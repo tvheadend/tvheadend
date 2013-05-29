@@ -1,411 +1,5 @@
 [
 	{
-		"tsid": 1048,
-		"onid": 1,
-		"charset": "PL_AUTO",
-		"sid": 4310,
-		"description": "Astra 19.2E TV Trwam"
-	},
-	{
-		"tsid": 1059,
-		"onid": 1,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Astra 19.2E TVP"
-	},
-	{
-		"tsid": 1111,
-		"onid": 1,
-		"charset": "PL_AUTO",
-		"sid": 7296,
-		"description": "Astra 19.2E TV Trwam"
-	},
-	{
-		"tsid": 8100,
-		"onid": 156,
-		"charset": "PL_AUTO",
-		"sid": 1500,
-		"description": "Eurobird 9.0E TV Polonia"
-	},
-	{
-		"tsid": 8300,
-		"onid": 156,
-		"charset": "PL_AUTO",
-		"sid": 620,
-		"description": "Eurobird 9.0E TVN International"
-	},
-	{
-		"tsid": 200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13834,
-		"description": "Hotbird 13.0 Eutelsat Eurosport PL"
-	},
-	{
-		"tsid": 200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13864,
-		"description": "Hotbird 13.0 Eutelsat Eurosport 2 PL"
-	},
-	{
-		"tsid": 200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13865,
-		"description": "Hotbird 13.0 Eutelsat Eurosport PL"
-	},
-	{
-		"tsid": 200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13878,
-		"description": "Hotbird 13.0 Eutelsat Eurosport 2 NE PL"
-	},
-	{
-		"tsid": 300,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 ITI/Nka HD PL"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13020,
-		"description": "Hotbird 13.0 Cyfra+ Canal+ HD Polska"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13022,
-		"description": "Hotbird 13.0 Cyfra+ Canal+ Sport HD Polska"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13023,
-		"description": "Hotbird 13.0 Cyfra+ National Geographic HD Polska"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13025,
-		"description": "Hotbird 13.0 Cyfra+ Filmbox HD"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13026,
-		"description": "Hotbird 13.0 Cyfra+ AXN Spin HD"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13027,
-		"description": "Hotbird 13.0 Cyfra+ TVN 7 HD"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13070,
-		"description": "Hotbird 13.0 Cyfra+ Eurosport HD PL"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13080,
-		"description": "Hotbird 13.0 Cyfra+ Eurosport HD PL"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13081,
-		"description": "Hotbird 13.0 Cyfra+ Eurosport HD PL"
-	},
-	{
-		"tsid": 400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13082,
-		"description": "Hotbird 13.0 Cyfra+ Eurosport HD PL"
-	},
-	{
-		"tsid": 1000,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 ITI/Nka TVN"
-	},
-	{
-		"tsid": 1100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfra+"
-	},
-	{
-		"tsid": 1300,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 ITI/Nka"
-	},
-	{
-		"tsid": 1400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 30,
-		"description": "Hotbird 13.0 Nick Junior"
-	},
-	{
-		"tsid": 1400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 31,
-		"description": "Hotbird 13.0 Nickelodeon HD"
-	},
-	{
-		"tsid": 1500,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfra+"
-	},
-	{
-		"tsid": 1600,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 ITI/Nka EskaTV, TVN"
-	},
-	{
-		"tsid": 1800,
-		"onid": 200,
-		"charset": "PL_AUTO",
-		"sid": 3623,
-		"description": "Hotbird 13.0 Polo TV"
-	},
-	{
-		"tsid": 7400,
-		"onid": 113,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfrowy Polsat"
-	},
-	{
-		"tsid": 7700,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 117,
-		"description": "Hotbird 13.0 Hot TV PL"
-	},
-	{
-		"tsid": 7800,
-		"onid": 113,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfrowy Polsat"
-	},
-	{
-		"tsid": 7900,
-		"onid": 113,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfrowy Polsat"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14900,
-		"description": "Hotbird 13.0 Eutelsat Sport Klub PL"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14901,
-		"description": "Hotbird 13.0 Eutelsat Universal CE"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14902,
-		"description": "Hotbird 13.0 Eutelsat Sci-Fi CE"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14910,
-		"description": "Hotbird 13.0 Eutelsat Sport Klub PL"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14911,
-		"description": "Hotbird 13.0 Eutelsat Universal CE"
-	},
-	{
-		"tsid": 8100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 14912,
-		"description": "Hotbird 13.0 Eutelsat Sci-Fi CE"
-	},
-	{
-		"tsid": 11000,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfra+"
-	},
-	{
-		"tsid": 11100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 4661,
-		"description": "Hotbird 13.0 Eutelsat Wedding TV"
-	},
-	{
-		"tsid": 11200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Polsat Cyfrowy PPV"
-	},
-	{
-		"tsid": 11400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfra+"
-	},
-	{
-		"tsid": 11600,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 ITI/Nka"
-	},
-	{
-		"tsid": 11900,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfra+"
-	},
-	{
-		"tsid": 12000,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Polsat Cyfrowy"
-	},
-	{
-		"tsid": 12200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7457,
-		"description": "Hotbird 13.0 Globecast Cartoon Network PL / TCM CE"
-	},
-	{
-		"tsid": 12200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7466,
-		"description": "Hotbird 13.0 Globecast Disney Channel PL"
-	},
-	{
-		"tsid": 12200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7467,
-		"description": "Hotbird 13.0 Globecast Cartoon Network CE"
-	},
-	{
-		"tsid": 12200,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7468,
-		"description": "Hotbird 13.0 Globecast TCM CE"
-	},
-	{
-		"tsid": 12800,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Viacom MTV / VH1 Polska"
-	},
-	{
-		"tsid": 13000,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Globecast Orange PL"
-	},
-	{
-		"tsid": 13100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7322,
-		"description": "Hotbird 13.0 TV5 Monde Europe"
-	},
-	{
-		"tsid": 13100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7324,
-		"description": "Hotbird 13.0 Crime & Investigation"
-	},
-	{
-		"tsid": 13100,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 7325,
-		"description": "Hotbird 13.0 Crime & Investigation"
-	},
-	{
-		"tsid": 13200,
-		"onid": 113,
-		"charset": "PL_AUTO",
-		"sid": 0,
-		"description": "Hotbird 13.0 Cyfrowy Polsat"
-	},
-	{
-		"tsid": 13400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 4754,
-		"description": "Hotbird 13.0 TVR"
-	},
-	{
-		"tsid": 15400,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 13511,
-		"description": "Hotbird 13.0 Rebel TV"
-	},
-	{
-		"tsid": 15700,
-		"onid": 318,
-		"charset": "PL_AUTO",
-		"sid": 10626,
-		"description": "Hotbird 13.0 Disco TV"
-	},
-	{
 		"tsid": 1,
 		"onid": 133,
 		"charset": "ISO8859-15",
@@ -495,5 +89,747 @@
 		"charset": "ISO8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12480.00 V"
+	},
+	{
+		"tsid": 1048,
+		"onid": 1,
+		"charset": "PL_AUTO",
+		"sid": 4310,
+		"description": "Astra 19.2E TV Trwam"
+	},
+	{
+		"tsid": 1059,
+		"onid": 1,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Astra 19.2E TVP"
+	},
+	{
+		"tsid": 3218,
+		"onid": 3,
+		"charset": "ISO8859-5",
+		"sid": 0,
+		"description": "Astra 23.5E Satellite BG 12051.00 V"
+	},
+	{
+		"tsid": 3226,
+		"onid": 3,
+		"charset": "ISO8859-5",
+		"sid": 0,
+		"description": "Astra 23.5E Satellite BG 12207.00 V"
+	},
+	{
+		"tsid": 8100,
+		"onid": 156,
+		"charset": "PL_AUTO",
+		"sid": 1500,
+		"description": "Eurobird 9.0E TV Polonia"
+	},
+	{
+		"tsid": 8300,
+		"onid": 156,
+		"charset": "PL_AUTO",
+		"sid": 620,
+		"description": "Eurobird 9.0E TVN International"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 13805,
+		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13834,
+		"description": "Hotbird 13.0 Eutelsat Eurosport PL"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 13840,
+		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13864,
+		"description": "Hotbird 13.0 Eutelsat Eurosport 2 PL"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13865,
+		"description": "Hotbird 13.0 Eutelsat Eurosport PL"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13878,
+		"description": "Hotbird 13.0 Eutelsat Eurosport 2 NE PL"
+	},
+	{
+		"tsid": 300,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+ HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13020,
+		"description": "Hotbird 13.0 NC+ Canal+ HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13022,
+		"description": "Hotbird 13.0 NC+ Canal+ Sport HD Polska"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13023,
+		"description": "Hotbird 13.0 NC+ Nat Geographic HD Polska"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13025,
+		"description": "Hotbird 13.0 NC+ Filmbox HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13026,
+		"description": "Hotbird 13.0 NC+ AXN Spin HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13027,
+		"description": "Hotbird 13.0 NC+ TVN 7 HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13070,
+		"description": "Hotbird 13.0 NC+ Eurosport HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13080,
+		"description": "Hotbird 13.0 NC+ Eurosport HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13081,
+		"description": "Hotbird 13.0 NC+ Eurosport HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13082,
+		"description": "Hotbird 13.0 NC+ Eurosport HD PL"
+	},
+	{
+		"tsid": 1000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+ TVN"
+	},
+	{
+		"tsid": 1100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 1300,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 1400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 30,
+		"description": "Hotbird 13.0 Nick Junior"
+	},
+	{
+		"tsid": 1400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 31,
+		"description": "Hotbird 13.0 Nickelodeon HD"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 1600,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 1800,
+		"onid": 200,
+		"charset": "PL_AUTO",
+		"sid": 3623,
+		"description": "Hotbird 13.0 Polo TV"
+	},
+	{
+		"tsid": 5500,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 6100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 7100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 7300,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 7400,
+		"onid": 113,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7700,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 117,
+		"description": "Hotbird 13.0 Hot TV PL"
+	},
+	{
+		"tsid": 7800,
+		"onid": 113,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14900,
+		"description": "Hotbird 13.0 Eutelsat Sport Klub PL"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14901,
+		"description": "Hotbird 13.0 Eutelsat Universal CE"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14902,
+		"description": "Hotbird 13.0 Eutelsat Sci-Fi CE"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14910,
+		"description": "Hotbird 13.0 Eutelsat Sport Klub PL"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14911,
+		"description": "Hotbird 13.0 Eutelsat Universal CE"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14912,
+		"description": "Hotbird 13.0 Eutelsat Sci-Fi CE"
+	},
+	{
+		"tsid": 11000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 11100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 4680,
+		"description": "Hotbird 13.0 Eutelsat 13th Street PL"
+	},
+	{
+		"tsid": 11200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Polsat Cyfrowy"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 11500,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 17309,
+		"description": "Hotbird 13.0 Baby TV PL"
+	},
+	{
+		"tsid": 11600,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 11900,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 NC+"
+	},
+	{
+		"tsid": 12000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Polsat Cyfrowy"
+	},
+	{
+		"tsid": 12100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7457,
+		"description": "Hotbird 13.0 Globecast Cartoon Network PL / TCM CE"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7466,
+		"description": "Hotbird 13.0 Globecast Disney Channel PL"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7467,
+		"description": "Hotbird 13.0 Globecast Cartoon Network CE"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7468,
+		"description": "Hotbird 13.0 Globecast TCM CE"
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 MTV Networks"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14602,
+		"description": "Hotbird 13.0 Globecast BBC Entertainment"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14603,
+		"description": "Hotbird 13.0 Globecast BBC Knowledge"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14604,
+		"description": "Hotbird 13.0 Globecast BBC Lifestyle"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14605,
+		"description": "Hotbird 13.0 Globecast BBC Cbeebies"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14612,
+		"description": "Hotbird 13.0 Globecast IDiscovery"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14613,
+		"description": "Hotbird 13.0 Globecast TLC Polska"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14619,
+		"description": "Hotbird 13.0 Globecast MTV Dance"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14620,
+		"description": "Hotbird 13.0 Globecast Viasat Explorer"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 14621,
+		"description": "Hotbird 13.0 Globecast ESPN America"
+	},
+	{
+		"tsid": 13100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7324,
+		"description": "Hotbird 13.0 Crime & Investigation"
+	},
+	{
+		"tsid": 13100,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 7325,
+		"description": "Hotbird 13.0 Crime & Investigation"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"charset": "PL_AUTO",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 13400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 4754,
+		"description": "Hotbird 13.0 TVR"
+	},
+	{
+		"tsid": 15400,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 13511,
+		"description": "Hotbird 13.0 RBL.TV"
+	},
+	{
+		"tsid": 15700,
+		"onid": 318,
+		"charset": "PL_AUTO",
+		"sid": 10626,
+		"description": "Hotbird 13.0 Disco TV"
+	},
+	{
+		"tsid": 1,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 2,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 3,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 4,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 5,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 6,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 7,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 8,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 9,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 10,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 11,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 12,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 13,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 20400,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10762.00 V"
+	},
+	{
+		"tsid": 20600,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10803.75 V"
+	},
+	{
+		"tsid": 20700,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10845.00 H"
+	},
+	{
+		"tsid": 20800,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10845.25 V"
+	},
+	{
+		"tsid": 20900,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 108877.00 H"
+	},
+	{
+		"tsid": 21000,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10928.00 H"
+	},
+	{
+		"tsid": 21100,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10887.00 V"
+	},
+	{
+		"tsid": 21200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10928.00 V"
+	},
+	{
+		"tsid": 41200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11455.50 V"
+	},
+	{
+		"tsid": 50100,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11471.00 H"
+	},
+	{
+		"tsid": 50200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11492.00 V"
+	},
+	{
+		"tsid": 50300,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11673.00 H"
+	},
+	{
+		"tsid": 50400,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11534.00 V"
+	},
+	{
+		"tsid": 50500,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11554.00 H"
+	},
+	{
+		"tsid": 50600,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11575.00 V"
+	},
+	{
+		"tsid": 50700,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11596.00 H"
+	},
+	{
+		"tsid": 50800,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11679.00 H"
+	},
+	{
+		"tsid": 50900,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11513.00 H"
+	},
+	{
+		"tsid": 51000,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11617.00 V"
 	}
 ]
