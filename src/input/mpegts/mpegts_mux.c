@@ -120,6 +120,7 @@ void
 mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
+  tvhlog(LOG_DEBUG, "mpegts", "initial scan complete for mm %p", mm);
   gtimer_disarm(&mm->mm_initial_scan_timeout);
   assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
   mn->mn_initial_scan_num--;
@@ -145,7 +146,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   }
   
   /* Create mux instances (where needed) */
-  //mm->mm_create_instances(mm);
+  mm->mm_create_instances(mm);
 
   /* Find */
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
@@ -159,9 +160,12 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
         break;
     if (mmi)
       tvhtrace("mpegts", "found free mmi %p", mmi);
+    else
+      tvhtrace("mpegts", "no input is free");
 
     /* Try and remove a lesser instance */
     if (!mmi) {
+#if 0
       LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
 
         /* Bad - skip */
@@ -175,6 +179,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 
       if (mmi)
         tvhtrace("mpegts", "found mmi %p to boot", mmi);
+#endif
 
       /* No free input */
       if (!mmi) {
@@ -184,13 +189,17 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     }
     
     /* Tune */
-    if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi))
+    if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi)) {
+      LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi, mmi_active_link);
+      mm->mm_active = mmi;
       break;
+    }
     tvhtrace("mpegts", "failed to run mmi %p", mmi);
   }
 
   /* Initial scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
+    tvhtrace("mpegts", "adding mm %p to current scan Q", mm);
     TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
     mm->mm_initial_scan_status = MM_SCAN_CURRENT;
     TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
@@ -206,6 +215,9 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
   service_t *s, *t;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi;
+
+  tvhtrace("mpegts", "stopping mux %p", mm);
+  assert(0);
 
   /* Flush all subscribers */
   if (mmi) {

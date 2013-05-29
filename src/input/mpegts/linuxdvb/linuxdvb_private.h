@@ -132,6 +132,9 @@ struct linuxdvb_frontend
   char                     *lfe_dmx_path;
   char                     *lfe_dvr_path;
 
+  int                       lfe_fe_fd;
+  int                       lfe_dvr_fd;
+ 
   /*
    * Tuning
    */
@@ -177,6 +180,9 @@ struct linuxdvb_mux
 };
 
 linuxdvb_mux_t *linuxdvb_mux_create0
+  (linuxdvb_network_t *ln, uint16_t onid, uint16_t tsid,
+   const dvb_mux_conf_t *dmc, const char *uuid);
+linuxdvb_mux_t *linuxdvb_mux_create1
   (linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf);
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

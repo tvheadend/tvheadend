@@ -50,7 +50,8 @@ static mpegts_mux_t *
 linuxdvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf )
 {
-  return NULL;
+  linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
+  return (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, conf, NULL);
 }
 
 static mpegts_service_t *
@@ -96,15 +97,12 @@ linuxdvb_network_create0
   if (!htsmsg_get_u32(conf, "nid", &u32))
     ln->mn_nid          = u32;
 
-  printf("network created %s / %s / %d\n", dvb_type2str(ln->ln_type),
-         ln->mn_network_name, ln->mn_nid);
-
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes", uuid))) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      (void)linuxdvb_mux_create0(ln, f->hmf_name, e);
+      (void)linuxdvb_mux_create1(ln, f->hmf_name, e);
     }
   }
 

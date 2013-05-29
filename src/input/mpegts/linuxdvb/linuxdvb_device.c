@@ -236,7 +236,6 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
 
   /* Create */
   ld = calloc(1, sizeof(linuxdvb_device_t));
-printf("create device %p\n", ld);
   if (idnode_insert(&ld->mi_id, uuid, &linuxdvb_device_class)) {
     free(ld);
     return NULL;
@@ -277,9 +276,6 @@ linuxdvb_device_find_by_hwid ( const char *hwid )
 {
   linuxdvb_hardware_t *lh;
   LIST_FOREACH(lh, &linuxdvb_device_all, lh_parent_link) {
-    printf("hwid  = %s\n", hwid);
-    printf("lh    = %p\n", lh);
-    printf("devid = %s\n", ((linuxdvb_device_t*)lh)->ld_devid.di_id);
     if (!strcmp(hwid, ((linuxdvb_device_t*)lh)->ld_devid.di_id))
       return (linuxdvb_device_t*)lh;
   }
@@ -306,7 +302,6 @@ linuxdvb_device_find_by_adapter ( int a )
   }
 
   /* Copy device info */
-  printf("added dev info to %p\n", ld);
   memcpy(&ld->ld_devid, &dev, sizeof(dev));
   ld->lh_displayname = strdup(dev.di_id);
   return ld;
@@ -325,7 +320,6 @@ void linuxdvb_device_init ( int adapter_mask )
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
       (void)linuxdvb_device_create0(f->hmf_name, e);
-      printf("created from config\n");
     }
   }
 

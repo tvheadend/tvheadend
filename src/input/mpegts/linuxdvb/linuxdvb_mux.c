@@ -122,6 +122,7 @@ linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
   }
 }
 
+#if 0
 static void
 linuxdvb_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
@@ -131,68 +132,69 @@ static void
 linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
 }
+#endif
 
 static const char *
 dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
 {
-  //const char *s;
+  int r;
+  const char *s;
   dmc->dmc_fe_params.inversion = INVERSION_AUTO;
   htsmsg_get_u32(m, "frequency", &dmc->dmc_fe_params.frequency);
 
-#if 0
-  switch(tda->tda_type) {
+  switch(type) {
   case FE_OFDM:
     s = htsmsg_get_str(m, "bandwidth");
-    if(s == NULL || (r = str2val(s, bwtab)) < 0)
+    if(s == NULL || (r = dvb_str2bw(s)) < 0)
       return "Invalid bandwidth";
     dmc->dmc_fe_params.u.ofdm.bandwidth = r;
 
     s = htsmsg_get_str(m, "constellation");
-    if(s == NULL || (r = str2val(s, qamtab)) < 0)
+    if(s == NULL || (r = dvb_str2qam(s)) < 0)
       return "Invalid QAM constellation";
     dmc->dmc_fe_params.u.ofdm.constellation = r;
 
     s = htsmsg_get_str(m, "transmission_mode");
-    if(s == NULL || (r = str2val(s, modetab)) < 0)
+    if(s == NULL || (r = dvb_str2mode(s)) < 0)
       return "Invalid transmission mode";
     dmc->dmc_fe_params.u.ofdm.transmission_mode = r;
 
     s = htsmsg_get_str(m, "guard_interval");
-    if(s == NULL || (r = str2val(s, guardtab)) < 0)
+    if(s == NULL || (r = dvb_str2guard(s)) < 0)
       return "Invalid guard interval";
     dmc->dmc_fe_params.u.ofdm.guard_interval = r;
 
     s = htsmsg_get_str(m, "hierarchy");
-    if(s == NULL || (r = str2val(s, hiertab)) < 0)
+    if(s == NULL || (r = dvb_str2hier(s)) < 0)
       return "Invalid heirarchy information";
     dmc->dmc_fe_params.u.ofdm.hierarchy_information = r;
 
     s = htsmsg_get_str(m, "fec_hi");
-    if(s == NULL || (r = str2val(s, fectab)) < 0)
+    if(s == NULL || (r = dvb_str2fec(s)) < 0)
       return "Invalid hi-FEC";
     dmc->dmc_fe_params.u.ofdm.code_rate_HP = r;
 
     s = htsmsg_get_str(m, "fec_lo");
-    if(s == NULL || (r = str2val(s, fectab)) < 0)
+    if(s == NULL || (r = dvb_str2fec(s)) < 0)
       return "Invalid lo-FEC";
     dmc->dmc_fe_params.u.ofdm.code_rate_LP = r;
     break;
+  default:
+    return "Not yet supported";
   }
-#endif
-  return "Not yet supported";
+  return NULL;
 }
 
 linuxdvb_mux_t *
 linuxdvb_mux_create0
-  ( linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf )
+  ( linuxdvb_network_t *ln,
+    uint16_t onid, uint16_t tsid, const dvb_mux_conf_t *dmc,
+    const char *uuid )
 {
-  uint32_t u32;
-  const char *str;
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  mpegts_mux_t *mm;
-  linuxdvb_mux_t *lm;
   const idclass_t *idc;
+  mpegts_mux_t *mm;
+
+  /* Search for existing */
 
   /* Class */
   if (ln->ln_type == FE_QPSK)
@@ -210,16 +212,44 @@ linuxdvb_mux_create0
 
   /* Create */
   if (!(mm = mpegts_mux_create0(calloc(1, sizeof(linuxdvb_mux_t)), idc, uuid,
-                                (mpegts_network_t*)ln,
-                                MPEGTS_ONID_NONE,
-                                MPEGTS_TSID_NONE)))
+                                (mpegts_network_t*)ln, onid, tsid)))
     return NULL;
-  lm = (linuxdvb_mux_t*)mm;
+  memcpy(&((linuxdvb_mux_t*)mm)->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
+
+  return (linuxdvb_mux_t*)mm;
+}
+
+linuxdvb_mux_t *
+linuxdvb_mux_create1
+  ( linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf )
+{
+  uint32_t u32;
+  const char *str;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  linuxdvb_mux_t *lm;
+  dvb_mux_conf_t dmc;
+
+  /* Check tuning */
+  memset(&dmc, 0, sizeof(dmc));
+  if (conf) {
+    if ((str = dvb_mux_conf_load(ln->ln_type, &dmc, conf))) {
+      tvhlog(LOG_ERR, "linuxdvb", "failed to load mux config [%s]", str);
+      return NULL;
+    }
+  }
+
+  lm = linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE,
+                            MPEGTS_TSID_NONE, &dmc, uuid);
+  if (!lm) printf("OH DEAR\n");
+  if (!lm) return NULL;
   
   /* Callbacks */
   lm->mm_config_save      = linuxdvb_mux_config_save;
+#if 0
   lm->mm_open_table       = linuxdvb_mux_open_table;
   lm->mm_close_table      = linuxdvb_mux_close_table;
+#endif
   lm->mm_create_instances = linuxdvb_mux_create_instances;
 
   /* No config */
@@ -236,10 +266,7 @@ linuxdvb_mux_create0
     lm->mm_tsid = u32;
   if ((str = htsmsg_get_str(conf, "default_authority")))
     lm->mm_dvb_default_authority = strdup(str);
-
-  /* Tuning info */
-  if ((e = htsmsg_get_map(conf, "tuning")))
-    (void)dvb_mux_conf_load(ln->ln_type, &lm->lm_tuning, e);
+  memcpy(&lm->lm_tuning, &dmc, sizeof(dmc));
 
   /* Services */
   if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",

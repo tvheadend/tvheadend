@@ -76,7 +76,6 @@ mpegts_input_recv_packets
   
   /* Process */
   while ( len >= 188 ) {
-    //printf("tsb[%d] = %02X\n", i, tsb[i]);
 
     /* Sync */
     if ( tsb[i] == 0x47 ) {
