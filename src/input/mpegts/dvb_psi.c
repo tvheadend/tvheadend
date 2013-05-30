@@ -328,12 +328,17 @@ dvb_desc_service_list
 {
   uint16_t stype, sid;
   int i;
+  mpegts_service_t *s;
   for (i = 0; i < len; i += 3) {
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
     tvhtrace(dstr, "    service %04X (%d) type %d", sid, sid, stype);
-    if (mm)
-      mm->mm_network->mn_create_service(mm, sid, 0);
+    if (mm) {
+      int save = 0;
+      s = mpegts_service_find(mm, sid, 0, NULL, &save);
+      if (save)
+        s->s_config_save((service_t*)s);
+    }
   }
   return 0;
 }
@@ -1038,11 +1043,6 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
   sid     = ptr[0] << 8 | ptr[1];
   version = ptr[2] >> 1 & 0x1f;
   
-  if((ptr[2] & 1) == 0) {
-    /* current_next_indicator == next, skip this */
-    return -1;
-  }
-
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   

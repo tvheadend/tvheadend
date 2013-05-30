@@ -214,7 +214,7 @@ mpegts_service_load_one
   const char *str;
 
   /* Load core */
-  service_load_one((service_t*)ms, c);
+  service_load((service_t*)ms, c);
 
   /* Load local */
   if (!htsmsg_get_u32(c, "pcr_pid", &u32))

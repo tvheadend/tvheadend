@@ -46,12 +46,12 @@
 static void service_data_timeout(void *aux);
 static const char *service_channel_get(void *obj);
 static void service_channel_set(void *obj, const char *str);
-static void service_save(struct idnode *self);
+static void service_class_save(struct idnode *self);
 
 const idclass_t service_class = {
   .ic_class = "service",
   .ic_caption = "Service",
-  .ic_save = service_save,
+  .ic_save = service_class_save,
   .ic_properties = (const property_t[]){
     {
       "channel", "Channel", PT_STR,
@@ -975,7 +975,7 @@ service_request_save(service_t *t, int restart)
  *
  */
 static void
-service_save(struct idnode *self)
+service_class_save(struct idnode *self)
 {
   service_t *s = (service_t *)self;
   s->s_config_save(s);
@@ -1273,6 +1273,70 @@ htsmsg_t *servicetype_list ( void )
   return ret;
 }
 
-void service_load_one ( service_t *s, htsmsg_t *c )
+void service_save ( service_t *t, htsmsg_t *m )
+{
+  elementary_stream_t *st;
+  htsmsg_t *list, *sub;
+
+  htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
+
+  htsmsg_add_u32(m, "disabled", !t->s_enabled);
+
+  lock_assert(&t->s_stream_mutex);
+
+  list = htsmsg_create_list();
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    sub = htsmsg_create_map();
+
+    htsmsg_add_u32(sub, "pid", st->es_pid);
+    htsmsg_add_str(sub, "type", streaming_component_type2txt(st->es_type));
+    htsmsg_add_u32(sub, "position", st->es_position);
+
+    if(st->es_lang[0])
+      htsmsg_add_str(sub, "language", st->es_lang);
+
+#if TODO // Where did this go?
+    if (SCT_ISAUDIO(st->es_type))
+      htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
+#endif
+
+    if(st->es_type == SCT_CA) {
+      caid_t *c;
+      htsmsg_t *v = htsmsg_create_list();
+      LIST_FOREACH(c, &st->es_caids, link) {
+	      htsmsg_t *caid = htsmsg_create_map();
+
+	      htsmsg_add_u32(caid, "caid", c->caid);
+	      if(c->providerid)
+	        htsmsg_add_u32(caid, "providerid", c->providerid);
+	      htsmsg_add_msg(v, NULL, caid);
+      }
+
+      htsmsg_add_msg(sub, "caidlist", v);
+    }
+
+    if(st->es_type == SCT_DVBSUB) {
+      htsmsg_add_u32(sub, "compositionid", st->es_composition_id);
+      htsmsg_add_u32(sub, "ancillartyid", st->es_ancillary_id);
+    }
+
+    if(st->es_type == SCT_TEXTSUB)
+      htsmsg_add_u32(sub, "parentpid", st->es_parent_pid);
+
+    if(st->es_type == SCT_MPEG2VIDEO || st->es_type == SCT_H264) {
+      if(st->es_width && st->es_height) {
+	      htsmsg_add_u32(sub, "width", st->es_width);
+	      htsmsg_add_u32(sub, "height", st->es_height);
+      }
+      if(st->es_frame_duration)
+        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
+    }
+    
+    htsmsg_add_msg(list, NULL, sub);
+  }
+  htsmsg_add_msg(m, "stream", list);
+}
+
+void service_load ( service_t *s, htsmsg_t *c )
 {
 }

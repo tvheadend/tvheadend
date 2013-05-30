@@ -513,6 +513,8 @@ int service_is_primary_epg (service_t *t);
 
 htsmsg_t *servicetype_list (void);
 
-void service_load_one ( service_t *s, htsmsg_t *c );
+void service_load ( service_t *s, htsmsg_t *c );
+
+void service_save ( service_t *s, htsmsg_t *c );
 
 #endif // SERVICE_H__

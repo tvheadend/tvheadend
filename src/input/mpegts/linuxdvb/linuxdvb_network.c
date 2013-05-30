@@ -98,11 +98,30 @@ linuxdvb_network_create_mux
   return mm;
 }
 
+static void
+linuxdvb_service_config_save ( service_t *t )
+{
+  mpegts_service_t *s = (mpegts_service_t*)t;
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&s->s_id, c);
+  service_save(t, c);
+  hts_settings_save(c, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
+                    idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id),
+                    idnode_uuid_as_str(&s->s_dvb_mux->mm_id),
+                    idnode_uuid_as_str(&s->s_id));
+  htsmsg_destroy(c);
+}
+
 static mpegts_service_t *
 linuxdvb_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  return NULL;
+  extern const idclass_t mpegts_service_class;
+  mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid);
+  if (s)
+    s->s_config_save = linuxdvb_service_config_save;
+  // TODO: do we need any DVB specific fields?
+  return s;
 }
 
 static linuxdvb_network_t *
