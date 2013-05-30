@@ -31,6 +31,8 @@ const idclass_t mpegts_network_class =
                PT_INT, mpegts_network_t, mn_nid) },
     { PROPDEF1("autodiscovery", "Network Discovery",
                PT_BOOL, mpegts_network_t, mn_autodiscovery) },
+    { PROPDEF1("skipinitscan", "Skip Initial Scan",
+               PT_BOOL, mpegts_network_t, mn_skipinitscan) },
     {}
   }
 };
@@ -122,7 +124,7 @@ int
 mpegts_network_set_network_name
   ( mpegts_network_t *mn, const char *name )
 {
-  if (!name || !strcmp(name, mn->mn_network_name))
+  if (!name || !strcmp(name, mn->mn_network_name ?: ""))
     return 0;
   tvh_str_update(&mn->mn_network_name, name);
   return 1;

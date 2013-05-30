@@ -40,7 +40,7 @@ mpegts_mux_t *
 tsfile_mux_create ( mpegts_network_t *mn )
 {
   mpegts_mux_t *mm 
-    = mpegts_mux_create1(NULL, mn, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
+    = mpegts_mux_create1(NULL, mn, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL);
   tvhtrace("tsfile", "mm created %p", mm);
   return mm;
 }

@@ -147,7 +147,7 @@ linuxdvb_mux_t *
 linuxdvb_mux_create0
   ( linuxdvb_network_t *ln,
     uint16_t onid, uint16_t tsid, const dvb_mux_conf_t *dmc,
-    const char *uuid )
+    const char *uuid, htsmsg_t *conf )
 {
   const idclass_t *idc;
   mpegts_mux_t *mm;
@@ -171,7 +171,7 @@ linuxdvb_mux_create0
 
   /* Create */
   if (!(mm = mpegts_mux_create0(calloc(1, sizeof(linuxdvb_mux_t)), idc, uuid,
-                                (mpegts_network_t*)ln, onid, tsid)))
+                                (mpegts_network_t*)ln, onid, tsid, conf)))
     return NULL;
   lm = (linuxdvb_mux_t*)mm;
   memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
@@ -204,7 +204,7 @@ linuxdvb_mux_create1
   }
 
   lm = linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE,
-                            MPEGTS_TSID_NONE, &dmc, uuid);
+                            MPEGTS_TSID_NONE, &dmc, uuid, conf);
   if (!lm) return NULL;
   
   /* No config */
@@ -212,7 +212,6 @@ linuxdvb_mux_create1
     return lm;
 
   /* Config */
-  idnode_load(&lm->mm_id, conf);
   memcpy(&lm->lm_tuning, &dmc, sizeof(dmc));
 
   /* Services */
@@ -225,8 +224,6 @@ linuxdvb_mux_create1
     }
     htsmsg_destroy(c);
   }
-
-  lm->mm_config_save((mpegts_mux_t*)lm);
 
   return lm;
 }

@@ -60,6 +60,8 @@ const idclass_t mpegts_mux_class =
                 PT_INT, mpegts_mux_t, mm_tsid) },
     {  PROPDEF2("crid_authority", "CRID Authority",
                 PT_STR, mpegts_mux_t, mm_crid_authority, 1) },
+    {  PROPDEF2("init_scan_done", "Initial Scan Complete",
+                PT_BOOL, mpegts_mux_t, mm_initial_scan_done, 1) },
     {}
   }
 };
@@ -85,27 +87,39 @@ mpegts_mux_is_enabled ( mpegts_mux_t *mm )
 int
 mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
 {
+  char buf[256];
   if (onid == mm->mm_onid)
     return 0;
   mm->mm_onid = onid;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s onid set to %d", buf, onid);
   return 1;
 }
 
 int
 mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
 {
+  char buf[256];
   if (tsid == mm->mm_tsid)
     return 0;
   mm->mm_tsid = tsid;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s tsid set to %d", buf, tsid);
   return 1;
 }
 
 int 
 mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
 {
+  char buf[256];
   if (defauth && !strcmp(defauth, mm->mm_crid_authority ?: ""))
     return 0;
   tvh_str_update(&mm->mm_crid_authority, defauth);
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s crid authority set to %s", buf, defauth);
   return 1;
 }
 
@@ -163,7 +177,9 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   if (!mpegts_mux_has_subscribers(mm))
     mm->mm_stop(mm);
 
-  // TODO: save
+  /* Save */
+  mm->mm_initial_scan_done = 1;
+  mm->mm_config_save(mm);
 }
 
 static int
@@ -341,9 +357,12 @@ mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c )
 mpegts_mux_t *
 mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
-    mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
+    mpegts_network_t *mn, uint16_t onid, uint16_t tsid, htsmsg_t *conf )
 {
   idnode_insert(&mm->mm_id, uuid, class);
+
+  /* Enabled by default */
+  mm->mm_enabled             = 1;
 
   /* Identification */
   mm->mm_onid                = onid;
@@ -352,7 +371,6 @@ mpegts_mux_create0
   /* Add to network */
   LIST_INSERT_HEAD(&mn->mn_muxes, mm, mm_network_link);
   mm->mm_network             = mn;
-  mpegts_mux_initial_scan_link(mm);
 
   /* Debug/Config */
   mm->mm_display_name        = mpegts_mux_display_name;
@@ -368,6 +386,14 @@ mpegts_mux_create0
   mm->mm_open_table          = mpegts_mux_open_table;
   mm->mm_close_table         = mpegts_mux_close_table;
   TAILQ_INIT(&mm->mm_table_queue);
+
+  /* Configuration */
+  if (conf)
+    idnode_load(&mm->mm_id, conf);
+
+  /* Initial scan */
+  if (!mm->mm_initial_scan_done || !mn->mn_skipinitscan)
+    mpegts_mux_initial_scan_link(mm);
 
   return mm;
 }

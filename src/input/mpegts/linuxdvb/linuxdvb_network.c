@@ -91,7 +91,7 @@ linuxdvb_network_create_mux
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   mm = linuxdvb_network_find_mux(ln, dmc);
   if (!mm) {
-    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL);
+    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
     if (mm)
       mm->mm_config_save(mm);
   }
@@ -164,5 +164,4 @@ void linuxdvb_network_init ( void )
     (void)linuxdvb_network_create0(f->hmf_name, e);
   }
   htsmsg_destroy(c);
-  exit(1);
 }

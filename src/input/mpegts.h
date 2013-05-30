@@ -181,6 +181,7 @@ struct mpegts_network
    */
   uint32_t mn_nid;
   uint32_t mn_autodiscovery;
+  uint32_t mn_skipinitscan;
 };
 
 /* Multiplex */
@@ -194,8 +195,8 @@ struct mpegts_mux
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
   mpegts_network_t        *mm_network;
-  uint16_t                mm_onid;
-  uint16_t                mm_tsid;
+  uint32_t                mm_onid;
+  uint32_t                mm_tsid;
 
   /*
    * Services
@@ -214,6 +215,7 @@ struct mpegts_mux
     MM_SCAN_PENDING,  // Waiting to be tuned for initial scan
     MM_SCAN_CURRENT,  // Currently tuned for initial scan
   }                       mm_initial_scan_status;
+  int                     mm_initial_scan_done;
 
   /*
    * Physical instances
@@ -438,15 +440,16 @@ int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
-    mpegts_network_t *mn, uint16_t onid, uint16_t tsid );
+    mpegts_network_t *mn, uint16_t onid, uint16_t tsid,
+    htsmsg_t *conf );
 
-#define mpegts_mux_create(type, uuid, mn, onid, tsid)\
+#define mpegts_mux_create(type, uuid, mn, onid, tsid, conf)\
   (struct type*)mpegts_mux_create0(calloc(1, sizeof(struct type)),\
                                    &type##_class, uuid,\
-                                   mn, onid, tsid)
-#define mpegts_mux_create1(uuid, mn, onid, tsid)\
+                                   mn, onid, tsid, conf)
+#define mpegts_mux_create1(uuid, mn, onid, tsid, conf)\
   mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
-                     mn, onid, tsid)
+                     mn, onid, tsid, conf)
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 

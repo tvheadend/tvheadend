@@ -478,7 +478,6 @@ linuxdvb_frontend_create0
 
   if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
     lfe->mi_enabled = u32;
-  printf("LFE ENABLED = %d\n", lfe->mi_enabled);
   if (!htsmsg_get_u32(conf, "number", &u32))
     lfe->lfe_number = u32; 
   if ((str = htsmsg_get_str(conf, "network"))) {
