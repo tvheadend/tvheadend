@@ -676,4 +676,66 @@ dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
     return "Invalid FE type";
 }
 
+static void
+dvb_mux_conf_save_dvbt ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  struct dvb_ofdm_parameters *ofdm = &dmc->dmc_fe_params.u.ofdm;
+  htsmsg_add_str(m, "bandwidth",
+                 dvb_bw2str(ofdm->bandwidth));
+  htsmsg_add_str(m, "constellation",
+                 dvb_qam2str(ofdm->constellation));
+  htsmsg_add_str(m, "transmission_mode",
+                 dvb_mode2str(ofdm->transmission_mode));
+  htsmsg_add_str(m, "guard_interval",
+                 dvb_guard2str(ofdm->guard_interval));
+  htsmsg_add_str(m, "hierarchy",
+                 dvb_hier2str(ofdm->hierarchy_information));
+  htsmsg_add_str(m, "fec_hi",
+                 dvb_fec2str(ofdm->code_rate_HP));
+  htsmsg_add_str(m, "fec_lo",
+                 dvb_fec2str(ofdm->code_rate_LP));
+}
+
+static void
+dvb_mux_conf_save_dvbc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  struct dvb_qam_parameters *qam  = &dmc->dmc_fe_params.u.qam;
+  htsmsg_add_u32(m, "symbol_rate",   qam->symbol_rate);
+  htsmsg_add_str(m, "constellation", dvb_qam2str(qam->modulation));
+  htsmsg_add_str(m, "fec",           dvb_fec2str(qam->fec_inner));
+}
+
+static void
+dvb_mux_conf_save_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  struct dvb_qpsk_parameters *qpsk  = &dmc->dmc_fe_params.u.qpsk;
+  htsmsg_add_u32(m, "symbol_rate",   qpsk->symbol_rate);
+  htsmsg_add_str(m, "fec",           dvb_fec2str(qpsk->fec_inner));
+  htsmsg_add_str(m, "polarisation",  dvb_pol2str(dmc->dmc_fe_polarisation));
+#if DVB_API_VERSION >= 5
+  htsmsg_add_str(m, "modulation",    dvb_qam2str(dmc->dmc_fe_modulation));
+  htsmsg_add_str(m, "rolloff",       dvb_rolloff2str(dmc->dmc_fe_rolloff));
+#endif
+}
+
+static void
+dvb_mux_conf_save_atsc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  htsmsg_add_str(m, "constellation",
+                 dvb_qam2str(dmc->dmc_fe_params.u.vsb.modulation));
+}
+
+void
+dvb_mux_conf_save ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  htsmsg_add_u32(m, "frequency", dmc->dmc_fe_params.frequency);
+#if DVB_API_VERSION >= 5
+  htsmsg_add_str(m, "delsys", dvb_delsys2str(dmc->dmc_fe_delsys));
+#endif
+       if (type == FE_OFDM) dvb_mux_conf_save_dvbt(dmc, m);
+  else if (type == FE_QAM)  dvb_mux_conf_save_dvbc(dmc, m);
+  else if (type == FE_QPSK) dvb_mux_conf_save_dvbs(dmc, m);
+  else if (type == FE_ATSC) dvb_mux_conf_save_atsc(dmc, m);
+}
+
 #endif /* ENABLE_DVBAPI */

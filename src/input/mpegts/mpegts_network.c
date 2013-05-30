@@ -25,18 +25,40 @@ const idclass_t mpegts_network_class =
   .ic_class      = "mpegts_network",
   .ic_caption    = "MPEGTS Network",
   .ic_properties = (const property_t[]){
+    { PROPDEF1("networkname", "Network Name",
+               PT_STR, mpegts_network_t, mn_network_name) },
+    { PROPDEF1("nid", "Network ID (limit scanning)",
+               PT_INT, mpegts_network_t, mn_nid) },
+    { PROPDEF1("autodiscovery", "Network Discovery",
+               PT_BOOL, mpegts_network_t, mn_autodiscovery) },
+    {}
   }
 };
+
+static void
+mpegts_network_display_name
+  ( mpegts_network_t *mn, char *buf, size_t len )
+{
+  strncpy(buf, mn->mn_network_name ?: "unknown", len);
+}
 
 static void
 mpegts_network_config_save
   ( mpegts_network_t *mn )
 {
+  // Nothing - leave to child classes
 }
 
 static mpegts_mux_t *
 mpegts_network_create_mux
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, dvb_mux_conf_t *aux )
+{
+  return NULL;
+}
+
+static mpegts_service_t *
+mpegts_network_create_service
+ ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
   return NULL;
 }
@@ -76,8 +98,10 @@ mpegts_network_create0
     const char *netname )
 {
   idnode_insert(&mn->mn_id, uuid, idc);
-  mn->mn_create_mux   = mpegts_network_create_mux;
-  mn->mn_config_save  = mpegts_network_config_save;
+  mn->mn_display_name   = mpegts_network_display_name;
+  mn->mn_config_save    = mpegts_network_config_save;
+  mn->mn_create_mux     = mpegts_network_create_mux;
+  mn->mn_create_service = mpegts_network_create_service;
   if (netname) mn->mn_network_name = strdup(netname);
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);

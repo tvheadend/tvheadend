@@ -438,7 +438,7 @@ dvb_pat_callback
 {
   int sect, last, ver;
   uint16_t sid, pid, tsid;
-  uint16_t nit_pid = DVB_NIT_PID;
+  uint16_t nit_pid = 0;
   mpegts_mux_t          *mm  = mt->mt_mux;
 
   /* Begin */
@@ -449,9 +449,7 @@ dvb_pat_callback
   /* Multiplex */
   tsid = (ptr[0] << 8) | ptr[1];
   tvhtrace("pat", "tsid %04X (%d)", tsid, tsid);
-  mpegts_mux_set_tsid(mm, tsid, 0);
-  if (mm->mm_tsid != tsid)
-    return -1;
+  mpegts_mux_set_tsid(mm, tsid);
   
   /* Process each programme */
   ptr += 5;
@@ -463,8 +461,8 @@ dvb_pat_callback
     /* NIT PID */
     if (sid == 0) {
       if (pid) {
-        tvhtrace("pat", "  nit on pid %04X (%d)", pid, pid);
         nit_pid = pid;
+        tvhtrace("pat", "  nit on pid %04X (%d)", pid, pid);
       }
 
     /* Service */
@@ -481,11 +479,13 @@ dvb_pat_callback
     ptr += 4;
     len -= 4;
   }
+  
+  /* Install NIT handler */
+  if (nit_pid)
+    mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
+                     NULL, "nit", MT_QUICKREQ | MT_CRC, nit_pid);
 
-  /* Install NIT monitor */
-  mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                   NULL, "nit", MT_CRC | MT_QUICKREQ, nit_pid);
-
+  /* End */
   dvb_table_end(mt, tableid, sect, last, ver);
   return mt->mt_state[0].complete ? 0 : -1;
 }
@@ -631,7 +631,7 @@ dvb_nit_callback
             return -1;
           tvhtrace(mt->mt_name, "    default auth [%s]", dauth);
           if (mux && *dauth)
-            mpegts_mux_set_default_authority(mux, dauth);
+            mpegts_mux_set_crid_authority(mux, dauth);
           break;
         case DVB_DESC_LOCAL_CHAN:
           if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
@@ -675,10 +675,8 @@ dvb_sdt_callback
 
   /* Find Transport Stream */
   if (tableid == 0x42) {
-    mpegts_mux_set_onid(mm, onid, 0);
-    mpegts_mux_set_tsid(mm, tsid, 0);
-    if (mm->mm_onid != onid || mm->mm_tsid != tsid)
-      return -1;
+    mpegts_mux_set_onid(mm, onid);
+    mpegts_mux_set_tsid(mm, tsid);
   } else {
     mpegts_network_t *mn = mm->mm_network;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)

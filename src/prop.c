@@ -53,11 +53,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m)
       continue;
     const property_t *p = prop_find(pl, f->hmf_name);
     if(p == NULL) {
-      fprintf(stderr, "Property %s unmappable\n", f->hmf_name);
-      continue;
-    }
-    if (p->rdonly) {
-      tvhlog(LOG_WARNING, "prop", "field %s is read-only", p->id);
+      //fprintf(stderr, "Property %s unmappable\n", f->hmf_name);
       continue;
     }
 

@@ -146,7 +146,6 @@ struct mpegts_network
   /*
    * Identification
    */
-
   char                    *mn_network_name;
 
   /*
@@ -170,30 +169,18 @@ struct mpegts_network
   /*
    * Functions
    */
+  void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
+  void              (*mn_config_save)  (mpegts_network_t*);
   mpegts_mux_t*     (*mn_create_mux)
     (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
-  void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
-  void              (*mn_config_save)  (mpegts_network_t*);
 
-  // Note: the above are slightly odd in that they take mux instead of
-  //       network as initial param. This is intentional as we need to
-  //       know the mux and can easily get to network from there
-
-#if 0 // TODO: FIXME
-  int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
-#endif
-
-  uint32_t mn_nid; // limit scope of scanning
-
-#if 0 // TODO: FIXME CONFIG
-  uint32_t dn_disable_pmt_monitor;
-  uint32_t dn_autodiscovery;
-  uint32_t dn_nitoid;
-  uint32_t dn_skip_checksubscr;
-#endif
-
+  /*
+   * Configuration
+   */
+  uint32_t mn_nid;
+  uint32_t mn_autodiscovery;
 };
 
 /* Multiplex */
@@ -249,17 +236,18 @@ struct mpegts_mux
    */
 
   void (*mm_config_save)      (mpegts_mux_t *mm);
+  void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
+  int  (*mm_is_enabled)       (mpegts_mux_t *mm);
   int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
   void (*mm_stop)             (mpegts_mux_t *mm);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
-  void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
 
   /*
-   * Fields
+   * Configuration
    */
-  char *mm_dvb_default_authority;
+  char *mm_crid_authority;
   int   mm_enabled;
 };
  
@@ -473,9 +461,9 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
                                             &type##_class, uuid,\
                                             mi, mm);
 
-int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
-int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force );
-int mpegts_mux_set_default_authority ( mpegts_mux_t *mm, const char *defauth );
+int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
+int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
+int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,

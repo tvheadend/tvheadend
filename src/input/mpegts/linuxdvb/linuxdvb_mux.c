@@ -91,17 +91,29 @@ const idclass_t linuxdvb_mux_atsc_class =
 static void
 linuxdvb_mux_config_save ( mpegts_mux_t *mm )
 {
+  linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+  linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&mm->mm_id, c);
+  dvb_mux_conf_save(ln->ln_type, &lm->lm_tuning, c);
+  hts_settings_save(c, "input/linuxdvb/networks/%s/muxes/%s/config",
+                    idnode_uuid_as_str(&mm->mm_network->mn_id),
+                    idnode_uuid_as_str(&mm->mm_id));
+  htsmsg_destroy(c);
 }
 
 static void
 linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
-  size_t c = 0;
-  const char *unit = "Hz";
   linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-  c = snprintf(buf+c, len-c, "%d %s [%04X:%04X]",
-               lm->lm_tuning.dmc_fe_params.frequency,
-               unit, mm->mm_onid, mm->mm_tsid);
+  linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
+  snprintf(buf, len, "%d %s%s [onid:%04X, tsid:%04X]",
+           lm->lm_tuning.dmc_fe_params.frequency,
+           (ln->ln_type == FE_QPSK) ? "MHz " : "Hz",
+           (ln->ln_type == FE_QPSK) 
+             ? dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation)
+             : "",
+           mm->mm_onid, mm->mm_tsid);
 }
 
 static void
@@ -110,15 +122,11 @@ linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
   extern const idclass_t mpegts_mux_instance_class;
   mpegts_input_t *mi;
   mpegts_mux_instance_t *mmi;
-  tvhtrace("linuxdvb", "mm %p create instances", mm);
   LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
-    tvhtrace("linuxdvb", "  checking mi %p", mi);
     LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
       if (mmi->mmi_mux == mm) break;
-    if (!mmi) {
+    if (!mmi)
       mmi = mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
-      tvhtrace("linuxdvb", "    created mmi %p", mmi);
-    }
     // TODO: we might eventually want to keep history!
   }
 }
@@ -180,7 +188,6 @@ linuxdvb_mux_t *
 linuxdvb_mux_create1
   ( linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf )
 {
-  uint32_t u32;
   const char *str;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
@@ -198,7 +205,6 @@ linuxdvb_mux_create1
 
   lm = linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE,
                             MPEGTS_TSID_NONE, &dmc, uuid);
-  if (!lm) printf("OH DEAR\n");
   if (!lm) return NULL;
   
   /* No config */
@@ -206,15 +212,7 @@ linuxdvb_mux_create1
     return lm;
 
   /* Config */
-  // TODO: this could go in mpegts_mux
-  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
-    lm->mm_enabled = 1;
-  if (!htsmsg_get_u32(conf, "onid", &u32))
-    lm->mm_onid = u32;
-  if (!htsmsg_get_u32(conf, "tsid", &u32))
-    lm->mm_tsid = u32;
-  if ((str = htsmsg_get_str(conf, "default_authority")))
-    lm->mm_dvb_default_authority = strdup(str);
+  idnode_load(&lm->mm_id, conf);
   memcpy(&lm->lm_tuning, &dmc, sizeof(dmc));
 
   /* Services */
@@ -227,6 +225,8 @@ linuxdvb_mux_create1
     }
     htsmsg_destroy(c);
   }
+
+  lm->mm_config_save((mpegts_mux_t*)lm);
 
   return lm;
 }

@@ -52,42 +52,60 @@ const idclass_t mpegts_mux_class =
   .ic_class      = "mpegts_mux",
   .ic_caption    = "MPEGTS Multiplex",
   .ic_properties = (const property_t[]){
+    {  PROPDEF1("enabled", "Enabled",
+                PT_BOOL, mpegts_mux_t, mm_enabled) },
     {  PROPDEF1("onid", "Original Network ID",
-               PT_INT, mpegts_mux_t, mm_onid) },
+                PT_INT, mpegts_mux_t, mm_onid) },
     {  PROPDEF1("tsid", "Transport Stream ID",
-               PT_INT, mpegts_mux_t, mm_tsid) },
-
+                PT_INT, mpegts_mux_t, mm_tsid) },
+    {  PROPDEF2("crid_authority", "CRID Authority",
+                PT_STR, mpegts_mux_t, mm_crid_authority, 1) },
+    {}
   }
 };
 
+static void
+mpegts_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
+{
+  snprintf(buf, len, "Multiplex [onid:%04X tsid:%04X]",
+           mm->mm_onid, mm->mm_tsid);
+}
+
+static void
+mpegts_mux_config_save ( mpegts_mux_t *mm )
+{
+}
+
+static int
+mpegts_mux_is_enabled ( mpegts_mux_t *mm )
+{
+  return mm->mm_enabled;
+}
+
 int
-mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force )
+mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
 {
   if (onid == mm->mm_onid)
-    return 0;
-  if (!force && mm->mm_onid != MPEGTS_ONID_NONE)
     return 0;
   mm->mm_onid = onid;
   return 1;
 }
 
 int
-mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
+mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
 {
   if (tsid == mm->mm_tsid)
-    return 0;
-  if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
     return 0;
   mm->mm_tsid = tsid;
   return 1;
 }
 
 int 
-mpegts_mux_set_default_authority ( mpegts_mux_t *mm, const char *defauth )
+mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
 {
-  if (defauth && !strcmp(defauth, mm->mm_dvb_default_authority ?: ""))
+  if (defauth && !strcmp(defauth, mm->mm_crid_authority ?: ""))
     return 0;
-  tvh_str_update(&mm->mm_dvb_default_authority, defauth);
+  tvh_str_update(&mm->mm_crid_authority, defauth);
   return 1;
 }
 
@@ -335,6 +353,11 @@ mpegts_mux_create0
   LIST_INSERT_HEAD(&mn->mn_muxes, mm, mm_network_link);
   mm->mm_network             = mn;
   mpegts_mux_initial_scan_link(mm);
+
+  /* Debug/Config */
+  mm->mm_display_name        = mpegts_mux_display_name;
+  mm->mm_config_save         = mpegts_mux_config_save;
+  mm->mm_is_enabled          = mpegts_mux_is_enabled;
 
   /* Start/stop */
   mm->mm_start               = mpegts_mux_start;

@@ -31,29 +31,53 @@
 #include <fcntl.h>
 
 extern const idclass_t mpegts_network_class;
+
+static const char *
+ln_type_getstr ( void *ptr )
+{
+  return dvb_type2str(((linuxdvb_network_t*)ptr)->ln_type);
+}
+
+static void 
+ln_type_setstr ( void *ptr, const char *str )
+{ 
+  ((linuxdvb_network_t*)ptr)->ln_type = dvb_str2type(str);
+}
+
 const idclass_t linuxdvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "linuxdvb_network",
   .ic_caption    = "LinuxDVB Network",
   .ic_properties = (const property_t[]){
-#if 0
     { PROPDEF2("type", "Network Type",
                PT_STR, linuxdvb_network_t, ln_type, 1),
-      .get_str },
-#endif
+      .str_get = ln_type_getstr,
+      .str_set = ln_type_setstr },
     {}
   }
 };
+
+static void
+linuxdvb_network_config_save ( mpegts_network_t *mn )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&mn->mn_id, c);
+  hts_settings_save(c, "input/linuxdvb/networks/%s/config",
+                    idnode_uuid_as_str(&mn->mn_id));
+  htsmsg_destroy(c);
+}
 
 static mpegts_mux_t *
 linuxdvb_network_find_mux
   ( linuxdvb_network_t *ln, dvb_mux_conf_t *dmc )
 {
+#define LINUXDVB_FREQ_TOL 2000 // TODO: fix this!
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-    if (abs(lm->lm_tuning.dmc_fe_params.frequency - dmc->dmc_fe_params.frequency) > 2000) continue;
+    if (abs(lm->lm_tuning.dmc_fe_params.frequency
+            - dmc->dmc_fe_params.frequency) > LINUXDVB_FREQ_TOL) continue;
     if (lm->lm_tuning.dmc_fe_polarisation != dmc->dmc_fe_polarisation) continue;
     break;
   }
@@ -62,12 +86,15 @@ linuxdvb_network_find_mux
 
 static mpegts_mux_t *
 linuxdvb_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf )
+  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
-  mm = linuxdvb_network_find_mux(ln, conf);
-  if (!mm)
-    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, conf, NULL);
+  mm = linuxdvb_network_find_mux(ln, dmc);
+  if (!mm) {
+    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL);
+    if (mm)
+      mm->mm_config_save(mm);
+  }
   return mm;
 }
 
@@ -78,17 +105,10 @@ linuxdvb_network_create_service
   return NULL;
 }
 
-static void
-linuxdvb_network_config_save ( mpegts_network_t *mn )
-{
-}
-
 static linuxdvb_network_t *
 linuxdvb_network_create0
   ( const char *uuid, htsmsg_t *conf )
 {
-  uint32_t u32;
-  const char *str;
   linuxdvb_network_t *ln;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
@@ -107,12 +127,7 @@ linuxdvb_network_create0
     return ln;
 
   /* Load configuration */
-  if ((str = htsmsg_get_str(conf, "type")))
-    ln->ln_type = dvb_str2type(str);
-  if ((str = htsmsg_get_str(conf, "name")))
-    ln->mn_network_name = strdup(str);
-  if (!htsmsg_get_u32(conf, "nid", &u32))
-    ln->mn_nid          = u32;
+  idnode_load(&ln->mn_id, conf);
 
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes", uuid))) {
@@ -122,6 +137,8 @@ linuxdvb_network_create0
       (void)linuxdvb_mux_create1(ln, f->hmf_name, e);
     }
   }
+
+  linuxdvb_network_config_save((mpegts_network_t*)ln);
 
   return ln;
 }
@@ -147,4 +164,5 @@ void linuxdvb_network_init ( void )
     (void)linuxdvb_network_create0(f->hmf_name, e);
   }
   htsmsg_destroy(c);
+  exit(1);
 }

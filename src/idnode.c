@@ -342,9 +342,27 @@ idnode_notify_title_changed(void *obj)
   notify_by_msg("idnodeNameChanged", m);
 }
 
-int
-idnode_load_one
-  ( idnode_t *self, htsmsg_t *m )
+/*
+ * Save
+ */
+void
+idnode_save ( idnode_t *self, htsmsg_t *c )
 {
-  return 0;
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    prop_read_values(self, idc->ic_properties, c);
+    idc = idc->ic_super;
+  }
+}
+
+/*
+ * Load
+ */
+void idnode_load ( idnode_t *self, htsmsg_t *c )
+{
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    prop_write_values(self, idc->ic_properties, c);
+    idc = idc->ic_super;
+  }
 }

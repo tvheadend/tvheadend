@@ -200,8 +200,8 @@ typedef struct dvb_mux_conf
 
 const char *dvb_mux_conf_load
   ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m );
-int dvb_mux_conf_save
-  ( dvb_mux_conf_t *dmc, htsmsg_t *m );
+void dvb_mux_conf_save
+  ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m );
 
 /* conversion routines */
 const char *dvb_rolloff2str ( int rolloff );

@@ -284,6 +284,8 @@ linuxdvb_frontend_monitor ( void *aux )
                      NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
     mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
                      NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
+    mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
+                     NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
     mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                      NULL, "bat", MT_CRC, DVB_BAT_PID);
   } else {
