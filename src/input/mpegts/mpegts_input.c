@@ -185,6 +185,7 @@ int
 mpegts_input_is_free ( mpegts_input_t *mi )
 {
   mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
+  tvhtrace("mpegts", "input_is_free(%p) mmi = %p", mi, mmi);
   return mmi ? 0 : 1;
 }
 
@@ -204,6 +205,12 @@ mpegts_input_current_weight ( mpegts_input_t *mi )
   return w;
 }
 
+static int
+mpegts_input_is_enabled ( mpegts_input_t *mi )
+{
+  return mi->mi_enabled;
+}
+
 mpegts_input_t*
 mpegts_input_create0  
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid )
@@ -215,6 +222,7 @@ mpegts_input_create0
   mi->mi_stop_mux       = NULL;
   mi->mi_open_service   = mpegts_input_open_service;
   mi->mi_close_service  = mpegts_input_close_service;
+  mi->mi_is_enabled     = mpegts_input_is_enabled;
   mi->mi_is_free        = mpegts_input_is_free;
   mi->mi_current_weight = mpegts_input_current_weight;
 

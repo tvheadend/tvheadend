@@ -93,31 +93,32 @@ linuxdvb_mux_config_save ( mpegts_mux_t *mm )
 {
 }
 
-#if 0
-static int
-linuxdvb_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
-{
-  return SM_CODE_TUNING_FAILED;
-}
-
 static void
-linuxdvb_mux_stop ( mpegts_mux_t *mm )
+linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
+  size_t c = 0;
+  const char *unit = "Hz";
+  linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+  c = snprintf(buf+c, len-c, "%d %s [%04X:%04X]",
+               lm->lm_tuning.dmc_fe_params.frequency,
+               unit, mm->mm_onid, mm->mm_tsid);
 }
-#endif
-
-extern const idclass_t mpegts_mux_instance_class;
 
 static void
 linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 {
+  extern const idclass_t mpegts_mux_instance_class;
   mpegts_input_t *mi;
   mpegts_mux_instance_t *mmi;
+  tvhtrace("linuxdvb", "mm %p create instances", mm);
   LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
+    tvhtrace("linuxdvb", "  checking mi %p", mi);
     LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
       if (mmi->mmi_mux == mm) break;
-    if (!mmi)
+    if (!mmi) {
       mmi = mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
+      tvhtrace("linuxdvb", "    created mmi %p", mmi);
+    }
     // TODO: we might eventually want to keep history!
   }
 }
@@ -134,57 +135,6 @@ linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 }
 #endif
 
-static const char *
-dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  int r;
-  const char *s;
-  dmc->dmc_fe_params.inversion = INVERSION_AUTO;
-  htsmsg_get_u32(m, "frequency", &dmc->dmc_fe_params.frequency);
-
-  switch(type) {
-  case FE_OFDM:
-    s = htsmsg_get_str(m, "bandwidth");
-    if(s == NULL || (r = dvb_str2bw(s)) < 0)
-      return "Invalid bandwidth";
-    dmc->dmc_fe_params.u.ofdm.bandwidth = r;
-
-    s = htsmsg_get_str(m, "constellation");
-    if(s == NULL || (r = dvb_str2qam(s)) < 0)
-      return "Invalid QAM constellation";
-    dmc->dmc_fe_params.u.ofdm.constellation = r;
-
-    s = htsmsg_get_str(m, "transmission_mode");
-    if(s == NULL || (r = dvb_str2mode(s)) < 0)
-      return "Invalid transmission mode";
-    dmc->dmc_fe_params.u.ofdm.transmission_mode = r;
-
-    s = htsmsg_get_str(m, "guard_interval");
-    if(s == NULL || (r = dvb_str2guard(s)) < 0)
-      return "Invalid guard interval";
-    dmc->dmc_fe_params.u.ofdm.guard_interval = r;
-
-    s = htsmsg_get_str(m, "hierarchy");
-    if(s == NULL || (r = dvb_str2hier(s)) < 0)
-      return "Invalid heirarchy information";
-    dmc->dmc_fe_params.u.ofdm.hierarchy_information = r;
-
-    s = htsmsg_get_str(m, "fec_hi");
-    if(s == NULL || (r = dvb_str2fec(s)) < 0)
-      return "Invalid hi-FEC";
-    dmc->dmc_fe_params.u.ofdm.code_rate_HP = r;
-
-    s = htsmsg_get_str(m, "fec_lo");
-    if(s == NULL || (r = dvb_str2fec(s)) < 0)
-      return "Invalid lo-FEC";
-    dmc->dmc_fe_params.u.ofdm.code_rate_LP = r;
-    break;
-  default:
-    return "Not yet supported";
-  }
-  return NULL;
-}
-
 linuxdvb_mux_t *
 linuxdvb_mux_create0
   ( linuxdvb_network_t *ln,
@@ -193,6 +143,7 @@ linuxdvb_mux_create0
 {
   const idclass_t *idc;
   mpegts_mux_t *mm;
+  linuxdvb_mux_t *lm;
 
   /* Search for existing */
 
@@ -214,7 +165,13 @@ linuxdvb_mux_create0
   if (!(mm = mpegts_mux_create0(calloc(1, sizeof(linuxdvb_mux_t)), idc, uuid,
                                 (mpegts_network_t*)ln, onid, tsid)))
     return NULL;
-  memcpy(&((linuxdvb_mux_t*)mm)->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
+  lm = (linuxdvb_mux_t*)mm;
+  memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
+
+  /* Callbacks */
+  lm->mm_display_name     = linuxdvb_mux_display_name;
+  lm->mm_config_save      = linuxdvb_mux_config_save;
+  lm->mm_create_instances = linuxdvb_mux_create_instances;
 
   return (linuxdvb_mux_t*)mm;
 }
@@ -244,14 +201,6 @@ linuxdvb_mux_create1
   if (!lm) printf("OH DEAR\n");
   if (!lm) return NULL;
   
-  /* Callbacks */
-  lm->mm_config_save      = linuxdvb_mux_config_save;
-#if 0
-  lm->mm_open_table       = linuxdvb_mux_open_table;
-  lm->mm_close_table      = linuxdvb_mux_close_table;
-#endif
-  lm->mm_create_instances = linuxdvb_mux_create_instances;
-
   /* No config */
   if (!conf)
     return lm;

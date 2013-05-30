@@ -93,9 +93,14 @@ struct mpegts_table
   void *mt_opaque;
   mpegts_table_callback_t mt_callback;
 
+  struct {
+    int section;
+    int version;
+    int complete;
+  } mt_state[256];
 
-  // TODO: remind myself of what each field is for
   int mt_count;
+
   int mt_pid;
 
   int mt_id;
@@ -169,7 +174,8 @@ struct mpegts_network
     (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
-  void              (*mn_config_save) (mpegts_network_t*);
+  void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
+  void              (*mn_config_save)  (mpegts_network_t*);
 
   // Note: the above are slightly odd in that they take mux instead of
   //       network as initial param. This is intentional as we need to
@@ -248,6 +254,7 @@ struct mpegts_mux
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
+  void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
 
   /*
    * Fields
@@ -364,6 +371,8 @@ struct mpegts_input
 {
   idnode_t mi_id;
 
+  int mi_enabled;
+
   int mi_instance;
 
   LIST_ENTRY(mpegts_input) mi_global_link;
@@ -403,6 +412,8 @@ struct mpegts_input
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   int  (*mi_is_free)        (mpegts_input_t*);
   int  (*mi_current_weight) (mpegts_input_t*);
+  int  (*mi_is_enabled)     (mpegts_input_t*);
+  void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
 };
 
 #endif /* __TVH_MPEGTS_H__ */

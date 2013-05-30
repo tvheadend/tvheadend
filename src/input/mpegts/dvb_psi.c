@@ -370,25 +370,80 @@ dvb_desc_local_channel
  * *************************************************************************/
 
 /*
- * PAT processing
+ * Begin table
  */
-
-int
-dvb_pat_callback
-  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+static int
+dvb_table_begin
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid,
+   int minlen, int *sect, int *last, int *ver)
 {
-  uint16_t sid, pid, tsid;
-  uint16_t nit_pid = DVB_NIT_PID;
-  mpegts_mux_t          *mm  = mt->mt_mux;
-  tvhtrace("pat", "tableid %02X len %d", tableid, len);
-  tvhlog_hexdump("pat", ptr, len);
-
-  /* Not enough data */
-  if(len < 5)
+  /* Not long enough */
+  if (len < minlen)
     return -1;
 
   /* Ignore next */
   if((ptr[2] & 1) == 0)
+    return -1;
+
+  tvhtrace(mt->mt_name, "tableid %02X len %d", tableid, len);
+  tvhlog_hexdump(mt->mt_name, ptr, len);
+
+  /* Section info */
+  if (sect) {
+    *sect = ptr[3];
+    *last = ptr[4];
+    *ver  = (ptr[2] >> 1) & 0x1F;
+    tvhtrace(mt->mt_name, "  section %d last %d ver %d", *sect, *last, *ver);
+
+    /* New version */
+    if (mt->mt_state[tableid].complete && mt->mt_state[tableid].version != *ver) {
+      tvhtrace(mt->mt_name, "  new version");
+      mt->mt_state[tableid].complete = 0;
+      mt->mt_state[tableid].section  = 0;
+    }
+
+    /* Ignore */
+    if (mt->mt_state[tableid].complete) {
+      tvhtrace(mt->mt_name, "  already processed");
+      return -1;
+    }
+
+    /* Not the right section */
+    tvhtrace(mt->mt_name, "  waiting for section %d version %d", mt->mt_state[tableid].section, mt->mt_state[tableid].version);
+    if (mt->mt_state[tableid].section != *sect) {
+      tvhtrace(mt->mt_name, "  skip, wrong section");
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+static void
+dvb_table_end
+  (mpegts_table_t *mt, int tableid, int sect, int last, int ver)
+{
+  mt->mt_state[tableid].section = sect + 1;
+  mt->mt_state[tableid].version = ver;
+  if (sect == last)
+    mt->mt_state[tableid].complete = 1;
+}
+
+/*
+ * PAT processing
+ */
+int
+dvb_pat_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int sect, last, ver;
+  uint16_t sid, pid, tsid;
+  uint16_t nit_pid = DVB_NIT_PID;
+  mpegts_mux_t          *mm  = mt->mt_mux;
+
+  /* Begin */
+  if (tableid != 0) return -1;
+  if (dvb_table_begin(mt, ptr, len, tableid, 5, &sect, &last, &ver) == -1)
     return -1;
 
   /* Multiplex */
@@ -431,7 +486,8 @@ dvb_pat_callback
   mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
                    NULL, "nit", MT_CRC | MT_QUICKREQ, nit_pid);
 
-  return 0;
+  dvb_table_end(mt, tableid, sect, last, ver);
+  return mt->mt_state[0].complete ? 0 : -1;
 }
 
 /*
@@ -442,10 +498,13 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
+  int sect, last, ver;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
-  tvhtrace("pmt", "tableid %02X len %d", tableid, len);
-  tvhlog_hexdump("pmt", ptr, len);
+
+  /* Start */
+  if (dvb_table_begin(mt, ptr, len, tableid, 5, &sect, &last, &ver))
+    return -1;
 
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
     pthread_mutex_lock(&s->s_stream_mutex);
@@ -463,7 +522,9 @@ dvb_pmt_callback
                     dm->dm_current_tdmi, tdt);
 #endif
 
-  return 0;
+  /* Finish */
+  dvb_table_end(mt, tableid, sect, last, ver);
+  return (sect == last) ? 0 : -1;
 }
 
 /*
@@ -474,6 +535,7 @@ dvb_nit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int save;
+  int sect, last, ver;
   uint8_t  dlen, dtag;
   uint16_t llen, dllen;
   const uint8_t *lptr, *dlptr, *dptr;
@@ -481,19 +543,10 @@ dvb_nit_callback
   mpegts_mux_t     *mm = mt->mt_mux, *mux;
   mpegts_network_t *mn = mm->mm_network;
   char name[256], dauth[256];
-  const char *dstr = (tableid == 0x4A) ? "bat" : "nit";
 
-  tvhtrace(dstr, "tableid %02X len %d", tableid, len);
-  tvhlog_hexdump(dstr, ptr, len);
-
-  /* Not long enough */
-  if (len < 7)
-    return -1;
-
-  tvhtrace(dstr, "  section %d last %d current %d", ptr[3], ptr[4], ptr[2]&1);
-
-  /* Ignore "next" */
-  if (!(ptr[2] & 0x01))
+  /* Begin */
+  if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A) return -1;
+  if (dvb_table_begin(mt, ptr, len, tableid, 7, &sect, &last, &ver))
     return -1;
 
   /* BAT */
@@ -518,7 +571,7 @@ dvb_nit_callback
   /* Network Descriptors */
   *name = 0;
   DVB_DESC_FOREACH(ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
-    tvhtrace(dstr, "  dtag %02X dlen %d", dtag, dlen);
+    tvhtrace(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
 
     switch (dtag) {
       case DVB_DESC_BOUQUET_NAME:
@@ -534,11 +587,11 @@ dvb_nit_callback
 
   /* BAT */
   if (tableid == 0x4A) {
-    tvhtrace("bat", "bouquet %04X (%d) [%s]", bid, bid, name);
+    tvhtrace(mt->mt_name, "bouquet %04X (%d) [%s]", bid, bid, name);
 
   /* NIT */
   } else {
-    tvhtrace("nit", "network %04X (%d) [%s]", nid, nid, name);
+    tvhtrace(mt->mt_name, "network %04X (%d) [%s]", nid, nid, name);
     save  = mpegts_network_set_nid(mn, nid);
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
@@ -549,7 +602,7 @@ dvb_nit_callback
   DVB_LOOP_FOREACH(ptr, len, 0, lptr, llen, 6) {
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
-    tvhtrace(dstr, "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
+    tvhtrace(mt->mt_name, "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
@@ -557,7 +610,7 @@ dvb_nit_callback
         break;
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
-      tvhtrace(dstr, "    dtag %02X dlen %d", dtag, dlen);
+      tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
 
       switch (dtag) {
     
@@ -576,23 +629,25 @@ dvb_nit_callback
         case DVB_DESC_DEF_AUTHORITY:
           if (dvb_desc_def_authority(dptr, dlen, dauth, sizeof(dauth)))
             return -1;
-          tvhtrace(dstr, "    default auth [%s]", dauth);
+          tvhtrace(mt->mt_name, "    default auth [%s]", dauth);
           if (mux && *dauth)
             mpegts_mux_set_default_authority(mux, dauth);
           break;
         case DVB_DESC_LOCAL_CHAN:
-          if (dvb_desc_local_channel(dstr, dptr, dlen, mux))
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
             return -1;
           break;
         case DVB_DESC_SERVICE_LIST:
-          if (dvb_desc_service_list(dstr, dptr, dlen, mux))
+          if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux))
             return -1;
           break;
       }
     }
   }
 
-  return 0;
+  /* End */
+  dvb_table_end(mt, tableid, sect, last, ver);
+  return (sect == last) ? 0 : -1;
 }
 
 /**
@@ -602,28 +657,16 @@ int
 dvb_sdt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
+  int sect, last, ver;
   uint16_t onid, tsid;
   uint16_t llen;
   uint8_t dtag, dlen;
   const uint8_t *lptr, *dptr;
   mpegts_mux_t     *mm = mt->mt_mux;
 
-  tvhtrace("sdt", "tableid %02X len %d", tableid, len);
-  tvhlog_hexdump("sdt", ptr, len);
-
-  /* Not enough data */
-  if(len < 8)
-    return -1;
-
-  tvhtrace("sdt", "  section %d last %d current %d", ptr[3], ptr[4], ptr[2]&1);
-
-  /* Ignore next */
-  if((ptr[2] & 1) == 0)
-    return -1;
-
-  /* Validate */
-  if (tableid != 0x42 && tableid != 0x46) 
-    return -1;
+  /* Begin */
+  if (tableid != 0x42 && tableid != 0x46) return -1;
+  dvb_table_begin(mt, ptr, len, tableid, 8, &sect, &last, &ver);
 
   /* ID */
   tsid = ptr[0] << 8 | ptr[1];
@@ -742,7 +785,10 @@ dvb_sdt_callback
       service_refresh_channel((service_t*)s);
     }
   }
-  return 0;
+
+  /* Done */
+  dvb_table_end(mt, tableid, sect, last, ver);
+  return (mt->mt_state[0x42].complete && mt->mt_state[0x46].complete) ? 0 : -1;
 }
 
 /*

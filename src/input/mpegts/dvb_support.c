@@ -406,7 +406,9 @@ const static struct strtab delsystab[] = {
   { "SYS_ATSCMH",           SYS_ATSCMH },
   { "SYS_DMBTH",            SYS_DMBTH },
   { "SYS_CMMB",             SYS_CMMB },
-  { "SYS_DAB",              SYS_DAB }
+  { "SYS_DAB",              SYS_DAB },
+  { "SYS_DVBT2",            SYS_DVBT2 },
+  { "SYS_TURBO",            SYS_TURBO }
 #endif
 };
 dvb_str2val(delsys);
@@ -511,8 +513,167 @@ const static struct strtab typetab[] = {
   {"ATSC",  FE_ATSC},
 };
 dvb_str2val(type);
-
-
 #undef dvb_str2val
+
+/*
+ * Process mux conf
+ */
+static const char *
+dvb_mux_conf_load_dvbt ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  int r;
+  const char *s;
+
+  s = htsmsg_get_str(m, "bandwidth");
+  if(s == NULL || (r = dvb_str2bw(s)) < 0)
+    return "Invalid bandwidth";
+  dmc->dmc_fe_params.u.ofdm.bandwidth = r;
+
+  s = htsmsg_get_str(m, "constellation");
+  if(s == NULL || (r = dvb_str2qam(s)) < 0)
+    return "Invalid QAM constellation";
+  dmc->dmc_fe_params.u.ofdm.constellation = r;
+
+  s = htsmsg_get_str(m, "transmission_mode");
+  if(s == NULL || (r = dvb_str2mode(s)) < 0)
+    return "Invalid transmission mode";
+  dmc->dmc_fe_params.u.ofdm.transmission_mode = r;
+
+  s = htsmsg_get_str(m, "guard_interval");
+  if(s == NULL || (r = dvb_str2guard(s)) < 0)
+    return "Invalid guard interval";
+  dmc->dmc_fe_params.u.ofdm.guard_interval = r;
+
+  s = htsmsg_get_str(m, "hierarchy");
+  if(s == NULL || (r = dvb_str2hier(s)) < 0)
+    return "Invalid heirarchy information";
+  dmc->dmc_fe_params.u.ofdm.hierarchy_information = r;
+
+  s = htsmsg_get_str(m, "fec_hi");
+  if(s == NULL || (r = dvb_str2fec(s)) < 0)
+    return "Invalid hi-FEC";
+  dmc->dmc_fe_params.u.ofdm.code_rate_HP = r;
+
+  s = htsmsg_get_str(m, "fec_lo");
+  if(s == NULL || (r = dvb_str2fec(s)) < 0)
+    return "Invalid lo-FEC";
+  dmc->dmc_fe_params.u.ofdm.code_rate_LP = r;
+
+  return NULL;
+}
+
+static const char *
+dvb_mux_conf_load_dvbc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  int r;
+  const char *s;
+
+  htsmsg_get_u32(m, "symbol_rate", &dmc->dmc_fe_params.u.qam.symbol_rate);
+  if(dmc->dmc_fe_params.u.qam.symbol_rate == 0)
+    return "Invalid symbol rate";
+    
+  s = htsmsg_get_str(m, "constellation");
+  if(s == NULL || (r = dvb_str2qam(s)) < 0)
+    return "Invalid QAM constellation";
+  dmc->dmc_fe_params.u.qam.modulation = r;
+
+  s = htsmsg_get_str(m, "fec");
+  if(s == NULL || (r = dvb_str2fec(s)) < 0)
+    return "Invalid FEC";
+  dmc->dmc_fe_params.u.qam.fec_inner = r;
+
+  return NULL;
+}
+
+static const char *
+dvb_mux_conf_load_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  int r;
+  const char *s;
+
+  htsmsg_get_u32(m, "symbol_rate", &dmc->dmc_fe_params.u.qpsk.symbol_rate);
+  if(dmc->dmc_fe_params.u.qpsk.symbol_rate == 0)
+    return "Invalid symbol rate";
+    
+  s = htsmsg_get_str(m, "fec");
+  if(s == NULL || (r = dvb_str2fec(s)) < 0)
+    return "Invalid FEC";
+  dmc->dmc_fe_params.u.qpsk.fec_inner = r;
+
+  s = htsmsg_get_str(m, "polarisation");
+  if(s == NULL || (r = dvb_str2pol(s)) < 0)
+    return "Invalid polarisation";
+  dmc->dmc_fe_polarisation = r;
+
+#if DVB_API_VERSION >= 5
+  s = htsmsg_get_str(m, "modulation");
+  if(s == NULL || (r = dvb_str2qam(s)) < 0) {
+    r = QPSK;
+    tvhlog(LOG_INFO, "dvb", "no modulation, using default QPSK");
+  } 
+  dmc->dmc_fe_modulation = r;
+
+  s = htsmsg_get_str(m, "rolloff");
+  if(s == NULL || (r = dvb_str2rolloff(s)) < 0) {
+    r = ROLLOFF_35;
+    tvhlog(LOG_INFO, "dvb", "no rolloff, using default ROLLOFF_35");
+  }
+  dmc->dmc_fe_rolloff = r;
+
+  // TODO: pilot mode
+#endif
+  return NULL;
+}
+
+static const char *
+dvb_mux_conf_load_atsc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  int r;
+  const char *s;
+  s = htsmsg_get_str(m, "constellation");
+  if(s == NULL || (r = dvb_str2qam(s)) < 0)
+    return "Invalid VSB constellation";
+  dmc->dmc_fe_params.u.vsb.modulation = r;
+  return NULL;
+}
+
+const char *
+dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  int r;
+  uint32_t u32;
+  const char *str;
+
+  memset(dmc, 0, sizeof(dvb_mux_conf_t));
+  dmc->dmc_fe_params.inversion = INVERSION_AUTO;
+
+  /* Delivery system */
+#if DVB_API_VERSION >= 5
+  str = htsmsg_get_str(m, "delsys");
+  if (!str || (r = dvb_str2delsys(str)) < 0) {
+         if (type == FE_OFDM) r = SYS_DVBT;
+    else if (type == FE_QAM)  r = SYS_DVBC_ANNEX_B;
+    else if (type == FE_QPSK) r = SYS_DVBS;
+    else if (type == FE_ATSC) r = SYS_ATSC;
+    else
+      return "Invalid FE type";
+    tvhlog(LOG_INFO, "dvb", "no delsys, using default %s", dvb_delsys2str(r));
+  }
+#endif
+  dmc->dmc_fe_delsys           = r;
+
+  /* Frequency */
+  if (htsmsg_get_u32(m, "frequency", &u32))
+    return "Invalid frequency";
+  dmc->dmc_fe_params.frequency = u32;
+
+  /* Type specific */
+  if      (type == FE_OFDM) return dvb_mux_conf_load_dvbt(dmc, m);
+  else if (type == FE_QAM)  return dvb_mux_conf_load_dvbc(dmc, m);
+  else if (type == FE_QPSK) return dvb_mux_conf_load_dvbs(dmc, m);
+  else if (type == FE_ATSC) return dvb_mux_conf_load_atsc(dmc, m);
+  else
+    return "Invalid FE type";
+}
 
 #endif /* ENABLE_DVBAPI */

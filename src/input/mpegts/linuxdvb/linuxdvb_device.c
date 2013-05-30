@@ -249,7 +249,7 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
   /* Load config */
   linuxdvb_hardware_load((linuxdvb_hardware_t*)ld, conf);
   if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
-    ld->lh_enabled     = 1;
+    ld->mi_enabled     = 1;
   if ((str = htsmsg_get_str(conf, "displayname")))
     ld->lh_displayname = strdup(str);
   if ((str = htsmsg_get_str(conf, "devid")))

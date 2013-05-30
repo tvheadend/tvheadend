@@ -158,6 +158,15 @@ static void
 linuxdvb_frontend_stop_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+
+  /* Stop thread */
+  if (lfe->lfe_dvr_pipe.wr > 0) {
+    tvh_write(lfe->lfe_dvr_pipe.wr, "", 1);
+    pthread_join(lfe->lfe_dvr_thread, NULL);
+    tvh_pipe_close(&lfe->lfe_dvr_pipe);
+    tvhlog(LOG_DEBUG, "linuxdvb", "stopped dvr thread");
+  }
 }
 
 static void *
@@ -212,6 +221,9 @@ linuxdvb_frontend_input_thread ( void *aux )
   ev.events  = EPOLLIN;
   ev.data.fd = dvr;
   epoll_ctl(efd, EPOLL_CTL_ADD, ev.data.fd, &ev);
+  ev.events  = EPOLLIN;
+  ev.data.fd = lfe->lfe_dvr_pipe.rd;
+  epoll_ctl(efd, EPOLL_CTL_ADD, ev.data.fd, &ev);
 
   /* Read */
   while (1) {
@@ -250,7 +262,6 @@ linuxdvb_frontend_monitor ( void *aux )
   linuxdvb_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
   mpegts_mux_t *mm;
-  pthread_t tid;
 
   if (!mmi) return;
   mm = mmi->mmi_mux;
@@ -265,7 +276,10 @@ linuxdvb_frontend_monitor ( void *aux )
   if (fe_status & FE_HAS_LOCK) {
     // Note: the lock
     // Open pending services
-    pthread_create(&tid, NULL, linuxdvb_frontend_input_thread, lfe);
+    tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
+    pthread_create(&lfe->lfe_dvr_thread, NULL, linuxdvb_frontend_input_thread, lfe);
+
+    // TODO: these tables need to vary based on type
     mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
                      NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
     mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
@@ -460,6 +474,9 @@ linuxdvb_frontend_create0
   if (!conf)
     return lfe;
 
+  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
+    lfe->mi_enabled = u32;
+  printf("LFE ENABLED = %d\n", lfe->mi_enabled);
   if (!htsmsg_get_u32(conf, "number", &u32))
     lfe->lfe_number = u32; 
   if ((str = htsmsg_get_str(conf, "network"))) {

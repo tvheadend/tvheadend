@@ -116,6 +116,19 @@ mpegts_mux_initial_scan_timeout ( void *aux )
   mpegts_mux_initial_scan_done(mm);
 }
 
+static int
+mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
+{
+  service_t *t;
+  mpegts_mux_instance_t *mmi = mm->mm_active;
+  if (mmi) {
+    LIST_FOREACH(t, &mmi->mmi_input->mi_transports, s_active_link)
+      if (((mpegts_service_t*)t)->s_dvb_mux == mm)
+        return 1;
+  }
+  return 0;
+}
+
 void
 mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
 {
@@ -127,12 +140,18 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   mm->mm_initial_scan_status = MM_SCAN_DONE;
   TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
   mpegts_network_schedule_initial_scan(mn);
+
+  /* Stop */
+  if (!mpegts_mux_has_subscribers(mm))
+    mm->mm_stop(mm);
+
   // TODO: save
 }
 
 static int
 mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 {
+  char buf[128];
   mpegts_network_t      *mn = mm->mm_network;
   mpegts_mux_instance_t *mmi;
 
@@ -147,6 +166,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   
   /* Create mux instances (where needed) */
   mm->mm_create_instances(mm);
+  if (!LIST_FIRST(&mm->mm_instances))
+    tvhtrace("mpegts", "mm %p has no instances", mm);
 
   /* Find */
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
@@ -154,10 +175,12 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   while (1) {
 
     /* Find free input */
-    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
       if (!mmi->mmi_tune_failed &&
+          mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
           mmi->mmi_input->mi_is_free(mmi->mmi_input))
         break;
+    }
     if (mmi)
       tvhtrace("mpegts", "found free mmi %p", mmi);
     else
@@ -189,6 +212,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     }
     
     /* Tune */
+    mm->mm_display_name(mm, buf, sizeof(buf));
+    tvhlog(LOG_INFO, "mpegts", "tuning %s", buf);
     if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi)) {
       LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi, mmi_active_link);
       mm->mm_active = mmi;
@@ -203,7 +228,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
     mm->mm_initial_scan_status = MM_SCAN_CURRENT;
     TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
-    gtimer_arm(&mm->mm_initial_scan_timeout, mpegts_mux_initial_scan_timeout, mm, 10);
+    gtimer_arm(&mm->mm_initial_scan_timeout, mpegts_mux_initial_scan_timeout, mm, 30);
   }
 
   return 0;
@@ -217,11 +242,15 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
   mpegts_input_t *mi;
 
   tvhtrace("mpegts", "stopping mux %p", mm);
-  assert(0);
 
-  /* Flush all subscribers */
   if (mmi) {
     mi = mmi->mmi_input;
+    mi->mi_stop_mux(mi, mmi);
+    mm->mm_active = NULL;
+    LIST_REMOVE(mmi, mmi_active_link);
+    tvhtrace("mpegts", "active first = %p", LIST_FIRST(&mi->mi_mux_active));
+
+    /* Flush all subscribers */
     s = LIST_FIRST(&mi->mi_transports);
     while (s) {
       t = s;

@@ -198,6 +198,11 @@ typedef struct dvb_mux_conf
 #endif
 } dvb_mux_conf_t;
 
+const char *dvb_mux_conf_load
+  ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m );
+int dvb_mux_conf_save
+  ( dvb_mux_conf_t *dmc, htsmsg_t *m );
+
 /* conversion routines */
 const char *dvb_rolloff2str ( int rolloff );
 const char *dvb_delsys2str  ( int delsys );

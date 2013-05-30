@@ -47,11 +47,28 @@ const idclass_t linuxdvb_network_class =
 };
 
 static mpegts_mux_t *
+linuxdvb_network_find_mux
+  ( linuxdvb_network_t *ln, dvb_mux_conf_t *dmc )
+{
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+    if (abs(lm->lm_tuning.dmc_fe_params.frequency - dmc->dmc_fe_params.frequency) > 2000) continue;
+    if (lm->lm_tuning.dmc_fe_polarisation != dmc->dmc_fe_polarisation) continue;
+    break;
+  }
+  return mm;
+}
+
+static mpegts_mux_t *
 linuxdvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf )
 {
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
-  return (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, conf, NULL);
+  mm = linuxdvb_network_find_mux(ln, conf);
+  if (!mm)
+    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, conf, NULL);
+  return mm;
 }
 
 static mpegts_service_t *

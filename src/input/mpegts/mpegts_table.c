@@ -29,9 +29,10 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
   if(mm->mm_initial_scan_status == MM_SCAN_DONE)
     return;
 
-  LIST_FOREACH(mt, &mm->mm_tables, mt_link)
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if((mt->mt_flags & MT_QUICKREQ) && mt->mt_count == 0)
       return;
+  }
 
   // TODO:
   //dvb_mux_save(dm);
@@ -121,11 +122,12 @@ mpegts_table_add
   mpegts_table_t *mt;
 
   /* Check for existing */
-  LIST_FOREACH(mt, &mm->mm_tables, mt_link)
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if ( mt->mt_pid      == pid      &&
          mt->mt_callback == callback &&
          mt->mt_opaque   == opaque )
       return;
+  }
 
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);

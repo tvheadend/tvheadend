@@ -47,7 +47,7 @@ linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list )
 
 void linuxdvb_hardware_save ( linuxdvb_hardware_t *lh, htsmsg_t *m )
 {
-  htsmsg_add_u32(m, "enabled", lh->lh_enabled);
+  htsmsg_add_u32(m, "enabled", lh->mi_enabled);
   if (lh->lh_displayname)
     htsmsg_add_str(m, "displayname", lh->lh_displayname);
 }
@@ -57,7 +57,7 @@ void linuxdvb_hardware_load ( linuxdvb_hardware_t *lh, htsmsg_t *conf )
   uint32_t u32;
   const char *str;
   if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
-    lh->lh_enabled     = 1;
+    lh->mi_enabled     = 1;
   if ((str = htsmsg_get_str(conf, "displayname")))
     lh->lh_displayname = strdup(str);
 }
@@ -82,7 +82,7 @@ const idclass_t linuxdvb_hardware_class =
   .ic_get_childs = linuxdvb_hardware_class_get_childs,
   .ic_properties = (const property_t[]){
     { PROPDEF1("enabled", "Enabled",
-               PT_BOOL, linuxdvb_hardware_t, lh_enabled) },
+               PT_BOOL, linuxdvb_hardware_t, mi_enabled) },
     { PROPDEF1("displayname", "Name",
                PT_STR, linuxdvb_hardware_t, lh_displayname) },
     {}

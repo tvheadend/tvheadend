@@ -62,7 +62,6 @@ struct linuxdvb_hardware
   /*
    * Device info
    */
-  int                           lh_enabled;
   char                         *lh_displayname;
 };
 
@@ -132,8 +131,13 @@ struct linuxdvb_frontend
   char                     *lfe_dmx_path;
   char                     *lfe_dvr_path;
 
+  /*
+   * Reception
+   */
   int                       lfe_fe_fd;
   int                       lfe_dvr_fd;
+  pthread_t                 lfe_dvr_thread;
+  th_pipe_t                 lfe_dvr_pipe;
  
   /*
    * Tuning
