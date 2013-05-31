@@ -5,8 +5,10 @@
 
 typedef enum {
   PT_BOOL,
-  PT_INT,
   PT_STR,
+  PT_INT,
+  PT_U16,
+  PT_U32,
 } prop_type_t;
 
 typedef struct property {
