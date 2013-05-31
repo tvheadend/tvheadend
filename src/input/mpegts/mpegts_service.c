@@ -294,5 +294,7 @@ mpegts_service_find
 void
 mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c )
 {
+  pthread_mutex_lock(&s->s_stream_mutex);
   service_save((service_t*)s, c);
+  pthread_mutex_unlock(&s->s_stream_mutex);
 }

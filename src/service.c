@@ -1277,6 +1277,8 @@ void service_save ( service_t *t, htsmsg_t *m )
   elementary_stream_t *st;
   htsmsg_t *list, *sub;
 
+  idnode_save(&t->s_id, m);
+
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
 
   lock_assert(&t->s_stream_mutex);
