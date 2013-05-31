@@ -16,7 +16,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define ENABLE_EPOLL 1
 
 #include "tvheadend.h"
 #include "tvhpoll.h"
@@ -29,6 +28,7 @@
 #if ENABLE_EPOLL
 #include <sys/epoll.h>
 #elif ENABLE_KQUEUE
+#include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
 #endif
@@ -118,8 +118,9 @@ int tvhpoll_add
   uint32_t fflags;
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
-    if (evs[i] & TVHPOLL_OUT) fflags |= EVFILT_WRITE;
-    if (evs[i] & TVHPOLL_IN)  fflags |= EVFILT_READ;
+    fflags = 0;
+    if (evs[i].events & TVHPOLL_OUT) fflags |= EVFILT_WRITE;
+    if (evs[i].events & TVHPOLL_IN)  fflags |= EVFILT_READ;
     EV_SET(tp->ev+i, evs[i].fd, fflags, EV_ADD, 0, 0, NULL);
   }
   kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
@@ -139,7 +140,7 @@ int tvhpoll_rem
 #elif ENABLE_KQUEUE
   int i;
   for (i = 0; i < num; i++)
-    EV_SET(tp->ev+i, evs[i].fd, 0, EV_DEL, 0, 0, NULL);
+    EV_SET(tp->ev+i, evs[i].fd, 0, EV_DELETE, 0, 0, NULL);
   kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
 #else
 #endif
@@ -172,8 +173,8 @@ int tvhpoll_wait
   for (i = 0; i < nfds; i++) {
     evs[i].fd     = tp->ev[i].ident;
     evs[i].events = 0;
-    if (tp->ev[i].ffilt & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
-    if (tp->ev[i].ffilt & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    if (tp->ev[i].fflags & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
+    if (tp->ev[i].fflags & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
   }
 #else
 #endif
