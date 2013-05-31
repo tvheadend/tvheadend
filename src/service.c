@@ -1281,7 +1281,7 @@ void service_save ( service_t *t, htsmsg_t *m )
 
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
 
-  lock_assert(&t->s_stream_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   list = htsmsg_create_list();
   TAILQ_FOREACH(st, &t->s_components, es_link) {
@@ -1333,6 +1333,7 @@ void service_save ( service_t *t, htsmsg_t *m )
     
     htsmsg_add_msg(list, NULL, sub);
   }
+  pthread_mutex_unlock(&t->s_stream_mutex);
   htsmsg_add_msg(m, "stream", list);
 }
 

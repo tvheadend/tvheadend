@@ -189,4 +189,11 @@ linuxdvb_mux_t *linuxdvb_mux_create0
 linuxdvb_mux_t *linuxdvb_mux_create1
   (linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf);
 
+/*
+ * Service
+ */
+mpegts_service_t *linuxdvb_service_create0
+  (linuxdvb_mux_t *lm, uint16_t sid, uint16_t pmt_pid,
+   const char *uuid, htsmsg_t *conf);
+
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

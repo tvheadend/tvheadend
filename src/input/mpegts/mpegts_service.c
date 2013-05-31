@@ -225,10 +225,12 @@ mpegts_service_create0
   ( mpegts_service_t *s, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, htsmsg_t *conf )
 {
+  char buf[256];
   service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
 
   /* Create */
-  tvhlog(LOG_DEBUG, "mpegts", "Add service %04X on %s", sid, "TODO");
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X", buf, sid);
 
   sbuf_init(&s->s_tsbuf);
 
@@ -294,7 +296,5 @@ mpegts_service_find
 void
 mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c )
 {
-  pthread_mutex_lock(&s->s_stream_mutex);
   service_save((service_t*)s, c);
-  pthread_mutex_unlock(&s->s_stream_mutex);
 }

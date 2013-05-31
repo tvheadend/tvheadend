@@ -33,8 +33,7 @@
 #include <linux/dvb/frontend.h>
 
 static int
-psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
-        int delete);
+psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len);
 
 /* **************************************************************************
  * Descriptors
@@ -314,16 +313,6 @@ dvb_desc_service
 }
 
 static int
-dvb_desc_def_authority
-  ( const uint8_t *ptr, int len,
-    char *sauth, size_t sauth_len )
-{
-  if (dvb_get_string_with_len(sauth, sauth_len, ptr, len, NULL, NULL) < 0)
-    return -1;
-  return 0;
-}
-
-static int
 dvb_desc_service_list
   ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm )
 {
@@ -507,28 +496,25 @@ dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int sect, last, ver;
+  uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
 
   /* Start */
-  if (dvb_table_begin(mt, ptr, len, tableid, 5, &sect, &last, &ver))
+  if (dvb_table_begin(mt, ptr, len, tableid, 9, &sect, &last, &ver))
     return -1;
 
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-    pthread_mutex_lock(&s->s_stream_mutex);
-    psi_parse_pmt(s, ptr, len, 1, 1);
-#if TODO_FIXME
-    if (s->s_pmt_pid == mt->mt_pid && t->s_status == SERVICE_RUNNING)
-      active = 1;
-#endif
-    pthread_mutex_unlock(&s->s_stream_mutex);
-  }
-  mpegts_table_destroy(mt);
-#if TODO_FIXME
-  if (dm->dm_dn->dn_disable_pmt_monitor && !active)
-    dvb_tdt_destroy(dm->dm_current_tdmi->tdmi_adapter,
-                    dm->dm_current_tdmi, tdt);
-#endif
+  /* Find service */
+  sid     = ptr[0] << 8 | ptr[1];
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (s->s_dvb_service_id == sid) break;
+  if (!s) return -1;
+
+  /* Process */
+  tvhtrace("pmt", "sid %04X (%d)", sid, sid);
+  pthread_mutex_lock(&s->s_stream_mutex);
+  psi_parse_pmt(s, ptr, len);
+  pthread_mutex_unlock(&s->s_stream_mutex);
 
   /* Finish */
   dvb_table_end(mt, tableid, sect, last, ver);
@@ -635,7 +621,7 @@ dvb_nit_callback
         
         /* Both */
         case DVB_DESC_DEF_AUTHORITY:
-          if (dvb_desc_def_authority(dptr, dlen, dauth, sizeof(dauth)))
+          if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, NULL, NULL))
             return -1;
           tvhtrace(mt->mt_name, "    default auth [%s]", dauth);
           if (mux && *dauth)
@@ -714,8 +700,7 @@ dvb_sdt_callback
     DVB_LOOP_INIT(ptr, len, 3, lptr, llen);
   
     /* Find service */
-    if (!(s = mm->mm_network->mn_create_service(mm, service_id, 0)))
-      continue;
+    s = mpegts_service_find(mm, service_id, 0, 1, &save);
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -727,7 +712,7 @@ dvb_sdt_callback
             return -1;
           break;
         case DVB_DESC_DEF_AUTHORITY:
-          if (dvb_desc_def_authority(dptr, dlen, sauth, sizeof(sauth)))
+          if (dvb_get_string(sauth, sizeof(sauth), dptr, dlen, NULL, NULL))
             return -1;
           break;
       }
@@ -735,6 +720,7 @@ dvb_sdt_callback
 
     tvhtrace("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
              stype, sname, sprov, sauth);
+    if (!s) continue;
 
     /* Update service type */
     if (stype && s->s_dvb_servicetype != stype) {
@@ -976,14 +962,13 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
-psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
-        int delete)
+psi_parse_pmt
+  (mpegts_service_t *t, const uint8_t *ptr, int len)
 {
   uint16_t pcr_pid, pid;
   uint8_t estype;
   int dllen;
   uint8_t dtag, dlen;
-  uint16_t sid;
   streaming_component_type_t hts_stream_type;
   elementary_stream_t *st, *next;
   int update = 0;
@@ -997,22 +982,14 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   caid_t *c, *cn;
 
-  if(len < 9)
-    return -1;
-
   lock_assert(&t->s_stream_mutex);
 
   had_components = !!TAILQ_FIRST(&t->s_components);
 
-  sid     = ptr[0] << 8 | ptr[1];
   version = ptr[2] >> 1 & 0x1f;
-  
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
-  if(chksvcid && sid != t->s_dvb_service_id)
-    return -1;
-
   if(t->s_pcr_pid != pcr_pid) {
     t->s_pcr_pid = pcr_pid;
     update |= PMT_UPDATE_PCR;
@@ -1022,17 +999,14 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
   len -= 9;
 
   /* Mark all streams for deletion */
-  if(delete) {
-    TAILQ_FOREACH(st, &t->s_components, es_link) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if(st->es_type == SCT_PMT)
+      continue;
 
-      if(st->es_type == SCT_PMT)
-        continue;
+    st->es_delete_me = 1;
 
-      st->es_delete_me = 1;
-
-      LIST_FOREACH(c, &st->es_caids, link)
+    LIST_FOREACH(c, &st->es_caids, link)
       c->delete_me = 1;
-    }
   }
 
   // Common descriptors
@@ -1055,12 +1029,11 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
     len -= dlen; ptr += dlen; dllen -= dlen;
   }
 
-
-
   while(len >= 5) {
     estype  = ptr[0];
     pid     = (ptr[1] & 0x1f) << 8 | ptr[2];
     dllen   = (ptr[3] & 0xf) << 8 | ptr[4];
+    tvhtrace("pmt", "  pid %04X estype %d", pid, estype);
 
     ptr += 5;
     len -= 5;
@@ -1174,6 +1147,14 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
       st->es_delete_me = 0;
 
+      tvhtrace("pmt", "  type %s position %d", streaming_component_type2txt(st->es_type), position);
+      if (lang)
+        tvhtrace("pmt", "  language %s", lang);
+      if (composition_id != -1)
+        tvhtrace("pmt", "  composition_id %d", composition_id);
+      if (ancillary_id != -1)
+        tvhtrace("pmt", "  ancillary_id %d", ancillary_id);
+
       if(st->es_position != position) {
         update |= PMT_REORDERED;
         st->es_position = position;
@@ -1237,6 +1218,10 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
      update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
+    int c = 0;
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      c++;
+    tvhtrace("pmt", "number of streams %d", c);
     
     service_request_save((service_t*)t, 0);
 

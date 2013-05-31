@@ -220,7 +220,7 @@ linuxdvb_mux_create1
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      //(void)linuxdvb_service_create0(lm, f->hmf_name, e);
+      (void)linuxdvb_service_create0(lm, 0, 0, f->hmf_name, e);
     }
     htsmsg_destroy(c);
   }
