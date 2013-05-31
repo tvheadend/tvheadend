@@ -374,7 +374,7 @@ linuxdvb_frontend_start_mux
       return 0;
 
     /* Stop current */
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux);
+    cur->mmi_mux->mm_stop(cur->mmi_mux);
   }
   assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
 
