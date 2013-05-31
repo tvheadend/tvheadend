@@ -47,10 +47,18 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
+static void
+mpegts_mux_class_save ( idnode_t *self )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t*)self;
+  mm->mm_config_save(mm);
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
   .ic_caption    = "MPEGTS Multiplex",
+  .ic_save       = mpegts_mux_class_save,
   .ic_properties = (const property_t[]){
     {  PROPDEF1("enabled", "Enabled",
                 PT_BOOL, mpegts_mux_t, mm_enabled) },

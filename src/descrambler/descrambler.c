@@ -137,6 +137,13 @@ descrambler_caid2name(uint16_t caid)
   return buf;
 }
 
+uint16_t
+descrambler_name2caid(const char *s)
+{
+  int i = str2val(s, caidnametab);
+  return (i < 0) ? strtol(s, NULL, 0) : i;
+}
+
 
 
 /* **************************************************************************

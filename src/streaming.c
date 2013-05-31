@@ -521,3 +521,9 @@ streaming_component_type2txt(streaming_component_type_t s)
 {
   return val2str(s, streamtypetab) ?: "INVALID";
 }
+
+streaming_component_type_t
+streaming_component_txt2type(const char *s)
+{
+  return str2val(s, streamtypetab);
+}

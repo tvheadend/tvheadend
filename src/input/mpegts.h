@@ -258,20 +258,6 @@ struct mpegts_service
 {
   service_t; // Parent
 
-#if 0 // TODO: temporarily moved to service_t
-  /**
-   * PID carrying the programs PCR.
-   * XXX: We don't support transports that does not carry
-   * the PCR in one of the content streams.
-   */
-  uint16_t s_pcr_pid;
-
-  /**
-   * PID for the PMT of this MPEG-TS stream.
-   */
-  uint16_t s_pmt_pid;
-#endif
-
   /*
    * Fields defined by DVB standard EN 300 468
    */
@@ -280,7 +266,7 @@ struct mpegts_service
   uint16_t s_dvb_channel_num;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;
-  char    *s_dvb_default_authority;
+  char    *s_dvb_cridauth;
   uint16_t s_dvb_servicetype;
   char    *s_dvb_charset;
 
@@ -492,19 +478,20 @@ void mpegts_table_destroy ( mpegts_table_t *mt );
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,
-    mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid );
+    mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, htsmsg_t *conf );
 
-#define mpegts_service_create(t, u, m, s, p)\
+#define mpegts_service_create(t, u, m, s, p, c)\
   (struct t*)mpegts_service_create0(calloc(1, sizeof(struct t)),\
-                                    &t##_class, u, m, s, p)
+                                    &t##_class, u, m, s, p, c)
 
-#define mpegts_service_create1(u, m, s, p)\
+#define mpegts_service_create1(u, m, s, p, c)\
   mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),\
-                         &mpegts_service_class, u, m, s, p)
+                         &mpegts_service_class, u, m, s, p, c)
 
-void mpegts_service_load_one ( mpegts_service_t *ms, htsmsg_t *c );
+mpegts_service_t *mpegts_service_find 
+  ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
-mpegts_service_t *mpegts_service_find ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, const char *uuid, int *save );
+void mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c );
 
 
 /******************************************************************************

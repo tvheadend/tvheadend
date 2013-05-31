@@ -130,6 +130,16 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m )
     htsmsg_add_str(m, "dvr_path", lfe->lfe_dvr_path);
 }
 
+static int
+linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  if (lfe->lfe_fe_path == NULL) return 0;
+  if (!lfe->mi_enabled) return 0;
+  if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
+  return 1;
+}
+
 #if 0
 static int
 linuxdvb_frontend_is_free ( mpegts_input_t *mi )
@@ -456,14 +466,11 @@ linuxdvb_frontend_create0
   lfe->lfe_info.type = type;
 
   /* Input callbacks */
+  lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
   lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
   lfe->mi_open_service   = linuxdvb_frontend_open_service;
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
-#if 0
-  lfe->mi_is_free        = linuxdvb_frontend_is_free;
-  lfe->mi_current_weight = linuxdvb_frontend_current_weight;
-#endif
 
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;

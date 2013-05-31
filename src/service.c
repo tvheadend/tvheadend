@@ -42,27 +42,27 @@
 #include "atomic.h"
 #include "htsp_server.h"
 #include "lang_codes.h"
+#include "descrambler.h"
 
 static void service_data_timeout(void *aux);
-static const char *service_channel_get(void *obj);
-static void service_channel_set(void *obj, const char *str);
+static const char *service_class_channel_get(void *obj);
+static void service_class_channel_set(void *obj, const char *str);
 static void service_class_save(struct idnode *self);
 
 const idclass_t service_class = {
-  .ic_class = "service",
-  .ic_caption = "Service",
-  .ic_save = service_class_save,
+  .ic_class      = "service",
+  .ic_caption    = "Service",
+  .ic_save       = service_class_save,
   .ic_properties = (const property_t[]){
-    {
+    { 
       "channel", "Channel", PT_STR,
-
-      .str_get = service_channel_get,
-      .str_set = service_channel_set,
-    }, {
-      "enabled", "Enabled", PT_BOOL,
-      offsetof(service_t, s_enabled)
-    }, {
-    }}
+      .str_get = service_class_channel_get,
+      .str_set = service_class_channel_set,
+    },
+    { PROPDEF1("enabled", "Enabled",
+               PT_BOOL, service_t, s_enabled) },
+    {}
+  }
 };
 
 /**
@@ -482,7 +482,8 @@ service_destroy(service_t *t)
  */
 service_t *
 service_create0
-  ( service_t *t, const idclass_t *class, const char *uuid, int source_type)
+  ( service_t *t, const idclass_t *class, const char *uuid,
+    int source_type, htsmsg_t *conf )
 {
   idnode_insert(&t->s_id, uuid, class);
 
@@ -493,16 +494,13 @@ service_create0
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
-#ifdef MOVE_TO_TODO
-  t->s_pcr_last = PTS_UNSET;
-#endif
   TAILQ_INIT(&t->s_components);
 
-#ifdef MOVE_TO_MPEGTS
-  sbuf_init(&t->s_tsbuf);
-#endif
-
   streaming_pad_init(&t->s_streaming_pad);
+  
+  /* Load config */
+  if (conf)
+    service_load(t, conf);
 
   return t;
 }
@@ -669,7 +667,8 @@ service_map_channel(service_t *t, channel_t *ch, int save)
 /**
  *
  */
-static const char *service_channel_get(void *obj)
+static const char *
+service_class_channel_get(void *obj)
 {
   service_t *s = obj;
   return s->s_ch ? s->s_ch->ch_name : NULL;
@@ -680,7 +679,7 @@ static const char *service_channel_get(void *obj)
  *
  */
 static void
-service_channel_set(void *obj, const char *str)
+service_class_channel_set(void *obj, const char *str)
 {
   service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
 }
@@ -1280,8 +1279,6 @@ void service_save ( service_t *t, htsmsg_t *m )
 
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
 
-  htsmsg_add_u32(m, "disabled", !t->s_enabled);
-
   lock_assert(&t->s_stream_mutex);
 
   list = htsmsg_create_list();
@@ -1337,6 +1334,177 @@ void service_save ( service_t *t, htsmsg_t *m )
   htsmsg_add_msg(m, "stream", list);
 }
 
-void service_load ( service_t *s, htsmsg_t *c )
+/**
+ *
+ */
+static int
+escmp(const void *A, const void *B)
 {
+  elementary_stream_t *a = *(elementary_stream_t **)A;
+  elementary_stream_t *b = *(elementary_stream_t **)B;
+  return a->es_position - b->es_position;
+}
+
+/**
+ *
+ */
+void
+sort_elementary_streams(service_t *t)
+{
+  elementary_stream_t *st, **v;
+  int num = 0, i = 0;
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    num++;
+
+  v = alloca(num * sizeof(elementary_stream_t *));
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    v[i++] = st;
+
+  qsort(v, num, sizeof(elementary_stream_t *), escmp);
+
+  TAILQ_INIT(&t->s_components);
+  for(i = 0; i < num; i++)
+    TAILQ_INSERT_TAIL(&t->s_components, v[i], es_link);
+}
+
+/**
+ *
+ */
+static void
+add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
+{
+  caid_t *c = malloc(sizeof(caid_t));
+  c->caid = caid;
+  c->providerid = providerid;
+  c->delete_me = 0;
+  LIST_INSERT_HEAD(&st->es_caids, c, link);
+}
+
+
+/**
+ *
+ */
+static void
+load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
+{
+  uint32_t a, b;
+  const char *v;
+
+  if(htsmsg_get_u32(c, "caproviderid", &b))
+    b = 0;
+
+  if(htsmsg_get_u32(c, "caidnum", &a)) {
+    if((v = htsmsg_get_str(c, "caid")) != NULL) {
+      a = descrambler_name2caid(v);
+    } else {
+      return;
+    }
+  }
+
+  add_caid(st, a, b);
+}
+
+
+/**
+ *
+ */
+static void 
+load_caid(htsmsg_t *m, elementary_stream_t *st)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c, *v = htsmsg_get_list(m, "caidlist");
+  uint32_t a, b;
+
+  if(v == NULL)
+    return;
+
+  HTSMSG_FOREACH(f, v) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+    
+    if(htsmsg_get_u32(c, "caid", &a))
+      continue;
+
+    if(htsmsg_get_u32(c, "providerid", &b))
+      b = 0;
+
+    add_caid(st, a, b);
+  }
+}
+
+void service_load ( service_t *t, htsmsg_t *c )
+{
+  htsmsg_t *m;
+  htsmsg_field_t *f;
+  uint32_t u32, pid;
+  elementary_stream_t *st;
+  streaming_component_type_t type;
+  const char *v;
+
+  idnode_load(&t->s_id, c);
+
+  if(!htsmsg_get_u32(c, "pcr", &u32))
+    t->s_pcr_pid = u32;
+
+  m = htsmsg_get_map(c, "stream");
+  if (m) {
+    HTSMSG_FOREACH(f, m) {
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
+        continue;
+
+      if((v = htsmsg_get_str(c, "type")) == NULL)
+        continue;
+
+      type = streaming_component_txt2type(v);
+      if(type == -1)
+        continue;
+
+      if(htsmsg_get_u32(c, "pid", &pid))
+        continue;
+
+      st = service_stream_create(t, pid, type);
+    
+      if((v = htsmsg_get_str(c, "language")) != NULL)
+        strncpy(st->es_lang, lang_code_get(v), 3);
+
+#if 0
+      if (SCT_ISAUDIO(type)) {
+        if(!htsmsg_get_u32(c, "audio_type", &u32))
+          st->es_audio_type = u32;
+      }
+#endif
+
+      if(!htsmsg_get_u32(c, "position", &u32))
+        st->es_position = u32;
+   
+      load_legacy_caid(c, st);
+      load_caid(c, st);
+
+      if(type == SCT_DVBSUB) {
+        if(!htsmsg_get_u32(c, "compositionid", &u32))
+	        st->es_composition_id = u32;
+
+        if(!htsmsg_get_u32(c, "ancillartyid", &u32))
+	        st->es_ancillary_id = u32;
+      }
+
+      if(type == SCT_TEXTSUB) {
+        if(!htsmsg_get_u32(c, "parentpid", &u32))
+	        st->es_parent_pid = u32;
+      }
+
+      if(type == SCT_MPEG2VIDEO || type == SCT_H264) {
+        if(!htsmsg_get_u32(c, "width", &u32))
+	        st->es_width = u32;
+
+        if(!htsmsg_get_u32(c, "height", &u32))
+	        st->es_height = u32;
+
+        if(!htsmsg_get_u32(c, "duration", &u32))
+          st->es_frame_duration = u32;
+      }
+    }
+  }
+  sort_elementary_streams(t);
 }

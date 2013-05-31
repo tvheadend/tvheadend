@@ -63,6 +63,7 @@ LIST_HEAD(caid_list, caid);
 void descrambler_init          ( void );
 void descrambler_service_start ( struct service *t );
 const char *descrambler_caid2name(uint16_t caid);
+uint16_t descrambler_name2caid(const char *str);
 
 #endif /* __TVH_DESCRAMBLER_H__ */
 

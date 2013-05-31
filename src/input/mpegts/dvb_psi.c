@@ -22,6 +22,7 @@
 #include "tsdemux.h"
 #include "parsers.h"
 #include "lang_codes.h"
+#include "service.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -335,7 +336,7 @@ dvb_desc_service_list
     tvhtrace(dstr, "    service %04X (%d) type %d", sid, sid, stype);
     if (mm) {
       int save = 0;
-      s = mpegts_service_find(mm, sid, 0, NULL, &save);
+      s = mpegts_service_find(mm, sid, 0, 1, &save);
       if (save)
         s->s_config_save((service_t*)s);
     }
@@ -355,7 +356,7 @@ dvb_desc_local_channel
     lcn = ((ptr[2] & 3) << 8) | ptr[3];
     tvhtrace(dstr, "    sid %d lcn %d", sid, lcn);
     if (lcn && mm) {
-      mpegts_service_t *s = mpegts_service_find(mm, sid, 0, NULL, &save);
+      mpegts_service_t *s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
         if (s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_num = lcn;
@@ -476,7 +477,7 @@ dvb_pat_callback
     } else if (pid) {
       tvhtrace("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
-      if (mpegts_service_find(mm, sid, pid, NULL, &save))
+      if (mpegts_service_find(mm, sid, pid, 1, &save))
         if (save)
           mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                            NULL, "pmt", MT_CRC | MT_QUICKREQ, pid);
@@ -754,8 +755,8 @@ dvb_sdt_callback
       master = 1;
     
     /* Update CRID authority */
-    if (*sauth && strcmp(s->s_dvb_default_authority ?: "", sauth)) {
-      tvh_str_update(&s->s_dvb_default_authority, sauth);
+    if (*sauth && strcmp(s->s_dvb_cridauth ?: "", sauth)) {
+      tvh_str_update(&s->s_dvb_cridauth, sauth);
       save = 1;
     }
 
@@ -970,43 +971,6 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
   }
   return r;
 }
-
-/**
- *
- */
-static int
-pidcmp(const void *A, const void *B)
-{
-  elementary_stream_t *a = *(elementary_stream_t **)A;
-  elementary_stream_t *b = *(elementary_stream_t **)B;
-  return a->es_position - b->es_position;
-}
-
-
-
-/**
- *
- */
-static void
-sort_pids(mpegts_service_t *t)
-{
-  elementary_stream_t *st, **v;
-  int num = 0, i = 0;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link)
-    num++;
-
-  v = alloca(num * sizeof(elementary_stream_t *));
-  TAILQ_FOREACH(st, &t->s_components, es_link)
-    v[i++] = st;
-
-  qsort(v, num, sizeof(elementary_stream_t *), pidcmp);
-
-  TAILQ_INIT(&t->s_components);
-  for(i = 0; i < num; i++)
-    TAILQ_INSERT_TAIL(&t->s_components, v[i], es_link);
-}
-
 
 /** 
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
@@ -1254,7 +1218,7 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
 
   if(update & PMT_REORDERED)
-    sort_pids(t);
+    sort_elementary_streams((service_t*)t);
 
   if(update) {
     tvhlog(LOG_DEBUG, "PSI", "Service \"%s\" PMT (version %d) updated"
@@ -1287,219 +1251,3 @@ psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
   return 0;
 }
-
-#if 0
-/**
- * Store service settings into message
- */
-void
-psi_save_service_settings(htsmsg_t *m, mpegts_service_t *t)
-{
-  elementary_stream_t *st;
-  htsmsg_t *sub;
-
-  htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
-
-  htsmsg_add_u32(m, "disabled", !t->s_enabled);
-
-  lock_assert(&t->s_stream_mutex);
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    sub = htsmsg_create_map();
-
-    htsmsg_add_u32(sub, "pid", st->es_pid);
-#ifdef TODO_FIXME
-    htsmsg_add_str(sub, "type", val2str(st->es_type, streamtypetab) ?: "?");
-#endif
-    htsmsg_add_u32(sub, "position", st->es_position);
-
-    if(st->es_lang[0])
-      htsmsg_add_str(sub, "language", st->es_lang);
-
-    if(st->es_type == SCT_CA) {
-
-      caid_t *c;
-      htsmsg_t *v = htsmsg_create_list();
-
-      LIST_FOREACH(c, &st->es_caids, link) {
-        htsmsg_t *caid = htsmsg_create_map();
-
-        htsmsg_add_u32(caid, "caid", c->caid);
-        if(c->providerid)
-          htsmsg_add_u32(caid, "providerid", c->providerid);
-        htsmsg_add_msg(v, NULL, caid);
-      }
-
-      htsmsg_add_msg(sub, "caidlist", v);
-    }
-
-    if(st->es_type == SCT_DVBSUB) {
-      htsmsg_add_u32(sub, "compositionid", st->es_composition_id);
-      htsmsg_add_u32(sub, "ancillartyid", st->es_ancillary_id);
-    }
-
-    if(st->es_type == SCT_TEXTSUB)
-      htsmsg_add_u32(sub, "parentpid", st->es_parent_pid);
-
-    if(st->es_type == SCT_MPEG2VIDEO || st->es_type == SCT_H264) {
-      if(st->es_width && st->es_height) {
-        htsmsg_add_u32(sub, "width", st->es_width);
-        htsmsg_add_u32(sub, "height", st->es_height);
-      }
-      if(st->es_frame_duration)
-        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
-    }
-    
-    htsmsg_add_msg(m, "stream", sub);
-  }
-}
-
-/**
- *
- */
-static void
-add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
-{
-  caid_t *c = malloc(sizeof(caid_t));
-  c->caid = caid;
-  c->providerid = providerid;
-  c->delete_me = 0;
-  LIST_INSERT_HEAD(&st->es_caids, c, link);
-}
-
-
-/**
- *
- */
-static void
-load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
-{
-#if TODO_FIXME
-  uint32_t a, b;
-  const char *v;
-
-  if(htsmsg_get_u32(c, "caproviderid", &b))
-    b = 0;
-
-  if(htsmsg_get_u32(c, "caidnum", &a)) {
-    if((v = htsmsg_get_str(c, "caid")) != NULL) {
-      int i = str2val(v, caidnametab);
-      a = i < 0 ? strtol(v, NULL, 0) : i;
-    } else {
-      return;
-    }
-  }
-
-  add_caid(st, a, b);
-#endif
-}
-
-
-/**
- *
- */
-static void 
-load_caid(htsmsg_t *m, elementary_stream_t *st)
-{
-  htsmsg_field_t *f;
-  htsmsg_t *c, *v = htsmsg_get_list(m, "caidlist");
-  uint32_t a, b;
-
-  if(v == NULL)
-    return;
-
-  HTSMSG_FOREACH(f, v) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL)
-      continue;
-    
-    if(htsmsg_get_u32(c, "caid", &a))
-      continue;
-
-    if(htsmsg_get_u32(c, "providerid", &b))
-      b = 0;
-
-    add_caid(st, a, b);
-  }
-}
-
-
-
-/**
- * Load service info from htsmsg
- */
-void
-psi_load_service_settings(htsmsg_t *m, mpegts_service_t *t)
-{
-  htsmsg_t *c;
-  htsmsg_field_t *f;
-  uint32_t u32, pid;
-  elementary_stream_t *st;
-  streaming_component_type_t type = 0; // TODO: FIXME
-  const char *v;
-
-  if(!htsmsg_get_u32(m, "pcr", &u32))
-    t->s_pcr_pid = u32;
-
-  if(!htsmsg_get_u32(m, "disabled", &u32))
-    t->s_enabled = !u32;
-  else
-    t->s_enabled = 1;
-
-  HTSMSG_FOREACH(f, m) {
-    if(strcmp(f->hmf_name, "stream"))
-      continue;
-
-    if((c = htsmsg_get_map_by_field(f)) == NULL)
-      continue;
-
-    if((v = htsmsg_get_str(c, "type")) == NULL)
-      continue;
-
-#ifdef TODO_FIXME
-    type = str2val(v, streamtypetab);
-    if(type == -1)
-      continue;
-#endif
-
-    if(htsmsg_get_u32(c, "pid", &pid))
-      continue;
-
-    st = service_stream_create((service_t*)t, pid, type);
-    
-    if((v = htsmsg_get_str(c, "language")) != NULL)
-      strncpy(st->es_lang, lang_code_get(v), 3);
-
-    if(!htsmsg_get_u32(c, "position", &u32))
-      st->es_position = u32;
-   
-    load_legacy_caid(c, st);
-    load_caid(c, st);
-
-    if(type == SCT_DVBSUB) {
-      if(!htsmsg_get_u32(c, "compositionid", &u32))
-        st->es_composition_id = u32;
-
-      if(!htsmsg_get_u32(c, "ancillartyid", &u32))
-        st->es_ancillary_id = u32;
-    }
-
-    if(type == SCT_TEXTSUB) {
-      if(!htsmsg_get_u32(c, "parentpid", &u32))
-        st->es_parent_pid = u32;
-    }
-
-    if(type == SCT_MPEG2VIDEO || type == SCT_H264) {
-      if(!htsmsg_get_u32(c, "width", &u32))
-        st->es_width = u32;
-
-      if(!htsmsg_get_u32(c, "height", &u32))
-        st->es_height = u32;
-
-      if(!htsmsg_get_u32(c, "duration", &u32))
-        st->es_frame_duration = u32;
-    }
-
-  }
-  sort_pids(t);
-}
-#endif

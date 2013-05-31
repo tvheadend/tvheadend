@@ -423,10 +423,10 @@ void service_init(void);
 
 int service_start(service_t *t, int instance);
 
-service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type);
+service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type, htsmsg_t *conf);
 
-#define service_create(t, c, u, s)\
-  (struct t*)service_create0(calloc(1, sizeof(struct t), &t##_class, c, u, s)
+#define service_create(t, c, u, s, m)\
+  (struct t*)service_create0(calloc(1, sizeof(struct t), &t##_class, c, u, s, m)
 
 void service_unref(service_t *t);
 
@@ -516,5 +516,7 @@ htsmsg_t *servicetype_list (void);
 void service_load ( service_t *s, htsmsg_t *c );
 
 void service_save ( service_t *s, htsmsg_t *c );
+
+void sort_elementary_streams(service_t *t);
 
 #endif // SERVICE_H__
