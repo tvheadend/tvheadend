@@ -106,13 +106,16 @@ int tvhpoll_add
   struct epoll_event ev;
   for (i = 0; i < num; i++) {
     memset(&ev, 0, sizeof(ev));
-    ev.data.fd = evs[i].fd;
+    ev.data.u64 = evs[i].data.u64;
     if (evs[i].events & TVHPOLL_IN)  ev.events |= EPOLLIN;
     if (evs[i].events & TVHPOLL_OUT) ev.events |= EPOLLOUT;
     if (evs[i].events & TVHPOLL_PRI) ev.events |= EPOLLPRI;
     if (evs[i].events & TVHPOLL_ERR) ev.events |= EPOLLERR;
-    epoll_ctl(tp->fd, EPOLL_CTL_ADD, evs[i].fd, &ev);
+    if (evs[i].events & TVHPOLL_HUP) ev.events |= EPOLLHUP;
+    if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, evs[i].fd, &ev) != 0)
+      return -1;
   }
+  return 0;
 #elif ENABLE_KQUEUE
   int i;
   uint32_t fflags;
@@ -121,12 +124,11 @@ int tvhpoll_add
     fflags = 0;
     if (evs[i].events & TVHPOLL_OUT) fflags |= EVFILT_WRITE;
     if (evs[i].events & TVHPOLL_IN)  fflags |= EVFILT_READ;
-    EV_SET(tp->ev+i, evs[i].fd, fflags, EV_ADD, 0, 0, NULL);
+    EV_SET(tp->ev+i, evs[i].fd, fflags, EV_ADD, 0, 0, evs[i].data.u64);
   }
-  kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
+  return kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
 #else
 #endif
-  return 0;
 }
 
 int tvhpoll_rem
@@ -155,12 +157,13 @@ int tvhpoll_wait
 #if ENABLE_EPOLL
   nfds = epoll_wait(tp->fd, tp->ev, num, ms);
   for (i = 0; i < nfds; i++) {
-    evs[i].fd     = tp->ev[i].data.fd;
-    evs[i].events = 0;
+    evs[i].data.u64 = tp->ev[i].data.u64;
+    evs[i].events   = 0;
     if (tp->ev[i].events & EPOLLIN)  evs[i].events |= TVHPOLL_IN;
     if (tp->ev[i].events & EPOLLOUT) evs[i].events |= TVHPOLL_OUT;
     if (tp->ev[i].events & EPOLLERR) evs[i].events |= TVHPOLL_ERR;
     if (tp->ev[i].events & EPOLLPRI) evs[i].events |= TVHPOLL_PRI;
+    if (tp->ev[i].events & EPOLLHUP) evs[i].events |= TVHPOLL_HUP;
   }
 #elif ENABLE_KQUEUE
   struct timespec tm, *to = NULL;
@@ -171,10 +174,12 @@ int tvhpoll_wait
   }
   nfds = kevent(tp->fd, NULL, 0, tp->ev, num, to);
   for (i = 0; i < nfds; i++) {
-    evs[i].fd     = tp->ev[i].ident;
-    evs[i].events = 0;
+    evs[i].fd       = tp->ev[i].ident;
+    evs[i].events   = 0;
+    evs[i].data.u64 = tp->ev[i].udata;
     if (tp->ev[i].fflags & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
     if (tp->ev[i].fflags & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    if (tp->ev[i].flags  & EV_EOF)       evs[i].events |= TVHPOLL_HUP;
   }
 #else
 #endif
