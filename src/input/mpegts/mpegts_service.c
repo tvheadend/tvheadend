@@ -234,8 +234,10 @@ mpegts_service_create0
 
   sbuf_init(&s->s_tsbuf);
 
-  s->s_dvb_service_id = sid;
-  s->s_pmt_pid        = pmt_pid;
+  if (!conf) {
+    if (sid)     s->s_dvb_service_id = sid;
+    if (pmt_pid) s->s_pmt_pid        = pmt_pid;
+  }
   s->s_dvb_mux        = mm;
   LIST_INSERT_HEAD(&mm->mm_services, s, s_dvb_mux_link);
   

@@ -101,6 +101,7 @@ prop_read_value(void *obj, const property_t *p, htsmsg_t *m, const char *name)
     break;
   case PT_INT:
     htsmsg_add_s64(m, name, *(int *)val);
+    break;
   case PT_U32:
     htsmsg_add_u32(m, name, *(uint32_t *)val);
     break;
