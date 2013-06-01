@@ -2100,9 +2100,11 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_lock(&tvhlog_mutex);
     m = htsmsg_create_map();
     htsmsg_add_u32(m, "tvhlog_level",      tvhlog_level);
-    htsmsg_add_u32(m, "tvhlog_trace",      tvhlog_level > LOG_DEBUG);
-    tvhlog_get_subsys(str, sizeof(str));
-    htsmsg_add_str(m, "tvhlog_subsys",     str);
+    htsmsg_add_u32(m, "tvhlog_trace_on",   tvhlog_level > LOG_DEBUG);
+    tvhlog_get_trace(str, sizeof(str));
+    htsmsg_add_str(m, "tvhlog_trace",      str);
+    tvhlog_get_debug(str, sizeof(str));
+    htsmsg_add_str(m, "tvhlog_debug",      str);
     htsmsg_add_str(m, "tvhlog_path",       tvhlog_path ?: "");
     htsmsg_add_u32(m, "tvhlog_options",    tvhlog_options);
     htsmsg_add_u32(m, "tvhlog_dbg_syslog",
@@ -2119,7 +2121,7 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_lock(&tvhlog_mutex);
     if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_level")))
       tvhlog_level = atoi(str);
-    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_trace")))
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_trace_on")))
       tvhlog_level = LOG_TRACE;
     else
       tvhlog_level = LOG_DEBUG;
@@ -2136,7 +2138,8 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
       tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
     else
       tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
-    tvhlog_set_subsys(http_arg_get(&hc->hc_req_args, "tvhlog_subsys"));
+    tvhlog_set_trace(http_arg_get(&hc->hc_req_args, "tvhlog_trace"));
+    tvhlog_set_debug(http_arg_get(&hc->hc_req_args, "tvhlog_debug"));
     pthread_mutex_unlock(&tvhlog_mutex);
   
     out = htsmsg_create_map();

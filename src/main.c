@@ -399,7 +399,7 @@ main(int argc, char **argv)
 #endif
   int  log_level   = LOG_INFO;
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
-  const char *log_subsys = NULL;
+  const char *log_debug = NULL, *log_trace = NULL;
 
   /* Defaults */
   tvheadend_webui_port      = 9981;
@@ -417,7 +417,6 @@ main(int argc, char **argv)
               opt_uidebug      = 0,
               opt_abort        = 0,
               opt_noacl        = 0,
-              opt_trace        = 0,
               opt_fileline     = 0,
               opt_ipv6         = 0,
               opt_tsfile_tuner = 0;
@@ -425,7 +424,8 @@ main(int argc, char **argv)
              *opt_user         = NULL,
              *opt_group        = NULL,
              *opt_logpath      = NULL,
-             *opt_log_subsys   = NULL,
+             *opt_log_debug    = NULL,
+             *opt_log_trace    = NULL,
              *opt_pidpath      = "/var/run/tvheadend.pid",
 #if ENABLE_LINUXDVB
              *opt_dvb_adapters = NULL,
@@ -470,11 +470,11 @@ main(int argc, char **argv)
     { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
     { 'l', "logfile",   "Enable debug to file",    OPT_STR,  &opt_logpath },
-    {   0, "subsys",    "Enable debug subsystems", OPT_STR,  &opt_log_subsys },
-    {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
+    {   0, "debug",     "Enable debug subsystems", OPT_STR,  &opt_log_debug },
 #if ENABLE_TRACE
-    {   0, "trace",     "Enable low level debug",  OPT_BOOL, &opt_trace   },
+    {   0, "trace",     "Enable trace subsystems", OPT_STR,  &opt_log_trace },
 #endif
+    {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
     {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
@@ -577,7 +577,7 @@ main(int argc, char **argv)
   if (isatty(2))
     log_options |= TVHLOG_OPT_DECORATE;
   if (opt_stderr || opt_syslog || opt_logpath) {
-    log_subsys     = "all";
+    log_debug      = "all";
     log_level      = LOG_DEBUG;
     if (opt_stderr)
       log_options   |= TVHLOG_OPT_DBG_STDERR;
@@ -588,13 +588,16 @@ main(int argc, char **argv)
   }
   if (opt_fileline)
     log_options |= TVHLOG_OPT_FILELINE;
-  if (opt_trace)
+  if (opt_log_trace) {
     log_level  = LOG_TRACE;
-  if (opt_log_subsys)
-    log_subsys = opt_log_subsys;
+    log_trace  = opt_log_trace;
+  }
+  if (opt_log_debug)
+    log_debug  = opt_log_debug;
     
   tvhlog_init(log_level, log_options, opt_logpath);
-  tvhlog_set_subsys(log_subsys);
+  tvhlog_set_debug(log_debug);
+  tvhlog_set_trace(log_trace);
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
 

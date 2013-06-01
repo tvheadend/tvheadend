@@ -28,7 +28,8 @@
 int              tvhlog_level;
 int              tvhlog_options;
 char            *tvhlog_path;
-htsmsg_t        *tvhlog_subsys;
+htsmsg_t        *tvhlog_debug;
+htsmsg_t        *tvhlog_trace;
 pthread_mutex_t  tvhlog_mutex;
 
 static const char *logtxtmeta[9][2] = {
@@ -50,20 +51,21 @@ tvhlog_init ( int level, int options, const char *path )
   tvhlog_level   = level;
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
-  tvhlog_subsys  = NULL;
+  tvhlog_trace   = NULL;
+  tvhlog_debug   = NULL;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
   pthread_mutex_init(&tvhlog_mutex, NULL);
 }
 
-/* Get subsys */
-void tvhlog_get_subsys ( char *subsys, size_t len )
+static void
+tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
 {
   size_t c = 0;
   int first = 1;
   htsmsg_field_t *f;
   *subsys = '\0';
-  if (tvhlog_subsys) {
-    HTSMSG_FOREACH(f, tvhlog_subsys) {
+  if (ss) {
+    HTSMSG_FOREACH(f, ss) {
       if (f->hmf_type != HMF_S64) continue;
       c += snprintf(subsys+c, len-c, "%c%s%s",
                     f->hmf_s64 ? '+' : '-',
@@ -75,14 +77,15 @@ void tvhlog_get_subsys ( char *subsys, size_t len )
 }
 
 /* Set subsys */
-void tvhlog_set_subsys ( const char *subsys )
+static void
+tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
 {
   uint32_t a;
   char *t, *r = NULL, *s;
 
-  if (tvhlog_subsys)
-    htsmsg_destroy(tvhlog_subsys);
-  tvhlog_subsys = NULL;
+  if (*c)
+    htsmsg_destroy(*c);
+  *c = NULL;
 
   if (!subsys)
     return;
@@ -98,17 +101,41 @@ void tvhlog_set_subsys ( const char *subsys )
       t++;
     }
     if (!strcmp(t, "all")) {
-      if (tvhlog_subsys)
-        htsmsg_destroy(tvhlog_subsys);
-      tvhlog_subsys = NULL;
+      if (*c)
+        htsmsg_destroy(*c);
+      *c = NULL;
     }
-    if (!tvhlog_subsys)
-      tvhlog_subsys = htsmsg_create_map();
-    htsmsg_set_u32(tvhlog_subsys, t, a);
+    if (!*c);
+      *c = htsmsg_create_map();
+    htsmsg_set_u32(*c, t, a);
 next:
     t = strtok_r(NULL, ",", &r);
   }
   free(s);
+}
+
+void
+tvhlog_set_debug ( const char *subsys )
+{
+  tvhlog_set_subsys(&tvhlog_debug, subsys);
+}
+
+void
+tvhlog_set_trace ( const char *subsys )
+{
+  tvhlog_set_subsys(&tvhlog_trace, subsys);
+}
+
+void
+tvhlog_get_debug ( char *subsys, size_t len )
+{
+  tvhlog_get_subsys(tvhlog_debug, subsys, len);
+}
+
+void
+tvhlog_get_trace ( char *subsys, size_t len )
+{
+  tvhlog_get_subsys(tvhlog_trace, subsys, len);
 }
 
 /* Log */
@@ -124,6 +151,7 @@ void tvhlogv ( const char *file, int line,
   int options;
   char *path = NULL;
   int skip = 0;
+  htsmsg_t *ss;
 
   /* Map down */
   if (severity > LOG_DEBUG)
@@ -134,13 +162,14 @@ void tvhlogv ( const char *file, int line,
   /* Check debug enabled (and cache config) */
   pthread_mutex_lock(&tvhlog_mutex);
   if (severity >= LOG_DEBUG) {
-    if (!tvhlog_subsys)
+    ss = (severity > LOG_DEBUG) ? tvhlog_trace : tvhlog_debug;
+    if (!ss)
       skip = 1;
     else if (severity > tvhlog_level)
       skip = 1;
     else {
-      uint32_t a = htsmsg_get_u32_or_default(tvhlog_subsys, "all", 0);
-      if (!htsmsg_get_u32_or_default(tvhlog_subsys, subsys, a))
+      uint32_t a = htsmsg_get_u32_or_default(ss, "all", 0);
+      if (!htsmsg_get_u32_or_default(ss, subsys, a))
         skip = 1;
     }
   }
