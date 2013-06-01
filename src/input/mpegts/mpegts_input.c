@@ -198,9 +198,17 @@ mpegts_input_is_free ( mpegts_input_t *mi )
 int
 mpegts_input_current_weight ( mpegts_input_t *mi )
 {
+  const mpegts_mux_instance_t *mmi;
   const service_t *s;
   const th_subscription_t *ths;
   int w = 0;
+
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    if (mmi->mmi_mux->mm_initial_scan_status == MM_SCAN_CURRENT) {
+      w = 1;
+      break;
+    }
+  }
 
   pthread_mutex_lock(&mi->mi_delivery_mutex);
   LIST_FOREACH(s, &mi->mi_transports, s_active_link) {

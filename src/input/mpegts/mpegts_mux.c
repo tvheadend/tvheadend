@@ -156,7 +156,6 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 
     /* Try and remove a lesser instance */
     if (!mmi) {
-#if 0
       LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
 
         /* Bad - skip */
@@ -167,7 +166,6 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
         if (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))
           break;
       }
-#endif
 
       if (mmi)
         tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);

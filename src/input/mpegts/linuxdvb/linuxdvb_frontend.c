@@ -143,8 +143,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
 static void
 linuxdvb_frontend_display_name ( mpegts_input_t* mi, char *buf, size_t len )
 {
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  strncpy(buf, lfe->lh_displayname ?: "unknown", len);
+  strncpy(buf, linuxdvb_frontend_class_get_title(&mi->mi_id), len);
 }
 
 #if 0
