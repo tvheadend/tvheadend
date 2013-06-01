@@ -381,15 +381,14 @@ struct mpegts_input
   /*
    * Functions
    */
-  
+  int  (*mi_is_enabled)     (mpegts_input_t*);
+  void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
+  int  (*mi_is_free)        (mpegts_input_t*);
+  int  (*mi_current_weight) (mpegts_input_t*);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
-  int  (*mi_is_free)        (mpegts_input_t*);
-  int  (*mi_current_weight) (mpegts_input_t*);
-  int  (*mi_is_enabled)     (mpegts_input_t*);
-  void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
 };
 
 #endif /* __TVH_MPEGTS_H__ */
@@ -399,16 +398,15 @@ struct mpegts_input
  * ***************************************************************************/
 
 mpegts_input_t *mpegts_input_create0
-  ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid );
+  ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid, htsmsg_t *c );
 
-#define mpegts_input_create(t, u)\
-  (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), &t##_class, u)
+#define mpegts_input_create(t, u, c)\
+  (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), &t##_class, u, c)
 
-#define mpegts_input_create1(u)\
+#define mpegts_input_create1(u, c)\
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
-                       &mpegts_input_class, u)
+                       &mpegts_input_class, u, c)
                  
-
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
     const char *name, htsmsg_t *conf );
@@ -456,13 +454,15 @@ int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
-   int64_t *pcr, uint16_t *pcr_pid);
+   int64_t *pcr, uint16_t *pcr_pid, const char *name);
 
 void *mpegts_input_table_thread ( void *aux );
 
 int mpegts_input_is_free ( mpegts_input_t *mi );
 
 int mpegts_input_current_weight ( mpegts_input_t *mi );
+
+void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);

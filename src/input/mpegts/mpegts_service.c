@@ -300,3 +300,9 @@ mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c )
 {
   service_save((service_t*)s, c);
 }
+
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/

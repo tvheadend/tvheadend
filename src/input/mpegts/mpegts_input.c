@@ -26,18 +26,84 @@
 #include <pthread.h>
 #include <assert.h>
 
+/* **************************************************************************
+ * Class definition
+ * *************************************************************************/
+
 const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
   .ic_caption    = "MPEGTS Input",
   .ic_properties = (const property_t[]){
+    { PROPDEF1("enabled", "Enabled",
+               PT_BOOL, mpegts_input_t, mi_enabled) },
+    {}
   }
 };
+
+/* **************************************************************************
+ * Class methods
+ * *************************************************************************/
+
+static int
+mpegts_input_is_enabled ( mpegts_input_t *mi )
+{
+  return mi->mi_enabled;
+}
 
 static void
 mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
   *buf = 0;
+}
+
+int
+mpegts_input_is_free ( mpegts_input_t *mi )
+{
+  char buf[256];
+  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  tvhtrace("mpegts", "%s - is free? %d", buf, mmi == NULL);
+  return mmi ? 0 : 1;
+}
+
+int
+mpegts_input_current_weight ( mpegts_input_t *mi )
+{
+  const mpegts_mux_instance_t *mmi;
+  const service_t *s;
+  const th_subscription_t *ths;
+  int w = 0;
+
+  // TODO: we probably need a way for mux level subs
+
+  /* Check for scan (weight 1) */
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    if (mmi->mmi_mux->mm_initial_scan_status == MM_SCAN_CURRENT) {
+      w = 1;
+      break;
+    }
+  }
+
+  /* Check subscriptions */
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
+      w = MAX(w, ths->ths_weight);
+  }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  return w;
+}
+
+static int
+mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  return SM_CODE_TUNING_FAILED;
+}
+
+static void
+mpegts_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
 }
 
 static void
@@ -50,18 +116,26 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
 }
 
+/* **************************************************************************
+ * Data processing
+ * *************************************************************************/
+
 size_t
 mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi,
-    uint8_t *tsb, size_t l, int64_t *pcr, uint16_t *pcr_pid )
+    uint8_t *tsb, size_t l, int64_t *pcr, uint16_t *pcr_pid,
+    const char *name )
 {
-  int len = l; // TODO: fix ts_resync() to remove this
+  int len = l;
   int i = 0, table_wakeup = 0;
   mpegts_mux_t *mm = mmi->mmi_mux;
   assert(mmi->mmi_input == mi);
   assert(mm != NULL);
-  tvhtrace("tsdemux", "recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
-           tsb, (int)len, pcr, pcr_pid);
+  assert(name != NULL);
+
+  // TODO: get the input name
+  tvhtrace("tsdemux", "%s - recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
+           name, tsb, (int)len, pcr, pcr_pid);
   
   /* Not enough data */
   if (len < 188) return 0;
@@ -86,7 +160,7 @@ mpegts_input_recv_packets
     /* Sync */
     if ( tsb[i] == 0x47 ) {
       int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
-      tvhtrace("tsdemux", "recv_packet for pid %04X (%d)", pid, pid);
+      tvhtrace("tsdemux", "%s - recv_packet for pid %04X (%d)", name, pid, pid);
 
       /* SI data */
       if (mm->mm_table_filter[pid]) {
@@ -114,10 +188,9 @@ mpegts_input_recv_packets
     
     /* Re-sync */
     } else {
-      // TODO: set flag (to avoid spam)
-      tvhdebug("tsdemux", "%s ts sync lost", "TODO");
+      tvhdebug("tsdemux", "%s - ts sync lost", name);
       if (ts_resync(tsb, &len, &i)) break;
-      tvhdebug("tsdemux", "%s ts sync found", "TODO");
+      tvhdebug("tsdemux", "%s - ts sync found", name);
     }
 
   }
@@ -179,7 +252,6 @@ mpegts_input_table_thread ( void *aux )
 
     /* Process */
     pthread_mutex_lock(&global_lock);
-    // TODO: should we check the mux is active
     mpegts_input_table_dispatch(mtf->mtf_mux, mtf);
     pthread_mutex_unlock(&global_lock);
     free(mtf);
@@ -187,59 +259,28 @@ mpegts_input_table_thread ( void *aux )
   return NULL;
 }
 
-int
-mpegts_input_is_free ( mpegts_input_t *mi )
-{
-  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
-  tvhtrace("mpegts", "input_is_free(%p) mmi = %p", mi, mmi);
-  return mmi ? 0 : 1;
-}
-
-int
-mpegts_input_current_weight ( mpegts_input_t *mi )
-{
-  const mpegts_mux_instance_t *mmi;
-  const service_t *s;
-  const th_subscription_t *ths;
-  int w = 0;
-
-  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
-    if (mmi->mmi_mux->mm_initial_scan_status == MM_SCAN_CURRENT) {
-      w = 1;
-      break;
-    }
-  }
-
-  pthread_mutex_lock(&mi->mi_delivery_mutex);
-  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
-      w = MAX(w, ths->ths_weight);
-  }
-  pthread_mutex_unlock(&mi->mi_delivery_mutex);
-  return w;
-}
-
-static int
-mpegts_input_is_enabled ( mpegts_input_t *mi )
-{
-  return mi->mi_enabled;
-}
+/* **************************************************************************
+ * Creation/Config
+ * *************************************************************************/
 
 mpegts_input_t*
 mpegts_input_create0  
-  ( mpegts_input_t *mi, const idclass_t *class, const char *uuid )
+  ( mpegts_input_t *mi, const idclass_t *class, const char *uuid,
+    htsmsg_t *c )
 {
   idnode_insert(&mi->mi_id, uuid, class);
+  if (c)
+    idnode_load(&mi->mi_id, c);
   
   /* Defaults */
-  mi->mi_start_mux      = NULL;
-  mi->mi_stop_mux       = NULL;
-  mi->mi_open_service   = mpegts_input_open_service;
-  mi->mi_close_service  = mpegts_input_close_service;
   mi->mi_is_enabled     = mpegts_input_is_enabled;
+  mi->mi_display_name   = mpegts_input_display_name;
   mi->mi_is_free        = mpegts_input_is_free;
   mi->mi_current_weight = mpegts_input_current_weight;
-  mi->mi_display_name   = mpegts_input_display_name;
+  mi->mi_start_mux      = mpegts_input_start_mux;
+  mi->mi_stop_mux       = mpegts_input_stop_mux;
+  mi->mi_open_service   = mpegts_input_open_service;
+  mi->mi_close_service  = mpegts_input_close_service;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);
@@ -252,6 +293,14 @@ mpegts_input_create0
   mi->mi_thread_pipe.rd = mi->mi_thread_pipe.wr = -1;
 
   return mi;
+}
+
+void
+mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
+{
+  idnode_save(&mi->mi_id, m);
+  if (mi->mi_network)
+    htsmsg_add_str(m, "network", idnode_uuid_as_str(&mi->mi_network->mn_id));
 }
 
 /******************************************************************************
