@@ -34,12 +34,11 @@
 
 #include "tvheadend.h"
 #include "subscriptions.h"
-#include "psi.h"
-#include "tsdemux.h"
 #include "parsers.h"
 #include "streaming.h"
 #include "input/mpegts.h"
 #include "parsers/parser_teletext.h"
+#include "tsdemux.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
