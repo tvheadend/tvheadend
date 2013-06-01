@@ -20,10 +20,23 @@
 
 #include <assert.h>
 
+/* ****************************************************************************
+ * Class definition
+ * ***************************************************************************/
+
+static void
+mpegts_network_class_save
+  ( idnode_t *in )
+{
+  mpegts_network_t *mn = (mpegts_network_t*)in;
+  mn->mn_config_save(mn);
+}
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
   .ic_caption    = "MPEGTS Network",
+  .ic_save       = mpegts_network_class_save,
   .ic_properties = (const property_t[]){
     { PROPDEF1("networkname", "Network Name",
                PT_STR, mpegts_network_t, mn_network_name) },
@@ -36,6 +49,10 @@ const idclass_t mpegts_network_class =
     {}
   }
 };
+
+/* ****************************************************************************
+ * Class methods
+ * ***************************************************************************/
 
 static void
 mpegts_network_display_name
@@ -65,6 +82,10 @@ mpegts_network_create_service
   return NULL;
 }
 
+/* ****************************************************************************
+ * Scanning
+ * ***************************************************************************/
+
 static void
 mpegts_network_initial_scan(void *aux)
 {
@@ -87,36 +108,61 @@ mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
   gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 0);
 }
 
-void
-mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi )
-{
-  mi->mi_network = mn;
-  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
-}
+/* ****************************************************************************
+ * Creation/Config
+ * ***************************************************************************/
 
 mpegts_network_t *
 mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
-    const char *netname )
+    const char *netname, htsmsg_t *conf )
 {
+  char buf[256];
+
+  /* Setup idnode */
   idnode_insert(&mn->mn_id, uuid, idc);
+  if (conf)
+    idnode_load(&mn->mn_id, conf);
+
+  /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;
   mn->mn_config_save    = mpegts_network_config_save;
   mn->mn_create_mux     = mpegts_network_create_mux;
   mn->mn_create_service = mpegts_network_create_service;
+
+  /* Network name */
   if (netname) mn->mn_network_name = strdup(netname);
+
+  /* Init Qs */
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);
+
+  mn->mn_display_name(mn, buf, sizeof(buf));
+  tvhtrace("mpegts", "created network %s", buf);
   return mn;
+}
+
+void
+mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi )
+{
+  char buf1[256], buf2[265];
+  mi->mi_network = mn;
+  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
+  mn->mn_display_name(mn, buf1, sizeof(buf1));
+  mi->mi_display_name(mi, buf2, sizeof(buf2));
+  tvhdebug("mpegts", "%s - added input %s", buf1, buf2);
 }
 
 int
 mpegts_network_set_nid
   ( mpegts_network_t *mn, uint16_t nid )
 {
+  char buf[256];
   if (mn->mn_nid == nid)
     return 0;
   mn->mn_nid = nid;
+  mn->mn_display_name(mn, buf, sizeof(buf));
+  tvhdebug("mpegts", "%s - set nid %04X (%d)", buf, nid, nid);
   return 1;
 }
 
@@ -124,9 +170,12 @@ int
 mpegts_network_set_network_name
   ( mpegts_network_t *mn, const char *name )
 {
+  char buf[256];
   if (!name || !strcmp(name, mn->mn_network_name ?: ""))
     return 0;
   tvh_str_update(&mn->mn_network_name, name);
+  mn->mn_display_name(mn, buf, sizeof(buf));
+  tvhdebug("mpegts", "%s - set name %s", buf, name);
   return 1;
 }
 

@@ -109,9 +109,9 @@ mpegts_input_recv_packets
     /* Re-sync */
     } else {
       // TODO: set flag (to avoid spam)
-      tvhlog(LOG_DEBUG, "tsdemux", "%s ts sync lost", "TODO");
+      tvhdebug("tsdemux", "%s ts sync lost", "TODO");
       if (ts_resync(tsb, &len, &i)) break;
-      tvhlog(LOG_DEBUG, "tsdemux", "%s ts sync found", "TODO");
+      tvhdebug("tsdemux", "%s ts sync found", "TODO");
     }
 
   }

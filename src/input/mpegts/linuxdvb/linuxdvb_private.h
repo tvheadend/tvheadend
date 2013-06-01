@@ -186,8 +186,10 @@ struct linuxdvb_mux
 linuxdvb_mux_t *linuxdvb_mux_create0
   (linuxdvb_network_t *ln, uint16_t onid, uint16_t tsid,
    const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
-linuxdvb_mux_t *linuxdvb_mux_create1
-  (linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf);
+
+#define linuxdvb_mux_create1(n, u, c)\
+  linuxdvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,\
+                       NULL, u, c)
 
 /*
  * Service

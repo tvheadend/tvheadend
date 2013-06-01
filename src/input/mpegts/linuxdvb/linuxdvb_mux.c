@@ -30,10 +30,12 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-/*
+/* **************************************************************************
  * Class definition
- */
+ * *************************************************************************/
+
 extern const idclass_t mpegts_mux_class;
+
 const idclass_t linuxdvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -84,9 +86,9 @@ const idclass_t linuxdvb_mux_atsc_class =
   }
 };
 
-/*
- * Mux Objects
- */
+/* **************************************************************************
+ * Class methods
+ * *************************************************************************/
 
 static void
 linuxdvb_mux_config_save ( mpegts_mux_t *mm )
@@ -94,7 +96,7 @@ linuxdvb_mux_config_save ( mpegts_mux_t *mm )
   linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   htsmsg_t *c = htsmsg_create_map();
-  idnode_save(&mm->mm_id, c);
+  mpegts_mux_save(mm, c);
   dvb_mux_conf_save(ln->ln_type, &lm->lm_tuning, c);
   hts_settings_save(c, "input/linuxdvb/networks/%s/muxes/%s/config",
                     idnode_uuid_as_str(&mm->mm_network->mn_id),
@@ -143,6 +145,10 @@ linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 }
 #endif
 
+/* **************************************************************************
+ * Creation/Config
+ * *************************************************************************/
+
 linuxdvb_mux_t *
 linuxdvb_mux_create0
   ( linuxdvb_network_t *ln,
@@ -150,10 +156,12 @@ linuxdvb_mux_create0
     const char *uuid, htsmsg_t *conf )
 {
   const idclass_t *idc;
+  const char *str;
   mpegts_mux_t *mm;
   linuxdvb_mux_t *lm;
-
-  /* Search for existing */
+  dvb_mux_conf_t dmc0;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
 
   /* Class */
   if (ln->ln_type == FE_QPSK)
@@ -165,7 +173,20 @@ linuxdvb_mux_create0
   else if (ln->ln_type == FE_ATSC)
     idc = &linuxdvb_mux_atsc_class;
   else {
-    tvhlog(LOG_ERR, "linuxdvb", "unknown FE type %d", ln->ln_type);
+    tvherror("linuxdvb", "unknown FE type %d", ln->ln_type);
+    return NULL;
+  }
+
+  /* Load mux config */
+  if (conf && !dmc) {
+    dmc = &dmc0;
+    if ((str = dvb_mux_conf_load(ln->ln_type, &dmc0, conf))) {
+      tvherror( "linuxdvb", "failed to load mux config [%s]", str);
+      return NULL;
+    }
+  }
+  if (!dmc) {
+    tvherror("linuxdvb", "no mux configuration provided");
     return NULL;
   }
 
@@ -174,49 +195,23 @@ linuxdvb_mux_create0
                                 (mpegts_network_t*)ln, onid, tsid, conf)))
     return NULL;
   lm = (linuxdvb_mux_t*)mm;
+
+  /* Tuning */
   memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
 
   /* Callbacks */
   lm->mm_display_name     = linuxdvb_mux_display_name;
   lm->mm_config_save      = linuxdvb_mux_config_save;
   lm->mm_create_instances = linuxdvb_mux_create_instances;
-
-  return (linuxdvb_mux_t*)mm;
-}
-
-linuxdvb_mux_t *
-linuxdvb_mux_create1
-  ( linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf )
-{
-  const char *str;
-  htsmsg_t *c, *e;
-  htsmsg_field_t *f;
-  linuxdvb_mux_t *lm;
-  dvb_mux_conf_t dmc;
-
-  /* Check tuning */
-  memset(&dmc, 0, sizeof(dmc));
-  if (conf) {
-    if ((str = dvb_mux_conf_load(ln->ln_type, &dmc, conf))) {
-      tvhlog(LOG_ERR, "linuxdvb", "failed to load mux config [%s]", str);
-      return NULL;
-    }
-  }
-
-  lm = linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE,
-                            MPEGTS_TSID_NONE, &dmc, uuid, conf);
-  if (!lm) return NULL;
   
   /* No config */
-  if (!conf)
-    return lm;
-
-  /* Config */
-  memcpy(&lm->lm_tuning, &dmc, sizeof(dmc));
+  if (!conf) return lm;
 
   /* Services */
-  if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",
-                               "TODO", uuid))) {
+  c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",
+                         idnode_uuid_as_str(&ln->mn_id),
+                         idnode_uuid_as_str(&mm->mm_id));
+  if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;

@@ -411,10 +411,10 @@ mpegts_input_t *mpegts_input_create0
 
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
-    const char *name );
+    const char *name, htsmsg_t *conf );
 
-#define mpegts_network_create(t, u, n)\
-  (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), &t##_class, u, n)
+#define mpegts_network_create(t, u, n, c)\
+  (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), &t##_class, u, n, c)
   
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
@@ -439,7 +439,7 @@ mpegts_mux_t *mpegts_mux_create0
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
-void mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c );
+void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
 
 mpegts_mux_instance_t *mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,

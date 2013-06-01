@@ -23,6 +23,13 @@
 
 #include <assert.h>
 
+static void
+mpegts_mux_initial_scan_timeout ( void *aux );
+
+/* ****************************************************************************
+ * Mux instance (input linkage)
+ * ***************************************************************************/
+
 const idclass_t mpegts_mux_instance_class =
 {
   .ic_class      = "mpegts_mux_instance",
@@ -37,15 +44,20 @@ mpegts_mux_instance_create0
     mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   idnode_insert(&mmi->mmi_id, uuid, class);
+  // TODO: does this need to be an idnode?
 
   /* Setup links */
   mmi->mmi_mux   = mm;
-  mmi->mmi_input = mi; // TODO: is this required?
+  mmi->mmi_input = mi;
 
   LIST_INSERT_HEAD(&mm->mm_instances, mmi, mmi_mux_link);
 
   return mmi;
 }
+
+/* ****************************************************************************
+ * Class definition
+ * ***************************************************************************/
 
 static void
 mpegts_mux_class_save ( idnode_t *self )
@@ -74,6 +86,10 @@ const idclass_t mpegts_mux_class =
   }
 };
 
+/* ****************************************************************************
+ * Class methods
+ * ***************************************************************************/
+
 static void
 mpegts_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
@@ -92,124 +108,34 @@ mpegts_mux_is_enabled ( mpegts_mux_t *mm )
   return mm->mm_enabled;
 }
 
-int
-mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
-{
-  char buf[256];
-  if (onid == mm->mm_onid)
-    return 0;
-  mm->mm_onid = onid;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  mm->mm_config_save(mm);
-  tvhtrace("mpegts", "%s onid set to %d", buf, onid);
-  return 1;
-}
-
-int
-mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
-{
-  char buf[256];
-  if (tsid == mm->mm_tsid)
-    return 0;
-  mm->mm_tsid = tsid;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  mm->mm_config_save(mm);
-  tvhtrace("mpegts", "%s tsid set to %d", buf, tsid);
-  return 1;
-}
-
-int 
-mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
-{
-  char buf[256];
-  if (defauth && !strcmp(defauth, mm->mm_crid_authority ?: ""))
-    return 0;
-  tvh_str_update(&mm->mm_crid_authority, defauth);
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  mm->mm_config_save(mm);
-  tvhtrace("mpegts", "%s crid authority set to %s", buf, defauth);
-  return 1;
-}
-
 static void
-mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
+mpegts_mux_create_instances ( mpegts_mux_t *mm )
 {
-  mpegts_network_t *mn = mm->mm_network;
-
-  assert(mn != NULL);
-  assert(mm->mm_initial_scan_status == MM_SCAN_DONE);
-
-  mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
-  mn->mn_initial_scan_num++;
-  tvhtrace("mpegts", "added mm %p to initial scan for mn %p pending %d",
-           mm, mn, mn->mn_initial_scan_num);
-  mpegts_network_schedule_initial_scan(mn);
-}
-
-static void
-mpegts_mux_initial_scan_timeout ( void *aux )
-{
-  mpegts_mux_t *mm = aux;
-  tvhlog(LOG_DEBUG, "mpegts", "initial scan timed out for mm %p", mm);
-  mpegts_mux_initial_scan_done(mm);
-}
-
-static int
-mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
-{
-  service_t *t;
-  mpegts_mux_instance_t *mmi = mm->mm_active;
-  if (mmi) {
-    LIST_FOREACH(t, &mmi->mmi_input->mi_transports, s_active_link)
-      if (((mpegts_service_t*)t)->s_dvb_mux == mm)
-        return 1;
-  }
-  return 0;
-}
-
-void
-mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
-{
-  mpegts_network_t *mn = mm->mm_network;
-  tvhlog(LOG_DEBUG, "mpegts", "initial scan complete for mm %p", mm);
-  gtimer_disarm(&mm->mm_initial_scan_timeout);
-  assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
-  mn->mn_initial_scan_num--;
-  mm->mm_initial_scan_status = MM_SCAN_DONE;
-  TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
-  mpegts_network_schedule_initial_scan(mn);
-
-  /* Stop */
-  if (!mpegts_mux_has_subscribers(mm))
-    mm->mm_stop(mm);
-
-  /* Save */
-  mm->mm_initial_scan_done = 1;
-  mm->mm_config_save(mm);
 }
 
 static int
 mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 {
-  char buf[128];
+  char buf[256], buf2[256];
   mpegts_network_t      *mn = mm->mm_network;
   mpegts_mux_instance_t *mmi;
 
-  tvhtrace("mpegts", "mm %p starting for '%s' (weight %d)",
-           mm, reason, weight); 
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
+          buf, reason, weight);
 
   /* Already tuned */
   if (mm->mm_active) {
-    tvhtrace("mpegts", "mm %p already active", mm);
+    tvhtrace("mpegts", "%s - already active", buf);
     return 0;
   }
   
   /* Create mux instances (where needed) */
   mm->mm_create_instances(mm);
-  if (!LIST_FIRST(&mm->mm_instances))
-    tvhtrace("mpegts", "mm %p has no instances", mm);
+  if (!LIST_FIRST(&mm->mm_instances)) {
+    tvhtrace("mpegts", "%s - has no instances", buf);
+    return SM_CODE_NO_FREE_ADAPTER;
+  }
 
   /* Find */
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
@@ -224,13 +150,12 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
         break;
     }
     if (mmi)
-      tvhtrace("mpegts", "found free mmi %p", mmi);
+      tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
     else
-      tvhtrace("mpegts", "no input is free");
+      tvhtrace("mpegts", "%s - no input is free", buf);
 
     /* Try and remove a lesser instance */
     if (!mmi) {
-#if 0
       LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
 
         /* Bad - skip */
@@ -243,30 +168,30 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
       }
 
       if (mmi)
-        tvhtrace("mpegts", "found mmi %p to boot", mmi);
-#endif
+        tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
 
       /* No free input */
-      if (!mmi) {
-        tvhlog(LOG_DEBUG, "mpegts", "no input available");
+      else {
+        tvhdebug("mpegts", "%s - no input available", buf);
         return SM_CODE_NO_FREE_ADAPTER;
       }
     }
     
     /* Tune */
-    mm->mm_display_name(mm, buf, sizeof(buf));
-    tvhlog(LOG_INFO, "mpegts", "tuning %s", buf);
+    mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
+    tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
     if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi)) {
+      tvhdebug("mpegts", "%s - started", buf);
       LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi, mmi_active_link);
       mm->mm_active = mmi;
       break;
     }
-    tvhtrace("mpegts", "failed to run mmi %p", mmi);
+    tvhwarn("mpegts", "%s - failed to start, try another", buf);
   }
 
   /* Initial scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
-    tvhtrace("mpegts", "adding mm %p to current scan Q", mm);
+    tvhtrace("mpegts", "%s - adding to current scan Q", buf);
     TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
     mm->mm_initial_scan_status = MM_SCAN_CURRENT;
     TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
@@ -279,20 +204,22 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 static void
 mpegts_mux_stop ( mpegts_mux_t *mm )
 {
+  char buf[256];
   service_t *s, *t;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi;
 
-  tvhtrace("mpegts", "stopping mux %p", mm);
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhdebug("mpegts", "%s - stopping mux", buf);
 
   if (mmi) {
     mi = mmi->mmi_input;
     mi->mi_stop_mux(mi, mmi);
     mm->mm_active = NULL;
     LIST_REMOVE(mmi, mmi_active_link);
-    tvhtrace("mpegts", "active first = %p", LIST_FIRST(&mi->mi_mux_active));
 
     /* Flush all subscribers */
+    tvhtrace("mpegts", "%s - flush subscribers", buf);
     s = LIST_FIRST(&mi->mi_transports);
     while (s) {
       t = s;
@@ -304,6 +231,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
   }
 
   /* Flush all tables */
+  tvhtrace("mpegts", "%s - flush tables", buf);
   mpegts_table_flush_all(mm);
 
   /* Alert listeners */
@@ -311,6 +239,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
 
   /* Scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_CURRENT) {
+    tvhtrace("mpegts", "%s - add to pending scan Q", buf);
     mpegts_network_t *mn = mm->mm_network;
     TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
     mm->mm_initial_scan_status = MM_SCAN_PENDING;
@@ -323,50 +252,113 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
 }
 
 static void
-mpegts_mux_create_instances ( mpegts_mux_t *mm )
-{
-}
-
-static void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
+  char buf[256];
   if (mt->mt_pid >= 0x2000)
     return;
+  mm->mm_display_name(mm, buf, sizeof(buf));
   if (!mm->mm_table_filter[mt->mt_pid])
-    tvhtrace("mpegts", "mm %p opened table pid %04X (%d)",
-             mm, mt->mt_pid, mt->mt_pid);
+    tvhtrace("mpegts", "%s - opened table %s pid %04X (%d)",
+             buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
   mm->mm_table_filter[mt->mt_pid] = 1;
 }
 
 static void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
+  char buf[256];
   if (mt->mt_pid >= 0x2000)
     return;
-  tvhtrace("mpegts", "mm %p closed table pid %04X (%d)",
-           mm, mt->mt_pid, mt->mt_pid);
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhtrace("mpegts", "%s - closed table %s pid %04X (%d)",
+           buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
   mm->mm_table_filter[mt->mt_pid] = 0;
 }
 
-void
-mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c )
-{
-  uint32_t u32;
-  
-  /* ONID */
-  if (!htsmsg_get_u32(c, "onid", &u32))
-    mm->mm_onid = u32;
+/* **************************************************************************
+ * Scanning
+ * *************************************************************************/
 
-  /* TSID */
-  if (!htsmsg_get_u32(c, "tsid", &u32))
-    mm->mm_tsid = u32;
+static int
+mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
+{
+  service_t *t;
+  mpegts_mux_instance_t *mmi = mm->mm_active;
+  if (mmi) {
+    LIST_FOREACH(t, &mmi->mmi_input->mi_transports, s_active_link)
+      if (((mpegts_service_t*)t)->s_dvb_mux == mm)
+        return 1;
+  }
+  return 0;
 }
+
+static void
+mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
+{
+  char buf1[256], buf2[256];
+  mpegts_network_t *mn = mm->mm_network;
+
+  assert(mn != NULL);
+  assert(mm->mm_initial_scan_status == MM_SCAN_DONE);
+
+  mm->mm_initial_scan_status = MM_SCAN_PENDING;
+  TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
+                    mm_initial_scan_link);
+  mn->mn_initial_scan_num++;
+  
+  mn->mn_display_name(mn, buf1, sizeof(buf1));
+  mm->mm_display_name(mm, buf2, sizeof(buf2));
+  tvhdebug("mpegts", "%s - added %s to scan pending q",
+           buf1, buf2);
+  mpegts_network_schedule_initial_scan(mn);
+}
+
+static void
+mpegts_mux_initial_scan_timeout ( void *aux )
+{
+  char buf[256];
+  mpegts_mux_t *mm = aux;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhdebug("mpegts", "%s - initial scan timed", buf);
+  mpegts_mux_initial_scan_done(mm);
+}
+
+void
+mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
+{
+  char buf[256];
+  mpegts_network_t *mn = mm->mm_network;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s - initial scan complete", buf);
+  gtimer_disarm(&mm->mm_initial_scan_timeout);
+  assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
+  mn->mn_initial_scan_num--;
+  mm->mm_initial_scan_status = MM_SCAN_DONE;
+  TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
+  mpegts_network_schedule_initial_scan(mn);
+
+  /* Stop */
+  if (!mpegts_mux_has_subscribers(mm)) {
+    tvhtrace("mpegts", "%s - no active subscribers, stop", buf);
+    mm->mm_stop(mm);
+  }
+
+  /* Save */
+  mm->mm_initial_scan_done = 1;
+  mm->mm_config_save(mm);
+}
+
+/* **************************************************************************
+ * Creation / Config
+ * *************************************************************************/
 
 mpegts_mux_t *
 mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
     mpegts_network_t *mn, uint16_t onid, uint16_t tsid, htsmsg_t *conf )
 {
+  char buf[256];
   idnode_insert(&mm->mm_id, uuid, class);
 
   /* Enabled by default */
@@ -403,9 +395,56 @@ mpegts_mux_create0
   if (!mm->mm_initial_scan_done || !mn->mn_skipinitscan)
     mpegts_mux_initial_scan_link(mm);
 
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhtrace("mpegts", "%s - created", buf);
+
   return mm;
 }
 
+void
+mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c )
+{
+  idnode_save(&mm->mm_id, c);
+}
+
+int
+mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
+{
+  char buf[256];
+  if (onid == mm->mm_onid)
+    return 0;
+  mm->mm_onid = onid;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
+  return 1;
+}
+
+int
+mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
+{
+  char buf[256];
+  if (tsid == mm->mm_tsid)
+    return 0;
+  mm->mm_tsid = tsid;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
+  return 1;
+}
+
+int 
+mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
+{
+  char buf[256];
+  if (defauth && !strcmp(defauth, mm->mm_crid_authority ?: ""))
+    return 0;
+  tvh_str_update(&mm->mm_crid_authority, defauth);
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  mm->mm_config_save(mm);
+  tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
+  return 1;
+}
 
 /******************************************************************************
  * Editor Configuration

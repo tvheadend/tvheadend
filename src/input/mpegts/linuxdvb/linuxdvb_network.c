@@ -30,16 +30,22 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+/* ****************************************************************************
+ * Class definition
+ * ***************************************************************************/
+
 extern const idclass_t mpegts_network_class;
 
 static const char *
-ln_type_getstr ( void *ptr )
+mpegts_network_class_get_lntype
+  ( void * ptr )
 {
   return dvb_type2str(((linuxdvb_network_t*)ptr)->ln_type);
 }
 
-static void 
-ln_type_setstr ( void *ptr, const char *str )
+static void
+mpegts_network_class_set_lntype
+  ( void *ptr, const char *str )
 { 
   ((linuxdvb_network_t*)ptr)->ln_type = dvb_str2type(str);
 }
@@ -52,21 +58,15 @@ const idclass_t linuxdvb_network_class =
   .ic_properties = (const property_t[]){
     { PROPDEF2("type", "Network Type",
                PT_STR, linuxdvb_network_t, ln_type, 1),
-      .str_get = ln_type_getstr,
-      .str_set = ln_type_setstr },
+      .str_get = mpegts_network_class_get_lntype,
+      .str_set = mpegts_network_class_set_lntype },
     {}
   }
 };
 
-static void
-linuxdvb_network_config_save ( mpegts_network_t *mn )
-{
-  htsmsg_t *c = htsmsg_create_map();
-  idnode_save(&mn->mn_id, c);
-  hts_settings_save(c, "input/linuxdvb/networks/%s/config",
-                    idnode_uuid_as_str(&mn->mn_id));
-  htsmsg_destroy(c);
-}
+/* ****************************************************************************
+ * Class methods
+ * ***************************************************************************/
 
 static mpegts_mux_t *
 linuxdvb_network_find_mux
@@ -84,10 +84,21 @@ linuxdvb_network_find_mux
   return mm;
 }
 
+static void
+linuxdvb_network_config_save ( mpegts_network_t *mn )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&mn->mn_id, c);
+  hts_settings_save(c, "input/linuxdvb/networks/%s/config",
+                    idnode_uuid_as_str(&mn->mn_id));
+  htsmsg_destroy(c);
+}
+
 static mpegts_mux_t *
 linuxdvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
+  // TODO: should we have a mux_find wrapper?
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   mm = linuxdvb_network_find_mux(ln, dmc);
   if (!mm) {
@@ -102,8 +113,13 @@ static mpegts_service_t *
 linuxdvb_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  return linuxdvb_service_create0((linuxdvb_mux_t*)mm, sid, pmt_pid, NULL, NULL);
+  return linuxdvb_service_create0((linuxdvb_mux_t*)mm, sid,
+                                  pmt_pid, NULL, NULL);
 }
+
+/* ****************************************************************************
+ * Creation/Config
+ * ***************************************************************************/
 
 static linuxdvb_network_t *
 linuxdvb_network_create0
@@ -114,7 +130,7 @@ linuxdvb_network_create0
   htsmsg_field_t *f;
 
   /* Create */
-  if (!(ln = mpegts_network_create(linuxdvb_network, uuid, NULL)))
+  if (!(ln = mpegts_network_create(linuxdvb_network, uuid, NULL, conf)))
     return NULL;
   
   /* Callbacks */
@@ -126,9 +142,6 @@ linuxdvb_network_create0
   if (!conf)
     return ln;
 
-  /* Load configuration */
-  idnode_load(&ln->mn_id, conf);
-
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes", uuid))) {
     HTSMSG_FOREACH(f, c) {
@@ -138,16 +151,7 @@ linuxdvb_network_create0
     }
   }
 
-  linuxdvb_network_config_save((mpegts_network_t*)ln);
-
   return ln;
-}
-
-linuxdvb_network_t*
-linuxdvb_network_find_by_uuid(const char *uuid)
-{
-  idnode_t *in = idnode_find(uuid, &linuxdvb_network_class);
-  return (linuxdvb_network_t*)in;
 }
 
 void linuxdvb_network_init ( void )
@@ -165,3 +169,20 @@ void linuxdvb_network_init ( void )
   }
   htsmsg_destroy(c);
 }
+
+/* ****************************************************************************
+ * Search
+ * ***************************************************************************/
+
+linuxdvb_network_t*
+linuxdvb_network_find_by_uuid(const char *uuid)
+{
+  idnode_t *in = idnode_find(uuid, &linuxdvb_network_class);
+  return (linuxdvb_network_t*)in;
+}
+
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/
