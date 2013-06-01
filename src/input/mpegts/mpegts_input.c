@@ -35,6 +35,12 @@ const idclass_t mpegts_input_class =
 };
 
 static void
+mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
+{
+  *buf = 0;
+}
+
+static void
 mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
 }
@@ -225,6 +231,7 @@ mpegts_input_create0
   mi->mi_is_enabled     = mpegts_input_is_enabled;
   mi->mi_is_free        = mpegts_input_is_free;
   mi->mi_current_weight = mpegts_input_current_weight;
+  mi->mi_display_name   = mpegts_input_display_name;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);

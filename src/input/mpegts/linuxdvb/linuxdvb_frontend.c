@@ -140,6 +140,13 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
   return 1;
 }
 
+static void
+linuxdvb_frontend_display_name ( mpegts_input_t* mi, char *buf, size_t len )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  strncpy(buf, lfe->lh_displayname ?: "unknown", len);
+}
+
 #if 0
 static int
 linuxdvb_frontend_is_free ( mpegts_input_t *mi )
@@ -466,6 +473,7 @@ linuxdvb_frontend_create0
   lfe->lfe_info.type = type;
 
   /* Input callbacks */
+  lfe->mi_display_name   = linuxdvb_frontend_display_name;
   lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
   lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
