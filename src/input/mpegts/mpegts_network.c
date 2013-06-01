@@ -41,7 +41,7 @@ const idclass_t mpegts_network_class =
     { PROPDEF1("networkname", "Network Name",
                PT_STR, mpegts_network_t, mn_network_name) },
     { PROPDEF1("nid", "Network ID (limit scanning)",
-               PT_INT, mpegts_network_t, mn_nid) },
+               PT_U16, mpegts_network_t, mn_nid) },
     { PROPDEF1("autodiscovery", "Network Discovery",
                PT_BOOL, mpegts_network_t, mn_autodiscovery) },
     { PROPDEF1("skipinitscan", "Skip Initial Scan",

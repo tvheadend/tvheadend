@@ -179,9 +179,9 @@ struct mpegts_network
   /*
    * Configuration
    */
-  uint32_t mn_nid;
-  uint32_t mn_autodiscovery;
-  uint32_t mn_skipinitscan;
+  uint16_t mn_nid;
+  int      mn_autodiscovery;
+  int      mn_skipinitscan;
 };
 
 /* Multiplex */
@@ -195,8 +195,8 @@ struct mpegts_mux
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
   mpegts_network_t        *mm_network;
-  uint32_t                mm_onid;
-  uint32_t                mm_tsid;
+  uint16_t                mm_onid;
+  uint16_t                mm_tsid;
 
   /*
    * Services
