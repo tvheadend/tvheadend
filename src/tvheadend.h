@@ -366,6 +366,15 @@ typedef enum {
 #define SM_CODE_NO_ACCESS                 401
 #define SM_CODE_NO_INPUT                  402
 
+typedef enum
+{
+  SIGNAL_UNKNOWN,
+  SIGNAL_GOOD,
+  SIGNAL_BAD,
+  SIGNAL_FAINT,
+  SIGNAL_NONE
+} signal_state_t;
+
 /**
  * Streaming messages are sent from the pad to its receivers
  */

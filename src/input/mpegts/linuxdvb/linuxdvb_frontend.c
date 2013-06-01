@@ -77,6 +77,8 @@ const idclass_t linuxdvb_frontend_class =
                PT_STR, linuxdvb_frontend_t, lfe_dmx_path, 1) },
     { PROPDEF2("number", "FE Number",
                PT_INT, linuxdvb_frontend_t, lfe_number, 1) },
+    { PROPDEF1("fullmux", "Full Mux Mode",
+               PT_BOOL, linuxdvb_frontend_t, lfe_fullmux) },
     {}
   }
 };
@@ -169,15 +171,24 @@ static void
 linuxdvb_frontend_stop_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  char buf1[256], buf2[256];
+  
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  mi->mi_display_name(mi, buf1, sizeof(buf1));
+  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  tvhdebug("linuxdvb", "%s - stopping %s", buf1, buf2);
 
   /* Stop thread */
   if (lfe->lfe_dvr_pipe.wr > 0) {
     tvh_write(lfe->lfe_dvr_pipe.wr, "", 1);
+    tvhtrace("linuxdvb", "%s - waiting for dvr thread", buf1);
     pthread_join(lfe->lfe_dvr_thread, NULL);
     tvh_pipe_close(&lfe->lfe_dvr_pipe);
-    tvhlog(LOG_DEBUG, "linuxdvb", "stopped dvr thread");
+    tvhdebug("linuxdvb", "%s - stopped dvr thread", buf1);
   }
+
+  /* Not locked */
+  lfe->lfe_locked = 0;
 }
 
 static int
@@ -185,9 +196,13 @@ linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int r;
+  char buf1[256], buf2[256];
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   mpegts_mux_instance_t *cur = LIST_FIRST(&mi->mi_mux_active);
-  tvhtrace("mpegts", "linuxdvb_frontend_start_mux(%p, %p)", mi, mmi);
+
+  mi->mi_display_name(mi, buf1, sizeof(buf1));
+  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
 
   // Not sure if this is right place?
   /* Currently active */
@@ -204,6 +219,7 @@ linuxdvb_frontend_start_mux
 
   /* Open FE */
   if (lfe->lfe_fe_fd <= 0) {
+    tvhtrace("linuxdvb", "%s - opening FE %s", buf1, lfe->lfe_fe_path);
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
     if (lfe->lfe_fe_fd <= 0) {
       return SM_CODE_TUNING_FAILED;
@@ -211,12 +227,12 @@ linuxdvb_frontend_start_mux
   }
 
   /* Tune */
+  tvhtrace("linuxdvb", "%s - tuning", buf1);
   r = linuxdvb_frontend_tune(lfe, (linuxdvb_mux_t*)mmi->mmi_mux);
 
   /* Failed */
   if (r != 0) {
-    tvhlog(LOG_ERR, "linuxdvb", "'%s' failed to tune '%s' error %s",
-           lfe->lfe_fe_path, "TODO", strerror(errno));
+    tvherror("linuxdvb", "%s - failed to tune [e=%s]", buf1, strerror(errno));
     if (errno == EINVAL)
       mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
@@ -227,26 +243,204 @@ linuxdvb_frontend_start_mux
   lfe->lfe_monitor += 4;
   gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
   
-  /* Send alert */
-  // TODO: should this be moved elsewhere?
   return r;
+}
+
+static int
+linuxdvb_frontend_open_pid
+  ( linuxdvb_frontend_t *lfe, int pid, const char *name )
+{
+  char buf[256];
+  struct dmx_pes_filter_params dmx_param;
+  int fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
+
+  if (!name) {
+    lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
+    name = buf;
+  }
+
+  if(fd == -1) {
+    tvherror("linuxdvb", "%s - failed to open dmx for pid %d [e=%s]",
+             name, pid, strerror(errno));
+    return -1;
+  }
+
+  memset(&dmx_param, 0, sizeof(dmx_param));
+  dmx_param.pid      = pid;
+  dmx_param.input    = DMX_IN_FRONTEND;
+  dmx_param.output   = DMX_OUT_TS_TAP;
+  dmx_param.pes_type = DMX_PES_OTHER;
+  dmx_param.flags    = DMX_IMMEDIATE_START;
+
+  if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
+    tvherror("linuxdvb", "%s - failed to config dmx for pid %d [e=%s]",
+             name, pid, strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  return fd;
 }
 
 static void
 linuxdvb_frontend_open_service
-  ( mpegts_input_t *mi, mpegts_service_t *ms )
+  ( mpegts_input_t *mi, mpegts_service_t *s )
 {
+  char buf[256];
+  elementary_stream_t *st;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+
+  /* Ignore in full rx mode OR if not yet locked */
+  if (lfe->lfe_fullmux || !lfe->lfe_locked)
+    return;
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  
+  /* Install PES filters */
+  TAILQ_FOREACH(st, &s->s_components, es_link) {
+    if(st->es_pid >= 0x2000)
+      continue;
+
+    if(st->es_demuxer_fd != -1)
+      continue;
+
+    st->es_cc_valid   = 0;
+    st->es_demuxer_fd
+      = linuxdvb_frontend_open_pid((linuxdvb_frontend_t*)mi, st->es_pid, buf);
+  }
 }
 
 static void
 linuxdvb_frontend_close_service
-  ( mpegts_input_t *mi, mpegts_service_t *ms )
+  ( mpegts_input_t *mi, mpegts_service_t *s )
 {
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+
+  /* Ignore in full rx mode OR if not yet locked */
+  if (lfe->lfe_fullmux || !lfe->lfe_locked)
+    return;
 }
 
 /* **************************************************************************
  * Data processing
  * *************************************************************************/
+
+static void
+linuxdvb_frontend_default_tables 
+  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t*)lfe;
+
+  /* Common */
+  mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
+                   NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
+#if 0
+  mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
+                   NULL, "cat", MT_CRC, DVB_CAT_PID);
+#endif
+
+  /* ATSC */
+  if (lfe->lfe_info.type == FE_ATSC) {
+#if 0
+    int tableid;
+    if (lc->lm_tuning.dmc_fe_params.u.vsb.modulation == VSB_8)
+      tableid = ATSC_VCT_TERR;
+    else
+      tableid = ATSC_VCT_CAB;
+    mpegts_table_add(mm, tableid, 0xff, atsc_vct_callback,
+                     NULL, "vct", MT_QUICKREQ | MT_CRC, ATSC_VCT_PID);
+#endif
+
+  /* DVB */
+  } else {
+    mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
+                     NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
+    mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
+                     NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
+    mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
+                     NULL, "bat", MT_CRC, DVB_BAT_PID);
+#if 0
+    mpegts_table_add(mm, DVB_TOT_BASE, DVB_TOT_MASK, dvb_tot_callback,
+                     NULL, "tot", MT_CRC, DVB_TOT_PID);
+#endif
+  }
+}
+
+static void
+linuxdvb_frontend_open_services ( linuxdvb_frontend_t *lfe )
+{
+  service_t *s;
+  LIST_FOREACH(s, &lfe->mi_transports, s_active_link)
+    linuxdvb_frontend_open_service((mpegts_input_t*)lfe,
+                                   (mpegts_service_t*)s);
+}
+
+static void
+linuxdvb_frontend_monitor_stats ( linuxdvb_frontend_t *lfe )
+{
+}
+
+static void
+linuxdvb_frontend_monitor ( void *aux )
+{
+  linuxdvb_frontend_t *lfe = aux;
+  mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
+  mpegts_mux_t *mm;
+  fe_status_t fe_status;
+  signal_state_t status;
+
+  // TODO: check the frontend is accessible
+
+  if (!mmi) return;
+  mm = mmi->mmi_mux;
+
+  /* Get current status */
+  if (!ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status))
+    status = SIGNAL_UNKNOWN;
+  else if (fe_status & FE_HAS_LOCK)
+    status = SIGNAL_GOOD;
+  else if (fe_status & (FE_HAS_SYNC | FE_HAS_VITERBI | FE_HAS_CARRIER))
+    status = SIGNAL_BAD;
+  else if (fe_status & FE_HAS_SIGNAL)
+    status = SIGNAL_FAINT;
+  else
+    status = SIGNAL_NONE;
+
+  /* Set default period */
+  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
+
+  /* Waiting for lock */
+  if (lfe->lfe_locked) {
+
+    /* Locked */
+    if (status == SIGNAL_GOOD) {
+      lfe->lfe_locked = 1;
+  
+      /* Start input */
+      tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
+      pthread_create(&lfe->lfe_dvr_thread, NULL,
+                     linuxdvb_frontend_input_thread, lfe);
+
+      /* Table handlers */
+      linuxdvb_frontend_default_tables(lfe, (linuxdvb_mux_t*)mm);
+
+      /* Services */
+      linuxdvb_frontend_open_services(lfe);
+
+    /* Re-arm (quick) */
+    } else {
+      gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor,
+                    lfe, 50);
+
+      /* Monitor 1 per sec */
+      if (dispatch_clock < lfe->lfe_monitor)
+        return;
+      lfe->lfe_monitor = dispatch_clock + 1;
+    }
+  }
+
+  /* Monitor stats */
+  linuxdvb_frontend_monitor_stats(lfe);
+}
 
 static void *
 linuxdvb_frontend_input_thread ( void *aux )
@@ -260,32 +454,35 @@ linuxdvb_frontend_input_thread ( void *aux )
   ssize_t c;
   struct epoll_event ev;
   struct dmx_pes_filter_params dmx_param;
+  int fullmux;
 
   /* Get MMI */
   pthread_mutex_lock(&global_lock);
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   mmi = LIST_FIRST(&lfe->mi_mux_active);
+  fullmux = lfe->lfe_fullmux;
   pthread_mutex_unlock(&global_lock);
   if (mmi == NULL) return NULL;
 
   /* Open DMX */
-  dmx = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
-  if (dmx < 0) {
-    tvherror("linuxdvb", "%s - failed to open %s", buf, lfe->lfe_dmx_path);
-    return NULL;
-  }
-  memset(&dmx_param, 0, sizeof(dmx_param));
-  dmx_param.pid      = 0x2000;
-  dmx_param.input    = DMX_IN_FRONTEND;
-  dmx_param.output   = DMX_OUT_TS_TAP;
-  dmx_param.pes_type = DMX_PES_OTHER;
-  dmx_param.flags    = DMX_IMMEDIATE_START;
-  if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param) == -1) {
-    tvhlog(LOG_ERR, "dvb",
-    "Unable to configure demuxer \"%s\" for all PIDs -- %s",
-    lfe->lfe_dmx_path, strerror(errno));
-    close(dmx);
-    return NULL;
+  if (fullmux) {
+    dmx = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
+    if (dmx < 0) {
+      tvherror("linuxdvb", "%s - failed to open %s", buf, lfe->lfe_dmx_path);
+      return NULL;
+    }
+    memset(&dmx_param, 0, sizeof(dmx_param));
+    dmx_param.pid      = 0x2000;
+    dmx_param.input    = DMX_IN_FRONTEND;
+    dmx_param.output   = DMX_OUT_TS_TAP;
+    dmx_param.pes_type = DMX_PES_OTHER;
+    dmx_param.flags    = DMX_IMMEDIATE_START;
+    if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param) == -1) {
+      tvherror("linuxdvb", "%s - open raw filter failed [e=%s]",
+               buf, strerror(errno));
+      close(dmx);
+      return NULL;
+    }
   }
 
   /* Open DVR */
@@ -331,48 +528,14 @@ linuxdvb_frontend_input_thread ( void *aux )
                                     NULL, NULL, buf);
   }
 
-  close(dmx);
+  if (dmx != -1) close(dmx);
   close(dvr);
   return NULL;
 }
 
-static void
-linuxdvb_frontend_monitor ( void *aux )
-{
-  linuxdvb_frontend_t *lfe = aux;
-  mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
-  mpegts_mux_t *mm;
-
-  if (!mmi) return;
-  mm = mmi->mmi_mux;
-  
-  fe_status_t fe_status;
-
-  if (!ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status))
-    tvhtrace("mpegts", "fe_status = %02X", fe_status); 
-  else
-    tvhtrace("mpegts", "fe_status = unknown");
-
-  if (fe_status & FE_HAS_LOCK) {
-    // Note: the lock
-    // Open pending services
-    tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
-    pthread_create(&lfe->lfe_dvr_thread, NULL, linuxdvb_frontend_input_thread, lfe);
-
-    // TODO: these tables need to vary based on type
-    mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
-                     NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
-    mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
-                     NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
-    mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                     NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
-    mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
-                     NULL, "bat", MT_CRC, DVB_BAT_PID);
-  } else {
-    gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1000);
-  }
-}
-
+/* **************************************************************************
+ * Tuning
+ * *************************************************************************/
 
 static int
 linuxdvb_frontend_tune
@@ -504,6 +667,7 @@ linuxdvb_frontend_create0
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
   lfe->mi_open_service   = linuxdvb_frontend_open_service;
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
+  lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
 
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;

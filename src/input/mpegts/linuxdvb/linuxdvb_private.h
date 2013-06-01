@@ -135,15 +135,21 @@ struct linuxdvb_frontend
    * Reception
    */
   int                       lfe_fe_fd;
-  int                       lfe_dvr_fd;
   pthread_t                 lfe_dvr_thread;
   th_pipe_t                 lfe_dvr_pipe;
  
   /*
    * Tuning
    */
+  int                       lfe_locked;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
+  int (*lfe_open_pid) (linuxdvb_frontend_t *lfe, int pid, const char *name);
+
+  /*
+   * Configuration
+   */
+  int                       lfe_fullmux;
 };
 
 linuxdvb_frontend_t *
