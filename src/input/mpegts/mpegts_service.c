@@ -229,11 +229,7 @@ mpegts_service_create0
   service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
 
   /* Create */
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X", buf, sid);
-
   sbuf_init(&s->s_tsbuf);
-
   if (!conf) {
     if (sid)     s->s_dvb_service_id = sid;
     if (pmt_pid) s->s_pmt_pid        = pmt_pid;
@@ -256,6 +252,8 @@ mpegts_service_create0
   service_make_nicename((service_t*)s);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
   return s;
 }
 
