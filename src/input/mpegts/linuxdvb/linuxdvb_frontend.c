@@ -219,8 +219,8 @@ linuxdvb_frontend_start_mux
 
   /* Open FE */
   if (lfe->lfe_fe_fd <= 0) {
-    tvhtrace("linuxdvb", "%s - opening FE %s", buf1, lfe->lfe_fe_path);
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
     if (lfe->lfe_fe_fd <= 0) {
       return SM_CODE_TUNING_FAILED;
     }
@@ -265,6 +265,7 @@ linuxdvb_frontend_open_pid
     return -1;
   }
 
+  tvhtrace("linuxdvb", "%s - open PID %04X (%d)", name, pid, pid);
   memset(&dmx_param, 0, sizeof(dmx_param));
   dmx_param.pid      = pid;
   dmx_param.input    = DMX_IN_FRONTEND;
@@ -328,7 +329,7 @@ static void
 linuxdvb_frontend_default_tables 
   ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm )
 {
-  mpegts_mux_t *mm = (mpegts_mux_t*)lfe;
+  mpegts_mux_t *mm = (mpegts_mux_t*)lm;
 
   /* Common */
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
@@ -382,6 +383,7 @@ linuxdvb_frontend_monitor_stats ( linuxdvb_frontend_t *lfe )
 static void
 linuxdvb_frontend_monitor ( void *aux )
 {
+  char buf[256];
   linuxdvb_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
   mpegts_mux_t *mm;
@@ -392,11 +394,13 @@ linuxdvb_frontend_monitor ( void *aux )
 
   if (!mmi) return;
   mm = mmi->mmi_mux;
+  lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
   /* Get current status */
-  if (!ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status))
+  if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
+    tvhwarn("linuxdvb", "%s - FE_READ_STATUS error %s", buf, strerror(errno));
     status = SIGNAL_UNKNOWN;
-  else if (fe_status & FE_HAS_LOCK)
+  } else if (fe_status & FE_HAS_LOCK)
     status = SIGNAL_GOOD;
   else if (fe_status & (FE_HAS_SYNC | FE_HAS_VITERBI | FE_HAS_CARRIER))
     status = SIGNAL_BAD;
@@ -409,7 +413,7 @@ linuxdvb_frontend_monitor ( void *aux )
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
 
   /* Waiting for lock */
-  if (lfe->lfe_locked) {
+  if (!lfe->lfe_locked) {
 
     /* Locked */
     if (status == SIGNAL_GOOD) {
