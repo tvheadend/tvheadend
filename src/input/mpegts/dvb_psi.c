@@ -121,7 +121,7 @@ dvb_desc_sat_del
 
   /* Debug */
   const char *pol = dvb_pol2str(dmc.dmc_fe_polarisation);
-  tvhtrace("nit", "    dvb-s%c pos %d%c freq %d %c sym %d fec %s"
+  tvhdebug("nit", "    dvb-s%c pos %d%c freq %d %c sym %d fec %s"
 #if DVB_API_VERSION >= 5
            " mod %s roff %s"
 #endif
@@ -168,11 +168,11 @@ dvb_desc_cable_del
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   if (!frequency) {
-    tvhlog(LOG_WARNING, "nit", "dvb-c frequency error");
+    tvhwarn("nit", "dvb-c frequency error");
     return NULL;
   }
   if (!symrate) {
-    tvhlog(LOG_WARNING, "nit", "dvb-c symbol rate error");
+    tvhwarn("nit", "dvb-c symbol rate error");
     return NULL;
   }
 
@@ -189,7 +189,7 @@ dvb_desc_cable_del
   dmc.dmc_fe_params.u.qam.fec_inner    = fec_tab[ptr[10] & 0x07];
 
   /* Debug */
-  tvhtrace("nit", "    dvb-c freq %d sym %d mod %s fec %s",
+  tvhdebug("nit", "    dvb-c freq %d sym %d mod %s fec %s",
            frequency, 
            symrate,
            dvb_qam2str(dmc.dmc_fe_params.u.qam.modulation),
@@ -241,7 +241,7 @@ dvb_desc_terr_del
   /* Extract data */
   frequency     = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
   if (!frequency) {
-    tvhlog(LOG_WARNING, "nit", "dvb-c frequency error");
+    tvhwarn("nit", "dvb-c frequency error");
     return NULL;
   }
 
@@ -258,7 +258,7 @@ dvb_desc_terr_del
   dmc.dmc_fe_params.u.ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
 
   /* Debug */
-  tvhtrace("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
+  tvhdebug("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
            frequency,
            dvb_bw2str(dmc.dmc_fe_params.u.ofdm.bandwidth),
            dvb_qam2str(dmc.dmc_fe_params.u.ofdm.constellation),
@@ -322,7 +322,7 @@ dvb_desc_service_list
   for (i = 0; i < len; i += 3) {
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
-    tvhtrace(dstr, "    service %04X (%d) type %d", sid, sid, stype);
+    tvhdebug(dstr, "    service %04X (%d) type %d", sid, sid, stype);
     if (mm) {
       int save = 0;
       s = mpegts_service_find(mm, sid, 0, 1, &save);
@@ -343,7 +343,7 @@ dvb_desc_local_channel
   while(len >= 4) {
     sid = (ptr[0] << 8) | ptr[1];
     lcn = ((ptr[2] & 3) << 8) | ptr[3];
-    tvhtrace(dstr, "    sid %d lcn %d", sid, lcn);
+    tvhdebug(dstr, "    sid %d lcn %d", sid, lcn);
     if (lcn && mm) {
       mpegts_service_t *s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
@@ -393,7 +393,8 @@ dvb_table_begin
     tvhtrace(mt->mt_name, "  section %d last %d ver %d", *sect, *last, *ver);
 
     /* New version */
-    if (mt->mt_state[tableid].complete && mt->mt_state[tableid].version != *ver) {
+    if (mt->mt_state[tableid].complete &&
+        mt->mt_state[tableid].version != *ver) {
       tvhtrace(mt->mt_name, "  new version");
       mt->mt_state[tableid].complete = 0;
       mt->mt_state[tableid].section  = 0;
@@ -406,7 +407,8 @@ dvb_table_begin
     }
 
     /* Not the right section */
-    tvhtrace(mt->mt_name, "  waiting for section %d version %d", mt->mt_state[tableid].section, mt->mt_state[tableid].version);
+    tvhtrace(mt->mt_name, "  waiting for section %d version %d",
+             mt->mt_state[tableid].section, mt->mt_state[tableid].version);
     if (mt->mt_state[tableid].section != *sect) {
       tvhtrace(mt->mt_name, "  skip, wrong section");
       return -1;
@@ -445,7 +447,7 @@ dvb_pat_callback
 
   /* Multiplex */
   tsid = (ptr[0] << 8) | ptr[1];
-  tvhtrace("pat", "tsid %04X (%d)", tsid, tsid);
+  tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
   mpegts_mux_set_tsid(mm, tsid);
   
   /* Process each programme */
@@ -459,12 +461,12 @@ dvb_pat_callback
     if (sid == 0) {
       if (pid) {
         nit_pid = pid;
-        tvhtrace("pat", "  nit on pid %04X (%d)", pid, pid);
+        tvhdebug("pat", "  nit on pid %04X (%d)", pid, pid);
       }
 
     /* Service */
     } else if (pid) {
-      tvhtrace("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
+      tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if (mpegts_service_find(mm, sid, pid, 1, &save))
         if (save)
@@ -511,7 +513,7 @@ dvb_pmt_callback
   if (!s) return -1;
 
   /* Process */
-  tvhtrace("pmt", "sid %04X (%d)", sid, sid);
+  tvhdebug("pmt", "sid %04X (%d)", sid, sid);
   pthread_mutex_lock(&s->s_stream_mutex);
   psi_parse_pmt(s, ptr, len);
   pthread_mutex_unlock(&s->s_stream_mutex);
@@ -565,7 +567,7 @@ dvb_nit_callback
   /* Network Descriptors */
   *name = 0;
   DVB_DESC_FOREACH(ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
-    tvhtrace(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
+    tvhdebug(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
 
     switch (dtag) {
       case DVB_DESC_BOUQUET_NAME:
@@ -581,11 +583,11 @@ dvb_nit_callback
 
   /* BAT */
   if (tableid == 0x4A) {
-    tvhtrace(mt->mt_name, "bouquet %04X (%d) [%s]", bid, bid, name);
+    tvhdebug(mt->mt_name, "bouquet %04X (%d) [%s]", bid, bid, name);
 
   /* NIT */
   } else {
-    tvhtrace(mt->mt_name, "network %04X (%d) [%s]", nid, nid, name);
+    tvhdebug(mt->mt_name, "network %04X (%d) [%s]", nid, nid, name);
     save  = mpegts_network_set_nid(mn, nid);
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
@@ -596,7 +598,7 @@ dvb_nit_callback
   DVB_LOOP_FOREACH(ptr, len, 0, lptr, llen, 6) {
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
-    tvhtrace(mt->mt_name, "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
+    tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
@@ -604,11 +606,11 @@ dvb_nit_callback
         break;
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
-      tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+      tvhdebug(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
 
       switch (dtag) {
     
-        /* NIT only */
+        /* nit only */
         case DVB_DESC_SAT_DEL:
           mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
           break;
@@ -623,7 +625,7 @@ dvb_nit_callback
         case DVB_DESC_DEF_AUTHORITY:
           if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, NULL, NULL))
             return -1;
-          tvhtrace(mt->mt_name, "    default auth [%s]", dauth);
+          tvhdebug(mt->mt_name, "    default auth [%s]", dauth);
           if (mux && *dauth)
             mpegts_mux_set_crid_authority(mux, dauth);
           break;
@@ -665,7 +667,7 @@ dvb_sdt_callback
   /* ID */
   tsid = ptr[0] << 8 | ptr[1];
   onid = ptr[5] << 8 | ptr[6];
-  tvhtrace("sdt", "onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
+  tvhdebug("sdt", "onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
   /* Find Transport Stream */
   if (tableid == 0x42) {
@@ -693,7 +695,7 @@ dvb_sdt_callback
     int      running_status            = (ptr[3] >> 5) & 0x7;
 #endif
     *sprov = *sname = *sauth = 0;
-    tvhtrace("sdt", "  sid %04X (%d) running %d free_ca %d",
+    tvhdebug("sdt", "  sid %04X (%d) running %d free_ca %d",
              service_id, service_id, running_status, free_ca_mode);
 
     /* Initialise the loop */
@@ -704,7 +706,7 @@ dvb_sdt_callback
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
-      tvhtrace("sdt", "    dtag %02X dlen %d", dtag, dlen);
+      tvhdebug("sdt", "    dtag %02X dlen %d", dtag, dlen);
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
@@ -718,7 +720,7 @@ dvb_sdt_callback
       }
     }
 
-    tvhtrace("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
+    tvhdebug("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
              stype, sname, sprov, sauth);
     if (!s) continue;
 
@@ -767,7 +769,7 @@ dvb_sdt_callback
       pthread_mutex_lock(&s->s_stream_mutex);
       service_make_nicename((service_t*)s);
       pthread_mutex_unlock(&s->s_stream_mutex);
-      tvhtrace("sdt", "  nicename %s", s->s_nicename);
+      tvhdebug("sdt", "  nicename %s", s->s_nicename);
       save = 1;
     }
 
@@ -814,7 +816,8 @@ dvb_bat_callback
  * Add a CA descriptor
  */
 static int
-psi_desc_add_ca(mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
+psi_desc_add_ca
+  (mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
   elementary_stream_t *st;
   caid_t *c;
@@ -834,8 +837,8 @@ psi_desc_add_ca(mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pi
       c->delete_me = 0;
 
       if(c->providerid != provid) {
-  c->providerid = provid;
-  r |= PMT_UPDATE_CA_PROVIDER_CHANGE;
+        c->providerid = provid;
+        r |= PMT_UPDATE_CA_PROVIDER_CHANGE;
       }
       return r;
     }
@@ -847,6 +850,8 @@ psi_desc_add_ca(mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pi
   c->providerid = provid;
   
   c->delete_me = 0;
+  tvhdebug("pmt", "  caid %04X (%s) provider %08X",
+           caid, descrambler_caid2name(caid), provid);
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
   return r;
@@ -946,8 +951,8 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
 
       // Check es_delete_me so we only compute position once per PMT update
       if(st->es_position != *position && st->es_delete_me) {
-  st->es_position = *position;
-  r |= PMT_REORDERED;
+        st->es_position = *position;
+        r |= PMT_REORDERED;
       }
       st->es_delete_me = 0;
       (*position)++;
@@ -1033,7 +1038,7 @@ psi_parse_pmt
     estype  = ptr[0];
     pid     = (ptr[1] & 0x1f) << 8 | ptr[2];
     dllen   = (ptr[3] & 0xf) << 8 | ptr[4];
-    tvhtrace("pmt", "  pid %04X estype %d", pid, estype);
+    tvhdebug("pmt", "  pid %04X estype %d", pid, estype);
 
     ptr += 5;
     len -= 5;
@@ -1147,13 +1152,14 @@ psi_parse_pmt
 
       st->es_delete_me = 0;
 
-      tvhtrace("pmt", "  type %s position %d", streaming_component_type2txt(st->es_type), position);
+      tvhdebug("pmt", "  type %s position %d",
+               streaming_component_type2txt(st->es_type), position);
       if (lang)
-        tvhtrace("pmt", "  language %s", lang);
+        tvhdebug("pmt", "  language %s", lang);
       if (composition_id != -1)
-        tvhtrace("pmt", "  composition_id %d", composition_id);
+        tvhdebug("pmt", "  composition_id %d", composition_id);
       if (ancillary_id != -1)
-        tvhtrace("pmt", "  ancillary_id %d", ancillary_id);
+        tvhdebug("pmt", "  ancillary_id %d", ancillary_id);
 
       if(st->es_position != position) {
         update |= PMT_REORDERED;
@@ -1202,7 +1208,7 @@ psi_parse_pmt
     sort_elementary_streams((service_t*)t);
 
   if(update) {
-    tvhlog(LOG_DEBUG, "PSI", "Service \"%s\" PMT (version %d) updated"
+    tvhdebug("pmt", "Service \"%s\" PMT (version %d) updated"
      "%s%s%s%s%s%s%s%s%s%s%s%s%s",
      service_nicename((service_t*)t), version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -1218,10 +1224,6 @@ psi_parse_pmt
      update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
-    int c = 0;
-    TAILQ_FOREACH(st, &t->s_components, es_link)
-      c++;
-    tvhtrace("pmt", "number of streams %d", c);
     
     service_request_save((service_t*)t, 0);
 
