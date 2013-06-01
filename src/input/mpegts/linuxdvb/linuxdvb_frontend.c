@@ -373,16 +373,20 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 }
 
-#if DVB_API_VERSION >= 5
 
 static int
 linuxdvb_frontend_tune
   ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm )
 {
+  int r;
   struct dvb_frontend_event ev;
   dvb_mux_conf_t *dmc = &lm->lm_tuning;
   struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
-  int r;
+
+  /* S2 tuning */
+#if DVB_API_VERSION >= 5
+  struct dtv_property cmds[20];
+  struct dtv_properties cmdseq = { .num = 0, .props = cmds };
   
   /* Clear Q */
   static struct dtv_property clear_p[] = {
@@ -396,45 +400,63 @@ linuxdvb_frontend_tune
     return -1;
   
   /* Tune */
-  struct dtv_property _dvbs_cmdargs[] = {
-    { .cmd = DTV_DELIVERY_SYSTEM,   .u.data = SYS_DVBT /*TODO: fix this*/ },
-    { .cmd = DTV_FREQUENCY,         .u.data = p->frequency },
-    { .cmd = DTV_INVERSION,         .u.data = p->inversion },
-    { .cmd = DTV_BANDWIDTH_HZ,      .u.data = 8000000 },// TODO: fix this
-    { .cmd = DTV_CODE_RATE_HP,      .u.data = p->u.ofdm.code_rate_HP },
-    { .cmd = DTV_CODE_RATE_LP,      .u.data = p->u.ofdm.code_rate_LP },
-    { .cmd = DTV_MODULATION,        .u.data = p->u.ofdm.constellation },
-    { .cmd = DTV_TRANSMISSION_MODE, .u.data = p->u.ofdm.transmission_mode },
-    { .cmd = DTV_GUARD_INTERVAL,    .u.data = p->u.ofdm.guard_interval },
-    { .cmd = DTV_HIERARCHY,         .u.data = p->u.ofdm.hierarchy_information },
-    { .cmd = DTV_TUNE },
-  };
+#define S2CMD(c, d)\
+  cmds[cmdseq.num].cmd      = c;\
+  cmds[cmdseq.num++].u.data = d
+  S2CMD(DTV_DELIVERY_SYSTEM, lm->lm_tuning.dmc_fe_delsys);
+  S2CMD(DTV_FREQUENCY,       p->frequency);
+  S2CMD(DTV_INVERSION,       p->inversion);
 
-  struct dtv_properties _dvbs_cmdseq = {
-    .num   = 11,
-    .props = _dvbs_cmdargs
-  };
+  /* DVB-T */
+  if (lfe->lfe_info.type == FE_OFDM) {
+    S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(p->u.ofdm.bandwidth));
+    S2CMD(DTV_CODE_RATE_HP,      p->u.ofdm.code_rate_HP);
+    S2CMD(DTV_CODE_RATE_LP,      p->u.ofdm.code_rate_LP);
+    S2CMD(DTV_MODULATION,        p->u.ofdm.constellation);
+    S2CMD(DTV_TRANSMISSION_MODE, p->u.ofdm.transmission_mode);
+    S2CMD(DTV_GUARD_INTERVAL,    p->u.ofdm.guard_interval);
+    S2CMD(DTV_HIERARCHY,         p->u.ofdm.hierarchy_information);
 
-  /* discard stale QPSK events */
+  /* DVB-C */
+  } else if (lfe->lfe_info.type == FE_QAM) {
+    S2CMD(DTV_SYMBOL_RATE,       p->u.qam.symbol_rate);
+    S2CMD(DTV_MODULATION,        p->u.qam.modulation);
+    S2CMD(DTV_INNER_FEC,         p->u.qam.fec_inner);
+
+  /* DVB-S */
+  } else if (lfe->lfe_info.type == FE_QPSK) {
+    S2CMD(DTV_SYMBOL_RATE,       p->u.qpsk.symbol_rate);
+    S2CMD(DTV_INNER_FEC,         p->u.qpsk.fec_inner);
+    S2CMD(DTV_MODULATION,        dmc->dmc_fe_modulation);
+    S2CMD(DTV_ROLLOFF,           dmc->dmc_fe_rolloff);
+
+  /* ATSC */
+  } else {
+    S2CMD(DTV_MODULATION,        p->u.vsb.modulation);
+  }
+
+  /* Tune */
+  S2CMD(DTV_TUNE, 0);
+#undef S2CMD
+#endif
+
+  /* discard stale events */
   while (1) {
     if (ioctl(lfe->lfe_fe_fd, FE_GET_EVENT, &ev) == -1)
       break;
   }
 
-  /* do tuning now */
-  r = ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
+  /* S2 tuning */
+#if DVB_API_VERSION >= 5
+  r = ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &cmdseq);
+
+  /* v3 tuning */
+#else
+  r = ioctl(lfe->lfe_fe_fd, FE_SET_FRONTEND, p);
+#endif
 
   return r;
 }
-
-#else
-static int
-linuxdvb_frontend_tune
-  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi )
-
-}
-
-#endif
 
 /* **************************************************************************
  * Creation/Config

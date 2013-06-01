@@ -738,4 +738,25 @@ dvb_mux_conf_save ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
   else if (type == FE_ATSC) dvb_mux_conf_save_atsc(dmc, m);
 }
 
+int
+dvb_bandwidth ( fe_bandwidth_t bw )
+{
+  switch (bw) {
+    case BANDWIDTH_10_MHZ:
+      return 10000000;
+    case BANDWIDTH_8_MHZ:
+      return 8000000;
+    case BANDWIDTH_7_MHZ:
+      return 7000000;
+    case BANDWIDTH_6_MHZ:
+      return 6000000;
+    case BANDWIDTH_5_MHZ:
+      return 5000000;
+    case BANDWIDTH_1_712_MHZ:
+      return 1712000;
+    default:
+      return 0;
+  }
+}
+
 #endif /* ENABLE_DVBAPI */

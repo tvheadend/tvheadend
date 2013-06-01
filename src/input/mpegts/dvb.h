@@ -226,6 +226,8 @@ int dvb_str2hier    ( const char *str );
 int dvb_str2pol     ( const char *str );
 int dvb_str2type    ( const char *str );
 
+int dvb_bandwidth   ( enum fe_bandwidth bw );
+
 #endif /* ENABLE_DVBAPI */
 
 #endif /* DVB_SUPPORT_H */
