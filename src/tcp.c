@@ -18,6 +18,8 @@
 
 #include <pthread.h>
 #include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <poll.h>
 #include <assert.h>
 #include <stdio.h>
