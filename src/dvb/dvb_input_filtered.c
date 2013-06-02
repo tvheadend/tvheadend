@@ -27,11 +27,11 @@
 #include <fcntl.h>
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
-#include <sys/epoll.h>
 
 #include "tvheadend.h"
 #include "dvb.h"
 #include "service.h"
+#include "tvhpoll.h"
 
 /**
  * Install filters for a service
@@ -58,9 +58,9 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
     if(fd == -1) {
       st->es_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
-	     st->es_pid, strerror(errno));
+       "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
+       s->s_identifier, tda->tda_demux_path, 
+       st->es_pid, strerror(errno));
       continue;
     }
 
@@ -73,9 +73,9 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
 
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
       tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
-	     st->es_pid, strerror(errno));
+       "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
+       s->s_identifier, tda->tda_demux_path, 
+       st->es_pid, strerror(errno));
       close(fd);
       fd = -1;
     }
@@ -113,7 +113,7 @@ static void
 open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  struct epoll_event e;
+  tvhpoll_event_t ev;
   static int tdt_id_tally;
 
   tdt->tdt_fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
@@ -122,10 +122,11 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 
     tdt->tdt_id = ++tdt_id_tally;
 
-    e.events = EPOLLIN;
-    e.data.u64 = ((uint64_t)tdt->tdt_fd << 32) | tdt->tdt_id;
+    ev.fd       = tdt->tdt_fd;
+    ev.events   = TVHPOLL_IN;
+    ev.data.u64 = ((uint64_t)tdt->tdt_fd << 32) | tdt->tdt_id;
 
-    if(epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_ADD, tdt->tdt_fd, &e)) {
+    if(tvhpoll_add(tda->tda_table_pd, &ev, 1) != 0) {
       close(tdt->tdt_fd);
       tdt->tdt_fd = -1;
     } else {
@@ -136,13 +137,13 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
       fp.filter.mask[0]   = tdt->tdt_mask;
 
       if(tdt->tdt_flags & TDT_CRC)
-	fp.flags |= DMX_CHECK_CRC;
+  fp.flags |= DMX_CHECK_CRC;
       fp.flags |= DMX_IMMEDIATE_START;
       fp.pid = tdt->tdt_pid;
 
       if(ioctl(tdt->tdt_fd, DMX_SET_FILTER, &fp)) {
-	close(tdt->tdt_fd);
-	tdt->tdt_fd = -1;
+  close(tdt->tdt_fd);
+  tdt->tdt_fd = -1;
       }
     }
   }
@@ -159,10 +160,12 @@ static void
 tdt_close_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  tvhpoll_event_t ev;
 
   assert(tdt->tdt_fd != -1);
 
-  epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_DEL, tdt->tdt_fd, NULL);
+  ev.fd = tdt->tdt_fd;
+  tvhpoll_rem(tda->tda_table_pd, &ev, 1);
   close(tdt->tdt_fd);
 
   tdt->tdt_fd = -1;
@@ -178,51 +181,48 @@ static void *
 dvb_table_input(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int r, i, tid, fd, x;
-  struct epoll_event ev[1];
+  int r, tid, fd, x;
   uint8_t sec[4096];
   th_dvb_mux_instance_t *tdmi;
   th_dvb_table_t *tdt;
   int64_t cycle_barrier = 0; 
+  tvhpoll_event_t ev;
 
   while(1) {
-    x = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
+    x = tvhpoll_wait(tda->tda_table_pd, &ev, 1, -1);
+    if (x != 1) continue;
 
-    for(i = 0; i < x; i++) {
-    
-      tid = ev[i].data.u64 & 0xffffffff;
-      fd  = ev[i].data.u64 >> 32; 
+    tid = ev.data.u64 & 0xffffffff;
+    fd  = ev.data.u64 >> 32; 
 
-      if(!(ev[i].events & EPOLLIN))
-	continue;
+    if(!(ev.events & TVHPOLL_IN))
+      continue;
 
-      if((r = read(fd, sec, sizeof(sec))) < 3)
-	continue;
+    if((r = read(fd, sec, sizeof(sec))) < 3)
+      continue;
 
-      pthread_mutex_lock(&global_lock);
-      if((tdmi = tda->tda_mux_current) != NULL) {
-	LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
-	  if(tdt->tdt_id == tid)
-	    break;
+    pthread_mutex_lock(&global_lock);
+    if((tdmi = tda->tda_mux_current) != NULL) {
+      LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+        if(tdt->tdt_id == tid)
+          break;
 
-	if(tdt != NULL) {
-	  dvb_table_dispatch(sec, r, tdt);
+      if(tdt != NULL) {
+        dvb_table_dispatch(sec, r, tdt);
 
-	  /* Any tables pending (that wants a filter/fd), close this one */
-	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
-	     cycle_barrier < getmonoclock()) {
-	    tdt_close_fd(tdmi, tdt);
-	    cycle_barrier = getmonoclock() + 100000;
-	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
-	    assert(tdt != NULL);
-	    TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
-
-	    open_table(tdmi, tdt);
-	  }
-	}
+        /* Any tables pending (that wants a filter/fd), close this one */
+        if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
+           cycle_barrier < getmonoclock()) {
+          tdt_close_fd(tdmi, tdt);
+          cycle_barrier = getmonoclock() + 100000;
+          tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
+          assert(tdt != NULL);
+          TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+          open_table(tdmi, tdt);
+        }
       }
-      pthread_mutex_unlock(&global_lock);
     }
+    pthread_mutex_unlock(&global_lock);
   }
   return NULL;
 }
@@ -232,11 +232,13 @@ static void
 close_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  tvhpoll_event_t ev;
 
   if(tdt->tdt_fd == -1) {
     TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
   } else {
-    epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_DEL, tdt->tdt_fd, NULL);
+    ev.fd = tdt->tdt_fd;
+    tvhpoll_rem(tda->tda_table_pd, &ev, 1);
     close(tdt->tdt_fd);
   }
 }
@@ -253,7 +255,7 @@ dvb_input_filtered_setup(th_dvb_adapter_t *tda)
   tda->tda_close_table   = close_table;
 
   pthread_t ptid;
-  tda->tda_table_epollfd = epoll_create(50);
+  tda->tda_table_pd = tvhpoll_create(50);
   pthread_create(&ptid, NULL, dvb_table_input, tda);
 }
 

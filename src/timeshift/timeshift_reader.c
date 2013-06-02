@@ -21,6 +21,7 @@
 #include "timeshift.h"
 #include "timeshift/private.h"
 #include "atomic.h"
+#include "tvhpoll.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -416,26 +417,13 @@ void *timeshift_reader ( void *p )
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
   time_t last_status = 0;
-#if ENABLE_EPOLL
-  int efd;
-  struct epoll_event ev = { 0 };
-#elif ENABLE_KQUEUE
-  int kfd;
-  struct kevent ke;
-#endif
+  tvhpoll_t *pd;
+  tvhpoll_event_t ev = { 0 };
 
-#if ENABLE_EPOLL
-  /* Poll */
-  efd        = epoll_create(1);
-  ev.events  = EPOLLIN;
-  ev.data.fd = ts->rd_pipe.rd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, ev.data.fd, &ev);
-#elif ENABLE_KQUEUE
-  /* kqueue */
-  kfd = kqueue();
-  EV_SET(&ke, ts->rd_pipe.rd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-  kevent(kfd, &ke, 1, NULL, 0, NULL);
-#endif
+  pd = tvhpoll_create(1);
+  ev.fd     = ts->rd_pipe.rd;
+  ev.events = TVHPOLL_IN;
+  tvhpoll_add(pd, &ev, 1);
 
   /* Output */
   while (run) {
@@ -447,11 +435,7 @@ void *timeshift_reader ( void *p )
 
     /* Wait for data */
     if(wait)
-#if ENABLE_EPOLL
-      nfds = epoll_wait(efd, &ev, 1, wait);
-#elif ENABLE_KQUEUE
-      nfds = kevent(kfd, NULL, 0, &ke, 1, NULL);
-#endif
+      nfds = tvhpoll_wait(pd, &ev, 1, wait);
     else
       nfds = 0;
     wait      = -1;
@@ -826,11 +810,7 @@ void *timeshift_reader ( void *p )
   }
 
   /* Cleanup */
-#if ENABLE_EPOLL
-  close(efd);
-#elif ENABLE_KQUEUE
-  close(kfd);
-#endif
+  tvhpoll_destroy(pd);
   if (fd != -1) close(fd);
   if (sm)       streaming_msg_free(sm);
   if (ctrl)     streaming_msg_free(ctrl);

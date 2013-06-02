@@ -47,6 +47,7 @@
 #include "epggrab.h"
 #include "diseqc.h"
 #include "atomic.h"
+#include "tvhpoll.h"
 
 #if ENABLE_EPOLL
 #include <sys/epoll.h>
@@ -1029,14 +1030,8 @@ dvb_adapter_input_dvr(void *aux)
   int fd = -1, i, r, c, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
-#if ENABLE_EPOLL
-  int delay = 10;
-  int efd;
-  struct epoll_event ev;
-#elif ENABLE_KQUEUE
-  int kfd;
-  struct kevent ke;
-#endif
+  tvhpoll_t *pd;
+  tvhpoll_event_t ev[2];
 
   /* Install RAW demux */
   if (tda->tda_rawmode) {
@@ -1052,40 +1047,25 @@ dvb_adapter_input_dvr(void *aux)
     return NULL;
   }
 
-#if ENABLE_EPOLL
-  /* Create poll */
-  efd = epoll_create(2);
-  memset(&ev, 0, sizeof(ev));
-  ev.events  = EPOLLIN;
-  ev.data.fd = tda->tda_dvr_pipe.rd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
-  ev.data.fd = fd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
-#elif ENABLE_KQUEUE
-  /* Create kqueue */
-  kfd = kqueue();
-  EV_SET(&ke, tda->tda_dvr_pipe.rd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-  kevent(kfd, &ke, 1, NULL, 0, NULL);
-  EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-  kevent(kfd, &ke, 1, NULL, 0, NULL);
-#endif
+  pd = tvhpoll_create(2);
+  memset(ev, 0, sizeof(ev));
+  ev[0].data.fd = ev[0].fd = tda->tda_dvr_pipe.rd;
+  ev[0].events  = TVHPOLL_IN;
+  ev[1].data.fd = ev[1].fd = fd;
+  ev[1].events  = TVHPOLL_IN;
+  tvhpoll_add(pd, ev, 2);
 
   r = i = 0;
   while(1) {
 
     /* Wait for input */
-#if ENABLE_EPOLL
-    nfds = epoll_wait(efd, &ev, 1, delay);
+    nfds = tvhpoll_wait(pd, ev, 1, -1);
 
     /* No data */
     if (nfds < 1) continue;
 
     /* Exit */
-    if (ev.data.fd != fd) break;
-#elif ENABLE_KQUEUE
-    nfds = kevent(kfd, NULL, 0, &ke, 1, NULL);
-    if (nfds < 1) continue;
-#endif
+    if (ev[0].data.fd != fd) break;
 
     /* Read data */
     c = read(fd, tsb+r, sizeof(tsb)-r);
@@ -1166,11 +1146,7 @@ dvb_adapter_input_dvr(void *aux)
 
   if(dmx != -1)
     close(dmx);
-#if ENABLE_EPOLL
-  close(efd);
-#elif ENABLE_KQUEUE
-  close(kfd);
-#endif
+  tvhpoll_destroy(pd);
   close(fd);
   return NULL;
 }

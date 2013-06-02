@@ -18,22 +18,29 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_POLL_H__
-#define __TVH_POLL_H_
+#ifndef __TVHPOLL_H__
+#define __TVHPOLL_H__
 
 #include <sys/types.h>
 
 typedef struct tvhpoll tvhpoll_t;
 typedef struct tvhpoll_event
 {
-  int fd;
-  int events;
+  int  fd; // input
+  int  events;
+  union {
+    void     *ptr;
+    uint64_t u64;
+    uint32_t u32;
+    int      fd;
+  }    data;
 } tvhpoll_event_t;
 
 #define TVHPOLL_IN  0x01
 #define TVHPOLL_OUT 0x02
 #define TVHPOLL_PRI 0x04
 #define TVHPOLL_ERR 0x08
+#define TVHPOLL_HUP 0x10
 
 tvhpoll_t *tvhpoll_create  ( size_t num );
 void       tvhpoll_destroy ( tvhpoll_t *tp );
@@ -44,4 +51,4 @@ int        tvhpoll_rem
 int        tvhpoll_wait
   ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num, int ms );
 
-#endif /* __TVH_POLL_H__ */
+#endif /* __TVHPOLL_H__ */
