@@ -530,7 +530,7 @@ int
 dvb_nit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int save;
+  int save = 0;
   int sect, last, ver;
   uint8_t  dlen, dtag;
   uint16_t llen, dllen;
@@ -588,7 +588,7 @@ dvb_nit_callback
   /* NIT */
   } else {
     tvhdebug(mt->mt_name, "network %04X (%d) [%s]", nid, nid, name);
-    save  = mpegts_network_set_nid(mn, nid);
+    //save  = mpegts_network_set_nid(mn, nid);
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
       mn->mn_config_save(mn);
