@@ -37,6 +37,7 @@ ARGS="-f"
 [ -z "$TVH_HTTP_PORT" ] || ARGS="$ARGS --http_port $TVH_HTTP_PORT"
 [ -z "$TVH_HTTP_ROOT" ] || ARGS="$ARGS --http_root $TVH_HTTP_ROOT"
 [ -z "$TVH_HTSP_PORT" ] || ARGS="$ARGS --htsp_port $TVH_HTSP_PORT"
+[ -z "$TVH_ARGS"      ] || ARGS="$ARGS $TVH_ARGS"
 [ "$TVH_DEBUG" = "1"  ] && ARGS="$ARGS -s"
 
 # Load the VERBOSE setting and other rcS variables
