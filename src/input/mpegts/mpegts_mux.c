@@ -124,6 +124,12 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
           buf, reason, weight);
 
+  /* Disabled */
+  if (!mm->mm_is_enabled(mm)) {
+    tvhwarn("mpegts", "%s - not enabled", buf);
+    return SM_CODE_MUX_NOT_ENABLED;
+  }
+
   /* Already tuned */
   if (mm->mm_active) {
     tvhtrace("mpegts", "%s - already active", buf);
@@ -158,6 +164,10 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     if (!mmi) {
       LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
 
+        /* Not enabled */
+        if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input))
+          continue;
+
         /* Bad - skip */
         if (mmi->mmi_tune_failed)
           continue;
@@ -172,7 +182,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 
       /* No free input */
       else {
-        tvhdebug("mpegts", "%s - no input available", buf);
+        tvhwarn("mpegts", "%s - no input available", buf);
         return SM_CODE_NO_FREE_ADAPTER;
       }
     }
