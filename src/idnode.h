@@ -43,6 +43,8 @@ htsmsg_t *idnode_serialize(struct idnode *self);
 
 void idnode_set_prop(idnode_t *in, const char *key, const char *value);
 
+const property_t* idnode_get_prop(idnode_t *in, const char *key);
+
 void idnode_update_all_props(idnode_t *in,
                              const char *(*getvalue)(void *opaque,
                                                      const char *key),
@@ -52,3 +54,6 @@ void idnode_notify_title_changed(void *obj);
 
 void idnode_save ( idnode_t *self, htsmsg_t *m );
 void idnode_load ( idnode_t *self, htsmsg_t *m );
+
+const char *idnode_get_str ( idnode_t *self, const char *key );
+int idnode_get_u32(idnode_t *self, const char *key, uint32_t *u32);

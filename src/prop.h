@@ -25,6 +25,7 @@ typedef struct property {
 
 } property_t;
 
+const property_t *prop_find(const property_t *p, const char *name);
 
 void prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg);
 

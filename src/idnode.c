@@ -358,11 +358,73 @@ idnode_save ( idnode_t *self, htsmsg_t *c )
 /*
  * Load
  */
-void idnode_load ( idnode_t *self, htsmsg_t *c )
+void
+idnode_load ( idnode_t *self, htsmsg_t *c )
 {
   const idclass_t *idc = self->in_class;
   while (idc) {
     prop_write_values(self, idc->ic_properties, c);
     idc = idc->ic_super;
   }
+}
+
+static const property_t *
+idnode_find_prop
+  ( idnode_t *self, const char *key )
+{
+  const idclass_t *idc = self->in_class;
+  const property_t *p;
+  while (idc) {
+    if ((p = prop_find(idc->ic_properties, key))) return p;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
+/*
+ * Get field as string
+ */
+const char *
+idnode_get_str
+  ( idnode_t *self, const char *key )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p && p->type == PT_STR) {
+    const char *s;
+    if (p->str_get)
+      s = p->str_get(self);
+    else {
+      void *ptr = self;
+      ptr += p->off;
+      s = *(const char**)ptr;
+    }
+    return s;
+  }
+
+  return NULL;
+}
+
+int
+idnode_get_u32
+  ( idnode_t *self, const char *key, uint32_t *u32 )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p) {
+    void *ptr = self;
+    ptr += p->off;
+    switch (p->type) {
+      case PT_INT:
+        *u32 = *(int*)ptr;
+        return 0;
+      case PT_U16:
+        *u32 = *(uint32_t*)ptr;
+        return 0;
+      case PT_U32:
+        *u32 = *(uint16_t*)ptr;
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1;
 }

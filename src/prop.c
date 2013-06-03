@@ -27,7 +27,7 @@ str_to_bool(const char *s)
 }
 
 
-static const property_t *
+const property_t *
 prop_find(const property_t *p, const char *id)
 {
   int i = 0;
