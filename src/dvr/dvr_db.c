@@ -194,9 +194,9 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   }
 
   if(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE) {
-    if(de->de_bcast && de->de_bcast->subtitle)  
+    if(de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->subtitle)  
 	  snprintf(output + strlen(output), outlen - strlen(output),
-		   "-%s", lang_str_get(de->de_subtitle, NULL));
+		   "-%s", lang_str_get(de->de_bcast->episode->subtitle, NULL));
   }
 
   if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
