@@ -99,10 +99,12 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme%s.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/xtheme-blue.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
+                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/GridFilters.css\">\n"
+                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/RangeMenu.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n",
                      tvheadend_webui_debug ? "-debug" : "",
                      tvheadend_webui_debug ? "-debug" : "",
-                     tvheadend_webui_debug ? ""       : "-min");
+                     "");//tvheadend_webui_debug ? ""       : "-min");
   
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = " "'"EXTJSPATH"/resources/images/default/s.gif';");
 
@@ -115,6 +117,15 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/multiselect/multiselect.js");
   extjs_load(hq, "static/multiselect/ddview.js");
   extjs_load(hq, "static/checkcolumn/CheckColumn.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/GridFilters.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/Filter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/BooleanFilter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/DateFilter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/ListFilter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/NumericFilter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/StringFilter.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/menu/ListMenu.js");
+  extjs_load(hq, "static/extjs/examples/ux/gridfilters/menu/RangeMenu.js");
 
   /**
    * Create a namespace for our app
