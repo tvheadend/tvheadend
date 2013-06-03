@@ -193,6 +193,12 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
+  if(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE) {
+    if(de->de_bcast && de->de_bcast->subtitle)  
+	  snprintf(output + strlen(output), outlen - strlen(output),
+		   "-%s", lang_str_get(de->de_subtitle, NULL));
+  }
+
   if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
     if(de->de_bcast && de->de_bcast->episode)  
       epg_episode_number_format(de->de_bcast->episode,
