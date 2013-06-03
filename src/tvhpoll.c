@@ -167,7 +167,7 @@ int tvhpoll_wait
   }
 #elif ENABLE_KQUEUE
   struct timespec tm, *to = NULL;
-  if (ms) {
+  if (ms > 0) {
     tm.tv_sec  = ms / 1000;
     tm.tv_nsec = (ms % 1000) * 1000000LL;
     to = &tm;
