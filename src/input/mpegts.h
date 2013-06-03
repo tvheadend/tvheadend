@@ -38,6 +38,7 @@ typedef struct mpegts_input         mpegts_input_t;
 typedef struct mpegts_table_feed    mpegts_table_feed_t;
 
 /* Lists */
+typedef LIST_HEAD (,mpegts_network)                mpegts_network_list_t;
 typedef LIST_HEAD (mpegts_input_list,mpegts_input) mpegts_input_list_t;
 typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux)    mpegts_mux_queue_t;
 typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)     mpegts_mux_list_t;
@@ -394,6 +395,12 @@ struct mpegts_input
 #endif /* __TVH_MPEGTS_H__ */
 
 /* ****************************************************************************
+ * Lists
+ * ***************************************************************************/
+
+extern mpegts_network_list_t mpegts_network_all;
+  
+/* ****************************************************************************
  * Functions
  * ***************************************************************************/
 
@@ -413,7 +420,7 @@ mpegts_network_t *mpegts_network_create0
 
 #define mpegts_network_create(t, u, n, c)\
   (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), &t##_class, u, n, c)
-  
+
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
 

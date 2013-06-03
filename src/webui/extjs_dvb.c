@@ -35,14 +35,9 @@
 #include "access.h"
 #include "dtable.h"
 #include "channels.h"
-#include "psi.h"
 #include "serviceprobe.h"
 
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
-#include "dvb/dvb_preconf.h"
-#include "dvr/dvr.h"
-
+#include "input.h"
 
 
 #if 0
@@ -685,10 +680,140 @@ extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
+#if 0
 static int
 extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 {
   return extjs_get_idnode(hc, remain, opaque, &dvb_network_root);
+}
+#endif
+
+static int
+extjs_mpegts_services
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  char buf[256];
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  mpegts_service_t *ms;
+  htsmsg_t *out, *list = htsmsg_create_list();
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+        htsmsg_t *e = htsmsg_create_map();
+        htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&ms->s_id));
+        mm->mm_display_name(mm, buf, sizeof(buf));
+        htsmsg_add_str(e, "mux", buf);
+        htsmsg_add_bool(e, "enabled", ms->s_enabled);
+        htsmsg_add_u32(e, "sid", ms->s_dvb_service_id);
+        htsmsg_add_u32(e, "pmt", ms->s_pmt_pid);
+        htsmsg_add_u32(e, "lcn", ms->s_dvb_channel_num);
+        if (ms->s_dvb_svcname)
+          htsmsg_add_str(e, "name", ms->s_dvb_svcname);
+        if (ms->s_dvb_provider)
+          htsmsg_add_str(e, "provider", ms->s_dvb_provider);
+        if (ms->s_dvb_cridauth)
+          htsmsg_add_str(e, "crid_auth", ms->s_dvb_cridauth);
+        if (ms->s_dvb_charset)
+          htsmsg_add_str(e, "charset", ms->s_dvb_charset);
+        htsmsg_add_u32(e, "type", ms->s_dvb_servicetype);
+        htsmsg_add_msg(list, NULL, e);
+      }
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+  out = htsmsg_create_map();
+  htsmsg_add_msg(out, "entries", list);
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
+
+
+static int
+extjs_mpegts_muxes
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  char buf[256];
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  mpegts_service_t *ms;
+  int s;
+  htsmsg_t *out, *list = htsmsg_create_list();
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      s = 0;
+      htsmsg_t *e = htsmsg_create_map();
+      htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mm->mm_id));
+      mn->mn_display_name(mn, buf, sizeof(buf));
+      htsmsg_add_str(e, "network", buf);
+      mm->mm_display_name(mm, buf, sizeof(buf));
+      htsmsg_add_str(e, "name", buf);
+      htsmsg_add_bool(e, "enabled", mm->mm_enabled);
+      htsmsg_add_u32(e, "onid", mm->mm_onid);
+      htsmsg_add_u32(e, "tsid", mm->mm_tsid);
+      htsmsg_add_bool(e, "initscan", mm->mm_initial_scan_done);
+      htsmsg_add_str(e, "crid_auth", mm->mm_crid_authority ?: "");
+      LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
+        s++;
+      htsmsg_add_u32(e, "num_svc", s);
+      htsmsg_add_msg(list, NULL, e);
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+  out = htsmsg_create_map();
+  htsmsg_add_msg(out, "entries", list);
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
+
+static int
+extjs_mpegts_networks
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  char buf[256];
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  mpegts_service_t *ms;
+  int m, s;
+  htsmsg_t *out, *list = htsmsg_create_list();
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    m = s = 0;
+    htsmsg_t *e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mn->mn_id));
+    mn->mn_display_name(mn, buf, sizeof(buf));
+    htsmsg_add_str(e, "name", buf);
+    htsmsg_add_u32(e, "nid",  mn->mn_nid);
+    htsmsg_add_u32(e, "autodiscovery",  mn->mn_autodiscovery);
+    htsmsg_add_u32(e, "skipinitscan",   mn->mn_skipinitscan);
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      m++;
+      LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
+        s++;
+    }
+    htsmsg_add_u32(e, "num_mux", m);
+    htsmsg_add_u32(e, "num_svc", s);
+    htsmsg_add_msg(list, NULL, e);
+  }
+  pthread_mutex_unlock(&global_lock);
+  out = htsmsg_create_map();
+  htsmsg_add_msg(out, "entries", list);
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
 }
 
 
@@ -698,8 +823,13 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 void
 extjs_start_dvb(void)
 {
-  http_path_add("/dvb/networks", 
-		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
+  printf("extjs_start_dvb()\n");
+  http_path_add("/api/mpegts/networks", 
+		NULL, extjs_mpegts_networks, ACCESS_WEB_INTERFACE);
+  http_path_add("/api/mpegts/muxes", 
+		NULL, extjs_mpegts_muxes, ACCESS_WEB_INTERFACE);
+  http_path_add("/api/mpegts/services", 
+		NULL, extjs_mpegts_services, ACCESS_WEB_INTERFACE);
 #if 0
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);

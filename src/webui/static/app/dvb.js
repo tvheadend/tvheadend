@@ -515,7 +515,7 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 			header : "Multiplex",
 			dataIndex : 'mux',
 			width : 100
-		});
+		}]});
 
 	if (adapterData.satConf) {
 		// Include DVB-S specific stuff

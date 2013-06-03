@@ -112,6 +112,8 @@ mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
  * Creation/Config
  * ***************************************************************************/
 
+mpegts_network_list_t mpegts_network_all;
+
 mpegts_network_t *
 mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
@@ -136,6 +138,9 @@ mpegts_network_create0
   /* Init Qs */
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);
+
+  /* Add to global list */
+  LIST_INSERT_HEAD(&mpegts_network_all, mn, mn_global_link);
 
   mn->mn_display_name(mn, buf, sizeof(buf));
   tvhtrace("mpegts", "created network %s", buf);
