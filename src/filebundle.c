@@ -402,7 +402,7 @@ fb_file *fb_open2
     FILE *fp = fopen(path, "rb");
     if (fp) {
       struct stat st;
-      lstat(path, &st);
+      stat(path, &st);
       ret         = calloc(1, sizeof(fb_file));
       ret->type   = FB_DIRECT;
       ret->size   = st.st_size;
