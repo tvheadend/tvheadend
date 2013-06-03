@@ -39,6 +39,31 @@
 
 #include "input.h"
 
+typedef struct extjs_grid_conf
+{
+  int       start;
+  int       limit;
+  htsmsg_t *filter;
+} extjs_grid_conf_t;
+
+static void
+extjs_grid_conf
+  ( struct http_arg_list *args, extjs_grid_conf_t *conf )
+{
+  const char *str;
+  if ((str = http_arg_get(args, "start")))
+    conf->start = atoi(str);
+  else
+    conf->start = 0;
+  if ((str = http_arg_get(args, "limit")))
+    conf->limit = atoi(str);
+  else
+    conf->limit = 50;
+  if ((str = http_arg_get(args, "filter")))
+    conf->filter = htsmsg_json_deserialize(str);
+  else
+    conf->filter = NULL;
+}
 
 #if 0
 /**
@@ -688,44 +713,126 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 }
 #endif
 
+#if 0
+static int
+extjs_mpegts_services_filter
+  (mpegts_service_t *s, htsmsg_t *filter)
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  const char *n;
+  HTSMSG_FOREACH(f, filter) {
+    if (!(e = htsmsg_get_map_by_field(f))) continue;
+    if (!(n = htsmsg_get_str(e, "field"))) continue;
+    if (!strcmp(n, "name"))
+      if (!strstr(s->s_dvb_svcname ?: "", htsmsg_get_str(e, "value") ?: "")) return 1;
+    if (!strcmp(n, "sid")) {
+      const char *t = htsmsg_get_str(e, "comparison");
+      const char *v = htsmsg_get_str(e, "value");
+      if (!strcmp(t ?: "", "gt")) {
+        if (s->s_dvb_service_id < atoi(v)) return 1;
+      } else if (!strcmp(t ?: "", "lt")) {
+        if (s->s_dvb_service_id > atoi(v)) return 1;
+      } else if (!strcmp(t ?: "", "eq")) {
+        if (s->s_dvb_service_id != atoi(v)) return 1;
+      }
+    }
+  }
+  return 0;
+}
+#endif
+
+static int
+extjs_idnode_filter
+  ( idnode_t *in, htsmsg_t *filter )
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  const char *k, *t;
+  
+  HTSMSG_FOREACH(f, filter) {
+    if (!(e = htsmsg_get_map_by_field(f)))      continue;
+    if (!(k = htsmsg_get_str(e, "field")))      continue;
+    if (!(t = htsmsg_get_str(e, "type"))) continue;
+    if (!strcmp(t, "string")) {
+      const char *str = idnode_get_str(in, k);
+      if (!strstr(str ?: "", htsmsg_get_str(e, "value") ?: ""))
+        return 0;
+    } else if (!strcmp(t, "numeric")) {
+      uint32_t u32, val;
+      if (!idnode_get_u32(in, k, &u32)) {
+        const char *op = htsmsg_get_str(e, "comparison");
+        if (!op) continue;
+        if (htsmsg_get_u32(e, "value", &val)) continue;
+        if (!strcmp(op, "lt")) {
+          if (u32 > val) return 0;
+        } else if (!strcmp(op, "gt")) {
+          if (u32 < val) return 0;
+        } else {
+          if (u32 != val) return 0;
+        }
+      }
+    }
+  }
+  return 1;
+}
+
 static int
 extjs_mpegts_services
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   char buf[256];
   mpegts_network_t *mn;
-  mpegts_mux_t *mm;
+  mpegts_mux_t     *mm;
   mpegts_service_t *ms;
-  htsmsg_t *out, *list = htsmsg_create_list();
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  pthread_mutex_lock(&global_lock);
-  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
-      LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
-        htsmsg_t *e = htsmsg_create_map();
-        htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&ms->s_id));
-        mm->mm_display_name(mm, buf, sizeof(buf));
-        htsmsg_add_str(e, "mux", buf);
-        htsmsg_add_bool(e, "enabled", ms->s_enabled);
-        htsmsg_add_u32(e, "sid", ms->s_dvb_service_id);
-        htsmsg_add_u32(e, "pmt", ms->s_pmt_pid);
-        htsmsg_add_u32(e, "lcn", ms->s_dvb_channel_num);
-        if (ms->s_dvb_svcname)
-          htsmsg_add_str(e, "name", ms->s_dvb_svcname);
-        if (ms->s_dvb_provider)
-          htsmsg_add_str(e, "provider", ms->s_dvb_provider);
-        if (ms->s_dvb_cridauth)
-          htsmsg_add_str(e, "crid_auth", ms->s_dvb_cridauth);
-        if (ms->s_dvb_charset)
-          htsmsg_add_str(e, "charset", ms->s_dvb_charset);
-        htsmsg_add_u32(e, "type", ms->s_dvb_servicetype);
-        htsmsg_add_msg(list, NULL, e);
+  htsbuf_queue_t   *hq = &hc->hc_reply;
+  const char       *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t         *out = htsmsg_create_map();
+  extjs_grid_conf_t conf;
+  int total = 0;
+
+  if (!strcmp(op, "list")) {
+    htsmsg_t *list = htsmsg_create_list();
+    extjs_grid_conf(&hc->hc_req_args, &conf);
+    pthread_mutex_lock(&global_lock);
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+        LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+          if (conf.filter && !extjs_idnode_filter(&ms->s_id, conf.filter))
+            continue;
+          total++;
+          if (conf.start-- > 0)
+            continue;
+          if (conf.limit) {
+            conf.limit--;
+            htsmsg_t *e = htsmsg_create_map();
+            htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&ms->s_id));
+            mm->mm_display_name(mm, buf, sizeof(buf));
+            htsmsg_add_str(e, "mux", buf);
+            htsmsg_add_bool(e, "enabled", ms->s_enabled);
+            htsmsg_add_u32(e, "sid", ms->s_dvb_service_id);
+            htsmsg_add_u32(e, "pmt", ms->s_pmt_pid);
+            htsmsg_add_u32(e, "lcn", ms->s_dvb_channel_num);
+            if (ms->s_dvb_svcname)
+              htsmsg_add_str(e, "name", ms->s_dvb_svcname);
+            if (ms->s_dvb_provider)
+              htsmsg_add_str(e, "provider", ms->s_dvb_provider);
+            if (ms->s_dvb_cridauth)
+              htsmsg_add_str(e, "crid_auth", ms->s_dvb_cridauth);
+            if (ms->s_dvb_charset)
+              htsmsg_add_str(e, "charset", ms->s_dvb_charset);
+            htsmsg_add_u32(e, "type", ms->s_dvb_servicetype);
+            htsmsg_add_msg(list, NULL, e);
+            conf.limit--;
+          }
+        }
       }
     }
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_add_msg(out, "entries", list);
+    htsmsg_add_u32(out, "total",   total);
   }
-  pthread_mutex_unlock(&global_lock);
-  out = htsmsg_create_map();
-  htsmsg_add_msg(out, "entries", list);
+
   htsmsg_json_serialize(out, hq, 0);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   htsmsg_destroy(out);

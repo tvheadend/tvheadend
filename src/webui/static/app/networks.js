@@ -163,6 +163,15 @@ tvheadend.services = function()
 {
   // TODO: build this from mpegts_network_class?
 
+  var filter = new Ext.ux.grid.GridFilters({
+    encode  : true,
+    local   : false,
+    filters : [
+      { type: 'string', dataIndex: 'name' },
+      { type: 'numeric', dataIndex: 'sid' }
+    ]
+  });
+
   var model = new Ext.grid.ColumnModel({
     defaultSortable: true,
     columns        : [
@@ -176,6 +185,7 @@ tvheadend.services = function()
         header      : 'Name',
         dataIndex   : 'name',
         width       : 100,
+        filterable  : true,
       },
       {
         header      : 'Mux',
@@ -220,6 +230,7 @@ tvheadend.services = function()
     url       : 'api/mpegts/services',
     autoLoad  : true,
     id        : 'uuid',
+    totalProperty: 'total',
     fields    : [
       'uuid', 'mux', 'name', 'sid', 'pmt', 'type', 'provider', 'crid_auth', 'charset'
     ],
@@ -233,9 +244,19 @@ tvheadend.services = function()
     title         : 'Services',
     store         : store,
     cm            : model,
+    plugins       : [
+      filter
+    ],
     viewConfig    : {
       forceFit : true
     },
+    bbar : new Ext.PagingToolbar({
+      store:    store,
+      pageSize: 50,
+      displayInfo: true,
+      displayMsg:  'Services {0} - {1} of {2}',
+      emptyMsg: 'No services to display'
+    })
   });
   
   return grid;
