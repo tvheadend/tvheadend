@@ -70,6 +70,12 @@ mpegts_input_network_class (mpegts_input_t *mi)
   return &mpegts_network_class;
 }
 
+static mpegts_network_t *
+mpegts_input_network_create (mpegts_input_t *mi, htsmsg_t *conf)
+{
+  return NULL;
+}
+
 static int
 mpegts_input_is_enabled ( mpegts_input_t *mi )
 {
@@ -309,6 +315,7 @@ mpegts_input_create0
   mi->mi_open_service   = mpegts_input_open_service;
   mi->mi_close_service  = mpegts_input_close_service;
   mi->mi_network_class  = mpegts_input_network_class;
+  mi->mi_network_create = mpegts_input_network_create;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);

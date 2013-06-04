@@ -52,6 +52,10 @@ const idclass_t linuxdvb_mux_dvbt_class =
   .ic_class      = "linuxdvb_mux_dvbt",
   .ic_caption    = "Linux DVB-T Multiplex",
   .ic_properties = (const property_t[]){
+    {
+      PROPDEF1("frequency", "Frequency (Hz)",
+               PT_U32, linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency) 
+    },
     {}
   }
 };

@@ -179,6 +179,9 @@ struct linuxdvb_network
 void linuxdvb_network_init ( void );
 linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
 
+linuxdvb_network_t *linuxdvb_network_create0
+  ( const char *uuid, fe_type_t type, htsmsg_t *conf );
+
 struct linuxdvb_mux
 {
   mpegts_mux_t;

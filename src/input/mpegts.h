@@ -391,6 +391,7 @@ struct mpegts_input
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
+  mpegts_network_t *(*mi_network_create) (mpegts_input_t *mi, htsmsg_t *c);
 };
 
 #endif /* __TVH_MPEGTS_H__ */

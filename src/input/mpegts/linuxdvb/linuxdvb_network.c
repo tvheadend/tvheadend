@@ -121,9 +121,9 @@ linuxdvb_network_create_service
  * Creation/Config
  * ***************************************************************************/
 
-static linuxdvb_network_t *
+linuxdvb_network_t *
 linuxdvb_network_create0
-  ( const char *uuid, htsmsg_t *conf )
+  ( const char *uuid, fe_type_t type, htsmsg_t *conf )
 {
   linuxdvb_network_t *ln;
   htsmsg_t *c, *e;
@@ -132,6 +132,8 @@ linuxdvb_network_create0
   /* Create */
   if (!(ln = mpegts_network_create(linuxdvb_network, uuid, NULL, conf)))
     return NULL;
+  if (type != -1)
+    ln->ln_type = type;
   
   /* Callbacks */
   ln->mn_create_mux     = linuxdvb_network_create_mux;
@@ -165,7 +167,7 @@ void linuxdvb_network_init ( void )
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_get_map_by_field(f)))  continue;
     if (!(e = htsmsg_get_map(e, "config"))) continue;
-    (void)linuxdvb_network_create0(f->hmf_name, e);
+    (void)linuxdvb_network_create0(f->hmf_name, -1, e);
   }
   htsmsg_destroy(c);
 }

@@ -130,20 +130,16 @@ const idclass_t linuxdvb_frontend_atsc_class =
 static const idclass_t *
 linuxdvb_frontend_network_class ( mpegts_input_t *mi )
 {
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  extern const idclass_t linuxdvb_network_class;
+  return &linuxdvb_network_class;
+}
 
-  switch (lfe->lfe_info.type) {
-    case FE_QPSK:
-      return &linuxdvb_frontend_dvbs_class;
-    case FE_QAM:
-      return &linuxdvb_frontend_dvbc_class;
-    case FE_OFDM:
-      return &linuxdvb_frontend_dvbt_class;
-    case FE_ATSC:
-      return &linuxdvb_frontend_atsc_class;
-    default:
-      return NULL;
-  }
+static mpegts_network_t *
+linuxdvb_frontend_network_create ( mpegts_input_t *mi, htsmsg_t *conf )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  return (mpegts_network_t*)
+    linuxdvb_network_create0(NULL, lfe->lfe_info.type, conf);
 }
 
 static int
@@ -692,6 +688,7 @@ linuxdvb_frontend_create0
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
   lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
   lfe->mi_network_class  = linuxdvb_frontend_network_class;
+  lfe->mi_network_create = linuxdvb_frontend_network_create;
 
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;
