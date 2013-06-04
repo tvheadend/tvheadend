@@ -160,8 +160,10 @@ prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
     htsmsg_add_str(m, "id", p[i].id);
     htsmsg_add_str(m, "caption", p[i].name);
     htsmsg_add_str(m, "type", val2str(p[i].type, typetab) ?: "unknown");
-    if (p->rdonly)
+    if (p->options & PO_RDONLY)
       htsmsg_add_u32(m, "rdonly", 1);
+    if (p->options & PO_NOSAVE)
+      htsmsg_add_u32(m, "nosave", 1);
     if (obj)
       prop_read_value(obj, p+i, m, "value");
     htsmsg_add_msg(msg, NULL, m);
@@ -182,7 +184,7 @@ prop_seti(void *obj, const property_t *p, const char *value)
   uint16_t u16;
   const char *s;
 
-  if (p->rdonly) return 0;
+  if (p->options & PO_NOSAVE) return 0;
 
   void *val = obj + p->off;
   switch(p->type) {
