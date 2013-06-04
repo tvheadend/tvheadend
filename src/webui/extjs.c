@@ -142,10 +142,11 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/cwceditor.js");
   extjs_load(hq, "static/app/capmteditor.js");
   extjs_load(hq, "static/app/tvadapters.js");
+  extjs_load(hq, "static/app/idnode.js");
 #if ENABLE_LINUXDVB
   extjs_load(hq, "static/app/dvb.js");
   extjs_load(hq, "static/app/dvb_networks.js");
-  extjs_load(hq, "static/app/networks.js");
+  extjs_load(hq, "static/app/mpegts.js");
 #endif
   extjs_load(hq, "static/app/iptv.js");
 #if ENABLE_V4L

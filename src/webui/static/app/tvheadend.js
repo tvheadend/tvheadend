@@ -268,9 +268,6 @@ function accessUpdate(o) {
       tabs2.push(new tvheadend.tvadapters);
     }
     tabs2.push(new tvheadend.iptv);
-    tabs2.push(new tvheadend.networks);
-    tabs2.push(new tvheadend.muxes);
-    tabs2.push(new tvheadend.services);
     tvheadend.conf_dvbin = new Ext.TabPanel({
       activeTab: 0,
       autoScroll: true,
@@ -278,6 +275,9 @@ function accessUpdate(o) {
       iconCls: 'hardware',
       items : tabs2
     });
+    tvheadend.networks(tvheadend.conf_dvbin);
+    tvheadend.muxes(tvheadend.conf_dvbin);
+    tvheadend.services(tvheadend.conf_dvbin);
     tabs1.push(tvheadend.conf_dvbin);
 
     /* Channel / EPG */
