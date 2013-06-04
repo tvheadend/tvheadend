@@ -100,6 +100,7 @@ extjs_idnode_filter
   return 1;
 }
 
+// TODO: move this
 static htsmsg_t *
 extjs_idnode_class ( const idclass_t *idc )
 {
@@ -112,7 +113,7 @@ extjs_idnode_class ( const idclass_t *idc )
 }
 
 static int
-extjs_mpegts_services
+extjs_mpegts_service
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   //char buf[256];
@@ -166,7 +167,7 @@ extjs_mpegts_services
 
 
 static int
-extjs_mpegts_muxes
+extjs_mpegts_mux
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   char buf[256];
@@ -223,7 +224,7 @@ extjs_mpegts_muxes
 }
 
 static int
-extjs_mpegts_networks
+extjs_mpegts_network
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   mpegts_network_t *mn;
@@ -278,6 +279,73 @@ extjs_mpegts_networks
   return 0;
 }
 
+static int
+extjs_mpegts_input
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  extern const idclass_t mpegts_input_class;
+  mpegts_input_t   *mi;
+  mpegts_network_t *mn;
+  htsbuf_queue_t   *hq  = &hc->hc_reply;
+  const char       *op  = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t         *out = htsmsg_create_map();
+  extjs_grid_conf_t conf;
+  int total = 0;
+
+  if (!op) return 404;
+
+  if (!strcmp(op, "list")) {
+    htsmsg_t *list = htsmsg_create_list();
+    extjs_grid_conf(&hc->hc_req_args, &conf);
+
+    pthread_mutex_lock(&global_lock);
+    LIST_FOREACH(mi, &mpegts_input_all, mi_global_link) {
+      if (conf.filter && !extjs_idnode_filter(&mi->mi_id, conf.filter))
+        continue;
+      total++;
+      if (conf.start-- > 0)
+        continue;
+      if (conf.limit != 0) {
+        if (conf.limit > 0) conf.limit--;
+        htsmsg_t *e = htsmsg_create_map();
+        htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mi->mi_id));
+        idnode_save(&mi->mi_id, e);
+        htsmsg_add_msg(list, NULL, e);
+      }
+    }
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_add_msg(out, "entries", list);
+    htsmsg_add_u32(out, "total",   total);
+  } else if (!strcmp(op, "class")) {
+    htsmsg_t *list= extjs_idnode_class(&mpegts_input_class);
+    htsmsg_add_msg(out, "entries", list);
+  } else if (!strcmp(op, "network_class")) {
+    const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    if (!uuid) return 404;
+    mpegts_input_t *mi = idnode_find(uuid, &mpegts_input_class);
+    if (!mi) return 404;
+    htsmsg_t *list= extjs_idnode_class(mi->mi_network_class(mi));
+    htsmsg_add_msg(out, "entries", list);
+  } else if (!strcmp(op, "network_create")) {
+    const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    const char *conf = http_arg_get(&hc->hc_req_args, "conf");
+    if (!uuid || !conf) return 404;
+    mi = idnode_find(uuid, &mpegts_input_class);
+    if (!mi) return 404;
+    mn = mi->mi_network_create(mi, htsmsg_json_deserialize(conf));
+    if (mn)
+      mn->mn_config_save(mn);
+    else {
+      // TODO: Check for error
+    }
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
 
 /**
  * DVB WEB user interface
@@ -285,13 +353,14 @@ extjs_mpegts_networks
 void
 extjs_start_dvb(void)
 {
-  printf("extjs_start_dvb()\n");
   http_path_add("/api/mpegts/network", 
-		NULL, extjs_mpegts_networks, ACCESS_WEB_INTERFACE);
+		NULL, extjs_mpegts_network, ACCESS_WEB_INTERFACE);
   http_path_add("/api/mpegts/mux", 
-		NULL, extjs_mpegts_muxes, ACCESS_WEB_INTERFACE);
+		NULL, extjs_mpegts_mux, ACCESS_WEB_INTERFACE);
   http_path_add("/api/mpegts/service", 
-		NULL, extjs_mpegts_services, ACCESS_WEB_INTERFACE);
+		NULL, extjs_mpegts_service, ACCESS_WEB_INTERFACE);
+  http_path_add("/api/mpegts/input", 
+		NULL, extjs_mpegts_input, ACCESS_WEB_INTERFACE);
 #if 0
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
