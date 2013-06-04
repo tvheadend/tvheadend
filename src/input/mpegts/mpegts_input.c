@@ -30,13 +30,31 @@
  * Class definition
  * *************************************************************************/
 
+static const char *
+mpegts_input_class_get_name ( void *in )
+{
+  static char buf[256];
+  mpegts_input_t *mi = in;
+  if (mi->mi_display_name)
+    mi->mi_display_name(mi, buf, sizeof(buf));
+  else
+    *buf = 0;
+  return buf;
+}
+
 const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
   .ic_caption    = "MPEGTS Input",
   .ic_properties = (const property_t[]){
-    { PROPDEF1("enabled", "Enabled",
-               PT_BOOL, mpegts_input_t, mi_enabled) },
+    {
+      PROPDEF1("enabled", "Enabled", PT_BOOL,
+               mpegts_input_t, mi_enabled)
+    },
+    {
+      PROPDEF0("displayname", "Name", PT_STR, PO_NOSAVE | PO_RDONLY),
+      .str_get = mpegts_input_class_get_name
+    },
     {}
   }
 };
@@ -44,6 +62,13 @@ const idclass_t mpegts_input_class =
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
+
+static const idclass_t *
+mpegts_input_network_class (mpegts_input_t *mi)
+{
+  extern const idclass_t mpegts_network_class;
+  return &mpegts_network_class;
+}
 
 static int
 mpegts_input_is_enabled ( mpegts_input_t *mi )
@@ -263,6 +288,8 @@ mpegts_input_table_thread ( void *aux )
  * Creation/Config
  * *************************************************************************/
 
+mpegts_input_list_t mpegts_input_all;
+
 mpegts_input_t*
 mpegts_input_create0  
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid,
@@ -281,6 +308,7 @@ mpegts_input_create0
   mi->mi_stop_mux       = mpegts_input_stop_mux;
   mi->mi_open_service   = mpegts_input_open_service;
   mi->mi_close_service  = mpegts_input_close_service;
+  mi->mi_network_class  = mpegts_input_network_class;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);
@@ -291,6 +319,9 @@ mpegts_input_create0
 
   /* Init input thread control */
   mi->mi_thread_pipe.rd = mi->mi_thread_pipe.wr = -1;
+
+  /* Add to global list */
+  LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);
 
   return mi;
 }

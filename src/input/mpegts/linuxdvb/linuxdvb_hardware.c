@@ -74,8 +74,10 @@ linuxdvb_hardware_class_get_childs ( idnode_t *in )
   return linuxdvb_hardware_enumerate(&((linuxdvb_hardware_t*)in)->lh_children);
 }
 
+extern const idclass_t mpegts_input_class;
 const idclass_t linuxdvb_hardware_class =
 {
+  .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_hardware",
   .ic_caption    = "LinuxDVB Hardware",
   .ic_get_title  = linuxdvb_hardware_class_get_title,

@@ -390,6 +390,7 @@ struct mpegts_input
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
+  const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
 };
 
 #endif /* __TVH_MPEGTS_H__ */
@@ -403,6 +404,8 @@ extern mpegts_network_list_t mpegts_network_all;
 /* ****************************************************************************
  * Functions
  * ***************************************************************************/
+
+extern mpegts_input_list_t mpegts_input_all;
 
 mpegts_input_t *mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid, htsmsg_t *c );
