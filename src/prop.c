@@ -162,7 +162,8 @@ prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
     htsmsg_add_str(m, "type", val2str(p[i].type, typetab) ?: "unknown");
     if (p->rdonly)
       htsmsg_add_u32(m, "rdonly", 1);
-    prop_read_value(obj, p+i, m, "value");
+    if (obj)
+      prop_read_value(obj, p+i, m, "value");
     htsmsg_add_msg(msg, NULL, m);
   }
 }
