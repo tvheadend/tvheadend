@@ -3,6 +3,8 @@
 #include "tvheadend.h"
 #include "prop.h"
 
+#include <regex.h>
+
 struct htsmsg;
 struct idnode;
 
@@ -46,6 +48,7 @@ typedef struct idnode_filter_ele
     int      b;
     char    *s;
     int64_t  n;
+    regex_t  re;
   } u;
   enum {
     IC_EQ, // Equals

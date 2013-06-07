@@ -502,7 +502,9 @@ idnode_filter
             return 1;
           break;
         case IC_RE:
-          break; // TODO: not yet supported
+          if (regexec(&f->u.re, str, 0, NULL, 0))
+            return 1;
+          break;
       }
     } else if (f->type == IF_NUM || f->type == IF_BOOL) {
       uint32_t u32;
@@ -542,7 +544,13 @@ idnode_filter_add_str
   ele->key  = strdup(key);
   ele->type = IF_STR;
   ele->comp = comp;
-  ele->u.s  = strdup(val);
+  if (comp == IC_RE) {
+    if (regcomp(&ele->u.re, val, REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+      free(ele);
+      return;
+    }
+  } else
+    ele->u.s  = strdup(val);
   LIST_INSERT_HEAD(filt, ele, link);
 }
 
@@ -577,8 +585,12 @@ idnode_filter_clear
   idnode_filter_ele_t *ele;
   while ((ele = LIST_FIRST(filt))) {
     LIST_REMOVE(ele, link);
-    if (ele->type == IF_STR)
-      free(ele->u.s);
+    if (ele->type == IF_STR) {
+      if (ele->comp == IC_RE)
+        regfree(&ele->u.re);
+      else
+        free(ele->u.s);
+    }
     free(ele);
   }
 }
