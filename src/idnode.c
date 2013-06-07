@@ -1,8 +1,10 @@
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "idnode.h"
 #include "notify.h"
@@ -427,4 +429,178 @@ idnode_get_u32
     }
   }
   return 1;
+}
+
+/* **************************************************************************
+ * Set procsesing
+ * *************************************************************************/
+
+static int
+idnode_cmp_sort
+  ( const void *a, const void *b, void *s )
+{
+  idnode_t      *ina  = *(idnode_t**)a;
+  idnode_t      *inb  = *(idnode_t**)b;
+  idnode_sort_t *sort = s;
+  const property_t *p = idnode_find_prop(ina, sort->key);
+  switch (p->type) {
+    case PT_STR:
+      {
+        const char *stra = idnode_get_str(ina, sort->key);
+        const char *strb = idnode_get_str(inb, sort->key);
+        if (sort->dir == IS_ASC)
+          return strcmp(stra ?: "", strb ?: "");
+        else
+          return strcmp(strb ?: "", stra ?: "");
+      }
+      break;
+    case PT_INT:
+    case PT_U16:
+    case PT_U32:
+      {
+        uint32_t u32a = 0, u32b = 0;
+        idnode_get_u32(ina, sort->key, &u32a);
+        idnode_get_u32(inb, sort->key, &u32b);
+        if (sort->dir == IS_ASC)
+          return u32a - u32b;
+        else
+          return u32b - u32a;
+      }
+      break;
+    case PT_BOOL:
+      // TODO
+      break;
+  }
+  return 0;
+}
+
+int
+idnode_filter
+  ( idnode_t *in, idnode_filter_t *filter )
+{
+  idnode_filter_ele_t *f;
+  
+  LIST_FOREACH(f, filter, link) {
+    if (f->type == IF_STR) {
+      const char *str;
+      if (!(str = idnode_get_str(in, f->key)))
+        return 1;
+      switch(f->comp) {
+        case IC_IN:
+          if (strstr(str, f->u.s) == NULL)
+            return 1;
+          break;
+        case IC_EQ:
+          if (strcmp(str, f->u.s) != 0)
+            return 1;
+        case IC_LT:
+          if (strcmp(str, f->u.s) > 0)
+            return 1;
+          break;
+        case IC_GT:
+          if (strcmp(str, f->u.s) < 0)
+            return 1;
+          break;
+        case IC_RE:
+          break; // TODO: not yet supported
+      }
+    } else if (f->type == IF_NUM || f->type == IF_BOOL) {
+      uint32_t u32;
+      int64_t a, b;
+      if (idnode_get_u32(in, f->key, &u32))
+        return 1;
+      a = u32;
+      b = (f->type == IF_NUM) ? f->u.n : f->u.b;
+      switch (f->comp) {
+        case IC_IN:
+        case IC_RE:
+          break; // Note: invalid
+        case IC_EQ:
+          if (a != b)
+            return 1;
+          break;
+        case IC_LT:
+          if (a > b)
+            return 1;
+          break;
+        case IC_GT:
+          if (a < b)
+            return 1;
+          break;
+      }
+    }
+  }
+
+  return 0;
+}
+
+void
+idnode_filter_add_str
+  ( idnode_filter_t *filt, const char *key, const char *val, int comp )
+{
+  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  ele->key  = strdup(key);
+  ele->type = IF_STR;
+  ele->comp = comp;
+  ele->u.s  = strdup(val);
+  LIST_INSERT_HEAD(filt, ele, link);
+}
+
+void
+idnode_filter_add_num
+  ( idnode_filter_t *filt, const char *key, int64_t val, int comp )
+{
+  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  ele->key  = strdup(key);
+  ele->type = IF_NUM;
+  ele->comp = comp;
+  ele->u.n  = val;
+  LIST_INSERT_HEAD(filt, ele, link);
+}
+
+void
+idnode_filter_add_bool
+  ( idnode_filter_t *filt, const char *key, int val, int comp )
+{
+  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  ele->key  = strdup(key);
+  ele->type = IF_BOOL;
+  ele->comp = comp;
+  ele->u.b  = val;
+  LIST_INSERT_HEAD(filt, ele, link);
+}
+
+void
+idnode_filter_clear
+  ( idnode_filter_t *filt )
+{
+  idnode_filter_ele_t *ele;
+  while ((ele = LIST_FIRST(filt))) {
+    LIST_REMOVE(ele, link);
+    if (ele->type == IF_STR)
+      free(ele->u.s);
+    free(ele);
+  }
+}
+
+void
+idnode_set_add
+  ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt )
+{
+  if (filt && idnode_filter(in, filt))
+    return;
+  
+  /* Allocate more space */
+  if (is->is_alloc == is->is_count) {
+    is->is_alloc = MAX(100, is->is_alloc * 2);
+    is->is_array = realloc(is->is_array, is->is_alloc * sizeof(idnode_t*));
+  }
+  is->is_array[is->is_count++] = in;
+}
+
+void
+idnode_set_sort
+  ( idnode_set_t *is, idnode_sort_t *sort )
+{
+  qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_sort, sort);
 }

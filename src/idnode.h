@@ -25,6 +25,46 @@ typedef struct idnode {
   const idclass_t *in_class;
 } idnode_t;
 
+typedef struct idnode_sort {
+  const char *key;
+  enum {
+    IS_ASC,
+    IS_DSC
+  }           dir;
+} idnode_sort_t;
+
+typedef struct idnode_filter_ele
+{
+  LIST_ENTRY(idnode_filter_ele) link;
+  char *key;
+  enum {
+    IF_STR,
+    IF_NUM,
+    IF_BOOL
+  } type;
+  union {
+    int      b;
+    char    *s;
+    int64_t  n;
+  } u;
+  enum {
+    IC_EQ, // Equals
+    IC_LT, // LT
+    IC_GT, // GT
+    IC_IN, // contains (STR only)
+    IC_RE, // regexp (STR only)
+  } comp;
+} idnode_filter_ele_t;
+
+typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
+
+typedef struct idnode_set
+{
+  idnode_t **is_array;
+  size_t     is_alloc;
+  size_t     is_count;
+} idnode_set_t;
+
 void idnode_init(void);
 
 int idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class);
@@ -57,3 +97,21 @@ void idnode_load ( idnode_t *self, htsmsg_t *m );
 
 const char *idnode_get_str ( idnode_t *self, const char *key );
 int idnode_get_u32(idnode_t *self, const char *key, uint32_t *u32);
+int idnode_get_bool(idnode_t *self, const char *key, int *b);
+
+/*
+ * Set processing
+ */
+void idnode_filter_add_str
+  (idnode_filter_t *f, const char *k, const char *v, int t);
+void idnode_filter_add_num
+  (idnode_filter_t *f, const char *k, int64_t s64, int t);
+void idnode_filter_add_bool
+  (idnode_filter_t *f, const char *k, int b, int t);
+void idnode_filter_clear
+  (idnode_filter_t *f);
+int  idnode_filter
+  ( idnode_t *in, idnode_filter_t *filt );
+void idnode_set_add
+  ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt );
+void idnode_set_sort    ( idnode_set_t *is, idnode_sort_t *s );
