@@ -67,10 +67,10 @@ tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
   if (ss) {
     HTSMSG_FOREACH(f, ss) {
       if (f->hmf_type != HMF_S64) continue;
-      c += snprintf(subsys+c, len-c, "%c%s%s",
+      c += snprintf(subsys+c, len-c, "%s%c%s",
+                    first ? "" : ",",
                     f->hmf_s64 ? '+' : '-',
-                    f->hmf_name,
-                    first ? "" : ",");
+                    f->hmf_name);
       first = 0;
     }
   }
@@ -105,7 +105,7 @@ tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
         htsmsg_destroy(*c);
       *c = NULL;
     }
-    if (!*c);
+    if (!*c)
       *c = htsmsg_create_map();
     htsmsg_set_u32(*c, t, a);
 next:
