@@ -8,14 +8,38 @@
 
 tvheadend.networks = function(panel)
 {
+  var fields = [
+    {
+      type    : 'str',
+      id      : 'name',
+      caption : 'Network Name'
+    },
+    {
+      type    : 'u16',
+      id      : 'nid',
+      caption : 'Network ID'
+    },
+    {
+      type    : 'bool',
+      id      : 'initscan',
+      caption : 'Initial scan'
+    },
+    {
+      type    : 'bool',
+      id      : 'autodiscovery',
+      caption : 'Auto-discovery'
+    }
+  ];
+
   tvheadend.idnode_grid(panel, {
-    title   : 'Networks',
-    url       : 'api/mpegts/network',
+    title    :  'Network',
+    url      : 'api/mpegts/network',
+    //fields  : fields,
     add       : {
       url    : 'api/mpegts/input',
       title  : 'Network',
       select : {
-        label        : 'Input',
+        caption      : 'Input',
         params       : { op: 'list', limit: -1 },
         displayField : 'fe_path',//displayname',
         valueField   : 'uuid',

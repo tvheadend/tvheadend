@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <assert.h>
 #include <stdio.h>
@@ -39,12 +40,24 @@
 
 #include "input.h"
 
+extern const idclass_t mpegts_input_class;
+extern const idclass_t mpegts_network_class;
+extern const idclass_t mpegts_mux_class;
+extern const idclass_t mpegts_service_class;
+
 typedef struct extjs_grid_conf
 {
-  int       start;
-  int       limit;
-  htsmsg_t *filter;
+  int             start;
+  int             limit;
+  idnode_filter_t filter;
+  idnode_sort_t   sort;
 } extjs_grid_conf_t;
+
+static struct strtab extjs_filtcmp_tab[] = {
+  { "gt", IC_GT },
+  { "lt", IC_LT },
+  { "eq", IC_EQ }
+};
 
 static void
 extjs_grid_conf
@@ -59,45 +72,40 @@ extjs_grid_conf
     conf->limit = atoi(str);
   else
     conf->limit = 50;
-  if ((str = http_arg_get(args, "filter")))
-    conf->filter = htsmsg_json_deserialize(str);
-  else
-    conf->filter = NULL;
-}
-
-static int
-extjs_idnode_filter
-  ( idnode_t *in, htsmsg_t *filter )
-{
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  const char *k, *t;
-  
-  HTSMSG_FOREACH(f, filter) {
-    if (!(e = htsmsg_get_map_by_field(f)))      continue;
-    if (!(k = htsmsg_get_str(e, "field")))      continue;
-    if (!(t = htsmsg_get_str(e, "type"))) continue;
-    if (!strcmp(t, "string")) {
-      const char *str = idnode_get_str(in, k);
-      if (!strstr(str ?: "", htsmsg_get_str(e, "value") ?: ""))
-        return 0;
-    } else if (!strcmp(t, "numeric")) {
-      uint32_t u32, val;
-      if (!idnode_get_u32(in, k, &u32)) {
-        const char *op = htsmsg_get_str(e, "comparison");
-        if (!op) continue;
-        if (htsmsg_get_u32(e, "value", &val)) continue;
-        if (!strcmp(op, "lt")) {
-          if (u32 > val) return 0;
-        } else if (!strcmp(op, "gt")) {
-          if (u32 < val) return 0;
-        } else {
-          if (u32 != val) return 0;
+  if ((str = http_arg_get(args, "filter"))) {
+    htsmsg_field_t *f;
+    htsmsg_t *e, *t = htsmsg_json_deserialize(str);
+    HTSMSG_FOREACH(f, t) {
+      const char *k, *t, *v;
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      if (!(k = htsmsg_get_str(e, "field"))) continue;
+      if (!(t = htsmsg_get_str(e, "type")))  continue;
+      if (!strcmp(t, "string")) {
+        if ((v = htsmsg_get_str(e, "value")))
+          idnode_filter_add_str(&conf->filter, k, v, IC_RE);
+      } else if (!strcmp(t, "numeric")) {
+        uint32_t v;
+        if (!htsmsg_get_u32(e, "value", &v)) {
+          int t = str2val(htsmsg_get_str(e, "comparison") ?: "",
+                          extjs_filtcmp_tab);
+          idnode_filter_add_num(&conf->filter, k, v, t == -1 ? IC_EQ : t);
         }
+      } else if (!strcmp(t, "boolean")) {
+        uint32_t v;
+        if (!htsmsg_get_u32(e, "value", &v))
+          idnode_filter_add_bool(&conf->filter, k, v, IC_EQ);
       }
     }
+    htsmsg_destroy(t);
   }
-  return 1;
+  if ((str = http_arg_get(args, "sort"))) {
+    conf->sort.key = str;
+    if ((str = http_arg_get(args, "dir")) && !strcmp(str, "DESC"))
+      conf->sort.dir = IS_DSC;
+    else
+      conf->sort.dir = IS_ASC;
+  } else
+    conf->sort.key = NULL;
 }
 
 // TODO: move this
@@ -112,6 +120,27 @@ extjs_idnode_class ( const idclass_t *idc )
   return ret;
 }
 
+static void
+extjs_idnode_grid
+  (idnode_set_t *ins, extjs_grid_conf_t *conf, htsmsg_t *out)
+{
+  int i;
+  htsmsg_t *list = htsmsg_create_list();
+  if (conf->sort.key)
+    idnode_set_sort(ins, &conf->sort);
+  for (i = conf->start; i < ins->is_count && conf->limit > 0; i++, conf->limit--) {
+    htsmsg_t *e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins->is_array[i]));
+    idnode_save(ins->is_array[i], e);
+    htsmsg_add_msg(list, NULL, e);
+  }
+  pthread_mutex_unlock(&global_lock);
+  free(ins->is_array);
+  idnode_filter_clear(&conf->filter);
+  htsmsg_add_msg(out, "entries", list);
+  htsmsg_add_u32(out, "total",   ins->is_count);
+}
+
 static int
 extjs_mpegts_service
   (http_connection_t *hc, const char *remain, void *opaque)
@@ -123,38 +152,22 @@ extjs_mpegts_service
   htsbuf_queue_t   *hq = &hc->hc_reply;
   const char       *op = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
-  extjs_grid_conf_t conf;
-  int total = 0;
+  extjs_grid_conf_t conf = { 0 };
 
   if (!strcmp(op, "list")) {
-    htsmsg_t *list = htsmsg_create_list();
+    idnode_set_t ins = { 0 };
     extjs_grid_conf(&hc->hc_req_args, &conf);
     pthread_mutex_lock(&global_lock);
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
         LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
-          if (conf.filter && !extjs_idnode_filter(&ms->s_id, conf.filter))
-            continue;
-          total++;
-          if (conf.start-- > 0)
-            continue;
-          if (conf.limit) {
-            conf.limit--;
-            htsmsg_t *e = htsmsg_create_map();
-            htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&ms->s_id));
-            idnode_save(&ms->s_id, e);
-            htsmsg_add_msg(list, NULL, e);
-            conf.limit--;
-          }
+          idnode_set_add(&ins, (idnode_t*)ms, &conf.filter);
         }
       }
     }
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_add_msg(out, "entries", list);
-    htsmsg_add_u32(out, "total",   total);
+    extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    extern const idclass_t mpegts_service_class;
-    htsmsg_t *list= extjs_idnode_class(&mpegts_service_class);
+    htsmsg_t *list = extjs_idnode_class(&mpegts_service_class);
     htsmsg_add_msg(out, "entries", list);
   }
 
@@ -170,49 +183,25 @@ static int
 extjs_mpegts_mux
   (http_connection_t *hc, const char *remain, void *opaque)
 {
-  char buf[256];
   mpegts_network_t *mn;
   mpegts_mux_t     *mm;
-  mpegts_service_t *ms;
   htsbuf_queue_t   *hq = &hc->hc_reply;
   const char       *op = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
-  extjs_grid_conf_t conf;
-  int s, total = 0;
+  extjs_grid_conf_t conf = { 0 };
 
   if (!strcmp(op, "list")) {
-    htsmsg_t *list = htsmsg_create_list();
+    idnode_set_t ins = { 0 };
     extjs_grid_conf(&hc->hc_req_args, &conf);
-
     pthread_mutex_lock(&global_lock);
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
-        if (conf.filter && !extjs_idnode_filter(&mm->mm_id, conf.filter))
-          continue;
-        total++;
-        if (conf.start-- > 0)
-          continue;
-        if (conf.limit) {
-          s = 0;
-          conf.limit--;
-          htsmsg_t *e = htsmsg_create_map();
-          htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mm->mm_id));
-          idnode_save(&mm->mm_id, e);
-          mn->mn_display_name(mn, buf, sizeof(buf));
-          htsmsg_add_str(e, "network", buf);
-          LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
-            s++;
-          htsmsg_add_u32(e, "num_svc", s);
-          htsmsg_add_msg(list, NULL, e);
-        }
+        idnode_set_add(&ins, (idnode_t*)mm, &conf.filter);
       }
     }
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_add_msg(out, "entries", list);
-    htsmsg_add_u32(out, "total",   total);
+    extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    extern const idclass_t mpegts_mux_class;
-    htsmsg_t *list= extjs_idnode_class(&mpegts_mux_class);
+    htsmsg_t *list = extjs_idnode_class(&mpegts_mux_class);
     htsmsg_add_msg(out, "entries", list);
   }
 
@@ -228,48 +217,22 @@ extjs_mpegts_network
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   mpegts_network_t *mn;
-  mpegts_mux_t     *mm;
-  mpegts_service_t *ms;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
   const char       *op  = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
-  extjs_grid_conf_t conf;
-  int s, m, total = 0;
+  extjs_grid_conf_t conf = { 0 };
 
   if (!strcmp(op, "list")) {
-    htsmsg_t *list = htsmsg_create_list();
+    idnode_set_t ins = { 0 };
     extjs_grid_conf(&hc->hc_req_args, &conf);
-
     pthread_mutex_lock(&global_lock);
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-      if (conf.filter && !extjs_idnode_filter(&mn->mn_id, conf.filter))
-        continue;
-      total++;
-      if (conf.start-- > 0)
-        continue;
-      if (conf.limit) {
-        s = m = 0;
-        conf.limit--;
-        htsmsg_t *e = htsmsg_create_map();
-        htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mn->mn_id));
-        idnode_save(&mn->mn_id, e);
-        LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
-          m++;
-          LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
-            s++;
-        }
-        htsmsg_add_u32(e, "num_mux", m);
-        htsmsg_add_u32(e, "num_svc", s);
-        htsmsg_add_msg(list, NULL, e);
-      }
+      idnode_set_add(&ins, (idnode_t*)mn, &conf.filter);
     }
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_add_msg(out, "entries", list);
-    htsmsg_add_u32(out, "total",   total);
+    extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    extern const idclass_t mpegts_network_class;
-    htsmsg_t *list= extjs_idnode_class(&mpegts_network_class);
-    htsmsg_add_msg(out, "entries", list);
+    htsmsg_t *c = extjs_idnode_class(&mpegts_network_class);
+    htsmsg_add_msg(out, "entries", c);
   }
 
   htsmsg_json_serialize(out, hq, 0);
@@ -283,39 +246,37 @@ static int
 extjs_mpegts_input
   (http_connection_t *hc, const char *remain, void *opaque)
 {
-  extern const idclass_t mpegts_input_class;
   mpegts_input_t   *mi;
   mpegts_network_t *mn;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
   const char       *op  = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
-  extjs_grid_conf_t conf;
-  int total = 0;
+  extjs_grid_conf_t conf = { 0 };
 
   if (!op) return 404;
 
   if (!strcmp(op, "list")) {
+    int i;
+    idnode_set_t ins = { 0 };
     htsmsg_t *list = htsmsg_create_list();
     extjs_grid_conf(&hc->hc_req_args, &conf);
-
     pthread_mutex_lock(&global_lock);
     LIST_FOREACH(mi, &mpegts_input_all, mi_global_link) {
-      if (conf.filter && !extjs_idnode_filter(&mi->mi_id, conf.filter))
-        continue;
-      total++;
-      if (conf.start-- > 0)
-        continue;
-      if (conf.limit != 0) {
-        if (conf.limit > 0) conf.limit--;
-        htsmsg_t *e = htsmsg_create_map();
-        htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&mi->mi_id));
-        idnode_save(&mi->mi_id, e);
-        htsmsg_add_msg(list, NULL, e);
-      }
+      idnode_set_add(&ins, (idnode_t*)mi, &conf.filter);
+    }
+    if (conf.sort.key)
+      idnode_set_sort(&ins, &conf.sort);
+    for (i = conf.start; i < ins.is_count && conf.limit > 0; i++, conf.limit--) {
+      htsmsg_t *e = htsmsg_create_map();
+      htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
+      idnode_save(ins.is_array[i], e);
+      htsmsg_add_msg(list, NULL, e);
     }
     pthread_mutex_unlock(&global_lock);
+    free(ins.is_array);
+    idnode_filter_clear(&conf.filter);
     htsmsg_add_msg(out, "entries", list);
-    htsmsg_add_u32(out, "total",   total);
+    htsmsg_add_u32(out, "total",   ins.is_count);
   } else if (!strcmp(op, "class")) {
     htsmsg_t *list= extjs_idnode_class(&mpegts_input_class);
     htsmsg_add_msg(out, "entries", list);

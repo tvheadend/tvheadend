@@ -157,9 +157,6 @@ tvheadend.idnode_grid = function(panel, conf)
     var addBtn  = null;
     var delBtn  = null;
 
-    /* Load Class */
-    d = json_decode(d);
-
     /* Process */
     for (i = 0; i < d.length; i++) {
       var type = 'string';
@@ -206,6 +203,7 @@ tvheadend.idnode_grid = function(panel, conf)
       id            : 'uuid',
       totalProperty : 'total',
       fields        : fields,
+      remoteSort    : true,
       baseParams : {
         op : 'list',
       }
@@ -309,11 +307,19 @@ tvheadend.idnode_grid = function(panel, conf)
     panel.add(grid);
   }
 
-  Ext.Ajax.request({
-    url     : conf.url,
-    success : build,
-    params  : {
-      op: 'class'
-    }
-  });
+  /* Request data */
+  if (!conf.fields) {
+    Ext.Ajax.request({
+      url     : conf.url,
+      params  : {
+        op: 'class'
+      },
+      success : function(d)
+      {
+        build(json_decode(d));
+      }
+    });
+  } else {
+    build(conf.fields);
+  }
 }
