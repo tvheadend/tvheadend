@@ -116,9 +116,10 @@ mpegts_mux_create_instances ( mpegts_mux_t *mm )
 static int
 mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 {
+  int pass, fail;
   char buf[256], buf2[256];
   mpegts_network_t      *mn = mm->mm_network;
-  mpegts_mux_instance_t *mmi;
+  mpegts_mux_instance_t *mmi, *tune;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
@@ -144,59 +145,58 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   }
 
   /* Find */
-  // TODO: don't like this is unbounded, if for some reason mi_start_mux()
-  //       constantly fails this will lock
-  while (1) {
+  fail = 0;
+  pass = 0;
+  mmi  = NULL;
+  while (pass < 2) {
+    if (!mmi) mmi = LIST_FIRST(&mm->mm_instances);
+  
+    /* First pass - free only */
+    if (!pass) {
 
-    /* Find free input */
-    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
       if (!mmi->mmi_tune_failed &&
           mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
-          mmi->mmi_input->mi_is_free(mmi->mmi_input))
-        break;
-    }
-    if (mmi)
-      tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
-    else
-      tvhtrace("mpegts", "%s - no input is free", buf);
-
-    /* Try and remove a lesser instance */
-    if (!mmi) {
-      LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-
-        /* Not enabled */
-        if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input))
-          continue;
-
-        /* Bad - skip */
-        if (mmi->mmi_tune_failed)
-          continue;
-
-        /* Found */
-        if (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))
-          break;
+          mmi->mmi_input->mi_is_free(mmi->mmi_input)) {
+        tune = mmi;
+        tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
       }
+    
+    /* Second pass - non-free */
+    } else {
 
-      if (mmi)
+      /* Enabled, valid and lower weight */
+      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
+          !mmi->mmi_tune_failed &&
+          (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))) {
+        tune = mmi;
         tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
-
-      /* No free input */
-      else {
-        tvhwarn("mpegts", "%s - no input available", buf);
-        return SM_CODE_NO_FREE_ADAPTER;
       }
     }
     
     /* Tune */
-    mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
-    tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
-    if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi)) {
-      tvhdebug("mpegts", "%s - started", buf);
-      LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi, mmi_active_link);
-      mm->mm_active = mmi;
-      break;
+    if (tune) {
+      tune->mmi_input->mi_display_name(tune->mmi_input, buf2, sizeof(buf2));
+      tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+      if (!tune->mmi_input->mi_start_mux(tune->mmi_input, mmi)) {
+        tvhdebug("mpegts", "%s - started", buf);
+        LIST_INSERT_HEAD(&tune->mmi_input->mi_mux_active, tune,
+                         mmi_active_link);
+        mm->mm_active = tune;
+        break;
+      }
+      tvhwarn("mpegts", "%s - failed to start, try another", buf);
+      tune = NULL;
+      fail = 1;
     }
-    tvhwarn("mpegts", "%s - failed to start, try another", buf);
+
+    /* Next */
+    mmi = LIST_NEXT(mmi, mmi_mux_link);
+    if (!mmi) pass++;
+  }
+  
+  if (!tune) {
+    tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
+    return SM_CODE_NO_FREE_ADAPTER;
   }
 
   /* Initial scanning */
