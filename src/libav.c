@@ -143,6 +143,19 @@ codec_id2streaming_component_type(enum CodecID id)
 /**
  * 
  */ 
+int
+libav_is_encoder(AVCodec *codec)
+{
+#if LIBAVCODEC_VERSION_INT >= ((54<<16)+(7<<8)+0)
+  return av_codec_is_encoder(codec);
+#else
+  return codec->encode || codec->encode2;
+#endif
+}
+
+/**
+ * 
+ */ 
 void
 libav_init(void)
 {

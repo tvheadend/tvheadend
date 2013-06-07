@@ -25,6 +25,7 @@
 
 enum CodecID streaming_component_type2codec_id(streaming_component_type_t type);
 streaming_component_type_t codec_id2streaming_component_type(enum CodecID id);
+int libav_is_encoder(AVCodec *codec);
 void libav_init(void);
 
 #endif
