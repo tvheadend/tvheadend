@@ -55,6 +55,50 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
+int
+mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
+{
+  int r;
+  char buf[256], buf2[256];;
+  mpegts_mux_instance_t *mmi = *mmiptr;
+  mpegts_mux_t           *mm = mmi->mmi_mux;
+  mpegts_network_t       *mn = mm->mm_network;
+  mm->mm_display_name(mm, buf, sizeof(buf));
+
+  /* Already active */
+  if (mm->mm_active) {
+    *mmiptr = mm->mm_active;
+    tvhdebug("mpegts", "%s - already active", buf);
+    return 0;
+  }
+
+  /* Start */
+  mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
+  tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+  r = mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi);
+  if (!r) return r;
+
+  /* Start */
+  tvhdebug("mpegts", "%s - started", buf);
+  LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi,
+                    mmi_active_link);
+  mm->mm_active = mmi;
+
+  /* Initial scanning */
+  if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
+    tvhtrace("mpegts", "%s - adding to current scan Q", buf);
+    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
+                 mm_initial_scan_link);
+    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
+    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm,
+                      mm_initial_scan_link);
+    gtimer_arm(&mm->mm_initial_scan_timeout,
+               mpegts_mux_initial_scan_timeout, mm, 30);
+  }
+
+  return 0;
+}
+
 /* ****************************************************************************
  * Class definition
  * ***************************************************************************/
@@ -117,8 +161,7 @@ static int
 mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 {
   int pass, fail;
-  char buf[256], buf2[256];
-  mpegts_network_t      *mn = mm->mm_network;
+  char buf[256];
   mpegts_mux_instance_t *mmi, *tune;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
@@ -175,18 +218,9 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     
     /* Tune */
     if (tune) {
-      tune->mmi_input->mi_display_name(tune->mmi_input, buf2, sizeof(buf2));
-      tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
-      if (!tune->mmi_input->mi_start_mux(tune->mmi_input, mmi)) {
-        tvhdebug("mpegts", "%s - started", buf);
-        LIST_INSERT_HEAD(&tune->mmi_input->mi_mux_active, tune,
-                         mmi_active_link);
-        mm->mm_active = tune;
-        break;
-      }
-      tvhwarn("mpegts", "%s - failed to start, try another", buf);
+      if (!(fail = mpegts_mux_instance_start(&tune))) break;
       tune = NULL;
-      fail = 1;
+      tvhwarn("mpegts", "%s - failed to start, try another", buf);
     }
 
     /* Next */
@@ -197,15 +231,6 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   if (!tune) {
     tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
     return SM_CODE_NO_FREE_ADAPTER;
-  }
-
-  /* Initial scanning */
-  if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
-    tvhtrace("mpegts", "%s - adding to current scan Q", buf);
-    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
-    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
-    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
-    gtimer_arm(&mm->mm_initial_scan_timeout, mpegts_mux_initial_scan_timeout, mm, 30);
   }
 
   return 0;

@@ -105,7 +105,7 @@ mpegts_service_start(service_t *t, int instance)
   int r;
   mpegts_service_t      *s = (mpegts_service_t*)t;
   mpegts_mux_t          *m = s->s_dvb_mux;
-  mpegts_mux_instance_t *mi;
+  mpegts_mux_instance_t *mmi;
 
   /* Validate */
   assert(s->s_status      == SERVICE_IDLE);
@@ -113,27 +113,27 @@ mpegts_service_start(service_t *t, int instance)
   lock_assert(&global_lock);
 
   /* Find */
-  LIST_FOREACH(mi, &m->mm_instances, mmi_mux_link)
-    if (mi->mmi_input->mi_instance == instance)
+  LIST_FOREACH(mmi, &m->mm_instances, mmi_mux_link)
+    if (mmi->mmi_input->mi_instance == instance)
       break;
-  assert(mi != NULL);
-  if (mi == NULL)
+  assert(mmi != NULL);
+  if (mmi == NULL)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
-  r = mi->mmi_input->mi_start_mux(mi->mmi_input, mi);
+  r = mpegts_mux_instance_start(&mmi);
 
   /* Start */
   if (!r) {
 
     /* Add to active set */
-    pthread_mutex_lock(&mi->mmi_input->mi_delivery_mutex);
-    LIST_INSERT_HEAD(&mi->mmi_input->mi_transports, t, s_active_link);
-    s->s_dvb_active_input = mi->mmi_input;
-    pthread_mutex_unlock(&mi->mmi_input->mi_delivery_mutex);
+    pthread_mutex_lock(&mmi->mmi_input->mi_delivery_mutex);
+    LIST_INSERT_HEAD(&mmi->mmi_input->mi_transports, t, s_active_link);
+    s->s_dvb_active_input = mmi->mmi_input;
+    pthread_mutex_unlock(&mmi->mmi_input->mi_delivery_mutex);
 
     /* Open service */
-    mi->mmi_input->mi_open_service(mi->mmi_input, s);
+    mmi->mmi_input->mi_open_service(mmi->mmi_input, s);
   }
 
   return r;

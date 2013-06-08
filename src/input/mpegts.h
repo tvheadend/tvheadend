@@ -458,6 +458,7 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
   (struct type*)mpegts_mux_instance_create0(calloc(1, sizeof(struct type)),\
                                             &type##_class, uuid,\
                                             mi, mm);
+int mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr );
 
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
