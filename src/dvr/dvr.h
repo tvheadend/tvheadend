@@ -48,12 +48,18 @@ typedef struct dvr_config {
   /* Duplicate detect */
   int dvr_dup_detect_episode;
 
+  int dvr_filename_mode;
+  char *dvr_filename_external;
+
   LIST_ENTRY(dvr_config) config_link;
 } dvr_config_t;
 
 extern struct dvr_config_list dvrconfigs;
 
 extern struct dvr_entry_list dvrentries;
+
+#define DVR_FILENAMEMODE_BASIC		1
+#define DVR_FILENAMEMODE_EXTERNAL	2
 
 #define DVR_DIR_PER_DAY		0x1
 #define DVR_DIR_PER_CHANNEL	0x2
@@ -334,6 +340,10 @@ void dvr_flags_set(dvr_config_t *cfg, int flags);
 void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 
 void dvr_extra_time_post_set(dvr_config_t *cfg, int d);
+
+void dvr_filename_mode_set(dvr_config_t *cfg, int mode);
+
+void dvr_filename_external_set(dvr_config_t *cfg, const char *external);
 
 void dvr_entry_delete(dvr_entry_t *de);
 

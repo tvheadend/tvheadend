@@ -40,6 +40,7 @@
  *
  */
 static void *dvr_thread(void *aux);
+static int dvr_spawn_proc(dvr_entry_t *de, const char *prog, char **output);
 static void dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
@@ -117,6 +118,15 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   de->de_last_error = stopcode;
 }
 
+static void
+remove_slashes(char *s)
+{
+  for (; *s; s++)
+  {
+    if(*s == '/')
+      *s = '-';
+  }
+}
 
 /**
  * Replace various chars with a dash
@@ -124,20 +134,108 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 static void
 cleanupfilename(char *s, int dvr_flags)
 {
-  int i, len = strlen(s);
-  for(i = 0; i < len; i++) { 
-
-    if(s[i] == '/')
-      s[i] = '-';
-
-    else if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
-            (s[i] == ' ' || s[i] == '\t'))
-      s[i] = '-';	
+  for (; *s; s++)
+  { 
+    if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
+            (*s == ' ' || *s == '\t'))
+      *s = '-';	
 
     else if((dvr_flags & DVR_CLEAN_TITLE) &&
-            ((s[i] < 32) || (s[i] > 122) ||
-             (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
-      s[i] = '-';
+            ((*s < 32) || (*s > 122) ||
+             (strchr(":\\<>|*?'\"", *s) != NULL)))
+      *s = '-';
+  }
+}
+
+static void
+generate_filename_basic(dvr_config_t *cfg, char *filename, size_t filename_size, dvr_entry_t *de)
+{
+  size_t buffer_size = filename_size;
+  char *buffer = malloc(buffer_size);
+  int temp;
+
+  /* Append per-day directory */
+
+  if(cfg->dvr_flags & DVR_DIR_PER_DAY) {
+    struct tm tm;
+
+    localtime_r(&de->de_start, &tm);
+    size_t day_length = strftime(filename, filename_size, "/%F", &tm);
+
+    if(!day_length)
+      *filename = '\0';
+    else
+    {
+      filename += day_length;
+      filename_size -= day_length;
+    }
+  }
+
+  /* Append per-channel directory */
+
+  if(cfg->dvr_flags & DVR_DIR_PER_CHANNEL) {
+
+    snprintf(buffer, buffer_size, "%s", DVR_CH_NAME(de));
+    remove_slashes(buffer);
+    temp = snprintf(filename, filename_size, "/%s", buffer);
+
+    if(temp > 0)
+    {
+      if(temp > filename_size)
+        temp = filename_size;
+      filename += temp;
+      filename_size -= temp;
+    }
+  }
+
+  // TODO: per-brand, per-season
+
+  /* Append per-title directory */
+
+  if(cfg->dvr_flags & DVR_DIR_PER_TITLE) {
+
+    snprintf(buffer, buffer_size, "%s", lang_str_get(de->de_title, NULL));
+    remove_slashes(buffer);
+    temp = snprintf(filename, filename_size, "/%s", buffer);
+
+    if(temp > 0)
+    {
+      if(temp > filename_size)
+        temp = filename_size;
+      filename += temp;
+      filename_size -= temp;
+    }
+  }
+
+  dvr_make_title(buffer, buffer_size, de);
+  remove_slashes(buffer);
+  snprintf(filename, filename_size, "/%s", buffer);
+
+  free(buffer);
+}
+
+/**
+ * Executes external program to get the filename. Filename is read from standard output.
+ *
+ * No character safety checks are made except the last character is ignored if it is '\n' (new line).
+ */
+static void
+generate_filename_external(dvr_config_t *cfg, char *filename, size_t filename_size, dvr_entry_t *de)
+{
+  char *output;
+  int output_size;
+
+  if(cfg->dvr_filename_external)
+  {
+    output_size = dvr_spawn_proc(de, cfg->dvr_filename_external, &output);
+    if(output_size > 0)
+    {
+      if(output[output_size - 1] == '\n')
+        output[output_size - 1] = '\0';
+
+      snprintf(filename, filename_size, "%.*s", output_size, output);
+      free(output);
+    }
   }
 }
 
@@ -151,87 +249,77 @@ cleanupfilename(char *s, int dvr_flags)
 static int
 pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 {
-  char fullname[1000];
-  char path[500];
+  char path[1000];
   int tally = 0;
   struct stat st;
   char filename[1000];
-  struct tm tm;
+  const char *suffix;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
-  dvr_make_title(filename, sizeof(filename), de);
-  cleanupfilename(filename,cfg->dvr_flags);
+  filename[0] = '\0';
 
-  snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
+  if(cfg->dvr_filename_mode == DVR_FILENAMEMODE_EXTERNAL)
+    generate_filename_external(cfg, filename, sizeof(filename), de);
 
-  /* Remove trailing slash */
+  if(filename[0] == '\0')
+    generate_filename_basic(cfg, filename, sizeof(filename), de);
 
-  if (path[strlen(path)-1] == '/')
-    path[strlen(path)-1] = '\0';
+  cleanupfilename(filename, cfg->dvr_flags);
 
-  /* Append per-day directory */
+  /* Combine filename parts */
+  {
+    int temp = snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
+    if(temp < sizeof(path))
+    {
+      /* Remove trailing slashes from storage path and leadind slashes from filename */
+      while(temp > 0 && path[temp - 1] == '/')
+        temp--;
 
-  if(cfg->dvr_flags & DVR_DIR_PER_DAY) {
-    localtime_r(&de->de_start, &tm);
-    strftime(fullname, sizeof(fullname), "%F", &tm);
-    cleanupfilename(fullname,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
-	     "/%s", fullname);
+      char *temp2 = filename;
+      while(*temp2 == '/')
+        temp2++;
+
+      snprintf(path + temp, sizeof(path) - temp, "/%s", temp2);
+    }
+    snprintf(filename, sizeof(filename), "%s", path);
   }
 
-  /* Append per-channel directory */
-
-  if(cfg->dvr_flags & DVR_DIR_PER_CHANNEL) {
-
-    char *chname = strdup(DVR_CH_NAME(de));
-    cleanupfilename(chname,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
-	     "/%s", chname);
-    free(chname);
+  /* Directory path */
+  {
+    char *pathend = strrchr(path, '/');
+    if(!pathend)
+      pathend = path;
+    *pathend = '\0';
   }
-
-  // TODO: per-brand, per-season
-
-  /* Append per-title directory */
-
-  if(cfg->dvr_flags & DVR_DIR_PER_TITLE) {
-
-    char *title = strdup(lang_str_get(de->de_title, NULL));
-    cleanupfilename(title,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
-	     "/%s", title);
-    free(title);
-  }
-
 
   /* */
   if(makedirs(path, 0777) != 0) {
     return -1;
   }
-  
 
   /* Construct final name */
-  
-  snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, muxer_suffix(de->de_mux, ss));
+
+  suffix = muxer_suffix(de->de_mux, ss);
+  snprintf(path, sizeof(path), "%s.%s",
+	   filename, suffix);
 
   while(1) {
-    if(stat(fullname, &st) == -1) {
+    if(stat(path, &st) == -1) {
       tvhlog(LOG_DEBUG, "dvr", "File \"%s\" -- %s -- Using for recording",
-	     fullname, strerror(errno));
+	     path, strerror(errno));
       break;
     }
 
     tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists", 
-	   fullname);
+	   path);
 
     tally++;
 
-    snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, muxer_suffix(de->de_mux, ss));
+    snprintf(path, sizeof(path), "%s-%d.%s",
+	     filename, tally, suffix);
   }
 
-  tvh_str_set(&de->de_filename, fullname);
+  tvh_str_set(&de->de_filename, path);
 
   return 0;
 }
@@ -573,32 +661,35 @@ dvr_thread(void *aux)
 
 
 /**
- *
+ * Execute the given program
+ * 
+ * If output-variable isn't NULL, store program output in a malloc()ed buffer.
+ * 
+ * *output will point to the allocated buffer.
+ * The function will return the size of the buffer or negative value on a failure.
  */
-static void
-dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
+static int
+dvr_spawn_proc(dvr_entry_t *de, const char *prog, char **output)
 {
   const char *fmap[256];
   char **args;
   char start[16];
   char stop[16];
-  char *fbasename; /* filename dup for basename */
+  char *fbasename = NULL; /* filename dup for basename */
   int i;
+  int result;
 
-  args = htsstr_argsplit(dvr_postproc);
+  args = htsstr_argsplit(prog);
   /* no arguments at all */
   if(!args[0]) {
     htsstr_argsplit_free(args);
-    return;
+    return -1;
   }
 
-  fbasename = strdup(de->de_filename); 
   snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - de->de_start_extra);
   snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + de->de_stop_extra);
 
   memset(fmap, 0, sizeof(fmap));
-  fmap['f'] = de->de_filename; /* full path to recoding */
-  fmap['b'] = basename(fbasename); /* basename of recoding */
   fmap['c'] = DVR_CH_NAME(de); /* channel name */
   fmap['C'] = de->de_creator; /* user who created this recording */
   fmap['t'] = lang_str_get(de->de_title, NULL); /* program title */
@@ -609,6 +700,13 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   fmap['E'] = stop; /* stop time, unix epoch */
   // TODO: brand, season
 
+  if(de->de_filename)
+  {
+    fbasename = strdup(de->de_filename); 
+    fmap['f'] = de->de_filename; /* full path to recoding */
+    fmap['b'] = basename(fbasename); /* basename of recoding */
+  }
+
   /* format arguments */
   for(i = 0; args[i]; i++) {
     char *s;
@@ -617,11 +715,26 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     free(args[i]);
     args[i] = s;
   }
-  
-  spawnv(args[0], (void *)args);
-    
-  free(fbasename);
+
+  if(!output)
+    result = spawnv(args[0], (void *)args);
+  else
+    result = spawn_and_store_stdout(args[0], (void *)args, output);
+
+  if(fbasename)
+    free(fbasename);
   htsstr_argsplit_free(args);
+
+  return result;
+}
+
+/**
+ *
+ */
+static void
+dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
+{
+  dvr_spawn_proc(de, dvr_postproc, NULL);
 }
 
 /**

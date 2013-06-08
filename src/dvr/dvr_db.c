@@ -1088,6 +1088,9 @@ dvr_init(void)
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
 
+      htsmsg_get_s32(m, "filename_mode", &cfg->dvr_filename_mode);
+      tvh_str_set(&cfg->dvr_filename_external, htsmsg_get_str(m, "filename_external"));
+
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
 
@@ -1232,6 +1235,9 @@ dvr_config_create(const char *name)
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
+  cfg->dvr_filename_mode = DVR_FILENAMEMODE_BASIC;
+  cfg->dvr_filename_external = NULL;
+
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
   return LIST_FIRST(&dvrconfigs);
@@ -1274,6 +1280,9 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
+  htsmsg_add_u32(m, "filename_mode", cfg->dvr_filename_mode);
+  if(cfg->dvr_filename_external != NULL)
+    htsmsg_add_str(m, "filename_external", cfg->dvr_filename_external);
   htsmsg_add_u32(m, "day-dir",          !!(cfg->dvr_flags & DVR_DIR_PER_DAY));
   htsmsg_add_u32(m, "channel-dir",      !!(cfg->dvr_flags & DVR_DIR_PER_CHANNEL));
   htsmsg_add_u32(m, "channel-in-title", !!(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE));
@@ -1402,6 +1411,34 @@ dvr_extra_time_post_set(dvr_config_t *cfg, int d)
     return;
 
   cfg->dvr_extra_time_post = d;
+  dvr_save(cfg);
+}
+
+
+/**
+ *
+ */
+void
+dvr_filename_mode_set(dvr_config_t *cfg, int mode)
+{
+  if(cfg->dvr_filename_mode == mode)
+    return;
+
+  cfg->dvr_filename_mode = mode;
+  dvr_save(cfg);
+}
+
+
+/**
+ *
+ */
+void
+dvr_filename_external_set(dvr_config_t *cfg, const char *external)
+{
+  if(cfg->dvr_filename_external != NULL && !strcmp(cfg->dvr_filename_external, external))
+    return;
+
+  tvh_str_set(&cfg->dvr_filename_external, !strcmp(external, "") ? NULL : external);
   dvr_save(cfg);
 }
 

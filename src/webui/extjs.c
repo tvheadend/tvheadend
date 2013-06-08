@@ -1255,6 +1255,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
     htsmsg_add_u32(r, "preExtraTime", cfg->dvr_extra_time_pre);
     htsmsg_add_u32(r, "postExtraTime", cfg->dvr_extra_time_post);
+    htsmsg_add_u32(r, "filename_mode", cfg->dvr_filename_mode);
+    if(cfg->dvr_filename_external != NULL)
+      htsmsg_add_str(r, "filename_external", cfg->dvr_filename_external);
     htsmsg_add_u32(r, "dayDirs",        !!(cfg->dvr_flags & DVR_DIR_PER_DAY));
     htsmsg_add_u32(r, "channelDirs",    !!(cfg->dvr_flags & DVR_DIR_PER_CHANNEL));
     htsmsg_add_u32(r, "channelInTitle", !!(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE));
@@ -1296,6 +1299,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
    if((s = http_arg_get(&hc->hc_req_args, "postExtraTime")) != NULL)
      dvr_extra_time_post_set(cfg,atoi(s));
 
+    if((s = http_arg_get(&hc->hc_req_args, "filename_mode")) != NULL)
+      dvr_filename_mode_set(cfg,atoi(s));
+    if((s = http_arg_get(&hc->hc_req_args, "filename_external")) != NULL)
+      dvr_filename_external_set(cfg,s);
     if(http_arg_get(&hc->hc_req_args, "dayDirs") != NULL)
       flags |= DVR_DIR_PER_DAY;
     if(http_arg_get(&hc->hc_req_args, "channelDirs") != NULL)
