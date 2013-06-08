@@ -60,6 +60,7 @@ void _tvhlog_hexdump   ( const char *file, int line,
 #define TVHLOG_OPT_MILLIS       0x0100
 #define TVHLOG_OPT_DECORATE     0x0200
 #define TVHLOG_OPT_FILELINE     0x0400
+#define TVHLOG_OPT_THREAD       0x0800
 #define TVHLOG_OPT_ALL          0xFFFF
 
 /* Levels */

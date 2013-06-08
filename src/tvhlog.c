@@ -192,7 +192,12 @@ void tvhlogv ( const char *file, int line,
   }
 
   /* Basic message */
-  l = snprintf(buf, sizeof(buf), "%s: ", subsys);
+  l = 0;
+  if (options & TVHLOG_OPT_THREAD) {
+    pthread_t tid = pthread_self();
+    l += snprintf(buf + l, sizeof(buf) - l, "tid %ld: ", tid);
+  }
+  l += snprintf(buf + l, sizeof(buf) - l, "%s: ", subsys);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
     l += snprintf(buf + l, sizeof(buf) - l, "(%s:%d) ", file, line);
   if (args)

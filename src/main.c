@@ -418,6 +418,7 @@ main(int argc, char **argv)
               opt_abort        = 0,
               opt_noacl        = 0,
               opt_fileline     = 0,
+              opt_threadid     = 0,
               opt_ipv6         = 0,
               opt_tsfile_tuner = 0;
   const char *opt_config       = NULL,
@@ -475,6 +476,7 @@ main(int argc, char **argv)
     {   0, "trace",     "Enable trace subsystems", OPT_STR,  &opt_log_trace },
 #endif
     {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
+    {   0, "threadid",  "Add the thread ID to debug", OPT_BOOL, &opt_threadid },
     {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
@@ -588,6 +590,8 @@ main(int argc, char **argv)
   }
   if (opt_fileline)
     log_options |= TVHLOG_OPT_FILELINE;
+  if (opt_threadid)
+    log_options |= TVHLOG_OPT_THREAD;
   if (opt_log_trace) {
     log_level  = LOG_TRACE;
     log_trace  = opt_log_trace;
