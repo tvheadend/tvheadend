@@ -262,8 +262,10 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
   LIST_FOREACH(si, sil, si_link)
     si->si_mark = 1;
 
-  LIST_FOREACH(s, &ch->ch_services, s_ch_link)
+  LIST_FOREACH(s, &ch->ch_services, s_ch_link) {
+    if (!s->s_is_enabled(s)) continue;
     s->s_enlist(s, sil);
+  }
 
   for(si = LIST_FIRST(sil); si != NULL; si = next) {
     next = LIST_NEXT(si, si_link);
@@ -324,7 +326,7 @@ service_enlist(channel_t *ch)
 
     if(!t->s_is_enabled(t)) {
       if(loginfo != NULL) {
-	tvhlog(LOG_NOTICE, "Service", "%s: Skipping \"%s\" -- not enabled",
+	tvhlog(LOG_NOTICE, "service", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, service_nicename(t));
 	err = SM_CODE_SVC_NOT_ENABLED;
       }
@@ -332,7 +334,7 @@ service_enlist(channel_t *ch)
     }
 
     vec[cnt++] = t;
-    tvhlog(LOG_DEBUG, "Service",
+    tvhlog(LOG_DEBUG, "service",
     		"%s: Adding adapter \"%s\" for service \"%s\"",
     		 loginfo, service_adapter_nicename(t), service_nicename(t));
   }
@@ -360,12 +362,12 @@ service_enlist(channel_t *ch)
     t = vec[i];
     if(t->s_status == SERVICE_RUNNING) 
       return t;
-    tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
+    tvhlog(LOG_DEBUG, "service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
     if((r = service_start(t, 0, 0)) == 0)
       return t;
     if(loginfo != NULL)
-      tvhlog(LOG_DEBUG, "Service", "%s: Unable to use \"%s\" -- %s",
+      tvhlog(LOG_DEBUG, "service", "%s: Unable to use \"%s\" -- %s",
 	     loginfo, service_nicename(t), streaming_code2txt(r));
   }
 
@@ -374,7 +376,7 @@ service_enlist(channel_t *ch)
 
   for(i = off; i < cnt; i++) {
     t = vec[i];
-    tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" with weight %d for service \"%s\"",
+    tvhlog(LOG_DEBUG, "service", "%s: Probing adapter \"%s\" with weight %d for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), weight, service_nicename(t));
 
     if((r = service_start(t, weight, 0)) == 0)
@@ -828,7 +830,7 @@ service_set_streaming_status_flags(service_t *t, int set)
 
   t->s_streaming_status = n;
 
-  tvhlog(LOG_DEBUG, "Service", "%s: Status changed to %s%s%s%s%s%s%s",
+  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s",
 	 service_nicename(t),
 	 n & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
 	 n & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
