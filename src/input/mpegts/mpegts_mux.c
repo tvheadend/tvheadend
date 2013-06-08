@@ -76,7 +76,7 @@ mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
   mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
   r = mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi);
-  if (!r) return r;
+  if (r) return r;
 
   /* Start */
   tvhdebug("mpegts", "%s - started", buf);
@@ -192,6 +192,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   pass = 0;
   mmi  = NULL;
   while (pass < 2) {
+    tune = NULL;
     if (!mmi) mmi = LIST_FIRST(&mm->mm_instances);
   
     /* First pass - free only */

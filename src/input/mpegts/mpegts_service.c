@@ -80,19 +80,19 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
 {
   mpegts_service_t      *s = (mpegts_service_t*)t;
   mpegts_mux_t          *m = s->s_dvb_mux;
-  mpegts_mux_instance_t *mi;
+  mpegts_mux_instance_t *mmi;
 
   assert(s->s_source_type == S_MPEG_TS);
 
-  LIST_FOREACH(mi, &m->mm_instances, mmi_mux_link) {
-    if (mi->mmi_tune_failed)
+  LIST_FOREACH(mmi, &m->mm_instances, mmi_mux_link) {
+    if (mmi->mmi_tune_failed)
       continue;
-    // TODO: check the instance is enabled
 
-    service_instance_add(sil, t, mi->mmi_input->mi_instance, 
-                         //TODO: fix below,
-                         100, 0);
-                         //mpegts_mux_instance_weight(mi));
+    if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input)) continue;
+
+    service_instance_add(sil, t, mmi->mmi_input->mi_instance,
+                         mmi->mmi_input->mi_current_weight(mmi->mmi_input),
+                         0/*TODO: priority */);
   }
 }
 
@@ -205,6 +205,12 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 
   m->mm_display_name(m, buf, sizeof(buf));
   si->si_mux = strdup(buf);
+
+  if(s->s_dvb_active_input) {
+    mpegts_input_t *mi = s->s_dvb_active_input;
+    mi->mi_display_name(mi, buf, sizeof(buf));
+    si->si_adapter = strdup(buf);
+  }
 
   if(s->s_dvb_provider != NULL)
     si->si_provider = strdup(s->s_dvb_provider);

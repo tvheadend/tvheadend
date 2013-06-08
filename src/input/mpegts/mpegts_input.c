@@ -294,6 +294,7 @@ mpegts_input_table_thread ( void *aux )
  * Creation/Config
  * *************************************************************************/
 
+static int mpegts_input_idx = 0;
 mpegts_input_list_t mpegts_input_all;
 
 mpegts_input_t*
@@ -316,6 +317,9 @@ mpegts_input_create0
   mi->mi_close_service  = mpegts_input_close_service;
   mi->mi_network_class  = mpegts_input_network_class;
   mi->mi_network_create = mpegts_input_network_create;
+
+  /* Index */
+  mi->mi_instance       = ++mpegts_input_idx;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);
