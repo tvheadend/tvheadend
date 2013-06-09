@@ -410,6 +410,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if (!mmi) return;
   mm = mmi->mmi_mux;
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
+  tvhdebug("linuxdvb", "%s - checking FE status", buf);
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -432,6 +433,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
     /* Locked */
     if (status == SIGNAL_GOOD) {
+      tvhdebug("linuxdvb", "%s - locked", buf);
       lfe->lfe_locked = 1;
   
       /* Start input */
