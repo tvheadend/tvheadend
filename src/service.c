@@ -275,7 +275,7 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
 
   // Check if any service is already running, if so, use that
   LIST_FOREACH(si, sil, si_link)
-    if(si->si_s->s_status == SERVICE_RUNNING)
+    if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0)
       return si;
 
   // Check if any is idle
