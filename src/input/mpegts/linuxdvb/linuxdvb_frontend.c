@@ -438,8 +438,11 @@ linuxdvb_frontend_monitor ( void *aux )
   
       /* Start input */
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
+      pthread_mutex_lock(&lfe->lfe_dvr_lock);
       pthread_create(&lfe->lfe_dvr_thread, NULL,
                      linuxdvb_frontend_input_thread, lfe);
+      pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
+      pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
       /* Table handlers */
       linuxdvb_frontend_default_tables(lfe, (linuxdvb_mux_t*)mm);
@@ -478,11 +481,12 @@ linuxdvb_frontend_input_thread ( void *aux )
   int fullmux;
 
   /* Get MMI */
-  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(&lfe->lfe_dvr_lock);
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   mmi = LIST_FIRST(&lfe->mi_mux_active);
   fullmux = lfe->lfe_fullmux;
-  pthread_mutex_unlock(&global_lock);
+  pthread_cond_signal(&lfe->lfe_dvr_cond);
+  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
   if (mmi == NULL) return NULL;
 
   /* Open DMX */
@@ -695,6 +699,10 @@ linuxdvb_frontend_create0
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;
   LIST_INSERT_HEAD(&la->lh_children, (linuxdvb_hardware_t*)lfe, lh_parent_link);
+
+  /* DVR lock/cond */
+  pthread_mutex_init(&lfe->lfe_dvr_lock, NULL);
+  pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
  
   /* Start table thread */
   pthread_create(&tid, NULL, mpegts_input_table_thread, lfe);
