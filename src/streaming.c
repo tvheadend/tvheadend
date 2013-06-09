@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <assert.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -328,8 +329,8 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
   streaming_target_t *st, *next;
 
   for(st = LIST_FIRST(&sp->sp_targets);st; st = next) {
-
     next = LIST_NEXT(st, st_link);
+    assert(next != st);
     if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
       continue;
     st->st_cb(st->st_opaque, streaming_msg_clone(sm));
