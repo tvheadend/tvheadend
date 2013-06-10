@@ -8,33 +8,10 @@
 
 tvheadend.networks = function(panel)
 {
-  var fields = [
-    {
-      type    : 'str',
-      id      : 'name',
-      caption : 'Network Name'
-    },
-    {
-      type    : 'u16',
-      id      : 'nid',
-      caption : 'Network ID'
-    },
-    {
-      type    : 'bool',
-      id      : 'initscan',
-      caption : 'Initial scan'
-    },
-    {
-      type    : 'bool',
-      id      : 'autodiscovery',
-      caption : 'Auto-discovery'
-    }
-  ];
-
   tvheadend.idnode_grid(panel, {
-    title    :  'Network',
+    titleS   :  'Network',
+    titleP   :  'Networks',
     url      : 'api/mpegts/network',
-    //fields  : fields,
     add       : {
       url    : 'api/mpegts/input',
       title  : 'Network',
@@ -59,19 +36,36 @@ tvheadend.networks = function(panel)
 tvheadend.muxes = function(panel)
 {
   tvheadend.idnode_grid(panel, {
-    url   : 'api/mpegts/mux',
-    title : 'Muxes',
-    add   : true,
-    del   : true
+    titleS   : 'Mux',
+    titleP   : 'Muxes',
+    url      : 'api/mpegts/mux',
+    add       : {
+      title  : 'Mux',
+      url    : 'api/mpegts/network',
+      select : {
+        caption      : 'Network',
+        params       : { op: 'list', limit: -1 },
+        displayField : 'networkname',
+        valueField   : 'uuid',
+        clazz        : {
+          params  : { op: 'mux_class' }
+        }
+      },
+      create : {
+        params : { op: 'mux_create' }
+      }
+    },
+    del     : true
   });
 }
 
 tvheadend.services = function(panel)
 {
   tvheadend.idnode_grid(panel, {
-    url   : 'api/mpegts/service',
-    title : 'Services',
-    add   : false,
-    del   : false
+    url     : 'api/mpegts/service',
+    titleS  : 'Service',
+    titleP  : 'Services',
+    add     : false,
+    del     : false
   });
 }

@@ -11,6 +11,69 @@ json_decode = function(d)
 }
 
 /*
+ * Field editor
+ */
+tvheadend.idnode_editor_field = function(f, create)
+{
+  var d = f.rdonly || false;
+  if (f.wronly && !create) d = false;
+
+  switch(f.type) {
+    case 'str':
+      if (f.enum) {
+        return new Ext.form.ComboBox({
+          fieldLabel      : f.caption,
+          name            : f.id,
+          value           : f.value,
+          disabled        : d,
+          width           : 300,
+          mode            : 'local',
+          store           : f.enum,
+          typeAhead       : true,
+          forceSelection  : true,
+          triggerAction   : 'all',
+          emptyText       :'Select ' + f.caption +' ...'
+        });
+      } else {
+        return new Ext.form.TextField({
+          fieldLabel  : f.caption,
+          name        : f.id,
+          value       : f.value,
+          disabled    : d,
+          width       : 300
+        });
+      }
+
+    case 'bool':
+      return new Ext.form.Checkbox({
+        fieldLabel  : f.caption,
+        name        : f.id,
+        checked     : f.value,
+        disabled    : d
+      });
+
+    case 'int':
+    case 'u32':
+    case 'u16':
+      return new Ext.form.NumberField({
+        fieldLabel  : f.caption,
+        name        : f.id,
+        value       : f.value,
+        disabled    : d,
+        width       : 300
+      });
+
+    /*
+    case 'separator':
+      return new Ext.form.LabelField({
+        fieldLabel  : f.caption
+      });
+*/
+  }
+  return null;
+}
+
+/*
  * ID node editor panel
  */
 tvheadend.idnode_editor = function(item)
@@ -18,62 +81,9 @@ tvheadend.idnode_editor = function(item)
   var fields = []
 
   for (var idx in item.params) {
-    var f = item.params[idx];
-    var d = f.rdonly || false;
-    switch(f.type) {
-    case 'str':
-      if (f.enum) {
-        fields.push(new Ext.form.ComboBox({
-          fieldLabel: f.caption,
-          name: f.id,
-          value: f.value,
-          mode: 'local',
-          disabled: d,
-          store: f.enum,
-          typeAhead: true,
-          forceSelection: true,
-          triggerAction: 'all',
-          emptyText:'Select ' + f.caption +' ...'
-        }));
-      } else {
-        fields.push({
-          fieldLabel: f.caption,
-          name: f.id,
-          value: f.value,
-          disabled: d
-        });
-      }
-      break;
-
-    case 'bool':
-      fields.push({
-        xtype: 'checkbox',
-        fieldLabel: f.caption,
-        name: f.id,
-        checked: f.value,
-        disabled: d
-      });
-      break;
-
-    case 'int':
-    case 'u32':
-    case 'u16':
-      fields.push(new Ext.form.NumberField({
-        fieldLabel: f.caption,
-        name: f.id,
-        value: f.value,
-        disabled: d,
-        width      : 300
-      }));
-      break;
-
-    case 'separator':
-      fields.push({
-        xtype: 'label',
-        fieldLabel: f.caption
-      });
-      break;
-    }
+    var f = tvheadend.idnode_editor_field(item.params[idx], true);
+    if (f)
+      fields.push(f);
   }
 
   var panel = new Ext.FormPanel({
@@ -161,25 +171,9 @@ tvheadend.idnode_create = function(conf)
 
     /* Fields */
     for (i = 0; i < d.length; i++) {
-      if (d[i].rdonly) continue;
-      if (d[i].type == 'int' || d[i].type == 'u16' || d[i].type == 'u32') {
-        panel.add(new Ext.form.NumberField({
-          fieldLabel : d[i].caption,
-          name       : d[i].id,
-          width      : 300
-        }));
-      } else if (d[i].type == 'bool') {
-        panel.add(new Ext.form.Checkbox({
-          fieldLabel : d[i].caption,
-          name       : d[i].id
-        }));
-      } else if (d[i].type == 'str') {
-        panel.add(new Ext.form.TextField({
-          fieldLabel : d[i].caption,
-          name       : d[i].id,
-          width      : 300
-        }));
-      }
+      var f = tvheadend.idnode_editor_field(d[i]);
+      if (f)
+        panel.add(f);
     }
     panel.doLayout();
   }
@@ -199,7 +193,7 @@ tvheadend.idnode_create = function(conf)
       triggerAction : 'all',
       store         : new Ext.data.JsonStore({
         root        : 'entries',
-        url         : conf.select.url,
+        url         : conf.select.url || conf.url,
         baseParams  : conf.select.params,
         fields      : [ conf.select.valueField, conf.select.displayField ]
       }),
@@ -379,7 +373,7 @@ tvheadend.idnode_grid = function(panel, conf)
               d = json_decode(d);
               p = tvheadend.idnode_editor(d[0]);
               w = new Ext.Window({
-                title       : 'Add ' + conf.title,
+                title       : 'Add ' + conf.titleS,
                 layout      : 'fit',
                 autoWidth   : true,
                 autoHeight  : true,
@@ -404,7 +398,7 @@ tvheadend.idnode_grid = function(panel, conf)
     /* Grid Panel */
     var grid   = new Ext.grid.EditorGridPanel({
       stripeRows    : true,
-      title         : conf.title,
+      title         : conf.titleP,
       store         : store,
       cm            : model,
       selModel      : select,
@@ -419,8 +413,8 @@ tvheadend.idnode_grid = function(panel, conf)
         store       : store,
         pageSize    : 50,
         displayInfo : true,
-        displayMsg  :  conf.title + ' {0} - {1} of {2}',
-        emptyMsg    : 'No ' + conf.title.toLowerCase() + ' to display'
+        displayMsg  :  conf.titleP + ' {0} - {1} of {2}',
+        emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display'
       })
     });
 

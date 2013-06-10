@@ -128,11 +128,12 @@ extjs_idnode_grid
   htsmsg_t *list = htsmsg_create_list();
   if (conf->sort.key)
     idnode_set_sort(ins, &conf->sort);
-  for (i = conf->start; i < ins->is_count && conf->limit > 0; i++, conf->limit--) {
+  for (i = conf->start; i < ins->is_count && conf->limit != 0; i++) {
     htsmsg_t *e = htsmsg_create_map();
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins->is_array[i]));
     idnode_save(ins->is_array[i], e);
     htsmsg_add_msg(list, NULL, e);
+    if (conf->limit > 0) conf->limit--;
   }
   pthread_mutex_unlock(&global_lock);
   free(ins->is_array);
@@ -216,7 +217,7 @@ static int
 extjs_mpegts_network
   (http_connection_t *hc, const char *remain, void *opaque)
 {
-  mpegts_network_t *mn;
+  mpegts_network_t *mn  = NULL;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
   const char       *op  = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
@@ -233,6 +234,44 @@ extjs_mpegts_network
   } else if (!strcmp(op, "class")) {
     htsmsg_t *c = extjs_idnode_class(&mpegts_network_class);
     htsmsg_add_msg(out, "entries", c);
+  } else if (!strcmp(op, "mux_class")) {
+    const idclass_t *idc; 
+    const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    pthread_mutex_lock(&global_lock);
+    mn = (uuid ? mpegts_network_find(uuid) : NULL);
+    if (!mn) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    if (!(idc = mn->mn_mux_class(mn))) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    htsmsg_t *c = extjs_idnode_class(idc);
+    htsmsg_add_msg(out, "entries", c);
+    pthread_mutex_unlock(&global_lock);
+  } else if (!strcmp(op, "mux_create")) {
+    mpegts_mux_t *mm;
+    htsmsg_t *conf = NULL;
+    const char *c;
+    const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    pthread_mutex_lock(&global_lock);
+    mn = (uuid ? mpegts_network_find(uuid) : NULL);
+    if (!mn) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    if ((c = http_arg_get(&hc->hc_req_args, "conf")))
+      conf = htsmsg_json_deserialize(c);
+    if (!conf) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    mm = mn->mn_mux_create2(mn, conf);
+    pthread_mutex_unlock(&global_lock);
+    if (!mm) return HTTP_STATUS_BAD_REQUEST; // TODO: error message
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
   }
 
   htsmsg_json_serialize(out, hq, 0);
