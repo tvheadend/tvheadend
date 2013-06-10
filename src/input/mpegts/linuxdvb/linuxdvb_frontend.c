@@ -83,12 +83,60 @@ const idclass_t linuxdvb_frontend_class =
   }
 };
 
+static const char*
+linuxdvb_frontend_class_network_get(void *o)
+{
+  linuxdvb_frontend_t *lfe = o;
+  if (lfe->mi_network)
+    return idnode_uuid_as_str(&lfe->mi_network->mn_id);
+  return NULL;
+}
+
+static void
+linuxdvb_frontend_class_network_set(void *o, const char *s)
+{
+#if 0
+  mpegts_input_t *mi = o;
+  mpegts_network_t *mn = mpegts_network_find(s);
+  if (mn)
+    mpegts_network_add_input(mn, mi);
+#endif
+}
+
+static htsmsg_t *
+linuxdvb_frontend_class_network_enum(void *o)
+{
+  extern const idclass_t linuxdvb_network_class;
+  int i;
+  linuxdvb_frontend_t *lfe = o;
+  linuxdvb_network_t *ln;
+  htsmsg_t *m = htsmsg_create_list();
+  idnode_set_t *is = idnode_find_all(&linuxdvb_network_class);
+  for (i = 0; i < is->is_count; i++) {
+    ln = (linuxdvb_network_t*)is->is_array[i];
+    if (ln->ln_type == lfe->lfe_info.type) {
+      htsmsg_t *e = htsmsg_create_map();
+      htsmsg_add_str(e, "key", idnode_uuid_as_str(&ln->mn_id));
+      htsmsg_add_str(e, "val", ln->mn_network_name);
+      htsmsg_add_msg(m, NULL, e);
+    }
+  }
+  idnode_set_free(is);
+  return m;
+}
+
 const idclass_t linuxdvb_frontend_dvbt_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbt",
   .ic_caption    = "Linux DVB-T Frontend",
   .ic_properties = (const property_t[]){
+    {
+      PROPDEF0("network", "Network", PT_STR, 0),
+      .str_get   = linuxdvb_frontend_class_network_get,
+      .str_set   = linuxdvb_frontend_class_network_set,
+      .str_enum2 = linuxdvb_frontend_class_network_enum
+    },
     {}
   }
 };
