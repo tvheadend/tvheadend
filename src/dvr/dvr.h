@@ -67,6 +67,7 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_TAG_FILES           0x200
 #define DVR_SKIP_COMMERCIALS    0x400
 #define DVR_SUBTITLE_IN_TITLE	0x800
+#define DVR_EPISODE_BEFORE_DATE	0x1000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
