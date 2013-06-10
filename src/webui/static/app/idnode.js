@@ -22,12 +22,27 @@ tvheadend.idnode_editor = function(item)
     var d = f.rdonly || false;
     switch(f.type) {
     case 'str':
-      fields.push({
-        fieldLabel: f.caption,
-        name: f.id,
-        value: f.value,
-        disabled: d
-      });
+      if (f.enum) {
+        fields.push(new Ext.form.ComboBox({
+          fieldLabel: f.caption,
+          name: f.id,
+          value: f.value,
+          mode: 'local',
+          disabled: d,
+          store: f.enum,
+          typeAhead: true,
+          forceSelection: true,
+          triggerAction: 'all',
+          emptyText:'Select ' + f.caption +' ...'
+        }));
+      } else {
+        fields.push({
+          fieldLabel: f.caption,
+          name: f.id,
+          value: f.value,
+          disabled: d
+        });
+      }
       break;
 
     case 'bool':
