@@ -164,6 +164,15 @@ prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
       htsmsg_add_u32(m, "rdonly", 1);
     if (p->options & PO_NOSAVE)
       htsmsg_add_u32(m, "nosave", 1);
+    if (p[i].type == PT_STR && p[i].str_enum) {
+      htsmsg_t *l    = htsmsg_create_list();
+      const char **e = p[i].str_enum(obj);
+      while (*e) {
+        htsmsg_add_str(l, NULL, *e);
+        e++;
+      }
+      htsmsg_add_msg(m, "enum", l);
+    }
     if (obj)
       prop_read_value(obj, p+i, m, "value");
     htsmsg_add_msg(msg, NULL, m);

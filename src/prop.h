@@ -14,6 +14,7 @@ typedef enum {
 #define PO_NONE   0x0
 #define PO_RDONLY 0x1 // Note: if this is changed, change PROPDEF2
 #define PO_NOSAVE 0x2
+#define PO_WRONCE 0x4
 
 typedef struct property {
   const char *id;
@@ -24,6 +25,7 @@ typedef struct property {
 
   const char *(*str_get)(void *ptr);
   void (*str_set)(void *ptr, const char *str);
+  const char **(*str_enum)(void *ptr);
 
   void (*notify)(void *ptr);
 
