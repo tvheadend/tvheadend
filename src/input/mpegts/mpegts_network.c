@@ -82,6 +82,21 @@ mpegts_network_create_service
   return NULL;
 }
 
+static const idclass_t *
+mpegts_network_mux_class
+  ( mpegts_network_t *mn )
+{
+  extern const idclass_t mpegts_mux_class;
+  return &mpegts_mux_class;
+}
+
+static mpegts_mux_t *
+mpegts_network_mux_create2
+  ( mpegts_network_t *mn, htsmsg_t *conf )
+{
+  return NULL;
+}
+
 /* ****************************************************************************
  * Scanning
  * ***************************************************************************/
@@ -131,6 +146,8 @@ mpegts_network_create0
   mn->mn_config_save    = mpegts_network_config_save;
   mn->mn_create_mux     = mpegts_network_create_mux;
   mn->mn_create_service = mpegts_network_create_service;
+  mn->mn_mux_class      = mpegts_network_mux_class;
+  mn->mn_mux_create2    = mpegts_network_mux_create2;
 
   /* Network name */
   if (netname) mn->mn_network_name = strdup(netname);

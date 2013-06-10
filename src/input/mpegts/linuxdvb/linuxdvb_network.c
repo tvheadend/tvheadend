@@ -117,6 +117,39 @@ linuxdvb_network_create_service
                                   pmt_pid, NULL, NULL);
 }
 
+static const idclass_t *
+linuxdvb_network_mux_class
+  ( mpegts_network_t *mn )
+{
+  extern const idclass_t linuxdvb_mux_dvbt_class;
+  extern const idclass_t linuxdvb_mux_dvbc_class;
+  extern const idclass_t linuxdvb_mux_dvbs_class;
+  extern const idclass_t linuxdvb_mux_atsc_class;
+  linuxdvb_network_t *ln = (linuxdvb_network_t*)mn;
+  switch (ln->ln_type) {
+    case FE_OFDM:
+      return &linuxdvb_mux_dvbt_class;
+    case FE_QAM:
+      return &linuxdvb_mux_dvbc_class;
+    case FE_QPSK:
+      return &linuxdvb_mux_dvbs_class;
+    case FE_ATSC:
+      return &linuxdvb_mux_atsc_class;
+    default:
+      return NULL;
+  }
+}
+
+static mpegts_mux_t *
+linuxdvb_network_mux_create2
+  ( mpegts_network_t *mn, htsmsg_t *conf )
+{
+  linuxdvb_network_t *ln = (linuxdvb_network_t*)mn;
+  return (mpegts_mux_t*)
+    linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                         NULL, NULL, conf);
+}
+
 /* ****************************************************************************
  * Creation/Config
  * ***************************************************************************/
@@ -139,6 +172,8 @@ linuxdvb_network_create0
   ln->mn_create_mux     = linuxdvb_network_create_mux;
   ln->mn_create_service = linuxdvb_network_create_service;
   ln->mn_config_save    = linuxdvb_network_config_save;
+  ln->mn_mux_class      = linuxdvb_network_mux_class;
+  ln->mn_mux_create2    = linuxdvb_network_mux_create2;
 
   /* No config */
   if (!conf)

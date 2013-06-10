@@ -176,6 +176,8 @@ struct mpegts_network
     (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
+  const idclass_t*  (*mn_mux_class)   (mpegts_network_t*);
+  mpegts_mux_t *    (*mn_mux_create2) (mpegts_network_t *mn, htsmsg_t *conf);
 
   /*
    * Configuration
@@ -424,6 +426,12 @@ mpegts_network_t *mpegts_network_create0
 
 #define mpegts_network_create(t, u, n, c)\
   (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), &t##_class, u, n, c)
+
+extern const idclass_t mpegts_network_class;
+
+#define mpegts_network_find(u)\
+  idnode_find(u, &mpegts_network_class)
+  
 
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
