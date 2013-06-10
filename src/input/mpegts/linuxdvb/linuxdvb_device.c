@@ -276,7 +276,8 @@ linuxdvb_device_find_by_hwid ( const char *hwid )
 {
   linuxdvb_hardware_t *lh;
   LIST_FOREACH(lh, &linuxdvb_device_all, lh_parent_link) {
-    if (!strcmp(hwid, ((linuxdvb_device_t*)lh)->ld_devid.di_id))
+    
+    if (!strcmp(hwid, ((linuxdvb_device_t*)lh)->ld_devid.di_id ?: ""))
       return (linuxdvb_device_t*)lh;
   }
   return NULL;
