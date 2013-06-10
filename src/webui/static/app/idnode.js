@@ -2,12 +2,81 @@ json_decode = function(d)
 {
   if (d && d.responseText) {
     d = Ext.util.JSON.decode(d.responseText)
-    d = d.entries;
+    if (d.entries)
+      d = d.entries;
   } else {
     d = []
   }
   return d;
 }
+
+/*
+ * ID node editor panel
+ */
+tvheadend.idnode_editor = function(item)
+{
+  var fields = []
+
+  for (var idx in item.params) {
+    var f = item.params[idx];
+    var d = f.rdonly || false;
+    switch(f.type) {
+    case 'str':
+      fields.push({
+        fieldLabel: f.caption,
+        name: f.id,
+        value: f.value,
+        disabled: d
+      });
+      break;
+
+    case 'bool':
+      fields.push({
+        xtype: 'checkbox',
+        fieldLabel: f.caption,
+        name: f.id,
+        checked: f.value,
+        disabled: d
+      });
+      break;
+
+    case 'int':
+    case 'u32':
+    case 'u16':
+      fields.push(new Ext.form.NumberField({
+        fieldLabel: f.caption,
+        name: f.id,
+        value: f.value,
+        disabled: d,
+        width      : 300
+      }));
+      break;
+
+    case 'separator':
+      fields.push({
+        xtype: 'label',
+        fieldLabel: f.caption
+      });
+      break;
+    }
+  }
+
+  var panel = new Ext.FormPanel({
+    frame       : true,
+    border      : true,
+    bodyStyle   : 'padding: 5px',
+    labelAlign  : 'left',
+    labelWidth  : 200,
+    autoWidth   : true,
+    autoHeight  : true,
+    defaultType : 'textfield',
+    buttonAlign : 'left',
+    items       : fields,
+    //buttons     : [ undoBtn, saveBtn ]
+  });
+  return panel;
+}
+
 
 /*
  * IDnode creation dialog
@@ -156,6 +225,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var undoBtn = null;
     var addBtn  = null;
     var delBtn  = null;
+    var editBtn = null;
 
     /* Process */
     for (i = 0; i < d.length; i++) {
@@ -229,6 +299,7 @@ tvheadend.idnode_grid = function(panel, conf)
     select.on('selectionchange', function(s){
       if (delBtn)
         delBtn.setDisabled(s.getCount() == 0);
+      editBtn.setDisabled(s.getCount() != 1);
     });
 
     /* Top bar */
@@ -273,6 +344,40 @@ tvheadend.idnode_grid = function(panel, conf)
       });
       buttons.push(delBtn);
     }
+    buttons.push('-');
+    editBtn = new Ext.Toolbar.Button({
+      tooltip     : 'Edit selected entry',
+      iconCls     : 'edit',
+      text        : 'Edit',
+      disabled    : true,
+      handler     : function() {
+        r = select.getSelected();
+        if (r) {
+          Ext.Ajax.request({
+            url     : 'api/idnode',
+            params  : {
+              op: 'get',
+              uuid: r.id
+            },
+            success : function(d)
+            {
+              d = json_decode(d);
+              p = tvheadend.idnode_editor(d[0]);
+              w = new Ext.Window({
+                title       : 'Add ' + conf.title,
+                layout      : 'fit',
+                autoWidth   : true,
+                autoHeight  : true,
+                plain       : true,
+                items       : p
+              });
+              w.show();
+            }
+          });
+        }
+      }
+    });
+    buttons.push(editBtn);
     buttons.push('->');
     if (conf.help) {
       buttons.push({  

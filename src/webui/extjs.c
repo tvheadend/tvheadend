@@ -2169,6 +2169,49 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static int
+extjs_idnode
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+  const char *op   = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out = NULL;
+  idnode_t *node;
+
+  if(uuid == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  node = idnode_find(uuid, NULL);
+  if (!node) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  if (!strcmp(op, "get")) {
+    out = htsmsg_create_list();
+    htsmsg_t *m = idnode_serialize(node);
+    htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
+    htsmsg_add_msg(out, NULL, m);
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  if (!out)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
 
 /**
  *
@@ -2399,6 +2442,7 @@ extjs_start(void)
 
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
+  http_path_add("/api/idnode", NULL, extjs_idnode, ACCESS_ADMIN); // TODO: might want diff access for read/write`
 
   extjs_start_dvb();
 
