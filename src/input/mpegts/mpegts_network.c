@@ -193,6 +193,7 @@ mpegts_network_set_network_name
   ( mpegts_network_t *mn, const char *name )
 {
   char buf[256];
+  if (mn->mn_network_name) return 0;
   if (!name || !strcmp(name, mn->mn_network_name ?: ""))
     return 0;
   tvh_str_update(&mn->mn_network_name, name);
