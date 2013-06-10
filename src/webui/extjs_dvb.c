@@ -295,27 +295,12 @@ extjs_mpegts_input
   if (!op) return 404;
 
   if (!strcmp(op, "list")) {
-    int i;
     idnode_set_t ins = { 0 };
-    htsmsg_t *list = htsmsg_create_list();
     extjs_grid_conf(&hc->hc_req_args, &conf);
     pthread_mutex_lock(&global_lock);
-    LIST_FOREACH(mi, &mpegts_input_all, mi_global_link) {
+    LIST_FOREACH(mi, &mpegts_input_all, mi_global_link)
       idnode_set_add(&ins, (idnode_t*)mi, &conf.filter);
-    }
-    if (conf.sort.key)
-      idnode_set_sort(&ins, &conf.sort);
-    for (i = conf.start; i < ins.is_count && conf.limit > 0; i++, conf.limit--) {
-      htsmsg_t *e = htsmsg_create_map();
-      htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
-      idnode_save(ins.is_array[i], e);
-      htsmsg_add_msg(list, NULL, e);
-    }
-    pthread_mutex_unlock(&global_lock);
-    free(ins.is_array);
-    idnode_filter_clear(&conf.filter);
-    htsmsg_add_msg(out, "entries", list);
-    htsmsg_add_u32(out, "total",   ins.is_count);
+    extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
     htsmsg_t *list= extjs_idnode_class(&mpegts_input_class);
     htsmsg_add_msg(out, "entries", list);

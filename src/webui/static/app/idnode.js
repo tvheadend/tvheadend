@@ -119,7 +119,7 @@ tvheadend.idnode_create = function(conf)
     handler     : function(){
       params = conf.create.params || {}
       params['uuid'] = puuid;
-      params['conf'] = Ext.util.JSON.encode(panel.getForm().getValues());
+      params['conf'] = Ext.util.JSON.encode(panel.getForm().getFieldValues());
       Ext.Ajax.request({
         url    : conf.create.url || conf.url,
         params : params,
