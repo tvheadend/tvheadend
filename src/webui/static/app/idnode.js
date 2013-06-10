@@ -21,6 +21,13 @@ tvheadend.idnode_editor_field = function(f, create)
   switch(f.type) {
     case 'str':
       if (f.enum) {
+        var store = f.enum;
+        if (f.enum.length > 0 && f.enum[0] instanceof Object)
+          store = new Ext.data.JsonStore({
+            id          : 'key',
+            fields      : [ 'key', 'val' ],
+            data	: f.enum,
+          });
         return new Ext.form.ComboBox({
           fieldLabel      : f.caption,
           name            : f.id,
@@ -28,7 +35,9 @@ tvheadend.idnode_editor_field = function(f, create)
           disabled        : d,
           width           : 300,
           mode            : 'local',
-          store           : f.enum,
+          valueField      : 'key',
+          displayField    : 'val',
+          store           : store,
           typeAhead       : true,
           forceSelection  : true,
           triggerAction   : 'all',
@@ -76,7 +85,7 @@ tvheadend.idnode_editor_field = function(f, create)
 /*
  * ID node editor panel
  */
-tvheadend.idnode_editor = function(item)
+tvheadend.idnode_editor = function(item, conf)
 {
   var fields = []
 
@@ -87,13 +96,14 @@ tvheadend.idnode_editor = function(item)
   }
 
   var panel = new Ext.FormPanel({
+    title       : conf.title || null,
     frame       : true,
     border      : true,
     bodyStyle   : 'padding: 5px',
     labelAlign  : 'left',
     labelWidth  : 200,
     autoWidth   : true,
-    autoHeight  : true,
+    autoHeight  : !conf.fixedHeight,
     defaultType : 'textfield',
     buttonAlign : 'left',
     items       : fields,
@@ -371,7 +381,7 @@ tvheadend.idnode_grid = function(panel, conf)
             success : function(d)
             {
               d = json_decode(d);
-              p = tvheadend.idnode_editor(d[0]);
+              p = tvheadend.idnode_editor(d[0], {});
               w = new Ext.Window({
                 title       : 'Add ' + conf.titleS,
                 layout      : 'fit',
@@ -436,4 +446,66 @@ tvheadend.idnode_grid = function(panel, conf)
   } else {
     build(conf.fields);
   }
+}
+
+tvheadend.idnode_tree = function (conf)
+{
+  var current = null;
+
+  var loader = new Ext.tree.TreeLoader({
+    dataUrl	: conf.url
+  });
+
+  var tree = new Ext.tree.TreePanel({
+    loader	  : loader,
+    flex	    : 1,
+    border  	: false,
+    root 	    : new Ext.tree.AsyncTreeNode({
+      id 	  : 'root',
+      text	: conf.title
+    }),
+    listeners : {
+      click: function(n) {
+        if(current)
+          panel.remove(current);
+        if(!n.isRoot)
+          current = panel.add(new tvheadend.idnode_editor(n.attributes, {title: 'Parameters', fixedHeight: true}));
+        panel.doLayout();
+      }
+    }
+  });
+
+  tvheadend.comet.on('idnodeNameChanged', function(o) {
+    var n = tree.getNodeById(o.id);
+    if(n) {
+      n.setText(o.text);
+    }
+  });
+
+  tvheadend.comet.on('idnodeParamsChanged', function(o) {
+    var n = tree.getNodeById(o.id);
+    if(n) {
+      n.attributes.params = o.params;
+   }
+  });
+
+
+  var panel = new Ext.Panel({
+    title	        : conf.title,
+    layout		    : 'hbox',
+    flex		      : 1,
+    padding		    : 5,
+    border		    : false,
+    layoutConfig  : {
+      align : 'stretch'
+    },
+    items: [ tree ]
+  });
+
+
+  tree.on('render', function() {
+    tree.getRootNode().expand();
+  });
+
+  return panel;
 }
