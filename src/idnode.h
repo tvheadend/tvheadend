@@ -76,6 +76,8 @@ const char *idnode_uuid_as_str(const idnode_t *in);
 
 void *idnode_find(const char *uuid, const idclass_t *class);
 
+idnode_set_t *idnode_find_all(const idclass_t *class);
+
 idnode_t **idnode_get_childs(idnode_t *in);
 
 int idnode_is_leaf(idnode_t *in);
@@ -118,3 +120,4 @@ int  idnode_filter
 void idnode_set_add
   ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt );
 void idnode_set_sort    ( idnode_set_t *is, idnode_sort_t *s );
+void idnode_set_free    ( idnode_set_t *is );

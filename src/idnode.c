@@ -616,3 +616,29 @@ idnode_set_sort
 {
   qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_sort, sort);
 }
+
+void
+idnode_set_free ( idnode_set_t *is )
+{
+  free(is->is_array);
+  free(is);
+}
+
+idnode_set_t *
+idnode_find_all ( const idclass_t *idc )
+{
+  idnode_t *in;
+  const idclass_t *ic;
+  idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
+  RB_FOREACH(in, &idnodes, in_link) {
+    ic = in->in_class;
+    while (ic) {
+      if (ic == idc) {
+        idnode_set_add(is, in, NULL);
+        break;
+      }
+      ic = ic->ic_super;
+    }
+  }
+  return is;
+}

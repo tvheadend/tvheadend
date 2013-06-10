@@ -26,6 +26,7 @@ typedef struct property {
   const char *(*str_get)(void *ptr);
   void (*str_set)(void *ptr, const char *str);
   const char **(*str_enum)(void *ptr);
+  htsmsg_t *(*str_enum2)(void *ptr);
 
   void (*notify)(void *ptr);
 

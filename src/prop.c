@@ -173,6 +173,8 @@ prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
         e++;
       }
       htsmsg_add_msg(m, "enum", l);
+    } else if (p[i].type == PT_STR && p[i].str_enum2) {
+      htsmsg_add_msg(m, "enum", p[i].str_enum2(obj));
     }
     if (obj)
       prop_read_value(obj, p+i, m, "value");
