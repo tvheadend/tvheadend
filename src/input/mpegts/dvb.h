@@ -174,6 +174,11 @@ int dvb_tdt_callback
 #include <linux/dvb/version.h>
 #include <linux/dvb/frontend.h>
 
+#define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
+
+#define DVB_VER_ATLEAST(maj, min) \
+ (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
+
 typedef struct dvb_frontend_parameters dvb_frontend_parameters_t;
 
 typedef enum polarisation {
@@ -214,6 +219,8 @@ const char *dvb_guard2str   ( int guard );
 const char *dvb_hier2str    ( int hier );
 const char *dvb_pol2str     ( int pol );
 const char *dvb_type2str    ( int type );
+#define dvb_feclo2str dvb_fec2str
+#define dvb_fechi2str dvb_fec2str
 
 int dvb_str2rolloff ( const char *str );
 int dvb_str2delsys  ( const char *str );
@@ -225,6 +232,8 @@ int dvb_str2guard   ( const char *str );
 int dvb_str2hier    ( const char *str );
 int dvb_str2pol     ( const char *str );
 int dvb_str2type    ( const char *str );
+#define dvb_str2feclo dvb_str2fec
+#define dvb_str2fechi dvb_str2fec
 
 int dvb_bandwidth   ( enum fe_bandwidth bw );
 

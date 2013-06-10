@@ -36,6 +36,43 @@
 
 extern const idclass_t mpegts_mux_class;
 
+/*
+ * Generic
+ */
+
+/* Macro to defien mux class str get/set */
+#define linuxdvb_mux_class_X(c, f, p, l, ...)\
+static const char * \
+linuxdvb_mux_##c##_class_##l##_get (void *o)\
+{\
+  linuxdvb_mux_t *lm = o;\
+  return dvb_##l##2str(lm->lm_tuning.dmc_fe_params.u.f.p);\
+}\
+static void \
+linuxdvb_mux_##c##_class_##l##_set (void *o, const char *s)\
+{\
+  linuxdvb_mux_t *lm = o;\
+  lm->lm_tuning.dmc_fe_params.u.f.p = dvb_str2##l (s);\
+}\
+static const char **\
+linuxdvb_mux_##c##_class_##l##_enum (void *o)\
+{\
+  static const int     t[] = { __VA_ARGS__ };\
+  static const char ** r   = NULL;\
+  if (!r) {\
+    int i, n = ARRAY_SIZE(t);\
+    r = calloc(n+1, sizeof(char*));\
+    for (i = 0; i < n; i++)\
+      r[i] = dvb_##l##2str(t[i]);\
+  }\
+  return r;\
+}
+#define MUX_PROP_STR(p, c, t, l)\
+  PROPDEF0(p, c, PT_STR, PO_WRONCE),\
+  .str_get  = linuxdvb_mux_##t##_class_##l##_get,\
+  .str_set  = linuxdvb_mux_##t##_class_##l##_set,\
+  .str_enum = linuxdvb_mux_##t##_class_##l##_enum\
+
 const idclass_t linuxdvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -46,6 +83,58 @@ const idclass_t linuxdvb_mux_class =
   }
 };
 
+/*
+ * DVB-T
+ */
+
+linuxdvb_mux_class_X(dvbt, ofdm, bandwidth,             bw,
+                     BANDWIDTH_AUTO
+                     , BANDWIDTH_8_MHZ, BANDWIDTH_7_MHZ, BANDWIDTH_6_MHZ
+#if DVB_VER_ATLEAST(5,4)
+                     , BANDWIDTH_5_MHZ
+                     , BANDWIDTH_10_MHZ
+                     , BANDWIDTH_1_712_MHZ
+#endif
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, constellation,         qam,
+                     QAM_AUTO, QPSK, QAM_16, QAM_64, QAM_256
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, transmission_mode,     mode,
+                    TRANSMISSION_MODE_AUTO,
+                    TRANSMISSION_MODE_2K, TRANSMISSION_MODE_8K
+#if DVB_VER_ATLEAST(5,4)
+                    , TRANSMISSION_MODE_1K, TRANSMISSION_MODE_16K
+                    , TRANSMISSION_MODE_32K
+#endif
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, guard_interval,        guard,
+                     GUARD_INTERVAL_AUTO, GUARD_INTERVAL_1_4,
+                     GUARD_INTERVAL_1_8, GUARD_INTERVAL_1_16,
+                     GUARD_INTERVAL_1_32
+#if DVB_VER_ATLEAST(5,4)
+                     , GUARD_INTERVAL_1_128, GUARD_INTERVAL_19_128
+                     , GUARD_INTERVAL_19_256
+#endif
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, hierarchy_information, hier,
+                     HIERARCHY_AUTO, HIERARCHY_NONE,
+                     HIERARCHY_1, HIERARCHY_2, HIERARCHY_4
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, code_rate_HP,          fechi,
+                     FEC_AUTO,
+                     FEC_1_2, FEC_2_3, FEC_3_4, FEC_4_5, FEC_5_6, FEC_7_8
+#if DVB_VER_ATLEAST(5,4)
+                     , FEC_3_5
+#endif
+                    );
+linuxdvb_mux_class_X(dvbt, ofdm, code_rate_LP,          feclo,
+                     FEC_AUTO,
+                     FEC_1_2, FEC_2_3, FEC_3_4, FEC_4_5, FEC_5_6, FEC_7_8
+#if DVB_VER_ATLEAST(5,4)
+                     , FEC_3_5
+#endif
+                    );
+
 const idclass_t linuxdvb_mux_dvbt_class =
 {
   .ic_super      = &linuxdvb_mux_class,
@@ -53,22 +142,114 @@ const idclass_t linuxdvb_mux_dvbt_class =
   .ic_caption    = "Linux DVB-T Multiplex",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF1("frequency", "Frequency (Hz)",
-               PT_U32, linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency) 
+      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
+               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
+               PO_WRONCE)
+    },
+    {
+      MUX_PROP_STR("bandwidth", "Bandwidth", dvbt, bw)
+    },
+    {
+      MUX_PROP_STR("constellation", "Constellation", dvbt, qam)
+    },
+    {
+      MUX_PROP_STR("transmission_mode", "Transmission Mode", dvbt, mode)
+    },
+    {
+      MUX_PROP_STR("guard_interval", "Guard Interval", dvbt, guard)
+    },
+    {
+      MUX_PROP_STR("hierarchy", "Hierarchy", dvbt, hier),
+    },
+    {
+      MUX_PROP_STR("fec_hi", "FEC High", dvbt, fechi),
+    },
+    {
+      MUX_PROP_STR("fec_lo", "FEC Low", dvbt, feclo),
     },
     {}
   }
 };
 
+/*
+ * DVB-C
+ */
+
+linuxdvb_mux_class_X(dvbc, qam, modulation,            qam,
+                     QAM_AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256
+                    );
+linuxdvb_mux_class_X(dvbc, qam, fec_inner,             fec,
+                     FEC_AUTO, FEC_NONE,
+                     FEC_1_2, FEC_2_3, FEC_3_4, FEC_4_5, FEC_5_6, FEC_8_9
+#if DVB_VER_ATLEAST(5,4)
+                     , FEC_9_10
+#endif
+                    );
 const idclass_t linuxdvb_mux_dvbc_class =
 {
   .ic_super      = &linuxdvb_mux_class,
   .ic_class      = "linuxdvb_mux_dvbc",
   .ic_caption    = "Linux DVB-C Multiplex",
   .ic_properties = (const property_t[]){
+    {
+      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
+               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
+               PO_WRONCE)
+    },
+    {
+      PROPDEF3("symbol_rate", "Symbol Rate", PT_U32,
+               linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qam.symbol_rate,
+               PO_WRONCE)
+    },
+    {
+      MUX_PROP_STR("constellation", "Constellation", dvbc, qam)
+    },
+    {
+      MUX_PROP_STR("fec", "FEC", dvbc, fec)
+    },
     {}
   }
 };
+
+linuxdvb_mux_class_X(dvbs, qam, modulation,            qam,
+                     QAM_AUTO, QPSK, QAM_16
+#if DVB_VER_ATLEAST(5,4)
+                     , PSK_8, APSK_16, APSK_32
+#endif
+                    );
+linuxdvb_mux_class_X(dvbs, qam, fec_inner,             fec,
+                     FEC_AUTO, FEC_NONE,
+                     FEC_1_2, FEC_2_3, FEC_3_4, FEC_4_5, FEC_5_6, FEC_7_8,
+                     FEC_8_9
+#if DVB_VER_ATLEAST(5,4)
+                     , FEC_3_5, FEC_9_10
+#endif
+                    );
+static const char *
+linuxdvb_mux_dvbs_class_polarity_get (void *o)
+{
+  linuxdvb_mux_t *lm = o;
+  return dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation);
+}
+static void
+linuxdvb_mux_dvbs_class_polarity_set (void *o, const char *s)
+{
+  linuxdvb_mux_t *lm = o;
+  lm->lm_tuning.dmc_fe_polarisation = dvb_str2pol(s);
+}
+static const char **\
+linuxdvb_mux_dvbs_class_polarity_enum (void *o)
+{
+  static const char **r   = NULL;
+  if (!r) {
+    r = calloc(4+1, sizeof(char*));\
+    r[0] = dvb_pol2str(POLARISATION_VERTICAL);
+    r[1] = dvb_pol2str(POLARISATION_HORIZONTAL);
+    r[2] = dvb_pol2str(POLARISATION_CIRCULAR_LEFT);
+    r[3] = dvb_pol2str(POLARISATION_CIRCULAR_RIGHT);
+  }
+  return r;
+}
 
 const idclass_t linuxdvb_mux_dvbs_class =
 {
@@ -76,6 +257,25 @@ const idclass_t linuxdvb_mux_dvbs_class =
   .ic_class      = "linuxdvb_mux_dvbs",
   .ic_caption    = "Linux DVB-S Multiplex",
   .ic_properties = (const property_t[]){
+    {
+      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
+               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
+               PO_WRONCE)
+    },
+    {
+      PROPDEF3("symbol_rate", "Symbol Rate", PT_U32,
+               linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qpsk.symbol_rate,
+               PO_WRONCE)
+    },
+    {
+      MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity)
+    },
+    {
+      MUX_PROP_STR("constellation", "Constellation", dvbs, qam)
+    },
+    {
+      MUX_PROP_STR("fec", "FEC", dvbs, fec)
+    },
     {}
   }
 };
@@ -97,11 +297,8 @@ const idclass_t linuxdvb_mux_atsc_class =
 static void
 linuxdvb_mux_config_save ( mpegts_mux_t *mm )
 {
-  linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-  linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
-  dvb_mux_conf_save(ln->ln_type, &lm->lm_tuning, c);
   hts_settings_save(c, "input/linuxdvb/networks/%s/muxes/%s/config",
                     idnode_uuid_as_str(&mm->mm_network->mn_id),
                     idnode_uuid_as_str(&mm->mm_id));
@@ -181,10 +378,8 @@ linuxdvb_mux_create0
     const char *uuid, htsmsg_t *conf )
 {
   const idclass_t *idc;
-  const char *str;
   mpegts_mux_t *mm;
   linuxdvb_mux_t *lm;
-  dvb_mux_conf_t dmc0;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
 
@@ -202,19 +397,6 @@ linuxdvb_mux_create0
     return NULL;
   }
 
-  /* Load mux config */
-  if (conf && !dmc) {
-    dmc = &dmc0;
-    if ((str = dvb_mux_conf_load(ln->ln_type, &dmc0, conf))) {
-      tvherror( "linuxdvb", "failed to load mux config [%s]", str);
-      return NULL;
-    }
-  }
-  if (!dmc) {
-    tvherror("linuxdvb", "no mux configuration provided");
-    return NULL;
-  }
-
   /* Create */
   if (!(mm = mpegts_mux_create0(calloc(1, sizeof(linuxdvb_mux_t)), idc, uuid,
                                 (mpegts_network_t*)ln, onid, tsid, conf)))
@@ -222,7 +404,8 @@ linuxdvb_mux_create0
   lm = (linuxdvb_mux_t*)mm;
 
   /* Tuning */
-  memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
+  if (dmc)
+    memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
 
   /* Callbacks */
   lm->mm_display_name     = linuxdvb_mux_display_name;
