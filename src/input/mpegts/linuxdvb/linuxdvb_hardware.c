@@ -83,8 +83,6 @@ const idclass_t linuxdvb_hardware_class =
   .ic_get_title  = linuxdvb_hardware_class_get_title,
   .ic_get_childs = linuxdvb_hardware_class_get_childs,
   .ic_properties = (const property_t[]){
-    { PROPDEF1("enabled", "Enabled",
-               PT_BOOL, linuxdvb_hardware_t, mi_enabled) },
     { PROPDEF1("displayname", "Name",
                PT_STR, linuxdvb_hardware_t, lh_displayname) },
     {}

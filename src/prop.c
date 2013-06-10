@@ -56,6 +56,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m)
       //fprintf(stderr, "Property %s unmappable\n", f->hmf_name);
       continue;
     }
+    if(p->options & PO_NOSAVE) continue;
 
     void *val = obj + p->off;
     switch(TO_FROM(p->type, f->hmf_type)) {

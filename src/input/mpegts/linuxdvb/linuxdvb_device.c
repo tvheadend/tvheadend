@@ -318,7 +318,6 @@ void linuxdvb_device_init ( int adapter_mask )
   if ((s = hts_settings_load_r(1, "input/linuxdvb/devices"))) {
     HTSMSG_FOREACH(f, s) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
-      if (!(e = htsmsg_get_map(e, "config"))) continue;
       (void)linuxdvb_device_create0(f->hmf_name, e);
     }
   }

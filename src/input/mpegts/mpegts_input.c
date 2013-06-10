@@ -30,6 +30,7 @@
  * Class definition
  * *************************************************************************/
 
+#if 0
 static const char *
 mpegts_input_class_get_name ( void *in )
 {
@@ -41,6 +42,7 @@ mpegts_input_class_get_name ( void *in )
     *buf = 0;
   return buf;
 }
+#endif
 
 const idclass_t mpegts_input_class =
 {
@@ -51,10 +53,12 @@ const idclass_t mpegts_input_class =
       PROPDEF1("enabled", "Enabled", PT_BOOL,
                mpegts_input_t, mi_enabled)
     },
+#if 0
     {
       PROPDEF0("displayname", "Name", PT_STR, PO_NOSAVE | PO_RDONLY),
       .str_get = mpegts_input_class_get_name
     },
+#endif
     {}
   }
 };

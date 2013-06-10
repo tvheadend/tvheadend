@@ -268,6 +268,7 @@ extjs_mpegts_network
       return HTTP_STATUS_BAD_REQUEST;
     }
     mm = mn->mn_mux_create2(mn, conf);
+    if(mm) mm->mm_config_save(mm);
     pthread_mutex_unlock(&global_lock);
     if (!mm) return HTTP_STATUS_BAD_REQUEST; // TODO: error message
   } else {
