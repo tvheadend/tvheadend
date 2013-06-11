@@ -308,7 +308,7 @@ mpegts_input_create0
 {
   idnode_insert(&mi->mi_id, uuid, class);
   if (c)
-    idnode_load(&mi->mi_id, c);
+    idnode_load(&mi->mi_id, c, 0);
   
   /* Defaults */
   mi->mi_is_enabled     = mpegts_input_is_enabled;
@@ -345,8 +345,6 @@ void
 mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
 {
   idnode_save(&mi->mi_id, m);
-  if (mi->mi_network)
-    htsmsg_add_str(m, "network", idnode_uuid_as_str(&mi->mi_network->mn_id));
 }
 
 /******************************************************************************

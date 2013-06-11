@@ -426,7 +426,7 @@ mpegts_mux_create0
 
   /* Configuration */
   if (conf)
-    idnode_load(&mm->mm_id, conf);
+    idnode_load(&mm->mm_id, conf, 0);
 
   /* Initial scan */
   if (!mm->mm_initial_scan_done || !mn->mn_skipinitscan)

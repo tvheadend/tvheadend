@@ -1447,7 +1447,7 @@ void service_load ( service_t *t, htsmsg_t *c )
   streaming_component_type_t type;
   const char *v;
 
-  idnode_load(&t->s_id, c);
+  idnode_load(&t->s_id, c, 0);
 
   if(!htsmsg_get_u32(c, "pcr", &u32))
     t->s_pcr_pid = u32;

@@ -29,7 +29,8 @@ mpegts_network_class_save
   ( idnode_t *in )
 {
   mpegts_network_t *mn = (mpegts_network_t*)in;
-  mn->mn_config_save(mn);
+  if (mn->mn_config_save)
+    mn->mn_config_save(mn);
 }
 
 const idclass_t mpegts_network_class =
@@ -139,7 +140,7 @@ mpegts_network_create0
   /* Setup idnode */
   idnode_insert(&mn->mn_id, uuid, idc);
   if (conf)
-    idnode_load(&mn->mn_id, conf);
+    idnode_load(&mn->mn_id, conf, 0);
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;

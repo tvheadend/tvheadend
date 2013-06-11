@@ -58,7 +58,8 @@ static void
 linuxdvb_frontend_class_save ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)in;
-  linuxdvb_device_save((linuxdvb_device_t*)lfe->lh_parent->lh_parent);
+  if (lfe->lh_parent && lfe->lh_parent->lh_parent)
+    linuxdvb_device_save((linuxdvb_device_t*)lfe->lh_parent->lh_parent);
 }
 
 const idclass_t linuxdvb_frontend_class =
@@ -95,12 +96,10 @@ linuxdvb_frontend_class_network_get(void *o)
 static void
 linuxdvb_frontend_class_network_set(void *o, const char *s)
 {
-#if 0
   mpegts_input_t *mi = o;
   mpegts_network_t *mn = mpegts_network_find(s);
   if (mn)
     mpegts_network_add_input(mn, mi);
-#endif
 }
 
 static htsmsg_t *
