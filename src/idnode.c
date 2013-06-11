@@ -1,3 +1,22 @@
+/*
+ *  Tvheadend - idnode (class) system
+ *
+ *  Copyright (C) 2013 Andreas Öman
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -10,11 +29,14 @@
 #include "notify.h"
 #include "settings.h"
 
-static int randfd = 0;
+static int              randfd = 0;
+static RB_HEAD(,idnode) idnodes;
 
-RB_HEAD(idnode_tree, idnode);
+static void idnode_updated(idnode_t *in, int optmask);
 
-static struct idnode_tree idnodes;
+/* **************************************************************************
+ * Utilities
+ * *************************************************************************/
 
 /**
  *
@@ -71,6 +93,18 @@ bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
   *dst = 0;
 }
 
+/**
+ *
+ */
+static int
+in_cmp(const idnode_t *a, const idnode_t *b)
+{
+  return memcmp(a->in_uuid, b->in_uuid, 16);
+}
+
+/* **************************************************************************
+ * Registration
+ * *************************************************************************/
 
 /**
  *
@@ -82,17 +116,6 @@ idnode_init(void)
   if(randfd == -1)
     exit(1);
 }
-
-
-/**
- *
- */
-static int
-in_cmp(const idnode_t *a, const idnode_t *b)
-{
-  return memcmp(a->in_uuid, b->in_uuid, 16);
-}
-
 
 /**
  *
@@ -121,6 +144,18 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
   return 0;
 }
 
+/**
+ *
+ */
+void
+idnode_unlink(idnode_t *in)
+{
+  RB_REMOVE(&idnodes, in, in_link);
+}
+
+/* **************************************************************************
+ * Info
+ * *************************************************************************/
 
 /**
  *
@@ -135,61 +170,6 @@ idnode_uuid_as_str(const idnode_t *in)
   p = (p + 1) & 15;
   return b;
 }
-
-
-/**
- *
- */
-void *
-idnode_find(const char *uuid, const idclass_t *idc)
-{
-  idnode_t skel, *r;
-
-  if(hex2bin(skel.in_uuid, 16, uuid))
-    return NULL;
-  r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
-  if(r != NULL && idc != NULL) {
-    const idclass_t *c = r->in_class;
-    for(;c != NULL; c = c->ic_super) {
-      if(idc == c)
-        return r;
-    }
-    return NULL;
-  }
-  return r;
-}
-
-
-/**
- *
- */
-void
-idnode_unlink(idnode_t *in)
-{
-  RB_REMOVE(&idnodes, in, in_link);
-}
-
-
-/**
- * Recursive to get superclass nodes first
- */
-static void
-add_params(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
-{
-  if(ic->ic_super != NULL)
-    add_params(self, ic->ic_super, p);
-
-  if(TAILQ_FIRST(&p->hm_fields) != NULL) {
-    // Only add separator if not empty
-    htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "caption", ic->ic_caption ?: ic->ic_class);
-    htsmsg_add_str(m, "type", "separator");
-    htsmsg_add_msg(p, NULL, m);
-  }
-
-  prop_add_params_to_msg(self, ic->ic_properties, p);
-}
-
 
 /**
  *
@@ -209,7 +189,7 @@ idnode_get_title(idnode_t *in)
 /**
  *
  */
-idnode_t **
+idnode_set_t *
 idnode_get_childs(idnode_t *in)
 {
   if(in == NULL)
@@ -223,7 +203,6 @@ idnode_get_childs(idnode_t *in)
   return NULL;
 }
 
-
 /**
  *
  */
@@ -231,8 +210,6 @@ int
 idnode_is_leaf(idnode_t *in)
 {
   const idclass_t *ic = in->in_class;
-  if(ic->ic_leaf)
-    return 1;
   for(; ic != NULL; ic = ic->ic_super) {
     if(ic->ic_get_childs != NULL)
       return 0;
@@ -240,137 +217,9 @@ idnode_is_leaf(idnode_t *in)
   return 1;
 }
 
-
-
-/**
- *
- */
-htsmsg_t *
-idnode_serialize(struct idnode *self)
-{
-  const idclass_t *c = self->in_class;
-  htsmsg_t *m;
-  if(c->ic_serialize != NULL) {
-    m = c->ic_serialize(self);
-  } else {
-    m = htsmsg_create_map();
-    htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
-    htsmsg_add_str(m, "text", idnode_get_title(self));
-
-    htsmsg_t *p  = htsmsg_create_list();
-    add_params(self, c, p);
-
-    htsmsg_add_msg(m, "params", p);
-
-  }
-  return m;
-}
-
-/**
- *
- */
-static void
-idnode_updated(idnode_t *in)
-{
-  const idclass_t *ic = in->in_class;
-
-  for(; ic != NULL; ic = ic->ic_super) {
-    if(ic->ic_save != NULL) {
-      ic->ic_save(in);
-      break;
-    }
-  }
-
-  // Tell about updated parameters
-
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
-
-  htsmsg_t *p  = htsmsg_create_list();
-  add_params(in, in->in_class, p);
-  htsmsg_add_msg(m, "params", p);
-
-  notify_by_msg("idnodeParamsChanged", m);
-}
-
-
-/**
- *
- */
-void
-idnode_set_prop(idnode_t *in, const char *key, const char *value)
-{
-  const idclass_t *ic = in->in_class;
-  int do_save = 0;
-  for(;ic != NULL; ic = ic->ic_super) {
-    int x = prop_set(in, ic->ic_properties, key, value);
-    if(x == -1)
-      continue;
-    do_save |= x;
-    break;
-  }
-  if(do_save)
-    idnode_updated(in);
-}
-
-
-/**
- *
- */
-void
-idnode_update_all_props(idnode_t *in,
-                        const char *(*getvalue)(void *opaque, const char *key),
-                        void *opaque)
-{
-  const idclass_t *ic = in->in_class;
-  int do_save = 0;
-  for(;ic != NULL; ic = ic->ic_super)
-    do_save |= prop_update_all(in, ic->ic_properties, getvalue, opaque);
-  if(do_save)
-    idnode_updated(in);
-}
-
-
-/**
- *
- */
-void
-idnode_notify_title_changed(void *obj)
-{
-  idnode_t *in = obj;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
-  htsmsg_add_str(m, "text", idnode_get_title(in));
-  notify_by_msg("idnodeNameChanged", m);
-}
-
-/*
- * Save
- */
-void
-idnode_save ( idnode_t *self, htsmsg_t *c )
-{
-  const idclass_t *idc = self->in_class;
-  while (idc) {
-    prop_read_values(self, idc->ic_properties, c);
-    idc = idc->ic_super;
-  }
-}
-
-/*
- * Load
- */
-void
-idnode_load ( idnode_t *self, htsmsg_t *c, int dosave )
-{
-  const idclass_t *idc = self->in_class;
-  while (idc) {
-    prop_write_values(self, idc->ic_properties, c);
-    idc = idc->ic_super;
-  }
-  if (dosave)
-    idnode_updated(self);
-}
+/* **************************************************************************
+ * Properties
+ * *************************************************************************/
 
 static const property_t *
 idnode_find_prop
@@ -408,6 +257,9 @@ idnode_get_str
   return NULL;
 }
 
+/*
+ * Get field as unsigned int
+ */
 int
 idnode_get_u32
   ( idnode_t *self, const char *key, uint32_t *u32 )
@@ -433,8 +285,75 @@ idnode_get_u32
   return 1;
 }
 
+/*
+ * Get field as BOOL
+ */
+int
+idnode_get_bool
+  ( idnode_t *self, const char *key, int *b )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p) {
+    void *ptr = self;
+    ptr += p->off;
+    switch (p->type) {
+      case PT_BOOL:
+        *b = *(int*)ptr;
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1; 
+}
+
 /* **************************************************************************
- * Set procsesing
+ * Lookup
+ * *************************************************************************/
+
+/**
+ *
+ */
+void *
+idnode_find(const char *uuid, const idclass_t *idc)
+{
+  idnode_t skel, *r;
+
+  if(hex2bin(skel.in_uuid, 16, uuid))
+    return NULL;
+  r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+  if(r != NULL && idc != NULL) {
+    const idclass_t *c = r->in_class;
+    for(;c != NULL; c = c->ic_super) {
+      if(idc == c)
+        return r;
+    }
+    return NULL;
+  }
+  return r;
+}
+
+idnode_set_t *
+idnode_find_all ( const idclass_t *idc )
+{
+  idnode_t *in;
+  const idclass_t *ic;
+  idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
+  RB_FOREACH(in, &idnodes, in_link) {
+    ic = in->in_class;
+    while (ic) {
+      if (ic == idc) {
+        idnode_set_add(is, in, NULL);
+        break;
+      }
+      ic = ic->ic_super;
+    }
+  }
+  return is;
+}
+
+/* **************************************************************************
+ * Set processing
  * *************************************************************************/
 
 static int
@@ -626,21 +545,140 @@ idnode_set_free ( idnode_set_t *is )
   free(is);
 }
 
-idnode_set_t *
-idnode_find_all ( const idclass_t *idc )
+/* **************************************************************************
+ * Write
+ * *************************************************************************/
+
+int
+idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
-  idnode_t *in;
-  const idclass_t *ic;
-  idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
-  RB_FOREACH(in, &idnodes, in_link) {
-    ic = in->in_class;
-    while (ic) {
-      if (ic == idc) {
-        idnode_set_add(is, in, NULL);
-        break;
-      }
-      ic = ic->ic_super;
+  int save = 0;
+  const idclass_t *idc = self->in_class;
+  for (; idc; idc = idc->ic_super)
+    save |= prop_write_values(self, idc->ic_properties, c, optmask);
+  if (save && dosave)
+    idnode_updated(self, optmask);
+  return save;
+}
+
+/* **************************************************************************
+ * Read
+ * *************************************************************************/
+
+/*
+ * Save
+ */
+void
+idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
+{
+  const idclass_t *idc = self->in_class;
+  for (; idc; idc = idc->ic_super)
+    prop_read_values(self, idc->ic_properties, c, optmask);
+}
+
+/**
+ * Recursive to get superclass nodes first
+ */
+static void
+add_params(struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask)
+{
+  /* Parent first */
+  if(ic->ic_super != NULL)
+    add_params(self, ic->ic_super, p, optmask);
+
+  /* Seperator (if not empty) */
+  if(TAILQ_FIRST(&p->hm_fields) != NULL) {
+    htsmsg_t *m = htsmsg_create_map();
+    htsmsg_add_str(m, "caption",  ic->ic_caption ?: ic->ic_class);
+    htsmsg_add_str(m, "type",     "separator");
+    htsmsg_add_msg(p, NULL, m);
+  }
+
+  /* Properties */
+  prop_serialize(self, ic->ic_properties, p, optmask);
+}
+
+static htsmsg_t *
+idnode_params (const idclass_t *idc, idnode_t *self, int optmask)
+{
+  htsmsg_t *p  = htsmsg_create_list();
+  add_params(self, idc, p, optmask);
+  return p;
+}
+
+/*
+ * Just get the class definition
+ */
+htsmsg_t *
+idclass_serialize0(const idclass_t *idc, int optmask)
+{
+  return idnode_params(idc, NULL, optmask);
+}
+
+/**
+ *
+ */
+htsmsg_t *
+idnode_serialize0(idnode_t *self, int optmask)
+{
+  const idclass_t *idc = self->in_class;
+
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(self));
+  htsmsg_add_str(m, "text", idnode_get_title(self));
+
+  htsmsg_add_msg(m, "params", idnode_params(idc, self, optmask));
+
+  return m;
+}
+
+/* **************************************************************************
+ * Notifcation
+ * *************************************************************************/
+
+/**
+ *
+ */
+static void
+idnode_updated(idnode_t *in, int optmask)
+{
+  const idclass_t *ic = in->in_class;
+
+  /* Save */
+  for(; ic != NULL; ic = ic->ic_super) {
+    if(ic->ic_save != NULL) {
+      ic->ic_save(in);
+      break;
     }
   }
-  return is;
+
+  /* Notification */
+
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+
+  htsmsg_t *p  = htsmsg_create_list();
+  add_params(in, in->in_class, p, optmask);
+  htsmsg_add_msg(m, "params", p);
+
+  notify_by_msg("idnodeParamsChanged", m);
 }
+
+/**
+ *
+ */
+void
+idnode_notify_title_changed(void *obj)
+{
+  idnode_t *in = obj;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+  htsmsg_add_str(m, "text", idnode_get_title(in));
+  notify_by_msg("idnodeNameChanged", m);
+}
+
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/

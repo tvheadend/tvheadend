@@ -1,16 +1,38 @@
+/*
+ *  Tvheadend - property system (part of idnode)
+ *
+ *  Copyright (C) 2013 Andreas Öman
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdio.h>
 #include <string.h>
 
 #include "tvheadend.h"
 #include "prop.h"
 
+/* **************************************************************************
+ * Utilities
+ * *************************************************************************/
 
+#define TO_FROM(x, y) ((x) << 16 | (y))
 
-
-
-/**
- *
+/*
+ * Bool conversion
  */
+#if 0
 static int
 str_to_bool(const char *s)
 {
@@ -25,6 +47,18 @@ str_to_bool(const char *s)
     return 1;
   return 0;
 }
+#endif
+
+/**
+ *
+ */
+const static struct strtab typetab[] = {
+  { "bool",  PT_BOOL },
+  { "int",   PT_INT },
+  { "str",   PT_STR },
+  { "u16",   PT_U16 },
+  { "u32",   PT_U32 },
+};
 
 
 const property_t *
@@ -37,65 +71,109 @@ prop_find(const property_t *p, const char *id)
   return NULL;
 }
 
-
-
-#define TO_FROM(x, y) ((x) << 16 | (y))
+/* **************************************************************************
+ * Write
+ * *************************************************************************/
 
 /**
  *
  */
-void
-prop_write_values(void *obj, const property_t *pl, htsmsg_t *m)
+int
+prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
 {
+  int save = 0;
   htsmsg_field_t *f;
   HTSMSG_FOREACH(f, m) {
     if(f->hmf_name == NULL)
       continue;
+
+    /* Find Property */
     const property_t *p = prop_find(pl, f->hmf_name);
     if(p == NULL) {
-      //fprintf(stderr, "Property %s unmappable\n", f->hmf_name);
+      tvhwarn("prop", "invalid property %s", f->hmf_name);
       continue;
     }
-    if(p->options & PO_NOSAVE) continue;
+    
+    /* Ignore */
+    if(p->opts & optmask) continue;
 
-    void *val = obj + p->off;
+    /* Write */
+    void *v = obj + p->off;
     switch(TO_FROM(p->type, f->hmf_type)) {
-    case TO_FROM(PT_BOOL, HMF_BOOL):
-      *(int *)val = f->hmf_bool;
-      break;
-    case TO_FROM(PT_BOOL, HMF_S64):
-      *(int *)val = !!f->hmf_s64;
-      break;
-    case TO_FROM(PT_INT, HMF_S64):
-      *(int *)val = f->hmf_s64;
-      break;
-    case TO_FROM(PT_U16, HMF_S64):
-      *(uint16_t *)val = f->hmf_s64;
-      break;
-    case TO_FROM(PT_U32, HMF_S64):
-      *(uint32_t *)val = f->hmf_s64;
-      break;
-    case TO_FROM(PT_STR, HMF_STR):
-      if(p->str_set != NULL)
-        p->str_set(obj, f->hmf_str);
-      else
-        mystrset(val, f->hmf_str);
+    case TO_FROM(PT_BOOL, HMF_BOOL): {
+      int *val = v;
+      if (*val != f->hmf_bool) {
+        *val = f->hmf_bool;
+        save = 1;
+      }
       break;
     }
+    case TO_FROM(PT_BOOL, HMF_S64): {
+      int *val = v;
+      if (*val != !!f->hmf_s64) {
+        *val = !!f->hmf_s64;
+        save = 1;
+      }
+      break;
+    }
+    case TO_FROM(PT_INT, HMF_S64): {
+      int *val = v;
+      if (*val != f->hmf_s64) {
+        *val = f->hmf_s64;
+        save = 1;
+      }
+      break;
+    }
+    case TO_FROM(PT_U16, HMF_S64): {
+      uint16_t *val = v;
+      if (*val != f->hmf_s64) {
+        *val = f->hmf_s64;
+        save = 1;
+      }
+      break;
+    }
+    case TO_FROM(PT_U32, HMF_S64): {
+      uint32_t *val = v;
+      if (*val != f->hmf_s64) {
+        *val = f->hmf_s64;
+        save = 1;
+      }
+      break;
+    }
+    case TO_FROM(PT_STR, HMF_STR): {
+      char **val = v;
+      if(p->str_set != NULL)
+        save |= p->str_set(obj, f->hmf_str);
+      else if (!strcmp(*val ?: "", f->hmf_str)) {
+        free(*val);
+        *val = strdup(f->hmf_str);
+        save = 1;
+      }
+      break;
+    }
+    }
   }
+  return save;
 }
 
-
+/* **************************************************************************
+ * Read
+ * *************************************************************************/
 
 /**
  *
  */
 static void
-prop_read_value(void *obj, const property_t *p, htsmsg_t *m, const char *name)
+prop_read_value
+  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask)
 {
   const char *s;
   const void *val = obj + p->off;
 
+  /* Ignore */
+  if (p->opts & optmask) return;
+
+  /* Read */
   switch(p->type) {
   case PT_BOOL:
     htsmsg_add_bool(m, name, *(int *)val);
@@ -125,147 +203,52 @@ prop_read_value(void *obj, const property_t *p, htsmsg_t *m, const char *name)
  *
  */
 void
-prop_read_values(void *obj, const property_t *p, htsmsg_t *m)
+prop_read_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
 {
-  if(p == NULL)
+  if(pl == NULL)
     return;
-  int i = 0;
-  for(;p[i].id; i++)
-    prop_read_value(obj, p+i, m, p[i].id);
+  for (; pl->id; pl++)
+    prop_read_value(obj, pl, m, pl->id, optmask);
 }
-
-
-/**
- *
- */
-const static struct strtab typetab[] = {
-  { "bool",  PT_BOOL },
-  { "int",   PT_INT },
-  { "str",   PT_STR },
-  { "u16",   PT_U16 },
-  { "u32",   PT_U32 },
-};
-
 
 /**
  *
  */
 void
-prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
+prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
 {
-  if(p == NULL)
+  if(pl == NULL)
     return;
-  int i = 0;
-  for(;p[i].id; i++) {
+
+  for(; pl->id; pl++) {
     htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "id", p[i].id);
-    htsmsg_add_str(m, "caption", p[i].name);
-    htsmsg_add_str(m, "type", val2str(p[i].type, typetab) ?: "unknown");
-    if (p->options & PO_RDONLY)
-      htsmsg_add_u32(m, "rdonly", 1);
-    if (p->options & PO_NOSAVE)
-      htsmsg_add_u32(m, "nosave", 1);
-    if (p[i].type == PT_STR && p[i].str_enum) {
-      htsmsg_t *l    = htsmsg_create_list();
-      const char **e = p[i].str_enum(obj);
-      while (*e) {
-        htsmsg_add_str(l, NULL, *e);
-        e++;
-      }
-      htsmsg_add_msg(m, "enum", l);
-    } else if (p[i].type == PT_STR && p[i].str_enum2) {
-      htsmsg_add_msg(m, "enum", p[i].str_enum2(obj));
-    }
-    if (obj)
-      prop_read_value(obj, p+i, m, "value");
     htsmsg_add_msg(msg, NULL, m);
+
+    /* Metadata */
+    htsmsg_add_str(m, "id",       pl->id);
+    htsmsg_add_str(m, "caption",  pl->name);
+    htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "unknown");
+
+    /* Options */
+    if (pl->opts & PO_RDONLY)
+      htsmsg_add_u32(m, "rdonly", 1);
+    if (pl->opts & PO_NOSAVE)
+      htsmsg_add_u32(m, "nosave", 1);
+    if (pl->opts & PO_WRONCE)
+      htsmsg_add_u32(m, "wronce", 1);
+
+    /* Enum list */
+    if (pl->str_enum)
+      htsmsg_add_msg(m, "enum", pl->str_enum(obj));
+
+    /* Data */
+    if (obj)
+      prop_read_value(obj, pl, m, "value", optmask);
   }
 }
 
-
-/**
- * value can be NULL
+/******************************************************************************
+ * Editor Configuration
  *
- * Return 1 if we actually changed something
- */
-static int
-prop_seti(void *obj, const property_t *p, const char *value)
-{
-  int i;
-  uint32_t u32;
-  uint16_t u16;
-  const char *s;
-
-  if (p->options & PO_NOSAVE) return 0;
-
-  void *val = obj + p->off;
-  switch(p->type) {
-
-  case PT_BOOL:
-    i = str_to_bool(value);
-    if(0)
-  case PT_INT:
-    i = value ? atoi(value) : 0;
-    if(*(int *)val == i)
-      return 0; // Already set
-    *(int *)val = i;
-    break;
-  case PT_U16:
-    u16 = value ? atoi(value) : 0;
-    if(*(uint16_t *)val == u16)
-      return 0;
-    *(uint16_t *)val = u16;
-    break;
-  case PT_U32:
-    u32 = value ? atoi(value) : 0;
-    if(*(uint32_t *)val == u32)
-      return 0;
-    *(uint32_t *)val = u32;
-    break;
-  case PT_STR:
-    if(p->str_get != NULL)
-      s = p->str_get(obj);
-    else
-      s = *(const char **)val;
-
-    if(!strcmp(s ?: "", value ?: ""))
-      return 0;
-
-    if(p->str_set != NULL)
-      p->str_set(obj, value);
-    else
-      mystrset(val, value);
-    break;
-  }
-  if(p->notify)
-    p->notify(obj);
-  return 1;
-}
-
-
-/**
- * Return 1 if something changed
- */
-int
-prop_set(void *obj, const property_t *p, const char *key, const char *value)
-{
-  if((p = prop_find(p, key)) == NULL)
-    return -1;
-  return prop_seti(obj, p, value);
-}
-
-
-/**
- *
- */
-int
-prop_update_all(void *obj, const property_t *p,
-                const char *(*getvalue)(void *opaque, const char *key),
-                void *opaque)
-{
-  int i = 0;
-  int r = 0;
-  for(; p[i].id; i++)
-    r |= prop_seti(obj, p+i, getvalue(opaque, p[i].id));
-  return r;
-}
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/
