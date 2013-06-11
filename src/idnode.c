@@ -622,9 +622,12 @@ htsmsg_t *
 idnode_serialize0(idnode_t *self, int optmask)
 {
   const idclass_t *idc = self->in_class;
+  const char *uuid;
 
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(self));
+  uuid = idnode_uuid_as_str(self);
+  htsmsg_add_str(m, "uuid", uuid);
+  htsmsg_add_str(m, "id",   uuid);
   htsmsg_add_str(m, "text", idnode_get_title(self));
 
   htsmsg_add_msg(m, "params", idnode_params(idc, self, optmask));

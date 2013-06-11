@@ -101,7 +101,7 @@ tvheadend.idnode_editor = function(item, conf)
     text	: 'Save',
     handler     : function() {
       var params = {
-        uuid: item.id,
+        uuid: item.uuid,
         op  : 'save',
         conf: Ext.util.JSON.encode(panel.getForm().getFieldValues())
       };

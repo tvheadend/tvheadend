@@ -64,10 +64,9 @@ const static struct strtab typetab[] = {
 const property_t *
 prop_find(const property_t *p, const char *id)
 {
-  int i = 0;
-  for(;p[i].id; i++)
-    if(!strcmp(id, p[i].id))
-      return p + i;
+  for(; p->id; p++)
+    if(!strcmp(id, p->id))
+      return p;
   return NULL;
 }
 
@@ -90,7 +89,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
     /* Find Property */
     const property_t *p = prop_find(pl, f->hmf_name);
     if(p == NULL) {
-      tvhwarn("prop", "invalid property %s", f->hmf_name);
+      //tvhwarn("prop", "invalid property %s", f->hmf_name);
       continue;
     }
     
@@ -144,7 +143,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
       char **val = v;
       if(p->str_set != NULL)
         save |= p->str_set(obj, f->hmf_str);
-      else if (!strcmp(*val ?: "", f->hmf_str)) {
+      else if (strcmp(*val ?: "", f->hmf_str)) {
         free(*val);
         *val = strdup(f->hmf_str);
         save = 1;
@@ -222,7 +221,6 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
 
   for(; pl->id; pl++) {
     htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_msg(msg, NULL, m);
 
     /* Metadata */
     htsmsg_add_str(m, "id",       pl->id);
@@ -244,6 +242,8 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
     /* Data */
     if (obj)
       prop_read_value(obj, pl, m, "value", optmask);
+
+    htsmsg_add_msg(msg, NULL, m);
   }
 }
 

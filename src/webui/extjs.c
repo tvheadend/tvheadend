@@ -2262,7 +2262,7 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
 
   pthread_mutex_unlock(&global_lock);
 
-  idnode_set_free(v);
+  if (v) idnode_set_free(v);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);

@@ -32,7 +32,7 @@ const idclass_t mpegts_service_class =
   .ic_caption    = "MPEGTS Service",
   .ic_properties = (const property_t[]){
     {
-      .type     = PT_STR,
+      .type     = PT_U16,
       .id       = "sid",
       .name     = "Service ID",
       .opts     = PO_RDONLY,

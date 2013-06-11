@@ -352,15 +352,21 @@ void
 mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn )
 {
   char buf1[256], buf2[265];
-  mi->mi_display_name(mi, buf1, sizeof(buf1));
+  if (mi->mi_network == mn) return;
+  *buf1 = *buf2 = 0;
+  if (mi->mi_display_name)
+    mi->mi_display_name(mi, buf1, sizeof(buf1));
   if (mi->mi_network) {
     mi->mi_network->mn_display_name(mi->mi_network, buf2, sizeof(buf2));
     LIST_REMOVE(mi, mi_network_link);
     tvhdebug("mpegts", "%s - remove network %s", buf1, buf2);
   }
-  mi->mi_network = mn;
-  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
-  tvhdebug("mpegts", "%s - added network %s", buf1, buf2);
+  if (mn) {
+    mn->mn_display_name(mn, buf2, sizeof(buf2));
+    mi->mi_network = mn;
+    LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
+    tvhdebug("mpegts", "%s - added network %s", buf1, buf2);
+  }
 }
 
 /******************************************************************************
