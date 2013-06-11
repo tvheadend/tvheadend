@@ -87,6 +87,7 @@ tvheadend.idnode_editor_field = function(f, create)
  */
 tvheadend.idnode_editor = function(item, conf)
 {
+  var panel  = null;
   var fields = []
 
   for (var idx in item.params) {
@@ -95,7 +96,26 @@ tvheadend.idnode_editor = function(item, conf)
       fields.push(f);
   }
 
-  var panel = new Ext.FormPanel({
+  /* Buttons */
+  var saveBtn = new Ext.Button({
+    text	: 'Save',
+    handler     : function() {
+      var params = {
+        uuid: item.id,
+        op  : 'save',
+        conf: Ext.util.JSON.encode(panel.getForm().getFieldValues())
+      };
+      Ext.Ajax.request({
+        url    	: 'api/idnode',
+        params 	: params,
+        success : function(d) {
+          // TODO
+        }
+      });
+    }
+  });
+
+  panel = new Ext.FormPanel({
     title       : conf.title || null,
     frame       : true,
     border      : true,
@@ -104,10 +124,12 @@ tvheadend.idnode_editor = function(item, conf)
     labelWidth  : 200,
     autoWidth   : true,
     autoHeight  : !conf.fixedHeight,
+    width	: 600,
+    //defaults: {width: 330},
     defaultType : 'textfield',
     buttonAlign : 'left',
     items       : fields,
-    //buttons     : [ undoBtn, saveBtn ]
+    buttons     : [ saveBtn ]
   });
   return panel;
 }

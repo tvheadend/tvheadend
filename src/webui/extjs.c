@@ -2200,6 +2200,14 @@ extjs_idnode
     htsmsg_t *m = idnode_serialize(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(out, NULL, m);
+  } else if (!strcmp(op, "save")) {
+    const char *c = http_arg_get(&hc->hc_req_args, "conf");
+    htsmsg_t *conf = htsmsg_json_deserialize(c);
+    if(conf) {
+      idnode_load(node, conf, 1);
+      htsmsg_destroy(conf);
+    }
+    out = htsmsg_create_map();
   }
 
   pthread_mutex_unlock(&global_lock);
