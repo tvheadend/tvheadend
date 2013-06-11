@@ -361,13 +361,15 @@ idnode_save ( idnode_t *self, htsmsg_t *c )
  * Load
  */
 void
-idnode_load ( idnode_t *self, htsmsg_t *c )
+idnode_load ( idnode_t *self, htsmsg_t *c, int dosave )
 {
   const idclass_t *idc = self->in_class;
   while (idc) {
     prop_write_values(self, idc->ic_properties, c);
     idc = idc->ic_super;
   }
+  if (dosave)
+    idnode_updated(self);
 }
 
 static const property_t *

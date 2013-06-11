@@ -98,7 +98,7 @@ void idnode_update_all_props(idnode_t *in,
 void idnode_notify_title_changed(void *obj);
 
 void idnode_save ( idnode_t *self, htsmsg_t *m );
-void idnode_load ( idnode_t *self, htsmsg_t *m );
+void idnode_load ( idnode_t *self, htsmsg_t *m, int dosave );
 
 const char *idnode_get_str ( idnode_t *self, const char *key );
 int idnode_get_u32(idnode_t *self, const char *key, uint32_t *u32);
