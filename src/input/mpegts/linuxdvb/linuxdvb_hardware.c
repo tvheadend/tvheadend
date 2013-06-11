@@ -29,37 +29,14 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-idnode_t **
+idnode_set_t *
 linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list )
 {
   linuxdvb_hardware_t *lh;
-  idnode_t **v;
-  int cnt = 1;
+  idnode_set_t *set = idnode_set_create();
   LIST_FOREACH(lh, list, lh_parent_link)
-    cnt++;
-  v = malloc(sizeof(idnode_t *) * cnt);
-  cnt = 0;
-  LIST_FOREACH(lh, list, lh_parent_link)
-    v[cnt++] = &lh->mi_id;
-  v[cnt] = NULL;
-  return v;
-}
-
-void linuxdvb_hardware_save ( linuxdvb_hardware_t *lh, htsmsg_t *m )
-{
-  htsmsg_add_u32(m, "enabled", lh->mi_enabled);
-  if (lh->lh_displayname)
-    htsmsg_add_str(m, "displayname", lh->lh_displayname);
-}
-
-void linuxdvb_hardware_load ( linuxdvb_hardware_t *lh, htsmsg_t *conf )
-{
-  uint32_t u32;
-  const char *str;
-  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
-    lh->mi_enabled     = 1;
-  if ((str = htsmsg_get_str(conf, "displayname")))
-    lh->lh_displayname = strdup(str);
+    idnode_set_add(set, &lh->mi_id, NULL);
+  return set;
 }
 
 static const char *
@@ -68,7 +45,7 @@ linuxdvb_hardware_class_get_title ( idnode_t *in )
   return ((linuxdvb_hardware_t*)in)->lh_displayname;
 }
 
-static idnode_t **
+static idnode_set_t *
 linuxdvb_hardware_class_get_childs ( idnode_t *in )
 {
   return linuxdvb_hardware_enumerate(&((linuxdvb_hardware_t*)in)->lh_children);
@@ -83,8 +60,12 @@ const idclass_t linuxdvb_hardware_class =
   .ic_get_title  = linuxdvb_hardware_class_get_title,
   .ic_get_childs = linuxdvb_hardware_class_get_childs,
   .ic_properties = (const property_t[]){
-    { PROPDEF1("displayname", "Name",
-               PT_STR, linuxdvb_hardware_t, lh_displayname) },
+    {
+      .type     = PT_STR,
+      .id       = "displayname",
+      .name     = "Name",
+      .off      = offsetof(linuxdvb_hardware_t, lh_displayname),
+    },
     {}
   }
 };

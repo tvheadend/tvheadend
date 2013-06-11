@@ -47,8 +47,13 @@ const idclass_t linuxdvb_adapter_class =
   .ic_caption    = "LinuxDVB Adapter",
   .ic_save       = linuxdvb_adapter_class_save,
   .ic_properties = (const property_t[]){
-    { PROPDEF2("rootpath", "Device Path",
-               PT_STR, linuxdvb_adapter_t, la_rootpath, 1) },
+    {
+      .type     = PT_STR,
+      .id       = "rootpath",
+      .name     = "Device Path",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_adapter_t, la_rootpath),
+    },
     {}
   }
 };
@@ -62,7 +67,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
   htsmsg_t *l;
   linuxdvb_hardware_t *lh;
 
-  linuxdvb_hardware_save((linuxdvb_hardware_t*)la, m);
+  idnode_save(&la->mi_id, m);
   htsmsg_add_u32(m, "number", la->la_number);
   if (la->la_rootpath)
     htsmsg_add_str(m, "rootpath", la->la_rootpath);
@@ -121,7 +126,7 @@ linuxdvb_adapter_create0
   if (!conf)
     return la;
 
-  linuxdvb_hardware_load((linuxdvb_hardware_t*)la, conf);
+  idnode_load(&la->mi_id, conf);
   if (!htsmsg_get_u32(conf, "number", &u32))
     la->la_number = u32;
   if ((str = htsmsg_get_str(conf, "rootpath")))

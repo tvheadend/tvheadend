@@ -43,16 +43,8 @@ static struct strtab bustab[] = {
   { "USB2", BUS_USB2 },
   { "USB3", BUS_USB3 }
 };
-static const char*
-devinfo_bus2str ( int p )
-{
-  return val2str(p, bustab);
-}
-static int
-devinfo_str2bus ( const char *str )
-{
-  return str2val(str, bustab);
-}
+#define devinfo_bus2str(p) val2str(p, bustab)
+#define devinfo_str2bus(p) str2val(p, bustab)
 
 /*
  * Get bus information
@@ -183,12 +175,7 @@ void linuxdvb_device_save ( linuxdvb_device_t *ld )
 
   m = htsmsg_create_map();
 
-  linuxdvb_hardware_save((linuxdvb_hardware_t*)ld, m);
-  if (ld->ld_devid.di_id) {
-    htsmsg_add_str(m, "devid",   ld->ld_devid.di_id);
-    htsmsg_add_str(m, "devbus",  devinfo_bus2str(ld->ld_devid.di_bus));
-    htsmsg_add_str(m, "devpath", ld->ld_devid.di_path);
-  }
+  idnode_save(&ld->mi_id, m);
   
   /* Adapters */
   l = htsmsg_create_map();
@@ -211,15 +198,20 @@ const idclass_t linuxdvb_device_class =
   .ic_caption    = "LinuxDVB Device",
   .ic_save       = linuxdvb_device_class_save,
   .ic_properties = (const property_t[]){
-    { PROPDEF2("devid", "Device ID",
-               PT_STR, linuxdvb_device_t, ld_devid.di_id, 1) },
+    {
+      .type     = PT_STR,
+      .id       = "devid",
+      .name     = "Device ID",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_device_t, ld_devid.di_id)
+    },
     {}
   }
 };
 
 static linuxdvb_hardware_list_t linuxdvb_device_all;
 
-idnode_t **
+idnode_set_t *
 linuxdvb_root ( void )
 {
   return linuxdvb_hardware_enumerate(&linuxdvb_device_all);
@@ -228,8 +220,6 @@ linuxdvb_root ( void )
 linuxdvb_device_t *
 linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
 {
-  uint32_t u32;
-  const char *str;
   linuxdvb_device_t *ld;
   htsmsg_t *e;
   htsmsg_field_t *f;
@@ -247,17 +237,7 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
     return ld;
 
   /* Load config */
-  linuxdvb_hardware_load((linuxdvb_hardware_t*)ld, conf);
-  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
-    ld->mi_enabled     = 1;
-  if ((str = htsmsg_get_str(conf, "displayname")))
-    ld->lh_displayname = strdup(str);
-  if ((str = htsmsg_get_str(conf, "devid")))
-    ld->ld_devid.di_id = strdup(str);
-  if ((str = htsmsg_get_str(conf, "devbus")))
-    ld->ld_devid.di_bus = devinfo_str2bus(str);
-  if ((str = htsmsg_get_str(conf, "devpath")))
-    strncpy(ld->ld_devid.di_path, str, sizeof(ld->ld_devid.di_path));
+  idnode_load(&ld->mi_id, conf);
   get_min_dvb_adapter(&ld->ld_devid);
 
   /* Adapters */
@@ -293,8 +273,10 @@ linuxdvb_device_find_by_adapter ( int a )
   get_device_info(&dev, a);
 
   /* Find existing */
-  if ((ld = linuxdvb_device_find_by_hwid(dev.di_id)))
+  if ((ld = linuxdvb_device_find_by_hwid(dev.di_id))) {
+    memcpy(&ld->ld_devid, &dev, sizeof(dev));
     return ld;
+  }
 
   /* Create new */
   if (!(ld = linuxdvb_device_create0(NULL, NULL))) {

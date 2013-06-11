@@ -39,14 +39,30 @@ const idclass_t mpegts_network_class =
   .ic_caption    = "MPEGTS Network",
   .ic_save       = mpegts_network_class_save,
   .ic_properties = (const property_t[]){
-    { PROPDEF1("networkname", "Network Name",
-               PT_STR, mpegts_network_t, mn_network_name) },
-    { PROPDEF1("nid", "Network ID (limit scanning)",
-               PT_U16, mpegts_network_t, mn_nid) },
-    { PROPDEF1("autodiscovery", "Network Discovery",
-               PT_BOOL, mpegts_network_t, mn_autodiscovery) },
-    { PROPDEF1("skipinitscan", "Skip Initial Scan",
-               PT_BOOL, mpegts_network_t, mn_skipinitscan) },
+    {
+      .type     = PT_STR,
+      .id       = "networkname",
+      .name     = "Network Name",
+      .off      = offsetof(mpegts_network_t, mn_network_name),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "nid",
+      .name     = "Network ID (limit scanning)",
+      .off      = offsetof(mpegts_network_t, mn_nid),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "autodiscovery",
+      .name     = "Network Discovery",
+      .off      = offsetof(mpegts_network_t, mn_autodiscovery),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "skipinitscan",
+      .name     = "Skip Initial Scan",
+      .off      = offsetof(mpegts_network_t, mn_skipinitscan),
+    },
     {}
   }
 };
@@ -140,7 +156,7 @@ mpegts_network_create0
   /* Setup idnode */
   idnode_insert(&mn->mn_id, uuid, idc);
   if (conf)
-    idnode_load(&mn->mn_id, conf, 0);
+    idnode_load(&mn->mn_id, conf);
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;
@@ -163,17 +179,6 @@ mpegts_network_create0
   mn->mn_display_name(mn, buf, sizeof(buf));
   tvhtrace("mpegts", "created network %s", buf);
   return mn;
-}
-
-void
-mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi )
-{
-  char buf1[256], buf2[265];
-  mi->mi_network = mn;
-  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
-  mn->mn_display_name(mn, buf1, sizeof(buf1));
-  mi->mi_display_name(mi, buf2, sizeof(buf2));
-  tvhdebug("mpegts", "%s - added input %s", buf1, buf2);
 }
 
 int

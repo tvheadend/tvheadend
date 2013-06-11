@@ -47,9 +47,6 @@ void extjs_service_update(htsmsg_t *in);
 void extjs_service_delete(htsmsg_t *in);
 
 
-int extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
-                     idnode_t **(*rootfn)(void));
-
 /**
  *
  */

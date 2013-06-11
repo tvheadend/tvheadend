@@ -43,11 +43,12 @@ mpegts_network_class_get_lntype
   return dvb_type2str(((linuxdvb_network_t*)ptr)->ln_type);
 }
 
-static void
+static int
 mpegts_network_class_set_lntype
   ( void *ptr, const char *str )
 { 
   ((linuxdvb_network_t*)ptr)->ln_type = dvb_str2type(str);
+  return 1;
 }
 
 const idclass_t linuxdvb_network_class =
@@ -56,10 +57,14 @@ const idclass_t linuxdvb_network_class =
   .ic_class      = "linuxdvb_network",
   .ic_caption    = "LinuxDVB Network",
   .ic_properties = (const property_t[]){
-    { PROPDEF2("type", "Network Type",
-               PT_STR, linuxdvb_network_t, ln_type, 1),
-      .str_get = mpegts_network_class_get_lntype,
-      .str_set = mpegts_network_class_set_lntype },
+    { 
+      .type     = PT_STR,
+      .id       = "type",
+      .name     = "Network Type",
+      .opts     = PO_RDONLY,
+      .str_get  = mpegts_network_class_get_lntype,
+      .str_set  = mpegts_network_class_set_lntype,
+    },
     {}
   }
 };

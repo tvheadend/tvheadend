@@ -22,7 +22,7 @@
 
 void linuxdvb_init ( int mask );
 
-idnode_t **linuxdvb_root ( void );
+idnode_set_t *linuxdvb_root ( void );
 
 #endif /* __TVH_LINUX_DVB_H__ */
 

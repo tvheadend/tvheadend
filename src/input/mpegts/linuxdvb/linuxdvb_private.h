@@ -67,11 +67,8 @@ struct linuxdvb_hardware
 
 extern const idclass_t linuxdvb_hardware_class;
 
-idnode_t **
-linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list );
-void linuxdvb_hardware_save ( linuxdvb_hardware_t *lh, htsmsg_t *m );
-void linuxdvb_hardware_load ( linuxdvb_hardware_t *lh, htsmsg_t *m );
-
+idnode_set_t *linuxdvb_hardware_enumerate
+  ( linuxdvb_hardware_list_t *list );
 
 struct linuxdvb_device
 {

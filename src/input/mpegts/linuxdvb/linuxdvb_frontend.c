@@ -70,16 +70,40 @@ const idclass_t linuxdvb_frontend_class =
   .ic_get_title  = linuxdvb_frontend_class_get_title,
   .ic_save       = linuxdvb_frontend_class_save,
   .ic_properties = (const property_t[]) {
-    { PROPDEF2("fe_path", "Frontend Path",
-               PT_STR, linuxdvb_frontend_t, lfe_fe_path, 1) },
-    { PROPDEF2("dvr_path", "Input Path",
-               PT_STR, linuxdvb_frontend_t, lfe_dvr_path, 1) },
-    { PROPDEF2("dmx_path", "Demux Path",
-               PT_STR, linuxdvb_frontend_t, lfe_dmx_path, 1) },
-    { PROPDEF2("number", "FE Number",
-               PT_INT, linuxdvb_frontend_t, lfe_number, 1) },
-    { PROPDEF1("fullmux", "Full Mux Mode",
-               PT_BOOL, linuxdvb_frontend_t, lfe_fullmux) },
+    {
+      .type     = PT_STR,
+      .id       = "fe_path",
+      .name     = "Frontend Path",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_fe_path),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "dvr_path",
+      .name     = "Input Path",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_dvr_path),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "dmx_path",
+      .name     = "Demux Path",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_dmx_path),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "fe_number",
+      .name     = "Frontend Number",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_number),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fullmux",
+      .name     = "Full Mux RX mode",
+      .off      = offsetof(linuxdvb_frontend_t, lfe_fullmux),
+    },
     {}
   }
 };
@@ -93,13 +117,17 @@ linuxdvb_frontend_class_network_get(void *o)
   return NULL;
 }
 
-static void
+static int
 linuxdvb_frontend_class_network_set(void *o, const char *s)
 {
-  mpegts_input_t *mi = o;
-  mpegts_network_t *mn = mpegts_network_find(s);
-  if (mn)
-    mpegts_network_add_input(mn, mi);
+  mpegts_input_t   *mi = o;
+  mpegts_network_t *mn = mi->mi_network;
+
+  if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
+    return 0;
+
+  mpegts_input_set_network(mi, s ? mpegts_network_find(s) : NULL);
+  return 1;
 }
 
 static htsmsg_t *
@@ -131,10 +159,12 @@ const idclass_t linuxdvb_frontend_dvbt_class =
   .ic_caption    = "Linux DVB-T Frontend",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF0("network", "Network", PT_STR, 0),
-      .str_get   = linuxdvb_frontend_class_network_get,
-      .str_set   = linuxdvb_frontend_class_network_set,
-      .str_enum2 = linuxdvb_frontend_class_network_enum
+      .type     = PT_STR,
+      .id       = "network",
+      .name     = "Network",
+      .str_get  = linuxdvb_frontend_class_network_get,
+      .str_set  = linuxdvb_frontend_class_network_set,
+      .str_enum = linuxdvb_frontend_class_network_enum
     },
     {}
   }
@@ -763,7 +793,7 @@ linuxdvb_frontend_create0
     linuxdvb_network_t *ln = linuxdvb_network_find_by_uuid(str);
     if (ln) {
       if (ln->ln_type == lfe->lfe_info.type) {
-        mpegts_network_add_input((mpegts_network_t*)ln, (mpegts_input_t*)lfe);
+        mpegts_input_set_network((mpegts_input_t*)lfe, (mpegts_network_t*)ln);
       } else
         tvhlog(LOG_WARNING, "linuxdvb",
                "attempt to add network %s of wrong type %s to %s (%s)",

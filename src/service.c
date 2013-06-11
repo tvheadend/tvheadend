@@ -46,21 +46,38 @@
 
 static void service_data_timeout(void *aux);
 static const char *service_class_channel_get(void *obj);
-static void service_class_channel_set(void *obj, const char *str);
+static int service_class_channel_set(void *obj, const char *str);
 static void service_class_save(struct idnode *self);
+
+static htsmsg_t *service_class_channel_enum(void *p)
+{
+  channel_t *ch;
+  htsmsg_t *list = htsmsg_create_list();
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    if (ch->ch_name)
+      htsmsg_add_str(list, NULL, ch->ch_name);
+  return list;
+}
 
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
   .ic_save       = service_class_save,
   .ic_properties = (const property_t[]){
-    { 
-      "channel", "Channel", PT_STR,
-      .str_get = service_class_channel_get,
-      .str_set = service_class_channel_set,
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(service_t, s_enabled),
     },
-    { PROPDEF1("enabled", "Enabled",
-               PT_BOOL, service_t, s_enabled) },
+    {
+      .type     = PT_STR,
+      .id       = "channel",
+      .name     = "Channel",
+      .str_get  = service_class_channel_get,
+      .str_set  = service_class_channel_set,
+      .str_enum = service_class_channel_enum
+    },
     {}
   }
 };
@@ -680,10 +697,11 @@ service_class_channel_get(void *obj)
 /**
  *
  */
-static void
+static int
 service_class_channel_set(void *obj, const char *str)
 {
   service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
+  return 1; // TODO: sort this!
 }
 
 
@@ -1447,7 +1465,7 @@ void service_load ( service_t *t, htsmsg_t *c )
   streaming_component_type_t type;
   const char *v;
 
-  idnode_load(&t->s_id, c, 0);
+  idnode_load(&t->s_id, c);
 
   if(!htsmsg_get_u32(c, "pcr", &u32))
     t->s_pcr_pid = u32;

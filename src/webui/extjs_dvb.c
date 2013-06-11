@@ -108,18 +108,6 @@ extjs_grid_conf
     conf->sort.key = NULL;
 }
 
-// TODO: move this
-static htsmsg_t *
-extjs_idnode_class ( const idclass_t *idc )
-{
-  htsmsg_t *ret = htsmsg_create_list();
-  while (idc) {
-    prop_add_params_to_msg(NULL, idc->ic_properties, ret);
-    idc = idc->ic_super;
-  }
-  return ret;
-}
-
 static void
 extjs_idnode_grid
   (idnode_set_t *ins, extjs_grid_conf_t *conf, htsmsg_t *out)
@@ -168,7 +156,7 @@ extjs_mpegts_service
     }
     extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    htsmsg_t *list = extjs_idnode_class(&mpegts_service_class);
+    htsmsg_t *list = idclass_serialize(&mpegts_service_class);
     htsmsg_add_msg(out, "entries", list);
   }
 
@@ -202,7 +190,7 @@ extjs_mpegts_mux
     }
     extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    htsmsg_t *list = extjs_idnode_class(&mpegts_mux_class);
+    htsmsg_t *list = idclass_serialize(&mpegts_mux_class);
     htsmsg_add_msg(out, "entries", list);
   }
 
@@ -232,7 +220,7 @@ extjs_mpegts_network
     }
     extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    htsmsg_t *c = extjs_idnode_class(&mpegts_network_class);
+    htsmsg_t *c = idclass_serialize(&mpegts_network_class);
     htsmsg_add_msg(out, "entries", c);
   } else if (!strcmp(op, "mux_class")) {
     const idclass_t *idc; 
@@ -247,7 +235,7 @@ extjs_mpegts_network
       pthread_mutex_unlock(&global_lock);
       return HTTP_STATUS_BAD_REQUEST;
     }
-    htsmsg_t *c = extjs_idnode_class(idc);
+    htsmsg_t *c = idclass_serialize(idc);
     htsmsg_add_msg(out, "entries", c);
     pthread_mutex_unlock(&global_lock);
   } else if (!strcmp(op, "mux_create")) {
@@ -303,14 +291,14 @@ extjs_mpegts_input
       idnode_set_add(&ins, (idnode_t*)mi, &conf.filter);
     extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    htsmsg_t *list= extjs_idnode_class(&mpegts_input_class);
+    htsmsg_t *list= idclass_serialize(&mpegts_input_class);
     htsmsg_add_msg(out, "entries", list);
   } else if (!strcmp(op, "network_class")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
     if (!uuid) return 404;
     mpegts_input_t *mi = idnode_find(uuid, &mpegts_input_class);
     if (!mi) return 404;
-    htsmsg_t *list= extjs_idnode_class(mi->mi_network_class(mi));
+    htsmsg_t *list= idclass_serialize(mi->mi_network_class(mi));
     htsmsg_add_msg(out, "entries", list);
   } else if (!strcmp(op, "network_create")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");

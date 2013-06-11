@@ -48,30 +48,30 @@ linuxdvb_mux_##c##_class_##l##_get (void *o)\
   linuxdvb_mux_t *lm = o;\
   return dvb_##l##2str(lm->lm_tuning.dmc_fe_params.u.f.p);\
 }\
-static void \
+static int \
 linuxdvb_mux_##c##_class_##l##_set (void *o, const char *s)\
 {\
   linuxdvb_mux_t *lm = o;\
   lm->lm_tuning.dmc_fe_params.u.f.p = dvb_str2##l (s);\
+  return 1;\
 }\
-static const char **\
+static htsmsg_t *\
 linuxdvb_mux_##c##_class_##l##_enum (void *o)\
 {\
   static const int     t[] = { __VA_ARGS__ };\
-  static const char ** r   = NULL;\
-  if (!r) {\
-    int i, n = ARRAY_SIZE(t);\
-    r = calloc(n+1, sizeof(char*));\
-    for (i = 0; i < n; i++)\
-      r[i] = dvb_##l##2str(t[i]);\
-  }\
-  return r;\
+  int i;\
+  htsmsg_t *m = htsmsg_create_list();\
+  for (i = 0; i < ARRAY_SIZE(t); i++)\
+    htsmsg_add_str(m, NULL, dvb_##l##2str(t[i]));\
+  return m;\
 }
-#define MUX_PROP_STR(p, c, t, l)\
-  PROPDEF0(p, c, PT_STR, PO_WRONCE),\
+#define MUX_PROP_STR(_id, _name, t, l)\
+  .type = PT_STR,\
+  .id   = _id,\
+  .name = _name,\
   .str_get  = linuxdvb_mux_##t##_class_##l##_get,\
   .str_set  = linuxdvb_mux_##t##_class_##l##_set,\
-  .str_enum = linuxdvb_mux_##t##_class_##l##_enum\
+  .str_enum = linuxdvb_mux_##t##_class_##l##_enum
 
 const idclass_t linuxdvb_mux_class =
 {
@@ -142,9 +142,11 @@ const idclass_t linuxdvb_mux_dvbt_class =
   .ic_caption    = "Linux DVB-T Multiplex",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
-               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
-               PO_WRONCE)
+      .type     = PT_U32,
+      .id       = "frequency",
+      .name     = "Frequency (MHz)",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
       MUX_PROP_STR("bandwidth", "Bandwidth", dvbt, bw)
@@ -192,14 +194,18 @@ const idclass_t linuxdvb_mux_dvbc_class =
   .ic_caption    = "Linux DVB-C Multiplex",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
-               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
-               PO_WRONCE)
+      .type     = PT_U32,
+      .id       = "frequency",
+      .name     = "Frequency (MHz)",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
-      PROPDEF3("symbol_rate", "Symbol Rate", PT_U32,
-               linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qam.symbol_rate,
-               PO_WRONCE)
+      .type     = PT_U32,
+      .id       = "symbolrate",
+      .name     = "Symbol Rate",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qam.symbol_rate),
     },
     {
       MUX_PROP_STR("constellation", "Constellation", dvbc, qam)
@@ -231,24 +237,22 @@ linuxdvb_mux_dvbs_class_polarity_get (void *o)
   linuxdvb_mux_t *lm = o;
   return dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation);
 }
-static void
+static int
 linuxdvb_mux_dvbs_class_polarity_set (void *o, const char *s)
 {
   linuxdvb_mux_t *lm = o;
   lm->lm_tuning.dmc_fe_polarisation = dvb_str2pol(s);
+  return 1;
 }
-static const char **\
+static htsmsg_t *
 linuxdvb_mux_dvbs_class_polarity_enum (void *o)
 {
-  static const char **r   = NULL;
-  if (!r) {
-    r = calloc(4+1, sizeof(char*));\
-    r[0] = dvb_pol2str(POLARISATION_VERTICAL);
-    r[1] = dvb_pol2str(POLARISATION_HORIZONTAL);
-    r[2] = dvb_pol2str(POLARISATION_CIRCULAR_LEFT);
-    r[3] = dvb_pol2str(POLARISATION_CIRCULAR_RIGHT);
-  }
-  return r;
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_pol2str(POLARISATION_VERTICAL));
+  htsmsg_add_str(list, NULL, dvb_pol2str(POLARISATION_HORIZONTAL));
+  htsmsg_add_str(list, NULL, dvb_pol2str(POLARISATION_CIRCULAR_LEFT));
+  htsmsg_add_str(list, NULL, dvb_pol2str(POLARISATION_CIRCULAR_RIGHT));
+  return list;
 }
 
 const idclass_t linuxdvb_mux_dvbs_class =
@@ -258,14 +262,18 @@ const idclass_t linuxdvb_mux_dvbs_class =
   .ic_caption    = "Linux DVB-S Multiplex",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF3("frequency", "Frequency (kHz)", PT_U32,
-               linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency,
-               PO_WRONCE)
+      .type     = PT_U32,
+      .id       = "frequency",
+      .name     = "Frequency (MHz)",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
-      PROPDEF3("symbol_rate", "Symbol Rate", PT_U32,
-               linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qpsk.symbol_rate,
-               PO_WRONCE)
+      .type     = PT_U32,
+      .id       = "symbolrate",
+      .name     = "Symbol Rate",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qpsk.symbol_rate),
     },
     {
       MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity)

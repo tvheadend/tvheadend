@@ -2204,7 +2204,7 @@ extjs_idnode
     const char *c = http_arg_get(&hc->hc_req_args, "conf");
     htsmsg_t *conf = htsmsg_json_deserialize(c);
     if(conf) {
-      idnode_load(node, conf, 1);
+      idnode_update(node, conf);
       htsmsg_destroy(conf);
     }
     out = htsmsg_create_map();
@@ -2224,9 +2224,9 @@ extjs_idnode
 /**
  *
  */
-int
+static int
 extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
-                 idnode_t **(*rootfn)(void))
+                 idnode_set_t *(*rootfn)(void))
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "node");
@@ -2243,7 +2243,7 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
   }
 
   out = htsmsg_create_list();
-  idnode_t **v;
+  idnode_set_t *v;
 
   if(!strcmp(s, "root")) {
     v = rootfn();
@@ -2253,64 +2253,22 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
 
   if(v != NULL) {
     int i;
-    for(i = 0; v[i] != NULL; i++) {
-      htsmsg_t *m = idnode_serialize(v[i]);
-      htsmsg_add_u32(m, "leaf", idnode_is_leaf(v[i]));
+    for(i = 0; i < v->is_count; i++) {
+      htsmsg_t *m = idnode_serialize(v->is_array[i]);
+      htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
       htsmsg_add_msg(out, NULL, m);
     }
   }
 
   pthread_mutex_unlock(&global_lock);
 
-  free(v);
+  idnode_set_free(v);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
-
-
-static const char *
-get_prop_value(void *opaque, const char *key)
-{
-  http_connection_t *hc = opaque;
-  return http_arg_get(&hc->hc_req_args, key);
-}
-
-/**
- *
- */
-static int
-extjs_item_update(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out = NULL;
-
-  if(remain == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  pthread_mutex_lock(&global_lock);
-
-  idnode_t *n = idnode_find(remain, NULL);
-
-  if(n == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    return 404;
-  }
-
-  idnode_update_all_props(n, get_prop_value, hc);
-
-  pthread_mutex_unlock(&global_lock);
-
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
 
 /**
  *
@@ -2446,7 +2404,6 @@ extjs_start(void)
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
-  http_path_add("/item/update",    NULL, extjs_item_update,    ACCESS_ADMIN);
 
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);

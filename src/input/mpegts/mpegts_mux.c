@@ -34,8 +34,6 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_class      = "mpegts_mux_instance",
   .ic_caption    = "MPEGTS Multiplex Phy",
-  .ic_properties = (const property_t[]){
-  }
 };
 
 mpegts_mux_instance_t *
@@ -116,16 +114,40 @@ const idclass_t mpegts_mux_class =
   .ic_caption    = "MPEGTS Multiplex",
   .ic_save       = mpegts_mux_class_save,
   .ic_properties = (const property_t[]){
-    {  PROPDEF1("enabled", "Enabled",
-                PT_BOOL, mpegts_mux_t, mm_enabled) },
-    {  PROPDEF1("onid", "Original Network ID",
-                PT_U16, mpegts_mux_t, mm_onid) },
-    {  PROPDEF1("tsid", "Transport Stream ID",
-                PT_U16, mpegts_mux_t, mm_tsid) },
-    {  PROPDEF2("crid_authority", "CRID Authority",
-                PT_STR, mpegts_mux_t, mm_crid_authority, 1) },
-    {  PROPDEF2("init_scan_done", "Initial Scan Complete",
-                PT_BOOL, mpegts_mux_t, mm_initial_scan_done, 1) },
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(mpegts_mux_t, mm_enabled),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "onid",
+      .name     = "Original Network ID",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_mux_t, mm_onid),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "tsid",
+      .name     = "Transport Stream ID",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_mux_t, mm_tsid),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "cridauth",
+      .name     = "CRID Authority",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_mux_t, mm_crid_authority),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "initscan",
+      .name     = "Initial Scan Complete",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_mux_t, mm_initial_scan_done),
+    },
     {}
   }
 };
@@ -426,7 +448,7 @@ mpegts_mux_create0
 
   /* Configuration */
   if (conf)
-    idnode_load(&mm->mm_id, conf, 0);
+    idnode_load(&mm->mm_id, conf);
 
   /* Initial scan */
   if (!mm->mm_initial_scan_done || !mn->mn_skipinitscan)

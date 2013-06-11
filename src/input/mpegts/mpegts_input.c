@@ -30,7 +30,6 @@
  * Class definition
  * *************************************************************************/
 
-#if 0
 static const char *
 mpegts_input_class_get_name ( void *in )
 {
@@ -42,7 +41,6 @@ mpegts_input_class_get_name ( void *in )
     *buf = 0;
   return buf;
 }
-#endif
 
 const idclass_t mpegts_input_class =
 {
@@ -50,15 +48,18 @@ const idclass_t mpegts_input_class =
   .ic_caption    = "MPEGTS Input",
   .ic_properties = (const property_t[]){
     {
-      PROPDEF1("enabled", "Enabled", PT_BOOL,
-               mpegts_input_t, mi_enabled)
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(mpegts_input_t, mi_enabled),
     },
-#if 0
     {
-      PROPDEF0("displayname", "Name", PT_STR, PO_NOSAVE | PO_RDONLY),
-      .str_get = mpegts_input_class_get_name
+      .type     = PT_STR,
+      .id       = "displayname",
+      .name     = "Name",
+      .opts     = PO_NOSAVE | PO_RDONLY,
+      .str_get  = mpegts_input_class_get_name,
     },
-#endif
     {}
   }
 };
@@ -308,7 +309,7 @@ mpegts_input_create0
 {
   idnode_insert(&mi->mi_id, uuid, class);
   if (c)
-    idnode_load(&mi->mi_id, c, 0);
+    idnode_load(&mi->mi_id, c);
   
   /* Defaults */
   mi->mi_is_enabled     = mpegts_input_is_enabled;
@@ -345,6 +346,21 @@ void
 mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
 {
   idnode_save(&mi->mi_id, m);
+}
+
+void
+mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn )
+{
+  char buf1[256], buf2[265];
+  mi->mi_display_name(mi, buf1, sizeof(buf1));
+  if (mi->mi_network) {
+    mi->mi_network->mn_display_name(mi->mi_network, buf2, sizeof(buf2));
+    LIST_REMOVE(mi, mi_network_link);
+    tvhdebug("mpegts", "%s - remove network %s", buf1, buf2);
+  }
+  mi->mi_network = mn;
+  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
+  tvhdebug("mpegts", "%s - added network %s", buf1, buf2);
 }
 
 /******************************************************************************

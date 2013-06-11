@@ -419,6 +419,8 @@ mpegts_input_t *mpegts_input_create0
 #define mpegts_input_create1(u, c)\
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
                        &mpegts_input_class, u, c)
+
+void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
                  
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
@@ -435,8 +437,6 @@ extern const idclass_t mpegts_network_class;
 
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
-
-void mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi );
 
 int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
