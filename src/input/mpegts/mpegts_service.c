@@ -26,8 +26,11 @@
  * Class definition
  * *************************************************************************/
 
+extern const idclass_t service_class;
+
 const idclass_t mpegts_service_class =
 {
+  .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
   .ic_caption    = "MPEGTS Service",
   .ic_properties = (const property_t[]){
