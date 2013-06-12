@@ -272,20 +272,8 @@ tvheadend.idnode_grid = function(panel, conf)
     for (i = 0; i < d.length; i++) {
       var type = 'string';
       var edit = null;
-      if (d[i].type == 'int' || d[i].type == 'u16' || d[i].type == 'u32') {
-        type = 'numeric';
-        if (!d[i].rdonly)
-          edit = new Ext.form.NumberField({
-            // TODO: min/max
-          })
-      } else if (d[i].type == 'bool') {
-        type = 'boolean';
-        if (!d[i].rdonly)
-          edit = new Ext.form.Checkbox({});
-      } else if (d[i].type == 'str') {
-        if (!d[i].rdonly)
-          edit = new Ext.form.TextField({});
-      }
+      if (!d[i].rdonly && !d[i].wronce)
+        edit = tvheadend.idnode_editor_field(d[i]);
       fields.push(d[i].id)
       columns.push({
         dataIndex: d[i].id,
