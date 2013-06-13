@@ -330,16 +330,9 @@ linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 static void
 linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 {
-  extern const idclass_t mpegts_mux_instance_class;
   mpegts_input_t *mi;
-  mpegts_mux_instance_t *mmi;
-  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
-    LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
-      if (mmi->mmi_mux == mm) break;
-    if (!mmi)
-      mmi = mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
-    // TODO: we might eventually want to keep history!
-  }
+  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link)
+    mi->mi_create_mux_instance(mi, mm);
 }
 
 static void

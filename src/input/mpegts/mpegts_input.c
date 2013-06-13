@@ -152,6 +152,18 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
 }
 
+static void
+mpegts_input_create_mux_instance
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  extern const idclass_t mpegts_mux_instance_class;
+  mpegts_mux_instance_t *mmi;
+  LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
+    if (mmi->mmi_mux == mm) break;
+  if (!mmi)
+    (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
+}
+
 /* **************************************************************************
  * Data processing
  * *************************************************************************/
@@ -312,16 +324,17 @@ mpegts_input_create0
     idnode_load(&mi->mi_id, c);
   
   /* Defaults */
-  mi->mi_is_enabled     = mpegts_input_is_enabled;
-  mi->mi_display_name   = mpegts_input_display_name;
-  mi->mi_is_free        = mpegts_input_is_free;
-  mi->mi_current_weight = mpegts_input_current_weight;
-  mi->mi_start_mux      = mpegts_input_start_mux;
-  mi->mi_stop_mux       = mpegts_input_stop_mux;
-  mi->mi_open_service   = mpegts_input_open_service;
-  mi->mi_close_service  = mpegts_input_close_service;
-  mi->mi_network_class  = mpegts_input_network_class;
-  mi->mi_network_create = mpegts_input_network_create;
+  mi->mi_is_enabled           = mpegts_input_is_enabled;
+  mi->mi_display_name         = mpegts_input_display_name;
+  mi->mi_is_free              = mpegts_input_is_free;
+  mi->mi_current_weight       = mpegts_input_current_weight;
+  mi->mi_start_mux            = mpegts_input_start_mux;
+  mi->mi_stop_mux             = mpegts_input_stop_mux;
+  mi->mi_open_service         = mpegts_input_open_service;
+  mi->mi_close_service        = mpegts_input_close_service;
+  mi->mi_network_class        = mpegts_input_network_class;
+  mi->mi_network_create       = mpegts_input_network_create;
+  mi->mi_create_mux_instance  = mpegts_input_create_mux_instance;
 
   /* Index */
   mi->mi_instance       = ++mpegts_input_idx;

@@ -392,6 +392,7 @@ struct mpegts_input
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
+  void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
   mpegts_network_t *(*mi_network_create) (mpegts_input_t *mi, htsmsg_t *c);
 };
