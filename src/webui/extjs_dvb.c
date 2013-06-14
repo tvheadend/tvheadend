@@ -380,7 +380,7 @@ extjs_start_dvb(void)
 		NULL, extjs_mpegts_service, ACCESS_WEB_INTERFACE);
   http_path_add("/api/mpegts/input", 
 		NULL, extjs_mpegts_input, ACCESS_WEB_INTERFACE);
-  http_path_add("/api/linuxdvbs/satconf", 
+  http_path_add("/api/linuxdvb/satconf", 
 		NULL, extjs_linuxdvb_satconf, ACCESS_WEB_INTERFACE);
 #if 0
   http_path_add("/dvb/locations", 

@@ -247,6 +247,15 @@ tvheadend.idnode_create = function(conf)
 
     panel.add(combo);
     win.show();
+  } else {
+    Ext.Ajax.request({
+      url     : conf.url,
+      params  : conf.params,
+      success : function(d) {
+        build_form(json_decode(d));
+        win.show();
+      }
+    });
   }
 }
 
@@ -272,6 +281,7 @@ tvheadend.idnode_grid = function(panel, conf)
     for (i = 0; i < d.length; i++) {
       var type = 'string';
       var edit = null;
+      if (d[i].type == 'separator') continue;
       if (!d[i].rdonly && !d[i].wronce)
         edit = tvheadend.idnode_editor_field(d[i]);
       fields.push(d[i].id)
