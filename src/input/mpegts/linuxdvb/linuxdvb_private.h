@@ -29,6 +29,7 @@ typedef struct linuxdvb_frontend linuxdvb_frontend_t;
 typedef struct linuxdvb_network  linuxdvb_network_t;
 typedef struct linuxdvb_mux      linuxdvb_mux_t;
 typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
+typedef struct linuxdvb_lnb      linuxdvb_lnb_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
@@ -170,6 +171,13 @@ linuxdvb_frontend_added
 void linuxdvb_frontend_add_network
   ( linuxdvb_frontend_t *lfe, linuxdvb_network_t *net );
 
+int linuxdvb_frontend_tune
+  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm, uint32_t freq );
+
+/*
+ * Network
+ */
+
 struct linuxdvb_network
 {
   mpegts_network_t;
@@ -212,6 +220,15 @@ mpegts_service_t *linuxdvb_service_create0
    const char *uuid, htsmsg_t *conf);
 
 /*
+ * LNB
+ */
+struct linuxdvb_lnb
+{
+  uint32_t  (*lnb_frequency)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  int       (*lnb_tune)(linuxdvb_lnb_t*, linuxdvb_mux_t *lm, int fd);
+};
+
+/*
  * Satconf
  */
 struct linuxdvb_satconf
@@ -220,6 +237,7 @@ struct linuxdvb_satconf
 
   /* Links */
   mpegts_input_t *ls_frontend;
+  linuxdvb_lnb_t *ls_lnb;
 };
 
 linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);

@@ -29,9 +29,6 @@
 #include <assert.h>
 #include <linux/dvb/dmx.h>
 
-static int
-linuxdvb_frontend_tune
-  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm );
 static void
 linuxdvb_frontend_monitor ( void *aux );
 static void *
@@ -348,7 +345,7 @@ linuxdvb_frontend_start_mux
 
   /* Tune */
   tvhtrace("linuxdvb", "%s - tuning", buf1);
-  r = linuxdvb_frontend_tune(lfe, (linuxdvb_mux_t*)mmi->mmi_mux);
+  r = linuxdvb_frontend_tune(lfe, (linuxdvb_mux_t*)mmi->mmi_mux, -1);
 
   /* Failed */
   if (r != 0) {
@@ -667,17 +664,17 @@ linuxdvb_frontend_input_thread ( void *aux )
  * Tuning
  * *************************************************************************/
 
-static int
+int
 linuxdvb_frontend_tune
-  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm )
+  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm, uint32_t freq )
 {
   int r;
   struct dvb_frontend_event ev;
-  dvb_mux_conf_t *dmc = &lm->lm_tuning;
-  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
+  dvb_mux_conf_t *dmc = &lm->lm_tuning;
+  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
   struct dtv_property cmds[20];
   struct dtv_properties cmdseq = { .num = 0, .props = cmds };
   
@@ -691,13 +688,16 @@ linuxdvb_frontend_tune
   };
   if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0)
     return -1;
+
+  if (freq == (uint32_t)-1)
+    freq = p->frequency;
   
   /* Tune */
 #define S2CMD(c, d)\
   cmds[cmdseq.num].cmd      = c;\
   cmds[cmdseq.num++].u.data = d
   S2CMD(DTV_DELIVERY_SYSTEM, lm->lm_tuning.dmc_fe_delsys);
-  S2CMD(DTV_FREQUENCY,       p->frequency);
+  S2CMD(DTV_FREQUENCY,       freq);
   S2CMD(DTV_INVERSION,       p->inversion);
 
   /* DVB-T */
@@ -731,6 +731,11 @@ linuxdvb_frontend_tune
   /* Tune */
   S2CMD(DTV_TUNE, 0);
 #undef S2CMD
+#else
+  dvb_mux_conf_t dmc = lm->lm_tuning;
+  struct dvb_frontend_parameters *p = &dmc.dmc_fe_params;
+  if (freq != (uint32_t)-1)
+    p->frequency = freq;
 #endif
 
   /* discard stale events */

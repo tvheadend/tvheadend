@@ -214,9 +214,33 @@ static int
 linuxdvb_satconf_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  mi = ls->ls_frontend;
-  // TODO: need more here!
+  int r;
+  uint32_t f;
+  linuxdvb_satconf_t   *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)(mi = ls->ls_frontend);
+  linuxdvb_mux_t      *lm  = (linuxdvb_mux_t*)mmi;
+
+  /* Test run */
+  // Note: basically this ensures the tuning params are acceptable
+  //       for the FE, so that if they're not we don't have to wait
+  //       for things like rotors and switches
+  if (!ls->ls_lnb)
+    return SM_CODE_TUNING_FAILED;
+  f = ls->ls_lnb->lnb_frequency(ls->ls_lnb, lm);
+  if (f < 0)
+    return SM_CODE_TUNING_FAILED;
+  r = linuxdvb_frontend_tune(lfe, lm, f);
+  if (r) return r;
+  
+  /* Switch */
+
+  /* Rotor */
+
+  /* LNB */
+  if (ls->ls_lnb->lnb_tune(ls->ls_lnb, lm, lfe->lfe_fe_fd))
+    return SM_CODE_TUNING_FAILED;
+
+  /* Tune */
   return mi->mi_start_mux(mi, mmi);
 }
 
