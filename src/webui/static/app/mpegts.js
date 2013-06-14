@@ -69,3 +69,20 @@ tvheadend.services = function(panel)
     del     : false
   });
 }
+
+tvheadend.satconf = function(panel)
+{
+  tvheadend.idnode_grid(panel, {
+    titleS   : 'Satconf',
+    titleP   : 'Satconfs',
+    url      : 'api/linuxdvb/satconf',
+    add       : {
+      title  : 'Satconf',
+      url    : 'api/linuxdvb/satconf',
+      create : {
+        params : { op: 'create' }
+      }
+    },
+    del     : true
+  });
+}

@@ -202,6 +202,51 @@ extjs_mpegts_mux
 }
 
 static int
+extjs_linuxdvb_satconf
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  struct linuxdvb_satconf;
+  extern const idclass_t linuxdvb_satconf_class;
+  extern struct linuxdvb_satconf *linuxdvb_satconf_create0(const char*, htsmsg_t*);
+  mpegts_input_t   *mi;
+  htsbuf_queue_t   *hq = &hc->hc_reply;
+  const char       *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t         *out = htsmsg_create_map();
+  extjs_grid_conf_t conf = { 0 };
+
+  if (!strcmp(op, "list")) {
+    idnode_set_t ins = { 0 };
+    extjs_grid_conf(&hc->hc_req_args, &conf);
+    pthread_mutex_lock(&global_lock);
+    
+    LIST_FOREACH(mi, &mpegts_input_all, mi_global_link)
+      if (idnode_is_instance((idnode_t*)mi, &linuxdvb_satconf_class))
+        idnode_set_add(&ins, (idnode_t*)mi, &conf.filter);
+    extjs_idnode_grid(&ins, &conf, out);
+  } else if (!strcmp(op, "class")) {
+    htsmsg_t *list = idclass_serialize(&linuxdvb_satconf_class);
+    htsmsg_add_msg(out, "entries", list);
+  } else if (!strcmp(op, "create")) {
+    htsmsg_t *conf = NULL;
+    const char *c;
+    if ((c = http_arg_get(&hc->hc_req_args, "conf")))
+      conf = htsmsg_json_deserialize(c);
+    if (!conf)
+      return HTTP_STATUS_BAD_REQUEST;
+    pthread_mutex_lock(&global_lock);
+    linuxdvb_satconf_create0(NULL, conf);
+    pthread_mutex_unlock(&global_lock);
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
+
+
+static int
 extjs_mpegts_network
   (http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -335,6 +380,8 @@ extjs_start_dvb(void)
 		NULL, extjs_mpegts_service, ACCESS_WEB_INTERFACE);
   http_path_add("/api/mpegts/input", 
 		NULL, extjs_mpegts_input, ACCESS_WEB_INTERFACE);
+  http_path_add("/api/linuxdvbs/satconf", 
+		NULL, extjs_linuxdvb_satconf, ACCESS_WEB_INTERFACE);
 #if 0
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
