@@ -105,15 +105,16 @@ typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
 void idnode_init(void);
 
-int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class);
+int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc);
 void idnode_unlink(idnode_t *in);
 
 const char   *idnode_uuid_as_str  (const idnode_t *in);
 idnode_set_t *idnode_get_childs   (idnode_t *in);
 int           idnode_is_leaf      (idnode_t *in);
+int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 
-void         *idnode_find    (const char *uuid, const idclass_t *class);
-idnode_set_t *idnode_find_all(const idclass_t *class);
+void         *idnode_find    (const char *uuid, const idclass_t *idc);
+idnode_set_t *idnode_find_all(const idclass_t *idc);
 
 void idnode_notify_title_changed(void *obj);
 

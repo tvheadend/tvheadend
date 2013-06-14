@@ -217,6 +217,16 @@ idnode_is_leaf(idnode_t *in)
   return 1;
 }
 
+int
+idnode_is_instance(idnode_t *in, const idclass_t *idc)
+{
+  const idclass_t *ic = in->in_class;
+  for(; ic != NULL; ic = ic->ic_super) {
+    if (ic == idc) return 1;
+  }
+  return 0;
+}
+
 /* **************************************************************************
  * Properties
  * *************************************************************************/

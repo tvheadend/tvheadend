@@ -92,7 +92,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
       //tvhwarn("prop", "invalid property %s", f->hmf_name);
       continue;
     }
-    
+
     /* Ignore */
     if(p->opts & optmask) continue;
 
