@@ -28,6 +28,7 @@ typedef struct linuxdvb_adapter  linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend linuxdvb_frontend_t;
 typedef struct linuxdvb_network  linuxdvb_network_t;
 typedef struct linuxdvb_mux      linuxdvb_mux_t;
+typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
@@ -143,12 +144,16 @@ struct linuxdvb_frontend
   int                       lfe_locked;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
-  int (*lfe_open_pid) (linuxdvb_frontend_t *lfe, int pid, const char *name);
 
   /*
    * Configuration
    */
   int                       lfe_fullmux;
+
+  /*
+   * Callbacks
+   */
+  int (*lfe_open_pid) (linuxdvb_frontend_t *lfe, int pid, const char *name);
 };
 
 linuxdvb_frontend_t *
@@ -205,5 +210,18 @@ linuxdvb_mux_t *linuxdvb_mux_create0
 mpegts_service_t *linuxdvb_service_create0
   (linuxdvb_mux_t *lm, uint16_t sid, uint16_t pmt_pid,
    const char *uuid, htsmsg_t *conf);
+
+/*
+ * Satconf
+ */
+struct linuxdvb_satconf
+{
+  mpegts_input_t;
+
+  /* Links */
+  mpegts_input_t *ls_frontend;
+};
+
+linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */
