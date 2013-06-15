@@ -1195,6 +1195,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}, [ 'name', 'enabled', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
+		'uni_scr', 'uni_qrg', 'uni_pin',
 		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose', 'grace_period' ]);
 
 	function saveConfForm() {
@@ -1283,7 +1284,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			allowBlank : false,
 			mode : 'remote',
 			triggerAction : 'all',
-			store : [ 'DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1' ]
+			store : [ 'DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1', 'EN50494 SCR / Unicable' ]
 		});
 		items.push(v);
 
@@ -1295,6 +1296,31 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			mode : 'remote',
 			triggerAction : 'all',
 			store : [ '0', '1', '2' ]
+		});
+		items.push(v);
+
+		v = new Ext.form.NumberField({
+			fieldLabel: 'EN50494 SCR#',
+			name: 'uni_scr',
+			minValue: 0,
+			maxValue: 7
+		});
+		items.push(v);
+
+		v = new Ext.form.NumberField({
+			fieldLabel: 'EN50494 Frequency',
+			name: 'uni_qrg',
+			minValue: 0,
+			maxValue: 2500
+		});
+		items.push(v);
+
+		v = new Ext.form.NumberField({
+			fieldLabel: 'EN50494 PIN',
+			name: 'uni_pin',
+			value    : -1,
+			minValue : -1,
+			maxValue : 255
 		});
 		items.push(v);
 

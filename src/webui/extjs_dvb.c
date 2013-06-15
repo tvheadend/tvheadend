@@ -162,11 +162,15 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "grace_period", tda->tda_grace_period);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
-				       "DiSEqC 1.1 / 2.1"})
-		   [tda->tda_diseqc_version % 2]);
+				       "DiSEqC 1.1 / 2.1",
+				       "EN50494 SCR / Unicable"})
+		   [tda->tda_diseqc_version % 3]);
     htsmsg_add_str(r, "diseqcrepeats",
 		   ((const char *[]){"0", "1", "3"})
 		   [tda->tda_diseqc_repeats % 3]);
+    htsmsg_add_s32(r, "uni_scr", tda->tda_uni_scr);
+    htsmsg_add_s32(r, "uni_qrg", tda->tda_uni_qrg);
+    htsmsg_add_s32(r, "uni_pin", tda->tda_uni_pin);
     htsmsg_add_u32(r, "extrapriority", tda->tda_extrapriority);
  
     out = json_single_record(r, "dvbadapters");
@@ -219,6 +223,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 	dvb_adapter_set_diseqc_version(tda, 0);
       else if(!strcmp(s, "DiSEqC 1.1 / 2.1"))
 	dvb_adapter_set_diseqc_version(tda, 1);
+      else if(!strcmp(s, "EN50494 SCR / Unicable"))
+	dvb_adapter_set_diseqc_version(tda, 2);
     }
 
     if((s = http_arg_get(&hc->hc_req_args, "diseqcrepeats")) != NULL) {
@@ -231,6 +237,13 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     }
     if((s = http_arg_get(&hc->hc_req_args, "extrapriority")) != NULL)
       dvb_adapter_set_extrapriority(tda, atoi(s));
+
+    if((s = http_arg_get(&hc->hc_req_args, "uni_scr")) != NULL)
+      dvb_adapter_set_uni_scr(tda, atoi(s));
+    if((s = http_arg_get(&hc->hc_req_args, "uni_qrg")) != NULL)
+      dvb_adapter_set_uni_qrg(tda, atoi(s));
+    if((s = http_arg_get(&hc->hc_req_args, "uni_pin")) != NULL)
+      dvb_adapter_set_uni_pin(tda, atoi(s));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
