@@ -179,7 +179,7 @@ mpegts_input_stopped_mux
   char buf[256];
   service_t *s, *t;
   mmi->mmi_mux->mm_active = NULL;
-  LIST_REMOVE(mmi, mmi_mux_link);
+  LIST_REMOVE(mmi, mmi_active_link);
 
   mi->mi_display_name(mi, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - flush subscribers", buf);

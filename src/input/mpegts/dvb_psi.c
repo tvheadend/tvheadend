@@ -94,7 +94,7 @@ dvb_desc_sat_del
 
   memset(&dmc, 0, sizeof(dmc));
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
-  dmc.dmc_fe_params.frequency = frequency * 10;
+  dmc.dmc_fe_params.frequency = frequency;
   dmc.dmc_fe_orbital_pos      = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
   dmc.dmc_fe_orbital_dir      = (ptr[6] & 0x80) ? 'E' : 'W';
   dmc.dmc_fe_polarisation     = (ptr[6] >> 5) & 0x03;
