@@ -336,6 +336,23 @@ mpegts_input_table_thread ( void *aux )
   return NULL;
 }
 
+void
+mpegts_input_flush_mux
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  mpegts_table_feed_t *mtf, *next;
+
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  mtf = TAILQ_FIRST(&mi->mi_table_feed);
+  while (mtf) {
+    next = TAILQ_NEXT(mtf, mtf_link);
+    if (mtf->mtf_mux == mm)
+      TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
+    mtf  = next;
+  }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+}
+
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/

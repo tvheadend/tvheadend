@@ -262,7 +262,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
 {
   char buf[256];
   mpegts_mux_instance_t *mmi = mm->mm_active;
-  mpegts_input_t *mi;
+  mpegts_input_t *mi = NULL;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhdebug("mpegts", "%s - stopping mux", buf);
@@ -276,6 +276,10 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
   /* Flush all tables */
   tvhtrace("mpegts", "%s - flush tables", buf);
   mpegts_table_flush_all(mm);
+
+  /* Flush table data queue */
+  if (mi)
+    mpegts_input_flush_mux(mi, mm);
 
   /* Alert listeners */
   // TODO

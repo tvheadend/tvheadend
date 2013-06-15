@@ -487,6 +487,8 @@ int mpegts_input_current_weight ( mpegts_input_t *mi );
 
 void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
 
+void mpegts_input_flush_mux ( mpegts_input_t *mi, mpegts_mux_t *mm );
+
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
 void mpegts_table_release
