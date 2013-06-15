@@ -19,6 +19,7 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
+#include "diseqc.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -33,7 +34,7 @@
  * Class definition
  * *************************************************************************/
 
-extern const idclass_t linuxdvb_hardware_class;
+extern const idclass_t mpegts_input_class;
 
 static const char*
 linuxdvb_satconf_class_network_get(void *o)
@@ -47,19 +48,21 @@ linuxdvb_satconf_class_network_get(void *o)
 static int
 linuxdvb_satconf_class_network_set(void *o, const char *s)
 {
+  extern const idclass_t linuxdvb_network_class;
   mpegts_input_t   *mi = o;
   mpegts_network_t *mn = mi->mi_network;
-  linuxdvb_network_t *ln = (linuxdvb_network_t*)mn;
 
   if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
     return 0;
 
-  if (ln->ln_type != FE_QPSK) {
+  mn = s ? idnode_find(s, &linuxdvb_network_class) : NULL;
+
+  if (mn && ((linuxdvb_network_t*)mn)->ln_type != FE_QPSK) {
     tvherror("linuxdvb", "attempt to set network of wrong type");
     return 0;
   }
 
-  mpegts_input_set_network(mi, s ? mpegts_network_find(s) : NULL);
+  mpegts_input_set_network(mi, mn);
   return 1;
 }
 
@@ -130,7 +133,7 @@ linuxdvb_satconf_class_frontend_enum (void *o)
 
 const idclass_t linuxdvb_satconf_class =
 {
-  .ic_super      = &linuxdvb_hardware_class,
+  .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = "Linux DVB Satconf",
   //.ic_get_title  = linuxdvb_satconf_class_get_title,
@@ -164,7 +167,7 @@ static void
 linuxdvb_satconf_display_name ( mpegts_input_t* mi, char *buf, size_t len )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  ls->mi_display_name(ls->ls_frontend, buf, len);
+  ls->ls_frontend->mi_display_name(ls->ls_frontend, buf, len);
 }
 
 static const idclass_t *
@@ -192,7 +195,8 @@ static int
 linuxdvb_satconf_is_free ( mpegts_input_t *mi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  return ls->ls_frontend->mi_is_free(ls->ls_frontend);
+  int r = ls->ls_frontend->mi_is_free(ls->ls_frontend);
+  return r;
 }
 
 static int
@@ -218,7 +222,7 @@ linuxdvb_satconf_start_mux
   uint32_t f;
   linuxdvb_satconf_t   *ls = (linuxdvb_satconf_t*)mi;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)(mi = ls->ls_frontend);
-  linuxdvb_mux_t      *lm  = (linuxdvb_mux_t*)mmi;
+  linuxdvb_mux_t      *lm  = (linuxdvb_mux_t*)mmi->mmi_mux;
 
   /* Test run */
   // Note: basically this ensures the tuning params are acceptable
@@ -227,9 +231,9 @@ linuxdvb_satconf_start_mux
   if (!ls->ls_lnb)
     return SM_CODE_TUNING_FAILED;
   f = ls->ls_lnb->lnb_frequency(ls->ls_lnb, lm);
-  if (f < 0)
+  if (f == (uint32_t)-1)
     return SM_CODE_TUNING_FAILED;
-  r = linuxdvb_frontend_tune(lfe, lm, f);
+  r = linuxdvb_frontend_tune0(lfe, mmi, f);
   if (r) return r;
   
   /* Switch */
@@ -241,7 +245,7 @@ linuxdvb_satconf_start_mux
     return SM_CODE_TUNING_FAILED;
 
   /* Tune */
-  return mi->mi_start_mux(mi, mmi);
+  return linuxdvb_frontend_tune1(lfe, mmi, f);
 }
 
 static void
@@ -261,16 +265,52 @@ linuxdvb_satconf_close_service
 }
 
 static void
-linuxdvb_satconf_create_mux_instance
-  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+linuxdvb_satconf_started_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  ls->ls_frontend->mi_create_mux_instance(ls->ls_frontend, mm);
+  ls->ls_frontend->mi_started_mux(ls->ls_frontend, mmi);
+}
+
+static void
+linuxdvb_satconf_stopped_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  ls->ls_frontend->mi_stopped_mux(ls->ls_frontend, mmi);
+}
+
+static int
+linuxdvb_satconf_open_pid
+  ( linuxdvb_frontend_t *lfe, int pid, const char *name )
+{
+  linuxdvb_satconf_t  *ls  = (linuxdvb_satconf_t*)lfe;
+  lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
+  return lfe->lfe_open_pid(lfe, pid, name);
 }
 
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/
+
+static uint32_t uni_freq
+  ( linuxdvb_lnb_t *lnb, linuxdvb_mux_t *lm )
+{
+  dvb_mux_conf_t *dmc = &lm->lm_tuning;
+  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
+  if (p->frequency > 11700000)
+    return abs(p->frequency - 10600000);
+  else
+    return abs(p->frequency - 9750000);
+}
+
+static int uni_tune
+  ( linuxdvb_lnb_t *lnb, linuxdvb_mux_t *lm, int fd )
+{
+  dvb_mux_conf_t *dmc = &lm->lm_tuning;
+  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
+  return diseqc_setup(fd, 0, 0, p->frequency > 11700000, 0, 0);
+}
  
 linuxdvb_satconf_t *
 linuxdvb_satconf_create0
@@ -289,7 +329,14 @@ linuxdvb_satconf_create0
   ls->mi_close_service       = linuxdvb_satconf_close_service;
   ls->mi_network_class       = linuxdvb_satconf_network_class;
   ls->mi_network_create      = linuxdvb_satconf_network_create;
-  ls->mi_create_mux_instance = linuxdvb_satconf_create_mux_instance;
+  ls->mi_started_mux         = linuxdvb_satconf_started_mux;
+  ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
+  ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
+
+  /* Unoversal LMB */
+  ls->ls_lnb = calloc(1, sizeof(linuxdvb_lnb_t));
+  ls->ls_lnb->lnb_frequency = uni_freq;
+  ls->ls_lnb->lnb_tune      = uni_tune;
 
   return ls;
 }

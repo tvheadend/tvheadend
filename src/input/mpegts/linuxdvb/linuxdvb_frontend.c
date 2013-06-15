@@ -257,7 +257,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
 static void
 linuxdvb_frontend_display_name ( mpegts_input_t* mi, char *buf, size_t len )
 {
-  strncpy(buf, linuxdvb_frontend_class_get_title(&mi->mi_id), len);
+  strncpy(buf, linuxdvb_frontend_class_get_title(&mi->mi_id) ?: "", len);
 }
 
 #if 0
@@ -312,55 +312,7 @@ static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  int r;
-  char buf1[256], buf2[256];
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  mpegts_mux_instance_t *cur = LIST_FIRST(&mi->mi_mux_active);
-
-  mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
-
-  // Not sure if this is right place?
-  /* Currently active */
-  if (cur != NULL) {
-
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux);
-  }
-  assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
-
-  /* Open FE */
-  if (lfe->lfe_fe_fd <= 0) {
-    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
-    if (lfe->lfe_fe_fd <= 0) {
-      return SM_CODE_TUNING_FAILED;
-    }
-  }
-
-  /* Tune */
-  tvhtrace("linuxdvb", "%s - tuning", buf1);
-  r = linuxdvb_frontend_tune(lfe, (linuxdvb_mux_t*)mmi->mmi_mux, -1);
-
-  /* Failed */
-  if (r != 0) {
-    tvherror("linuxdvb", "%s - failed to tune [e=%s]", buf1, strerror(errno));
-    if (errno == EINVAL)
-      mmi->mmi_tune_failed = 1;
-    return SM_CODE_TUNING_FAILED;
-  }
-
-  /* Start monitor */
-  time(&lfe->lfe_monitor);
-  lfe->lfe_monitor += 4;
-  gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
-  
-  return r;
+  return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
 }
 
 static int
@@ -512,7 +464,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if (!mmi) return;
   mm = mmi->mmi_mux;
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
-  tvhdebug("linuxdvb", "%s - checking FE status", buf);
+  tvhtrace("linuxdvb", "%s - checking FE status", buf);
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -529,6 +481,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Set default period */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
+  tvhtrace("linuxdvb", "%s - starus %d", buf, status);
 
   /* Waiting for lock */
   if (!lfe->lfe_locked) {
@@ -665,11 +618,37 @@ linuxdvb_frontend_input_thread ( void *aux )
  * *************************************************************************/
 
 int
-linuxdvb_frontend_tune
-  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm, uint32_t freq )
+linuxdvb_frontend_tune0
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
 {
   int r;
   struct dvb_frontend_event ev;
+  char buf1[256];
+  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
+  linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mmi->mmi_mux;
+
+  // Not sure if this is right place?
+  /* Currently active */
+  if (cur != NULL) {
+
+    /* Already tuned */
+    if (mmi == cur)
+      return 0;
+
+    /* Stop current */
+    cur->mmi_mux->mm_stop(cur->mmi_mux);
+  }
+  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
+
+  /* Open FE */
+  if (lfe->lfe_fe_fd <= 0) {
+    lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
+    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
+    if (lfe->lfe_fe_fd <= 0) {
+      return SM_CODE_TUNING_FAILED;
+    }
+  }
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
@@ -753,6 +732,37 @@ linuxdvb_frontend_tune
   r = ioctl(lfe->lfe_fe_fd, FE_SET_FRONTEND, p);
 #endif
 
+  /* Failed */
+  if (r != 0) {
+    tvherror("linuxdvb", "%s - failed to tune [e=%s]", buf1, strerror(errno));
+    if (errno == EINVAL)
+      mmi->mmi_tune_failed = 1;
+    return SM_CODE_TUNING_FAILED;
+  }
+
+  return r;
+}
+
+int
+linuxdvb_frontend_tune1
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
+{
+  int r;
+  char buf1[256], buf2[256];
+
+  lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
+  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
+
+  /* Tune */
+  tvhtrace("linuxdvb", "%s - tuning", buf1);
+  r = linuxdvb_frontend_tune0(lfe, mmi, freq);
+
+  /* Start monitor */
+  time(&lfe->lfe_monitor);
+  lfe->lfe_monitor += 4;
+  gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+  
   return r;
 }
 
@@ -802,9 +812,9 @@ linuxdvb_frontend_create0
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
   lfe->mi_open_service   = linuxdvb_frontend_open_service;
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
-  lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
   lfe->mi_network_class  = linuxdvb_frontend_network_class;
   lfe->mi_network_create = linuxdvb_frontend_network_create;
+  lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
 
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;

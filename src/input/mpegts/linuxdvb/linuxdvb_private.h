@@ -171,8 +171,10 @@ linuxdvb_frontend_added
 void linuxdvb_frontend_add_network
   ( linuxdvb_frontend_t *lfe, linuxdvb_network_t *net );
 
-int linuxdvb_frontend_tune
-  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm, uint32_t freq );
+int linuxdvb_frontend_tune0
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
+int linuxdvb_frontend_tune1
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 
 /*
  * Network
@@ -233,7 +235,7 @@ struct linuxdvb_lnb
  */
 struct linuxdvb_satconf
 {
-  mpegts_input_t;
+  linuxdvb_frontend_t;
 
   /* Links */
   mpegts_input_t *ls_frontend;
