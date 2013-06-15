@@ -78,9 +78,7 @@ mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
 
   /* Start */
   tvhdebug("mpegts", "%s - started", buf);
-  LIST_INSERT_HEAD(&mmi->mmi_input->mi_mux_active, mmi,
-                    mmi_active_link);
-  mm->mm_active = mmi;
+  mmi->mmi_input->mi_started_mux(mmi->mmi_input, mmi);
 
   /* Initial scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
@@ -263,7 +261,6 @@ static void
 mpegts_mux_stop ( mpegts_mux_t *mm )
 {
   char buf[256];
-  service_t *s, *t;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi;
 
@@ -273,19 +270,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
   if (mmi) {
     mi = mmi->mmi_input;
     mi->mi_stop_mux(mi, mmi);
-    mm->mm_active = NULL;
-    LIST_REMOVE(mmi, mmi_active_link);
-
-    /* Flush all subscribers */
-    tvhtrace("mpegts", "%s - flush subscribers", buf);
-    s = LIST_FIRST(&mi->mi_transports);
-    while (s) {
-      t = s;
-      s = LIST_NEXT(t, s_active_link);
-      if (((mpegts_service_t*)s)->s_dvb_mux != mm)
-        continue;
-      service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-    }
+    mi->mi_stopped_mux(mi, mmi);
   }
 
   /* Flush all tables */

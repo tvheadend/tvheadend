@@ -164,6 +164,35 @@ mpegts_input_create_mux_instance
     (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
 }
 
+static void
+mpegts_input_started_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  mmi->mmi_mux->mm_active = mmi;
+  LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
+}
+
+static void
+mpegts_input_stopped_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  char buf[256];
+  service_t *s, *t;
+  mmi->mmi_mux->mm_active = NULL;
+  LIST_REMOVE(mmi, mmi_mux_link);
+
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  tvhtrace("mpegts", "%s - flush subscribers", buf);
+  s = LIST_FIRST(&mi->mi_transports);
+  while (s) {
+    t = s;
+    s = LIST_NEXT(t, s_active_link);
+    if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux)
+      continue;
+    service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+  }
+}
+
 /* **************************************************************************
  * Data processing
  * *************************************************************************/
@@ -177,7 +206,7 @@ mpegts_input_recv_packets
   int len = l;
   int i = 0, table_wakeup = 0;
   mpegts_mux_t *mm = mmi->mmi_mux;
-  assert(mmi->mmi_input == mi);
+  //assert(mmi->mmi_input == mi);
   assert(mm != NULL);
   assert(name != NULL);
 
@@ -335,6 +364,8 @@ mpegts_input_create0
   mi->mi_network_class        = mpegts_input_network_class;
   mi->mi_network_create       = mpegts_input_network_create;
   mi->mi_create_mux_instance  = mpegts_input_create_mux_instance;
+  mi->mi_started_mux          = mpegts_input_started_mux;
+  mi->mi_stopped_mux          = mpegts_input_stopped_mux;
 
   /* Index */
   mi->mi_instance       = ++mpegts_input_idx;

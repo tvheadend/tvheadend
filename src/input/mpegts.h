@@ -395,6 +395,8 @@ struct mpegts_input
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
   mpegts_network_t *(*mi_network_create) (mpegts_input_t *mi, htsmsg_t *c);
+  void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
+  void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
 };
 
 #endif /* __TVH_MPEGTS_H__ */
