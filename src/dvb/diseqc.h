@@ -17,4 +17,6 @@ int diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
                   uint32_t version, uint32_t repeats);
 int diseqc_voltage_off(int fe_fd);
 
+int en50494_setup(int fe_fd, int lnb_num, int voltage, int band, int freq,
+                  int uni_scr, int uni_qrg, int uni_pin);
 #endif
