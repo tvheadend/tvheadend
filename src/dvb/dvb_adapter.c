@@ -124,6 +124,9 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
   htsmsg_add_s32(m, "full_mux_rx", tda->tda_full_mux_rx);
   htsmsg_add_u32(m, "grace_period", tda->tda_grace_period);
+  htsmsg_add_s32(m, "uni_scr", tda->tda_uni_scr);
+  htsmsg_add_s32(m, "uni_qrg", tda->tda_uni_qrg);
+  htsmsg_add_s32(m, "uni_pin", tda->tda_uni_pin);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -351,8 +354,8 @@ dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid)
 void
 dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
 {
-  if(v > 1)
-    v = 1;
+  if(v > 2)
+    v = 2;
 
   if(tda->tda_diseqc_version == v)
     return;
@@ -360,7 +363,7 @@ dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
   lock_assert(&global_lock);
 
   tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" DiSEqC version set to: %s",
-	 tda->tda_displayname, v ? "1.1 / 2.1" : "1.0 / 2.0" );
+	 tda->tda_displayname, v==0 ? "1.1 / 2.1" : v==1 ? "1.0 / 2.0" : "EN50494" );
 
   tda->tda_diseqc_version = v;
   tda_save(tda);
@@ -396,6 +399,60 @@ dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
          tda->tda_displayname, tda->tda_extrapriority, extrapriority);
 
   tda->tda_extrapriority = extrapriority;
+  tda_save(tda);
+}
+
+/**
+ *
+ */
+void
+dvb_adapter_set_uni_scr(th_dvb_adapter_t *tda, int scr)
+{
+  lock_assert(&global_lock);
+
+  if(tda->tda_uni_scr == scr)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" uni_scr \"%d\" changed to \"%d\"",
+         tda->tda_displayname, tda->tda_uni_scr, scr);
+
+  tda->tda_uni_scr = scr;
+  tda_save(tda);
+}
+
+/**
+ *
+ */
+void
+dvb_adapter_set_uni_qrg(th_dvb_adapter_t *tda, int qrg)
+{
+  lock_assert(&global_lock);
+
+  if(tda->tda_uni_qrg == qrg)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" uni_qrg \"%d\" changed to \"%d\"",
+         tda->tda_displayname, tda->tda_uni_qrg, qrg);
+
+  tda->tda_uni_qrg = qrg;
+  tda_save(tda);
+}
+
+/**
+ *
+ */
+void
+dvb_adapter_set_uni_pin(th_dvb_adapter_t *tda, int pin)
+{
+  lock_assert(&global_lock);
+
+  if(tda->tda_uni_pin == pin)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" uni_pin \"%d\" changed to \"%d\"",
+         tda->tda_displayname, tda->tda_uni_pin, pin);
+
+  tda->tda_uni_pin = pin;
   tda_save(tda);
 }
 
@@ -591,6 +648,7 @@ tda_add(int adapter_num)
     tda->tda_type          = fe_info.type;
     tda->tda_autodiscovery = tda->tda_type != FE_QPSK;
     tda->tda_idlescan      = 1;
+    tda->tda_uni_pin       = -1;
     tda->tda_sat           = tda->tda_type == FE_QPSK;
     tda->tda_displayname   = strdup(fe_info.name);
     tda->tda_fe_info       = malloc(sizeof(struct dvb_frontend_info));
@@ -828,6 +886,10 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       if (htsmsg_get_s32(c, "full_mux_rx", &tda->tda_full_mux_rx))
         if (!htsmsg_get_u32(c, "disable_full_mux_rx", &u32) && u32)
           tda->tda_full_mux_rx = 0;
+      htsmsg_get_s32(c, "uni_scr", &tda->tda_uni_scr);
+      htsmsg_get_s32(c, "uni_qrg", &tda->tda_uni_qrg);
+      if (htsmsg_get_s32(c, "uni_pin", &tda->tda_uni_pin))
+        tda->tda_uni_pin = -1;
     }
     htsmsg_destroy(l);
   }
