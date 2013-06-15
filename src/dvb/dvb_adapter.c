@@ -1444,6 +1444,11 @@ dvb_adapter_poweroff(th_dvb_adapter_t *tda)
   lock_assert(&global_lock);
   if (!tda->tda_poweroff || tda->tda_type != FE_QPSK)
     return;
+  if (tda->tda_diseqc_version == 2) { /* unicable */
+    tvhlog(LOG_DEBUG, "dvb", "switching off EN50494 SCR#%d", tda->tda_uni_scr);
+    en50494_setup(tda->tda_fe_fd, 2, 0, 0, 0,
+                  tda->tda_uni_scr, tda->tda_uni_qrg, tda->tda_uni_pin);
+  }
   diseqc_voltage_off(tda->tda_fe_fd);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" is off", tda->tda_rootpath);
 }
