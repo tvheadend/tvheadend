@@ -19,6 +19,8 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
+#include "notify.h"
+#include "atomic.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -445,8 +447,36 @@ linuxdvb_frontend_open_services ( linuxdvb_frontend_t *lfe )
 }
 
 static void
-linuxdvb_frontend_monitor_stats ( linuxdvb_frontend_t *lfe )
+linuxdvb_frontend_monitor_stats ( linuxdvb_frontend_t *lfe, const char *name )
 {
+  int bw;
+  htsmsg_t *m, *l, *e;
+  mpegts_mux_instance_t *mmi;
+
+  /* Send message */
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->mi_id));
+  htsmsg_add_str(m, "name", name);
+  htsmsg_add_str(m, "type", "linuxdvb");
+  
+  /* Mux list */
+  if ((mmi = LIST_FIRST(&lfe->mi_mux_active))) {
+    char buf[256];
+    l = htsmsg_create_list();
+    e = htsmsg_create_map();
+    mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf, sizeof(buf));
+    htsmsg_add_str(e, "name", buf);
+    htsmsg_add_u32(e, "bytes", 0); // TODO 
+    // TODO: signal info
+    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_msg(m, "muxes", l);
+  }
+
+  /* Total data */
+  bw = atomic_exchange(&lfe->mi_bytes, 0);
+  htsmsg_add_u32(m, "bytes", bw);
+
+  notify_by_msg("input", m);
 }
 
 static void
@@ -459,17 +489,24 @@ linuxdvb_frontend_monitor ( void *aux )
   fe_status_t fe_status;
   signal_state_t status;
 
-  // TODO: check the frontend is accessible
-
-  if (!mmi) return;
-  mm = mmi->mmi_mux;
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   tvhtrace("linuxdvb", "%s - checking FE status", buf);
+
+  /* Check accessibility */
+  if (lfe->lfe_fe_fd <= 0) {
+    if (lfe->lfe_fe_path && access(lfe->lfe_fe_path, R_OK | W_OK)) {
+      tvherror("linuxdvb", "%s - device is not accessible", buf);
+      // TODO: disable device
+      return;
+    }
+  }
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
     tvhwarn("linuxdvb", "%s - FE_READ_STATUS error %s", buf, strerror(errno));
-    status = SIGNAL_UNKNOWN;
+    /* TODO: check error value */
+    return;
+
   } else if (fe_status & FE_HAS_LOCK)
     status = SIGNAL_GOOD;
   else if (fe_status & (FE_HAS_SYNC | FE_HAS_VITERBI | FE_HAS_CARRIER))
@@ -482,6 +519,10 @@ linuxdvb_frontend_monitor ( void *aux )
   /* Set default period */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
   tvhtrace("linuxdvb", "%s - starus %d", buf, status);
+
+  /* Get current mux */
+  if (!mmi) return;
+  mm = mmi->mmi_mux;
 
   /* Waiting for lock */
   if (!lfe->lfe_locked) {
@@ -518,7 +559,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Monitor stats */
-  linuxdvb_frontend_monitor_stats(lfe);
+  linuxdvb_frontend_monitor_stats(lfe, buf);
 }
 
 static void *
