@@ -168,7 +168,7 @@ mpegts_service_start(service_t *t, int instance)
   if (!r) {
 
     /* Open service */
-    mmi->mmi_input->mi_open_service(mmi->mmi_input, s);
+    mmi->mmi_input->mi_open_service(mmi->mmi_input, s, 1);
   }
 
   return r;
@@ -208,7 +208,7 @@ mpegts_service_refresh(service_t *t)
   lock_assert(&global_lock);
 
   /* Re-open */
-  i->mi_open_service(i, s);
+  i->mi_open_service(i, s, 0);
 }
 
 /*

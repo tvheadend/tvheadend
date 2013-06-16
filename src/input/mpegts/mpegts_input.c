@@ -143,15 +143,12 @@ mpegts_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 }
 
 void
-mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s )
+mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 {
+  if (!init) return;
   pthread_mutex_lock(&mi->mi_delivery_mutex);
-  if (s->s_dvb_active_input == NULL) {
-    LIST_INSERT_HEAD(&mi->mi_transports, ((service_t*)s), s_active_link);
-    s->s_dvb_active_input = mi;
-  } else {
-    assert(mi == s->s_dvb_active_input);
-  }
+  LIST_INSERT_HEAD(&mi->mi_transports, ((service_t*)s), s_active_link);
+  s->s_dvb_active_input = mi;
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 

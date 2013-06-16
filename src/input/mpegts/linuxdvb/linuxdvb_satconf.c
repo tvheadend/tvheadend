@@ -250,10 +250,10 @@ linuxdvb_satconf_start_mux
 
 static void
 linuxdvb_satconf_open_service
-  ( mpegts_input_t *mi, mpegts_service_t *s )
+  ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  ls->ls_frontend->mi_open_service(ls->ls_frontend, s);
+  ls->ls_frontend->mi_open_service(ls->ls_frontend, s, init);
 }
 
 static void

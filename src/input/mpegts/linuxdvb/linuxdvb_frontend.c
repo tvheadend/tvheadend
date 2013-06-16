@@ -356,7 +356,7 @@ linuxdvb_frontend_open_pid
 
 static void
 linuxdvb_frontend_open_service
-  ( mpegts_input_t *mi, mpegts_service_t *s )
+  ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 {
   char buf[256];
   elementary_stream_t *st;
@@ -380,7 +380,7 @@ linuxdvb_frontend_open_service
   }
 
 exit:
-  mpegts_input_open_service(mi, s);
+  mpegts_input_open_service(mi, s, init);
 }
 
 static void
@@ -447,7 +447,7 @@ linuxdvb_frontend_open_services ( linuxdvb_frontend_t *lfe )
   service_t *s;
   LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
     linuxdvb_frontend_open_service((mpegts_input_t*)lfe,
-                                   (mpegts_service_t*)s);
+                                   (mpegts_service_t*)s, 0);
   }
 }
 

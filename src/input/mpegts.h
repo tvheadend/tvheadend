@@ -390,7 +390,7 @@ struct mpegts_input
   int  (*mi_current_weight) (mpegts_input_t*);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
-  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
+  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
@@ -425,7 +425,7 @@ mpegts_input_t *mpegts_input_create0
 
 void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
 
-void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s );
+void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
                  
 mpegts_network_t *mpegts_network_create0
