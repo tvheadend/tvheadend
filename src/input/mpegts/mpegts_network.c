@@ -33,6 +33,36 @@ mpegts_network_class_save
     mn->mn_config_save(mn);
 }
 
+static const void *
+mpegts_network_class_get_num_mux ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm;
+  mpegts_network_t *mn = ptr;
+
+  n = 0;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    n++;
+
+  return &n;
+}
+
+static const void *
+mpegts_network_class_get_num_svc ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm;
+  mpegts_service_t *s;
+  mpegts_network_t *mn = ptr;
+
+  n = 0;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+      n++;
+
+  return &n;
+}
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
@@ -62,6 +92,20 @@ const idclass_t mpegts_network_class =
       .id       = "skipinitscan",
       .name     = "Skip Initial Scan",
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "num_mux",
+      .name     = "# Muxes",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_network_class_get_num_mux,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "num_svc",
+      .name     = "# Services",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_network_class_get_num_svc,
     },
     {}
   }

@@ -106,6 +106,20 @@ mpegts_mux_class_save ( idnode_t *self )
   mm->mm_config_save(mm);
 }
 
+static const void *
+mpegts_mux_class_get_num_svc ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm = ptr;
+  mpegts_service_t *s;
+
+  n = 0;
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    n++;
+
+  return &n;
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -145,6 +159,13 @@ const idclass_t mpegts_mux_class =
       .name     = "Initial Scan Complete",
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_initial_scan_done),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "num_svc",
+      .name     = "# Services",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_mux_class_get_num_svc,
     },
     {}
   }
