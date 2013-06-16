@@ -29,4 +29,7 @@ void linuxdvb_init ( int adapter_mask )
 
   /* Initialsie devices */
   linuxdvb_device_init(adapter_mask);
+
+  /* Initialise satconfs */
+  linuxdvb_satconf_init();
 }

@@ -242,6 +242,8 @@ struct linuxdvb_satconf
   linuxdvb_lnb_t *ls_lnb;
 };
 
+void linuxdvb_satconf_init ( void );
+
 linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

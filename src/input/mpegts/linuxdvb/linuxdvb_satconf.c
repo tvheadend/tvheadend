@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "diseqc.h"
+#include "settings.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -131,13 +132,23 @@ linuxdvb_satconf_class_frontend_enum (void *o)
   return m;
 }
 
+static void
+linuxdvb_satconf_class_save ( idnode_t *in )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  idnode_save(in, m);
+  hts_settings_save(m, "input/linuxdvb/satconfs/%s",
+                    idnode_uuid_as_str(in));
+  htsmsg_destroy(m);
+}
+
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = "Linux DVB Satconf",
   //.ic_get_title  = linuxdvb_satconf_class_get_title,
-  //.ic_save       = linuxdvb_satconf_class_save,
+  .ic_save       = linuxdvb_satconf_class_save,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -350,14 +361,17 @@ linuxdvb_satconf_create0
   return ls;
 }
 
-#if 0
-void
-linuxdvb_satconf_save ( linuxdvb_satconf_t *lfe, htsmsg_t *m )
+void linuxdvb_satconf_init ( void )
 {
-  //mpegts_input_save((mpegts_input_t*)lfe, m);
- // htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_info.type));
+  htsmsg_t *s, *e;
+  htsmsg_field_t *f;
+  if ((s = hts_settings_load_r(1, "input/linuxdvb/satconfs"))) {
+    HTSMSG_FOREACH(f, s) {
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      (void)linuxdvb_satconf_create0(f->hmf_name, e);
+    }
+  }
 }
-#endif
 
 /******************************************************************************
  * Editor Configuration

@@ -227,6 +227,7 @@ extjs_linuxdvb_satconf
     htsmsg_t *list = idclass_serialize(&linuxdvb_satconf_class);
     htsmsg_add_msg(out, "entries", list);
   } else if (!strcmp(op, "create")) {
+    idnode_t *in;
     htsmsg_t *conf = NULL;
     const char *c;
     if ((c = http_arg_get(&hc->hc_req_args, "conf")))
@@ -234,7 +235,8 @@ extjs_linuxdvb_satconf
     if (!conf)
       return HTTP_STATUS_BAD_REQUEST;
     pthread_mutex_lock(&global_lock);
-    linuxdvb_satconf_create0(NULL, conf);
+    in = (idnode_t*)linuxdvb_satconf_create0(NULL, conf);
+    if (in) in->in_class->ic_save(in);
     pthread_mutex_unlock(&global_lock);
   }
 
