@@ -523,7 +523,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Set default period */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
-  tvhtrace("linuxdvb", "%s - starus %d", buf, status);
+  tvhtrace("linuxdvb", "%s - status %d", buf, status);
 
   /* Get current mux */
   if (!mmi) return;
