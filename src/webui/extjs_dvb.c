@@ -119,7 +119,7 @@ extjs_idnode_grid
   for (i = conf->start; i < ins->is_count && conf->limit != 0; i++) {
     htsmsg_t *e = htsmsg_create_map();
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins->is_array[i]));
-    idnode_save(ins->is_array[i], e);
+    idnode_read0(ins->is_array[i], e, 0);
     htsmsg_add_msg(list, NULL, e);
     if (conf->limit > 0) conf->limit--;
   }
