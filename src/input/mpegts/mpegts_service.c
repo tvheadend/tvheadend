@@ -121,6 +121,10 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
 
   assert(s->s_source_type == S_MPEG_TS);
 
+  /* Create instances */
+  m->mm_create_instances(m);
+
+  /* Enlist available */
   LIST_FOREACH(mmi, &m->mm_instances, mmi_mux_link) {
     if (mmi->mmi_tune_failed)
       continue;
@@ -163,12 +167,6 @@ mpegts_service_start(service_t *t, int instance)
   /* Start */
   if (!r) {
 
-    /* Add to active set */
-    pthread_mutex_lock(&mmi->mmi_input->mi_delivery_mutex);
-    LIST_INSERT_HEAD(&mmi->mmi_input->mi_transports, t, s_active_link);
-    s->s_dvb_active_input = mmi->mmi_input;
-    pthread_mutex_unlock(&mmi->mmi_input->mi_delivery_mutex);
-
     /* Open service */
     mmi->mmi_input->mi_open_service(mmi->mmi_input, s);
   }
@@ -189,12 +187,6 @@ mpegts_service_stop(service_t *t)
   assert(s->s_source_type == S_MPEG_TS);
   assert(i != NULL);
   lock_assert(&global_lock);
-
-  /* Remove */
-  pthread_mutex_lock(&i->mi_delivery_mutex);
-  LIST_REMOVE(t, s_active_link);
-  s->s_dvb_active_input = NULL;
-  pthread_mutex_unlock(&i->mi_delivery_mutex);
 
   /* Stop */
   i->mi_close_service(i, s);

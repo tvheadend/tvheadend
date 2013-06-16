@@ -226,7 +226,7 @@ int
 service_start(service_t *t, int instance)
 {
   elementary_stream_t *st;
-  int r, timeout = 2;
+  int r, timeout = 10;
 
   lock_assert(&global_lock);
 

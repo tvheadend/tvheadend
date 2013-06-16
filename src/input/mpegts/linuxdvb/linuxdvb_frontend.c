@@ -363,8 +363,7 @@ linuxdvb_frontend_open_service
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
   /* Ignore in full rx mode OR if not yet locked */
-  if (lfe->lfe_fullmux || !lfe->lfe_locked)
-    return;
+  if (!lfe->lfe_locked || lfe->lfe_fullmux) goto exit;
   mi->mi_display_name(mi, buf, sizeof(buf));
   
   /* Install PES filters */
@@ -379,6 +378,9 @@ linuxdvb_frontend_open_service
     st->es_demuxer_fd
       = linuxdvb_frontend_open_pid((linuxdvb_frontend_t*)mi, st->es_pid, buf);
   }
+
+exit:
+  mpegts_input_open_service(mi, s);
 }
 
 static void
@@ -388,8 +390,10 @@ linuxdvb_frontend_close_service
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
   /* Ignore in full rx mode OR if not yet locked */
-  if (lfe->lfe_fullmux || !lfe->lfe_locked)
-    return;
+  if (!lfe->lfe_locked || lfe->lfe_fullmux) goto exit;
+
+exit:
+  mpegts_input_close_service(mi, s);
 }
 
 /* **************************************************************************
@@ -441,9 +445,10 @@ static void
 linuxdvb_frontend_open_services ( linuxdvb_frontend_t *lfe )
 {
   service_t *s;
-  LIST_FOREACH(s, &lfe->mi_transports, s_active_link)
+  LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
     linuxdvb_frontend_open_service((mpegts_input_t*)lfe,
                                    (mpegts_service_t*)s);
+  }
 }
 
 static void

@@ -424,6 +424,9 @@ mpegts_input_t *mpegts_input_create0
                        &mpegts_input_class, u, c)
 
 void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
+
+void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s );
+void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
                  
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
