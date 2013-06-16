@@ -30,16 +30,15 @@
  * Class definition
  * *************************************************************************/
 
-static const char *
+static const void *
 mpegts_input_class_get_name ( void *in )
 {
-  static char buf[256];
+  static char buf[256], *s = buf;
   mpegts_input_t *mi = in;
+  *buf = 0;
   if (mi->mi_display_name)
     mi->mi_display_name(mi, buf, sizeof(buf));
-  else
-    *buf = 0;
-  return buf;
+  return &s;
 }
 
 const idclass_t mpegts_input_class =
@@ -58,7 +57,7 @@ const idclass_t mpegts_input_class =
       .id       = "displayname",
       .name     = "Name",
       .opts     = PO_NOSAVE | PO_RDONLY,
-      .str_get  = mpegts_input_class_get_name,
+      .get      = mpegts_input_class_get_name,
     },
     {}
   }

@@ -36,17 +36,20 @@
 
 extern const idclass_t mpegts_network_class;
 
-static const char *
+static const void *
 mpegts_network_class_get_lntype
   ( void * ptr )
 {
-  return dvb_type2str(((linuxdvb_network_t*)ptr)->ln_type);
+  static const char *s;
+  s = dvb_type2str(((linuxdvb_network_t*)ptr)->ln_type);
+  return &s;
 }
 
 static int
 mpegts_network_class_set_lntype
-  ( void *ptr, const char *str )
+  ( void *ptr, const void *v )
 { 
+  const char *str = v;
   ((linuxdvb_network_t*)ptr)->ln_type = dvb_str2type(str);
   return 1;
 }
@@ -62,8 +65,8 @@ const idclass_t linuxdvb_network_class =
       .id       = "type",
       .name     = "Network Type",
       .opts     = PO_RDONLY,
-      .str_get  = mpegts_network_class_get_lntype,
-      .str_set  = mpegts_network_class_set_lntype,
+      .get      = mpegts_network_class_get_lntype,
+      .set      = mpegts_network_class_set_lntype,
     },
     {}
   }

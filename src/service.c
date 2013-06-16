@@ -45,8 +45,8 @@
 #include "descrambler.h"
 
 static void service_data_timeout(void *aux);
-static const char *service_class_channel_get(void *obj);
-static int service_class_channel_set(void *obj, const char *str);
+static const void *service_class_channel_get(void *obj);
+static int service_class_channel_set(void *obj, const void *str);
 static void service_class_save(struct idnode *self);
 
 static htsmsg_t *service_class_channel_enum(void *p)
@@ -74,9 +74,9 @@ const idclass_t service_class = {
       .type     = PT_STR,
       .id       = "channel",
       .name     = "Channel",
-      .str_get  = service_class_channel_get,
-      .str_set  = service_class_channel_set,
-      .str_enum = service_class_channel_enum
+      .get      = service_class_channel_get,
+      .set      = service_class_channel_set,
+      .list     = service_class_channel_enum
     },
     {}
   }
@@ -686,11 +686,13 @@ service_map_channel(service_t *t, channel_t *ch, int save)
 /**
  *
  */
-static const char *
+static const void *
 service_class_channel_get(void *obj)
 {
+  static const char *r;
   service_t *s = obj;
-  return s->s_ch ? s->s_ch->ch_name : NULL;
+  r = s->s_ch ? s->s_ch->ch_name : NULL;
+  return &r;
 }
 
 
@@ -698,8 +700,9 @@ service_class_channel_get(void *obj)
  *
  */
 static int
-service_class_channel_set(void *obj, const char *str)
+service_class_channel_set(void *obj, const void *v)
 {
+  const char *str = v;
   service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
   return 1; // TODO: sort this!
 }

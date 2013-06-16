@@ -54,9 +54,9 @@ typedef struct property {
   int         opts;       ///< Options
 
   /* String based processing */
-  const char *(*str_get)  (void *ptr);
-  int         (*str_set)  (void *ptr, const char *str);
-  htsmsg_t   *(*str_enum) (void *ptr);
+  const void *(*get)  (void *ptr);
+  int         (*set)  (void *ptr, const void *v);
+  htsmsg_t   *(*list) (void *ptr);
   // Note: htsmsg_t can either be a string list or object list
   //       where the object has "key" and "val" fields
 

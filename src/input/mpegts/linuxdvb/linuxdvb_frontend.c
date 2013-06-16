@@ -61,22 +61,26 @@ linuxdvb_frontend_class_save ( idnode_t *in )
     linuxdvb_device_save((linuxdvb_device_t*)lfe->lh_parent->lh_parent);
 }
 
-static const char*
+static const void*
 linuxdvb_frontend_class_network_get(void *o)
 {
+  static const char *s;
   linuxdvb_frontend_t *lfe = o;
   if (lfe->mi_network)
-    return idnode_uuid_as_str(&lfe->mi_network->mn_id);
-  return NULL;
+    s = idnode_uuid_as_str(&lfe->mi_network->mn_id);
+  else
+    s = NULL;
+  return &s;
 }
 
 static int
-linuxdvb_frontend_class_network_set(void *o, const char *s)
+linuxdvb_frontend_class_network_set(void *o, const void *v)
 {
   mpegts_input_t   *mi = o;
   mpegts_network_t *mn = mi->mi_network;
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mn;
   linuxdvb_frontend_t *lfe = o;
+  const char *s = v;
 
   if (lfe->lfe_info.type == FE_QPSK) {
     tvherror("linuxdvb", "cannot set network on DVB-S FE");
@@ -173,9 +177,9 @@ const idclass_t linuxdvb_frontend_dvbt_class =
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .str_get  = linuxdvb_frontend_class_network_get,
-      .str_set  = linuxdvb_frontend_class_network_set,
-      .str_enum = linuxdvb_frontend_class_network_enum
+      .get      = linuxdvb_frontend_class_network_get,
+      .set      = linuxdvb_frontend_class_network_set,
+      .list     = linuxdvb_frontend_class_network_enum
     },
     {}
   }
@@ -201,9 +205,9 @@ const idclass_t linuxdvb_frontend_dvbc_class =
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .str_get  = linuxdvb_frontend_class_network_get,
-      .str_set  = linuxdvb_frontend_class_network_set,
-      .str_enum = linuxdvb_frontend_class_network_enum
+      .get      = linuxdvb_frontend_class_network_get,
+      .set      = linuxdvb_frontend_class_network_set,
+      .list     = linuxdvb_frontend_class_network_enum
     },
     {}
   }
@@ -219,9 +223,9 @@ const idclass_t linuxdvb_frontend_atsc_class =
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .str_get  = linuxdvb_frontend_class_network_get,
-      .str_set  = linuxdvb_frontend_class_network_set,
-      .str_enum = linuxdvb_frontend_class_network_enum
+      .get      = linuxdvb_frontend_class_network_get,
+      .set      = linuxdvb_frontend_class_network_set,
+      .list     = linuxdvb_frontend_class_network_enum
     },
     {}
   }

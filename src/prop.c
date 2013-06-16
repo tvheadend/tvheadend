@@ -141,8 +141,8 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
     }
     case TO_FROM(PT_STR, HMF_STR): {
       char **val = v;
-      if(p->str_set != NULL)
-        save |= p->str_set(obj, f->hmf_str);
+      if(p->set != NULL)
+        save |= p->set(obj, f->hmf_str);
       else if (strcmp(*val ?: "", f->hmf_str)) {
         free(*val);
         *val = strdup(f->hmf_str);
@@ -172,6 +172,10 @@ prop_read_value
   /* Ignore */
   if (p->opts & optmask) return;
 
+  /* Get method */
+  if (p->get)
+    val = p->get(obj);
+
   /* Read */
   switch(p->type) {
   case PT_BOOL:
@@ -187,10 +191,7 @@ prop_read_value
     htsmsg_add_u32(m, name, *(uint16_t *)val);
     break;
   case PT_STR:
-    if(p->str_get != NULL)
-      s = p->str_get(obj);
-    else
-      s = *(const char **)val;
+    s = *(const char **)val;
     if(s != NULL) {
       htsmsg_add_str(m, name, s);
     }
@@ -236,8 +237,8 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
       htsmsg_add_u32(m, "wronce", 1);
 
     /* Enum list */
-    if (pl->str_enum)
-      htsmsg_add_msg(m, "enum", pl->str_enum(obj));
+    if (pl->list)
+      htsmsg_add_msg(m, "enum", pl->list(obj));
 
     /* Data */
     if (obj)

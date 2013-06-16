@@ -37,21 +37,25 @@
 
 extern const idclass_t mpegts_input_class;
 
-static const char*
+static const void*
 linuxdvb_satconf_class_network_get(void *o)
 {
+  static const char *s;
   linuxdvb_satconf_t *ls = o;
   if (ls->mi_network)
-    return idnode_uuid_as_str(&ls->mi_network->mn_id);
-  return NULL;
+    s = idnode_uuid_as_str(&ls->mi_network->mn_id);
+  else
+    s = NULL;
+  return &s;
 }
 
 static int
-linuxdvb_satconf_class_network_set(void *o, const char *s)
+linuxdvb_satconf_class_network_set(void *o, const void *v)
 {
   extern const idclass_t linuxdvb_network_class;
   mpegts_input_t   *mi = o;
   mpegts_network_t *mn = mi->mi_network;
+  const char *s = v;
 
   if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
     return 0;
@@ -88,20 +92,24 @@ linuxdvb_satconf_class_network_enum(void *o)
   return m;
 }
 
-static const char *
+static const void *
 linuxdvb_satconf_class_frontend_get ( void *o )
 {
+  static const char *s;
   linuxdvb_satconf_t *ls = o;
   if (ls->ls_frontend)
-    return idnode_uuid_as_str(&ls->ls_frontend->mi_id);
-  return NULL;
+    s = idnode_uuid_as_str(&ls->ls_frontend->mi_id);
+  else
+    s = NULL;
+  return &s;
 }
 
 static int
-linuxdvb_satconf_class_frontend_set ( void *o, const char *u )
+linuxdvb_satconf_class_frontend_set ( void *o, const void *v )
 {
   extern const idclass_t linuxdvb_frontend_dvbs_class;
   linuxdvb_satconf_t *ls = o;
+  const char *u = v;
   mpegts_input_t *lfe = idnode_find(u, &linuxdvb_frontend_dvbs_class);
   if (lfe && ls->ls_frontend != lfe) {
     // TODO: I probably need to clean up the existing linkages
@@ -154,17 +162,17 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_STR,
       .id       = "frontend",
       .name     = "Frontend",
-      .str_get  = linuxdvb_satconf_class_frontend_get,
-      .str_set  = linuxdvb_satconf_class_frontend_set,
-      .str_enum = linuxdvb_satconf_class_frontend_enum
+      .get  	= linuxdvb_satconf_class_frontend_get,
+      .set  	= linuxdvb_satconf_class_frontend_set,
+      .list	= linuxdvb_satconf_class_frontend_enum
     },
     {
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .str_get  = linuxdvb_satconf_class_network_get,
-      .str_set  = linuxdvb_satconf_class_network_set,
-      .str_enum = linuxdvb_satconf_class_network_enum
+      .get  	= linuxdvb_satconf_class_network_get,
+      .set  	= linuxdvb_satconf_class_network_set,
+      .list	= linuxdvb_satconf_class_network_enum
     },
     {}
   }

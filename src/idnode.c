@@ -253,15 +253,12 @@ idnode_get_str
 {
   const property_t *p = idnode_find_prop(self, key);
   if (p && p->type == PT_STR) {
-    const char *s;
-    if (p->str_get)
-      s = p->str_get(self);
-    else {
-      void *ptr = self;
-      ptr += p->off;
-      s = *(const char**)ptr;
-    }
-    return s;
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
+    return *(const char**)ptr;
   }
 
   return NULL;
@@ -276,8 +273,11 @@ idnode_get_u32
 {
   const property_t *p = idnode_find_prop(self, key);
   if (p) {
-    void *ptr = self;
-    ptr += p->off;
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_INT:
         *u32 = *(int*)ptr;

@@ -42,17 +42,19 @@ extern const idclass_t mpegts_mux_class;
 
 /* Macro to defien mux class str get/set */
 #define linuxdvb_mux_class_X(c, f, p, l, ...)\
-static const char * \
+static const void * \
 linuxdvb_mux_##c##_class_##l##_get (void *o)\
 {\
+  static const char *s;\
   linuxdvb_mux_t *lm = o;\
-  return dvb_##l##2str(lm->lm_tuning.dmc_fe_params.u.f.p);\
+  s = dvb_##l##2str(lm->lm_tuning.dmc_fe_params.u.f.p);\
+  return &s;\
 }\
 static int \
-linuxdvb_mux_##c##_class_##l##_set (void *o, const char *s)\
+linuxdvb_mux_##c##_class_##l##_set (void *o, const void *v)\
 {\
   linuxdvb_mux_t *lm = o;\
-  lm->lm_tuning.dmc_fe_params.u.f.p = dvb_str2##l (s);\
+  lm->lm_tuning.dmc_fe_params.u.f.p = dvb_str2##l ((const char*)v);\
   return 1;\
 }\
 static htsmsg_t *\
@@ -69,19 +71,22 @@ linuxdvb_mux_##c##_class_##l##_enum (void *o)\
   .type = PT_STR,\
   .id   = _id,\
   .name = _name,\
-  .str_get  = linuxdvb_mux_##t##_class_##l##_get,\
-  .str_set  = linuxdvb_mux_##t##_class_##l##_set,\
-  .str_enum = linuxdvb_mux_##t##_class_##l##_enum
+  .get  = linuxdvb_mux_##t##_class_##l##_get,\
+  .set  = linuxdvb_mux_##t##_class_##l##_set,\
+  .list = linuxdvb_mux_##t##_class_##l##_enum
 
-static const char *
+static const void *
 linuxdvb_mux_class_delsys_get (void *o)
 {
+  static const char *s;
   linuxdvb_mux_t *lm = o;
-  return dvb_delsys2str(lm->lm_tuning.dmc_fe_delsys);
+  s = dvb_delsys2str(lm->lm_tuning.dmc_fe_delsys);
+  return &s;
 }
 static int
-linuxdvb_mux_class_delsys_set (void *o, const char *s)
+linuxdvb_mux_class_delsys_set (void *o, const void *v)
 {
+  const char *s = v;
   linuxdvb_mux_t *lm = o;
   lm->lm_tuning.dmc_fe_delsys = dvb_str2delsys(s);
   return 1;
@@ -275,17 +280,19 @@ linuxdvb_mux_class_X(dvbs, qam, fec_inner,             fec,
                      , FEC_3_5, FEC_9_10
 #endif
                     );
-static const char *
+static const void *
 linuxdvb_mux_dvbs_class_polarity_get (void *o)
 {
+  static const char *s;
   linuxdvb_mux_t *lm = o;
-  return dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation);
+  s = dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation);
+  return &s;
 }
 static int
-linuxdvb_mux_dvbs_class_polarity_set (void *o, const char *s)
+linuxdvb_mux_dvbs_class_polarity_set (void *o, const void *s)
 {
   linuxdvb_mux_t *lm = o;
-  lm->lm_tuning.dmc_fe_polarisation = dvb_str2pol(s);
+  lm->lm_tuning.dmc_fe_polarisation = dvb_str2pol((const char*)s);
   return 1;
 }
 static htsmsg_t *
