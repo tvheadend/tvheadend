@@ -845,11 +845,9 @@ linuxdvb_frontend_create0
     return NULL;
   }
 
-  linuxdvb_frontend_t *lfe
-    = (linuxdvb_frontend_t*)
-        mpegts_input_create0(calloc(1, sizeof(linuxdvb_frontend_t)),
-                             idc, uuid, conf);
+  linuxdvb_frontend_t *lfe = calloc(1, sizeof(linuxdvb_frontend_t));
   lfe->lfe_info.type = type;
+  lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
 
   /* Input callbacks */
   lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
