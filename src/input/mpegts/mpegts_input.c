@@ -204,6 +204,16 @@ mpegts_input_stopped_mux
   }
 }
 
+static int
+mpegts_input_has_subscription ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  service_t *t;
+  LIST_FOREACH(t, &mi->mi_transports, s_active_link)
+    if (((mpegts_service_t*)t)->s_dvb_mux == mm)
+      return 1;
+  return 0;
+}
+
 /* **************************************************************************
  * Data processing
  * *************************************************************************/
@@ -217,7 +227,6 @@ mpegts_input_recv_packets
   int len = l;
   int i = 0, table_wakeup = 0;
   mpegts_mux_t *mm = mmi->mmi_mux;
-  //assert(mmi->mmi_input == mi);
   assert(mm != NULL);
   assert(name != NULL);
 
@@ -394,6 +403,7 @@ mpegts_input_create0
   mi->mi_create_mux_instance  = mpegts_input_create_mux_instance;
   mi->mi_started_mux          = mpegts_input_started_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;
+  mi->mi_has_subscription     = mpegts_input_has_subscription;
 
   /* Index */
   mi->mi_instance       = ++mpegts_input_idx;

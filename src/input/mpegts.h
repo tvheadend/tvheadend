@@ -397,6 +397,7 @@ struct mpegts_input
   mpegts_network_t *(*mi_network_create) (mpegts_input_t *mi, htsmsg_t *c);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
+  int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
 };
 
 #endif /* __TVH_MPEGTS_H__ */

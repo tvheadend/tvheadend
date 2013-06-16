@@ -331,13 +331,9 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 static int
 mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
 {
-  service_t *t;
   mpegts_mux_instance_t *mmi = mm->mm_active;
-  if (mmi) {
-    LIST_FOREACH(t, &mmi->mmi_input->mi_transports, s_active_link)
-      if (((mpegts_service_t*)t)->s_dvb_mux == mm)
-        return 1;
-  }
+  if (mmi)
+    return mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm);
   return 0;
 }
 

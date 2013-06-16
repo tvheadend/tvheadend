@@ -281,6 +281,14 @@ linuxdvb_satconf_stopped_mux
 }
 
 static int
+linuxdvb_satconf_has_subscription
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  return ls->ls_frontend->mi_has_subscription(ls->ls_frontend, mm);
+}
+
+static int
 linuxdvb_satconf_open_pid
   ( linuxdvb_frontend_t *lfe, int pid, const char *name )
 {
@@ -331,6 +339,7 @@ linuxdvb_satconf_create0
   ls->mi_network_create      = linuxdvb_satconf_network_create;
   ls->mi_started_mux         = linuxdvb_satconf_started_mux;
   ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
+  ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
   ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
 
   /* Unoversal LMB */
