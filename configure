@@ -17,7 +17,7 @@ ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 
 OPTIONS=(
   "cwc:yes"
-  "v4l:yes"
+  "v4l:no"
   "linuxdvb:yes"
   "iptv:yes"
   "tsfile:yes"
