@@ -41,7 +41,7 @@ tsfile_network_create_service
 {
   static int t = 0;
   pthread_mutex_lock(&tsfile_lock);
-  mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid);
+  mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
   pthread_mutex_unlock(&tsfile_lock);
 
   // TODO: HACK: REMOVE ME
@@ -50,6 +50,7 @@ tsfile_network_create_service
     sprintf(buf, "channel-%d", t);
     channel_t *c = channel_find_by_name(buf, 1, t);
     service_map_channel((service_t*)s, c, 1);
+    t++;
   }
   return s;
 }
@@ -67,17 +68,17 @@ void tsfile_init ( int tuners )
 
   /* Shared network */
   mpegts_network_create0(&tsfile_network, &mpegts_network_class, NULL,
-                         "TSfile Network");
+                         "TSfile Network", NULL);
   tsfile_network.mn_create_service = tsfile_network_create_service;
 
   /* IPTV like setup */
   if (tuners <= 0) {
     mi = tsfile_input_create(0);
-    mpegts_network_add_input(&tsfile_network, mi);
+    mpegts_input_set_network(mi, &tsfile_network);
   } else {
     for (i = 0; i < tuners; i++) {
       mi = tsfile_input_create(i+1);
-      mpegts_network_add_input(&tsfile_network, mi);
+      mpegts_input_set_network(mi, &tsfile_network);
     }
   }
 }

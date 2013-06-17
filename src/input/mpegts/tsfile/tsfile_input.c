@@ -124,7 +124,7 @@ tsfile_input_thread ( void *aux )
     /* Process */
     if (c >= 0) {
       pcr = PTS_UNSET;
-      pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &tmi->mmi_tsfile_pcr_pid);
+      pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &tmi->mmi_tsfile_pcr_pid, "tsfile");
 
       /* Delay */
       if (pcr != PTS_UNSET) {
@@ -234,8 +234,9 @@ tsfile_input_create ( int idx )
   mpegts_input_t *mi;
 
   /* Create object */
-  mi = mpegts_input_create1(NULL);
+  mi = mpegts_input_create1(NULL, NULL);
   mi->mi_instance       = idx;
+  mi->mi_enabled        = 1;
   mi->mi_start_mux      = tsfile_input_start_mux;
   mi->mi_stop_mux       = tsfile_input_stop_mux;
   LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
