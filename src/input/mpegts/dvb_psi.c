@@ -720,7 +720,8 @@ dvb_sdt_callback
 
   /* Begin */
   if (tableid != 0x42 && tableid != 0x46) return -1;
-  dvb_table_begin(mt, ptr, len, tableid, 8, &sect, &last, &ver);
+  if (dvb_table_begin(mt, ptr, len, tableid, 8, &sect, &last, &ver))
+    return -1;
 
   /* ID */
   tsid = ptr[0] << 8 | ptr[1];
