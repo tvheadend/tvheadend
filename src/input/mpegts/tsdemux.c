@@ -102,7 +102,7 @@ ts_recv_packet0
   case SCT_CA:
     if(st->es_section == NULL)
       st->es_section = calloc(1, sizeof(mpegts_psi_section_t));
-    mpegts_psi_section_reassemble(st->es_section, tsb, 1, got_ca_section, st);
+    mpegts_psi_section_reassemble(st->es_section, tsb, 0, got_ca_section, st);
     break;
 
   default:

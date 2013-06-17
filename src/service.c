@@ -891,6 +891,8 @@ service_restart(service_t *t, int had_components)
   if(t->s_refresh_feed != NULL)
     t->s_refresh_feed(t);
 
+  descrambler_service_start(t);
+
   if(TAILQ_FIRST(&t->s_components) != NULL) {
 
     sm = streaming_msg_create_data(SMT_START, 

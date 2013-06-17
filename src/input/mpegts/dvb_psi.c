@@ -499,6 +499,7 @@ static int
 dvb_ca_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
+  (void)dvb_table_begin(mt, ptr, len, tableid, 0, NULL, NULL, NULL);
 #if ENABLE_CWC
   cwc_emm((uint8_t*)ptr, len, (uintptr_t)mt->mt_opaque, mt->mt_mux);
 #endif
@@ -530,6 +531,8 @@ dvb_cat_callback
       case DVB_DESC_CA:
         caid = ( ptr[0]         << 8) | ptr[1];
         pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
+        tvhdebug("cat", "  caid %04X (%d) pid %04X (%d)",
+                 (uint16_t)caid, (uint16_t)caid, pid, pid);
         if(pid != 0)
           mpegts_table_add(mm, 0, 0, dvb_ca_callback,
                            (void*)caid, "ca", MT_FULL, pid);
