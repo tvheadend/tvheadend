@@ -178,8 +178,9 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
       im->mm_active = mmi;
 
       /* Install table handlers */
-      mpegts_table_add(mmi->mmi_mux, 0x0, 0xff, psi_pat_callback, NULL, "pat",
-                       MT_QUICKREQ| MT_CRC, 0);
+      mpegts_table_add(mmi->mmi_mux, DVB_PAT_BASE, DVB_PAT_MASK,
+                       dvb_pat_callback, NULL, "pat",
+                       MT_QUICKREQ| MT_CRC, DVB_PAT_PID);
 
       // TODO: need to fire mux start event
     }
@@ -267,7 +268,7 @@ iptv_input_thread ( void *aux )
     if (!strncmp(im->mm_iptv_url, "http", 4)) {
       pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
                                       &im->mm_iptv_instance,
-                                      tsb, r, NULL, NULL);
+                                      tsb, r, NULL, NULL, "iptv");
     }
 
     pthread_mutex_unlock(&iptv_lock);
@@ -289,7 +290,7 @@ const idclass_t iptv_network_class = {
 
 static mpegts_mux_t *
 iptv_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *aux )
+  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf )
 {
   return NULL;
 }
@@ -311,22 +312,22 @@ void iptv_init ( void )
 
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)&iptv_input,
-                       &iptv_input_class, NULL);
+                       &iptv_input_class, NULL, NULL);
   iptv_input.mi_start_mux      = iptv_input_start_mux;
   iptv_input.mi_stop_mux       = iptv_input_stop_mux;
   iptv_input.mi_is_free        = iptv_input_is_free;
   iptv_input.mi_current_weight = iptv_input_current_weight;
+  iptv_input.mi_enabled        = 1;
 
   /* Init Network */
   mpegts_network_create0((mpegts_network_t*)&iptv_network,
-                         &iptv_network_class, NULL, "IPTV Network");
+                         &iptv_network_class, NULL, "IPTV Network", NULL);
   iptv_network.mn_create_mux     = iptv_network_create_mux;
   iptv_network.mn_create_service = iptv_network_create_service;
 
   /* Link */
-  mpegts_network_add_input((mpegts_network_t*)&iptv_network,
-                           (mpegts_input_t*)&iptv_input);
-
+  mpegts_input_set_network((mpegts_input_t*)&iptv_input,
+                           (mpegts_network_t*)&iptv_network);
   /* Set table thread */
   pthread_create(&tid, NULL, mpegts_input_table_thread, &iptv_input);
 

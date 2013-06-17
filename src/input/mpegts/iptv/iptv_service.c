@@ -32,7 +32,7 @@ iptv_service_create
   iptv_service_t *is = (iptv_service_t*)
     mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),
                            &mpegts_service_class, uuid,
-                           (mpegts_mux_t*)im, onid, tsid);
+                           (mpegts_mux_t*)im, onid, tsid, NULL);
   return is;
 }
 
@@ -42,8 +42,10 @@ iptv_service_create
 static void
 iptv_service_load_one ( iptv_service_t *is, htsmsg_t *c )
 {
+#if 0
   /* Load core */
   mpegts_service_load_one((mpegts_service_t*)is, c);
+#endif
 }
 
 void

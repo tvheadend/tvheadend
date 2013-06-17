@@ -32,9 +32,9 @@ const idclass_t iptv_mux_class =
   .ic_class      = "iptv_mux",
   .ic_caption    = "IPTV Multiplex",
   .ic_properties = (const property_t[]){
+#if 0
     { PROPDEF1("iptv_url",       "URL",
                PT_STR, iptv_mux_t, mm_iptv_url) },
-#if 0
     { PROPDEF1("iptv_interface", "Interface",
                PT_STR, iptv_mux_t, mm_iptv_interface) },
 #endif
@@ -51,7 +51,7 @@ iptv_mux_create ( const char *uuid, const char *url )
   iptv_mux_t *im =
     mpegts_mux_create(iptv_mux, NULL,
                       (mpegts_network_t*)&iptv_network,
-                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
+                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL);
   if (url)
     im->mm_iptv_url = strdup(url);
 
@@ -71,6 +71,7 @@ iptv_mux_create ( const char *uuid, const char *url )
 static void
 iptv_mux_load_one ( iptv_mux_t *im, htsmsg_t *c )
 {
+#if 0
   const char *str;
 
   /* Load core */
@@ -79,6 +80,7 @@ iptv_mux_load_one ( iptv_mux_t *im, htsmsg_t *c )
   /* URL */
   if ((str = htsmsg_get_str(c, "iptv_url")))
     tvh_str_update(&im->mm_iptv_url, str);
+#endif
 }
 
 void
