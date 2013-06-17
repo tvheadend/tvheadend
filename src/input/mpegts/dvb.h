@@ -33,6 +33,7 @@ struct mpegts_table;
 /* PIDs */
 
 #define DVB_PAT_PID                   0x00
+#define DVB_CAT_PID                   0x02
 #define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
@@ -41,6 +42,9 @@ struct mpegts_table;
 
 #define DVB_PAT_BASE                  0x00
 #define DVB_PAT_MASK                  0x00
+
+#define DVB_CAT_BASE                  0x01
+#define DVB_CAT_MASK                  0xFF
 
 #define DVB_PMT_BASE                  0x02
 #define DVB_PMT_MASK                  0xFF
@@ -151,6 +155,8 @@ do {\
 /* PSI table callbacks */
 
 int dvb_pat_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_cat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_pmt_callback  
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tabelid);

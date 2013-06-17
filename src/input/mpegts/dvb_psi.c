@@ -490,6 +490,61 @@ dvb_pat_callback
 }
 
 /*
+ * CAT processing
+ */
+
+// TODO: might be a better way of handling this
+#include "descrambler/cwc.h"
+static int
+dvb_ca_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+#if ENABLE_CWC
+  cwc_emm((uint8_t*)ptr, len, (uintptr_t)mt->mt_opaque, mt->mt_mux);
+#endif
+  return 0;
+}
+
+int
+dvb_cat_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int sect, last, ver;
+  uint8_t dtag, dlen;
+  uint16_t pid; 
+  uintptr_t caid;
+  mpegts_mux_t          *mm  = mt->mt_mux;
+
+  /* Start */
+  if (dvb_table_begin(mt, ptr, len, tableid, 7, &sect, &last, &ver))
+    return -1;
+  ptr += 5;
+  len -= 5;
+
+  while(len > 2) {
+    dtag = *ptr++;
+    dlen = *ptr++;
+    len -= 2;
+
+    switch(dtag) {
+      case DVB_DESC_CA:
+        caid = ( ptr[0]         << 8) | ptr[1];
+        pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
+        if(pid != 0)
+          mpegts_table_add(mm, 0, 0, dvb_ca_callback,
+                           (void*)caid, "ca", MT_FULL, pid);
+        break;
+      default:
+        break;
+    }
+
+    ptr += dlen;
+    len -= dlen;
+  }
+  return 0;
+}
+
+/*
  * PMT processing
  */
 

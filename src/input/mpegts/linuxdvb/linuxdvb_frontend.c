@@ -432,6 +432,8 @@ linuxdvb_frontend_default_tables
 
   /* DVB */
   } else {
+    mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
+                     NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID);
     mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
                      NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
     mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
