@@ -47,32 +47,24 @@ static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 /**
  * Code for dealing with a complete section
  */
-#if TODO_MOVE_THIS
 static void
-got_section(const uint8_t *data, size_t len, void *opaque)
+got_ca_section(const uint8_t *data, size_t len, void *opaque)
 {
   th_descrambler_t *td;
   elementary_stream_t *st = opaque;
   assert(st->es_service->s_source_type == S_MPEG_TS);
   mpegts_service_t *t = (mpegts_service_t*)st->es_service;
 
-  if(st->es_type == SCT_CA) {
-    LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-      td->td_table(td, (service_t*)t, st, data, len);
-#if TODO_FIXME
-  } else if(st->es_got_section != NULL) {
-    st->es_got_section(t, st, data, len);
-#endif
-  }
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link)
+    td->td_table(td, (service_t*)t, st, data, len);
 }
-#endif
-
 
 /**
  * Continue processing of transport stream packets
  */
 static void
-ts_recv_packet0(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
+ts_recv_packet0
+  (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
   int off, pusi, cc, error;
 
@@ -108,15 +100,9 @@ ts_recv_packet0(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb
   switch(st->es_type) {
 
   case SCT_CA:
-  case SCT_PMT:
-#if TODO_MOVE_THIS
-    break; // TODO: we should not receive these
     if(st->es_section == NULL)
-      st->es_section = calloc(1, sizeof(struct psi_section));
-
-    psi_section_reassemble(st->es_section, tsb, st->es_section_docrc,
-			   got_section, st);
-#endif
+      st->es_section = calloc(1, sizeof(mpegts_psi_section_t));
+    mpegts_psi_section_reassemble(st->es_section, tsb, 1, got_ca_section, st);
     break;
 
   default:
@@ -243,8 +229,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st->es_type != SCT_CA &&
-       st->es_type != SCT_PMT)) {
+      (t->s_scrambled_seen && st->es_type != SCT_CA)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error

@@ -194,7 +194,6 @@ typedef enum {
   SCT_TELETEXT,
   SCT_DVBSUB,
   SCT_CA,
-  SCT_PMT,
   SCT_AAC,
   SCT_MPEGTS,
   SCT_TEXTSUB,

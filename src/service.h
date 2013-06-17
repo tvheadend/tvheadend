@@ -117,6 +117,8 @@ typedef struct elementary_stream {
   /* Teletext subtitle */ 
   char es_blank; // Last subtitle was blank
 
+  /* SI section processing (horrible hack) */
+  void *es_section;
 
 } elementary_stream_t;
 

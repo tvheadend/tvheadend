@@ -150,6 +150,7 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
   avgstat_flush(&es->es_cc_errors);
 
   TAILQ_REMOVE(&t->s_components, es, es_link);
+  free(es->es_section);
   free(es->es_nicename);
   free(es);
 }

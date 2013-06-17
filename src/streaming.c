@@ -505,7 +505,6 @@ static struct strtab streamtypetab[] = {
   { "TELETEXT",   SCT_TELETEXT },
   { "DVBSUB",     SCT_DVBSUB },
   { "CA",         SCT_CA },
-  { "PMT",        SCT_PMT },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
