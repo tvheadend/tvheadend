@@ -397,12 +397,15 @@ linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
+  int freq = lm->lm_tuning.dmc_fe_params.frequency;
+  char pol[2] = { 0 };
+  if (ln->ln_type == FE_QPSK) {
+    pol[0] = *(dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation));
+  }
   snprintf(buf, len, "%d %s%s [onid:%04X, tsid:%04X]",
-           lm->lm_tuning.dmc_fe_params.frequency,
+           freq,
            (ln->ln_type == FE_QPSK) ? "MHz " : "Hz",
-           (ln->ln_type == FE_QPSK) 
-             ? dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation)
-             : "",
+           (ln->ln_type == FE_QPSK) ? pol : "",
            mm->mm_onid, mm->mm_tsid);
 }
 

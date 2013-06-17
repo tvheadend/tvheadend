@@ -206,8 +206,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   mpegts_mux_instance_t *mmi, *tune;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
-          buf, reason, weight);
+  tvhtrace("mpegts", "%s - starting for '%s' (weight %d)",
+           buf, reason, weight);
 
   /* Disabled */
   if (!mm->mm_is_enabled(mm)) {
@@ -260,6 +260,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     
     /* Tune */
     if (tune) {
+      tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
+              buf, reason, weight);
       if (!(fail = mpegts_mux_instance_start(&tune))) break;
       tune = NULL;
       tvhwarn("mpegts", "%s - failed to start, try another", buf);
