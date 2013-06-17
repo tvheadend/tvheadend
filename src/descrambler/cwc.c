@@ -31,20 +31,15 @@
 
 #include "tvheadend.h"
 #include "tcp.h"
-#include "psi.h"
-#include "tsdemux.h"
 #include "cwc.h"
 #include "notify.h"
 #include "atomic.h"
 #include "dtable.h"
 #include "subscriptions.h"
 #include "service.h"
-
-#if ENABLE_DVBCSA
-#include <dvbcsa/dvbcsa.h>
-#else
-#include "ffdecsa/FFdecsa.h"
-#endif
+#include "input/mpegts.h"
+#include "input/mpegts/tsdemux.h"
+#include "tvhcsa.h"
 
 /**
  *
@@ -143,7 +138,7 @@ typedef struct ecm_pid {
 typedef struct cwc_service {
   th_descrambler_t cs_head;
 
-  service_t *cs_service;
+  mpegts_service_t *cs_service;
 
   struct cwc *cs_cwc;
 
@@ -170,29 +165,11 @@ typedef struct cwc_service {
     CS_IDLE
   } cs_keystate;
 
-#if ENABLE_DVBCSA
-  struct dvbcsa_bs_key_s *cs_key_even;
-  struct dvbcsa_bs_key_s *cs_key_odd;
-#else
-  void *cs_keys;
-#endif
-
   uint8_t cs_cw[16];
   int cs_pending_cw_update;
 
-  /**
-   * CSA
-   */
-  int cs_cluster_size;
-  uint8_t *cs_tsbcluster;
-  int cs_fill;
-#if ENABLE_DVBCSA
-  struct dvbcsa_bs_batch_s *cs_tsbbatch_even;
-  struct dvbcsa_bs_batch_s *cs_tsbbatch_odd;
-  int cs_fill_even;
-  int cs_fill_odd;
-#endif
-
+  tvhcsa_t cs_csa;
+  
   LIST_HEAD(, ecm_pid) cs_pids;
 
 } cwc_service_t;
@@ -612,7 +589,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   cwc->cwc_connected = 1;
   cwc_comet_status_update(cwc);
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
-  n = psi_caid2name(cwc->cwc_caid & 0xff00) ?: "Unknown";
+  n = descrambler_caid2name(cwc->cwc_caid & 0xff00) ?: "Unknown";
 
   memcpy(cwc->cwc_ua, &msg[6], 8);
 
@@ -776,7 +753,7 @@ static void
 handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
-  service_t *t = ct->cs_service;
+  mpegts_service_t *t = ct->cs_service;
   ecm_pid_t *ep, *epn;
   cwc_service_t *ct2;
   cwc_t *cwc2;
@@ -800,7 +777,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     if (es->es_nok > 2) {
       tvhlog(LOG_DEBUG, "cwc",
              "Too many NOKs for service \"%s\"%s from %s:%i",
-             t->s_svcname, chaninfo, ct->cs_cwc->cwc_hostname,
+             t->s_dvb_svcname, chaninfo, ct->cs_cwc->cwc_hostname,
              ct->cs_cwc->cwc_port);
       goto forbid;
     }
@@ -812,7 +789,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
           tvhlog(LOG_DEBUG, "cwc",
 	    "NOK from %s:%i: Already has a key for service \"%s\", from %s:%i",
             ct->cs_cwc->cwc_hostname, ct->cs_cwc->cwc_port,
-	    t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+	    t->s_dvb_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
           es->es_nok = 3; /* do not send more ECM requests */
           goto forbid;
         }
@@ -820,7 +797,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
-	   "Req delay: %"PRId64" ms)", t->s_svcname, chaninfo, seq, delay);
+	   "Req delay: %"PRId64" ms)", t->s_dvb_svcname, chaninfo, seq, delay);
 
 forbid:
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
@@ -837,7 +814,7 @@ forbid:
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
 	   "Req delay: %"PRId64" ms)",
-	   t->s_svcname, seq, delay);
+	   t->s_dvb_svcname, seq, delay);
 
     ct->cs_keystate = CS_FORBIDDEN;
     ct->ecm_state = ECM_RESET;
@@ -853,7 +830,7 @@ forbid:
     if(t->s_prefcapid == 0 || t->s_prefcapid != ct->cs_channel) {
       t->s_prefcapid = ct->cs_channel;
       tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d", t->s_prefcapid);
-      service_request_save(t, 0);
+      service_request_save((service_t*)t, 0);
     }
 
     tvhlog(LOG_DEBUG, "cwc",
@@ -862,7 +839,7 @@ forbid:
 	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
 	   "Req delay: %"PRId64" ms)",
 	   chaninfo,
-	   t->s_svcname,
+	   t->s_dvb_svcname,
 	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
@@ -875,7 +852,7 @@ forbid:
           ct->cs_keystate = CS_IDLE;
           tvhlog(LOG_DEBUG, "cwc",
 	     "Already has a key for service \"%s\", from %s:%i",
-	     t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+	     t->s_dvb_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
           return;
         }
       }
@@ -884,7 +861,7 @@ forbid:
     if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_DEBUG, "cwc",
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s:%i",
-	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname,
+	     t->s_dvb_svcname, delay, ct->cs_cwc->cwc_hostname,
 	     ct->cs_cwc->cwc_port);
 
     ct->cs_keystate = CS_RESOLVED;
@@ -901,7 +878,7 @@ forbid:
         for(i = 0; i < 256; i++)
           free(ep->ep_sections[i]);
         LIST_REMOVE(ep, ep_link);
-        tvhlog(LOG_WARNING, "cwc", "Delete ECM (PID %d) for service \"%s\"", ep->ep_pid, t->s_svcname);
+        tvhlog(LOG_WARNING, "cwc", "Delete ECM (PID %d) for service \"%s\"", ep->ep_pid, t->s_dvb_svcname);
         free(ep);
         ep = epn;
       }
@@ -1162,7 +1139,7 @@ cwc_thread(void *aux)
   cwc_t *cwc = aux;
   int fd, d;
   char errbuf[100];
-  service_t *t;
+  mpegts_service_t *t;
   char hostname[256];
   int port;
   struct timespec ts;
@@ -1609,10 +1586,11 @@ cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
  * t->s_streaming_mutex is held
  */
 static void
-cwc_table_input(struct th_descrambler *td, struct service *t,
+cwc_table_input(struct th_descrambler *td, service_t *s,
 		struct elementary_stream *st, const uint8_t *data, int len)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
+  mpegts_service_t *t = (mpegts_service_t*)s;
   uint16_t sid = t->s_dvb_service_id;
   cwc_t *cwc = ct->cs_cwc;
   int channel;
@@ -1641,15 +1619,16 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
       ct->ecm_state = ECM_INIT;
       ct->cs_channel = -1;
       t->s_prefcapid = 0;
-      tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_svcname);
+      tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_dvb_svcname);
     }
 
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
       if(t->s_prefcapid != 0) {
-        struct elementary_stream *prefca = service_stream_find(t, t->s_prefcapid);
+        struct elementary_stream *prefca
+          = service_stream_find((service_t*)t, t->s_prefcapid);
         if (!prefca || prefca->es_type != SCT_CA) {
-          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_prefcapid, t->s_svcname);
+          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_prefcapid, t->s_dvb_svcname);
           t->s_prefcapid = 0;
         }
       }
@@ -1658,13 +1637,13 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
         ep = calloc(1, sizeof(ecm_pid_t));
         ep->ep_pid = t->s_prefcapid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-        tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_prefcapid, t->s_svcname);
+        tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_prefcapid, t->s_dvb_svcname);
       }
       else if(t->s_prefcapid == 0) {
           ep = calloc(1, sizeof(ecm_pid_t));
           ep->ep_pid = st->es_pid;
           LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", st->es_pid, t->s_svcname);
+          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", st->es_pid, t->s_dvb_svcname);
       }
     }
   }
@@ -1733,7 +1712,7 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
 
     tvhlog(LOG_DEBUG, "cwc", 
 	   "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
-	   chaninfo, section, ep->ep_last_section, t->s_svcname, es->es_seq);
+	   chaninfo, section, ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
     es->es_time = getmonoclock();
     break;
 
@@ -1909,21 +1888,13 @@ update_keys(cwc_service_t *ct)
   ct->cs_pending_cw_update = 0;
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[i]) {
-#if ENABLE_DVBCSA
-      dvbcsa_bs_key_set(ct->cs_cw, ct->cs_key_even);
-#else
-      set_even_control_word(ct->cs_keys, ct->cs_cw);
-#endif
+      tvhcsa_set_key_even(&ct->cs_csa, ct->cs_cw);
       break;
     }
   
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[8 + i]) {
-#if ENABLE_DVBCSA
-      dvbcsa_bs_key_set(ct->cs_cw + 8, ct->cs_key_odd);
-#else
-      set_odd_control_word(ct->cs_keys, ct->cs_cw + 8);
-#endif
+      tvhcsa_set_key_odd(&ct->cs_csa, ct->cs_cw);
       break;
     }
 }
@@ -1932,160 +1903,30 @@ update_keys(cwc_service_t *ct)
 /**
  *
  */
-#if ENABLE_DVBCSA
 static int
-cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-	       const uint8_t *tsb)
+cwc_descramble
+  (th_descrambler_t *td, service_t *t, struct elementary_stream *st,
+	 const uint8_t *tsb)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
-  uint8_t *pkt;
-  int xc0;
-  int ev_od;
-  int len;
-  int offset;
-  int n;
-  // FIXME: //int residue;
 
   if(ct->cs_keystate == CS_FORBIDDEN)
     return 1;
 
   if(ct->cs_keystate != CS_RESOLVED)
     return -1;
-
-  if(ct->cs_fill == 0 && ct->cs_pending_cw_update)
+  
+  if(ct->cs_csa.csa_fill == 0 && ct->cs_pending_cw_update)
     update_keys(ct);
 
-  pkt = ct->cs_tsbcluster + ct->cs_fill * 188;
-  memcpy(pkt, tsb, 188);
-  ct->cs_fill++;
-
-  do { // handle this packet
-    xc0 = pkt[3] & 0xc0;
-    if(xc0 == 0x00) { // clear
-      break;
-    }
-    if(xc0 == 0x40) { // reserved
-      break;
-    }
-    if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-      ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-      pkt[3] &= 0x3f;  // consider it decrypted now
-      if(pkt[3] & 0x20) { // incomplete packet
-        offset = 4 + pkt[4] + 1;
-        len = 188 - offset;
-        n = len >> 3;
-        // FIXME: //residue = len - (n << 3);
-        if(n == 0) { // decrypted==encrypted!
-          break; // this doesn't need more processing
-        }
-      } else {
-        len = 184;
-        offset = 4;
-        // FIXME: //n = 23;
-        // FIXME: //residue = 0;
-      }
-      if(ev_od == 0) {
-        ct->cs_tsbbatch_even[ct->cs_fill_even].data = pkt + offset;
-        ct->cs_tsbbatch_even[ct->cs_fill_even].len = len;
-        ct->cs_fill_even++;
-      } else {
-        ct->cs_tsbbatch_odd[ct->cs_fill_odd].data = pkt + offset;
-        ct->cs_tsbbatch_odd[ct->cs_fill_odd].len = len;
-        ct->cs_fill_odd++;
-      }
-    }
-  } while(0);
-
-  if(ct->cs_fill != ct->cs_cluster_size)
-    return 0;
-
-  if(ct->cs_fill_even) {
-    ct->cs_tsbbatch_even[ct->cs_fill_even].data = NULL;
-    dvbcsa_bs_decrypt(ct->cs_key_even, ct->cs_tsbbatch_even, 184);
-    ct->cs_fill_even = 0;
-  }
-  if(ct->cs_fill_odd) {
-    ct->cs_tsbbatch_odd[ct->cs_fill_odd].data = NULL;
-    dvbcsa_bs_decrypt(ct->cs_key_odd, ct->cs_tsbbatch_odd, 184);
-    ct->cs_fill_odd = 0;
-  }
-
-  {
-      int i;
-      const uint8_t *t0 = ct->cs_tsbcluster;
-
-      for(i = 0; i < ct->cs_fill; i++) {
-	ts_recv_packet2(t, t0);
-	t0 += 188;
-      }
-  }
-  ct->cs_fill = 0;
+  tvhcsa_descramble(&ct->cs_csa, (mpegts_service_t*)t, st, tsb,
+                    ct->cs_pending_cw_update);
 
   if(ct->cs_pending_cw_update)
     update_keys(ct);
 
   return 0;
 }
-#else
-static int
-cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-	       const uint8_t *tsb)
-{
-  cwc_service_t *ct = (cwc_service_t *)td;
-  int r;
-  unsigned char *vec[3];
-
-  if(ct->cs_keystate == CS_FORBIDDEN)
-    return 1;
-
-  if(ct->cs_keystate != CS_RESOLVED)
-    return -1;
-
-  if(ct->cs_fill == 0 && ct->cs_pending_cw_update)
-    update_keys(ct);
-
-  memcpy(ct->cs_tsbcluster + ct->cs_fill * 188, tsb, 188);
-  ct->cs_fill++;
-
-  if(ct->cs_fill != ct->cs_cluster_size)
-    return 0;
-
-  while(1) {
-
-    vec[0] = ct->cs_tsbcluster;
-    vec[1] = ct->cs_tsbcluster + ct->cs_fill * 188;
-    vec[2] = NULL;
-    
-    r = decrypt_packets(ct->cs_keys, vec);
-    if(r > 0) {
-      int i;
-      const uint8_t *t0 = ct->cs_tsbcluster;
-
-      for(i = 0; i < r; i++) {
-	ts_recv_packet2(t, t0);
-	t0 += 188;
-      }
-
-      r = ct->cs_fill - r;
-      assert(r >= 0);
-
-      if(r > 0)
-	memmove(ct->cs_tsbcluster, t0, r * 188);
-      ct->cs_fill = r;
-
-      if(ct->cs_pending_cw_update && r > 0)
-	continue;
-    } else {
-      ct->cs_fill = 0;
-    }
-    break;
-  }
-  if(ct->cs_pending_cw_update)
-    update_keys(ct);
-
-  return 0;
-}
-#endif
 
 /**
  * cwc_mutex is held
@@ -2109,15 +1950,7 @@ cwc_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, cs_link);
 
-#if ENABLE_DVBCSA
-  dvbcsa_bs_key_free(ct->cs_key_odd);
-  dvbcsa_bs_key_free(ct->cs_key_even);
-  free(ct->cs_tsbbatch_odd);
-  free(ct->cs_tsbbatch_even);
-#else
-  free_key_struct(ct->cs_keys);
-#endif
-  free(ct->cs_tsbcluster);
+  tvhcsa_destroy(&ct->cs_csa);
   free(ct);
 }
 
@@ -2152,6 +1985,10 @@ cwc_service_start(service_t *t)
   cwc_service_t *ct;
   th_descrambler_t *td;
 
+  extern const idclass_t mpegts_service_class;
+  if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
+    return;
+
   pthread_mutex_lock(&cwc_mutex);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == 0)
@@ -2161,24 +1998,9 @@ cwc_service_start(service_t *t)
       continue;
 
     ct                   = calloc(1, sizeof(cwc_service_t));
-#if ENABLE_DVBCSA
-    ct->cs_cluster_size  = dvbcsa_bs_batch_size();
-#else
-    ct->cs_cluster_size  = get_suggested_cluster_size();
-#endif
-    ct->cs_tsbcluster    = malloc(ct->cs_cluster_size * 188);
-#if ENABLE_DVBCSA
-    ct->cs_tsbbatch_even = malloc((ct->cs_cluster_size + 1) *
-                                   sizeof(struct dvbcsa_bs_batch_s));
-    ct->cs_tsbbatch_odd  = malloc((ct->cs_cluster_size + 1) *
-                                   sizeof(struct dvbcsa_bs_batch_s));
-    ct->cs_key_even      = dvbcsa_bs_key_alloc();
-    ct->cs_key_odd       = dvbcsa_bs_key_alloc();
-#else
-    ct->cs_keys          = get_key_struct();
-#endif
+    tvhcsa_init(&ct->cs_csa);
     ct->cs_cwc           = cwc;
-    ct->cs_service       = t;
+    ct->cs_service       = (mpegts_service_t*)t;
     ct->cs_channel       = -1;
     ct->ecm_state        = ECM_INIT;
 

@@ -38,20 +38,14 @@
 #include <fcntl.h>
 
 #include "tvheadend.h"
-#include "dvb/dvb.h"
+#include "input/mpegts.h"
 #include "tcp.h"
-#include "psi.h"
-#include "tsdemux.h"
 #include "capmt.h"
 #include "notify.h"
 #include "subscriptions.h"
 #include "dtable.h"
-
-#if ENABLE_DVBCSA
-#include <dvbcsa/dvbcsa.h>
-#else
-#include "ffdecsa/FFdecsa.h"
-#endif
+#include "tvhcsa.h"
+#include "input/mpegts/linuxdvb/linuxdvb_private.h"
 
 // ca_pmt_list_management values:
 #define CAPMT_LIST_MORE   0x00    // append a 'MORE' CAPMT object the list and start receiving the next object
@@ -148,7 +142,7 @@ typedef struct capmt_caid_ecm {
 typedef struct capmt_service {
   th_descrambler_t ct_head;
 
-  service_t *ct_service;
+  mpegts_service_t *ct_service;
 
   struct capmt *ct_capmt;
 
@@ -166,24 +160,7 @@ typedef struct capmt_service {
     CT_FORBIDDEN
   } ct_keystate;
 
-  /* buffers for keystructs */
-#if ENABLE_DVBCSA
-  struct dvbcsa_bs_key_s *ct_key_even;
-  struct dvbcsa_bs_key_s *ct_key_odd;
-#else
-  void                   *ct_keys;
-#endif
-
-  /* CSA */
-  int      ct_cluster_size;
-  uint8_t *ct_tsbcluster;
-  int      ct_fill;
-#if ENABLE_DVBCSA
-  struct dvbcsa_bs_batch_s *ct_tsbbatch_even;
-  struct dvbcsa_bs_batch_s *ct_tsbbatch_odd;
-  int      ct_fill_even;
-  int      ct_fill_odd;
-#endif
+  tvhcsa_t ct_csa;
 
   /* current sequence number */
   uint16_t ct_seq;
@@ -388,22 +365,14 @@ capmt_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, ct_link);
 
-#if ENABLE_DVBCSA
-  dvbcsa_bs_key_free(ct->ct_key_odd);
-  dvbcsa_bs_key_free(ct->ct_key_even);
-  free(ct->ct_tsbbatch_odd);
-  free(ct->ct_tsbbatch_even);
-#else
-  free_key_struct(ct->ct_keys);
-#endif
-  free(ct->ct_tsbcluster);
+  tvhcsa_destroy(&ct->ct_csa);
   free(ct);
 }
 
 static void 
 handle_ca0(capmt_t* capmt) {
   capmt_service_t *ct;
-  service_t *t;
+  mpegts_service_t *t;
   int ret, bufsize;
   int *request;
   ca_descr_t *ca;
@@ -522,7 +491,7 @@ handle_ca0(capmt_t* capmt) {
 
       if(ret < bufsize) {
         if(ct->ct_keystate != CT_FORBIDDEN) {
-          tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->s_svcname);
+          tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->s_dvb_svcname);
 
           ct->ct_keystate = CT_FORBIDDEN;
         }
@@ -534,20 +503,12 @@ handle_ca0(capmt_t* capmt) {
         continue;
 
       if (memcmp(even, invalid, 8))
-#if ENABLE_DVBCSA
-        dvbcsa_bs_key_set(even, ct->ct_key_even);
-#else
-        set_even_control_word(ct->ct_keys, even);
-#endif
+        tvhcsa_set_key_even(&ct->ct_csa, even);
       if (memcmp(odd, invalid, 8))
-#if ENABLE_DVBCSA
-        dvbcsa_bs_key_set(odd, ct->ct_key_odd);
-#else
-        set_odd_control_word(ct->ct_keys, odd);
-#endif
+        tvhcsa_set_key_odd(&ct->ct_csa, odd);
 
       if(ct->ct_keystate != CT_RESOLVED)
-        tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
+        tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",t->s_dvb_svcname);
 
       ct->ct_keystate = CT_RESOLVED;
     }
@@ -617,21 +578,22 @@ capmt_thread(void *aux)
       if (!capmt->capmt_oscam) {
         bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0], capmt->capmt_port);
       } else {
-#if TODO_FIX_THIS //ENABLE_LINUXDVB
-        th_dvb_adapter_t *tda;
-        TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-          if (!tda->tda_enabled)
+        int i;
+        extern const idclass_t linuxdvb_adapter_class;
+        linuxdvb_adapter_t *la;
+        idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
+        for (i = 0; i < is->is_count; i++) {
+          la = (linuxdvb_adapter_t*)is->is_array[i];
+          if (!la->mi_enabled)  continue;
+          if (!la->la_rootpath) continue;
+          if (la->la_number > MAX_CA) {
+            tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
             continue;
-          if (tda->tda_rootpath) {          //if rootpath is NULL then can't rely on tda_adapter_num because it is always 0
-            if (tda->tda_adapter_num > MAX_CA) {
-              tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
-              continue;
-            }
-            tvhlog(LOG_INFO, "capmt", "Creating capmt UDP socket for adapter %d", tda->tda_adapter_num);
-            bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[tda->tda_adapter_num], 9000 + tda->tda_adapter_num);
           }
+          tvhlog(LOG_INFO, "capmt", "Creating capmt UDP socket for adapter %d",
+                 la->la_number);
+          bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[la->la_number], 9000 + la->la_number);
         }
-#endif
       }
       if (bind_ok)
         handle_ca0(capmt);
@@ -672,13 +634,26 @@ capmt_thread(void *aux)
  *
  */
 static void
-capmt_table_input(struct th_descrambler *td, struct service *t,
+capmt_table_input(struct th_descrambler *td, struct service *s,
     struct elementary_stream *st, const uint8_t *data, int len)
 {
+  extern const idclass_t mpegts_service_class;
+  extern const idclass_t linuxdvb_frontend_class; 
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  int adapter_num = t->s_dvb_mux->dm_current_tdmi->tdmi_adapter->tda_adapter_num;
+  mpegts_service_t *t = (mpegts_service_t*)s;
+  linuxdvb_frontend_t *lfe;
+  int adapter_num;
   int total_caids = 0, current_caid = 0;
+
+  /* Validate */
+  if (!idnode_is_instance(&s->s_id, &mpegts_service_class))
+    return;
+  if (!t->s_dvb_active_input) return;
+  lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
+  if (!idnode_is_instance(&lfe->mi_id, &linuxdvb_frontend_class))
+    return;
+  adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
 
   caid_t *c;
 
@@ -713,7 +688,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           if (!cce) 
           {
             tvhlog(LOG_DEBUG, "capmt",
-              "New caid 0x%04X for service \"%s\"", c->caid, t->s_svcname);
+              "New caid 0x%04X for service \"%s\"", c->caid, t->s_dvb_svcname);
 
             /* ecmpid not already seen, add it to list */
             cce             = calloc(1, sizeof(capmt_caid_ecm_t));
@@ -734,12 +709,8 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 
           uint16_t sid = t->s_dvb_service_id;
           uint16_t ecmpid = st->es_pid;
-#if TODO_FIX_THIS
-          uint16_t transponder = t->s_dvb_mux_instance->tdmi_transport_stream_id;
-          uint16_t onid = t->s_dvb_mux_instance->tdmi_network_id;
-#else
-          uint16_t transponder = 0, onid = 0;
-#endif
+          uint16_t transponder = t->s_dvb_mux->mm_tsid;
+          uint16_t onid = t->s_dvb_mux->mm_onid;
 
           /* don't do too much requests */
           if (current_caid == total_caids && caid != ct->ct_caid_last)
@@ -857,7 +828,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 
           if(ct->ct_keystate != CT_RESOLVED)
             tvhlog(LOG_DEBUG, "capmt",
-              "Trying to obtain key for service \"%s\"",t->s_svcname);
+              "Trying to obtain key for service \"%s\"",t->s_dvb_svcname);
 
           buf[9] = pmtversion;
           pmtversion = (pmtversion + 1) & 0x1F;
@@ -876,21 +847,12 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 /**
  *
  */
-#if ENABLE_DVBCSA
 static int
-capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-     const uint8_t *tsb)
+capmt_descramble
+  (th_descrambler_t *td, service_t *t, struct elementary_stream *st,
+   const uint8_t *tsb)
 {
   capmt_service_t *ct = (capmt_service_t *)td;
-  uint8_t *pkt;
-  int xc0;
-  int ev_od;
-  int len;
-  int offset;
-  int n;
-  // FIXME: //int residue;
-  int i;
-  uint8_t *t0;
 
   if(ct->ct_keystate == CT_FORBIDDEN)
     return 1;
@@ -898,110 +860,10 @@ capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *s
   if(ct->ct_keystate != CT_RESOLVED)
     return -1;
 
-  pkt = ct->ct_tsbcluster + ct->ct_fill * 188;
-  memcpy(pkt, tsb, 188);
-  ct->ct_fill++;
+  tvhcsa_descramble(&ct->ct_csa, (mpegts_service_t*)t, st, tsb, 0);
 
-  do { // handle this packet
-    xc0 = pkt[3] & 0xc0;
-    if(xc0 == 0x00) { // clear
-      break;
-    }
-    if(xc0 == 0x40) { // reserved
-      break;
-    }
-    if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-      ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-      pkt[3] &= 0x3f;  // consider it decrypted now
-      if(pkt[3] & 0x20) { // incomplete packet
-        offset = 4 + pkt[4] + 1;
-        len = 188 - offset;
-        n = len >> 3;
-        // FIXME: //residue = len - (n << 3);
-        if(n == 0) { // decrypted==encrypted!
-          break; // this doesn't need more processing
-        }
-      } else {
-        len = 184;
-        offset = 4;
-        // FIXME: //n = 23;
-        // FIXME: //residue = 0;
-      }
-      if(ev_od == 0) {
-        ct->ct_tsbbatch_even[ct->ct_fill_even].data = pkt + offset;
-        ct->ct_tsbbatch_even[ct->ct_fill_even].len = len;
-        ct->ct_fill_even++;
-      } else {
-        ct->ct_tsbbatch_odd[ct->ct_fill_odd].data = pkt + offset;
-        ct->ct_tsbbatch_odd[ct->ct_fill_odd].len = len;
-        ct->ct_fill_odd++;
-      }
-    }
-  } while(0);
-
-  if(ct->ct_fill != ct->ct_cluster_size)
-    return 0;
-
-  if(ct->ct_fill_even) {
-    ct->ct_tsbbatch_even[ct->ct_fill_even].data = NULL;
-    dvbcsa_bs_decrypt(ct->ct_key_even, ct->ct_tsbbatch_even, 184);
-    ct->ct_fill_even = 0;
-  }
-  if(ct->ct_fill_odd) {
-    ct->ct_tsbbatch_odd[ct->ct_fill_odd].data = NULL;
-    dvbcsa_bs_decrypt(ct->ct_key_odd, ct->ct_tsbbatch_odd, 184);
-    ct->ct_fill_odd = 0;
-  }
-
-    t0 = ct->ct_tsbcluster;
-    for(i = 0; i < ct->ct_fill; i++) {
-      ts_recv_packet2(t, t0);
-      t0 += 188;
-    }
-  ct->ct_fill = 0;
   return 0;
 }
-#else
-static int
-capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-     const uint8_t *tsb)
-{
-  capmt_service_t *ct = (capmt_service_t *)td;
-  int r, i;
-  unsigned char *vec[3];
-  uint8_t *t0;
-
-  if(ct->ct_keystate == CT_FORBIDDEN)
-    return 1;
-
-  if(ct->ct_keystate != CT_RESOLVED)
-    return -1;
-
-  memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
-  ct->ct_fill++;
-
-  if(ct->ct_fill != ct->ct_cluster_size)
-    return 0;
-
-  ct->ct_fill = 0;
-
-  vec[0] = ct->ct_tsbcluster;
-  vec[1] = ct->ct_tsbcluster + ct->ct_cluster_size * 188;
-  vec[2] = NULL;
-
-  while(1) {
-    t0 = vec[0];
-    r = decrypt_packets(ct->ct_keys, vec);
-    if(r == 0)
-      break;
-    for(i = 0; i < r; i++) {
-      ts_recv_packet2(t, t0);
-      t0 += 188;
-    }
-  }
-  return 0;
-}
-#endif
 
 /**
  * Check if our CAID's matches, and if so, link
@@ -1009,47 +871,46 @@ capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *s
  * global_lock is held
  */
 void
-capmt_service_start(service_t *t)
+capmt_service_start(service_t *s)
 {
+  extern const idclass_t mpegts_service_class;
+  extern const idclass_t linuxdvb_frontend_class; 
   capmt_t *capmt;
   capmt_service_t *ct;
   capmt_caid_ecm_t *cce;
   th_descrambler_t *td;
+  mpegts_service_t *t = (mpegts_service_t*)s;
+  linuxdvb_frontend_t *lfe;
+  int tuner = 0;
   
   lock_assert(&global_lock);
+
+  /* Validate */
+  if (!idnode_is_instance(&s->s_id, &mpegts_service_class))
+    return;
+  if (!t->s_dvb_active_input) return;
+  lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
+  if (!idnode_is_instance(&lfe->mi_id, &linuxdvb_frontend_class))
+    return;
+  tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     /* skip, if we're not active */
     if (!capmt->capmt_enabled)
       continue;
 
-#if TODO_FIX_THIS
-    if (!(t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter))
-      continue;
-#endif
-
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
-      t->s_svcname,
-      t->s_dvb_mux->dm_current_tdmi->tdmi_adapter->tda_adapter_num);
+      t->s_dvb_svcname, tuner);
 
     elementary_stream_t *st;
 
     /* create new capmt service */
-    ct                   = calloc(1, sizeof(capmt_service_t));
-#if ENABLE_DVBCSA
-    ct->ct_cluster_size  = dvbcsa_bs_batch_size();
-#else
-    ct->ct_cluster_size  = get_suggested_cluster_size();
-#endif
-    ct->ct_tsbcluster    = malloc(ct->ct_cluster_size * 188);
-    ct->ct_seq           = capmt->capmt_seq++;
-#if ENABLE_DVBCSA
-    ct->ct_tsbbatch_even = malloc((ct->ct_cluster_size + 1) *
-                             sizeof(struct dvbcsa_bs_batch_s));
-    ct->ct_tsbbatch_odd  = malloc((ct->ct_cluster_size + 1) *
-                             sizeof(struct dvbcsa_bs_batch_s));
-#endif
+    ct              = calloc(1, sizeof(capmt_service_t));
+    tvhcsa_init(&ct->ct_csa);
+    ct->ct_capmt    = capmt;
+    ct->ct_service  = t;
+
 
     TAILQ_FOREACH(st, &t->s_components, es_link) {
       caid_t *c;
@@ -1058,7 +919,7 @@ capmt_service_start(service_t *t)
           continue;
 
         tvhlog(LOG_DEBUG, "capmt",
-          "New caid 0x%04X for service \"%s\"", c->caid, t->s_svcname);
+          "New caid 0x%04X for service \"%s\"", c->caid, t->s_dvb_svcname);
 
         /* add it to list */
         cce             = calloc(1, sizeof(capmt_caid_ecm_t));
@@ -1071,15 +932,6 @@ capmt_service_start(service_t *t)
         ct->ct_caid_last = -1;
       }
     }
-
-#if ENABLE_DVBCSA
-    ct->ct_key_even   = dvbcsa_bs_key_alloc();
-    ct->ct_key_odd    = dvbcsa_bs_key_alloc();
-#else
-    ct->ct_keys       = get_key_struct();
-#endif
-    ct->ct_capmt      = capmt;
-    ct->ct_service  = t;
 
     td = &ct->ct_head;
     td->td_stop       = capmt_service_destroy;

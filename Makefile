@@ -215,8 +215,9 @@ SRCS-$(CONFIG_LIBAV) += src/libav.c \
 
 # CWC
 SRCS-${CONFIG_CWC} += \
-	src/cwc.c \
-	src/capmt.c
+	src/descrambler/tvhcsa.c \
+	src/descrambler/cwc.c \
+	src/descrambler/capmt.c
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
