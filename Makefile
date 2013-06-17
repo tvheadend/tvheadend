@@ -149,46 +149,46 @@ SRCS += src/muxer.c \
 
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
-  src/input/mpegts/mpegts_input.c \
-  src/input/mpegts/mpegts_network.c \
-  src/input/mpegts/mpegts_mux.c \
-  src/input/mpegts/mpegts_service.c \
-  src/input/mpegts/mpegts_table.c \
+        src/input/mpegts/mpegts_input.c \
+        src/input/mpegts/mpegts_network.c \
+        src/input/mpegts/mpegts_mux.c \
+        src/input/mpegts/mpegts_service.c \
+        src/input/mpegts/mpegts_table.c \
 	src/input/mpegts/dvb_support.c \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/tsdemux.c \
 
 # MPEGTS EPG
 #SRCS-$(CONFIG_MPEGTS) += \
-	src/epggrab/otamux.c\
-	src/epggrab/module/eit.c \
-	src/epggrab/module/opentv.c \
-	src/epggrab/support/freesat_huffman.c \
+#	src/epggrab/otamux.c\
+#	src/epggrab/module/eit.c \
+#	src/epggrab/module/opentv.c \
+#	src/epggrab/support/freesat_huffman.c \
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
-  src/input/mpegts/linuxdvb/linuxdvb.c \
-  src/input/mpegts/linuxdvb/linuxdvb_hardware.c \
-  src/input/mpegts/linuxdvb/linuxdvb_device.c \
-  src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
-  src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
-  src/input/mpegts/linuxdvb/linuxdvb_network.c \
-  src/input/mpegts/linuxdvb/linuxdvb_mux.c \
-  src/input/mpegts/linuxdvb/linuxdvb_service.c \
-  src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
-  src/input/mpegts/linuxdvb/diseqc.c
+        src/input/mpegts/linuxdvb/linuxdvb.c \
+        src/input/mpegts/linuxdvb/linuxdvb_hardware.c \
+        src/input/mpegts/linuxdvb/linuxdvb_device.c \
+        src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
+        src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
+        src/input/mpegts/linuxdvb/linuxdvb_network.c \
+        src/input/mpegts/linuxdvb/linuxdvb_mux.c \
+        src/input/mpegts/linuxdvb/linuxdvb_service.c \
+        src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
+        src/input/mpegts/linuxdvb/diseqc.c
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \
 	src/input/mpegts/iptv/iptv.c \
-  src/input/mpegts/iptv/iptv_mux.c \
-  src/input/mpegts/iptv/iptv_service.c \
+        src/input/mpegts/iptv/iptv_mux.c \
+        src/input/mpegts/iptv/iptv_service.c \
 
 # TSfile
 SRCS-$(CONFIG_TSFILE) += \
-  src/input/mpegts/tsfile/tsfile.c \
-  src/input/mpegts/tsfile/tsfile_input.c \
-  src/input/mpegts/tsfile/tsfile_mux.c \
+        src/input/mpegts/tsfile/tsfile.c \
+        src/input/mpegts/tsfile/tsfile_input.c \
+        src/input/mpegts/tsfile/tsfile_mux.c \
 
 # Timeshift
 SRCS-${CONFIG_TIMESHIFT} += \
