@@ -336,7 +336,9 @@ static int uni_tune
 {
   dvb_mux_conf_t *dmc = &lm->lm_tuning;
   struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
-  return diseqc_setup(fd, 0, 0, p->frequency > 11700000, 0, 0);
+  int pol = dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
+            dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
+  return diseqc_setup(fd, 0, pol, p->frequency > 11700000, 0, 0);
 }
  
 linuxdvb_satconf_t *
