@@ -61,6 +61,17 @@ struct mpegts_psi_section
   uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
 };
 
+struct mpegts_table_state
+{
+  int tableid;
+  int extraid;
+  int section;
+  int version;
+  int complete;
+  int last;
+  RB_ENTRY(mpegts_table_state) link;
+};
+
 struct mpegts_table
 {
   /**
@@ -94,11 +105,7 @@ struct mpegts_table
   void *mt_opaque;
   mpegts_table_callback_t mt_callback;
 
-  struct {
-    int section;
-    int version;
-    int complete;
-  } mt_state[256];
+  RB_HEAD(,mpegts_table_state) mt_state;
 
   int mt_count;
 

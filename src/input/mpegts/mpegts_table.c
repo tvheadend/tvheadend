@@ -102,10 +102,15 @@ mpegts_table_release ( mpegts_table_t *mt )
 void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
+  struct mpegts_table_state *st;
   LIST_REMOVE(mt, mt_link);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_num_tables--;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  while ((st = RB_FIRST(&mt->mt_state))) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
   mpegts_table_release(mt);
 }
 
