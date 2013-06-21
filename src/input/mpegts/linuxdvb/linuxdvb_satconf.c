@@ -231,6 +231,56 @@ linuxdvb_satconf_stop_mux
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
   ls->ls_frontend->mi_stop_mux(ls->ls_frontend, mmi);
+  gtimer_disarm(&ls->ls_diseqc_timer);
+}
+
+static void linuxdvb_satconf_tune_cb ( void *o );
+
+static int
+linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
+{
+  int r, i;
+  uint32_t f;
+
+  /* Get beans in a row */
+  mpegts_mux_instance_t *mmi   = ls->ls_mmi;
+  linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
+  linuxdvb_mux_t        *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
+  linuxdvb_diseqc_t     *lds[] = {
+    (linuxdvb_diseqc_t*)ls->ls_switch,
+    (linuxdvb_diseqc_t*)ls->ls_rotor,
+    (linuxdvb_diseqc_t*)ls->ls_lnb
+  };
+
+  /* Diseqc */  
+  i = ls->ls_diseqc_idx;
+  for (i = ls->ls_diseqc_idx; i < 3; i++) {
+    if (!lds[i]) continue;
+    r = lds[i]->ld_tune(lds[i], lm, lfe->lfe_fe_fd);
+
+    /* Error */
+    if (r < 0) return r;
+
+    /* Pending */
+    if (r != 0) {
+      gtimer_arm_ms(&ls->ls_diseqc_timer, linuxdvb_satconf_tune_cb, ls, r);
+      ls->ls_diseqc_idx = i + 1;
+      return 0;
+    }
+  }
+
+  /* Frontend */
+  f = ls->ls_lnb->lnb_freq(ls->ls_lnb, lm);
+  return linuxdvb_frontend_tune1(lfe, mmi, f);
+}
+
+static void
+linuxdvb_satconf_tune_cb ( void *o )
+{
+  linuxdvb_satconf_t *ls = o;
+  if (linuxdvb_satconf_tune(ls) < 0) {
+    // TODO: how do we signal this?
+  }
 }
 
 static int
@@ -239,9 +289,9 @@ linuxdvb_satconf_start_mux
 {
   int r;
   uint32_t f;
-  linuxdvb_satconf_t   *ls = (linuxdvb_satconf_t*)mi;
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)(mi = ls->ls_frontend);
-  linuxdvb_mux_t      *lm  = (linuxdvb_mux_t*)mmi->mmi_mux;
+  linuxdvb_satconf_t   *ls   = (linuxdvb_satconf_t*)mi;
+  linuxdvb_frontend_t *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
+  linuxdvb_mux_t      *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
 
   /* Test run */
   // Note: basically this ensures the tuning params are acceptable
@@ -249,22 +299,16 @@ linuxdvb_satconf_start_mux
   //       for things like rotors and switches
   if (!ls->ls_lnb)
     return SM_CODE_TUNING_FAILED;
-  f = ls->ls_lnb->lnb_frequency(ls->ls_lnb, lm);
+  f = ls->ls_lnb->lnb_freq(ls->ls_lnb, lm);
   if (f == (uint32_t)-1)
     return SM_CODE_TUNING_FAILED;
   r = linuxdvb_frontend_tune0(lfe, mmi, f);
   if (r) return r;
-  
-  /* Switch */
 
-  /* Rotor */
-
-  /* LNB */
-  if (ls->ls_lnb->lnb_tune(ls->ls_lnb, lm, lfe->lfe_fe_fd))
-    return SM_CODE_TUNING_FAILED;
-
-  /* Tune */
-  return linuxdvb_frontend_tune1(lfe, mmi, f);
+  /* Diseqc */
+  ls->ls_mmi        = mmi;
+  ls->ls_diseqc_idx = 0;
+  return linuxdvb_satconf_tune(ls);
 }
 
 static void
@@ -308,6 +352,33 @@ linuxdvb_satconf_has_subscription
 }
 
 static int
+linuxdvb_satconf_grace_period
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  int i, r;
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_diseqc_t     *lds[] = {
+    (linuxdvb_diseqc_t*)ls->ls_switch,
+    (linuxdvb_diseqc_t*)ls->ls_rotor,
+    (linuxdvb_diseqc_t*)ls->ls_lnb
+  };
+
+  /* Get underlying value */
+  if (ls->ls_frontend->mi_grace_period)
+    r = ls->ls_frontend->mi_grace_period(mi, mm);
+  else  
+    r = 10;
+
+  /* Add diseqc delay */
+  for (i = 0; i < 3; i++) {
+    if (lds[i] && lds[i]->ld_grace)
+      r += lds[i]->ld_grace(lds[i], (linuxdvb_mux_t*)mm);
+  }
+
+  return r;
+}
+
+static int
 linuxdvb_satconf_open_pid
   ( linuxdvb_frontend_t *lfe, int pid, const char *name )
 {
@@ -320,27 +391,6 @@ linuxdvb_satconf_open_pid
  * Creation/Config
  * *************************************************************************/
 
-static uint32_t uni_freq
-  ( linuxdvb_lnb_t *lnb, linuxdvb_mux_t *lm )
-{
-  dvb_mux_conf_t *dmc = &lm->lm_tuning;
-  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
-  if (p->frequency > 11700000)
-    return abs(p->frequency - 10600000);
-  else
-    return abs(p->frequency - 9750000);
-}
-
-static int uni_tune
-  ( linuxdvb_lnb_t *lnb, linuxdvb_mux_t *lm, int fd )
-{
-  dvb_mux_conf_t *dmc = &lm->lm_tuning;
-  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
-  int pol = dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
-            dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
-  return diseqc_setup(fd, 0, pol, p->frequency > 11700000, 0, 0);
-}
- 
 linuxdvb_satconf_t *
 linuxdvb_satconf_create0
   ( const char *uuid, htsmsg_t *conf )
@@ -361,12 +411,8 @@ linuxdvb_satconf_create0
   ls->mi_started_mux         = linuxdvb_satconf_started_mux;
   ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
   ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
+  ls->mi_grace_period        = linuxdvb_satconf_grace_period;
   ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
-
-  /* Unoversal LMB */
-  ls->ls_lnb = calloc(1, sizeof(linuxdvb_lnb_t));
-  ls->ls_lnb->lnb_frequency = uni_freq;
-  ls->ls_lnb->lnb_tune      = uni_tune;
 
   return ls;
 }

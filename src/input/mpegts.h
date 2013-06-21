@@ -405,6 +405,7 @@ struct mpegts_input
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
+  int  (*mi_grace_period)   (mpegts_input_t*, mpegts_mux_t *mm);
 };
 
 #endif /* __TVH_MPEGTS_H__ */

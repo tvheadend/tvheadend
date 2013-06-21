@@ -29,7 +29,6 @@ typedef struct linuxdvb_frontend linuxdvb_frontend_t;
 typedef struct linuxdvb_network  linuxdvb_network_t;
 typedef struct linuxdvb_mux      linuxdvb_mux_t;
 typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
-typedef struct linuxdvb_lnb      linuxdvb_lnb_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
@@ -222,12 +221,21 @@ mpegts_service_t *linuxdvb_service_create0
    const char *uuid, htsmsg_t *conf);
 
 /*
- * LNB
+ * Diseqc gear
  */
+typedef struct linuxdvb_diseqc linuxdvb_diseqc_t;
+typedef struct linuxdvb_lnb    linuxdvb_lnb_t;
+
+struct linuxdvb_diseqc
+{
+  int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
+  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd);
+};
+
 struct linuxdvb_lnb
 {
-  uint32_t  (*lnb_frequency)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_tune)(linuxdvb_lnb_t*, linuxdvb_mux_t *lm, int fd);
+  linuxdvb_diseqc_t;
+  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
 };
 
 /*
@@ -237,9 +245,16 @@ struct linuxdvb_satconf
 {
   linuxdvb_frontend_t;
 
-  /* Links */
-  mpegts_input_t *ls_frontend;
-  linuxdvb_lnb_t *ls_lnb;
+  mpegts_input_t        *ls_frontend;
+  mpegts_mux_instance_t *ls_mmi;
+
+  /* Diseqc gear */
+  linuxdvb_lnb_t        *ls_lnb;
+  linuxdvb_diseqc_t     *ls_switch;
+  linuxdvb_diseqc_t     *ls_rotor;
+
+  gtimer_t              ls_diseqc_timer;
+  int                   ls_diseqc_idx;
 };
 
 void linuxdvb_satconf_init ( void );

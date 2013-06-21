@@ -248,6 +248,24 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
     si->si_service = strdup(s->s_dvb_svcname);
 }
 
+/*
+ * Grace period
+ */
+static int
+mpegts_service_grace_period(service_t *t)
+{
+  int r = 0;
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  mpegts_mux_t     *mm = ms->s_dvb_mux;
+  mpegts_input_t   *mi = ms->s_dvb_active_input;
+  assert(mi != NULL);
+
+  if (mi && mi->mi_grace_period)
+    r = mi->mi_grace_period(mi, mm);
+  
+  return r ?: 10;  
+}
+
 /* **************************************************************************
  * Creation/Location
  * *************************************************************************/
@@ -279,9 +297,7 @@ mpegts_service_create0
   s->s_stop_feed      = mpegts_service_stop;
   s->s_refresh_feed   = mpegts_service_refresh;
   s->s_setsourceinfo  = mpegts_service_setsourceinfo;
-#if 0
   s->s_grace_period   = mpegts_service_grace_period;
-#endif
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);

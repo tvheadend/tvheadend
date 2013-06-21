@@ -52,6 +52,6 @@ linuxdvb_service_create0
   mpegts_service_t *s
     = mpegts_service_create1(uuid, (mpegts_mux_t*)mm, sid, pmt_pid, conf);
   if (s)
-    s->s_config_save = linuxdvb_service_config_save;
+    s->s_config_save  = linuxdvb_service_config_save;
   return s;
 }
