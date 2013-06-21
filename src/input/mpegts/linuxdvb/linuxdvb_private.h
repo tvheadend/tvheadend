@@ -228,6 +228,7 @@ typedef struct linuxdvb_lnb    linuxdvb_lnb_t;
 
 struct linuxdvb_diseqc
 {
+  idnode_t ld_id;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd);
 };
@@ -237,6 +238,13 @@ struct linuxdvb_lnb
   linuxdvb_diseqc_t;
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
 };
+
+linuxdvb_lnb_t    *linuxdvb_lnb_create0
+  ( const char *name, htsmsg_t *conf );
+linuxdvb_diseqc_t *linuxdvb_switch_create0
+  ( const char *name, htsmsg_t *conf );
+linuxdvb_diseqc_t *linuxdvb_rotor_create0
+  ( const char *name, htsmsg_t *conf );
 
 /*
  * Satconf
