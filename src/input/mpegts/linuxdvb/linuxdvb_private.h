@@ -239,6 +239,14 @@ struct linuxdvb_lnb
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
 };
 
+linuxdvb_diseqc_t *linuxdvb_diseqc_create0
+  ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
+    htsmsg_t *conf );
+
+#define linuxdvb_diseqc_create(_d, _u, _c)\
+  linuxdvb_diseqc_create0(calloc(1, sizeof(struct _d)),\
+                                 _u, &_d##_class, _c)
+  
 linuxdvb_lnb_t    *linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf );
 linuxdvb_diseqc_t *linuxdvb_switch_create0

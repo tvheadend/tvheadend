@@ -429,6 +429,24 @@ void linuxdvb_satconf_init ( void )
   }
 }
 
+linuxdvb_diseqc_t *
+linuxdvb_diseqc_create0
+  ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
+    htsmsg_t *conf )
+{
+  /* Insert */
+  if (idnode_insert(&ld->ld_id, uuid, idc)) {
+    free(ld);
+    return NULL;
+  }
+  
+  /* Load config */
+  if (conf)
+    idnode_load(&ld->ld_id, conf);
+
+  return ld;
+}
+
 /******************************************************************************
  * Editor Configuration
  *
