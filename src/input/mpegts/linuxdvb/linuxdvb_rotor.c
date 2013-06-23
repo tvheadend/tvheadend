@@ -1,5 +1,5 @@
 /*
- *  Tvheadend - Linux DVB DiseqC switch
+ *  Tvheadend - Linux DVB DiseqC Rotor
  *
  *  Copyright (C) 2013 Adam Sutton
  *
@@ -35,7 +35,7 @@
  * Class definition
  * *************************************************************************/
 
-typedef struct linuxdvb_switch
+typedef struct linuxdvb_rotor
 {
   linuxdvb_diseqc_t;
 
@@ -44,51 +44,13 @@ typedef struct linuxdvb_switch
   int ls_committed;
   int ls_uncomitted;
 
-} linuxdvb_switch_t;
+} linuxdvb_rotor_t;
 
-static htsmsg_t *
-linuxdvb_switch_class_committed_list ( void *o )
-{
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "AA");
-  htsmsg_add_str(m, NULL, "AB");
-  htsmsg_add_str(m, NULL, "BA");
-  htsmsg_add_str(m, NULL, "BB");
-  return m;
-}
-
-static htsmsg_t *
-linuxdvb_switch_class_toneburst_list ( void *o )
-{
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "A");
-  htsmsg_add_str(m, NULL, "B");
-  return m;
-}
-
-const idclass_t linuxdvb_switch_class =
+const idclass_t linuxdvb_rotor_class =
 {
   .ic_class       = "linuxdvb_switch",
   .ic_caption     = "DiseqC switch",
   .ic_properties  = (const property_t[]) {
-    {
-      .type   = PT_INT,
-      .id     = "Committed",
-      .off    = offsetof(linuxdvb_switch_t, ls_committed),
-      .list   = linuxdvb_switch_class_committed_list
-    },
-    {
-      .type   = PT_INT,
-      .id     = "Uncommitted",
-      .off    = offsetof(linuxdvb_switch_t, ls_uncomitted),
-    },
-    {
-      .type   = PT_INT,
-      .id     = "Tone Burst",
-      .off    = offsetof(linuxdvb_switch_t, ls_toneburst),
-      .list   = linuxdvb_switch_class_toneburst_list
-    },
-    {}
   }
 };
 
@@ -97,38 +59,9 @@ const idclass_t linuxdvb_switch_class =
  * *************************************************************************/
 
 static int
-linuxdvb_switch_tune
+linuxdvb_rotor_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd )
 {
-  linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
-  
-  // TODO: retransmit
-  // TODO: build into above protocol
-  
-  /* Uncommitted */
-  if (ls->ls_uncomitted) {
-    uint8_t s = 0xF0 | (ls->ls_uncomitted - 1);
-    if (diseqc_send_msg(fd, 0xE0, 0x10, 0x39, s, 0, 0, 4))
-      return -1;
-    usleep(15000);
-  }
-
-  /* Committed */
-  if (ls->ls_committed) {
-    uint8_t s = 0xF0 | (ls->ls_committed - 1);
-    if (diseqc_send_msg(fd, 0xE0, 0x10, 0x38, s, 0, 0, 4))
-      return -1;
-  }
-
-  /* Tone burst */
-  if (ls->ls_toneburst) {
-    tvhtrace("linuxdvb", "toneburst %s", ls->ls_toneburst == 2 ? "on" : "off");
-    if (ioctl(fd, FE_SET_TONE, ls->ls_toneburst ? SEC_TONE_ON : SEC_TONE_OFF)) {
-      tvherror("linuxdvb", "failed to set toneburst (e=%s)", strerror(errno));
-      return -1;
-    }
-  }
-
   return 0;
 }
 
@@ -137,13 +70,13 @@ linuxdvb_switch_tune
  * *************************************************************************/
 
 linuxdvb_diseqc_t *
-linuxdvb_switch_create0
+linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf )
 {
   linuxdvb_diseqc_t *ld
-    = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf);
+    = linuxdvb_diseqc_create(linuxdvb_rotor, NULL, conf);
   if (ld) {
-    ld->ld_tune = linuxdvb_switch_tune;
+    ld->ld_tune = linuxdvb_rotor_tune;
   }
 
   return ld;

@@ -216,7 +216,7 @@ linuxdvb_lnb_create0
     if (!strcmp(linuxdvb_lnb_list[i].lnb_name, name))
       return (linuxdvb_lnb_t*)&linuxdvb_lnb_list[i];
   }
-  return NULL;
+  return (linuxdvb_lnb_t*)linuxdvb_lnb_list; // Universal
 }
 
 #if 0

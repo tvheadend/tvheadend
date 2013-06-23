@@ -395,6 +395,8 @@ linuxdvb_satconf_t *
 linuxdvb_satconf_create0
   ( const char *uuid, htsmsg_t *conf )
 {
+  const char *s;
+  htsmsg_t *e;
   linuxdvb_satconf_t *ls = mpegts_input_create(linuxdvb_satconf, uuid, conf);
 
   /* Input callbacks */
@@ -413,6 +415,25 @@ linuxdvb_satconf_create0
   ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
   ls->mi_grace_period        = linuxdvb_satconf_grace_period;
   ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
+
+  /* Config */
+  if (conf) {
+
+    /* LNB */
+    e = htsmsg_get_map(conf, "lnb");
+    s = e ? htsmsg_get_str(e, "type") : NULL;
+    ls->ls_lnb    = linuxdvb_lnb_create0(s, e);
+
+    /* Switch */
+    e = htsmsg_get_map(conf, "switch");
+    s = e ? htsmsg_get_str(e, "type") : NULL;
+    ls->ls_switch = linuxdvb_switch_create0(s, e);
+
+    /* Rotor */
+    e = htsmsg_get_map(conf, "rotor");
+    s = e ? htsmsg_get_str(e, "type") : NULL;
+    ls->ls_rotor  = linuxdvb_rotor_create0(s, e);
+  }
 
   return ls;
 }
