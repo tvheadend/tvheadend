@@ -58,6 +58,7 @@ const static struct strtab typetab[] = {
   { "str",   PT_STR },
   { "u16",   PT_U16 },
   { "u32",   PT_U32 },
+  { "dbl",   PT_DBL },
 };
 
 
@@ -150,6 +151,14 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
       }
       break;
     }
+    case TO_FROM(PT_DBL, HMF_DBL): {
+      double *val = v;
+      if (*val != f->hmf_dbl) {
+        *val = f->hmf_dbl;
+        save = 1;
+      }
+      break;
+    }
     }
   }
   return save;
@@ -195,6 +204,9 @@ prop_read_value
     if(s != NULL) {
       htsmsg_add_str(m, name, s);
     }
+    break;
+  case PT_DBL:
+    htsmsg_add_dbl(m, name, *(double*)val);
     break;
   }
 }

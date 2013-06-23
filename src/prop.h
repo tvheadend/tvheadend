@@ -33,6 +33,7 @@ typedef enum {
   PT_INT,
   PT_U16,
   PT_U32,
+  PT_DBL,
 } prop_type_t;
 
 /*

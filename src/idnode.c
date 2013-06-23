@@ -398,6 +398,7 @@ idnode_cmp_sort
           return u32b - u32a;
       }
       break;
+    case PT_DBL:
     case PT_BOOL:
       // TODO
       break;
