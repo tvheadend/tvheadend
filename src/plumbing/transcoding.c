@@ -1317,7 +1317,7 @@ transcoder_get_capabilities(htsmsg_t *array)
 
   while ((p = av_codec_next(p))) {
 
-    if (!p->encode && !p->encode2)
+    if (!libav_is_encoder(p))
       continue;
 
     if (!WORKING_ENCODER(p->id))

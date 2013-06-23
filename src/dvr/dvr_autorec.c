@@ -88,8 +88,10 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   // Note: we always test season first, though it will only be set
   //       if configured
-  if(dae->dae_serieslink)
+  if(dae->dae_serieslink) {
     if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
+    return 1;
+  }
   if(dae->dae_season)
     if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   if(dae->dae_brand)
