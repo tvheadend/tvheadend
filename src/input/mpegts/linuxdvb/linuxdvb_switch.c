@@ -73,18 +73,21 @@ const idclass_t linuxdvb_switch_class =
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_INT,
-      .id     = "Committed",
+      .id     = "committed",
+      .name   = "Committed",
       .off    = offsetof(linuxdvb_switch_t, ls_committed),
       .list   = linuxdvb_switch_class_committed_list
     },
     {
       .type   = PT_INT,
-      .id     = "Uncommitted",
+      .id     = "uncommitted",
+      .name   = "Uncommitted",
       .off    = offsetof(linuxdvb_switch_t, ls_uncomitted),
     },
     {
       .type   = PT_INT,
       .id     = "Tone Burst",
+      .name   = "toneburst",
       .off    = offsetof(linuxdvb_switch_t, ls_toneburst),
       .list   = linuxdvb_switch_class_toneburst_list
     },
