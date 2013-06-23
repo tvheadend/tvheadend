@@ -252,6 +252,12 @@ linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
     (linuxdvb_diseqc_t*)ls->ls_lnb
   };
 
+  /* Disable tone */
+  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
+    tvherror("linuxdvb", "failed to disable tone");
+    return -1;
+  }
+
   /* Diseqc */  
   i = ls->ls_diseqc_idx;
   for (i = ls->ls_diseqc_idx; i < 3; i++) {
