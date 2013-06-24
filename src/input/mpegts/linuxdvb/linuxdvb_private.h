@@ -254,6 +254,10 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf );
 
+int
+linuxdvb_diseqc_send
+  (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...);
+
 /*
  * Satconf
  */

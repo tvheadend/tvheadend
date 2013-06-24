@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
-#include "diseqc.h"
 #include "settings.h"
 
 #include <sys/ioctl.h>

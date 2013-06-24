@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
-#include "diseqc.h"
 #include "settings.h"
 
 #include <sys/ioctl.h>
@@ -143,7 +142,7 @@ static int
 linuxdvb_rotor_gotox_tune
   ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, int fd )
 {
-  if (diseqc_send_msg(fd, 0xE0, 0x31, 0x6B, lr->lr_position, 0, 0, 4)) {
+  if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
     tvherror("linuxdvb", "failed to set GOTOX pos %d", lr->lr_position);
     return -1;
   }
@@ -206,7 +205,7 @@ linuxdvb_rotor_usals_tune
            fabs(pos), (pos > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
-  if (diseqc_send_msg(fd, 0xE0, 0x31, 0x6E, angle_1, angle_2, 0, 5)) {
+  if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
     tvherror("linuxdvb", "failed to send USALS command");
     return -1;
   }

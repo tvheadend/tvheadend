@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
-#include "diseqc.h"
 #include "settings.h"
 
 #include <sys/ioctl.h>
@@ -110,16 +109,16 @@ linuxdvb_switch_tune
   
   /* Uncommitted */
   if (ls->ls_uncomitted) {
-    uint8_t s = 0xF0 | (ls->ls_uncomitted - 1);
-    if (diseqc_send_msg(fd, 0xE0, 0x10, 0x39, s, 0, 0, 4))
+    int s = 0xF0 | (ls->ls_uncomitted - 1);
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x39, 1, s))
       return -1;
     usleep(15000);
   }
 
   /* Committed */
   if (ls->ls_committed) {
-    uint8_t s = 0xF0 | (ls->ls_committed - 1);
-    if (diseqc_send_msg(fd, 0xE0, 0x10, 0x38, s, 0, 0, 4))
+    int s = 0xF0 | (ls->ls_committed - 1);
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, s))
       return -1;
   }
 

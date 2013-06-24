@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
-#include "diseqc.h"
 #include "settings.h"
 
 #include <sys/ioctl.h>
@@ -473,6 +472,44 @@ linuxdvb_diseqc_create0
 
   return ld;
 }
+
+int
+linuxdvb_diseqc_send
+  (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...)
+{
+  int i;
+  va_list ap;
+  struct dvb_diseqc_master_cmd message;
+#if ENABLE_TRACE
+  char buf[256];
+  size_t c = 0;
+#endif
+
+  /* Build message */
+  message.msg_len = len + 3;
+  message.msg[0]  = framing;
+  message.msg[1]  = addr;
+  message.msg[2]  = cmd;
+  va_start(ap, len);
+  for (i = 0; i < len; i++) {
+    message.msg[3 + i] = (uint8_t)va_arg(ap, int);
+#if ENABLE_TRACE
+    c += snprintf(buf + c, sizeof(buf) - c, "%02X ", message.msg[3 + i]);
+#endif
+  }
+  va_end(ap);
+
+  tvhtrace("linuxdvb", "sending diseqc (len %d) %02X %02X %02X %s",
+           len + 3, framing, addr, cmd, buf);
+
+  /* Send */
+  if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
+    tvherror("linuxdvb", "failed to send diseqc cmd (e=%s)", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
 
 /******************************************************************************
  * Editor Configuration
