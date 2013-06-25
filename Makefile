@@ -179,7 +179,6 @@ SRCS-${CONFIG_LINUXDVB} += \
         src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
         src/input/mpegts/linuxdvb/linuxdvb_switch.c \
         src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
-        src/input/mpegts/linuxdvb/diseqc.c
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \

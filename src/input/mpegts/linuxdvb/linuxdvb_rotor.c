@@ -249,6 +249,7 @@ linuxdvb_diseqc_t *
 linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf )
 {
+  if (!name) return NULL;
   linuxdvb_diseqc_t *ld
     = linuxdvb_diseqc_create(linuxdvb_rotor, NULL, conf);
   if (ld) {

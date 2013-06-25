@@ -211,9 +211,11 @@ linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf )
 {
   int i;
-  for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_list); i++) {
-    if (!strcmp(linuxdvb_lnb_list[i].lnb_name, name))
-      return (linuxdvb_lnb_t*)&linuxdvb_lnb_list[i];
+  if (name) {
+    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_list); i++) {
+      if (!strcmp(linuxdvb_lnb_list[i].lnb_name, name))
+        return (linuxdvb_lnb_t*)&linuxdvb_lnb_list[i];
+    }
   }
   return (linuxdvb_lnb_t*)linuxdvb_lnb_list; // Universal
 }
