@@ -64,6 +64,7 @@ tvheadend.idnode_editor_field = function(f, create)
     case 'int':
     case 'u32':
     case 'u16':
+    case 'dbl':
       return new Ext.form.NumberField({
         fieldLabel  : f.caption,
         name        : f.id,

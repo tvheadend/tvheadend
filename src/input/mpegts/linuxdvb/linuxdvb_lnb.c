@@ -38,14 +38,17 @@ typedef struct linuxdvb_lnb_conf
 {
   linuxdvb_lnb_t;
 
-  /* Name/ID */
-  const char *lnb_name;
-
   /* Freq control */
   int lnb_low;
   int lnb_high;
   int lnb_switch;
 } linuxdvb_lnb_conf_t;
+
+const idclass_t linuxdvb_lnb_class =
+{
+  .ic_class       = "linuxdvb_lnb_basic",
+  .ic_caption     = "LNB",
+};
 
 /* **************************************************************************
  * Control functions
@@ -91,7 +94,7 @@ linuxdvb_lnb_standard_freq
 
 static int 
 linuxdvb_lnb_standard_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
   linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)ld;
   dvb_mux_conf_t      *dmc = &lm->lm_tuning;
@@ -125,7 +128,7 @@ linuxdvb_lnb_bandstack_freq
 
 static int
 linuxdvb_lnb_bandstack_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
   return diseqc_volt_tone(fd, 1, 0);
 }
@@ -134,9 +137,9 @@ linuxdvb_lnb_bandstack_tune
  * Static list
  * *************************************************************************/
 
-struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
+struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   {
-    .lnb_name   = "Universal",
+    .ld_type    = "Universal",
     .lnb_low    =  9750000,
     .lnb_high   = 10600000,
     .lnb_switch = 11700000,
@@ -144,7 +147,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "Standard",
+    .ld_type    = "Standard",
     .lnb_low    = 10000000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -152,7 +155,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "Enhanced",
+    .ld_type    = "Enhanced",
     .lnb_low    =  9750000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -160,7 +163,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "C-Band",
+    .ld_type    = "C-Band",
     .lnb_low    =  5150000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -168,7 +171,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "Circular 10750",
+    .ld_type    = "Circular 10750",
     .lnb_low    = 10750000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -176,7 +179,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "Ku 11300",
+    .ld_type    = "Ku 11300",
     .lnb_low    = 11300000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -184,7 +187,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "DBS",
+    .ld_type    = "DBS",
     .lnb_low    = 11250000,
     .lnb_high   = 0,
     .lnb_switch = 0,
@@ -192,7 +195,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
-    .lnb_name   = "DBS Bandstack",
+    .ld_type    = "DBS Bandstack",
     .lnb_low    = 11250000,
     .lnb_high   = 14350000,
     .lnb_switch = 0,
@@ -201,31 +204,45 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_list[] = {
   },
 };
 
-
 /* **************************************************************************
  * Create / Config
  * *************************************************************************/
+
+htsmsg_t *
+linuxdvb_lnb_list ( void *o )
+{
+  int i;
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
+    htsmsg_add_str(m, NULL, linuxdvb_lnb_all[i].ld_type);
+  return m;
+}
 
 linuxdvb_lnb_t *
 linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf )
 {
   int i;
+
+  /* Setup static entries */
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
+    if (!linuxdvb_lnb_all[i].ld_id.in_class)
+      idnode_insert(&linuxdvb_lnb_all[i].ld_id, NULL, &linuxdvb_lnb_class);
+
+  /* Find */
   if (name) {
-    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_list); i++) {
-      if (!strcmp(linuxdvb_lnb_list[i].lnb_name, name))
-        return (linuxdvb_lnb_t*)&linuxdvb_lnb_list[i];
+    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++) {
+      if (!strcmp(linuxdvb_lnb_all[i].ld_type, name))
+        return (linuxdvb_lnb_t*)&linuxdvb_lnb_all[i];
     }
   }
-  return (linuxdvb_lnb_t*)linuxdvb_lnb_list; // Universal
+  return (linuxdvb_lnb_t*)linuxdvb_lnb_all; // Universal
 }
 
-#if 0
 void
-linuxvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
+linuxdvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
 {
 }
-#endif
 
 /******************************************************************************
  * Editor Configuration

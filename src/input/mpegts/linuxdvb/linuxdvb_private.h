@@ -229,8 +229,10 @@ typedef struct linuxdvb_lnb    linuxdvb_lnb_t;
 struct linuxdvb_diseqc
 {
   idnode_t ld_id;
+  const char *ld_type;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
-  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd);
+  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
+                   linuxdvb_satconf_t *ls, int fd);
 };
 
 struct linuxdvb_lnb
@@ -241,11 +243,13 @@ struct linuxdvb_lnb
 
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
   ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
-    htsmsg_t *conf );
+    htsmsg_t *conf, const char *type );
 
-#define linuxdvb_diseqc_create(_d, _u, _c)\
+void linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld );
+
+#define linuxdvb_diseqc_create(_d, _u, _c, _t)\
   linuxdvb_diseqc_create0(calloc(1, sizeof(struct _d)),\
-                                 _u, &_d##_class, _c)
+                                 _u, &_d##_class, _c, _t)
   
 linuxdvb_lnb_t    *linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf );
@@ -253,6 +257,14 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
   ( const char *name, htsmsg_t *conf );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf );
+
+void linuxdvb_lnb_destroy    ( linuxdvb_lnb_t    *lnb );
+void linuxdvb_switch_destroy ( linuxdvb_diseqc_t *ld );
+void linuxdvb_rotor_destroy  ( linuxdvb_diseqc_t *ld );
+
+htsmsg_t *linuxdvb_lnb_list    ( void *o );
+htsmsg_t *linuxdvb_switch_list ( void *o );
+htsmsg_t *linuxdvb_rotor_list  ( void *o );
 
 int
 linuxdvb_diseqc_send
@@ -275,6 +287,7 @@ struct linuxdvb_satconf
 
   gtimer_t              ls_diseqc_timer;
   int                   ls_diseqc_idx;
+  int                   ls_diseqc_repeats;
 };
 
 void linuxdvb_satconf_init ( void );

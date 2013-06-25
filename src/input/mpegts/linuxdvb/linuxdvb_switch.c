@@ -100,26 +100,40 @@ const idclass_t linuxdvb_switch_class =
 
 static int
 linuxdvb_switch_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *sc, int fd )
 {
+  int i, r = 0;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
   
-  // TODO: retransmit
-  // TODO: build into above protocol
-  
-  /* Uncommitted */
-  if (ls->ls_uncomitted) {
-    int s = 0xF0 | (ls->ls_uncomitted - 1);
-    if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x39, 1, s))
-      return -1;
-    usleep(15000);
-  }
-
-  /* Committed */
-  if (ls->ls_committed) {
+  /* Single committed (before repeats) */
+  if (sc->ls_diseqc_repeats && ls->ls_committed) {
     int s = 0xF0 | (ls->ls_committed - 1);
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, s))
       return -1;
+    usleep(25000); // 25ms
+  }
+
+  /* Repeats */
+  for (i = 0; i <= sc->ls_diseqc_repeats; i++) {
+    
+    /* Uncommitted */
+    if (ls->ls_uncomitted) {
+      int s = 0xF0 | (ls->ls_uncomitted - 1);
+      if (linuxdvb_diseqc_send(fd, 0xE0 | r, 0x10, 0x39, 1, s))
+        return -1;
+      usleep(25000);
+    }
+
+    /* Committed */
+    if (ls->ls_committed) {
+      int s = 0xF0 | (ls->ls_committed - 1);
+      if (linuxdvb_diseqc_send(fd, 0xE1, 0x10, 0x38, 1, s))
+        return -1;
+      usleep(25000);
+    }
+
+    /* repeat flag */
+    r = 1;
   }
 
   /* Tone burst */
@@ -138,25 +152,36 @@ linuxdvb_switch_tune
  * Create / Config
  * *************************************************************************/
 
+htsmsg_t *
+linuxdvb_switch_list ( void *o )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "None");
+  htsmsg_add_str(m, NULL, "Generic");
+  return m;
+}
+
 linuxdvb_diseqc_t *
 linuxdvb_switch_create0
   ( const char *name, htsmsg_t *conf )
 {
-  linuxdvb_diseqc_t *ld
-    = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf);
-  if (ld) {
-    ld->ld_tune = linuxdvb_switch_tune;
+  linuxdvb_diseqc_t *ld = NULL;
+  if (!strcmp(name ?: "", "Generic")) {
+    ld = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf, "Generic");
+    if (ld) {
+      ld->ld_tune = linuxdvb_switch_tune;
+    }
   }
 
   return ld;
 }
 
-#if 0
 void
-linuxvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
+linuxdvb_switch_destroy ( linuxdvb_diseqc_t *ld )
 {
+  linuxdvb_diseqc_destroy(ld);
+  free(ld);
 }
-#endif
 
 /******************************************************************************
  * Editor Configuration

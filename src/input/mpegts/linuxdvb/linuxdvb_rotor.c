@@ -38,89 +38,61 @@ typedef struct linuxdvb_rotor
 {
   linuxdvb_diseqc_t;
 
-  enum {
-    ROTOR_GOTOX,
-    ROTOR_USALS
-  }         lr_type;
-
+  /* USALS */
   double    lr_site_lat;
   double    lr_site_lon;
   double    lr_sat_lon;
   
+  /* GOTOX */
   uint32_t  lr_position;
 
   uint32_t  lr_rate;
 
 } linuxdvb_rotor_t;
 
-static const void *
-linuxdvb_rotor_class_type_get ( void *o )
+const idclass_t linuxdvb_rotor_gotox_class =
 {
-  static const char *str;
-  linuxdvb_rotor_t *lr = o;
-  str = lr->lr_type == ROTOR_GOTOX ? "GOTOX" : "USALS";
-  return &str;
-}
-
-static int
-linuxdvb_rotor_class_type_set ( void *o, const void *p )
-{
-  const char       *str = p;
-  linuxdvb_rotor_t *lr  = o;
-  if (!strcmp("GOTOX", str))
-    lr->lr_type = ROTOR_GOTOX;
-  else
-    lr->lr_type = ROTOR_USALS;
-  return 1;
-}
-
-static htsmsg_t *
-linuxdvb_rotor_class_type_list ( void *o )
-{
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "GOTOX");
-  htsmsg_add_str(m, NULL, "USALS");
-  return m;
-}
-
-const idclass_t linuxdvb_rotor_class =
-{
-  .ic_class       = "linuxdvb_switch",
-  .ic_caption     = "DiseqC switch",
+  .ic_class       = "linuxdvb_rotor_gotox",
+  .ic_caption     = "GOTOX Rotor",
   .ic_properties  = (const property_t[]) {
     {
-      .type   = PT_STR,
-      .id     = "type",
-      .name   = "Rotor Type",
-      .get    = linuxdvb_rotor_class_type_get,
-      .set    = linuxdvb_rotor_class_type_set,
-      .list   = linuxdvb_rotor_class_type_list,
+      .type   = PT_U16,
+      .id     = "position",
+      .name   = "Position",
+      .off    = offsetof(linuxdvb_rotor_t, lr_position),
     },
-#if 0
+    {
+      .type   = PT_U16,
+      .id     = "rate",
+      .name   = "Rate (millis/click)",
+      .off    = offsetof(linuxdvb_rotor_t, lr_rate),
+    },
+    {}
+  }
+};
+
+const idclass_t linuxdvb_rotor_usals_class =
+{
+  .ic_class       = "linuxdvb_rotor_usals",
+  .ic_caption     = "USALS Rotor",
+  .ic_properties  = (const property_t[]) {
     {
       .type   = PT_DBL,
       .id     = "site_lat",
-      .name   = "Site Lat",
+      .name   = "Site Latitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_site_lat),
     },
     {
       .type   = PT_DBL,
       .id     = "site_lon",
-      .name   = "Site Lon",
+      .name   = "Site Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_site_lon),
     },
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = "Sat Lon",
+      .name   = "Satellite Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
-    },
-#endif
-    {
-      .type   = PT_U16,
-      .id     = "position",
-      .name   = "Position",
-      .off    = offsetof(linuxdvb_rotor_t, lr_site_lat),
     },
     {
       .type   = PT_U16,
@@ -128,8 +100,8 @@ const idclass_t linuxdvb_rotor_class =
       .name   = "Rate (millis/deg)",
       .off    = offsetof(linuxdvb_rotor_t, lr_rate),
     },
-    {
-    }
+ 
+    {}
   }
 };
 
@@ -140,11 +112,15 @@ const idclass_t linuxdvb_rotor_class =
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
-  if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
-    tvherror("linuxdvb", "failed to set GOTOX pos %d", lr->lr_position);
-    return -1;
+  int i;
+  for (i = 0; i <= ls->ls_diseqc_repeats; i++) {
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
+      tvherror("linuxdvb", "failed to set GOTOX pos %d", lr->lr_position);
+      return -1;
+    }
+    usleep(25000);
   }
 
   tvhdebug("linuxdvb", "rotor GOTOX pos %d sent", lr->lr_position);
@@ -154,7 +130,7 @@ linuxdvb_rotor_gotox_tune
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
   /*
    * Code originally written in PR #238 by Jason Millard jsm174
@@ -168,6 +144,8 @@ linuxdvb_rotor_usals_tune
 
 #define TO_DEG(x) ((x * 180.0) / M_PI)
 #define TO_RAD(x) ((x * M_PI) / 180.0)
+  
+  int i;
  
   static const double r_eq  = 6378.14;
   static const double r_sat = 42164.57;
@@ -205,17 +183,23 @@ linuxdvb_rotor_usals_tune
            fabs(pos), (pos > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
-  if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
-    tvherror("linuxdvb", "failed to send USALS command");
-    return -1;
+  for (i = 0; i <= ls->ls_diseqc_repeats; i++) {
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
+      tvherror("linuxdvb", "failed to send USALS command");
+      return -1;
+    }
+    usleep(25000);
   }
 
   return 120; // TODO: calculate period (2 min hardcoded)
+
+#undef TO_RAD
+#undef TO_DEG
 }
 
 static int
 linuxdvb_rotor_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, int fd )
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
@@ -227,11 +211,11 @@ linuxdvb_rotor_tune
   usleep(15000);
 
   /* GotoX */
-  if (lr->lr_type == ROTOR_GOTOX)
-    return linuxdvb_rotor_gotox_tune(lr, lm, fd);
+  if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
+    return linuxdvb_rotor_gotox_tune(lr, lm, ls, fd);
 
   /* USALS */
-  return linuxdvb_rotor_usals_tune(lr, lm, fd);
+  return linuxdvb_rotor_usals_tune(lr, lm, ls, fd);
 }
 
 static int
@@ -245,27 +229,59 @@ linuxdvb_rotor_grace
  * Create / Config
  * *************************************************************************/
 
+struct {
+  const char      *name;
+  const idclass_t *idc;
+} linuxdvb_rotor_all[] = {
+  {
+    .name = "GOTOX",
+    .idc  = &linuxdvb_rotor_gotox_class
+  },
+  {
+    .name = "USALS",
+    .idc  = &linuxdvb_rotor_usals_class
+  }
+};
+
+htsmsg_t *
+linuxdvb_rotor_list ( void *o )
+{
+  int i;
+  htsmsg_t *m = htsmsg_create_list(); 
+  htsmsg_add_str(m, NULL, "None");
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_rotor_all); i++)
+    htsmsg_add_str(m, NULL, linuxdvb_rotor_all[i].name);
+  return m;
+}
+
 linuxdvb_diseqc_t *
 linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf )
 {
-  if (!name) return NULL;
-  linuxdvb_diseqc_t *ld
-    = linuxdvb_diseqc_create(linuxdvb_rotor, NULL, conf);
-  if (ld) {
-    ld->ld_tune  = linuxdvb_rotor_tune;
-    ld->ld_grace = linuxdvb_rotor_grace; 
-  }
+  int i;
+  linuxdvb_diseqc_t *ld = NULL;
 
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_rotor_all); i++) {
+    if (!strcmp(name ?: "", linuxdvb_rotor_all[i].name)) {
+      ld = linuxdvb_diseqc_create0(calloc(1, sizeof(linuxdvb_rotor_t)),
+                                   NULL, linuxdvb_rotor_all[i].idc, conf,
+                                   linuxdvb_rotor_all[i].name);
+      if (ld) {
+        ld->ld_tune  = linuxdvb_rotor_tune;
+        ld->ld_grace = linuxdvb_rotor_grace;
+      }
+    }
+  }
+                                 
   return ld;
 }
 
-#if 0
 void
-linuxvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
+linuxdvb_rotor_destroy ( linuxdvb_diseqc_t *lr )
 {
+  linuxdvb_diseqc_destroy(lr);
+  free(lr);
 }
-#endif
 
 /******************************************************************************
  * Editor Configuration

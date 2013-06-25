@@ -142,11 +142,91 @@ linuxdvb_satconf_class_frontend_enum (void *o)
 static void
 linuxdvb_satconf_class_save ( idnode_t *in )
 {
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)in;
   htsmsg_t *m = htsmsg_create_map();
   idnode_save(in, m);
+  if (ls->ls_lnb) {
+    htsmsg_t *e = htsmsg_create_map();
+    idnode_save(&ls->ls_lnb->ld_id, e);
+    htsmsg_add_msg(m, "lnb_conf", e);
+  }
+  if (ls->ls_switch) {
+    htsmsg_t *e = htsmsg_create_map();
+    idnode_save(&ls->ls_switch->ld_id, e);
+    htsmsg_add_msg(m, "switch_conf", e);
+  }
+  if (ls->ls_rotor) {
+    htsmsg_t *e = htsmsg_create_map();
+    idnode_save(&ls->ls_rotor->ld_id, e);
+    htsmsg_add_msg(m, "rotor_conf", e);
+  }
+    
   hts_settings_save(m, "input/linuxdvb/satconfs/%s",
                     idnode_uuid_as_str(in));
   htsmsg_destroy(m);
+}
+
+static int
+linuxdvb_satconf_class_lnbtype_set ( void *o, const void *p )
+{
+  linuxdvb_satconf_t *ls  = o;
+  const char         *str = p; 
+  if (ls->ls_lnb && !strcmp(str ?: "", ls->ls_lnb->ld_type))
+    return 0;
+  if (ls->ls_lnb) linuxdvb_lnb_destroy(ls->ls_lnb);
+  ls->ls_lnb = linuxdvb_lnb_create0(str, NULL);
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_lnbtype_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_satconf_t *ls = o;
+  s = ls->ls_lnb ? ls->ls_lnb->ld_type : NULL;
+  return &s;
+}
+
+static int
+linuxdvb_satconf_class_switchtype_set ( void *o, const void *p )
+{
+  linuxdvb_satconf_t *ls  = o;
+  const char         *str = p; 
+  if (ls->ls_switch && !strcmp(str ?: "", ls->ls_switch->ld_type))
+    return 0;
+  if (ls->ls_switch) linuxdvb_switch_destroy(ls->ls_switch);
+  ls->ls_switch = linuxdvb_switch_create0(str, NULL);
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_switchtype_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_satconf_t *ls = o;
+  s = ls->ls_switch ? ls->ls_switch->ld_type : NULL;
+  return &s;
+}
+
+static int
+linuxdvb_satconf_class_rotortype_set ( void *o, const void *p )
+{
+  linuxdvb_satconf_t *ls  = o;
+  const char         *str = p; 
+  if (ls->ls_rotor && !strcmp(str ?: "", ls->ls_rotor->ld_type))
+    return 0;
+  if (ls->ls_rotor) linuxdvb_rotor_destroy(ls->ls_rotor);
+  ls->ls_rotor = linuxdvb_rotor_create0(str, NULL);
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_rotortype_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_satconf_t *ls = o;
+  s = ls->ls_rotor ? ls->ls_rotor->ld_type : NULL;
+  return &s;
 }
 
 const idclass_t linuxdvb_satconf_class =
@@ -161,17 +241,47 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_STR,
       .id       = "frontend",
       .name     = "Frontend",
-      .get  	= linuxdvb_satconf_class_frontend_get,
-      .set  	= linuxdvb_satconf_class_frontend_set,
-      .list	= linuxdvb_satconf_class_frontend_enum
+      .get  	  = linuxdvb_satconf_class_frontend_get,
+      .set    	= linuxdvb_satconf_class_frontend_set,
+      .list	    = linuxdvb_satconf_class_frontend_enum
     },
     {
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .get  	= linuxdvb_satconf_class_network_get,
-      .set  	= linuxdvb_satconf_class_network_set,
-      .list	= linuxdvb_satconf_class_network_enum
+      .get  	  = linuxdvb_satconf_class_network_get,
+      .set  	  = linuxdvb_satconf_class_network_set,
+      .list	    = linuxdvb_satconf_class_network_enum
+    },
+    {
+      .type     = PT_INT,
+      .id       = "diseqc_repeats",
+      .name     = "DiseqC repeats",
+      .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_repeats),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "lnb_type",
+      .name     = "LNB Type",
+      .set      = linuxdvb_satconf_class_lnbtype_set,
+      .get      = linuxdvb_satconf_class_lnbtype_get,
+      .list     = linuxdvb_lnb_list,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "switch_type",
+      .name     = "Switch Type",
+      .set      = linuxdvb_satconf_class_switchtype_set,
+      .get      = linuxdvb_satconf_class_switchtype_get,
+      .list     = linuxdvb_switch_list,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "rotor_type",
+      .name     = "Rotor Type",
+      .set      = linuxdvb_satconf_class_rotortype_set,
+      .get      = linuxdvb_satconf_class_rotortype_get,
+      .list     = linuxdvb_rotor_list,
     },
     {}
   }
@@ -185,7 +295,10 @@ static void
 linuxdvb_satconf_display_name ( mpegts_input_t* mi, char *buf, size_t len )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  ls->ls_frontend->mi_display_name(ls->ls_frontend, buf, len);
+  if (ls->ls_frontend)
+    ls->ls_frontend->mi_display_name(ls->ls_frontend, buf, len);
+  else
+    strncpy(buf, "Unknown", len);
 }
 
 static const idclass_t *
@@ -261,7 +374,7 @@ linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
   i = ls->ls_diseqc_idx;
   for (i = ls->ls_diseqc_idx; i < 3; i++) {
     if (!lds[i]) continue;
-    r = lds[i]->ld_tune(lds[i], lm, lfe->lfe_fe_fd);
+    r = lds[i]->ld_tune(lds[i], lm, ls, lfe->lfe_fe_fd);
 
     /* Error */
     if (r < 0) return r;
@@ -400,7 +513,6 @@ linuxdvb_satconf_t *
 linuxdvb_satconf_create0
   ( const char *uuid, htsmsg_t *conf )
 {
-  const char *s;
   htsmsg_t *e;
   linuxdvb_satconf_t *ls = mpegts_input_create(linuxdvb_satconf, uuid, conf);
 
@@ -425,19 +537,16 @@ linuxdvb_satconf_create0
   if (conf) {
 
     /* LNB */
-    e = htsmsg_get_map(conf, "lnb");
-    s = e ? htsmsg_get_str(e, "type") : NULL;
-    ls->ls_lnb    = linuxdvb_lnb_create0(s, e);
+    if (ls->ls_lnb && (e = htsmsg_get_map(conf, "lnb_conf")))
+      idnode_load(&ls->ls_lnb->ld_id, e);
 
     /* Switch */
-    e = htsmsg_get_map(conf, "switch");
-    s = e ? htsmsg_get_str(e, "type") : NULL;
-    ls->ls_switch = linuxdvb_switch_create0(s, e);
+    if (ls->ls_switch && (e = htsmsg_get_map(conf, "switch_conf")))
+      idnode_load(&ls->ls_switch->ld_id, e);
 
     /* Rotor */
-    e = htsmsg_get_map(conf, "rotor");
-    s = e ? htsmsg_get_str(e, "type") : NULL;
-    ls->ls_rotor  = linuxdvb_rotor_create0(s, e);
+    if (ls->ls_rotor && (e = htsmsg_get_map(conf, "rotor_conf")))
+      idnode_load(&ls->ls_rotor->ld_id, e);
   }
 
   return ls;
@@ -458,19 +567,28 @@ void linuxdvb_satconf_init ( void )
 linuxdvb_diseqc_t *
 linuxdvb_diseqc_create0
   ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
-    htsmsg_t *conf )
+    htsmsg_t *conf, const char *type )
 {
   /* Insert */
   if (idnode_insert(&ld->ld_id, uuid, idc)) {
     free(ld);
     return NULL;
   }
+
+  assert(type != NULL);
+  ld->ld_type = strdup(type);
   
   /* Load config */
   if (conf)
     idnode_load(&ld->ld_id, conf);
 
   return ld;
+}
+
+void
+linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld )
+{
+  idnode_unlink(&ld->ld_id);
 }
 
 int
