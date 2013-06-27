@@ -124,16 +124,49 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!epg_genre_list_contains(&e->episode->genre, &dae->dae_content_type, 1))
       return 0;
   }
-
-  if(dae->dae_approx_time != 0) {
-    struct tm a_time;
+  
+  if (dae->dae_time_start_at_begin != 0 && dae->dae_time_start_at_end != 0) {
+    struct tm begin_time;
+    struct tm end_time;
     struct tm ev_time;
-    localtime_r(&e->start, &a_time);
+    localtime_r(&e->start, &begin_time);
+    localtime_r(&e->start, &end_time);
     localtime_r(&e->start, &ev_time);
-    a_time.tm_min = dae->dae_approx_time % 60;
-    a_time.tm_hour = dae->dae_approx_time / 60;
-    if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
+    begin_time.tm_min = dae->dae_time_start_at_begin % 60;
+    begin_time.tm_hour = dae->dae_time_start_at_begin / 60;
+    end_time.tm_min = dae->dae_time_start_at_end % 60;
+    end_time.tm_hour = dae->dae_time_start_at_end / 60;
+
+    if (dae->dae_time_start_at_begin > dae->dae_time_start_at_end) {
+      if (mktime(&ev_time) > mktime(&end_time) && mktime(&ev_time) < mktime(&begin_time)) {
+        return 0;
+      }
+    } else {
+      if (mktime(&ev_time) < mktime(&begin_time) || mktime(&ev_time) > mktime(&end_time)) {
+        return 0;
+      }
+    }
+
+  } else if (dae->dae_time_start_at_begin != 0) {
+	struct tm begin_time;
+	struct tm ev_time;
+	localtime_r(&e->start, &begin_time);
+	localtime_r(&e->start, &ev_time);
+	begin_time.tm_min = dae->dae_time_start_at_begin % 60;
+	begin_time.tm_hour = dae->dae_time_start_at_begin / 60;
+	if (mktime(&ev_time) - mktime(&begin_time) < 0) {
       return 0;
+	}
+  } else if (dae->dae_time_start_at_end != 0) {
+    struct tm end_time;
+    struct tm ev_time;
+    localtime_r(&e->start, &end_time);
+    localtime_r(&e->start, &ev_time);
+    end_time.tm_min = dae->dae_time_start_at_end % 60;
+    end_time.tm_hour = dae->dae_time_start_at_end / 60;
+    if (mktime(&ev_time) - mktime(&end_time) > 0) {
+      return 0;
+    }
   }
 
   if(dae->dae_weekdays != 0x7f) {
@@ -279,8 +312,9 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_u32(e, "contenttype",dae->dae_content_type.code);
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
-
-  htsmsg_add_u32(e, "approx_time", dae->dae_approx_time);
+  
+  htsmsg_add_u32(e, "time_start_at_begin", dae->dae_time_start_at_begin);
+  htsmsg_add_u32(e, "time_start_at_end", dae->dae_time_start_at_end);
 
   build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
   htsmsg_add_str(e, "weekdays", str);
@@ -344,6 +378,8 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 		      int maycreate)
 {
   int save;
+  int changed = 0;
+  htsmsg_t *m;
   dvr_autorec_entry_t *dae;
   const char *s;
   channel_t *ch;
@@ -394,18 +430,50 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if (!htsmsg_get_u32(values, "contenttype", &u32))
     dae->dae_content_type.code = u32;
-
-  if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
+  
+  /* backward compatibility - convert approx_time to start+end */
+  if((s = htsmsg_get_str(values, "approx_time")) != NULL &&
+     htsmsg_get_str(values, "time_start_at_begin") == NULL &&
+     htsmsg_get_str(values, "time_start_at_end") == NULL) {
     if(strchr(s, ':') != NULL) {
       // formatted time string - convert
-      dae->dae_approx_time = (atoi(s) * 60) + atoi(s + 3);
+      dae->dae_time_start_at_begin = fmax((atoi(s) * 60) + atoi(s + 3) - 90, 0);
+      dae->dae_time_start_at_end = fmin((atoi(s) * 60) + atoi(s + 3) + 90, 1440);
     } else if(strlen(s) == 0) {
-      dae->dae_approx_time = 0;
+      dae->dae_time_start_at_begin = 0;
+      dae->dae_time_start_at_end = 0;
     } else {
-      dae->dae_approx_time = atoi(s);
+      if (atoi(s) > 0) {
+        dae->dae_time_start_at_begin = fmax(atoi(s) - 90, 0);
+        dae->dae_time_start_at_end = fmin(atoi(s) + 90, 1440);
+      } 
+    }
+    tvhlog(LOG_INFO, "dvr", "Converted old style approx_time \"%s\" to start_at_begin: \"%i\" - start_at_end: \"%i\"", s, dae->dae_time_start_at_begin, dae->dae_time_start_at_end);
+    changed = 1;
+  }
+  
+  if((s = htsmsg_get_str(values, "time_start_at_begin")) != NULL) {
+    if(strchr(s, ':') != NULL) {
+      // formatted time string - convert
+      dae->dae_time_start_at_begin = (atoi(s) * 60) + atoi(s + 3);
+    } else if(strlen(s) == 0) {
+      dae->dae_time_start_at_begin = 0;
+    } else {
+      dae->dae_time_start_at_begin = atoi(s);
     }
   }
-
+  
+  if((s = htsmsg_get_str(values, "time_start_at_end")) != NULL) {
+    if(strchr(s, ':') != NULL) {
+      // formatted time string - convert
+      dae->dae_time_start_at_end = (atoi(s) * 60) + atoi(s + 3);
+    } else if(strlen(s) == 0) {
+      dae->dae_time_start_at_end = 0;
+    } else {
+      dae->dae_time_start_at_end = atoi(s);
+    }
+  }
+  
   if((s = htsmsg_get_str(values, "weekdays")) != NULL)
     dae->dae_weekdays = build_weekday_mask(s);
 
@@ -432,6 +500,11 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   }
   if (!dvr_autorec_in_init)
     dvr_autorec_changed(dae, 1);
+  else if (changed) {
+    m = autorec_record_build(dae);
+    hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
+    return m;
+  }
 
   return autorec_record_build(dae);
 }
@@ -494,7 +567,7 @@ _dvr_autorec_add(const char *config_name,
 		const char *tag, epg_genre_t *content_type,
     epg_brand_t *brand, epg_season_t *season,
     epg_serieslink_t *serieslink,
-    int approx_time, epg_episode_num_t *epnum,
+    int time_start_at_begin, int time_start_at_end, epg_episode_num_t *epnum,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
@@ -533,7 +606,8 @@ _dvr_autorec_add(const char *config_name,
     dae->dae_serieslink = serieslink;
   }
 
-  dae->dae_approx_time = approx_time;
+  dae->dae_time_start_at_begin = time_start_at_begin;
+  dae->dae_time_start_at_end = time_start_at_end;
 
   m = autorec_record_build(dae);
   hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
@@ -555,7 +629,7 @@ dvr_autorec_add(const char *config_name,
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-                   NULL, NULL, NULL, 0, NULL, creator, comment);
+                   NULL, NULL, NULL, 0, 0, NULL, creator, comment);
 }
 
 void dvr_autorec_add_series_link 
@@ -572,7 +646,7 @@ void dvr_autorec_add_series_link
                    NULL,
                    NULL,
                    event->serieslink,
-                   0, NULL,
+                   0, 0, NULL,
                    creator, comment);
   if (title)
     free(title);
