@@ -807,6 +807,7 @@ http_serve(int fd, void *opaque, struct sockaddr_storage *peer,
   http_arg_flush(&hc.hc_args);
   http_arg_flush(&hc.hc_req_args);
 
+  htsbuf_queue_flush(&hc.hc_reply);
   htsbuf_queue_flush(&spill);
   close(fd);
 }
