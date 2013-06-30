@@ -1256,7 +1256,9 @@ dvr_config_delete(const char *name)
         cfg->dvr_config_name);
     hts_settings_remove("dvr/config%s", cfg->dvr_config_name);
     LIST_REMOVE(cfg, config_link);
-    dvrconfig_changed();
+    free(cfg);
+
+    dvrconfig_changed();    
   }
 }
 
