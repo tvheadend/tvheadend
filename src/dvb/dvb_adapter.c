@@ -965,6 +965,10 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
   free(tda->tda_identifier);
   free(tda->tda_displayname);
   free(tda->tda_fe_info);
+  free((void*)tda->tda_rootpath); /* need cast because it's a const char* */
+  free(tda->tda_fe_path);
+  free(tda->tda_demux_path);
+  free(tda->tda_dvr_path);
 
   free(tda);
 
