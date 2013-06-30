@@ -556,7 +556,7 @@ main(int argc, char **argv)
     if (*tvheadend_webroot == '/')
       tmp = strdup(tvheadend_webroot);
     else {
-      tmp = malloc(strlen(tvheadend_webroot)+1);
+      tmp = malloc(strlen(tvheadend_webroot)+2);
       *tmp = '/';
       strcpy(tmp+1, tvheadend_webroot);
     }
