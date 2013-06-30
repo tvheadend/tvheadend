@@ -319,11 +319,10 @@ http_access_verify(http_connection_t *hc, int mask)
 
   if(!access_ticket_verify(ticket_id, hc->hc_url))
   {
-    char *addrstr = (char*)malloc(50);
+    char addrstr[50];
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
     tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
 	   addrstr, ticket_id, hc->hc_url);
-    free(addrstr);
     return 0;
   }
 
