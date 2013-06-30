@@ -247,12 +247,11 @@ void
 http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
-  char *addrstr = (char*)malloc(50);
+  char addrstr[50];
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
   tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
 	 addrstr, hc->hc_url, error);
-  free(addrstr);
 
   htsbuf_queue_flush(&hc->hc_reply);
 
