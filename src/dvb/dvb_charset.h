@@ -27,8 +27,6 @@ typedef struct dvb_charset {
  const char *charset;
 } dvb_charset_t;
 
-LIST_HEAD(,dvb_charset) dvb_charset_list;
-
 void dvb_charset_init ( void );
 
 const char *dvb_charset_find
