@@ -1244,6 +1244,8 @@ cwc_thread(void *aux)
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
   free((void *)cwc->cwc_hostname);
+  free((void *)cwc->cwc_id);
+  free((void *)cwc->cwc_viaccess_emm.shared_emm);
   free(cwc);
 
   pthread_mutex_unlock(&cwc_mutex);
