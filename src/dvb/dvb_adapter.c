@@ -964,6 +964,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   free(tda->tda_identifier);
   free(tda->tda_displayname);
+  free(tda->tda_fe_info);
 
   free(tda);
 
