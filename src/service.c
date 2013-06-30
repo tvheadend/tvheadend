@@ -108,6 +108,9 @@ stream_clean(elementary_stream_t *st)
   free(st->es_global_data);
   st->es_global_data = NULL;
   st->es_global_data_len = 0;
+
+  free(st->es_section);
+  st->es_section = NULL;
 }
 
 /**
