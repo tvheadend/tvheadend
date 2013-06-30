@@ -505,21 +505,20 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   struct epoll_event e;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
-  char *portBuf = (char*)malloc(6);
+  char port_buf[6];
   int one = 1;
   int zero = 0;
 
   memset(&e, 0, sizeof(e));
 
-  snprintf(portBuf, 6, "%d", port);
+  snprintf(port_buf, 6, "%d", port);
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_flags = AI_PASSIVE;
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
-  x = getaddrinfo(NULL, portBuf, &hints, &res);
-  free(portBuf);
+  x = getaddrinfo(NULL, port_buf, &hints, &res);
 
   if(x != 0)
     return NULL;
