@@ -65,8 +65,11 @@ linuxdvb_switch_class_toneburst_list ( void *o )
   return m;
 }
 
+extern const idclass_t linuxdvb_diseqc_class;
+
 const idclass_t linuxdvb_switch_class =
 {
+  .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_switch",
   .ic_caption     = "DiseqC switch",
   .ic_properties  = (const property_t[]) {
@@ -163,11 +166,11 @@ linuxdvb_switch_list ( void *o )
 
 linuxdvb_diseqc_t *
 linuxdvb_switch_create0
-  ( const char *name, htsmsg_t *conf )
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls )
 {
   linuxdvb_diseqc_t *ld = NULL;
   if (!strcmp(name ?: "", "Generic")) {
-    ld = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf, "Generic");
+    ld = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf, "Generic", ls);
     if (ld) {
       ld->ld_tune = linuxdvb_switch_tune;
     }

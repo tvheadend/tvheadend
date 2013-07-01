@@ -83,6 +83,9 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
 {
   int save = 0;
   htsmsg_field_t *f;
+
+  if (!pl) return 0;
+
   HTSMSG_FOREACH(f, m) {
     if(f->hmf_name == NULL)
       continue;

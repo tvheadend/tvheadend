@@ -44,8 +44,11 @@ typedef struct linuxdvb_lnb_conf
   int lnb_switch;
 } linuxdvb_lnb_conf_t;
 
+extern const idclass_t linuxdvb_diseqc_class;
+
 const idclass_t linuxdvb_lnb_class =
 {
+  .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_lnb_basic",
   .ic_caption     = "LNB",
 };
@@ -220,7 +223,7 @@ linuxdvb_lnb_list ( void *o )
 
 linuxdvb_lnb_t *
 linuxdvb_lnb_create0
-  ( const char *name, htsmsg_t *conf )
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls )
 {
   int i;
 

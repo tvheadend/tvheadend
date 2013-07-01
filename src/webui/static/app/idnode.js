@@ -52,6 +52,7 @@ tvheadend.idnode_editor_field = function(f, create)
           width       : 300
         });
       }
+      break;
 
     case 'bool':
       return new Ext.form.Checkbox({
@@ -60,18 +61,39 @@ tvheadend.idnode_editor_field = function(f, create)
         checked     : f.value,
         disabled    : d
       });
+      break;
 
     case 'int':
     case 'u32':
     case 'u16':
     case 'dbl':
-      return new Ext.form.NumberField({
-        fieldLabel  : f.caption,
-        name        : f.id,
-        value       : f.value,
-        disabled    : d,
-        width       : 300
-      });
+      if (f.enum) {
+        var store = f.enum;
+        return new Ext.form.ComboBox({
+          fieldLabel      : f.caption,
+          name            : f.id,
+          value           : f.value,
+          disabled        : d,
+          width           : 300,
+          mode            : 'local',
+          valueField      : 'key',
+          displayField    : 'val',
+          store           : store,
+          typeAhead       : true,
+          forceSelection  : true,
+          triggerAction   : 'all',
+          emptyText       :'Select ' + f.caption +' ...'
+        });
+      } else {
+        return new Ext.form.NumberField({
+          fieldLabel  : f.caption,
+          name        : f.id,
+          value       : f.value,
+          disabled    : d,
+          width       : 300
+        });
+      }
+      break;
 
     /*
     case 'separator':
@@ -391,29 +413,49 @@ tvheadend.idnode_grid = function(panel, conf)
       text        : 'Edit',
       disabled    : true,
       handler     : function() {
-        r = select.getSelected();
+        var r = select.getSelected();
         if (r) {
-          Ext.Ajax.request({
-            url     : 'api/idnode',
-            params  : {
-              op: 'get',
-              uuid: r.id
-            },
-            success : function(d)
-            {
-              d = json_decode(d);
-              p = tvheadend.idnode_editor(d[0], {});
-              w = new Ext.Window({
-                title       : 'Add ' + conf.titleS,
-                layout      : 'fit',
-                autoWidth   : true,
-                autoHeight  : true,
-                plain       : true,
-                items       : p
-              });
-              w.show();
-            }
-          });
+          if (conf.edittree) {
+            var p = tvheadend.idnode_tree({
+              url     : 'api/idnode',
+              params  : {
+                op   : 'childs',
+                root : r.id
+              }
+            });
+            p.setSize(800,600);
+            var w = new Ext.Window({
+              title       : 'Edit ' + conf.titleS,
+              layout      : 'fit',
+              autoWidth   : true,
+              autoHeight  : true,
+              plain       : true,
+              items       : p
+            });
+            w.show();
+          } else {
+            Ext.Ajax.request({
+              url     : 'api/idnode',
+              params  : {
+                op: 'get',
+                uuid: r.id
+              },
+              success : function(d)
+              {
+                d = json_decode(d);
+                var p = tvheadend.idnode_editor(d[0], {});
+                var w = new Ext.Window({
+                  title       : 'Edit ' + conf.titleS,
+                  layout      : 'fit',
+                  autoWidth   : true,
+                  autoHeight  : true,
+                  plain       : true,
+                  items       : p
+                });
+                w.show();
+              }
+            });
+          }
         }
       }
     });
@@ -474,7 +516,9 @@ tvheadend.idnode_tree = function (conf)
   var current = null;
 
   var loader = new Ext.tree.TreeLoader({
-    dataUrl	: conf.url
+    dataUrl	        : conf.url,
+    baseParams      : conf.params,
+    preloadChildren : conf.preload,
   });
 
   var tree = new Ext.tree.TreePanel({
@@ -482,8 +526,8 @@ tvheadend.idnode_tree = function (conf)
     flex	    : 1,
     border  	: false,
     root 	    : new Ext.tree.AsyncTreeNode({
-      id 	  : 'root',
-      text	: conf.title
+      id 	  : conf.root  || 'root',
+      text	: conf.title || ''
     }),
     listeners : {
       click: function(n) {
@@ -512,7 +556,7 @@ tvheadend.idnode_tree = function (conf)
 
 
   var panel = new Ext.Panel({
-    title	        : conf.title,
+    title	        : conf.title || '',
     layout		    : 'hbox',
     flex		      : 1,
     padding		    : 5,

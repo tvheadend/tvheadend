@@ -2174,8 +2174,18 @@ extjs_idnode
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
+  int isroot = 0;
   const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
   const char *op   = http_arg_get(&hc->hc_req_args, "op");
+  const char *root = http_arg_get(&hc->hc_req_args, "root");
+  if (uuid == NULL)
+    uuid = http_arg_get(&hc->hc_req_args, "node");
+  if (!strcmp(uuid, "root")) {
+    isroot = 1;
+    uuid   = root;
+  }
+  if (op == NULL) 
+    op   = "get";
   htsmsg_t *out = NULL;
   idnode_t *node;
 
@@ -2208,12 +2218,32 @@ extjs_idnode
       htsmsg_destroy(conf);
     }
     out = htsmsg_create_map();
+  } else if (!strcmp(op, "childs")) {
+    out = htsmsg_create_list();
+    if (isroot) {
+      htsmsg_t *m = idnode_serialize(node);
+      htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
+      htsmsg_add_msg(out, NULL, m);
+    } else {
+      idnode_set_t *v;
+      if ((v = idnode_get_childs(node))) {
+        int i;
+        for(i = 0; i < v->is_count; i++) {
+          htsmsg_t *m = idnode_serialize(v->is_array[i]);
+          htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
+          htsmsg_add_msg(out, NULL, m);
+        }
+        idnode_set_free(v);
+      }
+    }
   }
 
   pthread_mutex_unlock(&global_lock);
 
   if (!out)
     return HTTP_STATUS_BAD_REQUEST;
+printf("IDNODE: %s %s\n", uuid, op);
+htsmsg_print(out);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);

@@ -86,6 +86,7 @@ tvheadend.satconfs = function(panel)
         op: 'class'
       }
     },
-    del     : true
+    del      : true,
+    edittree : true,
   });
 }

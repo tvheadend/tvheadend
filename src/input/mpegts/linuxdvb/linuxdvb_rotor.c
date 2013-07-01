@@ -50,8 +50,17 @@ typedef struct linuxdvb_rotor
 
 } linuxdvb_rotor_t;
 
+extern const idclass_t linuxdvb_diseqc_class;
+
+const idclass_t linuxdvb_rotor_class = {
+  .ic_super       = &linuxdvb_diseqc_class,
+  .ic_class       = "linuxdvb_rotor",
+  .ic_caption     = "DiseqC Rotor",
+};
+
 const idclass_t linuxdvb_rotor_gotox_class =
 {
+  .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_gotox",
   .ic_caption     = "GOTOX Rotor",
   .ic_properties  = (const property_t[]) {
@@ -73,6 +82,7 @@ const idclass_t linuxdvb_rotor_gotox_class =
 
 const idclass_t linuxdvb_rotor_usals_class =
 {
+  .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_usals",
   .ic_caption     = "USALS Rotor",
   .ic_properties  = (const property_t[]) {
@@ -256,7 +266,7 @@ linuxdvb_rotor_list ( void *o )
 
 linuxdvb_diseqc_t *
 linuxdvb_rotor_create0
-  ( const char *name, htsmsg_t *conf )
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls )
 {
   int i;
   linuxdvb_diseqc_t *ld = NULL;
@@ -265,7 +275,7 @@ linuxdvb_rotor_create0
     if (!strcmp(name ?: "", linuxdvb_rotor_all[i].name)) {
       ld = linuxdvb_diseqc_create0(calloc(1, sizeof(linuxdvb_rotor_t)),
                                    NULL, linuxdvb_rotor_all[i].idc, conf,
-                                   linuxdvb_rotor_all[i].name);
+                                   linuxdvb_rotor_all[i].name, ls);
       if (ld) {
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;

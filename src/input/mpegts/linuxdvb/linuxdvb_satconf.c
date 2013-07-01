@@ -174,7 +174,7 @@ linuxdvb_satconf_class_lnbtype_set ( void *o, const void *p )
   if (ls->ls_lnb && !strcmp(str ?: "", ls->ls_lnb->ld_type))
     return 0;
   if (ls->ls_lnb) linuxdvb_lnb_destroy(ls->ls_lnb);
-  ls->ls_lnb = linuxdvb_lnb_create0(str, NULL);
+  ls->ls_lnb = linuxdvb_lnb_create0(str, NULL, ls);
   return 0;
 }
 
@@ -195,7 +195,7 @@ linuxdvb_satconf_class_switchtype_set ( void *o, const void *p )
   if (ls->ls_switch && !strcmp(str ?: "", ls->ls_switch->ld_type))
     return 0;
   if (ls->ls_switch) linuxdvb_switch_destroy(ls->ls_switch);
-  ls->ls_switch = linuxdvb_switch_create0(str, NULL);
+  ls->ls_switch = linuxdvb_switch_create0(str, NULL, ls);
   return 0;
 }
 
@@ -216,7 +216,7 @@ linuxdvb_satconf_class_rotortype_set ( void *o, const void *p )
   if (ls->ls_rotor && !strcmp(str ?: "", ls->ls_rotor->ld_type))
     return 0;
   if (ls->ls_rotor) linuxdvb_rotor_destroy(ls->ls_rotor);
-  ls->ls_rotor = linuxdvb_rotor_create0(str, NULL);
+  ls->ls_rotor = linuxdvb_rotor_create0(str, NULL, ls);
   return 0;
 }
 
@@ -229,12 +229,36 @@ linuxdvb_satconf_class_rotortype_get ( void *o )
   return &s;
 }
 
+static const char *
+linuxdvb_satconf_class_get_title ( idnode_t *o )
+{
+  static char buf[128];
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
+  ls->mi_display_name((mpegts_input_t*)ls, buf, sizeof(buf));
+  return buf;
+}
+
+static idnode_set_t *
+linuxdvb_satconf_class_get_childs ( idnode_t *o )
+{
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
+  idnode_set_t *is = idnode_set_create();
+  if (ls->ls_lnb)
+    idnode_set_add(is, &ls->ls_lnb->ld_id, NULL);
+  if (ls->ls_switch)
+    idnode_set_add(is, &ls->ls_switch->ld_id, NULL);
+  if (ls->ls_rotor)
+    idnode_set_add(is, &ls->ls_rotor->ld_id, NULL);
+  return is;
+}
+
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = "Linux DVB Satconf",
-  //.ic_get_title  = linuxdvb_satconf_class_get_title,
+  .ic_get_title  = linuxdvb_satconf_class_get_title,
+  .ic_get_childs = linuxdvb_satconf_class_get_childs,
   .ic_save       = linuxdvb_satconf_class_save,
   .ic_properties = (const property_t[]) {
     {
@@ -564,10 +588,33 @@ void linuxdvb_satconf_init ( void )
   }
 }
 
+static const char *
+linuxdvb_diseqc_class_get_title ( idnode_t *o )
+{
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  return ld->ld_type;
+}
+
+static void
+linuxdvb_diseqc_class_save ( idnode_t *o )
+{
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  if (ld->ld_satconf)
+    linuxdvb_satconf_class_save(&ld->ld_satconf->mi_id);
+}
+
+const idclass_t linuxdvb_diseqc_class =
+{
+  .ic_class       = "linuxdvb_diseqc",
+  .ic_caption     = "DiseqC",
+  .ic_get_title   = linuxdvb_diseqc_class_get_title,
+  .ic_save        = linuxdvb_diseqc_class_save,
+};
+
 linuxdvb_diseqc_t *
 linuxdvb_diseqc_create0
   ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
-    htsmsg_t *conf, const char *type )
+    htsmsg_t *conf, const char *type, linuxdvb_satconf_t *parent )
 {
   /* Insert */
   if (idnode_insert(&ld->ld_id, uuid, idc)) {
@@ -576,7 +623,8 @@ linuxdvb_diseqc_create0
   }
 
   assert(type != NULL);
-  ld->ld_type = strdup(type);
+  ld->ld_type    = strdup(type);
+  ld->ld_satconf = parent;
   
   /* Load config */
   if (conf)
