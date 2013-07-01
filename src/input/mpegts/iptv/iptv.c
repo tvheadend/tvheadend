@@ -132,11 +132,17 @@ static int http_connect (const char *urlstr)
 /*
  * Input definition
  */
+static const char *
+iptv_input_class_get_title ( idnode_t *self )
+{
+  return "IPTV";
+}
 extern const idclass_t mpegts_input_class;
 const idclass_t iptv_input_class = {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "iptv_input",
   .ic_caption    = "IPTV Input",
+  .ic_get_title  = iptv_input_class_get_title,
   .ic_properties = (const property_t[]){
   }
 };
@@ -219,6 +225,13 @@ iptv_input_current_weight ( mpegts_input_t *mi )
 {
   return 0; // unlimited number of muxes
 }
+
+static void
+iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
+{
+  snprintf(buf, len, "IPTV");
+}
+
 
 static void *
 iptv_input_thread ( void *aux )
@@ -317,6 +330,7 @@ void iptv_init ( void )
   iptv_input.mi_stop_mux       = iptv_input_stop_mux;
   iptv_input.mi_is_free        = iptv_input_is_free;
   iptv_input.mi_current_weight = iptv_input_current_weight;
+  iptv_input.mi_display_name   = iptv_input_display_name;
   iptv_input.mi_enabled        = 1;
 
   /* Init Network */
