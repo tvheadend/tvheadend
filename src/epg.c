@@ -758,7 +758,7 @@ static void epg_episode_num_deserialize
 {
   const char *str;
   uint32_t u32;
-  // assert(!m);
+  assert(m && num);
 
   memset(num, 0, sizeof(epg_episode_num_t));
 
