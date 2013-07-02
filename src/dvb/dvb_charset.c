@@ -21,6 +21,7 @@
 #include "settings.h"
 #include "dvb/dvb_charset.h"
 
+static LIST_HEAD(,dvb_charset) dvb_charset_list;
 /*
  * Process a file
  */
