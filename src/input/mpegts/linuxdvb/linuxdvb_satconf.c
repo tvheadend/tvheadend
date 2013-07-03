@@ -175,7 +175,7 @@ linuxdvb_satconf_class_lnbtype_set ( void *o, const void *p )
     return 0;
   if (ls->ls_lnb) linuxdvb_lnb_destroy(ls->ls_lnb);
   ls->ls_lnb = linuxdvb_lnb_create0(str, NULL, ls);
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -196,7 +196,7 @@ linuxdvb_satconf_class_switchtype_set ( void *o, const void *p )
     return 0;
   if (ls->ls_switch) linuxdvb_switch_destroy(ls->ls_switch);
   ls->ls_switch = linuxdvb_switch_create0(str, NULL, ls);
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -217,7 +217,7 @@ linuxdvb_satconf_class_rotortype_set ( void *o, const void *p )
     return 0;
   if (ls->ls_rotor) linuxdvb_rotor_destroy(ls->ls_rotor);
   ls->ls_rotor = linuxdvb_rotor_create0(str, NULL, ls);
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -572,6 +572,10 @@ linuxdvb_satconf_create0
     if (ls->ls_rotor && (e = htsmsg_get_map(conf, "rotor_conf")))
       idnode_load(&ls->ls_rotor->ld_id, e);
   }
+
+  /* Create default LNB */
+  if (!ls->ls_lnb)
+    ls->ls_lnb = linuxdvb_lnb_create0(NULL, NULL, ls);
 
   return ls;
 }
