@@ -139,7 +139,7 @@ tvheadend.idnode_editor_field = function(f, create)
 /*
  * ID node editor panel
  */
-tvheadend.idnode_editor = function(item, conf, win)
+tvheadend.idnode_editor = function(item, conf)
 {
   var panel  = null;
   var fields = []
@@ -493,7 +493,7 @@ tvheadend.idnode_grid = function(panel, conf)
               success : function(d)
               {
                 d = json_decode(d);
-                var p = tvheadend.idnode_editor(d[0], {}, w);
+                var p = tvheadend.idnode_editor(d[0], {});
                 var w = new Ext.Window({
                   title       : 'Edit ' + conf.titleS,
                   layout      : 'fit',
@@ -543,18 +543,20 @@ tvheadend.idnode_grid = function(panel, conf)
     panel.add(grid);
 
     /* Add comet listeners */
-    tvheadend.comet.on(conf.comet, function(o) {
-      var fs  = [];
-      var d   = {};
-      for ( i = 0; i < o.params.length; i++)
-        if (o.params[i].id) {
-          fs.push(o.params[i].id);
-          d[o.params[i].id] = o.params[i].value;
-        }
-      var rec = Ext.data.Record.create(fs);
-      rec = new rec(d, o.id);
-      store.add(rec);
-    });
+    if (conf.comet) {
+      tvheadend.comet.on(conf.comet, function(o) {
+        var fs  = [];
+        var d   = {};
+        for ( i = 0; i < o.params.length; i++)
+          if (o.params[i].id) {
+            fs.push(o.params[i].id);
+            d[o.params[i].id] = o.params[i].value;
+          }
+        var rec = Ext.data.Record.create(fs);
+        rec = new rec(d, o.id);
+        store.add(rec);
+      });
+    }
     tvheadend.comet.on('idnodeParamsChanged', function(o) {
       var r = store.getById(o.id);
       if (r) {
@@ -609,7 +611,7 @@ tvheadend.idnode_tree = function (conf)
           current = panel.add(new tvheadend.idnode_editor(n.attributes, {
             title       : 'Parameters',
             fixedHeight : true
-          }), null);
+          }));
         panel.doLayout();
       }
     }
