@@ -81,7 +81,7 @@ prop_find(const property_t *p, const char *id)
 int
 prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
 {
-  int save = 0;
+  int save, save2 = 0;
   htsmsg_field_t *f;
 
   if (!pl) return 0;
@@ -101,6 +101,7 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
     if(p->opts & optmask) continue;
 
     /* Write */
+    save = 0;
     void *v = obj + p->off;
     switch(TO_FROM(p->type, f->hmf_type)) {
     case TO_FROM(PT_BOOL, HMF_BOOL): {
@@ -163,8 +164,14 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
       break;
     }
     }
+  
+    if (save) {
+      save2 = 1;
+      if (p->notify)
+        p->notify(obj);
+    }
   }
-  return save;
+  return save2;
 }
 
 /* **************************************************************************
