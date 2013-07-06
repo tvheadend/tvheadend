@@ -2242,8 +2242,6 @@ extjs_idnode
 
   if (!out)
     return HTTP_STATUS_BAD_REQUEST;
-printf("IDNODE: %s %s\n", uuid, op);
-htsmsg_print(out);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);

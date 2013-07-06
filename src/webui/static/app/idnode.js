@@ -68,7 +68,19 @@ tvheadend.idnode_editor_field = function(f, create)
     case 'u16':
     case 'dbl':
       if (f.enum) {
-        var store = f.enum;
+        var data  = null;
+        if (f.enum.length > 0 && f.enum[0] instanceof Object) {
+          data = f.enum;
+        } else {
+          data = []
+          for ( i = 0; i < f.enum.length; i++ )
+            data.push({ key: i, val: f.enum[i]});
+        }
+        var store = new Ext.data.JsonStore({
+          id     : 'key',
+          fields : [ 'key', 'val' ],
+          data   : data
+        });
         return new Ext.form.ComboBox({
           fieldLabel      : f.caption,
           name            : f.id,
