@@ -139,7 +139,7 @@ tvheadend.idnode_editor_field = function(f, create)
 /*
  * ID node editor panel
  */
-tvheadend.idnode_editor = function(item, conf)
+tvheadend.idnode_editor = function(item, conf, win)
 {
   var panel  = null;
   var fields = []
@@ -163,7 +163,6 @@ tvheadend.idnode_editor = function(item, conf)
         url    	: 'api/idnode',
         params 	: params,
         success : function(d) {
-          // TODO
         }
       });
     }
@@ -494,7 +493,7 @@ tvheadend.idnode_grid = function(panel, conf)
               success : function(d)
               {
                 d = json_decode(d);
-                var p = tvheadend.idnode_editor(d[0], {});
+                var p = tvheadend.idnode_editor(d[0], {}, w);
                 var w = new Ext.Window({
                   title       : 'Edit ' + conf.titleS,
                   layout      : 'fit',
@@ -541,8 +540,30 @@ tvheadend.idnode_grid = function(panel, conf)
         emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display'
       })
     });
-
     panel.add(grid);
+
+    /* Add comet listeners */
+    tvheadend.comet.on(conf.comet, function(o) {
+      var fs  = [];
+      var d   = {};
+      for ( i = 0; i < o.params.length; i++)
+        if (o.params[i].id) {
+          fs.push(o.params[i].id);
+          d[o.params[i].id] = o.params[i].value;
+        }
+      var rec = Ext.data.Record.create(fs);
+      rec = new rec(d, o.id);
+      store.add(rec);
+    });
+    tvheadend.comet.on('idnodeParamsChanged', function(o) {
+      var r = store.getById(o.id);
+      if (r) {
+        for ( i = 0; i < o.params.length; i++)
+          if (o.params[i].id)
+            r.set(o.params[i].id, o.params[i].value);
+        r.commit();
+      }
+    });
   }
 
   /* Request data */
@@ -585,7 +606,10 @@ tvheadend.idnode_tree = function (conf)
         if(current)
           panel.remove(current);
         if(!n.isRoot)
-          current = panel.add(new tvheadend.idnode_editor(n.attributes, {title: 'Parameters', fixedHeight: true}));
+          current = panel.add(new tvheadend.idnode_editor(n.attributes, {
+            title       : 'Parameters',
+            fixedHeight : true
+          }), null);
         panel.doLayout();
       }
     }

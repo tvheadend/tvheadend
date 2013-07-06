@@ -12,13 +12,14 @@ tvheadend.networks = function(panel)
     titleS   :  'Network',
     titleP   :  'Networks',
     url      : 'api/mpegts/network',
-    add       : {
+    comet    : 'mpegts_network',
+    add      : {
       url    : 'api/mpegts/input',
       title  : 'Network',
       select : {
         caption      : 'Input',
         params       : { op: 'list', limit: -1 },
-        displayField : 'fe_path',//displayname',
+        displayField : 'displayname',
         valueField   : 'uuid',
         url          : 'api/mpegts/input',
         clazz        : {
