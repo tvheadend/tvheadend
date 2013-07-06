@@ -50,12 +50,22 @@ typedef struct linuxdvb_rotor
 
 } linuxdvb_rotor_t;
 
+static const char *
+linuxdvb_rotor_class_get_title ( idnode_t *o )
+{
+  static char buf[256];
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  snprintf(buf, sizeof(buf), "Rotor: %s", ld->ld_type);
+  return buf;
+}
+
 extern const idclass_t linuxdvb_diseqc_class;
 
 const idclass_t linuxdvb_rotor_class = {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_rotor",
   .ic_caption     = "DiseqC Rotor",
+  .ic_get_title   = linuxdvb_rotor_class_get_title,
 };
 
 const idclass_t linuxdvb_rotor_gotox_class =

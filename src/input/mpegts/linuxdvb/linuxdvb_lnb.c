@@ -44,6 +44,15 @@ typedef struct linuxdvb_lnb_conf
   int lnb_switch;
 } linuxdvb_lnb_conf_t;
 
+static const char *
+linuxdvb_lnb_class_get_title ( idnode_t *o )
+{
+  static char buf[256];
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  snprintf(buf, sizeof(buf), "LNB: %s", ld->ld_type);
+  return buf;
+}
+
 extern const idclass_t linuxdvb_diseqc_class;
 
 const idclass_t linuxdvb_lnb_class =
@@ -51,6 +60,7 @@ const idclass_t linuxdvb_lnb_class =
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_lnb_basic",
   .ic_caption     = "LNB",
+  .ic_get_title   = linuxdvb_lnb_class_get_title,
 };
 
 /* **************************************************************************

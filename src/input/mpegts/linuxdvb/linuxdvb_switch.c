@@ -65,6 +65,15 @@ linuxdvb_switch_class_toneburst_list ( void *o )
   return m;
 }
 
+static const char *
+linuxdvb_switch_class_get_title ( idnode_t *o )
+{
+  static char buf[256];
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  snprintf(buf, sizeof(buf), "Switch: %s", ld->ld_type);
+  return buf;
+}
+
 extern const idclass_t linuxdvb_diseqc_class;
 
 const idclass_t linuxdvb_switch_class =
@@ -72,6 +81,7 @@ const idclass_t linuxdvb_switch_class =
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_switch",
   .ic_caption     = "DiseqC switch",
+  .ic_get_title   = linuxdvb_switch_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_INT,
