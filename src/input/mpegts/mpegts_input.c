@@ -30,21 +30,18 @@
  * Class definition
  * *************************************************************************/
 
-static const void *
-mpegts_input_class_get_name ( void *in )
+static const char *
+mpegts_input_class_get_title ( idnode_t *in )
 {
-  static char buf[256], *s = buf;
-  mpegts_input_t *mi = in;
-  *buf = 0;
-  if (mi->mi_display_name)
-    mi->mi_display_name(mi, buf, sizeof(buf));
-  return &s;
+  mpegts_input_t *mi = (mpegts_input_t*)in;
+  return mi->mi_displayname;
 }
 
 const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
   .ic_caption    = "MPEGTS Input",
+  .ic_get_title  = mpegts_input_class_get_title,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -56,8 +53,8 @@ const idclass_t mpegts_input_class =
       .type     = PT_STR,
       .id       = "displayname",
       .name     = "Name",
-      .opts     = PO_NOSAVE | PO_RDONLY,
-      .get      = mpegts_input_class_get_name,
+      .off      = offsetof(mpegts_input_t, mi_displayname),
+      .notify   = idnode_notify_title_changed,
     },
     {}
   }
@@ -89,7 +86,10 @@ mpegts_input_is_enabled ( mpegts_input_t *mi )
 static void
 mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
-  *buf = 0;
+  if (mi->mi_displayname)
+    strncpy(buf, mi->mi_displayname, len);
+  else
+    *buf = 0;
 }
 
 int

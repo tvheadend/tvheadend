@@ -361,6 +361,8 @@ struct mpegts_input
 
   int mi_instance;
 
+  char *mi_displayname;
+
   LIST_ENTRY(mpegts_input) mi_global_link;
 
   mpegts_network_t *mi_network;
