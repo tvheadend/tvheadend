@@ -656,6 +656,28 @@ idnode_serialize0(idnode_t *self, int optmask)
 static void
 idnode_updated(idnode_t *in, int optmask)
 {
+  idnode_notify("idnodeParamsChanged", in, optmask);
+}
+
+/**
+ *
+ */
+void
+idnode_notify_title_changed(void *obj)
+{
+  idnode_t *in = obj;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+  htsmsg_add_str(m, "text", idnode_get_title(in));
+  notify_by_msg("idnodeNameChanged", m);
+}
+
+/**
+ * Notify on a given channel
+ */
+void
+idnode_notify(const char *chn, idnode_t *in, int optmask)
+{
   const idclass_t *ic = in->in_class;
 
   /* Save */
@@ -675,20 +697,7 @@ idnode_updated(idnode_t *in, int optmask)
   add_params(in, in->in_class, p, optmask);
   htsmsg_add_msg(m, "params", p);
 
-  notify_by_msg("idnodeParamsChanged", m);
-}
-
-/**
- *
- */
-void
-idnode_notify_title_changed(void *obj)
-{
-  idnode_t *in = obj;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
-  htsmsg_add_str(m, "text", idnode_get_title(in));
-  notify_by_msg("idnodeNameChanged", m);
+  notify_by_msg(chn, m);
 }
 
 /******************************************************************************
