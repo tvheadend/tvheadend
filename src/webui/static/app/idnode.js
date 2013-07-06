@@ -11,6 +11,45 @@ json_decode = function(d)
 }
 
 /*
+ * Build enum data store
+ */
+tvheadend.idnode_enum_store = function(f)
+{
+  var store = null;
+  switch (f.type) {
+    case 'str':
+      if (f.enum.length > 0 && f.enum[0] instanceof Object)
+        store = new Ext.data.JsonStore({
+          id      : 'key',
+          fields  : [ 'key', 'val' ],
+          data    : f.enum,
+        });
+      else
+        store = f.enum;
+      break;
+    case 'int':
+    case 'u32':
+    case 'u16':
+    case 'dbl':
+      var data  = null;
+      if (f.enum.length > 0 && f.enum[0] instanceof Object) {
+        data = f.enum;
+      } else {
+        data = []
+        for ( i = 0; i < f.enum.length; i++ )
+          data.push({ key: i, val: f.enum[i]});
+      }
+      store = new Ext.data.JsonStore({
+        id     : 'key',
+        fields : [ 'key', 'val' ],
+        data   : data
+      });
+      break;
+  }
+  return store;
+}
+
+/*
  * Field editor
  */
 tvheadend.idnode_editor_field = function(f, create)
@@ -21,13 +60,6 @@ tvheadend.idnode_editor_field = function(f, create)
   switch(f.type) {
     case 'str':
       if (f.enum) {
-        var store = f.enum;
-        if (f.enum.length > 0 && f.enum[0] instanceof Object)
-          store = new Ext.data.JsonStore({
-            id          : 'key',
-            fields      : [ 'key', 'val' ],
-            data	: f.enum,
-          });
         return new Ext.form.ComboBox({
           fieldLabel      : f.caption,
           name            : f.id,
@@ -37,7 +69,7 @@ tvheadend.idnode_editor_field = function(f, create)
           mode            : 'local',
           valueField      : 'key',
           displayField    : 'val',
-          store           : store,
+          store           : tvheadend.idnode_enum_store(f),
           typeAhead       : true,
           forceSelection  : true,
           triggerAction   : 'all',
@@ -68,19 +100,6 @@ tvheadend.idnode_editor_field = function(f, create)
     case 'u16':
     case 'dbl':
       if (f.enum) {
-        var data  = null;
-        if (f.enum.length > 0 && f.enum[0] instanceof Object) {
-          data = f.enum;
-        } else {
-          data = []
-          for ( i = 0; i < f.enum.length; i++ )
-            data.push({ key: i, val: f.enum[i]});
-        }
-        var store = new Ext.data.JsonStore({
-          id     : 'key',
-          fields : [ 'key', 'val' ],
-          data   : data
-        });
         return new Ext.form.ComboBox({
           fieldLabel      : f.caption,
           name            : f.id,
@@ -90,7 +109,7 @@ tvheadend.idnode_editor_field = function(f, create)
           mode            : 'local',
           valueField      : 'key',
           displayField    : 'val',
-          store           : store,
+          store           : tvheadend.idnode_enum_store(f),
           typeAhead       : true,
           forceSelection  : true,
           triggerAction   : 'all',
@@ -314,21 +333,41 @@ tvheadend.idnode_grid = function(panel, conf)
 
     /* Process */
     for (i = 0; i < d.length; i++) {
+      var f    = d[i];
       var type = 'string';
       var edit = null;
-      if (d[i].type == 'separator') continue;
-      if (!d[i].rdonly && !d[i].wronce)
-        edit = tvheadend.idnode_editor_field(d[i]);
-      fields.push(d[i].id)
+      var rend = null;
+      if (f.type == 'separator') continue;
+      if (!f.rdonly && !f.wronce)
+        edit = tvheadend.idnode_editor_field(f);
+      if (f.enum)
+        rend = function(v) {
+          var s = null;
+          for (j = 0; j < d.length; j++) {
+            if (d[j].id == this.dataIndex) {
+              s = tvheadend.idnode_enum_store(d[j]);
+              break;
+            }
+          }
+          if (s && s.find) {
+            var r = s.find('key', v);
+            if (r != -1) {
+              v = s.getAt(r).get('val');
+            }
+          }
+          return v;
+        }
+      fields.push(f.id)
       columns.push({
-        dataIndex: d[i].id,
-        header   : d[i].caption,
+        dataIndex: f.id,
+        header   : f.caption,
         sortable : true,
-        editor   : edit
+        editor   : edit,
+        renderer : rend,
       });
       filters.push({
         type      : type,
-        dataIndex : d[i].id
+        dataIndex : f.id
       });
     }
 
