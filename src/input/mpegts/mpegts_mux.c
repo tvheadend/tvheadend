@@ -120,6 +120,18 @@ mpegts_mux_class_get_num_svc ( void *ptr )
   return &n;
 }
 
+static const void *
+mpegts_mux_class_get_network ( void *ptr )
+{
+  static char buf[512], *s = buf;
+  mpegts_mux_t *mm = ptr;
+  if (mm && mm->mm_network && mm->mm_network->mn_display_name)
+    mm->mm_network->mn_display_name(mm->mm_network, buf, sizeof(buf));
+  else
+    *buf = 0;
+  return &s;
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -131,6 +143,13 @@ const idclass_t mpegts_mux_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(mpegts_mux_t, mm_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network",
+      .name     = "Network",
+      .opts     = PO_RDONLY,
+      .get      = mpegts_mux_class_get_network,
     },
     {
       .type     = PT_U16,

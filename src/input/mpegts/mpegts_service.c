@@ -28,12 +28,28 @@
 
 extern const idclass_t service_class;
 
+static const void *
+mpegts_service_class_get_mux ( void *ptr )
+{
+  static char buf[512], *s = buf;
+  mpegts_service_t *ms = ptr;
+  ms->s_dvb_mux->mm_display_name(ms->s_dvb_mux, buf, sizeof(buf));
+  return &s;
+}
+
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
   .ic_caption    = "MPEGTS Service",
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "multiplex",
+      .name     = "Mux",
+      .opts     = PO_RDONLY,
+      .get      = mpegts_service_class_get_mux,
+    },
     {
       .type     = PT_U16,
       .id       = "sid",
