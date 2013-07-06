@@ -46,8 +46,8 @@ static const char *
 linuxdvb_frontend_class_get_title ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)in;
-  if (lfe->lh_displayname)
-    return lfe->lh_displayname;
+  if (lfe->mi_displayname)
+    return lfe->mi_displayname;
   if (lfe->lfe_fe_path)
     return lfe->lfe_fe_path;
   return "unknown";
@@ -891,7 +891,7 @@ linuxdvb_frontend_create0
         tvhlog(LOG_WARNING, "linuxdvb",
                "attempt to add network %s of wrong type %s to %s (%s)",
                dvb_type2str(ln->ln_type), ln->mn_network_name,
-               lfe->lh_displayname, dvb_type2str(lfe->lfe_info.type));
+               lfe->mi_displayname, dvb_type2str(lfe->lfe_info.type));
     }
   }
 

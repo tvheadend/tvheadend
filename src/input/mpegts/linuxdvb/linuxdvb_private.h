@@ -59,11 +59,6 @@ struct linuxdvb_hardware
   linuxdvb_hardware_t          *lh_parent;
   LIST_ENTRY(linuxdvb_hardware) lh_parent_link;
   linuxdvb_hardware_list_t      lh_children;
-
-  /*
-   * Device info
-   */
-  char                         *lh_displayname;
 };
 
 extern const idclass_t linuxdvb_hardware_class;

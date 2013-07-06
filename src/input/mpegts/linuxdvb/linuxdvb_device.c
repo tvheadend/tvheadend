@@ -286,7 +286,7 @@ linuxdvb_device_find_by_adapter ( int a )
 
   /* Copy device info */
   memcpy(&ld->ld_devid, &dev, sizeof(dev));
-  ld->lh_displayname = strdup(dev.di_id);
+  ld->mi_displayname = strdup(dev.di_id);
   return ld;
 }
 

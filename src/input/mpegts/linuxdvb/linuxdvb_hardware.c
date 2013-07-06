@@ -39,12 +39,6 @@ linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list )
   return set;
 }
 
-static const char *
-linuxdvb_hardware_class_get_title ( idnode_t *in )
-{
-  return ((linuxdvb_hardware_t*)in)->lh_displayname;
-}
-
 static idnode_set_t *
 linuxdvb_hardware_class_get_childs ( idnode_t *in )
 {
@@ -57,15 +51,8 @@ const idclass_t linuxdvb_hardware_class =
   .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_hardware",
   .ic_caption    = "LinuxDVB Hardware",
-  .ic_get_title  = linuxdvb_hardware_class_get_title,
   .ic_get_childs = linuxdvb_hardware_class_get_childs,
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "displayname",
-      .name     = "Name",
-      .off      = offsetof(linuxdvb_hardware_t, lh_displayname),
-    },
     {}
   }
 };

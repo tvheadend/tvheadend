@@ -29,6 +29,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#define FE_PATH  "/dev/dvb/adapter%d/frontend%d"
+#define DVR_PATH "/dev/dvb/adapter%d/dvr%d"
+#define DMX_PATH "/dev/dvb/adapter%d/demux%d"
+
 /* ***************************************************************************
  * DVB Adapter
  * **************************************************************************/
@@ -177,8 +181,6 @@ linuxdvb_adapter_find_by_number ( int adapter )
   la->la_number = a;
   snprintf(buf, sizeof(buf), "/dev/dvb/adapter%d", adapter);
   tvh_str_update(&la->la_rootpath, buf);
-  if (!la->lh_displayname)
-    la->lh_displayname = strdup(la->la_rootpath);
 
   return la;
 }
@@ -196,7 +198,7 @@ linuxdvb_adapter_added ( int adapter )
 
   /* Process each frontend */
   for (i = 0; i < 32; i++) {
-    snprintf(fe_path, sizeof(fe_path), "/dev/dvb/adapter%d/frontend%d", adapter, i);
+    snprintf(fe_path, sizeof(fe_path), FE_PATH, adapter, i);
 
     /* No access */
     if (access(fe_path, R_OK | W_OK)) continue;
@@ -215,15 +217,15 @@ linuxdvb_adapter_added ( int adapter )
     }
 
     /* DVR/DMX (bit of a guess) */
-    snprintf(dmx_path, sizeof(dmx_path), "/dev/dvb/adapter%d/demux%d", adapter, i);
+    snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, adapter, i);
     if (access(dmx_path, R_OK | W_OK)) {
-      snprintf(dmx_path, sizeof(dmx_path), "/dev/dvb/adapter%d/demux0", adapter);
+      snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, adapter, 0);
       if (access(dmx_path, R_OK | W_OK)) continue;
     }
 
-    snprintf(dvr_path, sizeof(dvr_path), "/dev/dvb/adapter%d/dvr%d", adapter, i);
+    snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, adapter, i);
     if (access(dvr_path, R_OK | W_OK)) {
-      snprintf(dvr_path, sizeof(dvr_path), "/dev/dvb/adapter%d/dvr0", adapter);
+      snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, adapter, 0);
       if (access(dvr_path, R_OK | W_OK)) continue;
     }
 
@@ -232,6 +234,11 @@ linuxdvb_adapter_added ( int adapter )
       if (!(la = linuxdvb_adapter_find_by_number(adapter))) {
         tvhlog(LOG_ERR, "linuxdvb", "failed to find/create adapter%d", adapter);
         return NULL;
+      }
+      if (!la->mi_displayname) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "%s #%d", dfi.name, la->la_number);
+        la->mi_displayname = strdup(buf);
       }
     }
 
