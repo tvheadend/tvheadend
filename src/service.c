@@ -522,6 +522,9 @@ service_create0
   if (conf)
     service_load(t, conf);
 
+  /* Notify */
+  idnode_notify("service", &t->s_id, 0);
+
   return t;
 }
 
@@ -1003,7 +1006,8 @@ static void
 service_class_save(struct idnode *self)
 {
   service_t *s = (service_t *)self;
-  s->s_config_save(s);
+  if (s->s_config_save)
+    s->s_config_save(s);
 }
 
 /**

@@ -64,19 +64,6 @@ const idclass_t mpegts_input_class =
  * Class methods
  * *************************************************************************/
 
-static const idclass_t *
-mpegts_input_network_class (mpegts_input_t *mi)
-{
-  extern const idclass_t mpegts_network_class;
-  return &mpegts_network_class;
-}
-
-static mpegts_network_t *
-mpegts_input_network_create (mpegts_input_t *mi, htsmsg_t *conf)
-{
-  return NULL;
-}
-
 static int
 mpegts_input_is_enabled ( mpegts_input_t *mi )
 {
@@ -397,8 +384,6 @@ mpegts_input_create0
   mi->mi_stop_mux             = mpegts_input_stop_mux;
   mi->mi_open_service         = mpegts_input_open_service;
   mi->mi_close_service        = mpegts_input_close_service;
-  mi->mi_network_class        = mpegts_input_network_class;
-  mi->mi_network_create       = mpegts_input_network_create;
   mi->mi_create_mux_instance  = mpegts_input_create_mux_instance;
   mi->mi_started_mux          = mpegts_input_started_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;

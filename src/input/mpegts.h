@@ -402,27 +402,34 @@ struct mpegts_input
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
-  const idclass_t *(*mi_network_class) (mpegts_input_t *mi);
-  mpegts_network_t *(*mi_network_create) (mpegts_input_t *mi, htsmsg_t *c);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_grace_period)   (mpegts_input_t*, mpegts_mux_t *mm);
 };
 
-#endif /* __TVH_MPEGTS_H__ */
-
 /* ****************************************************************************
  * Lists
  * ***************************************************************************/
 
 extern mpegts_network_list_t mpegts_network_all;
-  
+
+typedef struct mpegts_network_builder {
+  LIST_ENTRY(mpegts_network_builder) link;
+  const idclass_t     *idc;
+  mpegts_network_t * (*build) ( const idclass_t *idc, htsmsg_t *conf );
+} mpegts_network_builder_t;
+
+
+typedef LIST_HEAD(,mpegts_network_builder) mpegts_network_builder_list_t;
+
+extern mpegts_network_builder_list_t mpegts_network_builders;
+
+extern mpegts_input_list_t mpegts_input_all;
+
 /* ****************************************************************************
  * Functions
  * ***************************************************************************/
-
-extern mpegts_input_list_t mpegts_input_all;
 
 mpegts_input_t *mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid, htsmsg_t *c );
@@ -438,6 +445,13 @@ void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
 
 void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
+
+void mpegts_network_register_builder
+  ( const idclass_t *idc,
+    mpegts_network_t *(*build)(const idclass_t *idc, htsmsg_t *conf) );
+
+mpegts_network_t *mpegts_network_build
+  ( const char *clazz, htsmsg_t *conf );
                  
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
@@ -532,6 +546,7 @@ mpegts_service_t *mpegts_service_find
 
 void mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c );
 
+#endif /* __TVH_MPEGTS_H__ */
 
 /******************************************************************************
  * Editor Configuration

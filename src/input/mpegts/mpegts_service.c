@@ -33,7 +33,10 @@ mpegts_service_class_get_mux ( void *ptr )
 {
   static char buf[512], *s = buf;
   mpegts_service_t *ms = ptr;
-  ms->s_dvb_mux->mm_display_name(ms->s_dvb_mux, buf, sizeof(buf));
+  if (ms->s_dvb_mux && ms->s_dvb_mux->mm_display_name)
+    ms->s_dvb_mux->mm_display_name(ms->s_dvb_mux, buf, sizeof(buf));
+  else
+    *buf = 0;
   return &s;
 }
 
@@ -47,7 +50,7 @@ const idclass_t mpegts_service_class =
       .type     = PT_STR,
       .id       = "multiplex",
       .name     = "Mux",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_mux,
     },
     {
@@ -321,6 +324,11 @@ mpegts_service_create0
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
+
+  /* Notification */
+  idnode_notify(NULL, &s->s_dvb_mux->mm_id, 0);
+  idnode_notify(NULL, &s->s_dvb_mux->mm_network->mn_id, 0);
+
   return s;
 }
 

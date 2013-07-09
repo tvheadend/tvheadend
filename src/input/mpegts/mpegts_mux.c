@@ -148,7 +148,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_network,
     },
     {
@@ -483,6 +483,11 @@ mpegts_mux_create0
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - created", buf);
+
+  /* Notification */
+printf("NOTIFY NEW MUX\n");
+  idnode_notify("mpegts_mux", &mm->mm_id, 0);
+  idnode_notify(NULL, &mn->mn_id, 0);
 
   return mm;
 }

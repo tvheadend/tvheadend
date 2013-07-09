@@ -232,6 +232,9 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
   }
   LIST_INSERT_HEAD(&linuxdvb_device_all, (linuxdvb_hardware_t*)ld, lh_parent_link);
 
+  /* Defaults */
+  ld->mi_enabled = 1;
+
   /* No config */
   if (!conf)
     return ld;

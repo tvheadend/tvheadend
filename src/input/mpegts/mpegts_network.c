@@ -257,6 +257,35 @@ mpegts_network_set_network_name
 }
 
 /******************************************************************************
+ * Network classes/creation
+ *****************************************************************************/
+
+mpegts_network_builder_list_t mpegts_network_builders;
+
+void
+mpegts_network_register_builder
+  ( const idclass_t *idc,
+    mpegts_network_t *(*build) (const idclass_t *idc, htsmsg_t *conf) )
+{
+  mpegts_network_builder_t *mnb = calloc(1, sizeof(mpegts_network_builder_t));
+  mnb->idc   = idc;
+  mnb->build = build;
+  LIST_INSERT_HEAD(&mpegts_network_builders, mnb, link);
+}
+
+mpegts_network_t *
+mpegts_network_build
+  ( const char *clazz, htsmsg_t *conf )
+{
+  mpegts_network_builder_t *mnb;
+  LIST_FOREACH(mnb, &mpegts_network_builders, link) {
+    if (!strcmp(mnb->idc->ic_class, clazz))
+      return mnb->build(mnb->idc, conf);
+  }
+  return NULL;
+}
+
+/******************************************************************************
  * Editor Configuration
  *
  * vim:sts=2:ts=2:sw=2:et

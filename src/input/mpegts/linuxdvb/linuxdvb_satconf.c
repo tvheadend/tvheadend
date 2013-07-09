@@ -234,7 +234,10 @@ linuxdvb_satconf_class_get_title ( idnode_t *o )
 {
   static char buf[128];
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
-  ls->mi_display_name((mpegts_input_t*)ls, buf, sizeof(buf));
+  if (ls->mi_display_name)
+    ls->mi_display_name((mpegts_input_t*)ls, buf, sizeof(buf));
+  else
+    *buf = 0;
   return buf;
 }
 
@@ -323,20 +326,6 @@ linuxdvb_satconf_display_name ( mpegts_input_t* mi, char *buf, size_t len )
     ls->ls_frontend->mi_display_name(ls->ls_frontend, buf, len);
   else
     strncpy(buf, "Unknown", len);
-}
-
-static const idclass_t *
-linuxdvb_satconf_network_class ( mpegts_input_t *mi )
-{
-  extern const idclass_t linuxdvb_network_class;
-  return &linuxdvb_network_class;
-}
-
-static mpegts_network_t *
-linuxdvb_satconf_network_create ( mpegts_input_t *mi, htsmsg_t *conf )
-{
-  return (mpegts_network_t*)
-    linuxdvb_network_create0(NULL, FE_QPSK, conf);
 }
 
 static int
@@ -549,8 +538,6 @@ linuxdvb_satconf_create0
   ls->mi_stop_mux            = linuxdvb_satconf_stop_mux;
   ls->mi_open_service        = linuxdvb_satconf_open_service;
   ls->mi_close_service       = linuxdvb_satconf_close_service;
-  ls->mi_network_class       = linuxdvb_satconf_network_class;
-  ls->mi_network_create      = linuxdvb_satconf_network_create;
   ls->mi_started_mux         = linuxdvb_satconf_started_mux;
   ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
   ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
@@ -576,6 +563,9 @@ linuxdvb_satconf_create0
   /* Create default LNB */
   if (!ls->ls_lnb)
     ls->ls_lnb = linuxdvb_lnb_create0(NULL, NULL, ls);
+
+  /* Notification */
+  idnode_notify("linuxdvb_satconf", &ls->mi_id, 0);
 
   return ls;
 }

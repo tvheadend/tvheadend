@@ -1,4 +1,5 @@
 /*
+rk_class
  *  Tvheadend - Linux DVB frontend
  *
  *  Copyright (C) 2013 Adam Sutton
@@ -41,17 +42,6 @@ linuxdvb_frontend_input_thread ( void *aux );
  * *************************************************************************/
 
 extern const idclass_t linuxdvb_hardware_class;
-
-static const char *
-linuxdvb_frontend_class_get_title ( idnode_t *in )
-{
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)in;
-  if (lfe->mi_displayname)
-    return lfe->mi_displayname;
-  if (lfe->lfe_fe_path)
-    return lfe->lfe_fe_path;
-  return "unknown";
-}
 
 static void
 linuxdvb_frontend_class_save ( idnode_t *in )
@@ -126,7 +116,6 @@ const idclass_t linuxdvb_frontend_class =
   .ic_super      = &linuxdvb_hardware_class,
   .ic_class      = "linuxdvb_frontend",
   .ic_caption    = "Linux DVB Frontend",
-  .ic_get_title  = linuxdvb_frontend_class_get_title,
   .ic_save       = linuxdvb_frontend_class_save,
   .ic_properties = (const property_t[]) {
     {
@@ -235,21 +224,6 @@ const idclass_t linuxdvb_frontend_atsc_class =
  * Class methods
  * *************************************************************************/
 
-static const idclass_t *
-linuxdvb_frontend_network_class ( mpegts_input_t *mi )
-{
-  extern const idclass_t linuxdvb_network_class;
-  return &linuxdvb_network_class;
-}
-
-static mpegts_network_t *
-linuxdvb_frontend_network_create ( mpegts_input_t *mi, htsmsg_t *conf )
-{
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  return (mpegts_network_t*)
-    linuxdvb_network_create0(NULL, lfe->lfe_info.type, conf);
-}
-
 static int
 linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
 {
@@ -258,12 +232,6 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
   if (!lfe->mi_enabled) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   return 1;
-}
-
-static void
-linuxdvb_frontend_display_name ( mpegts_input_t* mi, char *buf, size_t len )
-{
-  strncpy(buf, linuxdvb_frontend_class_get_title(&mi->mi_id) ?: "", len);
 }
 
 #if 0
@@ -857,13 +825,10 @@ linuxdvb_frontend_create0
 
   /* Input callbacks */
   lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
-  lfe->mi_display_name   = linuxdvb_frontend_display_name;
   lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
   lfe->mi_open_service   = linuxdvb_frontend_open_service;
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
-  lfe->mi_network_class  = linuxdvb_frontend_network_class;
-  lfe->mi_network_create = linuxdvb_frontend_network_create;
   lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
 
   /* Adapter link */
@@ -929,6 +894,10 @@ linuxdvb_frontend_added
       return NULL;
     }
   }
+
+  /* Defaults */
+  if (!lfe->mi_displayname)
+    lfe->mi_displayname = strdup(fe_path);
 
   /* Copy info */
   lfe->lfe_number = fe_num;

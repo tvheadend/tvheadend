@@ -124,7 +124,8 @@ linuxdvb_adapter_create0
   }
 
   LIST_INSERT_HEAD(&ld->lh_children, (linuxdvb_hardware_t*)la, lh_parent_link);
-  la->lh_parent = (linuxdvb_hardware_t*)ld;
+  la->lh_parent  = (linuxdvb_hardware_t*)ld;
+  la->mi_enabled = 1;
 
   /* No conf */
   if (!conf)

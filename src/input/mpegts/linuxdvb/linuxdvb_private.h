@@ -188,7 +188,7 @@ void linuxdvb_network_init ( void );
 linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
 
 linuxdvb_network_t *linuxdvb_network_create0
-  ( const char *uuid, fe_type_t type, htsmsg_t *conf );
+  ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
 struct linuxdvb_mux
 {
