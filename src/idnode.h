@@ -116,7 +116,7 @@ int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 void         *idnode_find    (const char *uuid, const idclass_t *idc);
 idnode_set_t *idnode_find_all(const idclass_t *idc);
 
-void idnode_notify(const char *chn, idnode_t *in, int optmask);
+void idnode_notify(const char *chn, idnode_t *in, int optmask, htsmsg_t *inc);
 void idnode_notify_title_changed(void *obj);
 
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, int optmask);

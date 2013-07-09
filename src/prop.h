@@ -69,13 +69,13 @@ typedef struct property {
 const property_t *prop_find(const property_t *p, const char *name);
 
 int prop_write_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *updated);
 
 void prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc);
 
 void prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc);
 
 #endif /* __TVH_PROP_H__ */
 

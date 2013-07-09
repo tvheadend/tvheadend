@@ -80,7 +80,7 @@ prop_find(const property_t *p, const char *id)
  */
 int
 prop_write_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *updated)
 {
   int save, save2 = 0;
   htsmsg_field_t *f;
@@ -170,6 +170,8 @@ prop_write_values
       save2 = 1;
       if (p->notify)
         p->notify(obj);
+      if (updated)
+        htsmsg_set_u32(updated, p->id, 1);
     }
   }
   return save2;
@@ -184,13 +186,17 @@ prop_write_values
  */
 static void
 prop_read_value
-  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask)
+  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask, htsmsg_t *inc)
 {
   const char *s;
   const void *val = obj + p->off;
 
   /* Ignore */
   if (p->opts & optmask) return;
+
+  /* Ignore */
+  if (inc && !htsmsg_get_u32_or_default(inc, p->id, 0))
+    return;
 
   /* Get method */
   if (p->get)
@@ -226,24 +232,29 @@ prop_read_value
  *
  */
 void
-prop_read_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
+prop_read_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc)
 {
   if(pl == NULL)
     return;
   for (; pl->id; pl++)
-    prop_read_value(obj, pl, m, pl->id, optmask);
+    prop_read_value(obj, pl, m, pl->id, optmask, inc);
 }
 
 /**
  *
  */
 void
-prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
+prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsmsg_t *inc)
 {
   if(pl == NULL)
     return;
 
   for(; pl->id; pl++) {
+
+    /* Ignore */
+    if (inc && !htsmsg_get_u32_or_default(inc, pl->id, 0))
+      continue;
+
     htsmsg_t *m = htsmsg_create_map();
 
     /* Metadata */
@@ -265,7 +276,7 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
 
     /* Data */
     if (obj)
-      prop_read_value(obj, pl, m, "value", optmask);
+      prop_read_value(obj, pl, m, "value", optmask, NULL);
 
     htsmsg_add_msg(msg, NULL, m);
   }

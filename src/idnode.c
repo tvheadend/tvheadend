@@ -563,10 +563,12 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
   int save = 0;
   const idclass_t *idc = self->in_class;
+  htsmsg_t *updated = htsmsg_create_map();
   for (; idc; idc = idc->ic_super)
-    save |= prop_write_values(self, idc->ic_properties, c, optmask);
+    save |= prop_write_values(self, idc->ic_properties, c, optmask, updated);
   if (save && dosave)
-    idnode_notify(NULL, self, optmask);
+    idnode_notify(NULL, self, optmask, updated);
+  htsmsg_destroy(updated);
   return save;
 }
 
@@ -582,7 +584,7 @@ idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
 {
   const idclass_t *idc = self->in_class;
   for (; idc; idc = idc->ic_super)
-    prop_read_values(self, idc->ic_properties, c, optmask);
+    prop_read_values(self, idc->ic_properties, c, optmask, NULL);
 }
 
 /**
@@ -590,11 +592,11 @@ idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
  */
 static void
 add_params
-  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask)
+  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask, htsmsg_t *inc)
 {
   /* Parent first */
   if(ic->ic_super != NULL)
-    add_params(self, ic->ic_super, p, optmask);
+    add_params(self, ic->ic_super, p, optmask, inc);
 
   /* Seperator (if not empty) */
 #if 0
@@ -607,14 +609,14 @@ add_params
 #endif
 
   /* Properties */
-  prop_serialize(self, ic->ic_properties, p, optmask);
+  prop_serialize(self, ic->ic_properties, p, optmask, inc);
 }
 
 static htsmsg_t *
 idnode_params (const idclass_t *idc, idnode_t *self, int optmask)
 {
   htsmsg_t *p  = htsmsg_create_list();
-  add_params(self, idc, p, optmask);
+  add_params(self, idc, p, optmask, NULL);
   return p;
 }
 
@@ -708,7 +710,7 @@ idnode_notify_title_changed(void *obj)
  */
 void
 idnode_notify
-  (const char *chn, idnode_t *in, int optmask)
+  (const char *chn, idnode_t *in, int optmask, htsmsg_t *inc)
 {
   const idclass_t *ic = in->in_class;
 
@@ -726,7 +728,7 @@ idnode_notify
   htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
 
   htsmsg_t *p  = htsmsg_create_list();
-  add_params(in, in->in_class, p, optmask);
+  add_params(in, in->in_class, p, optmask, inc);
   htsmsg_add_msg(m, "params", p);
 
   notify_by_msg(chn ?: "idnodeParamsChanged", m);
