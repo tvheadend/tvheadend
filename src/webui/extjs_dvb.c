@@ -269,6 +269,26 @@ extjs_mpegts_network
   } else if (!strcmp(op, "class")) {
     htsmsg_t *c = idclass_serialize(&mpegts_network_class);
     htsmsg_add_msg(out, "entries", c);
+  } else if (!strcmp(op, "class_list")) {
+    mpegts_network_builder_t *mnb;
+    htsmsg_t *e, *c = htsmsg_create_list();
+    LIST_FOREACH(mnb, &mpegts_network_builders, link)
+      if ((e = idclass_serialize(mnb->idc)))
+        htsmsg_add_msg(c, NULL, e);
+    htsmsg_add_msg(out, "entries", c);
+  } else if (!strcmp(op, "create")) {
+    htsmsg_t *conf = NULL;
+    const char *s, *c;
+    if (!(s = http_arg_get(&hc->hc_req_args, "conf")))
+      return HTTP_STATUS_BAD_REQUEST;
+    if (!(c = http_arg_get(&hc->hc_req_args, "class")))
+      return HTTP_STATUS_BAD_REQUEST;
+    if (!(conf = htsmsg_json_deserialize(s)))
+      return HTTP_STATUS_BAD_REQUEST;
+    pthread_mutex_lock(&global_lock);
+    mn = mpegts_network_build(c, conf);
+    if (mn) mn->mn_config_save(mn);
+    pthread_mutex_unlock(&global_lock);
   } else if (!strcmp(op, "mux_class")) {
     const idclass_t *idc; 
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
@@ -322,7 +342,7 @@ extjs_mpegts_input
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   mpegts_input_t   *mi;
-  mpegts_network_t *mn;
+  //mpegts_network_t *mn;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
   const char       *op  = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
@@ -340,6 +360,7 @@ extjs_mpegts_input
   } else if (!strcmp(op, "class")) {
     htsmsg_t *list= idclass_serialize(&mpegts_input_class);
     htsmsg_add_msg(out, "entries", list);
+#if 0
   } else if (!strcmp(op, "network_class")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
     if (!uuid) return 404;
@@ -359,6 +380,7 @@ extjs_mpegts_input
     else {
       // TODO: Check for error
     }
+#endif
   }
 
   htsmsg_json_serialize(out, hq, 0);

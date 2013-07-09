@@ -1,33 +1,40 @@
 /*
- * IDnode stuff
- */
-
-/*
  * DVB network
  */
+
+tvheadend.network_classes = new Ext.data.JsonStore({
+  autoLoad	: true,
+  root    	: 'entries',
+  fields	: [ 'class', 'caption', 'props' ],
+  id		: 'class',
+  url		: 'api/mpegts/network',
+  baseParams	: {
+    op: 'class_list'
+  }
+});
+tvheadend.comet.on('mpegts_network', function() {
+  tvheadend.network_classes.reload();
+});
 
 tvheadend.networks = function(panel)
 {
   tvheadend.idnode_grid(panel, {
-    titleS   :  'Network',
-    titleP   :  'Networks',
+    titleS   : 'Network',
+    titleP   : 'Networks',
     url      : 'api/mpegts/network',
     comet    : 'mpegts_network',
     add      : {
-      url    : 'api/mpegts/input',
+      url    : 'api/mpegts/network',
       title  : 'Network',
       select : {
-        caption      : 'Input',
-        params       : { op: 'list', limit: -1 },
-        displayField : 'displayname',
-        valueField   : 'uuid',
-        url          : 'api/mpegts/input',
-        clazz        : {
-          params  : { op: 'network_class' }
-        }
+        caption      : 'Type',
+	store        : tvheadend.network_classes,
+        displayField : 'caption',
+        valueField   : 'class',
+        propField    : 'props',
       },
       create : {
-        params : { op: 'network_create' }
+        params : { op: 'create' }
       }
     },
     del     : true
@@ -40,6 +47,7 @@ tvheadend.muxes = function(panel)
     titleS   : 'Mux',
     titleP   : 'Muxes',
     url      : 'api/mpegts/mux',
+    comet    : 'mpegts_mux',
     add       : {
       title  : 'Mux',
       url    : 'api/mpegts/network',
@@ -66,6 +74,7 @@ tvheadend.services = function(panel)
     url     : 'api/mpegts/service',
     titleS  : 'Service',
     titleP  : 'Services',
+    comet   : 'service',
     add     : false,
     del     : false
   });
@@ -77,7 +86,8 @@ tvheadend.satconfs = function(panel)
     titleS   : 'Satconf',
     titleP   : 'Satconfs',
     url      : 'api/linuxdvb/satconf',
-    add       : {
+    comet    : 'linuxdvb_satconf',
+    add      : {
       title  : 'Satconf',
       url    : 'api/linuxdvb/satconf',
       create : {

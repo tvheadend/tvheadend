@@ -193,8 +193,9 @@ tvheadend.idnode_editor = function(item, conf)
  */
 tvheadend.idnode_create = function(conf)
 {
-  var puuid = null;
-  var panel = null;
+  var puuid  = null;
+  var panel  = null;
+  var pclass = null;
 
   /* Buttons */
   var saveBtn = new Ext.Button({
@@ -203,7 +204,10 @@ tvheadend.idnode_create = function(conf)
     hidden      : true,
     handler     : function(){
       params = conf.create.params || {}
-      params['uuid'] = puuid;
+      if (puuid)
+        params['uuid'] = puuid;
+      if (pclass)
+        params['class'] = pclass
       params['conf'] = Ext.util.JSON.encode(panel.getForm().getFieldValues());
       Ext.Ajax.request({
         url    : conf.create.url || conf.url,
@@ -265,6 +269,44 @@ tvheadend.idnode_create = function(conf)
 
   /* Do we need to first select a class? */
   if (conf.select) {
+    var store = conf.select.store;
+    if (!store) {
+      store = new Ext.data.JsonStore({
+        root        : 'entries',
+        url         : conf.select.url || conf.url,
+        baseParams  : conf.select.params,
+        fields      : [ conf.select.valueField, conf.select.displayField ]
+      });
+    }
+    var select = null;
+    if (conf.select.propField) {
+      select = function (s, n, o) {
+        var r =  store.getAt(s.selectedIndex);
+        if (r) {
+          var d = r.get(conf.select.propField);
+          if (d) {
+            pclass = r.get(conf.select.valueField);
+            win.setTitle('Add ' + s.lastSelectionText);
+            panel.remove(s);
+            build_form(d);
+          }
+        }
+      }
+    } else {
+      select = function (s, n, o) {
+        params = conf.select.clazz.params || {};
+        params['uuid'] = puuid = n.data.uuid;
+        Ext.Ajax.request({
+          url     : conf.select.clazz.url || conf.select.url || conf.url,
+          success : function(d) {
+            panel.remove(s);
+            d = json_decode(d);
+            build_form(d.props);
+          },
+          params  : params
+        });
+      };
+    }
 
     /* Parent selector */
     var combo = new Ext.form.ComboBox({
@@ -276,25 +318,9 @@ tvheadend.idnode_create = function(conf)
       valueField    : conf.select.valueField,
       mode          : 'remote',
       triggerAction : 'all',
-      store         : new Ext.data.JsonStore({
-        root        : 'entries',
-        url         : conf.select.url || conf.url,
-        baseParams  : conf.select.params,
-        fields      : [ conf.select.valueField, conf.select.displayField ]
-      }),
+      store         : store,
       listeners     : {
-        select: function (s, n, o) {
-          params = conf.select.clazz.params || {};
-          params['uuid'] = puuid = n.data.uuid;
-          Ext.Ajax.request({
-            url     : conf.select.clazz.url || conf.select.url || conf.url,
-            success : function(d) {
-              panel.remove(s);
-              build_form(json_decode(d));
-            },
-            params  : params
-          });
-        }
+        select : select
       }
     });
 
@@ -305,7 +331,8 @@ tvheadend.idnode_create = function(conf)
       url     : conf.url,
       params  : conf.params,
       success : function(d) {
-        build_form(json_decode(d));
+        d = json_decode(d);
+        build_form(d.props);
         win.show();
       }
     });
@@ -577,7 +604,7 @@ tvheadend.idnode_grid = function(panel, conf)
       },
       success : function(d)
       {
-        build(json_decode(d));
+        build(json_decode(d).props);
       }
     });
   } else {
