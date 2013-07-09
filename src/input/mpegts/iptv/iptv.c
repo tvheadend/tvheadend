@@ -144,6 +144,7 @@ const idclass_t iptv_input_class = {
   .ic_caption    = "IPTV Input",
   .ic_get_title  = iptv_input_class_get_title,
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 
@@ -298,6 +299,7 @@ const idclass_t iptv_network_class = {
   .ic_class      = "iptv_network",
   .ic_caption    = "IPTV Network",
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 

@@ -178,7 +178,7 @@ const idclass_t linuxdvb_mux_dvbt_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (MHz)",
+      .name     = "Frequency (Hz)",
       .opts     = PO_WRONCE,
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
@@ -245,14 +245,14 @@ const idclass_t linuxdvb_mux_dvbc_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (MHz)",
+      .name     = "Frequency (Hz)",
       .opts     = PO_WRONCE,
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = "Symbol Rate",
+      .name     = "Symbol Rate (Sym/s)",
       .opts     = PO_WRONCE,
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qam.symbol_rate),
     },
@@ -329,14 +329,14 @@ const idclass_t linuxdvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (MHz)",
+      .name     = "Frequency (kHz)",
       .opts     = PO_WRONCE,
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = "Symbol Rate",
+      .name     = "Symbol Rate (Sym/s)",
       .opts     = PO_WRONCE,
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qpsk.symbol_rate),
     },

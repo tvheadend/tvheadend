@@ -652,7 +652,7 @@ dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
   str = htsmsg_get_str(m, "delsys");
   if (!str || (r = dvb_str2delsys(str)) < 0) {
          if (type == FE_OFDM) r = SYS_DVBT;
-    else if (type == FE_QAM)  r = SYS_DVBC_ANNEX_B;
+    else if (type == FE_QAM)  r = SYS_DVBC_ANNEX_AC;
     else if (type == FE_QPSK) r = SYS_DVBS;
     else if (type == FE_ATSC) r = SYS_ATSC;
     else
