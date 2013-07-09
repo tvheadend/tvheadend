@@ -177,7 +177,7 @@ dvb_desc_cable_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
-  dmc.dmc_fe_delsys           = SYS_DVBC_ANNEX_B;
+  dmc.dmc_fe_delsys           = SYS_DVBC_ANNEX_AC;
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency * 100;
 
