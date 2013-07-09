@@ -447,7 +447,25 @@ tvheadend.idnode_grid = function(panel, conf)
       iconCls     : 'save',
       text        : 'Save',
       disabled    : true,
-      handler     : function(){}
+      handler     : function(){
+        var mr  = store.getModifiedRecords();
+        var out = new Array();
+        for (var x = 0; x < mr.length; x++) {
+          v           = mr[x].getChanges();
+          out[x]      = v;
+          out[x].uuid = mr[x].id;
+        }
+        Ext.Ajax.request({
+           url     : 'api/idnode',
+           params  : {
+             op    : 'save',
+             nodes : Ext.encode(out)
+           },
+           success : function(d)
+           {
+           }
+        });
+      }
     });
     buttons.push(saveBtn);
     undoBtn = new Ext.Toolbar.Button({

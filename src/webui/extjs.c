@@ -2175,8 +2175,11 @@ extjs_idnode
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   int isroot = 0;
+  htsmsg_t *out = NULL;
+  idnode_t *node = NULL;
   const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
   const char *op   = http_arg_get(&hc->hc_req_args, "op");
+#if 0
   const char *root = http_arg_get(&hc->hc_req_args, "root");
   if (uuid == NULL)
     uuid = http_arg_get(&hc->hc_req_args, "node");
@@ -2186,11 +2189,10 @@ extjs_idnode
   }
   if (op == NULL) 
     op   = "get";
-  htsmsg_t *out = NULL;
-  idnode_t *node;
 
   if(uuid == NULL)
     return HTTP_STATUS_BAD_REQUEST;
+#endif
 
   pthread_mutex_lock(&global_lock);
 
@@ -2199,11 +2201,9 @@ extjs_idnode
     return HTTP_STATUS_UNAUTHORIZED;
   }
 
+#if 0
   node = idnode_find(uuid, NULL);
-  if (!node) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
+#endif
 
   if (!strcmp(op, "get")) {
     out = htsmsg_create_list();
@@ -2211,11 +2211,26 @@ extjs_idnode
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(out, NULL, m);
   } else if (!strcmp(op, "save")) {
-    const char *c = http_arg_get(&hc->hc_req_args, "conf");
-    htsmsg_t *conf = htsmsg_json_deserialize(c);
-    if(conf) {
-      idnode_update(node, conf);
-      htsmsg_destroy(conf);
+    const char *s;
+    htsmsg_t *conf;
+    if ((s = http_arg_get(&hc->hc_req_args, "nodes"))) {
+printf("s = %s\n", s);
+      htsmsg_t *nodes = htsmsg_json_deserialize(s);
+      htsmsg_field_t *f;
+      if (nodes) {
+        HTSMSG_FOREACH(f, nodes) {
+          if (!(conf = htsmsg_get_map_by_field(f))) continue;
+          if (!(uuid = htsmsg_get_str(conf, "uuid"))) continue;
+          if (!(node = idnode_find(uuid, NULL))) continue;
+          idnode_update(node, conf);
+        }
+        htsmsg_destroy(nodes);
+      }
+    } else if ((s = http_arg_get(&hc->hc_req_args, "conf"))) {
+      if ((conf = htsmsg_json_deserialize(s))) {
+        idnode_update(node, conf);
+        htsmsg_destroy(conf);
+      }
     }
     out = htsmsg_create_map();
   } else if (!strcmp(op, "childs")) {
