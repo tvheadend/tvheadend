@@ -187,7 +187,7 @@ mpegts_input_stopped_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   char buf[256];
-  service_t *s, *t;
+  service_t *s;
   mmi->mmi_mux->mm_active = NULL;
   LIST_REMOVE(mmi, mmi_active_link);
 
@@ -195,11 +195,9 @@ mpegts_input_stopped_mux
   tvhtrace("mpegts", "%s - flush subscribers", buf);
   s = LIST_FIRST(&mi->mi_transports);
   while (s) {
-    t = s;
-    s = LIST_NEXT(t, s_active_link);
-    if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux)
-      continue;
-    service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    if (((mpegts_service_t*)s)->s_dvb_mux == mmi->mmi_mux)
+      service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    s = LIST_NEXT(s, s_active_link);
   }
 }
 
