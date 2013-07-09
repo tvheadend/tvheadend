@@ -892,6 +892,7 @@ dvb_sdt_callback
 
     /* Save details */
     if (save) {
+      idnode_notify(NULL, &s->s_id, 0, NULL);
       s->s_config_save((service_t*)s);
       service_refresh_channel((service_t*)s);
     }

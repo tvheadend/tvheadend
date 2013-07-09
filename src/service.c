@@ -523,7 +523,7 @@ service_create0
     service_load(t, conf);
 
   /* Notify */
-  idnode_notify("service", &t->s_id, 0);
+  idnode_notify("service", &t->s_id, 0, NULL);
 
   return t;
 }

@@ -565,7 +565,7 @@ linuxdvb_satconf_create0
     ls->ls_lnb = linuxdvb_lnb_create0(NULL, NULL, ls);
 
   /* Notification */
-  idnode_notify("linuxdvb_satconf", &ls->mi_id, 0);
+  idnode_notify("linuxdvb_satconf", &ls->mi_id, 0, NULL);
 
   return ls;
 }

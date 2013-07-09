@@ -445,6 +445,8 @@ mpegts_mux_create0
     mpegts_network_t *mn, uint16_t onid, uint16_t tsid, htsmsg_t *conf )
 {
   char buf[256];
+  static htsmsg_t *inc = NULL;
+
   idnode_insert(&mm->mm_id, uuid, class);
 
   /* Enabled by default */
@@ -485,8 +487,12 @@ mpegts_mux_create0
   tvhtrace("mpegts", "%s - created", buf);
 
   /* Notification */
-  idnode_notify("mpegts_mux", &mm->mm_id, 0);
-  idnode_notify(NULL, &mn->mn_id, 0);
+  idnode_notify("mpegts_mux", &mm->mm_id, 0, NULL);
+  if (!inc) {
+    inc = htsmsg_create_map();
+    htsmsg_set_u32(inc, "num_mux", 1);
+  }
+  idnode_notify(NULL, &mn->mn_id, 0, inc);
 
   return mm;
 }
@@ -507,6 +513,7 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
   mm->mm_display_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
   tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
+  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
   return 1;
 }
 
@@ -520,6 +527,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
   mm->mm_display_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
   tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
+  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
   return 1;
 }
 
@@ -533,6 +541,7 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
   mm->mm_display_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
   tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
+  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
   return 1;
 }
 
