@@ -485,7 +485,6 @@ mpegts_mux_create0
   tvhtrace("mpegts", "%s - created", buf);
 
   /* Notification */
-printf("NOTIFY NEW MUX\n");
   idnode_notify("mpegts_mux", &mm->mm_id, 0);
   idnode_notify(NULL, &mn->mn_id, 0);
 
