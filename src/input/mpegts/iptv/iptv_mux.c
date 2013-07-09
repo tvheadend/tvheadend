@@ -38,6 +38,7 @@ const idclass_t iptv_mux_class =
     { PROPDEF1("iptv_interface", "Interface",
                PT_STR, iptv_mux_t, mm_iptv_interface) },
 #endif
+    {}
   }
 };
 
