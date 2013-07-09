@@ -375,12 +375,15 @@ idnode_cmp_sort
   switch (p->type) {
     case PT_STR:
       {
-        const char *stra = idnode_get_str(ina, sort->key);
+        int r;
+        char *stra = strdup(idnode_get_str(ina, sort->key) ?: "");
         const char *strb = idnode_get_str(inb, sort->key);
         if (sort->dir == IS_ASC)
-          return strcmp(stra ?: "", strb ?: "");
+          r = strcmp(stra ?: "", strb ?: "");
         else
-          return strcmp(strb ?: "", stra ?: "");
+          r = strcmp(strb ?: "", stra ?: "");
+        free(stra);
+        return r;
       }
       break;
     case PT_INT:
