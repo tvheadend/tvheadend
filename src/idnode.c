@@ -32,8 +32,6 @@
 static int              randfd = 0;
 static RB_HEAD(,idnode) idnodes;
 
-static void idnode_updated(idnode_t *in, int optmask);
-
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
@@ -568,7 +566,7 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   for (; idc; idc = idc->ic_super)
     save |= prop_write_values(self, idc->ic_properties, c, optmask);
   if (save && dosave)
-    idnode_updated(self, optmask);
+    idnode_notify(NULL, self, optmask);
   return save;
 }
 
@@ -591,19 +589,22 @@ idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
  * Recursive to get superclass nodes first
  */
 static void
-add_params(struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask)
+add_params
+  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask)
 {
   /* Parent first */
   if(ic->ic_super != NULL)
     add_params(self, ic->ic_super, p, optmask);
 
   /* Seperator (if not empty) */
+#if 0
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     htsmsg_t *m = htsmsg_create_map();
     htsmsg_add_str(m, "caption",  ic->ic_caption ?: ic->ic_class);
     htsmsg_add_str(m, "type",     "separator");
     htsmsg_add_msg(p, NULL, m);
   }
+#endif
 
   /* Properties */
   prop_serialize(self, ic->ic_properties, p, optmask);
@@ -617,13 +618,48 @@ idnode_params (const idclass_t *idc, idnode_t *self, int optmask)
   return p;
 }
 
+static const char *
+idclass_get_caption (const idclass_t *idc )
+{
+  while (idc) {
+    if (idc->ic_caption)
+      return idc->ic_caption;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
+static const char *
+idclass_get_class (const idclass_t *idc)
+{
+  while (idc) {
+    if (idc->ic_class)
+      return idc->ic_class;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
 /*
  * Just get the class definition
  */
 htsmsg_t *
 idclass_serialize0(const idclass_t *idc, int optmask)
 {
-  return idnode_params(idc, NULL, optmask);
+  const char *s;
+  htsmsg_t *p, *m = htsmsg_create_map();
+
+  /* Caption and name */
+  if ((s = idclass_get_caption(idc)))
+    htsmsg_add_str(m, "caption", s);
+  if ((s = idclass_get_class(idc)))
+    htsmsg_add_str(m, "class", s);
+
+  /* Props */
+  if ((p = idnode_params(idc, NULL, optmask)))
+    htsmsg_add_msg(m, "props", p);
+  
+  return m;
 }
 
 /**
@@ -633,13 +669,17 @@ htsmsg_t *
 idnode_serialize0(idnode_t *self, int optmask)
 {
   const idclass_t *idc = self->in_class;
-  const char *uuid;
+  const char *uuid, *s;
 
   htsmsg_t *m = htsmsg_create_map();
   uuid = idnode_uuid_as_str(self);
   htsmsg_add_str(m, "uuid", uuid);
   htsmsg_add_str(m, "id",   uuid);
   htsmsg_add_str(m, "text", idnode_get_title(self) ?: "");
+  if ((s = idclass_get_caption(idc)))
+    htsmsg_add_str(m, "caption", s);
+  if ((s = idclass_get_class(idc)))
+    htsmsg_add_str(m, "class", s);
 
   htsmsg_add_msg(m, "params", idnode_params(idc, self, optmask));
 
@@ -649,15 +689,6 @@ idnode_serialize0(idnode_t *self, int optmask)
 /* **************************************************************************
  * Notifcation
  * *************************************************************************/
-
-/**
- *
- */
-static void
-idnode_updated(idnode_t *in, int optmask)
-{
-  idnode_notify("idnodeParamsChanged", in, optmask);
-}
 
 /**
  *
@@ -676,7 +707,8 @@ idnode_notify_title_changed(void *obj)
  * Notify on a given channel
  */
 void
-idnode_notify(const char *chn, idnode_t *in, int optmask)
+idnode_notify
+  (const char *chn, idnode_t *in, int optmask)
 {
   const idclass_t *ic = in->in_class;
 
@@ -697,7 +729,7 @@ idnode_notify(const char *chn, idnode_t *in, int optmask)
   add_params(in, in->in_class, p, optmask);
   htsmsg_add_msg(m, "params", p);
 
-  notify_by_msg(chn, m);
+  notify_by_msg(chn ?: "idnodeParamsChanged", m);
 }
 
 /******************************************************************************

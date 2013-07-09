@@ -79,7 +79,8 @@ prop_find(const property_t *p, const char *id)
  *
  */
 int
-prop_write_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask)
+prop_write_values
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask)
 {
   int save, save2 = 0;
   htsmsg_field_t *f;
