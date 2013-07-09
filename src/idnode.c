@@ -31,6 +31,10 @@
 
 static int              randfd = 0;
 static RB_HEAD(,idnode) idnodes;
+static pthread_cond_t   idnode_cond;
+static pthread_mutex_t  idnode_mutex;
+static htsmsg_t        *idnode_queue;
+static void*            idnode_thread(void* p);
 
 /* **************************************************************************
  * Utilities
@@ -110,9 +114,17 @@ in_cmp(const idnode_t *a, const idnode_t *b)
 void
 idnode_init(void)
 {
+  pthread_t tid;
+
+
   randfd = open("/dev/urandom", O_RDONLY);
   if(randfd == -1)
     exit(1);
+  
+  idnode_queue = NULL;
+  pthread_mutex_init(&idnode_mutex, NULL);
+  pthread_cond_init(&idnode_cond, NULL);
+  pthread_create(&tid, NULL, idnode_thread, NULL);
 }
 
 /**
@@ -566,12 +578,19 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
   int save = 0;
   const idclass_t *idc = self->in_class;
-  htsmsg_t *updated = htsmsg_create_map();
   for (; idc; idc = idc->ic_super)
-    save |= prop_write_values(self, idc->ic_properties, c, optmask, updated);
-  if (save && dosave)
-    idnode_notify(NULL, self, optmask, updated);
-  htsmsg_destroy(updated);
+    save |= prop_write_values(self, idc->ic_properties, c, optmask, NULL);
+  if (save) {
+    if (dosave) {
+      for(; idc != NULL; idc = idc->ic_super) {
+        if(idc->ic_save != NULL) {
+          idc->ic_save(self);
+          break;
+        }
+      }
+    }
+    idnode_notify(self, NULL, 0);
+  }
   return save;
 }
 
@@ -696,45 +715,80 @@ idnode_serialize0(idnode_t *self, int optmask)
  * *************************************************************************/
 
 /**
- *
- */
-void
-idnode_notify_title_changed(void *obj)
-{
-  idnode_t *in = obj;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
-  htsmsg_add_str(m, "text", idnode_get_title(in));
-  notify_by_msg("idnodeNameChanged", m);
-}
-
-/**
  * Notify on a given channel
  */
 void
 idnode_notify
-  (const char *chn, idnode_t *in, int optmask, htsmsg_t *inc)
+  (idnode_t *in, const char *chn, int force)
 {
-  const idclass_t *ic = in->in_class;
-
-  /* Save */
-  for(; ic != NULL; ic = ic->ic_super) {
-    if(ic->ic_save != NULL) {
-      ic->ic_save(in);
-      break;
-    }
+  /* Forced */
+  if (chn || force) {
+    htsmsg_t *m = idnode_serialize0(in, 0);
+    notify_by_msg(chn ?: "idnodeParamsChanged", m);
+  
+  /* Rate-limited */
+  } else {
+    pthread_mutex_lock(&idnode_mutex);
+    if (!idnode_queue)
+      idnode_queue = htsmsg_create_map();
+    htsmsg_set_u32(idnode_queue, idnode_uuid_as_str(in), 1);
+    pthread_cond_signal(&idnode_cond);
+    pthread_mutex_unlock(&idnode_mutex);
   }
+}
 
-  /* Notification */
+void
+idnode_notify_simple (void *in)
+{
+  idnode_notify(in, NULL, 0);
+}
 
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+/*
+ * Thread for handling notifications
+ */
+void*
+idnode_thread ( void *p )
+{
+  idnode_t *node;
+  htsmsg_t *m, *q;
+  htsmsg_field_t *f;
 
-  htsmsg_t *p  = htsmsg_create_list();
-  add_params(in, in->in_class, p, optmask, inc);
-  htsmsg_add_msg(m, "params", p);
+  pthread_mutex_lock(&idnode_mutex);
 
-  notify_by_msg(chn ?: "idnodeParamsChanged", m);
+  while (1) {
+
+    /* Get queue */
+    if (!idnode_queue) {
+      pthread_cond_wait(&idnode_cond, &idnode_mutex);
+      continue;
+    }
+    q            = idnode_queue;
+    idnode_queue = NULL;
+    pthread_mutex_unlock(&idnode_mutex);
+
+    /* Process */
+    pthread_mutex_lock(&global_lock);
+
+    HTSMSG_FOREACH(f, q) {
+      node = idnode_find(f->hmf_name, NULL);
+      if (node) {
+        m = idnode_serialize0(node, 0);
+        if (m)
+          notify_by_msg("idnodeUpdated", m);
+      } else {
+        m = htsmsg_create_map();
+        htsmsg_add_str(m, "uuid", f->hmf_name);
+        notify_by_msg("idnodeDeleted", m);      
+      }
+    }
+    
+    /* Finished */
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_destroy(q);
+    pthread_mutex_lock(&idnode_mutex);
+  }
+  
+  return NULL;
 }
 
 /******************************************************************************

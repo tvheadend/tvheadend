@@ -116,8 +116,10 @@ int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 void         *idnode_find    (const char *uuid, const idclass_t *idc);
 idnode_set_t *idnode_find_all(const idclass_t *idc);
 
-void idnode_notify(const char *chn, idnode_t *in, int optmask, htsmsg_t *inc);
-void idnode_notify_title_changed(void *obj);
+#define idnode_updated(in) idnode_notify(in, NULL, 0)
+void idnode_notify
+  (idnode_t *in, const char *chn, int force);
+void idnode_notify_simple (void *in);
 
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, int optmask);
 htsmsg_t *idnode_serialize0  (idnode_t *self, int optmask);

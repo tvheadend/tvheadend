@@ -464,7 +464,6 @@ mpegts_mux_create0
     mpegts_network_t *mn, uint16_t onid, uint16_t tsid, htsmsg_t *conf )
 {
   char buf[256];
-  static htsmsg_t *inc = NULL;
 
   idnode_insert(&mm->mm_id, uuid, class);
 
@@ -506,12 +505,8 @@ mpegts_mux_create0
   tvhtrace("mpegts", "%s - created", buf);
 
   /* Notification */
-  idnode_notify("mpegts_mux", &mm->mm_id, 0, NULL);
-  if (!inc) {
-    inc = htsmsg_create_map();
-    htsmsg_set_u32(inc, "num_mux", 1);
-  }
-  idnode_notify(NULL, &mn->mn_id, 0, inc);
+  idnode_notify(&mm->mm_id, "mpegts_mux", 0);
+  idnode_updated(&mn->mn_id);
 
   return mm;
 }

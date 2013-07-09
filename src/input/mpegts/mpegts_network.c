@@ -224,7 +224,7 @@ mpegts_network_create0
   tvhtrace("mpegts", "created network %s", buf);
 
   /* Notification */
-  idnode_notify("mpegts_network", &mn->mn_id, 0, NULL);
+  idnode_notify(&mn->mn_id, "mpegts_network", 0);
 
   return mn;
 }

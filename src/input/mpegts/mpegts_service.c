@@ -298,7 +298,6 @@ mpegts_service_create0
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, htsmsg_t *conf )
 {
   char buf[256];
-  static htsmsg_t *inc = NULL;
   service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
 
   /* Create */
@@ -327,13 +326,8 @@ mpegts_service_create0
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
-  if (!inc) {
-    inc = htsmsg_create_map();
-    htsmsg_set_u32(inc, "num_mux", 1);
-    htsmsg_set_u32(inc, "num_svc", 1);
-  }
-  idnode_notify(NULL, &s->s_dvb_mux->mm_id, 0, inc);
-  idnode_notify(NULL, &s->s_dvb_mux->mm_network->mn_id, 0, inc);
+  idnode_updated(&mm->mm_id);
+  idnode_updated(&mm->mm_network->mn_id);
 
   return s;
 }
