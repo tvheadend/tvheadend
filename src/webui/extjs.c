@@ -2242,6 +2242,7 @@ extjs_idnode0
     }
     out = htsmsg_create_map();
     htsmsg_t *m = idnode_serialize(node);
+    pthread_mutex_unlock(&global_lock);
     htsmsg_add_u32(m,   "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(out, "nodes", m);
 
