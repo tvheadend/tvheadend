@@ -54,7 +54,7 @@ const idclass_t mpegts_input_class =
       .id       = "displayname",
       .name     = "Name",
       .off      = offsetof(mpegts_input_t, mi_displayname),
-      .notify   = idnode_notify_simple,
+      .notify   = idnode_notify_title_changed,
     },
     {}
   }

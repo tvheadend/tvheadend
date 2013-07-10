@@ -120,6 +120,7 @@ idnode_set_t *idnode_find_all(const idclass_t *idc);
 void idnode_notify
   (idnode_t *in, const char *chn, int force);
 void idnode_notify_simple (void *in);
+void idnode_notify_title_changed (void *in);
 
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, int optmask);
 htsmsg_t *idnode_serialize0  (idnode_t *self, int optmask);

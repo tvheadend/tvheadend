@@ -152,16 +152,17 @@ tvheadend.idnode_editor = function(item, conf)
 
   /* Buttons */
   var saveBtn = new Ext.Button({
-    text	: 'Save',
+    text  : 'Save',
     handler     : function() {
+      var node = panel.getForm().getFieldValues();
+      node.uuid  = item.uuid;
       var params = {
-        uuid: item.uuid,
-        op  : 'save',
-        conf: Ext.util.JSON.encode(panel.getForm().getFieldValues())
+        op    : 'save',
+        nodes : Ext.util.JSON.encode([node])
       };
       Ext.Ajax.request({
-        url    	: 'api/idnode',
-        params 	: params,
+        url      : 'api/idnode',
+        params   : params,
         success : function(d) {
         }
       });
@@ -177,7 +178,7 @@ tvheadend.idnode_editor = function(item, conf)
     labelWidth  : 200,
     autoWidth   : true,
     autoHeight  : !conf.fixedHeight,
-    width	: 600,
+    width  : 600,
     //defaults: {width: 330},
     defaultType : 'textfield',
     buttonAlign : 'left',
@@ -564,6 +565,14 @@ tvheadend.idnode_grid = function(panel, conf)
     }
 
     /* Grid Panel */
+    var auto   = new Ext.form.Checkbox({
+      checked     : true,
+      listeners   : {
+        check : function ( s, c ) {
+          if (c) store.reload();
+        }
+      }
+    });
     var grid   = new Ext.grid.EditorGridPanel({
       stripeRows    : true,
       title         : conf.titleP,
@@ -582,35 +591,21 @@ tvheadend.idnode_grid = function(panel, conf)
         pageSize    : 50,
         displayInfo : true,
         displayMsg  :  conf.titleP + ' {0} - {1} of {2}',
-        emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display'
+        emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display',
+        items       : [ '-', 'Auto-refresh', auto ]
       })
     });
     panel.add(grid);
 
     /* Add comet listeners */
-    if (conf.comet) {
-      tvheadend.comet.on(conf.comet, function(o) {
-        var fs  = [];
-        var d   = {};
-        for ( i = 0; i < o.params.length; i++)
-          if (o.params[i].id) {
-            fs.push(o.params[i].id);
-            d[o.params[i].id] = o.params[i].value;
-          }
-        var rec = Ext.data.Record.create(fs);
-        rec = new rec(d, o.id);
-        store.add(rec);
-      });
-    }
-    tvheadend.comet.on('idnodeParamsChanged', function(o) {
-      var r = store.getById(o.id);
-      if (r) {
-        for ( i = 0; i < o.params.length; i++)
-          if (o.params[i].id)
-            r.set(o.params[i].id, o.params[i].value);
-        r.commit();
-      }
-    });
+    var update = function(o) {
+      if (auto.getValue())
+        store.reload();
+    };
+    if (conf.comet)
+      tvheadend.comet.on(conf.comet, update);
+    tvheadend.comet.on('idnodeUpdated', update);
+    tvheadend.comet.on('idnodeDeleted', update);
   }
 
   /* Request data */
@@ -633,20 +628,22 @@ tvheadend.idnode_grid = function(panel, conf)
 tvheadend.idnode_tree = function (conf)
 {
   var current = null;
-
+  var params  = conf.params || {};
+  params.op = 'childs';
   var loader = new Ext.tree.TreeLoader({
-    dataUrl	        : conf.url,
-    baseParams      : conf.params,
+    dataUrl         : conf.url,
+    baseParams      : params,
     preloadChildren : conf.preload,
+    nodeParameter   : 'uuid'
   });
 
   var tree = new Ext.tree.TreePanel({
-    loader	  : loader,
-    flex	    : 1,
-    border  	: false,
-    root 	    : new Ext.tree.AsyncTreeNode({
-      id 	  : conf.root  || 'root',
-      text	: conf.title || ''
+    loader  : loader,
+    flex    : 1,
+    border  : false,
+    root    : new Ext.tree.AsyncTreeNode({
+      id    : conf.root  || 'root',
+      text  : conf.title || ''
     }),
     listeners : {
       click: function(n) {
@@ -662,27 +659,22 @@ tvheadend.idnode_tree = function (conf)
     }
   });
 
-  tvheadend.comet.on('idnodeNameChanged', function(o) {
-    var n = tree.getNodeById(o.id);
-    if(n) {
-      n.setText(o.text);
+  // TODO: top-level reload
+  tvheadend.comet.on('idnodeUpdated', function(o) {
+    var n = tree.getNodeById(o.uuid);
+    if (n) {
+      if (o.text) n.setText(o.text);
+      loader.load(n);
     }
-  });
-
-  tvheadend.comet.on('idnodeParamsChanged', function(o) {
-    var n = tree.getNodeById(o.id);
-    if(n) {
-      n.attributes.params = o.params;
-   }
   });
 
 
   var panel = new Ext.Panel({
-    title	        : conf.title || '',
-    layout		    : 'hbox',
-    flex		      : 1,
-    padding		    : 5,
-    border		    : false,
+    title          : conf.title || '',
+    layout        : 'hbox',
+    flex          : 1,
+    padding        : 5,
+    border        : false,
     layoutConfig  : {
       align : 'stretch'
     },

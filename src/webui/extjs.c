@@ -2170,90 +2170,109 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 static int
-extjs_idnode
-  (http_connection_t *hc, const char *remain, void *opaque)
+extjs_idnode_tree
+  ( http_connection_t *hc, const char *uuid, const char *root,
+    idnode_set_t *(*rootfn)(void), htsmsg_t **out )
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  int isroot = 0;
-  htsmsg_t *out = NULL;
+  int isroot;
   idnode_t *node = NULL;
-  const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
-  const char *op   = http_arg_get(&hc->hc_req_args, "op");
-#if 0
-  const char *root = http_arg_get(&hc->hc_req_args, "root");
-  if (uuid == NULL)
-    uuid = http_arg_get(&hc->hc_req_args, "node");
-  if (!strcmp(uuid, "root")) {
-    isroot = 1;
-    uuid   = root;
-  }
-  if (op == NULL) 
-    op   = "get";
 
-  if(uuid == NULL)
+  /* Validate */
+  if (!uuid)
     return HTTP_STATUS_BAD_REQUEST;
-#endif
+  isroot = !strcmp("root", uuid);
+  if (isroot && !(root || rootfn))
+    return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
 
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
+  if (!isroot || root) {
+    if (!(node = idnode_find(isroot ? root : uuid, NULL))) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
   }
 
-#if 0
-  node = idnode_find(uuid, NULL);
-#endif
+  *out = htsmsg_create_list();
 
-  if (!strcmp(op, "get")) {
-    out = htsmsg_create_list();
+  /* Root node */
+  if (isroot && node) {
     htsmsg_t *m = idnode_serialize(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
-    htsmsg_add_msg(out, NULL, m);
+    htsmsg_add_msg(*out, NULL, m);
+
+  /* Children */
+  } else {
+    idnode_set_t *v = node ? idnode_get_childs(node) : rootfn();
+    if (v) {
+      int i;
+      for(i = 0; i < v->is_count; i++) {
+        htsmsg_t *m = idnode_serialize(v->is_array[i]);
+        htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
+        htsmsg_add_msg(*out, NULL, m);
+      }
+      idnode_set_free(v);
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+static int
+extjs_idnode0
+  (http_connection_t *hc, const char *remain, void *opaque,
+   idnode_set_t *(*rootfn)(void))
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out = NULL;
+  idnode_t *node = NULL;
+  const char *uuid, *root, *op = http_arg_get(&hc->hc_req_args, "op");
+
+  if (!op) return HTTP_STATUS_BAD_REQUEST;
+
+  /* Get details */
+  if (!strcmp(op, "get")) {
+    if (!(uuid = http_arg_get(&hc->hc_req_args, "uuid")))
+      return HTTP_STATUS_BAD_REQUEST;
+    pthread_mutex_lock(&global_lock);
+    if (!(node = idnode_find(uuid, NULL))) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    out = htsmsg_create_map();
+    htsmsg_t *m = idnode_serialize(node);
+    htsmsg_add_u32(m,   "leaf", idnode_is_leaf(node));
+    htsmsg_add_msg(out, "nodes", m);
+
+  /* Update */
   } else if (!strcmp(op, "save")) {
     const char *s;
-    htsmsg_t *conf;
+    htsmsg_field_t *f;
+    htsmsg_t *conf, *nodes;
     if ((s = http_arg_get(&hc->hc_req_args, "nodes"))) {
-printf("s = %s\n", s);
-      htsmsg_t *nodes = htsmsg_json_deserialize(s);
-      htsmsg_field_t *f;
-      if (nodes) {
+      if ((nodes = htsmsg_json_deserialize(s))) {
+        pthread_mutex_lock(&global_lock);
         HTSMSG_FOREACH(f, nodes) {
           if (!(conf = htsmsg_get_map_by_field(f))) continue;
           if (!(uuid = htsmsg_get_str(conf, "uuid"))) continue;
           if (!(node = idnode_find(uuid, NULL))) continue;
           idnode_update(node, conf);
         }
+        pthread_mutex_unlock(&global_lock);
         htsmsg_destroy(nodes);
-      }
-    } else if ((s = http_arg_get(&hc->hc_req_args, "conf"))) {
-      if ((conf = htsmsg_json_deserialize(s))) {
-        idnode_update(node, conf);
-        htsmsg_destroy(conf);
       }
     }
     out = htsmsg_create_map();
-  } else if (!strcmp(op, "childs")) {
-    out = htsmsg_create_list();
-    if (isroot) {
-      htsmsg_t *m = idnode_serialize(node);
-      htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
-      htsmsg_add_msg(out, NULL, m);
-    } else {
-      idnode_set_t *v;
-      if ((v = idnode_get_childs(node))) {
-        int i;
-        for(i = 0; i < v->is_count; i++) {
-          htsmsg_t *m = idnode_serialize(v->is_array[i]);
-          htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
-          htsmsg_add_msg(out, NULL, m);
-        }
-        idnode_set_free(v);
-      }
-    }
-  }
 
-  pthread_mutex_unlock(&global_lock);
+  /* Children */
+  } else if (!strcmp(op, "childs")) {
+    int e;
+    uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    root = http_arg_get(&hc->hc_req_args, "root");
+    if ((e = extjs_idnode_tree(hc, uuid, root, rootfn, &out)))
+      return e;
+  }
 
   if (!out)
     return HTTP_STATUS_BAD_REQUEST;
@@ -2264,53 +2283,11 @@ printf("s = %s\n", s);
   return 0;
 }
 
-/**
- *
- */
 static int
-extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
-                 idnode_set_t *(*rootfn)(void))
+extjs_idnode
+  (http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *s = http_arg_get(&hc->hc_req_args, "node");
-  htsmsg_t *out = NULL;
-
-  if(s == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  out = htsmsg_create_list();
-  idnode_set_t *v;
-
-  if(!strcmp(s, "root")) {
-    v = rootfn();
-  } else {
-    v = idnode_get_childs(idnode_find(s, NULL));
-  }
-
-  if(v != NULL) {
-    int i;
-    for(i = 0; i < v->is_count; i++) {
-      htsmsg_t *m = idnode_serialize(v->is_array[i]);
-      htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
-      htsmsg_add_msg(out, NULL, m);
-    }
-  }
-
-  pthread_mutex_unlock(&global_lock);
-
-  if (v) idnode_set_free(v);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
+  return extjs_idnode0(hc, remain, opaque, NULL);
 }
 
 /**
@@ -2319,7 +2296,7 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
 static int
 extjs_tvadapters(http_connection_t *hc, const char *remain, void *opaque)
 {
-  return extjs_get_idnode(hc, remain, opaque, &linuxdvb_root);
+  return extjs_idnode0(hc, remain, opaque, &linuxdvb_root);
 }
 
 
