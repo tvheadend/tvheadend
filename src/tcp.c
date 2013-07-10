@@ -506,13 +506,13 @@ tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, 
   tvhpoll_event_t ev;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
-  char *portBuf = (char*)malloc(6);
+  char port_buf[6];
   int one = 1;
   int zero = 0;
 
   memset(&ev, 0, sizeof(ev));
 
-  snprintf(portBuf, 6, "%d", port);
+  snprintf(port_buf, 6, "%d", port);
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_flags = AI_PASSIVE;
@@ -521,8 +521,7 @@ tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, 
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
-  x = getaddrinfo(bindaddr, portBuf, &hints, &res);
-  free(portBuf);
+  x = getaddrinfo(bindaddr, port_buf, &hints, &res);
 
   if(x != 0) {
     tvhlog(LOG_ERR, "tcp", "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
