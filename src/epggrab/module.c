@@ -58,7 +58,7 @@ htsmsg_t *epggrab_module_list ( void )
     htsmsg_add_str(e, "id", m->id);
     htsmsg_add_u32(e, "type", m->type);
     htsmsg_add_u32(e, "enabled", m->enabled);
-    if(m->name) 
+    if(m->name)
       htsmsg_add_str(e, "name", m->name);
     if(m->type == EPGGRAB_EXT) {
       epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
@@ -78,7 +78,7 @@ epggrab_module_t *epggrab_module_create
     epggrab_channel_tree_t *channels )
 {
   assert(skel);
-  
+
   /* Setup */
   skel->id       = strdup(id);
   skel->name     = strdup(name);
@@ -116,7 +116,7 @@ void epggrab_module_parse
   time(&tm1);
   save |= mod->parse(mod, data, &stats);
   time(&tm2);
-  if (save) epg_updated();  
+  if (save) epg_updated();
   pthread_mutex_unlock(&global_lock);
   htsmsg_destroy(data);
 
@@ -194,7 +194,7 @@ void epggrab_module_ch_mod ( void *mod, channel_t *ch )
   return epggrab_module_ch_add(mod, ch);
 }
 
-static void _epggrab_module_channel_load 
+static void _epggrab_module_channel_load
   ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
 {
   int save = 0;
@@ -261,7 +261,7 @@ epggrab_module_int_t *epggrab_module_int_create
 {
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
-  
+
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
 
@@ -277,7 +277,7 @@ epggrab_module_int_t *epggrab_module_int_create
 }
 
 char *epggrab_module_grab_spawn ( void *m )
-{ 
+{
   int        outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
@@ -352,7 +352,7 @@ static void *_epggrab_socket_thread ( void *p )
   int s;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhlog(LOG_INFO, mod->id, "external socket enabled");
-  
+
   while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
@@ -374,7 +374,7 @@ int epggrab_module_enable_socket ( void *m, uint8_t e )
   struct sockaddr_un addr;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)m;
   assert(mod->type == EPGGRAB_EXT);
-  
+
   /* Ignore */
   if ( mod->enabled == e ) return 0;
 
@@ -384,7 +384,7 @@ int epggrab_module_enable_socket ( void *m, uint8_t e )
     close(mod->sock);
     unlink(mod->path);
     mod->sock = 0;
-  
+
   /* Enable */
   } else {
     unlink(mod->path); // just in case!
@@ -434,7 +434,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
-  
+
   /* Pass through */
   snprintf(path, 512, "%s/epggrab/%s.sock",
            hts_settings_get_root(), sockid);
@@ -463,7 +463,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
     epggrab_channel_tree_t *channels )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
-  
+
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
 

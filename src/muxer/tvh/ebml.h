@@ -7,7 +7,7 @@ void ebml_append_id(htsbuf_queue_t *q, uint32_t id);
 
 void ebml_append_size(htsbuf_queue_t *q, uint32_t size);
 
-void ebml_append_bin(htsbuf_queue_t *q, unsigned id, 
+void ebml_append_bin(htsbuf_queue_t *q, unsigned id,
 		    const void *data, size_t len);
 
 void ebml_append_string(htsbuf_queue_t *q, unsigned id, const char *str);
@@ -25,3 +25,4 @@ void ebml_append_pad(htsbuf_queue_t *q, size_t pad);
 void ebml_append_idid(htsbuf_queue_t *q, uint32_t id0, uint32_t id);
 
 #endif // EBML_H__
+

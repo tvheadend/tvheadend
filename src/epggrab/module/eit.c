@@ -93,7 +93,7 @@ static eit_table_status_t *eit_status_find
     sta->state = EIT_STATUS_PROCESS;
   }
 
-  /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
+  /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4
    * and ETSI EN 300 468 (V1.13.1) section 5.2.4 for usage of the
    * of the "seg" (= segment_last_section_number) field in the
    * now/next (tableid < 0x50) and schedule (tableid >= 0x50) tables
@@ -101,18 +101,18 @@ static eit_table_status_t *eit_status_find
   sec_index = sec/32;
   sec_seen_mask = 0x1 << (sec%32);
   if (tableid >= 0x50) {
-    // ETSI TS 101 211 (V1.11.1) section 4.1.4 specifies seg in eit schedule tables 
-    // as the index of the first section in the segment (always a multiple of 8, 
+    // ETSI TS 101 211 (V1.11.1) section 4.1.4 specifies seg in eit schedule tables
+    // as the index of the first section in the segment (always a multiple of 8,
     // because a segment has eight sections) plus an offset thaqt depends on the
     // number of sections used:
     // * seg_first_section + n - 1  if 0<n<8 segments are used (see section 4.1.4 e)
     // * seg_first_section + 7      if all segments are used (see section 4.1.4 f)
     // * seg_first_section + 0      if the section is empty (see section 4.1.4 g)
     // This means that we can calculate the mask offset of the last used section
-    // simply by taking the lowest three bits of seg + 1 (empty segments count as 
-    // "one section used"). We use this offset to calculate a mask for all *unused* 
-    // sections by shifting 0xff left by this offset, take the lowest eight bits, shift 
-    // them left by the first section offset and finally expand seen_mask (seen_mask) 
+    // simply by taking the lowest three bits of seg + 1 (empty segments count as
+    // "one section used"). We use this offset to calculate a mask for all *unused*
+    // sections by shifting 0xff left by this offset, take the lowest eight bits, shift
+    // them left by the first section offset and finally expand seen_mask (seen_mask)
     // by calculating "seen_mask |= unused_mask"
 
     uint32_t seg_first_section = seg & ~0x07;
@@ -149,7 +149,7 @@ typedef struct eit_event
 {
   char              uri[257];
   char              suri[257];
-  
+
   lang_str_t       *title;
   lang_str_t       *summary;
   lang_str_t       *desc;
@@ -204,7 +204,7 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
  */
 static int _eit_get_string_with_len
   ( epggrab_module_t *m,
-    char *dst, size_t dstlen, 
+    char *dst, size_t dstlen,
 		const uint8_t *src, size_t srclen, const char *charset )
 {
   dvb_string_conv_t *cptr = NULL;
@@ -304,7 +304,7 @@ static int _eit_desc_ext_event
     if ( (r = _eit_get_string_with_len(mod, ikey, sizeof(ikey),
                                        iptr, ilen, ev->default_charset)) < 0 )
       break;
-    
+
     ilen -= r;
     iptr += r;
 
@@ -472,7 +472,7 @@ static int _eit_desc_crid
         crid = ev->suri;
         clen = sizeof(ev->suri);
       }
-    
+
       if (crid) {
         if (strstr(buf, "crid://") == buf) {
           strncpy(crid, buf, clen);
@@ -659,7 +659,7 @@ static int _eit_process_event
 }
 
 static int _eit_callback
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
+  ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     uint8_t tableid, void *opaque )
 {
   epggrab_module_t *mod = opaque;
@@ -738,7 +738,7 @@ static int _eit_callback
   else
     epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
   // Note: this does mean you will get a slight oddity for muxes that
-  //       carry both, since they will end up with setting of 600/300 
+  //       carry both, since they will end up with setting of 600/300
   // Note: could we be more dynamic for now/next interval?
 
   /* Process events */
@@ -777,7 +777,7 @@ done:
       tvhtrace("eit",
                "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d"
                ", done=%d, "
-               "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
+               "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X",
                tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
                tsta->state == EIT_STATUS_DONE,
                tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
@@ -787,7 +787,7 @@ done:
     tvhtrace("eit", "  completed %d of %d", finished, total);
   }
 #endif
-  
+
   /* Update EPG */
   if (resched) epggrab_resched();
   if (save)    epg_updated();
@@ -814,7 +814,7 @@ static void _eit_ota_destroy ( epggrab_ota_mux_t *ota )
   free(ota);
 }
 
-static void _eit_start 
+static void _eit_start
   ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
 {
   epggrab_ota_mux_t *ota;
@@ -900,3 +900,4 @@ void eit_init ( void )
 void eit_load ( void )
 {
 }
+

@@ -233,3 +233,4 @@ void epggrab_channel_mod ( channel_t *ch )
     if (m->ch_mod) m->ch_mod(m, ch);
   }
 }
+

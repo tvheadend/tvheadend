@@ -91,7 +91,7 @@
            (oldhead)->lh_first->field.le_prev = &(newhead)->lh_first;	\
 	}								\
         (newhead)->lh_first = (oldhead)->lh_first;			\
-} while (0) 
+} while (0)
 
 #define LIST_INSERT_SORTED(head, elm, field, cmpfunc) do {	\
         if(LIST_EMPTY(head)) {					\
@@ -135,7 +135,8 @@
         } \
         (newhead)->tqh_first = (oldhead)->tqh_first;                   \
         (newhead)->tqh_last = (oldhead)->tqh_last;                     \
-} while (/*CONSTCOND*/0) 
- 
+} while (/*CONSTCOND*/0)
+
 
 #endif /* HTSQ_H */
+

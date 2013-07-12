@@ -119,7 +119,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
   if(SCT_ISAUDIO(ssc->ssc_type) &&
      (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
     return 0;
-  
+
   if(ssc->ssc_gh == NULL &&
      (ssc->ssc_type == SCT_H264 ||
       ssc->ssc_type == SCT_MPEG2VIDEO ||
@@ -140,7 +140,7 @@ headers_complete(globalheaders_t *gh, int64_t qd)
   int i, threshold = qd > (MAX_SCAN_TIME * 90);
 
   assert(ss != NULL);
- 
+
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
@@ -178,7 +178,7 @@ convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
 /**
  *
  */
-static int64_t 
+static int64_t
 gh_queue_delay(globalheaders_t *gh)
 {
   th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
@@ -201,7 +201,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
   switch(sm->sm_type) {
   case SMT_PACKET:
     pkt = sm->sm_data;
-    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
+    ssc = streaming_start_component_find_by_index(gh->gh_ss,
 						  pkt->pkt_componentindex);
     assert(ssc != NULL);
 
@@ -220,14 +220,14 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     free(sm);
 
-    if(!headers_complete(gh, gh_queue_delay(gh))) 
+    if(!headers_complete(gh, gh_queue_delay(gh)))
       break;
 
     // Send our modified start
-    sm = streaming_msg_create_data(SMT_START, 
+    sm = streaming_msg_create_data(SMT_START,
 				   streaming_start_copy(gh->gh_ss));
     streaming_target_deliver2(gh->gh_output, sm);
-   
+
     // Send all pending packets
     while((pr = TAILQ_FIRST(&gh->gh_holdq)) != NULL) {
       TAILQ_REMOVE(&gh->gh_holdq, pr, pr_link);
@@ -276,7 +276,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
   switch(sm->sm_type) {
   case SMT_START:
     abort(); // Should not happen
-    
+
   case SMT_STOP:
     gh->gh_passthru = 0;
     gh_flush(gh);
@@ -294,7 +294,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 
   case SMT_PACKET:
     pkt = sm->sm_data;
-    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
+    ssc = streaming_start_component_find_by_index(gh->gh_ss,
 						  pkt->pkt_componentindex);
     sm->sm_data = convertpkt(ssc, pkt);
     streaming_target_deliver2(gh->gh_output, sm);

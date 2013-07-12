@@ -122,7 +122,7 @@ void epg_updated ( void )
  * Object (Generic routines)
  * *************************************************************************/
 
-static void _epg_object_destroy 
+static void _epg_object_destroy
   ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   assert(eo->refcount == 0);
@@ -179,7 +179,7 @@ static void _epg_object_create ( void *o )
   LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
 }
 
-static epg_object_t *_epg_object_find_by_uri 
+static epg_object_t *_epg_object_find_by_uri
   ( const char *uri, int create, int *save,
     epg_object_tree_t *tree, epg_object_t **skel )
 {
@@ -193,7 +193,7 @@ static epg_object_t *_epg_object_find_by_uri
   /* Find only */
   if ( !create ) {
     eo = RB_FIND(tree, *skel, uri_link, _uri_cmp);
-  
+
   /* Find/create */
   } else {
     eo = RB_INSERT_SORTED(tree, *skel, uri_link, _uri_cmp);
@@ -413,7 +413,7 @@ static epg_object_t **_epg_brand_skel ( void )
   return &skel;
 }
 
-epg_brand_t* epg_brand_find_by_uri 
+epg_brand_t* epg_brand_find_by_uri
   ( const char *uri, int create, int *save )
 {
   return (epg_brand_t*)
@@ -461,7 +461,7 @@ int epg_brand_set_season_count
   return _epg_object_set_u16(brand, &brand->season_count, count, src);
 }
 
-static void _epg_brand_add_season 
+static void _epg_brand_add_season
   ( epg_brand_t *brand, epg_season_t *season )
 {
   _epg_object_getref(brand);
@@ -517,7 +517,7 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
 
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
   if ( !(eb = epg_brand_find_by_uri((*skel)->uri, create, save)) ) return NULL;
-  
+
   if ((ls = lang_str_deserialize(m, "title"))) {
     RB_FOREACH(e, ls, link)
       *save |= epg_brand_set_title(eb, e->str, e->lang, NULL);
@@ -594,7 +594,7 @@ static epg_object_t **_epg_season_skel ( void )
   return &skel;
 }
 
-epg_season_t* epg_season_find_by_uri 
+epg_season_t* epg_season_find_by_uri
   ( const char *uri, int create, int *save )
 {
   return (epg_season_t*)
@@ -701,7 +701,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
 
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
   if ( !(es = epg_season_find_by_uri((*skel)->uri, create, save)) ) return NULL;
-  
+
   if ((ls = lang_str_deserialize(m, "summary"))) {
     RB_FOREACH(e, ls, link) {
       *save |= epg_season_set_summary(es, e->str, e->lang, NULL);
@@ -712,7 +712,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
     *save |= epg_season_set_number(es, u32, NULL);
   if ( !htsmsg_get_u32(m, "episode-count", &u32) )
     *save |= epg_season_set_episode_count(es, u32, NULL);
-  
+
   if ( (str = htsmsg_get_str(m, "brand")) )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_season_set_brand(es, eb, NULL);
@@ -753,7 +753,7 @@ static htsmsg_t *epg_episode_num_serialize ( epg_episode_num_t *num )
   return m;
 }
 
-static void epg_episode_num_deserialize 
+static void epg_episode_num_deserialize
   ( htsmsg_t *m, epg_episode_num_t *num )
 {
   const char *str;
@@ -955,7 +955,7 @@ int epg_episode_set_brand
   return save;
 }
 
-int epg_episode_set_season 
+int epg_episode_set_season
   ( epg_episode_t *episode, epg_season_t *season, epggrab_module_t *src )
 {
   int save = 0;
@@ -992,7 +992,7 @@ int epg_episode_set_genre
     }
     g1 = g2;
   }
-  
+
   /* Insert all entries */
   LIST_FOREACH(g1, genre, link) {
     save |= epg_genre_list_add(&ee->genre, g1);
@@ -1027,7 +1027,7 @@ int epg_episode_set_first_aired
 {
   int save = 0;
   if (!episode) return 0;
-  if ( !_epg_object_set_grabber(episode, src) && episode->first_aired ) 
+  if ( !_epg_object_set_grabber(episode, src) && episode->first_aired )
     return 0;
   if ( episode->first_aired != aired ) {
     episode->first_aired = aired;
@@ -1037,7 +1037,7 @@ int epg_episode_set_first_aired
   return save;
 }
 
-static void _epg_episode_add_broadcast 
+static void _epg_episode_add_broadcast
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
   _epg_object_getref(episode);
@@ -1053,7 +1053,7 @@ static void _epg_episode_rem_broadcast
   _epg_object_putref(episode);
 }
 
-size_t epg_episode_number_format 
+size_t epg_episode_number_format
   ( epg_episode_t *episode, char *buf, size_t len,
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
@@ -1169,11 +1169,11 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   int64_t s64;
   lang_str_t *ls;
   lang_str_ele_t *e;
-  
+
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
   if ( !(ee = epg_episode_find_by_uri((*skel)->uri, create, save)) )
     return NULL;
-  
+
   if ((ls = lang_str_deserialize(m, "title"))) {
     RB_FOREACH(e, ls, link)
       *save |= epg_episode_set_title(ee, e->str, e->lang, NULL);
@@ -1209,14 +1209,14 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     *save |= epg_episode_set_genre(ee, egl, NULL);
     epg_genre_list_destroy(egl);
   }
-  
+
   if ( (str = htsmsg_get_str(m, "season")) )
     if ( (es = epg_season_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_season(ee, es, NULL);
   if ( (str = htsmsg_get_str(m, "brand")) )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_brand(ee, eb, NULL);
-  
+
   if (!htsmsg_get_u32(m, "is_bw", &u32))
     *save |= epg_episode_set_is_bw(ee, u32, NULL);
 
@@ -1232,28 +1232,28 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   return ee;
 }
 
-const char *epg_episode_get_title 
+const char *epg_episode_get_title
   ( const epg_episode_t *e, const char *lang )
 {
   if (!e || !e->title) return NULL;
   return lang_str_get(e->title, lang);
 }
 
-const char *epg_episode_get_subtitle 
+const char *epg_episode_get_subtitle
   ( const epg_episode_t *e, const char *lang )
 {
   if (!e || !e->subtitle) return NULL;
   return lang_str_get(e->subtitle, lang);
 }
 
-const char *epg_episode_get_summary 
+const char *epg_episode_get_summary
   ( const epg_episode_t *e, const char *lang )
 {
   if (!e || !e->summary) return NULL;
   return lang_str_get(e->summary, lang);
 }
 
-const char *epg_episode_get_description 
+const char *epg_episode_get_description
   ( const epg_episode_t *e, const char *lang )
 {
   if (!e || !e->description) return NULL;
@@ -1330,16 +1330,16 @@ htsmsg_t *epg_serieslink_serialize ( epg_serieslink_t *esl )
   return m;
 }
 
-epg_serieslink_t *epg_serieslink_deserialize 
+epg_serieslink_t *epg_serieslink_deserialize
   ( htsmsg_t *m, int create, int *save )
 {
   epg_object_t **skel = _epg_serieslink_skel();
   epg_serieslink_t *esl;
 
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
-  if ( !(esl = epg_serieslink_find_by_uri((*skel)->uri, create, save)) ) 
+  if ( !(esl = epg_serieslink_find_by_uri((*skel)->uri, create, save)) )
     return NULL;
-  
+
   return esl;
 }
 
@@ -1347,7 +1347,7 @@ epg_serieslink_t *epg_serieslink_deserialize
  * Channel
  * *************************************************************************/
 
-static void _epg_channel_rem_broadcast 
+static void _epg_channel_rem_broadcast
   ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *new )
 {
   if (new) dvr_event_replaced(ebc, new);
@@ -1393,7 +1393,7 @@ static void _epg_channel_timer_callback ( void *p )
     }
     break;
   }
-  
+
   /* Change (update HTSP) */
   if (cur != ch->ch_epg_now || nxt != ch->ch_epg_next) {
     tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
@@ -1417,7 +1417,7 @@ static void _epg_channel_timer_callback ( void *p )
   if (nxt) nxt->putref(nxt);
 }
 
-static epg_broadcast_t *_epg_channel_add_broadcast 
+static epg_broadcast_t *_epg_channel_add_broadcast
   ( channel_t *ch, epg_broadcast_t **bcast, int create, int *save )
 {
   int timer = 0;
@@ -1462,7 +1462,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       }
     }
   }
-  
+
   /* Changed */
   *save |= 1;
 
@@ -1543,8 +1543,8 @@ static epg_broadcast_t **_epg_broadcast_skel ( void )
   return &skel;
 }
 
-epg_broadcast_t* epg_broadcast_find_by_time 
-  ( channel_t *channel, time_t start, time_t stop, uint16_t eid, 
+epg_broadcast_t* epg_broadcast_find_by_time
+  ( channel_t *channel, time_t start, time_t stop, uint16_t eid,
     int create, int *save )
 {
   epg_broadcast_t **ebc;
@@ -1576,7 +1576,7 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
   return NULL;
 }
 
-int epg_broadcast_set_episode 
+int epg_broadcast_set_episode
   ( epg_broadcast_t *broadcast, epg_episode_t *episode, epggrab_module_t *src )
 {
   int save = 0;
@@ -1778,7 +1778,7 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     lang_str_serialize(broadcast->description, m, "description");
   if (broadcast->serieslink)
     htsmsg_add_str(m, "serieslink", broadcast->serieslink->uri);
-  
+
   return m;
 }
 
@@ -2087,7 +2087,7 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
     LIST_INSERT_HEAD(list, g2, link);
   } else {
     while (g1) {
-    
+
       /* Already exists */
       if (g1->code == genre->code) return 0;
 
@@ -2136,7 +2136,7 @@ int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str )
 
 // Note: if partial=1 and genre is a major only category then all minor
 // entries will also match
-int epg_genre_list_contains 
+int epg_genre_list_contains
   ( epg_genre_list_t *list, epg_genre_t *genre, int partial )
 {
   uint8_t mask = 0xFF;
@@ -2182,7 +2182,7 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
  * Querying
  * *************************************************************************/
 
-static void _eqr_add 
+static void _eqr_add
   ( epg_query_result_t *eqr, epg_broadcast_t *e,
     epg_genre_t *genre, regex_t *preg, time_t start, const char *lang )
 {
@@ -2197,15 +2197,15 @@ static void _eqr_add
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
     eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
-    eqr->eqr_array   = realloc(eqr->eqr_array, 
+    eqr->eqr_array   = realloc(eqr->eqr_array,
                                eqr->eqr_alloced * sizeof(epg_broadcast_t));
   }
-  
+
   /* Store */
   eqr->eqr_array[eqr->eqr_entries++] = e;
 }
 
-static void _eqr_add_channel 
+static void _eqr_add_channel
   ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
     regex_t *preg, time_t start, const char *lang )
 {
@@ -2235,11 +2235,11 @@ void epg_query0
   } else {
     preg = NULL;
   }
-  
+
   /* Single channel */
   if (channel && !tag) {
     _eqr_add_channel(eqr, channel, genre, preg, now, lang);
-  
+
   /* Tag based */
   } else if ( tag ) {
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
@@ -2294,3 +2294,4 @@ char *epg_hash ( const char *t, const char *s, const char *d )
   if ( t ) return md5sum(t);
   return NULL;
 }
+

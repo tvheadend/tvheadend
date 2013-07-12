@@ -63,7 +63,7 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
     hstbuflen *= 2;
     tmphstbuf = realloc(tmphstbuf, hstbuflen);
   }
-  
+
   if(res != 0) {
     snprintf(errbuf, errbufsize, "Resolver internal error");
     free(tmphstbuf);
@@ -76,15 +76,15 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
     case NO_ADDRESS:
       errtxt = "The requested name is valid but does not have an IP address";
       break;
-      
+
     case NO_RECOVERY:
       errtxt = "A non-recoverable name server error occurred";
       break;
-      
+
     case TRY_AGAIN:
       errtxt = "A temporary error occurred on an authoritative name server";
       break;
-      
+
     default:
       errtxt = "Unknown error";
       break;
@@ -151,7 +151,7 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
       	close(fd);
       	return -1;
       }
-      
+
       if(r == -1) {
       	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
       	close(fd);
@@ -171,7 +171,7 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
     close(fd);
     return -1;
   }
-  
+
   fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
   return fd;
 }
@@ -224,9 +224,9 @@ tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
       return 0;
     }
   }
-  
+
   hd = malloc(sizeof(htsbuf_data_t));
-  
+
   hd->hd_data_size = 1000;
   hd->hd_data = malloc(hd->hd_data_size);
 
@@ -260,7 +260,7 @@ tcp_read_line(int fd, char *buf, const size_t bufsize, htsbuf_queue_t *spill)
 	return -1;
       continue;
     }
-    
+
     if(len >= bufsize - 1)
       return -1;
 
@@ -404,7 +404,7 @@ tcp_server_start(void *aux)
 
   val = 1;
   setsockopt(tsl->fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
-  
+
 #ifdef TCP_KEEPIDLE
   val = 30;
   setsockopt(tsl->fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
@@ -466,7 +466,7 @@ tcp_server_loop(void *aux)
 	    close(ts->serverfd);
     	free(ts);
       continue;
-    } 
+    }
 
     if(ev.events & TVHPOLL_IN) {
 	    tsl = malloc(sizeof(tcp_server_launch_t));
@@ -474,7 +474,7 @@ tcp_server_loop(void *aux)
       tsl->opaque = ts->opaque;
       slen = sizeof(struct sockaddr_storage);
 
-      tsl->fd = accept(ts->serverfd, 
+      tsl->fd = accept(ts->serverfd,
 			                 (struct sockaddr *)&tsl->peer, &slen);
      	if(tsl->fd == -1) {
      	  perror("accept");
@@ -552,7 +552,7 @@ tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, 
     setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
 
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-  
+
   x = bind(fd, use->ai_addr, use->ai_addrlen);
   freeaddrinfo(ressave);
 
@@ -592,5 +592,4 @@ tcp_server_init(int opt_ipv6)
   tcp_server_poll = tvhpoll_create(10);
   pthread_create(&tid, NULL, tcp_server_loop, NULL);
 }
-
 

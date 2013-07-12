@@ -30,7 +30,7 @@
 #include "lang_codes.h"
 
 static int
-psi_section_reassemble0(psi_section_t *ps, const uint8_t *data, 
+psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
 			int len, int start, int crc,
 			section_handler_t *cb, void *opaque)
 {
@@ -54,10 +54,10 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
   }
 
   tsize = 3 + (((ps->ps_data[1] & 0xf) << 8) | ps->ps_data[2]);
- 
+
   if(ps->ps_offset < tsize)
     return len; // Not there yet
-  
+
   excess = ps->ps_offset - tsize;
 
   if(crc && tvh_crc32(ps->ps_data, tsize, 0xffffffff))
@@ -84,7 +84,7 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
     ps->ps_lock = 0;
     return;
   }
-  
+
   if(pusi) {
     int len = tsb[off++];
     if(len > 0) {
@@ -135,7 +135,7 @@ psi_append_crc32(uint8_t *buf, int offset, int maxlen)
 }
 
 
-/** 
+/**
  * PAT generator
  */
 
@@ -219,7 +219,7 @@ psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 
   c->caid = caid;
   c->providerid = provid;
-  
+
   c->delete_me = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
@@ -229,7 +229,7 @@ psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 /**
  * Parser for CA descriptors
  */
-static int 
+static int
 psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
 {
   int r = 0;
@@ -306,14 +306,14 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       // We put the teletext subtitle driven streams on a list of pids
       // higher than normal MPEG TS (0x2000 ++)
       int pid = PID_TELETEXT_BASE + page;
-    
+
       if((st = service_stream_find(t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
 	st = service_stream_create(t, pid, SCT_TEXTSUB);
 	st->es_delete_me = 1;
       }
 
-  
+
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
 	      r |= PMT_UPDATE_LANGUAGE;
@@ -376,7 +376,7 @@ sort_pids(service_t *t)
 }
 
 
-/** 
+/**
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
@@ -411,7 +411,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   sid     = ptr[0] << 8 | ptr[1];
   version = ptr[2] >> 1 & 0x1f;
-  
+
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
     return -1;
@@ -419,7 +419,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
-  
+
   if(chksvcid && sid != t->s_dvb_service_id)
     return -1;
 
@@ -450,7 +450,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     dtag = ptr[0];
     dlen = ptr[1];
 
-    len -= 2; ptr += 2; dllen -= 2; 
+    len -= 2; ptr += 2; dllen -= 2;
     if(dlen > len)
       break;
 
@@ -493,7 +493,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
-    
+
     case 0x0f:
       hts_stream_type = SCT_MP4A;
       break;
@@ -514,7 +514,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       dtag = ptr[0];
       dlen = ptr[1];
 
-      len -= 2; ptr += 2; dllen -= 2; 
+      len -= 2; ptr += 2; dllen -= 2;
       if(dlen > len)
 	break;
 
@@ -524,7 +524,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	break;
 
       case DVB_DESC_REGISTRATION:
-	if(dlen == 4 && 
+	if(dlen == 4 &&
 	   ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
 	  hts_stream_type = SCT_AC3;
 	break;
@@ -537,7 +537,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
 	  hts_stream_type = SCT_TELETEXT;
-	
+
 	update |= psi_desc_teletext(t, ptr, dlen, pid, &tt_position);
 	break;
 
@@ -573,7 +573,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       }
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
-    
+
     if(hts_stream_type == SCT_UNKNOWN && estype == 0x06 &&
        pid == 3401 && t->s_dvb_service_id == 10510) {
       // Workaround for ITV HD
@@ -662,13 +662,13 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
 	   update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
 	   update&PMT_REORDERED                ? ", PIDs reordered":"");
-    
+
     service_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
 		  PMT_UPDATE_NEW_CAID |
-		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
+		  PMT_UPDATE_CA_PROVIDER_CHANGE |
 		  PMT_UPDATE_CAID_DELETED)) {
       if(t->s_status == SERVICE_RUNNING)
 	service_restart(t, had_components);
@@ -678,7 +678,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 }
 
 
-/** 
+/**
  * PMT generator
  */
 int
@@ -772,9 +772,9 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[1] = 8;
       memcpy(&buf[2],ssc->ssc_lang,3);
       buf[5] = 16; /* Subtitling type */
-      buf[6] = ssc->ssc_composition_id >> 8; 
+      buf[6] = ssc->ssc_composition_id >> 8;
       buf[7] = ssc->ssc_composition_id;
-      buf[8] = ssc->ssc_ancillary_id >> 8; 
+      buf[8] = ssc->ssc_ancillary_id >> 8;
       buf[9] = ssc->ssc_ancillary_id;
       dlen = 10;
       break;
@@ -820,35 +820,35 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
 
 
 static struct strtab caidnametab[] = {
-  { "Seca",             0x0100 }, 
-  { "CCETT",            0x0200 }, 
-  { "Deutsche Telecom", 0x0300 }, 
-  { "Eurodec",          0x0400 }, 
-  { "Viaccess",         0x0500 }, 
-  { "Irdeto",           0x0600 }, 
-  { "Irdeto",           0x0602 }, 
+  { "Seca",             0x0100 },
+  { "CCETT",            0x0200 },
+  { "Deutsche Telecom", 0x0300 },
+  { "Eurodec",          0x0400 },
+  { "Viaccess",         0x0500 },
+  { "Irdeto",           0x0600 },
+  { "Irdeto",           0x0602 },
   { "Irdeto",           0x0603 },
   { "Irdeto",           0x0604 },
   { "Irdeto",		0x0622 },
   { "Irdeto",		0x0624 },
   { "Irdeto",		0x0648 },
   { "Irdeto",		0x0666 },
-  { "Jerroldgi",        0x0700 }, 
-  { "Matra",            0x0800 }, 
+  { "Jerroldgi",        0x0700 },
+  { "Matra",            0x0800 },
   { "NDS",              0x0900 },
   { "NDS",              0x0919 },
-  { "NDS",              0x091F }, 
+  { "NDS",              0x091F },
   { "NDS",              0x092B },
-  { "NDS",              0x09AF }, 
+  { "NDS",              0x09AF },
   { "NDS",              0x09C4 },
   { "NDS",              0x0960 },
-  { "NDS",              0x0963 }, 
-  { "Nokia",            0x0A00 }, 
+  { "NDS",              0x0963 },
+  { "Nokia",            0x0A00 },
   { "Conax",            0x0B00 },
   { "Conax",            0x0B01 },
-  { "Conax",            0x0B02 }, 
+  { "Conax",            0x0B02 },
   { "Conax",            0x0BAA },
-  { "NTL",              0x0C00 }, 
+  { "NTL",              0x0C00 },
   { "CryptoWorks",	0x0D00 },
   { "CryptoWorks",	0x0D01 },
   { "CryptoWorks",	0x0D02 },
@@ -856,23 +856,23 @@ static struct strtab caidnametab[] = {
   { "CryptoWorks",	0x0D05 },
   { "CryptoWorks",	0x0D0F },
   { "CryptoWorks",	0x0D70 },
-  { "CryptoWorks ICE",	0x0D95 }, 
+  { "CryptoWorks ICE",	0x0D95 },
   { "CryptoWorks ICE",	0x0D96 },
   { "CryptoWorks ICE",	0x0D97 },
-  { "PowerVu",          0x0E00 }, 
-  { "PowerVu",          0x0E11 }, 
-  { "Sony",             0x0F00 }, 
-  { "Tandberg",         0x1000 }, 
-  { "Thompson",         0x1100 }, 
-  { "TV-Com",           0x1200 }, 
-  { "HPT",              0x1300 }, 
-  { "HRT",              0x1400 }, 
-  { "IBM",              0x1500 }, 
-  { "Nera",             0x1600 }, 
-  { "BetaCrypt",        0x1700 }, 
-  { "BetaCrypt",        0x1702 }, 
-  { "BetaCrypt",        0x1722 }, 
-  { "BetaCrypt",        0x1762 }, 
+  { "PowerVu",          0x0E00 },
+  { "PowerVu",          0x0E11 },
+  { "Sony",             0x0F00 },
+  { "Tandberg",         0x1000 },
+  { "Thompson",         0x1100 },
+  { "TV-Com",           0x1200 },
+  { "HPT",              0x1300 },
+  { "HRT",              0x1400 },
+  { "IBM",              0x1500 },
+  { "Nera",             0x1600 },
+  { "BetaCrypt",        0x1700 },
+  { "BetaCrypt",        0x1702 },
+  { "BetaCrypt",        0x1722 },
+  { "BetaCrypt",        0x1762 },
   { "NagraVision",      0x1800 },
   { "NagraVision",      0x1803 },
   { "Nagra Media Access",      0x1813 },
@@ -883,15 +883,15 @@ static struct strtab caidnametab[] = {
   { "NagraVision",      0x1834 },
   { "NagraVision",      0x183D },
   { "NagraVision",      0x1861 },
-  { "Titan",            0x1900 }, 
-  { "Telefonica",       0x2000 }, 
-  { "Stentor",          0x2100 }, 
-  { "Tadiran Scopus",   0x2200 }, 
-  { "BARCO AS",         0x2300 }, 
-  { "StarGuide",        0x2400 }, 
-  { "Mentor",           0x2500 }, 
-  { "EBU",              0x2600 }, 
-  { "GI",               0x4700 }, 
+  { "Titan",            0x1900 },
+  { "Telefonica",       0x2000 },
+  { "Stentor",          0x2100 },
+  { "Tadiran Scopus",   0x2200 },
+  { "BARCO AS",         0x2300 },
+  { "StarGuide",        0x2400 },
+  { "Mentor",           0x2500 },
+  { "EBU",              0x2600 },
+  { "GI",               0x4700 },
   { "Telemann",         0x4800 },
   { "DRECrypt",         0x4ae0 },
   { "DRECrypt2",        0x4ae1 },
@@ -1027,7 +1027,7 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
       if(st->es_frame_duration)
         htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
-    
+
     htsmsg_add_msg(m, "stream", sub);
   }
 }
@@ -1075,7 +1075,7 @@ load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
 /**
  *
  */
-static void 
+static void
 load_caid(htsmsg_t *m, elementary_stream_t *st)
 {
   htsmsg_field_t *f;
@@ -1088,7 +1088,7 @@ load_caid(htsmsg_t *m, elementary_stream_t *st)
   HTSMSG_FOREACH(f, v) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
-    
+
     if(htsmsg_get_u32(c, "caid", &a))
       continue;
 
@@ -1140,7 +1140,7 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
       continue;
 
     st = service_stream_create(t, pid, type);
-    
+
     if((v = htsmsg_get_str(c, "language")) != NULL)
       strncpy(st->es_lang, lang_code_get(v), 3);
 
@@ -1151,7 +1151,7 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->es_position = u32;
-   
+
     load_legacy_caid(c, st);
     load_caid(c, st);
 
@@ -1182,3 +1182,4 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
   }
   sort_pids(t);
 }
+

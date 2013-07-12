@@ -72,7 +72,7 @@ dvb_fe_get_unc(th_dvb_adapter_t *tda)
 	   tda->tda_displayname, d);
     return fec;
   }
-  
+
   r = fec - tda->tda_last_fec;
 
   tda->tda_last_fec = fec;
@@ -148,7 +148,7 @@ dvb_fe_monitor(void *aux)
       gtimer_arm_ms(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 50);
 
       /* Monitor (1 per sec) */
-      if (dispatch_clock < tda->tda_monitor)  
+      if (dispatch_clock < tda->tda_monitor)
         return;
       tda->tda_monitor = dispatch_clock + 1;
     }
@@ -158,7 +158,7 @@ dvb_fe_monitor(void *aux)
   }
 
   /*
-   * Update stats 
+   * Update stats
    */
   if(status == -1) {
     /* Read FEC counter (delta) */
@@ -328,9 +328,9 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
   if(tdmi->tdmi_enabled) {
     dvb_mux_add_to_scan_queue(tdmi);
   }
-  
+
   epggrab_mux_stop(tdmi, 0);
-  
+
   time(&tdmi->tdmi_lost_adapter);
 
   if (!retune) {
@@ -359,12 +359,12 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
   int r;
-  
+
   if ((ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0)
     return -1;
-  
+
   struct dvb_frontend_event ev;
-  
+
   /* Support for legacy satellite tune, with the new API. */
   struct dtv_property _dvbs_cmdargs[] = {
     { .cmd = DTV_DELIVERY_SYSTEM, .u.data = dmc->dmc_fe_delsys },
@@ -409,10 +409,10 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   // copy dmc, cause frequency may be change with FE_QPSK
   dvb_mux_conf_t dmc = tdmi->tdmi_conf;
   dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
-  
+
   char buf[256];
   int r;
- 
+
   lock_assert(&global_lock);
 
   if(tda->tda_enabled == 0)
@@ -420,7 +420,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   if(tda->tda_mux_current == tdmi)
     return 0;
-  
+
   if(tdmi->tdmi_scan_queue != NULL) {
     TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
     tdmi->tdmi_scan_queue = NULL;
@@ -430,9 +430,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     dvb_fe_stop(tda->tda_mux_current, 1);
 
   dvb_adapter_start(tda, TDA_OPT_FE | TDA_OPT_PWR);
-      
+
   if(tda->tda_type == FE_QPSK) {
-	
+
     /* DVB-S */
     dvb_satconf_t *sc;
     int port, lowfreq, hifreq, switchfreq, hiband, pol, dbsbs;
@@ -468,7 +468,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
       else
         p->frequency = abs(p->frequency - lowfreq);
     }
- 
+
     if ((r = diseqc_setup(tda->tda_fe_fd, port,
                           pol == POLARISATION_HORIZONTAL ||
                           pol == POLARISATION_CIRCULAR_LEFT,
@@ -482,10 +482,10 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
-	    "%s, %s, %s) for %s", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
-      dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys), 
+	    "%s, %s, %s) for %s", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate,
+      dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys),
       dvb_mux_qam2str(dmc.dmc_fe_modulation), reason);
-  
+
     r = dvb_fe_tune_s2(tdmi, &dmc);
   } else
 #endif
@@ -522,3 +522,4 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   dvb_adapter_notify(tda);
   return 0;
 }
+

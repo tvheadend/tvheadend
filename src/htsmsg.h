@@ -28,7 +28,7 @@ TAILQ_HEAD(htsmsg_field_queue, htsmsg_field);
 
 typedef struct htsmsg {
   /**
-   * fields 
+   * fields
    */
   struct htsmsg_field_queue hm_fields;
 
@@ -275,7 +275,7 @@ int htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def);
  * @return A signed 32 bit integer or NULL if the field can not be found
  *         or if conversion is not possible.
  */
-int32_t htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, 
+int32_t htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name,
 				  int32_t def);
 
 /**
@@ -292,7 +292,7 @@ int htsmsg_delete_field(htsmsg_t *msg, const char *name);
 htsmsg_t *htsmsg_detach_submsg(htsmsg_field_t *f);
 
 /**
- * Print a message to stdout. 
+ * Print a message to stdout.
  */
 void htsmsg_print(htsmsg_t *msg);
 

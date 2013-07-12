@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* 
+/*
  * Based on:
  *
  * ITU-T Recommendation H.222.0 / ISO standard 13818-1
@@ -62,11 +62,11 @@ typedef struct dvb_string_conv
                     const uint8_t* src, size_t srclen );
 } dvb_string_conv_t;
 
-int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
+int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
 		   const size_t srclen, const char *dvb_charset,
        dvb_string_conv_t *conv);
 
-int dvb_get_string_with_len(char *dst, size_t dstlen, 
+int dvb_get_string_with_len(char *dst, size_t dstlen,
 			    const uint8_t *buf, size_t buflen, const char *dvb_charset,
           dvb_string_conv_t *conv);
 
@@ -88,3 +88,4 @@ void dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi);
 void atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen);
 
 #endif /* DVB_SUPPORT_H */
+

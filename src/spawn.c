@@ -82,7 +82,7 @@ find_exec ( const char *name, char *out, size_t len )
 /**
  * The reaper is called once a second to finish of any pending spawns
  */
-void 
+void
 spawn_reaper(void)
 {
   pid_t pid;
@@ -101,19 +101,19 @@ spawn_reaper(void)
 	break;
 
     if (WIFEXITED(status)) {
-      snprintf(txt, sizeof(txt), 
+      snprintf(txt, sizeof(txt),
 	       "exited, status=%d", WEXITSTATUS(status));
     } else if (WIFSIGNALED(status)) {
-      snprintf(txt, sizeof(txt), 
+      snprintf(txt, sizeof(txt),
 	       "killed by signal %d", WTERMSIG(status));
     } else if (WIFSTOPPED(status)) {
-      snprintf(txt, sizeof(txt), 
+      snprintf(txt, sizeof(txt),
 	       "stopped by signal %d", WSTOPSIG(status));
     } else if (WIFCONTINUED(status)) {
-      snprintf(txt, sizeof(txt), 
+      snprintf(txt, sizeof(txt),
 	       "continued");
     } else {
-      snprintf(txt, sizeof(txt), 
+      snprintf(txt, sizeof(txt),
 	       "unknown status");
     }
 
@@ -147,7 +147,7 @@ spawn_enq(const char *name, int pid)
 
 /**
  * Execute the given program and return its output in a malloc()ed buffer
- * 
+ *
  * *outp will point to the allocated buffer
  * The function will return the size of the buffer
  */
@@ -193,7 +193,7 @@ spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
 
     f = open("/dev/null", O_RDWR);
     if(f == -1) {
-      syslog(LOG_ERR, 
+      syslog(LOG_ERR,
 	     "spawn: pid %d cannot open /dev/null for redirect %s -- %s",
 	     getpid(), prog, strerror(errno));
       exit(1);
@@ -221,7 +221,7 @@ spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
 
 /**
  * Execute the given program with arguments
- * 
+ *
  * *outp will point to the allocated buffer
  * The function will return the size of the buffer
  */
@@ -262,3 +262,4 @@ spawnv(const char *prog, char *argv[])
   spawn_enq(prog, p);
   return 0;
 }
+

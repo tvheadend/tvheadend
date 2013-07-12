@@ -25,7 +25,7 @@ static const uint8_t *
 avc_find_startcode(const uint8_t *p, const uint8_t *end)
 {
   int i;
-	
+
   uint32_t sc=0xFFFFFFFF;
   size_t len = (end -p)+1;
   for (i=0;i<len;i++)
@@ -34,7 +34,7 @@ avc_find_startcode(const uint8_t *p, const uint8_t *end)
       if((sc & 0xffffff00) == 0x00000100) {
 	return p+i-3;
       }
-		
+
     }
   return end;
 }
@@ -43,7 +43,7 @@ avc_parse_nal_units(sbuf_t *sb, const uint8_t *buf_in, int size)
 {
   const uint8_t *p = buf_in;
   const uint8_t *end = p + size;
-  const uint8_t *nal_start, *nal_end; 
+  const uint8_t *nal_start, *nal_end;
 
   //printf("CONVERT SIZE %d\n", size);
 
@@ -83,13 +83,13 @@ avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size)
 }
 
 
-static uint32_t 
+static uint32_t
 RB32(const uint8_t *d)
 {
   return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
 }
 
-static uint32_t 
+static uint32_t
 RB24(const uint8_t *d)
 {
   return (d[0] << 16) | (d[1] << 8) | d[2];
@@ -189,7 +189,7 @@ avc_convert_pkt(th_pkt_t *src)
   if (src->pkt_header) {
     sbuf_t headers;
     sbuf_init(&headers);
-    
+
     isom_write_avcc(&headers, pktbuf_ptr(src->pkt_header),
 		    pktbuf_len(src->pkt_header));
     pkt->pkt_header = pktbuf_make(headers.sb_data, headers.sb_ptr);
@@ -204,7 +204,7 @@ avc_convert_pkt(th_pkt_t *src)
 
   avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_payload),
 		      pktbuf_len(src->pkt_payload));
-  
+
   pkt->pkt_payload = pktbuf_make(payload.sb_data, payload.sb_ptr);
   pkt_ref_dec(src);
   return pkt;

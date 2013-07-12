@@ -104,7 +104,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   subscription_unsubscribe(de->de_s);
 
   streaming_target_deliver(&de->de_sq.sq_st, streaming_msg_create(SMT_EXIT));
-  
+
   pthread_join(de->de_thread, NULL);
   de->de_s = NULL;
 
@@ -125,14 +125,14 @@ static void
 cleanupfilename(char *s, int dvr_flags)
 {
   int i, len = strlen(s);
-  for(i = 0; i < len; i++) { 
+  for(i = 0; i < len; i++) {
 
     if(s[i] == '/')
       s[i] = '-';
 
     else if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
             (s[i] == ' ' || s[i] == '\t'))
-      s[i] = '-';	
+      s[i] = '-';
 
     else if((dvr_flags & DVR_CLEAN_TITLE) &&
             ((s[i] < 32) || (s[i] > 122) ||
@@ -175,7 +175,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     localtime_r(&de->de_start, &tm);
     strftime(fullname, sizeof(fullname), "%F", &tm);
     cleanupfilename(fullname,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+    snprintf(path + strlen(path), sizeof(path) - strlen(path),
 	     "/%s", fullname);
   }
 
@@ -185,7 +185,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
     char *chname = strdup(DVR_CH_NAME(de));
     cleanupfilename(chname,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+    snprintf(path + strlen(path), sizeof(path) - strlen(path),
 	     "/%s", chname);
     free(chname);
   }
@@ -198,7 +198,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
     char *title = strdup(lang_str_get(de->de_title, NULL));
     cleanupfilename(title,cfg->dvr_flags);
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+    snprintf(path + strlen(path), sizeof(path) - strlen(path),
 	     "/%s", title);
     free(title);
   }
@@ -208,10 +208,10 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if(makedirs(path, 0777) != 0) {
     return -1;
   }
-  
+
 
   /* Construct final name */
-  
+
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
 	   path, filename, muxer_suffix(de->de_mux, ss));
 
@@ -222,7 +222,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       break;
     }
 
-    tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists", 
+    tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists",
 	   fullname);
 
     tally++;
@@ -250,7 +250,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
   vsnprintf(msgbuf, sizeof(msgbuf), fmt, ap);
   va_end(ap);
 
-  tvhlog(LOG_ERR, "dvr", 
+  tvhlog(LOG_ERR, "dvr",
 	 "Recording error: \"%s\": %s",
 	 de->de_filename ?: lang_str_get(de->de_title, NULL), msgbuf);
 }
@@ -422,7 +422,7 @@ dvr_thread(void *aux)
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
-    
+
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
     pthread_mutex_unlock(&sq->sq_mutex);
@@ -481,7 +481,7 @@ dvr_thread(void *aux)
           dvr_entry_save(de);
         }
         pthread_mutex_unlock(&global_lock);
-      } 
+      }
       break;
 
     case SMT_STOP:
@@ -492,7 +492,7 @@ dvr_thread(void *aux)
 	 // Recording is completed
 
 	de->de_last_error = 0;
-	tvhlog(LOG_INFO, 
+	tvhlog(LOG_INFO,
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
@@ -515,7 +515,7 @@ dvr_thread(void *aux)
 
     case SMT_SERVICE_STATUS:
       if(sm->sm_code & TSS_PACKETS) {
-	
+
       } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
 
 	int code = SM_CODE_UNDEFINED_ERROR;
@@ -592,7 +592,7 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     return;
   }
 
-  fbasename = strdup(de->de_filename); 
+  fbasename = strdup(de->de_filename);
   snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - de->de_start_extra);
   snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + de->de_stop_extra);
 
@@ -617,9 +617,9 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     free(args[i]);
     args[i] = s;
   }
-  
+
   spawnv(args[0], (void *)args);
-    
+
   free(fbasename);
   htsstr_argsplit_free(args);
 }
@@ -638,3 +638,4 @@ dvr_thread_epilog(dvr_entry_t *de)
   if(cfg->dvr_postproc && de->de_filename)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
 }
+

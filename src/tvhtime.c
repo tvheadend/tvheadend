@@ -27,11 +27,11 @@ uint32_t tvhtime_tolerance;
 typedef struct
 {
   int    mode; /* 0 - if valid set
-				        *       use values, 
+				        *       use values,
 				        *       clear valid
-				        * 1 - if valid set 
+				        * 1 - if valid set
 				        *       if count before and after read of values is equal,
-				        *         use values 
+				        *         use values
 				        *       clear valid
 				        */
   int    count;
@@ -168,3 +168,4 @@ void tvhtime_set_tolerance ( uint32_t v )
   tvhtime_tolerance = v;
   tvhtime_save();
 }
+

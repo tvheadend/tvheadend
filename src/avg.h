@@ -47,3 +47,4 @@ unsigned int avgstat_read_and_expire(avgstat_t *as, time_t now);
 unsigned int avgstat_read(avgstat_t *as, int depth, time_t now);
 
 #endif /* AVG_H */
+

@@ -194,7 +194,7 @@ pktref_create(th_pkt_t *pkt)
 
 
 
-void 
+void
 pktbuf_ref_dec(pktbuf_t *pb)
 {
   if((atomic_add(&pb->pb_refcount, -1)) == 1) {
@@ -233,3 +233,4 @@ pktbuf_make(void *data, size_t size)
   pb->pb_data = data;
   return pb;
 }
+

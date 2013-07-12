@@ -48,7 +48,7 @@ static htsmsg_t *
 json_single_record(htsmsg_t *rec, const char *root)
 {
   htsmsg_t *out, *array;
-  
+
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
@@ -78,7 +78,7 @@ extjs_v4ladapter(http_connection_t *hc, const char *remain, void *opaque)
 
     array = htsmsg_create_list();
 
-    TAILQ_FOREACH(va, &v4l_adapters, va_global_link) 
+    TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
       htsmsg_add_msg(array, NULL, v4l_adapter_build_msg(va));
 
     pthread_mutex_unlock(&global_lock);
@@ -102,7 +102,7 @@ extjs_v4ladapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "device", va->va_path ?: "No hardware attached");
     htsmsg_add_str(r, "name", va->va_displayname);
     htsmsg_add_u32(r, "logging", va->va_logging);
- 
+
     out = json_single_record(r, "v4ladapters");
   } else if(!strcmp(op, "save")) {
 
@@ -125,7 +125,7 @@ extjs_v4ladapter(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
 
   http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;  
+  return 0;
 }
 
 /**
@@ -145,7 +145,7 @@ service_update_v4l(htsmsg_t *in)
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
-    
+
     if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
@@ -274,7 +274,7 @@ extjs_list_v4l_adapters(htsmsg_t *array)
 {
   v4l_adapter_t *va;
 
-  TAILQ_FOREACH(va, &v4l_adapters, va_global_link) 
+  TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
     htsmsg_add_msg(array, NULL, v4l_adapter_build_msg(va));
 }
 
@@ -285,9 +285,10 @@ extjs_list_v4l_adapters(htsmsg_t *array)
 void
 extjs_start_v4l(void)
 {
-  http_path_add("/v4l/adapter", 
+  http_path_add("/v4l/adapter",
 		NULL, extjs_v4ladapter, ACCESS_ADMIN);
 
-  http_path_add("/v4l/services", 
+  http_path_add("/v4l/services",
 		NULL, extjs_v4lservices, ACCESS_ADMIN);
 }
+

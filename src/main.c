@@ -357,7 +357,7 @@ mainloop(void)
 
     // TODO: there is a risk that if timers re-insert themselves to
     //       the top of the list with a 0 offset we could loop indefinitely
-    
+
     while((gti = LIST_FIRST(&gtimers)) != NULL) {
       if ((gti->gti_expire.tv_sec > ts.tv_sec) ||
           ((gti->gti_expire.tv_sec == ts.tv_sec) &&
@@ -588,10 +588,10 @@ main(int argc, char **argv)
     log_level  = LOG_TRACE;
   if (opt_log_subsys)
     log_subsys = opt_log_subsys;
-    
+
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_subsys(log_subsys);
- 
+
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
 
   /* Daemonise */
@@ -653,7 +653,7 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_STDERR;
   if (!isatty(2))
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
-  
+
   /* Initialise configuration */
   hts_settings_init(opt_config);
 
@@ -671,7 +671,7 @@ main(int argc, char **argv)
   sigfillset(&set);
   sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
-  
+
   /**
    * Initialize subsystems
    */
@@ -836,7 +836,7 @@ limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
     ll->events = 0;
     buf[0] = 0;
   } else {
-    snprintf(buf, sizeof(buf), ", %d duplicate log lines suppressed", 
+    snprintf(buf, sizeof(buf), ", %d duplicate log lines suppressed",
 	     ll->events);
   }
 
@@ -847,14 +847,14 @@ limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
 
 /**
  *
- */  
+ */
 const char *
 hostconnection2str(int type)
 {
   switch(type) {
   case HOSTCONNECTION_USB12:
     return "USB (12 Mbit/s)";
-    
+
   case HOSTCONNECTION_USB480:
     return "USB (480 Mbit/s)";
 
@@ -890,7 +890,7 @@ readlinefromfile(const char *path, char *buf, size_t buflen)
 
 /**
  *
- */  
+ */
 int
 get_device_connection(const char *dev)
 {
@@ -905,9 +905,8 @@ get_device_connection(const char *dev)
     return HOSTCONNECTION_PCI;
   } else {
     speed = atoi(l);
-   
+
     return speed >= 480 ? HOSTCONNECTION_USB480 : HOSTCONNECTION_USB12;
   }
 }
-
 

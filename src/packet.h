@@ -34,7 +34,7 @@ typedef struct pktbuf {
 #define PKT_I_FRAME 1
 #define PKT_P_FRAME 2
 #define PKT_B_FRAME 3
-#define PKT_NTYPES  4 
+#define PKT_NTYPES  4
 
 static inline char pkt_frametype_to_char ( int frametype )
 {
@@ -114,3 +114,4 @@ pktbuf_t *pktbuf_make(void *data, size_t size);
 #define pktbuf_ptr(pb) ((pb)->pb_data)
 
 #endif /* PACKET_H_ */
+

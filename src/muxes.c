@@ -157,7 +157,7 @@ static int _muxes_load_dvbs ( mux_t *mux, const char *line )
 	           &mux->freq, &mux->polarisation, &mux->symrate,
              fec, hier, qam);
   if (r != (4+v2)) return 1;
-  
+
   if ((mux->fec             = dvb_mux_str2fec(fec)) == -1)   return 1;
   if (v2) {
     if ((mux->hierarchy     = dvb_mux_str2hier(hier)) == -1) return 1;
@@ -202,7 +202,7 @@ static int _reg_cmp ( void *a, void *b )
 /*
  * Create/Find region entry
  */
-static region_t *_muxes_region_create 
+static region_t *_muxes_region_create
   ( const char *type, const char *id, const char *desc )
 {
   region_t *reg;
@@ -223,7 +223,7 @@ static region_t *_muxes_region_create
     reg->name = strdup(desc);
     LIST_INSERT_SORTED(list, reg, link, _reg_cmp);
   }
-  
+
   return reg;
 }
 
@@ -234,7 +234,7 @@ static void _muxes_load_one ( network_t *net, const char *line )
 {
   int r = 1;
   mux_t *mux = calloc(1, sizeof(mux_t));
-  
+
   switch (line[0]) {
     case 'A':
       r = _muxes_load_atsc(mux, line+1);
@@ -315,7 +315,7 @@ static void _muxes_load_file
     if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
     i = 0;
     while (buf[i]) {
-      if (buf[i] == '#') 
+      if (buf[i] == '#')
         buf[i] = '\0';
       else
         i++;
@@ -351,7 +351,7 @@ static void _muxes_load_dir
   if (lvl >= 3) return;
   if (!(dir = fb_opendir(path))) return;
   lvl++;
-  
+
   while ((de = fb_readdir(dir))) {
     if (*de->name == '.') continue;
     if (de->type == FB_DIR) {
@@ -378,4 +378,5 @@ void muxes_init ( void )
     path = "/usr/share/dvb";
 #endif
   _muxes_load_dir(path, NULL, 0);
-} 
+}
+

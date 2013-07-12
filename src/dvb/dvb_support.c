@@ -243,7 +243,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
     ic = convert_iso_8859[src[2]];
     src+=3; srclen-=3;
     break;
-    
+
   case 0x11 ... 0x14:
     return -1;
 
@@ -291,7 +291,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
 
 
 int
-dvb_get_string_with_len(char *dst, size_t dstlen, 
+dvb_get_string_with_len(char *dst, size_t dstlen,
 			const uint8_t *buf, size_t buflen, const char *dvb_charset,
       dvb_string_conv_t *conv)
 {
@@ -446,10 +446,10 @@ nicenum(char *x, size_t siz, unsigned int v)
   else if(v < 1000000)
     snprintf(x, siz, "%d,%03d", v / 1000, v % 1000);
   else if(v < 1000000000)
-    snprintf(x, siz, "%d,%03d,%03d", 
+    snprintf(x, siz, "%d,%03d,%03d",
 	     v / 1000000, (v % 1000000) / 1000, v % 1000);
-  else 
-    snprintf(x, siz, "%d,%03d,%03d,%03d", 
+  else
+    snprintf(x, siz, "%d,%03d,%03d,%03d",
 	     v / 1000000000, (v % 1000000000) / 1000000,
 	     (v % 1000000) / 1000, v % 1000);
   return x;
@@ -457,7 +457,7 @@ nicenum(char *x, size_t siz, unsigned int v)
 
 
 /**
- * 
+ *
  */
 void
 dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
@@ -468,7 +468,7 @@ dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
     nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
     snprintf(buf, size, "%s kHz", freq);
   } else {
-    nicenum(freq, sizeof(freq), 
+    nicenum(freq, sizeof(freq),
 	    tdmi->tdmi_conf.dmc_fe_params.frequency / 1000);
     snprintf(buf, size, "%s kHz", freq);
   }
@@ -476,7 +476,7 @@ dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 
 
 /**
- * 
+ *
  */
 void
 dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
@@ -486,7 +486,7 @@ dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 
   if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
     nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
-    snprintf(buf, size, "%s%s%s kHz %s (%s)", 
+    snprintf(buf, size, "%s%s%s kHz %s (%s)",
 	     n?:"", n ? ": ":"", freq,
 	     dvb_polarisation_to_str_long(tdmi->tdmi_conf.dmc_polarisation),
 	     tdmi->tdmi_conf.dmc_satconf ? tdmi->tdmi_conf.dmc_satconf->sc_name : "No satconf");

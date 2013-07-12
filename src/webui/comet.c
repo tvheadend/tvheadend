@@ -186,7 +186,7 @@ comet_serverIpPort(http_connection_t *hc, comet_mailbox_t *cmb)
 static int
 comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 {
-  comet_mailbox_t *cmb = NULL; 
+  comet_mailbox_t *cmb = NULL;
   const char *cometid = http_arg_get(&hc->hc_req_args, "boxid");
   const char *immediate = http_arg_get(&hc->hc_req_args, "immediate");
   int im = immediate ? atoi(immediate) : 0;
@@ -203,7 +203,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     LIST_FOREACH(cmb, &mailboxes, cmb_link)
       if(!strcmp(cmb->cmb_boxid, cometid))
 	break;
-    
+
   if(cmb == NULL) {
     cmb = comet_mailbox_create();
     comet_access_update(hc, cmb);
@@ -223,7 +223,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_add_str(m, "boxid", cmb->cmb_boxid);
   htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_list());
   cmb->cmb_messages = NULL;
-  
+
   cmb->cmb_last_used = dispatch_clock;
 
   pthread_mutex_unlock(&comet_mutex);
@@ -241,25 +241,25 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 static int
 comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
 {
-  comet_mailbox_t *cmb = NULL; 
+  comet_mailbox_t *cmb = NULL;
   const char *cometid = http_arg_get(&hc->hc_req_args, "boxid");
 
   if(cometid == NULL)
     return 400;
 
   pthread_mutex_lock(&comet_mutex);
-  
+
   LIST_FOREACH(cmb, &mailboxes, cmb_link) {
     if(!strcmp(cmb->cmb_boxid, cometid)) {
       char buf[64];
       cmb->cmb_debug = !cmb->cmb_debug;
- 
+
       if(cmb->cmb_messages == NULL)
 	cmb->cmb_messages = htsmsg_create_list();
- 
+
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "notificationClass", "logmessage");
-      snprintf(buf, sizeof(buf), "Loglevel debug: %sabled", 
+      snprintf(buf, sizeof(buf), "Loglevel debug: %sabled",
 	       cmb->cmb_debug ? "en" : "dis");
       htsmsg_add_str(m, "logtxt", buf);
       htsmsg_add_msg(cmb->cmb_messages, NULL, m);
@@ -307,3 +307,4 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug)
   pthread_cond_broadcast(&comet_cond);
   pthread_mutex_unlock(&comet_mutex);
 }
+

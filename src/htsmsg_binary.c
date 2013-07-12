@@ -46,10 +46,10 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
               (buf[3] << 16) |
               (buf[4] << 8 ) |
               (buf[5]      );
-    
+
     buf += 6;
     len -= 6;
-    
+
     if(len < namelen + datalen)
       return -1;
 
@@ -283,3 +283,4 @@ htsmsg_binary_serialize(htsmsg_t *msg, void **datap, size_t *lenp, int maxlen)
   *lenp  = len + 4;
   return 0;
 }
+

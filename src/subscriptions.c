@@ -73,7 +73,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 {
   streaming_message_t *sm;
   s->ths_state = SUBSCRIPTION_TESTING_SERVICE;
- 
+
   s->ths_service = t;
   LIST_INSERT_HEAD(&t->s_subscriptions, s, ths_service_link);
 
@@ -101,7 +101,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
     s->ths_start_message = NULL;
 
     // Send status report
-    sm = streaming_msg_create_code(SMT_SERVICE_STATUS, 
+    sm = streaming_msg_create_code(SMT_SERVICE_STATUS,
 				   t->s_streaming_status);
     streaming_target_deliver(s->ths_output, sm);
   }
@@ -124,7 +124,7 @@ subscription_unlink_service(th_subscription_t *s, int reason)
   // Unlink from service output
   streaming_target_disconnect(&t->s_streaming_pad, &s->ths_input);
 
-  if(TAILQ_FIRST(&t->s_components) != NULL && 
+  if(TAILQ_FIRST(&t->s_components) != NULL &&
      s->ths_state == SUBSCRIPTION_GOT_SERVICE) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);
@@ -162,7 +162,7 @@ subscription_reschedule(void)
 
   lock_assert(&global_lock);
 
-  gtimer_arm(&subscription_reschedule_timer, 
+  gtimer_arm(&subscription_reschedule_timer,
 	     subscription_reschedule_cb, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
@@ -200,7 +200,7 @@ subscription_reschedule(void)
 /**
  *
  */
-void 
+void
 subscription_unsubscribe(th_subscription_t *s)
 {
   service_t *t = s->ths_service;
@@ -229,9 +229,9 @@ subscription_unsubscribe(th_subscription_t *s)
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
   }
 
-  if(s->ths_start_message != NULL) 
+  if(s->ths_start_message != NULL)
     streaming_msg_free(s->ths_start_message);
- 
+
   free(s->ths_title);
   free(s->ths_hostname);
   free(s->ths_username);
@@ -256,7 +256,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     // We are just testing if this service is good
 
     if(sm->sm_type == SMT_START) {
-      if(s->ths_start_message != NULL) 
+      if(s->ths_start_message != NULL)
 	streaming_msg_free(s->ths_start_message);
       s->ths_start_message = sm;
       return;
@@ -341,7 +341,7 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
   else
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
 
-  streaming_target_init(&s->ths_input, 
+  streaming_target_init(&s->ths_input,
 			cb ?: subscription_input_direct, s, reject);
 
   s->ths_weight            = weight;
@@ -367,7 +367,7 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
  *
  */
 th_subscription_t *
-subscription_create_from_channel(channel_t *ch, unsigned int weight, 
+subscription_create_from_channel(channel_t *ch, unsigned int weight,
 				 const char *name, streaming_target_t *st,
 				 int flags, const char *hostname,
 				 const char *username, const char *client)
@@ -384,7 +384,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
   subscription_reschedule();
 
   if(s->ths_service == NULL) {
-    tvhlog(LOG_NOTICE, "subscription", 
+    tvhlog(LOG_NOTICE, "subscription",
 	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
 	   s->ths_title, ch->ch_name);
@@ -393,7 +393,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 
     s->ths_service->s_setsourceinfo(s->ths_service, &si);
 
-    tvhlog(LOG_INFO, "subscription", 
+    tvhlog(LOG_INFO, "subscription",
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	   "service: \"%s\", quality: %d",
@@ -418,14 +418,14 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 th_subscription_t *
 subscription_create_from_service(service_t *t, const char *name,
 				 streaming_target_t *st, int flags,
-				 const char *hostname, const char *username, 
+				 const char *hostname, const char *username,
 				 const char *client)
 {
   th_subscription_t *s;
   source_info_t si;
   int r;
 
-  s = subscription_create(INT32_MAX, name, st, flags, 
+  s = subscription_create(INT32_MAX, name, st, flags,
 			  subscription_input_direct,
 			  hostname, username, client);
 
@@ -433,7 +433,7 @@ subscription_create_from_service(service_t *t, const char *name,
     if((r = service_start(t, INT32_MAX, 1)) != 0) {
       subscription_unsubscribe(s);
 
-      tvhlog(LOG_INFO, "subscription", 
+      tvhlog(LOG_INFO, "subscription",
 	     "\"%s\" direct subscription failed -- %s", name,
 	     streaming_code2txt(r));
       return NULL;
@@ -442,7 +442,7 @@ subscription_create_from_service(service_t *t, const char *name,
 
   t->s_setsourceinfo(t, &si);
 
-  tvhlog(LOG_INFO, "subscription", 
+  tvhlog(LOG_INFO, "subscription",
 	 "\"%s\" direct subscription to adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	 "service: \"%s\", quality: %d",
@@ -530,7 +530,7 @@ subscription_dummy_join(const char *id, int first)
   }
 
   if(t == NULL) {
-    tvhlog(LOG_ERR, "subscription", 
+    tvhlog(LOG_ERR, "subscription",
 	   "Unable to dummy join %s, service not found, retrying...", id);
 
     gtimer_arm(&dummy_sub_timer, dummy_retry, strdup(id), 1);
@@ -541,7 +541,7 @@ subscription_dummy_join(const char *id, int first)
   streaming_target_init(st, dummy_callback, NULL, 0);
   subscription_create_from_service(t, "dummy", st, 0, NULL, NULL, "dummy");
 
-  tvhlog(LOG_NOTICE, "subscription", 
+  tvhlog(LOG_NOTICE, "subscription",
 	 "Dummy join %s ok", id);
 }
 
@@ -566,7 +566,7 @@ subscription_create_msg(th_subscription_t *s)
   case SUBSCRIPTION_TESTING_SERVICE:
     state = "Testing";
     break;
-    
+
   case SUBSCRIPTION_GOT_SERVICE:
     state = "Running";
     break;
@@ -589,10 +589,10 @@ subscription_create_msg(th_subscription_t *s)
     htsmsg_add_str(m, "title", s->ths_client);
   else if(s->ths_title != NULL)
     htsmsg_add_str(m, "title", s->ths_title);
-  
+
   if(s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", s->ths_channel->ch_name);
-  
+
   if(s->ths_service != NULL)
     htsmsg_add_str(m, "service", s->ths_service->s_nicename);
 
@@ -614,7 +614,7 @@ every_sec_cb(void *aux)
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     int errors = s->ths_total_err;
     int bw = atomic_exchange(&s->ths_bytes, 0);
-    
+
     htsmsg_t *m = subscription_create_msg(s);
     htsmsg_delete_field(m, "errors");
     htsmsg_add_u32(m, "errors", errors);
@@ -675,3 +675,4 @@ subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
 
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
+

@@ -141,8 +141,8 @@ codec_id2streaming_component_type(enum CodecID id)
 
 
 /**
- * 
- */ 
+ *
+ */
 int
 libav_is_encoder(AVCodec *codec)
 {
@@ -154,8 +154,8 @@ libav_is_encoder(AVCodec *codec)
 }
 
 /**
- * 
- */ 
+ *
+ */
 void
 libav_init(void)
 {

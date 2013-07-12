@@ -81,3 +81,4 @@ typedef __m64 batch;
 #define XOR_BEST_BY(d,s1,s2) XOR_8_BY(d,s1,s2)
 
 #include "fftable.h"
+

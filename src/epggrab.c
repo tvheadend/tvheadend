@@ -89,7 +89,7 @@ static void* _epggrab_internal_thread ( void* p )
   epggrab_module_int_t *mod;
 
   /* Setup timeout */
-  ts.tv_nsec = 0; 
+  ts.tv_nsec = 0;
   time(&ts.tv_sec);
 
   while ( 1 ) {
@@ -217,7 +217,7 @@ static void _epggrab_load ( void )
       if (mod->type == EPGGRAB_OTA)
         epggrab_enable_module(mod, 1);
   }
- 
+
   /* Load module config (channels) */
 #if ENABLE_LINUXDVB
   eit_load();
@@ -250,7 +250,7 @@ void epggrab_save ( void )
     if (mod->enabled) {
       if (!a) a = htsmsg_create_map();
       htsmsg_add_u32(a, mod->id, 1);
-    } 
+    }
   }
   if (a) htsmsg_add_msg(m, "mod_enabled", a);
   hts_settings_save(m, "epggrab/config");
@@ -386,7 +386,7 @@ void epggrab_init ( void )
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
-  
+
   /* Initialise modules */
 #if ENABLE_LINUXDVB
   eit_init();

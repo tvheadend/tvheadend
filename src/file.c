@@ -24,7 +24,7 @@
 #include <assert.h>
 #include "queue.h"
 #include "file.h"
-	
+
 typedef struct file_read_buf {
   TAILQ_ENTRY(file_read_buf) link;
   int                        size;
@@ -55,7 +55,7 @@ size_t file_readall ( int fd, char **outp )
     totalsize += r;
     if(b->size == MAX_RDBUF_SIZE)
       b = NULL;
-  } 
+  }
 
   close(fd);
 
@@ -78,3 +78,4 @@ size_t file_readall ( int fd, char **outp )
   outbuf[totalsize] = 0;
   return totalsize;
 }
+

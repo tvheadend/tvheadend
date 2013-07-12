@@ -92,7 +92,7 @@ static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
   zstr.next_in   = bufin;
   zstr.avail_out = orig;
   zstr.next_out  = bufout;
-    
+
   /* Decompress */
   err = inflate(&zstr, Z_NO_FLUSH);
   if ( err != Z_STREAM_END || zstr.avail_out != 0 ) {
@@ -101,7 +101,7 @@ static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
   }
   free(bufin);
   inflateEnd(&zstr);
-  
+
   return bufout;
 }
 #endif
@@ -125,7 +125,7 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   zstr.next_in   = bufin;
   zstr.avail_out = orig;
   zstr.next_out  = bufout;
-    
+
   /* Decompress */
   err = deflate(&zstr, Z_FINISH);
   if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
@@ -136,7 +136,7 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   }
   free(bufin);
   deflateEnd(&zstr);
-  
+
   return bufout;
 }
 #endif
@@ -272,7 +272,7 @@ fb_dirent *fb_readdir ( fb_dir *dir )
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
     }
-    
+
   } else {
     struct dirent *de = readdir(dir->d.cur);
     if (de) {
@@ -343,7 +343,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
 //       be passed in though and will be ignored if this is not the case
 // Note: compress will work on EITHER type (but will be ignored for already
 //       compressed bundles)
-fb_file *fb_open2 
+fb_file *fb_open2
   ( const fb_dir *dir, const char *name, int decompress, int compress )
 {
   assert(!decompress || !compress);
@@ -400,7 +400,7 @@ fb_file *fb_open2
 #if ENABLE_ZLIB
   if (ret && !ret->gzip && compress) {
     ret->gzip = 1;
-      
+
     /* Get data */
     if (ret->type == FB_BUNDLE) {
       const uint8_t *data;
@@ -415,11 +415,11 @@ fb_file *fb_open2
       ret->d.cur = NULL;
       free(data);
     }
-  
+
     /* Cleanup */
     if (!ret->buf) {
       free(ret);
-      ret = NULL; 
+      ret = NULL;
     }
   }
 #endif
@@ -438,7 +438,7 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
     free(tmp);
     return NULL;
   }
-    
+
   /* Find directory */
   *pos = '\0';
   dir  = fb_opendir(tmp);
@@ -516,3 +516,4 @@ char *fb_gets ( fb_file *fp, void *buf, size_t count )
   ((char*)buf)[c] = '\0';
   return buf;
 }
+

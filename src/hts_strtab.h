@@ -51,7 +51,7 @@ static int
 str2val0_def(const char *str, struct strtab tab[], int l, int def)
 {
   int i;
-  if(str) 
+  if(str)
     for(i = 0; i < l; i++)
       if(!strcasecmp(str, tab[i].str))
 	return tab[i].val;
@@ -73,8 +73,9 @@ val2str0(int val, struct strtab tab[], int l)
     if(tab[i].val == val)
       return tab[i].str;
   return NULL;
-} 
+}
 
 #define val2str(val, tab) val2str0(val, tab, sizeof(tab) / sizeof(tab[0]))
 
 #endif /* STRTAB_H_ */
+

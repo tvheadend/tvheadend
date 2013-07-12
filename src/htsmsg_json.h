@@ -34,3 +34,4 @@ char *htsmsg_json_serialize_to_str(htsmsg_t *msg, int pretty);
 struct rstr *htsmsg_json_serialize_to_rstr(htsmsg_t *msg, const char *prefix);
 
 #endif /* HTSMSG_JSON_H_ */
+

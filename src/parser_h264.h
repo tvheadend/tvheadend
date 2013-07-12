@@ -31,3 +31,4 @@ int h264_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
 			     int *pkttype, int *isfield);
 
 #endif /* PARSER_H264_H_ */
+

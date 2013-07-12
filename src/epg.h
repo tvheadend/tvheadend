@@ -106,7 +106,7 @@ struct epg_object
   LIST_ENTRY(epg_object)  id_link;    ///< Global (ID) link
   LIST_ENTRY(epg_object)  un_link;    ///< Global unref'd link
   LIST_ENTRY(epg_object)  up_link;    ///< Global updated link
- 
+
   epg_object_type_t       type;       ///< Specific object type
   uint32_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
@@ -161,7 +161,7 @@ const char *epg_brand_get_summary
   ( const epg_brand_t *b, const char *lang );
 
 /* Mutators */
-int epg_brand_set_title        
+int epg_brand_set_title
   ( epg_brand_t *b, const char *title, const char *lang,
     struct epggrab_module *src )
   __attribute__((warn_unused_result));
@@ -356,7 +356,7 @@ void epg_episode_get_epnum
   ( epg_episode_t *e, epg_episode_num_t *epnum );
 /* EpNum format helper */
 // output string will be:
-// if (episode_num) 
+// if (episode_num)
 //   ret = pre
 //   if (season_num) ret += sprintf(sfmt, season_num)
 //   if (season_cnt && cnt) ret += sprintf(cnt, season_cnt)
@@ -364,7 +364,7 @@ void epg_episode_get_epnum
 //   ret += sprintf(efmt, episode_num)
 //   if (episode_cnt) ret += sprintf(cfmt, episode_cnt)
 // and will return num chars written
-size_t epg_episode_number_format 
+size_t epg_episode_number_format
   ( epg_episode_t *e, char *buf, size_t len,
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
@@ -401,7 +401,7 @@ epg_serieslink_t *epg_serieslink_find_by_id
 
 /* Serialization */
 htsmsg_t         *epg_serieslink_serialize   ( epg_serieslink_t *s );
-epg_serieslink_t *epg_serieslink_deserialize 
+epg_serieslink_t *epg_serieslink_deserialize
   ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
@@ -412,7 +412,7 @@ epg_serieslink_t *epg_serieslink_deserialize
 struct epg_broadcast
 {
   epg_object_t;                                ///< Parent object
-  
+
   uint16_t                   dvb_eid;          ///< DVB Event ID
   time_t                     start;            ///< Start time
   time_t                     stop;             ///< End time
@@ -446,8 +446,8 @@ struct epg_broadcast
 };
 
 /* Lookup */
-epg_broadcast_t *epg_broadcast_find_by_time 
-  ( struct channel *ch, time_t start, time_t stop, 
+epg_broadcast_t *epg_broadcast_find_by_time
+  ( struct channel *ch, time_t start, time_t stop,
     uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id, struct channel *ch );
@@ -462,7 +462,7 @@ int epg_broadcast_set_is_widescreen
 int epg_broadcast_set_is_hd
   ( epg_broadcast_t *b, uint8_t hd, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_lines 
+int epg_broadcast_set_lines
   ( epg_broadcast_t *b, uint16_t lines, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_aspect
@@ -484,11 +484,11 @@ int epg_broadcast_set_is_repeat
   ( epg_broadcast_t *b, uint8_t r, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_summary
-  ( epg_broadcast_t *b, const char *str, const char *lang, 
+  ( epg_broadcast_t *b, const char *str, const char *lang,
     struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_description
-  ( epg_broadcast_t *b, const char *str, const char *lang, 
+  ( epg_broadcast_t *b, const char *str, const char *lang,
     struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_summary2
@@ -503,9 +503,9 @@ int epg_broadcast_set_serieslink
 
 /* Accessors */
 epg_broadcast_t *epg_broadcast_get_next    ( epg_broadcast_t *b );
-epg_episode_t   *epg_broadcast_get_episode 
+epg_episode_t   *epg_broadcast_get_episode
   ( epg_broadcast_t *b, int create, int *save );
-const char *epg_broadcast_get_title 
+const char *epg_broadcast_get_title
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_summary
   ( epg_broadcast_t *b, const char *lang );
@@ -514,7 +514,7 @@ const char *epg_broadcast_get_description
 
 /* Serialization */
 htsmsg_t        *epg_broadcast_serialize   ( epg_broadcast_t *b );
-epg_broadcast_t *epg_broadcast_deserialize 
+epg_broadcast_t *epg_broadcast_deserialize
   ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
@@ -566,3 +566,4 @@ void epg_updated (void);
 char *epg_hash ( const char *t, const char *s, const char *d );
 
 #endif /* EPG_H */
+

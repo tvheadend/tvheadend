@@ -59,3 +59,4 @@ atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
   return ret;
 #endif
 }
+

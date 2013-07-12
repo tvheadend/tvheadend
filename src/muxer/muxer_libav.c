@@ -44,15 +44,15 @@ static const AVRational mpeg_tc = {1, 90000};
 /**
  * Callback function for libavformat
  */
-static int 
+static int
 lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
 {
   int r;
   lav_muxer_t *lm = (lav_muxer_t*)opaque;
-  
+
   r = write(lm->lm_fd, buf, buf_size);
   lm->m_errors += (r != buf_size);
-  
+
   return r;
 }
 
@@ -61,7 +61,7 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
  * Add a stream to the muxer
  */
 static int
-lav_muxer_add_stream(lav_muxer_t *lm, 
+lav_muxer_add_stream(lav_muxer_t *lm,
 		     const streaming_start_component_t *ssc)
 {
   AVStream *st;
@@ -99,7 +99,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   if(ssc->ssc_gh) {
     c->extradata_size = pktbuf_len(ssc->ssc_gh);
     c->extradata = av_malloc(c->extradata_size);
-    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh), 
+    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh),
 	   pktbuf_len(ssc->ssc_gh));
   }
 
@@ -145,7 +145,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
  * Check if a container supports a given streaming component
  */
 static int
-lav_muxer_support_stream(muxer_container_type_t mc, 
+lav_muxer_support_stream(muxer_container_type_t mc,
 			 streaming_component_type_t type)
 {
   int ret = 0;
@@ -195,7 +195,7 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   int has_audio;
   int has_video;
   const streaming_start_component_t *ssc;
-  
+
   has_audio = 0;
   has_video = 0;
 
@@ -253,14 +253,14 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
       continue;
 
     if(!lav_muxer_support_stream(lm->m_container, ssc->ssc_type)) {
-      tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s", 
-	     streaming_component_type2txt(ssc->ssc_type), 
+      tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s",
+	     streaming_component_type2txt(ssc->ssc_type),
 	     muxer_container_type2txt(lm->m_container));
       continue;
     }
 
     if(lav_muxer_add_stream(lm, ssc)) {
-      tvhlog(LOG_ERR, "libav",  "Failed to add %s stream", 
+      tvhlog(LOG_ERR, "libav",  "Failed to add %s stream",
 	     streaming_component_type2txt(ssc->ssc_type));
       continue;
     }
@@ -271,7 +271,7 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
     lm->m_errors++;
     return -1;
   } else if(avformat_write_header(lm->lm_oc, NULL) < 0) {
-    tvhlog(LOG_ERR, "libav",  "Failed to write %s header", 
+    tvhlog(LOG_ERR, "libav",  "Failed to write %s header",
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
     return -1;
@@ -308,7 +308,7 @@ lav_muxer_open_stream(muxer_t *m, int fd)
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   buf = av_malloc(MUX_BUF_SIZE);
-  pb = avio_alloc_context(buf, MUX_BUF_SIZE, 1, lm, NULL, 
+  pb = avio_alloc_context(buf, MUX_BUF_SIZE, 1, lm, NULL,
 			  lav_muxer_write, NULL);
   pb->seekable = 0;
   lm->lm_oc->pb = pb;
@@ -380,12 +380,12 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     if(lm->lm_h264_filter && st->codec->codec_id == CODEC_ID_H264) {
       if(av_bitstream_filter_filter(lm->lm_h264_filter,
-				    st->codec, 
-				    NULL, 
-				    &packet.data, 
-				    &packet.size, 
-				    pktbuf_ptr(pkt->pkt_payload), 
-				    pktbuf_len(pkt->pkt_payload), 
+				    st->codec,
+				    NULL,
+				    &packet.data,
+				    &packet.size,
+				    pktbuf_ptr(pkt->pkt_payload),
+				    pktbuf_len(pkt->pkt_payload),
 				    pkt->pkt_frametype < PKT_P_FRAME) < 0) {
 	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
 	break;
@@ -396,7 +396,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     }
 
     packet.stream_index = st->index;
- 
+
     packet.pts      = av_rescale_q(pkt->pkt_pts     , mpeg_tc, st->time_base);
     packet.dts      = av_rescale_q(pkt->pkt_dts     , mpeg_tc, st->time_base);
     packet.duration = av_rescale_q(pkt->pkt_duration, mpeg_tc, st->time_base);
@@ -453,7 +453,7 @@ lav_muxer_close(muxer_t *m)
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   if(lm->lm_init && av_write_trailer(lm->lm_oc) < 0) {
-    tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
+    tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer",
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
     ret = -1;
@@ -464,7 +464,7 @@ lav_muxer_close(muxer_t *m)
 
   for(i=0; i<lm->lm_oc->nb_streams; i++)
     av_freep(&lm->lm_oc->streams[i]->codec->extradata);
- 
+
   lm->lm_oc->nb_streams = 0;
 
   return ret;

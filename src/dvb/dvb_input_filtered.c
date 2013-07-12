@@ -59,7 +59,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
       st->es_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
        "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-       s->s_identifier, tda->tda_demux_path, 
+       s->s_identifier, tda->tda_demux_path,
        st->es_pid, strerror(errno));
       continue;
     }
@@ -74,7 +74,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
       tvhlog(LOG_ERR, "dvb",
        "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-       s->s_identifier, tda->tda_demux_path, 
+       s->s_identifier, tda->tda_demux_path,
        st->es_pid, strerror(errno));
       close(fd);
       fd = -1;
@@ -132,7 +132,7 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
     } else {
 
       struct dmx_sct_filter_params fp = {0};
-  
+
       fp.filter.filter[0] = tdt->tdt_table;
       fp.filter.mask[0]   = tdt->tdt_mask;
 
@@ -185,7 +185,7 @@ dvb_table_input(void *aux)
   uint8_t sec[4096];
   th_dvb_mux_instance_t *tdmi;
   th_dvb_table_t *tdt;
-  int64_t cycle_barrier = 0; 
+  int64_t cycle_barrier = 0;
   tvhpoll_event_t ev;
 
   while(1) {
@@ -193,7 +193,7 @@ dvb_table_input(void *aux)
     if (x != 1) continue;
 
     tid = ev.data.u64 & 0xffffffff;
-    fd  = ev.data.u64 >> 32; 
+    fd  = ev.data.u64 >> 32;
 
     if(!(ev.events & TVHPOLL_IN))
       continue;

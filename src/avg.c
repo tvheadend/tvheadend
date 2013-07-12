@@ -47,7 +47,7 @@ avgstat_expire(avgstat_t *as, int now)
 
   while(1) {
     ase = TAILQ_LAST(&as->as_queue, avgstat_entry_queue);
-    if(ase == NULL || ase->ase_clock > now - as->as_depth) 
+    if(ase == NULL || ase->ase_clock > now - as->as_depth)
       break;
     TAILQ_REMOVE(&as->as_queue, ase, ase_link);
     free(ase);

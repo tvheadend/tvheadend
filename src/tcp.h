@@ -36,7 +36,7 @@ void *tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *s
 
 int tcp_read(int fd, void *buf, size_t len);
 
-int tcp_read_line(int fd, char *buf, const size_t bufsize, 
+int tcp_read_line(int fd, char *buf, const size_t bufsize,
 		  htsbuf_queue_t *spill);
 
 int tcp_read_data(int fd, char *buf, const size_t bufsize,
@@ -49,3 +49,4 @@ int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
 char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 
 #endif /* TCP_H_ */
+

@@ -28,7 +28,7 @@
 #include "tvheadend.h"
 
 /**
- * CRC32 
+ * CRC32
  */
 static uint32_t crc_tab[256] = {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
@@ -171,7 +171,7 @@ static const uint8_t map2[] =
     0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33
 };
 
-int 
+int
 base64_decode(uint8_t *out, const char *in, int out_size)
 {
     int i, v;
@@ -202,7 +202,7 @@ put_utf8(char *out, int c)
 {
   if(c == 0xfffe || c == 0xffff || (c >= 0xD800 && c < 0xE000))
     return 0;
-  
+
   if (c < 0x80) {
     *out = c;
     return 1;
@@ -228,7 +228,7 @@ put_utf8(char *out, int c)
     *out   = 0x80 | (0x3f &  c);
     return 4;
   }
-  
+
   if(c < 0x4000000) {
     *out++ = 0xf8 | (0x03 & (c >> 24));
     *out++ = 0x80 | (0x3f & (c >> 18));
@@ -320,7 +320,7 @@ sbuf_put_byte(sbuf_t *sb, uint8_t u8)
 }
 
 
-void 
+void
 sbuf_cut(sbuf_t *sb, int off)
 {
   assert(off <= sb->sb_ptr);
@@ -436,3 +436,4 @@ regexp_escape(const char* str)
   *b = 0;
   return tmp;
 }
+

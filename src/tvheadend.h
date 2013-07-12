@@ -164,7 +164,7 @@ typedef struct loglimter {
   int events;
 } loglimiter_t;
 
-void limitedlog(loglimiter_t *ll, const char *sys, 
+void limitedlog(loglimiter_t *ll, const char *sys,
 		const char *o, const char *event);
 
 
@@ -266,7 +266,7 @@ typedef enum {
   /**
    * Packet with data.
    *
-   * sm_data points to a th_pkt. th_pkt will be unref'ed when 
+   * sm_data points to a th_pkt. th_pkt will be unref'ed when
    * the message is destroyed
    */
   SMT_PACKET,
@@ -299,7 +299,7 @@ typedef enum {
    *
    * End of streaming. If sm_code is 0 this was a result to an
    * unsubscription. Otherwise the reason was external and the
-   * subscription scheduler will attempt to start a new streaming 
+   * subscription scheduler will attempt to start a new streaming
    * session.
    */
   SMT_STOP,
@@ -400,14 +400,14 @@ typedef struct streaming_target {
  *
  */
 typedef struct streaming_queue {
-  
+
   streaming_target_t sq_st;
 
   pthread_mutex_t sq_mutex;    /* Protects sp_queue */
   pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
 
   size_t          sq_maxsize;  /* Max queue size (bytes) */
-  
+
   struct streaming_message_queue sq_queue;
 
 } streaming_queue_t;
@@ -446,7 +446,7 @@ int tvh_str_update(char **strp, const char *src);
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
 
-static inline int64_t 
+static inline int64_t
 getmonoclock(void)
 {
   struct timespec tp;
@@ -573,3 +573,4 @@ char *regexp_escape ( const char *str );
 #endif
 
 #endif /* TV_HEAD_H */
+

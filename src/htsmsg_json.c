@@ -44,7 +44,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
 
-    if(pretty) 
+    if(pretty)
       htsbuf_append(hq, indentor, indent < 16 ? indent : 16);
 
     if(!isarray) {
@@ -86,8 +86,8 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
     if(TAILQ_NEXT(f, hmf_link))
       htsbuf_append(hq, ",", 1);
   }
-  
-  if(pretty) 
+
+  if(pretty)
     htsbuf_append(hq, indentor, indent-1 < 16 ? indent-1 : 16);
   htsbuf_append(hq, isarray ? "]" : "}", 1);
 }
@@ -99,7 +99,7 @@ void
 htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 {
   htsmsg_json_write(msg, hq, msg->hm_islist, 2, pretty);
-  if(pretty) 
+  if(pretty)
     htsbuf_append(hq, "\n", 1);
 }
 
@@ -147,32 +147,32 @@ add_obj(void *opaque, void *parent, const char *name, void *child)
   htsmsg_add_msg(parent, name, child);
 }
 
-static void 
+static void
 add_string(void *opaque, void *parent, const char *name,  char *str)
 {
   htsmsg_add_str(parent, name, str);
   free(str);
 }
 
-static void 
+static void
 add_long(void *opaque, void *parent, const char *name, long v)
 {
   htsmsg_add_s64(parent, name, v);
 }
 
-static void 
+static void
 add_double(void *opaque, void *parent, const char *name, double v)
 {
   htsmsg_add_dbl(parent, name, v);
 }
 
-static void 
+static void
 add_bool(void *opaque, void *parent, const char *name, int v)
 {
   htsmsg_add_u32(parent, name, v);
 }
 
-static void 
+static void
 add_null(void *opaque, void *parent, const char *name)
 {
 }
@@ -201,3 +201,4 @@ htsmsg_json_deserialize(const char *src)
 {
   return json_deserialize(src, &json_to_htsmsg, NULL, NULL, 0);
 }
+

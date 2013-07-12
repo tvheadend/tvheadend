@@ -44,10 +44,10 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
   LIST_FOREACH(m, &net->muxes, link) {
 
     memset(&dmc, 0, sizeof(dmc));
-  
+
     dmc.dmc_fe_params.inversion = INVERSION_AUTO;
     dmc.dmc_fe_params.frequency = m->freq;
-    
+
     switch(tda->tda_type) {
     case FE_OFDM:
       dmc.dmc_fe_params.u.ofdm.bandwidth             = m->bw;
@@ -58,7 +58,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
       dmc.dmc_fe_params.u.ofdm.code_rate_HP          = m->fechp;
       dmc.dmc_fe_params.u.ofdm.code_rate_LP          = m->feclp;
       break;
-      
+
     case FE_QPSK:
 #if DVB_API_VERSION >= 5
       dmc.dmc_fe_delsys                    = SYS_DVBS;
@@ -97,7 +97,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
     }
 
     dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
-      
+
     dvb_mux_create(tda, &dmc, 0, 0xffff, NULL, source, 1, 1, NULL, NULL, 1, NULL);
   }
 }
@@ -173,7 +173,7 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
       tvhlog(LOG_ERR, "DVB", "No built-in config for fetype %d", fetype);
       return NULL;
   }
-  
+
   out = htsmsg_create_list();
 
   if(!strcmp(node, "root")) {
@@ -199,6 +199,7 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
     htsmsg_add_str(e, "id", n->id);
     htsmsg_add_msg(out, NULL, e);
   }
-      
+
   return out;
 }
+

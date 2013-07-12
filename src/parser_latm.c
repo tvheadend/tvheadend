@@ -104,7 +104,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
   latm->audio_mux_version_A = 0;
   if(audio_mux_version)                       // audioMuxVersion
     latm->audio_mux_version_A = read_bits(bs, 1);
-  
+
   if(latm->audio_mux_version_A)
     return;
 
@@ -117,7 +117,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
 
   // for each program (which there is only on in DVB)
   skip_bits(bs, 3);                         // numLayer = 0
-    
+
   // for each layer (which there is only on in DVB)
   if(!audio_mux_version)
     read_audio_specific_config(st, latm, bs);
@@ -171,7 +171,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
  * Parse AAC LATM
  */
 th_pkt_t *
-parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st, 
+parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
 			     const uint8_t *data, int len)
 {
   latm_private_t *latm;
@@ -226,10 +226,10 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   put_bits(&out, latm->channel_config, 3);
   put_bits(&out, 1, 1);      // Original
   put_bits(&out, 1, 1);      // Copy
-  
+
   put_bits(&out, 1, 1);      // Copyright identification bit
   put_bits(&out, 1, 1);      // Copyright identification start
-  put_bits(&out, slot_len, 13); 
+  put_bits(&out, slot_len, 13);
   put_bits(&out, 0, 11);     // Buffer fullness
   put_bits(&out, 0, 2);      // RDB in frame
 
@@ -244,3 +244,4 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
 
   return pkt;
 }
+

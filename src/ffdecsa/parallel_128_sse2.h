@@ -80,3 +80,4 @@ static inline void XOR_BEST_BY(unsigned char *d, unsigned char *s1, unsigned cha
 }
 
 #include "fftable.h"
+

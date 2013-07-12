@@ -72,11 +72,11 @@ static void
 rawts_service_save(service_t *t)
 {
   htsmsg_t *m = htsmsg_create_map();
-  
-  pthread_mutex_lock(&t->s_stream_mutex); 
+
+  pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
-  pthread_mutex_unlock(&t->s_stream_mutex); 
-  
+  pthread_mutex_unlock(&t->s_stream_mutex);
+
   //htsmsg_print(m);
   htsmsg_destroy(m);
 
@@ -128,7 +128,7 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
     if(t->s_dvb_service_id == sid)
       return t;
   }
-  
+
   snprintf(tmp, sizeof(tmp), "%s_%04x", rt->rt_identifier, sid);
 
   t = service_create(tmp, SERVICE_TYPE_DVB, S_MPEG_TS);
@@ -146,9 +146,9 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   t->s_svcname = strdup(tmp);
 
-  pthread_mutex_lock(&t->s_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_make_nicename(t);
-  pthread_mutex_unlock(&t->s_stream_mutex); 
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   tvhlog(LOG_NOTICE, "rawts", "Added service %d (pmt: %d)", sid, pmt_pid);
 
@@ -200,7 +200,7 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
   pthread_mutex_lock(&global_lock);
 
   while(len >= 4) {
-    
+
     prognum =  ptr[0]         << 8 | ptr[1];
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
@@ -220,7 +220,7 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
     }
     ptr += 4;
     len -= 4;
-  }  
+  }
   pthread_mutex_unlock(&global_lock);
 }
 
@@ -251,14 +251,14 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
     rawts_pat(rt, tsb);
     return;
   }
-  
+
   LIST_FOREACH(t, &rt->rt_services, s_group_link) {
     pcr = PTS_UNSET;
 
     ts_recv_packet1(t, tsb, &pcr);
 
     if(pcr != PTS_UNSET) {
-      
+
       if(rt->rt_pcr_pid == 0)
 	rt->rt_pcr_pid = pid;
 
@@ -267,7 +267,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  struct timespec slp;
 	  int64_t delta = pcr - t->s_pcr_last;
 
-	  
+
 
 	  if(delta > 90000)
 	    delta = 90000;
@@ -275,7 +275,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  d = delta + t->s_pcr_last_realtime;
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
-	
+
 	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
 	  didsleep = 1;
 	}
@@ -338,3 +338,4 @@ rawts_init(const char *filename)
 
   pthread_create(&ptid, NULL, raw_ts_reader, rt);
 }
+

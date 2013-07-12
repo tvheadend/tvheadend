@@ -67,7 +67,7 @@ stream_init(elementary_stream_t *st)
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
   st->es_prevdts = PTS_UNSET;
-  
+
   st->es_pcr_real_last = PTS_UNSET;
   st->es_pcr_last      = PTS_UNSET;
   st->es_pcr_drift     = 0;
@@ -95,7 +95,7 @@ stream_clean(elementary_stream_t *st)
   /* Clear reassembly buffers */
 
   st->es_startcode = 0;
-  
+
   sbuf_free(&st->es_buf);
   sbuf_free(&st->es_buf_ps);
   sbuf_free(&st->es_buf_a);
@@ -138,7 +138,7 @@ service_stop(service_t *t)
 {
   th_descrambler_t *td;
   elementary_stream_t *st;
- 
+
   gtimer_disarm(&t->s_receive_timer);
 
   t->s_stop_feed(t);
@@ -149,7 +149,7 @@ service_stop(service_t *t)
     td->td_stop(td);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
- 
+
   assert(LIST_FIRST(&t->s_streaming_pad.sp_targets) == NULL);
   assert(LIST_FIRST(&t->s_subscriptions) == NULL);
 
@@ -253,7 +253,7 @@ service_get_prio(service_t *t)
 {
   switch(t->s_type) {
   case SERVICE_TYPE_DVB:
-    return (t->s_scrambled ? 300 : 100) + 
+    return (t->s_scrambled ? 300 : 100) +
       dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter);
 
   case SERVICE_TYPE_IPTV:
@@ -374,7 +374,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* First, try all services without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
-    if(t->s_status == SERVICE_RUNNING) 
+    if(t->s_status == SERVICE_RUNNING)
       return t;
     if(t->s_quality_index(t) < 10) {
       if(loginfo != NULL) {
@@ -417,7 +417,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
 /**
  *
  */
-unsigned int 
+unsigned int
 service_compute_weight(struct service_list *head)
 {
   service_t *t;
@@ -485,7 +485,7 @@ service_destroy(service_t *t)
 
   LIST_REMOVE(t, s_group_link);
   LIST_REMOVE(t, s_hash_link);
-  
+
   if(t->s_status != SERVICE_IDLE)
     service_stop(t);
 
@@ -563,16 +563,16 @@ service_find_by_identifier(const char *identifier)
 /**
  *
  */
-static void 
+static void
 service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 {
   char buf[200];
   if(st->es_pid != -1)
-    snprintf(buf, sizeof(buf), "%s: %s @ #%d", 
+    snprintf(buf, sizeof(buf), "%s: %s @ #%d",
 	     service_nicename(t),
 	     streaming_component_type2txt(st->es_type), st->es_pid);
   else
-    snprintf(buf, sizeof(buf), "%s: %s", 
+    snprintf(buf, sizeof(buf), "%s: %s",
 	     service_nicename(t),
 	     streaming_component_type2txt(st->es_type));
 
@@ -584,7 +584,7 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 /**
  *
  */
-void 
+void
 service_make_nicename(service_t *t)
 {
   char buf[200];
@@ -595,7 +595,7 @@ service_make_nicename(service_t *t)
 
   t->s_setsourceinfo(t, &si);
 
-  snprintf(buf, sizeof(buf), 
+  snprintf(buf, sizeof(buf),
 	   "%s%s%s%s%s",
 	   si.si_adapter ?: "", si.si_adapter && si.si_mux     ? "/" : "",
 	   si.si_mux     ?: "", si.si_mux     && si.si_service ? "/" : "",
@@ -665,7 +665,7 @@ elementary_stream_t *
 service_stream_find(service_t *t, int pid)
 {
   elementary_stream_t *st;
- 
+
   lock_assert(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_components, es_link) {
@@ -782,7 +782,7 @@ service_servicetype_txt(service_t *t)
 int
 servicetype_is_tv(int servicetype)
 {
-  return 
+  return
     servicetype == ST_SDTV    ||
     servicetype == ST_HDTV    ||
     servicetype == ST_EX_HDTV ||
@@ -825,9 +825,9 @@ service_set_streaming_status_flags(service_t *t, int set)
   int n;
   streaming_message_t *sm;
   lock_assert(&t->s_stream_mutex);
-  
+
   n = t->s_streaming_status;
-  
+
   n |= set;
 
   if(n == t->s_streaming_status)
@@ -856,7 +856,7 @@ service_set_streaming_status_flags(service_t *t, int set)
 
 /**
  * Restart output on a service.
- * Happens if the stream composition changes. 
+ * Happens if the stream composition changes.
  * (i.e. an AC3 stream disappears, etc)
  */
 void
@@ -876,7 +876,7 @@ service_restart(service_t *t, int had_components)
 
   if(TAILQ_FIRST(&t->s_components) != NULL) {
 
-    sm = streaming_msg_create_data(SMT_START, 
+    sm = streaming_msg_create_data(SMT_START,
 				   service_build_stream_start(t));
     streaming_pad_deliver(&t->s_streaming_pad, sm);
     streaming_msg_free(sm);
@@ -895,15 +895,15 @@ service_build_stream_start(service_t *t)
   streaming_start_t *ss;
 
   lock_assert(&t->s_stream_mutex);
-  
+
   TAILQ_FOREACH(st, &t->s_components, es_link)
     n++;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
+  ss = calloc(1, sizeof(streaming_start_t) +
 	      sizeof(streaming_start_component_t) * n);
 
   ss->ss_num_components = n;
-  
+
   n = 0;
   TAILQ_FOREACH(st, &t->s_components, es_link) {
     streaming_start_component_t *ssc = &ss->ss_components[n++];
@@ -1216,3 +1216,4 @@ htsmsg_t *servicetype_list ( void )
   }
   return ret;
 }
+

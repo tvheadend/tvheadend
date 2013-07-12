@@ -32,3 +32,4 @@ void htsstr_argsplit_free(char **argv);
 char *htsstr_format(const char *str, const char **map);
 
 #endif /* HTSSTR_H__ */
+

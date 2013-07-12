@@ -148,9 +148,9 @@ static const char *cachemonths[12] = {
  * Transmit a HTTP reply
  */
 void
-http_send_header(http_connection_t *hc, int rc, const char *content, 
+http_send_header(http_connection_t *hc, int rc, const char *content,
 		 int64_t contentlen,
-		 const char *encoding, const char *location, 
+		 const char *encoding, const char *location,
 		 int maxage, const char *range,
 		 const char *disposition)
 {
@@ -160,7 +160,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   htsbuf_queue_init(&hdrs, 0);
 
-  htsbuf_qprintf(&hdrs, "%s %d %s\r\n", 
+  htsbuf_qprintf(&hdrs, "%s %d %s\r\n",
 		 val2str(hc->hc_version, HTTP_versiontab),
 		 rc, http_rc2str(rc));
 
@@ -172,28 +172,28 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     time(&t);
 
     tm = gmtime_r(&t, &tm0);
-    htsbuf_qprintf(&hdrs, 
+    htsbuf_qprintf(&hdrs,
                 "Last-Modified: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
-                cachedays[tm->tm_wday], tm->tm_mday, 
+                cachedays[tm->tm_wday], tm->tm_mday,
                 cachemonths[tm->tm_mon], tm->tm_year + 1900,
                 tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     t += maxage;
 
     tm = gmtime_r(&t, &tm0);
-    htsbuf_qprintf(&hdrs, 
+    htsbuf_qprintf(&hdrs,
 		"Expires: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
 		cachedays[tm->tm_wday],	tm->tm_mday,
                 cachemonths[tm->tm_mon], tm->tm_year + 1900,
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
-      
+
     htsbuf_qprintf(&hdrs, "Cache-Control: max-age=%d\r\n", maxage);
   }
 
   if(rc == HTTP_STATUS_UNAUTHORIZED)
     htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
 
-  htsbuf_qprintf(&hdrs, "Connection: %s\r\n", 
+  htsbuf_qprintf(&hdrs, "Connection: %s\r\n",
 	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
 
   if(encoding != NULL)
@@ -215,7 +215,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if(disposition != NULL)
     htsbuf_qprintf(&hdrs, "Content-Disposition: %s\r\n", disposition);
-  
+
   htsbuf_qprintf(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
@@ -227,12 +227,12 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
  * Transmit a HTTP reply
  */
 static void
-http_send_reply(http_connection_t *hc, int rc, const char *content, 
+http_send_reply(http_connection_t *hc, int rc, const char *content,
 		const char *encoding, const char *location, int maxage)
 {
   http_send_header(hc, rc, content, hc->hc_reply.hq_size,
 		   encoding, location, maxage, 0, NULL);
-  
+
   if(hc->hc_no_output)
     return;
 
@@ -250,12 +250,12 @@ http_error(http_connection_t *hc, int error)
   char addrstr[50];
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
-  tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
+  tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d",
 	 addrstr, hc->hc_url, error);
 
   htsbuf_queue_flush(&hc->hc_reply);
 
-  htsbuf_qprintf(&hc->hc_reply, 
+  htsbuf_qprintf(&hc->hc_reply,
 		 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
 		 "<HTML><HEAD>\r\n"
 		 "<TITLE>%d %s</TITLE>\r\n"
@@ -321,7 +321,7 @@ http_access_verify(http_connection_t *hc, int mask)
   {
     char addrstr[50];
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
-    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
+    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s",
 	   addrstr, ticket_id, hc->hc_url);
     return 0;
   }
@@ -334,7 +334,7 @@ http_access_verify(http_connection_t *hc, int mask)
  * Execute url callback
  *
  * Returns 1 if we should disconnect
- * 
+ *
  */
 static int
 http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
@@ -471,7 +471,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char *v, *argv[2];
   int n, rval = -1;
   uint8_t authbuf[150];
-  
+
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
 
   /* Set keep-alive status */
@@ -486,7 +486,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
     /* Keep-alive is default off, but can be enabled */
     hc->hc_keep_alive = v != NULL && !strcasecmp(v, "keep-alive");
     break;
-    
+
   case HTTP_VERSION_1_1:
     /* Keep-alive is default on, but can be disabled */
     hc->hc_keep_alive = !(v != NULL && !strcasecmp(v, "close"));
@@ -728,7 +728,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 
     if((n = http_tokenize(cmdline, argv, 3, -1)) != 3)
       return;
-    
+
     if((hc->hc_cmd = str2val(argv[0], HTTP_cmdtab)) == -1)
       return;
     hc->hc_url = argv[1];
@@ -771,7 +771,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
     hc->hc_password = NULL;
 
   } while(hc->hc_keep_alive);
-  
+
 }
 
 
@@ -779,12 +779,12 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
  *
  */
 static void
-http_serve(int fd, void *opaque, struct sockaddr_storage *peer, 
+http_serve(int fd, void *opaque, struct sockaddr_storage *peer,
 	   struct sockaddr_storage *self)
 {
   htsbuf_queue_t spill;
   http_connection_t hc;
-  
+
   memset(&hc, 0, sizeof(http_connection_t));
 
   TAILQ_INIT(&hc.hc_args);
@@ -819,3 +819,4 @@ http_server_init(const char *bindaddr)
 {
   http_server = tcp_server_create(bindaddr, tvheadend_webui_port, http_serve, NULL);
 }
+

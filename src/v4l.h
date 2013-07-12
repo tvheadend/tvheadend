@@ -74,9 +74,10 @@ void v4l_adapter_set_logging(v4l_adapter_t *va, int on);
 
 htsmsg_t *v4l_adapter_build_msg(v4l_adapter_t *va);
 
-service_t *v4l_service_find(v4l_adapter_t *va, const char *id, 
+service_t *v4l_service_find(v4l_adapter_t *va, const char *id,
 			    int create);
 
 void v4l_init(void);
 
 #endif /* V4L_H */
+

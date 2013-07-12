@@ -96,7 +96,7 @@ typedef enum {
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
 } dvr_rs_state_t;
-  
+
 
 typedef struct dvr_entry {
 
@@ -110,7 +110,7 @@ typedef struct dvr_entry {
 
   LIST_ENTRY(dvr_entry) de_global_link;
   int de_id;
-  
+
   channel_t *de_channel;
   LIST_ENTRY(dvr_entry) de_channel_link;
 
@@ -169,7 +169,7 @@ typedef struct dvr_entry {
    * Last error, see SM_CODE_ defines
    */
   uint32_t de_last_error;
-  
+
 
   /**
    * Autorec linkage
@@ -186,7 +186,7 @@ typedef struct dvr_entry {
   streaming_queue_t de_sq;
   streaming_target_t *de_tsfix;
   streaming_target_t *de_gh;
-  
+
   /**
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
    */
@@ -219,7 +219,7 @@ typedef struct dvr_autorec_entry {
 
   char *dae_title;
   regex_t dae_title_preg;
-  
+
   epg_genre_t dae_content_type;
 
   int dae_approx_time; /* Minutes from midnight */
@@ -270,7 +270,7 @@ void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event
   (const char *dvr_config_name,
-   epg_broadcast_t *e, 
+   epg_broadcast_t *e,
    time_t start_extra, time_t stop_extra,
    const char *creator,
    dvr_autorec_entry_t *dae,
@@ -278,7 +278,7 @@ dvr_entry_t *dvr_entry_create_by_event
 
 dvr_entry_t *dvr_entry_create
   (const char *dvr_config_name,
-   channel_t *ch, time_t start, time_t stop, 
+   channel_t *ch, time_t start, time_t stop,
    time_t start_extra, time_t stop_extra,
 	 const char *title, const char *description, const char *lang,
    epg_genre_t *content_type,
@@ -287,7 +287,7 @@ dvr_entry_t *dvr_entry_create
 
 dvr_entry_t *dvr_entry_update
   (dvr_entry_t *de,
-   const char* de_title, const char *de_desc, const char *lang, 
+   const char* de_title, const char *de_desc, const char *lang,
    time_t de_start, time_t de_stop,
    time_t de_start_extra, time_t de_stop_extra );
 
@@ -398,3 +398,4 @@ void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
 
 #endif /* DVR_H  */
+

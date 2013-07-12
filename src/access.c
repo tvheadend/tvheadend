@@ -65,13 +65,13 @@ static access_ticket_t *
 access_ticket_find(const char *id)
 {
   access_ticket_t *at = NULL;
-  
+
   if(id != NULL) {
     TAILQ_FOREACH(at, &access_tickets, at_link)
       if(!strcmp(at->at_id, id))
 	return at;
   }
-  
+
   return NULL;
 }
 
@@ -161,7 +161,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
   access_ipmask_t *ai;
   int isv4v6 = 0;
   uint32_t v4v6 = 0;
-  
+
   if(src->sa_family == AF_INET6)
   {
     struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
@@ -235,8 +235,8 @@ access_verify(const char *username, const char *password,
   if (access_noacl)
     return 0;
 
-  if(username != NULL && superuser_username != NULL && 
-     password != NULL && superuser_password != NULL && 
+  if(username != NULL && superuser_username != NULL &&
+     password != NULL && superuser_password != NULL &&
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password))
     return 0;
@@ -570,7 +570,7 @@ access_record_build(access_entry_t *ae)
 
 
   htsmsg_add_str(e, "id", ae->ae_id);
-  
+
   return e;
 }
 
@@ -617,7 +617,7 @@ access_record_create(void *opaque)
  *
  */
 static htsmsg_t *
-access_record_update(void *opaque, const char *id, htsmsg_t *values, 
+access_record_update(void *opaque, const char *id, htsmsg_t *values,
 		     int maycreate)
 {
   access_entry_t *ae;
@@ -626,7 +626,7 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if((ae = access_entry_find(id, maycreate)) == NULL)
     return NULL;
-  
+
   if((s = htsmsg_get_str(values, "username")) != NULL) {
     free(ae->ae_username);
     ae->ae_username = strdup(s);
@@ -769,3 +769,4 @@ access_init(int createdefault, int noacl)
     htsmsg_destroy(m);
   }
 }
+

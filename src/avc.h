@@ -27,4 +27,5 @@
 
 th_pkt_t *avc_convert_pkt(th_pkt_t *src);
 
-#endif 
+#endif
+

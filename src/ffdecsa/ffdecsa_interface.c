@@ -138,7 +138,7 @@ ffdecsa_init(void)
 
   int eax, ebx, ecx, edx;
   int max_std_level, std_caps=0;
-  
+
 #if defined(__i386__)
 
   x86_reg a, c;
@@ -234,3 +234,4 @@ decrypt_packets(void *keys, unsigned char **cluster)
 {
   return current.decrypt_packets(keys, cluster);
 }
+

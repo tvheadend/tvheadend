@@ -125,7 +125,7 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
 
   } else {
     ts_recv_packet1(t, tsb, NULL);
-  } 
+  }
 }
 
 
@@ -168,7 +168,7 @@ iptv_thread(void *aux)
 
       if((tsb[1] & 0x7f) != 33)
 	continue;
-      
+
       hlen = (tsb[0] & 0xf) * 4 + 12;
 
       if(tsb[0] & 0x10) {
@@ -191,11 +191,11 @@ iptv_thread(void *aux)
     }
 
     pthread_mutex_lock(&iptv_recvmutex);
-    
+
     LIST_FOREACH(t, &iptv_active_services, s_active_link) {
       if(t->s_iptv_fd != fd)
 	continue;
-      
+
       for(j = 0; j < r; j += 188)
 	iptv_ts_input(t, buf + j);
     }
@@ -233,7 +233,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   /* Now, open the real socket for UDP */
   if(t->s_iptv_group.s_addr!=0) {
     fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
-  
+
   }
   else {
     fd = tvh_socket(AF_INET6, SOCK_DGRAM, 0);
@@ -248,7 +248,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   snprintf(ifr.ifr_name, IFNAMSIZ, "%s", t->s_iptv_iface);
   ifr.ifr_name[IFNAMSIZ - 1] = 0;
   if(ioctl(fd, SIOCGIFINDEX, &ifr)) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s",
 	   t->s_identifier, t->s_iptv_iface);
     close(fd);
     return -1;
@@ -349,7 +349,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   ev.fd      = fd;
   ev.data.fd = fd;
   if(tvhpoll_add(iptv_poll, &ev, 1) == -1) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot add to epoll set -- %s", 
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot add to epoll set -- %s",
 	   t->s_identifier, strerror(errno));
     close(fd);
     return -1;
@@ -497,11 +497,11 @@ iptv_service_save(service_t *t)
     htsmsg_add_str(m, "channelname", t->s_ch->ch_name);
     htsmsg_add_u32(m, "mapped", 1);
   }
-  
+
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
   pthread_mutex_unlock(&t->s_stream_mutex);
-  
+
   hts_settings_save(m, "iptvservices/%s",
 		    t->s_identifier);
 
@@ -515,7 +515,7 @@ iptv_service_save(service_t *t)
 static int
 iptv_service_quality(service_t *t)
 {
-  if(t->s_iptv_iface == NULL || 
+  if(t->s_iptv_iface == NULL ||
      (t->s_iptv_group.s_addr == 0 && t->s_iptv_group6.s6_addr == 0) ||
      t->s_iptv_port == 0)
     return 0;
@@ -569,7 +569,7 @@ iptv_grace_period(service_t *t)
 static void
 iptv_service_dtor(service_t *t)
 {
-  hts_settings_remove("iptvservices/%s", t->s_identifier); 
+  hts_settings_remove("iptvservices/%s", t->s_identifier);
 }
 
 
@@ -595,7 +595,7 @@ iptv_service_find(const char *id, int create)
 
   if(create == 0)
     return NULL;
-  
+
   if(id == NULL) {
     tally++;
     snprintf(buf, sizeof(buf), "iptv_%d", tally);
@@ -620,9 +620,9 @@ iptv_service_find(const char *id, int create)
 
   LIST_INSERT_HEAD(&iptv_all_services, t, s_group_link);
 
-  pthread_mutex_lock(&t->s_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_make_nicename(t);
-  pthread_mutex_unlock(&t->s_stream_mutex); 
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   return t;
 }
@@ -650,14 +650,14 @@ iptv_service_load(void)
     else
       old = 1;
   }
-  
+
   HTSMSG_FOREACH(f, l) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
 
     if(htsmsg_get_u32(c, "pmt", &pmt))
       continue;
-    
+
     t = iptv_service_find(f->hmf_name, 1);
     t->s_pmt_pid = pmt;
 
@@ -668,7 +668,7 @@ iptv_service_load(void)
          inet_pton(AF_INET6, s, &t->s_iptv_group6.s6_addr);
       }
     }
-    
+
     if(!htsmsg_get_u32(c, "port", &u32))
       t->s_iptv_port = u32;
 
@@ -684,11 +684,11 @@ iptv_service_load(void)
     service_make_nicename(t);
     psi_load_service_settings(c, t);
     pthread_mutex_unlock(&t->s_stream_mutex);
-    
+
     s = htsmsg_get_str(c, "channelname");
     if(htsmsg_get_u32(c, "mapped", &u32))
       u32 = 0;
-    
+
     if(s && u32)
       service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
 
@@ -709,3 +709,4 @@ iptv_input_init(void)
   pthread_mutex_init(&iptv_recvmutex, NULL);
   iptv_service_load();
 }
+

@@ -194,7 +194,7 @@ static streaming_message_t *_timeshift_find_sstart
 
 static timeshift_index_iframe_t *_timeshift_first_frame
   ( timeshift_t *ts )
-{ 
+{
   int end;
   timeshift_index_iframe_t *tsi = NULL;
   timeshift_file_t *tsf = timeshift_filemgr_oldest(ts);
@@ -234,7 +234,7 @@ static int _timeshift_skip
   int64_t                   sec  = req_time / (1000000 * TIMESHIFT_FILE_PERIOD);
   int                       back = (req_time < cur_time) ? 1 : 0;
   int                       end  = 0;
-  
+
   /* Hold local ref */
   if (cur_file)
     cur_file->refcount++;
@@ -818,3 +818,4 @@ void *timeshift_reader ( void *p )
 
   return NULL;
 }
+

@@ -96,7 +96,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   if(dae->dae_brand)
     if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
-  
+
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if(!e->episode->title) return 0;
@@ -105,13 +105,13 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!ls) return 0;
   }
 
-  // Note: ignore channel test if we allow quality unlocking 
+  // Note: ignore channel test if we allow quality unlocking
   cfg = dvr_config_find_by_name_default(dae->dae_config_name);
   if (cfg->dvr_sl_quality_lock)
     if(dae->dae_channel != NULL &&
        dae->dae_channel != e->channel)
       return 0;
-  
+
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
       if(ctm->ctm_channel == e->channel)
@@ -214,7 +214,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
     dae->dae_season->putref(dae->dae_season);
   if(dae->dae_serieslink)
     dae->dae_serieslink->putref(dae->dae_serieslink);
-  
+
 
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
   free(dae);
@@ -244,7 +244,7 @@ static int
 build_weekday_mask(const char *str)
 {
   int r = 0;
-  for(; *str; str++) 
+  for(; *str; str++)
     if(*str >= '1' && *str <= '7')
       r |= 1 << (*str - '1');
   return r;
@@ -286,7 +286,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_str(e, "weekdays", str);
 
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
-  
+
   if (dae->dae_brand)
     htsmsg_add_str(e, "brand", dae->dae_brand->uri);
   if (dae->dae_season)
@@ -340,7 +340,7 @@ autorec_record_create(void *opaque)
  *
  */
 static htsmsg_t *
-autorec_record_update(void *opaque, const char *id, htsmsg_t *values, 
+autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 		      int maycreate)
 {
   int save;
@@ -558,7 +558,7 @@ dvr_autorec_add(const char *config_name,
                    NULL, NULL, NULL, 0, NULL, creator, comment);
 }
 
-void dvr_autorec_add_series_link 
+void dvr_autorec_add_series_link
   ( const char *dvr_config_name, epg_broadcast_t *event,
     const char *creator, const char *comment )
 {
@@ -652,3 +652,4 @@ autorec_destroy_by_channel(channel_t *ch)
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("autorec", m);
 }
+
