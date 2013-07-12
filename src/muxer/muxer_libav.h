@@ -24,3 +24,4 @@
 muxer_t* lav_muxer_create(muxer_container_type_t mc);
 
 #endif
+

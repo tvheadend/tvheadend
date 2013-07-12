@@ -86,3 +86,4 @@ html_escape(char *dst, const char *src, size_t len)
 
   return dst;
 }
+

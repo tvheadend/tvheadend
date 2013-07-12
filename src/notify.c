@@ -42,3 +42,4 @@ notify_reload(const char *class)
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg(class, m);
 }
+

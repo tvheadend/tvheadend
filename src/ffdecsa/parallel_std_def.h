@@ -27,3 +27,4 @@
 #define B_FFXOR(a,b) ((a)^(b))
 #define B_FFSH8L(a,n) ((a)<<(n))
 #define B_FFSH8R(a,n) ((a)>>(n))
+

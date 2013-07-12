@@ -47,3 +47,4 @@ void put_bits(bitstream_t *bs, int val, int num);
 int bs_eof(const bitstream_t *bs);
 
 #endif /* BITSTREAM_H_ */
+

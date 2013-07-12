@@ -188,7 +188,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
-    if(sm == NULL) {      
+    if(sm == NULL) {
       gettimeofday(&tp, NULL);
       ts.tv_sec  = tp.tv_sec + 1;
       ts.tv_nsec = tp.tv_usec * 1000;
@@ -197,7 +197,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
           timeouts++;
 
           //Check socket status
-          getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
+          getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);
           if(err) {
       tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
       run = 0;
@@ -239,7 +239,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_STOP:
       if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
-        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig,
                streaming_code2txt(sm->sm_code));
         run = 0;
       }
@@ -304,7 +304,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
-  htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+  htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
      access_ticket_create(buf));
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -331,7 +331,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", ctm->ctm_channel->ch_id);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
 
@@ -362,7 +362,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
 
@@ -391,7 +391,7 @@ http_channel_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
 
@@ -432,13 +432,13 @@ http_dvr_list_playlist(http_connection_t *hc)
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
-    
+
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
 
@@ -459,12 +459,12 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0;
-  struct tm tm;  
+  struct tm tm;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
   durration  = de->de_stop - de->de_start;
   durration += (de->de_stop_extra + de->de_start_extra)*60;
-    
+
   fsize = dvr_get_filesize(de);
 
   if(fsize) {
@@ -473,7 +473,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
     htsbuf_qprintf(hq, "#EXTM3U\n");
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
-    
+
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
@@ -558,7 +558,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
 #if ENABLE_LIBAV
 static int
-http_get_transcoder_properties(struct http_arg_list *args, 
+http_get_transcoder_properties(struct http_arg_list *args,
 			       transcoder_props_t *props)
 {
   int transcode;
@@ -573,10 +573,10 @@ http_get_transcoder_properties(struct http_arg_list *args,
 
   if ((s = http_arg_get(args, "resolution")))
     props->tp_resolution = atoi(s);
- 
+
   if ((s = http_arg_get(args, "channels")))
     props->tp_channels = atoi(s);
- 
+
   if ((s = http_arg_get(args, "bandwidth")))
     props->tp_bandwidth = atoi(s);
 
@@ -862,7 +862,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 #elif defined(PLATFORM_FREEBSD)
   off_t r;
 #endif
-  
+
   if(remain == NULL)
     return 404;
 
@@ -892,7 +892,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   file_start = 0;
   file_end = st.st_size-1;
-  
+
   range = http_arg_get(&hc->hc_args, "Range");
   if(range != NULL)
     sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
@@ -913,7 +913,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   content_len = file_end - file_start+1;
-  
+
   sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
     file_start, file_end, st.st_size);
 
@@ -929,13 +929,13 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   disposition[i] = '_';
       i++;
     }
-    
+
   } else {
     disposition[0] = 0;
   }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
-       content, content_len, NULL, NULL, 10, 
+       content, content_len, NULL, NULL, 10,
        range ? range_buf : NULL,
        disposition[0] ? disposition : NULL);
 
@@ -1054,3 +1054,4 @@ webui_init(void)
   comet_init();
 
 }
+

@@ -53,3 +53,4 @@ typedef unsigned int batch;
 #define B_FFN_ALL_80() 0x80808080
 
 #define M_EMPTY()
+

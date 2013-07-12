@@ -33,7 +33,7 @@
 #define EVENT_BUF_LEN ( 10 * ( EVENT_SIZE + 16 ) )
 #define EVENT_MASK    IN_CREATE    | IN_DELETE     | IN_DELETE_SELF |\
                       IN_MOVE_SELF | IN_MOVED_FROM | IN_MOVED_TO
-                      
+
 static int                         _inot_fd;
 static RB_HEAD(,dvr_inotify_entry) _inot_tree;
 
@@ -90,10 +90,10 @@ void dvr_inotify_add ( dvr_entry_t *de )
   if (!skel)
     skel = calloc(1, sizeof(dvr_inotify_entry_t));
   skel->path = dirname(path);
-  
+
   if (stat(skel->path, &st))
     return;
-  
+
   e = RB_INSERT_SORTED(&_inot_tree, skel, link, _str_cmp);
   if (!e) {
     e       = skel;
@@ -161,13 +161,13 @@ _dvr_inotify_find2
 {
   dvr_entry_t *de = NULL;
   char path[512];
-  
+
   snprintf(path, sizeof(path), "%s/%s", die->path, name);
-  
+
   LIST_FOREACH(de, &die->entries, de_inotify_link)
     if (!strcmp(path, de->de_filename))
       break;
-  
+
   return de;
 }
 
@@ -194,7 +194,7 @@ _dvr_inotify_moved
     dvr_entry_save(de);
   } else
     dvr_inotify_del(de);
-  
+
   htsp_dvr_entry_update(de);
   dvr_entry_notify(de);
 }
@@ -218,7 +218,7 @@ _dvr_inotify_moved_all
 {
   dvr_entry_t *de;
   dvr_inotify_entry_t *die;
-  
+
   if (!(die = _dvr_inotify_find(fd)))
     return;
 
@@ -275,15 +275,15 @@ void* _dvr_inotify_thread ( void *p )
       } else if ((ev->mask & IN_MOVED_TO) && from && ev->cookie == cookie) {
         _dvr_inotify_moved(ev->wd, from, ev->name);
         from = NULL;
-      
+
       /* Removed */
       } else if (ev->mask & IN_DELETE) {
         _dvr_inotify_delete(ev->wd, ev->name);
-    
+
       /* Moved self */
       } else if (ev->mask & IN_MOVE_SELF) {
         _dvr_inotify_moved_all(ev->wd, NULL);
-    
+
       /* Removed self */
       } else if (ev->mask & IN_DELETE_SELF) {
         _dvr_inotify_delete_all(ev->wd);

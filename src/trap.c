@@ -131,7 +131,7 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
 
 
 
-static void 
+static void
 traphandler(int sig, siginfo_t *si, void *UC)
 {
 #ifdef NGREG
@@ -187,7 +187,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
 
   for(i = 0; i < nframes; i++) {
 
-    
+
     if(dladdr(frames[i], &dli)) {
 
       if(dli.dli_sname != NULL && dli.dli_saddr != NULL) {
@@ -244,7 +244,7 @@ trap_init(const char *ver)
     self[0] = 0;
   else
     self[r] = 0;
-  
+
   if((fd = open("/proc/self/exe", O_RDONLY)) != -1) {
     struct stat st;
     if(!fstat(fd, &st)) {
@@ -259,7 +259,7 @@ trap_init(const char *ver)
       }
     }
   }
-  
+
   snprintf(line1, sizeof(line1),
 	   "PRG: %s (%s) "
 	   "[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
@@ -290,7 +290,7 @@ trap_init(const char *ver)
   memcpy(tvh_binshasum, digest, 20);
 
   dl_iterate_phdr(callback, NULL);
-  
+
 
   memset(&sa, 0, sizeof(sa));
 
@@ -321,3 +321,4 @@ trap_init(const char *ver)
 
 }
 #endif
+

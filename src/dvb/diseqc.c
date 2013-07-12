@@ -25,7 +25,7 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 
   tvhtrace("diseqc", "sending %X %X %X %X %X %X",
            framing_byte, address, cmd, data_1, data_2, data_3);
-  
+
   message.msg[0] = framing_byte;
   message.msg[1] = address;
   message.msg[2] = cmd;
@@ -112,7 +112,7 @@ int
 diseqc_voltage_off(int fe_fd)
 {
   int err;
-  
+
   tvhtrace("diseqc", "sending diseqc voltage off command");
   if ((err = ioctl(fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_OFF))) {
     tvhlog(LOG_ERR, "diseqc", "error sending diseqc voltage off command");
@@ -120,3 +120,4 @@ diseqc_voltage_off(int fe_fd)
   }
   return 0;
 }
+

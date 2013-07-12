@@ -38,7 +38,7 @@ typedef struct streaming_start_component {
   uint8_t ssc_sri;
   uint8_t ssc_channels;
   uint8_t ssc_disabled;
-  
+
   pktbuf_t *ssc_gh;
 
   int ssc_frameduration;
@@ -94,10 +94,10 @@ streaming_message_t *streaming_msg_clone(streaming_message_t *src);
 
 streaming_message_t *streaming_msg_create(streaming_message_type_t type);
 
-streaming_message_t *streaming_msg_create_data(streaming_message_type_t type, 
+streaming_message_t *streaming_msg_create_data(streaming_message_type_t type,
 					       void *data);
 
-streaming_message_t *streaming_msg_create_code(streaming_message_type_t type, 
+streaming_message_t *streaming_msg_create_code(streaming_message_type_t type,
 					       int code);
 
 streaming_message_t *streaming_msg_create_pkt(th_pkt_t *pkt);
@@ -110,7 +110,7 @@ void streaming_start_unref(streaming_start_t *ss);
 
 streaming_start_t *streaming_start_copy(const streaming_start_t *src);
 
-int streaming_pad_probe_type(streaming_pad_t *sp, 
+int streaming_pad_probe_type(streaming_pad_t *sp,
 			     streaming_message_type_t smt);
 
 const char *streaming_code2txt(int code);
@@ -120,3 +120,4 @@ streaming_start_component_t *streaming_start_component_find_by_index(streaming_s
 
 
 #endif /* STREAMING_H_ */
+

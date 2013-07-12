@@ -86,7 +86,7 @@ typedef struct http_connection {
   int hc_no_output;
 
   /* Support for HTTP POST */
-  
+
   char *hc_post_data;
   unsigned int hc_post_len;
 
@@ -111,12 +111,12 @@ void http_output_content(http_connection_t *hc, const char *content);
 
 void http_redirect(http_connection_t *hc, const char *location);
 
-void http_send_header(http_connection_t *hc, int rc, const char *content, 
+void http_send_header(http_connection_t *hc, int rc, const char *content,
 		      int64_t contentlen, const char *encoding,
 		      const char *location, int maxage, const char *range,
 		      const char *disposition);
 
-typedef int (http_callback_t)(http_connection_t *hc, 
+typedef int (http_callback_t)(http_connection_t *hc,
 			      const char *remain, void *opaque);
 
 typedef struct http_path {
@@ -140,3 +140,4 @@ int http_access_verify(http_connection_t *hc, int mask);
 void http_deescape(char *s);
 
 #endif /* HTTP_H_ */
+

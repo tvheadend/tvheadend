@@ -77,17 +77,17 @@ page_simple(http_connection_t *hc,
   htsbuf_qprintf(hq, "Event: <input type=\"text\" ");
   if(s != NULL)
     htsbuf_qprintf(hq, "value=\"%s\" ", s);
-  
+
   htsbuf_qprintf(hq, "name=\"s\">");
   htsbuf_qprintf(hq, "<input type=\"submit\" value=\"Search\">");
-  
+
   htsbuf_qprintf(hq, "</form><hr>");
 
   pthread_mutex_lock(&global_lock);
 
 
   if(s != NULL) {
-    
+
     epg_query(&eqr, NULL, NULL, NULL, s, lang);
     epg_query_sort(&eqr);
 
@@ -109,14 +109,14 @@ page_simple(http_connection_t *hc,
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
 	e = eqr.eqr_array[k];
-      
+
 	localtime_r(&e->start, &a);
 	localtime_r(&e->stop, &b);
 
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
 	  memcpy(&day, &a, sizeof(struct tm));
-	  htsbuf_qprintf(hq, 
+	  htsbuf_qprintf(hq,
 		      "<br><i>%s, %d/%d</i><br>",
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
@@ -126,7 +126,7 @@ page_simple(http_connection_t *hc,
 				       recstatustxt) : NULL;
 
         s = epg_broadcast_get_title(e, lang);
-	htsbuf_qprintf(hq, 
+	htsbuf_qprintf(hq,
 		    "<a href=\"/eventinfo/%u\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
@@ -150,7 +150,7 @@ page_simple(http_connection_t *hc,
   if(c == 0) {
     htsbuf_qprintf(hq, "No entries<br>");
   }
-  
+
   memset(&day, -1, sizeof(struct tm));
 
   for(i = 0; i < c; i++) {
@@ -171,8 +171,8 @@ page_simple(http_connection_t *hc,
 
 
     htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%d\">", de->de_id);
-    
-    htsbuf_qprintf(hq, 
+
+    htsbuf_qprintf(hq,
 		"%02d:%02d-%02d:%02d&nbsp; %s",
 		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, lang_str_get(de->de_title, NULL));
 
@@ -227,7 +227,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   localtime_r(&e->start, &a);
   localtime_r(&e->stop, &b);
 
-  htsbuf_qprintf(hq, 
+  htsbuf_qprintf(hq,
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
@@ -235,7 +235,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   s = epg_episode_get_title(e->episode, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      e->channel->ch_name, s ?: "");
-  
+
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
   if((rstatus = val2str(dvr_status, recstatustxt)) != NULL)
@@ -249,7 +249,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Remove from schedule\">");
     break;
-    
+
   case DVR_RECORDING:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
@@ -271,7 +271,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "%s", s);
   else if ( (s = epg_broadcast_get_summary(e, lang)) )
     htsbuf_qprintf(hq, "%s", s);
-  
+
 
   pthread_mutex_unlock(&global_lock);
 
@@ -316,18 +316,18 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   localtime_r(&de->de_start, &a);
   localtime_r(&de->de_stop, &b);
 
-  htsbuf_qprintf(hq, 
+  htsbuf_qprintf(hq,
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      DVR_CH_NAME(de), lang_str_get(de->de_title, NULL));
-  
+
   if((rstatus = val2str(de->de_sched_state, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%d\">", 
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%d\">",
 	      de->de_id);
 
   switch(de->de_sched_state) {
@@ -335,7 +335,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Remove from schedule\">");
     break;
-    
+
   case DVR_RECORDING:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
@@ -359,7 +359,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * 
+ *
  */
 static int
 page_status(http_connection_t *hc,
@@ -383,7 +383,7 @@ page_status(http_connection_t *hc,
                  "<currentload>\n");
 
 #ifdef ENABLE_GETLOADAVG
-  loads = getloadavg (avg, 3); 
+  loads = getloadavg (avg, 3);
   if (loads == -1) {
         tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
         loads = 0;
@@ -421,7 +421,7 @@ page_status(http_connection_t *hc,
       localtime_r(&de->de_stop, &b);
 
       html_escape(buf, lang_str_get(de->de_title, NULL), sizeof(buf));
-      htsbuf_qprintf(hq, 
+      htsbuf_qprintf(hq,
 		    "<recording>\n"
 		     "<start>\n"
 		     "<date>%d/%02d/%02d</date>\n"
@@ -437,12 +437,12 @@ page_status(http_connection_t *hc,
 		     "</stop>\n"
 		     "<title>%s</title>\n",
 		     a.tm_year + 1900, a.tm_mon + 1, a.tm_mday,
-		     a.tm_hour, a.tm_min, 
-		     de->de_start, 
-		     de->de_start_extra, 
+		     a.tm_hour, a.tm_min,
+		     de->de_start,
+		     de->de_start_extra,
 		     b.tm_year+1900, b.tm_mon + 1, b.tm_mday,
-		     b.tm_hour, b.tm_min, 
-		     de->de_stop, 
+		     b.tm_hour, b.tm_min,
+		     de->de_stop,
 		     de->de_stop_extra,
          buf);
 
@@ -506,3 +506,4 @@ simpleui_start(void)
   http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);
   http_path_add("/epgsave",	NULL, page_epgsave,     ACCESS_SIMPLE);
 }
+

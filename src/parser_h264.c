@@ -103,7 +103,7 @@ typedef struct h264_private {
     uint16_t aspect_num;
     uint16_t aspect_den;
   } sps[256];
-  
+
   struct {
     int sps;
   } pps[256];
@@ -151,7 +151,7 @@ gcd(uint32_t a, uint32_t b)
 }
 
 
-static int 
+static int
 decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 {
   p->sps[sps_id].aspect_num = 0;
@@ -192,7 +192,7 @@ decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 
   if(!read_bits1(bs)) /* We need timing info */
     return 0;
-    
+
 
   p->sps[sps_id].units_in_tick = read_bits(bs, 32);
   p->sps[sps_id].time_scale    = read_bits(bs, 32);
@@ -202,7 +202,7 @@ decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 
 
 
-static void 
+static void
 decode_scaling_list(bitstream_t *bs, int size)
 {
   int i, last = 8, next = 8;
@@ -280,7 +280,7 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
   p->sps[sps_id].max_frame_num_bits = read_golomb_ue(bs) + 4;
   poc_type= read_golomb_ue(bs);
- 
+
   if(poc_type == 0){ //FIXME #define
     read_golomb_ue(bs);
   } else if(poc_type == 1){//FIXME #define
@@ -337,7 +337,7 @@ h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
   if((p = st->es_priv) == NULL)
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
-  
+
   pps_id = read_golomb_ue(bs);
   if(pps_id > 255)
     return 0;
@@ -362,7 +362,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 
   read_golomb_ue(bs); /* first_mb_in_slice */
   slice_type = read_golomb_ue(bs);
-  
+
   if(slice_type > 4)
     slice_type -= 5;  /* Fixed slice type per frame */
 
@@ -422,7 +422,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
     int w = p->sps[sps_id].aspect_num * st->es_width;
     int h = p->sps[sps_id].aspect_den * st->es_height;
 
-    if(w && h) { 
+    if(w && h) {
       int d = gcd(w, h);
       st->es_aspect_num = w / d;
       st->es_aspect_den = h / d;
@@ -435,3 +435,4 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 
   return 0;
 }
+

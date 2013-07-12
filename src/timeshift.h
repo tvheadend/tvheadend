@@ -46,3 +46,4 @@ streaming_target_t *timeshift_create
 void timeshift_destroy(streaming_target_t *pad);
 
 #endif /* __TVH_TIMESHIFT_H__ */
+

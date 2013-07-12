@@ -41,15 +41,16 @@ const char     *lang_str_get     ( lang_str_t *ls, const char *lang );
 lang_str_ele_t *lang_str_get2    ( lang_str_t *ls, const char *lang );
 
 /* Add/Update elements */
-int             lang_str_add      
+int             lang_str_add
   ( lang_str_t *ls, const char *str, const char *lang, int update );
-int             lang_str_append  
+int             lang_str_append
   ( lang_str_t *ls, const char *str, const char *lang );
 
 /* Serialize/Deserialize */
-void            lang_str_serialize   
+void            lang_str_serialize
   ( lang_str_t *ls, htsmsg_t *msg, const char *f );
 lang_str_t     *lang_str_deserialize
   ( htsmsg_t *m, const char *f );
 
 #endif /* __TVH_LANG_STR_H__ */
+

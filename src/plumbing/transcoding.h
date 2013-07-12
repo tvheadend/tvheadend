@@ -37,6 +37,6 @@ streaming_target_t *transcoder_create (streaming_target_t *output);
 void                transcoder_destroy(streaming_target_t *tr);
 
 void transcoder_get_capabilities(htsmsg_t *array);
-void transcoder_set_properties  (streaming_target_t *tr, 
+void transcoder_set_properties  (streaming_target_t *tr,
 				 transcoder_props_t *prop);
 

@@ -277,7 +277,7 @@ uint32_t imagecache_get_id ( const char *url )
     id = i->id;
 #endif
   pthread_mutex_unlock(&imagecache_mutex);
-  
+
   return id;
 }
 
@@ -340,7 +340,7 @@ int imagecache_open ( uint32_t id )
 static void _imagecache_save ( imagecache_image_t *img )
 {
   htsmsg_t *m = htsmsg_create_map();
-  
+
   htsmsg_add_str(m, "url", img->url);
   if (img->updated)
     htsmsg_add_s64(m, "updated", img->updated);
@@ -421,7 +421,7 @@ static int _imagecache_fetch ( imagecache_image_t *img )
   snprintf(tmp, sizeof(tmp), "%s.tmp", path);
   if (!(fp = fopen(tmp, "wb")))
     return 1;
-  
+
   /* Build command */
   pthread_mutex_lock(&imagecache_mutex);
   tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
@@ -458,7 +458,8 @@ static int _imagecache_fetch ( imagecache_image_t *img )
   _imagecache_save(img);
   pthread_cond_broadcast(&_imagecache_cond);
   pthread_mutex_unlock(&imagecache_mutex);
-  
+
   return res;
 };
 #endif
+

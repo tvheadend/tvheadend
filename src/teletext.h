@@ -23,3 +23,4 @@ void teletext_input(struct service *t, struct elementary_stream *st,
 		    const uint8_t *tsb);
 
 #endif /* TELETEXT_H */
+

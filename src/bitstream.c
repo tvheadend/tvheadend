@@ -128,3 +128,4 @@ put_bits(bitstream_t *bs, int val, int num)
     bs->offset++;
   }
 }
+

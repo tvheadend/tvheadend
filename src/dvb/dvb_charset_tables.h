@@ -359,3 +359,4 @@ static const uint16_t iso6937_multi_byte[16][52] = {
 };
 
 #endif
+

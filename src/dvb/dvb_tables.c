@@ -91,11 +91,11 @@ dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt)
      honour the DMX_CHECK_CRC flag, so we check it again */
   if(chkcrc && tvh_crc32(sec, r, 0xffffffff))
     return;
-      
+
   r -= 3;
   tableid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
-  
+
   if(len < r)
     return;
 
@@ -112,7 +112,7 @@ dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt)
     ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt);
   else
     ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque);
-  
+
   if(ret == 0)
     tdt->tdt_count++;
 
@@ -166,7 +166,7 @@ tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
   //       sure how well this will work! I know Andreas has some thoughts on
   //       this
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
-    if(pid == t->tdt_pid && 
+    if(pid == t->tdt_pid &&
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
       return;
     }
@@ -193,7 +193,7 @@ tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
  * DVB Descriptor; Service
  */
 static int
-dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep, 
+dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep,
 		 char *provider, size_t providerlen,
 		 char *name, size_t namelen)
 {
@@ -393,8 +393,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       dlen = dlptr[1];
       dptr = dlptr + 2;
 
-      dlptr += (2 + dlen); 
-      dllen -= (2 + dlen); 
+      dlptr += (2 + dlen);
+      dllen -= (2 + dlen);
 
       if(dllen < 0) break;
 
@@ -452,7 +452,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
         t->s_provider = strdup(provider);
         save2 = 1;
       }
-      
+
       if (!t->s_svcname || master) {
         free(t->s_svcname);
         t->s_svcname = strdup(chname);
@@ -460,9 +460,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       }
 
       if (save2) {
-        pthread_mutex_lock(&t->s_stream_mutex); 
+        pthread_mutex_lock(&t->s_stream_mutex);
         service_make_nicename(t);
-        pthread_mutex_unlock(&t->s_stream_mutex); 
+        pthread_mutex_unlock(&t->s_stream_mutex);
         save = 1;
       }
     }
@@ -582,7 +582,7 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(pid == 0)
 	break;
 
-      tdt_add(tdmi, 0, 0, dvb_ca_callback, (void *)caid, "CA", 
+      tdt_add(tdmi, 0, 0, dvb_ca_callback, (void *)caid, "CA",
 	      TDT_CA, pid);
       break;
 
@@ -602,13 +602,13 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static const fe_code_rate_t fec_tab [16] = {
   FEC_AUTO, FEC_1_2, FEC_2_3, FEC_3_4,
-  FEC_5_6, FEC_7_8, FEC_8_9, 
+  FEC_5_6, FEC_7_8, FEC_8_9,
 #if DVB_API_VERSION >= 5
   FEC_3_5,
 #else
   FEC_NONE,
 #endif
-  FEC_4_5, 
+  FEC_4_5,
 #if DVB_API_VERSION >= 5
   FEC_9_10,
 #else
@@ -624,9 +624,9 @@ static const fe_modulation_t qam_tab [6] = {
 };
 
 static const fe_bandwidth_t bandwidth_tab [8] = {
-  BANDWIDTH_8_MHZ, BANDWIDTH_7_MHZ, BANDWIDTH_6_MHZ, BANDWIDTH_AUTO, 
+  BANDWIDTH_8_MHZ, BANDWIDTH_7_MHZ, BANDWIDTH_6_MHZ, BANDWIDTH_AUTO,
   BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO
-};  
+};
 
 static const fe_modulation_t constellation_tab [4] = {
   QPSK, QAM_16, QAM_64, QAM_AUTO
@@ -644,7 +644,7 @@ static const fe_transmit_mode_t transmission_mode_tab [4] = {
   TRANSMISSION_MODE_2K,
   TRANSMISSION_MODE_8K,
 #if DVB_VER_ATLEAST(5,3)
-  TRANSMISSION_MODE_4K, 
+  TRANSMISSION_MODE_4K,
 #else
   TRANSMISSION_MODE_AUTO,  /* For older DVB API versions - hope the device can detect */
 #endif
@@ -673,7 +673,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
 
   freq =
-    bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
+    bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 +
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
 
   if(!freq)
@@ -683,7 +683,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tvhtrace("nit", "    dvb-c frequency %d", dmc.dmc_fe_params.frequency);
 
   symrate =
-    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
+    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 +
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
 
   dmc.dmc_fe_params.u.qam.symbol_rate = symrate * 100;
@@ -723,7 +723,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
 
   freq =
-    bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
+    bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 +
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
   dmc.dmc_fe_params.frequency = freq * 10;
   tvhtrace("nit", "    dvb-s frequency %d", dmc.dmc_fe_params.frequency);
@@ -739,7 +739,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tvhtrace("nit", "    orbital pos %d", orbital_pos);
 
   symrate =
-    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
+    bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 +
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   dmc.dmc_fe_params.u.qam.symbol_rate = symrate * 100;
 
@@ -758,12 +758,12 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     dmc.dmc_fe_modulation = PSK_8;
   else if (modulation == 0x03)
     dmc.dmc_fe_modulation = QAM_16;
-  else 
+  else
     dmc.dmc_fe_modulation = 0;
 
-  if (ptr[6] & 0x04)  
+  if (ptr[6] & 0x04)
     dmc.dmc_fe_delsys = SYS_DVBS2;
-  else 
+  else
     dmc.dmc_fe_delsys = SYS_DVBS;
 
   switch ((ptr[6] >> 3) & 0x03) {
@@ -792,7 +792,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf,
      tdmi->tdmi_adapter->tda_autodiscovery, tdmi);
-  
+
   return 0;
 }
 
@@ -814,7 +814,7 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
 
   freq = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]) * 10;
-  
+
   if(!freq)
     return -1;
 
@@ -831,7 +831,7 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
                  "automatic mux discovery", 1, 1, NULL, NULL,
                  tdmi->tdmi_adapter->tda_autodiscovery, tdmi);
-  
+
   return 0;
 }
 
@@ -1008,8 +1008,8 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(tableid != 0xc8 && tableid != 0xc9)
     return -1; // Fail
 
-  ptr += 5; // Skip generic header 
-  len -= 5; 
+  ptr += 5; // Skip generic header
+  len -= 5;
 
   if(len < 2)
     return -1;
@@ -1019,7 +1019,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   len -= 2;
 
   for(; numch > 0 && len >= 32; ptr += 32 + dlen, len -= 32 + dlen, numch--) {
-    
+
     dl = dlen = ((ptr[30] & 3) << 8) | ptr[31];
 
     if(dlen + 32 > len)
@@ -1065,7 +1065,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       t->s_servicetype = stype;
       tvh_str_set(&t->s_svcname, chname);
-      
+
       t->s_config_save(t);
     }
   }
@@ -1093,7 +1093,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       active = 1;
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
-  
+
   if (tdmi->tdmi_adapter->tda_disable_pmt_monitor && !active)
     dvb_tdt_destroy(tdmi->tdmi_adapter, tdmi, tdt);
 
@@ -1154,12 +1154,12 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 {
   /* Network Information Table */
 
-  tdt_add(tdmi, 0, 0, dvb_nit_callback, NULL, "nit", 
+  tdt_add(tdmi, 0, 0, dvb_nit_callback, NULL, "nit",
 	  TDT_QUICKREQ | TDT_CRC, 0x10);
 
   /* Service Descriptor Table and Bouqeut Allocation Table */
 
-  tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11", 
+  tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11",
 	  TDT_QUICKREQ | TDT_CRC, 0x11);
 
   /* Time Offset Table */
@@ -1196,11 +1196,11 @@ void
 dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 {
   /* Program Allocation Table */
-  tdt_add(tdmi, 0x00, 0xff, dvb_pat_callback, NULL, "pat", 
+  tdt_add(tdmi, 0x00, 0xff, dvb_pat_callback, NULL, "pat",
 	  TDT_QUICKREQ | TDT_CRC, 0);
 
   /* Conditional Access Table */
-  tdt_add(tdmi, 0x1, 0xff, dvb_cat_callback, NULL, "cat", 
+  tdt_add(tdmi, 0x1, 0xff, dvb_cat_callback, NULL, "cat",
 	  TDT_CRC, 1);
 
 
@@ -1227,7 +1227,7 @@ dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
   char pmtname[100];
 
   snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
-  tdt_add(tdmi, 0x2, 0xff, dvb_pmt_callback, NULL, pmtname, 
+  tdt_add(tdmi, 0x2, 0xff, dvb_pmt_callback, NULL, pmtname,
 	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid);
 }
 
@@ -1254,5 +1254,6 @@ dvb_table_flush_all(th_dvb_mux_instance_t *tdmi)
 
   while((tdt = LIST_FIRST(&tdmi->tdmi_tables)) != NULL)
     dvb_tdt_destroy(tda, tdmi, tdt);
-  
+
 }
+

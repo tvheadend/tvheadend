@@ -18,3 +18,4 @@ int diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
 int diseqc_voltage_off(int fe_fd);
 
 #endif
+

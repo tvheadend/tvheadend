@@ -55,5 +55,6 @@ extern region_list_t regions_DVBS;
 extern region_list_t regions_ATSC;
 
 void muxes_init ( void );
-  
+
 #endif /* __TVH_MUXES_H__ */
+

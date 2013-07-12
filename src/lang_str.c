@@ -45,7 +45,7 @@ lang_str_t *lang_str_create ( void )
 
 /* Destroy (free memory) */
 void lang_str_destroy ( lang_str_t *ls )
-{ 
+{
   lang_str_ele_t *e;
   while ((e = RB_FIRST(ls))) {
     if (e->str)  free(e->str);
@@ -74,7 +74,7 @@ lang_str_ele_t *lang_str_get2
   lang_str_ele_t skel, *e = NULL;
 
   if (!ls) return NULL;
-  
+
   /* Check config/requested langs */
   if ((langs = lang_code_split(lang))) {
     i = 0;
@@ -138,14 +138,14 @@ static int _lang_str_add
     e->str = strdup(str);
     save = 1;
   }
-  
+
   return save;
 }
 
 /* Add new string (or replace existing one) */
-int lang_str_add 
+int lang_str_add
   ( lang_str_t *ls, const char *str, const char *lang, int update )
-{ 
+{
   return _lang_str_add(ls, str, lang, update, 0);
 }
 
@@ -175,7 +175,7 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
   htsmsg_t *a;
   htsmsg_field_t *f;
   const char *str;
-  
+
   if ((a = htsmsg_get_map(m, n))) {
     ret = lang_str_create();
     HTSMSG_FOREACH(f, a) {
@@ -189,3 +189,4 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
   }
   return ret;
 }
+

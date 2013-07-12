@@ -66,7 +66,7 @@ v4l_input(v4l_adapter_t *va)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  service_set_streaming_status_flags(t, 
+  service_set_streaming_status_flags(t,
 				       TSS_INPUT_HARDWARE | TSS_INPUT_SERVICE);
 
   while(len > 0) {
@@ -89,12 +89,12 @@ v4l_input(v4l_adapter_t *va)
     if(va->va_lenlock == 2) {
       l = st->es_buf_ps.sb_size;
       st->es_buf_ps.sb_data = pkt = realloc(st->es_buf_ps.sb_data, l);
-      
+
       r = l - st->es_buf_ps.sb_ptr;
       if(r > len)
 	r = len;
       memcpy(pkt + st->es_buf_ps.sb_ptr, ptr, r);
-      
+
       ptr += r;
       len -= r;
 
@@ -110,7 +110,7 @@ v4l_input(v4l_adapter_t *va)
       } else {
 	assert(st->es_buf_ps.sb_ptr < l);
       }
-      
+
     } else {
       st->es_buf_ps.sb_size = st->es_buf_ps.sb_size << 8 | *ptr;
       va->va_lenlock++;
@@ -185,7 +185,7 @@ v4l_service_start(service_t *t, unsigned int weight, int force_start)
   fd = tvh_open(va->va_path, O_RDWR | O_NONBLOCK, 0);
   if(fd == -1) {
     tvhlog(LOG_ERR, "v4l",
-	   "%s: Unable to open device: %s\n", va->va_path, 
+	   "%s: Unable to open device: %s\n", va->va_path,
 	   strerror(errno));
     return -1;
   }
@@ -256,7 +256,7 @@ v4l_service_stop(service_t *t)
   if(tvh_write(va->va_pipe[1], &c, 1))
     tvhlog(LOG_ERR, "v4l", "Unable to close video thread -- %s",
 	   strerror(errno));
-  
+
   pthread_join(va->va_thread, NULL);
 
   close(va->va_pipe[1]);
@@ -277,17 +277,17 @@ v4l_service_save(service_t *t)
   htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_u32(m, "frequency", t->s_v4l_frequency);
-  
+
   if(t->s_ch != NULL) {
     htsmsg_add_str(m, "channelname", t->s_ch->ch_name);
     htsmsg_add_u32(m, "mapped", 1);
   }
-  
+
 
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
   pthread_mutex_unlock(&t->s_stream_mutex);
-  
+
   hts_settings_save(m, "v4lservices/%s/%s",
 		    va->va_identifier, t->s_identifier);
 
@@ -364,7 +364,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
 
   if(create == 0)
     return NULL;
-  
+
   if(id == NULL) {
     va->va_tally++;
     snprintf(buf, sizeof(buf), "%s_%d", va->va_identifier, va->va_tally);
@@ -386,11 +386,11 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
   t->s_iptv_fd = -1;
   t->s_v4l_adapter = va;
 
-  pthread_mutex_lock(&t->s_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_make_nicename(t);
-  t->s_video = service_stream_create(t, -1, SCT_MPEG2VIDEO); 
-  t->s_audio = service_stream_create(t, -1, SCT_MPEG2AUDIO); 
-  pthread_mutex_unlock(&t->s_stream_mutex); 
+  t->s_video = service_stream_create(t, -1, SCT_MPEG2VIDEO);
+  t->s_audio = service_stream_create(t, -1, SCT_MPEG2AUDIO);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   LIST_INSERT_HEAD(&va->va_services, t, s_group_link);
 
@@ -402,7 +402,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
  *
  */
 static void
-v4l_adapter_add(const char *path, const char *displayname, 
+v4l_adapter_add(const char *path, const char *displayname,
 		const char *devicename, int file)
 {
   v4l_adapter_t *va;
@@ -441,7 +441,7 @@ v4l_adapter_check(const char *path, int fd)
   r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
 
   if(r) {
-    tvhlog(LOG_WARNING, "v4l", 
+    tvhlog(LOG_WARNING, "v4l",
 	   "%s: Can not query capabilities, device skipped", path);
     return;
   }
@@ -450,7 +450,7 @@ v4l_adapter_check(const char *path, int fd)
 	 path, caps.driver, caps.card, caps.bus_info, caps.capabilities);
 
   if(!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-    tvhlog(LOG_WARNING, "v4l", 
+    tvhlog(LOG_WARNING, "v4l",
 	   "%s: Device is not a video capture device, device skipped", path);
     return;
   }
@@ -465,10 +465,10 @@ v4l_adapter_check(const char *path, int fd)
     if(ioctl(fd, VIDIOC_ENUMSTD, &standard))
       break;
 
-    tvhlog(LOG_INFO, "v4l", 
+    tvhlog(LOG_INFO, "v4l",
 	   "%s: Standard #%d: %016llx %s, frameperiod: %d/%d, %d lines",
 	   path,
-	   standard.index, 
+	   standard.index,
 	   standard.id,
 	   standard.name,
 	   standard.frameperiod.numerator,
@@ -482,7 +482,7 @@ v4l_adapter_check(const char *path, int fd)
     struct v4l2_input input;
     memset(&input, 0, sizeof(input));
     input.index = i;
-    
+
     if(ioctl(fd, VIDIOC_ENUMINPUT, &input))
       break;
 
@@ -501,7 +501,7 @@ v4l_adapter_check(const char *path, int fd)
 
     int f = input.status;
 
-    tvhlog(LOG_INFO, "v4l", 
+    tvhlog(LOG_INFO, "v4l",
 	   "%s: Input #%d: %s (%s), audio:0x%x, tuner:%d, standard:%016llx, "
 	   "%s%s%s",
 	   path,
@@ -530,7 +530,7 @@ v4l_adapter_check(const char *path, int fd)
     if(ioctl(fd, VIDIOC_ENUM_FMT, &fmtdesc))
       break;
 
-    tvhlog(LOG_INFO, "v4l", 
+    tvhlog(LOG_INFO, "v4l",
 	   "%s: Format #%d: %s [%.4s] %s",
 	   path,
 	   fmtdesc.index,
@@ -544,13 +544,13 @@ v4l_adapter_check(const char *path, int fd)
 
 
   if(!(caps.capabilities & V4L2_CAP_TUNER)) {
-    tvhlog(LOG_WARNING, "v4l", 
+    tvhlog(LOG_WARNING, "v4l",
 	   "%s: Device does not have a tuner, device skipped", path);
     return;
   }
 
   if(!can_mpeg) {
-    tvhlog(LOG_WARNING, "v4l", 
+    tvhlog(LOG_WARNING, "v4l",
 	   "%s: Device lacks MPEG encoder, device skipped", path);
     return;
   }
@@ -567,7 +567,7 @@ v4l_adapter_check(const char *path, int fd)
 /**
  *
  */
-static void 
+static void
 v4l_adapter_probe(const char *path)
 {
   int fd;
@@ -627,7 +627,7 @@ v4l_adapter_build_msg(v4l_adapter_t *va)
 
   if(va->va_current_service != NULL) {
     char buf[100];
-    snprintf(buf, sizeof(buf), "%d Hz", 
+    snprintf(buf, sizeof(buf), "%d Hz",
 	     va->va_current_service->s_v4l_frequency);
     htsmsg_add_str(m, "currentMux", buf);
   } else {
@@ -655,7 +655,7 @@ v4l_adapter_t *
 v4l_adapter_find_by_identifier(const char *identifier)
 {
   v4l_adapter_t *va;
-  
+
   TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
     if(!strcmp(identifier, va->va_identifier))
       return va;
@@ -721,7 +721,7 @@ v4l_service_create_by_msg(v4l_adapter_t *va, htsmsg_t *c, const char *name)
   s = htsmsg_get_str(c, "channelname");
   if(htsmsg_get_u32(c, "mapped", &u32))
     u32 = 0;
-  
+
   if(!htsmsg_get_u32(c, "frequency", &u32))
     t->s_v4l_frequency = u32;
 
@@ -740,11 +740,11 @@ v4l_service_load(v4l_adapter_t *va)
 
   if((l = hts_settings_load("v4lservices/%s", va->va_identifier)) == NULL)
     return;
- 
+
   HTSMSG_FOREACH(f, l) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
-    
+
     v4l_service_create_by_msg(va, c, f->hmf_name);
   }
   htsmsg_destroy(l);
@@ -763,7 +763,7 @@ v4l_init(void)
   v4l_adapter_t *va;
 
   TAILQ_INIT(&v4l_adapters);
-  
+
   for(i = 0; i < 8; i++) {
     snprintf(buf, sizeof(buf), "/dev/video%d", i);
     v4l_adapter_probe(buf);
@@ -793,3 +793,4 @@ v4l_init(void)
   TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
     v4l_service_load(va);
 }
+

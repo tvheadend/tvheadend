@@ -46,7 +46,7 @@ static epggrab_channel_t *_pyepg_channel_find
 static int _pyepg_parse_time ( const char *str, time_t *out )
 {
   int ret = 0;
-  struct tm tm; 
+  struct tm tm;
   tm.tm_isdst = 0;
   if ( strptime(str, "%F %T %z", &tm) != NULL ) {
     *out = mktime(&tm);
@@ -70,7 +70,7 @@ static epg_genre_list_t
   return egl;
 }
 
-static int _pyepg_parse_channel 
+static int _pyepg_parse_channel
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -78,7 +78,7 @@ static int _pyepg_parse_channel
   htsmsg_t *attr, *tags;
   const char *str;
   uint32_t u32;
-  
+
   if ( data == NULL ) return 0;
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
@@ -95,7 +95,7 @@ static int _pyepg_parse_channel
     save |= epggrab_channel_set_icon(ch, str);
   if ((!htsmsg_xml_get_cdata_u32(tags, "number", &u32)))
     save |= epggrab_channel_set_number(ch, u32);
-  
+
   /* Update */
   if (save) {
     epggrab_channel_updated(ch);
@@ -105,7 +105,7 @@ static int _pyepg_parse_channel
   return save;
 }
 
-static int _pyepg_parse_brand 
+static int _pyepg_parse_brand
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -119,7 +119,7 @@ static int _pyepg_parse_brand
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  
+
   /* Find brand */
   if ((brand = epg_brand_find_by_uri(str, 1, &save)) == NULL) return 0;
   stats->brands.total++;
@@ -134,7 +134,7 @@ static int _pyepg_parse_brand
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
     save |= epg_brand_set_summary(brand, str, NULL, mod);
   }
-  
+
   /* Set image */
   if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
     save |= epg_brand_set_image(brand, str, mod);
@@ -152,7 +152,7 @@ static int _pyepg_parse_brand
   return save;
 }
 
-static int _pyepg_parse_season 
+static int _pyepg_parse_season
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -172,7 +172,7 @@ static int _pyepg_parse_season
   if ((season = epg_season_find_by_uri(str, 1, &save)) == NULL) return 0;
   stats->seasons.total++;
   if (save) stats->seasons.created++;
-  
+
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
     if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
@@ -184,7 +184,7 @@ static int _pyepg_parse_season
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
     save |= epg_season_set_summary(season, str, NULL, mod);
   }
-  
+
   /* Set image */
   if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
     save |= epg_season_set_image(season, str, mod);
@@ -207,7 +207,7 @@ static int _pyepg_parse_season
   return save;
 }
 
-static int _pyepg_parse_episode 
+static int _pyepg_parse_episode
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -229,7 +229,7 @@ static int _pyepg_parse_episode
   if ((episode = epg_episode_find_by_uri(str, 1, &save)) == NULL) return 0;
   stats->episodes.total++;
   if (save) stats->episodes.created++;
-  
+
   /* Set season */
   if ((str = htsmsg_get_str(attr, "series"))) {
     if ((season = epg_season_find_by_uri(str, 0, NULL))) {
@@ -247,10 +247,10 @@ static int _pyepg_parse_episode
   /* Set title/subtitle */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
     save |= epg_episode_set_title(episode, str, NULL, mod);
-  } 
+  }
   if ((str = htsmsg_xml_get_cdata_str(tags, "subtitle"))) {
     save |= epg_episode_set_subtitle(episode, str, NULL, mod);
-  } 
+  }
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
@@ -289,7 +289,7 @@ static int _pyepg_parse_episode
   return save;
 }
 
-static int _pyepg_parse_broadcast 
+static int _pyepg_parse_broadcast
   ( epggrab_module_t *mod, htsmsg_t *data, channel_t *channel,
     epggrab_stats_t *stats )
 {
@@ -314,7 +314,7 @@ static int _pyepg_parse_broadcast
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
 
   /* Find broadcast */
-  broadcast 
+  broadcast
     = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 0, 1, &save);
   if ( broadcast == NULL ) return 0;
   stats->broadcasts.total++;
@@ -341,12 +341,12 @@ static int _pyepg_parse_broadcast
   if ((episode = epg_episode_find_by_uri(id, 1, &save)) == NULL) return 0;
   save |= epg_broadcast_set_episode(broadcast, episode, mod);
 
-  if (save) stats->broadcasts.modified++;  
+  if (save) stats->broadcasts.modified++;
 
   return save;
 }
 
-static int _pyepg_parse_schedule 
+static int _pyepg_parse_schedule
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -374,7 +374,7 @@ static int _pyepg_parse_schedule
   return save;
 }
 
-static int _pyepg_parse_epg 
+static int _pyepg_parse_epg
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -400,7 +400,7 @@ static int _pyepg_parse_epg
   return save;
 }
 
-static int _pyepg_parse 
+static int _pyepg_parse
   ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   htsmsg_t *tags, *epg;
@@ -438,3 +438,4 @@ void pyepg_load ( void )
 {
   epggrab_module_channels_load(epggrab_module_find_by_id("pyepg"));
 }
+

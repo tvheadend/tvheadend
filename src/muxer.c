@@ -142,7 +142,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
   str = val2str(mc, container_name);
   if(!str)
     return "unknown";
- 
+
   return str;
 }
 
@@ -161,7 +161,7 @@ muxer_container_list(htsmsg_t *array)
   htsmsg_add_str(mc, "description", "Matroska");
   htsmsg_add_msg(array, NULL, mc);
   c++;
-  
+
   mc = htsmsg_create_map();
   htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_PASS));
   htsmsg_add_str(mc, "description", "Same as source (pass through)");
@@ -193,7 +193,7 @@ muxer_container_type_t
 muxer_container_txt2type(const char *str)
 {
   muxer_container_type_t mc;
-  
+
   if(!str)
     return MC_UNKNOWN;
 
@@ -230,7 +230,7 @@ muxer_container_mime2type(const char *str)
 /**
  * Create a new muxer
  */
-muxer_t* 
+muxer_t*
 muxer_create(muxer_container_type_t mc)
 {
   muxer_t *m;
@@ -402,5 +402,4 @@ muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
   return m->m_write_pkt(m, smt, data);
 }
-
 

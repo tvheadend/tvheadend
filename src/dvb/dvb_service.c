@@ -71,7 +71,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
 
   /* Check if adapter is idle, or already tuned */
 
-  if(tdmi != NULL && 
+  if(tdmi != NULL &&
      (tdmi != t->s_dvb_mux_instance ||
       tda->tda_hostconnection == HOSTCONNECTION_USB12)) {
 
@@ -179,7 +179,7 @@ dvb_service_save(service_t *t)
 
   if(t->s_dvb_charset != NULL)
     htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
-  
+
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
 
   if(t->s_default_authority)
@@ -191,7 +191,7 @@ dvb_service_save(service_t *t)
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
   pthread_mutex_unlock(&t->s_stream_mutex);
-  
+
   hts_settings_save(m, "dvbtransports/%s/%s",
 		    t->s_dvb_mux_instance->tdmi_identifier,
 		    t->s_identifier);
@@ -225,7 +225,7 @@ dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
 
   if((l = hts_settings_load("dvbtransports/%s", tdmi_identifier)) == NULL)
     return;
-  
+
   HTSMSG_FOREACH(f, l) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
@@ -235,7 +235,7 @@ dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
 
     if(htsmsg_get_u32(c, "pmt", &pmt))
       continue;
-    
+
     t = dvb_service_find(tdmi, sid, pmt, f->hmf_name);
 
     htsmsg_get_u32(c, "stype", &t->s_servicetype);
@@ -300,7 +300,7 @@ dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
  * Called to get quality for the given transport
  *
  * We keep track of this for the entire mux (if we see errors), soo..
- * return that value 
+ * return that value
  */
 static int
 dvb_service_quality(service_t *t)
@@ -332,10 +332,10 @@ dvb_service_setsourceinfo(service_t *t, struct source_info *si)
     si->si_device = strdup(tdmi->tdmi_adapter->tda_rootpath);
 
   si->si_adapter = strdup(tdmi->tdmi_adapter->tda_displayname);
-  
+
   if(tdmi->tdmi_network != NULL)
     si->si_network = strdup(tdmi->tdmi_network);
-  
+
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
   si->si_mux = strdup(buf);
 
@@ -430,7 +430,7 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
     }
     return t;
   }
-  
+
   if(identifier == NULL) {
     snprintf(tmp, sizeof(tmp), "%s_%04x", tdmi->tdmi_identifier, sid);
     identifier = tmp;
@@ -457,9 +457,9 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->s_dvb_mux_instance = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, s_group_link);
 
-  pthread_mutex_lock(&t->s_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_make_nicename(t);
-  pthread_mutex_unlock(&t->s_stream_mutex); 
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   dvb_adapter_notify(tdmi->tdmi_adapter);
   return t;
@@ -476,7 +476,7 @@ dvb_service_build_msg(service_t *t)
   htsmsg_t *m = htsmsg_create_map();
   uint16_t caid;
   char buf[100];
- 
+
   htsmsg_add_str(m, "id", t->s_identifier);
   htsmsg_add_u32(m, "enabled", t->s_enabled);
   htsmsg_add_u32(m, "channel", t->s_channel_number);
@@ -484,7 +484,7 @@ dvb_service_build_msg(service_t *t)
   htsmsg_add_u32(m, "sid", t->s_dvb_service_id);
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
-  
+
   snprintf(buf, sizeof(buf), "%s (0x%04X)", service_servicetype_txt(t), t->s_servicetype);
   htsmsg_add_str(m, "type", buf);
   htsmsg_add_str(m, "typestr", service_servicetype_txt(t));
@@ -542,3 +542,4 @@ dvb_service_notify(service_t *t)
   htsmsg_add_str(m, "adapterId", tdmi->tdmi_adapter->tda_identifier);
   notify_by_msg("dvbService", m);
 }
+

@@ -93,7 +93,7 @@ typedef struct timeshift {
   }                           state;       ///< Play state
   pthread_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     full;        ///< Buffer is full
-  
+
   streaming_start_t          *smt_start;   ///< Current stream makeup
 
   streaming_queue_t           wr_queue;   ///< Writer queue
@@ -153,3 +153,4 @@ void timeshift_filemgr_flush ( timeshift_t *ts, timeshift_file_t *end );
 void timeshift_filemgr_close ( timeshift_file_t *tsf );
 
 #endif /* __TVH_TIMESHIFT_PRIVATE_H__ */
+

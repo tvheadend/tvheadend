@@ -31,3 +31,4 @@ int htsmsg_binary_serialize(htsmsg_t *msg, void **datap, size_t *lenp,
 			    int maxlen);
 
 #endif /* HTSMSG_BINARY_H_ */
+

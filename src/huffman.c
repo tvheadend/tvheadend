@@ -71,10 +71,10 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
       node->data = strdup(data);
     }
   }
-  return root; 
+  return root;
 }
 
-char *huffman_decode 
+char *huffman_decode
   ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask,
     char *outb, int outl )
 {
@@ -110,3 +110,4 @@ end:
   *outb = '\0';
   return ret;
 }
+

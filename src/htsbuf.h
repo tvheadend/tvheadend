@@ -39,7 +39,7 @@ typedef struct htsbuf_queue {
   struct htsbuf_data_queue hq_q;
   unsigned int hq_size;
   unsigned int hq_maxsize;
-} htsbuf_queue_t;  
+} htsbuf_queue_t;
 
 void htsbuf_queue_init(htsbuf_queue_t *hq, unsigned int maxsize);
 
@@ -83,3 +83,4 @@ struct rstr *htsbuf_to_rstr(htsbuf_queue_t *hq, const char *prefix);
 void htsbuf_hexdump(htsbuf_queue_t *hq, const char *prefix);
 
 #endif /* HTSBUF_H__ */
+

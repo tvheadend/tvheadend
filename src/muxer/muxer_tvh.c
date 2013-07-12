@@ -41,7 +41,7 @@ tvh_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   int has_audio;
   int has_video;
   const streaming_start_component_t *ssc;
-  
+
   has_audio = 0;
   has_video = 0;
 
@@ -137,7 +137,7 @@ static int
 tvh_muxer_open_file(muxer_t *m, const char *filename)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
-  
+
   if(mk_mux_open_file(tm->tm_ref, filename)) {
     tm->m_errors++;
     return -1;

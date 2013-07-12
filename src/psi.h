@@ -42,7 +42,7 @@ int psi_parse_pmt(struct service *t, const uint8_t *ptr, int len, int chksvcid,
 
 int psi_build_pat(struct service *t, uint8_t *buf, int maxlen, int pmtpid);
 
-int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen, 
+int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen,
 		  int version, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
@@ -52,3 +52,4 @@ void psi_load_service_settings(htsmsg_t *m, struct service *t);
 void psi_save_service_settings(htsmsg_t *m, struct service *t);
 
 #endif /* PSI_H_ */
+

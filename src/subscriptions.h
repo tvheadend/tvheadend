@@ -26,7 +26,7 @@ extern struct th_subscription_list subscriptions;
 typedef struct th_subscription {
 
   int ths_id;
-  
+
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
 
@@ -129,3 +129,4 @@ struct htsmsg;
 struct htsmsg *subscription_create_msg(th_subscription_t *s);
 
 #endif /* SUBSCRIPTIONS_H */
+

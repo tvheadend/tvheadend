@@ -27,7 +27,7 @@
 
 #define NOT_THIS_TYPE ((void *)-1)
 
-static const char *json_parse_value(const char *s, void *parent, 
+static const char *json_parse_value(const char *s, void *parent,
 				    const char *name,
 				    const json_deserializer_t *jd,
 				    void *opaque,
@@ -160,7 +160,7 @@ json_parse_map(const char *s, const char **endp, const json_deserializer_t *jd,
   s++;
 
   r = jd->jd_create_map(opaque);
-  
+
   while(*s > 0 && *s < 33)
     s++;
 
@@ -178,7 +178,7 @@ json_parse_map(const char *s, const char **endp, const json_deserializer_t *jd,
 	return NULL;
 
       s = s2;
-    
+
       while(*s > 0 && *s < 33)
 	s++;
 
@@ -242,7 +242,7 @@ json_parse_list(const char *s, const char **endp, const json_deserializer_t *jd,
   s++;
 
   r = jd->jd_create_list(opaque);
-  
+
   while(*s > 0 && *s < 33)
     s++;
 
@@ -354,7 +354,7 @@ json_parse_value(const char *s, void *parent, const char *name,
 
   if((c = json_parse_list(s, &s2, jd, opaque, failp, failmsg)) == NULL)
     return NULL;
-  
+
   if(c != NOT_THIS_TYPE) {
     jd->jd_add_obj(opaque, parent, name, c);
     return s2;
@@ -436,3 +436,4 @@ json_deserialize(const char *src, const json_deserializer_t *jd, void *opaque,
   }
   return c;
 }
+

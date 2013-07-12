@@ -34,7 +34,7 @@ typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_service_link;
 
   void (*td_table)(struct th_descrambler *d, struct service *t,
-		   struct elementary_stream *st, 
+		   struct elementary_stream *st,
 		   const uint8_t *section, int section_len);
 
   int (*td_descramble)(struct th_descrambler *d, struct service *t,
@@ -88,7 +88,7 @@ typedef struct elementary_stream {
   uint16_t es_ancillary_id;
 
   int16_t es_pid;
-  uint16_t es_parent_pid;    /* For subtitle streams originating from 
+  uint16_t es_parent_pid;    /* For subtitle streams originating from
 				a teletext stream. this is the pid
 				of the teletext stream */
 
@@ -159,10 +159,10 @@ typedef struct elementary_stream {
 
   loglimiter_t es_loglimit_cc;
   loglimiter_t es_loglimit_pes;
-  
+
   char *es_nicename;
 
-  /* Teletext subtitle */ 
+  /* Teletext subtitle */
   char es_blank; // Last subtitle was blank
 
 
@@ -194,11 +194,11 @@ typedef struct service {
     SERVICE_RUNNING,
 
     /**
-     * Destroyed, but pointer is till valid. 
-     * This would be the case if transport_destroy() did not actually free 
+     * Destroyed, but pointer is till valid.
+     * This would be the case if transport_destroy() did not actually free
      * the transport because there are references held to it.
      *
-     * Reference counts can be used so that code can hold a pointer to 
+     * Reference counts can be used so that code can hold a pointer to
      * a transport without having the global lock.
      *
      * Note: No fields in the transport may be accessed without the
@@ -207,12 +207,12 @@ typedef struct service {
      * just drop the refcount and pretend that the transport never
      * was there in the first place.
      */
-    SERVICE_ZOMBIE, 
+    SERVICE_ZOMBIE,
   } s_status;
 
   /**
    * Refcount, operated using atomic.h ops.
-   */ 
+   */
   int s_refcount;
 
   /**
@@ -225,14 +225,14 @@ typedef struct service {
   /**
    * Source type is used to determine if an output requesting
    * MPEG-TS can shortcut all the parsing and remuxing.
-   */ 
+   */
   enum {
     S_MPEG_TS,
     S_MPEG_PS,
     S_OTHER,
   } s_source_type;
 
- 
+
   /**
    * PID carrying the programs PCR.
    * XXX: We don't support transports that does not carry
@@ -258,7 +258,7 @@ typedef struct service {
    */
   int64_t s_pcr_last;
   int64_t s_pcr_last_realtime;
-  
+
   LIST_ENTRY(service) s_group_link;
 
   LIST_ENTRY(service) s_active_link;
@@ -343,7 +343,7 @@ typedef struct service {
    */
   th_commercial_advice_t s_tt_commercial_advice;
   time_t s_tt_clock;   /* Network clock as determined by teletext decoder */
- 
+
   /**
    * Channel mapping
    */
@@ -397,7 +397,7 @@ typedef struct service {
 
   struct v4l_adapter *s_v4l_adapter;
   int s_v4l_frequency; // In Hz
-  
+
 
   /*********************************************************
    *
@@ -406,7 +406,7 @@ typedef struct service {
    * All access to fields below this must be protected with
    * s_stream_mutex held.
    *
-   * Note: Code holding s_stream_mutex should _never_ 
+   * Note: Code holding s_stream_mutex should _never_
    * acquire global_lock while already holding s_stream_mutex.
    *
    */
@@ -426,7 +426,7 @@ typedef struct service {
   pthread_cond_t s_tss_cond;
   /**
    *
-   */			   
+   */
   int s_streaming_status;
 
   // Progress
@@ -450,10 +450,10 @@ typedef struct service {
    */
   elementary_stream_t *s_video;
   elementary_stream_t *s_audio;
- 
+
 
   /**
-   * When a subscription request SMT_MPEGTS, chunk them togeather 
+   * When a subscription request SMT_MPEGTS, chunk them togeather
    * in order to recude load.
    */
   sbuf_t s_tsbuf;
@@ -611,3 +611,4 @@ int service_is_primary_epg (service_t *t);
 htsmsg_t *servicetype_list (void);
 
 #endif // SERVICE_H__
+

@@ -231,7 +231,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         ts->full = 1;
       }
     }
-      
+
     /* Create new file */
     tsf_tmp = NULL;
     if (!ts->full) {
@@ -366,5 +366,4 @@ void timeshift_filemgr_term ( void )
   timeshift_filemgr_get_root(path, sizeof(path));
   rmtree(path);
 }
-
 

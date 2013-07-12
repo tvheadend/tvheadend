@@ -25,7 +25,7 @@
  * htsmsg's with UTF-8 encoded payloads
  *
  *  Supports:                             Example:
- *  
+ *
  *  Comments                              <!--  a comment               -->
  *  Processing Instructions               <?xml                          ?>
  *  CDATA                                 <![CDATA[  <litteraly copied> ]]>
@@ -96,7 +96,7 @@ typedef struct cdata_content {
   char cc_buf[0];
 } cdata_content_t;
 
-static char *htsmsg_xml_parse_cd(xmlparser_t *xp, 
+static char *htsmsg_xml_parse_cd(xmlparser_t *xp,
 				 htsmsg_t *parent, char *src);
 
 /**
@@ -244,7 +244,7 @@ htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
   while(is_xmlws(*src))
     src++;
 
-  
+
   /* Parse attribute payload */
   quote = *src++;
   if(quote != '"' && quote != '\'') {
@@ -273,7 +273,7 @@ htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
   while(is_xmlws(*src))
     src++;
 
-  if(xmlns_scope_list != NULL && 
+  if(xmlns_scope_list != NULL &&
      attriblen > 6 && !memcmp(attribname, "xmlns:", 6)) {
 
     attribname += 6;
@@ -382,7 +382,7 @@ htsmsg_xml_parse_tag(xmlparser_t *xp, htsmsg_t *parent, char *src)
     if(tagname[i] == ':') {
 
       LIST_FOREACH(ns, &xp->xp_namespaces, xmlns_global_link) {
-	if(ns->xmlns_prefix_len == i && 
+	if(ns->xmlns_prefix_len == i &&
 	   !memcmp(ns->xmlns_prefix, tagname, ns->xmlns_prefix_len)) {
 
 	  int llen = taglen - i - 1;
@@ -503,7 +503,7 @@ xml_parse_comment(xmlparser_t *xp, char *src)
  *
  */
 static char *
-decode_label_reference(xmlparser_t *xp, 
+decode_label_reference(xmlparser_t *xp,
 		       struct cdata_content_queue *ccq, char *src)
 {
   char *s = src;
@@ -547,7 +547,7 @@ decode_label_reference(xmlparser_t *xp,
  *
  */
 static char *
-htsmsg_xml_parse_cd0(xmlparser_t *xp, 
+htsmsg_xml_parse_cd0(xmlparser_t *xp,
 		     struct cdata_content_queue *ccq, htsmsg_t *tags,
 		     htsmsg_t *pis, char *src, int raw)
 {
@@ -612,7 +612,7 @@ htsmsg_xml_parse_cd0(xmlparser_t *xp,
       src = htsmsg_xml_parse_tag(xp, tags, src);
       continue;
     }
-    
+
     if(*src == '&' && !raw) {
       if(cc != NULL)
 	cc->cc_end = src;
@@ -668,7 +668,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
   int c = 0, l, y = 0;
   char *x, *body;
   htsmsg_t *tags = htsmsg_create_map();
-  
+
   TAILQ_INIT(&ccq);
   src = htsmsg_xml_parse_cd0(xp, &ccq, tags, NULL, src, 0);
 
@@ -701,7 +701,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
     assert(cc != NULL);
     assert(TAILQ_NEXT(cc, cc_link) == NULL);
-    
+
     f = htsmsg_field_add(parent, "cdata", HMF_STR, 0);
     f->hmf_str = cc->cc_start;
     *cc->cc_end = 0;
@@ -725,7 +725,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 	  c += put_utf8(body + c, *x);
 	break;
       }
-      
+
       TAILQ_REMOVE(&ccq, cc, cc_link);
       free(cc);
     }
@@ -774,7 +774,7 @@ htsmsg_parse_prolog(xmlparser_t *xp, char *src)
 
     while(is_xmlws(*src))
       src++;
-    
+
     if(!strncmp(src, "<?", 2)) {
       src += 2;
       src = htsmsg_xml_parse_pi(xp, pis, src);
@@ -854,7 +854,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
  err:
   free(src0);
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
-  
+
   /* Remove any odd chars inside of errmsg */
   for(i = 0; i < errbufsize; i++) {
     if(errbuf[i] < 32) {
@@ -908,3 +908,4 @@ htsmsg_xml_get_attr_u32 ( htsmsg_t *tag, const char *name, uint32_t *ret )
   if (attr) return htsmsg_get_u32(attr, name, ret);
   return HTSMSG_ERR_FIELD_NOT_FOUND;
 }
+

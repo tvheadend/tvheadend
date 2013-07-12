@@ -170,7 +170,7 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
 
   free(tda->tda_displayname);
   tda->tda_displayname = strdup(s);
-  
+
   tda_save(tda);
 
   dvb_adapter_notify(tda);
@@ -339,7 +339,7 @@ dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid)
 	 tda->tda_nitoid, nitoid);
 
   tda->tda_nitoid = nitoid;
-  
+
   tda_save(tda);
 
 }
@@ -425,7 +425,7 @@ void
 dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int on)
 {
   const char* label[] = { "Auto", "Off", "On" };
-  
+
   if (on < -1) on = -1;
   if (on >  1) on = 1;
 
@@ -656,12 +656,12 @@ tda_add_from_file(const char *filename)
       buf[i] = '_';
 
   tda->tda_identifier = strdup(buf);
-  
+
   tda->tda_autodiscovery = 0;
   tda->tda_idlescan = 0;
 
   tda->tda_sat = 0;
- 
+
   tda->tda_full_mux_rx = 1;
 
   /* Come up with an initial displayname, user can change it and it will
@@ -705,7 +705,7 @@ dvb_adapter_start ( th_dvb_adapter_t *tda, int opt )
     tvhlog(LOG_INFO, "dvb", "Adapter \"%s\" cannot be started - it's disabled", tda->tda_displayname);
     return;
   }
-  
+
   /* Default to ALL */
   if (!opt)
     opt = TDA_OPT_ALL;
@@ -774,8 +774,8 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   TAILQ_INIT(&dvb_adapters);
 
   /* Initialise hardware */
-  for(i = 0; i < 32; i++) 
-    if ((1 << i) & adapter_mask) 
+  for(i = 0; i < 32; i++)
+    if ((1 << i) & adapter_mask)
       tda_add(i);
 
   /* Initialise rawts test file */
@@ -787,7 +787,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
         continue;
-      
+
       if((s = htsmsg_get_str(c, "type")) == NULL ||
          (type = dvb_str_to_adaptertype(s)) < 0)
         continue;
@@ -923,7 +923,7 @@ dvb_adapter_mux_scanner(void *aux)
 }
 
 /**
- * 
+ *
  */
 void
 dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
@@ -943,7 +943,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
 
 /**
- * 
+ *
  */
 int
 dvb_adapter_destroy(th_dvb_adapter_t *tda)
@@ -959,7 +959,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi);
-  
+
   TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
 
   free(tda->tda_identifier);
@@ -983,7 +983,7 @@ void
 dvb_adapter_clean(th_dvb_adapter_t *tda)
 {
   service_t *t;
-  
+
   lock_assert(&global_lock);
 
   while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
@@ -1110,7 +1110,7 @@ dvb_adapter_input_dvr(void *aux)
 
     /* Process */
     while (r >= 188) {
-  
+
       /* sync */
       if (tsb[i] == 0x47) {
 	      int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
@@ -1212,11 +1212,11 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
     return m;
 
   htsmsg_add_str(m, "path", tda->tda_rootpath);
-  htsmsg_add_str(m, "hostconnection", 
+  htsmsg_add_str(m, "hostconnection",
 		 hostconnection2str(tda->tda_hostconnection));
   htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
-  htsmsg_add_str(m, "deliverySystem", 
+  htsmsg_add_str(m, "deliverySystem",
 		 dvb_adaptertype_to_str(tda->tda_type) ?: "");
 
   htsmsg_add_u32(m, "satConf", tda->tda_sat);
@@ -1296,7 +1296,7 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
   }
 
   if(!strcmp(which, "transmissionmodes")) {
-    if(c & FE_CAN_TRANSMISSION_MODE_AUTO) 
+    if(c & FE_CAN_TRANSMISSION_MODE_AUTO)
       fe_opts_add(a, "Auto", TRANSMISSION_MODE_AUTO);
 
     fe_opts_add(a, "2k", TRANSMISSION_MODE_2K);
@@ -1305,7 +1305,7 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
   }
 
   if(!strcmp(which, "bandwidths")) {
-    if(c & FE_CAN_BANDWIDTH_AUTO) 
+    if(c & FE_CAN_BANDWIDTH_AUTO)
       fe_opts_add(a, "Auto", BANDWIDTH_AUTO);
 
     fe_opts_add(a, "8 MHz", BANDWIDTH_8_MHZ);
@@ -1385,3 +1385,4 @@ dvb_adapter_poweroff(th_dvb_adapter_t *tda)
   diseqc_voltage_off(tda->tda_fe_fd);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" is off", tda->tda_rootpath);
 }
+

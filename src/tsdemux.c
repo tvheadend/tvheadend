@@ -134,7 +134,7 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
  * than the stream PCR
  */
 static void
-ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb, 
+ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
 	       int64_t *pcrp)
 {
   int64_t real, pcr, d;
@@ -144,7 +144,7 @@ ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
   pcr |= (uint64_t)tsb[8] << 9;
   pcr |= (uint64_t)tsb[9] << 1;
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
-  
+
   if(pcrp != NULL)
     *pcrp = pcr;
 
@@ -155,7 +155,7 @@ ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
 
   if(st->es_pcr_real_last != PTS_UNSET) {
     d = (real - st->es_pcr_real_last) - (pcr - st->es_pcr_last);
-    
+
     if(d < -90000LL || d > 90000LL) {
       st->es_pcr_recovery_fails++;
       if(st->es_pcr_recovery_fails > 10) {
@@ -166,11 +166,11 @@ ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
     }
     st->es_pcr_recovery_fails = 0;
     st->es_pcr_drift += d;
-    
+
     if(t->s_pcr_pid == st->es_pid) {
       /* This is the registered PCR PID, adjust service PCR drift
 	 via an IIR filter */
-      
+
       t->s_pcr_drift = (t->s_pcr_drift * 255 + st->es_pcr_drift) / 256;
     }
   }
@@ -236,7 +236,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
     LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
       n++;
-      
+
       r = td->td_descramble(td, t, st, tsb);
       if(r == 0) {
 	pthread_mutex_unlock(&t->s_stream_mutex);
@@ -288,7 +288,7 @@ ts_remux(service_t *t, const uint8_t *src)
 
   sbuf_append(sb, src, 188);
 
-  if(sb->sb_ptr < TS_REMUX_BUFSIZE) 
+  if(sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
 
   pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
@@ -313,8 +313,9 @@ ts_resync ( const uint8_t *tsb, int *len, int *idx )
   int err = 1;
   while (err && (*len > 376)) {
     (*idx)++; (*len)--;
-    err = (tsb[*idx] != 0x47) || (tsb[*idx+188] != 0x47) || 
+    err = (tsb[*idx] != 0x47) || (tsb[*idx+188] != 0x47) ||
           (tsb[*idx+376] != 0x47);
   }
   return err;
 }
+

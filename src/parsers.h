@@ -22,7 +22,7 @@
 #include "packet.h"
 
 void parse_mpeg_ts(struct service *t, struct elementary_stream *st,
-		   const uint8_t *data, 
+		   const uint8_t *data,
 		   int len, int start, int err);
 
 void parse_mpeg_ps(struct service *t, struct elementary_stream *st,
@@ -37,3 +37,4 @@ void parser_set_stream_vparam(struct elementary_stream *st, int width, int heigh
 extern const unsigned int mpeg2video_framedurations[16];
 
 #endif /* PARSERS_H */
+

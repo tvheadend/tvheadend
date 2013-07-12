@@ -44,7 +44,7 @@ static const char *logtxtmeta[9][2] = {
 };
 
 /* Initialise */
-void 
+void
 tvhlog_init ( int level, int options, const char *path )
 {
   tvhlog_level   = level;
@@ -176,7 +176,7 @@ void tvhlogv ( const char *file, int line,
     if (options & TVHLOG_OPT_DBG_SYSLOG || severity < LOG_DEBUG) {
       syslog(s, "%s", buf);
     }
-  } 
+  }
 
   /* Comet (debug must still be enabled??) */
   if(notify && severity < LOG_TRACE) {
@@ -194,7 +194,7 @@ void tvhlogv ( const char *file, int line,
       const char *leveltxt = logtxtmeta[severity][0];
       const char *sgr      = logtxtmeta[severity][1];
       const char *sgroff;
-    
+
       if (options & TVHLOG_OPT_DECORATE)
         sgroff = "\033[0m";
       else {

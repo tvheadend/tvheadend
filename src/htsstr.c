@@ -60,7 +60,7 @@ htsstr_unescape(char *str) {
       /* shift string left, copies terminator too */
       memmove(s + 1, s + 2, strlen(s + 2) + 1);
     }
-  } 
+  }
 
   return str;
 }
@@ -88,7 +88,7 @@ htsstr_argsplit(const char *str) {
                           htsstr_unescape(hts_strndup(start, stop - start)));
       start = stop = NULL;
     }
-    
+
     if(inarg) {
       switch(*s) {
         case '\\':
@@ -139,13 +139,13 @@ htsstr_argsplit(const char *str) {
   return argv;
 }
 
-void 
+void
 htsstr_argsplit_free(char **argv) {
   int i;
 
   for(i = 0; argv[i]; i++)
     free(argv[i]);
-  
+
   free(argv);
 }
 
@@ -186,7 +186,7 @@ char *
 htsstr_format(const char *str, const char **map)
 {
   char *s;
-  
+
   s = malloc(htsstr_format0(str, NULL, map));
   htsstr_format0(str, s, map);
 

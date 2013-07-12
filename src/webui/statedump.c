@@ -47,7 +47,7 @@ outputtitle(htsbuf_queue_t *hq, int indent, const char *fmt, ...)
   va_start(ap, fmt);
 
   htsbuf_qprintf(hq, "\n%*.s", indent, "");
-  
+
   htsbuf_vqprintf(hq, fmt, ap);
   va_end(ap);
   htsbuf_qprintf(hq, "\n%*.s----------------------------------------------\n",
@@ -62,7 +62,7 @@ dumpchannels(htsbuf_queue_t *hq)
   outputtitle(hq, 0, "Channels");
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    
+
     htsbuf_qprintf(hq, "%s (%d)\n", ch->ch_name, ch->ch_id);
     htsbuf_qprintf(hq,
 		   "  refcount = %d\n"
@@ -88,8 +88,8 @@ dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 
     htsbuf_qprintf(hq, "%*.s%s (%s)\n", indent + 2, "",
 		   service_nicename(t), t->s_identifier);
-	
-    
+
+
     htsbuf_qprintf(hq, "%*.s%-16s %-5s %-5s %-5s %-5s %-10s\n", indent + 4, "",
 		   "Type",
 		   "Index",
@@ -133,14 +133,14 @@ dumpdvbadapters(htsbuf_queue_t *hq)
 
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
     htsbuf_qprintf(hq, "%s (%s)\n", tda->tda_displayname, tda->tda_identifier);
-     
+
     outputtitle(hq, 4, "Multiplexes");
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       char tdminame[64];
       dvb_mux_nicename(tdminame, sizeof(tdminame), tdmi);
       htsbuf_qprintf(hq, "      %s (%s)\n",
 		     tdminame, tdmi->tdmi_identifier);
-      
+
       htsbuf_qprintf(hq, "\n");
       dumptransports(hq, &tdmi->tdmi_transports, 8);
     }
@@ -154,7 +154,7 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
 
   scopedgloballock();
- 
+
 
   htsbuf_qprintf(hq, "Tvheadend %s  Binary SHA1: "
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
@@ -182,10 +182,10 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[19]);
 
   dumpchannels(hq);
-  
+
 #if ENABLE_LINUXDVB
   dumpdvbadapters(hq);
-#endif 
+#endif
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

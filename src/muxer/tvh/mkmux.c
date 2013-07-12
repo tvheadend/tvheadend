@@ -197,7 +197,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 
   mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
-  
+
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
@@ -266,7 +266,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     tracknum++;
     mkm->tracks[i].tracknum = tracknum;
     mkm->has_video |= (tracktype == 1);
-    
+
     t = htsbuf_queue_alloc(0);
 
     ebml_append_uint(t, 0xd7, mkm->tracks[i].tracknum);
@@ -274,21 +274,21 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     ebml_append_uint(t, 0x83, tracktype);
     ebml_append_uint(t, 0x9c, 0); // Lacing
     ebml_append_string(t, 0x86, codec_id);
-    
+
     if(ssc->ssc_lang[0])
       ebml_append_string(t, 0x22b59c, ssc->ssc_lang);
-    
+
     switch(ssc->ssc_type) {
     case SCT_H264:
     case SCT_MPEG2VIDEO:
     case SCT_MP4A:
     case SCT_AAC:
       if(ssc->ssc_gh)
-	ebml_append_bin(t, 0x63a2, 
+	ebml_append_bin(t, 0x63a2,
 			pktbuf_ptr(ssc->ssc_gh),
 			pktbuf_len(ssc->ssc_gh));
       break;
-      
+
     case SCT_DVBSUB:
       buf4[0] = ssc->ssc_composition_id >> 8;
       buf4[1] = ssc->ssc_composition_id;
@@ -302,7 +302,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       int d = ts_rescale(ssc->ssc_frameduration, 1000000000);
       ebml_append_uint(t, 0x23e383, d);
     }
-    
+
 
     if(SCT_ISVIDEO(ssc->ssc_type)) {
       htsbuf_queue_t *vi = htsbuf_queue_alloc(0);
@@ -379,7 +379,7 @@ static void
 mk_write_queue(mk_mux_t *mkm, htsbuf_queue_t *q)
 {
   if(!mkm->error && mk_write_to_fd(mkm, q))
-    tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename, 
+    tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename,
 	   strerror(errno));
 
   htsbuf_queue_flush(q);
@@ -409,7 +409,7 @@ mk_build_segment_header(int64_t size)
   uint8_t u8[8];
 
   ebml_append_id(q, 0x18538067);
-  
+
   u8[0] = 1;
   if(size == 0) {
     memset(u8+1, 0xff, 7);
@@ -423,7 +423,7 @@ mk_build_segment_header(int64_t size)
     u8[7] = size;
   }
   htsbuf_append(q, &u8, 8);
-  
+
   return q;
 }
 
@@ -626,7 +626,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
       addtag(q, build_tag_int("PART_NUMBER", num.p_num,
 			       40, "PART"));
     if (num.text)
-      addtag(q, build_tag_string("SYNOPSIS", 
+      addtag(q, build_tag_string("SYNOPSIS",
 			       num.text, NULL, 0, NULL));
   }
 
@@ -641,7 +641,7 @@ static htsbuf_queue_t *
 mk_build_one_metaseek(mk_mux_t *mkm, uint32_t id, off_t pos)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  
+
   ebml_append_idid(q, 0x53ab, id);
   ebml_append_uint(q, 0x53ac, pos - mkm->segment_pos);
   return q;
@@ -657,27 +657,27 @@ mk_build_metaseek(mk_mux_t *mkm)
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
 
   if(mkm->segmentinfo_pos)
-    ebml_append_master(q, 0x4dbb, 
+    ebml_append_master(q, 0x4dbb,
 		       mk_build_one_metaseek(mkm, 0x1549a966,
 					     mkm->segmentinfo_pos));
-  
+
   if(mkm->trackinfo_pos)
-    ebml_append_master(q, 0x4dbb, 
-		       mk_build_one_metaseek(mkm, 0x1654ae6b, 
+    ebml_append_master(q, 0x4dbb,
+		       mk_build_one_metaseek(mkm, 0x1654ae6b,
 					     mkm->trackinfo_pos));
 
   if(mkm->metadata_pos)
-    ebml_append_master(q, 0x4dbb, 
-		       mk_build_one_metaseek(mkm, 0x1254c367, 
+    ebml_append_master(q, 0x4dbb,
+		       mk_build_one_metaseek(mkm, 0x1254c367,
 					     mkm->metadata_pos));
 
   if(mkm->cue_pos)
-    ebml_append_master(q, 0x4dbb, 
+    ebml_append_master(q, 0x4dbb,
 		       mk_build_one_metaseek(mkm, 0x1c53bb6b,
 					     mkm->cue_pos));
 
   if(mkm->chapters_pos)
-    ebml_append_master(q, 0x4dbb, 
+    ebml_append_master(q, 0x4dbb,
 		       mk_build_one_metaseek(mkm, 0x1043a770,
 					     mkm->chapters_pos));
   return q;
@@ -699,7 +699,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
   assert(q.hq_size < 498);
 
   ebml_append_pad(&q, 500 - q.hq_size);
-  
+
   if(first) {
     mk_write_to_fd(mkm, &q);
   } else if(mkm->seekable) {
@@ -711,7 +711,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
     mkm->fdpos = prev;
     if(lseek(mkm->fd, mkm->fdpos, SEEK_SET) == (off_t) -1)
       mkm->error = errno;
-   
+
   }
   htsbuf_queue_flush(&q);
 }
@@ -721,7 +721,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
  *
  */
 static htsbuf_queue_t *
-mk_build_segment(mk_mux_t *mkm, 
+mk_build_segment(mk_mux_t *mkm,
 		 const streaming_start_t *ss)
 {
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
@@ -737,7 +737,7 @@ mk_build_segment(mk_mux_t *mkm,
 
   mkm->trackinfo_pos = mkm->segment_pos + p->hq_size;
   ebml_append_master(p, 0x1654ae6b, mk_build_tracks(mkm, ss));
-  
+
   return p;
 }
 
@@ -824,7 +824,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
 
   if(pts != PTS_UNSET) {
     t->nextpts = pts + (pkt->pkt_duration >> pkt->pkt_field);
-	
+
     nxt = ts_rescale(t->nextpts, 1000000000 / MATROSKA_TIMESCALE);
     pts = ts_rescale(pts,        1000000000 / MATROSKA_TIMESCALE);
 
@@ -871,7 +871,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
     // Skip ADTS header
     if(len < 7)
       return;
-      
+
     len -= 7;
     data += 7;
   }
@@ -907,7 +907,7 @@ mk_write_cues(mk_mux_t *mkm)
     TAILQ_REMOVE(&mkm->cues, mc, link);
 
     c = htsbuf_queue_alloc(0);
-    
+
     ebml_append_uint(c, 0xb3, mc->ts);
 
     p = htsbuf_queue_alloc(0);
@@ -997,13 +997,13 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
   htsbuf_queue_init(&q, 0);
 
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader());
-  
+
   mkm->segment_header_pos = q.hq_size;
   htsbuf_appendq(&q, mk_build_segment_header(0));
 
   mkm->segment_pos = q.hq_size;
   htsbuf_appendq(&q, mk_build_segment(mkm, ss));
- 
+
   mk_write_queue(mkm, &q);
 
   htsbuf_queue_flush(&q);
@@ -1027,7 +1027,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
       break;
     }
   }
-  
+
   if(t == NULL || t->disabled) {
     pkt_ref_dec(pkt);
     return mkm->error;
@@ -1039,22 +1039,22 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
     mark = 1;
     t->channels = pkt->pkt_channels;
   }
-  if(pkt->pkt_aspect_num != t->aspect_num && 
+  if(pkt->pkt_aspect_num != t->aspect_num &&
      pkt->pkt_aspect_num) {
     mark = 1;
     t->aspect_num = pkt->pkt_aspect_num;
   }
-  if(pkt->pkt_aspect_den != t->aspect_den && 
+  if(pkt->pkt_aspect_den != t->aspect_den &&
      pkt->pkt_aspect_den) {
     mark = 1;
     t->aspect_den = pkt->pkt_aspect_den;
   }
-  if(pkt->pkt_sri != t->sri && 
+  if(pkt->pkt_sri != t->sri &&
      pkt->pkt_sri) {
     mark = 1;
     t->sri = pkt->pkt_sri;
   }
-  if(pkt->pkt_commercial != t->commercial && 
+  if(pkt->pkt_commercial != t->commercial &&
      pkt->pkt_commercial != COMMERCIAL_UNKNOWN) {
     mark = 1;
     t->commercial = pkt->pkt_commercial;
@@ -1078,7 +1078,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
  * Append epg data to the muxer
  */
 int
-mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de, 
+mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de,
 		  const epg_broadcast_t *ebc)
 {
   htsbuf_queue_t q;
@@ -1169,3 +1169,4 @@ mk_mux_destroy(mk_mux_t *mkm)
   free(mkm->title);
   free(mkm);
 }
+

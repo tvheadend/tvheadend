@@ -99,7 +99,7 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
   tfs->tfs_index = index;
   tfs->tfs_last_dts_norm = PTS_UNSET;
   tfs->tfs_last_dts_in = PTS_UNSET;
-  tfs->tfs_dts_epoch = 0; 
+  tfs->tfs_dts_epoch = 0;
 
   LIST_INSERT_HEAD(&tf->tf_streams, tfs, tfs_link);
 }
@@ -176,7 +176,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	tfs->tfs_bad_dts++;
 
 	if(tfs->tfs_bad_dts < 5) {
-	  tvhlog(LOG_ERR, "parser", 
+	  tvhlog(LOG_ERR, "parser",
 		 "transport stream %s, DTS discontinuity. "
 		 "DTS = %" PRId64 ", last = %" PRId64,
 		 streaming_component_type2txt(tfs->tfs_type),
@@ -198,7 +198,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   if(pkt->pkt_pts != PTS_UNSET) {
     /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
     int64_t ptsoff = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
-    
+
     pkt->pkt_pts = dts + ptsoff;
   }
 
@@ -228,7 +228,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   pktref_enqueue(&tf->tf_ptsq, pkt);
 
   while((pr = TAILQ_FIRST(&tf->tf_ptsq)) != NULL) {
-    
+
     pkt = pr->pr_pkt;
     tfs = tfs_find(tf, pkt);
 
@@ -244,7 +244,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 		    streaming_component_type2txt(tfs->tfs_type),
 		    pkt->pkt_dts);
 	break;
-      
+
       case PKT_I_FRAME:
       case PKT_P_FRAME:
 	/* Presentation occures at DTS of next I or P frame,
@@ -253,7 +253,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	while(1) {
 	  if(srch == NULL)
 	    return; /* not arrived yet, wait */
-	  if(tfs_find(tf, srch->pr_pkt) == tfs && 
+	  if(tfs_find(tf, srch->pr_pkt) == tfs &&
 	     srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
 	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %"PRId64"\n",
@@ -309,7 +309,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   th_pkt_t *pkt = pkt_copy_shallow(sm->sm_data);
   tfstream_t *tfs = tfs_find(tf, pkt);
   streaming_msg_free(sm);
-  
+
   if(tfs == NULL || dispatch_clock < tf->tf_start_time) {
     pkt_ref_dec(pkt);
     return;

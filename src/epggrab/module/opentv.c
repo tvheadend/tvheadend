@@ -42,7 +42,7 @@ static epggrab_channel_tree_t _opentv_channels;
 
 /* Internal event structure */
 typedef struct opentv_event
-{ 
+{
   RB_ENTRY(opentv_event) ev_link;     ///< List of partial events
   uint16_t               cid;         ///< Channel ID
   uint16_t               eid;         ///< Events ID
@@ -53,7 +53,7 @@ typedef struct opentv_event
   char                  *desc;        ///< Event description
   uint8_t                cat;         ///< Event category
   uint16_t               serieslink;  ///< Series link ID
-  
+
   uint8_t                type;        ///< 0x1=title, 0x2=summary
 } opentv_event_t;
 
@@ -140,7 +140,7 @@ typedef struct opentv_module_t
   int                   *summary;
   opentv_dict_t         *dict;
   opentv_genre_t        *genre;
-  
+
 } opentv_module_t;
 
 /*
@@ -212,7 +212,7 @@ static int _ev_cmp ( void *_a, void *_b )
 }
 
 /* Parse huffman encoded string */
-static char *_opentv_parse_string 
+static char *_opentv_parse_string
   ( opentv_module_t *prov, uint8_t *buf, int len )
 {
   int ok = 0;
@@ -304,7 +304,7 @@ static int _opentv_parse_event
   }
   ev->type |= type;
 
-  /* Process records */ 
+  /* Process records */
   while (i < slen+4) {
     i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd);
   }
@@ -336,7 +336,7 @@ static int _opentv_parse_event_section
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
   if (!(ecl = LIST_FIRST(&ec->channels))) return 0;
   // TODO: it's assumed that opentv channels are always 1-1 mapping!
-  
+
   /* Time (start/stop referenced to this) */
   mjd = ((int)buf[5] << 8) | buf[6];
   mjd = (mjd - 40587) * 86400;
@@ -538,7 +538,7 @@ static int _opentv_bat_section
  * Table Callbacks
  * ***********************************************************************/
 
-static epggrab_ota_mux_t *_opentv_event_callback 
+static epggrab_ota_mux_t *_opentv_event_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
   th_dvb_table_t    *tdt = p;
@@ -579,7 +579,7 @@ static epggrab_ota_mux_t *_opentv_event_callback
     pid->state = OPENTV_PID_STARTED;
     memcpy(pid->start, buf, 20);
     return ota;
- 
+
   /* PID Already complete */
   } else if (pid->state == OPENTV_PID_COMPLETE) {
     return NULL;
@@ -599,7 +599,7 @@ static epggrab_ota_mux_t *_opentv_event_callback
 
   /* Mark complete */
   epggrab_ota_complete(ota);
-  
+
   return NULL;
 }
 
@@ -684,7 +684,7 @@ static void _opentv_start
 
   /* Register (just in case we missed it on enable somehow) */
   epggrab_ota_register(ota, 600, 3600); // 10min scan every hour
-  
+
   /* Install tables */
   tvhlog(LOG_DEBUG, "opentv", "install provider %s tables", mod->id);
 
@@ -738,15 +738,15 @@ static int _opentv_enable ( void  *m, uint8_t e )
  * ***********************************************************************/
 
 static int* _pid_list_to_array ( htsmsg_t *m )
-{ 
+{
   int i = 1;
   int *ret;
   htsmsg_field_t *f;
-  HTSMSG_FOREACH(f, m) 
+  HTSMSG_FOREACH(f, m)
     if (f->hmf_s64) i++;
   ret = calloc(i, sizeof(int));
   i   = 0;
-  HTSMSG_FOREACH(f, m) 
+  HTSMSG_FOREACH(f, m)
     if (f->hmf_s64) {
       ret[i] = (int)f->hmf_s64;
       i++;
@@ -782,7 +782,7 @@ static void _opentv_genre_load ( htsmsg_t *m )
   HTSMSG_FOREACH(f, m) {
     if ((e = htsmsg_get_list(m, f->hmf_name))) {
       if ((r = _opentv_genre_load_one(f->hmf_name, e))) {
-        if (r > 0) 
+        if (r > 0)
           tvhlog(LOG_DEBUG, "opentv", "genre map %s loaded", f->hmf_name);
         else
           tvhlog(LOG_WARNING, "opentv", "genre map %s failed", f->hmf_name);
@@ -821,7 +821,7 @@ static void _opentv_dict_load ( htsmsg_t *m )
   HTSMSG_FOREACH(f, m) {
     if ((e = htsmsg_get_list(m, f->hmf_name))) {
       if ((r = _opentv_dict_load_one(f->hmf_name, e))) {
-        if (r > 0) 
+        if (r > 0)
           tvhlog(LOG_DEBUG, "opentv", "dictionary %s loaded", f->hmf_name);
         else
           tvhlog(LOG_WARNING, "opentv", "dictionary %s failed", f->hmf_name);
@@ -859,7 +859,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
     genre = _opentv_genre_find(str);
   else
     genre = NULL;
- 
+
 
   /* Exists (we expect some duplicates due to config layout) */
   sprintf(ibuf, "opentv-%s", id);
@@ -872,7 +872,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
                               ibuf, nbuf, 2,
                               _opentv_start, _opentv_enable,
                               NULL);
-  
+
   /* Add provider details */
   mod->dict     = dict;
   mod->genre    = genre;
@@ -934,3 +934,4 @@ void opentv_load ( void )
 {
   // TODO: do we want to keep a list of channels stored?
 }
+

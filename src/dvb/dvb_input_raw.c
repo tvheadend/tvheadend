@@ -134,7 +134,7 @@ dvb_table_input(void *aux)
   while(1) {
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
-  
+
     while((dtf = TAILQ_FIRST(&tda->tda_table_feed)) == NULL)
       pthread_cond_wait(&tda->tda_table_feed_cond, &tda->tda_delivery_mutex);
     TAILQ_REMOVE(&tda->tda_table_feed, dtf, dtf_link);
@@ -148,7 +148,7 @@ dvb_table_input(void *aux)
 
     pthread_mutex_unlock(&global_lock);
     free(dtf);
-  }    
+  }
   return NULL;
 }
 

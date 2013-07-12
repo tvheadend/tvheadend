@@ -63,7 +63,7 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
   if(htsmsg_get_u32(c, "start", &e_start)) return;
   if(htsmsg_get_u32(c, "stop", &e_stop)) return;
   if(!(title = htsmsg_get_str(c, "title"))) return;
-  
+
   /* Create broadcast */
   save = 0;
   ebc  = epg_broadcast_find_by_time(ch, e_start, e_stop, 0, 1, &save);
@@ -108,11 +108,11 @@ static void _epgdb_v2_process ( htsmsg_t *m, epggrab_stats_t *stats )
   if ( (s = htsmsg_get_str(m, "__section__")) ) {
     if (sect) free(sect);
     sect = strdup(s);
-  
+
   /* Brand */
   } else if ( !strcmp(sect, "brands") ) {
     if (epg_brand_deserialize(m, 1, &save)) stats->brands.total++;
-      
+
   /* Season */
   } else if ( !strcmp(sect, "seasons") ) {
     if (epg_season_deserialize(m, 1, &save)) stats->seasons.total++;
@@ -120,11 +120,11 @@ static void _epgdb_v2_process ( htsmsg_t *m, epggrab_stats_t *stats )
   /* Episode */
   } else if ( !strcmp(sect, "episodes") ) {
     if (epg_episode_deserialize(m, 1, &save)) stats->episodes.total++;
-  
+
   /* Series link */
   } else if ( !strcmp(sect, "serieslinks") ) {
     if (epg_serieslink_deserialize(m, 1, &save)) stats->seasons.total++;
-  
+
   /* Broadcasts */
   } else if ( !strcmp(sect, "broadcasts") ) {
     if (epg_broadcast_deserialize(m, 1, &save)) stats->broadcasts.total++;
@@ -160,7 +160,7 @@ void epg_init ( void )
     tvhlog(LOG_DEBUG, "epgdb", "database does not exist");
     return;
   }
-  
+
   /* Map file to memory */
   if ( fstat(fd, &st) != 0 ) {
     tvhlog(LOG_ERR, "epgdb", "failed to detect database size");
@@ -191,7 +191,7 @@ void epg_init ( void )
       tvhlog(LOG_ERR, "epgdb", "corruption detected, some/all data lost");
       break;
     }
-    
+
     /* Extract message */
     htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
 
@@ -274,7 +274,7 @@ void epg_save ( void *p )
 
   if (epggrab_epgdb_periodicsave)
     gtimer_arm(&epggrab_save_timer, epg_save, NULL, epggrab_epgdb_periodicsave);
-  
+
   fd = hts_settings_open_file(1, "epgdb.v%d", EPG_DB_VERSION);
 
   memset(&stats, 0, sizeof(stats));
@@ -314,3 +314,4 @@ void epg_save ( void *p )
   tvhlog(LOG_INFO, "epgdb", "  episodes   %d", stats.episodes.total);
   tvhlog(LOG_INFO, "epgdb", "  broadcasts %d", stats.broadcasts.total);
 }
+

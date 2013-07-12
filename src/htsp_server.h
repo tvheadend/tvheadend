@@ -43,3 +43,4 @@ void htsp_event_update(epg_broadcast_t *ebc);
 void htsp_event_delete(epg_broadcast_t *ebc);
 
 #endif /* HTSP_H_ */
+

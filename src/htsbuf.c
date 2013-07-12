@@ -98,10 +98,10 @@ htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len)
   }
   if(len == 0)
     return;
-  
+
   hd = malloc(sizeof(htsbuf_data_t));
   TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
-  
+
   c = MAX(len, 1000); /* Allocate 1000 bytes to support lots of small writes */
 
   hd->hd_data = malloc(c);
@@ -124,7 +124,7 @@ htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len)
 
   hd = malloc(sizeof(htsbuf_data_t));
   TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
-  
+
   hd->hd_data = (void *)buf;
   hd->hd_data_size = len;
   hd->hd_data_len = len;
@@ -141,7 +141,7 @@ htsbuf_read(htsbuf_queue_t *hq, void *buf, size_t len)
   int c;
 
   htsbuf_data_t *hd;
-  
+
   while(len > 0) {
     hd = TAILQ_FIRST(&hq->hq_q);
     if(hd == NULL)
@@ -173,7 +173,7 @@ htsbuf_find(htsbuf_queue_t *hq, uint8_t v)
 
   TAILQ_FOREACH(hd, &hq->hq_q, hd_link) {
     for(i = hd->hd_data_off; i < hd->hd_data_len; i++) {
-      if(hd->hd_data[i] == v) 
+      if(hd->hd_data[i] == v)
 	return o + i - hd->hd_data_off;
     }
     o += hd->hd_data_len - hd->hd_data_off;
@@ -193,7 +193,7 @@ htsbuf_peek(htsbuf_queue_t *hq, void *buf, size_t len)
   int c;
 
   htsbuf_data_t *hd = TAILQ_FIRST(&hq->hq_q);
-  
+
   while(len > 0 && hd != NULL) {
     c = MIN(hd->hd_data_len - hd->hd_data_off, len);
     memcpy(buf, hd->hd_data + hd->hd_data_off, c);
@@ -216,7 +216,7 @@ htsbuf_drop(htsbuf_queue_t *hq, size_t len)
   size_t r = 0;
   int c;
   htsbuf_data_t *hd;
-  
+
   while(len > 0) {
     hd = TAILQ_FIRST(&hq->hq_q);
     if(hd == NULL)
@@ -355,13 +355,13 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
     case '"':  esc = "&quot;"; break;
     default:   esc = NULL;     break;
     }
-    
+
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
       htsbuf_append(hq, esc, strlen(esc));
       s = c;
     }
-    
+
     if(c == e) {
       htsbuf_append(hq, s, c - s);
       break;
@@ -386,7 +386,7 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
     const char *esc;
     char buf[4];
     C = *c++;
-    
+
     if((C >= '0' && C <= '9') ||
        (C >= 'a' && C <= 'z') ||
        (C >= 'A' && C <= 'Z') ||
@@ -409,7 +409,7 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
       htsbuf_append(hq, esc, strlen(esc));
       s = c;
     }
-    
+
     if(c == e) {
       htsbuf_append(hq, s, c - s);
       break;
@@ -434,11 +434,11 @@ htsbuf_append_and_escape_jsonstr(htsbuf_queue_t *hq, const char *str)
 
       if(*s == '"')
 	htsbuf_append(hq, "\\\"", 2);
-      else if(*s == '\n') 
+      else if(*s == '\n')
 	htsbuf_append(hq, "\\n", 2);
-      else if(*s == '\r') 
+      else if(*s == '\r')
 	htsbuf_append(hq, "\\r", 2);
-      else if(*s == '\t') 
+      else if(*s == '\t')
 	htsbuf_append(hq, "\\t", 2);
       else
 	htsbuf_append(hq, "\\\\", 2);

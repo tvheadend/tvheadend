@@ -126,7 +126,7 @@ void epggrab_ota_destroy_by_tdmi   ( struct th_dvb_mux_instance *tdmi );
 /*
  * Register interest
  */
-void epggrab_ota_register   
+void epggrab_ota_register
   ( epggrab_ota_mux_t *ota, int timeout, int interval );
 
 /*
@@ -176,3 +176,4 @@ void xmltv_init  ( void );
 void xmltv_load  ( void );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */
+

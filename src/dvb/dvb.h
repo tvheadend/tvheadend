@@ -253,7 +253,7 @@ typedef struct th_dvb_adapter {
 
   gtimer_t tda_fe_monitor_timer;
 
-  int tda_sat; // Set if this adapter is a satellite receiver (DVB-S, etc) 
+  int tda_sat; // Set if this adapter is a satellite receiver (DVB-S, etc)
 
   struct dvb_satconf_queue tda_satconfs;
 
@@ -549,10 +549,10 @@ htsmsg_t *dvb_satconf_list(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_lnblist_get(void);
 
-dvb_satconf_t *dvb_satconf_entry_find(th_dvb_adapter_t *tda, 
+dvb_satconf_t *dvb_satconf_entry_find(th_dvb_adapter_t *tda,
 				      const char *id, int create);
 
-void dvb_lnb_get_frequencies(const char *id, 
+void dvb_lnb_get_frequencies(const char *id,
 			     int *f_low, int *f_hi, int *f_switch);
 
 

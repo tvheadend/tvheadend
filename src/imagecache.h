@@ -59,3 +59,4 @@ int      imagecache_open    ( uint32_t id );
   }
 
 #endif /* __IMAGE_CACHE_H__ */
+

@@ -353,7 +353,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
   if(pb != NULL)
     pktbuf_ref_inc(pb);
   hm->hm_payloadsize = payloadsize;
-  
+
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
   TAILQ_INSERT_TAIL(&hmq->hmq_q, hm, hm_link);
@@ -383,7 +383,7 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
 }
 
-/** 
+/**
  * Simple function to respond with an error
  */
 static htsmsg_t *
@@ -418,7 +418,7 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 
   if((fd = tvh_open("/dev/urandom", O_RDONLY, 0)) < 0)
     return -1;
-  
+
   n = read(fd, &htsp->htsp_challenge, 32);
   close(fd);
   return n != 32;
@@ -579,7 +579,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   channel_tag_mapping_t *ctm;
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
- 
+
   htsmsg_add_u32(out, "tagId", ct->ct_identifier);
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
@@ -812,7 +812,7 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(!(htsp->htsp_granted_access & HTSP_PRIV_MASK))
     htsmsg_add_u32(r, "noaccess", 1);
-  
+
   return r;
 }
 
@@ -828,7 +828,7 @@ htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(statvfs(cfg->dvr_storage,&diskdata) == -1)
     return htsp_error("Unable to stat path");
-  
+
   out = htsmsg_create_map();
   htsmsg_add_s64(out, "freediskspace",
 		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
@@ -848,7 +848,7 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
   struct timezone tz;
 
   if(gettimeofday(&tv, &tz) == -1)
-    return htsp_error("Unable to get system time"); 
+    return htsp_error("Unable to get system time");
 
   out = htsmsg_create_map();
   htsmsg_add_s32(out, "time", tv.tv_sec);
@@ -880,7 +880,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     htsp->htsp_language = strdup(lang);
 
   /* First, just OK the async request */
-  htsp_reply(htsp, in, htsmsg_create_map()); 
+  htsp_reply(htsp, in, htsmsg_create_map());
 
   if(htsp->htsp_async_mode)
     return NULL; /* already in async mode */
@@ -893,11 +893,11 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
       htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
-  
+
   /* Send all channels */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
     htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd", htsp), NULL);
-    
+
   /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
@@ -937,7 +937,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t eventId;
   epg_broadcast_t *e;
   const char *lang;
-  
+
   if(htsmsg_get_u32(in, "eventId", &eventId))
     return htsp_error("Missing argument 'eventId'");
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
@@ -949,7 +949,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
- * Get information about the given event + 
+ * Get information about the given event +
  * n following events
  */
 static htsmsg_t *
@@ -969,7 +969,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsmsg_get_u32(in, "eventId", &u32))
     if (!(e = epg_broadcast_find_by_id(u32, ch)))
       return htsp_error("Event does not exist");
-  numFollowing 
+  numFollowing
     = htsmsg_get_u32_or_default(in, "numFollowing", 0);
   maxTime
     = htsmsg_get_s64_or_default(in, "maxTime", 0);
@@ -1003,7 +1003,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
       }
     }
   }
-  
+
   /* Send */
   out = htsmsg_create_map();
   htsmsg_add_msg(out, "events", events);
@@ -1026,11 +1026,11 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   epg_query_result_t eqr;
   epg_genre_t genre, *eg = NULL;
   const char *lang;
-  
+
   /* Required */
   if( (query = htsmsg_get_str(in, "query")) == NULL )
     return htsp_error("Missing argument 'query'");
-  
+
   /* Optional */
   if(!(htsmsg_get_u32(in, "channelId", &u32)))
     if (!(ch = channel_find_by_identifier(u32)))
@@ -1062,9 +1062,9 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     }
     htsmsg_add_msg(out, full ? "events" : "eventIds", array);
   }
-  
+
   epg_query_free(&eqr);
-  
+
   return out;
 }
 
@@ -1100,7 +1100,7 @@ htsp_method_getEpgObject(htsp_connection_t *htsp, htsmsg_t *in)
 /**
  * add a Dvrentry
  */
-static htsmsg_t * 
+static htsmsg_t *
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
@@ -1153,16 +1153,16 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Event timer */
   } else {
-    de = dvr_entry_create_by_event(dvr_config_name, e, 
+    de = dvr_entry_create_by_event(dvr_config_name, e,
                                    start_extra, stop_extra,
                                    creator, NULL, priority);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
-  
+
   //create response
   out = htsmsg_create_map();
-  
+
   switch(dvr_status) {
   case DVR_SCHEDULED:
   case DVR_RECORDING:
@@ -1170,7 +1170,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   case DVR_COMPLETED:
     htsmsg_add_u32(out, "id", de->de_id);
     htsmsg_add_u32(out, "success", 1);
-    break;  
+    break;
   case DVR_NOSTATE:
     htsmsg_add_str(out, "error", "Could not add dvrEntry");
     htsmsg_add_u32(out, "success", 0);
@@ -1190,11 +1190,11 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra;
   const char *title, *desc, *lang;
-    
+
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
-  
-  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL) 
+
+  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
     return htsp_error("id not found");
 
   start       = htsmsg_get_s64_or_default(in, "start",       0);
@@ -1212,7 +1212,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   //create response
   out = htsmsg_create_map();
   htsmsg_add_u32(out, "success", 1);
-  
+
   return out;
 }
 
@@ -1434,7 +1434,7 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
     if(s->hs_sid == sid)
       break;
-  
+
   /*
    * We send the reply here or the user will get the 'subscriptionStop'
    * async message before the reply to 'unsubscribe'.
@@ -1465,7 +1465,7 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
-  
+
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
@@ -1842,7 +1842,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
     return;
 
   if(strcmp(htsp->htsp_username ?: "", username)) {
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s",
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
@@ -1855,7 +1855,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 			     (struct sockaddr *)htsp->htsp_peer, &match);
 
   privgain = (access | htsp->htsp_granted_access) != htsp->htsp_granted_access;
-    
+
   if(privgain)
     tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
 
@@ -1873,7 +1873,7 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   uint8_t data[4];
   void *buf;
 
-  v = timeout ? tcp_read_timeout(htsp->htsp_fd, data, 4, timeout) : 
+  v = timeout ? tcp_read_timeout(htsp->htsp_fd, data, 4, timeout) :
     tcp_read(htsp->htsp_fd, data, 4);
 
   if(v != 0)
@@ -1885,9 +1885,9 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   if((buf = malloc(len)) == NULL)
     return ENOMEM;
 
-  v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) : 
+  v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) :
     tcp_read(htsp->htsp_fd, buf, len);
-  
+
   if(v != 0) {
     free(buf);
     return v;
@@ -1921,7 +1921,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   }
 
   pthread_mutex_lock(&global_lock);
-  htsp->htsp_granted_access = 
+  htsp->htsp_granted_access =
     access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
   pthread_mutex_unlock(&global_lock);
 
@@ -1941,14 +1941,14 @@ readmsg:
       for(i = 0; i < NUM_METHODS; i++) {
 	      if(!strcmp(method, htsp_methods[i].name)) {
 
-	        if((htsp->htsp_granted_access & htsp_methods[i].privmask) != 
+	        if((htsp->htsp_granted_access & htsp_methods[i].privmask) !=
 	           htsp_methods[i].privmask) {
 
       	    pthread_mutex_unlock(&global_lock);
 
 	          /* Classic authentication failed delay */
 	          usleep(250000);
-	    
+
 	          reply = htsmsg_create_map();
 	          htsmsg_add_u32(reply, "noaccess", 1);
 	          htsp_reply(htsp, m, reply);
@@ -2000,7 +2000,7 @@ htsp_write_scheduler(void *aux)
       /* No active queues at all */
       if(!htsp->htsp_writer_run)
 	      break; /* Should not run anymore, bail out */
-      
+
       /* Nothing to be done, go to sleep */
       pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
       continue;
@@ -2362,7 +2362,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   }
 
   if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
+     (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) ||
      (qlen > hs->hs_queue_depth * 3)) {
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
@@ -2373,7 +2373,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   }
 
   m = htsmsg_create_map();
- 
+
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "frametype", frametypearray[pkt->pkt_frametype]);
@@ -2393,7 +2393,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
   uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
-  
+
   pkt = pkt_merge_header(pkt);
 
   /**
@@ -2417,9 +2417,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
 
     /**
-     * Figure out real time queue delay 
+     * Figure out real time queue delay
      */
-    
+
     pthread_mutex_lock(&htsp->htsp_out_mutex);
 
     int64_t min_dts = PTS_UNSET;
@@ -2431,7 +2431,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 	continue;
       if(ts == PTS_UNSET)
 	continue;
-  
+
       if(min_dts == PTS_UNSET)
 	min_dts = ts;
       else
@@ -2480,7 +2480,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     htsmsg_add_str(c, "type", streaming_component_type2txt(ssc->ssc_type));
     if(ssc->ssc_lang[0])
       htsmsg_add_str(c, "language", ssc->ssc_lang);
-    
+
     if(ssc->ssc_type == SCT_DVBSUB) {
       htsmsg_add_u32(c, "composition_id", ssc->ssc_composition_id);
       htsmsg_add_u32(c, "ancillary_id", ssc->ssc_ancillary_id);
@@ -2511,7 +2511,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
     htsmsg_add_msg(streams, NULL, c);
   }
-  
+
   htsmsg_add_msg(m, "streams", streams);
 
   if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
@@ -2519,9 +2519,9 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
   if(si->si_provider) htsmsg_add_str(sourceinfo, "provider", si->si_provider);
   if(si->si_service ) htsmsg_add_str(sourceinfo, "service",  si->si_service );
-  
+
   htsmsg_add_msg(m, "sourceinfo", sourceinfo);
- 
+
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
@@ -2708,3 +2708,4 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
   }
   streaming_msg_free(sm);
 }
+

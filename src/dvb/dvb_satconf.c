@@ -75,7 +75,7 @@ dvb_satconf_entry_find(th_dvb_adapter_t *tda, const char *id, int create)
   sc = calloc(1, sizeof(dvb_satconf_t));
   sc->sc_id = strdup(id);
   sc->sc_lnb = strdup("Universal");
-  TAILQ_INSERT_TAIL(&tda->tda_satconfs, sc, sc_adapter_link);  
+  TAILQ_INSERT_TAIL(&tda->tda_satconfs, sc, sc_adapter_link);
 
   return sc;
 }
@@ -94,7 +94,7 @@ satconf_destroy(th_dvb_adapter_t *tda, dvb_satconf_t *sc)
     LIST_REMOVE(tdmi, tdmi_satconf_link);
   }
 
-  TAILQ_REMOVE(&tda->tda_satconfs, sc, sc_adapter_link);  
+  TAILQ_REMOVE(&tda->tda_satconfs, sc, sc_adapter_link);
   free(sc->sc_id);
   free(sc->sc_name);
   free(sc->sc_comment);
@@ -123,7 +123,7 @@ satconf_record_build(dvb_satconf_t *sc)
  *
  */
 static htsmsg_t *
-satconf_entry_update(void *opaque, const char *id, htsmsg_t *values, 
+satconf_entry_update(void *opaque, const char *id, htsmsg_t *values,
 		     int maycreate)
 {
   th_dvb_adapter_t *tda = opaque;
@@ -134,11 +134,11 @@ satconf_entry_update(void *opaque, const char *id, htsmsg_t *values,
     return NULL;
 
   lock_assert(&global_lock);
-  
+
   tvh_str_update(&sc->sc_name, htsmsg_get_str(values, "name"));
   tvh_str_update(&sc->sc_comment, htsmsg_get_str(values, "comment"));
   tvh_str_update(&sc->sc_lnb, htsmsg_get_str(values, "lnb"));
-  
+
   if(!htsmsg_get_u32(values, "port", &u32))
     sc->sc_port = u32;
 
@@ -271,7 +271,7 @@ dvb_satconf_list(th_dvb_adapter_t *tda)
 /**
  *
  */
-static void 
+static void
 add_to_lnblist(htsmsg_t *array, const char *n)
 {
   htsmsg_t *m = htsmsg_create_map();
@@ -345,3 +345,4 @@ dvb_lnb_get_frequencies(const char *id, int *f_low, int *f_hi, int *f_switch)
     *f_switch = 0;
   }
 }
+

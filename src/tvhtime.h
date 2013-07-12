@@ -32,3 +32,4 @@ void tvhtime_set_ntp_enabled ( uint32_t on );
 void tvhtime_set_tolerance ( uint32_t v );
 
 #endif /* __TVH_TIME_H__ */
+

@@ -95,7 +95,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   // Issue #1504 - IE9 temporary fix
   htsbuf_qprintf(hq, "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=8\">\n");
 
-  
+
   htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base%s.js\"></script>\n"
                      "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all%s.js\"></script>\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme%s.css\">\n"
@@ -105,7 +105,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
                      tvheadend_webui_debug ? "-debug" : "",
                      tvheadend_webui_debug ? "-debug" : "",
                      tvheadend_webui_debug ? ""       : "-min");
-  
+
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = " "'"EXTJSPATH"/resources/images/default/s.gif';");
 
   /**
@@ -155,7 +155,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
    */
   extjs_load(hq, "static/app/tvheadend.js");
   extjs_exec(hq, "Ext.onReady(tvheadend.app.init, tvheadend.app);");
-  
+
 
 
 
@@ -187,14 +187,14 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * 
+ *
  */
 static int
 page_about(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  htsbuf_qprintf(hq, 
+  htsbuf_qprintf(hq,
 		 "<center>"
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
@@ -244,7 +244,7 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   if(tablename == NULL || (dt = dtable_find(tablename)) == NULL)
     return 404;
-  
+
   if(http_access_verify(hc, dt->dt_dtc->dtc_read_access))
     return HTTP_STATUS_UNAUTHORIZED;
 
@@ -494,7 +494,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
     RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
       htsmsg_add_msg(array, NULL, build_record_channel(ch));
     }
-    
+
     htsmsg_add_msg(out, "entries", array);
 
   } else if(!strcmp(op, "create")) {
@@ -506,7 +506,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "update") && in != NULL) {
     extjs_channels_update(in);
-     
+
   } else {
     htsmsg_destroy(in);
     htsmsg_destroy(out);
@@ -545,7 +545,7 @@ static htsmsg_t *
 json_single_record(htsmsg_t *rec, const char *root)
 {
   htsmsg_t *out, *array;
-  
+
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
@@ -936,7 +936,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     if(e->serieslink)
       htsmsg_add_str(m, "serieslink", e->serieslink->uri);
-    
+
     if((eg = LIST_FIRST(&ee->genre))) {
       htsmsg_add_u32(m, "contenttype", eg->code);
     }
@@ -1000,7 +1000,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
           htsmsg_add_u32(m, "start", ebc->start);
           htsmsg_add_msg(array, NULL, m);
         }
-      
+
       /* Related */
       } else if (!strcmp(type, "related")) {
         if (ee->brand) {
@@ -1130,7 +1130,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if (!strcmp(op, "recordEvent"))
       dvr_entry_create_by_event(config_name,
-                                e, 0, 0, 
+                                e, 0, 0,
                                 hc->hc_representative, NULL, DVR_PRIO_NORMAL);
     else
       dvr_autorec_add_series_link(config_name, e, hc->hc_representative, "Created from EPG query");
@@ -1175,7 +1175,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     channel_t *ch = channel ? channel_find_by_identifier(atoi(channel)) : NULL;
 
-    if(ch == NULL || title == NULL || 
+    if(ch == NULL || title == NULL ||
        datestr  == NULL || strlen(datestr)  != 10 ||
        startstr == NULL || strlen(startstr) != 5  ||
        stopstr  == NULL || strlen(stopstr)  != 5) {
@@ -1191,12 +1191,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     t.tm_hour = atoi(startstr);
     t.tm_min = atoi(startstr + 3);
-    
+
     time_t start = mktime(&t);
 
     t.tm_hour = atoi(stopstr);
     t.tm_min = atoi(stopstr + 3);
-    
+
     time_t stop = mktime(&t);
 
     if(stop < start)
@@ -1217,7 +1217,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create(config_name,
                      ch, start, stop, 0, 0, title, NULL, NULL,
-                     0, hc->hc_representative, 
+                     0, hc->hc_representative,
 		                 NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
@@ -1280,7 +1280,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if((s = http_arg_get(&hc->hc_req_args, "storage")) != NULL)
       dvr_storage_set(cfg,s);
-    
+
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
 
@@ -1420,7 +1420,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
     htsmsg_add_u32(m, "start", de->de_start);
     htsmsg_add_u32(m, "end", de->de_stop);
     htsmsg_add_u32(m, "duration", de->de_stop - de->de_start);
-    
+
     htsmsg_add_str(m, "creator", de->de_creator);
 
     htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
@@ -1563,14 +1563,14 @@ service_update(htsmsg_t *in)
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
-    
+
     if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
     if(!htsmsg_get_u32(c, "enabled", &u32))
       service_set_enable(t, u32);
 
-    if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
+    if((chname = htsmsg_get_str(c, "channelname")) != NULL)
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
     if(!htsmsg_get_u32(c, "prefcapid", &u32))
@@ -1588,7 +1588,7 @@ service_update(htsmsg_t *in)
  *
  */
 static int
-extjs_servicedetails(http_connection_t *hc, 
+extjs_servicedetails(http_connection_t *hc,
 		     const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1623,7 +1623,7 @@ extjs_servicedetails(http_connection_t *hc,
       buf[0] = 0;
 
       LIST_FOREACH(ca, &st->es_caids, link) {
-	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), 
+	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
 		 "%s (0x%04x) [0x%08x]",
 		 psi_caid2name(ca->caid), ca->caid, ca->providerid);
       }
@@ -1741,7 +1741,7 @@ service_update_iptv(htsmsg_t *in)
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
-    
+
     if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
@@ -1763,7 +1763,7 @@ service_update_iptv(htsmsg_t *in)
       }
       save = 1;
     }
-    
+
 
     save |= tvh_str_update(&t->s_iptv_iface, htsmsg_get_str(c, "interface"));
     if(save)
@@ -1864,7 +1864,7 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(op, "delete")) {
     if(in != NULL)
       extjs_service_delete(in);
-    
+
     out = htsmsg_create_map();
 
   } else if (!strcmp(op, "servicetypeList")) {
@@ -1906,7 +1906,7 @@ extjs_service_update(htsmsg_t *in)
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
-    
+
     if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
@@ -1916,7 +1916,7 @@ extjs_service_update(htsmsg_t *in)
     if(!htsmsg_get_u32(c, "prefcapid", &u32))
       service_set_prefcapid(t, u32);
 
-    if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
+    if((chname = htsmsg_get_str(c, "channelname")) != NULL)
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
     if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
@@ -2031,7 +2031,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       tvhtime_set_tolerance(atoi(str));
 
     pthread_mutex_unlock(&global_lock);
-  
+
     /* Image Cache */
 #if ENABLE_IMAGECACHE
     pthread_mutex_lock(&imagecache_mutex);
@@ -2100,7 +2100,7 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "tvhlog_dbg_syslog",
                    tvhlog_options & TVHLOG_OPT_DBG_SYSLOG);
     pthread_mutex_unlock(&tvhlog_mutex);
-    
+
     if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
@@ -2130,7 +2130,7 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
       tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
     tvhlog_set_subsys(http_arg_get(&hc->hc_req_args, "tvhlog_subsys"));
     pthread_mutex_unlock(&tvhlog_mutex);
-  
+
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
@@ -2275,3 +2275,4 @@ extjs_start(void)
   extjs_start_v4l();
 #endif
 }
+

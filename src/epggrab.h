@@ -80,7 +80,7 @@ typedef struct epggrab_channel
   char                      *name;    ///< Channel name
   char                      *icon;    ///< Channel icon
   int                       number;   ///< Channel number
-  
+
   LIST_HEAD(,epggrab_channel_link) channels; ///< Mapped channels
 } epggrab_channel_t;
 
@@ -160,7 +160,7 @@ struct epggrab_module_int
 struct epggrab_module_ext
 {
   epggrab_module_int_t         ;          ///< Parent object
-  
+
   int                          sock;      ///< Socket descriptor
 };
 
@@ -279,3 +279,4 @@ void epggrab_resched     ( void );
  *
  * vim:sts=2:ts=2:sw=2:et
  * *************************************************************************/
+

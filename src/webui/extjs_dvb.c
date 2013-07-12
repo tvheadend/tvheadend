@@ -57,7 +57,7 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 
   if(s == NULL || a == NULL)
     return HTTP_STATUS_BAD_REQUEST;
-  
+
   pthread_mutex_lock(&global_lock);
 
   if(http_access_verify(hc, ACCESS_ADMIN)) {
@@ -88,7 +88,7 @@ static htsmsg_t *
 json_single_record(htsmsg_t *rec, const char *root)
 {
   htsmsg_t *out, *array;
-  
+
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
@@ -160,7 +160,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
     htsmsg_add_u32(r, "full_mux_rx", tda->tda_full_mux_rx+1);
     htsmsg_add_u32(r, "grace_period", tda->tda_grace_period);
-    htsmsg_add_str(r, "diseqcversion", 
+    htsmsg_add_str(r, "diseqcversion",
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
 		   [tda->tda_diseqc_version % 2]);
@@ -168,7 +168,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 		   ((const char *[]){"0", "1", "3"})
 		   [tda->tda_diseqc_repeats % 3]);
     htsmsg_add_u32(r, "extrapriority", tda->tda_extrapriority);
- 
+
     out = json_single_record(r, "dvbadapters");
   } else if(!strcmp(op, "save")) {
 
@@ -270,7 +270,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
 
   http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;  
+  return 0;
 }
 
 
@@ -290,7 +290,7 @@ mux_update(htsmsg_t *in)
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
-    
+
     if((tdmi = dvb_mux_find_by_identifier(id)) == NULL)
       continue;
 
@@ -359,7 +359,7 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(op, "delete")) {
     if(in != NULL)
       mux_delete(in);
-    
+
     out = htsmsg_create_map();
 
   } else {
@@ -371,7 +371,7 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   pthread_mutex_unlock(&global_lock);
- 
+
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
@@ -487,7 +487,7 @@ extjs_lnbtypes(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
-}  
+}
 
 
 
@@ -522,7 +522,7 @@ extjs_dvbsatconf(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
 
   http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;  
+  return 0;
 }
 
 
@@ -582,7 +582,7 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
   th_dvb_adapter_t *tda;
   const char *err;
   pthread_mutex_lock(&global_lock);
- 
+
   if(remain == NULL ||
      (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
     pthread_mutex_unlock(&global_lock);
@@ -604,7 +604,7 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
 			  atoi(http_arg_get(args, "fecID")?: "-1"),
 			  atoi(http_arg_get(args, "polarisationID")?: "-1"),
 			  http_arg_get(args, "satconfID") ?: NULL);
-			
+
   if(err != NULL)
     tvhlog(LOG_ERR, "web interface",
 	   "Unable to create mux on %s: %s",
@@ -644,7 +644,7 @@ extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
     return 400;
 
   pthread_mutex_lock(&global_lock);
- 
+
   if(remain == NULL ||
      (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
     pthread_mutex_unlock(&global_lock);
@@ -668,7 +668,7 @@ extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
 	char buf[100];
 	dvb_mux_nicename(buf, sizeof(buf), tdmi);
 
-	tvhlog(LOG_NOTICE, "DVB", 
+	tvhlog(LOG_NOTICE, "DVB",
 	       "Skipped copy of mux %s to adapter %s, mux already exist",
 	       buf, tda->tda_displayname);
       }
@@ -703,31 +703,32 @@ extjs_list_dvb_adapters(htsmsg_t *array)
 void
 extjs_start_dvb(void)
 {
-  http_path_add("/dvbnetworks", 
+  http_path_add("/dvbnetworks",
 		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
 
-  http_path_add("/dvb/adapter", 
+  http_path_add("/dvb/adapter",
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);
 
-  http_path_add("/dvb/muxes", 
+  http_path_add("/dvb/muxes",
 		NULL, extjs_dvbmuxes, ACCESS_ADMIN);
 
-  http_path_add("/dvb/services", 
+  http_path_add("/dvb/services",
 		NULL, extjs_dvbservices, ACCESS_ADMIN);
 
-  http_path_add("/dvb/lnbtypes", 
+  http_path_add("/dvb/lnbtypes",
 		NULL, extjs_lnbtypes, ACCESS_ADMIN);
 
-  http_path_add("/dvb/satconf", 
+  http_path_add("/dvb/satconf",
 		NULL, extjs_dvbsatconf, ACCESS_ADMIN);
 
-  http_path_add("/dvb/feopts", 
+  http_path_add("/dvb/feopts",
 		NULL, extjs_dvb_feopts, ACCESS_ADMIN);
 
-  http_path_add("/dvb/addmux", 
+  http_path_add("/dvb/addmux",
 		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
 
-  http_path_add("/dvb/copymux", 
+  http_path_add("/dvb/copymux",
 		NULL, extjs_dvb_copymux, ACCESS_ADMIN);
 
 }
+

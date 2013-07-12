@@ -33,7 +33,7 @@ extern int              tvhlog_options;
 extern pthread_mutex_t  tvhlog_mutex;
 
 /* Initialise */
-void tvhlog_init       ( int level, int options, const char *path ); 
+void tvhlog_init       ( int level, int options, const char *path );
 void tvhlog_set_subsys ( const char *subsys );
 void tvhlog_get_subsys ( char *subsys, size_t len );
 void tvhlogv           ( const char *file, int line,
@@ -81,3 +81,4 @@ void _tvhlog_hexdump   ( const char *file, int line,
 #endif
 
 #endif /* __TVH_LOGGING_H__ */
+

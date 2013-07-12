@@ -58,7 +58,7 @@ static char *name = NULL;
 static void create_services(AvahiClient *c);
 
 static void
-entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, 
+entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
 		     void *userdata)
 {
   assert(g == group || group == NULL);
@@ -81,7 +81,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
     n = avahi_alternative_service_name(name);
     avahi_free(name);
     name = n;
-    
+
     tvhlog(LOG_ERR, "AVAHI",
 	   "Service name collision, renaming service to '%s'", name);
 
@@ -92,7 +92,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
 
   case AVAHI_ENTRY_GROUP_FAILURE :
      tvhlog(LOG_ERR, "AVAHI",
-	    "Entry group failure: %s", 
+	    "Entry group failure: %s",
 	    avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(g))));
     break;
 
@@ -106,8 +106,8 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
 /**
  *
  */
-static void 
-create_services(AvahiClient *c) 
+static void
+create_services(AvahiClient *c)
 {
   char *n;
   int ret;
@@ -119,7 +119,7 @@ create_services(AvahiClient *c)
   if (!group)
     if (!(group = avahi_entry_group_new(c, entry_group_callback, NULL))) {
       tvhlog(LOG_ERR, "AVAHI",
-	     "avahi_enty_group_new() failed: %s", 
+	     "avahi_enty_group_new() failed: %s",
 	     avahi_strerror(avahi_client_errno(c)));
       goto fail;
     }
@@ -131,8 +131,8 @@ create_services(AvahiClient *c)
      tvhlog(LOG_DEBUG, "AVAHI", "Adding service '%s'", name);
 
     /* Add the service for HTSP */
-    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
-					     AVAHI_PROTO_UNSPEC, 0, name, 
+    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
+					     AVAHI_PROTO_UNSPEC, 0, name,
 					     "_htsp._tcp", NULL, NULL,tvheadend_htsp_port,
 					     NULL)) < 0) {
 
@@ -140,15 +140,15 @@ create_services(AvahiClient *c)
 	goto collision;
 
       tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to add _htsp._tcp service: %s", 
+	     "Failed to add _htsp._tcp service: %s",
 	     avahi_strerror(ret));
       goto fail;
     }
 
 
     /* Add the service for HTTP */
-    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
-					     AVAHI_PROTO_UNSPEC, 0, name, 
+    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
+					     AVAHI_PROTO_UNSPEC, 0, name,
 					     "_http._tcp", NULL, NULL, tvheadend_webui_port,
 					     "path=/",
 					     NULL)) < 0) {
@@ -157,7 +157,7 @@ create_services(AvahiClient *c)
 	goto collision;
 
       tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to add _http._tcp service: %s", 
+	     "Failed to add _http._tcp service: %s",
 	     avahi_strerror(ret));
       goto fail;
     }
@@ -165,7 +165,7 @@ create_services(AvahiClient *c)
     /* Tell the server to register the service */
     if ((ret = avahi_entry_group_commit(group)) < 0) {
       tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to commit entry group: %s", 
+	     "Failed to commit entry group: %s",
 	     avahi_strerror(ret));
       goto fail;
     }
@@ -213,7 +213,7 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
     break;
 
   case AVAHI_CLIENT_FAILURE:
-    tvhlog(LOG_ERR, "AVAHI", "Client failure: %s", 
+    tvhlog(LOG_ERR, "AVAHI", "Client failure: %s",
 	   avahi_strerror(avahi_client_errno(c)));
     break;
 
@@ -253,11 +253,11 @@ avahi_thread(void *aux)
   name = avahi_strdup("Tvheadend");
 
   avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
- 
+
   while((avahi_simple_poll_iterate(asp, -1)) != -1) {}
 
   return NULL;
-  
+
 
 }
 
@@ -271,3 +271,4 @@ avahi_init(void)
 
   pthread_create(&tid, NULL, avahi_thread, NULL);
 }
+

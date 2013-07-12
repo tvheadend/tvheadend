@@ -53,4 +53,5 @@ static inline void XOREQ_BEST_BY(unsigned char *d, unsigned char *s)
 	XOR_BEST_BY(d, d, s);
 }
 
-#endif //FFTABLE_H 
+#endif //FFTABLE_H
+

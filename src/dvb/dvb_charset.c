@@ -95,3 +95,4 @@ const char *dvb_charset_find
   }
   return ret ? ret->charset : NULL;
 }
+

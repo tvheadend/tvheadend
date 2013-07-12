@@ -117,13 +117,13 @@ static time_t _xmltv_str2time(const char *in)
  * made, or episode X out of Y episodes in this series, or part X of a
  * Y-part episode.  If any of these aren't known they can be omitted.
  * You can put spaces whereever you like to make things easier to read.
- * 
+ *
  * (NB 'part number' is not used when a whole programme is split in two
  * for purely scheduling reasons; it's intended for cases where there
  * really is a 'Part One' and 'Part Two'.  The format doesn't currently
  * have a way to represent a whole programme that happens to be split
  * across two or more timeslots.)
- * 
+ *
  * Some examples will make things clearer.  The first episode of the
  * second series is '1.0.0/1' .  If it were a two-part episode, then the
  * first half would be '1.0.0/2' and the second half '1.0.1/2'.  If you
@@ -203,7 +203,7 @@ static void parse_xmltv_dd_progid
 {
   char buf[128];
   if (strlen(s) < 2) return;
-  
+
   /* Raw URI */
   snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
 
@@ -243,7 +243,7 @@ static void get_episode_info
        (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
        (sys = htsmsg_get_str(a, "system")) == NULL)
       continue;
-    
+
     if(!strcmp(sys, "onscreen"))
       epnum->text = (char*)cdata;
     else if(!strcmp(sys, "xmltv_ns"))
@@ -302,7 +302,7 @@ xmltv_parse_vid_quality
   }
   if (lines)
     save |= epg_broadcast_set_lines(ebc, lines, mod);
-  
+
   return save;
 }
 
@@ -310,7 +310,7 @@ xmltv_parse_vid_quality
  * Parse accessibility data
  */
 int
-xmltv_parse_accessibility 
+xmltv_parse_accessibility
   ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m )
 {
   int save = 0;
@@ -415,7 +415,7 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
  * Parse tags inside of a programme
  */
 static int _xmltv_parse_programme_tags
-  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
+  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags,
    time_t start, time_t stop, epggrab_stats_t *stats)
 {
   int save = 0, save2 = 0, save3 = 0;
@@ -435,7 +435,7 @@ static int _xmltv_parse_programme_tags
   /*
    * Broadcast
    */
-  if (!(ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save))) 
+  if (!(ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save)))
     return 0;
   stats->broadcasts.total++;
   if (save) stats->broadcasts.created++;
@@ -492,7 +492,7 @@ static int _xmltv_parse_programme_tags
     _xmltv_parse_lang_str(&title, tags, "title");
     _xmltv_parse_lang_str(&subtitle, tags, "sub-title");
 
-    if (title) 
+    if (title)
       save3 |= epg_episode_set_title2(ee, title, mod);
     if (subtitle)
       save3 |= epg_episode_set_subtitle2(ee, subtitle, mod);
@@ -522,7 +522,7 @@ static int _xmltv_parse_programme_tags
   if (title)    lang_str_destroy(title);
   if (subtitle) lang_str_destroy(subtitle);
   if (desc)     lang_str_destroy(desc);
-  
+
   return save | save2 | save3;
 }
 
@@ -578,7 +578,7 @@ static int _xmltv_parse_channel
   if((ch      = _xmltv_channel_find(id, 1, &save)) == NULL) return 0;
   stats->channels.total++;
   if (save) stats->channels.created++;
-  
+
   if((name = htsmsg_xml_get_cdata_str(tags, "display-name")) != NULL) {
     save |= epggrab_channel_set_name(ch, name);
   }
@@ -721,3 +721,4 @@ void xmltv_load ( void )
 {
   epggrab_module_channels_load(epggrab_module_find_by_id("xmltv"));
 }
+

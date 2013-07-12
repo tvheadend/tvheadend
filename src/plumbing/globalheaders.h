@@ -27,3 +27,4 @@ void globalheaders_destroy(streaming_target_t *gh);
 
 
 #endif // GLOBALHEADERS_H__
+

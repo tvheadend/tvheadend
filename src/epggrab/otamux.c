@@ -163,7 +163,7 @@ void epggrab_ota_save ( void )
 {
   htsmsg_t *m = htsmsg_create_map();
   epggrab_module_t *mod;
-    
+
   // TODO: there is redundancy in this saving, because each MUX can
   // be represented N times, due to one copy per adapter. But load
   // only requires one instance to find them all.
@@ -192,7 +192,7 @@ static int _ota_time_cmp ( void *_a, void *_b )
   time(&now);
   epggrab_ota_mux_t *a = _a;
   epggrab_ota_mux_t *b = _b;
-  
+
   /* Unreg'd always at the end */
   r = a->is_reg - b->is_reg;
   if (r) return r;
@@ -249,7 +249,7 @@ epggrab_ota_mux_t *epggrab_ota_create
  * Create and register using mux ID
  */
 void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, int onid, int tsid, int period, int interval, 
+  ( epggrab_module_ota_t *mod, int onid, int tsid, int period, int interval,
     const char *networkname )
 {
   th_dvb_adapter_t *tda;
@@ -427,3 +427,4 @@ int epggrab_ota_is_blocked ( epggrab_ota_mux_t *ota )
   time(&t);
   return t < (ota->completed + ota->interval);
 }
+

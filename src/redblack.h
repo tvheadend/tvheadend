@@ -71,7 +71,7 @@ do {						\
   yy->field.left = xx;				\
   xx->field.parent = yy;			\
 } while(0)
-  
+
 
 #define RB_ROTATE_RIGHT(x, field, root)			\
 do {							\
@@ -476,7 +476,7 @@ do {									 \
     }						\
   }						\
  c;						\
-}) 
+})
 
 
 
@@ -570,3 +570,4 @@ do {									 \
 })
 
 #endif /* REDBLACK_H_ */
+

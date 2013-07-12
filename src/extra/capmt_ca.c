@@ -86,7 +86,7 @@ int proginfo=0;
 
 int sendcw(int fd, unsigned char *buff) {
   DBG(">>>>>>>> sendcw %02x%02x %02x%02x%02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x%02x%02x", buff[0], buff[1], buff[2], buff[3], buff[4], buff[5], buff[6], buff[7], buff[8], buff[9], buff[10], buff[11], buff[12], buff[13], buff[14], buff[15], buff[16], buff[17], buff[18]);
-  if ( send(fd,buff, 18, 0) == -1 ) { 
+  if ( send(fd,buff, 18, 0) == -1 ) {
   	ERR("ca.so: Send cw failed %d", errno);
     return 0;
   } // if
@@ -109,7 +109,7 @@ static int cactl (int fd, int cai, int request, void *argp) {
       break;
     case CA_SET_PID:
       DBG(">>>>>>>> cactl CA_SET_PID fd %d cai %d req %d (%d %04x)", fd, cai, request, cpd->index, cpd->pid);
-      if (cpd->index >=0 && cpd->index < MAX_INDEX) { 
+      if (cpd->index >=0 && cpd->index < MAX_INDEX) {
         ca_info[cai][cpd->index][0] = (cpd->pid >> 0) & 0xff;
 				ca_info[cai][cpd->index][1] = (cpd->pid >> 8) & 0xff;
       } else if (cpd->index == -1) {
@@ -134,7 +134,7 @@ static int cactl (int fd, int cai, int request, void *argp) {
   return 0;
 } // cactl
 
-/* 
+/*
     CPU Model
     Brcm4380 V4.2  // DM8000
     Brcm7401 V0.0  // DM800
@@ -159,8 +159,8 @@ int write_cpuinfo (void) {
   static FILE* (*func) (const char *, const char *) = NULL;
   func = (FILE* (*) (const char *, const char *)) dlsym (REAL_LIBC, "fopen");
   FILE* file = func(CPUINFO_MAP, "w");
-  
-  
+
+
   if(file == NULL) {
      printf("error \"%s\" opening file\n", strerror(errno));
      return -1;
@@ -181,12 +181,12 @@ FILE *fopen(const char *path, const char *mode){
   DBG(">>>>>>>> fopen %s", path);
   return (*func) (path, mode);
 } // fopen
-						  
+
 int open (const char *pathname, int flags, ...) {
   static int (*func) (const char *, int, mode_t) = NULL;
   if (!func) func = (int (*) (const char *, int, mode_t)) dlsym (REAL_LIBC, "open");
   PROGINFO();
-  
+
   va_list args;
   mode_t mode;
 
@@ -217,12 +217,12 @@ int open (const char *pathname, int flags, ...) {
           } // if
         } // if
       } // if
-      if(cafd[cai]!=-1) 
+      if(cafd[cai]!=-1)
         cafdc[cai]++;
-      else 
+      else
         cafdc[cai] = 0;
       return (cafd[cai]);
-    } // if      
+    } // if
   } else if (strstr(pathname, DEMUX_BASE)) {
     int cai=pathname[strlen(DEMUX_BASE)]-'0';
     if((cai >= 0) && (cai < MAX_CA)) {
@@ -259,7 +259,7 @@ int ioctl (int fd, int request, void *a) {
   for(i=0;i<MAX_CA;i++)
     if (fd == cafd[i])
       return cactl (fd, i, request, a);
-  return (*func) (fd, request, a); 
+  return (*func) (fd, request, a);
 } // ioctl
 
 int close (int fd) {
