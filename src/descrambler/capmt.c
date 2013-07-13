@@ -584,8 +584,8 @@ capmt_thread(void *aux)
         idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
         for (i = 0; i < is->is_count; i++) {
           la = (linuxdvb_adapter_t*)is->is_array[i];
-          if (!la->mi_enabled)  continue;
-          if (!la->la_rootpath) continue;
+          if (!la || !la->mi_is_enabled) continue;
+          if (!la->mi_is_enabled((mpegts_input_t*)la)) continue;
           if (la->la_number > MAX_CA) {
             tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
             continue;
