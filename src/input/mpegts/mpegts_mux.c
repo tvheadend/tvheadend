@@ -453,6 +453,7 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   mm->mm_initial_scan_done = 1;
   mm->mm_config_save(mm);
   idnode_updated(&mm->mm_id);
+  idnode_updated(&mm->mm_network->mn_id);
 }
 
 /* **************************************************************************

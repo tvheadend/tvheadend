@@ -63,6 +63,22 @@ mpegts_network_class_get_num_svc ( void *ptr )
   return &n;
 }
 
+static const void *
+mpegts_network_class_get_scanq_length ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm;
+  mpegts_network_t *mn = ptr;
+
+  n = 0;
+  TAILQ_FOREACH(mm, &mn->mn_initial_scan_pending_queue, mm_initial_scan_link)
+    n++;
+  TAILQ_FOREACH(mm, &mn->mn_initial_scan_current_queue, mm_initial_scan_link)
+    n++;
+
+  return &n;
+}
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
@@ -106,6 +122,13 @@ const idclass_t mpegts_network_class =
       .name     = "# Services",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_svc,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "scanq_length",
+      .name     = "Scan Q length",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_network_class_get_scanq_length,
     },
     {}
   }
