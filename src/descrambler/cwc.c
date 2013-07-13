@@ -491,6 +491,9 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   buf[0] = (len - 2) >> 8;
   buf[1] =  len - 2;
 
+  tvhtrace("cwc", "sending message sid %d len %"PRIsize_t" enq %d", sid, len, enq);
+  tvhlog_hexdump("cwc", msg, len);
+
 
   if(enq) {
     cm->cm_len = len;
@@ -951,6 +954,9 @@ cwc_read(cwc_t *cwc, void *buf, size_t len, int timeout)
   r = tcp_read_timeout(cwc->cwc_fd, buf, len, timeout);
   pthread_mutex_lock(&cwc_mutex);
 
+  if (r)
+    tvhwarn("cwc", "read error %d (%s)", r, strerror(r));
+
   if(cwc_must_break(cwc))
     return ECONNABORTED;
 
@@ -1117,6 +1123,7 @@ cwc_session(cwc_t *cwc)
       break;
     cwc_running_reply(cwc, cwc->cwc_buf[12], cwc->cwc_buf, r);
   }
+  tvhdebug("cwc", "session thread exiting");
 
   /**
    * Collect the writer thread
@@ -1915,7 +1922,7 @@ cwc_descramble
 
   if(ct->cs_keystate != CS_RESOLVED)
     return -1;
-  
+
   if(ct->cs_csa.csa_fill == 0 && ct->cs_pending_cw_update)
     update_keys(ct);
 
@@ -1991,11 +1998,22 @@ cwc_service_start(service_t *t)
 
   pthread_mutex_lock(&cwc_mutex);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
-    if(cwc->cwc_caid == 0)
-      continue;
+    LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
+      if (ct->cs_service == (mpegts_service_t*)t && ct->cs_cwc == cwc)
+        break;
+    }
 
-    if(cwc_find_stream_by_caid(t, cwc->cwc_caid) == NULL)
+    if(cwc->cwc_caid == 0) {
+      if (ct) cwc_service_destroy((th_descrambler_t*)ct);
       continue;
+    }
+
+    if(cwc_find_stream_by_caid(t, cwc->cwc_caid) == NULL) {
+      if (ct) cwc_service_destroy((th_descrambler_t*)ct);
+      continue;
+    }
+
+    if (ct) break;
 
     ct                   = calloc(1, sizeof(cwc_service_t));
     tvhcsa_init(&ct->cs_csa);
