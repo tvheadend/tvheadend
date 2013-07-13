@@ -145,6 +145,7 @@ void imagecache_init ( void )
       if (i) {
         hts_settings_remove("imagecache/meta/%d", id);
         hts_settings_remove("imagecache/data/%d", id);
+        free((void*)img->url);
         free(img);
         continue;
       }

@@ -97,8 +97,11 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       sub = &f->hmf_msg;
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
-      if(htsmsg_binary_des0(sub, buf, datalen) < 0)
-	return -1;
+      if(htsmsg_binary_des0(sub, buf, datalen) < 0) {
+        free(n);
+        free(f);
+        return -1;
+      }
       break;
 
     default:

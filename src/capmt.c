@@ -665,6 +665,9 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&global_lock);
   }
 
+  free(capmt->capmt_id);
+  free(capmt);
+
   return NULL;
 }
 
