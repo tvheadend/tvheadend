@@ -344,7 +344,7 @@ const idclass_t linuxdvb_mux_dvbs_class =
       MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity)
     },
     {
-      MUX_PROP_STR("constellation", "Constellation", dvbs, qam)
+      MUX_PROP_STR("modulation", "Modulation", dvbs, qam)
     },
     {
       MUX_PROP_STR("fec", "FEC", dvbs, fec)
