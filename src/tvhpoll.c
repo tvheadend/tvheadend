@@ -118,13 +118,15 @@ int tvhpoll_add
   return 0;
 #elif ENABLE_KQUEUE
   int i;
-  uint32_t fflags;
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
     fflags = 0;
-    if (evs[i].events & TVHPOLL_OUT) fflags |= EVFILT_WRITE;
-    if (evs[i].events & TVHPOLL_IN)  fflags |= EVFILT_READ;
-    EV_SET(tp->ev+i, evs[i].fd, fflags, EV_ADD, 0, 0, (void*)evs[i].data.u64);
+    if (evs[i].events & TVHPOLL_OUT){
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, (void*)evs[i].data.u64);
+    }
+    if (evs[i].events & TVHPOLL_IN){
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, (void*)evs[i].data.u64);
+    }
   }
   return kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
 #else
@@ -177,8 +179,9 @@ int tvhpoll_wait
     evs[i].fd       = tp->ev[i].ident;
     evs[i].events   = 0;
     evs[i].data.u64 = (uint64_t)tp->ev[i].udata;
-    if (tp->ev[i].fflags & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
-    if (tp->ev[i].fflags & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    if (tp->ev[i].filter & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
+    if (tp->ev[i].filter & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    if (tp->ev[i].flags  & EV_ERROR)     evs[i].events |= TVHPOLL_ERR;
     if (tp->ev[i].flags  & EV_EOF)       evs[i].events |= TVHPOLL_HUP;
   }
 #else
