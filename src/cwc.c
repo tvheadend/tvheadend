@@ -508,7 +508,6 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   buf[5] = sid;
 
   if((len = des_encrypt(buf, len, cwc)) <= 0) {
-    free(buf);
     free(cm);
     return -1;
   }
@@ -1244,6 +1243,8 @@ cwc_thread(void *aux)
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
   free((void *)cwc->cwc_hostname);
+  free((void *)cwc->cwc_id);
+  free((void *)cwc->cwc_viaccess_emm.shared_emm);
   free(cwc);
 
   pthread_mutex_unlock(&cwc_mutex);
@@ -1864,6 +1865,8 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
         free(tmp);
       } else if (tmp)
         free(tmp);
+
+      free(cwc->cwc_cryptoworks_emm.shared_emm);
       cwc->cwc_cryptoworks_emm.shared_emm = NULL;
       cwc->cwc_cryptoworks_emm.shared_len = 0;
     }
