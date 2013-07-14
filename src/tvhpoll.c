@@ -120,7 +120,6 @@ int tvhpoll_add
   int i;
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
-    fflags = 0;
     if (evs[i].events & TVHPOLL_OUT){
       EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, (void*)evs[i].data.u64);
     }
