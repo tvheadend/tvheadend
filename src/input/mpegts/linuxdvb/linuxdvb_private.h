@@ -235,6 +235,7 @@ struct linuxdvb_lnb
 {
   linuxdvb_diseqc_t;
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
 };
 
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
