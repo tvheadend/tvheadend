@@ -117,10 +117,22 @@ linuxdvb_switch_tune
 {
   int i, s, r = 0;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
+
+  //linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)ld;
+  dvb_mux_conf_t      *dmc = &lm->lm_tuning;
+  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
+
+
+  int pol_bit, band_bit;
+
+  pol_bit = dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
+            dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
+  band_bit = lnb->lnb_switch && (p->frequency > lnb->lnb_switch);
+
   
   /* Single committed (before repeats) */
-  if (sc->ls_diseqc_repeats > 0) {
-    s = 0xF0 | ls->ls_committed;
+  if (sc->ls_diseqc_repeats == 0) {
+    s = 0xF0 | (ls->ls_committed << 2) | (pol_bit << 1) | band_bit;
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, s))
       return -1;
     usleep(25000); // 25ms
@@ -136,7 +148,7 @@ linuxdvb_switch_tune
     usleep(25000);
 
     /* Committed */
-    s = 0xF0 | ls->ls_committed;
+    s = 0xF0 | (ls->ls_committed << 2) | (pol_bit << 1) | band_bit;
     if (linuxdvb_diseqc_send(fd, 0xE1, 0x10, 0x38, 1, s))
       return -1;
     usleep(25000);
