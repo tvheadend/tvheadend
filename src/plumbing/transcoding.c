@@ -1052,13 +1052,18 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 
   aspect = (double)ssc->ssc_width / ssc->ssc_height;
 
-  vs->vid_height = MIN(tp->tp_resolution, ssc->ssc_height);
-  if (vs->vid_height&1) // Must be even
-    vs->vid_height++;
+  if(tp->tp_resolution > 0) {
+    vs->vid_height = MIN(tp->tp_resolution, ssc->ssc_height);
+    if (vs->vid_height&1) // Must be even
+      vs->vid_height++;
 
-  vs->vid_width = vs->vid_height * aspect;
-  if (vs->vid_width&1) // Must be even
-    vs->vid_width++;
+    vs->vid_width = vs->vid_height * aspect;
+    if (vs->vid_width&1) // Must be even
+      vs->vid_width++;
+  } else {
+     vs->vid_height = ssc->ssc_height;
+     vs->vid_width  = ssc->ssc_width;
+  }
 
   tvhlog(LOG_INFO, "transcode", "%d:%s %dx%d ==> %s %dx%d", 
 	 ssc->ssc_index,
