@@ -948,11 +948,11 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
   as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
 
-  as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-  as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-
   avcodec_get_context_defaults3(as->aud_ictx, icodec);
   avcodec_get_context_defaults3(as->aud_octx, ocodec);
+
+  as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+  as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
   as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
   as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
@@ -1055,12 +1055,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_ictx = avcodec_alloc_context();
   vs->vid_octx = avcodec_alloc_context();
 
-  vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-  vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
- 
   avcodec_get_context_defaults3(vs->vid_ictx, icodec);
   avcodec_get_context_defaults3(vs->vid_octx, ocodec);
 
+  vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+  vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+ 
   vs->vid_dec_frame = avcodec_alloc_frame();
   vs->vid_enc_frame = avcodec_alloc_frame();
 
