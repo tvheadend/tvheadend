@@ -77,6 +77,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_MPEG2AUDIO:
     codec_id = CODEC_ID_MP2;
     break;
+  case SCT_VORBIS:
+    codec_id = CODEC_ID_VORBIS;
+    break;
   case SCT_DVBSUB:
     codec_id = CODEC_ID_DVB_SUBTITLE;
     break;
@@ -124,6 +127,9 @@ codec_id2streaming_component_type(enum CodecID id)
     break;
   case CODEC_ID_MP2:
     type = SCT_MPEG2AUDIO;
+    break;
+  case CODEC_ID_VORBIS:
+    type = SCT_VORBIS;
     break;
   case CODEC_ID_DVB_SUBTITLE:
     type = SCT_DVBSUB;

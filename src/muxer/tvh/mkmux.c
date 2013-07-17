@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -160,6 +161,39 @@ getuuid(char *id)
 /**
  *
  */
+static int 
+mk_split_vorbis_headers(uint8_t *extradata, int extradata_size, 
+			uint8_t *header_start[3],  int header_len[3])
+{
+  int i;
+  if (extradata_size >= 3 && extradata_size < INT_MAX - 0x1ff && extradata[0] == 2) {
+    int overall_len = 3;
+    extradata++;
+    for (i=0; i<2; i++, extradata++) {
+      header_len[i] = 0;
+      for (; overall_len < extradata_size && *extradata==0xff; extradata++) {
+	header_len[i] += 0xff;
+	overall_len   += 0xff + 1;
+      }
+      header_len[i] += *extradata;
+      overall_len   += *extradata;
+      if (overall_len > extradata_size)
+	return -1;
+    }
+    header_len[2] = extradata_size - overall_len;
+    header_start[0] = extradata;
+    header_start[1] = header_start[0] + header_len[0];
+    header_start[2] = header_start[1] + header_len[1];
+  } else {
+    return -1;
+  }
+  return 0;
+}
+
+
+/**
+ *
+ */
 static htsbuf_queue_t *
 mk_build_segment_info(mk_mux_t *mkm)
 {
@@ -253,6 +287,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       codec_id = "A_AAC";
       break;
 
+    case SCT_VORBIS:
+      tracktype = 2;
+      codec_id = "A_VORBIS";
+      break;
+
     case SCT_DVBSUB:
       tracktype = 0x11;
       codec_id = "S_DVBSUB";
@@ -294,6 +333,32 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 			pktbuf_len(ssc->ssc_gh));
       break;
       
+    case SCT_VORBIS:
+      if(ssc->ssc_gh) {
+	htsbuf_queue_t *cp;
+	uint8_t *header_start[3];
+	int header_len[3];
+	int j;
+	if(mk_split_vorbis_headers(pktbuf_ptr(ssc->ssc_gh), 
+				   pktbuf_len(ssc->ssc_gh),
+				   header_start, 
+				   header_len) < 0)
+	  break;
+
+	cp = htsbuf_queue_alloc(0);
+
+	ebml_append_xiph_size(cp, 2);
+
+	for (j = 0; j < 2; j++)
+	  ebml_append_xiph_size(cp, header_len[j]);
+
+	for (j = 0; j < 3; j++)
+	  htsbuf_append(cp, header_start[j], header_len[j]);
+
+	ebml_append_master(t, 0x63a2, cp);
+      }
+      break;
+
     case SCT_DVBSUB:
       buf4[0] = ssc->ssc_composition_id >> 8;
       buf4[1] = ssc->ssc_composition_id;

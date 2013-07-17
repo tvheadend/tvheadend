@@ -200,14 +200,16 @@ typedef enum {
   SCT_EAC3,
   SCT_MP4A,
   SCT_VP8,
+  SCT_VORBIS,
 } streaming_component_type_t;
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 ||	\
 			(t) == SCT_VP8)
 
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
-                        (t) == SCT_AAC || (t) == SCT_MP4A ||	   \
-			(t) == SCT_EAC3)
+                        (t) == SCT_AAC  || (t) == SCT_MP4A ||	   \
+			(t) == SCT_EAC3 || (t) == SCT_VORBIS)
+
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /**

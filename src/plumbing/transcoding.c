@@ -108,7 +108,7 @@ typedef struct transcoder {
 
 #define WORKING_ENCODER(x) (x == CODEC_ID_H264 || x == CODEC_ID_MPEG2VIDEO || \
 			    x == CODEC_ID_VP8  || x == CODEC_ID_AAC ||	\
-			    x == CODEC_ID_MP2)
+			    x == CODEC_ID_MP2  || x == CODEC_ID_VORBIS)
 
 
 uint32_t transcoding_enabled = 0;
@@ -373,6 +373,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   case SCT_AAC:
     octx->global_quality = 4*FF_QP2LAMBDA;
     octx->flags         |= CODEC_FLAG_QSCALE;
+    break;
+
+  case SCT_VORBIS:
+    octx->flags         |= CODEC_FLAG_QSCALE;
+    octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+    octx->channels       = 2; // Only stereo suported by libavcodec
+    octx->global_quality = 4*FF_QP2LAMBDA;
     break;
 
   default:
