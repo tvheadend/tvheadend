@@ -224,7 +224,7 @@ tvh_muxer_create(muxer_container_type_t mc)
 {
   tvh_muxer_t *tm;
 
-  if(mc != MC_MATROSKA)
+  if(mc != MC_MATROSKA && mc != MC_WEBM)
     return NULL;
 
   tm = calloc(1, sizeof(tvh_muxer_t));
@@ -239,7 +239,7 @@ tvh_muxer_create(muxer_container_type_t mc)
   tm->m_close        = tvh_muxer_close;
   tm->m_destroy      = tvh_muxer_destroy;
   tm->m_container    = mc;
-  tm->tm_ref         = mk_mux_create();
+  tm->tm_ref         = mk_mux_create(mc == MC_WEBM);
 
   return (muxer_t*)tm;
 }
