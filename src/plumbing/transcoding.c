@@ -107,7 +107,8 @@ typedef struct transcoder {
 
 
 #define WORKING_ENCODER(x) (x == CODEC_ID_H264 || x == CODEC_ID_MPEG2VIDEO || \
-			    x == CODEC_ID_AAC || x == CODEC_ID_MP2)
+			    x == CODEC_ID_VP8  || x == CODEC_ID_AAC ||	\
+			    x == CODEC_ID_MP2)
 
 
 uint32_t transcoding_enabled = 0;
@@ -532,6 +533,20 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->rc_buffer_size = 2 * octx->rc_max_rate;
       break;
  
+    case SCT_VP8:
+      octx->codec_id       = CODEC_ID_VP8;
+      octx->pix_fmt        = PIX_FMT_YUV420P;
+
+      octx->qmin = 10;
+      octx->qmax = 20;
+
+      av_dict_set(&opts, "quality",  "realtime", 0);
+
+      octx->bit_rate       = 3 * octx->width * octx->height;
+      octx->rc_buffer_size = 8 * 1024 * 224;
+      octx->rc_max_rate    = 2 * octx->bit_rate;
+      break;
+
     case SCT_H264:
       octx->codec_id       = CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;

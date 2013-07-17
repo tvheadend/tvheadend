@@ -62,6 +62,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_MPEG2VIDEO:
     codec_id = CODEC_ID_MPEG2VIDEO;
     break;
+  case SCT_VP8:
+    codec_id = CODEC_ID_VP8;
+    break;
   case SCT_AC3:
     codec_id = CODEC_ID_AC3;
     break;
@@ -106,6 +109,9 @@ codec_id2streaming_component_type(enum CodecID id)
     break;
   case CODEC_ID_MPEG2VIDEO:
     type = SCT_MPEG2VIDEO;
+    break;
+  case CODEC_ID_VP8:
+    type = SCT_VP8;
     break;
   case CODEC_ID_AC3:
     type = SCT_AC3;

@@ -227,6 +227,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       codec_id = "V_MPEG4/ISO/AVC";
       break;
 
+    case SCT_VP8:
+      tracktype = 1;
+      codec_id = "V_VP8";
+      break;
+
     case SCT_MPEG2AUDIO:
       tracktype = 2;
       codec_id = "A_MPEG/L2";
