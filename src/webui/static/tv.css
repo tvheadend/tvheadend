@@ -1,0 +1,43 @@
+body {
+    background: black;
+    font-size: 150%;
+}
+
+#tv_videoPlayer {
+    z-index: 0;
+    width:100%; 
+    margin-right:auto; 
+    margin-left:auto;
+    display:block;
+}
+
+#tv_channelList {
+    z-index: 1;
+}
+
+#tv_statusBar {
+    position: fixed;
+    bottom: 5%;
+    border-radius: 10px;
+    background: rgba(128, 128, 128, 0.7);
+    width: 80%;
+    left: 10%;
+    z-index: 1;
+}
+
+#tv_statusBar table {
+    padding: 5px;
+    white-space: nowrap;
+}
+
+#sb_channelLogo {
+    width: 128px;
+    height: 128px;
+    float: left;
+    margin: 5px;
+    cursor: pointer;
+}
+
+#sb_channelName, #sb_nowTitle, #sb_nextTitle {
+    width: 100%;
+}
