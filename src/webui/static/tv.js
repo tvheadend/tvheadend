@@ -105,97 +105,114 @@ tv.ui = function() {
 
 
 tv.playback = function() {
-
     //private space
-    var profiles = [
-	{
-	    name:  'pass',
-	    muxer: 'pass',
-	    audio: 'UNKNOWN',
-	    video: 'UNKNOWN',
-	    subs:  'UNKNOWN',
-	    canPlay: 'video/MP2T'
+
+    var profiles = {
+	pass: {
+	    muxer:   'pass',
+	    mimetype: 'video/MP2T'
 	},
-	{
-	    name:  'webm',
-	    muxer: 'webm',
-	    audio: 'VORBIS',
-	    video: 'VP8',
-	    subs:  'NONE',
-	    canPlay: 'video/webm; codecs="vp8.0, vorbis"'
+	hls: {
+	    muxer:     'mpegts',
+	    transcode: true,
+	    audio:     'AAC',
+	    video:     'H264',
+	    subs:      'NONE',
+	    playlist:  true,
+	    mimetype:  'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
 	},
-	{
-	    name:  'hls',
-	    muxer: 'mpegts',
-	    audio: 'AAC',
-	    video: 'H264',
-	    subs:  'NONE',
-	    canPlay: 'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2'
+	apple: {
+	    muxer:     'mpegts',
+	    transcode: true,
+	    audio:     'AAC',
+	    video:     'H264',
+	    subs:      'NONE',
+	    playlist:  true,
+	    mimetype:  'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
 	},
-	{
-	    name:  'hls',
-	    muxer: 'mpegts',
-	    audio: 'AAC',
-	    video: 'H264',
-	    subs:  'NONE',
-	    canPlay: 'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2'
+	ts: {
+	    muxer:     'mpegts',
+	    transcode: true,
+	    audio:     'AAC',
+	    video:     'H264',
+	    subs:      'NONE',
+	    playlist:  false,
+	    mimetype:  'video/MP2T; codecs="avc1.42E01E, mp4a.40.2"'
 	},
-	{
-	    name:  'ts',
-	    muxer: 'mpegts',
-	    audio: 'AAC',
-	    video: 'H264',
-	    subs:  'NONE',
-	    canPlay: 'video/MP2T; codecs="avc1.42E01E, mp4a.40.2'
+	mkv: {
+	    muxer:     'matroska',
+	    transcode: true,
+	    audio:     'AAC',
+	    video:     'H264',
+	    subs:      'NONE',
+	    playlist:  false,
+	    mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
 	},
-	{
-	    name:  'mkv',
-	    muxer: 'matroska',
-	    audio: 'AAC',
-	    video: 'H264',
-	    subs:  'NONE',
-	    canPlay: 'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2'
+	webm: {
+	    muxer:     'webm',
+	    transcode: true,
+	    audio:     'VORBIS',
+	    video:     'VP8',
+	    subs:      'NONE',
+	    mimetype:  'video/webm; codecs="vp8.0, vorbis"'
 	}
-    ];
+    };
 
     // public space
     return {
 	getProfile: function() {
 	    var vid = document.createElement('video');
-	    for(var i=0; i<profiles.length; i++)
-		if(vid.canPlayType(profiles[i].canPlay) == 'probably')
-		    return profiles[i];
 
-	    for(var i=0; i<profiles.length; i++)
-		if(vid.canPlayType(profiles[i].canPlay) == 'maybe')
-		    return profiles[i];
+	    // chrome can handle h264+aac within mkv, given that h264 codecs are available
+	    if(Ext.isChrome && 
+	       vid.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') == 'probably')
+		return profiles['mkv'];
 
-	    return null;
+	    for (var key in profiles)
+		if(vid.canPlayType(profiles[key].mimetype) == 'probably')
+		    return profiles[key];
+
+	    for (var key in profiles)
+		if(vid.canPlayType(profiles[key].mimetype) == 'maybe')
+		    return profiles[key];
+
+	    return {};
 	},
 
-	getUrl: function(chid) {
-	    var profile = this.getProfile();
+	getUrl: function(chid, config) {
+	    var config = config || {}
+	    var params = {}
+
+	    Ext.apply(params, this.getProfile(), {
+		transcode : 0,
+		resolution: 384,
+		channels  : 0,         // same as source
+		bandwidth : 0,         // same as source
+		language  : '',        // same as source
+		audio     : 'UNKNOWN', // same as source
+		video     : 'UNKNOWN', // same as source
+		subs      : 'UNKNOWN', // same as source
+		muxer     : '',        // default dvr config
+		playlist  : false      // don't use m3u8 playlist
+	    });
+	    Ext.apply(params, config);
+	    
 	    var url = tv.baseUrl;
 
-	    if(!profile) {
-		alert('Unsupported browser');
-		return '';
-	    }
-
-	    if(profile.name == 'hls')
+	    if(params.playlist)
 		url += 'playlist/channelid/'
 	    else
 		url += 'stream/channelid/'
 
-	    console.dir(profile);
-
 	    url += chid;
-	    url += "?transcode=1";
-	    url += "&mux=" + profile.muxer;
-	    url += "&acodec=" + profile.audio;
-	    url += "&vcodec=" + profile.video;
-	    url += "&scodec=" + profile.subs;
-	    url += "&resolution=384";
+	    url += "?transcode="  + new Number(params.transcode);
+	    url += "&mux="        + params.muxer;
+	    url += "&acodec="     + params.audio;
+	    url += "&vcodec="     + params.video;
+	    url += "&scodec="     + params.subs;
+	    url += "&resolution=" + params.resolution;
+	    url += "&bandwidth="  + params.bandwidth;
+	    url += "&language="   + params.language;
 
 	    return url;
 	}
