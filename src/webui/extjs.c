@@ -186,6 +186,42 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+/**
+ *
+ */
+static int
+extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  htsbuf_qprintf(hq, "<!DOCTYPE html>\n");
+  htsbuf_qprintf(hq, "<html>\n");
+  htsbuf_qprintf(hq, "<head>\n");
+  htsbuf_qprintf(hq, "<title>HTS Tvheadend %s</title>\n", tvheadend_version);
+  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/tv.css\">\n");
+
+  if(tvheadend_webui_debug) {
+    extjs_load(hq, "static/extjs/adapter/ext/ext-base-debug.js");
+    extjs_load(hq, "static/extjs/ext-all-debug.js");
+  } else {
+    extjs_load(hq, "static/extjs/adapter/ext/ext-base.js");
+    extjs_load(hq, "static/extjs/ext-all.js");
+  }
+
+  extjs_load(hq, "static/tv.js");
+  extjs_exec(hq, "Ext.onReady(tv.app.init, tv.app);");
+
+  htsbuf_qprintf(hq, "</head>\n");
+  htsbuf_qprintf(hq, "<body></body>\n");
+  htsbuf_qprintf(hq, "</html>\n");
+
+  http_output_html(hc);
+
+  return 0;
+}
+
+
 /**
  * 
  */
@@ -2240,6 +2276,7 @@ extjs_start(void)
 {
   http_path_add("/about.html",       NULL, page_about,             ACCESS_WEB_INTERFACE);
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
+  http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
   http_path_add("/channels",         NULL, extjs_channels,         ACCESS_WEB_INTERFACE);

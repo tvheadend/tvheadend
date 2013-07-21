@@ -162,7 +162,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	},
 
 	_getUrl: function(chid, params) {
-	    var url = '../';
+	    var url = '';
 
 	    if(params.playlist)
 		url += 'playlist/channelid/'
@@ -383,7 +383,7 @@ tv.app = function() {
 			field : 'number',
 			direction : "ASC"
 		    },
-		    url : "../channels",
+		    url : "channels",
 		    baseParams : {
 			op : 'list'
 		    }
