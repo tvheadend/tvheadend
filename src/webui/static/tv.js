@@ -120,7 +120,6 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	initComponent: function() {
 	    Ext.apply(this, {
 		baseCls     : 'tv-video-player',
-		bodyStyle   : 'background-color:#000;color:#fff',
 		html        : '',
 		bufferLength: 3000, //ms
 
@@ -137,18 +136,24 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 		    },
 		    render: {
 			fn: function() {
+			    this.message = this.body.createChild({
+				tag : 'span',
+				cls : 'tv-video-message',
+				hidden: true,
+				html: ''
+			    });
+
 			    this.video = this.body.createChild({
 				tag     : 'video',
 				width   : '100%',
 				height  : '100%',
 				html    : "Your browser doesn't support html5 video"
 			    });
-			    this.source = this.video.createChild({tag: 'source'});
-			    this.source.dom.addEventListener('error', this.error.bind(this));
 
 			    this.stop();
 
 			    var self = this;
+			    this.video.dom.addEventListener('error', this.error.bind(this));
 			    this.video.dom.addEventListener('loadeddata', function() {
 				setTimeout(function() {
 				    self.play();
@@ -201,25 +206,54 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    return {};
 	},
 
-	error: function() {
-	    var url = this.source.dom.src;
+	error: function(e) {
+	    var url = this.video.dom.src;
 	    if(url && url != document.location.href) {
 		this.body.removeClass('tv-video-loading');
 		this.body.removeClass('tv-video-idle');
 		this.body.addClass('tv-video-error');
 		this.video.hide();
+
+		var err = e.target.error;
+		switch (err.code) {
+		case err.MEDIA_ERR_ABORTED:
+		    this.message.update('You aborted the video playback.');
+		    break;
+
+		case err.MEDIA_ERR_NETWORK:
+		    this.message.update('A network error caused the video ' + 
+					'download to fail part-way.');
+		    break;
+		case err.MEDIA_ERR_DECODE:
+		    this.message.update('The video playback was aborted due to ' + 
+					'a corruption problem or because the video ' + 
+					'used features your browser did not support.');
+		    break;
+		case err.MEDIA_ERR_SRC_NOT_SUPPORTED:
+		    this.message.update('The video could not be loaded, either because ' + 
+					'the server or network failed or because the ' + 
+					'format is not supported.');
+		    break;
+		default:
+		    this.message.update('An unknown error occurred.');
+		    break;
+		}
+
+		this.message.show();
 	    }
 	},
 
 	stop: function() {
+	    this.message.hide();
 	    this.body.removeClass('tv-video-loading');
 	    this.body.removeClass('tv-video-error');
 	    this.body.addClass('tv-video-idle');
-	    this.source.dom.src = '';
+	    this.video.dom.src = '';
 	    this.video.dom.load();
 	},
 
 	play: function() {
+	    this.message.hide();
 	    this.body.removeClass('tv-video-loading');
 	    this.body.removeClass('tv-video-idle');
 	    this.body.removeClass('tv-video-error');
@@ -238,11 +272,14 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    this.video.hide();
 	    this.stop();
 
+	    this.message.update('Loading...');
+	    this.message.show();
+
 	    this.body.removeClass('tv-video-idle');
 	    this.body.removeClass('tv-video-error');
 	    this.body.addClass('tv-video-loading');
 
-	    this.source.dom.src = this._getUrl(chid, params);
+	    this.video.dom.src = this._getUrl(chid, params);
 	    this.video.dom.load();
 	}
     };

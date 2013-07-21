@@ -91,23 +91,27 @@ body {
 }
 
 .tv-video-idle {
-    background-color     : #000;
     background-image     : url(../docresources/tvheadendlogo.png);
-    background-repeat    : no-repeat;
-    background-attachment: fixed;
-    background-position  : center;
 }
 
 .tv-video-loading {
     background-image     : url(./img/spinner_black_bg.gif);
-    background-repeat    : no-repeat;
-    background-attachment: fixed;
-    background-position  : center;
 }
 
 .tv-video-error {
     background-image     : url(./img/error.png);
+}
+
+.tv-video-message {
+    text-align: center;
+}
+
+.tv-video-player-bwrap,
+.tv-video-idle,
+.tv-video-loading,
+.tv-video-error {
     background-repeat    : no-repeat;
     background-attachment: fixed;
     background-position  : center;
+    height: 100%;
 }
