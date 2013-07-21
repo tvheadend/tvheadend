@@ -454,14 +454,14 @@ tv.app = function() {
 
 	    });
 
-	    var nav = new Ext.KeyNav(Ext.getDoc(), {
-		'enter': function(e) {
+	    Ext.getDoc().on('keydown', function(e) {
+		switch(e.getKey()) {
+		case VK_ENTER:
 		    chListPanel.show();
-		    chList.focus();
-		},
-		'scope': this
+		    chList.focus();   
+		}
 	    });
-
+	    
 	    chListPanel.show();
 	    chList.focus();
 	}
