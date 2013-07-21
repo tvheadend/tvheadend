@@ -1,43 +1,113 @@
 body {
+    font-size : 150%;
+    color     : #b2afa8;
     background: black;
-    font-size: 150%;
 }
 
-#tv_videoPlayer {
-    z-index: 0;
-    width:100%; 
-    margin-right:auto; 
-    margin-left:auto;
-    display:block;
+.x-hide-display {
+    display: none !important;
 }
 
-#tv_channelList {
-    z-index: 1;
-}
-
-#tv_statusBar {
+.x-panel {
+    z-index : 1;
     position: fixed;
-    bottom: 5%;
+
+    padding: 5px;
+
     border-radius: 10px;
-    background: rgba(128, 128, 128, 0.7);
-    width: 80%;
-    left: 10%;
-    z-index: 1;
+    border       : double 5px #000000;
+
+    box-shadow: 10px 10px 15px #000000;
+
+    background:
+      radial-gradient(black 15%, transparent 16%) 0 0,
+      radial-gradient(black 15%, transparent 16%) 8px 8px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+
+    background-color: rgba(28,28,28,0.7);
+    background-size : 16px 16px;
 }
 
-#tv_statusBar table {
-    padding: 5px;
+.x-panel-header {
+    text-align: center;
+    border-bottom: solid 2px black;
+
+    margin-left : 10px;
+    margin-right: 10px;
+}
+
+.x-panel-header-text {
+    font-size      : 150%;
+    font-weight    : bold;
+}
+
+.tv-list {
+    overflow: hidden;
+    outline : 0;
+}
+
+.tv-list-item {
+    padding    : 5px;
+    height     : 64px;
+    font-size  : 120%;
     white-space: nowrap;
 }
 
-#sb_channelLogo {
-    width: 128px;
-    height: 128px;
-    float: left;
-    margin: 5px;
-    cursor: pointer;
+.tv-list-item img {
+    height : 100%;
+    width  : 64px;
+    display: inline;
+
+    vertical-align: middle;
+
+    padding-left : 10px;
+    padding-right: 10px;
 }
 
-#sb_channelName, #sb_nowTitle, #sb_nextTitle {
-    width: 100%;
+.tv-list-item-selected {
+    color        : white;
+    border       : solid 1px #4180eb;
+    border-radius: 10px;
+    background   : linear-gradient(#4180eb 0%, #366dab 100%);
+}
+
+.tv-video-player {
+    z-index     : 0;
+    position    : fixed;
+    margin-right: auto;
+    margin-left : auto;
+
+    width : 100%;
+    height: 100%;
+}
+
+.tv-channel-list {
+    z-index : 1;
+    position: fixed;
+    top     : 8%;
+    left    : 5%;
+    height  : 80%;
+}
+
+.tv-video-idle {
+    background-color     : #000;
+    background-image     : url(../docresources/tvheadendlogo.png);
+    background-repeat    : no-repeat;
+    background-attachment: fixed;
+    background-position  : center;
+}
+
+.tv-video-loading {
+    background-image     : url(./img/spinner_black_bg.gif);
+    background-repeat    : no-repeat;
+    background-attachment: fixed;
+    background-position  : center;
+}
+
+.tv-video-error {
+    background-image     : url(./img/error.png);
+    background-repeat    : no-repeat;
+    background-attachment: fixed;
+    background-position  : center;
 }

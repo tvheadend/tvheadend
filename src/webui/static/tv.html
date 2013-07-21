@@ -2,33 +2,14 @@
 <html>
   <head>
     <title>Tvheadend</title>
+    <link rel="stylesheet" type="text/css" href="tv.css">
     <script type="text/javascript" src="extjs/adapter/ext/ext-base.js"></script>
     <script type="text/javascript" src="extjs/ext-all.js"></script>
     <script type="text/javascript" src="tv.js"></script>
     <script type="text/javascript">
       Ext.onReady(tv.app.init, tv.app);
     </script>
-
-    <link rel="stylesheet" type="text/css" href="tv.css">
   </head>
   <body>
-    <div id="tv_statusBar">
-      <img id="sb_channelLogo" src="htslogo.png">
-      <table>
-	<tr>
-	  <td id="sb_channelName"></td>
-	  <td id="sb_currentTime"></td>
-	</tr>
-	<tr>
-	  <td id="sb_nowTitle"></td>
-	  <td id="sb_nowDuration"></td>
-	</tr>
-	<tr>
-	  <td id="sb_nextTitle"></td>
-	  <td id="sb_nextDuration"></td>
-	</tr>
-      </table>
-    </div>
-    <video id="tv_videoPlayer"></video>
   </body>
 </html>
