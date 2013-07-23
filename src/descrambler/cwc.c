@@ -1901,7 +1901,7 @@ update_keys(cwc_service_t *ct)
   
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[8 + i]) {
-      tvhcsa_set_key_odd(&ct->cs_csa, ct->cs_cw);
+      tvhcsa_set_key_odd(&ct->cs_csa, ct->cs_cw+8);
       break;
     }
 }
