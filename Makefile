@@ -107,7 +107,7 @@ SRCS =  src/version.c \
 	src/imagecache.c \
 	src/tvhtime.c \
 	src/descrambler/descrambler.c \
-	src/serviceprobe.c \
+	src/service_mapper.c \
 
 SRCS += \
 	src/parsers/parsers.c \

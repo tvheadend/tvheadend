@@ -39,6 +39,7 @@
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "imagecache.h"
+#include "service_mapper.h"
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
@@ -119,7 +120,6 @@ chidcmp(const channel_t *a, const channel_t *b)
 static void
 channel_set_name(channel_t *ch, const char *name)
 {
-  channel_t *x;
   const char *n2;
   int l, i;
   char *cp, c;
@@ -145,8 +145,8 @@ channel_set_name(channel_t *ch, const char *name)
 
   free((void *)n2);
 
-  x = RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
-  assert(x == NULL);
+  RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
+  //assert(x == NULL);
 
   /* Notify clients */
   channel_list_changed();
@@ -196,9 +196,9 @@ channel_create2(const char *name, int number)
  *
  */
 channel_t *
-channel_create ( void )
+channel_create ( const char *name )
 {
-  channel_t *ch = channel_create2(NULL, 0);
+  channel_t *ch = channel_create2(name, 0);
   channel_save(ch);
   return ch;
 }
@@ -209,9 +209,8 @@ channel_create ( void )
 channel_t *
 channel_find_by_name(const char *name, int create, int channel_number)
 {
-  channel_t skel, *ch;
-
   lock_assert(&global_lock);
+  channel_t *ch, skel;
 
   if (name) {
     skel.ch_name = (char *)name;
@@ -285,6 +284,8 @@ channel_load_one(htsmsg_t *c, int id)
       }
     }
   }
+
+  // TODO: load services
 }
 
 
@@ -334,6 +335,8 @@ channel_save(channel_t *ch)
   htsmsg_add_u32(m, "dvr_extra_time_pre",  ch->ch_dvr_extra_time_pre);
   htsmsg_add_u32(m, "dvr_extra_time_post", ch->ch_dvr_extra_time_post);
   htsmsg_add_s32(m, "channel_number", ch->ch_number);
+  
+  /* TODO: save services */
 
   hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
@@ -346,7 +349,6 @@ int
 channel_rename(channel_t *ch, const char *newname)
 {
   dvr_entry_t *de;
-  service_t *t;
 
   lock_assert(&global_lock);
 
@@ -362,9 +364,6 @@ channel_rename(channel_t *ch, const char *newname)
   channel_set_name(ch, newname);
   epggrab_channel_mod(ch);
 
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link)
-    t->s_config_save(t);
-  
   LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
     dvr_entry_save(de);
     dvr_entry_notify(de);
@@ -381,7 +380,7 @@ channel_rename(channel_t *ch, const char *newname)
 void
 channel_delete(channel_t *ch)
 {
-  service_t *t;
+  channel_service_mapping_t *t;
   th_subscription_t *s;
   channel_tag_mapping_t *ctm;
 
@@ -398,7 +397,7 @@ channel_delete(channel_t *ch)
   dvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_services)) != NULL)
-    service_map_channel(t, NULL, 1);
+    service_mapper_unlink(t->csm_svc, ch);
 
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_channel_link);
@@ -434,7 +433,7 @@ channel_delete(channel_t *ch)
 void
 channel_merge(channel_t *dst, channel_t *src)
 {
-  service_t *t;
+  channel_service_mapping_t *t;
 
   lock_assert(&global_lock);
   
@@ -442,7 +441,7 @@ channel_merge(channel_t *dst, channel_t *src)
 	 src->ch_name, dst->ch_name);
 
   while((t = LIST_FIRST(&src->ch_services)) != NULL)
-    service_map_channel(t, dst, 1);
+    service_mapper_link(t->csm_svc, dst);
 
   channel_delete(src);
 }

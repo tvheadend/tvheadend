@@ -285,6 +285,27 @@ mpegts_service_grace_period(service_t *t)
   return r ?: 10;  
 }
 
+/*
+ * Channel number
+ */
+static int
+mpegts_service_channel_number ( service_t *s )
+{
+  return ((mpegts_service_t*)s)->s_dvb_channel_num;
+}
+
+static const char *
+mpegts_service_channel_name ( service_t *s )
+{
+  return ((mpegts_service_t*)s)->s_dvb_svcname;
+}
+
+static const char *
+mpegts_service_provider_name ( service_t *s )
+{
+  return ((mpegts_service_t*)s)->s_dvb_provider;
+}
+
 /* **************************************************************************
  * Creation/Location
  * *************************************************************************/
@@ -317,6 +338,9 @@ mpegts_service_create0
   s->s_refresh_feed   = mpegts_service_refresh;
   s->s_setsourceinfo  = mpegts_service_setsourceinfo;
   s->s_grace_period   = mpegts_service_grace_period;
+  s->s_channel_number = mpegts_service_channel_number;
+  s->s_channel_name   = mpegts_service_channel_name;
+  s->s_provider_name  = mpegts_service_provider_name;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);

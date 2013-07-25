@@ -36,7 +36,6 @@
 #include "access.h"
 #include "dtable.h"
 #include "channels.h"
-#include "serviceprobe.h"
 
 #include "input.h"
 

@@ -44,7 +44,7 @@
 #include "epggrab.h"
 #include "spawn.h"
 #include "subscriptions.h"
-#include "serviceprobe.h"
+#include "service_mapper.h"
 #include "descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
@@ -712,7 +712,7 @@ main(int argc, char **argv)
   http_server_init(opt_bindaddr);
   webui_init();
 
-  serviceprobe_init();
+  service_mapper_init();
 
   descrambler_init();
 

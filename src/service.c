@@ -38,17 +38,20 @@
 #include "packet.h"
 #include "channels.h"
 #include "notify.h"
-#include "serviceprobe.h"
+#include "service_mapper.h"
 #include "atomic.h"
 #include "htsp_server.h"
 #include "lang_codes.h"
 #include "descrambler.h"
 
 static void service_data_timeout(void *aux);
-static const void *service_class_channel_get(void *obj);
-static int service_class_channel_set(void *obj, const void *str);
 static void service_class_save(struct idnode *self);
 
+struct service_queue service_all;
+
+#if 0
+static const void *service_class_channel_get(void *obj);
+static int service_class_channel_set(void *obj, const void *str);
 static htsmsg_t *service_class_channel_enum(void *p)
 {
   channel_t *ch;
@@ -58,6 +61,7 @@ static htsmsg_t *service_class_channel_enum(void *p)
       htsmsg_add_str(list, NULL, ch->ch_name);
   return list;
 }
+#endif
 
 const idclass_t service_class = {
   .ic_class      = "service",
@@ -70,6 +74,7 @@ const idclass_t service_class = {
       .name     = "Enabled",
       .off      = offsetof(service_t, s_enabled),
     },
+#if 0
     {
       .type     = PT_STR,
       .id       = "channel",
@@ -78,6 +83,7 @@ const idclass_t service_class = {
       .set      = service_class_channel_set,
       .list     = service_class_channel_enum
     },
+#endif
     {}
   }
 };
@@ -271,6 +277,7 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
                       int *error, int weight)
 {
   service_t *s;
+  channel_service_mapping_t *csm;
   service_instance_t *si, *next;
 
   lock_assert(&global_lock);
@@ -280,7 +287,8 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
   LIST_FOREACH(si, sil, si_link)
     si->si_mark = 1;
 
-  LIST_FOREACH(s, &ch->ch_services, s_ch_link) {
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+    s = csm->csm_svc;
     if (!s->s_is_enabled(s)) continue;
     s->s_enlist(s, sil);
   }
@@ -319,98 +327,6 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
 }
 
 
-
-#if 0
-/**
- *
- */
-service_t *
-service_enlist(channel_t *ch)
-{
-  service_t *t, **vec;
-  int cnt = 0, i, r, off;
-  int err = 0;
-
-  lock_assert(&global_lock);
-
-  /* First, sort all services in order */
-
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link)
-    cnt++;
-
-  vec = alloca(cnt * sizeof(service_t *));
-  cnt = 0;
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
-
-    if(!t->s_is_enabled(t)) {
-      if(loginfo != NULL) {
-	tvhlog(LOG_NOTICE, "service", "%s: Skipping \"%s\" -- not enabled",
-	       loginfo, service_nicename(t));
-	err = SM_CODE_SVC_NOT_ENABLED;
-      }
-      continue;
-    }
-
-    vec[cnt++] = t;
-    tvhlog(LOG_DEBUG, "service",
-    		"%s: Adding adapter \"%s\" for service \"%s\"",
-    		 loginfo, service_adapter_nicename(t), service_nicename(t));
-  }
-
-  /* Sort services, lower priority should come come earlier in the vector
-     (i.e. it will be more favoured when selecting a service */
-
-  //  qsort(vec, cnt, sizeof(service_t *), servicecmp);
-
-  // Skip up to the service that the caller didn't want
-  // If the sorting above is not stable that might mess up things
-  // temporary. But it should resolve itself eventually
-  if(skip != NULL) {
-    for(i = 0; i < cnt; i++) {
-      if(skip == t)
-	break;
-    }
-    off = i + 1;
-  } else {
-    off = 0;
-  }
-
-  /* First, try all services without stealing */
-  for(i = off; i < cnt; i++) {
-    t = vec[i];
-    if(t->s_status == SERVICE_RUNNING) 
-      return t;
-    tvhlog(LOG_DEBUG, "service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
-	     loginfo, service_adapter_nicename(t), service_nicename(t));
-    if((r = service_start(t, 0, 0)) == 0)
-      return t;
-    if(loginfo != NULL)
-      tvhlog(LOG_DEBUG, "service", "%s: Unable to use \"%s\" -- %s",
-	     loginfo, service_nicename(t), streaming_code2txt(r));
-  }
-
-  /* Ok, nothing, try again, but supply our weight and thus, try to steal
-     transponders */
-
-  for(i = off; i < cnt; i++) {
-    t = vec[i];
-    tvhlog(LOG_DEBUG, "service", "%s: Probing adapter \"%s\" with weight %d for service \"%s\"",
-	     loginfo, service_adapter_nicename(t), weight, service_nicename(t));
-
-    if((r = service_start(t, weight, 0)) == 0)
-      return t;
-    *errorp = r;
-  }
-  if(err)
-    *errorp = err;
-  else if(*errorp == 0)
-    *errorp = SM_CODE_NO_SERVICE;
-  return NULL;
-}
-#endif
-
-
-
 /**
  *
  */
@@ -441,28 +357,24 @@ service_destroy(service_t *t)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
+  channel_service_mapping_t *csm;
 
   if(t->s_dtor != NULL)
     t->s_dtor(t);
 
   lock_assert(&global_lock);
-
-#ifdef TODO_FIX_THIS
-  serviceprobe_delete(t);
-#endif
+  
+  service_mapper_remove(t);
 
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL) {
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
   }
 
-  if(t->s_ch != NULL) {
-    t->s_ch = NULL;
-    LIST_REMOVE(t, s_ch_link);
+  while ((csm = LIST_FIRST(&t->s_channels))) {
+    LIST_REMOVE(csm, csm_svc_link);
+    LIST_REMOVE(csm, csm_chn_link);
+    free(csm);
   }
-
-#ifdef TODO_MOVE_TO_MPEGTS
-  LIST_REMOVE(t, s_group_link);
-#endif
 
   idnode_unlink(&t->s_id);
 
@@ -471,31 +383,33 @@ service_destroy(service_t *t)
 
   t->s_status = SERVICE_ZOMBIE;
 
-#ifdef MOVE_TO_MPEGTS
-  free(t->s_svcname);
-  free(t->s_provider);
-  free(t->s_dvb_charset);
-#endif
-
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)
     service_stream_destroy(t, st);
 
-#ifdef MOVE_TO_TODO
-  free(t->s_pat_section);
-  free(t->s_pmt_section);
-#endif
-
-
-#ifdef MOVE_TO_MPEGTS
-  sbuf_free(&t->s_tsbuf);
-
-  avgstat_flush(&t->s_cc_errors);
-#endif
   avgstat_flush(&t->s_rate);
+
+  TAILQ_REMOVE(&service_all, t, s_all_link);
 
   service_unref(t);
 }
 
+static int
+service_channel_number ( service_t *s )
+{
+  return 0;
+}
+
+static const char *
+service_channel_name ( service_t *s )
+{
+  return NULL;
+}
+
+static const char *
+service_provider_name ( service_t *s )
+{
+  return NULL;
+}
 
 /**
  * Create and initialize a new service struct
@@ -508,12 +422,17 @@ service_create0
   idnode_insert(&t->s_id, uuid, class);
 
   lock_assert(&global_lock);
+  
+  TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
+  t->s_channel_number = service_channel_number;
+  t->s_channel_name   = service_channel_name;
+  t->s_provider_name  = service_provider_name;
   TAILQ_INIT(&t->s_components);
 
   streaming_pad_init(&t->s_streaming_pad);
@@ -653,43 +572,7 @@ service_stream_find(service_t *t, int pid)
   return NULL;
 }
 
-
-
-/**
- *
- */
-void
-service_map_channel(service_t *t, channel_t *ch, int save)
-{
-  lock_assert(&global_lock);
-
-  if(t->s_ch != NULL) {
-    LIST_REMOVE(t, s_ch_link);
-    htsp_channel_update(t->s_ch);
-    t->s_ch = NULL;
-  }
-
-
-  if(ch != NULL) {
-
-#ifdef MOVE_TO_MPEGTS
-    avgstat_init(&t->s_cc_errors, 3600);
-#endif
-    avgstat_init(&t->s_rate, 10);
-
-    t->s_ch = ch;
-    LIST_INSERT_HEAD(&ch->ch_services, t, s_ch_link);
-    htsp_channel_update(t->s_ch);
-  }
-
-  if(save)
-    t->s_config_save(t);
-}
-
-
-/**
- *
- */
+#if 0
 static const void *
 service_class_channel_get(void *obj)
 {
@@ -697,6 +580,7 @@ service_class_channel_get(void *obj)
   service_t *s = obj;
   r = s->s_ch ? s->s_ch->ch_name : NULL;
   return &r;
+  return NULL;
 }
 
 
@@ -709,37 +593,7 @@ service_class_channel_set(void *obj, const void *v)
   const char *str = v;
   service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
   return 1; // TODO: sort this!
-}
-
-
-/**
- *
- */
-#ifdef MOVE_TO_MPEGTS
-void
-service_set_dvb_charset(service_t *t, const char *dvb_charset)
-{
-  lock_assert(&global_lock);
-
-  if(t->s_dvb_charset != NULL && !strcmp(t->s_dvb_charset, dvb_charset))
-    return;
-
-  free(t->s_dvb_charset);
-  t->s_dvb_charset = strdup(dvb_charset);
-  t->s_config_save(t);
-}
-
-/**
- *
- */
-void
-service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable)
-{
-  if(t->s_dvb_eit_enable == dvb_eit_enable)
-    return;
-
-  t->s_dvb_eit_enable = dvb_eit_enable;
-  t->s_config_save(t);
+  return 0;
 }
 #endif
 
@@ -762,79 +616,64 @@ service_data_timeout(void *aux)
 /**
  *
  */
-#ifdef TODO_REMOVED
-static struct strtab stypetab[] = {
-  { "SDTV",         ST_SDTV },
-  { "Radio",        ST_RADIO },
-  { "HDTV",         ST_HDTV },
-  { "HDTV",         ST_EX_HDTV },
-  { "SDTV",         ST_EX_SDTV },
-  { "HDTV",         ST_EP_HDTV },
-  { "HDTV",         ST_ET_HDTV },
-  { "SDTV",         ST_DN_SDTV },
-  { "HDTV",         ST_DN_HDTV },
-  { "SDTV",         ST_SK_SDTV },
-  { "SDTV",         ST_NE_SDTV },
-  { "SDTV",         ST_AC_SDTV },
-  { "HDTV",         ST_AC_HDTV },
-};
-
-const char *
-service_servicetype_txt(service_t *t)
-{
-  return val2str(t->s_servicetype, stypetab) ?: "Other";
-}
-#endif
-
-/**
- *
- */
-#if 0
 int
-servicetype_is_tv(int servicetype)
+service_is_sdtv(service_t *t)
 {
-  return 
-    servicetype == ST_SDTV    ||
-    servicetype == ST_HDTV    ||
-    servicetype == ST_EX_HDTV ||
-    servicetype == ST_EX_SDTV ||
-    servicetype == ST_EP_HDTV ||
-    servicetype == ST_ET_HDTV ||
-    servicetype == ST_DN_SDTV ||
-    servicetype == ST_DN_HDTV ||
-    servicetype == ST_SK_SDTV ||
-    servicetype == ST_NE_SDTV ||
-    servicetype == ST_AC_SDTV ||
-    servicetype == ST_AC_HDTV;
-}
-#endif
-int
-service_is_tv(service_t *t)
-{
+  if (t->s_servicetype == ST_SDTV)
+    return 1;
+  else if (t->s_servicetype == ST_NONE) {
+    elementary_stream_t *st;
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISVIDEO(st->es_type) && st->es_height < 720)
+        return 1;
+  }
   return 0;
-#ifdef TODO_USE_ES
-  return servicetype_is_tv(t->s_servicetype);
-#endif
+}
+
+int
+service_is_hdtv(service_t *t)
+{
+  if (t->s_servicetype == ST_HDTV)
+    return 1;
+  else if (t->s_servicetype == ST_NONE) {
+    elementary_stream_t *st;
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISVIDEO(st->es_type) && st->es_height >= 720)
+        return 1;
+  }
+  return 0;
 }
 
 /**
  *
  */
-#if 0
-int
-servicetype_is_radio(int servicetype)
-{
-  return servicetype == ST_RADIO;
-}
-#endif
 int
 service_is_radio(service_t *t)
 {
+  if (t->s_servicetype == ST_RADIO)
+    return 1;
+  else if (t->s_servicetype == ST_NONE) {
+    elementary_stream_t *st;
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISAUDIO(st->es_type))
+        return 1;
+  }
   return 0;
-#ifdef TODO_USE_ES
-  return servicetype_is_radio(t->s_servicetype);
-#endif
 }
+
+/**
+ * Is encrypted
+ */
+int
+service_is_encrypted(service_t *t)
+{
+  elementary_stream_t *st;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if (st->es_type == SCT_CA)
+      return 1;
+  return 0;
+}
+
 
 /**
  *
@@ -1059,6 +898,7 @@ service_init(void)
 {
   pthread_t tid;
   TAILQ_INIT(&pending_save_queue);
+  TAILQ_INIT(&service_all);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
   pthread_create(&tid, NULL, service_saver, NULL);
@@ -1168,8 +1008,10 @@ tss2errcode(int tss)
 void
 service_refresh_channel(service_t *t)
 {
+#if 0
   if(t->s_ch != NULL)
     htsp_channel_update(t->s_ch);
+#endif
 }
 
 
@@ -1352,11 +1194,11 @@ void service_save ( service_t *t, htsmsg_t *m )
     if(st->es_type == SCT_TEXTSUB)
       htsmsg_add_u32(sub, "parentpid", st->es_parent_pid);
 
-    if(st->es_type == SCT_MPEG2VIDEO || st->es_type == SCT_H264) {
-      if(st->es_width && st->es_height) {
+    if(SCT_ISVIDEO(st->es_type)) {
+      if(st->es_width)
 	      htsmsg_add_u32(sub, "width", st->es_width);
+      if(st->es_height)
 	      htsmsg_add_u32(sub, "height", st->es_height);
-      }
       if(st->es_frame_duration)
         htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
@@ -1480,7 +1322,9 @@ void service_load ( service_t *t, htsmsg_t *c )
   if(!htsmsg_get_u32(c, "pcr", &u32))
     t->s_pcr_pid = u32;
 
-  m = htsmsg_get_map(c, "stream");
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+  m = htsmsg_get_list(c, "stream");
   if (m) {
     HTSMSG_FOREACH(f, m) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -1527,7 +1371,7 @@ void service_load ( service_t *t, htsmsg_t *c )
 	        st->es_parent_pid = u32;
       }
 
-      if(type == SCT_MPEG2VIDEO || type == SCT_H264) {
+      if(SCT_ISVIDEO(type)) {
         if(!htsmsg_get_u32(c, "width", &u32))
 	        st->es_width = u32;
 
@@ -1540,4 +1384,5 @@ void service_load ( service_t *t, htsmsg_t *c )
     }
   }
   sort_elementary_streams(t);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }

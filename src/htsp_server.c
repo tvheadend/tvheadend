@@ -454,6 +454,7 @@ static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
   channel_tag_mapping_t *ctm;
+  channel_service_mapping_t *csm;
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
@@ -505,7 +506,8 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       htsmsg_add_u32(tags, NULL, ct->ct_identifier);
   }
 
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+    t = csm->csm_svc;
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));

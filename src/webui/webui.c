@@ -596,8 +596,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
-    name = strdupa(service->s_ch ?
-                   service->s_ch->ch_name : service->s_nicename);
+    name = strdupa(service->s_nicename);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);

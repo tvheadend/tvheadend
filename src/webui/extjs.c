@@ -37,7 +37,7 @@
 #include "channels.h"
 
 #include "dvr/dvr.h"
-#include "serviceprobe.h"
+#include "service_mapper.h"
 #include "epggrab.h"
 #include "epg.h"
 #include "muxer.h"
@@ -512,7 +512,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "create")) {
     htsmsg_destroy(out);
-    out = build_record_channel(channel_create());
+    out = build_record_channel(channel_create(NULL));
 
   } else if(!strcmp(op, "delete") && in != NULL) {
     extjs_channels_delete(in);
@@ -1561,47 +1561,6 @@ extjs_service_delete(htsmsg_t *in)
 /**
  *
  */
-#ifdef TODO_FIX_THIS
-static void
-service_update(htsmsg_t *in)
-{
-  htsmsg_field_t *f;
-  htsmsg_t *c;
-  service_t *t;
-  uint32_t u32;
-  const char *id;
-  const char *chname;
-  const char *dvb_charset;
-
-  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       (id = htsmsg_get_str(c, "id")) == NULL)
-      continue;
-    
-    if((t = service_find_by_identifier(id)) == NULL)
-      continue;
-
-    if(!htsmsg_get_u32(c, "enabled", &u32))
-      service_set_enable(t, u32);
-
-    if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
-      service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
-
-    if(!htsmsg_get_u32(c, "prefcapid", &u32))
-      service_set_prefcapid(t, u32);
-
-    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
-      service_set_dvb_charset(t, dvb_charset);
-
-    if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
-      service_set_dvb_eit_enable(t, u32);
-  }
-}
-#endif
-
-/**
- *
- */
 static int
 extjs_servicedetails(http_connection_t *hc, 
 		     const char *remain, void *opaque)
@@ -1736,249 +1695,6 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
-
-/**
- *
- */
-#if 0//ENABLE_IPTV
-static void
-service_update_iptv(htsmsg_t *in)
-{
-  htsmsg_field_t *f;
-  htsmsg_t *c;
-  service_t *t;
-  uint32_t u32;
-  const char *id, *s;
-  int save;
-
-  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       (id = htsmsg_get_str(c, "id")) == NULL)
-      continue;
-    
-    if((t = service_find_by_identifier(id)) == NULL)
-      continue;
-
-    save = 0;
-
-    if(!htsmsg_get_u32(c, "port", &u32)) {
-      t->s_iptv_port = u32;
-      save = 1;
-    }
-
-    if (!htsmsg_get_u32(c, "stype", &u32)) {
-      t->s_servicetype = u32;
-      save = 1;
-    }
-
-    if((s = htsmsg_get_str(c, "group")) != NULL) {
-      if(!inet_pton(AF_INET, s, &t->s_iptv_group.s_addr)){
-      	inet_pton(AF_INET6, s, &t->s_iptv_group6.s6_addr);
-      }
-      save = 1;
-    }
-    
-
-    save |= tvh_str_update(&t->s_iptv_iface, htsmsg_get_str(c, "interface"));
-    if(save)
-      t->s_config_save(t); // Save config
-  }
-}
-
-/**
- *
- */
-static htsmsg_t *
-build_record_iptv(service_t *t)
-{
-  htsmsg_t *r = htsmsg_create_map();
-  char abuf[INET_ADDRSTRLEN];
-  char abuf6[INET6_ADDRSTRLEN];
-  //  htsmsg_add_str(r, "id", t->s_uuid); // XXX(dvbreorg)
-
-  htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
-  htsmsg_add_str(r, "interface", t->s_iptv_iface ?: "");
-
-  if(t->s_iptv_group.s_addr != 0){
-    inet_ntop(AF_INET, &t->s_iptv_group, abuf, sizeof(abuf));
-    htsmsg_add_str(r, "group", t->s_iptv_group.s_addr ? abuf : "");
-  }
-  else {
-    inet_ntop(AF_INET6, &t->s_iptv_group6, abuf6, sizeof(abuf6));
-    htsmsg_add_str(r, "group", t->s_iptv_group6.s6_addr ? abuf6 : "");
-  }
-
-  htsmsg_add_u32(r, "port", t->s_iptv_port);
-  htsmsg_add_u32(r, "stype", t->s_servicetype);
-  htsmsg_add_u32(r, "enabled", t->s_enabled);
-  return r;
-}
-
-/**
- *
- */
-static int
-iptv_servicecmp(const void *A, const void *B)
-{
-  service_t *a = *(service_t **)A;
-  service_t *b = *(service_t **)B;
-
-  return memcmp(&a->s_iptv_group, &b->s_iptv_group, 4);
-}
-
-/**
- *
- */
-static int
-extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *in, *array;
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-  service_t *t, **tvec;
-  int count = 0, i = 0;
-
-  if(op == NULL)
-    return 400;
-
-  pthread_mutex_lock(&global_lock);
-
-  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
-
-  if(!strcmp(op, "get")) {
-    LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      count++;
-    tvec = alloca(sizeof(service_t *) * count);
-    LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      tvec[i++] = t;
-
-    out = htsmsg_create_map();
-    array = htsmsg_create_list();
-
-    qsort(tvec, count, sizeof(service_t *), iptv_servicecmp);
-
-    for(i = 0; i < count; i++)
-      htsmsg_add_msg(array, NULL, build_record_iptv(tvec[i]));
-
-    htsmsg_add_msg(out, "entries", array);
-
-  } else if(!strcmp(op, "update")) {
-    if(in != NULL) {
-      service_update(in);      // Generic service parameters
-      service_update_iptv(in); // IPTV speicifc
-    }
-
-    out = htsmsg_create_map();
-
-  } else if(!strcmp(op, "create")) {
-
-    out = build_record_iptv(iptv_service_find(NULL, 1));
-
-  } else if(!strcmp(op, "delete")) {
-    if(in != NULL)
-      extjs_service_delete(in);
-    
-    out = htsmsg_create_map();
-
-  } else if (!strcmp(op, "servicetypeList")) {
-    out   = htsmsg_create_map();
-    array = servicetype_list();
-    htsmsg_add_msg(out, "entries", array);
-
-  } else {
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_destroy(in);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  htsmsg_destroy(in);
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-#endif
-
-/**
- *
- */
-void
-extjs_service_update(htsmsg_t *in)
-{
-  htsmsg_field_t *f;
-  htsmsg_t *c;
-  service_t *t;
-  uint32_t u32;
-  const char *id;
-  const char *chname;
-#ifdef TODO_FIX_THIS
-  const char *dvb_charset;
-#endif
-
-  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       (id = htsmsg_get_str(c, "id")) == NULL)
-      continue;
-    
-    if((t = service_find_by_identifier(id)) == NULL)
-      continue;
-
-    if(!htsmsg_get_u32(c, "enabled", &u32))
-      service_set_enable(t, u32);
-
-    if(!htsmsg_get_u32(c, "prefcapid", &u32))
-      service_set_prefcapid(t, u32);
-
-    if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
-      service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
-
-#ifdef TODO_FIX_THIS
-    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
-      service_set_dvb_charset(t, dvb_charset);
-
-    if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
-      service_set_dvb_eit_enable(t, u32);
-#endif
-  }
-}
-
-#if 0
-/**
- *
- */
-static int
-extjs_tvadapter(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array;
-
-  pthread_mutex_lock(&global_lock);
-
-  /* Just list all adapters */
-  array = htsmsg_create_list();
-
-#if ENABLE_LINUXDVB
-  extjs_list_dvb_adapters(array);
-#endif
-
-#if ENABLE_V4L
-  extjs_list_v4l_adapters(array);
-#endif
-
-  pthread_mutex_unlock(&global_lock);
-  out = htsmsg_create_map();
-  htsmsg_add_msg(out, "entries", array);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-#endif
 
 /**
  *
@@ -2389,6 +2105,67 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
 }
 #endif
 
+static int
+extjs_service_mapping
+  (http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out;
+  service_mapper_conf_t conf = { 0 };
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+
+  if (!op)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  /* Status */
+  if (!strcmp(op, "status")) {
+    int num;
+    pthread_mutex_lock(&global_lock);
+    num = service_mapper_qlen();
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "remaining", num);
+
+  /* Start */
+  } else if (!strcmp(op, "start")) {
+    
+    /* Get config */
+    if (http_arg_get(&hc->hc_req_args, "check_availability") != NULL)
+      conf.check_availability = 1;
+    if (http_arg_get(&hc->hc_req_args, "encrypted") != NULL)
+      conf.encrypted          = 1;
+    if (http_arg_get(&hc->hc_req_args, "merge_same_name") != NULL)
+      conf.merge_same_name    = 1;
+    if (http_arg_get(&hc->hc_req_args, "provider_tags") != NULL)
+      conf.provider_tags      = 1;
+
+    /* Start */
+    pthread_mutex_lock(&global_lock);
+    service_mapper_start(&conf);
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+  
+  /* Stop */
+  } else if (!strcmp(op, "stop")) {
+    pthread_mutex_lock(&global_lock);
+    service_mapper_stop();
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+  
+  /* Invalid */
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
+  return 0;
+}
+
+
 /**
  * WEB user interface
  */
@@ -2416,11 +2193,7 @@ extjs_start(void)
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
   http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
-#if 0//ENABLE_IPTV
-  http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
-#endif
   http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
-//  http_path_add("/tv/adapter",       NULL, extjs_tvadapter,        ACCESS_ADMIN);
 #if ENABLE_TIMESHIFT
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
@@ -2429,6 +2202,7 @@ extjs_start(void)
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
   http_path_add("/api/idnode", NULL, extjs_idnode, ACCESS_ADMIN); // TODO: might want diff access for read/write`
+  http_path_add("/api/service_mapping", NULL, extjs_service_mapping, ACCESS_ADMIN);
 
   extjs_start_dvb();
 

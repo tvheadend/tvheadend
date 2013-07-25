@@ -42,7 +42,7 @@ typedef struct channel {
   RB_ENTRY(channel) ch_identifier_link;
   int ch_id;		    
 
-  LIST_HEAD(, service) ch_services;
+  LIST_HEAD(, channel_service_mapping) ch_services;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
@@ -100,11 +100,17 @@ typedef struct channel_tag_mapping {
 
 } channel_tag_mapping_t;
 
-
+typedef struct channel_service_mapping {
+  LIST_ENTRY(channel_service_mapping) csm_chn_link;
+  LIST_ENTRY(channel_service_mapping) csm_svc_link;
+  
+  struct channel *csm_chn;
+  struct service *csm_svc;
+} channel_service_mapping_t;
 
 void channels_init(void);
 
-channel_t *channel_create(void);
+channel_t *channel_create(const char *name);
 
 channel_t *channel_find_by_name(const char *name, int create, int number);
 

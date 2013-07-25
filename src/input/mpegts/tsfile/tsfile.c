@@ -21,6 +21,7 @@
 #include "input.h"
 #include "channels.h"
 #include "tsfile_private.h"
+#include "service_mapper.h"
 
 /*
  * Globals
@@ -49,7 +50,7 @@ tsfile_network_create_service
     char buf[128];
     sprintf(buf, "channel-%d", t);
     channel_t *c = channel_find_by_name(buf, 1, t);
-    service_map_channel((service_t*)s, c, 1);
+    service_mapper_link((service_t*)s, c);
     t++;
   }
   return s;

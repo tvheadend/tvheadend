@@ -25,6 +25,8 @@
 
 extern const idclass_t service_class;
 
+extern struct service_queue service_all;
+
 /**
  * Stream, one media component for a service.
  */
@@ -173,6 +175,8 @@ void service_instance_list_clear(struct service_instance_list *sil);
 typedef struct service {
   idnode_t s_id;
 
+  TAILQ_ENTRY(service) s_all_link;
+
   enum {
     /**
      * Transport is idle.
@@ -223,6 +227,16 @@ typedef struct service {
     S_OTHER,
   } s_source_type;
 
+  /**
+   * Service type
+   */
+  enum {
+    ST_NONE,
+    ST_SDTV,
+    ST_HDTV,
+    ST_RADIO
+  } s_servicetype;
+
 // TODO: should this really be here?
 
   /**
@@ -267,6 +281,13 @@ typedef struct service {
   void (*s_dtor)(struct service *t);
 
   /**
+   * Channel info
+   */
+  int         (*s_channel_number) (struct service *);
+  const char *(*s_channel_name)   (struct service *);
+  const char *(*s_provider_name)  (struct service *);
+
+  /**
    * Name usable for displaying to user
    */
   char *s_nicename;
@@ -280,14 +301,13 @@ typedef struct service {
   /**
    * Channel mapping
    */
-  LIST_ENTRY(service) s_ch_link;
-  struct channel *s_ch;
+  LIST_HEAD(,channel_service_mapping) s_channels;
 
   /**
-   * Service probe, see serviceprobe.c for details
+   * Service mapping, see service_mapper.c form details
    */
-  int s_sp_onqueue;
-  TAILQ_ENTRY(service) s_sp_link;
+  int s_sm_onqueue;
+  TAILQ_ENTRY(service) s_sm_link;
 
   /**
    * Pending save.
@@ -307,27 +327,6 @@ typedef struct service {
    * will be set to TRANSPORT_STATUS_NO_INPUT
    */
   gtimer_t s_receive_timer;
-
-#ifdef MOVE_TO_IPTV
-  /**
-   * IPTV members
-   */
-  char *s_iptv_iface;
-  struct in_addr s_iptv_group;
-  struct in6_addr s_iptv_group6;
-  uint16_t s_iptv_port;
-  int s_iptv_fd;
-#endif
-
-  /**
-   * V4l members
-   */
-
-#ifdef MOVE_TO_V4L
-  struct v4l_adapter *s_v4l_adapter;
-  int s_v4l_frequency; // In Hz
-#endif
-  
 
   /*********************************************************
    *
@@ -436,8 +435,6 @@ void service_ref(service_t *t);
 
 service_t *service_find_by_identifier(const char *identifier);
 
-void service_map_channel(service_t *t, struct channel *ch, int save);
-
 service_instance_t *service_find_instance(struct channel *ch,
                                           struct service_instance_list *sil,
                                           int *error,
@@ -454,13 +451,12 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
-int service_is_tv(service_t *t);
-
+int service_is_sdtv(service_t *t);
+int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
+#define service_is_tv(s) (service_is_hdtv(s) || service_is_sdtv(s))
 
-int servicetype_is_tv(int st);
-
-int servicetype_is_radio(int st);
+int service_is_encrypted ( service_t *t );
 
 void service_destroy(service_t *t);
 
