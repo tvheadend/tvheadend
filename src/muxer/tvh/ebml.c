@@ -65,6 +65,19 @@ ebml_append_size(htsbuf_queue_t *q, uint32_t size)
 }
 
 
+void 
+ebml_append_xiph_size(htsbuf_queue_t *q, int size)
+{
+  int i;
+  uint8_t u8[4] = {0xff, size % 0xff};
+
+  for(i=0; i<size/0xff; i++)
+    htsbuf_append(q, u8, 1);
+
+  return htsbuf_append(q, u8+1, 1);
+}
+
+
 void
 ebml_append_bin(htsbuf_queue_t *q, unsigned id, const void *data, size_t len)
 {

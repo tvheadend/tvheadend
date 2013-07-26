@@ -33,6 +33,7 @@
 static struct strtab container_audio_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "audio/x-matroska",         MC_MATROSKA },
+  { "audio/webm",               MC_WEBM },
   { "audio/x-mpegts",           MC_MPEGTS },
   { "audio/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
@@ -46,6 +47,7 @@ static struct strtab container_audio_mime[] = {
 static struct strtab container_video_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "video/x-matroska",         MC_MATROSKA },
+  { "video/webm",               MC_WEBM },
   { "video/x-mpegts",           MC_MPEGTS },
   { "video/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
@@ -59,6 +61,7 @@ static struct strtab container_video_mime[] = {
 static struct strtab container_name[] = {
   { "unknown",  MC_UNKNOWN },
   { "matroska", MC_MATROSKA },
+  { "webm",     MC_WEBM },
   { "mpegts",   MC_MPEGTS },
   { "mpegps",   MC_MPEGPS },
   { "pass",     MC_PASS },
@@ -72,6 +75,7 @@ static struct strtab container_name[] = {
 static struct strtab container_audio_file_suffix[] = {
   { "bin",  MC_UNKNOWN },
   { "mka",  MC_MATROSKA },
+  { "webm", MC_WEBM },
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
@@ -85,6 +89,7 @@ static struct strtab container_audio_file_suffix[] = {
 static struct strtab container_video_file_suffix[] = {
   { "bin",  MC_UNKNOWN },
   { "mkv",  MC_MATROSKA },
+  { "webm", MC_WEBM },
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
