@@ -283,6 +283,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (pkt->pkt_pts > as->aud_dec_pts) {
     tvhlog(LOG_WARNING, "transcode", "Detected framedrop in audio");
     as->aud_enc_pts += (pkt->pkt_pts - as->aud_dec_pts);
+    as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
   }
 
   pkt = pkt_merge_header(pkt);
