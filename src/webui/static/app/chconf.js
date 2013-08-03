@@ -54,7 +54,7 @@ tvheadend.mapServices = function()
 
   /* Form fields */
   var availCheck = new Ext.form.Checkbox({
-    name        : 'check_availbility',
+    name        : 'check_availability',
     fieldLabel  : 'Check availability',
     checked     : false
   });

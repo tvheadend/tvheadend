@@ -36,6 +36,26 @@ static int
 psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len);
 
 /* **************************************************************************
+ * Lookup tables
+ * *************************************************************************/
+
+static const int dvb_servicetype_map[][2] = {
+  { 0x01, ST_SDTV  }, /* SDTV (MPEG2) */
+  { 0x02, ST_RADIO }, 
+  { 0x11, ST_HDTV  }, /* HDTV (MPEG2) */
+  { 0x16, ST_SDTV  }, /* Advanced codec SDTV */
+  { 0x19, ST_HDTV  }, /* Advanced codec HDTV */
+  { 0x80, ST_SDTV  }, /* NET POA - Cabo SDTV */
+  { 0x91, ST_HDTV  }, /* Bell TV HDTV */
+  { 0x96, ST_SDTV  }, /* Bell TV SDTV */
+  { 0xA0, ST_HDTV  }, /* Bell TV tiered HDTV */
+  { 0xA4, ST_HDTV  }, /* DN HDTV */
+  { 0xA6, ST_HDTV  }, /* Bell TV tiered HDTV */
+  { 0xA8, ST_SDTV  }, /* DN advanced SDTV */
+  { 0xD3, ST_SDTV  }, /* SKY TV SDTV */
+};
+
+/* **************************************************************************
  * Descriptors
  * *************************************************************************/
 
@@ -843,8 +863,15 @@ dvb_sdt_callback
 
     /* Update service type */
     if (stype && s->s_dvb_servicetype != stype) {
+      int i;
       s->s_dvb_servicetype = stype;
       save = 1;
+
+      /* Set tvh service type */
+      for (i = 0; i < ARRAY_SIZE(dvb_servicetype_map); i++) {
+        if (dvb_servicetype_map[i][0] == stype)
+          s->s_servicetype = dvb_servicetype_map[i][1];
+      }
     }
     
     /* Update scrambled state */

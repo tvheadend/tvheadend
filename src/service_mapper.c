@@ -30,6 +30,7 @@
 #include "service_mapper.h"
 #include "streaming.h"
 #include "service.h"
+#include "plumbing/tsfix.h"
 
 static pthread_cond_t        service_mapper_cond;
 static struct service_queue  service_mapper_queue;
@@ -78,8 +79,6 @@ service_mapper_start ( const service_mapper_conf_t *conf )
   /* Check each service */
   TAILQ_FOREACH(s, &service_all, s_all_link) {
 
-printf("name = %s\n", s->s_channel_name(s));
-
     /* Disabled */
     if (!s->s_is_enabled(s)) continue;
 
@@ -91,7 +90,6 @@ printf("name = %s\n", s->s_channel_name(s));
     e  = service_is_encrypted(s);
     tr = service_is_tv(s) || service_is_radio(s);
     pthread_mutex_unlock(&s->s_stream_mutex);
-printf("  tr = %d, e = %d\n", tr, e);
 
     /* Skip non-TV / Radio */
     if (!tr) continue;
@@ -104,11 +102,11 @@ printf("  tr = %d, e = %d\n", tr, e);
       if (!s->s_sm_onqueue) {
         qd = 1;
         TAILQ_INSERT_TAIL(&service_mapper_queue, s, s_sm_link);
+        s->s_sm_onqueue = 1;
       }
     
     /* Process */
     } else {
-printf("  map\n");
       service_mapper_process(s);
     }
   }
@@ -247,6 +245,7 @@ service_mapper_thread ( void *aux )
   streaming_queue_t sq;
   streaming_message_t *sm;
   const char *err;
+  streaming_target_t *st;
 
   streaming_queue_init(&sq, 0);
 
@@ -262,6 +261,7 @@ service_mapper_thread ( void *aux )
       }
       pthread_cond_wait(&service_mapper_cond, &global_lock);
     }
+    service_mapper_remove(s);
 
     if (!working) {
       working = 1;
@@ -270,12 +270,12 @@ service_mapper_thread ( void *aux )
 
     /* Subscribe */
     tvhinfo("service_mapper", "%s: checking availability", s->s_nicename);
-    sub = subscription_create_from_service(s, "service_mapper", &sq.sq_st,
+    st  = tsfix_create(&sq.sq_st);
+    sub = subscription_create_from_service(s, 2, "service_mapper", st,
                                            0, NULL, NULL, "service_mapper");
 
     /* Failed */
     if (!sub) {
-      service_mapper_remove(s);
       tvhinfo("service_mapper", "%s: could not subscribe", s->s_nicename);
       continue;
     }
@@ -294,13 +294,13 @@ service_mapper_thread ( void *aux )
       TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
       pthread_mutex_unlock(&sq.sq_mutex);
 
-      if(sm->sm_type == SMT_SERVICE_STATUS) {
+      if(sm->sm_type == SMT_PACKET) {
+        run = 0;
+        err = NULL;
+      } else if (sm->sm_type == SMT_SERVICE_STATUS) {
         int status = sm->sm_code;
 
-        if(status & TSS_PACKETS) {
-          run = 0;
-          err = NULL;
-        } else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+        if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
           run = 0;
           err = service_tss2text(status);
         }
@@ -315,6 +315,7 @@ service_mapper_thread ( void *aux )
  
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(sub);
+    tsfix_destroy(st);
 
     if(err)
       tvhinfo("service_mapper", "%s: failed %s", s->s_nicename, err);

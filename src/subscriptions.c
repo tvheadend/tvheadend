@@ -164,10 +164,12 @@ subscription_reschedule(void)
 	     subscription_reschedule_cb, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
+#if 0
     if(s->ths_channel == NULL)
       continue; /* stale entry, channel has been destroyed */
+#endif
 
-    if(s->ths_service != NULL) {
+    if(s->ths_service != NULL && s->ths_current_instance != NULL) {
       /* Already got a service */
 
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
@@ -180,8 +182,11 @@ subscription_reschedule(void)
       time(&si->si_error_time);
     }
 
-    tvhtrace("subscription", "find service for %s weight %d", s->ths_channel->ch_name, s->ths_weight);
-    si = service_find_instance(s->ths_channel, &s->ths_instances, &error,
+    if (s->ths_channel)
+      tvhtrace("subscription", "find service for %s weight %d", s->ths_channel->ch_name, s->ths_weight);
+    else 
+      tvhtrace("subscription", "find instance for %s weight %d", s->ths_service->s_nicename, s->ths_weight);
+    si = service_find_instance(s->ths_service, s->ths_channel, &s->ths_instances, &error,
                                s->ths_weight);
     s->ths_current_instance = si;
 
@@ -370,22 +375,26 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
 /**
  *
  */
-th_subscription_t *
-subscription_create_from_channel(channel_t *ch, unsigned int weight, 
-				 const char *name, streaming_target_t *st,
-				 int flags, const char *hostname,
-				 const char *username, const char *client)
+static th_subscription_t *
+subscription_create_from_channel_or_service
+  (channel_t *ch, service_t *t, unsigned int weight, 
+   const char *name, streaming_target_t *st,
+   int flags, const char *hostname,
+   const char *username, const char *client)
 {
   th_subscription_t *s;
+  assert(!ch || !t);
 
-  tvhtrace("subscription", "creating subscription for %s weight %d",
-           ch->ch_name, weight);
+  if (ch)
+    tvhtrace("subscription", "creating subscription for %s weight %d",
+             ch->ch_name, weight);
   s = subscription_create(weight, name, st, flags, subscription_input,
 			  hostname, username, client);
 
   s->ths_channel = ch;
-  LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
-  s->ths_service = NULL;
+  if (ch)
+    LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
+  s->ths_service = t;
 
   subscription_reschedule();
 
@@ -393,7 +402,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
     tvhlog(LOG_NOTICE, "subscription", 
 	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
-	   s->ths_title, ch->ch_name);
+	   s->ths_title, ch ? ch->ch_name : "none");
   } else {
     source_info_t si;
 
@@ -403,7 +412,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	   "service: \"%s\"",
-	   s->ths_title, ch->ch_name, weight,
+	   s->ths_title, ch ? ch->ch_name : "none", weight,
 	   si.si_adapter  ?: "<N/A>",
 	   si.si_network  ?: "<N/A>",
 	   si.si_mux      ?: "<N/A>",
@@ -416,57 +425,29 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
   return s;
 }
 
+th_subscription_t *
+subscription_create_from_channel(channel_t *ch, unsigned int weight, 
+				 const char *name, streaming_target_t *st,
+				 int flags, const char *hostname,
+				 const char *username, const char *client)
+{
+  return subscription_create_from_channel_or_service
+           (ch, NULL, weight, name, st, flags, hostname, username, client);
+}
 
 /**
  *
  */
 th_subscription_t *
-subscription_create_from_service(service_t *t, const char *name,
+subscription_create_from_service(service_t *t, unsigned int weight,
+                                 const char *name,
 				 streaming_target_t *st, int flags,
 				 const char *hostname, const char *username, 
 				 const char *client)
 {
-#if 0
-  th_subscription_t *s;
-  source_info_t si;
-  int r;
-
-  s = subscription_create(INT32_MAX, name, st, flags, 
-			  subscription_input_direct,
-			  hostname, username, client);
-
-  if(t->s_status != SERVICE_RUNNING) {
-    if((r = service_start(t, INT32_MAX, 1)) != 0) {
-      subscription_unsubscribe(s);
-
-      tvhlog(LOG_INFO, "subscription", 
-	     "\"%s\" direct subscription failed -- %s", name,
-	     streaming_code2txt(r));
-      return NULL;
-    }
-  }
-
-  t->s_setsourceinfo(t, &si);
-
-  tvhlog(LOG_INFO, "subscription", 
-	 "\"%s\" direct subscription to adapter: \"%s\", "
-	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	 "service: \"%s\"",
-	 s->ths_title,
-	 si.si_adapter  ?: "<N/A>",
-	 si.si_network  ?: "<N/A>",
-	 si.si_mux      ?: "<N/A>",
-	 si.si_provider ?: "<N/A>",
-	 si.si_service  ?: "<N/A>");
-  service_source_info_free(&si);
-
-  subscription_link_service(s, t);
-  notify_reload("subscriptions");
-  return s;
-#endif
-  abort();
+  return subscription_create_from_channel_or_service
+           (NULL, t, weight, name, st, flags, hostname, username, client);
 }
-
 
 /**
  *
@@ -546,7 +527,7 @@ subscription_dummy_join(const char *id, int first)
 
   st = calloc(1, sizeof(streaming_target_t));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  subscription_create_from_service(t, "dummy", st, 0, NULL, NULL, "dummy");
+  subscription_create_from_service(t, 1, "dummy", st, 0, NULL, NULL, "dummy");
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);

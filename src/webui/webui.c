@@ -591,7 +591,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_service(service, "HTTP", st, flags,
+  s = subscription_create_from_service(service, 100, "HTTP", st, flags,
 				       addrbuf,
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));

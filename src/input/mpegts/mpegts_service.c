@@ -91,7 +91,7 @@ const idclass_t mpegts_service_class =
     },
     {
       .type     = PT_U16,
-      .id       = "servicetype",
+      .id       = "dvb_servicetype",
       .name     = "Service Type",
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),

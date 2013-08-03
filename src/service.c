@@ -273,10 +273,9 @@ service_start(service_t *t, int instance)
  * Main entry point for starting a service based on a channel
  */
 service_instance_t *
-service_find_instance(channel_t *ch, struct service_instance_list *sil,
+service_find_instance(service_t *s, channel_t *ch, struct service_instance_list *sil,
                       int *error, int weight)
 {
-  service_t *s;
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
 
@@ -287,9 +286,13 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
   LIST_FOREACH(si, sil, si_link)
     si->si_mark = 1;
 
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-    s = csm->csm_svc;
-    if (!s->s_is_enabled(s)) continue;
+  if (ch) {
+    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+      s = csm->csm_svc;
+      if (!s->s_is_enabled(s)) continue;
+      s->s_enlist(s, sil);
+    }
+  } else {
     s->s_enlist(s, sil);
   }
 

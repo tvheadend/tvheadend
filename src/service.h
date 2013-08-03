@@ -435,7 +435,8 @@ void service_ref(service_t *t);
 
 service_t *service_find_by_identifier(const char *identifier);
 
-service_instance_t *service_find_instance(struct channel *ch,
+service_instance_t *service_find_instance(struct service *s,
+                                          struct channel *ch,
                                           struct service_instance_list *sil,
                                           int *error,
                                           int weight);
