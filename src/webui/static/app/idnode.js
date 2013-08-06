@@ -4,6 +4,8 @@ json_decode = function(d)
     d = Ext.util.JSON.decode(d.responseText)
     if (d.entries)
       d = d.entries;
+    if (d.nodes)
+      d = d.nodes;
   } else {
     d = []
   }
@@ -498,7 +500,24 @@ tvheadend.idnode_grid = function(panel, conf)
         iconCls     : 'remove',
         text        : 'Delete',
         disabled    : true,
-        handler     : function(){}
+        handler     : function() {
+          var r = select.getSelections();
+          if (r) {
+            var uuids = []
+            for ( var i = 0; i < r.length; i++ )
+              uuids.push(r[i].id)
+            Ext.Ajax.request({
+              url     : conf.url,
+              params  : {
+                op: 'delete',
+                args : Ext.util.JSON.encode({ uuids: uuids})
+              },
+              success : function(d)
+              {
+              }
+            });
+          }
+        }
       });
       buttons.push(delBtn);
     }
@@ -539,7 +558,7 @@ tvheadend.idnode_grid = function(panel, conf)
               success : function(d)
               {
                 d = json_decode(d);
-                var p = tvheadend.idnode_editor(d[0], {});
+                var p = tvheadend.idnode_editor(d, {});
                 var w = new Ext.Window({
                   title       : 'Edit ' + conf.titleS,
                   layout      : 'fit',

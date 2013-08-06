@@ -36,6 +36,16 @@ const idclass_t mpegts_mux_instance_class =
   .ic_caption    = "MPEGTS Multiplex Phy",
 };
 
+static void
+mpegts_mux_instance_delete
+  ( mpegts_mux_instance_t *mmi )
+{
+  idnode_unlink(&mmi->mmi_id);
+  LIST_REMOVE(mmi, mmi_mux_link);
+  LIST_REMOVE(mmi, mmi_input_link);
+  free(mmi);
+}
+
 mpegts_mux_instance_t *
 mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
@@ -47,8 +57,13 @@ mpegts_mux_instance_create0
   /* Setup links */
   mmi->mmi_mux   = mm;
   mmi->mmi_input = mi;
+  
+  /* Callbacks */
+  mmi->mmi_delete = mpegts_mux_instance_delete;
 
   LIST_INSERT_HEAD(&mm->mm_instances, mmi, mmi_mux_link);
+  LIST_INSERT_HEAD(&mi->mi_mux_instances, mmi, mmi_input_link);
+
 
   return mmi;
 }
@@ -218,6 +233,42 @@ mpegts_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   snprintf(buf, len, "Multiplex [onid:%04X tsid:%04X]",
            mm->mm_onid, mm->mm_tsid);
+}
+
+void
+mpegts_mux_delete ( mpegts_mux_t *mm )
+{
+  mpegts_mux_instance_t *mmi;
+  mpegts_network_t *mn = mm->mm_network;
+  mpegts_service_t *s;
+  char buf[256];
+
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s - deleting", buf);
+  
+  /* Stop */
+  mm->mm_stop(mm);
+
+  /* Remove from lists */
+  LIST_REMOVE(mm, mm_network_link);
+  printf("SCAN STATUS = %d\n", mm->mm_initial_scan_done);
+  if (mm->mm_initial_scan_status != MM_SCAN_DONE) {
+    printf("remove from pending Q\n");
+    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+  }
+  while ((mmi = LIST_FIRST(&mm->mm_instances))) {
+     mmi->mmi_delete(mmi);
+  }
+
+  /* Delete services */
+  while ((s = LIST_FIRST(&mm->mm_services))) {
+    service_destroy((service_t*)s);
+  }
+
+  /* Free memory */
+  idnode_unlink(&mm->mm_id);
+  free(mm->mm_crid_authority);
+  free(mm);
 }
 
 static void
@@ -481,6 +532,7 @@ mpegts_mux_create0
   mm->mm_network             = mn;
 
   /* Debug/Config */
+  mm->mm_delete              = mpegts_mux_delete;
   mm->mm_display_name        = mpegts_mux_display_name;
   mm->mm_config_save         = mpegts_mux_config_save;
   mm->mm_is_enabled          = mpegts_mux_is_enabled;

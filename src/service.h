@@ -278,7 +278,7 @@ typedef struct service {
 
   int (*s_grace_period)(struct service *t);
 
-  void (*s_dtor)(struct service *t);
+  void (*s_delete)(struct service *t);
 
   /**
    * Channel info

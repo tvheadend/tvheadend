@@ -134,6 +134,7 @@ int
 idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
 {
   idnode_t *c;
+  lock_assert(&global_lock);
   if(uuid == NULL) {
     if(read(randfd, in->in_uuid, 16) != 16) {
       perror("read(random for uuid)");
@@ -160,7 +161,9 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
 void
 idnode_unlink(idnode_t *in)
 {
+  lock_assert(&global_lock);
   RB_REMOVE(&idnodes, in, in_link);
+  idnode_updated(in);
 }
 
 /* **************************************************************************

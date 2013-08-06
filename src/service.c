@@ -359,8 +359,8 @@ service_destroy(service_t *t)
   th_subscription_t *s;
   channel_service_mapping_t *csm;
 
-  if(t->s_dtor != NULL)
-    t->s_dtor(t);
+  if(t->s_delete != NULL)
+    t->s_delete(t);
 
   lock_assert(&global_lock);
   

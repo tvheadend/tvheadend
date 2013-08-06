@@ -449,6 +449,20 @@ linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   close(mt->mt_fd);
 }
 
+static void
+linuxdvb_mux_delete
+  ( mpegts_mux_t *mm )
+{
+  printf("delete %p\n", mm);
+  /* Remove config */
+  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/config",
+                      idnode_uuid_as_str(&mm->mm_network->mn_id),
+                      idnode_uuid_as_str(&mm->mm_id));
+
+  /* Delete the mux */
+  mpegts_mux_delete(mm);
+}
+
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/
@@ -490,6 +504,7 @@ linuxdvb_mux_create0
     memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
 
   /* Callbacks */
+  lm->mm_delete           = linuxdvb_mux_delete;
   lm->mm_display_name     = linuxdvb_mux_display_name;
   lm->mm_config_save      = linuxdvb_mux_config_save;
   lm->mm_create_instances = linuxdvb_mux_create_instances;

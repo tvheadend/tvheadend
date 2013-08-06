@@ -247,6 +247,7 @@ struct mpegts_mux
    * Functions
    */
 
+  void (*mm_delete)           (mpegts_mux_t *mm);
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
@@ -350,6 +351,8 @@ struct mpegts_mux_instance
 
   // TODO: remove this
   int             mmi_tune_failed; // this is really DVB
+
+  void (*mmi_delete) (mpegts_mux_instance_t *mmi);
 };
 
 /* Input source */
@@ -485,7 +488,15 @@ mpegts_mux_t *mpegts_mux_create0
   mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
                      mn, onid, tsid, conf)
 
+#define mpegts_mux_find(u)\
+  idnode_find(u, &mpegts_mux_class);
+
+#define mpegts_mux_delete_by_uuid(u)\
+  { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm); }
+
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
+
+void mpegts_mux_delete ( mpegts_mux_t *mm );
 
 void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
 

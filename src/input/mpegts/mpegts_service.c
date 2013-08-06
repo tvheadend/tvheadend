@@ -306,6 +306,21 @@ mpegts_service_provider_name ( service_t *s )
   return ((mpegts_service_t*)s)->s_dvb_provider;
 }
 
+static void
+mpegts_service_delete ( service_t *t )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  free(ms->s_dvb_svcname);
+  free(ms->s_dvb_provider);
+  free(ms->s_dvb_charset);
+  LIST_REMOVE(ms, s_dvb_mux_link);
+
+  // TODO: delete config
+
+  // Note: the ultimate deletion and removal from the idnode list
+  //       is done in service_destroy
+}
+
 /* **************************************************************************
  * Creation/Location
  * *************************************************************************/
@@ -330,6 +345,7 @@ mpegts_service_create0
   s->s_dvb_mux        = mm;
   LIST_INSERT_HEAD(&mm->mm_services, s, s_dvb_mux_link);
   
+  s->s_delete         = mpegts_service_delete;
   s->s_is_enabled     = mpegts_service_is_enabled;
   s->s_config_save    = mpegts_service_config_save;
   s->s_enlist         = mpegts_service_enlist;

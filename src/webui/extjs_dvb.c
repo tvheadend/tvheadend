@@ -166,6 +166,20 @@ extjs_mpegts_service
   return 0;
 }
 
+static void
+http_api_boilerplate
+  (http_connection_t *hc, const char **op, htsmsg_t **args)
+{
+  const char *s;
+  *op = http_arg_get(&hc->hc_req_args, "op");
+  s   = http_arg_get(&hc->hc_req_args, "args");
+  if (s)
+    *args = htsmsg_json_deserialize(s);
+  else
+    *args = NULL;
+  if (!*op && *args)
+    *op   = htsmsg_get_str(*args, "method"); // HTSP compat
+}
 
 static int
 extjs_mpegts_mux
@@ -173,10 +187,15 @@ extjs_mpegts_mux
 {
   mpegts_network_t *mn;
   mpegts_mux_t     *mm;
-  htsbuf_queue_t   *hq = &hc->hc_reply;
-  const char       *op = http_arg_get(&hc->hc_req_args, "op");
+  htsbuf_queue_t   *hq  = &hc->hc_reply;
+  const char       *op;
+  htsmsg_t         *args;
   htsmsg_t         *out = htsmsg_create_map();
   extjs_grid_conf_t conf = { 0 };
+
+  http_api_boilerplate(hc, &op, &args);
+  if (!op)
+    return HTTP_STATUS_BAD_REQUEST;
 
   if (!strcmp(op, "list")) {
     idnode_set_t ins = { 0 };
@@ -191,6 +210,17 @@ extjs_mpegts_mux
   } else if (!strcmp(op, "class")) {
     htsmsg_t *list = idclass_serialize(&mpegts_mux_class);
     htsmsg_add_msg(out, "entries", list);
+  } else if (!strcmp(op, "delete") && args) {
+    htsmsg_field_t *f;
+    htsmsg_t *uuids = htsmsg_get_list(args, "uuids");
+    if (uuids) {
+      pthread_mutex_lock(&global_lock);
+      HTSMSG_FOREACH(f, uuids) {
+        if (f->hmf_type == HMF_STR)
+          mpegts_mux_delete_by_uuid(f->hmf_str);
+      }
+      pthread_mutex_unlock(&global_lock);
+    }
   }
 
   htsmsg_json_serialize(out, hq, 0);
@@ -363,22 +393,32 @@ extjs_mpegts_input
   } else if (!strcmp(op, "network_class")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
     if (!uuid) return 404;
+    pthread_mutex_lock(&global_lock);
     mpegts_input_t *mi = idnode_find(uuid, &mpegts_input_class);
-    if (!mi) return 404;
+    if (!mi) {
+      pthread_mutex_unlock(&global_lock);
+      return 404;
+    }
     htsmsg_t *list= idclass_serialize(mi->mi_network_class(mi));
     htsmsg_add_msg(out, "entries", list);
+    pthread_mutex_unlock(&global_lock);
   } else if (!strcmp(op, "network_create")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
     const char *conf = http_arg_get(&hc->hc_req_args, "conf");
     if (!uuid || !conf) return 404;
+    pthread_mutex_lock(&global_lock);
     mi = idnode_find(uuid, &mpegts_input_class);
-    if (!mi) return 404;
+    if (!mi) {
+      pthread_mutex_unlock(&global_lock);
+      return 404;
+    }
     mn = mi->mi_network_create(mi, htsmsg_json_deserialize(conf));
     if (mn)
       mn->mn_config_save(mn);
     else {
       // TODO: Check for error
     }
+    pthread_mutex_unlock(&global_lock);
 #endif
   }
 
