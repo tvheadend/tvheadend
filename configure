@@ -62,6 +62,29 @@ uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet lockowner '
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <pthread.h>
+#define TEST test
+int ok = 1;
+void *lockowner ( void *p)
+{
+  pthread_mutex_t lock;
+  pthread_mutex_init(&lock, NULL);
+  pthread_mutex_lock(&lock);
+  if (lock.__data.__owner == syscall(SYS_gettid))
+    ok = 0;
+  return NULL;
+}
+int test ( void )
+{
+  pthread_t tid;
+  pthread_create(&tid, NULL, lockowner, NULL);
+  pthread_join(tid, NULL);
+  return ok;
+}' -lpthread
+
 #
 # Python
 #

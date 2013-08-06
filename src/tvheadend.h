@@ -28,6 +28,11 @@
 #include <sys/time.h>
 #include <libgen.h>
 #include <string.h>
+#include <assert.h>
+#include <unistd.h>
+#if ENABLE_LOCKOWNER
+#include <sys/syscall.h>
+#endif
 
 #include "queue.h"
 #include "avg.h"
@@ -85,11 +90,15 @@ typedef struct source_info {
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {
+#if ENABLE_LOCKOWNER
+  assert(l->__data.__owner == syscall(SYS_gettid));
+#else
   if(pthread_mutex_trylock(l) == EBUSY)
     return;
 
   fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
   abort();
+#endif
 }
 
 #define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
