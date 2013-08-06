@@ -28,6 +28,7 @@ typedef enum {
   MC_MPEGPS      = 3,
   MC_PASS        = 4,
   MC_RAW         = 5,
+  MC_WEBM        = 6,
 } muxer_container_type_t;
 
 

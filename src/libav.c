@@ -62,6 +62,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_MPEG2VIDEO:
     codec_id = CODEC_ID_MPEG2VIDEO;
     break;
+  case SCT_VP8:
+    codec_id = CODEC_ID_VP8;
+    break;
   case SCT_AC3:
     codec_id = CODEC_ID_AC3;
     break;
@@ -73,6 +76,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
     break;
   case SCT_MPEG2AUDIO:
     codec_id = CODEC_ID_MP2;
+    break;
+  case SCT_VORBIS:
+    codec_id = CODEC_ID_VORBIS;
     break;
   case SCT_DVBSUB:
     codec_id = CODEC_ID_DVB_SUBTITLE;
@@ -107,6 +113,9 @@ codec_id2streaming_component_type(enum CodecID id)
   case CODEC_ID_MPEG2VIDEO:
     type = SCT_MPEG2VIDEO;
     break;
+  case CODEC_ID_VP8:
+    type = SCT_VP8;
+    break;
   case CODEC_ID_AC3:
     type = SCT_AC3;
     break;
@@ -118,6 +127,9 @@ codec_id2streaming_component_type(enum CodecID id)
     break;
   case CODEC_ID_MP2:
     type = SCT_MPEG2AUDIO;
+    break;
+  case CODEC_ID_VORBIS:
+    type = SCT_VORBIS;
     break;
   case CODEC_ID_DVB_SUBTITLE:
     type = SCT_DVBSUB;

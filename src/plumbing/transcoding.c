@@ -107,7 +107,8 @@ typedef struct transcoder {
 
 
 #define WORKING_ENCODER(x) (x == CODEC_ID_H264 || x == CODEC_ID_MPEG2VIDEO || \
-			    x == CODEC_ID_AAC || x == CODEC_ID_MP2)
+			    x == CODEC_ID_VP8  || x == CODEC_ID_AAC ||	\
+			    x == CODEC_ID_MP2  || x == CODEC_ID_VORBIS)
 
 
 uint32_t transcoding_enabled = 0;
@@ -282,6 +283,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (pkt->pkt_pts > as->aud_dec_pts) {
     tvhlog(LOG_WARNING, "transcode", "Detected framedrop in audio");
     as->aud_enc_pts += (pkt->pkt_pts - as->aud_dec_pts);
+    as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
   }
 
   pkt = pkt_merge_header(pkt);
@@ -372,6 +374,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   case SCT_AAC:
     octx->global_quality = 4*FF_QP2LAMBDA;
     octx->flags         |= CODEC_FLAG_QSCALE;
+    break;
+
+  case SCT_VORBIS:
+    octx->flags         |= CODEC_FLAG_QSCALE;
+    octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+    octx->channels       = 2; // Only stereo suported by libavcodec
+    octx->global_quality = 4*FF_QP2LAMBDA;
     break;
 
   default:
@@ -532,6 +541,20 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->rc_buffer_size = 2 * octx->rc_max_rate;
       break;
  
+    case SCT_VP8:
+      octx->codec_id       = CODEC_ID_VP8;
+      octx->pix_fmt        = PIX_FMT_YUV420P;
+
+      octx->qmin = 10;
+      octx->qmax = 20;
+
+      av_dict_set(&opts, "quality",  "realtime", 0);
+
+      octx->bit_rate       = 3 * octx->width * octx->height;
+      octx->rc_buffer_size = 8 * 1024 * 224;
+      octx->rc_max_rate    = 2 * octx->bit_rate;
+      break;
+
     case SCT_H264:
       octx->codec_id       = CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;
@@ -926,11 +949,11 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
   as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
 
-  as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-  as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-
   avcodec_get_context_defaults3(as->aud_ictx, icodec);
   avcodec_get_context_defaults3(as->aud_octx, ocodec);
+
+  as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+  as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
   as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
   as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
@@ -1033,12 +1056,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_ictx = avcodec_alloc_context();
   vs->vid_octx = avcodec_alloc_context();
 
-  vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-  vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
- 
   avcodec_get_context_defaults3(vs->vid_ictx, icodec);
   avcodec_get_context_defaults3(vs->vid_octx, ocodec);
 
+  vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+  vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+ 
   vs->vid_dec_frame = avcodec_alloc_frame();
   vs->vid_enc_frame = avcodec_alloc_frame();
 
@@ -1052,13 +1075,18 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 
   aspect = (double)ssc->ssc_width / ssc->ssc_height;
 
-  vs->vid_height = MIN(tp->tp_resolution, ssc->ssc_height);
-  if (vs->vid_height&1) // Must be even
-    vs->vid_height++;
+  if(tp->tp_resolution > 0) {
+    vs->vid_height = MIN(tp->tp_resolution, ssc->ssc_height);
+    if (vs->vid_height&1) // Must be even
+      vs->vid_height++;
 
-  vs->vid_width = vs->vid_height * aspect;
-  if (vs->vid_width&1) // Must be even
-    vs->vid_width++;
+    vs->vid_width = vs->vid_height * aspect;
+    if (vs->vid_width&1) // Must be even
+      vs->vid_width++;
+  } else {
+     vs->vid_height = ssc->ssc_height;
+     vs->vid_width  = ssc->ssc_width;
+  }
 
   tvhlog(LOG_INFO, "transcode", "%d:%s %dx%d ==> %s %dx%d", 
 	 ssc->ssc_index,
