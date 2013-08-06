@@ -453,9 +453,8 @@ static void
 linuxdvb_mux_delete
   ( mpegts_mux_t *mm )
 {
-  printf("delete %p\n", mm);
   /* Remove config */
-  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/config",
+  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s",
                       idnode_uuid_as_str(&mm->mm_network->mn_id),
                       idnode_uuid_as_str(&mm->mm_id));
 

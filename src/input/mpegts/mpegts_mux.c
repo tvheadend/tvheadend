@@ -251,9 +251,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm )
 
   /* Remove from lists */
   LIST_REMOVE(mm, mm_network_link);
-  printf("SCAN STATUS = %d\n", mm->mm_initial_scan_done);
   if (mm->mm_initial_scan_status != MM_SCAN_DONE) {
-    printf("remove from pending Q\n");
     TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
   }
   while ((mmi = LIST_FIRST(&mm->mm_instances))) {

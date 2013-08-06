@@ -338,7 +338,7 @@ hts_settings_remove(const char *pathfmt, ...)
   va_end(ap);
   if (stat(fullpath, &st) == 0) {
     if (S_ISDIR(st.st_mode))
-      rmdir(fullpath);
+      rmtree(fullpath);
     else
       unlink(fullpath);
   }

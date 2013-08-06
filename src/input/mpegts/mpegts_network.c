@@ -181,6 +181,39 @@ mpegts_network_mux_create2
   return NULL;
 }
 
+void
+mpegts_network_delete
+  ( mpegts_network_t *mn )
+{
+  mpegts_input_t *mi;
+  mpegts_mux_t *mm;
+
+  /* Remove from global list */
+  LIST_REMOVE(mn, mn_global_link);
+
+  /* Delete all muxes */
+  while ((mm = LIST_FIRST(&mn->mn_muxes))) {
+    mm->mm_delete(mm);
+  }
+
+  /* Check */
+  assert(TAILQ_FIRST(&mn->mn_initial_scan_pending_queue) == NULL);
+  assert(TAILQ_FIRST(&mn->mn_initial_scan_current_queue) == NULL);
+  
+
+  /* Disable timer */
+  gtimer_disarm(&mn->mn_initial_scan_timer);
+
+  /* Remove from input */
+  while ((mi = LIST_FIRST(&mn->mn_inputs)))
+    mpegts_input_set_network(mi, NULL);
+
+  /* Free memory */
+  idnode_unlink(&mn->mn_id);
+  free(mn->mn_network_name);
+  free(mn);
+}
+
 /* ****************************************************************************
  * Scanning
  * ***************************************************************************/

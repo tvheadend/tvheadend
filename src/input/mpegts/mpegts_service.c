@@ -21,6 +21,7 @@
 
 #include "service.h"
 #include "input/mpegts.h"
+#include "settings.h"
 
 /* **************************************************************************
  * Class definition
@@ -306,16 +307,23 @@ mpegts_service_provider_name ( service_t *s )
   return ((mpegts_service_t*)s)->s_dvb_provider;
 }
 
-static void
+void
 mpegts_service_delete ( service_t *t )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t;
+  mpegts_mux_t     *mm = ms->s_dvb_mux;
+
+  /* Remove config */
+  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/services/%s",
+                      idnode_uuid_as_str(&mm->mm_network->mn_id),
+                      idnode_uuid_as_str(&mm->mm_id),
+                      idnode_uuid_as_str(&t->s_id));
+
+  /* Free memory */
   free(ms->s_dvb_svcname);
   free(ms->s_dvb_provider);
   free(ms->s_dvb_charset);
   LIST_REMOVE(ms, s_dvb_mux_link);
-
-  // TODO: delete config
 
   // Note: the ultimate deletion and removal from the idnode list
   //       is done in service_destroy

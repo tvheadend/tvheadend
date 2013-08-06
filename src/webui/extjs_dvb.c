@@ -283,9 +283,14 @@ extjs_mpegts_network
 {
   mpegts_network_t *mn  = NULL;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
-  const char       *op  = http_arg_get(&hc->hc_req_args, "op");
+  const char       *op;
+  htsmsg_t         *args;
   htsmsg_t         *out = htsmsg_create_map();
   extjs_grid_conf_t conf = { 0 };
+
+  http_api_boilerplate(hc, &op, &args);
+  if (!op)
+    return HTTP_STATUS_BAD_REQUEST;
 
   if (!strcmp(op, "list")) {
     idnode_set_t ins = { 0 };
@@ -305,6 +310,17 @@ extjs_mpegts_network
       if ((e = idclass_serialize(mnb->idc)))
         htsmsg_add_msg(c, NULL, e);
     htsmsg_add_msg(out, "entries", c);
+  } else if (!strcmp(op, "delete") && args) {
+    htsmsg_field_t *f;
+    htsmsg_t *uuids = htsmsg_get_list(args, "uuids");
+    if (uuids) {
+      pthread_mutex_lock(&global_lock);
+      HTSMSG_FOREACH(f, uuids) {
+        if (f->hmf_type == HMF_STR)
+          mpegts_network_delete_by_uuid(f->hmf_str);
+      }
+      pthread_mutex_unlock(&global_lock);
+    }
   } else if (!strcmp(op, "create")) {
     htsmsg_t *conf = NULL;
     const char *s, *c;
