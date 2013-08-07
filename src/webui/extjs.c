@@ -1981,6 +1981,28 @@ extjs_idnode0
       }
     }
     out = htsmsg_create_map();
+  
+  /* List by class */
+  } else if (!strcmp(op, "list")) {
+    int i;
+    const char      *cls = http_arg_get(&hc->hc_req_args, "class");
+    pthread_mutex_lock(&global_lock);
+    const idclass_t *idc = idclass_find(cls);
+    idnode_set_t    *is  = idnode_find_all(idc);
+    out = htsmsg_create_map();
+    if (is) {
+      htsmsg_t *l = htsmsg_create_list();
+      for (i = 0; i < is->is_count; i++) {
+        idnode_t *in = is->is_array[i];
+        htsmsg_t *e = htsmsg_create_map();
+        htsmsg_add_str(e, "key", idnode_uuid_as_str(in));
+        htsmsg_add_str(e, "val", idnode_get_title(in));
+        htsmsg_add_msg(l, NULL, e);
+      }
+      idnode_set_free(is);
+      htsmsg_add_msg(out, "entries", l);
+    }
+    pthread_mutex_unlock(&global_lock);
 
   /* Children */
   } else if (!strcmp(op, "childs")) {

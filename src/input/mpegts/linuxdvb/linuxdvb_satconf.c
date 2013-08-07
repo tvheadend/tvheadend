@@ -73,21 +73,16 @@ linuxdvb_satconf_class_network_set(void *o, const void *v)
 static htsmsg_t *
 linuxdvb_satconf_class_network_enum(void *o)
 {
-  extern const idclass_t linuxdvb_network_class;
-  int i;
-  linuxdvb_network_t *ln;
-  htsmsg_t *m = htsmsg_create_list();
-  idnode_set_t *is = idnode_find_all(&linuxdvb_network_class);
-  for (i = 0; i < is->is_count; i++) {
-    ln = (linuxdvb_network_t*)is->is_array[i];
-    if (ln->ln_type == FE_QPSK) {
-      htsmsg_t *e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", idnode_uuid_as_str(&ln->mn_id));
-      htsmsg_add_str(e, "val", ln->mn_network_name);
-      htsmsg_add_msg(m, NULL, e);
-    }
-  }
-  idnode_set_free(is);
+  extern const idclass_t linuxdvb_network_dvbs_class;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "idnode");
+  htsmsg_add_str(m, "event", "mpegts_network");
+  htsmsg_add_str(p, "op",    "list");
+  htsmsg_add_str(p, "class", linuxdvb_network_dvbs_class.ic_class);
+  htsmsg_add_msg(m, "params", p);
+
   return m;
 }
 

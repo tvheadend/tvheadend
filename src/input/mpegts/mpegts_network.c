@@ -33,6 +33,17 @@ mpegts_network_class_save
     mn->mn_config_save(mn);
 }
 
+static const char *
+mpegts_network_class_get_title ( idnode_t *in )
+{
+  static char buf[256];
+  mpegts_network_t *mn = (mpegts_network_t*)in;
+  *buf = 0;
+  if (mn->mn_display_name)
+    mn->mn_display_name(mn, buf, sizeof(buf));
+  return buf;
+}
+
 static const void *
 mpegts_network_class_get_num_mux ( void *ptr )
 {
@@ -85,6 +96,7 @@ const idclass_t mpegts_network_class =
   .ic_caption    = "MPEGTS Network",
   .ic_save       = mpegts_network_class_save,
   .ic_event      = "mpegts_network",
+  .ic_get_title  = mpegts_network_class_get_title,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,

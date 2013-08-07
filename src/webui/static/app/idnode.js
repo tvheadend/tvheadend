@@ -6,11 +6,11 @@ tvheadend.idnode_enum_stores = {}
 tvheadend.idnode_get_enum = function ( conf )
 {
   /* Build key */
-  key = conf.url;
+  var key = conf.url;
   if (conf.event)
     key += conf.event;
   if (conf.params)
-    key += Ext.util.JSON.encode(conf.params);
+    key += '?' + Ext.util.JSON.encode(conf.params);
 
   /* Use cached */
   if (key in tvheadend.idnode_enum_stores)
