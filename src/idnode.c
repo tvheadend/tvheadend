@@ -29,12 +29,22 @@
 #include "notify.h"
 #include "settings.h"
 
-static int              randfd = 0;
-static RB_HEAD(,idnode) idnodes;
-static pthread_cond_t   idnode_cond;
-static pthread_mutex_t  idnode_mutex;
-static htsmsg_t        *idnode_queue;
-static void*            idnode_thread(void* p);
+typedef struct idclass_link
+{
+  const idclass_t        *idc;
+  RB_ENTRY(idclass_link) link;
+} idclass_link_t;
+
+static int                    randfd = 0;
+static RB_HEAD(,idnode)       idnodes;
+static RB_HEAD(,idclass_link) idclasses;
+static pthread_cond_t         idnode_cond;
+static pthread_mutex_t        idnode_mutex;
+static htsmsg_t              *idnode_queue;
+static void*                  idnode_thread(void* p);
+
+static void
+idclass_register(const idclass_t *idc);
 
 /* **************************************************************************
  * Utilities
@@ -153,6 +163,9 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
     abort();
   }
 
+  /* Register the class */
+  idclass_register(class); // Note: we never actually unregister
+
   /* Fire event */
   idnode_notify(in, NULL, 0, 1);
 
@@ -191,7 +204,7 @@ idnode_uuid_as_str(const idnode_t *in)
 /**
  *
  */
-static const char *
+const char *
 idnode_get_title(idnode_t *in)
 {
   const idclass_t *ic = in->in_class;
@@ -674,6 +687,40 @@ idclass_get_class (const idclass_t *idc)
     idc = idc->ic_super;
   }
   return NULL;
+}
+
+static int
+ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
+{
+  assert(a->idc->ic_class);
+  assert(b->idc->ic_class);
+  return strcmp(a->idc->ic_class, b->idc->ic_class);
+}
+
+static void
+idclass_register(const idclass_t *idc)
+{
+  static idclass_link_t *skel = NULL;
+  while (idc) {
+    if (!skel)
+      skel = calloc(1, sizeof(idclass_link_t));
+    skel->idc = idc;
+    if (RB_INSERT_SORTED(&idclasses, skel, link, ic_cmp))
+      break;
+    skel = NULL;
+    idc = idc->ic_super;
+  }
+}
+
+const idclass_t *
+idclass_find ( const char *class )
+{
+  idclass_link_t *t, skel;
+  idclass_t idc;
+  skel.idc = &idc;
+  idc.ic_class = class;
+  t = RB_FIND(&idclasses, &skel, link, ic_cmp);
+  return t ? t->idc : NULL;
 }
 
 /*
