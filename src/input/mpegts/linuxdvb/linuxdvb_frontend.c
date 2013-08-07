@@ -869,20 +869,6 @@ linuxdvb_frontend_create0
   if (!conf)
     return lfe;
 
-  /* TODO: this should be done differently */
-  if ((str = htsmsg_get_str(conf, "network"))) {
-    linuxdvb_network_t *ln = linuxdvb_network_find_by_uuid(str);
-    if (ln) {
-      if (ln->ln_type == lfe->lfe_info.type) {
-        mpegts_input_set_network((mpegts_input_t*)lfe, (mpegts_network_t*)ln);
-      } else
-        tvhlog(LOG_WARNING, "linuxdvb",
-               "attempt to add network %s of wrong type %s to %s (%s)",
-               dvb_type2str(ln->ln_type), ln->mn_network_name,
-               lfe->mi_displayname, dvb_type2str(lfe->lfe_info.type));
-    }
-  }
-
   return lfe;
 }
 

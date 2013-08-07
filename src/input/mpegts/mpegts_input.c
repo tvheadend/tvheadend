@@ -370,8 +370,6 @@ mpegts_input_create0
     htsmsg_t *c )
 {
   idnode_insert(&mi->mi_id, uuid, class);
-  if (c)
-    idnode_load(&mi->mi_id, c);
   
   /* Defaults */
   mi->mi_is_enabled           = mpegts_input_is_enabled;
@@ -388,7 +386,7 @@ mpegts_input_create0
   mi->mi_has_subscription     = mpegts_input_has_subscription;
 
   /* Index */
-  mi->mi_instance       = ++mpegts_input_idx;
+  mi->mi_instance             = ++mpegts_input_idx;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);
@@ -402,6 +400,10 @@ mpegts_input_create0
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);
+
+  /* Load config */
+  if (c)
+    idnode_load(&mi->mi_id, c);
 
   return mi;
 }
@@ -418,8 +420,9 @@ mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn )
   char buf1[256], buf2[265];
   if (mi->mi_network == mn) return;
   *buf1 = *buf2 = 0;
-  if (mi->mi_display_name)
+  if (mi->mi_display_name) {
     mi->mi_display_name(mi, buf1, sizeof(buf1));
+  }
   if (mi->mi_network) {
     mi->mi_network->mn_display_name(mi->mi_network, buf2, sizeof(buf2));
     LIST_REMOVE(mi, mi_network_link);

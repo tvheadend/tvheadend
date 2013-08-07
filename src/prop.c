@@ -84,19 +84,13 @@ prop_write_values
 {
   int save, save2 = 0;
   htsmsg_field_t *f;
+  const property_t *p;
 
   if (!pl) return 0;
 
-  HTSMSG_FOREACH(f, m) {
-    if(f->hmf_name == NULL)
-      continue;
-
-    /* Find Property */
-    const property_t *p = prop_find(pl, f->hmf_name);
-    if(p == NULL) {
-      //tvhwarn("prop", "invalid property %s", f->hmf_name);
-      continue;
-    }
+  for (p = pl; p->id; p++) {
+    f = htsmsg_field_find(m, p->id);
+    if (!f) continue;
 
     /* Ignore */
     if(p->opts & optmask) continue;

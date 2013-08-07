@@ -581,17 +581,24 @@ idnode_set_free ( idnode_set_t *is )
  * Write
  * *************************************************************************/
 
+static int
+idnode_class_write_values
+  ( idnode_t *self, const idclass_t *idc, htsmsg_t *c, int optmask )
+{
+  int save = 0;
+  if (idc->ic_super)
+    save |= idnode_class_write_values(self, idc->ic_super, c, optmask);
+  save |= prop_write_values(self, idc->ic_properties, c, optmask, NULL);
+  return save;
+}
+
 int
 idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
   int save = 0;
   void (*savefn)(idnode_t*) = NULL;
   const idclass_t *idc = self->in_class;
-  for (; idc; idc = idc->ic_super) {
-    save |= prop_write_values(self, idc->ic_properties, c, optmask, NULL);
-    if (!savefn && idc->ic_save)
-      savefn = idc->ic_save;
-  }
+  save = idnode_class_write_values(self, idc, c, optmask);
   if (save && dosave) {
     if (savefn) savefn(self);
     idnode_notify(self, NULL, 0, 0);
@@ -731,7 +738,6 @@ idnode_notify_event ( idnode_t *in )
     if (ic->ic_event) {
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "uuid", uuid);
-      printf("event = %s\n", ic->ic_event);
       notify_by_msg(ic->ic_event, m);
     }
     ic = ic->ic_super;
