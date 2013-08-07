@@ -410,6 +410,7 @@ struct mpegts_input
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_grace_period)   (mpegts_input_t*, mpegts_mux_t *mm);
+  idnode_set_t *(*mi_network_list) (mpegts_input_t*);
 };
 
 /* ****************************************************************************
@@ -444,6 +445,8 @@ mpegts_input_t *mpegts_input_create0
 #define mpegts_input_create1(u, c)\
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
                        &mpegts_input_class, u, c)
+
+#define mpegts_input_find(u) idnode_find(u, &mpegts_input_class);
 
 void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
 

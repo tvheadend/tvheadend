@@ -92,22 +92,15 @@ linuxdvb_frontend_class_network_set(void *o, const void *v)
 static htsmsg_t *
 linuxdvb_frontend_class_network_enum(void *o)
 {
-  extern const idclass_t linuxdvb_network_class;
-  int i;
-  linuxdvb_frontend_t *lfe = o;
-  linuxdvb_network_t *ln;
-  htsmsg_t *m = htsmsg_create_list();
-  idnode_set_t *is = idnode_find_all(&linuxdvb_network_class);
-  for (i = 0; i < is->is_count; i++) {
-    ln = (linuxdvb_network_t*)is->is_array[i];
-    if (ln->ln_type == lfe->lfe_info.type) {
-      htsmsg_t *e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", idnode_uuid_as_str(&ln->mn_id));
-      htsmsg_add_str(e, "val", ln->mn_network_name);
-      htsmsg_add_msg(m, NULL, e);
-    }
-  }
-  idnode_set_free(is);
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "mpegts/input");
+  htsmsg_add_str(p, "op",    "network_list");
+  htsmsg_add_str(p, "uuid",  idnode_uuid_as_str((idnode_t*)o));
+  htsmsg_add_str(m, "event", "mpegts_network");
+  htsmsg_add_msg(m, "params", p);
+
   return m;
 }
 
@@ -366,6 +359,30 @@ linuxdvb_frontend_close_service
 
 exit:
   mpegts_input_close_service(mi, s);
+}
+
+static idnode_set_t *
+linuxdvb_frontend_network_list ( mpegts_input_t *mi )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  const idclass_t     *idc;
+  extern const idclass_t linuxdvb_network_dvbt_class;
+  extern const idclass_t linuxdvb_network_dvbc_class;
+  extern const idclass_t linuxdvb_network_dvbs_class;
+  extern const idclass_t linuxdvb_network_atsc_class;
+
+  if (lfe->lfe_info.type == FE_OFDM)
+    idc = &linuxdvb_network_dvbt_class;
+  else if (lfe->lfe_info.type == FE_QAM)
+    idc = &linuxdvb_network_dvbc_class;
+  else if (lfe->lfe_info.type == FE_QPSK)
+    idc = &linuxdvb_network_dvbs_class;
+  else if (lfe->lfe_info.type == FE_ATSC)
+    idc = &linuxdvb_network_atsc_class;
+  else
+    return NULL;
+
+  return idnode_find_all(idc);
 }
 
 /* **************************************************************************
@@ -829,6 +846,7 @@ linuxdvb_frontend_create0
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
   lfe->mi_open_service   = linuxdvb_frontend_open_service;
   lfe->mi_close_service  = linuxdvb_frontend_close_service;
+  lfe->mi_network_list   = linuxdvb_frontend_network_list;
   lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
 
   /* Adapter link */

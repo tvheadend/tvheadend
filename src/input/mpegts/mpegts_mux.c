@@ -163,6 +163,7 @@ const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
   .ic_caption    = "MPEGTS Multiplex",
+  .ic_event      = "mpegts_mux",
   .ic_save       = mpegts_mux_class_save,
   .ic_properties = (const property_t[]){
     {
@@ -555,10 +556,6 @@ mpegts_mux_create0
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - created", buf);
-
-  /* Notification */
-  idnode_notify(&mm->mm_id, "mpegts_mux", 0);
-  idnode_updated(&mn->mn_id);
 
   return mm;
 }

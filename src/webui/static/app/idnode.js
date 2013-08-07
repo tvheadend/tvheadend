@@ -1,3 +1,41 @@
+/*
+ * Combobox stores
+ */
+tvheadend.idnode_enum_stores = {}
+
+tvheadend.idnode_get_enum = function ( conf )
+{
+  /* Build key */
+  key = conf.url;
+  if (conf.event)
+    key += conf.event;
+  if (conf.params)
+    key += Ext.util.JSON.encode(conf.params);
+
+  /* Use cached */
+  if (key in tvheadend.idnode_enum_stores)
+    return tvheadend.idnode_enum_stores[key];
+
+  /* Build combobox */
+  var st = new Ext.data.JsonStore({
+    root       : conf.root   || 'entries',
+    url        : conf.url,
+    baseParams : conf.params || {},
+    fields     : conf.fields || [ 'key', 'val' ],
+    autoLoad   : true,
+  });
+  tvheadend.idnode_enum_stores[key] = st;
+
+  /* Event to update */
+  if (conf.event) {
+    tvheadend.comet.on(conf.event, function(){
+      st.reload();
+    });
+  }
+
+  return st;
+}
+
 json_decode = function(d)
 {
   if (d && d.responseText) {
@@ -18,6 +56,16 @@ json_decode = function(d)
 tvheadend.idnode_enum_store = function(f)
 {
   var store = null;
+
+  /* API fetch */
+  if (f.enum.type == 'api') {
+    return tvheadend.idnode_get_enum({
+      url    : 'api/' + f.enum.uri,
+      params : f.enum.params,
+      event  : f.enum.event
+    });
+  }
+
   switch (f.type) {
     case 'str':
       if (f.enum.length > 0 && f.enum[0] instanceof Object)

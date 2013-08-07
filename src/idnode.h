@@ -46,6 +46,7 @@ typedef struct idclass {
   const char            *ic_class;      /// Class name
   const char            *ic_caption;    /// Class description
   const property_t      *ic_properties; /// Property list
+  const char            *ic_event;      /// Events to fire on add/delete/title
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs)(idnode_t *self);
@@ -116,9 +117,9 @@ int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 void         *idnode_find    (const char *uuid, const idclass_t *idc);
 idnode_set_t *idnode_find_all(const idclass_t *idc);
 
-#define idnode_updated(in) idnode_notify(in, NULL, 0)
+#define idnode_updated(in) idnode_notify(in, NULL, 0, 0)
 void idnode_notify
-  (idnode_t *in, const char *chn, int force);
+  (idnode_t *in, const char *chn, int force, int event);
 void idnode_notify_simple (void *in);
 void idnode_notify_title_changed (void *in);
 

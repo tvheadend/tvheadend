@@ -387,7 +387,7 @@ extjs_mpegts_input
   (http_connection_t *hc, const char *remain, void *opaque)
 {
   mpegts_input_t   *mi;
-  //mpegts_network_t *mn;
+  mpegts_network_t *mn;
   htsbuf_queue_t   *hq  = &hc->hc_reply;
   const char       *op  = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t         *out = htsmsg_create_map();
@@ -403,8 +403,32 @@ extjs_mpegts_input
       idnode_set_add(&ins, (idnode_t*)mi, &conf.filter);
     extjs_idnode_grid(&ins, &conf, out);
   } else if (!strcmp(op, "class")) {
-    htsmsg_t *list= idclass_serialize(&mpegts_input_class);
+    htsmsg_t *list = idclass_serialize(&mpegts_input_class);
     htsmsg_add_msg(out, "entries", list);
+  } else if (!strcmp(op, "network_list")) {
+    const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");
+    if (!uuid) return HTTP_STATUS_BAD_REQUEST;
+    pthread_mutex_lock(&global_lock);
+    mi = mpegts_input_find(uuid);
+    if (mi) {
+      int i;
+      idnode_set_t *is = mi->mi_network_list(mi);
+      if (is) {
+        htsmsg_t     *l  = htsmsg_create_list();
+        for (i = 0; i < is->is_count; i++) {
+          char buf[256];
+          htsmsg_t *e = htsmsg_create_map();
+          mn = (mpegts_network_t*)is->is_array[i];
+          htsmsg_add_str(e, "key", idnode_uuid_as_str(is->is_array[i]));
+          mn->mn_display_name(mn, buf, sizeof(buf));
+          htsmsg_add_str(e, "val", buf);
+          htsmsg_add_msg(l, NULL, e);
+        }
+        htsmsg_add_msg(out, "entries", l);
+        idnode_set_free(is);
+      }
+    }
+    pthread_mutex_unlock(&global_lock);
 #if 0
   } else if (!strcmp(op, "network_class")) {
     const char *uuid = http_arg_get(&hc->hc_req_args, "uuid");

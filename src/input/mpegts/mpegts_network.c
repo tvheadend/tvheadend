@@ -84,12 +84,14 @@ const idclass_t mpegts_network_class =
   .ic_class      = "mpegts_network",
   .ic_caption    = "MPEGTS Network",
   .ic_save       = mpegts_network_class_save,
+  .ic_event      = "mpegts_network",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "networkname",
       .name     = "Network Name",
       .off      = offsetof(mpegts_network_t, mn_network_name),
+      .notify   = idnode_notify_title_changed,
     },
     {
       .type     = PT_U16,
@@ -278,9 +280,6 @@ mpegts_network_create0
 
   mn->mn_display_name(mn, buf, sizeof(buf));
   tvhtrace("mpegts", "created network %s", buf);
-
-  /* Notification */
-  idnode_notify(&mn->mn_id, "mpegts_network", 0);
 
   return mn;
 }

@@ -441,9 +441,6 @@ service_create0
   if (conf)
     service_load(t, conf);
 
-  /* Notify */
-  idnode_notify(&t->s_id, "service", 0);
-
   return t;
 }
 

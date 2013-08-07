@@ -152,6 +152,10 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
     fprintf(stderr, "Id node collision\n");
     abort();
   }
+
+  /* Fire event */
+  idnode_notify(in, NULL, 0, 1);
+
   return 0;
 }
 
@@ -163,7 +167,7 @@ idnode_unlink(idnode_t *in)
 {
   lock_assert(&global_lock);
   RB_REMOVE(&idnodes, in, in_link);
-  idnode_updated(in);
+  idnode_notify(in, NULL, 0, 1);
 }
 
 /* **************************************************************************
@@ -590,7 +594,7 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   }
   if (save && dosave) {
     if (savefn) savefn(self);
-    idnode_notify(self, NULL, 0);
+    idnode_notify(self, NULL, 0, 0);
   }
   return save;
 }
@@ -716,11 +720,30 @@ idnode_serialize0(idnode_t *self, int optmask)
  * *************************************************************************/
 
 /**
+ * Update internal event pipes
+ */
+static void
+idnode_notify_event ( idnode_t *in )
+{
+  const idclass_t *ic = in->in_class;
+  const char *uuid = idnode_uuid_as_str(in);
+  while (ic) {
+    if (ic->ic_event) {
+      htsmsg_t *m = htsmsg_create_map();
+      htsmsg_add_str(m, "uuid", uuid);
+      printf("event = %s\n", ic->ic_event);
+      notify_by_msg(ic->ic_event, m);
+    }
+    ic = ic->ic_super;
+  }
+}
+
+/**
  * Notify on a given channel
  */
 void
 idnode_notify
-  (idnode_t *in, const char *chn, int force)
+  (idnode_t *in, const char *chn, int force, int event)
 {
   const char *uuid = idnode_uuid_as_str(in);
 
@@ -739,12 +762,16 @@ idnode_notify
     pthread_cond_signal(&idnode_cond);
     pthread_mutex_unlock(&idnode_mutex);
   }
+
+  /* Send event */
+  if (event)
+    idnode_notify_event(in);
 }
 
 void
 idnode_notify_simple (void *in)
 {
-  idnode_notify(in, NULL, 0);
+  idnode_notify(in, NULL, 0, 0);
 }
 
 void
@@ -754,6 +781,7 @@ idnode_notify_title_changed (void *in)
   htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in));
   htsmsg_add_str(m, "text", idnode_get_title(in));
   notify_by_msg("idnodeUpdated", m);
+  idnode_notify_event(in);
 }
 
 /*
