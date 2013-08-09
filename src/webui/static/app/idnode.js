@@ -731,7 +731,8 @@ tvheadend.idnode_tree = function (conf)
     var n = tree.getNodeById(o.uuid);
     if (n) {
       if (o.text) n.setText(o.text);
-      loader.load(n);
+      tree.getRootNode().reload();
+      // cannot get this to properly reload children and maintain state
     }
   });
 

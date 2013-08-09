@@ -609,8 +609,8 @@ int
 idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
   int save = 0;
-  void (*savefn)(idnode_t*) = NULL;
   const idclass_t *idc = self->in_class;
+  void (*savefn)(idnode_t*) = idc->ic_save;
   save = idnode_class_write_values(self, idc, c, optmask);
   if (save && dosave) {
     if (savefn) savefn(self);
