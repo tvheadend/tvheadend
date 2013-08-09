@@ -762,6 +762,11 @@ linuxdvb_frontend_tune0
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
+#if ENABLE_TRACE
+  int i;
+  for (i = 0; i < cmdseq.num; i++)
+    tvhtrace("linuxdvb", "S2CMD %02u => %u", cmds[i].cmd, cmds[i].u.data);
+#endif
   r = ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &cmdseq);
 
   /* v3 tuning */
