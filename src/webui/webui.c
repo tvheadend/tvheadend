@@ -974,5 +974,6 @@ webui_init(void)
   simpleui_start();
   extjs_start();
   comet_init();
+  webui_api_init();
 
 }

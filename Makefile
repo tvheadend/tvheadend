@@ -110,6 +110,9 @@ SRCS =  src/version.c \
 	src/service_mapper.c \
 
 SRCS += \
+	src/api.c \
+
+SRCS += \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \
@@ -136,6 +139,7 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/html.c\
+	src/webui/api.c\
 
 SRCS += src/muxer.c \
 	src/muxer/muxer_pass.c \

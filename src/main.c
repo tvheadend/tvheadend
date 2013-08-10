@@ -37,6 +37,7 @@
 #include <arpa/inet.h>
 
 #include "tvheadend.h"
+#include "api.h"
 #include "tcp.h"
 #include "access.h"
 #include "http.h"
@@ -687,6 +688,8 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
+  
+  api_init();
 
 #if ENABLE_LIBAV
   libav_init();
