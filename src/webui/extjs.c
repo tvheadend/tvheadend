@@ -2077,9 +2077,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     /* Transcoding */
 #if ENABLE_LIBAV
-    save = 0;
-    if ((str = http_arg_get(&hc->hc_req_args, "transcoding_enabled")))
-      save |= transcoding_set_enabled(!!str);
+    str = http_arg_get(&hc->hc_req_args, "transcoding_enabled");
+    save = transcoding_set_enabled(!!str);
     if (save)
       transcoding_save();
 #endif
