@@ -23,6 +23,7 @@
 #include <libavutil/dict.h>
 
 #include "tvheadend.h"
+#include "settings.h"
 #include "streaming.h"
 #include "service.h"
 #include "packet.h"
@@ -1361,4 +1362,40 @@ transcoder_get_capabilities(htsmsg_t *array)
 }
 
 
+/*
+ * 
+ */
+void transcoding_init(void)
+{
+  htsmsg_t *m;
 
+  if ((m = hts_settings_load("transcoding"))) {
+    htsmsg_get_u32(m, "enabled", &transcoding_enabled);
+    htsmsg_destroy(m);
+  }
+}
+
+
+/*
+ * 
+ */
+void transcoding_save(void)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_u32(m, "enabled", transcoding_enabled);
+  hts_settings_save(m, "transcoding");
+}
+
+
+/*
+ * 
+ */
+int transcoding_set_enabled(uint32_t e)
+{
+  if (e == transcoding_enabled)
+    return 0;
+
+  transcoding_enabled = e;
+
+  return 1;
+}

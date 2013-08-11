@@ -40,3 +40,7 @@ void transcoder_get_capabilities(htsmsg_t *array);
 void transcoder_set_properties  (streaming_target_t *tr, 
 				 transcoder_props_t *prop);
 
+
+void transcoding_init(void);
+void transcoding_save(void);
+int  transcoding_set_enabled(uint32_t e);

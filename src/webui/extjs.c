@@ -52,6 +52,10 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 
+#if ENABLE_LIBAV
+#include "plumbing/transcoding.h"
+#endif
+
 /**
  *
  */
@@ -2030,6 +2034,11 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "tvhtime_ntp_enabled", tvhtime_ntp_enabled);
     htsmsg_add_u32(m, "tvhtime_tolerance", tvhtime_tolerance);
 
+    /* Transcoding */
+#if ENABLE_LIBAV
+    htsmsg_add_u32(m, "transcoding_enabled", transcoding_enabled);
+#endif
+
     pthread_mutex_unlock(&global_lock);
 
     /* Image cache */
@@ -2065,6 +2074,15 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       tvhtime_set_ntp_enabled(!!str);
     if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_tolerance")))
       tvhtime_set_tolerance(atoi(str));
+
+    /* Transcoding */
+#if ENABLE_LIBAV
+    save = 0;
+    if ((str = http_arg_get(&hc->hc_req_args, "transcoding_enabled")))
+      save |= transcoding_set_enabled(!!str);
+    if (save)
+      transcoding_save();
+#endif
 
     pthread_mutex_unlock(&global_lock);
   

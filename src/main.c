@@ -678,6 +678,7 @@ main(int argc, char **argv)
 
 #if ENABLE_LIBAV
   libav_init();
+  transcoding_init();
 #endif
 
   config_init();

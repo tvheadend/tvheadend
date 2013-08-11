@@ -41,7 +41,7 @@ tvheadend.miscconf = function() {
        'imagecache_enabled', 'imagecache_ok_period',
        'imagecache_fail_period', 'imagecache_ignore_sslcert',
        'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
-       'tvhtime_tolerance']);
+       'tvhtime_tolerance', 'transcoding_enabled']);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -137,6 +137,26 @@ tvheadend.miscconf = function() {
   if (tvheadend.capabilities.indexOf('imagecache') == -1)
     imagecachePanel.hide();
 
+
+  /*
+   * Transcoding
+   */
+  var transcodingEnabled = new Ext.form.Checkbox({
+    name: 'transcoding_enabled',
+    fieldLabel: 'Enabled',
+  });
+
+  var transcodingPanel = new Ext.form.FieldSet({
+    title: 'Transcoding',
+    width: 700,
+    autoHeight: true,
+    collapsible: true,
+    items : [ transcodingEnabled ]
+  });
+  if (tvheadend.capabilities.indexOf('transcoding') == -1)
+    transcodingPanel.hide();
+
+
 	/* ****************************************************************
 	 * Form
 	 * ***************************************************************/
@@ -168,7 +188,8 @@ tvheadend.miscconf = function() {
 		defaultType : 'textfield',
 		autoHeight : true,
 		items : [ language, dvbscanPath,
-              imagecachePanel, tvhtimePanel ],
+			  imagecachePanel, tvhtimePanel,
+			  transcodingPanel],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 
