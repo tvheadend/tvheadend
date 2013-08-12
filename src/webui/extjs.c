@@ -2223,7 +2223,7 @@ extjs_start(void)
 
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
-  http_path_add("/api/idnode", NULL, extjs_idnode, ACCESS_ADMIN); // TODO: might want diff access for read/write`
+  http_path_add("/api/idnode2", NULL, extjs_idnode, ACCESS_ADMIN); // TODO: might want diff access for read/write`
   http_path_add("/api/service_mapping", NULL, extjs_service_mapping, ACCESS_ADMIN);
 
   extjs_start_dvb();

@@ -30,14 +30,14 @@ webui_api_handler
   ( http_connection_t *hc, const char *remain, void *opaque )
 {
   int r;
+  http_arg_t *ha;
   htsmsg_t *args, *resp;
   const char *a  = http_arg_get(&hc->hc_req_args, "args");
   const char *op = http_arg_get(&hc->hc_req_args, "method");
-
+  
   // Compat
   if (!op)
     op = http_arg_get(&hc->hc_req_args, "op");
-
 
   /* Parse arguments */
   if (a)
@@ -47,6 +47,15 @@ webui_api_handler
   if (!args)
     return HTTP_STATUS_BAD_REQUEST;
 
+  /* Add HTTP arguments?? */
+  TAILQ_FOREACH(ha, &hc->hc_req_args, link) {
+    // Ignore obvious keys
+    if (strcmp("op",     ha->key) &&
+        strcmp("method", ha->key) &&
+        strcmp("args",   ha->key))
+      htsmsg_add_str(args, ha->key, ha->val);
+  }
+      
   /* Add operation */
   if (!htsmsg_get_str(args, "method") && op)
     htsmsg_add_str(args, "method", op);

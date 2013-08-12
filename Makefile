@@ -111,6 +111,7 @@ SRCS =  src/version.c \
 
 SRCS += \
 	src/api.c \
+	src/api/api_idnode.c \
 
 SRCS += \
 	src/parsers/parsers.c \
@@ -139,7 +140,7 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/html.c\
-	src/webui/api.c\
+	src/webui/webui_api.c\
 
 SRCS += src/muxer.c \
 	src/muxer/muxer_pass.c \

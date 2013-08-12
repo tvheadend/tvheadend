@@ -21,6 +21,7 @@
 #define __TVH_API_H__
 
 #include "htsmsg.h"
+#include "idnode.h"
 #include "redblack.h"
 
 #define TVH_API_VERSION 12
@@ -43,7 +44,8 @@ typedef struct api_hook
 /*
  * Regsiter handler
  */
-void api_register ( const api_hook_t *hooks );
+void api_register     ( const api_hook_t *hook );
+void api_register_all ( const api_hook_t *hooks );
 
 /*
  * Execute
@@ -54,5 +56,13 @@ int  api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp );
  * Initialise
  */
 void api_init ( void );
+void api_idnode_init ( void );
+
+/*
+ * Re-usable functions
+ */
+int api_idnode_tree0
+  ( const char *uuid, const char *root, idnode_set_t *(*rootfn)(void),
+    htsmsg_t **resp );
 
 #endif /* __TVH_API_H__ */

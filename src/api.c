@@ -37,18 +37,24 @@ static int ah_cmp
 }
 
 void
-api_register ( const api_hook_t *hooks )
+api_register ( const api_hook_t *hook )
 {
   static api_link_t *t, *skel = NULL;
+  if (!skel)
+    skel = calloc(1, sizeof(api_link_t));
+  skel->hook = hook;
+  t = RB_INSERT_SORTED(&api_hook_tree, skel, link, ah_cmp);
+  if (t)
+    tvherror("api", "trying to re-register subsystem");
+  else
+    skel = NULL;
+}
+
+void
+api_register_all ( const api_hook_t *hooks )
+{
   while (hooks->ah_subsystem) {
-    if (!skel)
-      skel = calloc(1, sizeof(api_link_t));
-    skel->hook = hooks;
-    t = RB_INSERT_SORTED(&api_hook_tree, skel, link, ah_cmp);
-    if (t)
-      tvherror("api", "trying to re-register subsystem");
-    else
-      skel = NULL;
+    api_register(hooks);
     hooks++;
   }
 }
@@ -106,5 +112,8 @@ void api_init ( void )
     { "serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL },
     { NULL, 0, NULL, NULL }
   };
-  api_register(h);
+  api_register_all(h);
+
+  /* Subsystems */
+  api_idnode_init();
 }
