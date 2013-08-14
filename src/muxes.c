@@ -145,7 +145,7 @@ static int _muxes_load_dvbt ( mux_t *mux, const char *line )
 
 static int _muxes_load_dvbs ( mux_t *mux, const char *line )
 {
-  char fec[20], qam[20], hier[20];
+  char fec[20], qam[20], rolloff[20];
   int r, v2 = 0;
 
   if (*line == '2') {
@@ -162,13 +162,15 @@ static int _muxes_load_dvbs ( mux_t *mux, const char *line )
 
   r = sscanf(line, "%u %c %u %s %s %s",
 	           &mux->freq, &mux->polarisation, &mux->symrate,
-             fec, hier, qam);
+             fec, rolloff, qam);
   if (r != (4+v2)) return 1;
   
   if ((mux->fec             = dvb_mux_str2fec(fec)) == -1)   return 1;
   if (v2) {
-    if ((mux->hierarchy     = dvb_mux_str2hier(hier)) == -1) return 1;
-    if ((mux->constellation = dvb_mux_str2qamnew(qam)) == -1) return 1;
+#if DVB_API_VERSION >= 5
+    if ((mux->rolloff       = dvb_mux_str2rolloff(rolloff)) == -1) return 1;
+#endif
+    if ((mux->constellation = dvb_mux_str2qamnew(qam))   == -1) return 1;
   }
 
   return 0;

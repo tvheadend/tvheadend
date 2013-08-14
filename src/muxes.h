@@ -32,6 +32,7 @@ typedef struct mux {
  short tmode;
  short guard;
  short hierarchy;
+ short rolloff;
  char polarisation;
 } mux_t;
 

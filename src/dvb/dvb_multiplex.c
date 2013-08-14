@@ -401,10 +401,10 @@ dvb_mux_find_by_identifier(const char *identifier)
 
 #if DVB_API_VERSION >= 5
 static struct strtab rollofftab[] = {
-  { "ROLLOFF_35",   ROLLOFF_35 },
-  { "ROLLOFF_20",   ROLLOFF_20 },
-  { "ROLLOFF_25",   ROLLOFF_25 },
-  { "ROLLOFF_AUTO", ROLLOFF_AUTO }
+  { "35",   ROLLOFF_35 },
+  { "20",   ROLLOFF_20 },
+  { "25",   ROLLOFF_25 },
+  { "AUTO", ROLLOFF_AUTO }
 };
 
 static struct strtab delsystab[] = {
@@ -601,6 +601,11 @@ int dvb_mux_str2guard(const char *str)
 int dvb_mux_str2hier(const char *str)
 {
   return str2val(str, hiertab);
+}
+
+int dvb_mux_str2rolloff(const char *str)
+{
+  return str2val(str, rollofftab);
 }
 
 /**

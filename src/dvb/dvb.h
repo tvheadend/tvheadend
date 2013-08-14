@@ -426,6 +426,7 @@ int dvb_mux_str2fec(const char *str);
 int dvb_mux_str2mode(const char *str);
 int dvb_mux_str2guard(const char *str);
 int dvb_mux_str2hier(const char *str);
+int dvb_mux_str2rolloff(const char *str);
 
 void dvb_mux_save(th_dvb_mux_instance_t *tdmi);
 
