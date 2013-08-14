@@ -111,7 +111,7 @@ static int _muxes_load_atsc ( mux_t *mux, const char *line )
 
   r = sscanf(line, "%u %s", &mux->freq, qam);
   if (r != 2) return 1;
-  if ((mux->constellation = dvb_mux_str2qam(qam)) == -1) return 1;
+  if ((mux->constellation = dvb_mux_str2qamnew(qam)) == -1) return 1;
 
   return 0;
 }
@@ -133,7 +133,7 @@ static int _muxes_load_dvbt ( mux_t *mux, const char *line )
   }
 
   if ((mux->bw            = dvb_mux_str2bw(bw))       == -1) return 1;
-  if ((mux->constellation = dvb_mux_str2qam(qam))     == -1) return 1;
+  if ((mux->constellation = dvb_mux_str2qamnew(qam))  == -1) return 1;
   if ((mux->fechp         = dvb_mux_str2fec(fec))     == -1) return 1;
   if ((mux->feclp         = dvb_mux_str2fec(fec2))    == -1) return 1;
   if ((mux->tmode         = dvb_mux_str2mode(mode))   == -1) return 1;
@@ -168,7 +168,7 @@ static int _muxes_load_dvbs ( mux_t *mux, const char *line )
   if ((mux->fec             = dvb_mux_str2fec(fec)) == -1)   return 1;
   if (v2) {
     if ((mux->hierarchy     = dvb_mux_str2hier(hier)) == -1) return 1;
-    if ((mux->constellation = dvb_mux_str2qam(qam))   == -1) return 1;
+    if ((mux->constellation = dvb_mux_str2qamnew(qam)) == -1) return 1;
   }
 
   return 0;
@@ -184,7 +184,7 @@ static int _muxes_load_dvbc ( mux_t *mux, const char *line )
   if(r != 4) return 1;
 
   if ((mux->fec           = dvb_mux_str2fec(fec)) == -1) return 1;
-  if ((mux->constellation = dvb_mux_str2qam(qam)) == -1) return 1;
+  if ((mux->constellation = dvb_mux_str2qamnew(qam)) == -1) return 1;
 
   return 0;
 }

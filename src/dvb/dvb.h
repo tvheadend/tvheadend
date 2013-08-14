@@ -416,10 +416,12 @@ void dvb_input_raw_setup(th_dvb_adapter_t *tda);
 const char* dvb_mux_fec2str(int fec);
 const char* dvb_mux_delsys2str(int delsys);
 const char* dvb_mux_qam2str(int qam);
+const char* dvb_mux_qamnew2str(int qam);
 const char* dvb_mux_rolloff2str(int rolloff);
 
 int dvb_mux_str2bw(const char *str);
 int dvb_mux_str2qam(const char *str);
+int dvb_mux_str2qamnew(const char *str);
 int dvb_mux_str2fec(const char *str);
 int dvb_mux_str2mode(const char *str);
 int dvb_mux_str2guard(const char *str);

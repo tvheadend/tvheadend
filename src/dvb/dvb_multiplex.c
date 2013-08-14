@@ -445,6 +445,24 @@ static struct strtab fectab[] = {
 #endif
 };
 
+static struct strtab qamtab2[] = {
+  { "QPSK",    QPSK },
+  { "QAM16",   QAM_16 },
+  { "QAM32",   QAM_32 },
+  { "QAM64",   QAM_64 },
+  { "QAM128",  QAM_128 },
+  { "QAM256",  QAM_256 },
+  { "AUTO",    QAM_AUTO },
+  { "8VSB",    VSB_8 },
+  { "16VSB",   VSB_16 },
+#if DVB_API_VERSION >= 5
+  { "8PSK",   PSK_8 },
+  { "16APSK", APSK_16 },
+  { "32APSK", APSK_32 },
+  { "DQPSK",   DQPSK }
+#endif
+};
+
 static struct strtab qamtab[] = {
   { "QPSK",    QPSK },
   { "QAM16",   QAM_16 },
@@ -536,6 +554,9 @@ const char* dvb_mux_delsys2str(int delsys) {
 const char* dvb_mux_qam2str(int qam) {
   return val2str(qam, qamtab);
 }
+const char* dvb_mux_qamnew2str(int qam) {
+  return val2str(qam, qamtab2);
+}
 
 /**
  * for external use
@@ -556,6 +577,10 @@ int dvb_mux_str2bw(const char *str)
 int dvb_mux_str2qam(const char *str)
 {
   return str2val(str, qamtab);
+}
+int dvb_mux_str2qamnew(const char *str)
+{
+  return str2val(str, qamtab2);
 }
 
 int dvb_mux_str2fec(const char *str)
