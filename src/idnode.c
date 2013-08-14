@@ -183,6 +183,23 @@ idnode_unlink(idnode_t *in)
   idnode_notify(in, NULL, 0, 1);
 }
 
+/**
+ *
+ */
+void
+idnode_delete(idnode_t *in)
+{
+  lock_assert(&global_lock);
+  const idclass_t *idc = in->in_class;
+  while (idc) {
+    if (idc->ic_delete) {
+      idc->ic_delete(in);
+      break;
+    }
+    idc = idc->ic_super;
+  }
+}
+
 /* **************************************************************************
  * Info
  * *************************************************************************/
