@@ -636,8 +636,6 @@ static int _eit_process_event
   uint16_t eid;
   uint8_t dtag, dlen;
   epg_broadcast_t *ebc = NULL;
-  epg_episode_t *ee;
-  epg_serieslink_t *es;
   eit_event_t ev;
 
   if ( len < 12 ) return -1;
@@ -660,7 +658,6 @@ static int _eit_process_event
     ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
     tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
            eid, start, stop, ebc);
-#endif
     if (!ebc) return dllen + 12;
 
     /* Mark re-schedule detect (only now/next) */
