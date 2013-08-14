@@ -27,6 +27,7 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 #include "dvb/dvb_charset.h"
+#include "webui/webui.h"
 
 /* ************************************************************************
  * Status handling
@@ -54,6 +55,8 @@ typedef struct eit_status
   eit_table_status_t            *first;
   LIST_HEAD(, eit_table_status) tables;
 } eit_status_t;
+
+static int eit_comet_is_active = 0;
 
 static eit_table_status_t *eit_status_find
   ( eit_status_t *status, int tableid,
@@ -495,25 +498,144 @@ static int _eit_desc_crid
 
   return 0;
 }
+/* ************************************************************************
+ * Comet mailbox notification
+ * ***********************************************************************/
+static htsmsg_t* _create_eit_status_message(epggrab_ota_mux_t *completed_mux) {
+  htsmsg_t* m = htsmsg_create_map();
+  htsmsg_add_str(m, "notificationClass", "eitStatus");
+  if (completed_mux) {
+    htsmsg_add_str(m, "muxid", completed_mux->tdmi->tdmi_identifier);
+    htsmsg_add_u32(m, "completed", 1);
+  }
+  htsmsg_t* st = epggrab_ota_get_status("eit_comet");
+  if (st) htsmsg_add_msg(m, "status", st);
+  return m;
+}
+
+static void _notify_eit_status(epggrab_ota_mux_t *completed_mux) {
+  htsmsg_t* m = _create_eit_status_message(completed_mux);
+  comet_mailbox_add_message(m, COMET_DELIVERY_EIT);
+  htsmsg_destroy(m);
+}
+
+static void _notify_eit_event(service_t *svc, eit_event_t *ev, uint16_t eid,  time_t start, time_t stop) {
+  epg_genre_t *genre;
+  char genre_str[100];
+
+  htsmsg_t* m = htsmsg_create_map();
+  htsmsg_add_str(m, "notificationClass", "eitEvent");
+
+  htsmsg_add_str(m, "service", svc->s_svcname);
+  htsmsg_add_str(m, "provider", svc->s_provider);
+  htsmsg_add_str(m, "channel", svc->s_ch->ch_name);
+  htsmsg_add_u32(m, "id", eid);
+  htsmsg_add_u32(m, "start", start);
+  htsmsg_add_u32(m, "stop", stop);
+  htsmsg_add_u32(m, "duration", stop-start);
+  if (ev->title) { lang_str_serialize(ev->title, m, "title"); }
+  if (ev->summary) { lang_str_serialize(ev->summary,m, "summary"); }
+  if (ev->desc) { lang_str_serialize(ev->desc, m, "description"); }
+  if (*(ev->uri)) { htsmsg_add_str(m, "uri", ev->uri); }
+  if (*(ev->suri)) { htsmsg_add_str(m, "seriesuri", ev->suri); }
+  if (ev->extra) { htsmsg_add_msg(m, "extra", ev->extra); }
+  if (ev->hd){ htsmsg_add_u32(m, "hd", 1); }
+  if (ev->ws){ htsmsg_add_u32(m, "widescreen", 1); }
+  if (ev->ad){ htsmsg_add_u32(m, "audiodescribed", 1); }
+  if (ev->st){ htsmsg_add_u32(m, "subtitled", 1); }
+  if (ev->ds){ htsmsg_add_u32(m, "deafsigned", 1); }
+  if (ev->bw){ htsmsg_add_u32(m, "bw", 1); }
+  if (ev->genre) {
+    htsmsg_t* gl = htsmsg_create_list();
+    LIST_FOREACH(genre, ev->genre, link) {
+      epg_genre_get_str(genre, 0, 1, genre_str, 100);
+      htsmsg_add_str(gl, NULL, genre_str);
+    }
+    htsmsg_add_msg(m, "contenttype", gl);
+  }
+
+  comet_mailbox_add_message(m, COMET_DELIVERY_EIT);
+  htsmsg_destroy(m);
+}
+
 
 
 /* ************************************************************************
  * EIT Event
  * ***********************************************************************/
+static int _update_epg_from_eit(epg_broadcast_t *ebc, eit_event_t *ev, epggrab_module_t *mod) {
+  int save = 0;
+  epg_episode_t *ee;
+  epg_serieslink_t *es;
+  
+
+  /*
+   * Broadcast
+   */
+
+  /* Summary/Description */
+  if ( ev->summary )
+    save |= epg_broadcast_set_summary2(ebc, ev->summary, mod);
+  if ( ev->desc )
+    save |= epg_broadcast_set_description2(ebc, ev->desc, mod);
+
+  /* Broadcast Metadata */
+  save |= epg_broadcast_set_is_hd(ebc, ev->hd, mod);
+  save |= epg_broadcast_set_is_widescreen(ebc, ev->ws, mod);
+  save |= epg_broadcast_set_is_audio_desc(ebc, ev->ad, mod);
+  save |= epg_broadcast_set_is_subtitled(ebc, ev->st, mod);
+  save |= epg_broadcast_set_is_deafsigned(ebc, ev->ds, mod);
+
+  /*
+   * Series link
+   */
+
+  if (*ev->suri) {
+    if ((es = epg_serieslink_find_by_uri(ev->suri, 1, &save)))
+      save |= epg_broadcast_set_serieslink(ebc, es, mod);
+  }
+
+  /*
+   * Episode
+   */
+
+  /* Find episode */
+  if (*ev->uri) {
+    if ((ee = epg_episode_find_by_uri(ev->uri, 1, &save)))
+      save |= epg_broadcast_set_episode(ebc, ee, mod);
+
+  /* Existing/Artificial */
+  } else
+    ee = epg_broadcast_get_episode(ebc, 1, &save);
+
+  /* Update Episode */
+  if (ee) {
+    save |= epg_episode_set_is_bw(ee, ev->bw, mod);
+    if ( ev->title )
+      save |= epg_episode_set_title2(ee, ev->title, mod);
+    if ( ev->genre )
+      save |= epg_episode_set_genre(ee, ev->genre, mod);
+    if ( ev->parental )
+      save |= epg_episode_set_age_rating(ee, ev->parental, mod);
+#if TODO_ADD_EXTRA
+    if ( ev->extra )
+      save |= epg_episode_set_extra(ee, extra, mod);
+#endif
+  }
+  return save;
+}
 
 static int _eit_process_event
   ( epggrab_module_t *mod, int tableid,
     service_t *svc, uint8_t *ptr, int len,
-    int *resched, int *save )
+    int update_epg, int *resched, int *save )
 {
   int save2 = 0;
   int ret, dllen;
   time_t start, stop;
   uint16_t eid;
   uint8_t dtag, dlen;
-  epg_broadcast_t *ebc;
-  epg_episode_t *ee;
-  epg_serieslink_t *es;
+  epg_broadcast_t *ebc = NULL;
   eit_event_t ev;
 
   if ( len < 12 ) return -1;
@@ -532,14 +654,16 @@ static int _eit_process_event
   ret  = 12 + dllen;
 
   /* Find broadcast */
-  ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
-  tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
-         eid, start, stop, ebc);
-  if (!ebc) return dllen + 12;
+  if (update_epg) {
+    ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
+    tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
+           eid, start, stop, ebc);
+    if (!ebc) return dllen + 12;
 
-  /* Mark re-schedule detect (only now/next) */
-  if (save2 && tableid < 0x50) *resched = 1;
-  *save |= save2;
+    /* Mark re-schedule detect (only now/next) */
+    if (save2 && tableid < 0x50) *resched = 1;
+    *save |= save2;
+  }
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
@@ -592,58 +716,10 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
-  /*
-   * Broadcast
-   */
-
-  /* Summary/Description */
-  if ( ev.summary )
-    *save |= epg_broadcast_set_summary2(ebc, ev.summary, mod);
-  if ( ev.desc )
-    *save |= epg_broadcast_set_description2(ebc, ev.desc, mod);
-
-  /* Broadcast Metadata */
-  *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
-  *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
-  *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, mod);
-  *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
-  *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
-
-  /*
-   * Series link
-   */
-
-  if (*ev.suri) {
-    if ((es = epg_serieslink_find_by_uri(ev.suri, 1, save)))
-      *save |= epg_broadcast_set_serieslink(ebc, es, mod);
-  }
-
-  /*
-   * Episode
-   */
-
-  /* Find episode */
-  if (*ev.uri) {
-    if ((ee = epg_episode_find_by_uri(ev.uri, 1, save)))
-      *save |= epg_broadcast_set_episode(ebc, ee, mod);
-
-  /* Existing/Artificial */
-  } else
-    ee = epg_broadcast_get_episode(ebc, 1, save);
-
-  /* Update Episode */
-  if (ee) {
-    *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( ev.title )
-      *save |= epg_episode_set_title2(ee, ev.title, mod);
-    if ( ev.genre )
-      *save |= epg_episode_set_genre(ee, ev.genre, mod);
-    if ( ev.parental )
-      *save |= epg_episode_set_age_rating(ee, ev.parental, mod);
-#if TODO_ADD_EXTRA
-    if ( ev.extra )
-      *save |= epg_episode_set_extra(ee, extra, mod);
-#endif
+  if (update_epg) {
+    *save = _update_epg_from_eit(ebc, &ev, mod);
+  } else {
+    _notify_eit_event(svc, &ev, eid, start, stop);
   }
 
   /* Tidy up */
@@ -669,6 +745,7 @@ static int _eit_callback
   eit_status_t *sta;
   eit_table_status_t *tsta;
   int resched = 0, save = 0;
+  int update_epg = strcmp(mod->id, "eit_comet");
   uint16_t onid, tsid, sid;
   uint16_t sec, lst, seg, ver;
 
@@ -747,7 +824,7 @@ static int _eit_callback
   while (len) {
     int r;
     if ((r = _eit_process_event(mod, tableid, svc, ptr, len,
-                                &resched, &save)) < 0)
+                                update_epg, &resched, &save)) < 0)
       break;
     len -= r;
     ptr += r;
@@ -763,7 +840,12 @@ done:
     else if (sta->first == tsta) {
       LIST_FOREACH(tsta, &sta->tables, link)
         if (tsta->state != EIT_STATUS_DONE) break;
-      if (!tsta) epggrab_ota_complete(ota);
+      if (!tsta) {
+        int finished = epggrab_ota_complete(ota);
+        if (finished && !update_epg) {
+            _notify_eit_status(ota);
+        }
+      }
     }
   }
 #if ENABLE_TRACE
@@ -821,6 +903,9 @@ static void _eit_start
 
   /* Disabled */
   if (!m->enabled) return;
+
+  /* EIT comet and no one is listening */
+  if (!strcmp(m->id, "eit_comet") && !eit_comet_is_active) return;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
   // Note: do this as PID is the same
@@ -885,9 +970,44 @@ static int _eit_enable ( void *m, uint8_t e )
   return 1;
 }
 
+htsmsg_t* epggrab_ota_eit_comet_start_scan(void) {
+  epggrab_module_ota_t* mod = (epggrab_module_ota_t*) epggrab_module_find_by_id("eit_comet");
+  if (mod->enabled && !eit_comet_is_active) {
+    th_dvb_adapter_t *tda;
+    th_dvb_mux_instance_t *tdmi;
+
+    eit_comet_is_active = 1;
+    tvhlog_spawn(LOG_DEBUG, mod->id, "%s", "activating all muxes for EPG scan");
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+      LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+        if (tdmi->tdmi_enabled) {
+          service_t *s;
+          LIST_FOREACH(s, &tdmi->tdmi_transports, s_group_link) {
+            if(s->s_enabled && s->s_dvb_eit_enable) break;
+          }
+          if (!s) continue;
+          epggrab_ota_create_and_register_as_tmp(mod, tdmi, 20, 0);
+        }
+      }
+    }
+  }
+  return _create_eit_status_message(NULL);
+}
+
+void epggrab_ota_eit_comet_stop_scan(void) {
+  if (eit_comet_is_active) {
+    epggrab_module_ota_t* mod = (epggrab_module_ota_t*) epggrab_module_find_by_id("eit_comet");
+    tvhlog_spawn(LOG_DEBUG, mod->id, "%s", "deactivating all muxes for EPG scan");
+    eit_comet_is_active = 0;
+    epggrab_ota_destroy_by_module(mod);
+  }
+}
+
 void eit_init ( void )
 {
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
+  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber (internal EPG update)", 1,
+                            _eit_start, _eit_enable, NULL);
+  epggrab_module_ota_create(NULL, "eit_comet", "EIT: DVB Grabber (push EIT data to comet mailbox)", 1,
                             _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
                             _eit_start, _eit_enable, NULL);

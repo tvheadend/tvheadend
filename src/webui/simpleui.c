@@ -125,7 +125,7 @@ page_simple(http_connection_t *hc,
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
 
-        s = epg_broadcast_get_title(e, lang);
+        s = epg_generic_get_title(e, lang);
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%u\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
@@ -267,9 +267,9 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   htsbuf_qprintf(hq, "</form>");
 
-  if ( (s = epg_broadcast_get_description(e, lang)) )
+  if ( (s = epg_generic_get_description(e, lang)) )
     htsbuf_qprintf(hq, "%s", s);
-  else if ( (s = epg_broadcast_get_summary(e, lang)) )
+  else if ( (s = epg_generic_get_summary(e, lang)) )
     htsbuf_qprintf(hq, "%s", s);
   
 

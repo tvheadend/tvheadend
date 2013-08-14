@@ -2294,3 +2294,47 @@ char *epg_hash ( const char *t, const char *s, const char *d )
   if ( t ) return md5sum(t);
   return NULL;
 }
+
+/* ************************************************************************
+ * Generic accessors. These will get the first non-null result for a field
+ * broadcast, episode or brand (in this order) or return null if none of 
+ * the above specify the field.
+ * ***********************************************************************/
+const char *epg_generic_get_title ( epg_broadcast_t *b, const char *lang ) {
+  const char *result = epg_broadcast_get_title(b, lang);
+  if (result == NULL && b->episode != NULL) {
+    result = epg_episode_get_title(b->episode, lang);
+    if (result == NULL && b->episode->brand != NULL) {
+      result = epg_brand_get_title(b->episode->brand, lang);
+    }
+  }
+  return result;
+}
+
+const char *epg_generic_get_subtitle ( epg_broadcast_t *b, const char *lang ) {
+  if (b->episode != NULL) {
+    return epg_episode_get_subtitle(b->episode, lang);
+  }
+  return NULL;
+}
+
+const char *epg_generic_get_summary ( epg_broadcast_t *b, const char *lang ){
+  const char *result = epg_broadcast_get_summary(b, lang);
+  if (result == NULL && b->episode != NULL) {
+    result = epg_episode_get_summary(b->episode, lang);
+    if (result == NULL && b->episode->brand != NULL) {
+      result = epg_brand_get_summary(b->episode->brand, lang);
+    }
+  }
+  return result;
+}
+
+const char *epg_generic_get_description ( epg_broadcast_t *b, const char *lang ){
+  const char *result = epg_broadcast_get_description(b, lang);
+  if (result == NULL && b->episode != NULL) {
+    result = epg_episode_get_description(b->episode, lang);
+  }
+  return result;
+}
+
+

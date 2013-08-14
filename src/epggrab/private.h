@@ -115,7 +115,9 @@ epggrab_ota_mux_t *epggrab_ota_create
 void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, int nid, int tsid,
     int period, int interval, const char *name );
-
+void epggrab_ota_create_and_register_as_tmp 
+  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi,
+    int timeout, int interval );
 /*
  * Delete
  */
@@ -133,7 +135,7 @@ void epggrab_ota_register
  * State change
  */
 int  epggrab_ota_begin       ( epggrab_ota_mux_t *ota );
-void epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
+int  epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
 void epggrab_ota_cancel      ( epggrab_ota_mux_t *ota );
 void epggrab_ota_timeout     ( epggrab_ota_mux_t *ota );
 

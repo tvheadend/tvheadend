@@ -53,11 +53,13 @@ void epggrab_mux_stop ( th_dvb_mux_instance_t *tdmi, int timeout )
   // Note: the slightly akward list iteration here is because
   // _ota_cancel/delete can remove the object and free() it
   epggrab_ota_mux_t *a, *b;
+  time_t now;
+  time(&now);
   a = TAILQ_FIRST(&tdmi->tdmi_epg_grab);
   while (a) {
     b = TAILQ_NEXT(a, tdmi_link);
     if (a->tdmi == tdmi) {
-      if (timeout)
+      if (timeout && a->started + a->timeout <= 0)
         epggrab_ota_timeout(a);
       else
         epggrab_ota_cancel(a);
@@ -76,7 +78,7 @@ int epggrab_mux_period ( th_dvb_mux_instance_t *tdmi )
   int period = 0;
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
-    if (!ota->is_reg) continue;
+    if (ota->reg_state == EPGGRAB_OTA_REG_NONE) continue;
     if (ota->timeout > period)
       period = ota->timeout;
   }
@@ -91,10 +93,47 @@ th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
   TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
     if (ota->tdmi->tdmi_adapter != tda) continue;
     if (ota->interval + ota->completed > now) return NULL;
-    if (!ota->is_reg) return NULL;
+    if (ota->reg_state == EPGGRAB_OTA_REG_NONE) return NULL;
     break;
   }
   return ota ? ota->tdmi : NULL;
+}
+
+htsmsg_t* epggrab_ota_get_status ( const char *id ) {
+  epggrab_module_t* genmod = epggrab_module_find_by_id(id);
+  if (!genmod || genmod->type != EPGGRAB_OTA || !genmod->enabled) return NULL;
+
+  epggrab_module_ota_t* mod = (epggrab_module_ota_t*)genmod;
+  htsmsg_t* message = htsmsg_create_map();
+
+  time_t now;
+  time(&now);
+  time_t min_blocked_until = -1;
+  htsmsg_t* muxlist = htsmsg_create_list();
+  epggrab_ota_mux_t *ota;
+  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
+    if(ota->reg_state == EPGGRAB_OTA_REG_NONE) continue;
+
+    htsmsg_t* m = htsmsg_create_map();
+    htsmsg_add_str(m, "id", ota->tdmi->tdmi_identifier);
+    time_t blocked_until = ota->completed + ota->interval;
+    if (min_blocked_until == -1 || blocked_until < min_blocked_until) {
+      min_blocked_until = blocked_until;
+    }
+    if (ota->state == EPGGRAB_OTA_MUX_RUNNING || blocked_until <= now) {
+      htsmsg_add_s64(m, "blocked", 0);
+    } else {
+      htsmsg_add_s64(m, "blocked", blocked_until-now);
+    }
+    htsmsg_add_msg(muxlist, NULL, m);
+  }
+  htsmsg_add_msg(message, "muxes", muxlist);
+  if (min_blocked_until > now) {
+    htsmsg_add_s64(message, "blocked", min_blocked_until - now);
+  } else {
+    htsmsg_add_s64(message, "blocked", 0);
+  }
+  return message;
 }
 
 /* **************************************************************************
@@ -194,7 +233,7 @@ static int _ota_time_cmp ( void *_a, void *_b )
   epggrab_ota_mux_t *b = _b;
   
   /* Unreg'd always at the end */
-  r = a->is_reg - b->is_reg;
+  r = (a->reg_state != EPGGRAB_OTA_REG_NONE) - (a->reg_state != EPGGRAB_OTA_REG_NONE);
   if (r) return r;
 
   /* Check when */
@@ -238,8 +277,6 @@ epggrab_ota_mux_t *epggrab_ota_create
     TAILQ_INSERT_TAIL(&mod->muxes, ota, grab_link);
 
   } else {
-    time_t now;
-    time(&now);
     ota->state = EPGGRAB_OTA_MUX_IDLE;
   }
   return ota;
@@ -265,6 +302,21 @@ void epggrab_ota_create_and_register_by_id
     }
   }
 }
+
+/*
+ * Create and register interest for a single scan (used to start an ota module after the initial scan has completed)
+ */
+void epggrab_ota_create_and_register_as_tmp ( epggrab_module_ota_t *mod, th_dvb_mux_instance_t *tdmi,
+                                              int timeout, int interval )
+{
+  epggrab_ota_mux_t *ota = epggrab_ota_create(mod, tdmi);
+  ota->state = EPGGRAB_OTA_MUX_IDLE;
+  ota->reg_state = EPGGRAB_OTA_REG_TEMP;
+  time(&ota->started);
+  TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
+  TAILQ_INSERT_SORTED(&ota_mux_all, ota, glob_link, _ota_time_cmp);
+}
+
 
 /*
  * Destrory link (either because it was temporary OR mux deleted)
@@ -308,7 +360,7 @@ void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod )
 void epggrab_ota_register ( epggrab_ota_mux_t *ota, int timeout, int interval )
 {
   int up = 0;
-  ota->is_reg   = 1;
+  ota->reg_state = EPGGRAB_OTA_REG_PERM;
   if (timeout > ota->timeout) {
     up = 1;
     ota->timeout = timeout;
@@ -331,9 +383,12 @@ void epggrab_ota_register ( epggrab_ota_mux_t *ota, int timeout, int interval )
 
 static void _epggrab_ota_finished ( epggrab_ota_mux_t *ota )
 {
-  /* Temporary link - delete it */
-  if (!ota->is_reg)
+  /* Unregistered link or completed temp link - delete it */
+  if (ota->reg_state == EPGGRAB_OTA_REG_NONE 
+      || (ota->reg_state == EPGGRAB_OTA_REG_TEMP 
+          && ota->state == EPGGRAB_OTA_MUX_COMPLETE)) {
     epggrab_ota_destroy(ota);
+  }
 
   /* Reinsert into reg queue */
   else {
@@ -367,7 +422,7 @@ int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
   return 0;
 }
 
-void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
+int epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 {
   th_dvb_mux_instance_t *tdmi = ota->tdmi;
 
@@ -378,15 +433,17 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 
     /* Check others */
     TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
-      if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
+      if (ota->reg_state != EPGGRAB_OTA_REG_NONE && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
     }
 
     /* All complete (bring timer forward) */
     if (!ota) {
       gtimer_arm(&tdmi->tdmi_adapter->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 20);
+      return 1;
     }
   }
+  return 0;
 }
 
 /* Reset */

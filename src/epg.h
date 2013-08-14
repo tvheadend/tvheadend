@@ -565,4 +565,18 @@ void epg_updated (void);
 
 char *epg_hash ( const char *t, const char *s, const char *d );
 
+/* ************************************************************************
+ * Generic accessors. These will get the first non-null result for a field
+ * from broadcast, episode or brand (in this order) or return null if none of
+ * the above specify the field.
+ * ***********************************************************************/
+const char *epg_generic_get_title 
+  ( epg_broadcast_t *b, const char *lang );
+const char *epg_generic_get_subtitle 
+  ( epg_broadcast_t *b, const char *lang );
+const char *epg_generic_get_summary
+  ( epg_broadcast_t *b, const char *lang );
+const char *epg_generic_get_description
+  ( epg_broadcast_t *b, const char *lang );
+
 #endif /* EPG_H */
