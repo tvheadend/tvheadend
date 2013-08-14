@@ -21,6 +21,7 @@
 
 typedef struct mux {
   LIST_ENTRY(mux) link;
+ int delsys;
  unsigned int freq;
  unsigned int symrate;
  short fec;

@@ -149,8 +149,15 @@ static int _muxes_load_dvbs ( mux_t *mux, const char *line )
   int r, v2 = 0;
 
   if (*line == '2') {
+#if DVB_API_VERSION >= 5
+    mux->delsys = SYS_DVBS2;
+#endif
     v2 = 2;
     line++;
+  } else {
+#if DVB_API_VERSION >= 5
+    mux->delsys = SYS_DVBS;
+#endif
   }
 
   r = sscanf(line, "%u %c %u %s %s %s",
