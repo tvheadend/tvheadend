@@ -267,7 +267,9 @@ function accessUpdate(o) {
         tvheadend.capabilities.indexOf('v4l')      != -1) {
       tabs2.push(new tvheadend.tvadapters);
     }
+/*
     tabs2.push(new tvheadend.iptv);
+*/
     tvheadend.conf_dvbin = new Ext.TabPanel({
       activeTab: 0,
       autoScroll: true,

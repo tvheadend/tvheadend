@@ -36,11 +36,25 @@
 
 extern const idclass_t mpegts_network_class;
 
+static void
+linuxdvb_network_class_delete ( idnode_t *in )
+{
+  mpegts_network_t *mn = (mpegts_network_t*)in;
+
+  /* remove config */
+  hts_settings_remove("input/linuxdvb/networks/%s", 
+                      idnode_uuid_as_str(in));
+
+  /* Parent delete */
+  mpegts_network_delete(mn);
+}
+
 const idclass_t linuxdvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "linuxdvb_network",
   .ic_caption    = "LinuxDVB Network",
+  .ic_delete     = linuxdvb_network_class_delete,
   .ic_properties = (const property_t[]){
     {}
   }
@@ -169,18 +183,6 @@ linuxdvb_network_mux_create2
                          NULL, NULL, conf);
 }
 
-static void
-linuxdvb_network_delete
-  ( mpegts_network_t *mn )
-{
-  /* remove config */
-  hts_settings_remove("input/linuxdvb/networks/%s", 
-                      idnode_uuid_as_str(&mn->mn_id));
-
-  /* Parent delete */
-  mpegts_network_delete(mn);
-}
-
 /* ****************************************************************************
  * Creation/Config
  * ***************************************************************************/
@@ -208,7 +210,6 @@ linuxdvb_network_create0
     ln->ln_type = FE_ATSC;
   
   /* Callbacks */
-  ln->mn_delete         = linuxdvb_network_delete;
   ln->mn_create_mux     = linuxdvb_network_create_mux;
   ln->mn_create_service = linuxdvb_network_create_service;
   ln->mn_config_save    = linuxdvb_network_config_save;

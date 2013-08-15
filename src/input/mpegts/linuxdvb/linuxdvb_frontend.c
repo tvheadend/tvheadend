@@ -95,8 +95,7 @@ linuxdvb_frontend_class_network_enum(void *o)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "mpegts/input");
-  htsmsg_add_str(p, "op",    "network_list");
+  htsmsg_add_str(m, "uri",   "mpegts/input/network_list");
   htsmsg_add_str(p, "uuid",  idnode_uuid_as_str((idnode_t*)o));
   htsmsg_add_str(m, "event", "mpegts_network");
   htsmsg_add_msg(m, "params", p);

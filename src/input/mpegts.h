@@ -177,7 +177,6 @@ struct mpegts_network
   /*
    * Functions
    */
-  void              (*mn_delete)       (mpegts_network_t *mn);
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
   void              (*mn_config_save)  (mpegts_network_t*);
   mpegts_mux_t*     (*mn_create_mux)
@@ -472,9 +471,6 @@ extern const idclass_t mpegts_network_class;
 #define mpegts_network_find(u)\
   idnode_find(u, &mpegts_network_class)
   
-#define mpegts_network_delete_by_uuid(u)\
-  { mpegts_network_t *mn = mpegts_network_find(u); if (mn && mn->mn_delete) mn->mn_delete(mn); }
-
 void mpegts_network_delete ( mpegts_network_t *mn );
 
 void mpegts_network_schedule_initial_scan

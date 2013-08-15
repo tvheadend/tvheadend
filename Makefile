@@ -110,6 +110,11 @@ SRCS =  src/version.c \
 	src/service_mapper.c \
 
 SRCS += \
+	src/api.c \
+	src/api/api_idnode.c \
+	src/api/api_mpegts.c \
+
+SRCS += \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \
@@ -132,10 +137,10 @@ SRCS += src/dvr/dvr_db.c \
 SRCS += src/webui/webui.c \
 	src/webui/comet.c \
 	src/webui/extjs.c \
-	src/webui/extjs_dvb.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/html.c\
+	src/webui/webui_api.c\
 
 SRCS += src/muxer.c \
 	src/muxer/muxer_pass.c \
@@ -202,11 +207,6 @@ SRCS-${CONFIG_TIMESHIFT} += \
 # Inotify
 SRCS-${CONFIG_INOTIFY} += \
 	src/dvr/dvr_inotify.c \
-
-# V4L
-SRCS-${CONFIG_V4L} += \
-	src/v4l.c \
-	src/webui/extjs_v4l.c \
 
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
