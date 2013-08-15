@@ -27,28 +27,6 @@
  * Utilities
  * *************************************************************************/
 
-#define TO_FROM(x, y) ((x) << 16 | (y))
-
-/*
- * Bool conversion
- */
-#if 0
-static int
-str_to_bool(const char *s)
-{
-  if(s == NULL)
-    return 0;
-  int v = atoi(s);
-  if(v)
-    return 1;
-  if(!strcasecmp(s, "on") ||
-     !strcasecmp(s, "true") ||
-     !strcasecmp(s, "yes"))
-    return 1;
-  return 0;
-}
-#endif
-
 /**
  *
  */
@@ -98,66 +76,71 @@ prop_write_values
     /* Write */
     save = 0;
     void *v = obj + p->off;
-    switch(TO_FROM(p->type, f->hmf_type)) {
-    case TO_FROM(PT_BOOL, HMF_BOOL): {
-      int *val = v;
-      if (*val != f->hmf_bool) {
-        *val = f->hmf_bool;
-        save = 1;
+
+    switch (p->type) {
+      case PT_BOOL: {
+        int *val = v, tmp;
+        if (!htsmsg_field_get_bool(f, &tmp))
+          if (*val != tmp) {
+            *val = tmp;
+            save = 1;
+          }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_BOOL, HMF_S64): {
-      int *val = v;
-      if (*val != !!f->hmf_s64) {
-        *val = !!f->hmf_s64;
-        save = 1;
+      case PT_INT: {
+        uint32_t tmp;
+        int *val = v;
+        if (!htsmsg_field_get_u32(f, &tmp))
+          if (*val != (int)tmp) {
+            *val = (int)tmp;
+            save = 1;
+          }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_INT, HMF_S64): {
-      int *val = v;
-      if (*val != f->hmf_s64) {
-        *val = f->hmf_s64;
-        save = 1;
+      case PT_U16: {
+        uint32_t tmp;
+        uint16_t *val = v;
+        if (!htsmsg_field_get_u32(f, &tmp))
+          if (*val != (uint16_t)tmp) {
+            *val = (uint16_t)tmp;
+            save = 1;
+          }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_U16, HMF_S64): {
-      uint16_t *val = v;
-      if (*val != f->hmf_s64) {
-        *val = f->hmf_s64;
-        save = 1;
+      case PT_U32: {
+        uint32_t tmp;
+        uint32_t *val = v;
+        if (!htsmsg_field_get_u32(f, &tmp))
+          if (*val != tmp) {
+            *val = tmp;
+            save = 1;
+          }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_U32, HMF_S64): {
-      uint32_t *val = v;
-      if (*val != f->hmf_s64) {
-        *val = f->hmf_s64;
-        save = 1;
+      case PT_DBL: {
+        double tmp;
+        double *val = v;
+        if (!htsmsg_field_get_dbl(f, &tmp))
+          if (*val != tmp) {
+            *val = tmp;
+            save = 1;
+          }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_STR, HMF_STR): {
-      char **val = v;
-      if(p->set != NULL)
-        save |= p->set(obj, f->hmf_str);
-      else if (strcmp(*val ?: "", f->hmf_str)) {
-        free(*val);
-        *val = strdup(f->hmf_str);
-        save = 1;
+      case PT_STR: {
+        char **val = v;
+        const char *tmp = htsmsg_field_get_str(f);
+        if (tmp) {
+          if(p->set != NULL)
+            save |= p->set(obj, tmp);
+          else if (strcmp(*val ?: "", tmp)) {
+            free(*val);
+            *val = strdup(tmp);
+            save = 1;
+          }
+        }
+        break;
       }
-      break;
-    }
-    case TO_FROM(PT_DBL, HMF_DBL): {
-      double *val = v;
-      if (*val != f->hmf_dbl) {
-        *val = f->hmf_dbl;
-        save = 1;
-      }
-      break;
-    }
     }
   
     if (save) {

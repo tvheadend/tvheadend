@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "htsmsg.h"
+#include "misc/dbl.h"
 
 static void htsmsg_clear(htsmsg_t *msg);
 
@@ -328,7 +329,14 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
 
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
+  
+  return htsmsg_field_get_s64(f, s64p);
+}
 
+int
+htsmsg_field_get_s64
+  (htsmsg_field_t *f, int64_t *s64p)
+{
   switch(f->hmf_type) {
   default:
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
@@ -352,11 +360,50 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
 /**
  *
  */
+
+int
+htsmsg_field_get_bool
+  ( htsmsg_field_t *f, int *boolp )
+{
+  switch(f->hmf_type) {
+  default:
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  case HMF_STR:
+    if (!strcmp(f->hmf_str, "yes")  ||
+        !strcmp(f->hmf_str, "true") ||
+        !strcmp(f->hmf_str, "on") ||
+        !strcmp(f->hmf_str, "1"))
+      *boolp = 1;
+    else
+      *boolp = 0;
+    break;
+  case HMF_S64:
+    *boolp = f->hmf_s64 ? 1 : 0;
+    break;
+  case HMF_BOOL:
+    *boolp = f->hmf_bool;
+    break;
+  }
+  return 0;
+}
+
+int
+htsmsg_get_bool
+  (htsmsg_t *msg, const char *name, int *boolp)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+  
+  return htsmsg_field_get_bool(f, boolp);
+}
+
 int
 htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def)
 {
-  int64_t s64;
-  return htsmsg_get_s64(msg, name, &s64) ? def : s64;
+  int ret;
+  return htsmsg_get_bool(msg, name, &ret) ? def : ret;
 }
 
 
@@ -385,6 +432,22 @@ htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p)
 
   if(s64 < 0 || s64 > 0xffffffffLL)
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  
+  *u32p = s64;
+  return 0;
+}
+
+int
+htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p)
+{
+  int r;
+  int64_t s64;
+    
+  if ((r = htsmsg_field_get_s64(f, &s64)))
+    return r;
+
+  if (s64 < 0 || s64 > 0xffffffffL)
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
   
   *u32p = s64;
   return 0;
@@ -443,14 +506,30 @@ htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp)
 
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
-
-  if(f->hmf_type != HMF_DBL)
-    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
-
-  *dblp = f->hmf_dbl;
-  return 0;
+  
+  return htsmsg_field_get_dbl(f, dblp);
 }
 
+int
+htsmsg_field_get_dbl
+  ( htsmsg_field_t *f, double *dblp )
+{
+  switch (f->hmf_type) {
+    case HMF_S64:
+      *dblp = (double)f->hmf_s64;
+      break;
+    case HMF_DBL:
+      *dblp = f->hmf_dbl;
+      break;
+    case HMF_STR:
+      *dblp = my_str2double(f->hmf_str, NULL);
+      // TODO: better safety checks?
+      break;
+    default:
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  }
+  return 0;
+}
 
 /*
  *
@@ -478,15 +557,25 @@ htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
 const char *
 htsmsg_field_get_string(htsmsg_field_t *f)
 {
-  char buf[40];
+  char buf[128];
   
   switch(f->hmf_type) {
   default:
     return NULL;
   case HMF_STR:
     break;
+  case HMF_BOOL:
+    f->hmf_str = strdup(f->hmf_bool ? "true" : "false");
+    f->hmf_type = HMF_STR;
+    f->hmf_flags |= HMF_ALLOCED;
   case HMF_S64:
     snprintf(buf, sizeof(buf), "%"PRId64, f->hmf_s64);
+    f->hmf_str = strdup(buf);
+    f->hmf_type = HMF_STR;
+    f->hmf_flags |= HMF_ALLOCED;
+    break;
+  case HMF_DBL:
+    snprintf(buf, sizeof(buf), "%lf", f->hmf_dbl);
     f->hmf_str = strdup(buf);
     f->hmf_type = HMF_STR;
     f->hmf_flags |= HMF_ALLOCED;

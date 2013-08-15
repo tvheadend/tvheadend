@@ -177,6 +177,8 @@ void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin,
  */
 int htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p);
 
+int htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p);
+
 /**
  * Get an integer as an signed 32 bit integer.
  *
@@ -195,10 +197,16 @@ int htsmsg_get_s32(htsmsg_t *msg, const char *name,  int32_t *s32p);
  */
 int htsmsg_get_s64(htsmsg_t *msg, const char *name,  int64_t *s64p);
 
+int htsmsg_field_get_s64(htsmsg_field_t *f, int64_t *s64p);
+
 /*
  * Return the field \p name as an s64.
  */
 int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
+
+int htsmsg_field_get_bool(htsmsg_field_t *f, int *boolp);
+
+int htsmsg_get_bool(htsmsg_t *msg, const char *name, int *boolp);
 
 int htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def);
 
@@ -262,11 +270,19 @@ const char *htsmsg_get_str_multi(htsmsg_t *msg, ...)
  */
 int htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp);
 
+int htsmsg_field_get_dbl(htsmsg_field_t *f, double *dblp);
+
 /**
  * Given the field \p f, return a string if it is of type string, otherwise
  * return NULL
  */
 const char *htsmsg_field_get_string(htsmsg_field_t *f);
+#define htsmsg_field_get_str(f) htsmsg_field_get_string(f)
+
+/**
+ * Get s64 from field
+ */
+
 
 /**
  * Return the field \p name as an u32.
