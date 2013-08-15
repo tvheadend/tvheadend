@@ -622,15 +622,27 @@ idnode_class_write_values
   return save;
 }
 
+static void
+idnode_savefn ( idnode_t *self )
+{
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    if (idc->ic_save) {
+      idc->ic_save(self);
+      break;
+    }
+    idc = idc->ic_super;
+  }
+}
+
 int
 idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
   int save = 0;
   const idclass_t *idc = self->in_class;
-  void (*savefn)(idnode_t*) = idc->ic_save;
   save = idnode_class_write_values(self, idc, c, optmask);
   if (save && dosave) {
-    if (savefn) savefn(self);
+    idnode_savefn(self);
     idnode_notify(self, NULL, 0, 0);
   }
   return save;
