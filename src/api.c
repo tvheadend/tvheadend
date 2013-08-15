@@ -116,4 +116,5 @@ void api_init ( void )
 
   /* Subsystems */
   api_idnode_init();
+  api_mpegts_init();
 }

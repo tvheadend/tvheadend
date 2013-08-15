@@ -26,18 +26,288 @@
 #include "htsmsg.h"
 #include "api.h"
 
-int
-api_idnode_tree0
-  ( const char *uuid, const char *root, 
-    idnode_set_t *(*rootfn)(void), htsmsg_t **resp )
+static struct strtab filtcmptab[] = {
+  { "gt", IC_GT },
+  { "lt", IC_LT },
+  { "eq", IC_EQ }
+};
+
+static void
+api_idnode_grid_conf
+  ( htsmsg_t *args, api_idnode_grid_conf_t *conf )
 {
+  htsmsg_field_t *f;
+  htsmsg_t *filter, *e;
+  const char *str;
+
+  /* Start */
+  if ((str = htsmsg_get_str(args, "start")))
+    conf->start = atoi(str);
+  else
+    conf->start = 0;
+
+  /* Limit */
+  if ((str = htsmsg_get_str(args, "limit")))
+    conf->limit = atoi(str);
+  else
+    conf->limit = 50;
+
+  /* Filter */
+  if ((filter = htsmsg_get_list(args, "filter"))) {
+    HTSMSG_FOREACH(f, filter) {
+      const char *k, *t, *v;
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      if (!(k = htsmsg_get_str(e, "field"))) continue;
+      if (!(t = htsmsg_get_str(e, "type")))  continue;
+      if (!strcmp(t, "string")) {
+        if ((v = htsmsg_get_str(e, "value")))
+          idnode_filter_add_str(&conf->filter, k, v, IC_RE);
+      } else if (!strcmp(t, "numeric")) {
+        uint32_t v;
+        if (!htsmsg_get_u32(e, "value", &v)) {
+          int t = str2val(htsmsg_get_str(e, "comparison") ?: "",
+                          filtcmptab);
+          idnode_filter_add_num(&conf->filter, k, v, t == -1 ? IC_EQ : t);
+        }
+      } else if (!strcmp(t, "boolean")) {
+        uint32_t v;
+        if (!htsmsg_get_u32(e, "value", &v))
+          idnode_filter_add_bool(&conf->filter, k, v, IC_EQ);
+      }
+    }
+  }
+
+  /* Sort */
+  if ((str = htsmsg_get_str(args, "sort"))) {
+    conf->sort.key = str;
+    if ((str = htsmsg_get_str(args, "dir")) && !strcmp(str, "DESC"))
+      conf->sort.dir = IS_DSC;
+    else
+      conf->sort.dir = IS_ASC;
+  } else
+    conf->sort.key = NULL;
+}
+
+int
+api_idnode_grid
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int i;
+  htsmsg_t *list, *e;
+  api_idnode_grid_conf_t conf = { 0 };
+  idnode_set_t ins = { 0 };
+  api_idnode_grid_callback_t cb = opaque;
+
+  /* Grid configuration */
+  api_idnode_grid_conf(args, &conf);
+
+  /* Create list */
+  pthread_mutex_lock(&global_lock);
+  cb(&ins, &conf);
+
+  /* Sort */
+  if (conf.sort.key)
+    idnode_set_sort(&ins, &conf.sort);
+
+  /* Paginate */
+  list  = htsmsg_create_list();
+  for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
+    idnode_read0(ins.is_array[i], e, 0);
+    htsmsg_add_msg(list, NULL, e);
+    if (conf.limit > 0) conf.limit--;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  /* Output */
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", list);
+  htsmsg_add_u32(*resp, "total",   ins.is_count);
+
+  /* Cleanup */
+  free(ins.is_array);
+  idnode_filter_clear(&conf.filter);
+
+  return 0;
+}
+
+static int
+api_idnode_load_by_class
+  ( const char *class, htsmsg_t *args, htsmsg_t **resp )
+{
+  int i, _enum;
+  const idclass_t *idc;
+  idnode_set_t    *is;
+  idnode_t        *in;
+  htsmsg_t        *l, *e;
+
+  // TODO: this only works if pass as integer
+  _enum = htsmsg_get_bool_or_default(args, "enum", 0);
+
+  pthread_mutex_lock(&global_lock);
+
+  /* Find class */
+  if (!(idc = idclass_find(class))) {
+    pthread_mutex_unlock(&global_lock);
+    return EINVAL;
+  }
+
+  l = htsmsg_create_list();
+  if ((is = idnode_find_all(idc))) {
+    for (i = 0; i < is->is_count; i++) {
+      in = is->is_array[i];
+
+      /* Name/UUID only */
+      if (_enum) {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "key",  idnode_uuid_as_str(in));
+        htsmsg_add_str(e, "val", idnode_get_title(in));
+
+      /* Full record */
+      } else
+        e = idnode_serialize(in);
+        
+      if (e)
+        htsmsg_add_msg(l, NULL, e);
+    }
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+static int
+api_idnode_load
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err = 0;
+  idnode_t *in;
+  htsmsg_t *t, *l = NULL;
+  htsmsg_field_t *f;
+  const char *uuid, *class;
+
+  /* Class based */
+  if ((class = htsmsg_get_str(args, "class")))
+    return api_idnode_load_by_class(class, args, resp);
+  
+  /* ID based */
+  if (!(f = htsmsg_field_find(args, "uuid")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+
+  /* Single */
+  if (f->hmf_type == HMF_STR) {
+    uuid = htsmsg_field_get_string(f);
+    in   = idnode_find(uuid, NULL);
+    if (in) {
+      l     = htsmsg_create_list();
+      htsmsg_add_msg(l, NULL, idnode_serialize(in));
+    } else
+      err   = ENOENT;
+
+  /* Multiple */
+  } else if (f->hmf_type == HMF_LIST) {
+    t = htsmsg_get_list_by_field(f);
+    l = htsmsg_create_list();
+    HTSMSG_FOREACH(f, t) {
+      if (!(uuid = htsmsg_field_get_string(f))) continue;
+      if (!(in   = idnode_find(uuid, NULL))) continue;
+      htsmsg_add_msg(l, NULL, idnode_serialize(in));
+    }
+
+  /* Invalid */
+  } else {
+    err = EINVAL;
+  }
+
+  if (l) {
+    *resp = htsmsg_create_map();
+    htsmsg_add_msg(*resp, "entries", l);
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  return err;
+}
+
+static int
+api_idnode_save
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err = EINVAL;
+  idnode_t *in;
+  htsmsg_t *conf, *l;
+  htsmsg_field_t *f;
+  const char *uuid;
+
+  if (!(f = htsmsg_field_find(args, "node")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+
+  /* Single */
+  if (f->hmf_type == HMF_MAP) {
+    conf = htsmsg_get_map_by_field(f);
+    if (!(uuid = htsmsg_get_str(conf, "uuid")))
+      goto exit;
+    if (!(in = idnode_find(uuid, NULL)))
+      goto exit;
+    idnode_update(in, conf);
+    err = 0;
+
+  /* Multiple */
+  } else if (f->hmf_type == HMF_LIST) {
+    l     = htsmsg_get_list_by_field(f);
+    HTSMSG_FOREACH(f, l) {
+      if (!(conf = htsmsg_get_map_by_field(f)))
+        continue;
+      if (!(uuid = htsmsg_get_str(conf, "uuid")))
+        continue;
+      if (!(in = idnode_find(uuid, NULL)))
+        continue;
+      idnode_update(in, conf);
+    }
+    err = 0;
+
+  /* Invalid */
+  } else {
+    err = EINVAL;
+  }
+
+  // TODO: return updated UUIDs?
+
+exit:
+  pthread_mutex_unlock(&global_lock);
+
+  return err;
+}
+
+int
+api_idnode_tree
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const char *uuid;
+  const char *root = NULL;
   int      isroot;
   idnode_t *node = NULL;
+  api_idnode_tree_callback_t rootfn = opaque;
 
-  /* Validate */
-  if (!uuid)
+  /* UUID */
+  if (!(uuid = htsmsg_get_str(args, "uuid")))
     return EINVAL;
-  isroot = !strcmp("root", uuid);
+
+  /* Root UUID */
+  if (!rootfn)
+    root = htsmsg_get_str(args, "root");
+
+  /* Is root? */
+  isroot = (strcmp("root", uuid) == 0);
   if (isroot && !(root || rootfn))
     return EINVAL;
 
@@ -76,66 +346,46 @@ api_idnode_tree0
   return 0;
 }
 
-static int
+int
 api_idnode_class
-  ( const char *class, htsmsg_t *args, htsmsg_t **resp )
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  int i, brief;
+  int err = EINVAL;
+  const char      *name;
   const idclass_t *idc;
-  idnode_set_t    *is;
-  idnode_t        *in;
-  htsmsg_t        *e;
-
-  // TODO: this only works if pass as integer
-  brief = htsmsg_get_bool_or_default(args, "brief", 0);
 
   pthread_mutex_lock(&global_lock);
 
-  /* Find class */
-  if (!(idc = idclass_find(class))) {
-    pthread_mutex_unlock(&global_lock);
-    return EINVAL;
+  /* Lookup */
+  if (!opaque) {
+    if (!(name = htsmsg_get_str(args, "name")))
+      goto exit;
+    if (!(idc  = idclass_find(name)))
+      goto exit;
+  
+  } else {
+    idc = opaque;
   }
 
-  *resp = htsmsg_create_list();
-  if ((is = idnode_find_all(idc))) {
-    for (i = 0; i < is->is_count; i++) {
-      in = is->is_array[i];
+  err   = 0;
+  *resp = idclass_serialize(idc);
 
-      /* Name/UUID only */
-      if (brief) {
-        e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", idnode_uuid_as_str(in));
-        htsmsg_add_str(e, "val", idnode_get_title(in));
-
-      /* Full record */
-      } else
-        e = idnode_serialize(in);
-        
-      if (e)
-        htsmsg_add_msg(*resp, NULL, e);
-    }
-  }
-
+exit:
   pthread_mutex_unlock(&global_lock);
 
-  return 0;
+  return err;
 }
 
 static int
-api_idnode_load
+api_idnode_delete
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err = 0;
   idnode_t *in;
   htsmsg_t *l;
   htsmsg_field_t *f;
-  const char *uuid, *class;
+  const char *uuid;
 
-  /* Class based */
-  if ((class = htsmsg_get_str(args, "class")))
-    return api_idnode_class(class, args, resp);
-  
   /* ID based */
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
@@ -146,54 +396,38 @@ api_idnode_load
   if (f->hmf_type == HMF_STR) {
     uuid = htsmsg_field_get_string(f);
     in   = idnode_find(uuid, NULL);
-    if (in)
-      *resp = idnode_serialize(in);
-    else
+    if (in) {
+      idnode_delete(in);
+    } else
       err   = ENOENT;
 
   /* Multiple */
   } else if (f->hmf_type == HMF_LIST) {
     l     = htsmsg_get_list_by_field(f);
-    *resp = htsmsg_create_list();
     HTSMSG_FOREACH(f, l) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
       if (!(in   = idnode_find(uuid, NULL))) continue;
-      htsmsg_add_msg(*resp, NULL, idnode_serialize(in));
+      idnode_delete(in);
     }
-
-  /* Invalid */
-  } else {
-    err = EINVAL;
   }
+
+  // TODO: should we return the UUIDs that are deleted?
+  if (!err)
+    *resp = htsmsg_create_map();
 
   pthread_mutex_unlock(&global_lock);
 
   return err;
 }
 
-static int
-api_idnode_save
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  return 0;
-}
-
-static int
-api_idnode_tree
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  const char *uuid = htsmsg_get_str(args, "uuid");
-  const char *root = htsmsg_get_str(args, "root");
-
-  return api_idnode_tree0(uuid, root, NULL, resp);
-}
-
 void api_idnode_init ( void )
 {
   static api_hook_t ah[] = {
-    { "idnode/load", ACCESS_ANONYMOUS, api_idnode_load, NULL },
-    { "idnode/save", ACCESS_ADMIN,     api_idnode_save, NULL },
-    { "idnode/tree", ACCESS_ANONYMOUS, api_idnode_tree, NULL },
+    { "idnode/load",   ACCESS_ANONYMOUS, api_idnode_load,   NULL },
+    { "idnode/save",   ACCESS_ADMIN,     api_idnode_save,   NULL },
+    { "idnode/tree",   ACCESS_ANONYMOUS, api_idnode_tree,   NULL },
+    { "idnode/class",  ACCESS_ANONYMOUS, api_idnode_class,  NULL },
+    { "idnode/delete", ACCESS_ADMIN,     api_idnode_delete, NULL },
     { NULL },
   };
 

@@ -55,14 +55,33 @@ int  api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp );
 /*
  * Initialise
  */
-void api_init ( void );
+void api_init        ( void );
 void api_idnode_init ( void );
+void api_mpegts_init ( void );
 
 /*
- * Re-usable functions
+ * IDnode
  */
-int api_idnode_tree0
-  ( const char *uuid, const char *root, idnode_set_t *(*rootfn)(void),
-    htsmsg_t **resp );
+typedef struct api_idnode_grid_conf
+{
+  int             start;
+  int             limit;
+  idnode_filter_t filter;
+  idnode_sort_t   sort;
+} api_idnode_grid_conf_t;
+
+typedef void (*api_idnode_grid_callback_t)
+  (idnode_set_t*, api_idnode_grid_conf_t*);
+typedef idnode_set_t *(*api_idnode_tree_callback_t)
+  (void);
+
+int api_idnode_grid
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+
+int api_idnode_class
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+
+int api_idnode_tree
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 #endif /* __TVH_API_H__ */

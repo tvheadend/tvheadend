@@ -31,7 +31,7 @@ webui_api_handler
 {
   int r;
   http_arg_t *ha;
-  htsmsg_t *args, *resp;
+  htsmsg_t *args, *resp = NULL;
   const char *a  = http_arg_get(&hc->hc_req_args, "args");
   const char *op = http_arg_get(&hc->hc_req_args, "method");
   
@@ -74,9 +74,10 @@ webui_api_handler
       default:
         r = HTTP_STATUS_BAD_REQUEST;
     }
+  }
 
   /* Output response */
-  } else {
+  if (resp) {
     htsmsg_json_serialize(resp, &hc->hc_reply, 0);
     http_output_content(hc, "text/x-json; charset=UTF-8");
     htsmsg_destroy(resp);
