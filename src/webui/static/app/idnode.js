@@ -7,10 +7,10 @@ tvheadend.idnode_get_enum = function ( conf )
 {
   /* Build key */
   var key = conf.url;
-  if (conf.event)
-    key += conf.event;
   if (conf.params)
     key += '?' + Ext.util.JSON.encode(conf.params);
+  if (conf.event)
+    key += '+' + conf.event;
 
   /* Use cached */
   if (key in tvheadend.idnode_enum_stores)
@@ -22,6 +22,7 @@ tvheadend.idnode_get_enum = function ( conf )
     url        : conf.url,
     baseParams : conf.params || {},
     fields     : conf.fields || [ 'key', 'val' ],
+    id         : conf.id     || 'key',
     autoLoad   : true,
   });
   tvheadend.idnode_enum_stores[key] = st;
@@ -206,13 +207,11 @@ tvheadend.idnode_editor = function(item, conf)
     handler     : function() {
       var node = panel.getForm().getFieldValues();
       node.uuid  = item.uuid;
-      var params = {
-        op    : 'save',
-        nodes : Ext.util.JSON.encode([node])
-      };
       Ext.Ajax.request({
-        url      : 'api/idnode',
-        params   : params,
+        url      : 'api/idnode/save',
+        params   : {
+          args : Ext.encode({node: node})
+        },
         success : function(d) {
         }
       });
@@ -259,10 +258,12 @@ tvheadend.idnode_create = function(conf)
         params['uuid'] = puuid;
       if (pclass)
         params['class'] = pclass
-      params['conf'] = Ext.util.JSON.encode(panel.getForm().getFieldValues());
+      params['conf'] = panel.getForm().getFieldValues();
       Ext.Ajax.request({
-        url    : conf.create.url || conf.url,
-        params : params,
+        url    : conf.create.url || conf.url + '/create',
+        params : {
+          args : Ext.util.JSON.encode(params)
+        },
         success : function(d) {
           win.close();
         }
@@ -294,7 +295,7 @@ tvheadend.idnode_create = function(conf)
 
   /* Create window */
   win = new Ext.Window({
-    title       : 'Add ' + conf.title,
+    title       : 'Add ' + conf.titleS,
     layout      : 'fit',
     autoWidth   : true,
     autoHeight  : true,
@@ -379,7 +380,7 @@ tvheadend.idnode_create = function(conf)
     win.show();
   } else {
     Ext.Ajax.request({
-      url     : conf.url,
+      url     : conf.url + '/class',
       params  : conf.params,
       success : function(d) {
         d = json_decode(d);
@@ -458,15 +459,12 @@ tvheadend.idnode_grid = function(panel, conf)
     /* Store */
     var store  = new Ext.data.JsonStore({
       root          : 'entries',
-      url           : conf.url,
+      url           : conf.url + '/grid',
       autoLoad      : true,
       id            : 'uuid',
       totalProperty : 'total',
       fields        : fields,
-      remoteSort    : true,
-      baseParams : {
-        op : 'list',
-      }
+      remoteSort    : true
     });
 
     /* Model */
@@ -507,10 +505,9 @@ tvheadend.idnode_grid = function(panel, conf)
           out[x].uuid = mr[x].id;
         }
         Ext.Ajax.request({
-           url     : 'api/idnode',
+           url     : 'api/idnode/save',
            params  : {
-             op    : 'save',
-             nodes : Ext.encode(out)
+             args : Ext.encode({node : out})
            },
            success : function(d)
            {
@@ -555,10 +552,9 @@ tvheadend.idnode_grid = function(panel, conf)
             for ( var i = 0; i < r.length; i++ )
               uuids.push(r[i].id)
             Ext.Ajax.request({
-              url     : conf.url,
+              url     : 'api/idnode/delete',
               params  : {
-                op: 'delete',
-                args : Ext.util.JSON.encode({ uuids: uuids})
+                args : Ext.util.JSON.encode({ uuid: uuids})
               },
               success : function(d)
               {
@@ -580,9 +576,8 @@ tvheadend.idnode_grid = function(panel, conf)
         if (r) {
           if (conf.edittree) {
             var p = tvheadend.idnode_tree({
-              url     : 'api/idnode',
+              url     : 'api/idnode/tree',
               params  : {
-                op   : 'childs',
                 root : r.id
               }
             });
@@ -598,15 +593,14 @@ tvheadend.idnode_grid = function(panel, conf)
             w.show();
           } else {
             Ext.Ajax.request({
-              url     : 'api/idnode',
+              url     : 'api/idnode/load',
               params  : {
-                op: 'get',
                 uuid: r.id
               },
               success : function(d)
               {
                 d = json_decode(d);
-                var p = tvheadend.idnode_editor(d, {});
+                var p = tvheadend.idnode_editor(d[0], {});
                 var w = new Ext.Window({
                   title       : 'Edit ' + conf.titleS,
                   layout      : 'fit',
@@ -678,10 +672,7 @@ tvheadend.idnode_grid = function(panel, conf)
   /* Request data */
   if (!conf.fields) {
     Ext.Ajax.request({
-      url     : conf.url,
-      params  : {
-        op: 'class'
-      },
+      url     : conf.url + '/class',
       success : function(d)
       {
         build(json_decode(d).props);
@@ -696,7 +687,6 @@ tvheadend.idnode_tree = function (conf)
 {
   var current = null;
   var params  = conf.params || {};
-  params.op = 'childs';
   var loader = new Ext.tree.TreeLoader({
     dataUrl         : conf.url,
     baseParams      : params,
