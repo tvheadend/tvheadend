@@ -14,8 +14,8 @@ tvheadend.network_list = new Ext.data.JsonStore({
   url        : 'api/idnode/load',
   baseParams : { class : 'mpegts_network', enum: 1 },
   root       : 'entries',
-  fields     : [ 'uuid', 'title' ],
-  id         : 'uuid',
+  fields     : [ 'key', 'val' ],
+  id         : 'key',
   autoLoad   : true,
 });
 
@@ -61,8 +61,8 @@ tvheadend.muxes = function(panel)
       select   : {
         label        : 'Network',
         store        : tvheadend.network_list,
-        displayField : 'title',
-        valueField   : 'uuid',
+        valueField   : 'key',
+        displayField : 'val',
         clazz        : {
           url          : 'api/mpegts/network/mux_class'
         }
@@ -94,7 +94,10 @@ tvheadend.satconfs = function(panel)
     comet    : 'linuxdvb_satconf',
     titleS   : 'Satconf',
     titleP   : 'Satconfs',
-    add      : {},
+    add      : {
+      url    : 'api/linuxdvb/satconf',
+      create : {}
+    },
     del      : true,
     edittree : true,
   });

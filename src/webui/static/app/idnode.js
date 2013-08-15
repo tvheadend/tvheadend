@@ -347,7 +347,7 @@ tvheadend.idnode_create = function(conf)
     } else {
       select = function (s, n, o) {
         params = conf.select.clazz.params || {};
-        params['uuid'] = puuid = n.data.uuid;
+        params['uuid'] = puuid = n.id;
         Ext.Ajax.request({
           url     : conf.select.clazz.url || conf.select.url || conf.url,
           success : function(d) {
