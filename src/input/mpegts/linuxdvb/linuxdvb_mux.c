@@ -34,6 +34,9 @@
  * Class definition
  * *************************************************************************/
 
+static void
+linuxdvb_mux_delete ( mpegts_mux_t *mm );
+
 extern const idclass_t mpegts_mux_class;
 
 /*
@@ -92,11 +95,18 @@ linuxdvb_mux_class_delsys_set (void *o, const void *v)
   return 1;
 }
 
+static void
+linuxdvb_mux_class_delete ( idnode_t *self )
+{
+  linuxdvb_mux_delete((mpegts_mux_t*)self);
+}
+
 const idclass_t linuxdvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "linuxdvb_mux",
   .ic_caption    = "Linux DVB Multiplex",
+  .ic_delete     = linuxdvb_mux_class_delete,
   .ic_properties = (const property_t[]){
     {}
   }
@@ -450,8 +460,7 @@ linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 }
 
 static void
-linuxdvb_mux_delete
-  ( mpegts_mux_t *mm )
+linuxdvb_mux_delete ( mpegts_mux_t *mm )
 {
   /* Remove config */
   hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s",
