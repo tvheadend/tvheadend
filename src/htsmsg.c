@@ -25,8 +25,11 @@
 #include <string.h>
 #include "htsmsg.h"
 #include "misc/dbl.h"
+#include "htsmsg_json.h"
 
 static void htsmsg_clear(htsmsg_t *msg);
+static htsmsg_t *
+htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
 
 /**
  *
@@ -606,10 +609,16 @@ htsmsg_get_map(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
-  if((f = htsmsg_field_find(msg, name)) == NULL || f->hmf_type != HMF_MAP)
+  if((f = htsmsg_field_find(msg, name)) == NULL)
     return NULL;
 
-  return &f->hmf_msg;
+  return htsmsg_field_get_map(f);
+}
+
+htsmsg_t *
+htsmsg_field_get_map(htsmsg_field_t *f)
+{
+  return htsmsg_field_get_msg(f, 0);
 }
 
 /**
@@ -661,10 +670,38 @@ htsmsg_get_list(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
-  if((f = htsmsg_field_find(msg, name)) == NULL || f->hmf_type != HMF_LIST)
+  if((f = htsmsg_field_find(msg, name)) == NULL)
     return NULL;
 
-  return &f->hmf_msg;
+  return htsmsg_field_get_list(f);
+}
+
+htsmsg_t *
+htsmsg_field_get_list ( htsmsg_field_t *f )
+{
+  return htsmsg_field_get_msg(f, 1);
+}
+
+static htsmsg_t *
+htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
+{
+  htsmsg_t *m;
+
+  /* Deserialize JSON (will keep either list or map) */
+  if (f->hmf_type == HMF_STR) {
+    if ((m = htsmsg_json_deserialize(f->hmf_str))) {
+      free((void*)f->hmf_str);
+      f->hmf_type          = m->hm_islist ? HMF_LIST : HMF_MAP;
+      f->hmf_msg.hm_islist = m->hm_islist;
+      TAILQ_MOVE(&f->hmf_msg.hm_fields, &m->hm_fields, hmf_link);
+      free(m);
+    }
+  }
+
+  if (f->hmf_type == (islist ? HMF_LIST : HMF_MAP))
+    return &f->hmf_msg;
+
+  return NULL;
 }
 
 /**
