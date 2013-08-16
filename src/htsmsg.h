@@ -82,10 +82,9 @@ typedef struct htsmsg_field {
 #define hmf_dbl     u.dbl
 #define hmf_bool    u.bool
 
-#define htsmsg_get_map_by_field(f) \
- ((f)->hmf_type == HMF_MAP ? &(f)->hmf_msg : NULL)
-#define htsmsg_get_list_by_field(f) \
-  ((f)->hmf_type == HMF_LIST ? &(f)->hmf_msg : NULL)
+// backwards compat
+#define htsmsg_get_map_by_field(f) htsmsg_field_get_map(f)
+#define htsmsg_get_list_by_field(f) htsmsg_field_get_list(f)
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
@@ -233,6 +232,8 @@ int htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
  */
 htsmsg_t *htsmsg_get_list(htsmsg_t *msg, const char *name);
 
+htsmsg_t *htsmsg_field_get_list(htsmsg_field_t *f);
+
 /**
  * Get a field of type 'string'. No copying is done.
  *
@@ -248,6 +249,8 @@ const char *htsmsg_get_str(htsmsg_t *msg, const char *name);
  *         Otherwise a htsmsg is returned.
  */
 htsmsg_t *htsmsg_get_map(htsmsg_t *msg, const char *name);
+
+htsmsg_t *htsmsg_field_get_map(htsmsg_field_t *f);
 
 /**
  * Traverse a hierarchy of htsmsg's to find a specific child.
