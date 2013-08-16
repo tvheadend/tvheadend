@@ -210,7 +210,7 @@ tvheadend.idnode_editor = function(item, conf)
       Ext.Ajax.request({
         url      : 'api/idnode/save',
         params   : {
-          args : Ext.encode({node: node})
+          node: Ext.encode(node)
         },
         success : function(d) {
         }
@@ -258,12 +258,10 @@ tvheadend.idnode_create = function(conf)
         params['uuid'] = puuid;
       if (pclass)
         params['class'] = pclass
-      params['conf'] = panel.getForm().getFieldValues();
+      params['conf'] = Ext.encode(panel.getForm().getFieldValues());
       Ext.Ajax.request({
         url    : conf.create.url || conf.url + '/create',
-        params : {
-          args : Ext.util.JSON.encode(params)
-        },
+        params : params,
         success : function(d) {
           win.close();
         }
@@ -507,7 +505,7 @@ tvheadend.idnode_grid = function(panel, conf)
         Ext.Ajax.request({
            url     : 'api/idnode/save',
            params  : {
-             args : Ext.encode({node : out})
+             node: Ext.encode(out)
            },
            success : function(d)
            {
@@ -554,7 +552,7 @@ tvheadend.idnode_grid = function(panel, conf)
             Ext.Ajax.request({
               url     : 'api/idnode/delete',
               params  : {
-                args : Ext.util.JSON.encode({ uuid: uuids})
+                uuid: Ext.encode(uuids)
               },
               success : function(d)
               {

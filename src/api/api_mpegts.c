@@ -117,9 +117,9 @@ api_mpegts_network_create
   mpegts_network_t *mn;
 
   if (!(class = htsmsg_get_str(args, "class")))
-    return -EINVAL;
+    return EINVAL;
   if (!(conf  = htsmsg_get_map(args, "conf")))
-    return -EINVAL;
+    return EINVAL;
 
   pthread_mutex_lock(&global_lock);
   mn = mpegts_network_build(class, conf);
@@ -128,7 +128,7 @@ api_mpegts_network_create
     *resp = htsmsg_create_map();
     mn->mn_config_save(mn);
   } else {
-    err = -EINVAL;
+    err = EINVAL;
   }
   pthread_mutex_unlock(&global_lock);
 

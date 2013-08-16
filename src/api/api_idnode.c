@@ -187,7 +187,7 @@ api_idnode_load
 {
   int err = 0;
   idnode_t *in;
-  htsmsg_t *t, *l = NULL;
+  htsmsg_t *uuids, *l = NULL;
   htsmsg_field_t *f;
   const char *uuid, *class;
 
@@ -195,35 +195,32 @@ api_idnode_load
   if ((class = htsmsg_get_str(args, "class")))
     return api_idnode_load_by_class(class, args, resp);
   
-  /* ID based */
+  /* UUIDs */
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
+  if (!(uuids = htsmsg_field_get_list(f)))
+    if (!(uuid = htsmsg_field_get_str(f)))
+      return EINVAL;
 
   pthread_mutex_lock(&global_lock);
 
-  /* Single */
-  if (f->hmf_type == HMF_STR) {
-    uuid = htsmsg_field_get_string(f);
-    in   = idnode_find(uuid, NULL);
-    if (in) {
-      l     = htsmsg_create_list();
-      htsmsg_add_msg(l, NULL, idnode_serialize(in));
-    } else
-      err   = ENOENT;
-
   /* Multiple */
-  } else if (f->hmf_type == HMF_LIST) {
-    t = htsmsg_get_list_by_field(f);
+  if (uuids) {
     l = htsmsg_create_list();
-    HTSMSG_FOREACH(f, t) {
-      if (!(uuid = htsmsg_field_get_string(f))) continue;
+    HTSMSG_FOREACH(f, uuids) {
+      if (!(uuid = htsmsg_field_get_str(f))) continue;
       if (!(in   = idnode_find(uuid, NULL))) continue;
       htsmsg_add_msg(l, NULL, idnode_serialize(in));
     }
 
-  /* Invalid */
+  /* Single */
   } else {
-    err = EINVAL;
+    if (!(in = idnode_find(uuid, NULL)))
+      err = ENOENT;
+    else {
+      l     = htsmsg_create_list();
+      htsmsg_add_msg(l, NULL, idnode_serialize(in));
+    }
   }
 
   if (l) {
@@ -242,30 +239,31 @@ api_idnode_save
 {
   int err = EINVAL;
   idnode_t *in;
-  htsmsg_t *conf, *l;
+  htsmsg_t *msg, *conf;
   htsmsg_field_t *f;
   const char *uuid;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
+  if (!(msg = htsmsg_field_get_list(f)))
+    if (!(msg = htsmsg_field_get_map(f)))
+      return EINVAL;
 
   pthread_mutex_lock(&global_lock);
 
   /* Single */
-  if (f->hmf_type == HMF_MAP) {
-    conf = htsmsg_get_map_by_field(f);
-    if (!(uuid = htsmsg_get_str(conf, "uuid")))
+  if (!msg->hm_islist) {
+    if (!(uuid = htsmsg_get_str(msg, "uuid")))
       goto exit;
     if (!(in = idnode_find(uuid, NULL)))
       goto exit;
-    idnode_update(in, conf);
+    idnode_update(in, msg);
     err = 0;
 
   /* Multiple */
-  } else if (f->hmf_type == HMF_LIST) {
-    l     = htsmsg_get_list_by_field(f);
-    HTSMSG_FOREACH(f, l) {
-      if (!(conf = htsmsg_get_map_by_field(f)))
+  } else {
+    HTSMSG_FOREACH(f, msg) {
+      if (!(conf = htsmsg_field_get_map(f)))
         continue;
       if (!(uuid = htsmsg_get_str(conf, "uuid")))
         continue;
@@ -274,10 +272,6 @@ api_idnode_save
       idnode_update(in, conf);
     }
     err = 0;
-
-  /* Invalid */
-  } else {
-    err = EINVAL;
   }
 
   // TODO: return updated UUIDs?
@@ -382,38 +376,35 @@ api_idnode_delete
 {
   int err = 0;
   idnode_t *in;
-  htsmsg_t *l;
+  htsmsg_t *uuids;
   htsmsg_field_t *f;
   const char *uuid;
 
   /* ID based */
   if (!(f = htsmsg_field_find(args, "uuid")))
     return EINVAL;
+  if (!(uuids = htsmsg_field_get_list(f)))
+    if (!(uuid = htsmsg_field_get_str(f)))
+      return EINVAL;
 
   pthread_mutex_lock(&global_lock);
 
-  /* Single */
-  if (f->hmf_type == HMF_STR) {
-    uuid = htsmsg_field_get_string(f);
-    in   = idnode_find(uuid, NULL);
-    if (in) {
-      idnode_delete(in);
-    } else
-      err   = ENOENT;
-
   /* Multiple */
-  } else if (f->hmf_type == HMF_LIST) {
-    l     = htsmsg_get_list_by_field(f);
-    HTSMSG_FOREACH(f, l) {
+  if (uuids) {
+    HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
       if (!(in   = idnode_find(uuid, NULL))) continue;
       idnode_delete(in);
     }
+  
+  /* Single */
+  } else {
+    uuid = htsmsg_field_get_string(f);
+    if (!(in   = idnode_find(uuid, NULL)))
+      err = ENOENT;
+    else
+      idnode_delete(in);
   }
-
-  // TODO: should we return the UUIDs that are deleted?
-  if (!err)
-    *resp = htsmsg_create_map();
 
   pthread_mutex_unlock(&global_lock);
 
