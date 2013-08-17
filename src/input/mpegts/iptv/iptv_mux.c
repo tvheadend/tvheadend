@@ -32,29 +32,64 @@ const idclass_t iptv_mux_class =
   .ic_class      = "iptv_mux",
   .ic_caption    = "IPTV Multiplex",
   .ic_properties = (const property_t[]){
-#if 0
-    { PROPDEF1("iptv_url",       "URL",
-               PT_STR, iptv_mux_t, mm_iptv_url) },
-    { PROPDEF1("iptv_interface", "Interface",
-               PT_STR, iptv_mux_t, mm_iptv_interface) },
-#endif
+    {
+      .type     = PT_STR,
+      .id       = "iptv_url",
+      .name     = "URL",
+      .off      = offsetof(iptv_mux_t, mm_iptv_url),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_interface",
+      .name     = "Interface",
+      .off      = offsetof(iptv_mux_t, mm_iptv_interface),
+    },
     {}
   }
 };
+
+static void
+iptv_mux_config_save ( mpegts_mux_t *mm )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  mpegts_mux_save(mm, c);
+  hts_settings_save(c, "input/iptv/muxes/%s/config",
+                    idnode_uuid_as_str(&mm->mm_id));
+  htsmsg_destroy(c);
+}
+
+static void
+iptv_mux_delete ( mpegts_mux_t *mm )
+{
+  hts_settings_remove("input/iptv/muxes/%s/config",
+                      idnode_uuid_as_str(&mm->mm_id));
+
+  mpegts_mux_delete(mm);
+}
+
+static void
+iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
+{
+  iptv_mux_t *im = (iptv_mux_t*)mm;
+  strncpy(buf, im->mm_iptv_url, len);
+}
 
 /*
  * Create
  */
 iptv_mux_t *
-iptv_mux_create ( const char *uuid, const char *url )
+iptv_mux_create ( const char *uuid, htsmsg_t *conf )
 {
   /* Create Mux */
   iptv_mux_t *im =
-    mpegts_mux_create(iptv_mux, NULL,
+    mpegts_mux_create(iptv_mux, uuid,
                       (mpegts_network_t*)&iptv_network,
-                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL);
-  if (url)
-    im->mm_iptv_url = strdup(url);
+                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, conf);
+
+  /* Callbacks */
+  im->mm_display_name     = iptv_mux_display_name;
+  im->mm_config_save      = iptv_mux_config_save;
+  im->mm_delete           = iptv_mux_delete;
 
   /* Create Instance */
   mpegts_mux_instance_create0(&im->mm_iptv_instance,
@@ -69,50 +104,17 @@ iptv_mux_create ( const char *uuid, const char *url )
 /*
  * Load
  */
-static void
-iptv_mux_load_one ( iptv_mux_t *im, htsmsg_t *c )
-{
-#if 0
-  const char *str;
-
-  /* Load core */
-  mpegts_mux_load_one((mpegts_mux_t*)im, c);
-
-  /* URL */
-  if ((str = htsmsg_get_str(c, "iptv_url")))
-    tvh_str_update(&im->mm_iptv_url, str);
-#endif
-}
-
 void
 iptv_mux_load_all ( void )
 {
-  htsmsg_t *s, *m;
+  htsmsg_t *s, *e;
   htsmsg_field_t *f;
-  iptv_mux_t *im;
 
-  if ((s = hts_settings_load_r(1, "input/mpegts/iptv/muxes"))) {
+  if ((s = hts_settings_load_r(1, "input/iptv/muxes"))) {
     HTSMSG_FOREACH(f, s) {
-      if (!(m = htsmsg_get_map_by_field(f)) || !(m = htsmsg_get_map(m, "config"))) {
-        tvhlog(LOG_ERR, "iptv", "failed to load mux config %s", f->hmf_name);
-        continue;
-      }
-      printf("UUID: %s\n", f->hmf_name);
-      printf("CONFIG:\n");
-      htsmsg_print(m);
-
-      /* Create */
-      im = iptv_mux_create(f->hmf_name, NULL);
-      if (!im) {
-        tvhlog(LOG_ERR, "iptv", "failed to load mux config %s", f->hmf_name);
-        continue;
-      }
-
-      /* Configure */
-      iptv_mux_load_one(im, m);
-
-      /* Load services */
-      iptv_service_load_all(im, f->hmf_name);
+      if (!(e = htsmsg_get_map_by_field(f)))  continue;
+      if (!(e = htsmsg_get_map(e, "config"))) continue;
+      (void)iptv_mux_create(f->hmf_name, e);
     }
   }
 }

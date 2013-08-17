@@ -20,11 +20,28 @@
 #include "iptv_private.h"
 #include "tcp.h"
 
-#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/epoll.h>
+#include <fcntl.h>
 #include <assert.h>
+#include <string.h>
 #include <regex.h>
 #include <unistd.h>
+#include <regex.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <net/if.h>
+
+#if defined(PLATFORM_FREEBSD)
+#  ifndef IPV6_ADD_MEMBERSHIP
+#    define IPV6_ADD_MEMBERSHIP	IPV6_JOIN_GROUP
+#    define IPV6_DROP_MEMBERSHIP	IPV6_LEAVE_GROUP
+#  endif
+#endif
 
 /*
  * Globals
@@ -41,46 +58,47 @@ pthread_mutex_t iptv_lock;
 
 typedef struct url
 {
-  char       buf[2048];
-  const char *scheme;
-  const char *host;
-  uint16_t   port;
-  const char *path;  
+  char      scheme[16];
+  char      user[128];
+  char      pass[128];
+  char      host[256];
+  uint16_t  port;
+  char      path[256];
 } url_t;
 
-static int
-url_parse ( url_t *up, const char *urlstr )
+#define UC "[a-z0-9_\\-\\.!£$%^&]"
+#define PC UC
+#define HC "[a-z0-9\\-\\.]"
+#define URL_RE "^(\\w+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
+
+regex_t urlre;
+
+static int 
+urlparse ( const char *str, url_t *url )
 {
-  char *t1, *t2;
-  strcpy(up->buf, urlstr);
-
-  /* Scheme */
-  up->scheme = t1 = up->buf;
-  if (!(t2 = strstr(t1, "://"))) {
+  regmatch_t m[12];
+  char buf[16];
+  
+  memset(m, 0, sizeof(m));
+  
+  if (regexec(&urlre, str, 12, m, 0))
     return 1;
-  }
-  *t2 = 0;
-
-  /* Host */
-  up->host = t1 = t2 + 3;
-  up->path = NULL;
-  if ((t2 = strstr(t1, "/"))) {
-    *t2 = 0;
-    up->path = t2 + 1;
-  }
-
-  /* Port */
-  up->port = 0;
-  if (!(t2 = strstr(up->host, ":"))) {
-    if (!strcmp(up->scheme, "https"))
-      up->port = 443;
-    else if (!strcmp(up->scheme, "http"))
-      up->port = 80;
-  } else {
-    *t2 = 0;
-    up->port = atoi(t2+1);
-  }
-
+    
+#define copy(x, i)\
+  {\
+    int len = m[i].rm_eo - m[i].rm_so;\
+    if (len >= sizeof(x) - 1)\
+      len = sizeof(x) - 1;\
+    memcpy(x, str+m[i].rm_so, len);\
+    x[len] = 0;\
+  }(void)0
+  copy(url->scheme, 1);
+  copy(url->user,   3);
+  copy(url->pass,   5);
+  copy(url->host,   6);
+  copy(url->path,   9);
+  copy(buf,         8);
+  url->port = atoi(buf);
   return 0;
 }
 
@@ -93,7 +111,7 @@ static int http_connect (const char *urlstr)
   int fd, c, i;
   char buf[1024];
   url_t url;
-  if (url_parse(&url, urlstr))
+  if (urlparse(urlstr, &url))
     return -1;
 
   /* Make connection */
@@ -152,35 +170,149 @@ const idclass_t iptv_input_class = {
  * HTTP
  */
 static int
-iptv_input_start_http ( iptv_mux_t *im )
+iptv_input_start_http
+  ( iptv_mux_t *im, url_t *url, const char *name )
 {
   /* Setup connection */
-  im->mm_iptv_fd = http_connect(im->mm_iptv_url);
+  return http_connect("TODO");
+}
 
-  return im->mm_iptv_fd <= 0 ? SM_CODE_TUNING_FAILED : 0;
+/*
+ * UDP
+ *
+ * TODO: add IPv6 support
+ */
+static int
+iptv_input_start_udp
+  ( iptv_mux_t *im, url_t *url, const char *name )
+{
+  int fd, solip, rxsize, reuse;
+  struct ifreq ifr;
+  struct ip_mreqn m;
+  struct addrinfo *addr;
+  struct sockaddr_in sin;
+
+  /* Open socket */
+  if ((fd = tvh_socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+    tvherror("iptv", "%s - failed to create socket [%s]",
+             name, strerror(errno));
+    return -1;
+  }
+
+  /* Bind to interface */
+  if (im->mm_iptv_interface && *im->mm_iptv_interface) {
+    printf("have interface\n");
+    memset(&ifr, 0, sizeof(ifr));
+    snprintf(ifr.ifr_name, IFNAMSIZ, "%s", im->mm_iptv_interface);
+    if (ioctl(fd, SIOCGIFINDEX, &ifr)) {
+      tvherror("iptv", "%s - could not find interface %s",
+               name, im->mm_iptv_interface);
+      goto error;
+    }
+  }
+
+  /* Lookup hostname */
+  if (getaddrinfo(url->host, NULL, NULL, &addr)) {
+    tvherror("iptv", "%s - failed to lookup host %s", name, url->host);
+    return -1;
+  }
+
+  /* Bind to address */
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family      = AF_INET;
+  sin.sin_port        = htons(url->port); // TODO: default?
+  sin.sin_addr.s_addr = ((struct sockaddr_in*)addr->ai_addr)->sin_addr.s_addr;
+  freeaddrinfo(addr);
+  reuse = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+  if (bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+    tvherror("iptv", "%s - cannot bind %s:%d [%s]",
+             name, inet_ntoa(sin.sin_addr), 0, strerror(errno));
+    goto error;
+  }
+
+  
+  /* Join IPv4 group */
+  memset(&m, 0, sizeof(m));
+  m.imr_multiaddr.s_addr = sin.sin_addr.s_addr;
+  m.imr_address.s_addr = 0;
+#if defined(PLATFORM_LINUX)
+  m.imr_ifindex = ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  m.imr_ifindex = ifr.ifr_index;
+#endif
+
+#ifdef SOL_IP
+  solip = SOL_IP;
+#else
+  {
+    struct protoent *pent;
+    pent = getprotobyname("ip");
+    solip = (pent != NULL) ? pent->p_proto : 0;
+  }
+#endif
+
+  if (setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m,
+                 sizeof(struct ip_mreqn)) == -1) {
+    tvherror("iptv", "%s - cannot join %s [%s]",
+             name, inet_ntoa(m.imr_multiaddr), strerror(errno));
+    goto error;
+  }
+
+  /* Increase RX buffer size */
+  rxsize = 65536;//262142;
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rxsize, sizeof(rxsize)) == -1)
+    tvhwarn("iptv", "%s - cannot increase UDP rx buffer size [%s]",
+            name, strerror(errno));
+
+  /* Done */
+  return fd;
+
+error:
+  close(fd);
+  return -1;
 }
 
 static int
 iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  int ret = SM_CODE_TUNING_FAILED;
+  int fd, ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   assert(mmi == &im->mm_iptv_instance);
+  char buf[256];
+  url_t url;
+
+  im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
+  if (urlparse(im->mm_iptv_url ?: "", &url)) {
+    tvherror("iptv", "%s - invalid URL [%s]", buf, im->mm_iptv_url);
+    return ret;
+  }
 
   pthread_mutex_lock(&iptv_lock);
   if (!im->mm_active) {
     
     /* HTTP */
     // TODO: this needs to happen in a thread
-    if (!strncmp(im->mm_iptv_url, "http", 4))
-      ret = iptv_input_start_http(im);
+    if (!strcmp("http", url.scheme))
+      fd = iptv_input_start_http(im, &url, buf);
+
+    /* UDP/RTP (both mcast) */
+    else if (!strcmp(url.scheme, "udp") ||
+             !strcmp(url.scheme, "rtp"))
+      fd = iptv_input_start_udp(im, &url, buf);
+  
+    /* Unknown */
+    else {
+      tvherror("iptv", "%s - invalid scheme [%s]", buf, url.scheme);
+      fd = -1;
+    }
 
     /* OK */
-    if (!ret) {
+    if (fd != -1) {
       struct epoll_event ev;
       memset(&ev, 0, sizeof(ev));
       ev.events  = EPOLLIN;
-      ev.data.fd = im->mm_iptv_fd;
+      ev.data.fd = im->mm_iptv_fd = fd;
       epoll_ctl(iptv_poll_fd, EPOLL_CTL_ADD, im->mm_iptv_fd, &ev);
       im->mm_active = mmi;
 
@@ -190,6 +322,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
                        MT_QUICKREQ| MT_CRC, DVB_PAT_PID);
 
       // TODO: need to fire mux start event
+      ret = 0;
     }
   }
   pthread_mutex_unlock(&iptv_lock);
@@ -233,11 +366,10 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
   snprintf(buf, len, "IPTV");
 }
 
-
 static void *
 iptv_input_thread ( void *aux )
 {
-  int nfds, fd, r, pos = 0;
+  int hlen, nfds, fd, r, pos = 0;
   uint8_t tsb[65536];
   struct epoll_event ev;
   iptv_mux_t *im;
@@ -278,13 +410,33 @@ iptv_input_thread ( void *aux )
     }
     im = (iptv_mux_t*)mm;
 
-    /* Raw TS */
-    if (!strncmp(im->mm_iptv_url, "http", 4)) {
-      pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
-                                      &im->mm_iptv_instance,
-                                      tsb, r, NULL, NULL, "iptv");
+    /* RTP */
+    hlen = 0;
+    if (!strncmp(im->mm_iptv_url, "rtp", 3)) {
+      if (r < 12)
+        goto done;
+      if ((tsb[0] & 0xC0) != 0x80)
+        goto done;
+      if ((tsb[1] & 0x7F) != 33)
+        goto done;
+      hlen = ((tsb[0] & 0xf) * 4) + 12;
+      if (tsb[0] & 0x10) {
+        if (r < hlen+4)
+          goto done;
+        hlen += (tsb[hlen+2] << 8) | (tsb[hlen+3]*4);
+        hlen += 4;
+      }
+      if (r < hlen || ((r - hlen) % 188) != 0)
+        goto done;
     }
 
+    /* TS */
+    pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
+                                    &im->mm_iptv_instance,
+                                    tsb+hlen, r-hlen, NULL, NULL, "iptv");
+if(pos)
+printf("pos = %d\n", pos);
+done:
     pthread_mutex_unlock(&iptv_lock);
   }
   return NULL;
@@ -310,6 +462,13 @@ iptv_network_create_mux
   return NULL;
 }
 
+static mpegts_mux_t *
+iptv_network_create_mux2
+  ( mpegts_network_t *mm, htsmsg_t *conf )
+{
+  return (mpegts_mux_t*)iptv_mux_create(NULL, conf);
+}
+
 static mpegts_service_t *
 iptv_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
@@ -318,12 +477,25 @@ iptv_network_create_service
     iptv_service_create(NULL, (iptv_mux_t*)mm, sid, pmt_pid);
 }
 
+static const idclass_t *
+iptv_network_mux_class ( mpegts_network_t *mm )
+{
+  extern const idclass_t iptv_mux_class;
+  return &iptv_mux_class;
+}
+
 /*
  * Intialise and load config
  */
 void iptv_init ( void )
 {
   pthread_t tid;
+  
+  /* Initialise URL RE */
+  if (regcomp(&urlre, URL_RE, REG_ICASE | REG_EXTENDED)) {
+    tvherror("iptv", "failed to compile regexp");
+    exit(1);
+  }
 
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)&iptv_input,
@@ -340,6 +512,8 @@ void iptv_init ( void )
                          &iptv_network_class, NULL, "IPTV Network", NULL);
   iptv_network.mn_create_mux     = iptv_network_create_mux;
   iptv_network.mn_create_service = iptv_network_create_service;
+  iptv_network.mn_mux_class      = iptv_network_mux_class;
+  iptv_network.mn_mux_create2    = iptv_network_create_mux2;
 
   /* Link */
   mpegts_input_set_network((mpegts_input_t*)&iptv_input,

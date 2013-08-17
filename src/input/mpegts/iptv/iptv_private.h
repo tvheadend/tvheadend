@@ -46,9 +46,10 @@ struct iptv_mux
   int                   mm_iptv_fd;
   mpegts_mux_instance_t mm_iptv_instance;
   char                 *mm_iptv_url;
+  char                 *mm_iptv_interface;
 };
 
-iptv_mux_t* iptv_mux_create ( const char *uuid, const char *url );
+iptv_mux_t* iptv_mux_create ( const char *uuid, htsmsg_t *conf );
 
 struct iptv_service
 {
