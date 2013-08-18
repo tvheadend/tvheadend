@@ -112,6 +112,7 @@ SRCS =  src/version.c \
 SRCS += \
 	src/api.c \
 	src/api/api_idnode.c \
+	src/api/api_service.c \
 	src/api/api_mpegts.c \
 
 SRCS += \

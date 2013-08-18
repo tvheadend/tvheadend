@@ -90,8 +90,7 @@ tvheadend.mapServices = function()
     tooltip : 'Begin mapping',
     handler : function () {
       panel.getForm().submit({
-        url         : 'api/service_mapping',
-        params      : { op: 'start' },
+        url         : 'api/service/mapper/start',
         waitMessage : 'Mapping services...'
       });
     } 
