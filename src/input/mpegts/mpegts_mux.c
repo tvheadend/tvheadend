@@ -475,7 +475,7 @@ mpegts_mux_initial_scan_timeout ( void *aux )
   char buf[256];
   mpegts_mux_t *mm = aux;
   mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhdebug("mpegts", "%s - initial scan timed", buf);
+  tvhdebug("mpegts", "%s - initial scan timed out", buf);
   mpegts_mux_initial_scan_done(mm);
 }
 
