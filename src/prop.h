@@ -43,6 +43,7 @@ typedef enum {
 #define PO_RDONLY 0x01  // Property is read-only 
 #define PO_NOSAVE 0x02  // Property is transient (not saved)
 #define PO_WRONCE 0x04  // Property is write-once (i.e. on creation)
+#define PO_MULTI  0x08  // Multi-select
 
 /*
  * Property definition

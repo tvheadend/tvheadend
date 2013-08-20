@@ -141,15 +141,17 @@ service_mapper_remove ( service_t *s )
 /*
  * Link service and channel
  */
-void
+int
 service_mapper_link ( service_t *s, channel_t *c )
 {
   channel_service_mapping_t *csm;
 
   /* Already linked */
   LIST_FOREACH(csm, &s->s_channels, csm_chn_link)
-    if (csm->csm_chn == c)
-      return;
+    if (csm->csm_chn == c) {
+      csm->csm_mark = 0;
+      return 0;
+    }
 
   /* Link */
   csm = calloc(1, sizeof(channel_service_mapping_t));
@@ -157,6 +159,7 @@ service_mapper_link ( service_t *s, channel_t *c )
   csm->csm_svc = s;
   LIST_INSERT_HEAD(&s->s_channels, csm, csm_svc_link);
   LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
+  return 1;
 }
 
 void
@@ -182,7 +185,7 @@ void
 service_mapper_process ( service_t *s )
 {
   int num;
-  channel_t *chn;
+  channel_t *chn = NULL;
 
   /* Ignore */
   if (s->s_status == SERVICE_ZOMBIE)
@@ -194,10 +197,12 @@ service_mapper_process ( service_t *s )
 
   /* Find existing channel */
   num = s->s_channel_number(s);
+#if 0
   if (service_mapper_conf.merge_same_name)
-    chn = channel_find_by_name(s->s_channel_name(s), 1, num);
-  else
-    chn = channel_create(s->s_channel_name(s));
+    chn = channel_find_by_name(s->s_channel_name(s));
+#endif
+  if (!chn)
+    chn = channel_create(NULL, NULL, s->s_channel_name(s));
     
   /* Map */
   if (chn) {

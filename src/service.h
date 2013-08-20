@@ -27,6 +27,8 @@ extern const idclass_t service_class;
 
 extern struct service_queue service_all;
 
+struct channel;
+
 /**
  * Stream, one media component for a service.
  */
@@ -232,6 +234,7 @@ typedef struct service {
    */
   enum {
     ST_NONE,
+    ST_OTHER,
     ST_SDTV,
     ST_HDTV,
     ST_RADIO
@@ -433,7 +436,8 @@ void service_unref(service_t *t);
 
 void service_ref(service_t *t);
 
-service_t *service_find_by_identifier(const char *identifier);
+service_t *service_find(const char *identifier);
+#define service_find_by_identifier service_find
 
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
@@ -455,6 +459,7 @@ const char *service_servicetype_txt(service_t *t);
 int service_is_sdtv(service_t *t);
 int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
+int service_is_other(service_t *t);
 #define service_is_tv(s) (service_is_hdtv(s) || service_is_sdtv(s))
 
 int service_is_encrypted ( service_t *t );

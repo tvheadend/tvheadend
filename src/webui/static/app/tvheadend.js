@@ -290,11 +290,11 @@ function accessUpdate(o) {
       title : 'Channel / EPG',
       iconCls : 'television',
       items : [
-        new tvheadend.chconf,
         new tvheadend.cteditor,
         new tvheadend.epggrab
       ]
     });
+    tvheadend.channel_tab(tvheadend.conf_chepg);
     tabs1.push(tvheadend.conf_chepg);
 
     /* DVR / Timeshift */

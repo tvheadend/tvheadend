@@ -37,7 +37,6 @@
 #include "channels.h"
 
 #include "dvr/dvr.h"
-#include "service_mapper.h"
 #include "epggrab.h"
 #include "epg.h"
 #include "muxer.h"
@@ -315,221 +314,6 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-
-/**
- *
- */
-static void
-extjs_channels_delete(htsmsg_t *in)
-{
-  htsmsg_field_t *f;
-  channel_t *ch;
-
-  TAILQ_FOREACH(f, &in->hm_fields, hmf_link)
-    if(f->hmf_type == HMF_S64 &&
-       (ch = channel_find_by_identifier(f->hmf_s64)) != NULL)
-      channel_delete(ch);
-}
-
-/**
- *
- */
-static void
-extjs_channels_update(htsmsg_t *in)
-{
-  htsmsg_field_t *f;
-  channel_t *ch;
-  htsmsg_t *c;
-  uint32_t id;
-  const char *s;
-
-  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL ||
-       htsmsg_get_u32(c, "id", &id))
-      continue;
-
-    if((ch = channel_find_by_identifier(id)) == NULL)
-      continue;
-
-    if((s = htsmsg_get_str(c, "name")) != NULL)
-      channel_rename(ch, s);
-
-    if((s = htsmsg_get_str(c, "ch_icon")) != NULL)
-      channel_set_icon(ch, s);
-
-    if((s = htsmsg_get_str(c, "tags")) != NULL)
-      channel_set_tags_from_list(ch, s);
-
-    if((s = htsmsg_get_str(c, "epg_pre_start")) != NULL)
-      channel_set_epg_postpre_time(ch, 1, atoi(s));
-
-    if((s = htsmsg_get_str(c, "epg_post_end")) != NULL)
-      channel_set_epg_postpre_time(ch, 0, atoi(s));
-
-    if((s = htsmsg_get_str(c, "number")) != NULL)
-      channel_set_number(ch, atoi(s));
-
-    if((s = htsmsg_get_str(c, "epggrabsrc")) != NULL) {
-      char *tmp = strdup(s);
-      char *sptr = NULL, *sptr2 = NULL;
-      char *modecid  = strtok_r(tmp, ",", &sptr);
-      char *modid, *ecid;
-      epggrab_module_t *mod;
-      epggrab_channel_t *ec;
-      epggrab_channel_link_t *ecl;
-
-      /* Clear existing */
-      LIST_FOREACH(mod, &epggrab_modules, link) {
-        if (mod->type != EPGGRAB_OTA && mod->channels) {
-          RB_FOREACH(ec, mod->channels, link) {
-            LIST_FOREACH(ecl, &ec->channels, link) {
-              if (ecl->channel == ch) {
-                LIST_REMOVE(ecl, link);
-                free(ecl);
-                mod->ch_save(mod, ec);
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      /* Add new */
-      while (modecid) {
-        modid    = strtok_r(modecid, "|", &sptr2);
-        ecid     = strtok_r(NULL, "|", &sptr2);
-        modecid  = strtok_r(NULL, ",", &sptr);
-
-        if (!(mod = epggrab_module_find_by_id(modid)))
-          continue;
-        if (!mod->channels)
-          continue;
-        if (!(ec = epggrab_channel_find(mod->channels, ecid, 0, NULL, mod)))
-          continue;
-
-        epggrab_channel_link(ec, ch);
-      }
-
-      /* Cleanup */
-      free(tmp);
-    }
-  }
-}
-
-/**
- *
- */
-static htsmsg_t *
-build_record_channel ( channel_t *ch )
-{
-  char buf[1024];
-  channel_tag_mapping_t *ctm;
-  htsmsg_t *c;
-  char *epggrabsrc;
-  epggrab_module_t *mod;
-  epggrab_channel_t *ec;
-  epggrab_channel_link_t *ecl;
-
-  c = htsmsg_create_map();
-  htsmsg_add_str(c, "name", ch->ch_name);
-  htsmsg_add_u32(c, "chid", ch->ch_id);
-
-  if(ch->ch_icon != NULL) {
-    htsmsg_add_imageurl(c, "chicon", "imagecache/%d", ch->ch_icon);
-    htsmsg_add_str(c, "ch_icon", ch->ch_icon);
-  }
-
-  buf[0] = 0;
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-	  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-		  "%s%d", strlen(buf) == 0 ? "" : ",",
-		  ctm->ctm_tag->ct_identifier);
-  }
-  htsmsg_add_str(c, "tags", buf);
-
-  htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
-  htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
-  htsmsg_add_s32(c, "number",        ch->ch_number);
-
-  epggrabsrc = NULL;
-  LIST_FOREACH(mod, &epggrab_modules, link) {
-    if (mod->type != EPGGRAB_OTA && mod->channels) {
-      RB_FOREACH(ec, mod->channels, link) {
-        LIST_FOREACH(ecl, &ec->channels, link) {
-          if (ecl->channel == ch) {
-            char id[100];
-            sprintf(id, "%s|%s", mod->id, ec->id);
-            if (!epggrabsrc) {
-              epggrabsrc = strdup(id);
-            } else {
-              epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
-              strcat(epggrabsrc, ",");
-              strcat(epggrabsrc, id);
-            }
-          }
-        }
-      }
-    }
-  }
-  if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
-  free(epggrabsrc);
-  return c;
-}
-
-/**
- *
- */
-static int
-extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *array;
-  channel_t *ch;
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-
-  if(op == NULL)
-    return 400;
-
-  htsmsg_t *in =
-    entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
-
-  htsmsg_t *out = htsmsg_create_map();
-
-  scopedgloballock();
-
-  if(!strcmp(op, "list")) {
-    array = htsmsg_create_list();
-
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      htsmsg_add_msg(array, NULL, build_record_channel(ch));
-    }
-    
-    htsmsg_add_msg(out, "entries", array);
-
-  } else if(!strcmp(op, "create")) {
-    htsmsg_destroy(out);
-    out = build_record_channel(channel_create(NULL));
-
-  } else if(!strcmp(op, "delete") && in != NULL) {
-    extjs_channels_delete(in);
-
-  } else if(!strcmp(op, "update") && in != NULL) {
-    extjs_channels_update(in);
-     
-  } else {
-    htsmsg_destroy(in);
-    htsmsg_destroy(out);
-    return 400;
-  }
-
-  htsmsg_json_serialize(out, hq, 0);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  htsmsg_destroy(in);
-  htsmsg_destroy(out);
   return 0;
 }
 
@@ -924,7 +708,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     m = htsmsg_create_map();
 
     htsmsg_add_str(m, "channel", ch->ch_name);
-    htsmsg_add_u32(m, "channelid", ch->ch_id);
+    htsmsg_add_u32(m, "channelid", channel_get_id(ch));
     if(ch->ch_icon != NULL)
       htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
 
@@ -1186,7 +970,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     const char *channel  = http_arg_get(&hc->hc_req_args, "channelid");
     const char *pri      = http_arg_get(&hc->hc_req_args, "pri");
 
-    channel_t *ch = channel ? channel_find_by_identifier(atoi(channel)) : NULL;
+    channel_t *ch = channel ? channel_find_by_id(atoi(channel)) : NULL;
 
     if(ch == NULL || title == NULL || 
        datestr  == NULL || strlen(datestr)  != 10 ||
@@ -1657,49 +1441,6 @@ extjs_servicedetails(http_connection_t *hc,
  *
  */
 static int
-extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *target = http_arg_get(&hc->hc_req_args, "targetID");
-  htsmsg_t *out;
-  channel_t *src, *dst;
-
-  if(remain == NULL || target == NULL)
-    return 400;
-
-  pthread_mutex_lock(&global_lock);
-
-  src = channel_find_by_identifier(atoi(remain));
-  dst = channel_find_by_identifier(atoi(target));
-
-  if(src == NULL || dst == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    return 404;
-  }
-
-  out = htsmsg_create_map();
-
-  if(src != dst) {
-    channel_merge(dst, src);
-    htsmsg_add_u32(out, "success", 1);
-  } else {
-
-    htsmsg_add_u32(out, "success", 0);
-    htsmsg_add_str(out, "msg", "Target same as source");
-  }
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-/**
- *
- */
-static int
 extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1972,67 +1713,6 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
 }
 #endif
 
-static int
-extjs_service_mapping
-  (http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out;
-  service_mapper_conf_t conf = { 0 };
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
-
-  if (!op)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  /* Status */
-  if (!strcmp(op, "status")) {
-    int num;
-    pthread_mutex_lock(&global_lock);
-    num = service_mapper_qlen();
-    pthread_mutex_unlock(&global_lock);
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "remaining", num);
-
-  /* Start */
-  } else if (!strcmp(op, "start")) {
-    
-    /* Get config */
-    if (http_arg_get(&hc->hc_req_args, "check_availability") != NULL)
-      conf.check_availability = 1;
-    if (http_arg_get(&hc->hc_req_args, "encrypted") != NULL)
-      conf.encrypted          = 1;
-    if (http_arg_get(&hc->hc_req_args, "merge_same_name") != NULL)
-      conf.merge_same_name    = 1;
-    if (http_arg_get(&hc->hc_req_args, "provider_tags") != NULL)
-      conf.provider_tags      = 1;
-
-    /* Start */
-    pthread_mutex_lock(&global_lock);
-    service_mapper_start(&conf);
-    pthread_mutex_unlock(&global_lock);
-    out = htsmsg_create_map();
-  
-  /* Stop */
-  } else if (!strcmp(op, "stop")) {
-    pthread_mutex_lock(&global_lock);
-    service_mapper_stop();
-    pthread_mutex_unlock(&global_lock);
-    out = htsmsg_create_map();
-  
-  /* Invalid */
-  } else {
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-
-  return 0;
-}
-
-
 /**
  * WEB user interface
  */
@@ -2043,7 +1723,6 @@ extjs_start(void)
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
-  http_path_add("/channels",         NULL, extjs_channels,         ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags",      NULL, extjs_channeltags,      ACCESS_WEB_INTERFACE);
   http_path_add("/confignames",      NULL, extjs_confignames,      ACCESS_WEB_INTERFACE);
@@ -2059,14 +1738,11 @@ extjs_start(void)
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
-  http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
   http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
 #if ENABLE_TIMESHIFT
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
-
-  http_path_add("/api/service_mapping", NULL, extjs_service_mapping, ACCESS_ADMIN);
 
 #if ENABLE_V4L
   extjs_start_v4l();

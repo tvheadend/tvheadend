@@ -49,7 +49,7 @@ tsfile_network_create_service
   if (s) {
     char buf[128];
     sprintf(buf, "channel-%d", t);
-    channel_t *c = channel_find_by_name(buf, 1, t);
+    channel_t *c = channel_create(NULL, NULL, buf);
     service_mapper_link((service_t*)s, c);
     t++;
   }

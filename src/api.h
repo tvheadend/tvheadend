@@ -59,6 +59,7 @@ void api_init         ( void );
 void api_idnode_init  ( void );
 void api_mpegts_init  ( void );
 void api_service_init ( void );
+void api_channel_init ( void );
 
 /*
  * IDnode
@@ -83,6 +84,9 @@ int api_idnode_class
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 int api_idnode_tree
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+
+int api_idnode_load_by_class
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 #endif /* __TVH_API_H__ */

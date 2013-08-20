@@ -147,9 +147,6 @@ void gtimer_disarm(gtimer_t *gti);
  * List / Queue header declarations
  */
 LIST_HEAD(th_subscription_list, th_subscription);
-RB_HEAD(channel_tree, channel);
-TAILQ_HEAD(channel_queue, channel);
-LIST_HEAD(channel_list, channel);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);
@@ -481,7 +478,6 @@ int rate_to_sri(int rate);
 
 extern time_t dispatch_clock;
 extern struct service_list all_transports;
-extern struct channel_tree channel_name_tree;
 
 extern void scopedunlock(pthread_mutex_t **mtxp);
 

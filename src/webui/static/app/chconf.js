@@ -25,6 +25,7 @@ tvheadend.channelrec = new Ext.data.Record.create(
 	[ 'name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
 		'epg_post_end', 'number' ]);
 
+/*
 tvheadend.channels = new Ext.data.JsonStore({
 	autoLoad : true,
 	root : 'entries',
@@ -43,6 +44,7 @@ tvheadend.channels = new Ext.data.JsonStore({
 tvheadend.comet.on('channels', function(m) {
 	if (m.reload != null) tvheadend.channels.reload();
 });
+*/
 
 /*
  * Service mapping
@@ -465,4 +467,25 @@ tvheadend.chconf = function() {
 	});
 
 	return grid;
+}
+
+tvheadend.channel_tab = function(panel)
+{
+  var mapButton = new Ext.Toolbar.Button({
+    tooltip : 'Map services to channels',
+    iconCls : '',
+    text    : 'Map Services',
+    handler : tvheadend.mapServices,
+    disabled : false,
+  });
+
+  tvheadend.idnode_grid(panel, {
+    url     : 'api/channel',
+    comet   : 'channel',
+    titleS  : 'Channel',
+    titleP  : 'Channels',
+    add     : false,
+    del     : false,
+    tbar    : [ mapButton ]
+  });
 }

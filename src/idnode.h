@@ -110,6 +110,7 @@ void idnode_init(void);
 int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc);
 void idnode_unlink(idnode_t *in);
 
+uint32_t      idnode_get_short_uuid (const idnode_t *in);
 const char   *idnode_uuid_as_str  (const idnode_t *in);
 idnode_set_t *idnode_get_childs   (idnode_t *in);
 const char   *idnode_get_title    (idnode_t *in);

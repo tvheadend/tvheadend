@@ -49,24 +49,101 @@ static void service_class_save(struct idnode *self);
 
 struct service_queue service_all;
 
-#if 0
-static const void *service_class_channel_get(void *obj);
-static int service_class_channel_set(void *obj, const void *str);
-static htsmsg_t *service_class_channel_enum(void *p)
+static const void *
+service_class_channel_get ( void *obj )
 {
-  channel_t *ch;
-  htsmsg_t *list = htsmsg_create_list();
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-    if (ch->ch_name)
-      htsmsg_add_str(list, NULL, ch->ch_name);
-  return list;
+  service_t *svc = obj;
+  channel_service_mapping_t *csm;
+  static char buf[2048], *s;
+  // TODO: make this dynamic length
+  int first = 1;
+
+  *buf = 0;
+  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link) {
+    if (!first)
+      strcat(buf, ",");
+    strcat(buf, idnode_uuid_as_str(&csm->csm_chn->ch_id));
+    first = 0;
+  }
+  s = first ? NULL : buf;
+  
+  return &s;
 }
-#endif
+
+static int
+service_class_channel_set
+  ( void *obj, const void *str )
+{
+  int save = 0;
+  service_t *svc = obj;
+  char *tmp, *tok, *sptr;
+  channel_t *ch;
+  channel_service_mapping_t *csm, *n;
+
+  /* Mark all for deletion */
+  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link)
+    csm->csm_mark = 1;
+
+  /* Make new links */
+  tmp = strdup(str);
+  tok = strtok_r(tmp, ",", &sptr);
+  while (tok) {
+    ch = channel_find(tok);
+    if (ch) {
+      save |= service_mapper_link(svc, ch);
+    }
+    tok = strtok_r(NULL, ",", &sptr);
+  }
+
+  /* Delete unlinked */
+  for (csm = LIST_FIRST(&svc->s_channels); csm != NULL; csm = n ) {
+    n = LIST_NEXT(csm, csm_chn_link);
+    if (csm->csm_mark) {
+      save = 1;
+      LIST_REMOVE(csm, csm_chn_link);
+      LIST_REMOVE(csm, csm_svc_link);
+      free(csm);
+    }
+  }
+    
+  return save;
+}
+
+static htsmsg_t *
+service_class_channel_enum
+  ( void *obj )
+{
+  htsmsg_t *p, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channel/list");
+  htsmsg_add_str(m, "event", "channel");
+  p = htsmsg_create_map();
+  htsmsg_add_u32(p, "enum", 1);
+  htsmsg_add_msg(m, "params", p);
+  return m;
+}
+
+static const char *
+service_class_get_title ( idnode_t *self )
+{
+  static char *ret = NULL;
+  service_t *s = (service_t*)self;
+  if (ret) {
+    free(ret);
+    ret = NULL;
+  }
+  pthread_mutex_lock(&s->s_stream_mutex); 
+  if (s->s_nicename)
+    ret = strdup(s->s_nicename);
+  pthread_mutex_unlock(&s->s_stream_mutex);
+  return ret;
+}
 
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
   .ic_save       = service_class_save,
+  .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -74,16 +151,15 @@ const idclass_t service_class = {
       .name     = "Enabled",
       .off      = offsetof(service_t, s_enabled),
     },
-#if 0
     {
       .type     = PT_STR,
       .id       = "channel",
       .name     = "Channel",
       .get      = service_class_channel_get,
       .set      = service_class_channel_set,
-      .list     = service_class_channel_enum
+      .list     = service_class_channel_enum,
+      .opts     = PO_MULTI | PO_NOSAVE
     },
-#endif
     {}
   }
 };
@@ -451,7 +527,7 @@ service_create0
  * Find a service based on the given identifier
  */
 service_t *
-service_find_by_identifier(const char *identifier)
+service_find(const char *identifier)
 {
   return idnode_find(identifier, &service_class);
 }
@@ -650,15 +726,18 @@ service_is_hdtv(service_t *t)
 int
 service_is_radio(service_t *t)
 {
+  int ret = 0;
   if (t->s_servicetype == ST_RADIO)
     return 1;
   else if (t->s_servicetype == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components, es_link)
-      if (SCT_ISAUDIO(st->es_type))
-        return 1;
+      if (SCT_ISVIDEO(st->es_type))
+        return 0;
+      else if (SCT_ISAUDIO(st->es_type))
+        ret = 1;
   }
-  return 0;
+  return ret;
 }
 
 /**

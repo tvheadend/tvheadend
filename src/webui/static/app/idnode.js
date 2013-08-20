@@ -111,7 +111,10 @@ tvheadend.idnode_editor_field = function(f, create)
   switch(f.type) {
     case 'str':
       if (f.enum) {
-        return new Ext.form.ComboBox({
+        var cons = Ext.form.ComboBox;
+        if (f.multi)
+          cons = Ext.ux.form.LovCombo;
+        return new cons({
           fieldLabel      : f.caption,
           name            : f.id,
           value           : f.value,
@@ -124,7 +127,17 @@ tvheadend.idnode_editor_field = function(f, create)
           typeAhead       : true,
           forceSelection  : true,
           triggerAction   : 'all',
-          emptyText       :'Select ' + f.caption +' ...'
+          emptyText       :'Select ' + f.caption +' ...',
+          listeners       : { 
+            keyup: function() {
+              this.store.filter('val', this.getRawValue(), true, false);
+            },
+            beforequery: function(queryEvent) {
+              queryEvent.combo.onLoad();
+              // prevent doQuery from firing and clearing out my filter.
+              return false; 
+            }
+          }
         });
       } else {
         return new Ext.form.TextField({
@@ -615,13 +628,23 @@ tvheadend.idnode_grid = function(panel, conf)
       }
     });
     buttons.push(editBtn);
-    buttons.push('->');
+
+    /* Extra buttons */
+    if (conf.tbar) {
+      buttons.push('-')
+      for (i = 0; i < conf.tbar.length; i++)
+        buttons.push(conf.tbar[i])
+    }
+
+    /* Help */
     if (conf.help) {
+      buttons.push('->');
       buttons.push({  
         text    : 'Help',
         handler : conf.help
       });
     }
+
 
     /* Grid Panel */
     var auto   = new Ext.form.Checkbox({

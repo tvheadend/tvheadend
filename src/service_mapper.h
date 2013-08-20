@@ -42,7 +42,7 @@ void service_mapper_remove ( struct service *t );
 int  service_mapper_qlen   ( void );
 
 // Link service to channel
-void service_mapper_link   ( struct service *s, struct channel *c );
+int  service_mapper_link   ( struct service *s, struct channel *c );
 
 // Unlink service from channel
 void service_mapper_unlink ( struct service *s, struct channel *c );

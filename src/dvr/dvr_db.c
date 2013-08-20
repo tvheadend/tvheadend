@@ -519,7 +519,7 @@ static void
 dvr_db_load_one(htsmsg_t *c, int id)
 {
   dvr_entry_t *de;
-  const char *chname, *s, *creator;
+  const char *chuuid, *chname, *s, *creator;
   channel_t *ch;
   uint32_t start, stop, bcid, u32;
   int d;
@@ -531,9 +531,15 @@ dvr_db_load_one(htsmsg_t *c, int id)
   if(htsmsg_get_u32(c, "stop", &stop))
     return;
 
-  if((chname = htsmsg_get_str(c, "channel")) == NULL)
-    return;
-  ch = channel_find_by_name(chname, 0, 0);
+  chname = htsmsg_get_str(c, "channel_name");
+  chuuid = htsmsg_get_str(c, "channel");
+  ch     = chuuid ? channel_find(chuuid) : NULL;
+
+  /* Backwards compat */
+  if (!ch && !chname) {
+    chname = chuuid;
+    ch     = channel_find_by_name(chname);
+  }
     
   s = htsmsg_get_str(c, "config_name");
   cfg = dvr_config_find_by_name_default(s);
@@ -648,6 +654,8 @@ dvr_entry_save(dvr_entry_t *de)
 
   lock_assert(&global_lock);
 
+  if (de->de_channel)
+    htsmsg_add_str(m, "channel", channel_get_uuid(de->de_channel));
   htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
   htsmsg_add_u32(m, "start", de->de_start);
   htsmsg_add_u32(m, "stop", de->de_stop);

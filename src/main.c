@@ -701,7 +701,21 @@ main(int argc, char **argv)
 
   service_init();
 
-  channels_init();
+#if ENABLE_TSFILE
+  if(opt_tsfile.num) {
+    tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
+    for (i = 0; i < opt_tsfile.num; i++)
+      tsfile_add_file(opt_tsfile.str[i]);
+  }
+#endif
+#if ENABLE_IPTV
+  iptv_init();
+#endif
+#if ENABLE_LINUXDVB
+  linuxdvb_init(adapter_mask);
+#endif
+
+  channel_init();
 
   subscription_init();
 
@@ -726,19 +740,6 @@ main(int argc, char **argv)
 
   htsp_init(opt_bindaddr);
 
-#if ENABLE_TSFILE
-  if(opt_tsfile.num) {
-    tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
-    for (i = 0; i < opt_tsfile.num; i++)
-      tsfile_add_file(opt_tsfile.str[i]);
-  }
-#endif
-#if ENABLE_IPTV
-  iptv_init();
-#endif
-#if ENABLE_LINUXDVB
-  linuxdvb_init(adapter_mask);
-#endif
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);

@@ -133,9 +133,9 @@ api_idnode_grid
   return 0;
 }
 
-static int
+int
 api_idnode_load_by_class
-  ( const char *class, htsmsg_t *args, htsmsg_t **resp )
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int i, _enum;
   const idclass_t *idc;
@@ -149,10 +149,8 @@ api_idnode_load_by_class
   pthread_mutex_lock(&global_lock);
 
   /* Find class */
-  if (!(idc = idclass_find(class))) {
-    pthread_mutex_unlock(&global_lock);
-    return EINVAL;
-  }
+  idc = opaque;
+  assert(idc);
 
   l = htsmsg_create_list();
   if ((is = idnode_find_all(idc))) {
@@ -162,7 +160,7 @@ api_idnode_load_by_class
       /* Name/UUID only */
       if (_enum) {
         e = htsmsg_create_map();
-        htsmsg_add_str(e, "key",  idnode_uuid_as_str(in));
+        htsmsg_add_str(e, "key", idnode_uuid_as_str(in));
         htsmsg_add_str(e, "val", idnode_get_title(in));
 
       /* Full record */
@@ -192,8 +190,16 @@ api_idnode_load
   const char *uuid, *class;
 
   /* Class based */
-  if ((class = htsmsg_get_str(args, "class")))
-    return api_idnode_load_by_class(class, args, resp);
+  if ((class = htsmsg_get_str(args, "class"))) {
+    const idclass_t *idc;
+    pthread_mutex_lock(&global_lock);
+    idc = idclass_find(class);
+    pthread_mutex_unlock(&global_lock);
+    if (!idc)
+      return EINVAL;
+    // TODO: bit naff that 2 locks are required here
+    return api_idnode_load_by_class((void*)idc, NULL, args, resp);
+  }
   
   /* UUIDs */
   if (!(f = htsmsg_field_find(args, "uuid")))

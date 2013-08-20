@@ -290,7 +290,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
-  snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel->ch_id);
+  snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(channel));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
@@ -319,7 +319,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ctm->ctm_channel->ch_id);
+    snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
@@ -377,8 +377,8 @@ http_channel_list_playlist(http_connection_t *hc)
   host = http_arg_get(&hc->hc_args, "Host");
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
+  CHANNEL_FOREACH(ch) {
+    snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
@@ -511,9 +511,9 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_lock(&global_lock);
 
   if(nc == 2 && !strcmp(components[0], "channelid"))
-    ch = channel_find_by_identifier(atoi(components[1]));
+    ch = channel_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "channel"))
-    ch = channel_find_by_name(components[1], 0, 0);
+    ch = channel_find_by_name(components[1]);
   else if(nc == 2 && !strcmp(components[0], "dvrid"))
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
@@ -748,9 +748,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   scopedgloballock();
 
   if(!strcmp(components[0], "channelid")) {
-    ch = channel_find_by_identifier(atoi(components[1]));
+    ch = channel_find_by_id(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
-    ch = channel_find_by_name(components[1], 0, 0);
+    ch = channel_find_by_name(components[1]);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
 #if 0//ENABLE_LINUXDVB

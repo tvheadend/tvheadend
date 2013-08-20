@@ -21,6 +21,7 @@
 #define __TVH_API_SERVICE_H__
 
 #include "tvheadend.h"
+#include "service.h"
 #include "service_mapper.h"
 #include "access.h"
 #include "api.h"
@@ -75,10 +76,13 @@ api_mapper_status
 
 void api_service_init ( void )
 {
+  extern const idclass_t service_class;
   static api_hook_t ah[] = {
     { "service/mapper/start",   ACCESS_ADMIN, api_mapper_start,  NULL },
     { "service/mapper/stop",    ACCESS_ADMIN, api_mapper_stop,   NULL },
     { "service/mapper/status",  ACCESS_ADMIN, api_mapper_status, NULL },
+    { "service/list",           ACCESS_ANONYMOUS, api_idnode_load_by_class, 
+      (void*)&service_class },
     { NULL },
   };
 

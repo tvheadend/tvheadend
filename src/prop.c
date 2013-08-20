@@ -246,6 +246,8 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsm
       htsmsg_add_u32(m, "nosave", 1);
     if (pl->opts & PO_WRONCE)
       htsmsg_add_u32(m, "wronce", 1);
+    if (pl->opts & PO_MULTI)
+      htsmsg_add_u32(m, "multi",  1);
 
     /* Enum list */
     if (pl->list)

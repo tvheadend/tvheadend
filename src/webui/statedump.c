@@ -55,7 +55,7 @@ dumpchannels(htsbuf_queue_t *hq)
   channel_t *ch;
   outputtitle(hq, 0, "Channels");
 
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+  CHANNEL_FOREACH(ch) {
     
     htsbuf_qprintf(hq, "%s (%d)\n", ch->ch_name, ch->ch_id);
     htsbuf_qprintf(hq,
