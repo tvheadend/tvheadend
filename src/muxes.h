@@ -21,6 +21,7 @@
 
 typedef struct mux {
   LIST_ENTRY(mux) link;
+ int delsys;
  unsigned int freq;
  unsigned int symrate;
  short fec;
@@ -31,6 +32,7 @@ typedef struct mux {
  short tmode;
  short guard;
  short hierarchy;
+ short rolloff;
  char polarisation;
 } mux_t;
 
