@@ -43,6 +43,8 @@
 #  endif
 #endif
 
+#define IPTV_PKT_SIZE (300*188)
+
 /*
  * Globals
  */
@@ -106,28 +108,29 @@ urlparse ( const char *str, url_t *url )
  * HTTP client
  */
 
-static int http_connect (const char *urlstr)
+static int http_connect (url_t *url)
 {
   int fd, c, i;
   char buf[1024];
-  url_t url;
-  if (urlparse(urlstr, &url))
-    return -1;
+
+  if (!url->port)
+    url->port = strcmp("https", url->scheme) ? 80 : 443;
 
   /* Make connection */
   // TODO: move connection to thread
   // TODO: this is really only for testing and to allow use of TVH webserver as input
-  tvhlog(LOG_DEBUG, "iptv", "connecting to http %s %d", url.host, url.port);
-  fd = tcp_connect(url.host, url.port, buf, sizeof(buf), 10);
+  tvhlog(LOG_DEBUG, "iptv", "connecting to http %s %d",
+         url->host, url->port);
+  fd = tcp_connect(url->host, url->port, buf, sizeof(buf), 10);
   if (fd < 0) {
     tvhlog(LOG_ERR, "iptv", "tcp_connect() failed %s", buf);
     return -1;
   }
 
   /* Send request (VERY basic) */
-  c = snprintf(buf, sizeof(buf), "GET /%s HTTP/1.1\r\n", url.path);
+  c = snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n", url->path);
   tvh_write(fd, buf, c);
-  c = snprintf(buf, sizeof(buf), "Hostname: %s\r\n", url.host);
+  c = snprintf(buf, sizeof(buf), "Hostname: %s\r\n", url->host);
   tvh_write(fd, buf, c);
   tvh_write(fd, "\r\n", 2);
 
@@ -174,7 +177,7 @@ iptv_input_start_http
   ( iptv_mux_t *im, url_t *url, const char *name )
 {
   /* Setup connection */
-  return http_connect("TODO");
+  return http_connect(url);
 }
 
 /*
@@ -260,7 +263,7 @@ iptv_input_start_udp
   }
 
   /* Increase RX buffer size */
-  rxsize = 65536;//262142;
+  rxsize = IPTV_PKT_SIZE;
   if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rxsize, sizeof(rxsize)) == -1)
     tvhwarn("iptv", "%s - cannot increase UDP rx buffer size [%s]",
             name, strerror(errno));
@@ -370,7 +373,7 @@ static void *
 iptv_input_thread ( void *aux )
 {
   int hlen, nfds, fd, r, pos = 0;
-  uint8_t tsb[65536];
+  uint8_t tsb[IPTV_PKT_SIZE];
   struct epoll_event ev;
   iptv_mux_t *im;
   mpegts_mux_t *mm;
@@ -431,11 +434,13 @@ iptv_input_thread ( void *aux )
     }
 
     /* TS */
+#if 0
+    tvhtrace("iptv", "recv data %d (%d)", (int)r, hlen);
+    tvhlog_hexdump("iptv", tsb, r);
+#endif
     pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
                                     &im->mm_iptv_instance,
                                     tsb+hlen, r-hlen, NULL, NULL, "iptv");
-if(pos)
-printf("pos = %d\n", pos);
 done:
     pthread_mutex_unlock(&iptv_lock);
   }
