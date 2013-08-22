@@ -398,6 +398,7 @@ iptv_input_thread ( void *aux )
       // TODO: close and remove?
       continue;
     }
+    r += pos;
 
     pthread_mutex_lock(&iptv_lock);
 

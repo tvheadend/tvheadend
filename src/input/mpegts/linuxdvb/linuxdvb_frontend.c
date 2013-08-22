@@ -640,7 +640,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     }
     
     /* Process */
-    pos = mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, tsb, c,
+    pos = mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, tsb, c+pos,
                                     NULL, NULL, buf);
   }
 
