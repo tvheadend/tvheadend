@@ -145,7 +145,6 @@ static int http_connect (url_t *url)
       break;
     memmove(buf, buf+1, 3); i = 3;
   }
-  printf("DONE\n");
 
   return fd;
 }
@@ -479,7 +478,7 @@ iptv_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
   return (mpegts_service_t*)
-    iptv_service_create(NULL, (iptv_mux_t*)mm, sid, pmt_pid);
+    iptv_service_create0((iptv_mux_t*)mm, sid, pmt_pid, NULL, NULL);
 }
 
 static const idclass_t *

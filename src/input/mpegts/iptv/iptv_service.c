@@ -22,55 +22,32 @@
 
 extern const idclass_t mpegts_service_class;
 
+static void
+iptv_service_config_save ( service_t *s )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)s;
+  htsmsg_t *c = htsmsg_create_map();
+  service_save(s, c);
+  hts_settings_save(c, "input/iptv/muxes/%s/services/%s",
+                    idnode_uuid_as_str(&ms->s_dvb_mux->mm_id),
+                    idnode_uuid_as_str(&ms->s_id));
+  htsmsg_destroy(c);
+}
+
 /*
  * Create
  */
 iptv_service_t *
-iptv_service_create
-  ( const char *uuid, iptv_mux_t *im, uint16_t onid, uint16_t tsid )
+iptv_service_create0
+  ( iptv_mux_t *im, uint16_t sid, uint16_t pmt,
+    const char *uuid, htsmsg_t *conf )
 {
   iptv_service_t *is = (iptv_service_t*)
     mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),
                            &mpegts_service_class, uuid,
-                           (mpegts_mux_t*)im, onid, tsid, NULL);
+                           (mpegts_mux_t*)im, sid, pmt, conf);
+  
+  is->s_config_save = iptv_service_config_save;
+
   return is;
 }
-
-/*
- * Load
- */
-static void
-iptv_service_load_one ( iptv_service_t *is, htsmsg_t *c )
-{
-#if 0
-  /* Load core */
-  mpegts_service_load_one((mpegts_service_t*)is, c);
-#endif
-}
-
-void
-iptv_service_load_all ( iptv_mux_t *im, const char *n )
-{
-  htsmsg_t *s, *c;
-  htsmsg_field_t *f;
-  iptv_service_t *is;
-
-  if ((s = hts_settings_load_r(1, "input/mpegts/iptv/muxes/%s/services", n))) {
-    HTSMSG_FOREACH(f, s) {
-      if (!(c = htsmsg_get_map_by_field(f))) {
-        tvhlog(LOG_ERR, "iptv", "failed to load svc config %s", f->hmf_name);
-        continue;
-      }
-
-      /* Create */
-      if (!(is = iptv_service_create(f->hmf_name, im, 0, 0))) {
-        tvhlog(LOG_ERR, "iptv", "failed to load svc config %s", f->hmf_name);
-        continue;
-      }
-
-      /* Load */
-      iptv_service_load_one(is, c);
-    }
-  }
-}
-
