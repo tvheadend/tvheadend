@@ -410,7 +410,7 @@ tvheadend.idnode_grid = function(panel, conf)
 {
   function build (d)
   {
-    var columns = [];
+    var columns = conf.lcol || [];
     var filters = [];
     var fields  = [];
     var buttons = [];
@@ -420,7 +420,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var delBtn  = null;
     var editBtn = null;
 
-    /* Process */
+    /* Process model */
     for (i = 0; i < d.length; i++) {
       var f    = d[i];
       var type = 'string';
@@ -459,6 +459,11 @@ tvheadend.idnode_grid = function(panel, conf)
         dataIndex : f.id
       });
     }
+
+    /* Right-hand columns */
+    if (conf.rcol)
+      for (i = 0; i < conf.rcol.length; i++) 
+        columns.push(conf.rcol[i])
 
     /* Filters */
     var filter = new Ext.ux.grid.GridFilters({

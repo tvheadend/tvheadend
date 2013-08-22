@@ -513,7 +513,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   if(nc == 2 && !strcmp(components[0], "channelid"))
     ch = channel_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "channel"))
-    ch = channel_find_by_name(components[1]);
+    ch = channel_find(components[1]);
   else if(nc == 2 && !strcmp(components[0], "dvrid"))
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))

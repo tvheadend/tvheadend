@@ -486,6 +486,14 @@ tvheadend.channel_tab = function(panel)
     titleP  : 'Channels',
     add     : false,
     del     : false,
-    tbar    : [ mapButton ]
+    tbar    : [ mapButton ],
+    lcol    : [
+      {
+        header   : 'Play',
+        renderer : function (v, o, r) {
+          return "<a href='stream/channel/" + r.id + "'>Play</a>";
+        }
+      }
+    ]
   });
 }

@@ -129,7 +129,7 @@ void channel_delete(channel_t *ch);
 
 channel_t *channel_find_by_name(const char *name);
 #define channel_find_by_uuid(u)\
-  (channel_t*)idnode_find(NULL, &channel_class)
+  (channel_t*)idnode_find(u, &channel_class)
 
 channel_t *channel_find_by_id(uint32_t id);
 
