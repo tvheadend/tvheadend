@@ -43,8 +43,6 @@
 #  endif
 #endif
 
-#define IPTV_PKT_SIZE (300*188)
-
 /*
  * Globals
  */
@@ -316,7 +314,9 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
       ev.events  = EPOLLIN;
       ev.data.fd = im->mm_iptv_fd = fd;
       epoll_ctl(iptv_poll_fd, EPOLL_CTL_ADD, im->mm_iptv_fd, &ev);
-      im->mm_active = mmi;
+      im->mm_active   = mmi;
+      im->mm_iptv_pos = 0;
+      im->mm_iptv_tsb = calloc(1, IPTV_PKT_SIZE);
 
       /* Install table handlers */
       mpegts_table_add(mmi->mmi_mux, DVB_PAT_BASE, DVB_PAT_MASK,
@@ -342,10 +342,15 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (im->mm_active) {
 
     // TODO: multicast will require additional work
+    // TODO: need to leave group>
 
+    /* Close file */
     close(im->mm_iptv_fd); // removes from epoll
     im->mm_iptv_fd = -1;
-    
+
+    /* Free memory */
+    free(im->mm_iptv_tsb);
+    im->mm_iptv_tsb = NULL;
   }
   pthread_mutex_unlock(&iptv_lock);
 }
@@ -371,8 +376,7 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 static void *
 iptv_input_thread ( void *aux )
 {
-  int hlen, nfds, fd, r, pos = 0;
-  uint8_t tsb[IPTV_PKT_SIZE];
+  int hlen, nfds, fd, r;
   struct epoll_event ev;
   iptv_mux_t *im;
   mpegts_mux_t *mm;
@@ -387,22 +391,10 @@ iptv_input_thread ( void *aux )
     } else if ( nfds == 0 ) {
       continue;
     }
-
-    /* Read data */
     fd = ev.data.fd;
-    r  = read(fd, tsb+pos, sizeof(tsb)-pos);
-
-    /* Error */
-    if (r < 0) {
-      tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
-      // TODO: close and remove?
-      continue;
-    }
-    r += pos;
-
-    pthread_mutex_lock(&iptv_lock);
 
     /* Find mux */
+    pthread_mutex_lock(&iptv_lock);
     LIST_FOREACH(mm, &iptv_network.mn_muxes, mm_network_link) {
       if (((iptv_mux_t*)mm)->mm_iptv_fd == fd)
         break;
@@ -411,22 +403,35 @@ iptv_input_thread ( void *aux )
       pthread_mutex_unlock(&iptv_lock);
       continue;
     }
-    im = (iptv_mux_t*)mm;
+    im  = (iptv_mux_t*)mm;
+
+    /* Read data */
+    //tvhtrace("iptv", "read(%d)", fd);
+    r  = read(fd, im->mm_iptv_tsb+im->mm_iptv_pos,
+              IPTV_PKT_SIZE-im->mm_iptv_pos);
+
+    /* Error */
+    if (r < 0) {
+      tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
+      // TODO: close and remove?
+      continue;
+    }
+    r += im->mm_iptv_pos;
 
     /* RTP */
     hlen = 0;
     if (!strncmp(im->mm_iptv_url, "rtp", 3)) {
       if (r < 12)
         goto done;
-      if ((tsb[0] & 0xC0) != 0x80)
+      if ((im->mm_iptv_tsb[0] & 0xC0) != 0x80)
         goto done;
-      if ((tsb[1] & 0x7F) != 33)
+      if ((im->mm_iptv_tsb[1] & 0x7F) != 33)
         goto done;
-      hlen = ((tsb[0] & 0xf) * 4) + 12;
-      if (tsb[0] & 0x10) {
+      hlen = ((im->mm_iptv_tsb[0] & 0xf) * 4) + 12;
+      if (im->mm_iptv_tsb[0] & 0x10) {
         if (r < hlen+4)
           goto done;
-        hlen += (tsb[hlen+2] << 8) | (tsb[hlen+3]*4);
+        hlen += (im->mm_iptv_tsb[hlen+2] << 8) | (im->mm_iptv_tsb[hlen+3]*4);
         hlen += 4;
       }
       if (r < hlen || ((r - hlen) % 188) != 0)
@@ -436,11 +441,12 @@ iptv_input_thread ( void *aux )
     /* TS */
 #if 0
     tvhtrace("iptv", "recv data %d (%d)", (int)r, hlen);
-    tvhlog_hexdump("iptv", tsb, r);
+    tvhlog_hexdump("iptv", im->mm_iptv_tsb, r);
 #endif
-    pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
+    im->mm_iptv_pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
                                     &im->mm_iptv_instance,
-                                    tsb+hlen, r-hlen, NULL, NULL, "iptv");
+                                    im->mm_iptv_tsb+hlen, r-hlen, NULL, NULL, "iptv");
+    //tvhtrace("iptv", "pos = %d", im->mm_iptv_pos);
 done:
     pthread_mutex_unlock(&iptv_lock);
   }

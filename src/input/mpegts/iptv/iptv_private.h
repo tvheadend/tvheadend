@@ -24,6 +24,8 @@
 #include "input/mpegts/iptv.h"
 #include "htsbuf.h"
 
+#define IPTV_PKT_SIZE (300*188)
+
 typedef struct iptv_input   iptv_input_t;
 typedef struct iptv_network iptv_network_t;
 typedef struct iptv_mux     iptv_mux_t;
@@ -47,6 +49,9 @@ struct iptv_mux
   mpegts_mux_instance_t mm_iptv_instance;
   char                 *mm_iptv_url;
   char                 *mm_iptv_interface;
+
+  uint8_t              *mm_iptv_tsb;
+  int                   mm_iptv_pos;
 };
 
 iptv_mux_t* iptv_mux_create ( const char *uuid, htsmsg_t *conf );
