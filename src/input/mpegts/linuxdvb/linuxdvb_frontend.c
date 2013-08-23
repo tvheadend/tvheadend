@@ -678,8 +678,8 @@ linuxdvb_frontend_tune0
   assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
 
   /* Open FE */
+  lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
   if (lfe->lfe_fe_fd <= 0) {
-    lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
     tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
     if (lfe->lfe_fe_fd <= 0) {

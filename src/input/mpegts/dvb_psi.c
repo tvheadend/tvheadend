@@ -423,7 +423,7 @@ dvb_table_complete
   struct mpegts_table_state *st;
   tvhtrace(mt->mt_name, "status: ");
   RB_FOREACH(st, &mt->mt_state, link) {
-    tvhtrace(mt->mt_name, "  tableid %02X extraid %04X sect %2d last %2d ver %2d complete %d",
+    tvhtrace(mt->mt_name, "  tableid %02X extraid %08X sect %2d last %2d ver %2d complete %d",
              st->tableid, st->extraid, st->section, st->last, st->version, st->complete);
     if (!st->complete)
       p = 1;
@@ -472,7 +472,6 @@ dvb_table_begin
     return -1;
 
   tvhtrace(mt->mt_name, "tableid %02X len %d", tableid, len);
-  tvhlog_hexdump(mt->mt_name, ptr, len);
 
   /* Section info */
   if (sect) {
@@ -481,6 +480,7 @@ dvb_table_begin
     *ver  = (ptr[2] >> 1) & 0x1F;
     tvhtrace(mt->mt_name, "  extraid %08X", extraid);
     tvhtrace(mt->mt_name, "  section %d last %d ver %d", *sect, *last, *ver);
+    tvhlog_hexdump(mt->mt_name, ptr, len);
     st = mpegts_table_state_find(mt, tableid, extraid);
 
     /* New version */
@@ -503,6 +503,8 @@ dvb_table_begin
       tvhtrace(mt->mt_name, "  skip, wrong section");
       return -1;
     }
+  } else {
+    tvhlog_hexdump(mt->mt_name, ptr, len);
   }
 
   return 1;

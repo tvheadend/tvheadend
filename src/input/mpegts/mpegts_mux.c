@@ -95,6 +95,9 @@ mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
   tvhdebug("mpegts", "%s - started", buf);
   mmi->mmi_input->mi_started_mux(mmi->mmi_input, mmi);
 
+  /* Event handler */
+  mpegts_fire_event(mm, ml_mux_start);
+
   /* Initial scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
     tvhtrace("mpegts", "%s - adding to current scan Q", buf);
