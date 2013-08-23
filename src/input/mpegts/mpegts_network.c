@@ -353,6 +353,23 @@ mpegts_network_build
 }
 
 /******************************************************************************
+ * Search
+ *****************************************************************************/
+
+mpegts_mux_t *
+mpegts_network_find_mux
+  ( mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
+{
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+    if (mm->mm_onid && onid && mm->mm_onid != onid) continue;
+    if (mm->mm_tsid == tsid)
+      break;
+  }
+  return mm;
+}
+
+/******************************************************************************
  * Editor Configuration
  *
  * vim:sts=2:ts=2:sw=2:et

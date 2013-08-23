@@ -449,7 +449,7 @@ dvb_table_complete
   return 0;
 }
 
-static int
+int
 dvb_table_end
   (mpegts_table_t *mt, mpegts_table_state_t *st, int sect)
 {
@@ -476,7 +476,7 @@ dvb_table_end
 /*
  * Begin table
  */
-static int
+int
 dvb_table_begin
   (mpegts_table_t *mt, const uint8_t *ptr, int len,
    int tableid, int extraid, int minlen,

@@ -19,6 +19,8 @@
 #ifndef __EPGGRAB_PRIVATE_H__
 #define __EPGGRAB_PRIVATE_H__
 
+struct mpegts_mux;
+
 /* **************************************************************************
  * Generic module routines
  * *************************************************************************/
@@ -88,7 +90,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
-                   struct dvb_mux *dm),
+                   struct mpegts_mux *mm),
     int (*enable) (void *m, uint8_t e ),
     epggrab_channel_tree_t *channels );
 
@@ -109,11 +111,11 @@ void epggrab_ota_save ( void );
  *       blocked (i.e. has completed within interval period)
  */
 epggrab_ota_mux_t *epggrab_ota_find
-  ( epggrab_module_ota_t *mod, struct dvb_mux *dm );
+  ( epggrab_module_ota_t *mod, struct mpegts_mux *dm );
 epggrab_ota_mux_t *epggrab_ota_create
-  ( epggrab_module_ota_t *mod, struct dvb_mux *dm );
+  ( epggrab_module_ota_t *mod, struct mpegts_mux *dm );
 void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, int nid, int tsid,
+  ( epggrab_module_ota_t *mod, uint16_t onid, uint16_t tsid,
     int period, int interval, const char *name );
 
 /*
@@ -121,27 +123,24 @@ void epggrab_ota_create_and_register_by_id
  */
 void epggrab_ota_destroy           ( epggrab_ota_mux_t *ota );
 void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod );
+#if 0
 void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
+#endif
 
 /*
- * Register interest
+ * In module functions
  */
-void epggrab_ota_register   
-  ( epggrab_ota_mux_t *ota, int timeout, int interval );
+
+epggrab_ota_mux_t *epggrab_ota_register   
+  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux,
+    int timeout, int interval );
 
 /*
  * State change
  */
-int  epggrab_ota_begin       ( epggrab_ota_mux_t *ota );
-void epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
-void epggrab_ota_cancel      ( epggrab_ota_mux_t *ota );
-void epggrab_ota_timeout     ( epggrab_ota_mux_t *ota );
+void epggrab_ota_complete 
+  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota );
 
-/*
- * Status
- */
-int  epggrab_ota_is_complete ( epggrab_ota_mux_t *ota );
-int  epggrab_ota_is_blocked  ( epggrab_ota_mux_t *ota );
 
 /* **************************************************************************
  * Miscellaneous

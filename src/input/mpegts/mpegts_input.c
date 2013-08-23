@@ -98,13 +98,13 @@ mpegts_input_current_weight ( mpegts_input_t *mi )
   const th_subscription_t *ths;
   int w = 0;
 
-  // TODO: we probably need a way for mux level subs
-
   /* Check for scan (weight 1) */
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     RB_FOREACH(mms, &mmi->mmi_subs, mms_link)
       w = MAX(w, mms->mms_weight);
   }
+
+  /* Check for mux subs */
 
   /* Check subscriptions */
   pthread_mutex_lock(&mi->mi_delivery_mutex);

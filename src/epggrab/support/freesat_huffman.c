@@ -28,8 +28,7 @@
 #include <unistd.h>
 #include "tvheadend.h"
 #include "channels.h"
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
+#include "input/mpegts/dvb.h"
 #include "service.h"
 #include "epg.h"
 #include "epggrab.h"

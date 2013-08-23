@@ -392,6 +392,8 @@ mpegts_mux_start
     tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
     return SM_CODE_NO_FREE_ADAPTER;
   }
+  
+  mpegts_fire_event(mm, ml_mux_start);
 
   return 0;
 }
@@ -465,6 +467,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
     TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
     mpegts_network_schedule_initial_scan(mn);
   }
+
+  mpegts_fire_event(mm, ml_mux_stop);
 
   /* Clear */
   mm->mm_active = NULL;
@@ -654,6 +658,20 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
   tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
   //idnode_notify(NULL, &mm->mm_id, 0, NULL);
   return 1;
+}
+
+/* **************************************************************************
+ * Search
+ * *************************************************************************/
+
+mpegts_service_t *
+mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid)
+{
+  mpegts_service_t *ms;
+  LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
+    if (ms->s_dvb_service_id == sid)
+      break;
+  return ms;
 }
 
 /******************************************************************************

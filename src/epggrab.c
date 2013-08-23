@@ -386,11 +386,14 @@ void epggrab_init ( void )
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
+
+  /* Initialise the OTA subsystem */
+  epggrab_ota_init();
   
   /* Initialise modules */
-#if 0//ENABLE_LINUXDVB
+#if ENABLE_MPEGTS
   eit_init();
-  opentv_init();
+  //opentv_init();
 #endif
   pyepg_init();
   xmltv_init();

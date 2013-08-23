@@ -310,7 +310,7 @@ dvb_get_string_with_len(char *dst, size_t dstlen,
  *
  */
 void
-atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen)
+atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
 {
   int i, c, r;
 
@@ -331,7 +331,7 @@ atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen)
  */
 
 time_t
-dvb_convert_date(uint8_t *dvb_buf)
+dvb_convert_date(const uint8_t *dvb_buf)
 {
   int i;
   int year, month, day, hour, min, sec;

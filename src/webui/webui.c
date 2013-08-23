@@ -827,7 +827,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(components[0], "channelid")) {
     ch = channel_find_by_id(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
-    ch = channel_find_by_name(components[1]);
+    ch = channel_find(components[1]);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
 #if 0//ENABLE_LINUXDVB

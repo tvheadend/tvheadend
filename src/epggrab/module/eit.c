@@ -20,130 +20,17 @@
 
 #include "tvheadend.h"
 #include "channels.h"
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
 #include "service.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
-#include "dvb/dvb_charset.h"
+#include "input/mpegts.h"
+#include "input/mpegts/dvb.h"
+#include "input/mpegts/dvb_charset.h"
 
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
-
-typedef struct eit_table_status
-{
-  LIST_ENTRY(eit_table_status) link;
-  int                          tid;
-  uint16_t                     onid;
-  uint16_t                     tsid;
-  uint16_t                     sid;
-  uint32_t                     sec[8];
-  uint8_t                      ver;
-  enum {
-    EIT_STATUS_START,
-    EIT_STATUS_PROCESS,
-    EIT_STATUS_LAST,
-    EIT_STATUS_DONE
-  }                            state;
-} eit_table_status_t;
-
-typedef struct eit_status
-{
-  eit_table_status_t            *first;
-  LIST_HEAD(, eit_table_status) tables;
-} eit_status_t;
-
-static eit_table_status_t *eit_status_find
-  ( eit_status_t *status, int tableid,
-    uint16_t onid, uint16_t tsid, uint16_t sid,
-    uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
-{
-  int i, sec_index;
-  uint32_t sec_seen_mask;
-  eit_table_status_t *sta;
-
-  /* Find */
-  LIST_FOREACH(sta, &status->tables, link)
-    if (sta->tid == tableid && sta->tsid == tsid && sta->onid == onid &&
-        sta->sid == sid)
-      break;
-
-  /* Already complete */
-  if (sta && sta->state == EIT_STATUS_DONE && sta->ver == ver) return sta;
-
-  /* Insert new entry */
-  if (!sta) {
-    sta = calloc(1, sizeof(eit_table_status_t));
-    LIST_INSERT_HEAD(&status->tables, sta, link);
-    sta->tid  = tableid;
-    sta->onid = onid;
-    sta->tsid = tsid;
-    sta->sid  = sid;
-    sta->ver  = 255; // Note: force update below
-  }
-
-  /* Reset */
-  if (sta->ver != ver) {
-    sta->ver = ver;
-    for (i = 0; i < (lst / 32); i++)
-      sta->sec[i] = 0xFFFFFFFF;
-    sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
-    sta->state = EIT_STATUS_PROCESS;
-  }
-
-  /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
-   * and ETSI EN 300 468 (V1.13.1) section 5.2.4 for usage of the
-   * of the "seg" (= segment_last_section_number) field in the
-   * now/next (tableid < 0x50) and schedule (tableid >= 0x50) tables
-   */
-  sec_index = sec/32;
-  sec_seen_mask = 0x1 << (sec%32);
-  if (tableid >= 0x50) {
-    // ETSI TS 101 211 (V1.11.1) section 4.1.4 specifies seg in eit schedule tables 
-    // as the index of the first section in the segment (always a multiple of 8, 
-    // because a segment has eight sections) plus an offset thaqt depends on the
-    // number of sections used:
-    // * seg_first_section + n - 1  if 0<n<8 segments are used (see section 4.1.4 e)
-    // * seg_first_section + 7      if all segments are used (see section 4.1.4 f)
-    // * seg_first_section + 0      if the section is empty (see section 4.1.4 g)
-    // This means that we can calculate the mask offset of the last used section
-    // simply by taking the lowest three bits of seg + 1 (empty segments count as 
-    // "one section used"). We use this offset to calculate a mask for all *unused* 
-    // sections by shifting 0xff left by this offset, take the lowest eight bits, shift 
-    // them left by the first section offset and finally expand seen_mask (seen_mask) 
-    // by calculating "seen_mask |= unused_mask"
-
-    uint32_t seg_first_section = seg & ~0x07;
-    uint32_t seg_last_used_section_offset = (seg & 0x07) + 1;
-    uint32_t unused_mask = ((0xff << seg_last_used_section_offset) & 0xff) << (seg_first_section%32);
-    sec_seen_mask |= unused_mask;
-  }
-
-  /* Already seen */
-  if (!(sta->sec[sec_index] & sec_seen_mask)) {
-    if (sta->state == EIT_STATUS_START) {
-      sta->state = EIT_STATUS_DONE;
-      goto done;
-    }
-    return NULL;
-  }
-
-  /* Update */
-  sta->sec[sec_index] &= ~sec_seen_mask;
-
-  /* Check complete? */
-done:
-  sta->state = EIT_STATUS_LAST;
-  for (i = 0; i < 8; i++ ) {
-    if (sta->sec[i]) {
-      sta->state = EIT_STATUS_PROCESS;
-      break;
-    }
-  }
-  return sta;
-}
 
 typedef struct eit_event
 {
@@ -173,7 +60,9 @@ typedef struct eit_event
  * ***********************************************************************/
 
 // Dump a descriptor tag for debug (looking for new tags etc...)
-static void _eit_dtag_dump ( epggrab_module_t *mod, uint8_t dtag, uint8_t dlen, uint8_t *buf )
+static void
+_eit_dtag_dump 
+  ( epggrab_module_t *mod, uint8_t dtag, uint8_t dlen, const uint8_t *buf )
 {
 #if APS_DEBUG
   int i = 0, j = 0;
@@ -224,7 +113,7 @@ static int _eit_get_string_with_len
  * Short Event - 0x4d
  */
 static int _eit_desc_short_event
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r;
   char lang[4];
@@ -267,12 +156,12 @@ static int _eit_desc_short_event
  * Extended Event - 0x4e
  */
 static int _eit_desc_ext_event
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r, ilen;
   char ikey[512], ival[512];
   char buf[512], lang[4];
-  uint8_t *iptr;
+  const uint8_t *iptr;
 
   if (len < 6) return -1;
 
@@ -343,7 +232,7 @@ static int _eit_desc_ext_event
  */
 
 static int _eit_desc_component
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   uint8_t c, t;
 
@@ -401,7 +290,7 @@ static int _eit_desc_component
  */
 
 static int _eit_desc_content
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   while (len > 1) {
     if (*ptr == 0xb1)
@@ -420,7 +309,7 @@ static int _eit_desc_content
  * Parental rating Descriptor - 0x55
  */
 static int _eit_desc_parental
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
   int cnt = 0, sum = 0, i = 0;
   while (len > 3) {
@@ -442,7 +331,8 @@ static int _eit_desc_parental
  * Content ID - 0x76
  */
 static int _eit_desc_crid
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev, service_t *svc )
+  ( epggrab_module_t *mod, const uint8_t *ptr, int len,
+    eit_event_t *ev, mpegts_service_t *svc )
 {
   int r;
   uint8_t type;
@@ -479,9 +369,9 @@ static int _eit_desc_crid
         } else if ( *buf != '/' ) {
           snprintf(crid, clen, "crid://%s", buf);
         } else {
-          char *defauth = svc->s_default_authority;
+          char *defauth = svc->s_dvb_cridauth;
           if (!defauth)
-            defauth = svc->s_dvb_mux->dm_default_authority;
+            defauth = svc->s_dvb_mux->mm_crid_authority;
           if (defauth)
             snprintf(crid, clen, "crid://%s%s", defauth, buf);
         }
@@ -503,7 +393,7 @@ static int _eit_desc_crid
 
 static int _eit_process_event
   ( epggrab_module_t *mod, int tableid,
-    service_t *svc, uint8_t *ptr, int len,
+    mpegts_service_t *svc, const uint8_t *ptr, int len,
     int *resched, int *save )
 {
   int save2 = 0;
@@ -515,6 +405,7 @@ static int _eit_process_event
   epg_episode_t *ee;
   epg_serieslink_t *es;
   eit_event_t ev;
+  channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
 
   if ( len < 12 ) return -1;
 
@@ -532,9 +423,9 @@ static int _eit_process_event
   ret  = 12 + dllen;
 
   /* Find broadcast */
-  ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
+  ebc  = epg_broadcast_find_by_time(NULL, start, stop, eid, 1, &save2);
   tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
-         eid, start, stop, ebc);
+           eid, start, stop, ebc);
   if (!ebc) return dllen + 12;
 
   /* Mark re-schedule detect (only now/next) */
@@ -548,8 +439,8 @@ static int _eit_process_event
   /* Override */
   if (!ev.default_charset) {
     ev.default_charset
-      = dvb_charset_find(svc->s_dvb_mux->dm_network_id,
-                         svc->s_dvb_mux->dm_transport_stream_id,
+      = dvb_charset_find(svc->s_dvb_mux->mm_onid,
+                         svc->s_dvb_mux->mm_tsid,
                          svc->s_dvb_service_id);
   }
 
@@ -557,6 +448,8 @@ static int _eit_process_event
     int r;
     dtag = ptr[0];
     dlen = ptr[1];
+    tvhtrace(mod->id, "  dtag %02X dlen %d", dtag, dlen);
+    tvhlog_hexdump(mod->id, ptr+2, dlen);
 
     dllen -= 2;
     ptr   += 2;
@@ -659,88 +552,74 @@ static int _eit_process_event
 }
 
 static int
-_eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
-              uint8_t tableid, void *opaque)
+_eit_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  epggrab_module_t *mod = opaque;
-  epggrab_ota_mux_t *ota;
-  service_t *svc;
-  eit_status_t *sta;
-  eit_table_status_t *tsta;
-  int resched = 0, save = 0;
+  int r;
+  int sect, last, ver, save, resched;
+  uint8_t  seg;
   uint16_t onid, tsid, sid;
-  uint16_t sec, lst, seg, ver;
+  uint32_t extraid;
+  mpegts_service_t     *svc;
+  mpegts_mux_t         *mm  = mt->mt_mux;;
+  epggrab_module_t *mod = mt->mt_opaque;
+  epggrab_ota_mux_t    *ota = NULL;
+  mpegts_table_state_t *st;
 
-  /* Invalid */
-  if(tableid < 0x4e || tableid > 0x6f || len < 11) return -1;
+  /* Validate */
+  if(tableid < 0x4e || tableid > 0x6f || len < 11)
+    return -1;
 
-  /* Get OTA */
-  ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
-  if (!ota || !ota->status) return -1;
-  sta = ota->status;
+  /* Basic info */
+  sid     = ptr[0] << 8 | ptr[1];
+  tsid    = ptr[5] << 8 | ptr[6];
+  onid    = ptr[7] << 8 | ptr[8];
+  seg     = ptr[9];
+  extraid = ((uint32_t)tsid << 16) | sid;
+  // TODO: extra ID should probably include onid
 
-  /* Begin: reset sta->state to force revisiting of all tables */
-  if (epggrab_ota_begin(ota)) {
-    sta->first = NULL;
-    LIST_FOREACH(tsta, &sta->tables, link) {
-      tsta->state = EIT_STATUS_START;
-    }
+  /* Register interest */
+  if (tableid >= 0x50)
+    ota = epggrab_ota_register((epggrab_module_ota_t*)mod, mm, 1200, 3600);
+
+  /* Begin */
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 11, &st, &sect, &last, &ver);
+  if (r != 1) return r;
+  if (st) {
+    uint32_t mask;
+    int sa = seg & 0xF8;
+    int sb = 7 - (seg & 0x07);
+    mask = (~(0xFF << sb) & 0xFF);
+    mask <<= (24 - (sa % 32));
+    st->sections[sa/32] &= ~mask;
   }
-
-  /* Get table info */
-  sid  = ptr[0] << 8 | ptr[1];
-  tsid = ptr[5] << 8 | ptr[6];
-  onid = ptr[7] << 8 | ptr[8];
-  sec  = ptr[3];
-  lst  = ptr[4];
-  seg  = ptr[9];
-  ver  = (ptr[2] >> 1) & 0x1f;
-  tvhtrace("eit",
-           "tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X"
-           ", sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
-           tableid, onid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
-
-  /* Don't process */
-  if((ptr[2] & 1) == 0) return 0;
-
-  /* Current status */
-  tsta = eit_status_find(sta, tableid, onid, tsid, sid, sec, lst, seg, ver);
-  tvhtrace("eit", tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
-  if (!tsta) return 0; // already seen, no state change
-  if (tsta->state == EIT_STATUS_DONE) goto done;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    dm = dvb_mux_find(dm->dm_dn, NULL, onid, tsid, 1);
+    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid);
 
   } else {
-    if (dm->dm_transport_stream_id != tsid ||
-        dm->dm_network_id != onid) {
-      tvhtrace("eit",
-               "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-               tableid, dm->dm_network_id, dm->dm_transport_stream_id,
-               onid, tsid);
-      dm = NULL;
+    if (mm->mm_tsid != tsid ||
+        mm->mm_onid != onid) {
+      tvhwarn("eit",
+              "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+              tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
+      //dm = NULL;
     }
   }
-  if(!dm) goto done;
+  if(!mm)
+    goto done;
 
   /* Get service */
-  svc = dvb_service_find3(NULL, dm, NULL, 0, 0, sid, 1, 1);
-  if (!svc || !svc->s_ch) goto done;
-
-  /* Register as interesting */
-  if (tableid < 0x50)
-    epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
-  else
-    epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
-  // Note: this does mean you will get a slight oddity for muxes that
-  //       carry both, since they will end up with setting of 600/300 
-  // Note: could we be more dynamic for now/next interval?
+  svc = mpegts_mux_find_service(mm, sid);
+  // TODO: have lost the concept of the primary EPG service!
+  if (!svc || !LIST_FIRST(&svc->s_channels))
+    goto done;
 
   /* Process events */
+  save = resched = 0;
   len -= 11;
   ptr += 11;
   while (len) {
@@ -752,71 +631,27 @@ _eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
     ptr += r;
   }
 
-  /* Complete */
-done:
-  if (tsta->state == EIT_STATUS_LAST)
-    tsta->state = EIT_STATUS_DONE;
-  if (tsta->state == EIT_STATUS_DONE) {
-    if (!sta->first)
-      sta->first = tsta;
-    else if (sta->first == tsta) {
-      LIST_FOREACH(tsta, &sta->tables, link)
-        if (tsta->state != EIT_STATUS_DONE) break;
-      if (!tsta) epggrab_ota_complete(ota);
-    }
-  }
-#if ENABLE_TRACE
-  if (ota->state != EPGGRAB_OTA_MUX_COMPLETE)
-  {
-    int total = 0;
-    int finished = 0;
-    tvhtrace("eit", "scan status:");
-    LIST_FOREACH(tsta, &sta->tables, link) {
-      total++;
-      tvhtrace("eit",
-               "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d"
-               ", done=%d, "
-               "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
-               tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
-               tsta->state == EIT_STATUS_DONE,
-               tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
-               tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
-      if (tsta->state == EIT_STATUS_DONE) finished++;
-    }
-    tvhtrace("eit", "  completed %d of %d", finished, total);
-  }
-#endif
-  
   /* Update EPG */
   if (resched) epggrab_resched();
   if (save)    epg_updated();
-
-  return 0;
+  
+done:
+  r = dvb_table_end(mt, st, sect);
+  if (ota && !r)
+    epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+  
+  return r;
 }
 
 /* ************************************************************************
  * Module Setup
  * ***********************************************************************/
 
-static void _eit_ota_destroy ( epggrab_ota_mux_t *ota )
-{
-  eit_status_t *sta = ota->status;
-  eit_table_status_t *tsta;
-
-  /* Remove all entries */
-  while ((tsta = LIST_FIRST(&sta->tables))) {
-    LIST_REMOVE(tsta, link);
-    free(tsta);
-  }
-
-  free(sta);
-  free(ota);
-}
-
 static void _eit_start 
-  ( epggrab_module_ota_t *m, dvb_mux_t *dm )
+  ( epggrab_module_ota_t *m, mpegts_mux_t *dm )
 {
-  epggrab_ota_mux_t *ota;
+  int pid;
+
   /* Disabled */
   if (!m->enabled) return;
 
@@ -827,74 +662,31 @@ static void _eit_start
     if (m->enabled) return;
   }
 
-  /* Register */
-  if (!(ota = epggrab_ota_create(m, dm))) return;
-  if (!ota->status) {
-    ota->status  = calloc(1, sizeof(eit_status_t));
-    ota->destroy = _eit_ota_destroy;
-  }
-
   /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
-#ifdef IGNORE_TOO_SLOW
-    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
-#endif
-    tdt_add(dm, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002);
-    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003);
+    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", MT_CRC, 3002);
+    pid = 3003;
 
   /* Viasat Baltic (0x39) */
   } else if (!strcmp("viasat_baltic", m->id)) {
-    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39);
+    pid = 0x39;
 
   /* Standard (0x12) */
   } else {
-    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12);
+    pid = 0x12;
   }
-  tvhlog(LOG_DEBUG, m->id, "install table handlers");
-}
-
-static int _eit_enable ( void *m, uint8_t e )
-{
- epggrab_module_ota_t *mod = m;
-
-  if (mod->enabled == e) return 0;
-  mod->enabled = e;
-
-  /* Register interest */
-  if (e) {
-
-    /* Freesat (register fixed MUX) */
-    if (!strcmp(mod->id, "uk_freesat")) {
-#ifdef IGNORE_TOO_SLOW
-      epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
-                                            0, 2050,
-                                            600, 3600, "ASTRA");
-#endif
-      epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
-                                            0, 2315,
-                                            600, 3600, "Freesat");
-    }
-  /* Remove all links */
-  } else {
-    epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);
-  }
-
-  return 1;
+  mpegts_table_add(dm, 0, 0, _eit_callback, m, m->id, MT_CRC, pid);
+  tvhlog(LOG_DEBUG, m->id, "installed table handlers");
 }
 
 void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, NULL, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, NULL, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, NULL, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
-                            _eit_start, _eit_enable, NULL);
-}
-
-void eit_load ( void )
-{
+                            _eit_start, NULL, NULL);
 }

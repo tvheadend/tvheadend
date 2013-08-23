@@ -482,6 +482,9 @@ extern const idclass_t mpegts_network_class;
 
 #define mpegts_network_find(u)\
   idnode_find(u, &mpegts_network_class)
+
+mpegts_mux_t *mpegts_network_find_mux
+  (mpegts_network_t *mn, uint16_t onid, uint16_t tsid);
   
 void mpegts_network_delete ( mpegts_network_t *mn );
 
@@ -519,6 +522,8 @@ void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
 mpegts_mux_instance_t *mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
     mpegts_input_t *mi, mpegts_mux_t *mm );
+
+mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
 
 #define mpegts_mux_instance_create(type, uuid, mi, mm)\
   (struct type*)mpegts_mux_instance_create0(calloc(1, sizeof(struct type)),\
@@ -578,6 +583,35 @@ mpegts_service_t *mpegts_service_find
 void mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c );
 
 void mpegts_service_delete ( service_t *s );
+
+/*
+ * MPEG-TS event handler
+ */
+
+typedef struct mpegts_listener
+{
+  LIST_ENTRY(mpegts_listener) ml_link;
+  void *ml_opaque;
+  void (*ml_mux_start)  (mpegts_mux_t *mm, void *p);
+  void (*ml_mux_stop)   (mpegts_mux_t *mm, void *p);
+  void (*ml_mux_create) (mpegts_mux_t *mm, void *p);
+  void (*ml_mux_delete) (mpegts_mux_t *mm, void *p);
+} mpegts_listener_t;
+
+LIST_HEAD(,mpegts_listener) mpegts_listeners;
+
+#define mpegts_add_listener(ml)\
+  LIST_INSERT_HEAD(&mpegts_listeners, ml, ml_link)
+
+#define mpegts_rem_listener(ml)\
+  LIST_REMOVE(ml, ml_link)
+
+#define mpegts_fire_event(t, op)\
+{\
+  mpegts_listener_t *ml;\
+  LIST_FOREACH(ml, &mpegts_listeners, ml_link)\
+    if (ml->op) ml->op(t, ml->ml_opaque);\
+} (void)0
 
 #endif /* __TVH_MPEGTS_H__ */
 

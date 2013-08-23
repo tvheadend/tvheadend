@@ -16,422 +16,301 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * TODO: currently I don't try to block multiple scans of the same
- *       tdmi on different adapters
- */
-
 #include <string.h>
 
 #include "tvheadend.h"
 #include "queue.h"
 #include "epg.h"
-#include "dvb/dvb.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+#include "input/mpegts.h"
 
-TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
+RB_HEAD(,epggrab_ota_mux)   epggrab_ota_all;
+LIST_HEAD(,epggrab_ota_mux) epggrab_ota_pending;
+LIST_HEAD(,epggrab_ota_mux) epggrab_ota_active;
+
+gtimer_t                    epggrab_ota_pending_timer;
+gtimer_t                    epggrab_ota_active_timer;
+
+static void epggrab_ota_active_timer_cb ( void *p );
+static void epggrab_ota_pending_timer_cb ( void *p );
 
 /* **************************************************************************
- * Global functions (called from DVB code)
+ * Utilities
  * *************************************************************************/
 
-void epggrab_mux_start ( dvb_mux_t *dm )
+static int
+om_time_cmp ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
+{
+  return (a->om_when - b->om_when);
+}
+
+static int
+om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
+{
+  return strcmp(a->om_mux_uuid, b->om_mux_uuid);
+}
+
+#define EPGGRAB_OTA_MIN_PERIOD  600
+#define EPGGRAB_OTA_MIN_TIMEOUT  30
+
+static int
+epggrab_ota_period ( epggrab_ota_mux_t *ota )
+{
+  int period = 0;
+  epggrab_ota_map_t *map;
+
+  if (ota->om_interval)
+    period = ota->om_interval;
+  else {
+    LIST_FOREACH(map, &ota->om_modules, om_link)
+
+      if (!period || map->om_interval < period)
+        period = map->om_interval;
+  }
+
+  if (period < EPGGRAB_OTA_MIN_PERIOD)
+    period = EPGGRAB_OTA_MIN_PERIOD;
+  
+  return period;
+}
+
+static int
+epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
+{
+  int timeout = 0;
+  epggrab_ota_map_t *map;
+
+  if (ota->om_timeout)
+    timeout = ota->om_timeout;
+  else {
+    LIST_FOREACH(map, &ota->om_modules, om_link)
+      if (map->om_timeout > timeout)
+        timeout = map->om_timeout;
+  }
+
+  if (timeout < EPGGRAB_OTA_MIN_TIMEOUT)
+    timeout = EPGGRAB_OTA_MIN_TIMEOUT;
+
+  return timeout;
+}
+
+static void
+epggrab_ota_done ( epggrab_ota_mux_t *ota, int cancel, int timeout )
+{
+  LIST_REMOVE(ota, om_q_link);
+  ota->om_when   = dispatch_clock + 10;//epggrab_ota_period(ota);
+  ota->om_active = 0;
+  LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
+
+  /* Re-arm */
+  if (LIST_FIRST(&epggrab_ota_pending) == ota)
+    epggrab_ota_pending_timer_cb(NULL);
+  
+  /* Remove from active */
+  if (!timeout) {
+    gtimer_disarm(&epggrab_ota_active_timer);
+    epggrab_ota_active_timer_cb(NULL);
+  }
+  
+  /* Stop mux */
+  if (!cancel) {
+    extern const idclass_t mpegts_mux_class;
+    mpegts_mux_t *mm = mpegts_mux_find(ota->om_mux_uuid);
+    if (mm) mm->mm_stop(mm, ota, 0);
+  }
+}
+
+/* **************************************************************************
+ * MPEG-TS listener
+ * *************************************************************************/
+
+static void
+epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
   epggrab_module_t *m;
   epggrab_module_ota_t *om;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->type == EPGGRAB_OTA) {
       om = (epggrab_module_ota_t*)m;
-      if (om->start) om->start(om, dm);
+      if (om->start) om->start(om, mm);
     }
   }
 }
 
-void epggrab_mux_stop ( dvb_mux_t *dm, int timeout )
+static void
+epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
 {
-  // Note: the slightly akward list iteration here is because
-  // _ota_cancel/delete can remove the object and free() it
-  epggrab_ota_mux_t *a, *b;
-  a = TAILQ_FIRST(&dm->dm_epg_grab);
-  while (a) {
-    b = TAILQ_NEXT(a, dm_link);
-    if (a->dm == dm) {
-      if (timeout)
-        epggrab_ota_timeout(a);
-      else
-        epggrab_ota_cancel(a);
+  epggrab_ota_mux_t *ota;
+  RB_FOREACH(ota, &epggrab_ota_all, om_global_link) {
+    const char *uuid = idnode_uuid_as_str(&mm->mm_id);
+    if (!strcmp(ota->om_mux_uuid, uuid))
+      break;
+  }
+  if (ota && ota->om_active)
+    epggrab_ota_done(ota, 1, 0);
+}
+
+void
+epggrab_ota_init ( void )
+{
+  static mpegts_listener_t ml = {
+    .ml_mux_start = epggrab_mux_start,
+    .ml_mux_stop  = epggrab_mux_stop,
+  };
+  mpegts_add_listener(&ml);
+}
+
+/* **************************************************************************
+ * Completion handling
+ * *************************************************************************/
+
+/* **************************************************************************
+ * Module methods
+ * *************************************************************************/
+
+epggrab_ota_mux_t *
+epggrab_ota_register
+  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm,
+    int interval, int timeout )
+{
+  static epggrab_ota_mux_t *skel = NULL;
+  epggrab_ota_map_t *map;
+  epggrab_ota_mux_t *ota;
+
+  /* Find mux entry */
+  const char *uuid = idnode_uuid_as_str(&mm->mm_id);
+  if (!skel)
+    skel = calloc(1, sizeof(epggrab_ota_mux_t));
+  skel->om_mux_uuid = (char*)uuid;
+
+  ota = RB_INSERT_SORTED(&epggrab_ota_all, skel, om_global_link, om_id_cmp);
+  if (!ota) {
+    ota  = skel;
+    skel = NULL;
+    ota->om_mux_uuid = strdup(uuid);
+    ota->om_active   = 1;
+    // idnode_link(&ota->om_id, NULL);
+    LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
+    // TODO: save config
+    // TODO: generic creation routine (grid?)
+  }
+  
+  /* Find module entry */
+  LIST_FOREACH(map, &ota->om_modules, om_link)
+    if (map->om_module == mod)
+      break;
+  if (!mod) {
+    map = calloc(1, sizeof(epggrab_ota_map_t));
+    map->om_module   = mod;
+    map->om_timeout  = timeout;
+    map->om_interval = interval;
+    LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
+  }
+
+  return ota;
+}
+
+void
+epggrab_ota_complete
+  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota )
+{
+  int done = 1;
+  epggrab_ota_map_t *map;
+
+  /* Just for completion */
+  LIST_FOREACH(map, &ota->om_modules, om_link) {
+    if (map->om_module == mod)
+      map->om_complete = 1;
+    else if (!map->om_complete)
+      done = 0;
+  }
+  if (!done) return;
+
+  /* Done */
+  epggrab_ota_done(ota, 0, 0);
+}
+
+/* **************************************************************************
+ * Timer callback
+ * *************************************************************************/
+
+static void
+epggrab_ota_active_timer_cb ( void *p )
+{
+  epggrab_ota_mux_t *om = LIST_FIRST(&epggrab_ota_active);
+
+  lock_assert(&global_lock);
+  if (!om)
+    return;
+
+  /* Double check */
+  if (om->om_when > dispatch_clock)
+    goto done;
+
+  /* Re-queue */
+  epggrab_ota_done(om, 0, 1);
+
+done:
+  om = LIST_FIRST(&epggrab_ota_active);
+  if (om)
+    gtimer_arm_abs(&epggrab_ota_active_timer, epggrab_ota_active_timer_cb,
+                   NULL, om->om_when);
+}
+
+static void
+epggrab_ota_pending_timer_cb ( void *p )
+{
+  int r;
+  epggrab_ota_map_t *map;
+  epggrab_ota_mux_t *om = LIST_FIRST(&epggrab_ota_pending);
+  mpegts_mux_t *mm;
+
+  lock_assert(&global_lock);
+  if (!om)
+    return;
+  
+  /* Double check */
+  if (om->om_when > dispatch_clock)
+    goto done;
+  LIST_REMOVE(om, om_q_link);
+
+  /* Find the mux */
+  extern const idclass_t mpegts_mux_class;
+  mm = mpegts_mux_find(om->om_mux_uuid);
+  if (!mm) {
+    RB_REMOVE(&epggrab_ota_all, om, om_global_link);
+    while ((map = LIST_FIRST(&om->om_modules))) {
+      LIST_REMOVE(map, om_link);
+      free(map);
     }
-    a = b;
+    free(om->om_mux_uuid);
+    free(om);
+    goto done;
   }
-}
 
-void epggrab_mux_delete ( dvb_mux_t *dm )
-{
-  epggrab_ota_destroy_by_dm(dm);
-}
-
-int epggrab_mux_period ( dvb_mux_t *dm )
-{
-  int period = 0;
-  epggrab_ota_mux_t *ota;
-  TAILQ_FOREACH(ota, &dm->dm_epg_grab, dm_link) {
-    if (!ota->is_reg) continue;
-    if (ota->timeout > period)
-      period = ota->timeout;
+  /* Subscribe to the mux */
+  r = mm->mm_start(mm, om, "epggrab", 2); // TODO: remove hardcoded
+                                             // TODO: need to add src field
+  if (r) {
+    om->om_when = dispatch_clock + epggrab_ota_period(om) / 2;
+    LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
+  } else {
+    om->om_when = dispatch_clock + epggrab_ota_timeout(om);
+    LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
+    if (LIST_FIRST(&epggrab_ota_active) == om)
+      epggrab_ota_active_timer_cb(NULL);
+    LIST_FOREACH(map, &om->om_modules, om_link)
+      map->om_complete = 0;
   }
-  return period;
-}
 
-dvb_mux_t *epggrab_mux_next ( dvb_network_t *dn )
-{
-  time_t now;
-  epggrab_ota_mux_t *ota;
-  time(&now);
-  TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
-#if TODO_FIX_THIS
-    if (ota->tdmi->tdmi_adapter != tda) continue;
-#endif
-    if (ota->interval + ota->completed > now) return NULL;
-    if (!ota->is_reg) return NULL;
-    if (ota->dm->dm_dn == dn) break;
-  }
-  return ota ? ota->dm : NULL;
+done:
+  om = LIST_FIRST(&epggrab_ota_pending);
+  if (om)
+    gtimer_arm_abs(&epggrab_ota_pending_timer, epggrab_ota_pending_timer_cb,
+                   NULL, om->om_when);
 }
 
 /* **************************************************************************
  * Config
  * *************************************************************************/
-
-static void _epggrab_ota_load_one ( epggrab_module_ota_t *mod, htsmsg_t *m )
-{
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  int onid, tsid, period, interval;
-  const char *netname;
-
-  HTSMSG_FOREACH(f, m) {
-    if ((e = htsmsg_get_map_by_field(f))) {
-      onid     = htsmsg_get_u32_or_default(m, "onid",     0);
-      tsid     = htsmsg_get_u32_or_default(m, "tsid",     0);
-      period   = htsmsg_get_u32_or_default(m, "period",   0);
-      interval = htsmsg_get_u32_or_default(m, "interval", 0);
-      netname  = htsmsg_get_str(m, "networkname");
-
-      if (tsid)
-        epggrab_ota_create_and_register_by_id(mod, onid, tsid,
-                                              period, interval,
-                                              netname);
-    }
-  }
-}
-
-void epggrab_ota_load ( void )
-{
-  htsmsg_t *m, *l;
-  htsmsg_field_t *f;
-  epggrab_module_t *mod;
-
-  if ((m = hts_settings_load("epggrab/otamux"))) {
-    HTSMSG_FOREACH(f, m) {
-      mod = epggrab_module_find_by_id(f->hmf_name);
-      if (!mod || mod->type != EPGGRAB_OTA) continue;
-      if ((l = htsmsg_get_list_by_field(f)))
-        _epggrab_ota_load_one((epggrab_module_ota_t*)mod, l);
-    }
-    htsmsg_destroy(m);
-  }
-}
-
-static void _epggrab_ota_save_one ( htsmsg_t *m, epggrab_module_ota_t *mod )
-{
-  epggrab_ota_mux_t *ota;
-  htsmsg_t *e, *l = NULL;
-  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
-    if (!l) l = htsmsg_create_list();
-    e = htsmsg_create_map();
-
-    const dvb_mux_t *dm = ota->dm;
-
-    htsmsg_add_u32(e, "onid",     dm->dm_network_id);
-    htsmsg_add_u32(e, "tsid",     dm->dm_transport_stream_id);
-    htsmsg_add_u32(e, "period",   ota->timeout);
-    htsmsg_add_u32(e, "interval", ota->interval);
-    if (dm->dm_network_name)
-      htsmsg_add_str(e, "networkname", dm->dm_network_name);
-    htsmsg_add_msg(l, NULL, e);
-  }
-  if (l) htsmsg_add_msg(m, mod->id, l);
-}
-
-void epggrab_ota_save ( void )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  epggrab_module_t *mod;
-    
-  // TODO: there is redundancy in this saving, because each MUX can
-  // be represented N times, due to one copy per adapter. But load
-  // only requires one instance to find them all.
-  LIST_FOREACH(mod, &epggrab_modules, link) {
-    if (mod->type != EPGGRAB_OTA) continue;
-    _epggrab_ota_save_one(m, (epggrab_module_ota_t*)mod);
-  }
-
-  hts_settings_save(m, "epggrab/otamux");
-  htsmsg_destroy(m);
-}
-
-/* **************************************************************************
- * OTA Mux link functions
- * *************************************************************************/
-
-/*
- * Comprison of ota_mux instances based on when they can next run
- *
- * Note: ordering isn't garaunteed to be perfect as we use the current time
- */
-static int _ota_time_cmp ( void *_a, void *_b )
-{
-  int r;
-  time_t now, wa, wb;
-  time(&now);
-  epggrab_ota_mux_t *a = _a;
-  epggrab_ota_mux_t *b = _b;
-  
-  /* Unreg'd always at the end */
-  r = a->is_reg - b->is_reg;
-  if (r) return r;
-
-  /* Check when */
-  wa = a->completed + a->interval;
-  wb = b->completed + b->interval;
-  if (wa < now && wb < now)
-    return a->started - b->started;
-  else
-    return wa - wb;
-}
-
-/*
- * Find existing link
- */
-epggrab_ota_mux_t *epggrab_ota_find
-  ( epggrab_module_ota_t *mod, dvb_mux_t *dm )
-{
-  epggrab_ota_mux_t *ota;
-  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
-    if (ota->dm == dm) break;
-  }
-  return ota;
-}
-
-/*
- * Create (temporary) or Find (existing) link
- */
-epggrab_ota_mux_t *epggrab_ota_create
-  ( epggrab_module_ota_t *mod, dvb_mux_t *dm)
-{
-  /* Search for existing */
-  epggrab_ota_mux_t *ota = epggrab_ota_find(mod, dm);
-
-  /* Create new */
-  if (!ota) {
-    ota = calloc(1, sizeof(epggrab_ota_mux_t));
-    ota->grab  = mod;
-    ota->dm    = dm;
-    TAILQ_INSERT_TAIL(&ota_mux_all, ota, glob_link);
-    TAILQ_INSERT_TAIL(&dm->dm_epg_grab, ota, dm_link);
-    TAILQ_INSERT_TAIL(&mod->muxes, ota, grab_link);
-
-  } else {
-    time_t now;
-    time(&now);
-    ota->state = EPGGRAB_OTA_MUX_IDLE;
-  }
-  return ota;
-}
-
-/*
- * Create and register using mux ID
- */
-void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, int onid, int tsid, int period, int interval, 
-    const char *networkname )
-{
-  dvb_network_t *dn;
-  dvb_mux_t *dm;
-  epggrab_ota_mux_t *ota;
-  LIST_FOREACH(dn, &dvb_networks, dn_global_link) {
-    LIST_FOREACH(dm, &dn->dn_muxes, dm_network_link) {
-      if (dm->dm_transport_stream_id != tsid) continue;
-      if (onid && dm->dm_network_id != onid) continue;
-      if (networkname && (!dm->dm_network_name ||
-                          strcmp(networkname, dm->dm_network_name))) continue;
-      ota = epggrab_ota_create(mod, dm);
-      epggrab_ota_register(ota, period, interval);
-    }
-  }
-}
-
-/*
- * Destrory link (either because it was temporary OR mux deleted)
- */
-void epggrab_ota_destroy ( epggrab_ota_mux_t *ota )
-{
-  TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
-  TAILQ_REMOVE(&ota->dm->dm_epg_grab, ota, dm_link);
-  TAILQ_REMOVE(&ota->grab->muxes, ota, grab_link);
-  if (ota->destroy) ota->destroy(ota);
-  else {
-    if (ota->status) free(ota->status);
-    free(ota);
-  }
-}
-
-/*
- * Destroy by tdmi
- */
-void epggrab_ota_destroy_by_dm ( dvb_mux_t *dm )
-{
-  epggrab_ota_mux_t *ota;
-  while ((ota = TAILQ_FIRST(&dm->dm_epg_grab)))
-    epggrab_ota_destroy(ota);
-}
-
-/*
- * Destroy by module
- */
-void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod )
-{
-  epggrab_ota_mux_t *ota;
-  while ((ota = TAILQ_FIRST(&mod->muxes)))
-    epggrab_ota_destroy(ota);
-}
-
-/*
- * Register interest (called when useful data exists on the MUX
- * thus inserting it into the EPG scanning queue
- */
-void epggrab_ota_register ( epggrab_ota_mux_t *ota, int timeout, int interval )
-{
-  int up = 0;
-  ota->is_reg   = 1;
-  if (timeout > ota->timeout) {
-    up = 1;
-    ota->timeout = timeout;
-  }
-  if (interval > ota->interval) {
-    up = 1;
-    ota->interval = interval;
-  }
-
-  if (up) {
-    TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
-    TAILQ_INSERT_SORTED(&ota_mux_all, ota, glob_link, _ota_time_cmp);
-    epggrab_ota_save();
-  }
-}
-
-/*
- * State changes
- */
-
-static void _epggrab_ota_finished ( epggrab_ota_mux_t *ota )
-{
-  /* Temporary link - delete it */
-  if (!ota->is_reg)
-    epggrab_ota_destroy(ota);
-
-  /* Reinsert into reg queue */
-  else {
-    TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
-    // Find the last queue entry that can run before ota
-    // (i.e _ota_time_cmp(ota, entry)>0) and re-insert ota
-    // directly after this entry. If no matching entry is
-    // found (i.e ota can run before any other entry),
-    // re-insert ota at the queue head.
-    epggrab_ota_mux_t *entry = NULL;
-    epggrab_ota_mux_t *tmp;
-    TAILQ_FOREACH(tmp, &ota_mux_all, glob_link) {
-      if(_ota_time_cmp(ota, tmp)>0) entry = tmp;
-    }
-    if (entry) {
-      TAILQ_INSERT_AFTER(&ota_mux_all, entry, ota, glob_link);
-    } else {
-      TAILQ_INSERT_HEAD(&ota_mux_all, ota, glob_link);
-    }
-  }
-}
-
-int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
-{
-  if (ota->state == EPGGRAB_OTA_MUX_IDLE) {
-    tvhlog(LOG_DEBUG, ota->grab->id, "begin processing");
-    ota->state = EPGGRAB_OTA_MUX_RUNNING;
-    time(&ota->started);
-    return 1;
-  }
-  return 0;
-}
-
-void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
-{
-  dvb_mux_t *dm = ota->dm;
-
-  if (ota->state != EPGGRAB_OTA_MUX_COMPLETE) {
-    tvhlog(LOG_DEBUG, ota->grab->id, "processing complete");
-    ota->state = EPGGRAB_OTA_MUX_COMPLETE;
-    time(&ota->completed);
-
-    /* Check others */
-    TAILQ_FOREACH(ota, &dm->dm_epg_grab, dm_link) {
-      if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
-    }
-#if 0  // XXX(dvbreorg)
-    /* All complete (bring timer forward) */
-    if (!ota) {
-      dvb_network_t *dn = dm->dm_dn;
-      gtimer_arm(&dn->dn_mux_scanner_timer,
-                 dvb_network_mux_scanner, dn, 20);
-    }
-#endif
-  }
-}
-
-/* Reset */
-void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
-{
-  if (ota->state == EPGGRAB_OTA_MUX_RUNNING) {
-    tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
-    ota->state = EPGGRAB_OTA_MUX_IDLE;
-  }
-  _epggrab_ota_finished(ota);
-}
-
-/* Same as complete */
-void epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
-{
-  epggrab_ota_complete(ota);
-  _epggrab_ota_finished(ota);
-}
-
-/*
- * Check status
- */
-
-int epggrab_ota_is_complete ( epggrab_ota_mux_t *ota )
-{
-  if (ota->state == EPGGRAB_OTA_MUX_COMPLETE ||
-      ota->state == EPGGRAB_OTA_MUX_TIMEDOUT) {
-    if (epggrab_ota_is_blocked(ota))
-      return 1;
-    ota->state = EPGGRAB_OTA_MUX_IDLE;
-  }
-  return 0;
-}
-
-int epggrab_ota_is_blocked ( epggrab_ota_mux_t *ota )
-{
-  time_t t;
-  time(&t);
-  return t < (ota->completed + ota->interval);
-}
