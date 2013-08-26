@@ -25,12 +25,23 @@
 
 #include "webui/webui.h"
 
-int              tvhlog_level;
-int              tvhlog_options;
-char            *tvhlog_path;
-htsmsg_t        *tvhlog_debug;
-htsmsg_t        *tvhlog_trace;
-pthread_mutex_t  tvhlog_mutex;
+int                      tvhlog_level;
+int                      tvhlog_options;
+char                    *tvhlog_path;
+htsmsg_t                *tvhlog_debug;
+htsmsg_t                *tvhlog_trace;
+pthread_mutex_t          tvhlog_mutex;
+pthread_cond_t           tvhlog_cond;
+TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
+
+typedef struct tvhlog_msg
+{
+  TAILQ_ENTRY(tvhlog_msg)  link;
+  char                    *msg;
+  int                      severity;
+  int                      notify;
+  struct timeval           time;
+} tvhlog_msg_t;
 
 static const char *logtxtmeta[9][2] = {
   {"EMERGENCY", "\033[31m"},
@@ -43,19 +54,6 @@ static const char *logtxtmeta[9][2] = {
   {"DEBUG",     "\033[32m"},
   {"TRACE",     "\033[32m"},
 };
-
-/* Initialise */
-void 
-tvhlog_init ( int level, int options, const char *path )
-{
-  tvhlog_level   = level;
-  tvhlog_options = options;
-  tvhlog_path    = path ? strdup(path) : NULL;
-  tvhlog_trace   = NULL;
-  tvhlog_debug   = NULL;
-  openlog("tvheadend", LOG_PID, LOG_DAEMON);
-  pthread_mutex_init(&tvhlog_mutex, NULL);
-}
 
 static void
 tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
@@ -81,7 +79,7 @@ static void
 tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
 {
   uint32_t a;
-  char *t, *r = NULL, *s;
+  char *s, *t, *r;
 
   if (*c)
     htsmsg_destroy(*c);
@@ -139,63 +137,142 @@ tvhlog_get_trace ( char *subsys, size_t len )
 }
 
 /* Log */
+static void *
+tvhlog_thread ( void *p )
+{
+  int s, options;
+  char *path = NULL;
+  FILE *fp = NULL;
+  tvhlog_msg_t *msg;
+  size_t l;
+  char buf[2048], t[128];
+  struct tm tm;
+  
+
+  pthread_mutex_lock(&tvhlog_mutex);
+  while (1) {
+
+    /* Wait */
+    if (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
+      if (fp) {
+        fclose(fp); // only issue here is we close with mutex!
+                    // but overall performance will be higher
+        fp = NULL;
+      }
+      pthread_cond_wait(&tvhlog_cond, &tvhlog_mutex);
+      continue;
+    }
+    TAILQ_REMOVE(&tvhlog_queue, msg, link);
+
+    /* Copy options and path */
+    if (!fp) {
+      free(path);
+      path = tvhlog_path ? strdup(tvhlog_path) : NULL;
+    }
+    options  = tvhlog_options; 
+    pthread_mutex_unlock(&tvhlog_mutex);
+
+    /* Syslog */
+    if (options & TVHLOG_OPT_SYSLOG) {
+      if (options & TVHLOG_OPT_DBG_SYSLOG || msg->severity < LOG_DEBUG) {
+        s = msg->severity > LOG_DEBUG ? LOG_DEBUG : msg->severity;
+        syslog(s, "%s", msg->msg);
+      }
+    }
+
+    /* Get time */
+    localtime_r(&msg->time.tv_sec, &tm);
+    l = strftime(t, sizeof(t), "%F %T", &tm);// %d %H:%M:%S", &tm);
+    if (options & TVHLOG_OPT_MILLIS) {
+      int ms = msg->time.tv_usec / 1000;
+      snprintf(t+l, sizeof(t)-l, ".%03d", ms);
+    }
+
+    /* Comet (debug must still be enabled??) */
+    if(msg->notify && msg->severity < LOG_TRACE) {
+      htsmsg_t *m = htsmsg_create_map();
+      snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
+      htsmsg_add_str(m, "notificationClass", "logmessage");
+      htsmsg_add_str(m, "logtxt", buf);
+      comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG);
+      htsmsg_destroy(m);
+    }
+
+    /* Console */
+    if (options & TVHLOG_OPT_STDERR) {
+      if (options & TVHLOG_OPT_DBG_STDERR || msg->severity < LOG_DEBUG) {
+        const char *ltxt = logtxtmeta[msg->severity][0];
+        const char *sgr  = logtxtmeta[msg->severity][1];
+        const char *sgroff;
+    
+        if (options & TVHLOG_OPT_DECORATE)
+          sgroff = "\033[0m";
+        else {
+          sgr    = "";
+          sgroff = "";
+        }
+        fprintf(stderr, "%s%s [%7s] %s%s\n", sgr, t, ltxt, msg->msg, sgroff);
+      }
+    }
+
+    /* File */
+    if (fp || path) {
+      if (options & TVHLOG_OPT_DBG_FILE || msg->severity < LOG_DEBUG) {
+        const char *ltxt = logtxtmeta[msg->severity][0];
+        if (!fp)
+          fp = fopen(path, "a");
+        if (fp)
+          fprintf(fp, "%s [%7s]:%s\n", t, ltxt, msg->msg);
+      }
+    }
+  
+    free(msg->msg);
+    free(msg);
+    pthread_mutex_lock(&tvhlog_mutex);
+  }
+
+  return NULL;
+}
+
 void tvhlogv ( const char *file, int line,
                int notify, int severity,
                const char *subsys, const char *fmt, va_list *args )
 {
-  struct timeval now;
-  struct tm tm;
-  char t[128], buf[2048], buf2[2048];
+  int ok, options;
   size_t l;
-  int s;
-  int options;
-  char *path = NULL;
-  int skip = 0;
-  htsmsg_t *ss;
-
-  /* Map down */
-  if (severity > LOG_DEBUG)
-    s = LOG_DEBUG;
-  else
-    s = severity;
-
+  char buf[1024];
+  
   /* Check debug enabled (and cache config) */
   pthread_mutex_lock(&tvhlog_mutex);
+  options = tvhlog_options;
   if (severity >= LOG_DEBUG) {
-    ss = (severity > LOG_DEBUG) ? tvhlog_trace : tvhlog_debug;
-    if (!ss)
-      skip = 1;
-    else if (severity > tvhlog_level)
-      skip = 1;
-    else {
-      uint32_t a = htsmsg_get_u32_or_default(ss, "all", 0);
-      if (!htsmsg_get_u32_or_default(ss, subsys, a))
-        skip = 1;
+    ok = 0;
+    if (severity <= tvhlog_level) {
+      if (tvhlog_trace) {
+        ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
+        if (!ok)
+          ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
+      }
+      if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
+        ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
+        if (!ok)
+          ok = htsmsg_get_u32_or_default(tvhlog_debug, subsys, ok);
+      }
     }
+  } else {
+    ok = 1;
   }
-  if (!skip) {
-    if (tvhlog_path)
-      path = strdup(tvhlog_path);
-    options = tvhlog_options;
-  }
-  pthread_mutex_unlock(&tvhlog_mutex);
-  if (skip)
-    return;
 
-  /* Get time */
-  gettimeofday(&now, NULL);
-  localtime_r(&now.tv_sec, &tm);
-  l = strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
-  if (options & TVHLOG_OPT_MILLIS) {
-    int ms = now.tv_usec / 1000;
-    snprintf(t+l, sizeof(t)-l, ".%03d", ms);
+  /* Ignore */
+  if (!ok) {
+    pthread_mutex_unlock(&tvhlog_mutex);
+    return;
   }
 
   /* Basic message */
   l = 0;
   if (options & TVHLOG_OPT_THREAD) {
-    pthread_t tid = pthread_self();
-    l += snprintf(buf + l, sizeof(buf) - l, "tid %ld: ", tid);
+    l += snprintf(buf + l, sizeof(buf) - l, "tid %ld: ", pthread_self());
   }
   l += snprintf(buf + l, sizeof(buf) - l, "%s: ", subsys);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
@@ -205,53 +282,17 @@ void tvhlogv ( const char *file, int line,
   else
     l += snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
 
-  /* Syslog */
-  if (options & TVHLOG_OPT_SYSLOG) {
-    if (options & TVHLOG_OPT_DBG_SYSLOG || severity < LOG_DEBUG) {
-      syslog(s, "%s", buf);
-    }
-  } 
-
-  /* Comet (debug must still be enabled??) */
-  if(notify && severity < LOG_TRACE) {
-    htsmsg_t *m = htsmsg_create_map();
-    snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
-    htsmsg_add_str(m, "notificationClass", "logmessage");
-    htsmsg_add_str(m, "logtxt", buf2);
-    comet_mailbox_add_message(m, severity >= LOG_DEBUG);
-    htsmsg_destroy(m);
-  }
-
-  /* Console */
-  if (options & TVHLOG_OPT_STDERR) {
-    if (options & TVHLOG_OPT_DBG_STDERR || severity < LOG_DEBUG) {
-      const char *leveltxt = logtxtmeta[severity][0];
-      const char *sgr      = logtxtmeta[severity][1];
-      const char *sgroff;
-    
-      if (options & TVHLOG_OPT_DECORATE)
-        sgroff = "\033[0m";
-      else {
-        sgr    = "";
-        sgroff = "";
-      }
-      fprintf(stderr, "%s%s [%7s] %s%s\n", sgr, t, leveltxt, buf, sgroff);
-    }
-  }
-
-  /* File */
-  if (path) {
-    if (options & TVHLOG_OPT_DBG_FILE || severity < LOG_DEBUG) {
-      const char *leveltxt = logtxtmeta[severity][0];
-      FILE *fp = fopen(path, "a");
-      if (fp) {
-        fprintf(fp, "%s [%7s]:%s\n", t, leveltxt, buf);
-        fclose(fp);
-      }
-    }
-    free(path);
-  }
+  /* Store */
+  tvhlog_msg_t *msg = calloc(1, sizeof(tvhlog_msg_t));
+  gettimeofday(&msg->time, NULL);
+  msg->msg      = strdup(buf);
+  msg->severity = severity;
+  msg->notify   = notify;
+  TAILQ_INSERT_TAIL(&tvhlog_queue, msg, link);
+  pthread_cond_signal(&tvhlog_cond);
+  pthread_mutex_unlock(&tvhlog_mutex);
 }
+
 
 /*
  * Map args
@@ -302,5 +343,24 @@ _tvhlog_hexdump(const char *file, int line,
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }
+}
+
+/*
+ * Initialise
+ */
+void 
+tvhlog_init ( int level, int options, const char *path )
+{
+  pthread_t tid;
+  tvhlog_level   = level;
+  tvhlog_options = options;
+  tvhlog_path    = path ? strdup(path) : NULL;
+  tvhlog_trace   = NULL;
+  tvhlog_debug   = NULL;
+  openlog("tvheadend", LOG_PID, LOG_DAEMON);
+  pthread_mutex_init(&tvhlog_mutex, NULL);
+  pthread_cond_init(&tvhlog_cond, NULL);
+  TAILQ_INIT(&tvhlog_queue);
+  pthread_create(&tid, NULL, tvhlog_thread, NULL);
 }
 
