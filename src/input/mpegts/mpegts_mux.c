@@ -470,7 +470,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
   mm->mm_active = NULL;
 }
 
-static void
+void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   char buf[256];
@@ -483,7 +483,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   mm->mm_table_filter[mt->mt_pid] = 1;
 }
 
-static void
+void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   char buf[256];

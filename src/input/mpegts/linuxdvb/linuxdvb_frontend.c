@@ -289,6 +289,9 @@ linuxdvb_frontend_open_pid
   struct dmx_pes_filter_params dmx_param;
   int fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
 
+  if (!lfe->lfe_locked || lfe->lfe_fullmux)
+    return -1;
+
   if (!name) {
     lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
     name = buf;
@@ -432,12 +435,18 @@ linuxdvb_frontend_default_tables
 }
 
 static void
-linuxdvb_frontend_open_services ( linuxdvb_frontend_t *lfe )
+linuxdvb_frontend_open_all
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_t *mm )
 {
+  mpegts_table_t *mt;
   service_t *s;
   LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
-    linuxdvb_frontend_open_service((mpegts_input_t*)lfe,
-                                   (mpegts_service_t*)s, 0);
+    lfe->mi_open_service((mpegts_input_t*)lfe,
+                         (mpegts_service_t*)s, 0);
+  }
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (mt->mt_fd == -1)
+      mt->mt_fd = lfe->lfe_open_pid(lfe, mt->mt_pid, NULL);
   }
 }
 
@@ -539,7 +548,7 @@ linuxdvb_frontend_monitor ( void *aux )
       linuxdvb_frontend_default_tables(lfe, (linuxdvb_mux_t*)mm);
 
       /* Services */
-      linuxdvb_frontend_open_services(lfe);
+      linuxdvb_frontend_open_all(lfe, mm);
 
     /* Re-arm (quick) */
     } else {

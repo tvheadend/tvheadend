@@ -429,34 +429,25 @@ linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 static void
 linuxdvb_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  char buf[256];
   linuxdvb_frontend_t *lfe;
-  if (mt->mt_pid >= 0x2000)
-    return;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  if (!mm->mm_table_filter[mt->mt_pid])
-    tvhtrace("mpegts", "%s - opened table %s pid %04X (%d)",
-             buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
-  mm->mm_table_filter[mt->mt_pid] = 1;
+  mpegts_mux_open_table(mm, mt);
 
   /* Open DMX */
   if (mm->mm_active) {
     lfe       = (linuxdvb_frontend_t*)mm->mm_active->mmi_input;
     mt->mt_fd = lfe->lfe_open_pid(lfe, mt->mt_pid, NULL);
+  } else {
+    mt->mt_fd = -1;
   }
 }
 
 static void
 linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  char buf[256];
-  if (mt->mt_pid >= 0x2000)
-    return;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - closed table %s pid %04X (%d)",
-           buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
-  mm->mm_table_filter[mt->mt_pid] = 0;
-  close(mt->mt_fd);
+  mpegts_mux_close_table(mm, mt);
+
+  if (mt->mt_fd != -1)
+    close(mt->mt_fd);
 }
 
 static void

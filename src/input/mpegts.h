@@ -530,6 +530,9 @@ int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
+void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
+void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
+
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
    int64_t *pcr, uint16_t *pcr_pid, const char *name);
