@@ -68,8 +68,17 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
+static int 
+mms_cmp ( mpegts_mux_sub_t *a, mpegts_mux_sub_t *b )
+{
+  if (a->mms_src < b->mms_src) return -1;
+  if (a->mms_src > b->mms_src) return 1;
+  return 0;
+}
+
 int
-mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
+mpegts_mux_instance_start
+  ( mpegts_mux_instance_t **mmiptr, void *src, int weight )
 {
   int r;
   char buf[256], buf2[256];;
@@ -90,6 +99,21 @@ mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr )
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
   r = mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi);
   if (r) return r;
+
+  /* Add sub */
+  if (src) {
+    mpegts_mux_sub_t *sub;
+    static mpegts_mux_sub_t *skel = NULL;
+    if (!skel)
+      skel = calloc(1, sizeof(mpegts_mux_sub_t));
+    skel->mms_src = src;
+    sub = RB_INSERT_SORTED(&mmi->mmi_subs, skel, mms_link, mms_cmp);
+    if (!sub) {
+      sub  = skel;
+      skel = NULL;
+      sub->mms_weight = weight;
+    }
+  }    
 
   /* Start */
   tvhdebug("mpegts", "%s - started", buf);
@@ -251,7 +275,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm )
   tvhinfo("mpegts", "%s - deleting", buf);
   
   /* Stop */
-  mm->mm_stop(mm);
+  mm->mm_stop(mm, NULL, 1);
 
   /* Remove from lists */
   LIST_REMOVE(mm, mm_network_link);
@@ -290,7 +314,8 @@ mpegts_mux_create_instances ( mpegts_mux_t *mm )
 }
 
 static int
-mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
+mpegts_mux_start
+  ( mpegts_mux_t *mm, void *src, const char *reason, int weight )
 {
   int pass, fail;
   char buf[256];
@@ -353,7 +378,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     if (tune) {
       tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
               buf, reason, weight);
-      if (!(fail = mpegts_mux_instance_start(&tune))) break;
+      if (!(fail = mpegts_mux_instance_start(&tune, src, weight))) break;
       tune = NULL;
       tvhwarn("mpegts", "%s - failed to start, try another", buf);
     }
@@ -371,12 +396,44 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   return 0;
 }
 
+static int
+mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
+{
+  mpegts_mux_instance_t *mmi = mm->mm_active;
+  if (mmi) {
+    if (RB_FIRST(&mmi->mmi_subs))
+      return 1; 
+    return mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm);
+  }
+  return 0;
+}
+
 static void
-mpegts_mux_stop ( mpegts_mux_t *mm )
+mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
 {
   char buf[256];
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi = NULL;
+  mpegts_mux_sub_t *sub, skel;
+
+  /* Remove subs */
+  if (mmi) {
+    if (force) {
+      while ((sub = RB_FIRST(&mmi->mmi_subs))) {
+        RB_REMOVE(&mmi->mmi_subs, sub, mms_link);
+        free(sub);
+      }
+    } else if (src) {
+      skel.mms_src = src;
+      if ((sub = RB_FIND(&mmi->mmi_subs, &skel, mms_link, mms_cmp))) {
+        RB_REMOVE(&mmi->mmi_subs, sub, mms_link);
+        free(sub);
+      }
+    }
+  }
+
+  if (mpegts_mux_has_subscribers(mm))
+    return;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhdebug("mpegts", "%s - stopping mux", buf);
@@ -442,15 +499,6 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
  * Scanning
  * *************************************************************************/
 
-static int
-mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
-{
-  mpegts_mux_instance_t *mmi = mm->mm_active;
-  if (mmi)
-    return mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm);
-  return 0;
-}
-
 static void
 mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
 {
@@ -497,10 +545,7 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   mpegts_network_schedule_initial_scan(mn);
 
   /* Stop */
-  if (!mpegts_mux_has_subscribers(mm)) {
-    tvhtrace("mpegts", "%s - no active subscribers, stop", buf);
-    mm->mm_stop(mm);
-  }
+  mm->mm_stop(mm, mn, 0);
 
   /* Save */
   mm->mm_initial_scan_done = 1;

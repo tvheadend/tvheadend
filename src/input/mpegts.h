@@ -34,6 +34,7 @@ typedef struct mpegts_network       mpegts_network_t;
 typedef struct mpegts_mux           mpegts_mux_t;
 typedef struct mpegts_service       mpegts_service_t;
 typedef struct mpegts_mux_instance  mpegts_mux_instance_t;
+typedef struct mpegts_mux_sub       mpegts_mux_sub_t;
 typedef struct mpegts_input         mpegts_input_t;
 typedef struct mpegts_table_feed    mpegts_table_feed_t;
 
@@ -251,8 +252,9 @@ struct mpegts_mux
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
-  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
-  void (*mm_stop)             (mpegts_mux_t *mm);
+  int  (*mm_start)            (mpegts_mux_t *mm,
+                               void *src, const char *r, int w);
+  void (*mm_stop)             (mpegts_mux_t *mm, void *src, int force);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
@@ -349,10 +351,19 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
+  RB_HEAD(,mpegts_mux_sub)      mmi_subs;
+
   // TODO: remove this
   int             mmi_tune_failed; // this is really DVB
 
   void (*mmi_delete) (mpegts_mux_instance_t *mmi);
+};
+
+struct mpegts_mux_sub
+{
+  RB_ENTRY(mpegts_mux_sub)  mms_link;
+  void                     *mms_src;
+  int                       mms_weight;
 };
 
 /* Input source */
@@ -512,7 +523,8 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
   (struct type*)mpegts_mux_instance_create0(calloc(1, sizeof(struct type)),\
                                             &type##_class, uuid,\
                                             mi, mm);
-int mpegts_mux_instance_start ( mpegts_mux_instance_t **mmiptr );
+int mpegts_mux_instance_start
+  ( mpegts_mux_instance_t **mmiptr, void *src, int weight );
 
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );

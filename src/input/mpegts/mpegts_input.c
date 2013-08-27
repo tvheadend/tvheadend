@@ -93,6 +93,7 @@ int
 mpegts_input_current_weight ( mpegts_input_t *mi )
 {
   const mpegts_mux_instance_t *mmi;
+  const mpegts_mux_sub_t      *mms;
   const service_t *s;
   const th_subscription_t *ths;
   int w = 0;
@@ -101,10 +102,8 @@ mpegts_input_current_weight ( mpegts_input_t *mi )
 
   /* Check for scan (weight 1) */
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
-    if (mmi->mmi_mux->mm_initial_scan_status == MM_SCAN_CURRENT) {
-      w = 1;
-      break;
-    }
+    RB_FOREACH(mms, &mmi->mmi_subs, mms_link)
+      w = MAX(w, mms->mms_weight);
   }
 
   /* Check subscriptions */
