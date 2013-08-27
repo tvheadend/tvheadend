@@ -62,16 +62,15 @@ struct mpegts_psi_section
   uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
 };
 
-struct mpegts_table_state
+typedef struct mpegts_table_state
 {
-  int tableid;
-  int extraid;
-  int section;
-  int version;
-  int complete;
-  int last;
+  int      tableid;
+  int      extraid;
+  int      version;
+  int      complete;
+  uint32_t sections[8];
   RB_ENTRY(mpegts_table_state) link;
-};
+} mpegts_table_state_t;
 
 struct mpegts_table
 {
@@ -119,6 +118,8 @@ struct mpegts_table
 
   int mt_destroyed; // Refcounting
   int mt_refcount;
+
+  int mt_cc;
 
   mpegts_psi_section_t mt_sect;
 };

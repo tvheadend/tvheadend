@@ -154,6 +154,15 @@ do {\
 
 /* PSI table callbacks */
 
+struct mpegts_table_state;
+
+int dvb_table_end
+  (struct mpegts_table *mt, struct mpegts_table_state *st, int sect );
+int dvb_table_begin
+  (struct mpegts_table *mt, const uint8_t *ptr, int len,
+   int tableid, int extraid, int minlen,
+   struct mpegts_table_state **st, int *sect, int *last, int *ver);
+
 int dvb_pat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_cat_callback

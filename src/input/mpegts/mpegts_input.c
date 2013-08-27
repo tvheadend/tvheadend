@@ -250,6 +250,8 @@ mpegts_input_recv_packets
           mtf->mtf_mux = mm;
           TAILQ_INSERT_TAIL(&mi->mi_table_feed, mtf, mtf_link);
           table_wakeup = 1;
+        } else {
+          tvhdebug("tsdemux", "%s - SI packet had errors", name);
         }
       
       /* Other */
@@ -296,6 +298,7 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
   int      i   = 0;
   int      len = mm->mm_num_tables;
   uint16_t pid = ((mtf->mtf_tsb[1] & 0x1f) << 8) | mtf->mtf_tsb[2];
+  uint8_t  cc  = (mtf->mtf_tsb[3] & 0x0f);
   mpegts_table_t *mt, *vec[len];
 
   /* Collate - tables may be removed during callbacks */
@@ -308,9 +311,13 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
   /* Process */
   for (i = 0; i < len; i++) {
     mt = vec[i];
-    if (!mt->mt_destroyed && mt->mt_pid == pid)
+    if (!mt->mt_destroyed && mt->mt_pid == pid) {
+      if (mt->mt_cc != -1 && mt->mt_cc != cc)
+        tvhdebug("psi", "pid %04X cc error %d != %d", pid, mt->mt_cc, cc);
+      mt->mt_cc = (cc + 1) % 16;
       mpegts_psi_section_reassemble(&mt->mt_sect, mtf->mtf_tsb, 0,
                                     mpegts_table_dispatch, mt);
+    }
     mpegts_table_release(mt);
   }
 }

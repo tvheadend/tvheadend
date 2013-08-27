@@ -55,16 +55,20 @@ mpegts_table_dispatch
 
   /* It seems some hardware (or is it the dvb API?) does not
      honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && tvh_crc32(sec, r, 0xffffffff))
+  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
+    tvhdebug(mt->mt_name, "invalid checksum");
     return;
+  }
 
   /* Table info */
   tid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
   
   /* Not enough data */
-  if(len < r - 3)
+  if(len < r - 3) {
+    tvhtrace(mt->mt_name, "not enough data, %d < %d", (int)r, len);
     return;
+  }
 
   /* Check table mask */
   if((tid & mt->mt_mask) != mt->mt_table)
@@ -73,7 +77,7 @@ mpegts_table_dispatch
   /* Strip trailing CRC */
   if(chkcrc)
     len -= 4;
-  
+
   /* Pass with tableid / len in data */
   if (mt->mt_flags & MT_FULL)
     ret = mt->mt_callback(mt, sec, len+3, tid);
@@ -149,6 +153,7 @@ mpegts_table_add
   mt->mt_mask     = mask;
   mt->mt_mux      = mm;
   mt->mt_fd       = -1;
+  mt->mt_cc       = -1;
   LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
   mm->mm_num_tables++;
 

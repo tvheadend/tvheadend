@@ -394,8 +394,21 @@ static int sect_cmp
   return a->extraid - b->extraid;
 }
 
-static struct mpegts_table_state *mpegts_table_state_find
-  ( mpegts_table_t *mt, int tableid, int extraid )
+static void
+mpegts_table_state_reset
+  ( mpegts_table_state_t *st, int last )
+{
+  int i;
+  st->complete = 0;
+  memset(st->sections, 0, sizeof(st->sections));
+  for (i = 0; i < last / 32; i++)
+    st->sections[i] = 0xFFFFFFFF;
+  st->sections[last / 32] = 0xFFFFFFFF << (31 - (last % 32));
+}
+
+static struct mpegts_table_state *
+mpegts_table_state_find
+  ( mpegts_table_t *mt, int tableid, int extraid, int last )
 {
   static struct mpegts_table_state *st, *skel = NULL;
 
@@ -408,6 +421,7 @@ static struct mpegts_table_state *mpegts_table_state_find
   if (!st) {
     st   = skel;
     skel = NULL;
+    mpegts_table_state_reset(st, last);
   }
   return st;
 }
@@ -423,8 +437,8 @@ dvb_table_complete
   struct mpegts_table_state *st;
   tvhtrace(mt->mt_name, "status: ");
   RB_FOREACH(st, &mt->mt_state, link) {
-    tvhtrace(mt->mt_name, "  tableid %02X extraid %08X sect %2d last %2d ver %2d complete %d",
-             st->tableid, st->extraid, st->section, st->last, st->version, st->complete);
+    tvhtrace(mt->mt_name, "  tableid %02X extraid %08X ver %2d complete %d",
+             st->tableid, st->extraid, st->version, st->complete);
     if (!st->complete)
       p = 1;
     else
@@ -437,20 +451,26 @@ dvb_table_complete
 
 static int
 dvb_table_end
-  (mpegts_table_t *mt, int tableid, int extraid, int sect, int last, int ver)
+  (mpegts_table_t *mt, mpegts_table_state_t *st, int sect)
 {
-  struct mpegts_table_state *st;
-  if ((st = mpegts_table_state_find(mt, tableid, extraid))) {
-    tvhtrace(mt->mt_name, "  next section %d", sect + 1);
-    st->section = sect + 1;
-    st->version = ver;
-    st->last    = last;
-    if (sect == last) {
-      tvhtrace(mt->mt_name, "  subtable completed");
+  int sa, sb;
+  uint32_t rem;
+  if (st) {
+    sa = sect / 32;
+    sb = sect % 32;
+    st->sections[sa] &= ~(0x1 << (31 - sb));
+    if (!st->sections[sa]) {
+      rem = 0;
+      for (sa = 0; sa < 8; sa++)
+        rem |= st->sections[sa];
+      if (rem) return -1;
+      tvhtrace(mt->mt_name, "  tableid %02X extraid %08X completed",
+               st->tableid, st->extraid);
       st->complete = 1;
+      return dvb_table_complete(mt);
     }
   }
-  return dvb_table_complete(mt);
+  return -1;
 }
 
 /*
@@ -458,54 +478,62 @@ dvb_table_end
  */
 static int
 dvb_table_begin
-  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid,
-   int extraid, int minlen, int *sect, int *last, int *ver)
+  (mpegts_table_t *mt, const uint8_t *ptr, int len,
+   int tableid, int extraid, int minlen,
+   mpegts_table_state_t **ret, int *sect, int *last, int *ver)
 {
-  static struct mpegts_table_state *st;
+  mpegts_table_state_t *st;
+  uint32_t sa, sb;
 
   /* Not long enough */
-  if (len <= minlen)
+  if (len < minlen) {
+    tvhdebug(mt->mt_name, "invalid table length %d min %d", len, minlen);
     return -1;
+  }
 
   /* Ignore next */
   if((ptr[2] & 1) == 0)
     return -1;
 
-  tvhtrace(mt->mt_name, "tableid %02X len %d", tableid, len);
+  tvhtrace(mt->mt_name, "tableid %02X extraid %08X len %d",
+           tableid, extraid, len);
 
   /* Section info */
-  if (sect) {
+  if (sect && ret) {
     *sect = ptr[3];
     *last = ptr[4];
     *ver  = (ptr[2] >> 1) & 0x1F;
-    tvhtrace(mt->mt_name, "  extraid %08X", extraid);
     tvhtrace(mt->mt_name, "  section %d last %d ver %d", *sect, *last, *ver);
-    tvhlog_hexdump(mt->mt_name, ptr, len);
-    st = mpegts_table_state_find(mt, tableid, extraid);
+    *ret = st = mpegts_table_state_find(mt, tableid, extraid, *last);
 
     /* New version */
     if (st->complete &&
         st->version != *ver) {
-      tvhtrace(mt->mt_name, "  new version");
-      st->complete = st->section = 0;
+      tvhtrace(mt->mt_name, "  new version, restart");
+      mpegts_table_state_reset(st, *last);
     }
+    st->version = *ver;
 
-    /* Ignore */
+    /* Complete? */
     if (st->complete) {
-      st->complete = 2;
-      return dvb_table_complete(mt);
-    }
-
-    /* Not the right section */
-    tvhtrace(mt->mt_name, "  waiting for section %d version %d",
-             st->section, st->version);
-    if (st->section != *sect) {
-      tvhtrace(mt->mt_name, "  skip, wrong section");
+      tvhtrace(mt->mt_name, "  skip, already complete");
+      if (st->complete == 1) {
+        st->complete = 2;
+        return dvb_table_complete(mt);
+      }
       return -1;
     }
-  } else {
-    tvhlog_hexdump(mt->mt_name, ptr, len);
+
+    /* Already seen? */
+    sa = *sect / 32;
+    sb = *sect % 32;
+    if (!(st->sections[sa] & (0x1 << (31 - sb)))) {
+      tvhtrace(mt->mt_name, "  skip, already seen");
+      return -1;
+    }
   }
+
+  tvhlog_hexdump(mt->mt_name, ptr, len);
 
   return 1;
 }
@@ -521,10 +549,11 @@ dvb_pat_callback
   uint16_t sid, pid, tsid;
   uint16_t nit_pid = 0;
   mpegts_mux_t          *mm  = mt->mt_mux;
+  mpegts_table_state_t  *st  = NULL;
 
   /* Begin */
   if (tableid != 0) return -1;
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 5, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, 0, 5, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* Multiplex */
@@ -567,7 +596,7 @@ dvb_pat_callback
                      NULL, "nit", MT_QUICKREQ | MT_CRC, nit_pid);
 
   /* End */
-  return dvb_table_end(mt, tableid, 0, sect, last, ver);
+  return dvb_table_end(mt, st, sect);
 }
 
 /*
@@ -580,7 +609,7 @@ static int
 dvb_ca_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  (void)dvb_table_begin(mt, ptr, len, tableid, 0, 0, NULL, NULL, NULL);
+  (void)dvb_table_begin(mt, ptr, len, tableid, 0, 0, NULL, NULL, NULL, NULL);
 #if ENABLE_CWC
   cwc_emm((uint8_t*)ptr, len, (uintptr_t)mt->mt_opaque, mt->mt_mux);
 #endif
@@ -596,9 +625,10 @@ dvb_cat_callback
   uint16_t pid; 
   uintptr_t caid;
   mpegts_mux_t          *mm  = mt->mt_mux;
+  mpegts_table_state_t  *st  = NULL;
 
   /* Start */
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 7, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, 0, 7, &st, &sect, &last, &ver);
   if (r != 1) return r;
   ptr += 5;
   len -= 5;
@@ -640,9 +670,10 @@ dvb_pmt_callback
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
+  mpegts_table_state_t  *st  = NULL;
 
   /* Start */
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 9, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, 0, 9, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* Find service */
@@ -658,7 +689,7 @@ dvb_pmt_callback
   pthread_mutex_unlock(&s->s_stream_mutex);
 
   /* Finish */
-  return dvb_table_end(mt, tableid, 0, sect, last, ver);
+  return dvb_table_end(mt, st, sect);
 }
 
 /*
@@ -677,13 +708,14 @@ dvb_nit_callback
   mpegts_mux_t     *mm = mt->mt_mux, *mux;
   mpegts_network_t *mn = mm->mm_network;
   char name[256], dauth[256];
+  mpegts_table_state_t  *st  = NULL;
 
   /* Net/Bat ID */
   nbid = (ptr[0] << 8) | ptr[1];
 
   /* Begin */
   if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A) return -1;
-  r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* BAT */
@@ -777,7 +809,7 @@ dvb_nit_callback
   }
 
   /* End */
-  return dvb_table_end(mt, tableid, nbid, sect, last, ver);
+  return dvb_table_end(mt, st, sect);
 }
 
 /**
@@ -793,13 +825,14 @@ dvb_sdt_callback
   uint8_t dtag, dlen;
   const uint8_t *lptr, *dptr;
   mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_table_state_t  *st  = NULL;
 
   /* Begin */
   tsid    = ptr[0] << 8 | ptr[1];
   onid    = ptr[5] << 8 | ptr[6];
   extraid = ((int)onid) << 16 | tsid;
   if (tableid != 0x42 && tableid != 0x46) return -1;
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 8, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 8, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* ID */
@@ -928,7 +961,7 @@ dvb_sdt_callback
   }
 
   /* Done */
-  return dvb_table_end(mt, tableid, extraid, sect, last, ver);
+  return dvb_table_end(mt, st, sect);
 }
 
 /*
