@@ -343,7 +343,7 @@ tvheadend.epg = function() {
 	var epgFilterChannels = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
 		width : 200,
-		displayField : 'name',
+		displayField : 'val',
 		store : tvheadend.channels,
 		mode : 'local',
 		editable : true,
@@ -394,8 +394,8 @@ tvheadend.epg = function() {
 	}
 
 	epgFilterChannels.on('select', function(c, r) {
-		if (epgStore.baseParams.channel != r.data.name) {
-			epgStore.baseParams.channel = r.data.name;
+		if (epgStore.baseParams.channel != r.data.key) {
+			epgStore.baseParams.channel = r.data.key;
 			epgStore.reload();
 		}
 	});
