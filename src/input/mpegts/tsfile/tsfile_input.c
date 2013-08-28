@@ -67,8 +67,8 @@ tsfile_input_thread ( void *aux )
   /* Polling */
   memset(&ev, 0, sizeof(ev));
   efd = tvhpoll_create(2);
-  ev.events = TVHPOLL_IN;
-  ev.fd     = mi->mi_thread_pipe.rd;
+  ev.events          = TVHPOLL_IN;
+  ev.fd = ev.data.fd = mi->mi_thread_pipe.rd;
   tvhpoll_add(efd, &ev, 1);
 
   /* Get file length */

@@ -312,8 +312,8 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     if (fd != -1) {
       tvhpoll_event_t ev;
       memset(&ev, 0, sizeof(ev));
-      ev.events = TVHPOLL_IN;
-      ev.fd     = im->mm_iptv_fd = fd;
+      ev.events          = TVHPOLL_IN;
+      ev.fd = ev.data.fd = im->mm_iptv_fd = fd;
       if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
         tvherror("iptv", "%s - failed to add to poll q", buf);
         close(fd);

@@ -613,10 +613,10 @@ linuxdvb_frontend_input_thread ( void *aux )
   /* Setup poll */
   efd = tvhpoll_create(2);
   memset(ev, 0, sizeof(ev));
-  ev[0].events  = TVHPOLL_IN;
-  ev[0].fd      = dvr;
-  ev[1].events  = TVHPOLL_IN;
-  ev[1].fd      = lfe->lfe_dvr_pipe.rd;
+  ev[0].events             = TVHPOLL_IN;
+  ev[0].fd = ev[0].data.fd = dvr;
+  ev[1].events             = TVHPOLL_IN;
+  ev[1].fd = ev[1].data.fd = lfe->lfe_dvr_pipe.rd;
   tvhpoll_add(efd, ev, 2);
 
   /* Read */
