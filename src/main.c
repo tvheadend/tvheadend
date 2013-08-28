@@ -792,6 +792,7 @@ main(int argc, char **argv)
   pthread_mutex_unlock(&global_lock);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
+  tvhlog_end();
 
   if(opt_fork)
     unlink(opt_pidpath);

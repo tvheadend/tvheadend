@@ -25,11 +25,13 @@
 
 #include "webui/webui.h"
 
+int			 tvhlog_exit;
 int                      tvhlog_level;
 int                      tvhlog_options;
 char                    *tvhlog_path;
 htsmsg_t                *tvhlog_debug;
 htsmsg_t                *tvhlog_trace;
+pthread_t                tvhlog_tid;
 pthread_mutex_t          tvhlog_mutex;
 pthread_cond_t           tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
@@ -147,13 +149,13 @@ tvhlog_thread ( void *p )
   size_t l;
   char buf[2048], t[128];
   struct tm tm;
-  
 
   pthread_mutex_lock(&tvhlog_mutex);
   while (1) {
 
     /* Wait */
     if (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
+      if (tvhlog_exit) break;
       if (fp) {
         fclose(fp); // only issue here is we close with mutex!
                     // but overall performance will be higher
@@ -351,7 +353,7 @@ _tvhlog_hexdump(const char *file, int line,
 void 
 tvhlog_init ( int level, int options, const char *path )
 {
-  pthread_t tid;
+  tvhlog_exit    = 0;
   tvhlog_level   = level;
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
@@ -361,6 +363,15 @@ tvhlog_init ( int level, int options, const char *path )
   pthread_mutex_init(&tvhlog_mutex, NULL);
   pthread_cond_init(&tvhlog_cond, NULL);
   TAILQ_INIT(&tvhlog_queue);
-  pthread_create(&tid, NULL, tvhlog_thread, NULL);
+  pthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
 }
 
+void
+tvhlog_end ( void )
+{
+  pthread_mutex_lock(&tvhlog_mutex);
+  tvhlog_exit = 1;
+  pthread_cond_signal(&tvhlog_cond);
+  pthread_mutex_unlock(&tvhlog_mutex);
+  pthread_join(tvhlog_tid, NULL);
+}
