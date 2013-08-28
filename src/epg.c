@@ -1716,8 +1716,8 @@ epg_episode_t *epg_broadcast_get_episode
   if (!ebc) return NULL;
   if (ebc->episode) return ebc->episode;
   if (!create) return NULL;
-  snprintf(uri, sizeof(uri)-1, "tvh://channel-%d/bcast-%u/episode",
-           ebc->channel->ch_id, ebc->id);
+  snprintf(uri, sizeof(uri)-1, "tvh://channel-%s/bcast-%u/episode",
+           idnode_uuid_as_str(&ebc->channel->ch_id), ebc->id);
   if ((ee = epg_episode_find_by_uri(uri, 1, save)))
     *save |= epg_broadcast_set_episode(ebc, ee, ebc->grabber);
   return ee;
@@ -1751,7 +1751,7 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_s64(m, "stop", broadcast->stop);
   htsmsg_add_str(m, "episode", broadcast->episode->uri);
   if (broadcast->channel)
-    htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
+    htsmsg_add_str(m, "channel", channel_get_uuid(broadcast->channel));
   if (broadcast->dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
   if (broadcast->is_widescreen)
@@ -1791,7 +1791,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_serieslink_t *esl;
   lang_str_t *ls;
   const char *str;
-  uint32_t chid, eid, u32;
+  uint32_t eid, u32;
   int64_t start, stop;
 
   if ( htsmsg_get_s64(m, "start", &start) ) return NULL;
@@ -1813,9 +1813,8 @@ epg_broadcast_t *epg_broadcast_deserialize
   }
 
   /* Get channel */
-  if ( !htsmsg_get_u32(m, "channel", &chid) ) {
-    ch  = channel_find_by_identifier(chid);
-  }
+  if ((str = htsmsg_get_str(m, "channel")))
+    ch = channel_find(str);
   if (!ch) return NULL;
 
   /* Create */
@@ -2249,9 +2248,11 @@ void epg_query0
 
   /* All channels */
   } else {
+#if TODO
     RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
       _eqr_add_channel(eqr, channel, genre, preg, now, lang);
     }
+#endif
   }
   if (preg) regfree(preg);
 
@@ -2261,8 +2262,8 @@ void epg_query0
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       epg_genre_t *genre, const char *title, const char *lang)
 {
-  channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
-  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
+  channel_t     *ch = channel ? channel_find(channel)    : NULL;
+  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
   epg_query0(eqr, ch, ct, genre, title, lang);
 }
 

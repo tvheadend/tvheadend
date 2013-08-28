@@ -20,7 +20,7 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "globalheaders.h"
-#include "avc.h"
+#include "parsers/parser_avc.h"
 
 typedef struct globalheaders {
   streaming_target_t gh_input;

@@ -25,6 +25,7 @@ tvheadend.channelrec = new Ext.data.Record.create(
 	[ 'name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
 		'epg_post_end', 'number' ]);
 
+/*
 tvheadend.channels = new Ext.data.JsonStore({
 	autoLoad : true,
 	root : 'entries',
@@ -43,6 +44,86 @@ tvheadend.channels = new Ext.data.JsonStore({
 tvheadend.comet.on('channels', function(m) {
 	if (m.reload != null) tvheadend.channels.reload();
 });
+*/
+
+/*
+ * Service mapping
+ */
+tvheadend.mapServices = function()
+{
+  var panel = null;
+  var win   = null;
+
+  /* Form fields */
+  var availCheck = new Ext.form.Checkbox({
+    name        : 'check_availability',
+    fieldLabel  : 'Check availability',
+    checked     : false
+  });
+  var ftaCheck   = new Ext.form.Checkbox({
+    name        : 'encrypted',
+    fieldLabel  : 'Include encrypted services',
+    checked     : false,
+    // TODO: make dependent on CSA config
+  });
+  var mergeCheck = new Ext.form.Checkbox({
+    name        : 'merge_same_name',
+    fieldLabel  : 'Merge same name',
+    checked     : false
+  });
+  var provtagCheck = new Ext.form.Checkbox({
+    name        : 'provider_tags',
+    fieldLabel  : 'Create provider tags',
+    checked     : false
+  });
+  // TODO: provider list
+  items = [ availCheck, ftaCheck, mergeCheck, provtagCheck ];
+
+  /* Form */
+  var undoBtn = new Ext.Button({
+    text    : 'Cancel',
+    handler : function () {
+      win.close();
+    }
+  });
+
+  var saveBtn = new Ext.Button({  
+    text    : 'Map',
+    tooltip : 'Begin mapping',
+    handler : function () {
+      panel.getForm().submit({
+        url         : 'api/service/mapper/start',
+        waitMessage : 'Mapping services...'
+      });
+    } 
+  });
+
+  panel = new Ext.FormPanel({
+    frame       : true,
+    border      : true,
+    bodyStyle   : 'padding: 5px',
+    labelAlign  : 'left',
+    labelWidth  : 200,
+    autoWidth   : true,
+    autoHeight  : true,
+    defaultType : 'textfield',
+    buttonAlign : 'left',
+    items       : items,
+    buttons     : [ undoBtn, saveBtn ]
+  });
+   
+  /* Create window */
+  win = new Ext.Window({
+    title       : 'Map services',
+    layout      : 'fit',
+    autoWidth   : true,
+    autoHeight  : true,
+    plain       : true,
+    items       : panel
+  });
+
+  win.show();
+}
 
 /**
  *
@@ -347,6 +428,14 @@ tvheadend.chconf = function() {
 		disabled : true
 	});
 
+  var mapButton = new Ext.Toolbar.Button({
+    tooltip : 'Map services to channels',
+    iconCls : '',
+    text    : 'Map Services',
+    handler : tvheadend.mapServices,
+    disabled : false
+  });
+
 	var grid = new Ext.grid.EditorGridPanel({
 		stripeRows : true,
 		title : 'Channels',
@@ -359,7 +448,7 @@ tvheadend.chconf = function() {
 			forceFit : true
 		},
 		selModel : selModel,
-		tbar : [ addBtn, '-', delBtn, '-', saveBtn, rejectBtn, '->', {
+		tbar : [ addBtn, '-', delBtn, '-', saveBtn, rejectBtn, '-', mapButton, '->', {
 			text : 'Help',
 			handler : function() {
 				new tvheadend.help('Channels', 'config_channels.html');
@@ -378,4 +467,33 @@ tvheadend.chconf = function() {
 	});
 
 	return grid;
+}
+
+tvheadend.channel_tab = function(panel)
+{
+  var mapButton = new Ext.Toolbar.Button({
+    tooltip : 'Map services to channels',
+    iconCls : '',
+    text    : 'Map Services',
+    handler : tvheadend.mapServices,
+    disabled : false,
+  });
+
+  tvheadend.idnode_grid(panel, {
+    url     : 'api/channel',
+    comet   : 'channel',
+    titleS  : 'Channel',
+    titleP  : 'Channels',
+    add     : false,
+    del     : false,
+    tbar    : [ mapButton ],
+    lcol    : [
+      {
+        header   : 'Play',
+        renderer : function (v, o, r) {
+          return "<a href='stream/channel/" + r.id + "'>Play</a>";
+        }
+      }
+    ]
+  });
 }

@@ -31,7 +31,6 @@
 #include "settings.h"
 
 #include "tvheadend.h"
-#include "psi.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "channels.h"
@@ -40,12 +39,15 @@
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "imagecache.h"
+#include "service_mapper.h"
+#include "htsbuf.h"
 
-struct channel_tree channel_name_tree;
-static struct channel_tree channel_identifier_tree;
+struct channel_tree channels;
+
 struct channel_tag_queue channel_tags;
 static dtable_t *channeltags_dtable;
 
+static void channel_tag_init ( void );
 static channel_tag_t *channel_tag_find(const char *id, int create);
 static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
 					int flags);
@@ -53,522 +55,389 @@ static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm,
 #define CTM_DESTROY_UPDATE_TAG     0x1
 #define CTM_DESTROY_UPDATE_CHANNEL 0x2
 
+static int
+ch_id_cmp ( channel_t *a, channel_t *b )
+{
+  return channel_get_id(a) - channel_get_id(b);
+}
 
-/**
- *
- */
+/* **************************************************************************
+ * Class definition
+ * *************************************************************************/
+
 static void
-channel_list_changed(void)
+channel_class_save ( idnode_t *self )
 {
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("channels", m);
+  channel_save((channel_t*)self);
 }
 
-
-static int
-dictcmp(const char *a, const char *b)
+static const void *
+channel_class_services_get ( void *obj )
 {
-  long int da, db;
+  static char *s = NULL;
+  const char *uuid;
+  int first = 1;
+  channel_t *ch = obj;
+  htsbuf_queue_t hq;
+  channel_service_mapping_t *csm;
+  
+  /* Free previous */
+  if (s) free(s);
+  s = NULL;
 
-  while(1) {
-    switch((*a >= '0' && *a <= '9' ? 1 : 0)|(*b >= '0' && *b <= '9' ? 2 : 0)) {
-    case 0:  /* 0: a is not a digit, nor is b */
-      if(*a != *b)
-	return *(const unsigned char *)a - *(const unsigned char *)b;
-      if(*a == 0)
-	return 0;
-      a++;
-      b++;
-      break;
-    case 1:  /* 1: a is a digit,  b is not */
-    case 2:  /* 2: a is not a digit,  b is */
-	return *(const unsigned char *)a - *(const unsigned char *)b;
-    case 3:  /* both are digits, switch to integer compare */
-      da = strtol(a, (char **)&a, 10);
-      db = strtol(b, (char **)&b, 10);
-      if(da != db)
-	return da - db;
-      break;
-    }
-  }
-}
-
-
-/**
- *
- */
-static int
-channelcmp(const channel_t *a, const channel_t *b)
-{
-  return dictcmp(a->ch_name, b->ch_name);
-}
-
-
-/**
- *
- */
-static int
-chidcmp(const channel_t *a, const channel_t *b)
-{
-  return a->ch_id - b->ch_id;
-}
-
-/**
- *
- */
-static void
-channel_set_name(channel_t *ch, const char *name)
-{
-  channel_t *x;
-  const char *n2;
-  int l, i;
-  char *cp, c;
-
-  free((void *)ch->ch_name);
-  free((void *)ch->ch_sname);
-
-  ch->ch_name = strdup(name);
-
-  l = strlen(name);
-  ch->ch_sname = cp = malloc(l + 1);
-
-  n2 = strdup(name);
-
-  for(i = 0; i < strlen(n2); i++) {
-    c = tolower(n2[i]);
-    if(isalnum(c))
-      *cp++ = c;
+  /* Add all */
+  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link) {
+    if (first)
+      htsbuf_queue_init(&hq, 0);
     else
-      *cp++ = '_';
-  }
-  *cp = 0;
-
-  free((void *)n2);
-
-  x = RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
-  assert(x == NULL);
-
-  /* Notify clients */
-  channel_list_changed();
-
-}
-
-
-/**
- *
- */
-static channel_t *
-channel_create2(const char *name, int number)
-{
-  channel_t *ch, *x;
-  int id;
-  char buf[32];
-
-  ch = RB_LAST(&channel_identifier_tree);
-  if(ch == NULL) {
-    id = 1;
-  } else {
-    id = ch->ch_id + 1;
+      htsbuf_append(&hq, ",", 1);
+    uuid = idnode_uuid_as_str(&csm->csm_svc->s_id);
+    htsbuf_append(&hq, uuid, strlen(uuid));
+    first = 0;
   }
 
-  if (!name || !*name) {
-    snprintf(buf, sizeof(buf), "Channel %d", id);
-    name = buf;
+  /* Build string */
+  if (!first) {
+    s = htsbuf_to_string(&hq);  
+    htsbuf_queue_flush(&hq);
   }
 
-  ch = calloc(1, sizeof(channel_t));
-  channel_set_name(ch, name);
-  ch->ch_number = number;
-
-  ch->ch_id = id;
-  x = RB_INSERT_SORTED(&channel_identifier_tree, ch, 
-		       ch_identifier_link, chidcmp);
-
-  assert(x == NULL);
-
-  epggrab_channel_add(ch);
-
-  htsp_channel_add(ch);
-  return ch;
+  return &s;
 }
 
-/**
- *
- */
-channel_t *
-channel_create ( void )
+static int
+channel_class_services_set ( void *obj, const void *p )
 {
-  channel_t *ch = channel_create2(NULL, 0);
-  channel_save(ch);
-  return ch;
+  return channel_set_services_by_list(obj, p);
 }
 
-/**
- *
- */
-channel_t *
-channel_find_by_name(const char *name, int create, int channel_number)
+static htsmsg_t *
+channel_class_services_enum ( void *obj )
 {
-  channel_t skel, *ch;
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "service/list");
+  htsmsg_add_str(m, "event", "service");
+  e = htsmsg_create_map();
+  htsmsg_add_u32(e, "enum", 1);
+  htsmsg_add_msg(m, "params", e);
+  return m;
+}
 
-  lock_assert(&global_lock);
+static const void *
+channel_class_tags_get ( void *obj )
+{
+  static char *s = NULL;
+  int first = 1;
+  channel_t *ch = obj;
+  htsbuf_queue_t hq;
+  channel_tag_mapping_t *ctm;
+  
+  /* Free previous */
+  if (s) free(s);
+  s = NULL;
 
-  if (name) {
-    skel.ch_name = (char *)name;
-    ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
-    if(ch != NULL || create == 0)
-      return ch;
+  /* Add all */
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+    if (first)
+      htsbuf_queue_init(&hq, 0);
+    else
+      htsbuf_append(&hq, ",", 1);
+    htsbuf_append(&hq, ctm->ctm_tag->ct_name, strlen(ctm->ctm_tag->ct_name));
+    first = 0;
   }
-  return channel_create2(name, channel_number);
+
+  /* Build string */
+  if (!first) {
+    s = htsbuf_to_string(&hq);  
+    htsbuf_queue_flush(&hq);
+  }
+
+  return &s;
 }
 
-
-/**
- *
- */
-channel_t *
-channel_find_by_identifier(int id)
+static int
+channel_class_tags_set ( void *obj, const void *p )
 {
-  channel_t skel, *ch;
-
-  lock_assert(&global_lock);
-
-  skel.ch_id = id;
-  ch = RB_FIND(&channel_identifier_tree, &skel, ch_identifier_link, chidcmp);
-  return ch;
+  return channel_set_tags_by_list(obj, p);
 }
 
-/**
- *
- */
+static htsmsg_t *
+channel_class_tags_enum ( void *obj )
+{
+  channel_tag_t *ct;
+  htsmsg_t *m = htsmsg_create_list();
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    htsmsg_add_str(m, NULL, ct->ct_name);
+  return m;
+}
+
 static void
-channel_load_one(htsmsg_t *c, int id)
+channel_class_icon_notify ( void *obj )
+{
+  channel_t *ch = obj;
+  if (ch->ch_icon)
+    imagecache_get_id(ch->ch_icon);
+}
+
+static const char *
+channel_class_get_title ( idnode_t *self )
+{
+  channel_t *ch = (channel_t*)self;
+  return ch->ch_name;
+}
+
+const idclass_t channel_class = {
+  .ic_class      = "service",
+  .ic_caption    = "Service",
+  .ic_save       = channel_class_save,
+  .ic_get_title  = channel_class_get_title,
+  .ic_properties = (const property_t[]){
+#if 0
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(service_t, s_enabled),
+    },
+#endif
+    {
+      .type     = PT_STR,
+      .id       = "name",
+      .name     = "Name",
+      .off      = offsetof(channel_t, ch_name),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "number",
+      .name     = "Number",
+      .off      = offsetof(channel_t, ch_number),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "icon",
+      .name     = "Icon",
+      .off      = offsetof(channel_t, ch_icon),
+      .notify   = channel_class_icon_notify,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dvr_pre_time",
+      .name     = "DVR Pre", // TODO: better text?
+      .off      = offsetof(channel_t, ch_dvr_extra_time_pre),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dvr_pst_time",
+      .name     = "DVR Post", // TODO: better text?
+      .off      = offsetof(channel_t, ch_dvr_extra_time_post),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "services",
+      .name     = "Services",
+      .get      = channel_class_services_get,
+      .set      = channel_class_services_set,
+      .list     = channel_class_services_enum,
+      .opts     = PO_MULTI
+    },
+    {
+      .type     = PT_STR,
+      .id       = "tags",
+      .name     = "Tags",
+      .get      = channel_class_tags_get,
+      .set      = channel_class_tags_set,
+      .list     = channel_class_tags_enum,
+    },
+    {}
+  }
+};
+
+/* **************************************************************************
+ * Find
+ * *************************************************************************/
+
+// Note: since channel names are no longer unique this method will simply
+//       return the first entry encountered, so could be somewhat random
+channel_t *
+channel_find_by_name ( const char *name )
 {
   channel_t *ch;
-  const char *name = htsmsg_get_str(c, "name");
-  htsmsg_t *tags;
-  htsmsg_field_t *f;
-  channel_tag_t *ct;
-  char buf[32];
-
-  if(name == NULL)
-    return;
-
-  ch = calloc(1, sizeof(channel_t));
-  ch->ch_id = id;
-  if(RB_INSERT_SORTED(&channel_identifier_tree, ch, 
-		      ch_identifier_link, chidcmp)) {
-    /* ID collision, should not happen unless there is something
-       wrong in the setting storage */
-    free(ch);
-    return;
-  }
-
-  channel_set_name(ch, name);
-
-  epggrab_channel_add(ch);
-
-  tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
-  imagecache_get_id(ch->ch_icon);
-
-  htsmsg_get_s32(c, "dvr_extra_time_pre",  &ch->ch_dvr_extra_time_pre);
-  htsmsg_get_s32(c, "dvr_extra_time_post", &ch->ch_dvr_extra_time_post);
-  htsmsg_get_s32(c, "channel_number", &ch->ch_number);
-
-  if((tags = htsmsg_get_list(c, "tags")) != NULL) {
-    HTSMSG_FOREACH(f, tags) {
-      if(f->hmf_type == HMF_S64) {
-	snprintf(buf, sizeof(buf), "%" PRId64 , f->hmf_s64);
-
-	if((ct = channel_tag_find(buf, 0)) != NULL) 
-	  channel_tag_map(ch, ct, 1);
-      }
-    }
-  }
+  CHANNEL_FOREACH(ch)
+    if (!strcmp(ch->ch_name ?: "", name))
+      break;
+  return ch;
 }
 
-
-/**
- *
- */
-static void
-channels_load(void)
+channel_t *
+channel_find_by_id ( uint32_t i )
 {
-  htsmsg_t *l, *c;
-  htsmsg_field_t *f;
+  channel_t skel;
+  memcpy(skel.ch_id.in_uuid, &i, sizeof(i));
 
-  if((l = hts_settings_load("channels")) != NULL) {
-    HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_map_by_field(f)) == NULL)
-	continue;
-      channel_load_one(c, atoi(f->hmf_name));
-    }
-    htsmsg_destroy(l);
-  }
+  return RB_FIND(&channels, &skel, ch_link, ch_id_cmp);
 }
 
+/* **************************************************************************
+ * Property updating
+ * *************************************************************************/
 
-/**
- * Write out a config file for a channel
- */
-void
-channel_save(channel_t *ch)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *tags;
-  channel_tag_mapping_t *ctm;
-
-  lock_assert(&global_lock);
-
-  htsmsg_add_str(m, "name", ch->ch_name);
-
-  if(ch->ch_icon != NULL)
-    htsmsg_add_str(m, "icon", ch->ch_icon);
-
-  tags = htsmsg_create_list();
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    htsmsg_add_u32(tags, NULL, ctm->ctm_tag->ct_identifier);
-
-  htsmsg_add_msg(m, "tags", tags);
-
-  htsmsg_add_u32(m, "dvr_extra_time_pre",  ch->ch_dvr_extra_time_pre);
-  htsmsg_add_u32(m, "dvr_extra_time_post", ch->ch_dvr_extra_time_post);
-  htsmsg_add_s32(m, "channel_number", ch->ch_number);
-
-  hts_settings_save(m, "channels/%d", ch->ch_id);
-  htsmsg_destroy(m);
-}
-
-/**
- * Rename a channel and all tied services
- */
 int
-channel_rename(channel_t *ch, const char *newname)
+channel_set_services_by_list ( channel_t *ch, const char *svcs )
 {
-  dvr_entry_t *de;
-  service_t *t;
+  int save = 0;
+  char *tmp, *ret, *tok;
+  service_t *svc;
+  channel_service_mapping_t *csm, *n;
 
-  lock_assert(&global_lock);
+  /* Mark all for deletion */
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
+    csm->csm_mark = 1;
 
-  if (!newname || !*newname) return 0;
+  /* Link */
+  tmp = strdup(svcs);
+  tok = strtok_r(tmp, ",", &ret);
+  while (tok) {
+    if ((svc = service_find(tok)))
+      save |= service_mapper_link(svc, ch);
+    tok = strtok_r(NULL, ",", &ret);
+  }
+  free(tmp);
 
-  if(channel_find_by_name(newname, 0, 0))
-    return -1;
-
-  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" renamed to \"%s\"",
-	 ch->ch_name, newname);
-
-  RB_REMOVE(&channel_name_tree, ch, ch_name_link);
-  channel_set_name(ch, newname);
-  epggrab_channel_mod(ch);
-
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link)
-    t->s_config_save(t);
-  
-  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
-    dvr_entry_save(de);
-    dvr_entry_notify(de);
+  /* Remove */
+  for (csm = LIST_FIRST(&ch->ch_services); csm != NULL; csm = n) {
+    n = LIST_NEXT(csm, csm_chn_link);
+    if (csm->csm_mark) {
+      LIST_REMOVE(csm, csm_chn_link);
+      LIST_REMOVE(csm, csm_svc_link);
+      free(csm);
+      save = 1;
+    }
   }
 
-  channel_save(ch);
-  htsp_channel_update(ch);
+  return save;
+}
+
+int
+channel_set_tags_by_list ( channel_t *ch, const char *tags )
+{
   return 0;
 }
 
-/**
- * Delete channel
- */
-void
-channel_delete(channel_t *ch)
+/* **************************************************************************
+ * Creation/Deletion
+ * *************************************************************************/
+
+channel_t *
+channel_create0
+  ( channel_t *ch, const idclass_t *idc, const char *uuid, htsmsg_t *conf,
+    const char *name )
 {
-  service_t *t;
+  lock_assert(&global_lock);
+
+  idnode_insert(&ch->ch_id, uuid, idc);
+  if (RB_INSERT_SORTED(&channels, ch, ch_link, ch_id_cmp)) {
+    tvherror("channel", "id collision!");
+    abort();
+  }
+
+  if (conf)
+    idnode_load(&ch->ch_id, conf);
+
+  /* Override the name */
+  if (name) {
+    free(ch->ch_name);
+    ch->ch_name = strdup(name);
+  }
+
+  return ch;
+}
+
+void
+channel_delete ( channel_t *ch )
+{
   th_subscription_t *s;
   channel_tag_mapping_t *ctm;
+  channel_service_mapping_t *csm;
 
   lock_assert(&global_lock);
 
+  tvhinfo("channel", "%s - deleting", ch->ch_name);
+
+  /* Tags */
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
     channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG);
 
-  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
-	 ch->ch_name);
-
+  /* DVR */
   autorec_destroy_by_channel(ch);
-
   dvr_destroy_by_channel(ch);
 
-  while((t = LIST_FIRST(&ch->ch_services)) != NULL)
-    service_map_channel(t, NULL, 1);
+  /* Services */
+  while((csm = LIST_FIRST(&ch->ch_services)) != NULL)
+    service_mapper_unlink(csm->csm_svc, ch);
 
+  /* Subscriptions */
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_channel_link);
     s->ths_channel = NULL;
   }
 
+  /* EPG */
+#if 0
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
+#endif
 
-  hts_settings_remove("channels/%d", ch->ch_id);
+  /* Settings */
+  hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
 
-  htsp_channel_delete(ch);
-
-  RB_REMOVE(&channel_name_tree, ch, ch_name_link);
-  RB_REMOVE(&channel_identifier_tree, ch, ch_identifier_link);
-
+  /* Free memory */
+  RB_REMOVE(&channels, ch, ch_link);
+  idnode_unlink(&ch->ch_id);
   free(ch->ch_name);
-  free(ch->ch_sname);
   free(ch->ch_icon);
-
-  channel_list_changed();
-  
   free(ch);
 }
 
-
-
-/**
- * Merge services from channel 'src' to channel 'dst'
- *
- * Then, destroy the 'src' channel
+/*
+ * Save
  */
 void
-channel_merge(channel_t *dst, channel_t *src)
+channel_save ( channel_t *ch )
 {
-  service_t *t;
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&ch->ch_id, c);
+  hts_settings_save(c, "channel/%s", idnode_uuid_as_str(&ch->ch_id));
+  htsmsg_destroy(c);
+}
 
-  lock_assert(&global_lock);
+/**
+ *
+ */
+void
+channel_init ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  RB_INIT(&channels);
   
-  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" merged into \"%s\"",
-	 src->ch_name, dst->ch_name);
+  /* Tags */
+  channel_tag_init();
 
-  while((t = LIST_FIRST(&src->ch_services)) != NULL)
-    service_map_channel(t, dst, 1);
-
-  channel_delete(src);
-}
-
-/**
- *
- */
-void
-channel_set_icon(channel_t *ch, const char *icon)
-{
-  lock_assert(&global_lock);
-
-  if(ch->ch_icon != NULL && !strcmp(ch->ch_icon, icon))
+  /* Channels */
+  if (!(c = hts_settings_load_r(1, "channel")))
     return;
 
-  free(ch->ch_icon);
-  ch->ch_icon = strdup(icon);
-  imagecache_get_id(icon);
-  channel_save(ch);
-  htsp_channel_update(ch);
-}
-
-/**
- *  Set the amount of minutes to start before / end after recording on a channel
- */
-void
-channel_set_epg_postpre_time(channel_t *ch, int pre, int mins)
-{
-  if (mins < -10000 || mins > 10000)
-    mins = 0;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "channels", 
-	 "Channel \"%s\" epg %s-time set to %d minutes",
-	 ch->ch_name, pre ? "pre":"post", mins);
-
-  if (pre) {
-    if (ch->ch_dvr_extra_time_pre == mins)
-      return;
-    else
-      ch->ch_dvr_extra_time_pre = mins;
-  } else {
-    if (ch->ch_dvr_extra_time_post == mins)
-      return;
-    else
-       ch->ch_dvr_extra_time_post = mins;
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    (void)channel_create(f->hmf_name, e, NULL);
   }
-  channel_save(ch);
-  htsp_channel_update(ch);
+  htsmsg_destroy(c);
 }
 
-/**
- * Set the channel number
+/* ***
+ * Channel tags TODO
  */
-void
-channel_set_number(channel_t *ch, int number)
-{
-  if(ch->ch_number == number)
-    return;
-  ch->ch_number = number;
-  channel_save(ch);
-  htsp_channel_update(ch);
-}
-
-/**
- *
- */
-void
-channel_set_tags_from_list(channel_t *ch, const char *maplist)
-{
-  channel_tag_mapping_t *ctm, *n;
-  channel_tag_t *ct;
-  char buf[40];
-  int i, change = 0;
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    ctm->ctm_mark = 1; /* Mark for delete */
-
-  while(*maplist) {
-    for(i = 0; i < sizeof(buf) - 1; i++) {
-      buf[i] = *maplist;
-      if(buf[i] == 0)
-	break;
-
-      maplist++;
-      if(buf[i] == ',') {
-	break;
-      }
-    }
-
-    buf[i] = 0;
-    if((ct = channel_tag_find(buf, 0)) == NULL)
-      continue;
-
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-      if(ctm->ctm_tag == ct) {
-	ctm->ctm_mark = 0;
-	break;
-      }
-    
-    if(ctm == NULL) {
-      /* Need to create mapping */
-      change = 1;
-      channel_tag_map(ch, ct, 0);
-    }
-  }
-
-  for(ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
-    n = LIST_NEXT(ctm, ctm_channel_link);
-    if(ctm->ctm_mark) {
-      change = 1;
-      channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG |
-				  CTM_DESTROY_UPDATE_CHANNEL);
-    }
-  }
-
-  if(change)
-    channel_save(ch);
-}
-
-
-
 
 /**
  *
@@ -885,17 +754,10 @@ channel_tag_find_by_identifier(uint32_t id) {
   return NULL;
 }
 
-
-/**
- *
- */
-void
-channels_init(void)
+static void
+channel_tag_init ( void )
 {
   TAILQ_INIT(&channel_tags);
-
   channeltags_dtable = dtable_create(&channel_tags_dtc, "channeltags", NULL);
   dtable_load(channeltags_dtable);
-
-  channels_load();
 }

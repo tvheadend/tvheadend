@@ -12,7 +12,7 @@ install: ${PROG} ${MAN}
 
 	for bundle in ${BUNDLES}; do \
 		mkdir -p ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
-		cp -r $(ROOTDIR)/$$bundle/*  ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
+		cp -Lr $(ROOTDIR)/$$bundle/*  ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
 	done
 
 	find ${DESTDIR}${datadir}/tvheadend -name .git -exec rm -rf {} \; &>/dev/null || /bin/true

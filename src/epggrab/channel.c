@@ -57,12 +57,14 @@ void epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
   ecl = calloc(1, sizeof(epggrab_channel_link_t));
   ecl->channel = ch;
   LIST_INSERT_HEAD(&ec->channels, ecl, link);
+#if 0
   if (ec->name && epggrab_channel_rename)
     channel_rename(ch, ec->name);
   if (ec->icon && epggrab_channel_reicon)
     channel_set_icon(ch, ec->icon);
   if (ec->number>0 && epggrab_channel_renumber)
     channel_set_number(ch, ec->number);
+#endif
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
@@ -82,6 +84,7 @@ int epggrab_channel_match_and_link ( epggrab_channel_t *ec, channel_t *ch )
 int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 {
   int save = 0;
+#if 0
   epggrab_channel_link_t *ecl;
   if (!ec || !name) return 0;
   if (!ec->name || strcmp(ec->name, name)) {
@@ -92,6 +95,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
         channel_rename(ecl->channel, name);
     save = 1;
   }
+#endif
   return save;
 }
 
@@ -99,6 +103,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
+#if 0
   epggrab_channel_link_t *ecl;
   if (!ec->icon || strcmp(ec->icon, icon) ) {
   if (!ec | !icon) return 0;
@@ -109,6 +114,7 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
         channel_set_icon(ecl->channel, icon);
     save = 1;
   }
+#endif
   return save;
 }
 
@@ -116,6 +122,7 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
 {
   int save = 0;
+#if 0
   epggrab_channel_link_t *ecl;
   if (!ec || (number <= 0)) return 0;
   if (ec->number != number) {
@@ -125,12 +132,14 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
         channel_set_number(ecl->channel, number);
     save = 1;
   }
+#endif
   return save;
 }
 
 /* Channel settings updated */
 void epggrab_channel_updated ( epggrab_channel_t *ec )
 {
+#if 0
   channel_t *ch;
   if (!ec) return;
 
@@ -141,6 +150,7 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
+#endif
 }
 
 /* ID comparison */

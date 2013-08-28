@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <assert.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -328,8 +329,8 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
   streaming_target_t *st, *next;
 
   for(st = LIST_FIRST(&sp->sp_targets);st; st = next) {
-
     next = LIST_NEXT(st, st_link);
+    assert(next != st);
     if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
       continue;
     st->st_cb(st->st_opaque, streaming_msg_clone(sm));
@@ -418,8 +419,8 @@ streaming_code2txt(int code)
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
     return "Subscription overridden";
 
-  case SM_CODE_NO_HW_ATTACHED:
-    return "No hardware present";
+  case SM_CODE_NO_FREE_ADAPTER:
+    return "No free adapter";
   case SM_CODE_MUX_NOT_ENABLED:
     return "Mux not enabled";
   case SM_CODE_NOT_FREE:
@@ -491,4 +492,55 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
       return ssc;
   }
   return NULL;
+}
+
+/**
+ *
+ */
+static struct strtab streamtypetab[] = {
+  { "NONE",       SCT_NONE },
+  { "UNKNOWN",    SCT_UNKNOWN },
+  { "MPEG2VIDEO", SCT_MPEG2VIDEO },
+  { "MPEG2AUDIO", SCT_MPEG2AUDIO },
+  { "H264",       SCT_H264 },
+  { "AC3",        SCT_AC3 },
+  { "TELETEXT",   SCT_TELETEXT },
+  { "DVBSUB",     SCT_DVBSUB },
+  { "CA",         SCT_CA },
+  { "AAC",        SCT_AAC },
+  { "MPEGTS",     SCT_MPEGTS },
+  { "TEXTSUB",    SCT_TEXTSUB },
+  { "EAC3",       SCT_EAC3 },
+  { "AAC",        SCT_MP4A },
+  { "VP8",        SCT_VP8 },
+  { "VORBIS",     SCT_VORBIS },
+};
+
+/**
+ *
+ */
+const char *
+streaming_component_type2txt(streaming_component_type_t s)
+{
+  return val2str(s, streamtypetab) ?: "INVALID";
+}
+
+streaming_component_type_t
+streaming_component_txt2type(const char *s)
+{
+  return s ? str2val(s, streamtypetab) : SCT_UNKNOWN;
+}
+
+const char *
+streaming_component_audio_type2desc(int audio_type)
+{
+  /* From ISO 13818-1 - ISO 639 language descriptor */
+  switch(audio_type) {
+    case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
+    case 1: return "Clean effects";
+    case 2: return "Hearing impaired";
+    case 3: return "Visually impaired commentary";
+  }
+
+  return "Reserved";
 }

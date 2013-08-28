@@ -267,7 +267,9 @@ function accessUpdate(o) {
         tvheadend.capabilities.indexOf('v4l')      != -1) {
       tabs2.push(new tvheadend.tvadapters);
     }
+/*
     tabs2.push(new tvheadend.iptv);
+*/
     tvheadend.conf_dvbin = new Ext.TabPanel({
       activeTab: 0,
       autoScroll: true,
@@ -275,6 +277,10 @@ function accessUpdate(o) {
       iconCls: 'hardware',
       items : tabs2
     });
+    tvheadend.networks(tvheadend.conf_dvbin);
+    tvheadend.muxes(tvheadend.conf_dvbin);
+    tvheadend.services(tvheadend.conf_dvbin);
+    tvheadend.satconfs(tvheadend.conf_dvbin);
     tabs1.push(tvheadend.conf_dvbin);
 
     /* Channel / EPG */
@@ -284,11 +290,11 @@ function accessUpdate(o) {
       title : 'Channel / EPG',
       iconCls : 'television',
       items : [
-        new tvheadend.chconf,
         new tvheadend.cteditor,
         new tvheadend.epggrab
       ]
     });
+    tvheadend.channel_tab(tvheadend.conf_chepg);
     tabs1.push(tvheadend.conf_chepg);
 
     /* DVR / Timeshift */

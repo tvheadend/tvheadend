@@ -137,19 +137,19 @@
 }
 
 .add {
-	background-image: url(../icons/add.gif) !important;
+	background-image: url(../icons/add.png) !important;
 }
 
 .option {
-	background-image: url(../icons/plugin.gif) !important;
+	background-image: url(../icons/plugin.png) !important;
 }
 
 .remove {
-	background-image: url(../icons/delete.gif) !important;
+	background-image: url(../icons/delete.png) !important;
 }
 
 .save {
-	background-image: url(../icons/save.gif) !important;
+	background-image: url(../icons/save.png) !important;
 }
 
 .rec {
@@ -162,6 +162,10 @@
 
 .undo {
 	background-image: url(../icons/undo.png) !important;
+}
+
+.edit {
+	background-image: url(../icons/edit.png) !important;
 }
 
 .key {

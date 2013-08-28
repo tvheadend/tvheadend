@@ -50,6 +50,7 @@ typedef struct htsmsg {
 #define HMF_BIN  4
 #define HMF_LIST 5
 #define HMF_DBL  6
+#define HMF_BOOL 7
 
 typedef struct htsmsg_field {
   TAILQ_ENTRY(htsmsg_field) hmf_link;
@@ -69,6 +70,7 @@ typedef struct htsmsg_field {
     } bin;
     htsmsg_t msg;
     double dbl;
+    int bool;
   } u;
 } htsmsg_field_t;
 
@@ -78,11 +80,11 @@ typedef struct htsmsg_field {
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
 #define hmf_dbl     u.dbl
+#define hmf_bool    u.bool
 
-#define htsmsg_get_map_by_field(f) \
- ((f)->hmf_type == HMF_MAP ? &(f)->hmf_msg : NULL)
-#define htsmsg_get_list_by_field(f) \
-  ((f)->hmf_type == HMF_LIST ? &(f)->hmf_msg : NULL)
+// backwards compat
+#define htsmsg_get_map_by_field(f) htsmsg_field_get_map(f)
+#define htsmsg_get_list_by_field(f) htsmsg_field_get_list(f)
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
@@ -105,6 +107,8 @@ void htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f);
  * Destroys a message (map or list)
  */
 void htsmsg_destroy(htsmsg_t *msg);
+
+void htsmsg_add_bool(htsmsg_t *msg, const char *name, int b);
 
 /**
  * Add an integer field where source is unsigned 32 bit.
@@ -172,6 +176,8 @@ void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin,
  */
 int htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p);
 
+int htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p);
+
 /**
  * Get an integer as an signed 32 bit integer.
  *
@@ -190,10 +196,18 @@ int htsmsg_get_s32(htsmsg_t *msg, const char *name,  int32_t *s32p);
  */
 int htsmsg_get_s64(htsmsg_t *msg, const char *name,  int64_t *s64p);
 
+int htsmsg_field_get_s64(htsmsg_field_t *f, int64_t *s64p);
+
 /*
  * Return the field \p name as an s64.
  */
 int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
+
+int htsmsg_field_get_bool(htsmsg_field_t *f, int *boolp);
+
+int htsmsg_get_bool(htsmsg_t *msg, const char *name, int *boolp);
+
+int htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def);
 
 
 /**
@@ -218,6 +232,8 @@ int htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
  */
 htsmsg_t *htsmsg_get_list(htsmsg_t *msg, const char *name);
 
+htsmsg_t *htsmsg_field_get_list(htsmsg_field_t *f);
+
 /**
  * Get a field of type 'string'. No copying is done.
  *
@@ -233,6 +249,8 @@ const char *htsmsg_get_str(htsmsg_t *msg, const char *name);
  *         Otherwise a htsmsg is returned.
  */
 htsmsg_t *htsmsg_get_map(htsmsg_t *msg, const char *name);
+
+htsmsg_t *htsmsg_field_get_map(htsmsg_field_t *f);
 
 /**
  * Traverse a hierarchy of htsmsg's to find a specific child.
@@ -255,11 +273,19 @@ const char *htsmsg_get_str_multi(htsmsg_t *msg, ...)
  */
 int htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp);
 
+int htsmsg_field_get_dbl(htsmsg_field_t *f, double *dblp);
+
 /**
  * Given the field \p f, return a string if it is of type string, otherwise
  * return NULL
  */
 const char *htsmsg_field_get_string(htsmsg_field_t *f);
+#define htsmsg_field_get_str(f) htsmsg_field_get_string(f)
+
+/**
+ * Get s64 from field
+ */
+
 
 /**
  * Return the field \p name as an u32.
