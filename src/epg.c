@@ -2248,11 +2248,8 @@ void epg_query0
 
   /* All channels */
   } else {
-#if TODO
-    RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
+    CHANNEL_FOREACH(channel)
       _eqr_add_channel(eqr, channel, genre, preg, now, lang);
-    }
-#endif
   }
   if (preg) regfree(preg);
 
