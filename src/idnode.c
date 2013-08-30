@@ -211,7 +211,7 @@ idnode_get_short_uuid (const idnode_t *in)
 {
   uint32_t u32;
   memcpy(&u32, in->in_uuid, sizeof(u32));
-  return u32;
+  return u32 & 0x7FFFFFFF; // compat needs to be +ve signed
 }
 
 /**
