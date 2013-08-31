@@ -114,7 +114,7 @@ static int
 linuxdvb_switch_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *sc, int fd )
 {
-  int i, com, r = 0;
+  int i, com, r1 = 0, r2 = 0;
   int pol_bit, band_bit;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
   dvb_mux_conf_t      *dmc = &lm->lm_tuning;
@@ -129,6 +129,7 @@ linuxdvb_switch_tune
   
   /* Single committed (before repeats) */
   if (sc->ls_diseqc_repeats > 0) {
+    r2 = 1;
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
       return -1;
     usleep(25000); // 25ms
@@ -138,23 +139,24 @@ linuxdvb_switch_tune
   for (i = 0; i <= sc->ls_diseqc_repeats; i++) {
     
     /* Uncommitted */
-    if (linuxdvb_diseqc_send(fd, 0xE0 | r, 0x10, 0x39, 1,
+    if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
                              0xF0 | ls->ls_uncomitted))
       return -1;
     usleep(25000);
 
     /* Committed */
-    if (linuxdvb_diseqc_send(fd, 0xE1, 0x10, 0x38, 1, com))
+    if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
       return -1;
     usleep(25000);
 
     /* repeat flag */
-    r = 1;
+    r1 = r2 = 1;
   }
 
   /* Tone burst */
-  tvhtrace("linuxdvb", "toneburst %s", ls->ls_toneburst ? "on" : "off");
-  if (ioctl(fd, FE_SET_TONE, ls->ls_toneburst ? SEC_TONE_ON : SEC_TONE_OFF)) {
+  tvhtrace("linuxdvb", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+  if (ioctl(fd, FE_DISEQC_SEND_BURST,
+            ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_B)) {
     tvherror("linuxdvb", "failed to set toneburst (e=%s)", strerror(errno));
     return -1;
   }
