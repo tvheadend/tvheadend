@@ -152,8 +152,8 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
     if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input)) continue;
 
     service_instance_add(sil, t, mmi->mmi_input->mi_instance,
-                         mmi->mmi_input->mi_current_weight(mmi->mmi_input),
-                         0/*TODO: priority */);
+                         0 /* TODO: priority */,
+                         mmi->mmi_input->mi_current_weight(mmi->mmi_input));
   }
 }
 
