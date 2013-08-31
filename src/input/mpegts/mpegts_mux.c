@@ -434,7 +434,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
     }
   }
 
-  if (mpegts_mux_has_subscribers(mm))
+  if (!force && mpegts_mux_has_subscribers(mm))
     return;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
