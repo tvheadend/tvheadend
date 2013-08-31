@@ -100,6 +100,7 @@ for f in glob.glob(os.path.join(root, 'dvbtransports', '*', '*')):
     m = muxs[m]
     s = open(f).read()
     d = json.loads(s)
+    if 'channelname' not in d or not d['channelname']: continue
     k = '%s:%04X:%04X:%04X' % (m['type'], m['onid'], m['tsid'], d['service_id'])
     m['svcs'][k] = d
   except Exception, e:
@@ -162,12 +163,13 @@ for n in nets:
   for m in n['muxs']:
     m = n['muxs'][m]
     d = {
+      'enabled'   : True,
       'frequency' : m['freq'],
       'onid'      : m['onid'],
       'tsid'      : m['tsid']
     }
     if m['type'] == 'C':
-      d['symbol_rate']      = m['symr']
+      d['symbolrate']       = m['symr']
       d['fec']              = m['fec']
       d['constellation']    = m['cons']
     elif m['type'] == 'T':
@@ -179,10 +181,11 @@ for n in nets:
       d['fec_lo']           = m['fecl']
       d['fec_hi']           = m['fech']
     elif m['type'] == 'S':
-      d['symbol_rate']      = m['symr']
+      d['symbolrate']       = m['symr']
       d['fec']              = m['fec']
       d['polarisation']     = m['pol']
       d['modulation']       = m['mod']
+      d['delsys']           = m['del']
     else:
       d['constellation']    = m['cons']
     u = uuid()
@@ -194,6 +197,7 @@ for n in nets:
     for s in m['svcs']:
       s = m['svcs'][s]
       d = {
+        'enabled'         : True,
         'sid'             : s['service_id'],
         'svcname'         : s['servicename'] if 'servicename' in s else '',
         'dvb_servicetype' : s['stype'] if 'stype' in s else 0
@@ -206,6 +210,7 @@ for n in nets:
 
       # Find channel
       c = s['channelname'] if 'channelname' in s else None
+      print 'SVC %s CHN %s' % (str(s), str(c))
       if not c or c not in chns:
         continue
       c = chns[c]
