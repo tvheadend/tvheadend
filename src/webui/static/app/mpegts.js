@@ -71,7 +71,15 @@ tvheadend.muxes = function(panel)
         url    : 'api/mpegts/network/mux_create',
       }
     },
-    del     : true
+    del     : true,
+    lcol    : [
+      {
+        header   : 'Play',
+        renderer : function(v, o, r) {
+          return "<a href='stream/mux/" + r.id + "'>Play</a>";
+        }
+      }
+    ]
   });
 }
 
@@ -83,7 +91,15 @@ tvheadend.services = function(panel)
     titleS  : 'Service',
     titleP  : 'Services',
     add     : false,
-    del     : false
+    del     : false,
+    lcol    : [
+      {
+        header   : 'Play',
+        renderer : function(v, o, r) {
+          return "<a href='stream/service/" + r.id + "'>Play</a>";
+        }
+      }
+    ]
   });
 }
 

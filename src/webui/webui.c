@@ -706,6 +706,44 @@ http_stream_service(http_connection_t *hc, service_t *service)
 }
 
 /**
+ * Subscribe to a mux for grabbing a raw dump
+ *
+ * TODO: can't currently force this to be on a particular input
+ */
+#if ENABLE_MPEGTS
+#include "src/input/mpegts.h"
+static int
+http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
+{
+  th_subscription_t *s;
+  streaming_queue_t sq;
+  const char *name, *str;
+  char addrbuf[50];
+  streaming_queue_init(&sq, SMT_PACKET);
+  int weight = 10; // TODO: remove hardcoded
+
+  if ((str = http_arg_get(&hc->hc_req_args, "weight")))
+    weight = atoi(str);
+
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+  s = subscription_create_from_mux(mm, weight, "HTTP", &sq.sq_st, 0,
+                                   addrbuf, hc->hc_username,
+                                   http_arg_get(&hc->hc_args, "User-Agent"));
+  if (!s)
+    return HTTP_STATUS_BAD_REQUEST;
+  name = tvh_strdupa(s->ths_title);
+  pthread_mutex_unlock(&global_lock);
+  http_stream_run(hc, &sq, name, MC_RAW);
+  pthread_mutex_lock(&global_lock);
+  subscription_unsubscribe(s);
+
+  streaming_queue_deinit(&sq);
+
+  return 0;
+}
+#endif
+
+/**
  * Subscribes to a channel and starts the streaming loop
  */
 static int
@@ -804,8 +842,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
-#if 0//ENABLE_LINUXDVB
-  dvb_mux_t *dm = NULL;
+#if ENABLE_MPEGTS
+  mpegts_mux_t *mm = NULL;
 #endif
 
   hc->hc_keep_alive = 0;
@@ -830,9 +868,10 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find(components[1]);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
-#if 0//ENABLE_LINUXDVB
+#if ENABLE_MPEGTS
   } else if(!strcmp(components[0], "mux")) {
-    dm = dvb_mux_find_by_identifier(components[1]);
+    // TODO: do we want to be able to force starting a particular instance
+    mm      = mpegts_mux_find(components[1]);
 #endif
   }
 
@@ -840,9 +879,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
-#if 0//ENABLE_LINUXDVB
-  } else if(dm != NULL) {
-    return http_stream_tdmi(hc, dm);
+#if ENABLE_MPEGTS
+  } else if(mm != NULL) {
+    return http_stream_mux(hc, mm);
 #endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
