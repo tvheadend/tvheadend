@@ -270,6 +270,16 @@ linuxdvb_frontend_stop_mux
     tvhdebug("linuxdvb", "%s - stopped dvr thread", buf1);
   }
 
+  /* TODO: no way to know whether we need to close the FE or not */
+  if (lfe->lfe_fe_fd > 0) {
+    tvhtrace("linuxdvb", "%s - closing frontend", buf1);
+    close(lfe->lfe_fe_fd);
+    lfe->lfe_fe_fd = -1;
+  }
+
+  /* Stop monitor */
+  gtimer_disarm(&lfe->lfe_monitor_timer);
+
   /* Not locked */
   lfe->lfe_locked = 0;
 }
@@ -287,7 +297,7 @@ linuxdvb_frontend_open_pid
 {
   char buf[256];
   struct dmx_pes_filter_params dmx_param;
-  int fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
+  int fd = -1;
 
   if (!lfe->lfe_locked || lfe->lfe_fullmux)
     return -1;
@@ -297,13 +307,14 @@ linuxdvb_frontend_open_pid
     name = buf;
   }
 
+  fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
   if(fd == -1) {
     tvherror("linuxdvb", "%s - failed to open dmx for pid %d [e=%s]",
              name, pid, strerror(errno));
     return -1;
   }
 
-  tvhtrace("linuxdvb", "%s - open PID %04X (%d)", name, pid, pid);
+  tvhtrace("linuxdvb", "%s - open PID %04X (%d) fd %d", name, pid, pid, fd);
   memset(&dmx_param, 0, sizeof(dmx_param));
   dmx_param.pid      = pid;
   dmx_param.input    = DMX_IN_FRONTEND;
