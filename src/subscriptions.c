@@ -240,8 +240,8 @@ subscription_reschedule(void)
 /**
  *
  */
-void 
-subscription_unsubscribe(th_subscription_t *s)
+static void 
+subscription_unsubscribe0(th_subscription_t *s, int silent)
 {
   service_t *t = s->ths_service;
 
@@ -251,13 +251,15 @@ subscription_unsubscribe(th_subscription_t *s)
 
   LIST_REMOVE(s, ths_global_link);
 
-  if(s->ths_channel != NULL) {
-    LIST_REMOVE(s, ths_channel_link);
-    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
-	   s->ths_title, s->ths_channel->ch_name);
-  } else {
-    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
-	   s->ths_title);
+  if (!silent) {
+    if(s->ths_channel != NULL) {
+      LIST_REMOVE(s, ths_channel_link);
+      tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
+             s->ths_title, s->ths_channel->ch_name);
+    } else {
+      tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
+             s->ths_title);
+    }
   }
 
   if(t != NULL)
@@ -265,9 +267,10 @@ subscription_unsubscribe(th_subscription_t *s)
 
 #if ENABLE_MPEGTS
   if(s->ths_mmi) {
+    mpegts_mux_t *mm = s->ths_mmi->mmi_mux;
     subscription_unlink_mux(s, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-    if (s->ths_mmi->mmi_mux)
-      s->ths_mmi->mmi_mux->mm_stop(s->ths_mmi->mmi_mux, 0);
+    if (mm)
+      mm->mm_stop(mm, 0);
   }
 #endif
 
@@ -280,10 +283,17 @@ subscription_unsubscribe(th_subscription_t *s)
   free(s->ths_client);
   free(s);
 
-  subscription_reschedule();
-  notify_reload("subscriptions");
+  if (!silent) {
+    subscription_reschedule();
+    notify_reload("subscriptions");
+  }
 }
 
+void 
+subscription_unsubscribe(th_subscription_t *s)
+{
+  subscription_unsubscribe0(s, 0);
+}
 
 /**
  * This callback is invoked when we receive data and status updates from
@@ -543,7 +553,7 @@ subscription_create_from_mux
 
   /* Failed */
   if (r) {
-    subscription_unsubscribe(s);
+    subscription_unsubscribe0(s, 1);
     return NULL;
   }
   s->ths_mmi = mm->mm_active;
