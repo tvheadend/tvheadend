@@ -24,6 +24,7 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 #include "input/mpegts.h"
+#include "subscriptions.h"
 
 RB_HEAD(,epggrab_ota_mux)   epggrab_ota_all;
 LIST_HEAD(,epggrab_ota_mux) epggrab_ota_pending;
@@ -112,12 +113,12 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int cancel, int timeout )
     gtimer_disarm(&epggrab_ota_active_timer);
     epggrab_ota_active_timer_cb(NULL);
   }
-  
-  /* Stop mux */
-  if (!cancel) {
-    extern const idclass_t mpegts_mux_class;
-    mpegts_mux_t *mm = mpegts_mux_find(ota->om_mux_uuid);
-    if (mm) mm->mm_stop(mm, ota, 0);
+
+  /* Remove subscription */
+  if (ota->om_sub) {
+    subscription_unsubscribe(ota->om_sub);
+    free(ota->om_sub);
+    ota->om_sub = NULL;
   }
 }
 
@@ -261,14 +262,15 @@ done:
 static void
 epggrab_ota_pending_timer_cb ( void *p )
 {
-  int r;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *om = LIST_FIRST(&epggrab_ota_pending);
   mpegts_mux_t *mm;
+  th_subscription_t *s;
 
   lock_assert(&global_lock);
   if (!om)
     return;
+  assert(om->om_sub == NULL);
   
   /* Double check */
   if (om->om_when > dispatch_clock)
@@ -290,9 +292,11 @@ epggrab_ota_pending_timer_cb ( void *p )
   }
 
   /* Subscribe to the mux */
-  r = mm->mm_start(mm, om, "epggrab", 2); // TODO: remove hardcoded
-                                             // TODO: need to add src field
-  if (r) {
+  // TODO: remove hardcoded weight
+  s = subscription_create_from_mux(mm, 2, "epggrab", NULL,
+                                   SUBSCRIPTION_NONE, NULL, NULL, NULL);
+  if (s) {
+    om->om_sub  = s;
     om->om_when = dispatch_clock + epggrab_ota_period(om) / 2;
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
   } else {
