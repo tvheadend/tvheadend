@@ -24,6 +24,7 @@
 extern struct th_subscription_list subscriptions;
 
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
+#define SUBSCRIPTION_NONE       0x2
 
 typedef struct th_subscription {
 
@@ -73,11 +74,12 @@ typedef struct th_subscription {
   struct service_instance_list ths_instances;
   struct service_instance *ths_current_instance;
 
-#ifdef TODO_NEED_A_BETTER_SOLUTION
-  // Ugly ugly ugly to refer DVB code here
-
-  LIST_ENTRY(th_subscription) ths_tdmi_link;
-  struct th_dvb_mux_instance *ths_tdmi;
+#if ENABLE_MPEGTS
+  // Note: its a bit ugly linking MPEG-TS code directly here, but to do
+  //       otherwise would probably require adding lots of additional
+  //       (repeated) logic elsewhere
+  LIST_ENTRY(th_subscription) ths_mmi_link;
+  struct mpegts_mux_instance *ths_mmi;
 #endif
 
 } th_subscription_t;
@@ -113,12 +115,26 @@ th_subscription_t *subscription_create_from_service(struct service *t,
 						    const char *username,
 						    const char *client);
 
+#if ENABLE_MPEGTS
+struct mpegts_mux;
+th_subscription_t *subscription_create_from_mux
+  (struct mpegts_mux *m,
+  unsigned int weight,
+  const char *name,
+  streaming_target_t *st,
+  int flags,
+  const char *hostname,
+  const char *username,
+  const char *client);
+#endif
+
 th_subscription_t *subscription_create(int weight, const char *name,
 				       streaming_target_t *st,
 				       int flags, st_callback_t *cb,
 				       const char *hostname,
 				       const char *username,
 				       const char *client);
+
 
 void subscription_change_weight(th_subscription_t *s, int weight);
 
@@ -131,6 +147,8 @@ void subscription_set_skip
 void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_service(th_subscription_t *s, int reason);
+
+void subscription_unlink_mux(th_subscription_t *s, int reason);
 
 void subscription_dummy_join(const char *id, int first);
 

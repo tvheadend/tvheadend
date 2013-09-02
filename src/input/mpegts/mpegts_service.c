@@ -182,7 +182,7 @@ mpegts_service_start(service_t *t, int instance)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
-  r = mpegts_mux_instance_start(&mmi, NULL, 0);
+  r = mpegts_mux_instance_start(&mmi);
 
   /* Start */
   if (!r) {
@@ -210,7 +210,7 @@ mpegts_service_stop(service_t *t)
   lock_assert(&global_lock);
 
   /* Stop */
-  mm->mm_stop(mm, NULL, 0);
+  mm->mm_stop(mm, 0);
   i->mi_close_service(i, s);
   s->s_status = SERVICE_IDLE;
 }

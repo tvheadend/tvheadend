@@ -17,6 +17,7 @@
  */
 
 #include "input/mpegts.h"
+#include "subscriptions.h"
 
 #include <assert.h>
 
@@ -235,14 +236,16 @@ mpegts_network_delete
 static void
 mpegts_network_initial_scan(void *aux)
 {
-  mpegts_network_t *mn = aux;
-  mpegts_mux_t     *mm;
+  mpegts_network_t  *mn = aux;
+  mpegts_mux_t      *mm;
+  th_subscription_t *s;
 
   tvhtrace("mpegts", "setup initial scan for %p", mn);
   while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
-    if (mm->mm_start(mm, mn, "initial scan", 1))
-      break;
+    s = subscription_create_from_mux(mm, 1, "initscan", NULL,
+                                     SUBSCRIPTION_NONE, NULL, NULL, NULL);
+    if (!s) break;
     assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
   }
   gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 10);

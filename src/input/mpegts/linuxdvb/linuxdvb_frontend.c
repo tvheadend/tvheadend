@@ -682,7 +682,7 @@ linuxdvb_frontend_tune0
       return 0;
 
     /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, NULL, 1);
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
   }
   assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
 

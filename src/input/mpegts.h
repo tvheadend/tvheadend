@@ -45,6 +45,12 @@ typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux)    mpegts_mux_queue_t;
 typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)     mpegts_mux_list_t;
 TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
 
+/* Classes */
+extern const idclass_t mpegts_network_class;
+extern const idclass_t mpegts_mux_class;
+extern const idclass_t mpegts_service_class;
+extern const idclass_t mpegts_input_class;
+
 /* **************************************************************************
  * SI processing
  * *************************************************************************/
@@ -253,9 +259,8 @@ struct mpegts_mux
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
-  int  (*mm_start)            (mpegts_mux_t *mm,
-                               void *src, const char *r, int w);
-  void (*mm_stop)             (mpegts_mux_t *mm, void *src, int force);
+  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
+  void (*mm_stop)             (mpegts_mux_t *mm, int force);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
@@ -352,7 +357,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
-  RB_HEAD(,mpegts_mux_sub)      mmi_subs;
+  LIST_HEAD(,th_subscription) mmi_subs;
 
   // TODO: remove this
   int             mmi_tune_failed; // this is really DVB
@@ -530,7 +535,7 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
                                             &type##_class, uuid,\
                                             mi, mm);
 int mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, void *src, int weight );
+  ( mpegts_mux_instance_t **mmiptr );
 
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );

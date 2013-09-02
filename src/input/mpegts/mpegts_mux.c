@@ -20,6 +20,7 @@
 #include "idnode.h"
 #include "queue.h"
 #include "input/mpegts.h"
+#include "subscriptions.h"
 
 #include <assert.h>
 
@@ -68,17 +69,9 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
-static int 
-mms_cmp ( mpegts_mux_sub_t *a, mpegts_mux_sub_t *b )
-{
-  if (a->mms_src < b->mms_src) return -1;
-  if (a->mms_src > b->mms_src) return 1;
-  return 0;
-}
-
 int
 mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, void *src, int weight )
+  ( mpegts_mux_instance_t **mmiptr )
 {
   int r;
   char buf[256], buf2[256];;
@@ -99,21 +92,6 @@ mpegts_mux_instance_start
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
   r = mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi);
   if (r) return r;
-
-  /* Add sub */
-  if (src) {
-    mpegts_mux_sub_t *sub;
-    static mpegts_mux_sub_t *skel = NULL;
-    if (!skel)
-      skel = calloc(1, sizeof(mpegts_mux_sub_t));
-    skel->mms_src = src;
-    sub = RB_INSERT_SORTED(&mmi->mmi_subs, skel, mms_link, mms_cmp);
-    if (!sub) {
-      sub  = skel;
-      skel = NULL;
-      sub->mms_weight = weight;
-    }
-  }    
 
   /* Start */
   tvhdebug("mpegts", "%s - started", buf);
@@ -275,7 +253,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm )
   tvhinfo("mpegts", "%s - deleting", buf);
   
   /* Stop */
-  mm->mm_stop(mm, NULL, 1);
+  mm->mm_stop(mm, 1);
 
   /* Remove from lists */
   LIST_REMOVE(mm, mm_network_link);
@@ -315,7 +293,7 @@ mpegts_mux_create_instances ( mpegts_mux_t *mm )
 
 static int
 mpegts_mux_start
-  ( mpegts_mux_t *mm, void *src, const char *reason, int weight )
+  ( mpegts_mux_t *mm, const char *reason, int weight )
 {
   int pass, fail;
   char buf[256];
@@ -378,7 +356,7 @@ mpegts_mux_start
     if (tune) {
       tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
               buf, reason, weight);
-      if (!(fail = mpegts_mux_instance_start(&tune, src, weight))) break;
+      if (!(fail = mpegts_mux_instance_start(&tune))) break;
       tune = NULL;
       tvhwarn("mpegts", "%s - failed to start, try another", buf);
     }
@@ -403,7 +381,7 @@ mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
 {
   mpegts_mux_instance_t *mmi = mm->mm_active;
   if (mmi) {
-    if (RB_FIRST(&mmi->mmi_subs))
+    if (LIST_FIRST(&mmi->mmi_subs))
       return 1; 
     return mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm);
   }
@@ -411,28 +389,12 @@ mpegts_mux_has_subscribers ( mpegts_mux_t *mm )
 }
 
 static void
-mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
+mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 {
   char buf[256];
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi = NULL;
-  mpegts_mux_sub_t *sub, skel;
-
-  /* Remove subs */
-  if (mmi) {
-    if (force) {
-      while ((sub = RB_FIRST(&mmi->mmi_subs))) {
-        RB_REMOVE(&mmi->mmi_subs, sub, mms_link);
-        free(sub);
-      }
-    } else if (src) {
-      skel.mms_src = src;
-      if ((sub = RB_FIND(&mmi->mmi_subs, &skel, mms_link, mms_cmp))) {
-        RB_REMOVE(&mmi->mmi_subs, sub, mms_link);
-        free(sub);
-      }
-    }
-  }
+  th_subscription_t *sub;
 
   if (!force && mpegts_mux_has_subscribers(mm))
     return;
@@ -441,6 +403,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, void *src, int force )
   tvhdebug("mpegts", "%s - stopping mux", buf);
 
   if (mmi) {
+    LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
+      subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
     mi = mmi->mmi_input;
     mi->mi_stop_mux(mi, mmi);
     mi->mi_stopped_mux(mi, mmi);
@@ -530,7 +494,7 @@ mpegts_mux_initial_scan_timeout ( void *aux )
   char buf[256];
   mpegts_mux_t *mm = aux;
   mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhdebug("mpegts", "%s - initial scan timed out", buf);
+  tvhinfo("mpegts", "%s - initial scan timed out", buf);
   mpegts_mux_initial_scan_done(mm);
 }
 
@@ -539,6 +503,10 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
 {
   char buf[256];
   mpegts_network_t *mn = mm->mm_network;
+  mpegts_mux_instance_t *mmi;
+  th_subscription_t *s;
+
+  /* Stop */
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s - initial scan complete", buf);
   gtimer_disarm(&mm->mm_initial_scan_timeout);
@@ -548,8 +516,12 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
   mpegts_network_schedule_initial_scan(mn);
 
-  /* Stop */
-  mm->mm_stop(mm, mn, 0);
+  /* Unsubscribe */
+  // TODO: might be better to make a slightly more concrate link here
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
+      if (!strcmp(s->ths_title, "initscan"))
+        subscription_unsubscribe(s);
 
   /* Save */
   mm->mm_initial_scan_done = 1;

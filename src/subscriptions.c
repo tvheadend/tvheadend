@@ -39,6 +39,9 @@
 #include "htsmsg.h"
 #include "notify.h"
 #include "atomic.h"
+#if ENABLE_MPEGTS
+#include "input/mpegts.h"
+#endif
 
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
@@ -136,6 +139,32 @@ subscription_unlink_service(th_subscription_t *s, int reason)
   s->ths_service = NULL;
 }
 
+/*
+ * Called from mpegts code
+ */
+void
+subscription_unlink_mux(th_subscription_t *s, int reason)
+{
+  streaming_message_t *sm;
+  mpegts_mux_instance_t *mmi = s->ths_mmi;
+
+  pthread_mutex_lock(&mmi->mmi_input->mi_delivery_mutex);
+
+  streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
+
+  sm = streaming_msg_create_code(SMT_STOP, reason);
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&mmi->mmi_input->mi_delivery_mutex);
+
+  LIST_REMOVE(s, ths_mmi_link);
+  s->ths_mmi = NULL;
+
+  /* Free memory */
+  if (s->ths_flags & SUBSCRIPTION_NONE)
+    subscription_unsubscribe(s);
+}
+
 
 /**
  *
@@ -153,10 +182,12 @@ subscription_reschedule_cb(void *aux)
 void
 subscription_reschedule(void)
 {
+  static int reenter = 0;
   th_subscription_t *s;
   service_instance_t *si;
   streaming_message_t *sm;
   int error;
+  if (reenter) return;
 
   lock_assert(&global_lock);
 
@@ -164,6 +195,8 @@ subscription_reschedule(void)
 	     subscription_reschedule_cb, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
+    if (s->ths_mmi) continue;
+    if (!s->ths_channel && !s->ths_mmi) continue;
 #if 0
     if(s->ths_channel == NULL)
       continue; /* stale entry, channel has been destroyed */
@@ -173,7 +206,7 @@ subscription_reschedule(void)
       /* Already got a service */
 
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
-	continue; /* And it not bad, so we're happy */
+	      continue; /* And it not bad, so we're happy */
 
       si = s->ths_current_instance;
 
@@ -200,6 +233,8 @@ subscription_reschedule(void)
 
     subscription_link_service(s, si->si_s);
   }
+  
+  reenter = 0;
 }
 
 /**
@@ -228,13 +263,11 @@ subscription_unsubscribe(th_subscription_t *s)
   if(t != NULL)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
-#ifdef TODO_NEED_A_BETTER_SOLUTION
-  if(s->ths_tdmi != NULL) {
-    LIST_REMOVE(s, ths_tdmi_link);
-    th_dvb_adapter_t *tda = s->ths_tdmi->tdmi_adapter;
-    pthread_mutex_lock(&tda->tda_delivery_mutex);
-    streaming_target_disconnect(&tda->tda_streaming_pad, &s->ths_input);
-    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+#if ENABLE_MPEGTS
+  if(s->ths_mmi) {
+    subscription_unlink_mux(s, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    if (s->ths_mmi->mmi_mux)
+      s->ths_mmi->mmi_mux->mm_stop(s->ths_mmi->mmi_mux, 0);
   }
 #endif
 
@@ -345,11 +378,14 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
   int reject = 0;
   static int tally;
 
-  if(flags & SUBSCRIPTION_RAW_MPEGTS)
+  if (flags & SUBSCRIPTION_NONE)
+    reject |= -1;
+  else if(flags & SUBSCRIPTION_RAW_MPEGTS)
     reject |= SMT_TO_MASK(SMT_PACKET);  // Reject parsed frames
   else
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
 
+  // TODO: possibly we don't connect anything for SUB_NONE
   streaming_target_init(&s->ths_input, 
 			cb ?: subscription_input_direct, s, reject);
 
@@ -448,6 +484,106 @@ subscription_create_from_service(service_t *t, unsigned int weight,
   return subscription_create_from_channel_or_service
            (NULL, t, weight, name, st, flags, hostname, username, client);
 }
+
+/**
+ *
+ */
+/**
+ *
+ */
+#if ENABLE_MPEGTS
+// TODO: move this
+static void
+mpegts_mux_setsourceinfo ( mpegts_mux_t *mm, source_info_t *si )
+{
+  char buf[128];
+
+  /* Validate */
+  lock_assert(&global_lock);
+
+  /* Update */
+  if(mm->mm_network->mn_network_name != NULL)
+    si->si_network = strdup(mm->mm_network->mn_network_name);
+
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  si->si_mux = strdup(buf);
+
+  if(mm->mm_active && mm->mm_active->mmi_input) {
+    mpegts_input_t *mi = mm->mm_active->mmi_input;
+    mi->mi_display_name(mi, buf, sizeof(buf));
+    si->si_adapter = strdup(buf);
+  }
+}
+
+
+th_subscription_t *
+subscription_create_from_mux
+  (mpegts_mux_t *mm,
+   unsigned int weight,
+   const char *name,
+	 streaming_target_t *st,
+   int flags,
+	 const char *hostname,
+	 const char *username, 
+	 const char *client)
+{
+  th_subscription_t *s;
+  streaming_message_t *sm;
+  streaming_start_t *ss;
+  int r;
+
+  if (!flags)
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+
+  s = subscription_create(weight, name, st, flags,
+			  NULL, hostname, username, client);
+
+  /* Tune */
+  r = mm->mm_start(mm, s->ths_title, weight);
+
+  /* Failed */
+  if (r) {
+    subscription_unsubscribe(s);
+    return NULL;
+  }
+  s->ths_mmi = mm->mm_active;
+
+  pthread_mutex_lock(&s->ths_mmi->mmi_input->mi_delivery_mutex);
+
+  /* Store */
+  LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
+  
+  /* Connect (not for NONE streams) */
+  if (!(flags & SUBSCRIPTION_NONE)) {
+    streaming_target_connect(&s->ths_mmi->mmi_streaming_pad, &s->ths_input);
+
+    /* Deliver a start message */
+    ss = calloc(1, sizeof(streaming_start_t));
+    ss->ss_num_components = 0;
+    ss->ss_refcount       = 1;
+    
+    mpegts_mux_setsourceinfo(mm, &ss->ss_si);
+    ss->ss_si.si_service = strdup("rawmux");
+  
+    sm = streaming_msg_create_data(SMT_START, ss);
+    streaming_target_deliver(s->ths_output, sm);
+
+    tvhinfo("subscription", 
+	   "'%s' subscribing to mux, weight: %d, adapter: '%s', "
+	   "network: '%s', mux: '%s'",
+	   s->ths_title,
+     s->ths_weight,
+	   ss->ss_si.si_adapter  ?: "<N/A>",
+	   ss->ss_si.si_network  ?: "<N/A>",
+	   ss->ss_si.si_mux      ?: "<N/A>");
+  }
+
+  pthread_mutex_unlock(&s->ths_mmi->mmi_input->mi_delivery_mutex);
+
+  notify_reload("subscriptions");
+  return s;
+}
+#endif
 
 /**
  *
@@ -579,10 +715,10 @@ subscription_create_msg(th_subscription_t *s)
     htsmsg_add_str(m, "title", s->ths_title);
   
   if(s->ths_channel != NULL)
-    htsmsg_add_str(m, "channel", s->ths_channel->ch_name);
+    htsmsg_add_str(m, "channel", s->ths_channel->ch_name ?: "");
   
   if(s->ths_service != NULL)
-    htsmsg_add_str(m, "service", s->ths_service->s_nicename);
+    htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
 
   return m;
 }
