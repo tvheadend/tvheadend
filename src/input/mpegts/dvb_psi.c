@@ -775,7 +775,26 @@ dvb_nit_callback
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
       tvhdebug(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
 
+      /* User-defined */
+      if (mt->mt_mux_cb) {
+        int i = 0;
+        while (mt->mt_mux_cb[i].cb) {
+          if (mt->mt_mux_cb[i].tag == dtag)
+            break;
+          i++;
+        }
+        if (mt->mt_mux_cb[i].cb) {
+          if (mt->mt_mux_cb[i].cb(mt, mux, dtag, dptr, dlen))
+            return -1;
+          dtag = 0;
+        }
+      }
+
+      /* Pre-defined */
       switch (dtag) {
+        default:
+        case 0:
+          break;
     
         /* nit only */
         case DVB_DESC_SAT_DEL:

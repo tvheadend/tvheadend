@@ -219,7 +219,7 @@ static void _epggrab_load ( void )
   }
  
   /* Load module config (channels) */
-#if 0//ENABLE_LINUXDVB
+#if 0 //ENABLE_MPEGTS
   eit_load();
   opentv_load();
 #endif
@@ -393,7 +393,7 @@ void epggrab_init ( void )
   /* Initialise modules */
 #if ENABLE_MPEGTS
   eit_init();
-  //opentv_init();
+  opentv_init();
 #endif
   pyepg_init();
   xmltv_init();

@@ -122,7 +122,7 @@ mpegts_table_destroy ( mpegts_table_t *mt )
 /**
  * Add a new DVB table
  */
-void
+mpegts_table_t *
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
     mpegts_table_callback_t callback, void *opaque,
@@ -135,7 +135,7 @@ mpegts_table_add
     if ( mt->mt_pid      == pid      &&
          mt->mt_callback == callback &&
          mt->mt_opaque   == opaque )
-      return;
+      return mt;
   }
 
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
@@ -159,6 +159,7 @@ mpegts_table_add
 
   /* Open table */
   mm->mm_open_table(mm, mt);
+  return mt;
 }
 
 /**

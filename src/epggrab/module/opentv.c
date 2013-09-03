@@ -22,7 +22,6 @@
 #include <regex.h>
 #include <linux/dvb/dmx.h>
 #include "tvheadend.h"
-#include "dvb/dvb.h"
 #include "channels.h"
 #include "huffman.h"
 #include "epg.h"
@@ -33,80 +32,13 @@
 #include "service.h"
 #include "htsmsg.h"
 #include "settings.h"
+#include "input/mpegts.h"
 
 static epggrab_channel_tree_t _opentv_channels;
 
-/* ************************************************************************
- * Status monitoring
- * ***********************************************************************/
-
-/* Internal event structure */
-typedef struct opentv_event
-{ 
-  RB_ENTRY(opentv_event) ev_link;     ///< List of partial events
-  uint16_t               cid;         ///< Channel ID
-  uint16_t               eid;         ///< Events ID
-  time_t                 start;       ///< Start time
-  time_t                 stop;        ///< Event stop time
-  char                  *title;       ///< Event title
-  char                  *summary;     ///< Event summary
-  char                  *desc;        ///< Event description
-  uint8_t                cat;         ///< Event category
-  uint16_t               serieslink;  ///< Series link ID
-  
-  uint8_t                type;        ///< 0x1=title, 0x2=summary
-} opentv_event_t;
-
-/* PID status (for event PIDs) */
-typedef struct opentv_pid
-{
-  LIST_ENTRY(opentv_pid) link;
-  int                    pid;
-  enum {
-    OPENTV_PID_INIT,
-    OPENTV_PID_STARTED,
-    OPENTV_PID_COMPLETE
-  }                      state;
-  uint8_t                start[20];
-} opentv_pid_t;
-
-/* Scan status */
-typedef struct opentv_status
-{
-  int                     begbat;
-  int                     endbat;
-  LIST_HEAD(, opentv_pid) pids;
-  RB_HEAD(, opentv_event) events;
-} opentv_status_t;
-
-/* Get a pid entry */
-static opentv_pid_t *_opentv_status_get_pid
-  ( opentv_status_t *sta, int pid )
-{
-  opentv_pid_t *p;
-  LIST_FOREACH(p, &sta->pids, link) {
-    if (p->pid == pid) break;
-  }
-  if (!p) {
-    p = calloc(1, sizeof(opentv_pid_t));
-    p->pid = pid;
-    LIST_INSERT_HEAD(&sta->pids, p, link);
-  }
-  return p;
-}
-
-/* Clear events */
-static void _opentv_status_remove_events ( opentv_status_t *sta )
-{
-  opentv_event_t *ev;
-  while ((ev = RB_FIRST(&sta->events))) {
-    RB_REMOVE(&sta->events, ev, ev_link);
-    if (ev->title)   free(ev->title);
-    if (ev->summary) free(ev->summary);
-    if (ev->desc)    free(ev->desc);
-    free(ev);
-  }
-}
+#define OPENTV_TITLE_BASE   0xA0
+#define OPENTV_SUMMARY_BASE 0xA8
+#define OPENTV_TABLE_MASK   0xFC
 
 /* ************************************************************************
  * Module structure
@@ -178,14 +110,50 @@ static opentv_genre_t *_opentv_genre_find ( const char *id )
 }
 
 /* ************************************************************************
+ * Status monitoring
+ * ***********************************************************************/
+
+/* Internal event structure */
+typedef struct opentv_event
+{ 
+  uint16_t               eid;         ///< Events ID
+  time_t                 start;       ///< Start time
+  time_t                 stop;        ///< Event stop time
+  char                  *title;       ///< Event title
+  char                  *summary;     ///< Event summary
+  char                  *desc;        ///< Event description
+  uint8_t                cat;         ///< Event category
+  uint16_t               serieslink;  ///< Series link ID
+} opentv_event_t;
+
+/* Scan status */
+typedef struct opentv_status
+{
+  opentv_module_t   *os_mod;
+  int                os_refcount;
+  epggrab_ota_mux_t *os_ota;
+} opentv_status_t;
+
+static void
+opentv_status_destroy ( mpegts_table_t *mt )
+{
+  opentv_status_t *st = mt->mt_opaque;
+  lock_assert(&global_lock);
+  assert(st->os_refcount > 0);
+  --st->os_refcount;
+  if (!st->os_refcount) 
+    free(st);
+}
+
+/* ************************************************************************
  * EPG Object wrappers
  * ***********************************************************************/
 
 static epggrab_channel_t *_opentv_find_epggrab_channel
   ( opentv_module_t *mod, int cid, int create, int *save )
 {
-  char chid[32];
-  sprintf(chid, "%s-%d", mod->id, cid);
+  char chid[256];
+  snprintf(chid, sizeof(chid), "%s-%d", mod->id, cid);
   return epggrab_channel_find(&_opentv_channels, chid, create, save,
                               (epggrab_module_t*)mod);
 }
@@ -194,26 +162,9 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
  * OpenTV event processing
  * ***********************************************************************/
 
-#define OPENTV_TITLE_LEN   1024
-#define OPENTV_SUMMARY_LEN 1024
-#define OPENTV_DESC_LEN    2048
-
-#define OPENTV_TITLE       0x01
-#define OPENTV_SUMMARY     0x02
-
-/* Event list comparator */
-static int _ev_cmp ( void *_a, void *_b )
-{
-  opentv_event_t *a = (opentv_event_t*)_a;
-  opentv_event_t *b = (opentv_event_t*)_b;
-  int r = a->cid - b->cid;
-  if (r) return r;
-  return a->eid - b->eid;
-}
-
 /* Parse huffman encoded string */
 static char *_opentv_parse_string 
-  ( opentv_module_t *prov, uint8_t *buf, int len )
+  ( opentv_module_t *prov, const uint8_t *buf, int len )
 {
   int ok = 0;
   char *ret, *tmp;
@@ -243,7 +194,8 @@ static char *_opentv_parse_string
 
 /* Parse a specific record */
 static int _opentv_parse_event_record
- ( opentv_module_t *prov, opentv_event_t *ev, uint8_t *buf, int len,
+ ( opentv_module_t *prov, opentv_event_t *ev,
+   const uint8_t *buf, int len,
    time_t mjd )
 {
   uint8_t rtag = buf[0];
@@ -285,24 +237,13 @@ static int _opentv_parse_event_record
 /* Parse a specific event */
 static int _opentv_parse_event
   ( opentv_module_t *prov, opentv_status_t *sta,
-    uint8_t *buf, int len, int cid, time_t mjd,
-    opentv_event_t *ev, int type )
+    const uint8_t *buf, int len, int cid, time_t mjd,
+    opentv_event_t *ev )
 {
   int      slen = ((int)buf[2] & 0xf << 8) | buf[3];
   int      i    = 4;
-  opentv_event_t *e;
 
-  ev->cid = cid;
   ev->eid = ((uint16_t)buf[0] << 8) | buf[1];
-
-  /* Get existing summary */
-  e = RB_FIND(&sta->events, ev, ev_link, _ev_cmp);
-  if (e) {
-    RB_REMOVE(&sta->events, e, ev_link);
-    memcpy(ev, e, sizeof(opentv_event_t));
-    free(e);
-  }
-  ev->type |= type;
 
   /* Process records */ 
   while (i < slen+4) {
@@ -312,18 +253,19 @@ static int _opentv_parse_event
 }
 
 /* Parse an event section */
-static int _opentv_parse_event_section
-  ( opentv_module_t *mod, opentv_status_t *sta,
-    uint8_t *buf, int len, int type )
+static int
+opentv_parse_event_section
+  ( opentv_status_t *sta, int cid, int mjd,
+    const uint8_t *buf, int len )
 {
-  int i, cid, save = 0;
-  time_t mjd;
+  int i, save = 0;
+  opentv_module_t  *mod = sta->os_mod;
+  epggrab_module_t *src = (epggrab_module_t*)mod;
   epggrab_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   epg_serieslink_t *es;
   opentv_event_t ev;
-  epggrab_module_t *src = (epggrab_module_t*)mod;
   const char *lang = NULL;
   epggrab_channel_link_t *ecl;
 
@@ -332,55 +274,50 @@ static int _opentv_parse_event_section
   else if (!strcmp(mod->dict->id, "skyeng")) lang = "eng";
 
   /* Channel */
-  cid = ((int)buf[0] << 8) | buf[1];
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
   if (!(ecl = LIST_FIRST(&ec->channels))) return 0;
-  // TODO: it's assumed that opentv channels are always 1-1 mapping!
   
-  /* Time (start/stop referenced to this) */
-  mjd = ((int)buf[5] << 8) | buf[6];
-  mjd = (mjd - 40587) * 86400;
-
   /* Loop around event entries */
   i = 7;
   while (i < len) {
     memset(&ev, 0, sizeof(opentv_event_t));
     i += _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd,
-                             &ev, type);
+                             &ev);
 
     /*
      * Broadcast
      */
 
     /* Find broadcast */
-    if (ev.type & OPENTV_TITLE) {
+    if (ev.start && ev.stop) {
       ebc = epg_broadcast_find_by_time(ecl->channel, ev.start, ev.stop, ev.eid,
                                        1, &save);
-
-    /* Store */
-    } else if (!(ebc = epg_broadcast_find_by_eid(ecl->channel, ev.eid))) {
-      opentv_event_t *skel = malloc(sizeof(opentv_event_t));
-      memcpy(skel, &ev, sizeof(opentv_event_t));
-      assert(!RB_INSERT_SORTED(&sta->events, skel, ev_link, _ev_cmp));
-      continue; // don't want to free() anything
+      tvhdebug("opentv", "find by time start %ld stop %ld eid %d = %p", ev.start, ev.stop, ev.eid, ebc);
+    } else {
+      ebc = epg_broadcast_find_by_eid(ecl->channel, ev.eid);
+      tvhdebug("opentv", "find by eid %d = %p", ev.eid, ebc);
     }
+    if (!ebc)
+      goto done;
 
     /* Summary / Description */
-    if (ebc) {
-      if (ev.summary)
-        save |= epg_broadcast_set_summary(ebc, ev.summary, lang, src);
-      if (ev.desc)
-        save |= epg_broadcast_set_description(ebc, ev.desc, lang, src);
+    if (ev.summary) {
+      tvhdebug("opentv", "  summary %s", ev.summary);
+      save |= epg_broadcast_set_summary(ebc, ev.summary, lang, src);
+    }
+    if (ev.desc) {
+      tvhdebug("opentv", "  desc %s", ev.desc);
+      save |= epg_broadcast_set_description(ebc, ev.desc, lang, src);
     }
 
     /*
      * Series link
      */
 
-    if (ebc && ev.serieslink) {
+    if (ev.serieslink) {
       char suri[257];
-      snprintf(suri, 256, "opentv://channel-%d/series-%d",
-               ecl->channel->ch_id, ev.serieslink);
+      snprintf(suri, 256, "opentv://channel-%s/series-%d",
+               channel_get_uuid(ecl->channel), ev.serieslink);
       if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }
@@ -389,9 +326,12 @@ static int _opentv_parse_event_section
      * Episode
      */
 
-    if (ebc && (ee = epg_broadcast_get_episode(ebc, 1, &save))) {
-      if (ev.title)
+    if ((ee = epg_broadcast_get_episode(ebc, 1, &save))) {
+      tvhdebug("opentv", "  find episode %p", ee);
+      if (ev.title) {
+        tvhdebug("opentv", "    title %s", ev.title);
         save |= epg_episode_set_title(ee, ev.title, lang, src);
+      }
       if (ev.cat) {
         epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
         epg_genre_list_add_by_eit(egl, ev.cat);
@@ -404,7 +344,7 @@ static int _opentv_parse_event_section
 
         /* Parse Series/Episode
          * TODO: HACK: this needs doing properly */
-        regcomp(&preg, " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)$",
+        regcomp(&preg, " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",
                 REG_ICASE | REG_EXTENDED);
         if (!regexec(&preg, ev.summary, 3, match, 0)) {
           epg_episode_num_t en;
@@ -420,6 +360,7 @@ static int _opentv_parse_event_section
     }
 
     /* Cleanup */
+done:
     if (ev.title)   free(ev.title);
     if (ev.summary) free(ev.summary);
     if (ev.desc)    free(ev.desc);
@@ -434,12 +375,16 @@ static int _opentv_parse_event_section
  * OpenTV channel processing
  * ***********************************************************************/
 
-static void _opentv_parse_channels
-  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t onid, uint16_t tsid )
+static int
+opentv_desc_channels
+  ( mpegts_table_t *mt, mpegts_mux_t *mm,
+    const uint8_t dtag, const uint8_t *buf, int len )
 {
+  opentv_status_t *sta = mt->mt_opaque;
+  opentv_module_t *mod = sta->os_mod;
   epggrab_channel_t *ec;
   epggrab_channel_link_t *ecl;
-  service_t *svc;
+  mpegts_service_t *svc;
   int sid, cid, cnum;
   int save = 0;
   int i = 2;
@@ -447,290 +392,192 @@ static void _opentv_parse_channels
     sid  = ((int)buf[i] << 8) | buf[i+1];
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
+    tvhtrace(mt->mt_name, "     sid %04X cid %04X cnum %d", sid, cid, cnum);
 
     /* Find the service */
-    svc = dvb_service_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
-    if (svc && svc->s_ch) {
+    svc = mpegts_service_find(mm, sid, 0, 0, NULL);
+    tvhtrace(mt->mt_name, "     svc %p [%s]", svc, svc ? svc->s_nicename : NULL);
+    if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
+      tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
       if (!ecl) {
         ecl = calloc(1, sizeof(epggrab_channel_link_t));
         LIST_INSERT_HEAD(&ec->channels, ecl, link);
       }
-      ecl->channel = svc->s_ch;
+      ecl->channel = LIST_FIRST(&svc->s_channels)->csm_chn;
       save |= epggrab_channel_set_number(ec, cnum);
     }
     i += 9;
   }
-}
-
-static int _opentv_parse_ts_desc
-  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t onid, uint16_t tsid )
-{
-  int dtag = buf[0];
-  int dlen = buf[1];
-  if (dlen+2 > len) return -1;
-  if (dtag == 0xb1)
-    _opentv_parse_channels(mod, buf+2, dlen, onid, tsid);
-  return dlen + 2;
-}
-
-static int _opentv_bat_section
-  ( opentv_module_t *mod, opentv_status_t *sta, uint8_t *buf, int len )
-{
-  int i, r;
-  int bdlen, tllen, tdlen;
-  uint16_t bid, tsid, onid;
-  uint8_t sec;
-
-  /* Skip (not yet applicable) */
-  if (!(buf[2] & 0x1)) return 0;
-  bid  = buf[0] << 8 | buf[1];
-  //ver  = (buf[2] >> 1) & 0x1f;
-  sec  = buf[3];
-  //lst  = buf[4];
-
-  /* Check for finish */
-  // Note: this is NOT the most robust of approaches, but it works
-  //       most of the time
-  i = 0x80000000 | (bid << 8) | sec;
-  if (!sta->begbat) {
-    tvhlog(LOG_DEBUG, mod->id, "begin processing BAT");
-    sta->begbat = i;
-  } else if (sta->begbat == i) {
-    sta->endbat = 1;
-    tvhlog(LOG_DEBUG, mod->id, "finish processing BAT");
-    return 0;
-  }
-
-  /* Skip (ignore bouquet info for now) */
-  bdlen = ((int)buf[5] & 0xf << 8) | buf[6];
-  if (bdlen+7 > len) return -1;
-  buf   += (7 + bdlen);
-  len   -= (7 + bdlen);
-
-  /* TS descriptors */
-  tllen = ((int)buf[0] & 0xf << 8) | buf[1];
-  buf   += 2;
-  len   -= 2;
-  if (tllen > len) return -1;
-  while (len > 0) {
-    tsid  = ((int)buf[0] << 8) | buf[1];
-    onid  = ((int)buf[2] << 8) | buf[3];
-    tdlen = ((int)buf[4] & 0xf) << 8 | buf[5];
-    buf += 6;
-    len -= 6;
-    if (tdlen > len) return -1;
-    i = 0;
-    while (i < tdlen) {
-      r = _opentv_parse_ts_desc(mod, buf+i, tdlen-i, onid, tsid);
-      if (r < 0) return -1;
-      i += r;
-    }
-    buf += tdlen;
-    len -= tdlen;
-  }
 
   return 0;
 }
 
-/* ************************************************************************
- * Table Callbacks
- * ***********************************************************************/
-
-static epggrab_ota_mux_t *_opentv_event_callback 
-  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
+static int
+opentv_table_callback
+  ( mpegts_table_t *mt, const uint8_t *buf, int len, int tableid )
 {
-  th_dvb_table_t    *tdt = p;
-  opentv_module_t   *mod = tdt->tdt_opaque;
-  epggrab_ota_mux_t *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
-  opentv_status_t *sta;
-  opentv_pid_t *pid;
+  int r = 1, cid, mjd;
+  int sect, last, ver;
+  mpegts_table_state_t *st;
+  opentv_status_t *sta = mt->mt_opaque;
+  opentv_module_t *mod = sta->os_mod;
+  epggrab_ota_mux_t *ota = sta->os_ota;
 
-  /* Ignore (invalid - stopped?) */
-  if (!ota || !ota->status) return NULL;
-  sta = ota->status;
-
-  /* Ignore (not enough data) */
-  if (len < 20) return NULL;
-
-  /* Ignore (don't have BAT) */
-  if (!sta->endbat) return NULL;
-
-  /* Finished / Blocked */
-  if (epggrab_ota_is_complete(ota)) return NULL;
-
-  /* Begin (reset state) */
-  if (epggrab_ota_begin(ota)) {
-
-    /* Remove outstanding event data */
-    _opentv_status_remove_events(sta);
-
-    /* Reset status */
-    LIST_FOREACH(pid, &sta->pids, link)
-      pid->state = OPENTV_PID_INIT;
+  /* Register */
+  if (!ota) {
+    sta->os_ota = ota
+      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux,
+                             1200, 3600);
   }
+    
 
-  /* Insert/Find */
-  pid = _opentv_status_get_pid(sta, tdt->tdt_pid);
+  /* Validate */
+  if (len < 7) return -1;
 
-  /* Begin PID */
-  if (pid->state == OPENTV_PID_INIT) {
-    pid->state = OPENTV_PID_STARTED;
-    memcpy(pid->start, buf, 20);
-    return ota;
- 
-  /* PID Already complete */
-  } else if (pid->state == OPENTV_PID_COMPLETE) {
-    return NULL;
+  /* Extra ID */
+  cid = ((int)buf[0] << 8) | buf[1];
+  mjd = ((int)buf[5] << 8) | buf[6];
+  mjd = (mjd - 40587) * 86400;
 
-  /* End PID */
-  } else if (!memcmp(pid->start, buf, 20)) {
-    pid->state = OPENTV_PID_COMPLETE;
+  /* Begin */
+  r = dvb_table_begin(mt, buf, len, tableid, (uint64_t)cid << 32 | mjd, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) goto done;
 
-    /* Check rest */
-    LIST_FOREACH(pid, &sta->pids, link)
-      if (pid->state != OPENTV_PID_COMPLETE) return ota;
+  /* Process */
+  r = opentv_parse_event_section(sta, cid, mjd, buf, len);
 
-  /* PID in progress */
-  } else {
-    return ota;
-  }
+  /* End */
+  r = dvb_table_end(mt, st, sect);
 
-  /* Mark complete */
-  epggrab_ota_complete(ota);
+  /* Complete */
+done:
+  if (!r) {
+    tvhtrace(mt->mt_name, "pid %d complete remain %d",
+             mt->mt_pid, sta->os_refcount-1);
   
-  return NULL;
-}
+    /* Last PID */
+    if (sta->os_refcount == 1) {
+  
+      if (mt->mt_table == OPENTV_TITLE_BASE) {
+        int *t;
+        tvhinfo(mt->mt_name, "titles complete");
 
-static int _opentv_title_callback
-  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
-{
-  epggrab_ota_mux_t *ota = _opentv_event_callback(dm, buf, len, tid, p);
-  if (ota)
-    return _opentv_parse_event_section((opentv_module_t*)ota->grab,
-                                       (opentv_status_t*)ota->status,
-                                       buf, len, OPENTV_TITLE);
+        /* Summaries */
+        t = mod->summary;
+        while (*t) {
+          mpegts_table_t *mt2;
+          mt2 = mpegts_table_add(mt->mt_mux,
+                                 OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
+                                 opentv_table_callback, sta,
+                                 mod->id, MT_CRC, *t++);
+          if (mt2) {
+            sta->os_refcount++;
+            mt2->mt_destroy    = opentv_status_destroy;
+          }
+        }
+      } else {
+        tvhinfo(mt->mt_name, "summaries complete");
+        if (ota)
+          epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+      }
+    }
+
+    /* Remove table handler */
+    mpegts_table_destroy(mt);
+  }
+
   return 0;
 }
 
-static int _opentv_summary_callback
-  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
+static int
+opentv_bat_callback
+  ( mpegts_table_t *mt, const uint8_t *buf, int len, int tableid )
 {
-  epggrab_ota_mux_t *ota = _opentv_event_callback(dm, buf, len, tid, p);
-  if (ota)
-    return _opentv_parse_event_section((opentv_module_t*)ota->grab,
-                                       (opentv_status_t*)ota->status,
-                                       buf, len, OPENTV_SUMMARY);
-  return 0;
-}
+  int *t;
+  opentv_status_t *sta = mt->mt_opaque;
+  opentv_module_t *mod = sta->os_mod;
+  int r = dvb_bat_callback(mt, buf, len, tableid);
 
-static int _opentv_channel_callback
-  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
-{
-  opentv_module_t      *mod = p;
-  epggrab_ota_mux_t    *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
-  opentv_status_t      *sta;
-  if (!ota || !ota->status) return 0;
-  sta = ota->status;
-  if (!sta->endbat)
-    return _opentv_bat_section(mod, sta, buf, len);
-  return 0;
+  /* Complete */
+  if (!r) {
+    tvhinfo(mt->mt_name, "channels complete");
+
+    /* Install event handlers */
+    t = mod->title;
+    while (*t) {
+      mpegts_table_t *mt2;
+      mt2 = mpegts_table_add(mt->mt_mux,
+                             OPENTV_TITLE_BASE, OPENTV_TABLE_MASK,
+                             opentv_table_callback, mt->mt_opaque,
+                             mod->id, MT_CRC, *t++);
+      if (mt2) {
+        if (!mt2->mt_destroy) {
+          sta->os_refcount++;
+          mt2->mt_destroy    = opentv_status_destroy;
+        }
+      }
+    }
+
+    /* Remove BAT handler */
+    mpegts_table_destroy(mt);
+  }
+
+  return r;
 }
 
 /* ************************************************************************
  * Module callbacks
  * ***********************************************************************/
 
-static void _opentv_ota_destroy ( epggrab_ota_mux_t *ota )
-{
-  opentv_status_t *sta = ota->status;
-  opentv_pid_t    *pid;
-
-  /* Empty the events */
-  _opentv_status_remove_events(sta);
-
-  /* Empty pids */
-  while ((pid = LIST_FIRST(&sta->pids))) {
-    LIST_REMOVE(pid, link);
-    free(pid);
-  }
-
-  /* Free the rest */
-  free(sta);
-  free(ota);
-}
-
 static void _opentv_start
-  ( epggrab_module_ota_t *m, dvb_mux_t *dm )
+  ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
 {
   int *t;
-  epggrab_ota_mux_t *ota;
   opentv_module_t *mod = (opentv_module_t*)m;
-  opentv_status_t *sta;
+  opentv_status_t *sta = NULL;
+  mpegts_table_t *mt;
+  static struct mpegts_table_mux_cb bat_desc[] = {
+    { .tag = 0xB1, .cb = opentv_desc_channels },
+    { .tag = 0x00, .cb = NULL }
+  };
 
   /* Ignore */
   if (!m->enabled)  return;
-  if (mod->tsid != dm->dm_transport_stream_id) return;
+  if (mod->tsid != mm->mm_tsid) return;
 
-  /* Create link */
-  if (!(ota = epggrab_ota_create(m, dm))) return;
-  if (!ota->status) {
-    ota->status  = calloc(1, sizeof(opentv_status_t));
-    ota->destroy = _opentv_ota_destroy;
-  }
-  sta = ota->status;
-  sta->begbat = sta->endbat = 0;
-
-  /* Register (just in case we missed it on enable somehow) */
-  epggrab_ota_register(ota, 600, 3600); // 10min scan every hour
-  
   /* Install tables */
-  tvhlog(LOG_DEBUG, "opentv", "install provider %s tables", mod->id);
+  tvhinfo(mod->id, "begin grab");
 
   /* Channels */
-  t = mod->channel;
+  t   = mod->channel;
   while (*t) {
-    // TODO: what about 0x46 (service description)
-    tdt_add(dm, 0x4a, 0xff, _opentv_channel_callback, m,
-            m->id, TDT_CRC, *t++);
+    if (!sta) {
+      sta = calloc(1, sizeof(opentv_status_t));
+      sta->os_mod = mod;
+    }
+    mt = mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK,
+                          opentv_bat_callback, sta,
+                          m->id, MT_CRC, *t++);
+    if (mt) {
+      mt->mt_mux_cb  = bat_desc;
+      if (!mt->mt_destroy) {
+        sta->os_refcount++;
+        mt->mt_destroy = opentv_status_destroy;
+      }
+    }
   }
+  if (!sta->os_refcount)
+    free(sta);
 
-  /* Titles */
-  t = mod->title;
-  while (*t) {
-    _opentv_status_get_pid(sta, *t);
-    tdt_add(dm, 0xa0, 0xfc, _opentv_title_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++);
-  }
+  // TODO: maybe if we had global cbs and event on complete we wouldn't
+  //       have to potentially process the BAT twice (but is that really
+  //       a big deal?)
 
-  /* Summaries */
-  t = mod->summary;
-  while (*t) {
-    _opentv_status_get_pid(sta, *t);
-    tdt_add(dm, 0xa8, 0xfc, _opentv_summary_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++);
-  }
-}
-
-static int _opentv_enable ( void  *m, uint8_t e )
-{
-  opentv_module_t *mod = (opentv_module_t*)m;
-
-  if (mod->enabled == e) return 0;
-  mod->enabled = e;
-
-  /* Register interest */
-  if (e) {
-    epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
-                                          mod->onid, mod->tsid,
-                                          600, 3600,  NULL);
-  /* Remove all links */
-  } else {
-    epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);
-  }
-
-  return 1;
+  // Note: we process the data in a serial fashion, first we do channels
+  //       then we do titles, then we do summaries
 }
 
 /* ************************************************************************
@@ -827,7 +674,7 @@ static void _opentv_dict_load ( htsmsg_t *m )
           tvhlog(LOG_WARNING, "opentv", "dictionary %s failed", f->hmf_name);
       }
     }
-  }
+  } 
   htsmsg_destroy(m);
 }
 
@@ -870,7 +717,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod = (opentv_module_t*)
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
                               ibuf, nbuf, 2,
-                              _opentv_start, _opentv_enable,
+                              _opentv_start, NULL,
                               NULL);
   
   /* Add provider details */

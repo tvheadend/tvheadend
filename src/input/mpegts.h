@@ -61,6 +61,13 @@ typedef int (*mpegts_table_callback_t)
 typedef void (*mpegts_psi_section_callback_t)
   ( const uint8_t *tsb, size_t len, void *opaque );
 
+struct mpegts_table_mux_cb
+{
+  int tag;
+  int (*cb) ( mpegts_table_t*, mpegts_mux_t *mm,
+              const uint8_t dtag, const uint8_t *dptr, int dlen );
+};
+
 struct mpegts_psi_section
 {
   int     ps_offset;
@@ -128,6 +135,8 @@ struct mpegts_table
   int mt_cc;
 
   mpegts_psi_section_t mt_sect;
+
+  struct mpegts_table_mux_cb *mt_mux_cb;
 };
 
 /**
@@ -562,7 +571,7 @@ void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
 void mpegts_table_release
   (mpegts_table_t *mt);
-void mpegts_table_add
+mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,
    const char *name, int flags, int pid);

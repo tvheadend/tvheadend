@@ -172,8 +172,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/epggrab/otamux.c\
 	src/epggrab/module/eit.c \
 	src/epggrab/support/freesat_huffman.c \
-
-#	src/epggrab/module/opentv.c \
+	src/epggrab/module/opentv.c \
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
