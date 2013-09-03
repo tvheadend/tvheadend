@@ -243,7 +243,7 @@ void tvhlogv ( const char *file, int line,
   int ok, options;
   size_t l;
   char buf[1024];
-  
+
   /* Check debug enabled (and cache config) */
   pthread_mutex_lock(&tvhlog_mutex);
   options = tvhlog_options;
@@ -319,9 +319,16 @@ _tvhlog_hexdump(const char *file, int line,
                 const char *subsys,
                 const uint8_t *data, ssize_t len )
 {
-  int i, c;
+  int i, c, skip;
   char str[1024];
 
+  /* Don't process if trace is OFF */
+  pthread_mutex_lock(&tvhlog_mutex);
+  skip = (severity > tvhlog_level);
+  pthread_mutex_unlock(&tvhlog_mutex);
+  if (skip) return;
+ 
+  /* Build and log output */
   while (len > 0) {
     c = 0;
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
