@@ -16,15 +16,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-
 #include "tvheadend.h"
 #include "queue.h"
+#include "settings.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
 #include "input/mpegts.h"
 #include "subscriptions.h"
+
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 RB_HEAD(,epggrab_ota_mux)   epggrab_ota_all;
 LIST_HEAD(,epggrab_ota_mux) epggrab_ota_pending;
@@ -35,6 +39,8 @@ gtimer_t                    epggrab_ota_active_timer;
 
 static void epggrab_ota_active_timer_cb ( void *p );
 static void epggrab_ota_pending_timer_cb ( void *p );
+
+static void epggrab_ota_save ( epggrab_ota_mux_t *ota );
 
 /* **************************************************************************
  * Utilities
@@ -152,16 +158,6 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
     epggrab_ota_done(ota, 0);
 }
 
-void
-epggrab_ota_init ( void )
-{
-  static mpegts_listener_t ml = {
-    .ml_mux_start = epggrab_mux_start,
-    .ml_mux_stop  = epggrab_mux_stop,
-  };
-  mpegts_add_listener(&ml);
-}
-
 /* **************************************************************************
  * Completion handling
  * *************************************************************************/
@@ -175,6 +171,7 @@ epggrab_ota_register
   ( epggrab_module_ota_t *mod, mpegts_mux_t *mm,
     int interval, int timeout )
 {
+  int save = 0;
   static epggrab_ota_mux_t *skel = NULL;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *ota;
@@ -198,21 +195,24 @@ epggrab_ota_register
     LIST_INSERT_SORTED(&epggrab_ota_active, ota, om_q_link, om_time_cmp);
     if (LIST_FIRST(&epggrab_ota_active) == ota)
       epggrab_ota_active_timer_cb(NULL);
-
-    // TODO: configuration
+    save = 1;
   }
   
   /* Find module entry */
   LIST_FOREACH(map, &ota->om_modules, om_link)
     if (map->om_module == mod)
       break;
-  if (!mod) {
+  if (!map) {
     map = calloc(1, sizeof(epggrab_ota_map_t));
     map->om_module   = mod;
     map->om_timeout  = timeout;
     map->om_interval = interval;
     LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
+    save = 1;
   }
+
+  /* Save config */
+  if (save) epggrab_ota_save(ota);
 
   return ota;
 }
@@ -329,3 +329,105 @@ done:
 /* **************************************************************************
  * Config
  * *************************************************************************/
+
+static void
+epggrab_ota_save ( epggrab_ota_mux_t *ota )
+{
+  epggrab_ota_map_t *map;
+  htsmsg_t *e, *l, *c = htsmsg_create_map();
+
+  htsmsg_add_u32(c, "timeout",  ota->om_timeout);
+  htsmsg_add_u32(c, "interval", ota->om_interval);
+  l = htsmsg_create_list();
+  LIST_FOREACH(map, &ota->om_modules, om_link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "id", map->om_module->id);
+    htsmsg_add_u32(e, "timeout", map->om_timeout);
+    htsmsg_add_u32(e, "interval", map->om_interval);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  htsmsg_add_msg(c, "modules", l);
+  hts_settings_save(c, "epggrab/otamux/%s", ota->om_mux_uuid);
+}
+
+static void
+epggrab_ota_load_one
+  ( const char *uuid, htsmsg_t *c )
+{
+  htsmsg_t *l, *e;
+  htsmsg_field_t *f;
+  mpegts_mux_t *mm;
+  epggrab_module_ota_t *mod;
+  epggrab_ota_mux_t *ota;
+  epggrab_ota_map_t *map;
+  const char *id;
+  
+  mm = mpegts_mux_find(uuid);
+  if (!mm) return;
+
+  ota = calloc(1, sizeof(epggrab_ota_mux_t));
+  ota->om_mux_uuid = strdup(uuid);
+  ota->om_timeout  = htsmsg_get_u32_or_default(c, "timeout", 0);
+  ota->om_interval = htsmsg_get_u32_or_default(c, "timeout", 0);
+  if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
+    free(ota->om_mux_uuid);
+    free(ota);
+    return;
+  }
+  LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
+  
+  if (!(l = htsmsg_get_list(c, "modules"))) return;
+  HTSMSG_FOREACH(f, l) {
+    if (!(e   = htsmsg_field_get_map(f))) continue;
+    if (!(id  = htsmsg_get_str(e, "id"))) continue;
+    if (!(mod = (epggrab_module_ota_t*)epggrab_module_find_by_id(id)))
+      continue;
+    
+    map = calloc(1, sizeof(epggrab_ota_map_t));
+    map->om_module   = mod;
+    map->om_timeout  = htsmsg_get_u32_or_default(e, "timeout", 0);
+    map->om_interval = htsmsg_get_u32_or_default(e, "interval", 0);
+    LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
+  }
+}
+
+void
+epggrab_ota_init ( void )
+{
+  htsmsg_t *c, *m;
+  htsmsg_field_t *f;
+  char path[1024];
+  struct stat st;
+
+  /* Add listener */
+  static mpegts_listener_t ml = {
+    .ml_mux_start = epggrab_mux_start,
+    .ml_mux_stop  = epggrab_mux_stop,
+  };
+  mpegts_add_listener(&ml);
+
+  /* Delete old config */
+  hts_settings_buildpath(path, sizeof(path), "epggrab/otamux");
+  if (!lstat(path, &st))
+    if (!S_ISDIR(st.st_mode))
+      hts_settings_remove("epggrab/otamux");
+  
+  /* Load config */
+  if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(m  = htsmsg_field_get_map(f))) continue;
+      epggrab_ota_load_one(f->hmf_name, m); 
+    }
+  }
+  
+  /* Init timer (immediate call after full init) */
+  if (LIST_FIRST(&epggrab_ota_pending))
+    gtimer_arm_abs(&epggrab_ota_pending_timer, epggrab_ota_pending_timer_cb,
+                   NULL, 0);
+}
+
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/

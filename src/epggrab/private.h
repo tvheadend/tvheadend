@@ -101,8 +101,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
 /*
  * Config handling
  */
-void epggrab_ota_load ( void );
-void epggrab_ota_save ( void );
+void epggrab_ota_init ( void );
 
 /*
  * Create/Find a link (unregistered)

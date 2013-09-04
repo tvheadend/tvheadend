@@ -172,8 +172,6 @@ struct epggrab_module_ext
  */
 struct epggrab_ota_mux
 {
-  idnode_t                           om_id;
-  
   char                              *om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
