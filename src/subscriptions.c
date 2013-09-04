@@ -150,21 +150,18 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
 
   pthread_mutex_lock(&mmi->mmi_input->mi_delivery_mutex);
 
-  streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
+  if (!(s->ths_flags & SUBSCRIPTION_NONE)) {
+    streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
 
-  sm = streaming_msg_create_code(SMT_STOP, reason);
-  streaming_target_deliver(s->ths_output, sm);
+    sm = streaming_msg_create_code(SMT_STOP, reason);
+    streaming_target_deliver(s->ths_output, sm);
+  }
+
+  s->ths_mmi = NULL;
+  LIST_REMOVE(s, ths_mmi_link);
 
   pthread_mutex_unlock(&mmi->mmi_input->mi_delivery_mutex);
-
-  LIST_REMOVE(s, ths_mmi_link);
-  s->ths_mmi = NULL;
-
-  /* Free memory */
-  if (s->ths_flags & SUBSCRIPTION_NONE)
-    subscription_unsubscribe(s);
 }
-
 
 /**
  *
