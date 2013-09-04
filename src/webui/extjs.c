@@ -140,6 +140,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/dvb.js");
 #endif
   extjs_load(hq, "static/app/iptv.js");
+  extjs_load(hq, "static/app/rtsp.js");
 #if ENABLE_V4L
   extjs_load(hq, "static/app/v4l.js");
 #endif
@@ -1856,7 +1857,7 @@ iptv_servicecmp(const void *A, const void *B)
  *
  */
 static int
-extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
+extjs_iptvservices_common(http_connection_t *hc, const char *remain, void *opaque, iptv_subtype_t subtype)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *in, *array;
@@ -1874,10 +1875,12 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "get")) {
     LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      count++;
+      if (iptv_is_service_subtype(t, subtype))
+        count++;
     tvec = alloca(sizeof(service_t *) * count);
     LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      tvec[i++] = t;
+      if (iptv_is_service_subtype(t, subtype))
+        tvec[i++] = t;
 
     out = htsmsg_create_map();
     array = htsmsg_create_list();
@@ -1926,6 +1929,24 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
+}
+
+/**
+ *
+ */
+static int
+extjs_iptvservices_mcast(http_connection_t *hc, const char *remain, void *opaque)
+{
+	return extjs_iptvservices_common(hc, remain, opaque, SERVICE_TYPE_IPTV_MCAST);
+}
+
+/**
+ *
+ */
+static int
+extjs_iptvservices_rtsp(http_connection_t *hc, const char *remain, void *opaque)
+{
+	return extjs_iptvservices_common(hc, remain, opaque, SERVICE_TYPE_IPTV_RTSP);
 }
 
 /**
@@ -2291,35 +2312,36 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
 void
 extjs_start(void)
 {
-  http_path_add("/about.html",       NULL, page_about,             ACCESS_WEB_INTERFACE);
-  http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
-  http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
-  http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
-  http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
-  http_path_add("/channels",         NULL, extjs_channels,         ACCESS_WEB_INTERFACE);
-  http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
-  http_path_add("/channeltags",      NULL, extjs_channeltags,      ACCESS_WEB_INTERFACE);
-  http_path_add("/confignames",      NULL, extjs_confignames,      ACCESS_WEB_INTERFACE);
-  http_path_add("/epg",              NULL, extjs_epg,              ACCESS_WEB_INTERFACE);
-  http_path_add("/epgrelated",       NULL, extjs_epgrelated,       ACCESS_WEB_INTERFACE);
-  http_path_add("/epgobject",        NULL, extjs_epgobject,        ACCESS_WEB_INTERFACE);
-  http_path_add("/dvr",              NULL, extjs_dvr,              ACCESS_WEB_INTERFACE);
-  http_path_add("/dvrlist_upcoming", NULL, extjs_dvrlist_upcoming, ACCESS_WEB_INTERFACE);
-  http_path_add("/dvrlist_finished", NULL, extjs_dvrlist_finished, ACCESS_WEB_INTERFACE);
-  http_path_add("/dvrlist_failed",   NULL, extjs_dvrlist_failed,   ACCESS_WEB_INTERFACE);
-  http_path_add("/dvr_containers",   NULL, extjs_dvr_containers,   ACCESS_WEB_INTERFACE);
-  http_path_add("/subscriptions",    NULL, extjs_subscriptions,    ACCESS_WEB_INTERFACE);
-  http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
-  http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
-  http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
-  http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
-  http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
-  http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
-  http_path_add("/tv/adapter",       NULL, extjs_tvadapter,        ACCESS_ADMIN);
+  http_path_add("/about.html",       NULL, page_about,               ACCESS_WEB_INTERFACE);
+  http_path_add("/extjs.html",       NULL, extjs_root,               ACCESS_WEB_INTERFACE);
+  http_path_add("/tv.html",          NULL, extjs_livetv,             ACCESS_WEB_INTERFACE);
+  http_path_add("/capabilities",     NULL, extjs_capabilities,       ACCESS_WEB_INTERFACE);
+  http_path_add("/tablemgr",         NULL, extjs_tablemgr,           ACCESS_WEB_INTERFACE);
+  http_path_add("/channels",         NULL, extjs_channels,           ACCESS_WEB_INTERFACE);
+  http_path_add("/epggrab",          NULL, extjs_epggrab,            ACCESS_WEB_INTERFACE);
+  http_path_add("/channeltags",      NULL, extjs_channeltags,        ACCESS_WEB_INTERFACE);
+  http_path_add("/confignames",      NULL, extjs_confignames,        ACCESS_WEB_INTERFACE);
+  http_path_add("/epg",              NULL, extjs_epg,                ACCESS_WEB_INTERFACE);
+  http_path_add("/epgrelated",       NULL, extjs_epgrelated,         ACCESS_WEB_INTERFACE);
+  http_path_add("/epgobject",        NULL, extjs_epgobject,          ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr",              NULL, extjs_dvr,                ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist_upcoming", NULL, extjs_dvrlist_upcoming,   ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist_finished", NULL, extjs_dvrlist_finished,   ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist_failed",   NULL, extjs_dvrlist_failed,     ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr_containers",   NULL, extjs_dvr_containers,     ACCESS_WEB_INTERFACE);
+  http_path_add("/subscriptions",    NULL, extjs_subscriptions,      ACCESS_WEB_INTERFACE);
+  http_path_add("/ecglist",          NULL, extjs_ecglist,            ACCESS_WEB_INTERFACE);
+  http_path_add("/config",           NULL, extjs_config,             ACCESS_WEB_INTERFACE);
+  http_path_add("/languages",        NULL, extjs_languages,          ACCESS_WEB_INTERFACE);
+  http_path_add("/mergechannel",     NULL, extjs_mergechannel,       ACCESS_ADMIN);
+  http_path_add("/iptv/services",    NULL, extjs_iptvservices_mcast, ACCESS_ADMIN);
+  http_path_add("/rtsp/services",    NULL, extjs_iptvservices_rtsp,  ACCESS_ADMIN);
+  http_path_add("/servicedetails",   NULL, extjs_servicedetails,     ACCESS_ADMIN);
+  http_path_add("/tv/adapter",       NULL, extjs_tvadapter,          ACCESS_ADMIN);
 #if ENABLE_TIMESHIFT
-  http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
+  http_path_add("/timeshift",        NULL, extjs_timeshift,          ACCESS_ADMIN);
 #endif
-  http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
+  http_path_add("/tvhlog",           NULL, extjs_tvhlog,             ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

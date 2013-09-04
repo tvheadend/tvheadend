@@ -131,6 +131,9 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
   } 
 }
 
+/**
+ * Determine whether service is an RTSP service
+ */
 static int
 is_rtsp(service_t *service)
 {
@@ -138,16 +141,42 @@ is_rtsp(service_t *service)
         || strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
 }
 
+/**
+ * Determine whether service is an IPv4 based multicast service
+ */
 static int
 is_multicast_ipv4(service_t *service)
 {
   return service->s_iptv_group.s_addr != 0;
 }
 
+/**
+ * Determine whether service is an IPv6 based multicast service
+ */
 static int
 is_multicast_ipv6(service_t *service)
 {
-  return service->s_iptv_group6.s6_addr != 0;
+#ifdef SOL_IPV6
+  return IN6_IS_ADDR_MULTICAST(service->s_iptv_group6.s6_addr);
+#else
+  return 0;
+#endif
+}
+
+/**
+ * Determine whether service is of a given subtype
+ */
+int
+iptv_is_service_subtype(service_t *service, iptv_subtype_t subtype)
+{
+  switch(subtype) {
+  case SERVICE_TYPE_IPTV_MCAST:
+    return is_multicast_ipv4(service) || is_multicast_ipv6(service);
+  case SERVICE_TYPE_IPTV_RTSP:
+    return is_rtsp(service);
+  default:
+    return 0;
+  }
 }
 
 

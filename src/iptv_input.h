@@ -19,10 +19,19 @@
 #ifndef IPTV_INPUT_H_
 #define IPTV_INPUT_H_
 
+#include "service.h"
+
+typedef enum {
+    SERVICE_TYPE_IPTV_MCAST,
+    SERVICE_TYPE_IPTV_RTSP
+} iptv_subtype_t;
+
 void iptv_input_init(void);
 
 struct service *iptv_service_find(const char *id, int create);
+int iptv_is_service_subtype(service_t *service, iptv_subtype_t subtype);
 
 extern struct service_list iptv_all_services;
+
 
 #endif /* IPTV_INPUT_H_ */
