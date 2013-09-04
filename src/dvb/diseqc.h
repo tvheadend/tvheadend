@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <linux/dvb/frontend.h>
 
+#if defined(PLATFORM_FREEBSD)
+#define 	__u8   u_int8_t
+#endif
+
 /**
  *   set up the switch to position/voltage/tone
  */

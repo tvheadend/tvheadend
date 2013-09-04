@@ -21,16 +21,18 @@
 
 #include "htsbuf.h"
 
-void tcp_server_init(void);
+extern int tcp_preferred_address_family;
+
+void tcp_server_init(int opt_ipv6);
 
 int tcp_connect(const char *hostname, int port, char *errbuf,
 		size_t errbufsize, int timeout);
 
 typedef void (tcp_server_callback_t)(int fd, void *opaque,
-				     struct sockaddr_in *peer,
-				     struct sockaddr_in *self);
+				     struct sockaddr_storage *peer,
+				     struct sockaddr_storage *self);
 
-void *tcp_server_create(int port, tcp_server_callback_t *start, void *opaque);
+void *tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque);
 
 int tcp_read(int fd, void *buf, size_t len);
 
@@ -43,5 +45,7 @@ int tcp_read_data(int fd, char *buf, const size_t bufsize,
 int tcp_write_queue(int fd, htsbuf_queue_t *q);
 
 int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
+
+char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 
 #endif /* TCP_H_ */

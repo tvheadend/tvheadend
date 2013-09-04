@@ -1,6 +1,7 @@
 /*
- *  Output functions for fixed multicast streaming
- *  Copyright (C) 2007 Andreas Öman
+ *  TVheadend - time processing
+ *
+ *  Copyright (C) 2013 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,9 +17,18 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef IPTV_OUTPUT_H_
-#define IPTV_OUTPUT_H_
+#ifndef __TVH_TIME_H__
+#define __TVH_TIME_H_
 
-void output_multicast_setup(void);
+extern uint32_t tvhtime_update_enabled;
+extern uint32_t tvhtime_ntp_enabled;
+extern uint32_t tvhtime_tolerance;
 
-#endif /* IPTV_OUTPUT_H_ */
+void tvhtime_init ( void );
+void tvhtime_update ( struct tm *now );
+
+void tvhtime_set_update_enabled ( uint32_t on );
+void tvhtime_set_ntp_enabled ( uint32_t on );
+void tvhtime_set_tolerance ( uint32_t v );
+
+#endif /* __TVH_TIME_H__ */

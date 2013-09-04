@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -241,9 +242,8 @@ static int _epg_write ( int fd, htsmsg_t *m )
     int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
     htsmsg_destroy(m);
     if (!r) {
-      ssize_t w = write(fd, msgdata, msglen);
+      ret = tvh_write(fd, msgdata, msglen);
       free(msgdata);
-      if(w == msglen) ret = 0;
     }
   } else {
     ret = 0;
@@ -263,13 +263,17 @@ static int _epg_write_sect ( int fd, const char *sect )
   return _epg_write(fd, m);
 }
 
-void epg_save ( void )
+void epg_save ( void *p )
 {
   int fd;
   epg_object_t *eo;
   epg_broadcast_t *ebc;
   channel_t *ch;
   epggrab_stats_t stats;
+  extern gtimer_t epggrab_save_timer;
+
+  if (epggrab_epgdb_periodicsave)
+    gtimer_arm(&epggrab_save_timer, epg_save, NULL, epggrab_epgdb_periodicsave);
   
   fd = hts_settings_open_file(1, "epgdb.v%d", EPG_DB_VERSION);
 

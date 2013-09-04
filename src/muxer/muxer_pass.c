@@ -49,6 +49,7 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
+  uint8_t   pm_injection;
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
   uint16_t  pm_pmt_version;
@@ -194,16 +195,16 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
 
 /**
- * Write TS packets to the file descriptor
+ * Write data to the file descriptor
  */
 static void
-pass_muxer_write(muxer_t *m, const void *ts, size_t len)
+pass_muxer_write(muxer_t *m, const void *data, size_t size)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_error) {
     pm->m_errors++;
-  } else if(write(pm->pm_fd, ts, len) != len) {
+  } else if(tvh_write(pm->pm_fd, data, size)) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
@@ -221,14 +222,16 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
 
-  if(pm->pm_pat != NULL) {
+  if(pm->pm_pat != NULL &&
+     pm->pm_pmt != NULL &&
+     pm->pm_injection) {
     // Inject pmt and pat into the stream
     rem = pm->pm_pc % TS_INJECTION_RATE;
     if(!rem) {
       pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
       pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | (pm->pm_ic & 0x0f);
-      pass_muxer_write(m, pm->pm_pmt, 188);
       pass_muxer_write(m, pm->pm_pat, 188);
+      pass_muxer_write(m, pm->pm_pmt, 188);
       pm->pm_ic++;
     }
   }
@@ -324,7 +327,7 @@ pass_muxer_create(muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
-  if(mc != MC_PASS)
+  if(mc != MC_PASS && mc != MC_RAW)
     return NULL;
 
   pm = calloc(1, sizeof(pass_muxer_t));
@@ -338,7 +341,8 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
-  
+  pm->pm_injection   = (mc == MC_PASS);
+
   return (muxer_t *)pm;
 }
 

@@ -47,6 +47,7 @@
 #define DVB_DESC_PARENTAL_RAT 0x55
 #define DVB_DESC_TELETEXT     0x56
 #define DVB_DESC_SUBTITLE     0x59
+#define DVB_DESC_TERR         0x5a
 #define DVB_DESC_AC3          0x6a
 #define DVB_DESC_DEF_AUTHORITY 0x73
 #define DVB_DESC_CRID         0x76

@@ -29,7 +29,6 @@
 #include <arpa/inet.h>
 
 #include <sys/stat.h>
-#include <sys/sendfile.h>
 
 #include "tvheadend.h"
 #include "access.h"
@@ -40,10 +39,22 @@
 #include "psi.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
+#include "plumbing/transcoding.h"
 #include "epg.h"
 #include "muxer.h"
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
+#include "imagecache.h"
+#include "tcp.h"
+#include "config2.h"
+
+#if defined(PLATFORM_LINUX)
+#include <sys/sendfile.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#endif
 
 /**
  *
@@ -64,6 +75,61 @@ is_client_simple(http_connection_t *hc)
   return 0;
 }
 
+
+
+#if ENABLE_LIBAV
+static int
+http_get_transcoder_properties(struct http_arg_list *args, 
+			       transcoder_props_t *props)
+{
+  int transcode;
+  const char *s;
+
+  memset(props, 0, sizeof(transcoder_props_t));
+
+  if ((s = http_arg_get(args, "transcode")))
+    transcode = atoi(s);
+  else
+    transcode = 0;
+
+  if ((s = http_arg_get(args, "resolution")))
+    props->tp_resolution = atoi(s);
+  else
+    props->tp_resolution = 384;
+
+  if ((s = http_arg_get(args, "channels")))
+    props->tp_channels = atoi(s);
+  else
+    props->tp_channels = 0; //same as source
+
+  if ((s = http_arg_get(args, "bandwidth")))
+    props->tp_bandwidth = atoi(s);
+  else
+    props->tp_bandwidth = 0; //same as source
+
+  if ((s = http_arg_get(args, "language")))
+    strncpy(props->tp_language, s, 3);
+  else
+    strncpy(props->tp_language, config_get_language(), 3);
+
+  if ((s = http_arg_get(args, "vcodec")))
+    props->tp_vcodec = streaming_component_txt2type(s);
+  else
+    props->tp_vcodec = SCT_UNKNOWN;
+
+  if ((s = http_arg_get(args, "acodec")))
+    props->tp_acodec = streaming_component_txt2type(s);
+  else
+    props->tp_acodec = SCT_UNKNOWN;
+
+  if ((s = http_arg_get(args, "scodec")))
+    props->tp_scodec = streaming_component_txt2type(s);
+  else
+    props->tp_scodec = SCT_UNKNOWN;
+
+  return transcode && transcoding_enabled;
+}
+#endif
 
 
 /**
@@ -95,7 +161,7 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from the filesystem
  */
-static int
+int
 page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
   int ret = 0;
@@ -139,7 +205,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
       ret = 500;
       break;
     }
-    if (write(hc->hc_fd, buf, c) != c) {
+    if (tvh_write(hc->hc_fd, buf, c)) {
       ret = 500;
       break;
     }
@@ -189,11 +255,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           if(err) {
-	    tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-	    run = 0;
+      tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+      run = 0;
           }else if(timeouts >= 20) {
-	    tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
-	    run = 0;
+      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+      run = 0;
           }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
@@ -208,52 +274,56 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_MPEGTS:
     case SMT_PACKET:
       if(started) {
-	muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
-	sm->sm_data = NULL;
+        muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
+        sm->sm_data = NULL;
       }
       break;
 
     case SMT_START:
       if(!started) {
-	tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-	http_output_content(hc, muxer_mime(mux, sm->sm_data));
+        tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+        http_output_content(hc, muxer_mime(mux, sm->sm_data));
 
-	if(muxer_init(mux, sm->sm_data, name) < 0)
-	  run = 0;
+        if(muxer_init(mux, sm->sm_data, name) < 0)
+          run = 0;
 
-	started = 1;
+        started = 1;
       } else if(muxer_reconfigure(mux, sm->sm_data) < 0) {
-	tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
+        tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
       }
       break;
 
     case SMT_STOP:
       if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
-	tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
-	       streaming_code2txt(sm->sm_code));
-	run = 0;
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
+               streaming_code2txt(sm->sm_code));
+        run = 0;
       }
       break;
 
     case SMT_SERVICE_STATUS:
       if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
-	tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-	run = 0;
+        tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
+               hc->hc_url_orig);
+        run = 0;
       }
       break;
 
+    case SMT_SKIP:
+    case SMT_SPEED:
     case SMT_SIGNAL_STATUS:
+    case SMT_TIMESHIFT_STATUS:
       break;
 
     case SMT_NOSTART:
-      tvhlog(LOG_WARNING, "webui",  "Couldn't start streaming %s, %s", hc->hc_url_orig,
-	     streaming_code2txt(sm->sm_code));
+      tvhlog(LOG_WARNING, "webui",  "Couldn't start streaming %s, %s",
+             hc->hc_url_orig, streaming_code2txt(sm->sm_code));
       run = 0;
       break;
 
     case SMT_EXIT:
       tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig,
-	     streaming_code2txt(sm->sm_code));
+             streaming_code2txt(sm->sm_code));
       run = 0;
       break;
     }
@@ -282,6 +352,11 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_queue_t *hq;
   char buf[255];
   const char *host;
+  muxer_container_type_t mc;
+
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = dvr_config_find_by_name_default("")->dvr_mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -290,8 +365,30 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
-  htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		 access_ticket_create(buf));
+  htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf, 
+     access_ticket_create(buf));
+
+#if ENABLE_LIBAV
+  transcoder_props_t props;
+  if(http_get_transcoder_properties(&hc->hc_req_args, &props)) {
+    htsbuf_qprintf(hq, "&transcode=1");
+    if(props.tp_resolution)
+      htsbuf_qprintf(hq, "&resolution=%d", props.tp_resolution);
+    if(props.tp_channels)
+      htsbuf_qprintf(hq, "&channels=%d", props.tp_channels);
+    if(props.tp_bandwidth)
+      htsbuf_qprintf(hq, "&bandwidth=%d", props.tp_bandwidth);
+    if(props.tp_language[0])
+      htsbuf_qprintf(hq, "&language=%s", props.tp_language);
+    if(props.tp_vcodec)
+      htsbuf_qprintf(hq, "&vcodec=%s", streaming_component_type2txt(props.tp_vcodec));
+    if(props.tp_acodec)
+      htsbuf_qprintf(hq, "&acodec=%s", streaming_component_type2txt(props.tp_acodec));
+    if(props.tp_scodec)
+      htsbuf_qprintf(hq, "&scodec=%s", streaming_component_type2txt(props.tp_scodec));
+  }
+#endif
+  htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
 
   http_output_content(hc, "audio/x-mpegurl");
 
@@ -318,7 +415,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", ctm->ctm_channel->ch_id);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -349,7 +446,7 @@ http_tag_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -378,7 +475,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -425,7 +522,7 @@ http_dvr_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -527,6 +624,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     r = http_tag_list_playlist(hc);
   else if(!strcmp(components[0], "channels"))
     r = http_channel_list_playlist(hc);
+  else if(!strcmp(components[0], "channels.m3u"))
+    r = http_channel_list_playlist(hc);
   else if(!strcmp(components[0], "recordings"))
     r = http_dvr_list_playlist(hc);
   else {
@@ -557,6 +656,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   const char *str;
   size_t qsize;
   const char *name;
+  char addrbuf[50];
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -569,7 +669,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   else
     qsize = 1500000;
 
-  if(mc == MC_PASS) {
+  if(mc == MC_PASS || mc == MC_RAW) {
     streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
@@ -583,9 +683,13 @@ http_stream_service(http_connection_t *hc, service_t *service)
     flags = 0;
   }
 
-  s = subscription_create_from_service(service, "HTTP", st, flags);
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+  s = subscription_create_from_service(service, "HTTP", st, flags,
+				       addrbuf,
+				       hc->hc_username,
+				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
-    name = strdupa(service->s_ch ?
+    name = tvh_strdupa(service->s_ch ?
                    service->s_ch->ch_name : service->s_nicename);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
@@ -615,12 +719,17 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   th_subscription_t *s;
   streaming_queue_t sq;
   const char *name;
+  char addrbuf[50];
   streaming_queue_init(&sq, SMT_PACKET);
 
-  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
-  name = strdupa(tdmi->tdmi_identifier);
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st,
+					addrbuf,
+					hc->hc_username,
+					http_arg_get(&hc->hc_args, "User-Agent"));
+  name = tvh_strdupa(tdmi->tdmi_identifier);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_PASS);
+  http_stream_run(hc, &sq, name, MC_RAW);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -642,6 +751,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   streaming_target_t *st;
+#if ENABLE_LIBAV
+  streaming_target_t *tr = NULL;
+#endif
   dvr_config_t *cfg;
   int priority = 100;
   int flags;
@@ -649,6 +761,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   char *str;
   size_t qsize;
   const char *name;
+  char addrbuf[50];
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -661,7 +774,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   else
     qsize = 1500000;
 
-  if(mc == MC_PASS) {
+  if(mc == MC_PASS || mc == MC_RAW) {
     streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
@@ -670,18 +783,27 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
+#if ENABLE_LIBAV
+    transcoder_props_t props;
+    if(http_get_transcoder_properties(&hc->hc_req_args, &props)) {
+      tr = transcoder_create(gh);
+      transcoder_set_properties(tr, &props);
+      tsfix = tsfix_create(tr);
+    } else
+#endif
     tsfix = tsfix_create(gh);
     st = tsfix;
     flags = 0;
   }
 
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-				       inet_ntoa(hc->hc_peer->sin_addr),
-				       hc->hc_username,
-				       http_arg_get(&hc->hc_args, "User-Agent"));
+               addrbuf,
+               hc->hc_username,
+               http_arg_get(&hc->hc_args, "User-Agent"));
 
   if(s) {
-    name = strdupa(ch->ch_name);
+    name = tvh_strdupa(ch->ch_name);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);
@@ -690,6 +812,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   if(gh)
     globalheaders_destroy(gh);
+
+#if ENABLE_LIBAV
+  if(tr)
+    transcoder_destroy(tr);
+#endif
+
   if(tsfix)
     tsfix_destroy(tsfix);
 
@@ -757,45 +885,6 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   }
 }
 
-
-/**
- * Static download of a file from an embedded filebundle
- */
-#if 0
-static int
-page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
-{
-  const struct filebundle *fb = opaque;
-  const struct filebundle_entry *fbe;
-  const char *content = NULL, *postfix;
-
-  if(remain == NULL)
-    return 404;
-
-  postfix = strrchr(remain, '.');
-  if(postfix != NULL) {
-    postfix++;
-    if(!strcmp(postfix, "js"))
-      content = "text/javascript; charset=UTF-8";
-  }
-
-  for(fbe = fb->entries; fbe->filename != NULL; fbe++) {
-    if(!strcmp(fbe->filename, remain)) {
-
-      http_send_header(hc, 200, content, fbe->size, 
-		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0,
-		       NULL);
-      /* ignore return value */
-      if(write(hc->hc_fd, fbe->data, fbe->size) != fbe->size)
-	return -1;
-      return 0;
-    }
-  }
-  return 404;
-}
-#endif
-
-
 /**
  * Download a recorded file
  */
@@ -810,7 +899,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   char range_buf[255];
   char disposition[256];
   off_t content_len, file_start, file_end, chunk;
+#if defined(PLATFORM_LINUX)
   ssize_t r;
+#elif defined(PLATFORM_FREEBSD)
+  off_t r;
+#endif
   
   if(remain == NULL)
     return 404;
@@ -864,18 +957,18 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   content_len = file_end - file_start+1;
   
   sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
-	  file_start, file_end, st.st_size);
+    file_start, file_end, st.st_size);
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
 
   if(de->de_title != NULL) {
     snprintf(disposition, sizeof(disposition),
-	     "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
+       "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
     i = 20;
     while(disposition[i]) {
       if(disposition[i] == ' ')
-	disposition[i] = '_';
+  disposition[i] = '_';
       i++;
     }
     
@@ -884,17 +977,21 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
-		   content, content_len, NULL, NULL, 10, 
-		   range ? range_buf : NULL,
-		   disposition[0] ? disposition : NULL);
+       content, content_len, NULL, NULL, 10, 
+       range ? range_buf : NULL,
+       disposition[0] ? disposition : NULL);
 
   if(!hc->hc_no_output) {
     while(content_len > 0) {
       chunk = MIN(1024 * 1024 * 1024, content_len);
+#if defined(PLATFORM_LINUX)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
+#elif defined(PLATFORM_FREEBSD)
+      sendfile(fd, hc->hc_fd, 0, chunk, NULL, &r, 0);
+#endif
       if(r == -1) {
-	close(fd);
-	return -1;
+  close(fd);
+  return -1;
       }
       content_len -= r;
     }
@@ -903,7 +1000,47 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ * Fetch image cache image
+ */
+/**
+ * Static download of a file from the filesystem
+ */
+static int
+page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
+{
+  uint32_t id;
+  int fd;
+  char buf[8192];
+  struct stat st;
+  ssize_t c;
 
+  if(remain == NULL)
+    return 404;
+
+  if(sscanf(remain, "%d", &id) != 1)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if ((fd = imagecache_open(id)) < 0)
+    return 404;
+  if (fstat(fd, &st)) {
+    close(fd);
+    return 404;
+  }
+
+  http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL);
+
+  while (1) {
+    c = read(fd, buf, sizeof(buf));
+    if (c <= 0)
+      break;
+    if (tvh_write(hc->hc_fd, buf, c))
+      break;
+  }
+  close(fd);
+
+  return 0;
+}
 
 /**
  *
@@ -911,7 +1048,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 static void
 webui_static_content(const char *http_path, const char *source)
 {
-  http_path_add(http_path, strdup(source), page_static_file, ACCESS_WEB_INTERFACE);
+  http_path_add(http_path, strdup(source), page_static_file,
+    ACCESS_WEB_INTERFACE);
 }
 
 
@@ -933,6 +1071,9 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(void)
 {
+  if (tvheadend_webui_debug)
+    tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
+
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
@@ -943,6 +1084,8 @@ webui_init(void)
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
+
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEB_INTERFACE);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");

@@ -75,7 +75,13 @@
 #define CW_DUMP(buf, len, format, ...) \
   printf(format, __VA_ARGS__); int j; for (j = 0; j < len; ++j) printf("%02X ", buf[j]); printf("\n");
 
+#ifdef __GNUC__
+#include <features.h>
+#if __GNUC_PREREQ(4, 3)
 #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+#endif
+
 #define MAX_CA  4
 #define MAX_INDEX 64
 #define KEY_SIZE  8
@@ -227,7 +233,7 @@ static int
 capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
 {
   if (capmt->capmt_oscam) {
-    int i, sent = 0;
+    int i;
 
     // dumping current SID table
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -264,6 +270,14 @@ capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
       tvhlog(LOG_DEBUG, "capmt", "%s: added: i=%d", __FUNCTION__, i);
     }
 
+    // check if the socket is still alive by writing 0 bytes
+    if (capmt->capmt_sock[i] > 0) {
+      if (write(capmt->capmt_sock[i], NULL, 0) < 0)
+        capmt->capmt_sock[i] = 0;
+      else if (found)
+        return 0;
+    }
+
     // opening socket and sending
     if (capmt->capmt_sock[i] == 0) {
       capmt->capmt_sock[i] = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
@@ -280,18 +294,17 @@ capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
         tvhlog(LOG_DEBUG, "capmt", "created socket with socket_fd=%d", capmt->capmt_sock[i]);
     }
     if (capmt->capmt_sock[i] > 0) {
-      sent = write(capmt->capmt_sock[i], buf, len);
-      tvhlog(LOG_DEBUG, "capmt", "socket_fd=%d len=%d sent=%d", capmt->capmt_sock[i], (int)len, sent);
-      if (sent != len) {
-        tvhlog(LOG_ERR, "capmt", "%s: len != sent", __FUNCTION__);
+      if (tvh_write(capmt->capmt_sock[i], buf, len)) {
+        tvhlog(LOG_DEBUG, "capmt", "socket_fd=%d send failed", capmt->capmt_sock[i]);
         close(capmt->capmt_sock[i]);
         capmt->capmt_sock[i] = 0;
+        return -1;
       }
     }
-    return sent;
   }
   else  // standard old capmt mode
-    return write(capmt->capmt_sock[0], buf, len);
+    tvh_write(capmt->capmt_sock[0], buf, len);
+  return 0;
 }
 
 static void 
@@ -534,7 +547,7 @@ handle_ca0(capmt_t* capmt) {
 #endif
 
       if(ct->ct_keystate != CT_RESOLVED)
-        tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
+        tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
 
       ct->ct_keystate = CT_RESOLVED;
     }
@@ -607,6 +620,8 @@ capmt_thread(void *aux)
 #if ENABLE_LINUXDVB
         th_dvb_adapter_t *tda;
         TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+          if (!tda->tda_enabled)
+            continue;
           if (tda->tda_rootpath) {          //if rootpath is NULL then can't rely on tda_adapter_num because it is always 0
             if (tda->tda_adapter_num > MAX_CA) {
               tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
@@ -650,6 +665,9 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&global_lock);
   }
 
+  free(capmt->capmt_id);
+  free(capmt);
+
   return NULL;
 }
 
@@ -664,7 +682,6 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
   capmt_t *capmt = ct->ct_capmt;
   int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
   int total_caids = 0, current_caid = 0;
-  int i;
 
   caid_t *c;
 
@@ -720,7 +737,9 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 
           uint16_t sid = t->s_dvb_service_id;
           uint16_t ecmpid = st->es_pid;
-          uint16_t transponder = 0;
+          uint16_t transponder = t->s_dvb_mux_instance->tdmi_transport_stream_id;
+          uint16_t onid = t->s_dvb_mux_instance->tdmi_network_id;
+          
 
           /* don't do too much requests */
           if (current_caid == total_caids && caid != ct->ct_caid_last)
@@ -758,9 +777,9 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           capmt_descriptor_t prd = { 
             .cad_type = CAPMT_DESC_PRIVATE, 
             .cad_length = 0x08,
-            .cad_data = { 0x00, 0x00, 0x00, 0x00, 
-              sid >> 8, sid & 0xFF,
-              transponder >> 8, transponder & 0xFF
+            .cad_data = { 0x00, 0x00, 0x00, 0x00, // enigma namespace goes here              
+              transponder >> 8, transponder & 0xFF,
+              onid >> 8, onid & 0xFF
             }};
           memcpy(&buf[pos], &prd, prd.cad_length + 2);
           pos += prd.cad_length + 2;
@@ -837,23 +856,13 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           cce->cce_ecmsize = len;
 
           if(ct->ct_keystate != CT_RESOLVED)
-            tvhlog(LOG_INFO, "capmt",
+            tvhlog(LOG_DEBUG, "capmt",
               "Trying to obtain key for service \"%s\"",t->s_svcname);
 
           buf[9] = pmtversion;
           pmtversion = (pmtversion + 1) & 0x1F;
 
-          int found = 0;
-          if (capmt->capmt_oscam) {
-            for (i = 0; i < MAX_SOCKETS; i++) {
-              if (capmt->sids[i] == sid) {
-                found = 1;
-                break;
-              }
-            }
-          }
-          if ((capmt->capmt_oscam && !found) || !capmt->capmt_oscam)
-            capmt_send_msg(capmt, sid, buf, pos);
+          capmt_send_msg(capmt, sid, buf, pos);
           break;
         }
       default:
@@ -1010,6 +1019,14 @@ capmt_service_start(service_t *t)
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
+    /* skip, if we're not active */
+    if (!capmt->capmt_enabled)
+      continue;
+
+
+    if (!(t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter))
+      continue;
+
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
       t->s_svcname,

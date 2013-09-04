@@ -39,8 +39,8 @@ typedef struct http_arg {
 
 typedef struct http_connection {
   int hc_fd;
-  struct sockaddr_in *hc_peer;
-  struct sockaddr_in *hc_self;
+  struct sockaddr_storage *hc_peer;
+  struct sockaddr_storage *hc_self;
   char *hc_representative;
 
   char *hc_url;
@@ -133,7 +133,7 @@ http_path_t *http_path_add(const char *path, void *opaque,
 
 
 
-void http_server_init(void);
+void http_server_init(const char *bindaddr);
 
 int http_access_verify(http_connection_t *hc, int mask);
 

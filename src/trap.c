@@ -134,14 +134,18 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
 static void 
 traphandler(int sig, siginfo_t *si, void *UC)
 {
+#ifdef NGREG
   ucontext_t *uc = UC;
+#endif
 #if ENABLE_EXECINFO
   char buf[200];
   static void *frames[MAXFRAMES];
   int nframes = backtrace(frames, MAXFRAMES);
   Dl_info dli;
 #endif
+#if defined(NGREG) || defined(ENABLE_EXECINFO)
   int i;
+#endif
   const char *reason = NULL;
 
   tvhlog_spawn(LOG_ALERT, "CRASH", "Signal: %d in %s ", sig, line1);
@@ -165,6 +169,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
 	       si->si_addr, reason ?: "N/A");
 
   tvhlog_spawn(LOG_ALERT, "CRASH", "Loaded libraries: %s ", libs);
+#ifdef NGREG
   snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", NGREG);
 
   for(i = 0; i < NGREG; i++) {
@@ -174,6 +179,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
     sappend(tmpbuf, sizeof(tmpbuf), "%08x ", uc->uc_mcontext.gregs[i]);
 #endif
   }
+#endif
   tvhlog_spawn(LOG_ALERT, "CRASH", "%s", tmpbuf);
 
 #if ENABLE_EXECINFO

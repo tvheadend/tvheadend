@@ -46,11 +46,15 @@ for path in args:
     t = ents
     while True:
       (d,n) = rsplit(n)
+      if d.startswith('.'):
+        fs = []
+        break
       if d not in t:
         t[d] = {}
       t = t[d]
       if not n: break
     for f in fs:
+      if f.startswith('.'): continue
       t[f] = None
 
 # Output a file

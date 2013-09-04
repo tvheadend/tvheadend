@@ -32,22 +32,44 @@
 #include "queue.h"
 #include "avg.h"
 #include "hts_strtab.h"
+#include "htsmsg.h"
+#include "tvhlog.h"
 
 #include "redblack.h"
 
-extern const char *tvheadend_version;
-extern char *tvheadend_cwd;
-extern const char *tvheadend_capabilities[];
-extern const char *tvheadend_webroot;
+typedef struct {
+  const char     *name;
+  const uint32_t *enabled;
+} tvh_caps_t;
+extern const char      *tvheadend_version;
+extern const char      *tvheadend_cwd;
+extern const char      *tvheadend_webroot;
+extern const tvh_caps_t tvheadend_capabilities[];
+
+static inline htsmsg_t *tvheadend_capabilities_list(int check)
+{
+  int i = 0;
+  htsmsg_t *r = htsmsg_create_list();
+  while (tvheadend_capabilities[i].name) {
+    if (!check ||
+        !tvheadend_capabilities[i].enabled ||
+        *tvheadend_capabilities[i].enabled)
+      htsmsg_add_str(r, NULL, tvheadend_capabilities[i].name);
+    i++;
+  }
+  return r;
+}
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
+extern pthread_mutex_t atomic_lock;
 
-extern int webui_port;
-extern int htsp_port;
+extern int tvheadend_webui_port;
+extern int tvheadend_webui_debug;
+extern int tvheadend_htsp_port;
 
 typedef struct source_info {
   char *si_device;
@@ -93,14 +115,20 @@ typedef struct gtimer {
   LIST_ENTRY(gtimer) gti_link;
   gti_callback_t *gti_callback;
   void *gti_opaque;
-  time_t gti_expire;
+  struct timespec gti_expire;
 } gtimer_t;
 
 void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 		int delta);
 
+void gtimer_arm_ms(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+  long delta_ms);
+
 void gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 		    time_t when);
+
+void gtimer_arm_abs2(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+  struct timespec *when);
 
 void gtimer_disarm(gtimer_t *gti);
 
@@ -157,6 +185,7 @@ int get_device_connection(const char *dev);
  * Stream component types
  */
 typedef enum {
+  SCT_NONE = -1,
   SCT_UNKNOWN = 0,
   SCT_MPEG2VIDEO = 1,
   SCT_MPEG2AUDIO,
@@ -165,19 +194,23 @@ typedef enum {
   SCT_TELETEXT,
   SCT_DVBSUB,
   SCT_CA,
-  SCT_PAT,
   SCT_PMT,
   SCT_AAC,
   SCT_MPEGTS,
   SCT_TEXTSUB,
   SCT_EAC3,
   SCT_MP4A,
+  SCT_VP8,
+  SCT_VORBIS,
 } streaming_component_type_t;
 
-#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
+#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 ||	\
+			(t) == SCT_VP8)
+
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
-                        (t) == SCT_AAC || (t) == SCT_MP4A ||	   \
-			(t) == SCT_EAC3)
+                        (t) == SCT_AAC  || (t) == SCT_MP4A ||	   \
+			(t) == SCT_EAC3 || (t) == SCT_VORBIS)
+
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /**
@@ -190,6 +223,26 @@ typedef struct signal_status {
   int ber;      /* bit error rate */
   int unc;      /* uncorrected blocks */
 } signal_status_t;
+
+/**
+ * Streaming skip
+ */
+typedef struct streaming_skip
+{
+  enum {
+    SMT_SKIP_ERROR,
+    SMT_SKIP_REL_TIME,
+    SMT_SKIP_ABS_TIME,
+    SMT_SKIP_REL_SIZE,
+    SMT_SKIP_ABS_SIZE,
+    SMT_SKIP_LIVE
+  } type;
+  union {
+    off_t   size;
+    int64_t time;
+  };
+} streaming_skip_t;
+
 
 /**
  * A streaming pad generates data.
@@ -215,6 +268,7 @@ TAILQ_HEAD(streaming_message_queue, streaming_message);
  * Streaming messages types
  */
 typedef enum {
+
   /**
    * Packet with data.
    *
@@ -272,6 +326,22 @@ typedef enum {
    * Internal message to exit receiver
    */
   SMT_EXIT,
+
+  /**
+   * Set stream speed
+   */
+  SMT_SPEED,
+
+  /**
+   * Skip the stream
+   */
+  SMT_SKIP,
+
+  /**
+   * Timeshift status
+   */
+  SMT_TIMESHIFT_STATUS,
+
 } streaming_message_type_t;
 
 #define SMT_TO_MASK(x) (1 << ((unsigned int)x))
@@ -307,6 +377,9 @@ typedef enum {
 typedef struct streaming_message {
   TAILQ_ENTRY(streaming_message) sm_link;
   streaming_message_type_t sm_type;
+#if ENABLE_TIMESHIFT
+  int64_t  sm_time;
+#endif
   union {
     void *sm_data;
     int sm_code;
@@ -357,7 +430,7 @@ typedef struct sbuf {
 } sbuf_t;
 
 
-
+streaming_component_type_t streaming_component_txt2type(const char *str);
 const char *streaming_component_type2txt(streaming_component_type_t s);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
@@ -370,32 +443,10 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
-
-void tvhlog(int severity, const char *subsys, const char *fmt, ...)
-  __attribute__((format(printf,3,4)));
-
-void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
-  __attribute__((format(printf,3,4)));
-
-#define	LOG_EMERG	0	/* system is unusable */
-#define	LOG_ALERT	1	/* action must be taken immediately */
-#define	LOG_CRIT	2	/* critical conditions */
-#define	LOG_ERR		3	/* error conditions */
-#define	LOG_WARNING	4	/* warning conditions */
-#define	LOG_NOTICE	5	/* normal but significant condition */
-#define	LOG_INFO	6	/* informational */
-#define	LOG_DEBUG	7	/* debug-level messages */
-
-extern int log_debug;
-
-#define DEBUGLOG(subsys, fmt...) do { \
- if(log_debug) \
-  tvhlog(LOG_DEBUG, subsys, fmt); \
-} while(0)
-
 
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
@@ -455,6 +506,8 @@ int tvh_socket(int domain, int type, int protocol);
 
 int tvh_pipe(int flags, th_pipe_t *pipe);
 
+int tvh_write(int fd, const void *buf, size_t len);
+
 int tvh_get_port(struct addrinfo *address);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
@@ -469,6 +522,11 @@ static inline int64_t ts_rescale(int64_t ts, int tb)
 {
   //  return (ts * tb + (tb / 2)) / 90000LL;
   return (ts * tb ) / 90000LL;
+}
+
+static inline int64_t ts_rescale_i(int64_t ts, int tb)
+{
+  return (ts * 90000LL) / tb;
 }
 
 void sbuf_init(sbuf_t *sb);
@@ -497,11 +555,29 @@ int makedirs ( const char *path, int mode );
 
 int rmtree ( const char *path );
 
+char *regexp_escape ( const char *str );
+
 /* printing */
-#if __SIZEOF_LONG__ == 8
-  #define PRItime_t PRId64
+# if __WORDSIZE == 64
+#define PRIsword_t      PRId64
+#define PRIuword_t      PRIu64
 #else
-  #define PRItime_t "l" PRId32
+#define PRIsword_t      PRId32
+#define PRIuword_t      PRIu32
+#endif
+#define PRIslongword_t  "ld"
+#define PRIulongword_t  "lu"
+#define PRIsize_t       PRIuword_t
+#define PRIssize_t      PRIsword_t
+#if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
+#define PRItime_t       PRIsword_t
+#else
+#define PRItime_t       PRIslongword_t
+#endif
+#if _FILE_OFFSET_BITS == 64
+#define PRIoff_t        PRId64
+#else
+#define PRIoff_t        PRIslongword_t
 #endif
 
 #endif /* TV_HEAD_H */

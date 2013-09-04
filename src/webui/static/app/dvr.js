@@ -14,12 +14,19 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 		[ 'unimportant', 'Unimportant' ] ]
 });
 
+
 //For the container configuration
-tvheadend.containers = new Ext.data.SimpleStore({
-	fields : [ 'identifier', 'name' ],
-	id : 0,
-	data : [ [ 'matroska', 'Matroska' ], [ 'pass', 'TS (Pass-through)' ] ]
+tvheadend.containers = new Ext.data.JsonStore({
+	autoLoad : true,
+	root : 'entries',
+	fields : [ 'name', 'description' ],
+	id : 'name',
+	url : 'dvr_containers',
+	baseParams : {
+		op : 'list'
+	}
 });
+
 
 /**
  * Configuration names
@@ -129,7 +136,6 @@ tvheadend.dvrDetails = function(entry) {
 
 			success : function(response, options) {
 				win.close();
-				v
 			},
 
 			failure : function(response, options) {
@@ -176,6 +182,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		}
 	}
 
+	function renderSize(value)
+	{
+		if (value == null)
+			return '';
+		return parseInt(value / 1000000) + ' MB';
+	}
+
 	function renderPri(value) {
 		return tvheadend.dvrprio.getById(value).data.name;
 	}
@@ -195,11 +208,12 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		id : 'pri',
 		header : "Priority",
 		dataIndex : 'pri',
-		renderer : renderPri
+		renderer : renderPri,
+		hidden : iconCls != 'clock',
 	}, {
 		width : 100,
 		id : 'start',
-		header : "Start",
+		header : iconCls == 'clock' ? "Start" : "Date/Time",
 		dataIndex : 'start',
 		renderer : renderDate
 	}, {
@@ -215,6 +229,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		header : "Duration",
 		dataIndex : 'duration',
 		renderer : renderDuration
+	}, {
+		width : 100,
+		id : 'filesize',
+		header : "Filesize",
+		dataIndex : 'filesize',
+		renderer : renderSize,
+		hidden : iconCls != 'television'
 	}, {
 		width : 250,
 		id : 'channel',
@@ -238,12 +259,14 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 				return value;
 			}
 		},
-		dataIndex : 'config_name'
+		dataIndex : 'config_name',
+		hidden: iconCls != 'clock'
 	}, {
 		width : 200,
 		id : 'status',
 		header : "Status",
-		dataIndex : 'status'
+		dataIndex : 'status',
+		hidden: iconCls != 'exclamation'
 	} ]);
 
 	function addEntry() {
@@ -603,6 +626,8 @@ tvheadend.dvr = function() {
 		}, {
 			name : 'schedstate'
 		}, {
+			name : 'error'
+		}, {
 			name : 'creator'
 		}, {
 			name : 'duration'
@@ -704,7 +729,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -744,11 +769,11 @@ tvheadend.dvrsettings = function() {
 		}, new Ext.form.ComboBox({
 			store : tvheadend.containers,
 			fieldLabel : 'Media container',
-			mode : 'local',
 			triggerAction : 'all',
-			displayField : 'name',
-			valueField : 'identifier',
+			displayField : 'description',
+			valueField : 'name',
 			editable : false,
+			width : 200,
 			hiddenName : 'container'
 		}), new Ext.form.NumberField({
 			allowNegative : false,
@@ -794,6 +819,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Tag files with metadata',
 			name : 'tagFiles'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Skip commercials',
+			name : 'commSkip'
 		}), {
 			width : 300,
 			fieldLabel : 'Post-processor command',

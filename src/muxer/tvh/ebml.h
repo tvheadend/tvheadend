@@ -7,6 +7,8 @@ void ebml_append_id(htsbuf_queue_t *q, uint32_t id);
 
 void ebml_append_size(htsbuf_queue_t *q, uint32_t size);
 
+void ebml_append_xiph_size(htsbuf_queue_t *q, int size);
+
 void ebml_append_bin(htsbuf_queue_t *q, unsigned id, 
 		    const void *data, size_t len);
 

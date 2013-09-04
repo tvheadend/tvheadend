@@ -403,3 +403,36 @@ rmtree ( const char *path )
     err = rmdir(path);
   return err;
 }
+
+char *
+regexp_escape(const char* str)
+{
+  const char *a;
+  char *tmp, *b;
+  if (!str)
+    return NULL;
+  a = str;
+  b = tmp = malloc(strlen(str) * 2);
+  while (*a) {
+    switch (*a) {
+      case '?':
+      case '+':
+      case '.':
+      case '(':
+      case ')':
+      case '[':
+      case ']':
+      case '*':
+        *b = '\\';
+        b++;
+        /* -fallthrough */
+      default:
+        break;
+    }
+    *b = *a;
+    b++;
+    a++;
+  }
+  *b = 0;
+  return tmp;
+}

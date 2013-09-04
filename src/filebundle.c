@@ -384,7 +384,7 @@ fb_file *fb_open2
   } else {
     char path[512];
     snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
-    FILE *fp = fopen(path, "r");
+    FILE *fp = fopen(path, "rb");
     if (fp) {
       struct stat st;
       lstat(path, &st);
@@ -493,7 +493,8 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     memcpy(buf, fp->buf + fp->pos, count);
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
-    fp->pos += fread(buf, 1, count, fp->d.cur);
+    count = fread(buf, 1, count, fp->d.cur);
+    fp->pos += count;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
     memcpy(buf, fp->b.root->f.data + fp->pos, count);

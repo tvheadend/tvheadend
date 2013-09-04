@@ -91,6 +91,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 
   case SCT_H264:
   case SCT_MPEG2VIDEO:
+  case SCT_VORBIS:
 
     if(pkt->pkt_header != NULL) {
       ssc->ssc_gh = pkt->pkt_header;
@@ -124,7 +125,8 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
      (ssc->ssc_type == SCT_H264 ||
       ssc->ssc_type == SCT_MPEG2VIDEO ||
       ssc->ssc_type == SCT_MP4A ||
-      ssc->ssc_type == SCT_AAC))
+      ssc->ssc_type == SCT_AAC ||
+      ssc->ssc_type == SCT_VORBIS))
     return 0;
   return 1;
 }
@@ -255,6 +257,9 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
+  case SMT_SPEED:
+  case SMT_SKIP:
+  case SMT_TIMESHIFT_STATUS:
     streaming_target_deliver2(gh->gh_output, sm);
     break;
   }
@@ -283,6 +288,9 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
+  case SMT_SKIP:
+  case SMT_SPEED:
+  case SMT_TIMESHIFT_STATUS:
     streaming_target_deliver2(gh->gh_output, sm);
     break;
 

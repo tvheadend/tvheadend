@@ -20,6 +20,20 @@
 #define ACCESS_H_
 
 
+typedef struct access_ipmask {
+  TAILQ_ENTRY(access_ipmask) ai_link;
+
+  int ai_ipv6;
+
+  struct in_addr ai_ip;
+  struct in6_addr ai_ip6;
+
+  int ai_prefixlen;
+
+  uint32_t ai_network;
+  uint32_t ai_netmask;
+} access_ipmask_t;
+
 TAILQ_HEAD(access_entry_queue, access_entry);
 
 extern struct access_entry_queue access_entries;
@@ -31,15 +45,12 @@ typedef struct access_entry {
   char *ae_username;
   char *ae_password;
   char *ae_comment;
-  struct in_addr ae_ip;
-  int ae_prefixlen;
   int ae_enabled;
   
 
   uint32_t ae_rights;
 
-  uint32_t ae_network; /* derived from ae_ip */
-  uint32_t ae_netmask; /* derived from ae_prefixlen */
+  TAILQ_HEAD(, access_ipmask) ae_ipmasks;
 } access_entry_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -99,6 +110,6 @@ uint32_t access_get_by_addr(struct sockaddr *src);
 /**
  *
  */
-void access_init(int createdefault);
+void access_init(int createdefault, int noacl);
 
 #endif /* ACCESS_H_ */

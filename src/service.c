@@ -108,6 +108,9 @@ stream_clean(elementary_stream_t *st)
   free(st->es_global_data);
   st->es_global_data = NULL;
   st->es_global_data_len = 0;
+
+  free(st->es_section);
+  st->es_section = NULL;
 }
 
 /**
@@ -335,7 +338,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   cnt = 0;
   LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
 
-    if(!t->s_enabled) {
+    if(!t->s_is_enabled(t)) {
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Service", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, service_nicename(t));
@@ -463,7 +466,6 @@ service_destroy(service_t *t)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
-  channel_t *ch = t->s_ch;
 
   if(t->s_dtor != NULL)
     t->s_dtor(t);
@@ -506,11 +508,6 @@ service_destroy(service_t *t)
   avgstat_flush(&t->s_rate);
 
   service_unref(t);
-
-  if(ch != NULL) {
-    if(LIST_FIRST(&ch->ch_services) == NULL) 
-      channel_delete(ch);
-  }
 }
 
 
@@ -769,8 +766,8 @@ static struct strtab stypetab[] = {
   { "HDTV",         ST_DN_HDTV },
   { "SDTV",         ST_SK_SDTV },
   { "SDTV",         ST_NE_SDTV },
-  { "SDTV-AC",      ST_AC_SDTV },
-  { "HDTV-AC",      ST_AC_HDTV },
+  { "SDTV",         ST_AC_SDTV },
+  { "HDTV",         ST_AC_HDTV },
 };
 
 const char *
@@ -783,30 +780,40 @@ service_servicetype_txt(service_t *t)
  *
  */
 int
-service_is_tv(service_t *t)
+servicetype_is_tv(int servicetype)
 {
   return 
-    t->s_servicetype == ST_SDTV    ||
-    t->s_servicetype == ST_HDTV    ||
-    t->s_servicetype == ST_EX_HDTV ||
-    t->s_servicetype == ST_EX_SDTV ||
-    t->s_servicetype == ST_EP_HDTV ||
-    t->s_servicetype == ST_ET_HDTV ||
-    t->s_servicetype == ST_DN_SDTV ||
-    t->s_servicetype == ST_DN_HDTV ||
-    t->s_servicetype == ST_SK_SDTV ||
-    t->s_servicetype == ST_NE_SDTV ||
-    t->s_servicetype == ST_AC_SDTV ||
-    t->s_servicetype == ST_AC_HDTV;
+    servicetype == ST_SDTV    ||
+    servicetype == ST_HDTV    ||
+    servicetype == ST_EX_HDTV ||
+    servicetype == ST_EX_SDTV ||
+    servicetype == ST_EP_HDTV ||
+    servicetype == ST_ET_HDTV ||
+    servicetype == ST_DN_SDTV ||
+    servicetype == ST_DN_HDTV ||
+    servicetype == ST_SK_SDTV ||
+    servicetype == ST_NE_SDTV ||
+    servicetype == ST_AC_SDTV ||
+    servicetype == ST_AC_HDTV;
+}
+int
+service_is_tv(service_t *t)
+{
+  return servicetype_is_tv(t->s_servicetype);
 }
 
 /**
  *
  */
 int
+servicetype_is_radio(int servicetype)
+{
+  return servicetype == ST_RADIO;
+}
+int
 service_is_radio(service_t *t)
 {
-  return t->s_servicetype == ST_RADIO;
+  return servicetype_is_radio(t->s_servicetype);
 }
 
 /**
@@ -904,6 +911,7 @@ service_build_stream_start(service_t *t)
     ssc->ssc_type  = st->es_type;
 
     memcpy(ssc->ssc_lang, st->es_lang, 4);
+    ssc->ssc_audio_type = st->es_audio_type;
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;
     ssc->ssc_pid = st->es_pid;
@@ -1185,8 +1193,7 @@ service_is_primary_epg(service_t *svc)
   service_t *ret = NULL, *t;
   if (!svc || !svc->s_ch) return 0;
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_dvb_mux_instance) continue;
-    if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
+    if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
     if (!ret || service_get_prio(t) < service_get_prio(ret))
       ret = t;
   }

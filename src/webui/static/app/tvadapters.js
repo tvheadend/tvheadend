@@ -7,7 +7,7 @@ tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 	fields : [ 'identifier', 'type', 'name', 'path', 'devicename',
 		   'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
 		   'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
-		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg'],
+		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg', 'bw'],
 	url : 'tv/adapter'
 });
 
@@ -99,7 +99,7 @@ tvheadend.showTransportDetails = function(data) {
 	win = new Ext.Window({
 		title : 'Service details for ' + data.title,
 		layout : 'fit',
-		width : 400,
+		width : 450,
 		height : 400,
 		plain : true,
 		bodyStyle : 'padding: 5px',

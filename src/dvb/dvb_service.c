@@ -86,18 +86,21 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
     dvb_adapter_clean(tda);
   }
 
+  r = dvb_fe_tune(t->s_dvb_mux_instance, "Transport start");
+
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
-  r = dvb_fe_tune(t->s_dvb_mux_instance, "Transport start");
   if(!r)
     LIST_INSERT_HEAD(&tda->tda_transports, t, s_active_link);
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  if(!r)
-    tda->tda_open_service(tda, t);
+  if (tda->tda_locked) {
+    if(!r)
+      tda->tda_open_service(tda, t);
 
-  dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+    dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+  }
 
   return r;
 }
@@ -135,6 +138,17 @@ dvb_service_refresh(service_t *t)
   tda->tda_open_service(tda, t);
 }
 
+/**
+ *
+ */
+static int
+dvb_service_is_enabled(service_t *t)
+{
+  th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  return tda->tda_enabled && tdmi->tdmi_enabled && t->s_enabled && t->s_pmt_pid;
+}
+
 
 /**
  *
@@ -170,6 +184,9 @@ dvb_service_save(service_t *t)
 
   if(t->s_default_authority)
     htsmsg_add_str(m, "default_authority", t->s_default_authority);
+
+  if(t->s_prefcapid)
+    htsmsg_add_u32(m, "prefcapid", t->s_prefcapid);
 
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
@@ -336,6 +353,8 @@ dvb_service_setsourceinfo(service_t *t, struct source_info *si)
 static int
 dvb_grace_period(service_t *t)
 {
+  if (t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter)
+    return t->s_dvb_mux_instance->tdmi_adapter->tda_grace_period ?: 10;
   return 10;
 }
 
@@ -351,9 +370,10 @@ dvb_service_find3
   service_t *svc;
   if (tdmi) {
     LIST_FOREACH(svc, &tdmi->tdmi_transports, s_group_link) {
+      if (sid != svc->s_dvb_service_id) continue;
       if (enabled    && !svc->s_enabled) continue;
       if (epgprimary && !service_is_primary_epg(svc)) continue;
-      if (sid == svc->s_dvb_service_id) return svc;
+      return svc;
     }
   } else if (tda) {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
@@ -399,12 +419,18 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
     if(t->s_dvb_service_id == sid)
-      return t;
+      break;
+  }
+
+  /* Existing - updated PMT_PID if required */
+  if (t) {
+    if (pmt_pid && pmt_pid != t->s_pmt_pid) {
+      t->s_pmt_pid = pmt_pid;
+      *save = 1;
+    }
+    return t;
   }
   
-  if(pmt_pid == 0)
-    return NULL;
-
   if(identifier == NULL) {
     snprintf(tmp, sizeof(tmp), "%s_%04x", tdmi->tdmi_identifier, sid);
     identifier = tmp;
@@ -426,6 +452,7 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->s_setsourceinfo = dvb_service_setsourceinfo;
   t->s_quality_index = dvb_service_quality;
   t->s_grace_period  = dvb_grace_period;
+  t->s_is_enabled    = dvb_service_is_enabled;
 
   t->s_dvb_mux_instance = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, s_group_link);
@@ -447,6 +474,7 @@ dvb_service_build_msg(service_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
   htsmsg_t *m = htsmsg_create_map();
+  uint16_t caid;
   char buf[100];
  
   htsmsg_add_str(m, "id", t->s_identifier);
@@ -457,15 +485,24 @@ dvb_service_build_msg(service_t *t)
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
   
-  htsmsg_add_str(m, "type", service_servicetype_txt(t));
+  snprintf(buf, sizeof(buf), "%s (0x%04X)", service_servicetype_txt(t), t->s_servicetype);
+  htsmsg_add_str(m, "type", buf);
+  htsmsg_add_str(m, "typestr", service_servicetype_txt(t));
+  htsmsg_add_u32(m, "typenum", t->s_servicetype);
 
   htsmsg_add_str(m, "svcname", t->s_svcname ?: "");
   htsmsg_add_str(m, "provider", t->s_provider ?: "");
 
   htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
 
+  if((caid = service_get_encryption(t)) != 0)
+    htsmsg_add_str(m, "encryption", psi_caid2name(caid));
+
   dvb_mux_nicefreq(buf, sizeof(buf), tdmi);
   htsmsg_add_str(m, "mux", buf);
+
+  if(tdmi->tdmi_conf.dmc_satconf != NULL)
+    htsmsg_add_str(m, "satconf", tdmi->tdmi_conf.dmc_satconf->sc_id);
 
   if(t->s_ch != NULL)
     htsmsg_add_str(m, "channelname", t->s_ch->ch_name);

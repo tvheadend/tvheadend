@@ -23,6 +23,7 @@
 #include "packet.h"
 #include "atomic.h"
 #include "service.h"
+#include "timeshift.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp)
@@ -137,6 +138,9 @@ streaming_msg_create(streaming_message_type_t type)
 {
   streaming_message_t *sm = malloc(sizeof(streaming_message_t));
   sm->sm_type = type;
+#if ENABLE_TIMESHIFT
+  sm->sm_time      = 0;
+#endif
   return sm;
 }
 
@@ -188,7 +192,10 @@ streaming_msg_clone(streaming_message_t *src)
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
   streaming_start_t *ss;
 
-  dst->sm_type = src->sm_type;
+  dst->sm_type      = src->sm_type;
+#if ENABLE_TIMESHIFT
+  dst->sm_time      = src->sm_time;
+#endif
 
   switch(src->sm_type) {
 
@@ -202,11 +209,22 @@ streaming_msg_clone(streaming_message_t *src)
     atomic_add(&ss->ss_refcount, 1);
     break;
 
+  case SMT_SKIP:
+    dst->sm_data = malloc(sizeof(streaming_skip_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(streaming_skip_t));
+    break;
+
   case SMT_SIGNAL_STATUS:
     dst->sm_data = malloc(sizeof(signal_status_t));
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
     break;
 
+  case SMT_TIMESHIFT_STATUS:
+    dst->sm_data = malloc(sizeof(timeshift_status_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
+    break;
+
+  case SMT_SPEED:
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
@@ -264,18 +282,17 @@ streaming_msg_free(streaming_message_t *sm)
     break;
 
   case SMT_STOP:
-    break;
-
   case SMT_EXIT:
-    break;
-
   case SMT_SERVICE_STATUS:
-    break;
-
   case SMT_NOSTART:
+  case SMT_SPEED:
     break;
 
+  case SMT_SKIP:
   case SMT_SIGNAL_STATUS:
+#if ENABLE_TIMESHIFT
+  case SMT_TIMESHIFT_STATUS:
+#endif
     free(sm->sm_data);
     break;
 

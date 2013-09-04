@@ -22,9 +22,9 @@
 #include "epg.h"
 #include "dvr/dvr.h"
 
-void htsp_init(void);
+void htsp_init(const char *bindaddr);
 
-void htsp_channel_update_current(channel_t *ch);
+void htsp_channel_update_nownext(channel_t *ch);
 
 void htsp_channel_add(channel_t *ch);
 void htsp_channel_update(channel_t *ch);

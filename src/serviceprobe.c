@@ -108,13 +108,17 @@ serviceprobe_thread(void *aux)
       was_doing_work = 1;
     }
 
-    checksubscr = !t->s_dvb_mux_instance->tdmi_adapter->tda_skip_checksubscr;
+    if (t->s_dvb_mux_instance)
+      checksubscr = !t->s_dvb_mux_instance->tdmi_adapter->tda_skip_checksubscr;
+    else
+      checksubscr = 1;
 
     if (checksubscr) {
       tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
        t->s_svcname);
 
-      s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0);
+      s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0, 
+					   NULL, NULL, "serviceprobe");
       if(s == NULL) {
         t->s_sp_onqueue = 0;
         TAILQ_REMOVE(&serviceprobe_queue, t, s_sp_link);

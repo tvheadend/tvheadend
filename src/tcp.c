@@ -18,7 +18,8 @@
 
 #include <pthread.h>
 #include <netdb.h>
-#include <sys/epoll.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <poll.h>
 #include <assert.h>
 #include <stdio.h>
@@ -34,7 +35,9 @@
 
 #include "tcp.h"
 #include "tvheadend.h"
+#include "tvhpoll.h"
 
+int tcp_preferred_address_family = AF_INET;
 
 /**
  *
@@ -143,16 +146,16 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
 
       r = poll(&pfd, 1, timeout * 1000);
       if(r == 0) {
-	/* Timeout */
-	snprintf(errbuf, errbufsize, "Connection attempt timed out");
-	close(fd);
-	return -1;
+	      /* Timeout */
+      	snprintf(errbuf, errbufsize, "Connection attempt timed out");
+      	close(fd);
+      	return -1;
       }
       
       if(r == -1) {
-	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
-	close(fd);
-	return -1;
+      	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
+      	close(fd);
+      	return -1;
       }
 
       getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
@@ -182,14 +185,15 @@ tcp_write_queue(int fd, htsbuf_queue_t *q)
 {
   htsbuf_data_t *hd;
   int l, r = 0;
+  void *p;
 
   while((hd = TAILQ_FIRST(&q->hq_q)) != NULL) {
-    TAILQ_REMOVE(&q->hq_q, hd, hd_link);
-
-    l = hd->hd_data_len - hd->hd_data_off;
-    r |= !!write(fd, hd->hd_data + hd->hd_data_off, l);
-    free(hd->hd_data);
-    free(hd);
+    if (!r) {
+      l = hd->hd_data_len - hd->hd_data_off;
+      p = hd->hd_data + hd->hd_data_off;
+      r = tvh_write(fd, p, l);
+    }
+    htsbuf_data_free(q, hd);
   }
   q->hq_size = 0;
   return r;
@@ -329,7 +333,7 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
     if(x == -1) {
       if(errno == EAGAIN)
-	continue;
+	      continue;
       return errno;
     }
 
@@ -346,7 +350,32 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
-static int tcp_server_epoll_fd;
+char *
+tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+{
+  if(sa == NULL || s == NULL)
+    return NULL;
+
+  switch(sa->sa_family)
+  {
+    case AF_INET:
+      inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), s, maxlen);
+      break;
+    case AF_INET6:
+      inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), s, maxlen);
+      break;
+    default:
+      strncpy(s, "Unknown AF", maxlen);
+      return NULL;
+  }
+
+  return s;
+}
+
+/**
+ *
+ */
+static tvhpoll_t *tcp_server_poll;
 
 typedef struct tcp_server {
   tcp_server_callback_t *start;
@@ -358,8 +387,8 @@ typedef struct tcp_server_launch_t {
   tcp_server_callback_t *start;
   void *opaque;
   int fd;
-  struct sockaddr_in peer;
-  struct sockaddr_in self;
+  struct sockaddr_storage peer;
+  struct sockaddr_storage self;
 } tcp_server_launch_t;
 
 
@@ -411,8 +440,8 @@ tcp_server_start(void *aux)
 static void *
 tcp_server_loop(void *aux)
 {
-  int r, i;
-  struct epoll_event ev[1];
+  int r;
+  tvhpoll_event_t ev;
   tcp_server_t *ts;
   tcp_server_launch_t *tsl;
   pthread_attr_t attr;
@@ -423,46 +452,45 @@ tcp_server_loop(void *aux)
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
   while(1) {
-    r = epoll_wait(tcp_server_epoll_fd, ev, sizeof(ev) / sizeof(ev[0]), -1);
+    r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r == -1) {
-      perror("tcp_server: epoll_wait");
+      perror("tcp_server: tchpoll_wait");
       continue;
     }
 
-    for(i = 0; i < r; i++) {
-      ts = ev[i].data.ptr;
+    if (r == 0) continue;
 
-      if(ev[i].events & EPOLLHUP) {
-	close(ts->serverfd);
-	free(ts);
-	continue;
-      }
+    ts = ev.data.ptr;
 
-      if(ev[i].events & EPOLLIN) {
-	tsl = malloc(sizeof(tcp_server_launch_t));
-	tsl->start  = ts->start;
-	tsl->opaque = ts->opaque;
-	slen = sizeof(struct sockaddr_in);
+    if(ev.events & TVHPOLL_HUP) {
+	    close(ts->serverfd);
+    	free(ts);
+      continue;
+    } 
 
-	tsl->fd = accept(ts->serverfd, 
-			 (struct sockaddr *)&tsl->peer, &slen);
-	if(tsl->fd == -1) {
-	  perror("accept");
-	  free(tsl);
-	  sleep(1);
-	  continue;
-	}
+    if(ev.events & TVHPOLL_IN) {
+	    tsl = malloc(sizeof(tcp_server_launch_t));
+      tsl->start  = ts->start;
+      tsl->opaque = ts->opaque;
+      slen = sizeof(struct sockaddr_storage);
 
+      tsl->fd = accept(ts->serverfd, 
+			                 (struct sockaddr *)&tsl->peer, &slen);
+     	if(tsl->fd == -1) {
+     	  perror("accept");
+     	  free(tsl);
+     	  sleep(1);
+     	  continue;
+     	}
 
-	slen = sizeof(struct sockaddr_in);
-	if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
-	    close(tsl->fd);
-	    free(tsl);
-	    continue;
-	}
+     	slen = sizeof(struct sockaddr_storage);
+	    if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
+        close(tsl->fd);
+        free(tsl);
+        continue;
+     	}
 
-	pthread_create(&tid, &attr, tcp_server_start, tsl);
-      }
+     	pthread_create(&tid, &attr, tcp_server_start, tsl);
     }
   }
   return NULL;
@@ -472,26 +500,65 @@ tcp_server_loop(void *aux)
  *
  */
 void *
-tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
+tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque)
 {
   int fd, x;
-  struct epoll_event e;
+  tvhpoll_event_t ev;
   tcp_server_t *ts;
-  struct sockaddr_in s;
+  struct addrinfo hints, *res, *ressave, *use = NULL;
+  char port_buf[6];
   int one = 1;
-  memset(&e, 0, sizeof(e));
-  fd = tvh_socket(AF_INET, SOCK_STREAM, 0);
+  int zero = 0;
+
+  memset(&ev, 0, sizeof(ev));
+
+  snprintf(port_buf, 6, "%d", port);
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_flags = AI_PASSIVE;
+  if (bindaddr != NULL)
+      hints.ai_flags |= AI_NUMERICHOST;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+  x = getaddrinfo(bindaddr, port_buf, &hints, &res);
+
+  if(x != 0) {
+    tvhlog(LOG_ERR, "tcp", "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
+      x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
+    return NULL;
+  }
+
+  ressave = res;
+  while(res)
+  {
+    if(res->ai_family == tcp_preferred_address_family)
+    {
+      use = res;
+      break;
+    }
+    else if(use == NULL)
+    {
+      use = res;
+    }
+    res = res->ai_next;
+  }
+
+  fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
   if(fd == -1)
     return NULL;
 
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+  if(use->ai_family == AF_INET6)
+    setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
 
-  memset(&s, 0, sizeof(s));
-  s.sin_family = AF_INET;
-  s.sin_port = htons(port);
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
   
-  x = bind(fd, (struct sockaddr *)&s, sizeof(s));
-  if(x < 0) {
+  x = bind(fd, use->ai_addr, use->ai_addrlen);
+  freeaddrinfo(ressave);
+
+  if(x != 0)
+  {
+    tvhlog(LOG_ERR, "tcp", "bind: %s: %s", bindaddr != NULL ? bindaddr : "*", strerror(errno));
     close(fd);
     return NULL;
   }
@@ -503,11 +570,11 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   ts->start = start;
   ts->opaque = opaque;
 
-  
-  e.events = EPOLLIN;
-  e.data.ptr = ts;
+  ev.fd       = fd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = ts;
+  tvhpoll_add(tcp_server_poll, &ev, 1);
 
-  epoll_ctl(tcp_server_epoll_fd, EPOLL_CTL_ADD, fd, &e);
   return ts;
 }
 
@@ -515,11 +582,14 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
  *
  */
 void
-tcp_server_init(void)
+tcp_server_init(int opt_ipv6)
 {
   pthread_t tid;
 
-  tcp_server_epoll_fd = epoll_create(10);
+  if(opt_ipv6)
+    tcp_preferred_address_family = AF_INET6;
+
+  tcp_server_poll = tvhpoll_create(10);
   pthread_create(&tid, NULL, tcp_server_loop, NULL);
 }
 

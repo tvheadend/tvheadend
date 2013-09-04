@@ -129,8 +129,12 @@ def serialize ( msg ):
   return int2bin(cnt) + binary_write(msg)
 
 # Deserialize an htsmsg
-def deserialize0 ( data ):
-  msg = {}
+def deserialize0 ( data, typ = HMF_MAP ):
+  islist = False
+  msg    = {}
+  if (typ == HMF_LIST):
+    islist = True
+    msg    = []
   while len(data) > 5:
     typ  = ord(data[0])
     nlen = ord(data[1])
@@ -152,10 +156,13 @@ def deserialize0 ( data ):
         item = (item << 8) | ord(data[i])
         i    = i - 1
     elif typ in [ HMF_LIST, HMF_MAP ]:
-      item = deserialize0(data[:dlen])
+      item = deserialize0(data[:dlen], typ)
     else:
       raise Exception('invalid data type %d' % typ)
-    msg[name] = item
+    if islist:
+      msg.append(item)
+    else:
+      msg[name] = item
     data      = data[dlen:]
   return msg
 

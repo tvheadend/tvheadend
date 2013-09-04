@@ -65,6 +65,7 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_EPISODE_IN_TITLE	0x80
 #define DVR_CLEAN_TITLE	        0x100
 #define DVR_TAG_FILES           0x200
+#define DVR_SKIP_COMMERCIALS    0x400
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -113,6 +114,8 @@ typedef struct dvr_entry {
   channel_t *de_channel;
   LIST_ENTRY(dvr_entry) de_channel_link;
 
+  char *de_channel_name;
+
   gtimer_t de_timer;
 
   /**
@@ -133,6 +136,8 @@ typedef struct dvr_entry {
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   epg_genre_t de_content_type; /* Content type (from EPG) */
+
+  uint16_t de_dvb_eid;
 
   dvr_prio_t de_pri;
 
@@ -188,8 +193,16 @@ typedef struct dvr_entry {
 
   struct muxer *de_mux;
 
+  /**
+   * Inotify
+   */
+#if ENABLE_INOTIFY
+  LIST_ENTRY(dvr_entry) de_inotify_link;
+#endif
+
 } dvr_entry_t;
 
+#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : (e)-> de_channel->ch_name)
 
 /**
  * Autorec entry
@@ -302,7 +315,7 @@ dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
-off_t dvr_get_filesize(dvr_entry_t *de);
+int64_t dvr_get_filesize(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
@@ -376,5 +389,12 @@ dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 dvr_prio_t dvr_pri2val(const char *s);
 
 const char *dvr_val2pri(dvr_prio_t v);
+
+/**
+ * Inotify support
+ */
+void dvr_inotify_init ( void );
+void dvr_inotify_add  ( dvr_entry_t *de );
+void dvr_inotify_del  ( dvr_entry_t *de );
 
 #endif /* DVR_H  */
