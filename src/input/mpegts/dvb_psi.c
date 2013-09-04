@@ -389,16 +389,24 @@ dvb_desc_local_channel
 static int sect_cmp
   ( struct mpegts_table_state *a, struct mpegts_table_state *b )
 {
-  if (b->tableid != a->tableid)
+  if (a->tableid != b->tableid)
     return a->tableid - b->tableid;
-  return a->extraid - b->extraid;
+  if (a->extraid < b->extraid)
+    return -1;
+  if (a->extraid > b->extraid)
+    return 1;
+  return 0;
 }
 
 static void
 mpegts_table_state_reset
-  ( mpegts_table_state_t *st, int last )
+  ( mpegts_table_t *mt, mpegts_table_state_t *st, int last )
 {
   int i;
+  if (st->complete == 2) {
+    mt->mt_complete--;
+    mt->mt_incomplete++;
+  }
   st->complete = 0;
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
@@ -408,7 +416,7 @@ mpegts_table_state_reset
 
 static struct mpegts_table_state *
 mpegts_table_state_find
-  ( mpegts_table_t *mt, int tableid, int extraid, int last )
+  ( mpegts_table_t *mt, int tableid, uint64_t extraid, int last )
 {
   static struct mpegts_table_state *st, *skel = NULL;
 
@@ -421,7 +429,8 @@ mpegts_table_state_find
   if (!st) {
     st   = skel;
     skel = NULL;
-    mpegts_table_state_reset(st, last);
+    mt->mt_incomplete++;
+    mpegts_table_state_reset(mt, st, last);
   }
   return st;
 }
@@ -433,19 +442,16 @@ static int
 dvb_table_complete
   (mpegts_table_t *mt)
 {
-  int c = 0, p = 0;
-  struct mpegts_table_state *st;
-  tvhtrace(mt->mt_name, "status: ");
-  RB_FOREACH(st, &mt->mt_state, link) {
-    tvhtrace(mt->mt_name, "  tableid %02X extraid %08X ver %2d complete %d",
-             st->tableid, st->extraid, st->version, st->complete);
-    if (!st->complete)
-      p = 1;
-    else
-      c = MAX(c, st->complete);
+  if (mt->mt_incomplete || !mt->mt_complete) {
+    int total = 0;
+    mpegts_table_state_t *st;
+    RB_FOREACH(st, &mt->mt_state, link)
+      total++;
+    tvhtrace(mt->mt_name, "incomplete %d complete %d total %d",
+             mt->mt_incomplete, mt->mt_complete, total);
+    return -1;
   }
-  if (p || c != 2) return -1;
-  tvhdebug(mt->mt_name, "completed");
+  tvhdebug(mt->mt_name, "subtable completed");
   return 0;
 }
 
@@ -456,6 +462,7 @@ dvb_table_end
   int sa, sb;
   uint32_t rem;
   if (st) {
+    assert(sect >= 0 && sect <= 255);
     sa = sect / 32;
     sb = sect % 32;
     st->sections[sa] &= ~(0x1 << (31 - sb));
@@ -464,9 +471,10 @@ dvb_table_end
       for (sa = 0; sa < 8; sa++)
         rem |= st->sections[sa];
       if (rem) return -1;
-      tvhtrace(mt->mt_name, "  tableid %02X extraid %08X completed",
+      tvhtrace(mt->mt_name, "  tableid %02X extraid %016lX completed",
                st->tableid, st->extraid);
       st->complete = 1;
+      mt->mt_incomplete--;
       return dvb_table_complete(mt);
     }
   }
@@ -479,7 +487,7 @@ dvb_table_end
 int
 dvb_table_begin
   (mpegts_table_t *mt, const uint8_t *ptr, int len,
-   int tableid, int extraid, int minlen,
+   int tableid, uint64_t extraid, int minlen,
    mpegts_table_state_t **ret, int *sect, int *last, int *ver)
 {
   mpegts_table_state_t *st;
@@ -495,8 +503,8 @@ dvb_table_begin
   if((ptr[2] & 1) == 0)
     return -1;
 
-  tvhtrace(mt->mt_name, "tableid %02X extraid %08X len %d",
-           tableid, extraid, len);
+  tvhtrace(mt->mt_name, "pid %02X tableid %02X extraid %016lX len %d",
+           mt->mt_pid, tableid, extraid, len);
 
   /* Section info */
   if (sect && ret) {
@@ -510,7 +518,7 @@ dvb_table_begin
     if (st->complete &&
         st->version != *ver) {
       tvhtrace(mt->mt_name, "  new version, restart");
-      mpegts_table_state_reset(st, *last);
+      mpegts_table_state_reset(mt, st, *last);
     }
     st->version = *ver;
 
@@ -519,6 +527,7 @@ dvb_table_begin
       tvhtrace(mt->mt_name, "  skip, already complete");
       if (st->complete == 1) {
         st->complete = 2;
+        mt->mt_complete++;
         return dvb_table_complete(mt);
       }
       return -1;
@@ -735,7 +744,7 @@ dvb_nit_callback
   /* Network Descriptors */
   *name = 0;
   DVB_DESC_FOREACH(ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
-    tvhdebug(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
+    tvhtrace(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
 
     switch (dtag) {
       case DVB_DESC_BOUQUET_NAME:
@@ -773,7 +782,7 @@ dvb_nit_callback
         break;
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
-      tvhdebug(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+      tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
 
       /* User-defined */
       if (mt->mt_mux_cb) {
@@ -882,9 +891,7 @@ dvb_sdt_callback
     int      free_ca_mode              = (ptr[3] >> 4) & 0x1;
     int      stype = 0;
     char     sprov[256], sname[256], sauth[256];
-#if ENABLE_TRACE
     int      running_status            = (ptr[3] >> 5) & 0x7;
-#endif
     *sprov = *sname = *sauth = 0;
     tvhdebug("sdt", "  sid %04X (%d) running %d free_ca %d",
              service_id, service_id, running_status, free_ca_mode);
@@ -897,7 +904,7 @@ dvb_sdt_callback
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
-      tvhdebug("sdt", "    dtag %02X dlen %d", dtag, dlen);
+      tvhtrace("sdt", "    dtag %02X dlen %d", dtag, dlen);
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
@@ -911,7 +918,7 @@ dvb_sdt_callback
       }
     }
 
-    tvhdebug("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
+    tvhtrace("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
              stype, sname, sprov, sauth);
     if (!s) continue;
 

@@ -78,11 +78,11 @@ struct mpegts_psi_section
 typedef struct mpegts_table_state
 {
   int      tableid;
-  int      extraid;
+  uint64_t extraid;
   int      version;
   int      complete;
   uint32_t sections[8];
-  RB_ENTRY(mpegts_table_state) link;
+  RB_ENTRY(mpegts_table_state)   link;
 } mpegts_table_state_t;
 
 struct mpegts_table
@@ -119,6 +119,8 @@ struct mpegts_table
   mpegts_table_callback_t mt_callback;
 
   RB_HEAD(,mpegts_table_state) mt_state;
+  int mt_complete;
+  int mt_incomplete;
 
   int mt_count;
 
@@ -137,6 +139,10 @@ struct mpegts_table
   mpegts_psi_section_t mt_sect;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
+  
+  void (*mt_destroy) (mpegts_table_t *mt); // Allow customisable destroy hook
+                                           // useful for dynamic allocation of
+                                           // the opaque field
 };
 
 /**

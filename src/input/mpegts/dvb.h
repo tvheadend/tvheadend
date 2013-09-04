@@ -160,7 +160,7 @@ int dvb_table_end
   (struct mpegts_table *mt, struct mpegts_table_state *st, int sect );
 int dvb_table_begin
   (struct mpegts_table *mt, const uint8_t *ptr, int len,
-   int tableid, int extraid, int minlen,
+   int tableid, uint64_t extraid, int minlen,
    struct mpegts_table_state **st, int *sect, int *last, int *ver);
 
 int dvb_pat_callback

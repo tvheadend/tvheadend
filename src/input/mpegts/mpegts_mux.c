@@ -371,8 +371,6 @@ mpegts_mux_start
     return SM_CODE_NO_FREE_ADAPTER;
   }
   
-  mpegts_fire_event(mm, ml_mux_start);
-
   return 0;
 }
 

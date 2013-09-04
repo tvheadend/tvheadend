@@ -115,6 +115,8 @@ mpegts_table_destroy ( mpegts_table_t *mt )
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
   }
+  if (mt->mt_destroy)
+    mt->mt_destroy(mt);
   mpegts_table_release(mt);
 }
 
