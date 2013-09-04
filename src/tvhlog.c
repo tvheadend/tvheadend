@@ -35,6 +35,10 @@ pthread_t                tvhlog_tid;
 pthread_mutex_t          tvhlog_mutex;
 pthread_cond_t           tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
+int                      tvhlog_queue_size;
+int                      tvhlog_queue_full;
+
+#define TVHLOG_QUEUE_MAXSIZE 10000
 
 typedef struct tvhlog_msg
 {
@@ -165,6 +169,9 @@ tvhlog_thread ( void *p )
       continue;
     }
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
+    tvhlog_queue_size--;
+    if (tvhlog_queue_size < (TVHLOG_QUEUE_MAXSIZE / 2))
+      tvhlog_queue_full = 0;
 
     /* Copy options and path */
     if (!fp) {
@@ -244,8 +251,15 @@ void tvhlogv ( const char *file, int line,
   size_t l;
   char buf[1024];
 
-  /* Check debug enabled (and cache config) */
   pthread_mutex_lock(&tvhlog_mutex);
+
+  /* Check for full */
+  if (tvhlog_queue_full) {
+    pthread_mutex_unlock(&tvhlog_mutex);
+    return;
+  }
+
+  /* Check debug enabled (and cache config) */
   options = tvhlog_options;
   if (severity >= LOG_DEBUG) {
     ok = 0;
@@ -271,6 +285,14 @@ void tvhlogv ( const char *file, int line,
     return;
   }
 
+  /* FULL */
+  if (tvhlog_queue_size == TVHLOG_QUEUE_MAXSIZE) {
+    tvhlog_queue_full = 1;
+    fmt      = "log buffer full";
+    args     = NULL;
+    severity = LOG_ERR;
+  }
+
   /* Basic message */
   l = 0;
   if (options & TVHLOG_OPT_THREAD) {
@@ -291,6 +313,7 @@ void tvhlogv ( const char *file, int line,
   msg->severity = severity;
   msg->notify   = notify;
   TAILQ_INSERT_TAIL(&tvhlog_queue, msg, link);
+  tvhlog_queue_size++;
   pthread_cond_signal(&tvhlog_cond);
   pthread_mutex_unlock(&tvhlog_mutex);
 }
