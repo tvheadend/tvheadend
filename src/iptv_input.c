@@ -171,7 +171,7 @@ iptv_is_service_subtype(service_t *service, iptv_subtype_t subtype)
 {
   switch(subtype) {
   case SERVICE_TYPE_IPTV_MCAST:
-    return is_multicast_ipv4(service) || is_multicast_ipv6(service);
+    return !iptv_is_service_subtype(service, SERVICE_TYPE_IPTV_RTSP);
   case SERVICE_TYPE_IPTV_RTSP:
     return is_rtsp(service);
   default:
