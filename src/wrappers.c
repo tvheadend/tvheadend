@@ -88,7 +88,7 @@ int tvhthread_create0(pthread_t *thread, const pthread_attr_t *attr,
   char buf[16] = { 0 };
   strncpy(buf, name, sizeof(buf)-1);
   r = pthread_create(thread, attr, start_routine, arg);
-  tvhinfo("thread", "created thread %ld [%s / %p]", *thread, name, start_routine);
+  tvhdebug("thread", "created thread %ld [%s / %p]", *thread, name, start_routine);
   if (r) return r;
   pthread_setname_np(*thread, buf);
   return r;
