@@ -48,7 +48,7 @@ service_mapper_init ( void )
   pthread_t tid;
   TAILQ_INIT(&service_mapper_queue);
   pthread_cond_init(&service_mapper_cond, NULL);
-  pthread_create(&tid, NULL, service_mapper_thread, NULL);
+  tvhthread_create(&tid, NULL, service_mapper_thread, NULL);
 }
 
 /*

@@ -134,7 +134,7 @@ idnode_init(void)
   idnode_queue = NULL;
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
-  pthread_create(&tid, NULL, idnode_thread, NULL);
+  tvhthread_create(&tid, NULL, idnode_thread, NULL);
 }
 
 /**

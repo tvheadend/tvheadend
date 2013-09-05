@@ -997,7 +997,7 @@ capmt_entry_find(const char *id, int create)
 
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&ptid, &attr, capmt_thread, capmt);
+  tvhthread_create(&ptid, &attr, capmt_thread, capmt);
   pthread_attr_destroy(&attr);
 
   return capmt;

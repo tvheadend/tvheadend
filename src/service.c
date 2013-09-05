@@ -984,7 +984,7 @@ service_init(void)
   TAILQ_INIT(&service_all);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
-  pthread_create(&tid, NULL, service_saver, NULL);
+  tvhthread_create(&tid, NULL, service_saver, NULL);
 }
 
 

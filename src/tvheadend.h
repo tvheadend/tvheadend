@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -521,6 +522,11 @@ static inline void mystrset(char **p, const char *s)
   free(*p);
   *p = s ? strdup(s) : NULL;
 }
+
+int tvhthread_create0(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg, const char *name);
+
+#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

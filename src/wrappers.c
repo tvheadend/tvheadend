@@ -1,8 +1,10 @@
+#define __USE_GNU
+#include "tvheadend.h"
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <unistd.h>
-#include "tvheadend.h"
+#include <pthread.h>
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
@@ -77,4 +79,17 @@ tvh_write(int fd, const void *buf, size_t len)
   }
 
   return len ? 1 : 0;
+}
+
+int tvhthread_create0(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg, const char *name)
+{
+  int r;
+  char buf[16] = { 0 };
+  strncpy(buf, name, sizeof(buf)-1);
+  r = pthread_create(thread, attr, start_routine, arg);
+  tvhinfo("thread", "created thread %ld [%s / %p]", *thread, name, start_routine);
+  if (r) return r;
+  pthread_setname_np(*thread, buf);
+  return r;
 }

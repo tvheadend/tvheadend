@@ -393,7 +393,7 @@ tvhlog_init ( int level, int options, const char *path )
   pthread_mutex_init(&tvhlog_mutex, NULL);
   pthread_cond_init(&tvhlog_cond, NULL);
   TAILQ_INIT(&tvhlog_queue);
-  pthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
+  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
 }
 
 void

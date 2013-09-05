@@ -66,7 +66,7 @@ void dvr_inotify_init ( void )
     return;
   }
 
-  pthread_create(&tid, NULL, _dvr_inotify_thread, NULL);
+  tvhthread_create(&tid, NULL, _dvr_inotify_thread, NULL);
 }
 
 /**

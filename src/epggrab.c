@@ -400,7 +400,7 @@ void epggrab_init ( void )
   pthread_attr_t tattr;
   pthread_attr_init(&tattr);
   pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&tid, &tattr, _epggrab_internal_thread, NULL);
+  tvhthread_create(&tid, &tattr, _epggrab_internal_thread, NULL);
   pthread_attr_destroy(&tattr);
 }
 

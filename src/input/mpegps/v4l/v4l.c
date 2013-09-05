@@ -230,7 +230,7 @@ v4l_service_start(service_t *t, int instance)
 
   va->va_fd = fd;
   va->va_current_service = t;
-  pthread_create(&va->va_thread, NULL, v4l_thread, va);
+  tvhthread_create(&va->va_thread, NULL, v4l_thread, va);
   v4l_adapter_notify(va);
   return 0;
 }

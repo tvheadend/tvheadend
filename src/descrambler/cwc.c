@@ -1112,7 +1112,7 @@ cwc_session(cwc_t *cwc)
   pthread_cond_init(&cwc->cwc_writer_cond, NULL);
   pthread_mutex_init(&cwc->cwc_writer_mutex, NULL);
   TAILQ_INIT(&cwc->cwc_writeq);
-  pthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc);
+  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc);
 
   /**
    * Mainloop
@@ -2091,7 +2091,7 @@ cwc_entry_find(const char *id, int create)
 
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&ptid, &attr, cwc_thread, cwc);
+  tvhthread_create(&ptid, &attr, cwc_thread, cwc);
   pthread_attr_destroy(&attr);
 
   return cwc;

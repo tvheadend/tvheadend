@@ -490,7 +490,7 @@ tcp_server_loop(void *aux)
         continue;
      	}
 
-     	pthread_create(&tid, &attr, tcp_server_start, tsl);
+     	tvhthread_create(&tid, &attr, tcp_server_start, tsl);
     }
   }
   return NULL;
@@ -590,7 +590,7 @@ tcp_server_init(int opt_ipv6)
     tcp_preferred_address_family = AF_INET6;
 
   tcp_server_poll = tvhpoll_create(10);
-  pthread_create(&tid, NULL, tcp_server_loop, NULL);
+  tvhthread_create(&tid, NULL, tcp_server_loop, NULL);
 }
 
 

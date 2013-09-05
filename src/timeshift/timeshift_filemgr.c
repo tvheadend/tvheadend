@@ -344,7 +344,7 @@ void timeshift_filemgr_init ( void )
   pthread_mutex_init(&timeshift_reaper_lock, NULL);
   pthread_cond_init(&timeshift_reaper_cond, NULL);
   TAILQ_INIT(&timeshift_reaper_list);
-  pthread_create(&timeshift_reaper_thread, NULL,
+  tvhthread_create(&timeshift_reaper_thread, NULL,
                  timeshift_reaper_callback, NULL);
 }
 

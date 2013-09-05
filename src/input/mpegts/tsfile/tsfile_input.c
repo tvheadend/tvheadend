@@ -206,7 +206,7 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
       return SM_CODE_TUNING_FAILED;
     }
     tvhtrace("tsfile", "adapter %d starting thread", mi->mi_instance);
-    pthread_create(&mi->mi_thread_id, NULL, tsfile_input_thread, mi);
+    tvhthread_create(&mi->mi_thread_id, NULL, tsfile_input_thread, mi);
   }
 
   /* Current */
@@ -243,7 +243,7 @@ tsfile_input_create ( int idx )
   LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
 
   /* Start table thread */
-  pthread_create(&tid, NULL, mpegts_input_table_thread, mi);
+  tvhthread_create(&tid, NULL, mpegts_input_table_thread, mi);
   return mi;
 }
 
