@@ -106,7 +106,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
 {
   LIST_REMOVE(ota, om_q_link);
   ota->om_active = 0;
-  ota->om_when   = dispatch_clock + 10;//epggrab_ota_period(ota);
+  ota->om_when   = dispatch_clock + epggrab_ota_period(ota);
   LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
 
   /* Remove subscription */
@@ -125,21 +125,36 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
   }
 }
 
+static void
+epggrab_ota_start ( epggrab_ota_mux_t *om )
+{
+  epggrab_ota_map_t *map;
+  om->om_when   = dispatch_clock + epggrab_ota_timeout(om);
+  om->om_active = 1;
+  LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
+  if (LIST_FIRST(&epggrab_ota_active) == om)
+    epggrab_ota_active_timer_cb(NULL);
+  LIST_FOREACH(map, &om->om_modules, om_link)
+    map->om_complete = 0;
+}
+
 /* **************************************************************************
  * MPEG-TS listener
  * *************************************************************************/
 
 static void
-epggrab_mux_start ( mpegts_mux_t *mm, void *p )
+epggrab_mux_start0 ( mpegts_mux_t *mm, int force )
 {
   epggrab_module_t *m;
   epggrab_module_ota_t *om;
   epggrab_ota_mux_t *ota;
 
   /* Already started */
-  LIST_FOREACH(ota, &epggrab_ota_active, om_q_link)
-    if (!strcmp(ota->om_mux_uuid, idnode_uuid_as_str(&mm->mm_id)))
-      return;
+  if (!force) {
+    LIST_FOREACH(ota, &epggrab_ota_active, om_q_link)
+      if (!strcmp(ota->om_mux_uuid, idnode_uuid_as_str(&mm->mm_id)))
+        return;
+  }
 
   /* Check if already active */
   LIST_FOREACH(m, &epggrab_modules, link) {
@@ -148,6 +163,12 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
       if (om->start) om->start(om, mm);
     }
   }
+}
+
+static void
+epggrab_mux_start ( mpegts_mux_t *mm, void *p )
+{
+  epggrab_mux_start0(mm, 0);
 }
 
 static void
@@ -300,23 +321,22 @@ epggrab_ota_pending_timer_cb ( void *p )
     goto done;
   }
 
+  /* Insert into active (assume success) */
+  // Note: if we don't do this the subscribe below can result in a mux
+  //       start call which means we call it a second time below
+  epggrab_ota_start(om);
+
   /* Subscribe to the mux */
   // TODO: remove hardcoded weight
   s = subscription_create_from_mux(mm, 2, "epggrab", NULL,
                                    SUBSCRIPTION_NONE, NULL, NULL, NULL);
-  om->om_sub = s;
-  if (!s) {
-    om->om_when = dispatch_clock + epggrab_ota_period(om) / 2;
+  if (!(om->om_sub = s)) {
+    LIST_REMOVE(om, om_q_link);
+    om->om_active = 0;
+    om->om_when   = dispatch_clock + epggrab_ota_period(om) / 2;
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
   } else {
-    epggrab_mux_start(mm, NULL);
-    om->om_when   = dispatch_clock + epggrab_ota_timeout(om);
-    om->om_active = 1;
-    LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
-    if (LIST_FIRST(&epggrab_ota_active) == om)
-      epggrab_ota_active_timer_cb(NULL);
-    LIST_FOREACH(map, &om->om_modules, om_link)
-      map->om_complete = 0;
+    epggrab_mux_start0(mm, 1);
   }
 
 done:
