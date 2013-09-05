@@ -185,6 +185,7 @@ subscription_reschedule(void)
   streaming_message_t *sm;
   int error;
   if (reenter) return;
+  reenter = 1;
 
   lock_assert(&global_lock);
 
