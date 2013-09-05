@@ -194,7 +194,7 @@ subscription_reschedule(void)
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if (s->ths_mmi) continue;
-    if (!s->ths_channel && !s->ths_mmi) continue;
+    if (!s->ths_service && !s->ths_channel) continue;
 #if 0
     if(s->ths_channel == NULL)
       continue; /* stale entry, channel has been destroyed */
@@ -242,6 +242,7 @@ static void
 subscription_unsubscribe0(th_subscription_t *s, int silent)
 {
   service_t *t = s->ths_service;
+  service_instance_t *si = s->ths_current_instance; 
 
   lock_assert(&global_lock);
 
@@ -260,7 +261,7 @@ subscription_unsubscribe0(th_subscription_t *s, int silent)
     }
   }
 
-  if(t != NULL)
+  if(si != NULL)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
 #if ENABLE_MPEGTS
