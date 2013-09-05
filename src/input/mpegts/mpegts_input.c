@@ -145,6 +145,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
     s->s_dvb_active_input = NULL;
   }
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  s->s_dvb_mux->mm_stop(s->s_dvb_mux, 0);
 }
 
 static void
@@ -189,11 +190,17 @@ mpegts_input_stopped_mux
 static int
 mpegts_input_has_subscription ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
+  int ret = 0;
   service_t *t;
-  LIST_FOREACH(t, &mi->mi_transports, s_active_link)
-    if (((mpegts_service_t*)t)->s_dvb_mux == mm)
-      return 1;
-  return 0;
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  LIST_FOREACH(t, &mi->mi_transports, s_active_link) {
+    if (((mpegts_service_t*)t)->s_dvb_mux == mm) {
+      ret = 1;
+      break;
+    }
+  }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  return ret;
 }
 
 /* **************************************************************************
