@@ -478,15 +478,16 @@ done:
             mt2->mt_destroy    = opentv_status_destroy;
           }
         }
+        mpegts_table_destroy(mt);
       } else {
         tvhinfo(mt->mt_name, "summaries complete");
+        mpegts_table_destroy(mt);
         if (ota)
           epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
       }
+    } else {
+      mpegts_table_destroy(mt);
     }
-
-    /* Remove table handler */
-    mpegts_table_destroy(mt);
   }
 
   return 0;
