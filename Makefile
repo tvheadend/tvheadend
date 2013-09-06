@@ -109,10 +109,12 @@ SRCS =  src/version.c \
 	src/tvhtime.c \
 	src/descrambler/descrambler.c \
 	src/service_mapper.c \
+	src/input.c \
 
 SRCS += \
 	src/api.c \
 	src/api/api_idnode.c \
+	src/api/api_input.c \
 	src/api/api_channel.c \
 	src/api/api_service.c \
 	src/api/api_mpegts.c \

@@ -136,9 +136,61 @@ tvheadend.status_subs = function() {
 
 
 /**
- *
+ * Streams
  */
-tvheadend.status_adapters = function() {
+tvheadend.status_streams = function() {
+
+	var stream_store = new Ext.data.JsonStore({
+		root : 'entries',
+		totalProperty : 'totalCount',
+		fields : [ {
+			name : 'uuid'
+		}, {
+			name : 'input'
+		}, {
+			name : 'username'
+		}, {
+			name : 'stream'
+		}, {
+			name : 'subs'
+		}, {
+			name : 'weight'
+		}, {
+			name : 'signal'
+		}, {
+			name : 'ber'
+		}, {
+			name : 'unc'
+		}, {
+			name : 'snr'
+		}, {
+			name : 'bps'
+		},
+		],
+		url : 'api/input/status',
+		autoLoad : true,
+		id : 'uuid'
+	});
+
+  tvheadend.comet.on('input_status', function(m){
+    if (m.reload != null) stream_store.reload();
+    if (m.update != null) {
+      var r = stream_store.getById(m.uuid);
+      if (r) {
+        r.data.subs    = m.subs;
+        r.data.weight  = m.weight;
+        r.data.signal  = m.signal;
+        r.data.ber     = m.ber;
+        r.data.unc     = m.unc;
+        r.data.snr     = m.snr;
+        r.data.bps     = m.bps;
+			  stream_store.afterEdit(r);
+			  stream_store.fireEvent('updated', stream_store, r, Ext.data.Record.COMMIT);
+      } else {
+        stream_store.reload();
+      } 
+    }
+  });
 
 	var signal = new Ext.ux.grid.ProgressColumn({
 		header : "Signal Strength",
@@ -149,30 +201,30 @@ tvheadend.status_adapters = function() {
 	});
 
 	function renderBw(value) {
-		return parseInt(value / 125);
+		return parseInt(value / 1024);
 	}
 
 	var cm = new Ext.grid.ColumnModel([{
-		width : 50,
-		header : "Name",
-		dataIndex : 'name'
-        },{
-		width : 50,
-		header : "Hardware device",
-		dataIndex : 'path'
+		width : 100,
+		header : "Input",
+		dataIndex : 'input'
         },{
 		width : 100,
-		header : "Currently tuned to",
-		dataIndex : 'currentMux'
+		header : "Stream",
+		dataIndex : 'stream'
+        },{
+		width : 50,
+		header : "Subs #",
+		dataIndex : 'subs'
+        },{
+		width : 50,
+		header : "Weight",
+		dataIndex : 'weight'
         },{
 		width : 100,
 		header : "Bandwidth (kb/s)",
-		dataIndex : 'bw',
+		dataIndex : 'bps',
 		renderer: renderBw
-        },{
-		width : 50,
-		header : "Used for",
-		dataIndex : 'reason'
         },{
 		width : 50,
 		header : "Bit error rate",
@@ -180,7 +232,7 @@ tvheadend.status_adapters = function() {
         },{
 		width : 50,
 		header : "Uncorrected bit error rate",
-		dataIndex : 'uncavg'
+		dataIndex : 'unc'
         },{
 		width : 50,
 		header : "SNR",
@@ -199,9 +251,9 @@ tvheadend.status_adapters = function() {
 		loadMask : true,
 		stripeRows : true,
 		disableSelection : true,
-		title : 'Adapters',
+		title : 'Stream',
 		iconCls : 'hardware',
-		store : tvheadend.tvAdapterStore,
+		store : stream_store,
 		cm : cm,
                 flex: 1,
 		viewConfig : {
@@ -218,7 +270,7 @@ tvheadend.status = function() {
 		layout : 'vbox',
 		title : 'Status',
 		iconCls : 'eye',
-		items : [ new tvheadend.status_subs, new tvheadend.status_adapters ]
+		items : [ new tvheadend.status_subs, new tvheadend.status_streams ]
         });
 
 	return panel;

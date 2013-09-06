@@ -20,6 +20,7 @@
 #ifndef __TVH_MPEGTS_H__
 #define __TVH_MPEGTS_H__
 
+#include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
 
@@ -374,8 +375,9 @@ struct mpegts_mux_instance
 
   LIST_HEAD(,th_subscription) mmi_subs;
 
-  // TODO: remove this
-  int             mmi_tune_failed; // this is really DVB
+  tvh_input_stream_stats_t mmi_stats;
+
+  int             mmi_tune_failed;
 
   void (*mmi_delete) (mpegts_mux_instance_t *mmi);
 };
@@ -390,7 +392,7 @@ struct mpegts_mux_sub
 /* Input source */
 struct mpegts_input
 {
-  idnode_t mi_id;
+  tvh_input_t;
 
   int mi_enabled;
 
@@ -408,6 +410,11 @@ struct mpegts_input
   LIST_HEAD(,mpegts_mux_instance) mi_mux_instances;
 
   /*
+   * Status
+   */
+  gtimer_t mi_status_timer;
+
+  /*
    * Input processing
    */
 
@@ -415,8 +422,6 @@ struct mpegts_input
 
   LIST_HEAD(,service) mi_transports;
 
-
-  int mi_bytes;
 
   struct mpegts_table_feed_queue mi_table_feed;
   pthread_cond_t mi_table_feed_cond;  // Bound to mi_delivery_mutex
@@ -483,6 +488,8 @@ void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
 
 void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
+
+void mpegts_input_status_timer ( void *p );
 
 void mpegts_network_register_builder
   ( const idclass_t *idc,

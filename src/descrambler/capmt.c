@@ -654,7 +654,7 @@ capmt_table_input(struct th_descrambler *td, struct service *s,
     return;
   if (!t->s_dvb_active_input) return;
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
-  if (!idnode_is_instance(&lfe->mi_id, &linuxdvb_frontend_class))
+  if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
   adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
 
@@ -893,7 +893,7 @@ capmt_service_start(service_t *s)
     return;
   if (!t->s_dvb_active_input) return;
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
-  if (!idnode_is_instance(&lfe->mi_id, &linuxdvb_frontend_class))
+  if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
   tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
 

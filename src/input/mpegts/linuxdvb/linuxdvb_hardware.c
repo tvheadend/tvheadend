@@ -35,7 +35,7 @@ linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list )
   linuxdvb_hardware_t *lh;
   idnode_set_t *set = idnode_set_create();
   LIST_FOREACH(lh, list, lh_parent_link)
-    idnode_set_add(set, &lh->mi_id, NULL);
+    idnode_set_add(set, &lh->ti_id, NULL);
   return set;
 }
 

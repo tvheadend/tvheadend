@@ -19,6 +19,61 @@
 #ifndef __TVH_INPUT_H__
 #define __TVH_INPUT_H__
 
+#include "idnode.h"
+#include "queue.h"
+
+/*
+ * Input stream structure - used for getting statistics about active streams
+ */
+typedef struct tvh_input_stream_stats
+{
+  int signal; ///< Signal level (0-100)
+  int ber;    ///< Bit error rate (0-100?)
+  int unc;    ///< Uncorrectable errors
+  int snr;    ///< Signal 2 Noise (dB)
+  int bps;    ///< Bandwidth (bps)
+} tvh_input_stream_stats_t;
+
+typedef struct tvh_input_stream {
+
+  LIST_ENTRY(tvh_input_stream) link;
+
+  char *uuid;         ///< Unique ID of the entry (used for updates)
+  char *input_name;   ///< Name of the parent input
+  char *stream_name;  ///< Name for this stream
+  int   subs_count;   ///< Number of subcscriptions
+  int   max_weight;   ///< Current max weight
+
+  tvh_input_stream_stats_t stats;
+
+} tvh_input_stream_t;
+
+typedef LIST_HEAD(,tvh_input_stream) tvh_input_stream_list_t;
+
+/*
+ * Generic input super-class
+ */
+typedef struct tvh_input {
+  idnode_t ti_id;
+
+  LIST_ENTRY(tvh_input) ti_link;
+
+  void (*ti_get_streams) (struct tvh_input *, tvh_input_stream_list_t*);
+
+} tvh_input_t;
+
+typedef LIST_HEAD(,tvh_input) tvh_input_list_t;
+tvh_input_list_t tvh_inputs;
+
+#define TVH_INPUT_FOREACH(x) LIST_FOREACH(x, &tvh_inputs, ti_link)
+
+void input_init ( void );
+
+htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
+
+void tvh_input_stream_destroy ( tvh_input_stream_t *st );
+
+
 #if ENABLE_MPEGPS
 #include "input/mpegps.h"
 #endif
@@ -35,7 +90,5 @@
 #include "input/mpegts/linuxdvb.h"
 #endif
 #endif
-
-void input_init ( void );
 
 #endif /* __TVH_INPUT_H__ */

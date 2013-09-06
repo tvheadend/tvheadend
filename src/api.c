@@ -116,6 +116,7 @@ void api_init ( void )
 
   /* Subsystems */
   api_idnode_init();
+  api_input_init();
   api_mpegts_init();
   api_service_init();
   api_channel_init();

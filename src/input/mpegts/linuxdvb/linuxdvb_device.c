@@ -175,20 +175,20 @@ void linuxdvb_device_save ( linuxdvb_device_t *ld )
 
   m = htsmsg_create_map();
 
-  idnode_save(&ld->mi_id, m);
+  idnode_save(&ld->ti_id, m);
   
   /* Adapters */
   l = htsmsg_create_map();
   LIST_FOREACH(lh, &ld->lh_children, lh_parent_link) {
     e = htsmsg_create_map();
     linuxdvb_adapter_save((linuxdvb_adapter_t*)lh, e);
-    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->mi_id), e);
+    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->ti_id), e);
   }
   htsmsg_add_msg(m, "adapters", l);
 
   /* Save */
   hts_settings_save(m, "input/linuxdvb/devices/%s",
-                    idnode_uuid_as_str(&ld->mi_id));
+                    idnode_uuid_as_str(&ld->ti_id));
 }
 
 const idclass_t linuxdvb_device_class =
@@ -226,7 +226,7 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
 
   /* Create */
   ld = calloc(1, sizeof(linuxdvb_device_t));
-  if (idnode_insert(&ld->mi_id, uuid, &linuxdvb_device_class)) {
+  if (idnode_insert(&ld->ti_id, uuid, &linuxdvb_device_class)) {
     free(ld);
     return NULL;
   }
@@ -240,7 +240,7 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
     return ld;
 
   /* Load config */
-  idnode_load(&ld->mi_id, conf);
+  idnode_load(&ld->ti_id, conf);
   get_min_dvb_adapter(&ld->ld_devid);
 
   /* Adapters */

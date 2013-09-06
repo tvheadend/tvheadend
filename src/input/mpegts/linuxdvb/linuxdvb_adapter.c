@@ -71,7 +71,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
   htsmsg_t *l;
   linuxdvb_hardware_t *lh;
 
-  idnode_save(&la->mi_id, m);
+  idnode_save(&la->ti_id, m);
   htsmsg_add_u32(m, "number", la->la_number);
   if (la->la_rootpath)
     htsmsg_add_str(m, "rootpath", la->la_rootpath);
@@ -81,7 +81,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
   LIST_FOREACH(lh, &la->lh_children, lh_parent_link) {
     htsmsg_t *e = htsmsg_create_map();
     linuxdvb_frontend_save((linuxdvb_frontend_t*)lh, e);
-    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->mi_id), e);
+    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->ti_id), e);
   }
   htsmsg_add_msg(m, "frontends", l);
 }
@@ -118,7 +118,7 @@ linuxdvb_adapter_create0
   linuxdvb_adapter_t *la;
 
   la = calloc(1, sizeof(linuxdvb_adapter_t));
-  if (idnode_insert(&la->mi_id, uuid, &linuxdvb_adapter_class)) {
+  if (idnode_insert(&la->ti_id, uuid, &linuxdvb_adapter_class)) {
     free(la);
     return NULL;
   }
@@ -131,7 +131,7 @@ linuxdvb_adapter_create0
   if (!conf)
     return la;
 
-  idnode_load(&la->mi_id, conf);
+  idnode_load(&la->ti_id, conf);
   if (!htsmsg_get_u32(conf, "number", &u32))
     la->la_number = u32;
   if ((str = htsmsg_get_str(conf, "rootpath")))

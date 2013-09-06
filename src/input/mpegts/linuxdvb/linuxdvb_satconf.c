@@ -91,7 +91,7 @@ linuxdvb_satconf_class_frontend_get ( void *o )
   static const char *s;
   linuxdvb_satconf_t *ls = o;
   if (ls->ls_frontend)
-    s = idnode_uuid_as_str(&ls->ls_frontend->mi_id);
+    s = idnode_uuid_as_str(&ls->ls_frontend->ti_id);
   else
     s = NULL;
   return &s;
@@ -123,7 +123,7 @@ linuxdvb_satconf_class_frontend_enum (void *o)
   for (i = 0; i < is->is_count; i++) {
     mpegts_input_t *mi = (mpegts_input_t*)is->is_array[i];
     htsmsg_t *e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&mi->mi_id));
+    htsmsg_add_str(e, "key", idnode_uuid_as_str(&mi->ti_id));
     *buf = 0;
     mi->mi_display_name(mi, buf, sizeof(buf));
     htsmsg_add_str(e, "val", buf);
@@ -585,7 +585,7 @@ linuxdvb_diseqc_class_save ( idnode_t *o )
 {
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
   if (ld->ld_satconf)
-    linuxdvb_satconf_class_save(&ld->ld_satconf->mi_id);
+    linuxdvb_satconf_class_save(&ld->ld_satconf->ti_id);
 }
 
 const idclass_t linuxdvb_diseqc_class =

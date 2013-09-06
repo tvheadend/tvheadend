@@ -1,5 +1,4 @@
 /*
-rk_class
  *  Tvheadend - Linux DVB frontend
  *
  *  Copyright (C) 2013 Adam Sutton
@@ -462,41 +461,10 @@ linuxdvb_frontend_open_all
 }
 
 static void
-linuxdvb_frontend_monitor_stats ( linuxdvb_frontend_t *lfe, const char *name )
-{
-  int bw;
-  htsmsg_t *m, *l, *e;
-  mpegts_mux_instance_t *mmi;
-
-  /* Send message */
-  m = htsmsg_create_map();
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->mi_id));
-  htsmsg_add_str(m, "name", name);
-  htsmsg_add_str(m, "type", "linuxdvb");
-  
-  /* Mux list */
-  if ((mmi = LIST_FIRST(&lfe->mi_mux_active))) {
-    char buf[256];
-    l = htsmsg_create_list();
-    e = htsmsg_create_map();
-    mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf, sizeof(buf));
-    htsmsg_add_str(e, "name", buf);
-    htsmsg_add_u32(e, "bytes", 0); // TODO 
-    // TODO: signal info
-    htsmsg_add_msg(l, NULL, e);
-    htsmsg_add_msg(m, "muxes", l);
-  }
-
-  /* Total data */
-  bw = atomic_exchange(&lfe->mi_bytes, 0);
-  htsmsg_add_u32(m, "bytes", bw);
-
-  notify_by_msg("input", m);
-}
-
-static void
 linuxdvb_frontend_monitor ( void *aux )
 {
+  uint16_t u16;
+  uint32_t u32;
   char buf[256];
   linuxdvb_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
@@ -573,8 +541,15 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
-  /* Monitor stats */
-  linuxdvb_frontend_monitor_stats(lfe, buf);
+  /* Statistics */
+  if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16))
+    mmi->mmi_stats.signal = u16;
+  if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
+    mmi->mmi_stats.ber = u32;
+  if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16))
+    mmi->mmi_stats.snr = u16;
+  if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
+    mmi->mmi_stats.unc = u32;
 }
 
 static void *

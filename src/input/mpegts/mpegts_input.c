@@ -22,6 +22,7 @@
 #include "streaming.h"
 #include "subscriptions.h"
 #include "atomic.h"
+#include "notify.h"
 
 #include <pthread.h>
 #include <assert.h>
@@ -164,8 +165,15 @@ static void
 mpegts_input_started_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  /* Arm timer */
+  if (LIST_FIRST(&mi->mi_mux_active) == NULL)
+    gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer,
+               mi, 1);
+
+  /* Update */
   mmi->mmi_mux->mm_active = mmi;
   LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
+  notify_reload("input_status");
 }
 
 static void
@@ -177,6 +185,10 @@ mpegts_input_stopped_mux
   mmi->mmi_mux->mm_active = NULL;
   LIST_REMOVE(mmi, mmi_active_link);
 
+  /* Disarm timer */
+  if (LIST_FIRST(&mi->mi_mux_active) == NULL)
+    gtimer_disarm(&mi->mi_status_timer);
+
   mi->mi_display_name(mi, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - flush subscribers", buf);
   s = LIST_FIRST(&mi->mi_transports);
@@ -185,6 +197,7 @@ mpegts_input_stopped_mux
       service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
     s = LIST_NEXT(s, s_active_link);
   }
+  notify_reload("input_status");
 }
 
 static int
@@ -290,7 +303,7 @@ mpegts_input_recv_packets
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
 
   /* Bandwidth monitoring */
-  atomic_add(&mi->mi_bytes, i);
+  atomic_add(&mmi->mmi_stats.bps, i);
   
   /* Reset buffer */
   if (len) memmove(tsb, tsb+i, len);
@@ -371,6 +384,59 @@ mpegts_input_flush_mux
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
+static void
+mpegts_input_stream_status
+  ( mpegts_mux_instance_t *mmi, tvh_input_stream_t *st )
+{
+  int s = 0, w = 0;
+  char buf[512];
+  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf, sizeof(buf));
+  st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
+  st->input_name  = strdup(mmi->mmi_input->mi_displayname?:"");
+  st->stream_name = strdup(buf);
+  st->subs_count  = s;
+  st->max_weight  = w;
+  st->stats       = mmi->mmi_stats;
+  st->stats.bps   = atomic_exchange(&mmi->mmi_stats.bps, 0) * 8;
+}
+
+static void
+mpegts_input_get_streams
+  ( tvh_input_t *i, tvh_input_stream_list_t *isl )
+{
+  tvh_input_stream_t *st;
+  mpegts_input_t *mi = (mpegts_input_t*)i;
+  mpegts_mux_instance_t *mmi;
+
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    st = calloc(1, sizeof(tvh_input_stream_t));
+    mpegts_input_stream_status(mmi, st);
+    LIST_INSERT_HEAD(isl, st, link);
+  }
+}
+
+/* **************************************************************************
+ * Status monitoring
+ * *************************************************************************/
+
+void
+mpegts_input_status_timer ( void *p )
+{
+  tvh_input_stream_t st;
+  mpegts_input_t *mi = p;
+  mpegts_mux_instance_t *mmi;
+  htsmsg_t *e;
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    memset(&st, 0, sizeof(st));
+    mpegts_input_stream_status(mmi, &st);
+    e = tvh_input_stream_create_msg(&st);
+    htsmsg_add_u32(e, "update", 1);
+    notify_by_msg("input_status", e);
+    tvh_input_stream_destroy(&st);
+  }
+  gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer, mi, 1);
+}
+
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/
@@ -383,7 +449,8 @@ mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid,
     htsmsg_t *c )
 {
-  idnode_insert(&mi->mi_id, uuid, class);
+  idnode_insert(&mi->ti_id, uuid, class);
+  LIST_INSERT_HEAD(&tvh_inputs, (tvh_input_t*)mi, ti_link);
   
   /* Defaults */
   mi->mi_is_enabled           = mpegts_input_is_enabled;
@@ -398,6 +465,7 @@ mpegts_input_create0
   mi->mi_started_mux          = mpegts_input_started_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;
   mi->mi_has_subscription     = mpegts_input_has_subscription;
+  mi->ti_get_streams          = mpegts_input_get_streams;
 
   /* Index */
   mi->mi_instance             = ++mpegts_input_idx;
@@ -417,7 +485,7 @@ mpegts_input_create0
 
   /* Load config */
   if (c)
-    idnode_load(&mi->mi_id, c);
+    idnode_load(&mi->ti_id, c);
 
   return mi;
 }
@@ -425,7 +493,7 @@ mpegts_input_create0
 void
 mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
 {
-  idnode_save(&mi->mi_id, m);
+  idnode_save(&mi->ti_id, m);
 }
 
 void
