@@ -18,6 +18,85 @@ tvheadend.comet.on('channeltags', function(m) {
 	if (m.reload != null) tvheadend.channelTags.reload();
 });
 
+/*
+ * Service mapping
+ */
+tvheadend.mapServices = function()
+{
+  var panel = null;
+  var win   = null;
+
+  /* Form fields */
+  var availCheck = new Ext.form.Checkbox({
+    name        : 'check_availability',
+    fieldLabel  : 'Check availability',
+    checked     : false
+  });
+  var ftaCheck   = new Ext.form.Checkbox({
+    name        : 'encrypted',
+    fieldLabel  : 'Include encrypted services',
+    checked     : false,
+    // TODO: make dependent on CSA config
+  });
+  var mergeCheck = new Ext.form.Checkbox({
+    name        : 'merge_same_name',
+    fieldLabel  : 'Merge same name',
+    checked     : false
+  });
+  var provtagCheck = new Ext.form.Checkbox({
+    name        : 'provider_tags',
+    fieldLabel  : 'Create provider tags',
+    checked     : false
+  });
+  // TODO: provider list
+  items = [ availCheck, ftaCheck, mergeCheck, provtagCheck ];
+
+  /* Form */
+  var undoBtn = new Ext.Button({
+    text    : 'Cancel',
+    handler : function () {
+      win.close();
+    }
+  });
+
+  var saveBtn = new Ext.Button({  
+    text    : 'Map',
+    tooltip : 'Begin mapping',
+    handler : function () {
+      panel.getForm().submit({
+        url         : 'api/service/mapper/start',
+        waitMessage : 'Mapping services...'
+      });
+    } 
+  });
+
+  panel = new Ext.FormPanel({
+    frame       : true,
+    border      : true,
+    bodyStyle   : 'padding: 5px',
+    labelAlign  : 'left',
+    labelWidth  : 200,
+    autoWidth   : true,
+    autoHeight  : true,
+    defaultType : 'textfield',
+    buttonAlign : 'left',
+    items       : items,
+    buttons     : [ undoBtn, saveBtn ]
+  });
+   
+  /* Create window */
+  win = new Ext.Window({
+    title       : 'Map services',
+    layout      : 'fit',
+    autoWidth   : true,
+    autoHeight  : true,
+    plain       : true,
+    items       : panel
+  });
+
+  win.show();
+}
+
 /**
  * Channels
  */
@@ -54,7 +133,10 @@ tvheadend.channel_tab = function(panel)
     comet   : 'channel',
     titleS  : 'Channel',
     titleP  : 'Channels',
-    add     : false,
+    add     :  {
+      url    : 'api/channel',
+      create : {}
+    },
     del     : false,
     tbar    : [ mapButton ],
     lcol    : [
