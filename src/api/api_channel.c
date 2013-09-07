@@ -58,12 +58,32 @@ api_channel_grid
     idnode_set_add(ins, (idnode_t*)ch, &conf->filter);
 }
 
+static int
+api_channel_create
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  channel_t *ch;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  ch = channel_create(NULL, conf, NULL);
+  if (ch)
+    channel_save(ch);
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
 void api_channel_init ( void )
 {
   static api_hook_t ah[] = {
-    { "channel/class", ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_class },
-    { "channel/grid",  ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
-    { "channel/list",  ACCESS_ANONYMOUS, api_channel_list, NULL },
+    { "channel/class",  ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_class },
+    { "channel/grid",   ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
+    { "channel/list",   ACCESS_ANONYMOUS, api_channel_list, NULL },
+    { "channel/create", ACCESS_ADMIN,     api_channel_create, NULL },
     { NULL },
   };
 
