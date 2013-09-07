@@ -24,6 +24,10 @@ tvheadend.idnode_get_enum = function ( conf )
     fields     : conf.fields || [ 'key', 'val' ],
     id         : conf.id     || 'key',
     autoLoad   : true,
+    sortInfo   : {
+      field     : 'val',
+      direction : 'ASC'
+    }
   });
   tvheadend.idnode_enum_stores[key] = st;
 

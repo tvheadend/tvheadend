@@ -109,10 +109,12 @@ tvheadend.channels = new Ext.data.JsonStore({
 	root 	  : 'entries',
 	fields 	  : [ 'key', 'val' ],
 	id 	  : 'key',
-	autoLoad  : true
+	autoLoad  : true,
+  sortInfo : {
+    field : 'val',
+    direction : 'ASC'
+  }
 });
-
-tvheadend.channels.setDefaultSort('val', 'ASC');
 
 tvheadend.comet.on('channels', function(m) {
 	if (m.reload != null) tvheadend.channels.reload();
