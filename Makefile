@@ -32,7 +32,7 @@ CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
-LDFLAGS += -lrt -ldl -lpthread -lm
+LDFLAGS += -lrt -ldl -lpthread -lm -lcurl
 
 vpath %.c $(ROOTDIR)
 vpath %.h $(ROOTDIR)
@@ -107,6 +107,8 @@ SRCS =  src/version.c \
 	src/htsstr.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
+	src/iptv_input_rtsp.c \
+	src/rtcp.c \
 	src/avc.c \
   src/huffman.c \
   src/filebundle.c \

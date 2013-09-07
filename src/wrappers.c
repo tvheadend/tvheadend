@@ -2,6 +2,7 @@
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netdb.h>
 #include "tvheadend.h"
 
 int
@@ -68,4 +69,22 @@ tvh_write(int fd, const void *buf, size_t len)
   }
 
   return len ? 1 : 0;
+}
+
+int
+tvh_get_port(struct addrinfo *address)
+{
+  int port = -1;
+  switch (address->ai_family)
+  {
+  case AF_INET:
+    port = ntohs(((struct sockaddr_in *) address->ai_addr)->sin_port);
+    break;
+  case AF_INET6:
+    port = ntohs(((struct sockaddr_in6 *) address->ai_addr)->sin6_port);
+    break;
+  default:
+    tvhlog(LOG_ERR, "GetPort", "Unknown socket family %d", address->ai_family);
+  }
+  return port;
 }

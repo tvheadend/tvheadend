@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <sys/time.h>
 #include <libgen.h>
 
@@ -506,6 +507,8 @@ int tvh_socket(int domain, int type, int protocol);
 int tvh_pipe(int flags, th_pipe_t *pipe);
 
 int tvh_write(int fd, const void *buf, size_t len);
+
+int tvh_get_port(struct addrinfo *address);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 

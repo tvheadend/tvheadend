@@ -1,6 +1,7 @@
 /*
  *  Multicasted IPTV Input
  *  Copyright (C) 2007 Andreas Öman
+ *                2012 Adrien CLERC
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +37,8 @@
 #include "htsmsg.h"
 #include "channels.h"
 #include "iptv_input.h"
+#include "iptv_input_rtsp.h"
+#include "rtcp.h"
 #include "tsdemux.h"
 #include "psi.h"
 #include "settings.h"
@@ -128,6 +131,54 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
   } 
 }
 
+/**
+ * Determine whether service is an RTSP service
+ */
+static int
+is_rtsp(service_t *service)
+{
+  return service->s_iptv_rtsp_info != NULL
+        || strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
+}
+
+/**
+ * Determine whether service is an IPv4 based multicast service
+ */
+static int
+is_multicast_ipv4(service_t *service)
+{
+  return service->s_iptv_group.s_addr != 0;
+}
+
+/**
+ * Determine whether service is an IPv6 based multicast service
+ */
+static int
+is_multicast_ipv6(service_t *service)
+{
+#ifdef SOL_IPV6
+  return IN6_IS_ADDR_MULTICAST(service->s_iptv_group6.s6_addr);
+#else
+  return 0;
+#endif
+}
+
+/**
+ * Determine whether service is of a given subtype
+ */
+int
+iptv_is_service_subtype(service_t *service, iptv_subtype_t subtype)
+{
+  switch(subtype) {
+  case SERVICE_TYPE_IPTV_MCAST:
+    return !iptv_is_service_subtype(service, SERVICE_TYPE_IPTV_RTSP);
+  case SERVICE_TYPE_IPTV_RTSP:
+    return is_rtsp(service);
+  default:
+    return 0;
+  }
+}
+
 
 /**
  * Main epoll() based input thread for IPTV
@@ -196,6 +247,12 @@ iptv_thread(void *aux)
       if(t->s_iptv_fd != fd)
 	continue;
       
+      // RTP check OK, send this to RTCP if needed
+      if(is_rtsp(t))
+      {
+        rtcp_receiver_update(t, tsb);
+      }
+      
       for(j = 0; j < r; j += 188)
 	iptv_ts_input(t, buf + j);
     }
@@ -204,6 +261,191 @@ iptv_thread(void *aux)
   return NULL;
 }
 
+static int
+iptv_find_interface(service_t *service, struct ifreq *ifr, int fd)
+{
+  memset(ifr, 0, sizeof(*ifr));
+  snprintf(ifr->ifr_name, IFNAMSIZ, "%s", service->s_iptv_iface);
+  ifr->ifr_name[IFNAMSIZ - 1] = 0;
+  if(ioctl(fd, SIOCGIFINDEX, ifr)) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
+	   service->s_identifier, service->s_iptv_iface);
+    return -1;
+  }
+  
+  return 0;
+}
+
+static int
+iptv_multicast_ipv4_start(service_t *service, int fd)
+{
+  struct sockaddr_in sin;
+  struct ip_mreqn m;
+  struct ifreq ifr;
+  int solip;
+  
+  /* First, resolve interface name */
+  if(iptv_find_interface(service, &ifr, fd) != 0)
+  {
+    return -1;
+  }
+  
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(service->s_iptv_port);
+  sin.sin_addr.s_addr = service->s_iptv_group.s_addr;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m, sizeof(struct ip_mreqn));
+  if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
+         service->s_identifier, inet_ntoa(sin.sin_addr), service->s_iptv_port,
+         strerror(errno));
+    return -1;
+  }
+
+  /* Join IPv4 group */
+  memset(&m, 0, sizeof(m));
+  m.imr_multiaddr.s_addr = service->s_iptv_group.s_addr;
+  m.imr_address.s_addr = 0;
+#if defined(PLATFORM_LINUX)
+  m.imr_ifindex = ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  m.imr_ifindex = ifr.ifr_index;
+#endif
+
+#ifdef SOL_IP
+  solip = SOL_IP;
+#else
+  {
+    struct protoent *pent;
+    pent = getprotobyname("ip");
+    solip = (pent != NULL) ? pent->p_proto : 0;
+  }
+#endif
+
+  if(setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m,
+              sizeof(struct ip_mreqn)) == -1) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
+         service->s_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+static void
+iptv_multicast_ipv4_stop(service_t *service)
+{
+  struct ifreq ifr;
+  struct ip_mreqn m;
+  int solip;
+
+  iptv_find_interface(service, &ifr, service->s_iptv_fd);
+
+  memset(&m, 0, sizeof(m));
+  /* Leave multicast group */
+  m.imr_multiaddr.s_addr = service->s_iptv_group.s_addr;
+  m.imr_address.s_addr = 0;
+#if defined(PLATFORM_LINUX)
+  m.imr_ifindex = ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  m.imr_ifindex = ifr.ifr_index;
+#endif
+
+#ifdef SOL_IP
+  solip = SOL_IP;
+#else
+  {
+    struct protoent *pent;
+    pent = getprotobyname("ip");
+    solip = (pent != NULL) ? pent->p_proto : 0;
+  }
+#endif
+
+  if(setsockopt(service->s_iptv_fd, solip, IP_DROP_MEMBERSHIP, &m,
+		  sizeof(struct ip_mreqn)) == -1) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
+	     service->s_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
+  }
+}
+
+static void
+iptv_multicast_ipv6_stop(service_t *service)
+{
+  struct ifreq ifr;
+  struct ipv6_mreq m6;
+  memset(&m6, 0, sizeof(m6));
+
+  iptv_find_interface(service, &ifr, service->s_iptv_fd);
+
+  m6.ipv6mr_multiaddr = service->s_iptv_group6;
+#if defined(PLATFORM_LINUX)
+  m6.ipv6mr_interface = ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  m6.ipv6mr_interface = ifr.ifr_index;
+#endif
+
+#ifdef SOL_IPV6
+  if(setsockopt(service->s_iptv_fd, SOL_IPV6, IPV6_DROP_MEMBERSHIP, &m6,
+		  sizeof(struct ipv6_mreq)) == -1) {
+    char straddr[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
+		straddr, sizeof(straddr));
+
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
+	     service->s_identifier, straddr, strerror(errno));
+  }
+#else
+  tvhlog(LOG_ERR, "IPTV", "IPv6 multicast not supported on your platform");
+#endif
+}
+
+static int
+iptv_multicast_ipv6_start(service_t *service, int fd)
+{
+  char straddr[INET6_ADDRSTRLEN];
+  struct sockaddr_in6 sin6;
+  struct ipv6_mreq m6;
+  struct ifreq ifr;
+  
+  /* First, resolve interface name */
+  if(iptv_find_interface(service, &ifr, fd) != 0)
+  {
+    return -1;
+  }
+  
+  /* Bind to IPv6 multicast group */
+  memset(&sin6, 0, sizeof(sin6));
+  sin6.sin6_family = AF_INET6;
+  sin6.sin6_port = htons(service->s_iptv_port);
+  sin6.sin6_addr = service->s_iptv_group6;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m6, sizeof(struct ipv6_mreq));
+  if(bind(fd, (struct sockaddr *)&sin6, sizeof(sin6)) == -1) {
+    inet_ntop(AF_INET6, &sin6.sin6_addr, straddr, sizeof(straddr));
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
+         service->s_identifier, straddr, service->s_iptv_port,
+         strerror(errno));
+    return -1;
+  }
+  /* Join IPv6 group */
+  memset(&m6, 0, sizeof(m6));
+  m6.ipv6mr_multiaddr = service->s_iptv_group6;
+#if defined(PLATFORM_LINUX)
+  m6.ipv6mr_interface = ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  m6.ipv6mr_interface = ifr.ifr_index;
+#endif
+
+#ifdef SOL_IPV6
+  if(setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m6,
+              sizeof(struct ipv6_mreq)) == -1) {
+    inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
+		straddr, sizeof(straddr));
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
+         service->s_identifier, straddr, strerror(errno));
+    return -1;
+  }
+  
+  return 0;
+}
 
 /**
  *
@@ -213,13 +455,6 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
 {
   pthread_t tid;
   int fd;
-  int solip;
-  char straddr[INET6_ADDRSTRLEN];
-  struct ip_mreqn m;
-  struct ipv6_mreq m6;
-  struct sockaddr_in sin;
-  struct sockaddr_in6 sin6;
-  struct ifreq ifr;
   tvhpoll_event_t ev;
 
   assert(t->s_iptv_fd == -1);
@@ -230,102 +465,38 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     pthread_create(&tid, NULL, iptv_thread, NULL);
   }
 
-  /* Now, open the real socket for UDP */
-  if(t->s_iptv_group.s_addr!=0) {
-    fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
-  
-  }
-  else {
-    fd = tvh_socket(AF_INET6, SOCK_DGRAM, 0);
-  }
-  if(fd == -1) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->s_identifier);
-    return -1;
-  }
-
-  /* First, resolve interface name */
-  memset(&ifr, 0, sizeof(ifr));
-  snprintf(ifr.ifr_name, IFNAMSIZ, "%s", t->s_iptv_iface);
-  ifr.ifr_name[IFNAMSIZ - 1] = 0;
-  if(ioctl(fd, SIOCGIFINDEX, &ifr)) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
-	   t->s_identifier, t->s_iptv_iface);
-    close(fd);
-    return -1;
-  }
-
-  /* Bind to IPv4 multicast group */
-  if(t->s_iptv_group.s_addr!=0) {
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(t->s_iptv_port);
-    sin.sin_addr.s_addr = t->s_iptv_group.s_addr;
-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m, sizeof(struct ip_mreqn));
-    if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
-           t->s_identifier, inet_ntoa(sin.sin_addr), t->s_iptv_port,
-           strerror(errno));
-      close(fd);
-      return -1;
-    }
-    /* Join IPv4 group */
-    memset(&m, 0, sizeof(m));
-    m.imr_multiaddr.s_addr = t->s_iptv_group.s_addr;
-    m.imr_address.s_addr = 0;
-#if defined(PLATFORM_LINUX)
-    m.imr_ifindex = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-    m.imr_ifindex = ifr.ifr_index;
-#endif
-
-#ifdef SOL_IP
-    solip = SOL_IP;
-#else
+  if(is_rtsp(t))
+  {
+    tvhlog(LOG_WARNING, "IPTV",
+	   "Starting RTSP Streaming with %s", t->s_iptv_iface);
+    // The socket will be opened by the function
+    t->s_iptv_rtsp_info = iptv_rtsp_start(t->s_iptv_iface, &fd);
+    if(!t->s_iptv_rtsp_info)
     {
-      struct protoent *pent;
-      pent = getprotobyname("ip");
-      solip = (pent != NULL) ? pent->p_proto : 0;
-    }
-#endif
-
-    if(setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m,
-                sizeof(struct ip_mreqn)) == -1) {
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
-           t->s_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
       close(fd);
       return -1;
     }
-  } else {
+  } else if(is_multicast_ipv4(t)) {
+    fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
+    if(fd == -1) {
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->s_identifier);
+      return -1;
+    }
+    /* Bind to IPv4 multicast group */
+    if(iptv_multicast_ipv4_start(t, fd) != 0)
+    {
+      close(fd);
+      return -1;
+    }
+  } else if(is_multicast_ipv6(t)) {
+    fd = tvh_socket(AF_INET6, SOCK_DGRAM, 0);
+    if(fd == -1) {
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->s_identifier);
+      return -1;
+    }
     /* Bind to IPv6 multicast group */
-    memset(&sin6, 0, sizeof(sin6));
-    sin6.sin6_family = AF_INET6;
-    sin6.sin6_port = htons(t->s_iptv_port);
-    sin6.sin6_addr = t->s_iptv_group6;
-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m6, sizeof(struct ipv6_mreq));
-    if(bind(fd, (struct sockaddr *)&sin6, sizeof(sin6)) == -1) {
-      inet_ntop(AF_INET6, &sin6.sin6_addr, straddr, sizeof(straddr));
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
-           t->s_identifier, straddr, t->s_iptv_port,
-           strerror(errno));
-      close(fd);
-      return -1;
-    }
-    /* Join IPv6 group */
-    memset(&m6, 0, sizeof(m6));
-    m6.ipv6mr_multiaddr = t->s_iptv_group6;
-#if defined(PLATFORM_LINUX)
-    m6.ipv6mr_interface = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-    m6.ipv6mr_interface = ifr.ifr_index;
-#endif
-
-#ifdef SOL_IPV6
-    if(setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m6,
-                sizeof(struct ipv6_mreq)) == -1) {
-      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
-		straddr, sizeof(straddr));
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
-           t->s_identifier, straddr, strerror(errno));
+    if(iptv_multicast_ipv6_start(t, fd) != 0)
+    {
       close(fd);
       return -1;
     }
@@ -380,76 +551,19 @@ iptv_service_refresh(service_t *t)
 static void
 iptv_service_stop(service_t *t)
 {
-  int solip;
-  struct ifreq ifr;
-
   pthread_mutex_lock(&iptv_recvmutex);
   LIST_REMOVE(t, s_active_link);
   pthread_mutex_unlock(&iptv_recvmutex);
 
   assert(t->s_iptv_fd >= 0);
-
-  /* First, resolve interface name */
-  memset(&ifr, 0, sizeof(ifr));
-  snprintf(ifr.ifr_name, IFNAMSIZ, "%s", t->s_iptv_iface);
-  ifr.ifr_name[IFNAMSIZ - 1] = 0;
-  if(ioctl(t->s_iptv_fd, SIOCGIFINDEX, &ifr)) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s",
-	   t->s_identifier, t->s_iptv_iface);
-  }
-
-  if(t->s_iptv_group.s_addr != 0) {
-
-    struct ip_mreqn m;
-    memset(&m, 0, sizeof(m));
-    /* Leave multicast group */
-    m.imr_multiaddr.s_addr = t->s_iptv_group.s_addr;
-    m.imr_address.s_addr = 0;
-#if defined(PLATFORM_LINUX)
-    m.imr_ifindex = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-    m.imr_ifindex = ifr.ifr_index;
-#endif
-
-#ifdef SOL_IP
-    solip = SOL_IP;
-#else
-    {
-      struct protoent *pent;
-      pent = getprotobyname("ip");
-      solip = (pent != NULL) ? pent->p_proto : 0;
-    }
-#endif
-
-    if(setsockopt(t->s_iptv_fd, solip, IP_DROP_MEMBERSHIP, &m,
-		  sizeof(struct ip_mreqn)) == -1) {
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
-	     t->s_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
-    }
-  } else {
-    struct ipv6_mreq m6;
-    memset(&m6, 0, sizeof(m6));
-
-    m6.ipv6mr_multiaddr = t->s_iptv_group6;
-#if defined(PLATFORM_LINUX)
-    m6.ipv6mr_interface = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-    m6.ipv6mr_interface = ifr.ifr_index;
-#endif
-
-#ifdef SOL_IPV6
-    if(setsockopt(t->s_iptv_fd, SOL_IPV6, IPV6_DROP_MEMBERSHIP, &m6,
-		  sizeof(struct ipv6_mreq)) == -1) {
-      char straddr[INET6_ADDRSTRLEN];
-      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
-		straddr, sizeof(straddr));
-
-      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
-	     t->s_identifier, straddr, strerror(errno));
-    }
-#else
-    tvhlog(LOG_ERR, "IPTV", "IPv6 multicast not supported on your platform");
-#endif
+  
+  if(is_rtsp(t))
+  {
+    iptv_rtsp_stop(t->s_iptv_rtsp_info);
+  } else if (is_multicast_ipv4(t)) {
+    iptv_multicast_ipv4_stop(t);
+  } else if (is_multicast_ipv6(t)) {
+    iptv_multicast_ipv6_stop(t);
   }
   close(t->s_iptv_fd); // Automatically removes fd from epoll set
   // TODO: this is an issue
@@ -515,9 +629,7 @@ iptv_service_save(service_t *t)
 static int
 iptv_service_quality(service_t *t)
 {
-  if(t->s_iptv_iface == NULL || 
-     (t->s_iptv_group.s_addr == 0 && t->s_iptv_group6.s6_addr == 0) ||
-     t->s_iptv_port == 0)
+  if(!is_rtsp(t) && !is_multicast_ipv4(t) && !is_multicast_ipv6(t))
     return 0;
 
   return 100;
@@ -617,6 +729,7 @@ iptv_service_find(const char *id, int create)
   t->s_grace_period  = iptv_grace_period;
   t->s_dtor          = iptv_service_dtor;
   t->s_iptv_fd = -1;
+  t->s_iptv_rtsp_info = NULL;
 
   LIST_INSERT_HEAD(&iptv_all_services, t, s_group_link);
 
@@ -708,4 +821,5 @@ iptv_input_init(void)
 {
   pthread_mutex_init(&iptv_recvmutex, NULL);
   iptv_service_load();
+  iptv_init_rtsp();
 }

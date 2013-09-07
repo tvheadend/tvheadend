@@ -268,6 +268,7 @@ function accessUpdate(o) {
       tabs2.push(new tvheadend.tvadapters);
     }
     tabs2.push(new tvheadend.iptv);
+    tabs2.push(new tvheadend.rtsp);
     tvheadend.conf_dvbin = new Ext.TabPanel({
       activeTab: 0,
       autoScroll: true,
