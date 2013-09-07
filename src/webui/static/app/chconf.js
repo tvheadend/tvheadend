@@ -137,7 +137,7 @@ tvheadend.channel_tab = function(panel)
       url    : 'api/channel',
       create : {}
     },
-    del     : false,
+    del     : true,
     tbar    : [ mapButton ],
     lcol    : [
       {

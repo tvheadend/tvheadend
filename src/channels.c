@@ -71,6 +71,12 @@ channel_class_save ( idnode_t *self )
   channel_save((channel_t*)self);
 }
 
+static void
+channel_class_delete ( idnode_t *self )
+{
+  channel_delete((channel_t*)self);
+}
+
 static const void *
 channel_class_services_get ( void *obj )
 {
@@ -192,13 +198,14 @@ const idclass_t channel_class = {
   .ic_caption    = "Service",
   .ic_save       = channel_class_save,
   .ic_get_title  = channel_class_get_title,
+  .ic_delete     = channel_class_delete,
   .ic_properties = (const property_t[]){
 #if 0
     {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = "Enabled",
-      .off      = offsetof(service_t, s_enabled),
+      .off      = offsetof(channel_t, ch_enabled),
     },
 #endif
     {
@@ -383,10 +390,8 @@ channel_delete ( channel_t *ch )
   }
 
   /* EPG */
-#if 0
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
-#endif
 
   /* Settings */
   hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
