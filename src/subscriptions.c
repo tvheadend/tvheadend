@@ -252,8 +252,8 @@ subscription_reschedule(void)
 static void
 subscription_input_null(void *opaque, streaming_message_t *sm)
 {
-  if (sm->sm_type == SMT_STOP) {
-    th_subscription_t *s = opaque;
+  th_subscription_t *s = opaque;
+  if (sm->sm_type == SMT_STOP && s->ths_state != SUBSCRIPTION_ZOMBIE) {
     LIST_INSERT_HEAD(&subscriptions_remove, s, ths_remove_link);
     gtimer_arm(&subscription_reschedule_timer, 
   	       subscription_reschedule_cb, NULL, 0);
@@ -347,6 +347,8 @@ subscription_unsubscribe(th_subscription_t *s)
   service_instance_t *si = s->ths_current_instance; 
 
   lock_assert(&global_lock);
+
+  s->ths_state = SUBSCRIPTION_ZOMBIE;
 
   service_instance_list_clear(&s->ths_instances);
 

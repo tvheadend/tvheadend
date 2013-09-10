@@ -656,7 +656,7 @@ mpegts_mux_unsubscribe_by_name
 
   LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
     LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
-      if (!strcmp(s->ths_title, "initscan"))
+      if (!strcmp(s->ths_title, name))
         subscription_unsubscribe(s);
 }
 

@@ -39,6 +39,7 @@ typedef struct th_subscription {
     SUBSCRIPTION_TESTING_SERVICE,
     SUBSCRIPTION_GOT_SERVICE,
     SUBSCRIPTION_BAD_SERVICE,
+    SUBSCRIPTION_ZOMBIE
   } ths_state;
 
   int ths_testing_error;
