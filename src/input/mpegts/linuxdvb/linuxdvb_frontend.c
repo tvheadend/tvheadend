@@ -143,6 +143,12 @@ const idclass_t linuxdvb_frontend_class =
       .name     = "Full Mux RX mode",
       .off      = offsetof(linuxdvb_frontend_t, lfe_fullmux),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "noclosefe",
+      .name     = "Keep FE open",
+      .off      = offsetof(linuxdvb_frontend_t, lfe_noclosefe),
+    },
     {}
   }
 };
@@ -269,18 +275,11 @@ linuxdvb_frontend_stop_mux
     tvhdebug("linuxdvb", "%s - stopped dvr thread", buf1);
   }
 
-  /* TODO: no way to know whether we need to close the FE or not */
-  if (lfe->lfe_fe_fd > 0) {
-    tvhtrace("linuxdvb", "%s - closing frontend", buf1);
-    close(lfe->lfe_fe_fd);
-    lfe->lfe_fe_fd = -1;
-  }
-
-  /* Stop monitor */
-  gtimer_disarm(&lfe->lfe_monitor_timer);
-
   /* Not locked */
   lfe->lfe_locked = 0;
+
+  /* Ensure it won't happen immediately */
+  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
 }
 
 static int
@@ -475,6 +474,13 @@ linuxdvb_frontend_monitor ( void *aux )
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   tvhtrace("linuxdvb", "%s - checking FE status", buf);
 
+  /* Close FE */
+  if (lfe->lfe_fe_fd > 0 && !mmi && !lfe->lfe_noclosefe) {
+    tvhtrace("linuxdvb", "%s - closing frontend", buf);
+    close(lfe->lfe_fe_fd);
+    lfe->lfe_fe_fd = -1;
+  }
+
   /* Check accessibility */
   if (lfe->lfe_fe_fd <= 0) {
     if (lfe->lfe_fe_path && access(lfe->lfe_fe_path, R_OK | W_OK)) {
@@ -483,6 +489,9 @@ linuxdvb_frontend_monitor ( void *aux )
       return;
     }
   }
+
+  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
+  if (!mmi) return;
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -500,11 +509,9 @@ linuxdvb_frontend_monitor ( void *aux )
     status = SIGNAL_NONE;
 
   /* Set default period */
-  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
   tvhtrace("linuxdvb", "%s - status %d", buf, status);
 
   /* Get current mux */
-  if (!mmi) return;
   mm = mmi->mmi_mux;
 
   /* Waiting for lock */
@@ -796,9 +803,11 @@ linuxdvb_frontend_tune1
   r = linuxdvb_frontend_tune0(lfe, mmi, freq);
 
   /* Start monitor */
-  time(&lfe->lfe_monitor);
-  lfe->lfe_monitor += 4;
-  gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+  if (!r) {
+    time(&lfe->lfe_monitor);
+    lfe->lfe_monitor += 4;
+    gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+  }
   
   return r;
 }
