@@ -81,7 +81,7 @@ tsfile_input_thread ( void *aux )
   /* Check for extra (incomplete) packet at end */
   rem = st.st_size % 188;
   len = 0;
-  tvhtrace("tsfile", "adapter %d file size %"PRIsize_t " rem %"PRIsize_t,
+  tvhtrace("tsfile", "adapter %d file size %"PRIoff_t " rem %"PRIsize_t,
            mi->mi_instance, st.st_size, rem);
   
   /* Process input */
