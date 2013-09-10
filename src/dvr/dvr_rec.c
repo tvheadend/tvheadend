@@ -33,6 +33,7 @@
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #include "htsp_server.h"
+#include "atomic.h"
 
 #include "muxer.h"
 
@@ -422,7 +423,13 @@ dvr_thread(void *aux)
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
-    
+
+    if (de->de_s && started &&
+        (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS)) {
+      th_pkt_t *pkt = sm->sm_data;
+      atomic_add(&de->de_s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
+    }
+
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
     pthread_mutex_unlock(&sq->sq_mutex);

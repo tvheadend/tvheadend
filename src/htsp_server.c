@@ -16,23 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
 #include "tvheadend.h"
+#include "atomic.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "tcp.h"
@@ -51,6 +36,22 @@
 #if ENABLE_LIBAV
 #include "plumbing/transcoding.h"
 #endif
+
+#include <pthread.h>
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/statvfs.h>
 #include "settings.h"
 #include <sys/time.h>
@@ -2407,6 +2408,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload),
 		    pktbuf_len(pkt->pkt_payload));
   htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, pktbuf_len(pkt->pkt_payload));
+  atomic_add(&hs->hs_s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
 
   if(hs->hs_last_report != dispatch_clock) {
 

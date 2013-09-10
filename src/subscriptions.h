@@ -55,7 +55,8 @@ typedef struct th_subscription {
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
-  int ths_bytes;     // Reset every second to get aprox. bandwidth
+  int ths_bytes_in;   // Reset every second to get aprox. bandwidth (in)
+  int ths_bytes_out; // Reset every second to get approx bandwidth (out)
 
   streaming_target_t ths_input;
 

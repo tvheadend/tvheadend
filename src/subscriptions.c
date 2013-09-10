@@ -275,10 +275,10 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
     th_pkt_t *pkt = sm->sm_data;
     if(pkt->pkt_err)
       s->ths_total_err++;
-    s->ths_bytes += pkt->pkt_payload->pb_size;
+    s->ths_bytes_in += pkt->pkt_payload->pb_size;
   } else if(sm->sm_type == SMT_MPEGTS) {
     pktbuf_t *pb = sm->sm_data;
-    s->ths_bytes += pb->pb_size;
+    s->ths_bytes_in += pb->pb_size;
   }
 
   /* Pass to output */
@@ -678,11 +678,13 @@ subscription_status_callback ( void *p )
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     int errors  = s->ths_total_err;
-    int bw      = atomic_exchange(&s->ths_bytes, 0);
+    int in      = atomic_exchange(&s->ths_bytes_in, 0);
+    int out     = atomic_exchange(&s->ths_bytes_out, 0);
     htsmsg_t *m = subscription_create_msg(s);
     htsmsg_delete_field(m, "errors");
     htsmsg_add_u32(m, "errors", errors);
-    htsmsg_add_u32(m, "bw", bw);
+    htsmsg_add_u32(m, "in", in);
+    htsmsg_add_u32(m, "out", out);
     htsmsg_add_u32(m, "updateEntry", 1);
     notify_by_msg("subscriptions", m);
   }

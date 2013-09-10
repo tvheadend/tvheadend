@@ -45,6 +45,7 @@
 #include "imagecache.h"
 #include "tcp.h"
 #include "config2.h"
+#include "atomic.h"
 
 #if defined(PLATFORM_LINUX)
 #include <sys/sendfile.h>
@@ -218,7 +219,8 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  */
 static void
 http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
-		const char *name, muxer_container_type_t mc)
+		const char *name, muxer_container_type_t mc,
+                th_subscription_t *s)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -272,7 +274,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_MPEGTS:
     case SMT_PACKET:
       if(started) {
-        muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
+        th_pkt_t *pkt = sm->sm_data;
+        atomic_add(&s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
+        muxer_write_pkt(mux, sm->sm_type, pkt);
         sm->sm_data = NULL;
       }
       break;
@@ -689,7 +693,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   if(s) {
     name = tvh_strdupa(service->s_nicename);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
+    http_stream_run(hc, &sq, name, mc, s);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
@@ -733,7 +737,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
     return HTTP_STATUS_BAD_REQUEST;
   name = tvh_strdupa(s->ths_title);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW);
+  http_stream_run(hc, &sq, name, MC_RAW, s);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -808,7 +812,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   if(s) {
     name = tvh_strdupa(ch->ch_name);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
+    http_stream_run(hc, &sq, name, mc, s);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }

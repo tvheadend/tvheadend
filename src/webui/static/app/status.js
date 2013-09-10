@@ -23,7 +23,9 @@ tvheadend.status_subs = function() {
 		}, {
 			name : 'errors'
 		}, {
-			name : 'bw'
+			name : 'in'
+		}, {
+			name : 'out'
 		}, {
 			name : 'start',
 			type : 'date',
@@ -51,7 +53,8 @@ tvheadend.status_subs = function() {
 			r.data.service  = m.service;
 			r.data.state    = m.state;
 			r.data.errors   = m.errors;
-			r.data.bw       = m.bw
+			r.data.in       = m.in;
+			r.data.out      = m.out;
 
 			tvheadend.subsStore.afterEdit(r);
 			tvheadend.subsStore.fireEvent('updated', tvheadend.subsStore, r,
@@ -111,9 +114,15 @@ tvheadend.status_subs = function() {
 		dataIndex : 'errors'
 	}, {
 		width : 50,
-		id : 'bw',
-		header : "Bandwidth (kb/s)",
-		dataIndex : 'bw',
+		id : 'in',
+		header : "Input (kb/s)",
+		dataIndex : 'in',
+		renderer: renderBw
+	}, {
+		width : 50,
+		id : 'out',
+		header : "Output (kb/s)",
+		dataIndex : 'out',
 		renderer: renderBw
 	} ]);
 
