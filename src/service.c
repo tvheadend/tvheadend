@@ -127,14 +127,19 @@ static const char *
 service_class_get_title ( idnode_t *self )
 {
   static char *ret = NULL;
+  const char *str = NULL;
   service_t *s = (service_t*)self;
+  pthread_mutex_lock(&s->s_stream_mutex);
   if (ret) {
     free(ret);
     ret = NULL;
   }
-  pthread_mutex_lock(&s->s_stream_mutex); 
-  if (s->s_nicename)
-    ret = strdup(s->s_nicename);
+  if (s->s_channel_name)
+    str = s->s_channel_name(s);
+  if (!str)
+    str = s->s_nicename;
+  if (str)
+    ret = strdup(str);
   pthread_mutex_unlock(&s->s_stream_mutex);
   return ret;
 }

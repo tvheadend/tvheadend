@@ -128,10 +128,11 @@ tvheadend.idnode_editor_field = function(f, create)
           valueField      : 'key',
           displayField    : 'val',
           store           : tvheadend.idnode_enum_store(f),
-          typeAhead       : true,
-          forceSelection  : true,
+          /*typeAhead       : true,*/
+          /*forceSelection  : true,*/
           triggerAction   : 'all',
           emptyText       :'Select ' + f.caption +' ...',
+          clearFilterOnReset: false,
           listeners       : { 
             keyup: function() {
               this.store.filter('val', this.getRawValue(), true, false);
