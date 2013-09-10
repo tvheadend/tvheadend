@@ -109,7 +109,7 @@ http_get_transcoder_properties(struct http_arg_list *args,
   if ((s = http_arg_get(args, "language")))
     strncpy(props->tp_language, s, 3);
   else
-    strncpy(props->tp_language, config_get_language(), 3);
+    strncpy(props->tp_language, config_get_language() ?: "", 3);
 
   if ((s = http_arg_get(args, "vcodec")))
     props->tp_vcodec = streaming_component_txt2type(s);
