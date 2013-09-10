@@ -732,7 +732,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_mux(mm, weight, "HTTP", &sq.sq_st, 0,
                                    addrbuf, hc->hc_username,
-                                   http_arg_get(&hc->hc_args, "User-Agent"));
+                                   http_arg_get(&hc->hc_args, "User-Agent"), NULL);
   if (!s)
     return HTTP_STATUS_BAD_REQUEST;
   name = tvh_strdupa(s->ths_title);

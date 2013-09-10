@@ -542,6 +542,7 @@ mpegts_mux_t *mpegts_mux_create0
   { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm); }
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
+void mpegts_mux_initial_scan_fail ( mpegts_mux_t *mm );
 
 void mpegts_mux_delete ( mpegts_mux_t *mm );
 

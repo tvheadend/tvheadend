@@ -236,15 +236,28 @@ mpegts_network_delete
 static void
 mpegts_network_initial_scan(void *aux)
 {
+  int r;
   mpegts_network_t  *mn = aux;
   mpegts_mux_t      *mm;
 
   tvhtrace("mpegts", "setup initial scan for %p", mn);
   while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
-    if (mpegts_mux_subscribe(mm, "initscan", 1))
+    r = mpegts_mux_subscribe(mm, "initscan", 1);
+
+    /* Stop scanning here */
+    if (r == SM_CODE_NO_FREE_ADAPTER)
       break;
-    assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
+
+    /* Started */
+    if (!r) {
+      assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
+      continue;
+    }
+
+    /* Remove */
+    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+    mpegts_mux_initial_scan_fail(mm);
   }
   gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 10);
 }

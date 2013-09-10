@@ -295,7 +295,7 @@ static int
 mpegts_mux_start
   ( mpegts_mux_t *mm, const char *reason, int weight )
 {
-  int pass, fail;
+  int pass, fail, havefree = 0;
   char buf[256];
   mpegts_mux_instance_t *mmi, *tune;
 
@@ -319,7 +319,11 @@ mpegts_mux_start
   mm->mm_create_instances(mm);
   if (!LIST_FIRST(&mm->mm_instances)) {
     tvhtrace("mpegts", "%s - has no instances", buf);
-    return SM_CODE_NO_FREE_ADAPTER;
+    return SM_CODE_TUNING_FAILED;
+    // Note: we report a permanent inability to tune at this
+    //       time, rather than a lack of free tuners
+    //       this stops the init scan thinking we can't
+    //       proceed
   }
 
   /* Find */
@@ -329,15 +333,17 @@ mpegts_mux_start
   while (pass < 2) {
     tune = NULL;
     if (!mmi) mmi = LIST_FIRST(&mm->mm_instances);
-  
+
     /* First pass - free only */
     if (!pass) {
 
-      if (!mmi->mmi_tune_failed &&
-          mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
+      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
           mmi->mmi_input->mi_is_free(mmi->mmi_input)) {
-        tune = mmi;
-        tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
+        havefree = 1;
+        if (!mmi->mmi_tune_failed) {
+          tune = mmi;
+          tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
+        }
       }
     
     /* Second pass - non-free */
@@ -368,7 +374,7 @@ mpegts_mux_start
   
   if (!tune) {
     tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
-    return SM_CODE_NO_FREE_ADAPTER;
+    return havefree ? SM_CODE_TUNING_FAILED : SM_CODE_NO_FREE_ADAPTER;
   }
   
   return 0;
@@ -522,6 +528,26 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   idnode_updated(&mm->mm_network->mn_id);
 }
 
+void
+mpegts_mux_initial_scan_fail ( mpegts_mux_t *mm )
+{
+  char buf[256];
+  mpegts_network_t *mn = mm->mm_network;
+
+  /* Stop */
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s - initial scan failed (remove mux)", buf);
+  gtimer_disarm(&mm->mm_initial_scan_timeout);
+  mn->mn_initial_scan_num--;
+  mm->mm_initial_scan_status = MM_SCAN_DONE;
+
+  /* Save */
+  mm->mm_initial_scan_done = 1;
+  mm->mm_config_save(mm);
+  idnode_updated(&mm->mm_id);
+  idnode_updated(&mm->mm_network->mn_id);
+}
+
 /* **************************************************************************
  * Creation / Config
  * *************************************************************************/
@@ -640,11 +666,12 @@ int
 mpegts_mux_subscribe
   ( mpegts_mux_t *mm, const char *name, int weight )
 {
+  int err = 0;
   th_subscription_t *s;
   s = subscription_create_from_mux(mm, weight, name, NULL,
                                    SUBSCRIPTION_NONE,
-                                   NULL, NULL, NULL);
-  return s != NULL ? 0 : 1;
+                                   NULL, NULL, NULL, &err);
+  return s ? 0 : err;
 }
 
 void

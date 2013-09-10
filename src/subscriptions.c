@@ -553,11 +553,12 @@ subscription_create_from_mux
   (mpegts_mux_t *mm,
    unsigned int weight,
    const char *name,
-	 streaming_target_t *st,
+   streaming_target_t *st,
    int flags,
-	 const char *hostname,
-	 const char *username, 
-	 const char *client)
+   const char *hostname,
+   const char *username, 
+   const char *client,
+   int *err)
 {
   th_subscription_t *s;
   streaming_message_t *sm;
@@ -566,8 +567,10 @@ subscription_create_from_mux
 
   /* Tune */
   r = mm->mm_start(mm, name, weight);
-  if (r)
+  if (r) {
+    if (err) *err = r;
     return NULL;
+  }
 
   /* Create subscription */
   s = subscription_create(weight, name, st, flags, NULL,

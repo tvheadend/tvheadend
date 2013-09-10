@@ -128,7 +128,7 @@ th_subscription_t *subscription_create_from_mux
   int flags,
   const char *hostname,
   const char *username,
-  const char *client);
+  const char *client, int *err);
 #endif
 
 th_subscription_t *subscription_create(int weight, const char *name,
