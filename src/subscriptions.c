@@ -72,6 +72,8 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   s->ths_service = t;
   LIST_INSERT_HEAD(&t->s_subscriptions, s, ths_service_link);
 
+  tvhtrace("subscription", "linking sub %p to svc %p", s, t);
+
   pthread_mutex_lock(&t->s_stream_mutex);
 
   if(TAILQ_FIRST(&t->s_components) != NULL) {
@@ -85,7 +87,6 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);
-
 
   if(s->ths_start_message != NULL && t->s_streaming_status & TSS_PACKETS) {
 
@@ -112,6 +113,8 @@ subscription_unlink_service(th_subscription_t *s, int reason)
 {
   streaming_message_t *sm;
   service_t *t = s->ths_service;
+
+  tvhtrace("subscription", "unlinking sub %p from svc %p", s, t);
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -363,7 +366,7 @@ subscription_unsubscribe(th_subscription_t *s)
            s->ths_title);
   }
 
-  if(si != NULL)
+  if(si)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
 #if ENABLE_MPEGTS
