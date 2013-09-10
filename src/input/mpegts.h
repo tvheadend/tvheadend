@@ -23,6 +23,7 @@
 #include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
+#include "subscriptions.h"
 
 #define MPEGTS_ONID_NONE        0xFFFF
 #define MPEGTS_TSID_NONE        0xFFFF
@@ -535,7 +536,7 @@ mpegts_mux_t *mpegts_mux_create0
                      mn, onid, tsid, conf)
 
 #define mpegts_mux_find(u)\
-  idnode_find(u, &mpegts_mux_class);
+  idnode_find(u, &mpegts_mux_class)
 
 #define mpegts_mux_delete_by_uuid(u)\
   { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm); }
@@ -565,6 +566,10 @@ int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
 void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
 void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
+
+void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int reason);
+int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight);
+void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,

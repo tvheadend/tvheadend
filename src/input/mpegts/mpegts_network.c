@@ -238,14 +238,12 @@ mpegts_network_initial_scan(void *aux)
 {
   mpegts_network_t  *mn = aux;
   mpegts_mux_t      *mm;
-  th_subscription_t *s;
 
   tvhtrace("mpegts", "setup initial scan for %p", mn);
   while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
-    s = subscription_create_from_mux(mm, 1, "initscan", NULL,
-                                     SUBSCRIPTION_NONE, NULL, NULL, NULL);
-    if (!s) break;
+    if (mpegts_mux_subscribe(mm, "initscan", 1))
+      break;
     assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
   }
   gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 10);

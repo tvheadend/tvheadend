@@ -31,6 +31,7 @@ typedef struct th_subscription {
   int ths_id;
   
   LIST_ENTRY(th_subscription) ths_global_link;
+  LIST_ENTRY(th_subscription) ths_remove_link;
   int ths_weight;
 
   enum {

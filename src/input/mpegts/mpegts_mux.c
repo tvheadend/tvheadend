@@ -501,8 +501,6 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
 {
   char buf[256];
   mpegts_network_t *mn = mm->mm_network;
-  mpegts_mux_instance_t *mmi;
-  th_subscription_t *s;
 
   /* Stop */
   mm->mm_display_name(mm, buf, sizeof(buf));
@@ -515,11 +513,7 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
   mpegts_network_schedule_initial_scan(mn);
 
   /* Unsubscribe */
-  // TODO: might be better to make a slightly more concrate link here
-  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-    LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
-      if (!strcmp(s->ths_title, "initscan"))
-        subscription_unsubscribe(s);
+  mpegts_mux_unsubscribe_by_name(mm, "initscan");
 
   /* Save */
   mm->mm_initial_scan_done = 1;
@@ -628,6 +622,42 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
   tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
   //idnode_notify(NULL, &mm->mm_id, 0, NULL);
   return 1;
+}
+
+/* **************************************************************************
+ * Subscriptions
+ * *************************************************************************/
+
+void
+mpegts_mux_remove_subscriber
+  ( mpegts_mux_t *mm, th_subscription_t *s, int reason )
+{
+  subscription_unlink_mux(s, reason);
+  mm->mm_stop(mm, 0);
+}
+
+int
+mpegts_mux_subscribe
+  ( mpegts_mux_t *mm, const char *name, int weight )
+{
+  th_subscription_t *s;
+  s = subscription_create_from_mux(mm, weight, name, NULL,
+                                   SUBSCRIPTION_NONE,
+                                   NULL, NULL, NULL);
+  return s != NULL ? 0 : 1;
+}
+
+void
+mpegts_mux_unsubscribe_by_name
+  ( mpegts_mux_t *mm, const char *name )
+{
+  mpegts_mux_instance_t *mmi;
+  th_subscription_t *s;
+
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
+      if (!strcmp(s->ths_title, "initscan"))
+        subscription_unsubscribe(s);
 }
 
 /* **************************************************************************

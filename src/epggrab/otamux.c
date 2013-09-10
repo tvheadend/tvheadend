@@ -109,12 +109,6 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
   ota->om_when   = dispatch_clock + epggrab_ota_period(ota);
   LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
 
-  /* Remove subscription */
-  if (ota->om_sub) {
-    subscription_unsubscribe(ota->om_sub);
-    ota->om_sub = NULL;
-  }
-
   /* Re-arm */
   if (LIST_FIRST(&epggrab_ota_pending) == ota)
     epggrab_ota_pending_timer_cb(NULL);
@@ -180,10 +174,6 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
 }
 
 /* **************************************************************************
- * Completion handling
- * *************************************************************************/
-
-/* **************************************************************************
  * Module methods
  * *************************************************************************/
 
@@ -244,6 +234,7 @@ epggrab_ota_complete
 {
   int done = 1;
   epggrab_ota_map_t *map;
+  mpegts_mux_t *mm;
   tvhinfo(mod->id, "grab complete");
 
   /* Test for completion */
@@ -255,6 +246,10 @@ epggrab_ota_complete
     }
   }
   if (!done) return;
+
+  /* Remove subscriber */
+  if ((mm = mpegts_mux_find(ota->om_mux_uuid)))
+    mpegts_mux_unsubscribe_by_name(mm, "epggrab");
 
   /* Done */
   epggrab_ota_done(ota, 0);
@@ -294,13 +289,11 @@ epggrab_ota_pending_timer_cb ( void *p )
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *om = LIST_FIRST(&epggrab_ota_pending);
   mpegts_mux_t *mm;
-  th_subscription_t *s;
   gtimer_disarm(&epggrab_ota_pending_timer);
 
   lock_assert(&global_lock);
   if (!om)
     return;
-  assert(om->om_sub == NULL);
   
   /* Double check */
   if (om->om_when > dispatch_clock)
@@ -327,10 +320,7 @@ epggrab_ota_pending_timer_cb ( void *p )
   epggrab_ota_start(om);
 
   /* Subscribe to the mux */
-  // TODO: remove hardcoded weight
-  s = subscription_create_from_mux(mm, 2, "epggrab", NULL,
-                                   SUBSCRIPTION_NONE, NULL, NULL, NULL);
-  if (!(om->om_sub = s)) {
+  if (mpegts_mux_subscribe(mm, "epggrab", 2)) {
     LIST_REMOVE(om, om_q_link);
     om->om_active = 0;
     om->om_when   = dispatch_clock + epggrab_ota_period(om) / 2;

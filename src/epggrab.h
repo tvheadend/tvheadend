@@ -180,8 +180,6 @@ struct epggrab_ota_mux
   int                                om_interval;
   time_t                             om_when;         ///< Next event time
 
-  struct th_subscription            *om_sub;
-  
   LIST_ENTRY(epggrab_ota_mux)        om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 };
