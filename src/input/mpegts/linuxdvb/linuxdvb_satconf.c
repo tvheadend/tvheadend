@@ -326,6 +326,8 @@ static int
 linuxdvb_satconf_is_enabled ( mpegts_input_t *mi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  if (!ls->ls_frontend)
+    return 0;
   return ls->ls_frontend->mi_is_enabled(ls->ls_frontend);
 }
 
@@ -333,14 +335,17 @@ static int
 linuxdvb_satconf_is_free ( mpegts_input_t *mi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  int r = ls->ls_frontend->mi_is_free(ls->ls_frontend);
-  return r;
+  if (!ls->ls_frontend)
+    return 0;
+  return ls->ls_frontend->mi_is_free(ls->ls_frontend);
 }
 
 static int
 linuxdvb_satconf_current_weight ( mpegts_input_t *mi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  if (!ls->ls_frontend)
+    return 0;
   return ls->ls_frontend->mi_current_weight(ls->ls_frontend);
 }
 
@@ -349,7 +354,8 @@ linuxdvb_satconf_stop_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
-  ls->ls_frontend->mi_stop_mux(ls->ls_frontend, mmi);
+  if (ls->ls_frontend)
+    ls->ls_frontend->mi_stop_mux(ls->ls_frontend, mmi);
   gtimer_disarm(&ls->ls_diseqc_timer);
 }
 
