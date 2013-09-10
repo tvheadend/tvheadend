@@ -471,7 +471,7 @@ dvb_table_end
       for (sa = 0; sa < 8; sa++)
         rem |= st->sections[sa];
       if (rem) return -1;
-      tvhtrace(mt->mt_name, "  tableid %02X extraid %016lX completed",
+      tvhtrace(mt->mt_name, "  tableid %02X extraid %016" PRIx64 " completed",
                st->tableid, st->extraid);
       st->complete = 1;
       mt->mt_incomplete--;
@@ -503,7 +503,7 @@ dvb_table_begin
   if((ptr[2] & 1) == 0)
     return -1;
 
-  tvhtrace(mt->mt_name, "pid %02X tableid %02X extraid %016lX len %d",
+  tvhtrace(mt->mt_name, "pid %02X tableid %02X extraid %016" PRIx64 " len %d",
            mt->mt_pid, tableid, extraid, len);
 
   /* Section info */
