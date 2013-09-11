@@ -108,8 +108,8 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 /**
  * Called from service code
  */
-void
-subscription_unlink_service(th_subscription_t *s, int reason)
+static void
+subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 {
   streaming_message_t *sm;
   service_t *t = s->ths_service;
@@ -118,10 +118,10 @@ subscription_unlink_service(th_subscription_t *s, int reason)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  // Unlink from service output
   streaming_target_disconnect(&t->s_streaming_pad, &s->ths_input);
 
-  if(TAILQ_FIRST(&t->s_components) != NULL && 
+  if(stop &&
+     TAILQ_FIRST(&t->s_components) != NULL && 
      s->ths_state == SUBSCRIPTION_GOT_SERVICE) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);
@@ -132,6 +132,12 @@ subscription_unlink_service(th_subscription_t *s, int reason)
 
   LIST_REMOVE(s, ths_service_link);
   s->ths_service = NULL;
+}
+
+void
+subscription_unlink_service(th_subscription_t *s, int reason)
+{
+  subscription_unlink_service0(s, reason, 1);
 }
 
 /*
@@ -209,11 +215,14 @@ subscription_reschedule(void)
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
 	      continue; /* And it not bad, so we're happy */
 
+      subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
+
       si = s->ths_current_instance;
 
       assert(si != NULL);
       si->si_error = s->ths_testing_error;
       time(&si->si_error_time);
+  
     }
 
     if (s->ths_channel)
