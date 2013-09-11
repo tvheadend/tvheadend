@@ -254,6 +254,7 @@ trap_init(const char *ver)
 	free(m);
       }
     }
+    close(fd);
   }
   
   snprintf(line1, sizeof(line1),

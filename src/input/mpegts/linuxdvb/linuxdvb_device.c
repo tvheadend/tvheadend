@@ -73,12 +73,14 @@ get_device_info ( device_info_t *di, int a )
       if ((fp = fopen(path, "r"))) {
         if (fscanf(fp, "0x%hx", &u16) == 1)
           di->di_dev = u16;
+        fclose(fp);
       }
       di->di_dev <<= 16;
       snprintf(path, sizeof(path), DVB_DEV_PATH "/subsystem_device", a);
       if ((fp = fopen(path, "r"))) {
         if (fscanf(fp, "0x%hx", &u16) == 1)
           di->di_dev |= u16;
+        fclose(fp);
       }
 
     } else if (!strcmp(bus, "usb")) {
@@ -87,12 +89,14 @@ get_device_info ( device_info_t *di, int a )
       if ((fp = fopen(path, "r"))) {
         if (fscanf(fp, "%hx", &u16) == 1)
           di->di_dev = u16;
+        fclose(fp);
       }
       di->di_dev <<= 16;
       snprintf(path, sizeof(path), DVB_DEV_PATH "/idProduct", a);
       if ((fp = fopen(path, "r"))) {
         if (fscanf(fp, "%hx", &u16) == 1)
           di->di_dev |= u16;
+        fclose(fp);
       }
       snprintf(path, sizeof(path), DVB_DEV_PATH "/speed", a);
       if ((fp = fopen(path, "r"))) {
@@ -158,6 +162,7 @@ get_min_dvb_adapter ( device_info_t *di )
       if ((sscanf(de->d_name, "dvb%d.frontend0", &t)))
         if (mina == -1 || t < mina) mina = t;
     }
+    closedir(dp);
   }
   di->di_min_adapter = mina;
 }
@@ -316,6 +321,7 @@ void linuxdvb_device_init ( int adapter_mask )
       if ((0x1 << a) & adapter_mask)
         linuxdvb_adapter_added(a);
     }
+    closedir(dp);
   }
 
   // TODO: add udev support for hotplug
