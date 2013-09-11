@@ -105,6 +105,21 @@ linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la )
 }
 
 /*
+ * Enabled
+ */
+static int
+linuxdvb_adapter_is_enabled ( mpegts_input_t *mi )
+{
+  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)mi;
+  linuxdvb_hardware_t *lh;
+
+  LIST_FOREACH(lh, &la->lh_children, lh_parent_link)
+    if (lh->mi_is_enabled && lh->mi_is_enabled((mpegts_input_t*)lh))
+      return 1;
+  return 0;
+}
+
+/*
  * Create
  */
 linuxdvb_adapter_t *
@@ -124,8 +139,9 @@ linuxdvb_adapter_create0
   }
 
   LIST_INSERT_HEAD(&ld->lh_children, (linuxdvb_hardware_t*)la, lh_parent_link);
-  la->lh_parent  = (linuxdvb_hardware_t*)ld;
-  la->mi_enabled = 1;
+  la->lh_parent     = (linuxdvb_hardware_t*)ld;
+  la->mi_is_enabled = linuxdvb_adapter_is_enabled;
+  la->mi_enabled    = 1;
 
   /* No conf */
   if (!conf)

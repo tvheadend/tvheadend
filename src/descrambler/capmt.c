@@ -530,7 +530,7 @@ capmt_create_udp_socket(int *socket, int port)
 
   if (bind(*socket, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0)
   {
-    perror("[CapmtServer] ERROR binding to ca0");
+    tvherror("capmt", "failed to bind to ca0 (port %d)", port);
     return 0;
   }
   else
