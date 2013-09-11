@@ -374,7 +374,11 @@ mpegts_mux_start
   
   if (!tune) {
     tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
-    return havefree ? SM_CODE_TUNING_FAILED : SM_CODE_NO_FREE_ADAPTER;
+    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+      if (!mmi->mmi_tune_failed)
+        return havefree ? SM_CODE_NO_VALID_ADAPTER : SM_CODE_NO_FREE_ADAPTER;
+    tvhdebug("mpegts", "%s - tuning failed", buf);
+    return SM_CODE_TUNING_FAILED;
   }
   
   return 0;
