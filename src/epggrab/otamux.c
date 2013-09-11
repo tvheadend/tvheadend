@@ -128,8 +128,10 @@ epggrab_ota_start ( epggrab_ota_mux_t *om )
   LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
   if (LIST_FIRST(&epggrab_ota_active) == om)
     epggrab_ota_active_timer_cb(NULL);
-  LIST_FOREACH(map, &om->om_modules, om_link)
+  LIST_FOREACH(map, &om->om_modules, om_link) {
     map->om_complete = 0;
+    tvhinfo(map->om_module->id, "grab started");
+  }
 }
 
 /* **************************************************************************

@@ -550,7 +550,7 @@ static void _opentv_start
   if (mod->tsid != mm->mm_tsid) return;
 
   /* Install tables */
-  tvhinfo(mod->id, "begin grab");
+  tvhdebug(mod->id, "install table handlers");
 
   /* Channels */
   t   = mod->channel;
