@@ -333,6 +333,7 @@ api_idnode_tree
     idnode_set_t *v = node ? idnode_get_childs(node) : rootfn();
     if (v) {
       int i;
+      idnode_set_sort_by_title(v);
       for(i = 0; i < v->is_count; i++) {
         htsmsg_t *m = idnode_serialize(v->is_array[i]);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));

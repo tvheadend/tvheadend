@@ -428,6 +428,17 @@ idnode_find_all ( const idclass_t *idc )
  * *************************************************************************/
 
 static int
+idnode_cmp_title
+  ( const void *a, const void *b )
+{
+  idnode_t      *ina  = *(idnode_t**)a;
+  idnode_t      *inb  = *(idnode_t**)b;
+  const char *sa = idnode_get_title(ina);
+  const char *sb = idnode_get_title(inb);
+  return strcmp(sa, sb);
+}
+
+static int
 idnode_cmp_sort
   ( const void *a, const void *b, void *s )
 {
@@ -611,6 +622,13 @@ idnode_set_sort
   ( idnode_set_t *is, idnode_sort_t *sort )
 {
   qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_sort, sort);
+}
+
+void
+idnode_set_sort_by_title
+  ( idnode_set_t *is )
+{
+  qsort(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_title);
 }
 
 void

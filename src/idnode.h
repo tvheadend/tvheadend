@@ -157,6 +157,7 @@ int  idnode_filter
 void idnode_set_add
   ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt );
 void idnode_set_sort    ( idnode_set_t *is, idnode_sort_t *s );
+void idnode_set_sort_by_title ( idnode_set_t *is );
 void idnode_set_free    ( idnode_set_t *is );
 
 #endif /* __TVH_IDNODE_H__ */
