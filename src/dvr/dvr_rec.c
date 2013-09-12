@@ -424,10 +424,14 @@ dvr_thread(void *aux)
       continue;
     }
 
-    if (de->de_s && started &&
-        (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS)) {
-      th_pkt_t *pkt = sm->sm_data;
-      atomic_add(&de->de_s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
+    if (de->de_s && started) {
+      pktbuf_t *pb = NULL;
+      if (sm->sm_type == SMT_PACKET)
+        pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
+      else if (sm->sm_type == SMT_MPEGTS)
+        pb = sm->sm_data;
+      if (pb)
+        atomic_add(&de->de_s->ths_bytes_out, pktbuf_len(pb));
     }
 
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);

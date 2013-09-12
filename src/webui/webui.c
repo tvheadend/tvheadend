@@ -274,9 +274,13 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_MPEGTS:
     case SMT_PACKET:
       if(started) {
-        th_pkt_t *pkt = sm->sm_data;
-        atomic_add(&s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
-        muxer_write_pkt(mux, sm->sm_type, pkt);
+        pktbuf_t *pb;;
+        if (sm->sm_type == SMT_PACKET)
+          pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
+        else
+          pb = sm->sm_data;
+        atomic_add(&s->ths_bytes_out, pktbuf_len(pb));
+        muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
         sm->sm_data = NULL;
       }
       break;
