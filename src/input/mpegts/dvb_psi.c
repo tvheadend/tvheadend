@@ -785,7 +785,7 @@ dvb_nit_callback
       tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
 
       /* User-defined */
-      if (mt->mt_mux_cb) {
+      if (mt->mt_mux_cb && mux) {
         int i = 0;
         while (mt->mt_mux_cb[i].cb) {
           if (mt->mt_mux_cb[i].tag == dtag)
