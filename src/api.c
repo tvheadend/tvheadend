@@ -120,4 +120,5 @@ void api_init ( void )
   api_mpegts_init();
   api_service_init();
   api_channel_init();
+  api_epg_init();
 }

@@ -118,6 +118,7 @@ SRCS += \
 	src/api/api_channel.c \
 	src/api/api_service.c \
 	src/api/api_mpegts.c \
+  src/api/api_epg.c \
 
 SRCS += \
 	src/parsers/parsers.c \
