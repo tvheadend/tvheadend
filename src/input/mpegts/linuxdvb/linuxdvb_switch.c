@@ -115,17 +115,19 @@ linuxdvb_switch_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *sc, int fd )
 {
   int i, com, r1 = 0, r2 = 0;
-  int pol_bit, band_bit;
+  int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
-  dvb_mux_conf_t      *dmc = &lm->lm_tuning;
 
-  /* Bit of a mess, comitted switch config is actually dependant
-   * on LNB configuration
-   */
-  pol_bit   = dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
-              dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
-  band_bit  = (sc->ls_lnb) ? sc->ls_lnb->lnb_band(sc->ls_lnb, lm) : 0;
-  com       = 0xF0 | (ls->ls_committed << 2) | (pol_bit << 1) | band_bit;
+  /* LNB settings */
+  pol  = (sc->ls_lnb) ? sc->ls_lnb->lnb_pol (sc->ls_lnb, lm) & 0x1 : 0;
+  band = (sc->ls_lnb) ? sc->ls_lnb->lnb_band(sc->ls_lnb, lm) & 0x1 : 0;
+  
+  /* Set the voltage */
+  if (linuxdvb_diseqc_set_volt(fd, pol))
+    return -1;
+
+  /* Committed command */
+  com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
   
   /* Single committed (before repeats) */
   if (sc->ls_diseqc_repeats > 0) {
@@ -154,10 +156,10 @@ linuxdvb_switch_tune
   }
 
   /* Tone burst */
-  tvhtrace("linuxdvb", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+  tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
   if (ioctl(fd, FE_DISEQC_SEND_BURST,
             ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_B)) {
-    tvherror("linuxdvb", "failed to set toneburst (e=%s)", strerror(errno));
+    tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
     return -1;
   }
 

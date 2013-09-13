@@ -66,27 +66,6 @@ const idclass_t linuxdvb_lnb_class =
  * Control functions
  * *************************************************************************/
 
-static int
-diseqc_volt_tone ( int fd, int vol, int tone )
-{
-  /* Set voltage */
-  tvhtrace("linuxdvb", "set LNB voltage %dV", vol ? 18 : 13);
-  if (ioctl(fd, FE_SET_VOLTAGE, vol ? SEC_VOLTAGE_18 : SEC_VOLTAGE_13)) {
-    tvherror("linuxdvb", "failed to set LNB voltage (e=%s)", strerror(errno));
-    return -1;
-  }
-  usleep(15000);
-
-  /* Set tone */
-  tvhtrace("linuxdvb", "set LNB tone %s", tone ? "on" : "off");
-  if (ioctl(fd, FE_SET_TONE, tone ? SEC_TONE_ON : SEC_TONE_OFF)) {
-    tvherror("linuxdvb", "failed to set LNB tone (e=%s)", strerror(errno));
-    return -1;
-  }
-
-  return 0;
-}
-
 /*
  * Standard freq switched LNB
  */
@@ -113,18 +92,21 @@ linuxdvb_lnb_standard_band
   return (lnb->lnb_switch && f > lnb->lnb_switch);
 }
 
+static int
+linuxdvb_lnb_standard_pol
+  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+{
+  dvb_mux_conf_t      *dmc = &lm->lm_tuning;
+  return dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
+         dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
+}
+
 static int 
 linuxdvb_lnb_standard_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
-  linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)ld;
-  dvb_mux_conf_t      *dmc = &lm->lm_tuning;
-  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
-  int pol = dmc->dmc_fe_polarisation == POLARISATION_HORIZONTAL ||
-            dmc->dmc_fe_polarisation == POLARISATION_CIRCULAR_LEFT;
-  int hi  = lnb->lnb_switch && (p->frequency > lnb->lnb_switch);
-
-  return diseqc_volt_tone(fd, pol, hi);
+  int pol = linuxdvb_lnb_standard_pol((linuxdvb_lnb_t*)ld, lm);
+  return linuxdvb_diseqc_set_volt(fd, pol);
 }
 
 /*
@@ -158,10 +140,18 @@ linuxdvb_lnb_bandstack_band
 }
 
 static int
+linuxdvb_lnb_bandstack_pol
+  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+{
+  return 0;
+}
+
+static int
 linuxdvb_lnb_bandstack_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *ls, int fd )
 {
-  return diseqc_volt_tone(fd, 1, 0);
+  int pol = linuxdvb_lnb_bandstack_pol((linuxdvb_lnb_t*)ld, lm);
+  return linuxdvb_diseqc_set_volt(fd, pol);
 }
 
 /* **************************************************************************
@@ -176,6 +166,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 11700000,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -185,6 +176,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -194,6 +186,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -203,6 +196,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -212,6 +206,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -221,6 +216,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -230,6 +226,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_standard_freq,
     .lnb_band   = linuxdvb_lnb_standard_band,
+    .lnb_pol    = linuxdvb_lnb_standard_pol,
     .ld_tune    = linuxdvb_lnb_standard_tune,
   },
   {
@@ -239,6 +236,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 0,
     .lnb_freq   = linuxdvb_lnb_bandstack_freq,
     .lnb_band   = linuxdvb_lnb_bandstack_band,
+    .lnb_pol    = linuxdvb_lnb_bandstack_pol,
     .ld_tune    = linuxdvb_lnb_bandstack_tune,
   },
 };

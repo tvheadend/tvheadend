@@ -237,6 +237,7 @@ struct linuxdvb_lnb
   linuxdvb_diseqc_t;
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
   int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
 };
 
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
@@ -267,6 +268,7 @@ htsmsg_t *linuxdvb_rotor_list  ( void *o );
 int
 linuxdvb_diseqc_send
   (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...);
+int linuxdvb_diseqc_set_volt (int fd, int volt);
 
 /*
  * Satconf

@@ -136,13 +136,13 @@ linuxdvb_rotor_gotox_tune
   int i;
   for (i = 0; i <= ls->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
-      tvherror("linuxdvb", "failed to set GOTOX pos %d", lr->lr_position);
+      tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
     }
     usleep(25000);
   }
 
-  tvhdebug("linuxdvb", "rotor GOTOX pos %d sent", lr->lr_position);
+  tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
   return 120; // TODO: calculate period (2 min hardcoded)
 }
 
@@ -198,13 +198,13 @@ linuxdvb_rotor_usals_tune
   int angle_1 = (((motor_angle > 0.0) ? 0xd0 : 0xe0) | (sixteenths >> 8));
   int angle_2 = (sixteenths & 0xff);
  
-  tvhtrace("linuxdvb", "rotor USALS goto %0.1f%c (motor %0.2f %sclockwise)",
+  tvhtrace("diseqc", "rotor USALS goto %0.1f%c (motor %0.2f %sclockwise)",
            fabs(pos), (pos > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
   for (i = 0; i <= ls->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
-      tvherror("linuxdvb", "failed to send USALS command");
+      tvherror("diseqc", "failed to send USALS command");
       return -1;
     }
     usleep(25000);
@@ -224,7 +224,7 @@ linuxdvb_rotor_tune
 
   /* Force to 18v (quicker movement) */
   if (ioctl(fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
-    tvherror("linuxdvb", "failed to set 18v for rotor movement");
+    tvherror("diseqc", "failed to set 18v for rotor movement");
     return -1;
   }
   usleep(15000);

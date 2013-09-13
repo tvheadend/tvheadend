@@ -364,7 +364,7 @@ static void linuxdvb_satconf_tune_cb ( void *o );
 static int
 linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
 {
-  int r, i;
+  int r, i, b;
   uint32_t f;
 
   /* Get beans in a row */
@@ -372,14 +372,17 @@ linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
   linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
   linuxdvb_mux_t        *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
   linuxdvb_diseqc_t     *lds[] = {
-    (linuxdvb_diseqc_t*)ls->ls_switch,
+    ls->ls_rotor ? (linuxdvb_diseqc_t*)ls->ls_switch : NULL,
     (linuxdvb_diseqc_t*)ls->ls_rotor,
+    (linuxdvb_diseqc_t*)ls->ls_switch,
     (linuxdvb_diseqc_t*)ls->ls_lnb
   };
+  // TODO: really need to understand whether or not we need to pre configure
+  //       and/or re-affirm the switch
 
   /* Disable tone */
   if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
-    tvherror("linuxdvb", "failed to disable tone");
+    tvherror("diseqc", "failed to disable tone");
     return -1;
   }
 
@@ -398,6 +401,14 @@ linuxdvb_satconf_tune ( linuxdvb_satconf_t *ls )
       ls->ls_diseqc_idx = i + 1;
       return 0;
     }
+  }
+
+  /* Set the tone */
+  b = ls->ls_lnb->lnb_band(ls->ls_lnb, lm);
+  tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
+  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+    tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
+    return -1;
   }
 
   /* Frontend */
@@ -656,17 +667,29 @@ linuxdvb_diseqc_send
   }
   va_end(ap);
 
-  tvhtrace("linuxdvb", "sending diseqc (len %d) %02X %02X %02X %s",
+  tvhtrace("diseqc", "sending diseqc (len %d) %02X %02X %02X %s",
            len + 3, framing, addr, cmd, buf);
 
   /* Send */
   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
-    tvherror("linuxdvb", "failed to send diseqc cmd (e=%s)", strerror(errno));
+    tvherror("disqec", "failed to send diseqc cmd (e=%s)", strerror(errno));
     return -1;
   }
   return 0;
 }
 
+int
+linuxdvb_diseqc_set_volt ( int fd, int vol )
+{
+  /* Set voltage */
+  tvhtrace("disqec", "set voltage %dV", vol ? 18 : 13);
+  if (ioctl(fd, FE_SET_VOLTAGE, vol ? SEC_VOLTAGE_18 : SEC_VOLTAGE_13)) {
+    tvherror("diseqc", "failed to set voltage (e=%s)", strerror(errno));
+    return -1;
+  }
+  usleep(15000);
+  return 0;
+}
 
 /******************************************************************************
  * Editor Configuration
