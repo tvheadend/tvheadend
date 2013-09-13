@@ -390,9 +390,32 @@ mpegts_input_stream_status
 {
   int s = 0, w = 0;
   char buf[512];
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf, sizeof(buf));
+  th_subscription_t *sub;
+  mpegts_mux_t *mm = mmi->mmi_mux;
+  mpegts_input_t *mi = mmi->mmi_input;
+
+  /* Get number of subs */
+  // Note: this is a bit of a mess
+  LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link) {
+    s++;
+    w = MAX(w, sub->ths_weight);
+  }
+  // Note: due to satconf acting as proxy for input we can't always
+  //       use mi_transports, so we can in via a convoluted route
+  LIST_FOREACH(sub, &subscriptions, ths_global_link) {
+    if (!sub->ths_service) continue;
+    if (!idnode_is_instance(&sub->ths_service->s_id,
+                            &mpegts_service_class)) continue;
+    mpegts_service_t *ms = (mpegts_service_t*)sub->ths_service;
+    if (ms->s_dvb_mux == mm) {
+      s++;
+      w = MAX(w, sub->ths_weight);
+    }
+  }
+
+  mm->mm_display_name(mm, buf, sizeof(buf));
   st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
-  st->input_name  = strdup(mmi->mmi_input->mi_displayname?:"");
+  st->input_name  = strdup(mi->mi_displayname?:"");
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;
@@ -408,11 +431,13 @@ mpegts_input_get_streams
   mpegts_input_t *mi = (mpegts_input_t*)i;
   mpegts_mux_instance_t *mmi;
 
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     st = calloc(1, sizeof(tvh_input_stream_t));
     mpegts_input_stream_status(mmi, st);
     LIST_INSERT_HEAD(isl, st, link);
   }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
 /* **************************************************************************
@@ -426,6 +451,7 @@ mpegts_input_status_timer ( void *p )
   mpegts_input_t *mi = p;
   mpegts_mux_instance_t *mmi;
   htsmsg_t *e;
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     memset(&st, 0, sizeof(st));
     mpegts_input_stream_status(mmi, &st);
@@ -434,6 +460,7 @@ mpegts_input_status_timer ( void *p )
     notify_by_msg("input_status", e);
     tvh_input_stream_destroy(&st);
   }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
   gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer, mi, 1);
 }
 

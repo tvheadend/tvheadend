@@ -680,6 +680,13 @@ subscription_create_msg(th_subscription_t *s)
   if(s->ths_service != NULL)
     htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
 
+  else if (s->ths_mmi != NULL && s->ths_mmi->mmi_mux != NULL) {
+    char buf[512];
+    mpegts_mux_t *mm = s->ths_mmi->mmi_mux;
+    mm->mm_display_name(mm, buf, sizeof(buf));
+    htsmsg_add_str(m, "service", buf);
+  }
+  
   return m;
 }
 
