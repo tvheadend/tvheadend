@@ -501,7 +501,7 @@ tvheadend.idnode_grid = function(panel, conf)
 
     /* Event handlers */
     store.on('update', function(s, r, o){
-      d = (s.getModifiedRecords().length == 0);
+      var d = (s.getModifiedRecords().length == 0);
       undoBtn.setDisabled(d);
       saveBtn.setDisabled(d);
     });
