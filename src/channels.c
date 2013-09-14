@@ -80,41 +80,21 @@ channel_class_delete ( idnode_t *self )
 static const void *
 channel_class_services_get ( void *obj )
 {
-  static char *s = NULL;
-  const char *uuid;
-  int first = 1;
+  htsmsg_t *l = htsmsg_create_list();
   channel_t *ch = obj;
-  htsbuf_queue_t hq;
   channel_service_mapping_t *csm;
-  
-  /* Free previous */
-  if (s) free(s);
-  s = NULL;
 
   /* Add all */
-  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link) {
-    if (first)
-      htsbuf_queue_init(&hq, 0);
-    else
-      htsbuf_append(&hq, ",", 1);
-    uuid = idnode_uuid_as_str(&csm->csm_svc->s_id);
-    htsbuf_append(&hq, uuid, strlen(uuid));
-    first = 0;
-  }
+  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_svc->s_id));
 
-  /* Build string */
-  if (!first) {
-    s = htsbuf_to_string(&hq);  
-    htsbuf_queue_flush(&hq);
-  }
-
-  return &s;
+  return l;
 }
 
 static int
 channel_class_services_set ( void *obj, const void *p )
 {
-  return channel_set_services_by_list(obj, p);
+  return channel_set_services_by_list(obj, (htsmsg_t*)p);
 }
 
 static htsmsg_t *
@@ -125,7 +105,7 @@ channel_class_services_enum ( void *obj )
   htsmsg_add_str(m, "uri",   "service/list");
   htsmsg_add_str(m, "event", "service");
   e = htsmsg_create_map();
-  htsmsg_add_u32(e, "enum", 1);
+  htsmsg_add_bool(e, "enum", 1);
   htsmsg_add_msg(m, "params", e);
   return m;
 }
@@ -133,50 +113,35 @@ channel_class_services_enum ( void *obj )
 static const void *
 channel_class_tags_get ( void *obj )
 {
-  static char *s = NULL;
-  int first = 1;
-  channel_t *ch = obj;
-  htsbuf_queue_t hq;
   channel_tag_mapping_t *ctm;
-  
-  /* Free previous */
-  if (s) free(s);
-  s = NULL;
+  channel_t *ch = obj;
+  htsmsg_t *m = htsmsg_create_list();
 
   /* Add all */
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-    if (first)
-      htsbuf_queue_init(&hq, 0);
-    else
-      htsbuf_append(&hq, ",", 1);
-    htsbuf_append(&hq, ctm->ctm_tag->ct_name, strlen(ctm->ctm_tag->ct_name));
-    first = 0;
-  }
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    htsmsg_add_u32(m, NULL, ctm->ctm_tag->ct_identifier);
 
-  /* Build string */
-  if (!first) {
-    s = htsbuf_to_string(&hq);  
-    htsbuf_queue_flush(&hq);
-  }
-
-  return &s;
+  return m;
 }
 
 static int
 channel_class_tags_set ( void *obj, const void *p )
 {
-  return channel_set_tags_by_list(obj, p);
+  return channel_set_tags_by_list(obj, (htsmsg_t*)p);
 }
 
 static htsmsg_t *
 channel_class_tags_enum ( void *obj )
 {
-  channel_tag_t *ct;
-  htsmsg_t *m = htsmsg_create_list();
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    htsmsg_add_str(m, NULL, ct->ct_name);
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channeltag/list");
+  htsmsg_add_str(m, "event", "channeltag");
+  e = htsmsg_create_map();
+  htsmsg_add_bool(e, "enum", 1);
+  htsmsg_add_msg(m, "params", e);
   return m;
-}
+ }
 
 static void
 channel_class_icon_notify ( void *obj )
@@ -241,15 +206,16 @@ const idclass_t channel_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "services",
       .name     = "Services",
       .get      = channel_class_services_get,
       .set      = channel_class_services_set,
       .list     = channel_class_services_enum,
-      .opts     = PO_MULTI
     },
     {
-      .type     = PT_STR,
+      .type     = PT_INT,
+      .islist   = 1,
       .id       = "tags",
       .name     = "Tags",
       .get      = channel_class_tags_get,
@@ -290,11 +256,12 @@ channel_find_by_id ( uint32_t i )
  * *************************************************************************/
 
 int
-channel_set_services_by_list ( channel_t *ch, const char *svcs )
+channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
 {
   int save = 0;
-  char *tmp, *ret, *tok;
+  const char *str;
   service_t *svc;
+  htsmsg_field_t *f;
   channel_service_mapping_t *csm, *n;
 
   /* Mark all for deletion */
@@ -302,14 +269,11 @@ channel_set_services_by_list ( channel_t *ch, const char *svcs )
     csm->csm_mark = 1;
 
   /* Link */
-  tmp = strdup(svcs);
-  tok = strtok_r(tmp, ",", &ret);
-  while (tok) {
-    if ((svc = service_find(tok)))
-      save |= service_mapper_link(svc, ch);
-    tok = strtok_r(NULL, ",", &ret);
+  HTSMSG_FOREACH(f, svcs) {
+    if ((str = htsmsg_field_get_str(f)))
+      if ((svc = service_find(str)))
+        save |= service_mapper_link(svc, ch);
   }
-  free(tmp);
 
   /* Remove */
   for (csm = LIST_FIRST(&ch->ch_services); csm != NULL; csm = n) {
@@ -326,9 +290,37 @@ channel_set_services_by_list ( channel_t *ch, const char *svcs )
 }
 
 int
-channel_set_tags_by_list ( channel_t *ch, const char *tags )
+channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
 {
-  return 0;
+  int save = 0;
+  uint32_t u32;
+  channel_tag_mapping_t *ctm, *n;
+  channel_tag_t *ct;
+  htsmsg_field_t *f;
+  
+  /* Mark for deletion */
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    ctm->ctm_mark = 1;
+  
+  /* Link */
+  HTSMSG_FOREACH(f, tags)
+    if (!htsmsg_field_get_u32(f, &u32)) {
+      if ((ct = channel_tag_find_by_identifier(u32)))
+        save |= channel_tag_map(ch, ct);
+    }
+    
+  /* Remove */
+  for (ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
+    n = LIST_NEXT(ctm, ctm_channel_link);
+    if (ctm->ctm_mark) {
+      LIST_REMOVE(ctm, ctm_channel_link);
+      LIST_REMOVE(ctm, ctm_tag_link);
+      free(ctm);
+      save = 1;
+    }
+  }
+
+  return save;
 }
 
 /* **************************************************************************
@@ -448,18 +440,21 @@ channel_init ( void )
  *
  */
 int
-channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
+channel_tag_map(channel_t *ch, channel_tag_t *ct)
 {
   channel_tag_mapping_t *ctm;
 
-  if(check) {
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-      if(ctm->ctm_tag == ct)
-	return 0;
-
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    if(ctm->ctm_tag == ct)
+      break;
+  if (!ctm)
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ctm->ctm_channel == ch)
-	return 0;
+        break;
+
+  if (ctm) {
+    ctm->ctm_mark = 0;
+    return 0;
   }
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
@@ -482,7 +477,7 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
     htsp_tag_update(ct);
     htsp_channel_update(ch);
   }
-  return 0;
+  return 1;
 }
 
 
@@ -752,9 +747,10 @@ channel_tag_t *
 channel_tag_find_by_identifier(uint32_t id) {
   channel_tag_t *ct;
 
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+  TAILQ_FOREACH(ct, &channel_tags, ct_link) {
     if(ct->ct_identifier == id)
       return ct;
+  }
 
   return NULL;
 }

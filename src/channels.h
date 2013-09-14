@@ -135,14 +135,14 @@ channel_t *channel_find_by_id(uint32_t id);
 
 #define channel_find channel_find_by_uuid
 
-int channel_set_tags_by_list ( channel_t *ch, const char *tags );
-int channel_set_services_by_list ( channel_t *ch, const char *svcs );
+int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
+int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 
-int channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
+int channel_tag_map(channel_t *ch, channel_tag_t *ct);
 
 void channel_save(channel_t *ch);
 
