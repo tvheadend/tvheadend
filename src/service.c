@@ -54,29 +54,23 @@ service_class_channel_get ( void *obj )
 {
   service_t *svc = obj;
   channel_service_mapping_t *csm;
-  static char buf[2048], *s;
-  // TODO: make this dynamic length
-  int first = 1;
 
-  *buf = 0;
-  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link) {
-    if (!first)
-      strcat(buf, ",");
-    strcat(buf, idnode_uuid_as_str(&csm->csm_chn->ch_id));
-    first = 0;
-  }
-  s = first ? NULL : buf;
+  htsmsg_t *l = htsmsg_create_list();
+  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_chn->ch_id));
   
-  return &s;
+  return l;
 }
 
 static int
 service_class_channel_set
-  ( void *obj, const void *str )
+  ( void *obj, const void *p )
 {
   int save = 0;
   service_t *svc = obj;
-  char *tmp, *tok, *sptr;
+  htsmsg_t  *chns = (htsmsg_t*)p;
+  const char *str;
+  htsmsg_field_t *f;
   channel_t *ch;
   channel_service_mapping_t *csm, *n;
 
@@ -85,14 +79,10 @@ service_class_channel_set
     csm->csm_mark = 1;
 
   /* Make new links */
-  tmp = strdup(str);
-  tok = strtok_r(tmp, ",", &sptr);
-  while (tok) {
-    ch = channel_find(tok);
-    if (ch) {
-      save |= service_mapper_link(svc, ch);
-    }
-    tok = strtok_r(NULL, ",", &sptr);
+  HTSMSG_FOREACH(f, chns) {
+    if ((str = htsmsg_field_get_str(f)))
+      if ((ch = channel_find(str)))
+        save |= service_mapper_link(svc, ch);
   }
 
   /* Delete unlinked */
@@ -158,12 +148,13 @@ const idclass_t service_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "channel",
       .name     = "Channel",
       .get      = service_class_channel_get,
       .set      = service_class_channel_set,
       .list     = service_class_channel_enum,
-      .opts     = PO_MULTI | PO_NOSAVE
+      .opts     = PO_NOSAVE
     },
     {}
   }
@@ -655,31 +646,6 @@ service_stream_find(service_t *t, int pid)
   }
   return NULL;
 }
-
-#if 0
-static const void *
-service_class_channel_get(void *obj)
-{
-  static const char *r;
-  service_t *s = obj;
-  r = s->s_ch ? s->s_ch->ch_name : NULL;
-  return &r;
-  return NULL;
-}
-
-
-/**
- *
- */
-static int
-service_class_channel_set(void *obj, const void *v)
-{
-  const char *str = v;
-  service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
-  return 1; // TODO: sort this!
-  return 0;
-}
-#endif
 
 /**
  *
