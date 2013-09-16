@@ -227,7 +227,7 @@ for c in chns:
   u = uuid()
   d = {
     'name'      : c['name'],
-    'services'  : ','.join(c['svcs'])
+    'services'  : c['svcs']
   }
   if c['icon']:
     d['icon'] = c['icon']
