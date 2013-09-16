@@ -152,6 +152,11 @@ service_mapper_link ( service_t *s, channel_t *c )
       csm->csm_mark = 0;
       return 0;
     }
+  LIST_FOREACH(csm, &c->ch_services, csm_svc_link)
+    if (csm->csm_svc == s) {
+      csm->csm_mark = 0;
+      return 0;
+    }
 
   /* Link */
   csm = calloc(1, sizeof(channel_service_mapping_t));
