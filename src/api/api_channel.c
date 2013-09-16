@@ -77,13 +77,41 @@ api_channel_create
   return 0;
 }
 
+static int
+api_channeltag_enum
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  channel_tag_t *ct;
+  htsmsg_t *l, *e;
+  
+  int _enum = htsmsg_get_bool_or_default(args, "enum", 0);
+
+  if (_enum) {
+    l = htsmsg_create_list();
+    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+      e = htsmsg_create_map();
+      htsmsg_add_u32(e, "key", ct->ct_identifier);
+      htsmsg_add_str(e, "val", ct->ct_name);
+      htsmsg_add_msg(l, NULL, e);
+    }
+    *resp = htsmsg_create_map();
+    htsmsg_add_msg(*resp, "entries", l);
+  } else {
+    // TODO: support full listing v enum
+  }
+  return 0;
+}
+
 void api_channel_init ( void )
 {
   static api_hook_t ah[] = {
-    { "channel/class",  ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_class },
-    { "channel/grid",   ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
-    { "channel/list",   ACCESS_ANONYMOUS, api_channel_list, NULL },
-    { "channel/create", ACCESS_ADMIN,     api_channel_create, NULL },
+    { "channel/class",   ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_class },
+    { "channel/grid",    ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_grid },
+    { "channel/list",    ACCESS_ANONYMOUS, api_channel_list, NULL },
+    { "channel/create",  ACCESS_ADMIN,     api_channel_create, NULL },
+
+    { "channeltag/list", ACCESS_ANONYMOUS, api_channeltag_enum, NULL },
+
     { NULL },
   };
 
