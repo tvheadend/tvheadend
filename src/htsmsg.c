@@ -875,5 +875,48 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
   return htsmsg_get_str_multi(m, field, "cdata", NULL);
 }
 
+/**
+ * Convert list to CSV string
+ *
+ * Note: this will NOT work for lists of complex types
+ */
+char *
+htsmsg_list_2_csv(htsmsg_t *m)
+{
+  int alloc, used, first = 1;
+  char *ret;
+  htsmsg_field_t *f;
+  const char *sep = ", ";
+  if (!m->hm_islist) return NULL;
+
+#define MAX(a,b) ((a) < (b)) ? (a) : (b)
+#define REALLOC(l)\
+  if ((alloc - used) < l) {\
+    alloc = MAX((l)*2, alloc*2);\
+    ret   = realloc(ret, alloc);\
+  }\
+
+  ret  = malloc(alloc = 512);
+  *ret = 0;
+  used = 0;
+  HTSMSG_FOREACH(f, m) {
+    if (f->hmf_type == HMF_STR) {
+      REALLOC(2 + strlen(f->hmf_str));
+      used += sprintf(ret+used, "%s%s", !first ? sep : "", f->hmf_str);
+    } else if (f->hmf_type == HMF_S64) {
+      REALLOC(34); // max length is actually 20 chars + 2
+      used += sprintf(ret+used, "%s%"PRId64, !first ? sep : "", f->hmf_s64);
+    } else if (f->hmf_type == HMF_BOOL) {
+      REALLOC(2); // max length is actually 20 chars + 2
+      used += sprintf(ret+used, "%s%d", !first ? sep : "", f->hmf_bool);
+    } else {
+      // TODO: handle doubles
+      free(ret);
+      return NULL;
+    }
+  }
+
+  return ret;
+}
 
 
