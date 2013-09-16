@@ -126,7 +126,6 @@ idnode_init(void)
 {
   pthread_t tid;
 
-
   randfd = open("/dev/urandom", O_RDONLY);
   if(randfd == -1)
     exit(1);
@@ -302,6 +301,23 @@ idnode_find_prop
 }
 
 /*
+ * Get display value
+ */
+static char *
+idnode_get_display
+  ( idnode_t *self, const property_t *p )
+{
+  if (p->rend)
+    return p->rend(self);
+  if (p->islist) {
+    htsmsg_t *l = (htsmsg_t*)p->get(self);
+    if (l)
+      return htsmsg_list_2_csv(l);
+  }
+  return NULL;
+}
+
+/*
  * Get field as string
  */
 const char *
@@ -329,6 +345,7 @@ idnode_get_u32
   ( idnode_t *self, const char *key, uint32_t *u32 )
 {
   const property_t *p = idnode_find_prop(self, key);
+  if (p->islist) return 1;
   if (p) {
     const void *ptr;
     if (p->get)
@@ -361,6 +378,7 @@ idnode_get_bool
   ( idnode_t *self, const char *key, int *b )
 {
   const property_t *p = idnode_find_prop(self, key);
+  if (p->islist) return 1;
   if (p) {
     void *ptr = self;
     ptr += p->off;
@@ -446,17 +464,32 @@ idnode_cmp_sort
   idnode_t      *inb  = *(idnode_t**)b;
   idnode_sort_t *sort = s;
   const property_t *p = idnode_find_prop(ina, sort->key);
+  if (!p) return 0;
+
+  /* Get display string */
+  if (p->islist || p->list) {
+    int r;
+    char *stra = idnode_get_display(ina, p);
+    char *strb = idnode_get_display(inb, p);
+    if (sort->dir == IS_ASC)
+      r = strcmp(stra ?: "", strb ?: "");
+    else
+      r = strcmp(strb ?: "", stra ?: "");
+    free(stra);
+    free(strb);
+    return r;
+  }
+
   switch (p->type) {
     case PT_STR:
       {
         int r;
-        char *stra = strdup(idnode_get_str(ina, sort->key) ?: "");
+        const char *stra = idnode_get_str(ina, sort->key);
         const char *strb = idnode_get_str(inb, sort->key);
         if (sort->dir == IS_ASC)
           r = strcmp(stra ?: "", strb ?: "");
         else
           r = strcmp(strb ?: "", stra ?: "");
-        free(stra);
         return r;
       }
       break;
@@ -490,8 +523,10 @@ idnode_filter
   LIST_FOREACH(f, filter, link) {
     if (f->type == IF_STR) {
       const char *str;
-      if (!(str = idnode_get_str(in, f->key)))
-        return 1;
+      str = idnode_get_display(in, idnode_find_prop(in, f->key));
+      if (!str)
+        if (!(str = idnode_get_str(in, f->key)))
+          return 1;
       switch(f->comp) {
         case IC_IN:
           if (strstr(str, f->u.s) == NULL)

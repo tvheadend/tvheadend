@@ -59,8 +59,9 @@ typedef struct property {
   const void *(*get)  (void *ptr);
   int         (*set)  (void *ptr, const void *v);
   htsmsg_t   *(*list) (void *ptr);
-  // Note: htsmsg_t can either be a string list or object list
-  //       where the object has "key" and "val" fields
+  char       *(*rend) (void *ptr); ///< Provide the rendered value for enum/list
+                                   ///< Lists should be CSV. This is used for
+                                   ///< sorting and searching in UI API
 
   /* Notification callback */
   void        (*notify)   (void *ptr);
