@@ -144,7 +144,47 @@ descrambler_name2caid(const char *s)
   return (i < 0) ? strtol(s, NULL, 0) : i;
 }
 
-
+/**
+ * Detects the cam card type
+ * If you want to add another card, have a look at
+ * http://www.dvbservices.com/identifiers/ca_system_id?page=3
+ *
+ * based on the equivalent in sasc-ng
+ */
+card_type_t
+detect_card_type(const uint16_t caid)
+{
+  
+  uint8_t c_sys = caid >> 8;
+  
+  switch(caid) {
+    case 0x5581:
+    case 0x4aee:
+      return CARD_BULCRYPT;
+  }
+  
+  switch(c_sys) {
+    case 0x17:
+    case 0x06:
+      return CARD_IRDETO;
+    case 0x05:
+      return CARD_VIACCESS;
+    case 0x0b:
+      return CARD_CONAX;
+    case 0x01:
+      return CARD_SECA;
+    case 0x4a:
+      return CARD_DRE;
+    case 0x18:
+      return CARD_NAGRA;
+    case 0x09:
+      return CARD_NDS;
+    case 0x0d:
+      return CARD_CRYPTOWORKS;
+    default:
+      return CARD_UNKNOWN;
+  }
+}
 
 /* **************************************************************************
  * Editor

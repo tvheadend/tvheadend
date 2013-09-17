@@ -58,12 +58,29 @@ typedef struct caid {
 
 } caid_t;
 
+/**
+ * cards for which emm updates are handled
+ */
+typedef enum {
+  CARD_IRDETO,
+  CARD_DRE,
+  CARD_CONAX,
+  CARD_SECA,
+  CARD_VIACCESS,
+  CARD_NAGRA,
+  CARD_NDS,
+  CARD_CRYPTOWORKS,
+  CARD_BULCRYPT,
+  CARD_UNKNOWN
+} card_type_t;
+
 LIST_HEAD(caid_list, caid);
 
 void descrambler_init          ( void );
 void descrambler_service_start ( struct service *t );
 const char *descrambler_caid2name(uint16_t caid);
 uint16_t descrambler_name2caid(const char *str);
+card_type_t detect_card_type(const uint16_t caid);
 
 #endif /* __TVH_DESCRAMBLER_H__ */
 

@@ -52,22 +52,6 @@
 #define CWS_NETMSGSIZE 362
 #define CWS_FIRSTCMDNO 0xe0
 
-/**
- * cards for which emm updates are handled
- */
-typedef enum {
-  CARD_IRDETO,
-  CARD_DRE,
-  CARD_CONAX,
-  CARD_SECA,
-  CARD_VIACCESS,
-  CARD_NAGRA,
-  CARD_NDS,
-  CARD_CRYPTOWORKS,
-  CARD_BULCRYPT,
-  CARD_UNKNOWN
-} card_type_t;
-
 typedef enum {
   MSG_CLIENT_2_SERVER_LOGIN = CWS_FIRSTCMDNO,
   MSG_CLIENT_2_SERVER_LOGIN_ACK,
@@ -297,7 +281,6 @@ typedef struct cwc {
  */
 
 static void cwc_service_destroy(th_descrambler_t *td);
-static void cwc_detect_card_type(cwc_t *cwc, struct cs_card_data *pcard);
 void cwc_emm_conax(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int len);
@@ -616,7 +599,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
   
   memcpy(pcard->cwc_ua, &msg[6], 8);
-  cwc_detect_card_type(cwc, pcard);
+  pcard->cwc_card_type = detect_card_type(pcard->cwc_caid);
   
   msg  += 15;
   plen -= 12;
@@ -682,76 +665,6 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   }
 
   return 0;
-}
-
-/**
- * Detects the cam card type
- * If you want to add another card, have a look at
- * http://www.dvbservices.com/identifiers/ca_system_id?page=3
- * 
- * based on the equivalent in sasc-ng
- */
-static void
-cwc_detect_card_type(cwc_t *cwc, struct cs_card_data *pcard)
-{
-  
-  uint8_t c_sys = pcard->cwc_caid >> 8;
-  
-  switch(pcard->cwc_caid) {
-    case 0x5581:
-    case 0x4aee:
-      pcard->cwc_card_type = CARD_BULCRYPT;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: bulcrypt card",
-	     cwc->cwc_hostname, cwc->cwc_port);
-      return;
-  }
-		
-  switch(c_sys) {
-    case 0x17:
-    case 0x06:
-      pcard->cwc_card_type = CARD_IRDETO;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: irdeto card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x05:
-      pcard->cwc_card_type = CARD_VIACCESS;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: viaccess card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x0b:
-      pcard->cwc_card_type = CARD_CONAX;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: conax card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x01:
-      pcard->cwc_card_type = CARD_SECA;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: seca card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x4a:
-      pcard->cwc_card_type = CARD_DRE;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: dre card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x18:
-      pcard->cwc_card_type = CARD_NAGRA;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: nagra card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x09:
-      pcard->cwc_card_type = CARD_NDS;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: nds card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    case 0x0d:
-      pcard->cwc_card_type = CARD_CRYPTOWORKS;
-      tvhlog(LOG_INFO, "cwc", "%s:%i: cryptoworks card",
-             cwc->cwc_hostname, cwc->cwc_port);
-      break;
-    default:
-      pcard->cwc_card_type = CARD_UNKNOWN;
-      break;
-  }
 }
 
 /**
@@ -985,7 +898,8 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
         n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
         
         memcpy(pcard->cwc_ua, &msg[6], 8);
-        cwc_detect_card_type(cwc, pcard);
+        
+        pcard->cwc_card_type = detect_card_type(pcard->cwc_caid);
         
         pcard->cwc_providers[0].id = (msg[8] << 16) | (msg[9] << 8) | msg[10];
         
