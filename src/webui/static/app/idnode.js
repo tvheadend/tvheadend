@@ -104,6 +104,160 @@ tvheadend.idnode_enum_store = function(f)
   return store;
 }
 
+tvheadend.IdNodeField = function (conf)
+{
+  /*
+   * Properties
+   */
+  this.id     = conf.id;
+  this.text   = conf.caption || this.id;
+  this.type   = conf.type;
+  this.list = conf.list;
+  this.rdonly = conf.rdonly;
+  this.wronly = conf.wronly;
+  this.wronce = conf.wronce;
+  this.enum   = conf.enum;
+  this.store  = null;
+  if (this.enum)
+    this.store = tvheadend.idnode_enum_store(this);
+
+  /*
+   * Methods
+   */
+
+  this.column = function ()
+  {
+    var ftype = 'string';
+    if (this.type == 'int' || this.type == 'u32' || 
+        this.type == 'u16' || this.type == 'dbl')
+      ftype = 'numeric';
+    else if (this.type == 'bool')
+      ftype = 'boolean'
+    return {
+      dataIndex: this.id,
+      header   : this.text,
+      sortable : true,
+      editor   : this.editor({create: false}),
+      renderer : this.renderer(),
+      filter   : {
+        type      : ftype,
+        dataIndex : this.id
+      }
+    };
+  }
+
+  this.renderer = function ()
+  {
+    if (!this.store)
+      return null;
+
+    var st = this.store;
+    return function (v) {
+      if (st) {
+        var t = []
+        var d;
+        if (v.push)
+          d = v;
+        else
+          d = [ v ];
+        for (var i = 0; i < d.length; i++) {
+          var r = st.find('key', d[i]);
+          if (r != -1) {
+            var nv = st.getAt(r).get('val');
+            if (nv)
+              t.push(nv);
+          }
+        }
+        v = t.join(',');
+      }
+      return v;
+    };
+  }
+
+  this.editor   = function (conf)
+  {
+    var cons = null;
+
+    /* Editable? */
+    var d = this.rdonly;
+    if (this.wronly && !conf.create)
+      d = false;
+
+    /* Basic */
+    var c = {
+      fieldLabel : this.text,
+      name       : this.id,
+      value      : conf.value || null,
+      disabled   : d,
+      width      : 300,
+    };
+
+    /* ComboBox */
+    if (this.enum) {
+      cons = Ext.form.ComboBox;
+      if (this.list)
+        cons = Ext.ux.form.LovCombo;
+
+      /* Combo settings */
+      c['mode']           = 'local';
+      c['valueField']     = 'key';
+      c['displayField']   = 'val';
+      c['store']          = this.store;
+      c['typeAhead']      = true;
+      c['forceSelection'] = false;
+      c['triggerAction']  = 'all',
+      c['emptyText']      = 'Select ' + this.text + ' ...';
+    
+    /* Single */
+    } else {
+      switch (this.type) {
+        case 'bool':
+          cons = Ext.form.Checkbox;
+        break;
+
+        case 'int':
+        case 'u32':
+        case 'u16':
+        case 'dbl':
+          cons = Ext.form.NumberField;
+          break;
+
+        default:
+          cons = Ext.form.TextField;
+          break;
+      }
+    }
+
+    return new cons(c);
+  }
+}
+
+/*
+ * IdNode
+ */
+tvheadend.IdNode = function (conf)
+{
+  /*
+   * Properties
+   */
+  this.clazz  = conf.class;
+  this.text   = conf.caption || this.clazz;
+  this.props  = conf.props;
+  this.fields = []
+  for (var i = 0; i < this.props.length; i++) {
+    this.fields.push(new tvheadend.IdNodeField(this.props[i]));
+  }
+
+  /*
+   * Methods
+   */
+
+  this.length = function () {
+    return this.fields.length;
+  }
+}
+
+
 /*
  * Field editor
  */
@@ -111,48 +265,51 @@ tvheadend.idnode_editor_field = function(f, create)
 {
   var d = f.rdonly || false;
   if (f.wronly && !create) d = false;
+    
+  /* Enumerated (combobox) type */
+  if (f.enum) {
+    var cons = Ext.form.ComboBox;
+    if (f.list)
+      cons = Ext.ux.form.LovCombo;
+    return new cons({
+      fieldLabel      : f.caption,
+      name            : f.id,
+      value           : f.value,
+      disabled        : d,
+      width           : 300,
+      mode            : 'local',
+      valueField      : 'key',
+      displayField    : 'val',
+      store           : tvheadend.idnode_enum_store(f),
+      typeAhead       : true, // TODO: this does strange things in multi
+      forceSelection  : false,
+      triggerAction   : 'all',
+      emptyText       :'Select ' + f.caption +' ...'
+    });
+    /* TODO: listeners for regexp?
+    listeners       : { 
+      keyup: function() {
+        this.store.filter('val', this.getRawValue(), true, false);
+      },
+      beforequery: function(queryEvent) {
+        queryEvent.combo.onLoad();
+        // prevent doQuery from firing and clearing out my filter.
+        return false; 
+      }
+    }
+    */
+  }
 
+  /* Singular */
   switch(f.type) {
     case 'str':
-      if (f.enum) {
-        var cons = Ext.form.ComboBox;
-        if (f.multi)
-          cons = Ext.ux.form.LovCombo;
-        return new cons({
-          fieldLabel      : f.caption,
-          name            : f.id,
-          value           : f.value,
-          disabled        : d,
-          width           : 300,
-          mode            : 'local',
-          valueField      : 'key',
-          displayField    : 'val',
-          store           : tvheadend.idnode_enum_store(f),
-          /*typeAhead       : true,*/
-          /*forceSelection  : true,*/
-          triggerAction   : 'all',
-          emptyText       :'Select ' + f.caption +' ...',
-          clearFilterOnReset: false,
-          listeners       : { 
-            keyup: function() {
-              this.store.filter('val', this.getRawValue(), true, false);
-            },
-            beforequery: function(queryEvent) {
-              queryEvent.combo.onLoad();
-              // prevent doQuery from firing and clearing out my filter.
-              return false; 
-            }
-          }
-        });
-      } else {
-        return new Ext.form.TextField({
-          fieldLabel  : f.caption,
-          name        : f.id,
-          value       : f.value,
-          disabled    : d,
-          width       : 300
-        });
-      }
+      return new Ext.form.TextField({
+        fieldLabel  : f.caption,
+        name        : f.id,
+        value       : f.value,
+        disabled    : d,
+        width       : 300
+      });
       break;
 
     case 'bool':
@@ -168,39 +325,14 @@ tvheadend.idnode_editor_field = function(f, create)
     case 'u32':
     case 'u16':
     case 'dbl':
-      if (f.enum) {
-        return new Ext.form.ComboBox({
-          fieldLabel      : f.caption,
-          name            : f.id,
-          value           : f.value,
-          disabled        : d,
-          width           : 300,
-          mode            : 'local',
-          valueField      : 'key',
-          displayField    : 'val',
-          store           : tvheadend.idnode_enum_store(f),
-          typeAhead       : true,
-          forceSelection  : true,
-          triggerAction   : 'all',
-          emptyText       :'Select ' + f.caption +' ...'
-        });
-      } else {
-        return new Ext.form.NumberField({
-          fieldLabel  : f.caption,
-          name        : f.id,
-          value       : f.value,
-          disabled    : d,
-          width       : 300
-        });
-      }
-      break;
-
-    /*
-    case 'separator':
-      return new Ext.form.LabelField({
-        fieldLabel  : f.caption
+      return new Ext.form.NumberField({
+        fieldLabel  : f.caption,
+        name        : f.id,
+        value       : f.value,
+        disabled    : d,
+        width       : 300
       });
-*/
+      break;
   }
   return null;
 }
@@ -425,44 +557,15 @@ tvheadend.idnode_grid = function(panel, conf)
     var delBtn  = null;
     var editBtn = null;
 
-    /* Process model */
-    for (i = 0; i < d.length; i++) {
-      var f    = d[i];
-      var type = 'string';
-      var edit = null;
-      var rend = null;
-      if (f.type == 'separator') continue;
-      if (!f.rdonly && !f.wronce)
-        edit = tvheadend.idnode_editor_field(f);
-      if (f.enum)
-        rend = function(v) {
-          var s = null;
-          for (j = 0; j < d.length; j++) {
-            if (d[j].id == this.dataIndex) {
-              s = tvheadend.idnode_enum_store(d[j]);
-              break;
-            }
-          }
-          if (s && s.find) {
-            var r = s.find('key', v);
-            if (r != -1) {
-              v = s.getAt(r).get('val');
-            }
-          }
-          return v;
-        }
-      fields.push(f.id)
-      columns.push({
-        dataIndex: f.id,
-        header   : f.caption,
-        sortable : true,
-        editor   : edit,
-        renderer : rend,
-      });
-      filters.push({
-        type      : type,
-        dataIndex : f.id
-      });
+    /* Model */
+    var idnode  = new tvheadend.IdNode(d);
+    for (var i = 0; i < idnode.length(); i++) {
+      var f = idnode.fields[i];
+      var c = f.column();
+      fields.push(f.id);
+      columns.push(c);
+      if (c.filter)
+        filters.push(c.filter);
     }
 
     /* Right-hand columns */
@@ -479,13 +582,14 @@ tvheadend.idnode_grid = function(panel, conf)
 
     /* Store */
     var store  = new Ext.data.JsonStore({
-      root          : 'entries',
-      url           : conf.url + '/grid',
-      autoLoad      : true,
-      id            : 'uuid',
-      totalProperty : 'total',
-      fields        : fields,
-      remoteSort    : true
+      root                 : 'entries',
+      url                  : conf.url + '/grid',
+      autoLoad             : true,
+      id                   : 'uuid',
+      totalProperty        : 'total',
+      fields               : fields,
+      remoteSort           : true,
+      pruneModifiedRecords : true
     });
 
     /* Model */
@@ -532,6 +636,7 @@ tvheadend.idnode_grid = function(panel, conf)
            },
            success : function(d)
            {
+             if (!auto.getValue()) store.reload();
            }
         });
       }
@@ -579,6 +684,7 @@ tvheadend.idnode_grid = function(panel, conf)
               },
               success : function(d)
               {
+                if (!auto.getValue()) store.reload();
               }
             });
           }
@@ -706,7 +812,8 @@ tvheadend.idnode_grid = function(panel, conf)
       url     : conf.url + '/class',
       success : function(d)
       {
-        build(json_decode(d).props);
+        var d = json_decode(d);
+        build(d);
       }
     });
   } else {
