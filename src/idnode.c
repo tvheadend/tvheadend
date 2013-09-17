@@ -88,7 +88,6 @@ hex2bin(uint8_t *buf, size_t buflen, const char *str)
   return 0;
 }
 
-
 /**
  *
  */
@@ -111,7 +110,7 @@ bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 static int
 in_cmp(const idnode_t *a, const idnode_t *b)
 {
-  return memcmp(a->in_uuid, b->in_uuid, 16);
+  return memcmp(a->in_uuid, b->in_uuid, sizeof(a->in_uuid));
 }
 
 /* **************************************************************************
@@ -145,12 +144,12 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
   idnode_t *c;
   lock_assert(&global_lock);
   if(uuid == NULL) {
-    if(read(randfd, in->in_uuid, 16) != 16) {
+    if(read(randfd, in->in_uuid, sizeof(in->in_uuid)) != sizeof(in->in_uuid)) {
       perror("read(random for uuid)");
       exit(1);
     }
   } else {
-    if(hex2bin(in->in_uuid, 16, uuid))
+    if(hex2bin(in->in_uuid, sizeof(in->in_uuid), uuid))
       return -1;
   }
 
@@ -217,14 +216,19 @@ idnode_get_short_uuid (const idnode_t *in)
  *
  */
 const char *
+idnode_uuid_as_str0(const idnode_t *in, char *b)
+{
+  bin2hex(b, UUID_STR_LEN, in->in_uuid, sizeof(in->in_uuid));
+  return b;
+}
+const char *
 idnode_uuid_as_str(const idnode_t *in)
 {
-  static char ret[16][33];
-  static int p;
+  static char ret[16][UUID_STR_LEN];
+  static int p = 0;
   char *b = ret[p];
-  bin2hex(b, 33, in->in_uuid, 16);
-  p = (p + 1) & 15;
-  return b;
+  p = (p + 1) % 16;
+  return idnode_uuid_as_str0(in, b);
 }
 
 /**
@@ -406,7 +410,7 @@ idnode_find(const char *uuid, const idclass_t *idc)
   idnode_t skel, *r;
 
   tvhtrace("idnode", "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
-  if(hex2bin(skel.in_uuid, 16, uuid))
+  if(hex2bin(skel.in_uuid, sizeof(skel.in_uuid), uuid))
     return NULL;
   r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
   if(r != NULL && idc != NULL) {
