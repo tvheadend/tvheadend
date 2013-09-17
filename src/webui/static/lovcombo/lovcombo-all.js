@@ -136,7 +136,7 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	,getCheckedDisplay:function() {
 		var re = new RegExp(this.separator, "g");
-		return this.getCheckedValue(this.displayField).replace(re, this.separator + ' ');
+		return this.getCheckedValue(this.displayField).join(this.separator);
 	} // eo function getCheckedDisplay
 	// }}}
 	// {{{
@@ -157,7 +157,7 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 			}
 		}, this);
 
-		return c.join(this.separator);
+		return c;
 	} // eo function getCheckedValue
 	// }}}
 	// {{{
@@ -177,7 +177,7 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	,onRealBlur:function() {
 		this.list.hide();
 		var rv = this.getRawValue();
-		var rva = rv.split(new RegExp(RegExp.escape(this.separator) + ' *'));
+		var rva = rv.split(this.separator);//new RegExp(RegExp.escape(this.separator) + '+'));
 		var va = [];
 		var snapshot = this.store.snapshot || this.store.data;
 
