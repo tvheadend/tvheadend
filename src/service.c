@@ -56,10 +56,26 @@ service_class_channel_get ( void *obj )
   channel_service_mapping_t *csm;
 
   htsmsg_t *l = htsmsg_create_list();
-  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link)
+  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
     htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_chn->ch_id));
   
   return l;
+}
+
+static char *
+service_class_channel_rend ( void *obj )
+{
+  char *str;
+  service_t *svc = obj;
+  channel_service_mapping_t *csm;
+
+  htsmsg_t *l = htsmsg_create_list();
+  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
+    htsmsg_add_str(l, NULL, idnode_get_title(&csm->csm_chn->ch_id));
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
 }
 
 static int
@@ -154,6 +170,7 @@ const idclass_t service_class = {
       .get      = service_class_channel_get,
       .set      = service_class_channel_set,
       .list     = service_class_channel_enum,
+      .rend     = service_class_channel_rend,
       .opts     = PO_NOSAVE
     },
     {}

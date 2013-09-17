@@ -91,6 +91,22 @@ channel_class_services_get ( void *obj )
   return l;
 }
 
+static char *
+channel_class_services_rend ( void *obj )
+{
+  char *str;
+  htsmsg_t   *l = htsmsg_create_list();
+  channel_t *ch = obj;
+  channel_service_mapping_t  *csm;
+
+  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link)
+    htsmsg_add_str(l, NULL, idnode_get_title(&csm->csm_svc->s_id) ?: "");
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
+}
+
 static int
 channel_class_services_set ( void *obj, const void *p )
 {
@@ -124,6 +140,22 @@ channel_class_tags_get ( void *obj )
   return m;
 }
 
+static char *
+channel_class_tags_rend ( void *obj )
+{
+  char *str;
+  htsmsg_t   *l = htsmsg_create_list();
+  channel_t *ch = obj;
+  channel_tag_mapping_t *ctm;
+
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    htsmsg_add_str(l, NULL, ctm->ctm_tag->ct_name);
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
+}
+
 static int
 channel_class_tags_set ( void *obj, const void *p )
 {
@@ -141,8 +173,8 @@ channel_class_tags_enum ( void *obj )
   htsmsg_add_bool(e, "enum", 1);
   htsmsg_add_msg(m, "params", e);
   return m;
- }
-
+}
+  
 static void
 channel_class_icon_notify ( void *obj )
 {
@@ -212,6 +244,7 @@ const idclass_t channel_class = {
       .get      = channel_class_services_get,
       .set      = channel_class_services_set,
       .list     = channel_class_services_enum,
+      .rend     = channel_class_services_rend,
     },
     {
       .type     = PT_INT,
@@ -221,6 +254,7 @@ const idclass_t channel_class = {
       .get      = channel_class_tags_get,
       .set      = channel_class_tags_set,
       .list     = channel_class_tags_enum,
+      .rend     = channel_class_tags_rend
     },
     {}
   }

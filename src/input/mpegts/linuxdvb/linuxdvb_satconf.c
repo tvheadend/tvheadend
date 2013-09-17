@@ -40,11 +40,19 @@ linuxdvb_satconf_class_network_get(void *o)
 {
   static const char *s;
   linuxdvb_satconf_t *ls = o;
-  if (ls->mi_network)
-    s = idnode_uuid_as_str(&ls->mi_network->mn_id);
-  else
-    s = NULL;
+  s = ls->mi_network ? idnode_uuid_as_str(&ls->mi_network->mn_id) : NULL;
   return &s;
+}
+
+static char *
+linuxdvb_satconf_class_network_rend ( void *o )
+{
+  const char *buf;
+  linuxdvb_satconf_t *ls = o;
+  if (ls->mi_network)
+    if ((buf = idnode_get_title(&ls->mi_network->mn_id)))
+      return strdup(buf);
+  return NULL;
 }
 
 static int
@@ -90,11 +98,19 @@ linuxdvb_satconf_class_frontend_get ( void *o )
 {
   static const char *s;
   linuxdvb_satconf_t *ls = o;
-  if (ls->ls_frontend)
-    s = idnode_uuid_as_str(&ls->ls_frontend->ti_id);
-  else
-    s = NULL;
+  s = ls->ls_frontend ? idnode_uuid_as_str(&ls->ls_frontend->ti_id) : NULL;
   return &s;
+}
+
+static char *
+linuxdvb_satconf_class_frontend_rend ( void *o )
+{
+  const char *buf;
+  linuxdvb_satconf_t *ls = o;
+  if (ls->ls_frontend)
+    if ((buf = idnode_get_title(&ls->ls_frontend->ti_id)))
+      return strdup(buf);
+  return NULL;
 }
 
 static int
@@ -264,7 +280,8 @@ const idclass_t linuxdvb_satconf_class =
       .name     = "Frontend",
       .get  	  = linuxdvb_satconf_class_frontend_get,
       .set    	= linuxdvb_satconf_class_frontend_set,
-      .list	    = linuxdvb_satconf_class_frontend_enum
+      .list	    = linuxdvb_satconf_class_frontend_enum,
+      .rend     = linuxdvb_satconf_class_frontend_rend,
     },
     {
       .type     = PT_STR,
@@ -272,7 +289,8 @@ const idclass_t linuxdvb_satconf_class =
       .name     = "Network",
       .get  	  = linuxdvb_satconf_class_network_get,
       .set  	  = linuxdvb_satconf_class_network_set,
-      .list	    = linuxdvb_satconf_class_network_enum
+      .list	    = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend,
     },
     {
       .type     = PT_INT,
