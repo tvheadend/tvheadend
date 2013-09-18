@@ -1220,6 +1220,7 @@ cwc_thread(void *aux)
 
   while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
     LIST_REMOVE(cd, cs_card);
+    free(cd);
   }
   free((void *)cwc->cwc_password);
   free((void *)cwc->cwc_password_salted);
