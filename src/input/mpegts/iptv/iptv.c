@@ -471,13 +471,6 @@ const idclass_t iptv_network_class = {
 };
 
 static mpegts_mux_t *
-iptv_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf )
-{
-  return NULL;
-}
-
-static mpegts_mux_t *
 iptv_network_create_mux2
   ( mpegts_network_t *mm, htsmsg_t *conf )
 {
@@ -525,7 +518,6 @@ void iptv_init ( void )
   /* Init Network */
   mpegts_network_create0((mpegts_network_t*)&iptv_network,
                          &iptv_network_class, NULL, "IPTV Network", NULL);
-  iptv_network.mn_create_mux     = iptv_network_create_mux;
   iptv_network.mn_create_service = iptv_network_create_service;
   iptv_network.mn_mux_class      = iptv_network_mux_class;
   iptv_network.mn_mux_create2    = iptv_network_create_mux2;

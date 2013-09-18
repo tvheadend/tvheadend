@@ -135,10 +135,9 @@ static mpegts_mux_t *
 linuxdvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
-  // TODO: should we have a mux_find wrapper?
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   mm = linuxdvb_network_find_mux(ln, dmc);
-  if (!mm) {
+  if (!mm && ln->mn_autodiscovery) {
     mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
     if (mm)
       mm->mm_config_save(mm);
