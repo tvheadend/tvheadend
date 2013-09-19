@@ -206,7 +206,7 @@ typedef enum polarisation {
 typedef struct dvb_mux_conf
 {
   dvb_frontend_parameters_t dmc_fe_params;
-  
+
   // Additional DVB-S fields
   polarisation_t            dmc_fe_polarisation;
   int                       dmc_fe_orbital_pos;
@@ -216,6 +216,10 @@ typedef struct dvb_mux_conf
   fe_delivery_system_t      dmc_fe_delsys;
   fe_rolloff_t              dmc_fe_rolloff;
 #endif
+
+  // For scan file configurations
+  LIST_ENTRY(dvb_mux_conf)  dmc_link;
+  
 } dvb_mux_conf_t;
 
 const char *dvb_mux_conf_load

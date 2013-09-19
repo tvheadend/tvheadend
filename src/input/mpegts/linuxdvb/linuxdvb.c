@@ -21,9 +21,13 @@
 #include "input.h"
 #include "settings.h"
 #include "linuxdvb_private.h"
+#include "scanfile.h"
 
 void linuxdvb_init ( int adapter_mask )
 {
+  /* Load scan files */
+  scanfile_init();
+
   /* Initialise networks */
   linuxdvb_network_init();
 

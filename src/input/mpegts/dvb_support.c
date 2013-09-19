@@ -499,10 +499,10 @@ const static struct strtab hiertab[] = {
 dvb_str2val(hier);
 
 const static struct strtab poltab[] = {
-  { "Vertical",             POLARISATION_VERTICAL },
-  { "Horizontal",           POLARISATION_HORIZONTAL },
-  { "Left",                 POLARISATION_CIRCULAR_LEFT },
-  { "Right",                POLARISATION_CIRCULAR_RIGHT },
+  { "V",                   POLARISATION_VERTICAL },
+  { "H",                   POLARISATION_HORIZONTAL },
+  { "L",                   POLARISATION_CIRCULAR_LEFT },
+  { "R",                   POLARISATION_CIRCULAR_RIGHT },
 };
 dvb_str2val(pol);
 

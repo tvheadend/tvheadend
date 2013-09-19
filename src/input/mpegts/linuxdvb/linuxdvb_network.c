@@ -22,6 +22,7 @@
 #include "linuxdvb_private.h"
 #include "queue.h"
 #include "settings.h"
+#include "scanfile.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -29,6 +30,10 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+
+static mpegts_mux_t *
+linuxdvb_network_find_mux
+  ( linuxdvb_network_t *ln, dvb_mux_conf_t *dmc );
 
 /* ****************************************************************************
  * Class definition
@@ -49,6 +54,70 @@ linuxdvb_network_class_delete ( idnode_t *in )
   mpegts_network_delete(mn);
 }
 
+static const void *
+linuxdvb_network_class_scanfile_get ( void *o )
+{
+  static const char *s = NULL;
+  return &s;
+}
+static int
+linuxdvb_network_class_scanfile_set ( void *o, const void *s )
+{
+  dvb_mux_conf_t *dmc;
+  scanfile_network_t *sfn;
+  mpegts_mux_t *mm;
+
+  /* Find */
+  if (!s)
+    return 0;
+  if (!(sfn = scanfile_find(s)))
+    return 0;
+  
+  /* Create */
+  LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
+    if (!(mm = linuxdvb_network_find_mux(o, dmc))) {
+      mm = (mpegts_mux_t*)linuxdvb_mux_create0(o,
+                                               MPEGTS_ONID_NONE,
+                                               MPEGTS_TSID_NONE,
+                                               dmc, NULL, NULL);
+      if (mm)
+        mm->mm_config_save(mm);
+    }
+  }
+  return 0;
+}
+static htsmsg_t *
+linuxdvb_network_class_scanfile_list ( const char *type )
+{
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type", "api");
+  htsmsg_add_str(m, "uri", "linuxdvb/scanfile/list");
+  e = htsmsg_create_map();
+  htsmsg_add_str(e, "type", type);
+  htsmsg_add_msg(m, "params", e);
+  return m;
+}
+static htsmsg_t *
+linuxdvb_network_dvbt_class_scanfile_list ( void *o )
+{
+  return linuxdvb_network_class_scanfile_list("dvbt");
+}
+static htsmsg_t *
+linuxdvb_network_dvbc_class_scanfile_list ( void *o )
+{
+  return linuxdvb_network_class_scanfile_list("dvbc");
+}
+static htsmsg_t *
+linuxdvb_network_dvbs_class_scanfile_list ( void *o )
+{
+  return linuxdvb_network_class_scanfile_list("dvbs");
+}
+static htsmsg_t *
+linuxdvb_network_atsc_class_scanfile_list ( void *o )
+{
+  return linuxdvb_network_class_scanfile_list("atsc");
+}
+
 const idclass_t linuxdvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
@@ -66,6 +135,15 @@ const idclass_t linuxdvb_network_dvbt_class =
   .ic_class      = "linuxdvb_network_dvbt",
   .ic_caption    = "DVB-T Network",
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = "Pre-defined Muxes",
+      .set      = linuxdvb_network_class_scanfile_set,
+      .get      = linuxdvb_network_class_scanfile_get,
+      .list     = linuxdvb_network_dvbt_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
     {}
   }
 };
@@ -76,6 +154,15 @@ const idclass_t linuxdvb_network_dvbc_class =
   .ic_class      = "linuxdvb_network_dvbc",
   .ic_caption    = "DVB-C Network",
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = "Pre-defined Muxes",
+      .set      = linuxdvb_network_class_scanfile_set,
+      .get      = linuxdvb_network_class_scanfile_get,
+      .list     = linuxdvb_network_dvbc_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
     {}
   }
 };
@@ -86,6 +173,15 @@ const idclass_t linuxdvb_network_dvbs_class =
   .ic_class      = "linuxdvb_network_dvbs",
   .ic_caption    = "DVB-S Network",
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = "Pre-defined Muxes",
+      .set      = linuxdvb_network_class_scanfile_set,
+      .get      = linuxdvb_network_class_scanfile_get,
+      .list     = linuxdvb_network_dvbs_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
     {}
   }
 };
@@ -96,6 +192,15 @@ const idclass_t linuxdvb_network_atsc_class =
   .ic_class      = "linuxdvb_network_atsc",
   .ic_caption    = "ATSC Network",
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = "Pre-defined Muxes",
+      .set      = linuxdvb_network_class_scanfile_set,
+      .get      = linuxdvb_network_class_scanfile_get,
+      .list     = linuxdvb_network_atsc_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
     {}
   }
 };
@@ -194,11 +299,7 @@ linuxdvb_network_create0
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
 
-  /* Create */
-  if (!(ln = (linuxdvb_network_t*)mpegts_network_create0(calloc(1, sizeof(linuxdvb_network_t)),
-                                    idc, uuid, NULL, conf)))
-    return NULL;
-  
+  ln = calloc(1, sizeof(linuxdvb_network_t));
   if (idc == &linuxdvb_network_dvbt_class)
     ln->ln_type = FE_OFDM;
   else if (idc == &linuxdvb_network_dvbc_class)
@@ -207,6 +308,11 @@ linuxdvb_network_create0
     ln->ln_type = FE_QPSK;
   else
     ln->ln_type = FE_ATSC;
+
+  /* Create */
+  if (!(ln = (linuxdvb_network_t*)mpegts_network_create0((void*)ln,
+                                     idc, uuid, NULL, conf)))
+    return NULL;
   
   /* Callbacks */
   ln->mn_create_mux     = linuxdvb_network_create_mux;

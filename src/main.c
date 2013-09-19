@@ -54,7 +54,6 @@
 #include "service.h"
 #include "trap.h"
 #include "settings.h"
-#include "muxes.h"
 #include "config2.h"
 #include "idnode.h"
 #include "imagecache.h"

@@ -300,8 +300,6 @@ mpegts_network_create0
 
   /* Setup idnode */
   idnode_insert(&mn->mn_id, uuid, idc);
-  if (conf)
-    idnode_load(&mn->mn_id, conf);
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;
@@ -311,9 +309,6 @@ mpegts_network_create0
   mn->mn_mux_class      = mpegts_network_mux_class;
   mn->mn_mux_create2    = mpegts_network_mux_create2;
 
-  /* Network name */
-  if (netname) mn->mn_network_name = strdup(netname);
-
   /* Init Qs */
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);
@@ -321,6 +316,12 @@ mpegts_network_create0
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_network_all, mn, mn_global_link);
 
+  /* Load config */
+  if (conf)
+    idnode_load(&mn->mn_id, conf);
+
+  /* Name */
+  if (netname) mn->mn_network_name = strdup(netname);
   mn->mn_display_name(mn, buf, sizeof(buf));
   tvhtrace("mpegts", "created network %s", buf);
 

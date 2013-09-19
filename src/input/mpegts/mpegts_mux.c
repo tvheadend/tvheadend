@@ -319,11 +319,7 @@ mpegts_mux_start
   mm->mm_create_instances(mm);
   if (!LIST_FIRST(&mm->mm_instances)) {
     tvhtrace("mpegts", "%s - has no instances", buf);
-    return SM_CODE_TUNING_FAILED;
-    // Note: we report a permanent inability to tune at this
-    //       time, rather than a lack of free tuners
-    //       this stops the init scan thinking we can't
-    //       proceed
+    return SM_CODE_NO_VALID_ADAPTER;
   }
 
   /* Find */

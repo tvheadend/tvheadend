@@ -25,6 +25,7 @@
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb.h"
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
+#include "input/mpegts/linuxdvb/scanfile.h"
 #endif
 
 /*
@@ -271,6 +272,52 @@ api_linuxdvb_satconf_create
 
   return err;
 }
+
+static int
+api_linuxdvb_scanfile_list
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  char buf[512];
+  const char *type = htsmsg_get_str(args, "type");
+  scanfile_region_list_t *list = NULL;
+  htsmsg_t *l, *e;
+  scanfile_region_t *r;
+  scanfile_network_t *n;
+
+  if (!type)
+    return -EINVAL;
+
+  if (!strcasecmp(type, "dvbt"))
+    list = &scanfile_regions_DVBT;
+  else if (!strcasecmp(type, "dvbc"))
+    list = &scanfile_regions_DVBC;
+  else if (!strcasecmp(type, "dvbs"))
+    list = &scanfile_regions_DVBS;
+  else if (!strcasecmp(type, "atsc"))
+    list = &scanfile_regions_ATSC;
+  else
+    return -EINVAL;
+  
+  l = htsmsg_create_list();
+  LIST_FOREACH(r, list, sfr_link) {
+    LIST_FOREACH(n, &r->sfr_networks, sfn_link) {
+      e = htsmsg_create_map();
+      sprintf(buf, "%s/%s/%s", type, r->sfr_id, n->sfn_id);
+      htsmsg_add_str(e, "key", buf);
+      if (list != &scanfile_regions_DVBS) {
+        sprintf(buf, "%s: %s", r->sfr_name, n->sfn_name);
+        htsmsg_add_str(e, "val", buf);
+      } else {
+        htsmsg_add_str(e, "val", n->sfn_name);
+      }
+      htsmsg_add_msg(l, NULL, e);
+    }
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  return 0;
+}
 #endif
 
 /*
@@ -316,6 +363,7 @@ api_mpegts_init ( void )
     { "linuxdvb/satconf/grid",     ACCESS_ANONYMOUS, api_idnode_grid,  api_linuxdvb_satconf_grid },
     { "linuxdvb/satconf/class",    ACCESS_ANONYMOUS, api_idnode_class, (void*)&linuxdvb_satconf_class },
     { "linuxdvb/satconf/create",   ACCESS_ANONYMOUS, api_linuxdvb_satconf_create, NULL },
+    { "linuxdvb/scanfile/list",    ACCESS_ANONYMOUS, api_linuxdvb_scanfile_list, NULL },
 #endif
     { NULL },
   };
