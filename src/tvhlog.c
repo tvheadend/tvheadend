@@ -275,13 +275,11 @@ void tvhlogv ( const char *file, int line,
     if (severity <= tvhlog_level) {
       if (tvhlog_trace) {
         ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
-        if (!ok)
-          ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
       }
       if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
         ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
-        if (!ok)
-          ok = htsmsg_get_u32_or_default(tvhlog_debug, subsys, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_debug, subsys, ok);
       }
     }
   } else {
