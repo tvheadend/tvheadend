@@ -276,13 +276,7 @@ const idclass_t linuxdvb_mux_dvbc_class =
   }
 };
 
-linuxdvb_mux_class_X(dvbs, qam, modulation,            qam,
-                     QAM_AUTO, QPSK, QAM_16
-#if DVB_VER_ATLEAST(5,4)
-                     , PSK_8, APSK_16, APSK_32
-#endif
-                    );
-linuxdvb_mux_class_X(dvbs, qam, fec_inner,             fec,
+linuxdvb_mux_class_X(dvbs, qpsk, fec_inner,             fec,
                      FEC_AUTO, FEC_NONE,
                      FEC_1_2, FEC_2_3, FEC_3_4, FEC_4_5, FEC_5_6, FEC_7_8,
                      FEC_8_9
@@ -315,6 +309,66 @@ linuxdvb_mux_dvbs_class_polarity_enum (void *o)
   htsmsg_add_str(list, NULL, dvb_pol2str(POLARISATION_CIRCULAR_RIGHT));
   return list;
 }
+
+static const void *
+linuxdvb_mux_dvbs_class_modulation_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_mux_t *lm = o;
+  s = dvb_qam2str(lm->lm_tuning.dmc_fe_modulation);
+  return &s;
+}
+static int
+linuxdvb_mux_dvbs_class_modulation_set (void *o, const void *s)
+{
+  linuxdvb_mux_t *lm = o;
+  lm->lm_tuning.dmc_fe_modulation = dvb_str2qam(s);
+  return 1;
+}
+static htsmsg_t *
+linuxdvb_mux_dvbs_class_modulation_list ( void *o )
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_qam2str(QAM_AUTO));
+  htsmsg_add_str(list, NULL, dvb_qam2str(QPSK));
+  htsmsg_add_str(list, NULL, dvb_qam2str(QAM_16));
+#if DVB_VER_ATLEAST(5,4)
+  htsmsg_add_str(list, NULL, dvb_qam2str(PSK_8));
+  htsmsg_add_str(list, NULL, dvb_qam2str(APSK_16));
+  htsmsg_add_str(list, NULL, dvb_qam2str(APSK_32));
+#endif
+  return list;
+}
+
+#if DVB_VER_ATLEAST(5,0)
+static const void *
+linuxdvb_mux_dvbs_class_rolloff_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_mux_t *lm = o;
+  s = dvb_rolloff2str(lm->lm_tuning.dmc_fe_rolloff);
+  return &s;
+}
+static int
+linuxdvb_mux_dvbs_class_rolloff_set ( void *o, const void *s )
+{
+  linuxdvb_mux_t *lm = o;
+  lm->lm_tuning.dmc_fe_rolloff = dvb_str2rolloff(s);
+  return 1;
+}
+static htsmsg_t *
+linuxdvb_mux_dvbs_class_rolloff_list ( void *o )
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_rolloff2str(ROLLOFF_35));
+  // Note: this is a bit naff, as the below values are only relevant
+  //       to S2 muxes, but currently have no way to model that
+  htsmsg_add_str(list, NULL, dvb_rolloff2str(ROLLOFF_20));
+  htsmsg_add_str(list, NULL, dvb_rolloff2str(ROLLOFF_25));
+  htsmsg_add_str(list, NULL, dvb_rolloff2str(ROLLOFF_AUTO));
+  return list;
+}
+#endif
 
 #define linuxdvb_mux_dvbs_class_delsys_get linuxdvb_mux_class_delsys_get
 #define linuxdvb_mux_dvbs_class_delsys_set linuxdvb_mux_class_delsys_set
@@ -354,11 +408,26 @@ const idclass_t linuxdvb_mux_dvbs_class =
       MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity)
     },
     {
-      MUX_PROP_STR("modulation", "Modulation", dvbs, qam)
+      .type     = PT_STR,
+      .id       = "modulation",
+      .name     = "Modulation",
+      .set      = linuxdvb_mux_dvbs_class_modulation_set,
+      .get      = linuxdvb_mux_dvbs_class_modulation_get,
+      .list     = linuxdvb_mux_dvbs_class_modulation_list,
     },
     {
       MUX_PROP_STR("fec", "FEC", dvbs, fec)
     },
+#if DVB_VER_ATLEAST(5,0)
+    {
+      .type     = PT_STR,
+      .id       = "rolloff",
+      .name     = "Rolloff",
+      .set      = linuxdvb_mux_dvbs_class_rolloff_set,
+      .get      = linuxdvb_mux_dvbs_class_rolloff_get,
+      .list     = linuxdvb_mux_dvbs_class_rolloff_list,
+    },
+#endif
     {}
   }
 };
