@@ -153,7 +153,7 @@ tvheadend.IdNodeField = function (conf)
 
     var st = this.store;
     return function (v) {
-      if (st) {
+      if (st && st.find) {
         var t = []
         var d;
         if (v.push)
