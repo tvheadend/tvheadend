@@ -381,34 +381,34 @@ int         dvb_str2##p   (const char *p) { return str2val(p, p##tab); }
 
 const static struct strtab rollofftab[] = {
 #if DVB_API_VERSION >= 5
-  { "ROLLOFF_35",           ROLLOFF_35 },
-  { "ROLLOFF_20",           ROLLOFF_20 },
-  { "ROLLOFF_25",           ROLLOFF_25 },
-  { "ROLLOFF_AUTO",         ROLLOFF_AUTO }
+  { "35",           ROLLOFF_35 },
+  { "20",           ROLLOFF_20 },
+  { "25",           ROLLOFF_25 },
+  { "AUTO",         ROLLOFF_AUTO }
 #endif
 };
 dvb_str2val(rolloff);
 
 const static struct strtab delsystab[] = {
 #if DVB_API_VERSION >= 5
-  { "SYS_UNDEFINED",        SYS_UNDEFINED },
-  { "SYS_DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
-  { "SYS_DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
-  { "SYS_DVBT",             SYS_DVBT },
-  { "SYS_DSS",              SYS_DSS },
-  { "SYS_DVBS",             SYS_DVBS },
-  { "SYS_DVBS2",            SYS_DVBS2 },
-  { "SYS_DVBH",             SYS_DVBH },
-  { "SYS_ISDBT",            SYS_ISDBT },
-  { "SYS_ISDBS",            SYS_ISDBS },
-  { "SYS_ISDBC",            SYS_ISDBC },
-  { "SYS_ATSC",             SYS_ATSC },
-  { "SYS_ATSCMH",           SYS_ATSCMH },
-  { "SYS_DMBTH",            SYS_DMBTH },
-  { "SYS_CMMB",             SYS_CMMB },
-  { "SYS_DAB",              SYS_DAB },
-  { "SYS_DVBT2",            SYS_DVBT2 },
-  { "SYS_TURBO",            SYS_TURBO }
+  { "UNDEFINED",        SYS_UNDEFINED },
+  { "DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
+  { "DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
+  { "DVBT",             SYS_DVBT },
+  { "DSS",              SYS_DSS },
+  { "DVBS",             SYS_DVBS },
+  { "DVBS2",            SYS_DVBS2 },
+  { "DVBH",             SYS_DVBH },
+  { "ISDBT",            SYS_ISDBT },
+  { "ISDBS",            SYS_ISDBS },
+  { "ISDBC",            SYS_ISDBC },
+  { "ATSC",             SYS_ATSC },
+  { "ATSCMH",           SYS_ATSCMH },
+  { "DMBTH",            SYS_DMBTH },
+  { "CMMB",             SYS_CMMB },
+  { "DAB",              SYS_DAB },
+  { "DVBT2",            SYS_DVBT2 },
+  { "TURBO",            SYS_TURBO }
 #endif
 };
 dvb_str2val(delsys);
@@ -442,9 +442,9 @@ const static struct strtab qamtab[] = {
   { "8VSB",                 VSB_8 },
   { "16VSB",                VSB_16 },
 #if DVB_API_VERSION >= 5
-  { "PSK_8",                PSK_8 },
-  { "APSK_16",              APSK_16 },
-  { "APSK_32",              APSK_32 },
+  { "8PSK",                 PSK_8 },
+  { "16APSK",               APSK_16 },
+  { "32APSK",               APSK_32 },
   { "DQPSK",                DQPSK }
 #endif
 };
