@@ -875,10 +875,7 @@ dvb_sdt_callback
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid)
         break;
-    if (!mm) {
-      tvhtrace("sdt", "  waiting for NIT");
-      return -1;
-    }
+    goto done;
   }
 
   /* Service loop */
@@ -987,6 +984,7 @@ dvb_sdt_callback
   }
 
   /* Done */
+done:
   return dvb_table_end(mt, st, sect);
 }
 
