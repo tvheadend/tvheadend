@@ -2016,20 +2016,16 @@ cwc_service_start(service_t *t)
       if (ct->cs_service == (mpegts_service_t*)t && ct->cs_cwc == cwc)
         break;
     }
-
-    LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card){
-      if(pcard->cwc_caid == 0) {
-        if (ct) cwc_service_destroy((th_descrambler_t*)ct);
-        continue;
-      }
-      
-      if(cwc_find_stream_by_caid(t, pcard->cwc_caid) == NULL) {
-        if (ct) cwc_service_destroy((th_descrambler_t*)ct);
-        continue;
-      }
+    LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
+      if((pcard->cwc_caid != 0) && cwc_find_stream_by_caid(t, pcard->cwc_caid))
+        break;
+    }
+    if (!pcard) {
+      if (ct) cwc_service_destroy((th_descrambler_t*)ct);
+      continue;
     }
 
-    if (ct) break;
+    if (ct) continue;
 
     ct                   = calloc(1, sizeof(cwc_service_t));
     tvhcsa_init(&ct->cs_csa);
