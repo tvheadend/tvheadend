@@ -85,6 +85,13 @@ tvheadend.muxes = function(panel)
 
 tvheadend.services = function(panel)
 {
+  var mapButton = new Ext.Toolbar.Button({
+    tooltip : 'Map services to channels',
+    iconCls : '',
+    text    : 'Map Services',
+    callback: tvheadend.mapServices,
+    disabled : false,
+  });
   tvheadend.idnode_grid(panel, {
     url     : 'api/mpegts/service',
     comet   : 'service',
@@ -92,6 +99,7 @@ tvheadend.services = function(panel)
     titleP  : 'Services',
     add     : false,
     del     : false,
+    tbar    : [ mapButton ],
     lcol    : [
       {
         header   : 'Play',

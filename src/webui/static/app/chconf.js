@@ -21,7 +21,7 @@ tvheadend.comet.on('channeltags', function(m) {
 /*
  * Service mapping
  */
-tvheadend.mapServices = function()
+tvheadend.mapServices = function(t, e, store, select)
 {
   var panel = null;
   var win   = null;
@@ -63,11 +63,22 @@ tvheadend.mapServices = function()
     text    : 'Map',
     tooltip : 'Begin mapping',
     handler : function () {
+      p = null;
+      if (select) {
+        var r = select.getSelections();
+        if (r.length > 0) {
+          var uuids = [];
+          for (var i = 0; i < r.length; i++)
+            uuids.push(r[i].id);
+          p = { uuids: Ext.encode(uuids) };
+        }
+      }
       panel.getForm().submit({
         url         : 'api/service/mapper/start',
-        waitMessage : 'Mapping services...'
+        waitMessage : 'Mapping services...',
+        params      : p
       });
-    } 
+    }
   });
 
   panel = new Ext.FormPanel({

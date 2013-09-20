@@ -748,8 +748,14 @@ tvheadend.idnode_grid = function(panel, conf)
     /* Extra buttons */
     if (conf.tbar) {
       buttons.push('-')
-      for (i = 0; i < conf.tbar.length; i++)
+      for (i = 0; i < conf.tbar.length; i++) {
+        if (conf.tbar[i].callback) {
+          conf.tbar[i].handler = function (b, e) {
+            this.callback(this, e, store, select);
+          }
+        }
         buttons.push(conf.tbar[i])
+      }
     }
 
     /* Help */
