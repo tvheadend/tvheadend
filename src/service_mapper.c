@@ -68,7 +68,7 @@ service_mapper_qlen ( void )
  * Start a new mapping
  */
 void
-service_mapper_start ( const service_mapper_conf_t *conf )
+service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 {
   int e, tr, qd = 0;
   service_t *s;
@@ -78,6 +78,16 @@ service_mapper_start ( const service_mapper_conf_t *conf )
 
   /* Check each service */
   TAILQ_FOREACH(s, &service_all, s_all_link) {
+    if (uuids) {
+      htsmsg_field_t *f;
+      const char *str;
+      const char *uuid = idnode_uuid_as_str(&s->s_id);
+      HTSMSG_FOREACH(f, uuids) {
+        if (!(str = htsmsg_field_get_str(f))) continue;
+        if (!strcmp(str, uuid)) break;
+      }
+      if (!f) continue;
+    }
 
     /* Disabled */
     if (!s->s_is_enabled(s)) continue;
@@ -162,8 +172,8 @@ service_mapper_link ( service_t *s, channel_t *c )
   csm = calloc(1, sizeof(channel_service_mapping_t));
   csm->csm_chn = c;
   csm->csm_svc = s;
-  LIST_INSERT_HEAD(&s->s_channels, csm, csm_svc_link);
-  LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
+  LIST_INSERT_HEAD(&s->s_channels,  csm, csm_chn_link);
+  LIST_INSERT_HEAD(&c->ch_services, csm, csm_svc_link);
   return 1;
 }
 
@@ -202,10 +212,8 @@ service_mapper_process ( service_t *s )
 
   /* Find existing channel */
   num = s->s_channel_number(s);
-#if 0
-  if (service_mapper_conf.merge_same_name)
-    chn = channel_find_by_name(s->s_channel_name(s));
-#endif
+  if (service_mapper_conf.merge_same_name && s->s_channel_name)
+    chn = channel_find_by_name(s->s_channel_name(s) ?: "");
   if (!chn)
     chn = channel_create(NULL, NULL, s->s_channel_name(s));
     

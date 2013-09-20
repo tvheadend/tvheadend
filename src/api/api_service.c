@@ -31,17 +31,19 @@ api_mapper_start
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   service_mapper_conf_t conf = { 0 };
+  htsmsg_t *uuids;
 #define get_u32(x)\
-  conf.x = htsmsg_get_u32_or_default(args, #x, 0)
+  conf.x = htsmsg_get_bool_or_default(args, #x, 0)
   
   /* Get config */
+  uuids = htsmsg_get_list(args, "uuids");
   get_u32(check_availability);
   get_u32(encrypted);
   get_u32(merge_same_name);
   get_u32(provider_tags);
   
   pthread_mutex_lock(&global_lock);
-  service_mapper_start(&conf);
+  service_mapper_start(&conf, uuids);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
