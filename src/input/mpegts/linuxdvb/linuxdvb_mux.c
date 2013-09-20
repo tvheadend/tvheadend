@@ -479,7 +479,8 @@ linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   uint32_t freq = lm->lm_tuning.dmc_fe_params.frequency;
   char pol[2] = { 0 };
   if (ln->ln_type == FE_QPSK) {
-    pol[0] = *(dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation));
+    const char *s = dvb_pol2str(lm->lm_tuning.dmc_fe_polarisation);
+    if (s) pol[0] = *s;
     freq /= 1000;
   } else {
     freq /= 1000;
