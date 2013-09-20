@@ -761,7 +761,6 @@ tvheadend.idnode_grid = function(panel, conf)
       });
     }
 
-
     /* Grid Panel */
     var auto   = new Ext.form.Checkbox({
       checked     : true,
@@ -770,6 +769,41 @@ tvheadend.idnode_grid = function(panel, conf)
           if (c) store.reload();
         }
       }
+    });
+    var count  = new Ext.form.ComboBox({
+      width          : 50,
+      displayField   : 'val',
+      valueField     : 'key',
+      store          : new Ext.data.ArrayStore({
+        id     : 0,
+        fields : [ 'key', 'val' ],
+        data   : [[25, '25'], [50, '50'], [100, '100'],
+                  [200, '200'], [-1, 'All']]
+      }),
+      value          : 50,
+      mode           : 'local',
+      forceSelection : false,
+      triggerAction  : 'all',
+      listeners      : {
+        select : function (s, r) {
+          if (r != page.pageSize) {
+            page.pageSize = r.id;
+            store.reload();
+            page.changePage(0);
+            // TODO: currently setting pageSize=-1 to disable paging confuses
+            //       the UI elements, and I don't know how to sort that!
+          }
+        }
+      }
+    });
+    var page = new Ext.PagingToolbar({
+      store       : store,
+      pageSize    : 50,
+      displayInfo : true,
+      displayMsg  :  conf.titleP + ' {0} - {1} of {2}',
+      emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display',
+      items       : [ '-', 'Auto-refresh', auto,
+                      '->', '-', 'Per page', count ]
     });
     var grid   = new Ext.grid.EditorGridPanel({
       stripeRows    : true,
@@ -784,14 +818,7 @@ tvheadend.idnode_grid = function(panel, conf)
         forceFit : true
       },
       tbar          : buttons,
-      bbar          : new Ext.PagingToolbar({
-        store       : store,
-        pageSize    : 50,
-        displayInfo : true,
-        displayMsg  :  conf.titleP + ' {0} - {1} of {2}',
-        emptyMsg    : 'No ' + conf.titleP.toLowerCase() + ' to display',
-        items       : [ '-', 'Auto-refresh', auto ]
-      })
+      bbar          : page
     });
     panel.add(grid);
 
