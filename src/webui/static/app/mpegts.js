@@ -119,6 +119,7 @@ tvheadend.satconfs = function(panel)
     titleS   : 'Satconf',
     titleP   : 'Satconfs',
     add      : {
+      titleS : 'Satconf',
       url    : 'api/linuxdvb/satconf',
       create : {}
     },

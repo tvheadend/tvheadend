@@ -116,6 +116,7 @@ tvheadend.IdNodeField = function (conf)
   this.rdonly = conf.rdonly;
   this.wronly = conf.wronly;
   this.wronce = conf.wronce;
+  this.hidden = conf.hidden || conf.advanced;
   this.enum   = conf.enum;
   this.store  = null;
   if (this.enum)
@@ -139,6 +140,7 @@ tvheadend.IdNodeField = function (conf)
       sortable : true,
       editor   : this.editor({create: false}),
       renderer : this.renderer(),
+      hidden   : this.hidden,
       filter   : {
         type      : ftype,
         dataIndex : this.id
@@ -274,7 +276,7 @@ tvheadend.idnode_editor_field = function(f, create)
     return new cons({
       fieldLabel      : f.caption,
       name            : f.id,
-      value           : f.value,
+      value           : f.value || f.default,
       disabled        : d,
       width           : 300,
       mode            : 'local',
@@ -306,7 +308,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.TextField({
         fieldLabel  : f.caption,
         name        : f.id,
-        value       : f.value,
+        value       : f.value || f.default,
         disabled    : d,
         width       : 300
       });
@@ -316,7 +318,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.Checkbox({
         fieldLabel  : f.caption,
         name        : f.id,
-        checked     : f.value,
+        checked     : f.value || f.default,
         disabled    : d
       });
       break;
@@ -328,7 +330,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.NumberField({
         fieldLabel  : f.caption,
         name        : f.id,
-        value       : f.value,
+        value       : f.value || f.default,
         disabled    : d,
         width       : 300
       });
@@ -338,18 +340,53 @@ tvheadend.idnode_editor_field = function(f, create)
 }
 
 /*
+ * ID node editor form fields
+ */
+tvheadend.idnode_editor_form = function ( d, panel )
+{
+  var af = [];
+  var rf = [];
+
+  /* Fields */
+  for (i = 0; i < d.length; i++) {
+    var f = tvheadend.idnode_editor_field(d[i]);
+    if (!f) continue;
+    if (d[i].rdonly)
+      rf.push(f)
+    else if (d[i].advanced)
+      af.push(f);
+    else
+      panel.add(f);
+  }
+  if (af.length) {
+    panel.add(new Ext.form.FieldSet({
+      title       : 'Advanced Settings',
+      autoHeight  : true,
+      autoWidth   : true,
+      collapsible : true,
+      collapsed   : true,
+      items       : af
+    }));
+  }
+  if (rf.length) {
+    panel.add(new Ext.form.FieldSet({
+      title       : 'Read-only info',
+      autoHeight  : true,
+      autoWidth   : true,
+      collapsible : true,
+      collapsed   : true,
+      items       : rf
+    }));
+  }
+  panel.doLayout();
+}
+
+/*
  * ID node editor panel
  */
 tvheadend.idnode_editor = function(item, conf)
 {
   var panel  = null;
-  var fields = []
-
-  for (var idx in item.params) {
-    var f = tvheadend.idnode_editor_field(item.params[idx], true);
-    if (f)
-      fields.push(f);
-  }
 
   /* Buttons */
   var saveBtn = new Ext.Button({
@@ -381,9 +418,11 @@ tvheadend.idnode_editor = function(item, conf)
     //defaults: {width: 330},
     defaultType : 'textfield',
     buttonAlign : 'left',
-    items       : fields,
     buttons     : [ saveBtn ]
   });
+
+  tvheadend.idnode_editor_form(item.props || item.params, panel);
+
   return panel;
 }
 
@@ -451,22 +490,7 @@ tvheadend.idnode_create = function(conf)
     items       : panel
   });
 
-  /*
-   * Build the edit panel
-   */
-  function build_form (d)
-  {
-    saveBtn.setVisible(true);
-
-    /* Fields */
-    for (i = 0; i < d.length; i++) {
-      var f = tvheadend.idnode_editor_field(d[i]);
-      if (f)
-        panel.add(f);
-    }
-    panel.doLayout();
-  }
-
+  
   /* Do we need to first select a class? */
   if (conf.select) {
     var store = conf.select.store;
@@ -488,7 +512,8 @@ tvheadend.idnode_create = function(conf)
             pclass = r.get(conf.select.valueField);
             win.setTitle('Add ' + s.lastSelectionText);
             panel.remove(s);
-            build_form(d);
+            tvheadend.idnode_editor_form(d, panel);
+            saveBtn.setVisible(true);
           }
         }
       }
@@ -501,7 +526,8 @@ tvheadend.idnode_create = function(conf)
           success : function(d) {
             panel.remove(s);
             d = json_decode(d);
-            build_form(d.props);
+            tvheadend.idnode_editor_form(d.props, panel);
+            saveBtn.setVisible(true);
           },
           params  : params
         });
@@ -532,7 +558,8 @@ tvheadend.idnode_create = function(conf)
       params  : conf.params,
       success : function(d) {
         d = json_decode(d);
-        build_form(d.props);
+        tvheadend.idnode_editor_form(d.props, panel);
+        saveBtn.setVisible(true);
         win.show();
       }
     });
