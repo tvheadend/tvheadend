@@ -104,10 +104,16 @@ epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
 static void
 epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
 {
+  mpegts_mux_t *mm;
+
   LIST_REMOVE(ota, om_q_link);
   ota->om_active = 0;
   ota->om_when   = dispatch_clock + epggrab_ota_period(ota);
   LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
+
+  /* Remove subscriber */
+  if ((mm = mpegts_mux_find(ota->om_mux_uuid)))
+    mpegts_mux_unsubscribe_by_name(mm, "epggrab");
 
   /* Re-arm */
   if (LIST_FIRST(&epggrab_ota_pending) == ota)
@@ -236,7 +242,6 @@ epggrab_ota_complete
 {
   int done = 1;
   epggrab_ota_map_t *map;
-  mpegts_mux_t *mm;
   tvhinfo(mod->id, "grab complete");
 
   /* Test for completion */
@@ -248,10 +253,6 @@ epggrab_ota_complete
     }
   }
   if (!done) return;
-
-  /* Remove subscriber */
-  if ((mm = mpegts_mux_find(ota->om_mux_uuid)))
-    mpegts_mux_unsubscribe_by_name(mm, "epggrab");
 
   /* Done */
   epggrab_ota_done(ota, 0);
