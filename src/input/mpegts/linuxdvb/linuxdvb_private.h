@@ -294,4 +294,6 @@ void linuxdvb_satconf_init ( void );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);
 
+void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls );
+
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

@@ -483,6 +483,8 @@ mpegts_input_t *mpegts_input_create0
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
                        &mpegts_input_class, u, c)
 
+void mpegts_input_delete ( mpegts_input_t *mi );
+
 #define mpegts_input_find(u) idnode_find(u, &mpegts_input_class);
 
 void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );

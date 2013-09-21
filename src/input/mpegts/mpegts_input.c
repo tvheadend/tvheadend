@@ -518,6 +518,18 @@ mpegts_input_create0
 }
 
 void
+mpegts_input_delete ( mpegts_input_t *mi )
+{
+  idnode_unlink(&mi->ti_id);
+  pthread_mutex_destroy(&mi->mi_delivery_mutex);
+  pthread_cond_destroy(&mi->mi_table_feed_cond);
+  tvh_pipe_close(&mi->mi_thread_pipe);
+  LIST_REMOVE(mi, ti_link);
+  LIST_REMOVE(mi, mi_global_link);
+  free(mi);
+}
+
+void
 mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
 {
   idnode_save(&mi->ti_id, m);

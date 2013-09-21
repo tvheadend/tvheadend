@@ -265,6 +265,12 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
   return is;
 }
 
+static void
+linuxdvb_satconf_class_delete ( idnode_t *in )
+{
+  linuxdvb_satconf_delete((linuxdvb_satconf_t*)in);
+}
+
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_super      = &mpegts_input_class,
@@ -273,6 +279,7 @@ const idclass_t linuxdvb_satconf_class =
   .ic_get_title  = linuxdvb_satconf_class_get_title,
   .ic_get_childs = linuxdvb_satconf_class_get_childs,
   .ic_save       = linuxdvb_satconf_class_save,
+  .ic_delete     = linuxdvb_satconf_class_delete,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -596,7 +603,22 @@ linuxdvb_satconf_create0
   return ls;
 }
 
-void linuxdvb_satconf_init ( void )
+void
+linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls )
+{
+  const char *uuid = idnode_uuid_as_str(&ls->ti_id);
+  hts_settings_remove("input/linuxdvb/satconfs/%s", uuid);
+  if (ls->ls_lnb)
+    linuxdvb_lnb_destroy(ls->ls_lnb);
+  if (ls->ls_switch)
+    linuxdvb_switch_destroy(ls->ls_switch);
+  if (ls->ls_rotor)
+    linuxdvb_rotor_destroy(ls->ls_rotor);
+  mpegts_input_delete((mpegts_input_t*)ls);
+}
+
+void
+linuxdvb_satconf_init ( void )
 {
   htsmsg_t *s, *e;
   htsmsg_field_t *f;
