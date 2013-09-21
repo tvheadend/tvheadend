@@ -425,14 +425,6 @@ opentv_table_callback
   opentv_module_t *mod = sta->os_mod;
   epggrab_ota_mux_t *ota = sta->os_ota;
 
-  /* Register */
-  if (!ota) {
-    sta->os_ota = ota
-      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux,
-                             1200, 3600);
-  }
-    
-
   /* Validate */
   if (len < 7) return -1;
 
@@ -501,6 +493,14 @@ opentv_bat_callback
   opentv_status_t *sta = mt->mt_opaque;
   opentv_module_t *mod = sta->os_mod;
   int r = dvb_bat_callback(mt, buf, len, tableid);
+  epggrab_ota_mux_t *ota = sta->os_ota;
+
+  /* Register */
+  if (!ota) {
+    sta->os_ota = ota
+      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux,
+                             1200, 3600);
+  }
 
   /* Complete */
   if (!r) {
