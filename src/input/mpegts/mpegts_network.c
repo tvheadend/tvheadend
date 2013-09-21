@@ -110,6 +110,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_U16,
       .id       = "nid",
       .name     = "Network ID (limit scanning)",
+      .opts     = PO_ADVANCED,
       .off      = offsetof(mpegts_network_t, mn_nid),
     },
     {
@@ -117,12 +118,14 @@ const idclass_t mpegts_network_class =
       .id       = "autodiscovery",
       .name     = "Network Discovery",
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
+      .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "skipinitscan",
       .name     = "Skip Initial Scan",
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
+      .def.i    = 1
     },
     {
       .type     = PT_INT,

@@ -79,21 +79,21 @@ const idclass_t mpegts_service_class =
       .type     = PT_STR,
       .id       = "provider",
       .name     = "Provider",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_provider),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
       .name     = "CRID Authority",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_cridauth),
     },
     {
       .type     = PT_U16,
       .id       = "dvb_servicetype",
       .name     = "Service Type",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY || PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {
@@ -101,6 +101,7 @@ const idclass_t mpegts_service_class =
       .id     = "charset",
       .name   = "Character Set",
       .off    = offsetof(mpegts_service_t, s_dvb_charset),
+      .opts  = PO_ADVANCED,
     },
     {},
   }

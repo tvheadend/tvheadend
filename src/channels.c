@@ -229,12 +229,14 @@ const idclass_t channel_class = {
       .id       = "dvr_pre_time",
       .name     = "DVR Pre", // TODO: better text?
       .off      = offsetof(channel_t, ch_dvr_extra_time_pre),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_INT,
       .id       = "dvr_pst_time",
       .name     = "DVR Post", // TODO: better text?
       .off      = offsetof(channel_t, ch_dvr_extra_time_post),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,

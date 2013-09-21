@@ -70,13 +70,14 @@ linuxdvb_mux_##c##_class_##l##_enum (void *o)\
     htsmsg_add_str(m, NULL, dvb_##l##2str(t[i]));\
   return m;\
 }
-#define MUX_PROP_STR(_id, _name, t, l)\
-  .type = PT_STR,\
-  .id   = _id,\
-  .name = _name,\
-  .get  = linuxdvb_mux_##t##_class_##l##_get,\
-  .set  = linuxdvb_mux_##t##_class_##l##_set,\
-  .list = linuxdvb_mux_##t##_class_##l##_enum
+#define MUX_PROP_STR(_id, _name, t, l, d)\
+  .type  = PT_STR,\
+  .id    = _id,\
+  .name  = _name,\
+  .get   = linuxdvb_mux_##t##_class_##l##_get,\
+  .set   = linuxdvb_mux_##t##_class_##l##_set,\
+  .list  = linuxdvb_mux_##t##_class_##l##_enum,\
+  .def.s = d
 
 static const void *
 linuxdvb_mux_class_delsys_get (void *o)
@@ -183,7 +184,7 @@ const idclass_t linuxdvb_mux_dvbt_class =
   .ic_caption    = "Linux DVB-T Multiplex",
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", "Delivery System", dvbt, delsys),
+      MUX_PROP_STR("delsys", "Delivery System", dvbt, delsys, "DVBT"),
     },
     {
       .type     = PT_U32,
@@ -193,25 +194,25 @@ const idclass_t linuxdvb_mux_dvbt_class =
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
     },
     {
-      MUX_PROP_STR("bandwidth", "Bandwidth", dvbt, bw)
+      MUX_PROP_STR("bandwidth", "Bandwidth", dvbt, bw, "AUTO")
     },
     {
-      MUX_PROP_STR("constellation", "Constellation", dvbt, qam)
+      MUX_PROP_STR("constellation", "Constellation", dvbt, qam, "AUTO")
     },
     {
-      MUX_PROP_STR("transmission_mode", "Transmission Mode", dvbt, mode)
+      MUX_PROP_STR("transmission_mode", "Transmission Mode", dvbt, mode, "AUTO")
     },
     {
-      MUX_PROP_STR("guard_interval", "Guard Interval", dvbt, guard)
+      MUX_PROP_STR("guard_interval", "Guard Interval", dvbt, guard, "AUTO")
     },
     {
-      MUX_PROP_STR("hierarchy", "Hierarchy", dvbt, hier),
+      MUX_PROP_STR("hierarchy", "Hierarchy", dvbt, hier, "AUTO"),
     },
     {
-      MUX_PROP_STR("fec_hi", "FEC High", dvbt, fechi),
+      MUX_PROP_STR("fec_hi", "FEC High", dvbt, fechi, "AUTO"),
     },
     {
-      MUX_PROP_STR("fec_lo", "FEC Low", dvbt, feclo),
+      MUX_PROP_STR("fec_lo", "FEC Low", dvbt, feclo, "AUTO"),
     },
     {}
   }
@@ -250,7 +251,7 @@ const idclass_t linuxdvb_mux_dvbc_class =
   .ic_caption    = "Linux DVB-C Multiplex",
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", "Delivery System", dvbc, delsys),
+      MUX_PROP_STR("delsys", "Delivery System", dvbc, delsys, "DVBC_ANNEX_AC"),
     },
     {
       .type     = PT_U32,
@@ -267,10 +268,10 @@ const idclass_t linuxdvb_mux_dvbc_class =
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qam.symbol_rate),
     },
     {
-      MUX_PROP_STR("constellation", "Constellation", dvbc, qam)
+      MUX_PROP_STR("constellation", "Constellation", dvbc, qam, "AUTO")
     },
     {
-      MUX_PROP_STR("fec", "FEC", dvbc, fec)
+      MUX_PROP_STR("fec", "FEC", dvbc, fec, "AUTO")
     },
     {}
   }
@@ -388,7 +389,7 @@ const idclass_t linuxdvb_mux_dvbs_class =
   .ic_caption    = "Linux DVB-S Multiplex",
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", "Delivery System", dvbs, delsys),
+      MUX_PROP_STR("delsys", "Delivery System", dvbs, delsys, "DVBS"),
     },
     {
       .type     = PT_U32,
@@ -405,7 +406,7 @@ const idclass_t linuxdvb_mux_dvbs_class =
       .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.u.qpsk.symbol_rate),
     },
     {
-      MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity)
+      MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity, NULL)
     },
     {
       .type     = PT_STR,
@@ -414,9 +415,10 @@ const idclass_t linuxdvb_mux_dvbs_class =
       .set      = linuxdvb_mux_dvbs_class_modulation_set,
       .get      = linuxdvb_mux_dvbs_class_modulation_get,
       .list     = linuxdvb_mux_dvbs_class_modulation_list,
+      .def.s    = "AUTO",
     },
     {
-      MUX_PROP_STR("fec", "FEC", dvbs, fec)
+      MUX_PROP_STR("fec", "FEC", dvbs, fec, "AUTO")
     },
 #if DVB_VER_ATLEAST(5,0)
     {
@@ -426,6 +428,7 @@ const idclass_t linuxdvb_mux_dvbs_class =
       .set      = linuxdvb_mux_dvbs_class_rolloff_set,
       .get      = linuxdvb_mux_dvbs_class_rolloff_get,
       .list     = linuxdvb_mux_dvbs_class_rolloff_list,
+      .def.s    = "AUTO"
     },
 #endif
     {}
@@ -450,7 +453,7 @@ const idclass_t linuxdvb_mux_atsc_class =
   .ic_caption    = "Linux ATSC Multiplex",
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", "Delivery System", atsc, delsys),
+      MUX_PROP_STR("delsys", "Delivery System", atsc, delsys, "ATSC"),
     },
     {}
   }

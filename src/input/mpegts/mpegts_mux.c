@@ -176,6 +176,7 @@ const idclass_t mpegts_mux_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(mpegts_mux_t, mm_enabled),
+      .def.i    = 1,
     },
     {
       .type     = PT_STR,
@@ -209,7 +210,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "cridauth",
       .name     = "CRID Authority",
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {

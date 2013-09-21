@@ -49,6 +49,7 @@ const idclass_t mpegts_input_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(mpegts_input_t, mi_enabled),
+      .def.i    = 1,
     },
     {
       .type     = PT_STR,

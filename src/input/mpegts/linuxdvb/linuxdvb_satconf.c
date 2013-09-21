@@ -304,6 +304,7 @@ const idclass_t linuxdvb_satconf_class =
       .id       = "diseqc_repeats",
       .name     = "DiseqC repeats",
       .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_repeats),
+      .def.i    = 0
     },
     {
       .type     = PT_STR,
@@ -312,6 +313,7 @@ const idclass_t linuxdvb_satconf_class =
       .set      = linuxdvb_satconf_class_lnbtype_set,
       .get      = linuxdvb_satconf_class_lnbtype_get,
       .list     = linuxdvb_lnb_list,
+      .def.s    = "Universal",
     },
     {
       .type     = PT_STR,
@@ -320,6 +322,7 @@ const idclass_t linuxdvb_satconf_class =
       .set      = linuxdvb_satconf_class_switchtype_set,
       .get      = linuxdvb_satconf_class_switchtype_get,
       .list     = linuxdvb_switch_list,
+      .def.s    = "None",
     },
     {
       .type     = PT_STR,
@@ -328,6 +331,7 @@ const idclass_t linuxdvb_satconf_class =
       .set      = linuxdvb_satconf_class_rotortype_set,
       .get      = linuxdvb_satconf_class_rotortype_get,
       .list     = linuxdvb_rotor_list,
+      .def.s    = "None",
     },
     {}
   }
