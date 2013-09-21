@@ -221,7 +221,8 @@ prop_read_value
  *
  */
 void
-prop_read_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc)
+prop_read_values
+  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc)
 {
   if(pl == NULL)
     return;
@@ -233,7 +234,8 @@ prop_read_values(void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsm
  *
  */
 void
-prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsmsg_t *inc)
+prop_serialize
+  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsmsg_t *inc)
 {
   if(pl == NULL)
     return;
@@ -253,13 +255,40 @@ prop_serialize(void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsm
     if (pl->islist)
       htsmsg_add_u32(m, "list", 1);
 
+    /* Default */
+    // TODO: currently no support for list defaults
+    switch (pl->type) {
+      case PT_BOOL:
+        htsmsg_add_bool(m, "default", pl->def.i);
+        break;
+      case PT_INT:
+        htsmsg_add_u32(m, "default", pl->def.i);
+        break;
+      case PT_U16:
+        htsmsg_add_u32(m, "default", pl->def.u16);
+        break;
+      case PT_U32:
+        htsmsg_add_u32(m, "default", pl->def.u32);
+        break;
+      case PT_DBL:
+        htsmsg_add_dbl(m, "default", pl->def.d);
+        break;
+      case PT_STR:
+        htsmsg_add_str(m, "default", pl->def.s ?: "");
+        break;
+    }
+
     /* Options */
     if (pl->opts & PO_RDONLY)
-      htsmsg_add_u32(m, "rdonly", 1);
+      htsmsg_add_bool(m, "rdonly", 1);
     if (pl->opts & PO_NOSAVE)
-      htsmsg_add_u32(m, "nosave", 1);
+      htsmsg_add_bool(m, "nosave", 1);
     if (pl->opts & PO_WRONCE)
-      htsmsg_add_u32(m, "wronce", 1);
+      htsmsg_add_bool(m, "wronce", 1);
+    if (pl->opts & PO_ADVANCED)
+      htsmsg_add_bool(m, "advanced", 1);
+    if (pl->opts & PO_HIDDEN)
+      htsmsg_add_bool(m, "hidden", 1);
 
     /* Enum list */
     if (pl->list)

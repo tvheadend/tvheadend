@@ -39,10 +39,12 @@ typedef enum {
 /*
  * Property options
  */
-#define PO_NONE   0x00
-#define PO_RDONLY 0x01  // Property is read-only 
-#define PO_NOSAVE 0x02  // Property is transient (not saved)
-#define PO_WRONCE 0x04  // Property is write-once (i.e. on creation)
+#define PO_NONE     0x00
+#define PO_RDONLY   0x01  // Property is read-only 
+#define PO_NOSAVE   0x02  // Property is transient (not saved)
+#define PO_WRONCE   0x04  // Property is write-once (i.e. on creation)
+#define PO_ADVANCED 0x08  // Property is advanced
+#define PO_HIDDEN   0x10  // Property is hidden (by default)
 
 /*
  * Property definition
@@ -62,6 +64,15 @@ typedef struct property {
   char       *(*rend) (void *ptr); ///< Provide the rendered value for enum/list
                                    ///< Lists should be CSV. This is used for
                                    ///< sorting and searching in UI API
+
+  /* Default (for UI) */
+  union {
+    int         i;   // PT_BOOL/PT_INT
+    const char *s;   // PR_STR
+    uint16_t    u16; // PT_U16
+    uint32_t    u32; // PR_U32
+    double      d;   // PT_DBL
+  } def;
 
   /* Notification callback */
   void        (*notify)   (void *ptr);
