@@ -146,6 +146,7 @@ tvheadend.channel_tab = function(panel)
     comet   : 'channel',
     titleS  : 'Channel',
     titleP  : 'Channels',
+    tabIndex: 0,
     add     :  {
       url    : 'api/channel',
       create : {}

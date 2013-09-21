@@ -853,7 +853,10 @@ tvheadend.idnode_grid = function(panel, conf)
       tbar          : buttons,
       bbar          : page
     });
-    panel.add(grid);
+    if (conf.tabIndex != null)
+      panel.insert(conf.tabIndex, grid);
+    else
+      panel.add(grid);
 
     /* Add comet listeners */
     var update = function(o) {

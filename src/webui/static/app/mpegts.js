@@ -32,6 +32,7 @@ tvheadend.networks = function(panel)
     comet    : 'mpegts_network',
     titleS   : 'Network',
     titleP   : 'Networks',
+    tabIndex : 1,
     add      : {
       titleS : 'Network',
       select : {
@@ -56,6 +57,7 @@ tvheadend.muxes = function(panel)
     comet    : 'mpegts_mux',
     titleS   : 'Mux',
     titleP   : 'Muxes',
+    tabIndex : 2,
     add      : {
       titleS   : 'Mux',
       select   : {
@@ -97,6 +99,7 @@ tvheadend.services = function(panel)
     comet   : 'service',
     titleS  : 'Service',
     titleP  : 'Services',
+    tabIndex: 3,
     add     : false,
     del     : false,
     tbar    : [ mapButton ],
@@ -118,6 +121,7 @@ tvheadend.satconfs = function(panel)
     comet    : 'linuxdvb_satconf',
     titleS   : 'Satconf',
     titleP   : 'Satconfs',
+    tabIndex : 4,
     add      : {
       titleS : 'Satconf',
       url    : 'api/linuxdvb/satconf',
