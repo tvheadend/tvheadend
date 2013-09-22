@@ -58,6 +58,7 @@ tvheadend.muxes = function(panel)
     titleS   : 'Mux',
     titleP   : 'Muxes',
     tabIndex : 2,
+    hidemode : true,
     add      : {
       titleS   : 'Mux',
       select   : {
@@ -107,6 +108,7 @@ tvheadend.services = function(panel)
     titleS   : 'Service',
     titleP   : 'Services',
     tabIndex : 3,
+    hidemode : true,
     add      : false,
     del      : false,
     selected : selected,

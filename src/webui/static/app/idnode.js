@@ -775,6 +775,43 @@ tvheadend.idnode_grid = function(panel, conf)
     });
     buttons.push(editBtn);
 
+    /* Hide Mode */
+    if (conf.hidemode) {
+      var hidemode = new Ext.form.ComboBox({
+        width          : 100,
+        displayField   : 'val',
+        valueField     : 'key',
+        store          : new Ext.data.ArrayStore({
+          id     : 0,
+          fields : [ 'key', 'val' ],
+          data   : [ ['default', 'Parent disabled'],
+                     ['all', 'All' ],
+                     ['none', 'None' ] ],
+        }),
+        value          : 'default',
+        mode           : 'local',
+        forceSelection : false,
+        triggerAction  : 'all',
+        listeners      : {
+          select : function (s, r) {
+            store.baseParams.hidemode = r.id;
+            page.changePage(0);
+            store.reload();
+          }
+        }
+      });
+      buttons.push('-');
+      buttons.push('Hide:');
+      buttons.push(hidemode);
+    }
+    var page = new Ext.PagingToolbar({
+      store       : store,
+      pageSize    : 50,
+      displayInfo : true,
+      displayMsg  :  conf.titleP + ' {0} - {1} of {2}',
+      width : 50,
+    });
+
     /* Extra buttons */
     if (conf.tbar) {
       buttons.push('-')
@@ -824,8 +861,8 @@ tvheadend.idnode_grid = function(panel, conf)
         select : function (s, r) {
           if (r != page.pageSize) {
             page.pageSize = r.id;
-            store.reload();
             page.changePage(0);
+            store.reload();
             // TODO: currently setting pageSize=-1 to disable paging confuses
             //       the UI elements, and I don't know how to sort that!
           }
@@ -856,6 +893,10 @@ tvheadend.idnode_grid = function(panel, conf)
       tbar          : buttons,
       bbar          : page
     });
+    grid.on('filterupdate', function() {
+      page.changePage(0);
+    });
+
     if (conf.tabIndex != null)
       panel.insert(conf.tabIndex, grid);
     else
