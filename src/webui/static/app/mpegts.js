@@ -89,21 +89,29 @@ tvheadend.services = function(panel)
 {
   var mapButton = new Ext.Toolbar.Button({
     tooltip : 'Map services to channels',
-    iconCls : '',
-    text    : 'Map Services',
+    iconCls : 'clone',
+    text    : 'Map All',
     callback: tvheadend.mapServices,
     disabled : false,
   });
+  var selected = function (s)
+  {
+    if (s.getCount() > 0)
+      mapButton.setText('Map Selected')
+    else
+      mapButton.setText('Map All')
+  }
   tvheadend.idnode_grid(panel, {
-    url     : 'api/mpegts/service',
-    comet   : 'service',
-    titleS  : 'Service',
-    titleP  : 'Services',
-    tabIndex: 3,
-    add     : false,
-    del     : false,
-    tbar    : [ mapButton ],
-    lcol    : [
+    url      : 'api/mpegts/service',
+    comet    : 'service',
+    titleS   : 'Service',
+    titleP   : 'Services',
+    tabIndex : 3,
+    add      : false,
+    del      : false,
+    selected : selected,
+    tbar     : [ mapButton ],
+    lcol     : [
       {
         header   : 'Play',
         renderer : function(v, o, r) {

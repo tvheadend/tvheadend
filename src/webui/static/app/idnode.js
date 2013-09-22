@@ -640,6 +640,8 @@ tvheadend.idnode_grid = function(panel, conf)
       if (delBtn)
         delBtn.setDisabled(s.getCount() == 0);
       editBtn.setDisabled(s.getCount() != 1);
+      if (conf.selected)
+        conf.selected(s);
     });
 
     /* Top bar */
@@ -700,7 +702,7 @@ tvheadend.idnode_grid = function(panel, conf)
         disabled    : true,
         handler     : function() {
           var r = select.getSelections();
-          if (r) {
+          if (r && r.length > 0) {
             var uuids = []
             for ( var i = 0; i < r.length; i++ )
               uuids.push(r[i].id)
