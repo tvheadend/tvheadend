@@ -721,7 +721,8 @@ tvheadend.idnode_grid = function(panel, conf)
       });
       buttons.push(delBtn);
     }
-    buttons.push('-');
+    if (conf.add || conf.del)
+      buttons.push('-');
     editBtn = new Ext.Toolbar.Button({
       tooltip     : 'Edit selected entry',
       iconCls     : 'edit',
