@@ -211,7 +211,6 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 
   /* Current */
   mmi->mmi_mux->mm_active = t;
-  LIST_INSERT_HEAD(&mi->mi_mux_active, t, mmi_active_link);
 
   /* Install table handlers */
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
