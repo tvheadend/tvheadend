@@ -103,7 +103,7 @@ api_idnode_grid
 
   /* Create list */
   pthread_mutex_lock(&global_lock);
-  cb(&ins, &conf);
+  cb(&ins, &conf, args);
 
   /* Sort */
   if (conf.sort.key)

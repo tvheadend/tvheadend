@@ -79,7 +79,7 @@ exit:
  */
 static void
 api_mpegts_network_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
 
@@ -200,13 +200,23 @@ exit:
  */
 static void
 api_mpegts_mux_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
+  int hide = 1;
+  const char *s = htsmsg_get_str(args, "hidemode");
+  if (s) {
+    if (!strcmp(s, "all"))
+      hide = 2;
+    else if (!strcmp(s, "none"))
+      hide = 0;
+  }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    //if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      if (hide == 2 && !mm->mm_is_enabled(mm)) continue;
       idnode_set_add(ins, (idnode_t*)mm, &conf->filter);
     }
   }
@@ -217,15 +227,26 @@ api_mpegts_mux_grid
  */
 static void
 api_mpegts_service_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
   mpegts_service_t *ms;
+  int hide = 1;
+  const char *s = htsmsg_get_str(args, "hidemode");
+  if (s) {
+    if (!strcmp(s, "all"))
+      hide = 2;
+    else if (!strcmp(s, "none"))
+      hide = 0;
+  }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    //if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      if (hide && !mm->mm_is_enabled(mm)) continue;
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+        if (hide == 2 && !ms->s_is_enabled((service_t*)ms)) continue;
         idnode_set_add(ins, (idnode_t*)ms, &conf->filter);
       }
     }
@@ -238,7 +259,7 @@ api_mpegts_service_grid
 #if ENABLE_LINUXDVB
 static void
 api_linuxdvb_satconf_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_input_t *mi;
   extern const idclass_t linuxdvb_satconf_class;

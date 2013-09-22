@@ -75,7 +75,7 @@ typedef struct api_idnode_grid_conf
 } api_idnode_grid_conf_t;
 
 typedef void (*api_idnode_grid_callback_t)
-  (idnode_set_t*, api_idnode_grid_conf_t*);
+  (idnode_set_t*, api_idnode_grid_conf_t*, htsmsg_t *args);
 typedef idnode_set_t *(*api_idnode_tree_callback_t)
   (void);
 
