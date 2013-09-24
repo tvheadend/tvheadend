@@ -376,7 +376,10 @@ epggrab_ota_load_one
   const char *id;
   
   mm = mpegts_mux_find(uuid);
-  if (!mm) return;
+  if (!mm) {
+    hts_settings_remove("epggrab/otamux/%s", uuid);
+    return;
+  }
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = strdup(uuid);
