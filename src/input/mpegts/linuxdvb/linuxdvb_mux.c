@@ -500,30 +500,6 @@ linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 }
 
 static void
-linuxdvb_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
-{
-  linuxdvb_frontend_t *lfe;
-  mpegts_mux_open_table(mm, mt);
-
-  /* Open DMX */
-  if (mm->mm_active) {
-    lfe       = (linuxdvb_frontend_t*)mm->mm_active->mmi_input;
-    mt->mt_fd = lfe->lfe_open_pid(lfe, mt->mt_pid, NULL);
-  } else {
-    mt->mt_fd = -1;
-  }
-}
-
-static void
-linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
-{
-  mpegts_mux_close_table(mm, mt);
-
-  if (mt->mt_fd != -1)
-    close(mt->mt_fd);
-}
-
-static void
 linuxdvb_mux_delete ( mpegts_mux_t *mm )
 {
   /* Remove config */
@@ -580,8 +556,6 @@ linuxdvb_mux_create0
   lm->mm_display_name     = linuxdvb_mux_display_name;
   lm->mm_config_save      = linuxdvb_mux_config_save;
   lm->mm_create_instances = linuxdvb_mux_create_instances;
-  lm->mm_open_table       = linuxdvb_mux_open_table;
-  lm->mm_close_table      = linuxdvb_mux_close_table;
   
   /* No config */
   if (!conf) return lm;

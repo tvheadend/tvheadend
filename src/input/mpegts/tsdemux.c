@@ -165,7 +165,7 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
 /**
  * Process service stream packets, extract PCR and optionally descramble
  */
-void
+int
 ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
 {
   elementary_stream_t *st;
@@ -194,11 +194,11 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   }
 
   /* Nothing - special case for tsfile to get PCR */
-  if (!t) return;
+  if (!t) return 0;
 
   /* Service inactive - ignore */
   if(t->s_status != SERVICE_RUNNING)
-    return;
+    return 0;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -220,7 +220,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   if(st == NULL) {
     pthread_mutex_unlock(&t->s_stream_mutex);
-    return;
+    return 0;
   }
 
   if(!error)
@@ -246,7 +246,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
       r = td->td_descramble(td, (service_t*)t, st, tsb);
       if(r == 0) {
 	pthread_mutex_unlock(&t->s_stream_mutex);
-	return;
+	return 1;
       }
 
       if(r == 1)
@@ -265,6 +265,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
     ts_recv_packet0(t, st, tsb);
   }
   pthread_mutex_unlock(&t->s_stream_mutex);
+  return 1;
 }
 
 

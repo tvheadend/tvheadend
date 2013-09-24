@@ -205,12 +205,6 @@ stream_init(elementary_stream_t *st)
 static void
 stream_clean(elementary_stream_t *st)
 {
-  if(st->es_demuxer_fd != -1) {
-    // XXX: Should be in DVB-code perhaps
-    close(st->es_demuxer_fd);
-    st->es_demuxer_fd = -1;
-  }
-
   free(st->es_priv);
   st->es_priv = NULL;
 
@@ -629,7 +623,6 @@ service_stream_create(service_t *t, int pid,
   st->es_service = t;
 
   st->es_pid = pid;
-  st->es_demuxer_fd = -1;
 
   avgstat_init(&st->es_rate, 10);
   avgstat_init(&st->es_cc_errors, 10);
@@ -792,7 +785,7 @@ void
 service_restart(service_t *t, int had_components)
 {
   streaming_message_t *sm;
-  lock_assert(&t->s_stream_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   if(had_components) {
     sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
@@ -800,18 +793,19 @@ service_restart(service_t *t, int had_components)
     streaming_msg_free(sm);
   }
 
-  if(t->s_refresh_feed != NULL)
-    t->s_refresh_feed(t);
-
   descrambler_service_start(t);
 
   if(TAILQ_FIRST(&t->s_components) != NULL) {
-
     sm = streaming_msg_create_data(SMT_START, 
 				   service_build_stream_start(t));
     streaming_pad_deliver(&t->s_streaming_pad, sm);
     streaming_msg_free(sm);
   }
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
+
+  if(t->s_refresh_feed != NULL)
+    t->s_refresh_feed(t);
 }
 
 
@@ -948,9 +942,7 @@ service_saver(void *aux)
     if(t->s_status != SERVICE_ZOMBIE)
       t->s_config_save(t);
     if(t->s_status == SERVICE_RUNNING && restart) {
-      pthread_mutex_lock(&t->s_stream_mutex);
       service_restart(t, 1);
-      pthread_mutex_unlock(&t->s_stream_mutex);
     }
     service_unref(t);
 

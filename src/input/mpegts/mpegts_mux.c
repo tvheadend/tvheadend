@@ -400,6 +400,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_input_t *mi = NULL;
   th_subscription_t *sub;
+  mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
 
   if (!force && mpegts_mux_has_subscribers(mm))
     return;
@@ -423,8 +425,19 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   if (mi)
     mpegts_input_flush_mux(mi, mm);
 
-  /* Alert listeners */
-  // TODO
+  /* Ensure PIDs are cleared */
+  while ((mp = RB_FIRST(&mm->mm_pids))) {
+    while ((mps = RB_FIRST(&mp->mp_subs))) {
+      RB_REMOVE(&mp->mp_subs, mps, mps_link);
+      free(mps);
+    }
+    RB_REMOVE(&mm->mm_pids, mp, mp_link);
+    if (mp->mp_fd) {
+      tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
+      close(mp->mp_fd);
+    }
+    free(mp);
+  }
 
   /* Scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_CURRENT) {
@@ -446,26 +459,23 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  char buf[256];
-  if (mt->mt_pid >= 0x2000)
-    return;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  if (!mm->mm_table_filter[mt->mt_pid])
-    tvhtrace("mpegts", "%s - opened table %s pid %04X (%d)",
-             buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
-  mm->mm_table_filter[mt->mt_pid] = 1;
+  mpegts_input_t *mi;
+  if (!mm->mm_active || !mm->mm_active->mmi_input) return;
+  mi = mm->mm_active->mmi_input;
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  mi->mi_open_pid(mi, mm, mt->mt_pid, MPS_TABLE, mt);
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
 void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  char buf[256];
-  if (mt->mt_pid >= 0x2000)
-    return;
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - closed table %s pid %04X (%d)",
-           buf, mt->mt_name, mt->mt_pid, mt->mt_pid);
-  mm->mm_table_filter[mt->mt_pid] = 0;
+  mpegts_input_t *mi;
+  if (!mm->mm_active || !mm->mm_active->mmi_input) return;
+  mi = mm->mm_active->mmi_input;
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  mi->mi_close_pid(mi, mm, mt->mt_pid, MPS_TABLE, mt);
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
 /* **************************************************************************
@@ -700,6 +710,37 @@ mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid)
     if (ms->s_dvb_service_id == sid)
       break;
   return ms;
+}
+
+static int mp_cmp ( mpegts_pid_t *a, mpegts_pid_t *b )
+{
+  return a->mp_pid - b->mp_pid;
+};
+
+mpegts_pid_t *
+mpegts_mux_find_pid ( mpegts_mux_t *mm, int pid, int create )
+{
+  mpegts_pid_t *mp;
+  
+  if (pid > 0x2000) return NULL;
+
+  if (!create) {
+    mpegts_pid_t skel;
+    skel.mp_pid = pid;
+    mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
+  } else {
+    static mpegts_pid_t *skel = NULL;
+    if (!skel)
+      skel = calloc(1, sizeof(mpegts_pid_t));
+    skel->mp_pid = pid;
+    mp = RB_INSERT_SORTED(&mm->mm_pids, skel, mp_link, mp_cmp);
+    if (!mp) {
+      mp        = skel;
+      skel      = NULL;
+      mp->mp_fd = -1;
+    }
+  }
+  return mp;
 }
 
 /******************************************************************************

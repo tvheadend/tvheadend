@@ -675,7 +675,7 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver;
+  int r, sect, last, ver, had_components;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
@@ -694,8 +694,11 @@ dvb_pmt_callback
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
   pthread_mutex_lock(&s->s_stream_mutex);
-  psi_parse_pmt(s, ptr, len);
+  had_components = !!TAILQ_FIRST(&s->s_components);
+  r = psi_parse_pmt(s, ptr, len);
   pthread_mutex_unlock(&s->s_stream_mutex);
+  if (r)
+    service_restart((service_t*)s, had_components);
 
   /* Finish */
   return dvb_table_end(mt, st, sect);
@@ -1170,10 +1173,11 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
 /** 
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
-int
+static int
 psi_parse_pmt
   (mpegts_service_t *t, const uint8_t *ptr, int len)
 {
+  int ret = 0;
   uint16_t pcr_pid, pid;
   uint8_t estype;
   int dllen;
@@ -1181,7 +1185,6 @@ psi_parse_pmt
   streaming_component_type_t hts_stream_type;
   elementary_stream_t *st, *next;
   int update = 0;
-  int had_components;
   int composition_id;
   int ancillary_id;
   int version;
@@ -1193,8 +1196,6 @@ psi_parse_pmt
   caid_t *c, *cn;
 
   lock_assert(&t->s_stream_mutex);
-
-  had_components = !!TAILQ_FIRST(&t->s_components);
 
   version = ptr[2] >> 1 & 0x1f;
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
@@ -1441,8 +1442,8 @@ psi_parse_pmt
       PMT_UPDATE_CA_PROVIDER_CHANGE | 
       PMT_UPDATE_CAID_DELETED)) {
       if(t->s_status == SERVICE_RUNNING)
-        service_restart((service_t*)t, had_components);
+        ret = 1;
     }
   }
-  return 0;
+  return ret;
 }

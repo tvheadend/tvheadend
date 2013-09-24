@@ -240,6 +240,8 @@ tsfile_input_create ( int idx )
   mi->mi_start_mux      = tsfile_input_start_mux;
   mi->mi_stop_mux       = tsfile_input_stop_mux;
   LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
+  if (!mi->mi_displayname)
+    mi->mi_displayname = strdup("TSFile");
 
   /* Start table thread */
   tvhthread_create(&tid, NULL, mpegts_input_table_thread, mi);

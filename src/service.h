@@ -61,7 +61,6 @@ typedef struct elementary_stream {
   avgstat_t es_cc_errors;
   avgstat_t es_rate;
 
-  int es_demuxer_fd;
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
   /* PCR recovery */

@@ -289,32 +289,37 @@ linuxdvb_frontend_start_mux
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
 }
 
-static int
-linuxdvb_frontend_open_pid
-  ( linuxdvb_frontend_t *lfe, int pid, const char *name )
+static void
+linuxdvb_frontend_open_pid0
+  ( linuxdvb_frontend_t *lfe, mpegts_pid_t *mp )
 {
-  char buf[256];
+  char name[256];
   struct dmx_pes_filter_params dmx_param;
-  int fd = -1;
+  int fd;
 
+  /* Already opened */
+  if (mp->mp_fd != -1)
+    return;
+
+  /* Not locked OR full mux mode */
   if (!lfe->lfe_locked || lfe->lfe_fullmux)
-    return -1;
+    return;
 
-  if (!name) {
-    lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
-    name = buf;
-  }
+  lfe->mi_display_name((mpegts_input_t*)lfe, name, sizeof(name));
 
+  /* Open DMX */
   fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
   if(fd == -1) {
     tvherror("linuxdvb", "%s - failed to open dmx for pid %d [e=%s]",
-             name, pid, strerror(errno));
-    return -1;
+             name, mp->mp_pid, strerror(errno));
+    return;
   }
 
-  tvhtrace("linuxdvb", "%s - open PID %04X (%d) fd %d", name, pid, pid, fd);
+  /* Install filter */
+  tvhtrace("linuxdvb", "%s - open PID %04X (%d) fd %d",
+           name, mp->mp_pid, mp->mp_pid, fd);
   memset(&dmx_param, 0, sizeof(dmx_param));
-  dmx_param.pid      = pid;
+  dmx_param.pid      = mp->mp_pid;
   dmx_param.input    = DMX_IN_FRONTEND;
   dmx_param.output   = DMX_OUT_TS_TAP;
   dmx_param.pes_type = DMX_PES_OTHER;
@@ -322,54 +327,30 @@ linuxdvb_frontend_open_pid
 
   if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
     tvherror("linuxdvb", "%s - failed to config dmx for pid %d [e=%s]",
-             name, pid, strerror(errno));
+             name, mp->mp_pid, strerror(errno));
     close(fd);
-    return -1;
+    return;
   }
 
-  return fd;
+  /* Store */
+  mp->mp_fd = fd;
+
+  return;
 }
 
-static void
-linuxdvb_frontend_open_service
-  ( mpegts_input_t *mi, mpegts_service_t *s, int init )
+static mpegts_pid_t *
+linuxdvb_frontend_open_pid
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
-  char buf[256];
-  elementary_stream_t *st;
+  mpegts_pid_t *mp;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
-  /* Ignore in full rx mode OR if not yet locked */
-  if (!lfe->lfe_locked || lfe->lfe_fullmux) goto exit;
-  mi->mi_display_name(mi, buf, sizeof(buf));
-  
-  /* Install PES filters */
-  TAILQ_FOREACH(st, &s->s_components, es_link) {
-    if(st->es_pid >= 0x2000)
-      continue;
+  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner)))
+    return NULL;
 
-    if(st->es_demuxer_fd != -1)
-      continue;
+  linuxdvb_frontend_open_pid0(lfe, mp);
 
-    st->es_cc_valid   = 0;
-    st->es_demuxer_fd
-      = linuxdvb_frontend_open_pid((linuxdvb_frontend_t*)mi, st->es_pid, buf);
-  }
-
-exit:
-  mpegts_input_open_service(mi, s, init);
-}
-
-static void
-linuxdvb_frontend_close_service
-  ( mpegts_input_t *mi, mpegts_service_t *s )
-{
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-
-  /* Ignore in full rx mode OR if not yet locked */
-  if (!lfe->lfe_locked || lfe->lfe_fullmux) goto exit;
-
-exit:
-  mpegts_input_close_service(mi, s);
+  return mp;
 }
 
 static idnode_set_t *
@@ -444,22 +425,6 @@ linuxdvb_frontend_default_tables
 }
 
 static void
-linuxdvb_frontend_open_all
-  ( linuxdvb_frontend_t *lfe, mpegts_mux_t *mm )
-{
-  mpegts_table_t *mt;
-  service_t *s;
-  LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
-    lfe->mi_open_service((mpegts_input_t*)lfe,
-                         (mpegts_service_t*)s, 0);
-  }
-  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
-    if (mt->mt_fd == -1)
-      mt->mt_fd = lfe->lfe_open_pid(lfe, mt->mt_pid, NULL);
-  }
-}
-
-static void
 linuxdvb_frontend_monitor ( void *aux )
 {
   uint16_t u16;
@@ -468,6 +433,7 @@ linuxdvb_frontend_monitor ( void *aux )
   linuxdvb_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi = LIST_FIRST(&lfe->mi_mux_active);
   mpegts_mux_t *mm;
+  mpegts_pid_t *mp;
   fe_status_t fe_status;
   signal_state_t status;
 
@@ -533,8 +499,11 @@ linuxdvb_frontend_monitor ( void *aux )
       /* Table handlers */
       linuxdvb_frontend_default_tables(lfe, (linuxdvb_mux_t*)mm);
 
-      /* Services */
-      linuxdvb_frontend_open_all(lfe, mm);
+      /* Locked - ensure everything is open */
+      pthread_mutex_lock(&lfe->mi_delivery_mutex);
+      RB_FOREACH(mp, &mm->mm_pids, mp_link)
+        linuxdvb_frontend_open_pid0(lfe, mp);
+      pthread_mutex_unlock(&lfe->mi_delivery_mutex);
 
     /* Re-arm (quick) */
     } else {
@@ -853,10 +822,8 @@ linuxdvb_frontend_create0
   lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
   lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
   lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
-  lfe->mi_open_service   = linuxdvb_frontend_open_service;
-  lfe->mi_close_service  = linuxdvb_frontend_close_service;
   lfe->mi_network_list   = linuxdvb_frontend_network_list;
-  lfe->lfe_open_pid      = linuxdvb_frontend_open_pid;
+  lfe->mi_open_pid       = linuxdvb_frontend_open_pid;
 
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;

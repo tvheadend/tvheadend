@@ -154,7 +154,6 @@ mpegts_table_add
   mt->mt_table    = tableid;
   mt->mt_mask     = mask;
   mt->mt_mux      = mm;
-  mt->mt_fd       = -1;
   mt->mt_cc       = -1;
   LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
   mm->mm_num_tables++;
