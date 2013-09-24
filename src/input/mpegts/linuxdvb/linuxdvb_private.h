@@ -93,6 +93,7 @@ struct linuxdvb_adapter
    */
   char    *la_rootpath;
   uint32_t la_number;
+  int      la_dvb_number;
 };
 
 #define LINUXDVB_SUBSYS_FE  0x01

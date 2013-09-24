@@ -586,13 +586,13 @@ capmt_thread(void *aux)
           la = (linuxdvb_adapter_t*)is->is_array[i];
           if (!la || !la->mi_is_enabled) continue;
           if (!la->mi_is_enabled((mpegts_input_t*)la)) continue;
-          if (la->la_number > MAX_CA) {
+          if (la->la_dvb_number > MAX_CA) {
             tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
             continue;
           }
           tvhlog(LOG_INFO, "capmt", "Creating capmt UDP socket for adapter %d",
-                 la->la_number);
-          bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[la->la_number], 9000 + la->la_number);
+                 la->la_dvb_number);
+          bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[la->la_dvb_number], 9000 + la->la_dvb_number);
         }
       }
       if (bind_ok)
@@ -656,7 +656,7 @@ capmt_table_input(struct th_descrambler *td, struct service *s,
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
   if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
-  adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
+  adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
 
   caid_t *c;
 
@@ -895,7 +895,7 @@ capmt_service_start(service_t *s)
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
   if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
-  tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_number;
+  tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     /* skip, if we're not active */

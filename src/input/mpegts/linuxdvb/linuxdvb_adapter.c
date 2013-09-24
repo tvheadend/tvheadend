@@ -113,6 +113,9 @@ linuxdvb_adapter_is_enabled ( mpegts_input_t *mi )
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)mi;
   linuxdvb_hardware_t *lh;
 
+  if (la->la_dvb_number == -1)
+    return 0;
+
   LIST_FOREACH(lh, &la->lh_children, lh_parent_link)
     if (lh->mi_is_enabled && lh->mi_is_enabled((mpegts_input_t*)lh))
       return 1;
@@ -142,6 +145,8 @@ linuxdvb_adapter_create0
   la->lh_parent     = (linuxdvb_hardware_t*)ld;
   la->mi_is_enabled = linuxdvb_adapter_is_enabled;
   la->mi_enabled    = 1;
+
+  la->la_dvb_number = -1;
 
   /* No conf */
   if (!conf)
@@ -252,6 +257,7 @@ linuxdvb_adapter_added ( int adapter )
         tvhlog(LOG_ERR, "linuxdvb", "failed to find/create adapter%d", adapter);
         return NULL;
       }
+      la->la_dvb_number = adapter;
       if (!la->mi_displayname) {
         char buf[256];
         snprintf(buf, sizeof(buf), "%s #%d", dfi.name, la->la_number);
