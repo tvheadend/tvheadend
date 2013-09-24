@@ -148,18 +148,23 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
 {
   streaming_message_t *sm;
   mpegts_mux_instance_t *mmi = s->ths_mmi;
+  mpegts_mux_t   *mm = mmi->mmi_mux;
+  mpegts_input_t *mi = mmi->mmi_input;
 
-  pthread_mutex_lock(&mmi->mmi_input->mi_delivery_mutex);
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
 
-  streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
+  if (!(s->ths_flags & SUBSCRIPTION_NONE))
+    streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
 
   sm = streaming_msg_create_code(SMT_STOP, reason);
   streaming_target_deliver(s->ths_output, sm);
 
+  if (mi)
+    mi->mi_close_pid(mi, mm, 0x2000, MPS_NONE, s);
   s->ths_mmi = NULL;
   LIST_REMOVE(s, ths_mmi_link);
 
-  pthread_mutex_unlock(&mmi->mmi_input->mi_delivery_mutex);
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
 /* **************************************************************************
@@ -575,6 +580,7 @@ subscription_create_from_mux
   th_subscription_t *s;
   streaming_message_t *sm;
   streaming_start_t *ss;
+  mpegts_input_t *mi;
   int r;
 
   /* Tune */
@@ -585,9 +591,19 @@ subscription_create_from_mux
   }
 
   /* Create subscription */
+  if (!st)
+    flags |= SUBSCRIPTION_NONE;
   s = subscription_create(weight, name, st, flags, NULL,
                           hostname, username, client);
   s->ths_mmi = mm->mm_active;
+
+  /* Install full mux handler */
+  mi = s->ths_mmi->mmi_input;
+  if (mi) {
+    pthread_mutex_lock(&mi->mi_delivery_mutex);
+    mi->mi_open_pid(mi, mm, 0x2000, MPS_NONE, s);
+    pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  }
 
   pthread_mutex_lock(&s->ths_mmi->mmi_input->mi_delivery_mutex);
 
@@ -595,7 +611,8 @@ subscription_create_from_mux
   LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
 
   /* Connect */
-  streaming_target_connect(&s->ths_mmi->mmi_streaming_pad, &s->ths_input);
+  if (st)
+    streaming_target_connect(&s->ths_mmi->mmi_streaming_pad, &s->ths_input);
 
   /* Deliver a start message */
   ss = calloc(1, sizeof(streaming_start_t));
