@@ -348,7 +348,7 @@ tvheadend.idnode_editor_form = function ( d, panel )
   var rf = [];
 
   /* Fields */
-  for (i = 0; i < d.length; i++) {
+  for (var i = 0; i < d.length; i++) {
     var f = tvheadend.idnode_editor_field(d[i]);
     if (!f) continue;
     if (d[i].rdonly)
