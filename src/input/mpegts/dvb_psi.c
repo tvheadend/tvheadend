@@ -1030,6 +1030,9 @@ psi_desc_add_ca
   caid_t *c;
   int r = 0;
 
+  tvhdebug("pmt", "  caid %04X (%s) provider %08X pid %04X",
+           caid, descrambler_caid2name(caid), provid, pid);
+
   if((st = service_stream_find((service_t*)t, pid)) == NULL) {
     st = service_stream_create((service_t*)t, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
@@ -1057,8 +1060,6 @@ psi_desc_add_ca
   c->providerid = provid;
   
   c->delete_me = 0;
-  tvhdebug("pmt", "  caid %04X (%s) provider %08X",
-           caid, descrambler_caid2name(caid), provid);
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
   return r;
