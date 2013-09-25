@@ -267,6 +267,9 @@ tvheadend.idnode_editor_field = function(f, create)
 {
   var d = f.rdonly || false;
   if (f.wronly && !create) d = false;
+  var value = f.value;
+  if (value == null)
+    value = f.default;
     
   /* Enumerated (combobox) type */
   if (f.enum) {
@@ -276,7 +279,7 @@ tvheadend.idnode_editor_field = function(f, create)
     return new cons({
       fieldLabel      : f.caption,
       name            : f.id,
-      value           : f.value || f.default,
+      value           : value,
       disabled        : d,
       width           : 300,
       mode            : 'local',
@@ -308,7 +311,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.TextField({
         fieldLabel  : f.caption,
         name        : f.id,
-        value       : f.value || f.default,
+        value       : value,
         disabled    : d,
         width       : 300
       });
@@ -318,7 +321,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.Checkbox({
         fieldLabel  : f.caption,
         name        : f.id,
-        checked     : f.value || f.default,
+        checked     : value,
         disabled    : d
       });
       break;
@@ -330,7 +333,7 @@ tvheadend.idnode_editor_field = function(f, create)
       return new Ext.form.NumberField({
         fieldLabel  : f.caption,
         name        : f.id,
-        value       : f.value || f.default,
+        value       : value,
         disabled    : d,
         width       : 300
       });
