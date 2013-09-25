@@ -114,6 +114,9 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
   streaming_message_t *sm;
   service_t *t = s->ths_service;
 
+  /* Ignore - not actually linked */
+  if (!s->ths_current_instance) return;
+
   tvhtrace("subscription", "unlinking sub %p from svc %p", s, t);
 
   pthread_mutex_lock(&t->s_stream_mutex);
@@ -227,7 +230,9 @@ subscription_reschedule(void)
       assert(si != NULL);
       si->si_error = s->ths_testing_error;
       time(&si->si_error_time);
-  
+
+      if (!s->ths_channel)
+        s->ths_service = si->si_s;
     }
 
     if (s->ths_channel)
@@ -361,7 +366,6 @@ void
 subscription_unsubscribe(th_subscription_t *s)
 {
   service_t *t = s->ths_service;
-  service_instance_t *si = s->ths_current_instance; 
 
   lock_assert(&global_lock);
 
@@ -380,7 +384,7 @@ subscription_unsubscribe(th_subscription_t *s)
            s->ths_title);
   }
 
-  if(si)
+  if(t)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
 #if ENABLE_MPEGTS
