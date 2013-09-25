@@ -330,12 +330,15 @@ mpegts_mux_start
   while (pass < 2) {
     tune = NULL;
     if (!mmi) mmi = LIST_FIRST(&mm->mm_instances);
+    tvhtrace("mpegts", "%s - checking mmi %p", buf, mmi);
 
     /* First pass - free only */
     if (!pass) {
+      int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input);
+      int f = mmi->mmi_input->mi_is_free(mmi->mmi_input);
+      tvhtrace("mpegts", "%s -   enabled %d free %d\n", buf, e, f);
 
-      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
-          mmi->mmi_input->mi_is_free(mmi->mmi_input)) {
+      if (e && f) {
         havefree = 1;
         if (!mmi->mmi_tune_failed) {
           tune = mmi;
