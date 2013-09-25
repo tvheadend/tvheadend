@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <sys/prctl.h>
 #include <unistd.h>
 #include <pthread.h>
 
@@ -81,15 +82,38 @@ tvh_write(int fd, const void *buf, size_t len)
   return len ? 1 : 0;
 }
 
-int tvhthread_create0(pthread_t *thread, const pthread_attr_t *attr,
-                          void *(*start_routine) (void *), void *arg, const char *name)
+struct
+thread_state {
+  void *(*run)(void*);
+  void *arg;
+  char name[17];
+};
+
+static void *
+thread_wrapper ( void *p )
 {
-  int r;
-  char buf[16] = { 0 };
-  strncpy(buf, name, sizeof(buf)-1);
-  r = pthread_create(thread, attr, start_routine, arg);
-  tvhdebug("thread", "created thread %ld [%s / %p]", *thread, name, start_routine);
-  if (r) return r;
-  pthread_setname_np(*thread, buf);
+  struct thread_state *ts = p;
+
+  /* Set name */
+  prctl(PR_SET_NAME, ts->name);
+
+  /* Run */
+  tvhdebug("thread", "created thread %ld [%s / %p(%p)]",
+           pthread_self(), ts->name, ts->run, ts->arg);
+  void *r = ts->run(ts->arg);
+  free(ts);
+
   return r;
+}
+
+int
+tvhthread_create0
+  (pthread_t *thread, const pthread_attr_t *attr,
+   void *(*start_routine) (void *), void *arg, const char *name)
+{
+  struct thread_state *ts = calloc(1, sizeof(struct thread_state));
+  strncpy(ts->name, name, sizeof(ts->name));
+  ts->run = start_routine;
+  ts->arg = arg;
+  return pthread_create(thread, attr, thread_wrapper, ts);
 }
