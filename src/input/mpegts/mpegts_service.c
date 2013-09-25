@@ -206,7 +206,6 @@ static void
 mpegts_service_stop(service_t *t)
 {
   mpegts_service_t *s  = (mpegts_service_t*)t;
-  mpegts_mux_t     *mm = (mpegts_mux_t*)s->s_dvb_mux;
   mpegts_input_t   *i  = s->s_dvb_active_input;
 
   /* Validate */
@@ -215,7 +214,6 @@ mpegts_service_stop(service_t *t)
   lock_assert(&global_lock);
 
   /* Stop */
-  mm->mm_stop(mm, 0);
   i->mi_close_service(i, s);
   s->s_status = SERVICE_IDLE;
 }
