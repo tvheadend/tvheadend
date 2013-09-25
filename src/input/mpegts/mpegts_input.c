@@ -143,9 +143,9 @@ mpegts_input_open_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
   char buf[512];
-  mpegts_pid_t *mp = mpegts_mux_find_pid(mm, pid, 1);
+  mpegts_pid_t *mp;
   assert(owner != NULL);
-  if (mp) {
+  if ((mp = mpegts_mux_find_pid(mm, pid, 1))) {
     static mpegts_pid_sub_t *skel = NULL;
     if (!skel)
       skel = calloc(1, sizeof(mpegts_pid_sub_t));
@@ -167,8 +167,10 @@ mpegts_input_close_pid
 {
   char buf[512];
   mpegts_pid_sub_t *mps, skel;
-  mpegts_pid_t *mp = mpegts_mux_find_pid(mm, pid, 1);
+  mpegts_pid_t *mp;
   assert(owner != NULL);
+  if (!(mp = mpegts_mux_find_pid(mm, pid, 1)))
+    return;
   skel.mps_type  = type;
   skel.mps_owner = owner;
   mps = RB_FIND(&mp->mp_subs, &skel, mps_link, mps_cmp);
