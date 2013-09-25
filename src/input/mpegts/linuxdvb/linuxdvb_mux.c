@@ -556,6 +556,9 @@ linuxdvb_mux_create0
   lm->mm_display_name     = linuxdvb_mux_display_name;
   lm->mm_config_save      = linuxdvb_mux_config_save;
   lm->mm_create_instances = linuxdvb_mux_create_instances;
+
+  /* Defaults */
+  lm->lm_tuning.dmc_fe_params.inversion = INVERSION_AUTO;
   
   /* No config */
   if (!conf) return lm;

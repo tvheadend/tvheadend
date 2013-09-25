@@ -267,6 +267,7 @@ dvb_desc_terr_del
 
   memset(&dmc, 0, sizeof(dmc));
   dmc.dmc_fe_delsys           = SYS_DVBT;
+  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency * 10;
 
   dmc.dmc_fe_params.u.ofdm.bandwidth             = btab[(ptr[4] >> 5) & 0x7];
