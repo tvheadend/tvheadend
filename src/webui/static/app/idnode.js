@@ -400,6 +400,7 @@ tvheadend.idnode_editor = function(item, conf)
           node: Ext.encode(node)
         },
         success : function(d) {
+          if (conf.win) conf.win.hide();
         }
       });
     }
@@ -757,8 +758,10 @@ tvheadend.idnode_grid = function(panel, conf)
               success : function(d)
               {
                 d = json_decode(d);
-                var p = tvheadend.idnode_editor(d[0], {});
-                var w = new Ext.Window({
+                var w = null;
+                var c = { win: w };
+                var p = tvheadend.idnode_editor(d[0], c);
+                w = new Ext.Window({
                   title       : 'Edit ' + conf.titleS,
                   layout      : 'fit',
                   autoWidth   : true,
@@ -766,6 +769,7 @@ tvheadend.idnode_grid = function(panel, conf)
                   plain       : true,
                   items       : p
                 });
+                c.win = w;
                 w.show();
               }
             });
