@@ -690,12 +690,17 @@ mpegts_mux_unsubscribe_by_name
   ( mpegts_mux_t *mm, const char *name )
 {
   mpegts_mux_instance_t *mmi;
-  th_subscription_t *s;
+  th_subscription_t *s, *n;
 
-  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-    LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+    s = LIST_FIRST(&mmi->mmi_subs);
+    while (s) {
+      n = LIST_NEXT(s, ths_mmi_link);
       if (!strcmp(s->ths_title, name))
         subscription_unsubscribe(s);
+      s = n;
+    }
+  }
 }
 
 /* **************************************************************************
