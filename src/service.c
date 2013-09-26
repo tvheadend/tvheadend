@@ -294,10 +294,6 @@ service_stop(service_t *t)
   TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
-#ifdef MOVE_TO_MPEGTS
-  sbuf_free(&t->s_tsbuf);
-#endif
-
   t->s_status = SERVICE_IDLE;
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -343,9 +339,6 @@ service_start(service_t *t, int instance)
 
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
-#ifdef MOVE_TO_V4L
-  t->s_pcr_drift = 0;
-#endif
 
   if((r = t->s_start_feed(t, instance)))
     return r;

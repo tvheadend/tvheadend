@@ -346,18 +346,6 @@ struct mpegts_service
    */
 
   /**
-   * Descrambling support
-   */
-
-#ifdef TODO_MOVE_THIS_HERE
-  struct th_descrambler_list s_descramblers;
-  int s_scrambled;
-  int s_scrambled_seen;
-  int s_caid;
-  uint16_t s_prefcapid;
-#endif
-
-  /**
    * When a subscription request SMT_MPEGTS, chunk them togeather 
    * in order to recude load.
    */
