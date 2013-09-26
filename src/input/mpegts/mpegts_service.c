@@ -41,12 +41,32 @@ mpegts_service_class_get_mux ( void *ptr )
   return &s;
 }
 
+static const void *
+mpegts_service_class_get_network ( void *ptr )
+{
+  static char buf[512], *s = buf;
+  mpegts_service_t *ms = ptr;
+  mpegts_network_t *mn = ms->s_dvb_mux ? ms->s_dvb_mux->mm_network : NULL;
+  if (mn && mn->mn_display_name)
+    mn->mn_display_name(mn, buf, sizeof(buf));
+  else
+    *buf = 0;
+  return &s;
+}
+
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
   .ic_caption    = "MPEGTS Service",
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "network",
+      .name     = "Network",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_service_class_get_network,
+    },
     {
       .type     = PT_STR,
       .id       = "multiplex",
@@ -93,7 +113,7 @@ const idclass_t mpegts_service_class =
       .type     = PT_U16,
       .id       = "dvb_servicetype",
       .name     = "Service Type",
-      .opts     = PO_RDONLY || PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {

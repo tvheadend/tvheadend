@@ -150,6 +150,17 @@ service_class_get_title ( idnode_t *self )
   return ret;
 }
 
+static const void *
+service_class_encrypted_get ( void *p )
+{
+  static int t;
+  service_t *s = p;
+  pthread_mutex_lock(&s->s_stream_mutex);
+  t = service_is_encrypted(s);
+  pthread_mutex_unlock(&s->s_stream_mutex);
+  return &t;
+}
+
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
@@ -172,6 +183,13 @@ const idclass_t service_class = {
       .list     = service_class_channel_enum,
       .rend     = service_class_channel_rend,
       .opts     = PO_NOSAVE
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "encrypted",
+      .name     = "Encrypted",
+      .get      = service_class_encrypted_get,
+      .opts     = PO_NOSAVE | PO_RDONLY
     },
     {}
   }
