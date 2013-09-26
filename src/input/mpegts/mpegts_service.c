@@ -234,12 +234,11 @@ mpegts_service_stop(service_t *t)
 
   /* Validate */
   assert(s->s_source_type == S_MPEG_TS);
-  assert(i != NULL);
   lock_assert(&global_lock);
 
   /* Stop */
-  i->mi_close_service(i, s);
-  s->s_status = SERVICE_IDLE;
+  if (i)
+    i->mi_close_service(i, s);
 }
 
 /*
