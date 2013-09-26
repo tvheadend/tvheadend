@@ -422,6 +422,7 @@ subscription_create
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
   int reject = 0;
   static int tally;
+  TAILQ_INIT(&s->ths_instances);
 
   if(flags & SUBSCRIPTION_NONE)
     reject |= (SMT_TO_MASK(SMT_PACKET) | SMT_TO_MASK(SMT_MPEGTS));

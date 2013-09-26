@@ -377,58 +377,68 @@ service_start(service_t *t, int instance)
  * Main entry point for starting a service based on a channel
  */
 service_instance_t *
-service_find_instance(service_t *s, channel_t *ch, struct service_instance_list *sil,
-                      int *error, int weight)
+service_find_instance
+  (service_t *s, channel_t *ch, service_instance_list_t *sil,
+   int *error, int weight)
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
 
   lock_assert(&global_lock);
 
-  // First, update list of candidates
-
-  LIST_FOREACH(si, sil, si_link)
+  /* Build list */
+  TAILQ_FOREACH(si, sil, si_link)
     si->si_mark = 1;
 
   if (ch) {
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
-      if (!s->s_is_enabled(s)) continue;
-      s->s_enlist(s, sil);
+      if (s->s_is_enabled(s))
+        s->s_enlist(s, sil);
     }
   } else {
     s->s_enlist(s, sil);
   }
 
-  for(si = LIST_FIRST(sil); si != NULL; si = next) {
-    next = LIST_NEXT(si, si_link);
+  /* Clean */
+  for(si = TAILQ_FIRST(sil); si != NULL; si = next) {
+    next = TAILQ_NEXT(si, si_link);
     if(si->si_mark)
-      service_instance_destroy(si);
+      service_instance_destroy(sil, si);
+  }
+  
+  /* Debug */
+  TAILQ_FOREACH(si, sil, si_link) {
+    const char *name = ch ? ch->ch_name : NULL;
+    if (!name && s) name = s->s_nicename;
+    tvhdebug("service", "%s si %p weight %d prio %d error %d\n",
+             name, si, si->si_weight, si->si_prio, si->si_error);
   }
 
-  // Check if any service is already running, if so, use that
-  LIST_FOREACH(si, sil, si_link)
+  /* Already running? */
+  TAILQ_FOREACH(si, sil, si_link)
     if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0)
       return si;
 
-  // Check if any is idle
-  LIST_FOREACH(si, sil, si_link)
-    if(si->si_weight == 0 && si->si_error == 0)
+  /* Forced or Idle */
+  TAILQ_FOREACH(si, sil, si_link)
+    if(si->si_weight <= 0 && si->si_error == 0)
       break;
 
-  // Check if to kick someone out
-  if(si == NULL) {
-    LIST_FOREACH(si, sil, si_link) {
-      if(si->si_weight < weight && si->si_error == 0)
+  /* Bump someone */
+  if (!si) {
+    TAILQ_FOREACH_REVERSE(si, sil, service_instance_list, si_link)
+      if (weight > si->si_weight && si->si_error == 0)
         break;
-    }
   }
 
+  /* Failed */
   if(si == NULL) {
     *error = SM_CODE_NO_FREE_ADAPTER;
     return NULL;
   }
 
+  /* Start */
   service_start(si->si_s, si->si_instance);
   return si;
 }
@@ -1097,24 +1107,30 @@ service_refresh_channel(service_t *t)
 
 
 /**
- *
+ * Weight then prio?
  */
 static int
 si_cmp(const service_instance_t *a, const service_instance_t *b)
 {
-  return a->si_prio - b->si_prio;
+  int r;
+  r = a->si_weight - b->si_weight;
+  if (!r)
+    r = a->si_prio - b->si_prio;
+  return r;
 }
 
 /**
  *
  */
 service_instance_t *
-service_instance_add(struct service_instance_list *sil,
+service_instance_add(service_instance_list_t *sil,
                      struct service *s, int instance, int prio,
                      int weight)
 {
   service_instance_t *si;
-  LIST_FOREACH(si, sil, si_link)
+
+  /* Existing */
+  TAILQ_FOREACH(si, sil, si_link)
     if(si->si_s == s && si->si_instance == instance)
       break;
 
@@ -1128,11 +1144,11 @@ service_instance_add(struct service_instance_list *sil,
     si->si_mark = 0;
     if(si->si_prio == prio && si->si_weight == weight)
       return si;
-    LIST_REMOVE(si, si_link);
+    TAILQ_REMOVE(sil, si, si_link);
   }
   si->si_weight = weight;
-  si->si_prio = prio;
-  LIST_INSERT_SORTED(sil, si, si_link, si_cmp);
+  si->si_prio   = prio;
+  TAILQ_INSERT_SORTED(sil, si, si_link, si_cmp);
   return si;
 }
 
@@ -1141,9 +1157,10 @@ service_instance_add(struct service_instance_list *sil,
  *
  */
 void
-service_instance_destroy(service_instance_t *si)
+service_instance_destroy
+  (service_instance_list_t *sil, service_instance_t *si)
 {
-  LIST_REMOVE(si, si_link);
+  TAILQ_REMOVE(sil, si, si_link);
   service_unref(si->si_s);
   free(si);
 }
@@ -1153,13 +1170,13 @@ service_instance_destroy(service_instance_t *si)
  *
  */
 void
-service_instance_list_clear(struct service_instance_list *sil)
+service_instance_list_clear(service_instance_list_t *sil)
 {
   lock_assert(&global_lock);
 
   service_instance_t *si;
-  while((si = LIST_FIRST(sil)) != NULL)
-    service_instance_destroy(si);
+  while((si = TAILQ_FIRST(sil)) != NULL)
+    service_instance_destroy(sil, si);
 }
 
 

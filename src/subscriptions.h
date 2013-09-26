@@ -74,7 +74,7 @@ typedef struct th_subscription {
   /**
    * This is the list of service candidates we have
    */
-  struct service_instance_list ths_instances;
+  service_instance_list_t ths_instances;
   struct service_instance *ths_current_instance;
 
 #if ENABLE_MPEGTS

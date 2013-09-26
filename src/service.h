@@ -128,14 +128,14 @@ typedef struct elementary_stream {
 } elementary_stream_t;
 
 
-LIST_HEAD(service_instance_list, service_instance);
+typedef TAILQ_HEAD(service_instance_list, service_instance) service_instance_list_t;
 
 /**
  *
  */
 typedef struct service_instance {
 
-  LIST_ENTRY(service_instance) si_link;
+  TAILQ_ENTRY(service_instance) si_link;
 
   int si_prio;
 
@@ -162,15 +162,16 @@ typedef struct service_instance {
 /**
  *
  */
-service_instance_t *service_instance_add(struct service_instance_list *sil,
+service_instance_t *service_instance_add(service_instance_list_t *sil,
                                          struct service *s,
                                          int instance,
                                          int prio,
                                          int weight);
 
-void service_instance_destroy(service_instance_t *si);
+void service_instance_destroy
+  (service_instance_list_t *sil, service_instance_t *si);
 
-void service_instance_list_clear(struct service_instance_list *sil);
+void service_instance_list_clear(service_instance_list_t *sil);
 
 /**
  *
@@ -268,7 +269,7 @@ typedef struct service {
 
   int (*s_is_enabled)(struct service *t);
 
-  void (*s_enlist)(struct service *s, struct service_instance_list *sil);
+  void (*s_enlist)(struct service *s, service_instance_list_t *sil);
 
   int (*s_start_feed)(struct service *s, int instance);
 
@@ -442,7 +443,7 @@ service_t *service_find(const char *identifier);
 
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
-                                          struct service_instance_list *sil,
+                                          service_instance_list_t *sil,
                                           int *error,
                                           int weight);
 
