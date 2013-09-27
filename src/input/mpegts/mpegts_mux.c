@@ -449,7 +449,10 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
     TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
     mm->mm_initial_scan_status = MM_SCAN_PENDING;
     gtimer_disarm(&mm->mm_initial_scan_timeout);
-    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+    if (mm->mm_initial_scan_done)
+      TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+    else
+      TAILQ_INSERT_HEAD(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
     mpegts_network_schedule_initial_scan(mn);
   }
 
@@ -495,8 +498,12 @@ mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
   assert(mm->mm_initial_scan_status == MM_SCAN_DONE);
 
   mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
+  if (mm->mm_initial_scan_done)
+    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
+                      mm_initial_scan_link);
+  else
+    TAILQ_INSERT_HEAD(&mn->mn_initial_scan_pending_queue, mm,
+                      mm_initial_scan_link);
   mn->mn_initial_scan_num++;
   
   mn->mn_display_name(mn, buf1, sizeof(buf1));
