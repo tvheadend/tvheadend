@@ -162,8 +162,8 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   sm = streaming_msg_create_code(SMT_STOP, reason);
   streaming_target_deliver(s->ths_output, sm);
 
-  if (mi)
-    mi->mi_close_pid(mi, mm, 0x2000, MPS_NONE, s);
+  if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX))
+    mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
   s->ths_mmi = NULL;
   LIST_REMOVE(s, ths_mmi_link);
 
@@ -604,9 +604,9 @@ subscription_create_from_mux
 
   /* Install full mux handler */
   mi = s->ths_mmi->mmi_input;
-  if (mi) {
+  if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX)) {
     pthread_mutex_lock(&mi->mi_delivery_mutex);
-    mi->mi_open_pid(mi, mm, 0x2000, MPS_NONE, s);
+    mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
     pthread_mutex_unlock(&mi->mi_delivery_mutex);
   }
 

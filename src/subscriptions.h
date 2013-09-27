@@ -25,6 +25,7 @@ extern struct th_subscription_list subscriptions;
 
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
 #define SUBSCRIPTION_NONE       0x2
+#define SUBSCRIPTION_FULLMUX    0x4
 
 typedef struct th_subscription {
 

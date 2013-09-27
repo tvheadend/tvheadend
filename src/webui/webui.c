@@ -735,7 +735,8 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_mux(mm, weight, "HTTP", &sq.sq_st,
-                                   SUBSCRIPTION_RAW_MPEGTS,
+                                   SUBSCRIPTION_RAW_MPEGTS |
+                                   SUBSCRIPTION_FULLMUX,
                                    addrbuf, hc->hc_username,
                                    http_arg_get(&hc->hc_args, "User-Agent"), NULL);
   if (!s)
