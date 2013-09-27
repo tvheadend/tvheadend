@@ -366,7 +366,7 @@ iptv_input_is_free ( mpegts_input_t *mi )
 }
 
 static int
-iptv_input_current_weight ( mpegts_input_t *mi )
+iptv_input_get_weight ( mpegts_input_t *mi )
 {
   return 0; // unlimited number of muxes
 }
@@ -511,7 +511,7 @@ void iptv_init ( void )
   iptv_input.mi_start_mux      = iptv_input_start_mux;
   iptv_input.mi_stop_mux       = iptv_input_stop_mux;
   iptv_input.mi_is_free        = iptv_input_is_free;
-  iptv_input.mi_current_weight = iptv_input_current_weight;
+  iptv_input.mi_get_weight     = iptv_input_get_weight;
   iptv_input.mi_display_name   = iptv_input_display_name;
   iptv_input.mi_enabled        = 1;
 

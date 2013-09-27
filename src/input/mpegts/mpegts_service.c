@@ -178,8 +178,8 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
       w = -1;
       p = -1;
     } else {
-      w = mmi->mmi_input->mi_current_weight(mmi->mmi_input);
-      p = 0;//mmi->mmi_input->mi_priority(mmi->mmi_input);
+      w = mmi->mmi_input->mi_get_weight(mmi->mmi_input);
+      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input);
     }
 
     service_instance_add(sil, t, mmi->mmi_input->mi_instance, p, w);
@@ -308,8 +308,8 @@ mpegts_service_grace_period(service_t *t)
   mpegts_input_t   *mi = ms->s_dvb_active_input;
   assert(mi != NULL);
 
-  if (mi && mi->mi_grace_period)
-    r = mi->mi_grace_period(mi, mm);
+  if (mi && mi->mi_get_grace)
+    r = mi->mi_get_grace(mi, mm);
   
   return r ?: 10;  
 }

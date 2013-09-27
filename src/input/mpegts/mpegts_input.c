@@ -52,6 +52,14 @@ const idclass_t mpegts_input_class =
       .def.i    = 1,
     },
     {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Priority",
+      .off      = offsetof(mpegts_input_t, mi_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "displayname",
       .name     = "Name",
@@ -92,7 +100,7 @@ mpegts_input_is_free ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_current_weight ( mpegts_input_t *mi )
+mpegts_input_get_weight ( mpegts_input_t *mi )
 {
   const mpegts_mux_instance_t *mmi;
   const service_t *s;
@@ -115,6 +123,12 @@ mpegts_input_current_weight ( mpegts_input_t *mi )
   }
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
   return w;
+}
+
+int
+mpegts_input_get_priority ( mpegts_input_t *mi )
+{
+  return mi->mi_priority;
 }
 
 static int
@@ -583,7 +597,8 @@ mpegts_input_create0
   mi->mi_is_enabled           = mpegts_input_is_enabled;
   mi->mi_display_name         = mpegts_input_display_name;
   mi->mi_is_free              = mpegts_input_is_free;
-  mi->mi_current_weight       = mpegts_input_current_weight;
+  mi->mi_get_weight           = mpegts_input_get_weight;
+  mi->mi_get_priority         = mpegts_input_get_priority;
   mi->mi_start_mux            = mpegts_input_start_mux;
   mi->mi_stop_mux             = mpegts_input_stop_mux;
   mi->mi_open_service         = mpegts_input_open_service;

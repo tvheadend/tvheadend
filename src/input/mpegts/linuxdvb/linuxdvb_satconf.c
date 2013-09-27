@@ -370,12 +370,22 @@ linuxdvb_satconf_is_free ( mpegts_input_t *mi )
 }
 
 static int
-linuxdvb_satconf_current_weight ( mpegts_input_t *mi )
+linuxdvb_satconf_get_weight ( mpegts_input_t *mi )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
   if (!ls->ls_frontend)
     return 0;
-  return ls->ls_frontend->mi_current_weight(ls->ls_frontend);
+  return ls->ls_frontend->mi_get_weight(ls->ls_frontend);
+}
+
+static int
+linuxdvb_satconf_get_priority ( mpegts_input_t *mi )
+{
+  int prio = 0;
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  if (!ls->ls_frontend)
+    prio = ls->ls_frontend->mi_get_priority(ls->ls_frontend);
+  return prio + mpegts_input_get_priority(mi);
 }
 
 static void
@@ -523,7 +533,7 @@ linuxdvb_satconf_has_subscription
 }
 
 static int
-linuxdvb_satconf_grace_period
+linuxdvb_satconf_get_grace
   ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   int i, r;
@@ -535,8 +545,8 @@ linuxdvb_satconf_grace_period
   };
 
   /* Get underlying value */
-  if (ls->ls_frontend->mi_grace_period)
-    r = ls->ls_frontend->mi_grace_period(mi, mm);
+  if (ls->ls_frontend->mi_get_grace)
+    r = ls->ls_frontend->mi_get_grace(mi, mm);
   else  
     r = 10;
 
@@ -572,7 +582,9 @@ linuxdvb_satconf_create0
   /* Input callbacks */
   ls->mi_is_enabled          = linuxdvb_satconf_is_enabled;
   ls->mi_is_free             = linuxdvb_satconf_is_free;
-  ls->mi_current_weight      = linuxdvb_satconf_current_weight;
+  ls->mi_get_weight          = linuxdvb_satconf_get_weight;
+  ls->mi_get_priority        = linuxdvb_satconf_get_priority;
+  ls->mi_get_grace           = linuxdvb_satconf_get_grace;
   ls->mi_display_name        = linuxdvb_satconf_display_name;
   ls->mi_start_mux           = linuxdvb_satconf_start_mux;
   ls->mi_stop_mux            = linuxdvb_satconf_stop_mux;
@@ -581,7 +593,6 @@ linuxdvb_satconf_create0
   ls->mi_started_mux         = linuxdvb_satconf_started_mux;
   ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
   ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
-  ls->mi_grace_period        = linuxdvb_satconf_grace_period;
   ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
 
   /* Config */

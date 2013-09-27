@@ -292,6 +292,10 @@ mpegts_mux_create_instances ( mpegts_mux_t *mm )
 {
 }
 
+// TODO: this does not follow the same logic for ordering things
+//       as the service_enlist() routine that's used for service
+//       arbitration
+
 static int
 mpegts_mux_start
   ( mpegts_mux_t *mm, const char *reason, int weight )
@@ -352,7 +356,7 @@ mpegts_mux_start
       /* Enabled, valid and lower weight */
       if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
           !mmi->mmi_tune_failed &&
-          (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))) {
+          (weight > mmi->mmi_input->mi_get_weight(mmi->mmi_input))) {
         tune = mmi;
         tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
       }
