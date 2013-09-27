@@ -435,7 +435,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
       free(mps);
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
-    if (mp->mp_fd) {
+    if (mp->mp_fd != -1) {
       tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
       close(mp->mp_fd);
     }
