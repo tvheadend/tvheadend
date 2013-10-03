@@ -146,11 +146,6 @@ struct linuxdvb_frontend
    */
   int                       lfe_fullmux;
   int                       lfe_noclosefe;
-
-  /*
-   * Callbacks
-   */
-  int (*lfe_open_pid) (linuxdvb_frontend_t *lfe, int pid, const char *name);
 };
 
 linuxdvb_frontend_t *

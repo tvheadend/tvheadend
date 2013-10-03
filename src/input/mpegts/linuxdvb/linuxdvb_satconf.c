@@ -559,13 +559,12 @@ linuxdvb_satconf_get_grace
   return r;
 }
 
-static int
+static mpegts_pid_t *
 linuxdvb_satconf_open_pid
-  ( linuxdvb_frontend_t *lfe, int pid, const char *name )
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
-  linuxdvb_satconf_t  *ls  = (linuxdvb_satconf_t*)lfe;
-  lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
-  return lfe->lfe_open_pid(lfe, pid, name);
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  return ls->ls_frontend->mi_open_pid(ls->ls_frontend, mm, pid, type, owner);
 }
 
 /* **************************************************************************
@@ -593,7 +592,7 @@ linuxdvb_satconf_create0
   ls->mi_started_mux         = linuxdvb_satconf_started_mux;
   ls->mi_stopped_mux         = linuxdvb_satconf_stopped_mux;
   ls->mi_has_subscription    = linuxdvb_satconf_has_subscription;
-  ls->lfe_open_pid           = linuxdvb_satconf_open_pid;
+  ls->mi_open_pid            = linuxdvb_satconf_open_pid;
 
   /* Config */
   if (conf) {
