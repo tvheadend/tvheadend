@@ -120,7 +120,8 @@ for a in adps:
       x = set(n['muxs'].keys())
       y = set(m.keys())
       i = x.intersection(x, y)
-      c = (2 * len(i)) / (len(x) + len(y))
+      c = (2.0 * len(i)) / (len(x) + len(y))
+      #print 'comp %d %d %d %f' % (len(x), len(y), len(i), c)
       if c > 0.5:
         f = True
         for k in m:
@@ -141,6 +142,7 @@ if not os.path.exists(p):
   os.makedirs(p)
 i = 0
 for n in nets:
+  i = i + 1
   
   # Network config
   if n['type'] == 'A':
@@ -169,10 +171,12 @@ for n in nets:
       'tsid'      : m['tsid']
     }
     if m['type'] == 'C':
+      d['delsys']           = 'DVBC_ANNEX_AC'
       d['symbolrate']       = m['symr']
       d['fec']              = m['fec']
       d['constellation']    = m['cons']
     elif m['type'] == 'T':
+      d['delsys']           = 'DVBT'
       d['bandwidth']        = m['bw']
       d['constellation']    = m['cons']
       d['tranmission_mode'] = m['txm']
@@ -183,10 +187,20 @@ for n in nets:
     elif m['type'] == 'S':
       d['symbolrate']       = m['symr']
       d['fec']              = m['fec']
-      d['polarisation']     = m['pol']
+      d['polarisation']     = m['pol'][0]
       d['modulation']       = m['mod']
-      d['delsys']           = m['del']
+      d['delsys']           = m['del'][4:]
+      d['inversion']        = 'AUTO'
+      if 'rolloff' in m:
+        d['rolloff']        = m['rolloff'][8:]
+      elif d['delsys'] == 'DVBS':
+        d['rolloff']        = '35'
+      else:
+        d['rolloff']        = 'AUTO'
+      if d['modulation'] == 'PSK_8':
+        d['modulation']     = '8PSK'
     else:
+      d['delsys']           = 'ATSC'
       d['constellation']    = m['cons']
     u = uuid()
     p3 = os.path.join(p2, 'muxes', u)
@@ -210,7 +224,7 @@ for n in nets:
 
       # Find channel
       c = s['channelname'] if 'channelname' in s else None
-      print 'SVC %s CHN %s' % (str(s), str(c))
+      #print 'SVC %s CHN %s' % (str(s), str(c))
       if not c or c not in chns:
         continue
       c = chns[c]
