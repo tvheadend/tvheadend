@@ -85,7 +85,7 @@ channel_class_services_get ( void *obj )
   channel_service_mapping_t *csm;
 
   /* Add all */
-  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link)
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
     htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_svc->s_id));
 
   return l;
@@ -99,7 +99,7 @@ channel_class_services_rend ( void *obj )
   channel_t *ch = obj;
   channel_service_mapping_t  *csm;
 
-  LIST_FOREACH(csm, &ch->ch_services, csm_svc_link)
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
     htsmsg_add_str(l, NULL, idnode_get_title(&csm->csm_svc->s_id) ?: "");
 
   str = htsmsg_list_2_csv(l);
@@ -337,7 +337,7 @@ channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
   /* Mark for deletion */
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
     ctm->ctm_mark = 1;
-  
+
   /* Link */
   HTSMSG_FOREACH(f, tags)
     if (!htsmsg_field_get_u32(f, &u32)) {

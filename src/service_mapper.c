@@ -157,12 +157,12 @@ service_mapper_link ( service_t *s, channel_t *c )
   channel_service_mapping_t *csm;
 
   /* Already linked */
-  LIST_FOREACH(csm, &s->s_channels, csm_chn_link)
+  LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
     if (csm->csm_chn == c) {
       csm->csm_mark = 0;
       return 0;
     }
-  LIST_FOREACH(csm, &c->ch_services, csm_svc_link)
+  LIST_FOREACH(csm, &c->ch_services, csm_chn_link)
     if (csm->csm_svc == s) {
       csm->csm_mark = 0;
       return 0;
@@ -172,8 +172,8 @@ service_mapper_link ( service_t *s, channel_t *c )
   csm = calloc(1, sizeof(channel_service_mapping_t));
   csm->csm_chn = c;
   csm->csm_svc = s;
-  LIST_INSERT_HEAD(&s->s_channels,  csm, csm_chn_link);
-  LIST_INSERT_HEAD(&c->ch_services, csm, csm_svc_link);
+  LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
+  LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
   return 1;
 }
 
@@ -183,7 +183,7 @@ service_mapper_unlink ( service_t *s, channel_t *c )
   channel_service_mapping_t *csm;
 
   /* Unlink */
-  LIST_FOREACH(csm, &s->s_channels, csm_chn_link) {
+  LIST_FOREACH(csm, &s->s_channels, csm_svc_link) {
     if (csm->csm_chn == c) {
       LIST_REMOVE(csm, csm_chn_link);
       LIST_REMOVE(csm, csm_svc_link);

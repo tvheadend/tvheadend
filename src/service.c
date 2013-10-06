@@ -91,7 +91,7 @@ service_class_channel_set
   channel_service_mapping_t *csm, *n;
 
   /* Mark all for deletion */
-  LIST_FOREACH(csm, &svc->s_channels, csm_chn_link)
+  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
     csm->csm_mark = 1;
 
   /* Make new links */
@@ -103,7 +103,7 @@ service_class_channel_set
 
   /* Delete unlinked */
   for (csm = LIST_FIRST(&svc->s_channels); csm != NULL; csm = n ) {
-    n = LIST_NEXT(csm, csm_chn_link);
+    n = LIST_NEXT(csm, csm_svc_link);
     if (csm->csm_mark) {
       save = 1;
       LIST_REMOVE(csm, csm_chn_link);
