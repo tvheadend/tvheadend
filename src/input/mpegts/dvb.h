@@ -215,6 +215,7 @@ typedef struct dvb_mux_conf
   fe_modulation_t           dmc_fe_modulation;
   fe_delivery_system_t      dmc_fe_delsys;
   fe_rolloff_t              dmc_fe_rolloff;
+  fe_pilot_t                dmc_fe_pilot;
 #endif
 
   // For scan file configurations
@@ -238,6 +239,7 @@ const char *dvb_guard2str   ( int guard );
 const char *dvb_hier2str    ( int hier );
 const char *dvb_pol2str     ( int pol );
 const char *dvb_type2str    ( int type );
+const char *dvb_pilot2str   ( int pilot );
 #define dvb_feclo2str dvb_fec2str
 #define dvb_fechi2str dvb_fec2str
 
@@ -251,6 +253,7 @@ int dvb_str2guard   ( const char *str );
 int dvb_str2hier    ( const char *str );
 int dvb_str2pol     ( const char *str );
 int dvb_str2type    ( const char *str );
+int dvb_str2pilot   ( const char *str );
 #define dvb_str2feclo dvb_str2fec
 #define dvb_str2fechi dvb_str2fec
 

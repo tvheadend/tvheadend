@@ -113,6 +113,7 @@ dvb_desc_sat_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_pilot            = PILOT_AUTO;
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency;
   dmc.dmc_fe_orbital_pos      = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);

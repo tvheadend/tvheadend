@@ -513,6 +513,13 @@ const static struct strtab typetab[] = {
   {"ATSC",  FE_ATSC},
 };
 dvb_str2val(type);
+
+const static struct strtab pilottab[] = {
+  {"AUTO", PILOT_AUTO},
+  {"ON",   PILOT_ON},
+  {"OFF",  PILOT_OFF}
+};
+dvb_str2val(pilot);
 #undef dvb_str2val
 
 /*

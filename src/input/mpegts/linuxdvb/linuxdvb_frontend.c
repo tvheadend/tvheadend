@@ -707,8 +707,14 @@ linuxdvb_frontend_tune0
   } else if (lfe->lfe_info.type == FE_QPSK) {
     S2CMD(DTV_SYMBOL_RATE,       p->u.qpsk.symbol_rate);
     S2CMD(DTV_INNER_FEC,         p->u.qpsk.fec_inner);
-    S2CMD(DTV_MODULATION,        dmc->dmc_fe_modulation);
-    S2CMD(DTV_ROLLOFF,           dmc->dmc_fe_rolloff);
+    S2CMD(DTV_PILOT,             dmc->dmc_fe_pilot);
+    if (lm->lm_tuning.dmc_fe_delsys == SYS_DVBS) {
+      S2CMD(DTV_MODULATION,        QPSK);
+      S2CMD(DTV_ROLLOFF,           ROLLOFF_35);
+    } else {
+      S2CMD(DTV_MODULATION,        dmc->dmc_fe_modulation);
+      S2CMD(DTV_ROLLOFF,           dmc->dmc_fe_rolloff);
+    }
 
   /* ATSC */
   } else {

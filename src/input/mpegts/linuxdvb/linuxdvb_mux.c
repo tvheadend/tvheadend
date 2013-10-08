@@ -369,6 +369,31 @@ linuxdvb_mux_dvbs_class_rolloff_list ( void *o )
   htsmsg_add_str(list, NULL, dvb_rolloff2str(ROLLOFF_AUTO));
   return list;
 }
+
+static const void *
+linuxdvb_mux_dvbs_class_pilot_get ( void *o )
+{
+  static const char *s;
+  linuxdvb_mux_t *lm = o;
+  s = dvb_pilot2str(lm->lm_tuning.dmc_fe_pilot);
+  return &s;
+}
+static int
+linuxdvb_mux_dvbs_class_pilot_set ( void *o, const void *s )
+{
+  linuxdvb_mux_t *lm = o;
+  lm->lm_tuning.dmc_fe_pilot = dvb_str2pilot(s);
+  return 1;
+}
+static htsmsg_t *
+linuxdvb_mux_dvbs_class_pilot_list ( void *o )
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_pilot2str(PILOT_AUTO));
+  htsmsg_add_str(list, NULL, dvb_pilot2str(PILOT_ON));
+  htsmsg_add_str(list, NULL, dvb_pilot2str(PILOT_OFF));
+  return list;
+}
 #endif
 
 #define linuxdvb_mux_dvbs_class_delsys_get linuxdvb_mux_class_delsys_get
@@ -429,6 +454,15 @@ const idclass_t linuxdvb_mux_dvbs_class =
       .get      = linuxdvb_mux_dvbs_class_rolloff_get,
       .list     = linuxdvb_mux_dvbs_class_rolloff_list,
       .def.s    = "AUTO"
+    },
+    {
+      .type     = PT_STR,
+      .id       = "pilot",
+      .name     = "Pilot",
+      .opts     = PO_ADVANCED,
+      .set      = linuxdvb_mux_dvbs_class_pilot_set,
+      .get      = linuxdvb_mux_dvbs_class_pilot_get,
+      .list     = linuxdvb_mux_dvbs_class_pilot_list,
     },
 #endif
     {}
@@ -559,6 +593,7 @@ linuxdvb_mux_create0
 
   /* Defaults */
   lm->lm_tuning.dmc_fe_params.inversion = INVERSION_AUTO;
+  lm->lm_tuning.dmc_fe_pilot            = PILOT_AUTO;
   
   /* No config */
   if (!conf) return lm;
