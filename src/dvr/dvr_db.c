@@ -181,6 +181,22 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   snprintf(output + strlen(output), outlen - strlen(output),
 	   "%s", lang_str_get(de->de_title, NULL));
 
+  if(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE) {
+    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+      if(de->de_bcast && de->de_bcast->episode)
+        epg_episode_number_format(de->de_bcast->episode,
+                                  output + strlen(output),
+                                  outlen - strlen(output),
+                                  ".", "S%02d", NULL, "E%02d", NULL);
+    }
+  }
+
+  if(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE) {
+    if(de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->subtitle)
+      snprintf(output + strlen(output), outlen - strlen(output),
+           ".%s", lang_str_get(de->de_bcast->episode->subtitle, NULL));
+  }
+
   localtime_r(&de->de_start, &tm);
   
   if(cfg->dvr_flags & DVR_DATE_IN_TITLE) {
@@ -193,12 +209,14 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
-    if(de->de_bcast && de->de_bcast->episode)  
-      epg_episode_number_format(de->de_bcast->episode,
-                                output + strlen(output),
-                                outlen - strlen(output),
-                                ".", "S%02d", NULL, "E%02d", NULL);
+  if(!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE)) {
+    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+      if(de->de_bcast && de->de_bcast->episode)
+        epg_episode_number_format(de->de_bcast->episode,
+                                  output + strlen(output),
+                                  outlen - strlen(output),
+                                  ".", "S%02d", NULL, "E%02d", NULL);
+    }
   }
 
   if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
@@ -1121,7 +1139,13 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "skip-commercials", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_SKIP_COMMERCIALS;
 
-      tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
+      if(!htsmsg_get_u32(m, "subtitle-in-title", &u32) && u32)
+        cfg->dvr_flags |= DVR_SUBTITLE_IN_TITLE;
+
+      if(!htsmsg_get_u32(m, "episode-before-date", &u32) && u32)
+        cfg->dvr_flags |= DVR_EPISODE_BEFORE_DATE;
+
+		tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
     htsmsg_destroy(l);
@@ -1287,6 +1311,8 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
+  htsmsg_add_u32(m, "subtitle-in-title", !!(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE));
+  htsmsg_add_u32(m, "episode-before-date", !!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 
