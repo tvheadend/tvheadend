@@ -973,6 +973,10 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "start", e->start);
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
+    if(ee->star_rating)
+    	htsmsg_add_u32(m, "starrating", ee->star_rating);
+    if(ee->age_rating)
+    	htsmsg_add_u32(m, "agerating", ee->age_rating);
 
     if(e->serieslink)
       htsmsg_add_str(m, "serieslink", e->serieslink->uri);
