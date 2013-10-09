@@ -300,7 +300,7 @@ static int
 mpegts_mux_start
   ( mpegts_mux_t *mm, const char *reason, int weight )
 {
-  int pass, fail, havefree = 0;
+  int pass, havefree = 0, enabled = 0;
   char buf[256];
   mpegts_mux_instance_t *mmi, *tune;
 
@@ -323,12 +323,11 @@ mpegts_mux_start
   /* Create mux instances (where needed) */
   mm->mm_create_instances(mm);
   if (!LIST_FIRST(&mm->mm_instances)) {
-    tvhtrace("mpegts", "%s - has no instances", buf);
+    tvhtrace("mpegts", "%s - has no instances, tuners enabled?", buf);
     return SM_CODE_NO_VALID_ADAPTER;
   }
 
   /* Find */
-  fail = 0;
   pass = 0;
   mmi  = NULL;
   while (pass < 2) {
@@ -341,6 +340,7 @@ mpegts_mux_start
       int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input);
       int f = mmi->mmi_input->mi_is_free(mmi->mmi_input);
       tvhtrace("mpegts", "%s -   enabled %d free %d\n", buf, e, f);
+      if (e) enabled = 1;
 
       if (e && f) {
         havefree = 1;
@@ -366,7 +366,7 @@ mpegts_mux_start
     if (tune) {
       tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
               buf, reason, weight);
-      if (!(fail = mpegts_mux_instance_start(&tune))) break;
+      if (!mpegts_mux_instance_start(&tune)) break;
       tune = NULL;
       tvhwarn("mpegts", "%s - failed to start, try another", buf);
     }
@@ -377,11 +377,21 @@ mpegts_mux_start
   }
   
   if (!tune) {
-    tvhdebug("mpegts", "%s - no free input (fail=%d)", buf, fail);
-    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-      if (!mmi->mmi_tune_failed)
-        return havefree ? SM_CODE_NO_VALID_ADAPTER : SM_CODE_NO_FREE_ADAPTER;
-    tvhdebug("mpegts", "%s - tuning failed", buf);
+    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+      if (!mmi->mmi_tune_failed) {
+        if (!enabled) {
+          tvhdebug("mpegts", "%s - no tuners enabled", buf);
+          return SM_CODE_NO_VALID_ADAPTER;
+        } else if (havefree) {
+          tvhdebug("mpegts", "%s - no valid tuner available", buf);
+          return SM_CODE_NO_VALID_ADAPTER;
+        } else {
+          tvhdebug("mpegts", "%s - no free tuner available", buf);
+          return SM_CODE_NO_FREE_ADAPTER;
+        }
+      }
+    }
+    tvhdebug("mpegts", "%s - tuning failed, invalid config?", buf);
     return SM_CODE_TUNING_FAILED;
   }
   

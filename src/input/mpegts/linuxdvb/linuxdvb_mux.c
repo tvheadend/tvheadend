@@ -529,8 +529,10 @@ static void
 linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 {
   mpegts_input_t *mi;
-  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link)
-    mi->mi_create_mux_instance(mi, mm);
+  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
+    if (mi->mi_is_enabled(mi))
+      mi->mi_create_mux_instance(mi, mm);
+  }
 }
 
 static void
