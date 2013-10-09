@@ -1415,6 +1415,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if(normts)
     st = hs->hs_tsfix = tsfix_create(st);
 
+  tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
 					      st, 0,
