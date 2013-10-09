@@ -369,6 +369,7 @@ mpegts_service_create0
   ( mpegts_service_t *s, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, htsmsg_t *conf )
 {
+  int r;
   char buf[256];
   service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
 
@@ -379,6 +380,8 @@ mpegts_service_create0
     if (pmt_pid) s->s_pmt_pid        = pmt_pid;
   }
   s->s_dvb_mux        = mm;
+  if ((r = dvb_servicetype_lookup(s->s_dvb_servicetype)) != -1)
+    s->s_servicetype = r;
   LIST_INSERT_HEAD(&mm->mm_services, s, s_dvb_mux_link);
   
   s->s_delete         = mpegts_service_delete;

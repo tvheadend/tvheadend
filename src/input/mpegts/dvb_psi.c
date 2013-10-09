@@ -55,6 +55,17 @@ static const int dvb_servicetype_map[][2] = {
   { 0xD3, ST_SDTV  }, /* SKY TV SDTV */
 };
 
+int
+dvb_servicetype_lookup ( int t )
+{
+  int i;
+  for (i = 0; i < ARRAY_SIZE(dvb_servicetype_map); i++) {
+    if (dvb_servicetype_map[i][0] == t)
+      return dvb_servicetype_map[i][1];
+  }
+  return -1;
+}
+
 /* **************************************************************************
  * Descriptors
  * *************************************************************************/
@@ -926,15 +937,13 @@ dvb_sdt_callback
 
     /* Update service type */
     if (stype && s->s_dvb_servicetype != stype) {
-      int i;
+      int r;
       s->s_dvb_servicetype = stype;
       save = 1;
 
       /* Set tvh service type */
-      for (i = 0; i < ARRAY_SIZE(dvb_servicetype_map); i++) {
-        if (dvb_servicetype_map[i][0] == stype)
-          s->s_servicetype = dvb_servicetype_map[i][1];
-      }
+      if ((r = dvb_servicetype_lookup(stype)) != -1)
+        s->s_servicetype = r;
     }
     
     /* Update scrambled state */

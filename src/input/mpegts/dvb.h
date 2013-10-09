@@ -91,6 +91,11 @@ struct mpegts_table;
 #define DVB_DESC_AAC                  0x7C
 #define DVB_DESC_LOCAL_CHAN           0x83
 
+/* Service type lookup */
+
+int dvb_servicetype_lookup ( int t );
+
+
 /* String Extraction */
 
 typedef struct dvb_string_conv

@@ -736,11 +736,12 @@ service_is_radio(service_t *t)
     return 1;
   else if (t->s_servicetype == ST_NONE) {
     elementary_stream_t *st;
-    TAILQ_FOREACH(st, &t->s_components, es_link)
+    TAILQ_FOREACH(st, &t->s_components, es_link) {
       if (SCT_ISVIDEO(st->es_type))
         return 0;
       else if (SCT_ISAUDIO(st->es_type))
         ret = 1;
+    }
   }
   return ret;
 }
@@ -756,6 +757,21 @@ service_is_encrypted(service_t *t)
     if (st->es_type == SCT_CA)
       return 1;
   return 0;
+}
+
+/*
+ * String describing service type
+ */
+const char *
+service_servicetype_txt ( service_t *s )
+{
+  static const char *types[] = {
+    "HDTV", "SDTV", "Radio", "Other"
+  };
+  if (service_is_hdtv(s))  return types[0];
+  if (service_is_sdtv(s))  return types[1];
+  if (service_is_radio(s)) return types[2];
+  return types[3];
 }
 
 
