@@ -200,6 +200,8 @@ streaming_target_t *hs_transcoder;
 
   uint32_t hs_filtered_streams[16]; // one bit per stream
 
+  int hs_first;
+
 } htsp_subscription_t;
 
 
@@ -1941,6 +1943,7 @@ readmsg:
     htsp_authenticate(htsp, m);
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
+      tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
       for(i = 0; i < NUM_METHODS; i++) {
 	      if(!strcmp(method, htsp_methods[i].name)) {
 
@@ -2475,6 +2478,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   htsmsg_t *sourceinfo = htsmsg_create_map();
   int i;
   const source_info_t *si = &ss->ss_si;
+  tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
@@ -2540,6 +2544,7 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStop");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  tvhdebug("htsp", "%s - subscription stop", hs->hs_htsp->htsp_logname);
 
   if(err != NULL)
     htsmsg_add_str(m, "status", err);
@@ -2604,6 +2609,7 @@ static void
 htsp_subscription_speed(htsp_subscription_t *hs, int speed)
 {
   htsmsg_t *m = htsmsg_create_map();
+  tvhdebug("htsp", "%s - subscription speed", hs->hs_htsp->htsp_logname);
   htsmsg_add_str(m, "method", "subscriptionSpeed");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "speed", speed);
@@ -2617,6 +2623,7 @@ static void
 htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
 {
   htsmsg_t *m = htsmsg_create_map();
+  tvhdebug("htsp", "%s - subscription skip", hs->hs_htsp->htsp_logname);
   htsmsg_add_str(m, "method", "subscriptionSkip");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
 
@@ -2665,6 +2672,9 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
+    if (!hs->hs_first)
+      tvhdebug("htsp", "%s - first packet", hs->hs_htsp->htsp_logname);
+    hs->hs_first = 1;
     htsp_stream_deliver(hs, sm->sm_data);
     // reference is transfered
     sm->sm_data = NULL;
