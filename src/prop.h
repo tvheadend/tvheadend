@@ -45,6 +45,7 @@ typedef enum {
 #define PO_WRONCE   0x04  // Property is write-once (i.e. on creation)
 #define PO_ADVANCED 0x08  // Property is advanced
 #define PO_HIDDEN   0x10  // Property is hidden (by default)
+#define PO_USERAW   0x20  // Only save the RAW (off) value if it exists
 
 /*
  * Property definition

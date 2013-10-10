@@ -516,7 +516,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_add_u32(out, "channelId", channel_get_id(ch));
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
-  htsmsg_add_str(out, "channelName", ch->ch_name ?: "");
+  htsmsg_add_str(out, "channelName", channel_get_name(ch));
   if(ch->ch_icon != NULL) {
     uint32_t id;
     struct sockaddr_storage addr;

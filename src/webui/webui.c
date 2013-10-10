@@ -370,7 +370,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(channel));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
-  htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
+  htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
   htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf, 
      access_ticket_create(buf));
 
@@ -419,7 +419,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
+    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
   }
@@ -479,7 +479,7 @@ http_channel_list_playlist(http_connection_t *hc)
   CHANNEL_FOREACH(ch) {
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
+    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
   }
@@ -816,7 +816,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
                http_arg_get(&hc->hc_args, "User-Agent"));
 
   if(s) {
-    name = tvh_strdupa(ch->ch_name);
+    name = tvh_strdupa(channel_get_name(ch));
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc, s);
     pthread_mutex_lock(&global_lock);

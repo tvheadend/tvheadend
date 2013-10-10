@@ -1376,7 +1376,8 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch));
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1399,16 +1400,16 @@ static void _epg_channel_timer_callback ( void *p )
     tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
            ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
            ch->ch_epg_next ? ch->ch_epg_next->id : 0,
-           ch->ch_name);
+           channel_get_name(ch));
     tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
-           ch->ch_name);
+           channel_get_name(ch));
     htsp_channel_update_nownext(ch);
   }
 
   /* re-arm */
   if ( next ) {
     tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRItime_t" for %s",
-           next, ch->ch_name);
+           next, channel_get_name(ch));
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
 
@@ -1443,7 +1444,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       // Note: sets updated
       _epg_object_getref(ret);
       tvhtrace("epg", "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-               ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
+               ret->id, epg_broadcast_get_title(ret, NULL),
+               channel_get_name(ch), ret->start, ret->stop);
 
     /* Existing */
     } else {
@@ -1458,7 +1460,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
         ret->stop = (*bcast)->stop;
         _epg_object_set_updated(ret);
         tvhtrace("epg", "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-                 ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
+                 ret->id, epg_broadcast_get_title(ret, NULL),
+                 channel_get_name(ch), ret->start, ret->stop);
       }
     }
   }
@@ -1470,7 +1473,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ( (ebc = RB_PREV(ret, sched_link)) != NULL ) {
     if ( ebc->stop <= ret->start ) break;
     tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
@@ -1478,7 +1482,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ( (ebc = RB_NEXT(ret, sched_link)) != NULL ) {
     if ( ebc->start >= ret->stop ) break;
     tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 

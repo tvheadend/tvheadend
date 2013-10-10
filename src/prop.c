@@ -184,8 +184,9 @@ prop_read_value
     return;
 
   /* Get method */
-  if (p->get)
-    val = p->get(obj);
+  if (!(optmask & PO_USERAW) || !p->off)
+    if (p->get)
+      val = p->get(obj);
 
   /* List */
   if (p->islist)

@@ -140,7 +140,7 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 #define idclass_serialize(idc) idclass_serialize0(idc, 0)
 #define idnode_serialize(in)   idnode_serialize0(in, 0)
 #define idnode_load(in, m)     idnode_write0(in, m, 0, 0)
-#define idnode_save(in, m)     idnode_read0(in, m, PO_NOSAVE)
+#define idnode_save(in, m)     idnode_read0(in, m, PO_NOSAVE | PO_USERAW)
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
 
 const char *idnode_get_str (idnode_t *self, const char *key );

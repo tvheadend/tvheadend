@@ -748,7 +748,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     m = htsmsg_create_map();
 
-    htsmsg_add_str(m, "channel", ch->ch_name);
+    htsmsg_add_str(m, "channel", channel_get_name(ch));
     htsmsg_add_u32(m, "channelid", channel_get_id(ch));
     if(ch->ch_icon != NULL)
       htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
@@ -832,7 +832,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
           count++;
           m = htsmsg_create_map();
           htsmsg_add_u32(m, "id", ebc->id);
-          if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
+          htsmsg_add_str(m, "channel", channel_get_name(ch));
           if (ch->ch_icon)
             htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
           htsmsg_add_u32(m, "start", ebc->start);

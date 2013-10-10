@@ -825,7 +825,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     tvhtrace("dvr",
              "dvr entry %d event replaced %s on %s @ %"PRItime_t
              " to %"PRItime_t,
-             de->de_id, epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+             de->de_id, epg_broadcast_get_title(e, NULL),
+             channel_get_name(e->channel),
              e->start, e->stop);
 
     /* Ignore - already in progress */
@@ -847,7 +848,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
           tvhtrace("dvr",
                    "  replacement event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
-                   epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+                   epg_broadcast_get_title(e, NULL),
+                   channel_get_name(e->channel),
                    e->start, e->stop);
           e->getref(e);
           de->de_bcast = e;
@@ -875,7 +877,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  "dvr entry %d link to event %s on %s @ %"PRItime_t
                  " to %"PRItime_t,
                  de->de_id, epg_broadcast_get_title(e, NULL),
-                 e->channel->ch_name,
+                 channel_get_name(e->channel),
                  e->start, e->stop);
         e->getref(e);
         de->de_bcast = e;
@@ -1048,7 +1050,7 @@ dvr_destroy_by_channel(channel_t *ch)
   while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL) {
     LIST_REMOVE(de, de_channel_link);
     de->de_channel = NULL;
-    de->de_channel_name = strdup(ch->ch_name);
+    de->de_channel_name = strdup(channel_get_name(ch));
     dvr_entry_purge(de);
   }
 }

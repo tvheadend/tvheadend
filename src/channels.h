@@ -45,7 +45,7 @@ typedef struct channel
   int ch_zombie;
 
   /* Channel info */
-  char *ch_name;
+  char *ch_name; // Note: do not access directly!
   int   ch_number;
   char *ch_icon;
   struct channel_tag_mapping_list ch_ctms;
@@ -145,6 +145,9 @@ channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);
 
 void channel_save(channel_t *ch);
+
+const char *channel_get_name ( channel_t *ch );
+int channel_set_name ( channel_t *ch, const char *s );
 
 #define channel_get_uuid(ch) idnode_uuid_as_str(&ch->ch_id)
 

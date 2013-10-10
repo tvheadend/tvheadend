@@ -236,11 +236,13 @@ subscription_reschedule(void)
     }
 
     if (s->ths_channel)
-      tvhtrace("subscription", "find service for %s weight %d", s->ths_channel->ch_name, s->ths_weight);
+      tvhtrace("subscription", "find service for %s weight %d",
+               channel_get_name(s->ths_channel), s->ths_weight);
     else 
-      tvhtrace("subscription", "find instance for %s weight %d", s->ths_service->s_nicename, s->ths_weight);
-    si = service_find_instance(s->ths_service, s->ths_channel, &s->ths_instances, &error,
-                               s->ths_weight);
+      tvhtrace("subscription", "find instance for %s weight %d",
+               s->ths_service->s_nicename, s->ths_weight);
+    si = service_find_instance(s->ths_service, s->ths_channel,
+                               &s->ths_instances, &error, s->ths_weight);
     s->ths_current_instance = si;
 
     if(si == NULL) {
@@ -378,7 +380,7 @@ subscription_unsubscribe(th_subscription_t *s)
   if(s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
     tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
-           s->ths_title, s->ths_channel->ch_name);
+           s->ths_title, channel_get_name(s->ths_channel));
   } else {
     tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
            s->ths_title);
@@ -477,7 +479,7 @@ subscription_create_from_channel_or_service
 
   if (ch)
     tvhtrace("subscription", "creating subscription for %s weight %d",
-             ch->ch_name, weight);
+             channel_get_name(ch), weight);
   s = subscription_create(weight, name, st, flags, subscription_input,
                           hostname, username, client);
   s->ths_channel = ch;
@@ -492,7 +494,7 @@ subscription_create_from_channel_or_service
     tvhlog(LOG_NOTICE, "subscription", 
 	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
-	   s->ths_title, ch ? ch->ch_name : "none");
+	   s->ths_title, ch ? channel_get_name(ch) : "none");
   } else {
     source_info_t si;
 
@@ -502,7 +504,7 @@ subscription_create_from_channel_or_service
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	   "service: \"%s\"",
-	   s->ths_title, ch ? ch->ch_name : "none", weight,
+	   s->ths_title, ch ? channel_get_name(ch) : "none", weight,
 	   si.si_adapter  ?: "<N/A>",
 	   si.si_network  ?: "<N/A>",
 	   si.si_mux      ?: "<N/A>",
@@ -697,7 +699,7 @@ subscription_create_msg(th_subscription_t *s)
     htsmsg_add_str(m, "title", s->ths_title);
   
   if(s->ths_channel != NULL)
-    htsmsg_add_str(m, "channel", s->ths_channel->ch_name ?: "");
+    htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel));
   
   if(s->ths_service != NULL)
     htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");

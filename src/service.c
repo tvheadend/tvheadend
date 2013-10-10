@@ -132,22 +132,7 @@ service_class_channel_enum
 static const char *
 service_class_get_title ( idnode_t *self )
 {
-  static char *ret = NULL;
-  const char *str = NULL;
-  service_t *s = (service_t*)self;
-  pthread_mutex_lock(&s->s_stream_mutex);
-  if (ret) {
-    free(ret);
-    ret = NULL;
-  }
-  if (s->s_channel_name)
-    str = s->s_channel_name(s);
-  if (!str)
-    str = s->s_nicename;
-  if (str)
-    ret = strdup(str);
-  pthread_mutex_unlock(&s->s_stream_mutex);
-  return ret;
+  return service_get_channel_name((service_t*)self);
 }
 
 static const void *
@@ -402,7 +387,7 @@ service_find_instance
   
   /* Debug */
   TAILQ_FOREACH(si, sil, si_link) {
-    const char *name = ch ? ch->ch_name : NULL;
+    const char *name = ch ? channel_get_name(ch) : NULL;
     if (!name && s) name = s->s_nicename;
     tvhdebug("service", "%s si %p weight %d prio %d error %d\n",
              name, si, si->si_weight, si->si_prio, si->si_error);
@@ -1188,6 +1173,17 @@ service_instance_list_clear(service_instance_list_t *sil)
     service_instance_destroy(sil, si);
 }
 
+/*
+ * Get name for channel from service
+ */
+const char *
+service_get_channel_name ( service_t *s )
+{
+  const char *r = NULL;
+  if (s->s_channel_name) r = s->s_channel_name(s);
+  if (!r) r = s->s_nicename;
+  return r;
+}
 
 /**
  * Get the encryption CAID from a service

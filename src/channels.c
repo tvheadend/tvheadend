@@ -186,8 +186,21 @@ channel_class_icon_notify ( void *obj )
 static const char *
 channel_class_get_title ( idnode_t *self )
 {
-  channel_t *ch = (channel_t*)self;
-  return ch->ch_name;
+  return channel_get_name((channel_t*)self);
+}
+
+static const void *
+channel_class_get_name ( void *p )
+{
+  static const char *s;
+  s = channel_get_name(p);
+  return &s;
+}
+
+static int
+channel_class_set_name ( void *o, const void *p )
+{
+  return channel_set_name(o, p);
 }
 
 const idclass_t channel_class = {
@@ -210,6 +223,8 @@ const idclass_t channel_class = {
       .id       = "name",
       .name     = "Name",
       .off      = offsetof(channel_t, ch_name),
+      .get      = channel_class_get_name,
+      .set      = channel_class_set_name,
     },
     {
       .type     = PT_INT,
@@ -273,7 +288,7 @@ channel_find_by_name ( const char *name )
 {
   channel_t *ch;
   CHANNEL_FOREACH(ch)
-    if (!strcmp(ch->ch_name ?: "", name))
+    if (!strcmp(channel_get_name(ch), name))
       break;
   return ch;
 }
@@ -359,6 +374,42 @@ channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
   return save;
 }
 
+const char *
+channel_get_name ( channel_t *ch )
+{
+  static const char *blank = "";
+  const char *s;
+  channel_service_mapping_t *csm;
+
+  if (ch->ch_name) return ch->ch_name;
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
+    if ((s = service_get_channel_name(csm->csm_svc)))
+      return s;
+  return blank;
+}
+
+int
+channel_set_name ( channel_t *ch, const char *s )
+{
+  if (!s || !*s) {
+    if (ch->ch_name) {
+      free(ch->ch_name);
+      ch->ch_name = NULL;
+    }
+    return 1; // NOTE: we always return this, else UI gets confused
+              // if user see's generated name clears to "" and tries to set
+              // and nosave is returned (so UI doesn't update)
+  }
+
+  if (!ch->ch_name || strcmp(ch->ch_name, s)) {
+    free(ch->ch_name);
+    ch->ch_name = strdup(s);
+    return 1;
+  }
+
+  return 0;
+}
+
 /* **************************************************************************
  * Creation/Deletion
  * *************************************************************************/
@@ -397,7 +448,7 @@ channel_delete ( channel_t *ch )
 
   lock_assert(&global_lock);
 
-  tvhinfo("channel", "%s - deleting", ch->ch_name);
+  tvhinfo("channel", "%s - deleting", channel_get_name(ch));
 
   /* Tags */
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)

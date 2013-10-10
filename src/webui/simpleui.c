@@ -234,7 +234,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   s = epg_episode_get_title(e->episode, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->channel->ch_name, s ?: "");
+	      channel_get_name(e->channel));
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 

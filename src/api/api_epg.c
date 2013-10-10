@@ -40,8 +40,8 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang )
   m = htsmsg_create_map();
 
   /* EPG IDs */
+  // Note: "id" is for UI compat, remove it?
   htsmsg_add_u32(m, "id", eb->id);
-  // TODO: the above is for UI compat, remove it
   htsmsg_add_u32(m, "eventId", eb->id);
   if (ee) {
     htsmsg_add_u32(m, "episodeId", ee->id);
@@ -55,9 +55,9 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang )
   }
   
   /* Channel Info */
-  htsmsg_add_str(m, "channel",     ch->ch_name ?: "");
-  // TODO: the above is for UI compat, remove it
-  htsmsg_add_str(m, "channelName", ch->ch_name ?: "");
+  // Note: "channel" is for UI compat, remove it?
+  htsmsg_add_str(m, "channel",     channel_get_name(ch));
+  htsmsg_add_str(m, "channelName", channel_get_name(ch));
   htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch));
   htsmsg_add_u32(m, "channelId",   channel_get_id(ch));
   

@@ -38,7 +38,7 @@ api_channel_list
   CHANNEL_FOREACH(ch) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "key", idnode_uuid_as_str(&ch->ch_id));
-    htsmsg_add_str(e, "val", ch->ch_name ?: "");
+    htsmsg_add_str(e, "val", channel_get_name(ch));
     htsmsg_add_msg(l, NULL, e);
   }
   pthread_mutex_unlock(&global_lock);

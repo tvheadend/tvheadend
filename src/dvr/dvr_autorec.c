@@ -271,7 +271,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
     htsmsg_add_str(e, "comment", dae->dae_comment);
 
   if(dae->dae_channel != NULL)
-    htsmsg_add_str(e, "channel", dae->dae_channel->ch_name);
+    htsmsg_add_str(e, "channel", channel_get_name(dae->dae_channel));
 
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);

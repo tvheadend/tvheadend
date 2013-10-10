@@ -38,7 +38,7 @@ int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
   if (!ec || !ch) return 0;
   if (LIST_FIRST(&ec->channels)) return 0; // ignore already paired
 
-  if (ec->name && !strcmp(ec->name, ch->ch_name)) return 1;
+  if (ec->name && !strcmp(ec->name, channel_get_name(ch))) return 1;
   return 0;
 }
 
@@ -53,7 +53,7 @@ void epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
     if (ecl->channel == ch) return;
 
   tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
-         ec->id, ch->ch_name);
+         ec->id, channel_get_name(ch));
   ecl = calloc(1, sizeof(epggrab_channel_link_t));
   ecl->channel = ch;
   LIST_INSERT_HEAD(&ec->channels, ecl, link);
