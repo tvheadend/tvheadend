@@ -233,6 +233,9 @@ subscription_reschedule(void)
 
       if (!s->ths_channel)
         s->ths_service = si->si_s;
+
+      s->ths_service->s_streaming_status = 0;
+      s->ths_service->s_status = SERVICE_IDLE;
     }
 
     if (s->ths_channel)

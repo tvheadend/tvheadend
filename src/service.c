@@ -322,6 +322,8 @@ service_start(service_t *t, int instance)
 
   lock_assert(&global_lock);
 
+  tvhtrace("service", "starting %s", t->s_nicename);
+
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
 
@@ -389,14 +391,16 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link) {
     const char *name = ch ? channel_get_name(ch) : NULL;
     if (!name && s) name = s->s_nicename;
-    tvhdebug("service", "%s si %p weight %d prio %d error %d\n",
+    tvhdebug("service", "%s si %p weight %d prio %d error %d",
              name, si, si->si_weight, si->si_prio, si->si_error);
   }
 
   /* Already running? */
   TAILQ_FOREACH(si, sil, si_link)
-    if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0)
+    if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0) {
+      tvhtrace("service", "return already running %p", si);
       return si;
+    }
 
   /* Forced or Idle */
   TAILQ_FOREACH(si, sil, si_link)
@@ -417,7 +421,12 @@ service_find_instance
   }
 
   /* Start */
-  service_start(si->si_s, si->si_instance);
+  tvhtrace("service", "will start new instance %d", si->si_instance);
+  if (service_start(si->si_s, si->si_instance)) {
+    tvhtrace("service", "tuning failed");
+    *error = SM_CODE_TUNING_FAILED;
+    si = NULL;
+  }
   return si;
 }
 
@@ -769,7 +778,7 @@ service_set_streaming_status_flags(service_t *t, int set)
   int n;
   streaming_message_t *sm;
   lock_assert(&t->s_stream_mutex);
-  
+
   n = t->s_streaming_status;
   
   n |= set;
