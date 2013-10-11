@@ -283,7 +283,8 @@ service_mapper_thread ( void *aux )
 
     /* Subscribe */
     tvhinfo("service_mapper", "%s: checking availability", s->s_nicename);
-    sub = subscription_create_from_service(s, 3, "service_mapper", &sq.sq_st,
+    sub = subscription_create_from_service(s, SUBSCRIPTION_PRIO_MAPPER,
+                                           "service_mapper", &sq.sq_st,
                                            0, NULL, NULL, "service_mapper");
 
     /* Failed */

@@ -323,7 +323,7 @@ epggrab_ota_pending_timer_cb ( void *p )
   epggrab_ota_start(om);
 
   /* Subscribe to the mux */
-  if (mpegts_mux_subscribe(mm, "epggrab", 2)) {
+  if (mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
     LIST_REMOVE(om, om_q_link);
     om->om_active = 0;
     om->om_when   = dispatch_clock + epggrab_ota_period(om) / 2;

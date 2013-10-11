@@ -250,7 +250,7 @@ mpegts_network_initial_scan(void *aux)
     if (mm == mark) break;
 
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
-    r = mpegts_mux_subscribe(mm, "initscan", 1);
+    r = mpegts_mux_subscribe(mm, "initscan", SUBSCRIPTION_PRIO_SCAN);
 
     /* Stop scanning here */
     if (r == SM_CODE_NO_FREE_ADAPTER)

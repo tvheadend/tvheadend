@@ -1468,8 +1468,9 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return NULL; /* Subscription did not exist, but we don't really care */
 
   s->hs_unsubscribe = 1;
-  subscription_change_weight(s->hs_s, 10); // fake unsubscribe (Note: don't set to 0 else other
-                                           // background tasks could steal the tuner)
+  subscription_change_weight(s->hs_s, SUBSCRIPTION_PRIO_MIN);
+  // Note: fake unsubscribe (Note: don't set to 0 else other
+  // background tasks could steal the tuner)
   gtimer_arm(&htsp->htsp_timer, htsp_unsubscribe_timer, htsp, 2);
   return NULL;
 }
