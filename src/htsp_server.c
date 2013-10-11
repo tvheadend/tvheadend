@@ -160,6 +160,8 @@ typedef struct htsp_connection {
 
   uint8_t htsp_challenge[32];
 
+  gtimer_t htsp_timer;
+
 } htsp_connection_t;
 
 
@@ -201,6 +203,7 @@ streaming_target_t *hs_transcoder;
   uint32_t hs_filtered_streams[16]; // one bit per stream
 
   int hs_first;
+  int hs_unsubscribe;
 
 } htsp_subscription_t;
 
@@ -1415,7 +1418,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if(normts)
     st = hs->hs_tsfix = tsfix_create(st);
 
-  tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
+  tvhdebug("htsp", "%s - subscribe to %s", htsp->htsp_logname,
+           channel_get_name(ch));
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
 					      st, 0,
@@ -1423,6 +1427,19 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      htsp->htsp_username,
 					      htsp->htsp_clientname);
   return NULL;
+}
+
+static void
+htsp_unsubscribe_timer ( void *p )
+{
+  htsp_connection_t *htsp = p;
+  htsp_subscription_t *s, *n;
+
+  for (s = LIST_FIRST(&htsp->htsp_subscriptions); s != NULL; s = n) {
+    n = LIST_NEXT(s, hs_link);
+    if (s->hs_unsubscribe)
+      htsp_subscription_destroy(htsp, s);
+  }
 }
 
 /**
@@ -1450,7 +1467,10 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if(s == NULL)
     return NULL; /* Subscription did not exist, but we don't really care */
 
-  htsp_subscription_destroy(htsp, s);
+  s->hs_unsubscribe = 1;
+  subscription_change_weight(s->hs_s, 10); // fake unsubscribe (Note: don't set to 0 else other
+                                           // background tasks could steal the tuner)
+  gtimer_arm(&htsp->htsp_timer, htsp_unsubscribe_timer, htsp, 2);
   return NULL;
 }
 
@@ -2101,6 +2121,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
    */
 
   pthread_mutex_lock(&global_lock);
+
+  gtimer_disarm(&htsp.htsp_timer);
 
   /* Beware! Closing subscriptions will invoke a lot of callbacks
      down in the streaming code. So we do this as early as possible
