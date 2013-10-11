@@ -224,29 +224,27 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
  *
  */
 static void
-build_weekday_tags(char *buf, size_t buflen, int mask)
+build_weekday_tags(htsmsg_t *l, int mask)
 {
-  int i, p = 0;
+  int i;
   for(i = 0; i < 7; i++) {
-    if(mask & (1 << i) && p < buflen - 3) {
-      if(p != 0)
-	buf[p++] = ',';
-      buf[p++] = '1' + i;
-    }
+    if(mask & (1 << i))
+      htsmsg_add_u32(l, NULL, i+1);
   }
-  buf[p] = 0;
 }
 
 /**
  *
  */
 static int
-build_weekday_mask(const char *str)
+build_weekday_mask(htsmsg_t *l)
 {
   int r = 0;
-  for(; *str; str++) 
-    if(*str >= '1' && *str <= '7')
-      r |= 1 << (*str - '1');
+  uint32_t u32;
+  htsmsg_field_t *f;
+  HTSMSG_FOREACH(f, l)
+    if (!htsmsg_field_get_u32(f, &u32))
+      r |= 1 << (u32 - 1);
   return r;
 }
 
@@ -257,8 +255,8 @@ build_weekday_mask(const char *str)
 static htsmsg_t *
 autorec_record_build(dvr_autorec_entry_t *dae)
 {
-  char str[30];
   htsmsg_t *e = htsmsg_create_map();
+  htsmsg_t *l = htsmsg_create_list();
 
   htsmsg_add_str(e, "id", dae->dae_id);
   htsmsg_add_u32(e, "enabled",  !!dae->dae_enabled);
@@ -282,8 +280,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   htsmsg_add_u32(e, "approx_time", dae->dae_approx_time);
 
-  build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
-  htsmsg_add_str(e, "weekdays", str);
+  build_weekday_tags(l, dae->dae_weekdays);
+  htsmsg_add_msg(e, "weekdays", l);
 
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
@@ -349,6 +347,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   channel_t *ch;
   channel_tag_t *ct;
   uint32_t u32;
+  htsmsg_t *l;
 
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
@@ -408,8 +407,8 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  if((s = htsmsg_get_str(values, "weekdays")) != NULL)
-    dae->dae_weekdays = build_weekday_mask(s);
+  if((l = htsmsg_get_list(values, "weekdays")) != NULL)
+    dae->dae_weekdays = build_weekday_mask(l);
 
   if(!htsmsg_get_u32(values, "enabled", &u32))
     dae->dae_enabled = u32;

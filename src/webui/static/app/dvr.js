@@ -505,12 +505,11 @@ tvheadend.autoreceditor = function() {
 				header : "Weekdays",
 				dataIndex : 'weekdays',
 				renderer : function(value, metadata, record, row, col, store) {
-					if (typeof value === 'undefined' || value.length < 1) return 'No days';
-
-					if (value == '1,2,3,4,5,6,7') return 'All days';
-
+                                        if (value.split) value = value.split(',')
+                                        if (value.length == 7) return 'All days';
+                                        if (value.length == 0 || value[0] == "") return 'No days';
 					ret = [];
-					tags = value.split(',');
+					tags = value;
 					for ( var i = 0; i < tags.length; i++) {
 						var tag = tvheadend.weekdays.getById(tags[i]);
 						if (typeof tag !== 'undefined') ret.push(tag.data.name);
