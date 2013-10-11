@@ -270,11 +270,15 @@ psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
       i += nanolen;
     }
     break;
-  case 0x4a00://DRECrypt
-    if (caid != 0x4aee) { // Bulcrypt
+  case 0x4a00://DRECrypt or streamguard
+    if (caid=0x4ad2) {
+              provid=0000;
+    }
+    if (caid != 0x4aee && caid!=0x4ad2) { // Bulcrypt
       provid = size < 4 ? 0 : buffer[4];
       break;
     }
+          
   default:
     provid = 0;
     break;
@@ -489,8 +493,8 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     case 0x04:
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
-
-    case 0x81:
+            
+    case 0x81||0x06:
       hts_stream_type = SCT_AC3;
       break;
     
@@ -898,6 +902,7 @@ static struct strtab caidnametab[] = {
   { "Bulcrypt",         0x4aee },
   { "Bulcrypt",         0x5581 },
   { "Verimatrix",       0x5601 },
+  { "StreamGuard",      0x4ad2 },
 };
 
 const char *
