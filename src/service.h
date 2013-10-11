@@ -526,5 +526,6 @@ void service_save ( service_t *s, htsmsg_t *c );
 void sort_elementary_streams(service_t *t);
 
 const char *service_get_channel_name (service_t *s);
+int         service_get_channel_number (service_t *s);
 
 #endif // SERVICE_H__

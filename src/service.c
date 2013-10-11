@@ -1194,6 +1194,16 @@ service_get_channel_name ( service_t *s )
   return r;
 }
 
+/*
+ * Get number for service
+ */
+int
+service_get_channel_number ( service_t *s )
+{
+  if (s->s_channel_number) return s->s_channel_number(s);
+  return 0;
+}
+
 /**
  * Get the encryption CAID from a service
  * only the first CA stream in a service is returned

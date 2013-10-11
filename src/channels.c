@@ -197,10 +197,12 @@ channel_class_get_name ( void *p )
   return &s;
 }
 
-static int
-channel_class_set_name ( void *o, const void *p )
+static const void *
+channel_class_get_number ( void *p )
 {
-  return channel_set_name(o, p);
+  static int i;
+  i = channel_get_number(p);
+  return &i;
 }
 
 const idclass_t channel_class = {
@@ -224,13 +226,13 @@ const idclass_t channel_class = {
       .name     = "Name",
       .off      = offsetof(channel_t, ch_name),
       .get      = channel_class_get_name,
-      .set      = channel_class_set_name,
     },
     {
       .type     = PT_INT,
       .id       = "number",
       .name     = "Number",
       .off      = offsetof(channel_t, ch_number),
+      .get      = channel_class_get_number,
     },
     {
       .type     = PT_STR,
@@ -380,8 +382,7 @@ channel_get_name ( channel_t *ch )
   static const char *blank = "";
   const char *s;
   channel_service_mapping_t *csm;
-
-  if (ch->ch_name) return ch->ch_name;
+  if (ch->ch_name && *ch->ch_name) return ch->ch_name;
   LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
     if ((s = service_get_channel_name(csm->csm_svc)))
       return s;
@@ -389,24 +390,14 @@ channel_get_name ( channel_t *ch )
 }
 
 int
-channel_set_name ( channel_t *ch, const char *s )
+channel_get_number ( channel_t *ch )
 {
-  if (!s || !*s) {
-    if (ch->ch_name) {
-      free(ch->ch_name);
-      ch->ch_name = NULL;
-    }
-    return 1; // NOTE: we always return this, else UI gets confused
-              // if user see's generated name clears to "" and tries to set
-              // and nosave is returned (so UI doesn't update)
-  }
-
-  if (!ch->ch_name || strcmp(ch->ch_name, s)) {
-    free(ch->ch_name);
-    ch->ch_name = strdup(s);
-    return 1;
-  }
-
+  int n;
+  channel_service_mapping_t *csm;
+  if (ch->ch_number) return ch->ch_number;
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
+    if ((n = service_get_channel_number(csm->csm_svc)))
+      return n;
   return 0;
 }
 

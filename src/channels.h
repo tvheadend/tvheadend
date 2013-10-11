@@ -149,6 +149,10 @@ void channel_save(channel_t *ch);
 const char *channel_get_name ( channel_t *ch );
 int channel_set_name ( channel_t *ch, const char *s );
 
+int channel_get_number ( channel_t *ch );
+
+const char *channel_get_icon ( channel_t *ch );
+
 #define channel_get_uuid(ch) idnode_uuid_as_str(&ch->ch_id)
 
 #define channel_get_id(ch)   idnode_get_short_uuid((&ch->ch_id))
