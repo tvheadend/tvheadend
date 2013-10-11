@@ -223,6 +223,9 @@ subscription_reschedule(void)
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
 	      continue; /* And it not bad, so we're happy */
 
+      s->ths_service->s_streaming_status = 0;
+      s->ths_service->s_status = SERVICE_IDLE;
+
       subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
 
       si = s->ths_current_instance;
@@ -233,9 +236,6 @@ subscription_reschedule(void)
 
       if (!s->ths_channel)
         s->ths_service = si->si_s;
-
-      s->ths_service->s_streaming_status = 0;
-      s->ths_service->s_status = SERVICE_IDLE;
     }
 
     if (s->ths_channel)
