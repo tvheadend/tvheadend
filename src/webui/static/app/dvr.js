@@ -300,8 +300,8 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 				hiddenName : 'channelid',
 				editable : false,
 				allowBlank : false,
-				displayField : 'name',
-				valueField : 'chid',
+				displayField : 'val',
+				valueField : 'key',
 				mode : 'remote',
 				triggerAction : 'all',
 				store : tvheadend.channels
@@ -451,13 +451,20 @@ tvheadend.autoreceditor = function() {
 				dataIndex : 'channel',
 				editor : new Ext.form.ComboBox({
 					loadingText : 'Loading...',
-					displayField : 'name',
+					displayField : 'val',
+                                        valueField: 'key',
 					store : tvheadend.channels,
 					mode : 'local',
 					editable : false,
 					triggerAction : 'all',
 					emptyText : 'Only include channel...'
-				})
+				}),
+                                renderer : function (v, m, r) {
+                                  var i = tvheadend.channels.find('key', v);
+                                  if (i != -1)
+                                    v = tvheadend.channels.getAt(i).get('val')
+                                  return v
+                                }
 			},
       {
         header    : "SeriesLink",

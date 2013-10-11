@@ -1011,7 +1011,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     const char *channel  = http_arg_get(&hc->hc_req_args, "channelid");
     const char *pri      = http_arg_get(&hc->hc_req_args, "pri");
 
-    channel_t *ch = channel ? channel_find_by_id(atoi(channel)) : NULL;
+    channel_t *ch = channel ? channel_find(channel) : NULL;
 
     if(ch == NULL || title == NULL || 
        datestr  == NULL || strlen(datestr)  != 10 ||

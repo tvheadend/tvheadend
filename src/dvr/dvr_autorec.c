@@ -271,7 +271,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
     htsmsg_add_str(e, "comment", dae->dae_comment);
 
   if(dae->dae_channel != NULL)
-    htsmsg_add_str(e, "channel", channel_get_name(dae->dae_channel));
+    htsmsg_add_str(e, "channel", channel_get_uuid(dae->dae_channel));
 
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
@@ -362,7 +362,9 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       LIST_REMOVE(dae, dae_channel_link);
       dae->dae_channel = NULL;
     }
-    if((ch = channel_find(s)) != NULL) {
+    ch = channel_find(s);
+    if (!ch) ch = channel_find_by_name(s);
+    if (ch) {
       LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
       dae->dae_channel = ch;
     }
