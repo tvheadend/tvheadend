@@ -641,6 +641,7 @@ linuxdvb_satconf_init ( void )
       if (!(e = htsmsg_get_map_by_field(f))) continue;
       (void)linuxdvb_satconf_create0(f->hmf_name, e);
     }
+    htsmsg_destroy(s);
   }
 }
 

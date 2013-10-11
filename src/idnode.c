@@ -132,7 +132,7 @@ idnode_init(void)
   idnode_queue = NULL;
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
-  tvhthread_create(&tid, NULL, idnode_thread, NULL);
+  tvhthread_create(&tid, NULL, idnode_thread, NULL, 1);
 }
 
 /**
@@ -945,7 +945,7 @@ void*
 idnode_thread ( void *p )
 {
   idnode_t *node;
-  htsmsg_t *m, *q;
+  htsmsg_t *m, *q = NULL;
   htsmsg_field_t *f;
 
   pthread_mutex_lock(&idnode_mutex);
@@ -977,11 +977,13 @@ idnode_thread ( void *p )
     /* Finished */
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(q);
+    q = NULL;
 
     /* Wait */
     usleep(500000);
     pthread_mutex_lock(&idnode_mutex);
   }
+  if (q) htsmsg_destroy(q);
   
   return NULL;
 }

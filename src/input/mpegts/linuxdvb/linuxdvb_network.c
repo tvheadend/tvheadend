@@ -332,6 +332,7 @@ linuxdvb_network_create0
       if (!(e = htsmsg_get_map(e, "config"))) continue;
       (void)linuxdvb_mux_create1(ln, f->hmf_name, e);
     }
+    htsmsg_destroy(c);
   }
 
   return ln;

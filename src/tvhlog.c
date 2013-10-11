@@ -215,7 +215,7 @@ static void *
 tvhlog_thread ( void *p )
 {
   int options;
-  char *path = NULL;
+  char *path, buf[512];
   FILE *fp = NULL;
   tvhlog_msg_t *msg;
 
@@ -240,8 +240,12 @@ tvhlog_thread ( void *p )
 
     /* Copy options and path */
     if (!fp) {
-      free(path);
-      path = tvhlog_path ? strdup(tvhlog_path) : NULL;
+      if (tvhlog_path) {
+        strncpy(buf, tvhlog_path, sizeof(buf));
+        path = buf;
+      } else {
+        path = NULL;
+      }
     }
     options  = tvhlog_options; 
     pthread_mutex_unlock(&tvhlog_mutex);
@@ -406,7 +410,7 @@ tvhlog_init ( int level, int options, const char *path )
   pthread_mutex_init(&tvhlog_mutex, NULL);
   pthread_cond_init(&tvhlog_cond, NULL);
   TAILQ_INIT(&tvhlog_queue);
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
+  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, 1);
 }
 
 void

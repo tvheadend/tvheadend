@@ -194,6 +194,7 @@ void linuxdvb_device_save ( linuxdvb_device_t *ld )
   /* Save */
   hts_settings_save(m, "input/linuxdvb/devices/%s",
                     idnode_uuid_as_str(&ld->ti_id));
+  htsmsg_destroy(m);
 }
 
 const idclass_t linuxdvb_device_class =
@@ -282,12 +283,19 @@ linuxdvb_device_find_by_adapter ( int a )
 
   /* Find existing */
   if ((ld = linuxdvb_device_find_by_hwid(dev.di_id))) {
-    memcpy(&ld->ld_devid, &dev, sizeof(dev));
+    free(dev.di_id);
+    if (ld->ld_devid.di_bus == BUS_NONE) {
+      strcpy(ld->ld_devid.di_path, dev.di_path);
+      ld->ld_devid.di_bus        = dev.di_bus;
+      ld->ld_devid.di_dev         = dev.di_dev;
+      ld->ld_devid.di_min_adapter = dev.di_min_adapter;
+    }
     return ld;
   }
 
   /* Create new */
   if (!(ld = linuxdvb_device_create0(NULL, NULL))) {
+    free(dev.di_id);
     tvhlog(LOG_ERR, "linuxdvb", "failed to create device for adapter%d", a);
     return NULL;
   }
@@ -295,6 +303,7 @@ linuxdvb_device_find_by_adapter ( int a )
   /* Copy device info */
   memcpy(&ld->ld_devid, &dev, sizeof(dev));
   ld->mi_displayname = strdup(dev.di_id);
+  ld->ld_devid.di_id = dev.di_id;
   return ld;
 }
 
@@ -311,6 +320,7 @@ void linuxdvb_device_init ( int adapter_mask )
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       (void)linuxdvb_device_create0(f->hmf_name, e);
     }
+    htsmsg_destroy(s);
   }
 
   /* Scan for hardware */

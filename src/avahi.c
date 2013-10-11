@@ -269,5 +269,5 @@ avahi_init(void)
 {
   pthread_t tid;
 
-  tvhthread_create(&tid, NULL, avahi_thread, NULL);
+  tvhthread_create(&tid, NULL, avahi_thread, NULL, 1);
 }

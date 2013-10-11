@@ -114,6 +114,7 @@ static cmdline_opt_t* cmdline_opt_find
 /*
  * Globals
  */
+int              tvheadend_running;
 int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
@@ -154,7 +155,6 @@ pthread_mutex_t atomic_lock;
 /*
  * Locals
  */
-static int running;
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
 
@@ -167,7 +167,7 @@ handle_sigpipe(int x)
 static void
 doexit(int x)
 {
-  running = 0;
+  tvheadend_running = 0;
 }
 
 static int
@@ -343,7 +343,7 @@ mainloop(void)
   gti_callback_t *cb;
   struct timespec ts;
 
-  while(running) {
+  while(tvheadend_running) {
     clock_gettime(CLOCK_REALTIME, &ts);
 
     /* 1sec stuff */
@@ -760,7 +760,7 @@ main(int argc, char **argv)
    * Wait for SIGTERM / SIGINT, but only in this thread
    */
 
-  running = 1;
+  tvheadend_running = 1;
   sigemptyset(&set);
   sigaddset(&set, SIGTERM);
   sigaddset(&set, SIGINT);
@@ -795,6 +795,8 @@ main(int argc, char **argv)
 
   if(opt_fork)
     unlink(opt_pidpath);
+
+  // TODO: could join all threads for clean shutdown
 
   return 0;
 

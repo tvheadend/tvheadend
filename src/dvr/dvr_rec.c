@@ -91,7 +91,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 					      buf, st, flags,
 					      NULL, NULL, NULL);
 
-  tvhthread_create(&de->de_thread, NULL, dvr_thread, de);
+  tvhthread_create(&de->de_thread, NULL, dvr_thread, de, 0);
 }
 
 /**

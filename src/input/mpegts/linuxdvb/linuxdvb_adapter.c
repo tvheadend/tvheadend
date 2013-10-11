@@ -73,8 +73,6 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
 
   idnode_save(&la->ti_id, m);
   htsmsg_add_u32(m, "number", la->la_number);
-  if (la->la_rootpath)
-    htsmsg_add_str(m, "rootpath", la->la_rootpath);
 
   /* Frontends */
   l = htsmsg_create_map();
@@ -130,7 +128,6 @@ linuxdvb_adapter_create0
   ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf )
 {
   uint32_t u32;
-  const char *str;
   htsmsg_t *e;
   htsmsg_field_t *f;
   linuxdvb_adapter_t *la;
@@ -145,7 +142,6 @@ linuxdvb_adapter_create0
   la->lh_parent     = (linuxdvb_hardware_t*)ld;
   la->mi_is_enabled = linuxdvb_adapter_is_enabled;
   la->mi_enabled    = 1;
-
   la->la_dvb_number = -1;
 
   /* No conf */
@@ -155,8 +151,6 @@ linuxdvb_adapter_create0
   idnode_load(&la->ti_id, conf);
   if (!htsmsg_get_u32(conf, "number", &u32))
     la->la_number = u32;
-  if ((str = htsmsg_get_str(conf, "rootpath")))
-    la->la_rootpath = strdup(str);
 
   /* Frontends */
   if ((conf = htsmsg_get_map(conf, "frontends"))) {

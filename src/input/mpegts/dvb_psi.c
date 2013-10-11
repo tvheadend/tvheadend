@@ -335,7 +335,7 @@ dvb_desc_service
   str = sname;
   while (*str && *str <= 32)
     str++;
-  strncpy(sname, str, sname_len); // Note: could avoid this copy by passing an output ptr
+  memmove(sname, str, sname_len); // Note: could avoid this copy by passing an output ptr
   l   = strlen(str);
   while (l > 1 && str[l-1] <= 32) {
     str[l-1] = 0;

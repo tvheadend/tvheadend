@@ -526,13 +526,13 @@ void iptv_init ( void )
   mpegts_input_set_network((mpegts_input_t*)&iptv_input,
                            (mpegts_network_t*)&iptv_network);
   /* Set table thread */
-  tvhthread_create(&tid, NULL, mpegts_input_table_thread, &iptv_input);
+  tvhthread_create(&tid, NULL, mpegts_input_table_thread, &iptv_input, 1);
 
   /* Setup TS thread */
   // TODO: could set this up only when needed
   iptv_poll = tvhpoll_create(10);
   pthread_mutex_init(&iptv_lock, NULL);
-  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL);
+  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL, 1);
 
   /* Load config */
   iptv_mux_load_all();

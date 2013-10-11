@@ -2085,7 +2085,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
   LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
   pthread_mutex_unlock(&global_lock);
 
-  tvhthread_create(&htsp.htsp_writer_thread, NULL, htsp_write_scheduler, &htsp);
+  tvhthread_create(&htsp.htsp_writer_thread, NULL,
+                   htsp_write_scheduler, &htsp, 0);
 
   /**
    * Reader loop

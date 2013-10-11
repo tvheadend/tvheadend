@@ -253,8 +253,8 @@ streaming_target_t *timeshift_create
   /* Initialise input */
   streaming_queue_init(&ts->wr_queue, 0);
   streaming_target_init(&ts->input, timeshift_input, ts, 0);
-  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts);
-  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts);
+  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts, 0);
+  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts, 0);
 
   /* Update index */
   timeshift_index++;

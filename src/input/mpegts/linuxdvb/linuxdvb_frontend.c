@@ -492,7 +492,7 @@ linuxdvb_frontend_monitor ( void *aux )
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
       pthread_mutex_lock(&lfe->lfe_dvr_lock);
       tvhthread_create(&lfe->lfe_dvr_thread, NULL,
-                     linuxdvb_frontend_input_thread, lfe);
+                       linuxdvb_frontend_input_thread, lfe, 0);
       pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
@@ -683,6 +683,7 @@ linuxdvb_frontend_tune0
 #define S2CMD(c, d)\
   cmds[cmdseq.num].cmd      = c;\
   cmds[cmdseq.num++].u.data = d
+  memset(&cmds, 0, sizeof(cmds));
   S2CMD(DTV_DELIVERY_SYSTEM, lm->lm_tuning.dmc_fe_delsys);
   S2CMD(DTV_FREQUENCY,       freq);
   S2CMD(DTV_INVERSION,       p->inversion);
@@ -840,7 +841,7 @@ linuxdvb_frontend_create0
   pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
  
   /* Start table thread */
-  tvhthread_create(&tid, NULL, mpegts_input_table_thread, lfe);
+  tvhthread_create(&tid, NULL, mpegts_input_table_thread, lfe, 1);
 
   /* No conf */
   if (!conf)
@@ -890,6 +891,9 @@ linuxdvb_frontend_added
   memcpy(&lfe->lfe_info, fe_info, sizeof(struct dvb_frontend_info));
 
   /* Set paths */
+  free(lfe->lfe_fe_path);
+  free(lfe->lfe_dvr_path);
+  free(lfe->lfe_dmx_path);
   lfe->lfe_fe_path  = strdup(fe_path);
   lfe->lfe_dmx_path = strdup(dmx_path);
   lfe->lfe_dvr_path = strdup(dvr_path);

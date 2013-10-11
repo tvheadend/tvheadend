@@ -165,7 +165,7 @@ void imagecache_init ( void )
 #if ENABLE_IMAGECACHE
   {
     pthread_t tid;
-    tvhthread_create(&tid, NULL, _imagecache_thread, NULL);
+    tvhthread_create(&tid, NULL, _imagecache_thread, NULL, 1);
   }
 #endif
 }

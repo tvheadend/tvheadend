@@ -965,7 +965,6 @@ capmt_destroy(capmt_t *capmt)
 static capmt_t *
 capmt_entry_find(const char *id, int create)
 {
-  pthread_attr_t attr;
   pthread_t ptid;
   char buf[20];
   capmt_t *capmt;
@@ -995,10 +994,7 @@ capmt_entry_find(const char *id, int create)
 
   TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);  
 
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  tvhthread_create(&ptid, &attr, capmt_thread, capmt);
-  pthread_attr_destroy(&attr);
+  tvhthread_create(&ptid, NULL, capmt_thread, capmt, 1);
 
   return capmt;
 }

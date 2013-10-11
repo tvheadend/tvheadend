@@ -34,7 +34,7 @@ typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
 typedef struct device_info
 {
-  char     *di_id;
+  char    *di_id;
   char     di_path[128];
   enum {
     BUS_NONE = 0,

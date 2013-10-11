@@ -47,6 +47,7 @@ typedef struct {
   const char     *name;
   const uint32_t *enabled;
 } tvh_caps_t;
+extern int              tvheadend_running;
 extern const char      *tvheadend_version;
 extern const char      *tvheadend_cwd;
 extern const char      *tvheadend_webroot;
@@ -524,10 +525,12 @@ static inline void mystrset(char **p, const char *s)
   *p = s ? strdup(s) : NULL;
 }
 
-int tvhthread_create0(pthread_t *thread, const pthread_attr_t *attr,
-                          void *(*start_routine) (void *), void *arg, const char *name);
+int tvhthread_create0
+  (pthread_t *thread, const pthread_attr_t *attr,
+   void *(*start_routine) (void *), void *arg,
+   const char *name, int detach);
 
-#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
+#define tvhthread_create(a, b, c, d, e)  tvhthread_create0(a, b, c, d, #c, e)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

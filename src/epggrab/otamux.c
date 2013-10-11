@@ -434,6 +434,7 @@ epggrab_ota_init ( void )
       if (!(m  = htsmsg_field_get_map(f))) continue;
       epggrab_ota_load_one(f->hmf_name, m); 
     }
+    htsmsg_destroy(c);
   }
   
   /* Init timer (immediate call after full init) */

@@ -1107,7 +1107,7 @@ cwc_session(cwc_t *cwc)
   pthread_cond_init(&cwc->cwc_writer_cond, NULL);
   pthread_mutex_init(&cwc->cwc_writer_mutex, NULL);
   TAILQ_INIT(&cwc->cwc_writeq);
-  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc);
+  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc, 0);
 
   /**
    * Mainloop
@@ -1285,7 +1285,6 @@ cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id)
   cwc_t *cwc;
 
   struct cs_card_data *pcard;
-  pcard = calloc(1, sizeof(struct cs_card_data));
   pthread_mutex_lock(&cwc_mutex);
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
@@ -2068,7 +2067,6 @@ cwc_destroy(cwc_t *cwc)
 static cwc_t *
 cwc_entry_find(const char *id, int create)
 {
-  pthread_attr_t attr;
   pthread_t ptid;
   char buf[20];
   cwc_t *cwc;
@@ -2097,10 +2095,7 @@ cwc_entry_find(const char *id, int create)
   cwc->cwc_running = 1;
   TAILQ_INSERT_TAIL(&cwcs, cwc, cwc_link);  
 
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  tvhthread_create(&ptid, &attr, cwc_thread, cwc);
-  pthread_attr_destroy(&attr);
+  tvhthread_create(&ptid, NULL, cwc_thread, cwc, 1);
 
   return cwc;
 }
