@@ -176,6 +176,7 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	,onRealBlur:function() {
 		this.list.hide();
+/*
 		var rv = this.getRawValue();
 		var rva = rv.split(this.separator);//new RegExp(RegExp.escape(this.separator) + '+'));
 		var va = [];
@@ -190,6 +191,8 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 			}, this);
 		}, this);
 		this.setValue(va.join(this.separator));
+*/
+		this.setValue(this.value);
 		this.store.clearFilter();
 	} // eo function onRealBlur
 	// }}}
