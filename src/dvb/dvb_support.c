@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <errno.h>
-
+#include <iconv.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,11 +30,11 @@
 
 #include <linux/dvb/frontend.h>
 
+
 #include "tvheadend.h"
 #include "dvb_support.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
-#include <iconv.h>
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
 };
