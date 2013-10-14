@@ -29,7 +29,7 @@
 #include <limits.h>
 #include <time.h>
 #include <locale.h>
-
+#include <iconv.h>
 #include <pwd.h>
 #include <grp.h>
 
