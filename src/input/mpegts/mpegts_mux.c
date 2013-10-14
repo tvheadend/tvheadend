@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "input/mpegts.h"
 #include "subscriptions.h"
+#include "dvb_charset.h"
 
 #include <assert.h>
 
@@ -221,6 +222,14 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_initial_scan_done),
     },
     {
+      .type     = PT_STR,
+      .id       = "charset",
+      .name     = "Character Set",
+      .off      = offsetof(mpegts_mux_t, mm_charset),
+      .list     = dvb_charset_enum,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_INT,
       .id       = "num_svc",
       .name     = "# Services",
@@ -273,6 +282,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm )
   /* Free memory */
   idnode_unlink(&mm->mm_id);
   free(mm->mm_crid_authority);
+  free(mm->mm_charset);
   free(mm);
 }
 

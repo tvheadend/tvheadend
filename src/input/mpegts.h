@@ -236,6 +236,7 @@ struct mpegts_network
   uint16_t mn_nid;
   int      mn_autodiscovery;
   int      mn_skipinitscan;
+  char    *mn_charset;
 };
 
 /* Multiplex */
@@ -307,6 +308,7 @@ struct mpegts_mux
    */
   char *mm_crid_authority;
   int   mm_enabled;
+  char *mm_charset;
 };
  
 /* Service */

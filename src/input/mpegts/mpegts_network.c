@@ -18,6 +18,7 @@
 
 #include "input/mpegts.h"
 #include "subscriptions.h"
+#include "dvb_charset.h"
 
 #include <assert.h>
 
@@ -128,6 +129,14 @@ const idclass_t mpegts_network_class =
       .def.i    = 1
     },
     {
+      .type     = PT_STR,
+      .id       = "charset",
+      .name     = "Character Set",
+      .off      = offsetof(mpegts_network_t, mn_charset),
+      .list     = dvb_charset_enum,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_INT,
       .id       = "num_mux",
       .name     = "# Muxes",
@@ -229,6 +238,7 @@ mpegts_network_delete
   /* Free memory */
   idnode_unlink(&mn->mn_id);
   free(mn->mn_network_name);
+  free(mn->mn_charset);
   free(mn);
 }
 

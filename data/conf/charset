@@ -2,91 +2,91 @@
 	{
 		"tsid": 1,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12070.50 H"
 	},
 	{
 		"tsid": 2,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11797.50 H"
 	},
 	{
 		"tsid": 3,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11719.50 H"
 	},
 	{
 		"tsid": 4,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12031.50 H"
 	},
 	{
 		"tsid": 6,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11914.50 H"
 	},
 	{
 		"tsid": 10,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11332.25 H"
 	},
 	{
 		"tsid": 11,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12382.50 H"
 	},
 	{
 		"tsid": 12,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12304.50 H"
 	},
 	{
 		"tsid": 13,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11992.50 H"
 	},
 	{
 		"tsid": 14,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11875.50 H"
 	},
 	{
 		"tsid": 15,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 10920.75 H"
 	},
 	{
 		"tsid": 17,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 11758.50 H"
 	},
 	{
 		"tsid": 33,
 		"onid": 133,
-		"charset": "ISO8859-15",
+		"charset": "ISO-8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12480.00 V"
 	},
@@ -107,14 +107,14 @@
 	{
 		"tsid": 3218,
 		"onid": 3,
-		"charset": "ISO8859-5",
+		"charset": "ISO-8859-5",
 		"sid": 0,
 		"description": "Astra 23.5E Satellite BG 12051.00 V"
 	},
 	{
 		"tsid": 3226,
 		"onid": 3,
-		"charset": "ISO8859-5",
+		"charset": "ISO-8859-5",
 		"sid": 0,
 		"description": "Astra 23.5E Satellite BG 12207.00 V"
 	},
@@ -135,7 +135,7 @@
 	{
 		"tsid": 200,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 13805,
 		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
 	},
@@ -149,7 +149,7 @@
 	{
 		"tsid": 200,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 13840,
 		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
 	},
@@ -310,28 +310,28 @@
 	{
 		"tsid": 5500,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 0,
 		"description": "Hotbird 13.0 Nova GR"
 	},
 	{
 		"tsid": 6100,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 0,
 		"description": "Hotbird 13.0 Nova GR"
 	},
 	{
 		"tsid": 7100,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 0,
 		"description": "Hotbird 13.0 Nova GR"
 	},
 	{
 		"tsid": 7300,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 0,
 		"description": "Hotbird 13.0 Nova GR"
 	},
@@ -464,7 +464,7 @@
 	{
 		"tsid": 12100,
 		"onid": 318,
-		"charset": "ISO8859-7",
+		"charset": "ISO-8859-7",
 		"sid": 0,
 		"description": "Hotbird 13.0 Nova GR"
 	},
@@ -611,224 +611,224 @@
 	{
 		"tsid": 1,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 2,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 3,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 4,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 5,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 6,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 7,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 8,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 9,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 10,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 11,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 12,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 13,
 		"onid": 1,
-		"charset": "ISO8859-2",
+		"charset": "ISO-8859-2",
 		"sid": 0,
 		"description": "Intelsat/Thor 1W RCS DigiTV"
 	},
 	{
 		"tsid": 20400,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10762.00 V"
 	},
 	{
 		"tsid": 20600,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10803.75 V"
 	},
 	{
 		"tsid": 20700,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10845.00 H"
 	},
 	{
 		"tsid": 20800,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10845.25 V"
 	},
 	{
 		"tsid": 20900,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 108877.00 H"
 	},
 	{
 		"tsid": 21000,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10928.00 H"
 	},
 	{
 		"tsid": 21100,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10887.00 V"
 	},
 	{
 		"tsid": 21200,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 10928.00 V"
 	},
 	{
 		"tsid": 41200,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11455.50 V"
 	},
 	{
 		"tsid": 50100,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11471.00 H"
 	},
 	{
 		"tsid": 50200,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11492.00 V"
 	},
 	{
 		"tsid": 50300,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11673.00 H"
 	},
 	{
 		"tsid": 50400,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11534.00 V"
 	},
 	{
 		"tsid": 50500,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11554.00 H"
 	},
 	{
 		"tsid": 50600,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11575.00 V"
 	},
 	{
 		"tsid": 50700,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11596.00 H"
 	},
 	{
 		"tsid": 50800,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11679.00 H"
 	},
 	{
 		"tsid": 50900,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11513.00 H"
 	},
 	{
 		"tsid": 51000,
 		"onid": 126,
-		"charset": "ISO8859-9",
+		"charset": "ISO-8859-9",
 		"sid": 0,
 		"description": "Turksat 7E Digitürk 11617.00 V"
 	}

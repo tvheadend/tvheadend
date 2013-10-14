@@ -197,7 +197,7 @@ dvb_get_string
   (char *dst, size_t dstlen, const uint8_t *src, size_t srclen, 
    const char *dvb_charset, dvb_string_conv_t *conv)
 {
-  int ic;
+  int ic = -1;
   size_t len, outlen;
   int i, auto_pl_charset = 0;
 
@@ -262,10 +262,14 @@ dvb_get_string
 
   // manual charset override
   if (dvb_charset != NULL && dvb_charset[0] != 0) {
-    if (sscanf(dvb_charset, "ISO8859-%d", &i) > 0 && i > 0 && i < 16) {
+    if (!strcmp(dvb_charset, "AUTO")) {
+      // ignore
+    } else if (sscanf(dvb_charset, "ISO-8859-%d", &i) > 0 && i > 0 && i < 16) {
       ic = convert_iso_8859[i];
-    } else {
+    } else if (!strcmp(dvb_charset, "ISO-6937")) {
       ic = convert_iso6937;
+    } else if (!strcmp(dvb_charset, "UTF-8")) {
+      ic = convert_utf8;
     }
   }
 

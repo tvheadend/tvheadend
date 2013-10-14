@@ -23,6 +23,7 @@
 #include "parsers.h"
 #include "lang_codes.h"
 #include "service.h"
+#include "dvb_charset.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -311,7 +312,7 @@ static int
 dvb_desc_service
   ( const uint8_t *ptr, int len, int *stype,
     char *sprov, size_t sprov_len,
-    char *sname, size_t sname_len )
+    char *sname, size_t sname_len, const char *charset )
 {
   int r;
   size_t l;
@@ -324,11 +325,11 @@ dvb_desc_service
   *stype = *ptr++;
 
   /* Provider */
-  if ((r = dvb_get_string_with_len(sprov, sprov_len, ptr, len, NULL, NULL)) < 0)
+  if ((r = dvb_get_string_with_len(sprov, sprov_len, ptr, len, charset, NULL)) < 0)
     return -1;
 
   /* Name */
-  if (dvb_get_string_with_len(sname, sname_len, ptr+r, len-r, NULL, NULL) < 0)
+  if (dvb_get_string_with_len(sname, sname_len, ptr+r, len-r, charset, NULL) < 0)
     return -1;
 
   /* Cleanup name */
@@ -734,6 +735,7 @@ dvb_nit_callback
   mpegts_network_t *mn = mm->mm_network;
   char name[256], dauth[256];
   mpegts_table_state_t  *st  = NULL;
+  const char *charset;
 
   /* Net/Bat ID */
   nbid = (ptr[0] << 8) | ptr[1];
@@ -758,14 +760,15 @@ dvb_nit_callback
   }
 
   /* Network Descriptors */
-  *name = 0;
+  *name   = 0;
+  charset = dvb_charset_find(mn, NULL, NULL);
   DVB_DESC_FOREACH(ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
     tvhtrace(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
 
     switch (dtag) {
       case DVB_DESC_BOUQUET_NAME:
       case DVB_DESC_NETWORK_NAME:
-        if (dvb_get_string(name, sizeof(name), dptr, dlen, NULL, NULL))
+        if (dvb_get_string(name, sizeof(name), dptr, dlen, charset, NULL))
           return -1;
         break;
       case DVB_DESC_MULTI_NETWORK_NAME:
@@ -796,6 +799,7 @@ dvb_nit_callback
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
       if (mux->mm_onid == onid && mux->mm_tsid == tsid)
         break;
+    charset = dvb_charset_find(mn, mux, NULL);
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
       tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
@@ -834,7 +838,7 @@ dvb_nit_callback
         
         /* Both */
         case DVB_DESC_DEF_AUTHORITY:
-          if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, NULL, NULL))
+          if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, charset, NULL))
             return -1;
           tvhdebug(mt->mt_name, "    default auth [%s]", dauth);
           if (mux && *dauth)
@@ -869,6 +873,7 @@ dvb_sdt_callback
   uint8_t dtag, dlen;
   const uint8_t *lptr, *dptr;
   mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_network_t *mn = mm->mm_network;
   mpegts_table_state_t  *st  = NULL;
 
   /* Begin */
@@ -887,7 +892,6 @@ dvb_sdt_callback
     mpegts_mux_set_onid(mm, onid);
     mpegts_mux_set_tsid(mm, tsid);
   } else {
-    mpegts_network_t *mn = mm->mm_network;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid)
         break;
@@ -905,6 +909,7 @@ dvb_sdt_callback
     int      stype = 0;
     char     sprov[256], sname[256], sauth[256];
     int      running_status            = (ptr[3] >> 5) & 0x7;
+    const char *charset;
     *sprov = *sname = *sauth = 0;
     tvhdebug("sdt", "  sid %04X (%d) running %d free_ca %d",
              service_id, service_id, running_status, free_ca_mode);
@@ -913,7 +918,8 @@ dvb_sdt_callback
     DVB_LOOP_INIT(ptr, len, 3, lptr, llen);
   
     /* Find service */
-    s = mpegts_service_find(mm, service_id, 0, 1, &save);
+    s       = mpegts_service_find(mm, service_id, 0, 1, &save);
+    charset = dvb_charset_find(mn, mm, s);
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -921,11 +927,11 @@ dvb_sdt_callback
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
-                                sizeof(sprov), sname, sizeof(sname)))
+                                sizeof(sprov), sname, sizeof(sname), charset))
             return -1;
           break;
         case DVB_DESC_DEF_AUTHORITY:
-          if (dvb_get_string(sauth, sizeof(sauth), dptr, dlen, NULL, NULL))
+          if (dvb_get_string(sauth, sizeof(sauth), dptr, dlen, charset, NULL))
             return -1;
           break;
       }

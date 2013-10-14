@@ -20,8 +20,10 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvb_charset.h"
+#include "../mpegts.h"
 
 static LIST_HEAD(,dvb_charset) dvb_charset_list;
+
 /*
  * Process a file
  */
@@ -80,18 +82,66 @@ void dvb_charset_init ( void )
  * Find default charset
  */
 const char *dvb_charset_find
-  ( uint16_t onid, uint16_t tsid, uint16_t sid )
+  ( mpegts_network_t *mn, mpegts_mux_t *mm, mpegts_service_t *s )
 {
   dvb_charset_t *ret = NULL, *enc;
-  LIST_FOREACH(enc, &dvb_charset_list, link) {
-    if (onid == enc->onid && tsid == enc->tsid) {
-      if (sid == enc->sid) {
-         ret = enc;
-        break;
-      } else if (!enc->sid) {
-        ret = enc;
+
+  if (!mm && s)  mm = s->s_dvb_mux;
+  if (!mn && mm) mn = mm->mm_network;
+
+  /* User Overrides */
+  if (s && s->s_dvb_charset && *s->s_dvb_charset)
+    return s->s_dvb_charset;
+  if (mm && mm->mm_charset && *mm->mm_charset)
+    return mm->mm_charset;
+  if (mn && mn->mn_charset && *mn->mn_charset)
+    return mn->mn_charset;
+
+  /* Global overrides */
+  if (mm) {
+    LIST_FOREACH(enc, &dvb_charset_list, link) {
+      if (mm->mm_onid == enc->onid && mm->mm_tsid == enc->tsid) {
+        if (s && (s->s_dvb_service_id == enc->sid)) {
+          ret = enc;
+          break;
+        } else if (!enc->sid) {
+          ret = enc;
+        }
       }
     }
   }
   return ret ? ret->charset : NULL;
+}
+
+/*
+ * List of available charsets
+ */
+htsmsg_t *
+dvb_charset_enum ( void *p )
+{
+  int i;
+  static const char *charsets[] = {
+    "AUTO",
+    "ISO-6937",
+    "ISO-8859-1",
+    "ISO-8859-2",
+    "ISO-8859-3",
+    "ISO-8859-4",
+    "ISO-8859-5",
+    "ISO-8859-6",
+    "ISO-8859-7",
+    "ISO-8859-8",
+    "ISO-8859-9",
+    "ISO-8859-10",
+    "ISO-8859-11",
+    "ISO-8859-12",
+    "ISO-8859-13",
+    "ISO-8859-14",
+    "ISO-8859-15",
+    "UTF-8",
+  };
+  htsmsg_t *m = htsmsg_create_list();
+  for ( i = 0; i < ARRAY_SIZE(charsets); i++)
+    htsmsg_add_str(m, NULL, charsets[i]);
+  return m;
 }

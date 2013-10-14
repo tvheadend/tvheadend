@@ -22,6 +22,7 @@
 #include "service.h"
 #include "input/mpegts.h"
 #include "settings.h"
+#include "dvb_charset.h"
 
 /* **************************************************************************
  * Class definition
@@ -121,7 +122,8 @@ const idclass_t mpegts_service_class =
       .id     = "charset",
       .name   = "Character Set",
       .off    = offsetof(mpegts_service_t, s_dvb_charset),
-      .opts  = PO_ADVANCED,
+      .list   = dvb_charset_enum,
+      .opts   = PO_ADVANCED,
     },
     {},
   }

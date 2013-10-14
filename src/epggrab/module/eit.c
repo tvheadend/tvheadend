@@ -434,15 +434,7 @@ static int _eit_process_event
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
-  ev.default_charset = svc->s_dvb_charset;
-
-  /* Override */
-  if (!ev.default_charset) {
-    ev.default_charset
-      = dvb_charset_find(svc->s_dvb_mux->mm_onid,
-                         svc->s_dvb_mux->mm_tsid,
-                         svc->s_dvb_service_id);
-  }
+  ev.default_charset = dvb_charset_find(NULL, NULL, svc);
 
   while (dllen > 2) {
     int r;

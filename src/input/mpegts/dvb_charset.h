@@ -29,7 +29,13 @@ typedef struct dvb_charset {
 
 void dvb_charset_init ( void );
 
+struct mpegts_network;
+struct mpegts_mux;
+struct mpegts_service;
+
 const char *dvb_charset_find
-  (uint16_t onid, uint16_t tsid, uint16_t sid);
+  (struct mpegts_network *mn, struct mpegts_mux *mm, struct mpegts_service *s);
+
+htsmsg_t *dvb_charset_enum ( void* );
 
 #endif /* __TVH_DVB_CHARSET_H__ */
