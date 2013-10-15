@@ -726,7 +726,7 @@ tvheadend.dvrsettings = function() {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvrSettings'
-	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
+	}, [ 'storage', 'prerecord', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
 		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
@@ -822,7 +822,12 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Skip commercials',
 			name : 'commSkip'
-		}), {
+		}),{
+			width : 300,
+			fieldLabel : 'Pre-recording command',
+			name : 'prerecord'
+			
+		}, {
 			width : 300,
 			fieldLabel : 'Post-processor command',
 			name : 'postproc'

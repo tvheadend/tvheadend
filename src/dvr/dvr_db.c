@@ -1289,6 +1289,8 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
+  if(cfg->dvr_prerecord != NULL)
+    htsmsg_add_str(m, "prerecord", cfg->dvr_prerecord);
 
   hts_settings_save(m, "dvr/config%s", cfg->dvr_config_name);
   htsmsg_destroy(m);
@@ -1340,6 +1342,19 @@ dvr_postproc_set(dvr_config_t *cfg, const char *postproc)
     return;
 
   tvh_str_set(&cfg->dvr_postproc, !strcmp(postproc, "") ? NULL : postproc);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_prerecord_set(dvr_config_t *cfg, const char *prerecord)
+{
+  if(cfg->dvr_prerecord != NULL && !strcmp(cfg->dvr_prerecord, prerecord))
+    return;
+
+  tvh_str_set(&cfg->dvr_prerecord, !strcmp(prerecord, "") ? NULL : prerecord);
   dvr_save(cfg);
 }
 

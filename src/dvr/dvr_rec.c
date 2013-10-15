@@ -42,6 +42,7 @@
 static void *dvr_thread(void *aux);
 static void dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc);
 static void dvr_thread_epilog(dvr_entry_t *de);
+static void dvr_thread_prolog(dvr_entry_t *de);
 
 
 const static int prio2weight[5] = {
@@ -316,6 +317,9 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     }
   }
 
+  dvr_thread_prolog(de);
+ 
+
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
@@ -413,6 +417,8 @@ dvr_thread(void *aux)
   int started = 0;
   int comm_skip = (cfg->dvr_flags & DVR_SKIP_COMMERCIALS);
   int commercial = COMMERCIAL_UNKNOWN;
+
+ 
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -637,4 +643,15 @@ dvr_thread_epilog(dvr_entry_t *de)
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
   if(cfg->dvr_postproc && de->de_filename)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
+}
+
+/*
+ *
+ */
+static void
+dvr_thread_prolog(dvr_entry_t *de)
+{
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  if(cfg->dvr_prerecord && de->de_filename)
+    dvr_spawn_postproc(de,cfg->dvr_prerecord);
 }

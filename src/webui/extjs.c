@@ -1292,6 +1292,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
     if(cfg->dvr_postproc != NULL)
       htsmsg_add_str(r, "postproc", cfg->dvr_postproc);
+    if(cfg->dvr_prerecord != NULL)
+      htsmsg_add_str(r, "prerecord", cfg->dvr_prerecord);
     htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
     htsmsg_add_u32(r, "preExtraTime", cfg->dvr_extra_time_pre);
     htsmsg_add_u32(r, "postExtraTime", cfg->dvr_extra_time_post);
@@ -1326,6 +1328,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
       dvr_postproc_set(cfg,s);
+
+    if((s = http_arg_get(&hc->hc_req_args, "prerecord")) != NULL)
+      dvr_prerecord_set(cfg,s);
 
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
       dvr_retention_set(cfg,atoi(s));
