@@ -1,5 +1,5 @@
 --- src/dvb/dvb_support.c.orig	2013-10-14 17:24:29.000000000 +0800
-+++ src/dvb/dvb_support.c	2013-10-14 22:58:56.000000000 +0800
++++ src/dvb/dvb_support.c	2013-10-15 11:15:30.000000000 +0800
 @@ -22,7 +22,7 @@
  #include <sys/stat.h>
  #include <sys/ioctl.h>
