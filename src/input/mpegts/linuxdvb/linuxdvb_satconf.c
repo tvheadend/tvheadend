@@ -30,6 +30,185 @@
 #include <linux/dvb/dmx.h>
 
 /* **************************************************************************
+ * Types
+ * *************************************************************************/
+
+/*
+ * Generic satconf
+ */
+const idclass_t linuxdvb_satconf_class
+{
+};
+
+/*
+ * Simple LNB only
+ */
+const idclass_t linuxdvb_satconf_lnbonly_class
+{
+  .ic_class      = "linuxdvb_satconf_lnbonly",
+  .ic_caption    = "DVB-S Simple",
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "network",
+      .name     = "Network",
+      .get  	  = linuxdvb_satconf_class_network_get,
+      .set      = linuxdvb_satconf_class_network_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {}
+  }
+};
+
+/*
+ * 2 port switch
+ */
+const idclass_t linuxdvb_satconf_2port_class
+{
+  .ic_class      = "linuxdvb_satconf_2port",
+  .ic_caption    = "DVB-S Toneburst",
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "network_a",
+      .name     = "A",
+      .get  	  = linuxdvb_satconf_class_network_a_get,
+      .set      = linuxdvb_satconf_class_network_a_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_b",
+      .name     = "B",
+      .get  	  = linuxdvb_satconf_class_network_b_get,
+      .set      = linuxdvb_satconf_class_network_b_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {}
+  }
+};
+
+/*
+ * 4 port switch
+ */
+const idclass_t linuxdvb_satconf_4port_class
+{
+  .ic_class      = "linuxdvb_satconf_2port",
+  .ic_caption    = "DVB-S Toneburst",
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "network_aa",
+      .name     = "AA",
+      .get  	  = linuxdvb_satconf_class_network_aa_get,
+      .set      = linuxdvb_satconf_class_network_aa_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_ab",
+      .name     = "AB",
+      .get  	  = linuxdvb_satconf_class_network_ab_get,
+      .set      = linuxdvb_satconf_class_network_ab_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_ba",
+      .name     = "BA",
+      .get  	  = linuxdvb_satconf_class_network_ba_get,
+      .set      = linuxdvb_satconf_class_network_ba_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_bb`",
+      .name     = "BB",
+      .get  	  = linuxdvb_satconf_class_network_bb_get,
+      .set      = linuxdvb_satconf_class_network_bb_set,
+      .list     = linuxdvb_satconf_class_network_list
+    },
+    {}
+  }
+};
+
+/*
+ * Advanced
+ */
+const idclass_t linuxdvb_
+
+const idclass_t linuxdvb_satconf_advanced_ele_class
+{
+  .ic_class      = "linuxdvb_satconf_advanced",
+  .ic_caption    = "DVB-S Advanced",
+  .ic_get_title  = linuxdvb_satconf_class_get_title,
+  .ic_get_childs = linuxdvb_satconf_class_get_childs,
+  .ic_save       = linuxdvb_satconf_class_save,
+  .ic_delete     = linuxdvb_satconf_class_delete,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "network",
+      .name     = "Network",
+      .get  	  = linuxdvb_satconf_class_network_get,
+      .set  	  = linuxdvb_satconf_class_network_set,
+      .list	    = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "diseqc_repeats",
+      .name     = "DiseqC repeats",
+      .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_repeats),
+      .def.i    = 0
+    },
+    {
+      .type     = PT_STR,
+      .id       = "lnb_type",
+      .name     = "LNB Type",
+      .set      = linuxdvb_satconf_class_lnbtype_set,
+      .get      = linuxdvb_satconf_class_lnbtype_get,
+      .list     = linuxdvb_lnb_list,
+      .def.s    = "Universal",
+    },
+    {
+      .type     = PT_STR,
+      .id       = "switch_type",
+      .name     = "Switch Type",
+      .set      = linuxdvb_satconf_class_switchtype_set,
+      .get      = linuxdvb_satconf_class_switchtype_get,
+      .list     = linuxdvb_switch_list,
+      .def.s    = "None",
+    },
+    {
+      .type     = PT_STR,
+      .id       = "rotor_type",
+      .name     = "Rotor Type",
+      .set      = linuxdvb_satconf_class_rotortype_set,
+      .get      = linuxdvb_satconf_class_rotortype_get,
+      .list     = linuxdvb_rotor_list,
+      .def.s    = "None",
+    },
+    {}
+  }
+
+};
+
+/* **************************************************************************
+ * Objects
+ * *************************************************************************/
+
+typedef struct linuxdvb_satconf_t
+{
+  idnode_t ls_id;
+
+  /* Sub-elements */
+  
+
+
+};
+
+/* **************************************************************************
  * Class definition
  * *************************************************************************/
 
@@ -121,8 +300,11 @@ linuxdvb_satconf_class_frontend_set ( void *o, const void *v )
   const char *u = v;
   mpegts_input_t *lfe = idnode_find(u, &linuxdvb_frontend_dvbs_class);
   if (lfe && ls->ls_frontend != lfe) {
-    // TODO: I probably need to clean up the existing linkages
+    if (ls->ls_frontend)
+      LIST_REMOVE(ls, ls_link);
     ls->ls_frontend = lfe;
+    if (lfe)
+      LIST_INSERT_HEAD(&((linuxdvb_frontend_t*)lfe)->lfe_satconfs, ls, ls_link);
     return 1;
   }
   return 0;
@@ -244,8 +426,8 @@ linuxdvb_satconf_class_get_title ( idnode_t *o )
 {
   static char buf[128];
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
-  if (ls->mi_display_name)
-    ls->mi_display_name((mpegts_input_t*)ls, buf, sizeof(buf));
+  if (ls->mi_network)
+    ls->mi_network->mn_display_name(ls->mi_network, buf, sizeof(buf));
   else
     *buf = 0;
   return buf;
@@ -281,15 +463,6 @@ const idclass_t linuxdvb_satconf_class =
   .ic_save       = linuxdvb_satconf_class_save,
   .ic_delete     = linuxdvb_satconf_class_delete,
   .ic_properties = (const property_t[]) {
-    {
-      .type     = PT_STR,
-      .id       = "frontend",
-      .name     = "Frontend",
-      .get  	  = linuxdvb_satconf_class_frontend_get,
-      .set    	= linuxdvb_satconf_class_frontend_set,
-      .list	    = linuxdvb_satconf_class_frontend_enum,
-      .rend     = linuxdvb_satconf_class_frontend_rend,
-    },
     {
       .type     = PT_STR,
       .id       = "network",

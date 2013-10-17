@@ -40,14 +40,12 @@ linuxdvb_frontend_input_thread ( void *aux );
  * Class definition
  * *************************************************************************/
 
-extern const idclass_t linuxdvb_hardware_class;
-
 static void
 linuxdvb_frontend_class_save ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)in;
-  if (lfe->lh_parent && lfe->lh_parent->lh_parent)
-    linuxdvb_device_save((linuxdvb_device_t*)lfe->lh_parent->lh_parent);
+  if (lfe->lfe_adapter && lfe->lfe_adapter->la_device)
+    linuxdvb_device_save(lfe->lfe_adapter->la_device);
 }
 
 static const void*
@@ -104,7 +102,7 @@ linuxdvb_frontend_class_network_enum(void *o)
 
 const idclass_t linuxdvb_frontend_class =
 {
-  .ic_super      = &linuxdvb_hardware_class,
+  .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_frontend",
   .ic_caption    = "Linux DVB Frontend",
   .ic_save       = linuxdvb_frontend_class_save,
@@ -171,12 +169,54 @@ const idclass_t linuxdvb_frontend_dvbt_class =
   }
 };
 
+static idnode_set_t *
+linuxdvb_frontend_dvbs_class_get_childs ( idnode_t *self )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)self;
+  idnode_set_t        *is  = idnode_set_create();
+  idnode_set_add(is, &lfe->lfe_satconf->ls_id, NULL);
+  return is;
+}
+
+static int
+linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
+{
+  linuxdvb_frontend_t *lfe = self;
+  if (!strcmp(str ?: "", lfe->lfe_satconf->ls_type))
+    return 0;
+  linuxdvb_satconf_destroy(lfe->lfe_satconf);
+  lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str);
+  return 1;
+}
+
+static const void *
+linuxdvb_frontend_dvbs_class_satconf_get ( void *self )
+{
+  linuxdvb_frontend_t *lfe = self;
+  return &lfe->lfe_satconf->ls_type;
+}
+
+static htsmsg_t *
+linuxdvb_frontend_dvbs_class_satconf_list ( void *self )
+{
+  return linuxdvb_satconf_types();
+}
+
 const idclass_t linuxdvb_frontend_dvbs_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbs",
   .ic_caption    = "Linux DVB-S Frontend",
+  .ic_get_childs = linuxdvb_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "satconf",
+      .name     = "SatConfig",
+      .set      = linuxdvb_frontend_dvbs_class_satconf_set,
+      .get      = linuxdvb_frontend_dvbs_class_satconf_get,
+      .list     = linuxdvb_frontend_dvbs_class_satconf_list,
+    },
     {}
   }
 };
@@ -230,30 +270,6 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   return 1;
 }
-
-#if 0
-static int
-linuxdvb_frontend_is_free ( mpegts_input_t *mi )
-{
-#if 0
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  linuxdvb_adapter_t  *la =  lfe->lfe_adapter;
-  return linuxdvb_adapter_is_free(la);
-#endif
-  return 0;
-}
-
-static int
-linuxdvb_frontend_current_weight ( mpegts_input_t *mi )
-{
-#if 0
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  linuxdvb_adapter_t  *la =  lfe->lfe_adapter;
-  return linuxdvb_adapter_current_weight(la);
-#endif
-  return 0;
-}
-#endif
 
 static void
 linuxdvb_frontend_stop_mux
@@ -833,8 +849,8 @@ linuxdvb_frontend_create0
   lfe->mi_open_pid       = linuxdvb_frontend_open_pid;
 
   /* Adapter link */
-  lfe->lh_parent = (linuxdvb_hardware_t*)la;
-  LIST_INSERT_HEAD(&la->lh_children, (linuxdvb_hardware_t*)lfe, lh_parent_link);
+  lfe->lfe_adapter = la;
+  LIST_INSERT_HEAD(&la->la_frontends, lfe, lfe_link);
 
   /* DVR lock/cond */
   pthread_mutex_init(&lfe->lfe_dvr_lock, NULL);
@@ -858,12 +874,10 @@ linuxdvb_frontend_added
     const char *dvr_path,
     const struct dvb_frontend_info *fe_info )
 {
-  linuxdvb_hardware_t *lh;
   linuxdvb_frontend_t *lfe = NULL;
 
   /* Find existing */
-  LIST_FOREACH(lh, &la->lh_children, lh_parent_link) {
-    lfe = (linuxdvb_frontend_t*)lh;
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
     if (lfe->lfe_number == fe_num) {
       if (lfe->lfe_info.type != fe_info->type) {
         tvhlog(LOG_ERR, "linuxdvb", "detected incorrect fe_type %s != %s",

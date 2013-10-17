@@ -26,11 +26,17 @@ typedef struct linuxdvb_hardware linuxdvb_hardware_t;
 typedef struct linuxdvb_device   linuxdvb_device_t;
 typedef struct linuxdvb_adapter  linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend linuxdvb_frontend_t;
+typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
+typedef struct linuxdvb_diseqc   linuxdvb_diseqc_t;
+typedef struct linuxdvb_lnb      linuxdvb_lnb_t;
 typedef struct linuxdvb_network  linuxdvb_network_t;
 typedef struct linuxdvb_mux      linuxdvb_mux_t;
-typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
+
+/*
+ * Hardware tree objects
+ */
 
 typedef struct device_info
 {
@@ -47,74 +53,54 @@ typedef struct device_info
   int      di_min_adapter;
 } device_info_t;
 
-struct linuxdvb_hardware
-{
-  mpegts_input_t; // Note: this is redundant in many of the instances
-                  //       but we can't do multiple-inheritance and this
-                  //       keeps some of the code clean
-
-  /*
-   * Parent/Child links
-   */
-  linuxdvb_hardware_t          *lh_parent;
-  LIST_ENTRY(linuxdvb_hardware) lh_parent_link;
-  linuxdvb_hardware_list_t      lh_children;
-};
-
-extern const idclass_t linuxdvb_hardware_class;
-
-idnode_set_t *linuxdvb_hardware_enumerate
-  ( linuxdvb_hardware_list_t *list );
-
 struct linuxdvb_device
 {
-  linuxdvb_hardware_t;
+  tvh_hardware_t;
 
   /*
    * Device info
    */
-  device_info_t               ld_devid;
+  device_info_t                ld_devid;
+
+  /*
+   * Adapters
+   */
+  LIST_HEAD(,linuxdvb_adapter) ld_adapters;
 };
-
-void linuxdvb_device_init ( int adapter_mask );
-void linuxdvb_device_save ( linuxdvb_device_t *ld );
-
-linuxdvb_device_t *linuxdvb_device_create0
-  (const char *uuid, htsmsg_t *conf);
-
-linuxdvb_device_t * linuxdvb_device_find_by_adapter ( int a );
 
 struct linuxdvb_adapter
 {
-  linuxdvb_hardware_t;
+  idnode_t la_id;
+  
+  /*
+   * Link to device
+   */
+  linuxdvb_device_t           *la_device;
+  LIST_ENTRY(linuxdvb_adapter) la_link;
 
   /*
    * Adapter info
    */
+  char    *la_name;
   char    *la_rootpath;
   uint32_t la_number;
   int      la_dvb_number;
+
+  /*
+   * Frontends
+   */
+  LIST_HEAD(,linuxdvb_frontend) la_frontends;
 };
-
-#define LINUXDVB_SUBSYS_FE  0x01
-#define LINUXDVB_SUBSYS_DVR 0x02
-
-void linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m );
-
-linuxdvb_adapter_t *linuxdvb_adapter_create0
-  ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf );
-
-linuxdvb_adapter_t *linuxdvb_adapter_added (int a);
-
-int  linuxdvb_adapter_is_free        ( linuxdvb_adapter_t *la );
-int  linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la );
-
-linuxdvb_adapter_t *linuxdvb_adapter_find_by_hwid ( const char *hwid );
-linuxdvb_adapter_t *linuxdvb_adapter_find_by_path ( const char *path );
 
 struct linuxdvb_frontend
 {
-  linuxdvb_hardware_t;
+  mpegts_input_t;
+
+  /*
+   * Adapter
+   */
+  linuxdvb_adapter_t           *lfe_adapter;
+  LIST_ENTRY(linuxdvb_frontend) lfe_link;
 
   /*
    * Frontend info
@@ -146,7 +132,64 @@ struct linuxdvb_frontend
    */
   int                       lfe_fullmux;
   int                       lfe_noclosefe;
+
+  /*
+   * Satconf (DVB-S only)
+   */
+  linuxdvb_satconf_t       *lfe_satconf;
 };
+
+struct linuxdvb_satconf
+{
+  idnode_t              ls_id;
+  const char           *ls_type;
+};
+
+struct linuxdvb_diseqc
+{
+  idnode_t              ld_id;
+  const char           *ld_type;
+  linuxdvb_satconf_t   *ld_satconf;
+  int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
+  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
+                   linuxdvb_satconf_t *ls, int fd);
+};
+
+struct linuxdvb_lnb
+{
+  linuxdvb_diseqc_t;
+  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
+};
+
+/*
+ * Methods
+ */
+  
+void linuxdvb_device_init ( int adapter_mask );
+void linuxdvb_device_save ( linuxdvb_device_t *ld );
+
+linuxdvb_device_t *linuxdvb_device_create0
+  (const char *uuid, htsmsg_t *conf);
+
+linuxdvb_device_t * linuxdvb_device_find_by_adapter ( int a );
+
+#define LINUXDVB_SUBSYS_FE  0x01
+#define LINUXDVB_SUBSYS_DVR 0x02
+
+void linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m );
+
+linuxdvb_adapter_t *linuxdvb_adapter_create0
+  ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf );
+
+linuxdvb_adapter_t *linuxdvb_adapter_added (int a);
+
+int  linuxdvb_adapter_is_free        ( linuxdvb_adapter_t *la );
+int  linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la );
+
+linuxdvb_adapter_t *linuxdvb_adapter_find_by_hwid ( const char *hwid );
+linuxdvb_adapter_t *linuxdvb_adapter_find_by_path ( const char *path );
 
 linuxdvb_frontend_t *
 linuxdvb_frontend_create0 
@@ -215,26 +258,7 @@ mpegts_service_t *linuxdvb_service_create0
 /*
  * Diseqc gear
  */
-typedef struct linuxdvb_diseqc linuxdvb_diseqc_t;
-typedef struct linuxdvb_lnb    linuxdvb_lnb_t;
 
-struct linuxdvb_diseqc
-{
-  idnode_t ld_id;
-  const char *ld_type;
-  linuxdvb_satconf_t *ld_satconf;
-  int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
-  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
-                   linuxdvb_satconf_t *ls, int fd);
-};
-
-struct linuxdvb_lnb
-{
-  linuxdvb_diseqc_t;
-  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
-};
 
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
   ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
@@ -269,27 +293,18 @@ int linuxdvb_diseqc_set_volt (int fd, int volt);
 /*
  * Satconf
  */
-struct linuxdvb_satconf
-{
-  linuxdvb_frontend_t;
-
-  mpegts_input_t        *ls_frontend;
-  mpegts_mux_instance_t *ls_mmi;
-
-  /* Diseqc gear */
-  linuxdvb_lnb_t        *ls_lnb;
-  linuxdvb_diseqc_t     *ls_switch;
-  linuxdvb_diseqc_t     *ls_rotor;
-
-  gtimer_t              ls_diseqc_timer;
-  int                   ls_diseqc_idx;
-  int                   ls_diseqc_repeats;
-};
 
 void linuxdvb_satconf_init ( void );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);
 
 void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls );
+
+htsmsg_t *linuxdvb_satconf_types ( void );
+
+linuxdvb_satconf_t *linuxdvb_satconf_create 
+  ( linuxdvb_frontend_t *lfe, const char *type );
+
+void linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls );
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

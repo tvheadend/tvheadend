@@ -31,7 +31,7 @@
 #include <fcntl.h>
   
 /* ***************************************************************************
- * DVB Device
+ * Device/BUS Info
  * **************************************************************************/
 
 /*
@@ -167,42 +167,40 @@ get_min_dvb_adapter ( device_info_t *di )
   di->di_min_adapter = mina;
 }
 
+/* ***************************************************************************
+ * Class
+ * **************************************************************************/
 
 static void
 linuxdvb_device_class_save ( idnode_t *in )
 {
   linuxdvb_device_save((linuxdvb_device_t*)in);
 }
-void linuxdvb_device_save ( linuxdvb_device_t *ld )
+
+static const char *
+linuxdvb_device_class_get_title ( idnode_t *in )
 {
-  htsmsg_t *m, *e, *l;
-  linuxdvb_hardware_t *lh;
+  return ((linuxdvb_device_t*)in)->ld_devid.di_id;
+}
 
-  m = htsmsg_create_map();
-
-  idnode_save(&ld->ti_id, m);
-  
-  /* Adapters */
-  l = htsmsg_create_map();
-  LIST_FOREACH(lh, &ld->lh_children, lh_parent_link) {
-    e = htsmsg_create_map();
-    linuxdvb_adapter_save((linuxdvb_adapter_t*)lh, e);
-    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->ti_id), e);
-  }
-  htsmsg_add_msg(m, "adapters", l);
-
-  /* Save */
-  hts_settings_save(m, "input/linuxdvb/devices/%s",
-                    idnode_uuid_as_str(&ld->ti_id));
-  htsmsg_destroy(m);
+static idnode_set_t *
+linuxdvb_device_class_get_childs ( idnode_t *in )
+{
+  linuxdvb_adapter_t *la;
+  linuxdvb_device_t  *ld = (linuxdvb_device_t*)in;
+  idnode_set_t       *is = idnode_set_create();
+  LIST_FOREACH(la, &ld->ld_adapters, la_link)
+    idnode_set_add(is, &la->la_id, NULL);
+  return is;
 }
 
 const idclass_t linuxdvb_device_class =
 {
-  .ic_super      = &linuxdvb_hardware_class,
   .ic_class      = "linuxdvb_device",
   .ic_caption    = "LinuxDVB Device",
   .ic_save       = linuxdvb_device_class_save,
+  .ic_get_childs = linuxdvb_device_class_get_childs,
+  .ic_get_title  = linuxdvb_device_class_get_title,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -215,13 +213,30 @@ const idclass_t linuxdvb_device_class =
   }
 };
 
-static linuxdvb_hardware_list_t linuxdvb_device_all;
-
-idnode_set_t *
-linuxdvb_root ( void )
+void linuxdvb_device_save ( linuxdvb_device_t *ld )
 {
-  return linuxdvb_hardware_enumerate(&linuxdvb_device_all);
+  htsmsg_t *m, *e, *l;
+  linuxdvb_adapter_t *la;
+
+  m = htsmsg_create_map();
+
+  idnode_save(&ld->th_id, m);
+  
+  /* Adapters */
+  l = htsmsg_create_map();
+  LIST_FOREACH(la, &ld->ld_adapters, la_link) {
+    e = htsmsg_create_map();
+    linuxdvb_adapter_save(la, e);
+    htsmsg_add_msg(l, idnode_uuid_as_str(&la->la_id), e);
+  }
+  htsmsg_add_msg(m, "adapters", l);
+
+  /* Save */
+  hts_settings_save(m, "input/linuxdvb/devices/%s",
+                    idnode_uuid_as_str(&ld->th_id));
+  htsmsg_destroy(m);
 }
+
 
 linuxdvb_device_t *
 linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
@@ -232,21 +247,18 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
 
   /* Create */
   ld = calloc(1, sizeof(linuxdvb_device_t));
-  if (idnode_insert(&ld->ti_id, uuid, &linuxdvb_device_class)) {
+  if (idnode_insert(&ld->th_id, uuid, &linuxdvb_device_class)) {
     free(ld);
     return NULL;
   }
-  LIST_INSERT_HEAD(&linuxdvb_device_all, (linuxdvb_hardware_t*)ld, lh_parent_link);
-
-  /* Defaults */
-  ld->mi_enabled = 1;
+  LIST_INSERT_HEAD(&tvh_hardware, (tvh_hardware_t*)ld, th_link);
 
   /* No config */
   if (!conf)
     return ld;
 
   /* Load config */
-  idnode_load(&ld->ti_id, conf);
+  idnode_load(&ld->th_id, conf);
   get_min_dvb_adapter(&ld->ld_devid);
 
   /* Adapters */
@@ -263,11 +275,11 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
 static linuxdvb_device_t *
 linuxdvb_device_find_by_hwid ( const char *hwid )
 {
-  linuxdvb_hardware_t *lh;
-  LIST_FOREACH(lh, &linuxdvb_device_all, lh_parent_link) {
-    
-    if (!strcmp(hwid, ((linuxdvb_device_t*)lh)->ld_devid.di_id ?: ""))
-      return (linuxdvb_device_t*)lh;
+  tvh_hardware_t *lh;
+  LIST_FOREACH(lh, &tvh_hardware, th_link) {
+    if (idnode_is_instance(&lh->th_id, &linuxdvb_device_class))
+      if (!strcmp(hwid, ((linuxdvb_device_t*)lh)->ld_devid.di_id ?: ""))
+        return (linuxdvb_device_t*)lh;
   }
   return NULL;
 }
@@ -302,7 +314,6 @@ linuxdvb_device_find_by_adapter ( int a )
 
   /* Copy device info */
   memcpy(&ld->ld_devid, &dev, sizeof(dev));
-  ld->mi_displayname = strdup(dev.di_id);
   ld->ld_devid.di_id = dev.di_id;
   return ld;
 }
