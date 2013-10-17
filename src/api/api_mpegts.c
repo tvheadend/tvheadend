@@ -342,21 +342,6 @@ api_linuxdvb_scanfile_list
 #endif
 
 /*
- * Adapter list
- *
- * TODO: this will need reworking for mpegps etc...
- */
-static idnode_set_t *
-api_tvadapter_tree ( void )
-{
-#if ENABLE_LINUXDVB
-  return linuxdvb_root();
-#else
-  return NULL;
-#endif
-}
-
-/*
  * Init
  */
 void
@@ -368,7 +353,6 @@ api_mpegts_init ( void )
   extern const idclass_t linuxdvb_satconf_class;
 
   static api_hook_t ah[] = {
-    { "tvadapter/tree",            ACCESS_ANONYMOUS, api_idnode_tree,  api_tvadapter_tree },
     { "mpegts/input/network_list", ACCESS_ANONYMOUS, api_mpegts_input_network_list, NULL },
     { "mpegts/network/grid",       ACCESS_ANONYMOUS, api_idnode_grid,  api_mpegts_network_grid },
     { "mpegts/network/class",      ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_network_class },

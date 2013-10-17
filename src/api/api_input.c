@@ -56,11 +56,21 @@ api_input_status
   return 0;
 }
 
+static idnode_set_t *
+api_input_hw_tree ( void )
+{
+  tvh_hardware_t *th;
+  idnode_set_t *is = idnode_set_create();
+  TVH_HARDWARE_FOREACH(th)
+    idnode_set_add(is, &th->th_id, NULL);
+  return is;
+}
+
 void api_input_init ( void )
 {
   static api_hook_t ah[] = {
-    { "input/status",  ACCESS_ANONYMOUS, api_input_status, NULL },
-//    { "input/tree",    ACCESS_ANONYMOUS, NULL, NULL },
+    { "input/status",  ACCESS_ANONYMOUS, api_input_status,  NULL },
+    { "hardware/tree", ACCESS_ADMIN,     api_idnode_tree, api_input_hw_tree }, 
     { NULL },
   };
 

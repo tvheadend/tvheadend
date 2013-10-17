@@ -18,7 +18,12 @@
 
 #include "input.h"
 
-tvh_input_list_t tvh_inputs;
+tvh_input_list_t    tvh_inputs;
+tvh_hardware_list_t tvh_hardware;
+
+/*
+ * Input status handling
+ */
 
 htsmsg_t *
 tvh_input_stream_create_msg

@@ -457,7 +457,7 @@ idnode_cmp_title
   idnode_t      *inb  = *(idnode_t**)b;
   const char *sa = idnode_get_title(ina);
   const char *sb = idnode_get_title(inb);
-  return strcmp(sa, sb);
+  return strcmp(sa ?: "", sb ?: "");
 }
 
 static int

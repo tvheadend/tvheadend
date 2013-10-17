@@ -23,18 +23,30 @@
 #include "queue.h"
 
 /*
+ * Type-defs
+ */
+typedef struct tvh_hardware           tvh_hardware_t;
+typedef struct tvh_input              tvh_input_t;
+typedef struct tvh_input_stream       tvh_input_stream_t;
+typedef struct tvh_input_stream_stats tvh_input_stream_stats_t;
+
+typedef LIST_HEAD(,tvh_hardware)      tvh_hardware_list_t;
+typedef LIST_HEAD(,tvh_input)         tvh_input_list_t;
+typedef LIST_HEAD(,tvh_input_stream)  tvh_input_stream_list_t;
+
+/*
  * Input stream structure - used for getting statistics about active streams
  */
-typedef struct tvh_input_stream_stats
+struct tvh_input_stream_stats
 {
   int signal; ///< Signal level (0-100)
   int ber;    ///< Bit error rate (0-100?)
   int unc;    ///< Uncorrectable errors
   int snr;    ///< Signal 2 Noise (dB)
   int bps;    ///< Bandwidth (bps)
-} tvh_input_stream_stats_t;
+};
 
-typedef struct tvh_input_stream {
+struct tvh_input_stream {
 
   LIST_ENTRY(tvh_input_stream) link;
 
@@ -45,10 +57,7 @@ typedef struct tvh_input_stream {
   int   max_weight;   ///< Current max weight
 
   tvh_input_stream_stats_t stats;
-
-} tvh_input_stream_t;
-
-typedef LIST_HEAD(,tvh_input_stream) tvh_input_stream_list_t;
+};
 
 /*
  * Generic input super-class
@@ -62,10 +71,29 @@ typedef struct tvh_input {
 
 } tvh_input_t;
 
-typedef LIST_HEAD(,tvh_input) tvh_input_list_t;
-tvh_input_list_t tvh_inputs;
+/*
+ * Generic hardware super-class
+ */
+typedef struct tvh_hardware {
+  idnode_t                     th_id;
+  LIST_ENTRY(tvh_hardware)     th_link;
+} tvh_input_hw_t;
+
+
+/*
+ * Class and Global list defs
+ */
+extern const idclass_t tvh_input_class;
+
+tvh_input_list_t    tvh_inputs;
+tvh_hardware_list_t tvh_hardware;
 
 #define TVH_INPUT_FOREACH(x) LIST_FOREACH(x, &tvh_inputs, ti_link)
+#define TVH_HARDWARE_FOREACH(x) LIST_FOREACH(x, &tvh_hardware, th_link)
+
+/*
+ * Methods
+ */
 
 void input_init ( void );
 
@@ -73,6 +101,9 @@ htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
 
 void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 
+/*
+ * Input subsystem includes
+ */
 
 #if ENABLE_MPEGPS
 #include "input/mpegps.h"
