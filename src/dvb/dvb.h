@@ -225,6 +225,9 @@ typedef struct th_dvb_adapter {
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
   uint32_t tda_diseqc_repeats;
+  int tda_uni_qrg;                // unicable freq, SCR# and pin
+  int tda_uni_scr;
+  int tda_uni_pin;
   uint32_t tda_disable_pmt_monitor;
   int32_t  tda_full_mux_rx;
   uint32_t tda_grace_period;
@@ -401,6 +404,10 @@ htsmsg_t *dvb_adapter_build_msg(th_dvb_adapter_t *tda);
 htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
 
 void dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority);
+
+void dvb_adapter_set_uni_scr(th_dvb_adapter_t *tda, int i);
+void dvb_adapter_set_uni_qrg(th_dvb_adapter_t *tda, int i);
+void dvb_adapter_set_uni_pin(th_dvb_adapter_t *tda, int i);
 
 void dvb_adapter_poweroff(th_dvb_adapter_t *tda);
 

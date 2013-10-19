@@ -435,13 +435,16 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	
     /* DVB-S */
     dvb_satconf_t *sc;
-    int port, lowfreq, hifreq, switchfreq, hiband, pol, dbsbs;
+    int port, lowfreq, hifreq, switchfreq, hiband, pol, dbsbs, uni_qrg, uni_scr, uni_pin;
 
     lowfreq = 9750000;
     hifreq = 10600000;
     switchfreq = 11700000;
     port = 0;
     dbsbs = 0;
+    uni_qrg = tda->tda_uni_qrg;
+    uni_scr = tda->tda_uni_scr;
+    uni_pin = tda->tda_uni_pin;
 
     if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
       port = sc->sc_port;
@@ -469,13 +472,23 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
         p->frequency = abs(p->frequency - lowfreq);
     }
  
-    if ((r = diseqc_setup(tda->tda_fe_fd, port,
+    if (tda->tda_diseqc_version == 2) { /* EN50494 SCR */
+      r = en50494_setup(tda->tda_fe_fd, port,
                           pol == POLARISATION_HORIZONTAL ||
                           pol == POLARISATION_CIRCULAR_LEFT,
-                          hiband, tda->tda_diseqc_version,
-                          tda->tda_diseqc_repeats)) != 0)
+                          hiband, p->frequency,
+                          uni_scr, uni_qrg, uni_pin);
+      if (r < 0)
+        tvhlog(LOG_ERR, "dvb", "en50494 setup failed %d\n", r);
+      else
+        p->frequency = r; /* the returned frequency needs to be tuned */
+    } else if ((r = diseqc_setup(tda->tda_fe_fd, port,
+                                 pol == POLARISATION_HORIZONTAL ||
+                                 pol == POLARISATION_CIRCULAR_LEFT,
+                                 hiband, tda->tda_diseqc_version,
+                                 tda->tda_diseqc_repeats)) != 0)
       tvhlog(LOG_ERR, "dvb", "diseqc setup failed %d\n", r);
-    }
+  }
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
 
