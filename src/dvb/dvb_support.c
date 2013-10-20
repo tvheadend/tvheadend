@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <iconv.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -35,7 +36,6 @@
 #include "dvb_support.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
-#include "iconv.h"
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
 };
@@ -46,7 +46,7 @@ static int convert_iso_8859[16] = {
 #define convert_gb   17
 static inline int code_convert(const char *from_charset,const char *to_charset,char *inbuf,size_t inlen,char *outbuf,size_t *outlen)
 {
-  iconv_t cd;
+    iconv_t cd;
 
   char **pin = &inbuf;
   char **pout = &outbuf;
@@ -281,7 +281,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
     auto_pl_charset = 1;
     dvb_charset = NULL;
   }
-
+   
   // automatic charset detection
   switch(src[0]) {
   case 0:
@@ -338,7 +338,10 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
     if (sscanf(dvb_charset, "ISO8859-%d", &i) > 0 && i > 0 && i < 16) {
       ic = convert_iso_8859[i];
     } else {
-      ic = convert_iso6937;
+      //ic = convert_iso6937;
+        ic= convert_gb;//add
+        tvhlog(LOG_DEBUG, "dvb", "\"%i\" = manual charset override convert_gb dvb_charset[0] " ,dvb_charset[0]);
+
     }
   }
 

@@ -1,15 +1,14 @@
---- src/dvb/dvb_support.c.orig	2013-10-14 17:24:29.000000000 +0800
-+++ src/dvb/dvb_support.c	2013-10-15 11:15:30.000000000 +0800
-@@ -22,7 +22,7 @@
+--- ./src/dvb/dvb_support.c.orig	2013-10-14 17:24:29.000000000 +0800
++++ ./src/dvb/dvb_support.c	2013-10-20 11:36:11.000000000 +0800
+@@ -22,6 +22,7 @@
  #include <sys/stat.h>
  #include <sys/ioctl.h>
  #include <errno.h>
--
 +#include <iconv.h>
+ 
  #include <stdio.h>
  #include <unistd.h>
- #include <stdlib.h>
-@@ -30,16 +30,50 @@
+@@ -30,16 +31,50 @@
  
  #include <linux/dvb/frontend.h>
  
@@ -29,7 +28,7 @@
 +#define convert_gb   17
 +static inline int code_convert(const char *from_charset,const char *to_charset,char *inbuf,size_t inlen,char *outbuf,size_t *outlen)
 +{
-+  iconv_t cd;
++    iconv_t cd;
 +
 +  char **pin = &inbuf;
 +  char **pout = &outbuf;
@@ -61,7 +60,7 @@
  
  static inline int encode_utf8(unsigned int c, char *outb, int outleft)
  {
-@@ -65,7 +99,32 @@
+@@ -65,7 +100,32 @@
      return -1;
    }
  }
@@ -95,7 +94,7 @@
  static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
                                char *dst, size_t *dstlen)
  {
-@@ -186,6 +245,8 @@
+@@ -186,6 +246,8 @@
    switch (conv) {
      case convert_utf8: return conv_utf8(src, srclen, dst, dstlen);
      case convert_iso6937: return conv_6937(src, srclen, dst, dstlen);
@@ -104,7 +103,16 @@
      default: return conv_8859(conv, src, srclen, dst, dstlen);
    }
  }
-@@ -243,10 +304,19 @@
+@@ -219,7 +281,7 @@
+     auto_pl_charset = 1;
+     dvb_charset = NULL;
+   }
+-
++   
+   // automatic charset detection
+   switch(src[0]) {
+   case 0:
+@@ -243,10 +305,19 @@
      ic = convert_iso_8859[src[2]];
      src+=3; srclen-=3;
      break;
@@ -127,7 +135,7 @@
    case 0x15:
      ic = convert_utf8;
      break;
-@@ -257,7 +327,8 @@
+@@ -257,7 +328,8 @@
      if (auto_pl_charset)
        ic = convert_iso_8859[2];
      else
@@ -135,5 +143,17 @@
 +      //ic = convert_iso6937;
 +      ic=convert_gb;//add
      break;
+   }
+ 
+@@ -266,7 +338,10 @@
+     if (sscanf(dvb_charset, "ISO8859-%d", &i) > 0 && i > 0 && i < 16) {
+       ic = convert_iso_8859[i];
+     } else {
+-      ic = convert_iso6937;
++      //ic = convert_iso6937;
++        ic= convert_gb;//add
++        tvhlog(LOG_DEBUG, "dvb", "\"%i\" = manual charset override convert_gb dvb_charset[0] " ,dvb_charset[0]);
++
+     }
    }
  
