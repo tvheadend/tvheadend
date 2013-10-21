@@ -339,22 +339,11 @@ mpegts_input_recv_packets
            name, tsb, (int)len, pcr, pcr_pid);
   
   /* Not enough data */
-  if (len < 188) return 0;
+  if (len < 188) return len;
   
   /* Streaming - lock mutex */
   pthread_mutex_lock(&mi->mi_delivery_mutex);
 
-  /* Raw stream */
-  if (LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
-    streaming_message_t sm;
-    pktbuf_t *pb = pktbuf_alloc(tsb, len);
-    memset(&sm, 0, sizeof(sm));
-    sm.sm_type = SMT_MPEGTS;
-    sm.sm_data = pb;
-    streaming_pad_deliver(&mmi->mmi_streaming_pad, &sm);
-    pktbuf_ref_dec(pb);
-  }
-  
   /* Process */
   while ( len >= 188 ) {
 
@@ -408,6 +397,18 @@ mpegts_input_recv_packets
       tvhdebug("tsdemux", "%s - ts sync found", name);
     }
 
+  }
+
+  /* Raw stream */
+  // Note: this will include unsynced data if that's what is received
+  if (i > 0 && LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
+    streaming_message_t sm;
+    pktbuf_t *pb = pktbuf_alloc(tsb, i);
+    memset(&sm, 0, sizeof(sm));
+    sm.sm_type = SMT_MPEGTS;
+    sm.sm_data = pb;
+    streaming_pad_deliver(&mmi->mmi_streaming_pad, &sm);
+    pktbuf_ref_dec(pb);
   }
 
   /* Wake table */
