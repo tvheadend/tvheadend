@@ -76,6 +76,9 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
 
+  if (!st)
+    return;
+
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
@@ -211,7 +214,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error)
     ts_extract_pcr(t, st, tsb, pcrp);
 
-  if(st == NULL) {
+  if((st == NULL) && (pid != t->s_pcr_pid)) {
     pthread_mutex_unlock(&t->s_stream_mutex);
     return;
   }
@@ -222,7 +225,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st->es_type != SCT_CA &&
+      (t->s_scrambled_seen && st && st->es_type != SCT_CA && 
        st->es_type != SCT_PMT)) {
 
     /**
