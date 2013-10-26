@@ -427,11 +427,23 @@ dvr_entry_create_by_event(const char *config_name,
                            creator, dae, pri);
 }
 
+/**
+ * Considered a duplicate if it has episode numbers and it is equal to an existing recording
+ */
 static int _dvr_duplicate_event ( epg_broadcast_t *e )
 {
   dvr_entry_t *de;
+  epg_episode_num_t empty_epnum;
+
+  memset(&empty_epnum, 0, sizeof(empty_epnum));
+  if (epg_episode_number_cmp(&empty_epnum, &e->episode->epnum) == 0)
+    return 0;
+
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    if (de->de_bcast && (de->de_bcast->episode == e->episode)) return 1;
+    if (de->de_bcast && epg_episode_number_cmp(&de->de_bcast->episode->epnum, &e->episode->epnum) == 0)
+    {
+      return 1;
+    }
   }
   return 0;
 }
