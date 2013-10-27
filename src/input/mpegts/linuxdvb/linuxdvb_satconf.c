@@ -77,13 +77,10 @@ linuxdvb_satconf_class_network_set
 {
   int i = 0;
   linuxdvb_satconf_ele_t *lse;
-  printf("SET NETWORK %p %d = %s\n", ls, idx, uuid);
   LIST_FOREACH(lse, &ls->ls_elements, ls_link) {
-    printf("element\n");
     if (i == idx) break;
     i++;
   }
-  printf("lse = %p\n", lse);
   if (lse)
     return linuxdvb_satconf_ele_class_network_set(lse, uuid);
   return 0;
@@ -369,14 +366,13 @@ linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls )
 
 linuxdvb_satconf_t *
 linuxdvb_satconf_create
-  ( linuxdvb_frontend_t *lfe, const char *type )
+  ( linuxdvb_frontend_t *lfe, const char *type, const char *uuid,
+    htsmsg_t *conf )
 {
   int i;
   linuxdvb_satconf_ele_t *lse;
   struct linuxdvb_satconf_type *lst
     = linuxdvb_satconf_type_find(type);
-  const char *uuid = NULL;//"TODO";
-  htsmsg_t *conf = NULL;
   assert(lst);
   
   linuxdvb_satconf_t *ls = calloc(1, sizeof(linuxdvb_satconf_t));
@@ -446,7 +442,6 @@ linuxdvb_satconf_ele_class_network_set(void *o, const void *v)
   mpegts_input_t   *mi = o;
   mpegts_network_t *mn = mi->mi_network;
   const char *s = v;
-  printf("SET NETWORK %s\n", (const char*)v);
 
   if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
     return 0;

@@ -185,7 +185,7 @@ linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
   if (lfe->lfe_satconf && !strcmp(str ?: "", lfe->lfe_satconf->ls_type))
     return 0;
   linuxdvb_satconf_destroy(lfe->lfe_satconf);
-  lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str);
+  lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str, NULL, NULL);
   return 1;
 }
 
@@ -816,6 +816,8 @@ linuxdvb_frontend_create0
   const char *str;
   const idclass_t *idc;
   pthread_t tid;
+  const char *scuuid = NULL, *sctype = NULL;
+  htsmsg_t *scconf = NULL;
 
   /* Get type */
   if (conf) {
@@ -860,9 +862,17 @@ linuxdvb_frontend_create0
   /* Start table thread */
   tvhthread_create(&tid, NULL, mpegts_input_table_thread, lfe, 1);
 
+  /* Satconf */
+  if (conf) {
+    if ((scconf = htsmsg_get_map(conf, "satconf"))) {
+      sctype = htsmsg_get_str(scconf, "type");
+      scuuid = htsmsg_get_str(scconf, "uuid");
+    }
+  }
+
   /* Create satconf */
   if (type == FE_QPSK && !lfe->lfe_satconf)
-    lfe->lfe_satconf = linuxdvb_satconf_create(lfe, "");
+    lfe->lfe_satconf = linuxdvb_satconf_create(lfe, sctype, scuuid, scconf);
 
   /* No conf */
   if (!conf)
@@ -925,14 +935,12 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m )
 {
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_info.type));
-htsmsg_print(m);
   if (lfe->lfe_satconf) {
     htsmsg_t *s = htsmsg_create_map();
     linuxdvb_satconf_save(lfe->lfe_satconf, s);
     htsmsg_add_str(s, "uuid", idnode_uuid_as_str(&lfe->lfe_satconf->ls_id));
     htsmsg_add_msg(m, "satconf", s);
   }
-htsmsg_print(m);
 }
 
 /******************************************************************************
