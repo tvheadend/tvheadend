@@ -793,7 +793,8 @@ static void
 linuxdvb_satconf_ele_open_service
   ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   ls->ls_frontend->mi_open_service(ls->ls_frontend, s, init);
 }
 
@@ -801,7 +802,8 @@ static void
 linuxdvb_satconf_ele_close_service
   ( mpegts_input_t *mi, mpegts_service_t *s )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   ls->ls_frontend->mi_close_service(ls->ls_frontend, s);
 }
 
@@ -809,7 +811,8 @@ static void
 linuxdvb_satconf_ele_started_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   ls->ls_frontend->mi_started_mux(ls->ls_frontend, mmi);
 }
 
@@ -817,7 +820,8 @@ static void
 linuxdvb_satconf_ele_stopped_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   ls->ls_frontend->mi_stopped_mux(ls->ls_frontend, mmi);
 }
 
@@ -825,7 +829,8 @@ static int
 linuxdvb_satconf_ele_has_subscription
   ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   return ls->ls_frontend->mi_has_subscription(ls->ls_frontend, mm);
 }
 
@@ -861,7 +866,8 @@ static mpegts_pid_t *
 linuxdvb_satconf_ele_open_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
-  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)mi;
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
   return ls->ls_frontend->mi_open_pid(ls->ls_frontend, mm, pid, type, owner);
 }
 
