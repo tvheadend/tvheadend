@@ -1306,6 +1306,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "cleanTitle", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
     htsmsg_add_u32(r, "tagFiles", !!(cfg->dvr_flags & DVR_TAG_FILES));
     htsmsg_add_u32(r, "commSkip", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
+    htsmsg_add_u32(r, "episodeDuplicateDetection", !!(cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION));
 
     out = json_single_record(r, "dvrSettings");
 
@@ -1358,6 +1359,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       flags |= DVR_TAG_FILES;
     if(http_arg_get(&hc->hc_req_args, "commSkip") != NULL)
       flags |= DVR_SKIP_COMMERCIALS;
+    if(http_arg_get(&hc->hc_req_args, "episodeDuplicateDetection") != NULL)
+      flags |= DVR_EPISODE_DUPLICATE_DETECTION;
 
 
     dvr_flags_set(cfg,flags);

@@ -729,7 +729,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'episodeDuplicateDetection' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -822,6 +822,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Skip commercials',
 			name : 'commSkip'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Episode duplicate detection',
+			name : 'episodeDuplicateDetection'
 		}), {
 			width : 300,
 			fieldLabel : 'Post-processor command',

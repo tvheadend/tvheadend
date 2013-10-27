@@ -436,7 +436,7 @@ static int _dvr_duplicate_event ( epg_broadcast_t *e )
   epg_episode_num_t empty_epnum;
   int has_epnum = 1;
 
-  /* do not do episode duplicate check below if no episode number */
+  /* skip episode duplicate check below if no episode number */
   memset(&empty_epnum, 0, sizeof(empty_epnum));
   if (epg_episode_number_cmp(&empty_epnum, &e->episode->epnum) == 0)
     has_epnum = 0;
@@ -446,13 +446,18 @@ static int _dvr_duplicate_event ( epg_broadcast_t *e )
       if (de->de_bcast->episode == e->episode) return 1;
 
       if (has_epnum) {
-        const char* de_title = lang_str_get(de->de_bcast->episode->title, NULL);
-        const char* e_title = lang_str_get(e->episode->title, NULL);
+        dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+        int ep_dup_det = (cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION);
 
-        /* duplicate if title and episode match */
-        if (de_title && e_title && strcmp(de_title, e_title) == 0
-            && epg_episode_number_cmp(&de->de_bcast->episode->epnum, &e->episode->epnum) == 0) {
-          return 1;
+        if (ep_dup_det) {
+          const char* de_title = lang_str_get(de->de_bcast->episode->title, NULL);
+          const char* e_title = lang_str_get(e->episode->title, NULL);
+
+          /* duplicate if title and episode match */
+          if (de_title && e_title && strcmp(de_title, e_title) == 0
+              && epg_episode_number_cmp(&de->de_bcast->episode->epnum, &e->episode->epnum) == 0) {
+            return 1;
+          }
         }
       }
     }
@@ -1145,6 +1150,9 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "skip-commercials", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_SKIP_COMMERCIALS;
 
+      if(!htsmsg_get_u32(m, "episode-duplicate-detection", &u32) && u32)
+        cfg->dvr_flags |= DVR_EPISODE_DUPLICATE_DETECTION;
+
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
@@ -1311,6 +1319,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
+  htsmsg_add_u32(m, "episode-duplicate-detection", !!(cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 
