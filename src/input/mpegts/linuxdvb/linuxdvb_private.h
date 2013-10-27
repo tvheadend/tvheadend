@@ -22,15 +22,16 @@
 
 #include "input/mpegts.h"
 
-typedef struct linuxdvb_hardware linuxdvb_hardware_t;
-typedef struct linuxdvb_device   linuxdvb_device_t;
-typedef struct linuxdvb_adapter  linuxdvb_adapter_t;
-typedef struct linuxdvb_frontend linuxdvb_frontend_t;
-typedef struct linuxdvb_satconf  linuxdvb_satconf_t;
-typedef struct linuxdvb_diseqc   linuxdvb_diseqc_t;
-typedef struct linuxdvb_lnb      linuxdvb_lnb_t;
-typedef struct linuxdvb_network  linuxdvb_network_t;
-typedef struct linuxdvb_mux      linuxdvb_mux_t;
+typedef struct linuxdvb_hardware    linuxdvb_hardware_t;
+typedef struct linuxdvb_device      linuxdvb_device_t;
+typedef struct linuxdvb_adapter     linuxdvb_adapter_t;
+typedef struct linuxdvb_frontend    linuxdvb_frontend_t;
+typedef struct linuxdvb_satconf     linuxdvb_satconf_t;
+typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
+typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
+typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
+typedef struct linuxdvb_network     linuxdvb_network_t;
+typedef struct linuxdvb_mux         linuxdvb_mux_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
@@ -143,16 +144,61 @@ struct linuxdvb_satconf
 {
   idnode_t              ls_id;
   const char           *ls_type;
+
+  /*
+   * MPEG-TS hooks
+   */
+  mpegts_input_t        *ls_frontend; ///< Frontend we're proxying for
+  mpegts_mux_instance_t *ls_mmi;      ///< Used within delay diseqc handler
+
+  /*
+   * Diseqc handling
+   */
+  gtimer_t               ls_diseqc_timer;
+  int                    ls_diseqc_idx;
+  int                    ls_diseqc_repeats;
+  
+  /*
+   * Satconf elements
+   */
+  LIST_HEAD(,linuxdvb_satconf_ele) ls_elements;
+};
+
+/*
+ * Internal wrapper for a satconf entry
+ *
+ * Note: this is a bit cumbersome, it comes from how I first did the satconf
+ *       and was subsequently bullied (by amet) into changing it (probably
+ *       for the better, just don't tell him, no danger he'll read this!)
+ *
+ *       maybe one day I'll do it again properly
+ */
+struct linuxdvb_satconf_ele
+{
+  mpegts_input_t; // This acts as proxy for the frontend
+
+  /*
+   * Parent
+   */
+  linuxdvb_satconf_t               *ls_parent;
+  LIST_ENTRY(linuxdvb_satconf_ele)  ls_link;
+
+  /*
+   * Diseqc kit
+   */
+  linuxdvb_lnb_t        *ls_lnb;
+  linuxdvb_diseqc_t     *ls_switch;
+  linuxdvb_diseqc_t     *ls_rotor;
 };
 
 struct linuxdvb_diseqc
 {
   idnode_t              ld_id;
   const char           *ld_type;
-  linuxdvb_satconf_t   *ld_satconf;
+  linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
-                   linuxdvb_satconf_t *ls, int fd);
+                   linuxdvb_satconf_ele_t *ls, int fd);
 };
 
 struct linuxdvb_lnb
@@ -258,11 +304,9 @@ mpegts_service_t *linuxdvb_service_create0
 /*
  * Diseqc gear
  */
-
-
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
   ( linuxdvb_diseqc_t *ld, const char *uuid, const idclass_t *idc,
-    htsmsg_t *conf, const char *type, linuxdvb_satconf_t *parent );
+    htsmsg_t *conf, const char *type, linuxdvb_satconf_ele_t *parent );
 
 void linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld );
 
@@ -271,11 +315,11 @@ void linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld );
                                  _u, &_d##_class, _c, _t, _p)
   
 linuxdvb_lnb_t    *linuxdvb_lnb_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls );
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 linuxdvb_diseqc_t *linuxdvb_switch_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls );
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls );
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 
 void linuxdvb_lnb_destroy    ( linuxdvb_lnb_t    *lnb );
 void linuxdvb_switch_destroy ( linuxdvb_diseqc_t *ld );
@@ -293,14 +337,22 @@ int linuxdvb_diseqc_set_volt (int fd, int volt);
 /*
  * Satconf
  */
+void linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m );
 
-void linuxdvb_satconf_init ( void );
+linuxdvb_satconf_ele_t *linuxdvb_satconf_ele_create0
+  (const char *uuid, htsmsg_t *conf, linuxdvb_satconf_t *ls);
+
+void linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls );
+
+htsmsg_t *linuxdvb_satconf_type_list ( void *o );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create0(const char *uuid, htsmsg_t *conf);
 
-void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls );
+linuxdvb_satconf_t *linuxdvb_satconf_create
+  ( linuxdvb_frontend_t *lfe, const char *type );
 
-htsmsg_t *linuxdvb_satconf_types ( void );
+void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls );
+void linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create 
   ( linuxdvb_frontend_t *lfe, const char *type );

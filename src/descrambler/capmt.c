@@ -584,8 +584,10 @@ capmt_thread(void *aux)
         idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
         for (i = 0; i < is->is_count; i++) {
           la = (linuxdvb_adapter_t*)is->is_array[i];
+#if 0
           if (!la || !la->mi_is_enabled) continue;
           if (!la->mi_is_enabled((mpegts_input_t*)la)) continue;
+#endif
           if (la->la_dvb_number > MAX_CA) {
             tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
             continue;
@@ -646,7 +648,7 @@ capmt_table_input(struct th_descrambler *td, struct service *s,
   capmt_t *capmt = ct->ct_capmt;
   mpegts_service_t *t = (mpegts_service_t*)s;
   linuxdvb_frontend_t *lfe;
-  int adapter_num;
+  int adapter_num = -1;
   int total_caids = 0, current_caid = 0;
 
   /* Validate */
@@ -656,7 +658,7 @@ capmt_table_input(struct th_descrambler *td, struct service *s,
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
   if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
-  adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
+  //adapter_num = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
 
   caid_t *c;
 
@@ -895,7 +897,7 @@ capmt_service_start(service_t *s)
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
   if (!idnode_is_instance(&lfe->ti_id, &linuxdvb_frontend_class))
     return;
-  tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
+  //tuner = ((linuxdvb_adapter_t*)lfe->lh_parent)->la_dvb_number;
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     /* skip, if we're not active */

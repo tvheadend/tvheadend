@@ -83,13 +83,13 @@ ts_recv_packet0
     if(st->es_cc_valid && cc != st->es_cc) {
       /* Incorrect CC */
       limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
-		 "Continuity counter error");
+     "Continuity counter error");
       avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
 
       // Mark as error if this is not the first packet of a payload
       if(!pusi)
-	error |= 0x2;
+  error |= 0x2;
     }
     st->es_cc_valid = 1;
     st->es_cc = (cc + 1) & 0xf;
@@ -143,8 +143,8 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
     if(d < -90000LL || d > 90000LL) {
       st->es_pcr_recovery_fails++;
       if(st->es_pcr_recovery_fails > 10) {
-	st->es_pcr_recovery_fails = 0;
-	st->es_pcr_real_last = PTS_UNSET;
+  st->es_pcr_recovery_fails = 0;
+  st->es_pcr_real_last = PTS_UNSET;
       }
       return;
     }
@@ -153,7 +153,7 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
     
     if(t->s_pcr_pid == st->es_pid) {
       /* This is the registered PCR PID, adjust service PCR drift
-	 via an IIR filter */
+   via an IIR filter */
       
       t->s_pcr_drift = (t->s_pcr_drift * 255 + st->es_pcr_drift) / 256;
     }
@@ -207,7 +207,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   if(error) {
     /* Transport Error Indicator */
     limitedlog(&t->s_loglimit_tei, "TS", service_nicename((service_t*)t),
-	       "Transport error indicator");
+         "Transport error indicator");
   }
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
@@ -245,19 +245,19 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
       
       r = td->td_descramble(td, (service_t*)t, st, tsb);
       if(r == 0) {
-	pthread_mutex_unlock(&t->s_stream_mutex);
-	return 1;
+        pthread_mutex_unlock(&t->s_stream_mutex);
+        return 1;
       }
 
       if(r == 1)
-	m++;
+        m++;
     }
 
     if(!error && t->s_scrambled != 0) {
       if(n == 0) {
-	service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
+        service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
       } else if(m == n) {
-	service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
+        service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
       }
     }
 

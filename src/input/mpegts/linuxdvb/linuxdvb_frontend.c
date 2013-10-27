@@ -182,7 +182,7 @@ static int
 linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
 {
   linuxdvb_frontend_t *lfe = self;
-  if (!strcmp(str ?: "", lfe->lfe_satconf->ls_type))
+  if (lfe->lfe_satconf && !strcmp(str ?: "", lfe->lfe_satconf->ls_type))
     return 0;
   linuxdvb_satconf_destroy(lfe->lfe_satconf);
   lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str);
@@ -192,14 +192,13 @@ linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
 static const void *
 linuxdvb_frontend_dvbs_class_satconf_get ( void *self )
 {
+  static const char *s;
   linuxdvb_frontend_t *lfe = self;
-  return &lfe->lfe_satconf->ls_type;
-}
-
-static htsmsg_t *
-linuxdvb_frontend_dvbs_class_satconf_list ( void *self )
-{
-  return linuxdvb_satconf_types();
+  if (lfe->lfe_satconf)
+    s = lfe->lfe_satconf->ls_type;
+  else
+    s = NULL;
+  return &s;
 }
 
 const idclass_t linuxdvb_frontend_dvbs_class =
@@ -213,9 +212,11 @@ const idclass_t linuxdvb_frontend_dvbs_class =
       .type     = PT_STR,
       .id       = "satconf",
       .name     = "SatConfig",
+      .opts     = PO_NOSAVE,
       .set      = linuxdvb_frontend_dvbs_class_satconf_set,
       .get      = linuxdvb_frontend_dvbs_class_satconf_get,
-      .list     = linuxdvb_frontend_dvbs_class_satconf_list,
+      .list     = linuxdvb_satconf_type_list,
+      .def.s    = "simple"
     },
     {}
   }
@@ -859,6 +860,10 @@ linuxdvb_frontend_create0
   /* Start table thread */
   tvhthread_create(&tid, NULL, mpegts_input_table_thread, lfe, 1);
 
+  /* Create satconf */
+  if (type == FE_QPSK && !lfe->lfe_satconf)
+    lfe->lfe_satconf = linuxdvb_satconf_create(lfe, "");
+
   /* No conf */
   if (!conf)
     return lfe;
@@ -920,6 +925,14 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m )
 {
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_info.type));
+htsmsg_print(m);
+  if (lfe->lfe_satconf) {
+    htsmsg_t *s = htsmsg_create_map();
+    linuxdvb_satconf_save(lfe->lfe_satconf, s);
+    htsmsg_add_str(s, "uuid", idnode_uuid_as_str(&lfe->lfe_satconf->ls_id));
+    htsmsg_add_msg(m, "satconf", s);
+  }
+htsmsg_print(m);
 }
 
 /******************************************************************************

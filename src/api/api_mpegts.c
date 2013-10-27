@@ -281,7 +281,7 @@ api_linuxdvb_satconf_create
     return -EINVAL;
 
   pthread_mutex_lock(&global_lock);
-  in = (idnode_t*)linuxdvb_satconf_create0(NULL, conf);
+  in = NULL;//TODO:(idnode_t*)linuxdvb_satconf_create0(NULL, conf);
   if (in) {
     err = 0;
     in->in_class->ic_save(in);

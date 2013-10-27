@@ -112,7 +112,7 @@ const idclass_t linuxdvb_switch_class =
 
 static int
 linuxdvb_switch_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
   int i, com, r1 = 0, r2 = 0;
   int pol, band;
@@ -130,7 +130,7 @@ linuxdvb_switch_tune
   com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
   
   /* Single committed (before repeats) */
-  if (sc->ls_diseqc_repeats > 0) {
+  if (sc->ls_parent->ls_diseqc_repeats > 0) {
     r2 = 1;
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
       return -1;
@@ -138,7 +138,7 @@ linuxdvb_switch_tune
   }
 
   /* Repeats */
-  for (i = 0; i <= sc->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= sc->ls_parent->ls_diseqc_repeats; i++) {
     
     /* Uncommitted */
     if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
@@ -181,17 +181,26 @@ linuxdvb_switch_list ( void *o )
 
 linuxdvb_diseqc_t *
 linuxdvb_switch_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_t *ls )
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c )
 {
-  linuxdvb_diseqc_t *ld = NULL;
+  linuxdvb_switch_t *ld = NULL;
   if (!strcmp(name ?: "", "Generic")) {
-    ld = linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf, "Generic", ls);
+    ld = (linuxdvb_switch_t*)linuxdvb_diseqc_create(linuxdvb_switch, NULL, conf, "Generic", ls);
     if (ld) {
       ld->ld_tune = linuxdvb_switch_tune;
+      if (!conf) {
+        if (u >= 0) {
+          ld->ls_committed = u;
+          ld->ls_toneburst = u % 2;
+        }
+        if (c >= 0) {
+          ld->ls_committed = c;
+        }
+      }
     }
   }
 
-  return ld;
+  return (linuxdvb_diseqc_t*)ld;
 }
 
 void
