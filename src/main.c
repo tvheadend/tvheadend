@@ -406,9 +406,9 @@ main(int argc, char **argv)
   const char *log_debug = NULL, *log_trace = NULL;
 
   /* Defaults */
-  tvheadend_webui_port      = 9981;
+  tvheadend_webui_port      = 80;
   tvheadend_webroot         = NULL;
-  tvheadend_htsp_port       = 9982;
+  tvheadend_htsp_port       = 81;
   tvheadend_htsp_port_extra = 0;
 
   /* Command line options */
@@ -873,7 +873,7 @@ hostconnection2str(int type)
     return "USB (12 Mbit/s)";
     
   case HOSTCONNECTION_USB480:
-    return "USB (480 Mbit/s)";
+    return "USB 2.0 (480 Mbit/s)";
 
   case HOSTCONNECTION_PCI:
     return "PCI";
