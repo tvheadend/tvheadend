@@ -227,7 +227,7 @@ const idclass_t linuxdvb_satconf_4port_class =
     },
     {
       .type     = PT_STR,
-      .id       = "network_bb`",
+      .id       = "network_bb",
       .name     = "BB",
       .get  	  = linuxdvb_satconf_class_network_get3,
       .set      = linuxdvb_satconf_class_network_set3,
