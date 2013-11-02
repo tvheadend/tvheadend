@@ -34,6 +34,7 @@ typedef struct linuxdvb_network     linuxdvb_network_t;
 typedef struct linuxdvb_mux         linuxdvb_mux_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
+typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
 
 /*
  * Hardware tree objects
@@ -161,7 +162,7 @@ struct linuxdvb_satconf
   /*
    * Satconf elements
    */
-  LIST_HEAD(,linuxdvb_satconf_ele) ls_elements;
+  linuxdvb_satconf_ele_list_t ls_elements;
 };
 
 /*
@@ -181,7 +182,7 @@ struct linuxdvb_satconf_ele
    * Parent
    */
   linuxdvb_satconf_t               *ls_parent;
-  LIST_ENTRY(linuxdvb_satconf_ele)  ls_link;
+  TAILQ_ENTRY(linuxdvb_satconf_ele)  ls_link;
 
   /*
    * Diseqc kit
@@ -351,8 +352,6 @@ linuxdvb_satconf_t *linuxdvb_satconf_create
     const char *type, const char *uuid, htsmsg_t *conf );
 
 void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls );
-void linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls );
-
 void linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls );
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */
