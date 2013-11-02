@@ -253,47 +253,7 @@ api_mpegts_service_grid
   }
 }
 
-/*
- * Satconfs
- */
 #if ENABLE_LINUXDVB
-static void
-api_linuxdvb_satconf_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
-{
-  mpegts_input_t *mi;
-  extern const idclass_t linuxdvb_satconf_class;
-
-  LIST_FOREACH(mi, &mpegts_input_all, mi_global_link)
-    if (idnode_is_instance((idnode_t*)mi, &linuxdvb_satconf_class))
-      idnode_set_add(ins, (idnode_t*)mi, &conf->filter);
-}
-
-static int
-api_linuxdvb_satconf_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int err;
-  htsmsg_t *conf;
-  idnode_t *in;
-
-  if (!(conf  = htsmsg_get_map(args, "conf")))
-    return -EINVAL;
-
-  pthread_mutex_lock(&global_lock);
-  in = NULL;//TODO:(idnode_t*)linuxdvb_satconf_create0(NULL, conf);
-  if (in) {
-    err = 0;
-    in->in_class->ic_save(in);
-    *resp = htsmsg_create_map();
-  } else {
-    err = -EINVAL;
-  }
-  pthread_mutex_unlock(&global_lock);
-
-  return err;
-}
-
 static int
 api_linuxdvb_scanfile_list
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
@@ -350,7 +310,6 @@ api_mpegts_init ( void )
   extern const idclass_t mpegts_network_class;
   extern const idclass_t mpegts_mux_class;
   extern const idclass_t mpegts_service_class;
-  extern const idclass_t linuxdvb_satconf_class;
 
   static api_hook_t ah[] = {
     { "mpegts/input/network_list", ACCESS_ANONYMOUS, api_mpegts_input_network_list, NULL },
@@ -365,9 +324,6 @@ api_mpegts_init ( void )
     { "mpegts/service/grid",       ACCESS_ANONYMOUS, api_idnode_grid,  api_mpegts_service_grid },
     { "mpegts/service/class",      ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_service_class },
 #if ENABLE_LINUXDVB
-    { "linuxdvb/satconf/grid",     ACCESS_ANONYMOUS, api_idnode_grid,  api_linuxdvb_satconf_grid },
-    { "linuxdvb/satconf/class",    ACCESS_ANONYMOUS, api_idnode_class, (void*)&linuxdvb_satconf_class },
-    { "linuxdvb/satconf/create",   ACCESS_ANONYMOUS, api_linuxdvb_satconf_create, NULL },
     { "linuxdvb/scanfile/list",    ACCESS_ANONYMOUS, api_linuxdvb_scanfile_list, NULL },
 #endif
     { NULL },
