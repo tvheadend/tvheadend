@@ -120,6 +120,55 @@ linuxdvb_satconf_class_save ( idnode_t *s )
   linuxdvb_device_save(lfe->lfe_adapter->la_device);
 }
 
+static const void *
+linuxdvb_satconf_class_orbitalpos_get ( void *p )
+{
+  static int n;
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  n = 0;
+  LIST_FOREACH(lse, &ls->ls_elements, ls_link)
+    n++;
+  return &n;
+}
+
+static int
+linuxdvb_satconf_class_orbitalpos_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  int c = *(int*)linuxdvb_satconf_class_orbitalpos_get(p);
+  int n = *(int*)v;
+
+  if (n == c)
+    return 0;
+
+  /* Add */
+  if (n > c) {
+    while (c < n) {
+      linuxdvb_satconf_ele_create0(NULL, NULL, ls);
+      c++;
+    }
+
+  /* Remove */
+  } else {
+    // TODO
+  }
+  
+  return 1;
+}
+
+static idnode_set_t *
+linuxdvb_satconf_class_get_childs ( idnode_t *o )
+{
+  linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
+  linuxdvb_satconf_ele_t *lse;
+  idnode_set_t *is = idnode_set_create();
+  LIST_FOREACH(lse, &ls->ls_elements, ls_link)
+    idnode_set_add(is, &lse->ti_id, NULL);
+  return is;
+}
+
 /*
  * Generic satconf
  */
@@ -199,7 +248,7 @@ const idclass_t linuxdvb_satconf_4port_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_2port",
-  .ic_caption    = "DVB-S Toneburst",
+  .ic_caption    = "DVB-S 4-port",
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -236,6 +285,28 @@ const idclass_t linuxdvb_satconf_4port_class =
     {}
   }
 };
+
+/*
+ * Advanced
+ */
+const idclass_t linuxdvb_satconf_advanced_class =
+{
+  .ic_super      = &linuxdvb_satconf_class,
+  .ic_class      = "linuxdvb_satconf_advanced",
+  .ic_caption    = "DVB-S Advanced",
+  .ic_get_childs = linuxdvb_satconf_class_get_childs,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_INT,
+      .id       = "orbital_pos",
+      .name     = "Orbital Positions",
+      .get      = linuxdvb_satconf_class_orbitalpos_get,
+      .set      = linuxdvb_satconf_class_orbitalpos_set,
+    },
+    {}
+  }
+};
+
 
 /*
  * Advanced
@@ -318,14 +389,12 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
     .idc   = &linuxdvb_satconf_4port_class,
     .ports = 4, 
   },
-#if 0
   {
     .type  = "advanced",
     .name  = "Advanced",
     .idc   = &linuxdvb_satconf_advanced_class,
     .ports = 0, 
   },
-#endif
 };
 
 /* Find type (with default) */
