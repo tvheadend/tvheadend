@@ -27,6 +27,8 @@
 
 static void
 mpegts_mux_initial_scan_timeout ( void *aux );
+static void
+mpegts_mux_initial_scan_link ( mpegts_mux_t *mm );
 
 /* ****************************************************************************
  * Mux instance (input linkage)
@@ -70,6 +72,23 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
+static void
+mpegts_mux_add_to_current ( mpegts_mux_t *mm, const char *buf )
+{
+  mpegts_network_t       *mn = mm->mm_network;
+  /* Initial scanning */
+  if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
+    tvhtrace("mpegts", "%s - adding to current scan Q", buf);
+    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
+                 mm_initial_scan_link);
+    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
+    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm,
+                      mm_initial_scan_link);
+    gtimer_arm(&mm->mm_initial_scan_timeout,
+               mpegts_mux_initial_scan_timeout, mm, 30);
+  }
+}
+
 int
 mpegts_mux_instance_start
   ( mpegts_mux_instance_t **mmiptr )
@@ -78,13 +97,13 @@ mpegts_mux_instance_start
   char buf[256], buf2[256];;
   mpegts_mux_instance_t *mmi = *mmiptr;
   mpegts_mux_t           *mm = mmi->mmi_mux;
-  mpegts_network_t       *mn = mm->mm_network;
   mm->mm_display_name(mm, buf, sizeof(buf));
 
   /* Already active */
   if (mm->mm_active) {
     *mmiptr = mm->mm_active;
     tvhdebug("mpegts", "%s - already active", buf);
+    mpegts_mux_add_to_current(mm, buf);
     return 0;
   }
 
@@ -101,17 +120,8 @@ mpegts_mux_instance_start
   /* Event handler */
   mpegts_fire_event(mm, ml_mux_start);
 
-  /* Initial scanning */
-  if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
-    tvhtrace("mpegts", "%s - adding to current scan Q", buf);
-    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
-                 mm_initial_scan_link);
-    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
-    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm,
-                      mm_initial_scan_link);
-    gtimer_arm(&mm->mm_initial_scan_timeout,
-               mpegts_mux_initial_scan_timeout, mm, 30);
-  }
+  /* Link */
+  mpegts_mux_add_to_current(mm, buf);
 
   return 0;
 }
@@ -199,6 +209,27 @@ mpegts_mux_class_get_name ( void *ptr )
   return &s;
 }
 
+static void
+mpegts_mux_class_initscan_notify ( void *p )
+{
+  mpegts_mux_t *mm = p;
+  mpegts_network_t *mn = mm->mm_network;
+
+  /* Start */
+  if (!mm->mm_initial_scan_done) {
+    if (mm->mm_initial_scan_status == MM_SCAN_DONE)
+      mpegts_mux_initial_scan_link(mm);
+
+  /* Stop */
+  } else {
+    if (mm->mm_initial_scan_status == MM_SCAN_CURRENT)
+      mpegts_mux_initial_scan_done(mm);
+    else if (mm->mm_initial_scan_status == MM_SCAN_PENDING)
+      TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
+                   mm_initial_scan_link);
+  }
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -253,8 +284,8 @@ const idclass_t mpegts_mux_class =
       .type     = PT_BOOL,
       .id       = "initscan",
       .name     = "Initial Scan Complete",
-      .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_initial_scan_done),
+      .notify   = mpegts_mux_class_initscan_notify,
     },
     {
       .type     = PT_STR,
@@ -362,6 +393,7 @@ mpegts_mux_start
   /* Already tuned */
   if (mm->mm_active) {
     tvhtrace("mpegts", "%s - already active", buf);
+    mpegts_mux_add_to_current(mm, buf);
     return 0;
   }
   
