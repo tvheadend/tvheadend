@@ -365,9 +365,9 @@ static int _pyepg_parse_schedule
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      LIST_FOREACH(ecl, &ec->channels, link)
+      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link)
         save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
-                                       ecl->channel, stats);
+                                       ecl->ecl_channel, stats);
     }
   }
 

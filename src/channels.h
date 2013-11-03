@@ -62,6 +62,8 @@ typedef struct channel
   gtimer_t              ch_epg_timer_head;
   gtimer_t              ch_epg_timer_current;
 
+  LIST_HEAD(,epggrab_channel_link) ch_epggrab;
+
   /* DVR */
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
@@ -152,6 +154,7 @@ int channel_set_name ( channel_t *ch, const char *s );
 int channel_get_number ( channel_t *ch );
 
 const char *channel_get_icon ( channel_t *ch );
+int channel_set_icon ( channel_t *ch, const char *icon );
 
 #define channel_get_uuid(ch) idnode_uuid_as_str(&ch->ch_id)
 

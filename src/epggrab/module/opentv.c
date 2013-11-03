@@ -290,11 +290,12 @@ opentv_parse_event_section
 
     /* Find broadcast */
     if (ev.start && ev.stop) {
-      ebc = epg_broadcast_find_by_time(ecl->channel, ev.start, ev.stop, ev.eid,
-                                       1, &save);
-      tvhdebug("opentv", "find by time start %ld stop %ld eid %d = %p", ev.start, ev.stop, ev.eid, ebc);
+      ebc = epg_broadcast_find_by_time(ecl->ecl_channel, ev.start, ev.stop,
+                                       ev.eid, 1, &save);
+      tvhdebug("opentv", "find by time start %ld stop %ld eid %d = %p",
+               ev.start, ev.stop, ev.eid, ebc);
     } else {
-      ebc = epg_broadcast_find_by_eid(ecl->channel, ev.eid);
+      ebc = epg_broadcast_find_by_eid(ecl->ecl_channel, ev.eid);
       tvhdebug("opentv", "find by eid %d = %p", ev.eid, ebc);
     }
     if (!ebc)
@@ -317,7 +318,7 @@ opentv_parse_event_section
     if (ev.serieslink) {
       char suri[257];
       snprintf(suri, 256, "opentv://channel-%s/series-%d",
-               channel_get_uuid(ecl->channel), ev.serieslink);
+               channel_get_uuid(ecl->ecl_channel), ev.serieslink);
       if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }
@@ -385,6 +386,7 @@ opentv_desc_channels
   epggrab_channel_t *ec;
   epggrab_channel_link_t *ecl;
   mpegts_service_t *svc;
+  channel_t *ch;
   int sid, cid, cnum;
   int save = 0;
   int i = 2;
@@ -400,12 +402,16 @@ opentv_desc_channels
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
+      ch  = LIST_FIRST(&svc->s_channels)->csm_chn;
       tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
-      if (!ecl) {
-        ecl = calloc(1, sizeof(epggrab_channel_link_t));
-        LIST_INSERT_HEAD(&ec->channels, ecl, link);
+
+      if (ecl && ecl->ecl_channel != ch) {
+        epggrab_channel_link_delete(ecl);
+        ecl = NULL;
       }
-      ecl->channel = LIST_FIRST(&svc->s_channels)->csm_chn;
+      
+      if (!ecl)
+        epggrab_channel_link(ec, ch);
       save |= epggrab_channel_set_number(ec, cnum);
     }
     i += 9;

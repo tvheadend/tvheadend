@@ -121,4 +121,5 @@ void api_init ( void )
   api_service_init();
   api_channel_init();
   api_epg_init();
+  api_epggrab_init();
 }

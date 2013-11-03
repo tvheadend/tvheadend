@@ -88,8 +88,11 @@ typedef struct epggrab_channel
 
 typedef struct epggrab_channel_link
 {
-  LIST_ENTRY(epggrab_channel_link) link;     ///< Link to grab channel
-  struct channel                   *channel; ///< Real channel
+  int                               ecl_mark;
+  struct channel                    *ecl_channel;
+  struct epggrab_channel            *ecl_epggrab;
+  LIST_ENTRY(epggrab_channel_link)  ecl_chn_link;
+  LIST_ENTRY(epggrab_channel_link)  ecl_epg_link;
 } epggrab_channel_link_t;
 
 /*
@@ -107,7 +110,13 @@ int epggrab_channel_set_number   ( epggrab_channel_t *ch, int number );
 /*
  * Updated/link
  */
-void epggrab_channel_updated   ( epggrab_channel_t *ch );
+void epggrab_channel_updated     ( epggrab_channel_t *ch );
+void epggrab_channel_link_delete ( epggrab_channel_link_t *ecl );
+int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch );
+
+/* ID */
+const char *epggrab_channel_get_id ( epggrab_channel_t *ch );
+epggrab_channel_t *epggrab_channel_find_by_id ( const char *id );
 
 /* **************************************************************************
  * Grabber Modules

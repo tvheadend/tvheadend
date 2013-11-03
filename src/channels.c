@@ -205,6 +205,61 @@ channel_class_get_number ( void *p )
   return &i;
 }
 
+static const void *
+channel_class_epggrab_get ( void *o )
+{
+  channel_t *ch = o;
+  htsmsg_t *l = htsmsg_create_list();
+  epggrab_channel_link_t *ecl;
+  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link)
+    htsmsg_add_str(l, NULL, epggrab_channel_get_id(ecl->ecl_epggrab));
+  return l;
+}
+
+static int
+channel_class_epggrab_set ( void *o, const void *v )
+{
+  int save = 0;
+  channel_t *ch = o;
+  htsmsg_t *l = (htsmsg_t*)v;
+  htsmsg_field_t *f;
+  epggrab_channel_t *ec;
+  epggrab_channel_link_t *ecl, *n;
+
+  /* mark for deletion */
+  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link)
+    ecl->ecl_mark = 1;
+    
+  /* Link */
+  HTSMSG_FOREACH(f, l) {
+    if ((ec = epggrab_channel_find_by_id(htsmsg_field_get_str(f))))
+      save |= epggrab_channel_link(ec, ch);
+  }
+
+  /* Delete */
+  for (ecl = LIST_FIRST(&ch->ch_epggrab); ecl != NULL; ecl = n) {
+    n = LIST_NEXT(ecl, ecl_chn_link);
+    if (ecl->ecl_mark) {
+      epggrab_channel_link_delete(ecl);
+      save = 1;
+    }
+  }
+  return save;
+}
+
+static htsmsg_t *
+channel_class_epggrab_list ( void *o )
+{
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "epggrab/channel/list");
+  htsmsg_add_str(m, "event", "epggrabchannel");
+  e = htsmsg_create_map();
+  htsmsg_add_bool(e, "enum", 1);
+  htsmsg_add_msg(m, "params", e);
+  return m;
+}
+
 const idclass_t channel_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
@@ -240,6 +295,16 @@ const idclass_t channel_class = {
       .name     = "Icon",
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
+    },
+    {
+      .type     = PT_STR,
+      .islist   = 1,
+      .id       = "epggrab",
+      .name     = "EPG Source",
+      .set      = channel_class_epggrab_set,
+      .get      = channel_class_epggrab_get,
+      .list     = channel_class_epggrab_list,
+      .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_INT,
@@ -426,6 +491,9 @@ channel_create0
     free(ch->ch_name);
     ch->ch_name = strdup(name);
   }
+
+  /* EPG */
+  epggrab_channel_add(ch);
 
   return ch;
 }

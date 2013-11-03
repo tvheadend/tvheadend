@@ -153,9 +153,9 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
     htsmsg_add_str(m, "name", ch->name);
   if (ch->icon)
     htsmsg_add_str(m, "icon", ch->icon);
-  LIST_FOREACH(ecl, &ch->channels, link) {
+  LIST_FOREACH(ecl, &ch->channels, ecl_epg_link) {
     if (!a) a = htsmsg_create_list();
-    htsmsg_add_u32(a, NULL, channel_get_id(ecl->channel));
+    htsmsg_add_str(a, NULL, channel_get_uuid(ecl->ecl_channel));
   }
   if (a) htsmsg_add_msg(m, "channels", a);
   if (ch->number)
@@ -175,18 +175,9 @@ void epggrab_module_ch_add ( void *m, channel_t *ch )
 
 void epggrab_module_ch_rem ( void *m, channel_t *ch )
 {
-  epggrab_channel_t *egc;
-  epggrab_channel_link_t *egl;
-  epggrab_module_int_t *mod = m;
-  RB_FOREACH(egc, mod->channels, link) {
-    LIST_FOREACH(egl, &egc->channels, link) {
-      if (egl->channel == ch) {
-        LIST_REMOVE(egl, link);
-        free(egl);
-        break;
-      }
-    }
-  }
+  epggrab_channel_link_t *ecl;
+  while ((ecl = LIST_FIRST(&ch->ch_epggrab)))
+    epggrab_channel_link_delete(ecl);
 }
 
 void epggrab_module_ch_mod ( void *mod, channel_t *ch )
@@ -215,20 +206,14 @@ static void _epggrab_module_channel_load
     egc->number = u32;
   if ((a = htsmsg_get_list(m, "channels"))) {
     HTSMSG_FOREACH(f, a) {
-      if ((ch  = channel_find_by_id((uint32_t)f->hmf_s64))) {
-        epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
-        ecl->channel = ch;
-        LIST_INSERT_HEAD(&egc->channels, ecl, link);
-      }
+      if ((ch  = channel_find_by_uuid(f->hmf_str)))
+        epggrab_channel_link(egc, ch);
     }
 
   /* Compat with older 3.1 code */
   } else if (!htsmsg_get_u32(m, "channel", &u32)) {
-    if ((ch = channel_find_by_id(u32))) {
-      epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
-      ecl->channel = ch;
-      LIST_INSERT_HEAD(&egc->channels, ecl, link);
-    }
+    if ((ch = channel_find_by_id(u32)))
+      epggrab_channel_link(egc, ch);
   }
 }
 

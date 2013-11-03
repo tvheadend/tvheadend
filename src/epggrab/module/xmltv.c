@@ -553,8 +553,8 @@ static int _xmltv_parse_programme
 
   if(stop <= start || stop <= dispatch_clock) return 0;
 
-  LIST_FOREACH(ecl, &ch->channels, link)
-    save |= _xmltv_parse_programme_tags(mod, ecl->channel, tags,
+  LIST_FOREACH(ecl, &ch->channels, ecl_epg_link)
+    save |= _xmltv_parse_programme_tags(mod, ecl->ecl_channel, tags,
                                         start, stop, stats);
   return save;
 }

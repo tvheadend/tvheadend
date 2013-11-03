@@ -23,7 +23,6 @@
 #include "settings.h"
 #include "htsmsg.h"
 #include "channels.h"
-#include "service.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
@@ -42,33 +41,55 @@ int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
   return 0;
 }
 
+/* Destroy */
+void
+epggrab_channel_link_delete
+  ( epggrab_channel_link_t *ecl )
+{
+  LIST_REMOVE(ecl, ecl_chn_link);
+  LIST_REMOVE(ecl, ecl_epg_link);
+  if (ecl->ecl_epggrab->mod->ch_save)
+    ecl->ecl_epggrab->mod->ch_save(ecl->ecl_epggrab->mod, ecl->ecl_epggrab);
+  free(ecl);
+}
+
 /* Link epggrab channel to real channel */
-void epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
+int
+epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
 {
   epggrab_channel_link_t *ecl;
 
   /* No change */
-  if (!ch) return;
-  LIST_FOREACH(ecl, &ec->channels, link)
-    if (ecl->channel == ch) return;
+  if (!ch) return 0;
 
+  /* Already linked */
+  LIST_FOREACH(ecl, &ec->channels, ecl_epg_link) {
+    if (ecl->ecl_channel == ch) {
+      ecl->ecl_mark = 0;
+      return 0;
+    }
+  }
+
+  /* New link */
   tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
          ec->id, channel_get_name(ch));
   ecl = calloc(1, sizeof(epggrab_channel_link_t));
-  ecl->channel = ch;
-  LIST_INSERT_HEAD(&ec->channels, ecl, link);
-#if 0
+  ecl->ecl_channel = ch;
+  ecl->ecl_epggrab = ec;
+  LIST_INSERT_HEAD(&ec->channels, ecl, ecl_epg_link);
+  LIST_INSERT_HEAD(&ch->ch_epggrab, ecl, ecl_chn_link);
+#if TODO_CHAN_UPDATE
   if (ec->name && epggrab_channel_rename)
     channel_rename(ch, ec->name);
-  if (ec->icon && epggrab_channel_reicon)
-    channel_set_icon(ch, ec->icon);
   if (ec->number>0 && epggrab_channel_renumber)
     channel_set_number(ch, ec->number);
+  if (ec->icon && epggrab_channel_reicon)
+    channel_set_icon(ch, ec->icon);
 #endif
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
-
+  return 1;
 }
 
 /* Match and link (basically combines two funcs above for ease) */
@@ -84,18 +105,19 @@ int epggrab_channel_match_and_link ( epggrab_channel_t *ec, channel_t *ch )
 int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 {
   int save = 0;
-#if 0
-  epggrab_channel_link_t *ecl;
   if (!ec || !name) return 0;
   if (!ec->name || strcmp(ec->name, name)) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
-    if (epggrab_channel_rename)
+#if TODO_CHAN_UPDATE
+    if (epggrab_channel_rename) {
+      epggrab_channel_link_t *ecl;
       LIST_FOREACH(ecl, &ec->channels, link)
         channel_rename(ecl->channel, name);
+    }
+#endif
     save = 1;
   }
-#endif
   return save;
 }
 
@@ -103,18 +125,19 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
-#if 0
-  epggrab_channel_link_t *ecl;
   if (!ec->icon || strcmp(ec->icon, icon) ) {
   if (!ec | !icon) return 0;
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
-    if (epggrab_channel_reicon)
+#if TODO_CHAN_UPDATE
+    if (epggrab_channel_reicon) {
+      epggrab_channel_link_t *ecl;
       LIST_FOREACH(ecl, &ec->channels, link)
         channel_set_icon(ecl->channel, icon);
+    }
+#endif
     save = 1;
   }
-#endif
   return save;
 }
 
@@ -122,35 +145,34 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
 {
   int save = 0;
-#if 0
-  epggrab_channel_link_t *ecl;
   if (!ec || (number <= 0)) return 0;
   if (ec->number != number) {
     ec->number = number;
-    if (epggrab_channel_renumber)
+#if TODO_CHAN_UPDATE
+    if (epggrab_channel_renumber) {
+      epggrab_channel_link_t *ecl;
       LIST_FOREACH(ecl, &ec->channels, link)
         channel_set_number(ecl->channel, number);
+    }
+#endif
     save = 1;
   }
-#endif
   return save;
 }
 
 /* Channel settings updated */
 void epggrab_channel_updated ( epggrab_channel_t *ec )
 {
-#if 0
   channel_t *ch;
   if (!ec) return;
 
   /* Find a link */
   if (!LIST_FIRST(&ec->channels))
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    CHANNEL_FOREACH(ch)
       if (epggrab_channel_match_and_link(ec, ch)) break;
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
-#endif
 }
 
 /* ID comparison */
@@ -167,7 +189,6 @@ epggrab_channel_t *epggrab_channel_find
 {
   epggrab_channel_t *ec;
   static epggrab_channel_t *skel = NULL;
-  assert(owner);
   if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
   skel->id = (char*)id;
 
@@ -179,6 +200,7 @@ epggrab_channel_t *epggrab_channel_find
   } else {
     ec = RB_INSERT_SORTED(tree, skel, link, _ch_id_cmp);
     if (!ec) {
+      assert(owner);
       ec      = skel;
       skel    = NULL;
       ec->id  = strdup(id);
@@ -204,15 +226,11 @@ htsmsg_t *epggrab_channel_list ( void )
     if (mod->channels) {
       RB_FOREACH(ec, mod->channels, link) {
         e = htsmsg_create_map();
-        htsmsg_add_str(e, "module", mod->id);
-        htsmsg_add_str(e, "id",     ec->id);
-        if (ec->name)
-          htsmsg_add_str(e, "name",   ec->name);
         snprintf(name, sizeof(name), "%s|%s", mod->id, ec->id);
-        htsmsg_add_str(e, "mod-id", name);
+        htsmsg_add_str(e, "key", name);
         snprintf(name, sizeof(name), "%s: %s (%s)",
                  mod->name, ec->name, ec->id);
-        htsmsg_add_str(e, "mod-name", name);
+        htsmsg_add_str(e, "val", name);
         htsmsg_add_msg(m, NULL, e);
       }
     }
@@ -242,4 +260,26 @@ void epggrab_channel_mod ( channel_t *ch )
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->ch_mod) m->ch_mod(m, ch);
   }
+}
+
+const char *
+epggrab_channel_get_id ( epggrab_channel_t *ec )
+{
+  static char buf[1024];
+  epggrab_module_t *m = ec->mod;
+  snprintf(buf, sizeof(buf), "%s|%s", m->id, ec->id);
+  return buf;
+}
+
+epggrab_channel_t *
+epggrab_channel_find_by_id ( const char *id )
+{
+  char buf[1024];
+  char *mid, *cid;
+  epggrab_module_t *mod;
+  strncpy(buf, id, sizeof(buf));
+  if ((mid = strtok_r(buf, "|", &cid)) && cid)
+    if ((mod = epggrab_module_find_by_id(mid)) && mod->channels)
+      return epggrab_channel_find(mod->channels, cid, 0, NULL, NULL);
+  return NULL;
 }
