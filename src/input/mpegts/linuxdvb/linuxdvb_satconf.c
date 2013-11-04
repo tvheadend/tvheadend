@@ -431,13 +431,19 @@ linuxdvb_satconf_create
   
   /* Create elements */
   i = 0;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+    if (!lse->ls_lnb)
+      lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
+    if (lst->ports > 1 && !lse->ls_switch)
+      lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
     i++;
+  }
   for (; i < lst->ports; i++) {
     lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
     lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
-    if (lst->ports > 1)
-      lse->ls_switch = linuxdvb_switch_create0(NULL, NULL, lse, i, -1);
+    if (lst->ports > 1) {
+      lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+    }
   }
 
   return ls;
@@ -447,7 +453,7 @@ void
 linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
 {
   linuxdvb_satconf_ele_t *lse;
-  htsmsg_t *l, *e;
+  htsmsg_t *l, *e, *c;
   htsmsg_add_str(m, "type", ls->ls_type);
   idnode_save(&ls->ls_id, m);
   l = htsmsg_create_list();
@@ -455,6 +461,21 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
     e = htsmsg_create_map();
     idnode_save(&lse->ti_id, e);
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&lse->ti_id));
+    if (lse->ls_lnb) {
+      c = htsmsg_create_map();
+      idnode_save(&lse->ls_lnb->ld_id, c);
+      htsmsg_add_msg(e, "lnb_conf", c);
+    }
+    if (lse->ls_switch) {
+      c = htsmsg_create_map();
+      idnode_save(&lse->ls_switch->ld_id, c);
+      htsmsg_add_msg(e, "switch_conf", c);
+    }
+    if (lse->ls_rotor) {
+      c = htsmsg_create_map();
+      idnode_save(&lse->ls_rotor->ld_id, c);
+      htsmsg_add_msg(e, "rotor_conf", c);
+    }
     htsmsg_add_msg(l, NULL, e);
   }
   htsmsg_add_msg(m, "elements", l);

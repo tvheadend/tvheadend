@@ -97,8 +97,8 @@ const idclass_t linuxdvb_switch_class =
     },
     {
       .type   = PT_INT,
-      .id     = "Tone Burst",
-      .name   = "toneburst",
+      .id     = "toneburst",
+      .name   = "Tone Burst",
       .off    = offsetof(linuxdvb_switch_t, ls_toneburst),
       .list   = linuxdvb_switch_class_toneburst_list
     },
