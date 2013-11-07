@@ -409,7 +409,7 @@ struct mpegts_input
 
   int mi_instance;
 
-  char *mi_displayname;
+  char *mi_name;
 
   int mi_priority;
 

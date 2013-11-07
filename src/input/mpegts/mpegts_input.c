@@ -34,8 +34,10 @@
 static const char *
 mpegts_input_class_get_title ( idnode_t *in )
 {
+  static char buf[512];
   mpegts_input_t *mi = (mpegts_input_t*)in;
-  return mi->mi_displayname;
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  return buf;
 }
 
 const idclass_t mpegts_input_class =
@@ -63,7 +65,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_STR,
       .id       = "displayname",
       .name     = "Name",
-      .off      = offsetof(mpegts_input_t, mi_displayname),
+      .off      = offsetof(mpegts_input_t, mi_name),
       .notify   = idnode_notify_title_changed,
     },
     {}
@@ -83,8 +85,8 @@ mpegts_input_is_enabled ( mpegts_input_t *mi )
 static void
 mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
-  if (mi->mi_displayname)
-    strncpy(buf, mi->mi_displayname, len);
+  if (mi->mi_name)
+    strncpy(buf, mi->mi_name, len);
   else
     *buf = 0;
 }
@@ -528,9 +530,10 @@ mpegts_input_stream_status
     }
   }
 
-  mm->mm_display_name(mm, buf, sizeof(buf));
   st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
-  st->input_name  = strdup(mi->mi_displayname?:"");
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  st->input_name  = strdup(buf);
+  mm->mm_display_name(mm, buf, sizeof(buf));
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;

@@ -912,8 +912,8 @@ linuxdvb_frontend_added
   }
 
   /* Defaults */
-  if (!lfe->mi_displayname)
-    lfe->mi_displayname = strdup(fe_path);
+  if (!lfe->mi_name)
+    lfe->mi_name = strdup(fe_path);
 
   /* Copy info */
   lfe->lfe_number = fe_num;
