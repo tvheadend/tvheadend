@@ -104,6 +104,20 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
 }
 
 /*
+ * Check if enabled
+ */
+static int
+linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
+{
+  linuxdvb_frontend_t *lfe;
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
+    if (lfe->mi_is_enabled((mpegts_input_t*)lfe))
+      return 1;
+  }
+  return 0;
+}
+
+/*
  * Create
  */
 linuxdvb_adapter_t *
@@ -124,6 +138,7 @@ linuxdvb_adapter_create0
   LIST_INSERT_HEAD(&ld->ld_adapters, la, la_link);
   la->la_device     = ld;
   la->la_dvb_number = -1;
+  la->la_is_enabled = linuxdvb_adapter_is_enabled;
 
   /* No conf */
   if (!conf)

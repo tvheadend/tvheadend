@@ -92,6 +92,11 @@ struct linuxdvb_adapter
    * Frontends
    */
   LIST_HEAD(,linuxdvb_frontend) la_frontends;
+
+  /*
+  * Functions
+  */
+  int (*la_is_enabled) ( linuxdvb_adapter_t *la );
 };
 
 struct linuxdvb_frontend

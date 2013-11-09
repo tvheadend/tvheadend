@@ -576,25 +576,24 @@ capmt_thread(void *aux)
 
       /* open connection to emulated ca0 device */
       if (!capmt->capmt_oscam) {
-        bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0], capmt->capmt_port);
+        bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0],
+                                          capmt->capmt_port);
       } else {
-        int i;
+        int i, n;
         extern const idclass_t linuxdvb_adapter_class;
         linuxdvb_adapter_t *la;
         idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
         for (i = 0; i < is->is_count; i++) {
           la = (linuxdvb_adapter_t*)is->is_array[i];
-#if TODO_FIXME
-          if (!la || !la->mi_is_enabled) continue;
-          if (!la->mi_is_enabled((mpegts_input_t*)la)) continue;
-#endif
-          if (la->la_dvb_number > MAX_CA) {
+	  if (!la || !la->la_is_enabled(la)) continue;
+          n = la->la_dvb_number;
+          if (n < 0 || n > MAX_CA) {
             tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
             continue;
           }
-          tvhlog(LOG_INFO, "capmt", "Creating capmt UDP socket for adapter %d",
-                 la->la_dvb_number);
-          bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[la->la_dvb_number], 9000 + la->la_dvb_number);
+          tvhlog(LOG_INFO, "capmt", "created UDP socket %d", n);
+          bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[n],
+                                            capmt->capmt_port + n);
         }
       }
       if (bind_ok)
