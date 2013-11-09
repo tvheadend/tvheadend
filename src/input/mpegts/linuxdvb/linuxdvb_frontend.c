@@ -414,15 +414,13 @@ linuxdvb_frontend_default_tables
 
   /* ATSC */
   if (lfe->lfe_info.type == FE_ATSC) {
-#if 0
     int tableid;
-    if (lc->lm_tuning.dmc_fe_params.u.vsb.modulation == VSB_8)
-      tableid = ATSC_VCT_TERR;
+    if (lm->lm_tuning.dmc_fe_params.u.vsb.modulation == VSB_8)
+      tableid = DVB_VCT_T_BASE;
     else
-      tableid = ATSC_VCT_CAB;
-    mpegts_table_add(mm, tableid, 0xff, atsc_vct_callback,
-                     NULL, "vct", MT_QUICKREQ | MT_CRC, ATSC_VCT_PID);
-#endif
+      tableid = DVB_VCT_C_BASE;
+    mpegts_table_add(mm, tableid, DVB_VCT_MASK, atsc_vct_callback,
+                     NULL, "vct", MT_QUICKREQ | MT_CRC, DVB_VCT_PID);
 
   /* DVB */
   } else {

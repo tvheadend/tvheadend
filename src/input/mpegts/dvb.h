@@ -37,6 +37,7 @@ struct mpegts_table;
 #define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
+#define DVB_VCT_PID                   0x1FFB
 
 /* Tables */
 
@@ -57,6 +58,10 @@ struct mpegts_table;
 
 #define DVB_BAT_BASE                  0x48
 #define DVB_BAT_MASK                  0xF8
+
+#define DVB_VCT_T_BASE                0xC8
+#define DVB_VCT_C_BASE                0xC9
+#define DVB_VCT_MASK                  0xFF
 
 #define DVB_TELETEXT_BASE             0x2000
 
@@ -181,6 +186,8 @@ int dvb_bat_callback
 int dvb_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_tdt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int atsc_vct_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 
 /*

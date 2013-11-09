@@ -220,6 +220,10 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
                    NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                    NULL, "bat", MT_CRC, DVB_BAT_PID);
+  mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
+                   NULL, "vct", MT_CRC, DVB_VCT_PID);
+  mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
+                   NULL, "vct", MT_CRC, DVB_VCT_PID);
 #if 0
   mpegts_table_add(mm, 0x1, 0xff, dvb_cat_callback, NULL, "cat",
                    MT_CRC, 1);

@@ -1009,6 +1009,99 @@ done:
 }
 
 /*
+ * ATSC VCT processing
+ */
+  /* Done */
+int
+atsc_vct_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int i, r, sect, last, ver, extraid, save, dlen;
+  int maj, min, count;
+  uint16_t tsid, sid, type;
+  char chname[256];
+  mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_network_t *mn = mm->mm_network;
+  mpegts_service_t *s;
+  mpegts_table_state_t  *st  = NULL;
+
+  /* Validate */
+  if (tableid != 0xc8 && tableid != 0xc9) return -1;
+
+  /* Extra ID */
+  tsid    = ptr[0] << 8 | ptr[1];
+  extraid = tsid;
+
+  /* Begin */
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) return r;
+  tvhdebug("vct", "tsid %04X (%d)", tsid, tsid);
+
+  /* # channels */
+  count = ptr[6];
+  tvhdebug("vct", "channel count %d", count);
+  ptr  += 7;
+  len  -= 7;
+  for (i = 0; i < count && len >= 32; i++) {
+    dlen = ((ptr[30] & 0x3) << 8) | ptr[31];
+    if (dlen + 32 > len) return -1;
+
+    /* Extract fields */
+    atsc_utf16_to_utf8(ptr, 7, chname, sizeof(chname));
+    maj  = (ptr[14] & 0xF) << 6 | ptr[15] >> 2;
+    min  = (ptr[15] & 0x3) << 2 | ptr[16];
+    tsid = (ptr[22]) << 8 | ptr[23];
+    sid  = (ptr[24]) << 8 | ptr[25];
+    type = ptr[27] & 0x3f;
+    tvhdebug("vct", "tsid   %04X (%d)", tsid, tsid);
+    tvhdebug("vct", "sid    %04X (%d)", sid, sid);
+    tvhdebug("vct", "chname %s",    chname);
+    tvhdebug("vct", "chnum  %d.%d", maj, min);
+    tvhdebug("vct", "type   %02X (%d)", type, type);
+
+    /* Find mux */
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+      if (mm->mm_tsid == tsid)
+        break;
+    if (!mm) goto next;
+
+    /* Find the service */
+    if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
+      goto next;
+
+    /* Update */
+    if (s->s_dvb_servicetype != type) {
+      s->s_dvb_servicetype = type;
+      save = 1;
+    }
+    if (strcmp(s->s_dvb_svcname ?: "", chname)) {
+      tvh_str_set(&s->s_dvb_svcname, chname);
+      save = 1;
+    }
+    if (s->s_dvb_channel_num != maj) {
+      // TODO: ATSC channel numbering is plain weird!
+      //       could shift the major (*100 or something) and append
+      //       minor, but that'll probably confuse people, as will this!
+      s->s_dvb_channel_num = maj;
+      save = 1;
+    }
+
+    /* Save */
+    if (save)
+      s->s_config_save((service_t*)s);
+
+    /* Move on */
+next:
+    ptr += dlen + 32;
+    len -= dlen + 32;
+  }
+
+  return dvb_table_end(mt, st, sect);
+}
+
+
+/*
  * DVB BAT processing
  */
 int
