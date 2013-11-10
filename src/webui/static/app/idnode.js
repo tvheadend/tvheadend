@@ -155,7 +155,7 @@ tvheadend.IdNodeField = function (conf)
 
     var st = this.store;
     return function (v) {
-      if (st && st.find) {
+      if (st && st instanceof Ext.data.JsonStore) {
         var t = []
         var d;
         if (v.push)
@@ -283,7 +283,7 @@ tvheadend.idnode_editor_field = function(f, create)
       value           : value,
       disabled        : d,
       width           : 300,
-      mode            : 'remote',
+      mode            : 'local',
       valueField      : 'key',
       displayField    : 'val',
       store           : st,
@@ -297,9 +297,11 @@ tvheadend.idnode_editor_field = function(f, create)
         }
       }
     });
-    st.on('load', function() {
-      r.setValue(r.getValue());
-    });
+    if (st.on) {
+      st.on('load', function() {
+        r.setValue(r.getValue());
+      });
+    }
     return r;
     /* TODO: listeners for regexp?
     listeners       : { 
