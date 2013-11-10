@@ -276,21 +276,31 @@ tvheadend.idnode_editor_field = function(f, create)
     var cons = Ext.form.ComboBox;
     if (f.list)
       cons = Ext.ux.form.LovCombo;
-    return new cons({
+    var st = tvheadend.idnode_enum_store(f);
+    var r = new cons({
       fieldLabel      : f.caption,
       name            : f.id,
       value           : value,
       disabled        : d,
       width           : 300,
-      mode            : 'local',
+      mode            : 'remote',
       valueField      : 'key',
       displayField    : 'val',
-      store           : tvheadend.idnode_enum_store(f),
+      store           : st,
       typeAhead       : true, // TODO: this does strange things in multi
       forceSelection  : false,
       triggerAction   : 'all',
-      emptyText       :'Select ' + f.caption +' ...'
+      emptyText       :'Select ' + f.caption +' ...',
+      listeners       : {
+        beforequery: function(qe){
+          delete qe.combo.lastQuery;
+        }
+      }
     });
+    st.on('load', function() {
+      r.setValue(r.getValue());
+    });
+    return r;
     /* TODO: listeners for regexp?
     listeners       : { 
       keyup: function() {
