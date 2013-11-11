@@ -361,6 +361,7 @@ tvheadend.idnode_editor_form = function ( d, panel )
 {
   var af = [];
   var rf = [];
+  var df = [];
 
   /* Fields */
   for (var i = 0; i < d.length; i++) {
@@ -371,7 +372,17 @@ tvheadend.idnode_editor_form = function ( d, panel )
     else if (d[i].advanced)
       af.push(f);
     else
-      panel.add(f);
+      df.push(f);
+  }
+  if (df.length) {
+    panel.add(new Ext.form.FieldSet({
+      title       : 'Basic Settings',
+      autoHeight  : true,
+      autoWidth   : true,
+      collapsible : true,
+      collapsed   : false,
+      items       : df
+    }));
   }
   if (af.length) {
     panel.add(new Ext.form.FieldSet({
@@ -379,17 +390,17 @@ tvheadend.idnode_editor_form = function ( d, panel )
       autoHeight  : true,
       autoWidth   : true,
       collapsible : true,
-      collapsed   : true,
+      collapsed   : false,//true,
       items       : af
     }));
   }
   if (rf.length) {
     panel.add(new Ext.form.FieldSet({
-      title       : 'Read-only info',
+      title       : 'Read-only Info',
       autoHeight  : true,
       autoWidth   : true,
       collapsible : true,
-      collapsed   : true,
+      collapsed   : false,//true,
       items       : rf
     }));
   }
@@ -962,6 +973,7 @@ tvheadend.idnode_tree = function (conf)
     loader  : loader,
     flex    : 1,
     border  : false,
+    animate : false,
     root    : new Ext.tree.AsyncTreeNode({
       id    : conf.root  || 'root',
       text  : conf.title || ''
@@ -990,7 +1002,6 @@ tvheadend.idnode_tree = function (conf)
     }
   });
 
-
   var panel = new Ext.Panel({
     title          : conf.title || '',
     layout        : 'hbox',
@@ -1004,8 +1015,9 @@ tvheadend.idnode_tree = function (conf)
   });
 
 
-  tree.on('render', function() {
-    tree.getRootNode().expand();
+  tree.on('beforerender', function() {
+    // To be honest this isn't quite right, but it'll do
+    tree.expandAll();
   });
 
   return panel;
