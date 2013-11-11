@@ -26,36 +26,6 @@
 #include "access.h"
 #include "api.h"
 
-static int
-api_input_status
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  int c = 0;
-  htsmsg_t *l, *e;
-  tvh_input_t *ti;
-  tvh_input_stream_t *st;
-  tvh_input_stream_list_t stl = { 0 };
-  
-  TVH_INPUT_FOREACH(ti)
-    ti->ti_get_streams(ti, &stl);
-
-  l = htsmsg_create_list();
-  while ((st = LIST_FIRST(&stl))) {
-    e = tvh_input_stream_create_msg(st);
-    htsmsg_add_msg(l, NULL, e);
-    tvh_input_stream_destroy(st);
-    LIST_REMOVE(st, link);
-    free(st);
-    c++;
-  }
-    
-  *resp = htsmsg_create_map();
-  htsmsg_add_msg(*resp, "entries", l);
-  htsmsg_add_u32(*resp, "totalCount", c);
-
-  return 0;
-}
-
 static idnode_set_t *
 api_input_hw_tree ( void )
 {
@@ -69,7 +39,6 @@ api_input_hw_tree ( void )
 void api_input_init ( void )
 {
   static api_hook_t ah[] = {
-    { "input/status",  ACCESS_ANONYMOUS, api_input_status,  NULL },
     { "hardware/tree", ACCESS_ADMIN,     api_idnode_tree, api_input_hw_tree }, 
     { NULL },
   };

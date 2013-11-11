@@ -59,4 +59,6 @@ int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
 
 char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 
+htsmsg_t *tcp_server_connections ( void );
+
 #endif /* TCP_H_ */

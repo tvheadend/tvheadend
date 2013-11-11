@@ -44,7 +44,6 @@
 #include "epggrab/private.h"
 #include "config2.h"
 #include "lang_codes.h"
-#include "subscriptions.h"
 #include "imagecache.h"
 #include "timeshift.h"
 #include "tvhtime.h"
@@ -1335,40 +1334,6 @@ extjs_dvrlist_failed(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-static int
-extjs_subscriptions(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array;
-  th_subscription_t *s;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  out = htsmsg_create_map();
-  array = htsmsg_create_list();
-
-  LIST_FOREACH(s, &subscriptions, ths_global_link)
-    htsmsg_add_msg(array, NULL, subscription_create_msg(s));
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_add_msg(out, "entries", array);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-
-/**
- *
- */
 void
 extjs_service_delete(htsmsg_t *in)
 {
@@ -1795,7 +1760,6 @@ extjs_start(void)
   http_path_add("/dvrlist_finished", NULL, extjs_dvrlist_finished, ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist_failed",   NULL, extjs_dvrlist_failed,   ACCESS_WEB_INTERFACE);
   http_path_add("/dvr_containers",   NULL, extjs_dvr_containers,   ACCESS_WEB_INTERFACE);
-  http_path_add("/subscriptions",    NULL, extjs_subscriptions,    ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);

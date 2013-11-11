@@ -30,6 +30,7 @@
 #include "plumbing/tsfix.h"
 #include "imagecache.h"
 #include "descrambler.h"
+#include "notify.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -1873,6 +1874,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
+    notify_reload("connections");
   }
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))

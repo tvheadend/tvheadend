@@ -33,6 +33,7 @@
 #include "tcp.h"
 #include "http.h"
 #include "access.h"
+#include "notify.h"
 
 static void *http_server;
 
@@ -497,8 +498,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
       n = base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
       authbuf[n] = 0;
       if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
-	hc->hc_username = strdup(argv[0]);
-	hc->hc_password = strdup(argv[1]);
+	      hc->hc_username = strdup(argv[0]);
+	      hc->hc_password = strdup(argv[1]);
+        // No way to actually track this
       }
     }
   }

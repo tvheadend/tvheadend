@@ -31,7 +31,7 @@ tvheadend.status_subs = function() {
 			type : 'date',
 			dateFormat : 'U' /* unix time */
 		} ],
-		url : 'subscriptions',
+		url : 'api/status/subscriptions',
 		autoLoad : true,
 		id : 'id'
 	});
@@ -131,7 +131,7 @@ tvheadend.status_subs = function() {
 		loadMask : true,
 		stripeRows : true,
 		disableSelection : true,
-		title : 'Active subscriptions',
+		title : 'Subscriptions',
 		iconCls : 'eye',
 		store : tvheadend.subsStore,
 		cm : subsCm,
@@ -176,7 +176,7 @@ tvheadend.status_streams = function() {
 			name : 'bps'
 		},
 		],
-		url : 'api/input/status',
+		url : 'api/status/inputs',
 		autoLoad : true,
 		id : 'uuid'
 	});
@@ -272,16 +272,93 @@ tvheadend.status_streams = function() {
         return panel;
 }
 
-tvheadend.status = function() {
+/**
+ *
+ */
+tvheadend.status_conns = function() {
 
-        var panel = new Ext.Panel({
-                border: false,
-		layout : 'vbox',
-		title : 'Status',
+	var store = new Ext.data.JsonStore({
+		root : 'entries',
+		totalProperty : 'totalCount',
+		fields : [ {
+      name : 'id'
+    }, {
+			name : 'type'
+		}, {
+			name : 'peer'
+		}, {
+			name : 'user'
+		}, {
+			name : 'started',
+			type : 'date',
+			dateFormat : 'U' /* unix time */
+		} ],
+		url : 'api/status/connections',
+		autoLoad : true,
+		id : 'id'
+	});
+
+	tvheadend.comet.on('connections', function(m) {
+		if (m.reload != null) store.reload();
+	});
+
+	function renderDate(value) {
+		var dt = new Date(value);
+		return dt.format('Y-m-d H:i:s');
+	}
+
+	var cm = new Ext.grid.ColumnModel([{
+		width : 50,
+		id : 'type',
+		header : "Type",
+		dataIndex : 'type'
+	}, {
+		width : 50,
+		id : 'peer',
+		header : "IP Address",
+		dataIndex : 'peer'
+	}, {
+		width : 50,
+		id : 'user',
+		header : "Username",
+		dataIndex : 'user'
+	}, {
+		width : 50,
+		id : 'started',
+		header : "Started",
+		dataIndex : 'started',
+		renderer : renderDate
+	} ]);
+
+	var panel = new Ext.grid.GridPanel({
+    border: false,
+		loadMask : true,
+		stripeRows : true,
+		disableSelection : true,
+		title : 'Connections',
 		iconCls : 'eye',
-		items : [ new tvheadend.status_subs, new tvheadend.status_streams ]
-        });
+		store : store,
+		cm : cm,
+    flex: 1,
+		viewConfig : {
+			forceFit : true
+		}
+	});
+  return panel;
+}
 
+tvheadend.status = function() {
+  var panel = new Ext.TabPanel({
+		title : 'Status',
+    autoScroll : true,
+    activeTab : 0,
+		iconCls : 'eye',
+		items : [
+      new tvheadend.status_subs,
+      new tvheadend.status_streams,
+      new tvheadend.status_conns
+    ]
+  });
 	return panel;
 }
 

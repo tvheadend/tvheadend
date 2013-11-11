@@ -397,8 +397,6 @@ typedef struct tcp_server_launch {
 
 static LIST_HEAD(, tcp_server_launch) tcp_server_launches = { 0 };
 
-static gtimer_t tcp_server_status_timer;
-
 /**
  *
  */
@@ -438,6 +436,7 @@ tcp_server_start(void *aux)
   time(&tsl->started);
   pthread_mutex_lock(&global_lock);
   LIST_INSERT_HEAD(&tcp_server_launches, tsl, link);
+  notify_reload("connections");
   pthread_mutex_unlock(&global_lock);
   tsl->ops.start(tsl->fd, &tsl->opaque, &tsl->peer, &tsl->self);
 
@@ -445,6 +444,7 @@ tcp_server_start(void *aux)
   if (tsl->ops.stop) tsl->ops.stop(tsl->opaque);
   pthread_mutex_lock(&global_lock);
   LIST_REMOVE(tsl, link);
+  notify_reload("connections");
   pthread_mutex_unlock(&global_lock);
 
   free(tsl);
@@ -600,20 +600,19 @@ tcp_server_create
 /*
  * Connections status
  */
-static void
-tcp_server_status_callback ( void *opaque )
+htsmsg_t *
+tcp_server_connections ( void )
 {
   tcp_server_launch_t *tsl;
   lock_assert(&global_lock);
   htsmsg_t *l, *e, *m;
   char buf[1024];
+  int c = 0;
   
-  /* RE-arm */
-  gtimer_arm(&tcp_server_status_timer, tcp_server_status_callback, NULL, 1);
-
   /* Build list */
   l = htsmsg_create_list();
   LIST_FOREACH(tsl, &tcp_server_launches, link) {
+    c++;
     e = htsmsg_create_map();
     tcp_get_ip_str((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
     htsmsg_add_str(e, "peer", buf);
@@ -625,7 +624,8 @@ tcp_server_status_callback ( void *opaque )
   /* Output */
   m = htsmsg_create_map();
   htsmsg_add_msg(m, "entries", l);
-  notify_by_msg("tcp_connections", m);
+  htsmsg_add_u32(m, "totalCount", c);
+  return m;
 }
 
 /**
@@ -641,9 +641,4 @@ tcp_server_init(int opt_ipv6)
 
   tcp_server_poll = tvhpoll_create(10);
   tvhthread_create(&tid, NULL, tcp_server_loop, NULL, 1);
-
-  /* Status timer */
-  gtimer_arm(&tcp_server_status_timer, tcp_server_status_callback, NULL, 1);
 }
-
-
