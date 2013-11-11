@@ -777,13 +777,14 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
  *
  */
 static void
-http_serve(int fd, void *opaque, struct sockaddr_storage *peer, 
+http_serve(int fd, void **opaque, struct sockaddr_storage *peer, 
 	   struct sockaddr_storage *self)
 {
   htsbuf_queue_t spill;
   http_connection_t hc;
   
   memset(&hc, 0, sizeof(http_connection_t));
+  *opaque = &hc;
 
   TAILQ_INIT(&hc.hc_args);
   TAILQ_INIT(&hc.hc_req_args);
@@ -806,8 +807,20 @@ http_serve(int fd, void *opaque, struct sockaddr_storage *peer,
   htsbuf_queue_flush(&hc.hc_reply);
   htsbuf_queue_flush(&spill);
   close(fd);
+
+  pthread_mutex_lock(&global_lock);
+  *opaque = NULL;
+  pthread_mutex_unlock(&global_lock);
 }
 
+static void
+http_server_status ( void *opaque, htsmsg_t *m )
+{
+  http_connection_t *hc = opaque;
+  htsmsg_add_str(m, "type", "HTTP");
+  if (hc->hc_username)
+    htsmsg_add_str(m, "user", hc->hc_username);
+}
 
 /**
  *  Fire up HTTP server
@@ -815,5 +828,10 @@ http_serve(int fd, void *opaque, struct sockaddr_storage *peer,
 void
 http_server_init(const char *bindaddr)
 {
-  http_server = tcp_server_create(bindaddr, tvheadend_webui_port, http_serve, NULL);
+  static tcp_server_ops_t ops = {
+    .start  = http_serve,
+    .stop   = NULL,
+    .status = http_server_status,
+  };
+  http_server = tcp_server_create(bindaddr, tvheadend_webui_port, &ops, NULL);
 }

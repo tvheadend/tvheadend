@@ -2078,7 +2078,7 @@ htsp_write_scheduler(void *aux)
  *
  */
 static void
-htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
+htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 	   struct sockaddr_storage *self)
 {
   htsp_connection_t htsp;
@@ -2088,6 +2088,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
   tcp_get_ip_str((struct sockaddr*)source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
+  *opaque = &htsp;
 
   TAILQ_INIT(&htsp.htsp_active_output_queues);
 
@@ -2122,6 +2123,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
    */
 
   pthread_mutex_lock(&global_lock);
+
+  *opaque = NULL;
 
   gtimer_disarm(&htsp.htsp_timer);
 
@@ -2168,6 +2171,18 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
   close(fd);
 }
 
+/*
+ * Status callback
+ */
+static void
+htsp_server_status ( void *opaque, htsmsg_t *m )
+{
+  htsp_connection_t *htsp = opaque;
+  htsmsg_add_str(m, "type", "HTSP");
+  if (htsp->htsp_username)
+    htsmsg_add_str(m, "user", htsp->htsp_username);
+}
+
 /**
  *  Fire up HTSP server
  */
@@ -2175,9 +2190,14 @@ void
 htsp_init(const char *bindaddr)
 {
   extern int tvheadend_htsp_port_extra;
-  htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, htsp_serve, NULL);
+  static tcp_server_ops_t ops = {
+    .start  = htsp_serve,
+    .stop   = NULL,
+    .status = htsp_server_status,
+  };
+  htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);
   if(tvheadend_htsp_port_extra)
-    htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, htsp_serve, NULL);
+    htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
 }
 
 /* **************************************************************************

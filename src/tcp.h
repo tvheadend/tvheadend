@@ -20,6 +20,16 @@
 #define TCP_H_
 
 #include "htsbuf.h"
+#include "htsmsg.h"
+
+typedef struct tcp_server_ops
+{
+  void (*start)  (int fd, void **opaque,
+                     struct sockaddr_storage *peer,
+                     struct sockaddr_storage *self);
+  void (*stop)   (void *opaque);
+  void (*status) (void *opaque, htsmsg_t *m);
+} tcp_server_ops_t;
 
 extern int tcp_preferred_address_family;
 
@@ -32,7 +42,8 @@ typedef void (tcp_server_callback_t)(int fd, void *opaque,
 				     struct sockaddr_storage *peer,
 				     struct sockaddr_storage *self);
 
-void *tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque);
+void *tcp_server_create(const char *bindaddr, int port, 
+  tcp_server_ops_t *ops, void *opaque);
 
 int tcp_read(int fd, void *buf, size_t len);
 
