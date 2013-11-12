@@ -441,14 +441,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_unlock(&epggrab_mutex);
     htsmsg_add_msg(out, "entries", array);
 
-  /* Channel list */
-  } else if (!strcmp(op, "channelList")) {
-    out = htsmsg_create_map();
-    pthread_mutex_lock(&global_lock);
-    array = epggrab_channel_list();
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_add_msg(out, "entries", array);
-
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
     int save = 0;

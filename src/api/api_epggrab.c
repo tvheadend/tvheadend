@@ -28,7 +28,7 @@ api_epggrab_channel_list
 {
   htsmsg_t *m;
   pthread_mutex_lock(&global_lock);
-  m = epggrab_channel_list();
+  m = epggrab_channel_list(0);
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", m);

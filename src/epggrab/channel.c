@@ -215,7 +215,7 @@ epggrab_channel_t *epggrab_channel_find
  * Global routines
  * *************************************************************************/
 
-htsmsg_t *epggrab_channel_list ( void )
+htsmsg_t *epggrab_channel_list ( int ota )
 {
   char name[500];
   epggrab_module_t *mod;
@@ -223,6 +223,7 @@ htsmsg_t *epggrab_channel_list ( void )
   htsmsg_t *e, *m;
   m = htsmsg_create_list();
   LIST_FOREACH(mod, &epggrab_modules, link) {
+    if (!ota && (mod->type == EPGGRAB_OTA)) continue;
     if (mod->channels) {
       RB_FOREACH(ec, mod->channels, link) {
         e = htsmsg_create_map();
@@ -282,4 +283,10 @@ epggrab_channel_find_by_id ( const char *id )
     if ((mod = epggrab_module_find_by_id(mid)) && mod->channels)
       return epggrab_channel_find(mod->channels, cid, 0, NULL, NULL);
   return NULL;
+}
+
+int
+epggrab_channel_is_ota ( epggrab_channel_t *ec )
+{
+  return ec->mod->type == EPGGRAB_OTA;
 }

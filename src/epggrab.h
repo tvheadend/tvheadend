@@ -98,7 +98,7 @@ typedef struct epggrab_channel_link
 /*
  * Access functions
  */
-htsmsg_t*         epggrab_channel_list      ( void );
+htsmsg_t*         epggrab_channel_list      ( int ota );
 
 /*
  * Mutators
@@ -118,6 +118,11 @@ int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch );
 const char *epggrab_channel_get_id ( epggrab_channel_t *ch );
 epggrab_channel_t *epggrab_channel_find_by_id ( const char *id );
 
+/*
+ * Check type
+ */
+int epggrab_channel_is_ota ( epggrab_channel_t *ec );
+
 /* **************************************************************************
  * Grabber Modules
  * *************************************************************************/
@@ -130,9 +135,9 @@ struct epggrab_module
   LIST_ENTRY(epggrab_module)   link;      ///< Global list link
 
   enum {
+    EPGGRAB_OTA,
     EPGGRAB_INT,
     EPGGRAB_EXT,
-    EPGGRAB_OTA
   }                            type;      ///< Grabber type
   const char                   *id;       ///< Module identifier
   const char                   *name;     ///< Module name (for display)

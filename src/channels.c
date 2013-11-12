@@ -211,8 +211,10 @@ channel_class_epggrab_get ( void *o )
   channel_t *ch = o;
   htsmsg_t *l = htsmsg_create_list();
   epggrab_channel_link_t *ecl;
-  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link)
-    htsmsg_add_str(l, NULL, epggrab_channel_get_id(ecl->ecl_epggrab));
+  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link) {
+    if (!epggrab_channel_is_ota(ecl->ecl_epggrab))
+      htsmsg_add_str(l, NULL, epggrab_channel_get_id(ecl->ecl_epggrab));
+  }
   return l;
 }
 
@@ -227,8 +229,10 @@ channel_class_epggrab_set ( void *o, const void *v )
   epggrab_channel_link_t *ecl, *n;
 
   /* mark for deletion */
-  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link)
-    ecl->ecl_mark = 1;
+  LIST_FOREACH(ecl, &ch->ch_epggrab, ecl_chn_link) {
+    if (!epggrab_channel_is_ota(ecl->ecl_epggrab))
+      ecl->ecl_mark = 1;
+  }
     
   /* Link */
   HTSMSG_FOREACH(f, l) {
