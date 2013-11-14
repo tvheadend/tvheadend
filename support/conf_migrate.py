@@ -1,41 +1,42 @@
 #!/usr/bin/env python
 #
-# Load all channels/service info and attempt to create a translation from
-# the old setup to the new
+# Migration version 3 configuration to version 4
+#
+# Files that need updating:
+#   autorec/*       : Auto-mapped by code
+#   dvr/log/*       : Auto-mapped by code
+#   channels/*      : map services
+#   dvb/*           : map network/mux but nothing else
+#   epggrab/otamux  : remove
+#     
+# Create new "version" file to validate config version
+# 
+
+#
+# Imports
 #
 
 import os, sys, re, json, glob
 import pprint
+from optparse import OptionParser
 
-# Parse args
-root = '.'
-if len(sys.argv) > 1:
-  root = sys.argv[1]
+#
+# Utilities
+#
 
 # Generate UUID
 def uuid ():
   import uuid
   return uuid.uuid4().hex
 
-# Load channels
-chns = {}
-for f in glob.glob(os.path.join(root, 'channels', '*')):
-  try:
-    s = open(f).read()
-    d = json.loads(s)
-    chns[d['name']] = {
-      'svcs': [],
-      'name': d['name'] if 'name' in d else None,
-      'icon': d['icon'] if 'icon' in d else None,
-      'tags': d['tags'] if 'tags' in d else None,
-      'num' : d['channel_number'] if 'channel_number' in d else 0
-    }
-  except: pass
+#
+# DVB - input
+#
 
-# Load adapters
-adps = {}
-for f in glob.glob(os.path.join(root, 'dvbadapters', '*')):
-  try:
+# Adapters
+def load_adapters ( path ):
+  adps = {}
+  for f in glob.glob(os.path.join(path, 'dvbadapters', '*')):
     s = open(f).read()
     d = json.loads(s)
     t = d['type']
@@ -47,206 +48,327 @@ for f in glob.glob(os.path.join(root, 'dvbadapters', '*')):
       'type' : t,
       'nets' : {}
     }
-  except: pass
+  
+  # Done
+  return adps
 
-# Load muxes
-muxs = {}
-for f in glob.glob(os.path.join(root, 'dvbmuxes', '*', '*')):
-  try:
+# Muxes
+def load_muxes ( path, adps ):
+  maps = {
+    'transportstreamid' : 'tsid',
+    'originalnetworkid' : 'onid',
+    'initialscan'       : 'initscan',
+    'default_authority' : 'cridauth'
+  }
+  muxs = {}
+  for f in glob.glob(os.path.join(path, 'dvbmuxes', '*', '*')):
     a = os.path.basename(os.path.dirname(f))
     if a not in adps: continue
+  
     t = adps[a]['type']
     s = open(f).read()
     d = json.loads(s)
-    k = '%s:%04X:%04X' % (t, d['originalnetworkid'], d['transportstreamid'])
-    m = {
-      'key' : k,
-      'type': t,
-      'onid': d['originalnetworkid'],
-      'tsid': d['transportstreamid'],
-      'freq': d['frequency'],
-      'symr': d['symbol_rate'] if 'symbol_rate' in d else None,
-      'fec' : d['fec'] if 'fec' in d else None,
-      'fech': d['fec_hi'] if 'fec_hi' in d else None,
-      'fecl': d['fec_lo'] if 'fec_lo' in d else None,
-      'gi'  : d['guard_interval'] if 'guard_interval' in d else None,
-      'hier': d['hierarchy'] if 'hierarchy' in d else None,
-      'bw'  : d['bandwidth'] if 'bandwidth' in d else None,
-      'txm' : d['tranmission_mode'] if 'tranmission_mode' in d else None,
-      'mod' : d['modulation'] if 'modulation' in d else None,
-      'del' : d['delivery_system'] if 'delivery_system' in d else None,
-      'cons': d['constellation'] if 'constellation' in d else None,
-      'pol' : d['polarisation'] if 'polarisation' in d else None,
-      'svcs': {}
-    }
+    
+    if not 'transportstreamid' in d: continue
+    tsid = d['transportstreamid']
+    onid = d['originalnetworkid'] if 'transportstreamid' in d else None
+
+    # Build
+    m = {}
+    for k in d:
+      if k in maps:
+        m[maps[k]] = d[k]
+      else:
+        m[k]       = d[k]
+    m['type'] = t
+    m['key']  = k = '%s:%04X:%04X' % (t, onid, tsid)
+    m['svcs'] = {}
+
+    # Fixups
+    if 'delivery_system' in m:
+      m['delivery_system'] = m['delivery_system'][4:]
+    elif t == 'A':
+      m['delivery_system'] = 'ATSC'
+    elif t == 'T':
+      m['delivery_system'] = 'DVBT'
+    elif t == 'C':
+      m['delivery_system'] = 'DVBC_ANNEX_AC'
+    elif t == 'S':
+      m['delivery_system'] = 'DVBS'
+    if 'polarisation' in m:
+      m['polarisation'] = m['polarisation'][0]
+    if 'modulation' in m and m['polarisation'] == 'PSK_8':
+      m['modulation'] = '8PSK'
+    if 'rolloff' in m:
+      m['rolloff'] = m['rolloff'][8:]
+    
+    # Store
     muxs[os.path.basename(f)] = m
+
+    # Network
     n = None
     if 'satconf' in d:
       n = d['satconf']
     if n not in adps[a]['nets']:
       adps[a]['nets'][n] = {}
     adps[a]['nets'][n][k] = m
-  except Exception, e:
-    print e
-    raise e
-    pass
 
-# Load servies
-svcs = {}
-for f in glob.glob(os.path.join(root, 'dvbtransports', '*', '*')):
-  try:
+  # Done
+  return muxs
+
+# Servies
+def load_services ( path, muxs ):
+  svcs = {}
+  maps = {
+    'service_id'        : 'sid',
+    'servicename'       : 'svcname',
+    'stype'             : 'dvb_servicetype',
+    'channel'           : 'lcn',
+    'default_authority' : 'cridauth'
+  }
+  for f in glob.glob(os.path.join(path, 'dvbtransports', '*', '*')):
     m = os.path.basename(os.path.dirname(f))
     if m not in muxs: continue
+      
+    # Load data    
     m = muxs[m]
     s = open(f).read()
     d = json.loads(s)
-    if 'channelname' not in d or not d['channelname']: continue
-    k = '%s:%04X:%04X:%04X' % (m['type'], m['onid'], m['tsid'], d['service_id'])
-    m['svcs'][k] = d
-  except Exception, e:
-    print e
-    raise e
-    pass
+    
+    # Validate
+    if 'service_id'  not in d: continue
+    if 'stream' in d: del d['stream']
+
+    # Map fields
+    s = {}
+    for k in d:
+      if k in maps:
+        s[maps[k]] = d[k]
+      else:
+        s[k] = d[k]
+
+    k = '%s:%04X:%04X:%04X' % (m['type'], m['onid'], m['tsid'], s['sid'])
+    m['svcs'][k] = svcs[k] = s
+  return svcs
+
+#
+# Channels
+#
+
+def load_channels ( path, nets ):
+  maps = {
+    'channel_number'      : 'number',
+    'dvr_extra_time_pre'  : 'dvr_pre_time',
+    'dvr_extra_time_pst'  : 'dvr_pst_time',
+  }
+  chns = []
+
+  # Process channels
+  for f in glob.glob(os.path.join(path, 'channels', '*')):
+      
+    # Load data
+    s = open(f).read()
+    d = json.loads(s)
+    c = { 'services' : [] }
+
+    # Map fields
+    for k in d:
+      if k in maps:
+        c[maps[k]] = d[k]
+      else:
+        c[k] = d[k]
+
+    # Find services
+    for n in nets:
+      for m in n['muxs']:
+        m = n['muxs'][m]
+        for s in m['svcs']:
+          s = m['svcs'][s]
+          if 'uuid' not in s: continue
+          if 'channelname' in s and s['channelname'] == c['name']:
+            c['services'].append(s['uuid'])
+
+    # Store
+    chns.append(c)
+
+  # Done
+  return chns
+
+#
+# Output
+#
 
 # Build networks
-nets = []
-for a in adps:
-  a = adps[a]
-  for m in a['nets']:
-    m = a['nets'][m]
-    f = False
-    for n in nets:
-      if n['type'] != a['type']: continue
-      x = set(n['muxs'].keys())
-      y = set(m.keys())
-      i = x.intersection(x, y)
-      c = (2.0 * len(i)) / (len(x) + len(y))
-      #print 'comp %d %d %d %f' % (len(x), len(y), len(i), c)
-      if c > 0.5:
-        f = True
-        for k in m:
-          if k not in n['muxs']:
-            n['muxs'][k] = m[k]
-          else:
-            n['muxs'][k]['svcs'].update(m[k]['svcs'])
-    if not f:
-      n = {
-        'type': a['type'],
-        'muxs': m
-      }
-      nets.append(n)
+def build_networks ( adps, opts ):
+  nets = []
+
+  # Process each adapter
+  for a in adps:
+    a = adps[a]
+
+    # Process each network
+    for m in a['nets']:
+      m = a['nets'][m]
+      f = False
+
+      # Look for overlap and combine
+      for n in nets:
+        if n['type'] != a['type']: continue
+        x = set(n['muxs'].keys())
+        y = set(m.keys())
+        i = x.intersection(x, y)
+        c = (2.0 * len(i)) / (len(x) + len(y))
+        #print 'comp %d %d %d %f' % (len(x), len(y), len(i), c)
+        if c > 0.5:
+          f = True
+          for k in m:
+            if k not in n['muxs']:
+              n['muxs'][k] = m[k]
+            else:
+              n['muxs'][k]['svcs'].update(m[k]['svcs'])
+
+      if not f:
+        n = {
+          'type': a['type'],
+          'muxs': m
+        }
+        nets.append(n)
+
+  # Set network name
+  i = 0
+  for n in nets:
+    i     = i + 1
+    names = {}
+    for m in n['muxs']:
+      m = n['muxs'][m]
+      if 'network' not in m: continue
+      if m['network'] not in names:
+        names[m['network']] = 1
+      else:
+        names[m['network']] = 1 + names[m['network']]
+    name = None
+    for na in names:
+      if not name:
+        name = na
+      elif names[na] > names[name]:
+        name = na
+    if name:
+      n['name'] = name
+    else:
+      n['name'] = 'Network %s %d' % (n['type'], i)
+      
+  # Done
+  return nets
+
+# Output services
+def output_services ( path, svcs, opts ):
+  ignore = { 'type', 'key', 'channelname', 'mapped' }
+
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+  # Process services
+  for s in svcs:
+    s = svcs[s]
+    
+    # Copy
+    d = {}
+    for k in s:
+      if k not in ignore:
+        d[k] = s[k]
+
+    # Output
+    u     = uuid()
+    spath = os.path.join(path, u)
+    open(os.path.join(spath), 'w').write(json.dumps(d, indent=2))
+    s['uuid'] = u
+    
+
+# Output muxes
+def output_muxes ( path, muxs, opts ):
+  ignore = [ 'type', 'key', 'svcs', 'network', 'quality', 'status' ]
+
+  # Process each
+  for m in muxs:
+    m = muxs[m]
+
+    # Copy
+    d = {}
+    for k in m:
+      if k not in ignore:
+        d[k] = m[k]
+
+    # Output
+    u     = uuid()
+    mpath = os.path.join(path, u)
+    os.makedirs(mpath)
+    open(os.path.join(mpath, 'config'), 'w').write(json.dumps(d, indent=2))
+
+    # Services
+    output_services(os.path.join(mpath, 'services'), m['svcs'], opts)
 
 # Output networks
-p = os.path.join(root, 'input', 'linuxdvb', 'networks')
-if not os.path.exists(p):
-  os.makedirs(p)
-i = 0
-for n in nets:
-  i = i + 1
+def output_networks ( path, nets, opts ):
+ 
+  # Ensure dir exists
+  path = os.path.join(path, 'input', 'linuxdvb', 'networks')
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+  # Write each network
+  for n in nets:
   
-  # Network config
-  if n['type'] == 'A':
-    c = 'linuxdvb_network_atsc'
-  else:
-    c = 'linuxdvb_network_dvb' + n['type'].lower()
-  d = {
-    'networkname'   : 'Network %s %d' % (n['type'], i),
-    'nid'           : 0,
-    'autodiscovery' : False,
-    'skipinitscan'  : True,
-    'class'         : c
-  }
-  u  = uuid()
-  p2 = os.path.join(p, u)
-  os.mkdir(p2)
-  open(os.path.join(p2, 'config'), 'w').write(json.dumps(d))
-    
-  # Process muxes
-  for m in n['muxs']:
-    m = n['muxs'][m]
-    d = {
-      'enabled'   : True,
-      'frequency' : m['freq'],
-      'onid'      : m['onid'],
-      'tsid'      : m['tsid']
-    }
-    if m['type'] == 'C':
-      d['delsys']           = 'DVBC_ANNEX_AC'
-      d['symbolrate']       = m['symr']
-      d['fec']              = m['fec']
-      d['constellation']    = m['cons']
-    elif m['type'] == 'T':
-      d['delsys']           = 'DVBT'
-      d['bandwidth']        = m['bw']
-      d['constellation']    = m['cons']
-      d['tranmission_mode'] = m['txm']
-      d['guard_interval']   = m['gi']
-      d['hierarchy']        = m['hier']
-      d['fec_lo']           = m['fecl']
-      d['fec_hi']           = m['fech']
-    elif m['type'] == 'S':
-      d['symbolrate']       = m['symr']
-      d['fec']              = m['fec']
-      d['polarisation']     = m['pol'][0]
-      d['modulation']       = m['mod']
-      d['delsys']           = m['del'][4:]
-      d['inversion']        = 'AUTO'
-      if 'rolloff' in m:
-        d['rolloff']        = m['rolloff'][8:]
-      elif d['delsys'] == 'DVBS':
-        d['rolloff']        = '35'
-      else:
-        d['rolloff']        = 'AUTO'
-      if d['modulation'] == 'PSK_8':
-        d['modulation']     = '8PSK'
+    # Network config
+    if n['type'] == 'A':
+      c = 'linuxdvb_network_atsc'
     else:
-      d['delsys']           = 'ATSC'
-      d['constellation']    = m['cons']
-    u = uuid()
-    p3 = os.path.join(p2, 'muxes', u)
-    os.makedirs(p3)
-    open(os.path.join(p3, 'config'), 'w').write(json.dumps(d))
+      c = 'linuxdvb_network_dvb' + n['type'].lower()
+    d = {
+      'networkname'   : n['name'],
+      'nid'           : 0,
+      'autodiscovery' : False,
+      'skipinitscan'  : True,
+      'class'         : c
+    }
 
-    # Process services
-    for s in m['svcs']:
-      s = m['svcs'][s]
-      d = {
-        'enabled'         : True,
-        'sid'             : s['service_id'],
-        'svcname'         : s['servicename'] if 'servicename' in s else '',
-        'dvb_servicetype' : s['stype'] if 'stype' in s else 0
-      }
-      u = uuid()
-      p4 = os.path.join(p3, 'services')
-      if not os.path.exists(p4):
-        os.makedirs(p4)
-      open(os.path.join(p4, u), 'w').write(json.dumps(d))
+    # Write
+    u     = uuid()
+    npath = os.path.join(path, u)
+    os.mkdir(npath)
+    open(os.path.join(npath, 'config'), 'w').write(json.dumps(d, indent=2))
 
-      # Find channel
-      c = s['channelname'] if 'channelname' in s else None
-      #print 'SVC %s CHN %s' % (str(s), str(c))
-      if not c or c not in chns:
-        continue
-      c = chns[c]
-      c['svcs'].append(u)
-
-# Output channels
-if not os.path.exists(os.path.join(root, 'channel')):
-  os.mkdir(os.path.join(root, 'channel'))
-for c in chns:
-  c = chns[c]
-  if 'name' not in c: continue
+    # Muxes
+    output_muxes(os.path.join(npath, 'muxes'), n['muxs'], opts)
+    
+# Channels
+def output_channels ( path, chns, opts ):
   
-  # Create UUID
-  u = uuid()
-  d = {
-    'name'      : c['name'],
-    'services'  : c['svcs']
-  }
-  if c['icon']:
-    d['icon'] = c['icon']
-  if c['tags']:
-    d['tags'] = c['tags']
-  if c['num']:
-    d['number'] = c['num']
-  open(os.path.join(root, 'channel', u), 'w').write(json.dumps(d))
+  path = os.path.join(path, 'channel')
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+  # Each channels
+  for c in chns:
+    u = uuid()
+
+    # Output
+    open(os.path.join(path, u), 'w').write(json.dumps(c, indent=2))
+
+#
+# Main
+#
+  
+    
+optp = OptionParser()
+optp.add_option('-o', '--overlap', type='float', default=0.5,
+                help='Percentage overlap at which networks considered same')
+(opts,args) = optp.parse_args()
+path = args[0]
+adps = load_adapters(path)
+muxs = load_muxes(path, adps)
+svcs = load_services(path, muxs)
+nets = build_networks(adps, opts)
+output_networks(path, nets, opts)
+chns = load_channels(path, nets)
+output_channels(path, chns, opts)
+sys.exit(0)
