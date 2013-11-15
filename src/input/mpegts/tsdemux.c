@@ -73,6 +73,9 @@ ts_recv_packet0
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
 
+  if (!st)
+    return;
+
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
@@ -218,7 +221,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   if (pcr != PTS_UNSET)
     ts_process_pcr(t, st, pcr);
 
-  if(st == NULL) {
+  if((st == NULL) && (pid != t->s_pcr_pid)) {
     pthread_mutex_unlock(&t->s_stream_mutex);
     return 0;
   }
@@ -229,7 +232,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st->es_type != SCT_CA)) {
+      (t->s_scrambled_seen && st && st->es_type != SCT_CA)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error

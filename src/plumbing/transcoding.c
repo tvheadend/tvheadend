@@ -188,6 +188,7 @@ transcoder_stream_packet(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(ts->ts_target, sm);
+  pkt_ref_dec(pkt);
 }
 
 
@@ -243,6 +244,7 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
   av_free_packet(&packet);
+  pkt_ref_dec(pkt);
   avsubtitle_free(&sub);
 }
 
@@ -445,6 +447,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
   av_free_packet(&packet);
+  pkt_ref_dec(pkt);
 }
 
 
@@ -724,6 +727,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
   av_free_packet(&packet);
+  pkt_ref_dec(pkt);
 
   if(buf)
     av_free(buf);
@@ -752,8 +756,10 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
       continue;
 
     ts->ts_handle_pkt(ts, pkt);
-    break;
+    return;
   }
+
+  pkt_ref_dec(pkt);
 }
 
 
@@ -1247,15 +1253,12 @@ transcoder_input(void *opaque, streaming_message_t *sm)
 {
   transcoder_t *t;
   streaming_start_t *ss;
-  th_pkt_t *pkt;
 
   t = opaque;
 
   switch (sm->sm_type) {
   case SMT_PACKET:
-    pkt = sm->sm_data;
-    transcoder_packet(t, pkt);
-    pkt_ref_dec(pkt);
+    transcoder_packet(t, sm->sm_data);
     break;
 
   case SMT_START:
