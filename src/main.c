@@ -663,6 +663,9 @@ main(int argc, char **argv)
     umask(0);
   }
 
+  /* Start log thread (must be done post fork) */
+  tvhlog_start();
+
   /* Alter logging */
   if (opt_fork)
     tvhlog_options &= ~TVHLOG_OPT_STDERR;

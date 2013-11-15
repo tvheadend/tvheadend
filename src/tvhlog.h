@@ -35,6 +35,7 @@ extern pthread_mutex_t  tvhlog_mutex;
 
 /* Initialise */
 void tvhlog_init       ( int level, int options, const char *path ); 
+void tvhlog_start      ( void );
 void tvhlog_end        ( void );
 void tvhlog_set_debug  ( const char *subsys );
 void tvhlog_get_debug  ( char *subsys, size_t len );
