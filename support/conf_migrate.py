@@ -3,11 +3,12 @@
 # Migration version 3 configuration to version 4
 #
 # Files that need updating:
-#   autorec/*       : Auto-mapped by code
-#   dvr/log/*       : Auto-mapped by code
+#   autorec/*       : Auto-mapped by code, but mapped here as well
+#   dvr/log/*       : Auto-mapped by code, but mapped here as well
 #   channels/*      : map services
 #   dvb/*           : map network/mux but nothing else
 #   epggrab/otamux  : remove
+#   epggrab/*/channels/* : update channels
 #     
 # Create new "version" file to validate config version
 # 
@@ -161,7 +162,7 @@ def load_channels ( path, nets ):
     'dvr_extra_time_pre'  : 'dvr_pre_time',
     'dvr_extra_time_pst'  : 'dvr_pst_time',
   }
-  chns = []
+  chns = {}
 
   # Process channels
   for f in glob.glob(os.path.join(path, 'channels', '*')):
@@ -189,7 +190,7 @@ def load_channels ( path, nets ):
             c['services'].append(s['uuid'])
 
     # Store
-    chns.append(c)
+    chns[int(os.path.basename(f))] = c
 
   # Done
   return chns
@@ -349,10 +350,96 @@ def output_channels ( path, chns, opts ):
 
   # Each channels
   for c in chns:
+    c = chns[c]
     u = uuid()
 
     # Output
     open(os.path.join(path, u), 'w').write(json.dumps(c, indent=2))
+    
+    # Store
+    c['uuid'] = u
+
+#
+# DVR
+#
+
+# Find channel by name
+def find_channel_by_name ( chns, name ):
+  for c in chns:
+    c = chns[c]
+    if 'name' in c and c['name'] == name:
+      return c
+  return None
+
+def update_dvr ( path, chns ):
+
+  # Update all DVR log entries
+  for f in glob.glob(os.path.join(path, 'dvr', 'log', '*')):
+
+    # Load
+    s = open(f).read()
+    d = json.loads(s)
+
+    # Already done
+    if 'channelname' in d: continue
+
+    # Update all channels
+    if 'channel' in d:
+      d['channelname'] = d['channel']
+      c = find_channel_by_name(chns, d['channelname'])
+      if c and 'uuid' in c:
+        d['channel'] = c['uuid']
+
+    # Save
+    open(f, 'w').write(json.dumps(d, indent=2))
+
+  # Update autorec rules
+  for f in glob.glob(os.path.join(path, 'autorec', '*')):
+
+    # Load
+    s = open(f).read()
+    d = json.loads(s)
+
+    # Update all channels
+    if 'channel' in d:
+      d['channelname'] = d['channel']
+      c = find_channel_by_name(chns, d['channelname'])
+      if c and 'uuid' in c:
+        d['channel'] = c['uuid']
+
+    # Save
+    open(f, 'w').write(json.dumps(d, indent=2))
+
+#
+# EPG grab
+#
+
+def update_epg ( path, chns ):
+
+  # Remove otamux
+  p = os.path.join(path, 'epggrab', 'otamux')
+  if os.path.isfile(p):
+    os.unlink(p)
+
+  # Remove epgdb?
+
+  # Map grab channels
+  for f in glob.glob(os.path.join(path, 'epggrab', '*', 'channels', '*')):
+
+    # Load
+    s = open(f).read()
+    d = json.loads(s)
+
+    # Update all channels
+    t = []
+    if 'channels' in d:
+      for c in d['channels']:
+        if c in chns and 'uuid' in chns[c]:
+          t.append(chns[c]['uuid'])
+    d['channels'] = t
+
+    # Save
+    open(f, 'w').write(json.dumps(d, indent=2))
 
 #
 # Main
@@ -371,4 +458,6 @@ nets = build_networks(adps, opts)
 output_networks(path, nets, opts)
 chns = load_channels(path, nets)
 output_channels(path, chns, opts)
+update_dvr(path, chns)
+update_epg(path, chns)
 sys.exit(0)

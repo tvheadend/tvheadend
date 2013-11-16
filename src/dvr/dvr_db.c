@@ -531,7 +531,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
   if(htsmsg_get_u32(c, "stop", &stop))
     return;
 
-  chname = htsmsg_get_str(c, "channel_name");
+  chname = htsmsg_get_str(c, "channelname");
   chuuid = htsmsg_get_str(c, "channel");
   ch     = chuuid ? channel_find(chuuid) : NULL;
 
@@ -656,7 +656,7 @@ dvr_entry_save(dvr_entry_t *de)
 
   if (de->de_channel)
     htsmsg_add_str(m, "channel", channel_get_uuid(de->de_channel));
-  htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
+  htsmsg_add_str(m, "channelname", DVR_CH_NAME(de));
   htsmsg_add_u32(m, "start", de->de_start);
   htsmsg_add_u32(m, "stop", de->de_stop);
  
