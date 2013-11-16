@@ -19,6 +19,8 @@
 #ifndef __TVH_LANG_CODES_H__
 #define __TVH_LANG_CODES_H__
 
+#include "redblack.h"
+
 typedef struct lang_code
 {
   const char *code2b; ///< ISO 639-2 B
@@ -37,5 +39,13 @@ const lang_code_t *lang_code_get3 ( const char *code );
 /* Split list of codes as per HTTP Language-Accept spec */
 const char **lang_code_split ( const char *codes );
 const lang_code_t **lang_code_split2 ( const char *codes );
+
+/* Efficient code lookup */
+typedef struct lang_code_lookup_element {
+  RB_ENTRY(lang_code_lookup_element) link;
+  const lang_code_t *lang_code;
+} lang_code_lookup_element_t;
+
+typedef RB_HEAD(lang_code_lookup, lang_code_lookup_element) lang_code_lookup_t;
 
 #endif /* __TVH_LANG_CODES_H__ */

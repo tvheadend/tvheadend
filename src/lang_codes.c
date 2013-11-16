@@ -495,14 +495,60 @@ const lang_code_t lang_codes[] = {
   { NULL, NULL, NULL, NULL }
 };
 
+lang_code_lookup_t* lang_codes_code2b = NULL;
+lang_code_lookup_t* lang_codes_code1 = NULL;
+lang_code_lookup_t* lang_codes_code2t = NULL;
+
 /* **************************************************************************
  * Functions
  * *************************************************************************/
+
+/* Compare language codes */
+static int _lang_code2b_cmp ( void *a, void *b )
+{
+  return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2b,
+      ((lang_code_lookup_element_t*)b)->lang_code->code2b);
+}
+
+static int _lang_code1_cmp ( void *a, void *b )
+{
+  return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code1,
+      ((lang_code_lookup_element_t*)b)->lang_code->code1);
+}
+
+static int _lang_code2t_cmp ( void *a, void *b )
+{
+  return strcmp(((lang_code_lookup_element_t*)a)->lang_code->code2t,
+      ((lang_code_lookup_element_t*)b)->lang_code->code2t);
+}
+
+static int _lang_code_lookup_add( lang_code_lookup_t* lookup_table, const lang_code_t *code, int (*func)(void*, void*) ) {
+  lang_code_lookup_element_t *element;
+  element = (lang_code_lookup_element_t *)calloc(1, sizeof(lang_code_lookup_element_t));
+  element->lang_code = code;
+  RB_INSERT_SORTED(lookup_table, element, link, func);
+  return 0;
+}
 
 static const lang_code_t *_lang_code_get ( const char *code, size_t len )
 {
   int i;
   char tmp[4];
+  
+  if (lang_codes_code2b == NULL) {
+    const lang_code_t *c = lang_codes;
+
+    lang_codes_code2b = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+    lang_codes_code1 = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+    lang_codes_code2t = (lang_code_lookup_t *)calloc(1, sizeof(lang_code_lookup_t));
+
+    while (c->code2b) {
+      _lang_code_lookup_add(lang_codes_code2b, c, _lang_code2b_cmp);
+      if (c->code1) _lang_code_lookup_add(lang_codes_code1, c, _lang_code1_cmp);
+      if (c->code2t) _lang_code_lookup_add(lang_codes_code2t, c, _lang_code2t_cmp);
+      c++;
+    }
+  }
 
   if (code && *code && len) {
 
@@ -527,13 +573,18 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
 
     /* Search */
     if (i) {
-      const lang_code_t *c = lang_codes;
-      while (c->code2b) {
-        if ( !strcmp(tmp, c->code2b) )              return c;
-        if ( c->code1  && !strcmp(tmp, c->code1) )  return c;
-        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c;
-        c++;
-      }
+      lang_code_lookup_element_t sample, *element;
+      lang_code_t lang_code;
+      lang_code.code1 = tmp;
+      lang_code.code2b = tmp;
+      lang_code.code2t = tmp;
+      sample.lang_code = &lang_code;
+      element = RB_FIND(lang_codes_code2b, &sample, link, _lang_code2b_cmp);
+      if (element != NULL) return element->lang_code;
+      element = RB_FIND(lang_codes_code1, &sample, link, _lang_code1_cmp);
+      if (element != NULL) return element->lang_code;
+      element = RB_FIND(lang_codes_code2t, &sample, link, _lang_code2t_cmp);
+      if (element != NULL) return element->lang_code;
     }
   }
   return &lang_codes[0];
