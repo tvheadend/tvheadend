@@ -62,22 +62,21 @@ struct tvh_input_stream {
 /*
  * Generic input super-class
  */
-typedef struct tvh_input {
+struct tvh_input {
   idnode_t ti_id;
 
   LIST_ENTRY(tvh_input) ti_link;
 
   void (*ti_get_streams) (struct tvh_input *, tvh_input_stream_list_t*);
-
-} tvh_input_t;
+};
 
 /*
  * Generic hardware super-class
  */
-typedef struct tvh_hardware {
+struct tvh_hardware {
   idnode_t                     th_id;
   LIST_ENTRY(tvh_hardware)     th_link;
-} tvh_input_hw_t;
+};
 
 
 /*
