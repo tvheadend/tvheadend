@@ -352,6 +352,9 @@ static int _xmltv_parse_previously_shown
 
 /*
  * Star rating
+ *   <star-rating>
+ *     <value>3.3/5</value>
+ *   </star-rating>
  */
 static int _xmltv_parse_star_rating
   ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
@@ -359,6 +362,7 @@ static int _xmltv_parse_star_rating
   double a, b;
   htsmsg_t *stars, *tags;
   const char *s1, *s2;
+  char *s1end, *s2end;
 
   if (!mod || !ee || !body) return 0;
   if (!(stars = htsmsg_get_map(body, "star-rating"))) return 0;
@@ -366,10 +370,49 @@ static int _xmltv_parse_star_rating
   if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
   if (!(s2 = strstr(s1, "/"))) return 0;
 
-  a = atof(s1);
-  b = atof(s2 + 1);
+  a = strtod(s1, &s1end);
+  b = strtod(s2 + 1, &s2end);
+  if ( a == 0.0f || b == 0.0f) return 0;
 
   return epg_episode_set_star_rating(ee, (100 * a) / b, mod);
+}
+
+/*
+ * Tries to get age ratingform <rating> element.
+ * Expects integer representing minimal age of watcher.
+ * Other rating types (non-integer, for example MPAA or VCHIP) are ignored.
+ *
+ * Attribute system is ignored.
+ *
+ * Working example:
+ * <rating system="pl"><value>16</value></rating>
+ *
+ * Currently non-working example:
+ *    <rating system="MPAA">
+ *     <value>PG</value>
+ *     <icon src="pg_symbol.png" />
+ *   </rating>
+ *
+ * TODO - support for other rating systems:
+ * [rating system=VCHIP] values TV-PG, TV-G, etc
+ * [rating system=MPAA] values R, PG, G, PG-13 etc
+ * [rating system=advisory] values "strong sexual content","Language", etc
+ */
+static int _xmltv_parse_age_rating
+  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
+{
+  uint8_t age;
+  htsmsg_t *rating, *tags;
+  const char *s1;
+
+  if (!mod || !ee || !body) return 0;
+  if (!(rating = htsmsg_get_map(body, "rating"))) return 0;
+  if (!(tags  = htsmsg_get_map(rating, "tags"))) return 0;
+  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
+
+  age = atoi(s1);
+
+  return epg_episode_set_age_rating(ee, age, mod);
 }
 
 /*
@@ -509,8 +552,7 @@ static int _xmltv_parse_programme_tags
 
     save3 |= _xmltv_parse_star_rating(mod, ee, tags);
 
-
-    // TODO: parental rating
+    save3 |= _xmltv_parse_age_rating(mod, ee, tags);
   }
 
   /* Stats */
