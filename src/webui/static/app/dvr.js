@@ -736,7 +736,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate']);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -829,6 +829,12 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Skip commercials',
 			name : 'commSkip'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Include subtitle in filename',
+			name : 'subtitleInTitle'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Put episode in filename before date and time',
+			name : 'episodeBeforeDate'
 		}), {
 			width : 300,
 			fieldLabel : 'Post-processor command',
