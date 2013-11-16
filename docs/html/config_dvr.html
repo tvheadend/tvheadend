@@ -84,19 +84,25 @@
       or an error occurred. Use the %e error formatting string to check
       for errors, the error string is empty if recording finished
       successfully.
-      <br><br>
-      Support format strings:<br>
+
+  <dt>External filename program
+  <dd>Command run to generate a filename. The command is executed before starting
+      recording. The command should write to standard output. Trailing new line
+      marker is ignored but no other safety checks are made unless removing of
+      unsafe characters is enabled.
+
+  <dt>Post-processor and external filename program format strings
       <table class="hts-doc-text" border="0">
-        <tr><th>Format</th><th>Description</th><th>Example value</th></tr>
-        <tr><td>%f</td><td>Full path to recording</td><td>/home/user/Videos/News.mkv</td></tr>
-        <tr><td>%b</td><td>Basename of recording</td><td>News.mkv</td></tr>
-        <tr><td>%c</td><td>Channel name</td><td>BBC world</td></tr>
-        <tr><td>%C</td><td>Who created this recording</td><td>user</td></tr>
-        <tr><td>%t</td><td>Program title</td><td>News</td></tr>
-        <tr><td>%d</td><td>Program description</td><td>News and stories...</td></tr>
-        <tr><td>%e</td><td>Error message</td><td>Aborted by user</td></tr>
-        <tr><td>%S</td><td>Start time stamp of recording, UNIX epoch</td><td>1224421200</td></tr>
-        <tr><td>%E</td><td>Stop time stamp of recording, UNIX epoch</td><td>1224426600</td></tr>
+        <tr><th>Format</th><th>Description</th><th>Example value</th><th>Notice</th></tr>
+        <tr><td>%f</td><td>Full path to recording</td><td>/home/user/Videos/News.mkv</td><td>Post-processor only</td></tr>
+        <tr><td>%b</td><td>Basename of recording</td><td>News.mkv</td><td>Post-processor only</td></tr>
+        <tr><td>%c</td><td>Channel name</td><td>BBC world</td><td></td></tr>
+        <tr><td>%C</td><td>Who created this recording</td><td>user</td><td></td></tr>
+        <tr><td>%t</td><td>Program title</td><td>News</td><td></td></tr>
+        <tr><td>%d</td><td>Program description</td><td>News and stories...</td><td></td></tr>
+        <tr><td>%e</td><td>Error message</td><td>Aborted by user</td><td>Useful only for post-processor</td></tr>
+        <tr><td>%S</td><td>Start time stamp of recording, UNIX epoch</td><td>1224421200</td><td></td></tr>
+        <tr><td>%E</td><td>Stop time stamp of recording, UNIX epoch</td><td>1224426600</td><td></td></tr>
       </table>
       <br>
       Example usage: /path/to/ffmpeg -i %f -vcodec libx264 -acodec copy "/path/with white space/%b"<br>
