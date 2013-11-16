@@ -1,5 +1,138 @@
 [
 	{
+		"tsid": 1050,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10729.00 V"
+	},
+	{
+		"tsid": 1028,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10758.50 V"
+	},
+	{
+		"tsid": 1054,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10788.00 V"
+	},
+	{
+		"tsid": 1056,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10817.50 V"
+	},
+	{
+		"tsid": 1058,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10847.00 V"
+	},
+	{
+		"tsid": 1060,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10876.50 V"
+	},
+	{
+		"tsid": 1064,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10935.50 V"
+	},
+	{
+		"tsid": 1034,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 10979.00 V"
+	},
+	{
+		"tsid": 1038,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11038.00 V"
+	},
+	{
+		"tsid": 1040,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11068.00 V"
+	},
+	{
+		"tsid": 1042,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11097.00 V"
+	},
+	{
+		"tsid": 1044,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11126.50 V"
+	},
+	{
+		"tsid": 1046,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11156.00 V"
+	},
+	{
+		"tsid": 1048,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11185.50 V xx"
+	},
+	{
+		"tsid": 1004,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11258.50 V"
+	},
+	{
+		"tsid": 1008,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11317.50 V"
+	},
+	{
+		"tsid": 1016,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11435.50 V"
+	},
+	{
+		"tsid": 1032,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11685.50 V"
+	},
+	{
+		"tsid": 1066,
+		"onid": 1,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Canal + Spain 11739.00 V"
+	},
+	{
 		"tsid": 1,
 		"onid": 133,
 		"charset": "ISO-8859-15",
