@@ -206,8 +206,10 @@ static void _epggrab_module_channel_load
     egc->number = u32;
   if ((a = htsmsg_get_list(m, "channels"))) {
     HTSMSG_FOREACH(f, a) {
-      if ((ch  = channel_find_by_uuid(f->hmf_str)))
-        epggrab_channel_link(egc, ch);
+      if ((str = htsmsg_field_get_str(f))) {
+        if ((ch = channel_find_by_uuid(str)))
+          epggrab_channel_link(egc, ch);
+      }
     }
 
   /* Compat with older 3.1 code */
