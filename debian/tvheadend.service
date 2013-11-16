@@ -1,0 +1,13 @@
+[Unit]
+Description=Tvheadend DVB/IPTV streaming server
+After=network.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/default/tvheadend
+PIDFile=/var/run/tvheadend.pid
+ExecStart=/usr/bin/tvheadend -f -p /var/run/tvheadend.pid -C -u ${TVH_USER} -g ${TVH_GROUP} "$TVH_ARGS"
+ExecStopPost=/bin/rm -f /var/run/tvheadend.pid
+
+[Install]
+WantedBy=multi-user.target
