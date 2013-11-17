@@ -60,7 +60,11 @@ tvheadend.cometPoller = function() {
 		tvheadend.boxid = response.boxid
 		for (x = 0; x < response.messages.length; x++) {
 			m = response.messages[x];
-			tvheadend.comet.fireEvent(m.notificationClass, m);
+			try {
+			  tvheadend.comet.fireEvent(m.notificationClass, m);
+			} catch (e) {
+				tvheadend.log('comet failure [e=' + e.message + ']');
+			}
 		}
 		cometRequest.delay(100);
 	}
