@@ -827,13 +827,18 @@ dvb_nit_callback
     
         /* nit only */
         case DVB_DESC_SAT_DEL:
-          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
-          break;
         case DVB_DESC_CABLE_DEL:
-          mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
-          break;
         case DVB_DESC_TERR_DEL:
-          mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
+          if (dtag == DVB_DESC_SAT_DEL)
+            mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
+          else if (dtag == DVB_DESC_CABLE_DEL)
+            mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
+          else
+            mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
+          if (mux) {
+            mpegts_mux_set_tsid(mux, tsid);
+            mpegts_mux_set_tsid(mux, onid);
+          }
           break;
         
         /* Both */
