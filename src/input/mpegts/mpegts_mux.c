@@ -349,7 +349,7 @@ mpegts_mux_start
     if (!pass) {
       int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input);
       int f = mmi->mmi_input->mi_is_free(mmi->mmi_input);
-      tvhtrace("mpegts", "%s -   enabled %d free %d\n", buf, e, f);
+      tvhtrace("mpegts", "%s -   enabled %d free %d", buf, e, f);
       if (e) enabled = 1;
 
       if (e && f) {
