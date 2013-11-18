@@ -213,7 +213,6 @@ static mpegts_mux_t *
 linuxdvb_network_find_mux
   ( linuxdvb_network_t *ln, dvb_mux_conf_t *dmc )
 {
-#define LINUXDVB_FREQ_TOL 2000 // TODO: fix this!
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
@@ -240,13 +239,25 @@ static mpegts_mux_t *
 linuxdvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
+  int save = 0;
   linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
   mm = linuxdvb_network_find_mux(ln, dmc);
   if (!mm && ln->mn_autodiscovery) {
-    mm = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
-    if (mm)
-      mm->mm_config_save(mm);
+    mm   = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
+    save = 1;
+  } else if (mm) {
+    linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+    dmc->dmc_fe_params.frequency = lm->lm_tuning.dmc_fe_params.frequency;
+    // Note: keep original freq, else it can bounce around if diff transponders
+    // report it slightly differently.
+    // TODO: Note: should we also leave AUTO settings as is?
+    if (memcmp(&lm->lm_tuning, dmc, sizeof(lm->lm_tuning))) {
+      memcpy(&lm->lm_tuning, dmc, sizeof(lm->lm_tuning));
+      save = 1;
+    }
   }
+  if (save)
+      mm->mm_config_save(mm);
   return mm;
 }
 

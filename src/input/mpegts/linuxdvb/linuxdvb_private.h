@@ -22,6 +22,9 @@
 
 #include "input/mpegts.h"
 
+/* Max allowed frequency variation for something to be considered the same */
+#define LINUXDVB_FREQ_TOL 2000
+
 typedef struct linuxdvb_hardware    linuxdvb_hardware_t;
 typedef struct linuxdvb_device      linuxdvb_device_t;
 typedef struct linuxdvb_adapter     linuxdvb_adapter_t;
