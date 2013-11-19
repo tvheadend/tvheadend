@@ -157,6 +157,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   /* Create directories */
   if (hts_settings_makedirs(path)) return;
 
+  tvhdebug("settings", "saving to %s", path);
+
   /* Create tmp file */
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
   if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {

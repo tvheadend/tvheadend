@@ -238,7 +238,7 @@ void linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m );
 linuxdvb_adapter_t *linuxdvb_adapter_create0
   ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf );
 
-linuxdvb_adapter_t *linuxdvb_adapter_added (int a);
+void linuxdvb_adapter_added (int a);
 
 int  linuxdvb_adapter_is_free        ( linuxdvb_adapter_t *la );
 int  linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la );
@@ -252,8 +252,7 @@ linuxdvb_frontend_create0
 
 void linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m );
 
-linuxdvb_frontend_t *
-linuxdvb_frontend_added
+int linuxdvb_frontend_added
   ( linuxdvb_adapter_t *la, int fe_num,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
     const struct dvb_frontend_info *fe_info );

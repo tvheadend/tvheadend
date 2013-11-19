@@ -879,7 +879,7 @@ linuxdvb_frontend_create0
   return lfe;
 }
 
-linuxdvb_frontend_t *
+int
 linuxdvb_frontend_added
   ( linuxdvb_adapter_t *la, int fe_num,
     const char *fe_path,
@@ -887,6 +887,7 @@ linuxdvb_frontend_added
     const char *dvr_path,
     const struct dvb_frontend_info *fe_info )
 {
+  int save = 0;
   linuxdvb_frontend_t *lfe = NULL;
 
   /* Find existing */
@@ -895,7 +896,7 @@ linuxdvb_frontend_added
       if (lfe->lfe_info.type != fe_info->type) {
         tvhlog(LOG_ERR, "linuxdvb", "detected incorrect fe_type %s != %s",
                dvb_type2str(lfe->lfe_info.type), dvb_type2str(fe_info->type));
-        return NULL;
+        return 0;
       }
       break;
     }
@@ -905,8 +906,9 @@ linuxdvb_frontend_added
   if (!lfe) {
     if (!(lfe = linuxdvb_frontend_create0(la, NULL, NULL, fe_info->type))) {
       tvhlog(LOG_ERR, "linuxdvb", "failed to create frontend");
-      return NULL;
+      return 0;
     }
+    save = 1;
   }
 
   /* Defaults */
@@ -925,7 +927,7 @@ linuxdvb_frontend_added
   lfe->lfe_dmx_path = strdup(dmx_path);
   lfe->lfe_dvr_path = strdup(dvr_path);
 
-  return lfe;
+  return save;
 }
 
 void

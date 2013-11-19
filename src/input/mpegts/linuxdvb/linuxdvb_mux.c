@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <math.h>
 
 /* **************************************************************************
  * Class definition
@@ -407,6 +408,38 @@ linuxdvb_mux_dvbs_class_delsys_enum (void *o)
   return list;
 }
 
+static const void *
+linuxdvb_mux_dvbs_class_orbital_get ( void *o )
+{
+  static char buf[256], *s = buf;
+  linuxdvb_mux_t *lm = o;
+  snprintf(buf, sizeof(buf), "%0.1f%c",
+           lm->lm_tuning.dmc_fe_orbital_pos / 10.0,
+           lm->lm_tuning.dmc_fe_orbital_dir);
+  return &s;
+}
+
+static int
+linuxdvb_mux_dvbs_class_orbital_set ( void *o, const void *s )
+{
+  int pos, save = 0;
+  char dir;
+  char *tmp = strdupa(s);
+  linuxdvb_mux_t *lm = o;
+
+  dir = tmp[strlen(tmp)-1];
+  tmp[strlen(tmp)-1] = '\0';
+  pos = (int)floorf(atof(tmp) * 10.0);
+
+  if (pos != lm->lm_tuning.dmc_fe_orbital_pos ||
+      dir != lm->lm_tuning.dmc_fe_orbital_dir) {
+    lm->lm_tuning.dmc_fe_orbital_pos = pos;
+    lm->lm_tuning.dmc_fe_orbital_dir = dir;
+    save = 1;
+  }
+  return save;
+}
+
 const idclass_t linuxdvb_mux_dvbs_class =
 {
   .ic_super      = &linuxdvb_mux_class,
@@ -465,6 +498,14 @@ const idclass_t linuxdvb_mux_dvbs_class =
       .list     = linuxdvb_mux_dvbs_class_pilot_list,
     },
 #endif
+    {
+      .type     = PT_STR,
+      .id       = "orbital",
+      .name     = "Orbital Pos.",
+      .set      = linuxdvb_mux_dvbs_class_orbital_set,
+      .get      = linuxdvb_mux_dvbs_class_orbital_get,
+      .opts     = PO_ADVANCED | PO_RDONLY
+    },
     {}
   }
 };

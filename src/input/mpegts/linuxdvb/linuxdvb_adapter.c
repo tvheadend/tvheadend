@@ -198,10 +198,10 @@ linuxdvb_adapter_find_by_number ( int adapter )
 /*
  * Load an adapter
  */
-linuxdvb_adapter_t *
+void
 linuxdvb_adapter_added ( int adapter )
 {
-  int i, r, fd;
+  int i, r, fd, save = 0;
   char fe_path[512], dmx_path[512], dvr_path[512];
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
@@ -243,7 +243,7 @@ linuxdvb_adapter_added ( int adapter )
     if (!la) {
       if (!(la = linuxdvb_adapter_find_by_number(adapter))) {
         tvhlog(LOG_ERR, "linuxdvb", "failed to find/create adapter%d", adapter);
-        return NULL;
+        return;
       }
       la->la_dvb_number = adapter;
       if (!la->la_name) {
@@ -256,11 +256,9 @@ linuxdvb_adapter_added ( int adapter )
     /* Create frontend */
     tvhlog(LOG_DEBUG, "linuxdvb", "fe_create(%p, %s, %s, %s)",
            la, fe_path, dmx_path, dvr_path);
-    linuxdvb_frontend_added(la, i, fe_path, dmx_path, dvr_path, &dfi);
+    save |= linuxdvb_frontend_added(la, i, fe_path, dmx_path, dvr_path, &dfi);
   }
 
-  if (la)
+  if (save)
     linuxdvb_device_save(la->la_device);
-
-  return la;
 }

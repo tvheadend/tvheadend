@@ -836,8 +836,8 @@ dvb_nit_callback
           else
             mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
           if (mux) {
+            mpegts_mux_set_onid(mux, onid);
             mpegts_mux_set_tsid(mux, tsid);
-            mpegts_mux_set_tsid(mux, onid);
           }
           break;
         
@@ -951,6 +951,7 @@ dvb_sdt_callback
       int r;
       s->s_dvb_servicetype = stype;
       save = 1;
+      tvhtrace("sdt", "    type changed");
 
       /* Set tvh service type */
       if ((r = dvb_servicetype_lookup(stype)) != -1)
@@ -960,7 +961,7 @@ dvb_sdt_callback
     /* Update scrambled state */
     if (s->s_scrambled != free_ca_mode) {
       s->s_scrambled   = free_ca_mode;
-      save = 1;
+      tvhtrace("sdt", "    scrambled changed");
     }
   
     /* Check if this is master 
@@ -973,6 +974,7 @@ dvb_sdt_callback
     if (*sauth && strcmp(s->s_dvb_cridauth ?: "", sauth)) {
       tvh_str_update(&s->s_dvb_cridauth, sauth);
       save = 1;
+      tvhtrace("sdt", "    cridauth changed");
     }
 
     /* Update name */
@@ -980,6 +982,7 @@ dvb_sdt_callback
       if (!s->s_dvb_svcname || master) {
         tvh_str_update(&s->s_dvb_svcname, sname);
         save2 = 1;
+        tvhtrace("sdt", "    name changed");
       }
     }
     
@@ -988,6 +991,7 @@ dvb_sdt_callback
       if (!s->s_dvb_provider || master) {
         tvh_str_update(&s->s_dvb_provider, sprov);
         save2 = 1;
+        tvhtrace("sdt", "    provider changed");
       }
     }
 
