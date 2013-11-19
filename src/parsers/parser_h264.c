@@ -303,22 +303,27 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   width = read_golomb_ue(bs) + 1; /* mb width */
   height = read_golomb_ue(bs) + 1; /* mb height */
 
-  p->sps[sps_id].width = width * 16;
-  p->sps[sps_id].height = height * 16;
-
   p->sps[sps_id].mbs_only_flag = read_bits1(bs);
   if(!p->sps[sps_id].mbs_only_flag)
     p->sps[sps_id].aff = read_bits1(bs);
 
   read_bits1(bs);
 
+  int crop_left   = 0;
+  int crop_right  = 0;
+  int crop_top    = 0;
+  int crop_bottom = 0;
+
   /* CROP */
   if(read_bits1(bs)){
-    tmp = read_golomb_ue(bs);
-    tmp = read_golomb_ue(bs);
-    tmp = read_golomb_ue(bs);
-    tmp = read_golomb_ue(bs);
+    crop_left   = read_golomb_ue(bs) * 2;
+    crop_right  = read_golomb_ue(bs) * 2;
+    crop_top    = read_golomb_ue(bs) * 2;
+    crop_bottom = read_golomb_ue(bs) * 2;
   }
+
+  p->sps[sps_id].width  = width  * 16 - crop_left - crop_right;
+  p->sps[sps_id].height = height * 16 - crop_top  - crop_bottom;
 
   if(read_bits1(bs)) {
     decode_vui(p, bs, sps_id);
