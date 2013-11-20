@@ -59,7 +59,9 @@ def load_muxes ( path, adps ):
     'transportstreamid' : 'tsid',
     'originalnetworkid' : 'onid',
     'initialscan'       : 'initscan',
-    'default_authority' : 'cridauth'
+    'default_authority' : 'cridauth',
+    'delivery_system'   : 'delsys',
+    'symbol_rate'       : 'symbolrate'
   }
   muxs = {}
   for f in glob.glob(os.path.join(path, 'dvbmuxes', '*', '*')):
@@ -86,16 +88,16 @@ def load_muxes ( path, adps ):
     m['svcs'] = {}
 
     # Fixups
-    if 'delivery_system' in m:
-      m['delivery_system'] = m['delivery_system'][4:]
+    if 'delsys' in m:
+      m['delsys'] = m['delsys'][4:]
     elif t == 'A':
-      m['delivery_system'] = 'ATSC'
+      m['delsys'] = 'ATSC'
     elif t == 'T':
-      m['delivery_system'] = 'DVBT'
+      m['delsys'] = 'DVBT'
     elif t == 'C':
-      m['delivery_system'] = 'DVBC_ANNEX_AC'
+      m['delsys'] = 'DVBC_ANNEX_AC'
     elif t == 'S':
-      m['delivery_system'] = 'DVBS'
+      m['delsys'] = 'DVBS'
     if 'polarisation' in m:
       m['polarisation'] = m['polarisation'][0]
     if 'modulation' in m and m['polarisation'] == 'PSK_8':
