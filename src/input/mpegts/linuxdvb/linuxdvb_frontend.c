@@ -534,7 +534,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Statistics */
   if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16))
-    mmi->mmi_stats.signal = u16;
+    mmi->mmi_stats.signal = (u16 * 100) / 0xffff;
   if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
     mmi->mmi_stats.ber = u32;
   /* SNR is reported in 0.1 dB resolution */
