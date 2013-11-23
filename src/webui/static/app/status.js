@@ -354,8 +354,8 @@ tvheadend.status = function() {
     activeTab : 0,
 		iconCls : 'eye',
 		items : [
-      new tvheadend.status_subs,
       new tvheadend.status_streams,
+      new tvheadend.status_subs,
       new tvheadend.status_conns
     ]
   });
