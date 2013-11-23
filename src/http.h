@@ -20,10 +20,14 @@
 #define HTTP_H_
 
 #include "htsbuf.h"
+#include "url.h"
 
 TAILQ_HEAD(http_arg_list, http_arg);
 
+typedef RB_HEAD(,http_arg) http_arg_tree_t;
+
 typedef struct http_arg {
+  RB_ENTRY(http_arg) rb_link;
   TAILQ_ENTRY(http_arg) link;
   char *key;
   char *val;
@@ -131,12 +135,25 @@ typedef struct http_path {
 http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
-
-
 void http_server_init(const char *bindaddr);
 
 int http_access_verify(http_connection_t *hc, int mask);
 
 void http_deescape(char *s);
+
+typedef struct http_client http_client_t;
+
+typedef void   (http_client_conn_cb) (void *p);
+typedef size_t (http_client_data_cb) (void *p, void *buf, size_t len);
+typedef void   (http_client_fail_cb) (void *p);
+
+void http_client_init ( void );
+http_client_t*
+http_connect ( const url_t *url,
+               http_client_conn_cb conn_cb,
+               http_client_data_cb data_cb,
+               http_client_fail_cb fail_cb,
+               void *p );
+void http_close ( http_client_t *hc );
 
 #endif /* HTTP_H_ */
