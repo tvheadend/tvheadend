@@ -21,6 +21,7 @@
 #ifndef __TVHPOLL_H__
 #define __TVHPOLL_H__
 
+#include <stdint.h>
 #include <sys/types.h>
 
 typedef struct tvhpoll tvhpoll_t;

@@ -101,8 +101,8 @@ void tvhpoll_destroy ( tvhpoll_t *tp )
 int tvhpoll_add
   ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num )
 {
+  int i, rc;
 #if ENABLE_EPOLL
-  int i;
   struct epoll_event ev;
   for (i = 0; i < num; i++) {
     memset(&ev, 0, sizeof(ev));
@@ -112,13 +112,14 @@ int tvhpoll_add
     if (evs[i].events & TVHPOLL_PRI) ev.events |= EPOLLPRI;
     if (evs[i].events & TVHPOLL_ERR) ev.events |= EPOLLERR;
     if (evs[i].events & TVHPOLL_HUP) ev.events |= EPOLLHUP;
-    if (epoll_ctl(tp->fd, EPOLL_CTL_ADD, evs[i].fd, &ev) != 0)
-      return -1;
+    rc = epoll_ctl(tp->fd, EPOLL_CTL_ADD, evs[i].fd, &ev);
+    if (rc && errno == EEXIST) {
+      if (epoll_ctl(tp->fd, EPOLL_CTL_MOD, evs[i].fd, &ev))
+        return -1;
+    }
   }
   return 0;
 #elif ENABLE_KQUEUE
-  int i;
-  int rc;
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
     if (evs[i].events & TVHPOLL_OUT){
@@ -149,7 +150,6 @@ int tvhpoll_add
 int tvhpoll_rem
   ( tvhpoll_t *tp, tvhpoll_event_t *evs, size_t num )
 {
-  tvhpoll_alloc(tp, num);
 #if ENABLE_EPOLL
   int i;
   for (i = 0; i < num; i++)
