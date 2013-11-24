@@ -732,6 +732,7 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
+  http_client_init();
   tcp_server_init(opt_ipv6);
   http_server_init(opt_bindaddr);
   webui_init();
