@@ -169,15 +169,15 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    tv.ui.VideoPlayer.superclass.initComponent.apply(this, arguments);
 	},
 
-	_getUrl: function(chid, params) {
+	_getUrl: function(uuid, params) {
 	    var url = '';
 
 	    if(params.playlist)
-		url += 'playlist/channelid/'
+		url += 'playlist/channel/'
 	    else
-		url += 'stream/channelid/'
+		url += 'stream/channel/'
 	    
-	    url += chid;
+	    url += uuid;
 	    url += "?transcode="  + new Number(params.transcode);
 	    url += "&mux="        + params.muxer;
 	    url += "&acodec="     + params.audio;
@@ -265,7 +265,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    this.video.dom.play();
 	},
 
-	zapTo: function(chid, config) {
+	zapTo: function(uuid, config) {
 	    var config = config || {}
 	    var params = {}
 
@@ -282,7 +282,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    this.body.removeClass('tv-video-error');
 	    this.body.addClass('tv-video-loading');
 
-	    this.source.dom.src = this._getUrl(chid, params);
+	    this.source.dom.src = this._getUrl(uuid, params);
 	    this.video.dom.load();
 	}
     };
@@ -300,8 +300,8 @@ tv.ui.ChannelList = Ext.extend(Ext.DataView, {
 	    singleSelect: true,
 	    tpl: new Ext.XTemplate(
 		'<tpl for=".">',
-		'<div class="tv-list-item" id="chid_{chid}">',
-		'<img src="{ch_icon}" title="{name}">{name}',
+		'<div class="tv-list-item" id="{uuid}">',
+		'<img src="{icon}" title="{name}">{name}',
 		'</div>',
 		'</tpl>'),
 
@@ -417,16 +417,13 @@ tv.app = function() {
 		store: new Ext.data.JsonStore({
 		    autoLoad : true,
 		    root : 'entries',
-		    fields : ['ch_icon', 'number', 'name', 'chid'],
-		    id : 'chid',
+		    fields : ['icon', 'number', 'name', 'uuid'],
+		    id : 'uuid',
 		    sortInfo : {
 			field : 'number',
 			direction : "ASC"
 		    },
-		    url : "channels",
-		    baseParams : {
-			op : 'list'
-		    }
+		    url : "api/channel/grid"
 		})
 	    });
 
@@ -460,8 +457,7 @@ tv.app = function() {
 		    return;
 		    
 		var item = this.store.getAt(indices[0]);
-
-		videoPlayer.zapTo(item.data.chid);
+		videoPlayer.zapTo(item.id);
 		chListPanel.hide();
 		chList.blur();
 	    });
