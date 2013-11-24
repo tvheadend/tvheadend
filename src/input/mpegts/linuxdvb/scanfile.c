@@ -280,7 +280,7 @@ scanfile_load_one ( scanfile_network_t *net, const char *line )
       break;
   }
 
-  tvhdebug("scanfile", "[%s] %s", line, r ? "FAIL" : "OK");
+  tvhtrace("scanfile", "[%s] %s", line, r ? "FAIL" : "OK");
   if (r) {
     free(mux);
   } else {
