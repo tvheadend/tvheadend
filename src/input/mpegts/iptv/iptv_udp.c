@@ -217,7 +217,7 @@ iptv_rtp_read ( iptv_mux_t *im, size_t *off )
 
   /* OK */
   *off = hlen;
-  return len-hlen;
+  return len;
 }
 
 /*

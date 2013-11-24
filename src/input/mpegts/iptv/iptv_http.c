@@ -52,12 +52,7 @@ iptv_http_data
 
   memcpy(tsb, buf, len);
 
-  im->mm_iptv_pos
-      = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
-                                  im->mm_active,
-                                  im->mm_iptv_tsb,
-                                  im->mm_iptv_pos + len,
-                                  NULL, NULL, "iptv");
+  iptv_input_recv_packets(im, 0, len);
 
   pthread_mutex_unlock(&iptv_lock);
 

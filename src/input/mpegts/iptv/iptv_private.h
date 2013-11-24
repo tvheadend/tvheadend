@@ -57,10 +57,17 @@ struct iptv_input
 };
 
 void iptv_input_mux_started ( iptv_mux_t *im );
+void iptv_input_recv_packets ( iptv_mux_t *im, size_t off, size_t len );
 
 struct iptv_network
 {
   mpegts_network_t;
+
+  int in_bps;
+  int in_bw_limited;
+
+  uint32_t in_max_streams;
+  uint32_t in_max_bandwidth;
 };
 
 struct iptv_mux
