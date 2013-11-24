@@ -116,6 +116,33 @@ mpegts_mux_instance_start
   return 0;
 }
 
+int
+mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
+{
+  int w = 0;
+  const service_t *s;
+  const th_subscription_t *ths;
+  mpegts_input_t *mi = mmi->mmi_input;
+  lock_assert(&mi->mi_delivery_mutex);
+
+  /* Direct subs */
+  LIST_FOREACH(ths, &mmi->mmi_subs, ths_mmi_link) {
+    w = MAX(w, ths->ths_weight);
+  }
+
+  /* Service subs */
+  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+    mpegts_service_t *ms = (mpegts_service_t*)s;
+    if (ms->s_dvb_mux == mmi->mmi_mux) {
+      LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
+        w = MAX(w, ths->ths_weight);
+      }
+    }
+  }
+
+  return w;
+}
+
 /* ****************************************************************************
  * Class definition
  * ***************************************************************************/
