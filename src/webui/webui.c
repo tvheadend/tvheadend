@@ -649,7 +649,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
  * Subscribes to a service and starts the streaming loop
  */
 static int
-http_stream_service(http_connection_t *hc, service_t *service)
+http_stream_service(http_connection_t *hc, service_t *service, int weight)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
@@ -690,7 +690,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_service(service, 100, "HTTP", st, flags,
+  s = subscription_create_from_service(service, weight ?: 100, "HTTP", st, flags,
 				       addrbuf,
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));
@@ -721,20 +721,16 @@ http_stream_service(http_connection_t *hc, service_t *service)
 #if ENABLE_MPEGTS
 #include "src/input/mpegts.h"
 static int
-http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
+http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 {
   th_subscription_t *s;
   streaming_queue_t sq;
-  const char *name, *str;
+  const char *name;
   char addrbuf[50];
   streaming_queue_init(&sq, SMT_PACKET);
-  int weight = 10; // TODO: remove hardcoded
-
-  if ((str = http_arg_get(&hc->hc_req_args, "weight")))
-    weight = atoi(str);
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_mux(mm, weight, "HTTP", &sq.sq_st,
+  s = subscription_create_from_mux(mm, weight ?: 10, "HTTP", &sq.sq_st,
                                    SUBSCRIPTION_RAW_MPEGTS |
                                    SUBSCRIPTION_FULLMUX,
                                    addrbuf, hc->hc_username,
@@ -757,7 +753,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm)
  * Subscribes to a channel and starts the streaming loop
  */
 static int
-http_stream_channel(http_connection_t *hc, channel_t *ch)
+http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
@@ -768,7 +764,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *tr = NULL;
 #endif
   dvr_config_t *cfg;
-  int priority = 100;
   int flags;
   muxer_container_type_t mc;
   char *str;
@@ -810,7 +805,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
+  s = subscription_create_from_channel(ch, weight ?: 100, "HTTP", st, flags,
                addrbuf,
                hc->hc_username,
                http_arg_get(&hc->hc_args, "User-Agent"));
@@ -855,6 +850,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 #if ENABLE_MPEGTS
   mpegts_mux_t *mm = NULL;
 #endif
+  const char *str;
+  int weight = 0;
 
   hc->hc_keep_alive = 0;
 
@@ -869,6 +866,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   http_deescape(components[1]);
+
+  if ((str = http_arg_get(&hc->hc_req_args, "weight")))
+    weight = atoi(str);
 
   scopedgloballock();
 
@@ -886,12 +886,12 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(ch != NULL) {
-    return http_stream_channel(hc, ch);
+    return http_stream_channel(hc, ch, weight);
   } else if(service != NULL) {
-    return http_stream_service(hc, service);
+    return http_stream_service(hc, service, weight);
 #if ENABLE_MPEGTS
   } else if(mm != NULL) {
-    return http_stream_mux(hc, mm);
+    return http_stream_mux(hc, mm, weight);
 #endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
