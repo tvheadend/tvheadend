@@ -899,6 +899,14 @@ capmt_service_start(service_t *s)
   tuner = lfe->lfe_adapter->la_dvb_number;
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
+    LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+      /* skip, if we already have this service */
+      if (ct->ct_service == t)
+        return;
+    }
+  }
+
+  TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     /* skip, if we're not active */
     if (!capmt->capmt_enabled)
       continue;
