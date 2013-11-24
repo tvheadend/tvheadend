@@ -22,25 +22,22 @@
 
 #include <stdint.h>
 
-// TODO: might be better to find a lib to do this!
+// TODO: limits are a bit arbitrary and it's a bit inflexible, but it
+//       does keep things simple, not having dynamically allocated strings
 
 /* URL structure */
 typedef struct url
 {
-  char      scheme[16];
-  char      user[128];
-  char      pass[128];
-  char      host[256];
-  uint16_t  port;
-  char      path[256];
-  char      raw[1024];
+  char  scheme[32];
+  char  user[128];
+  char  pass[128];
+  char  host[256];
+  short port;
+  char  path[256];
+  char  query[1024];
+  char  frag[256];
+  char  raw[2048];
 } url_t;
-
-/* URL regexp - I probably found this online */
-#define UC "[a-z0-9_\\-\\.!£$%^&]"
-#define PC UC
-#define HC "[a-z0-9\\-\\.]"
-#define URL_RE "^(\\w+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
 
 int urlparse ( const char *str, url_t *url );
 

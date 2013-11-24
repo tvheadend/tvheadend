@@ -25,7 +25,83 @@
 #include <regex.h>
 #include <string.h>
 
+/* Use liburiparser if available */
+#if ENABLE_URIPARSER
+#include <uriparser/Uri.h>
+
 int 
+urlparse ( const char *str, url_t *url )
+{
+  UriParserStateA state;
+  UriPathSegmentA *path;
+  UriUriA uri;
+  char *s, buf[256];
+
+  /* Parse */
+  state.uri = &uri;
+  if (uriParseUriA(&state, str) != URI_SUCCESS) {
+    uriFreeUriMembersA(&uri);
+    return -1;
+  }
+  
+  /* Store raw */
+  strncpy(url->raw, str, sizeof(url->raw));
+
+  /* Copy */
+#define uri_copy(y, x)\
+  if (x.first) {\
+    size_t len = x.afterLast - x.first;\
+    strncpy(y, x.first, len);\
+    y[len] = 0;\
+  } else {\
+    *y = 0;\
+  }
+  uri_copy(url->scheme, uri.scheme);
+  uri_copy(url->host,   uri.hostText);
+  uri_copy(url->user,   uri.userInfo);
+  uri_copy(url->query,  uri.query);
+  uri_copy(url->frag,   uri.fragment);
+  uri_copy(buf,         uri.portText);
+  if (*buf)
+    url->port = atoi(buf);
+  else
+    url->port = 0;
+  *url->path = 0;
+  path       = uri.pathHead;
+  while (path) {
+    strcat(url->path, "/");
+    uri_copy(buf, path->text);
+    strcat(url->path, buf);
+    path = path->next;
+  }
+  // TODO: query/fragment
+
+  /* Split user/pass */
+  s = strstr(url->user, ":");
+  if (s) {
+    strcpy(url->pass, s+1);
+    *s = 0;
+  } else {
+    *url->pass = 0;
+  }
+
+  /* Cleanup */
+  uriFreeUriMembersA(&uri);
+  return 0;
+}
+
+/* Fallback to limited support */
+#else /* ENABLE_URIPARSER */
+
+/* URL regexp - I probably found this online */
+// TODO: does not support ipv6
+#define UC "[a-z0-9_\\-\\.!£$%^&]"
+#define PC UC
+#define HC "[a-z0-9\\-\\.]"
+#define URL_RE "^(\\w+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
+
+
+int
 urlparse ( const char *str, url_t *url )
 {
   static regex_t *exp = NULL;
@@ -61,9 +137,12 @@ urlparse ( const char *str, url_t *url )
   copy(url->path,   9);
   copy(buf,         8);
   url->port = atoi(buf);
+  *url->query = 0;
+  *url->frag  = 0;
 
   strncpy(url->raw, str, sizeof(url->raw));
 
- 
   return 0;
 }
+
+#endif /* ENABLE_URIPARSER */

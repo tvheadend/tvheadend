@@ -29,6 +29,7 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "inotify:auto"
+  "uriparser:auto"
   "bundle:no"
   "dvbcsa:no"
   "epoll:yes"
@@ -130,6 +131,17 @@ if enabled_or_auto zlib; then
     enable zlib
   elif enabled zlib; then
     die "Zlib development support not found (use --disable-zlib)"
+  fi
+fi
+
+#
+# uriparser
+#
+if enabled_or_auto uriparser; then
+  if check_pkg liburiparser; then
+    enable uriparser
+  elif enabled uriparser; then
+    die "liburiparser development support not found (use --disable-uriparser)"
   fi
 fi
 

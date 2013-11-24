@@ -2,12 +2,12 @@ Source: tvheadend
 Section: video
 Priority: extra
 Maintainer: Andreas Öman <andreas@tvheadend.org>
-Build-Depends: debhelper (>= 7.0.50), pkg-config, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, libcurl4-gnutls-dev, git-core
+Build-Depends: debhelper (>= 7.0.50), pkg-config, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, libcurl4-gnutls-dev, git-core, liburiparser-dev
 Standards-Version: 3.7.3
 
 Package: tvheadend
 Architecture: any
-Depends: ${shlibs:Depends}, libavahi-client3, zlib1g
+Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1
 Recommends: xmltv-util
 Enhances: showtime
 Replaces: hts-tvheadend
