@@ -29,10 +29,11 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "inotify:auto"
+  "curl:auto"
+  "epoll:auto"
   "uriparser:auto"
   "bundle:no"
   "dvbcsa:no"
-  "epoll:yes"
   "kqueue:no"
 )
 
@@ -135,6 +136,17 @@ if enabled_or_auto zlib; then
 fi
 
 #
+# CURL
+#
+if enabled_or_auto curl; then
+  if check_pkg libcurl; then
+    enable curl
+  elif enabled curl; then
+    die "Curl development support not foun (use --disable-curl)"
+  fi
+fi
+
+#
 # uriparser
 #
 if enabled_or_auto uriparser; then
@@ -227,7 +239,7 @@ fi
 # Icon caching
 #
 if enabled_or_auto imagecache; then
-  if check_pkg libcurl; then
+  if enabled curl; then
     enable imagecache
   elif enabled imagecache; then
     die "Libcurl support not found (use --disable-imagecache)"
@@ -250,8 +262,8 @@ fi
 #
 # epoll
 #
-if [ ${PLATFORM} != "linux" ]; then
-  disable epoll
+if [ ${PLATFORM} = "linux" ]; then
+  enable epoll
 fi
 
 #

@@ -75,6 +75,7 @@ SRCS =  src/version.c \
 	src/access.c \
 	src/dtable.c \
 	src/tcp.c \
+	src/url.c \
 	src/http.c \
 	src/notify.c \
 	src/file.c \
@@ -110,6 +111,7 @@ SRCS =  src/version.c \
 	src/descrambler/descrambler.c \
 	src/service_mapper.c \
 	src/input.c \
+	src/http/http_client.c \
 
 SRCS += \
 	src/api.c \
@@ -199,6 +201,8 @@ SRCS-${CONFIG_IPTV} += \
 	src/input/mpegts/iptv/iptv.c \
         src/input/mpegts/iptv/iptv_mux.c \
         src/input/mpegts/iptv/iptv_service.c \
+        src/input/mpegts/iptv/iptv_http.c \
+        src/input/mpegts/iptv/iptv_udp.c \
 
 # TSfile
 SRCS-$(CONFIG_TSFILE) += \
