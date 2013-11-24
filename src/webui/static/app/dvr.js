@@ -67,9 +67,8 @@ tvheadend.dvrDetails = function(entry) {
 	if (entry.url != null && entry.filesize > 0) {
 		content += '<div class="x-epg-meta">' + '<a href="' + entry.url
 			+ '" target="_blank">Download</a> '
-			+ parseInt(entry.filesize / 1000000) + ' MB<br>'
-			+ "<a href=\"javascript:tvheadend.VLC('dvrfile/" + entry.id
-			+ "')\">Play</a>" + '</div>';
+			+ parseInt(entry.filesize / 1000000) + ' MB</div>';
+
 	}
 
 	var win = new Ext.Window({

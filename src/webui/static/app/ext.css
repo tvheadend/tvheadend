@@ -333,6 +333,27 @@
 	padding: 10px;
 }
 
+.tv-video-player {
+    margin-right: auto;
+    margin-left : auto;
+
+    width : 100%;
+    height: 100%;
+    background: black;
+    color: white;
+}
+
+.tv-video-idle {
+    background-image     : url(../../docresources/tvheadendlogo.png);
+    background-repeat    : no-repeat;
+    background-position  : center;
+}
+
+.tv-video-message {
+    text-align: center;
+    font-size: 150%;
+}
+
 .about-title {
 	font-size: 24px;
 	font-weight: bold;

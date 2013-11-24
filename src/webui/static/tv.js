@@ -137,16 +137,15 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 		    render: {
 			fn: function() {
 			    this.message = this.body.createChild({
-				tag : 'span',
+				tag : 'div',
 				cls : 'tv-video-message',
-				hidden: true,
 				html: ''
 			    });
+			    this.message.setVisibilityMode(Ext.Element.DISPLAY);
+			    this.message.hide();
 
 			    this.video = this.body.createChild({
 				tag     : 'video',
-				width   : '100%',
-				height  : '100%',
 				html    : "Your browser doesn't support html5 video"
 			    });
 
@@ -253,6 +252,43 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    this.body.addClass('tv-video-idle');
 	    this.source.dom.src = '';
 	    this.video.dom.load();
+	},
+
+	pause: function() {
+	    this.video.dom.pause();
+	},
+
+	setVolume: function(vol) {
+	    this.video.dom.volume = vol / 100.0;
+	},
+
+	getVolume: function() {
+	    return Math.round(100 * this.video.dom.volume);
+	},
+
+	setDisplaySize: function(width, height) {
+	    this.video.setSize(width, height);
+	},
+
+	setResolution: function(res) {
+	    this.params.resolution = res;
+	},
+
+	isIdle: function() {
+	    return this.body.hasClass('tv-video-idle');
+	},
+
+	fullscreen: function() {
+	    var dom  = this.video.dom;
+
+	    if(typeof dom.requestFullScreen !== 'undefined')
+		dom.requestFullScreen();
+
+	    else if(typeof dom.mozRequestFullScreen !== 'undefined')
+		dom.mozRequestFullScreen();
+
+	    else if(typeof dom.webkitRequestFullScreen !== 'undefined')
+		dom.webkitEnterFullscreen();
 	},
 
 	play: function() {
@@ -412,6 +448,7 @@ tv.app = function() {
 		},
 		renderTo: Ext.getBody()
 	    });
+	    videoPlayer.setDisplaySize('100%', '00%');
 
 	    var chList = new tv.ui.ChannelList({
 		store: new Ext.data.JsonStore({
