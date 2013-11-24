@@ -20,6 +20,7 @@
 #include "iptv_private.h"
 #include "tvhpoll.h"
 #include "tcp.h"
+#include "settings.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -302,6 +303,16 @@ iptv_network_mux_class ( mpegts_network_t *mm )
   return &iptv_mux_class;
 }
 
+static void
+iptv_network_config_save ( mpegts_network_t *mn )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&mn->mn_id, c);
+  htsmsg_add_str(c, "uuid", idnode_uuid_as_str(&mn->mn_id));
+  hts_settings_save(c, "input/iptv/config");
+  htsmsg_destroy(c);
+}
+
 /* **************************************************************************
  * IPTV initialise
  * *************************************************************************/
@@ -309,6 +320,8 @@ iptv_network_mux_class ( mpegts_network_t *mm )
 void iptv_init ( void )
 {
   pthread_t tid;
+  htsmsg_t *conf;
+  const char *uuid = NULL;
 
   /* Register handlers */
   iptv_http_init();
@@ -323,12 +336,22 @@ void iptv_init ( void )
   iptv_input.mi_display_name   = iptv_input_display_name;
   iptv_input.mi_enabled        = 1;
 
+  /* Load settings */
+  if ((conf = hts_settings_load("input/iptv/config")))
+    uuid = htsmsg_get_str(conf, "uuid");
+
   /* Init Network */
   mpegts_network_create0((mpegts_network_t*)&iptv_network,
-                         &iptv_network_class, NULL, "IPTV Network", NULL);
+                         &iptv_network_class, uuid, "IPTV Network", conf);
   iptv_network.mn_create_service = iptv_network_create_service;
   iptv_network.mn_mux_class      = iptv_network_mux_class;
   iptv_network.mn_mux_create2    = iptv_network_create_mux2;
+  iptv_network.mn_config_save    = iptv_network_config_save;
+  
+  /* Defaults */
+  if (!conf) {
+    iptv_network.mn_skipinitscan = 1;
+  }
 
   /* Link */
   mpegts_input_set_network((mpegts_input_t*)&iptv_input,
