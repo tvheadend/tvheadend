@@ -560,8 +560,12 @@ linuxdvb_frontend_monitor ( void *aux )
         u16 = fe_properties[1].u.st.stat[0].uvalue;
     }
     if(fe_properties[2].u.st.len > 0) {
-      if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER)
-        mmi->mmi_stats.ber = u16 / fe_properties[2].u.st.stat[0].uvalue;
+      if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        if(fe_properties[5].u.st.stat[0].uvalue > 0 )
+          mmi->mmi_stats.ber = u16 / fe_properties[2].u.st.stat[0].uvalue;
+        else
+          mmi->mmi_stats.ber = 0;
+      }
     }
     if(fe_properties[3].u.st.len > 0) {
       /* note that decibel scale means 0.0001 dB units */
@@ -576,8 +580,12 @@ linuxdvb_frontend_monitor ( void *aux )
         u16 = fe_properties[4].u.st.stat[0].uvalue;
     }
     if(fe_properties[5].u.st.len > 0) {
-      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER)
-        mmi->mmi_stats.unc = u16 / fe_properties[5].u.st.stat[0].uvalue;
+      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        if(fe_properties[5].u.st.stat[0].uvalue > 0 )
+          mmi->mmi_stats.unc = u16 / fe_properties[5].u.st.stat[0].uvalue;
+        else
+          mmi->mmi_stats.unc = 0;
+      }
     }
   } else {
     /* use old v3 API */
