@@ -47,8 +47,7 @@ void *tcp_server_create(const char *bindaddr, int port,
 
 int tcp_read(int fd, void *buf, size_t len);
 
-int tcp_read_line(int fd, char *buf, const size_t bufsize, 
-		  htsbuf_queue_t *spill);
+char *tcp_read_line(int fd, htsbuf_queue_t *spill);
 
 int tcp_read_data(int fd, char *buf, const size_t bufsize,
 		  htsbuf_queue_t *spill);

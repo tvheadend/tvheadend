@@ -706,16 +706,13 @@ http_parse_get_args(http_connection_t *hc, char *args)
   }
 }
 
-
 /**
  *
  */
 static void
 http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 {
-  char cmdline[1024];
-  char hdrline[1024];
-  char *argv[3], *c;
+  char *argv[3], *c, *cmdline = NULL, *hdrline = NULL;
   int n;
 
   htsbuf_queue_init(&hc->hc_reply, 0);
@@ -723,31 +720,36 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
   do {
     hc->hc_no_output  = 0;
 
-    if(tcp_read_line(hc->hc_fd, cmdline, sizeof(cmdline), spill) < 0)
-      return;
+    if (cmdline) free(cmdline);
+
+    if ((cmdline = tcp_read_line(hc->hc_fd, spill)) == NULL)
+      goto error;
 
     if((n = http_tokenize(cmdline, argv, 3, -1)) != 3)
-      return;
+      goto error;
     
     if((hc->hc_cmd = str2val(argv[0], HTTP_cmdtab)) == -1)
-      return;
+      goto error;
+
     hc->hc_url = argv[1];
     if((hc->hc_version = str2val(argv[2], HTTP_versiontab)) == -1)
-      return;
+      goto error;
 
     /* parse header */
     while(1) {
-      if(tcp_read_line(hc->hc_fd, hdrline, sizeof(hdrline), spill) < 0)
-	return;
+      if (hdrline) free(hdrline);
 
-      if(hdrline[0] == 0)
-	break; /* header complete */
+      if ((hdrline = tcp_read_line(hc->hc_fd, spill)) == NULL)
+        goto error;
+
+      if(!*hdrline)
+	      break; /* header complete */
 
       if((n = http_tokenize(hdrline, argv, 2, -1)) < 2)
-	continue;
+	      continue;
 
       if((c = strrchr(argv[0], ':')) == NULL)
-	return;
+	      goto error;
 
       *c = 0;
       http_arg_set(&hc->hc_args, argv[0], argv[1]);
@@ -771,7 +773,10 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
     hc->hc_password = NULL;
 
   } while(hc->hc_keep_alive);
-  
+
+error:
+  free(hdrline);
+  free(cmdline);
 }
 
 

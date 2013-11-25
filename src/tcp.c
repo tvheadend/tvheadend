@@ -249,30 +249,29 @@ tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
 /**
  *
  */
-int
-tcp_read_line(int fd, char *buf, const size_t bufsize, htsbuf_queue_t *spill)
+char *
+tcp_read_line(int fd, htsbuf_queue_t *spill)
 {
   int len;
+  char *buf;
 
-  while(1) {
+  do {
     len = htsbuf_find(spill, 0xa);
 
     if(len == -1) {
       if(tcp_fill_htsbuf_from_fd(fd, spill) < 0)
-	return -1;
-      continue;
+        return NULL;
     }
-    
-    if(len >= bufsize - 1)
-      return -1;
+  } while (len == -1);
 
-    htsbuf_read(spill, buf, len);
-    buf[len] = 0;
-    while(len > 0 && buf[len - 1] < 32)
-      buf[--len] = 0;
-    htsbuf_drop(spill, 1); /* Drop the \n */
-    return 0;
-  }
+  buf = malloc(len+1);
+  
+  htsbuf_read(spill, buf, len);
+  buf[len] = 0;
+  while(len > 0 && buf[len - 1] < 32)
+    buf[--len] = 0;
+  htsbuf_drop(spill, 1); /* Drop the \n */
+  return buf;
 }
 
 
