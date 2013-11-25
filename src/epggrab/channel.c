@@ -71,7 +71,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
   }
 
   /* New link */
-  tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
+  tvhdebug(ec->mod->id, "linking %s to %s",
          ec->id, channel_get_name(ch));
   ecl = calloc(1, sizeof(epggrab_channel_link_t));
   ecl->ecl_channel = ch;
