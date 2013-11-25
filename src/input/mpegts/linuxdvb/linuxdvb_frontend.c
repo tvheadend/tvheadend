@@ -568,10 +568,9 @@ linuxdvb_frontend_monitor ( void *aux )
       }
     }
     if(fe_properties[3].u.st.len > 0) {
-      /* note that decibel scale means 0.0001 dB units */
-      /* TODO: snr is not unsigned, but signed! */
+      /* note that decibel scale means 1 = 0.0001 dB units here */
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL)
-        mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].uvalue;
+        mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].svalue * 0.0001;
       /* TODO: handle other scales */
     }
     /* Calculate PER from PRE_ERROR and TOTAL_BIT_COUNT */
