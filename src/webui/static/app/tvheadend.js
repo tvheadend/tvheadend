@@ -5,6 +5,12 @@ tvheadend.conf_dvbin   = null;
 tvheadend.conf_tsdvr   = null;
 tvheadend.conf_csa     = null;
 
+/* State Provider */
+Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
+  // 7 days from now
+  expires : new Date(new Date().getTime()+(1000*60*60*24*7)),
+}));
+
 /**
  * Displays a help popup window
  */

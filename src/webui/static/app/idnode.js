@@ -909,6 +909,8 @@ tvheadend.idnode_grid = function(panel, conf)
                       '->', '-', 'Per page', count ]
     });
     var grid   = new Ext.grid.EditorGridPanel({
+      stateful      : true,
+      stateId       : conf.url,
       stripeRows    : true,
       title         : conf.titleP,
       store         : store,
