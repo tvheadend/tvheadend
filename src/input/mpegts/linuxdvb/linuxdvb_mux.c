@@ -97,18 +97,11 @@ linuxdvb_mux_class_delsys_set (void *o, const void *v)
   return 1;
 }
 
-static void
-linuxdvb_mux_class_delete ( idnode_t *self )
-{
-  linuxdvb_mux_delete((mpegts_mux_t*)self);
-}
-
 const idclass_t linuxdvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "linuxdvb_mux",
   .ic_caption    = "Linux DVB Multiplex",
-  .ic_delete     = linuxdvb_mux_class_delete,
   .ic_properties = (const property_t[]){
     {}
   }
