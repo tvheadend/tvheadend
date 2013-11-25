@@ -161,7 +161,6 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   int ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   iptv_handler_t *ih;
-  assert(mmi == &im->mm_iptv_instance);
   char buf[256];
   url_t url;
 
@@ -216,7 +215,6 @@ static void
 iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
-  assert(mmi == &im->mm_iptv_instance);
 
   // Not active??
   if (!im->mm_active)

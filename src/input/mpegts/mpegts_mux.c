@@ -151,7 +151,14 @@ static void
 mpegts_mux_class_save ( idnode_t *self )
 {
   mpegts_mux_t *mm = (mpegts_mux_t*)self;
-  mm->mm_config_save(mm);
+  if (mm->mm_config_save) mm->mm_config_save(mm);
+}
+
+static void
+mpegts_mux_class_delete ( idnode_t *self )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t*)self;
+  if (mm->mm_delete) mm->mm_delete(mm);
 }
 
 static const void *
@@ -198,6 +205,7 @@ const idclass_t mpegts_mux_class =
   .ic_caption    = "MPEGTS Multiplex",
   .ic_event      = "mpegts_mux",
   .ic_save       = mpegts_mux_class_save,
+  .ic_delete     = mpegts_mux_class_delete,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,

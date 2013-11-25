@@ -75,7 +75,6 @@ struct iptv_mux
   mpegts_mux_t;
 
   int                   mm_iptv_fd;
-  mpegts_mux_instance_t mm_iptv_instance;
   char                 *mm_iptv_url;
   char                 *mm_iptv_interface;
 

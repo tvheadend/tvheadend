@@ -95,11 +95,9 @@ iptv_mux_create ( const char *uuid, htsmsg_t *conf )
   im->mm_delete           = iptv_mux_delete;
 
   /* Create Instance */
-  mpegts_mux_instance_create0(&im->mm_iptv_instance,
-                              &mpegts_mux_instance_class,
-                              NULL,
-                              (mpegts_input_t*)&iptv_input,
-                              (mpegts_mux_t*)im);
+  (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
+                                   (mpegts_input_t*)&iptv_input,
+                                   (mpegts_mux_t*)im);
 
   /* Services */
   c = hts_settings_load_r(1, "input/iptv/muxes/%s/services",
