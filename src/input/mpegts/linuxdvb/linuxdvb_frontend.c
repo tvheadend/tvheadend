@@ -561,7 +561,7 @@ linuxdvb_frontend_monitor ( void *aux )
     }
     if(fe_properties[2].u.st.len > 0) {
       if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
-        if(fe_properties[5].u.st.stat[0].uvalue > 0 )
+        if(fe_properties[2].u.st.stat[0].uvalue > 0 )
           mmi->mmi_stats.ber = u16 / fe_properties[2].u.st.stat[0].uvalue;
         else
           mmi->mmi_stats.ber = 0;
