@@ -86,7 +86,7 @@ static void
 tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
 {
   uint32_t a;
-  char *s, *t, *r;
+  char *s, *t, *r = NULL;
 
   if (*c)
     htsmsg_destroy(*c);
