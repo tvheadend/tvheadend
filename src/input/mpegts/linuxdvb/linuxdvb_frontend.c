@@ -406,7 +406,8 @@ linuxdvb_frontend_default_tables
 
   /* Common */
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
-                   NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
+                   NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_PAT_PID);
 #if 0
   mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
                    NULL, "cat", MT_CRC, DVB_CAT_PID);
@@ -420,7 +421,8 @@ linuxdvb_frontend_default_tables
     else
       tableid = DVB_VCT_C_BASE;
     mpegts_table_add(mm, tableid, DVB_VCT_MASK, atsc_vct_callback,
-                     NULL, "vct", MT_QUICKREQ | MT_CRC, DVB_VCT_PID);
+                     NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                     DVB_VCT_PID);
 
   /* DVB */
   } else {
@@ -429,7 +431,8 @@ linuxdvb_frontend_default_tables
     mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
                      NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
     mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
-                     NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
+                     NULL, "sdt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                     DVB_SDT_PID);
     mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                      NULL, "bat", MT_CRC, DVB_BAT_PID);
 #if 0

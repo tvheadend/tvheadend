@@ -92,7 +92,7 @@ ts_recv_packet0
 
       // Mark as error if this is not the first packet of a payload
       if(!pusi)
-  error |= 0x2;
+        error |= 0x2;
     }
     st->es_cc_valid = 1;
     st->es_cc = (cc + 1) & 0xf;
@@ -169,7 +169,8 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
  * Process service stream packets, extract PCR and optionally descramble
  */
 int
-ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
+ts_recv_packet1
+  (mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp, int table)
 {
   elementary_stream_t *st;
   int pid, n, m, r;
@@ -221,7 +222,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   if (pcr != PTS_UNSET)
     ts_process_pcr(t, st, pcr);
 
-  if((st == NULL) && (pid != t->s_pcr_pid)) {
+  if((st == NULL) && (pid != t->s_pcr_pid) && !table) {
     pthread_mutex_unlock(&t->s_stream_mutex);
     return 0;
   }

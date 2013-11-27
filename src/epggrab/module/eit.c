@@ -642,7 +642,7 @@ done:
 static void _eit_start 
   ( epggrab_module_ota_t *m, mpegts_mux_t *dm )
 {
-  int pid;
+  int pid, opts = 0;
 
   /* Disabled */
   if (!m->enabled) return;
@@ -665,9 +665,11 @@ static void _eit_start
 
   /* Standard (0x12) */
   } else {
-    pid = 0x12;
+    pid  = 0x12;
+    opts = MT_RECORD;
   }
-  mpegts_table_add(dm, 0, 0, _eit_callback, m, m->id, MT_CRC, pid);
+  mpegts_table_add(dm, 0, 0, _eit_callback, m, m->id, MT_CRC | opts, pid);
+  // TODO: might want to limit recording to EITpf only
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
 }
 

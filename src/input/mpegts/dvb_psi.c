@@ -608,7 +608,7 @@ dvb_pat_callback
       int save = 0;
       if (mpegts_service_find(mm, sid, pid, 1, &save)) {
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
-                         NULL, "pmt", MT_CRC | MT_QUICKREQ, pid);
+                         NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_RECORD, pid);
 			}
     }
 

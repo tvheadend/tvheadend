@@ -147,8 +147,12 @@ mpegts_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 static int
 mps_cmp ( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b )
 {
-  if (a->mps_type != b->mps_type)
-    return a->mps_type - b->mps_type;
+  if (a->mps_type != b->mps_type) {
+    if (a->mps_type & MPS_STREAM)
+      return 1;
+    else
+      return -1;
+  }
   if (a->mps_owner < b->mps_owner) return -1;
   if (a->mps_owner > b->mps_owner) return 1;
   return 0;
@@ -360,19 +364,26 @@ mpegts_input_recv_packets
 
       /* Find PID */
       if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
+        int stream = 0;
+	int table  = 0;
 
         /* Stream takes pref. */
-        RB_FOREACH(mps, &mp->mp_subs, mps_link)
-          if (mps->mps_type == MPS_STREAM)
-            break;
+        RB_FOREACH(mps, &mp->mp_subs, mps_link) {
+          if (mps->mps_type & MPS_STREAM)
+            stream = 1;
+          if (mps->mps_type & MPS_TABLE)
+	    table  = 1;
+        }
+        printf("pid = %04X, stream = %d, table = %d\n", pid, stream, table);
   
         /* Stream data */
-        if (mps) {
+        if (stream) {
           LIST_FOREACH(s, &mi->mi_transports, s_active_link)
-            ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr);
+            ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr, table);
+        }
 
         /* Table data */
-        } else {
+        if (table) {
           if (!(tsb[i+1] & 0x80)) {
             mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
             memcpy(mtf->mtf_tsb, tsb+i, 188);
@@ -383,11 +394,12 @@ mpegts_input_recv_packets
             tvhdebug("tsdemux", "%s - SI packet had errors", name);
           }
         }
-      }
 
       /* Force PCR extraction for tsfile */
-      if (ppcr && *ppcr == PTS_UNSET)
-        ts_recv_packet1(NULL, tsb+i, ppcr);
+      } else {
+        if (ppcr && *ppcr == PTS_UNSET)
+          ts_recv_packet1(NULL, tsb+i, ppcr, 0);
+      }
 
       i   += 188;
       len -= 188;

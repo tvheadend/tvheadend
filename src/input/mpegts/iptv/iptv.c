@@ -348,10 +348,10 @@ iptv_input_mux_started ( iptv_mux_t *im )
   // TODO: not currently installing ATSC handler
   mpegts_table_add((mpegts_mux_t*)im, DVB_SDT_BASE, DVB_SDT_MASK,
                    dvb_sdt_callback, NULL, "sdt",
-                   MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
+                   MT_QUICKREQ | MT_CRC | MT_RECORD, DVB_SDT_PID);
   mpegts_table_add((mpegts_mux_t*)im, DVB_PAT_BASE, DVB_PAT_MASK,
                    dvb_pat_callback, NULL, "pat",
-                   MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
+                   MT_QUICKREQ | MT_CRC | MT_RECORD, DVB_PAT_PID);
 }
 
 /* **************************************************************************

@@ -524,11 +524,13 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
+  int type = MPS_TABLE;
+  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
   mpegts_input_t *mi;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_delivery_mutex);
-  mi->mi_open_pid(mi, mm, mt->mt_pid, MPS_TABLE, mt);
+  mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 
@@ -536,10 +538,12 @@ void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
+  int type = MPS_TABLE;
+  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_delivery_mutex);
-  mi->mi_close_pid(mi, mm, mt->mt_pid, MPS_TABLE, mt);
+  mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
   pthread_mutex_unlock(&mi->mi_delivery_mutex);
 }
 

@@ -91,11 +91,10 @@ typedef struct mpegts_table_state
 typedef struct mpegts_pid_sub
 {
   RB_ENTRY(mpegts_pid_sub) mps_link;
-  enum {
-    MPS_NONE,
-    MPS_STREAM,
-    MPS_TABLE
-  }                        mps_type;
+#define MPS_NONE   0x0
+#define MPS_STREAM 0x1
+#define MPS_TABLE  0x2
+  int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
 
@@ -118,6 +117,7 @@ struct mpegts_table
 #define MT_CRC      0x1
 #define MT_FULL     0x2
 #define MT_QUICKREQ 0x4
+#define MT_RECORD   0x8
 
   /**
    * Cycle queue
