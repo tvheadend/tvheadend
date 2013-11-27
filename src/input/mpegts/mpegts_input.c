@@ -374,7 +374,6 @@ mpegts_input_recv_packets
           if (mps->mps_type & MPS_TABLE)
 	    table  = 1;
         }
-        printf("pid = %04X, stream = %d, table = %d\n", pid, stream, table);
   
         /* Stream data */
         if (stream) {
