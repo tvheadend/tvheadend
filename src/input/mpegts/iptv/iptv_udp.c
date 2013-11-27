@@ -101,30 +101,30 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
       goto error;
     }
 
-    /* Join group */
-    m.imr_multiaddr      = sin.sin_addr;
-    m.imr_address.s_addr = 0;
-#if defined(PLATFORM_LINUX)
-    m.imr_ifindex        = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-    m.imr_ifindex        = ifr.ifr_index;
-#endif
-#ifdef SOL_IP
-    solip = SOL_IP;
-#else
-    {
-      struct protoent *pent;
-      pent = getprotobyname("ip");
-      solip = (pent != NULL) ? pent->p_proto : 0;
-    }
-#endif
+      /* Join group */
+      m.imr_multiaddr      = sin.sin_addr;
+      m.imr_address.s_addr = 0;
+  #if defined(PLATFORM_LINUX)
+      m.imr_ifindex        = ifr.ifr_ifindex;
+  #elif defined(PLATFORM_FREEBSD)
+      m.imr_ifindex        = ifr.ifr_index;
+  #endif
+  #ifdef SOL_IP
+      solip = SOL_IP;
+  #else
+      {
+        struct protoent *pent;
+        pent = getprotobyname("ip");
+        solip = (pent != NULL) ? pent->p_proto : 0;
+      }
+  #endif
 
-    if (setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
-      inet_ntop(AF_INET, &m.imr_multiaddr, buf, sizeof(buf));
-      tvherror("iptv", "%s - cannot join %s [%s]",
-               name, buf, strerror(errno));
-      goto error;
-    }
+      if (setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
+        inet_ntop(AF_INET, &m.imr_multiaddr, buf, sizeof(buf));
+        tvherror("iptv", "%s - cannot join %s [%s]",
+                 name, buf, strerror(errno));
+        goto error;
+      }
 
   /* Bind to IPv6 group */
   } else {
@@ -171,7 +171,9 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
             name, strerror(errno));
 
   /* Done */
-  return fd;
+  im->mm_iptv_fd = fd;
+  iptv_input_mux_started(im);
+  return 0;
 
 error:
   close(fd);

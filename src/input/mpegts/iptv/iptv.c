@@ -223,7 +223,8 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   pthread_mutex_lock(&iptv_lock);
   
   /* Stop */
-  im->im_handler->stop(im);
+  if (im->im_handler->stop)
+    im->im_handler->stop(im);
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
@@ -425,6 +426,7 @@ void iptv_init ( void )
 
   /* Register handlers */
   iptv_http_init();
+  iptv_udp_init();
 
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)&iptv_input,
