@@ -421,6 +421,7 @@ mpegts_table_state_reset
     mt->mt_complete--;
     mt->mt_incomplete++;
   }
+  mt->mt_finished = 0;
   st->complete = 0;
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
@@ -465,7 +466,9 @@ dvb_table_complete
              mt->mt_incomplete, mt->mt_complete, total);
     return -1;
   }
-  tvhdebug(mt->mt_name, "subtable completed");
+  if (!mt->mt_finished)
+    tvhdebug(mt->mt_name, "completed pid %d table %08X / %08x", mt->mt_pid, mt->mt_table, mt->mt_mask);
+  mt->mt_finished = 1;
   return 0;
 }
 
@@ -745,17 +748,18 @@ dvb_nit_callback
   r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
-  /* BAT */
+  /* NIT */
   if (tableid != 0x4A) {
 
     /* Specific NID */
     if (mn->mn_nid) {
-      if (mn->mn_nid != nbid)
-        return -1;
+      if (mn->mn_nid != nbid) {
+        return dvb_table_end(mt, st, sect);
+      }
   
     /* Only use "this" network */
     } else if (tableid != 0x40) {
-      return -1;
+      return dvb_table_end(mt, st, sect);
     }
   }
 

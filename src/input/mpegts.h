@@ -142,6 +142,7 @@ struct mpegts_table
   RB_HEAD(,mpegts_table_state) mt_state;
   int mt_complete;
   int mt_incomplete;
+  int mt_finished;
 
   int mt_count;
 
