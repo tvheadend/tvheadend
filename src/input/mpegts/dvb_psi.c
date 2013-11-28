@@ -579,11 +579,12 @@ dvb_pat_callback
 
   /* Begin */
   if (tableid != 0) return -1;
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 5, &st, &sect, &last, &ver);
+  tsid = (ptr[0] << 8) | ptr[1];
+  r    = dvb_table_begin(mt, ptr, len, tableid, tsid, 5,
+                         &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* Multiplex */
-  tsid = (ptr[0] << 8) | ptr[1];
   tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
   mpegts_mux_set_tsid(mm, tsid);
   
@@ -699,11 +700,11 @@ dvb_pmt_callback
   mpegts_table_state_t  *st  = NULL;
 
   /* Start */
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 9, &st, &sect, &last, &ver);
+  sid = ptr[0] << 8 | ptr[1];
+  r   = dvb_table_begin(mt, ptr, len, tableid, sid, 9, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* Find service */
-  sid     = ptr[0] << 8 | ptr[1];
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     if (s->s_dvb_service_id == sid) break;
   if (!s) return -1;
