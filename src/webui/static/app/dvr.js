@@ -781,6 +781,9 @@ tvheadend.dvrsettings = function() {
 			editable : false,
 			width : 200,
 			hiddenName : 'container'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Rewrite PAT/PMT in passthrough mode',
+			name : 'rewritePATPMT'
 		}), new Ext.form.NumberField({
 			allowNegative : false,
 			allowDecimals : false,

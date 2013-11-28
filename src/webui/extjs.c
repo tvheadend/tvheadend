@@ -1084,6 +1084,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
+    htsmsg_add_u32(r, "rewritePATPMT", !!(cfg->dvr_flags & DVR_REWRITE_PATPMT));
     if(cfg->dvr_postproc != NULL)
       htsmsg_add_str(r, "postproc", cfg->dvr_postproc);
     htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
@@ -1119,6 +1120,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
+
+   if(http_arg_get(&hc->hc_req_args, "rewritePATPMT") != NULL)
+     flags |= DVR_REWRITE_PATPMT;
 
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
       dvr_postproc_set(cfg,s);

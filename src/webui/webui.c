@@ -220,7 +220,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 static void
 http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 		const char *name, muxer_container_type_t mc,
-                th_subscription_t *s)
+                th_subscription_t *s, muxer_config_t *mcfg)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -232,7 +232,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int err = 0;
   socklen_t errlen = sizeof(err);
 
-  mux = muxer_create(mc);
+  mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
@@ -663,12 +663,16 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  muxer_config_t m_cfg;
 
+  cfg = dvr_config_find_by_name_default("");
+
+  /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
-    cfg = dvr_config_find_by_name_default("");
     mc = cfg->dvr_mc;
   }
+  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -690,6 +694,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+
   s = subscription_create_from_service(service, weight ?: 100, "HTTP", st, flags,
 				       addrbuf,
 				       hc->hc_username,
@@ -697,7 +702,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(s) {
     name = tvh_strdupa(service->s_nicename);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s);
+    http_stream_run(hc, &sq, name, mc, s, &m_cfg);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
@@ -739,7 +744,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
     return HTTP_STATUS_BAD_REQUEST;
   name = tvh_strdupa(s->ths_title);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW, s);
+  http_stream_run(hc, &sq, name, MC_RAW, s, NULL);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -770,12 +775,16 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  muxer_config_t m_cfg;
 
+  cfg = dvr_config_find_by_name_default("");
+
+  /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
-    cfg = dvr_config_find_by_name_default("");
     mc = cfg->dvr_mc;
   }
+  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -813,7 +822,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if(s) {
     name = tvh_strdupa(channel_get_name(ch));
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s);
+    http_stream_run(hc, &sq, name, mc, s, &m_cfg);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }

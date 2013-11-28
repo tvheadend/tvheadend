@@ -27,17 +27,7 @@
 #include "service.h"
 #include "input/mpegts/dvb.h"
 #include "muxer_pass.h"
-
-
-#define TS_INJECTION_RATE 1000
-
-/*
-TODO: How often do we send the injected packets?
-      Once evry packet? Once every 1000 packets?
-      Or perhaps even once 10k packets?
-      Maby we should messure in seconds instead?
-      For now, every 1000 packets will do.
-*/
+#include "dvr/dvr.h"
 
 typedef struct pass_muxer {
   muxer_t;
@@ -51,206 +41,142 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
-  uint8_t   pm_injection;
-  uint8_t  *pm_pat;
-  uint8_t  *pm_pmt;
-  uint16_t  pm_pmt_version;
-  uint32_t pm_ic; // Injection counter
-  uint32_t pm_pc; // Packet counter
+  uint8_t   pm_rewrite_patpmt;
+  uint8_t   pm_pat_cc;
+  uint16_t  pm_pmt_pid;
+  uint16_t  pm_service_id;
+  uint32_t  pm_streams[256];  /* lookup table identifying which streams to include in the PMT */
 } pass_muxer_t;
 
-/**
- * Append CRC
- */
-static int
-pass_muxer_append_crc32(uint8_t *buf, int offset, int maxlen)
+static inline void set_pid_bit(uint32_t* pm_streams, uint16_t pid)
 {
-  uint32_t crc;
-
-  if(offset + 4 > maxlen)
-    return -1;
-
-  crc = tvh_crc32(buf, offset, 0xffffffff);
-
-  buf[offset + 0] = crc >> 24;
-  buf[offset + 1] = crc >> 16;
-  buf[offset + 2] = crc >> 8;
-  buf[offset + 3] = crc;
-
-  assert(tvh_crc32(buf, offset + 4, 0xffffffff) == 0);
-
-  return offset + 4;
+  pm_streams[pid >> 5] |= 1 << (pid & 31);
 }
 
-/** 
- * PAT generator
- */
-
-static int
-pass_muxer_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
+static inline int check_pid_bit(uint32_t* pm_streams, uint16_t pid)
 {
-  if(maxlen < 12)
-    return -1;
-
-  buf[0] = 0;
-  buf[1] = 0xb0;       /* reserved */
-  buf[2] = 12 + 4 - 3; /* Length */
-
-  buf[3] = 0x00; /* transport stream id */
-  buf[4] = 0x01;
-
-  buf[5] = 0xc1; /* reserved + current_next_indicator + version */
-  buf[6] = 0;
-  buf[7] = 0;
-
-  buf[8] = 0;    /* Program number, we only have one program */
-  buf[9] = 1;
-
-  buf[10] = 0xe0 | (pmtpid >> 8);
-  buf[11] =         pmtpid;
-
-  return pass_muxer_append_crc32(buf, 12, maxlen);
+  return pm_streams[pid >> 5] & (1 << (pid & 31));
 }
 
-
-
-/** 
- * PMT generator
+/*
+ * Rewrite a PAT packet to only include the service included in the transport stream.
+ *
+ * This is complicated by the need to deal with PATs that span more than one transport
+ * stream packet.  In that scenario, we replace the 2nd and subsequent PAT packets with
+ * NULL packets (PID 0x1fff).
+ *
  */
-static int
-pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
-	      int version, int pcrpid)
+
+static int pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* buf)
 {
-  int c, tlen, dlen, l, i;
-  uint8_t *buf, *buf1;
+  int pusi = buf[1] & 0x40;
 
-  buf = buf0;
+  if (pusi) {
+    /* First TS packet, generate our new PAT */
 
-  if(maxlen < 12)
-    return -1;
-
-  buf[0] = 2; /* table id, always 2 */
-
-  buf[3] = 0x00; /* program id */
-  buf[4] = 0x01;
-
-  buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[5] |= (version & 0x1F) << 1;
-
-  buf[6] = 0; /* section number */
-  buf[7] = 0; /* last section number */
-
-  buf[8] = 0xe0 | (pcrpid >> 8);
-  buf[9] =         pcrpid;
-
-  buf[10] = 0xf0; /* Program info length */
-  buf[11] = 0x00; /* We dont have any such things atm */
-
-  buf += 12;
-  tlen = 12;
-
-  for(i = 0; i < ss->ss_num_components; i++) {
-    const streaming_start_component_t *ssc = &ss->ss_components[i];
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2VIDEO:
-      c = 0x02;
-      break;
-
-    case SCT_MPEG2AUDIO:
-      c = 0x04;
-      break;
-
-    case SCT_EAC3:
-    case SCT_DVBSUB:
-      c = 0x06;
-      break;
-
-    case SCT_MP4A:
-    case SCT_AAC:
-      c = 0x11;
-      break;
-
-    case SCT_H264:
-      c = 0x1b;
-      break;
-
-    case SCT_AC3:
-      c = 0x81;
-      break;
-
-    default:
-      continue;
+    /* Some sanity checks */
+    if (buf[4] != 0) {
+      tvhlog(LOG_ERR, "pass", "Unsupported PAT format - pointer_to_data != 0 (%d) (Please report to developers!)\n",buf[4]);
+      return 1;
+    }
+    int last_section_number = buf[12];
+    if (last_section_number != 0) {
+      tvhlog(LOG_ERR, "pass", "Multi-section PAT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
+      return 2;
     }
 
-
-    buf[0] = c;
-    buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
-    buf[2] =         ssc->ssc_pid;
-
-    buf1 = &buf[3];
-    tlen += 5;
-    buf  += 5;
-    dlen = 0;
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2AUDIO:
-    case SCT_MP4A:
-    case SCT_AAC:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      dlen = 6;
-      break;
-    case SCT_DVBSUB:
-      buf[0] = DVB_DESC_SUBTITLE;
-      buf[1] = 8;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 16; /* Subtitling type */
-      buf[6] = ssc->ssc_composition_id >> 8; 
-      buf[7] = ssc->ssc_composition_id;
-      buf[8] = ssc->ssc_ancillary_id >> 8; 
-      buf[9] = ssc->ssc_ancillary_id;
-      dlen = 10;
-      break;
-    case SCT_AC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_AC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real AC3 desc */
-      dlen = 9;
-      break;
-    case SCT_EAC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_EAC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real EAC3 desc */
-      dlen = 9;
-      break;
-    default:
-      break;
+    int current_next_indicator = (buf[10] & 0x1);
+    if (!current_next_indicator) {
+      /* If next version of PAT, do nothing */
+      return 0;
     }
 
-    tlen += dlen;
-    buf  += dlen;
+    /* Rewrite continuity counter, in case this is a multi-packet PAT (we discard all but the first packet) */
+    buf[3] = (buf[3] & 0xf0) | pm->pm_pat_cc;
+    pm->pm_pat_cc = (pm->pm_pat_cc + 1) & 0xf;
 
-    buf1[0] = 0xf0 | (dlen >> 8);
-    buf1[1] =         dlen;
+    buf[6] = 0; buf[7] = 13; /* section_length (number of bytes after this field, including CRC) */
+
+    buf[13] = (pm->pm_service_id & 0xff00) >> 8;
+    buf[14] = pm->pm_service_id & 0x00ff;
+    buf[15] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
+    buf[16] = pm->pm_pmt_pid & 0x00ff;
+
+    uint32_t crc32 = tvh_crc32(buf+5, 12, 0xffffffff);
+    buf[17] = (crc32 & 0xff000000) >> 24;
+    buf[18] = (crc32 & 0x00ff0000) >> 16;
+    buf[19] = (crc32 & 0x0000ff00) >>  8;
+    buf[20] = crc32 & 0x000000ff;
+
+    memset(buf + 21, 0xff, 167); /* Wipe rest of packet */
+  } else {
+    /* The second or subsequent packet of a multi-packet PAT, replace with NULL packet */
+    buf[1] = 0x1f;  /* pid 0x1fff */
+    memset(buf+2, 0xff, 186);
   }
 
-  l = tlen - 3 + 4;
+  return 0;
+}
 
-  buf0[1] = 0xb0 | (l >> 8);
-  buf0[2] =         l;
+static int pass_muxer_rewrite_pmt(pass_muxer_t* pm, unsigned char* buf)
+{
+  int i;
 
-  return pass_muxer_append_crc32(buf0, tlen, maxlen);
+  int pusi = buf[1] & 0x40;
+
+  if (pusi) {
+    /* First TS packet, generate our new PAT */
+
+    int current_next_indicator = (buf[10] & 0x1);
+    if (!current_next_indicator) {
+      /* If next version of PAT, do nothing */
+      return 0;
+    }
+
+    /* Some sanity checks */
+    if (buf[4] != 0) {
+      tvhlog(LOG_ERR, "pass", "Unsupported PMT format - pointer_to_data != 0 (%d) (Please report to developers!)\n",buf[4]);
+      return 1;
+    }
+    int last_section_number = buf[12];
+    if (last_section_number != 0) {
+      tvhlog(LOG_ERR, "pass", "Multi-section PMT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
+      return 2;
+    }
+
+    int section_length = ((buf[6]&0x0f) << 8) | buf[7]; i += 2;
+    if (section_length > (188 - 4 - 7)) {  /* 7 bytes before section_length, plus CRC */
+      tvhlog(LOG_ERR, "pass", "Multi-packet PMT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
+    }
+
+    i = 15;
+
+    int program_info_length = ((buf[i] & 0x0f) << 8) | buf[i+1]; i += 2;
+    i += program_info_length;
+
+    while ( i < 7 + section_length - 4) {
+      //int stream_type = buf[i];
+      int pid = ((buf[i+1]&0x1f) << 8) | buf[i+2];
+      int ES_info_length = ((buf[i+3] & 0x0f) << 8) | buf[i+4];
+
+      if (check_pid_bit(pm->pm_streams,pid)) {
+        i += 5 + ES_info_length;
+      } else {
+        memmove(buf + i, buf + i + 5 + ES_info_length,(188-i-5-ES_info_length));
+        section_length -= (5+ES_info_length);
+      }
+    }
+
+    buf[7] = section_length;
+
+    uint32_t crc32 = tvh_crc32(buf+5, i-5, 0xffffffff);
+    buf[i++] = ((crc32 & 0xff000000) >> 24);
+    buf[i++] = ((crc32 & 0x00ff0000) >> 16);
+    buf[i++] = ((crc32 & 0x0000ff00) >>  8);
+    buf[i++] = (crc32 & 0x000000ff);
+  }
+
+  return 0;
 }
 
 /**
@@ -302,36 +228,19 @@ static int
 pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  const source_info_t *si = &ss->ss_si;
+  pm->pm_pmt_pid = ss->ss_pmt_pid;
+  pm->pm_service_id = ss->ss_service_id;
 
-  if(si->si_type == S_MPEG_TS && ss->ss_pmt_pid) {
-    pm->pm_pat = realloc(pm->pm_pat, 188);
-    memset(pm->pm_pat, 0xff, 188);
-    pm->pm_pat[0] = 0x47;
-    pm->pm_pat[1] = 0x40;
-    pm->pm_pat[2] = 0x00;
-    pm->pm_pat[3] = 0x10;
-    pm->pm_pat[4] = 0x00;
-    if(pass_muxer_build_pat(NULL, pm->pm_pat+5, 183, ss->ss_pmt_pid) < 0) {
-      pm->m_errors++;
-      tvhlog(LOG_ERR, "pass", "%s: Unable to build pat", pm->pm_filename);
-      return -1;
+  /* Store the PIDs of all the components */
+  if (pm->pm_rewrite_patpmt) {
+    int i;
+    memset(pm->pm_streams,0,1024);
+    for (i=0;i<ss->ss_num_components;i++) {
+      /* SCT_TEXTSUB (text extracted from teletext) streams are virtual and have an invalid PID */
+      if (ss->ss_components[i].ssc_pid < 8192) {
+        set_pid_bit(pm->pm_streams,ss->ss_components[i].ssc_pid);
+      }
     }
-
-    pm->pm_pmt = realloc(pm->pm_pmt, 188);
-    memset(pm->pm_pmt, 0xff, 188);
-    pm->pm_pmt[0] = 0x47;
-    pm->pm_pmt[1] = 0x40 | (ss->ss_pmt_pid >> 8);
-    pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
-    pm->pm_pmt[3] = 0x10;
-    pm->pm_pmt[4] = 0x00;
-    if(pass_muxer_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
-		     ss->ss_pcr_pid) < 0) {
-      pm->m_errors++;
-      tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);
-      return -1;
-    }
-    pm->pm_pmt_version++;
   }
 
   return 0;
@@ -415,25 +324,33 @@ static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  int rem;
+  unsigned char* p;
 
-  if(pm->pm_pat != NULL &&
-     pm->pm_pmt != NULL &&
-     pm->pm_injection) {
-    // Inject pmt and pat into the stream
-    rem = pm->pm_pc % TS_INJECTION_RATE;
-    if(!rem) {
-      pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-      pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | (pm->pm_ic & 0x0f);
-      pass_muxer_write(m, pm->pm_pat, 188);
-      pass_muxer_write(m, pm->pm_pmt, 188);
-      pm->pm_ic++;
+  if (pm->pm_rewrite_patpmt) {
+    p = pb->pb_data;
+    while (p < pb->pb_data + pb->pb_size) {
+      int pid = (p[1] & 0x1f) << 8 | p[2];
+
+      if (pid == 0) {
+        /* Remove all PMT references except the one being streamed */
+        if (pass_muxer_rewrite_pat(pm, p)) {
+          tvhlog(LOG_ERR, "pass", "Error rewriting PAT, sending original\n");
+          pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PAT from now on */
+          break;
+        }
+      } else if (pid == pm->pm_pmt_pid) {
+        /* Remove all references to streams not being streamed */
+        if (pass_muxer_rewrite_pmt(pm, p)) {
+          tvhlog(LOG_ERR, "pass", "Error rewriting PMT, sending original\n");
+          pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PMT from now on */
+          break;
+        }
+      }
+      p += 188;
     }
   }
 
   pass_muxer_write(m, pb->pb_data, pb->pb_size);
-
-  pm->pm_pc += (pb->pb_size / 188);
 }
 
 
@@ -504,12 +421,6 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_filename)
     free(pm->pm_filename);
 
-  if(pm->pm_pmt)
-    free(pm->pm_pmt);
-
-  if(pm->pm_pat)
-    free(pm->pm_pat);
-
   free(pm);
 }
 
@@ -518,7 +429,7 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(muxer_container_type_t mc)
+pass_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
 {
   pass_muxer_t *pm;
 
@@ -536,7 +447,10 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
-  pm->pm_injection   = (mc == MC_PASS);
+  /* Copy any configuration values we are interested in */
+  if ((mc == MC_PASS) && (m_cfg)) {
+    pm->pm_rewrite_patpmt = m_cfg->rewrite_patpmt;
+  }
 
   return (muxer_t *)pm;
 }

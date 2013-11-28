@@ -493,7 +493,7 @@ lav_muxer_destroy(muxer_t *m)
  * Create a new libavformat based muxer
  */
 muxer_t*
-lav_muxer_create(muxer_container_type_t mc)
+lav_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
 {
   const char *mux_name;
   lav_muxer_t *lm;

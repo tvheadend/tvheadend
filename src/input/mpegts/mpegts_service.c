@@ -375,6 +375,7 @@ mpegts_service_create0
   char buf[256];
   service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
 
+  fprintf(stderr,"Created service - pmt_pid=%d\n",pmt_pid);
   /* Create */
   sbuf_init(&s->s_tsbuf);
   if (!conf) {

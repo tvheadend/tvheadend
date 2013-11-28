@@ -56,6 +56,7 @@ typedef struct streaming_start {
 
   uint16_t ss_pcr_pid;
   uint16_t ss_pmt_pid;
+  uint16_t ss_service_id;
 
   streaming_start_component_t ss_components[0];
 

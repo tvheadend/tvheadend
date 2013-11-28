@@ -220,7 +220,7 @@ tvh_muxer_destroy(muxer_t *m)
  * Create a new builtin muxer
  */
 muxer_t*
-tvh_muxer_create(muxer_container_type_t mc)
+tvh_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
 {
   tvh_muxer_t *tm;
 

@@ -236,18 +236,18 @@ muxer_container_mime2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
 {
   muxer_t *m;
 
-  m = pass_muxer_create(mc);
+  m = pass_muxer_create(mc, m_cfg);
 
   if(!m)
-    m = tvh_muxer_create(mc);
+    m = tvh_muxer_create(mc, m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)
-    m = lav_muxer_create(mc);
+    m = lav_muxer_create(mc, m_cfg);
 #endif
 
   if(!m)

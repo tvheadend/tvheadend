@@ -43,6 +43,7 @@
 #include "htsp_server.h"
 #include "lang_codes.h"
 #include "descrambler.h"
+#include "input/mpegts.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_save(struct idnode *self);
@@ -846,6 +847,7 @@ service_restart(service_t *t, int had_components)
 streaming_start_t *
 service_build_stream_start(service_t *t)
 {
+  extern const idclass_t mpegts_service_class;
   elementary_stream_t *st;
   int n = 0;
   streaming_start_t *ss;
@@ -881,6 +883,11 @@ service_build_stream_start(service_t *t)
   ss->ss_refcount = 1;
   ss->ss_pcr_pid = t->s_pcr_pid;
   ss->ss_pmt_pid = t->s_pmt_pid;
+  if (idnode_is_instance(&t->s_id, &mpegts_service_class)) {
+    mpegts_service_t *ts = (mpegts_service_t*)t;
+    ss->ss_service_id = ts->s_dvb_service_id;
+    fprintf(stderr,"Streaming service %d, PMT PID is %d\n",ss->ss_service_id,ss->ss_pmt_pid);
+  }
   return ss;
 }
 
