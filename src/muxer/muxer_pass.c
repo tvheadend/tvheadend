@@ -135,18 +135,19 @@ static int pass_muxer_rewrite_pmt(pass_muxer_t* pm, unsigned char* buf)
 
     /* Some sanity checks */
     if (buf[4] != 0) {
-      tvhlog(LOG_ERR, "pass", "Unsupported PMT format - pointer_to_data != 0 (%d) (Please report to developers!)\n",buf[4]);
+      tvhlog(LOG_ERR, "pass", "Unsupported PMT format - pointer_to_data != 0 (%d) (Please report to developers!)",buf[4]);
       return 1;
     }
     int last_section_number = buf[12];
     if (last_section_number != 0) {
-      tvhlog(LOG_ERR, "pass", "Multi-section PMT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
+      tvhlog(LOG_ERR, "pass", "Multi-section PMT not supported (last_section_number = %d) (Please report to developers!)",last_section_number);
       return 2;
     }
 
     int section_length = ((buf[6]&0x0f) << 8) | buf[7]; i += 2;
     if (section_length > (188 - 4 - 7)) {  /* 7 bytes before section_length, plus CRC */
-      tvhlog(LOG_ERR, "pass", "Multi-packet PMT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
+      tvhlog(LOG_ERR, "pass", "Multi-packet PMT not supported (section_length = %d) (Please report to developers!)",section_length);
+      return 3;
     }
 
     i = 15;
@@ -334,14 +335,14 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       if (pid == 0) {
         /* Remove all PMT references except the one being streamed */
         if (pass_muxer_rewrite_pat(pm, p)) {
-          tvhlog(LOG_ERR, "pass", "Error rewriting PAT, sending original\n");
+          tvhlog(LOG_ERR, "pass", "Disabling PAT/PMT rewriting");
           pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PAT from now on */
           break;
         }
       } else if (pid == pm->pm_pmt_pid) {
         /* Remove all references to streams not being streamed */
         if (pass_muxer_rewrite_pmt(pm, p)) {
-          tvhlog(LOG_ERR, "pass", "Error rewriting PMT, sending original\n");
+          tvhlog(LOG_ERR, "pass", "Disabling PAT/PMT rewriting");
           pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PMT from now on */
           break;
         }
