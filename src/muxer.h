@@ -21,6 +21,9 @@
 
 #include "htsmsg.h"
 
+#define MUX_REWRITE_PAT 0x0001
+#define MUX_REWRITE_PMT 0x0002
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,
@@ -33,9 +36,7 @@ typedef enum {
 
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
-  /* Options only for passthrough muxer */
-  int rewrite_patpmt;
-
+  int dvr_flags;
 } muxer_config_t;
 
 struct muxer;

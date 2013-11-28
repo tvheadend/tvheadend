@@ -735,7 +735,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate']);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -782,8 +782,11 @@ tvheadend.dvrsettings = function() {
 			width : 200,
 			hiddenName : 'container'
 		}), new Ext.form.Checkbox({
-			fieldLabel : 'Rewrite PAT/PMT in passthrough mode',
-			name : 'rewritePATPMT'
+			fieldLabel : 'Rewrite PAT in passthrough mode',
+			name : 'rewritePAT'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Rewrite PMT in passthrough mode',
+			name : 'rewritePMT'
 		}), new Ext.form.NumberField({
 			allowNegative : false,
 			allowDecimals : false,

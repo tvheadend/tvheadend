@@ -31,6 +31,7 @@ typedef struct dvr_config {
   char *dvr_storage;
   uint32_t dvr_retention_days;
   int dvr_flags;
+  int dvr_mux_flags;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
@@ -68,7 +69,6 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_SKIP_COMMERCIALS    0x400
 #define DVR_SUBTITLE_IN_TITLE	0x800
 #define DVR_EPISODE_BEFORE_DATE	0x1000
-#define DVR_REWRITE_PATPMT      0x2000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -333,6 +333,8 @@ void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 void dvr_retention_set(dvr_config_t *cfg, int days);
 
 void dvr_flags_set(dvr_config_t *cfg, int flags);
+
+void dvr_mux_flags_set(dvr_config_t *cfg, int flags);
 
 void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 

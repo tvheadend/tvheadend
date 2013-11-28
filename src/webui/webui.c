@@ -672,7 +672,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(mc == MC_UNKNOWN) {
     mc = cfg->dvr_mc;
   }
-  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
+  m_cfg.dvr_flags = cfg->dvr_mux_flags;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -784,7 +784,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if(mc == MC_UNKNOWN) {
     mc = cfg->dvr_mc;
   }
-  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
+  m_cfg.dvr_flags = cfg->dvr_mux_flags;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);

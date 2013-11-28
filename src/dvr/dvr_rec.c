@@ -292,7 +292,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   muxer_config_t m_cfg;
 
   mc = de->de_mc;
-  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
+  m_cfg.dvr_flags = cfg->dvr_mux_flags;
 
   de->de_mux = muxer_create(mc, &m_cfg);
   if(!de->de_mux) {

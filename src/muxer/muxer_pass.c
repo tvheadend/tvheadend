@@ -41,19 +41,21 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
-  uint8_t   pm_rewrite_patpmt;
+  uint8_t   pm_flags;
   uint8_t   pm_pat_cc;
   uint16_t  pm_pmt_pid;
   uint16_t  pm_service_id;
   uint32_t  pm_streams[256];  /* lookup table identifying which streams to include in the PMT */
 } pass_muxer_t;
 
-static inline void set_pid_bit(uint32_t* pm_streams, uint16_t pid)
+static inline void
+set_pid_bit(uint32_t* pm_streams, uint16_t pid)
 {
   pm_streams[pid >> 5] |= 1 << (pid & 31);
 }
 
-static inline int check_pid_bit(uint32_t* pm_streams, uint16_t pid)
+static inline int
+check_pid_bit(uint32_t* pm_streams, uint16_t pid)
 {
   return pm_streams[pid >> 5] & (1 << (pid & 31));
 }
@@ -67,115 +69,126 @@ static inline int check_pid_bit(uint32_t* pm_streams, uint16_t pid)
  *
  */
 
-static int pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* buf)
+static int
+pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 {
-  int pusi = buf[1] & 0x40;
+  uint32_t crc32;
+  int pusi = tsb[1]  & 0x40;
 
-  if (pusi) {
-    /* First TS packet, generate our new PAT */
-
-    /* Some sanity checks */
-    if (buf[4] != 0) {
-      tvhlog(LOG_ERR, "pass", "Unsupported PAT format - pointer_to_data != 0 (%d) (Please report to developers!)\n",buf[4]);
-      return 1;
-    }
-    int last_section_number = buf[12];
-    if (last_section_number != 0) {
-      tvhlog(LOG_ERR, "pass", "Multi-section PAT not supported (last_section_number = %d) (Please report to developers!)\n",last_section_number);
-      return 2;
-    }
-
-    int current_next_indicator = (buf[10] & 0x1);
-    if (!current_next_indicator) {
-      /* If next version of PAT, do nothing */
-      return 0;
-    }
-
-    /* Rewrite continuity counter, in case this is a multi-packet PAT (we discard all but the first packet) */
-    buf[3] = (buf[3] & 0xf0) | pm->pm_pat_cc;
-    pm->pm_pat_cc = (pm->pm_pat_cc + 1) & 0xf;
-
-    buf[6] = 0; buf[7] = 13; /* section_length (number of bytes after this field, including CRC) */
-
-    buf[13] = (pm->pm_service_id & 0xff00) >> 8;
-    buf[14] = pm->pm_service_id & 0x00ff;
-    buf[15] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
-    buf[16] = pm->pm_pmt_pid & 0x00ff;
-
-    uint32_t crc32 = tvh_crc32(buf+5, 12, 0xffffffff);
-    buf[17] = (crc32 & 0xff000000) >> 24;
-    buf[18] = (crc32 & 0x00ff0000) >> 16;
-    buf[19] = (crc32 & 0x0000ff00) >>  8;
-    buf[20] = crc32 & 0x000000ff;
-
-    memset(buf + 21, 0xff, 167); /* Wipe rest of packet */
-  } else {
-    /* The second or subsequent packet of a multi-packet PAT, replace with NULL packet */
-    buf[1] = 0x1f;  /* pid 0x1fff */
-    memset(buf+2, 0xff, 186);
+  /* NULL packet */
+  if (!pusi) {
+    printf("NULL PAT\n");
+    tsb[1] = 0x1f;
+    memset(tsb+2, 0xff, 186);
+    return 0;
   }
+
+  /* Ignore Next (TODO: should we wipe it?) */
+  if (!(tsb[10] & 0x1)) {
+    printf("NEXT PAT\n");
+    return 0;
+  }
+    
+  /* Some sanity checks */
+  if (tsb[4]) {
+    tvherror("pass", "Unsupported PAT format - pointer_to_data %d", tsb[4]);
+    return 1;
+  }
+  if (tsb[12]) {
+    tvherror("pass", "Multi-section PAT not supported");
+    return 2;
+  }
+
+  /* Rewrite continuity counter, in case this is a multi-packet PAT (we discard all but the first packet) */
+  tsb[3] = (tsb[3] & 0xf0) | pm->pm_pat_cc;
+  pm->pm_pat_cc = (pm->pm_pat_cc + 1) & 0xf;
+
+  tsb[6] = 0;
+  tsb[7] = 13; /* section_length (number of bytes after this field, including CRC) */
+
+  tsb[13] = (pm->pm_service_id & 0xff00) >> 8;
+  tsb[14] = pm->pm_service_id & 0x00ff;
+  tsb[15] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
+  tsb[16] = pm->pm_pmt_pid & 0x00ff;
+
+  crc32 = tvh_crc32(tsb+5, 12, 0xffffffff);
+  tsb[17] = (crc32 & 0xff000000) >> 24;
+  tsb[18] = (crc32 & 0x00ff0000) >> 16;
+  tsb[19] = (crc32 & 0x0000ff00) >>  8;
+  tsb[20] = crc32 & 0x000000ff;
+
+  printf("rewrite PAT\n");
+
+  memset(tsb + 21, 0xff, 167); /* Wipe rest of packet */
 
   return 0;
 }
 
-static int pass_muxer_rewrite_pmt(pass_muxer_t* pm, unsigned char* buf)
+static int
+pass_muxer_rewrite_pmt(pass_muxer_t* pm, unsigned char* tsb)
 {
-  int i;
+  int i, prog_len;
+  uint32_t crc32;
+  int pusi      = tsb[1] & 0x40;
+  int sect_len  = ((tsb[6] & 0x0f) << 8) | tsb[7];
+  tvhlog_hexdump("pass", tsb, 188);
 
-  int pusi = buf[1] & 0x40;
-
-  if (pusi) {
-    /* First TS packet, generate our new PAT */
-
-    int current_next_indicator = (buf[10] & 0x1);
-    if (!current_next_indicator) {
-      /* If next version of PAT, do nothing */
-      return 0;
-    }
-
-    /* Some sanity checks */
-    if (buf[4] != 0) {
-      tvhlog(LOG_ERR, "pass", "Unsupported PMT format - pointer_to_data != 0 (%d) (Please report to developers!)",buf[4]);
-      return 1;
-    }
-    int last_section_number = buf[12];
-    if (last_section_number != 0) {
-      tvhlog(LOG_ERR, "pass", "Multi-section PMT not supported (last_section_number = %d) (Please report to developers!)",last_section_number);
-      return 2;
-    }
-
-    int section_length = ((buf[6]&0x0f) << 8) | buf[7]; i += 2;
-    if (section_length > (188 - 4 - 7)) {  /* 7 bytes before section_length, plus CRC */
-      tvhlog(LOG_ERR, "pass", "Multi-packet PMT not supported (section_length = %d) (Please report to developers!)",section_length);
-      return 3;
-    }
-
-    i = 15;
-
-    int program_info_length = ((buf[i] & 0x0f) << 8) | buf[i+1]; i += 2;
-    i += program_info_length;
-
-    while ( i < 7 + section_length - 4) {
-      //int stream_type = buf[i];
-      int pid = ((buf[i+1]&0x1f) << 8) | buf[i+2];
-      int ES_info_length = ((buf[i+3] & 0x0f) << 8) | buf[i+4];
-
-      if (check_pid_bit(pm->pm_streams,pid)) {
-        i += 5 + ES_info_length;
-      } else {
-        memmove(buf + i, buf + i + 5 + ES_info_length,(188-i-5-ES_info_length));
-        section_length -= (5+ES_info_length);
-      }
-    }
-
-    buf[7] = section_length;
-
-    uint32_t crc32 = tvh_crc32(buf+5, i-5, 0xffffffff);
-    buf[i++] = ((crc32 & 0xff000000) >> 24);
-    buf[i++] = ((crc32 & 0x00ff0000) >> 16);
-    buf[i++] = ((crc32 & 0x0000ff00) >>  8);
-    buf[i++] = (crc32 & 0x000000ff);
+  /* NULL packet */
+  if (!pusi) {
+    printf("NULL PMT\n");
+    tsb[1] = 0x1f;
+    memset(tsb+2, 0xff, 186);
+    return 0;
   }
+  
+  /* Ignore Next (TODO: should we wipe it?) */
+  if (!(tsb[10] & 0x1)) {
+    printf("NEXT PMT\n");
+    return 0;
+  }
+    
+  /* Some sanity checks */
+  if (tsb[4]) {
+    tvherror("pass", "Unsupported PMT format - pointer_to_data %d", tsb[4]);
+    return 1;
+  }
+  if (tsb[12]) {
+    tvherror("pass", "Multi-section PMT not supported");
+    return 2;
+  }
+  if (sect_len > (188 - 7 - 4)) {
+    tvherror("pass", "Multi-packet PMT not supported - sect_len %d", sect_len);
+    return 3;
+  }
+
+  prog_len = ((tsb[15] & 0x0f) << 8) | tsb[16];
+  i        = 17 + prog_len;
+
+  while (i < (7 + sect_len - 4)) {
+    //int stream_type = tsb[i];
+    int pid    = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
+    int es_len = ((tsb[i+3] & 0x0f) << 8) | tsb[i+4];
+
+    /* Keep */
+    if (check_pid_bit(pm->pm_streams, pid)) {
+      i += 5 + es_len;
+
+    /* Drop */
+    } else {
+      memmove(tsb + i, tsb + i + 5 + es_len, (188 - i - 5 - es_len));
+      sect_len -= (5 + es_len);
+    }
+  }
+
+  printf("rewrite PMT, orig len %d new len %d i %d", tsb[7], sect_len, i);
+
+  tsb[7] = sect_len;
+
+  crc32 = tvh_crc32(tsb+5, i-5, 0xffffffff);
+  tsb[i++] = (crc32 >> 24) & 0xff;
+  tsb[i++] = (crc32 >> 16) & 0xff;
+  tsb[i++] = (crc32 >>  8) & 0xff;
+  tsb[i++] = (crc32 >>  0) & 0xff;
 
   return 0;
 }
@@ -233,7 +246,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_service_id = ss->ss_service_id;
 
   /* Store the PIDs of all the components */
-  if (pm->pm_rewrite_patpmt) {
+  if (pm->pm_flags & MUX_REWRITE_PMT) {
     int i;
     memset(pm->pm_streams,0,1024);
     for (i=0;i<ss->ss_num_components;i++) {
@@ -325,29 +338,33 @@ static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  unsigned char* p;
+  unsigned char* tsb;
+  
+  // Note: this code currently assumes PAT/PMT will never span 1 packet
 
-  if (pm->pm_rewrite_patpmt) {
-    p = pb->pb_data;
-    while (p < pb->pb_data + pb->pb_size) {
-      int pid = (p[1] & 0x1f) << 8 | p[2];
+  /* Rewrite PAT/PMT in operation */
+  if (pm->pm_flags & (MUX_REWRITE_PAT | MUX_REWRITE_PMT)) {
 
-      if (pid == 0) {
-        /* Remove all PMT references except the one being streamed */
-        if (pass_muxer_rewrite_pat(pm, p)) {
-          tvhlog(LOG_ERR, "pass", "Disabling PAT/PMT rewriting");
-          pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PAT from now on */
-          break;
+    tsb = pb->pb_data;
+    while (tsb < pb->pb_data + pb->pb_size) {
+      int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+
+      /* PAT */
+      if (pm->pm_flags & MUX_REWRITE_PAT && pid == 0) {
+        if (pass_muxer_rewrite_pat(pm, tsb)) {
+          tvherror("pass", "PAT rewrite failed, disabling");
+          pm->pm_flags &= ~MUX_REWRITE_PAT;
         }
-      } else if (pid == pm->pm_pmt_pid) {
-        /* Remove all references to streams not being streamed */
-        if (pass_muxer_rewrite_pmt(pm, p)) {
-          tvhlog(LOG_ERR, "pass", "Disabling PAT/PMT rewriting");
-          pm->pm_rewrite_patpmt = 0; /* There was an error, so just give user original PMT from now on */
-          break;
+
+      /* PMT */
+      } else if (pm->pm_flags & MUX_REWRITE_PMT && pid == pm->pm_pmt_pid) {
+        if (pass_muxer_rewrite_pmt(pm, tsb)) {
+          tvherror("pass", "PMT rewrite failed, disabling");
+          pm->pm_flags &= ~MUX_REWRITE_PMT;
         }
       }
-      p += 188;
+
+      tsb += 188;
     }
   }
 
@@ -449,9 +466,8 @@ pass_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
   /* Copy any configuration values we are interested in */
-  if ((mc == MC_PASS) && (m_cfg)) {
-    pm->pm_rewrite_patpmt = m_cfg->rewrite_patpmt;
-  }
+  if ((mc == MC_PASS) && (m_cfg))
+    pm->pm_flags = m_cfg->dvr_flags;
 
   return (muxer_t *)pm;
 }
