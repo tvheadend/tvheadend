@@ -365,20 +365,29 @@ mpegts_input_recv_packets
       /* Find PID */
       if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
         int stream = 0;
-	int table  = 0;
+        int table  = 0;
 
         /* Stream takes pref. */
         RB_FOREACH(mps, &mp->mp_subs, mps_link) {
           if (mps->mps_type & MPS_STREAM)
             stream = 1;
           if (mps->mps_type & MPS_TABLE)
-	    table  = 1;
+            table  = 1;
+        }
+
+        /* Special case streams */
+        if (pid == 0) table = stream = 1;
+        LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+               if (pid == s->s_pmt_pid) stream = 1;
+          else if (pid == s->s_pcr_pid) stream = 1;
         }
   
         /* Stream data */
         if (stream) {
-          LIST_FOREACH(s, &mi->mi_transports, s_active_link)
-            ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr, table);
+          LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+            int f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+            ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr, f);
+          }
         }
 
         /* Table data */
