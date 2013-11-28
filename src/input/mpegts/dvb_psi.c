@@ -187,7 +187,7 @@ dvb_desc_cable_del
   dvb_mux_conf_t dmc;
 
   static const fe_modulation_t qtab [6] = {
-	 QAM_AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256
+    QAM_AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256
   };
 
   /* Not enough data */
@@ -576,6 +576,7 @@ dvb_pat_callback
   uint16_t nit_pid = 0;
   mpegts_mux_t          *mm  = mt->mt_mux;
   mpegts_table_state_t  *st  = NULL;
+  mpegts_service_t *s;
 
   /* Begin */
   if (tableid != 0) return -1;
@@ -606,10 +607,13 @@ dvb_pat_callback
     } else if (pid) {
       tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
-      if (mpegts_service_find(mm, sid, pid, 1, &save)) {
+      if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                          NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_RECORD, pid);
-			}
+
+        if (save)
+          service_request_save((service_t*)s, 1);
+      }
     }
 
     /* Next */
@@ -1428,7 +1432,7 @@ psi_parse_pmt
       case DVB_DESC_LANGUAGE:
         lang = lang_code_get2((const char*)ptr, 3);
         audio_type = ptr[3];
-	      break;
+        break;
 
       case DVB_DESC_TELETEXT:
         if(estype == 0x06)

@@ -886,7 +886,6 @@ service_build_stream_start(service_t *t)
   if (idnode_is_instance(&t->s_id, &mpegts_service_class)) {
     mpegts_service_t *ts = (mpegts_service_t*)t;
     ss->ss_service_id = ts->s_dvb_service_id;
-    fprintf(stderr,"Streaming service %d, PMT PID is %d\n",ss->ss_service_id,ss->ss_pmt_pid);
   }
   return ss;
 }
@@ -1281,6 +1280,7 @@ void service_save ( service_t *t, htsmsg_t *m )
   idnode_save(&t->s_id, m);
 
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
+  htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -1448,7 +1448,8 @@ void service_load ( service_t *t, htsmsg_t *c )
 
   if(!htsmsg_get_u32(c, "pcr", &u32))
     t->s_pcr_pid = u32;
-
+  if(!htsmsg_get_u32(c, "pmt", &u32))
+    t->s_pmt_pid = u32;
 
   pthread_mutex_lock(&t->s_stream_mutex);
   m = htsmsg_get_list(c, "stream");
