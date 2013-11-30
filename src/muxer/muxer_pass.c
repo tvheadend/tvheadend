@@ -44,20 +44,173 @@ typedef struct pass_muxer {
   uint8_t   pm_flags;
   uint8_t   pm_pat_cc;
   uint16_t  pm_pmt_pid;
+  uint8_t   pm_pmt_cc;
+  uint8_t  *pm_pmt;
+  uint16_t  pm_pmt_version;
   uint16_t  pm_service_id;
   uint32_t  pm_streams[256];  /* lookup table identifying which streams to include in the PMT */
 } pass_muxer_t;
 
-static inline void
-set_pid_bit(uint32_t* pm_streams, uint16_t pid)
+/**
+ * Append CRC
+ */
+static int
+pass_muxer_append_crc32(uint8_t *buf, int offset, int maxlen)
 {
-  pm_streams[pid >> 5] |= 1 << (pid & 31);
+  uint32_t crc;
+
+  if(offset + 4 > maxlen)
+    return -1;
+
+  crc = tvh_crc32(buf, offset, 0xffffffff);
+
+  buf[offset + 0] = crc >> 24;
+  buf[offset + 1] = crc >> 16;
+  buf[offset + 2] = crc >> 8;
+  buf[offset + 3] = crc;
+
+  assert(tvh_crc32(buf, offset + 4, 0xffffffff) == 0);
+
+  return offset + 4;
 }
 
-static inline int
-check_pid_bit(uint32_t* pm_streams, uint16_t pid)
+/** 
+ * PMT generator
+ */
+static int
+pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
+	      int version, int pcrpid)
 {
-  return pm_streams[pid >> 5] & (1 << (pid & 31));
+  int c, tlen, dlen, l, i;
+  uint8_t *buf, *buf1;
+
+  buf = buf0;
+
+  if(maxlen < 12)
+    return -1;
+
+  buf[0] = 2; /* table id, always 2 */
+
+  buf[3] = 0x00; /* program id */
+  buf[4] = 0x01;
+
+  buf[5] = 0xc1; /* current_next_indicator + version */
+  buf[5] |= (version & 0x1F) << 1;
+
+  buf[6] = 0; /* section number */
+  buf[7] = 0; /* last section number */
+
+  buf[8] = 0xe0 | (pcrpid >> 8);
+  buf[9] =         pcrpid;
+
+  buf[10] = 0xf0; /* Program info length */
+  buf[11] = 0x00; /* We dont have any such things atm */
+
+  buf += 12;
+  tlen = 12;
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+
+    switch(ssc->ssc_type) {
+    case SCT_MPEG2VIDEO:
+      c = 0x02;
+      break;
+
+    case SCT_MPEG2AUDIO:
+      c = 0x04;
+      break;
+
+    case SCT_EAC3:
+    case SCT_DVBSUB:
+      c = 0x06;
+      break;
+
+    case SCT_MP4A:
+    case SCT_AAC:
+      c = 0x11;
+      break;
+
+    case SCT_H264:
+      c = 0x1b;
+      break;
+
+    case SCT_AC3:
+      c = 0x81;
+      break;
+
+    default:
+      continue;
+    }
+
+
+    buf[0] = c;
+    buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
+    buf[2] =         ssc->ssc_pid;
+
+    buf1 = &buf[3];
+    tlen += 5;
+    buf  += 5;
+    dlen = 0;
+
+    switch(ssc->ssc_type) {
+    case SCT_MPEG2AUDIO:
+    case SCT_MP4A:
+    case SCT_AAC:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      dlen = 6;
+      break;
+    case SCT_DVBSUB:
+      buf[0] = DVB_DESC_SUBTITLE;
+      buf[1] = 8;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 16; /* Subtitling type */
+      buf[6] = ssc->ssc_composition_id >> 8; 
+      buf[7] = ssc->ssc_composition_id;
+      buf[8] = ssc->ssc_ancillary_id >> 8; 
+      buf[9] = ssc->ssc_ancillary_id;
+      dlen = 10;
+      break;
+    case SCT_AC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_AC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real AC3 desc */
+      dlen = 9;
+      break;
+    case SCT_EAC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_EAC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real EAC3 desc */
+      dlen = 9;
+      break;
+    default:
+      break;
+    }
+
+    tlen += dlen;
+    buf  += dlen;
+
+    buf1[0] = 0xf0 | (dlen >> 8);
+    buf1[1] =         dlen;
+  }
+
+  l = tlen - 3 + 4;
+
+  buf0[1] = 0xb0 | (l >> 8);
+  buf0[2] =         l;
+
+  return pass_muxer_append_crc32(buf0, tlen, maxlen);
 }
 
 /*
@@ -72,7 +225,6 @@ check_pid_bit(uint32_t* pm_streams, uint16_t pid)
 static int
 pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 {
-  uint32_t crc32;
   int pusi = tsb[1]  & 0x40;
 
   /* NULL packet */
@@ -111,84 +263,9 @@ pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
   tsb[15] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
   tsb[16] = pm->pm_pmt_pid & 0x00ff;
 
-  crc32 = tvh_crc32(tsb+5, 12, 0xffffffff);
-  tsb[17] = (crc32 & 0xff000000) >> 24;
-  tsb[18] = (crc32 & 0x00ff0000) >> 16;
-  tsb[19] = (crc32 & 0x0000ff00) >>  8;
-  tsb[20] = crc32 & 0x000000ff;
-
-  printf("rewrite PAT\n");
+  pass_muxer_append_crc32(tsb+5, 12, 183);
 
   memset(tsb + 21, 0xff, 167); /* Wipe rest of packet */
-
-  return 0;
-}
-
-static int
-pass_muxer_rewrite_pmt(pass_muxer_t* pm, unsigned char* tsb)
-{
-  int i, prog_len;
-  uint32_t crc32;
-  int pusi      = tsb[1] & 0x40;
-  int sect_len  = ((tsb[6] & 0x0f) << 8) | tsb[7];
-  tvhlog_hexdump("pass", tsb, 188);
-
-  /* NULL packet */
-  if (!pusi) {
-    printf("NULL PMT\n");
-    tsb[1] = 0x1f;
-    memset(tsb+2, 0xff, 186);
-    return 0;
-  }
-  
-  /* Ignore Next (TODO: should we wipe it?) */
-  if (!(tsb[10] & 0x1)) {
-    printf("NEXT PMT\n");
-    return 0;
-  }
-    
-  /* Some sanity checks */
-  if (tsb[4]) {
-    tvherror("pass", "Unsupported PMT format - pointer_to_data %d", tsb[4]);
-    return 1;
-  }
-  if (tsb[12]) {
-    tvherror("pass", "Multi-section PMT not supported");
-    return 2;
-  }
-  if (sect_len > (188 - 7 - 4)) {
-    tvherror("pass", "Multi-packet PMT not supported - sect_len %d", sect_len);
-    return 3;
-  }
-
-  prog_len = ((tsb[15] & 0x0f) << 8) | tsb[16];
-  i        = 17 + prog_len;
-
-  while (i < (7 + sect_len - 4)) {
-    //int stream_type = tsb[i];
-    int pid    = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
-    int es_len = ((tsb[i+3] & 0x0f) << 8) | tsb[i+4];
-
-    /* Keep */
-    if (check_pid_bit(pm->pm_streams, pid)) {
-      i += 5 + es_len;
-
-    /* Drop */
-    } else {
-      memmove(tsb + i, tsb + i + 5 + es_len, (188 - i - 5 - es_len));
-      sect_len -= (5 + es_len);
-    }
-  }
-
-  printf("rewrite PMT, orig len %d new len %d i %d", tsb[7], sect_len, i);
-
-  tsb[7] = sect_len;
-
-  crc32 = tvh_crc32(tsb+5, i-5, 0xffffffff);
-  tsb[i++] = (crc32 >> 24) & 0xff;
-  tsb[i++] = (crc32 >> 16) & 0xff;
-  tsb[i++] = (crc32 >>  8) & 0xff;
-  tsb[i++] = (crc32 >>  0) & 0xff;
 
   return 0;
 }
@@ -245,16 +322,21 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_pmt_pid = ss->ss_pmt_pid;
   pm->pm_service_id = ss->ss_service_id;
 
-  /* Store the PIDs of all the components */
   if (pm->pm_flags & MUX_REWRITE_PMT) {
-    int i;
-    memset(pm->pm_streams,0,1024);
-    for (i=0;i<ss->ss_num_components;i++) {
-      /* SCT_TEXTSUB (text extracted from teletext) streams are virtual and have an invalid PID */
-      if (ss->ss_components[i].ssc_pid < 8192) {
-        set_pid_bit(pm->pm_streams,ss->ss_components[i].ssc_pid);
-      }
+    pm->pm_pmt = realloc(pm->pm_pmt, 188);
+    memset(pm->pm_pmt, 0xff, 188);
+    pm->pm_pmt[0] = 0x47;
+    pm->pm_pmt[1] = 0x40 | (ss->ss_pmt_pid >> 8);
+    pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
+    pm->pm_pmt[3] = 0x10;
+    pm->pm_pmt[4] = 0x00;
+    if(pass_muxer_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
+			    ss->ss_pcr_pid) < 0) {
+      pm->m_errors++;
+      tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);
+      return -1;
     }
+    pm->pm_pmt_version++;
   }
 
   return 0;
@@ -340,8 +422,6 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   unsigned char* tsb;
   
-  // Note: this code currently assumes PAT/PMT will never span 1 packet
-
   /* Rewrite PAT/PMT in operation */
   if (pm->pm_flags & (MUX_REWRITE_PAT | MUX_REWRITE_PMT)) {
 
@@ -355,12 +435,16 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
           tvherror("pass", "PAT rewrite failed, disabling");
           pm->pm_flags &= ~MUX_REWRITE_PAT;
         }
-
       /* PMT */
       } else if (pm->pm_flags & MUX_REWRITE_PMT && pid == pm->pm_pmt_pid) {
-        if (pass_muxer_rewrite_pmt(pm, tsb)) {
-          tvherror("pass", "PMT rewrite failed, disabling");
-          pm->pm_flags &= ~MUX_REWRITE_PMT;
+        if (tsb[1] & 0x40) { /* pusi - the first PMT packet */  
+          memcpy(tsb, pm->pm_pmt, 188);
+          tsb[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
+          pm->pm_pmt_cc = (pm->pm_pmt_cc + 1) & 0xf;
+        } else {
+          /* Nullify packet */
+          tsb[1] = 0x1f;
+          memset(tsb+2, 0xff, 186);
         }
       }
 
@@ -438,6 +522,9 @@ pass_muxer_destroy(muxer_t *m)
 
   if(pm->pm_filename)
     free(pm->pm_filename);
+
+  if(pm->pm_pmt)
+    free(pm->pm_pmt);
 
   free(pm);
 }
