@@ -709,7 +709,7 @@ static void _xmltv_load_grabbers ( void )
 
   /* Internal search */
   } else if ((tmp = getenv("PATH"))) {
-    tvhlog(LOG_DEBUG, "epggrab", "using internal grab search");
+    tvhdebug("epggrab", "using internal grab search");
     char bin[256];
     char desc[] = "--description";
     char *argv[] = {

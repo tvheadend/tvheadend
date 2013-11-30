@@ -56,7 +56,12 @@ htsmsg_t *epggrab_module_list ( void )
   LIST_FOREACH(m, &epggrab_modules, link) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "id", m->id);
-    htsmsg_add_u32(e, "type", m->type);
+    if (m->type == EPGGRAB_INT)
+      htsmsg_add_str(e, "type", "internal");
+    else if (m->type == EPGGRAB_EXT)
+      htsmsg_add_str(e, "type", "external");
+    else
+      htsmsg_add_str(e, "type", "ota");
     htsmsg_add_u32(e, "enabled", m->enabled);
     if(m->name) 
       htsmsg_add_str(e, "name", m->name);

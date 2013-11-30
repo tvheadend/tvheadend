@@ -17,9 +17,9 @@ tvheadend.epggrab = function() {
 	/*
 	 * Module lists (I'm sure there is a better way!)
 	 */
-	var EPGGRAB_MODULE_INTERNAL = 0;
-	var EPGGRAB_MODULE_EXTERNAL = 1;
-	var EPGGRAB_MODULE_OTA = 2;
+	var EPGGRAB_MODULE_INTERNAL = "internal";
+	var EPGGRAB_MODULE_EXTERNAL = "external";
+	var EPGGRAB_MODULE_OTA      = "ota";
 
 	var moduleStore = new Ext.data.JsonStore({
 		root : 'entries',
