@@ -220,11 +220,11 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (!im->mm_active)
     return;
   
-  pthread_mutex_lock(&iptv_lock);
-  
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
+
+  pthread_mutex_lock(&iptv_lock);
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
