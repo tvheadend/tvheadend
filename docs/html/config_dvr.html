@@ -16,6 +16,19 @@
   <dt>Media container
   <dd>Select the container format used to store recordings.
 
+  <dt>Rewrite PAT in passthrough mode
+  <dd>Rewrite the original Program Association Table to only include
+      the active service.  When this option is disabled, Tvheadend will
+      write the original PAT as broadcast, which lists all services from
+      the original multiplex.
+
+  <dt>Rewrite PMT in passthrough mode
+  <dd>Generate a Program Map Table only listing the streams actually in
+      the output transport stream.  When this option is disabled,
+      Tvheadend will write the original Program Map Table as
+      broadcast, which may include references to excluded streams such
+      as data and ECMs.
+
   <dt>DVR Log retention time (days)
   <dd>Time that Tvheadend will keep information about the recording in
       its internal database. Notice that the actual recorded file will not
