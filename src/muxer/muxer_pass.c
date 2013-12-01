@@ -229,7 +229,6 @@ pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 
   /* NULL packet */
   if (!pusi) {
-    printf("NULL PAT\n");
     tsb[1] = 0x1f;
     memset(tsb+2, 0xff, 186);
     return 0;
@@ -237,7 +236,6 @@ pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 
   /* Ignore Next (TODO: should we wipe it?) */
   if (!(tsb[10] & 0x1)) {
-    printf("NEXT PAT\n");
     return 0;
   }
     
