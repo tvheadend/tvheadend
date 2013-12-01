@@ -578,6 +578,7 @@ main(int argc, char **argv)
       tmp[strlen(tmp)-1] = '\0';
     tvheadend_webroot = tmp;
   }
+  tvheadend_webui_debug = opt_uidebug;
 
   /* Setup logging */
   if (isatty(2))

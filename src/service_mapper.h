@@ -27,6 +27,15 @@ typedef struct service_mapper_conf
   int provider_tags;      ///< Create tags based on provider name
 } service_mapper_conf_t;
 
+typedef struct service_mapper_status
+{
+  int       total;
+  int       ok;
+  int       fail;
+  int       ignore;
+  service_t *active;
+} service_mapper_status_t;
+
 void service_mapper_init   ( void );
 
 // Start new mapping
@@ -40,7 +49,7 @@ void service_mapper_stop   ( void );
 void service_mapper_remove ( struct service *t );
 
 // Get current Q size
-int  service_mapper_qlen   ( void );
+service_mapper_status_t service_mapper_status ( void );
 
 // Link service to channel
 int  service_mapper_link   ( struct service *s, struct channel *c );

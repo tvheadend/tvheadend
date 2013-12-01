@@ -166,6 +166,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tvhlog.js");
   extjs_load(hq, "static/app/status.js");
   extjs_load(hq, "static/tv.js");
+  extjs_load(hq, "static/app/servicemapper.js");
 
   /**
    * Finally, the app itself

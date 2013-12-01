@@ -356,7 +356,8 @@ tvheadend.status = function() {
 		items : [
       new tvheadend.status_streams,
       new tvheadend.status_subs,
-      new tvheadend.status_conns
+      new tvheadend.status_conns,
+      new tvheadend.service_mapper_status
     ]
   });
 	return panel;

@@ -25,6 +25,7 @@
 #include "service_mapper.h"
 #include "access.h"
 #include "api.h"
+#include "notify.h"
 
 static int
 api_mapper_start
@@ -60,20 +61,35 @@ api_mapper_stop
   return 0;
 }
 
+static htsmsg_t *
+api_mapper_status_msg ( void )
+{
+  htsmsg_t *m;
+  service_mapper_status_t stat = service_mapper_status();
+  m = htsmsg_create_map();
+  htsmsg_add_u32(m, "total",  stat.total);
+  htsmsg_add_u32(m, "ok",     stat.ok);
+  htsmsg_add_u32(m, "fail",   stat.fail);
+  htsmsg_add_u32(m, "ignore", stat.ignore);
+  if (stat.active)
+    htsmsg_add_str(m, "active", idnode_uuid_as_str(&stat.active->s_id));
+  return m;
+}
+
 static int
 api_mapper_status
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  int num;
-
   pthread_mutex_lock(&global_lock);
-  num = service_mapper_qlen();
+  *resp = api_mapper_status_msg();
   pthread_mutex_unlock(&global_lock);
-  
-  *resp = htsmsg_create_map();
-  htsmsg_add_u32(*resp, "remain", num);
-  
   return 0;
+}
+
+void
+api_service_mapper_notify ( void )
+{
+  notify_by_msg("servicemapper", api_mapper_status_msg());
 }
 
 void api_service_init ( void )

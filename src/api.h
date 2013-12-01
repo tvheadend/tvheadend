@@ -93,4 +93,9 @@ int api_idnode_tree
 int api_idnode_load_by_class
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
+/*
+ * Service mapper
+ */
+void api_service_mapper_notify ( void );
+
 #endif /* __TVH_API_H__ */

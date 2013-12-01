@@ -89,11 +89,11 @@ tvheadend.muxes = function(panel)
 tvheadend.services = function(panel)
 {
   var mapButton = new Ext.Toolbar.Button({
-    tooltip : 'Map services to channels',
-    iconCls : 'clone',
-    text    : 'Map All',
-    callback: tvheadend.mapServices,
-    disabled : false,
+    tooltip   : 'Map services to channels',
+    iconCls   : 'clone',
+    text      : 'Map All',
+    callback  : tvheadend.service_mapper,
+    disabled  : false,
   });
   var selected = function (s)
   {
