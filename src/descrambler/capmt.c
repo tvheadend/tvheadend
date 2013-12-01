@@ -1023,7 +1023,7 @@ capmt_record_build(capmt_t *capmt)
 
   htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
   htsmsg_add_u32(e, "port", capmt->capmt_port);
-  htsmsg_add_u32(e, "oscam", !!capmt->capmt_oscam);
+  htsmsg_add_u32(e, "oscam", capmt->capmt_oscam);
   htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
   
   return e;
