@@ -417,7 +417,8 @@ service_find_instance
 
   /* Failed */
   if(si == NULL) {
-    *error = SM_CODE_NO_FREE_ADAPTER;
+    if (*error < SM_CODE_NO_FREE_ADAPTER)
+      *error = SM_CODE_NO_FREE_ADAPTER;
     return NULL;
   }
 
@@ -425,7 +426,9 @@ service_find_instance
   tvhtrace("service", "will start new instance %d", si->si_instance);
   if (service_start(si->si_s, si->si_instance)) {
     tvhtrace("service", "tuning failed");
-    *error = SM_CODE_TUNING_FAILED;
+    si->si_error = SM_CODE_TUNING_FAILED;
+    if (*error < SM_CODE_TUNING_FAILED)
+      *error = SM_CODE_TUNING_FAILED;
     si = NULL;
   }
   return si;

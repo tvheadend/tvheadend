@@ -238,6 +238,7 @@ subscription_reschedule(void)
         s->ths_service = si->si_s;
     }
 
+    error = s->ths_testing_error;
     if (s->ths_channel)
       tvhtrace("subscription", "find service for %s weight %d",
                channel_get_name(s->ths_channel), s->ths_weight);
@@ -319,6 +320,7 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
 static void
 subscription_input(void *opauqe, streaming_message_t *sm)
 {
+  int error;
   th_subscription_t *s = opauqe;
 
   if(s->ths_state == SUBSCRIPTION_TESTING_SERVICE) {
@@ -335,7 +337,9 @@ subscription_input(void *opauqe, streaming_message_t *sm)
        sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
       // No, mark our subscription as bad_service
       // the scheduler will take care of things
-      s->ths_testing_error = tss2errcode(sm->sm_code);
+      error = tss2errcode(sm->sm_code);
+      if (error > s->ths_testing_error)
+        s->ths_testing_error = error;
       s->ths_state = SUBSCRIPTION_BAD_SERVICE;
       streaming_msg_free(sm);
       return;
