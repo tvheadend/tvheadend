@@ -253,7 +253,7 @@ pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
   tsb[3] = (tsb[3] & 0xf0) | pm->pm_pat_cc;
   pm->pm_pat_cc = (pm->pm_pat_cc + 1) & 0xf;
 
-  tsb[6] = 0;
+  tsb[6] = 0x80;
   tsb[7] = 13; /* section_length (number of bytes after this field, including CRC) */
 
   tsb[13] = (pm->pm_service_id & 0xff00) >> 8;
