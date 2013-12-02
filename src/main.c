@@ -135,7 +135,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { "transcoding", &transcoding_enabled },
 #endif
 #if ENABLE_IMAGECACHE
-  { "imagecache", &imagecache_enabled },
+  { "imagecache", (uint32_t*)&imagecache_conf.enabled },
 #endif
 #if ENABLE_TIMESHIFT
   { "timeshift", &timeshift_enabled },

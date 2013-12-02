@@ -21,25 +21,22 @@
 
 #include <pthread.h>
 
-extern uint32_t imagecache_enabled;
-extern uint32_t imagecache_ok_period;
-extern uint32_t imagecache_fail_period;
-extern uint32_t imagecache_ignore_sslcert;
+struct imagecache_config {
+  int       enabled;
+  int       ignore_sslcert;
+  uint32_t  ok_period;
+  uint32_t  fail_period;
+};
+
+extern struct imagecache_config imagecache_conf;
 
 extern pthread_mutex_t imagecache_mutex;
 
 void     imagecache_init     ( void );
 
-void     imagecache_save     ( void );
-
-int      imagecache_set_enabled     ( uint32_t e )
-  __attribute__((warn_unused_result));
-int      imagecache_set_ok_period   ( uint32_t e )
-  __attribute__((warn_unused_result));
-int      imagecache_set_fail_period ( uint32_t e )
-  __attribute__((warn_unused_result));
-int      imagecache_set_ignore_sslcert ( uint32_t e )
-  __attribute__((warn_unused_result));
+htsmsg_t *imagecache_get_config ( void );
+int       imagecache_set_config ( htsmsg_t *c );
+void      imagecache_save       ( void );
 
 // Note: will return 0 if invalid (must serve original URL)
 uint32_t imagecache_get_id  ( const char *url );

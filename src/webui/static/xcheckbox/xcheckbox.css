@@ -1,0 +1,25 @@
+  .xcheckbox-wrap {
+       line-height: 18px;
+       padding-top:2px;
+  }
+  .xcheckbox-wrap a {
+      display:block;
+      width:16px;
+      height:16px;
+      float:left;
+  }
+  .x-toolbar .xcheckbox-wrap {
+      padding: 0 0 2px 0;
+  }
+  .xcheckbox-on {
+      background:transparent url(../extjs/resources/images/default/menu/checked.gif) no-repeat 0 0;
+  }
+  .xcheckbox-off {
+      background:transparent url(../extjs/resources/images/default/menu/unchecked.gif) no-repeat 0 0;
+  }
+  .xcheckbox-disabled {
+      opacity: 0.5;
+      -moz-opacity: 0.5;
+      filter: alpha(opacity=50);
+      cursor:default;
+  }

@@ -123,4 +123,5 @@ void api_init ( void )
   api_epg_init();
   api_epggrab_init();
   api_status_init();
+  api_imagecache_init();
 }

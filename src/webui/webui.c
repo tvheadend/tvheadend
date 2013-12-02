@@ -1044,7 +1044,13 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   if(sscanf(remain, "%d", &id) != 1)
     return HTTP_STATUS_BAD_REQUEST;
 
-  if ((fd = imagecache_open(id)) < 0)
+  /* Fetch details */
+  pthread_mutex_lock(&global_lock);
+  fd = imagecache_open(id);
+  pthread_mutex_unlock(&global_lock);
+
+  /* Check result */
+  if (fd < 0)
     return 404;
   if (fstat(fd, &st)) {
     close(fd);

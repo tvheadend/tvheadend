@@ -214,7 +214,7 @@ tvheadend.IdNodeField = function (conf)
     } else {
       switch (this.type) {
         case 'bool':
-          cons = Ext.form.Checkbox;
+          cons = Ext.ux.form.XCheckbox;
         break;
 
         case 'int':
@@ -330,7 +330,7 @@ tvheadend.idnode_editor_field = function(f, create)
       break;
 
     case 'bool':
-      return new Ext.form.Checkbox({
+      return new Ext.ux.form.XCheckbox({
         fieldLabel  : f.caption,
         name        : f.id,
         checked     : value,
@@ -865,7 +865,7 @@ tvheadend.idnode_grid = function(panel, conf)
     }
 
     /* Grid Panel */
-    var auto   = new Ext.form.Checkbox({
+    var auto   = new Ext.ux.form.XCheckbox({
       checked     : true,
       listeners   : {
         check : function ( s, c ) {

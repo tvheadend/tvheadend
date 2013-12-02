@@ -104,6 +104,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/GridFilters.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/RangeMenu.css\">\n"
+                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/xcheckbox/xcheckbox.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n",
                      tvheadend_webui_debug ? "-debug" : "",
                      tvheadend_webui_debug ? "-debug" : "",
@@ -119,6 +120,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/lovcombo/lovcombo-all.js");
   extjs_load(hq, "static/multiselect/multiselect.js");
   extjs_load(hq, "static/multiselect/ddview.js");
+  extjs_load(hq, "static/xcheckbox/xcheckbox.js");
   extjs_load(hq, "static/checkcolumn/CheckColumn.js");
   extjs_load(hq, "static/extjs/examples/ux/gridfilters/GridFilters.js");
   extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/Filter.js");
@@ -1506,16 +1508,6 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_unlock(&global_lock);
 
-    /* Image cache */
-#if ENABLE_IMAGECACHE
-    pthread_mutex_lock(&imagecache_mutex);
-    htsmsg_add_u32(m, "imagecache_enabled",     imagecache_enabled);
-    htsmsg_add_u32(m, "imagecache_ok_period",   imagecache_ok_period);
-    htsmsg_add_u32(m, "imagecache_fail_period", imagecache_fail_period);
-    htsmsg_add_u32(m, "imagecache_ignore_sslcert", imagecache_ignore_sslcert);
-    pthread_mutex_unlock(&imagecache_mutex);
-#endif
-
     if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
@@ -1550,22 +1542,6 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_unlock(&global_lock);
   
-    /* Image Cache */
-#if ENABLE_IMAGECACHE
-    pthread_mutex_lock(&imagecache_mutex);
-    str = http_arg_get(&hc->hc_req_args, "imagecache_enabled");
-    save = imagecache_set_enabled(!!str);
-    if ((str = http_arg_get(&hc->hc_req_args, "imagecache_ok_period")))
-      save |= imagecache_set_ok_period(atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "imagecache_fail_period")))
-      save |= imagecache_set_fail_period(atoi(str));
-    str = http_arg_get(&hc->hc_req_args, "imagecache_ignore_sslcert");
-    save |= imagecache_set_ignore_sslcert(!!str);
-    if (save)
-      imagecache_save();
-    pthread_mutex_unlock(&imagecache_mutex);
-#endif
-
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
