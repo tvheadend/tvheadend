@@ -1001,6 +1001,7 @@ capmt_service_start(service_t *s)
     tvhcsa_init(&ct->ct_csa);
     ct->ct_capmt    = capmt;
     ct->ct_service  = t;
+    ct->ct_seq      = capmt->capmt_seq++;
 
 
     TAILQ_FOREACH(st, &t->s_components, es_link) {
