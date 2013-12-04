@@ -317,6 +317,20 @@ epggrab_ota_pending_timer_cb ( void *p )
     goto done;
   }
 
+  /* Check we have modules attached and enabled */
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (map->om_module->enabled)
+      break;
+  }
+  if (!map) {
+    char name[256];
+    mm->mm_display_name(mm, name, sizeof(name));
+    tvhdebug("epggrab", "no modules attached to %s, check again later", name);
+    om->om_when = dispatch_clock + epggrab_ota_period(om) / 2;
+    LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
+    goto done;
+  }
+
   /* Insert into active (assume success) */
   // Note: if we don't do this the subscribe below can result in a mux
   //       start call which means we call it a second time below
