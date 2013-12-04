@@ -356,6 +356,8 @@ imagecache_save ( void )
   notify_reload("imagecache");
 }
 
+#endif /* ENABLE_IMAGECACHE */
+
 /*
  * Fetch a URLs ID
  */
@@ -414,7 +416,7 @@ int
 imagecache_open ( uint32_t id )
 {
   imagecache_image_t skel, *i;
-  int e, fd = -1;
+  int fd = -1;
 
   lock_assert(&global_lock);
 
@@ -430,8 +432,8 @@ imagecache_open ( uint32_t id )
   /* Remote file */
 #if ENABLE_IMAGECACHE
   else if (imagecache_conf.enabled) {
+    int e;
     struct timespec ts;
-    int err;
 
     /* Use existing */
     if (i->updated) {
@@ -441,8 +443,8 @@ imagecache_open ( uint32_t id )
       time(&ts.tv_sec);
       ts.tv_nsec = 0;
       ts.tv_sec += 5;
-      err = pthread_cond_timedwait(&imagecache_cond, &global_lock, &ts);
-      if (err == ETIMEDOUT)
+      e = pthread_cond_timedwait(&imagecache_cond, &global_lock, &ts);
+      if (e == ETIMEDOUT)
         return -1;
 
     /* Attempt to fetch */
@@ -461,5 +463,3 @@ imagecache_open ( uint32_t id )
 
   return fd;
 }
-
-#endif /* ENABLE_IMAGECACHE */
