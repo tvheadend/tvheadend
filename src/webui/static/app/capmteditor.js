@@ -13,6 +13,24 @@ tvheadend.capmteditor = function() {
 			meta.attr = 'style="color:red;"';
 		}
 	}
+	var selectMode = new Ext.form.ComboBox({
+		displayField:'name',
+		valueField: 'res',
+		value: 2,
+		mode: 'local',
+		editable: false,
+		triggerAction: 'all',
+		emptyText: 'Select mode...',
+		store: new Ext.data.SimpleStore({
+			fields: ['res','name'],
+			id: 0,
+			data: [
+				['2','Recent OSCam (svn rev >= 9063)'],
+				['1','Older OSCam'],
+				['0','Wrapper (capmt_ca.so)']
+			]
+		})
+	});
 
 	var cm = new Ext.grid.ColumnModel({
   defaultSortable: true,
@@ -21,7 +39,12 @@ tvheadend.capmteditor = function() {
 		header : "Enabled",
 		dataIndex : 'enabled',
 		width : 60
-          }, {
+	}, {
+		header: "Mode",
+		dataIndex: 'oscam',
+		width: 150,
+		editor: selectMode
+	}, {
 		header : "Camd.socket Filename",
 		dataIndex : 'camdfilename',
 		width : 200,
@@ -43,12 +66,6 @@ tvheadend.capmteditor = function() {
 			allowBlank : false
 		})
 	}, {
-            xtype: 'checkcolumn',
-		header : "OSCam mode",
-		dataIndex : 'oscam',
-		width : 60
-
-        } , {
 		header : "Comment",
 		dataIndex : 'comment',
 		width : 400,
