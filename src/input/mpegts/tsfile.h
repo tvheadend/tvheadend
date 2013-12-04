@@ -29,7 +29,7 @@ struct mpegts_network;
 void tsfile_init ( int tuners );
 
 /* Add a new file (multiplex) */
-void tsfile_add_file ( const char *path );
+void tsfile_add_file ( const char *path, int atsc );
 
 #endif /* __TVH_TSFILE_H__ */
 

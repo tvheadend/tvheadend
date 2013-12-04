@@ -424,7 +424,8 @@ main(int argc, char **argv)
               opt_fileline     = 0,
               opt_threadid     = 0,
               opt_ipv6         = 0,
-              opt_tsfile_tuner = 0;
+              opt_tsfile_tuner = 0,
+              opt_tsfile_atsc  = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -492,6 +493,7 @@ main(int argc, char **argv)
     { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
     { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
+    { 0, "tsfile_atsc", "tsfile input is ATSC", OPT_INT, &opt_tsfile_atsc }
 
   };
 
@@ -713,7 +715,7 @@ main(int argc, char **argv)
   if(opt_tsfile.num) {
     tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
     for (i = 0; i < opt_tsfile.num; i++)
-      tsfile_add_file(opt_tsfile.str[i]);
+      tsfile_add_file(opt_tsfile.str[i], opt_tsfile_atsc);
   }
 #endif
 #if ENABLE_IPTV

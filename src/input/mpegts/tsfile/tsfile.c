@@ -83,7 +83,7 @@ void tsfile_init ( int tuners )
 /*
  * Add multiplex
  */
-void tsfile_add_file ( const char *path )
+void tsfile_add_file ( const char *path, int atsc )
 {
   mpegts_input_t        *mi;
   mpegts_mux_t          *mm;
@@ -94,7 +94,7 @@ void tsfile_add_file ( const char *path )
   
   /* Create physical instance (for each tuner) */
   LIST_FOREACH(mi, &tsfile_inputs, mi_global_link)
-    tsfile_mux_instance_create(path, mi, mm);
+    tsfile_mux_instance_create(path, mi, mm, atsc);
 }
 
 /******************************************************************************
