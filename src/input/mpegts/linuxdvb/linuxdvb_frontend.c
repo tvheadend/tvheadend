@@ -709,12 +709,16 @@ linuxdvb_frontend_tune0
   /* DVB-T */
   if (lfe->lfe_info.type == FE_OFDM) {
     S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(p->u.ofdm.bandwidth));
+#if DVB_VER_ATLEAST(5,1)
     S2CMD(DTV_CODE_RATE_HP,      p->u.ofdm.code_rate_HP);
     S2CMD(DTV_CODE_RATE_LP,      p->u.ofdm.code_rate_LP);
+#endif
     S2CMD(DTV_MODULATION,        p->u.ofdm.constellation);
+#if DVB_VER_ATLEAST(5,1)
     S2CMD(DTV_TRANSMISSION_MODE, p->u.ofdm.transmission_mode);
     S2CMD(DTV_GUARD_INTERVAL,    p->u.ofdm.guard_interval);
     S2CMD(DTV_HIERARCHY,         p->u.ofdm.hierarchy_information);
+#endif
 
   /* DVB-C */
   } else if (lfe->lfe_info.type == FE_QAM) {

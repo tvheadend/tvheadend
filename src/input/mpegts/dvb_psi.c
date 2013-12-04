@@ -79,13 +79,13 @@ dvb_servicetype_lookup ( int t )
 static const fe_code_rate_t fec_tab [16] = {
   FEC_AUTO, FEC_1_2, FEC_2_3, FEC_3_4,
   FEC_5_6, FEC_7_8, FEC_8_9, 
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   FEC_3_5,
 #else
   FEC_NONE,
 #endif
   FEC_4_5, 
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   FEC_9_10,
 #else
   FEC_NONE,
@@ -125,7 +125,9 @@ dvb_desc_sat_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+#if DVB_VER_ATLEAST(5,0)
   dmc.dmc_fe_pilot            = PILOT_AUTO;
+#endif
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency;
   dmc.dmc_fe_orbital_pos      = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
@@ -135,9 +137,15 @@ dvb_desc_sat_del
   dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate * 100;
   dmc.dmc_fe_params.u.qpsk.fec_inner   = fec_tab[ptr[10] & 0x0f];
   
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   static int mtab[4] = {
-    0, QPSK, PSK_8, QAM_16
+    0, QPSK,
+#if DVB_VER_ATLEAST(5,3)
+    PSK_8,
+#else
+    0,
+#endif
+    QAM_16
   };
   static int rtab[4] = {
     ROLLOFF_35, ROLLOFF_25, ROLLOFF_20, ROLLOFF_AUTO
@@ -147,7 +155,7 @@ dvb_desc_sat_del
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
   if (dmc.dmc_fe_delsys == SYS_DVBS &&
       dmc.dmc_fe_rolloff != ROLLOFF_35) {
-    tvhlog(LOG_WARNING, "nit", "dvb-s rolloff error");
+    tvhwarn("nit", "dvb-s rolloff error");
     return NULL;
   }
 #endif
@@ -155,7 +163,7 @@ dvb_desc_sat_del
   /* Debug */
   const char *pol = dvb_pol2str(dmc.dmc_fe_polarisation);
   tvhdebug("nit", "    dvb-s%c pos %d%c freq %d %c sym %d fec %s"
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
            " mod %s roff %s"
 #endif
            ,
@@ -164,9 +172,9 @@ dvb_desc_sat_del
            dmc.dmc_fe_params.frequency,
            pol ? pol[0] : 'X',
            symrate,
-           dvb_fec2str(dmc.dmc_fe_params.u.qpsk.fec_inner),
-#if DVB_API_VERSION >= 5
-           dvb_qam2str(dmc.dmc_fe_modulation),
+           dvb_fec2str(dmc.dmc_fe_params.u.qpsk.fec_inner)
+#if DVB_VER_ATLEAST(5,0)
+           , dvb_qam2str(dmc.dmc_fe_modulation),
            dvb_rolloff2str(dmc.dmc_fe_rolloff)
 #endif
           );
@@ -210,7 +218,9 @@ dvb_desc_cable_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+#if DVB_VER_ATLEAST(5,0)
   dmc.dmc_fe_delsys           = SYS_DVBC_ANNEX_AC;
+#endif
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency * 100;
 
@@ -253,7 +263,7 @@ dvb_desc_terr_del
   static const fe_transmit_mode_t ttab [4] = {
     TRANSMISSION_MODE_2K,
     TRANSMISSION_MODE_8K,
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,1)
     TRANSMISSION_MODE_4K, 
 #else
     TRANSMISSION_MODE_AUTO,
@@ -279,7 +289,9 @@ dvb_desc_terr_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+#if DVB_VER_ATLEAST(5,0)
   dmc.dmc_fe_delsys           = SYS_DVBT;
+#endif
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
   dmc.dmc_fe_params.frequency = frequency * 10;
 

@@ -384,7 +384,7 @@ const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
 int         dvb_str2##p   (const char *p) { return str2val(p, p##tab); }
 
 const static struct strtab rollofftab[] = {
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   { "35",           ROLLOFF_35 },
   { "20",           ROLLOFF_20 },
   { "25",           ROLLOFF_25 },
@@ -394,12 +394,11 @@ const static struct strtab rollofftab[] = {
 dvb_str2val(rolloff);
 
 const static struct strtab delsystab[] = {
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   { "UNDEFINED",        SYS_UNDEFINED },
   { "DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
   { "DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
   { "DVBT",             SYS_DVBT },
-  { "DSS",              SYS_DSS },
   { "DVBS",             SYS_DVBS },
   { "DVBS2",            SYS_DVBS2 },
   { "DVBH",             SYS_DVBH },
@@ -411,6 +410,11 @@ const static struct strtab delsystab[] = {
   { "DMBTH",            SYS_DMBTH },
   { "CMMB",             SYS_CMMB },
   { "DAB",              SYS_DAB },
+#endif
+#if DVB_VER_ATLEAST(5,1)
+  { "DSS",              SYS_DSS },
+#endif
+#if DVB_VER_ATLEAST(5,4)
   { "DVBT2",            SYS_DVBT2 },
   { "TURBO",            SYS_TURBO }
 #endif
@@ -428,7 +432,7 @@ const static struct strtab fectab[] = {
   { "7/8",                  FEC_7_8 },
   { "8/9",                  FEC_8_9 },
   { "AUTO",                 FEC_AUTO },
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   { "3/5",                  FEC_3_5 },
   { "9/10",                 FEC_9_10 }
 #endif
@@ -445,11 +449,13 @@ const static struct strtab qamtab[] = {
   { "AUTO",                 QAM_AUTO },
   { "8VSB",                 VSB_8 },
   { "16VSB",                VSB_16 },
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
+  { "DQPSK",                DQPSK },
+#endif
+#if DVB_VER_ATLEAST(5,1)
   { "8PSK",                 PSK_8 },
   { "16APSK",               APSK_16 },
   { "32APSK",               APSK_32 },
-  { "DQPSK",                DQPSK }
 #endif
 };
 dvb_str2val(qam);
@@ -459,7 +465,7 @@ const static struct strtab bwtab[] = {
   { "7MHz",                 BANDWIDTH_7_MHZ },
   { "6MHz",                 BANDWIDTH_6_MHZ },
   { "AUTO",                 BANDWIDTH_AUTO },
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,3)
   { "5MHz",                 BANDWIDTH_5_MHZ },
   { "10MHz",                BANDWIDTH_10_MHZ },
   { "1712kHz",              BANDWIDTH_1_712_MHZ},
@@ -471,7 +477,10 @@ const static struct strtab modetab[] = {
   { "2k",                   TRANSMISSION_MODE_2K },
   { "8k",                   TRANSMISSION_MODE_8K },
   { "AUTO",                 TRANSMISSION_MODE_AUTO },
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,1)
+  { "4k",                   TRANSMISSION_MODE_4K },
+#endif
+#if DVB_VER_ATLEAST(5,3)
   { "1k",                   TRANSMISSION_MODE_1K },
   { "2k",                   TRANSMISSION_MODE_16K },
   { "32k",                  TRANSMISSION_MODE_32K },
@@ -485,7 +494,7 @@ const static struct strtab guardtab[] = {
   { "1/8",                  GUARD_INTERVAL_1_8 },
   { "1/4",                  GUARD_INTERVAL_1_4 },
   { "AUTO",                 GUARD_INTERVAL_AUTO },
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,3)
   { "1/128",                GUARD_INTERVAL_1_128 },
   { "19/128",               GUARD_INTERVAL_19_128 },
   { "19/256",               GUARD_INTERVAL_19_256},
@@ -519,9 +528,11 @@ const static struct strtab typetab[] = {
 dvb_str2val(type);
 
 const static struct strtab pilottab[] = {
+#if DVB_VER_ATLEAST(5,0)
   {"AUTO", PILOT_AUTO},
   {"ON",   PILOT_ON},
   {"OFF",  PILOT_OFF}
+#endif
 };
 dvb_str2val(pilot);
 #undef dvb_str2val
@@ -616,7 +627,7 @@ dvb_mux_conf_load_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
     return "Invalid polarisation";
   dmc->dmc_fe_polarisation = r;
 
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   s = htsmsg_get_str(m, "modulation");
   if(s == NULL || (r = dvb_str2qam(s)) < 0) {
     r = QPSK;
@@ -651,15 +662,17 @@ dvb_mux_conf_load_atsc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
 const char *
 dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
 {
+#if DVB_VER_ATLEAST(5,0)
   int r;
-  uint32_t u32;
   const char *str;
+#endif
+  uint32_t u32;
 
   memset(dmc, 0, sizeof(dvb_mux_conf_t));
   dmc->dmc_fe_params.inversion = INVERSION_AUTO;
 
   /* Delivery system */
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   str = htsmsg_get_str(m, "delsys");
   if (!str || (r = dvb_str2delsys(str)) < 0) {
          if (type == FE_OFDM) r = SYS_DVBT;
@@ -670,8 +683,8 @@ dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
       return "Invalid FE type";
     tvhlog(LOG_INFO, "dvb", "no delsys, using default %s", dvb_delsys2str(r));
   }
-#endif
   dmc->dmc_fe_delsys           = r;
+#endif
 
   /* Frequency */
   if (htsmsg_get_u32(m, "frequency", &u32))
@@ -723,7 +736,7 @@ dvb_mux_conf_save_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
   htsmsg_add_u32(m, "symbol_rate",   qpsk->symbol_rate);
   htsmsg_add_str(m, "fec",           dvb_fec2str(qpsk->fec_inner));
   htsmsg_add_str(m, "polarisation",  dvb_pol2str(dmc->dmc_fe_polarisation));
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(m, "modulation",    dvb_qam2str(dmc->dmc_fe_modulation));
   htsmsg_add_str(m, "rolloff",       dvb_rolloff2str(dmc->dmc_fe_rolloff));
 #endif
@@ -740,7 +753,7 @@ void
 dvb_mux_conf_save ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
 {
   htsmsg_add_u32(m, "frequency", dmc->dmc_fe_params.frequency);
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(m, "delsys", dvb_delsys2str(dmc->dmc_fe_delsys));
 #endif
        if (type == FE_OFDM) dvb_mux_conf_save_dvbt(dmc, m);
@@ -753,18 +766,20 @@ int
 dvb_bandwidth ( fe_bandwidth_t bw )
 {
   switch (bw) {
+#if DVB_VER_ATLEAST(5,3)
     case BANDWIDTH_10_MHZ:
       return 10000000;
+    case BANDWIDTH_5_MHZ:
+      return 5000000;
+    case BANDWIDTH_1_712_MHZ:
+      return 1712000;
+#endif
     case BANDWIDTH_8_MHZ:
       return 8000000;
     case BANDWIDTH_7_MHZ:
       return 7000000;
     case BANDWIDTH_6_MHZ:
       return 6000000;
-    case BANDWIDTH_5_MHZ:
-      return 5000000;
-    case BANDWIDTH_1_712_MHZ:
-      return 1712000;
     default:
       return 0;
   }

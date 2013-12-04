@@ -116,7 +116,9 @@ scanfile_load_atsc ( dvb_mux_conf_t *mux, const char *line )
 
   r = sscanf(line, "%u %s", &p->frequency, qam);
   if (r != 2) return 1;
+#if DVB_VER_ATLEAST(5,0)
   mux->dmc_fe_delsys = SYS_ATSC;
+#endif
   if ((p->u.vsb.modulation = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
@@ -134,12 +136,16 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
     r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
 	             &i, &i, &p->frequency, bw, fec, fec2, qam, mode, guard, hier);
     if(r != 10) return 1;
+#if DVB_VER_ATLEAST(5,4)
     mux->dmc_fe_delsys = SYS_DVBT2;
+#endif
   } else {
     r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
 	             &p->frequency, bw, fec, fec2, qam, mode, guard, hier);
     if(r != 8) return 1;
+#if DVB_VER_ATLEAST(5,0)
     mux->dmc_fe_delsys = SYS_DVBT;
+#endif
   }
 
   if ((p->u.ofdm.bandwidth             = dvb_str2bw(bw))       == -1) return 1;
@@ -172,6 +178,7 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
 
   if ((mux->dmc_fe_polarisation = dvb_str2pol(pol)) == -1) return 1;
   if ((p->u.qpsk.fec_inner      = dvb_str2fec(fec)) == -1) return 1;
+#if DVB_VER_ATLEAST(5,0)
   if (v2) {
     mux->dmc_fe_delsys     = SYS_DVBS2;
     if ((mux->dmc_fe_rolloff    = dvb_str2rolloff(rolloff)) == -1) return 1;
@@ -181,6 +188,9 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
     mux->dmc_fe_rolloff    = ROLLOFF_35;
     mux->dmc_fe_modulation = QPSK;
   }
+#else
+  if (v2) return 1;
+#endif
 
   return 0;
 }
@@ -196,7 +206,9 @@ scanfile_load_dvbc ( dvb_mux_conf_t *mux, const char *line )
 	           &p->frequency, &p->u.qam.symbol_rate, fec, qam);
   if(r != 4) return 1;
 
+#if DVB_VER_ATLEAST(5,0)
   mux->dmc_fe_delsys = SYS_DVBC_ANNEX_AC;
+#endif
   if ((p->u.qam.fec_inner  = dvb_str2fec(fec)) == -1) return 1;
   if ((p->u.qam.modulation = dvb_str2qam(qam)) == -1) return 1;
 

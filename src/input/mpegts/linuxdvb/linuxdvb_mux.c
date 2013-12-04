@@ -84,17 +84,27 @@ static const void *
 linuxdvb_mux_class_delsys_get (void *o)
 {
   static const char *s;
+#if DVB_VER_ATLEAST(5,0)
   linuxdvb_mux_t *lm = o;
   s = dvb_delsys2str(lm->lm_tuning.dmc_fe_delsys);
+#else
+  s = NULL;
+#endif
   return &s;
 }
 static int
 linuxdvb_mux_class_delsys_set (void *o, const void *v)
 {
+#if DVB_VER_ATLEAST(5,0)
   const char *s = v;
+  int delsys = dvb_str2delsys(s);
   linuxdvb_mux_t *lm = o;
-  lm->lm_tuning.dmc_fe_delsys = dvb_str2delsys(s);
-  return 1;
+  if (delsys != lm->lm_tuning.dmc_fe_delsys) {
+    lm->lm_tuning.dmc_fe_delsys = dvb_str2delsys(s);
+    return 1;
+  }
+#endif
+  return 0;
 }
 
 const idclass_t linuxdvb_mux_class =
@@ -165,9 +175,13 @@ static htsmsg_t *
 linuxdvb_mux_dvbt_class_delsys_enum (void *o)
 {
   htsmsg_t *list = htsmsg_create_list();
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBT));
+#endif
+#if DVB_VER_ATLEAST(5,4)
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBT2));
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_TURBO));
+#endif
   return list;
 }
 
@@ -233,8 +247,10 @@ static htsmsg_t *
 linuxdvb_mux_dvbc_class_delsys_enum (void *o)
 {
   htsmsg_t *list = htsmsg_create_list();
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBC_ANNEX_AC));
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBC_ANNEX_B));
+#endif
   return list;
 }
 
@@ -309,16 +325,24 @@ static const void *
 linuxdvb_mux_dvbs_class_modulation_get ( void *o )
 {
   static const char *s;
+#if DVB_VER_ATLEAST(5,0)
   linuxdvb_mux_t *lm = o;
   s = dvb_qam2str(lm->lm_tuning.dmc_fe_modulation);
+#endif
   return &s;
 }
 static int
 linuxdvb_mux_dvbs_class_modulation_set (void *o, const void *s)
 {
+#if DVB_VER_ATLEAST(5,0)
+  int mod = dvb_str2qam(s);
   linuxdvb_mux_t *lm = o;
-  lm->lm_tuning.dmc_fe_modulation = dvb_str2qam(s);
-  return 1;
+  if (mod != lm->lm_tuning.dmc_fe_modulation) {
+    lm->lm_tuning.dmc_fe_modulation = mod;
+    return 1;
+  }
+#endif
+  return 0;
 }
 static htsmsg_t *
 linuxdvb_mux_dvbs_class_modulation_list ( void *o )
@@ -396,8 +420,10 @@ static htsmsg_t *
 linuxdvb_mux_dvbs_class_delsys_enum (void *o)
 {
   htsmsg_t *list = htsmsg_create_list();
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBS));
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_DVBS2));
+#endif
   return list;
 }
 
@@ -509,8 +535,10 @@ static htsmsg_t *
 linuxdvb_mux_atsc_class_delsys_enum (void *o)
 {
   htsmsg_t *list = htsmsg_create_list();
+#if DVB_VER_ATLEAST(5,0)
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_ATSC));
   htsmsg_add_str(list, NULL, dvb_delsys2str(SYS_ATSCMH));
+#endif
   return list;
 }
 
@@ -629,7 +657,9 @@ linuxdvb_mux_create0
 
   /* Defaults */
   lm->lm_tuning.dmc_fe_params.inversion = INVERSION_AUTO;
+#if DVB_VER_ATLEAST(5,0)
   lm->lm_tuning.dmc_fe_pilot            = PILOT_AUTO;
+#endif
   
   /* No config */
   if (!conf) return lm;
