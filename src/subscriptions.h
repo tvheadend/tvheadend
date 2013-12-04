@@ -28,8 +28,8 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_FULLMUX    0x4
 
 /* Some internal prioties */
-#define SUBSCRIPTION_PRIO_SCAN  	1
-#define SUBSCRIPTION_PRIO_EPG   	2
+#define SUBSCRIPTION_PRIO_EPG   	1
+#define SUBSCRIPTION_PRIO_SCAN  	2
 #define SUBSCRIPTION_PRIO_MAPPER	3
 #define SUBSCRIPTION_PRIO_MIN	 	10
 
