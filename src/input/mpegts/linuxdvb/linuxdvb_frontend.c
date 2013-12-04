@@ -454,8 +454,10 @@ linuxdvb_frontend_monitor ( void *aux )
   mpegts_pid_t *mp;
   fe_status_t fe_status;
   signal_state_t status;
+#if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
+#endif
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   tvhtrace("linuxdvb", "%s - checking FE status", buf);
@@ -537,13 +539,15 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
-  /* Statistics */
-  /* try the v5 API first */
+  /* Statistics - New API */
+#if DVB_VER_ATLEAST(5,10)
   fe_properties[0].cmd = DTV_STAT_SIGNAL_STRENGTH;
+
   /* BER */
   fe_properties[1].cmd = DTV_STAT_PRE_ERROR_BIT_COUNT;
   fe_properties[2].cmd = DTV_STAT_PRE_TOTAL_BIT_COUNT;
   fe_properties[3].cmd = DTV_STAT_CNR;
+
   /* PER */
   fe_properties[4].cmd = DTV_STAT_ERROR_BLOCK_COUNT;
   fe_properties[5].cmd = DTV_STAT_TOTAL_BLOCK_COUNT;
@@ -551,12 +555,12 @@ linuxdvb_frontend_monitor ( void *aux )
   dtv_prop.props = fe_properties;
 
   if(!ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
-    /* use v5 API */
     if(fe_properties[0].u.st.len > 0) {
       if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE)
         mmi->mmi_stats.signal = (fe_properties[0].u.st.stat[0].uvalue * 100) / 0xffff;
       /* TODO: handle other scales */
     }
+
     /* Calculate BER from PRE_ERROR and TOTAL_BIT_COUNT */
     if(fe_properties[1].u.st.len > 0) {
       if(fe_properties[1].u.st.stat[0].scale == FE_SCALE_COUNTER)
@@ -570,12 +574,15 @@ linuxdvb_frontend_monitor ( void *aux )
           mmi->mmi_stats.ber = 0;
       }
     }
+    
+    /* SNR */
     if(fe_properties[3].u.st.len > 0) {
       /* note that decibel scale means 1 = 0.0001 dB units here */
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL)
         mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].svalue * 0.0001;
       /* TODO: handle other scales */
     }
+
     /* Calculate PER from PRE_ERROR and TOTAL_BIT_COUNT */
     if(fe_properties[4].u.st.len > 0) {
       if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER)
@@ -589,8 +596,11 @@ linuxdvb_frontend_monitor ( void *aux )
           mmi->mmi_stats.unc = 0;
       }
     }
-  } else {
-    /* use old v3 API */
+  
+  /* Older API */
+  } else
+#endif
+  {
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16))
       mmi->mmi_stats.signal = u16;
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
@@ -600,7 +610,6 @@ linuxdvb_frontend_monitor ( void *aux )
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       mmi->mmi_stats.unc = u32;
   }
-
 }
 
 static void *
