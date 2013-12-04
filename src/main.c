@@ -586,7 +586,8 @@ main(int argc, char **argv)
   if (isatty(2))
     log_options |= TVHLOG_OPT_DECORATE;
   if (opt_stderr || opt_syslog || opt_logpath) {
-    log_debug      = "all";
+    if (!opt_log_trace && !opt_log_debug)
+      log_debug      = "all";
     log_level      = LOG_DEBUG;
     if (opt_stderr)
       log_options   |= TVHLOG_OPT_DBG_STDERR;
