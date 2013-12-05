@@ -72,7 +72,7 @@ tvheadend.VideoPlayer = function(url) {
 	displayField : 'val',
 	store : tvheadend.channels,
 	mode : 'local',
-	editable : false,
+	editable : true,
 	triggerAction : 'all',
 	emptyText : 'Select channel...'
     });
