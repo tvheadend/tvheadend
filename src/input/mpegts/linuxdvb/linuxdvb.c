@@ -22,11 +22,15 @@
 #include "settings.h"
 #include "linuxdvb_private.h"
 #include "scanfile.h"
+#include "../dvb_charset.h"
 
 void linuxdvb_init ( int adapter_mask )
 {
   /* Load scan files */
   scanfile_init();
+
+  /* Load list of mux charset global overrides */
+  dvb_charset_init();
 
   /* Initialise networks */
   linuxdvb_network_init();
