@@ -91,8 +91,9 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
 
   buf[0] = 2; /* table id, always 2 */
 
-  buf[3] = 0x00; /* program id */
-  buf[4] = 0x01;
+  /* program id */
+  buf[3] = ss->ss_service_id >> 8;
+  buf[4] = ss->ss_service_id & 0xff;
 
   buf[5] = 0xc1; /* current_next_indicator + version */
   buf[5] |= (version & 0x1F) << 1;
