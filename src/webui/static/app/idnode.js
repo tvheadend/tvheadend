@@ -881,7 +881,7 @@ tvheadend.idnode_grid = function(panel, conf)
         id     : 0,
         fields : [ 'key', 'val' ],
         data   : [[25, '25'], [50, '50'], [100, '100'],
-                  [200, '200'], [-1, 'All']]
+                  [200, '200'], [9999999999, 'All']]
       }),
       value          : 50,
       mode           : 'local',
