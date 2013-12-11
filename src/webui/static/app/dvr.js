@@ -735,7 +735,8 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate', 
+		'rewritePAT', 'rewritePMT', 'cleanUnsafeCharactersInTitle' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -825,6 +826,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Remove all unsafe characters from filename',
 			name : 'cleanTitle'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Remove unsafe characters from filename but keep national characters',
+			name : 'cleanUnsafeCharactersInTitle'
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Replace whitespace in title with \'-\'',
 			name : 'whitespaceInTitle'

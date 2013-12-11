@@ -69,6 +69,7 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_SKIP_COMMERCIALS    0x400
 #define DVR_SUBTITLE_IN_TITLE	0x800
 #define DVR_EPISODE_BEFORE_DATE	0x1000
+#define DVR_CLEAN_UNSAFE_CHARACTERS_IN_TITLE 0x2000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -250,6 +251,8 @@ typedef struct dvr_autorec_entry {
 /**
  * Prototypes
  */
+
+void dvr_cleanupfilename(char *s, int dvr_flags, char rep);
 
 void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
