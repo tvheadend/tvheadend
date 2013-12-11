@@ -154,7 +154,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if(cfg->dvr_flags & DVR_DIR_PER_DAY) {
     localtime_r(&de->de_start, &tm);
     strftime(fullname, sizeof(fullname), "%F", &tm);
-    dvr_cleanupfilename(fullname,cfg->dvr_flags,'-');
+    dvr_cleanupfilename(fullname,cfg->dvr_flags,'_');
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", fullname);
   }
@@ -164,7 +164,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if(cfg->dvr_flags & DVR_DIR_PER_CHANNEL) {
 
     char *chname = strdup(DVR_CH_NAME(de));
-    dvr_cleanupfilename(chname,cfg->dvr_flags,'-');
+    dvr_cleanupfilename(chname,cfg->dvr_flags,'_');
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", chname);
     free(chname);
@@ -177,7 +177,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if(cfg->dvr_flags & DVR_DIR_PER_TITLE) {
 
     char *title = strdup(lang_str_get(de->de_title, NULL));
-    dvr_cleanupfilename(title,cfg->dvr_flags,'-');
+    dvr_cleanupfilename(title,cfg->dvr_flags,'_');
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", title);
     free(title);
