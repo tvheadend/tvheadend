@@ -542,6 +542,9 @@ linuxdvb_mux_atsc_class_delsys_enum (void *o)
   return list;
 }
 
+linuxdvb_mux_class_X(atsc, vsb, modulation, qam,
+                     QAM_AUTO, QAM_256, VSB_8);
+
 const idclass_t linuxdvb_mux_atsc_class =
 {
   .ic_super      = &linuxdvb_mux_class,
@@ -550,6 +553,16 @@ const idclass_t linuxdvb_mux_atsc_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", "Delivery System", atsc, delsys, "ATSC"),
+    },
+    {
+      .type     = PT_U32,
+      .id       = "frequency",
+      .name     = "Frequency (kHz)",
+      .opts     = PO_WRONCE,
+      .off      = offsetof(linuxdvb_mux_t, lm_tuning.dmc_fe_params.frequency),
+    },
+    {
+      MUX_PROP_STR("modulation", "Modulation", atsc, qam, "AUTO")
     },
     {}
   }
