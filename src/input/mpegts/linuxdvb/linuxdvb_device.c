@@ -38,6 +38,7 @@
  * BUS str table
  */
 static struct strtab bustab[] = {
+  { "NONE", BUS_NONE },
   { "PCI",  BUS_PCI  },
   { "USB1", BUS_USB1 },
   { "USB2", BUS_USB2 },
@@ -60,6 +61,9 @@ get_device_info ( device_info_t *di, int a )
   char path[512], buf[512];
   ssize_t c;
   int mina = a;
+
+  /* Clear */
+  memset(di, 0, sizeof(device_info_t));
 
   /* Check for subsystem */
 #define DVB_DEV_PATH "/sys/class/dvb/dvb%d.frontend0/device"
@@ -135,7 +139,7 @@ get_device_info ( device_info_t *di, int a )
   di->di_min_adapter = mina;
 
   /* Create ID */
-  if (*di->di_path && di->di_dev) {
+  if (*di->di_path && di->di_dev && di->di_bus) {
     snprintf(buf, sizeof(buf), "%s/%s/%04x:%04x",
              devinfo_bus2str(di->di_bus), di->di_path,
              di->di_dev >> 16, di->di_dev & 0xFFFF);
