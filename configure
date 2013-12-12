@@ -32,6 +32,7 @@ OPTIONS=(
   "curl:auto"
   "epoll:auto"
   "uriparser:auto"
+  "ccache:auto"
   "bundle:no"
   "dvbcsa:no"
   "kqueue:no"
@@ -53,6 +54,19 @@ echo "Checking support/features"
 #
 # Compiler
 #
+
+# Use ccache
+if enabled_or_auto ccache; then
+  which ccache &> /dev/null
+  if [ $? -eq 0 ]; then
+    echo "$CC" | grep -q ccache || CC="ccache $CC"
+    enable ccache
+  elif enabled ccache; then
+    die "ccache not found, try --disable-ccache"
+  fi
+fi
+
+# Valiate compiler
 check_cc || die 'No C compiler found'
 check_cc_header execinfo
 check_cc_option mmx
