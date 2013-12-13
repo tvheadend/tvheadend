@@ -385,7 +385,7 @@ handle_ca0(capmt_t* capmt) {
   int *request = NULL;
   ca_descr_t *ca;
   ca_pid_t *cpd;
-  int process_key, process_next, cai;
+  int process_key, process_next, cai = 0;
   int i, j;
   int recvsock = 0;
 
@@ -422,6 +422,18 @@ handle_ca0(capmt_t* capmt) {
       else
         recvsock = capmt->capmt_sock_ca0[i];
       if (recvsock > 0) {
+        if (capmt->capmt_oscam == 2)
+        {
+          // adapter index is in first byte
+          uint8_t adapter_index;
+          ret = recv(recvsock, &adapter_index, 1, MSG_DONTWAIT);
+          if (ret < 0)
+          {
+            usleep(10 * 1000);
+            continue;
+          }
+          cai = adapter_index;
+        }
         request = NULL;
         ret = recv(recvsock, buffer, (capmt->capmt_oscam == 2) ? sizeof(int) : bufsize, MSG_DONTWAIT);
         if (ret > 0) {
@@ -481,7 +493,8 @@ handle_ca0(capmt_t* capmt) {
     if (capmt->capmt_oscam) {
       if (!request)
         continue;
-      cai = i;
+      if (capmt->capmt_oscam != 2) //in mode 2 we read it directly from socket
+        cai = i;
       if (*request == CA_SET_PID) {
         cpd = (ca_pid_t *)&buffer[sizeof(int)];
         tvhlog(LOG_DEBUG, "capmt", "CA_SET_PID cai %d req %d (%d %04x)", cai, *request, cpd->index, cpd->pid);
