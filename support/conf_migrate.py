@@ -198,6 +198,44 @@ def load_channels ( path, nets ):
   return chns
 
 #
+# IPTV
+#
+
+def iptv_network ( nets, opts ):
+  muxes = {}
+  for f in glob.glob(os.path.join(path, 'iptvservices', '*')):
+    s   = open(f).read()
+    d   = json.loads(s)
+    url = '%s://%s:%d' % (opts.iptv, d['group'], d['port'])
+    if url not in muxes:
+      e = 'disabled' not in d or not d['disabled']
+      i = ''
+      if 'interface' in d: i = d['interface']
+      muxes[url] = m = { 'iptv_url' : url, 'enabled' : e, 'svcs' : {},
+                         'iptv_interface': i }
+    else:
+      m = muxes[url]
+
+    # Create service entry
+    d['svcname']         = d['channelname']
+    d['dvb_servicetype'] = d['stype']
+    d['sid']             = 1 # Let's hope!
+    m['svcs']            = { '1' : d }
+
+    # Remove
+    for f in [ 'stream', 'group', 'stype', 'interface' ]:
+      if f in d:
+        del d[f]
+
+
+  nets.append({ 'type'          : 'iptv',
+                'muxs'          : muxes,\
+                'skipinitscan'  : True,\
+                'autodiscovery' : False })
+
+  return nets
+  
+#
 # Output
 #
 
@@ -342,6 +380,31 @@ def output_networks ( path, nets, opts ):
 
     # Muxes
     output_muxes(os.path.join(npath, 'muxes'), n['muxs'], opts)
+
+# Output IPTV
+def output_iptv ( path, nets, opts ):
+  d = None
+
+  # Find
+  for n in nets:
+    if n['type'] == 'iptv':
+      d = n
+  if not d: return
+  
+  # Ensure dir exists
+  path = os.path.join(path, 'input', 'iptv')
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+  # Write
+  u    = uuid()
+  n    = { 'uuid'          : u,
+           'skipinitscan'  : True,
+           'autodiscovery' : False }
+  open(os.path.join(path, 'config'), 'w').write(json.dumps(n, indent=2))
+
+  # Muxes
+  output_muxes(os.path.join(path, 'muxes'), d['muxs'], opts)
     
 # Channels
 def output_channels ( path, chns, opts ):
@@ -451,6 +514,8 @@ def update_epg ( path, chns ):
 optp = OptionParser()
 optp.add_option('-o', '--overlap', type='float', default=0.5,
                 help='Percentage overlap at which networks considered same')
+optp.add_option('-i', '--iptv', type='string', default='udp',
+                help='IPTV input type, rtp/udp')
 (opts,args) = optp.parse_args()
 path = args[0]
 adps = load_adapters(path)
@@ -458,6 +523,8 @@ muxs = load_muxes(path, adps)
 svcs = load_services(path, muxs)
 nets = build_networks(adps, opts)
 output_networks(path, nets, opts)
+nets = iptv_network(nets, opts)
+output_iptv(path, nets, opts)
 chns = load_channels(path, nets)
 output_channels(path, chns, opts)
 update_dvr(path, chns)
