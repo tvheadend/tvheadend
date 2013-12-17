@@ -203,9 +203,11 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Start */
   pthread_mutex_lock(&iptv_lock);
-  im->mm_active  = mmi;
-  im->im_handler = ih;
   ret            = ih->start(im, &url);
+  if (!ret) {
+    im->mm_active  = mmi;
+    im->im_handler = ih;
+  }
   pthread_mutex_unlock(&iptv_lock);
 
   return ret;

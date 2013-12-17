@@ -51,7 +51,7 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
   struct in6_addr s6addr;
   char name[256], buf[256];
 
-  im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
+  im->mm_display_name((mpegts_mux_t*)im, name, sizeof(name));
 
   /* Determine if this is IPv6 */
   if (!inet_pton(AF_INET, url->host, &saddr)) {
