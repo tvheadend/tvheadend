@@ -426,7 +426,7 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   if (t) {
     if (pmt_pid && pmt_pid != t->s_pmt_pid) {
       t->s_pmt_pid = pmt_pid;
-      *save = 1;
+      if (save) *save = 1;
     }
     return t;
   }
