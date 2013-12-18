@@ -25,7 +25,7 @@ tvheadend.capmteditor = function() {
 			fields: ['res','name'],
 			id: 0,
 			data: [
-				['2','Recent OSCam (svn rev >= 9063)'],
+				['2','Recent OSCam (svn rev >= 9095)'],
 				['1','Older OSCam'],
 				['0','Wrapper (capmt_ca.so)']
 			]
