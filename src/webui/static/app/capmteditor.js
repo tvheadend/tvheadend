@@ -6,8 +6,11 @@ tvheadend.capmteditor = function() {
 		if (!enabled) return;
 
 		var connected = record.get('connected');
-		if (connected == 1) {
+		if (connected == 2) {
 			meta.attr = 'style="color:green;"';
+		}
+		else if (connected == 1) {
+			meta.attr = 'style="color:orange;"';
 		}
 		else {
 			meta.attr = 'style="color:red;"';
@@ -91,7 +94,7 @@ tvheadend.capmteditor = function() {
 		}
 	});
 
-	tvheadend.comet.on('capmtStatus', function(server) {
+	tvheadend.comet.on('capmt', function(server) {
 		var rec = store.getById(server.id);
 		if (rec) {
 			rec.set('connected', server.connected);

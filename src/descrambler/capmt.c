@@ -209,6 +209,38 @@ static void capmt_send_request(capmt_service_t *ct, int es_pid, int lm);
 /**
  *
  */
+static htsmsg_t *
+capmt_record_build(capmt_t *capmt)
+{
+  htsmsg_t *e = htsmsg_create_map();
+
+  htsmsg_add_str(e, "id", capmt->capmt_id);
+  htsmsg_add_u32(e, "enabled",  !!capmt->capmt_enabled);
+  htsmsg_add_u32(e, "connected", !!capmt->capmt_connected);
+
+  htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
+  htsmsg_add_u32(e, "port", capmt->capmt_port);
+  htsmsg_add_u32(e, "oscam", capmt->capmt_oscam);
+  htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
+  
+  return e;
+}
+
+/**
+ *
+ */
+static void
+capmt_set_connected(capmt_t *capmt, int c)
+{
+  if (c == capmt->capmt_connected)
+    return;
+  capmt->capmt_connected = c;
+  notify_by_msg("capmt", capmt_record_build(capmt));
+}
+
+/**
+ *
+ */
 static int
 capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
 {
@@ -271,8 +303,11 @@ capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
       if (connect(capmt->capmt_sock[i], (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) != 0) {
         tvhlog(LOG_ERR, "capmt", "Cannot connect to %s, Do you have OSCam running?", capmt->capmt_sockfile);
         capmt->capmt_sock[i] = 0;
-      } else
+        capmt_set_connected(capmt, 0);
+      } else {
         tvhlog(LOG_DEBUG, "capmt", "created socket with socket_fd=%d", capmt->capmt_sock[i]);
+        capmt_set_connected(capmt, 2);
+      }
     }
     if (capmt->capmt_sock[i] > 0) {
       if (tvh_write(capmt->capmt_sock[i], buf, len)) {
@@ -603,7 +638,12 @@ capmt_thread(void *aux)
       capmt->sids[i] = 0;
       capmt->capmt_sock[i] = 0;
     }
-    capmt->capmt_connected = 0;
+
+    /* Accessible */
+    if (!access(capmt->capmt_sockfile, R_OK | W_OK))
+      capmt_set_connected(capmt, 1);
+    else
+      capmt_set_connected(capmt, 0);
     
     pthread_mutex_lock(&global_lock);
 
@@ -624,7 +664,7 @@ capmt_thread(void *aux)
       snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "%s", capmt->capmt_sockfile);
 
       if (connect(capmt->capmt_sock[0], (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) == 0) {
-        capmt->capmt_connected = 1;
+        capmt_set_connected(capmt, 2);
 
         /* open connection to emulated ca0 device */
         if (!capmt->capmt_oscam) {
@@ -651,7 +691,7 @@ capmt_thread(void *aux)
       } else 
         tvhlog(LOG_ERR, "capmt", "Error connecting to %s: %s", capmt->capmt_sockfile, strerror(errno));
     }
-    capmt->capmt_connected = 0;
+    capmt_set_connected(capmt, 0);
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -924,8 +964,10 @@ capmt_enumerate_services(capmt_t *capmt, int es_pid, int force)
   if (!all_srv_count && !res_srv_count) {
     // closing socket (oscam handle this as event and stop decrypting)
     tvhlog(LOG_DEBUG, "capmt", "%s: no subscribed services, closing socket, fd=%d", __FUNCTION__, capmt->capmt_sock[0]);
-    if (capmt->capmt_sock[0] > 0)
+    if (capmt->capmt_sock[0] > 0) {
       close(capmt->capmt_sock[0]);
+      capmt_set_connected(capmt, 1);
+    }
     capmt->capmt_sock[0] = 0;
   }
   else if (force || (res_srv_count != all_srv_count)) {
@@ -1101,26 +1143,6 @@ capmt_entry_find(const char *id, int create)
   return capmt;
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-capmt_record_build(capmt_t *capmt)
-{
-  htsmsg_t *e = htsmsg_create_map();
-
-  htsmsg_add_str(e, "id", capmt->capmt_id);
-  htsmsg_add_u32(e, "enabled",  !!capmt->capmt_enabled);
-  htsmsg_add_u32(e, "connected", !!capmt->capmt_connected);
-
-  htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
-  htsmsg_add_u32(e, "port", capmt->capmt_port);
-  htsmsg_add_u32(e, "oscam", capmt->capmt_oscam);
-  htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
-  
-  return e;
-}
 
 /**
  *
