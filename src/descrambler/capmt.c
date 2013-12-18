@@ -216,7 +216,7 @@ capmt_record_build(capmt_t *capmt)
 
   htsmsg_add_str(e, "id", capmt->capmt_id);
   htsmsg_add_u32(e, "enabled",  !!capmt->capmt_enabled);
-  htsmsg_add_u32(e, "connected", !!capmt->capmt_connected);
+  htsmsg_add_u32(e, "connected", capmt->capmt_connected);
 
   htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
   htsmsg_add_u32(e, "port", capmt->capmt_port);
