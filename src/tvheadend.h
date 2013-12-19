@@ -27,6 +27,12 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <string.h>
+#include <assert.h>
+#include <unistd.h>
+#if ENABLE_LOCKOWNER
+#include <sys/syscall.h>
+#endif
 
 #include "queue.h"
 #include "avg.h"
@@ -80,14 +86,19 @@ typedef struct source_info {
   int   si_type;
 } source_info_t;
 
+
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {
+#if ENABLE_LOCKOWNER
+  assert(l->__data.__owner == syscall(SYS_gettid));
+#else
   if(pthread_mutex_trylock(l) == EBUSY)
     return;
 
   fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
   abort();
+#endif
 }
 
 #define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
@@ -136,9 +147,6 @@ void gtimer_disarm(gtimer_t *gti);
  * List / Queue header declarations
  */
 LIST_HEAD(th_subscription_list, th_subscription);
-RB_HEAD(channel_tree, channel);
-TAILQ_HEAD(channel_queue, channel);
-LIST_HEAD(channel_list, channel);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);
@@ -193,7 +201,6 @@ typedef enum {
   SCT_TELETEXT,
   SCT_DVBSUB,
   SCT_CA,
-  SCT_PMT,
   SCT_AAC,
   SCT_MPEGTS,
   SCT_TEXTSUB,
@@ -355,7 +362,7 @@ typedef enum {
 #define SM_CODE_SOURCE_DELETED            102
 #define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
 
-#define SM_CODE_NO_HW_ATTACHED            200
+#define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
 #define SM_CODE_NOT_FREE                  202
 #define SM_CODE_TUNING_FAILED             203
@@ -369,6 +376,15 @@ typedef enum {
 #define SM_CODE_NO_DESCRAMBLER            400
 #define SM_CODE_NO_ACCESS                 401
 #define SM_CODE_NO_INPUT                  402
+
+typedef enum
+{
+  SIGNAL_UNKNOWN,
+  SIGNAL_GOOD,
+  SIGNAL_BAD,
+  SIGNAL_FAINT,
+  SIGNAL_NONE
+} signal_state_t;
 
 /**
  * Streaming messages are sent from the pad to its receivers
@@ -431,6 +447,8 @@ typedef struct sbuf {
 
 streaming_component_type_t streaming_component_txt2type(const char *str);
 const char *streaming_component_type2txt(streaming_component_type_t s);
+streaming_component_type_t streaming_component_txt2type(const char *s);
+const char *streaming_component_audio_type2desc(int audio_type);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {
@@ -467,7 +485,6 @@ int rate_to_sri(int rate);
 
 extern time_t dispatch_clock;
 extern struct service_list all_transports;
-extern struct channel_tree channel_name_tree;
 
 extern void scopedunlock(pthread_mutex_t **mtxp);
 
@@ -499,17 +516,25 @@ typedef struct th_pipe
   int wr;
 } th_pipe_t;
 
+static inline void mystrset(char **p, const char *s)
+{
+  free(*p);
+  *p = s ? strdup(s) : NULL;
+}
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
 
 int tvh_pipe(int flags, th_pipe_t *pipe);
 
+void tvh_pipe_close(th_pipe_t *pipe);
+
 int tvh_write(int fd, const void *buf, size_t len);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
-uint32_t tvh_crc32(uint8_t *data, size_t datalen, uint32_t crc);
+uint32_t tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc);
 
 int base64_decode(uint8_t *out, const char *in, int out_size);
 

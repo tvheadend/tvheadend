@@ -26,11 +26,11 @@ struct strtab {
   int val;
 };
 
-static int str2val0(const char *str, struct strtab tab[], int l)
+static int str2val0(const char *str, const struct strtab tab[], int l)
      __attribute((unused));
 
 static int
-str2val0(const char *str, struct strtab tab[], int l)
+str2val0(const char *str, const struct strtab tab[], int l)
 {
   int i;
   for(i = 0; i < l; i++)
@@ -62,11 +62,11 @@ str2val0_def(const char *str, struct strtab tab[], int l, int def)
  str2val0_def(str, tab, sizeof(tab) / sizeof(tab[0]), def)
 
 
-static const char * val2str0(int val, struct strtab tab[], int l)
+static const char * val2str0(int val, const struct strtab tab[], int l)
      __attribute__((unused));
 
 static const char *
-val2str0(int val, struct strtab tab[], int l)
+val2str0(int val, const struct strtab tab[], int l)
 {
   int i;
   for(i = 0; i < l; i++)

@@ -155,7 +155,7 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
     htsmsg_add_str(m, "icon", ch->icon);
   LIST_FOREACH(ecl, &ch->channels, link) {
     if (!a) a = htsmsg_create_list();
-    htsmsg_add_u32(a, NULL, ecl->channel->ch_id);
+    htsmsg_add_u32(a, NULL, channel_get_id(ecl->channel));
   }
   if (a) htsmsg_add_msg(m, "channels", a);
   if (ch->number)
@@ -215,7 +215,7 @@ static void _epggrab_module_channel_load
     egc->number = u32;
   if ((a = htsmsg_get_list(m, "channels"))) {
     HTSMSG_FOREACH(f, a) {
-      if ((ch  = channel_find_by_identifier((uint32_t)f->hmf_s64))) {
+      if ((ch  = channel_find_by_id((uint32_t)f->hmf_s64))) {
         epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
         ecl->channel = ch;
         LIST_INSERT_HEAD(&egc->channels, ecl, link);
@@ -224,7 +224,7 @@ static void _epggrab_module_channel_load
 
   /* Compat with older 3.1 code */
   } else if (!htsmsg_get_u32(m, "channel", &u32)) {
-    if ((ch = channel_find_by_identifier(u32))) {
+    if ((ch = channel_find_by_id(u32))) {
       epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
       ecl->channel = ch;
       LIST_INSERT_HEAD(&egc->channels, ecl, link);
@@ -458,7 +458,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
-                   struct th_dvb_mux_instance *tdmi),
+                   struct dvb_mux *dm),
     int (*enable) (void *m, uint8_t e ),
     epggrab_channel_tree_t *channels )
 {

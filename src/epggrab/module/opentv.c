@@ -539,11 +539,11 @@ static int _opentv_bat_section
  * ***********************************************************************/
 
 static epggrab_ota_mux_t *_opentv_event_callback 
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
+  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
 {
   th_dvb_table_t    *tdt = p;
   opentv_module_t   *mod = tdt->tdt_opaque;
-  epggrab_ota_mux_t *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
+  epggrab_ota_mux_t *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
   opentv_status_t *sta;
   opentv_pid_t *pid;
 
@@ -604,9 +604,9 @@ static epggrab_ota_mux_t *_opentv_event_callback
 }
 
 static int _opentv_title_callback
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
+  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  epggrab_ota_mux_t *ota = _opentv_event_callback(tdmi, buf, len, tid, p);
+  epggrab_ota_mux_t *ota = _opentv_event_callback(dm, buf, len, tid, p);
   if (ota)
     return _opentv_parse_event_section((opentv_module_t*)ota->grab,
                                        (opentv_status_t*)ota->status,
@@ -615,9 +615,9 @@ static int _opentv_title_callback
 }
 
 static int _opentv_summary_callback
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
+  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  epggrab_ota_mux_t *ota = _opentv_event_callback(tdmi, buf, len, tid, p);
+  epggrab_ota_mux_t *ota = _opentv_event_callback(dm, buf, len, tid, p);
   if (ota)
     return _opentv_parse_event_section((opentv_module_t*)ota->grab,
                                        (opentv_status_t*)ota->status,
@@ -626,10 +626,10 @@ static int _opentv_summary_callback
 }
 
 static int _opentv_channel_callback
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
+  ( dvb_mux_t *dm, uint8_t *buf, int len, uint8_t tid, void *p )
 {
   opentv_module_t      *mod = p;
-  epggrab_ota_mux_t    *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
+  epggrab_ota_mux_t    *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
   opentv_status_t      *sta;
   if (!ota || !ota->status) return 0;
   sta = ota->status;
@@ -662,7 +662,7 @@ static void _opentv_ota_destroy ( epggrab_ota_mux_t *ota )
 }
 
 static void _opentv_start
-  ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
+  ( epggrab_module_ota_t *m, dvb_mux_t *dm )
 {
   int *t;
   epggrab_ota_mux_t *ota;
@@ -671,10 +671,10 @@ static void _opentv_start
 
   /* Ignore */
   if (!m->enabled)  return;
-  if (mod->tsid != tdmi->tdmi_transport_stream_id) return;
+  if (mod->tsid != dm->dm_transport_stream_id) return;
 
   /* Create link */
-  if (!(ota = epggrab_ota_create(m, tdmi))) return;
+  if (!(ota = epggrab_ota_create(m, dm))) return;
   if (!ota->status) {
     ota->status  = calloc(1, sizeof(opentv_status_t));
     ota->destroy = _opentv_ota_destroy;
@@ -692,7 +692,7 @@ static void _opentv_start
   t = mod->channel;
   while (*t) {
     // TODO: what about 0x46 (service description)
-    tdt_add(tdmi, 0x4a, 0xff, _opentv_channel_callback, m,
+    tdt_add(dm, 0x4a, 0xff, _opentv_channel_callback, m,
             m->id, TDT_CRC, *t++);
   }
 
@@ -700,7 +700,7 @@ static void _opentv_start
   t = mod->title;
   while (*t) {
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, 0xa0, 0xfc, _opentv_title_callback, m,
+    tdt_add(dm, 0xa0, 0xfc, _opentv_title_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++);
   }
 
@@ -708,7 +708,7 @@ static void _opentv_start
   t = mod->summary;
   while (*t) {
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, 0xa8, 0xfc, _opentv_summary_callback, m,
+    tdt_add(dm, 0xa8, 0xfc, _opentv_summary_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++);
   }
 }

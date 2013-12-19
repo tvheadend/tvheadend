@@ -17,8 +17,10 @@ ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 
 OPTIONS=(
   "cwc:yes"
-  "v4l:yes"
+  "v4l:no"
   "linuxdvb:yes"
+  "iptv:yes"
+  "tsfile:yes"
   "dvbscan:yes"
   "timeshift:yes"
   "trace:yes"
@@ -62,6 +64,29 @@ uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet lockowner '
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <pthread.h>
+#define TEST test
+int ok = 1;
+void *lockowner ( void *p)
+{
+  pthread_mutex_t lock;
+  pthread_mutex_init(&lock, NULL);
+  pthread_mutex_lock(&lock);
+  if (lock.__data.__owner == syscall(SYS_gettid))
+    ok = 0;
+  return NULL;
+}
+int test ( void )
+{
+  pthread_t tid;
+  pthread_create(&tid, NULL, lockowner, NULL);
+  pthread_join(tid, NULL);
+  return ok;
+}' -lpthread
+
 #
 # Python
 #
@@ -83,6 +108,18 @@ elif check_pkg openssl || check_pkg libssl; then
   enable ssl
 else
   die "SSL development support not found"
+fi
+
+#
+# DVB API
+#
+check_cc_header 'linux/dvb/version' dvbapi
+if enabled_or_auto linuxdvb; then
+  if enabled dvbapi; then
+    enable linuxdvb
+  elif enabled linuxdvb; then
+    die "Linux DVB API not found (use --disable-linuxdvb)"
+  fi
 fi
 
 #
@@ -210,6 +247,19 @@ fi
 #
 if [ ${PLATFORM} = "freebsd" ]; then
   enable kqueue
+fi
+
+#
+# MPEGTS/PS support
+#
+disable mpegts
+disable mpegps
+if enabled linuxdvb || enabled iptv || enabled tsfile; then
+  enable mpegts
+fi
+
+if enabled v4l; then
+  enable mpegps
 fi
 
 # ###########################################################################

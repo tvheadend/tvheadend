@@ -49,6 +49,15 @@ tvh_pipe(int flags, th_pipe_t *p)
   return err;
 }
 
+void
+tvh_pipe_close(th_pipe_t *p)
+{
+  close(p->rd);
+  close(p->wr);
+  p->rd = -1;
+  p->wr = -1;
+}
+
 int
 tvh_write(int fd, const void *buf, size_t len)
 {

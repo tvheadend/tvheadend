@@ -362,7 +362,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       LIST_REMOVE(dae, dae_channel_link);
       dae->dae_channel = NULL;
     }
-    if((ch = channel_find_by_name(s, 0, 0)) != NULL) {
+    if((ch = channel_find(s)) != NULL) {
       LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
       dae->dae_channel = ch;
     }
@@ -553,7 +553,7 @@ dvr_autorec_add(const char *config_name,
 		const char *creator, const char *comment)
 {
   channel_t *ch = NULL;
-  if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
+  if(channel != NULL) ch = channel_find(channel);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
                    NULL, NULL, NULL, 0, NULL, creator, comment);
 }
@@ -624,7 +624,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   if (purge)
     dvr_autorec_purge_spawns(dae);
 
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+  CHANNEL_FOREACH(ch) {
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
       if(autorec_cmp(dae, e))
 	      dvr_entry_create_by_autorec(e, dae);

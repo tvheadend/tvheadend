@@ -36,14 +36,12 @@
 #include "webui.h"
 #include "dvr/dvr.h"
 #include "filebundle.h"
-#include "psi.h"
+#include "streaming.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #include "plumbing/transcoding.h"
 #include "epg.h"
 #include "muxer.h"
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
 #include "imagecache.h"
 #include "tcp.h"
 #include "config2.h"
@@ -361,7 +359,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
-  snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel->ch_id);
+  snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(channel));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
@@ -412,7 +410,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ctm->ctm_channel->ch_id);
+    snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
@@ -470,8 +468,8 @@ http_channel_list_playlist(http_connection_t *hc)
   host = http_arg_get(&hc->hc_args, "Host");
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
+  CHANNEL_FOREACH(ch) {
+    snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
@@ -604,9 +602,9 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_lock(&global_lock);
 
   if(nc == 2 && !strcmp(components[0], "channelid"))
-    ch = channel_find_by_identifier(atoi(components[1]));
+    ch = channel_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "channel"))
-    ch = channel_find_by_name(components[1], 0, 0);
+    ch = channel_find(components[1]);
   else if(nc == 2 && !strcmp(components[0], "dvrid"))
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
@@ -684,13 +682,12 @@ http_stream_service(http_connection_t *hc, service_t *service)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_service(service, "HTTP", st, flags,
+  s = subscription_create_from_service(service, 100, "HTTP", st, flags,
 				       addrbuf,
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
-    name = tvh_strdupa(service->s_ch ?
-                   service->s_ch->ch_name : service->s_nicename);
+    name = tvh_strdupa(service->s_nicename);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);
@@ -707,38 +704,6 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   return 0;
 }
-
-
-/**
- * Subscribes to a service and starts the streaming loop
- */
-#if ENABLE_LINUXDVB
-static int
-http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
-{
-  th_subscription_t *s;
-  streaming_queue_t sq;
-  const char *name;
-  char addrbuf[50];
-  streaming_queue_init(&sq, SMT_PACKET);
-
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st,
-					addrbuf,
-					hc->hc_username,
-					http_arg_get(&hc->hc_args, "User-Agent"));
-  name = tvh_strdupa(tdmi->tdmi_identifier);
-  pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW);
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-
-  streaming_queue_deinit(&sq);
-
-  return 0;
-}
-#endif
-
 
 /**
  * Subscribes to a channel and starts the streaming loop
@@ -839,8 +804,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
-#if ENABLE_LINUXDVB
-  th_dvb_mux_instance_t *tdmi = NULL;
+#if 0//ENABLE_LINUXDVB
+  dvb_mux_t *dm = NULL;
 #endif
 
   hc->hc_keep_alive = 0;
@@ -860,14 +825,14 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   scopedgloballock();
 
   if(!strcmp(components[0], "channelid")) {
-    ch = channel_find_by_identifier(atoi(components[1]));
+    ch = channel_find_by_id(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
-    ch = channel_find_by_name(components[1], 0, 0);
+    ch = channel_find_by_name(components[1]);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   } else if(!strcmp(components[0], "mux")) {
-    tdmi = dvb_mux_find_by_identifier(components[1]);
+    dm = dvb_mux_find_by_identifier(components[1]);
 #endif
   }
 
@@ -875,9 +840,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
-#if ENABLE_LINUXDVB
-  } else if(tdmi != NULL) {
-    return http_stream_tdmi(hc, tdmi);
+#if 0//ENABLE_LINUXDVB
+  } else if(dm != NULL) {
+    return http_stream_tdmi(hc, dm);
 #endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
@@ -1094,5 +1059,6 @@ webui_init(void)
   simpleui_start();
   extjs_start();
   comet_init();
+  webui_api_init();
 
 }

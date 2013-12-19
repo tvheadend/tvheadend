@@ -59,7 +59,7 @@ ECHO   = printf "%-16s%s\n" $(1) $(2)
 BRIEF  = CC MKBUNDLE CXX
 MSG    = $(subst $(BUILDDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
-    $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+	$(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
 endif
 
 #
@@ -68,6 +68,8 @@ endif
 SRCS =  src/version.c \
 	src/main.c \
 	src/tvhlog.c \
+	src/idnode.c \
+	src/prop.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \
@@ -82,18 +84,10 @@ SRCS =  src/version.c \
 	src/spawn.c \
 	src/packet.c \
 	src/streaming.c \
-	src/teletext.c \
 	src/channels.c \
 	src/subscriptions.c \
 	src/service.c \
-	src/psi.c \
-	src/parsers.c \
-	src/parser_h264.c \
-	src/parser_latm.c \
-	src/tsdemux.c \
-	src/bitstream.c \
 	src/htsp_server.c \
-	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_json.c \
@@ -105,27 +99,36 @@ SRCS =  src/version.c \
 	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
-	src/rawtsinput.c \
-	src/iptv_input.c \
-	src/avc.c \
-  src/huffman.c \
-  src/filebundle.c \
-  src/config2.c \
-  src/lang_codes.c \
-  src/lang_str.c \
-  src/imagecache.c \
-  src/tvhtime.c \
-  src/tvhpoll.c
+  src/tvhpoll.c \
+	src/huffman.c \
+	src/filebundle.c \
+	src/config2.c \
+	src/lang_codes.c \
+	src/lang_str.c \
+	src/imagecache.c \
+	src/tvhtime.c \
+	src/descrambler/descrambler.c \
+	src/service_mapper.c \
+
+SRCS += \
+	src/api.c \
+	src/api/api_idnode.c \
+	src/api/api_channel.c \
+	src/api/api_service.c \
+	src/api/api_mpegts.c \
+
+SRCS += \
+	src/parsers/parsers.c \
+	src/parsers/bitstream.c \
+	src/parsers/parser_h264.c \
+	src/parsers/parser_latm.c \
+	src/parsers/parser_avc.c \
+	src/parsers/parser_teletext.c \
 
 SRCS += src/epggrab/module.c\
-  src/epggrab/channel.c\
-  src/epggrab/module/pyepg.c\
-  src/epggrab/module/xmltv.c\
-
-SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
-  src/epggrab/module/eit.c \
-  src/epggrab/module/opentv.c \
-  src/epggrab/support/freesat_huffman.c \
+	src/epggrab/channel.c\
+	src/epggrab/module/pyepg.c\
+	src/epggrab/module/xmltv.c\
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c
@@ -140,6 +143,7 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/html.c\
+	src/webui/webui_api.c\
 
 SRCS += src/muxer.c \
 	src/muxer/muxer_pass.c \
@@ -151,39 +155,61 @@ SRCS += src/muxer.c \
 # Optional code
 #
 
-# Timeshift
-SRCS-${CONFIG_TIMESHIFT} += \
-  src/timeshift.c \
-  src/timeshift/timeshift_filemgr.c \
-  src/timeshift/timeshift_writer.c \
-  src/timeshift/timeshift_reader.c \
+# MPEGTS core
+SRCS-$(CONFIG_MPEGTS) += \
+        src/input/mpegts/mpegts_input.c \
+        src/input/mpegts/mpegts_network.c \
+        src/input/mpegts/mpegts_mux.c \
+        src/input/mpegts/mpegts_service.c \
+        src/input/mpegts/mpegts_table.c \
+	src/input/mpegts/dvb_support.c \
+	src/input/mpegts/dvb_psi.c \
+	src/input/mpegts/tsdemux.c \
+
+# MPEGTS EPG
+#SRCS-$(CONFIG_MPEGTS) += \
+#	src/epggrab/otamux.c\
+#	src/epggrab/module/eit.c \
+#	src/epggrab/module/opentv.c \
+#	src/epggrab/support/freesat_huffman.c \
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
-	src/dvb/dvb.c \
-	src/dvb/dvb_support.c \
-	src/dvb/dvb_charset.c \
-	src/dvb/dvb_fe.c \
-	src/dvb/dvb_tables.c \
-	src/dvb/diseqc.c \
-	src/dvb/dvb_adapter.c \
-	src/dvb/dvb_multiplex.c \
-	src/dvb/dvb_service.c \
-	src/dvb/dvb_preconf.c \
-	src/dvb/dvb_satconf.c \
-	src/dvb/dvb_input_filtered.c \
-	src/dvb/dvb_input_raw.c \
-	src/webui/extjs_dvb.c \
-	src/muxes.c \
+        src/input/mpegts/linuxdvb/linuxdvb.c \
+        src/input/mpegts/linuxdvb/linuxdvb_hardware.c \
+        src/input/mpegts/linuxdvb/linuxdvb_device.c \
+        src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
+        src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
+        src/input/mpegts/linuxdvb/linuxdvb_network.c \
+        src/input/mpegts/linuxdvb/linuxdvb_mux.c \
+        src/input/mpegts/linuxdvb/linuxdvb_service.c \
+        src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
+        src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
+        src/input/mpegts/linuxdvb/linuxdvb_switch.c \
+        src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
+
+# IPTV
+SRCS-${CONFIG_IPTV} += \
+	src/input/mpegts/iptv/iptv.c \
+        src/input/mpegts/iptv/iptv_mux.c \
+        src/input/mpegts/iptv/iptv_service.c \
+
+# TSfile
+SRCS-$(CONFIG_TSFILE) += \
+        src/input/mpegts/tsfile/tsfile.c \
+        src/input/mpegts/tsfile/tsfile_input.c \
+        src/input/mpegts/tsfile/tsfile_mux.c \
+
+# Timeshift
+SRCS-${CONFIG_TIMESHIFT} += \
+	src/timeshift.c \
+	src/timeshift/timeshift_filemgr.c \
+	src/timeshift/timeshift_writer.c \
+	src/timeshift/timeshift_reader.c \
 
 # Inotify
 SRCS-${CONFIG_INOTIFY} += \
-  src/dvr/dvr_inotify.c \
-
-# V4L
-SRCS-${CONFIG_V4L} += \
-	src/v4l.c \
-	src/webui/extjs_v4l.c \
+	src/dvr/dvr_inotify.c \
 
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
@@ -194,19 +220,22 @@ SRCS-$(CONFIG_LIBAV) += src/libav.c \
 	src/plumbing/transcoding.c \
 
 # CWC
-SRCS-${CONFIG_CWC} += src/cwc.c \
-	src/capmt.c
+SRCS-${CONFIG_CWC} += \
+	src/descrambler/tvhcsa.c \
+	src/descrambler/cwc.c \
+	src/descrambler/capmt.c
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
+SRCS-${CONFIG_CWC}  += \
+	src/descrambler/ffdecsa/ffdecsa_interface.c \
+	src/descrambler/ffdecsa/ffdecsa_int.c
 ifeq ($(CONFIG_CWC),yes)
-SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
-SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
+SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
 endif
-${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
-${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
 # File bundles

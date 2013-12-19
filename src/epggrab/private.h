@@ -88,7 +88,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
-                   struct th_dvb_mux_instance *tdmi),
+                   struct dvb_mux *dm),
     int (*enable) (void *m, uint8_t e ),
     epggrab_channel_tree_t *channels );
 
@@ -109,9 +109,9 @@ void epggrab_ota_save ( void );
  *       blocked (i.e. has completed within interval period)
  */
 epggrab_ota_mux_t *epggrab_ota_find
-  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
+  ( epggrab_module_ota_t *mod, struct dvb_mux *dm );
 epggrab_ota_mux_t *epggrab_ota_create
-  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
+  ( epggrab_module_ota_t *mod, struct dvb_mux *dm );
 void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, int nid, int tsid,
     int period, int interval, const char *name );
@@ -121,7 +121,7 @@ void epggrab_ota_create_and_register_by_id
  */
 void epggrab_ota_destroy           ( epggrab_ota_mux_t *ota );
 void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod );
-void epggrab_ota_destroy_by_tdmi   ( struct th_dvb_mux_instance *tdmi );
+void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
 
 /*
  * Register interest

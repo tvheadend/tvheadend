@@ -27,15 +27,18 @@
 
 /* Config */
 extern int              tvhlog_level;
-extern htsmsg_t        *tvhlog_subsys;
+extern htsmsg_t        *tvhlog_debug;
+extern htsmsg_t        *tvhlog_trace;
 extern char            *tvhlog_path;
 extern int              tvhlog_options;
 extern pthread_mutex_t  tvhlog_mutex;
 
 /* Initialise */
 void tvhlog_init       ( int level, int options, const char *path ); 
-void tvhlog_set_subsys ( const char *subsys );
-void tvhlog_get_subsys ( char *subsys, size_t len );
+void tvhlog_set_debug  ( const char *subsys );
+void tvhlog_get_debug  ( char *subsys, size_t len );
+void tvhlog_set_trace  ( const char *subsys );
+void tvhlog_get_trace  ( char *subsys, size_t len );
 void tvhlogv           ( const char *file, int line,
                          int notify, int severity,
                          const char *subsys, const char *fmt, va_list *args );
@@ -58,6 +61,7 @@ void _tvhlog_hexdump   ( const char *file, int line,
 #define TVHLOG_OPT_MILLIS       0x0100
 #define TVHLOG_OPT_DECORATE     0x0200
 #define TVHLOG_OPT_FILELINE     0x0400
+#define TVHLOG_OPT_THREAD       0x0800
 #define TVHLOG_OPT_ALL          0xFFFF
 
 /* Levels */
@@ -79,5 +83,10 @@ void _tvhlog_hexdump   ( const char *file, int line,
 #define tvhtrace(...) (void)0
 #define tvhlog_hexdump(...) (void)0
 #endif
+
+#define tvhdebug(...) tvhlog(LOG_DEBUG,   ##__VA_ARGS__)
+#define tvhinfo(...)  tvhlog(LOG_INFO,    ##__VA_ARGS__)
+#define tvhwarn(...)  tvhlog(LOG_WARNING, ##__VA_ARGS__)
+#define tvherror(...) tvhlog(LOG_ERR,     ##__VA_ARGS__)
 
 #endif /* __TVH_LOGGING_H__ */

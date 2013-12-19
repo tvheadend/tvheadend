@@ -40,11 +40,11 @@
 #include "access.h"
 #include "htsp_server.h"
 #include "streaming.h"
-#include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
 #include "plumbing/tsfix.h"
 #include "imagecache.h"
+#include "descrambler.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -501,6 +501,7 @@ static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
   channel_tag_mapping_t *ctm;
+  channel_service_mapping_t *csm;
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
@@ -509,7 +510,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_t *tags = htsmsg_create_list();
   htsmsg_t *services = htsmsg_create_list();
 
-  htsmsg_add_u32(out, "channelId", ch->ch_id);
+  htsmsg_add_u32(out, "channelId", channel_get_id(ch));
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
@@ -552,14 +553,17 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       htsmsg_add_u32(tags, NULL, ct->ct_identifier);
   }
 
-  LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
+  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+    t = csm->csm_svc;
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
+#ifdef TODO_FIX_THIS
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
+#endif
     if((caid = service_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
-      htsmsg_add_str(svcmsg, "caname", psi_caid2name(caid));
+      htsmsg_add_str(svcmsg, "caname", descrambler_caid2name(caid));
     }
     htsmsg_add_msg(services, NULL, svcmsg);
   }
@@ -588,7 +592,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 
   if(members != NULL) {
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      htsmsg_add_u32(members, NULL, ctm->ctm_channel->ch_id);
+      htsmsg_add_u32(members, NULL, channel_get_id(ctm->ctm_channel));
     htsmsg_add_msg(out, "members", members);
   }
 
@@ -609,7 +613,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 
   htsmsg_add_u32(out, "id", de->de_id);
   if (de->de_channel)
-    htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
+    htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
 
   htsmsg_add_s64(out, "start", de->de_start);
   htsmsg_add_s64(out, "stop", de->de_stop);
@@ -690,7 +694,7 @@ htsp_build_event
     htsmsg_add_str(out, "method", method);
 
   htsmsg_add_u32(out, "eventId", e->id);
-  htsmsg_add_u32(out, "channelId", e->channel->ch_id);
+  htsmsg_add_u32(out, "channelId", channel_get_id(e->channel));
   htsmsg_add_s64(out, "start", e->start);
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
@@ -895,7 +899,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
       htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
   
   /* Send all channels */
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+  CHANNEL_FOREACH(ch)
     htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd", htsp), NULL);
     
   /* Send all enabled and external tags (now with channel mappings) */
@@ -909,7 +913,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send EPG updates */
   if (epg) {
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    CHANNEL_FOREACH(ch)
       RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
         if (epgMaxTime && ebc->start > epgMaxTime) break;
         htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate, htsp);
@@ -964,7 +968,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Optional fields */
   if (!htsmsg_get_u32(in, "channelId", &u32))
-    if (!(ch = channel_find_by_identifier(u32)))
+    if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
   if (!htsmsg_get_u32(in, "eventId", &u32))
     if (!(e = epg_broadcast_find_by_id(u32, ch)))
@@ -993,7 +997,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   /* All channels */
   } else {
     events = htsmsg_create_list();
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    CHANNEL_FOREACH(ch) {
       int num = numFollowing;
       RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
         if (maxTime && e->start > maxTime) break;
@@ -1033,7 +1037,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   
   /* Optional */
   if(!(htsmsg_get_u32(in, "channelId", &u32)))
-    if (!(ch = channel_find_by_identifier(u32)))
+    if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
   if(!(htsmsg_get_u32(in, "tagId", &u32)))
     if (!(ct = channel_tag_find_by_identifier(u32)))
@@ -1121,7 +1125,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
     stop_extra  = 0;
   if(!htsmsg_get_u32(in, "channelId", &u32))
-    ch = channel_find_by_identifier(u32);
+    ch = channel_find_by_id(u32);
   if(!htsmsg_get_u32(in, "eventId", &eventid))
     e = epg_broadcast_find_by_id(eventid, ch);
   if(htsmsg_get_u32(in, "priority", &priority))
@@ -1305,18 +1309,18 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 #if ENABLE_TIMESHIFT
   uint32_t timeshiftPeriod = 0;
 #endif
+  const char *str;
   channel_t *ch;
   htsp_subscription_t *hs;
-  const char *str;
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
   if(!htsmsg_get_u32(in, "channelId", &chid)) {
 
-    if((ch = channel_find_by_identifier(chid)) == NULL)
+    if((ch = channel_find_by_id(chid)) == NULL)
       return htsp_error("Requested channel does not exist");
   } else if((str = htsmsg_get_str(in, "channelName")) != NULL) {
-    if((ch = channel_find_by_name(str, 0, 0)) == NULL)
+    if((ch = channel_find_by_name(str)) == NULL)
       return htsp_error("Requested channel does not exist");
 
   } else {
@@ -2182,7 +2186,7 @@ htsp_channel_update_nownext(channel_t *ch)
 
   m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "channelUpdate");
-  htsmsg_add_u32(m, "channelId", ch->ch_id);
+  htsmsg_add_u32(m, "channelId", channel_get_id(ch));
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
@@ -2225,7 +2229,7 @@ void
 htsp_channel_delete(channel_t *ch)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "channelId", ch->ch_id);
+  htsmsg_add_u32(m, "channelId", channel_get_id(ch));
   htsmsg_add_str(m, "method", "channelDelete");
   htsp_async_send(m, HTSP_ASYNC_ON);
 }

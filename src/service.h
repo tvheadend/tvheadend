@@ -19,52 +19,15 @@
 #ifndef SERVICE_H__
 #define SERVICE_H__
 
-#define PID_TELETEXT_BASE 0x2000
-
 #include "htsmsg.h"
+#include "idnode.h"
+#include "descrambler.h"
 
+extern const idclass_t service_class;
 
+extern struct service_queue service_all;
 
-/**
- * Descrambler superclass
- *
- * Created/Destroyed on per-transport basis upon transport start/stop
- */
-typedef struct th_descrambler {
-  LIST_ENTRY(th_descrambler) td_service_link;
-
-  void (*td_table)(struct th_descrambler *d, struct service *t,
-		   struct elementary_stream *st, 
-		   const uint8_t *section, int section_len);
-
-  int (*td_descramble)(struct th_descrambler *d, struct service *t,
-		       struct elementary_stream *st, const uint8_t *tsb);
-
-  void (*td_stop)(struct th_descrambler *d);
-
-} th_descrambler_t;
-
-
-/*
- * Section callback, called when a PSI table is fully received
- */
-typedef void (pid_section_callback_t)(struct service *t,
-				      struct elementary_stream *pi,
-				      const uint8_t *section, int section_len);
-
-
-LIST_HEAD(caid_list, caid);
-/**
- *
- */
-typedef struct caid {
-  LIST_ENTRY(caid) link;
-
-  uint8_t delete_me;
-  uint16_t caid;
-  uint32_t providerid;
-
-} caid_t;
+struct channel;
 
 /**
  * Stream, one media component for a service.
@@ -100,11 +63,6 @@ typedef struct elementary_stream {
 
   int es_demuxer_fd;
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
-
-  struct psi_section *es_section;
-  int es_section_docrc;           /* Set if we should verify CRC on tables */
-  pid_section_callback_t *es_got_section;
-  void *es_got_section_opaque;
 
   /* PCR recovery */
 
@@ -165,22 +123,63 @@ typedef struct elementary_stream {
   /* Teletext subtitle */ 
   char es_blank; // Last subtitle was blank
 
+  /* SI section processing (horrible hack) */
+  void *es_section;
 
 } elementary_stream_t;
+
+
+LIST_HEAD(service_instance_list, service_instance);
+
+/**
+ *
+ */
+typedef struct service_instance {
+
+  LIST_ENTRY(service_instance) si_link;
+
+  int si_prio;
+
+  struct service *si_s; // A reference is held
+  int si_instance;       // Discriminator when having multiple adapters, etc
+
+  int si_error;        /* Set if subscription layer deem this cand
+                          to be broken. We typically set this if we
+                          have not seen any demuxed packets after
+                          the grace period has expired.
+                          The actual value is current time
+                       */
+
+  time_t si_error_time;
+
+
+  int si_weight;         // Highest weight that holds this cand
+
+  int si_mark;           // For mark & sweep
+
+} service_instance_t;
 
 
 /**
  *
  */
+service_instance_t *service_instance_add(struct service_instance_list *sil,
+                                         struct service *s,
+                                         int instance,
+                                         int prio,
+                                         int weight);
+
+void service_instance_destroy(service_instance_t *si);
+
+void service_instance_list_clear(struct service_instance_list *sil);
+
+/**
+ *
+ */
 typedef struct service {
+  idnode_t s_id;
 
-  LIST_ENTRY(service) s_hash_link;
-
-  enum {
-    SERVICE_TYPE_DVB,
-    SERVICE_TYPE_IPTV,
-    SERVICE_TYPE_V4L,
-  } s_type;
+  TAILQ_ENTRY(service) s_all_link;
 
   enum {
     /**
@@ -232,7 +231,19 @@ typedef struct service {
     S_OTHER,
   } s_source_type;
 
- 
+  /**
+   * Service type
+   */
+  enum {
+    ST_NONE,
+    ST_OTHER,
+    ST_SDTV,
+    ST_HDTV,
+    ST_RADIO
+  } s_servicetype;
+
+// TODO: should this really be here?
+
   /**
    * PID carrying the programs PCR.
    * XXX: We don't support transports that does not carry
@@ -251,22 +262,16 @@ typedef struct service {
    * subscription scheduling.
    */
   int s_enabled;
-  int (*s_is_enabled)(struct service *t);
-
-  /**
-   * Last PCR seen, we use it for a simple clock for rawtsinput.c
-   */
-  int64_t s_pcr_last;
-  int64_t s_pcr_last_realtime;
-  
-  LIST_ENTRY(service) s_group_link;
 
   LIST_ENTRY(service) s_active_link;
 
   LIST_HEAD(, th_subscription) s_subscriptions;
 
-  int (*s_start_feed)(struct service *t, unsigned int weight,
-			int force_start);
+  int (*s_is_enabled)(struct service *t);
+
+  void (*s_enlist)(struct service *s, struct service_instance_list *sil);
+
+  int (*s_start_feed)(struct service *s, int instance);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -276,67 +281,21 @@ typedef struct service {
 
   void (*s_setsourceinfo)(struct service *t, struct source_info *si);
 
-  int (*s_quality_index)(struct service *t);
-
   int (*s_grace_period)(struct service *t);
 
-  void (*s_dtor)(struct service *t);
-
-  /*
-   * Per source type structs
-   */
-  struct th_dvb_mux_instance *s_dvb_mux_instance;
+  void (*s_delete)(struct service *t);
 
   /**
-   * Unique identifer (used for storing on disk, etc)
+   * Channel info
    */
-  char *s_identifier;
+  int         (*s_channel_number) (struct service *);
+  const char *(*s_channel_name)   (struct service *);
+  const char *(*s_provider_name)  (struct service *);
 
   /**
    * Name usable for displaying to user
    */
   char *s_nicename;
-
-  /**
-   * Service ID according to EN 300 468
-   */
-  uint16_t s_dvb_service_id;
-
-  uint16_t s_channel_number;
-
-  /**
-   * Service name (eg. DVB service name as specified by EN 300 468)
-   */
-  char *s_svcname;
-
-  /**
-   * Provider name (eg. DVB provider name as specified by EN 300 468)
-   */
-  char *s_provider;
-
-  /**
-   * Default authority
-   */
-  char *s_default_authority;
-
-  enum {
-    /* Service types defined in EN 300 468 */
-
-    ST_SDTV       = 0x1,    /* SDTV (MPEG2) */
-    ST_RADIO      = 0x2,
-    ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
-    ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
-    ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
-    ST_NE_SDTV    = 0x80,   /* NET POA - Cabo SDTV */
-    ST_EX_HDTV    = 0x91,   /* Bell TV HDTV */
-    ST_EX_SDTV    = 0x96,   /* Bell TV SDTV */
-    ST_EP_HDTV    = 0xA0,   /* Bell TV tiered HDTV */
-    ST_ET_HDTV    = 0xA6,   /* Bell TV tiered HDTV */
-    ST_DN_SDTV    = 0xA8,   /* DN advanced SDTV */
-    ST_DN_HDTV    = 0xA4,   /* DN HDTV */
-    ST_SK_SDTV    = 0xd3    /* SKY TV SDTV */
-  } s_servicetype;
-
 
   /**
    * Teletext...
@@ -347,14 +306,13 @@ typedef struct service {
   /**
    * Channel mapping
    */
-  LIST_ENTRY(service) s_ch_link;
-  struct channel *s_ch;
+  LIST_HEAD(,channel_service_mapping) s_channels;
 
   /**
-   * Service probe, see serviceprobe.c for details
+   * Service mapping, see service_mapper.c form details
    */
-  int s_sp_onqueue;
-  TAILQ_ENTRY(service) s_sp_link;
+  int s_sm_onqueue;
+  TAILQ_ENTRY(service) s_sm_link;
 
   /**
    * Pending save.
@@ -374,30 +332,6 @@ typedef struct service {
    * will be set to TRANSPORT_STATUS_NO_INPUT
    */
   gtimer_t s_receive_timer;
-
-  /**
-   * IPTV members
-   */
-  char *s_iptv_iface;
-  struct in_addr s_iptv_group;
-  struct in6_addr s_iptv_group6;
-  uint16_t s_iptv_port;
-  int s_iptv_fd;
-
-  /**
-   * For per-transport PAT/PMT parsers, allocated on demand
-   * Free'd by transport_destroy
-   */
-  struct psi_section *s_pat_section;
-  struct psi_section *s_pmt_section;
-
-  /**
-   * V4l members
-   */
-
-  struct v4l_adapter *s_v4l_adapter;
-  int s_v4l_frequency; // In Hz
-  
 
   /*********************************************************
    *
@@ -448,21 +382,11 @@ typedef struct service {
    * For simple streaming sources (such as video4linux) keeping
    * track of the video and audio stream is convenient.
    */
+#ifdef MOVE_TO_V4L
   elementary_stream_t *s_video;
   elementary_stream_t *s_audio;
+#endif
  
-
-  /**
-   * When a subscription request SMT_MPEGTS, chunk them togeather 
-   * in order to recude load.
-   */
-  sbuf_t s_tsbuf;
-
-  /**
-   * Average continuity errors
-   */
-  avgstat_t s_cc_errors;
-
   /**
    * Average bitrate
    */
@@ -477,11 +401,6 @@ typedef struct service {
   int s_scrambled_seen;
   int s_caid;
   uint16_t s_prefcapid;
-
-  /**
-   * PCR drift compensation. This should really be per-packet.
-   */
-  int64_t  s_pcr_drift;
 
   /**
    * List of all components.
@@ -500,17 +419,6 @@ typedef struct service {
 
   int64_t s_current_pts;
 
-  /**
-   * DVB default charset
-   * 	used to overide the default ISO6937 per service
-   */
-  char *s_dvb_charset;
-
-  /**
-   * Set if EIT grab is enabled for DVB service (the default).
-   */
-  int s_dvb_eit_enable;
-
 } service_t;
 
 
@@ -519,24 +427,25 @@ typedef struct service {
 
 void service_init(void);
 
-unsigned int service_compute_weight(struct service_list *head);
+int service_start(service_t *t, int instance);
 
-int service_start(service_t *t, unsigned int weight, int force_start);
+service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type, htsmsg_t *conf);
 
-service_t *service_create(const char *identifier, int type,
-				 int source_type);
+#define service_create(t, c, u, s, m)\
+  (struct t*)service_create0(calloc(1, sizeof(struct t), &t##_class, c, u, s, m)
 
 void service_unref(service_t *t);
 
 void service_ref(service_t *t);
 
-service_t *service_find_by_identifier(const char *identifier);
+service_t *service_find(const char *identifier);
+#define service_find_by_identifier service_find
 
-void service_map_channel(service_t *t, struct channel *ch, int save);
-
-service_t *service_find(struct channel *ch, unsigned int weight,
-			const char *loginfo, int *errorp,
-			service_t *skip);
+service_instance_t *service_find_instance(struct service *s,
+                                          struct channel *ch,
+                                          struct service_instance_list *sil,
+                                          int *error,
+                                          int weight);
 
 elementary_stream_t *service_stream_find(service_t *t, int pid);
 
@@ -549,13 +458,13 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
-int service_is_tv(service_t *t);
-
+int service_is_sdtv(service_t *t);
+int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
+int service_is_other(service_t *t);
+#define service_is_tv(s) (service_is_hdtv(s) || service_is_sdtv(s))
 
-int servicetype_is_tv(int st);
-
-int servicetype_is_radio(int st);
+int service_is_encrypted ( service_t *t );
 
 void service_destroy(service_t *t);
 
@@ -609,5 +518,11 @@ void service_set_prefcapid(service_t *t, uint32_t prefcapid);
 int service_is_primary_epg (service_t *t);
 
 htsmsg_t *servicetype_list (void);
+
+void service_load ( service_t *s, htsmsg_t *c );
+
+void service_save ( service_t *s, htsmsg_t *c );
+
+void sort_elementary_streams(service_t *t);
 
 #endif // SERVICE_H__

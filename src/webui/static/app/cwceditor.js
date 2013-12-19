@@ -1,24 +1,6 @@
 tvheadend.cwceditor = function() {
 	var fm = Ext.form;
 
-	var enabledColumn = new Ext.grid.CheckColumn({
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 60
-	});
-
-	var emmColumn = new Ext.grid.CheckColumn({
-		header : "Update Card",
-		dataIndex : 'emm',
-		width : 100
-	});
-
-	var emmexColumn = new Ext.grid.CheckColumn({
-		header : "Update One",
-		dataIndex : 'emmex',
-		width : 100
-	});
-
 	function setMetaAttr(meta, record) {
 		var enabled = record.get('enabled');
 		if (!enabled) return;
@@ -34,7 +16,12 @@ tvheadend.cwceditor = function() {
 
 	var cm = new Ext.grid.ColumnModel({
     defaultSortable: true,
-    columns : [ enabledColumn, {
+          columns : [ {
+            xtype: 'checkcolumn',
+	    header : "Enabled",
+	    dataIndex : 'enabled',
+	    width : 60
+          }, {
 		header : "Hostname",
 		dataIndex : 'hostname',
 		width : 200,
@@ -86,7 +73,17 @@ tvheadend.cwceditor = function() {
 		editor : new fm.TextField({
 			allowBlank : false
 		})
-	}, emmColumn, emmexColumn, {
+	}, {
+          xtype: 'checkcolumn',
+		header : "Update Card",
+		dataIndex : 'emm',
+		width : 100
+        }, {
+          xtype: 'checkcolumn',
+		header : "Update One",
+		dataIndex : 'emmex',
+		width : 100
+        }, {
 		header : "Comment",
 		dataIndex : 'comment',
 		width : 400,
@@ -112,8 +109,8 @@ tvheadend.cwceditor = function() {
 		}
 	});
 
-	var grid = new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec, [
-		enabledColumn, emmColumn, emmexColumn ], store, 'config_cwc.html', 'key');
+	var grid = new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec, [],
+                                             store, 'config_cwc.html', 'key');
 
 	tvheadend.comet.on('cwcStatus', function(msg) {
 		var rec = store.getById(msg.id);

@@ -222,7 +222,7 @@ hts_settings_load_one(const char *filename)
  *
  */
 static htsmsg_t *
-_hts_settings_load(const char *fullpath)
+hts_settings_load_path(const char *fullpath, int depth)
 {
   char child[256];
   struct filebundle_stat st;
@@ -245,9 +245,16 @@ _hts_settings_load(const char *fullpath)
     for(i = 0; i < n; i++) {
       d = namelist[i];
       if(d->name[0] != '.') {
-	      snprintf(child, sizeof(child), "%s/%s", fullpath, d->name);
- 	      if ((c = hts_settings_load_one(child)))
+
+        snprintf(child, sizeof(child), "%s/%s", fullpath, d->name);
+        if(d->type == FB_DIR && depth > 0) {
+          c = hts_settings_load_path(child, depth - 1);
+        } else {
+          c = hts_settings_load_one(child);
+        }
+        if(c != NULL)
           htsmsg_add_msg(r, d->name, c);
+
       }
       free(d);
     }
@@ -264,30 +271,55 @@ _hts_settings_load(const char *fullpath)
 /**
  *
  */
-htsmsg_t *
-hts_settings_load(const char *pathfmt, ...)
+static htsmsg_t *
+hts_settings_vload(const char *pathfmt, va_list ap, int depth)
 {
   htsmsg_t *ret = NULL;
   char fullpath[256];
-  va_list ap;
+  va_list ap2;
+  va_copy(ap2, ap);
 
   /* Try normal path */
-  va_start(ap, pathfmt);
   _hts_settings_buildpath(fullpath, sizeof(fullpath), 
                           pathfmt, ap, settingspath);
-  va_end(ap);
-  ret = _hts_settings_load(fullpath);
+  ret = hts_settings_load_path(fullpath, depth);
 
   /* Try bundle path */
   if (!ret && *pathfmt != '/') {
-    va_start(ap, pathfmt);
     _hts_settings_buildpath(fullpath, sizeof(fullpath),
-                            pathfmt, ap, "data/conf");
-    va_end(ap);
-    ret = _hts_settings_load(fullpath);
+                            pathfmt, ap2, "data/conf");
+    ret = hts_settings_load_path(fullpath, depth);
   }
-  
+
   return ret;
+}
+
+
+/**
+ *
+ */
+htsmsg_t *
+hts_settings_load(const char *pathfmt, ...)
+{
+  va_list ap;
+  va_start(ap, pathfmt);
+  htsmsg_t *r = hts_settings_vload(pathfmt, ap, 0);
+  va_end(ap);
+  return r;
+}
+
+
+/**
+ *
+ */
+htsmsg_t *
+hts_settings_load_r(int depth, const char *pathfmt, ...)
+{
+  va_list ap;
+  va_start(ap, pathfmt);
+  htsmsg_t *r = hts_settings_vload(pathfmt, ap, depth);
+  va_end(ap);
+  return r;
 }
 
 /**
@@ -306,7 +338,7 @@ hts_settings_remove(const char *pathfmt, ...)
   va_end(ap);
   if (stat(fullpath, &st) == 0) {
     if (S_ISDIR(st.st_mode))
-      rmdir(fullpath);
+      rmtree(fullpath);
     else
       unlink(fullpath);
   }

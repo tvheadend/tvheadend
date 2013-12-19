@@ -31,31 +31,32 @@
 double
 my_str2double(const char *str, const char **endp)
 {
-  double ret = 1.0f;
-  int n = 0, m = 0, o = 0, e = 0;
+  double ret = 0.0, t = 0.1;
+  int n = 0, e = 0;
 
+  /* Negative */
   if(*str == '-') {
-    ret = -1.0f;
+    n = 1;
     str++;
   }
 
+  /* Integer */
   while(*str >= '0' && *str <= '9')
-    n = n * 10 + *str++ - '0';
+    ret = ret * 10 + *str++ - '0';
 
-  if(*str != '.') {
-    ret *= n;
-  } else {
-
+  /* Fracton */
+  if(*str == '.') {
     str++;
-
     while(*str >= '0' && *str <= '9') {
-      o = o * 10 + *str++ - '0';
-      m--;
+      ret += (*str++ - '0') * t;
+      t /= 10;
     }
-
-    ret *= (n + pow(10, m) * o);
   }
 
+  /* Negate */
+  if (n) ret *= -1;
+
+  /* Exponential */
   if(*str == 'e' || *str == 'E') {
     int esign = 1;
     str++;
