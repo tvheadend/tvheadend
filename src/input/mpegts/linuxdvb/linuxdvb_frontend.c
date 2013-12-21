@@ -404,41 +404,18 @@ linuxdvb_frontend_default_tables
 {
   mpegts_mux_t *mm = (mpegts_mux_t*)lm;
 
-  /* Common */
-  mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
-                   NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                   DVB_PAT_PID);
-#if 0
-  mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
-                   NULL, "cat", MT_CRC, DVB_CAT_PID);
-#endif
+  psi_tables_default(mm);
 
   /* ATSC */
   if (lfe->lfe_info.type == FE_ATSC) {
-    int tableid;
     if (lm->lm_tuning.dmc_fe_params.u.vsb.modulation == VSB_8)
-      tableid = DVB_VCT_T_BASE;
+      psi_tables_atsc_t(mm);
     else
-      tableid = DVB_VCT_C_BASE;
-    mpegts_table_add(mm, tableid, DVB_VCT_MASK, atsc_vct_callback,
-                     NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                     DVB_VCT_PID);
+      psi_tables_atsc_c(mm);
 
   /* DVB */
   } else {
-    mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
-                     NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID);
-    mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                     NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
-    mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
-                     NULL, "sdt", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                     DVB_SDT_PID);
-    mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
-                     NULL, "bat", MT_CRC, DVB_BAT_PID);
-#if 0
-    mpegts_table_add(mm, DVB_TOT_BASE, DVB_TOT_MASK, dvb_tot_callback,
-                     NULL, "tot", MT_CRC, DVB_TOT_PID);
-#endif
+    psi_tables_dvb(mm);
   }
 }
 

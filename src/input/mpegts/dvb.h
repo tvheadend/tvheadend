@@ -27,8 +27,8 @@
 #define __TVH_DVB_SUPPORT_H__
 
 struct mpegts_table;
-
-/* Defaults */
+struct mpegts_table_state;
+struct mpegts_mux;
 
 /* PIDs */
 
@@ -100,7 +100,6 @@ struct mpegts_table;
 
 int dvb_servicetype_lookup ( int t );
 
-
 /* String Extraction */
 
 typedef struct dvb_string_conv
@@ -159,12 +158,7 @@ do {\
   DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
   DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr)\
 
-/* PSI descriptors */
-
-
 /* PSI table callbacks */
-
-struct mpegts_table_state;
 
 int dvb_table_end
   (struct mpegts_table *mt, struct mpegts_table_state *st, int sect );
@@ -189,6 +183,11 @@ int dvb_tdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int atsc_vct_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+
+void psi_tables_default ( struct mpegts_mux *mm );
+void psi_tables_dvb     ( struct mpegts_mux *mm );
+void psi_tables_atsc_t  ( struct mpegts_mux *mm );
+void psi_tables_atsc_c  ( struct mpegts_mux *mm );
 
 /*
  * Delivery systems and DVB API wrappers

@@ -264,7 +264,8 @@ struct mpegts_mux
    * Scanning
    */
 
-  gtimer_t                mm_initial_scan_timeout; // TODO: really? here?
+  int                     mm_initial_scan_init;
+  gtimer_t                mm_initial_scan_timeout;
   TAILQ_ENTRY(mpegts_mux) mm_initial_scan_link;
   enum {
     MM_SCAN_DONE,     // All done
@@ -559,7 +560,7 @@ mpegts_mux_t *mpegts_mux_create0
 #define mpegts_mux_delete_by_uuid(u)\
   { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm); }
 
-void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
+void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm, int log );
 void mpegts_mux_initial_scan_fail ( mpegts_mux_t *mm );
 
 void mpegts_mux_delete ( mpegts_mux_t *mm );

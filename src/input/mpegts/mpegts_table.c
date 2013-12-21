@@ -34,13 +34,9 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
       return;
   }
 
-  // TODO:
-  //dvb_mux_save(dm);
-
   tvhlog(LOG_DEBUG, "mpegts", "initial scan for mm %p done", mm);
-  mpegts_mux_initial_scan_done(mm);
+  mpegts_mux_initial_scan_done(mm, 1);
 }
-
 
 void
 mpegts_table_dispatch
@@ -87,10 +83,10 @@ mpegts_table_dispatch
     ret = mt->mt_callback(mt, sec+3, len, tid);
   
   /* Good */
-  if(ret == 0)
+  if(ret >= 0)
     mt->mt_count++;
 
-  if(mt->mt_flags & MT_QUICKREQ)
+  if(!ret && mt->mt_flags & MT_QUICKREQ)
     mpegts_table_fastswitch(mt->mt_mux);
 }
 

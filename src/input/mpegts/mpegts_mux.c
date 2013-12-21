@@ -73,19 +73,31 @@ mpegts_mux_instance_create0
 }
 
 static void
-mpegts_mux_add_to_current ( mpegts_mux_t *mm, const char *buf )
+mpegts_mux_add_to_current
+  ( mpegts_mux_t *mm, const char *buf, mpegts_input_t *mi )
 {
+  int t;
   mpegts_network_t       *mn = mm->mm_network;
+
   /* Initial scanning */
   if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
     tvhtrace("mpegts", "%s - adding to current scan Q", buf);
     TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
                  mm_initial_scan_link);
-    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
+    mm->mm_initial_scan_status  = MM_SCAN_CURRENT;
+    mm->mm_initial_scan_init    = 0;
     TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm,
                       mm_initial_scan_link);
+
+    /* Get timeout */
+    t = 0;
+    if (mi && mi->mi_get_grace)
+      t = mi->mi_get_grace(mi, mm);
+    if (t < 5) t = 5; // lower bound
+  
+    /* Setup timeout */
     gtimer_arm(&mm->mm_initial_scan_timeout,
-               mpegts_mux_initial_scan_timeout, mm, 30);
+               mpegts_mux_initial_scan_timeout, mm, t);
   }
 }
 
@@ -103,7 +115,7 @@ mpegts_mux_instance_start
   if (mm->mm_active) {
     *mmiptr = mm->mm_active;
     tvhdebug("mpegts", "%s - already active", buf);
-    mpegts_mux_add_to_current(mm, buf);
+    mpegts_mux_add_to_current(mm, buf, mmi->mmi_input);
     return 0;
   }
 
@@ -121,7 +133,7 @@ mpegts_mux_instance_start
   mpegts_fire_event(mm, ml_mux_start);
 
   /* Link */
-  mpegts_mux_add_to_current(mm, buf);
+  mpegts_mux_add_to_current(mm, buf, mmi->mmi_input);
 
   return 0;
 }
@@ -223,7 +235,7 @@ mpegts_mux_class_initscan_notify ( void *p )
   /* Stop */
   } else {
     if (mm->mm_initial_scan_status == MM_SCAN_CURRENT)
-      mpegts_mux_initial_scan_done(mm);
+      mpegts_mux_initial_scan_done(mm, 1);
     else if (mm->mm_initial_scan_status == MM_SCAN_PENDING)
       TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm,
                    mm_initial_scan_link);
@@ -393,7 +405,7 @@ mpegts_mux_start
   /* Already tuned */
   if (mm->mm_active) {
     tvhtrace("mpegts", "%s - already active", buf);
-    mpegts_mux_add_to_current(mm, buf);
+    mpegts_mux_add_to_current(mm, buf, mm->mm_active->mmi_input);
     return 0;
   }
   
@@ -611,22 +623,75 @@ mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
 static void
 mpegts_mux_initial_scan_timeout ( void *aux )
 {
+  int c, q;
   char buf[256];
   mpegts_mux_t *mm = aux;
+  mpegts_table_t *mt, *nxt;
   mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s - initial scan timed out", buf);
-  mpegts_mux_initial_scan_done(mm);
+
+  /* Timeout */
+  if (mm->mm_initial_scan_init) {
+    tvhinfo("mpegts", "%s - initial scan timed out", buf);
+    mpegts_mux_initial_scan_done(mm, 0);
+    return;
+  }
+  mm->mm_initial_scan_init = 1;
+  
+  /* Check tables */
+  c = q = 0;
+  for (mt = LIST_FIRST(&mm->mm_tables); mt != NULL; mt = nxt) {
+    nxt = LIST_NEXT(mt, mt_link);
+    if (!(mt->mt_flags & MT_QUICKREQ)) continue;
+    if (!mt->mt_count) {
+      mpegts_table_destroy(mt);
+    } else if (!mt->mt_complete) {
+      q++;
+    } else {
+      c++;
+    }
+  }
+      
+  /* No DATA - give up now */
+  if (!c) {
+    tvhinfo("mpegts", "%s - initial scan no data, failed", buf);
+    mpegts_mux_initial_scan_done(mm, 0);
+
+  /* Pending tables (another 20s - bit arbitrary) */
+  } else if (q) {
+    gtimer_arm(&mm->mm_initial_scan_timeout,
+               mpegts_mux_initial_scan_timeout, mm, 20);
+    return;
+
+  /* Complete */
+  } else {
+    mpegts_mux_initial_scan_done(mm, 1);
+  }
 }
 
 void
-mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
+mpegts_mux_initial_scan_done ( mpegts_mux_t *mm, int log )
 {
   char buf[256];
   mpegts_network_t *mn = mm->mm_network;
+  mpegts_table_t *mt;
+
+  /* Log */
+  if (log) {
+    mm->mm_display_name(mm, buf, sizeof(buf));
+    tvhinfo("mpegts", "%s - initial scan complete", buf);
+  }
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (mt->mt_flags & MT_QUICKREQ) {
+      const char *s = "not found";
+      if (mt->mt_complete)
+        s = "complete";
+      else if (mt->mt_count)
+        s = "incomplete";
+      tvhinfo("mpegts", "%s - %s %s", buf, mt->mt_name, s);
+    }
+  }
 
   /* Stop */
-  mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s - initial scan complete", buf);
   gtimer_disarm(&mm->mm_initial_scan_timeout);
   assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
   mn->mn_initial_scan_num--;

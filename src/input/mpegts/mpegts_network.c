@@ -226,7 +226,6 @@ mpegts_network_delete
   /* Check */
   assert(TAILQ_FIRST(&mn->mn_initial_scan_pending_queue) == NULL);
   assert(TAILQ_FIRST(&mn->mn_initial_scan_current_queue) == NULL);
-  
 
   /* Disable timer */
   gtimer_disarm(&mn->mn_initial_scan_timer);

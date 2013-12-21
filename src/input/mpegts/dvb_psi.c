@@ -476,7 +476,7 @@ dvb_table_complete
       total++;
     tvhtrace(mt->mt_name, "incomplete %d complete %d total %d",
              mt->mt_incomplete, mt->mt_complete, total);
-    return -1;
+    return 2;
   }
   if (!mt->mt_finished)
     tvhdebug(mt->mt_name, "completed pid %d table %08X / %08x", mt->mt_pid, mt->mt_table, mt->mt_mask);
@@ -499,7 +499,7 @@ dvb_table_end
       rem = 0;
       for (sa = 0; sa < 8; sa++)
         rem |= st->sections[sa];
-      if (rem) return -1;
+      if (rem) return 1;
       tvhtrace(mt->mt_name, "  tableid %02X extraid %016" PRIx64 " completed",
                st->tableid, st->extraid);
       st->complete = 1;
@@ -507,7 +507,7 @@ dvb_table_end
       return dvb_table_complete(mt);
     }
   }
-  return -1;
+  return 2;
 }
 
 /*
@@ -1587,4 +1587,46 @@ psi_parse_pmt
     }
   }
   return ret;
+}
+
+/*
+ * Install default table sets
+ */
+
+void
+psi_tables_default ( mpegts_mux_t *mm )
+{
+  mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
+                   NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_PAT_PID);
+  mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
+                   NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID);
+}
+
+void
+psi_tables_dvb ( mpegts_mux_t *mm )
+{
+  mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
+                   NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
+  mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
+                   NULL, "sdt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_SDT_PID);
+  mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
+                   NULL, "bat", MT_CRC, DVB_BAT_PID);
+}
+
+void
+psi_tables_atsc_c ( mpegts_mux_t *mm )
+{
+  mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
+                   NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_VCT_PID);
+}
+
+void
+psi_tables_atsc_t ( mpegts_mux_t *mm )
+{
+  mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
+                   NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_VCT_PID);
 }

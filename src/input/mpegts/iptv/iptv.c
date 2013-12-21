@@ -346,14 +346,13 @@ iptv_input_mux_started ( iptv_mux_t *im )
   }
 
   /* Install table handlers */
-  // Note: we don't install NIT as we can't do mux discovery
-  // TODO: not currently installing ATSC handler
-  mpegts_table_add((mpegts_mux_t*)im, DVB_SDT_BASE, DVB_SDT_MASK,
-                   dvb_sdt_callback, NULL, "sdt",
-                   MT_QUICKREQ | MT_CRC | MT_RECORD, DVB_SDT_PID);
-  mpegts_table_add((mpegts_mux_t*)im, DVB_PAT_BASE, DVB_PAT_MASK,
-                   dvb_pat_callback, NULL, "pat",
-                   MT_QUICKREQ | MT_CRC | MT_RECORD, DVB_PAT_PID);
+  mpegts_mux_t *mm = (mpegts_mux_t*)im;
+  psi_tables_default(mm);
+  if (im->mm_iptv_atsc) {
+    psi_tables_atsc_t(mm);
+    psi_tables_atsc_c(mm);
+  } else
+    psi_tables_dvb(mm);
 }
 
 /* **************************************************************************

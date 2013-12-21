@@ -44,6 +44,12 @@ const idclass_t iptv_mux_class =
       .name     = "Interface",
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "iptv_atsc",
+      .name     = "ATSC",
+      .off      = offsetof(iptv_mux_t, mm_iptv_atsc),
+    },
     {}
   }
 };

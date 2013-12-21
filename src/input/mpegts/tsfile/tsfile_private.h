@@ -50,7 +50,6 @@ struct tsfile_mux_instance
    * File input
    */
   
-  int       mmi_tsfile_atsc;    ///< ATSC input
   char     *mmi_tsfile_path;    ///< Source file path
   th_pipe_t mmi_tsfile_pipe;    ///< Thread control pipe
   uint16_t  mmi_tsfile_pcr_pid; ///< Timing control
@@ -62,7 +61,7 @@ struct tsfile_mux_instance
 mpegts_input_t        *tsfile_input_create ( int idx );
 
 tsfile_mux_instance_t *tsfile_mux_instance_create
-  ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm, int atsc );
+  ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm );
 
 mpegts_mux_t *
 tsfile_mux_create ( mpegts_network_t *mn );

@@ -78,6 +78,8 @@ struct iptv_mux
   char                 *mm_iptv_url;
   char                 *mm_iptv_interface;
 
+  int                   mm_iptv_atsc;
+
   uint8_t              *mm_iptv_tsb;
   int                   mm_iptv_pos;
 
