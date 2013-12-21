@@ -493,7 +493,7 @@ main(int argc, char **argv)
     { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
     { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
-    { 0, "tsfile_atsc", "tsfile input is ATSC", OPT_INT, &opt_tsfile_atsc }
+    { 0, "tsfile_atsc", "tsfile input is ATSC", OPT_BOOL, &opt_tsfile_atsc }
 
   };
 
