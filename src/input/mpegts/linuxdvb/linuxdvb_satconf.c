@@ -795,6 +795,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
     return -1;
   }
+  usleep(20000); // Allow LNB to settle before tuning
 
   /* Frontend */
   f = lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
