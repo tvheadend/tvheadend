@@ -747,8 +747,8 @@ dvb_nit_callback
 {
   int save = 0;
   int r, sect, last, ver;
-  uint8_t  dlen, dtag;
-  uint16_t llen, dllen;
+  uint8_t  dtag;
+  int llen, dllen, dlen;
   const uint8_t *lptr, *dlptr, *dptr;
   uint16_t nbid = 0, onid, tsid;
   mpegts_mux_t     *mm = mt->mt_mux, *mux;
@@ -895,8 +895,8 @@ dvb_sdt_callback
 {
   int r, sect, last, ver, extraid;
   uint16_t onid, tsid;
-  uint16_t llen;
-  uint8_t dtag, dlen;
+  uint8_t dtag;
+  int llen, dlen;
   const uint8_t *lptr, *dptr;
   mpegts_mux_t     *mm = mt->mt_mux;
   mpegts_network_t *mn = mm->mm_network;
