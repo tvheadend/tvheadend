@@ -134,6 +134,7 @@ struct linuxdvb_frontend
    * Tuning
    */
   int                       lfe_locked;
+  fe_status_t               lfe_status;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
 
