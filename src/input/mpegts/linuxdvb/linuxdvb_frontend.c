@@ -294,6 +294,7 @@ linuxdvb_frontend_stop_mux
 
   /* Not locked */
   lfe->lfe_locked = 0;
+  lfe->lfe_status = 0;
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
@@ -474,7 +475,19 @@ linuxdvb_frontend_monitor ( void *aux )
     status = SIGNAL_NONE;
 
   /* Set default period */
-  tvhtrace("linuxdvb", "%s - status %d", buf, status);
+  if (fe_status != lfe->lfe_status) {
+    tvhdebug("linuxdvb", "%s - status %7s (%s%s%s%s%s%s)", buf,
+             signal2str(status),
+             (fe_status & FE_HAS_SIGNAL) ?  "SIGNAL"  : "",
+             (fe_status & FE_HAS_CARRIER) ? " | CARRIER" : "",
+             (fe_status & FE_HAS_VITERBI) ? " | VITERBI" : "",
+             (fe_status & FE_HAS_SYNC) ?    " | SYNC"    : "",
+             (fe_status & FE_HAS_LOCK) ?    " | SIGNAL"  : "",
+             (fe_status & FE_TIMEDOUT) ?    "TIMEOUT" : "");
+  } else {
+    tvhtrace("linuxdvb", "%s - status %d (%04X)", buf, status, fe_status);
+  }
+  lfe->lfe_status = fe_status;
 
   /* Get current mux */
   mm = mmi->mmi_mux;
@@ -718,6 +731,8 @@ linuxdvb_frontend_tune0
       return SM_CODE_TUNING_FAILED;
     }
   }
+  lfe->lfe_locked = 0;
+  lfe->lfe_status = 0;
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
