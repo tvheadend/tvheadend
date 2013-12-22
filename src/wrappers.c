@@ -122,3 +122,29 @@ tvhthread_create0
     pthread_detach(*thread);
   return r;
 }
+
+/*
+ * qsort_r wrapper for pre GLIBC 2.8
+ */
+
+#if !__GLIBC_PREREQ(2,8)
+static __thread struct {
+  int (*cmp) ( const void *a, const void *b, void *p );
+  void *aux;
+} qsort_r_data;
+
+static int
+qsort_r_wrap ( const void *a, const void *b )
+{
+  return qsort_r_data.cmp(a, b, qsort_r_data.aux);
+}
+
+void
+qsort_r(void *base, size_t nmemb, size_t size,
+       int (*cmp)(const void *, const void *, void *), void *aux)
+{
+  qsort_r_data.cmp = cmp;
+  qsort_r_data.aux = aux;
+  qsort(base, nmemb, size, qsort_r_wrap);
+}
+#endif /* GLIBC < 2.8 */

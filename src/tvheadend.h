@@ -603,6 +603,13 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+/* glibc wrapper */
+#if !__GLIBC_PREREQ(2,8)
+void
+qsort_r(void *base, size_t nmemb, size_t size,
+       int (*cmp)(const void *, const void *, void *), void *aux);
+#endif
+
 /* printing */
 # if __WORDSIZE == 64
 #define PRIsword_t      PRId64
