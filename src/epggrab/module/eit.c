@@ -595,10 +595,12 @@ _eit_callback
   } else {
     if (mm->mm_tsid != tsid ||
         mm->mm_onid != onid) {
-      tvhwarn("eit",
-              "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-              tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
-      //dm = NULL;
+      if (mm->mm_onid != MPEGTS_ONID_NONE &&
+          mm->mm_tsid != MPEGTS_TSID_NONE)
+        tvhwarn("eit",
+                "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+                tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
+      mm = NULL;
     }
   }
   if(!mm)

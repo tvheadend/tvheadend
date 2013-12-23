@@ -136,7 +136,7 @@ epggrab_ota_start ( epggrab_ota_mux_t *om )
     epggrab_ota_active_timer_cb(NULL);
   LIST_FOREACH(map, &om->om_modules, om_link) {
     map->om_complete = 0;
-    tvhinfo(map->om_module->id, "grab started");
+    tvhdebug(map->om_module->id, "grab started");
   }
 }
 
@@ -242,7 +242,7 @@ epggrab_ota_complete
 {
   int done = 1;
   epggrab_ota_map_t *map;
-  tvhinfo(mod->id, "grab complete");
+  tvhdebug(mod->id, "grab complete");
 
   /* Test for completion */
   LIST_FOREACH(map, &ota->om_modules, om_link) {
