@@ -203,11 +203,13 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Start */
   pthread_mutex_lock(&iptv_lock);
+  im->mm_active = mmi; // Note: must set here else mux_started call
+                       // will not realise we're ready to accept pid open calls
   ret            = ih->start(im, &url);
-  if (!ret) {
-    im->mm_active  = mmi;
+  if (!ret)
     im->im_handler = ih;
-  }
+  else
+    im->mm_active  = NULL;
   pthread_mutex_unlock(&iptv_lock);
 
   return ret;
