@@ -16,9 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <string.h>
-
 #include "tvheadend.h"
 #include "settings.h"
 #include "htsmsg.h"
@@ -26,6 +23,9 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+
+#include <assert.h>
+#include <string.h>
 
 /* **************************************************************************
  * EPG Grab Channel functions
@@ -187,10 +187,19 @@ epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *tree, const char *id, int create, int *save,
     epggrab_module_t *owner )
 {
+  char *s;
   epggrab_channel_t *ec;
   static epggrab_channel_t *skel = NULL;
   if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
-  skel->id = (char*)id;
+  skel->id = strdupa(id);
+
+  /* Replace / with # */
+  // Note: this is a bit of a nasty fix for #1774, but will do for now
+  s = skel->id;
+  while (*s) {
+    if (*s == '/') *s = '#';
+    s++;
+  }
 
   /* Find */
   if (!create) {
@@ -202,9 +211,9 @@ epggrab_channel_t *epggrab_channel_find
     if (!ec) {
       assert(owner);
       ec      = skel;
-      skel    = NULL;
-      ec->id  = strdup(id);
+      ec->id  = strdup(skel->id);
       ec->mod = owner;
+      skel    = NULL;
       *save   = 1;
     }
   }
