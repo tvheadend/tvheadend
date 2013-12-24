@@ -1346,6 +1346,7 @@ psi_parse_pmt
     t->s_pcr_pid = pcr_pid;
     update |= PMT_UPDATE_PCR;
   }
+  tvhdebug("pmt", "  pcr_pid %04X", pcr_pid);
 
   ptr += 9;
   len -= 9;
