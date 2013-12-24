@@ -8,13 +8,16 @@ import os, sys, time
 import socket, struct
 from optparse import OptionParser
 
-DEBUG    = False
-PKT_SIZE = 188 * 200
-
 # Cmd line
 optp = OptionParser()
 optp.add_option('-p', '--protocol', default='udp')
+optp.add_option('-d', '--debug',    default=False, action='store_true')
+optp.add_option('--port', default=9983, type='int')
+optp.add_option('-i', '--ipaddr', default='127.0.0.1')
 (opts,args) = optp.parse_args()
+
+DEBUG    = opts.debug
+PKT_SIZE = 188 * 200
 
 # Debug
 def out ( pre, msg ):
@@ -74,6 +77,7 @@ def output_file ( path, cb ):
     if not fp:
       info('open')
       fp = open(path)
+      pcr_last = pcr_init = pcr_rtc = None
     tsb = fp.read(PKT_SIZE)
     
     # EOF
@@ -90,12 +94,16 @@ def output_file ( path, cb ):
 
       # Wait
       if pcr_init:
+        #debug('checking')
         d = pcr - pcr_init
         d = d / 90000.0
         d = d + pcr_rtc
         if d > time.time():
           s = d - time.time()
+          debug('wait %f' % s)
           time.sleep(s)
+        else:
+          print 'behind'
       else:
         pcr_init = pcr
         pcr_rtc  = time.time()
@@ -109,8 +117,8 @@ if opts.protocol == 'http':
 
 # Multicast
 elif opts.protocol in [ 'udp', 'rtp' ]:
-  g = '225.0.0.250'
-  p = 9983
+  g = opts.ipaddr
+  p = opts.port
   
   # Setup multicast connection
   a = socket.getaddrinfo(g, None)[0]
