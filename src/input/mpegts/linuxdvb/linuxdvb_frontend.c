@@ -592,11 +592,11 @@ linuxdvb_frontend_monitor ( void *aux )
 #endif
   {
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16))
-      mmi->mmi_stats.signal = u16;
+      mmi->mmi_stats.signal = (u16 * 100) / 0xffff;
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
       mmi->mmi_stats.ber = u32;
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16))
-      mmi->mmi_stats.snr = u16;
+      mmi->mmi_stats.snr = u16 / 10;
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       mmi->mmi_stats.unc = u32;
   }
