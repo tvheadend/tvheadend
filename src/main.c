@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <time.h>
 #include <locale.h>
+#include <sys/prctl.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -417,6 +418,7 @@ main(int argc, char **argv)
   int  log_level   = LOG_INFO;
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
+  char buf[512];
 
   /* Defaults */
   tvheadend_webui_port      = 9981;
@@ -437,7 +439,8 @@ main(int argc, char **argv)
               opt_fileline     = 0,
               opt_threadid     = 0,
               opt_ipv6         = 0,
-              opt_tsfile_tuner = 0;
+              opt_tsfile_tuner = 0,
+              opt_dump         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -496,6 +499,7 @@ main(int argc, char **argv)
     {   0, "threadid",  "Add the thread ID to debug", OPT_BOOL, &opt_threadid },
     {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
+    { 'D', "dump",      "Enable coredumps for daemon", OPT_BOOL, &opt_dump },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
     { 'j', "join",      "Subscribe to a service permanently",
@@ -675,6 +679,13 @@ main(int argc, char **argv)
       fclose(pidfile);
     }
 
+    /* Make dumpable */
+    if (opt_dump) {
+      if (chdir("/tmp"))
+        tvhwarn("START", "failed to change cwd to /tmp");
+      prctl(PR_SET_DUMPABLE, 1);
+    }
+
     umask(0);
   }
 
@@ -790,9 +801,10 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
-	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
-	 tvheadend_version,
-	 getpid(), getuid(), getgid(), hts_settings_get_root());
+         "running as PID:%d UID:%d GID:%d, CWD:%s CNF:%s",
+         tvheadend_version,
+         getpid(), getuid(), getgid(), getcwd(buf, sizeof(buf)),
+         hts_settings_get_root());
 
   if(opt_abort)
     abort();
@@ -815,10 +827,7 @@ main(int argc, char **argv)
   if(opt_fork)
     unlink(opt_pidpath);
 
-  // TODO: could join all threads for clean shutdown
-
   return 0;
-
 }
 
 /**
