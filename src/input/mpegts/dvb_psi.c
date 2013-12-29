@@ -1090,6 +1090,10 @@ atsc_vct_callback
     tvhdebug("vct", "chnum  %d.%d", maj, min);
     tvhdebug("vct", "type   %02X (%d)", type, type);
 
+    /* Skip */
+    if (type > 3)
+      goto next;
+
     /* Find mux */
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_tsid == tsid)
@@ -1101,10 +1105,6 @@ atsc_vct_callback
       goto next;
 
     /* Update */
-    if (s->s_dvb_servicetype != type) {
-      s->s_dvb_servicetype = type;
-      save = 1;
-    }
     if (strcmp(s->s_dvb_svcname ?: "", chname)) {
       tvh_str_set(&s->s_dvb_svcname, chname);
       save = 1;
