@@ -30,7 +30,8 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
     return;
 
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
-    if((mt->mt_flags & MT_QUICKREQ) && mt->mt_count == 0)
+    if (!(mt->mt_flags & MT_QUICKREQ)) continue;
+    if(!mt->mt_complete)
       return;
   }
 

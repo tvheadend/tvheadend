@@ -698,7 +698,9 @@ dvb_cat_callback
     ptr += dlen;
     len -= dlen;
   }
-  return 0;
+
+  /* Finish */
+  return dvb_table_end(mt, st, sect);
 }
 
 /*
