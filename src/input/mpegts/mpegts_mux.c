@@ -658,6 +658,7 @@ mpegts_mux_initial_scan_timeout ( void *aux )
 
   /* Pending tables (another 20s - bit arbitrary) */
   } else if (q) {
+    tvhinfo("mepgts", "%s - initial scan needs more time", buf);
     gtimer_arm(&mm->mm_initial_scan_timeout,
                mpegts_mux_initial_scan_timeout, mm, 20);
     return;
