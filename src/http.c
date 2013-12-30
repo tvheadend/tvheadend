@@ -790,6 +790,8 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   htsbuf_queue_t spill;
   http_connection_t hc;
   
+  // Note: global_lock held on entry */
+  pthread_mutex_unlock(&global_lock);
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
@@ -804,10 +806,6 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 
   http_serve_requests(&hc, &spill);
 
-  free(hc.hc_post_data);
-  free(hc.hc_username);
-  free(hc.hc_password);
-
   http_arg_flush(&hc.hc_args);
   http_arg_flush(&hc.hc_req_args);
 
@@ -815,9 +813,12 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   htsbuf_queue_flush(&spill);
   close(fd);
 
+  // Note: leave global_lock held for parent
   pthread_mutex_lock(&global_lock);
+  free(hc.hc_post_data);
+  free(hc.hc_username);
+  free(hc.hc_password);
   *opaque = NULL;
-  pthread_mutex_unlock(&global_lock);
 }
 
 #if 0

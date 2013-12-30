@@ -2065,6 +2065,8 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp_connection_t htsp;
   char buf[50];
   htsp_subscription_t *s;
+  
+  // Note: global_lock held on entry
 
   tcp_get_ip_str((struct sockaddr*)source, buf, 50);
 
@@ -2084,7 +2086,6 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
-  pthread_mutex_lock(&global_lock);
   LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
   pthread_mutex_unlock(&global_lock);
 
@@ -2104,8 +2105,6 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
    */
 
   pthread_mutex_lock(&global_lock);
-
-  *opaque = NULL;
 
   /* Beware! Closing subscriptions will invoke a lot of callbacks
      down in the streaming code. So we do this as early as possible
@@ -2128,11 +2127,6 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   pthread_join(htsp.htsp_writer_thread, NULL);
 
-  free(htsp.htsp_logname);
-  free(htsp.htsp_peername);
-  free(htsp.htsp_username);
-  free(htsp.htsp_clientname);
-
   htsp_msg_q_t *hmq;
 
   TAILQ_FOREACH(hmq, &htsp.htsp_active_output_queues, hmq_link) {
@@ -2148,6 +2142,14 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
     htsp_file_destroy(hf);
 
   close(fd);
+  
+  /* Free memory (leave lock in place, for parent method) */
+  pthread_mutex_lock(&global_lock);
+  free(htsp.htsp_logname);
+  free(htsp.htsp_peername);
+  free(htsp.htsp_username);
+  free(htsp.htsp_clientname);
+  *opaque = NULL;
 }
 
 /*

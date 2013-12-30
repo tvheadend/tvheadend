@@ -439,16 +439,16 @@ tcp_server_start(void *aux)
     notify_reload("connections");
     pthread_mutex_unlock(&global_lock);
   }
+  pthread_mutex_lock(&global_lock);
   tsl->ops.start(tsl->fd, &tsl->opaque, &tsl->peer, &tsl->self);
 
   /* Stop */
   if (tsl->ops.stop) tsl->ops.stop(tsl->opaque);
   if (tsl->ops.status) {
-    pthread_mutex_lock(&global_lock);
     LIST_REMOVE(tsl, link);
     notify_reload("connections");
-    pthread_mutex_unlock(&global_lock);
   }
+  pthread_mutex_unlock(&global_lock);
 
   free(tsl);
   return NULL;
