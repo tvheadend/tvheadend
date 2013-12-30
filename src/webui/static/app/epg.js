@@ -451,6 +451,8 @@ tvheadend.epg = function() {
 	});
 
 	var panel = new Ext.ux.grid.livegrid.GridPanel({
+		stateful: true,
+		stateId : 'epggrid',
 		enableDragDrop : false,
 		cm : epgCm,
 		plugins : [ actions ],
