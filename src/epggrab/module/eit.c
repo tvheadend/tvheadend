@@ -369,11 +369,13 @@ static int _eit_desc_crid
         } else if ( *buf != '/' ) {
           snprintf(crid, clen, "crid://%s", buf);
         } else {
-          char *defauth = svc->s_dvb_cridauth;
+          const char *defauth = svc->s_dvb_cridauth;
           if (!defauth)
             defauth = svc->s_dvb_mux->mm_crid_authority;
           if (defauth)
             snprintf(crid, clen, "crid://%s%s", defauth, buf);
+          else
+            snprintf(crid, clen, "crid://%d%s", svc->s_dvb_mux->mm_onid, buf);
         }
       }
 
