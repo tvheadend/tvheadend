@@ -217,16 +217,19 @@ def iptv_network ( nets, opts ):
       m = muxes[url]
 
     # Create service entry
-    d['svcname']         = d['channelname']
+    if 'channelname' in d:
+      d['svcname']       = d['channelname']
+    else:
+      d['svcname']       = ''
     d['dvb_servicetype'] = d['stype']
     d['sid']             = 1 # Let's hope!
+    d['enabled']         = e
     m['svcs']            = { '1' : d }
 
     # Remove
     for f in [ 'stream', 'group', 'stype', 'interface' ]:
       if f in d:
         del d[f]
-
 
   nets.append({ 'type'          : 'iptv',
                 'muxs'          : muxes,\
