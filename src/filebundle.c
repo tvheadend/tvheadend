@@ -127,12 +127,25 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   zstr.next_out  = bufout;
     
   /* Decompress */
-  err = deflate(&zstr, Z_FINISH);
-  if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
-    free(bufout);
-    bufout = NULL;
-  } else {
-    *size  = zstr.total_out;
+  while (1) {
+    err = deflate(&zstr, Z_FINISH);
+
+    /* Need more space */
+    if (err == Z_OK && zstr.avail_out == 0) {
+      bufout         = realloc(bufout, zstr.total_out * 2);
+      zstr.avail_out = zstr.total_out;
+      zstr.next_out  = bufout + zstr.total_out;
+      continue;
+    }
+
+    /* Error */
+    if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
+      free(bufout);
+      bufout = NULL;
+    } else {
+      *size  = zstr.total_out;
+    }
+    break;
   }
   free(bufin);
   deflateEnd(&zstr);
