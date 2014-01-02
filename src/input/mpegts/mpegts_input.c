@@ -345,8 +345,8 @@ mpegts_input_recv_packets
   assert(name != NULL);
 
   // TODO: get the input name
-  tvhtrace("tsdemux", "%s - recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
-           name, tsb, (int)len, pcr, pcr_pid);
+  tvhtrace("tsdemux", "%s - recv pkts tsb=%p len=%d pcr=%p pcr_pid=%p mmi=%p",
+           name, tsb, (int)len, pcr, pcr_pid, mmi);
   
   /* Not enough data */
   if (len < 188) return len;
@@ -364,7 +364,8 @@ mpegts_input_recv_packets
       service_t *s;
       int     pid   = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
       int64_t *ppcr = (pcr_pid && *pcr_pid == pid) ? pcr : NULL;
-      tvhtrace("tsdemux", "%s - recv_packet for pid %04X (%d)", name, pid, pid);
+      tvhtrace("tsdemux", "%s - recv pkt for pid %04X (%d) on mmi %p",
+               name, pid, pid, mmi);
 
       /* Find PID */
       if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
@@ -382,6 +383,7 @@ mpegts_input_recv_packets
         /* Special case streams */
         if (pid == 0) table = stream = 1;
         LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+          if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
                if (pid == s->s_pmt_pid) stream = 1;
           else if (pid == s->s_pcr_pid) stream = 1;
         }
@@ -389,7 +391,9 @@ mpegts_input_recv_packets
         /* Stream data */
         if (stream) {
           LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-            int f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+            int f;
+            if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
+            f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
             ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr, f);
           }
         }
