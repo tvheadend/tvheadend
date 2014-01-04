@@ -71,6 +71,9 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
   int e, tr, qd = 0;
   service_t *s;
 
+  /* Store config */
+  service_mapper_conf = *conf;
+
   /* Check each service */
   TAILQ_FOREACH(s, &service_all, s_all_link) {
     if (uuids) {
