@@ -488,7 +488,7 @@ idnode_cmp_sort
     case PT_STR:
       {
         int r;
-        const char *stra = strdupa(idnode_get_str(ina, sort->key) ?: "");
+        const char *stra = tvh_strdupa(idnode_get_str(ina, sort->key) ?: "");
         const char *strb = idnode_get_str(inb, sort->key);
         if (sort->dir == IS_ASC)
           r = strcmp(stra ?: "", strb ?: "");

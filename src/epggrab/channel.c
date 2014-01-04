@@ -191,7 +191,7 @@ epggrab_channel_t *epggrab_channel_find
   epggrab_channel_t *ec;
   static epggrab_channel_t *skel = NULL;
   if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
-  skel->id = strdupa(id);
+  skel->id = tvh_strdupa(id);
 
   /* Replace / with # */
   // Note: this is a bit of a nasty fix for #1774, but will do for now
