@@ -443,7 +443,7 @@ linuxdvb_mux_dvbs_class_orbital_set ( void *o, const void *s )
 {
   int pos, save = 0;
   char dir;
-  char *tmp = strdupa(s);
+  char *tmp = tvh_strdupa(s);
   linuxdvb_mux_t *lm = o;
 
   dir = tmp[strlen(tmp)-1];
