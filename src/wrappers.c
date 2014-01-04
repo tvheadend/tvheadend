@@ -99,7 +99,7 @@ thread_wrapper ( void *p )
 
   /* Run */
   tvhdebug("thread", "created thread %ld [%s / %p(%p)]",
-           pthread_self(), ts->name, ts->run, ts->arg);
+           (long)pthread_self(), ts->name, ts->run, ts->arg);
   void *r = ts->run(ts->arg);
   free(ts);
 
