@@ -868,7 +868,11 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* Frontend */
   // TODO: get en50494 tuning frequency, not channel frequency
-  f = 2040500;// lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
+  if (lse->ls_en50494) {
+    f = ((linuxdvb_en50494_t*)lse->ls_en50494)->le_tune_freq;
+  } else {
+    f = lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
+  }
   return linuxdvb_frontend_tune1(lfe, mmi, f);
 }
 

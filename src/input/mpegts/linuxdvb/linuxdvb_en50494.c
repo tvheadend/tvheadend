@@ -57,20 +57,19 @@
  * Class definition
  * *************************************************************************/
 
-typedef struct linuxdvb_en50494
-{
-  linuxdvb_diseqc_t;
-
-  /* en50494 configuration*/
-  uint8_t   le_position;  /* satelitte A(0) or B(1) */
-  uint16_t  le_frequency; /* user band frequency in MHz */
-  uint8_t   le_id;        /* user band id 0-7 */
-  uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
-
-  /* runtime */
-  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-
-} linuxdvb_en50494_t;
+//typedef struct linuxdvb_en50494
+//{
+//  linuxdvb_diseqc_t;
+//
+//  /* en50494 configuration*/
+//  uint8_t   le_position;  /* satelitte A(0) or B(1) */
+//  uint16_t  le_frequency; /* user band frequency in MHz */
+//  uint8_t   le_id;        /* user band id 0-7 */
+//  uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
+//
+//  /* runtime */
+//  uint32_t  le_tune_freq; /* the real frequency to tune to */
+//} linuxdvb_en50494_t;
 
 static const char *
 linuxdvb_en50494_class_get_title ( idnode_t *o )
@@ -177,7 +176,7 @@ linuxdvb_en50494_tune
     tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "transponder value bigger then 1024");
     return -1;
   }
-//  uint32_t tunefreq = (t + 350) * 4000 - freq; /* real used en50494 frequency */
+  le->le_tune_freq = (t + 350) * 4000 - freq; /* real used en50494 frequency */
 
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
