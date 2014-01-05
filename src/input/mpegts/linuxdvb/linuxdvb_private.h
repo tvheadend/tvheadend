@@ -35,6 +35,7 @@ typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
 typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
 typedef struct linuxdvb_network     linuxdvb_network_t;
 typedef struct linuxdvb_mux         linuxdvb_mux_t;
+typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
@@ -218,6 +219,20 @@ struct linuxdvb_lnb
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
   int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
   int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
+};
+
+struct linuxdvb_en50494
+{
+  linuxdvb_diseqc_t;
+
+  /* en50494 configuration*/
+  uint8_t   le_position;  /* satelitte A(0) or B(1) */
+  uint16_t  le_frequency; /* user band frequency in MHz */
+  uint8_t   le_id;        /* user band id 0-7 */
+  uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
+
+  /* runtime */
+  uint32_t  le_tune_freq; /* the real frequency to tune to */
 };
 
 /*
