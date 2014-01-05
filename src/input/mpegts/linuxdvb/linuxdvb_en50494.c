@@ -1,0 +1,274 @@
+/*
+ *  Tvheadend - Linux DVB EN50494
+ *              (known under trademark "UniCable")
+ *
+ *  Copyright (C) 2013 Sascha "InuSasha" Kuehndel
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Open things:
+ *    - make linuxdvb_en50494_tune thread safe
+ *      avoiding self-raised collisions
+ *    - collision dectection
+ *      when a diseqc-command wasn't executed succesful, retry.
+ *      delay time is easly random, but in standard is special (complicated) way described (cap 8).
+ */
+
+#include "tvheadend.h"
+#include "linuxdvb_private.h"
+#include "settings.h"
+
+#include <unistd.h>
+#include <math.h>
+
+/* **************************************************************************
+ * Static definition
+ * *************************************************************************/
+#define LINUXDVB_EN50494_NAME                  "en50494"
+
+#define LINUXDVB_EN50494_NOPIN                 256
+
+#define LINUXDVB_EN50494_FRAME                 0xE0
+/* adresses 0x00, 0x10 and 0x11 are possible */
+#define LINUXDVB_EN50494_ADDRESS               0x10
+
+#define LINUXDVB_EN50494_CMD_NORMAL            0x5A
+#define LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME  0x5C
+/* special modes not implemented yet */
+#define LINUXDVB_EN50494_CMD_SPECIAL           0x5B
+#define LINUXDVB_EN50494_CMD_SPECIAL_MULTIHOME 0x5D
+
+#define LINUXDVB_EN50494_SAT_A                 0x00
+#define LINUXDVB_EN50494_SAT_B                 0x01
+
+
+/* **************************************************************************
+ * Class definition
+ * *************************************************************************/
+
+typedef struct linuxdvb_en50494
+{
+  linuxdvb_diseqc_t;
+
+  /* en50494 configuration*/
+  uint8_t   le_position;  /* satelitte A(0) or B(1) */
+  uint16_t  le_frequency; /* user band frequency in MHz */
+  uint8_t   le_id;        /* user band id 0-7 */
+  uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
+
+  /* runtime */
+  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
+
+} linuxdvb_en50494_t;
+
+static const char *
+linuxdvb_en50494_class_get_title ( idnode_t *o )
+{
+  static char buf[256];
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
+  snprintf(buf, sizeof(buf), "%s: %s", LINUXDVB_EN50494_NAME, ld->ld_type);
+  return buf;
+}
+
+static htsmsg_t *
+linuxdvb_en50494_class_position_list ( void *o )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_u32(m, NULL, LINUXDVB_EN50494_SAT_A);
+  htsmsg_add_u32(m, NULL, LINUXDVB_EN50494_SAT_B);
+  return m;
+}
+
+static htsmsg_t *
+linuxdvb_en50494_class_id_list ( void *o )
+{
+  uint32_t i;
+
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < 8; i++) {
+    htsmsg_add_u32(m, NULL, i);
+  }
+  return m;
+}
+
+static htsmsg_t *
+linuxdvb_en50494_class_pin_list ( void *o )
+{
+  int32_t i;
+
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = -1; i < 256; i++) {
+    htsmsg_add_s32(m, NULL, i);
+  }
+  return m;
+}
+
+extern const idclass_t linuxdvb_diseqc_class;
+const idclass_t linuxdvb_en50494_class =
+{
+  .ic_super       = &linuxdvb_diseqc_class,
+  .ic_class       = "linuxdvb_en50494",
+  .ic_caption     = LINUXDVB_EN50494_NAME,
+  .ic_get_title   = linuxdvb_en50494_class_get_title,
+  .ic_properties  = (const property_t[]) {
+    {
+      .type   = PT_INT,
+      .id     = "position",
+      .name   = "Position",
+      .off    = offsetof(linuxdvb_en50494_t, le_position),
+      .list   = linuxdvb_en50494_class_position_list
+    },
+    {
+      .type   = PT_INT,
+      .id     = "frequency",
+      .name   = "Frequency",
+      .off    = offsetof(linuxdvb_en50494_t, le_frequency),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "id",
+      .name   = "ID",
+      .off    = offsetof(linuxdvb_en50494_t, le_id),
+      .list   = linuxdvb_en50494_class_id_list
+    },
+    {
+      .type   = PT_INT,
+      .id     = "pin",
+      .name   = "Pin",
+      .off    = offsetof(linuxdvb_en50494_t, le_pin),
+      .list   = linuxdvb_en50494_class_pin_list
+    },
+    {}
+  }
+};
+
+
+/* **************************************************************************
+ * Class methods
+ * *************************************************************************/
+
+static int
+linuxdvb_en50494_tune
+  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+{
+  int ret = 0;
+  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
+  linuxdvb_lnb_t *lnb = sc->ls_lnb;
+
+  /* band & polarisation */
+  uint8_t pol  = lnb->lnb_pol(lnb, lm);
+  uint8_t band = lnb->lnb_band(lnb, lm);
+  uint32_t freq = lnb->lnb_freq(lnb, lm);
+
+  /* transponder value - t*/
+  uint16_t t = round((( (freq / 1000) + 2 + le->le_frequency) / 4) - 350);
+  if ( t > 1024) {
+    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "transponder value bigger then 1024");
+    return -1;
+  }
+//  uint32_t tunefreq = (t + 350) * 4000 - freq; /* real used en50494 frequency */
+
+  /* 2 data fields (16bit) */
+  uint8_t data1, data2;
+  data1  = le->le_id << 5;        /* 3bit user-band */
+  data1 |= le->le_position << 4;  /* 1bit position (satelitte A(0)/B(0)) */
+  data1 |= pol << 3;              /* 1bit polarisation v(0)/h(1) */
+  data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
+  data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
+  data2  = t & 0xFF;              /* 8bit transponder value bit 3-10 */
+  tvhlog(LOG_INFO, LINUXDVB_EN50494_NAME,
+         "lnb=%i, id=%i, freq=%i, pin=%i, v/h=%i, l/u=%i, f=%i, data=0x%02X%02X",
+         le->le_position, le->le_id, le->le_frequency, le->le_pin, pol, band, freq, data1, data2);
+
+  /* use 18V */
+  if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18)) {
+    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
+    return -1;
+  }
+  usleep(15000); /* standard: 4ms < x < 22ms */
+
+   /* send tune command (with/with pin) */
+  if (le->le_pin != LINUXDVB_EN50494_NOPIN) {
+    ret = linuxdvb_diseqc_send(fd,
+                               LINUXDVB_EN50494_FRAME,
+                               LINUXDVB_EN50494_ADDRESS,
+                               LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME,
+                               3,
+                               data1, data2, (uint8_t)le->le_pin);
+  } else {
+    ret = linuxdvb_diseqc_send(fd,
+                               LINUXDVB_EN50494_FRAME,
+                               LINUXDVB_EN50494_ADDRESS,
+                               LINUXDVB_EN50494_CMD_NORMAL,
+                               2,
+                               data1, data2);
+  }
+  if (ret != 0) {
+    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error send tune command");
+    return -1;
+  }
+  usleep(50000); /* standard: 2ms < x < 60ms */
+
+  /* return to 13V */
+  if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13)) {
+    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
+    return -1;
+  }
+
+  return 0;
+}
+
+
+/* **************************************************************************
+ * Create / Config
+ * *************************************************************************/
+
+htsmsg_t *
+linuxdvb_en50494_list ( void *o )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "None");
+  htsmsg_add_str(m, NULL, "EN50494/UniCable");
+  return m;
+}
+
+linuxdvb_diseqc_t *
+linuxdvb_en50494_create0
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls)
+{
+  linuxdvb_diseqc_t *ld;
+//  linuxdvb_en50494_t *le;
+
+  ld = linuxdvb_diseqc_create0(
+      calloc(1, sizeof(linuxdvb_en50494_t)),
+      NULL,
+      &linuxdvb_en50494_class,
+      conf,
+      LINUXDVB_EN50494_NAME,
+      ls);
+//  le = (linuxdvb_en50494_t*)ld;
+  if (ld) {
+    ld->ld_tune  = linuxdvb_en50494_tune;
+    /* May not needed: ld->ld_grace = linuxdvb_en50494_grace; */
+  }
+
+  return (linuxdvb_diseqc_t*)ld;
+}
+
+void
+linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *le )
+{
+  linuxdvb_diseqc_destroy(le);
+  free(le);
+}

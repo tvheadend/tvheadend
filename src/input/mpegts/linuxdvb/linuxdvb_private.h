@@ -199,6 +199,7 @@ struct linuxdvb_satconf_ele
   linuxdvb_lnb_t        *ls_lnb;
   linuxdvb_diseqc_t     *ls_switch;
   linuxdvb_diseqc_t     *ls_rotor;
+  linuxdvb_diseqc_t     *ls_en50494;
 };
 
 struct linuxdvb_diseqc
@@ -329,14 +330,18 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
+linuxdvb_diseqc_t *linuxdvb_en50494_create0
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 
-void linuxdvb_lnb_destroy    ( linuxdvb_lnb_t    *lnb );
-void linuxdvb_switch_destroy ( linuxdvb_diseqc_t *ld );
-void linuxdvb_rotor_destroy  ( linuxdvb_diseqc_t *ld );
+void linuxdvb_lnb_destroy     ( linuxdvb_lnb_t    *lnb );
+void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );
+void linuxdvb_rotor_destroy   ( linuxdvb_diseqc_t *ld );
+void linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *ld );
 
-htsmsg_t *linuxdvb_lnb_list    ( void *o );
-htsmsg_t *linuxdvb_switch_list ( void *o );
-htsmsg_t *linuxdvb_rotor_list  ( void *o );
+htsmsg_t *linuxdvb_lnb_list     ( void *o );
+htsmsg_t *linuxdvb_switch_list  ( void *o );
+htsmsg_t *linuxdvb_rotor_list   ( void *o );
+htsmsg_t *linuxdvb_en50494_list ( void *o );
 
 int
 linuxdvb_diseqc_send
