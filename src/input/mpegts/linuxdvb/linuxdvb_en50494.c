@@ -176,6 +176,8 @@ linuxdvb_en50494_tune
     tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "transponder value bigger then 1024");
     return -1;
   }
+
+  /* tune frequency for the frontend */
   le->le_tune_freq = (t + 350) * 4000 - freq; /* real used en50494 frequency */
 
   /* 2 data fields (16bit) */
