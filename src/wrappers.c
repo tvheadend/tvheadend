@@ -123,6 +123,7 @@ tvhthread_create0
   return r;
 }
 
+#ifdef PLATFORM_LINUX
 /*
  * qsort_r wrapper for pre GLIBC 2.8
  */
@@ -148,3 +149,4 @@ qsort_r(void *base, size_t nmemb, size_t size,
   qsort(base, nmemb, size, qsort_r_wrap);
 }
 #endif /* GLIBC < 2.8 */
+#endif /* PLATFORM_LINUX */

@@ -603,12 +603,14 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+#ifdef PLATFORM_LINUX
 /* glibc wrapper */
 #if !__GLIBC_PREREQ(2,8)
 void
 qsort_r(void *base, size_t nmemb, size_t size,
        int (*cmp)(const void *, const void *, void *), void *aux);
 #endif
+#endif /* PLATFORM_LINUX */
 
 /* printing */
 # if __WORDSIZE == 64
