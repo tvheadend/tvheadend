@@ -3,9 +3,12 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
-#include <sys/prctl.h>
 #include <unistd.h>
 #include <pthread.h>
+
+#ifdef PLATFORM_LINUX
+#include <sys/prctl.h>
+#endif
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
@@ -94,8 +97,10 @@ thread_wrapper ( void *p )
 {
   struct thread_state *ts = p;
 
+#ifdef PLATFORM_LINUX
   /* Set name */
   prctl(PR_SET_NAME, ts->name);
+#endif
 
   /* Run */
   tvhdebug("thread", "created thread %ld [%s / %p(%p)]",
