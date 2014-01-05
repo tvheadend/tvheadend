@@ -660,7 +660,7 @@ void
 idnode_set_sort
   ( idnode_set_t *is, idnode_sort_t *sort )
 {
-  qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_sort, sort);
+  qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_sort, (void*)sort);
 }
 
 void
