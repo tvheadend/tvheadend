@@ -471,15 +471,24 @@ linuxdvb_satconf_create
   TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
     if (!lse->ls_lnb)
       lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
-    if (lst->ports > 1 && !lse->ls_switch)
-      lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+    /* create multi port elements (2/4port & en50494) */
+    if (lst->ports > 1) {
+      if( !lse->ls_en50494 && !strcmp("en50494",lst->type))
+        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse);
+      if( !lse->ls_switch && (!strcmp("2port",lst->type) || !strcmp("4port",lst->type)))
+        lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+    }
     i++;
   }
   for (; i < lst->ports; i++) {
     lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
     lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
+    /* create multi port elements (2/4port & en50494) */
     if (lst->ports > 1) {
-      lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+      if( !strcmp("en50494",lst->type))
+        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse);
+      if( !strcmp("2port",lst->type) || !strcmp("4port",lst->type))
+        lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
     }
   }
 
