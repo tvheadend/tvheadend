@@ -188,7 +188,7 @@ linuxdvb_en50494_tune
   data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;              /* 8bit transponder value bit 3-10 */
-  tvhlog(LOG_INFO, LINUXDVB_EN50494_NAME,
+  tvhlog(LOG_DEBUG, LINUXDVB_EN50494_NAME,
          "lnb=%i, id=%i, freq=%i, pin=%i, v/h=%i, l/u=%i, f=%i, data=0x%02X%02X",
          le->le_position, le->le_id, le->le_frequency, le->le_pin, pol, band, freq, data1, data2);
 
