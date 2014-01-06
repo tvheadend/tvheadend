@@ -173,7 +173,7 @@ linuxdvb_en50494_tune
   /* transponder value - t*/
   uint16_t t = round((( (freq / 1000) + 2 + le->le_frequency) / 4) - 350);
   if ( t > 1024) {
-    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "transponder value bigger then 1024");
+    tvherror(LINUXDVB_EN50494_NAME, "transponder value bigger then 1024");
     return -1;
   }
 
@@ -188,18 +188,18 @@ linuxdvb_en50494_tune
   data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;              /* 8bit transponder value bit 3-10 */
-  tvhlog(LOG_DEBUG, LINUXDVB_EN50494_NAME,
+  tvhdebug(LINUXDVB_EN50494_NAME,
          "lnb=%i, id=%i, freq=%i, pin=%i, v/h=%i, l/u=%i, f=%i, data=0x%02X%02X",
          le->le_position, le->le_id, le->le_frequency, le->le_pin, pol, band, freq, data1, data2);
 
   /* use 18V */
   if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18)) {
-    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
+    tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
     return -1;
   }
   usleep(15000); /* standard: 4ms < x < 22ms */
 
-   /* send tune command (with/with pin) */
+   /* send tune command (with/without pin) */
   if (le->le_pin != LINUXDVB_EN50494_NOPIN) {
     ret = linuxdvb_diseqc_send(fd,
                                LINUXDVB_EN50494_FRAME,
@@ -216,14 +216,14 @@ linuxdvb_en50494_tune
                                data1, data2);
   }
   if (ret != 0) {
-    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error send tune command");
+    tvherror(LINUXDVB_EN50494_NAME, "error send tune command");
     return -1;
   }
   usleep(50000); /* standard: 2ms < x < 60ms */
 
   /* return to 13V */
   if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13)) {
-    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
+    tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
     return -1;
   }
 
@@ -252,7 +252,7 @@ linuxdvb_en50494_create0
   linuxdvb_en50494_t *le;
 
   if (port > 1) {
-    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "only 2 ports/positions are posible. given %i", port);
+    tvherror(LINUXDVB_EN50494_NAME, "only 2 ports/positions are posible. given %i", port);
     port = 0;
   }
 
