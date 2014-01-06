@@ -163,6 +163,115 @@ linuxdvb_satconf_class_orbitalpos_set
   return 1;
 }
 
+static const void *
+linuxdvb_satconf_class_en50494_id_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  linuxdvb_en50494_t *le;
+  static uint16_t default_value = 0;
+
+  if (!lse && !lse->ls_en50494)
+    return &default_value;
+
+  le = (linuxdvb_en50494_t*)lse->ls_en50494;
+  return &le->le_id;
+}
+
+static int
+linuxdvb_satconf_class_en50494_id_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  linuxdvb_en50494_t *le;
+  uint16_t new_value = *(uint16_t*)v;
+
+  if (new_value < 0 || new_value > 7)
+    return 1;
+
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+    if (!lse && !lse->ls_en50494)
+      continue;
+
+    le = (linuxdvb_en50494_t*)lse->ls_en50494;
+    le->le_id = new_value;
+  }
+  return 0;
+
+}
+
+static const void *
+linuxdvb_satconf_class_en50494_freq_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  linuxdvb_en50494_t *le;
+  static uint16_t default_value = 0;
+
+  if (!lse && !lse->ls_en50494)
+    return &default_value;
+
+  le = (linuxdvb_en50494_t*)lse->ls_en50494;
+  return &le->le_frequency;
+}
+
+static int
+linuxdvb_satconf_class_en50494_freq_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  linuxdvb_en50494_t *le;
+  uint16_t new_value = *(uint16_t*)v;
+
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+    if (!lse && !lse->ls_en50494)
+      continue;
+
+    le = (linuxdvb_en50494_t*)lse->ls_en50494;
+    le->le_frequency = new_value;
+  }
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_en50494_pin_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  linuxdvb_en50494_t *le;
+  static uint16_t default_value = 256;
+
+  if (!lse && !lse->ls_en50494)
+    return &default_value;
+
+  le = (linuxdvb_en50494_t*)lse->ls_en50494;
+  return &le->le_pin;
+}
+
+static int
+linuxdvb_satconf_class_en50494_pin_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  linuxdvb_en50494_t *le;
+  uint16_t new_value = *(uint16_t*)v;
+
+  if (new_value < 0 || new_value > 256)
+    return 1;
+
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+    if (!lse && !lse->ls_en50494)
+      continue;
+
+    le = (linuxdvb_en50494_t*)lse->ls_en50494;
+    le->le_pin = new_value;
+  }
+  return 0;
+}
+
 static idnode_set_t *
 linuxdvb_satconf_class_get_childs ( idnode_t *o )
 {
@@ -324,6 +433,32 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_ele_class_network_enum,
       .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "id",
+      .name     = "ID (0-7)",
+      .get      = linuxdvb_satconf_class_en50494_id_get,
+      .set      = linuxdvb_satconf_class_en50494_id_set,
+      .opts     = PO_NOSAVE,
+      // TODO: add id list
+    },
+    {
+      .type     = PT_U16,
+      .id       = "freqency",
+      .name     = "Freqency (MHz)",
+      .get      = linuxdvb_satconf_class_en50494_freq_get,
+      .set      = linuxdvb_satconf_class_en50494_freq_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "pin",
+      .name     = "PIN (0-255, 256 for no pin)",
+      .get      = linuxdvb_satconf_class_en50494_pin_get,
+      .set      = linuxdvb_satconf_class_en50494_pin_set,
+      .opts     = PO_NOSAVE,
+      // TODO: add pin list
     },
     {}
   }
