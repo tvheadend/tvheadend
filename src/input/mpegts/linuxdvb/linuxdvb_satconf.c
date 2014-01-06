@@ -1015,7 +1015,7 @@ linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
   if (ls->ls_lnb)     linuxdvb_lnb_destroy(ls->ls_lnb);
   if (ls->ls_switch)  linuxdvb_switch_destroy(ls->ls_switch);
   if (ls->ls_rotor)   linuxdvb_rotor_destroy(ls->ls_rotor);
-  if (ls->ls_en50494) linuxdvb_switch_destroy(ls->ls_en50494);
+  if (ls->ls_en50494) linuxdvb_en50494_destroy(ls->ls_en50494);
   mpegts_input_delete((mpegts_input_t*)ls);
 }
 
