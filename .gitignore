@@ -19,4 +19,3 @@ debian/tvheadend
 debian/tvheadend-dbg
 debian/tvheadend*substvars
 debian/tvheadend*.debhelper*
-/etc
