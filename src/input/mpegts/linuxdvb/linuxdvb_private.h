@@ -226,9 +226,9 @@ struct linuxdvb_en50494
   linuxdvb_diseqc_t;
 
   /* en50494 configuration*/
-  uint8_t   le_position;  /* satelitte A(0) or B(1) */
+  uint16_t  le_position;  /* satelitte A(0) or B(1) */
   uint16_t  le_frequency; /* user band frequency in MHz */
-  uint8_t   le_id;        /* user band id 0-7 */
+  uint16_t  le_id;        /* user band id 0-7 */
   uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
 
   /* runtime */
@@ -346,7 +346,7 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 linuxdvb_diseqc_t *linuxdvb_en50494_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port );
 
 void linuxdvb_lnb_destroy     ( linuxdvb_lnb_t    *lnb );
 void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );

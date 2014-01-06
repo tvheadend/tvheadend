@@ -18,11 +18,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Open things:
- *    - make linuxdvb_en50494_tune thread safe
- *      avoiding self-raised collisions
- *    - collision dectection
- *      when a diseqc-command wasn't executed succesful, retry.
- *      delay time is easly random, but in standard is special (complicated) way described (cap 8).
+ *    - TODO: make linuxdvb_en50494_tune thread safe
+ *      avoid self-raised collisions
+ *    - TODO: collision dectection
+ *      when a en50494-command wasn't executed succesful, retry.
+ *      delay time is easly random, but in standard is special (complicated) way described (cap. 8).
  */
 
 #include "tvheadend.h"
@@ -122,27 +122,27 @@ const idclass_t linuxdvb_en50494_class =
   .ic_get_title   = linuxdvb_en50494_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
-      .type   = PT_INT,
+      .type   = PT_U16,
       .id     = "position",
       .name   = "Position",
       .off    = offsetof(linuxdvb_en50494_t, le_position),
       .list   = linuxdvb_en50494_class_position_list
     },
     {
-      .type   = PT_INT,
+      .type   = PT_U16,
       .id     = "frequency",
       .name   = "Frequency",
       .off    = offsetof(linuxdvb_en50494_t, le_frequency),
     },
     {
-      .type   = PT_INT,
+      .type   = PT_U16,
       .id     = "id",
       .name   = "ID",
       .off    = offsetof(linuxdvb_en50494_t, le_id),
       .list   = linuxdvb_en50494_class_id_list
     },
     {
-      .type   = PT_INT,
+      .type   = PT_U16,
       .id     = "pin",
       .name   = "Pin",
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
@@ -183,7 +183,7 @@ linuxdvb_en50494_tune
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
   data1  = le->le_id << 5;        /* 3bit user-band */
-  data1 |= le->le_position << 4;  /* 1bit position (satelitte A(0)/B(0)) */
+  data1 |= le->le_position << 4;  /* 1bit position (satelitte A(0)/B(1)) */
   data1 |= pol << 3;              /* 1bit polarisation v(0)/h(1) */
   data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
@@ -246,10 +246,15 @@ linuxdvb_en50494_list ( void *o )
 
 linuxdvb_diseqc_t *
 linuxdvb_en50494_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls)
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port )
 {
   linuxdvb_diseqc_t *ld;
-//  linuxdvb_en50494_t *le;
+  linuxdvb_en50494_t *le;
+
+  if (port > 1) {
+    tvhlog(LOG_ERR, LINUXDVB_EN50494_NAME, "only 2 ports/positions are posible. given %i", port);
+    port = 0;
+  }
 
   ld = linuxdvb_diseqc_create0(
       calloc(1, sizeof(linuxdvb_en50494_t)),
@@ -258,10 +263,15 @@ linuxdvb_en50494_create0
       conf,
       LINUXDVB_EN50494_NAME,
       ls);
-//  le = (linuxdvb_en50494_t*)ld;
+  le = (linuxdvb_en50494_t*)ld;
   if (ld) {
     ld->ld_tune  = linuxdvb_en50494_tune;
     /* May not needed: ld->ld_grace = linuxdvb_en50494_grace; */
+
+    le->le_position  = port;
+    le->le_id        = 0;
+    le->le_frequency = 0;
+    le->le_pin       = LINUXDVB_EN50494_NOPIN;
   }
 
   return (linuxdvb_diseqc_t*)ld;

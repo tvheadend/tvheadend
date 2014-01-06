@@ -422,7 +422,7 @@ linuxdvb_satconf_type_list ( void *p )
 void
 linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls )
 {
-  // TODO
+  // TODO: satconf_destroy
 }
 
 linuxdvb_satconf_t *
@@ -474,7 +474,7 @@ linuxdvb_satconf_create
     /* create multi port elements (2/4port & en50494) */
     if (lst->ports > 1) {
       if( !lse->ls_en50494 && !strcmp("en50494",lst->type))
-        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse);
+        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse, i);
       if( !lse->ls_switch && (!strcmp("2port",lst->type) || !strcmp("4port",lst->type)))
         lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
     }
@@ -486,7 +486,7 @@ linuxdvb_satconf_create
     /* create multi port elements (2/4port & en50494) */
     if (lst->ports > 1) {
       if( !strcmp("en50494",lst->type))
-        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse);
+        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse, i);
       if( !strcmp("2port",lst->type) || !strcmp("4port",lst->type))
         lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
     }
@@ -521,6 +521,11 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
       c = htsmsg_create_map();
       idnode_save(&lse->ls_rotor->ld_id, c);
       htsmsg_add_msg(e, "rotor_conf", c);
+    }
+    if (lse->ls_en50494) {
+      c = htsmsg_create_map();
+      idnode_save(&lse->ls_en50494->ld_id, c);
+      htsmsg_add_msg(e, "en50494_conf", c);
     }
     htsmsg_add_msg(l, NULL, e);
   }
@@ -619,7 +624,7 @@ linuxdvb_satconf_ele_class_en50494type_set ( void *o, const void *p )
   const char             *str = p;
   if (ls->ls_en50494)
     linuxdvb_en50494_destroy(ls->ls_en50494);
-  ls->ls_en50494 = linuxdvb_en50494_create0(str, NULL, ls);
+  ls->ls_en50494 = linuxdvb_en50494_create0(str, NULL, ls, 0);
   return 1;
 }
 
@@ -876,12 +881,10 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   usleep(20000); // Allow LNB to settle before tuning
 
   /* Frontend */
-  // TODO: get en50494 tuning frequency, not channel frequency
-  if (lse->ls_en50494) {
-    f = ((linuxdvb_en50494_t*)lse->ls_en50494)->le_tune_freq;
-  } else {
-    f = lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
-  }
+  /* use en50494 tuning frequency, if needed (not channel frequency) */
+  f = lse->ls_en50494
+    ? ((linuxdvb_en50494_t*)lse->ls_en50494)->le_tune_freq
+    : lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
   return linuxdvb_frontend_tune1(lfe, mmi, f);
 }
 
