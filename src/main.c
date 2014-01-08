@@ -953,13 +953,8 @@ get_device_connection(const char *dev)
   snprintf(path, sizeof(path),  "/sys/class/%s/device/speed", dev);
 
   if(readlinefromfile(path, l, sizeof(l))) {
-#if defined(PLATFORM_FREEBSD)
-    // Assume USB 2.0 on FreeBSD because there are no supported PCI devices
-    return HOSTCONNECTION_USB480;
-#else
     // Unable to read speed, assume it's PCI
     return HOSTCONNECTION_PCI;
-#endif
   } else {
     speed = atoi(l);
    
