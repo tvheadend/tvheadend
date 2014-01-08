@@ -247,17 +247,25 @@ linuxdvb_satconf_class_en50494_freq_set
   return 0;
 }
 
-/* TODO: Value 256 should shown as "no Pin", and have to set on top" */
 static htsmsg_t *
 linuxdvb_satconf_class_en50494_pin_list ( void *o )
 {
   int32_t i;
 
   htsmsg_t *m = htsmsg_create_list();
+  htsmsg_t *e;
+
+  e = htsmsg_create_map();
+  htsmsg_add_u32(e, "key", 256);
+  htsmsg_add_str(e, "val", "no Pin");
+  htsmsg_add_msg(m, NULL, e);
+
   for (i = 0; i < 256; i++) {
-    htsmsg_add_u32(m, NULL, i);
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "val", i);
+    htsmsg_add_msg(m, NULL, e);
   }
-  htsmsg_add_u32(m, NULL, 256);
   return m;
 }
 
@@ -464,7 +472,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "id",
-      .name     = "ID (0-7)",
+      .name     = "ID",
       .get      = linuxdvb_satconf_class_en50494_id_get,
       .set      = linuxdvb_satconf_class_en50494_id_set,
       .list     = linuxdvb_satconf_class_en50494_id_list,
@@ -481,7 +489,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "pin",
-      .name     = "Pin (256 for no pin)",
+      .name     = "Pin",
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_satconf_class_en50494_pin_list,
