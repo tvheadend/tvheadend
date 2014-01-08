@@ -97,9 +97,12 @@ thread_wrapper ( void *p )
 {
   struct thread_state *ts = p;
 
-#ifdef PLATFORM_LINUX
+#if defined(PLATFORM_LINUX)
   /* Set name */
   prctl(PR_SET_NAME, ts->name);
+#elif defined(PLATFORM_FREEBSD)
+  /* Set name of thread */
+  pthread_set_name_np(pthread_self(), ts->name);
 #endif
 
   /* Run */
