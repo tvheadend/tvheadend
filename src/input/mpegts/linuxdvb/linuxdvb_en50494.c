@@ -80,39 +80,6 @@ linuxdvb_en50494_class_get_title ( idnode_t *o )
   return buf;
 }
 
-static htsmsg_t *
-linuxdvb_en50494_class_position_list ( void *o )
-{
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_u32(m, NULL, LINUXDVB_EN50494_SAT_A);
-  htsmsg_add_u32(m, NULL, LINUXDVB_EN50494_SAT_B);
-  return m;
-}
-
-static htsmsg_t *
-linuxdvb_en50494_class_id_list ( void *o )
-{
-  uint32_t i;
-
-  htsmsg_t *m = htsmsg_create_list();
-  for (i = 0; i < 8; i++) {
-    htsmsg_add_u32(m, NULL, i);
-  }
-  return m;
-}
-
-static htsmsg_t *
-linuxdvb_en50494_class_pin_list ( void *o )
-{
-  int32_t i;
-
-  htsmsg_t *m = htsmsg_create_list();
-  for (i = -1; i < 256; i++) {
-    htsmsg_add_s32(m, NULL, i);
-  }
-  return m;
-}
-
 extern const idclass_t linuxdvb_diseqc_class;
 const idclass_t linuxdvb_en50494_class =
 {
@@ -126,7 +93,6 @@ const idclass_t linuxdvb_en50494_class =
       .id     = "position",
       .name   = "Position",
       .off    = offsetof(linuxdvb_en50494_t, le_position),
-      .list   = linuxdvb_en50494_class_position_list
     },
     {
       .type   = PT_U16,
@@ -139,14 +105,12 @@ const idclass_t linuxdvb_en50494_class =
       .id     = "id",
       .name   = "ID",
       .off    = offsetof(linuxdvb_en50494_t, le_id),
-      .list   = linuxdvb_en50494_class_id_list
     },
     {
       .type   = PT_U16,
       .id     = "pin",
       .name   = "Pin",
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
-      .list   = linuxdvb_en50494_class_pin_list
     },
     {}
   }

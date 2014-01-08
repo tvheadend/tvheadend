@@ -163,6 +163,18 @@ linuxdvb_satconf_class_orbitalpos_set
   return 1;
 }
 
+static htsmsg_t *
+linuxdvb_satconf_class_en50494_id_list ( void *o )
+{
+  uint32_t i;
+
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < 8; i++) {
+    htsmsg_add_u32(m, NULL, i);
+  }
+  return m;
+}
+
 static const void *
 linuxdvb_satconf_class_en50494_id_get ( void *p )
 {
@@ -234,6 +246,21 @@ linuxdvb_satconf_class_en50494_freq_set
   }
   return 0;
 }
+
+/* TODO: Value 256 should shown as "no Pin", and have to set on top" */
+static htsmsg_t *
+linuxdvb_satconf_class_en50494_pin_list ( void *o )
+{
+  int32_t i;
+
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < 256; i++) {
+    htsmsg_add_u32(m, NULL, i);
+  }
+  htsmsg_add_u32(m, NULL, 256);
+  return m;
+}
+
 
 static const void *
 linuxdvb_satconf_class_en50494_pin_get ( void *p )
@@ -440,8 +467,8 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .name     = "ID (0-7)",
       .get      = linuxdvb_satconf_class_en50494_id_get,
       .set      = linuxdvb_satconf_class_en50494_id_set,
+      .list     = linuxdvb_satconf_class_en50494_id_list,
       .opts     = PO_NOSAVE,
-      // TODO: add id list
     },
     {
       .type     = PT_U16,
@@ -454,11 +481,11 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "pin",
-      .name     = "PIN (0-255, 256 for no pin)",
+      .name     = "Pin (256 for no pin)",
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
+      .list     = linuxdvb_satconf_class_en50494_pin_list,
       .opts     = PO_NOSAVE,
-      // TODO: add pin list
     },
     {}
   }
@@ -871,7 +898,7 @@ const idclass_t linuxdvb_satconf_ele_class =
       .name     = "Network",
       .get      = linuxdvb_satconf_ele_class_network_get,
       .set      = linuxdvb_satconf_ele_class_network_set,
-      .list	    = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_ele_class_network_enum,
       .rend     = linuxdvb_satconf_ele_class_network_rend,
     },
     {
