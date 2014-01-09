@@ -18,8 +18,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Open things:
- *    - TODO: make linuxdvb_en50494_tune thread safe
- *      avoid self-raised collisions
  *    - TODO: collision dectection
  *      when a en50494-command wasn't executed succesful, retry.
  *      delay time is easly random, but in standard is special (complicated) way described (cap. 8).
@@ -70,6 +68,8 @@
 //  /* runtime */
 //  uint32_t  le_tune_freq; /* the real frequency to tune to */
 //} linuxdvb_en50494_t;
+/* prevention of self raised DiSEqC collisions */
+static pthread_mutex_t linuxdvb_en50494_lock;
 
 static const char *
 linuxdvb_en50494_class_get_title ( idnode_t *o )
@@ -126,6 +126,7 @@ linuxdvb_en50494_tune
   ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
   int ret = 0;
+  int i;
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
   linuxdvb_lnb_t *lnb = sc->ls_lnb;
 
@@ -142,7 +143,7 @@ linuxdvb_en50494_tune
   }
 
   /* tune frequency for the frontend */
-  le->le_tune_freq = (t + 350) * 4000 - freq; /* real used en50494 frequency */
+  le->le_tune_freq = (t + 350) * 4000 - freq;
 
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
@@ -156,40 +157,53 @@ linuxdvb_en50494_tune
          "lnb=%i, id=%i, freq=%i, pin=%i, v/h=%i, l/u=%i, f=%i, data=0x%02X%02X",
          le->le_position, le->le_id, le->le_frequency, le->le_pin, pol, band, freq, data1, data2);
 
-  /* use 18V */
-  if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18)) {
-    tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
-    return -1;
-  }
-  usleep(15000); /* standard: 4ms < x < 22ms */
+  pthread_mutex_lock(&linuxdvb_en50494_lock);
+  for (i = 0; i <= sc->ls_parent->ls_diseqc_repeats; i++) {
+    /* to avoid repeated collision, wait a random time (5-25ms) */
+    if (i != 0) {
+      int ms = rand()%20 + 5;
+      usleep(ms*1000);
+    }
 
-   /* send tune command (with/without pin) */
-  if (le->le_pin != LINUXDVB_EN50494_NOPIN) {
-    ret = linuxdvb_diseqc_send(fd,
-                               LINUXDVB_EN50494_FRAME,
-                               LINUXDVB_EN50494_ADDRESS,
-                               LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME,
-                               3,
-                               data1, data2, (uint8_t)le->le_pin);
-  } else {
-    ret = linuxdvb_diseqc_send(fd,
-                               LINUXDVB_EN50494_FRAME,
-                               LINUXDVB_EN50494_ADDRESS,
-                               LINUXDVB_EN50494_CMD_NORMAL,
-                               2,
-                               data1, data2);
-  }
-  if (ret != 0) {
-    tvherror(LINUXDVB_EN50494_NAME, "error send tune command");
-    return -1;
-  }
-  usleep(50000); /* standard: 2ms < x < 60ms */
+    /* use 18V */
+    if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18)) {
+      tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
+      pthread_mutex_unlock(&linuxdvb_en50494_lock);
+      return -1;
+    }
+    usleep(15000); /* standard: 4ms < x < 22ms */
 
-  /* return to 13V */
-  if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13)) {
-    tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
-    return -1;
+    /* send tune command (with/without pin) */
+    if (le->le_pin != LINUXDVB_EN50494_NOPIN) {
+      ret = linuxdvb_diseqc_send(fd,
+                                 LINUXDVB_EN50494_FRAME,
+                                 LINUXDVB_EN50494_ADDRESS,
+                                 LINUXDVB_EN50494_CMD_NORMAL_MULTIHOME,
+                                 3,
+                                 data1, data2, (uint8_t)le->le_pin);
+    } else {
+      ret = linuxdvb_diseqc_send(fd,
+                                 LINUXDVB_EN50494_FRAME,
+                                 LINUXDVB_EN50494_ADDRESS,
+                                 LINUXDVB_EN50494_CMD_NORMAL,
+                                 2,
+                                 data1, data2);
+    }
+    if (ret != 0) {
+      tvherror(LINUXDVB_EN50494_NAME, "error send tune command");
+      pthread_mutex_unlock(&linuxdvb_en50494_lock);
+      return -1;
+    }
+    usleep(50000); /* standard: 2ms < x < 60ms */
+
+    /* return to 13V */
+    if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13)) {
+      tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
+      pthread_mutex_unlock(&linuxdvb_en50494_lock);
+      return -1;
+    }
   }
+  pthread_mutex_unlock(&linuxdvb_en50494_lock);
 
   return 0;
 }
@@ -198,6 +212,14 @@ linuxdvb_en50494_tune
 /* **************************************************************************
  * Create / Config
  * *************************************************************************/
+
+void
+linuxdvb_en50494_init (void)
+{
+  if (pthread_mutex_init(&linuxdvb_en50494_lock, NULL) != 0) {
+    tvherror(LINUXDVB_EN50494_NAME, "failed to init lock mutex");
+  }
+}
 
 htsmsg_t *
 linuxdvb_en50494_list ( void *o )
