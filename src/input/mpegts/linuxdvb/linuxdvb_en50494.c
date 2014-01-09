@@ -166,10 +166,10 @@ linuxdvb_en50494_tune
     }
 
     /* use 18V */
-    if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18)) {
+    ret = linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18);
+    if (ret) {
       tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage to 18V");
-      pthread_mutex_unlock(&linuxdvb_en50494_lock);
-      return -1;
+      break;
     }
     usleep(15000); /* standard: 4ms < x < 22ms */
 
@@ -191,21 +191,20 @@ linuxdvb_en50494_tune
     }
     if (ret != 0) {
       tvherror(LINUXDVB_EN50494_NAME, "error send tune command");
-      pthread_mutex_unlock(&linuxdvb_en50494_lock);
-      return -1;
+      break;
     }
     usleep(50000); /* standard: 2ms < x < 60ms */
 
     /* return to 13V */
-    if (linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13)) {
+    ret = linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13);
+    if (ret) {
       tvherror(LINUXDVB_EN50494_NAME, "error setting lnb voltage back to 13V");
-      pthread_mutex_unlock(&linuxdvb_en50494_lock);
-      return -1;
+      break;
     }
   }
   pthread_mutex_unlock(&linuxdvb_en50494_lock);
 
-  return 0;
+  return ret == 0 ? 0 : -1;
 }
 
 
