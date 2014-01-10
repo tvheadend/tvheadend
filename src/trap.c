@@ -53,6 +53,10 @@ static char tmpbuf[1024];
 static char libs[1024];
 static char self[PATH_MAX];
 
+#ifdef PLATFORM_FREEBSD
+extern char **environ;
+#endif
+
 static void
 sappend(char *buf, size_t l, const char *fmt, ...)
 {
