@@ -222,7 +222,7 @@ typedef struct dvb_mux_conf
   polarisation_t            dmc_fe_polarisation;
   int                       dmc_fe_orbital_pos;
   char                      dmc_fe_orbital_dir;
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,0)
   fe_modulation_t           dmc_fe_modulation;
   fe_delivery_system_t      dmc_fe_delsys;
   fe_rolloff_t              dmc_fe_rolloff;
@@ -269,6 +269,10 @@ int dvb_str2pilot   ( const char *str );
 #define dvb_str2fechi dvb_str2fec
 
 int dvb_bandwidth   ( enum fe_bandwidth bw );
+
+#if DVB_VER_ATLEAST(5,10)
+int dvb_delsys2type ( enum fe_delivery_system ds );
+#endif
 
 #endif /* ENABLE_DVBAPI */
 

@@ -21,17 +21,21 @@
 #include "input.h"
 #include "linuxdvb_private.h"
 #include "queue.h"
+#include "fsmonitor.h"
+#include "settings.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <openssl/sha.h>
 
-#define FE_PATH  "/dev/dvb/adapter%d/frontend%d"
-#define DVR_PATH "/dev/dvb/adapter%d/dvr%d"
-#define DMX_PATH "/dev/dvb/adapter%d/demux%d"
+#define FE_PATH  "%s/frontend%d"
+#define DVR_PATH "%s/dvr%d"
+#define DMX_PATH "%s/demux%d"
 
 /* ***************************************************************************
  * DVB Adapter
@@ -41,7 +45,7 @@ static void
 linuxdvb_adapter_class_save ( idnode_t *in )
 {
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  linuxdvb_device_save(la->la_device);
+  linuxdvb_adapter_save(la);
 }
 
 static idnode_set_t *
@@ -85,141 +89,114 @@ const idclass_t linuxdvb_adapter_class =
  * Save data
  */
 void
-linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
+linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 {
-  htsmsg_t *l;
+  htsmsg_t *m, *l;
   linuxdvb_frontend_t *lfe;
 
-  idnode_save(&la->la_id, m);
-  htsmsg_add_u32(m, "number", la->la_number);
+  m = htsmsg_create_map();
+  idnode_save(&la->th_id, m);
 
   /* Frontends */
   l = htsmsg_create_map();
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
-    htsmsg_t *e = htsmsg_create_map();
-    linuxdvb_frontend_save(lfe, e);
-    htsmsg_add_msg(l, idnode_uuid_as_str(&lfe->ti_id), e);
-  }
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+    linuxdvb_frontend_save(lfe, l);
   htsmsg_add_msg(m, "frontends", l);
-}
 
-/*
- * Check if enabled
- */
-static int
-linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
-{
-  linuxdvb_frontend_t *lfe;
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
-    if (lfe->mi_is_enabled((mpegts_input_t*)lfe))
-      return 1;
-  }
-  return 0;
+  /* Save */
+  hts_settings_save(m, "input/linuxdvb/adapters/%s",
+                    idnode_uuid_as_str(&la->th_id));
+  htsmsg_destroy(m);
 }
 
 /*
  * Create
  */
-linuxdvb_adapter_t *
-linuxdvb_adapter_create0 
-  ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf )
+static linuxdvb_adapter_t *
+linuxdvb_adapter_create
+  ( const char *uuid, htsmsg_t *conf,
+    const char *path, int number, struct dvb_frontend_info *dfi )
 {
-  uint32_t u32;
-  htsmsg_t *e;
-  htsmsg_field_t *f;
   linuxdvb_adapter_t *la;
+  char buf[1024];
 
+  /* Create */
   la = calloc(1, sizeof(linuxdvb_adapter_t));
-  if (idnode_insert(&la->la_id, uuid, &linuxdvb_adapter_class)) {
+  if (!tvh_hardware_create0((tvh_hardware_t*)la, &linuxdvb_adapter_class,
+                            uuid, conf)) {
     free(la);
     return NULL;
   }
 
-  LIST_INSERT_HEAD(&ld->ld_adapters, la, la_link);
-  la->la_device     = ld;
-  la->la_dvb_number = -1;
-  la->la_is_enabled = linuxdvb_adapter_is_enabled;
-
-  /* No conf */
-  if (!conf)
-    return la;
-
-  idnode_load(&la->la_id, conf);
-  if (!htsmsg_get_u32(conf, "number", &u32))
-    la->la_number = u32;
-
-  /* Frontends */
-  if ((conf = htsmsg_get_map(conf, "frontends"))) {
-    HTSMSG_FOREACH(f, conf) {
-      if (!(e = htsmsg_get_map_by_field(f))) continue;
-      (void)linuxdvb_frontend_create0(la, f->hmf_name, e, 0);
-    }
-  }
+  /* Setup */
+  sprintf(buf, "%s [%s]", path, dfi->name);
+  la->la_rootpath   = strdup(path);
+  la->la_name       = strdup(buf);
+  la->la_dvb_number = number;
 
   return la;
 }
 
 /*
- * Find existing adapter/device entry
+ * Add adapter by path
  */
-static linuxdvb_adapter_t *
-linuxdvb_adapter_find_by_number ( int adapter )
+static void
+linuxdvb_adapter_add ( const char *path )
 {
-  int a;
-  char buf[1024];
-  linuxdvb_device_t *ld;
-  linuxdvb_adapter_t *la;
-
-  /* Find device */
-  if (!(ld = linuxdvb_device_find_by_adapter(adapter)))
-    return NULL;
-
-  /* Find existing adapter */ 
-  a = adapter - ld->ld_devid.di_min_adapter;
-  LIST_FOREACH(la, &ld->ld_adapters, la_link) {
-    if (la->la_number == a)
-      break;
-  }
-
-  /* Create */
-  if (!la) {
-    if (!(la = linuxdvb_adapter_create0(ld, NULL, NULL)))
-      return NULL;
-  }
-
-  /* Update */
-  la->la_number = a;
-  snprintf(buf, sizeof(buf), "/dev/dvb/adapter%d", adapter);
-  tvh_str_update(&la->la_rootpath, buf);
-
-  return la;
-}
-
-/*
- * Load an adapter
- */
-void
-linuxdvb_adapter_added ( int adapter )
-{
-  int i, r, fd, save = 0;
-  char fe_path[512], dmx_path[512], dvr_path[512];
+  int a, i, j, r, fd;
+  char fe_path[512], dmx_path[512], dvr_path[512], uuid[UUID_STR_LEN];
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
+  SHA_CTX sha1;
+  uint8_t uuidbin[20];
+  htsmsg_t *conf = NULL, *feconf = NULL;
+#if DVB_VER_ATLEAST(5,10)
+  int fetypes[4] = { 0 };
+  struct dtv_property   cmd = {
+    .cmd = DTV_ENUM_DELSYS
+  };
+  struct dtv_properties cmdseq = {
+    .num   = 1,
+    .props = &cmd
+  };
+#endif
+
+  /* Validate the path */
+  if (sscanf(path, "/dev/dvb/adapter%d", &a) != 1)
+    return;
+
+  /* Note: some of the below can take a while, so we relinquish the lock
+   *       to stop us blocking everyhing else
+   */
+  pthread_mutex_unlock(&global_lock);
 
   /* Process each frontend */
   for (i = 0; i < 32; i++) {
-    snprintf(fe_path, sizeof(fe_path), FE_PATH, adapter, i);
+    snprintf(fe_path, sizeof(fe_path), FE_PATH, path, i);
 
-    /* No access */
+    /* Wait for access (first FE can take a fe ms to be setup) */
+    if (!i) {
+      for (j = 0; j < 10; j++) {
+        if (!access(fe_path, R_OK | W_OK)) break;
+        usleep(100000);
+      }
+    }
     if (access(fe_path, R_OK | W_OK)) continue;
 
     /* Get frontend info */
-    fd = tvh_open(fe_path, O_RDONLY | O_NONBLOCK, 0);
+    for (j = 0; j < 10; j++) {
+      if ((fd = tvh_open(fe_path, O_RDONLY, 0)) > 0) break;
+      usleep(100000);
+    }
     if (fd == -1) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", fe_path);
       continue;
     }
     r = ioctl(fd, FE_GET_INFO, &dfi);
+#if DVB_VER_ATLEAST(5,10)
+    if (!r)
+      r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
+#endif
     close(fd);
     if(r) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", fe_path);
@@ -227,38 +204,188 @@ linuxdvb_adapter_added ( int adapter )
     }
 
     /* DVR/DMX (bit of a guess) */
-    snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, adapter, i);
+    snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, path, i);
     if (access(dmx_path, R_OK | W_OK)) {
-      snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, adapter, 0);
+      snprintf(dmx_path, sizeof(dmx_path), DMX_PATH, path, 0);
       if (access(dmx_path, R_OK | W_OK)) continue;
     }
 
-    snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, adapter, i);
+    snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, path, i);
     if (access(dvr_path, R_OK | W_OK)) {
-      snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, adapter, 0);
+      snprintf(dvr_path, sizeof(dvr_path), DVR_PATH, path, 0);
       if (access(dvr_path, R_OK | W_OK)) continue;
     }
 
     /* Create/Find adapter */
+    pthread_mutex_lock(&global_lock);
     if (!la) {
-      if (!(la = linuxdvb_adapter_find_by_number(adapter))) {
-        tvhlog(LOG_ERR, "linuxdvb", "failed to find/create adapter%d", adapter);
-        return;
-      }
-      la->la_dvb_number = adapter;
-      if (!la->la_name) {
-        char buf[512];
-        snprintf(buf, sizeof(buf), "%s #%d", dfi.name, la->la_number);
-        la->la_name = strdup(buf);
+
+      /* Create hash for adapter */
+      SHA1_Init(&sha1); 
+      SHA1_Update(&sha1, (void*)path,     strlen(path));
+      SHA1_Update(&sha1, (void*)dfi.name, strlen(dfi.name));
+      // TODO: could include more form dfi, and maybe frontend enum
+      SHA1_Final(uuidbin, &sha1);
+      idnode_uuid_as_str1(uuidbin, sizeof(uuidbin), uuid);
+
+      /* Load config */
+      conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid);
+      if (conf)
+        feconf = htsmsg_get_map(conf, "frontends");
+  
+      /* Create */
+      if (!(la = linuxdvb_adapter_create(uuid, conf, path, a, &dfi))) {
+        tvhlog(LOG_ERR, "linuxdvb", "failed to create %s", path);
+        return; // Note: save to return here as global_lock is held
       }
     }
 
     /* Create frontend */
-    tvhlog(LOG_DEBUG, "linuxdvb", "fe_create(%p, %s, %s, %s)",
-           la, fe_path, dmx_path, dvr_path);
-    save |= linuxdvb_frontend_added(la, i, fe_path, dmx_path, dvr_path, &dfi);
+    linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, &dfi);
+#if DVB_VER_ATLEAST(5,10)
+    fetypes[dfi.type] = 1;
+    for (j = 0; j < cmd.u.buffer.len; j++) {
+
+      /* Invalid */
+      if ((dfi.type = dvb_delsys2type(cmd.u.buffer.data[j])) == -1)
+        continue;
+
+      /* Couldn't find */
+      if (fetypes[dfi.type])
+        continue;
+
+      /* Create */
+      linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, &dfi); 
+      fetypes[dfi.type] = 1;
+    }
+#endif
+    pthread_mutex_unlock(&global_lock);
   }
 
-  if (save)
-    linuxdvb_device_save(la->la_device);
+  /* Relock before exit */
+  pthread_mutex_lock(&global_lock);
+
+  /* Save configuration */
+  if (!conf && la)
+    linuxdvb_adapter_save(la);
+}
+
+static void
+linuxdvb_adapter_del ( const char *path )
+{
+  int a;
+  linuxdvb_frontend_t *lfe, *next;
+  linuxdvb_adapter_t *la;
+  tvh_hardware_t *th;
+
+  if (sscanf(path, "/dev/dvb/adapter%d", &a) == 1) {
+    LIST_FOREACH(th, &tvh_hardware, th_link)
+      if (idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) {
+        la = (linuxdvb_adapter_t*)th;
+        if (!strcmp(path, la->la_rootpath))
+          break;
+      }
+    if (!th) return;
+  
+    /* Delete the frontends */
+    for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = next) {
+      next = LIST_NEXT(lfe, lfe_link);
+      linuxdvb_frontend_delete(lfe);
+    }
+
+    /* Free memory */
+    free(la->la_rootpath);
+    free(la->la_name);
+    
+    /* Delete */
+    tvh_hardware_delete((tvh_hardware_t*)la);
+  }
+}
+
+/* **************************************************************************
+ * Adapter Management
+ * *************************************************************************/
+
+/*
+ * Scan for adapters
+ */
+static void
+linuxdvb_adapter_scan ( void )
+{
+  DIR *dir;
+  struct dirent buf, *de;
+  char path[1024];
+
+  if ((dir = opendir("/dev/dvb"))) {
+    while (!readdir_r(dir, &buf, &de) && de) {
+      if (de->d_name[0] == '.') continue;
+      snprintf(path, sizeof(path), "/dev/dvb/%s", de->d_name);
+      linuxdvb_adapter_add(path);
+    }
+    closedir(dir);
+  }
+}
+
+/*
+ * /dev/dvb monitor
+ */
+static void
+devdvb_create ( fsmonitor_t *fsm, const char *path )
+{
+  linuxdvb_adapter_add(path);
+}
+
+static void
+devdvb_delete ( fsmonitor_t *fsm, const char *path )
+{
+  linuxdvb_adapter_del(path);
+}
+
+static fsmonitor_t devdvbmon = {
+  .fsm_create = devdvb_create,
+  .fsm_delete = devdvb_delete
+};
+
+/*
+ * /dev monitor
+ */
+
+static void
+dev_create ( fsmonitor_t *fsm, const char *path )
+{
+  if (!strcmp(path, "/dev/dvb")) {
+    fsmonitor_add("/dev/dvb", &devdvbmon);
+    linuxdvb_adapter_scan();
+  }
+}
+
+static void
+dev_delete ( fsmonitor_t *fsm, const char *path )
+{
+  if (!strcmp(path, "/dev/dvb"))
+    fsmonitor_del("/dev/dvb", &devdvbmon);
+}
+
+static fsmonitor_t devmon = { 
+  .fsm_create = dev_create,
+  .fsm_delete = dev_delete
+};
+
+/*
+ * Initialise
+ */
+
+void
+linuxdvb_adapter_init ( void )
+{
+  /* Install monitor on /dev */
+  (void)fsmonitor_add("/dev", &devmon);
+
+  /* Install monitor on /dev/dvb */
+  if (!access("/dev/dvb", R_OK)) {
+    (void)fsmonitor_add("/dev/dvb", &devdvbmon);
+
+    /* Scan for adapters */
+    linuxdvb_adapter_scan();
+  }
 }

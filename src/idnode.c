@@ -230,6 +230,12 @@ idnode_uuid_as_str(const idnode_t *in)
   p = (p + 1) % 16;
   return idnode_uuid_as_str0(in, b);
 }
+const char *
+idnode_uuid_as_str1 ( const uint8_t *bin, size_t len, char *b )
+{
+  bin2hex(b, UUID_STR_LEN, bin, len);
+  return b;
+}
 
 /**
  *

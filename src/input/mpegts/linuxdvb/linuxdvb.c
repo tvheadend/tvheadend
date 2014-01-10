@@ -36,5 +36,5 @@ void linuxdvb_init ( int adapter_mask )
   linuxdvb_network_init();
 
   /* Initialsie devices */
-  linuxdvb_device_init(adapter_mask);
+  linuxdvb_adapter_init();
 }

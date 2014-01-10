@@ -78,6 +78,9 @@ struct tvh_hardware {
   LIST_ENTRY(tvh_hardware)     th_link;
 };
 
+void *tvh_hardware_create0
+  ( void *o, const idclass_t *idc, const char *uuid, htsmsg_t *conf );
+void tvh_hardware_delete ( tvh_hardware_t *th );
 
 /*
  * Class and Global list defs
