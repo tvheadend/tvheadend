@@ -475,7 +475,7 @@ tcp_server_loop(void *aux)
   while(1) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r == -1) {
-      perror("tcp_server: tchpoll_wait");
+      perror("tcp_server: tvhpoll_wait");
       continue;
     }
 
