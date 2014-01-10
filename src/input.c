@@ -17,9 +17,51 @@
  */
 
 #include "input.h"
+#include "notify.h"
 
 tvh_input_list_t    tvh_inputs;
 tvh_hardware_list_t tvh_hardware;
+
+/*
+ * Create entry
+ */
+void *
+tvh_hardware_create0
+  ( void *o, const idclass_t *idc, const char *uuid, htsmsg_t *conf )
+{
+  tvh_hardware_t *th = o;
+
+  /* Create node */
+  if (idnode_insert(&th->th_id, uuid, idc)) {
+    free(o);
+    return NULL;
+  }
+  
+  /* Update list */
+  LIST_INSERT_HEAD(&tvh_hardware, th, th_link);
+  
+  /* Load config */
+  if (conf)
+    idnode_load(&th->th_id, conf);
+
+  /* Update */
+  notify_reload("hardware");
+  
+  return o;
+}
+
+/*
+ * Delete hardware entry
+ */
+
+void
+tvh_hardware_delete ( tvh_hardware_t *th )
+{
+  // TODO
+  LIST_REMOVE(th, th_link);
+  idnode_unlink(&th->th_id);
+  notify_reload("hardware");
+}
 
 /*
  * Input status handling

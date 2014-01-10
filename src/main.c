@@ -59,6 +59,7 @@
 #include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
+#include "fsmonitor.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -420,6 +421,14 @@ main(int argc, char **argv)
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
 
+  /* Setup global mutexes */
+  pthread_mutex_init(&ffmpeg_lock, NULL);
+  pthread_mutex_init(&fork_lock, NULL);
+  pthread_mutex_init(&global_lock, NULL);
+  pthread_mutex_init(&atomic_lock, NULL);
+  pthread_mutex_lock(&global_lock);
+  pthread_cond_init(&gtimer_cond, NULL);
+
   /* Defaults */
   tvheadend_webui_port      = 9981;
   tvheadend_webroot         = NULL;
@@ -702,14 +711,7 @@ main(int argc, char **argv)
   idnode_init();
   hts_settings_init(opt_config);
 
-  /* Setup global mutexes */
-  pthread_mutex_init(&ffmpeg_lock, NULL);
-  pthread_mutex_init(&fork_lock, NULL);
-  pthread_mutex_init(&global_lock, NULL);
-  pthread_mutex_init(&atomic_lock, NULL);
-  pthread_mutex_lock(&global_lock);
-  pthread_cond_init(&gtimer_cond, NULL);
-
+  /* Initialise clock */
   time(&dispatch_clock);
 
   /* Signal handling */
@@ -722,6 +724,8 @@ main(int argc, char **argv)
    */
   
   api_init();
+
+  fsmonitor_init();
 
 #if ENABLE_LIBAV
   libav_init();

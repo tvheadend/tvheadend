@@ -115,9 +115,11 @@ linuxdvb_satconf_class_get_title ( idnode_t *p )
 static void
 linuxdvb_satconf_class_save ( idnode_t *s )
 {
+#if 0
   linuxdvb_satconf_t  *ls  = (linuxdvb_satconf_t*)s;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
   linuxdvb_device_save(lfe->lfe_adapter->la_device);
+#endif
 }
 
 static const void *
@@ -381,12 +383,6 @@ linuxdvb_satconf_type_list ( void *p )
 /* **************************************************************************
  * Create/Delete satconf
  * *************************************************************************/
-
-void
-linuxdvb_satconf_destroy ( linuxdvb_satconf_t *ls )
-{
-  // TODO
-}
 
 linuxdvb_satconf_t *
 linuxdvb_satconf_create

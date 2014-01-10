@@ -611,12 +611,6 @@ tvheadend.idnode_grid = function(panel, conf)
     var delBtn  = null;
     var editBtn = null;
 
-    /* Selection */
-    var select = new Ext.grid.CheckboxSelectionModel({
-      singleSelect    : false
-    });
-    columns.splice(0, 0, select);
-
     /* Model */
     var idnode  = new tvheadend.IdNode(d);
     for (var i = 0; i < idnode.length(); i++) {
@@ -656,6 +650,11 @@ tvheadend.idnode_grid = function(panel, conf)
     var model = new Ext.grid.ColumnModel({
       defaultSortable : true,
       columns         : columns
+    });
+
+    /* Selection */
+    var select = new Ext.grid.RowSelectionModel({
+      singleSelect    : false
     });
 
     /* Event handlers */
@@ -994,6 +993,13 @@ tvheadend.idnode_tree = function (conf)
       }
     }
   });
+
+  if (conf.comet) {
+    tvheadend.comet.on(conf.comet, function(o) {
+      if (o.reload)
+        tree.getRootNode().reload();
+    });
+  }
 
   // TODO: top-level reload
   tvheadend.comet.on('idnodeUpdated', function(o) {

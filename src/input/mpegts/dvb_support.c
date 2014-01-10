@@ -421,6 +421,33 @@ const static struct strtab delsystab[] = {
 };
 dvb_str2val(delsys);
 
+#if DVB_VER_ATLEAST(5,10)
+int
+dvb_delsys2type ( fe_delivery_system_t delsys )
+{
+  switch (delsys) {
+    case SYS_DVBC_ANNEX_AC:
+    case SYS_DVBC_ANNEX_B:
+    case SYS_ISDBC:
+      return FE_QAM;
+    case SYS_DVBT:
+    case SYS_DVBT2:
+    case SYS_TURBO:
+    case SYS_ISDBT:
+      return FE_OFDM;
+    case SYS_DVBS:
+    case SYS_DVBS2:
+    case SYS_ISDBS:
+      return FE_QPSK;
+    case SYS_ATSC:
+    case SYS_ATSCMH:
+      return FE_ATSC;
+    default:
+      return -1;
+  }
+}
+#endif
+
 const static struct strtab fectab[] = {
   { "NONE",                 FEC_NONE },
   { "1/2",                  FEC_1_2 },

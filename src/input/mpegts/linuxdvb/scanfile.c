@@ -443,7 +443,6 @@ scanfile_find ( const char *id )
   /* Type */
   if (!(tok = strtok_r(tmp, "/", &s)))
     return NULL;
-  printf("tok = %s\n", tok);
   if (!strcasecmp(tok, "dvbt"))
     l = &scanfile_regions_DVBT;
   else if (!strcasecmp(tok, "dvbc"))
@@ -458,7 +457,6 @@ scanfile_find ( const char *id )
   /* Region */
   if (!(tok = strtok_r(NULL, "/", &s)))
     return NULL;
-  printf("tok = %s\n", tok);
   LIST_FOREACH(r, l, sfr_link)
     if (!strcmp(r->sfr_id, tok))
       break;
@@ -467,7 +465,6 @@ scanfile_find ( const char *id )
   /* Network */
   if (!(tok = strtok_r(NULL, "/", &s)))
     return NULL;
-  printf("tok = %s\n", tok);
   LIST_FOREACH(n, &r->sfr_networks, sfn_link)
     if (!strcmp(n->sfn_id, tok))
       break;
