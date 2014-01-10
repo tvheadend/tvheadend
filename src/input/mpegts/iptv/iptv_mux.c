@@ -77,7 +77,10 @@ static void
 iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm;
-  strncpy(buf, im->mm_iptv_url, len);
+  if(im->mm_iptv_url)
+    strncpy(buf, im->mm_iptv_url, len);
+  else
+    *buf = 0;
 }
 
 /*
