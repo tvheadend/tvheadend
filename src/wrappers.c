@@ -10,6 +10,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef PLATFORM_FREEBSD
+#include <pthread_np.h>
+#endif
+
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
 {
