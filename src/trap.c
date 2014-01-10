@@ -33,6 +33,7 @@ char tvh_binshasum[20];
 #include <limits.h>
 #if ENABLE_EXECINFO
 #include <execinfo.h>
+#include <dlfcn.h>
 #endif
 #include <stdio.h>
 #include <stdarg.h>
