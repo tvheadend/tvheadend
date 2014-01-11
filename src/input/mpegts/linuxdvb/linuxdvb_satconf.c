@@ -164,150 +164,6 @@ linuxdvb_satconf_class_orbitalpos_set
   return 1;
 }
 
-static htsmsg_t *
-linuxdvb_satconf_class_en50494_id_list ( void *o )
-{
-  uint32_t i;
-
-  htsmsg_t *m = htsmsg_create_list();
-  for (i = 0; i < 8; i++) {
-    htsmsg_add_u32(m, NULL, i);
-  }
-  return m;
-}
-
-static const void *
-linuxdvb_satconf_class_en50494_id_get ( void *p )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  linuxdvb_en50494_t *le;
-  static uint16_t default_value = 0;
-
-  if (!lse && !lse->ls_en50494)
-    return &default_value;
-
-  le = (linuxdvb_en50494_t*)lse->ls_en50494;
-  return &le->le_id;
-}
-
-static int
-linuxdvb_satconf_class_en50494_id_set
-  ( void *p, const void *v )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse;
-  linuxdvb_en50494_t *le;
-  uint16_t new_value = *(uint16_t*)v;
-
-  if (new_value < 0 || new_value > 7)
-    return 1;
-
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
-    if (!lse && !lse->ls_en50494)
-      continue;
-
-    le = (linuxdvb_en50494_t*)lse->ls_en50494;
-    le->le_id = new_value;
-  }
-  return 0;
-
-}
-
-static const void *
-linuxdvb_satconf_class_en50494_freq_get ( void *p )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  linuxdvb_en50494_t *le;
-  static uint16_t default_value = 0;
-
-  if (!lse && !lse->ls_en50494)
-    return &default_value;
-
-  le = (linuxdvb_en50494_t*)lse->ls_en50494;
-  return &le->le_frequency;
-}
-
-static int
-linuxdvb_satconf_class_en50494_freq_set
-  ( void *p, const void *v )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse;
-  linuxdvb_en50494_t *le;
-  uint16_t new_value = *(uint16_t*)v;
-
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
-    if (!lse && !lse->ls_en50494)
-      continue;
-
-    le = (linuxdvb_en50494_t*)lse->ls_en50494;
-    le->le_frequency = new_value;
-  }
-  return 0;
-}
-
-static htsmsg_t *
-linuxdvb_satconf_class_en50494_pin_list ( void *o )
-{
-  int32_t i;
-
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_t *e;
-
-  e = htsmsg_create_map();
-  htsmsg_add_u32(e, "key", 256);
-  htsmsg_add_str(e, "val", "no Pin");
-  htsmsg_add_msg(m, NULL, e);
-
-  for (i = 0; i < 256; i++) {
-    e = htsmsg_create_map();
-    htsmsg_add_u32(e, "key", i);
-    htsmsg_add_u32(e, "val", i);
-    htsmsg_add_msg(m, NULL, e);
-  }
-  return m;
-}
-
-
-static const void *
-linuxdvb_satconf_class_en50494_pin_get ( void *p )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  linuxdvb_en50494_t *le;
-  static uint16_t default_value = 256;
-
-  if (!lse && !lse->ls_en50494)
-    return &default_value;
-
-  le = (linuxdvb_en50494_t*)lse->ls_en50494;
-  return &le->le_pin;
-}
-
-static int
-linuxdvb_satconf_class_en50494_pin_set
-  ( void *p, const void *v )
-{
-  linuxdvb_satconf_t *ls = p;
-  linuxdvb_satconf_ele_t *lse;
-  linuxdvb_en50494_t *le;
-  uint16_t new_value = *(uint16_t*)v;
-
-  if (new_value < 0 || new_value > 256)
-    return 1;
-
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
-    if (!lse && !lse->ls_en50494)
-      continue;
-
-    le = (linuxdvb_en50494_t*)lse->ls_en50494;
-    le->le_pin = new_value;
-  }
-  return 0;
-}
-
 static idnode_set_t *
 linuxdvb_satconf_class_get_childs ( idnode_t *o )
 {
@@ -444,14 +300,97 @@ const idclass_t linuxdvb_satconf_4port_class =
 };
 
 /*
- * en50494
+ * Unicable (EN50494)
  */
+static const void *
+linuxdvb_satconf_class_en50494_id_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_id);
+}
+
+static int
+linuxdvb_satconf_class_en50494_id_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
+    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_id) = *(uint16_t*)v;
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_en50494_pin_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_pin);
+}
+
+static int
+linuxdvb_satconf_class_en50494_pin_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
+    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_pin) = *(uint16_t*)v;
+  return 0;
+}
+
+static const void *
+linuxdvb_satconf_class_en50494_freq_get ( void *p )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
+  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_frequency);
+}
+
+static int
+linuxdvb_satconf_class_en50494_freq_set
+  ( void *p, const void *v )
+{
+  linuxdvb_satconf_t *ls = p;
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
+    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_frequency) = *(uint16_t*)v;
+  return 0;
+}
+
 const idclass_t linuxdvb_satconf_en50494_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_en50494",
   .ic_caption    = "DVB-S EN50494 (UniCable)",
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_U16,
+      .id       = "id",
+      .name     = "ID",
+      .get      = linuxdvb_satconf_class_en50494_id_get,
+      .set      = linuxdvb_satconf_class_en50494_id_set,
+      .list     = linuxdvb_en50494_id_list,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "pin",
+      .name     = "Pin",
+      .get      = linuxdvb_satconf_class_en50494_pin_get,
+      .set      = linuxdvb_satconf_class_en50494_pin_set,
+      .list     = linuxdvb_en50494_pin_list,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "frequency",
+      .name     = "Frequency (MHz)",
+      .get      = linuxdvb_satconf_class_en50494_freq_get,
+      .set      = linuxdvb_satconf_class_en50494_freq_set,
+      .opts     = PO_NOSAVE,
+    },
     {
       .type     = PT_STR,
       .id       = "network_a",
@@ -468,32 +407,6 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_ele_class_network_enum,
-      .opts     = PO_NOSAVE,
-    },
-    {
-      .type     = PT_U16,
-      .id       = "id",
-      .name     = "ID",
-      .get      = linuxdvb_satconf_class_en50494_id_get,
-      .set      = linuxdvb_satconf_class_en50494_id_set,
-      .list     = linuxdvb_satconf_class_en50494_id_list,
-      .opts     = PO_NOSAVE,
-    },
-    {
-      .type     = PT_U16,
-      .id       = "freqency",
-      .name     = "Freqency (MHz)",
-      .get      = linuxdvb_satconf_class_en50494_freq_get,
-      .set      = linuxdvb_satconf_class_en50494_freq_set,
-      .opts     = PO_NOSAVE,
-    },
-    {
-      .type     = PT_U16,
-      .id       = "pin",
-      .name     = "Pin",
-      .get      = linuxdvb_satconf_class_en50494_pin_get,
-      .set      = linuxdvb_satconf_class_en50494_pin_set,
-      .list     = linuxdvb_satconf_class_en50494_pin_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -548,7 +461,7 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "en50494",
-    .name  = "EN50494/UniCable Switch (Universal LNB)",
+    .name  = "Unicable Switch (Universal LNB)",
     .idc   = &linuxdvb_satconf_en50494_class,
     .ports = 2,
   },
@@ -632,29 +545,24 @@ linuxdvb_satconf_create
   }
   
   /* Create elements */
-  i = 0;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+  i   = 0;
+  lse = TAILQ_FIRST(&ls->ls_elements);
+  while (i < lst->ports) {
+    if (!lse)
+      lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
     if (!lse->ls_lnb)
       lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
-    /* create multi port elements (2/4port & en50494) */
     if (lst->ports > 1) {
-      if( !lse->ls_en50494 && !strcmp("en50494",lst->type))
-        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse, i);
-      if( !lse->ls_switch && (!strcmp("2port",lst->type) || !strcmp("4port",lst->type)))
-        lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+      if (!strcmp(lst->type, "en50494")) {
+        if (!lse->ls_en50494)
+          lse->ls_en50494 = linuxdvb_en50494_create0("Generic", NULL, lse, i);
+      } else {
+        if (!lse->ls_switch)
+          lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+      }
     }
+    lse = TAILQ_NEXT(lse, ls_link);
     i++;
-  }
-  for (; i < lst->ports; i++) {
-    lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
-    lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
-    /* create multi port elements (2/4port & en50494) */
-    if (lst->ports > 1) {
-      if( !strcmp("en50494",lst->type))
-        lse->ls_en50494 = linuxdvb_en50494_create0("en50494", NULL, lse, i);
-      if( !strcmp("2port",lst->type) || !strcmp("4port",lst->type))
-        lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
-    }
   }
 
   return ls;
@@ -927,7 +835,7 @@ const idclass_t linuxdvb_satconf_ele_class =
     {
       .type     = PT_STR,
       .id       = "en50494_type",
-      .name     = "EN50494 Type",
+      .name     = "Unicable Type",
       .set      = linuxdvb_satconf_ele_class_en50494type_set,
       .get      = linuxdvb_satconf_ele_class_en50494type_get,
       .list     = linuxdvb_en50494_list,

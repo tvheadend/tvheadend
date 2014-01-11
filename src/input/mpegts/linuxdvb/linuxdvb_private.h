@@ -302,6 +302,9 @@ htsmsg_t *linuxdvb_switch_list  ( void *o );
 htsmsg_t *linuxdvb_rotor_list   ( void *o );
 htsmsg_t *linuxdvb_en50494_list ( void *o );
 
+htsmsg_t *linuxdvb_en50494_id_list ( void *o );
+htsmsg_t *linuxdvb_en50494_pin_list ( void *o );
+
 void linuxdvb_en50494_init (void);
 
 int
