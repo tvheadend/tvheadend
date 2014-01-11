@@ -86,7 +86,6 @@ do_stop()
 case "$1" in
   start)
 	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
-	[ ! -z "$TVH_DELAY" ] && sleep $TVH_DELAY
 	do_start
 	case "$?" in
 		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
