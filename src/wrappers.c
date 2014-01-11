@@ -3,9 +3,16 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
-#include <sys/prctl.h>
 #include <unistd.h>
 #include <pthread.h>
+
+#ifdef PLATFORM_LINUX
+#include <sys/prctl.h>
+#endif
+
+#ifdef PLATFORM_FREEBSD
+#include <pthread_np.h>
+#endif
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
@@ -94,12 +101,17 @@ thread_wrapper ( void *p )
 {
   struct thread_state *ts = p;
 
+#if defined(PLATFORM_LINUX)
   /* Set name */
   prctl(PR_SET_NAME, ts->name);
+#elif defined(PLATFORM_FREEBSD)
+  /* Set name of thread */
+  pthread_set_name_np(pthread_self(), ts->name);
+#endif
 
   /* Run */
   tvhdebug("thread", "created thread %ld [%s / %p(%p)]",
-           pthread_self(), ts->name, ts->run, ts->arg);
+           (long)pthread_self(), ts->name, ts->run, ts->arg);
   void *r = ts->run(ts->arg);
   free(ts);
 
@@ -123,6 +135,7 @@ tvhthread_create0
   return r;
 }
 
+#ifdef PLATFORM_LINUX
 /*
  * qsort_r wrapper for pre GLIBC 2.8
  */
@@ -148,3 +161,4 @@ qsort_r(void *base, size_t nmemb, size_t size,
   qsort(base, nmemb, size, qsort_r_wrap);
 }
 #endif /* GLIBC < 2.8 */
+#endif /* PLATFORM_LINUX */

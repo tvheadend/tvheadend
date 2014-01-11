@@ -29,7 +29,6 @@
 #include <limits.h>
 #include <time.h>
 #include <locale.h>
-#include <sys/prctl.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -63,6 +62,10 @@
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
+#endif
+
+#ifdef PLATFORM_LINUX
+#include <sys/prctl.h>
 #endif
 
 /* Command line option struct */
@@ -690,9 +693,13 @@ main(int argc, char **argv)
 
     /* Make dumpable */
     if (opt_dump) {
+#ifdef PLATFORM_LINUX
       if (chdir("/tmp"))
         tvhwarn("START", "failed to change cwd to /tmp");
       prctl(PR_SET_DUMPABLE, 1);
+#else
+      tvhwarn("START", "Coredumps not implemented on your platform");
+#endif
     }
 
     umask(0);
