@@ -24,27 +24,27 @@ typedef struct fsmonitor      fsmonitor_t;
 typedef struct fsmonitor_path fsmonitor_path_t;
 typedef struct fsmonitor_link fsmonitor_link_t;
 
-typedef struct fsmonitor_path
+struct fsmonitor_path
 {
   char                        *fmp_path;
   int                          fmp_fd;
   RB_ENTRY(fsmonitor_path)     fmp_link;
   LIST_HEAD(,fsmonitor_link)   fmp_monitors;
-} fsmonitor_path_t;
+};
 
-typedef struct fsmonitor_link
+struct fsmonitor_link
 {
   LIST_ENTRY(fsmonitor_link)   fml_plink;
   LIST_ENTRY(fsmonitor_link)   fml_mlink;
   fsmonitor_path_t            *fml_path;
   fsmonitor_t                 *fml_monitor;
-} fsmonitor_link_t;
+};
 
-typedef struct fsmonitor {
+struct fsmonitor {
   LIST_HEAD(,fsmonitor_link) fsm_paths;
   void (*fsm_create) ( struct fsmonitor *fsm, const char *path );
   void (*fsm_delete) ( struct fsmonitor *fsm, const char *path );
-} fsmonitor_t;
+};
 
 void fsmonitor_init ( void );
 int  fsmonitor_add  ( const char *path, fsmonitor_t *fsm );
