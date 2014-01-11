@@ -28,7 +28,5 @@ script
   [ -z "$TVH_HTSP_PORT" ] || ARGS="$ARGS --htsp_port $TVH_HTSP_PORT"
   [ "$TVH_DEBUG" = "1"  ] && ARGS="$ARGS -s"
 
-  [ ! -z "$TVH_DELAY" ] && sleep $TVH_DELAY
-
   exec tvheadend $ARGS $TVH_ARGS
 end script

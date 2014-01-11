@@ -47,10 +47,6 @@ TVH_HTSP_PORT=""
 #   if set to 1 will output debug to syslog
 TVH_DEBUG=0
 
-# TVH_DELAY
-#   if set startup will be delayed N seconds to allow hardware init
-TVH_DELAY=""
-
 # TVH_ARGS
 #   add any other arguments
 TVH_ARGS=""
