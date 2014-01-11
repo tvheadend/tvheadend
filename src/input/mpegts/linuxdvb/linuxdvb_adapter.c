@@ -143,7 +143,7 @@ linuxdvb_adapter_create
 static void
 linuxdvb_adapter_add ( const char *path )
 {
-  int a, i, j, r = 0, fd;
+  int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], uuid[UUID_STR_LEN];
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
@@ -207,10 +207,11 @@ linuxdvb_adapter_add ( const char *path )
       cmdseq.props = fecmd;
       cmdseq.num   = 2;
       r = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
+    } else {
+      cmd.u.buffer.len = 0;
     }
 #endif
-    if (!r)
-      r = ioctl(fd, FE_GET_INFO, &dfi);
+    r = ioctl(fd, FE_GET_INFO, &dfi);
     close(fd);
     if(r) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", fe_path);
