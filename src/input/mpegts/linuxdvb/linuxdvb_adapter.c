@@ -143,7 +143,7 @@ linuxdvb_adapter_create
 static void
 linuxdvb_adapter_add ( const char *path )
 {
-  int a, i, j, r, fd;
+  int a, i, j, r = 0, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], uuid[UUID_STR_LEN];
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
@@ -185,18 +185,32 @@ linuxdvb_adapter_add ( const char *path )
 
     /* Get frontend info */
     for (j = 0; j < 10; j++) {
-      if ((fd = tvh_open(fe_path, O_RDONLY, 0)) > 0) break;
+      if ((fd = tvh_open(fe_path, O_RDWR, 0)) > 0) break;
       usleep(100000);
     }
     if (fd == -1) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", fe_path);
       continue;
     }
-    r = ioctl(fd, FE_GET_INFO, &dfi);
 #if DVB_VER_ATLEAST(5,10)
-    if (!r)
-      r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
+    r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
+    if (!r && cmd.u.buffer.len) {
+      struct dtv_property fecmd[2] = {
+        {
+          .cmd    = DTV_DELIVERY_SYSTEM,
+          .u.data = cmd.u.buffer.data[0]
+        },
+        {
+          .cmd    = DTV_TUNE
+        }
+      };
+      cmdseq.props = fecmd;
+      cmdseq.num   = 2;
+      r = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
+    }
 #endif
+    if (!r)
+      r = ioctl(fd, FE_GET_INFO, &dfi);
     close(fd);
     if(r) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", fe_path);
@@ -224,7 +238,6 @@ linuxdvb_adapter_add ( const char *path )
       SHA1_Init(&sha1); 
       SHA1_Update(&sha1, (void*)path,     strlen(path));
       SHA1_Update(&sha1, (void*)dfi.name, strlen(dfi.name));
-      // TODO: could include more form dfi, and maybe frontend enum
       SHA1_Final(uuidbin, &sha1);
       idnode_uuid_as_str1(uuidbin, sizeof(uuidbin), uuid);
 
