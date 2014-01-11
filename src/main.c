@@ -429,7 +429,6 @@ main(int argc, char **argv)
   pthread_mutex_init(&fork_lock, NULL);
   pthread_mutex_init(&global_lock, NULL);
   pthread_mutex_init(&atomic_lock, NULL);
-  pthread_mutex_lock(&global_lock);
   pthread_cond_init(&gtimer_cond, NULL);
 
   /* Defaults */
@@ -719,6 +718,7 @@ main(int argc, char **argv)
   hts_settings_init(opt_config);
 
   /* Initialise clock */
+  pthread_mutex_lock(&global_lock);
   time(&dispatch_clock);
 
   /* Signal handling */
