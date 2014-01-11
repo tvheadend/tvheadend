@@ -32,6 +32,9 @@ void linuxdvb_init ( int adapter_mask )
   /* Load list of mux charset global overrides */
   dvb_charset_init();
 
+  /* Initialise en50494 locks */
+  linuxdvb_en50494_init();
+
   /* Initialise networks */
   linuxdvb_network_init();
 

@@ -34,6 +34,7 @@ typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
 typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
 typedef struct linuxdvb_network     linuxdvb_network_t;
 typedef struct linuxdvb_mux         linuxdvb_mux_t;
+typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
@@ -157,6 +158,7 @@ struct linuxdvb_satconf_ele
   linuxdvb_lnb_t        *ls_lnb;
   linuxdvb_diseqc_t     *ls_switch;
   linuxdvb_diseqc_t     *ls_rotor;
+  linuxdvb_diseqc_t     *ls_en50494;
 };
 
 struct linuxdvb_diseqc
@@ -175,6 +177,20 @@ struct linuxdvb_lnb
   uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
   int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
   int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
+};
+
+struct linuxdvb_en50494
+{
+  linuxdvb_diseqc_t;
+
+  /* en50494 configuration*/
+  uint16_t  le_position;  /* satelitte A(0) or B(1) */
+  uint16_t  le_frequency; /* user band frequency in MHz */
+  uint16_t  le_id;        /* user band id 0-7 */
+  uint16_t  le_pin;       /* 0-255 or LINUXDVB_EN50494_NOPIN */
+
+  /* runtime */
+  uint32_t  le_tune_freq; /* the real frequency to tune to */
 };
 
 /*
@@ -273,14 +289,20 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
+linuxdvb_diseqc_t *linuxdvb_en50494_create0
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port );
 
-void linuxdvb_lnb_destroy    ( linuxdvb_lnb_t    *lnb );
-void linuxdvb_switch_destroy ( linuxdvb_diseqc_t *ld );
-void linuxdvb_rotor_destroy  ( linuxdvb_diseqc_t *ld );
+void linuxdvb_lnb_destroy     ( linuxdvb_lnb_t    *lnb );
+void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );
+void linuxdvb_rotor_destroy   ( linuxdvb_diseqc_t *ld );
+void linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *ld );
 
-htsmsg_t *linuxdvb_lnb_list    ( void *o );
-htsmsg_t *linuxdvb_switch_list ( void *o );
-htsmsg_t *linuxdvb_rotor_list  ( void *o );
+htsmsg_t *linuxdvb_lnb_list     ( void *o );
+htsmsg_t *linuxdvb_switch_list  ( void *o );
+htsmsg_t *linuxdvb_rotor_list   ( void *o );
+htsmsg_t *linuxdvb_en50494_list ( void *o );
+
+void linuxdvb_en50494_init (void);
 
 int
 linuxdvb_diseqc_send
