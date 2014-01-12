@@ -110,6 +110,20 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 }
 
 /*
+ * Check if enabled
+ */
+static int
+linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
+{
+  linuxdvb_frontend_t *lfe;
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
+    if (lfe->mi_is_enabled((mpegts_input_t*)lfe))
+      return 1;
+  }
+  return 0;
+}
+
+/*
  * Create
  */
 static linuxdvb_adapter_t *
@@ -133,6 +147,9 @@ linuxdvb_adapter_create
   la->la_rootpath   = strdup(path);
   la->la_name       = strdup(buf);
   la->la_dvb_number = number;
+
+  /* Callbacks */
+  la->la_is_enabled = linuxdvb_adapter_is_enabled;
 
   return la;
 }
