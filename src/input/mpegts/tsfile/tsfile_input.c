@@ -132,16 +132,27 @@ tsfile_input_thread ( void *aux )
       if (pcr != PTS_UNSET) {
         if (pcr_last != PTS_UNSET) {
           struct timespec slp;
-          int64_t d = pcr - pcr_last;
-          if (d < 0)
-            d = 0;
-          else if (d > 90000)
-            d = 90000;
-          d *= 11;
-          d += pcr_last_realtime;
-          slp.tv_sec  = (d / 1000000);
-          slp.tv_nsec = (d % 1000000) * 1000;
+          int64_t time, delta;
+
+          time = pcr_last_realtime;
+          delta = pcr - pcr_last;
+
+          if (delta < 0)
+            delta = 0;
+          else if (delta > 90000)
+            delta = 90000;
+          delta *= 11;
+
+#ifdef clock_nanosleep
+          time += delta;
+          slp.tv_sec  = (time / 1000000);
+          slp.tv_nsec = (time % 1000000) * 1000;
           clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+#else
+          slp.tv_sec  = (delta / 1000000);
+          slp.tv_nsec = (delta % 1000000) * 1000;
+          nanosleep(&slp, NULL);
+#endif
         }
         pcr_last          = pcr;
         pcr_last_realtime = getmonoclock();
