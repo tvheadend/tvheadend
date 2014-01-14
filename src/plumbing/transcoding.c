@@ -21,6 +21,7 @@
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
 #include <libavutil/dict.h>
+#include <libavutil/audioconvert.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -216,7 +217,7 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (ictx->codec_id == CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
-    if (avcodec_open(ictx, icodec) < 0) {
+    if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", icodec->name);
       ts->ts_index = 0;
       goto cleanup;
@@ -274,7 +275,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (ictx->codec_id == CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
-    if (avcodec_open(ictx, icodec) < 0) {
+    if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", icodec->name);
       ts->ts_index = 0;
       goto cleanup;
@@ -393,7 +394,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (octx->codec_id == CODEC_ID_NONE) {
     octx->codec_id = ocodec->id;
 
-    if (avcodec_open(octx, ocodec) < 0) {
+    if (avcodec_open2(octx, ocodec, NULL) < 0) {
       tvhlog(LOG_ERR, "transcode", "Unable to open %s encoder", ocodec->name);
       ts->ts_index = 0;
       goto cleanup;
@@ -480,7 +481,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   if (ictx->codec_id == CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
-    if (avcodec_open(ictx, icodec) < 0) {
+    if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", icodec->name);
       ts->ts_index = 0;
       goto cleanup;
@@ -858,14 +859,8 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   ss->sub_icodec = icodec;
   ss->sub_ocodec = ocodec;
 
-  ss->sub_ictx = avcodec_alloc_context();
-  ss->sub_octx = avcodec_alloc_context();
-
-  ss->sub_ictx->codec_type = AVMEDIA_TYPE_SUBTITLE;
-  ss->sub_octx->codec_type = AVMEDIA_TYPE_SUBTITLE;
-
-  avcodec_get_context_defaults3(ss->sub_ictx, icodec);
-  avcodec_get_context_defaults3(ss->sub_octx, ocodec);
+  ss->sub_ictx = avcodec_alloc_context3(icodec);
+  ss->sub_octx = avcodec_alloc_context3(ocodec);
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)ss, ts_link);
 
@@ -950,20 +945,11 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_icodec = icodec;
   as->aud_ocodec = ocodec;
 
-  as->aud_ictx = avcodec_alloc_context();
-  as->aud_octx = avcodec_alloc_context();
-
-  as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
-  as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
-
-  avcodec_get_context_defaults3(as->aud_ictx, icodec);
-  avcodec_get_context_defaults3(as->aud_octx, ocodec);
+  as->aud_ictx = avcodec_alloc_context3(icodec);
+  as->aud_octx = avcodec_alloc_context3(ocodec);
 
   as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-
-  as->aud_ictx->codec_type = AVMEDIA_TYPE_AUDIO;
-  as->aud_octx->codec_type = AVMEDIA_TYPE_AUDIO;
 
   as->aud_dec_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
   as->aud_enc_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
@@ -1060,11 +1046,8 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_icodec = icodec;
   vs->vid_ocodec = ocodec;
 
-  vs->vid_ictx = avcodec_alloc_context();
-  vs->vid_octx = avcodec_alloc_context();
-
-  avcodec_get_context_defaults3(vs->vid_ictx, icodec);
-  avcodec_get_context_defaults3(vs->vid_octx, ocodec);
+  vs->vid_ictx = avcodec_alloc_context3(icodec);
+  vs->vid_octx = avcodec_alloc_context3(ocodec);
 
   vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -1074,9 +1057,6 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 
   avcodec_get_frame_defaults(vs->vid_dec_frame);
   avcodec_get_frame_defaults(vs->vid_enc_frame);
-
-  vs->vid_ictx->codec_type = AVMEDIA_TYPE_VIDEO;
-  vs->vid_octx->codec_type = AVMEDIA_TYPE_VIDEO;
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)vs, ts_link);
 
