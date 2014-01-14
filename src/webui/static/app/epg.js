@@ -253,6 +253,13 @@ tvheadend.epg = function() {
 		return dt.format('l H:i');
 	}
 
+	function renderDateFull(value, meta, record, rowIndex, colIndex, store) {
+		setMetaAttr(meta, record);
+
+		var dt = new Date(value);
+		return dt.format('D, M d, H:i');
+	}
+
 	function renderDuration(value, meta, record, rowIndex, colIndex, store) {
 		setMetaAttr(meta, record);
 
@@ -310,11 +317,24 @@ tvheadend.epg = function() {
 		renderer : renderDate
 	}, {
 		width : 100,
+		id : 'lstart',
+		header : "Start (long)",
+		dataIndex : 'start',
+		renderer : renderDateFull
+	}, {
+		width : 100,
 		hidden : true,
 		id : 'end',
 		header : "End",
 		dataIndex : 'end',
 		renderer : renderDate
+	}, {
+		width : 100,
+		hidden : true,
+		id : 'lend',
+		header : "End (long)",
+		dataIndex : 'end',
+		renderer : renderDateFull
 	}, {
 		width : 100,
 		id : 'duration',
