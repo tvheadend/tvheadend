@@ -417,7 +417,7 @@ handle_ca0(capmt_t* capmt) {
   capmt_service_t *ct;
   mpegts_service_t *t;
   int ret, bufsize;
-  int *request = NULL;
+  unsigned int *request = NULL;
   ca_descr_t *ca;
   ca_pid_t *cpd;
   int process_key, process_next, cai = 0;
@@ -472,7 +472,7 @@ handle_ca0(capmt_t* capmt) {
         request = NULL;
         ret = recv(recvsock, buffer, (capmt->capmt_oscam == 2) ? sizeof(int) : bufsize, MSG_DONTWAIT);
         if (ret > 0) {
-          request = (int *) &buffer;
+          request = (unsigned int *) &buffer;
           if (capmt->capmt_oscam != 2)
             process_next = 0;
           else {
