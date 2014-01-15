@@ -292,7 +292,8 @@ opentv_parse_event_section
     if (ev.start && ev.stop) {
       ebc = epg_broadcast_find_by_time(ecl->ecl_channel, ev.start, ev.stop,
                                        ev.eid, 1, &save);
-      tvhdebug("opentv", "find by time start %ld stop %ld eid %d = %p",
+      tvhdebug("opentv", "find by time start %"PRItime_t " stop "
+               "%"PRItime_t " eid %d = %p",
                ev.start, ev.stop, ev.eid, ebc);
     } else {
       ebc = epg_broadcast_find_by_eid(ecl->ecl_channel, ev.eid);
