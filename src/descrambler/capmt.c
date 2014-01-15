@@ -33,7 +33,6 @@
 #include <sys/un.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <linux/ioctl.h>
 #include <linux/dvb/ca.h>
 #include <fcntl.h>
 
@@ -46,6 +45,12 @@
 #include "dtable.h"
 #include "tvhcsa.h"
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
+
+#if defined(PLATFORM_LINUX)
+#include <linux/ioctl.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/ioccom.h>
+#endif
 
 // ca_pmt_list_management values:
 #define CAPMT_LIST_MORE   0x00    // append a 'MORE' CAPMT object the list and start receiving the next object
@@ -69,7 +74,7 @@
 #define CW_DUMP(buf, len, format, ...) \
   printf(format, __VA_ARGS__); int j; for (j = 0; j < len; ++j) printf("%02X ", buf[j]); printf("\n");
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(PLATFORM_LINUX)
 #include <features.h>
 #if __GNUC_PREREQ(4, 3)
 #pragma GCC diagnostic ignored "-Warray-bounds"
@@ -417,7 +422,7 @@ handle_ca0(capmt_t* capmt) {
   capmt_service_t *ct;
   mpegts_service_t *t;
   int ret, bufsize;
-  int *request = NULL;
+  unsigned int *request = NULL;
   ca_descr_t *ca;
   ca_pid_t *cpd;
   int process_key, process_next, cai = 0;
@@ -472,7 +477,7 @@ handle_ca0(capmt_t* capmt) {
         request = NULL;
         ret = recv(recvsock, buffer, (capmt->capmt_oscam == 2) ? sizeof(int) : bufsize, MSG_DONTWAIT);
         if (ret > 0) {
-          request = (int *) &buffer;
+          request = (unsigned int *) &buffer;
           if (capmt->capmt_oscam != 2)
             process_next = 0;
           else {
