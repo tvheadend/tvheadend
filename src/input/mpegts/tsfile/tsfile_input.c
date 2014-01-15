@@ -44,7 +44,10 @@ tsfile_input_thread ( void *aux )
   tvhpoll_event_t ev;
   struct stat st;
   uint8_t tsb[188*10];
-  int64_t pcr, pcr_last = PTS_UNSET, pcr_last_realtime = 0;
+  int64_t pcr, pcr_last = PTS_UNSET;
+#if PLATFORM_LINUX
+  int64_t pcr_last_realtime = 0;
+#endif
   mpegts_input_t *mi = aux;
   mpegts_mux_instance_t *mmi;
   tsfile_mux_instance_t *tmi;
@@ -132,9 +135,8 @@ tsfile_input_thread ( void *aux )
       if (pcr != PTS_UNSET) {
         if (pcr_last != PTS_UNSET) {
           struct timespec slp;
-          int64_t time, delta;
+          int64_t delta;
 
-          time = pcr_last_realtime;
           delta = pcr - pcr_last;
 
           if (delta < 0)
@@ -143,10 +145,10 @@ tsfile_input_thread ( void *aux )
             delta = 90000;
           delta *= 11;
 
-#ifdef clock_nanosleep
-          time += delta;
-          slp.tv_sec  = (time / 1000000);
-          slp.tv_nsec = (time % 1000000) * 1000;
+#if PLATFORM_LINUX
+          delta += pcr_last_realtime;
+          slp.tv_sec  = (delta / 1000000);
+          slp.tv_nsec = (delta % 1000000) * 1000;
           clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
 #else
           slp.tv_sec  = (delta / 1000000);
@@ -155,7 +157,9 @@ tsfile_input_thread ( void *aux )
 #endif
         }
         pcr_last          = pcr;
+#if PLATFORM_LINUX
         pcr_last_realtime = getmonoclock();
+#endif
       }
     }
     sched_yield();
