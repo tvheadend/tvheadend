@@ -183,6 +183,26 @@ channel_class_icon_notify ( void *obj )
     imagecache_get_id(ch->ch_icon);
 }
 
+static const void *
+channel_class_get_imagecache ( void *obj )
+{
+  static char buf[512], *r;
+  uint32_t id;
+  channel_t *ch = obj;
+
+  if (!ch->ch_icon) {
+    r = NULL;
+  } else if ((id = imagecache_get_id(ch->ch_icon))) {
+    snprintf(buf, sizeof(buf), "imagecache/%d", id);
+    r = buf;
+  } else {
+    strncpy(buf, ch->ch_icon, sizeof(buf));
+    r = buf;
+  }
+
+  return &r;
+}
+
 static const char *
 channel_class_get_title ( idnode_t *self )
 {
@@ -299,6 +319,13 @@ const idclass_t channel_class = {
       .name     = "Icon",
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "icon_public_url",
+      .name     = "Icon URL",
+      .get      = channel_class_get_imagecache,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
