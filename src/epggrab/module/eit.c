@@ -375,7 +375,7 @@ static int _eit_desc_crid
           if (defauth)
             snprintf(crid, clen, "crid://%s%s", defauth, buf);
           else
-            snprintf(crid, clen, "crid://%d%s", svc->s_dvb_mux->mm_onid, buf);
+            snprintf(crid, clen, "crid://onid-%d%s", svc->s_dvb_mux->mm_onid, buf);
         }
       }
 
