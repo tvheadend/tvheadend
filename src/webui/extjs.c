@@ -96,6 +96,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   // Issue #1504 - IE9 temporary fix
   htsbuf_qprintf(hq, "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=8\">\n");
 
+  htsbuf_qprintf(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
   
   htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base%s.js\"></script>\n"
                      "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all%s.js\"></script>\n"
