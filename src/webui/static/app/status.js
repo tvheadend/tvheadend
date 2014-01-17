@@ -67,8 +67,10 @@ tvheadend.status_subs = function() {
 		return dt.format('D j M H:i');
 	}
 
-	function renderBw(value) {
-		return parseInt(value / 125);
+ 	function renderBw(value, item, store) {
+		var txt = parseInt(value / 125);
+		var href = 'javascript:tvheadend.status_bandwidth_monitor(' + store.id + ');';
+		return '<a href="' + href + '">' + txt + '</a>';
 	}
 
 	var subsCm = new Ext.grid.ColumnModel([{
@@ -363,3 +365,103 @@ tvheadend.status = function() {
 	return panel;
 }
 
+
+tvheadend.status_bandwidth_monitor = function(id) {
+    var inputSeries  = new TimeSeries();
+    var outputSeries = new TimeSeries();
+    var chart = new SmoothieChart({
+	minValue: 0,
+	grid: {
+	    sharpLines: true,
+	    fillStyle: 'transparent',
+	    verticalSections: 0,
+	    millisPerLine: 0
+	},
+	labels: {
+	    disabled: false,
+	    fillStyle: '#000000',
+	    fontSize: 12
+	}
+    });
+
+    chart.addTimeSeries(inputSeries, {
+	strokeStyle: 'rgb(0, 255, 0)',
+	fillStyle: 'rgba(0, 255, 0, 0.5)',
+	lineWidth: 3
+    });
+
+    chart.addTimeSeries(outputSeries, {
+	strokeStyle: 'rgb(255, 0, 255)',
+	fillStyle: 'rgba(255, 0, 255, 0.5)',
+	lineWidth: 3
+    });
+   
+    var inputLbl = new Ext.form.Label();
+    var outputLbl = new Ext.form.Label();
+    var comprLbl = new Ext.form.Label();
+
+    var win = new Ext.Window({
+        title: 'Bandwidth monitor',
+        layout:'fit',
+	resizable: false,
+	width : 450 + 30,
+	height : 150 + 50,
+	constrainHeader : true,
+	tbar : [inputLbl, '-', outputLbl, '-', comprLbl],
+	items: {
+	    xtype: 'box',
+	    autoEl: {
+		tag: 'canvas',
+		width: 450,
+		height: 150
+	    },
+	    listeners: {
+		render: {
+		    scope: this,
+		    fn: function(item) {
+			chart.streamTo(item.el.dom, 1000);
+		    }
+		},
+                resize: {
+		    scope: this,
+		    fn: function(item) {
+			chart.render(item.el.dom, 1000);
+                    }
+		}
+	    }
+	}
+    });
+
+    var task = {
+	interval: 1000,
+	run: function() {
+	    r = tvheadend.subsStore.getById(id);
+	    if (typeof r === 'undefined') {
+		chart.stop();
+		Ext.TaskMgr.stop(task);
+		return;
+	    }
+
+	    var input  = Math.round(r.data.in  / 125);
+	    var output = Math.round(r.data.out / 125);
+	    var ratio  = new Number(r.data.in / r.data.out).toPrecision(3);
+
+	    win.setTitle(r.data.channel);
+	    inputLbl.setText('In: ' + input + ' kb/s');
+	    outputLbl.setText('Out: ' + output + ' kb/s');
+	    comprLbl.setText('Compression ratio: ' + ratio);
+
+	    inputSeries.append(new Date().getTime(), input);
+	    outputSeries.append(new Date().getTime(), output);
+	}
+    };
+
+    win.on('close', function() {
+	chart.stop();
+	Ext.TaskMgr.stop(task);
+    });
+
+    win.show();
+ 
+    Ext.TaskMgr.start(task);
+};
