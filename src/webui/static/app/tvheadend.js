@@ -419,6 +419,9 @@ tvheadend.app = function() {
 			new tvheadend.cometPoller;
 
 			Ext.QuickTips.init();
+
+			// Load the chart library smoothie.js, as used by the bandwidth monitor.
+			Ext.Loader.load('static/smoothie.js');
 		}
 
 	};
