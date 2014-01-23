@@ -31,6 +31,8 @@
 #include "transcoding.h"
 #include "libav.h"
 
+#define	MAX_AUDIO_FRAME_SIZE	192000	/* 1 second of 48khz 32bit audio */
+
 LIST_HEAD(transcoder_stream_list, transcoder_stream);
 
 typedef struct transcoder_stream {
@@ -121,7 +123,7 @@ uint32_t transcoding_enabled = 0;
 static AVCodec *
 transcoder_get_decoder(streaming_component_type_t ty)
 {
-  enum CodecID codec_id;
+  enum AVCodecID codec_id;
   AVCodec *codec;
 
   codec_id = streaming_component_type2codec_id(ty);
@@ -150,7 +152,7 @@ transcoder_get_decoder(streaming_component_type_t ty)
 static AVCodec *
 transcoder_get_encoder(streaming_component_type_t ty)
 {
-  enum CodecID codec_id;
+  enum AVCodecID codec_id;
   AVCodec *codec;
 
   codec_id = streaming_component_type2codec_id(ty);
@@ -951,8 +953,8 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
-  as->aud_dec_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
-  as->aud_enc_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
+  as->aud_dec_size = MAX_AUDIO_FRAME_SIZE*2;
+  as->aud_enc_size = MAX_AUDIO_FRAME_SIZE*2;
 
   as->aud_dec_sample = av_malloc(as->aud_dec_size + FF_INPUT_BUFFER_PADDING_SIZE);
   as->aud_enc_sample = av_malloc(as->aud_enc_size + FF_INPUT_BUFFER_PADDING_SIZE);
