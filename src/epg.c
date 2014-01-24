@@ -504,6 +504,8 @@ htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
     lang_str_serialize(brand->summary, m, "summary");
   if (brand->season_count)
     htsmsg_add_u32(m, "season-count", brand->season_count);
+  if (brand->image)
+    htsmsg_add_str(m, "image", brand->image);
   return m;
 }
 
@@ -512,6 +514,7 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
   epg_object_t **skel = _epg_brand_skel();
   epg_brand_t *eb;
   uint32_t u32;
+  const char *str;
   lang_str_t *ls;
   lang_str_ele_t *e;
 
@@ -530,6 +533,9 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
   }
   if ( !htsmsg_get_u32(m, "season-count", &u32) )
     *save |= epg_brand_set_season_count(eb, u32, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_brand_set_image(eb, str, NULL);
 
   return eb;
 }
@@ -686,6 +692,8 @@ htsmsg_t *epg_season_serialize ( epg_season_t *season )
     htsmsg_add_u32(m, "episode-count", season->episode_count);
   if (season->brand)
     htsmsg_add_str(m, "brand", season->brand->uri);
+  if (season->image)
+    htsmsg_add_str(m, "image", season->image);
   return m;
 }
 
@@ -716,6 +724,9 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
   if ( (str = htsmsg_get_str(m, "brand")) )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_season_set_brand(es, eb, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_season_set_image(es, str, NULL);
 
   return es;
 }
@@ -1152,6 +1163,9 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(m, "age_rating", episode->age_rating);
   if (episode->first_aired)
     htsmsg_add_s64(m, "first_aired", episode->first_aired);
+  if (episode->image)
+    htsmsg_add_str(m, "image", episode->image);
+
   return m;
 }
 
@@ -1228,6 +1242,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
   if (!htsmsg_get_s64(m, "first_aired", &s64))
     *save |= epg_episode_set_first_aired(ee, (time_t)s64, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_episode_set_image(ee, str, NULL);
 
   return ee;
 }
