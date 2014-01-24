@@ -24,8 +24,12 @@
 #include "scanfile.h"
 #include "../dvb_charset.h"
 
+int linuxdvb_adapter_mask;
+
 void linuxdvb_init ( int adapter_mask )
 {
+  linuxdvb_adapter_mask = adapter_mask;
+
   /* Load scan files */
   scanfile_init();
 

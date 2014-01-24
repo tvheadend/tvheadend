@@ -160,6 +160,7 @@ linuxdvb_adapter_create
 static void
 linuxdvb_adapter_add ( const char *path )
 {
+  extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512], uuid[UUID_STR_LEN];
   linuxdvb_adapter_t *la = NULL;
@@ -180,6 +181,9 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Validate the path */
   if (sscanf(path, "/dev/dvb/adapter%d", &a) != 1)
+    return;
+
+  if (a >= 0 && a < 32 && (linuxdvb_adapter_mask & (1 << a)) == 0)
     return;
 
   /* Note: some of the below can take a while, so we relinquish the lock
