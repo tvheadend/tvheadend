@@ -1273,6 +1273,54 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Return cutpoint data for a recording (if present). 
+ *
+ * Request message fields:
+ * id                 u32    required   DVR entry id
+ *
+ * Result message fields:
+ * cutpoints          msg[]  optional   List of cutpoint entries, if a file is 
+ *                                      found and has some valid data.
+ *
+ * Cutpoint fields:
+ * start              u32    required   Cut start time in ms.
+ * end                u32    required   Cut end time in ms.
+ * type               u32    required   Action type: 
+ *                                      0=Cut, 1=Mute, 2=Scene, 
+ *                                      3=Commercial break.
+ **/
+static htsmsg_t *
+htsp_method_getDvrCutpoints(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  uint32_t dvrEntryId;
+  if (htsmsg_get_u32(in, "id", &dvrEntryId))
+    return htsp_error("Missing argument 'id'");
+
+  htsmsg_t *msg = htsmsg_create_map();
+
+  dvr_cutpoint_list_t *list = dvr_get_cutpoint_list(dvrEntryId); 
+
+  if (list != NULL) {
+    htsmsg_t *cutpoint_list = htsmsg_create_list();
+    dvr_cutpoint_t *cp;
+    TAILQ_FOREACH(cp, list, dc_link) {
+      htsmsg_t *cutpoint = htsmsg_create_map();
+      htsmsg_add_u32(cutpoint, "start", cp->dc_start_ms);
+      htsmsg_add_u32(cutpoint, "end", cp->dc_end_ms);
+      htsmsg_add_u32(cutpoint, "type", cp->dc_type);
+
+      htsmsg_add_msg(cutpoint_list, NULL, cutpoint);
+    }
+    htsmsg_add_msg(msg, "cutpoints", cutpoint_list);
+  }
+  
+  // Cleanup...
+  dvr_cutpoint_list_destroy(list);
+
+  return msg;
+}
+
+/**
  * Request a ticket for a http url pointing to a channel or dvr
  */
 static htsmsg_t *
@@ -1794,36 +1842,37 @@ struct {
   htsmsg_t *(*fn)(htsp_connection_t *htsp, htsmsg_t *in);
   int privmask;
 } htsp_methods[] = {
-  { "hello",                    htsp_method_hello,          ACCESS_ANONYMOUS},
-  { "authenticate",             htsp_method_authenticate,   ACCESS_ANONYMOUS},
-  { "getDiskSpace",             htsp_method_getDiskSpace,   ACCESS_STREAMING},
-  { "getSysTime",               htsp_method_getSysTime,     ACCESS_STREAMING},
-  { "enableAsyncMetadata",      htsp_method_async,          ACCESS_STREAMING},
-  { "getEvent",                 htsp_method_getEvent,       ACCESS_STREAMING},
-  { "getEvents",                htsp_method_getEvents,      ACCESS_STREAMING},
-  { "epgQuery",                 htsp_method_epgQuery,       ACCESS_STREAMING},
-  { "getEpgObject",             htsp_method_getEpgObject,   ACCESS_STREAMING},
-  { "addDvrEntry",              htsp_method_addDvrEntry,    ACCESS_RECORDER},
-  { "updateDvrEntry",           htsp_method_updateDvrEntry, ACCESS_RECORDER},
-  { "cancelDvrEntry",           htsp_method_cancelDvrEntry, ACCESS_RECORDER},
-  { "deleteDvrEntry",           htsp_method_deleteDvrEntry, ACCESS_RECORDER},
-  { "getTicket",                htsp_method_getTicket,      ACCESS_STREAMING},
-  { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
-  { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
-  { "subscriptionChangeWeight", htsp_method_change_weight,  ACCESS_STREAMING},
-  { "subscriptionSeek",         htsp_method_skip,           ACCESS_STREAMING},
-  { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
-  { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
-  { "subscriptionLive",         htsp_method_live,           ACCESS_STREAMING},
-  { "subscriptionFilterStream", htsp_method_filter_stream,  ACCESS_STREAMING},
+  { "hello",                    htsp_method_hello,           ACCESS_ANONYMOUS},
+  { "authenticate",             htsp_method_authenticate,    ACCESS_ANONYMOUS},
+  { "getDiskSpace",             htsp_method_getDiskSpace,    ACCESS_STREAMING},
+  { "getSysTime",               htsp_method_getSysTime,      ACCESS_STREAMING},
+  { "enableAsyncMetadata",      htsp_method_async,           ACCESS_STREAMING},
+  { "getEvent",                 htsp_method_getEvent,        ACCESS_STREAMING},
+  { "getEvents",                htsp_method_getEvents,       ACCESS_STREAMING},
+  { "epgQuery",                 htsp_method_epgQuery,        ACCESS_STREAMING},
+  { "getEpgObject",             htsp_method_getEpgObject,    ACCESS_STREAMING},
+  { "addDvrEntry",              htsp_method_addDvrEntry,     ACCESS_RECORDER},
+  { "updateDvrEntry",           htsp_method_updateDvrEntry,  ACCESS_RECORDER},
+  { "cancelDvrEntry",           htsp_method_cancelDvrEntry,  ACCESS_RECORDER},
+  { "deleteDvrEntry",           htsp_method_deleteDvrEntry,  ACCESS_RECORDER},
+  { "getDvrCutpoints",          htsp_method_getDvrCutpoints, ACCESS_RECORDER},
+  { "getTicket",                htsp_method_getTicket,       ACCESS_STREAMING},
+  { "subscribe",                htsp_method_subscribe,       ACCESS_STREAMING},
+  { "unsubscribe",              htsp_method_unsubscribe,     ACCESS_STREAMING},
+  { "subscriptionChangeWeight", htsp_method_change_weight,   ACCESS_STREAMING},
+  { "subscriptionSeek",         htsp_method_skip,            ACCESS_STREAMING},
+  { "subscriptionSkip",         htsp_method_skip,            ACCESS_STREAMING},
+  { "subscriptionSpeed",        htsp_method_speed,           ACCESS_STREAMING},
+  { "subscriptionLive",         htsp_method_live,            ACCESS_STREAMING},
+  { "subscriptionFilterStream", htsp_method_filter_stream,   ACCESS_STREAMING},
 #if ENABLE_LIBAV
-  { "getCodecs",                htsp_method_getCodecs,      ACCESS_STREAMING},
+  { "getCodecs",                htsp_method_getCodecs,       ACCESS_STREAMING},
 #endif
-  { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
-  { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
-  { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},
-  { "fileStat",                 htsp_method_file_stat,      ACCESS_RECORDER},
-  { "fileSeek",                 htsp_method_file_seek,      ACCESS_RECORDER},
+  { "fileOpen",                 htsp_method_file_open,       ACCESS_RECORDER},
+  { "fileRead",                 htsp_method_file_read,       ACCESS_RECORDER},
+  { "fileClose",                htsp_method_file_close,      ACCESS_RECORDER},
+  { "fileStat",                 htsp_method_file_stat,       ACCESS_RECORDER},
+  { "fileSeek",                 htsp_method_file_seek,       ACCESS_RECORDER},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))
