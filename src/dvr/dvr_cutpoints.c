@@ -17,44 +17,39 @@
 #include "tvheadend.h"
 #include "dvr.h"
 
+/*
+ * Internal defines controlling parsing
+ */
+
 /**
- * Replaces the extension of a filename with a different extension.
- * filename, in: full path to file.
- * new_ext, in: new extension including leading '.'., e.g. ".edl"
- * new_filename, in: pre-allocated char*, out: filename with the new extension.
- * Return 1 on success, otherwise 0.
- **/
-static int 
-dvr_switch_file_extension(const char *filename, const char *new_ext, char *new_filename)
-{
-  char *ext = strrchr(filename, '.');
+ * This is the max number of lines that will be read
+ * from a cutpoint file (e.g. EDL or Comskip).
+ * This is a safety against large files containing non-cutpoint/garbage data.
+ */
 
-  // No '.' found. Probably not a good path/file then...
-  if(ext == NULL) {
-    return 0;
-  }
+#define DVR_MAX_READ_CUTFILE_LINES 10000
 
-  int len = (ext - filename);
-  if(len <= 0) {
-    return 0;
-  }
+/**
+ * This is the max number of entries that will be used
+ * from a cutpoint file (e.g. EDL or Comskip).
+ * This is a safety against using up resources due to
+ * potentially large files containing weird data.
+ */
+#define DVR_MAX_CUT_ENTRIES 5000
 
-  // Allocate length for stripped filename + new_ext + "\0" 
-  int ext_len = strlen(new_ext);
+/**
+ * Max line length allowed in a cutpoints file. Excess will be ignored.
+ */
+#define DVR_MAX_CUTPOINT_LINE 128
 
-  // Build the new filename.
-  memcpy(new_filename, filename, len);
-  memcpy(&new_filename[len], new_ext, ext_len);
-  new_filename[len + ext_len] = 0;
-
-  return 1;
-}
+/* **************************************************************************
+ * Parsers
+ * *************************************************************************/
 
 /**
  * Parse EDL data.
  *   filename, in: full path to EDL file.
  *   cut_list, in: empty list. out: the list filled with data.
- *                 Don't forget to call dvr_cutpoint_list_destroy for the cut_list when done.
  *   return:   number of read valid lines.
  *
  * Example of EDL file content:
@@ -63,55 +58,31 @@ dvr_switch_file_extension(const char *filename, const char *new_ext, char *new_f
  * 596.92  665.92  3
  * 1426.68 2160.16 3
  *
- **/ 
-static int 
-dvr_parse_edl(const char *filename, dvr_cutpoint_list_t *cut_list)
+ */
+static int
+dvr_parse_edl
+  ( const char *line, dvr_cutpoint_t *cutpoint, float *frame )
 {
-  char line[DVR_MAX_CUTPOINT_LINE];
-  int line_count = 0, valid_lines = 0, action = 0;
+  int action = 0;
   float start = 0.0f, end = 0.0f;
-  dvr_cutpoint_t *cutpoint;
 
-  FILE *file = fopen(filename, "r");
+  /* Invalid line */
+  if (sscanf(line, "%f\t%f\t%d", &start, &end, &action) != 3)
+    return 1;
 
-  // No file found. Which is perfectly ok.
-  if (file == NULL)
-    return -1;
-
-  while(line_count < DVR_MAX_READ_CUTFILE_LINES) {
-    if(fgets(line, DVR_MAX_CUTPOINT_LINE, file) == NULL)
-      break;      
-    line_count++;
-    if (sscanf(line, "%f\t%f\t%d", &start, &end, &action) == 3) {
-      // Sanity checks...
-      if(start < 0 || end < 0 || end < start || start == end ||
-         action < DVR_CP_CUT || action > DVR_CP_COMM) {
-        tvhwarn("DVR", 
-               "Insane entry: start=%f, end=%f. Skipping.", start, end);
-        continue;
-      }
-
-      cutpoint = calloc(1, sizeof(dvr_cutpoint_t));
-      if(cutpoint == NULL) {
-	fclose(file);
-        return 0;
-      }
-
-      cutpoint->dc_start_ms = (int) (start * 1000.0f);
-      cutpoint->dc_end_ms   = (int) (end * 1000.0f);
-      cutpoint->dc_type     = action;
-
-      TAILQ_INSERT_TAIL(cut_list, cutpoint, dc_link);
-        
-      valid_lines++;
-
-      if(valid_lines >= DVR_MAX_CUT_ENTRIES)
-	break;
-    }
+  /* Sanity Checks */
+  if(start < 0 || end < 0 || end < start || start == end ||
+     action < DVR_CP_CUT || action > DVR_CP_COMM) {
+    tvhwarn("dvr", "Insane entry: start=%f, end=%f. Skipping.", start, end);
+    return 1;
   }
-  fclose(file);
 
-  return valid_lines;
+  /* Set values */
+  cutpoint->dc_start_ms = (int) (start * 1000.0f);
+  cutpoint->dc_end_ms   = (int) (end * 1000.0f);
+  cutpoint->dc_type     = action;
+
+  return 0;
 }
 
 
@@ -119,7 +90,6 @@ dvr_parse_edl(const char *filename, dvr_cutpoint_list_t *cut_list)
  * Parse comskip data.
  *   filename, in: full path to comskip file.
  *   cut_list, in: empty list. out: the list filled with data.
- *                 Don't forget to call dvr_cutpoint_list_destroy for the cut_list when done.
  *   return:   number of read valid lines.
  *
  * Example of comskip file content (format v2):
@@ -130,115 +100,174 @@ dvr_parse_edl(const char *filename, dvr_cutpoint_list_t *cut_list)
  * 14923   23398
  * 42417   54004
  *
- **/ 
-static int 
-dvr_parse_comskip(const char *filename, dvr_cutpoint_list_t *cut_list)
+ */
+static int
+dvr_parse_comskip
+  ( const char *line, dvr_cutpoint_t *cutpoint, float *frame_rate )
 {
+  int start = 0, end = 0;
+
+  /* Header */
+  if (sscanf(line, "FILE PROCESSING COMPLETE %*d FRAMES AT %f",
+             frame_rate) == 1) {
+    if (*frame_rate <= 0.0)
+      return 1;
+    *frame_rate /= (*frame_rate > 1000.0f ? 100.0f : 1.0f);
+    return 0;
+  }
+
+  /* Invalid line */
+  if(*frame_rate <= 0.0f && sscanf(line, "%d\t%d", &start, &end) != 2)
+    return 1;
+
+  /* Sanity Checks */
+  if(start < 0 || end < 0 || end < start || start == end) {
+    tvherror("dvr", "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
+    return 1;
+  }
+
+  /* Set values */
+  cutpoint->dc_start_ms = (int) ((start * 1000) / *frame_rate);
+  cutpoint->dc_end_ms   = (int) ((end * 1000) / *frame_rate);
+  // Comskip don't have different actions, so use DVR_CP_COMM (Commercial skip)
+  cutpoint->dc_type     = DVR_CP_COMM;
+
+  return 0;
+}
+
+/**
+ * Wrapper for basic file processing
+ */
+static int
+dvr_parse_file
+  ( const char *path, dvr_cutpoint_list_t *cut_list, void *p )
+{
+  int line_count = 0, valid_lines = -1;
+  int (*parse) (const char *line, dvr_cutpoint_t *cp, float *framerate) = p;
+  dvr_cutpoint_t *cp = NULL;
+  float frate = 0.0;
   char line[DVR_MAX_CUTPOINT_LINE];
-  float frame_rate = 0.0f;
-  int line_count = 0, valid_lines = 0, start = 0, end = 0;
-  dvr_cutpoint_t *cutpoint;
+  FILE *file = fopen(path, "r");
 
-  FILE *file = fopen(filename, "r");
-
-  // No file found. Which is perfectly ok.
-  if (file == NULL) 
+  if (file == NULL)
     return -1;
 
-  while(line_count < DVR_MAX_READ_CUTFILE_LINES) {
+  while (line_count  < DVR_MAX_READ_CUTFILE_LINES &&
+         valid_lines < DVR_MAX_CUT_ENTRIES) {
+
+    /* Read line */
     if(fgets(line, DVR_MAX_CUTPOINT_LINE, file) == NULL)
       break;
     line_count++;
-    if (sscanf(line, "FILE PROCESSING COMPLETE %*d FRAMES AT %f", &frame_rate) == 1)
-      continue;
-    if(frame_rate > 0.0f && sscanf(line, "%d\t%d", &start, &end) == 2) {
-      // Sanity checks...
-      if(start < 0 || end < 0 || end < start || start == end) {
-        tvherror("DVR", 
-               "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
-        continue;
-      }
 
-      // Support frame rate stated as both 25 and 2500
-      frame_rate /= (frame_rate > 1000.0f ? 100.0f : 1.0f);
+    /* Alloc cut point */
+    if (!(cp = calloc(1, sizeof(dvr_cutpoint_t))))
+      goto done;
 
-      cutpoint = calloc(1, sizeof(dvr_cutpoint_t));
-      if(cutpoint == NULL) {
-	fclose(file);
-        return 0;
-      }
-
-      // Convert frame numbers to timestamps (in ms)
-      cutpoint->dc_start_ms = (int) ((start * 1000) / frame_rate);
-      cutpoint->dc_end_ms   = (int) ((end * 1000) / frame_rate);
-      // Comskip don't have different actions, so use DVR_CP_COMM (Commercial skip)
-      cutpoint->dc_type     = DVR_CP_COMM;
-
-      TAILQ_INSERT_TAIL(cut_list, cutpoint, dc_link);
-        
+    /* Parse */
+    if (!parse(line, cp, &frate)) {
+      TAILQ_INSERT_TAIL(cut_list, cp, dc_link);
       valid_lines++;
-
-      if(valid_lines >= DVR_MAX_CUT_ENTRIES)
-	break;
+      cp = NULL;
     }
   }
-  fclose(file);
 
+done:
+  if (cp) free(cp);
+  fclose(file);
   return valid_lines;
 }
 
+/* **************************************************************************
+ * Public routines
+ * *************************************************************************/
 
-/**
- * Return cutpoint data for a recording (if present). 
- **/
+/*
+ * Hooks for different decoders
+ *
+ * // TODO: possibly could be better with some sort of auto-detect
+ */
+static struct {
+  const char *ext;
+  int        (*parse) (const char *path, dvr_cutpoint_list_t *, void *);
+  void       *opaque;
+} dvr_cutpoint_parsers[] = {
+  {
+    .ext    = "txt",
+    .parse  = dvr_parse_file,
+    .opaque = dvr_parse_comskip,
+  },
+  {
+    .ext    = "edl",
+    .parse  = dvr_parse_file,
+    .opaque = dvr_parse_edl,
+  },
+};
+
+/*
+ * Return cutpoint data for a recording (if present).
+ */
 dvr_cutpoint_list_t *
 dvr_get_cutpoint_list (uint32_t dvr_entry_id)
 {
+  int i;
   dvr_entry_t *de;
+  char *path, *sptr;
+  dvr_cutpoint_list_t *cuts;
 
-  if ((de = dvr_entry_find_by_id(dvr_entry_id)) == NULL) 
+  /* Check this is a valid recording */
+  if ((de = dvr_entry_find_by_id(dvr_entry_id)) == NULL)
     return NULL;
   if (de->de_filename == NULL)
     return NULL;
 
-  char *dc_filename = alloca(strlen(de->de_filename) + 4);
-  if(dc_filename == NULL) 
-    return NULL;
-
-  // First we try with comskip file. (.txt)
-  if(!dvr_switch_file_extension(de->de_filename, ".txt", dc_filename))
-    return NULL;
-
-  dvr_cutpoint_list_t *cuts = calloc(1, sizeof(dvr_cutpoint_list_t)); 
-  if (cuts == NULL) 
+  /* Allocate list space */
+  cuts = calloc(1, sizeof(dvr_cutpoint_list_t));
+  if (cuts == NULL)
     return NULL;
   TAILQ_INIT(cuts);
 
-  if(dvr_parse_comskip(dc_filename, cuts) == -1) {
-    // Then try with edl file. (.edl)
-    if(!dvr_switch_file_extension(de->de_filename, ".edl", dc_filename)) {
-      dvr_cutpoint_list_destroy(cuts);
-      return NULL;
-    }
-    if(dvr_parse_edl(dc_filename, cuts) == -1) {
-      // No cutpoint file found
-      dvr_cutpoint_list_destroy(cuts);
-      return NULL;
-    }
+  /* Get base filename */
+  // TODO: harcoded 3 for max extension
+  path = alloca(strlen(de->de_filename) + 3);
+  strcpy(path, de->de_filename);
+  sptr = strrchr(path, '.');
+  if (!sptr)
+    return NULL;
+
+  /* Check each parser */
+  for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
+
+    /* Add extension */
+    strcpy(sptr, dvr_cutpoint_parsers[i].ext);
+
+    /* Check file exists (and readable) */
+    if (access(path, R_OK))
+      continue;
+
+    /* Try parsing */
+    if (dvr_cutpoint_parsers[i].parse(path, cuts,
+                                      dvr_cutpoint_parsers[i].opaque) != -1)
+      break;
+  }
+
+  /* Cleanup */
+  if (i < ARRAY_SIZE(dvr_cutpoint_parsers)) {
+    dvr_cutpoint_list_destroy(cuts);
+    return NULL;
   }
 
   return cuts;
 }
 
-/***************************
- * Helpers
- ***************************/
-
-void 
+/*
+ * Delete list
+ */
+void
 dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list)
 {
-  if(!list) return;
   dvr_cutpoint_t *cp;
+  if(!list) return;
   while ((cp = TAILQ_FIRST(list))) {
     TAILQ_REMOVE(list, cp, dc_link);
     free(cp);

@@ -406,25 +406,6 @@ void dvr_inotify_del  ( dvr_entry_t *de );
  * Cutpoints support
  **/
 
-/**
- * This is the max number of lines that will be read 
- * from a cutpoint file (e.g. EDL or Comskip). 
- * This is a safety against large files containing non-cutpoint/garbage data.
- **/
-#define DVR_MAX_READ_CUTFILE_LINES 10000
-/**
- * This is the max number of entries that will be used
- * from a cutpoint file (e.g. EDL or Comskip). 
- * This is a safety against using up resources due to
- * potentially large files containing weird data.
- **/
-#define DVR_MAX_CUT_ENTRIES 5000
-/**
- * Max line length allowed in a cutpoints file. Excess will be ignored.
- **/
-#define DVR_MAX_CUTPOINT_LINE 128
-
-
 typedef struct dvr_cutpoint {
   TAILQ_ENTRY(dvr_cutpoint) dc_link;
   uint64_t dc_start_ms;
