@@ -110,14 +110,12 @@ dvr_parse_comskip
   /* Header */
   if (sscanf(line, "FILE PROCESSING COMPLETE %*d FRAMES AT %f",
              frame_rate) == 1) {
-    if (*frame_rate <= 0.0)
-      return 1;
     *frame_rate /= (*frame_rate > 1000.0f ? 100.0f : 1.0f);
-    return 0;
+    return 1; // TODO: probably not nice this returns "error"
   }
 
   /* Invalid line */
-  if(*frame_rate <= 0.0f && sscanf(line, "%d\t%d", &start, &end) != 2)
+  if(*frame_rate <= 0.0f || sscanf(line, "%d\t%d", &start, &end) != 2)
     return 1;
 
   /* Sanity Checks */
@@ -239,7 +237,7 @@ dvr_get_cutpoint_list (uint32_t dvr_entry_id)
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {
 
     /* Add extension */
-    strcpy(sptr, dvr_cutpoint_parsers[i].ext);
+    strcpy(sptr+1, dvr_cutpoint_parsers[i].ext);
 
     /* Check file exists (and readable) */
     if (access(path, R_OK))
@@ -252,7 +250,7 @@ dvr_get_cutpoint_list (uint32_t dvr_entry_id)
   }
 
   /* Cleanup */
-  if (i < ARRAY_SIZE(dvr_cutpoint_parsers)) {
+  if (i >= ARRAY_SIZE(dvr_cutpoint_parsers)) {
     dvr_cutpoint_list_destroy(cuts);
     return NULL;
   }
