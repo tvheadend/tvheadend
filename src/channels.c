@@ -400,6 +400,16 @@ channel_find_by_id ( uint32_t i )
   return RB_FIND(&channels, &skel, ch_link, ch_id_cmp);
 }
 
+channel_t *
+channel_find_by_number ( int no )
+{
+  channel_t *ch;
+  CHANNEL_FOREACH(ch)
+    if(channel_get_number(ch) == no)
+      break;
+  return ch;
+}
+
 /* **************************************************************************
  * Property updating
  * *************************************************************************/
