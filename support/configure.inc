@@ -265,8 +265,6 @@ int main() {
 EOF
   $CC $CFLAGS $LDFLAGS $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt &> /dev/null
   RET=$?
-  [ $RET -eq 0 ] && $TMPDIR/$$.bin
-  RET=$?
   rm -f $TMPDIR/$$.{c,bin}
   return $RET
 }
