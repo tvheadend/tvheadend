@@ -429,6 +429,43 @@ scanfile_init ( void )
 }
 
 /*
+ * Destroy the mux list
+ */
+static void
+scanfile_done_region( scanfile_region_list_t *list )
+{
+  scanfile_region_t *reg;
+  scanfile_network_t *net;
+  dvb_mux_conf_t *mux;
+
+  while ((reg = LIST_FIRST(list)) != NULL) {
+    LIST_REMOVE(reg, sfr_link);
+    while ((net = LIST_FIRST(&reg->sfr_networks)) != NULL) {
+      LIST_REMOVE(net, sfn_link);
+      while ((mux = LIST_FIRST(&net->sfn_muxes)) != NULL) {
+        LIST_REMOVE(mux, dmc_link);
+        free(mux);
+      }
+      free((void *)net->sfn_id);
+      free((void *)net->sfn_name);
+      free(net);
+    }
+    free((void *)reg->sfr_id);
+    free((void *)reg->sfr_name);
+    free(reg);
+  }
+}
+
+void
+scanfile_done ( void )
+{
+  scanfile_done_region(&scanfile_regions_DVBS);
+  scanfile_done_region(&scanfile_regions_DVBT);
+  scanfile_done_region(&scanfile_regions_DVBC);
+  scanfile_done_region(&scanfile_regions_ATSC);
+}
+
+/*
  * Find scanfile
  */
 scanfile_network_t *

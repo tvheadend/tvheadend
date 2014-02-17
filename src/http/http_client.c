@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
 
 
 /*
@@ -141,7 +142,7 @@ http_thread ( void *p )
   tvhpoll_event_t ev;
   http_client_t *hc;
 
-  while (1) {
+  while (tvheadend_running) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
     if (n < 0) {
       tvherror("http_client", "tvhpoll_wait() error");
@@ -217,11 +218,11 @@ http_close ( http_client_t *hc )
 /*
  * Initialise subsystem
  */
+pthread_t http_client_tid;
+
 void
 http_client_init ( void )
 {
-  pthread_t tid;
-  
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
   TAILQ_INIT(&http_clients);
@@ -235,13 +236,28 @@ http_client_init ( void )
   http_poll = tvhpoll_create(10);
 
   /* Setup thread */
-  tvhthread_create(&tid, NULL, http_thread, NULL, 1);
+  tvhthread_create(&http_client_tid, NULL, http_thread, NULL, 0);
+}
+
+void
+http_client_done ( void )
+{
+  pthread_kill(http_client_tid, SIGTERM);
+  pthread_join(http_client_tid, NULL);
+  tvhpoll_destroy(http_poll);
+  curl_multi_cleanup(http_curlm);
+  curl_global_cleanup();
 }
 
 #else /* ENABLE_CURL */
 
 void 
 http_client_init ( void )
+{
+}
+
+void
+http_client_done ( void )
 {
 }
 

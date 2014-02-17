@@ -25,6 +25,8 @@
 
 #include <assert.h>
 
+SKEL_DECLARE(mpegts_pid_skel, mpegts_pid_t);
+
 static void
 mpegts_mux_initial_scan_timeout ( void *aux );
 static void
@@ -180,7 +182,7 @@ static void
 mpegts_mux_class_delete ( idnode_t *self )
 {
   mpegts_mux_t *mm = (mpegts_mux_t*)self;
-  if (mm->mm_delete) mm->mm_delete(mm);
+  if (mm->mm_delete) mm->mm_delete(mm, 1);
 }
 
 static const void *
@@ -330,7 +332,7 @@ mpegts_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 }
 
 void
-mpegts_mux_delete ( mpegts_mux_t *mm )
+mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   mpegts_mux_instance_t *mmi;
   mpegts_network_t *mn = mm->mm_network;
@@ -354,7 +356,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm )
 
   /* Delete services */
   while ((s = LIST_FIRST(&mm->mm_services))) {
-    service_destroy((service_t*)s);
+    service_destroy((service_t*)s, delconf);
   }
 
   /* Free memory */
@@ -527,6 +529,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   tvhtrace("mpegts", "%s - flush tables", buf);
   mpegts_table_flush_all(mm);
 
+  tvhtrace("mpegts", "%s - mi=%p", buf, (void *)mi);
   /* Flush table data queue */
   if (mi)
     mpegts_input_flush_mux(mi, mm);
@@ -905,14 +908,12 @@ mpegts_mux_find_pid ( mpegts_mux_t *mm, int pid, int create )
     skel.mp_pid = pid;
     mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
   } else {
-    static mpegts_pid_t *skel = NULL;
-    if (!skel)
-      skel = calloc(1, sizeof(mpegts_pid_t));
-    skel->mp_pid = pid;
-    mp = RB_INSERT_SORTED(&mm->mm_pids, skel, mp_link, mp_cmp);
+    SKEL_ALLOC(mpegts_pid_skel);
+    mpegts_pid_skel->mp_pid = pid;
+    mp = RB_INSERT_SORTED(&mm->mm_pids, mpegts_pid_skel, mp_link, mp_cmp);
     if (!mp) {
-      mp        = skel;
-      skel      = NULL;
+      mp = mpegts_pid_skel;
+      SKEL_USED(mpegts_pid_skel);
       mp->mp_fd = -1;
     }
   }

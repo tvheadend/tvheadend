@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -789,7 +790,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 {
   htsbuf_queue_t spill;
   http_connection_t hc;
-  
+
   // Note: global_lock held on entry */
   pthread_mutex_unlock(&global_lock);
   memset(&hc, 0, sizeof(http_connection_t));
@@ -844,4 +845,19 @@ http_server_init(const char *bindaddr)
     .status = NULL,
   };
   http_server = tcp_server_create(bindaddr, tvheadend_webui_port, &ops, NULL);
+}
+
+void
+http_server_done(void)
+{
+  http_path_t *hp;
+
+  pthread_mutex_lock(&global_lock);
+  while ((hp = LIST_FIRST(&http_paths)) != NULL) {
+    LIST_REMOVE(hp, hp_link);
+    free((void *)hp->hp_path);
+    free(hp);
+  }
+  pthread_mutex_unlock(&global_lock);
+  tcp_server_delete(http_server);
 }

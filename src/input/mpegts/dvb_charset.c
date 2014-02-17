@@ -79,6 +79,20 @@ void dvb_charset_init ( void )
 }
 
 /*
+ *
+ */
+void dvb_charset_done ( void )
+{
+  dvb_charset_t *enc;
+  
+  while ((enc = LIST_FIRST(&dvb_charset_list)) != NULL) {
+    LIST_REMOVE(enc, link);
+    free((void *)enc->charset);
+    free(enc);
+  }
+}
+
+/*
  * Find default charset
  */
 const char *dvb_charset_find

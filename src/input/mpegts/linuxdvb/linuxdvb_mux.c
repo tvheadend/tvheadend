@@ -36,7 +36,7 @@
  * *************************************************************************/
 
 static void
-linuxdvb_mux_delete ( mpegts_mux_t *mm );
+linuxdvb_mux_delete ( mpegts_mux_t *mm, int delconf );
 
 extern const idclass_t mpegts_mux_class;
 
@@ -611,15 +611,16 @@ linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 }
 
 static void
-linuxdvb_mux_delete ( mpegts_mux_t *mm )
+linuxdvb_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   /* Remove config */
-  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s",
+  if (delconf)
+    hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s",
                       idnode_uuid_as_str(&mm->mm_network->mn_id),
                       idnode_uuid_as_str(&mm->mm_id));
 
   /* Delete the mux */
-  mpegts_mux_delete(mm);
+  mpegts_mux_delete(mm, delconf);
 }
 
 /* **************************************************************************

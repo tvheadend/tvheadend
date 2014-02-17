@@ -47,6 +47,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -1986,8 +1987,9 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   /* Session main loop */
 
-  while(1) {
+  while(tvheadend_running) {
 readmsg:
+    tvhlog(LOG_INFO, "htsp", "read_loop");
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       return r;
 
@@ -2036,6 +2038,7 @@ readmsg:
 
     htsmsg_destroy(m);
   }
+  return 0;
 }
 
 /**
@@ -2052,7 +2055,7 @@ htsp_write_scheduler(void *aux)
 
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
-  while(1) {
+  while(tvheadend_running) {
 
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
       /* No active queues at all */
@@ -2213,6 +2216,14 @@ htsp_server_status ( void *opaque, htsmsg_t *m )
     htsmsg_add_str(m, "user", htsp->htsp_username);
 }
 
+/*
+ * Cancel callback
+ */
+static void
+htsp_server_cancel ( void *opaque )
+{
+}
+
 /**
  *  Fire up HTSP server
  */
@@ -2224,10 +2235,23 @@ htsp_init(const char *bindaddr)
     .start  = htsp_serve,
     .stop   = NULL,
     .status = htsp_server_status,
+    .cancel = htsp_server_cancel
   };
   htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);
   if(tvheadend_htsp_port_extra)
     htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
+}
+
+/**
+ *  Fire down HTSP server
+ */
+void
+htsp_done(void)
+{
+  if (htsp_server_2)
+    tcp_server_delete(htsp_server_2);
+  if (htsp_server)
+    tcp_server_delete(htsp_server);
 }
 
 /* **************************************************************************

@@ -41,6 +41,7 @@
 static int            epggrab_confver;
 pthread_mutex_t       epggrab_mutex;
 static pthread_cond_t epggrab_cond;
+int                   epggrab_running;
 
 /* Config */
 uint32_t              epggrab_interval;
@@ -96,7 +97,7 @@ static void* _epggrab_internal_thread ( void* p )
 
     /* Check for config change */
     pthread_mutex_lock(&epggrab_mutex);
-    while ( confver == epggrab_confver ) {
+    while ( epggrab_running && confver == epggrab_confver ) {
       if (epggrab_module) {
         err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
       } else {
@@ -108,6 +109,9 @@ static void* _epggrab_internal_thread ( void* p )
     mod        = epggrab_module;
     ts.tv_sec += epggrab_interval;
     pthread_mutex_unlock(&epggrab_mutex);
+
+    if ( !epggrab_running)
+      break;
 
     /* Run grabber */
     if (mod) _epggrab_module_grab(mod);
@@ -143,7 +147,7 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
     htsmsg_get_u32(m, "epgdb_periodicsave", &epggrab_epgdb_periodicsave);
     if (epggrab_epgdb_periodicsave)
-      gtimer_arm(&epggrab_save_timer, epg_save, NULL,
+      gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
                  epggrab_epgdb_periodicsave);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
                         &epggrab_interval)) {
@@ -319,7 +323,7 @@ int epggrab_set_periodicsave ( uint32_t e )
     if (!e)
       gtimer_disarm(&epggrab_save_timer);
     else
-      epg_save(NULL); // will arm the timer
+      epg_save(); // will arm the timer
     pthread_mutex_unlock(&global_lock);
     save = 1;
   }
@@ -368,6 +372,8 @@ void epggrab_resched ( void )
 /*
  * Initialise
  */
+pthread_t      epggrab_tid;
+
 void epggrab_init ( void )
 {
   /* Defaults */
@@ -396,11 +402,33 @@ void epggrab_init ( void )
   _epggrab_load();
 
   /* Start internal grab thread */
-  pthread_t      tid;
-  pthread_attr_t tattr;
-  pthread_attr_init(&tattr);
-  pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-  tvhthread_create(&tid, &tattr, _epggrab_internal_thread, NULL, 1);
-  pthread_attr_destroy(&tattr);
+  epggrab_running = 1;
+  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, 0);
 }
 
+/*
+ * Cleanup
+ */
+void epggrab_done ( void )
+{
+  epggrab_module_t *mod;
+
+  epggrab_running = 0;
+  pthread_cond_signal(&epggrab_cond);
+  pthread_join(epggrab_tid, NULL);
+
+  pthread_mutex_lock(&global_lock);
+  while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {
+    LIST_REMOVE(mod, link);
+    if (mod->type == EPGGRAB_OTA && ((epggrab_module_ota_t *)mod)->done)
+      ((epggrab_module_ota_t *)mod)->done((epggrab_module_ota_t *)mod);
+    if (mod->type == EPGGRAB_INT || mod->type == EPGGRAB_EXT)
+      free((void *)((epggrab_module_int_t *)mod)->path);
+    free((void *)mod->id);
+    free((void *)mod->name);
+    free(mod);
+  }
+  pthread_mutex_unlock(&global_lock);
+  epggrab_ota_done_();
+  opentv_done();
+}

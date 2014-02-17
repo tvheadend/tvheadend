@@ -23,6 +23,7 @@
 #include "dvr/dvr.h"
 
 void htsp_init(const char *bindaddr);
+void htsp_done(void);
 
 void htsp_channel_update_nownext(channel_t *ch);
 

@@ -37,6 +37,7 @@ typedef struct service_mapper_status
 } service_mapper_status_t;
 
 void service_mapper_init   ( void );
+void service_mapper_done   ( void );
 
 // Start new mapping
 void service_mapper_start  

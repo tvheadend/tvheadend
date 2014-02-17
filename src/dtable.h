@@ -58,6 +58,8 @@ typedef struct dtable {
 dtable_t *dtable_create(const dtable_class_t *dtc, const char *name, 
 			void *opaque);
 
+void dtable_delete(const char *name);
+
 int dtable_load(dtable_t *dt);
 
 dtable_t *dtable_find(const char *name);

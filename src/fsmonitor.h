@@ -47,6 +47,7 @@ struct fsmonitor {
 };
 
 void fsmonitor_init ( void );
+void fsmonitor_done ( void );
 int  fsmonitor_add  ( const char *path, fsmonitor_t *fsm );
 void fsmonitor_del  ( const char *path, fsmonitor_t *fsm );
 

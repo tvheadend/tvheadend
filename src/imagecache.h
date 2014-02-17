@@ -33,6 +33,7 @@ extern struct imagecache_config imagecache_conf;
 extern pthread_mutex_t imagecache_mutex;
 
 void     imagecache_init     ( void );
+void	 imagecache_done     ( void );
 
 htsmsg_t *imagecache_get_config ( void );
 int       imagecache_set_config ( htsmsg_t *c );

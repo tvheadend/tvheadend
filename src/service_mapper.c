@@ -44,13 +44,21 @@ static void *service_mapper_thread ( void *p );
 /**
  * Initialise
  */
+pthread_t service_mapper_tid;
+
 void
 service_mapper_init ( void )
 {
-  pthread_t tid;
   TAILQ_INIT(&service_mapper_queue);
   pthread_cond_init(&service_mapper_cond, NULL);
-  tvhthread_create(&tid, NULL, service_mapper_thread, NULL, 1);
+  tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, 0);
+}
+
+void
+service_mapper_done ( void )
+{
+  pthread_cond_signal(&service_mapper_cond);
+  pthread_join(service_mapper_tid, NULL);
 }
 
 /*
@@ -289,7 +297,7 @@ service_mapper_thread ( void *aux )
 
   pthread_mutex_lock(&global_lock);
 
-  while (1) {
+  while (tvheadend_running) {
     
     /* Wait for work */
     while (!(s = TAILQ_FIRST(&service_mapper_queue))) {
@@ -298,7 +306,11 @@ service_mapper_thread ( void *aux )
         tvhinfo("service_mapper", "idle");
       }
       pthread_cond_wait(&service_mapper_cond, &global_lock);
+      if (!tvheadend_running)
+        break;
     }
+    if (!tvheadend_running)
+      break;
     service_mapper_remove(s);
 
     if (!working) {
@@ -327,11 +339,17 @@ service_mapper_thread ( void *aux )
     /* Wait */
     run = 1;
     pthread_mutex_lock(&sq.sq_mutex);
-    while(run) {
+    while(tvheadend_running && run) {
 
       /* Wait for message */
-      while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL)
+      while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL) {
         pthread_cond_wait(&sq.sq_cond, &sq.sq_mutex);
+        if (!tvheadend_running)
+          break;
+      }
+      if (!tvheadend_running)
+        break;
+
       TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
       pthread_mutex_unlock(&sq.sq_mutex);
 
@@ -353,6 +371,8 @@ service_mapper_thread ( void *aux )
       streaming_msg_free(sm);
       pthread_mutex_lock(&sq.sq_mutex);
     }
+    if (!tvheadend_running)
+      break;
 
     streaming_queue_clear(&sq.sq_queue);
     pthread_mutex_unlock(&sq.sq_mutex);
@@ -370,5 +390,7 @@ service_mapper_thread ( void *aux )
     service_mapper_stat.active = NULL;
     api_service_mapper_notify();
   }
+
+  pthread_mutex_unlock(&global_lock);
   return NULL;
 }

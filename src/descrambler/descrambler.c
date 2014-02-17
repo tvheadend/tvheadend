@@ -116,6 +116,13 @@ descrambler_init ( void )
 }
 
 void
+descrambler_done ( void )
+{
+  capmt_done();
+  cwc_done();
+}
+
+void
 descrambler_service_start ( service_t *t )
 {
 #if ENABLE_CWC
