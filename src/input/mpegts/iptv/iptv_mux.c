@@ -65,12 +65,13 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 }
 
 static void
-iptv_mux_delete ( mpegts_mux_t *mm )
+iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  hts_settings_remove("input/iptv/muxes/%s/config",
+  if (delconf)
+    hts_settings_remove("input/iptv/muxes/%s/config",
                       idnode_uuid_as_str(&mm->mm_id));
 
-  mpegts_mux_delete(mm);
+  mpegts_mux_delete(mm, delconf);
 }
 
 static void

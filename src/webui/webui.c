@@ -241,7 +241,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   tp.tv_usec = 0;
   setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
 
-  while(run) {
+  while(run && tvheadend_running) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {      
@@ -1081,7 +1081,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
 static void
 webui_static_content(const char *http_path, const char *source)
 {
-  http_path_add(http_path, strdup(source), page_static_file,
+  http_path_add(http_path, (void *)source, page_static_file,
     ACCESS_WEB_INTERFACE);
 }
 
@@ -1129,4 +1129,10 @@ webui_init(void)
   comet_init();
   webui_api_init();
 
+}
+
+void
+webui_done(void)
+{
+  comet_done();
 }

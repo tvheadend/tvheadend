@@ -21,6 +21,8 @@
 
 void cwc_init(void);
 
+void cwc_done(void);
+
 void cwc_service_start(struct service *t);
 
 void cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id);

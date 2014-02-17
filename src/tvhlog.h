@@ -86,6 +86,12 @@ void _tvhlog_hexdump   ( const char *file, int line,
 #define tvhlog_hexdump(...) (void)0
 #endif
 
+#define tvhftrace(subsys, fcn) do { \
+  tvhtrace(subsys, "%s() enter", #fcn); \
+  fcn(); \
+  tvhtrace(subsys, "%s() leave", #fcn); \
+} while (0)
+
 #define tvhdebug(...) tvhlog(LOG_DEBUG,   ##__VA_ARGS__)
 #define tvhinfo(...)  tvhlog(LOG_INFO,    ##__VA_ARGS__)
 #define tvhwarn(...)  tvhlog(LOG_WARNING, ##__VA_ARGS__)

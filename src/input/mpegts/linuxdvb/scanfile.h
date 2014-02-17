@@ -40,6 +40,7 @@ extern scanfile_region_list_t scanfile_regions_DVBS;
 extern scanfile_region_list_t scanfile_regions_ATSC;
 
 void scanfile_init ( void );
+void scanfile_done ( void );
 
 scanfile_network_t *scanfile_find ( const char *id );
   

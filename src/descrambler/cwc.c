@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <openssl/des.h>
@@ -184,9 +185,9 @@ typedef struct cwc_provider {
 typedef struct cs_card_data {
   
   LIST_ENTRY(cs_card_data) cs_card;
-  
+
   /* Card caid */
-	uint16_t cwc_caid;
+  uint16_t cwc_caid;
   
   /* Card type */
   card_type_t cwc_card_type;
@@ -210,6 +211,8 @@ typedef struct cwc {
 
   int cwc_retry_delay;
 
+  pthread_t cwc_tid;
+  
   pthread_cond_t cwc_cond;
 
   pthread_mutex_t cwc_writer_mutex; 
@@ -465,8 +468,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
   
   int seq = atomic_add(&cwc->cwc_seq, 1);
   
-  memset(buf, 0, 12);
-  
+  buf[0] = buf[1] = 0;
   buf[2] = (seq >> 8) & 0xff;
   buf[3] = seq & 0xff;
   buf[4] = (sid >> 8) & 0xff;
@@ -488,7 +490,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
   }
 
   tvhtrace("cwc", "sending message sid %d len %"PRIsize_t" enq %d", sid, len, enq);
-  tvhlog_hexdump("cwc", msg, len);
+  tvhlog_hexdump("cwc", buf, len);
 
   buf[0] = (len - 2) >> 8;
   buf[1] = (len - 2) & 0xff;
@@ -1194,6 +1196,7 @@ cwc_thread(void *aux)
              cwc->cwc_hostname, cwc->cwc_port);
     }
 
+    if(cwc->cwc_running == 0) continue;
     if(attempts == 1) continue; // Retry immediately
     d = 3;
 
@@ -1224,6 +1227,7 @@ cwc_thread(void *aux)
   free((void *)cwc->cwc_password);
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
+  free((void *)cwc->cwc_comment);
   free((void *)cwc->cwc_hostname);
   free((void *)cwc->cwc_id);
   free((void *)cwc->cwc_viaccess_emm.shared_emm);
@@ -2066,7 +2070,6 @@ cwc_destroy(cwc_t *cwc)
 static cwc_t *
 cwc_entry_find(const char *id, int create)
 {
-  pthread_t ptid;
   char buf[20];
   cwc_t *cwc;
   static int tally;
@@ -2094,7 +2097,7 @@ cwc_entry_find(const char *id, int create)
   cwc->cwc_running = 1;
   TAILQ_INSERT_TAIL(&cwcs, cwc, cwc_link);  
 
-  tvhthread_create(&ptid, NULL, cwc_thread, cwc, 1);
+  tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc, 0);
 
   return cwc;
 }
@@ -2334,6 +2337,29 @@ cwc_init(void)
 
   dt = dtable_create(&cwc_dtc, "cwc", NULL);
   dtable_load(dt);
+}
+
+
+/**
+ *
+ */
+void
+cwc_done(void)
+{
+  cwc_t *cwc;
+  pthread_t tid;
+
+  dtable_delete("cwc");
+  pthread_mutex_lock(&cwc_mutex);
+  while ((cwc = TAILQ_FIRST(&cwcs)) != NULL) {
+    tid = cwc->cwc_tid;
+    cwc_destroy(cwc);
+    pthread_mutex_unlock(&cwc_mutex);
+    pthread_kill(tid, SIGTERM);
+    pthread_join(tid, NULL);
+    pthread_mutex_lock(&cwc_mutex);
+  }
+  pthread_mutex_unlock(&cwc_mutex);
 }
 
 

@@ -33,6 +33,8 @@
 #include <linux/dvb/version.h>
 #include <linux/dvb/frontend.h>
 
+SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
+
 static int
 psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len);
 
@@ -445,17 +447,16 @@ static struct mpegts_table_state *
 mpegts_table_state_find
   ( mpegts_table_t *mt, int tableid, uint64_t extraid, int last )
 {
-  static struct mpegts_table_state *st, *skel = NULL;
+  struct mpegts_table_state *st;
 
   /* Find state */
-  if (!skel)
-    skel = calloc(1, sizeof(*skel));
-  skel->tableid = tableid;
-  skel->extraid = extraid;
-  st = RB_INSERT_SORTED(&mt->mt_state, skel, link, sect_cmp);
+  SKEL_ALLOC(mpegts_table_state_skel);
+  mpegts_table_state_skel->tableid = tableid;
+  mpegts_table_state_skel->extraid = extraid;
+  st = RB_INSERT_SORTED(&mt->mt_state, mpegts_table_state_skel, link, sect_cmp);
   if (!st) {
-    st   = skel;
-    skel = NULL;
+    st   = mpegts_table_state_skel;
+    SKEL_USED(mpegts_table_state_skel);
     mt->mt_incomplete++;
     mpegts_table_state_reset(mt, st, last);
   }

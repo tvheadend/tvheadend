@@ -59,6 +59,7 @@
 #include "imagecache.h"
 #include "timeshift.h"
 #include "fsmonitor.h"
+#include "lang_codes.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -67,6 +68,8 @@
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
 #endif
+
+pthread_t main_tid;
 
 /* Command line option struct */
 typedef struct str_list
@@ -169,10 +172,14 @@ handle_sigpipe(int x)
   return;
 }
 
-static void
+void
 doexit(int x)
 {
+  if (pthread_self() != main_tid)
+    pthread_kill(main_tid, SIGTERM);
+  pthread_cond_signal(&gtimer_cond);
   tvheadend_running = 0;
+  signal(x, doexit);
 }
 
 static int
@@ -423,6 +430,8 @@ main(int argc, char **argv)
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
+
+  main_tid = pthread_self();
 
   /* Setup global mutexes */
   pthread_mutex_init(&ffmpeg_lock, NULL);
@@ -704,6 +713,8 @@ main(int argc, char **argv)
     umask(0);
   }
 
+  tvheadend_running = 1;
+
   /* Start log thread (must be done post fork) */
   tvhlog_start();
 
@@ -789,9 +800,7 @@ main(int argc, char **argv)
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);
 
-#ifdef CONFIG_AVAHI
   avahi_init();
-#endif
 
   epg_updated(); // cleanup now all prev ref's should have been created
 
@@ -801,7 +810,6 @@ main(int argc, char **argv)
    * Wait for SIGTERM / SIGINT, but only in this thread
    */
 
-  tvheadend_running = 1;
   sigemptyset(&set);
   sigaddset(&set, SIGTERM);
   sigaddset(&set, SIGINT);
@@ -822,21 +830,55 @@ main(int argc, char **argv)
 
   mainloop();
 
+  tvhftrace("main", htsp_done);
+  tvhftrace("main", http_server_done);
+  tvhftrace("main", webui_done);
+  tvhftrace("main", http_client_done);
+  tvhftrace("main", fsmonitor_done);
+#if ENABLE_IPTV
+  tvhftrace("main", iptv_done);
+#endif
+#if ENABLE_LINUXDVB
+  tvhftrace("main", linuxdvb_done);
+#endif
+
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
   pthread_mutex_lock(&global_lock);
-  epg_save(NULL);
+  tvhftrace("main", epg_save);
 
 #if ENABLE_TIMESHIFT
-  timeshift_term();
+  tvhftrace("main", timeshift_term);
 #endif
   pthread_mutex_unlock(&global_lock);
+
+  tvhftrace("main", epggrab_done);
+  tvhftrace("main", tcp_server_done);
+  tvhftrace("main", subscription_done);
+  tvhftrace("main", descrambler_done);
+  tvhftrace("main", service_mapper_done);
+  tvhftrace("main", service_done);
+  tvhftrace("main", channel_done);
+  tvhftrace("main", dvr_done);
+  tvhftrace("main", access_done);
+  tvhftrace("main", epg_done);
+  tvhftrace("main", avahi_done);
+  tvhftrace("main", imagecache_done);
+  tvhftrace("main", idnode_done);
+  tvhftrace("main", lang_code_done);
+  tvhftrace("main", api_done);
+  tvhftrace("main", config_done);
+  tvhftrace("main", hts_settings_done);
+  tvhftrace("main", dvb_done);
+  tvhftrace("main", lang_str_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();
 
   if(opt_fork)
     unlink(opt_pidpath);
+    
+  free(opt_tsfile.str);
 
   return 0;
 }

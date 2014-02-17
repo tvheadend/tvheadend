@@ -1085,7 +1085,7 @@ linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
   if (ls->ls_switch)  linuxdvb_switch_destroy(ls->ls_switch);
   if (ls->ls_rotor)   linuxdvb_rotor_destroy(ls->ls_rotor);
   if (ls->ls_en50494) linuxdvb_en50494_destroy(ls->ls_en50494);
-  mpegts_input_delete((mpegts_input_t*)ls);
+  mpegts_input_delete((mpegts_input_t*)ls, 1);
 }
 
 linuxdvb_satconf_ele_t *
@@ -1160,8 +1160,10 @@ linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
       linuxdvb_rotor_destroy(lse->ls_rotor);
     if (lse->ls_en50494)
       linuxdvb_en50494_destroy(lse->ls_en50494);
-    mpegts_input_delete((mpegts_input_t*)lse);
+    mpegts_input_delete((mpegts_input_t*)lse, delconf);
   }
+  idnode_unlink(&ls->ls_id);
+  free(ls);
 }
 
 /******************************************************************************
@@ -1217,6 +1219,7 @@ void
 linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld )
 {
   idnode_unlink(&ld->ld_id);
+  free((void *)ld->ld_type);
 }
 
 int

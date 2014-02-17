@@ -91,6 +91,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
     void (*start) (epggrab_module_ota_t*m,
                    struct mpegts_mux *mm),
     int (*enable) (void *m, uint8_t e ),
+    void (*done) (epggrab_module_ota_t*m),
     epggrab_channel_tree_t *channels );
 
 /* **************************************************************************
@@ -162,6 +163,7 @@ void eit_load    ( void );
 
 /* OpenTV module */
 void opentv_init ( void );
+void opentv_done ( void );
 void opentv_load ( void );
 
 /* PyEPG module */

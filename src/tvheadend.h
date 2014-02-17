@@ -69,6 +69,8 @@ static inline htsmsg_t *tvheadend_capabilities_list(int check)
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
+extern int tvheadend_running;
+
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
@@ -539,6 +541,8 @@ static inline void mystrset(char **p, const char *s)
   *p = s ? strdup(s) : NULL;
 }
 
+void doexit(int x);
+
 int tvhthread_create0
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg,
@@ -602,6 +606,11 @@ int makedirs ( const char *path, int mode );
 int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
+
+#define SKEL_DECLARE(name, type) type *name;
+#define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
+#define SKEL_USED(name) do { name = NULL; } while (0)
+#define SKEL_FREE(name) do { free(name); name = NULL; } while (0)
 
 #ifdef PLATFORM_LINUX
 /* glibc wrapper */
