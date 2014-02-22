@@ -53,7 +53,7 @@ tvheadend.epgDetails = function(event) {
 	if (event.ext_text != null) 
 		content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
 
-	content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
+	content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>'
 	content += '<div id="related"></div>';
 	content += '<div id="altbcast"></div>';
 
