@@ -22,6 +22,7 @@
 #include "notify.h"
 #include "atomic.h"
 #include "tvhpoll.h"
+#include "streaming.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -453,6 +454,9 @@ linuxdvb_frontend_monitor ( void *aux )
   mpegts_pid_t *mp;
   fe_status_t fe_status;
   signal_state_t status;
+  signal_status_t sigstat;
+  streaming_message_t sm;
+  service_t *s;
 #if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
@@ -620,6 +624,20 @@ linuxdvb_frontend_monitor ( void *aux )
       mmi->mmi_stats.snr = u16;
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       mmi->mmi_stats.unc = u32;
+  }
+
+  /* Send message */
+  sigstat.status_text = signal2str(status);
+  sigstat.snr         = mmi->mmi_stats.snr;
+  sigstat.signal      = mmi->mmi_stats.signal;
+  sigstat.ber         = mmi->mmi_stats.ber;
+  sigstat.unc         = mmi->mmi_stats.ber;
+  sm.sm_type = SMT_SIGNAL_STATUS;
+  sm.sm_data = &sigstat;
+  LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
+    pthread_mutex_lock(&s->s_stream_mutex);
+    streaming_pad_deliver(&s->s_streaming_pad, &sm);
+    pthread_mutex_unlock(&s->s_stream_mutex);
   }
 }
 
