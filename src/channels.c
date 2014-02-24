@@ -536,6 +536,9 @@ channel_create0
   /* EPG */
   epggrab_channel_add(ch);
 
+  /* HTSP */
+  htsp_channel_add(ch);
+
   return ch;
 }
 
@@ -571,6 +574,9 @@ channel_delete ( channel_t *ch )
   /* EPG */
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
+
+  /* HTSP */
+  htsp_channel_delete(ch);
 
   /* Settings */
   hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
