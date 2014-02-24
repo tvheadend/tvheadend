@@ -69,7 +69,7 @@ tvheadend.status_subs = function() {
 
  	function renderBw(value, item, store) {
 		var txt = parseInt(value / 125);
-		var href = 'javascript:tvheadend.status_bandwidth_monitor(' + store.id + ');';
+		var href = 'javascript:tvheadend.subscription_bw_monitor(' + store.id + ');';
 		return '<a href="' + href + '">' + txt + '</a>';
 	}
 
@@ -151,7 +151,7 @@ tvheadend.status_subs = function() {
  */
 tvheadend.status_streams = function() {
 
-	var stream_store = new Ext.data.JsonStore({
+	tvheadend.streamStatusStore = new Ext.data.JsonStore({
 		root : 'entries',
 		totalProperty : 'totalCount',
 		fields : [ {
@@ -184,9 +184,9 @@ tvheadend.status_streams = function() {
 	});
 
   tvheadend.comet.on('input_status', function(m){
-    if (m.reload != null) stream_store.reload();
+    if (m.reload != null) tvheadend.streamStatusStore.reload();
     if (m.update != null) {
-      var r = stream_store.getById(m.uuid);
+      var r = tvheadend.streamStatusStore.getById(m.uuid);
       if (r) {
         r.data.subs    = m.subs;
         r.data.weight  = m.weight;
@@ -195,10 +195,14 @@ tvheadend.status_streams = function() {
         r.data.unc     = m.unc;
         r.data.snr     = m.snr;
         r.data.bps     = m.bps;
-			  stream_store.afterEdit(r);
-			  stream_store.fireEvent('updated', stream_store, r, Ext.data.Record.COMMIT);
+
+        tvheadend.streamStatusStore.afterEdit(r);
+        tvheadend.streamStatusStore.fireEvent('updated',
+                                              tvheadend.streamStatusStore,
+                                              r,
+                                              Ext.data.Record.COMMIT);
       } else {
-        stream_store.reload();
+        tvheadend.streamStatusStore.reload();
       } 
     }
   });
@@ -211,8 +215,10 @@ tvheadend.status_streams = function() {
 		colored : true
 	});
 
-	function renderBw(value) {
-		return parseInt(value / 1024);
+	function renderBw(value, item, store) {
+		var txt = parseInt(value / 1024);
+		var href = "javascript:tvheadend.stream_bw_monitor('" + store.id + "');";
+		return '<a href="' + href + '">' + txt + '</a>';
 	}
 
 	var cm = new Ext.grid.ColumnModel([{
@@ -264,7 +270,7 @@ tvheadend.status_streams = function() {
 		disableSelection : true,
 		title : 'Stream',
 		iconCls : 'hardware',
-		store : stream_store,
+		store : tvheadend.streamStatusStore,
 		cm : cm,
                 flex: 1,
 		viewConfig : {
@@ -366,7 +372,7 @@ tvheadend.status = function() {
 }
 
 
-tvheadend.status_bandwidth_monitor = function(id) {
+tvheadend.subscription_bw_monitor = function(id) {
     var inputSeries  = new TimeSeries();
     var outputSeries = new TimeSeries();
     var chart = new SmoothieChart({
@@ -463,5 +469,90 @@ tvheadend.status_bandwidth_monitor = function(id) {
 
     win.show();
  
+    Ext.TaskMgr.start(task);
+};
+
+
+tvheadend.stream_bw_monitor = function(id) {
+    var inputSeries  = new TimeSeries();
+    var chart = new SmoothieChart({
+	minValue: 0,
+	grid: {
+	    sharpLines: true,
+	    fillStyle: 'transparent',
+	    verticalSections: 0,
+	    millisPerLine: 0
+	},
+	labels: {
+	    disabled: false,
+	    fillStyle: '#000000',
+	    fontSize: 12
+	}
+    });
+
+    chart.addTimeSeries(inputSeries, {
+	strokeStyle: 'rgb(0, 255, 0)',
+	fillStyle: 'rgba(0, 255, 0, 0.5)',
+	lineWidth: 3
+    });
+
+    var inputLbl = new Ext.form.Label();
+
+    var win = new Ext.Window({
+        title: 'Bandwidth monitor',
+        layout:'fit',
+	resizable: false,
+	width : 450 + 30,
+	height : 150 + 50,
+	constrainHeader : true,
+	tbar : [inputLbl],
+	items: {
+	    xtype: 'box',
+	    autoEl: {
+		tag: 'canvas',
+		width: 450,
+		height: 150
+	    },
+	    listeners: {
+		render: {
+		    scope: this,
+		    fn: function(item) {
+			chart.streamTo(item.el.dom, 1000);
+		    }
+		},
+                resize: {
+		    scope: this,
+		    fn: function(item) {
+			chart.render(item.el.dom, 1000);
+                    }
+		}
+	    }
+	}
+    });
+
+    var task = {
+	interval: 1000,
+	run: function() {
+	    r = tvheadend.streamStatusStore.getById(id);
+	    if (typeof r === 'undefined') {
+		chart.stop();
+		Ext.TaskMgr.stop(task);
+		return;
+	    }
+
+	    win.setTitle(r.data.input + ' (' + r.data.stream + ')');
+	    var input = Math.round(r.data.bps  / 1024);
+	    inputLbl.setText('Input: ' + input + ' kb/s');
+	    inputSeries.append(new Date().getTime(), input);
+	}
+    };
+
+    win.on('close', function() {
+	chart.stop();
+	Ext.TaskMgr.stop(task);
+    });
+
+    win.show();
+
     Ext.TaskMgr.start(task);
 };
