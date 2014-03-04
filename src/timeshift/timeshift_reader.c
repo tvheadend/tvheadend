@@ -731,17 +731,19 @@ void *timeshift_reader ( void *p )
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
-#if ENABLE_TRACE
-      if (skip)
-      {
-        time_t pts = 0;
-        int64_t delta = now - sm->sm_time;
-        if (sm->sm_type == SMT_PACKET)
-          pts = ((th_pkt_t*)sm->sm_data)->pkt_pts;
-        tvhtrace("timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
-               ts->id, sm->sm_time, pts, delta);
+      if (sm->sm_type == SMT_PACKET) {
+        th_pkt_t *pkt = sm->sm_data;
+        tvhtrace("timeshift",
+                 "ts %d pkt out - stream %d type %c pts %10"PRId64
+                 " dts %10"PRId64 " dur %10d len %"PRIsize_t" time %"PRItime_t,
+                 ts->id,
+                 pkt->pkt_componentindex,
+                 pkt_frametype_to_char(pkt->pkt_frametype),
+                 ts_rescale(pkt->pkt_pts, 1000000),
+                 ts_rescale(pkt->pkt_dts, 1000000),
+                 pkt->pkt_duration,
+                 pktbuf_len(pkt->pkt_payload), sm->sm_time);
       }
-#endif
       streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;
       sm        = NULL;
