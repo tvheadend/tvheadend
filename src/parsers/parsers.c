@@ -1387,15 +1387,21 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
       pkt->pkt_pts < t->s_current_pts - 180000))
     t->s_current_pts = pkt->pkt_pts;
 
-#if 0
-  printf("PARSE: %-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
-	 streaming_component_type2txt(st->es_type),
-	 pkt->pkt_frametype,
-	 pkt->pkt_dts,
-	 pkt->pkt_pts,
-	 pkt->pkt_duration,
-	 pktbuf_len(pkt->pkt_payload));
+  tvhtrace("parser",
+           "pkt stream %2d %-12s type %c dts %10"PRId64" pts %10"PRId64
+           " dur %10d len %10"PRIsize_t,
+           st->es_index,
+           streaming_component_type2txt(st->es_type),
+           pkt_frametype_to_char(pkt->pkt_frametype),
+#if 1
+           ts_rescale(pkt->pkt_pts, 1000000),
+           ts_rescale(pkt->pkt_dts, 1000000),
+#else
+           pkt->pkt_dts,
+           pkt->pkt_pts,
 #endif
+           pkt->pkt_duration,
+           pktbuf_len(pkt->pkt_payload));
 
   pkt->pkt_aspect_num = st->es_aspect_num;
   pkt->pkt_aspect_den = st->es_aspect_den;
