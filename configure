@@ -103,6 +103,15 @@ int test ( void )
   return ok;
 }' -lpthread
 
+check_cc_snippet qsort_r '
+#include <stdlib.h>
+#define TEST test
+int test(void)
+{
+  qsort_r(NULL, 0, 0, NULL, NULL);
+  return 0;
+}
+'
 #
 # Python
 #
