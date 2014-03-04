@@ -175,7 +175,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
 
   tvhlog_spawn(LOG_ALERT, "CRASH", "Loaded libraries: %s ", libs);
 #ifdef NGREG
-  snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", NGREG);
+  snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", (int)NGREG);
 
   for(i = 0; i < NGREG; i++) {
     sappend(tmpbuf, sizeof(tmpbuf), "%016" PRIx64, uc->uc_mcontext.gregs[i]);
