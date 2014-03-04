@@ -74,9 +74,8 @@
 #define CW_DUMP(buf, len, format, ...) \
   printf(format, __VA_ARGS__); int j; for (j = 0; j < len; ++j) printf("%02X ", buf[j]); printf("\n");
 
-#if defined(__GNUC__) && defined(PLATFORM_LINUX)
-#include <features.h>
-#if __GNUC_PREREQ(4, 3)
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#if 100*__GNUC__+__GNUC_MINOR >=403
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 #endif
