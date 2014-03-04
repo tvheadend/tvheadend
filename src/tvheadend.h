@@ -31,6 +31,7 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
+#include <limits.h>
 #if ENABLE_LOCKOWNER
 #include <sys/syscall.h>
 #endif
@@ -611,6 +612,14 @@ qsort_r(void *base, size_t nmemb, size_t size,
 #endif /* ENABLE_QSORT_R */
 
 /* printing */
+#ifndef __WORDSIZE
+# if ULONG_MAX == 0xffffffffffffffff
+#  define __WORDSIZE 64
+# elif ULONG_MAX == 0xffffffff
+#  define __WORDSIZE 32
+# endif /* ULONG_MAX */
+#endif /* __WORDSIZE */
+
 # if __WORDSIZE == 64
 #define PRIsword_t      PRId64
 #define PRIuword_t      PRIu64
