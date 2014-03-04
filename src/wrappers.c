@@ -135,12 +135,11 @@ tvhthread_create0
   return r;
 }
 
-#ifdef PLATFORM_LINUX
+#if ! ENABLE_QSORT_R
 /*
  * qsort_r wrapper for pre GLIBC 2.8
  */
 
-#if !__GLIBC_PREREQ(2,8)
 static __thread struct {
   int (*cmp) ( const void *a, const void *b, void *p );
   void *aux;
@@ -160,5 +159,4 @@ qsort_r(void *base, size_t nmemb, size_t size,
   qsort_r_data.aux = aux;
   qsort(base, nmemb, size, qsort_r_wrap);
 }
-#endif /* GLIBC < 2.8 */
-#endif /* PLATFORM_LINUX */
+#endif /* ENABLE_QSORT_R */
