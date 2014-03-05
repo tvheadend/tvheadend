@@ -21,6 +21,7 @@
 #define __IPTV_H__
 
 void iptv_init ( void );
+void iptv_done ( void );
 
 #endif /* __IPTV_H__ */
 

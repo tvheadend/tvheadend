@@ -43,6 +43,8 @@ static pthread_mutex_t        idnode_mutex;
 static htsmsg_t              *idnode_queue;
 static void*                  idnode_thread(void* p);
 
+SKEL_DECLARE(idclasses_skel, idclass_link_t);
+
 static void
 idclass_register(const idclass_t *idc);
 
@@ -120,11 +122,11 @@ in_cmp(const idnode_t *a, const idnode_t *b)
 /**
  *
  */
+pthread_t idnode_tid;
+
 void
 idnode_init(void)
 {
-  pthread_t tid;
-
   randfd = open("/dev/urandom", O_RDONLY);
   if(randfd == -1)
     exit(1);
@@ -132,7 +134,25 @@ idnode_init(void)
   idnode_queue = NULL;
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
-  tvhthread_create(&tid, NULL, idnode_thread, NULL, 1);
+  tvhthread_create(&idnode_tid, NULL, idnode_thread, NULL, 0);
+}
+
+void
+idnode_done(void)
+{
+  idclass_link_t *il;
+
+  pthread_cond_signal(&idnode_cond);
+  pthread_join(idnode_tid, NULL);
+  pthread_mutex_lock(&idnode_mutex);
+  htsmsg_destroy(idnode_queue);
+  idnode_queue = NULL;
+  pthread_mutex_unlock(&idnode_mutex);  
+  while ((il = RB_FIRST(&idclasses)) != NULL) {
+    RB_REMOVE(&idclasses, il, link);
+    free(il);
+  }
+  SKEL_FREE(idclasses_skel);
 }
 
 /**
@@ -810,15 +830,13 @@ ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
 static void
 idclass_register(const idclass_t *idc)
 {
-  static idclass_link_t *skel = NULL;
   while (idc) {
-    if (!skel)
-      skel = calloc(1, sizeof(idclass_link_t));
-    skel->idc = idc;
-    if (RB_INSERT_SORTED(&idclasses, skel, link, ic_cmp))
+    SKEL_ALLOC(idclasses_skel);
+    idclasses_skel->idc = idc;
+    if (RB_INSERT_SORTED(&idclasses, idclasses_skel, link, ic_cmp))
       break;
+    SKEL_USED(idclasses_skel);
     tvhtrace("idnode", "register class %s", idc->ic_class);
-    skel = NULL;
     idc = idc->ic_super;
   }
 }
@@ -912,6 +930,9 @@ idnode_notify
 {
   const char *uuid = idnode_uuid_as_str(in);
 
+  if (!tvheadend_running)
+    return;
+
   /* Forced */
   if (chn || force) {
     htsmsg_t *m = htsmsg_create_map();
@@ -961,7 +982,7 @@ idnode_thread ( void *p )
 
   pthread_mutex_lock(&idnode_mutex);
 
-  while (1) {
+  while (tvheadend_running) {
 
     /* Get queue */
     if (!idnode_queue) {
@@ -995,6 +1016,7 @@ idnode_thread ( void *p )
     pthread_mutex_lock(&idnode_mutex);
   }
   if (q) htsmsg_destroy(q);
+  pthread_mutex_unlock(&idnode_mutex);
   
   return NULL;
 }

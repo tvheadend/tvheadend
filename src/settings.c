@@ -80,6 +80,15 @@ hts_settings_init(const char *confpath)
 /**
  *
  */
+void
+hts_settings_done(void)
+{
+  free(settingspath);
+}
+
+/**
+ *
+ */
 int
 hts_settings_makedirs ( const char *inpath )
 {

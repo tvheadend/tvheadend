@@ -556,7 +556,10 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
  * ***********************************************************************/
 
 void epg_init    (void);
-void epg_save    (void*);
+void epg_done    (void);
+void epg_skel_done (void);
+void epg_save    (void);
+void epg_save_callback (void *p);
 void epg_updated (void);
 
 /* ************************************************************************

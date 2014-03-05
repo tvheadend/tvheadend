@@ -481,6 +481,20 @@ dvr_autorec_init(void)
 }
 
 void
+dvr_autorec_done(void)
+{
+  dvr_autorec_entry_t *dae;
+
+  pthread_mutex_lock(&global_lock);
+  while ((dae = TAILQ_FIRST(&autorec_entries)) != NULL) {
+    TAILQ_REMOVE(&autorec_entries, dae, dae_link);
+    free(dae);
+  }
+  pthread_mutex_unlock(&global_lock);
+  dtable_delete("autorec");
+}
+
+void
 dvr_autorec_update(void)
 {
   dvr_autorec_entry_t *dae;
@@ -638,13 +652,14 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
  *
  */
 void
-autorec_destroy_by_channel(channel_t *ch)
+autorec_destroy_by_channel(channel_t *ch, int delconf)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *m;
 
   while((dae = LIST_FIRST(&ch->ch_autorecs)) != NULL) {
-    dtable_record_erase(autorec_dt, dae->dae_id);
+    if (delconf)
+      dtable_record_erase(autorec_dt, dae->dae_id);
     autorec_entry_destroy(dae);
   }
 

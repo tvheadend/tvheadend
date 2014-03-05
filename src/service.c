@@ -239,6 +239,8 @@ stream_clean(elementary_stream_t *st)
 void
 service_stream_destroy(service_t *t, elementary_stream_t *es)
 {
+  caid_t *c;
+
   if(t->s_status == SERVICE_RUNNING)
     stream_clean(es);
 
@@ -246,6 +248,12 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
   avgstat_flush(&es->es_cc_errors);
 
   TAILQ_REMOVE(&t->s_components, es, es_link);
+
+  while ((c = LIST_FIRST(&es->es_caids)) != NULL) {
+    LIST_REMOVE(c, link);
+    free(c);
+  }
+
   free(es->es_section);
   free(es->es_nicename);
   free(es);
@@ -441,8 +449,10 @@ service_find_instance
 void
 service_unref(service_t *t)
 {
-  if((atomic_add(&t->s_refcount, -1)) == 1)
+  if((atomic_add(&t->s_refcount, -1)) == 1) {
+    free(t->s_nicename);
     free(t);
+  }
 }
 
 
@@ -461,14 +471,14 @@ service_ref(service_t *t)
  * Destroy a service
  */
 void
-service_destroy(service_t *t)
+service_destroy(service_t *t, int delconf)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
   channel_service_mapping_t *csm;
 
   if(t->s_delete != NULL)
-    t->s_delete(t);
+    t->s_delete(t, delconf);
 
   lock_assert(&global_lock);
   
@@ -964,7 +974,7 @@ service_saver(void *aux)
   int restart;
   pthread_mutex_lock(&pending_save_mutex);
 
-  while(1) {
+  while(tvheadend_running) {
 
     if((t = TAILQ_FIRST(&pending_save_queue)) == NULL) {
       pthread_cond_wait(&pending_save_cond, &pending_save_mutex);
@@ -996,17 +1006,24 @@ service_saver(void *aux)
 /**
  *
  */
+pthread_t service_saver_tid;
+
 void
 service_init(void)
 {
-  pthread_t tid;
   TAILQ_INIT(&pending_save_queue);
   TAILQ_INIT(&service_all);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
-  tvhthread_create(&tid, NULL, service_saver, NULL, 1);
+  tvhthread_create(&service_saver_tid, NULL, service_saver, NULL, 0);
 }
 
+void
+service_done(void)
+{
+  pthread_cond_signal(&pending_save_cond);
+  pthread_join(service_saver_tid, NULL);
+}
 
 /**
  *

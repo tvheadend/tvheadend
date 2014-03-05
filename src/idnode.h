@@ -109,6 +109,7 @@ typedef struct idnode_filter_ele
 typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
 void idnode_init(void);
+void idnode_done(void);
 
 int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc);
 void idnode_unlink(idnode_t *in);

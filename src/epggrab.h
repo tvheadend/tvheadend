@@ -221,6 +221,7 @@ struct epggrab_module_ota
 
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
+  void (*done) ( epggrab_module_ota_t *m );
 };
 
 /*
@@ -238,6 +239,7 @@ htsmsg_t*         epggrab_module_list       ( void );
  */
 extern epggrab_module_list_t epggrab_modules;
 extern pthread_mutex_t       epggrab_mutex;
+extern int                   epggrab_running;
 extern uint32_t              epggrab_interval;
 extern epggrab_module_int_t* epggrab_module;
 extern uint32_t              epggrab_channel_rename;
@@ -262,8 +264,10 @@ int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
  * Load/Save
  */
 void epggrab_init                 ( void );
+void epggrab_done                 ( void );
 void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
+void epggrab_ota_done_            ( void );
 
 /* **************************************************************************
  * Global Functions

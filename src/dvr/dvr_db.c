@@ -490,6 +490,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if(de->de_autorec != NULL)
     LIST_REMOVE(de, de_autorec_link);
 
+  free(de->de_filename);
   free(de->de_config_name);
   free(de->de_creator);
   if (de->de_title) lang_str_destroy(de->de_title);
@@ -506,9 +507,10 @@ dvr_entry_dec_ref(dvr_entry_t *de)
  *
  */
 static void
-dvr_entry_remove(dvr_entry_t *de)
+dvr_entry_remove(dvr_entry_t *de, int delconf)
 {
-  hts_settings_remove("dvr/log/%d", de->de_id);
+  if (delconf)
+    hts_settings_remove("dvr/log/%d", de->de_id);
 
   htsp_dvr_entry_delete(de);
   
@@ -523,6 +525,7 @@ dvr_entry_remove(dvr_entry_t *de)
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
   free(de->de_channel_name);
+  de->de_channel_name = NULL;
 
   dvrdb_changed();
 
@@ -729,7 +732,7 @@ static void
 dvr_timer_expire(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_remove(de);
+  dvr_entry_remove(de, 1);
  
 }
 
@@ -857,7 +860,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 
     /* If this was craeted by autorec - just remove it, it'll get recreated */
     if (de->de_autorec) {
-      dvr_entry_remove(de);
+      dvr_entry_remove(de, 1);
 
     /* Find match */
     } else {
@@ -1025,7 +1028,7 @@ dvr_entry_cancel(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   case DVR_RECORDING:
@@ -1034,11 +1037,11 @@ dvr_entry_cancel(dvr_entry_t *de)
     return de;
 
   case DVR_COMPLETED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   case DVR_MISSED_TIME:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   default:
@@ -1209,6 +1212,31 @@ dvr_init(void)
 }
 
 /**
+ *
+ */
+void
+dvr_done(void)
+{
+  dvr_config_t *cfg;
+  dvr_entry_t *de;
+
+#if ENABLE_INOTIFY
+  dvr_inotify_done();
+#endif
+  pthread_mutex_lock(&global_lock);
+  while ((cfg = LIST_FIRST(&dvrconfigs)) != NULL) {
+    LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_storage);
+    free(cfg->dvr_config_name);
+    free(cfg);
+  }
+  while ((de = LIST_FIRST(&dvrentries)) != NULL)
+    dvr_entry_remove(de, 0);
+  pthread_mutex_unlock(&global_lock);
+  dvr_autorec_done();
+}
+
+/**
  * find a dvr config by name, return NULL if not found
  */
 dvr_config_t *
@@ -1306,6 +1334,7 @@ dvr_config_delete(const char *name)
         cfg->dvr_config_name);
     hts_settings_remove("dvr/config%s", cfg->dvr_config_name);
     LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_config_name);
     free(cfg);
 
     dvrconfig_changed();    
@@ -1647,7 +1676,7 @@ dvr_entry_delete(dvr_entry_t *de)
     }
 
   }
-  dvr_entry_remove(de);
+  dvr_entry_remove(de, 1);
 }
 
 /**
@@ -1658,7 +1687,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     break;
 
   case DVR_RECORDING:
@@ -1669,7 +1698,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
     break;
 
   case DVR_MISSED_TIME:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     break;
 
   default:

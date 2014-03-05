@@ -224,7 +224,7 @@ tvhlog_thread ( void *p )
 
     /* Wait */
     if (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
-      if (tvhlog_run != 1) break;
+      if (!tvhlog_run) break;
       if (fp) {
         fclose(fp); // only issue here is we close with mutex!
                     // but overall performance will be higher
@@ -233,6 +233,7 @@ tvhlog_thread ( void *p )
       pthread_cond_wait(&tvhlog_cond, &tvhlog_mutex);
       continue;
     }
+    if (!msg) break;
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
     tvhlog_queue_size--;
     if (tvhlog_queue_size < (TVHLOG_QUEUE_MAXSIZE / 2))
@@ -252,7 +253,9 @@ tvhlog_thread ( void *p )
     tvhlog_process(msg, options, &fp, path);
     pthread_mutex_lock(&tvhlog_mutex);
   }
-
+  if (fp)
+    fclose(fp);
+  pthread_mutex_unlock(&tvhlog_mutex);
   return NULL;
 }
 
@@ -420,15 +423,18 @@ void
 tvhlog_start ( void )
 {
   tvhlog_run = 1;
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, 1);
+  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, 0);
 }
 
 void
 tvhlog_end ( void )
 {
   pthread_mutex_lock(&tvhlog_mutex);
-  tvhlog_run = 2;
+  tvhlog_run = 0;
   pthread_cond_signal(&tvhlog_cond);
   pthread_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
+  free(tvhlog_path);
+  htsmsg_destroy(tvhlog_debug);
+  htsmsg_destroy(tvhlog_trace);
 }

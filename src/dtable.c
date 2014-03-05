@@ -66,6 +66,23 @@ dtable_create(const dtable_class_t *dtc, const char *name, void *opaque)
 /**
  *
  */
+void
+dtable_delete(const char *name)
+{
+  dtable_t *dt = dtable_find(name);
+
+  if (dt) {
+    pthread_mutex_lock(&global_lock);
+    LIST_REMOVE(dt, dt_link);
+    pthread_mutex_unlock(&global_lock);
+    free(dt->dt_tablename);
+    free(dt);
+  }
+}
+
+/**
+ *
+ */
 int
 dtable_load(dtable_t *dt)
 {

@@ -184,6 +184,8 @@ typedef struct capmt {
 
   struct capmt_service_list capmt_services;
 
+  pthread_t capmt_tid;
+
   /* from capmt configuration */
   char *capmt_sockfile;
   char *capmt_hostname;
@@ -1113,7 +1115,6 @@ capmt_destroy(capmt_t *capmt)
 static capmt_t *
 capmt_entry_find(const char *id, int create)
 {
-  pthread_t ptid;
   char buf[20];
   capmt_t *capmt;
   static int tally;
@@ -1142,7 +1143,7 @@ capmt_entry_find(const char *id, int create)
 
   TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);  
 
-  tvhthread_create(&ptid, NULL, capmt_thread, capmt, 1);
+  tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, 1);
 
   return capmt;
 }
@@ -1280,3 +1281,19 @@ capmt_init(void)
   dtable_load(dt);
 }
 
+void
+capmt_done(void)
+{
+  capmt_t *capmt, *n;
+  pthread_t tid;
+
+  for (capmt = TAILQ_FIRST(&capmts); capmt != NULL; capmt = n) {
+    n = TAILQ_NEXT(capmt, capmt_link);
+    pthread_mutex_lock(&global_lock);
+    tid = capmt->capmt_tid;
+    capmt_destroy(capmt);
+    pthread_mutex_unlock(&global_lock);
+    pthread_join(tid, NULL);
+  }
+  dtable_delete("capmt");
+}

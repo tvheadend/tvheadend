@@ -1360,7 +1360,7 @@ extjs_service_delete(htsmsg_t *in)
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((id = htsmsg_field_get_string(f)) != NULL &&
        (t = service_find_by_identifier(id)) != NULL)
-      service_destroy(t);
+      service_destroy(t, 1);
   }
 }
 

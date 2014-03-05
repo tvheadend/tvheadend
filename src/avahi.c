@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <signal.h>
 
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
@@ -54,6 +55,7 @@
 
 static AvahiEntryGroup *group = NULL;
 static char *name = NULL;
+static AvahiSimplePoll *avahi_asp = NULL;
 
 static void create_services(AvahiClient *c);
 
@@ -247,14 +249,13 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
 static void *
 avahi_thread(void *aux)
 {
-  AvahiSimplePoll *asp = avahi_simple_poll_new();
-  const AvahiPoll *ap = avahi_simple_poll_get(asp);
+  const AvahiPoll *ap = avahi_simple_poll_get(avahi_asp);
 
   name = avahi_strdup("Tvheadend");
 
   avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
  
-  while((avahi_simple_poll_iterate(asp, -1)) != -1) {}
+  while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
 
   return NULL;
   
@@ -264,10 +265,19 @@ avahi_thread(void *aux)
 /**
  *
  */
+pthread_t avahi_tid;
+
 void
 avahi_init(void)
 {
-  pthread_t tid;
+  avahi_asp = avahi_simple_poll_new();
+  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, 0);
+}
 
-  tvhthread_create(&tid, NULL, avahi_thread, NULL, 1);
+void
+avahi_done(void)
+{
+  avahi_simple_poll_quit(avahi_asp);
+  pthread_kill(avahi_tid, SIGTERM);
+  pthread_join(avahi_tid, NULL);
 }

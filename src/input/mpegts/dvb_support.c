@@ -31,6 +31,7 @@
 #include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
+#include "../mpegts.h"
 
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
@@ -813,3 +814,17 @@ dvb_bandwidth ( fe_bandwidth_t bw )
 }
 
 #endif /* ENABLE_DVBAPI */
+
+/**
+ *
+ */
+void dvb_done( void )
+{
+  extern SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
+  extern SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
+  extern SKEL_DECLARE(mpegts_pid_skel, mpegts_pid_t);
+
+  SKEL_FREE(mpegts_table_state_skel);
+  SKEL_FREE(mpegts_pid_sub_skel);
+  SKEL_FREE(mpegts_pid_skel);
+}

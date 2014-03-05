@@ -33,6 +33,11 @@ void config_init ( void )
   }
 }
 
+void config_done ( void )
+{
+  htsmsg_destroy(config);
+}
+
 void config_save ( void )
 {
   hts_settings_save(config, "config");

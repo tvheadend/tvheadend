@@ -704,7 +704,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 2);
 
   /* Read */
-  while (1) {
+  while (tvheadend_running) {
     nfds = tvhpoll_wait(efd, ev, 1, 10);
     if (nfds < 1) continue;
     if (ev[0].data.fd != dvr) break;
@@ -922,7 +922,6 @@ linuxdvb_frontend_create
   char id[12], name[256];
   linuxdvb_frontend_t *lfe;
   htsmsg_t *scconf = NULL;
-  pthread_t tid;
 
   /* Internal config ID */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(dfi->type), number);
@@ -986,7 +985,7 @@ linuxdvb_frontend_create
   pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
  
   /* Start table thread */
-  tvhthread_create(&tid, NULL, mpegts_input_table_thread, lfe, 1);
+  mpegts_input_table_thread_start((mpegts_input_t *)lfe);
 
   /* Satconf */
   if (conf) {
@@ -1042,6 +1041,8 @@ linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
   if (lfe->lfe_fe_fd > 0)
     close(lfe->lfe_fe_fd);
 
+  mpegts_input_table_thread_stop((mpegts_input_t *)lfe);
+
   /* Remove from adapter */
   LIST_REMOVE(lfe, lfe_link);
 
@@ -1055,7 +1056,7 @@ linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
     linuxdvb_satconf_delete(lfe->lfe_satconf, 0);
 
   /* Finish */
-  mpegts_input_delete((mpegts_input_t*)lfe);
+  mpegts_input_delete((mpegts_input_t*)lfe, 0);
 }
 
 /******************************************************************************

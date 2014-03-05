@@ -48,9 +48,12 @@ struct channel_tag_queue channel_tags;
 static dtable_t *channeltags_dtable;
 
 static void channel_tag_init ( void );
+static void channel_tag_done ( void );
 static channel_tag_t *channel_tag_find(const char *id, int create);
 static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
 					int flags);
+static void channel_tag_destroy(channel_tag_t *ct, int delconf);
+
 
 #define CTM_DESTROY_UPDATE_TAG     0x1
 #define CTM_DESTROY_UPDATE_CHANNEL 0x2
@@ -74,7 +77,7 @@ channel_class_save ( idnode_t *self )
 static void
 channel_class_delete ( idnode_t *self )
 {
-  channel_delete((channel_t*)self);
+  channel_delete((channel_t*)self, 1);
 }
 
 static const void *
@@ -543,7 +546,7 @@ channel_create0
 }
 
 void
-channel_delete ( channel_t *ch )
+channel_delete ( channel_t *ch, int delconf )
 {
   th_subscription_t *s;
   channel_tag_mapping_t *ctm;
@@ -551,14 +554,15 @@ channel_delete ( channel_t *ch )
 
   lock_assert(&global_lock);
 
-  tvhinfo("channel", "%s - deleting", channel_get_name(ch));
+  if (delconf)
+    tvhinfo("channel", "%s - deleting", channel_get_name(ch));
 
   /* Tags */
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
     channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG);
 
   /* DVR */
-  autorec_destroy_by_channel(ch);
+  autorec_destroy_by_channel(ch, delconf);
   dvr_destroy_by_channel(ch);
 
   /* Services */
@@ -579,7 +583,8 @@ channel_delete ( channel_t *ch )
   htsp_channel_delete(ch);
 
   /* Settings */
-  hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
+  if (delconf)
+    hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
 
   /* Free memory */
   RB_REMOVE(&channels, ch, ch_link);
@@ -623,6 +628,21 @@ channel_init ( void )
     (void)channel_create(f->hmf_name, e, NULL);
   }
   htsmsg_destroy(c);
+}
+
+/**
+ *
+ */
+void
+channel_done ( void )
+{
+  channel_t *ch;
+  
+  pthread_mutex_lock(&global_lock);
+  while ((ch = RB_FIRST(&channels)) != NULL)
+    channel_delete(ch, 0);
+  pthread_mutex_unlock(&global_lock);
+  channel_tag_done();
 }
 
 /* ***
@@ -738,15 +758,17 @@ channel_tag_find(const char *id, int create)
  *
  */
 static void
-channel_tag_destroy(channel_tag_t *ct)
+channel_tag_destroy(channel_tag_t *ct, int delconf)
 {
   channel_tag_mapping_t *ctm;
   channel_t *ch;
 
-  while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL) {
-    ch = ctm->ctm_channel;
-    channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
-    channel_save(ch);
+  if (delconf) {
+    while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL) {
+      ch = ctm->ctm_channel;
+      channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
+      channel_save(ch);
+    }
   }
 
   if(ct->ct_enabled && !ct->ct_internal)
@@ -884,7 +906,7 @@ channel_tag_record_delete(void *opaque, const char *id)
 
   if((ct = channel_tag_find(id, 0)) == NULL)
     return -1;
-  channel_tag_destroy(ct);
+  channel_tag_destroy(ct, 1);
   return 0;
 }
 
@@ -954,4 +976,16 @@ channel_tag_init ( void )
   TAILQ_INIT(&channel_tags);
   channeltags_dtable = dtable_create(&channel_tags_dtc, "channeltags", NULL);
   dtable_load(channeltags_dtable);
+}
+
+static void
+channel_tag_done ( void )
+{
+  channel_tag_t *ct;
+  
+  pthread_mutex_lock(&global_lock);
+  while ((ct = TAILQ_FIRST(&channel_tags)) != NULL)
+    channel_tag_destroy(ct, 0);
+  pthread_mutex_unlock(&global_lock);
+  dtable_delete("channeltags");
 }

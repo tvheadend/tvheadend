@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <assert.h>
 #include <poll.h>
+#include <signal.h>
+#include <pthread.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
 
@@ -45,6 +47,8 @@ typedef struct dvr_inotify_entry
   struct dvr_entry_list        entries;
 } dvr_inotify_entry_t;
 
+static SKEL_DECLARE(dvr_inotify_entry_skel, dvr_inotify_entry_t);
+
 static void* _dvr_inotify_thread ( void *p );
 
 static int _str_cmp ( void *a, void *b )
@@ -55,10 +59,10 @@ static int _str_cmp ( void *a, void *b )
 /**
  * Initialise threads
  */
+pthread_t dvr_inotify_tid;
+
 void dvr_inotify_init ( void )
 {
-  pthread_t tid;
-
   _inot_fd = inotify_init();
   if (_inot_fd == -1) {
     tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
@@ -66,7 +70,20 @@ void dvr_inotify_init ( void )
     return;
   }
 
-  tvhthread_create(&tid, NULL, _dvr_inotify_thread, NULL, 1);
+  tvhthread_create(&dvr_inotify_tid, NULL, _dvr_inotify_thread, NULL, 0);
+}
+
+/**
+ *
+ */
+void dvr_inotify_done ( void )
+{
+  int fd = _inot_fd;
+  _inot_fd = -1;
+  close(fd);
+  pthread_kill(dvr_inotify_tid, SIGTERM);
+  pthread_join(dvr_inotify_tid, NULL);
+  SKEL_FREE(dvr_inotify_entry_skel);
 }
 
 /**
@@ -74,7 +91,6 @@ void dvr_inotify_init ( void )
  */
 void dvr_inotify_add ( dvr_entry_t *de )
 {
-  static dvr_inotify_entry_t *skel = NULL;
   dvr_inotify_entry_t *e;
   char *path;
   struct stat st;
@@ -87,17 +103,16 @@ void dvr_inotify_add ( dvr_entry_t *de )
 
   path = strdup(de->de_filename);
 
-  if (!skel)
-    skel = calloc(1, sizeof(dvr_inotify_entry_t));
-  skel->path = dirname(path);
+  SKEL_ALLOC(dvr_inotify_entry_skel);
+  dvr_inotify_entry_skel->path = dirname(path);
   
-  if (stat(skel->path, &st))
+  if (stat(dvr_inotify_entry_skel->path, &st))
     return;
   
-  e = RB_INSERT_SORTED(&_inot_tree, skel, link, _str_cmp);
+  e = RB_INSERT_SORTED(&_inot_tree, dvr_inotify_entry_skel, link, _str_cmp);
   if (!e) {
-    e       = skel;
-    skel    = NULL;
+    e       = dvr_inotify_entry_skel;
+    SKEL_USED(dvr_inotify_entry_skel);
     e->path = strdup(e->path);
     e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
     if (e->fd == -1) {
@@ -258,6 +273,8 @@ void* _dvr_inotify_thread ( void *p )
     from   = NULL;
     i      = 0;
     len    = read(_inot_fd, buf, EVENT_BUF_LEN);
+    if (_inot_fd < 0)
+      break;
 
     /* Process */
     pthread_mutex_lock(&global_lock);

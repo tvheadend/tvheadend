@@ -111,5 +111,6 @@ uint32_t access_get_by_addr(struct sockaddr *src);
  *
  */
 void access_init(int createdefault, int noacl);
+void access_done(void);
 
 #endif /* ACCESS_H_ */

@@ -48,4 +48,6 @@ typedef struct lang_code_lookup_element {
 
 typedef RB_HEAD(lang_code_lookup, lang_code_lookup_element) lang_code_lookup_t;
 
+void lang_code_done( void );
+
 #endif /* __TVH_LANG_CODES_H__ */
