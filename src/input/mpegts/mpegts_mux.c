@@ -535,6 +535,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
     mpegts_input_flush_mux(mi, mm);
 
   /* Ensure PIDs are cleared */
+  mm->mm_last_pid = -1;
+  mm->mm_last_mp = NULL;
   while ((mp = RB_FIRST(&mm->mm_pids))) {
     while ((mps = RB_FIRST(&mp->mp_subs))) {
       RB_REMOVE(&mp->mp_subs, mps, mps_link);
@@ -773,6 +775,8 @@ mpegts_mux_create0
   mm->mm_close_table         = mpegts_mux_close_table;
   TAILQ_INIT(&mm->mm_table_queue);
 
+  mm->mm_last_pid            = -1;
+
   /* Configuration */
   if (conf)
     idnode_load(&mm->mm_id, conf);
@@ -916,6 +920,10 @@ mpegts_mux_find_pid ( mpegts_mux_t *mm, int pid, int create )
       SKEL_USED(mpegts_pid_skel);
       mp->mp_fd = -1;
     }
+  }
+  if (mp) {
+    mm->mm_last_pid = pid;
+    mm->mm_last_mp = mp;
   }
   return mp;
 }

@@ -92,12 +92,10 @@ mpegts_table_dispatch
 }
 
 void
-mpegts_table_release ( mpegts_table_t *mt )
+mpegts_table_release_ ( mpegts_table_t *mt )
 {
-  if(--mt->mt_refcount == 0) {
-    free(mt->mt_name);
-    free(mt);
-  }
+  free(mt->mt_name);
+  free(mt);
 }
 
 void
