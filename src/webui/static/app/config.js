@@ -42,16 +42,6 @@ tvheadend.miscconf = function() {
        'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
        'tvhtime_tolerance', 'transcoding_enabled']);
 
-  /*
-   * Imagecache
-   */
-  var imagecache_reader = new Ext.data.JsonReader({
-    root        : 'entries'
-  },
-  [
-     'enabled', 'ok_period', 'fail_period', 'ignore_sslcert',
-  ]);
-
 	/* ****************************************************************
 	 * Form Fields
 	 * ***************************************************************/
@@ -115,48 +105,57 @@ tvheadend.miscconf = function() {
   /*
    * Image cache
    */
-  var imagecacheEnabled = new Ext.ux.form.XCheckbox({
-    name: 'enabled',
-    fieldLabel: 'Enabled',
-  });
+  if (tvheadend.capabilities.indexOf('imagecache') != -1) {
+    var imagecache_reader = new Ext.data.JsonReader({
+      root        : 'entries'
+    },
+    [
+       'enabled', 'ok_period', 'fail_period', 'ignore_sslcert',
+    ]);
 
-  var imagecacheOkPeriod = new Ext.form.NumberField({
-    name: 'ok_period',
-    fieldLabel: 'Re-fetch period (hours)'
-  });
+    var imagecacheEnabled = new Ext.ux.form.XCheckbox({
+      name: 'enabled',
+      fieldLabel: 'Enabled',
+    });
 
-  var imagecacheFailPeriod = new Ext.form.NumberField({
-    name: 'fail_period',
-    fieldLabel: 'Re-try period (hours)',
-  });
+    var imagecacheOkPeriod = new Ext.form.NumberField({
+      name: 'ok_period',
+      fieldLabel: 'Re-fetch period (hours)'
+    });
 
-  var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
-    name: 'ignore_sslcert',
-    fieldLabel: 'Ignore invalid SSL certificate'
-  });
+    var imagecacheFailPeriod = new Ext.form.NumberField({
+      name: 'fail_period',
+      fieldLabel: 'Re-try period (hours)',
+    });
 
-  var imagecachePanel = new Ext.form.FieldSet({
-    title: 'Image Caching',
-    width: 700,
-    autoHeight: true,
-    collapsible: true,
-    items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
-              imagecacheIgnoreSSLCert ]
-  });
-  if (tvheadend.capabilities.indexOf('imagecache') == -1)
-    imagecachePanel.hide();
+    var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
+      name: 'ignore_sslcert',
+      fieldLabel: 'Ignore invalid SSL certificate'
+    });
 
-  var imagecache_form = new Ext.form.FormPanel({
-		border : false,
-		labelAlign : 'left',
-		labelWidth : 200,
-		waitMsgTarget : true,
-    reader: imagecache_reader,
-		layout : 'form',
-		defaultType : 'textfield',
-		autoHeight : true,
-		items : [ imagecachePanel ]
-	});
+    var imagecachePanel = new Ext.form.FieldSet({
+      title: 'Image Caching',
+      width: 700,
+      autoHeight: true,
+      collapsible: true,
+      items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
+                imagecacheIgnoreSSLCert ]
+    });
+
+    var imagecache_form = new Ext.form.FormPanel({
+      border : false,
+      labelAlign : 'left',
+      labelWidth : 200,
+      waitMsgTarget : true,
+      reader: imagecache_reader,
+      layout : 'form',
+      defaultType : 'textfield',
+      autoHeight : true,
+      items : [ imagecachePanel ]
+    });
+  } else {
+    var imagecache_form = null;
+  }
 
   /*
    * Transcoding
@@ -209,13 +208,16 @@ tvheadend.miscconf = function() {
 			  transcodingPanel]
 	});
 
+  var _items = [confpanel];
+  if (imagecache_form)
+    _items.push(imagecache_form);
   var panel = new Ext.Panel({
 		title : 'General',
 		iconCls : 'wrench',
 		border : false,
 		bodyStyle : 'padding:15px',
 		layout : 'form',
-    items: [confpanel, imagecache_form ],
+    items: _items,
 		tbar : [ saveButton, '->', helpButton ]
   });
 
@@ -233,15 +235,16 @@ tvheadend.miscconf = function() {
 				confpanel.enable();
 			}
 		});
-    imagecache_form.getForm().load({
-      url     : 'api/imagecache/config/load',
-      success : function (form, action) {
-        imagecache_form.enable();
-      },
-      failure : function (form, action) {
-        alert("FAILED");
-      }
-    });
+		if (imagecache_form)
+      imagecache_form.getForm().load({
+        url     : 'api/imagecache/config/load',
+        success : function (form, action) {
+          imagecache_form.enable();
+        },
+        failure : function (form, action) {
+          alert("FAILED");
+        }
+      });
 	});
 
 	function saveChanges() {
@@ -255,13 +258,14 @@ tvheadend.miscconf = function() {
 				Ext.Msg.alert('Save failed', action.result.errormsg);
 			}
 		});
-    imagecache_form.getForm().submit({
-      url     : 'api/imagecache/config/save',
-      waitMsg : 'Saving data...',
-      failure : function(form, action) {
-        Ext.Msg.alert('Imagecache save failed', action.result.errormsg);
-      }
-    });
+		if (imagecache_form)
+      imagecache_form.getForm().submit({
+        url     : 'api/imagecache/config/save',
+        waitMsg : 'Saving data...',
+        failure : function(form, action) {
+          Ext.Msg.alert('Imagecache save failed', action.result.errormsg);
+        }
+      });
 	}
 
 	return panel;
