@@ -111,8 +111,8 @@ void streaming_start_unref(streaming_start_t *ss);
 
 streaming_start_t *streaming_start_copy(const streaming_start_t *src);
 
-int streaming_pad_probe_type(streaming_pad_t *sp, 
-			     streaming_message_type_t smt);
+#define streaming_pad_probe_type(sp, smt) \
+    (((sp)->sp_reject_filter & SMT_TO_MASK(smt)) == 0)
 
 const char *streaming_code2txt(int code);
 

@@ -195,6 +195,10 @@ mpegts_input_close_pid
   skel.mps_type  = type;
   skel.mps_owner = owner;
   mps = RB_FIND(&mp->mp_subs, &skel, mps_link, mps_cmp);
+  if (pid == mm->mm_last_pid) {
+    mm->mm_last_pid = -1;
+    mm->mm_last_mp = NULL;
+  }
   if (mps) {
     RB_REMOVE(&mp->mp_subs, mps, mps_link);
     free(mps);
@@ -369,7 +373,7 @@ mpegts_input_recv_packets
                name, pid, pid, mmi);
 
       /* Find PID */
-      if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
+      if ((mp = mpegts_mux_find_pid_fast(mm, pid, 0))) {
         int stream = 0;
         int table  = 0;
 
