@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <signal.h>
 
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
@@ -248,13 +249,13 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
 static void *
 avahi_thread(void *aux)
 {
-  const AvahiPoll *ap = avahi_simple_poll_get(asp);
+  const AvahiPoll *ap = avahi_simple_poll_get(avahi_asp);
 
   name = avahi_strdup("Tvheadend");
 
   avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
  
-  while(avahi_simple_poll_iterate(asp, -1) == 0);
+  while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
 
   return NULL;
   

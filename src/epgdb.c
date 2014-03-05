@@ -100,8 +100,8 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
 /*
  * Process v2 data
  */
-static void _epgdb_v2_process (
-  char **sect, htsmsg_t *m, epggrab_stats_t *stats )
+static void
+_epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 {
   int save = 0;
   const char *s;
