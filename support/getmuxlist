@@ -18,3 +18,4 @@ elif [ ! -d "${DIR}" ]; then
 fi
 
 # Note: will not update existing set (if not .git)
+exit 0
