@@ -283,7 +283,7 @@ service_mapper_thread ( void *aux )
   int run, working = 0;
   streaming_queue_t sq;
   streaming_message_t *sm;
-  const char *err;
+  const char *err = NULL;
 
   streaming_queue_init(&sq, 0);
 
