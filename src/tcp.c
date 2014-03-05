@@ -695,7 +695,7 @@ tcp_server_done(void)
   char c = 'E';
 
   tcp_server_running = 0;
-  write(tcp_server_pipe.wr, &c, 1);
+  tvh_write(tcp_server_pipe.wr, &c, 1);
 
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(tsl, &tcp_server_active, alink) {

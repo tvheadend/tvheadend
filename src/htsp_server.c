@@ -1989,7 +1989,6 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   while(tvheadend_running) {
 readmsg:
-    tvhlog(LOG_INFO, "htsp", "read_loop");
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       return r;
 
