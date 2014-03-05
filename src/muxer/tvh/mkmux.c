@@ -458,11 +458,16 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 static void
 mk_write_queue(mk_mux_t *mkm, htsbuf_queue_t *q)
 {
+  off_t oldpos = mkm->fdpos; 
+
   if(!mkm->error && mk_write_to_fd(mkm, q))
     tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename, 
 	   strerror(errno));
 
   htsbuf_queue_flush(q);
+
+  fdatasync(mkm->fd);
+  posix_fadvise(mkm->fd, oldpos, 0, POSIX_FADV_DONTNEED);
 }
 
 
