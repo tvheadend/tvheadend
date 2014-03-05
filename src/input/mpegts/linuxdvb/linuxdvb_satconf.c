@@ -193,6 +193,14 @@ const idclass_t linuxdvb_satconf_class =
       .opts     = PO_ADVANCED,
       .def.i    = 0
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "lnb_poweroff",
+      .name     = "Turn off LNB when idle",
+      .off      = offsetof(linuxdvb_satconf_t, ls_lnb_poweroff),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1
+    },
     {}
   }
 };
@@ -889,6 +897,9 @@ linuxdvb_satconf_ele_stop_mux
   if (ls->ls_frontend)
     ls->ls_frontend->mi_stop_mux(ls->ls_frontend, mmi);
   gtimer_disarm(&ls->ls_diseqc_timer);
+  if (ls->ls_frontend && ls->ls_lnb_poweroff)
+    linuxdvb_diseqc_set_volt(
+        ((linuxdvb_frontend_t *)ls->ls_frontend)->lfe_fe_fd, -1);
 }
 
 static void linuxdvb_satconf_ele_tune_cb ( void *o );
@@ -1260,12 +1271,14 @@ int
 linuxdvb_diseqc_set_volt ( int fd, int vol )
 {
   /* Set voltage */
-  tvhtrace("disqec", "set voltage %dV", vol ? 18 : 13);
-  if (ioctl(fd, FE_SET_VOLTAGE, vol ? SEC_VOLTAGE_18 : SEC_VOLTAGE_13)) {
+  tvhtrace("diseqc", "set voltage %dV", vol ? (vol < 0 ? 0 : 18) : 13);
+  if (ioctl(fd, FE_SET_VOLTAGE,
+        vol ? (vol < 0 ? SEC_VOLTAGE_OFF : SEC_VOLTAGE_18) : SEC_VOLTAGE_13)) {
     tvherror("diseqc", "failed to set voltage (e=%s)", strerror(errno));
     return -1;
   }
-  usleep(15000);
+  if (vol >= 0)
+    usleep(15000);
   return 0;
 }
 
