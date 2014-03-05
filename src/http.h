@@ -136,6 +136,7 @@ http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
 void http_server_init(const char *bindaddr);
+void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
 
@@ -148,6 +149,7 @@ typedef size_t (http_client_data_cb) (void *p, void *buf, size_t len);
 typedef void   (http_client_fail_cb) (void *p);
 
 void http_client_init ( void );
+void http_client_done ( void );
 http_client_t*
 http_connect ( const url_t *url,
                http_client_conn_cb conn_cb,

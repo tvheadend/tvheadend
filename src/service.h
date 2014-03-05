@@ -283,7 +283,7 @@ typedef struct service {
 
   int (*s_grace_period)(struct service *t);
 
-  void (*s_delete)(struct service *t);
+  void (*s_delete)(struct service *t, int delconf);
 
   /**
    * Channel info
@@ -426,6 +426,7 @@ typedef struct service {
 
 
 void service_init(void);
+void service_done(void);
 
 int service_start(service_t *t, int instance);
 
@@ -466,7 +467,7 @@ int service_is_other(service_t *t);
 
 int service_is_encrypted ( service_t *t );
 
-void service_destroy(service_t *t);
+void service_destroy(service_t *t, int delconf);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);

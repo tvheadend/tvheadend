@@ -520,6 +520,7 @@ access_entry_destroy(access_entry_t *ae)
   free(ae->ae_id);
   free(ae->ae_username);
   free(ae->ae_password);
+  free(ae->ae_comment);
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   free(ae);
 }
@@ -768,4 +769,14 @@ access_init(int createdefault, int noacl)
     superuser_password =s ? strdup(s) : NULL;
     htsmsg_destroy(m);
   }
+}
+
+void
+access_done(void)
+{
+  access_entry_t *ae;
+
+  dtable_delete("accesscontrol");
+  while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
+    access_entry_destroy(ae);
 }

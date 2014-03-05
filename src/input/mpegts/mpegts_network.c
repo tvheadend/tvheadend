@@ -210,7 +210,7 @@ mpegts_network_mux_create2
 
 void
 mpegts_network_delete
-  ( mpegts_network_t *mn )
+  ( mpegts_network_t *mn, int delconf )
 {
   mpegts_input_t *mi;
   mpegts_mux_t *mm;
@@ -220,7 +220,7 @@ mpegts_network_delete
 
   /* Delete all muxes */
   while ((mm = LIST_FIRST(&mn->mn_muxes))) {
-    mm->mm_delete(mm);
+    mm->mm_delete(mm, delconf);
   }
 
   /* Check */
@@ -340,6 +340,18 @@ mpegts_network_create0
   return mn;
 }
 
+void
+mpegts_network_class_delete(const idclass_t *idc, int delconf)
+{
+  mpegts_network_t *mn, *n;
+
+  for (mn = LIST_FIRST(&mpegts_network_all); mn != NULL; mn = n) {
+    n = LIST_NEXT(mn, mn_global_link);
+    if (mn->mn_id.in_class == idc)
+      mpegts_network_delete(mn, delconf);
+  }
+}
+
 int
 mpegts_network_set_nid
   ( mpegts_network_t *mn, uint16_t nid )
@@ -382,6 +394,20 @@ mpegts_network_register_builder
   mnb->idc   = idc;
   mnb->build = build;
   LIST_INSERT_HEAD(&mpegts_network_builders, mnb, link);
+}
+
+void
+mpegts_network_unregister_builder
+  ( const idclass_t *idc )
+{
+  mpegts_network_builder_t *mnb;
+  LIST_FOREACH(mnb, &mpegts_network_builders, link) {
+    if (mnb->idc == idc) {
+      LIST_REMOVE(mnb, link);
+      free(mnb);
+      return;
+    }
+  }
 }
 
 mpegts_network_t *

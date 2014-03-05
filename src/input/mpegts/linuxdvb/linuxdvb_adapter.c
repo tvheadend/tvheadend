@@ -144,6 +144,7 @@ linuxdvb_adapter_create
 
   /* Setup */
   sprintf(buf, "%s [%s]", path, dfi->name);
+  free(la->la_rootpath);
   la->la_rootpath   = strdup(path);
   la->la_name       = strdup(buf);
   la->la_dvb_number = number;
@@ -271,6 +272,7 @@ linuxdvb_adapter_add ( const char *path )
       /* Create */
       if (!(la = linuxdvb_adapter_create(uuid, conf, path, a, &dfi))) {
         tvhlog(LOG_ERR, "linuxdvb", "failed to create %s", path);
+        htsmsg_destroy(conf);
         return; // Note: save to return here as global_lock is held
       }
     }
@@ -295,6 +297,7 @@ linuxdvb_adapter_add ( const char *path )
     }
 #endif
     pthread_mutex_unlock(&global_lock);
+    htsmsg_destroy(conf);
   }
 
   /* Relock before exit */
@@ -334,6 +337,8 @@ linuxdvb_adapter_del ( const char *path )
     
     /* Delete */
     tvh_hardware_delete((tvh_hardware_t*)la);
+
+    free(la);
   }
 }
 
@@ -423,4 +428,23 @@ linuxdvb_adapter_init ( void )
     /* Scan for adapters */
     linuxdvb_adapter_scan();
   }
+}
+
+void
+linuxdvb_adapter_done ( void )
+{
+  linuxdvb_adapter_t *la;
+  tvh_hardware_t *th, *n;
+
+  pthread_mutex_lock(&global_lock);
+  fsmonitor_del("/dev/dvb", &devdvbmon);
+  fsmonitor_del("/dev", &devmon);
+  for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
+    n = LIST_NEXT(th, th_link);
+    if (idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) {
+      la = (linuxdvb_adapter_t*)th;
+      linuxdvb_adapter_del(la->la_rootpath);
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
 }

@@ -207,6 +207,8 @@ struct linuxdvb_en50494
 
 void linuxdvb_adapter_init ( void );
 
+void linuxdvb_adapter_done ( void );
+
 void linuxdvb_adapter_save ( linuxdvb_adapter_t *la );
 
 int  linuxdvb_adapter_is_free        ( linuxdvb_adapter_t *la );
@@ -245,6 +247,7 @@ struct linuxdvb_network
 };
 
 void linuxdvb_network_init ( void );
+void linuxdvb_network_done ( void );
 linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
 
 linuxdvb_network_t *linuxdvb_network_create0

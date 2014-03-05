@@ -296,7 +296,11 @@ dvr_entry_t *dvr_entry_update
 
 void dvr_init(void);
 
+void dvr_done(void);
+
 void dvr_autorec_init(void);
+
+void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
 
@@ -384,7 +388,7 @@ void dvr_autorec_check_season(epg_season_t *s);
 void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 
-void autorec_destroy_by_channel(channel_t *ch);
+void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 
@@ -399,6 +403,7 @@ const char *dvr_val2pri(dvr_prio_t v);
  * Inotify support
  */
 void dvr_inotify_init ( void );
+void dvr_inotify_done ( void );
 void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
 

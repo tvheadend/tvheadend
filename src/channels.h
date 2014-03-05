@@ -120,6 +120,7 @@ typedef struct channel_service_mapping {
 extern const idclass_t channel_class;
 
 void channel_init(void);
+void channel_done(void);
 
 channel_t *channel_create0
   (channel_t *ch, const idclass_t *idc, const char *uuid, htsmsg_t *conf,
@@ -127,7 +128,7 @@ channel_t *channel_create0
 #define channel_create(u, c, n)\
   channel_create0(calloc(1, sizeof(channel_t)), &channel_class, u, c, n)
 
-void channel_delete(channel_t *ch);
+void channel_delete(channel_t *ch, int delconf);
 
 channel_t *channel_find_by_name(const char *name);
 #define channel_find_by_uuid(u)\

@@ -28,6 +28,7 @@ typedef struct dvb_charset {
 } dvb_charset_t;
 
 void dvb_charset_init ( void );
+void dvb_charset_done ( void );
 
 struct mpegts_network;
 struct mpegts_mux;

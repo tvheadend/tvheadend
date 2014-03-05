@@ -22,6 +22,9 @@
 #include "redblack.h"
 #include "lang_codes.h"
 #include "lang_str.h"
+#include "tvheadend.h"
+
+SKEL_DECLARE(lang_str_ele_skel, lang_str_ele_t);
 
 /* ************************************************************************
  * Support
@@ -107,7 +110,6 @@ static int _lang_str_add
   ( lang_str_t *ls, const char *str, const char *lang, int update, int append )
 {
   int save = 0;
-  static lang_str_ele_t *skel = NULL;
   lang_str_ele_t *e;
 
   if (!str) return 0;
@@ -116,14 +118,14 @@ static int _lang_str_add
   if (!(lang = lang_code_get(lang))) return 0;
 
   /* Create skel */
-  if (!skel) skel = calloc(1, sizeof(lang_str_ele_t));
-  skel->lang = lang;
+  SKEL_ALLOC(lang_str_ele_skel);
+  lang_str_ele_skel->lang = lang;
 
   /* Create */
-  e = RB_INSERT_SORTED(ls, skel, link, _lang_cmp);
+  e = RB_INSERT_SORTED(ls, lang_str_ele_skel, link, _lang_cmp);
   if (!e) {
-    skel->str = strdup(str);
-    skel = NULL;
+    lang_str_ele_skel->str = strdup(str);
+    SKEL_USED(lang_str_ele_skel);
     save = 1;
 
   /* Append */
@@ -188,4 +190,9 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
     lang_str_add(ret, str, NULL, 0);
   }
   return ret;
+}
+
+void lang_str_done( void )
+{
+  SKEL_FREE(lang_str_ele_skel);
 }

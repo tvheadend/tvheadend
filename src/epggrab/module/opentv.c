@@ -686,6 +686,14 @@ static void _opentv_dict_load ( htsmsg_t *m )
   htsmsg_destroy(m);
 }
 
+static void _opentv_done( epggrab_module_ota_t *m )
+{
+  opentv_module_t *mod = (opentv_module_t *)m;
+  free(mod->channel);
+  free(mod->title);
+  free(mod->summary);
+}
+
 static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 {
   char ibuf[100], nbuf[1000];
@@ -726,7 +734,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
                               ibuf, nbuf, 2,
                               _opentv_start, NULL,
-                              NULL);
+                              _opentv_done, NULL);
   
   /* Add provider details */
   mod->dict     = dict;
@@ -783,6 +791,24 @@ void opentv_init ( void )
   if ((m = hts_settings_load("epggrab/opentv/prov")))
     _opentv_prov_load(m);
   tvhlog(LOG_DEBUG, "opentv", "providers loaded");
+}
+
+void opentv_done ( void )
+{
+  opentv_dict_t *dict;
+  opentv_genre_t *genre;
+  
+  while ((dict = RB_FIRST(&_opentv_dicts)) != NULL) {
+    RB_REMOVE(&_opentv_dicts, dict, h_link);
+    huffman_tree_destroy(dict->codes);
+    free(dict->id);
+    free(dict);
+  }
+  while ((genre = RB_FIRST(&_opentv_genres)) != NULL) {
+    RB_REMOVE(&_opentv_genres, genre, h_link);
+    free(genre->id);
+    free(genre);
+  }
 }
 
 void opentv_load ( void )

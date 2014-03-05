@@ -199,7 +199,7 @@ imagecache_thread ( void *p )
   imagecache_image_t *img;
 
   pthread_mutex_lock(&global_lock);
-  while (1) {
+  while (tvheadend_running) {
 
     /* Check we're enabled */
     if (!imagecache_conf.enabled) {
@@ -220,7 +220,9 @@ imagecache_thread ( void *p )
     /* Fetch */
     (void)imagecache_image_fetch(img);
   }
+  pthread_mutex_unlock(&global_lock);
 
+  fprintf(stderr, "imagecache thread end\n");
   return NULL;
 }
 
@@ -245,6 +247,10 @@ imagecache_timer_cb ( void *p )
 /*
  * Initialise
  */
+#if ENABLE_IMAGECACHE
+pthread_t imagecache_tid;
+#endif
+
 void
 imagecache_init ( void )
 {
@@ -307,10 +313,7 @@ imagecache_init ( void )
 
   /* Start threads */
 #if ENABLE_IMAGECACHE
-  {
-    pthread_t tid;
-    tvhthread_create(&tid, NULL, imagecache_thread, NULL, 1);
-  }
+  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL, 0);
 
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however
@@ -319,6 +322,27 @@ imagecache_init ( void )
   gtimer_arm(&imagecache_timer, imagecache_timer_cb, NULL, 600);
 #endif
 }
+
+/*
+ * Shutdown
+ */
+void
+imagecache_done ( void )
+{
+  imagecache_image_t *img;
+
+#if ENABLE_IMAGECACHE
+  pthread_cond_broadcast(&imagecache_cond);
+  pthread_join(imagecache_tid, NULL);
+#endif
+  while ((img = RB_FIRST(&imagecache_by_url)) != NULL) {
+    RB_REMOVE(&imagecache_by_url, img, url_link);
+    RB_REMOVE(&imagecache_by_id, img, id_link);
+    free((void *)img->url);
+    free(img);
+  }
+}
+
 
 #if ENABLE_IMAGECACHE
 

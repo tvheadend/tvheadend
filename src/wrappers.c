@@ -4,6 +4,7 @@
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <unistd.h>
+#include <signal.h>
 #include <pthread.h>
 
 #ifdef PLATFORM_LINUX
@@ -100,6 +101,7 @@ static void *
 thread_wrapper ( void *p )
 {
   struct thread_state *ts = p;
+  sigset_t set;
 
 #if defined(PLATFORM_LINUX)
   /* Set name */
@@ -108,6 +110,12 @@ thread_wrapper ( void *p )
   /* Set name of thread */
   pthread_set_name_np(pthread_self(), ts->name);
 #endif
+
+  sigemptyset(&set);
+  sigaddset(&set, SIGTERM);
+  pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+
+  signal(SIGTERM, doexit);
 
   /* Run */
   tvhdebug("thread", "created thread %ld [%s / %p(%p)]",

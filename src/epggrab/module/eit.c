@@ -555,7 +555,7 @@ _eit_callback
   uint16_t onid, tsid, sid;
   uint32_t extraid;
   mpegts_service_t     *svc;
-  mpegts_mux_t         *mm  = mt->mt_mux;;
+  mpegts_mux_t         *mm  = mt->mt_mux;
   epggrab_module_t *mod = mt->mt_opaque;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_table_state_t *st;
@@ -680,11 +680,11 @@ static void _eit_start
 void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
-                            _eit_start, NULL, NULL);
+                            _eit_start, NULL, NULL, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
-                            _eit_start, NULL, NULL);
+                            _eit_start, NULL, NULL, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
-                            _eit_start, NULL, NULL);
+                            _eit_start, NULL, NULL, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
-                            _eit_start, NULL, NULL);
+                            _eit_start, NULL, NULL, NULL);
 }

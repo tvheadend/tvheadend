@@ -403,6 +403,9 @@ subscription_unsubscribe(th_subscription_t *s)
 
   if(s->ths_start_message != NULL) 
     streaming_msg_free(s->ths_start_message);
+
+  if(s->ths_output->st_cb == subscription_input_null)
+   free(s->ths_output);
  
   free(s->ths_title);
   free(s->ths_hostname);
@@ -752,6 +755,20 @@ void
 subscription_init(void)
 {
   subscription_status_callback(NULL);
+}
+
+/**
+ * Shutdown subsystem
+ */
+void
+subscription_done(void)
+{
+  th_subscription_t *s;
+
+  pthread_mutex_lock(&global_lock);
+  while ((s = LIST_FIRST(&subscriptions)) != NULL)
+    subscription_unsubscribe(s);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /* **************************************************************************

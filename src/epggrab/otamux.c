@@ -37,6 +37,8 @@ LIST_HEAD(,epggrab_ota_mux) epggrab_ota_active;
 gtimer_t                    epggrab_ota_pending_timer;
 gtimer_t                    epggrab_ota_active_timer;
 
+SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
+
 static void epggrab_ota_active_timer_cb ( void *p );
 static void epggrab_ota_pending_timer_cb ( void *p );
 
@@ -191,23 +193,21 @@ epggrab_ota_register
     int interval, int timeout )
 {
   int save = 0;
-  static epggrab_ota_mux_t *skel = NULL;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *ota;
 
   /* Find mux entry */
   const char *uuid = idnode_uuid_as_str(&mm->mm_id);
-  if (!skel)
-    skel = calloc(1, sizeof(epggrab_ota_mux_t));
-  skel->om_mux_uuid = (char*)uuid;
+  SKEL_ALLOC(epggrab_ota_mux_skel);
+  epggrab_ota_mux_skel->om_mux_uuid = (char*)uuid;
 
-  ota = RB_INSERT_SORTED(&epggrab_ota_all, skel, om_global_link, om_id_cmp);
+  ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
   if (!ota) {
     char buf[256];
     mm->mm_display_name(mm, buf, sizeof(buf));
     tvhinfo(mod->id, "registering mux %s", buf);
-    ota  = skel;
-    skel = NULL;
+    ota  = epggrab_ota_mux_skel;
+    SKEL_USED(epggrab_ota_mux_skel);
     ota->om_mux_uuid = strdup(uuid);
     ota->om_when     = dispatch_clock + epggrab_ota_timeout(ota);
     ota->om_active   = 1;
@@ -375,6 +375,7 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
   }
   htsmsg_add_msg(c, "modules", l);
   hts_settings_save(c, "epggrab/otamux/%s", ota->om_mux_uuid);
+  htsmsg_destroy(c);
 }
 
 static void
@@ -455,6 +456,34 @@ epggrab_ota_init ( void )
   if (LIST_FIRST(&epggrab_ota_pending))
     gtimer_arm_abs(&epggrab_ota_pending_timer, epggrab_ota_pending_timer_cb,
                    NULL, 0);
+}
+
+static void
+epggrab_ota_free ( epggrab_ota_mux_t *ota )
+{
+  epggrab_ota_map_t *map;
+
+  LIST_REMOVE(ota, om_q_link);
+  while ((map = LIST_FIRST(&ota->om_modules)) != NULL) {
+    LIST_REMOVE(map, om_link);
+    free(map);
+  }
+  free(ota->om_mux_uuid);
+  free(ota);
+}
+
+void
+epggrab_ota_done_ ( void )
+{
+  epggrab_ota_mux_t *ota;
+
+  pthread_mutex_lock(&global_lock);
+  while ((ota = LIST_FIRST(&epggrab_ota_active)) != NULL)
+    epggrab_ota_free(ota);
+  while ((ota = LIST_FIRST(&epggrab_ota_pending)) != NULL)
+    epggrab_ota_free(ota);
+  pthread_mutex_unlock(&global_lock);
+  SKEL_FREE(epggrab_ota_mux_skel);
 }
 
 /******************************************************************************

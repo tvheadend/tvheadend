@@ -276,4 +276,6 @@ int dvb_delsys2type ( enum fe_delivery_system ds );
 
 #endif /* ENABLE_DVBAPI */
 
+void dvb_done       ( void );
+
 #endif /* DVB_SUPPORT_H */

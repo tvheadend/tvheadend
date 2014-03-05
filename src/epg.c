@@ -2314,3 +2314,18 @@ char *epg_hash ( const char *t, const char *s, const char *d )
   if ( t ) return md5sum(t);
   return NULL;
 }
+
+void epg_skel_done(void)
+{
+  epg_object_t **skel;
+  epg_broadcast_t **broad;
+
+  skel = _epg_brand_skel();
+  free(*skel); *skel = NULL;
+  skel = _epg_season_skel();
+  free(*skel); *skel = NULL;
+  skel = _epg_episode_skel();
+  free(*skel); *skel = NULL;
+  broad = _epg_broadcast_skel();
+  free(*broad); *broad = NULL;
+}

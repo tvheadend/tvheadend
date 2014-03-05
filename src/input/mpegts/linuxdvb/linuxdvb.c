@@ -45,3 +45,11 @@ void linuxdvb_init ( int adapter_mask )
   /* Initialsie devices */
   linuxdvb_adapter_init();
 }
+
+void linuxdvb_done ( void )
+{
+  linuxdvb_network_done();
+  linuxdvb_adapter_done();
+  dvb_charset_done();
+  scanfile_done();
+}

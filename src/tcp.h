@@ -29,11 +29,13 @@ typedef struct tcp_server_ops
                      struct sockaddr_storage *self);
   void (*stop)   (void *opaque);
   void (*status) (void *opaque, htsmsg_t *m);
+  void (*cancel) (void *opaque);
 } tcp_server_ops_t;
 
 extern int tcp_preferred_address_family;
 
 void tcp_server_init(int opt_ipv6);
+void tcp_server_done(void);
 
 int tcp_connect(const char *hostname, int port, char *errbuf,
 		size_t errbufsize, int timeout);
@@ -44,6 +46,8 @@ typedef void (tcp_server_callback_t)(int fd, void *opaque,
 
 void *tcp_server_create(const char *bindaddr, int port, 
   tcp_server_ops_t *ops, void *opaque);
+
+void tcp_server_delete(void *server);
 
 int tcp_read(int fd, void *buf, size_t len);
 

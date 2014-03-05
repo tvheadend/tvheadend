@@ -29,6 +29,7 @@ typedef struct api_link {
 } api_link_t;
 
 RB_HEAD(,api_link) api_hook_tree;
+SKEL_DECLARE(api_skel, api_link_t);
 
 static int ah_cmp
   ( api_link_t *a, api_link_t *b )
@@ -39,15 +40,15 @@ static int ah_cmp
 void
 api_register ( const api_hook_t *hook )
 {
-  static api_link_t *t, *skel = NULL;
-  if (!skel)
-    skel = calloc(1, sizeof(api_link_t));
-  skel->hook = hook;
-  t = RB_INSERT_SORTED(&api_hook_tree, skel, link, ah_cmp);
-  if (t)
+  api_link_t *t;
+  SKEL_ALLOC(api_skel);
+  api_skel->hook = hook;
+  t = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
+  if (t) {
     tvherror("api", "trying to re-register subsystem");
-  else
-    skel = NULL;
+  } else {
+    SKEL_USED(api_skel);
+  }
 }
 
 void
@@ -124,4 +125,15 @@ void api_init ( void )
   api_epggrab_init();
   api_status_init();
   api_imagecache_init();
+}
+
+void api_done ( void )
+{
+  api_link_t *t;
+
+  while ((t = RB_FIRST(&api_hook_tree)) != NULL) {
+    RB_REMOVE(&api_hook_tree, t, link);
+    free(t);
+  }
+  SKEL_FREE(api_skel);
 }
