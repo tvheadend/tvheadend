@@ -31,6 +31,7 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
+#include <limits.h>
 #if ENABLE_LOCKOWNER
 #include <sys/syscall.h>
 #endif
@@ -603,16 +604,22 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
-#ifdef PLATFORM_LINUX
 /* glibc wrapper */
-#if !__GLIBC_PREREQ(2,8)
+#if ! ENABLE_QSORT_R
 void
 qsort_r(void *base, size_t nmemb, size_t size,
        int (*cmp)(const void *, const void *, void *), void *aux);
-#endif
-#endif /* PLATFORM_LINUX */
+#endif /* ENABLE_QSORT_R */
 
 /* printing */
+#ifndef __WORDSIZE
+# if ULONG_MAX == 0xffffffffffffffff
+#  define __WORDSIZE 64
+# elif ULONG_MAX == 0xffffffff
+#  define __WORDSIZE 32
+# endif /* ULONG_MAX */
+#endif /* __WORDSIZE */
+
 # if __WORDSIZE == 64
 #define PRIsword_t      PRId64
 #define PRIuword_t      PRIu64
