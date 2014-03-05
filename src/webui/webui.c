@@ -1,6 +1,6 @@
 /*
  *  tvheadend, WEBUI / HTML user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -614,7 +614,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   else if(nc == 2 && !strcmp(components[0], "channelnumber"))
     ch = channel_find_by_number(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "channel"))
-    ch = channel_find(components[1]);
+    ch = channel_find_by_name(components[1]);
   else if(nc == 2 && !strcmp(components[0], "dvrid"))
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
@@ -888,7 +888,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(components[0], "channelnumber")) {
     ch = channel_find_by_number(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
-    ch = channel_find(components[1]);
+    ch = channel_find_by_name(components[1]);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
 #if ENABLE_MPEGTS
