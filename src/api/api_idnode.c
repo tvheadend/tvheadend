@@ -170,6 +170,8 @@ api_idnode_load_by_class
       if (e)
         htsmsg_add_msg(l, NULL, e);
     }
+    free(is->is_array);
+    free(is);
   }
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);

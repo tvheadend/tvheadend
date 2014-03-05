@@ -338,13 +338,14 @@ mpegts_service_provider_name ( service_t *s )
 }
 
 void
-mpegts_service_delete ( service_t *t )
+mpegts_service_delete ( service_t *t, int delconf )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t;
   mpegts_mux_t     *mm = ms->s_dvb_mux;
 
   /* Remove config */
-  hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/services/%s",
+  if (delconf)
+    hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/services/%s",
                       idnode_uuid_as_str(&mm->mm_network->mn_id),
                       idnode_uuid_as_str(&mm->mm_id),
                       idnode_uuid_as_str(&t->s_id));
@@ -354,6 +355,7 @@ mpegts_service_delete ( service_t *t )
   free(ms->s_dvb_provider);
   free(ms->s_dvb_charset);
   LIST_REMOVE(ms, s_dvb_mux_link);
+  sbuf_free(&ms->s_tsbuf);
 
   // Note: the ultimate deletion and removal from the idnode list
   //       is done in service_destroy

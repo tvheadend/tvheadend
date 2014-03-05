@@ -345,7 +345,7 @@ static void *_epggrab_socket_thread ( void *p )
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhlog(LOG_INFO, mod->id, "external socket enabled");
   
-  while ( mod->enabled && mod->sock ) {
+  while ( epggrab_running && mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
     if (s <= 0) continue;
@@ -452,6 +452,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
     void (*start) (epggrab_module_ota_t*m,
                    struct mpegts_mux *dm),
     int (*enable) (void *m, uint8_t e ),
+    void (*done) (epggrab_module_ota_t *m),
     epggrab_channel_tree_t *channels )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
@@ -463,6 +464,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->type   = EPGGRAB_OTA;
   skel->enable = enable;
   skel->start  = start;
+  skel->done   = done;
   //TAILQ_INIT(&skel->muxes);
 
   return skel;

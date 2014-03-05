@@ -24,6 +24,7 @@
 
 #if ENABLE_INOTIFY
 
+#include <signal.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
 
@@ -56,6 +57,8 @@ fsmonitor_thread ( void* p )
 
     /* Wait for event */
     c = read(fsmonitor_fd, buf, sizeof(buf));
+    if (fsmonitor_fd < 0)
+      break;
 
     /* Process */
     pthread_mutex_lock(&global_lock);
@@ -94,14 +97,27 @@ fsmonitor_thread ( void* p )
 /*
  * Start the fsmonitor subsystem
  */
+pthread_t fsmonitor_tid;
+
 void
 fsmonitor_init ( void )
 {
-  pthread_t tid;
-
   /* Intialise inotify */
   fsmonitor_fd = inotify_init();
-  tvhthread_create0(&tid, NULL, fsmonitor_thread, NULL, "fsmonitor", 1);
+  tvhthread_create0(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor", 0);
+}
+
+/*
+ * Stop the fsmonitor subsystem
+ */
+void
+fsmonitor_done ( void )
+{
+  int fd = fsmonitor_fd;
+  fsmonitor_fd = -1;
+  close(fd);
+  pthread_kill(fsmonitor_tid, SIGTERM);
+  pthread_join(fsmonitor_tid, NULL);
 }
 
 /*
@@ -111,13 +127,13 @@ int
 fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 {
   int mask;
-  static fsmonitor_path_t *skel = NULL;
+  fsmonitor_path_t *skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
 
   lock_assert(&global_lock);
 
-  if (!skel) skel = calloc(1, sizeof(fsmonitor_path_t));
+  skel = calloc(1, sizeof(fsmonitor_path_t));
   skel->fmp_path = (char*)path;
 
   /* Build mask */
@@ -127,21 +143,22 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
   fmp = RB_INSERT_SORTED(&fsmonitor_paths, skel, fmp_link, fmp_cmp);
   if (!fmp) {
     fmp = skel;
-    fmp->fmp_fd
-      = inotify_add_watch(fsmonitor_fd, path, mask);
+    fmp->fmp_fd = inotify_add_watch(fsmonitor_fd, path, mask);
 
     /* Failed */
     if (fmp->fmp_fd <= 0) {
-      RB_REMOVE(&fsmonitor_paths, skel, fmp_link);
+      RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
+      free(fmp);
       tvhdebug("fsmonitor", "failed to add %s (exists?)", path);
       printf("ERROR: failed to add %s\n", path);
       return -1;
     }
 
     /* Setup */
-    skel          = NULL;
     fmp->fmp_path = strdup(path);
     tvhdebug("fsmonitor", "watch %s", fmp->fmp_path);
+  } else {
+    free(skel);
   }
 
   /* Check doesn't exist */
@@ -165,17 +182,16 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 void
 fsmonitor_del ( const char *path, fsmonitor_t *fsm )
 {
-  static fsmonitor_path_t *skel = NULL;
+  static fsmonitor_path_t skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
 
   lock_assert(&global_lock);
 
-  if (!skel) skel = calloc(1, sizeof(fsmonitor_path_t));
-  skel->fmp_path = (char*)path;
+  skel.fmp_path = (char*)path;
 
   /* Find path */
-  fmp = RB_FIND(&fsmonitor_paths, skel, fmp_link, fmp_cmp);
+  fmp = RB_FIND(&fsmonitor_paths, &skel, fmp_link, fmp_cmp);
   if (fmp) {
 
     /* Find link */
@@ -191,7 +207,7 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
     }
 
     /* Remove path */
-    if (!LIST_FIRST(&fmp->fmp_monitors)) {
+    if (LIST_EMPTY(&fmp->fmp_monitors)) {
       tvhdebug("fsmonitor", "unwatch %s", fmp->fmp_path);
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
       inotify_rm_watch(fsmonitor_fd, fmp->fmp_fd);

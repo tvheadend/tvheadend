@@ -240,7 +240,6 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 mpegts_input_t *
 tsfile_input_create ( int idx )
 {
-  pthread_t tid;
   mpegts_input_t *mi;
 
   /* Create object */
@@ -254,7 +253,7 @@ tsfile_input_create ( int idx )
     mi->mi_name = strdup("TSFile");
 
   /* Start table thread */
-  tvhthread_create(&tid, NULL, mpegts_input_table_thread, mi, 1);
+  mpegts_input_table_thread_start(mi);
   return mi;
 }
 

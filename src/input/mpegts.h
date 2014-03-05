@@ -295,7 +295,7 @@ struct mpegts_mux
    * Functions
    */
 
-  void (*mm_delete)           (mpegts_mux_t *mm);
+  void (*mm_delete)           (mpegts_mux_t *mm, int delconf);
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
@@ -445,6 +445,9 @@ struct mpegts_input
   pthread_t mi_thread_id;
   th_pipe_t mi_thread_pipe;
 
+  int mi_delivery_running;
+  pthread_t mi_thread_table_id;
+
   /*
    * Functions
    */
@@ -500,7 +503,7 @@ mpegts_input_t *mpegts_input_create0
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
                        &mpegts_input_class, u, c)
 
-void mpegts_input_delete ( mpegts_input_t *mi );
+void mpegts_input_delete ( mpegts_input_t *mi, int delconf );
 
 #define mpegts_input_find(u) idnode_find(u, &mpegts_input_class);
 
@@ -514,6 +517,9 @@ void mpegts_input_status_timer ( void *p );
 void mpegts_network_register_builder
   ( const idclass_t *idc,
     mpegts_network_t *(*build)(const idclass_t *idc, htsmsg_t *conf) );
+
+void mpegts_network_unregister_builder
+  ( const idclass_t *idc );
 
 mpegts_network_t *mpegts_network_build
   ( const char *clazz, htsmsg_t *conf );
@@ -532,8 +538,10 @@ extern const idclass_t mpegts_network_class;
 
 mpegts_mux_t *mpegts_network_find_mux
   (mpegts_network_t *mn, uint16_t onid, uint16_t tsid);
-  
-void mpegts_network_delete ( mpegts_network_t *mn );
+
+void mpegts_network_class_delete ( const idclass_t *idc, int delconf );
+
+void mpegts_network_delete ( mpegts_network_t *mn, int delconf );
 
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
@@ -557,13 +565,13 @@ mpegts_mux_t *mpegts_mux_create0
 #define mpegts_mux_find(u)\
   idnode_find(u, &mpegts_mux_class)
 
-#define mpegts_mux_delete_by_uuid(u)\
-  { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm); }
+#define mpegts_mux_delete_by_uuid(u, delconf)\
+  { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm, delconf); }
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm, int log );
 void mpegts_mux_initial_scan_fail ( mpegts_mux_t *mm );
 
-void mpegts_mux_delete ( mpegts_mux_t *mm );
+void mpegts_mux_delete ( mpegts_mux_t *mm, int delconf );
 
 void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
 
@@ -599,7 +607,9 @@ size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
    int64_t *pcr, uint16_t *pcr_pid, const char *name);
 
-void *mpegts_input_table_thread ( void *aux );
+void mpegts_input_table_thread_start( mpegts_input_t *mi );
+
+void mpegts_input_table_thread_stop( mpegts_input_t *mi );
 
 int mpegts_input_is_free ( mpegts_input_t *mi );
 
@@ -646,7 +656,7 @@ mpegts_service_t *mpegts_service_find
 
 void mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c );
 
-void mpegts_service_delete ( service_t *s );
+void mpegts_service_delete ( service_t *s, int delconf );
 
 /*
  * MPEG-TS event handler

@@ -668,3 +668,22 @@ const lang_code_t **lang_code_split2 ( const char *codes )
 
   return ret;
 }
+
+static void lang_code_free( lang_code_lookup_t *l )
+{
+  lang_code_lookup_element_t *element;
+  if (l == NULL)
+    return;
+  while ((element = RB_FIRST(l)) != NULL) {
+    RB_REMOVE(l, element, link);
+    free(element);
+  }
+  free(l);
+}
+
+void lang_code_done( void )
+{
+  lang_code_free(lang_codes_code2b);
+  lang_code_free(lang_codes_code1);
+  lang_code_free(lang_codes_code2t);
+}

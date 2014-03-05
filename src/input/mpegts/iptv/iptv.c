@@ -32,13 +32,15 @@
 #include <unistd.h>
 #include <regex.h>
 #include <errno.h>
+#include <signal.h>
+#include <pthread.h>
 
 /* **************************************************************************
  * IPTV state
  * *************************************************************************/
 
-iptv_input_t    iptv_input;
-iptv_network_t  iptv_network;
+iptv_input_t   *iptv_input;
+iptv_network_t *iptv_network;
 tvhpoll_t      *iptv_poll;
 pthread_t       iptv_thread;
 pthread_mutex_t iptv_lock;
@@ -108,12 +110,12 @@ iptv_input_is_free ( mpegts_input_t *mi )
     c++;
   
   /* Limit reached */
-  if (iptv_network.in_max_streams && c >= iptv_network.in_max_streams) {  
+  if (iptv_network->in_max_streams && c >= iptv_network->in_max_streams) {  
     return 0;
   }
   
   /* Bandwidth reached */
-  if (iptv_network.in_bw_limited) {
+  if (iptv_network->in_bw_limited) {
     return 0;
   }
 
@@ -241,7 +243,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   im->mm_iptv_tsb = NULL;
 
   /* Clear bw limit */
-  iptv_network.in_bw_limited = 0;
+  iptv_network->in_bw_limited = 0;
 
   pthread_mutex_unlock(&iptv_lock);
 }
@@ -261,7 +263,7 @@ iptv_input_thread ( void *aux )
   iptv_mux_t *im;
   tvhpoll_event_t ev;
 
-  while ( 1 ) {
+  while ( tvheadend_running ) {
     nfds = tvhpoll_wait(iptv_poll, &ev, 1, -1);
     if ( nfds < 0 ) {
       tvhlog(LOG_ERR, "iptv", "poll() error %s, sleeping 1 second",
@@ -298,23 +300,23 @@ void
 iptv_input_recv_packets ( iptv_mux_t *im, size_t off, size_t len )
 {
   static time_t t1 = 0, t2;
-  iptv_network.in_bps += len * 8;
+  iptv_network->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
-    if (iptv_network.in_max_bandwidth &&
-        iptv_network.in_bps > iptv_network.in_max_bandwidth * 1024) {
-      if (!iptv_network.in_bw_limited) {
+    if (iptv_network->in_max_bandwidth &&
+        iptv_network->in_bps > iptv_network->in_max_bandwidth * 1024) {
+      if (!iptv_network->in_bw_limited) {
         tvhinfo("iptv", "bandwidth limited exceeded");
-        iptv_network.in_bw_limited = 1;
+        iptv_network->in_bw_limited = 1;
       }
     }
-    iptv_network.in_bps = 0;
+    iptv_network->in_bps = 0;
     t1 = t2;
   }
 
   /* Pass on */
   im->mm_iptv_pos
-    = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
+    = mpegts_input_recv_packets((mpegts_input_t*)iptv_input,
                                 im->mm_active,
                                 im->mm_iptv_tsb + off,
                                 im->mm_iptv_pos + len - off,
@@ -423,7 +425,6 @@ iptv_network_config_save ( mpegts_network_t *mn )
 
 void iptv_init ( void )
 {
-  pthread_t tid;
   htsmsg_t *conf;
   const char *uuid = NULL;
 
@@ -431,46 +432,62 @@ void iptv_init ( void )
   iptv_http_init();
   iptv_udp_init();
 
+  iptv_input = calloc(1, sizeof(iptv_input_t));
+
   /* Init Input */
-  mpegts_input_create0((mpegts_input_t*)&iptv_input,
+  mpegts_input_create0((mpegts_input_t*)iptv_input,
                        &iptv_input_class, NULL, NULL);
-  iptv_input.mi_start_mux      = iptv_input_start_mux;
-  iptv_input.mi_stop_mux       = iptv_input_stop_mux;
-  iptv_input.mi_is_free        = iptv_input_is_free;
-  iptv_input.mi_get_weight     = iptv_input_get_weight;
-  iptv_input.mi_display_name   = iptv_input_display_name;
-  iptv_input.mi_enabled        = 1;
+  iptv_input->mi_start_mux      = iptv_input_start_mux;
+  iptv_input->mi_stop_mux       = iptv_input_stop_mux;
+  iptv_input->mi_is_free        = iptv_input_is_free;
+  iptv_input->mi_get_weight     = iptv_input_get_weight;
+  iptv_input->mi_display_name   = iptv_input_display_name;
+  iptv_input->mi_enabled        = 1;
 
   /* Load settings */
   if ((conf = hts_settings_load("input/iptv/config")))
     uuid = htsmsg_get_str(conf, "uuid");
 
+  iptv_network = calloc(1, sizeof(iptv_network_t));
+
   /* Init Network */
-  mpegts_network_create0((mpegts_network_t*)&iptv_network,
+  mpegts_network_create0((mpegts_network_t*)iptv_network,
                          &iptv_network_class, uuid, "IPTV Network", conf);
-  iptv_network.mn_create_service = iptv_network_create_service;
-  iptv_network.mn_mux_class      = iptv_network_mux_class;
-  iptv_network.mn_mux_create2    = iptv_network_create_mux2;
-  iptv_network.mn_config_save    = iptv_network_config_save;
+  iptv_network->mn_create_service = iptv_network_create_service;
+  iptv_network->mn_mux_class      = iptv_network_mux_class;
+  iptv_network->mn_mux_create2    = iptv_network_create_mux2;
+  iptv_network->mn_config_save    = iptv_network_config_save;
   
   /* Defaults */
   if (!conf) {
-    iptv_network.mn_skipinitscan = 1;
+    iptv_network->mn_skipinitscan = 1;
   }
 
   /* Link */
-  mpegts_input_set_network((mpegts_input_t*)&iptv_input,
-                           (mpegts_network_t*)&iptv_network);
+  mpegts_input_set_network((mpegts_input_t*)iptv_input,
+                           (mpegts_network_t*)iptv_network);
   /* Set table thread */
-  tvhthread_create(&tid, NULL, mpegts_input_table_thread, &iptv_input, 1);
+  mpegts_input_table_thread_start((mpegts_input_t *)iptv_input);
 
   /* Setup TS thread */
   iptv_poll = tvhpoll_create(10);
   pthread_mutex_init(&iptv_lock, NULL);
-  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL, 1);
+  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL, 0);
 
   /* Load config */
   iptv_mux_load_all();
+}
+
+void iptv_done ( void )
+{
+  mpegts_input_table_thread_stop((mpegts_input_t *)iptv_input);
+  pthread_kill(iptv_thread, SIGTERM);
+  pthread_join(iptv_thread, NULL);
+  tvhpoll_destroy(iptv_poll);
+  pthread_mutex_lock(&global_lock);
+  mpegts_network_delete((mpegts_network_t *)iptv_network, 0);
+  mpegts_input_delete((mpegts_input_t *)iptv_input, 0);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /******************************************************************************

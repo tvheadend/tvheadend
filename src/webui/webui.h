@@ -24,6 +24,7 @@
 #include "http.h"
 
 void webui_init(void);
+void webui_done(void);
 
 void simpleui_start(void);
 
@@ -53,6 +54,8 @@ void webui_api_init ( void );
  *
  */
 void comet_init(void);
+
+void comet_done(void);
 
 void comet_mailbox_add_message(htsmsg_t *m, int isdebug);
 

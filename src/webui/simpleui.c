@@ -484,7 +484,7 @@ page_epgsave(http_connection_t *hc,
                  "<epgflush>1</epgflush>\n");
 
   pthread_mutex_lock(&global_lock);
-  epg_save(NULL);
+  epg_save();
   pthread_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/xml");

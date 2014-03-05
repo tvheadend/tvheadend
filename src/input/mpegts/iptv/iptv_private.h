@@ -99,8 +99,8 @@ iptv_service_t *iptv_service_create0
   ( iptv_mux_t *im, uint16_t sid, uint16_t pmt_pid,
     const char *uuid, htsmsg_t *conf );
 
-extern iptv_input_t   iptv_input;
-extern iptv_network_t iptv_network;
+extern iptv_input_t   *iptv_input;
+extern iptv_network_t *iptv_network;
 
 void iptv_mux_load_all ( void );
 

@@ -24,6 +24,7 @@
 #include "htsmsg.h"
 
 void        config_init    ( void );
+void        config_done    ( void );
 void        config_save    ( void );
 
 htsmsg_t   *config_get_all ( void );

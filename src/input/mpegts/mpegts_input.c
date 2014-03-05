@@ -27,6 +27,9 @@
 #include <pthread.h>
 #include <assert.h>
 
+SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
+
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -166,16 +169,14 @@ mpegts_input_open_pid
   mpegts_pid_t *mp;
   assert(owner != NULL);
   if ((mp = mpegts_mux_find_pid(mm, pid, 1))) {
-    static mpegts_pid_sub_t *skel = NULL;
-    if (!skel)
-      skel = calloc(1, sizeof(mpegts_pid_sub_t));
-    skel->mps_type  = type;
-    skel->mps_owner = owner;
-    if (!RB_INSERT_SORTED(&mp->mp_subs, skel, mps_link, mps_cmp)) {
+    SKEL_ALLOC(mpegts_pid_sub_skel);
+    mpegts_pid_sub_skel->mps_type  = type;
+    mpegts_pid_sub_skel->mps_owner = owner;
+    if (!RB_INSERT_SORTED(&mp->mp_subs, mpegts_pid_sub_skel, mps_link, mps_cmp)) {
       mm->mm_display_name(mm, buf, sizeof(buf));
       tvhdebug("mpegts", "%s - open PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
-      skel = NULL;
+      SKEL_USED(mpegts_pid_sub_skel);
     }
   }
   return mp;
@@ -486,28 +487,58 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
   }
 }
 
-void *
+static void *
 mpegts_input_table_thread ( void *aux )
 {
   mpegts_table_feed_t   *mtf;
   mpegts_input_t        *mi = aux;
 
-  while (1) {
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  while (mi->mi_delivery_running) {
 
     /* Wait for data */
-    pthread_mutex_lock(&mi->mi_delivery_mutex);
-    while(!(mtf = TAILQ_FIRST(&mi->mi_table_feed)))
+    while(!(mtf = TAILQ_FIRST(&mi->mi_table_feed))) {
+      if (!mi->mi_delivery_running)
+        break;
       pthread_cond_wait(&mi->mi_table_feed_cond, &mi->mi_delivery_mutex);
-    TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
-    pthread_mutex_unlock(&mi->mi_delivery_mutex);
-
+    }
+    if (mtf)
+      TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
+    
     /* Process */
-    pthread_mutex_lock(&global_lock);
-    mpegts_input_table_dispatch(mtf->mtf_mux, mtf);
-    pthread_mutex_unlock(&global_lock);
+    if (mtf) {
+      pthread_mutex_unlock(&mi->mi_delivery_mutex);
+      pthread_mutex_lock(&global_lock);
+      mpegts_input_table_dispatch(mtf->mtf_mux, mtf);
+      pthread_mutex_unlock(&global_lock);
+      free(mtf);
+      pthread_mutex_lock(&mi->mi_delivery_mutex);
+    }
+  }
+  while ((mtf = TAILQ_FIRST(&mi->mi_table_feed)) != NULL) {
+    TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
     free(mtf);
   }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
   return NULL;
+}
+
+void
+mpegts_input_table_thread_start( mpegts_input_t *mi )
+{
+  mi->mi_delivery_running = 1;
+  tvhthread_create(&mi->mi_thread_table_id, NULL,  
+                   mpegts_input_table_thread, mi, 0);
+}
+
+void
+mpegts_input_table_thread_stop( mpegts_input_t *mi )
+{
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  mi->mi_delivery_running = 0;
+  pthread_cond_signal(&mi->mi_table_feed_cond);
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  pthread_join(mi->mi_thread_table_id, NULL);
 }
 
 void
@@ -667,14 +698,16 @@ mpegts_input_create0
 }
 
 void
-mpegts_input_delete ( mpegts_input_t *mi )
+mpegts_input_delete ( mpegts_input_t *mi, int delconf )
 {
+  mpegts_input_set_network(mi, NULL);
   idnode_unlink(&mi->ti_id);
   pthread_mutex_destroy(&mi->mi_delivery_mutex);
   pthread_cond_destroy(&mi->mi_table_feed_cond);
   tvh_pipe_close(&mi->mi_thread_pipe);
   LIST_REMOVE(mi, ti_link);
   LIST_REMOVE(mi, mi_global_link);
+  free(mi->mi_name);
   free(mi);
 }
 

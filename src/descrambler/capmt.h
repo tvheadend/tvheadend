@@ -21,6 +21,8 @@
 
 void capmt_init(void);
 
+void capmt_done(void);
+
 void capmt_service_start(struct service *t);
 
 #endif /* CAPMT_H_ */

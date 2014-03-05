@@ -100,6 +100,8 @@ typedef struct th_subscription {
  */
 void subscription_init(void);
 
+void subscription_done(void);
+
 void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);

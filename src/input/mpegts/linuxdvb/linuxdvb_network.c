@@ -51,7 +51,7 @@ linuxdvb_network_class_delete ( idnode_t *in )
                       idnode_uuid_as_str(in));
 
   /* Parent delete */
-  mpegts_network_delete(mn);
+  mpegts_network_delete(mn, 1);
 }
 
 static const void *
@@ -356,6 +356,13 @@ linuxdvb_network_builder
   return (mpegts_network_t*)linuxdvb_network_create0(NULL, idc, conf);
 }
 
+static  const idclass_t* linuxdvb_network_classes[] = {
+  &linuxdvb_network_dvbt_class,
+  &linuxdvb_network_dvbc_class,
+  &linuxdvb_network_dvbs_class,
+  &linuxdvb_network_atsc_class,
+};
+
 void linuxdvb_network_init ( void )
 {
   htsmsg_t *c, *e;
@@ -363,16 +370,10 @@ void linuxdvb_network_init ( void )
   const char *s;
   int i;
 
-  const idclass_t* classes[] = {
-    &linuxdvb_network_dvbt_class,
-    &linuxdvb_network_dvbc_class,
-    &linuxdvb_network_dvbs_class,
-    &linuxdvb_network_atsc_class,
-  };
-  
   /* Register class builders */
-  for (i = 0; i < ARRAY_SIZE(classes); i++)
-    mpegts_network_register_builder(classes[i], linuxdvb_network_builder);
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_network_classes); i++)
+    mpegts_network_register_builder(linuxdvb_network_classes[i],
+                                    linuxdvb_network_builder);
   
   /* Load settings */
   if (!(c = hts_settings_load_r(1, "input/linuxdvb/networks")))
@@ -382,14 +383,27 @@ void linuxdvb_network_init ( void )
     if (!(e = htsmsg_get_map_by_field(f)))  continue;
     if (!(e = htsmsg_get_map(e, "config"))) continue;
     if (!(s = htsmsg_get_str(e, "class")))  continue;
-    for (i = 0; i < ARRAY_SIZE(classes); i++) {
-      if(!strcmp(classes[i]->ic_class, s)) {
-        (void)linuxdvb_network_create0(f->hmf_name, classes[i], e);
+    for (i = 0; i < ARRAY_SIZE(linuxdvb_network_classes); i++) {
+      if(!strcmp(linuxdvb_network_classes[i]->ic_class, s)) {
+        (void)linuxdvb_network_create0(f->hmf_name, linuxdvb_network_classes[i], e);
         break;
       }
     }
   }
   htsmsg_destroy(c);
+}
+
+void linuxdvb_network_done ( void )
+{
+  int i;
+
+  pthread_mutex_lock(&global_lock);
+  /* Unregister class builders */
+  for (i = 0; i < ARRAY_SIZE(linuxdvb_network_classes); i++) {
+    mpegts_network_unregister_builder(linuxdvb_network_classes[i]);
+    mpegts_network_class_delete(linuxdvb_network_classes[i], 0);
+  }
+  pthread_mutex_unlock(&global_lock);
 }
 
 /* ****************************************************************************

@@ -29,6 +29,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -40,6 +41,8 @@
 #include "notify.h"
 
 int tcp_preferred_address_family = AF_INET;
+int tcp_server_running;
+th_pipe_t tcp_server_pipe;
 
 /**
  *
@@ -330,6 +333,11 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     x = poll(&fds, 1, timeout);
     if(x == 0)
       return ETIMEDOUT;
+    if(x == -1) {
+      if (errno == EAGAIN)
+        continue;
+      return errno;
+    }
 
     x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
     if(x == -1) {
@@ -385,6 +393,7 @@ typedef struct tcp_server {
 } tcp_server_t;
 
 typedef struct tcp_server_launch {
+  pthread_t tid;
   int fd;
   tcp_server_ops_t ops;
   void *opaque;
@@ -392,9 +401,11 @@ typedef struct tcp_server_launch {
   struct sockaddr_storage self;
   time_t started;
   LIST_ENTRY(tcp_server_launch) link;
+  LIST_ENTRY(tcp_server_launch) alink;
 } tcp_server_launch_t;
 
 static LIST_HEAD(, tcp_server_launch) tcp_server_launches = { 0 };
+static LIST_HEAD(, tcp_server_launch) tcp_server_active = { 0 };
 
 /**
  *
@@ -448,6 +459,7 @@ tcp_server_start(void *aux)
     LIST_REMOVE(tsl, link);
     notify_reload("connections");
   }
+  LIST_REMOVE(tsl, alink);
   pthread_mutex_unlock(&global_lock);
 
   free(tsl);
@@ -465,14 +477,9 @@ tcp_server_loop(void *aux)
   tvhpoll_event_t ev;
   tcp_server_t *ts;
   tcp_server_launch_t *tsl;
-  pthread_attr_t attr;
-  pthread_t tid;
   socklen_t slen;
 
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-  while(1) {
+  while(tcp_server_running) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r == -1) {
       perror("tcp_server: tvhpoll_wait");
@@ -482,6 +489,8 @@ tcp_server_loop(void *aux)
     if (r == 0) continue;
 
     ts = ev.data.ptr;
+    if (ts == (tcp_server_t *)&tcp_server_pipe)
+      break;
 
     if(ev.events & TVHPOLL_HUP) {
 	    close(ts->serverfd);
@@ -511,9 +520,13 @@ tcp_server_loop(void *aux)
         continue;
      	}
 
-     	tvhthread_create(&tid, &attr, tcp_server_start, tsl, 1);
+        pthread_mutex_lock(&global_lock);
+        LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
+        pthread_mutex_unlock(&global_lock);
+     	tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, 0);
     }
   }
+  tvhtrace("tcp", "server thread finished");
   return NULL;
 }
 
@@ -600,6 +613,23 @@ tcp_server_create
   return ts;
 }
 
+/**
+ *
+ */
+void
+tcp_server_delete(void *server)
+{
+  tcp_server_t *ts = server;
+  tvhpoll_event_t ev;
+
+  memset(&ev, 0, sizeof(ev));
+  ev.fd       = ts->serverfd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = ts;
+  tvhpoll_rem(tcp_server_poll, &ev, 1);  
+  free(ts);
+}
+
 /*
  * Connections status
  */
@@ -635,14 +665,58 @@ tcp_server_connections ( void )
 /**
  *
  */
+pthread_t tcp_server_tid;
+
 void
 tcp_server_init(int opt_ipv6)
 {
-  pthread_t tid;
-
+  tvhpoll_event_t ev;
   if(opt_ipv6)
     tcp_preferred_address_family = AF_INET6;
 
+  tvh_pipe(O_NONBLOCK, &tcp_server_pipe);
   tcp_server_poll = tvhpoll_create(10);
-  tvhthread_create(&tid, NULL, tcp_server_loop, NULL, 1);
+
+  memset(&ev, 0, sizeof(ev));
+  ev.fd       = tcp_server_pipe.rd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = &tcp_server_pipe;
+  tvhpoll_add(tcp_server_poll, &ev, 1);
+
+  tcp_server_running = 1;
+  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, 0);
+}
+
+void
+tcp_server_done(void)
+{
+  pthread_t tid;
+  tcp_server_launch_t *tsl;  
+  char c = 'E';
+
+  tcp_server_running = 0;
+  write(tcp_server_pipe.wr, &c, 1);
+
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(tsl, &tcp_server_active, alink) {
+    if (tsl->ops.cancel)
+      tsl->ops.cancel(tsl->opaque);
+    close(tsl->fd);
+    tsl->fd = -1;
+    pthread_kill(tsl->tid, SIGTERM);
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  pthread_join(tcp_server_tid, NULL);
+  tvh_pipe_close(&tcp_server_pipe);
+  tvhpoll_destroy(tcp_server_poll);
+  
+  pthread_mutex_lock(&global_lock);
+  while ((tsl = LIST_FIRST(&tcp_server_active)) != NULL) {
+    tid = tsl->tid;
+    pthread_mutex_unlock(&global_lock);
+    pthread_join(tid, NULL);
+    pthread_mutex_lock(&global_lock);
+  }
+  pthread_mutex_unlock(&global_lock);
 }
