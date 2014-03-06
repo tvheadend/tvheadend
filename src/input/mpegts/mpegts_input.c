@@ -345,7 +345,10 @@ mpegts_input_recv_packets
 {
   int len = l;
   int i = 0, table_wakeup = 0;
+  int stream = 0;
+  int table = 0;
   mpegts_mux_t *mm = mmi->mmi_mux;
+  mpegts_pid_t *last_mp = NULL;
   assert(mm != NULL);
   assert(name != NULL);
 
@@ -374,25 +377,29 @@ mpegts_input_recv_packets
 
       /* Find PID */
       if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
-        int stream = 0;
-        int table  = 0;
 
-        /* Stream takes pref. */
-        RB_FOREACH(mps, &mp->mp_subs, mps_link) {
-          if (mps->mps_type & MPS_STREAM)
-            stream = 1;
-          if (mps->mps_type & MPS_TABLE)
-            table  = 1;
-        }
+	if (mp != last_mp) {
+	  last_mp = mp;
+	  stream = 0;
+          table = 0;
 
-        /* Special case streams */
-        if (pid == 0) table = stream = 1;
-        LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-          if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
-               if (pid == s->s_pmt_pid) stream = 1;
-          else if (pid == s->s_pcr_pid) stream = 1;
+          /* Stream takes pref. */
+          RB_FOREACH(mps, &mp->mp_subs, mps_link) {
+            if (mps->mps_type & MPS_STREAM)
+              stream = 1;
+            if (mps->mps_type & MPS_TABLE)
+              table  = 1;
+          }
+
+          /* Special case streams */
+          if (pid == 0) table = stream = 1;
+          LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+            if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
+                 if (pid == s->s_pmt_pid) stream = 1;
+            else if (pid == s->s_pcr_pid) stream = 1;
+          }
         }
-  
+    
         /* Stream data */
         if (stream) {
           LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
