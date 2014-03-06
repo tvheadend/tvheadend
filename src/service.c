@@ -679,7 +679,7 @@ service_stream_create(service_t *t, int pid,
  * Find an elementary stream in a service
  */
 elementary_stream_t *
-service_stream_find(service_t *t, int pid)
+service_stream_find_(service_t *t, int pid)
 {
   elementary_stream_t *st;
  
@@ -796,7 +796,7 @@ service_servicetype_txt ( service_t *s )
  *
  */
 void
-service_set_streaming_status_flags(service_t *t, int set)
+service_set_streaming_status_flags_(service_t *t, int set)
 {
   int n;
   streaming_message_t *sm;

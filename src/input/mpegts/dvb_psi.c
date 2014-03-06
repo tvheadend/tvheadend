@@ -1176,7 +1176,7 @@ psi_desc_add_ca
   tvhdebug("pmt", "  caid %04X (%s) provider %08X pid %04X",
            caid, descrambler_caid2name(caid), provid, pid);
 
-  if((st = service_stream_find_fast((service_t*)t, pid)) == NULL) {
+  if((st = service_stream_find((service_t*)t, pid)) == NULL) {
     st = service_stream_create((service_t*)t, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
@@ -1282,7 +1282,7 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
       // higher than normal MPEG TS (0x2000 ++)
       int pid = DVB_TELETEXT_BASE + page;
     
-      if((st = service_stream_find_fast((service_t*)t, pid)) == NULL) {
+      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
         r |= PMT_UPDATE_NEW_STREAM;
         st = service_stream_create((service_t*)t, pid, SCT_TEXTSUB);
         st->es_delete_me = 1;
@@ -1492,7 +1492,7 @@ psi_parse_pmt
     
     if(hts_stream_type != SCT_UNKNOWN) {
 
-      if((st = service_stream_find_fast((service_t*)t, pid)) == NULL) {
+      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
         update |= PMT_UPDATE_NEW_STREAM;
         st = service_stream_create((service_t*)t, pid, hts_stream_type);
       }

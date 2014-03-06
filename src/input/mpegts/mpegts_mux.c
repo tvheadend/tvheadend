@@ -901,7 +901,7 @@ static int mp_cmp ( mpegts_pid_t *a, mpegts_pid_t *b )
 };
 
 mpegts_pid_t *
-mpegts_mux_find_pid ( mpegts_mux_t *mm, int pid, int create )
+mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
 {
   mpegts_pid_t *mp;
   

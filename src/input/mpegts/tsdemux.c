@@ -68,7 +68,7 @@ ts_recv_packet0
 {
   int off, pusi, cc, error;
 
-  service_set_streaming_status_flags_fast((service_t*)t, TSS_MUX_PACKETS);
+  service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
@@ -206,7 +206,7 @@ ts_recv_packet1
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  service_set_streaming_status_flags_fast((service_t*)t, TSS_INPUT_HARDWARE);
+  service_set_streaming_status_flags((service_t*)t, TSS_INPUT_HARDWARE);
 
   if(error) {
     /* Transport Error Indicator */
@@ -216,7 +216,7 @@ ts_recv_packet1
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  st = service_stream_find_fast((service_t*)t, pid);
+  st = service_stream_find((service_t*)t, pid);
 
   /* Extract PCR */
   if (pcr != PTS_UNSET)
@@ -228,7 +228,7 @@ ts_recv_packet1
   }
 
   if(!error)
-    service_set_streaming_status_flags_fast((service_t*)t, TSS_INPUT_SERVICE);
+    service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
@@ -259,9 +259,9 @@ ts_recv_packet1
 
     if(!error && t->s_scrambled != 0) {
       if(n == 0) {
-        service_set_streaming_status_flags_fast((service_t*)t, TSS_NO_DESCRAMBLER);
+        service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
       } else if(m == n) {
-        service_set_streaming_status_flags_fast((service_t*)t, TSS_NO_ACCESS);
+        service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
       }
     }
 
@@ -282,7 +282,7 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb)
   elementary_stream_t *st;
   int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  if((st = service_stream_find_fast((service_t*)t, pid)) != NULL)
+  if((st = service_stream_find((service_t*)t, pid)) != NULL)
     ts_recv_packet0(t, st, tsb);
 }
 
@@ -310,7 +310,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
 
   pktbuf_ref_dec(pb);
 
-  service_set_streaming_status_flags_fast((service_t*)t, TSS_PACKETS);
+  service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
 
   sbuf_reset(sb);
 }

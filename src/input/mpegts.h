@@ -603,16 +603,16 @@ void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int re
 int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
-#define mpegts_mux_find_pid_fast(mm, pid, create) ({ \
+#define mpegts_mux_find_pid(mm, pid, create) ({ \
  mpegts_pid_t *__mp; \
  if ((mm)->mm_last_pid != (pid)) \
-   __mp = mpegts_mux_find_pid(mm, pid, create); \
+   __mp = mpegts_mux_find_pid_(mm, pid, create); \
  else \
    __mp = (mm)->mm_last_mp; \
  __mp; \
 })
 
-mpegts_pid_t *mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create);
+mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
