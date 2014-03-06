@@ -406,6 +406,8 @@ typedef struct service {
    * List of all components.
    */
   struct elementary_stream_queue s_components;
+  int s_last_pid;
+  elementary_stream_t *s_last_es;
 
 
   /**
@@ -448,7 +450,16 @@ service_instance_t *service_find_instance(struct service *s,
                                           int *error,
                                           int weight);
 
-elementary_stream_t *service_stream_find(service_t *t, int pid);
+elementary_stream_t *service_stream_find_(service_t *t, int pid);
+
+static inline elementary_stream_t *
+service_stream_find(service_t *t, int pid)
+{
+  if (t->s_last_pid != (pid))
+    return service_stream_find_(t, pid);
+  else
+    return t->s_last_es;
+}
 
 elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
@@ -472,7 +483,14 @@ void service_destroy(service_t *t, int delconf);
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
 
-void service_set_streaming_status_flags(service_t *t, int flag);
+void service_set_streaming_status_flags_(service_t *t, int flag);
+
+static inline void
+service_set_streaming_status_flags(service_t *t, int flag)
+{
+  if ((t->s_streaming_status & flag) != flag)
+    service_set_streaming_status_flags_(t, flag);
+}
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
