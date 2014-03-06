@@ -106,7 +106,11 @@ tvheadend.cwceditor = function() {
 		baseParams : {
 			table : 'cwc',
 			op : "get"
-		}
+		},
+		sortInfo : {
+                        field : 'username',
+                        direction : 'ASC'
+                }
 	});
 
 	var grid = new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec, [],
