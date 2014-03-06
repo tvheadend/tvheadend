@@ -450,16 +450,16 @@ service_instance_t *service_find_instance(struct service *s,
                                           int *error,
                                           int weight);
 
-#define service_stream_find_fast(t, pid) ({ \
+#define service_stream_find(t, pid) ({ \
   elementary_stream_t *__es; \
   if ((t)->s_last_pid != (pid)) \
-    __es = service_stream_find(t, pid); \
+    __es = service_stream_find_(t, pid); \
   else \
     __es = (t)->s_last_es; \
   __es; \
 })
 
-elementary_stream_t *service_stream_find(service_t *t, int pid);
+elementary_stream_t *service_stream_find_(service_t *t, int pid);
 
 elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
@@ -483,11 +483,11 @@ void service_destroy(service_t *t, int delconf);
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
 
-void service_set_streaming_status_flags(service_t *t, int flag);
+void service_set_streaming_status_flags_(service_t *t, int flag);
 
-#define service_set_streaming_status_flags_fast(t, flag) \
+#define service_set_streaming_status_flags(t, flag) \
   do { if (((t)->s_streaming_status & flag) != flag) \
-    service_set_streaming_status_flags(t, flag); } while (0)
+    service_set_streaming_status_flags_(t, flag); } while (0)
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);

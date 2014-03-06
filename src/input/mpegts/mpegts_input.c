@@ -373,7 +373,7 @@ mpegts_input_recv_packets
                name, pid, pid, mmi);
 
       /* Find PID */
-      if ((mp = mpegts_mux_find_pid_fast(mm, pid, 0))) {
+      if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
         int stream = 0;
         int table  = 0;
 
