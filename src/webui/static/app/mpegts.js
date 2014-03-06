@@ -46,7 +46,11 @@ tvheadend.networks = function(panel)
         url          : 'api/mpegts/network/create'
       }
     },
-    del     : true
+    del     : true,
+    sort    : {
+      field : 'networkname',
+      direction : 'ASC'
+    }
   });
 }
 
@@ -82,7 +86,11 @@ tvheadend.muxes = function(panel)
           return "<a href='stream/mux/" + r.id + "'>Play</a>";
         }
       }
-    ]
+    ],
+    sort    : {
+      field  : 'name',
+      direction : 'ASC'
+    }
   });
 }
 
@@ -120,6 +128,10 @@ tvheadend.services = function(panel)
           return "<a href='stream/service/" + r.id + "'>Play</a>";
         }
       }
-    ]
+    ],
+    sort     : {
+      field  : 'svcname',
+      direction : 'ASC'
+    }
   });
 }
