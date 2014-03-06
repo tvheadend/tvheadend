@@ -70,6 +70,10 @@ tvheadend.channel_tab = function(panel)
           return "<a href='stream/channel/" + r.id + "'>Play</a>";
         }
       }
-    ]
+    ],
+    sort    : {
+      field : 'number',
+      direction : 'ASC'
+    }
   });
 }
