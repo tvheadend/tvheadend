@@ -377,7 +377,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if(fd < 0) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
