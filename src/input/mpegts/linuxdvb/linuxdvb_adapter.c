@@ -298,6 +298,7 @@ linuxdvb_adapter_add ( const char *path )
 #endif
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(conf);
+    conf = feconf = NULL;
   }
 
   /* Relock before exit */
