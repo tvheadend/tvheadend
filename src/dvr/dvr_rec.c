@@ -206,7 +206,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
 
   /* */
-  if(makedirs(path, 0777) != 0) {
+  if(makedirs(path, 0755) != 0) {
     return -1;
   }
   
