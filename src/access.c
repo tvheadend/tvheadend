@@ -347,7 +347,22 @@ access_get_by_addr(struct sockaddr *src)
   return r;
 }
 
+/**
+ *
+ */
+uint32_t
+access_tag_only(const char *username)
+{
+  access_entry_t *ae;
+  uint32_t r = 0;
 
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!strcmp(ae->ae_username, username))
+      return ae->ae_tagonly;
+  }
+  return r;
+}
 
 
 /**
@@ -568,6 +583,7 @@ access_record_build(access_entry_t *ae)
   htsmsg_add_u32(e, "dvrallcfg", ae->ae_rights & ACCESS_RECORDER_ALL  ? 1 : 0);
   htsmsg_add_u32(e, "webui"    , ae->ae_rights & ACCESS_WEB_INTERFACE ? 1 : 0);
   htsmsg_add_u32(e, "admin"    , ae->ae_rights & ACCESS_ADMIN         ? 1 : 0);
+  htsmsg_add_u32(e, "tag_only" , ae->ae_tagonly);
 
 
   htsmsg_add_str(e, "id", ae->ae_id);
@@ -669,6 +685,9 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
   if(!htsmsg_get_u32(values, "webui", &u32))
     access_update_flag(ae, ACCESS_WEB_INTERFACE, u32);
 
+  if(!htsmsg_get_u32(values, "tag_only", &u32))
+    ae->ae_tagonly = u32;
+
   return access_record_build(ae);
 }
 
@@ -740,6 +759,7 @@ access_init(int createdefault, int noacl)
     ae->ae_comment = strdup("Default access entry");
 
     ae->ae_enabled = 1;
+    ae->ae_tagonly = 0;
     ae->ae_rights = 0xffffffff;
 
     TAILQ_INIT(&ae->ae_ipmasks);

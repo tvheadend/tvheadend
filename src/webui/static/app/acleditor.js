@@ -56,14 +56,19 @@ tvheadend.acleditor = function() {
       dataIndex : 'admin',
       width : 100
     }, {
+      xtype: 'checkcolumn',
+      header : "Access Tag Only",
+      dataIndex : 'tag_only',
+      width : 200
+    }, {      
       header : "Comment",
       dataIndex : 'comment',
-      width : 400,
+      width : 300,
       editor : new fm.TextField({})
     }]});
 
   var UserRecord = Ext.data.Record.create(
-    [ 'enabled', 'streaming', 'dvr', 'dvrallcfg', 'admin', 'webui', 'username',
+    [ 'enabled', 'streaming', 'dvr', 'dvrallcfg', 'admin', 'webui', 'username', 'tag_only',
       'prefix', 'password', 'comment'
     ]);
 

@@ -217,6 +217,7 @@ typedef struct htsp_file {
   char *hf_path; // For logging
 } htsp_file_t;
 
+static int htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch);
 
 
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
@@ -902,9 +903,11 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
       htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
   
   /* Send all channels */
-  CHANNEL_FOREACH(ch)
-    htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd", htsp), NULL);
-    
+  CHANNEL_FOREACH(ch) {
+    if (htsp_user_access_channel(htsp,ch))
+      htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd", htsp), NULL);
+  }
+  
   /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
@@ -912,13 +915,16 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
+  {
+    if (htsp_user_access_channel(htsp,de->de_channel))
+      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
+  }
 
   /* Send EPG updates */
   if (epg) {
     CHANNEL_FOREACH(ch)
       RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-        if (epgMaxTime && ebc->start > epgMaxTime) break;
+        if ((epgMaxTime && ebc->start > epgMaxTime) || !htsp_user_access_channel(htsp,ch)) break;
         htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate, htsp);
         if (e) htsp_send_message(htsp, e, NULL);
       }
@@ -1377,6 +1383,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   } else {
     return htsp_error("Missing argument 'channelId' or 'channelName'");
   }
+  if (!htsp_user_access_channel(htsp,ch))
+    return htsp_error("User not allowed to view this channel");
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
   normts = htsmsg_get_u32_or_default(in, "normts", 0);
@@ -1687,6 +1695,9 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     if(de->de_filename == NULL)
       return htsp_error("DVR entry does not have a file yet");
 
+    if (!htsp_user_access_channel(htsp,de->de_channel))
+      return htsp_error("User not allowed to view this recording");
+      
     filename = de->de_filename;
     return htsp_file_open(htsp, filename, 0);
 
@@ -2303,8 +2314,10 @@ _htsp_channel_update(channel_t *ch, const char *msg)
 {
   htsp_connection_t *htsp;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
-    if (htsp->htsp_async_mode & HTSP_ASYNC_ON)
+  {
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON & htsp_user_access_channel(htsp,ch))
       htsp_send_message(htsp, htsp_build_channel(ch, msg, htsp), NULL);
+  }
 }
 
 void
@@ -2367,6 +2380,19 @@ htsp_tag_delete(channel_tag_t *ct)
   htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
+/**
+ * Called when a DVR entry is updated/added
+ */
+static void
+_htsp_dvr_entry_update(dvr_entry_t *de, const char *msg)
+{
+  htsp_connection_t *htsp;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
+  {
+    if (htsp_user_access_channel(htsp,de->de_channel))
+      htsp_send_message(htsp, htsp_build_dvrentry(de, msg), NULL);
+  }
+}
 
 /**
  * Called from dvr_db.c when a DVR entry is created
@@ -2374,7 +2400,7 @@ htsp_tag_delete(channel_tag_t *ct)
 void
 htsp_dvr_entry_add(dvr_entry_t *de)
 {
-  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryAdd"), HTSP_ASYNC_ON);
+  _htsp_dvr_entry_update(de, "dvrEntryAdd");
 }
 
 
@@ -2384,7 +2410,7 @@ htsp_dvr_entry_add(dvr_entry_t *de)
 void
 htsp_dvr_entry_update(dvr_entry_t *de)
 {
-  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryUpdate"), HTSP_ASYNC_ON);
+  _htsp_dvr_entry_update(de, "dvrEntryUpdate");
 }
 
 
@@ -2401,18 +2427,27 @@ htsp_dvr_entry_delete(dvr_entry_t *de)
 }
 
 /**
+ * Called when a event entry is updated/added
+ */
+static void
+_htsp_event_update(epg_broadcast_t *ebc, const char *msg)
+{
+  htsp_connection_t *htsp;
+  htsmsg_t *m;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG) || !htsp_user_access_channel(htsp,ebc->channel)) continue;
+    m = htsp_build_event(ebc, msg, htsp->htsp_language, 0, htsp);
+    htsp_send_message(htsp, m, NULL);
+  }
+}
+
+/**
  * Event added
  */
 void
 htsp_event_add(epg_broadcast_t *ebc)
 {
-  htsp_connection_t *htsp;
-  htsmsg_t *m;
-  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
-    if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
-    m = htsp_build_event(ebc, "eventAdd", htsp->htsp_language, 0, htsp);
-    htsp_send_message(htsp, m, NULL);
-  }
+  _htsp_event_update(ebc, "eventAdd");
 }
 
 /**
@@ -2421,13 +2456,7 @@ htsp_event_add(epg_broadcast_t *ebc)
 void
 htsp_event_update(epg_broadcast_t *ebc)
 {
-  htsp_connection_t *htsp;
-  htsmsg_t *m;
-  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
-    if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
-    m = htsp_build_event(ebc, "eventUpdate", htsp->htsp_language, 0, htsp);
-    htsp_send_message(htsp, m, NULL);
-  }
+  _htsp_event_update(ebc, "eventUpdate");
 }
 
 /**
@@ -2819,4 +2848,25 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
   }
   streaming_msg_free(sm);
+}
+
+/**
+ *
+ */
+static int
+htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch) {
+  if (!access_tag_only(htsp->htsp_username))
+  	return 1;
+  else
+  {
+    if (!ch)
+      return 0;
+    channel_tag_mapping_t *ctm;
+    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    {
+      if (!strcmp(htsp->htsp_username, ctm->ctm_tag->ct_name))
+        return 1;
+    }
+  }  
+  return 0;
 }
