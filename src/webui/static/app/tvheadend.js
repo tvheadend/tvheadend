@@ -295,6 +295,17 @@ function accessUpdate(o) {
       tabs1.push(tvheadend.conf_csa);
     }
 
+    /* Stream Config */
+    tvheadend.conf_stream = new Ext.TabPanel({
+      activeTab: 0,
+      autoScroll: true,
+      title: 'Stream',
+      iconCls: 'stream_config',
+      items: []
+    });
+    tvheadend.esfilter_tab(tvheadend.conf_stream);
+    tabs1.push(tvheadend.conf_stream);
+
     /* Debug */
     tabs1.push(new tvheadend.tvhlog);
 

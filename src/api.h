@@ -67,12 +67,14 @@ void api_epg_init           ( void );
 void api_epggrab_init       ( void );
 void api_status_init        ( void );
 void api_imagecache_init    ( void );
+void api_esfilter_init      ( void );
 
 /*
  * IDnode
  */
 typedef struct api_idnode_grid_conf
 {
+  int             tindex;
   int             start;
   int             limit;
   idnode_filter_t filter;

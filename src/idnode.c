@@ -140,18 +140,38 @@ idnode_unlink(idnode_t *in)
 /**
  *
  */
-void
-idnode_delete(idnode_t *in)
+static void
+idnode_handler(size_t off, idnode_t *in)
 {
+  void (**fcn)(idnode_t *);
   lock_assert(&global_lock);
   const idclass_t *idc = in->in_class;
   while (idc) {
-    if (idc->ic_delete) {
-      idc->ic_delete(in);
+    fcn = (void *)idc + off;
+    if (*fcn) {
+      (*fcn)(in);
       break;
     }
     idc = idc->ic_super;
   }
+}
+
+void
+idnode_delete(idnode_t *in)
+{
+  return idnode_handler(offsetof(idclass_t, ic_delete), in);
+}
+
+void
+idnode_moveup(idnode_t *in)
+{
+  return idnode_handler(offsetof(idclass_t, ic_moveup), in);
+}
+
+void
+idnode_movedown(idnode_t *in)
+{
+  return idnode_handler(offsetof(idclass_t, ic_movedown), in);
 }
 
 /* **************************************************************************

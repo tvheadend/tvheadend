@@ -145,7 +145,6 @@ tvheadend.IdNodeField = function (conf)
       width    : w,
       dataIndex: this.id,
       header   : this.text,
-      sortable : true,
       editor   : this.editor({create: false}),
       renderer : this.renderer(),
       hidden   : this.hidden,
@@ -665,10 +664,12 @@ tvheadend.idnode_grid = function(panel, conf)
     var undoBtn = null;
     var addBtn  = null;
     var delBtn  = null;
+    var upBtn   = null;
+    var downBtn = null;
     var editBtn = null;
 
     /* Model */
-    var idnode  = new tvheadend.IdNode(d);
+    var idnode = new tvheadend.IdNode(d);
     for (var i = 0; i < idnode.length(); i++) {
       var f = idnode.field(i);
       var c = f.column();
@@ -708,8 +709,11 @@ tvheadend.idnode_grid = function(panel, conf)
     });
 
     /* Model */
+    var sortable = true;
+    if (conf.move)
+      sortable = false;
     var model = new Ext.grid.ColumnModel({
-      defaultSortable : true,
+      defaultSortable : sortable,
       columns         : columns
     });
 
@@ -727,6 +731,10 @@ tvheadend.idnode_grid = function(panel, conf)
     select.on('selectionchange', function(s){
       if (delBtn)
         delBtn.setDisabled(s.getCount() == 0);
+      if (upBtn) {
+        upBtn.setDisabled(s.getCount() == 0);
+        downBtn.setDisabled(s.getCount() == 0);
+      }
       editBtn.setDisabled(s.getCount() != 1);
       if (conf.selected)
         conf.selected(s);
@@ -809,7 +817,59 @@ tvheadend.idnode_grid = function(panel, conf)
       });
       buttons.push(delBtn);
     }
-    if (conf.add || conf.del)
+    if (conf.move) {
+      upBtn  = new Ext.Toolbar.Button({
+        tooltip     : 'Move selected entries up',
+        iconCls     : 'moveup',
+        text        : 'Move Up',
+        disabled    : true,
+        handler     : function() {
+          var r = select.getSelections();
+          if (r && r.length > 0) {
+            var uuids = []
+            for ( var i = 0; i < r.length; i++ )
+              uuids.push(r[i].id)
+            Ext.Ajax.request({
+              url     : 'api/idnode/moveup',
+              params  : {
+                uuid: Ext.encode(uuids)
+              },
+              success : function(d)
+              {
+                store.reload();
+              }
+            });
+          }
+        }
+      });
+      buttons.push(upBtn);
+      downBtn  = new Ext.Toolbar.Button({
+        tooltip     : 'Move selected entries down',
+        iconCls     : 'movedown',
+        text        : 'Move Down',
+        disabled    : true,
+        handler     : function() {
+          var r = select.getSelections();
+          if (r && r.length > 0) {
+            var uuids = []
+            for ( var i = 0; i < r.length; i++ )
+              uuids.push(r[i].id)
+            Ext.Ajax.request({
+              url     : 'api/idnode/movedown',
+              params  : {
+                uuid: Ext.encode(uuids)
+              },
+              success : function(d)
+              {
+                store.reload();
+              }
+            });
+          }
+        }
+      });
+      buttons.push(downBtn);
+    }
+    if (conf.add || conf.del || conf.move)
       buttons.push('-');
     editBtn = new Ext.Toolbar.Button({
       tooltip     : 'Edit selected entry',

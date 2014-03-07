@@ -61,6 +61,7 @@
 #include "timeshift.h"
 #include "fsmonitor.h"
 #include "lang_codes.h"
+#include "esfilter.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -767,6 +768,7 @@ main(int argc, char **argv)
   imagecache_init();
 
   http_client_init();
+  esfilter_init();
 
   service_init();
 
@@ -877,6 +879,7 @@ main(int argc, char **argv)
   tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
+  tvhftrace("main", esfilter_done);
   tvhftrace("main", urlparse_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");

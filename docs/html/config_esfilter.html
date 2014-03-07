@@ -1,0 +1,109 @@
+<div class="hts-doc-text">
+
+This table defines rules to filter and order the elementary streams
+like video or audio from the input feed.
+
+<p>
+The execution order of commands is granted. It means that first rule
+is executed for all available streams then second and so on.
+
+<p>
+If any elementary stream is not marked as ignored or exclusive, it is
+used. If you like to ignore unknown elementary streams, add a rule
+to the end of grid with the any (not defined) comparisons and
+with the action ignore.
+
+<p>
+The rules for different elementary stream groups (video, audio,
+teletext, subtitle, CA, other) are executed separately (as visually edited).
+
+<p>
+For the visual verification of the filtering, there is a service info
+dialog in the Configuration / DVB Inputs / Services window . This dialog
+shows the received PIDs and filtered PIDs in one window.
+
+<p>
+The rules are listed / edited  in a grid.
+
+<ul>
+  <li>To edit a cell, double click on it. After a cell is changed it
+      will flags one of its corner to red to indicated that it has been
+      changed. To commit these changes back to Tvheadend press the
+      'Save changes' button. In order to change a Checkbox cell you only
+      have to click once in it.
+
+  <li>To add a new entry, press the 'Add entry' button. The new (empty) entry
+      will be created on the server but will not be in its enabled state.
+      You can now change all the cells to the desired values, check the
+      'enable' box and then press 'Save changes' to activate the new entry.
+
+  <li>To delete one or more entries, select the lines (by clicking once on
+      them), and press the 'Delete selected' button. A pop up
+      will ask you to confirm your request.
+
+  <li>To move up or down one or more entries, select the lines (by clicking
+      once on  them), and press the 'Move up' or 'Move down' button.
+</ul>
+
+<p>
+The columns have the following functions:
+
+<dl>
+  <dt>Enabled
+  <dd>If selected, the rule will be enabled.
+
+  <dt>Stream Type
+  <dd>Select the elementary stream type to compare. Empty field means any.
+
+  <dt>Language
+  <dd>Select the language to compare. Empty field means any.
+
+  <dt>Service
+  <dd>The service to compare. Empty field means any.
+
+  <dt>CA Identification
+  <dd>The CAID to compare. Empty field means any.
+
+  <dt>CA Provider
+  <dd>The CA provider to compare. Empty field means any.
+
+  <dt>PID
+  <dd>Program identification (PID) number to compare. Zero means any.
+      This comparison is processed only when service comparison is active.
+
+  <dt>Action
+  <dd>The rule action defines the operation when all comparisons succeeds.
+
+    <dl>
+
+      <dt>NONE
+      <dd>No action, may be used for the logging and a comparison verification.
+
+      <dt>USE
+      <dd>Use this elementary stream.
+
+      <dt>ONCE
+      <dd>Use this elementary stream only once per selected language.
+          The first successfully compared rule wins.
+
+      <dt>EXCLUSIVE
+      <dd>Use only this elementary stream. No other elementary streams
+          will be used.
+
+      <dt>EMPTY
+      <dd>Add this elementary stream only when no elementary streams are
+          used from previous rules.
+
+      <dt>IGNORE
+      <dd>Ignore this elementary stream. This stream is not used. Another
+          successfully compared rule with different action may override it.
+
+    </dl>
+
+  <dt>Log
+  <dd>Write a short message to log identifying the matched parameters.
+      It is useful for debugging your setup or structure of incoming
+      streams.
+
+ </dl>
+</div>

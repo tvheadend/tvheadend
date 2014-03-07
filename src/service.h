@@ -35,6 +35,7 @@ struct channel;
 typedef struct elementary_stream {
 
   TAILQ_ENTRY(elementary_stream) es_link;
+  TAILQ_ENTRY(elementary_stream) es_filt_link;
   int es_position;
   struct service *es_service;
 
@@ -123,6 +124,9 @@ typedef struct elementary_stream {
 
   /* SI section processing (horrible hack) */
   void *es_section;
+
+  /* Filter temporary variable */
+  uint32_t es_filter;
 
 } elementary_stream_t;
 
@@ -400,9 +404,10 @@ typedef struct service {
   int s_caid;
 
   /**
-   * List of all components.
+   * List of all and filtered components.
    */
   struct elementary_stream_queue s_components;
+  struct elementary_stream_queue s_filt_components;
   int s_last_pid;
   elementary_stream_t *s_last_es;
 
@@ -428,6 +433,8 @@ void service_init(void);
 void service_done(void);
 
 int service_start(service_t *t, int instance);
+
+void service_build_filter(service_t *t);
 
 service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type, htsmsg_t *conf);
 

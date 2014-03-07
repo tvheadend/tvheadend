@@ -220,7 +220,10 @@ typedef enum {
   SCT_MP4A,
   SCT_VP8,
   SCT_VORBIS,
+  SCT_LAST = SCT_VORBIS
 } streaming_component_type_t;
+
+#define SCT_MASK(t) (1 << (t))
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 ||	\
 			(t) == SCT_VP8)

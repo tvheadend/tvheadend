@@ -148,6 +148,14 @@
 	background-image: url(../icons/delete.png) !important;
 }
 
+.moveup {
+	background-image: url(../icons/arrow_up.png) !important;
+}
+
+.movedown {
+	background-image: url(../icons/arrow_down.png) !important;
+}
+
 .save {
 	background-image: url(../icons/save.png) !important;
 }
@@ -286,6 +294,11 @@
 
 .arrow_switch {
 	background-image: url(../icons/arrow_switch.png) !important;
+
+}
+
+.stream_config {
+	background-image: url(../icons/film_edit.png) !important;
 }
 
 .x-smallhdr {
