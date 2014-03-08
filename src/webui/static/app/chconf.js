@@ -153,7 +153,7 @@ tvheadend.channel_tab = function(panel)
 
   var mapButton = new Ext.Toolbar.Button({
     tooltip   : 'Map services to channels',
-    iconCls   : '',
+    iconCls   : 'clone',
     text      : 'Map Services',
     handler   : tvheadend.service_mapper,
     disabled  : false
@@ -161,7 +161,7 @@ tvheadend.channel_tab = function(panel)
 
   var lowNoButton = new Ext.Toolbar.Button({
     tooltip   : 'Assign lowest free channel number',
-    iconCls   : '',
+    iconCls   : 'bullet_add',
     text      : 'Assign Number',
     handler   : assign_low_number,
     disabled  : false
@@ -169,7 +169,7 @@ tvheadend.channel_tab = function(panel)
 
   var noUpButton = new Ext.Toolbar.Button({
     tooltip   : 'Move channel one number up',
-    iconCls   : '',
+    iconCls   : 'arrow_up',
     text      : 'Number Up',
     handler   : move_number_up,
     disabled  : false
@@ -177,7 +177,7 @@ tvheadend.channel_tab = function(panel)
 
   var noDownButton = new Ext.Toolbar.Button({
     tooltip   : 'Move channel one number down',
-    iconCls   : '',
+    iconCls   : 'arrow_down',
     text      : 'Number Down',
     handler   : move_number_down,
     disabled  : false
@@ -185,7 +185,7 @@ tvheadend.channel_tab = function(panel)
 
   var noSwapButton = new Ext.Toolbar.Button({
     tooltip   : 'Swap the two selected channels numbers',
-    iconCls   : '',
+    iconCls   : 'arrow_switch',
     text      : 'Swap Numbers',
     handler   : swap_numbers,
     disabled  : false
