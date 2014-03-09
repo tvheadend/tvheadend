@@ -631,7 +631,7 @@ linuxdvb_frontend_monitor ( void *aux )
   sigstat.snr         = mmi->mmi_stats.snr;
   sigstat.signal      = mmi->mmi_stats.signal;
   sigstat.ber         = mmi->mmi_stats.ber;
-  sigstat.unc         = mmi->mmi_stats.ber;
+  sigstat.unc         = mmi->mmi_stats.unc;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {
