@@ -884,7 +884,7 @@ linuxdvb_satconf_ele_get_priority ( mpegts_input_t *mi )
 {
   int prio = 0;
   linuxdvb_satconf_t *ls = ((linuxdvb_satconf_ele_t*)mi)->ls_parent;
-  if (!ls->ls_frontend)
+  if (ls->ls_frontend)
     prio = ls->ls_frontend->mi_get_priority(ls->ls_frontend);
   return prio + mpegts_input_get_priority(mi);
 }
