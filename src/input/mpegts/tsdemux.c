@@ -297,6 +297,9 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
   pktbuf_t *pb;
   sbuf_t *sb = &t->s_tsbuf;
 
+  if (sb->sb_data == NULL)
+    sbuf_init_fixed(sb, TS_REMUX_BUFSIZE);
+
   sbuf_append(sb, src, 188);
 
   if(sb->sb_ptr < TS_REMUX_BUFSIZE) 
@@ -312,7 +315,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
 
   service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
 
-  sbuf_reset(sb);
+  sbuf_reset(sb, TS_REMUX_BUFSIZE);
 }
 
 /*

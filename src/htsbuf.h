@@ -45,6 +45,8 @@ void htsbuf_queue_init(htsbuf_queue_t *hq, unsigned int maxsize);
 
 htsbuf_queue_t *htsbuf_queue_alloc(unsigned int maxsize);
 
+void htsbuf_queue_free(htsbuf_queue_t *hq);
+
 void htsbuf_queue_flush(htsbuf_queue_t *hq);
 
 void htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap);
