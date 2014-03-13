@@ -206,16 +206,14 @@ static struct {
  * Return cutpoint data for a recording (if present).
  */
 dvr_cutpoint_list_t *
-dvr_get_cutpoint_list (uint32_t dvr_entry_id)
+dvr_get_cutpoint_list (dvr_entry_t *de)
 {
   int i;
-  dvr_entry_t *de;
   char *path, *sptr;
   dvr_cutpoint_list_t *cuts;
 
   /* Check this is a valid recording */
-  if ((de = dvr_entry_find_by_id(dvr_entry_id)) == NULL)
-    return NULL;
+  assert(de != NULL);
   if (de->de_filename == NULL)
     return NULL;
 

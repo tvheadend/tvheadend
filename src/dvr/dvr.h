@@ -425,7 +425,7 @@ typedef struct dvr_cutpoint {
 
 typedef TAILQ_HEAD(,dvr_cutpoint) dvr_cutpoint_list_t;
 
-dvr_cutpoint_list_t *dvr_get_cutpoint_list (uint32_t id);
+dvr_cutpoint_list_t *dvr_get_cutpoint_list (dvr_entry_t *de);
 void dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list);
 
 #endif /* DVR_H  */

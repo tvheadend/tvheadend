@@ -57,7 +57,7 @@ tvheadend.acleditor = function() {
       width : 100
     }, {
       xtype: 'checkcolumn',
-      header : "Access Tag Only",
+      header : "Channel Tag Only",
       dataIndex : 'tag_only',
       width : 200
     }, {      
