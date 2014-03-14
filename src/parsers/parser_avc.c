@@ -27,7 +27,7 @@ avc_find_startcode(const uint8_t *p, const uint8_t *end)
   int i;
 	
   uint32_t sc=0xFFFFFFFF;
-  size_t len = (end -p)+1;
+  size_t len = end - p;
   for (i=0;i<len;i++)
     {
       sc = (sc <<8) | p[i];
@@ -138,10 +138,14 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
       }
       if(!sps_count || !pps_count) {
 	free(start);
-	if (sps_count)
+	if (sps_count) {
 	  free(sps_array);
-	if (pps_count)
+          free(sps_size_array);
+        }
+	if (pps_count) {
 	  free(pps_array);
+          free(pps_size_array);
+        }
 	return -1;
       }
 
@@ -163,10 +167,14 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
       }
       free(start);
 
-      if (sps_count)
+      if (sps_count) {
 	free(sps_array);
-      if (pps_count)
+        free(sps_size_array);
+      }
+      if (pps_count) {
 	free(pps_array);
+        free(pps_size_array);
+      }
     } else {
       sbuf_append(sb, data, len);
     }

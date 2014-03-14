@@ -210,7 +210,7 @@ tvh_muxer_destroy(muxer_t *m)
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
   if(tm->tm_ref)
-    free(tm->tm_ref);
+    mk_mux_destroy(tm->tm_ref);
 
   free(tm);
 }

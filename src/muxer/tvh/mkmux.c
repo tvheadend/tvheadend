@@ -514,7 +514,10 @@ mk_build_segment_header(int64_t size)
 static void
 mk_write_segment_header(mk_mux_t *mkm, int64_t size)
 {
-  mk_write_queue(mkm, mk_build_segment_header(size));
+  htsbuf_queue_t *q;
+  q = mk_build_segment_header(size);
+  mk_write_queue(mkm, q);
+  htsbuf_queue_free(q);
 }
 
 
@@ -1064,7 +1067,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
 int
 mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
 {
-  htsbuf_queue_t q;
+  htsbuf_queue_t q, *a;
 
   getuuid(mkm->uuid);
 
@@ -1081,10 +1084,14 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader(mkm));
   
   mkm->segment_header_pos = q.hq_size;
-  htsbuf_appendq(&q, mk_build_segment_header(0));
+  a = mk_build_segment_header(0);
+  htsbuf_appendq(&q, a);
+  htsbuf_queue_free(a);
 
   mkm->segment_pos = q.hq_size;
-  htsbuf_appendq(&q, mk_build_segment(mkm, ss));
+  a = mk_build_segment(mkm, ss);
+  htsbuf_appendq(&q, a);
+  htsbuf_queue_free(a);
  
   mk_write_queue(mkm, &q);
 

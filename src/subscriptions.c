@@ -763,12 +763,7 @@ subscription_init(void)
 void
 subscription_done(void)
 {
-  th_subscription_t *s;
-
-  pthread_mutex_lock(&global_lock);
-  while ((s = LIST_FIRST(&subscriptions)) != NULL)
-    subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  assert(LIST_FIRST(&subscriptions) == NULL);
 }
 
 /* **************************************************************************
