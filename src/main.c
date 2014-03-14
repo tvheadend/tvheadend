@@ -854,12 +854,12 @@ main(int argc, char **argv)
 
   tvhftrace("main", epggrab_done);
   tvhftrace("main", tcp_server_done);
-  tvhftrace("main", subscription_done);
   tvhftrace("main", descrambler_done);
   tvhftrace("main", service_mapper_done);
   tvhftrace("main", service_done);
   tvhftrace("main", channel_done);
   tvhftrace("main", dvr_done);
+  tvhftrace("main", subscription_done);
   tvhftrace("main", access_done);
   tvhftrace("main", epg_done);
   tvhftrace("main", avahi_done);
