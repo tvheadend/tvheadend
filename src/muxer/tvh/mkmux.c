@@ -85,6 +85,7 @@ typedef struct mk_chapter {
  *
  */
 struct mk_mux {
+  muxer_t *m;
   int fd;
   char *filename;
   int error;
@@ -424,6 +425,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 {
   htsbuf_data_t *hd;
   int i = 0;
+  off_t oldpos = mkm->fdpos;
 
   TAILQ_FOREACH(hd, &hq->hq_q, hd_link)
     i++;
@@ -447,6 +449,8 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     i -= iovcnt;
     iov += iovcnt;
   } while(i);
+
+  muxer_cache_update(mkm->m, mkm->fd, oldpos, 0);
 
   return 0;
 }
@@ -785,6 +789,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
     mk_write_to_fd(mkm, &q);
   } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
+    mkm->fdpos = mkm->segment_pos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
       mkm->error = errno;
 
@@ -1008,10 +1013,11 @@ mk_write_cues(mk_mux_t *mkm)
 /**
  *
  */
-mk_mux_t *mk_mux_create(int webm)
+mk_mux_t *mk_mux_create(muxer_t *m, int webm)
 {
   mk_mux_t *mkm = calloc(1, sizeof(mk_mux_t));
 
+  mkm->m = m;
   mkm->webm = webm;
   mkm->fd   = -1;
 

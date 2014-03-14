@@ -239,7 +239,7 @@ tvh_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
   tm->m_close        = tvh_muxer_close;
   tm->m_destroy      = tvh_muxer_destroy;
   tm->m_container    = mc;
-  tm->tm_ref         = mk_mux_create(mc == MC_WEBM);
+  tm->tm_ref         = mk_mux_create((muxer_t *)tm, mc == MC_WEBM);
 
   return (muxer_t*)tm;
 }

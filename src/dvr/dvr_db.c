@@ -1113,6 +1113,7 @@ dvr_init(void)
         cfg = dvr_config_create(s);
 
       cfg->dvr_mc = htsmsg_get_u32_or_default(m, "container", MC_MATROSKA);
+      cfg->dvr_mux_cache = htsmsg_get_u32_or_default(m, "cache", MC_CACHE_DONTKEEP);
 
       if(!htsmsg_get_u32(m, "rewrite-pat", &u32)) {
         if (u32)
@@ -1294,6 +1295,7 @@ dvr_config_create(const char *name)
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
+  cfg->dvr_mux_cache = MC_CACHE_DONTKEEP;
   cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
 
   /* series link support */
@@ -1352,6 +1354,7 @@ dvr_save(dvr_config_t *cfg)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
+  htsmsg_add_u32(m, "cache", cfg->dvr_mux_cache);
   htsmsg_add_u32(m, "rewrite-pat", !!(cfg->dvr_mux_flags & MUX_REWRITE_PAT));
   htsmsg_add_u32(m, "rewrite-pmt", !!(cfg->dvr_mux_flags & MUX_REWRITE_PMT));
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
@@ -1408,6 +1411,23 @@ dvr_container_set(dvr_config_t *cfg, const char *container)
     return;
 
   cfg->dvr_mc = mc;
+
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_mux_cache_set(dvr_config_t *cfg, int mcache)
+{
+  if (mcache < MC_CACHE_UNKNOWN || mcache > MC_CACHE_LAST)
+    mcache = MC_CACHE_UNKNOWN;
+
+  if(cfg->dvr_mux_cache == mcache)
+    return;
+
+  cfg->dvr_mux_cache = mcache;
 
   dvr_save(cfg);
 }
