@@ -53,9 +53,22 @@ void service_mapper_remove ( struct service *t );
 service_mapper_status_t service_mapper_status ( void );
 
 // Link service to channel
-int  service_mapper_link   ( struct service *s, struct channel *c );
+int  service_mapper_link   ( struct service *s, struct channel *c, int save );
 
 // Unlink service from channel
-void service_mapper_unlink ( struct service *s, struct channel *c );
+void service_mapper_unlink ( struct service *s, struct channel *c, int save );
+
+/**
+ * Clean linkages that are marked for deletion
+ *
+ * Note: only ever pass one of s and c
+ *
+ * @param s     The service to clean linkages for
+ * @param c     The channel to clean linkages for
+ * @parma save  Force channel saves for affected channels
+ *
+ * @return 1 if changes were made, else 0
+ */
+int service_mapper_clean ( struct service *s, struct channel *ch, int save );
 
 #endif /* __TVH_SERVICE_MAPPER_H__ */

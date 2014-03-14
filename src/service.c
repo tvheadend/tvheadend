@@ -89,7 +89,7 @@ service_class_channel_set
   const char *str;
   htsmsg_field_t *f;
   channel_t *ch;
-  channel_service_mapping_t *csm, *n;
+  channel_service_mapping_t *csm;
 
   /* Mark all for deletion */
   LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
@@ -99,19 +99,11 @@ service_class_channel_set
   HTSMSG_FOREACH(f, chns) {
     if ((str = htsmsg_field_get_str(f)))
       if ((ch = channel_find(str)))
-        save |= service_mapper_link(svc, ch);
+        save |= service_mapper_link(svc, ch, 1);
   }
 
   /* Delete unlinked */
-  for (csm = LIST_FIRST(&svc->s_channels); csm != NULL; csm = n ) {
-    n = LIST_NEXT(csm, csm_svc_link);
-    if (csm->csm_mark) {
-      save = 1;
-      LIST_REMOVE(csm, csm_chn_link);
-      LIST_REMOVE(csm, csm_svc_link);
-      free(csm);
-    }
-  }
+  service_mapper_clean(svc, NULL, 1);
     
   return save;
 }

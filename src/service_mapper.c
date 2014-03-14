@@ -178,7 +178,7 @@ service_mapper_remove ( service_t *s )
  * Link service and channel
  */
 int
-service_mapper_link ( service_t *s, channel_t *c )
+service_mapper_link ( service_t *s, channel_t *c, int dosave )
 {
   channel_service_mapping_t *csm;
 
@@ -200,23 +200,48 @@ service_mapper_link ( service_t *s, channel_t *c )
   csm->csm_svc = s;
   LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
   LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
+  if (dosave) channel_save(c);
   return 1;
 }
 
+static void
+service_mapper_unlink0 ( channel_service_mapping_t *csm, int save )
+{
+  if (save) channel_save(csm->csm_chn);
+  LIST_REMOVE(csm, csm_chn_link);
+  LIST_REMOVE(csm, csm_svc_link);
+  free(csm);
+}
+
 void
-service_mapper_unlink ( service_t *s, channel_t *c )
+service_mapper_unlink ( service_t *s, channel_t *c, int save )
 {
   channel_service_mapping_t *csm;
 
   /* Unlink */
   LIST_FOREACH(csm, &s->s_channels, csm_svc_link) {
     if (csm->csm_chn == c) {
-      LIST_REMOVE(csm, csm_chn_link);
-      LIST_REMOVE(csm, csm_svc_link);
-      free(csm);
+      service_mapper_unlink0(csm, save);
       break;
     }
   }
+}
+
+int
+service_mapper_clean ( service_t *s, channel_t *c, int dosave )
+{
+  int save = 0;
+  channel_service_mapping_t *csm, *n;
+
+  csm = s ? LIST_FIRST(&s->s_channels) : LIST_FIRST(&c->ch_services);
+  for (; csm != NULL; csm = n ) {
+    n = s ? LIST_NEXT(csm, csm_svc_link) : LIST_NEXT(csm, csm_chn_link);
+    if (csm->csm_mark) {
+      service_mapper_unlink0(csm, dosave);
+      save = 1;
+    }
+  }
+  return save;
 }
 
 /*
@@ -250,7 +275,7 @@ service_mapper_process ( service_t *s )
   /* Map */
   if (chn) {
     const char *prov;
-    service_mapper_link(s, chn);
+    service_mapper_link(s, chn, 0);
 
     /* Type tags */
     if (service_is_hdtv(s)) {

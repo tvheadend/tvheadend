@@ -47,7 +47,7 @@ tsfile_network_create_service
   // TODO: HACK: REMOVE ME
   if (s) {
     channel_t *c = channel_create(NULL, NULL, NULL);
-    service_mapper_link((service_t*)s, c);
+    service_mapper_link((service_t*)s, c, 0);
   }
   return s;
 }

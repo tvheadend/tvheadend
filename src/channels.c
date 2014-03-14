@@ -424,7 +424,7 @@ channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
   const char *str;
   service_t *svc;
   htsmsg_field_t *f;
-  channel_service_mapping_t *csm, *n;
+  channel_service_mapping_t *csm;
 
   /* Mark all for deletion */
   LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
@@ -434,19 +434,11 @@ channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
   HTSMSG_FOREACH(f, svcs) {
     if ((str = htsmsg_field_get_str(f)))
       if ((svc = service_find(str)))
-        save |= service_mapper_link(svc, ch);
+        save |= service_mapper_link(svc, ch, 0);
   }
 
   /* Remove */
-  for (csm = LIST_FIRST(&ch->ch_services); csm != NULL; csm = n) {
-    n = LIST_NEXT(csm, csm_chn_link);
-    if (csm->csm_mark) {
-      LIST_REMOVE(csm, csm_chn_link);
-      LIST_REMOVE(csm, csm_svc_link);
-      free(csm);
-      save = 1;
-    }
-  }
+  save |= service_mapper_clean(NULL, ch, 0);
 
   return save;
 }
@@ -567,7 +559,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Services */
   while((csm = LIST_FIRST(&ch->ch_services)) != NULL)
-    service_mapper_unlink(csm->csm_svc, ch);
+    service_mapper_unlink(csm->csm_svc, ch, 0);
 
   /* Subscriptions */
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
