@@ -432,7 +432,7 @@ htsp_generate_challenge(htsp_connection_t *htsp)
  */
 static int
 htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch) {
-  if (!access_tag_only(htsp->htsp_username))
+  if (!access_tag_only(htsp->htsp_username ?: ""))
     return 1;
   else {
     if (!ch) return 0;
