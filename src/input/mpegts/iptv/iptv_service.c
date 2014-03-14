@@ -49,5 +49,10 @@ iptv_service_create0
   
   is->s_config_save = iptv_service_config_save;
 
+  /* Set default service name */
+  if (!is->s_dvb_svcname || !*is->s_dvb_svcname)
+    if (im->mm_iptv_svcname)
+      is->s_dvb_svcname = strdup(im->mm_iptv_svcname);
+
   return is;
 }

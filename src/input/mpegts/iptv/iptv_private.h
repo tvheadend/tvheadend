@@ -83,9 +83,12 @@ struct iptv_mux
   uint8_t              *mm_iptv_tsb;
   int                   mm_iptv_pos;
 
+  char                 *mm_iptv_svcname;
+
   iptv_handler_t       *im_handler;
 
   void                 *im_data;
+
 };
 
 iptv_mux_t* iptv_mux_create ( const char *uuid, htsmsg_t *conf );

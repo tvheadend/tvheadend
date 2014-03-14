@@ -50,6 +50,12 @@ const idclass_t iptv_mux_class =
       .name     = "ATSC",
       .off      = offsetof(iptv_mux_t, mm_iptv_atsc),
     },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_svcname",
+      .name     = "Service Name",
+      .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
+    },
     {}
   }
 };
