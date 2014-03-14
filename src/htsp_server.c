@@ -438,7 +438,7 @@ htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch) {
     if (!ch) return 0;
     channel_tag_mapping_t *ctm;
     LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      if (!strcmp(htsp->htsp_username, ctm->ctm_tag->ct_name))
+      if (!strcmp(htsp->htsp_username ?: "", ctm->ctm_tag->ct_name))
         return 1;
     }
   }
