@@ -51,6 +51,15 @@ htsbuf_queue_alloc(unsigned int maxsize)
   return hq;
 }
 
+/**
+ *
+ */
+void
+htsbuf_queue_free(htsbuf_queue_t *hq)
+{
+  htsbuf_queue_flush(hq);
+  free(hq);
+}
 
 /**
  *
