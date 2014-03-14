@@ -563,7 +563,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* DVR */
   autorec_destroy_by_channel(ch, delconf);
-  dvr_destroy_by_channel(ch);
+  dvr_destroy_by_channel(ch, delconf);
 
   /* Services */
   while((csm = LIST_FIRST(&ch->ch_services)) != NULL)
