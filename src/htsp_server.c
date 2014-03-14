@@ -2359,6 +2359,7 @@ _htsp_channel_update(channel_t *ch, const char *method, htsmsg_t *msg)
       htsp_send_message(htsp, m, NULL);
     }
   }
+  htsmsg_destroy(msg);
 }
 
 /**
@@ -2459,6 +2460,7 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
       htsp_send_message(htsp, m, NULL);
     }
   }
+  htsmsg_destroy(msg);
 }
 
 /**
@@ -2509,6 +2511,7 @@ _htsp_event_update(epg_broadcast_t *ebc, const char *method, htsmsg_t *msg)
       htsp_send_message(htsp, m, NULL);
     }
   }
+  htsmsg_destroy(msg);
 }
 
 /**
