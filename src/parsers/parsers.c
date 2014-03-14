@@ -231,7 +231,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     /* Payload unit start */
     st->es_parser_state = 1;
     st->es_parser_ptr = 0;
-    sbuf_reset(&st->es_buf);
+    sbuf_reset(&st->es_buf, 4000);
   }
 
   if(st->es_parser_state == 0)
@@ -351,9 +351,9 @@ parse_sc(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
       r = 1;
     }
 
-    assert(st->es_buf.sb_data != NULL);
-
     if(r == 2) {
+      assert(st->es_buf.sb_data != NULL);
+
       // Drop packet
       st->es_buf.sb_ptr = st->es_startcode_offset;
 
@@ -367,12 +367,13 @@ parse_sc(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
       if(r == 1) {
 	/* Reset packet parser upon length error or if parser
 	   tells us so */
-	sbuf_reset(&st->es_buf);
+	sbuf_reset_and_alloc(&st->es_buf, 256);
 	st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 24;
 	st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 16;
 	st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 8;
 	st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc;
       }
+      assert(st->es_buf.sb_data != NULL);
       st->es_startcode = sc;
       st->es_startcode_offset = st->es_buf.sb_ptr - 4;
     }
@@ -1118,16 +1119,10 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
 				     st->es_buf.sb_ptr - 4);
       pkt->pkt_duration = st->es_frame_duration;
+      sbuf_steal_data(&st->es_buf);
 
       parser_deliver(t, st, pkt, st->es_buf.sb_err);
       st->es_curpkt = NULL;
-
-      st->es_buf.sb_data = malloc(st->es_buf.sb_size);
-      if(st->es_buf.sb_data == NULL) {
-	fprintf(stderr, "Unable to allocate %d bytes\n",
-		st->es_buf.sb_size);
-	abort();
-      }
 
       return 1;
     }
@@ -1248,10 +1243,10 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     
       pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
 				     st->es_buf.sb_ptr - 4);
+      sbuf_steal_data(&st->es_buf);
       parser_deliver(t, st, pkt, st->es_buf.sb_err);
       
       st->es_curpkt = NULL;
-      st->es_buf.sb_data = malloc(st->es_buf.sb_size);
 
       st->es_curdts = PTS_UNSET;
       st->es_curpts = PTS_UNSET;
@@ -1276,7 +1271,7 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
   if(start) {
     /* Payload unit start */
     st->es_parser_state = 1;
-    sbuf_reset(&st->es_buf);
+    sbuf_reset(&st->es_buf, 4000);
   }
 
   if(st->es_parser_state == 0)
@@ -1339,7 +1334,7 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   if(start) {
     st->es_parser_state = 1;
     st->es_parser_ptr = 0;
-    sbuf_reset(&st->es_buf);    
+    sbuf_reset(&st->es_buf, 4000);
   }
 
   if(st->es_parser_state == 0)

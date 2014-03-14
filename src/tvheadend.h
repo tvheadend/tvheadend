@@ -583,13 +583,32 @@ static inline int64_t ts_rescale_i(int64_t ts, int tb)
 
 void sbuf_init(sbuf_t *sb);
 
+void sbuf_init_fixed(sbuf_t *sb, int len);
+
 void sbuf_free(sbuf_t *sb);
 
-void sbuf_reset(sbuf_t *sb);
+void sbuf_reset(sbuf_t *sb, int max_len);
 
-void sbuf_err(sbuf_t *sb);
+void sbuf_reset_and_alloc(sbuf_t *sb, int len);
 
-void sbuf_alloc(sbuf_t *sb, int len);
+static inline void sbuf_steal_data(sbuf_t *sb)
+{
+  sb->sb_data = NULL;
+  sb->sb_ptr = sb->sb_size = 0;
+}
+
+static inline void sbuf_err(sbuf_t *sb)
+{
+  sb->sb_err = 1;
+}
+
+void sbuf_alloc_(sbuf_t *sb, int len);
+
+static inline void sbuf_alloc(sbuf_t *sb, int len)
+{
+  if (sb->sb_ptr + len >= sb->sb_size)
+    sbuf_alloc_(sb, len);
+}
 
 void sbuf_append(sbuf_t *sb, const void *data, int len);
 
