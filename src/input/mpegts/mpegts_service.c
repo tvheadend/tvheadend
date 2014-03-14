@@ -241,6 +241,9 @@ mpegts_service_stop(service_t *t)
   /* Stop */
   if (i)
     i->mi_close_service(i, s);
+
+  /* Save some memory */
+  sbuf_free(&s->s_tsbuf);
 }
 
 /*
