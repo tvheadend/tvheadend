@@ -251,11 +251,12 @@ muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
     m = lav_muxer_create(mc, m_cfg);
 #endif
 
-  if(!m)
+  if(!m) {
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
 	   muxer_container_type2txt(mc));
-  else
-    m->m_cache = m_cfg->dvr_cache;
+    return NULL;
+  }
+  m->m_cache = m_cfg ? m_cfg->dvr_cache : MC_CACHE_SYSTEM;
 
   return m;
 }
