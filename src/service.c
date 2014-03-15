@@ -247,6 +247,11 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
   avgstat_flush(&es->es_rate);
   avgstat_flush(&es->es_cc_errors);
 
+  if (t->s_last_es == es) {
+    t->s_last_pid = -1;
+    t->s_last_es = NULL;
+  }
+
   TAILQ_REMOVE(&t->s_components, es, es_link);
 
   while ((c = LIST_FIRST(&es->es_caids)) != NULL) {
@@ -552,6 +557,7 @@ service_create0
   t->s_channel_name   = service_channel_name;
   t->s_provider_name  = service_provider_name;
   TAILQ_INIT(&t->s_components);
+  t->s_last_pid = -1;
 
   streaming_pad_init(&t->s_streaming_pad);
   
@@ -670,18 +676,21 @@ service_stream_create(service_t *t, int pid,
 
 
 /**
- * Add a new stream to a service
+ * Find an elementary stream in a service
  */
 elementary_stream_t *
-service_stream_find(service_t *t, int pid)
+service_stream_find_(service_t *t, int pid)
 {
   elementary_stream_t *st;
  
   lock_assert(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_components, es_link) {
-    if(st->es_pid == pid)
+    if(st->es_pid == pid) {
+      t->s_last_es = st;
+      t->s_last_pid = pid;
       return st;
+    }
   }
   return NULL;
 }
@@ -787,7 +796,7 @@ service_servicetype_txt ( service_t *s )
  *
  */
 void
-service_set_streaming_status_flags(service_t *t, int set)
+service_set_streaming_status_flags_(service_t *t, int set)
 {
   int n;
   streaming_message_t *sm;

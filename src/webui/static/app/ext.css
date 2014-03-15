@@ -272,6 +272,22 @@
 	background-image: url(../icons/rec.png) !important;
 }
 
+.bullet_add {
+	background-image: url(../icons/bullet_add.png) !important;
+}
+
+.arrow_up {
+	background-image: url(../icons/arrow_up.png) !important;
+}
+
+.arrow_down {
+	background-image: url(../icons/arrow_down.png) !important;
+}
+
+.arrow_switch {
+	background-image: url(../icons/arrow_switch.png) !important;
+}
+
 .x-smallhdr {
 	float: left;
 	width: 100px;

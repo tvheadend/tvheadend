@@ -270,6 +270,7 @@ typedef struct streaming_skip
 typedef struct streaming_pad {
   struct streaming_target_list sp_targets;
   int sp_ntargets;
+  int sp_reject_filter;
 } streaming_pad_t;
 
 

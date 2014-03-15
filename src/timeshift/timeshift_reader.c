@@ -732,6 +732,7 @@ void *timeshift_reader ( void *p )
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
       if (sm->sm_type == SMT_PACKET) {
+#if ENABLE_TRACE
         th_pkt_t *pkt = sm->sm_data;
         tvhtrace("timeshift",
                  "ts %d pkt out - stream %d type %c pts %10"PRId64
@@ -743,6 +744,7 @@ void *timeshift_reader ( void *p )
                  ts_rescale(pkt->pkt_dts, 1000000),
                  pkt->pkt_duration,
                  pktbuf_len(pkt->pkt_payload), sm->sm_time);
+#endif
       }
       streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;

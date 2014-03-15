@@ -286,6 +286,8 @@ struct mpegts_mux
    */
 
   RB_HEAD(, mpegts_pid)       mm_pids;
+  int                         mm_last_pid;
+  mpegts_pid_t               *mm_last_mp;
 
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
@@ -601,7 +603,16 @@ void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int re
 int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
-mpegts_pid_t *mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create);
+mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
+
+static inline mpegts_pid_t *
+mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
+{
+  if (mm->mm_last_pid != pid)
+    return mpegts_mux_find_pid_(mm, pid, create);
+  else
+    return mm->mm_last_mp;
+}
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
@@ -629,8 +640,13 @@ void mpegts_input_close_pid
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
-void mpegts_table_release
+void mpegts_table_release_
   (mpegts_table_t *mt);
+static inline void mpegts_table_release
+  (mpegts_table_t *mt)
+{
+  if(--mt->mt_refcount == 0) mpegts_table_release_(mt);
+}
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,

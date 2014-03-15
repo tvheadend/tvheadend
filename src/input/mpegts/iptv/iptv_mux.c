@@ -96,7 +96,7 @@ iptv_mux_create ( const char *uuid, htsmsg_t *conf )
   /* Create Mux */
   iptv_mux_t *im =
     mpegts_mux_create(iptv_mux, uuid,
-                      (mpegts_network_t*)&iptv_network,
+                      (mpegts_network_t*)iptv_network,
                       MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, conf);
 
   /* Callbacks */
@@ -106,7 +106,7 @@ iptv_mux_create ( const char *uuid, htsmsg_t *conf )
 
   /* Create Instance */
   (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
-                                   (mpegts_input_t*)&iptv_input,
+                                   (mpegts_input_t*)iptv_input,
                                    (mpegts_mux_t*)im);
 
   /* Services */

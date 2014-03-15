@@ -30,6 +30,8 @@ void
 streaming_pad_init(streaming_pad_t *sp)
 {
   LIST_INIT(&sp->sp_targets);
+  sp->sp_ntargets = 0;
+  sp->sp_reject_filter = 0;
 }
 
 /**
@@ -115,6 +117,7 @@ streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
   sp->sp_ntargets++;
   st->st_pad = sp;
   LIST_INSERT_HEAD(&sp->sp_targets, st, st_link);
+  sp->sp_reject_filter |= st->st_reject_filter;
 }
 
 
@@ -124,10 +127,17 @@ streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
 void
 streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 {
+  int filter;
+
   sp->sp_ntargets--;
   st->st_pad = NULL;
 
   LIST_REMOVE(st, st_link);
+
+  filter = 0;
+  LIST_FOREACH(st, &sp->sp_targets, st_link)
+    filter |= st->st_reject_filter;
+  sp->sp_reject_filter = filter;
 }
 
 
@@ -335,22 +345,6 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
       continue;
     st->st_cb(st->st_opaque, streaming_msg_clone(sm));
   }
-}
-
-
-/**
- *
- */
-int
-streaming_pad_probe_type(streaming_pad_t *sp, streaming_message_type_t smt)
-{
-  streaming_target_t *st;
-
-  LIST_FOREACH(st, &sp->sp_targets, st_link) {
-    if(!(st->st_reject_filter & SMT_TO_MASK(smt)))
-      return 1;
-  }
-  return 0;
 }
 
 

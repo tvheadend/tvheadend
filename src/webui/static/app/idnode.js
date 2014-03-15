@@ -634,6 +634,10 @@ tvheadend.idnode_grid = function(panel, conf)
       filters : filters
     });
 
+    var sort = null;
+    if (conf.sort)
+      sort = conf.sort;
+
     /* Store */
     var store  = new Ext.data.JsonStore({
       root                 : 'entries',
@@ -643,7 +647,8 @@ tvheadend.idnode_grid = function(panel, conf)
       totalProperty        : 'total',
       fields               : fields,
       remoteSort           : true,
-      pruneModifiedRecords : true
+      pruneModifiedRecords : true,
+      sortInfo             : sort
     });
 
     /* Model */

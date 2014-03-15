@@ -281,8 +281,9 @@ void
 sbuf_alloc(sbuf_t *sb, int len)
 {
   if(sb->sb_data == NULL) {
-    sb->sb_size = 4000;
+    sb->sb_size = len * 4 > 4000 ? len * 4 : 4000;
     sb->sb_data = malloc(sb->sb_size);
+    return;
   }
 
   if(sb->sb_ptr + len >= sb->sb_size) {
@@ -291,10 +292,24 @@ sbuf_alloc(sbuf_t *sb, int len)
   }
 }
 
+static void
+sbuf_alloc1(sbuf_t *sb, int len)
+{
+  if(sb->sb_data == NULL) {
+    sb->sb_size = len * 4 > 4000 ? len * 4 : 4000;
+    sb->sb_data = malloc(sb->sb_size);
+    return;
+  }
+
+  sb->sb_size += len * 4;
+  sb->sb_data = realloc(sb->sb_data, sb->sb_size);
+}
+
 void
 sbuf_append(sbuf_t *sb, const void *data, int len)
 {
-  sbuf_alloc(sb, len);
+  if(sb->sb_ptr + len >= sb->sb_size)
+    sbuf_alloc1(sb, len);
   memcpy(sb->sb_data + sb->sb_ptr, data, len);
   sb->sb_ptr += len;
 }

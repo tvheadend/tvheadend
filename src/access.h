@@ -46,6 +46,7 @@ typedef struct access_entry {
   char *ae_password;
   char *ae_comment;
   int ae_enabled;
+  int ae_tagonly;
   
 
   uint32_t ae_rights;
@@ -112,5 +113,10 @@ uint32_t access_get_by_addr(struct sockaddr *src);
  */
 void access_init(int createdefault, int noacl);
 void access_done(void);
+
+/**
+ *
+ */
+uint32_t access_tag_only(const char *username);
 
 #endif /* ACCESS_H_ */

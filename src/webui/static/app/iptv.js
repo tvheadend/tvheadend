@@ -11,7 +11,11 @@ tvheadend.iptv = function(adapterId) {
 		  op : 'servicetypeList'
 	  },
 	  fields : [ 'val', 'str' ],
-	  autoLoad : false
+	  autoLoad : false,
+	  sortInfo : {
+	  	field : 'channelname',
+	  	direction : 'ASC'
+	  }
   });
 
 	var fm = Ext.form;
