@@ -434,7 +434,10 @@ channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
   HTSMSG_FOREACH(f, svcs) {
     if ((str = htsmsg_field_get_str(f)))
       if ((svc = service_find(str)))
-        save |= service_mapper_link(svc, ch);
+        if (service_mapper_link(svc, ch)) {
+          save = 1;
+          idnode_notify_simple(&svc->s_id);
+        }
   }
 
   /* Remove */
@@ -443,6 +446,7 @@ channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
     if (csm->csm_mark) {
       LIST_REMOVE(csm, csm_chn_link);
       LIST_REMOVE(csm, csm_svc_link);
+      idnode_notify_simple(&csm->csm_svc->s_id);
       free(csm);
       save = 1;
     }

@@ -83,7 +83,6 @@ static int
 service_class_channel_set
   ( void *obj, const void *p )
 {
-  int save = 0;
   service_t *svc = obj;
   htsmsg_t  *chns = (htsmsg_t*)p;
   const char *str;
@@ -99,21 +98,28 @@ service_class_channel_set
   HTSMSG_FOREACH(f, chns) {
     if ((str = htsmsg_field_get_str(f)))
       if ((ch = channel_find(str)))
-        save |= service_mapper_link(svc, ch);
+        if (service_mapper_link(svc, ch)) {
+	  channel_save(ch);
+	  idnode_notify_simple(&ch->ch_id);
+        }
   }
 
   /* Delete unlinked */
   for (csm = LIST_FIRST(&svc->s_channels); csm != NULL; csm = n ) {
     n = LIST_NEXT(csm, csm_svc_link);
     if (csm->csm_mark) {
-      save = 1;
       LIST_REMOVE(csm, csm_chn_link);
       LIST_REMOVE(csm, csm_svc_link);
+      channel_save(csm->csm_chn);
+      idnode_notify_simple(&csm->csm_chn->ch_id);
       free(csm);
     }
   }
-    
-  return save;
+
+  /* no save - the link information is in the saved channel record */
+  /* only send a notify about the change to other clients */
+  idnode_notify_simple(&svc->s_id);
+  return 0;
 }
 
 static htsmsg_t *
