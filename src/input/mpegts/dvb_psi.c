@@ -1332,10 +1332,10 @@ psi_parse_pmt
   int composition_id;
   int ancillary_id;
   int version;
-  int position = 0;
-  int tt_position = 1000;
-  const char *lang = NULL;
-  uint8_t audio_type = 0;
+  int position;
+  int tt_position;
+  const char *lang;
+  uint8_t audio_type;
 
   caid_t *c, *cn;
 
@@ -1394,6 +1394,10 @@ psi_parse_pmt
     hts_stream_type = SCT_UNKNOWN;
     composition_id = -1;
     ancillary_id = -1;
+    position = 0;
+    tt_position = 1000;
+    lang = NULL;
+    audio_type = 0;
 
     switch(estype) {
     case 0x01:
