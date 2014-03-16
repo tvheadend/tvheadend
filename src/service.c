@@ -83,7 +83,6 @@ static int
 service_class_channel_set
   ( void *obj, const void *p )
 {
-  int save = 0;
   service_t *svc = obj;
   htsmsg_t  *chns = (htsmsg_t*)p;
   const char *str;
@@ -99,13 +98,14 @@ service_class_channel_set
   HTSMSG_FOREACH(f, chns) {
     if ((str = htsmsg_field_get_str(f)))
       if ((ch = channel_find(str)))
-        save |= service_mapper_link(svc, ch, 1);
+        service_mapper_link(svc, ch, 1);
   }
 
   /* Delete unlinked */
   service_mapper_clean(svc, NULL, 1);
-    
-  return save;
+
+  /* no save - the link information is in the saved channel record */
+  return 0;
 }
 
 static htsmsg_t *

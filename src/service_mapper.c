@@ -201,15 +201,16 @@ service_mapper_link ( service_t *s, channel_t *c, int dosave )
   LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
   LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
   if (dosave) channel_save(c);
+  idnode_notify_simple(dosave ? &c->ch_id : &s->s_id);
   return 1;
 }
 
 static void
 service_mapper_unlink0 ( channel_service_mapping_t *csm, int save )
 {
-  if (save) channel_save(csm->csm_chn);
   LIST_REMOVE(csm, csm_chn_link);
   LIST_REMOVE(csm, csm_svc_link);
+  if (save) channel_save(csm->csm_chn);
   free(csm);
 }
 
@@ -239,6 +240,7 @@ service_mapper_clean ( service_t *s, channel_t *c, int dosave )
     if (csm->csm_mark) {
       service_mapper_unlink0(csm, dosave);
       save = 1;
+      idnode_notify_simple(s ? &csm->csm_chn->ch_id : &csm->csm_svc->s_id);
     }
   }
   return save;
