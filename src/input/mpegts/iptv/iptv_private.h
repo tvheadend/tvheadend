@@ -70,6 +70,8 @@ struct iptv_network
   uint32_t in_max_bandwidth;
 };
 
+iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf );
+
 struct iptv_mux
 {
   mpegts_mux_t;
@@ -91,7 +93,8 @@ struct iptv_mux
 
 };
 
-iptv_mux_t* iptv_mux_create ( const char *uuid, htsmsg_t *conf );
+iptv_mux_t* iptv_mux_create0
+  ( iptv_network_t *in, const char *uuid, htsmsg_t *conf );
 
 struct iptv_service
 {

@@ -40,7 +40,6 @@
  * *************************************************************************/
 
 iptv_input_t   *iptv_input;
-iptv_network_t *iptv_network;
 tvhpoll_t      *iptv_poll;
 pthread_t       iptv_thread;
 pthread_mutex_t iptv_lock;
@@ -105,18 +104,23 @@ iptv_input_is_free ( mpegts_input_t *mi )
 {
   int c = 0;
   mpegts_mux_instance_t *mmi;
+  mpegts_network_link_t *mnl;
   
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
     c++;
   
   /* Limit reached */
-  if (iptv_network->in_max_streams && c >= iptv_network->in_max_streams) {  
-    return 0;
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
+    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
+    if (in->in_max_streams && c >= in->in_max_streams)
+      return 0;
   }
   
   /* Bandwidth reached */
-  if (iptv_network->in_bw_limited) {
-    return 0;
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
+    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
+    if (in->in_bw_limited)
+      return 0;
   }
 
   return 1;
@@ -221,6 +225,7 @@ static void
 iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  mpegts_network_link_t *mnl;
 
   // Not active??
   if (!im->mm_active)
@@ -243,7 +248,10 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   im->mm_iptv_tsb = NULL;
 
   /* Clear bw limit */
-  iptv_network->in_bw_limited = 0;
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
+    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
+    in->in_bw_limited = 0;
+  }
 
   pthread_mutex_unlock(&iptv_lock);
 }
@@ -302,17 +310,19 @@ void
 iptv_input_recv_packets ( iptv_mux_t *im, size_t off, size_t len )
 {
   static time_t t1 = 0, t2;
-  iptv_network->in_bps += len * 8;
+  iptv_network_t *in = (iptv_network_t*)im->mm_network;
+  in->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
-    if (iptv_network->in_max_bandwidth &&
-        iptv_network->in_bps > iptv_network->in_max_bandwidth * 1024) {
-      if (!iptv_network->in_bw_limited) {
-        tvhinfo("iptv", "bandwidth limited exceeded");
-        iptv_network->in_bw_limited = 1;
+    if (in->in_max_bandwidth &&
+        in->in_bps > in->in_max_bandwidth * 1024) {
+      if (!in->in_bw_limited) {
+        tvhinfo("iptv", "%s bandwidth limited exceeded",
+                idnode_get_title(&in->mn_id));
+        in->in_bw_limited = 1;
       }
     }
-    iptv_network->in_bps = 0;
+    in->in_bps = 0;
     t1 = t2;
   }
 
@@ -365,11 +375,25 @@ iptv_input_mux_started ( iptv_mux_t *im )
  * IPTV network
  * *************************************************************************/
 
+static void
+iptv_network_class_delete ( idnode_t *in )
+{
+  mpegts_network_t *mn = (mpegts_network_t*)in;
+
+  /* Remove config */
+  hts_settings_remove("input/iptv/networks/%s",
+                      idnode_uuid_as_str(in));
+
+  /* delete */
+  mpegts_network_delete(mn, 1);
+}
+
 extern const idclass_t mpegts_network_class;
 const idclass_t iptv_network_class = {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "iptv_network",
   .ic_caption    = "IPTV Network",
+  .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U32,
@@ -391,9 +415,9 @@ const idclass_t iptv_network_class = {
 
 static mpegts_mux_t *
 iptv_network_create_mux2
-  ( mpegts_network_t *mm, htsmsg_t *conf )
+  ( mpegts_network_t *mn, htsmsg_t *conf )
 {
-  return (mpegts_mux_t*)iptv_mux_create(NULL, conf);
+  return (mpegts_mux_t*)iptv_mux_create0((iptv_network_t*)mn, NULL, conf);
 }
 
 static mpegts_service_t *
@@ -416,20 +440,85 @@ iptv_network_config_save ( mpegts_network_t *mn )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&mn->mn_id, c);
-  htsmsg_add_str(c, "uuid", idnode_uuid_as_str(&mn->mn_id));
-  hts_settings_save(c, "input/iptv/config");
+  hts_settings_save(c, "input/iptv/networks/%s/config",
+                    idnode_uuid_as_str(&mn->mn_id));
   htsmsg_destroy(c);
+}
+
+iptv_network_t *
+iptv_network_create0
+  ( const char *uuid, htsmsg_t *conf )
+{
+  iptv_network_t *in;
+  htsmsg_t *c;
+
+  /* Init Network */
+  if (!(in = mpegts_network_create(iptv_network, uuid, NULL, conf)))
+    return NULL;
+  in->mn_create_service = iptv_network_create_service;
+  in->mn_mux_class      = iptv_network_mux_class;
+  in->mn_mux_create2    = iptv_network_create_mux2;
+  in->mn_config_save    = iptv_network_config_save;
+ 
+  /* Defaults */
+  if (!conf) {
+    in->mn_skipinitscan = 1;
+  }
+
+  /* Link */
+  mpegts_input_add_network((mpegts_input_t*)iptv_input, (mpegts_network_t*)in);
+
+  /* Load muxes */
+  if ((c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes",
+                                idnode_uuid_as_str(&in->mn_id)))) {
+    htsmsg_field_t *f;
+    htsmsg_t *e;
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_get_map_by_field(f)))  continue;
+      if (!(e = htsmsg_get_map(e, "config"))) continue;
+      iptv_mux_create0(in, f->hmf_name, e);
+    }
+    htsmsg_destroy(c);
+  }
+  
+  return in;
+}
+
+static mpegts_network_t *
+iptv_network_builder
+  ( const idclass_t *idc, htsmsg_t *conf )
+{
+  return (mpegts_network_t*)iptv_network_create0(NULL, conf);
 }
 
 /* **************************************************************************
  * IPTV initialise
  * *************************************************************************/
 
+static void
+iptv_network_init ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  /* Register builder */
+  mpegts_network_register_builder(&iptv_network_class,
+                                  iptv_network_builder);
+
+  /* Load settings */
+  if (!(c = hts_settings_load_r(1, "input/iptv/networks")))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_get_map_by_field(f)))  continue;
+    if (!(e = htsmsg_get_map(e, "config"))) continue;
+    iptv_network_create0(f->hmf_name, e);
+  }
+  htsmsg_destroy(c);
+}
+
 void iptv_init ( void )
 {
-  htsmsg_t *conf;
-  const char *uuid = NULL;
-
   /* Register handlers */
   iptv_http_init();
   iptv_udp_init();
@@ -446,38 +535,16 @@ void iptv_init ( void )
   iptv_input->mi_display_name   = iptv_input_display_name;
   iptv_input->mi_enabled        = 1;
 
-  /* Load settings */
-  if ((conf = hts_settings_load("input/iptv/config")))
-    uuid = htsmsg_get_str(conf, "uuid");
-
-  iptv_network = calloc(1, sizeof(iptv_network_t));
-
   /* Init Network */
-  mpegts_network_create0((mpegts_network_t*)iptv_network,
-                         &iptv_network_class, uuid, "IPTV Network", conf);
-  iptv_network->mn_create_service = iptv_network_create_service;
-  iptv_network->mn_mux_class      = iptv_network_mux_class;
-  iptv_network->mn_mux_create2    = iptv_network_create_mux2;
-  iptv_network->mn_config_save    = iptv_network_config_save;
-  
-  /* Defaults */
-  if (!conf) {
-    iptv_network->mn_skipinitscan = 1;
-  }
+  iptv_network_init();
 
-  /* Link */
-  mpegts_input_set_network((mpegts_input_t*)iptv_input,
-                           (mpegts_network_t*)iptv_network);
-  /* Set table thread */
+    /* Set table thread */
   mpegts_input_table_thread_start((mpegts_input_t *)iptv_input);
 
   /* Setup TS thread */
   iptv_poll = tvhpoll_create(10);
   pthread_mutex_init(&iptv_lock, NULL);
   tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL, 0);
-
-  /* Load config */
-  iptv_mux_load_all();
 }
 
 void iptv_done ( void )
@@ -487,7 +554,7 @@ void iptv_done ( void )
   pthread_join(iptv_thread, NULL);
   tvhpoll_destroy(iptv_poll);
   pthread_mutex_lock(&global_lock);
-  mpegts_network_delete((mpegts_network_t *)iptv_network, 0);
+  mpegts_network_unregister_builder(&iptv_network_class);
   mpegts_input_delete((mpegts_input_t *)iptv_input, 0);
   pthread_mutex_unlock(&global_lock);
 }

@@ -65,7 +65,8 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 {
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
-  hts_settings_save(c, "input/iptv/muxes/%s/config",
+  hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/config",
+                    idnode_uuid_as_str(&mm->mm_network->mn_id),
                     idnode_uuid_as_str(&mm->mm_id));
   htsmsg_destroy(c);
 }
@@ -94,15 +95,14 @@ iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
  * Create
  */
 iptv_mux_t *
-iptv_mux_create ( const char *uuid, htsmsg_t *conf )
+iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
 
   /* Create Mux */
   iptv_mux_t *im =
-    mpegts_mux_create(iptv_mux, uuid,
-                      (mpegts_network_t*)iptv_network,
+    mpegts_mux_create(iptv_mux, uuid, (mpegts_network_t*)in,
                       MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, conf);
 
   /* Callbacks */
@@ -116,7 +116,8 @@ iptv_mux_create ( const char *uuid, htsmsg_t *conf )
                                    (mpegts_mux_t*)im);
 
   /* Services */
-  c = hts_settings_load_r(1, "input/iptv/muxes/%s/services",
+  c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes/%s/services",
+                          idnode_uuid_as_str(&in->mn_id),
                           idnode_uuid_as_str(&im->mm_id));
   if (c) {
     HTSMSG_FOREACH(f, c) {
@@ -127,22 +128,4 @@ iptv_mux_create ( const char *uuid, htsmsg_t *conf )
   
 
   return im;
-}
-
-/*
- * Load
- */
-void
-iptv_mux_load_all ( void )
-{
-  htsmsg_t *s, *e;
-  htsmsg_field_t *f;
-
-  if ((s = hts_settings_load_r(1, "input/iptv/muxes"))) {
-    HTSMSG_FOREACH(f, s) {
-      if (!(e = htsmsg_get_map_by_field(f)))  continue;
-      if (!(e = htsmsg_get_map(e, "config"))) continue;
-      (void)iptv_mux_create(f->hmf_name, e);
-    }
-  }
 }
