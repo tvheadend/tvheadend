@@ -105,6 +105,8 @@ service_class_channel_set
   service_mapper_clean(svc, NULL, 1);
 
   /* no save - the link information is in the saved channel record */
+  /* only send a notify about the change to other clients */
+  idnode_notify_simple(&svc->s_id);
   return 0;
 }
 
