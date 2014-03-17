@@ -28,6 +28,7 @@
  * Property types
  */
 typedef enum {
+  PT_NONE,
   PT_BOOL,
   PT_STR,
   PT_INT,

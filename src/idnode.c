@@ -539,6 +539,7 @@ idnode_cmp_sort
       break;
     case PT_DBL:
       // TODO
+    case PT_NONE:
       break;
   }
   return 0;

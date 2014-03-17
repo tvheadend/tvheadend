@@ -80,6 +80,8 @@ prop_write_values
   if (!pl) return 0;
 
   for (p = pl; p->id; p++) {
+    if (p->type == PT_NONE) continue;
+
     f = htsmsg_field_find(m, p->id);
     if (!f) continue;
 
@@ -141,6 +143,8 @@ prop_write_values
         }
         break;
       }
+      case PT_NONE:
+        break;
       }
     }
   
@@ -178,6 +182,7 @@ prop_read_value
 
   /* Ignore */
   if (p->opts & optmask) return;
+  if (p->type == PT_NONE) return;
 
   /* Ignore */
   if (inc && !htsmsg_get_u32_or_default(inc, p->id, 0))
@@ -214,6 +219,8 @@ prop_read_value
     case PT_DBL:
       htsmsg_add_dbl(m, name, *(double*)val);
       break;
+    case PT_NONE:
+      break;
     }
   }
 }
@@ -238,10 +245,25 @@ void
 prop_serialize
   (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsmsg_t *inc)
 {
+  htsmsg_field_t *f;
+
   if(pl == NULL)
     return;
 
   for(; pl->id; pl++) {
+
+    /* Remove parent */
+    // TODO: this is really horrible and inefficient!
+    HTSMSG_FOREACH(f, msg) {
+      htsmsg_t *t = htsmsg_field_get_map(f);
+      const char *str;
+      if (t && (str = htsmsg_get_str(t, "id"))) {
+        if (!strcmp(str, pl->id)) {
+          htsmsg_field_destroy(msg, f);
+          break;
+        }
+      }
+    }
 
     /* Ignore */
     if (inc && !htsmsg_get_u32_or_default(inc, pl->id, 0))
@@ -249,10 +271,18 @@ prop_serialize
 
     htsmsg_t *m = htsmsg_create_map();
 
-    /* Metadata */
+    /* ID / type */
     htsmsg_add_str(m, "id",       pl->id);
+    htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
+
+    /* Skip - special blocker */
+    if (pl->type == PT_NONE) {
+      htsmsg_add_msg(msg, NULL, m);
+      continue;
+    }
+      
+    /* Metadata */
     htsmsg_add_str(m, "caption",  pl->name);
-    htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "unknown");
     if (pl->islist)
       htsmsg_add_u32(m, "list", 1);
 
@@ -276,6 +306,8 @@ prop_serialize
         break;
       case PT_STR:
         htsmsg_add_str(m, "default", pl->def.s ?: "");
+        break;
+      case PT_NONE:
         break;
     }
 
