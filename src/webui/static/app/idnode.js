@@ -112,7 +112,7 @@ tvheadend.IdNodeField = function (conf)
   this.id     = conf.id;
   this.text   = conf.caption || this.id;
   this.type   = conf.type;
-  this.list = conf.list;
+  this.list   = conf.list;
   this.rdonly = conf.rdonly;
   this.wronly = conf.wronly;
   this.wronce = conf.wronce;
@@ -298,9 +298,11 @@ tvheadend.idnode_editor_field = function(f, create)
       }
     });
     if (st.on) {
-      st.on('load', function() {
-        r.setValue(r.getValue());
-      });
+      var fn = function() {
+        st.un('load', fn);
+        r.setValue(value); // HACK: to get extjs to display properly
+      };
+      st.on('load', fn);
     }
     return r;
     /* TODO: listeners for regexp?
