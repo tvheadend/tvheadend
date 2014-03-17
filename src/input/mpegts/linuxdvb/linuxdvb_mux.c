@@ -603,8 +603,9 @@ linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 static void
 linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
 {
-  mpegts_input_t *mi;
-  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
+  mpegts_network_link_t *mnl;
+  LIST_FOREACH(mnl, &mm->mm_network->mn_inputs, mnl_mn_link) {
+    mpegts_input_t *mi = mnl->mnl_input;
     if (mi->mi_is_enabled(mi))
       mi->mi_create_mux_instance(mi, mm);
   }

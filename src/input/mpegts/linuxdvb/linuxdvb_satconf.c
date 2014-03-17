@@ -29,18 +29,6 @@
 #include <assert.h>
 #include <linux/dvb/dmx.h>
 
-static const void*
-linuxdvb_satconf_ele_class_network_get(void *o);
-
-static char *
-linuxdvb_satconf_ele_class_network_rend ( void *o );
-
-static int
-linuxdvb_satconf_ele_class_network_set(void *o, const void *v);
-
-static htsmsg_t *
-linuxdvb_satconf_ele_class_network_enum(void *o);
-
 static struct linuxdvb_satconf_type *
 linuxdvb_satconf_type_find ( const char *type );
 
@@ -60,20 +48,19 @@ linuxdvb_satconf_class_network_get
   ( linuxdvb_satconf_t *ls, int idx )
 {
   int i = 0;
-  static const char *s = NULL;
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
     if (i == idx) break;
     i++;
   }
   if (lse)
-    return linuxdvb_satconf_ele_class_network_get(lse);
-  return &s;
+    return mpegts_input_class_network_get(lse);
+  return NULL;
 }
 
 static int
 linuxdvb_satconf_class_network_set
-  ( linuxdvb_satconf_t *ls, int idx, const char *uuid )
+  ( linuxdvb_satconf_t *ls, int idx, const void *networks )
 {
   int i = 0;
   linuxdvb_satconf_ele_t *lse;
@@ -82,9 +69,26 @@ linuxdvb_satconf_class_network_set
     i++;
   }
   if (lse)
-    return linuxdvb_satconf_ele_class_network_set(lse, uuid);
+    return mpegts_input_class_network_set(lse, networks);
   return 0;
 }
+
+static htsmsg_t *
+linuxdvb_satconf_class_network_enum(void *o)
+{
+  extern const idclass_t linuxdvb_network_dvbs_class;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "idnode/load");
+  htsmsg_add_str(m, "event", "mpegts_network");
+  htsmsg_add_u32(p, "enum",  1);
+  htsmsg_add_str(p, "class", linuxdvb_network_dvbs_class.ic_class);
+  htsmsg_add_msg(m, "params", p);
+
+  return m;
+}
+
 
 #define linuxdvb_satconf_class_network_getset(x)\
 static int \
@@ -216,11 +220,13 @@ const idclass_t linuxdvb_satconf_lnbonly_class =
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
-      .id       = "network",
-      .name     = "Network",
+      .id       = "networks",
+      .name     = "Networks",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -240,18 +246,22 @@ const idclass_t linuxdvb_satconf_2port_class =
       .type     = PT_STR,
       .id       = "network_a",
       .name     = "A",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_STR,
       .id       = "network_b",
       .name     = "B",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -271,36 +281,44 @@ const idclass_t linuxdvb_satconf_4port_class =
       .type     = PT_STR,
       .id       = "network_aa",
       .name     = "AA",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_STR,
       .id       = "network_ab",
       .name     = "AB",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_STR,
       .id       = "network_ba",
       .name     = "BA",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get2,
       .set      = linuxdvb_satconf_class_network_set2,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_STR,
       .id       = "network_bb",
       .name     = "BB",
+      .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get3,
       .set      = linuxdvb_satconf_class_network_set3,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -405,7 +423,8 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .name     = "Network A",
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {
@@ -414,7 +433,8 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .name     = "Netwotk B",
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -520,6 +540,7 @@ linuxdvb_satconf_create
   htsmsg_t *l, *e;
   htsmsg_field_t *f;
   linuxdvb_satconf_ele_t *lse;
+  const char *str;
   struct linuxdvb_satconf_type *lst
     = linuxdvb_satconf_type_find(type);
   assert(lst);
@@ -544,6 +565,14 @@ linuxdvb_satconf_create
     if ((l = htsmsg_get_list(conf, "elements"))) {
       HTSMSG_FOREACH(f, l) {
         if (!(e = htsmsg_field_get_map(f))) continue;
+
+        /* Fix config */
+        if ((str = htsmsg_get_str(e, "network")) &&
+            !htsmsg_get_list(e, "networks")) {
+          htsmsg_t *l = htsmsg_create_list();
+          htsmsg_add_str(l, NULL, str);
+          htsmsg_add_msg(e, "networks", l);
+        }
         (void)linuxdvb_satconf_ele_create0(htsmsg_get_str(e, "uuid"), e, ls);
       }
     }
@@ -618,64 +647,6 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
  * *************************************************************************/
 
 extern const idclass_t mpegts_input_class;
-
-static const void*
-linuxdvb_satconf_ele_class_network_get(void *o)
-{
-  static const char *s;
-  linuxdvb_satconf_ele_t *ls = o;
-  s = ls->mi_network ? idnode_uuid_as_str(&ls->mi_network->mn_id) : NULL;
-  return &s;
-}
-
-static char *
-linuxdvb_satconf_ele_class_network_rend ( void *o )
-{
-  const char *buf;
-  linuxdvb_satconf_ele_t *ls = o;
-  if (ls->mi_network)
-    if ((buf = idnode_get_title(&ls->mi_network->mn_id)))
-      return strdup(buf);
-  return NULL;
-}
-
-static int
-linuxdvb_satconf_ele_class_network_set(void *o, const void *v)
-{
-  extern const idclass_t linuxdvb_network_class;
-  mpegts_input_t   *mi = o;
-  mpegts_network_t *mn = mi->mi_network;
-  const char *s = v;
-
-  if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
-    return 0;
-
-  mn = s ? idnode_find(s, &linuxdvb_network_class) : NULL;
-
-  if (mn && ((linuxdvb_network_t*)mn)->ln_type != FE_QPSK) {
-    tvherror("linuxdvb", "attempt to set network of wrong type");
-    return 0;
-  }
-
-  mpegts_input_set_network(mi, mn);
-  return 1;
-}
-
-static htsmsg_t *
-linuxdvb_satconf_ele_class_network_enum(void *o)
-{
-  extern const idclass_t linuxdvb_network_dvbs_class;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *p = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "idnode/load");
-  htsmsg_add_str(m, "event", "mpegts_network");
-  htsmsg_add_u32(p, "enum",  1);
-  htsmsg_add_str(p, "class", linuxdvb_network_dvbs_class.ic_class);
-  htsmsg_add_msg(m, "params", p);
-
-  return m;
-}
 
 static int
 linuxdvb_satconf_ele_class_lnbtype_set ( void *o, const void *p )
@@ -764,11 +735,13 @@ static const char *
 linuxdvb_satconf_ele_class_get_title ( idnode_t *o )
 {
   static char buf[128];
+#if 0
   linuxdvb_satconf_ele_t *ls = (linuxdvb_satconf_ele_t*)o;
   if (ls->mi_network)
     ls->mi_network->mn_display_name(ls->mi_network, buf, sizeof(buf));
   else
     *buf = 0;
+#endif
   return buf;
 }
 
@@ -804,15 +777,6 @@ const idclass_t linuxdvb_satconf_ele_class =
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,
   .ic_save       = linuxdvb_satconf_ele_class_save,
   .ic_properties = (const property_t[]) {
-    {
-      .type     = PT_STR,
-      .id       = "network",
-      .name     = "Network",
-      .get      = linuxdvb_satconf_ele_class_network_get,
-      .set      = linuxdvb_satconf_ele_class_network_set,
-      .list     = linuxdvb_satconf_ele_class_network_enum,
-      .rend     = linuxdvb_satconf_ele_class_network_rend,
-    },
     {
       .type     = PT_STR,
       .id       = "lnb_type",

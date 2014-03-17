@@ -48,58 +48,6 @@ linuxdvb_frontend_class_save ( idnode_t *in )
   linuxdvb_adapter_save(la);
 }
 
-static const void*
-linuxdvb_frontend_class_network_get(void *o)
-{
-  static const char *s;
-  linuxdvb_frontend_t *lfe = o;
-  if (lfe->mi_network)
-    s = idnode_uuid_as_str(&lfe->mi_network->mn_id);
-  else
-    s = NULL;
-  return &s;
-}
-
-static int
-linuxdvb_frontend_class_network_set(void *o, const void *v)
-{
-  mpegts_input_t   *mi = o;
-  mpegts_network_t *mn = mi->mi_network;
-  linuxdvb_network_t *ln = (linuxdvb_network_t*)mn;
-  linuxdvb_frontend_t *lfe = o;
-  const char *s = v;
-
-  if (lfe->lfe_info.type == FE_QPSK) {
-    tvherror("linuxdvb", "cannot set network on DVB-S FE");
-    return 0;
-  }
-
-  if (mi->mi_network && !strcmp(idnode_uuid_as_str(&mn->mn_id), s ?: ""))
-    return 0;
-
-  if (ln && ln->ln_type != lfe->lfe_info.type) {
-    tvherror("linuxdvb", "attempt to set network of wrong type");
-    return 0;
-  }
-
-  mpegts_input_set_network(mi, s ? mpegts_network_find(s) : NULL);
-  return 1;
-}
-
-static htsmsg_t *
-linuxdvb_frontend_class_network_enum(void *o)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *p = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "mpegts/input/network_list");
-  htsmsg_add_str(p, "uuid",  idnode_uuid_as_str((idnode_t*)o));
-  htsmsg_add_str(m, "event", "mpegts_network");
-  htsmsg_add_msg(m, "params", p);
-
-  return m;
-}
-
 const idclass_t linuxdvb_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
@@ -157,14 +105,6 @@ const idclass_t linuxdvb_frontend_dvbt_class =
   .ic_class      = "linuxdvb_frontend_dvbt",
   .ic_caption    = "Linux DVB-T Frontend",
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "network",
-      .name     = "Network",
-      .get      = linuxdvb_frontend_class_network_get,
-      .set      = linuxdvb_frontend_class_network_set,
-      .list     = linuxdvb_frontend_class_network_enum
-    },
     {}
   }
 };
@@ -218,6 +158,10 @@ const idclass_t linuxdvb_frontend_dvbs_class =
       .list     = linuxdvb_satconf_type_list,
       .def.s    = "simple"
     },
+    {
+      .id       = "networks",
+      .type     = PT_NONE,
+    },
     {}
   }
 };
@@ -228,14 +172,6 @@ const idclass_t linuxdvb_frontend_dvbc_class =
   .ic_class      = "linuxdvb_frontend_dvbc",
   .ic_caption    = "Linux DVB-C Frontend",
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "network",
-      .name     = "Network",
-      .get      = linuxdvb_frontend_class_network_get,
-      .set      = linuxdvb_frontend_class_network_set,
-      .list     = linuxdvb_frontend_class_network_enum
-    },
     {}
   }
 };
@@ -246,14 +182,6 @@ const idclass_t linuxdvb_frontend_atsc_class =
   .ic_class      = "linuxdvb_frontend_atsc",
   .ic_caption    = "Linux ATSC Frontend",
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "network",
-      .name     = "Network",
-      .get      = linuxdvb_frontend_class_network_get,
-      .set      = linuxdvb_frontend_class_network_set,
-      .list     = linuxdvb_frontend_class_network_enum
-    },
     {}
   }
 };
@@ -917,7 +845,7 @@ linuxdvb_frontend_create
     struct dvb_frontend_info *dfi )
 {
   const idclass_t *idc;
-  const char *uuid = NULL, *scuuid = NULL, *sctype = NULL;
+  const char *str, *uuid = NULL, *scuuid = NULL, *sctype = NULL;
   char id[12], name[256];
   linuxdvb_frontend_t *lfe;
   htsmsg_t *scconf = NULL;
@@ -928,6 +856,16 @@ linuxdvb_frontend_create
     conf = htsmsg_get_map(conf, id);
   if (conf)
     uuid = htsmsg_get_str(conf, "uuid");
+
+  /* Fudge configuration for old network entry */
+  if (conf) {
+    if (!htsmsg_get_list(conf, "networks") &&
+        (str = htsmsg_get_str(conf, "network"))) {
+      htsmsg_t *l = htsmsg_create_list();
+      htsmsg_add_str(l, NULL, str);
+      htsmsg_add_msg(conf, "networks", l);
+    }
+  }
 
   /* Class */
   if (dfi->type == FE_QPSK)
