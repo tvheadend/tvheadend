@@ -399,7 +399,7 @@ epggrab_ota_load_one
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = strdup(uuid);
   ota->om_timeout  = htsmsg_get_u32_or_default(c, "timeout", 0);
-  ota->om_interval = htsmsg_get_u32_or_default(c, "timeout", 0);
+  ota->om_interval = htsmsg_get_u32_or_default(c, "interval", 0);
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
     free(ota->om_mux_uuid);
     free(ota);
