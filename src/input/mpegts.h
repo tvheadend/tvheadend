@@ -40,12 +40,14 @@ typedef struct mpegts_mux_instance  mpegts_mux_instance_t;
 typedef struct mpegts_mux_sub       mpegts_mux_sub_t;
 typedef struct mpegts_input         mpegts_input_t;
 typedef struct mpegts_table_feed    mpegts_table_feed_t;
+typedef struct mpegts_network_link  mpegts_network_link_t;
 
 /* Lists */
-typedef LIST_HEAD (,mpegts_network)                mpegts_network_list_t;
-typedef LIST_HEAD (mpegts_input_list,mpegts_input) mpegts_input_list_t;
-typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux)    mpegts_mux_queue_t;
-typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)     mpegts_mux_list_t;
+typedef LIST_HEAD (,mpegts_network)             mpegts_network_list_t;
+typedef LIST_HEAD (,mpegts_input)               mpegts_input_list_t;
+typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux) mpegts_mux_queue_t;
+typedef LIST_HEAD (,mpegts_mux)                 mpegts_mux_list_t;
+typedef LIST_HEAD (,mpegts_network_link)        mpegts_network_link_list_t;
 TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
 
 /* Classes */
@@ -190,6 +192,16 @@ void mpegts_psi_section_reassemble
  * Logical network
  * *************************************************************************/
 
+/* Network/Input linkage */
+struct mpegts_network_link
+{
+  int                             mnl_mark;
+  mpegts_input_t                  *mnl_input;
+  mpegts_network_t                *mnl_network;
+  LIST_ENTRY(mpegts_network_link) mnl_mn_link;
+  LIST_ENTRY(mpegts_network_link) mnl_mi_link;
+};
+
 /* Network */
 struct mpegts_network
 {
@@ -212,7 +224,7 @@ struct mpegts_network
   /*
    * Inputs
    */
-  mpegts_input_list_t     mn_inputs;
+  mpegts_network_link_list_t   mn_inputs;
 
   /*
    * Multiplexes
@@ -419,8 +431,7 @@ struct mpegts_input
 
   LIST_ENTRY(mpegts_input) mi_global_link;
 
-  mpegts_network_t *mi_network;
-  LIST_ENTRY(mpegts_input) mi_network_link;
+  mpegts_network_link_list_t mi_networks;
 
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
 
@@ -509,12 +520,20 @@ void mpegts_input_delete ( mpegts_input_t *mi, int delconf );
 
 #define mpegts_input_find(u) idnode_find(u, &mpegts_input_class);
 
-void mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn );
+int mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg );
+
+int mpegts_input_add_network  ( mpegts_input_t *mi, mpegts_network_t *mn );
 
 void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 
 void mpegts_input_status_timer ( void *p );
+
+/* TODO: exposing these class methods here is a bit of a hack */
+const void *mpegts_input_class_network_get  ( void *o );
+int         mpegts_input_class_network_set  ( void *o, const void *p );
+htsmsg_t   *mpegts_input_class_network_enum ( void *o );
+char       *mpegts_input_class_network_rend ( void *o );
 
 void mpegts_network_register_builder
   ( const idclass_t *idc,

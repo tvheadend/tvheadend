@@ -23,12 +23,15 @@
 #include "subscriptions.h"
 #include "atomic.h"
 #include "notify.h"
+#include "idnode.h"
 
 #include <pthread.h>
 #include <assert.h>
 
 SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
 
+static void
+mpegts_input_del_network ( mpegts_network_link_t *mnl );
 
 /* **************************************************************************
  * Class definition
@@ -41,6 +44,59 @@ mpegts_input_class_get_title ( idnode_t *in )
   mpegts_input_t *mi = (mpegts_input_t*)in;
   mi->mi_display_name(mi, buf, sizeof(buf));
   return buf;
+}
+
+const void *
+mpegts_input_class_network_get ( void *obj )
+{
+  mpegts_network_link_t *mnl;  
+  mpegts_input_t *mi = obj;
+  htsmsg_t       *l  = htsmsg_create_list();
+
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&mnl->mnl_network->mn_id));
+
+  return l;
+}
+
+int
+mpegts_input_class_network_set ( void *obj, const void *p )
+{
+  return mpegts_input_set_networks(obj, (htsmsg_t*)p);
+}
+
+htsmsg_t *
+mpegts_input_class_network_enum ( void *obj )
+{
+  htsmsg_t *p, *m;
+
+  p = htsmsg_create_map();
+  htsmsg_add_str (p, "uuid",    idnode_uuid_as_str((idnode_t*)obj));
+  htsmsg_add_bool(p, "enum",    1);
+
+  m = htsmsg_create_map();
+  htsmsg_add_str (m, "type",    "api");
+  htsmsg_add_str (m, "uri",     "mpegts/input/network_list");
+  htsmsg_add_str (m, "event",   "mpegts_network");
+  htsmsg_add_msg (m, "params",  p);
+  return m;
+}
+
+char *
+mpegts_input_class_network_rend ( void *obj )
+{
+  char *str;
+  mpegts_network_link_t *mnl;  
+  mpegts_input_t *mi = obj;
+  htsmsg_t        *l = htsmsg_create_list();
+
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
+    htsmsg_add_str(l, NULL, idnode_get_title(&mnl->mnl_network->mn_id));
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+
+  return str;
 }
 
 const idclass_t mpegts_input_class =
@@ -70,6 +126,16 @@ const idclass_t mpegts_input_class =
       .name     = "Name",
       .off      = offsetof(mpegts_input_t, mi_name),
       .notify   = idnode_notify_title_changed,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "networks",
+      .name     = "Networks",
+      .islist   = 1,
+      .set      = mpegts_input_class_network_set,
+      .get      = mpegts_input_class_network_get,
+      .list     = mpegts_input_class_network_enum,
+      .rend     = mpegts_input_class_network_rend,
     },
     {}
   }
@@ -711,7 +777,9 @@ mpegts_input_create0
 void
 mpegts_input_delete ( mpegts_input_t *mi, int delconf )
 {
-  mpegts_input_set_network(mi, NULL);
+  mpegts_network_link_t *mnl;
+  while ((mnl = LIST_FIRST(&mi->mi_networks)))
+    mpegts_input_del_network(mnl);
   idnode_unlink(&mi->ti_id);
   pthread_mutex_destroy(&mi->mi_delivery_mutex);
   pthread_cond_destroy(&mi->mi_table_feed_cond);
@@ -728,27 +796,71 @@ mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *m )
   idnode_save(&mi->ti_id, m);
 }
 
-void
-mpegts_input_set_network ( mpegts_input_t *mi, mpegts_network_t *mn )
+int
+mpegts_input_add_network ( mpegts_input_t *mi, mpegts_network_t *mn )
 {
-  char buf1[256], buf2[265];
-  if (mi->mi_network == mn) return;
-  *buf1 = *buf2 = 0;
-  if (mi->mi_display_name) {
-    mi->mi_display_name(mi, buf1, sizeof(buf1));
+  mpegts_network_link_t *mnl;
+
+  /* Find existing */
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
+    if (mnl->mnl_network == mn)
+      break;
+
+  /* Clear mark */
+  if (mnl) {
+    mnl->mnl_mark = 0;
+    return 0;
   }
-  if (mi->mi_network) {
-    mi->mi_network->mn_display_name(mi->mi_network, buf2, sizeof(buf2));
-    LIST_REMOVE(mi, mi_network_link);
-    tvhdebug("mpegts", "%s - remove network %s", buf1, buf2);
-    mi->mi_network = NULL;
+
+  /* Create new */
+  mnl = calloc(1, sizeof(mpegts_network_link_t));
+  mnl->mnl_input    = mi;
+  mnl->mnl_network  = mn;
+  LIST_INSERT_HEAD(&mi->mi_networks, mnl, mnl_mi_link);
+  LIST_INSERT_HEAD(&mn->mn_inputs,   mnl, mnl_mn_link);
+  idnode_notify_simple(&mnl->mnl_network->mn_id);
+  return 1;
+}
+
+static void
+mpegts_input_del_network ( mpegts_network_link_t *mnl )
+{
+  idnode_notify_simple(&mnl->mnl_network->mn_id);
+  LIST_REMOVE(mnl, mnl_mn_link);
+  LIST_REMOVE(mnl, mnl_mi_link);
+  free(mnl);
+}
+
+int
+mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg )
+{
+  int save = 0;
+  const char *str;
+  htsmsg_field_t *f;
+  mpegts_network_t *mn;
+  mpegts_network_link_t *mnl, *nxt;
+  
+  /* Mark for deletion */
+  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
+    mnl->mnl_mark = 1;
+
+  /* Link */
+  HTSMSG_FOREACH(f, msg) {
+    if (!(str = htsmsg_field_get_str(f))) continue;
+    if (!(mn = mpegts_network_find(str))) continue;
+    save |= mpegts_input_add_network(mi, mn);
   }
-  if (mn) {
-    mn->mn_display_name(mn, buf2, sizeof(buf2));
-    mi->mi_network = mn;
-    LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
-    tvhdebug("mpegts", "%s - added network %s", buf1, buf2);
+
+  /* Unlink */
+  for (mnl = LIST_FIRST(&mi->mi_networks); mnl != NULL; mnl = nxt) {
+    nxt = LIST_NEXT(mnl, mnl_mi_link);
+    if (mnl->mnl_mark) {
+      mpegts_input_del_network(mnl);
+      save = 1;
+    }
   }
+  
+  return save;
 }
 
 /******************************************************************************

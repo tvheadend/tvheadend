@@ -208,12 +208,21 @@ mpegts_network_mux_create2
   return NULL;
 }
 
+static void
+mpegts_network_link_delete ( mpegts_network_link_t *mnl )
+{
+  idnode_notify_simple(&mnl->mnl_input->ti_id);
+  LIST_REMOVE(mnl, mnl_mn_link);
+  LIST_REMOVE(mnl, mnl_mi_link);
+  free(mnl);
+}
+
 void
 mpegts_network_delete
   ( mpegts_network_t *mn, int delconf )
 {
-  mpegts_input_t *mi;
   mpegts_mux_t *mm;
+  mpegts_network_link_t *mnl;
 
   /* Remove from global list */
   LIST_REMOVE(mn, mn_global_link);
@@ -231,8 +240,8 @@ mpegts_network_delete
   gtimer_disarm(&mn->mn_initial_scan_timer);
 
   /* Remove from input */
-  while ((mi = LIST_FIRST(&mn->mn_inputs)))
-    mpegts_input_set_network(mi, NULL);
+  while ((mnl = LIST_FIRST(&mn->mn_inputs)))
+    mpegts_network_link_delete(mnl);
 
   /* Free memory */
   idnode_unlink(&mn->mn_id);
