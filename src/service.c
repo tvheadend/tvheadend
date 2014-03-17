@@ -98,11 +98,11 @@ service_class_channel_set
   HTSMSG_FOREACH(f, chns) {
     if ((str = htsmsg_field_get_str(f)))
       if ((ch = channel_find(str)))
-        service_mapper_link(svc, ch, 1);
+        service_mapper_link(svc, ch, svc);
   }
 
   /* Delete unlinked */
-  service_mapper_clean(svc, NULL, 1);
+  service_mapper_clean(svc, NULL, svc);
 
   /* no save - the link information is in the saved channel record */
   /* only send a notify about the change to other clients */

@@ -174,11 +174,22 @@ service_mapper_remove ( service_t *s )
   api_service_mapper_notify();
 }
 
+static void
+service_mapper_notify ( channel_service_mapping_t *csm, void *origin )
+{
+  if (origin == NULL || origin == csm->csm_svc) {
+    idnode_notify_simple(&csm->csm_chn->ch_id);
+    channel_save(csm->csm_chn);
+  }
+  if (origin == NULL || origin == csm->csm_chn)
+    idnode_notify_simple(&csm->csm_svc->s_id);
+}
+
 /*
  * Link service and channel
  */
 int
-service_mapper_link ( service_t *s, channel_t *c, int dosave )
+service_mapper_link ( service_t *s, channel_t *c, void *origin )
 {
   channel_service_mapping_t *csm;
 
@@ -200,36 +211,35 @@ service_mapper_link ( service_t *s, channel_t *c, int dosave )
   csm->csm_svc = s;
   LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
   LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
-  if (dosave) channel_save(c);
-  idnode_notify_simple(dosave ? &c->ch_id : &s->s_id);
+  service_mapper_notify( csm, origin );
   return 1;
 }
 
 static void
-service_mapper_unlink0 ( channel_service_mapping_t *csm, int save )
+service_mapper_unlink0 ( channel_service_mapping_t *csm, void *origin )
 {
   LIST_REMOVE(csm, csm_chn_link);
   LIST_REMOVE(csm, csm_svc_link);
-  if (save) channel_save(csm->csm_chn);
+  service_mapper_notify( csm, origin );
   free(csm);
 }
 
 void
-service_mapper_unlink ( service_t *s, channel_t *c, int save )
+service_mapper_unlink ( service_t *s, channel_t *c, void *origin )
 {
   channel_service_mapping_t *csm;
 
   /* Unlink */
   LIST_FOREACH(csm, &s->s_channels, csm_svc_link) {
     if (csm->csm_chn == c) {
-      service_mapper_unlink0(csm, save);
+      service_mapper_unlink0(csm, origin);
       break;
     }
   }
 }
 
 int
-service_mapper_clean ( service_t *s, channel_t *c, int dosave )
+service_mapper_clean ( service_t *s, channel_t *c, void *origin )
 {
   int save = 0;
   channel_service_mapping_t *csm, *n;
@@ -238,9 +248,8 @@ service_mapper_clean ( service_t *s, channel_t *c, int dosave )
   for (; csm != NULL; csm = n ) {
     n = s ? LIST_NEXT(csm, csm_svc_link) : LIST_NEXT(csm, csm_chn_link);
     if (csm->csm_mark) {
-      service_mapper_unlink0(csm, dosave);
+      service_mapper_unlink0(csm, origin);
       save = 1;
-      idnode_notify_simple(s ? &csm->csm_chn->ch_id : &csm->csm_svc->s_id);
     }
   }
   return save;
@@ -277,7 +286,7 @@ service_mapper_process ( service_t *s )
   /* Map */
   if (chn) {
     const char *prov;
-    service_mapper_link(s, chn, 0);
+    service_mapper_link(s, chn, chn);
 
     /* Type tags */
     if (service_is_hdtv(s)) {
@@ -296,6 +305,7 @@ service_mapper_process ( service_t *s )
         channel_tag_map(chn, channel_tag_find_by_name(prov, 1));
 
     /* save */
+    idnode_notify_simple(&chn->ch_id);
     channel_save(chn);
   }
   service_mapper_stat.ok++;
