@@ -71,11 +71,11 @@ void tsfile_init ( int tuners )
   /* IPTV like setup */
   if (tuners <= 0) {
     mi = tsfile_input_create(0);
-    mpegts_input_set_network(mi, &tsfile_network);
+    mpegts_input_add_network(mi, &tsfile_network);
   } else {
     for (i = 0; i < tuners; i++) {
       mi = tsfile_input_create(i+1);
-      mpegts_input_set_network(mi, &tsfile_network);
+      mpegts_input_add_network(mi, &tsfile_network);
     }
   }
 }
