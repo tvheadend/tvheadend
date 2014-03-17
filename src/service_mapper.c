@@ -177,11 +177,13 @@ service_mapper_remove ( service_t *s )
 static void
 service_mapper_notify ( channel_service_mapping_t *csm, void *origin )
 {
-  if (origin == NULL || origin == csm->csm_svc) {
+  if (origin == NULL)
+    return;
+  if (origin == csm->csm_svc) {
     idnode_notify_simple(&csm->csm_chn->ch_id);
     channel_save(csm->csm_chn);
   }
-  if (origin == NULL || origin == csm->csm_chn)
+  if (origin == csm->csm_chn)
     idnode_notify_simple(&csm->csm_svc->s_id);
 }
 

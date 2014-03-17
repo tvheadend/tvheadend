@@ -66,7 +66,7 @@ void service_mapper_unlink ( struct service *s, struct channel *c, void *origin 
  * @param s       The service to clean linkages for
  * @param c       The channel to clean linkages for
  * @parma origin  Origin of the change (should be a service or a channel ptr).
- *                NULL = both changed, other ptr = no save and notifications.
+ *                NULL = no save and notifications.
  *
  * @return 1 if changes were made, else 0
  */
