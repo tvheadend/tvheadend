@@ -31,7 +31,7 @@ streaming_pad_init(streaming_pad_t *sp)
 {
   LIST_INIT(&sp->sp_targets);
   sp->sp_ntargets = 0;
-  sp->sp_reject_filter = 0;
+  sp->sp_reject_filter = ~0;
 }
 
 /**
@@ -117,7 +117,7 @@ streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
   sp->sp_ntargets++;
   st->st_pad = sp;
   LIST_INSERT_HEAD(&sp->sp_targets, st, st_link);
-  sp->sp_reject_filter |= st->st_reject_filter;
+  sp->sp_reject_filter &= st->st_reject_filter;
 }
 
 
@@ -134,9 +134,9 @@ streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 
   LIST_REMOVE(st, st_link);
 
-  filter = 0;
+  filter = ~0;
   LIST_FOREACH(st, &sp->sp_targets, st_link)
-    filter |= st->st_reject_filter;
+    filter &= st->st_reject_filter;
   sp->sp_reject_filter = filter;
 }
 
