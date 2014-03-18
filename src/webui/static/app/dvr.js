@@ -27,6 +27,18 @@ tvheadend.containers = new Ext.data.JsonStore({
 	}
 });
 
+//For the cache configuration
+tvheadend.caches = new Ext.data.JsonStore({
+	autoLoad : true,
+	root : 'entries',
+	fields : [ 'index', 'description' ],
+	id : 'name',
+	url : 'dvr_caches',
+	baseParams : {
+		op : 'list'
+	}
+});
+
 
 /**
  * Configuration names
@@ -733,7 +745,7 @@ tvheadend.dvrsettings = function() {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvrSettings'
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
-		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
+		'channelInTitle', 'container', 'cache', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
 		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
 
@@ -781,6 +793,15 @@ tvheadend.dvrsettings = function() {
 			editable : false,
 			width : 200,
 			hiddenName : 'container'
+		}), new Ext.form.ComboBox({
+			store : tvheadend.caches,
+			fieldLabel : 'Cache scheme',
+			triggerAction : 'all',
+			displayField : 'description',
+			valueField : 'index',
+			editable : false,
+			width : 200,
+			hiddenName : 'cache'
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Rewrite PAT in passthrough mode',
 			name : 'rewritePAT'

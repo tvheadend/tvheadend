@@ -33,6 +33,7 @@ typedef struct pass_muxer {
   muxer_t;
 
   /* File descriptor stuff */
+  off_t pm_off;
   int   pm_fd;
   int   pm_seekable;
   int   pm_error;
@@ -360,6 +361,7 @@ pass_muxer_open_stream(muxer_t *m, int fd)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
+  pm->pm_off      = 0;
   pm->pm_fd       = fd;
   pm->pm_seekable = 0;
   pm->pm_filename = strdup("Live stream");
@@ -386,6 +388,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
     return -1;
   }
 
+  pm->pm_off      = 0;
   pm->pm_seekable = 1;
   pm->pm_fd       = fd;
   pm->pm_filename = strdup(filename);
@@ -408,6 +411,11 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
     m->m_errors++;
+    muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
+    pm->pm_off = lseek(pm->pm_fd, 0, SEEK_CUR);
+  } else {
+    muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
+    pm->pm_off += size;
   }
 }
 

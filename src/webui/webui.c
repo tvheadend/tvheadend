@@ -787,6 +787,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     mc = cfg->dvr_mc;
   }
   m_cfg.dvr_flags = cfg->dvr_mux_flags;
+  m_cfg.dvr_cache = cfg->dvr_mux_cache;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
