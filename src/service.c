@@ -44,6 +44,7 @@
 #include "lang_codes.h"
 #include "descrambler.h"
 #include "input/mpegts.h"
+#include "esfilter.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_save(struct idnode *self);
@@ -856,31 +857,23 @@ service_restart(service_t *t, int had_components)
     t->s_refresh_feed(t);
 }
 
-
 /**
- * Generate a message containing info about all components
+ *
  */
-streaming_start_t *
-service_build_stream_start(service_t *t)
+#define ESFM_USED   (1<<0)
+#define ESFM_IGNORE (1<<1)
+
+static void
+ss_copy_info(streaming_start_t *ss, elementary_stream_t *st)
 {
-  extern const idclass_t mpegts_service_class;
-  elementary_stream_t *st;
-  int n = 0;
-  streaming_start_t *ss;
+    streaming_start_component_t *ssc;
 
-  lock_assert(&t->s_stream_mutex);
-  
-  TAILQ_FOREACH(st, &t->s_components, es_link)
-    n++;
+    if (st->es_filter & ESFM_USED)
+      return;
+    st->es_filter |= ESFM_USED;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
-	      sizeof(streaming_start_component_t) * n);
+    ssc = &ss->ss_components[ss->ss_num_components++];
 
-  ss->ss_num_components = n;
-  
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
 
@@ -892,7 +885,137 @@ service_build_stream_start(service_t *t)
     ssc->ssc_width = st->es_width;
     ssc->ssc_height = st->es_height;
     ssc->ssc_frameduration = st->es_frame_duration;
+}
+
+/**
+ * Generate a message containing info about all components
+ */
+streaming_start_t *
+service_build_stream_start(service_t *t)
+{
+  extern const idclass_t mpegts_service_class;
+  elementary_stream_t *st, *st2;
+  int n = 0;
+  streaming_start_t *ss;
+  esfilter_t *esf;
+  int i, exclusive;
+  uint32_t mask;
+
+  lock_assert(&t->s_stream_mutex);
+  
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    st->es_filter = 0;
+    n++;
   }
+
+  ss = calloc(1, sizeof(streaming_start_t) + 
+	      sizeof(streaming_start_component_t) * n);
+
+  for (i = ESF_CLASS_VIDEO; i <= ESF_CLASS_LAST; i++)
+    if (!TAILQ_EMPTY(&esfilters[i]))
+      goto filter;
+
+  /* Copy all elementary streams without modification */
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    ss_copy_info(ss, st);
+  goto filter_end;
+
+filter:
+  for (i = ESF_CLASS_VIDEO; i <= ESF_CLASS_LAST; i++) {
+    n = ss->ss_num_components;
+    mask = esfilterclsmask[i];
+    if (TAILQ_EMPTY(&esfilters[i])) {
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if ((mask & SCT_MASK(st->es_type)) != 0)
+          ss_copy_info(ss, st);
+      }
+      continue;
+    }
+    exclusive = 0;
+    TAILQ_FOREACH(esf, &esfilters[i], esf_link) {
+      if (!esf->esf_enabled)
+        continue;
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if ((mask & SCT_MASK(st->es_type)) == 0)
+          continue;
+        if (esf->esf_type && (esf->esf_type & SCT_MASK(st->es_type)) == 0)
+          continue;
+        if (esf->esf_language[0] &&
+            strncmp(esf->esf_language, st->es_lang, 4))
+          continue;
+        if (esf->esf_service && esf->esf_service[0]) {
+          if (strcmp(esf->esf_service, idnode_uuid_as_str(&t->s_id)))
+            continue;
+          if (esf->esf_pid && esf->esf_pid != st->es_pid)
+            continue;
+        }
+        if (esf->esf_log)
+          tvhlog(LOG_INFO, "service", "esfilter: %03d %05d %s %s %s %s",
+            esf->esf_index,
+            st->es_pid, streaming_component_type2txt(st->es_type),
+            lang_code_get(st->es_lang), t->s_nicename,
+            esfilter_action2txt(esf->esf_action));
+        switch (esf->esf_action) {
+        case ESFA_NONE:
+          break;
+        case ESFA_IGNORE:
+          st->es_filter |= ESFM_IGNORE;
+          break;
+        case ESFA_USE:
+          ss_copy_info(ss, st);
+          break;
+        case ESFA_ONCE:
+          if (esf->esf_language[0] == '\0') {
+            ss_copy_info(ss, st);
+          } else {
+            int present = 0;
+            TAILQ_FOREACH(st2, &t->s_components, es_link) {
+              if ((st2->es_filter & ESFM_USED) == 0)
+                continue;
+              if (strcmp(st2->es_lang, st->es_lang) == 0) {
+                present = 1;
+                break;
+              }
+            }
+            if (!present)
+              ss_copy_info(ss, st);
+          }
+          break;
+        case ESFA_EXCLUSIVE:
+          break;
+        case ESFA_EMPTY:
+          if (n == ss->ss_num_components)
+            ss_copy_info(ss, st);
+          break;
+        default:
+          tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
+          break;
+        }
+        if (esf->esf_action == ESFA_EXCLUSIVE) {
+          /* forget previous work */
+          if (n < ss->ss_num_components) {
+            memset(&ss->ss_components[n-1], 0,
+                   (ss->ss_num_components - n) *
+                   sizeof(streaming_start_component_t));
+            ss->ss_num_components = n;
+          }
+          ss_copy_info(ss, st);
+          exclusive = 1;
+          break;
+        }
+      }
+    }
+    if (!exclusive) {
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if ((mask & SCT_MASK(st->es_type)) != 0 &&
+            (st->es_filter & (ESFM_USED|ESFM_IGNORE)) == 0)
+          ss_copy_info(ss, st);
+      }
+    }
+  }
+
+filter_end:
+  ss->ss_num_components = n;
 
   t->s_setsourceinfo(t, &ss->ss_si);
 

@@ -125,6 +125,9 @@ typedef struct elementary_stream {
   /* SI section processing (horrible hack) */
   void *es_section;
 
+  /* Filter temporary variable */
+  uint32_t es_filter;
+
 } elementary_stream_t;
 
 
