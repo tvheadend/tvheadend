@@ -292,7 +292,7 @@ service_mapper_process ( service_t *s )
 
     /* Type tags */
     if (service_is_hdtv(s)) {
-      channel_tag_map(chn, channel_tag_find_by_name("TV", 1));
+      channel_tag_map(chn, channel_tag_find_by_name("TV channels", 1));
       channel_tag_map(chn, channel_tag_find_by_name("HDTV", 1));
     } else if (service_is_sdtv(s)) {
       channel_tag_map(chn, channel_tag_find_by_name("TV channels", 1));
