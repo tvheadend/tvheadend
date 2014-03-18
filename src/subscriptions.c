@@ -763,6 +763,10 @@ subscription_init(void)
 void
 subscription_done(void)
 {
+  pthread_mutex_lock(&global_lock);
+  /* clear remaining subscriptions */
+  subscription_reschedule();
+  pthread_mutex_unlock(&global_lock);
   assert(LIST_FIRST(&subscriptions) == NULL);
 }
 
