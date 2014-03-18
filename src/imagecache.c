@@ -222,7 +222,6 @@ imagecache_thread ( void *p )
   }
   pthread_mutex_unlock(&global_lock);
 
-  fprintf(stderr, "imagecache thread end\n");
   return NULL;
 }
 

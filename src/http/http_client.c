@@ -145,7 +145,8 @@ http_thread ( void *p )
   while (tvheadend_running) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
     if (n < 0) {
-      tvherror("http_client", "tvhpoll_wait() error");
+      if (tvheadend_running)
+        tvherror("http_client", "tvhpoll_wait() error");
       break;
     } else {
       pthread_mutex_lock(&http_lock);
