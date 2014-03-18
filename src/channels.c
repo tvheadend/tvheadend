@@ -434,11 +434,11 @@ channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
   HTSMSG_FOREACH(f, svcs) {
     if ((str = htsmsg_field_get_str(f)))
       if ((svc = service_find(str)))
-        save |= service_mapper_link(svc, ch, 0);
+        save |= service_mapper_link(svc, ch, ch);
   }
 
   /* Remove */
-  save |= service_mapper_clean(NULL, ch, 0);
+  save |= service_mapper_clean(NULL, ch, ch);
 
   return save;
 }
@@ -559,7 +559,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Services */
   while((csm = LIST_FIRST(&ch->ch_services)) != NULL)
-    service_mapper_unlink(csm->csm_svc, ch, 0);
+    service_mapper_unlink(csm->csm_svc, ch, ch);
 
   /* Subscriptions */
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
