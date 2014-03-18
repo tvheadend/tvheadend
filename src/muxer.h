@@ -34,9 +34,19 @@ typedef enum {
   MC_WEBM        = 6,
 } muxer_container_type_t;
 
+typedef enum {
+  MC_CACHE_UNKNOWN      = 0,
+  MC_CACHE_SYSTEM       = 1,
+  MC_CACHE_DONTKEEP     = 2,
+  MC_CACHE_SYNC         = 3,
+  MC_CACHE_SYNCDONTKEEP = 4,
+  MC_CACHE_LAST         = MC_CACHE_SYNCDONTKEEP
+} muxer_cache_type_t;
+
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
   int dvr_flags;
+  muxer_cache_type_t dvr_cache;
 } muxer_config_t;
 
 struct muxer;
@@ -65,6 +75,7 @@ typedef struct muxer {
 
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
+  muxer_cache_type_t     m_cache;      // Caching scheme
 } muxer_t;
 
 
@@ -94,5 +105,11 @@ int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);
 int         muxer_write_pkt   (muxer_t *m, streaming_message_type_t smt, void *data);
 const char* muxer_mime        (muxer_t *m, const struct streaming_start *ss);
 const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
+
+// Cache
+const char *       muxer_cache_type2txt(muxer_cache_type_t t);
+muxer_cache_type_t muxer_cache_txt2type(const char *str);
+void               muxer_cache_update(muxer_t *m, int fd, off_t off, size_t size);
+int                muxer_cache_list(htsmsg_t *array);
 
 #endif

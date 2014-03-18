@@ -626,6 +626,46 @@ skip:
  *
  */
 static int
+extjs_dvr_caches(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(op != NULL && !strcmp(op, "list")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
+    muxer_cache_list(array);
+
+skip:
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+
+/**
+ *
+ */
+static int
 extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1086,6 +1126,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
+    htsmsg_add_u32(r, "cache",     cfg->dvr_mux_cache);
     htsmsg_add_u32(r, "rewritePAT", !!(cfg->dvr_mux_flags & MUX_REWRITE_PAT));
     htsmsg_add_u32(r, "rewritePMT", !!(cfg->dvr_mux_flags & MUX_REWRITE_PMT));
     if(cfg->dvr_postproc != NULL)
@@ -1123,6 +1164,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
+
+   if((s = http_arg_get(&hc->hc_req_args, "cache")) != NULL)
+      dvr_mux_cache_set(cfg,atoi(s));
 
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
       dvr_postproc_set(cfg,s);
@@ -1750,6 +1794,7 @@ extjs_start(void)
   http_path_add("/dvrlist_finished", NULL, extjs_dvrlist_finished, ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist_failed",   NULL, extjs_dvrlist_failed,   ACCESS_WEB_INTERFACE);
   http_path_add("/dvr_containers",   NULL, extjs_dvr_containers,   ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr_caches",       NULL, extjs_dvr_caches,       ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
