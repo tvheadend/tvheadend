@@ -81,6 +81,7 @@ tvheadend.muxes = function(panel)
     del     : true,
     lcol    : [
       {
+        width    : 50,
         header   : 'Play',
         renderer : function(v, o, r) {
           return "<a href='stream/mux/" + r.id + "'>Play</a>";
@@ -123,6 +124,7 @@ tvheadend.services = function(panel)
     tbar     : [ mapButton ],
     lcol     : [
       {
+        width    : 50,
         header   : 'Play',
         renderer : function(v, o, r) {
           return "<a href='stream/service/" + r.id + "'>Play</a>";
