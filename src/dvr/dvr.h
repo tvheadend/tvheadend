@@ -29,6 +29,7 @@
 typedef struct dvr_config {
   char *dvr_config_name;
   char *dvr_storage;
+  char *dvr_mux_file_permissions;
   uint32_t dvr_retention_days;
   int dvr_flags;
   int dvr_mux_flags;
@@ -332,6 +333,8 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
 
 void dvr_container_set(dvr_config_t *cfg, const char *container);
+
+void dvr_permissions_set(dvr_config_t *cfg, const char *permissions);
 
 void dvr_mux_cache_set(dvr_config_t *cfg, int mcache);
 

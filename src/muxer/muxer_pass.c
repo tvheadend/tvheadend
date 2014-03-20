@@ -379,7 +379,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, m_cfg.dvr_file_permissions);
   if(fd < 0) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",

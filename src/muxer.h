@@ -47,6 +47,7 @@ typedef enum {
 typedef struct muxer_config {
   int dvr_flags;
   muxer_cache_type_t dvr_cache;
+  char *dvr_file_permissions;
 } muxer_config_t;
 
 struct muxer;
