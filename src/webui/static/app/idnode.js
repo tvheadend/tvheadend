@@ -121,6 +121,7 @@ tvheadend.IdNodeField = function (conf)
   this.store  = null;
   if (this.enum)
     this.store = tvheadend.idnode_enum_store(this);
+  this.ordered = false;
 
   /*
    * Methods
@@ -245,9 +246,40 @@ tvheadend.IdNode = function (conf)
   this.clazz  = conf.class;
   this.text   = conf.caption || this.clazz;
   this.props  = conf.props;
-  this.fields = []
+  this.order  = [];
+  this.fields = [];
   for (var i = 0; i < this.props.length; i++) {
     this.fields.push(new tvheadend.IdNodeField(this.props[i]));
+  }
+  var o = [];
+  if (conf.order)
+    o = conf.order.split(',');
+  if (o) {
+    while (o.length < this.fields.length)
+      o.push(null);
+    for (var i = 0; i < o.length; i++) {
+      this.order[i] = null;
+      if (o[i]) {
+        for (var j = 0; j < this.fields.length; j++) {
+          if (this.fields[j].id == o[i]) {
+            this.order[i] = this.fields[j];
+            this.fields[j].ordered = true;
+            break;
+          }
+        }
+      }
+    }
+    for (var i = 0; i < o.length; i++) {
+      if (this.order[i] == null) {
+        for (var j = 0; j < this.fields.length; j++) {
+          if (!this.fields[j].ordered) {
+            this.fields[j].ordered = true;
+            this.order[i] = this.fields[j];
+            break;
+          }
+        }
+      }
+    }
   }
 
   /*
@@ -256,6 +288,10 @@ tvheadend.IdNode = function (conf)
 
   this.length = function () {
     return this.fields.length;
+  }
+  
+  this.field = function ( index ) {
+    if (this.order) return this.order[index]; else return this.fields[index];
   }
 }
 
@@ -616,7 +652,7 @@ tvheadend.idnode_grid = function(panel, conf)
     /* Model */
     var idnode  = new tvheadend.IdNode(d);
     for (var i = 0; i < idnode.length(); i++) {
-      var f = idnode.fields[i];
+      var f = idnode.field(i);
       var c = f.column();
       fields.push(f.id);
       columns.push(c);
