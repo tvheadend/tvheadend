@@ -42,7 +42,6 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
-  uint8_t   pm_flags;
   uint8_t   pm_pat_cc;
   uint16_t  pm_pmt_pid;
   uint8_t   pm_pmt_cc;
@@ -322,7 +321,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_pmt_pid = ss->ss_pmt_pid;
   pm->pm_service_id = ss->ss_service_id;
 
-  if (pm->pm_flags & MUX_REWRITE_PMT) {
+  if (pm->m_config.m_flags & MC_REWRITE_PMT) {
     pm->pm_pmt = realloc(pm->pm_pmt, 188);
     memset(pm->pm_pmt, 0xff, 188);
     pm->pm_pmt[0] = 0x47;
@@ -430,20 +429,20 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   unsigned char* tsb;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->pm_flags & (MUX_REWRITE_PAT | MUX_REWRITE_PMT)) {
+  if (pm->m_config.m_flags & (MC_REWRITE_PAT | MC_REWRITE_PMT)) {
 
     tsb = pb->pb_data;
     while (tsb < pb->pb_data + pb->pb_size) {
       int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
       /* PAT */
-      if (pm->pm_flags & MUX_REWRITE_PAT && pid == 0) {
+      if (pm->m_config.m_flags & MC_REWRITE_PAT && pid == 0) {
         if (pass_muxer_rewrite_pat(pm, tsb)) {
           tvherror("pass", "PAT rewrite failed, disabling");
-          pm->pm_flags &= ~MUX_REWRITE_PAT;
+          pm->m_config.m_flags &= ~MC_REWRITE_PAT;
         }
       /* PMT */
-      } else if (pm->pm_flags & MUX_REWRITE_PMT && pid == pm->pm_pmt_pid) {
+      } else if (pm->m_config.m_flags & MC_REWRITE_PMT && pid == pm->pm_pmt_pid) {
         if (tsb[1] & 0x40) { /* pusi - the first PMT packet */  
           memcpy(tsb, pm->pm_pmt, 188);
           tsb[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
@@ -541,7 +540,7 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
+pass_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
 {
   pass_muxer_t *pm;
 
@@ -559,9 +558,6 @@ pass_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
-  /* Copy any configuration values we are interested in */
-  if ((mc == MC_PASS) && (m_cfg))
-    pm->pm_flags = m_cfg->dvr_flags;
 
   return (muxer_t *)pm;
 }

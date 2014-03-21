@@ -665,7 +665,6 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
-  muxer_config_t m_cfg;
 
   cfg = dvr_config_find_by_name_default("");
 
@@ -674,7 +673,6 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(mc == MC_UNKNOWN) {
     mc = cfg->dvr_mc;
   }
-  m_cfg.dvr_flags = cfg->dvr_mux_flags;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -704,7 +702,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(s) {
     name = tvh_strdupa(service->s_nicename);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s, &m_cfg);
+    http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
@@ -777,7 +775,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
-  muxer_config_t m_cfg;
 
   cfg = dvr_config_find_by_name_default("");
 
@@ -786,8 +783,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if(mc == MC_UNKNOWN) {
     mc = cfg->dvr_mc;
   }
-  m_cfg.dvr_flags = cfg->dvr_mux_flags;
-  m_cfg.dvr_cache = cfg->dvr_mux_cache;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -825,7 +820,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if(s) {
     name = tvh_strdupa(channel_get_name(ch));
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s, &m_cfg);
+    http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }

@@ -1113,19 +1113,20 @@ dvr_init(void)
         cfg = dvr_config_create(s);
 
       cfg->dvr_mc = htsmsg_get_u32_or_default(m, "container", MC_MATROSKA);
-      cfg->dvr_mux_cache = htsmsg_get_u32_or_default(m, "cache", MC_CACHE_DONTKEEP);
+      cfg->dvr_muxcnf.m_cache
+        = htsmsg_get_u32_or_default(m, "cache", MC_CACHE_DONTKEEP);
 
       if(!htsmsg_get_u32(m, "rewrite-pat", &u32)) {
         if (u32)
-          cfg->dvr_mux_flags |= MUX_REWRITE_PAT;
+          cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PAT;
         else
-          cfg->dvr_mux_flags &= ~MUX_REWRITE_PAT;
+          cfg->dvr_muxcnf.m_flags &= ~MC_REWRITE_PAT;
       }
       if(!htsmsg_get_u32(m, "rewrite-pmt", &u32)) {
         if (u32)
-          cfg->dvr_mux_flags |= MUX_REWRITE_PMT;
+          cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PMT;
         else
-          cfg->dvr_mux_flags &= ~MUX_REWRITE_PMT;
+          cfg->dvr_muxcnf.m_flags &= ~MC_REWRITE_PMT;
       }
 
       htsmsg_get_s32(m, "pre-extra-time", &cfg->dvr_extra_time_pre);
@@ -1295,7 +1296,6 @@ dvr_config_create(const char *name)
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
-  cfg->dvr_mux_cache = MC_CACHE_DONTKEEP;
   cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
 
   /* series link support */
@@ -1306,8 +1306,9 @@ dvr_config_create(const char *name)
   cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
   cfg->dvr_sl_quality_lock = 1; // Don't attempt to ajust quality
 
-  /* PAT/PMT rewrite support */
-  cfg->dvr_mux_flags |= MUX_REWRITE_PAT;
+  /* Muxer config */
+  cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
+  cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PAT;
 
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
@@ -1354,9 +1355,11 @@ dvr_save(dvr_config_t *cfg)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
-  htsmsg_add_u32(m, "cache", cfg->dvr_mux_cache);
-  htsmsg_add_u32(m, "rewrite-pat", !!(cfg->dvr_mux_flags & MUX_REWRITE_PAT));
-  htsmsg_add_u32(m, "rewrite-pmt", !!(cfg->dvr_mux_flags & MUX_REWRITE_PMT));
+  htsmsg_add_u32(m, "cache", cfg->dvr_muxcnf.m_cache);
+  htsmsg_add_u32(m, "rewrite-pat",
+                 !!(cfg->dvr_muxcnf.m_flags & MC_REWRITE_PAT));
+  htsmsg_add_u32(m, "rewrite-pmt",
+                 !!(cfg->dvr_muxcnf.m_flags & MC_REWRITE_PMT));
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
@@ -1424,10 +1427,10 @@ dvr_mux_cache_set(dvr_config_t *cfg, int mcache)
   if (mcache < MC_CACHE_UNKNOWN || mcache > MC_CACHE_LAST)
     mcache = MC_CACHE_UNKNOWN;
 
-  if(cfg->dvr_mux_cache == mcache)
+  if(cfg->dvr_muxcnf.m_cache == mcache)
     return;
 
-  cfg->dvr_mux_cache = mcache;
+  cfg->dvr_muxcnf.m_cache = mcache;
 
   dvr_save(cfg);
 }
@@ -1488,10 +1491,10 @@ dvr_flags_set(dvr_config_t *cfg, int flags)
 void
 dvr_mux_flags_set(dvr_config_t *cfg, int flags)
 {
-  if(cfg->dvr_mux_flags == flags)
+  if(cfg->dvr_muxcnf.m_flags == flags)
     return;
 
-  cfg->dvr_mux_flags = flags;
+  cfg->dvr_muxcnf.m_flags = flags;
   dvr_save(cfg);
 }
 

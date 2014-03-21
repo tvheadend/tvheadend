@@ -31,13 +31,12 @@ typedef struct dvr_config {
   char *dvr_storage;
   uint32_t dvr_retention_days;
   int dvr_flags;
-  int dvr_mux_flags;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
   muxer_container_type_t dvr_mc;
-  muxer_cache_type_t dvr_mux_cache;
+  muxer_config_t         dvr_muxcnf;
 
   /* Series link support */
   int dvr_sl_brand_lock;

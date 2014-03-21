@@ -21,8 +21,8 @@
 
 #include "htsmsg.h"
 
-#define MUX_REWRITE_PAT 0x0001
-#define MUX_REWRITE_PMT 0x0002
+#define MC_REWRITE_PAT 0x0001
+#define MC_REWRITE_PMT 0x0002
 
 typedef enum {
   MC_UNKNOWN     = 0,
@@ -45,8 +45,8 @@ typedef enum {
 
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
-  int dvr_flags;
-  muxer_cache_type_t dvr_cache;
+  int                m_flags;
+  muxer_cache_type_t m_cache;
 } muxer_config_t;
 
 struct muxer;
@@ -75,7 +75,7 @@ typedef struct muxer {
 
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
-  muxer_cache_type_t     m_cache;      // Caching scheme
+  muxer_config_t         m_config;     // general configuration
 } muxer_t;
 
 
@@ -91,7 +91,7 @@ const char*            muxer_container_suffix(muxer_container_type_t mc, int vid
 int muxer_container_list(htsmsg_t *array);
 
 // Muxer factory
-muxer_t *muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg);
+muxer_t *muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);
