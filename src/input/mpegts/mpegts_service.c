@@ -60,6 +60,7 @@ const idclass_t mpegts_service_class =
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
   .ic_caption    = "MPEGTS Service",
+  .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
