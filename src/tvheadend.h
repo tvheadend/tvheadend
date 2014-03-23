@@ -1,6 +1,6 @@
 /*
  *  Tvheadend - structures
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <sys/time.h>
 #include <libgen.h>
 #include <string.h>
@@ -561,6 +562,8 @@ int tvh_pipe(int flags, th_pipe_t *pipe);
 void tvh_pipe_close(th_pipe_t *pipe);
 
 int tvh_write(int fd, const void *buf, size_t len);
+
+int tvh_get_port(struct addrinfo *address);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
