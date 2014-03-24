@@ -727,7 +727,8 @@ tcp_server_done(void)
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
-  assert(LIST_FIRST(&tcp_server_active) == NULL);
+  while (LIST_FIRST(&tcp_server_active) != NULL)
+    usleep(20000);
   pthread_mutex_lock(&global_lock);
   while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
     LIST_REMOVE(tsl, jlink);
