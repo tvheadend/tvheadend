@@ -734,15 +734,7 @@ linuxdvb_satconf_ele_class_rotortype_get ( void *o )
 static const char *
 linuxdvb_satconf_ele_class_get_title ( idnode_t *o )
 {
-  static char buf[128];
-#if 0
-  linuxdvb_satconf_ele_t *ls = (linuxdvb_satconf_ele_t*)o;
-  if (ls->mi_network)
-    ls->mi_network->mn_display_name(ls->mi_network, buf, sizeof(buf));
-  else
-    *buf = 0;
-#endif
-  return buf;
+  return ((mpegts_input_t *)o)->mi_name;
 }
 
 static idnode_set_t *
@@ -1048,6 +1040,15 @@ linuxdvb_satconf_ele_open_pid
   return ls->ls_frontend->mi_open_pid(ls->ls_frontend, mm, pid, type, owner);
 }
 
+static idnode_set_t *
+linuxdvb_satconf_ele_network_list
+  ( mpegts_input_t *mi )
+{
+  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
+  linuxdvb_satconf_t     *ls  = lse->ls_parent;
+  return ls->ls_frontend->mi_network_list(ls->ls_frontend);
+}
+
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/
@@ -1088,6 +1089,7 @@ linuxdvb_satconf_ele_create0
   lse->mi_stopped_mux         = linuxdvb_satconf_ele_stopped_mux;
   lse->mi_has_subscription    = linuxdvb_satconf_ele_has_subscription;
   lse->mi_open_pid            = linuxdvb_satconf_ele_open_pid;
+  lse->mi_network_list        = linuxdvb_satconf_ele_network_list;
 
   /* Config */
   if (conf) {
