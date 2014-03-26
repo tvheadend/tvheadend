@@ -379,7 +379,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, m_cfg.dvr_file_permissions);
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 644);
   if(fd < 0) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
@@ -548,6 +548,12 @@ pass_muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
   if(mc != MC_PASS && mc != MC_RAW)
     return NULL;
 
+/* debugging to see if the variable is available here */
+/* IH 26 March */
+/* Doesn't go beyond this scope - doesn't reach pass_muxer_open_file */
+
+  printf ("%s\n", m_cfg->dvr_file_permissions);
+  
   pm = calloc(1, sizeof(pass_muxer_t));
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;

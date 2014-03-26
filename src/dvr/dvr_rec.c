@@ -294,6 +294,11 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   mc = de->de_mc;
   m_cfg.dvr_flags = cfg->dvr_mux_flags;
   m_cfg.dvr_cache = cfg->dvr_mux_cache;
+  
+  /* Come back to this - IH 26 March */
+  /* Any other changes to this file? */
+  
+  m_cfg.dvr_file_permissions = cfg->dvr_mux_file_permissions;
 
   de->de_mux = muxer_create(mc, &m_cfg);
   if(!de->de_mux) {
