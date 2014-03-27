@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <math.h>
+#include <linux/dvb/frontend.h>
 
 /* **************************************************************************
  * Class definition

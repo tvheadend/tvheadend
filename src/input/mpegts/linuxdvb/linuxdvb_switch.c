@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <linux/dvb/dmx.h>
+#include <linux/dvb/frontend.h>
 
 /* **************************************************************************
  * Class definition

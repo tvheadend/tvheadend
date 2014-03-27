@@ -197,47 +197,223 @@ void psi_tables_atsc_c  ( struct mpegts_mux *mm );
  */
 #if ENABLE_DVBAPI
 
-#include <linux/dvb/version.h>
-#include <linux/dvb/frontend.h>
+typedef enum dvb_fe_type {
+  DVB_TYPE_NONE = 0,
+  DVB_TYPE_T = 1,		/* terrestrial */
+  DVB_TYPE_C,			/* cable */
+  DVB_TYPE_S,			/* satellite */
+  DVB_TYPE_ATSC,		/* terrestrial - north america */
+  DVB_TYPE_LAST = DVB_TYPE_ATSC
+} dvb_fe_type_t;
 
-#define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
+typedef enum dvb_fe_delivery_system {
+  DVB_SYS_NONE            =    0,
+  DVB_SYS_DVBC_ANNEX_A    =  100,
+  DVB_SYS_DVBC_ANNEX_B,
+  DVB_SYS_DVBC_ANNEX_C,
+  DVB_SYS_DVBT            =  200,
+  DVB_SYS_DVBT2,
+  DVB_SYS_DVBS            =  300,
+  DVB_SYS_DVBS2,
+  DVB_SYS_DVBH            =  400,
+  DVB_SYS_DSS             =  500,
+  DVB_SYS_ISDBT           =  600,
+  DVB_SYS_ISDBS,
+  DVB_SYS_ISDBC,
+  DVB_SYS_ATSC            =  700,
+  DVB_SYS_ATSCMH,
+  DVB_SYS_DTMB            =  800,
+  DVB_SYS_CMMB            =  900,
+  DVB_SYS_DAB             = 1000,
+  DVB_SYS_TURBO           = 1100,
+} dvb_fe_delivery_system_t;
 
-#define DVB_VER_ATLEAST(maj, min) \
- (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
+typedef enum dvb_fe_spectral_inversion {
+  DVB_INVERSION_UNDEFINED,
+  DVB_INVERSION_AUTO,
+  DVB_INVERSION_OFF,
+  DVB_INVERSION_ON,
+} dvb_fe_spectral_inversion_t;
 
-typedef struct dvb_frontend_parameters dvb_frontend_parameters_t;
+typedef enum dvb_fe_code_rate {
+  DVB_FEC_NONE  =    0,
+  DVB_FEC_AUTO,
+  DVB_FEC_1_2   =  102,
+  DVB_FEC_1_3   =  103,
+  DVB_FEC_1_5   =  105,
+  DVB_FEC_2_3   =  203,
+  DVB_FEC_2_5   =  205,
+  DVB_FEC_2_9   =  209,
+  DVB_FEC_3_4   =  304,
+  DVB_FEC_3_5   =  305,
+  DVB_FEC_4_5   =  405,
+  DVB_FEC_4_15  =  415,
+  DVB_FEC_5_6   =  506,
+  DVB_FEC_5_9   =  509,
+  DVB_FEC_6_7   =  607,
+  DVB_FEC_7_8   =  708,
+  DVB_FEC_7_9   =  709,
+  DVB_FEC_7_15  =  715,
+  DVB_FEC_8_9   =  809,
+  DVB_FEC_8_15  =  815,
+  DVB_FEC_9_10  =  910,
+  DVB_FEC_9_20  =  920,
+  DVB_FEC_11_15 = 1115,
+  DVB_FEC_11_20 = 1120,
+  DVB_FEC_11_45 = 1145,
+  DVB_FEC_13_18 = 1318,
+  DVB_FEC_13_45 = 1345,
+  DVB_FEC_14_45 = 1445,
+  DVB_FEC_23_36 = 2336,
+  DVB_FEC_25_36 = 2536,
+  DVB_FEC_26_45 = 2645,
+  DVB_FEC_28_45 = 2845,
+  DVB_FEC_29_45 = 2945,
+  DVB_FEC_31_45 = 3145,
+  DVB_FEC_32_45 = 3245,
+  DVB_FEC_77_90 = 7790,
+} dvb_fe_code_rate_t;
 
-typedef enum polarisation {
-	POLARISATION_HORIZONTAL     = 0x00,
-	POLARISATION_VERTICAL       = 0x01,
-	POLARISATION_CIRCULAR_LEFT  = 0x02,
-	POLARISATION_CIRCULAR_RIGHT = 0x03
-} polarisation_t;
+typedef enum dvb_fe_modulation {
+  DVB_MOD_NONE       =     0,
+  DVB_MOD_AUTO,
+  DVB_MOD_QPSK       =  1001,
+  DVB_MOD_QAM_4_NR   =  2004,
+  DVB_MOD_QAM_AUTO   =  3000,
+  DVB_MOD_QAM_16     =  3016,
+  DVB_MOD_QAM_32     =  3032,
+  DVB_MOD_QAM_64     =  3064,
+  DVB_MOD_QAM_128    =  3128,
+  DVB_MOD_QAM_256    =  3256,
+  DVB_MOD_VSB_8      =  4008,
+  DVB_MOD_VSB_16     =  4016,
+  DVB_MOD_PSK_8      =  5008,
+  DVB_MOD_DQPSK      =  6001,
+  DVB_MOD_BPSK       =  7001,
+  DVB_MOD_BPSK_S     =  8001,
+  DVB_MOD_APSK_16    =  9016,
+  DVB_MOD_APSK_32    =  9032,
+  DVB_MOD_APSK_64    =  9064,
+  DVB_MOD_APSK_128   =  9128,
+  DVB_MOD_APSK_256   =  9256,
+  DVB_MOD_APSK_8_L   = 10008,
+  DVB_MOD_APSK_16_L  = 10016,
+  DVB_MOD_APSK_32_L  = 10032,
+  DVB_MOD_APSK_64_L  = 10064,
+  DVB_MOD_APSK_128_L = 10128,
+  DVB_MOD_APSK_256_L = 10256,
+} dvb_fe_modulation_t;
+
+typedef enum dvb_fe_transmit_mode {
+  DVB_TRANSMISSION_MODE_NONE =      0,
+  DVB_TRANSMISSION_MODE_AUTO,
+  DVB_TRANSMISSION_MODE_1K    =   100,
+  DVB_TRANSMISSION_MODE_2K,
+  DVB_TRANSMISSION_MODE_4K,
+  DVB_TRANSMISSION_MODE_8K,
+  DVB_TRANSMISSION_MODE_16K,
+  DVB_TRANSMISSION_MODE_32K,
+  DVB_TRANSMISSION_MODE_C1    = 10001,
+  DVB_TRANSMISSION_MODE_C3780 = 13780,
+} dvb_fe_transmit_mode_t;
+
+typedef enum dvb_fe_bandwidth {
+  DVB_BANDWIDTH_NONE          =     0,
+  DVB_BANDWIDTH_AUTO,
+  DVB_BANDWIDTH_1_712_MHZ     =  1712,
+  DVB_BANDWIDTH_5_MHZ         =  5000,
+  DVB_BANDWIDTH_6_MHZ         =  6000,
+  DVB_BANDWIDTH_7_MHZ         =  7000,
+  DVB_BANDWIDTH_8_MHZ         =  8000,
+  DVB_BANDWIDTH_10_MHZ        = 10000,
+} dvb_fe_bandwidth_t;
+
+typedef enum dvb_fe_guard_interval {
+  DVB_GUARD_INTERVAL_NONE =         0,
+  DVB_GUARD_INTERVAL_AUTO,
+  DVB_GUARD_INTERVAL_1_4      =  1004,
+  DVB_GUARD_INTERVAL_1_8      =  1008,
+  DVB_GUARD_INTERVAL_1_16     =  1016,
+  DVB_GUARD_INTERVAL_1_32     =  1032,
+  DVB_GUARD_INTERVAL_1_128    =  1128,
+  DVB_GUARD_INTERVAL_19_128   = 19128,
+  DVB_GUARD_INTERVAL_19_256   = 19256,
+  DVB_GUARD_INTERVAL_PN420    = 90420,
+  DVB_GUARD_INTERVAL_PN595    = 90595,
+  DVB_GUARD_INTERVAL_PN945    = 90945,
+} dvb_fe_guard_interval_t;
+
+typedef enum dvb_fe_hierarchy {
+  DVB_HIERARCHY_NONE          =    0,
+  DVB_HIERARCHY_AUTO,
+  DVB_HIERARCHY_1             = 1001,
+  DVB_HIERARCHY_2             = 1002,
+  DVB_HIERARCHY_4             = 1004,
+} dvb_fe_hierarchy_t;
+
+typedef enum dvb_fe_pilot {
+  DVB_PILOT_NONE = 0,
+  DVB_PILOT_AUTO,
+  DVB_PILOT_ON,
+  DVB_PILOT_OFF,
+} dvb_fe_pilot_t;
+
+typedef enum dvb_fe_rolloff {
+  DVB_ROLLOFF_NONE       =   0,
+  DVB_ROLLOFF_AUTO,
+  DVB_ROLLOFF_20         = 200,
+  DVB_ROLLOFF_25         = 250,
+  DVB_ROLLOFF_35         = 350,
+} dvb_fe_rolloff_t;
+
+typedef enum dvb_polarisation {
+  DVB_POLARISATION_HORIZONTAL     = 0x00,
+  DVB_POLARISATION_VERTICAL       = 0x01,
+  DVB_POLARISATION_CIRCULAR_LEFT  = 0x02,
+  DVB_POLARISATION_CIRCULAR_RIGHT = 0x03
+} dvb_polarisation_t;
+
+typedef struct dvb_qpsk_config {
+  dvb_polarisation_t  polarisation;
+  int                 orbital_pos;
+  char                orbital_dir;
+  uint32_t            symbol_rate;
+  dvb_fe_code_rate_t  fec_inner;
+} dvb_qpsk_config_t;
+
+typedef struct dvb_qam_config {
+  uint32_t            symbol_rate;
+  dvb_fe_code_rate_t  fec_inner;
+} dvb_qam_config_t;
+
+typedef struct dvb_ofdm_config {
+  dvb_fe_bandwidth_t      bandwidth;
+  dvb_fe_code_rate_t      code_rate_HP;
+  dvb_fe_code_rate_t      code_rate_LP;
+  dvb_fe_transmit_mode_t  transmission_mode;
+  dvb_fe_guard_interval_t guard_interval;
+  dvb_fe_hierarchy_t      hierarchy_information;
+} dvb_ofdm_config_t;
 
 typedef struct dvb_mux_conf
 {
-  dvb_frontend_parameters_t dmc_fe_params;
-
-  // Additional DVB-S fields
-  polarisation_t            dmc_fe_polarisation;
-  int                       dmc_fe_orbital_pos;
-  char                      dmc_fe_orbital_dir;
-#if DVB_VER_ATLEAST(5,0)
-  fe_modulation_t           dmc_fe_modulation;
-  fe_delivery_system_t      dmc_fe_delsys;
-  fe_rolloff_t              dmc_fe_rolloff;
-  fe_pilot_t                dmc_fe_pilot;
-#endif
+  dvb_fe_type_t               dmc_fe_type;
+  dvb_fe_delivery_system_t    dmc_fe_delsys;
+  dvb_fe_modulation_t         dmc_fe_modulation;
+  uint32_t                    dmc_fe_freq;
+  dvb_fe_spectral_inversion_t dmc_fe_inversion;
+  dvb_fe_rolloff_t            dmc_fe_rolloff;
+  dvb_fe_pilot_t              dmc_fe_pilot;
+  union {
+    dvb_qpsk_config_t         dmc_fe_qpsk;
+    dvb_qam_config_t          dmc_fe_qam;
+    dvb_ofdm_config_t         dmc_fe_ofdm;
+  } u;
 
   // For scan file configurations
-  LIST_ENTRY(dvb_mux_conf)  dmc_link;
+  LIST_ENTRY(dvb_mux_conf)    dmc_link;
   
 } dvb_mux_conf_t;
-
-const char *dvb_mux_conf_load
-  ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m );
-void dvb_mux_conf_save
-  ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m );
 
 /* conversion routines */
 const char *dvb_rolloff2str ( int rolloff );
@@ -268,11 +444,12 @@ int dvb_str2pilot   ( const char *str );
 #define dvb_str2feclo dvb_str2fec
 #define dvb_str2fechi dvb_str2fec
 
-int dvb_bandwidth   ( enum fe_bandwidth bw );
+static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
+{
+  return bw < 1000 ? 0 : bw * 1000;
+}
 
-#if DVB_VER_ATLEAST(5,10)
-int dvb_delsys2type ( enum fe_delivery_system ds );
-#endif
+int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
 #endif /* ENABLE_DVBAPI */
 

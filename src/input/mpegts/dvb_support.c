@@ -380,438 +380,305 @@ dvb_convert_date(const uint8_t *dvb_buf)
  */
 #if ENABLE_DVBAPI
 
+
 #define dvb_str2val(p)\
 const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
 int         dvb_str2##p   (const char *p) { return str2val(p, p##tab); }
 
-const static struct strtab rollofftab[] = {
-#if DVB_VER_ATLEAST(5,0)
-  { "35",           ROLLOFF_35 },
-  { "20",           ROLLOFF_20 },
-  { "25",           ROLLOFF_25 },
-  { "AUTO",         ROLLOFF_AUTO }
-#endif
-};
-dvb_str2val(rolloff);
+#define DVB_EOD -10	/* end-of-data */
+
+static const char *dvb_common2str(int p)
+{
+  if (p == 0)
+    return "NONE";
+  if (p == 1)
+    return "AUTO";
+  return NULL;
+}
+
+static int dvb_str2common(const char *p)
+{
+  if (strcmp(p, "NONE") == 0)
+    return 0;
+  if (strcmp(p, "AUTO") == 0)
+    return 1;
+  return DVB_EOD;
+}
+
+static int dvb_verify(int val, int *table)
+{
+  while (*table != DVB_EOD) {
+    if (val == *table)
+      return val;
+    table++;
+  }
+  return 0; /* NONE */
+}
+
+const char *dvb_rolloff2str(int p)
+{
+  static char __thread buf[16];
+  const char *res = dvb_common2str(p);
+  if (res)
+    return res;
+  sprintf(buf, "%02i", p / 10);
+  return buf;
+}
+
+int dvb_str2rolloff(const char *p)
+{
+  static int rolloff_table[] = {
+    DVB_ROLLOFF_20,
+    DVB_ROLLOFF_25,
+    DVB_ROLLOFF_35,
+    DVB_EOD,
+  };
+  int res = dvb_str2common(p);
+  if (res != DVB_EOD)
+    return res;
+  res = atoi(p) * 10;
+  return dvb_verify(atoi(p) * 10, rolloff_table);
+}
 
 const static struct strtab delsystab[] = {
-#if DVB_VER_ATLEAST(5,0)
-  { "UNDEFINED",        SYS_UNDEFINED },
-  { "DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
-  { "DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
-  { "DVBT",             SYS_DVBT },
-  { "DVBS",             SYS_DVBS },
-  { "DVBS2",            SYS_DVBS2 },
-  { "DVBH",             SYS_DVBH },
-  { "ISDBT",            SYS_ISDBT },
-  { "ISDBS",            SYS_ISDBS },
-  { "ISDBC",            SYS_ISDBC },
-  { "ATSC",             SYS_ATSC },
-  { "ATSCMH",           SYS_ATSCMH },
-  { "DMBTH",            SYS_DMBTH },
-  { "CMMB",             SYS_CMMB },
-  { "DAB",              SYS_DAB },
-#endif
-#if DVB_VER_ATLEAST(5,1)
-  { "DSS",              SYS_DSS },
-#endif
-#if DVB_VER_ATLEAST(5,4)
-  { "DVBT2",            SYS_DVBT2 },
-  { "TURBO",            SYS_TURBO }
-#endif
+  { "NONE",         DVB_SYS_NONE },
+  { "DVBC_ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
+  { "DVBC_ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
+  { "DVBC_ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
+  { "DVBC_ANNEX_AC",DVB_SYS_DVBC_ANNEX_A }, /* for compatibility */
+  { "DVBT",         DVB_SYS_DVBT },
+  { "DVBT2",        DVB_SYS_DVBT2 },
+  { "DVBS",         DVB_SYS_DVBS },
+  { "DVBS2",        DVB_SYS_DVBS2 },
+  { "DVBH",         DVB_SYS_DVBH },
+  { "ISDBT",        DVB_SYS_ISDBT },
+  { "ISDBS",        DVB_SYS_ISDBS },
+  { "ISDBC",        DVB_SYS_ISDBC },
+  { "ATSC",         DVB_SYS_ATSC },
+  { "ATSCMH",       DVB_SYS_ATSCMH },
+  { "DTMB",         DVB_SYS_DTMB },
+  { "DMBTH",        DVB_SYS_DTMB },	/* for compatibility */
+  { "CMMB",         DVB_SYS_CMMB },
+  { "DAB",          DVB_SYS_DAB },
+  { "DSS",          DVB_SYS_DSS },
+  { "TURBO",        DVB_SYS_TURBO }
 };
 dvb_str2val(delsys);
 
-#if DVB_VER_ATLEAST(5,10)
 int
-dvb_delsys2type ( fe_delivery_system_t delsys )
+dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
 {
   switch (delsys) {
-    case SYS_DVBC_ANNEX_AC:
-    case SYS_DVBC_ANNEX_B:
-    case SYS_ISDBC:
-      return FE_QAM;
-    case SYS_DVBT:
-    case SYS_DVBT2:
-    case SYS_TURBO:
-    case SYS_ISDBT:
-      return FE_OFDM;
-    case SYS_DVBS:
-    case SYS_DVBS2:
-    case SYS_ISDBS:
-      return FE_QPSK;
-    case SYS_ATSC:
-    case SYS_ATSCMH:
-      return FE_ATSC;
+    case DVB_SYS_DVBC_ANNEX_A:
+    case DVB_SYS_DVBC_ANNEX_B:
+    case DVB_SYS_DVBC_ANNEX_C:
+    case DVB_SYS_ISDBC:
+      return DVB_TYPE_C;
+    case DVB_SYS_DVBT:
+    case DVB_SYS_DVBT2:
+    case DVB_SYS_TURBO:
+    case DVB_SYS_ISDBT:
+      return DVB_TYPE_T;
+    case DVB_SYS_DVBS:
+    case DVB_SYS_DVBS2:
+    case DVB_SYS_ISDBS:
+      return DVB_TYPE_S;
+    case DVB_SYS_ATSC:
+    case DVB_SYS_ATSCMH:
+      return DVB_TYPE_ATSC;
     default:
-      return -1;
+      return DVB_TYPE_NONE;
   }
 }
-#endif
 
-const static struct strtab fectab[] = {
-  { "NONE",                 FEC_NONE },
-  { "1/2",                  FEC_1_2 },
-  { "2/3",                  FEC_2_3 },
-  { "3/4",                  FEC_3_4 },
-  { "4/5",                  FEC_4_5 },
-  { "5/6",                  FEC_5_6 },
-  { "6/7",                  FEC_6_7 },
-  { "7/8",                  FEC_7_8 },
-  { "8/9",                  FEC_8_9 },
-  { "AUTO",                 FEC_AUTO },
-#if DVB_VER_ATLEAST(5,0)
-  { "3/5",                  FEC_3_5 },
-  { "9/10",                 FEC_9_10 }
-#endif
-};
-dvb_str2val(fec);
+const char *dvb_fec2str(int p)
+{
+  static char __thread buf[16];
+  const char *res = dvb_common2str(p);
+  if (res)
+    return res;
+  sprintf(buf, "%i/%i", p / 100, p % 100);
+  return buf;
+}
+
+int dvb_str2fec(const char *p)
+{
+  static int fec_table[] = {
+    DVB_FEC_1_2,
+    DVB_FEC_1_3,
+    DVB_FEC_1_5,
+    DVB_FEC_2_3,
+    DVB_FEC_2_5,
+    DVB_FEC_2_9,
+    DVB_FEC_3_4,
+    DVB_FEC_3_5,
+    DVB_FEC_4_5,
+    DVB_FEC_4_15,
+    DVB_FEC_5_6,
+    DVB_FEC_5_9,
+    DVB_FEC_6_7,
+    DVB_FEC_7_8,
+    DVB_FEC_7_9,
+    DVB_FEC_7_15,
+    DVB_FEC_8_9,
+    DVB_FEC_8_15,
+    DVB_FEC_9_10,
+    DVB_FEC_9_20,
+    DVB_FEC_11_15,
+    DVB_FEC_11_20,
+    DVB_FEC_11_45,
+    DVB_FEC_13_18,
+    DVB_FEC_13_45,
+    DVB_FEC_14_45,
+    DVB_FEC_23_36,
+    DVB_FEC_25_36,
+    DVB_FEC_26_45,
+    DVB_FEC_28_45,
+    DVB_FEC_29_45,
+    DVB_FEC_31_45,
+    DVB_FEC_32_45,
+    DVB_FEC_77_90,
+    DVB_EOD,
+  };
+  int res = dvb_str2common(p);
+  int hi, lo;
+  if (res != DVB_EOD)
+    return res;
+  hi = lo = 0;
+  sscanf(p, "%i/%i", &hi, &lo);
+  return dvb_verify(hi * 100 + lo, fec_table);
+}
 
 const static struct strtab qamtab[] = {
-  { "QPSK",                 QPSK },
-  { "QAM16",                QAM_16 },
-  { "QAM32",                QAM_32 },
-  { "QAM64",                QAM_64 },
-  { "QAM128",               QAM_128 },
-  { "QAM256",               QAM_256 },
-  { "AUTO",                 QAM_AUTO },
-  { "8VSB",                 VSB_8 },
-  { "16VSB",                VSB_16 },
-#if DVB_VER_ATLEAST(5,0)
-  { "DQPSK",                DQPSK },
-#endif
-#if DVB_VER_ATLEAST(5,1)
-  { "8PSK",                 PSK_8 },
-  { "16APSK",               APSK_16 },
-  { "32APSK",               APSK_32 },
-#endif
+  { "NONE",      DVB_MOD_NONE },
+  { "AUTO",      DVB_MOD_AUTO },
+  { "QPSK",      DVB_MOD_QPSK },
+  { "QAM4NR",    DVB_MOD_QAM_4_NR },
+  { "QAM-AUTO",  DVB_MOD_QAM_AUTO },
+  { "QAM16",     DVB_MOD_QAM_16 },
+  { "QAM32",     DVB_MOD_QAM_32 },
+  { "QAM64",     DVB_MOD_QAM_64 },
+  { "QAM128",    DVB_MOD_QAM_128 },
+  { "QAM256",    DVB_MOD_QAM_256 },
+  { "8VSB",      DVB_MOD_VSB_8 },
+  { "16VSB",     DVB_MOD_VSB_16 },
+  { "8PSK",      DVB_MOD_PSK_8 },
+  { "DQPSK",     DVB_MOD_DQPSK },
+  { "BPSK",      DVB_MOD_BPSK },
+  { "BPSK-S",    DVB_MOD_BPSK_S },
+  { "16APSK",    DVB_MOD_APSK_16 },
+  { "32APSK",    DVB_MOD_APSK_32 },
+  { "64APSK",    DVB_MOD_APSK_64 },
+  { "128APSK",   DVB_MOD_APSK_128 },
+  { "256APSK",   DVB_MOD_APSK_256 },
+  { "8APSK-L",   DVB_MOD_APSK_8_L },
+  { "16APSK-L",  DVB_MOD_APSK_16_L },
+  { "32APSK-L",  DVB_MOD_APSK_32_L },
+  { "64APSK-L",  DVB_MOD_APSK_64_L },
+  { "128APSK-L", DVB_MOD_APSK_128_L },
+  { "256APSK-L", DVB_MOD_APSK_256_L },
 };
 dvb_str2val(qam);
 
-const static struct strtab bwtab[] = {
-  { "8MHz",                 BANDWIDTH_8_MHZ },
-  { "7MHz",                 BANDWIDTH_7_MHZ },
-  { "6MHz",                 BANDWIDTH_6_MHZ },
-  { "AUTO",                 BANDWIDTH_AUTO },
-#if DVB_VER_ATLEAST(5,3)
-  { "5MHz",                 BANDWIDTH_5_MHZ },
-  { "10MHz",                BANDWIDTH_10_MHZ },
-  { "1712kHz",              BANDWIDTH_1_712_MHZ},
-#endif
-};
-dvb_str2val(bw);
+const char *dvb_bw2str(int p)
+{
+  static char __thread buf[16];
+  const char *res = dvb_common2str(p);
+  if (res)
+    return res;
+  if (p % 1000)
+    sprintf(buf, "%i.%iMHz", p / 1000, p % 1000);
+  else
+    sprintf(buf, "%iMHz", p / 1000);
+  return buf;
+}
+
+int dvb_str2bw(const char *p)
+{
+  static int bw_table[] = {
+    DVB_BANDWIDTH_1_712_MHZ,
+    DVB_BANDWIDTH_5_MHZ,
+    DVB_BANDWIDTH_6_MHZ,
+    DVB_BANDWIDTH_7_MHZ,
+    DVB_BANDWIDTH_8_MHZ,
+    DVB_BANDWIDTH_10_MHZ,
+    DVB_EOD,
+  };
+  int len, res = dvb_str2common(p);
+  int hi, lo;
+  if (res != DVB_EOD)
+    return res;
+  len = strlen(p);
+  hi = lo = 0;
+  sscanf(p, "%i.%i", &hi, &lo);
+  if (len > 3 && strcmp(&p[len-3], "MHz") == 0)
+    hi = hi * 1000 + lo;
+  return dvb_verify(hi, bw_table);
+}
 
 const static struct strtab modetab[] = {
-  { "2k",                   TRANSMISSION_MODE_2K },
-  { "8k",                   TRANSMISSION_MODE_8K },
-  { "AUTO",                 TRANSMISSION_MODE_AUTO },
-#if DVB_VER_ATLEAST(5,1)
-  { "4k",                   TRANSMISSION_MODE_4K },
-#endif
-#if DVB_VER_ATLEAST(5,3)
-  { "1k",                   TRANSMISSION_MODE_1K },
-  { "2k",                   TRANSMISSION_MODE_16K },
-  { "32k",                  TRANSMISSION_MODE_32K },
-#endif
+  { "NONE",  DVB_TRANSMISSION_MODE_NONE },
+  { "AUTO",  DVB_TRANSMISSION_MODE_AUTO },
+  { "1k",    DVB_TRANSMISSION_MODE_1K },
+  { "2k",    DVB_TRANSMISSION_MODE_2K },
+  { "8k",    DVB_TRANSMISSION_MODE_8K },
+  { "4k",    DVB_TRANSMISSION_MODE_4K },
+  { "16k",   DVB_TRANSMISSION_MODE_16K },
+  { "32k",   DVB_TRANSMISSION_MODE_32K },
+  { "C1",    DVB_TRANSMISSION_MODE_C1 },
+  { "C3780", DVB_TRANSMISSION_MODE_C3780 },
 };
 dvb_str2val(mode);
 
 const static struct strtab guardtab[] = {
-  { "1/32",                 GUARD_INTERVAL_1_32 },
-  { "1/16",                 GUARD_INTERVAL_1_16 },
-  { "1/8",                  GUARD_INTERVAL_1_8 },
-  { "1/4",                  GUARD_INTERVAL_1_4 },
-  { "AUTO",                 GUARD_INTERVAL_AUTO },
-#if DVB_VER_ATLEAST(5,3)
-  { "1/128",                GUARD_INTERVAL_1_128 },
-  { "19/128",               GUARD_INTERVAL_19_128 },
-  { "19/256",               GUARD_INTERVAL_19_256},
-#endif
+  { "NONE",   DVB_GUARD_INTERVAL_NONE },
+  { "AUTO",   DVB_GUARD_INTERVAL_AUTO },
+  { "1/4",    DVB_GUARD_INTERVAL_1_4 },
+  { "1/8",    DVB_GUARD_INTERVAL_1_8 },
+  { "1/32",   DVB_GUARD_INTERVAL_1_32 },
+  { "1/16",   DVB_GUARD_INTERVAL_1_16 },
+  { "1/128",  DVB_GUARD_INTERVAL_1_128 },
+  { "19/128", DVB_GUARD_INTERVAL_19_128 },
+  { "19/256", DVB_GUARD_INTERVAL_19_256 },
+  { "PN420",  DVB_GUARD_INTERVAL_PN420 },
+  { "PN595",  DVB_GUARD_INTERVAL_PN595 },
+  { "PN945",  DVB_GUARD_INTERVAL_PN945 },
 };
 dvb_str2val(guard);
 
 const static struct strtab hiertab[] = {
-  { "NONE",                 HIERARCHY_NONE },
-  { "1",                    HIERARCHY_1 },
-  { "2",                    HIERARCHY_2 },
-  { "4",                    HIERARCHY_4 },
-  { "AUTO",                 HIERARCHY_AUTO }
+  { "NONE", DVB_HIERARCHY_NONE },
+  { "AUTO", DVB_HIERARCHY_AUTO },
+  { "1",    DVB_HIERARCHY_1 },
+  { "2",    DVB_HIERARCHY_2 },
+  { "4",    DVB_HIERARCHY_4 },
 };
 dvb_str2val(hier);
 
 const static struct strtab poltab[] = {
-  { "V",                   POLARISATION_VERTICAL },
-  { "H",                   POLARISATION_HORIZONTAL },
-  { "L",                   POLARISATION_CIRCULAR_LEFT },
-  { "R",                   POLARISATION_CIRCULAR_RIGHT },
+  { "V", DVB_POLARISATION_VERTICAL },
+  { "H", DVB_POLARISATION_HORIZONTAL },
+  { "L", DVB_POLARISATION_CIRCULAR_LEFT },
+  { "R", DVB_POLARISATION_CIRCULAR_RIGHT },
 };
 dvb_str2val(pol);
 
 const static struct strtab typetab[] = {
-  {"DVB-T", FE_OFDM},
-  {"DVB-C", FE_QAM},
-  {"DVB-S", FE_QPSK},
-  {"ATSC",  FE_ATSC},
+  {"DVB-T", DVB_TYPE_T},
+  {"DVB-C", DVB_TYPE_C},
+  {"DVB-S", DVB_TYPE_S},
+  {"ATSC",  DVB_TYPE_ATSC},
 };
 dvb_str2val(type);
 
 const static struct strtab pilottab[] = {
-#if DVB_VER_ATLEAST(5,0)
-  {"AUTO", PILOT_AUTO},
-  {"ON",   PILOT_ON},
-  {"OFF",  PILOT_OFF}
-#endif
+  {"NONE", DVB_PILOT_AUTO},
+  {"AUTO", DVB_PILOT_AUTO},
+  {"ON",   DVB_PILOT_ON},
+  {"OFF",  DVB_PILOT_OFF}
 };
 dvb_str2val(pilot);
 #undef dvb_str2val
-
-/*
- * Process mux conf
- */
-static const char *
-dvb_mux_conf_load_dvbt ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  int r;
-  const char *s;
-
-  s = htsmsg_get_str(m, "bandwidth");
-  if(s == NULL || (r = dvb_str2bw(s)) < 0)
-    return "Invalid bandwidth";
-  dmc->dmc_fe_params.u.ofdm.bandwidth = r;
-
-  s = htsmsg_get_str(m, "constellation");
-  if(s == NULL || (r = dvb_str2qam(s)) < 0)
-    return "Invalid QAM constellation";
-  dmc->dmc_fe_params.u.ofdm.constellation = r;
-
-  s = htsmsg_get_str(m, "transmission_mode");
-  if(s == NULL || (r = dvb_str2mode(s)) < 0)
-    return "Invalid transmission mode";
-  dmc->dmc_fe_params.u.ofdm.transmission_mode = r;
-
-  s = htsmsg_get_str(m, "guard_interval");
-  if(s == NULL || (r = dvb_str2guard(s)) < 0)
-    return "Invalid guard interval";
-  dmc->dmc_fe_params.u.ofdm.guard_interval = r;
-
-  s = htsmsg_get_str(m, "hierarchy");
-  if(s == NULL || (r = dvb_str2hier(s)) < 0)
-    return "Invalid heirarchy information";
-  dmc->dmc_fe_params.u.ofdm.hierarchy_information = r;
-
-  s = htsmsg_get_str(m, "fec_hi");
-  if(s == NULL || (r = dvb_str2fec(s)) < 0)
-    return "Invalid hi-FEC";
-  dmc->dmc_fe_params.u.ofdm.code_rate_HP = r;
-
-  s = htsmsg_get_str(m, "fec_lo");
-  if(s == NULL || (r = dvb_str2fec(s)) < 0)
-    return "Invalid lo-FEC";
-  dmc->dmc_fe_params.u.ofdm.code_rate_LP = r;
-
-  return NULL;
-}
-
-static const char *
-dvb_mux_conf_load_dvbc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  int r;
-  const char *s;
-
-  htsmsg_get_u32(m, "symbol_rate", &dmc->dmc_fe_params.u.qam.symbol_rate);
-  if(dmc->dmc_fe_params.u.qam.symbol_rate == 0)
-    return "Invalid symbol rate";
-    
-  s = htsmsg_get_str(m, "constellation");
-  if(s == NULL || (r = dvb_str2qam(s)) < 0)
-    return "Invalid QAM constellation";
-  dmc->dmc_fe_params.u.qam.modulation = r;
-
-  s = htsmsg_get_str(m, "fec");
-  if(s == NULL || (r = dvb_str2fec(s)) < 0)
-    return "Invalid FEC";
-  dmc->dmc_fe_params.u.qam.fec_inner = r;
-
-  return NULL;
-}
-
-static const char *
-dvb_mux_conf_load_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  int r;
-  const char *s;
-
-  htsmsg_get_u32(m, "symbol_rate", &dmc->dmc_fe_params.u.qpsk.symbol_rate);
-  if(dmc->dmc_fe_params.u.qpsk.symbol_rate == 0)
-    return "Invalid symbol rate";
-    
-  s = htsmsg_get_str(m, "fec");
-  if(s == NULL || (r = dvb_str2fec(s)) < 0)
-    return "Invalid FEC";
-  dmc->dmc_fe_params.u.qpsk.fec_inner = r;
-
-  s = htsmsg_get_str(m, "polarisation");
-  if(s == NULL || (r = dvb_str2pol(s)) < 0)
-    return "Invalid polarisation";
-  dmc->dmc_fe_polarisation = r;
-
-#if DVB_VER_ATLEAST(5,0)
-  s = htsmsg_get_str(m, "modulation");
-  if(s == NULL || (r = dvb_str2qam(s)) < 0) {
-    r = QPSK;
-    tvhlog(LOG_INFO, "dvb", "no modulation, using default QPSK");
-  } 
-  dmc->dmc_fe_modulation = r;
-
-  s = htsmsg_get_str(m, "rolloff");
-  if(s == NULL || (r = dvb_str2rolloff(s)) < 0) {
-    r = ROLLOFF_35;
-    tvhlog(LOG_INFO, "dvb", "no rolloff, using default ROLLOFF_35");
-  }
-  dmc->dmc_fe_rolloff = r;
-
-  // TODO: pilot mode
-#endif
-  return NULL;
-}
-
-static const char *
-dvb_mux_conf_load_atsc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  int r;
-  const char *s;
-  s = htsmsg_get_str(m, "constellation");
-  if(s == NULL || (r = dvb_str2qam(s)) < 0)
-    return "Invalid VSB constellation";
-  dmc->dmc_fe_params.u.vsb.modulation = r;
-  return NULL;
-}
-
-const char *
-dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-#if DVB_VER_ATLEAST(5,0)
-  int r;
-  const char *str;
-#endif
-  uint32_t u32;
-
-  memset(dmc, 0, sizeof(dvb_mux_conf_t));
-  dmc->dmc_fe_params.inversion = INVERSION_AUTO;
-
-  /* Delivery system */
-#if DVB_VER_ATLEAST(5,0)
-  str = htsmsg_get_str(m, "delsys");
-  if (!str || (r = dvb_str2delsys(str)) < 0) {
-         if (type == FE_OFDM) r = SYS_DVBT;
-    else if (type == FE_QAM)  r = SYS_DVBC_ANNEX_AC;
-    else if (type == FE_QPSK) r = SYS_DVBS;
-    else if (type == FE_ATSC) r = SYS_ATSC;
-    else
-      return "Invalid FE type";
-    tvhlog(LOG_INFO, "dvb", "no delsys, using default %s", dvb_delsys2str(r));
-  }
-  dmc->dmc_fe_delsys           = r;
-#endif
-
-  /* Frequency */
-  if (htsmsg_get_u32(m, "frequency", &u32))
-    return "Invalid frequency";
-  dmc->dmc_fe_params.frequency = u32;
-
-  /* Type specific */
-  if      (type == FE_OFDM) return dvb_mux_conf_load_dvbt(dmc, m);
-  else if (type == FE_QAM)  return dvb_mux_conf_load_dvbc(dmc, m);
-  else if (type == FE_QPSK) return dvb_mux_conf_load_dvbs(dmc, m);
-  else if (type == FE_ATSC) return dvb_mux_conf_load_atsc(dmc, m);
-  else
-    return "Invalid FE type";
-}
-
-static void
-dvb_mux_conf_save_dvbt ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  struct dvb_ofdm_parameters *ofdm = &dmc->dmc_fe_params.u.ofdm;
-  htsmsg_add_str(m, "bandwidth",
-                 dvb_bw2str(ofdm->bandwidth));
-  htsmsg_add_str(m, "constellation",
-                 dvb_qam2str(ofdm->constellation));
-  htsmsg_add_str(m, "transmission_mode",
-                 dvb_mode2str(ofdm->transmission_mode));
-  htsmsg_add_str(m, "guard_interval",
-                 dvb_guard2str(ofdm->guard_interval));
-  htsmsg_add_str(m, "hierarchy",
-                 dvb_hier2str(ofdm->hierarchy_information));
-  htsmsg_add_str(m, "fec_hi",
-                 dvb_fec2str(ofdm->code_rate_HP));
-  htsmsg_add_str(m, "fec_lo",
-                 dvb_fec2str(ofdm->code_rate_LP));
-}
-
-static void
-dvb_mux_conf_save_dvbc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  struct dvb_qam_parameters *qam  = &dmc->dmc_fe_params.u.qam;
-  htsmsg_add_u32(m, "symbol_rate",   qam->symbol_rate);
-  htsmsg_add_str(m, "constellation", dvb_qam2str(qam->modulation));
-  htsmsg_add_str(m, "fec",           dvb_fec2str(qam->fec_inner));
-}
-
-static void
-dvb_mux_conf_save_dvbs ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  struct dvb_qpsk_parameters *qpsk  = &dmc->dmc_fe_params.u.qpsk;
-  htsmsg_add_u32(m, "symbol_rate",   qpsk->symbol_rate);
-  htsmsg_add_str(m, "fec",           dvb_fec2str(qpsk->fec_inner));
-  htsmsg_add_str(m, "polarisation",  dvb_pol2str(dmc->dmc_fe_polarisation));
-#if DVB_VER_ATLEAST(5,0)
-  htsmsg_add_str(m, "modulation",    dvb_qam2str(dmc->dmc_fe_modulation));
-  htsmsg_add_str(m, "rolloff",       dvb_rolloff2str(dmc->dmc_fe_rolloff));
-#endif
-}
-
-static void
-dvb_mux_conf_save_atsc ( dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  htsmsg_add_str(m, "constellation",
-                 dvb_qam2str(dmc->dmc_fe_params.u.vsb.modulation));
-}
-
-void
-dvb_mux_conf_save ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
-{
-  htsmsg_add_u32(m, "frequency", dmc->dmc_fe_params.frequency);
-#if DVB_VER_ATLEAST(5,0)
-  htsmsg_add_str(m, "delsys", dvb_delsys2str(dmc->dmc_fe_delsys));
-#endif
-       if (type == FE_OFDM) dvb_mux_conf_save_dvbt(dmc, m);
-  else if (type == FE_QAM)  dvb_mux_conf_save_dvbc(dmc, m);
-  else if (type == FE_QPSK) dvb_mux_conf_save_dvbs(dmc, m);
-  else if (type == FE_ATSC) dvb_mux_conf_save_atsc(dmc, m);
-}
-
-int
-dvb_bandwidth ( fe_bandwidth_t bw )
-{
-  switch (bw) {
-#if DVB_VER_ATLEAST(5,3)
-    case BANDWIDTH_10_MHZ:
-      return 10000000;
-    case BANDWIDTH_5_MHZ:
-      return 5000000;
-    case BANDWIDTH_1_712_MHZ:
-      return 1712000;
-#endif
-    case BANDWIDTH_8_MHZ:
-      return 8000000;
-    case BANDWIDTH_7_MHZ:
-      return 7000000;
-    case BANDWIDTH_6_MHZ:
-      return 6000000;
-    default:
-      return 0;
-  }
-}
 
 #endif /* ENABLE_DVBAPI */
 
