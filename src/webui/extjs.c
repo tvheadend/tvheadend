@@ -1126,6 +1126,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
+    htsmsg_add_str(r, "file-permissions", cfg->dvr_muxcnf.m_file_permissions);
+    htsmsg_add_str(r, "directory-permissions", cfg->dvr_muxcnf.m_directory_permissions);
     htsmsg_add_u32(r, "cache",     cfg->dvr_muxcnf.m_cache);
     htsmsg_add_u32(r, "rewritePAT",
                    !!(cfg->dvr_muxcnf.m_flags & MC_REWRITE_PAT));
@@ -1167,6 +1169,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
 
+   if((s = http_arg_get(&hc->hc_req_args, "filePermissions")) != NULL)
+      dvr_file_permissions_set(cfg,s);
+      
+   if((s = http_arg_get(&hc->hc_req_args, "directoryPermissions")) != NULL)
+      dvr_directory_permissions_set(cfg,s);
+      
    if((s = http_arg_get(&hc->hc_req_args, "cache")) != NULL)
       dvr_mux_cache_set(cfg,atoi(s));
 

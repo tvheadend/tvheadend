@@ -378,7 +378,11 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+/* IH DEBUG */
+
+  tvhlog(LOG_DEBUG, "muxer_pass - pass_muxer_open_file", "Using file permissions: \"%s\"", pm->m_config.m_file_permissions);
+  
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
   if(fd < 0) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
@@ -547,6 +551,11 @@ pass_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
   if(mc != MC_PASS && mc != MC_RAW)
     return NULL;
 
+/* debugging to see if the variable is available here */
+/* IH 26 March */
+
+  tvhlog(LOG_DEBUG, "muxer_pass - pass_muxer_create", "Using file permissions: \"%s\"", m_cfg->m_file_permissions);
+    
   pm = calloc(1, sizeof(pass_muxer_t));
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;

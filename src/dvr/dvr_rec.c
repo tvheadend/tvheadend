@@ -204,9 +204,13 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     free(title);
   }
 
+/* IH DEBUG */
 
+  tvhlog(LOG_DEBUG, "dvr_rec - pvr_generate_filename", "Using string directory permissions: \"%s\"", cfg->dvr_directory_permissions);
+  tvhlog(LOG_DEBUG, "dvr_rec - pvr_generate_filename", "Using int directory permissions: \"%i\"", atoi(cfg->dvr_directory_permissions));
+  
   /* */
-  if(makedirs(path, 0755) != 0) {
+  if(makedirs(path, atoi(cfg->dvr_directory_permissions)) != 0) {
     return -1;
   }
   
@@ -320,10 +324,16 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     }
   }
 
+ /* IH DEBUG */
+ 
+  tvhlog(LOG_DEBUG, "dvr - dvr_rec_start", "Using file/directory permissions: \"%s\", \"%s\"", 
+     cfg->dvr_file_permissions, cfg->dvr_directory_permissions);
+  
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	 "service: \"%s\"",
+		
 	 de->de_filename ?: lang_str_get(de->de_title, NULL),
 	 si->si_adapter  ?: "<N/A>",
 	 si->si_network  ?: "<N/A>",
