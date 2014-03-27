@@ -148,8 +148,16 @@ mpegts_service_is_enabled(service_t *t)
  * Save
  */
 static void
-mpegts_service_config_save(service_t *t)
+mpegts_service_config_save ( service_t *t )
 {
+  htsmsg_t *c = htsmsg_create_map();
+  mpegts_service_t *s = (mpegts_service_t*)t;
+  service_save(t, c);
+  hts_settings_save(c, "input/dvb/networks/%s/muxes/%s/services/%s",
+                    idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id),
+                    idnode_uuid_as_str(&s->s_dvb_mux->mm_id),
+                    idnode_uuid_as_str(&s->s_id));
+  htsmsg_destroy(c);
 }
 
 /*
@@ -348,7 +356,7 @@ mpegts_service_delete ( service_t *t, int delconf )
 
   /* Remove config */
   if (delconf)
-    hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/services/%s",
+    hts_settings_remove("input/dvb/networks/%s/muxes/%s/services/%s",
                       idnode_uuid_as_str(&mm->mm_network->mn_id),
                       idnode_uuid_as_str(&mm->mm_id),
                       idnode_uuid_as_str(&t->s_id));
@@ -449,15 +457,6 @@ mpegts_service_find
   }
   
   return s;
-}
-
-/*
- * Save
- */
-void
-mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c )
-{
-  service_save((service_t*)s, c);
 }
 
 /******************************************************************************

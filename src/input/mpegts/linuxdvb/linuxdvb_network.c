@@ -265,8 +265,7 @@ static mpegts_service_t *
 linuxdvb_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  return linuxdvb_service_create0((linuxdvb_mux_t*)mm, sid,
-                                  pmt_pid, NULL, NULL);
+  return mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
 }
 
 static const idclass_t *

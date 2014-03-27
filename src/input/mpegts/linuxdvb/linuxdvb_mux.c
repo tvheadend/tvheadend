@@ -664,6 +664,8 @@ linuxdvb_mux_create0
   linuxdvb_mux_t *lm;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  mpegts_service_t *ts;
+  int move = 0;
 
   /* Class */
   if (ln->ln_type == DVB_TYPE_S)
@@ -710,15 +712,27 @@ linuxdvb_mux_create0
   if (!conf) return lm;
 
   /* Services */
-  c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",
+  c = hts_settings_load_r(1, "input/dvb/networks/%s/muxes/%s/services",
                          idnode_uuid_as_str(&ln->mn_id),
                          idnode_uuid_as_str(&mm->mm_id));
+  if (!c) {
+    move = 1;
+    c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",
+                           idnode_uuid_as_str(&ln->mn_id),
+                           idnode_uuid_as_str(&mm->mm_id));
+  }
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
-      (void)linuxdvb_service_create0(lm, 0, 0, f->hmf_name, e);
+      ts = mpegts_service_create1(f->hmf_name, (mpegts_mux_t *)lm, 0, 0, e);
+      if (ts && move)
+        ts->s_config_save((service_t *)ts);
     }
     htsmsg_destroy(c);
+    if (move)
+      hts_settings_remove("input/linuxdvb/networks/%s/muxes/%s/services",
+                           idnode_uuid_as_str(&ln->mn_id),
+                           idnode_uuid_as_str(&mm->mm_id));
   }
 
   return lm;

@@ -285,13 +285,6 @@ linuxdvb_mux_t *linuxdvb_mux_create0
                        NULL, u, c)
 
 /*
- * Service
- */
-mpegts_service_t *linuxdvb_service_create0
-  (linuxdvb_mux_t *lm, uint16_t sid, uint16_t pmt_pid,
-   const char *uuid, htsmsg_t *conf);
-
-/*
  * Diseqc gear
  */
 linuxdvb_diseqc_t *linuxdvb_diseqc_create0
