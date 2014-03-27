@@ -98,7 +98,7 @@ urlparse ( const char *str, url_t *url )
 #define UC "[a-z0-9_\\-\\.!£$%^&]"
 #define PC UC
 #define HC "[a-z0-9\\-\\.]"
-#define URL_RE "^(\\w+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
+#define URL_RE "^([A-Za-z)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
 
 
 int

@@ -748,7 +748,7 @@ tvheadend.dvrsettings = function() {
 		'channelInTitle', 'container', 'cache', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
 		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 
-		'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'recordingPermissions' ]);
+		'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'filePermissions', 'dirPermissions' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -829,11 +829,11 @@ tvheadend.dvrsettings = function() {
 		name : 'storage'
 	});
 	
-	var filePermissions = new Ext.form.TextField({
+	var recordingPermissions = new Ext.form.TextField({
 	    regex : /^[0-7]{3}$/,
 	    maskRe : /[0-7]/,
-		fieldLabel : 'File permissions on recordings (3-byte octal)',
-		name : 'recordingPermissions'
+		fieldLabel : 'File permissions for recordings (3-byte octal)',
+		name : 'filePermissions'
 	});
 		
 	var PATrewrite = new Ext.form.Checkbox({
@@ -858,6 +858,13 @@ tvheadend.dvrsettings = function() {
 		
 /* Subdirectories and filename handling */
 
+	var directoryPermissions = new Ext.form.TextField({
+	    regex : /^[0-7]{3}$/,
+	    maskRe : /[0-7]/,
+		fieldLabel : 'Directory permissions for recordings (3-byte octal)',
+		name : 'dirPermissions'
+	});
+	
 	var dirsPerDay = new Ext.form.Checkbox({
 		fieldLabel : 'Make subdirectories per day',
 		name : 'dayDirs'
@@ -931,7 +938,7 @@ tvheadend.dvrsettings = function() {
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
-		items : [ recordingPath, filePermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials ]
+		items : [ recordingPath, recordingPermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials ]
 	});
 
 /* Sub-Panel - Directory operations */
@@ -941,7 +948,7 @@ tvheadend.dvrsettings = function() {
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
-		items : [ dirsPerDay, dirsPerChannel, dirsPerTitle ]
+		items : [ directoryPermissions, dirsPerDay, dirsPerChannel, dirsPerTitle ]
 	});
 		
 /* Sub-Panel - File operations */

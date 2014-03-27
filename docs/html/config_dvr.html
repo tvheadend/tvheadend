@@ -75,7 +75,7 @@
   <dt>Recording system path
   <dd>Path to where Tvheadend will write recorded events. If components of the path does not exist, Tvheadend will try to create them.
  
-  <dt>File permissions on recordings (3-byte octal)
+  <dt>File permissions for recordings (3-byte octal)
   <dd>The permissions to be set on the resultant recording files. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
       
       <table class="hts-doc-text" border="0">
@@ -86,7 +86,7 @@
 	  <tr><td>666 == rw-rw-rw-</td></tr>
 	  </table>
 	  
-	  Note that this affects any created subdirectories as well.
+	  See also <i>Directory permissions for recordings</i> in <i>Subdirectory Options</i>. 
 	  
   <dt>Rewrite PAT in passthrough mode
   <dd>Rewrite the original Program Association Table to only include the active service.  When this option is disabled, Tvheadend will write the original PAT as broadcast, which lists all services from the original multiplex.
@@ -105,6 +105,19 @@
   <b>Subdirectory Options</b>
   <hr>
    
+  <dt>Directory permissions for recordings (3-byte octal)
+  <dd>The permissions to be set on any sub-directories created for recordings. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
+      
+      <table class="hts-doc-text" border="0">
+      <tr><td>Common examples:</td></tr> 
+      <br>
+      <tr><td>755 == rwxr--r--</td></tr>
+      <tr><td>775 == rwxrwxr-- (default)</td></tr>
+	  <tr><td>777 == rwxrwxrwx</td></tr>
+	  </table>
+	  
+	  See also <i>File permissions for recordings</i> in <i>Recroding File Options</i>. 
+	  
   <dt>Make sub-directories per day
   <dd>If checked, create a new directory per day in the recording system path. Only days when anything is recorded will be created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)
 

@@ -237,9 +237,11 @@ muxer_container_mime2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
+muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
 {
   muxer_t *m;
+
+  assert(m_cfg);
 
   m = pass_muxer_create(mc, m_cfg);
 
@@ -256,7 +258,8 @@ muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg)
 	   muxer_container_type2txt(mc));
     return NULL;
   }
-  m->m_cache = m_cfg ? m_cfg->dvr_cache : MC_CACHE_SYSTEM;
+  
+  memcpy(&m->m_config, m_cfg, sizeof(muxer_config_t));
 
   return m;
 }
@@ -444,7 +447,7 @@ muxer_cache_txt2type(const char *str)
 void
 muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
 {
-  switch (m->m_cache) {
+  switch (m->m_config.m_cache) {
   case MC_CACHE_UNKNOWN:
   case MC_CACHE_SYSTEM:
     break;

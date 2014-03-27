@@ -28,7 +28,8 @@ iptv_service_config_save ( service_t *s )
   mpegts_service_t *ms = (mpegts_service_t*)s;
   htsmsg_t *c = htsmsg_create_map();
   service_save(s, c);
-  hts_settings_save(c, "input/iptv/muxes/%s/services/%s",
+  hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/services/%s",
+                    idnode_uuid_as_str(&ms->s_dvb_mux->mm_network->mn_id),
                     idnode_uuid_as_str(&ms->s_dvb_mux->mm_id),
                     idnode_uuid_as_str(&ms->s_id));
   htsmsg_destroy(c);

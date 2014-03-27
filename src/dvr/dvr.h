@@ -29,16 +29,16 @@
 typedef struct dvr_config {
   char *dvr_config_name;
   char *dvr_storage;
-  char *dvr_mux_file_permissions;
+  char *dvr_file_permissions;
+  char *dvr_directory_permissions;
   uint32_t dvr_retention_days;
   int dvr_flags;
-  int dvr_mux_flags;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
   muxer_container_type_t dvr_mc;
-  muxer_cache_type_t dvr_mux_cache;
+  muxer_config_t         dvr_muxcnf;
 
   /* Series link support */
   int dvr_sl_brand_lock;
@@ -334,7 +334,9 @@ void dvr_storage_set(dvr_config_t *cfg, const char *storage);
 
 void dvr_container_set(dvr_config_t *cfg, const char *container);
 
-void dvr_permissions_set(dvr_config_t *cfg, const char *permissions);
+void dvr_file_permissions_set(dvr_config_t *cfg, const char *permissions);
+
+void dvr_directory_permissions_set(dvr_config_t *cfg, const char *permissions);
 
 void dvr_mux_cache_set(dvr_config_t *cfg, int mcache);
 
