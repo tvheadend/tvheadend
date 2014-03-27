@@ -8,11 +8,14 @@
 
  <p>
  Configuration options:
+ 
  <dl>
-  <dt>Recording system path
-  <dd>Path to where Tvheadend will write recorded events. If components of
-      the path does not exist, Tvheadend will try to create them.
-
+  
+  <br><br>
+  <hr>
+  <b>DVR Behaviour</b>
+  <hr>
+  
   <dt>Media container
   <dd>Select the container format used to store recordings.
 
@@ -34,88 +37,18 @@
       <dd>Combination of two above variants.
 
     </dl>
-
-  <dt>Rewrite PAT in passthrough mode
-  <dd>Rewrite the original Program Association Table to only include
-      the active service.  When this option is disabled, Tvheadend will
-      write the original PAT as broadcast, which lists all services from
-      the original multiplex.
-
-  <dt>Rewrite PMT in passthrough mode
-  <dd>Generate a Program Map Table only listing the streams actually in
-      the output transport stream.  When this option is disabled,
-      Tvheadend will write the original Program Map Table as
-      broadcast, which may include references to excluded streams such
-      as data and ECMs.
-
+    
   <dt>DVR Log retention time (days)
-  <dd>Time that Tvheadend will keep information about the recording in
-      its internal database. Notice that the actual recorded file will not
-      be deleted when the log entry is deleted.
+  <dd>Time that Tvheadend will keep information about the recording in its internal database. Notice that the actual recorded file will not be deleted when the log entry is deleted.
 
   <dt>Extra time before recordings (minutes)
-  <dd>Specify the number of minutes to record before the events scheduled
-      start time. Used to cope with small scheduling errors.
+  <dd>Specify the number of minutes to record before the events scheduled start time. Used to cope with small scheduling errors.
 
   <dt>Extra time after recordings (minutes)
-  <dd>Specify the number of minutes to record after the events scheduled
-      stop time. Used to cope with small scheduling errors.
-
-  <dt>Make sub-directories per day
-  <dd>If checked, Tvheadend will create a new directory per day in the
-      recording system path. Only days when anything is recorded will be 
-      created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)
-
-  <dt>Make sub-directories per channel
-  <dd>If checked, Tvheadend will create a directory per channel when storing
-      events. If both this and the 'directory per day' checkbox is enabled,
-      the date-directory will be parent to the per-channel directory.
-
-  <dt>Make sub-directories per title
-  <dd>If checked, Tvheadend will create a directory per title when storing
-      events. If the day/channel directory checkboxes are also enabled, those
-      directories will be parents of this directory.
-
-  <dt>Include channel name in title
-  <dd>If checked, Tvheadend will include the name of the channel in the
-      event title. This applies to both the titled stored in the file
-      and to the file name itself.
-
-  <dt>Include date in title
-  <dd>If checked, Tvheadend will include the date for the recording in the
-      event title. This applies to both the titled stored in the file
-      and to the file name itself.
-
-  <dt>Include time in title
-  <dd>If checked, Tvheadend will include the time for the recording in the
-      event title. This applies to both the titled stored in the file
-      and to the file name itself.
-
-  <dt>Include episode in title
-  <dd>If checked, Tvheadend will include the season and episode in the
-      title (if such info is available).
-
-  <dt>Remove all unsafe characters from filename
-  <dd>If checked, all characters that could possibly cause problems for
-      filenaming will be removed.
-  
-  <dt>Replace whitespace in title with '-'
-  <dd>If checked, all whitespace characters will be replaced with '-'.
-  
-  <dt>Tag files with metadata
-  <dd>If checked, media containers that support metadata will be tagged with
-      the metadata associated with the event being recorded.
-
-  <dt>Skip commercials
-  <dd>If checked, commercials will be dropped from the recordings. At the 
-    moment, commercial detection only works for the swedish channel TV4.
+  <dd>Specify the number of minutes to record after the events scheduled stop time. Used to cope with small scheduling errors.
 
   <dt>Post-processor command
-  <dd>Command to run after finishing a recording. The command will be
-      run in background and is executed even if a recording is aborted
-      or an error occurred. Use the %e error formatting string to check
-      for errors, the error string is empty if recording finished
-      successfully.
+  <dd>Command to run after finishing a recording. The command will be run in background and is executed even if a recording is aborted or an error occurred. Use the %e error formatting string to check for errors, the error string is empty if recording finished successfully.
       <br><br>
       Support format strings:<br>
       <table class="hts-doc-text" border="0">
@@ -133,7 +66,96 @@
       <br>
       Example usage: /path/to/ffmpeg -i %f -vcodec libx264 -acodec copy "/path/with white space/%b"<br>
       You need to use quotes or escape white spaces if you want white spaces in an argument.
+ 
+  <br><br>
+  <hr>
+  <b>Recording File Options</b>
+  <hr>
+       
+  <dt>Recording system path
+  <dd>Path to where Tvheadend will write recorded events. If components of the path does not exist, Tvheadend will try to create them.
+ 
+  <dt>File permissions for recordings (3-byte octal)
+  <dd>The permissions to be set on the resultant recording files. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
+      
+      <table class="hts-doc-text" border="0">
+      <tr><td>Common examples:</td></tr> 
+      <br>
+      <tr><td>644 == rw-r--r--</td></tr>
+      <tr><td>664 == rw-rw-r-- (default)</td></tr>
+	  <tr><td>666 == rw-rw-rw-</td></tr>
+	  </table>
+	  
+	  See also <i>Directory permissions for recordings</i> in <i>Subdirectory Options</i>. 
+	  
+  <dt>Rewrite PAT in passthrough mode
+  <dd>Rewrite the original Program Association Table to only include the active service.  When this option is disabled, Tvheadend will write the original PAT as broadcast, which lists all services from the original multiplex.
+
+  <dt>Rewrite PMT in passthrough mode
+  <dd>Generate a Program Map Table only listing the streams actually in the output transport stream.  When this option is disabled, Tvheadend will write the original Program Map Table as broadcast, which may include references to excluded streams such as data and ECMs.
+
+  <dt>Tag files with metadata
+  <dd>If checked, media containers that support metadata will be tagged with the metadata associated with the event being recorded.
+
+  <dt>Skip commercials
+  <dd>If checked, commercials will be dropped from the recordings. At the moment, commercial detection only works for the swedish channel TV4.
+
+  <br><br>
+  <hr>
+  <b>Subdirectory Options</b>
+  <hr>
+   
+  <dt>Directory permissions for recordings (3-byte octal)
+  <dd>The permissions to be set on any sub-directories created for recordings. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
+      
+      <table class="hts-doc-text" border="0">
+      <tr><td>Common examples:</td></tr> 
+      <br>
+      <tr><td>755 == rwxr--r--</td></tr>
+      <tr><td>775 == rwxrwxr-- (default)</td></tr>
+	  <tr><td>777 == rwxrwxrwx</td></tr>
+	  </table>
+	  
+	  See also <i>File permissions for recordings</i> in <i>Recroding File Options</i>. 
+	  
+  <dt>Make sub-directories per day
+  <dd>If checked, create a new directory per day in the recording system path. Only days when anything is recorded will be created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)
+
+  <dt>Make sub-directories per channel
+  <dd>If checked, create a directory per channel when storing events. If both this and the 'directory per day' checkbox is enabled, the date-directory will be parent to the per-channel directory.
+
+  <dt>Make sub-directories per title
+  <dd>If checked, create a directory per title when storing events. If the day/channel directory checkboxes are also enabled, those directories will be parents of this directory.
+
+  <br><br>
+  <hr>
+  <b>Filename Options</b>
+  <hr>
+  
+  <dt>Include channel name in title
+  <dd>If checked, include the name of the channel in the event title. This applies to both the titled stored in the file and to the file name itself.
+
+  <dt>Include date in title
+  <dd>If checked, include the date for the recording in the event title. This applies to both the titled stored in the file and to the file name itself.
+
+  <dt>Include time in title
+  <dd>If checked, include the time for the recording in the event title. This applies to both the titled stored in the file and to the file name itself.
+
+  <dt>Include episode in title
+  <dd>If checked, include the season and episode in the title (if such info is available).
+
+  <dt>Include subtitle in title
+  <dd>If checked, include the episode subtitle in the title (if such info is available).
+
+  <dt>Put episode in filename before date and time
+  <dd>If checked, insert the episode number before the data and time rather than after (assumes <i>Include date</i>, <i>Include time</i> and <i>Include episode</i> options are set).
+	  
+  <dt>Remove all unsafe characters from filename
+  <dd>If checked, all characters that could possibly cause problems for filenaming will be removed.
+  
+  <dt>Replace whitespace in title with '-'
+  <dd>If checked, all whitespace characters will be replaced with '-'.
+  
  </dl>
- Changes to any of these settings must be confirmed by pressing the
- 'Save configuration' button before taking effect.
+ Changes to any of these settings must be confirmed by pressing the 'Save configuration' button before taking effect.
 </div>

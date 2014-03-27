@@ -45,8 +45,10 @@ typedef enum {
 
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
-  int                m_flags;
+  int                  m_flags;
   muxer_cache_type_t m_cache;
+  char                 *m_file_permissions;
+  char                 *m_directory_permissions;
 } muxer_config_t;
 
 struct muxer;
