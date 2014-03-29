@@ -29,7 +29,7 @@ PROG    := $(BUILDDIR)/tvheadend
 
 CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes -fms-extensions
-CFLAGS  += -g -funsigned-char -O2
+CFLAGS  += -g -funsigned-char -O0
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 LDFLAGS += -lrt -ldl -lpthread -lm
@@ -211,6 +211,8 @@ SRCS-${CONFIG_IPTV} += \
         src/input/mpegts/iptv/iptv_service.c \
         src/input/mpegts/iptv/iptv_http.c \
         src/input/mpegts/iptv/iptv_udp.c \
+        src/input/mpegts/iptv/iptv_rtsp.c \
+        src/input/mpegts/iptv/rtcp.c \
 
 # TSfile
 SRCS-$(CONFIG_TSFILE) += \
