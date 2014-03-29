@@ -181,7 +181,7 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
       p = -1;
     } else {
       w = mmi->mmi_input->mi_get_weight(mmi->mmi_input);
-      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input);
+      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input, mmi->mmi_mux);
     }
 
     service_instance_add(sil, t, mmi->mmi_input->mi_instance, p, w);

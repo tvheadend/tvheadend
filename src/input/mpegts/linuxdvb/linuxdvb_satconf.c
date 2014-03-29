@@ -44,38 +44,42 @@ struct linuxdvb_satconf_type {
  * Types
  * *************************************************************************/
 
-static const void *
-linuxdvb_satconf_class_network_get
-  ( linuxdvb_satconf_t *ls, int idx )
+static linuxdvb_satconf_ele_t *
+linuxdvb_satconf_class_find_ele( linuxdvb_satconf_t *ls, int idx )
 {
   int i = 0;
   linuxdvb_satconf_ele_t *lse;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link) {
     if (i == idx) break;
     i++;
   }
+  return lse;
+}
+
+static const void *
+linuxdvb_satconf_class_network_get( linuxdvb_satconf_t *ls, int idx )
+{
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_class_find_ele(ls, idx);
   if (lse)
-    return mpegts_input_class_network_get(lse);
+    return idnode_set_as_htsmsg(lse->lse_networks);
   return NULL;
 }
+
+static int
+linuxdvb_satconf_ele_class_network_set( void *o, const void *p );
 
 static int
 linuxdvb_satconf_class_network_set
   ( linuxdvb_satconf_t *ls, int idx, const void *networks )
 {
-  int i = 0;
-  linuxdvb_satconf_ele_t *lse;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link) {
-    if (i == idx) break;
-    i++;
-  }
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_class_find_ele(ls, idx);
   if (lse)
-    return mpegts_input_class_network_set(lse, networks);
+    return linuxdvb_satconf_ele_class_network_set(lse, networks);
   return 0;
 }
 
 static htsmsg_t *
-linuxdvb_satconf_class_network_enum(void *o)
+linuxdvb_satconf_class_network_enum( void *o )
 {
   extern const idclass_t linuxdvb_network_dvbs_class;
   htsmsg_t *m = htsmsg_create_map();
@@ -90,6 +94,17 @@ linuxdvb_satconf_class_network_enum(void *o)
   return m;
 }
 
+static char *
+linuxdvb_satconf_ele_class_network_rend( void *o );
+
+static char *
+linuxdvb_satconf_class_network_rend( linuxdvb_satconf_t *ls, int idx )
+{
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_class_find_ele(ls, idx);
+  if (lse)
+    return linuxdvb_satconf_ele_class_network_rend(lse);
+  return NULL;
+}
 
 #define linuxdvb_satconf_class_network_getset(x)\
 static int \
@@ -101,6 +116,11 @@ static const void * \
 linuxdvb_satconf_class_network_get##x ( void *o )\
 {\
   return linuxdvb_satconf_class_network_get(o, x);\
+}\
+static char * \
+linuxdvb_satconf_class_network_rend##x ( void *o )\
+{\
+  return linuxdvb_satconf_class_network_rend(o, x);\
 }
 
 linuxdvb_satconf_class_network_getset(0);
@@ -133,7 +153,7 @@ linuxdvb_satconf_class_orbitalpos_get ( void *p )
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse;
   n = 0;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     n++;
   return &n;
 }
@@ -175,8 +195,8 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
   linuxdvb_satconf_ele_t *lse;
   idnode_set_t *is = idnode_set_create();
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
-    idnode_set_add(is, &lse->ti_id, NULL);
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    idnode_set_add(is, &lse->lse_id, NULL);
   return is;
 }
 
@@ -227,7 +247,7 @@ const idclass_t linuxdvb_satconf_lnbonly_class =
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend0,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -251,7 +271,7 @@ const idclass_t linuxdvb_satconf_2port_class =
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend0,
       .opts     = PO_NOSAVE,
     },
     {
@@ -262,7 +282,7 @@ const idclass_t linuxdvb_satconf_2port_class =
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend1,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -286,7 +306,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend0,
       .opts     = PO_NOSAVE,
     },
     {
@@ -297,7 +317,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend1,
       .opts     = PO_NOSAVE,
     },
     {
@@ -308,7 +328,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .get      = linuxdvb_satconf_class_network_get2,
       .set      = linuxdvb_satconf_class_network_set2,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend2,
       .opts     = PO_NOSAVE,
     },
     {
@@ -319,7 +339,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .get      = linuxdvb_satconf_class_network_get3,
       .set      = linuxdvb_satconf_class_network_set3,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend3,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -334,7 +354,7 @@ linuxdvb_satconf_class_en50494_id_get ( void *p )
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_id);
+  return &(((linuxdvb_en50494_t*)lse->lse_en50494)->le_id);
 }
 
 static int
@@ -343,8 +363,8 @@ linuxdvb_satconf_class_en50494_id_set
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
-    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_id) = *(uint16_t*)v;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    (((linuxdvb_en50494_t*)lse->lse_en50494)->le_id) = *(uint16_t*)v;
   return 0;
 }
 
@@ -353,7 +373,7 @@ linuxdvb_satconf_class_en50494_pin_get ( void *p )
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_pin);
+  return &(((linuxdvb_en50494_t*)lse->lse_en50494)->le_pin);
 }
 
 static int
@@ -362,8 +382,8 @@ linuxdvb_satconf_class_en50494_pin_set
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
-    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_pin) = *(uint16_t*)v;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    (((linuxdvb_en50494_t*)lse->lse_en50494)->le_pin) = *(uint16_t*)v;
   return 0;
 }
 
@@ -372,7 +392,7 @@ linuxdvb_satconf_class_en50494_freq_get ( void *p )
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse = TAILQ_FIRST(&ls->ls_elements);
-  return &(((linuxdvb_en50494_t*)lse->ls_en50494)->le_frequency);
+  return &(((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency);
 }
 
 static int
@@ -381,8 +401,8 @@ linuxdvb_satconf_class_en50494_freq_set
 {
   linuxdvb_satconf_t *ls = p;
   linuxdvb_satconf_ele_t *lse;
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link)
-    (((linuxdvb_en50494_t*)lse->ls_en50494)->le_frequency) = *(uint16_t*)v;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
+    (((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency) = *(uint16_t*)v;
   return 0;
 }
 
@@ -425,7 +445,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend0,
       .opts     = PO_NOSAVE,
     },
     {
@@ -435,7 +455,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_class_network_enum,
-      .rend     = mpegts_input_class_network_rend,
+      .rend     = linuxdvb_satconf_class_network_rend1,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -528,6 +548,159 @@ linuxdvb_satconf_type_list ( void *p )
   return m;
 }
 
+/*
+ * Frontend callbacks
+ */
+
+static linuxdvb_satconf_ele_t *
+linuxdvb_satconf_find_ele( linuxdvb_satconf_t *ls, mpegts_mux_t *mux )
+{
+  linuxdvb_satconf_ele_t *lse;
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link) {
+    if (idnode_set_exists(lse->lse_networks, &mux->mm_network->mn_id))
+      return lse;
+  }
+  return NULL;
+}
+
+int
+linuxdvb_satconf_get_priority
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
+{
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
+  return lse->lse_priority;
+}
+
+void
+linuxdvb_satconf_post_stop_mux
+  ( linuxdvb_satconf_t *ls )
+{
+  gtimer_disarm(&ls->ls_diseqc_timer);
+  if (ls->ls_frontend && ls->ls_lnb_poweroff)
+    linuxdvb_diseqc_set_volt(
+        ((linuxdvb_frontend_t *)ls->ls_frontend)->lfe_fe_fd, -1);
+}
+
+int
+linuxdvb_satconf_get_grace
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
+{
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
+  int i, r = 10;
+  linuxdvb_diseqc_t      *lds[] = {
+    (linuxdvb_diseqc_t*)lse->lse_en50494,
+    (linuxdvb_diseqc_t*)lse->lse_switch,
+    (linuxdvb_diseqc_t*)lse->lse_rotor,
+    (linuxdvb_diseqc_t*)lse->lse_lnb
+  };
+
+  /* Add diseqc delay */
+  for (i = 0; i < 3; i++) {
+    if (lds[i] && lds[i]->ld_grace)
+      r += lds[i]->ld_grace(lds[i], (linuxdvb_mux_t*)mm);
+  }
+
+  return r;
+}
+
+static void linuxdvb_satconf_ele_tune_cb ( void *o );
+
+static int
+linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
+{
+  int r, i, b;
+  uint32_t f;
+  linuxdvb_satconf_t *ls = lse->lse_parent;
+
+  /* Get beans in a row */
+  mpegts_mux_instance_t *mmi   = ls->ls_mmi;
+  linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
+  linuxdvb_mux_t        *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
+  linuxdvb_diseqc_t     *lds[] = {
+    lse->lse_rotor ? (linuxdvb_diseqc_t*)lse->lse_switch : NULL,
+    (linuxdvb_diseqc_t*)lse->lse_rotor,
+    (linuxdvb_diseqc_t*)lse->lse_switch,
+    (linuxdvb_diseqc_t*)lse->lse_en50494,
+    (linuxdvb_diseqc_t*)lse->lse_lnb
+  };
+  // TODO: really need to understand whether or not we need to pre configure
+  //       and/or re-affirm the switch
+
+  /* Disable tone */
+  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
+    tvherror("diseqc", "failed to disable tone");
+    return -1;
+  }
+
+  /* Diseqc */  
+  i = ls->ls_diseqc_idx;
+  for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
+    if (!lds[i]) continue;
+    r = lds[i]->ld_tune(lds[i], lm, lse, lfe->lfe_fe_fd);
+
+    /* Error */
+    if (r < 0) return r;
+
+    /* Pending */
+    if (r != 0) {
+      gtimer_arm_ms(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, r);
+      ls->ls_diseqc_idx = i + 1;
+      return 0;
+    }
+  }
+
+  /* Set the tone */
+  b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
+  tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
+  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+    tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
+    return -1;
+  }
+  usleep(20000); // Allow LNB to settle before tuning
+
+  /* Frontend */
+  /* use en50494 tuning frequency, if needed (not channel frequency) */
+  f = lse->lse_en50494
+    ? ((linuxdvb_en50494_t*)lse->lse_en50494)->le_tune_freq
+    : lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+  return linuxdvb_frontend_tune1(lfe, mmi, f);
+}
+
+static void
+linuxdvb_satconf_ele_tune_cb ( void *o )
+{
+  (void)linuxdvb_satconf_ele_tune(o);
+  // TODO: how to signal error
+}
+
+int
+linuxdvb_satconf_start_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi )
+{
+  int r;
+  uint32_t f;
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
+  linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
+  linuxdvb_mux_t         *lm  = (linuxdvb_mux_t*)mmi->mmi_mux;
+
+  /* Test run */
+  // Note: basically this ensures the tuning params are acceptable
+  //       for the FE, so that if they're not we don't have to wait
+  //       for things like rotors and switches
+  if (!lse->lse_lnb)
+    return SM_CODE_TUNING_FAILED;
+  f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+  if (f == (uint32_t)-1)
+    return SM_CODE_TUNING_FAILED;
+  r = linuxdvb_frontend_tune0(lfe, mmi, f);
+  if (r) return r;
+
+  /* Diseqc */
+  ls->ls_mmi        = mmi;
+  ls->ls_diseqc_idx = 0;
+  return linuxdvb_satconf_ele_tune(lse);
+}
+
 /* **************************************************************************
  * Create/Delete satconf
  * *************************************************************************/
@@ -542,8 +715,7 @@ linuxdvb_satconf_create
   htsmsg_field_t *f;
   linuxdvb_satconf_ele_t *lse;
   const char *str;
-  struct linuxdvb_satconf_type *lst
-    = linuxdvb_satconf_type_find(type);
+  struct linuxdvb_satconf_type *lst = linuxdvb_satconf_type_find(type);
   assert(lst);
   
   linuxdvb_satconf_t *ls = calloc(1, sizeof(linuxdvb_satconf_t));
@@ -588,18 +760,18 @@ linuxdvb_satconf_create
   while (i < lst->ports) {
     if (!lse)
       lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
-    if (!lse->ls_lnb)
-      lse->ls_lnb    = linuxdvb_lnb_create0(NULL, NULL, lse);
+    if (!lse->lse_lnb)
+      lse->lse_lnb = linuxdvb_lnb_create0(NULL, NULL, lse);
     if (lst->ports > 1) {
       if (!strcmp(lst->type, "en50494")) {
-        if (!lse->ls_en50494)
-          lse->ls_en50494 = linuxdvb_en50494_create0("Generic", NULL, lse, i);
+        if (!lse->lse_en50494)
+          lse->lse_en50494 = linuxdvb_en50494_create0("Generic", NULL, lse, i);
       } else {
-        if (!lse->ls_switch)
-          lse->ls_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
+        if (!lse->lse_switch)
+          lse->lse_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
       }
     }
-    lse = TAILQ_NEXT(lse, ls_link);
+    lse = TAILQ_NEXT(lse, lse_link);
     i++;
   }
 
@@ -614,28 +786,28 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
   htsmsg_add_str(m, "type", ls->ls_type);
   idnode_save(&ls->ls_id, m);
   l = htsmsg_create_list();
-  TAILQ_FOREACH(lse, &ls->ls_elements, ls_link){ 
+  TAILQ_FOREACH(lse, &ls->ls_elements, lse_link){ 
     e = htsmsg_create_map();
-    idnode_save(&lse->ti_id, e);
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&lse->ti_id));
-    if (lse->ls_lnb) {
+    idnode_save(&lse->lse_id, e);
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&lse->lse_id));
+    if (lse->lse_lnb) {
       c = htsmsg_create_map();
-      idnode_save(&lse->ls_lnb->ld_id, c);
+      idnode_save(&lse->lse_lnb->ld_id, c);
       htsmsg_add_msg(e, "lnb_conf", c);
     }
-    if (lse->ls_switch) {
+    if (lse->lse_switch) {
       c = htsmsg_create_map();
-      idnode_save(&lse->ls_switch->ld_id, c);
+      idnode_save(&lse->lse_switch->ld_id, c);
       htsmsg_add_msg(e, "switch_conf", c);
     }
-    if (lse->ls_rotor) {
+    if (lse->lse_rotor) {
       c = htsmsg_create_map();
-      idnode_save(&lse->ls_rotor->ld_id, c);
+      idnode_save(&lse->lse_rotor->ld_id, c);
       htsmsg_add_msg(e, "rotor_conf", c);
     }
-    if (lse->ls_en50494) {
+    if (lse->lse_en50494) {
       c = htsmsg_create_map();
-      idnode_save(&lse->ls_en50494->ld_id, c);
+      idnode_save(&lse->lse_en50494->ld_id, c);
       htsmsg_add_msg(e, "en50494_conf", c);
     }
     htsmsg_add_msg(l, NULL, e);
@@ -649,15 +821,85 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
 
 extern const idclass_t mpegts_input_class;
 
+static const void *
+linuxdvb_satconf_ele_class_network_get( void *o )
+{
+  linuxdvb_satconf_ele_t *ls  = o;
+  return idnode_set_as_htsmsg(ls->lse_networks);
+}
+
+static int
+linuxdvb_satconf_ele_class_network_set( void *o, const void *p )
+{
+  linuxdvb_satconf_ele_t *ls  = o;
+  const htsmsg_t *msg = p;
+  mpegts_network_t *mn;
+  idnode_set_t *n = idnode_set_create();
+  htsmsg_field_t *f;
+  const char *str;
+  int i, save;
+
+  HTSMSG_FOREACH(f, msg) {
+    if (!(str = htsmsg_field_get_str(f))) continue;
+    if (!(mn = mpegts_network_find(str))) continue;
+    idnode_set_add(n, &mn->mn_id, NULL);
+  }
+
+  save = n->is_count != ls->lse_networks->is_count;
+  if (!save) {
+    for (i = 0; i < n->is_count; i++)
+      if (!idnode_set_exists(ls->lse_networks, n->is_array[i])) {
+        save = 1;
+        break;
+      }
+  }
+  if (save) {
+    /* update the local (antenna satconf) network list */
+    idnode_set_free(ls->lse_networks);
+    ls->lse_networks = n;
+    /* update the input (frontend) network list */
+    htsmsg_t *l = htsmsg_create_list();
+    linuxdvb_satconf_t *sc = ls->lse_parent;
+    linuxdvb_satconf_ele_t *lse;
+    TAILQ_FOREACH(lse, &sc->ls_elements, lse_link) {
+      for (i = 0; i < lse->lse_networks->is_count; i++)
+        htsmsg_add_str(l, NULL,
+                       idnode_uuid_as_str(lse->lse_networks->is_array[i]));
+    }
+    mpegts_input_class_network_set(ls->lse_parent->ls_frontend, l);
+    htsmsg_destroy(l);
+  } else {
+    idnode_set_free(n);
+  }
+  return save;
+}
+
+static htsmsg_t *
+linuxdvb_satconf_ele_class_network_enum( void *o )
+{
+  linuxdvb_satconf_ele_t *ls  = o;
+  return mpegts_input_class_network_enum(ls->lse_parent->ls_frontend);
+}
+
+static char *
+linuxdvb_satconf_ele_class_network_rend( void *o )
+{
+  linuxdvb_satconf_ele_t *ls  = o;
+  htsmsg_t               *l   = idnode_set_as_htsmsg(ls->lse_networks);
+  char                   *str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
+}
+
 static int
 linuxdvb_satconf_ele_class_lnbtype_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p; 
-  if (ls->ls_lnb && !strcmp(str ?: "", ls->ls_lnb->ld_type))
+  if (ls->lse_lnb && !strcmp(str ?: "", ls->lse_lnb->ld_type))
     return 0;
-  if (ls->ls_lnb) linuxdvb_lnb_destroy(ls->ls_lnb);
-  ls->ls_lnb = linuxdvb_lnb_create0(str, NULL, ls);
+  if (ls->lse_lnb) linuxdvb_lnb_destroy(ls->lse_lnb);
+  ls->lse_lnb = linuxdvb_lnb_create0(str, NULL, ls);
   return 1;
 }
 
@@ -666,7 +908,7 @@ linuxdvb_satconf_ele_class_lnbtype_get ( void *o )
 {
   static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->ls_lnb ? ls->ls_lnb->ld_type : NULL;
+  s = ls->lse_lnb ? ls->lse_lnb->ld_type : NULL;
   return &s;
 }
 
@@ -675,9 +917,9 @@ linuxdvb_satconf_ele_class_en50494type_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p;
-  if (ls->ls_en50494)
-    linuxdvb_en50494_destroy(ls->ls_en50494);
-  ls->ls_en50494 = linuxdvb_en50494_create0(str, NULL, ls, 0);
+  if (ls->lse_en50494)
+    linuxdvb_en50494_destroy(ls->lse_en50494);
+  ls->lse_en50494 = linuxdvb_en50494_create0(str, NULL, ls, 0);
   return 1;
 }
 
@@ -686,7 +928,7 @@ linuxdvb_satconf_ele_class_en50494type_get ( void *o )
 {
   static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->ls_en50494 ? ls->ls_en50494->ld_type : NULL;
+  s = ls->lse_en50494 ? ls->lse_en50494->ld_type : NULL;
   return &s;
 }
 
@@ -695,10 +937,10 @@ linuxdvb_satconf_ele_class_switchtype_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p; 
-  if (ls->ls_switch && !strcmp(str ?: "", ls->ls_switch->ld_type))
+  if (ls->lse_switch && !strcmp(str ?: "", ls->lse_switch->ld_type))
     return 0;
-  if (ls->ls_switch) linuxdvb_switch_destroy(ls->ls_switch);
-  ls->ls_switch = linuxdvb_switch_create0(str, NULL, ls, 0, 0);
+  if (ls->lse_switch) linuxdvb_switch_destroy(ls->lse_switch);
+  ls->lse_switch = linuxdvb_switch_create0(str, NULL, ls, 0, 0);
   return 1;
 }
 
@@ -707,7 +949,7 @@ linuxdvb_satconf_ele_class_switchtype_get ( void *o )
 {
   static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->ls_switch ? ls->ls_switch->ld_type : NULL;
+  s = ls->lse_switch ? ls->lse_switch->ld_type : NULL;
   return &s;
 }
 
@@ -716,10 +958,10 @@ linuxdvb_satconf_ele_class_rotortype_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p; 
-  if (ls->ls_rotor && !strcmp(str ?: "", ls->ls_rotor->ld_type))
+  if (ls->lse_rotor && !strcmp(str ?: "", ls->lse_rotor->ld_type))
     return 0;
-  if (ls->ls_rotor) linuxdvb_rotor_destroy(ls->ls_rotor);
-  ls->ls_rotor = linuxdvb_rotor_create0(str, NULL, ls);
+  if (ls->lse_rotor) linuxdvb_rotor_destroy(ls->lse_rotor);
+  ls->lse_rotor = linuxdvb_rotor_create0(str, NULL, ls);
   return 1;
 }
 
@@ -728,22 +970,14 @@ linuxdvb_satconf_ele_class_rotortype_get ( void *o )
 {
   static const char *s;
   linuxdvb_satconf_ele_t *ls = o;
-  s = ls->ls_rotor ? ls->ls_rotor->ld_type : NULL;
+  s = ls->lse_rotor ? ls->lse_rotor->ld_type : NULL;
   return &s;
 }
 
 static const char *
 linuxdvb_satconf_ele_class_get_title ( idnode_t *o )
 {
-  static char buf[128];
-#if 0
-  linuxdvb_satconf_ele_t *ls = (linuxdvb_satconf_ele_t*)o;
-  if (ls->mi_network)
-    ls->mi_network->mn_display_name(ls->mi_network, buf, sizeof(buf));
-  else
-    *buf = 0;
-#endif
-  return buf;
+  return ((linuxdvb_satconf_ele_t *)o)->lse_name;
 }
 
 static idnode_set_t *
@@ -751,14 +985,14 @@ linuxdvb_satconf_ele_class_get_childs ( idnode_t *o )
 {
   linuxdvb_satconf_ele_t *ls = (linuxdvb_satconf_ele_t*)o;
   idnode_set_t *is = idnode_set_create();
-  if (ls->ls_lnb)
-    idnode_set_add(is, &ls->ls_lnb->ld_id, NULL);
-  if (ls->ls_switch)
-    idnode_set_add(is, &ls->ls_switch->ld_id, NULL);
-  if (ls->ls_rotor)
-    idnode_set_add(is, &ls->ls_rotor->ld_id, NULL);
-  if (ls->ls_en50494)
-    idnode_set_add(is, &ls->ls_en50494->ld_id, NULL);
+  if (ls->lse_lnb)
+    idnode_set_add(is, &ls->lse_lnb->ld_id, NULL);
+  if (ls->lse_switch)
+    idnode_set_add(is, &ls->lse_switch->ld_id, NULL);
+  if (ls->lse_rotor)
+    idnode_set_add(is, &ls->lse_rotor->ld_id, NULL);
+  if (ls->lse_en50494)
+    idnode_set_add(is, &ls->lse_en50494->ld_id, NULL);
   return is;
 }
 
@@ -766,18 +1000,48 @@ static void
 linuxdvb_satconf_ele_class_save ( idnode_t *in )
 {
   linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)in;
-  linuxdvb_satconf_class_save(&lse->ls_parent->ls_id);
+  linuxdvb_satconf_class_save(&lse->lse_parent->ls_id);
 }
 
 const idclass_t linuxdvb_satconf_ele_class =
 {
-  .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_satconf_ele",
   .ic_caption    = "Satconf",
   .ic_get_title  = linuxdvb_satconf_ele_class_get_title,
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,
   .ic_save       = linuxdvb_satconf_ele_class_save,
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(linuxdvb_satconf_ele_t, lse_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "displayname",
+      .name     = "Name",
+      .off      = offsetof(linuxdvb_satconf_ele_t, lse_name),
+      .notify   = idnode_notify_title_changed,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Priority",
+      .off      = offsetof(linuxdvb_satconf_ele_t, lse_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "networks",
+      .name     = "Networks",
+      .islist   = 1,
+      .set      = linuxdvb_satconf_ele_class_network_set,
+      .get      = linuxdvb_satconf_ele_class_network_get,
+      .list     = linuxdvb_satconf_ele_class_network_enum,
+      .rend     = linuxdvb_satconf_ele_class_network_rend,
+    },
     {
       .type     = PT_STR,
       .id       = "lnb_type",
@@ -819,249 +1083,20 @@ const idclass_t linuxdvb_satconf_ele_class =
 };
 
 /* **************************************************************************
- * MPEG-TS Class methods
- * *************************************************************************/
-
-static void
-linuxdvb_satconf_ele_display_name ( mpegts_input_t* mi, char *buf, size_t len )
-{
-  linuxdvb_satconf_t *ls = ((linuxdvb_satconf_ele_t*)mi)->ls_parent;
-  if (ls->ls_frontend)
-    ls->ls_frontend->mi_display_name(ls->ls_frontend, buf, len);
-  else
-    strncpy(buf, "Unknown", len);
-}
-
-#define linuxdvb_satconf_ele_proxy(type, func)\
-static type \
-linuxdvb_satconf_ele_##func ( mpegts_input_t *mi )\
-{\
-  linuxdvb_satconf_t *ls = ((linuxdvb_satconf_ele_t*)mi)->ls_parent;\
-  return ls->ls_frontend->mi_##func(ls->ls_frontend);\
-}
-
-linuxdvb_satconf_ele_proxy(int, is_enabled);
-linuxdvb_satconf_ele_proxy(int, is_free);
-linuxdvb_satconf_ele_proxy(int, get_weight);
-
-static int
-linuxdvb_satconf_ele_get_priority ( mpegts_input_t *mi )
-{
-  int prio = 0;
-  linuxdvb_satconf_t *ls = ((linuxdvb_satconf_ele_t*)mi)->ls_parent;
-  if (ls->ls_frontend)
-    prio = ls->ls_frontend->mi_get_priority(ls->ls_frontend);
-  return prio + mpegts_input_get_priority(mi);
-}
-
-static void
-linuxdvb_satconf_ele_stop_mux
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
-{
-  linuxdvb_satconf_t *ls = ((linuxdvb_satconf_ele_t*)mi)->ls_parent;
-  if (ls->ls_frontend)
-    ls->ls_frontend->mi_stop_mux(ls->ls_frontend, mmi);
-  gtimer_disarm(&ls->ls_diseqc_timer);
-  if (ls->ls_frontend && ls->ls_lnb_poweroff)
-    linuxdvb_diseqc_set_volt(
-        ((linuxdvb_frontend_t *)ls->ls_frontend)->lfe_fe_fd, -1);
-}
-
-static void linuxdvb_satconf_ele_tune_cb ( void *o );
-
-static int
-linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
-{
-  int r, i, b;
-  uint32_t f;
-  linuxdvb_satconf_t *ls = lse->ls_parent;
-
-  /* Get beans in a row */
-  mpegts_mux_instance_t *mmi   = ls->ls_mmi;
-  linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
-  linuxdvb_mux_t        *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
-  linuxdvb_diseqc_t     *lds[] = {
-    lse->ls_rotor ? (linuxdvb_diseqc_t*)lse->ls_switch : NULL,
-    (linuxdvb_diseqc_t*)lse->ls_rotor,
-    (linuxdvb_diseqc_t*)lse->ls_switch,
-    (linuxdvb_diseqc_t*)lse->ls_en50494,
-    (linuxdvb_diseqc_t*)lse->ls_lnb
-  };
-  // TODO: really need to understand whether or not we need to pre configure
-  //       and/or re-affirm the switch
-
-  /* Disable tone */
-  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
-    tvherror("diseqc", "failed to disable tone");
-    return -1;
-  }
-
-  /* Diseqc */  
-  i = ls->ls_diseqc_idx;
-  for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
-    if (!lds[i]) continue;
-    r = lds[i]->ld_tune(lds[i], lm, lse, lfe->lfe_fe_fd);
-
-    /* Error */
-    if (r < 0) return r;
-
-    /* Pending */
-    if (r != 0) {
-      gtimer_arm_ms(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, r);
-      ls->ls_diseqc_idx = i + 1;
-      return 0;
-    }
-  }
-
-  /* Set the tone */
-  b = lse->ls_lnb->lnb_band(lse->ls_lnb, lm);
-  tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
-  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
-    tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
-    return -1;
-  }
-  usleep(20000); // Allow LNB to settle before tuning
-
-  /* Frontend */
-  /* use en50494 tuning frequency, if needed (not channel frequency) */
-  f = lse->ls_en50494
-    ? ((linuxdvb_en50494_t*)lse->ls_en50494)->le_tune_freq
-    : lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
-  return linuxdvb_frontend_tune1(lfe, mmi, f);
-}
-
-static void
-linuxdvb_satconf_ele_tune_cb ( void *o )
-{
-  (void)linuxdvb_satconf_ele_tune(o);
-  // TODO: how to signal error
-}
-
-static int
-linuxdvb_satconf_ele_start_mux
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
-{
-  int r;
-  uint32_t f;
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
-  linuxdvb_mux_t         *lm  = (linuxdvb_mux_t*)mmi->mmi_mux;
-
-  /* Test run */
-  // Note: basically this ensures the tuning params are acceptable
-  //       for the FE, so that if they're not we don't have to wait
-  //       for things like rotors and switches
-  if (!lse->ls_lnb)
-    return SM_CODE_TUNING_FAILED;
-  f = lse->ls_lnb->lnb_freq(lse->ls_lnb, lm);
-  if (f == (uint32_t)-1)
-    return SM_CODE_TUNING_FAILED;
-  r = linuxdvb_frontend_tune0(lfe, mmi, f);
-  if (r) return r;
-
-  /* Diseqc */
-  ls->ls_mmi        = mmi;
-  ls->ls_diseqc_idx = 0;
-  return linuxdvb_satconf_ele_tune(lse);
-}
-
-static void
-linuxdvb_satconf_ele_open_service
-  ( mpegts_input_t *mi, mpegts_service_t *s, int init )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  ls->ls_frontend->mi_open_service(ls->ls_frontend, s, init);
-}
-
-static void
-linuxdvb_satconf_ele_close_service
-  ( mpegts_input_t *mi, mpegts_service_t *s )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  ls->ls_frontend->mi_close_service(ls->ls_frontend, s);
-}
-
-static void
-linuxdvb_satconf_ele_started_mux
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  ls->ls_frontend->mi_started_mux(ls->ls_frontend, mmi);
-}
-
-static void
-linuxdvb_satconf_ele_stopped_mux
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  ls->ls_frontend->mi_stopped_mux(ls->ls_frontend, mmi);
-}
-
-static int
-linuxdvb_satconf_ele_has_subscription
-  ( mpegts_input_t *mi, mpegts_mux_t *mm )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  return ls->ls_frontend->mi_has_subscription(ls->ls_frontend, mm);
-}
-
-static int
-linuxdvb_satconf_ele_get_grace
-  ( mpegts_input_t *mi, mpegts_mux_t *mm )
-{
-  int i, r;
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  linuxdvb_diseqc_t      *lds[] = {
-    (linuxdvb_diseqc_t*)lse->ls_en50494,
-    (linuxdvb_diseqc_t*)lse->ls_switch,
-    (linuxdvb_diseqc_t*)lse->ls_rotor,
-    (linuxdvb_diseqc_t*)lse->ls_lnb
-  };
-
-  /* Get underlying value */
-  if (ls->ls_frontend->mi_get_grace)
-    r = ls->ls_frontend->mi_get_grace(mi, mm);
-  else  
-    r = 10;
-
-  /* Add diseqc delay */
-  for (i = 0; i < 3; i++) {
-    if (lds[i] && lds[i]->ld_grace)
-      r += lds[i]->ld_grace(lds[i], (linuxdvb_mux_t*)mm);
-  }
-
-  return r;
-}
-
-static mpegts_pid_t *
-linuxdvb_satconf_ele_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
-{
-  linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)mi;
-  linuxdvb_satconf_t     *ls  = lse->ls_parent;
-  return ls->ls_frontend->mi_open_pid(ls->ls_frontend, mm, pid, type, owner);
-}
-
-/* **************************************************************************
  * Creation/Config
  * *************************************************************************/
 
 void
 linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
 {
-  TAILQ_REMOVE(&ls->ls_parent->ls_elements, ls, ls_link);
-  if (ls->ls_lnb)     linuxdvb_lnb_destroy(ls->ls_lnb);
-  if (ls->ls_switch)  linuxdvb_switch_destroy(ls->ls_switch);
-  if (ls->ls_rotor)   linuxdvb_rotor_destroy(ls->ls_rotor);
-  if (ls->ls_en50494) linuxdvb_en50494_destroy(ls->ls_en50494);
-  mpegts_input_delete((mpegts_input_t*)ls, 1);
+  TAILQ_REMOVE(&ls->lse_parent->ls_elements, ls, lse_link);
+  idnode_unlink(&ls->lse_id);
+  if (ls->lse_lnb)     linuxdvb_lnb_destroy(ls->lse_lnb);
+  if (ls->lse_switch)  linuxdvb_switch_destroy(ls->lse_switch);
+  if (ls->lse_rotor)   linuxdvb_rotor_destroy(ls->lse_rotor);
+  if (ls->lse_en50494) linuxdvb_en50494_destroy(ls->lse_en50494);
+  free(ls->lse_name);
+  free(ls);
 }
 
 linuxdvb_satconf_ele_t *
@@ -1069,50 +1104,40 @@ linuxdvb_satconf_ele_create0
   ( const char *uuid, htsmsg_t *conf, linuxdvb_satconf_t *ls )
 {
   htsmsg_t *e;
-  linuxdvb_satconf_ele_t *lse
-    = mpegts_input_create(linuxdvb_satconf_ele, uuid, conf);
-  lse->ls_parent = ls;
-  TAILQ_INSERT_TAIL(&ls->ls_elements, lse, ls_link);
-
-  /* Input callbacks */
-  lse->mi_is_enabled          = linuxdvb_satconf_ele_is_enabled;
-  lse->mi_is_free             = linuxdvb_satconf_ele_is_free;
-  lse->mi_get_weight          = linuxdvb_satconf_ele_get_weight;
-  lse->mi_get_priority        = linuxdvb_satconf_ele_get_priority;
-  lse->mi_get_grace           = linuxdvb_satconf_ele_get_grace;
-  lse->mi_display_name        = linuxdvb_satconf_ele_display_name;
-  lse->mi_start_mux           = linuxdvb_satconf_ele_start_mux;
-  lse->mi_stop_mux            = linuxdvb_satconf_ele_stop_mux;
-  lse->mi_open_service        = linuxdvb_satconf_ele_open_service;
-  lse->mi_close_service       = linuxdvb_satconf_ele_close_service;
-  lse->mi_started_mux         = linuxdvb_satconf_ele_started_mux;
-  lse->mi_stopped_mux         = linuxdvb_satconf_ele_stopped_mux;
-  lse->mi_has_subscription    = linuxdvb_satconf_ele_has_subscription;
-  lse->mi_open_pid            = linuxdvb_satconf_ele_open_pid;
+  linuxdvb_satconf_ele_t *lse = calloc(1, sizeof(*lse));
+  if (idnode_insert(&lse->lse_id, uuid, &linuxdvb_satconf_ele_class)) {
+    free(lse);
+    return NULL;
+  }
+  lse->lse_networks = idnode_set_create();
+  lse->lse_parent = ls;
+  TAILQ_INSERT_TAIL(&ls->ls_elements, lse, lse_link);
+  if (conf)
+    idnode_load(&lse->lse_id, conf);
 
   /* Config */
   if (conf) {
 
     /* LNB */
-    if (lse->ls_lnb && (e = htsmsg_get_map(conf, "lnb_conf")))
-      idnode_load(&lse->ls_lnb->ld_id, e);
+    if (lse->lse_lnb && (e = htsmsg_get_map(conf, "lnb_conf")))
+      idnode_load(&lse->lse_lnb->ld_id, e);
 
     /* Switch */
-    if (lse->ls_switch && (e = htsmsg_get_map(conf, "switch_conf")))
-      idnode_load(&lse->ls_switch->ld_id, e);
+    if (lse->lse_switch && (e = htsmsg_get_map(conf, "switch_conf")))
+      idnode_load(&lse->lse_switch->ld_id, e);
 
     /* Rotor */
-    if (lse->ls_rotor && (e = htsmsg_get_map(conf, "rotor_conf")))
-      idnode_load(&lse->ls_rotor->ld_id, e);
+    if (lse->lse_rotor && (e = htsmsg_get_map(conf, "rotor_conf")))
+      idnode_load(&lse->lse_rotor->ld_id, e);
 
     /* EN50494 */
-    if (lse->ls_en50494 && (e = htsmsg_get_map(conf, "en50494_conf")))
-      idnode_load(&lse->ls_en50494->ld_id, e);
+    if (lse->lse_en50494 && (e = htsmsg_get_map(conf, "en50494_conf")))
+      idnode_load(&lse->lse_en50494->ld_id, e);
 }
 
   /* Create default LNB */
-  if (!lse->ls_lnb)
-    lse->ls_lnb = linuxdvb_lnb_create0(NULL, NULL, lse);
+  if (!lse->lse_lnb)
+    lse->lse_lnb = linuxdvb_lnb_create0(NULL, NULL, lse);
 
   return lse;
 }
@@ -1126,17 +1151,19 @@ linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
     hts_settings_remove("input/linuxdvb/satconfs/%s", uuid);
   gtimer_disarm(&ls->ls_diseqc_timer);
   for (lse = TAILQ_FIRST(&ls->ls_elements); lse != NULL; lse = nxt) {
-    nxt = TAILQ_NEXT(lse, ls_link);
-    TAILQ_REMOVE(&ls->ls_elements, lse, ls_link);
-    if (lse->ls_lnb)
-      linuxdvb_lnb_destroy(lse->ls_lnb);
-    if (lse->ls_switch)
-      linuxdvb_switch_destroy(lse->ls_switch);
-    if (lse->ls_rotor)
-      linuxdvb_rotor_destroy(lse->ls_rotor);
-    if (lse->ls_en50494)
-      linuxdvb_en50494_destroy(lse->ls_en50494);
-    mpegts_input_delete((mpegts_input_t*)lse, delconf);
+    nxt = TAILQ_NEXT(lse, lse_link);
+    TAILQ_REMOVE(&ls->ls_elements, lse, lse_link);
+    if (lse->lse_lnb)
+      linuxdvb_lnb_destroy(lse->lse_lnb);
+    if (lse->lse_switch)
+      linuxdvb_switch_destroy(lse->lse_switch);
+    if (lse->lse_rotor)
+      linuxdvb_rotor_destroy(lse->lse_rotor);
+    if (lse->lse_en50494)
+      linuxdvb_en50494_destroy(lse->lse_en50494);
+    idnode_unlink(&lse->lse_id);
+    idnode_set_free(lse->lse_networks);
+    free(lse);
   }
   idnode_unlink(&ls->ls_id);
   free(ls);
@@ -1158,7 +1185,7 @@ linuxdvb_diseqc_class_save ( idnode_t *o )
 {
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
   if (ld->ld_satconf)
-    linuxdvb_satconf_ele_class_save(&ld->ld_satconf->ti_id);
+    linuxdvb_satconf_ele_class_save(&ld->ld_satconf->lse_id);
 }
 
 const idclass_t linuxdvb_diseqc_class =

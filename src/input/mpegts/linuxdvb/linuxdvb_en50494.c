@@ -148,7 +148,7 @@ linuxdvb_en50494_tune
   int ret = 0;
   int i;
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
-  linuxdvb_lnb_t *lnb = sc->ls_lnb;
+  linuxdvb_lnb_t *lnb = sc->lse_lnb;
 
   /* band & polarisation */
   uint8_t  pol  = lnb->lnb_pol(lnb, lm);
@@ -179,7 +179,7 @@ linuxdvb_en50494_tune
            band, freq, data1, data2);
 
   pthread_mutex_lock(&linuxdvb_en50494_lock);
-  for (i = 0; i <= sc->ls_parent->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
     /* to avoid repeated collision, wait a random time (5-25ms) */
     if (i != 0) {
       int ms = rand()%20 + 5;

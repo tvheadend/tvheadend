@@ -683,6 +683,17 @@ idnode_set_add
   is->is_array[is->is_count++] = in;
 }
 
+int
+idnode_set_exists
+  ( idnode_set_t *is, idnode_t * in )
+{
+  int i;
+  for (i = 0; i < is->is_count; i++)
+    if (memcmp(is->is_array[i]->in_uuid, in->in_uuid, sizeof(in->in_uuid)) == 0)
+      return 1;
+  return 0;
+}
+
 void
 idnode_set_sort
   ( idnode_set_t *is, idnode_sort_t *sort )
@@ -695,6 +706,17 @@ idnode_set_sort_by_title
   ( idnode_set_t *is )
 {
   qsort(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_title);
+}
+
+htsmsg_t *
+idnode_set_as_htsmsg
+  ( idnode_set_t *is )
+{
+  htsmsg_t *l = htsmsg_create_list();
+  int i;
+  for (i = 0; i < is->is_count; i++)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(is->is_array[i]));
+  return l;
 }
 
 void

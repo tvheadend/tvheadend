@@ -147,31 +147,36 @@ struct linuxdvb_satconf
 };
 
 /*
- * Internal wrapper for a satconf entry
- *
- * Note: this is a bit cumbersome, it comes from how I first did the satconf
- *       and was subsequently bullied (by amet) into changing it (probably
- *       for the better, just don't tell him, no danger he'll read this!)
- *
- *       maybe one day I'll do it again properly
+ * Elementary satconf entry
  */
 struct linuxdvb_satconf_ele
 {
-  mpegts_input_t; // This acts as proxy for the frontend
-
+  idnode_t               lse_id;
   /*
    * Parent
    */
-  linuxdvb_satconf_t               *ls_parent;
-  TAILQ_ENTRY(linuxdvb_satconf_ele)  ls_link;
+  linuxdvb_satconf_t               *lse_parent;
+  TAILQ_ENTRY(linuxdvb_satconf_ele)  lse_link;
+
+  /*
+   * Config
+   */
+  int                    lse_enabled;
+  int                    lse_priority;
+  char                  *lse_name;
+
+  /*
+   * Assigned networks to this SAT configuration
+   */
+  idnode_set_t          *lse_networks;
 
   /*
    * Diseqc kit
    */
-  linuxdvb_lnb_t        *ls_lnb;
-  linuxdvb_diseqc_t     *ls_switch;
-  linuxdvb_diseqc_t     *ls_rotor;
-  linuxdvb_diseqc_t     *ls_en50494;
+  linuxdvb_lnb_t        *lse_lnb;
+  linuxdvb_diseqc_t     *lse_switch;
+  linuxdvb_diseqc_t     *lse_rotor;
+  linuxdvb_diseqc_t     *lse_en50494;
 };
 
 struct linuxdvb_diseqc
@@ -345,5 +350,16 @@ linuxdvb_satconf_t *linuxdvb_satconf_create
     const char *type, const char *uuid, htsmsg_t *conf );
 
 void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf );
+
+int linuxdvb_satconf_get_priority
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
+
+int linuxdvb_satconf_get_grace
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
+  
+void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
+
+int linuxdvb_satconf_start_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

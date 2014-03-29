@@ -215,6 +215,26 @@ linuxdvb_frontend_get_weight ( mpegts_input_t *mi )
 }
 
 static int
+linuxdvb_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  int r = mpegts_input_get_priority(mi, mm);
+  if (lfe->lfe_satconf)
+    r += linuxdvb_satconf_get_priority(lfe->lfe_satconf, mm);
+  return r;
+}
+
+static int
+linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  int r = 5;
+  if (lfe->lfe_satconf)
+    r = linuxdvb_satconf_get_grace(lfe->lfe_satconf, mm);
+  return r;
+}
+
+static int
 linuxdvb_frontend_is_enabled ( mpegts_input_t *mi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
@@ -250,12 +270,18 @@ linuxdvb_frontend_stop_mux
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
+
+  if (lfe->lfe_satconf)
+    linuxdvb_satconf_post_stop_mux(lfe->lfe_satconf);
 }
 
 static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  if (lfe->lfe_satconf)
+    return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
 }
 
@@ -1100,8 +1126,10 @@ linuxdvb_frontend_create
   if (!lfe) return NULL;
 
   /* Callbacks */
-  lfe->mi_is_free    = linuxdvb_frontend_is_free;
-  lfe->mi_get_weight = linuxdvb_frontend_get_weight;
+  lfe->mi_is_free      = linuxdvb_frontend_is_free;
+  lfe->mi_get_weight   = linuxdvb_frontend_get_weight;
+  lfe->mi_get_priority = linuxdvb_frontend_get_priority;
+  lfe->mi_get_grace    = linuxdvb_frontend_get_grace;
 
   /* Default name */
   if (!lfe->mi_name) {

@@ -197,7 +197,7 @@ mpegts_input_get_weight ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_get_priority ( mpegts_input_t *mi )
+mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   return mi->mi_priority;
 }
@@ -839,7 +839,7 @@ mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg )
   htsmsg_field_t *f;
   mpegts_network_t *mn;
   mpegts_network_link_t *mnl, *nxt;
-  
+
   /* Mark for deletion */
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
     mnl->mnl_mark = 1;
