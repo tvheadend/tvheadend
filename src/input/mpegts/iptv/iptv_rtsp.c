@@ -576,6 +576,9 @@ iptv_rtsp_start(iptv_mux_t *im, const url_t *url)
   rtcp_init(rtsp_info);
   
   rtsp_info->is_initialized = 1;
+  
+  // File descriptor was set before
+  iptv_input_mux_started(im);
   return 0;
 }
 
