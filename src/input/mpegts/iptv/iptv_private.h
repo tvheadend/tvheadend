@@ -105,6 +105,7 @@ extern iptv_network_t *iptv_network;
 void iptv_mux_load_all ( void );
 
 void iptv_http_init    ( void );
+void iptv_rtsp_init    ( void );
 void iptv_udp_init     ( void );
 
 #endif /* __IPTV_PRIVATE_H__ */

@@ -21,6 +21,7 @@
 #include "tvhpoll.h"
 #include "tcp.h"
 #include "settings.h"
+#include "iptv_rtsp.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -516,6 +517,7 @@ void iptv_init ( void )
   /* Register handlers */
   iptv_http_init();
   iptv_udp_init();
+  iptv_rtsp_init();
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
 
