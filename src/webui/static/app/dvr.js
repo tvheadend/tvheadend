@@ -744,11 +744,11 @@ tvheadend.dvrsettings = function() {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvrSettings'
-	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
+	}, [ 'storage', 'filePermissions', 'dirPermissions', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'cache', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
 		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 
-		'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'filePermissions', 'dirPermissions' ]);
+		'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -828,13 +828,20 @@ tvheadend.dvrsettings = function() {
 		fieldLabel : 'Recording system path',
 		name : 'storage'
 	});
+
+/* NB: recordingPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a decimal number */
 	
 	var recordingPermissions = new Ext.form.TextField({
-	    regex : /^[0-7]{3}$/,
+		regex : /^[0-7]{3}$/,
 	    maskRe : /[0-7]/,
-		fieldLabel : 'File permissions for recordings (3-byte octal)',
+   		width : 100,
+   		allowBlank : false,
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 664',
+		fieldLabel : 'File permissions (octal, e.g. 664)',
 		name : 'filePermissions'
 	});
+
+/* TO DO - Add 'override user umask?' option, then trigger fchmod in mkmux.c, muxer_pass.c after file created */
 		
 	var PATrewrite = new Ext.form.Checkbox({
 		fieldLabel : 'Rewrite PAT in passthrough mode',
@@ -858,12 +865,19 @@ tvheadend.dvrsettings = function() {
 		
 /* Subdirectories and filename handling */
 
+/* NB: directoryPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a decimal number */
+
 	var directoryPermissions = new Ext.form.TextField({
-	    regex : /^[0-7]{3}$/,
+		regex : /^[0-7]{3}$/,
 	    maskRe : /[0-7]/,
-		fieldLabel : 'Directory permissions for recordings (3-byte octal)',
+   		width : 100,
+   		allowBlank : false,
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 775',
+		fieldLabel : 'Directory permissions (octal, e.g. 775)',
 		name : 'dirPermissions'
 	});
+	
+/* TO DO - Add 'override user umask?' option, then trigger fchmod in utils.c after directory created */
 	
 	var dirsPerDay = new Ext.form.Checkbox({
 		fieldLabel : 'Make subdirectories per day',
@@ -963,7 +977,7 @@ tvheadend.dvrsettings = function() {
 	});
 
 /* Main (form) panel */
-	
+				
 	var confpanel = new Ext.FormPanel({
 		title : 'Digital Video Recorder',
 		iconCls : 'drive',

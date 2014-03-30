@@ -1046,15 +1046,17 @@ mk_mux_open_stream(mk_mux_t *mkm, int fd)
  *
  */
 int
-mk_mux_open_file(mk_mux_t *mkm, const char *filename, const char *permissions)
+mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
 {
   int fd;
 
-/* IH DEBUG */
-
-  tvhlog(LOG_DEBUG, "mkmux - tmk_mux_open_file", "Using file permissions: \"%s\"", permissions);
+// Very ugly hack alert!
+// Convert my nasty stored-as-decimal permissions into literal octal equivalent (i.e. 777 => 0777)
   
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
+  int octal_perms = ((permissions / 100) << 6) | ((permissions % 100 / 10) << 3) | (permissions % 10);
+
+  tvhlog(LOG_DEBUG, "mkv", "Creating file \"%s\" with octal permissions \"%o\"", filename, octal_perms);
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, octal_perms);
   if(fd < 0) {
     mkm->error = errno;
     tvhlog(LOG_ERR, "mkv", "%s: Unable to create file, open failed -- %s",

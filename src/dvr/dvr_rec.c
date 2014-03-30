@@ -204,13 +204,15 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     free(title);
   }
 
-/* IH DEBUG */
-
-  tvhlog(LOG_DEBUG, "dvr_rec - pvr_generate_filename", "Using string directory permissions: \"%s\"", cfg->dvr_directory_permissions);
-  tvhlog(LOG_DEBUG, "dvr_rec - pvr_generate_filename", "Using int directory permissions: \"%i\"", atoi(cfg->dvr_directory_permissions));
+// Very ugly hack alert!
+// Convert my nasty stored-as-decimal permissions into literal octal equivalent (i.e. 777 => 0777)
   
-  /* */
-  if(makedirs(path, atoi(cfg->dvr_directory_permissions)) != 0) {
+  int decimal_perms = cfg->dvr_muxcnf.m_directory_permissions;
+  int octal_perms = ((decimal_perms / 100) << 6) | ((decimal_perms % 100 / 10) << 3) | (decimal_perms % 10);
+
+// Create directory path
+  
+  if(makedirs(path, octal_perms) != 0) {
     return -1;
   }
   
@@ -324,11 +326,6 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     }
   }
 
- /* IH DEBUG */
- 
-  tvhlog(LOG_DEBUG, "dvr - dvr_rec_start", "Using file/directory permissions: \"%s\", \"%s\"", 
-     cfg->dvr_file_permissions, cfg->dvr_directory_permissions);
-  
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "

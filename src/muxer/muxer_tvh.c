@@ -138,10 +138,6 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
   
-/* IH DEBUG */
-
-  tvhlog(LOG_DEBUG, "muxer_tvh - tvh_muxer_open", "Using file permissions: \"%s\"", tm->m_config.m_file_permissions);
- 
   if(mk_mux_open_file(tm->tm_ref, filename, tm->m_config.m_file_permissions)) {
     tm->m_errors++;
     return -1;
@@ -230,11 +226,6 @@ tvh_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
 
   if(mc != MC_MATROSKA && mc != MC_WEBM)
     return NULL;
-
-/* debugging to see if the variable is available here */
-/* IH 26 March */
-
-  tvhlog(LOG_DEBUG, "muxer_tvh - tvh_muxer_create", "Using file permissions: \"%s\"", m_cfg->m_file_permissions);
 
   tm = calloc(1, sizeof(tvh_muxer_t));
   tm->m_open_stream  = tvh_muxer_open_stream;

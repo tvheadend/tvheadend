@@ -75,7 +75,7 @@
   <dt>Recording system path
   <dd>Path to where Tvheadend will write recorded events. If components of the path does not exist, Tvheadend will try to create them.
  
-  <dt>File permissions for recordings (3-byte octal)
+  <dt>File permissions
   <dd>The permissions to be set on the resultant recording files. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
       
       <table class="hts-doc-text" border="0">
@@ -86,7 +86,9 @@
 	  <tr><td>666 == rw-rw-rw-</td></tr>
 	  </table>
 	  
-	  See also <i>Directory permissions for recordings</i> in <i>Subdirectory Options</i>. 
+	  Note that your default user umask applies, so 666 with umask 002 will produce 664.
+	  
+	  See also <i>Directory permissions</i> in <i>Subdirectory Options</i>. 
 	  
   <dt>Rewrite PAT in passthrough mode
   <dd>Rewrite the original Program Association Table to only include the active service.  When this option is disabled, Tvheadend will write the original PAT as broadcast, which lists all services from the original multiplex.
@@ -105,7 +107,7 @@
   <b>Subdirectory Options</b>
   <hr>
    
-  <dt>Directory permissions for recordings (3-byte octal)
+  <dt>Directory permissions
   <dd>The permissions to be set on any sub-directories created for recordings. This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.
       
       <table class="hts-doc-text" border="0">
@@ -116,7 +118,9 @@
 	  <tr><td>777 == rwxrwxrwx</td></tr>
 	  </table>
 	  
-	  See also <i>File permissions for recordings</i> in <i>Recroding File Options</i>. 
+	  Note that your default user umask applies, so 777 with umask 002 will produce 775.
+	  
+	  See also <i>File permissions</i> in <i>Recording File Options</i>. 
 	  
   <dt>Make sub-directories per day
   <dd>If checked, create a new directory per day in the recording system path. Only days when anything is recorded will be created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)

@@ -1133,9 +1133,9 @@ dvr_init(void)
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
-      tvh_str_set(&cfg->dvr_file_permissions, htsmsg_get_str(m, "file-permissions"));
-      tvh_str_set(&cfg->dvr_directory_permissions, htsmsg_get_str(m, "directory-permissions"));
-
+      htsmsg_get_s32(m, "file-permissions", &cfg->dvr_muxcnf.m_file_permissions);
+      htsmsg_get_s32(m, "directory-permissions", &cfg->dvr_muxcnf.m_directory_permissions);
+      
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
 
@@ -1315,9 +1315,10 @@ dvr_config_create(const char *name)
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
-  /* Recording file and directory permissions */
-  strcpy(cfg->dvr_file_permissions,"664");
-  strcpy(cfg->dvr_directory_permissions,"775");
+  /* Default recording file and directory permissions */
+  /* Note that these are decimal literal equivalents of the octal - they get converted later. Yes, it's a kludge. Sue me. */  
+  cfg->dvr_muxcnf.m_file_permissions = 664;
+  cfg->dvr_muxcnf.m_directory_permissions = 775;
   
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
@@ -1357,11 +1358,12 @@ static void
 dvr_save(dvr_config_t *cfg)
 {
   htsmsg_t *m = htsmsg_create_map();
+  
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
-  htsmsg_add_str(m, "file-permissions", cfg->dvr_file_permissions);
-  htsmsg_add_str(m, "directory-permissions", cfg->dvr_directory_permissions);
+  htsmsg_add_u32(m, "file-permissions", cfg->dvr_muxcnf.m_file_permissions);
+  htsmsg_add_u32(m, "directory-permissions", cfg->dvr_muxcnf.m_directory_permissions);
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
   htsmsg_add_u32(m, "cache", cfg->dvr_muxcnf.m_cache);
   htsmsg_add_u32(m, "rewrite-pat",
@@ -1410,12 +1412,12 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
  *
  */
 void
-dvr_file_permissions_set(dvr_config_t *cfg, const char *permissions)
+dvr_file_permissions_set(dvr_config_t *cfg, int permissions)
 {
-  if(cfg->dvr_file_permissions != NULL && !strcmp(cfg->dvr_file_permissions, permissions))
+  if(cfg->dvr_muxcnf.m_file_permissions == permissions)
     return;
 
-  tvh_str_set(&cfg->dvr_file_permissions, permissions);
+  cfg->dvr_muxcnf.m_file_permissions = permissions;
   dvr_save(cfg);
 }
 
@@ -1423,12 +1425,12 @@ dvr_file_permissions_set(dvr_config_t *cfg, const char *permissions)
  *
  */
 void
-dvr_directory_permissions_set(dvr_config_t *cfg, const char *permissions)
+dvr_directory_permissions_set(dvr_config_t *cfg, int permissions)
 {
-  if(cfg->dvr_directory_permissions != NULL && !strcmp(cfg->dvr_directory_permissions, permissions))
+  if(cfg->dvr_muxcnf.m_directory_permissions == permissions)
     return;
 
-  tvh_str_set(&cfg->dvr_directory_permissions, permissions);
+  cfg->dvr_muxcnf.m_directory_permissions = permissions;
   dvr_save(cfg);
 }
 
@@ -1496,7 +1498,7 @@ dvr_retention_set(dvr_config_t *cfg, int days)
 
   cfg->dvr_retention_days = days;
 
-  /* Also, rearm all timres */
+  /* Also, rearm all timers */
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if(de->de_sched_state == DVR_COMPLETED)
