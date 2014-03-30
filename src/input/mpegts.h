@@ -20,6 +20,10 @@
 #ifndef __TVH_MPEGTS_H__
 #define __TVH_MPEGTS_H__
 
+#ifndef __TVH_INPUT_H__
+#error "Use header file input.h not input/mpegts.h"
+#endif
+
 #include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
@@ -727,3 +731,4 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
  *
  * vim:sts=2:ts=2:sw=2:et
  *****************************************************************************/
+

@@ -81,14 +81,13 @@ linuxdvb_satconf_class_network_set
 static htsmsg_t *
 linuxdvb_satconf_class_network_enum( void *o )
 {
-  extern const idclass_t linuxdvb_network_dvbs_class;
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "idnode/load");
   htsmsg_add_str(m, "event", "mpegts_network");
   htsmsg_add_u32(p, "enum",  1);
-  htsmsg_add_str(p, "class", linuxdvb_network_dvbs_class.ic_class);
+  htsmsg_add_str(p, "class", dvb_network_dvbs_class.ic_class);
   htsmsg_add_msg(m, "params", p);
 
   return m;

@@ -190,12 +190,9 @@ void psi_tables_atsc_t  ( struct mpegts_mux *mm );
 void psi_tables_atsc_c  ( struct mpegts_mux *mm );
 
 /*
- * Delivery systems and DVB API wrappers
  *
- * Note: although these are really only useful for linuxDVB, they are
- *       used in mpegts so that tsfile can be used to debug issues
  */
-#if ENABLE_DVBAPI
+#if ENABLE_MPEGTS_DVB
 
 typedef enum dvb_fe_type {
   DVB_TYPE_NONE = 0,
@@ -451,7 +448,7 @@ static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
 
 int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
-#endif /* ENABLE_DVBAPI */
+#endif /* ENABLE_MPEGTS_DVB */
 
 void dvb_done       ( void );
 

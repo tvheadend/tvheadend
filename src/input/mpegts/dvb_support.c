@@ -26,12 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-
 #include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
-#include "../mpegts.h"
+#include "input.h"
 
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
@@ -378,7 +376,7 @@ dvb_convert_date(const uint8_t *dvb_buf)
 /*
  * DVB API helpers
  */
-#if ENABLE_DVBAPI
+#if ENABLE_MPEGTS_DVB
 
 
 #define dvb_str2val(p)\
@@ -680,7 +678,7 @@ const static struct strtab pilottab[] = {
 dvb_str2val(pilot);
 #undef dvb_str2val
 
-#endif /* ENABLE_DVBAPI */
+#endif /* ENABLE_MPEGTS_DVB */
 
 /**
  *

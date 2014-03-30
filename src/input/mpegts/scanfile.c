@@ -17,7 +17,7 @@
  */
 
 #include "tvheadend.h"
-#include "../dvb.h"
+#include "dvb.h"
 #include "filebundle.h"
 #include "config2.h"
 #include "scanfile.h"
@@ -174,7 +174,7 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
   if ((mux->u.dmc_fe_qpsk.polarisation  = dvb_str2pol(pol)) == -1) return 1;
   if ((mux->u.dmc_fe_qpsk.fec_inner     = dvb_str2fec(fec)) == -1) return 1;
   if (v2) {
-    mux->dmc_fe_delsys          = DVB_SYS_DVBS2;
+    mux->dmc_fe_delsys     = DVB_SYS_DVBS2;
     if ((mux->dmc_fe_rolloff    = dvb_str2rolloff(rolloff)) == -1) return 1;
     if ((mux->dmc_fe_modulation = dvb_str2qam(qam))         == -1) return 1;
   } else {
@@ -197,7 +197,7 @@ scanfile_load_dvbc ( dvb_mux_conf_t *mux, const char *line )
 	           &mux->dmc_fe_freq, &mux->u.dmc_fe_qam.symbol_rate, fec, qam);
   if(r != 4) return 1;
 
-  mux->dmc_fe_type   = DVB_TYPE_C;
+  mux->dmc_fe_type = DVB_TYPE_C;
   mux->dmc_fe_delsys = DVB_SYS_DVBC_ANNEX_A;
   if ((mux->u.dmc_fe_qam.fec_inner  = dvb_str2fec(fec)) == -1) return 1;
   if ((mux->dmc_fe_modulation       = dvb_str2qam(qam)) == -1) return 1;

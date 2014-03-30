@@ -17,7 +17,7 @@
  */
 
 #include "tvhcsa.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "input/mpegts/tsdemux.h"
 
 #include <stdlib.h>

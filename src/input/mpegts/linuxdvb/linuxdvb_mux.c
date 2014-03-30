@@ -612,7 +612,7 @@ static void
 linuxdvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-  linuxdvb_network_t *ln = (linuxdvb_network_t*)mm->mm_network;
+  dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq;
   char pol[2] = { 0 };
   if (ln->ln_type == DVB_TYPE_S) {
@@ -655,7 +655,7 @@ linuxdvb_mux_delete ( mpegts_mux_t *mm, int delconf )
 
 linuxdvb_mux_t *
 linuxdvb_mux_create0
-  ( linuxdvb_network_t *ln,
+  ( dvb_network_t *ln,
     uint16_t onid, uint16_t tsid, const dvb_mux_conf_t *dmc,
     const char *uuid, htsmsg_t *conf )
 {

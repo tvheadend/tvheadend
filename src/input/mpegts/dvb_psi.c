@@ -17,7 +17,7 @@
  */
 
 #include "tvheadend.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "dvb.h"
 #include "tsdemux.h"
 #include "parsers.h"
@@ -73,7 +73,7 @@ dvb_servicetype_lookup ( int t )
  * Descriptors
  * *************************************************************************/
 
-#if ENABLE_DVBAPI
+#if ENABLE_MPEGTS_DVB
 
 /**
  * Tables for delivery descriptor parsing
@@ -290,7 +290,7 @@ dvb_desc_terr_del
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
 }
  
-#endif /* ENABLE_DVBAPI */
+#endif /* ENABLE_MPEGTS_DVB */
 
 static int
 dvb_desc_service

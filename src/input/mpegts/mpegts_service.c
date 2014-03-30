@@ -20,7 +20,7 @@
 #include <assert.h>
 
 #include "service.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "settings.h"
 #include "dvb_charset.h"
 

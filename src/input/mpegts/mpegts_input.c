@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input/mpegts.h"
+#include "input.h"
 #include "tsdemux.h"
 #include "packet.h"
 #include "streaming.h"

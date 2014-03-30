@@ -20,7 +20,7 @@
 #ifndef __TVH_LINUXDVB_PRIVATE_H__
 #define __TVH_LINUXDVB_PRIVATE_H__
 
-#include "input/mpegts.h"
+#include "input.h"
 
 #include <linux/dvb/version.h>
 
@@ -246,26 +246,8 @@ int linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 
 /*
- * Network
+ *
  */
-
-struct linuxdvb_network
-{
-  mpegts_network_t;
-
-  /*
-   * Network type
-   */
-  dvb_fe_type_t ln_type;
-};
-
-void linuxdvb_network_init ( void );
-void linuxdvb_network_done ( void );
-linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
-
-linuxdvb_network_t *linuxdvb_network_create0
-  ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
-
 struct linuxdvb_mux
 {
   mpegts_mux_t;
@@ -277,7 +259,7 @@ struct linuxdvb_mux
 };
 
 linuxdvb_mux_t *linuxdvb_mux_create0
-  (linuxdvb_network_t *ln, uint16_t onid, uint16_t tsid,
+  (dvb_network_t *ln, uint16_t onid, uint16_t tsid,
    const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
 
 #define linuxdvb_mux_create1(n, u, c)\

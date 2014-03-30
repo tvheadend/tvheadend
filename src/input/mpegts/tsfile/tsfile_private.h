@@ -20,7 +20,7 @@
 #ifndef __TVH_TSFILE_PRIVATE_H__
 #define __TVH_TSFILE_PRIVATE_H__
 
-#include "input/mpegts.h"
+#include "input.h"
 
 /*
  * Globals

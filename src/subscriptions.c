@@ -39,9 +39,7 @@
 #include "htsmsg.h"
 #include "notify.h"
 #include "atomic.h"
-#if ENABLE_MPEGTS
-#include "input/mpegts.h"
-#endif
+#include "input.h"
 
 struct th_subscription_list subscriptions;
 struct th_subscription_list subscriptions_remove;

@@ -354,19 +354,15 @@ linuxdvb_frontend_network_list ( mpegts_input_t *mi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   const idclass_t     *idc;
-  extern const idclass_t linuxdvb_network_dvbt_class;
-  extern const idclass_t linuxdvb_network_dvbc_class;
-  extern const idclass_t linuxdvb_network_dvbs_class;
-  extern const idclass_t linuxdvb_network_atsc_class;
 
   if (lfe->lfe_type == DVB_TYPE_T)
-    idc = &linuxdvb_network_dvbt_class;
+    idc = &dvb_network_dvbt_class;
   else if (lfe->lfe_type == DVB_TYPE_C)
-    idc = &linuxdvb_network_dvbc_class;
+    idc = &dvb_network_dvbc_class;
   else if (lfe->lfe_type == DVB_TYPE_S)
-    idc = &linuxdvb_network_dvbs_class;
+    idc = &dvb_network_dvbs_class;
   else if (lfe->lfe_type == DVB_TYPE_ATSC)
-    idc = &linuxdvb_network_atsc_class;
+    idc = &dvb_network_atsc_class;
   else
     return NULL;
 
