@@ -180,6 +180,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 # MPEGTS DVB
 SRCS-${CONFIG_MPEGTS_DVB} += \
         src/input/mpegts/mpegts_network_dvb.c \
+        src/input/mpegts/mpegts_mux_dvb.c \
         src/input/mpegts/scanfile.c
 
 # MPEGTS EPG
@@ -194,7 +195,6 @@ SRCS-${CONFIG_LINUXDVB} += \
         src/input/mpegts/linuxdvb/linuxdvb.c \
         src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
         src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
-        src/input/mpegts/linuxdvb/linuxdvb_mux.c \
         src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
         src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
         src/input/mpegts/linuxdvb/linuxdvb_switch.c \

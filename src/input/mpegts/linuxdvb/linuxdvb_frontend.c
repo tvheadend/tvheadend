@@ -375,7 +375,7 @@ linuxdvb_frontend_network_list ( mpegts_input_t *mi )
 
 static void
 linuxdvb_frontend_default_tables 
-  ( linuxdvb_frontend_t *lfe, linuxdvb_mux_t *lm )
+  ( linuxdvb_frontend_t *lfe, dvb_mux_t *lm )
 {
   mpegts_mux_t *mm = (mpegts_mux_t*)lm;
 
@@ -486,7 +486,7 @@ linuxdvb_frontend_monitor ( void *aux )
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
       /* Table handlers */
-      linuxdvb_frontend_default_tables(lfe, (linuxdvb_mux_t*)mm);
+      linuxdvb_frontend_default_tables(lfe, (dvb_mux_t*)mm);
 
       /* Locked - ensure everything is open */
       pthread_mutex_lock(&lfe->mi_delivery_mutex);
@@ -861,7 +861,7 @@ linuxdvb_frontend_tune0
   struct dvb_frontend_event ev;
   char buf1[256];
   mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
-  linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mmi->mmi_mux;
+  dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
   dvb_mux_conf_t *dmc;
   struct dvb_frontend_parameters p;
 

@@ -596,7 +596,7 @@ linuxdvb_satconf_get_grace
   /* Add diseqc delay */
   for (i = 0; i < 3; i++) {
     if (lds[i] && lds[i]->ld_grace)
-      r += lds[i]->ld_grace(lds[i], (linuxdvb_mux_t*)mm);
+      r += lds[i]->ld_grace(lds[i], (dvb_mux_t*)mm);
   }
 
   return r;
@@ -614,7 +614,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* Get beans in a row */
   mpegts_mux_instance_t *mmi   = ls->ls_mmi;
   linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
-  linuxdvb_mux_t        *lm    = (linuxdvb_mux_t*)mmi->mmi_mux;
+  dvb_mux_t             *lm    = (dvb_mux_t*)mmi->mmi_mux;
   linuxdvb_diseqc_t     *lds[] = {
     lse->lse_rotor ? (linuxdvb_diseqc_t*)lse->lse_switch : NULL,
     (linuxdvb_diseqc_t*)lse->lse_rotor,
@@ -680,7 +680,7 @@ linuxdvb_satconf_start_mux
   uint32_t f;
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
   linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
-  linuxdvb_mux_t         *lm  = (linuxdvb_mux_t*)mmi->mmi_mux;
+  dvb_mux_t              *lm  = (dvb_mux_t*)mmi->mmi_mux;
 
   /* Test run */
   // Note: basically this ensures the tuning params are acceptable

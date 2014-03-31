@@ -143,7 +143,7 @@ const idclass_t linuxdvb_en50494_class =
 
 static int
 linuxdvb_en50494_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
   int ret = 0;
   int i;

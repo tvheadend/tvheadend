@@ -40,7 +40,6 @@ typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
 typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
 typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
 typedef struct linuxdvb_network     linuxdvb_network_t;
-typedef struct linuxdvb_mux         linuxdvb_mux_t;
 typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
@@ -184,17 +183,17 @@ struct linuxdvb_diseqc
   idnode_t              ld_id;
   const char           *ld_type;
   linuxdvb_satconf_ele_t   *ld_satconf;
-  int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
-  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
+  int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
+  int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_ele_t *ls, int fd);
 };
 
 struct linuxdvb_lnb
 {
   linuxdvb_diseqc_t;
-  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_band)(linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_pol) (linuxdvb_lnb_t*, dvb_mux_t*);
 };
 
 struct linuxdvb_en50494
@@ -244,27 +243,6 @@ int linuxdvb_frontend_tune0
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 int linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
-
-/*
- *
- */
-struct linuxdvb_mux
-{
-  mpegts_mux_t;
-
-  /*
-   * Tuning information
-   */
-  dvb_mux_conf_t lm_tuning;
-};
-
-linuxdvb_mux_t *linuxdvb_mux_create0
-  (dvb_network_t *ln, uint16_t onid, uint16_t tsid,
-   const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
-
-#define linuxdvb_mux_create1(n, u, c)\
-  linuxdvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,\
-                       NULL, u, c)
 
 /*
  * Diseqc gear

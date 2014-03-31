@@ -132,7 +132,7 @@ const idclass_t linuxdvb_rotor_usals_class =
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int i;
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
@@ -150,7 +150,7 @@ linuxdvb_rotor_gotox_tune
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   /*
    * Code originally written in PR #238 by Jason Millard jsm174
@@ -219,7 +219,7 @@ linuxdvb_rotor_usals_tune
 
 static int
 linuxdvb_rotor_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
@@ -240,7 +240,7 @@ linuxdvb_rotor_tune
 
 static int
 linuxdvb_rotor_grace
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
 {
   return 120; // TODO: calculate approx period
 }

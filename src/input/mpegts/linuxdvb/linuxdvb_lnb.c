@@ -72,7 +72,7 @@ const idclass_t linuxdvb_lnb_class =
 
 static uint32_t
 linuxdvb_lnb_standard_freq 
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)l;
   int32_t                f = (int32_t)lm->lm_tuning.dmc_fe_freq;
@@ -85,7 +85,7 @@ linuxdvb_lnb_standard_freq
 
 static int
 linuxdvb_lnb_standard_band
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)l;
   uint32_t               f = lm->lm_tuning.dmc_fe_freq;
@@ -94,7 +94,7 @@ linuxdvb_lnb_standard_band
 
 static int
 linuxdvb_lnb_standard_pol
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   dvb_mux_conf_t      *dmc = &lm->lm_tuning;
   return dmc->u.dmc_fe_qpsk.polarisation == DVB_POLARISATION_HORIZONTAL ||
@@ -103,7 +103,7 @@ linuxdvb_lnb_standard_pol
 
 static int 
 linuxdvb_lnb_standard_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int pol = linuxdvb_lnb_standard_pol((linuxdvb_lnb_t*)ld, lm);
   return linuxdvb_diseqc_set_volt(fd, pol);
@@ -115,7 +115,7 @@ linuxdvb_lnb_standard_tune
 
 static uint32_t
 linuxdvb_lnb_bandstack_freq
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)l;
   int32_t                f = (int32_t)lm->lm_tuning.dmc_fe_freq;
@@ -131,7 +131,7 @@ linuxdvb_lnb_bandstack_freq
 
 static int
 linuxdvb_lnb_bandstack_band
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   dvb_mux_conf_t      *dmc = &lm->lm_tuning;
   int pol = dmc->u.dmc_fe_qpsk.polarisation == DVB_POLARISATION_HORIZONTAL ||
@@ -141,14 +141,14 @@ linuxdvb_lnb_bandstack_band
 
 static int
 linuxdvb_lnb_bandstack_pol
-  ( linuxdvb_lnb_t *l, linuxdvb_mux_t *lm )
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   return 0;
 }
 
 static int
 linuxdvb_lnb_bandstack_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int pol = linuxdvb_lnb_bandstack_pol((linuxdvb_lnb_t*)ld, lm);
   return linuxdvb_diseqc_set_volt(fd, pol);

@@ -78,10 +78,10 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
     if (!(mm = dvb_network_find_mux(o, dmc))) {
-      mm = (mpegts_mux_t*)linuxdvb_mux_create0(o,
-                                               MPEGTS_ONID_NONE,
-                                               MPEGTS_TSID_NONE,
-                                               dmc, NULL, NULL);
+      mm = (mpegts_mux_t*)dvb_mux_create0(o,
+                                          MPEGTS_ONID_NONE,
+                                          MPEGTS_TSID_NONE,
+                                          dmc, NULL, NULL);
       if (mm)
         mm->mm_config_save(mm);
     }
@@ -217,7 +217,7 @@ dvb_network_find_mux
 {
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
-    linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+    dvb_mux_t *lm = (dvb_mux_t*)mm;
     if (abs(lm->lm_tuning.dmc_fe_freq
             - dmc->dmc_fe_freq) > LINUXDVB_FREQ_TOL) continue;
     if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
@@ -245,10 +245,10 @@ dvb_network_create_mux
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   mm = dvb_network_find_mux(ln, dmc);
   if (!mm && ln->mn_autodiscovery) {
-    mm   = (mpegts_mux_t*)linuxdvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
+    mm   = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
     save = 1;
   } else if (mm) {
-    linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
+    dvb_mux_t *lm = (dvb_mux_t*)mm;
     dmc->dmc_fe_freq = lm->lm_tuning.dmc_fe_freq;
     // Note: keep original freq, else it can bounce around if diff transponders
     // report it slightly differently.
@@ -274,18 +274,14 @@ static const idclass_t *
 dvb_network_mux_class
   ( mpegts_network_t *mn )
 {
-  extern const idclass_t linuxdvb_mux_dvbt_class;
-  extern const idclass_t linuxdvb_mux_dvbc_class;
-  extern const idclass_t linuxdvb_mux_dvbs_class;
-  extern const idclass_t linuxdvb_mux_atsc_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbt_class))
-    return &linuxdvb_mux_dvbt_class;
+    return &dvb_mux_dvbt_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
-    return &linuxdvb_mux_dvbc_class;
+    return &dvb_mux_dvbc_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class))
-    return &linuxdvb_mux_dvbs_class;
+    return &dvb_mux_dvbs_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
-    return &linuxdvb_mux_atsc_class;
+    return &dvb_mux_atsc_class;
   return NULL;
 }
 
@@ -295,8 +291,8 @@ dvb_network_mux_create2
 {
   dvb_network_t *ln = (dvb_network_t*)mn;
   return (mpegts_mux_t*)
-    linuxdvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
-                         NULL, NULL, conf);
+    dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                    NULL, NULL, conf);
 }
 
 /* ****************************************************************************
@@ -349,7 +345,7 @@ dvb_network_create0
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      mm = (mpegts_mux_t *)linuxdvb_mux_create1(ln, f->hmf_name, e);
+      mm = (mpegts_mux_t *)dvb_mux_create1(ln, f->hmf_name, e);
       if (mm && move)
         mm->mm_config_save(mm);
     }

@@ -46,4 +46,29 @@ dvb_network_t *dvb_network_find_by_uuid(const char *uuid);
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
+/*
+ *
+ */
+typedef struct dvb_mux
+{
+  mpegts_mux_t;
+
+  /*
+   * Tuning information
+   */
+  dvb_mux_conf_t lm_tuning;
+} dvb_mux_t;
+
+extern const idclass_t dvb_mux_dvbt_class;
+extern const idclass_t dvb_mux_dvbc_class;
+extern const idclass_t dvb_mux_dvbs_class;
+extern const idclass_t dvb_mux_atsc_class;        
+
+dvb_mux_t *dvb_mux_create0
+  (dvb_network_t *ln, uint16_t onid, uint16_t tsid,
+   const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
+
+#define dvb_mux_create1(n, u, c)\
+  dvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL, u, c)
+
 #endif /* __TVH_MPEGTS_DVB_H__ */
