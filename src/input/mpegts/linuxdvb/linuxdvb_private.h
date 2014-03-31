@@ -22,6 +22,13 @@
 
 #include "input/mpegts.h"
 
+#include <linux/dvb/version.h>
+
+#define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
+
+#define DVB_VER_ATLEAST(maj, min) \
+ (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
+
 /* Max allowed frequency variation for something to be considered the same */
 #define LINUXDVB_FREQ_TOL 2000
 
@@ -75,7 +82,8 @@ struct linuxdvb_frontend
    * Frontend info
    */
   int                       lfe_number;
-  struct dvb_frontend_info  lfe_info;
+  dvb_fe_type_t             lfe_type;
+  char                      lfe_name[128];
   char                     *lfe_fe_path;
   char                     *lfe_dmx_path;
   char                     *lfe_dvr_path;
@@ -93,7 +101,7 @@ struct linuxdvb_frontend
    * Tuning
    */
   int                       lfe_locked;
-  fe_status_t               lfe_status;
+  int                       lfe_status;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
 
@@ -218,7 +226,7 @@ linuxdvb_frontend_t *
 linuxdvb_frontend_create
   ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
-    struct dvb_frontend_info *dfi );
+    dvb_fe_type_t type, const char *name );
 
 void linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m );
 
@@ -243,7 +251,7 @@ struct linuxdvb_network
   /*
    * Network type
    */
-  fe_type_t ln_type;
+  dvb_fe_type_t ln_type;
 };
 
 void linuxdvb_network_init ( void );

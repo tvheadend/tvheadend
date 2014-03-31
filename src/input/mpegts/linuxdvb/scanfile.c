@@ -112,14 +112,12 @@ scanfile_load_atsc ( dvb_mux_conf_t *mux, const char *line )
 {
   char qam[20];
   int r;
-  dvb_frontend_parameters_t *p = &mux->dmc_fe_params;
 
-  r = sscanf(line, "%u %s", &p->frequency, qam);
+  r = sscanf(line, "%u %s", &mux->dmc_fe_freq, qam);
   if (r != 2) return 1;
-#if DVB_VER_ATLEAST(5,0)
-  mux->dmc_fe_delsys = SYS_ATSC;
-#endif
-  if ((p->u.vsb.modulation = dvb_str2qam(qam)) == -1) return 1;
+  mux->dmc_fe_type = DVB_TYPE_ATSC;
+  mux->dmc_fe_delsys = DVB_SYS_ATSC;
+  if ((mux->dmc_fe_modulation = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
 }
@@ -130,31 +128,28 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
   char bw[20], fec[20], fec2[20], qam[20], mode[20], guard[20], hier[20];
   int r;
   uint32_t i;
-  dvb_frontend_parameters_t *p = &mux->dmc_fe_params;
 
   if (*line == '2') {
     r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
-	             &i, &i, &p->frequency, bw, fec, fec2, qam, mode, guard, hier);
+	             &i, &i, &mux->dmc_fe_freq, bw, fec, fec2, qam,
+                     mode, guard, hier);
     if(r != 10) return 1;
-#if DVB_VER_ATLEAST(5,4)
-    mux->dmc_fe_delsys = SYS_DVBT2;
-#endif
+    mux->dmc_fe_delsys = DVB_SYS_DVBT2;
   } else {
     r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
-	             &p->frequency, bw, fec, fec2, qam, mode, guard, hier);
+	             &mux->dmc_fe_freq, bw, fec, fec2, qam, mode, guard, hier);
     if(r != 8) return 1;
-#if DVB_VER_ATLEAST(5,0)
-    mux->dmc_fe_delsys = SYS_DVBT;
-#endif
+    mux->dmc_fe_delsys = DVB_SYS_DVBT;
   }
 
-  if ((p->u.ofdm.bandwidth             = dvb_str2bw(bw))       == -1) return 1;
-  if ((p->u.ofdm.constellation         = dvb_str2qam(qam))     == -1) return 1;
-  if ((p->u.ofdm.code_rate_HP          = dvb_str2fec(fec))     == -1) return 1;
-  if ((p->u.ofdm.code_rate_LP          = dvb_str2fec(fec2))    == -1) return 1;
-  if ((p->u.ofdm.transmission_mode     = dvb_str2mode(mode))   == -1) return 1;
-  if ((p->u.ofdm.guard_interval        = dvb_str2guard(guard)) == -1) return 1;
-  if ((p->u.ofdm.hierarchy_information = dvb_str2hier(hier))   == -1) return 1;
+  mux->dmc_fe_type = DVB_TYPE_T;
+  if ((mux->u.dmc_fe_ofdm.bandwidth             = dvb_str2bw(bw))       == -1) return 1;
+  if ((mux->dmc_fe_modulation                   = dvb_str2qam(qam))     == -1) return 1;
+  if ((mux->u.dmc_fe_ofdm.code_rate_HP          = dvb_str2fec(fec))     == -1) return 1;
+  if ((mux->u.dmc_fe_ofdm.code_rate_LP          = dvb_str2fec(fec2))    == -1) return 1;
+  if ((mux->u.dmc_fe_ofdm.transmission_mode     = dvb_str2mode(mode))   == -1) return 1;
+  if ((mux->u.dmc_fe_ofdm.guard_interval        = dvb_str2guard(guard)) == -1) return 1;
+  if ((mux->u.dmc_fe_ofdm.hierarchy_information = dvb_str2hier(hier))   == -1) return 1;
 
   return 0;
 }
@@ -164,7 +159,6 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
 {
   char pol[20], fec[20], qam[20], rolloff[20];
   int r, v2 = 0;
-  dvb_frontend_parameters_t *p = &mux->dmc_fe_params;
 
   if (*line == '2') {
     v2 = 2;
@@ -172,25 +166,23 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
   }
 
   r = sscanf(line, "%u %s %u %s %s %s",
-	           &p->frequency, pol, &p->u.qpsk.symbol_rate,
+	           &mux->dmc_fe_freq, pol, &mux->u.dmc_fe_qpsk.symbol_rate,
              fec, rolloff, qam);
   if (r < (4+v2)) return 1;
 
-  if ((mux->dmc_fe_polarisation = dvb_str2pol(pol)) == -1) return 1;
-  if ((p->u.qpsk.fec_inner      = dvb_str2fec(fec)) == -1) return 1;
-#if DVB_VER_ATLEAST(5,0)
+  mux->dmc_fe_type = DVB_TYPE_S;
+  if ((mux->u.dmc_fe_qpsk.polarisation  = dvb_str2pol(pol)) == -1) return 1;
+  if ((mux->u.dmc_fe_qpsk.fec_inner     = dvb_str2fec(fec)) == -1) return 1;
   if (v2) {
-    mux->dmc_fe_delsys     = SYS_DVBS2;
+    mux->dmc_fe_delsys          = DVB_SYS_DVBS2;
     if ((mux->dmc_fe_rolloff    = dvb_str2rolloff(rolloff)) == -1) return 1;
     if ((mux->dmc_fe_modulation = dvb_str2qam(qam))         == -1) return 1;
   } else {
-    mux->dmc_fe_delsys     = SYS_DVBS;
-    mux->dmc_fe_rolloff    = ROLLOFF_35;
-    mux->dmc_fe_modulation = QPSK;
+    mux->dmc_fe_delsys     = DVB_SYS_DVBS;
+    mux->dmc_fe_rolloff    = DVB_ROLLOFF_35;
+    mux->dmc_fe_modulation = DVB_MOD_QPSK;
   }
-#else
   if (v2) return 1;
-#endif
 
   return 0;
 }
@@ -200,17 +192,15 @@ scanfile_load_dvbc ( dvb_mux_conf_t *mux, const char *line )
 {
   char fec[20], qam[20];
   int r;
-  dvb_frontend_parameters_t *p = &mux->dmc_fe_params;
 
   r = sscanf(line, "%u %u %s %s",
-	           &p->frequency, &p->u.qam.symbol_rate, fec, qam);
+	           &mux->dmc_fe_freq, &mux->u.dmc_fe_qam.symbol_rate, fec, qam);
   if(r != 4) return 1;
 
-#if DVB_VER_ATLEAST(5,0)
-  mux->dmc_fe_delsys = SYS_DVBC_ANNEX_AC;
-#endif
-  if ((p->u.qam.fec_inner  = dvb_str2fec(fec)) == -1) return 1;
-  if ((p->u.qam.modulation = dvb_str2qam(qam)) == -1) return 1;
+  mux->dmc_fe_type   = DVB_TYPE_C;
+  mux->dmc_fe_delsys = DVB_SYS_DVBC_ANNEX_A;
+  if ((mux->u.dmc_fe_qam.fec_inner  = dvb_str2fec(fec)) == -1) return 1;
+  if ((mux->dmc_fe_modulation       = dvb_str2qam(qam)) == -1) return 1;
 
   return 0;
 }

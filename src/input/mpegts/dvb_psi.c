@@ -78,22 +78,11 @@ dvb_servicetype_lookup ( int t )
 /**
  * Tables for delivery descriptor parsing
  */
-static const fe_code_rate_t fec_tab [16] = {
-  FEC_AUTO, FEC_1_2, FEC_2_3, FEC_3_4,
-  FEC_5_6, FEC_7_8, FEC_8_9, 
-#if DVB_VER_ATLEAST(5,0)
-  FEC_3_5,
-#else
-  FEC_NONE,
-#endif
-  FEC_4_5, 
-#if DVB_VER_ATLEAST(5,0)
-  FEC_9_10,
-#else
-  FEC_NONE,
-#endif
-  FEC_NONE, FEC_NONE,
-  FEC_NONE, FEC_NONE, FEC_NONE, FEC_NONE
+static const dvb_fe_code_rate_t fec_tab [16] = {
+  DVB_FEC_AUTO,   DVB_FEC_1_2,   DVB_FEC_2_3,   DVB_FEC_3_4,
+  DVB_FEC_5_6,    DVB_FEC_7_8,   DVB_FEC_8_9,   DVB_FEC_3_5,
+  DVB_FEC_4_5,    DVB_FEC_9_10,  DVB_FEC_NONE,  DVB_FEC_NONE,
+  DVB_FEC_NONE,   DVB_FEC_NONE,  DVB_FEC_NONE,  DVB_FEC_NONE
 };
 
 /*
@@ -127,58 +116,43 @@ dvb_desc_sat_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
-#if DVB_VER_ATLEAST(5,0)
-  dmc.dmc_fe_pilot            = PILOT_AUTO;
-#endif
-  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
-  dmc.dmc_fe_params.frequency = frequency;
-  dmc.dmc_fe_orbital_pos      = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
-  dmc.dmc_fe_orbital_dir      = (ptr[6] & 0x80) ? 'E' : 'W';
-  dmc.dmc_fe_polarisation     = (ptr[6] >> 5) & 0x03;
+  dmc.dmc_fe_pilot               = DVB_PILOT_AUTO;
+  dmc.dmc_fe_inversion           = DVB_INVERSION_AUTO;
+  dmc.dmc_fe_freq                = frequency;
+  dmc.u.dmc_fe_qpsk.orbital_pos  = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
+  dmc.u.dmc_fe_qpsk.orbital_dir  = (ptr[6] & 0x80) ? 'E' : 'W';
+  dmc.u.dmc_fe_qpsk.polarisation = (ptr[6] >> 5) & 0x03;
 
-  dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate * 100;
-  dmc.dmc_fe_params.u.qpsk.fec_inner   = fec_tab[ptr[10] & 0x0f];
+  dmc.u.dmc_fe_qpsk.symbol_rate  = symrate * 100;
+  dmc.u.dmc_fe_qpsk.fec_inner    = fec_tab[ptr[10] & 0x0f];
   
-#if DVB_VER_ATLEAST(5,0)
   static int mtab[4] = {
-    0, QPSK,
-#if DVB_VER_ATLEAST(5,3)
-    PSK_8,
-#else
-    0,
-#endif
-    QAM_16
+    DVB_MOD_NONE, DVB_MOD_QPSK, DVB_MOD_PSK_8, DVB_MOD_QAM_16
   };
   static int rtab[4] = {
-    ROLLOFF_35, ROLLOFF_25, ROLLOFF_20, ROLLOFF_AUTO
+    DVB_ROLLOFF_35, DVB_ROLLOFF_25, DVB_ROLLOFF_20, DVB_ROLLOFF_AUTO
   };
-  dmc.dmc_fe_delsys     = (ptr[6] & 0x4) ? SYS_DVBS2 : SYS_DVBS;
+  dmc.dmc_fe_delsys     = (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS;
   dmc.dmc_fe_modulation = mtab[ptr[6] & 0x3];
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
-  if (dmc.dmc_fe_delsys == SYS_DVBS &&
-      dmc.dmc_fe_rolloff != ROLLOFF_35) {
+  if (dmc.dmc_fe_delsys == DVB_SYS_DVBS &&
+      dmc.dmc_fe_rolloff != DVB_ROLLOFF_35) {
     tvhwarn("nit", "dvb-s rolloff error");
     return NULL;
   }
-#endif
 
   /* Debug */
-  const char *pol = dvb_pol2str(dmc.dmc_fe_polarisation);
-  tvhdebug("nit", "    dvb-s%c pos %d%c freq %d %c sym %d fec %s"
-#if DVB_VER_ATLEAST(5,0)
-           " mod %s roff %s"
-#endif
-           ,
+  const char *pol = dvb_pol2str(dmc.u.dmc_fe_qpsk.polarisation);
+  tvhdebug("nit",
+           "    dvb-s%c pos %d%c freq %d %c sym %d fec %s mod %s roff %s",
            (ptr[6] & 0x4) ? '2' : ' ',
-           dmc.dmc_fe_orbital_pos, dmc.dmc_fe_orbital_dir,
-           dmc.dmc_fe_params.frequency,
+           dmc.u.dmc_fe_qpsk.orbital_pos, dmc.u.dmc_fe_qpsk.orbital_dir,
+           dmc.dmc_fe_freq,
            pol ? pol[0] : 'X',
            symrate,
-           dvb_fec2str(dmc.dmc_fe_params.u.qpsk.fec_inner)
-#if DVB_VER_ATLEAST(5,0)
-           , dvb_qam2str(dmc.dmc_fe_modulation),
+           dvb_fec2str(dmc.u.dmc_fe_qpsk.fec_inner),
+           dvb_qam2str(dmc.dmc_fe_modulation),
            dvb_rolloff2str(dmc.dmc_fe_rolloff)
-#endif
           );
 
   /* Create */
@@ -197,7 +171,8 @@ dvb_desc_cable_del
   dvb_mux_conf_t dmc;
 
   static const fe_modulation_t qtab [6] = {
-    QAM_AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256
+    DVB_MOD_QAM_AUTO, DVB_MOD_QAM_16, DVB_MOD_QAM_32, DVB_MOD_QAM_64,
+    DVB_MOD_QAM_128,  DVB_MOD_QAM_256
   };
 
   /* Not enough data */
@@ -220,25 +195,23 @@ dvb_desc_cable_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
-#if DVB_VER_ATLEAST(5,0)
-  dmc.dmc_fe_delsys           = SYS_DVBC_ANNEX_AC;
-#endif
-  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
-  dmc.dmc_fe_params.frequency = frequency * 100;
+  dmc.dmc_fe_delsys          = DVB_SYS_DVBC_ANNEX_A;
+  dmc.dmc_fe_inversion       = DVB_INVERSION_AUTO;
+  dmc.dmc_fe_freq            = frequency * 100;
 
-  dmc.dmc_fe_params.u.qam.symbol_rate  = symrate * 100;
+  dmc.u.dmc_fe_qam.symbol_rate  = symrate * 100;
   if((ptr[6] & 0x0f) >= sizeof(qtab))
-    dmc.dmc_fe_params.u.qam.modulation = QAM_AUTO;
+    dmc.dmc_fe_modulation    = QAM_AUTO;
   else
-    dmc.dmc_fe_params.u.qam.modulation = qtab[ptr[6] & 0x0f];
-  dmc.dmc_fe_params.u.qam.fec_inner    = fec_tab[ptr[10] & 0x07];
+    dmc.dmc_fe_modulation    = qtab[ptr[6] & 0x0f];
+  dmc.u.dmc_fe_qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
   /* Debug */
   tvhdebug("nit", "    dvb-c freq %d sym %d mod %s fec %s",
            frequency, 
            symrate,
-           dvb_qam2str(dmc.dmc_fe_params.u.qam.modulation),
-           dvb_fec2str(dmc.dmc_fe_params.u.qam.fec_inner));
+           dvb_qam2str(dmc.dmc_fe_modulation),
+           dvb_fec2str(dmc.u.dmc_fe_qam.fec_inner));
 
   /* Create */
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
@@ -253,28 +226,27 @@ dvb_desc_terr_del
    const uint8_t *ptr, int len )
 {
   static const fe_bandwidth_t btab [8] = {
-    BANDWIDTH_8_MHZ, BANDWIDTH_7_MHZ, BANDWIDTH_6_MHZ, BANDWIDTH_AUTO, 
-    BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO
-  };  
+    DVB_BANDWIDTH_8_MHZ, DVB_BANDWIDTH_7_MHZ,
+    DVB_BANDWIDTH_6_MHZ, DVB_BANDWIDTH_AUTO,
+    DVB_BANDWIDTH_AUTO,  DVB_BANDWIDTH_AUTO,
+    DVB_BANDWIDTH_AUTO,  DVB_BANDWIDTH_AUTO
+  };
   static const fe_modulation_t ctab [4] = {
-    QPSK, QAM_16, QAM_64, QAM_AUTO
+    DVB_MOD_QPSK, DVB_MOD_QAM_16, DVB_MOD_QAM_64, DVB_MOD_QAM_AUTO
   };
   static const fe_guard_interval_t gtab [4] = {
-    GUARD_INTERVAL_1_32, GUARD_INTERVAL_1_16, GUARD_INTERVAL_1_8, GUARD_INTERVAL_1_4
+    DVB_GUARD_INTERVAL_1_32, DVB_GUARD_INTERVAL_1_16,
+    DVB_GUARD_INTERVAL_1_8,  DVB_GUARD_INTERVAL_1_4
   };
   static const fe_transmit_mode_t ttab [4] = {
-    TRANSMISSION_MODE_2K,
-    TRANSMISSION_MODE_8K,
-#if DVB_VER_ATLEAST(5,1)
-    TRANSMISSION_MODE_4K, 
-#else
-    TRANSMISSION_MODE_AUTO,
-#endif
-    TRANSMISSION_MODE_AUTO
-};
+    DVB_TRANSMISSION_MODE_2K,
+    DVB_TRANSMISSION_MODE_8K,
+    DVB_TRANSMISSION_MODE_4K,
+    DVB_TRANSMISSION_MODE_AUTO
+  };
   static const fe_hierarchy_t htab [8] = {
-    HIERARCHY_NONE, HIERARCHY_1, HIERARCHY_2, HIERARCHY_4,
-    HIERARCHY_NONE, HIERARCHY_1, HIERARCHY_2, HIERARCHY_4
+    DVB_HIERARCHY_NONE, DVB_HIERARCHY_1, DVB_HIERARCHY_2, DVB_HIERARCHY_4,
+    DVB_HIERARCHY_NONE, DVB_HIERARCHY_1, DVB_HIERARCHY_2, DVB_HIERARCHY_4
   };
 
   int frequency;
@@ -291,30 +263,28 @@ dvb_desc_terr_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
-#if DVB_VER_ATLEAST(5,0)
-  dmc.dmc_fe_delsys           = SYS_DVBT;
-#endif
-  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
-  dmc.dmc_fe_params.frequency = frequency * 10;
+  dmc.dmc_fe_delsys           = DVB_SYS_DVBT;
+  dmc.dmc_fe_inversion        = DVB_INVERSION_AUTO;
+  dmc.dmc_fe_freq             = frequency * 10;
 
-  dmc.dmc_fe_params.u.ofdm.bandwidth             = btab[(ptr[4] >> 5) & 0x7];
-  dmc.dmc_fe_params.u.ofdm.constellation         = ctab[(ptr[5] >> 6) & 0x3];
-  dmc.dmc_fe_params.u.ofdm.hierarchy_information = htab[(ptr[5] >> 3) & 0x3];
-  dmc.dmc_fe_params.u.ofdm.code_rate_HP          = fec_tab[(ptr[5] + 1) & 0x7];
-  dmc.dmc_fe_params.u.ofdm.code_rate_LP          = fec_tab[((ptr[6] + 1) >> 5) & 0x7];
-  dmc.dmc_fe_params.u.ofdm.guard_interval        = gtab[(ptr[6] >> 3) & 0x3];
-  dmc.dmc_fe_params.u.ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
+  dmc.u.dmc_fe_ofdm.bandwidth             = btab[(ptr[4] >> 5) & 0x7];
+  dmc.dmc_fe_modulation                   = ctab[(ptr[5] >> 6) & 0x3];
+  dmc.u.dmc_fe_ofdm.hierarchy_information = htab[(ptr[5] >> 3) & 0x3];
+  dmc.u.dmc_fe_ofdm.code_rate_HP          = fec_tab[(ptr[5] + 1) & 0x7];
+  dmc.u.dmc_fe_ofdm.code_rate_LP          = fec_tab[((ptr[6] + 1) >> 5) & 0x7];
+  dmc.u.dmc_fe_ofdm.guard_interval        = gtab[(ptr[6] >> 3) & 0x3];
+  dmc.u.dmc_fe_ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
 
   /* Debug */
   tvhdebug("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
            frequency,
-           dvb_bw2str(dmc.dmc_fe_params.u.ofdm.bandwidth),
-           dvb_qam2str(dmc.dmc_fe_params.u.ofdm.constellation),
-           dvb_hier2str(dmc.dmc_fe_params.u.ofdm.hierarchy_information),
-           dvb_fec2str(dmc.dmc_fe_params.u.ofdm.code_rate_HP),
-           dvb_fec2str(dmc.dmc_fe_params.u.ofdm.code_rate_LP),
-           dvb_guard2str(dmc.dmc_fe_params.u.ofdm.guard_interval),
-           dvb_mode2str(dmc.dmc_fe_params.u.ofdm.transmission_mode));
+           dvb_bw2str(dmc.u.dmc_fe_ofdm.bandwidth),
+           dvb_qam2str(dmc.dmc_fe_modulation),
+           dvb_hier2str(dmc.u.dmc_fe_ofdm.hierarchy_information),
+           dvb_fec2str(dmc.u.dmc_fe_ofdm.code_rate_HP),
+           dvb_fec2str(dmc.u.dmc_fe_ofdm.code_rate_LP),
+           dvb_guard2str(dmc.u.dmc_fe_ofdm.guard_interval),
+           dvb_mode2str(dmc.u.dmc_fe_ofdm.transmission_mode));
   
   /* Create */
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);

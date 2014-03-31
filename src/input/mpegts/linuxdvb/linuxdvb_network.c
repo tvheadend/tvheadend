@@ -216,9 +216,9 @@ linuxdvb_network_find_mux
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-    if (abs(lm->lm_tuning.dmc_fe_params.frequency
-            - dmc->dmc_fe_params.frequency) > LINUXDVB_FREQ_TOL) continue;
-    if (lm->lm_tuning.dmc_fe_polarisation != dmc->dmc_fe_polarisation) continue;
+    if (abs(lm->lm_tuning.dmc_fe_freq
+            - dmc->dmc_fe_freq) > LINUXDVB_FREQ_TOL) continue;
+    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
     break;
   }
   return mm;
@@ -247,7 +247,7 @@ linuxdvb_network_create_mux
     save = 1;
   } else if (mm) {
     linuxdvb_mux_t *lm = (linuxdvb_mux_t*)mm;
-    dmc->dmc_fe_params.frequency = lm->lm_tuning.dmc_fe_params.frequency;
+    dmc->dmc_fe_freq = lm->lm_tuning.dmc_fe_freq;
     // Note: keep original freq, else it can bounce around if diff transponders
     // report it slightly differently.
     // TODO: Note: should we also leave AUTO settings as is?
@@ -312,13 +312,13 @@ linuxdvb_network_create0
 
   ln = calloc(1, sizeof(linuxdvb_network_t));
   if (idc == &linuxdvb_network_dvbt_class)
-    ln->ln_type = FE_OFDM;
+    ln->ln_type = DVB_TYPE_T;
   else if (idc == &linuxdvb_network_dvbc_class)
-    ln->ln_type = FE_QAM;
+    ln->ln_type = DVB_TYPE_C;
   else if (idc == &linuxdvb_network_dvbs_class)
-    ln->ln_type = FE_QPSK;
+    ln->ln_type = DVB_TYPE_S;
   else
-    ln->ln_type = FE_ATSC;
+    ln->ln_type = DVB_TYPE_ATSC;
 
   /* Create */
   if (!(ln = (linuxdvb_network_t*)mpegts_network_create0((void*)ln,
