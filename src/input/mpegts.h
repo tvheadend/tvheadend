@@ -20,6 +20,10 @@
 #ifndef __TVH_MPEGTS_H__
 #define __TVH_MPEGTS_H__
 
+#ifndef __TVH_INPUT_H__
+#error "Use header file input.h not input/mpegts.h"
+#endif
+
 #include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
@@ -468,7 +472,7 @@ struct mpegts_input
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
   int  (*mi_get_weight)     (mpegts_input_t*);
-  int  (*mi_get_priority)   (mpegts_input_t*);
+  int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
@@ -644,7 +648,7 @@ void mpegts_input_table_thread_stop( mpegts_input_t *mi );
 int mpegts_input_is_free ( mpegts_input_t *mi );
 
 int mpegts_input_get_weight ( mpegts_input_t *mi );
-int mpegts_input_get_priority ( mpegts_input_t *mi );
+int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm );
 int mpegts_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm );
 
 void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
@@ -689,8 +693,6 @@ mpegts_service_t *mpegts_service_create0
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
-void mpegts_service_save ( mpegts_service_t *s, htsmsg_t *c );
-
 void mpegts_service_delete ( service_t *s, int delconf );
 
 /*
@@ -729,3 +731,4 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
  *
  * vim:sts=2:ts=2:sw=2:et
  *****************************************************************************/
+

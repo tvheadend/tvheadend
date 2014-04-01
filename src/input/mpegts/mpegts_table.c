@@ -17,7 +17,7 @@
  */
 
 #include "tvheadend.h"
-#include "input/mpegts.h"
+#include "input.h"
 
 #include <assert.h>
 

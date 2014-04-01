@@ -113,6 +113,9 @@ void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 
 #if ENABLE_MPEGTS
 #include "input/mpegts.h"
+#if ENABLE_MPEGTS_DVB
+#include "input/mpegts/mpegts_dvb.h"
+#endif
 #if ENABLE_TSFILE
 #include "input/mpegts/tsfile.h"
 #endif

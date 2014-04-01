@@ -43,7 +43,7 @@
 #include "htsp_server.h"
 #include "lang_codes.h"
 #include "descrambler.h"
-#include "input/mpegts.h"
+#include "input.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_save(struct idnode *self);

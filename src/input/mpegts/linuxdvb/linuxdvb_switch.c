@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <linux/dvb/dmx.h>
+#include <linux/dvb/frontend.h>
 
 /* **************************************************************************
  * Class definition
@@ -112,15 +113,15 @@ const idclass_t linuxdvb_switch_class =
 
 static int
 linuxdvb_switch_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
   int i, com, r1 = 0, r2 = 0;
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 
   /* LNB settings */
-  pol  = (sc->ls_lnb) ? sc->ls_lnb->lnb_pol (sc->ls_lnb, lm) & 0x1 : 0;
-  band = (sc->ls_lnb) ? sc->ls_lnb->lnb_band(sc->ls_lnb, lm) & 0x1 : 0;
+  pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
+  band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
   
   /* Set the voltage */
   if (linuxdvb_diseqc_set_volt(fd, pol))
@@ -130,7 +131,7 @@ linuxdvb_switch_tune
   com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
   
   /* Single committed (before repeats) */
-  if (sc->ls_parent->ls_diseqc_repeats > 0) {
+  if (sc->lse_parent->ls_diseqc_repeats > 0) {
     r2 = 1;
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
       return -1;
@@ -138,7 +139,7 @@ linuxdvb_switch_tune
   }
 
   /* Repeats */
-  for (i = 0; i <= sc->ls_parent->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
     
     /* Uncommitted */
     if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,

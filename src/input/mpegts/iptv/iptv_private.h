@@ -20,8 +20,7 @@
 #ifndef __IPTV_PRIVATE_H__
 #define __IPTV_PRIVATE_H__
 
-#include "input/mpegts.h"
-#include "input/mpegts/iptv.h"
+#include "input.h"
 #include "htsbuf.h"
 #include "url.h"
 

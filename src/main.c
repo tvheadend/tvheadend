@@ -763,6 +763,9 @@ main(int argc, char **argv)
       tsfile_add_file(opt_tsfile.str[i]);
   }
 #endif
+#if ENABLE_MPEGTS_DVB
+  dvb_network_init();
+#endif
 #if ENABLE_IPTV
   iptv_init();
 #endif
@@ -835,6 +838,9 @@ main(int argc, char **argv)
   tvhftrace("main", webui_done);
   tvhftrace("main", http_client_done);
   tvhftrace("main", fsmonitor_done);
+#if ENABLE_MPEGTS_DVB
+  tvhftrace("main", dvb_network_done);
+#endif
 #if ENABLE_IPTV
   tvhftrace("main", iptv_done);
 #endif
