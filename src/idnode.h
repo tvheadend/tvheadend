@@ -22,11 +22,9 @@
 
 #include "tvheadend.h"
 #include "prop.h"
+#include "uuid.h"
 
 #include <regex.h>
-
-#define UUID_STR_LEN 33 // inc NUL char
-#define UUID_BIN_LEN 16
 
 struct htsmsg;
 typedef struct idnode idnode_t;
@@ -62,9 +60,9 @@ typedef struct idclass {
  * Node definition
  */
 struct idnode {
-  uint8_t           in_uuid[UUID_BIN_LEN]; ///< Unique ID
-  RB_ENTRY(idnode)  in_link;               ///< Global hash
-  const idclass_t  *in_class;              ///< Class definition
+  uint8_t           in_uuid[UUID_BIN_SIZE]; ///< Unique ID
+  RB_ENTRY(idnode)  in_link;                ///< Global hash
+  const idclass_t  *in_class;               ///< Class definition
 };
 
 /*
@@ -115,8 +113,6 @@ int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc);
 void idnode_unlink(idnode_t *in);
 
 uint32_t      idnode_get_short_uuid (const idnode_t *in);
-const char   *idnode_uuid_as_str1 (const uint8_t *bin, size_t len, char *b);
-const char   *idnode_uuid_as_str0 (const idnode_t *in, char *b);
 const char   *idnode_uuid_as_str  (const idnode_t *in);
 idnode_set_t *idnode_get_childs   (idnode_t *in);
 const char   *idnode_get_title    (idnode_t *in);

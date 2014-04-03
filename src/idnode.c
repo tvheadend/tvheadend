@@ -28,6 +28,7 @@
 #include "idnode.h"
 #include "notify.h"
 #include "settings.h"
+#include "uuid.h"
 
 typedef struct idclass_link
 {
@@ -35,7 +36,6 @@ typedef struct idclass_link
   RB_ENTRY(idclass_link) link;
 } idclass_link_t;
 
-static int                    randfd = 0;
 static RB_HEAD(,idnode)       idnodes;
 static RB_HEAD(,idclass_link) idclasses;
 static pthread_cond_t         idnode_cond;
@@ -51,60 +51,6 @@ idclass_register(const idclass_t *idc);
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
-
-/**
- *
- */
-static int
-hexnibble(char c)
-{
-  switch(c) {
-  case '0' ... '9':    return c - '0';
-  case 'a' ... 'f':    return c - 'a' + 10;
-  case 'A' ... 'F':    return c - 'A' + 10;
-  default:
-    return -1;
-  }
-}
-
-
-/**
- *
- */
-static int
-hex2bin(uint8_t *buf, size_t buflen, const char *str)
-{
-  int hi, lo;
-
-  while(*str) {
-    if(buflen == 0)
-      return -1;
-    if((hi = hexnibble(*str++)) == -1)
-      return -1;
-    if((lo = hexnibble(*str++)) == -1)
-      return -1;
-
-    *buf++ = hi << 4 | lo;
-    buflen--;
-  }
-  return 0;
-}
-
-/**
- *
- */
-static void
-bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
-{
-  while(dstlen > 2 && srclen > 0) {
-    *dst++ = "0123456789abcdef"[*src >> 4];
-    *dst++ = "0123456789abcdef"[*src & 0xf];
-    src++;
-    srclen--;
-    dstlen -= 2;
-  }
-  *dst = 0;
-}
 
 /**
  *
@@ -127,10 +73,6 @@ pthread_t idnode_tid;
 void
 idnode_init(void)
 {
-  randfd = open("/dev/urandom", O_RDONLY);
-  if(randfd == -1)
-    exit(1);
-  
   idnode_queue = NULL;
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
@@ -163,15 +105,10 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
 {
   idnode_t *c;
   lock_assert(&global_lock);
-  if(uuid == NULL) {
-    if(read(randfd, in->in_uuid, sizeof(in->in_uuid)) != sizeof(in->in_uuid)) {
-      perror("read(random for uuid)");
-      exit(1);
-    }
-  } else {
-    if(hex2bin(in->in_uuid, sizeof(in->in_uuid), uuid))
-      return -1;
-  }
+  uuid_t u;
+  if (uuid_init_bin(&u, uuid))
+    return -1;
+  memcpy(in->in_uuid, u.bin, sizeof(in->in_uuid));
 
   in->in_class = class;
 
@@ -236,25 +173,14 @@ idnode_get_short_uuid (const idnode_t *in)
  *
  */
 const char *
-idnode_uuid_as_str0(const idnode_t *in, char *b)
-{
-  bin2hex(b, UUID_STR_LEN, in->in_uuid, sizeof(in->in_uuid));
-  return b;
-}
-const char *
 idnode_uuid_as_str(const idnode_t *in)
 {
-  static char ret[16][UUID_STR_LEN];
-  static int p = 0;
-  char *b = ret[p];
+  static uuid_t ret[16];
+  static uint8_t p = 0;
+  bin2hex(ret[p].hex, sizeof(ret[p].hex), in->in_uuid, sizeof(in->in_uuid));
+  const char *s = ret[p].hex;
   p = (p + 1) % 16;
-  return idnode_uuid_as_str0(in, b);
-}
-const char *
-idnode_uuid_as_str1 ( const uint8_t *bin, size_t len, char *b )
-{
-  bin2hex(b, UUID_STR_LEN, bin, len);
-  return b;
+  return s;
 }
 
 /**

@@ -725,6 +725,7 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
   
   /* Initialise configuration */
+  uuid_init();
   idnode_init();
   hts_settings_init(opt_config);
 

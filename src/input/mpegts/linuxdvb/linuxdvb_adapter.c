@@ -163,7 +163,8 @@ linuxdvb_adapter_add ( const char *path )
 {
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
-  char fe_path[512], dmx_path[512], dvr_path[512], uuid[UUID_STR_LEN];
+  char fe_path[512], dmx_path[512], dvr_path[512];
+  uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
   SHA_CTX sha1;
@@ -265,7 +266,7 @@ linuxdvb_adapter_add ( const char *path )
       SHA1_Update(&sha1, (void*)path,     strlen(path));
       SHA1_Update(&sha1, (void*)dfi.name, strlen(dfi.name));
       SHA1_Final(uuidbin, &sha1);
-      idnode_uuid_as_str1(uuidbin, sizeof(uuidbin), uuid);
+      bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
 
       /* Load config */
       conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid);
@@ -275,7 +276,7 @@ linuxdvb_adapter_add ( const char *path )
         save = 1;
   
       /* Create */
-      if (!(la = linuxdvb_adapter_create(uuid, conf, path, a, &dfi))) {
+      if (!(la = linuxdvb_adapter_create(uuid.hex, conf, path, a, &dfi))) {
         tvhlog(LOG_ERR, "linuxdvb", "failed to create %s", path);
         htsmsg_destroy(conf);
         return; // Note: save to return here as global_lock is held
