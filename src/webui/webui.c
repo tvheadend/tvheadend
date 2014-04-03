@@ -44,7 +44,7 @@
 #include "muxer.h"
 #include "imagecache.h"
 #include "tcp.h"
-#include "config2.h"
+#include "config.h"
 #include "atomic.h"
 
 #if defined(PLATFORM_LINUX)

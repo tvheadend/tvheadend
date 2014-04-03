@@ -42,4 +42,6 @@ int hts_settings_buildpath(char *dst, size_t dstsize, const char *pathfmt, ...);
 
 int hts_settings_makedirs ( const char *path );
 
+int hts_settings_exists ( const char *pathfmt, ... );
+
 #endif /* HTSSETTINGS_H__ */ 

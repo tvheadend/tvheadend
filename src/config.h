@@ -23,7 +23,7 @@
 
 #include "htsmsg.h"
 
-void        config_init    ( void );
+void        config_init    ( const char *path );
 void        config_done    ( void );
 void        config_save    ( void );
 

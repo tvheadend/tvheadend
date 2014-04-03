@@ -18,7 +18,7 @@
 #ifndef TVHEADEND_H
 #define TVHEADEND_H
 
-#include "config.h"
+#include "build.h"
 
 #define _GNU_SOURCE
 #include <pthread.h>

@@ -54,7 +54,7 @@
 #include "service.h"
 #include "trap.h"
 #include "settings.h"
-#include "config2.h"
+#include "config.h"
 #include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
@@ -724,11 +724,6 @@ main(int argc, char **argv)
   if (!isatty(2))
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
   
-  /* Initialise configuration */
-  uuid_init();
-  idnode_init();
-  hts_settings_init(opt_config);
-
   /* Initialise clock */
   pthread_mutex_lock(&global_lock);
   time(&dispatch_clock);
@@ -738,6 +733,11 @@ main(int argc, char **argv)
   sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
   
+  /* Initialise configuration */
+  uuid_init();
+  idnode_init();
+  config_init(opt_config);
+
   /**
    * Initialize subsystems
    */
@@ -750,8 +750,6 @@ main(int argc, char **argv)
   libav_init();
   transcoding_init();
 #endif
-
-  config_init();
 
   imagecache_init();
 

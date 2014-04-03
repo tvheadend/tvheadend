@@ -28,7 +28,7 @@
 #include "streaming.h"
 #include "timeshift.h"
 #include "timeshift/private.h"
-#include "config2.h"
+#include "config.h"
 #include "settings.h"
 #include "atomic.h"
 

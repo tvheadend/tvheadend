@@ -104,7 +104,7 @@ SRCS =  src/version.c \
   src/tvhpoll.c \
 	src/huffman.c \
 	src/filebundle.c \
-	src/config2.c \
+	src/config.c \
 	src/lang_codes.c \
 	src/lang_str.c \
 	src/imagecache.c \

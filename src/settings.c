@@ -33,7 +33,7 @@
 #include "tvheadend.h"
 #include "filebundle.h"
 
-static char *settingspath;
+static char *settingspath = NULL;
 
 /**
  *
@@ -50,31 +50,8 @@ hts_settings_get_root(void)
 void
 hts_settings_init(const char *confpath)
 {
-  char buf[256];
-  const char *homedir = getenv("HOME");
-  struct stat st;
-
-  if(confpath != NULL) {
+  if (confpath)
     settingspath = strdup(confpath);
-  } else if(homedir != NULL) {
-    snprintf(buf, sizeof(buf), "%s/.hts", homedir);
-    if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0) {
-	    snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
-	    if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0)
-	      settingspath = strdup(buf);
-    }
-  }
-  if(settingspath == NULL) {
-    tvhlog(LOG_ALERT, "START", 
-	   "No configuration path set, "
-	   "settings and configuration will not be saved");
-  } else if(access(settingspath, R_OK | W_OK)) {
-    tvhlog(LOG_ALERT, "START", 
-	   "Configuration path %s is not read/write:able "
-	   "by user (UID:%d, GID:%d) -- %s",
-	   settingspath, getuid(), getgid(), strerror(errno));
-    settingspath = NULL;
-  }
 }
 
 /**
@@ -377,4 +354,22 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
   int flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
 
   return tvh_open(path, flags, 0700);
+}
+
+/*
+ * Check if a path exists
+ */
+int
+hts_settings_exists ( const char *pathfmt, ... )
+{
+  va_list ap;
+  char path[256];
+  struct stat st;
+
+  /* Build path */
+  va_start(ap, pathfmt);
+  _hts_settings_buildpath(path, sizeof(path), pathfmt, ap, settingspath);
+  va_end(ap);
+
+  return (stat(path, &st) == 0);
 }
