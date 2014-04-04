@@ -205,6 +205,7 @@ tvheadend.channel_tab = function(panel)
     tbar    : [ mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton ],
     lcol    : [
       {
+        width    : 50,
         header   : 'Play',
         renderer : function (v, o, r) {
           return "<a href='stream/channel/" + r.id + "'>Play</a>";

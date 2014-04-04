@@ -129,13 +129,20 @@ tvheadend.IdNodeField = function (conf)
 
   this.column = function ()
   {
+    var w = 300;
     var ftype = 'string';
     if (this.type == 'int' || this.type == 'u32' || 
-        this.type == 'u16' || this.type == 'dbl')
+        this.type == 'u16' || this.type == 'dbl') {
       ftype = 'numeric';
-    else if (this.type == 'bool')
-      ftype = 'boolean'
+      w = 80;
+    } else if (this.type == 'bool') {
+      ftype = 'boolean';
+      w = 60;
+    }
+    if (this.enum || this.list)
+      w = 300;
     return {
+      width    : w,
       dataIndex: this.id,
       header   : this.text,
       sortable : true,
