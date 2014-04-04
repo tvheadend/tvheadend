@@ -36,7 +36,7 @@
 #include "subscriptions.h"
 #include "parsers.h"
 #include "streaming.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "parsers/parser_teletext.h"
 #include "tsdemux.h"
 

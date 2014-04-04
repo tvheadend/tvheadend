@@ -178,6 +178,12 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/tsdemux.c \
 
+# MPEGTS DVB
+SRCS-${CONFIG_MPEGTS_DVB} += \
+        src/input/mpegts/mpegts_network_dvb.c \
+        src/input/mpegts/mpegts_mux_dvb.c \
+        src/input/mpegts/scanfile.c
+
 # MPEGTS EPG
 SRCS-$(CONFIG_MPEGTS) += \
 	src/epggrab/otamux.c\
@@ -185,20 +191,16 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/epggrab/support/freesat_huffman.c \
 	src/epggrab/module/opentv.c \
 
-# DVB
+# LINUX DVB
 SRCS-${CONFIG_LINUXDVB} += \
         src/input/mpegts/linuxdvb/linuxdvb.c \
         src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
         src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
-        src/input/mpegts/linuxdvb/linuxdvb_network.c \
-        src/input/mpegts/linuxdvb/linuxdvb_mux.c \
-        src/input/mpegts/linuxdvb/linuxdvb_service.c \
         src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
         src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
         src/input/mpegts/linuxdvb/linuxdvb_switch.c \
         src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
-        src/input/mpegts/linuxdvb/linuxdvb_en50494.c \
-        src/input/mpegts/linuxdvb/scanfile.c \
+        src/input/mpegts/linuxdvb/linuxdvb_en50494.c
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \

@@ -724,7 +724,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
  * TODO: can't currently force this to be on a particular input
  */
 #if ENABLE_MPEGTS
-#include "src/input/mpegts.h"
+#include "input.h"
 static int
 http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 {

@@ -22,7 +22,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "subscriptions.h"
 
 #include <string.h>

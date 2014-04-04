@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LINUXDVB_SCANFILES_H__
-#define __LINUXDVB_SCANFILES_H__
+#ifndef __DVB_SCANFILES_H__
+#define __DVB_SCANFILES_H__
 
 typedef struct scanfile_network {
   const char                  *sfn_id;
@@ -44,4 +44,4 @@ void scanfile_done ( void );
 
 scanfile_network_t *scanfile_find ( const char *id );
   
-#endif /* __LINUXDVB_SCANFILES_H__ */
+#endif /* __DVB_SCANFILES_H__ */

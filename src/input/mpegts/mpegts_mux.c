@@ -19,7 +19,7 @@
 
 #include "idnode.h"
 #include "queue.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "subscriptions.h"
 #include "dvb_charset.h"
 

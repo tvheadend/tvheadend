@@ -24,8 +24,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
-#include "input/mpegts.h"
-#include "input/mpegts/dvb.h"
+#include "input.h"
 #include "input/mpegts/dvb_charset.h"
 
 /* ************************************************************************

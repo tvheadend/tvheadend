@@ -20,7 +20,14 @@
 #ifndef __TVH_LINUXDVB_PRIVATE_H__
 #define __TVH_LINUXDVB_PRIVATE_H__
 
-#include "input/mpegts.h"
+#include "input.h"
+
+#include <linux/dvb/version.h>
+
+#define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
+
+#define DVB_VER_ATLEAST(maj, min) \
+ (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
 
 /* Max allowed frequency variation for something to be considered the same */
 #define LINUXDVB_FREQ_TOL 2000
@@ -33,7 +40,6 @@ typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
 typedef struct linuxdvb_diseqc      linuxdvb_diseqc_t;
 typedef struct linuxdvb_lnb         linuxdvb_lnb_t;
 typedef struct linuxdvb_network     linuxdvb_network_t;
-typedef struct linuxdvb_mux         linuxdvb_mux_t;
 typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
@@ -75,7 +81,8 @@ struct linuxdvb_frontend
    * Frontend info
    */
   int                       lfe_number;
-  struct dvb_frontend_info  lfe_info;
+  dvb_fe_type_t             lfe_type;
+  char                      lfe_name[128];
   char                     *lfe_fe_path;
   char                     *lfe_dmx_path;
   char                     *lfe_dvr_path;
@@ -93,7 +100,7 @@ struct linuxdvb_frontend
    * Tuning
    */
   int                       lfe_locked;
-  fe_status_t               lfe_status;
+  int                       lfe_status;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
 
@@ -139,31 +146,36 @@ struct linuxdvb_satconf
 };
 
 /*
- * Internal wrapper for a satconf entry
- *
- * Note: this is a bit cumbersome, it comes from how I first did the satconf
- *       and was subsequently bullied (by amet) into changing it (probably
- *       for the better, just don't tell him, no danger he'll read this!)
- *
- *       maybe one day I'll do it again properly
+ * Elementary satconf entry
  */
 struct linuxdvb_satconf_ele
 {
-  mpegts_input_t; // This acts as proxy for the frontend
-
+  idnode_t               lse_id;
   /*
    * Parent
    */
-  linuxdvb_satconf_t               *ls_parent;
-  TAILQ_ENTRY(linuxdvb_satconf_ele)  ls_link;
+  linuxdvb_satconf_t               *lse_parent;
+  TAILQ_ENTRY(linuxdvb_satconf_ele)  lse_link;
+
+  /*
+   * Config
+   */
+  int                    lse_enabled;
+  int                    lse_priority;
+  char                  *lse_name;
+
+  /*
+   * Assigned networks to this SAT configuration
+   */
+  idnode_set_t          *lse_networks;
 
   /*
    * Diseqc kit
    */
-  linuxdvb_lnb_t        *ls_lnb;
-  linuxdvb_diseqc_t     *ls_switch;
-  linuxdvb_diseqc_t     *ls_rotor;
-  linuxdvb_diseqc_t     *ls_en50494;
+  linuxdvb_lnb_t        *lse_lnb;
+  linuxdvb_diseqc_t     *lse_switch;
+  linuxdvb_diseqc_t     *lse_rotor;
+  linuxdvb_diseqc_t     *lse_en50494;
 };
 
 struct linuxdvb_diseqc
@@ -171,17 +183,17 @@ struct linuxdvb_diseqc
   idnode_t              ld_id;
   const char           *ld_type;
   linuxdvb_satconf_ele_t   *ld_satconf;
-  int (*ld_grace) (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm);
-  int (*ld_tune)  (linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm,
+  int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
+  int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_ele_t *ls, int fd);
 };
 
 struct linuxdvb_lnb
 {
   linuxdvb_diseqc_t;
-  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_band)(linuxdvb_lnb_t*, linuxdvb_mux_t*);
-  int       (*lnb_pol) (linuxdvb_lnb_t*, linuxdvb_mux_t*);
+  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_band)(linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_pol) (linuxdvb_lnb_t*, dvb_mux_t*);
 };
 
 struct linuxdvb_en50494
@@ -218,7 +230,7 @@ linuxdvb_frontend_t *
 linuxdvb_frontend_create
   ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
-    struct dvb_frontend_info *dfi );
+    dvb_fe_type_t type, const char *name );
 
 void linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m );
 
@@ -231,52 +243,6 @@ int linuxdvb_frontend_tune0
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 int linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
-
-/*
- * Network
- */
-
-struct linuxdvb_network
-{
-  mpegts_network_t;
-
-  /*
-   * Network type
-   */
-  fe_type_t ln_type;
-};
-
-void linuxdvb_network_init ( void );
-void linuxdvb_network_done ( void );
-linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
-
-linuxdvb_network_t *linuxdvb_network_create0
-  ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
-
-struct linuxdvb_mux
-{
-  mpegts_mux_t;
-
-  /*
-   * Tuning information
-   */
-  dvb_mux_conf_t lm_tuning;
-};
-
-linuxdvb_mux_t *linuxdvb_mux_create0
-  (linuxdvb_network_t *ln, uint16_t onid, uint16_t tsid,
-   const dvb_mux_conf_t *dmc, const char *uuid, htsmsg_t *conf);
-
-#define linuxdvb_mux_create1(n, u, c)\
-  linuxdvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,\
-                       NULL, u, c)
-
-/*
- * Service
- */
-mpegts_service_t *linuxdvb_service_create0
-  (linuxdvb_mux_t *lm, uint16_t sid, uint16_t pmt_pid,
-   const char *uuid, htsmsg_t *conf);
 
 /*
  * Diseqc gear
@@ -337,5 +303,16 @@ linuxdvb_satconf_t *linuxdvb_satconf_create
     const char *type, const char *uuid, htsmsg_t *conf );
 
 void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf );
+
+int linuxdvb_satconf_get_priority
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
+
+int linuxdvb_satconf_get_grace
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
+  
+void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
+
+int linuxdvb_satconf_start_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

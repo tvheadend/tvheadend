@@ -20,7 +20,7 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvb_charset.h"
-#include "../mpegts.h"
+#include "input.h"
 
 static LIST_HEAD(,dvb_charset) dvb_charset_list;
 

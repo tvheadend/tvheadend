@@ -37,7 +37,7 @@
 #include <fcntl.h>
 
 #include "tvheadend.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "tcp.h"
 #include "capmt.h"
 #include "notify.h"

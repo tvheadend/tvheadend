@@ -21,8 +21,6 @@
 #include "input.h"
 #include "settings.h"
 #include "linuxdvb_private.h"
-#include "scanfile.h"
-#include "../dvb_charset.h"
 
 int linuxdvb_adapter_mask;
 
@@ -30,17 +28,8 @@ void linuxdvb_init ( int adapter_mask )
 {
   linuxdvb_adapter_mask = adapter_mask;
 
-  /* Load scan files */
-  scanfile_init();
-
-  /* Load list of mux charset global overrides */
-  dvb_charset_init();
-
   /* Initialise en50494 locks */
   linuxdvb_en50494_init();
-
-  /* Initialise networks */
-  linuxdvb_network_init();
 
   /* Initialsie devices */
   linuxdvb_adapter_init();
@@ -48,8 +37,5 @@ void linuxdvb_init ( int adapter_mask )
 
 void linuxdvb_done ( void )
 {
-  linuxdvb_network_done();
   linuxdvb_adapter_done();
-  dvb_charset_done();
-  scanfile_done();
 }

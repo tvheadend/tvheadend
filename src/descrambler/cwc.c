@@ -40,7 +40,7 @@
 #include "dtable.h"
 #include "subscriptions.h"
 #include "service.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "input/mpegts/tsdemux.h"
 #include "tvhcsa.h"
 

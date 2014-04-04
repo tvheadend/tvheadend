@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <math.h>
+#include <linux/dvb/frontend.h>
 
 /* **************************************************************************
  * Class definition
@@ -131,10 +132,10 @@ const idclass_t linuxdvb_rotor_usals_class =
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int i;
-  for (i = 0; i <= ls->ls_parent->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
@@ -149,7 +150,7 @@ linuxdvb_rotor_gotox_tune
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
-  ( linuxdvb_rotor_t *lr, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   /*
    * Code originally written in PR #238 by Jason Millard jsm174
@@ -202,7 +203,7 @@ linuxdvb_rotor_usals_tune
            fabs(pos), (pos > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
-  for (i = 0; i <= ls->ls_parent->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
       tvherror("diseqc", "failed to send USALS command");
       return -1;
@@ -218,7 +219,7 @@ linuxdvb_rotor_usals_tune
 
 static int
 linuxdvb_rotor_tune
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
@@ -239,7 +240,7 @@ linuxdvb_rotor_tune
 
 static int
 linuxdvb_rotor_grace
-  ( linuxdvb_diseqc_t *ld, linuxdvb_mux_t *lm )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
 {
   return 120; // TODO: calculate approx period
 }

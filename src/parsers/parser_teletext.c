@@ -35,7 +35,7 @@
 #include "packet.h"
 #include "streaming.h"
 #include "service.h"
-#include "input/mpegts.h"
+#include "input.h"
 #include "parser_teletext.h"
 
 /**

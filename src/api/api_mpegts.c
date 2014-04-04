@@ -21,11 +21,9 @@
 #include "access.h"
 #include "htsmsg.h"
 #include "api.h"
-#include "input/mpegts.h"
-#if ENABLE_LINUXDVB
-#include "input/mpegts/linuxdvb.h"
-#include "input/mpegts/linuxdvb/linuxdvb_private.h"
-#include "input/mpegts/linuxdvb/scanfile.h"
+#include "input.h"
+#if ENABLE_MPEGTS_DVB
+#include "input/mpegts/scanfile.h"
 #endif
 
 /*
@@ -253,9 +251,9 @@ api_mpegts_service_grid
   }
 }
 
-#if ENABLE_LINUXDVB
+#if ENABLE_MPEGTS_DVB
 static int
-api_linuxdvb_scanfile_list
+api_dvb_scanfile_list
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   char buf[512];
@@ -323,8 +321,8 @@ api_mpegts_init ( void )
     { "mpegts/mux/class",          ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_mux_class },
     { "mpegts/service/grid",       ACCESS_ANONYMOUS, api_idnode_grid,  api_mpegts_service_grid },
     { "mpegts/service/class",      ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_service_class },
-#if ENABLE_LINUXDVB
-    { "linuxdvb/scanfile/list",    ACCESS_ANONYMOUS, api_linuxdvb_scanfile_list, NULL },
+#if ENABLE_MPEGTS_DVB
+    { "dvb/scanfile/list",         ACCESS_ANONYMOUS, api_dvb_scanfile_list, NULL },
 #endif
     { NULL },
   };

@@ -32,7 +32,7 @@
 #include "service.h"
 #include "htsmsg.h"
 #include "settings.h"
-#include "input/mpegts.h"
+#include "input.h"
 
 static epggrab_channel_tree_t _opentv_channels;
 
