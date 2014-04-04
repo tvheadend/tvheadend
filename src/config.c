@@ -474,11 +474,25 @@ config_migrate_v2 ( void )
 }
 
 /*
+ * v2 -> v3 : changes to DVB layout
+ */
+static void
+config_migrate_v3 ( void )
+{
+  char src[1024], dst[1024];
+  
+  hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks");
+  hts_settings_buildpath(dst, sizeof(dst), "input/dvb/networks");
+  rename(src, dst);
+}
+
+/*
  * Migration table
  */
 static const config_migrate_t config_migrate_table[] = {
   config_migrate_v1,
-  config_migrate_v2
+  config_migrate_v2,
+  config_migrate_v3
 };
 
 /*
