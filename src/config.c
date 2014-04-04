@@ -52,6 +52,171 @@ config_migrate_chn_add_svc
 }
 
 /*
+ * Helper function to migrate a muxes services
+ */
+static void
+config_migrate_dvb_svcs
+  ( const char *name, const char *netu, const char *muxu, htsmsg_t *channels )
+{
+  uuid_t svcu;
+  htsmsg_t *c, *e, *svc;
+  htsmsg_field_t *f;
+  const char *str;
+  uint32_t u32;
+
+  if ((c = hts_settings_load_r(1, "dvbtransports/%s", name))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+
+      svc = htsmsg_create_map();
+      uuid_init_hex(&svcu, NULL);
+      if (!htsmsg_get_u32(e, "service_id", &u32))
+        htsmsg_add_u32(svc, "sid", u32);
+      if ((str = htsmsg_get_str(e, "servicename")))
+        htsmsg_add_str(svc, "svcname", str);
+      if ((str = htsmsg_get_str(e, "provider")))
+        htsmsg_add_str(svc, "provider", str);
+      if (!(htsmsg_get_u32(e, "type", &u32))) 
+        htsmsg_add_u32(svc, "dvb_servicetype", u32);
+      if (!htsmsg_get_u32(e, "channel", &u32))
+        htsmsg_add_u32(svc, "lcn", u32);
+      if (!htsmsg_get_u32(e, "disabled", &u32))
+        htsmsg_add_u32(svc, "enabled", u32 ? 0 : 1);
+      if ((str = htsmsg_get_str(e, "charset")))
+        htsmsg_add_str(svc, "charset", str);
+      if ((str = htsmsg_get_str(e, "default_authority"))) 
+        htsmsg_add_str(svc, "cridauth", str);
+  
+      // TODO: dvb_eit_enable
+
+      hts_settings_save(svc, "input/linuxdvb/networks/%s/muxes/%s/services/%s",
+                        netu, muxu, svcu.hex);
+
+      /* Map to channel */
+      if ((str = htsmsg_get_str(e, "channelname")))
+        config_migrate_chn_add_svc(channels, str, svcu.hex);
+    }
+    htsmsg_destroy(c);
+  }
+}
+
+/*
+ * Helper to convert a DVB network
+ */
+static void
+config_migrate_dvb_network
+  ( const char *name, htsmsg_t *c, htsmsg_t *channels )
+{
+  int i;
+  uuid_t netu, muxu;
+  htsmsg_t *e, *net, *mux, *tun;
+  htsmsg_field_t *f;
+  const char *str, *type;
+  uint32_t u32;
+  const char *mux_str_props[] = {
+    "bandwidth",
+    "consellation",
+    "transmission_mode",
+    "guard_interval",
+    "hierarchy",
+    "fec_hi",
+    "fec_lo",
+    "fec"
+  };
+    
+
+  /* Load the adapter config */
+  if (!(tun = hts_settings_load("dvbadapters/%s", name))) return;
+  if (!(str = htsmsg_get_str(tun, "type"))) return;
+  type = str;
+
+  /* Create network entry */
+  uuid_init_hex(&netu, NULL);
+  net = htsmsg_create_map();
+  if (!strcmp(str, "ATSC"))
+    htsmsg_add_str(net, "class", "linuxdvb_network_atsc");
+  else if (!strcmp(str, "DVB-S"))
+    htsmsg_add_str(net, "class", "linuxdvb_network_dvbs");
+  else if (!strcmp(str, "DVB-C"))
+    htsmsg_add_str(net, "class", "linuxdvb_network_dvbc");
+  else
+    htsmsg_add_str(net, "class", "linuxdvb_network_dvbt");
+  if (!htsmsg_get_u32(tun, "autodiscovery", &u32))
+    htsmsg_add_u32(net, "autodiscovery",  u32);
+  if (!htsmsg_get_u32(tun, "skip_initialscan", &u32))
+    htsmsg_add_u32(net, "skipinitscan",   u32);
+
+  /* Each mux */
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    mux = htsmsg_create_map();
+
+    if (!htsmsg_get_u32(e, "transportstreamid", &u32))
+      htsmsg_add_u32(mux, "tsid", u32);
+    if (!htsmsg_get_u32(e, "originalnetworkid", &u32))
+      htsmsg_add_u32(mux, "onid", u32);
+    if (!htsmsg_get_u32(e, "enabled", &u32))
+      htsmsg_add_u32(mux, "enabled", u32);
+    if (!htsmsg_get_u32(e, "initialscan", &u32))
+      htsmsg_add_u32(mux, "initscan", u32);
+    if ((str = htsmsg_get_str(e, "default_authority")))
+      htsmsg_add_str(mux, "cridauth", str);
+    if ((str = htsmsg_get_str(e, "network")) && *str)
+      name = str;
+
+    if (!htsmsg_get_u32(e, "symbol_rate", &u32))
+      htsmsg_add_u32(mux, "symbolrate", u32);
+    if (!htsmsg_get_u32(e, "frequency", &u32))
+      htsmsg_add_u32(mux, "frequency", u32);
+
+    for (i = 0; i < ARRAY_SIZE(mux_str_props); i++) {
+      if ((str = htsmsg_get_str(e, mux_str_props[i])))
+        htsmsg_add_str(mux, mux_str_props[i], str);
+    }
+
+    if ((str = htsmsg_get_str(e, "polarisation"))) {
+      char tmp[2] = { *str, 0 };
+      htsmsg_add_str(mux, "polarisation", tmp);
+    }
+    if ((str = htsmsg_get_str(e, "modulation"))) {
+      if (!strcmp(str, "PSK_8"))
+        htsmsg_add_str(mux, "modulation", "8PSK");
+      else
+        htsmsg_add_str(mux, "modulation", str);
+    }
+    if ((str = htsmsg_get_str(e, "rolloff")))
+      if (strlen(str) > 8)
+        htsmsg_add_str(mux, "rolloff", str+8);
+
+    if ((str = htsmsg_get_str(e, "delivery_system")) &&
+        strlen(str) > 4 )
+      htsmsg_add_str(mux, "delsys", str+4);
+    else if (!strcmp(type, "ATSC"))
+      htsmsg_add_str(mux, "delsys", "ATSC");
+    else if (!strcmp(type, "DVB-S"))
+      htsmsg_add_str(mux, "delsys", "DVBS");
+    else if (!strcmp(type, "DVB-C"))
+      htsmsg_add_str(mux, "delsys", "DVBC_ANNEX_AC");
+    else
+      htsmsg_add_str(mux, "delsys", "DVBT");
+
+    /* Save */
+    uuid_init_hex(&muxu, NULL);
+    hts_settings_save(mux, "input/linuxdvb/networks/%s/muxes/%s/config",
+                      netu.hex, muxu.hex);
+    htsmsg_destroy(mux);
+
+    /* Services */
+    config_migrate_dvb_svcs(f->hmf_name, netu.hex, muxu.hex, channels);
+  }
+
+  /* Add properties derived from network */
+  htsmsg_add_str(net, "networkname", name);
+  hts_settings_save(net, "input/linuxdvb/networks/%s/config", netu.hex);
+  htsmsg_destroy(net);
+}
+
+/*
  * v0 -> v1 : 3.4 to initial 4.0)
  *
  * Strictly speaking there were earlier versions than this, but most people
@@ -151,6 +316,15 @@ config_migrate_v1 ( void )
       htsmsg_destroy(m);
     }
 
+    htsmsg_destroy(c);
+  }
+
+  /* DVB Networks */
+  if ((c = hts_settings_load_r(2, "dvbmuxes"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_migrate_dvb_network(f->hmf_name, e, channels);
+    }
     htsmsg_destroy(c);
   }
 
