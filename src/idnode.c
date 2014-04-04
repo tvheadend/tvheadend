@@ -768,6 +768,17 @@ idclass_get_class (const idclass_t *idc)
   return NULL;
 }
 
+static const char *
+idclass_get_order (const idclass_t *idc)
+{
+  while (idc) {
+    if (idc->ic_class)
+      return idc->ic_order;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
 static int
 ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
 {
@@ -816,6 +827,8 @@ idclass_serialize0(const idclass_t *idc, int optmask)
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
+  if ((s = idclass_get_order(idc)))
+    htsmsg_add_str(m, "order", s);
 
   /* Props */
   if ((p = idnode_params(idc, NULL, optmask)))
