@@ -37,6 +37,21 @@ static htsmsg_t *config;
 typedef void (*config_migrate_t) (void);
 
 /*
+ * Helper to add service to channel
+ */
+static void
+config_migrate_chn_add_svc
+  ( htsmsg_t *chns, const char *chnname, const char *svcuuid )
+{
+  htsmsg_t *chn = htsmsg_get_map(chns, chnname);
+  if (chn) {
+    htsmsg_t *l = htsmsg_get_list(chn, "services");
+    if (l)
+      htsmsg_add_str(l, NULL, svcuuid);
+  }
+}
+
+/*
  * v0 -> v1 : 3.4 to initial 4.0)
  *
  * Strictly speaking there were earlier versions than this, but most people
@@ -45,6 +60,108 @@ typedef void (*config_migrate_t) (void);
 static void
 config_migrate_v1 ( void )
 {
+  uuid_t netu, muxu, svcu, chnu;
+  htsmsg_t *c, *m, *e, *l;
+  htsmsg_field_t *f;
+  uint32_t u32;
+  const char *str;
+  char buf[1024];
+  htsmsg_t *channels = htsmsg_create_map();
+
+  /* Channels */
+  if ((c = hts_settings_load_r(1, "channels"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+
+      /* Build entry */
+      uuid_init_hex(&chnu, NULL);
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "uuid", chnu.hex);
+      htsmsg_add_msg(m, "services", htsmsg_create_list());
+      if (!htsmsg_get_u32(e, "dvr_extra_time_pre", &u32))
+        htsmsg_add_u32(m, "dvr_pre_time", u32);
+      if (!htsmsg_get_u32(e, "dvr_extra_time_pst", &u32))
+        htsmsg_add_u32(m, "dvr_pst_time", u32);
+      if (!htsmsg_get_u32(e, "channel_number", &u32))
+        htsmsg_add_u32(m, "number", u32);
+      if ((str = htsmsg_get_str(e, "icon")))
+        htsmsg_add_str(m, "icon", str);
+      if ((l = htsmsg_get_list(e, "tags")))
+        htsmsg_add_msg(m, "tags", htsmsg_copy(l));
+      if ((str = htsmsg_get_str(e, "name"))) {
+        htsmsg_add_str(m, "name", str);
+        htsmsg_add_msg(channels, str, m);
+      }
+    }
+    htsmsg_destroy(c);
+  }
+
+  /* IPTV */
+  // Note: this routine actually converts directly to v2 for simplicity
+  if ((c = hts_settings_load_r(1, "iptvservices"))) {
+
+    /* Create a network */
+    uuid_init_hex(&netu, NULL);
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "networkname",    "IPTV Network");
+    htsmsg_add_u32(m, "skipinitscan",   1);
+    htsmsg_add_u32(m, "autodiscovery",  0);
+    htsmsg_add_u32(m, "max_streams",    0);
+    htsmsg_add_u32(m, "max_bandwidth",  0);
+    hts_settings_save(m, "input/iptv/networks/%s/config", netu.hex);
+    htsmsg_destroy(m);
+
+    /* Process services */
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)))       continue;
+      if (!(str = htsmsg_get_str(e, "group")))  continue;
+      if (htsmsg_get_u32(e, "port", &u32))      continue;
+
+      /* Create mux entry */
+      uuid_init_hex(&muxu, NULL);
+      m = htsmsg_create_map();
+      snprintf(buf, sizeof(buf), "udp://%s:%d", str, u32);
+      htsmsg_add_str(m, "iptv_url", buf);
+      if ((str = htsmsg_get_str(e, "interface")))
+        htsmsg_add_str(m, "iptv_interface", str);
+      if ((str = htsmsg_get_str(e, "channelname")))
+        htsmsg_add_str(m, "iptv_svcname", str);
+      htsmsg_add_u32(m, "enabled",
+                     !!htsmsg_get_u32_or_default(e, "disabled", 0));
+      htsmsg_add_u32(m, "initscan", 1);
+      hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/config",
+                        netu.hex, muxu.hex);
+      htsmsg_destroy(m);
+
+      /* Create svc entry */
+      uuid_init_hex(&svcu, NULL);
+      m = htsmsg_create_map();
+      if (!htsmsg_get_u32(e, "pmt", &u32))
+        htsmsg_add_u32(m, "pmt", u32);
+      if (!htsmsg_get_u32(e, "pcr", &u32))
+        htsmsg_add_u32(m, "pcr", u32);
+      if (!htsmsg_get_u32(e, "disabled", &u32))
+        htsmsg_add_u32(m, "disabled", u32);
+      if ((str = htsmsg_get_str(e, "channelname"))) {
+        htsmsg_add_str(m, "svcname", str);
+        config_migrate_chn_add_svc(channels, str, svcu.hex);
+      }
+      hts_settings_save(m, "input/iptv/networks/%s/muxes/%s/services/%s",
+                        netu.hex, muxu.hex, svcu.hex);
+      htsmsg_destroy(m);
+    }
+
+    htsmsg_destroy(c);
+  }
+
+  /* Save the channels */
+  // Note: UUID will be stored in the file (redundant) but that's no biggy
+  HTSMSG_FOREACH(f, channels) {
+    if (!(e   = htsmsg_field_get_map(f)))   continue;
+    if (!(str = htsmsg_get_str(e, "uuid"))) continue;
+    hts_settings_save(e, "channel/%s", str);
+  }
+  htsmsg_destroy(channels);
 }
 
 /*
@@ -54,25 +171,25 @@ static void
 config_migrate_v2 ( void )
 {
   htsmsg_t *m;
-  uuid_hex_t u;
+  uuid_t u;
   char src[1024], dst[1024];
 
   /* Do we have IPTV config to migrate ? */
   if (hts_settings_exists("input/iptv/muxes")) {
     
     /* Create a dummy network */
-    uuid_init_hex(u, NULL);
+    uuid_init_hex(&u, NULL);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "networkname", "IPTV Network");
     htsmsg_add_u32(m, "skipinitscan", 1);
     htsmsg_add_u32(m, "autodiscovery", 0);
-    hts_settings_save(m, "input/iptv/networks/%s", u);
+    hts_settings_save(m, "input/iptv/networks/%s/config", u.hex);
 
     /* Move muxes */
     hts_settings_buildpath(src, sizeof(src),
                            "input/iptv/muxes");
     hts_settings_buildpath(dst, sizeof(dst),
-                           "input/iptv/networks/%s/muxes", u);
+                           "input/iptv/networks/%s/muxes", u.hex);
     rename(src, dst);
   }
 }
@@ -110,6 +227,7 @@ config_migrate ( void )
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
+    tvhinfo("config", "migrating config from v%d to v%d", v, v+1);
     config_migrate_table[v]();
   }
 
