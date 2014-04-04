@@ -970,7 +970,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   int flags = 0;
   dvr_config_t *cfg;
   epg_broadcast_t *e;
-  char buffer[5]; //IH - leading zero, three octal digits plus terminating null
+  char buffer[5]; // Permissions buffer: leading zero, three octal digits plus terminating null
 
   if(op == NULL)
     op = "loadSettings";
@@ -1128,13 +1128,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
 
-//IH Convert integer permissions to an octal-format string and store it in the config file
+// Convert integer permissions to an octal-format 0xxx string and store it in the config file
 
-    snprintf(buffer,5,"%o",cfg->dvr_muxcnf.m_file_permissions);
+    snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
     htsmsg_add_str(r, "filePermissions", buffer);
-    snprintf(buffer,5,"%o",cfg->dvr_muxcnf.m_directory_permissions);
+    snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_directory_permissions);
     htsmsg_add_str(r, "dirPermissions", buffer);
-//
 
     htsmsg_add_u32(r, "cache",     cfg->dvr_muxcnf.m_cache);
     htsmsg_add_u32(r, "rewritePAT",
@@ -1177,29 +1176,14 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
 
-//IH 
-// Convert the octal string permissions to integer
-
-// Theoretical risk of overflowing the (int) cast from long, but this shouldn't ever happen in normal use
-// Only if someone's been dicking about with the config by hand
-// and then a plague be upon their houses
+// Convert 0xxx format permission strings to integer for internal use
+// Note no checking that strtol won't overflow int - this should never happen with three-digit numbers      
 
    if((s = http_arg_get(&hc->hc_req_args, "filePermissions")) != NULL)
       dvr_file_permissions_set(cfg,(int)strtol(s,NULL,0));
 
-//   tvhlog(LOG_INFO, "extjs.c", "****** Testing string \"%s\"", s);
-//   tvhlog(LOG_INFO, "extjs.c", "****** Testing decimal \"%i\"", (int)strtol(s,NULL,0));
-//   tvhlog(LOG_INFO, "extjs.c", "****** Testing octal \"%o\"", (int)strtol(s,NULL,0));
-
-//   tvhlog(LOG_INFO, "extjs.c", "****** Line 1190+ - File permissions set to decimal \"%i\"", cfg->dvr_muxcnf.m_file_permissions);
-//   tvhlog(LOG_INFO, "extjs.c", "****** Line 1190+ -             equivalent to octal \"%o\"", cfg->dvr_muxcnf.m_file_permissions);
-   
    if((s = http_arg_get(&hc->hc_req_args, "dirPermissions")) != NULL)
       dvr_directory_permissions_set(cfg,(int)strtol(s,NULL,0));
-   
-//   tvhlog(LOG_INFO, "extjs.c", "****** Line 1190+ = Dir permissions set to decimal \"%i\"", cfg->dvr_muxcnf.m_directory_permissions);
-//   tvhlog(LOG_INFO, "extjs.c", "****** Line 1190+ =            equivalent to octal \"%o\"", cfg->dvr_muxcnf.m_directory_permissions);
-
    
    if((s = http_arg_get(&hc->hc_req_args, "cache")) != NULL)
       dvr_mux_cache_set(cfg,atoi(s));

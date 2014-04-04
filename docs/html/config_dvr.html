@@ -86,7 +86,7 @@
 	  <tr><td>0666 == rw-rw-rw-</td></tr>
 	  </table>
 	  
-	  Note that your default user umask applies, so 666 with umask 0002 will produce 0664.
+	  Note that the applicable umask applies, so 0666 with umask 0022 will produce 0644 (rw-r--r--).
 	  
 	  See also <i>Directory permissions</i> in <i>Subdirectory Options</i>. 
 	  
@@ -113,12 +113,12 @@
       <table class="hts-doc-text" border="0">
       <tr><td>Common examples:</td></tr> 
       <br>
-      <tr><td>0755 == rwxr--r--</td></tr>
-      <tr><td>0775 == rwxrwxr-- (default)</td></tr>
+      <tr><td>0755 == rwxr-xr-x</td></tr>
+      <tr><td>0775 == rwxrwxr-x (default)</td></tr>
 	  <tr><td>0777 == rwxrwxrwx</td></tr>
 	  </table>
 	  
-	  Note that your default user umask applies, so 0777 with umask 0002 will produce 0775.
+	  Note that the applicable umask applies, so 0777 with umask 0022 will produce 0755 (rwxr-xr-x).
 	  
 	  See also <i>File permissions</i> in <i>Recording File Options</i>. 
 	  

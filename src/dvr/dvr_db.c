@@ -1134,54 +1134,15 @@ dvr_init(void)
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
 
-//IH      
+// Convert 0xxx format permission strings to integer for internal use
+// Note no checking that strtol won't overflow int - this should never happen with three-digit numbers      
 
-/* THIS IS WHERE IT ALL GOES HORRIBLY WRONG
- * 
- * I need to pass tvh_str_set a type char**, but I'm genuinely guessing, and that's not good even if it compiles!
- * 
- */
-
-      tvhlog(LOG_INFO, "loading", "%s Before load octal file-permission \"%o\"", cfg->dvr_config_name, cfg->dvr_muxcnf.m_file_permissions);
-
-      tvhlog(LOG_INFO, "loading", "calling tvh_str_set");
-
-// This is embarassingly poor code. Sorry.
-      
-      char placeholder[5];  // Yes, I know it should be at the start of the function
-      char *placeholderptr; // Ditto
-      
-      placeholderptr = placeholder;
-      
-//      tvhlog(LOG_INFO, "loading", "placeholder \"%s\"", placeholder);
-//      tvhlog(LOG_INFO, "loading", "placeholderptr \"%i\"", &placeholderptr);
-//      tvhlog(LOG_INFO, "loading", "placeholder \"%i\"", &placeholder);
-
-	  tvh_str_set(&placeholderptr, htsmsg_get_str(m, "file-permissions"));
+      if ((s = htsmsg_get_str(m, "file-permissions")))
+        cfg->dvr_muxcnf.m_file_permissions = (int)strtol(s,NULL,0);
 	  
-//      tvhlog(LOG_INFO, "loading", "copying cfg");
-      
-// Thought: we know that strtol will return a type that can be cast to int
-// What if someone manually enters 123456789 in the config file? What then?
-// Worth checking if strtol returns > int size then throw error and revert to default as it's clearly invalid?
-// Isn't the same true of editing it to be "file perms : abolloxstring" or "boolean-flags : aaargh"? It's their fault...
+      if ((s = htsmsg_get_str(m, "directory-permissions")))
+        cfg->dvr_muxcnf.m_directory_permissions = (int)strtol(s,NULL,0);
 
-      cfg->dvr_muxcnf.m_file_permissions = (int)strtol(placeholder,NULL,0);
-    
-//      tvhlog(LOG_INFO, "loading", "%s Loaded octal placeholder file-permission \"%o\"", cfg->dvr_config_name,cfg->dvr_muxcnf.m_file_permissions);
-//      tvhlog(LOG_INFO, "loading", "%s After load octal file-permission \"%o\"", cfg->dvr_config_name,cfg->dvr_muxcnf.m_file_permissions);
-
-//      tvhlog(LOG_INFO, "loading", "%s Before load octal dir-permission \"%o\"", cfg->dvr_config_name,cfg->dvr_muxcnf.m_directory_permissions);
-
-// THIS WILL BREAK AS WELL. Amateur.
-
-	  tvh_str_set(&placeholderptr, htsmsg_get_str(m, "directory-permissions"));
-      cfg->dvr_muxcnf.m_directory_permissions = (int)strtol(placeholder,NULL,0);
-
-//      tvhlog(LOG_INFO, "loading", "%s Loaded octal directory-permission \"%o\"", cfg->dvr_config_name,cfg->dvr_muxcnf.m_directory_permissions);
-//      tvhlog(LOG_INFO, "loading", "%s After load octal directory-permission \"%o\"", cfg->dvr_config_name,cfg->dvr_muxcnf.m_directory_permissions);
-      
- 
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
 
@@ -1404,26 +1365,19 @@ static void
 dvr_save(dvr_config_t *cfg)
 {
   htsmsg_t *m = htsmsg_create_map();
-  char buffer[5]; //IH - leading zero, three octal digits plus terminating null
+  char buffer[5]; // Permissions buffer: leading zero, three octal digits plus terminating null
   
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
 
-//  tvhlog(LOG_INFO, "saving", "****** To be written: file-permission decimal \"%i\"", cfg->dvr_muxcnf.m_file_permissions);
-//  tvhlog(LOG_INFO, "saving", "******                    equivalent to octal \"%o\"", cfg->dvr_muxcnf.m_file_permissions);
-//  tvhlog(LOG_INFO, "saving", "****** To be written: directory-permission decimal \"%i\"", cfg->dvr_muxcnf.m_directory_permissions);
-//  tvhlog(LOG_INFO, "saving", "******                         equivalent to octal \"%o\"", cfg->dvr_muxcnf.m_directory_permissions);
+// Convert permissions to 0xxx octal format and output
 
-  snprintf(buffer,5,"%o",cfg->dvr_muxcnf.m_file_permissions);
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
   htsmsg_add_str(m, "file-permissions", buffer);
   
-//  tvhlog(LOG_INFO, "saving", "****** Saved file-permission as string \"%s\"", buffer);
-  
-  snprintf(buffer,5,"%o",cfg->dvr_muxcnf.m_directory_permissions);
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_directory_permissions);
   htsmsg_add_str(m, "directory-permissions", buffer);
-
-//  tvhlog(LOG_INFO, "saving", "****** Saved directory-permission as string \"%s\"", buffer);
 
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
   htsmsg_add_u32(m, "cache", cfg->dvr_muxcnf.m_cache);

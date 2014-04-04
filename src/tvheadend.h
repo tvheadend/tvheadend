@@ -628,13 +628,6 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
-//IH
-// Helper functions to convert between string/decimal literals and octal notation (i.e. 777 => 0777 => 777)
-// Potentially superseded by other methods
-
-int decimal_to_octal ( const int decimal );
-int octal_to_decimal ( const int octal );
-
 #define SKEL_DECLARE(name, type) type *name;
 #define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
 #define SKEL_USED(name) do { name = NULL; } while (0)
