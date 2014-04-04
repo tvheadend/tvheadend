@@ -913,7 +913,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
  *
  */
 static void
-dvr_stop_recording(dvr_entry_t *de, int stopcode)
+dvr_stop_recording(dvr_entry_t *de, int stopcode, int delconf)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
@@ -929,7 +929,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
-  dvr_entry_save(de);
+  if (delconf)
+    dvr_entry_save(de);
   htsp_dvr_entry_update(de);
   dvr_entry_notify(de);
 
@@ -944,7 +945,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 static void
 dvr_timer_stop_recording(void *aux)
 {
-  dvr_stop_recording(aux, 0);
+  dvr_stop_recording(aux, 0, 1);
 }
 
 
@@ -1033,7 +1034,7 @@ dvr_entry_cancel(dvr_entry_t *de)
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, SM_CODE_ABORTED);
+    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
     return de;
 
   case DVR_COMPLETED:
@@ -1054,17 +1055,17 @@ dvr_entry_cancel(dvr_entry_t *de)
  * Unconditionally remove an entry
  */
 static void
-dvr_entry_purge(dvr_entry_t *de)
+dvr_entry_purge(dvr_entry_t *de, int delconf)
 {
   if(de->de_sched_state == DVR_RECORDING)
-    dvr_stop_recording(de, SM_CODE_SOURCE_DELETED);
+    dvr_stop_recording(de, SM_CODE_SOURCE_DELETED, delconf);
 }
 
 /**
  *
  */
 void
-dvr_destroy_by_channel(channel_t *ch)
+dvr_destroy_by_channel(channel_t *ch, int delconf)
 {
   dvr_entry_t *de;
 
@@ -1072,7 +1073,7 @@ dvr_destroy_by_channel(channel_t *ch)
     LIST_REMOVE(de, de_channel_link);
     de->de_channel = NULL;
     de->de_channel_name = strdup(channel_get_name(ch));
-    dvr_entry_purge(de);
+    dvr_entry_purge(de, delconf);
   }
 }
 
@@ -1715,7 +1716,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, SM_CODE_ABORTED);
+    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
   case DVR_COMPLETED:
     dvr_entry_delete(de);
     break;
