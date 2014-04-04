@@ -297,7 +297,7 @@ linuxdvb_adapter_add ( const char *path )
       bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
 
       /* Load config */
-      conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid);
+      conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid.hex);
       if (conf)
         feconf = htsmsg_get_map(conf, "frontends");
       else
