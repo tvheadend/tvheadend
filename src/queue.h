@@ -132,9 +132,12 @@
 #define TAILQ_MOVE(newhead, oldhead, field) do { \
         if(TAILQ_FIRST(oldhead)) { \
            TAILQ_FIRST(oldhead)->field.tqe_prev = &(newhead)->tqh_first;  \
-        } \
-        (newhead)->tqh_first = (oldhead)->tqh_first;                   \
-        (newhead)->tqh_last = (oldhead)->tqh_last;                     \
+          (newhead)->tqh_first = (oldhead)->tqh_first;                   \
+          (newhead)->tqh_last = (oldhead)->tqh_last;                     \
+          TAILQ_INIT(oldhead);\
+        } else { \
+          TAILQ_INIT(newhead);\
+        }\
 } while (/*CONSTCOND*/0) 
  
 
