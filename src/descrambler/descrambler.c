@@ -118,8 +118,10 @@ descrambler_init ( void )
 void
 descrambler_done ( void )
 {
+#if ENABLE_CWC
   capmt_done();
   cwc_done();
+#endif
 }
 
 void
