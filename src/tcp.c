@@ -402,10 +402,12 @@ typedef struct tcp_server_launch {
   time_t started;
   LIST_ENTRY(tcp_server_launch) link;
   LIST_ENTRY(tcp_server_launch) alink;
+  LIST_ENTRY(tcp_server_launch) jlink;
 } tcp_server_launch_t;
 
 static LIST_HEAD(, tcp_server_launch) tcp_server_launches = { 0 };
 static LIST_HEAD(, tcp_server_launch) tcp_server_active = { 0 };
+static LIST_HEAD(, tcp_server_launch) tcp_server_join = { 0 };
 
 /**
  *
@@ -416,6 +418,7 @@ tcp_server_start(void *aux)
   tcp_server_launch_t *tsl = aux;
   struct timeval to;
   int val;
+  char c = 'J';
 
   val = 1;
   setsockopt(tsl->fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
@@ -460,9 +463,9 @@ tcp_server_start(void *aux)
     notify_reload("connections");
   }
   LIST_REMOVE(tsl, alink);
+  LIST_INSERT_HEAD(&tcp_server_join, tsl, jlink);
   pthread_mutex_unlock(&global_lock);
-
-  free(tsl);
+  tvh_write(tcp_server_pipe.wr, &c, 1);
   return NULL;
 }
 
@@ -478,6 +481,7 @@ tcp_server_loop(void *aux)
   tcp_server_t *ts;
   tcp_server_launch_t *tsl;
   socklen_t slen;
+  char c;
 
   while(tcp_server_running) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
@@ -489,8 +493,21 @@ tcp_server_loop(void *aux)
     if (r == 0) continue;
 
     ts = ev.data.ptr;
-    if (ts == (tcp_server_t *)&tcp_server_pipe)
-      break;
+    if (ts == (tcp_server_t *)&tcp_server_pipe) {
+      r = read(tcp_server_pipe.rd, &c, 1);
+      if (r > 0) {
+        pthread_mutex_lock(&global_lock);
+        while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
+          LIST_REMOVE(tsl, jlink);
+          pthread_mutex_unlock(&global_lock);
+          pthread_join(tsl->tid, NULL);
+          free(tsl);
+          pthread_mutex_lock(&global_lock);
+        }
+        pthread_mutex_unlock(&global_lock);
+      }
+      continue;
+    }
 
     if(ev.events & TVHPOLL_HUP) {
 	    close(ts->serverfd);
@@ -520,10 +537,10 @@ tcp_server_loop(void *aux)
         continue;
      	}
 
-        pthread_mutex_lock(&global_lock);
-        LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
-        pthread_mutex_unlock(&global_lock);
-     	tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, 0);
+      pthread_mutex_lock(&global_lock);
+      LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
+      pthread_mutex_unlock(&global_lock);
+      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, 0);
     }
   }
   tvhtrace("tcp", "server thread finished");
@@ -690,7 +707,6 @@ tcp_server_init(int opt_ipv6)
 void
 tcp_server_done(void)
 {
-  pthread_t tid;
   tcp_server_launch_t *tsl;  
   char c = 'E';
 
@@ -711,11 +727,14 @@ tcp_server_done(void)
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
+  while (LIST_FIRST(&tcp_server_active) != NULL)
+    usleep(20000);
   pthread_mutex_lock(&global_lock);
-  while ((tsl = LIST_FIRST(&tcp_server_active)) != NULL) {
-    tid = tsl->tid;
+  while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
+    LIST_REMOVE(tsl, jlink);
     pthread_mutex_unlock(&global_lock);
-    pthread_join(tid, NULL);
+    pthread_join(tsl->tid, NULL);
+    free(tsl);
     pthread_mutex_lock(&global_lock);
   }
   pthread_mutex_unlock(&global_lock);
