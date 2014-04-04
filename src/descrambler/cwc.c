@@ -1156,6 +1156,7 @@ cwc_thread(void *aux)
     
     while(cwc->cwc_running && cwc->cwc_enabled == 0)
       pthread_cond_wait(&cwc->cwc_cond, &cwc_mutex);
+    if (cwc->cwc_running == 0) continue;
 
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
     port = cwc->cwc_port;
