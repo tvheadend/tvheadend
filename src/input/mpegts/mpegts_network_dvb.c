@@ -306,8 +306,6 @@ dvb_network_create0
   dvb_network_t *ln;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
-  mpegts_mux_t *mm;
-  int move = 0;
 
   ln = calloc(1, sizeof(dvb_network_t));
   if (idc == &dvb_network_dvbt_class)
@@ -336,22 +334,13 @@ dvb_network_create0
     return ln;
 
   /* Load muxes */
-  c = hts_settings_load_r(1, "input/dvb/networks/%s/muxes", uuid);
-  if (!c) {
-    c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes", uuid);
-    move = 1;
-  }
-  if (c) {
+  if ((c = hts_settings_load_r(1, "input/dvb/networks/%s/muxes", uuid))) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
-      mm = (mpegts_mux_t *)dvb_mux_create1(ln, f->hmf_name, e);
-      if (mm && move)
-        mm->mm_config_save(mm);
+      (void)dvb_mux_create1(ln, f->hmf_name, e);
     }
     htsmsg_destroy(c);
-    if (move)
-      hts_settings_remove("input/linuxdvb/networks/%s/muxes", uuid);
   }
 
   return ln;
@@ -376,7 +365,6 @@ void dvb_network_init ( void )
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   const char *s;
-  dvb_network_t *ln;
   int i, move = 0;
 
   /* Load scan files */
@@ -391,13 +379,8 @@ void dvb_network_init ( void )
                                     dvb_network_builder);
   
   /* Load settings */
-  if (!(c = hts_settings_load_r(1, "input/dvb/networks"))) {
-    if (!(c = hts_settings_load_r(1, "input/linuxdvb/networks"))) {
-      printf("RETURN!!\n");
-      return;
-    }
-    move = 1;
-  }
+  if (!(c = hts_settings_load_r(1, "input/dvb/networks")))
+    return;
 
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_get_map_by_field(f)))  continue;
@@ -405,16 +388,12 @@ void dvb_network_init ( void )
     if (!(s = htsmsg_get_str(e, "class")))  continue;
     for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++) {
       if(!strcmp(dvb_network_classes[i]->ic_class, s + (move ? 5 : 0))) {
-        ln = dvb_network_create0(f->hmf_name, dvb_network_classes[i], e);
-        if (ln && move)
-          ln->mn_config_save((mpegts_network_t *)ln);
+        dvb_network_create0(f->hmf_name, dvb_network_classes[i], e);
         break;
       }
     }
   }
   htsmsg_destroy(c);
-  if (move)
-    hts_settings_remove("input/linuxdvb/networks");
 }
 
 void dvb_network_done ( void )
