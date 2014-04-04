@@ -204,15 +204,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     free(title);
   }
 
-// Very ugly hack alert!
-// Convert my nasty stored-as-decimal permissions into literal octal equivalent (i.e. 777 => 0777)
-  
-  int decimal_perms = cfg->dvr_muxcnf.m_directory_permissions;
-  int octal_perms = ((decimal_perms / 100) << 6) | ((decimal_perms % 100 / 10) << 3) | (decimal_perms % 10);
-
-// Create directory path
-  
-  if(makedirs(path, octal_perms) != 0) {
+  if(makedirs(path, cfg->dvr_muxcnf.m_directory_permissions) != 0) {
     return -1;
   }
   

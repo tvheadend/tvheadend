@@ -81,12 +81,12 @@
       <table class="hts-doc-text" border="0">
       <tr><td>Common examples:</td></tr> 
       <br>
-      <tr><td>644 == rw-r--r--</td></tr>
-      <tr><td>664 == rw-rw-r-- (default)</td></tr>
-	  <tr><td>666 == rw-rw-rw-</td></tr>
+      <tr><td>0644 == rw-r--r--</td></tr>
+      <tr><td>0664 == rw-rw-r-- (default)</td></tr>
+	  <tr><td>0666 == rw-rw-rw-</td></tr>
 	  </table>
 	  
-	  Note that your default user umask applies, so 666 with umask 002 will produce 664.
+	  Note that your default user umask applies, so 666 with umask 0002 will produce 0664.
 	  
 	  See also <i>Directory permissions</i> in <i>Subdirectory Options</i>. 
 	  
@@ -113,12 +113,12 @@
       <table class="hts-doc-text" border="0">
       <tr><td>Common examples:</td></tr> 
       <br>
-      <tr><td>755 == rwxr--r--</td></tr>
-      <tr><td>775 == rwxrwxr-- (default)</td></tr>
-	  <tr><td>777 == rwxrwxrwx</td></tr>
+      <tr><td>0755 == rwxr--r--</td></tr>
+      <tr><td>0775 == rwxrwxr-- (default)</td></tr>
+	  <tr><td>0777 == rwxrwxrwx</td></tr>
 	  </table>
 	  
-	  Note that your default user umask applies, so 777 with umask 002 will produce 775.
+	  Note that your default user umask applies, so 0777 with umask 0002 will produce 0775.
 	  
 	  See also <i>File permissions</i> in <i>Recording File Options</i>. 
 	  

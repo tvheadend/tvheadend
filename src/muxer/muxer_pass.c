@@ -378,14 +378,9 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-// Very ugly hack alert!
-// Convert my nasty stored-as-decimal permissions into literal octal equivalent (i.e. 777 => 0777)
-  
-  int decimal_perms = pm->m_config.m_file_permissions;
-  int octal_perms = ((decimal_perms / 100) << 6) | ((decimal_perms % 100 / 10) << 3) | (decimal_perms % 10);
-
-  tvhlog(LOG_DEBUG, "pass", "Creating file \"%s\" with octal permissions \"%o\"", filename, octal_perms);
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, octal_perms);
+  tvhlog(LOG_DEBUG, "pass", "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
+ 
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
 
   if(fd < 0) {
     pm->pm_error = errno;

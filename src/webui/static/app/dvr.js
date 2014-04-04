@@ -829,15 +829,15 @@ tvheadend.dvrsettings = function() {
 		name : 'storage'
 	});
 
-/* NB: recordingPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a decimal number */
+/* NB: recordingPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a number */
 	
 	var recordingPermissions = new Ext.form.TextField({
-		regex : /^[0-7]{3}$/,
+		regex : /^[0][0-7]{3}$/,
 	    maskRe : /[0-7]/,
    		width : 100,
    		allowBlank : false,
-   		blankText : 'You must provide a value - use octal chmod notation, e.g. 664',
-		fieldLabel : 'File permissions (octal, e.g. 664)',
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 0664',
+		fieldLabel : 'File permissions (octal, e.g. 0664)',
 		name : 'filePermissions'
 	});
 
@@ -865,15 +865,15 @@ tvheadend.dvrsettings = function() {
 		
 /* Subdirectories and filename handling */
 
-/* NB: directoryPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a decimal number */
+/* NB: directoryPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a number */
 
 	var directoryPermissions = new Ext.form.TextField({
-		regex : /^[0-7]{3}$/,
+		regex : /^[0][0-7]{3}$/,
 	    maskRe : /[0-7]/,
    		width : 100,
    		allowBlank : false,
-   		blankText : 'You must provide a value - use octal chmod notation, e.g. 775',
-		fieldLabel : 'Directory permissions (octal, e.g. 775)',
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 0775',
+		fieldLabel : 'Directory permissions (octal, e.g. 0775)',
 		name : 'dirPermissions'
 	});
 	

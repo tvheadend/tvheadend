@@ -473,3 +473,25 @@ regexp_escape(const char* str)
   *b = 0;
   return tmp;
 }
+
+//IH - no longer needed? Delete afterwards as required. I think snprintf and strtol have superseded them, though
+
+int 
+decimal_to_octal(const int decimal)
+{
+	int octal;
+	
+	octal = ((decimal / 100) * 64) | ((decimal % 100 / 10) * 8) | (decimal % 10);
+		
+	return octal;
+}
+
+int 
+octal_to_decimal(const int octal)
+{
+	int decimal;
+	
+	decimal = ((octal / 64) * 100) | ((octal % 64 / 8) * 10) | (octal % 8);
+	
+	return decimal;
+}
