@@ -608,10 +608,10 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
   htsmsg_add_u32(out, "tagId", ct->ct_identifier);
-
   htsmsg_add_str(out, "tagName", ct->ct_name);
   htsmsg_add_str(out, "tagIcon", ct->ct_icon);
   htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
+  htsmsg_add_bool(out, "tagEnabled", ct->ct_enabled);
 
   if(members != NULL) {
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
