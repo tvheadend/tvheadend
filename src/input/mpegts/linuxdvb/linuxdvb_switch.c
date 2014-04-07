@@ -49,6 +49,7 @@ static htsmsg_t *
 linuxdvb_switch_class_committed_list ( void *o )
 {
   htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "NONE");
   htsmsg_add_str(m, NULL, "AA");
   htsmsg_add_str(m, NULL, "AB");
   htsmsg_add_str(m, NULL, "BA");
@@ -60,6 +61,7 @@ static htsmsg_t *
 linuxdvb_switch_class_toneburst_list ( void *o )
 {
   htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "NONE");
   htsmsg_add_str(m, NULL, "A");
   htsmsg_add_str(m, NULL, "B");
   return m;
@@ -127,35 +129,44 @@ linuxdvb_switch_tune
   if (linuxdvb_diseqc_set_volt(fd, pol))
     return -1;
 
-  /* Committed command */
-  com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
-  
-  /* Single committed (before repeats) */
-  if (sc->lse_parent->ls_diseqc_repeats > 0) {
-    r2 = 1;
-    if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
-      return -1;
-    usleep(25000); // 25ms
+  /* check if committed port set. if not don't send command */
+  if (ls->ls_committed > 0) {
+    /* Committed command */
+    com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
+
+    /* Single committed (before repeats) */
+    if (sc->lse_parent->ls_diseqc_repeats > 0) {
+      r2 = 1;
+      if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
+        return -1;
+      usleep(25000); // 25ms
+    }
   }
 
   /* Repeats */
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
-    
-    /* Uncommitted */
-    if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
-                             0xF0 | ls->ls_uncomitted))
-      return -1;
-    usleep(25000);
 
-    /* Committed */
-    if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
-      return -1;
-    usleep(25000);
+    /* check if uncommitted port set. if not don't send command */
+    if (ls->lsuncomitted > 0) {
+      /* Uncommitted */
+      if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
+                               0xF0 | ls->ls_uncomitted))
+        return -1;
+      usleep(25000);
+    }
 
+    /* check if committed port set. if not don't send command */
+    if (ls->ls_committed > 0) {
+      /* Committed */
+      if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
+        return -1;
+      usleep(25000);
+    }
     /* repeat flag */
     r1 = r2 = 1;
   }
-
+  /* check if committed port set. if not don't send command */
+  if (ls->ls_toneburst > 0) {
   /* Tone burst */
   tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
   if (ioctl(fd, FE_DISEQC_SEND_BURST,
@@ -191,8 +202,8 @@ linuxdvb_switch_create0
       ld->ld_tune = linuxdvb_switch_tune;
       if (!conf) {
         if (u >= 0) {
-          ld->ls_committed = u;
-          ld->ls_toneburst = u % 2;
+          ld->ls_committed = (u - 1);
+          ld->ls_toneburst = (u - 1) % 2;
         }
         if (c >= 0) {
           ld->ls_committed = c;
