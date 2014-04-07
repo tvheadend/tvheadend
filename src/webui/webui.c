@@ -732,6 +732,8 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   streaming_queue_t sq;
   const char *name;
   char addrbuf[50];
+  muxer_config_t muxcfg = { 0 };
+
   streaming_queue_init(&sq, SMT_PACKET);
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
@@ -744,7 +746,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
     return HTTP_STATUS_BAD_REQUEST;
   name = tvh_strdupa(s->ths_title);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW, s, NULL);
+  http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
