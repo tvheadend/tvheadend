@@ -647,13 +647,11 @@ dvb_mux_create0
                                 (mpegts_network_t*)ln, onid, tsid, conf)))
     return NULL;
   lm = (dvb_mux_t*)mm;
-  lm->lm_tuning.dmc_fe_type = ln->ln_type;
 
   /* Tuning */
-  if (dmc) {
-    assert(dmc->dmc_fe_type == lm->lm_tuning.dmc_fe_type);
+  if (dmc)
     memcpy(&lm->lm_tuning, dmc, sizeof(dvb_mux_conf_t));
-  }
+  lm->lm_tuning.dmc_fe_type = ln->ln_type;
 
   /* Callbacks */
   lm->mm_delete           = dvb_mux_delete;
