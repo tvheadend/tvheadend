@@ -175,7 +175,6 @@ static void timeshift_input
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
       sm->sm_time = getmonoclock();
-      streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
       if (sm->sm_type == SMT_PACKET) {
         tvhtrace("timeshift",
                  "ts %d pkt buf - stream %d type %c pts %10"PRId64
@@ -188,6 +187,7 @@ static void timeshift_input
                  pkt->pkt_duration,
                  pktbuf_len(pkt->pkt_payload));
       }
+      streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else
       streaming_msg_free(sm);
 
