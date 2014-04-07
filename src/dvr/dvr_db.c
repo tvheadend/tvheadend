@@ -251,6 +251,10 @@ dvr_entry_set_timer(dvr_entry_t *de)
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + cfg->dvr_retention_days * 86400);
 
+  } else if (de->de_sched_state == DVR_RECORDING)  {
+    gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de,
+		   de->de_stop + (60 * de->de_stop_extra));
+
   } else if (de->de_channel) {
     de->de_sched_state = DVR_SCHEDULED;
 
