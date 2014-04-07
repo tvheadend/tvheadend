@@ -480,10 +480,41 @@ static void
 config_migrate_v3 ( void )
 {
   char src[1024], dst[1024];
-  
-  hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks");
+
+  /* Due to having to potentially run this twice! */
   hts_settings_buildpath(dst, sizeof(dst), "input/dvb/networks");
+  if (!access(dst, R_OK | W_OK))
+    return;
+
+  hts_settings_makedirs(dst);
+  hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks");
   rename(src, dst);
+}
+
+/*
+ * v3 -> v4 : fix broken DVB network / mux files
+ */
+static void
+config_migrate_v5 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  const char *str;
+
+  /* Remove linux prefix from class */
+  if ((c = hts_settings_load_r(1, "input/dvb/networks"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e   = htsmsg_field_get_map(f)))    	continue;
+      if (!(e   = htsmsg_get_map(e, "config"))) continue;
+      if (!(str = htsmsg_get_str(e, "class"))) 	continue;
+      if (!strncmp(str, "linux", 5)) {
+        str = strdupa(str+5);
+        htsmsg_delete_field(e, "class");
+        htsmsg_add_str(e, "class", str);
+        hts_settings_save(e, "input/dvb/networks/%s/config", f->hmf_name);
+      }
+    }
+  }
 }
 
 /*
@@ -492,7 +523,9 @@ config_migrate_v3 ( void )
 static const config_migrate_t config_migrate_table[] = {
   config_migrate_v1,
   config_migrate_v2,
-  config_migrate_v3
+  config_migrate_v3,
+  config_migrate_v3, // Re-run due to bug in previous version of function
+  config_migrate_v5
 };
 
 /*
