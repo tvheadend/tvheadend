@@ -98,27 +98,27 @@ urlparse ( const char *str, url_t *url )
 #define UC "[a-z0-9_\\-\\.!£$%^&]"
 #define PC UC
 #define HC "[a-z0-9\\-\\.]"
-#define URL_RE "^([A-Za-z)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/.*)?"
+#define URL_RE "^([A-Za-z]+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/[^\\?]*)?(.([^#]*))?(#(.*))?"
 
 
 int
 urlparse ( const char *str, url_t *url )
 {
   static regex_t *exp = NULL;
-  regmatch_t m[12];
+  regmatch_t m[16];
   char buf[16];
 
   /* Create regexp */
   if (!exp) {
     exp = calloc(1, sizeof(regex_t));
     if (regcomp(exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
-      tvherror("iptv", "failed to compile regexp");
+      tvherror("url", "failed to compile regexp");
       exit(1);
     }
   }
 
   /* Execute */
-  if (regexec(exp, str, 12, m, 0))
+  if (regexec(exp, str, ARRAY_SIZE(m), m, 0))
     return 1;
     
   /* Extract data */
@@ -137,8 +137,8 @@ urlparse ( const char *str, url_t *url )
   copy(url->path,   9);
   copy(buf,         8);
   url->port = atoi(buf);
-  *url->query = 0;
-  *url->frag  = 0;
+  copy(url->query, 11);
+  copy(url->frag,  13);
 
   strncpy(url->raw, str, sizeof(url->raw));
 
