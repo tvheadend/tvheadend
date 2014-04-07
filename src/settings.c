@@ -51,7 +51,7 @@ void
 hts_settings_init(const char *confpath)
 {
   if (confpath)
-    settingspath = strdup(confpath);
+    settingspath = realpath(confpath, NULL);
 }
 
 /**
