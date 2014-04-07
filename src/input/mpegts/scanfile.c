@@ -19,7 +19,7 @@
 #include "tvheadend.h"
 #include "dvb.h"
 #include "filebundle.h"
-#include "config.h"
+#include "cfg.h"
 #include "scanfile.h"
 
 #include <sys/types.h>

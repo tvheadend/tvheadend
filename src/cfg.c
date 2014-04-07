@@ -18,7 +18,7 @@
 
 #include "tvheadend.h"
 #include "settings.h"
-#include "config.h"
+#include "cfg.h"
 #include "uuid.h"
 
 #include <string.h>

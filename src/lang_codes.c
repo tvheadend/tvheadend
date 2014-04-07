@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #include "lang_codes.h"
-#include "config.h"
+#include "cfg.h"
 
 /* **************************************************************************
  * Code list

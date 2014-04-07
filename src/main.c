@@ -54,7 +54,7 @@
 #include "service.h"
 #include "trap.h"
 #include "settings.h"
-#include "config.h"
+#include "cfg.h"
 #include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
