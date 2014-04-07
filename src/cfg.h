@@ -18,8 +18,8 @@
 
 // TODO: expand this, possibly integrate command line
 
-#ifndef __TVH_CONFIG__H__
-#define __TVH_CONFIG__H__
+#ifndef __TVH_CFG__H__
+#define __TVH_CFG__H__
 
 #include "htsmsg.h"
 
@@ -37,4 +37,4 @@ const char *config_get_language    ( void );
 int         config_set_language    ( const char *str )
   __attribute__((warn_unused_result));
 
-#endif /* __TVH_CONFIG__H__ */
+#endif /* __TVH_CFG__H__ */

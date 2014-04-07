@@ -42,7 +42,7 @@
 #include "epg.h"
 #include "muxer.h"
 #include "epggrab/private.h"
-#include "config.h"
+#include "cfg.h"
 #include "lang_codes.h"
 #include "imagecache.h"
 #include "timeshift.h"
