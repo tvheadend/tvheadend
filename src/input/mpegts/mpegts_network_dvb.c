@@ -250,6 +250,7 @@ dvb_network_create_mux
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     dmc->dmc_fe_freq = lm->lm_tuning.dmc_fe_freq;
+    dmc->dmc_fe_type = lm->lm_tuning.dmc_fe_type;
     // Note: keep original freq, else it can bounce around if diff transponders
     // report it slightly differently.
     // TODO: Note: should we also leave AUTO settings as is?
