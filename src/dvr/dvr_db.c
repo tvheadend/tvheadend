@@ -39,6 +39,7 @@ struct dvr_entry_list dvrentries;
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
+static void dvr_timer_stop_recording(void *aux);
 
 /*
  * Completed
