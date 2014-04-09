@@ -165,6 +165,9 @@ fi
 #
 if enabled_or_auto curl; then
   if check_pkg libcurl; then
+    if check_pkg nspr; then
+      enable nspr
+    fi
     enable curl
   elif enabled curl; then
     die "Curl development support not foun (use --disable-curl)"

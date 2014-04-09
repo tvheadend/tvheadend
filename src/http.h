@@ -158,4 +158,6 @@ http_connect ( const url_t *url,
                void *p );
 void http_close ( http_client_t *hc );
 
+void curl_done ( void );
+
 #endif /* HTTP_H_ */
