@@ -218,6 +218,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     im->mm_active  = NULL;
   pthread_mutex_unlock(&iptv_lock);
 
+  urlreset(&url);
   return ret;
 }
 

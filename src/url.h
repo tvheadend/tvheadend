@@ -22,24 +22,23 @@
 
 #include <stdint.h>
 
-// TODO: limits are a bit arbitrary and it's a bit inflexible, but it
-//       does keep things simple, not having dynamically allocated strings
-
 /* URL structure */
 typedef struct url
 {
-  char  scheme[32];
-  char  user[128];
-  char  pass[128];
-  char  host[256];
-  short port;
-  char  path[256];
-  char  query[1024];
-  char  frag[256];
-  char  raw[2048];
+  char  *scheme;
+  char  *user;
+  char  *pass;
+  char  *host;
+  short  port;
+  char  *path;
+  char  *query;
+  char  *frag;
+  char  *raw;
 } url_t;
 
+void urlreset ( url_t *url );
 int urlparse ( const char *str, url_t *url );
 void urlparse_done ( void );
+void urlcopy ( url_t *dst, const url_t *src );
 
 #endif

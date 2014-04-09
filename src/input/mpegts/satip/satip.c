@@ -466,6 +466,7 @@ satip_discovery_destroy(satip_discovery_t *d, int unlink)
   }
   if (d->http_client)
     http_close(d->http_client);
+  urlreset(&d->url);
   free(d->myaddr);
   free(d->location);
   free(d->server);
@@ -622,7 +623,7 @@ satip_discovery_timerq_cb(void *aux)
     next = TAILQ_NEXT(d, disc_link);
     if (d->http_client) {
       if (dispatch_clock - d->http_start > 4)
-        satip_discovery_destroy(d, 1);;
+        satip_discovery_destroy(d, 1);
       continue;
     }
     d->http_client = http_connect(&d->url, NULL,
@@ -631,7 +632,8 @@ satip_discovery_timerq_cb(void *aux)
                                   d);
     if (d->http_client == NULL)
       satip_discovery_destroy(d, 1);
-    d->http_start = dispatch_clock;
+    else
+      d->http_start = dispatch_clock;
   }
   if (TAILQ_FIRST(&satip_discoveries))
     gtimer_arm(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, 5);

@@ -81,6 +81,8 @@ http_remove ( http_client_t *hc )
   /* Free CURL memory */
   curl_easy_cleanup(hc->hc_curl);
   hc->hc_curl = NULL;
+
+  urlreset(&hc->hc_url);
 }
 
 /*
@@ -199,7 +201,7 @@ http_connect
   /* Setup structure */
   http_client_t *hc = calloc(1, sizeof(http_client_t));
   hc->hc_curl       = curl_easy_init();
-  hc->hc_url        = *url;
+  urlcopy(&hc->hc_url, url);
   hc->hc_conn       = conn_cb;
   hc->hc_data       = data_cb;
   hc->hc_fail       = fail_cb;
