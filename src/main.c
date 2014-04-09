@@ -41,6 +41,7 @@
 #include "tcp.h"
 #include "access.h"
 #include "http.h"
+#include "upnp.h"
 #include "webui/webui.h"
 #include "epggrab.h"
 #include "spawn.h"
@@ -767,6 +768,9 @@ main(int argc, char **argv)
   tcp_server_init(opt_ipv6);
   http_server_init(opt_bindaddr);
   webui_init();
+#if ENABLE_UPNP
+  upnp_server_init(opt_bindaddr);
+#endif
 
   service_mapper_init();
 
@@ -813,6 +817,9 @@ main(int argc, char **argv)
 
   mainloop();
 
+#if ENABLE_UPNP
+  tvhftrace("main", upnp_server_done);
+#endif
   tvhftrace("main", htsp_done);
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);

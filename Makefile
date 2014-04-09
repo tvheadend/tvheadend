@@ -117,6 +117,9 @@ SRCS =  src/version.c \
 	src/fsmonitor.c \
 	src/cron.c \
 
+SRCS-${CONFIG_UPNP} += \
+	src/upnp.c
+
 SRCS += \
 	src/api.c \
 	src/api/api_status.c \
