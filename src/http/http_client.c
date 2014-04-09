@@ -112,9 +112,9 @@ http_curl_socket ( CURL *c, int fd, int a, void *u, void *s )
       ev.events |= TVHPOLL_IN;
     if (a & CURL_POLL_OUT)
       ev.events |= TVHPOLL_OUT;
-    ev.data.fd = fd;
-    ev.data.u64 = (uint64_t)hc;
-    hc->hc_fd  = fd;
+    ev.data.fd  = fd;
+    ev.data.ptr = hc;
+    hc->hc_fd   = fd;
     tvhpoll_add(http_poll, &ev, 1);
   }
 
@@ -154,7 +154,7 @@ http_thread ( void *p )
       if (tvheadend_running)
         tvherror("http_client", "tvhpoll_wait() error");
     } else if (n > 0) {
-      if ((uint64_t)&http_pipe == ev.data.u64) {
+      if (&http_pipe == ev.data.ptr) {
         if (read(http_pipe.rd, &c, 1) == 1) {
           if (c == 'n') {
             pthread_mutex_lock(&http_lock);
@@ -174,7 +174,7 @@ http_thread ( void *p )
       }
       pthread_mutex_lock(&http_lock);
       TAILQ_FOREACH(hc, &http_clients, hc_link)
-        if ((uint64_t)hc == ev.data.u64)
+        if (hc == ev.data.ptr)
           break;
       if (hc && (ev.events & (TVHPOLL_IN | TVHPOLL_OUT)))
         curl_multi_socket_action(http_curlm, hc->hc_fd, 0, &run);
@@ -261,7 +261,7 @@ http_client_init ( void )
   http_poll   = tvhpoll_create(10);
   ev.fd       = http_pipe.rd;
   ev.events   = TVHPOLL_IN;
-  ev.data.u64 = (uint64_t)&http_pipe;
+  ev.data.ptr = &http_pipe;
   tvhpoll_add(http_poll, &ev, 1);
 
   /* Setup thread */

@@ -687,17 +687,17 @@ satip_frontend_input_thread ( void *aux )
   memset(ev, 0, sizeof(ev));
   ev[0].events             = TVHPOLL_IN;
   ev[0].fd                 = lfe->sf_rtp->fd;
-  ev[0].data.u64           = (uint64_t)lfe->sf_rtp;
+  ev[0].data.ptr           = lfe->sf_rtp;
   ev[1].events             = TVHPOLL_IN;
   ev[1].fd                 = lfe->sf_rtcp->fd;
-  ev[1].data.u64           = (uint64_t)lfe->sf_rtcp;
+  ev[1].data.ptr           = lfe->sf_rtcp;
   ev[2].events             = TVHPOLL_IN;
   ev[2].fd                 = rtsp->fd;
-  ev[2].data.u64           = (uint64_t)rtsp;
+  ev[2].data.ptr           = rtsp;
   evr                      = ev[2];
   ev[3].events             = TVHPOLL_IN;
   ev[3].fd                 = lfe->sf_dvr_pipe.rd;
-  ev[3].data.u64           = 0;
+  ev[3].data.ptr           = NULL;
   tvhpoll_add(efd, ev, 4);
 
   /* Read */
@@ -736,7 +736,7 @@ satip_frontend_input_thread ( void *aux )
     
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
-    if (nfds > 0 && ev[0].data.u64 == 0) {
+    if (nfds > 0 && ev[0].data.ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, tsb[0], 1);
       if (c == 1 && tsb[0][0] == 'c') {
         ms = 20;
@@ -756,7 +756,7 @@ satip_frontend_input_thread ( void *aux )
 
     if (nfds < 1) continue;
 
-    if (ev[0].data.u64 == (uint64_t)rtsp) {
+    if (ev[0].data.ptr == rtsp) {
       r = satip_rtsp_run(rtsp);
       if (r < 0) {
         tvhlog(LOG_ERR, "satip", "%s - RTSP error %d (%s) [%i-%i]",
@@ -805,14 +805,14 @@ satip_frontend_input_thread ( void *aux )
         rtsp->cmd == SATIP_RTSP_CMD_NONE)
       satip_rtsp_options(rtsp);
 
-    if (ev[0].data.u64 == (uint64_t)lfe->sf_rtcp) {
+    if (ev[0].data.ptr == lfe->sf_rtcp) {
       c = recv(lfe->sf_rtcp->fd, rtcp, sizeof(rtcp), MSG_DONTWAIT);
       if (c > 0)
         satip_frontend_decode_rtcp(lfe, buf, mmi, rtcp, c);
       continue;
     }
     
-    if (ev[0].data.u64 != (uint64_t)lfe->sf_rtp)
+    if (ev[0].data.ptr != lfe->sf_rtp)
       continue;     
 
     tc = recvmmsg(lfe->sf_rtp->fd, msg, PKTS, MSG_DONTWAIT, NULL);
@@ -866,13 +866,13 @@ satip_frontend_input_thread ( void *aux )
 
   ev[0].events             = TVHPOLL_IN;
   ev[0].fd                 = lfe->sf_rtp->fd;
-  ev[0].data.u64           = (uint64_t)lfe->sf_rtp;
+  ev[0].data.ptr           = lfe->sf_rtp;
   ev[1].events             = TVHPOLL_IN;
   ev[1].fd                 = lfe->sf_rtcp->fd;
-  ev[1].data.u64           = (uint64_t)lfe->sf_rtcp;
+  ev[1].data.ptr           = lfe->sf_rtcp;
   ev[2].events             = TVHPOLL_IN;
   ev[2].fd                 = lfe->sf_dvr_pipe.rd;
-  ev[2].data.u64           = 0;
+  ev[2].data.ptr           = NULL;
   tvhpoll_rem(efd, ev, 3);
 
   if (rtsp->stream_id) {
