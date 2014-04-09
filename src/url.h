@@ -40,5 +40,6 @@ typedef struct url
 } url_t;
 
 int urlparse ( const char *str, url_t *url );
+void urlparse_done ( void );
 
 #endif
