@@ -210,6 +210,11 @@ typedef enum {
   SATIP_RTSP_CMD_DESCRIBE
 } satip_rtsp_cmd_t;
 
+#define SATIP_RTSP_OK         1
+#define SATIP_RTSP_READ_DONE  1
+#define SATIP_RTSP_SEND_DONE  1
+#define SATIP_RTSP_INCOMPLETE 0
+
 typedef struct satip_rtsp_connection {
   /* decoded answer */
   int              cseq;
@@ -229,6 +234,8 @@ typedef struct satip_rtsp_connection {
   int              fd;
   char             rbuf[4096];
   size_t           rsize;
+  size_t           hsize;        /* header size */
+  size_t           csize;        /* contents size (exclude header) */
   char            *wbuf;
   size_t           wpos;
   size_t           wsize;
@@ -252,7 +259,7 @@ satip_rtsp_send( satip_rtsp_connection_t *conn, htsbuf_queue_t *q,
                  satip_rtsp_cmd_t cmd );
 
 int
-satip_rtsp_receive( satip_rtsp_connection_t *conn );
+satip_rtsp_run( satip_rtsp_connection_t *conn );
 
 int
 satip_rtsp_options_decode( satip_rtsp_connection_t *conn );
@@ -275,5 +282,11 @@ satip_rtsp_play( satip_rtsp_connection_t *sd, const char *pids,
 
 int
 satip_rtsp_teardown( satip_rtsp_connection_t *conn );
+
+int
+satip_rtsp_describe_decode( satip_rtsp_connection_t *conn );
+
+int
+satip_rtsp_describe( satip_rtsp_connection_t *conn );
 
 #endif /* __TVH_SATIP_PRIVATE_H__ */
