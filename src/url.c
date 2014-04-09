@@ -90,6 +90,11 @@ urlparse ( const char *str, url_t *url )
   return 0;
 }
 
+void
+urlparse_free( void )
+{
+}
+
 /* Fallback to limited support */
 #else /* ENABLE_URIPARSER */
 
@@ -100,25 +105,25 @@ urlparse ( const char *str, url_t *url )
 #define HC "[a-z0-9\\-\\.]"
 #define URL_RE "^([A-Za-z]+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/[^\\?]*)?(.([^#]*))?(#(.*))?"
 
+static regex_t *urlparse_exp = NULL;
 
 int
 urlparse ( const char *str, url_t *url )
 {
-  static regex_t *exp = NULL;
   regmatch_t m[16];
   char buf[16];
 
   /* Create regexp */
-  if (!exp) {
-    exp = calloc(1, sizeof(regex_t));
-    if (regcomp(exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
+  if (!urlparse_exp) {
+    urlparse_exp = calloc(1, sizeof(regex_t));
+    if (regcomp(urlparse_exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
       tvherror("url", "failed to compile regexp");
       exit(1);
     }
   }
 
   /* Execute */
-  if (regexec(exp, str, ARRAY_SIZE(m), m, 0))
+  if (regexec(urlparse_exp, str, ARRAY_SIZE(m), m, 0))
     return 1;
     
   /* Extract data */
@@ -143,6 +148,15 @@ urlparse ( const char *str, url_t *url )
   strncpy(url->raw, str, sizeof(url->raw));
 
   return 0;
+}
+
+void
+urlparse_done( void )
+{
+  if (urlparse_exp) {
+    regfree(urlparse_exp);
+    free(urlparse_exp);
+  }
 }
 
 #endif /* ENABLE_URIPARSER */

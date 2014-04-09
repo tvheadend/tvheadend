@@ -859,6 +859,7 @@ main(int argc, char **argv)
   tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
+  tvhftrace("main", urlparse_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();
