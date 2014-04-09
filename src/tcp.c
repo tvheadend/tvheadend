@@ -640,6 +640,9 @@ tcp_server_delete(void *server)
   tcp_server_t *ts = server;
   tvhpoll_event_t ev;
 
+  if (server == NULL)
+    return;
+
   memset(&ev, 0, sizeof(ev));
   ev.fd       = ts->serverfd;
   ev.events   = TVHPOLL_IN;
