@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <fcntl.h>
 
 
 /*
@@ -41,6 +42,7 @@ struct http_client
   CURL *hc_curl;
   int   hc_fd;
   url_t hc_url;
+  int   hc_init;
   int   hc_begin;
 
   /* Callbacks */
@@ -55,10 +57,12 @@ struct http_client
 /*
  * Global state
  */
+static int                      http_running;
 static tvhpoll_t               *http_poll;
 static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
 static CURLM                   *http_curlm;
+static th_pipe_t                http_pipe;
 
 /*
  * Disable
@@ -109,6 +113,7 @@ http_curl_socket ( CURL *c, int fd, int a, void *u, void *s )
     if (a & CURL_POLL_OUT)
       ev.events |= TVHPOLL_OUT;
     ev.data.fd = fd;
+    ev.data.u64 = (uint64_t)hc;
     hc->hc_fd  = fd;
     tvhpoll_add(http_poll, &ev, 1);
   }
@@ -138,27 +143,41 @@ http_curl_data ( void *buf, size_t len, size_t n, void *p )
 static void *
 http_thread ( void *p )
 {
-  int n, e, run = 0;
+  int n, run = 0;
   tvhpoll_event_t ev;
   http_client_t *hc;
+  char c;
 
-  while (tvheadend_running) {
+  while (http_running) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
     if (n < 0) {
       if (tvheadend_running)
         tvherror("http_client", "tvhpoll_wait() error");
-      break;
-    } else {
+    } else if (n > 0) {
+      if ((uint64_t)&http_pipe == ev.data.u64) {
+        if (read(http_pipe.rd, &c, 1) == 1) {
+          if (c == 'n') {
+            pthread_mutex_lock(&http_lock);
+            TAILQ_FOREACH(hc, &http_clients, hc_link) {
+              if (hc->hc_init == 0)
+                continue;
+              hc->hc_init = 0;
+              curl_multi_socket_action(http_curlm, hc->hc_fd, 0, &run);
+            }
+            pthread_mutex_unlock(&http_lock);
+          } else {
+            /* end-of-task */
+            break;
+          }
+        }
+        continue;
+      }
       pthread_mutex_lock(&http_lock);
       TAILQ_FOREACH(hc, &http_clients, hc_link)
-        if (hc->hc_fd == ev.data.fd)
+        if ((uint64_t)hc == ev.data.u64)
           break;
-      if (hc && (ev.events & (TVHPOLL_IN | TVHPOLL_OUT))) {
-        e = 0;
-        if (ev.events & TVHPOLL_IN)  e |= CURL_POLL_IN;
-        if (ev.events & TVHPOLL_OUT) e |= CURL_POLL_OUT;
-        curl_multi_socket_action(http_curlm, ev.data.fd, 0, &run);
-      }
+      if (hc && (ev.events & (TVHPOLL_IN | TVHPOLL_OUT)))
+        curl_multi_socket_action(http_curlm, hc->hc_fd, 0, &run);
       pthread_mutex_unlock(&http_lock);
     }
   }
@@ -177,8 +196,6 @@ http_connect
     http_client_fail_cb fail_cb, 
     void *p )
 {
-  int run;
-
   /* Setup structure */
   http_client_t *hc = calloc(1, sizeof(http_client_t));
   hc->hc_curl       = curl_easy_init();
@@ -187,6 +204,7 @@ http_connect
   hc->hc_data       = data_cb;
   hc->hc_fail       = fail_cb;
   hc->hc_opaque     = p;
+  hc->hc_init       = 1;
 
   /* Store */
   pthread_mutex_lock(&http_lock);
@@ -198,8 +216,9 @@ http_connect
   curl_easy_setopt(hc->hc_curl, CURLOPT_WRITEFUNCTION, http_curl_data);
   curl_easy_setopt(hc->hc_curl, CURLOPT_WRITEDATA,     hc);
   curl_multi_add_handle(http_curlm, hc->hc_curl);
-  curl_multi_socket_action(http_curlm, CURL_SOCKET_TIMEOUT, 0, &run);
   pthread_mutex_unlock(&http_lock);
+
+  tvh_write(http_pipe.wr, "n", 1);
 
   return hc;
 }
@@ -224,6 +243,8 @@ pthread_t http_client_tid;
 void
 http_client_init ( void )
 {
+  tvhpoll_event_t ev = { 0 };
+
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
   TAILQ_INIT(&http_clients);
@@ -233,21 +254,48 @@ http_client_init ( void )
   http_curlm = curl_multi_init();
   curl_multi_setopt(http_curlm, CURLMOPT_SOCKETFUNCTION, http_curl_socket);
 
+  /* Setup pipe */
+  tvh_pipe(O_NONBLOCK, &http_pipe);
+
   /* Setup poll */
-  http_poll = tvhpoll_create(10);
+  http_poll   = tvhpoll_create(10);
+  ev.fd       = http_pipe.rd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.u64 = (uint64_t)&http_pipe;
+  tvhpoll_add(http_poll, &ev, 1);
 
   /* Setup thread */
+  http_running = 1;
   tvhthread_create(&http_client_tid, NULL, http_thread, NULL, 0);
 }
 
 void
 http_client_done ( void )
 {
-  pthread_kill(http_client_tid, SIGTERM);
+  http_running = 0;
+  tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
+  assert(TAILQ_FIRST(&http_clients) == NULL);
+  tvh_pipe_close(&http_pipe);
   tvhpoll_destroy(http_poll);
   curl_multi_cleanup(http_curlm);
+}
+
+
+void
+curl_done ( void )
+{
+#if ENABLE_NSPR
+  void PR_Cleanup( void );
+#endif
   curl_global_cleanup();
+#if ENABLE_NSPR
+  /*
+   * Note: Curl depends on the NSPR library.
+   *       The PR_Cleanup() call is mandatory to free NSPR resources.
+   */
+  PR_Cleanup();
+#endif
 }
 
 #else /* ENABLE_CURL */
@@ -259,6 +307,11 @@ http_client_init ( void )
 
 void
 http_client_done ( void )
+{
+}
+
+void
+curl_done ( void )
 {
 }
 

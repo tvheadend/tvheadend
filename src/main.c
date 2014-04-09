@@ -748,6 +748,8 @@ main(int argc, char **argv)
 
   imagecache_init();
 
+  http_client_init();
+
   service_init();
 
 #if ENABLE_MPEGTS
@@ -764,7 +766,6 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
-  http_client_init();
   tcp_server_init(opt_ipv6);
   http_server_init(opt_bindaddr);
   webui_init();
@@ -823,11 +824,11 @@ main(int argc, char **argv)
   tvhftrace("main", htsp_done);
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);
-  tvhftrace("main", http_client_done);
   tvhftrace("main", fsmonitor_done);
 #if ENABLE_MPEGTS
   tvhftrace("main", mpegts_done);
 #endif
+  tvhftrace("main", http_client_done);
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
@@ -866,6 +867,8 @@ main(int argc, char **argv)
     unlink(opt_pidpath);
     
   free(opt_tsfile.str);
+
+  curl_done();
 
   return 0;
 }
