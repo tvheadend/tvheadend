@@ -270,7 +270,7 @@ void tvhlogv ( const char *file, int line,
   pthread_mutex_lock(&tvhlog_mutex);
 
   /* Check for full */
-  if (tvhlog_queue_full) {
+  if (tvhlog_queue_full || !tvhlog_run) {
     pthread_mutex_unlock(&tvhlog_mutex);
     return;
   }
