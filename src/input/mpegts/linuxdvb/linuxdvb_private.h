@@ -244,6 +244,8 @@ int linuxdvb_frontend_tune0
 int linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 
+int linuxdvb2tvh_delsys ( int delsys );
+
 /*
  * Diseqc gear
  */

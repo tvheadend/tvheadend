@@ -690,41 +690,94 @@ linuxdvb_frontend_input_thread ( void *aux )
  * Tuning
  * *************************************************************************/
 
-typedef struct tvh2linuxdvb {
+typedef struct linuxdvb_tbl {
   int t; ///< TVH internal value
   int l; ///< LinuxDVB API value
-} tvh2linuxdvb_t;
+} linuxdvb_tbl_t;
 
 #define TABLE_EOD -1
 
 static int
-translate_from_table
-    (const char *prefix, int src, tvh2linuxdvb_t *tbl, int defval)
+linuxdvb2tvh ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
 {
-  while (tbl->t >= 0) {
-    if (tbl->t == src)
-     return tbl->l;
+  while (tbl->t != TABLE_EOD) {
+    if (tbl->l == key)
+      return tbl->t;
     tbl++;
   }
-  tvhtrace("linuxdvb", "%s - cannot translate %d", prefix, src);
+  tvhtrace("linuxdvb", "%s - linuxdvb2tvh failed %d", prefix, key);
+  return defval;
+}
+
+static int
+tvh2linuxdvb ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
+{
+  while (tbl->t != TABLE_EOD) {
+    if (tbl->t == key)
+      return tbl->l;
+    tbl++;
+  }
+  tvhtrace("linuxdvb", "%s - tvh2linuxdvb failed %d", prefix, key);
   return defval;
 }
 
 #define TOSTR(s) #s
-#define TR(s, t, d) translate_from_table(TOSTR(s), dmc->dmc_fe_##s , t, d)
-#define TRU(s, t, d) translate_from_table(TOSTR(s), dmc->u.dmc_fe_##s , t, d)
+#define TR(s, t, d)  tvh2linuxdvb(TOSTR(s), t, dmc->dmc_fe_##s , d)
+#define TRU(s, t, d) tvh2linuxdvb(TOSTR(s), t, dmc->u.dmc_fe_##s , d)
+
+#if DVB_API_VERSION >= 5
+static linuxdvb_tbl_t delsys_tbl[] = {
+  { .t = DVB_SYS_DVBC_ANNEX_B,        .l = SYS_DVBC_ANNEX_B },
+#if DVB_VER_ATLEAST(5,6)
+  { .t = DVB_SYS_DVBC_ANNEX_A,        .l = SYS_DVBC_ANNEX_A },
+  { .t = DVB_SYS_DVBC_ANNEX_C,        .l = SYS_DVBC_ANNEX_C },
+#else
+  { .t = DVB_SYS_DVBC_ANNEX_A,        .l = SYS_DVBC_ANNEX_AC },
+  { .t = DVB_SYS_DVBC_ANNEX_C,        .l = SYS_DVBC_ANNEX_AC },
+#endif
+  { .t = DVB_SYS_DVBT,                .l = SYS_DVBT         },
+#if DVB_VER_ATLEAST(5,3)
+  { .t = DVB_SYS_DVBT2,               .l = SYS_DVBT2        },
+#endif
+  { .t = DVB_SYS_DVBS,                .l = SYS_DVBS         },
+  { .t = DVB_SYS_DVBS2,               .l = SYS_DVBS2        },
+  { .t = DVB_SYS_DVBH,                .l = SYS_DVBH         },
+#if DVB_VER_ATLEAST(5,1)
+  { .t = DVB_SYS_DSS,                 .l = SYS_DSS          },
+#endif
+  { .t = DVB_SYS_ISDBT,               .l = SYS_ISDBT        },
+  { .t = DVB_SYS_ISDBS,               .l = SYS_ISDBS        },
+  { .t = DVB_SYS_ISDBC,               .l = SYS_ISDBC        },
+  { .t = DVB_SYS_ATSC,                .l = SYS_ATSC         },
+  { .t = DVB_SYS_ATSCMH,              .l = SYS_ATSCMH       },
+#if DVB_VER_ATLEAST(5,7)
+  { .t = DVB_SYS_DTMB,                .l = SYS_DTMB         },
+#endif
+  { .t = DVB_SYS_CMMB,                .l = SYS_CMMB         },
+  { .t = DVB_SYS_DAB,                 .l = SYS_DAB          },
+#if DVB_VER_ATLEAST(5,4)
+  { .t = DVB_SYS_TURBO,               .l = SYS_TURBO        },
+#endif
+  { .t = TABLE_EOD }
+};
+int linuxdvb2tvh_delsys ( int delsys )
+{
+  return linuxdvb2tvh("delsys", delsys_tbl, delsys, DVB_SYS_NONE);
+}
+#endif
+
 
 int
 linuxdvb_frontend_tune0
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
 {
-  static tvh2linuxdvb_t inv_tbl[] = {
+  static linuxdvb_tbl_t inv_tbl[] = {
     { .t = DVB_INVERSION_AUTO,          .l = INVERSION_AUTO  },
     { .t = DVB_INVERSION_OFF,           .l = INVERSION_OFF   },
     { .t = DVB_INVERSION_ON,            .l = INVERSION_ON    },
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t bw_tbl[] = {
+  static linuxdvb_tbl_t bw_tbl[] = {
     { .t = DVB_BANDWIDTH_AUTO,          .l = BANDWIDTH_AUTO      },
 #if DVB_VER_ATLEAST(5,3)
     { .t = DVB_BANDWIDTH_1_712_MHZ,     .l = BANDWIDTH_1_712_MHZ },
@@ -738,7 +791,7 @@ linuxdvb_frontend_tune0
 #endif
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t fec_tbl[] = {
+  static linuxdvb_tbl_t fec_tbl[] = {
     { .t = DVB_FEC_NONE,                .l = FEC_NONE  },
     { .t = DVB_FEC_AUTO,                .l = FEC_AUTO  },
     { .t = DVB_FEC_1_2,                 .l = FEC_1_2   },
@@ -760,7 +813,7 @@ linuxdvb_frontend_tune0
 #endif
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t mod_tbl[] = {
+  static linuxdvb_tbl_t mod_tbl[] = {
     { .t = DVB_MOD_AUTO,                .l = QAM_AUTO },
     { .t = DVB_MOD_QPSK,                .l = QPSK     },
     { .t = DVB_MOD_QAM_16,              .l = QAM_16   },
@@ -784,7 +837,7 @@ linuxdvb_frontend_tune0
 #endif
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t trans_tbl[] = {
+  static linuxdvb_tbl_t trans_tbl[] = {
     { .t = DVB_TRANSMISSION_MODE_AUTO,  .l = TRANSMISSION_MODE_AUTO  },
 #if DVB_VER_ATLEAST(5,3)
     { .t = DVB_TRANSMISSION_MODE_1K,    .l = TRANSMISSION_MODE_1K    },
@@ -804,7 +857,7 @@ linuxdvb_frontend_tune0
 #endif
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t guard_tbl[] = {
+  static linuxdvb_tbl_t guard_tbl[] = {
     { .t = DVB_GUARD_INTERVAL_AUTO,     .l = GUARD_INTERVAL_AUTO   },
     { .t = DVB_GUARD_INTERVAL_1_4,      .l = GUARD_INTERVAL_1_4    },
     { .t = DVB_GUARD_INTERVAL_1_8,      .l = GUARD_INTERVAL_1_8    },
@@ -817,7 +870,7 @@ linuxdvb_frontend_tune0
 #endif
     { .t = TABLE_EOD }
   };
-  static tvh2linuxdvb_t h_tbl[] = {
+  static linuxdvb_tbl_t h_tbl[] = {
     { .t = DVB_HIERARCHY_NONE,          .l = HIERARCHY_NONE },
     { .t = DVB_HIERARCHY_AUTO,          .l = HIERARCHY_AUTO },
     { .t = DVB_HIERARCHY_1,             .l = HIERARCHY_1    },
@@ -826,47 +879,13 @@ linuxdvb_frontend_tune0
     { .t = TABLE_EOD }
   };
 #if DVB_API_VERSION >= 5
-  static tvh2linuxdvb_t delsys_tbl[] = {
-    { .t = DVB_SYS_DVBC_ANNEX_B,        .l = SYS_DVBC_ANNEX_B },
-#if DVB_VER_ATLEAST(5,6)
-    { .t = DVB_SYS_DVBC_ANNEX_A,        .l = SYS_DVBC_ANNEX_A },
-    { .t = DVB_SYS_DVBC_ANNEX_C,        .l = SYS_DVBC_ANNEX_C },
-#else
-    { .t = DVB_SYS_DVBC_ANNEX_A,        .l = SYS_DVBC_ANNEX_AC },
-    { .t = DVB_SYS_DVBC_ANNEX_C,        .l = SYS_DVBC_ANNEX_AC },
-#endif
-    { .t = DVB_SYS_DVBT,                .l = SYS_DVBT         },
-#if DVB_VER_ATLEAST(5,3)
-    { .t = DVB_SYS_DVBT2,               .l = SYS_DVBT2        },
-#endif
-    { .t = DVB_SYS_DVBS,                .l = SYS_DVBS         },
-    { .t = DVB_SYS_DVBS2,               .l = SYS_DVBS2        },
-    { .t = DVB_SYS_DVBH,                .l = SYS_DVBH         },
-#if DVB_VER_ATLEAST(5,1)
-    { .t = DVB_SYS_DSS,                 .l = SYS_DSS          },
-#endif
-    { .t = DVB_SYS_ISDBT,               .l = SYS_ISDBT        },
-    { .t = DVB_SYS_ISDBS,               .l = SYS_ISDBS        },
-    { .t = DVB_SYS_ISDBC,               .l = SYS_ISDBC        },
-    { .t = DVB_SYS_ATSC,                .l = SYS_ATSC         },
-    { .t = DVB_SYS_ATSCMH,              .l = SYS_ATSCMH       },
-#if DVB_VER_ATLEAST(5,7)
-    { .t = DVB_SYS_DTMB,                .l = SYS_DTMB         },
-#endif
-    { .t = DVB_SYS_CMMB,                .l = SYS_CMMB         },
-    { .t = DVB_SYS_DAB,                 .l = SYS_DAB          },
-#if DVB_VER_ATLEAST(5,4)
-    { .t = DVB_SYS_TURBO,               .l = SYS_TURBO        },
-#endif
-    { .t = TABLE_EOD }
-  };
-  static tvh2linuxdvb_t pilot_tbl[] = {
+  static linuxdvb_tbl_t pilot_tbl[] = {
     { .t = DVB_PILOT_AUTO,              .l = PILOT_AUTO },
     { .t = DVB_PILOT_ON,                .l = PILOT_ON   },
     { .t = DVB_PILOT_OFF,               .l = PILOT_OFF  },
     { .l = TABLE_EOD }
   };
-  static tvh2linuxdvb_t rolloff_tbl[] = {
+  static linuxdvb_tbl_t rolloff_tbl[] = {
     { .t = DVB_HIERARCHY_AUTO,          .l = ROLLOFF_AUTO },
     { .t = DVB_ROLLOFF_20,              .l = ROLLOFF_20   },
     { .t = DVB_ROLLOFF_25,              .l = ROLLOFF_25   },
