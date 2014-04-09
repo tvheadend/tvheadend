@@ -184,7 +184,7 @@ static void
 linuxdvb_adapter_add ( const char *path )
 {
   extern int linuxdvb_adapter_mask;
-  int a, i, j, r, fd, delsys;
+  int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512];
   uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
@@ -195,6 +195,7 @@ linuxdvb_adapter_add ( const char *path )
   int save = 0;
   dvb_fe_type_t type;
 #if DVB_VER_ATLEAST(5,10)
+  int delsys;
   dvb_fe_type_t fetypes[DVB_TYPE_LAST+1] = { 0 };
   struct dtv_property   cmd = {
     .cmd = DTV_ENUM_DELSYS
