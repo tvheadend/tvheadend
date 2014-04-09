@@ -19,6 +19,7 @@ OPTIONS=(
   "cwc:yes"
   "v4l:no"
   "linuxdvb:yes"
+  "satip_client:yes"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
@@ -171,6 +172,17 @@ if enabled_or_auto curl; then
     enable curl
   elif enabled curl; then
     die "Curl development support not foun (use --disable-curl)"
+  fi
+fi
+
+#
+# SAT>IP client
+#
+if enabled_or_auto satip_client; then
+  if enabled curl; then
+    enable upnp
+  else
+    die "SAT>IP client requires curl enabled"
   fi
 fi
 
