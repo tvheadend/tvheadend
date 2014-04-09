@@ -184,7 +184,7 @@ static void
 linuxdvb_adapter_add ( const char *path )
 {
   extern int linuxdvb_adapter_mask;
-  int a, i, j, r, fd;
+  int a, i, j, r, fd, delsys;
   char fe_path[512], dmx_path[512], dvr_path[512];
   uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
@@ -316,9 +316,13 @@ linuxdvb_adapter_add ( const char *path )
 #if DVB_VER_ATLEAST(5,10)
     fetypes[type] = 1;
     for (j = 0; j < cmd.u.buffer.len; j++) {
+      delsys = cmd.u.buffer.data[j];
+
+      if ((delsys = linuxdvb2tvh_delsys(delsys)) == DVB_SYS_NONE)
+        continue;
 
       /* Invalid */
-      if ((type = dvb_delsys2type(cmd.u.buffer.data[j])) == DVB_TYPE_NONE)
+      if ((type = dvb_delsys2type(delsys)) == DVB_TYPE_NONE)
         continue;
 
       /* Couldn't find */
