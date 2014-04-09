@@ -239,7 +239,8 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
-    close(im->mm_iptv_fd); // removes from poll
+    udp_close(im->mm_iptv_connection); // removes from poll
+    im->mm_iptv_connection = NULL;
     im->mm_iptv_fd = -1;
   }
 
