@@ -637,7 +637,10 @@ satip_frontend_pid_changed( satip_rtsp_connection_t *rtsp,
     lfe->sf_pids_tcount = lfe->sf_pids_count;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-    r = satip_rtsp_play(rtsp, NULL, add, del);
+    if (add[0] != '\0' || del[0] != '\0')
+      r = satip_rtsp_play(rtsp, NULL, add, del);
+    else
+      r = 0;
   }
 
   if (r < 0)
@@ -663,6 +666,7 @@ satip_frontend_input_thread ( void *aux )
   size_t c;
   int tc;
   tvhpoll_event_t ev[4];
+  tvhpoll_event_t evr;
   tvhpoll_t *efd;
   int changing = 0, ms = -1, fatal = 0;
   uint32_t seq = -1, nseq;
@@ -690,6 +694,7 @@ satip_frontend_input_thread ( void *aux )
   ev[2].events             = TVHPOLL_IN;
   ev[2].fd                 = rtsp->fd;
   ev[2].data.u64           = (uint64_t)rtsp;
+  evr                      = ev[2];
   ev[3].events             = TVHPOLL_IN;
   ev[3].fd                 = lfe->sf_dvr_pipe.rd;
   ev[3].data.u64           = 0;
@@ -717,6 +722,18 @@ satip_frontend_input_thread ( void *aux )
 
   while (tvheadend_running && !fatal) {
 
+    if (rtsp->sending) {
+      if ((evr.events & TVHPOLL_OUT) == 0) {
+        evr.events |= TVHPOLL_OUT;
+        tvhpoll_add(efd, &evr, 1);
+      }
+    } else {
+      if (evr.events & TVHPOLL_OUT) {
+        evr.events &= ~TVHPOLL_OUT;
+        tvhpoll_add(efd, &evr, 1);
+      }
+    }
+    
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
     if (nfds > 0 && ev[0].data.u64 == 0) {
@@ -740,12 +757,12 @@ satip_frontend_input_thread ( void *aux )
     if (nfds < 1) continue;
 
     if (ev[0].data.u64 == (uint64_t)rtsp) {
-      r = satip_rtsp_receive(rtsp);
+      r = satip_rtsp_run(rtsp);
       if (r < 0) {
         tvhlog(LOG_ERR, "satip", "%s - RTSP error %d (%s) [%i-%i]",
                buf, r, strerror(-r), rtsp->cmd, rtsp->code);
         fatal = 1;
-      } else if (r) {
+      } else if (r == SATIP_RTSP_READ_DONE) {
         switch (rtsp->cmd) {
         case SATIP_RTSP_CMD_OPTIONS:
           r = satip_rtsp_options_decode(rtsp);
@@ -783,6 +800,7 @@ satip_frontend_input_thread ( void *aux )
       }
     }
 
+    /* We need to keep the session alive */
     if (rtsp->ping_time + rtsp->timeout / 2 < dispatch_clock &&
         rtsp->cmd == SATIP_RTSP_CMD_NONE)
       satip_rtsp_options(rtsp);
@@ -862,11 +880,20 @@ satip_frontend_input_thread ( void *aux )
     if (r < 0) {
       tvhtrace("satip", "%s - bad teardown", buf);
     } else {
-      while (1) {
-        tvhpoll_wait(efd, ev, 1, -1);
-        r = satip_rtsp_receive(rtsp);
-        if (r)
+      if (r == SATIP_RTSP_INCOMPLETE) {
+        evr.events |= TVHPOLL_OUT;
+        tvhpoll_add(efd, &evr, 1);
+      }
+      r = 0;
+      while (r == SATIP_RTSP_INCOMPLETE) {
+        if (!rtsp->sending) {
+          evr.events &= ~TVHPOLL_OUT;
+          tvhpoll_add(efd, &evr, 1);
+        }
+        nfds = tvhpoll_wait(efd, ev, 1, -1);
+        if (nfds < 0)
           break;
+        r = satip_rtsp_run(rtsp);
       }
     }
   }
