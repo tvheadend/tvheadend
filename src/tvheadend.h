@@ -620,6 +620,8 @@ void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
 
 void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
+ssize_t sbuf_read(sbuf_t *sb, int fd);
+
 char *md5sum ( const char *str );
 
 int makedirs ( const char *path, int mode );

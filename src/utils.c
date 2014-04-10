@@ -364,6 +364,15 @@ sbuf_cut(sbuf_t *sb, int off)
   memmove(sb->sb_data, sb->sb_data + off, sb->sb_ptr);
 }
 
+ssize_t
+sbuf_read(sbuf_t *sb, int fd)
+{
+  ssize_t n = read(fd, sb->sb_data + sb->sb_ptr, sb->sb_size - sb->sb_ptr);
+  if (n > 0)
+    sb->sb_ptr += n;
+  return n;
+}
+
 char *
 md5sum ( const char *str )
 {
