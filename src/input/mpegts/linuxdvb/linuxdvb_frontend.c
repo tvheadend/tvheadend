@@ -657,12 +657,12 @@ linuxdvb_frontend_input_thread ( void *aux )
 
   /* Read */
   while (tvheadend_running) {
-    nfds = tvhpoll_wait(efd, ev, 1, 10);
+    nfds = tvhpoll_wait(efd, ev, 1, -1);
     if (nfds < 1) continue;
     if (ev[0].data.fd != dvr) break;
     
     /* Read */
-    if (sbuf_read(&sb, dvr)) {
+    if (sbuf_read(&sb, dvr) < 0) {
       if ((errno == EAGAIN) || (errno == EINTR))
         continue;
       if (errno == EOVERFLOW) {
