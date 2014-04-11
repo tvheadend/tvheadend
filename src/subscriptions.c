@@ -152,7 +152,7 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   mpegts_mux_t   *mm = mmi->mmi_mux;
   mpegts_input_t *mi = mmi->mmi_input;
 
-  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  pthread_mutex_lock(&mi->mi_output_lock);
 
   if (!(s->ths_flags & SUBSCRIPTION_NONE))
     streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
@@ -165,7 +165,7 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   s->ths_mmi = NULL;
   LIST_REMOVE(s, ths_mmi_link);
 
-  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 /* **************************************************************************
@@ -615,12 +615,12 @@ subscription_create_from_mux
   /* Install full mux handler */
   mi = s->ths_mmi->mmi_input;
   if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX)) {
-    pthread_mutex_lock(&mi->mi_delivery_mutex);
+    pthread_mutex_lock(&mi->mi_output_lock);
     mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
-    pthread_mutex_unlock(&mi->mi_delivery_mutex);
+    pthread_mutex_unlock(&mi->mi_output_lock);
   }
 
-  pthread_mutex_lock(&s->ths_mmi->mmi_input->mi_delivery_mutex);
+  pthread_mutex_lock(&s->ths_mmi->mmi_input->mi_output_lock);
 
   /* Store */
   LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
@@ -649,7 +649,7 @@ subscription_create_from_mux
   sm = streaming_msg_create_data(SMT_START, ss);
   streaming_target_deliver(s->ths_output, sm);
 
-  pthread_mutex_unlock(&s->ths_mmi->mmi_input->mi_delivery_mutex);
+  pthread_mutex_unlock(&s->ths_mmi->mmi_input->mi_output_lock);
 
   return s;
 }
