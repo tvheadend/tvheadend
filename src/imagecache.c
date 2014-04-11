@@ -142,7 +142,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   int res = 1;
   CURL *curl;
   FILE *fp;
-  char tmp[256], path[256];
+  char tmp[256], path[256], useragent[256];
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
@@ -151,6 +151,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (hts_settings_makedirs(path))
     goto error;
   snprintf(tmp, sizeof(tmp), "%s.tmp", path);
+  snprintf(useragent, sizeof(useragent), "TVHeadend/%s", tvheadend_version);
   if (!(fp = fopen(tmp, "wb")))
     goto error;
   
@@ -159,7 +160,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   curl = curl_easy_init();
   curl_easy_setopt(curl, CURLOPT_URL,         img->url);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA,   fp);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT,   "TVHeadend");
+  curl_easy_setopt(curl, CURLOPT_USERAGENT,   useragent);
   curl_easy_setopt(curl, CURLOPT_TIMEOUT,     120);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS,  1);
   curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
