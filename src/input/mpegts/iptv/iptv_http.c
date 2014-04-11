@@ -41,22 +41,18 @@ static size_t
 iptv_http_data
   ( void *p, void *buf, size_t len )
 {
-  uint8_t *tsb;
-  size_t ret = len;
   iptv_mux_t *im = p;
 
   pthread_mutex_lock(&iptv_lock);
 
-  tsb = im->mm_iptv_tsb + im->mm_iptv_pos;
-  len = MIN(len, IPTV_PKT_SIZE   - im->mm_iptv_pos);
+  sbuf_append(&im->mm_iptv_buffer, buf, len);
 
-  memcpy(tsb, buf, len);
-
-  iptv_input_recv_packets(im, 0, len);
+  if (len > 0)
+    iptv_input_recv_packets(im, len, 0);
 
   pthread_mutex_unlock(&iptv_lock);
 
-  return ret;
+  return len;
 }
 
 /*

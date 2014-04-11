@@ -39,10 +39,6 @@ struct iptv_handler
   const char *scheme;
   int     (*start) ( iptv_mux_t *im, const url_t *url );
   void    (*stop)  ( iptv_mux_t *im );
-
-  // Return number of available bytes, with optional offset
-  // from start of mux buffer (useful for things with wrapper
-  // around TS)
   ssize_t (*read)  ( iptv_mux_t *im, size_t *off );
   
   RB_ENTRY(iptv_handler) link;
@@ -56,7 +52,7 @@ struct iptv_input
 };
 
 void iptv_input_mux_started ( iptv_mux_t *im );
-void iptv_input_recv_packets ( iptv_mux_t *im, size_t off, size_t len );
+void iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off );
 
 struct iptv_network
 {
@@ -81,10 +77,9 @@ struct iptv_mux
 
   int                   mm_iptv_atsc;
 
-  uint8_t              *mm_iptv_tsb;
-  int                   mm_iptv_pos;
-
   char                 *mm_iptv_svcname;
+
+  sbuf_t                mm_iptv_buffer;
 
   iptv_handler_t       *im_handler;
 
