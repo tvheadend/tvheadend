@@ -45,6 +45,8 @@ typedef struct mpegts_mux_sub       mpegts_mux_sub_t;
 typedef struct mpegts_input         mpegts_input_t;
 typedef struct mpegts_table_feed    mpegts_table_feed_t;
 typedef struct mpegts_network_link  mpegts_network_link_t;
+typedef struct mpegts_packet        mpegts_packet_t;
+typedef struct mpegts_buffer        mpegts_buffer_t;
 
 /* Lists */
 typedef LIST_HEAD (,mpegts_network)             mpegts_network_list_t;
@@ -52,7 +54,8 @@ typedef LIST_HEAD (,mpegts_input)               mpegts_input_list_t;
 typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux) mpegts_mux_queue_t;
 typedef LIST_HEAD (,mpegts_mux)                 mpegts_mux_list_t;
 typedef LIST_HEAD (,mpegts_network_link)        mpegts_network_link_list_t;
-TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
+typedef TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed)
+  mpegts_table_feed_queue_t;
 
 /* Classes */
 extern const idclass_t mpegts_network_class;
@@ -61,8 +64,16 @@ extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_input_class;
 
 /* **************************************************************************
- * SI processing
+ * Data / SI processing
  * *************************************************************************/
+
+struct mpegts_packet
+{
+  TAILQ_ENTRY(mpegts_packet)  mp_link;
+  size_t                      mp_len;
+  mpegts_mux_t               *mp_mux;
+  uint8_t                     mp_data[0];
+};
 
 typedef int (*mpegts_table_callback_t)
   ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
@@ -437,9 +448,8 @@ struct mpegts_input
 
   mpegts_network_link_list_t mi_networks;
 
-  LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
-
   LIST_HEAD(,mpegts_mux_instance) mi_mux_instances;
+
 
   /*
    * Status
@@ -450,20 +460,28 @@ struct mpegts_input
    * Input processing
    */
 
-  pthread_mutex_t mi_delivery_mutex;
+  int mi_running;
 
-  LIST_HEAD(,service) mi_transports;
+  /* Data input */
+  // Note: this section is protected by mi_input_lock
+  pthread_t                       mi_input_tid;
+  pthread_mutex_t                 mi_input_lock;
+  pthread_cond_t                  mi_input_cond;
+  TAILQ_HEAD(,mpegts_packet)      mi_input_queue;
 
+  /* Data processing/output */
+  // Note: this lock (mi_output_lock) protects all the remaining
+  //       data fields (excluding the callback functions)
+  pthread_mutex_t                 mi_output_lock;
 
-  struct mpegts_table_feed_queue mi_table_feed;
-  pthread_cond_t mi_table_feed_cond;  // Bound to mi_delivery_mutex
-
-
-  pthread_t mi_thread_id;
-  th_pipe_t mi_thread_pipe;
-
-  int mi_delivery_running;
-  pthread_t mi_thread_table_id;
+  /* Active sources */
+  LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
+  LIST_HEAD(,service)             mi_transports;
+  
+  /* Table processing */
+  pthread_t                       mi_table_tid;
+  pthread_cond_t                  mi_table_cond;
+  mpegts_table_feed_queue_t       mi_table_queue;
 
   /*
    * Functions
@@ -519,6 +537,8 @@ mpegts_input_t *mpegts_input_create0
 #define mpegts_input_create1(u, c)\
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
                        &mpegts_input_class, u, c)
+
+void mpegts_input_stop_all ( mpegts_input_t *mi );
 
 void mpegts_input_delete ( mpegts_input_t *mi, int delconf );
 
@@ -637,13 +657,9 @@ mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
     return mm->mm_last_mp;
 }
 
-size_t mpegts_input_recv_packets
-  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
-   int64_t *pcr, uint16_t *pcr_pid, const char *name);
-
-void mpegts_input_table_thread_start( mpegts_input_t *mi );
-
-void mpegts_input_table_thread_stop( mpegts_input_t *mi );
+void mpegts_input_recv_packets
+  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
+   int64_t *pcr, uint16_t *pcr_pid);
 
 int mpegts_input_is_free ( mpegts_input_t *mi );
 

@@ -147,7 +147,7 @@ mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
   const service_t *s;
   const th_subscription_t *ths;
   mpegts_input_t *mi = mmi->mmi_input;
-  lock_assert(&mi->mi_delivery_mutex);
+  lock_assert(&mi->mi_output_lock);
 
   /* Direct subs */
   LIST_FOREACH(ths, &mmi->mmi_subs, ths_mmi_link) {
@@ -578,9 +578,9 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   mpegts_input_t *mi;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
-  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  pthread_mutex_lock(&mi->mi_output_lock);
   mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
-  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 void
@@ -591,9 +591,9 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
-  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  pthread_mutex_lock(&mi->mi_output_lock);
   mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
-  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 /* **************************************************************************
