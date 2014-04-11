@@ -422,12 +422,17 @@ mpegts_input_recv_packets
   int i, p = 0;
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data + off;
-  int     len  = sb->sb_size - off;
-#define MIN_TS_PKT 10
+  int     len  = sb->sb_ptr  - off;
+#define MIN_TS_PKT 100
+#define MIN_TS_SYN 5
+
+  if (len < (MIN_TS_PKT * 188))
+    return;
 
   /* Check for sync */
-  while ( (len >= (MIN_TS_PKT * 188)) &&
-          ((p = ts_sync_count(tsb, len)) < MIN_TS_PKT) ) {
+// could be a bit more efficient
+  while ( (len >= (MIN_TS_SYN * 188)) &&
+          ((p = ts_sync_count(tsb, len)) == 0) ) {
     --len;
     ++tsb;
     ++off;
@@ -451,7 +456,7 @@ mpegts_input_recv_packets
   }
 
   /* Pass */
-  if (p >= 10) {
+  if (p >= MIN_TS_SYN) {
     size_t sz = sizeof(mpegts_packet_t) + (p * 188);
     
     mp = calloc(1, sz);
