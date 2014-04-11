@@ -859,5 +859,6 @@ http_server_done(void)
     free(hp);
   }
   pthread_mutex_unlock(&global_lock);
-  tcp_server_delete(http_server);
+  if (http_server)
+    tcp_server_delete(http_server);
 }
