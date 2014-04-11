@@ -846,6 +846,9 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
   tvhftrace("main", linuxdvb_done);
 #endif
+#if ENABLE_TSFILE
+  tvhftrace("main", tsfile_done);
+#endif
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
