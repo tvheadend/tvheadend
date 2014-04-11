@@ -489,10 +489,10 @@ linuxdvb_frontend_monitor ( void *aux )
       linuxdvb_frontend_default_tables(lfe, (dvb_mux_t*)mm);
 
       /* Locked - ensure everything is open */
-      pthread_mutex_lock(&lfe->mi_delivery_mutex);
+      pthread_mutex_lock(&lfe->mi_output_lock);
       RB_FOREACH(mp, &mm->mm_pids, mp_link)
         linuxdvb_frontend_open_pid0(lfe, mp);
-      pthread_mutex_unlock(&lfe->mi_delivery_mutex);
+      pthread_mutex_unlock(&lfe->mi_output_lock);
 
     /* Re-arm (quick) */
     } else {
@@ -600,13 +600,13 @@ linuxdvb_frontend_input_thread ( void *aux )
   mpegts_mux_instance_t *mmi;
   int dmx = -1, dvr = -1;
   char buf[256];
-  uint8_t tsb[18800];
-  int pos = 0, nfds;
-  ssize_t c;
+  int nfds;
   tvhpoll_event_t ev[2];
   struct dmx_pes_filter_params dmx_param;
   int fullmux;
   tvhpoll_t *efd;
+  sbuf_t sb;
+  sbuf_init_fixed(&sb, 18800);
 
   /* Get MMI */
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
@@ -662,8 +662,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     if (ev[0].data.fd != dvr) break;
     
     /* Read */
-    c = read(dvr, tsb+pos, sizeof(tsb)-pos);
-    if (c < 0) {
+    if (sbuf_read(&sb, dvr)) {
       if ((errno == EAGAIN) || (errno == EINTR))
         continue;
       if (errno == EOVERFLOW) {
@@ -676,8 +675,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     }
     
     /* Process */
-    pos = mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, tsb, c+pos,
-                                    NULL, NULL, buf);
+    mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, &sb, 0, NULL, NULL);
   }
 
   tvhpoll_destroy(efd);
@@ -1189,9 +1187,6 @@ linuxdvb_frontend_create
   pthread_mutex_init(&lfe->lfe_dvr_lock, NULL);
   pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
  
-  /* Start table thread */
-  mpegts_input_table_thread_start((mpegts_input_t *)lfe);
-
   /* Satconf */
   if (conf) {
     if ((scconf = htsmsg_get_map(conf, "satconf"))) {
@@ -1231,13 +1226,10 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
 void
 linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
 {
-  mpegts_mux_instance_t *mmi;
-
   lock_assert(&global_lock);
 
   /* Ensure we're stopped */
-  if ((mmi = LIST_FIRST(&lfe->mi_mux_active)))
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+  mpegts_input_stop_all((mpegts_input_t*)lfe);
 
   /* Stop monitor */
   gtimer_disarm(&lfe->lfe_monitor_timer);
@@ -1245,8 +1237,6 @@ linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
   /* Close FDs */
   if (lfe->lfe_fe_fd > 0)
     close(lfe->lfe_fe_fd);
-
-  mpegts_input_table_thread_stop((mpegts_input_t *)lfe);
 
   /* Remove from adapter */
   LIST_REMOVE(lfe, lfe_link);
