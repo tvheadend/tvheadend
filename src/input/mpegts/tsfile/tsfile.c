@@ -28,7 +28,7 @@
  */
 pthread_mutex_t          tsfile_lock;
 mpegts_network_t         tsfile_network;
-mpegts_input_list_t      tsfile_inputs;
+tsfile_input_list_t      tsfile_inputs;
 
 extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_network_class;
@@ -58,7 +58,7 @@ tsfile_network_create_service
 void tsfile_init ( int tuners )
 {
   int i;
-  mpegts_input_t *mi;
+  tsfile_input_t *mi;
 
   /* Mutex - used for minor efficiency in service processing */
   pthread_mutex_init(&tsfile_lock, NULL);
@@ -71,13 +71,30 @@ void tsfile_init ( int tuners )
   /* IPTV like setup */
   if (tuners <= 0) {
     mi = tsfile_input_create(0);
-    mpegts_input_add_network(mi, &tsfile_network);
+    mpegts_input_add_network((mpegts_input_t*)mi, &tsfile_network);
   } else {
     for (i = 0; i < tuners; i++) {
       mi = tsfile_input_create(i+1);
-      mpegts_input_add_network(mi, &tsfile_network);
+      mpegts_input_add_network((mpegts_input_t*)mi, &tsfile_network);
     }
   }
+}
+
+/*
+ * Shutdown
+ */
+void
+tsfile_done ( void )
+{
+  tsfile_input_t *mi;
+  pthread_mutex_lock(&global_lock);
+  while ((mi = LIST_FIRST(&tsfile_inputs))) {
+    LIST_REMOVE(mi, tsi_link);
+    mpegts_input_stop_all((mpegts_input_t*)mi);
+    mpegts_input_delete((mpegts_input_t*)mi, 0);
+    // doesn't close the pipe!
+  }
+  pthread_mutex_unlock(&global_lock);
 }
 
 /*
@@ -85,7 +102,7 @@ void tsfile_init ( int tuners )
  */
 void tsfile_add_file ( const char *path )
 {
-  mpegts_input_t        *mi;
+  tsfile_input_t        *mi;
   mpegts_mux_t          *mm;
   tvhtrace("tsfile", "add file %s", path);
 
@@ -93,8 +110,8 @@ void tsfile_add_file ( const char *path )
   mm = tsfile_mux_create(&tsfile_network);
   
   /* Create physical instance (for each tuner) */
-  LIST_FOREACH(mi, &tsfile_inputs, mi_global_link)
-    tsfile_mux_instance_create(path, mi, mm);
+  LIST_FOREACH(mi, &tsfile_inputs, tsi_link)
+    tsfile_mux_instance_create(path, (mpegts_input_t*)mi, mm);
 }
 
 /******************************************************************************

@@ -37,20 +37,22 @@ extern const idclass_t mpegts_input_class;
 static void *
 tsfile_input_thread ( void *aux )
 {
-  int pos = 0, fd = -1, nfds;
+  int fd = -1, nfds;
   size_t len, rem;
   ssize_t c;
   tvhpoll_t *efd;
   tvhpoll_event_t ev;
   struct stat st;
-  uint8_t tsb[188*10];
+  sbuf_t buf;
   int64_t pcr, pcr_last = PTS_UNSET;
 #if PLATFORM_LINUX
   int64_t pcr_last_realtime = 0;
 #endif
-  mpegts_input_t *mi = aux;
+  tsfile_input_t *mi = aux;
   mpegts_mux_instance_t *mmi;
   tsfile_mux_instance_t *tmi;
+
+  sbuf_init_fixed(&buf, 18800);
 
   /* Open file */
   pthread_mutex_lock(&global_lock);
@@ -71,7 +73,7 @@ tsfile_input_thread ( void *aux )
   memset(&ev, 0, sizeof(ev));
   efd = tvhpoll_create(2);
   ev.events          = TVHPOLL_IN;
-  ev.fd = ev.data.fd = mi->mi_thread_pipe.rd;
+  ev.fd = ev.data.fd = mi->ti_thread_pipe.rd;
   tvhpoll_add(efd, &ev, 1);
 
   /* Get file length */
@@ -106,7 +108,7 @@ tsfile_input_thread ( void *aux )
     if (nfds == 1) break;
     
     /* Read */
-    c = read(fd, tsb+pos, sizeof(tsb)-pos);
+    c = sbuf_read(&buf, fd);
     if (c < 0) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
@@ -128,8 +130,8 @@ tsfile_input_thread ( void *aux )
     /* Process */
     if (c >= 0) {
       pcr = PTS_UNSET;
-      pos = mpegts_input_recv_packets(mi, mmi, tsb, c+pos, &pcr,
-                                      &tmi->mmi_tsfile_pcr_pid, "tsfile");
+      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0,
+                                &pcr, &tmi->mmi_tsfile_pcr_pid);
 
       /* Delay */
       if (pcr != PTS_UNSET) {
@@ -175,14 +177,15 @@ static void
 tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int err;
+  tsfile_input_t *ti = (tsfile_input_t*)mi;
 
   /* Stop thread */
-  if (mi->mi_thread_pipe.rd != -1) {
+  if (ti->ti_thread_pipe.rd != -1) {
     tvhtrace("tsfile", "adapter %d stopping thread", mi->mi_instance);
-    err = tvh_write(mi->mi_thread_pipe.wr, "", 1);
+    err = tvh_write(ti->ti_thread_pipe.wr, "", 1);
     assert(err != -1);
-    pthread_join(mi->mi_thread_id, NULL);
-    tvh_pipe_close(&mi->mi_thread_pipe);
+    pthread_join(ti->ti_thread_id, NULL);
+    tvh_pipe_close(&ti->ti_thread_pipe);
     tvhtrace("tsfile", "adapter %d stopped thread", mi->mi_instance);
   }
 
@@ -196,6 +199,7 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   struct stat st;
   mpegts_mux_t          *mm  = t->mmi_mux;
   tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
+  tsfile_input_t        *ti  = (tsfile_input_t*)mi;
   tvhtrace("tsfile", "adapter %d starting mmi %p", mi->mi_instance, mmi);
 
   /* Already tuned */
@@ -215,14 +219,14 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   }
 
   /* Start thread */
-  if (mi->mi_thread_pipe.rd == -1) {
-    if (tvh_pipe(O_NONBLOCK, &mi->mi_thread_pipe)) {
+  if (ti->ti_thread_pipe.rd == -1) {
+    if (tvh_pipe(O_NONBLOCK, &ti->ti_thread_pipe)) {
       mmi->mmi_tune_failed = 1;
       tvhlog(LOG_ERR, "tsfile", "failed to create thread pipe");
       return SM_CODE_TUNING_FAILED;
     }
     tvhtrace("tsfile", "adapter %d starting thread", mi->mi_instance);
-    tvhthread_create(&mi->mi_thread_id, NULL, tsfile_input_thread, mi, 0);
+    tvhthread_create(&ti->ti_thread_id, NULL, tsfile_input_thread, mi, 0);
   }
 
   /* Current */
@@ -237,23 +241,27 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   return 0;
 }
 
-mpegts_input_t *
+tsfile_input_t *
 tsfile_input_create ( int idx )
 {
-  mpegts_input_t *mi;
+  tsfile_input_t *mi;
 
   /* Create object */
-  mi = mpegts_input_create1(NULL, NULL);
+  mi = (tsfile_input_t*)
+    mpegts_input_create0(calloc(1, sizeof(tsfile_input_t)),
+                         &mpegts_input_class,
+                         NULL, NULL);
   mi->mi_instance       = idx;
   mi->mi_enabled        = 1;
   mi->mi_start_mux      = tsfile_input_start_mux;
   mi->mi_stop_mux       = tsfile_input_stop_mux;
-  LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
+  LIST_INSERT_HEAD(&tsfile_inputs, mi, tsi_link);
   if (!mi->mi_name)
     mi->mi_name = strdup("TSFile");
 
+  mi->ti_thread_pipe.rd = mi->ti_thread_pipe.wr = -1;
+
   /* Start table thread */
-  mpegts_input_table_thread_start(mi);
   return mi;
 }
 

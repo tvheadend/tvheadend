@@ -28,6 +28,9 @@ struct mpegts_network;
 /* Initialise system (with N tuners) */
 void tsfile_init ( int tuners );
 
+/* Shutdown */
+void tsfile_done ( void );
+
 /* Add a new file (multiplex) */
 void tsfile_add_file ( const char *path );
 
