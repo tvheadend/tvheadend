@@ -26,6 +26,7 @@
 #include "api.h"
 #include "tcp.h"
 #include "input.h"
+#include "epggrab.h"
 
 static int
 api_status_inputs
@@ -90,12 +91,39 @@ api_status_connections
   return 0;
 }
 
+static int
+api_status_epgs
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int c;
+  c=0;
+  htsmsg_t *l, *e;
+  l = htsmsg_create_list();
+
+  epggrab_module_t *m;
+  LIST_FOREACH(m, &epggrab_modules, link) {
+	if (m->active)
+	{
+	  e = htsmsg_create_map();
+	  htsmsg_add_str(e, "name", m->name);
+	  c++;
+	}
+  }
+
+  /* Output */
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+  htsmsg_add_u32(*resp, "totalCount", c);
+  return 0;
+}
+
 void api_status_init ( void )
 {
   static api_hook_t ah[] = {
     { "status/connections",   ACCESS_ADMIN, api_status_connections, NULL },
     { "status/subscriptions", ACCESS_ADMIN, api_status_subscriptions, NULL },
     { "status/inputs",        ACCESS_ADMIN, api_status_inputs, NULL },
+    { "status/epgs",        ACCESS_ADMIN, api_status_epgs, NULL },
     { NULL },
   };
 

@@ -117,10 +117,12 @@ SRCS =  src/version.c \
 	src/rtsp.c \
 	src/fsmonitor.c \
 	src/cron.c \
+	src/power.c \
 	src/esfilter.c
 
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
+
 
 SRCS += \
 	src/api.c \
@@ -274,7 +276,7 @@ endif
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += docs/html docs/docresources src/webui/static
-BUNDLES-yes               += data/conf
+BUNDLES-yes               += data/conf bin
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
 

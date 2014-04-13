@@ -40,7 +40,9 @@ tvheadend.miscconf = function() {
 		root : 'config'
 	}, [ 'muxconfpath', 'language',
        'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
-       'tvhtime_tolerance', 'transcoding_enabled']);
+       'tvhtime_tolerance', 'power_enabled', 'power_idletime', 
+       'power_prerecordingwakeup', 'power_epgwakeup', 'power_rtcscript', 
+       'power_preshutdownscript', 'power_shutdownscript', 'transcoding_enabled']);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -157,6 +159,65 @@ tvheadend.miscconf = function() {
     var imagecache_form = null;
   }
 
+  
+  /*
+   * Power
+   */
+  var powerEnabled = new Ext.form.Checkbox({
+    name: 'power_enabled',
+    fieldLabel: 'Enabled'
+  });
+
+  var powerIdleTime = new Ext.form.NumberField({
+	    name: 'power_idletime',
+	    fieldLabel: 'Idle time after which to shutdown'
+  });
+
+  var preRecordingWakeupTime = new Ext.form.NumberField({
+	    name: 'power_prerecordingwakeup',
+	    fieldLabel: 'Wake up computer how many minutes before recording?'
+  });
+
+
+	var epgWakeupTime = new Ext.form.TimeField({
+		allowBlank : false,
+		increment : 10,
+		format : 'H:i',
+	    name: 'power_epgwakeup',
+	    fieldLabel: 'At what time to wakup the computer to update epg'
+	});
+
+	var setAlarmScript = new Ext.form.TextField({
+		fieldLabel : 'Script to set RTC wake-up time',
+		name : 'power_rtcscript',
+		allowBlank : true,
+		width: 400
+	});
+	
+	var shutdownOkayScript = new Ext.form.TextField({
+		fieldLabel : 'Script to check if it is okay to shutdown',
+		name : 'power_preshutdownscript',
+		allowBlank : true,
+		width: 400
+	});
+
+	var shutdownScript = new Ext.form.TextField({
+		fieldLabel : 'Script to shutdown computer',
+		name : 'power_shutdownscript',
+		allowBlank : true,
+		width: 400
+	});
+
+  var powerPanel = new Ext.form.FieldSet({
+    title: 'Power',
+    width: 700,
+    autoHeight: true,
+    collapsible: true,
+    items : [ powerEnabled, powerIdleTime, preRecordingWakeupTime, epgWakeupTime, setAlarmScript, 
+              shutdownOkayScript, shutdownScript ]
+  });
+
+  
   /*
    * Transcoding
    */
@@ -204,7 +265,7 @@ tvheadend.miscconf = function() {
 		defaultType : 'textfield',
 		autoHeight : true,
 		items : [ language, dvbscanPath,
-			  tvhtimePanel,
+			  tvhtimePanel, powerPanel,
 			  transcodingPanel]
 	});
 

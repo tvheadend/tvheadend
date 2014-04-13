@@ -27,4 +27,6 @@ int spawnv(const char *prog, char *argv[]);
 
 void spawn_reaper(void);
 
+uint32_t spawn_pending(void);
+
 #endif /* SPAWN_H */

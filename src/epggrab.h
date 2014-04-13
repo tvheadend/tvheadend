@@ -144,6 +144,7 @@ struct epggrab_module
   uint8_t                      enabled;   ///< Whether the module is enabled
   int                          priority;  ///< Priority of the module
   epggrab_channel_tree_t       *channels; ///< Channel list
+  int                          active;    ///< 1 if this grabber is currently active, 0 otherwise
 
   /* Enable/Disable */
   int       (*enable)  ( void *m, uint8_t e );

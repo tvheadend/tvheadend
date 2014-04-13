@@ -67,6 +67,7 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
   htsmsg_t *data;
 
   /* Grab */
+  mod->active=1;
   time(&tm1);
   data = mod->trans(mod, mod->grab(mod));
   time(&tm2);
@@ -78,6 +79,7 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
   } else {
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
   }
+  mod->active=0;
 }
 
 /*

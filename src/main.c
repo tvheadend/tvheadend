@@ -52,6 +52,7 @@
 #include "htsp_server.h"
 #include "avahi.h"
 #include "input.h"
+#include "power.h"
 #include "service.h"
 #include "trap.h"
 #include "settings.h"
@@ -802,6 +803,8 @@ main(int argc, char **argv)
 
   dvr_init();
 
+  power_init();
+
   htsp_init(opt_bindaddr);
 
 
@@ -842,6 +845,7 @@ main(int argc, char **argv)
   tvhftrace("main", upnp_server_done);
 #endif
   tvhftrace("main", htsp_done);
+  tvhftrace("main", power_done);
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);
   tvhftrace("main", fsmonitor_done);
