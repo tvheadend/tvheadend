@@ -450,7 +450,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_STR,
       .id       = "network_b",
-      .name     = "Netwotk B",
+      .name     = "Network B",
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_class_network_enum,
