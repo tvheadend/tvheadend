@@ -194,7 +194,7 @@ linuxdvb_adapter_add ( const char *path )
   htsmsg_t *conf, *feconf;
   int save = 0;
   dvb_fe_type_t type;
-#if DVB_VER_ATLEAST(5,10)
+#if DVB_VER_ATLEAST(5,5)
   int delsys;
   dvb_fe_type_t fetypes[DVB_TYPE_LAST+1] = { 0 };
   struct dtv_property   cmd = {
@@ -242,7 +242,7 @@ linuxdvb_adapter_add ( const char *path )
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", fe_path);
       continue;
     }
-#if DVB_VER_ATLEAST(5,10)
+#if DVB_VER_ATLEAST(5,5)
     r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
     if (!r && cmd.u.buffer.len) {
       struct dtv_property fecmd[2] = {
@@ -314,7 +314,7 @@ linuxdvb_adapter_add ( const char *path )
 
     /* Create frontend */
     linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, dfi.name);
-#if DVB_VER_ATLEAST(5,10)
+#if DVB_VER_ATLEAST(5,5)
     fetypes[type] = 1;
     for (j = 0; j < cmd.u.buffer.len; j++) {
       delsys = cmd.u.buffer.data[j];
