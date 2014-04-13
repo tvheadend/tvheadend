@@ -1704,9 +1704,6 @@ cwc_table_input(struct th_descrambler *td, service_t *s,
       
       es = ep->ep_sections[section];
       
-      if (es->es_nok > 2)
-        break; /* too many NOK responses in a row */
-      
       if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
         break; /* key already sent */
       
