@@ -428,8 +428,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
   
   /* Pass through */
-  snprintf(path, 512, "%s/epggrab/%s.sock",
-           hts_settings_get_root(), sockid);
+  hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
                             id, name, priority, path,
                             NULL, parse, trans,

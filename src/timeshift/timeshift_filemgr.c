@@ -110,15 +110,16 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
  *
  * TODO: should this be fixed on startup?
  */
-static void timeshift_filemgr_get_root ( char *buf, size_t len )
+static int
+timeshift_filemgr_get_root ( char *buf, size_t len )
 {
   const char *path = timeshift_path;
   if (!path || !*path) {
-    path = hts_settings_get_root();
-    snprintf(buf, len, "%s/timeshift/buffer", path);
+    return hts_settings_buildpath(buf, len, "timeshift/buffer");
   } else {
     snprintf(buf, len, "%s/buffer", path);
   }
+  return 0;
 }
 
 /*
@@ -126,7 +127,8 @@ static void timeshift_filemgr_get_root ( char *buf, size_t len )
  */
 int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
 {
-  timeshift_filemgr_get_root(buf, len);
+  if (timeshift_filemgr_get_root(buf, len))
+    return 1;
   snprintf(buf+strlen(buf), len-strlen(buf), "/%d", index);
   return makedirs(buf, 0700);
 }
@@ -333,8 +335,8 @@ void timeshift_filemgr_init ( void )
   char path[512];
 
   /* Try to remove any rubbish left from last run */
-  timeshift_filemgr_get_root(path, sizeof(path));
-  rmtree(path);
+  if(!timeshift_filemgr_get_root(path, sizeof(path)))
+    rmtree(path);
 
   /* Size processing */
   timeshift_total_size = 0;
@@ -363,8 +365,8 @@ void timeshift_filemgr_term ( void )
   pthread_join(timeshift_reaper_thread, NULL);
 
   /* Remove the lot */
-  timeshift_filemgr_get_root(path, sizeof(path));
-  rmtree(path);
+  if (!timeshift_filemgr_get_root(path, sizeof(path)))
+    rmtree(path);
 }
 
 

@@ -41,7 +41,7 @@ static char *settingspath = NULL;
 const char *
 hts_settings_get_root(void)
 {
-  return settingspath ?: "No settings dir";
+  return settingspath;
 }
 
 /**
