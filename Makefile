@@ -113,7 +113,7 @@ SRCS =  src/version.c \
 	src/descrambler/descrambler.c \
 	src/service_mapper.c \
 	src/input.c \
-	src/http/http_client.c \
+	src/httpc.c \
 	src/fsmonitor.c \
 	src/cron.c \
 

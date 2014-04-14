@@ -142,7 +142,9 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
   free(tmphstbuf);
 
   if(r == -1) {
-    if(errno == EINPROGRESS) {
+    if(errno == EINPROGRESS && timeout < 0) {
+      err = 0;
+    } else if(errno == EINPROGRESS) {
       struct pollfd pfd;
 
       pfd.fd = fd;

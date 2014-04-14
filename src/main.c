@@ -69,6 +69,11 @@
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
 #endif
+#include <openssl/ssl.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/engine.h>
 
 pthread_t main_tid;
 
@@ -730,6 +735,11 @@ main(int argc, char **argv)
   sigfillset(&set);
   sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
+
+  /* SSL library init */
+  OPENSSL_config(NULL);
+  SSL_load_error_strings();
+  SSL_library_init();
   
   /* Initialise configuration */
   uuid_init();
@@ -872,7 +882,21 @@ main(int argc, char **argv)
     
   free(opt_tsfile.str);
 
-  curl_done();
+  /* OpenSSL - welcome to the "cleanup" hell */
+  ENGINE_cleanup();
+  RAND_cleanup();
+  CRYPTO_cleanup_all_ex_data();
+  EVP_cleanup();
+  CONF_modules_free();
+  COMP_zlib_cleanup();
+  ERR_remove_state(0);
+  ERR_free_strings();
+  {
+    struct stack_st_SSL_COMP * pCOMP = SSL_COMP_get_compression_methods();
+    if (pCOMP)
+     sk_SSL_COMP_free(pCOMP);
+  }
+  /* end of OpenSSL cleanup code */
 
   return 0;
 }
