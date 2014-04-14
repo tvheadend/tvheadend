@@ -239,7 +239,7 @@ ts_recv_packet1
      * Lock for descrambling, but only if packet was not in error
      */
     if(!error)
-      t->s_scrambled_seen = t->s_scrambled;
+      t->s_scrambled_seen |= service_is_encrypted((service_t*)t);
 
     /* scrambled stream */
     n = m = 0;
@@ -257,7 +257,7 @@ ts_recv_packet1
         m++;
     }
 
-    if(!error && t->s_scrambled != 0) {
+    if(!error && service_is_encrypted((service_t*)t) != 0) {
       if(n == 0) {
         service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
       } else if(m == n) {

@@ -952,12 +952,6 @@ dvb_sdt_callback
         s->s_servicetype = r;
     }
     
-    /* Update scrambled state */
-    if (s->s_scrambled != free_ca_mode) {
-      s->s_scrambled   = free_ca_mode;
-      tvhtrace("sdt", "    scrambled changed");
-    }
-  
     /* Check if this is master 
      * Some networks appear to provide diff service names on diff transponders
      */

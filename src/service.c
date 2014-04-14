@@ -334,6 +334,7 @@ service_start(service_t *t, int instance)
 
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
+  t->s_scrambled_seen   = 0;
 
   if((r = t->s_start_feed(t, instance)))
     return r;
