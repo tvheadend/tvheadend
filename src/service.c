@@ -181,7 +181,7 @@ const idclass_t service_class = {
 static void
 stream_init(elementary_stream_t *st)
 {
-  st->es_cc_valid = 0;
+  st->es_cc = -1;
 
   st->es_startcond = 0xffffffff;
   st->es_curdts = PTS_UNSET;

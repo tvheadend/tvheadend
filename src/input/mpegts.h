@@ -173,7 +173,7 @@ struct mpegts_table
   int mt_destroyed; // Refcounting
   int mt_refcount;
 
-  int mt_cc;
+  int8_t mt_cc;
 
   mpegts_psi_section_t mt_sect;
 

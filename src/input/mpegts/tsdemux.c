@@ -83,7 +83,7 @@ ts_recv_packet0
 
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
-    if(st->es_cc_valid && cc != st->es_cc) {
+    if(st->es_cc != -1 && cc != st->es_cc) {
       /* Incorrect CC */
       limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
      "Continuity counter error");
@@ -94,7 +94,6 @@ ts_recv_packet0
       if(!pusi)
         error |= 0x2;
     }
-    st->es_cc_valid = 1;
     st->es_cc = (cc + 1) & 0xf;
   }
 

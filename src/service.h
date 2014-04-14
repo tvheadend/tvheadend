@@ -55,8 +55,7 @@ typedef struct elementary_stream {
 				a teletext stream. this is the pid
 				of the teletext stream */
 
-  uint8_t es_cc;             /* Last CC */
-  uint8_t es_cc_valid;       /* Is CC valid at all? */
+  int8_t es_cc;             /* Last CC */
 
   avgstat_t es_cc_errors;
   avgstat_t es_rate;

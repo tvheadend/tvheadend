@@ -53,7 +53,7 @@ mpegts_table_dispatch
   /* It seems some hardware (or is it the dvb API?) does not
      honour the DMX_CHECK_CRC flag, so we check it again */
   if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
-    tvhdebug(mt->mt_name, "invalid checksum");
+    tvhwarn(mt->mt_name, "invalid checksum");
     return;
   }
 
