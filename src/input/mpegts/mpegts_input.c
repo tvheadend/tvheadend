@@ -452,7 +452,7 @@ mpegts_input_recv_packets
   if (pcr && pcr_pid) {
     uint8_t *tmp = tsb;
     for (i = 0; i < p; i++) {
-      if (*pcr_pid == (((tmp[1] & 0x1f) << 8) | tmp[2]))
+      if (*pcr_pid == (((tmp[1] & 0x1f) << 8) | tmp[2]) || *pcr_pid == 0)
         ts_recv_packet1(NULL, tmp, pcr, 0);
       tmp += 188;
     }
