@@ -99,6 +99,21 @@ mpegts_input_class_network_rend ( void *obj )
   return str;
 }
 
+static void
+mpegts_input_enabled_notify ( void *p )
+{
+  mpegts_input_t *mi = p;
+  mpegts_mux_instance_t *mmi;
+
+  /* Stop */
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+
+  /* Alert */
+  if (mi->mi_enabled_updated)
+    mi->mi_enabled_updated(mi);
+}
+
 const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
@@ -110,6 +125,7 @@ const idclass_t mpegts_input_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(mpegts_input_t, mi_enabled),
+      .notify   = mpegts_input_enabled_notify,
       .def.i    = 1,
     },
     {

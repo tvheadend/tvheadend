@@ -108,7 +108,7 @@ struct linuxdvb_frontend
    * Configuration
    */
   int                       lfe_fullmux;
-  int                       lfe_noclosefe;
+  int                       lfe_powersave;
 
   /*
    * Satconf (DVB-S only)

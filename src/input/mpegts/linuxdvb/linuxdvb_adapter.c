@@ -183,6 +183,7 @@ linux_dvb_get_type(int linux_type)
 static void
 linuxdvb_adapter_add ( const char *path )
 {
+#define MAX_DEV_OPEN_ATTEMPTS 20
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512];
@@ -226,7 +227,7 @@ linuxdvb_adapter_add ( const char *path )
 
     /* Wait for access (first FE can take a fe ms to be setup) */
     if (!i) {
-      for (j = 0; j < 10; j++) {
+      for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
         if (!access(fe_path, R_OK | W_OK)) break;
         usleep(100000);
       }
@@ -234,7 +235,7 @@ linuxdvb_adapter_add ( const char *path )
     if (access(fe_path, R_OK | W_OK)) continue;
 
     /* Get frontend info */
-    for (j = 0; j < 10; j++) {
+    for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
       if ((fd = tvh_open(fe_path, O_RDWR, 0)) > 0) break;
       usleep(100000);
     }
@@ -310,6 +311,7 @@ linuxdvb_adapter_add ( const char *path )
         htsmsg_destroy(conf);
         return; // Note: save to return here as global_lock is held
       }
+      tvhinfo("linuxdvb", "adapter added %s", path);
     }
 
     /* Create frontend */
@@ -418,6 +420,7 @@ devdvb_create ( fsmonitor_t *fsm, const char *path )
 static void
 devdvb_delete ( fsmonitor_t *fsm, const char *path )
 {
+  tvhinfo("linuxdvb", "adapter removed %s", path);
   linuxdvb_adapter_del(path);
 }
 

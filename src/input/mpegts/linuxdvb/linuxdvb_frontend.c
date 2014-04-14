@@ -93,9 +93,9 @@ const idclass_t linuxdvb_frontend_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "noclosefe",
-      .name     = "Keep FE open",
-      .off      = offsetof(linuxdvb_frontend_t, lfe_noclosefe),
+      .id       = "powersave",
+      .name     = "Power Save",
+      .off      = offsetof(linuxdvb_frontend_t, lfe_powersave),
     },
     {}
   }
@@ -191,6 +191,29 @@ const idclass_t linuxdvb_frontend_atsc_class =
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
+
+static void
+linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
+{
+  char buf[512];
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+
+  mi->mi_display_name(mi, buf, sizeof(buf));
+
+  /* Ensure disabled */
+  if (!mi->mi_enabled) {
+    tvhtrace("linuxdvb", "%s - disabling tuner", buf);
+    if (lfe->lfe_fe_fd > 0)
+      close(lfe->lfe_fe_fd);
+    gtimer_disarm(&lfe->lfe_monitor_timer);
+
+  /* Ensure FE opened (if not powersave) */
+  } else if (!lfe->lfe_powersave && lfe->lfe_fe_fd <= 0 && lfe->lfe_fe_path) {
+    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+    tvhtrace("linuxdvb", "%s - opening FE %s (%d)",
+             buf, lfe->lfe_fe_path, lfe->lfe_fe_fd);
+  }
+}
 
 static int
 linuxdvb_frontend_is_free ( mpegts_input_t *mi )
@@ -416,9 +439,13 @@ linuxdvb_frontend_monitor ( void *aux )
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   tvhtrace("linuxdvb", "%s - checking FE status", buf);
+  
+  /* Disabled */
+  if (!lfe->mi_enabled && mmi)
+    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
 
   /* Close FE */
-  if (lfe->lfe_fe_fd > 0 && !mmi && !lfe->lfe_noclosefe) {
+  if (lfe->lfe_fe_fd > 0 && !mmi && lfe->lfe_powersave) {
     tvhtrace("linuxdvb", "%s - closing frontend", buf);
     close(lfe->lfe_fe_fd);
     lfe->lfe_fe_fd = -1;
@@ -433,8 +460,11 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
-  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
+  /* Stop timer */
   if (!mmi) return;
+
+  /* re-arm */
+  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -1173,11 +1203,12 @@ linuxdvb_frontend_create
   lfe->lfe_dvr_path = strdup(dvr_path);
 
   /* Input callbacks */
-  lfe->mi_is_enabled     = linuxdvb_frontend_is_enabled;
-  lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
-  lfe->mi_stop_mux       = linuxdvb_frontend_stop_mux;
-  lfe->mi_network_list   = linuxdvb_frontend_network_list;
-  lfe->mi_open_pid       = linuxdvb_frontend_open_pid;
+  lfe->mi_is_enabled      = linuxdvb_frontend_is_enabled;
+  lfe->mi_start_mux       = linuxdvb_frontend_start_mux;
+  lfe->mi_stop_mux        = linuxdvb_frontend_stop_mux;
+  lfe->mi_network_list    = linuxdvb_frontend_network_list;
+  lfe->mi_open_pid        = linuxdvb_frontend_open_pid;
+  lfe->mi_enabled_updated = linuxdvb_frontend_enabled_updated;
 
   /* Adapter link */
   lfe->lfe_adapter = la;
@@ -1198,6 +1229,9 @@ linuxdvb_frontend_create
   /* Create satconf */
   if (lfe->lfe_type == DVB_TYPE_S && !lfe->lfe_satconf)
     lfe->lfe_satconf = linuxdvb_satconf_create(lfe, sctype, scuuid, scconf);
+
+  /* Double check enabled */
+  linuxdvb_frontend_enabled_updated((mpegts_input_t*)lfe);
 
   return lfe;
 }
