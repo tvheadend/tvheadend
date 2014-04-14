@@ -636,7 +636,6 @@ linuxdvb_frontend_input_thread ( void *aux )
   int fullmux;
   tvhpoll_t *efd;
   sbuf_t sb;
-  sbuf_init_fixed(&sb, 18800);
 
   /* Get MMI */
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
@@ -685,6 +684,9 @@ linuxdvb_frontend_input_thread ( void *aux )
   ev[1].fd = ev[1].data.fd = lfe->lfe_dvr_pipe.rd;
   tvhpoll_add(efd, ev, 2);
 
+  /* Allocate memory */
+  sbuf_init_fixed(&sb, 18800);
+
   /* Read */
   while (tvheadend_running) {
     nfds = tvhpoll_wait(efd, ev, 1, -1);
@@ -708,6 +710,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, &sb, 0, NULL, NULL);
   }
 
+  sbuf_free(&sb);
   tvhpoll_destroy(efd);
   if (dmx != -1) close(dmx);
   close(dvr);

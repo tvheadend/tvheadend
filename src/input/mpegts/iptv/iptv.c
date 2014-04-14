@@ -244,7 +244,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   }
 
   /* Free memory */
-  free(im->mm_iptv_buffer.sb_data);
+  sbuf_free(&im->mm_iptv_buffer);
 
   /* Clear bw limit */
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {

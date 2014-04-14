@@ -52,8 +52,6 @@ tsfile_input_thread ( void *aux )
   mpegts_mux_instance_t *mmi;
   tsfile_mux_instance_t *tmi;
 
-  sbuf_init_fixed(&buf, 18800);
-
   /* Open file */
   pthread_mutex_lock(&global_lock);
 
@@ -75,6 +73,9 @@ tsfile_input_thread ( void *aux )
   ev.events          = TVHPOLL_IN;
   ev.fd = ev.data.fd = mi->ti_thread_pipe.rd;
   tvhpoll_add(efd, &ev, 1);
+
+  /* Alloc memory */
+  sbuf_init_fixed(&buf, 18800);
 
   /* Get file length */
   if (fstat(fd, &st)) {
@@ -168,6 +169,7 @@ tsfile_input_thread ( void *aux )
   }
 
 exit:
+  sbuf_free(&buf);
   tvhpoll_destroy(efd);
   close(fd);
   return NULL;
