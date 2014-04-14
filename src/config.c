@@ -508,7 +508,7 @@ config_migrate_v5 ( void )
       if (!(e   = htsmsg_get_map(e, "config"))) continue;
       if (!(str = htsmsg_get_str(e, "class"))) 	continue;
       if (!strncmp(str, "linux", 5)) {
-        str = strdupa(str+5);
+        str = tvh_strdupa(str+5);
         htsmsg_delete_field(e, "class");
         htsmsg_add_str(e, "class", str);
         hts_settings_save(e, "input/dvb/networks/%s/config", f->hmf_name);
