@@ -73,7 +73,8 @@ satip_rtsp_send_partial( satip_rtsp_connection_t *conn )
   while (1) {
     r = send(conn->fd, conn->wbuf + conn->wpos, conn->wsize - conn->wpos, MSG_DONTWAIT);
     if (r < 0) {
-      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
+          errno == EINPROGRESS)
         return SATIP_RTSP_INCOMPLETE;
       return -errno;
     }
@@ -238,7 +239,7 @@ satip_rtsp_options_decode( satip_rtsp_connection_t *conn )
 {
   char *argv[32], *s, *saveptr;
   int i, n, what = 0;
-  
+
   s = strtok_r(conn->header, "\n", &saveptr);
   while (s) {
     n = http_tokenize(s, argv, 32, ',');

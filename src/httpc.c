@@ -1,0 +1,1645 @@
+/*
+ *  Tvheadend - HTTP client functions
+ *
+ *  Copyright (C) 2014 Jaroslav Kysela
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tvheadend.h"
+#include "http.h"
+#include "tcp.h"
+
+#include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <fcntl.h>
+
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+
+#define HTTPCLIENT_TESTSUITE 1
+
+struct http_client_ssl {
+  int      connected;
+  int      shutdown;
+  int      notified;
+
+  SSL_CTX *ctx;
+  SSL     *ssl;
+
+  BIO     *rbio;
+  char    *rbio_buf;
+  size_t   rbio_size;
+  size_t   rbio_pos;
+  
+  BIO     *wbio;
+  char    *wbio_buf;
+  size_t   wbio_size;
+  size_t   wbio_pos;
+};
+
+
+static int
+http_client_redirected ( http_client_t *hc );
+static int
+http_client_ssl_write_update( http_client_t *hc );
+static int
+http_client_reconnect
+  ( http_client_t *hc, http_ver_t ver, const char *scheme,
+    const char *host, int port );
+#if HTTPCLIENT_TESTSUITE
+static void
+http_client_testsuite_run( void );
+#endif
+
+
+/*
+ * Global state
+ */
+static int                      http_running;
+static tvhpoll_t               *http_poll;
+static TAILQ_HEAD(,http_client) http_clients;
+static pthread_mutex_t          http_lock;
+static th_pipe_t                http_pipe;
+
+/*
+ *
+ */
+static int
+http_port( const char *scheme, int port )
+{
+  if (port <= 0 || port > 65535) {
+    if (strcmp(scheme, "http") == 0)
+      port = 80;
+    else if (strcmp(scheme, "https") == 0)
+      port = 443;
+    else if (strcmp(scheme, "rtsp") == 0)
+      port = 554;
+    else {
+      tvhlog(LOG_ERR, "httpc", "Unknown scheme '%s'", scheme);
+      return -EINVAL;
+    }
+  }
+  return port;
+}
+
+/*
+ * Disable
+ */
+static void
+http_client_shutdown ( http_client_t *hc, int force )
+{
+  struct http_client_ssl *ssl = hc->hc_ssl;
+  tvhpoll_t *efd = NULL;
+
+  hc->hc_shutdown = 1;
+  if (ssl) {
+    if (!ssl->shutdown) {
+      SSL_shutdown(hc->hc_ssl->ssl);
+      http_client_ssl_write_update(hc);
+      ssl->shutdown = 1;
+    }
+    if (!force)
+      return;
+  }
+  if (hc->hc_efd) {
+    tvhpoll_event_t ev;
+    if (hc->hc_efd == http_poll)
+      TAILQ_REMOVE(&http_clients, hc, hc_link);
+    memset(&ev, 0, sizeof(ev));
+    ev.fd       = hc->hc_fd;
+    tvhpoll_rem(efd = hc->hc_efd, &ev, 1);
+    hc->hc_efd  = NULL;
+  }
+  if (hc->hc_fd >= 0) {
+    if (hc->hc_conn_closed)
+      hc->hc_conn_closed(hc, -hc->hc_result);
+    if (hc->hc_fd >= 0)
+      close(hc->hc_fd);
+    hc->hc_fd = -1;
+  }
+}
+
+/*
+ * Poll I/O
+ */
+static void
+http_client_poll_dir ( http_client_t *hc, int in, int out )
+{
+  int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
+  if (hc->hc_efd && hc->hc_pevents != events) {
+    tvhpoll_event_t ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.fd       = hc->hc_fd;
+    ev.events   = events | TVHPOLL_IN;
+    ev.data.ptr = hc;  
+    tvhpoll_add(hc->hc_efd, &ev, 1);
+  }
+  hc->hc_pevents = events;
+  /* make sure to se the correct errno for our SSL routines */
+  errno = EAGAIN;
+}
+
+static void
+http_client_direction ( http_client_t *hc, int sending )
+{
+  hc->hc_sending = sending;
+  if (hc->hc_ssl == NULL)
+    http_client_poll_dir(hc, 1, sending);
+}
+
+/*
+ * Main I/O routines
+ */
+
+static void
+http_client_cmd_destroy( http_client_t *hc, http_client_wcmd_t *cmd )
+{
+  TAILQ_REMOVE(&hc->hc_wqueue, cmd, link);
+  free(cmd->wbuf);
+  free(cmd);
+}
+
+static int
+http_client_flush( http_client_t *hc, int result )
+{
+  if (result < 0)
+    http_client_shutdown(hc, 0);
+  hc->hc_result       = result;
+  hc->hc_in_data      = 0;
+  hc->hc_hsize        = 0;
+  hc->hc_csize        = 0;
+  hc->hc_rpos         = 0;
+  hc->hc_chunked      = 0;
+  free(hc->hc_chunk);
+  hc->hc_chunk        = 0;
+  hc->hc_chunk_pos    = 0;
+  hc->hc_chunk_size   = 0;
+  hc->hc_chunk_csize  = 0;
+  hc->hc_chunk_alloc  = 0;
+  hc->hc_chunk_trails = 0;
+  http_arg_flush(&hc->hc_args);
+  return result;
+}
+
+int
+http_client_clear_state( http_client_t *hc )
+{
+  if (hc->hc_shutdown)
+    return -EBADFD;
+  free(hc->hc_data);
+  hc->hc_data = NULL;
+  hc->hc_data_size = 0;
+  return http_client_flush(hc, 0);
+}
+
+static int
+http_client_ssl_read_update( http_client_t *hc )
+{
+  struct http_client_ssl *ssl = hc->hc_ssl;
+  char *rbuf = alloca(hc->hc_io_size);
+  ssize_t r, r2;
+  size_t len;
+
+  if (ssl->rbio_pos > 0) {
+    r = BIO_write(ssl->rbio, ssl->rbio_buf, ssl->rbio_pos);
+    if (r >= 0) {
+      memmove(ssl->rbio_buf, ssl->rbio_buf + r, ssl->rbio_pos - r);
+      ssl->rbio_pos -= r;
+    } else if (r < 0) {
+      errno = EIO;
+      return -1;
+    }
+  }
+  r = recv(hc->hc_fd, rbuf, hc->hc_io_size, MSG_DONTWAIT);
+  if (r == 0) {
+    errno = ESTRPIPE;
+    return -1;
+  }
+  if (r < 0) {
+    if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+      http_client_poll_dir(hc, 1, 0);
+      errno = EAGAIN;
+      return r;
+    }
+    return r;
+  }
+  r2 = BIO_write(ssl->rbio, rbuf, r);
+  len = r - (r2 < 0 ? 0 : r2);
+  if (len) {
+    if (ssl->rbio_pos + len > ssl->rbio_size) {
+      ssl->rbio_buf = realloc(ssl->rbio_buf, ssl->rbio_pos + len);
+      ssl->rbio_size += len;
+    }
+    memcpy(ssl->rbio_buf + ssl->rbio_pos, rbuf + (len - r), len);
+    ssl->rbio_pos += len;
+  }
+  return 0;
+}
+
+static int
+http_client_ssl_write_update( http_client_t *hc )
+{
+  struct http_client_ssl *ssl = hc->hc_ssl;
+  char *rbuf = alloca(hc->hc_io_size);
+  ssize_t r, r2;
+  size_t len;
+
+  if (ssl->wbio_pos) {
+    r = send(hc->hc_fd, ssl->wbio_buf, ssl->wbio_pos, MSG_DONTWAIT);
+    if (r > 0) {
+      memmove(ssl->wbio_buf, ssl->wbio_buf + r, ssl->wbio_pos - r);
+      ssl->wbio_pos -= r;
+    } else if (r < 0) {
+      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+        http_client_poll_dir(hc, 0, 1);
+        errno = EAGAIN;
+        return r;
+      }
+      return r;
+    }
+    if (ssl->wbio_pos)
+      return 1;
+  }
+  r = BIO_read(ssl->wbio, rbuf, hc->hc_io_size);
+  if (r > 0) {
+    r2 = send(hc->hc_fd, rbuf, r, MSG_DONTWAIT);
+    len = r - (r2 < 0 ? 0 : r2);
+    if (len) {
+      if (ssl->wbio_pos + len > ssl->wbio_size) {
+        ssl->wbio_buf = realloc(ssl->wbio_buf, ssl->wbio_pos + len);
+        ssl->wbio_size += len;
+      }
+      memcpy(ssl->wbio_buf + ssl->wbio_pos, rbuf + (len - r), len);
+      ssl->wbio_pos += len;
+    }
+    if (r2 < 0) {
+      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+        http_client_poll_dir(hc, 0, 1);
+        errno = EAGAIN;
+        return r2;
+      }
+      return r2;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+static ssize_t
+http_client_ssl_recv( http_client_t *hc, void *buf, size_t len )
+{
+  ssize_t r;
+  int e;
+
+  while (1) {
+    r = SSL_read(hc->hc_ssl->ssl, buf, len);
+    if (r > 0)
+      return r;
+    e = SSL_get_error(hc->hc_ssl->ssl, r);
+    if (e == SSL_ERROR_WANT_READ) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+      r = http_client_ssl_read_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_WANT_WRITE) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_ZERO_RETURN) {
+      errno = ESTRPIPE;
+      return -1;
+    } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
+      errno = EBADFD;
+      return -1;
+    } else if (e == SSL_ERROR_SSL) {
+      errno = EPERM;
+      return -1;
+    } else {
+      errno = EIO;
+      return -1;
+    }
+  }
+  return 0;
+}
+
+static ssize_t
+http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
+{
+  struct http_client_ssl *ssl = hc->hc_ssl;
+  ssize_t r, r2;
+  int e;
+
+  while (1) {
+    if (!ssl->connected) {
+      r = SSL_connect(ssl->ssl);
+      if (r > 0) {
+        ssl->connected = 1;
+        goto write;
+      }
+    } else {
+write:
+      r = SSL_write(ssl->ssl, buf, len);
+    }
+    if (r > 0) {
+      while (1) {
+        r2 = http_client_ssl_write_update(hc);
+        if (r2 < 0) {
+          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+            break;
+          return r2;
+        }
+        if (r2 == 0)
+          break;
+      }
+      return r;
+    }
+    e = SSL_get_error(ssl->ssl, r);
+    ERR_print_errors_fp(stdout);
+    if (e == SSL_ERROR_WANT_READ) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+      r = http_client_ssl_read_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_WANT_WRITE) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
+      errno = EBADFD;
+      return -1;
+    } else if (e == SSL_ERROR_SSL) {
+      errno = EPERM;
+      return -1;
+    } else {
+      errno = EIO;
+      return -1;
+    }
+  }
+  return 0;
+}
+
+static ssize_t
+http_client_ssl_shutdown( http_client_t *hc )
+{
+  ssize_t r;
+  int e;
+
+  while (1) {
+    r = SSL_shutdown(hc->hc_ssl->ssl);
+    if (r > 0) {
+      /* everything done, bail-out completely */
+      http_client_shutdown(hc, 1);
+      return r;
+    }
+    e = SSL_get_error(hc->hc_ssl->ssl, r);
+    if (e == SSL_ERROR_WANT_READ) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+      r = http_client_ssl_read_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_WANT_WRITE) {
+      r = http_client_ssl_write_update(hc);
+      if (r < 0)
+        return r;
+    } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
+      errno = EBADFD;
+      return -1;
+    } else if (r == SSL_ERROR_SSL) {
+      errno = EPERM;
+      return -1;
+    } else {
+      errno = EIO;
+      return -1;
+    }
+  }
+  return 0;
+}
+
+static int
+http_client_send_partial( http_client_t *hc )
+{
+  http_client_wcmd_t *wcmd;
+  ssize_t r;
+  int res = HTTP_CON_IDLE;
+
+  wcmd = TAILQ_FIRST(&hc->hc_wqueue);
+  while (wcmd != NULL) {
+    hc->hc_cmd   = wcmd->wcmd;
+    hc->hc_rcseq = wcmd->wcseq;
+    if (hc->hc_ssl)
+      r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos,
+                               wcmd->wsize - wcmd->wpos);
+    else
+      r = send(hc->hc_fd, wcmd->wbuf + wcmd->wpos,
+               wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
+    if (r < 0) {
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
+          errno == EINPROGRESS) {
+        http_client_direction(hc, 1);
+        return HTTP_CON_SENDING;
+      }
+      return http_client_flush(hc, -errno);
+    }
+    wcmd->wpos += r;
+    if (wcmd->wpos >= wcmd->wsize) {
+      http_client_cmd_destroy(hc, wcmd);
+      res = HTTP_CON_SENT;
+      wcmd = NULL;
+    }
+    break;
+  }
+  if (wcmd == NULL) {
+    http_client_direction(hc, 0);
+    return res;
+  } else {
+    http_client_direction(hc, 1);
+    return HTTP_CON_SENDING;
+  }
+}
+
+int
+http_client_send( http_client_t *hc, enum http_cmd cmd,
+                  const char *path, const char *query,
+                  http_arg_list_t *header, void *body, size_t body_size )
+{
+  http_client_wcmd_t *wcmd = calloc(1, sizeof(*wcmd));
+  http_arg_t *h;
+  htsbuf_queue_t q;
+  const char *s;
+
+  if (hc->hc_shutdown) {
+    if (header)
+      http_arg_flush(header);
+    return -EIO;
+  }
+
+  wcmd->wcmd = cmd;
+  hc->hc_keepalive = 1;
+
+  htsbuf_queue_init(&q, 0);
+  s = http_cmd2str(cmd);
+  if (s == NULL) {
+    http_arg_flush(header);
+    return -EINVAL;
+  }
+  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append(&q, " ", 1);
+  if (path == NULL || path[0] == '\0')
+    path = "/";
+  htsbuf_append(&q, path, strlen(path));
+  if (query && query[0] != '\0') {
+    htsbuf_append(&q, "?", 1);
+    htsbuf_append(&q, query, strlen(query));
+  }
+  htsbuf_append(&q, " ", 1);
+  s = http_ver2str(hc->hc_version);
+  if (s == NULL) {
+    htsbuf_queue_flush(&q);
+    http_arg_flush(header);
+    return -EINVAL;
+  }
+  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append(&q, "\r\n", 2);
+
+  if (header) {
+    TAILQ_FOREACH(h, header, link) {
+      htsbuf_append(&q, h->key, strlen(h->key));
+      htsbuf_append(&q, ": ", 2);
+      htsbuf_append(&q, h->val, strlen(h->val));
+      htsbuf_append(&q, "\r\n", 2);
+      if (strcasecmp(h->key, "Connection") == 0 &&
+          strcasecmp(h->val, "close") == 0)
+        hc->hc_keepalive = 0;
+    }
+    http_arg_flush(header);
+  }
+
+  if (hc->hc_version == HTTP_VERSION_1_0)
+    hc->hc_keepalive = 0;
+  if (hc->hc_version == RTSP_VERSION_1_0) {
+    hc->hc_cseq = (hc->hc_cseq + 1) & 0x7fff;
+    htsbuf_qprintf(&q, "CSeq: %i\r\n", hc->hc_cseq);
+    wcmd->wcseq = hc->hc_cseq;
+  }
+  htsbuf_append(&q, "\r\n", 2);
+  if (body && body_size)
+    htsbuf_append(&q, body, body_size);
+
+  body_size = q.hq_size;
+  body = malloc(body_size);
+  htsbuf_read(&q, body, body_size);
+
+#if ENABLE_TRACE
+  tvhtrace("httpc", "sending %s cmd", http_ver2str(hc->hc_version));
+  tvhlog_hexdump("httpc", body, body_size);
+#endif
+
+  wcmd->wbuf  = body;
+  wcmd->wsize = body_size;
+
+  TAILQ_INSERT_TAIL(&hc->hc_wqueue, wcmd, link);
+
+  hc->hc_ping_time = dispatch_clock;
+
+  return http_client_send_partial(hc);
+}
+
+static int
+http_client_finish( http_client_t *hc )
+{
+  int res;
+
+#if ENABLE_TRACE
+  if (hc->hc_data) {
+    tvhtrace("httpc", "received %s data", http_ver2str(hc->hc_version));
+    tvhlog_hexdump("httpc", hc->hc_data, hc->hc_csize);
+  }
+#endif
+  if (hc->hc_data_complete) {
+    res = hc->hc_data_complete(hc);
+    if (res < 0)
+      return http_client_flush(hc, res);
+  }
+  hc->hc_hsize = hc->hc_csize = 0;
+  if (hc->hc_handle_location &&
+      (hc->hc_code == HTTP_STATUS_MOVED ||
+       hc->hc_code == HTTP_STATUS_FOUND ||
+       hc->hc_code == HTTP_STATUS_SEE_OTHER ||
+       hc->hc_code == HTTP_STATUS_NOT_MODIFIED)) {
+    const char *p = http_arg_get(&hc->hc_args, "Location");
+    if (p) {
+      hc->hc_location = strdup(p);
+      res = http_client_redirected(hc);
+      if (res < 0)
+        return http_client_flush(hc, res);
+      return HTTP_CON_RECEIVING;
+    }
+  }
+  if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK)
+    return http_client_send_partial(hc);
+  if (!hc->hc_keepalive) {
+    http_client_shutdown(hc, 0);
+    if (hc->hc_ssl) {
+      /* finish the shutdown I/O sequence, notify owner later */
+      errno = EAGAIN;
+      return HTTP_CON_RECEIVING;
+    }
+  }
+  return hc->hc_reconnected ? HTTP_CON_RECEIVING : HTTP_CON_DONE;
+}
+
+static int
+http_client_parse_arg( http_arg_list_t *list, const char *p )
+{
+  char *d, *t;
+
+  d = strchr(p, ':');
+  if (d) {
+    *d++ = '\0';
+    while (*d && *d <= ' ')
+      d++;
+    t = d + strlen(d);
+    while (--t != d && *t <= ' ')
+      *t = '\0';
+    http_arg_set(list, p, d);
+    return 0;
+  }
+  return -EINVAL;
+}
+
+static int
+http_client_data_copy( http_client_t *hc, char *buf, size_t len )
+{
+  int res;
+
+  if (hc->hc_data_received) {
+    res = hc->hc_data_received(hc, buf, len);
+    if (res < 0)
+      return res;
+  } else {
+    hc->hc_data = realloc(hc->hc_data, hc->hc_data_size + len + 1);
+    memcpy(hc->hc_data + hc->hc_data_size, buf, len);
+    hc->hc_data_size += len;
+    hc->hc_data[hc->hc_data_size] = '\0';
+  }
+  return 0;
+}
+
+static ssize_t
+http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
+{
+  size_t old = len, l, l2;
+  char *d, *s;
+  int res;
+
+  while (len > 0) {
+    if (hc->hc_chunk_size) {
+      s = hc->hc_chunk;
+      l = len;
+      if (hc->hc_chunk_pos + l > hc->hc_chunk_size)
+        l = hc->hc_chunk_size - hc->hc_chunk_pos;
+      memcpy(s + hc->hc_chunk_pos, buf, l);
+      hc->hc_chunk_pos += l;
+      buf += l;
+      len -= l;
+      if (hc->hc_chunk_pos >= hc->hc_chunk_size) {
+        if (s[hc->hc_chunk_size - 2] != '\r' &&
+            s[hc->hc_chunk_size - 1] != '\n')
+          return -EIO;
+        res = http_client_data_copy(hc, hc->hc_chunk, hc->hc_chunk_size - 2);
+        if (res < 0)
+          return res;
+        hc->hc_chunk_size = hc->hc_chunk_pos = 0;
+      }
+      continue;
+    }
+    l = 0;
+    if (hc->hc_chunk_csize) {
+      s = d = hc->hc_chunk;
+      if (buf[0] == '\n' && s[hc->hc_chunk_csize-1] == '\r')
+        l = 1;
+      else if (len > 1 && buf[0] == '\r' && buf[1] == '\n')
+        l = 2;
+    } else {
+      d = strstr(s = buf, "\r\n");
+      if (d) {
+        *d = '\0';
+        l = (d + 2) - s;
+      }
+    }
+    if (l) {
+      hc->hc_chunk_csize = 0;
+      if (hc->hc_chunk_trails) {
+        buf += l;
+        len -= l;
+        if (s[0] == '\0') {
+          *end = 1;
+          return old - len;
+        }
+        res = http_client_parse_arg(&hc->hc_args, s);
+        if (res < 0)
+          return res;
+        continue;
+      }
+      if (s[0] == '0' && s[1] == '\0')
+        hc->hc_chunk_trails = 1;
+      else {
+        hc->hc_chunk_size = strtoll(s, NULL, 16);
+        if (hc->hc_chunk_size == 0)
+          return -EIO;
+        if (hc->hc_chunk_size > 256*1024)
+          return -EMSGSIZE;
+        hc->hc_chunk_size += 2; /* CR-LF */
+        if (hc->hc_chunk_alloc < hc->hc_chunk_size) {
+          hc->hc_chunk = realloc(hc->hc_chunk, hc->hc_chunk_size + 1);
+          hc->hc_chunk[hc->hc_chunk_size] = '\0';
+          hc->hc_chunk_alloc = hc->hc_chunk_size;
+        }
+      }
+      buf += l;
+      len -= l;
+    } else {
+      l2 = hc->hc_chunk_csize + len;
+      if (l2 > hc->hc_chunk_alloc) {
+        hc->hc_chunk = realloc(hc->hc_chunk, l2 + 1);
+        hc->hc_chunk[l2] = '\0';
+        hc->hc_chunk_alloc = l2;
+      }
+      memcpy(hc->hc_chunk + hc->hc_chunk_csize, buf, len);
+      hc->hc_chunk_csize += len;
+      buf += len;
+      len -= len;
+    }
+  }
+  return old;
+}
+
+static int
+http_client_data_received( http_client_t *hc, char *buf, ssize_t len )
+{
+  ssize_t l, l2, csize;
+  int res, end = 0;
+
+  buf[len] = '\0';
+
+  if (len == 0) {
+    if (hc->hc_csize == -1 || hc->hc_rpos >= hc->hc_csize)
+      return 1;
+    return 0;
+  }  
+
+  csize = hc->hc_csize < 0 ? 0 : hc->hc_csize;
+  l = len;
+  if (hc->hc_csize && hc->hc_csize != -1 && hc->hc_rpos > csize) {
+    l2 = hc->hc_rpos - csize;
+    if (l2 < l)
+      l = l2;
+  }
+  if (l) {
+    if (hc->hc_chunked) {
+      l = http_client_data_chunked(hc, buf, l, &end);
+      if (l < 0)
+        return l;
+    } else {
+      res = http_client_data_copy(hc, buf, l);
+      if (res < 0)
+        return res;
+    }
+  }
+  hc->hc_rpos += l;
+  end |= hc->hc_csize && hc->hc_rpos >= hc->hc_csize;
+  if (l < len) {
+    l2 = len - l;
+    if (l2 > hc->hc_rsize)
+      hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize = l2 + 1);
+    memcpy(hc->hc_rbuf, buf + l, l2);
+    hc->hc_rbuf[l2] = '\0';
+    hc->hc_rpos = l2;
+  }
+  return end ? 1 : 0;
+}
+
+int
+http_client_run( http_client_t *hc )
+{
+  char *buf, *saveptr, *argv[3], *d, *p;
+  http_ver_t ver;
+  ssize_t r;
+  size_t len;
+  int res;
+
+  if (hc == NULL)
+    return 0;
+
+  if (hc->hc_shutdown) {
+    if (hc->hc_ssl && hc->hc_ssl->shutdown) {
+      r = http_client_ssl_shutdown(hc);
+      if (r < 0) {
+        if (errno != ESTRPIPE) {
+          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+            return HTTP_CON_SENDING;
+          return r;
+        }
+      }
+      if (r == 0)
+        return HTTP_CON_SENDING;
+    }
+    return hc->hc_result ? hc->hc_result : HTTP_CON_DONE;
+  }
+
+  if (hc->hc_sending) {
+    res = http_client_send_partial(hc);
+    if (res < 0 || res == HTTP_CON_SENDING)
+      return res;
+  }
+
+  buf = alloca(hc->hc_io_size);
+
+  if (!hc->hc_in_data && hc->hc_rpos > 3 &&
+      (d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
+    goto header;
+
+retry:
+  if (hc->hc_ssl)
+    r = http_client_ssl_recv(hc, buf, hc->hc_io_size);
+  else
+    r = recv(hc->hc_fd, buf, hc->hc_io_size, MSG_DONTWAIT);
+  if (r == 0) {
+    if (hc->hc_in_data && !hc->hc_keepalive)
+      return http_client_finish(hc);
+    return http_client_flush(hc, -ESTRPIPE);
+  }
+  if (r < 0) {
+    if (errno == ESTRPIPE && hc->hc_in_data && !hc->hc_keepalive)
+      return http_client_finish(hc);
+    if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+      return HTTP_CON_RECEIVING;
+    return http_client_flush(hc, -errno);
+  }
+#if ENABLE_TRACE
+  if (r > 0) {
+    tvhtrace("httpc", "received %s answer", http_ver2str(hc->hc_version));
+    tvhlog_hexdump("httpc", buf, r);
+  }
+#endif
+
+  if (hc->hc_in_data) {
+    res = http_client_data_received(hc, buf, r);
+    if (res < 0)
+      return http_client_flush(hc, res);
+    if (res > 0)
+      return http_client_finish(hc);
+    if (hc->hc_data_limit && r + hc->hc_rsize >= hc->hc_data_limit)
+      return http_client_flush(hc, -EOVERFLOW);
+    goto retry;
+  }
+
+  if (hc->hc_rsize < r + hc->hc_rpos) {
+    if (hc->hc_rsize + r > 16*1024)
+      return http_client_flush(hc, -EMSGSIZE);
+    hc->hc_rsize += r;
+    hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
+  }
+  memcpy(hc->hc_rbuf + hc->hc_rpos, buf, r);
+  hc->hc_rpos += r;
+  hc->hc_rbuf[hc->hc_rpos] = '\0';
+
+next_header:
+  if (hc->hc_rpos < 3)
+    return HTTP_CON_RECEIVING;
+  if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL)
+    return HTTP_CON_RECEIVING;
+
+header:
+  *d = '\0';
+  len = hc->hc_rpos;
+  hc->hc_reconnected = 0;
+  http_client_clear_state(hc);
+  hc->hc_rpos  = len;
+  hc->hc_hsize = d - hc->hc_rbuf + 4;
+  p = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
+  if (p == NULL)
+    return http_client_flush(hc, -EINVAL);
+  tvhtrace("httpc", "%s answer '%s'", http_ver2str(hc->hc_version), p);
+  if (http_tokenize(p, argv, 3, -1) != 3)
+    return http_client_flush(hc, -EINVAL);
+  if ((ver = http_str2ver(argv[0])) < 0)
+    return http_client_flush(hc, -EINVAL);
+  if (ver != hc->hc_version)
+    return http_client_flush(hc, -EINVAL);
+  if ((hc->hc_code = atoi(argv[1])) < 200)
+    return http_client_flush(hc, -EINVAL);
+  while ((p = strtok_r(NULL, "\r\n", &saveptr)) != NULL) {
+    res = http_client_parse_arg(&hc->hc_args, p);
+    if (res < 0)
+      return http_client_flush(hc, -EINVAL);
+  }
+  p = http_arg_get(&hc->hc_args, "Content-Length");
+  if (p) {
+    hc->hc_csize = atoll(p);
+    if (hc->hc_csize == 0)
+      hc->hc_csize = -1;
+  }
+  p = http_arg_get(&hc->hc_args, "Connection");
+  if (p) {
+    if (hc->hc_keepalive && strcasecmp(p, "keep-alive"))
+      return http_client_flush(hc, -EINVAL);
+    if (!hc->hc_keepalive && strcasecmp(p, "close"))
+      return http_client_flush(hc, -EINVAL);
+  }
+  if (ver == RTSP_VERSION_1_0) {
+    p = http_arg_get(&hc->hc_args, "CSeq");
+    if (p == NULL || hc->hc_rcseq != atoi(p))
+      return http_client_flush(hc, -EINVAL);
+  }
+  p = http_arg_get(&hc->hc_args, "Transfer-Encoding");
+  if (p)
+    hc->hc_chunked = strcasecmp(p, "chunked") == 0;
+  if (hc->hc_hdr_received) {
+    res = hc->hc_hdr_received(hc);
+    if (res < 0)
+      return http_client_flush(hc, res);
+  }
+  hc->hc_rpos -= hc->hc_hsize;
+  len = hc->hc_rpos;
+  if (hc->hc_code == HTTP_STATUS_CONTINUE) {
+    memmove(hc->hc_rbuf, hc->hc_rbuf + hc->hc_hsize, len);
+    goto next_header;
+  }
+  hc->hc_rpos = 0;
+  hc->hc_in_data = 1;
+  res = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len);
+  if (res < 0)
+    return http_client_flush(hc, res);
+  if (res > 0)
+    return http_client_finish(hc);
+  goto retry;
+}
+
+/*
+ * Redirected
+ */
+static void
+http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
+{
+  char buf[64];
+
+  http_arg_init(h);
+  http_arg_set(h, "Host", url->host);
+  snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
+  http_arg_set(h, "User-Agent", buf);
+  if (!keepalive)
+    http_arg_set(h, "Connection", "close");
+  if (url->user && url->user[0] && url->pass && url->pass[0]) {
+    size_t plen = strlen(url->pass);
+    size_t ulen = strlen(url->user);
+    size_t len = BASE64_SIZE(plen) + 1;
+    char *buf = alloca(ulen + 1 + len + 1);
+    strcpy(buf, url->user);
+    base64_encode(buf + ulen + 1, len, (uint8_t *)url->pass, plen);
+    buf[ulen] = ':';
+    http_arg_set(h, "Authorization", buf);
+  }
+}
+
+static int
+http_client_redirected ( http_client_t *hc )
+{
+  char *location, *location2;
+  http_arg_list_t h;
+  tvhpoll_t *efd;
+  url_t u;
+  int r;
+
+  if (++hc->hc_redirects > 10)
+    return -ELOOP;
+
+  location  = hc->hc_location;
+  location2 = hc->hc_location = NULL;
+
+  if (location[0] == '\0' || location[0] == '/') {
+    size_t size2 = strlen(hc->hc_scheme) + 3 + strlen(hc->hc_host) +
+                   12 + strlen(location) + 1;
+    location2 = alloca(size2);
+    snprintf(location2, size2, "%s://%s:%i%s",
+        hc->hc_scheme, hc->hc_host, hc->hc_port, location);
+  }
+
+  memset(&u, 0, sizeof(u));
+  if (urlparse(location2 ? location2 : location, &u)) {
+    tvherror("httpc", "redirection - cannot parse url '%s'",
+             location2 ? location2 : location);
+    free(location);
+    return -EIO;
+  }
+  free(location);
+
+  if (strcmp(u.scheme, hc->hc_scheme) ||
+      strcmp(u.host, hc->hc_host) ||
+      http_port(u.scheme, u.port) != hc->hc_port ||
+      !hc->hc_keepalive) {
+    efd = hc->hc_efd;
+    http_client_shutdown(hc, 1);
+    r = http_client_reconnect(hc, hc->hc_version,
+                              u.scheme, u.host, u.port);
+    if (r < 0) {
+      urlreset(&u);
+      return r;
+    }
+    hc->hc_efd = efd;
+  }
+
+  http_client_flush(hc, 0);
+
+  http_client_basic_args(&h, &u, hc->hc_keepalive);
+  hc->hc_reconnected = 1;
+  hc->hc_shutdown    = 0;
+  hc->hc_pevents     = 0;
+
+  r = http_client_send(hc, hc->hc_cmd, u.path, u.query, &h, NULL, 0);
+  if (r < 0) {
+    urlreset(&u);
+    return r;
+  }
+
+  hc->hc_reconnected = 1;
+  urlreset(&u);
+  return 1;
+}
+
+int
+http_client_simple( http_client_t *hc, const url_t *url )
+{
+  http_arg_list_t h;
+
+  http_client_basic_args(&h, url, 0);
+  return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
+                          &h, NULL, 0);
+}
+
+/*
+ * Data thread
+ */
+static void *
+http_client_thread ( void *p )
+{
+  int n;
+  tvhpoll_event_t ev;
+  http_client_t *hc;
+  char c;
+
+  while (http_running) {
+    n = tvhpoll_wait(http_poll, &ev, 1, -1);
+    if (n < 0) {
+      if (http_running &&
+          errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK)
+        tvherror("httpc", "tvhpoll_wait() error");
+    } else if (n > 0) {
+      if (&http_pipe == ev.data.ptr) {
+        if (read(http_pipe.rd, &c, 1) == 1) {
+          /* end-of-task */
+          break;
+        }
+        continue;
+      }
+      pthread_mutex_lock(&http_lock);
+      TAILQ_FOREACH(hc, &http_clients, hc_link)
+        if (hc == ev.data.ptr)
+          break;
+      http_client_run(hc);
+      pthread_mutex_unlock(&http_lock);
+    }
+  }
+
+  return NULL;
+}
+
+static void
+http_client_ssl_free( http_client_t *hc )
+{
+  struct http_client_ssl *ssl;
+
+  if ((ssl = hc->hc_ssl) != NULL) {
+    free(ssl->rbio_buf);
+    free(ssl->wbio_buf);
+    SSL_free(ssl->ssl);
+    SSL_CTX_free(ssl->ctx);
+    free(ssl);
+    hc->hc_ssl = NULL;
+  }
+}
+
+/*
+ * Setup a connection (async)
+ */
+static int
+http_client_reconnect
+  ( http_client_t *hc, http_ver_t ver, const char *scheme,
+    const char *host, int port )
+{
+  struct http_client_ssl *ssl;
+  char errbuf[256];
+
+  free(hc->hc_scheme);
+  free(hc->hc_host);
+
+  port           = http_port(scheme, port);
+  hc->hc_pevents = 0;
+  hc->hc_version = ver;
+  hc->hc_scheme  = strdup(scheme);
+  hc->hc_host    = strdup(host);
+  hc->hc_port    = port;
+  hc->hc_fd      = tcp_connect(host, port, errbuf, sizeof(errbuf), -1);
+  if (hc->hc_fd < 0) {
+    tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
+    return -EINVAL;
+  }
+  http_client_ssl_free(hc);
+  if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
+    ssl = calloc(1, sizeof(*ssl));
+    hc->hc_ssl = ssl;
+    ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
+    if (ssl->ctx == NULL) {
+      tvhlog(LOG_ERR, "httpc", "Unable to get SSL_CTX");
+      goto err1;
+    }
+    /* do not use SSLv2 */
+    SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_COMPRESSION);
+    /* adjust cipher list */
+    if (SSL_CTX_set_cipher_list(ssl->ctx, "HIGH:MEDIUM") != 1) {
+      tvhlog(LOG_ERR, "httpc", "Unable to adjust SSL cipher list");
+      goto err2;
+    }
+    ssl->rbio  = BIO_new(BIO_s_mem());
+    ssl->wbio  = BIO_new(BIO_s_mem());
+    ssl->ssl   = SSL_new(ssl->ctx);
+    if (ssl->ssl == NULL || ssl->rbio == NULL || ssl->wbio == NULL) {
+      tvhlog(LOG_ERR, "httpc", "Unable to get SSL handle");
+      goto err3;
+    }
+    SSL_set_bio(ssl->ssl, ssl->rbio, ssl->wbio);
+    if (!SSL_set_tlsext_host_name(ssl->ssl, host)) {
+      tvhlog(LOG_ERR, "httpc", "Unable to set SSL hostname");
+      goto err4;
+    }
+  }
+
+  return 0;
+
+err4:
+  SSL_free(ssl->ssl);
+err3:
+  BIO_free(ssl->rbio);
+  BIO_free(ssl->wbio);
+err2:
+  SSL_CTX_free(ssl->ctx);
+err1:
+  close(hc->hc_fd);
+  free(ssl);
+  return -EINVAL;
+}
+
+http_client_t *
+http_client_connect 
+  ( void *aux, http_ver_t ver, const char *scheme, const char *host, int port )
+{
+  http_client_t *hc;
+
+  hc             = calloc(1, sizeof(http_client_t));
+  hc->hc_aux     = aux;
+  hc->hc_io_size = 1024;
+
+  TAILQ_INIT(&hc->hc_args);
+  TAILQ_INIT(&hc->hc_wqueue);
+
+  if (http_client_reconnect(hc, ver, scheme, host, port) < 0) {
+    free(hc);
+    return NULL;
+  }
+
+  return hc;
+}
+
+/*
+ * Register to the another thread
+ */
+void
+http_client_register( http_client_t *hc )
+{
+  assert(hc->hc_data_received || hc->hc_conn_closed);
+  assert(hc->hc_efd == NULL);
+  
+  pthread_mutex_lock(&http_lock);
+
+  TAILQ_INSERT_TAIL(&http_clients, hc, hc_link);
+
+  hc->hc_efd  = http_poll;
+
+  pthread_mutex_unlock(&http_lock);
+}
+
+/*
+ * Cancel
+ */
+void
+http_client_close ( http_client_t *hc )
+{
+  http_client_wcmd_t *wcmd;
+
+  if (hc == NULL)
+    return;
+
+  pthread_mutex_lock(&http_lock);
+  http_client_shutdown(hc, 1);
+  http_client_flush(hc, 0);
+  pthread_mutex_unlock(&http_lock);
+  while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
+    http_client_cmd_destroy(hc, wcmd);
+  http_client_ssl_free(hc);
+  free(hc->hc_location);
+  free(hc->hc_rbuf);
+  free(hc->hc_data);
+  free(hc->hc_host);
+  free(hc->hc_scheme);
+  free(hc);
+}
+
+/*
+ * Initialise subsystem
+ */
+pthread_t http_client_tid;
+
+void
+http_client_init ( void )
+{
+  tvhpoll_event_t ev;
+
+  /* Setup list */
+  pthread_mutex_init(&http_lock, NULL);
+  TAILQ_INIT(&http_clients);
+
+  /* Setup pipe */
+  tvh_pipe(O_NONBLOCK, &http_pipe);
+
+  /* Setup poll */
+  http_poll   = tvhpoll_create(10);
+  memset(&ev, 0, sizeof(ev));
+  ev.fd       = http_pipe.rd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = &http_pipe;
+  tvhpoll_add(http_poll, &ev, 1);
+
+  /* Setup thread */
+  http_running = 1;
+  tvhthread_create(&http_client_tid, NULL, http_client_thread, NULL, 0);
+#if HTTPCLIENT_TESTSUITE
+  http_client_testsuite_run();
+#endif
+}
+
+void
+http_client_done ( void )
+{
+  http_running = 0;
+  tvh_write(http_pipe.wr, "", 1);
+  pthread_join(http_client_tid, NULL);
+  assert(TAILQ_FIRST(&http_clients) == NULL);
+  tvh_pipe_close(&http_pipe);
+  tvhpoll_destroy(http_poll);
+}
+
+/*
+ *
+ * TESTSUITE
+ *
+ */
+
+#if HTTPCLIENT_TESTSUITE
+
+static int
+http_client_testsuite_hdr_received( http_client_t *hc )
+{
+  http_arg_t *ra;
+
+  fprintf(stderr, "HTTPCTS: Received header from %s:%i\n", hc->hc_host, hc->hc_port);
+  TAILQ_FOREACH(ra, &hc->hc_args, link)
+    fprintf(stderr, "  %s: %s\n", ra->key, ra->val);
+  return 0;
+}
+
+static void
+http_client_testsuite_conn_closed( http_client_t *hc, int result )
+{
+  fprintf(stderr, "HTTPCTS: Closed (result=%i - %s)\n", result, strerror(result));
+}
+
+static int
+http_client_testsuite_data_complete( http_client_t *hc )
+{
+  fprintf(stderr, "HTTPCTS: Data Complete (code=%i, data=%p, data_size=%li)\n",
+          hc->hc_code, hc->hc_data, hc->hc_data_size);
+  return 0;
+}
+
+static int
+http_client_testsuite_data_received( http_client_t *hc, void *data, size_t len )
+{
+  fprintf(stderr, "HTTPCTS: Data received (len=%li)\n", len);
+  /* check, if the data memory area is OK */
+  memset(data, 0xa5, len);
+  return 0;
+}
+
+static struct strtab HTTP_contab[] = {
+  { "WAIT_REQUEST", HTTP_CON_WAIT_REQUEST },
+  { "READ_HEADER",  HTTP_CON_READ_HEADER },
+  { "END",          HTTP_CON_END },
+  { "POST_DATA",    HTTP_CON_POST_DATA },
+  { "SENDING",      HTTP_CON_SENDING },
+  { "SENT",         HTTP_CON_SENT },
+  { "RECEIVING",    HTTP_CON_RECEIVING },
+  { "DONE",         HTTP_CON_DONE },
+};
+
+static struct strtab ERRNO_tab[] = {
+  { "EPERM",           EPERM },
+  { "ENOENT",          ENOENT },
+  { "ESRCH",           ESRCH },
+  { "EINTR",           EINTR },
+  { "EIO",             EIO },
+  { "ENXIO",           ENXIO },
+  { "E2BIG",           E2BIG },
+  { "ENOEXEC",         ENOEXEC },
+  { "EBADF",           EBADF },
+  { "ECHILD",          ECHILD },
+  { "EAGAIN",          EAGAIN },
+  { "ENOMEM",          ENOMEM },
+  { "EACCES",          EACCES },
+  { "EFAULT",          EFAULT },
+  { "ENOTBLK",         ENOTBLK },
+  { "EBUSY",           EBUSY },
+  { "EEXIST",          EEXIST },
+  { "EXDEV",           EXDEV },
+  { "ENODEV",          ENODEV },
+  { "ENOTDIR",         ENOTDIR },
+  { "EISDIR",          EISDIR },
+  { "EINVAL",          EINVAL },
+  { "ENFILE",          ENFILE },
+  { "EMFILE",          EMFILE },
+  { "ENOTTY",          ENOTTY },
+  { "ETXTBSY",         ETXTBSY },
+  { "EFBIG",           EFBIG },
+  { "ENOSPC",          ENOSPC },
+  { "ESPIPE",          ESPIPE },
+  { "EROFS",           EROFS },
+  { "EMLINK",          EMLINK },
+  { "EPIPE",           EPIPE },
+  { "EDOM",            EDOM },
+  { "ERANGE",          ERANGE },
+  { "EDEADLK",         EDEADLK },
+  { "ENAMETOOLONG",    ENAMETOOLONG },
+  { "ENOLCK",          ENOLCK },
+  { "ENOSYS",          ENOSYS },
+  { "ENOTEMPTY",       ENOTEMPTY },
+  { "ELOOP",           ELOOP },
+  { "EWOULDBLOCK",     EWOULDBLOCK },
+  { "ENOMSG",          ENOMSG },
+  { "EIDRM",           EIDRM },
+  { "ECHRNG",          ECHRNG },
+  { "EL2NSYNC",        EL2NSYNC },
+  { "EL3HLT",          EL3HLT },
+  { "EL3RST",          EL3RST },
+  { "ELNRNG",          ELNRNG },
+  { "EUNATCH",         EUNATCH },
+  { "ENOCSI",          ENOCSI },
+  { "EL2HLT",          EL2HLT },
+  { "EBADE",           EBADE },
+  { "EBADR",           EBADR },
+  { "EXFULL",          EXFULL },
+  { "ENOANO",          ENOANO },
+  { "EBADRQC",         EBADRQC },
+  { "EBADSLT",         EBADSLT },
+  { "EDEADLOCK",       EDEADLOCK },
+  { "EBFONT",          EBFONT },
+  { "ENOSTR",          ENOSTR },
+  { "ENODATA",         ENODATA },
+  { "ETIME",           ETIME },
+  { "ENOSR",           ENOSR },
+  { "ENONET",          ENONET },
+  { "ENOPKG",          ENOPKG },
+  { "EREMOTE",         EREMOTE },
+  { "ENOLINK",         ENOLINK },
+  { "EADV",            EADV },
+  { "ESRMNT",          ESRMNT },
+  { "ECOMM",           ECOMM },
+  { "EPROTO",          EPROTO },
+  { "EMULTIHOP",       EMULTIHOP },
+  { "EDOTDOT",         EDOTDOT },
+  { "EBADMSG",         EBADMSG },
+  { "EOVERFLOW",       EOVERFLOW },
+  { "ENOTUNIQ",        ENOTUNIQ },
+  { "EBADFD",          EBADFD },
+  { "EREMCHG",         EREMCHG },
+  { "ELIBACC",         ELIBACC },
+  { "ELIBBAD",         ELIBBAD },
+  { "ELIBSCN",         ELIBSCN },
+  { "ELIBMAX",         ELIBMAX },
+  { "ELIBEXEC",        ELIBEXEC },
+  { "EILSEQ",          EILSEQ },
+  { "ERESTART",        ERESTART },
+  { "ESTRPIPE",        ESTRPIPE },
+  { "EUSERS",          EUSERS },
+  { "ENOTSOCK",        ENOTSOCK },
+  { "EDESTADDRREQ",    EDESTADDRREQ },
+  { "EMSGSIZE",        EMSGSIZE },
+  { "EPROTOTYPE",      EPROTOTYPE },
+  { "ENOPROTOOPT",     ENOPROTOOPT },
+  { "EPROTONOSUPPORT", EPROTONOSUPPORT },
+  { "ESOCKTNOSUPPORT", ESOCKTNOSUPPORT },
+  { "EOPNOTSUPP",      EOPNOTSUPP },
+  { "EPFNOSUPPORT",    EPFNOSUPPORT },
+  { "EAFNOSUPPORT",    EAFNOSUPPORT },
+  { "EADDRINUSE",      EADDRINUSE },
+  { "EADDRNOTAVAIL",   EADDRNOTAVAIL },
+  { "ENETDOWN",        ENETDOWN },
+  { "ENETUNREACH",     ENETUNREACH },
+  { "ENETRESET",       ENETRESET },
+  { "ECONNABORTED",    ECONNABORTED },
+  { "ECONNRESET",      ECONNRESET },
+  { "ENOBUFS",         ENOBUFS },
+  { "EISCONN",         EISCONN },
+  { "ENOTCONN",        ENOTCONN },
+  { "ESHUTDOWN",       ESHUTDOWN },
+  { "ETOOMANYREFS",    ETOOMANYREFS },
+  { "ETIMEDOUT",       ETIMEDOUT },
+  { "ECONNREFUSED",    ECONNREFUSED },
+  { "EHOSTDOWN",       EHOSTDOWN },
+  { "EHOSTUNREACH",    EHOSTUNREACH },
+  { "EALREADY",        EALREADY },
+  { "EINPROGRESS",     EINPROGRESS },
+  { "ESTALE",          ESTALE },
+  { "EUCLEAN",         EUCLEAN },
+  { "ENOTNAM",         ENOTNAM },
+  { "ENAVAIL",         ENAVAIL },
+  { "EISNAM",          EISNAM },
+  { "EREMOTEIO",       EREMOTEIO },
+  { "EDQUOT",          EDQUOT },
+  { "ENOMEDIUM",       ENOMEDIUM },
+  { "EMEDIUMTYPE",     EMEDIUMTYPE },
+  { "ECANCELED",       ECANCELED },
+  { "ENOKEY",          ENOKEY },
+  { "EKEYEXPIRED",     EKEYEXPIRED },
+  { "EKEYREVOKED",     EKEYREVOKED },
+  { "EKEYREJECTED",    EKEYREJECTED },
+  { "EOWNERDEAD",      EOWNERDEAD },
+  { "ENOTRECOVERABLE", ENOTRECOVERABLE },
+  { "ERFKILL",         ERFKILL },
+  { "EHWPOISON",       EHWPOISON },
+};
+
+void
+http_client_testsuite_run( void )
+{
+  const char *path, *cs, *cs2;
+  char line[1024], *s;
+  http_arg_list_t args;
+  http_client_t *hc = NULL;
+  http_cmd_t cmd;
+  http_ver_t ver = HTTP_VERSION_1_1;
+  int data_transfer = 0, port = 0;
+  size_t data_limit = 0;
+  tvhpoll_event_t ev;
+  tvhpoll_t *efd;
+  url_t u1, u2;
+  FILE *fp;
+  int r, expected = HTTP_CON_DONE;
+  int handle_location = 0;
+
+  path = getenv("TVHEADEND_HTTPC_TEST");
+  if (path == NULL)
+    path = TVHEADEND_DATADIR "/support/httpc-test.txt";
+  fp = fopen(path, "r");
+  if (fp == NULL) {
+    tvhlog(LOG_ERR, "httpc", "Test: unable to open '%s': %s", path, strerror(errno));
+    return;
+  }
+  memset(&u1, 0, sizeof(u1));
+  memset(&u2, 0, sizeof(u2));
+  http_arg_init(&args);
+  efd = tvhpoll_create(1);
+  while (fgets(line, sizeof(line), fp) != NULL && tvheadend_running) {
+    if (line[0] == '\0')
+      continue;
+    s = line + strlen(line) - 1;
+    while (*s < ' ' && s != line)
+      s--;
+    if (*s < ' ')
+      *s = '\0';
+    else
+      s[1] = '\0';
+    s = line;
+    while (*s && *s < ' ')
+      s++;
+    if (*s == '\0' || *s == '#')
+      continue;
+    if (strcmp(s, "Reset=1") == 0) {
+      ver = HTTP_VERSION_1_1;
+      urlreset(&u1);
+      urlreset(&u2);
+      http_client_close(hc);
+      hc = NULL;
+      data_transfer = 0;
+      data_limit = 0;
+      port = 0;
+      expected = HTTP_CON_DONE;
+      handle_location = 0;
+    } else if (strcmp(s, "DataTransfer=all") == 0) {
+      data_transfer = 0;
+    } else if (strcmp(s, "DataTransfer=cont") == 0) {
+      data_transfer = 1;
+    } else if (strcmp(s, "HandleLocation=0") == 0) {
+      handle_location = 0;
+    } else if (strcmp(s, "HandleLocation=1") == 0) {
+      handle_location = 1;
+    } else if (strncmp(s, "DataLimit=", 10) == 0) {
+      data_limit = atoll(s + 10);
+    } else if (strncmp(s, "Port=", 5) == 0) {
+      port = atoi(s + 5);
+    } else if (strncmp(s, "ExpectedError=", 14) == 0) {
+      r = str2val(s + 14, HTTP_contab);
+      if (r < 0) {
+        r = str2val(s + 14, ERRNO_tab);
+        if (r < 0) {
+          fprintf(stderr, "HTTPCTS: Unknown error code '%s'\n", s + 14);
+          goto fatal;
+        } else {
+          r = -r;
+        }
+      }
+      expected = r;
+    } else if (strncmp(s, "Header=", 7) == 0) {
+      r = http_client_parse_arg(&args, s + 7);
+      if (r < 0)
+        goto fatal;
+    } else if (strncmp(s, "Version=", 8) == 0) {
+      ver = http_str2ver(s + 8);
+      if (ver < 0)
+        goto fatal;
+    } else if (strncmp(s, "URL=", 4) == 0) {
+      urlreset(&u1);
+      if (urlparse(s + 4, &u1) < 0)
+        goto fatal;
+    } else if (strncmp(s, "Command=", 8) == 0) {
+      if (u1.host == NULL || u1.host[0] == '\0') {
+        fprintf(stderr, "HTTPCTS: Define URL\n");
+        goto fatal;
+      }
+      cmd = http_str2cmd(s + 8);
+      if (cmd < 0)
+        goto fatal;
+      if (http_arg_get(&args, "Host") == NULL && u1.host && u1.host[0] != '\0')
+        http_arg_set(&args, "Host", u1.host);
+      if (u2.host == NULL || u1.host == NULL || strcmp(u1.host, u2.host) ||
+          u2.port != u1.port || !hc->hc_keepalive) {
+        http_client_close(hc);
+        if (port)
+          u1.port = port;
+        hc = http_client_connect(NULL, ver, u1.scheme, u1.host, u1.port);
+        if (hc == NULL) {
+          fprintf(stderr, "HTTPCTS: Unable to connect to %s:%i (%s)\n", u1.host, u1.port, u1.scheme);
+          goto fatal;
+        } else {
+          fprintf(stderr, "HTTPCTS: Connected to %s:%i\n", hc->hc_host, hc->hc_port);
+        }
+      }
+      fprintf(stderr, "HTTPCTS Send: Cmd=%s Ver=%s Host=%s Path=%s\n",
+              http_cmd2str(cmd), http_ver2str(ver), http_arg_get(&args, "Host"), u1.path);
+      hc->hc_efd = efd;
+      hc->hc_handle_location = handle_location;
+      hc->hc_data_limit = data_limit;
+      hc->hc_hdr_received = http_client_testsuite_hdr_received;
+      hc->hc_data_complete = http_client_testsuite_data_complete;
+      hc->hc_conn_closed = http_client_testsuite_conn_closed;
+      if (data_transfer) {
+        hc->hc_data_received = http_client_testsuite_data_received;
+      } else {
+        hc->hc_data_received = NULL;
+      }
+      r = http_client_send(hc, cmd, u1.path, u1.query, &args, NULL, 0);
+      if (r < 0) {
+        fprintf(stderr, "HTTPCTS Send Failed %s\n", strerror(-r));
+        goto fatal;
+      }
+      while (tvheadend_running) {
+        fprintf(stderr, "HTTPCTS: Enter Poll\n");
+        r = tvhpoll_wait(efd, &ev, 1, -1);
+        fprintf(stderr, "HTTPCTS: Leave Poll: %i (%s)\n", r, val2str(r, ERRNO_tab));
+        if (r < 0 && (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK))
+          continue;
+        if (r < 0) {
+          fprintf(stderr, "HTTPCTS: Poll result: %s\n", strerror(-r));
+          goto fatal;
+        }
+        if (r != 1)
+          continue;
+        if (ev.data.ptr != hc) {
+          fprintf(stderr, "HTTPCTS: Poll returned a wrong value\n");
+          goto fatal;
+        }
+        r = http_client_run(hc);
+        cs = val2str(r, HTTP_contab);
+        if (cs == NULL)
+          cs = val2str(-r, ERRNO_tab);
+        cs2 = val2str(expected, HTTP_contab);
+        if (cs2 == NULL)
+          cs2 = val2str(-expected, ERRNO_tab);
+        fprintf(stderr, "HTTPCTS: Run Done, Result = %i (%s), Expected = %i (%s)\n", r, cs, expected, cs2);
+        if (r == expected)
+          break;
+        if (r < 0)
+          goto fatal;
+        if (r == HTTP_CON_DONE)
+          goto fatal;
+      }
+      urlreset(&u2);
+      urlcopy(&u2, &u1);
+      urlreset(&u1);
+      http_client_clear_state(hc);
+    } else {
+      fprintf(stderr, "HTTPCTS: Wrong line '%s'\n", s);
+    }
+  }
+  urlreset(&u2);
+  urlreset(&u1);
+  http_client_close(hc);
+  tvhpoll_destroy(efd);
+  http_arg_flush(&args);
+  fclose(fp);
+  fprintf(stderr, "HTTPCTS Return To Main\n");
+  return;
+fatal:
+  fprintf(stderr, "HTTPCTS Fatal Error\n");
+  abort();
+}
+
+#endif

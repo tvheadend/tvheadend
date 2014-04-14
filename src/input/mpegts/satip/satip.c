@@ -444,7 +444,6 @@ typedef struct satip_discovery {
   url_t url;
   http_client_t *http_client;
   time_t http_start;
-  char *desc;
 } satip_discovery_t;
 
 TAILQ_HEAD(satip_discovery_queue, satip_discovery);
@@ -465,7 +464,7 @@ satip_discovery_destroy(satip_discovery_t *d, int unlink)
     TAILQ_REMOVE(&satip_discoveries, d, disc_link);
   }
   if (d->http_client)
-    http_close(d->http_client);
+    http_client_close(d->http_client);
   urlreset(&d->url);
   free(d->myaddr);
   free(d->location);
@@ -474,7 +473,6 @@ satip_discovery_destroy(satip_discovery_t *d, int unlink)
   free(d->bootid);
   free(d->configid);
   free(d->deviceid);
-  free(d->desc);
   free(d);
 }
 
@@ -489,11 +487,10 @@ satip_discovery_find(satip_discovery_t *d)
   return NULL;
 }
 
-static size_t
-satip_discovery_http_data(void *p, void *buf, size_t len)
+static void
+satip_discovery_http_closed(http_client_t *hc, int errn)
 {
-  satip_discovery_t *d = p;
-  size_t size;
+  satip_discovery_t *d = hc->hc_aux;
   char *s;
   htsmsg_t *xml = NULL, *tags, *root, *device;
   const char *friendlyname, *manufacturer, *manufacturerURL, *modeldesc;
@@ -503,24 +500,27 @@ satip_discovery_http_data(void *p, void *buf, size_t len)
   satip_device_info_t info;
   char errbuf[100];
 
-  size = d->desc ? strlen(d->desc) : 0;
-  if (len + size > 16384)
-    goto finish;
-  d->desc = realloc(d->desc, size + len + 1);
-  memcpy(d->desc + size, buf, len);
-  size += len;
-  d->desc[size] = '\0';
+  s = http_arg_get(&hc->hc_args, "Content-Type");
+  if (s && strcasecmp(s, "text/xml")) {
+    errn = EMEDIUMTYPE;
+    s = NULL;
+  }
+  if (errn != 0 || s == NULL || hc->hc_code != 200 ||
+      hc->hc_data_size == 0 || hc->hc_data == NULL) {
+    tvhlog(LOG_ERR, "satip", "Cannot get %s: %s", d->location, strerror(errn));
+    return;
+  }
 
-  s = d->desc + size - 1;
-  while (s != d->desc && *s != '/')
+  s = hc->hc_data + hc->hc_data_size - 1;
+  while (s != hc->hc_data && *s != '/')
     s--;
-  if (s != d->desc)
+  if (s != hc->hc_data)
     s--;
   if (strncmp(s, "</root>", 7))
-    return len;
+    return;
   /* Parse */
-  xml = htsmsg_xml_deserialize(d->desc, errbuf, sizeof(errbuf));
-  d->desc = NULL;
+  xml = htsmsg_xml_deserialize(hc->hc_data, errbuf, sizeof(errbuf));
+  hc->hc_data = NULL;
   if (!xml) {
     tvhlog(LOG_ERR, "satip_discovery_desc", "htsmsg_xml_deserialize error %s", errbuf);
     goto finish;
@@ -599,21 +599,13 @@ satip_discovery_http_data(void *p, void *buf, size_t len)
   free(info.tunercfg);
 finish:
   htsmsg_destroy(xml);
-  return -EIO;
-}
-
-static void
-satip_discovery_http_fail(void *p)
-{
-  pthread_mutex_lock(&global_lock);
-  satip_discovery_destroy((satip_discovery_t *)p, 1);
-  pthread_mutex_unlock(&global_lock);
 }
 
 static void
 satip_discovery_timerq_cb(void *aux)
 {
   satip_discovery_t *d, *next;
+  int r;
 
   lock_assert(&global_lock);
 
@@ -626,14 +618,19 @@ satip_discovery_timerq_cb(void *aux)
         satip_discovery_destroy(d, 1);
       continue;
     }
-    d->http_client = http_connect(&d->url, NULL,
-                                  satip_discovery_http_data,
-                                  satip_discovery_http_fail,
-                                  d);
+
+    d->http_client = http_client_connect(d, HTTP_VERSION_1_1, d->url.scheme,
+                                         d->url.host, d->url.port);
     if (d->http_client == NULL)
       satip_discovery_destroy(d, 1);
-    else
+    else {
       d->http_start = dispatch_clock;
+      d->http_client->hc_conn_closed = satip_discovery_http_closed;
+      http_client_register(d->http_client);
+      r = http_client_simple(d->http_client, &d->url);
+      if (r < 0)
+        satip_discovery_destroy(d, 1);
+    }
   }
   if (TAILQ_FIRST(&satip_discoveries))
     gtimer_arm(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, 5);

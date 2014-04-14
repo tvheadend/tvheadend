@@ -575,6 +575,11 @@ uint32_t tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc);
 
 int base64_decode(uint8_t *out, const char *in, int out_size);
 
+char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size);
+
+/* Calculate the output size needed to base64-encode x bytes. */
+#define BASE64_SIZE(x) (((x)+2) / 3 * 4 + 1)
+
 int put_utf8(char *out, int c);
 
 static inline int64_t ts_rescale(int64_t ts, int tb)
