@@ -33,6 +33,11 @@ tsfile_input_list_t      tsfile_inputs;
 extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_network_class;
 
+static void
+tsfile_service_config_save ( service_t *s )
+{
+}
+
 /*
  * Network definition
  */
@@ -42,6 +47,7 @@ tsfile_network_create_service
 {
   pthread_mutex_lock(&tsfile_lock);
   mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
+  s->s_config_save = tsfile_service_config_save;
   pthread_mutex_unlock(&tsfile_lock);
 
   // TODO: HACK: REMOVE ME
