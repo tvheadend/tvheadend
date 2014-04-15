@@ -35,12 +35,7 @@
 #include "redblack.h"
 #include "notify.h"
 #include "prop.h"
-
-#if ENABLE_IMAGECACHE
-#define CURL_STATICLIB
-#include <curl/curl.h>
-#include <curl/easy.h>
-#endif
+#include "http.h"
 
 /*
  * Image metadata
@@ -139,10 +134,15 @@ imagecache_image_add ( imagecache_image_t *img )
 static int
 imagecache_image_fetch ( imagecache_image_t *img )
 {
-  int res = 1;
-  CURL *curl;
+  int res = 1, r;
   FILE *fp;
+  url_t url;
   char tmp[256], path[256];
+  tvhpoll_event_t ev;
+  tvhpoll_t *efd = NULL;
+  http_client_t *hc;
+
+  memset(&url, 0, sizeof(url));
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
@@ -156,25 +156,54 @@ imagecache_image_fetch ( imagecache_image_t *img )
   
   /* Build command */
   tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
-  curl = curl_easy_init();
-  curl_easy_setopt(curl, CURLOPT_URL,         img->url);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA,   fp);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT,   "TVHeadend");
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT,     120);
-  curl_easy_setopt(curl, CURLOPT_NOPROGRESS,  1);
-  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-  if (imagecache_conf.ignore_sslcert)
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+  memset(&url, 0, sizeof(url));
+  if (urlparse(img->url, &url)) {
+    tvherror("imagecache", "Unable to parse url '%s'", img->url);
+    goto error;
+  }
 
   /* Fetch (release lock, incase of delays) */
   pthread_mutex_unlock(&global_lock);
-  res = curl_easy_perform(curl);
-  curl_easy_cleanup(curl);
-  fclose(fp);
+
+  hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
+                           url.host, url.port);
+  if (hc == NULL)
+    goto error;
+
+  http_client_ssl_peer_verify(hc, imagecache_conf.ignore_sslcert ? 0 : 1);
+  hc->hc_handle_location = 1;
+  hc->hc_data_limit  = 256*1024;
+  efd = tvhpoll_create(1);
+  hc->hc_efd = efd;
+
+  r = http_client_simple(hc, &url);
+  if (r < 0)
+    goto error;
+
+  while (tvheadend_running) {
+    r = tvhpoll_wait(efd, &ev, 1, -1);
+    if (r < 0)
+      break;
+    if (r == 0)
+      continue;
+    r = http_client_run(hc);
+    if (r < 0)
+      break;
+    if (r == HTTP_CON_DONE) {
+      if (hc->hc_code == HTTP_STATUS_OK && hc->hc_data_size > 0) {
+        fwrite(hc->hc_data, hc->hc_data_size, 1, fp);
+        res = 0;
+      }
+      break;
+    }
+  }
+
   pthread_mutex_lock(&global_lock);
 
   /* Process */
 error:
+  urlreset(&url);
+  tvhpoll_destroy(efd);
   img->state = IDLE;
   time(&img->updated); // even if failed (possibly request sooner?)
   if (res) {

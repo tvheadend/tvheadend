@@ -30,7 +30,9 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
+#if ENABLE_TRACE 
 #define HTTPCLIENT_TESTSUITE 1
+#endif
 
 struct http_client_ssl {
   int      connected;
@@ -345,11 +347,24 @@ http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
   ssize_t r, r2;
   int e;
 
+  if (hc->hc_verify_peer < 0)
+    http_client_ssl_peer_verify(hc, 1); /* default method - verify */
   while (1) {
     if (!ssl->connected) {
       r = SSL_connect(ssl->ssl);
       if (r > 0) {
         ssl->connected = 1;
+        if (hc->hc_verify_peer > 0) {
+          if (SSL_get_peer_certificate(ssl->ssl) == NULL ||
+              SSL_get_verify_result(ssl->ssl) != X509_V_OK) {
+            tvhlog(LOG_ERR, "httpc", "SSL peer verification failed (%s:%i)%s %li",
+                   hc->hc_host, hc->hc_port,
+                   SSL_get_peer_certificate(ssl->ssl) ? " X509" : "",
+                   SSL_get_verify_result(ssl->ssl));
+            errno = EPERM;
+            return -1;
+          }
+        }
         goto write;
       }
     } else {
@@ -1012,6 +1027,9 @@ http_client_redirected ( http_client_t *hc )
       urlreset(&u);
       return r;
     }
+    r = hc->hc_verify_peer;
+    hc->hc_verify_peer = -1;
+    http_client_ssl_peer_verify(hc, r);
     hc->hc_efd = efd;
   }
 
@@ -1041,6 +1059,26 @@ http_client_simple( http_client_t *hc, const url_t *url )
   http_client_basic_args(&h, url, 0);
   return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
                           &h, NULL, 0);
+}
+
+void
+http_client_ssl_peer_verify( http_client_t *hc, int verify )
+{
+  struct http_client_ssl *ssl;
+
+  if (hc->hc_verify_peer < 0) {
+    hc->hc_verify_peer = verify ? 1 : 0;
+    if ((ssl = hc->hc_ssl) != NULL) {
+      if (!SSL_CTX_set_default_verify_paths(ssl->ctx))
+        tvherror("httpc", "SSL - unable to load CA certificates for verification");
+      SSL_CTX_set_verify_depth(ssl->ctx, 1);
+      SSL_CTX_set_verify(ssl->ctx,
+                         hc->hc_verify_peer ? SSL_VERIFY_PEER : SSL_VERIFY_NONE,
+                         NULL);
+    }
+  } else {
+    tvherror("httpc", "SSL peer verification method must be set only once");
+  }
 }
 
 /*
@@ -1120,6 +1158,7 @@ http_client_reconnect
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
     return -EINVAL;
   }
+  tvhtrace("httpc", "Connected to %s:%i", host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
@@ -1175,6 +1214,7 @@ http_client_connect
   hc->hc_aux     = aux;
   hc->hc_io_size = 1024;
   hc->hc_rtsp_stream_id = -1;
+  hc->hc_verify_peer = -1;
 
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
@@ -1482,13 +1522,14 @@ http_client_testsuite_run( void )
   FILE *fp;
   int r, expected = HTTP_CON_DONE;
   int handle_location = 0;
+  int peer_verify = 1;
 
   path = getenv("TVHEADEND_HTTPC_TEST");
   if (path == NULL)
     path = TVHEADEND_DATADIR "/support/httpc-test.txt";
   fp = fopen(path, "r");
   if (fp == NULL) {
-    tvhlog(LOG_ERR, "httpc", "Test: unable to open '%s': %s", path, strerror(errno));
+    tvhlog(LOG_NOTICE, "httpc", "Test: unable to open '%s': %s", path, strerror(errno));
     return;
   }
   memset(&u1, 0, sizeof(u1));
@@ -1521,6 +1562,7 @@ http_client_testsuite_run( void )
       port = 0;
       expected = HTTP_CON_DONE;
       handle_location = 0;
+      peer_verify = 1;
     } else if (strcmp(s, "DataTransfer=all") == 0) {
       data_transfer = 0;
     } else if (strcmp(s, "DataTransfer=cont") == 0) {
@@ -1529,6 +1571,10 @@ http_client_testsuite_run( void )
       handle_location = 0;
     } else if (strcmp(s, "HandleLocation=1") == 0) {
       handle_location = 1;
+    } else if (strcmp(s, "SSLPeerVerify=0") == 0) {
+      peer_verify = 0;
+    } else if (strcmp(s, "SSLPeerVerify=1") == 0) {
+      peer_verify = 1;
     } else if (strncmp(s, "DataLimit=", 10) == 0) {
       data_limit = atoll(s + 10);
     } else if (strncmp(s, "Port=", 5) == 0) {
@@ -1558,6 +1604,8 @@ http_client_testsuite_run( void )
       if (urlparse(s + 4, &u1) < 0)
         goto fatal;
     } else if (strncmp(s, "Command=", 8) == 0) {
+      if (strcmp(s + 8, "EXIT") == 0)
+        break;
       if (u1.host == NULL || u1.host[0] == '\0') {
         fprintf(stderr, "HTTPCTS: Define URL\n");
         goto fatal;
@@ -1579,6 +1627,7 @@ http_client_testsuite_run( void )
         } else {
           fprintf(stderr, "HTTPCTS: Connected to %s:%i\n", hc->hc_host, hc->hc_port);
         }
+        http_client_ssl_peer_verify(hc, peer_verify);
       }
       fprintf(stderr, "HTTPCTS Send: Cmd=%s Ver=%s Host=%s Path=%s\n",
               http_cmd2str(cmd), http_ver2str(ver), http_arg_get(&args, "Host"), u1.path);

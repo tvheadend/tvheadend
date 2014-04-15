@@ -7,7 +7,9 @@
 #  DataTransfer=cont continuous passing data to the data_received callback
 #  DataLimit=        limit data to these bytes
 #  ExpectedError=    expected error
+#  SSLPeerVerify=    Enable SSL/TLS peer verification (0 or 1)
 #  Reset=1           reset the initial state - close the current keep-alive conn
+#  Command=          HTTP/RTSP command or EXIT
 #
 
 Header=Connection: close
@@ -78,4 +80,3 @@ DataLimit=10
 HandleLocation=1
 ExpectedError=EOVERFLOW
 Command=GET
-
