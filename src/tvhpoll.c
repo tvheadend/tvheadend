@@ -91,6 +91,8 @@ tvhpoll_create ( size_t n )
 
 void tvhpoll_destroy ( tvhpoll_t *tp )
 {
+  if (tp == NULL)
+    return;
 #if ENABLE_EPOLL || ENABLE_KQUEUE
   free(tp->ev);
   close(tp->fd);

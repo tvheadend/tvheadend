@@ -264,6 +264,8 @@ struct http_client {
   http_client_wcmd_t            *hc_wcmd;
   TAILQ_HEAD(,http_client_wcmd)  hc_wqueue;
 
+  int          hc_verify_peer;  /* SSL - verify peer */
+
   int          hc_cseq;         /* RTSP */
   int          hc_rcseq;        /* RTSP - expected cseq */
   char        *hc_rtsp_session;
@@ -298,6 +300,7 @@ int http_client_send( http_client_t *hc, http_cmd_t cmd,
 int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );
+void http_client_ssl_peer_verify( http_client_t *hc, int verify );
 
 /*
  * RTSP helpers
