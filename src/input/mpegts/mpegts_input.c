@@ -430,16 +430,13 @@ ts_sync_count ( const uint8_t *tsb, int len )
   return i;
 }
 
-static void
-mpegts_input_process
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, const uint8_t *tsb, int len );
-
 void
 mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
     int64_t *pcr, uint16_t *pcr_pid )
 {
   int i, p = 0;
+  mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data + off;
   int     len  = sb->sb_ptr  - off;
 #define MIN_TS_PKT 100
@@ -476,9 +473,9 @@ mpegts_input_recv_packets
 
   /* Pass */
   if (p >= MIN_TS_SYN) {
-#ifdef MPEGTS_EXTRA_THREAD
     size_t sz = sizeof(mpegts_packet_t) + (p * 188);
-    mpegts_packet_t *mp = calloc(1, sz);
+    
+    mp = calloc(1, sz);
     mp->mp_mux  = mmi->mmi_mux;
     mp->mp_len  = p * 188;
     memcpy(mp->mp_data, tsb, mp->mp_len);
@@ -491,9 +488,6 @@ mpegts_input_recv_packets
 
     len -= mp->mp_len;
     off += mp->mp_len;
-#else
-    mpegts_input_process(mi, mmi->mmi_mux, tsb, p * 188);
-#endif
   }
 
   /* Adjust buffer */
@@ -505,10 +499,13 @@ mpegts_input_recv_packets
 
 static void
 mpegts_input_process
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, const uint8_t *tsb, int len )
+  ( mpegts_input_t *mi, mpegts_packet_t *mp )
 {
+  int len = mp->mp_len;
   int i = 0, table_wakeup = 0;
   int table, stream;
+  uint8_t *tsb = mp->mp_data;
+  mpegts_mux_t          *mm  = mp->mp_mux;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
 
@@ -598,7 +595,6 @@ mpegts_input_process
   atomic_add(&mmi->mmi_stats.bps, i);
 }
 
-#ifdef MPEGTS_EXTRA_THREAD
 static void *
 mpegts_input_thread ( void * p )
 {
@@ -619,7 +615,7 @@ mpegts_input_thread ( void * p )
     /* Process */
     pthread_mutex_lock(&mi->mi_output_lock);
     if (mp->mp_mux && mp->mp_mux->mm_active)
-      mpegts_input_process(mi, mp->mp_mux, mp->mp_data, mp->mp_len);
+      mpegts_input_process(mi, mp);
     pthread_mutex_unlock(&mi->mi_output_lock);
 
     /* Cleanup */
@@ -636,7 +632,6 @@ mpegts_input_thread ( void * p )
 
   return NULL;
 }
-#endif
 
 static void
 mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
@@ -801,10 +796,8 @@ mpegts_input_thread_start ( mpegts_input_t *mi )
   
   tvhthread_create(&mi->mi_table_tid, NULL,
                    mpegts_input_table_thread, mi, 0);
-#ifdef MPEGTS_EXTRA_THREAD
   tvhthread_create(&mi->mi_input_tid, NULL,
                    mpegts_input_thread, mi, 0);
-#endif
 }
 
 static void
@@ -813,11 +806,9 @@ mpegts_input_thread_stop ( mpegts_input_t *mi )
   mi->mi_running = 0;
 
   /* Stop input thread */
-#ifdef MPEGTS_EXTRA_THREAD
   pthread_mutex_lock(&mi->mi_input_lock);
   pthread_cond_signal(&mi->mi_input_cond);
   pthread_mutex_unlock(&mi->mi_input_lock);
-#endif
 
   /* Stop table thread */
   pthread_mutex_lock(&mi->mi_output_lock);
