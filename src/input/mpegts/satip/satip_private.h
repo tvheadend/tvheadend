@@ -23,6 +23,7 @@
 #include "input.h"
 #include "htsbuf.h"
 #include "udp.h"
+#include "http.h"
 #include "satip.h"
 
 #define SATIP_BUF_SIZE    (4000*188)
@@ -201,92 +202,14 @@ int satip_satconf_get_position
  * RTSP part
  */
 
-typedef enum {
-  SATIP_RTSP_CMD_NONE,
-  SATIP_RTSP_CMD_OPTIONS,
-  SATIP_RTSP_CMD_SETUP,
-  SATIP_RTSP_CMD_PLAY,
-  SATIP_RTSP_CMD_TEARDOWN,
-  SATIP_RTSP_CMD_DESCRIBE
-} satip_rtsp_cmd_t;
-
-#define SATIP_RTSP_OK         1
-#define SATIP_RTSP_READ_DONE  1
-#define SATIP_RTSP_SEND_DONE  1
-#define SATIP_RTSP_INCOMPLETE 0
-
-typedef struct satip_rtsp_connection {
-  /* decoded answer */
-  int              cseq;
-  int              code;
-  char            *header;
-  char            *data;
-  /* state variables */
-  int              sending;
-  satip_rtsp_cmd_t cmd;
-  int              port;
-  int              client_port;
-  int              timeout;
-  char            *session;
-  uint64_t         stream_id;
-  /* internal data */
-  satip_device_t  *device;
-  int              fd;
-  char             rbuf[4096];
-  size_t           rsize;
-  size_t           hsize;        /* header size */
-  size_t           csize;        /* contents size (exclude header) */
-  char            *wbuf;
-  size_t           wpos;
-  size_t           wsize;
-  htsbuf_queue_t   wq2;
-  satip_rtsp_cmd_t wq2_cmd;
-  int              wq2_loaded;
-  time_t           ping_time;
-} satip_rtsp_connection_t;
-
-satip_rtsp_connection_t *
-satip_rtsp_connection( satip_device_t *sd );
-
-void
-satip_rtsp_connection_close( satip_rtsp_connection_t *conn );
-
 int
-satip_rtsp_send_partial( satip_rtsp_connection_t *conn );
-
-int 
-satip_rtsp_send( satip_rtsp_connection_t *conn, htsbuf_queue_t *q,
-                 satip_rtsp_cmd_t cmd );
-
-int
-satip_rtsp_run( satip_rtsp_connection_t *conn );
-
-int
-satip_rtsp_options_decode( satip_rtsp_connection_t *conn );
-
-void
-satip_rtsp_options( satip_rtsp_connection_t *conn );
-
-int
-satip_rtsp_setup_decode( satip_rtsp_connection_t *conn );
-
-int
-satip_rtsp_setup( satip_rtsp_connection_t *conn,
+satip_rtsp_setup( http_client_t *hc,
                   int src, int fe, int udp_port,
-                  const dvb_mux_conf_t *dmc,
-                  int connection_close );
+                  const dvb_mux_conf_t *dmc );
 
 int
-satip_rtsp_play( satip_rtsp_connection_t *sd, const char *pids,
-                 const char *addpids, const char *delpids );
-
-int
-satip_rtsp_teardown( satip_rtsp_connection_t *conn );
-
-int
-satip_rtsp_describe_decode( satip_rtsp_connection_t *conn );
-
-int
-satip_rtsp_describe( satip_rtsp_connection_t *conn );
+satip_rtsp_play( http_client_t *hc, const char *pids,
+                 const char *addpids, const char *delpids,
+                 int max_pids_len );
 
 #endif /* __TVH_SATIP_PRIVATE_H__ */

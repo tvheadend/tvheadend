@@ -581,7 +581,8 @@ http_client_finish( http_client_t *hc )
       return http_client_flush(hc, res);
   }
   hc->hc_hsize = hc->hc_csize = 0;
-  if (hc->hc_handle_location &&
+  if (hc->hc_version != RTSP_VERSION_1_0 &&
+      hc->hc_handle_location &&
       (hc->hc_code == HTTP_STATUS_MOVED ||
        hc->hc_code == HTTP_STATUS_FOUND ||
        hc->hc_code == HTTP_STATUS_SEE_OTHER ||
@@ -927,7 +928,12 @@ header:
     goto next_header;
   }
   hc->hc_rpos = 0;
-  hc->hc_in_data = 1;
+  if (hc->hc_version == RTSP_VERSION_1_0 && !hc->hc_csize) {
+    hc->hc_csize = -1;
+    hc->hc_in_data = 0;
+  } else {
+    hc->hc_in_data = 1;
+  }
   res = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len);
   if (res < 0)
     return http_client_flush(hc, res);
@@ -1168,6 +1174,7 @@ http_client_connect
   hc             = calloc(1, sizeof(http_client_t));
   hc->hc_aux     = aux;
   hc->hc_io_size = 1024;
+  hc->hc_rtsp_stream_id = -1;
 
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
@@ -1216,6 +1223,7 @@ http_client_close ( http_client_t *hc )
   while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
+  rtsp_clear_session(hc);
   free(hc->hc_location);
   free(hc->hc_rbuf);
   free(hc->hc_data);

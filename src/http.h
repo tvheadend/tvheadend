@@ -84,7 +84,8 @@ typedef enum http_state {
   HTTP_CON_SENT,
   HTTP_CON_RECEIVING,
   HTTP_CON_DONE,
-  HTTP_CON_IDLE
+  HTTP_CON_IDLE,
+  HTTP_CON_OK
 } http_state_t;
 
 typedef enum http_cmd {
@@ -265,6 +266,13 @@ struct http_client {
 
   int          hc_cseq;         /* RTSP */
   int          hc_rcseq;        /* RTSP - expected cseq */
+  char        *hc_rtsp_session;
+  char        *hc_rtp_dest;
+  int          hc_rtp_port;
+  int          hc_rtpc_port;
+  int          hc_rtp_multicast:1;
+  long         hc_rtsp_stream_id;
+  int          hc_rtp_timeout;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
@@ -284,15 +292,45 @@ http_client_connect ( void *aux, http_ver_t ver,
 void http_client_register ( http_client_t *hc );
 void http_client_close ( http_client_t *hc );
 
-int
-http_client_send( http_client_t *hc, http_cmd_t cmd,
-                  const char *path, const char *query,
-                  http_arg_list_t *header, void *body, size_t body_size );
-int
-http_client_simple( http_client_t *hc, const url_t *url);
-int
-http_client_clear_state( http_client_t *hc );
-int
-http_client_run( http_client_t *hc );
+int http_client_send( http_client_t *hc, http_cmd_t cmd,
+                      const char *path, const char *query,
+                      http_arg_list_t *header, void *body, size_t body_size );
+int http_client_simple( http_client_t *hc, const url_t *url);
+int http_client_clear_state( http_client_t *hc );
+int http_client_run( http_client_t *hc );
+
+/*
+ * RTSP helpers
+ */
+
+int rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr );
+                      
+void rtsp_clear_session( http_client_t *hc );
+
+int rtsp_options_decode( http_client_t *hc );
+static inline int rtsp_options( http_client_t *hc ) {
+  return rtsp_send(hc, RTSP_CMD_OPTIONS, NULL, NULL, NULL);
+}
+
+int rtsp_setup_decode( http_client_t *hc, int satip );
+int rtsp_setup( http_client_t *hc, const char *path, const char *query,
+                const char *multicast_addr, int rtp_port, int rtpc_port );
+
+static inline int
+rtsp_play( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_PLAY, path, query, NULL);
+}
+
+static inline int
+rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_TEARDOWN, path, query, NULL);
+}
+
+int rtsp_describe_decode( http_client_t *hc );
+static inline int
+rtsp_describe( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_DESCRIBE, path, query, NULL);
+}
 
 #endif /* HTTP_H_ */

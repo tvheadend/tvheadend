@@ -28,291 +28,6 @@
 /*
  *
  */
-satip_rtsp_connection_t *
-satip_rtsp_connection( satip_device_t *sd )
-{
-  satip_rtsp_connection_t *conn;
-  char errbuf[256];
-
-  conn = calloc(1, sizeof(satip_rtsp_connection_t));
-  htsbuf_queue_init(&conn->wq2, 0);
-  conn->port = 554;
-  conn->timeout = 60;
-  conn->fd = tcp_connect(sd->sd_info.addr, conn->port,
-                         errbuf, sizeof(errbuf), 2);
-  if (conn->fd < 0) {
-    tvhlog(LOG_ERR, "satip", "RTSP - unable to connect - %s", errbuf);
-    free(conn);
-    return NULL;
-  }
-  conn->device = sd;
-  conn->ping_time = dispatch_clock;
-  return conn;
-}
-
-void
-satip_rtsp_connection_close( satip_rtsp_connection_t *conn )
-{
-  
-  htsbuf_queue_flush(&conn->wq2);
-  free(conn->session);
-  free(conn->header);
-  free(conn->data);
-  free(conn->wbuf);
-  if (conn->fd > 0)
-    close(conn->fd);
-  free(conn);
-}
-
-int
-satip_rtsp_send_partial( satip_rtsp_connection_t *conn )
-{
-  ssize_t r;
-
-  conn->sending = 1;
-  while (1) {
-    r = send(conn->fd, conn->wbuf + conn->wpos, conn->wsize - conn->wpos, MSG_DONTWAIT);
-    if (r < 0) {
-      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
-          errno == EINPROGRESS)
-        return SATIP_RTSP_INCOMPLETE;
-      return -errno;
-    }
-    conn->wpos += r;
-    if (conn->wpos >= conn->wsize) {
-      conn->sending = 0;
-      return SATIP_RTSP_SEND_DONE;
-    }
-    break;
-  }
-  return SATIP_RTSP_INCOMPLETE;
-}
-
-int
-satip_rtsp_send( satip_rtsp_connection_t *conn, htsbuf_queue_t *q,
-                 satip_rtsp_cmd_t cmd )
-{
-  conn->ping_time = dispatch_clock;
-  conn->cmd = cmd;
-  free(conn->wbuf);
-  htsbuf_qprintf(q, "CSeq: %i\r\n\r\n", ++conn->cseq);
-  conn->wbuf    = htsbuf_to_string(q);
-  conn->wsize   = strlen(conn->wbuf);
-  conn->wpos    = 0;
-#if ENABLE_TRACE
-  tvhtrace("satip", "%s - sending RTSP cmd", conn->device->sd_info.addr);
-  tvhlog_hexdump("satip", conn->wbuf, conn->wsize);
-#endif
-  return satip_rtsp_send_partial(conn);
-}
-
-static int
-satip_rtsp_send2( satip_rtsp_connection_t *conn, htsbuf_queue_t *q,
-                  satip_rtsp_cmd_t cmd )
-{
-  conn->wq2_loaded = 1;
-  conn->wq2_cmd = cmd;
-  htsbuf_appendq(&conn->wq2, q);
-  return SATIP_RTSP_SEND_DONE;
-}
-
-static char *
-satip_rtsp_hstrip(char *h)
-{
-  while (*h && *h <= ' ')
-    h++;
-  return h;
-}
-
-int
-satip_rtsp_run( satip_rtsp_connection_t *conn )
-{
-  char buf[1024], *saveptr, *argv[3], *d, *p, *p1;
-  htsbuf_queue_t header;
-  int cseq_seen;
-  ssize_t r;
-  size_t len;
-
-  if (conn->sending) {
-    r = satip_rtsp_send_partial(conn);
-    if (r < 0 || r == SATIP_RTSP_INCOMPLETE)
-      return r;
-  }
-  r = recv(conn->fd, buf, sizeof(buf), MSG_DONTWAIT);
-  if (r == 0)
-    return -ESTRPIPE;
-  if (r < 0) {
-    if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
-      return SATIP_RTSP_INCOMPLETE;
-    return -errno;
-  }
-#if ENABLE_TRACE
-  if (r > 0) {
-    tvhtrace("satip", "%s - received RTSP answer", conn->device->sd_info.addr);
-    tvhlog_hexdump("satip", buf, r);
-  }
-#endif
-  if (r + conn->rsize >= sizeof(conn->rbuf))
-    return -EINVAL;
-  memcpy(conn->rbuf + conn->rsize, buf, r);
-  conn->rsize += r;
-  conn->rbuf[conn->rsize] = '\0';
-  if (!conn->csize && conn->rsize > 3 &&
-      (d = strstr(conn->rbuf, "\r\n\r\n")) != NULL) {
-    conn->hsize = d - conn->rbuf + 4;
-    *d = '\0';
-    htsbuf_queue_init(&header, 0);
-    p = strtok_r(conn->rbuf, "\r\n", &saveptr);
-    if (p == NULL)
-      goto fail;
-    tvhtrace("satip", "%s - RTSP answer '%s'", conn->device->sd_info.addr, p);
-    if (http_tokenize(p, argv, 3, -1) != 3)
-      goto fail;
-    if (strcmp(argv[0], "RTSP/1.0"))
-      goto fail;
-    if ((conn->code = atoi(argv[1])) <= 0)
-      goto fail;
-    cseq_seen = 0;
-    while ((p = strtok_r(NULL, "\r\n", &saveptr)) != NULL) {
-      if (strncasecmp(p, "CSeq:", 5) == 0) {
-        p1 = satip_rtsp_hstrip(p + 5);
-        if (p1)
-          cseq_seen = conn->cseq == atoi(p1);
-      } else if (strncasecmp(p, "Content-Length:", 15) == 0) {
-        conn->csize = atoll(p + 15);
-      } else {
-        htsbuf_append(&header, p, strlen(p));
-        htsbuf_append(&header, "\n", 1);
-      }
-    }
-    if (!cseq_seen)
-      goto fail;
-    free(conn->header);
-    conn->header = htsbuf_to_string(&header);
-    htsbuf_queue_flush(&header);
-    free(conn->data);
-    conn->data   = NULL;
-    if (!conn->csize)
-      goto processed;
-    if (conn->rsize > conn->hsize)
-      goto data;
-  } else if (conn->hsize + conn->csize >= conn->rsize) {
-data:
-    conn->data = malloc(conn->csize + 1);
-    memcpy(conn->data, conn->rbuf + conn->hsize, conn->csize);
-    conn->data[conn->csize] = '\0';
-processed:
-    len = conn->hsize + conn->csize;
-    memcpy(conn->rbuf, conn->rbuf + len, conn->rsize - len);
-    conn->rsize -= len;
-#if ENABLE_TRACE
-    tvhtrace("satip", "%s - received RTSP header", conn->device->sd_info.addr);
-    tvhlog_hexdump("satip", conn->header, strlen(conn->header));
-    if (conn->csize) {
-      tvhtrace("satip", "%s - received RTSP data", conn->device->sd_info.addr);
-      tvhlog_hexdump("satip", conn->data, conn->csize);
-    }
-#endif
-    conn->hsize = conn->csize = 0;
-    /* second write */
-    if (conn->wq2_loaded && conn->code == 200 && !conn->rsize) {
-      r =  satip_rtsp_send(conn, &conn->wq2, conn->wq2_cmd);
-      htsbuf_queue_flush(&conn->wq2);
-      conn->wq2_loaded = 0;
-      return r;
-    }
-    return SATIP_RTSP_READ_DONE;
-fail:
-    htsbuf_queue_flush(&header);
-    conn->rsize = 0;
-    return -EINVAL;
-  }
-  return SATIP_RTSP_INCOMPLETE;
-}
-
-/*
- *
- */
-
-int
-satip_rtsp_options_decode( satip_rtsp_connection_t *conn )
-{
-  char *argv[32], *s, *saveptr;
-  int i, n, what = 0;
-
-  s = strtok_r(conn->header, "\n", &saveptr);
-  while (s) {
-    n = http_tokenize(s, argv, 32, ',');
-    if (strcasecmp(argv[0], "Public:") == 0)
-      for (i = 1; i < n; i++) {
-        if (strcmp(argv[i], "DESCRIBE") == 0)
-          what |= 1;
-        else if (strcmp(argv[i], "SETUP") == 0)
-          what |= 2;
-        else if (strcmp(argv[i], "PLAY") == 0)
-          what |= 4;
-        else if (strcmp(argv[i], "TEARDOWN") == 0)
-          what |= 8;
-      }
-    s = strtok_r(NULL, "\n", &saveptr);
-  }
-  return (conn->code != 200 && what != 0x0f) ? -EIO : SATIP_RTSP_OK;
-}
-
-void
-satip_rtsp_options( satip_rtsp_connection_t *conn )
-{
-  htsbuf_queue_t q;
-  htsbuf_queue_init(&q, 0);
-  htsbuf_qprintf(&q,
-           "OPTIONS rtsp://%s/ RTSP/1.0\r\n",
-            conn->device->sd_info.addr);
-  satip_rtsp_send(conn, &q, SATIP_RTSP_CMD_OPTIONS);
-  htsbuf_queue_flush(&q);
-}
-
-int
-satip_rtsp_setup_decode( satip_rtsp_connection_t *conn )
-{
-  char *argv[32], *s, *saveptr;
-  int i, n;
-
-  if (conn->code != 200)
-    return -EIO;
-  conn->client_port = 0;
-  s = strtok_r(conn->header, "\n", &saveptr);
-  while (s) {
-    n = http_tokenize(s, argv, 32, ';');
-    if (strcasecmp(argv[0], "Session:") == 0) {
-      conn->session = strdup(argv[1]);
-      for (i = 2; i < n; i++) {
-        if (strncasecmp(argv[i], "timeout=", 8) == 0) {
-          conn->timeout = atoi(argv[i] + 8);
-          if (conn->timeout <= 20 || conn->timeout > 3600)
-            return -EIO;
-        }
-      }
-    } else if (strcasecmp(argv[0], "com.ses.streamID:") == 0) {
-      conn->stream_id = atoll(argv[1]);
-      /* zero is valid stream id per specification */
-      if (argv[1][0] == '0' && argv[1][0] == '\0')
-        conn->stream_id = 0;
-      else if (conn->stream_id <= 0)
-        return -EIO;
-    } else if (strcasecmp(argv[0], "Transport:") == 0) {
-      if (strcasecmp(argv[1], "RTP/AVP"))
-        return -EIO;
-      if (strcasecmp(argv[2], "unicast"))
-        return -EIO;
-      for (i = 2; i < n; i++) {
-        if (strncmp(argv[i], "client_port=", 12) == 0)
-          conn->client_port = atoi(argv[i] + 12);
-      }
-    }
-    s = strtok_r(NULL, "\n", &saveptr);
-  }
-  return SATIP_RTSP_OK;
-}
 
 typedef struct tvh2satip {
   int         t; ///< TVH internal value
@@ -354,9 +69,8 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 }
 
 int
-satip_rtsp_setup( satip_rtsp_connection_t *conn, int src, int fe,
-                  int udp_port, const dvb_mux_conf_t *dmc,
-                  int connection_close )
+satip_rtsp_setup( http_client_t *hc, int src, int fe,
+                  int udp_port, const dvb_mux_conf_t *dmc )
 {
   static tvh2satip_t msys[] = {
     { .t = DVB_SYS_DVBT,                      "dvbt"  },
@@ -432,10 +146,9 @@ satip_rtsp_setup( satip_rtsp_connection_t *conn, int src, int fe,
   };
 
   char buf[512];
-  htsbuf_queue_t q;
-  int r;
+  char *stream = NULL;
+  char _stream[32];
 
-  htsbuf_queue_init(&q, 0);
   if (src > 0)
     sprintf(buf, "src=%i&", src);
   else
@@ -469,27 +182,15 @@ satip_rtsp_setup( satip_rtsp_connection_t *conn, int src, int fe,
       ADD(u.dmc_fe_ofdm.guard_interval, gi, "18");
   }
   tvhtrace("satip", "setup params - %s", buf);
-  if (conn->stream_id > 0)
-    htsbuf_qprintf(&q, "SETUP rtsp://%s/stream=%li?",
-                   conn->device->sd_info.addr, conn->stream_id);
-  else
-    htsbuf_qprintf(&q, "SETUP rtsp://%s/?", conn->device->sd_info.addr);
-  htsbuf_qprintf(&q,
-      "%s RTSP/1.0\r\nTransport: RTP/AVP;unicast;client_port=%i-%i\r\n",
-      buf, udp_port, udp_port+1);
-  if (conn->session)
-    htsbuf_qprintf(&q, "Session: %s\r\n", conn->session);
-  if (connection_close)
-    htsbuf_qprintf(&q, "Connection: close\r\n");
-  r = satip_rtsp_send(conn, &q, SATIP_RTSP_CMD_SETUP);
-  htsbuf_queue_flush(&q);
-  return r;
+  if (hc->hc_rtsp_stream_id >= 0)
+    snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
+             hc->hc_rtsp_stream_id);
+  return rtsp_setup(hc, stream, buf, NULL, udp_port, udp_port + 1);
 }
 
 static const char *
-satip_rtsp_pids_strip( satip_rtsp_connection_t *conn, const char *s )
+satip_rtsp_pids_strip( const char *s, int maxlen )
 {
-  int maxlen = conn->device->sd_pids_len;
   char *ptr;
 
   if (s == NULL)
@@ -508,15 +209,19 @@ satip_rtsp_pids_strip( satip_rtsp_connection_t *conn, const char *s )
 }
 
 int
-satip_rtsp_play( satip_rtsp_connection_t *conn, const char *pids,
-                 const char *addpids, const char *delpids )
+satip_rtsp_play( http_client_t *hc, const char *pids,
+                 const char *addpids, const char *delpids,
+                 int max_pids_len )
 {
   htsbuf_queue_t q;
+  char *stream = NULL;
+  char _stream[32];
+  char *query;
   int r, split = 0;
 
-  pids    = satip_rtsp_pids_strip(conn, pids);
-  addpids = satip_rtsp_pids_strip(conn, addpids);
-  delpids = satip_rtsp_pids_strip(conn, delpids);
+  pids    = satip_rtsp_pids_strip(pids   , max_pids_len);
+  addpids = satip_rtsp_pids_strip(addpids, max_pids_len);
+  delpids = satip_rtsp_pids_strip(delpids, max_pids_len);
 
   if (pids == NULL && addpids == NULL && delpids == NULL)
     return -EINVAL;
@@ -524,8 +229,6 @@ satip_rtsp_play( satip_rtsp_connection_t *conn, const char *pids,
   //printf("pids = '%s' addpids = '%s' delpids = '%s'\n", pids, addpids, delpids);
 
   htsbuf_queue_init(&q, 0);
-  htsbuf_qprintf(&q, "PLAY rtsp://%s/stream=%li?",
-                 conn->device->sd_info.addr, conn->stream_id);
   /* pids setup and add/del requests cannot be mixed per specification */
   if (pids) {
     htsbuf_qprintf(&q, "pids=%s", pids);
@@ -535,7 +238,7 @@ satip_rtsp_play( satip_rtsp_connection_t *conn, const char *pids,
     if (addpids) {
       if (delpids) {
         /* try to maintain the maximum request size - simple split */
-        if (strlen(addpids) + strlen(delpids) <= conn->device->sd_pids_len)
+        if (strlen(addpids) + strlen(delpids) <= max_pids_len)
           split = 1;
         else
           htsbuf_append(&q, "&", 1);
@@ -544,55 +247,11 @@ satip_rtsp_play( satip_rtsp_connection_t *conn, const char *pids,
         htsbuf_qprintf(&q, "addpids=%s", addpids);
     }
   }
-  htsbuf_qprintf(&q, " RTSP/1.0\r\nSession: %s\r\n", conn->session);
-  r = satip_rtsp_send(conn, &q, SATIP_RTSP_CMD_PLAY);
-  htsbuf_queue_flush(&q);
-  if (r < 0 || !split)
-    return r;
-
-  htsbuf_queue_init(&q, 0);
-  htsbuf_qprintf(&q, "PLAY rtsp://%s/stream=%li?",
-                 conn->device->sd_info.addr, conn->stream_id);
-  htsbuf_qprintf(&q, "addpids=%s", addpids);
-  htsbuf_qprintf(&q, " RTSP/1.0\r\nSession: %s\r\n", conn->session);
-  r = satip_rtsp_send2(conn, &q, SATIP_RTSP_CMD_PLAY);
-  htsbuf_queue_flush(&q);
-  return r;
-}
-
-int
-satip_rtsp_teardown( satip_rtsp_connection_t *conn )
-{
-  int r;
-  htsbuf_queue_t q;
-  htsbuf_queue_init(&q, 0);
-  htsbuf_qprintf(&q,
-           "TEARDOWN rtsp://%s/stream=%li RTSP/1.0\r\nSession: %s\r\n",
-            conn->device->sd_info.addr, conn->stream_id, conn->session);
-  r = satip_rtsp_send(conn, &q, SATIP_RTSP_CMD_TEARDOWN);
-  htsbuf_queue_flush(&q);
-  return r;
-}
-
-int
-satip_rtsp_describe_decode( satip_rtsp_connection_t *conn )
-{
-  printf("describe: %i\n", conn->code);
-  printf("header:\n%s\n",  conn->header);
-  printf("data:\n%s\n",    conn->data);
-  return SATIP_RTSP_SEND_DONE;
-}
-
-int
-satip_rtsp_describe( satip_rtsp_connection_t *conn )
-{
-  int r;
-
-  htsbuf_queue_t q;
-  htsbuf_queue_init(&q, 0);
-  htsbuf_qprintf(&q,
-           "DESCRIBE rtsp://%s/ RTSP/1.0\r\n", conn->device->sd_info.addr);
-  r = satip_rtsp_send(conn, &q, SATIP_RTSP_CMD_DESCRIBE);
-  htsbuf_queue_flush(&q);
+  if (hc->hc_rtsp_stream_id >= 0)
+    snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
+             hc->hc_rtsp_stream_id);
+  query = htsbuf_to_string(&q);
+  r = rtsp_play(hc, stream, query);
+  free(query);
   return r;
 }
