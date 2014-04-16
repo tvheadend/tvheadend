@@ -92,6 +92,39 @@ satip_frontend_class_save ( idnode_t *in )
   satip_device_save(la);
 }
 
+static int
+satip_frontend_set_new_type
+  ( satip_frontend_t *lfe, const char *type )
+{
+  free(lfe->sf_type_override);
+  lfe->sf_type_override = strdup(type);
+  satip_device_destroy_later(lfe->sf_device, 100);
+  return 1;
+}
+
+static int
+satip_frontend_class_override_set( void *obj, const void * p )
+{
+  satip_frontend_t *lfe = obj;
+  const char *s = p;
+
+  if (lfe->sf_type_override == NULL) {
+    if (strlen(p) > 0)
+      return satip_frontend_set_new_type(lfe, s);
+  } else if (strcmp(lfe->sf_type_override, s))
+    return satip_frontend_set_new_type(lfe, s);
+  return 0;
+}
+
+static htsmsg_t *
+satip_frontend_class_override_enum( void * p )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "DVB-T");
+  htsmsg_add_str(m, NULL, "DVB-C");
+  return m;
+}
+
 const idclass_t satip_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
@@ -128,6 +161,14 @@ const idclass_t satip_frontend_dvbt_class =
   .ic_class      = "satip_frontend_dvbt",
   .ic_caption    = "SAT>IP DVB-T Frontend",
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "fe_override",
+      .name     = "Network Type",
+      .set      = satip_frontend_class_override_set,
+      .list     = satip_frontend_class_override_enum,
+      .off      = offsetof(satip_frontend_t, sf_type_override),
+    },
     {}
   }
 };
@@ -189,6 +230,14 @@ const idclass_t satip_frontend_dvbc_class =
   .ic_class      = "satip_frontend_dvbc",
   .ic_caption    = "SAT>IP DVB-C Frontend",
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "fe_override",
+      .name     = "Network Type",
+      .set      = satip_frontend_class_override_set,
+      .list     = satip_frontend_class_override_enum,
+      .off      = offsetof(satip_frontend_t, sf_type_override),
+    },
     {}
   }
 };
@@ -1087,10 +1136,23 @@ satip_frontend_create
   ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int t2, int num )
 {
   const idclass_t *idc;
-  const char *uuid = NULL;
+  const char *uuid = NULL, *override = NULL;
   char id[12], lname[256];
   satip_frontend_t *lfe;
+  int i;
 
+  /* Override type */
+  snprintf(id, sizeof(id), "override #%d", num);
+  if (conf && type != DVB_TYPE_S) {
+    override = htsmsg_get_str(conf, id);
+    if (override) {
+      i = dvb_str2type(override);
+      if ((i == DVB_TYPE_T || i == DVB_TYPE_C || DVB_TYPE_S) && i != type)
+        type = i;
+      else
+        override = NULL;
+    }
+  }
   /* Internal config ID */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), num);
   if (conf)
@@ -1114,9 +1176,11 @@ satip_frontend_create
   //       correct "fe_type" we cannot set the network (which is done
   //       in mpegts_input_create()). So we must set early.
   lfe = calloc(1, sizeof(satip_frontend_t));
+  lfe->sf_device   = sd;
   lfe->sf_number   = num;
   lfe->sf_type     = type;
   lfe->sf_type_t2  = t2;
+  lfe->sf_type_override = override ? strdup(override) : NULL;
   TAILQ_INIT(&lfe->sf_satconf);
   pthread_mutex_init(&lfe->sf_dvr_lock, NULL);
   lfe = (satip_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
@@ -1132,9 +1196,13 @@ satip_frontend_create
   lfe->mi_get_grace    = satip_frontend_get_grace;
 
   /* Default name */
-  if (!lfe->mi_name) {
-    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner %s #%i",
-             dvb_type2str(type), sd->sd_info.addr, num);
+  if (!lfe->mi_name ||
+      (strncmp(lfe->mi_name, "SAT>IP ", 7) == 0 &&
+       strstr(lfe->mi_name, " Tuner ") &&
+       strstr(lfe->mi_name, " #"))) {
+    snprintf(lname, sizeof(lname), "SAT>IP %s Tuner #%i (%s)",
+             dvb_type2str(type), num, sd->sd_info.addr);
+    free(lfe->mi_name);
     lfe->mi_name = strdup(lname);
   }
 
@@ -1169,10 +1237,15 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
   satip_satconf_save(lfe, m);
   if (lfe->ti_id.in_class == &satip_frontend_dvbs_class)
     htsmsg_delete_field(m, "networks");
+  htsmsg_delete_field(m, "fe_override");
 
   /* Add to list */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(lfe->sf_type), lfe->sf_number);
   htsmsg_add_msg(fe, id, m);
+  if (lfe->sf_type_override) {
+    snprintf(id, sizeof(id), "override #%d", lfe->sf_number);
+    htsmsg_add_str(fe, id, lfe->sf_type_override);
+  }
 }
 
 void
@@ -1193,6 +1266,8 @@ satip_frontend_delete ( satip_frontend_t *lfe )
 
   /* Delete satconf */
   satip_satconf_destroy(lfe);
+
+  free(lfe->sf_type_override);
 
   /* Finish */
   mpegts_input_delete((mpegts_input_t*)lfe, 0);
