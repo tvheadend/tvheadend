@@ -77,6 +77,9 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     { .t = DVB_SYS_DVBT2,                     "dvbt2" },
     { .t = DVB_SYS_DVBS,                      "dvbs"  },
     { .t = DVB_SYS_DVBS2,                     "dvbs2" },
+    { .t = DVB_SYS_DVBC_ANNEX_A,              "dvbc"  },
+    { .t = DVB_SYS_DVBC_ANNEX_B,              "dvbc"  },
+    { .t = DVB_SYS_DVBC_ANNEX_C,              "dvbc"  },
     { .t = TABLE_EOD }
   };
   static tvh2satip_t pol[] = {
@@ -157,7 +160,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq);
   if (dmc->dmc_fe_delsys == DVB_SYS_DVBS ||
       dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
-    satip_rtsp_add_val("sr",   buf, dmc->u.dmc_fe_qpsk.symbol_rate);
+    satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qpsk.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbs");
     ADD(dmc_fe_modulation,          mtype, "qpsk");
     ADD(u.dmc_fe_qpsk.polarisation, pol,   "h"   );
@@ -165,6 +168,14 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     ADD(dmc_fe_rolloff,             ro,    "0.35");
     if (dmc->dmc_fe_pilot != DVB_PILOT_AUTO)
       ADD(dmc_fe_pilot,             plts,  "auto");
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
+             dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
+             dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_C) {
+    satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qam.symbol_rate);
+    ADD(dmc_fe_delsys,              msys,  "dvbc");
+    ADD(dmc_fe_modulation,          mtype, "64qam");
+    /* missing plp */
+    ADD(u.dmc_fe_qpsk.fec_inner,    fec,   "auto");
   } else {
     if (dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_AUTO &&
         dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_NONE)

@@ -162,6 +162,16 @@ const idclass_t satip_frontend_dvbs_class =
   }
 };
 
+const idclass_t satip_frontend_dvbc_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_dvbc",
+  .ic_caption    = "SAT>IP DVB-C Frontend",
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
@@ -419,6 +429,8 @@ satip_frontend_network_list ( mpegts_input_t *mi )
     idc = &dvb_network_dvbt_class;
   else if (lfe->sf_type == DVB_TYPE_S)
     idc = &dvb_network_dvbs_class;
+  else if (lfe->sf_type == DVB_TYPE_C)
+    idc = &dvb_network_dvbc_class;
   else
     return NULL;
 
@@ -1071,6 +1083,8 @@ satip_frontend_create
     idc = &satip_frontend_dvbs_class;
   else if (type == DVB_TYPE_T)
     idc = &satip_frontend_dvbt_class;
+  else if (type == DVB_TYPE_C)
+    idc = &satip_frontend_dvbc_class;
   else {
     tvherror("satip", "unknown FE type %d", type);
     return NULL;
