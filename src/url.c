@@ -91,6 +91,7 @@ urlparse ( const char *str, url_t *url )
   if (x.first) {\
     size_t len = x.afterLast - x.first;\
     strncpy(y, x.first, len);\
+    y[len] = '\0';\
   } else {\
     y[0] = '\0';\
   }
@@ -107,7 +108,10 @@ urlparse ( const char *str, url_t *url )
   path       = uri.pathHead;
   while (path) {
     uri_copy_static(buf, path->text);
-    url->path = realloc(url->path, strlen(url->path) + strlen(buf) + 2);
+    if (url->path)
+      url->path = realloc(url->path, strlen(url->path) + strlen(buf) + 2);
+    else
+      url->path = calloc(1, strlen(buf) + 2);
     strcat(url->path, "/");
     strcat(url->path, buf);
     path = path->next;
@@ -115,10 +119,12 @@ urlparse ( const char *str, url_t *url )
   // TODO: query/fragment
 
   /* Split user/pass */
-  s = strstr(url->user, ":");
-  if (s) {
-    strcpy(url->pass, s+1);
-    *s = 0;
+  if (url->user) {
+    s = strstr(url->user, ":");
+    if (s) {
+      strcpy(url->pass, s+1);
+      *s = 0;
+    }
   }
 
   /* Cleanup */
