@@ -905,8 +905,13 @@ header:
     return http_client_flush(hc, -EINVAL);
   if ((ver = http_str2ver(argv[0])) < 0)
     return http_client_flush(hc, -EINVAL);
-  if (ver != hc->hc_version)
-    return http_client_flush(hc, -EINVAL);
+  if (ver != hc->hc_version) {
+    /* 1.1 -> 1.0 transition allowed */
+    if (hc->hc_version == HTTP_VERSION_1_1 && ver == HTTP_VERSION_1_0)
+      hc->hc_version = ver;
+    else
+      return http_client_flush(hc, -EINVAL);
+  }
   if ((hc->hc_code = atoi(argv[1])) < 200)
     return http_client_flush(hc, -EINVAL);
   while ((p = strtok_r(NULL, "\r\n", &saveptr)) != NULL) {
