@@ -340,6 +340,9 @@ satip_device_create( satip_device_info_t *info )
     } else if (strncmp(argv[i], "DVBT-", 5) == 0) {
       type = DVB_TYPE_T;
       m = atoi(argv[i] + 5);
+    } else if (strncmp(argv[i], "DVBC-", 5) == 0) {
+      type = DVB_TYPE_C;
+      m = atoi(argv[i] + 5);
     }
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]", sd->sd_info.addr, argv[i]);
@@ -510,6 +513,11 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     tvhlog(LOG_ERR, "satip", "Cannot get %s: %s", d->location, strerror(errn));
     return;
   }
+
+#if ENABLE_TRACE
+  tvhtrace("satip", "received XML description from %s", hc->hc_host);
+  tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
+#endif
 
   s = hc->hc_data + hc->hc_data_size - 1;
   while (s != hc->hc_data && *s != '/')
