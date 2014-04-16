@@ -176,6 +176,10 @@ tvheadend.status_streams = function() {
 			name : 'snr'
 		}, {
 			name : 'bps'
+		}, {
+			name : 'cc'
+		}, {
+			name : 'te'
 		},
 		],
 		url : 'api/status/inputs',
@@ -195,6 +199,8 @@ tvheadend.status_streams = function() {
         r.data.unc     = m.unc;
         r.data.snr     = m.snr;
         r.data.bps     = m.bps;
+        r.data.cc      = m.cc;
+        r.data.te      = m.te;
 
         tvheadend.streamStatusStore.afterEdit(r);
         tvheadend.streamStatusStore.fireEvent('updated',
@@ -238,18 +244,26 @@ tvheadend.status_streams = function() {
 		header : "Weight",
 		dataIndex : 'weight'
         },{
-		width : 100,
+		width : 50,
 		header : "Bandwidth (kb/s)",
 		dataIndex : 'bps',
 		renderer: renderBw
         },{
 		width : 50,
-		header : "Bit error rate",
+		header : "BER",
 		dataIndex : 'ber'
         },{
 		width : 50,
-		header : "Uncorrected bit error rate",
+		header : "Uncorrected BER",
 		dataIndex : 'unc'
+        },{
+		width : 50,
+		header : "Transport Error",
+		dataIndex : 'te'
+        },{
+		width : 50,
+		header : "Continuity Error",
+		dataIndex : 'cc'
         },{
 		width : 50,
 		header : "SNR",
