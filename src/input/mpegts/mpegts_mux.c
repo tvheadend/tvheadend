@@ -919,6 +919,7 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
       mp = mpegts_pid_skel;
       SKEL_USED(mpegts_pid_skel);
       mp->mp_fd = -1;
+      mp->mp_cc = -1;
     }
   }
   if (mp) {

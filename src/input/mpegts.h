@@ -120,6 +120,7 @@ typedef struct mpegts_pid
 {
   int                      mp_pid;
   int                      mp_fd;   // linuxdvb demux fd
+  int8_t                   mp_cc;
   RB_HEAD(,mpegts_pid_sub) mp_subs; // subscribers to pid
   RB_ENTRY(mpegts_pid)     mp_link;
 } mpegts_pid_t;

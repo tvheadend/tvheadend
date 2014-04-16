@@ -44,6 +44,8 @@ struct tvh_input_stream_stats
   int unc;    ///< Uncorrectable errors
   int snr;    ///< Signal 2 Noise (dB)
   int bps;    ///< Bandwidth (bps)
+  int cc;     ///< Continuity errors
+  int te;     ///< Transport errors
 };
 
 struct tvh_input_stream {

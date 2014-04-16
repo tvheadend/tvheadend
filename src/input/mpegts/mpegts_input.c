@@ -516,12 +516,29 @@ mpegts_input_process
     mpegts_pid_sub_t *mps;
     service_t *s;
     int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
+    int cc  = (tsb[i+3] & 0x0f);
+    int pl  = (tsb[i+3] & 0x10) ? 1 : 0;
+    int te  = (tsb[i+1] & 0x80);
 
     /* Ignore NUL packets */
     if (pid == 0x1FFF) goto done;
 
+    /* Transport error */
+    if (te)
+      ++mmi->mmi_stats.te;
+
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
+
+      /* Low level CC check */
+      if (pl) {
+        if (mp->mp_cc != -1 && mp->mp_cc != cc) {
+          tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, mp->mp_cc);
+          ++mmi->mmi_stats.cc;
+        }
+        mp->mp_cc = (cc + 1) & 0xF;
+      }
+
       // Note: there is a minor danger this caching will get things
       //       wrong for a brief period of time if the registrations on
       //       the PID change

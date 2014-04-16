@@ -84,6 +84,8 @@ tvh_input_stream_create_msg
   htsmsg_add_u32(m, "snr", st->stats.snr);
   htsmsg_add_u32(m, "unc", st->stats.unc);
   htsmsg_add_u32(m, "bps", st->stats.bps);
+  htsmsg_add_u32(m, "te", st->stats.te);
+  htsmsg_add_u32(m, "cc", st->stats.cc);
   return m;
 }
 
