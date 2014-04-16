@@ -118,7 +118,7 @@ thread_wrapper ( void *p )
   signal(SIGTERM, doexit);
 
   /* Run */
-  tvhdebug("thread", "created thread %ld [%s / %p(%p)]",
+  tvhtrace("thread", "created thread %ld [%s / %p(%p)]",
            (long)pthread_self(), ts->name, ts->run, ts->arg);
   void *r = ts->run(ts->arg);
   free(ts);
