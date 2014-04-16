@@ -55,7 +55,7 @@ udp_resolve( udp_connection_t *uc, int receiver )
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
   
-  x = getaddrinfo(uc->host ? uc->host : "*", port_buf, &hints, &res);
+  x = getaddrinfo(uc->host, port_buf, &hints, &res);
   if (x < 0) {
     tvhlog(LOG_ERR, uc->subsystem, "getaddrinfo: %s: %s",
            uc->host != NULL ? uc->host : "*",
