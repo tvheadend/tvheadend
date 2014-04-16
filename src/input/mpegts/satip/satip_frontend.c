@@ -26,6 +26,8 @@
 #include "http.h"
 #include "satip_private.h"
 
+#define PKTS 64
+
 #ifndef CONFIG_RECVMMSG
 
 #ifdef __linux__
@@ -42,11 +44,30 @@ struct mmsghdr {
 int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
              unsigned int flags, struct timespec *timeout);
 
+#ifdef __NR_recvmmsg
+
 int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
              unsigned int flags, struct timespec *timeout)
 {
   return syscall(__NR_recvmmsg, sockfd, msgvec, vlen, flags, timeout);
 }
+
+#else
+
+#undef PKTS
+#define PKTS 1
+/* receive only single packet */
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout)
+{
+  ssize_t r = recvmsg(sockfd, &msgvec->msg_hdr, flags);
+  if (r < 0)
+    return r;
+  msgvec->msg_len = r;
+  return 1;
+}
+
+#endif
 
 #else /* not __linux__ */
 
@@ -54,7 +75,7 @@ int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 #endif
 
-#endif /* ENABLE_RECVMMSG */
+#endif /* !CONFIG_RECVMMSG */
 
 static int
 satip_frontend_tune1
@@ -693,7 +714,6 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 static void *
 satip_frontend_input_thread ( void *aux )
 {
-#define PKTS 64
 #define HTTP_CMD_NONE 9874
   satip_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi = lfe->sf_mmi;
