@@ -27,9 +27,12 @@
 static int
 iptv_http_header ( http_client_t *hc )
 {
-  pthread_mutex_lock(&global_lock);
-  iptv_input_mux_started(hc->hc_aux);
-  pthread_mutex_unlock(&global_lock);
+  /* multiple headers for redirections */
+  if (hc->hc_code == HTTP_STATUS_OK) {
+    pthread_mutex_lock(&global_lock);
+    iptv_input_mux_started(hc->hc_aux);
+    pthread_mutex_unlock(&global_lock);
+  }
   return 0;
 }
 
@@ -67,9 +70,11 @@ iptv_http_start
   if (!(hc = http_client_connect(im, HTTP_VERSION_1_1, u->scheme,
                                  u->host, u->port)))
     return SM_CODE_TUNING_FAILED;
-  hc->hc_hdr_received  = iptv_http_header;
-  hc->hc_data_received = iptv_http_data;
-  http_client_register(hc);
+  hc->hc_hdr_received    = iptv_http_header;
+  hc->hc_data_received   = iptv_http_data;
+  hc->hc_handle_location = 1;        /* allow redirects */
+  hc->hc_chunk_size      = 128*1024; /* increase buffering */
+  http_client_register(hc);          /* register to the HTTP thread */
   r = http_client_simple(hc, u);
   if (r < 0) {
     http_client_close(hc);
