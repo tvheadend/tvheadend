@@ -58,6 +58,8 @@ struct satip_device
 {
   tvh_hardware_t;
 
+  gtimer_t                   sd_destroy_timer;
+
   /*
    * Adapter info
    */
@@ -76,14 +78,6 @@ struct satip_device
   int                        sd_pids_len;
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
-
-  int                        sd_rtsp_running;
-  pthread_t                  sd_rtsp_tid;
-  pthread_mutex_t            sd_rtsp_lock;
-  pthread_cond_t             sd_rtsp_cond;
-  TAILQ_HEAD(,satip_rtsp_request) sd_rtsp_queue;
-  time_t                     sd_rtsp_ping;
-  gtimer_t                   sd_rtsp_shutdown;
 };
 
 struct satip_frontend
@@ -102,6 +96,7 @@ struct satip_frontend
   int                        sf_number;
   dvb_fe_type_t              sf_type;
   int                        sf_type_t2;
+  char                      *sf_type_override;
   int                        sf_udp_rtp_port;
   int                        sf_fullmux;
 
@@ -170,6 +165,8 @@ void satip_device_done ( void );
 void satip_device_save ( satip_device_t *sd );
 
 void satip_device_destroy ( satip_device_t *sd );
+
+void satip_device_destroy_later( satip_device_t *sd, int after_ms );
 
 satip_frontend_t *
 satip_frontend_create

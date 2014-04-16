@@ -28,6 +28,8 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 
+static void satip_device_discovery_start( void );
+
 /*
  * SAT-IP client
  */
@@ -404,6 +406,8 @@ satip_device_destroy( satip_device_t *sd )
 
   lock_assert(&global_lock);
 
+  gtimer_disarm(&sd->sd_destroy_timer);
+
   while ((lfe = TAILQ_FIRST(&sd->sd_frontends)) != NULL)
     satip_frontend_delete(lfe);
 
@@ -429,6 +433,19 @@ satip_device_destroy( satip_device_t *sd )
 
   tvh_hardware_delete((tvh_hardware_t*)sd);
   free(sd);
+}
+
+static void
+satip_device_destroy_cb( void *aux )
+{
+  satip_device_destroy((satip_device_t *)aux);
+  satip_device_discovery_start();
+}
+
+void
+satip_device_destroy_later( satip_device_t *sd, int after )
+{
+  gtimer_arm_ms(&sd->sd_destroy_timer, satip_device_destroy_cb, sd, after);
 }
 
 /*
@@ -795,6 +812,12 @@ ST: urn:ses-com:device:SatIPServer:1\r\n\
 #undef MSG
 }
 
+static void
+satip_device_discovery_start( void )
+{
+  gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
+}
+
 /*
  * Initialization
  */
@@ -802,7 +825,7 @@ ST: urn:ses-com:device:SatIPServer:1\r\n\
 void satip_init ( void )
 {
   TAILQ_INIT(&satip_discoveries);
-  gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
+  satip_device_discovery_start();
 }
 
 void satip_done ( void )
