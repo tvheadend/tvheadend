@@ -33,6 +33,7 @@
 #define MPEGTS_TSID_NONE        0xFFFF
 #define MPEGTS_PSI_SECTION_SIZE 5000
 #define MPEGTS_FULLMUX_PID      0x2000
+#define MPEGTS_PID_NONE         0xFFFF
 
 /* Types */
 typedef struct mpegts_table         mpegts_table_t;

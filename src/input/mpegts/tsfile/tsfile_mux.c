@@ -31,7 +31,7 @@ tsfile_mux_instance_create
     mpegts_mux_instance_create(tsfile_mux_instance, NULL, mi, mm);
 #undef tsfile_mux_instance_class
   mmi->mmi_tsfile_path    = strdup(path);
-  mmi->mmi_tsfile_pcr_pid = 0;
+  mmi->mmi_tsfile_pcr_pid = MPEGTS_PID_NONE;
   tvhtrace("tsfile", "mmi created %p path %s", mmi, mmi->mmi_tsfile_path);
   return mmi;
 }

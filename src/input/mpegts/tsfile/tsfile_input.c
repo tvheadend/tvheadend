@@ -94,7 +94,7 @@ tsfile_input_thread ( void *aux )
   while (1) {
       
     /* Find PCR PID */
-    if (!tmi->mmi_tsfile_pcr_pid) { 
+    if (tmi->mmi_tsfile_pcr_pid == MPEGTS_PID_NONE) { 
       mpegts_service_t *s;
       pthread_mutex_lock(&tsfile_lock);
       LIST_FOREACH(s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {

@@ -459,14 +459,15 @@ mpegts_input_recv_packets
   //       without the potential need to buffer data (since that would
   //       require per mmi buffers, where this is generally not required)
 
-  /* Extract PCR */
-  // Note: this is only used by tsfile for timing the play out of packets
-  //       maybe we should move it?
+  /* Extract PCR (used for tsfile playback) */
   if (pcr && pcr_pid) {
     uint8_t *tmp = tsb;
     for (i = 0; i < p; i++) {
-      if (*pcr_pid == (((tmp[1] & 0x1f) << 8) | tmp[2]) || *pcr_pid == 0)
+      int pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
+      if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
         ts_recv_packet1(NULL, tmp, pcr, 0);
+        if (*pcr != PTS_UNSET) *pcr_pid = pid;
+      }
       tmp += 188;
     }
   }
