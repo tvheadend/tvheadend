@@ -182,9 +182,9 @@ http_client_cmd_destroy( http_client_t *hc, http_client_wcmd_t *cmd )
 static int
 http_client_flush( http_client_t *hc, int result )
 {
+  hc->hc_result       = result;
   if (result < 0)
     http_client_shutdown(hc, 0);
-  hc->hc_result       = result;
   hc->hc_in_data      = 0;
   hc->hc_hsize        = 0;
   hc->hc_csize        = 0;
