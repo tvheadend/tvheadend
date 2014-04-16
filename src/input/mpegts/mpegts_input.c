@@ -517,6 +517,9 @@ mpegts_input_process
     service_t *s;
     int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
 
+    /* Ignore NUL packets */
+    if (pid == 0x1FFF) goto done;
+
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
       // Note: there is a minor danger this caching will get things
@@ -573,6 +576,7 @@ mpegts_input_process
       }
     }
 
+done:
     i   += 188;
     len -= 188;
   }
