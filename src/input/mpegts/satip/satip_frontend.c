@@ -26,6 +26,36 @@
 #include "http.h"
 #include "satip_private.h"
 
+#ifndef CONFIG_RECVMMSG
+
+#ifdef __linux__
+
+/* define the syscall - works only for linux */
+
+#include <linux/unistd.h>
+
+struct mmsghdr {
+  struct msghdr msg_hdr;
+  unsigned int  msg_len;
+};
+
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout);
+
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout)
+{
+  return syscall(__NR_recvmmsg, sockfd, msgvec, vlen, flags, timeout);
+}
+
+#else /* not __linux__ */
+
+#error "Add recvmmsg() support for your platform!!!"
+
+#endif
+
+#endif /* ENABLE_RECVMMSG */
+
 static int
 satip_frontend_tune1
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi );

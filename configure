@@ -113,6 +113,18 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet recvmmsg '
+#define _GNU_SOURCE
+#include <stdlib.h>
+#include <sys/socket.h>
+#define TEST test
+int test(void)
+{
+  recvmmsg(0, NULL, 0, 0, NULL);
+  return 0;
+}
+'
 #
 # Python
 #
