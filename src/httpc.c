@@ -30,6 +30,10 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
+#ifndef SSL_OP_NO_COMPRESSION
+#define SSL_OP_NO_COMPRESSION 0
+#endif
+
 #if ENABLE_TRACE 
 #define HTTPCLIENT_TESTSUITE 1
 #endif
@@ -1344,7 +1348,7 @@ http_client_testsuite_conn_closed( http_client_t *hc, int result )
 static int
 http_client_testsuite_data_complete( http_client_t *hc )
 {
-  fprintf(stderr, "HTTPCTS: Data Complete (code=%i, data=%p, data_size=%li)\n",
+  fprintf(stderr, "HTTPCTS: Data Complete (code=%i, data=%p, data_size=%zi)\n",
           hc->hc_code, hc->hc_data, hc->hc_data_size);
   return 0;
 }
@@ -1352,7 +1356,7 @@ http_client_testsuite_data_complete( http_client_t *hc )
 static int
 http_client_testsuite_data_received( http_client_t *hc, void *data, size_t len )
 {
-  fprintf(stderr, "HTTPCTS: Data received (len=%li)\n", len);
+  fprintf(stderr, "HTTPCTS: Data received (len=%zi)\n", len);
   /* check, if the data memory area is OK */
   memset(data, 0xa5, len);
   return 0;
@@ -1501,8 +1505,12 @@ static struct strtab ERRNO_tab[] = {
   { "EKEYREJECTED",    EKEYREJECTED },
   { "EOWNERDEAD",      EOWNERDEAD },
   { "ENOTRECOVERABLE", ENOTRECOVERABLE },
+#ifdef ERFKILL
   { "ERFKILL",         ERFKILL },
+#endif
+#ifdef EHWPOISON
   { "EHWPOISON",       EHWPOISON },
+#endif
 };
 
 void
