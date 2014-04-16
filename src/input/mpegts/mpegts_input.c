@@ -480,14 +480,14 @@ mpegts_input_recv_packets
     mp->mp_len  = p * 188;
     memcpy(mp->mp_data, tsb, mp->mp_len);
 
+    len -= mp->mp_len;
+    off += mp->mp_len;
+
     pthread_mutex_lock(&mi->mi_input_lock);
     if (TAILQ_FIRST(&mi->mi_input_queue) == NULL)
       pthread_cond_signal(&mi->mi_input_cond);
     TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
     pthread_mutex_unlock(&mi->mi_input_lock);
-
-    len -= mp->mp_len;
-    off += mp->mp_len;
   }
 
   /* Adjust buffer */
