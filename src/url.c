@@ -106,7 +106,7 @@ urlparse ( const char *str, url_t *url )
     url->port = 0;
   path       = uri.pathHead;
   while (path) {
-    uri_copy(buf, path->text);
+    uri_copy_static(buf, path->text);
     url->path = realloc(url->path, strlen(url->path) + strlen(buf) + 2);
     strcat(url->path, "/");
     strcat(url->path, buf);
@@ -127,7 +127,7 @@ urlparse ( const char *str, url_t *url )
 }
 
 void
-urlparse_free( void )
+urlparse_done( void )
 {
 }
 
