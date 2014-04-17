@@ -531,6 +531,11 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
    * DVB-T:
    * ver=1.1;tuner=<feID>,<level>,<lock>,<quality>,<freq>,<bw>,<msys>,<tmode>,\
    * <mtype>,<gi>,<fec>,<plp>,<t2id>,<sm>;pids=<pid0>,...,<pidn>
+   *
+   * DVB-C (OctopusNet):
+   * ver=0.9;tuner=<feID>,<0>,<lock>,<0>,<freq>,<bw>,<msys>,<mtype>;pids=<pid0>,...<pidn>
+   * example:
+   * ver=0.9;tuner=1,0,1,0,362.000,6900,dvbc,256qam;pids=0,1,16,17,18
    */
 
   /* level:
@@ -567,7 +572,25 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
         s = (char *)rtcp + 16;
         tvhtrace("satip", "Status string: '%s'", s);
         status = SIGNAL_NONE;
-        if (strncmp(s, "ver=1.0;", 8) == 0) {
+        if (strncmp(s, "ver=0.9;tuner=", 14) == 0) {
+          n = http_tokenize(s + 14, argv, 4, ',');
+          if (n < 4)
+            return;
+          if (atoi(argv[0]) != lfe->sf_number)
+            return;
+          mmi->mmi_stats.signal =
+            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+          if (atoi(argv[2]) > 0)
+            status = SIGNAL_GOOD;
+          mmi->mmi_stats.snr = atoi(argv[3]);
+          if (status == SIGNAL_GOOD &&
+              mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
+            /* some values that we're tuned */
+            mmi->mmi_stats.signal = 50;
+            mmi->mmi_stats.snr = 12;
+          }
+          goto ok;          
+        } else if (strncmp(s, "ver=1.0;", 8) == 0) {
           if ((s = strstr(s + 8, ";tuner=")) == NULL)
             return;
           s += 7;
@@ -825,7 +848,8 @@ satip_frontend_input_thread ( void *aux )
 
   r = satip_rtsp_setup(rtsp,
                        lfe->sf_position, lfe->sf_number,
-                       lfe->sf_rtp_port, &lm->lm_tuning);
+                       lfe->sf_rtp_port, &lm->lm_tuning,
+                       lfe->sf_device->sd_pids0);
   if (r < 0) {
     tvherror("satip", "%s - failed to tune", buf);
     return NULL;

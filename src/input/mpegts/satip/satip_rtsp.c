@@ -70,7 +70,7 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 
 int
 satip_rtsp_setup( http_client_t *hc, int src, int fe,
-                  int udp_port, const dvb_mux_conf_t *dmc )
+                  int udp_port, const dvb_mux_conf_t *dmc, int pids0 )
 {
   static tvh2satip_t msys[] = {
     { .t = DVB_SYS_DVBT,                      "dvbt"  },
@@ -175,7 +175,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     ADD(dmc_fe_delsys,              msys,  "dvbc");
     ADD(dmc_fe_modulation,          mtype, "64qam");
     /* missing plp */
-    ADD(u.dmc_fe_qpsk.fec_inner,    fec,   "auto");
+    if (dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_NONE &&
+        dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
+      /* note: OctopusNet device does not handle 'fec=auto' */
+      ADD(u.dmc_fe_qam.fec_inner,   fec,   "auto");
   } else {
     if (dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_AUTO &&
         dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_NONE)
@@ -192,6 +195,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->u.dmc_fe_ofdm.guard_interval != DVB_GUARD_INTERVAL_NONE)
       ADD(u.dmc_fe_ofdm.guard_interval, gi, "18");
   }
+  if (pids0)
+    strcat(buf, "&pids=0");
   tvhtrace("satip", "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
