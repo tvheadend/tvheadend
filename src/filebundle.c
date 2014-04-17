@@ -313,8 +313,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
 
   /* Direct */
   if (dir->type == FB_DIRECT) {
-    if ((ret = scandir(dir->d.root, &de, NULL, NULL)) != -1) {
-      if (ret == 0) return 0;
+    if ((ret = scandir(dir->d.root, &de, NULL, NULL)) > 0) {
       *list = malloc(sizeof(fb_dirent*)*ret);
       for (i = 0; i < ret; i++) {
         (*list)[i] = calloc(1, sizeof(fb_dirent));
