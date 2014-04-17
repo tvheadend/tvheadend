@@ -106,6 +106,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_pids_deladd),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "pids0",
+      .name     = "PIDs in setup",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_pids0),
+    },
+    {
       .type     = PT_STR,
       .id       = "addr",
       .name     = "IP Address",
@@ -263,6 +270,9 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_deladd = 0;
     tvhwarn("satip", "Detected old Inverto firmware V1.13.0.105 and less");
     tvhwarn("satip", "Upgrade to V1.16.0.120 - http://http://www.inverto.tv/support/ - IDL400s");
+  } else if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
+    /* OctopusNet requires pids in the SETUP RTSP command */
+    sd->sd_pids0       = 1;
   }
 }
 

@@ -78,6 +78,7 @@ struct satip_device
   int                        sd_pids_len;
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
+  int                        sd_pids0;
 };
 
 struct satip_frontend
@@ -202,7 +203,8 @@ int satip_satconf_get_position
 int
 satip_rtsp_setup( http_client_t *hc,
                   int src, int fe, int udp_port,
-                  const dvb_mux_conf_t *dmc );
+                  const dvb_mux_conf_t *dmc,
+                  int pids0 );
 
 int
 satip_rtsp_play( http_client_t *hc, const char *pids,
