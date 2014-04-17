@@ -126,10 +126,10 @@ upnp_thread( void *aux )
   memset(&ev, 0, sizeof(ev));
   ev[0].fd       = multicast->fd;
   ev[0].events   = TVHPOLL_IN;
-  ev[0].data.u64 = (uint64_t)multicast;
+  ev[0].data.ptr = multicast;
   ev[1].fd       = unicast->fd;
   ev[1].events   = TVHPOLL_IN;
-  ev[1].data.u64 = (uint64_t)unicast;
+  ev[1].data.ptr = unicast;
   tvhpoll_add(poll, ev, 2);
 
   while (upnp_running && multicast->fd >= 0) {
@@ -137,7 +137,7 @@ upnp_thread( void *aux )
 
     while (r-- > 0) {
       if ((ev[r].events & TVHPOLL_IN) != 0) {
-        conn = (udp_connection_t *)ev[r].data.u64;
+        conn = ev[r].data.ptr;
         iplen = sizeof(ip);
         size = recvfrom(conn->fd, buf, sizeof(buf), 0,
                                            (struct sockaddr *)&ip, &iplen);
@@ -145,7 +145,7 @@ upnp_thread( void *aux )
         if (size > 0) {
           char tbuf[256];
           inet_ntop(ip.ss_family, IP_IN_ADDR(ip), tbuf, sizeof(tbuf));
-          tvhtrace("upnp", "%s - received data from %s:%hu [size=%li]",
+          tvhtrace("upnp", "%s - received data from %s:%hu [size=%zi]",
                    conn == multicast ? "multicast" : "unicast",
                    tbuf, IP_PORT(ip), size);
           tvhlog_hexdump("upnp", buf, size);
