@@ -469,7 +469,7 @@ scanfile_find ( const char *id )
 
   /* Type */
   if (!(tok = strtok_r(tmp, "/", &s)))
-    return NULL;
+    goto fail;
   if (!strcasecmp(tok, "dvbt"))
     l = &scanfile_regions_DVBT;
   else if (!strcasecmp(tok, "dvbc"))
@@ -479,22 +479,27 @@ scanfile_find ( const char *id )
   else if (!strcasecmp(tok, "atsc"))
     l = &scanfile_regions_ATSC;
   else
-    return NULL;
+    goto fail;
 
   /* Region */
   if (!(tok = strtok_r(NULL, "/", &s)))
-    return NULL;
+    goto fail;
   LIST_FOREACH(r, l, sfr_link)
     if (!strcmp(r->sfr_id, tok))
       break;
-  if (!r) return NULL;
+  if (!r) goto fail;
 
   /* Network */
   if (!(tok = strtok_r(NULL, "/", &s)))
-    return NULL;
+    goto fail;
   LIST_FOREACH(n, &r->sfr_networks, sfn_link)
     if (!strcmp(n->sfn_id, tok))
       break;
 
+  free(tmp);
   return n;
+
+fail:
+  free(tmp);
+  return NULL;
 }
