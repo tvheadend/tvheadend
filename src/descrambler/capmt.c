@@ -411,11 +411,11 @@ capmt_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, ct_link);
 
-  tvhcsa_destroy(&ct->ct_csa);
-  free(ct);
-
   if (ct->ct_capmt->capmt_oscam == 2)
     capmt_enumerate_services(ct->ct_capmt, 0, 1);
+
+  tvhcsa_destroy(&ct->ct_csa);
+  free(ct);
 }
 
 static void 
