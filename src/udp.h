@@ -52,6 +52,11 @@ udp_connection_t *
 udp_bind ( const char *subsystem, const char *name,
            const char *bindaddr, int port,
            const char *ifname, int rxsize );
+int
+udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
+                  const char *subsystem, const char *name1,
+                  const char *name2, const char *host, int port,
+                  const char *ifname, int rxsize1, int rxsize2 );
 udp_connection_t *
 udp_connect ( const char *subsystem, const char *name,
               const char *host, int port,
