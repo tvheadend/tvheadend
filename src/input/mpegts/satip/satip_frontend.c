@@ -249,12 +249,8 @@ const idclass_t satip_frontend_dvbc_class =
 static int
 satip_frontend_is_free ( mpegts_input_t *mi )
 {
-  satip_device_t *sd = ((satip_frontend_t*)mi)->sf_device;
-  satip_frontend_t *lfe;
-  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    if (!mpegts_input_is_free((mpegts_input_t*)lfe))
-      return 0;
-  return 1;
+  /* TODO: Add some RTSP live checks here */
+  return mpegts_input_is_free(mi);
 }
 
 static int
