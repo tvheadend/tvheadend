@@ -256,12 +256,7 @@ satip_frontend_is_free ( mpegts_input_t *mi )
 static int
 satip_frontend_get_weight ( mpegts_input_t *mi )
 {
-  int weight = 0;
-  satip_device_t *sd = ((satip_frontend_t*)mi)->sf_device;
-  satip_frontend_t *lfe;
-  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    weight = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe));
-  return weight;
+  return mpegts_input_get_weight(mi);
 }
 
 static int
