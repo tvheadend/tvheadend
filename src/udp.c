@@ -229,6 +229,44 @@ error:
   return NULL;
 }
 
+int
+udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
+                  const char *subsystem, const char *name1,
+                  const char *name2, const char *host, int port,
+                  const char *ifname, int rxsize1, int rxsize2 )
+{
+  udp_connection_t *u1 = NULL, *u2 = NULL;
+  udp_connection_t *ucs[10] = { NULL, NULL, NULL, NULL, NULL,
+                                NULL, NULL, NULL, NULL, NULL };
+  int pos = 0, i, port2;
+
+  memset(&ucs, 0, sizeof(ucs));
+  while (1) {
+    u1 = udp_bind(subsystem, name1, host, port, ifname, rxsize1);
+    if (u1 == NULL || u1 == UDP_FATAL_ERROR)
+      goto fail;
+    port2 = ntohs(IP_PORT(u1->ip));
+    /* RTP port should be even, RTCP port should be odd */
+    if ((port2 % 2) == 0) {
+      u2 = udp_bind(subsystem, name2, host, port2 + 1, ifname, rxsize2);
+      if (u2 != NULL && u2 != UDP_FATAL_ERROR)
+        break;
+    }
+    ucs[pos++] = u1;
+    if (port || pos >= ARRAY_SIZE(ucs))
+      goto fail;
+  }
+  for (i = 0; i < pos; i++)
+    udp_close(ucs[i]);
+  *_u1 = u1;
+  *_u2 = u2;
+  return 0;
+fail:
+  for (i = 0; i < pos; i++)
+    udp_close(ucs[i]);
+  return -1;
+}
+
 udp_connection_t *
 udp_connect ( const char *subsystem, const char *name,
               const char *host, int port,

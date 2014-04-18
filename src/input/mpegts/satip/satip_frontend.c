@@ -1058,8 +1058,6 @@ satip_frontend_tune0
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi )
 {
   mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
-  udp_connection_t *uc1 = NULL, *uc2 = NULL;
-  int res = 0;
 
   if (cur != NULL) {
     /* Already tuned */
@@ -1070,6 +1068,14 @@ satip_frontend_tune0
     cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
   }
   assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
+
+  if (udp_bind_double(&lfe->sf_rtp, &lfe->sf_rtcp,
+                      "satip", "rtp", "rtpc",
+                      lfe->sf_device->sd_info.myaddr, lfe->sf_udp_rtp_port,
+                      NULL, SATIP_BUF_SIZE, 16384) < 0)
+    return SM_CODE_TUNING_FAILED;
+
+  lfe->sf_rtp_port = ntohs(IP_PORT(lfe->sf_rtp->ip));
 
   assert(lfe->sf_pids == NULL);
   assert(lfe->sf_pids_tuned == NULL);
@@ -1082,54 +1088,21 @@ satip_frontend_tune0
   lfe->sf_pids_any_tuned  = 0;
   lfe->sf_status          = SIGNAL_NONE;
 
-retry:
-  if (lfe->sf_rtp == NULL) {
-    lfe->sf_rtp = udp_bind("satip", "satip_rtp",
-                           lfe->sf_device->sd_info.myaddr,
-                           lfe->sf_udp_rtp_port,
-                           NULL, SATIP_BUF_SIZE);
-    if (lfe->sf_rtp == NULL || lfe->sf_rtp == UDP_FATAL_ERROR)
-      res = SM_CODE_TUNING_FAILED;
-    else
-      lfe->sf_rtp_port = ntohs(IP_PORT(lfe->sf_rtp->ip));
-  }
-  if (lfe->sf_rtcp == NULL && !res) {
-    lfe->sf_rtcp = udp_bind("satip", "satip_rtcp",
-                            lfe->sf_device->sd_info.myaddr,
-                            lfe->sf_rtp_port + 1,
-                            NULL, 16384);
-    if (lfe->sf_rtcp == NULL || lfe->sf_rtcp == UDP_FATAL_ERROR) {
-      if (lfe->sf_udp_rtp_port > 0)
-        res = SM_CODE_TUNING_FAILED;
-      else if (uc1 && uc2)
-        res = SM_CODE_TUNING_FAILED;
-      /* try to find another free UDP port */
-      if (!res) {
-        if (uc1 == NULL)
-          uc1 = lfe->sf_rtp;
-        else
-          uc2 = lfe->sf_rtp;
-        lfe->sf_rtp = NULL;
-        goto retry;
-      }
-    }
-  }
-  udp_close(uc1);
-  udp_close(uc2);
+  tvhtrace("satip", "%s - local RTP port %i RTCP port %i",
+                    lfe->mi_name,
+                    ntohs(IP_PORT(lfe->sf_rtp->ip)),
+                    ntohs(IP_PORT(lfe->sf_rtcp->ip)));
 
-  if (!res) {
-    lfe->sf_mmi = mmi;
+  lfe->sf_mmi = mmi;
 
-    tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
-    tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                     satip_frontend_input_thread, lfe, 0);
+  tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
+  tvhthread_create(&lfe->sf_dvr_thread, NULL,
+                   satip_frontend_input_thread, lfe, 0);
 
-    gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);
+  gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);
 
-    lfe->sf_running = 1;
-  }
-
-  return res;
+  lfe->sf_running = 1;
+  return 0;
 }
 
 static int
@@ -1143,7 +1116,6 @@ satip_frontend_tune1
   tvhdebug("satip", "%s - starting %s", buf1, buf2);
 
   /* Tune */
-  tvhtrace("satip", "%s - tuning", buf1);
   return satip_frontend_tune0(lfe, mmi);
 }
 
@@ -1254,9 +1226,10 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->sf_type));
-  satip_satconf_save(lfe, m);
-  if (lfe->ti_id.in_class == &satip_frontend_dvbs_class)
+  if (lfe->ti_id.in_class == &satip_frontend_dvbs_class) {
+    satip_satconf_save(lfe, m);
     htsmsg_delete_field(m, "networks");
+  }
   htsmsg_delete_field(m, "fe_override");
 
   /* Add to list */
@@ -1271,14 +1244,12 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
 void
 satip_frontend_delete ( satip_frontend_t *lfe )
 {
-  mpegts_mux_instance_t *mmi;
-
   lock_assert(&global_lock);
 
   /* Ensure we're stopped */
-  if ((mmi = LIST_FIRST(&lfe->mi_mux_active)))
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+  mpegts_input_stop_all((mpegts_input_t*)lfe);
 
+  /* Stop timer */
   gtimer_disarm(&lfe->sf_monitor_timer);
 
   /* Remove from adapter */
