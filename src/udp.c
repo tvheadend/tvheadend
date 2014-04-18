@@ -18,6 +18,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "tvheadend.h"
 #include "udp.h"
 
@@ -379,4 +380,103 @@ udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
   }
   q->hq_size = 0;
   return r;
+}
+
+/*
+ * UDP multi packet receive support
+ */
+
+#ifndef CONFIG_RECVMMSG
+
+#ifdef __linux__
+
+/* define the syscall - works only for linux */
+
+#include <linux/unistd.h>
+
+struct mmsghdr {
+  struct msghdr msg_hdr;
+  unsigned int  msg_len;
+};
+
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout);
+
+#ifdef __NR_recvmmsg
+
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout)
+{
+  return syscall(__NR_recvmmsg, sockfd, msgvec, vlen, flags, timeout);
+}
+
+#else
+
+#undef PKTS
+#define PKTS 1
+/* receive only single packet */
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout)
+{
+  ssize_t r = recvmsg(sockfd, &msgvec->msg_hdr, flags);
+  if (r < 0)
+    return r;
+  msgvec->msg_len = r;
+  return 1;
+}
+
+#endif
+
+#else /* not __linux__ */
+
+#error "Add recvmmsg() support for your platform!!!"
+
+#endif
+
+#endif /* !CONFIG_RECVMMSG */
+
+void
+udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
+{
+  int i;
+
+  um->um_psize   = psize;
+  um->um_packets = packets;
+  um->um_data    = malloc(packets * psize);
+  um->um_iovec   = malloc(packets * sizeof(struct iovec));
+  um->um_riovec  = malloc(packets * sizeof(struct iovec));
+  um->um_msg     = calloc(packets,  sizeof(struct mmsghdr));
+  for (i = 0; i < packets; i++) {
+    ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iov    = &um->um_iovec[i];
+    ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iovlen = 1;
+    um->um_iovec[i].iov_base  = /* follow thru */
+    um->um_riovec[i].iov_base = um->um_data + i * psize;
+    um->um_iovec[i].iov_len   = psize;
+  }
+}
+
+void
+udp_multirecv_free( udp_multirecv_t *um )
+{
+  free(um->um_msg);   um->um_msg   = NULL;
+  free(um->um_iovec); um->um_iovec = NULL;
+  free(um->um_data);  um->um_data  = NULL;
+  um->um_psize   = 0;
+  um->um_packets = 0;
+}
+
+int
+udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
+                    struct iovec **iovec )
+{
+  int n, i;
+  if (packets > um->um_packets)
+    packets = um->um_packets;
+  n = recvmmsg(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT, NULL);
+  if (n > 0) {
+    for (i = 0; i < n; i++)
+      um->um_riovec[i].iov_len = ((struct mmsghdr *)um->um_msg)[i].msg_len;
+    *iovec = um->um_riovec;
+  }
+  return n;
 }

@@ -70,5 +70,22 @@ int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
                  struct sockaddr_storage *storage );
 
+typedef struct udp_multirecv {
+  int             um_psize;
+  int             um_packets;
+  uint8_t        *um_data;
+  struct iovec   *um_iovec;
+  struct iovec   *um_riovec;
+  struct mmsghdr *um_msg;
+} udp_multirecv_t;
+
+void
+udp_multirecv_init( udp_multirecv_t *um, int packets, int psize );
+void
+udp_multirecv_free( udp_multirecv_t *um );
+int
+udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
+                    struct iovec **iovec );
+
 
 #endif /* UDP_H_ */
