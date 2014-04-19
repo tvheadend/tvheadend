@@ -440,7 +440,7 @@ mpegts_mux_start
 
     /* First pass - free only */
     if (!pass) {
-      int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input);
+      int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm);
       int f = mmi->mmi_input->mi_is_free(mmi->mmi_input);
       tvhtrace("mpegts", "%s -   enabled %d free %d", buf, e, f);
       if (e) enabled = 1;
@@ -457,7 +457,7 @@ mpegts_mux_start
     } else {
 
       /* Enabled, valid and lower weight */
-      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input) &&
+      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm) &&
           !mmi->mmi_tune_failed &&
           (weight > mmi->mmi_input->mi_get_weight(mmi->mmi_input))) {
         tune = mmi;

@@ -98,6 +98,7 @@ struct satip_frontend
   dvb_fe_type_t              sf_type;
   int                        sf_type_t2;
   char                      *sf_type_override;
+  int                        sf_master;
   int                        sf_udp_rtp_port;
   int                        sf_fullmux;
 
