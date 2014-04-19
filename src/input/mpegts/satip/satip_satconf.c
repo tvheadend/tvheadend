@@ -41,7 +41,7 @@ satip_satconf_get_priority
   ( satip_frontend_t *lfe, mpegts_mux_t *mm )
 {
   satip_satconf_t *sfc = satip_satconf_find_ele(lfe, mm);
-  return sfc->sfc_priority;
+  return sfc ? sfc->sfc_priority : 0;
 }
 
 int
@@ -49,7 +49,7 @@ satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm )
 {
   satip_satconf_t *sfc = satip_satconf_find_ele(lfe, mm);
-  return sfc->sfc_position;
+  return sfc ? sfc->sfc_position : 0;
 }
 
 /* **************************************************************************
@@ -94,7 +94,7 @@ satip_satconf_class_network_set( void *o, const void *p )
     sfc->sfc_networks = n;
     /* update the input (frontend) network list */
     htsmsg_t *l = htsmsg_create_list();
-    satip_frontend_t *lfe = sfc->sfc_lfe;
+    satip_frontend_t *lfe = sfc->sfc_lfe, *lfe2;
     satip_satconf_t *sfc2;
     TAILQ_FOREACH(sfc2, &lfe->sf_satconf, sfc_link) {
       for (i = 0; i < sfc2->sfc_networks->is_count; i++)
@@ -102,6 +102,11 @@ satip_satconf_class_network_set( void *o, const void *p )
                        idnode_uuid_as_str(sfc2->sfc_networks->is_array[i]));
     }
     mpegts_input_class_network_set(lfe, l);
+    /* update the slave tuners, too */
+    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
+      if (lfe2->sf_number != lfe->sf_number &&
+          lfe2->sf_master == lfe->sf_number)
+        mpegts_input_class_network_set(lfe2, l);
     htsmsg_destroy(l);
   } else {
     idnode_set_free(n);

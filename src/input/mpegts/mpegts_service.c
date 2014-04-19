@@ -189,7 +189,7 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
     if (mmi->mmi_tune_failed)
       continue;
 
-    if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input)) continue;
+    if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mmi->mmi_mux)) continue;
 
     /* Set weight to -1 (forced) for already active mux */
     if (mmi->mmi_mux->mm_active == mmi) {

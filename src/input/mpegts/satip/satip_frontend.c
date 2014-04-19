@@ -28,6 +28,20 @@ static int
 satip_frontend_tune1
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi );
 
+/*
+ *
+ */
+static satip_frontend_t *
+satip_frontend_find_by_number( satip_device_t *sd, int num )
+{
+  satip_frontend_t *lfe;
+
+  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+    if (lfe->sf_number == num)
+      return lfe;
+  return NULL;
+}
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -147,6 +161,46 @@ satip_frontend_dvbs_class_positions_set ( void *self, const void *val )
   return 0;
 }
 
+static int
+satip_frontend_dvbs_class_master_set ( void *self, const void *val )
+{
+  satip_frontend_t *lfe  = self;
+  satip_frontend_t *lfe2 = NULL;
+  int num = *(int *)val, pos = 0;
+
+  if (num) {
+    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
+      if (lfe2 != lfe && lfe2->sf_type == lfe->sf_type)
+        if (++pos == num) {
+          num = lfe2->sf_number;
+          break;
+        }
+  }
+  if (lfe2 == NULL)
+    num = 0;
+  else if (lfe2->sf_master)
+    num = lfe2->sf_master;
+  if (lfe->sf_master != num) {
+    lfe->sf_master = num;
+    satip_device_destroy_later(lfe->sf_device, 100);
+    return 1;
+  }
+  return 0;
+}
+
+static htsmsg_t *
+satip_frontend_dvbs_class_master_enum( void * self )
+{
+  satip_frontend_t *lfe = self, *lfe2;
+  satip_device_t *sd = lfe->sf_device;
+  htsmsg_t *m = htsmsg_create_list();
+  htsmsg_add_str(m, NULL, "This Tuner");
+  TAILQ_FOREACH(lfe2, &sd->sd_frontends, sf_link)
+    if (lfe2 != lfe && lfe2->sf_type == lfe->sf_type)
+      htsmsg_add_str(m, NULL, lfe2->mi_name);
+  return m;
+}
+
 const idclass_t satip_frontend_dvbs_class =
 {
   .ic_super      = &satip_frontend_class,
@@ -162,6 +216,36 @@ const idclass_t satip_frontend_dvbs_class =
       .opts     = PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_positions),
       .def.i    = 4
+    },
+    {
+      .type     = PT_INT,
+      .id       = "fe_master",
+      .name     = "Master Tuner",
+      .set      = satip_frontend_dvbs_class_master_set,
+      .list     = satip_frontend_dvbs_class_master_enum,
+      .off      = offsetof(satip_frontend_t, sf_master),
+    },
+    {
+      .id       = "networks",
+      .type     = PT_NONE,
+    },
+    {}
+  }
+};
+
+const idclass_t satip_frontend_dvbs_slave_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_dvbs",
+  .ic_caption    = "SAT>IP DVB-S Slave Frontend",
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_INT,
+      .id       = "fe_master",
+      .name     = "Master Tuner",
+      .set      = satip_frontend_dvbs_class_master_set,
+      .list     = satip_frontend_dvbs_class_master_enum,
+      .off      = offsetof(satip_frontend_t, sf_master),
     },
     {
       .id       = "networks",
@@ -227,10 +311,56 @@ satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-satip_frontend_is_enabled ( mpegts_input_t *mi )
+satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
+{
+  mpegts_mux_t *mm1;
+  dvb_mux_conf_t *mc1, *mc2;
+  int position, high1, high2;
+
+  if (lfe2->sf_mmi == NULL)
+    return 0;
+  mm1 = lfe2->sf_mmi->mmi_mux;
+  position = satip_satconf_get_position(lfe2, mm2);
+  if (lfe2->sf_position != position)
+    return 0;
+  mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
+  mc2 = &((dvb_mux_t *)mm2)->lm_tuning;
+  if (mc1->dmc_fe_type != DVB_TYPE_S || mc2->dmc_fe_type != DVB_TYPE_S)
+    return 0;
+  if (mc1->u.dmc_fe_qpsk.polarisation != mc2->u.dmc_fe_qpsk.polarisation)
+    return 0;
+  high1 = mc1->dmc_fe_freq > 11700000;
+  high2 = mc2->dmc_fe_freq > 11700000;
+  if (high1 != high2)
+    return 0;
+  return 1;
+}
+
+static int
+satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
+  satip_frontend_t *lfe2;
+
+  lock_assert(&global_lock);
+
   if (!lfe->mi_enabled) return 0;
+  if (lfe->sf_type != DVB_TYPE_S) return 1;
+  /* check if any "blocking" tuner is running */
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+    if (lfe2 == lfe) continue;
+    if (lfe2->sf_type != DVB_TYPE_S) continue;
+    if (lfe->sf_master == lfe2->sf_number) {
+      if (!lfe2->sf_running)
+        return 0; /* master must be running */
+      return satip_frontend_match_satcfg(lfe2, mm);
+    }
+    if (lfe2->sf_master == lfe->sf_number && lfe2->sf_running) {
+      if (lfe2->sf_mmi == NULL)
+        return 0;
+      return satip_frontend_match_satcfg(lfe2, mm);
+    }
+  }
   return 1;
 }
 
@@ -727,7 +857,7 @@ satip_frontend_input_thread ( void *aux )
 #define RTP_PKTS      64
 #define RTP_PKT_SIZE  1472  /* this is maximum UDP payload (standard ethernet) */
 #define HTTP_CMD_NONE 9874
-  satip_frontend_t *lfe = aux;
+  satip_frontend_t *lfe = aux, *lfe2;
   mpegts_mux_instance_t *mmi = lfe->sf_mmi;
   http_client_t *rtsp;
   dvb_mux_t *lm;
@@ -775,8 +905,14 @@ satip_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 4);
   rtsp->hc_efd = efd;
 
+  pos = lfe->sf_position;
+  if (lfe->sf_master) {
+    lfe2 = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master);
+    if (lfe2)
+      pos = lfe2->sf_position;
+  }
   r = satip_rtsp_setup(rtsp,
-                       lfe->sf_position, lfe->sf_number,
+                       pos, lfe->sf_number,
                        lfe->sf_rtp_port, &lm->lm_tuning,
                        lfe->sf_device->sd_pids0);
   if (r < 0) {
@@ -1064,8 +1200,9 @@ satip_frontend_create
 {
   const idclass_t *idc;
   const char *uuid = NULL, *override = NULL;
-  char id[12], lname[256];
+  char id[16], lname[256];
   satip_frontend_t *lfe;
+  uint32_t master = 0;
   int i;
 
   /* Override type */
@@ -1080,6 +1217,14 @@ satip_frontend_create
         override = NULL;
     }
   }
+  /* Tuner slave */
+  snprintf(id, sizeof(id), "master for #%d", num);
+  if (conf && type == DVB_TYPE_S) {
+    if (htsmsg_get_u32(conf, id, &master))
+      master = 0;
+    if (master == num)
+      master = 0;
+  }
   /* Internal config ID */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), num);
   if (conf)
@@ -1089,7 +1234,8 @@ satip_frontend_create
 
   /* Class */
   if (type == DVB_TYPE_S)
-    idc = &satip_frontend_dvbs_class;
+    idc = master ? &satip_frontend_dvbs_slave_class :
+                   &satip_frontend_dvbs_class;
   else if (type == DVB_TYPE_T)
     idc = &satip_frontend_dvbt_class;
   else if (type == DVB_TYPE_C)
@@ -1107,6 +1253,7 @@ satip_frontend_create
   lfe->sf_number   = num;
   lfe->sf_type     = type;
   lfe->sf_type_t2  = t2;
+  lfe->sf_master   = master;
   lfe->sf_type_override = override ? strdup(override) : NULL;
   TAILQ_INIT(&lfe->sf_satconf);
   pthread_mutex_init(&lfe->sf_dvr_lock, NULL);
@@ -1146,8 +1293,20 @@ satip_frontend_create
   TAILQ_INSERT_TAIL(&sd->sd_frontends, lfe, sf_link);
 
   /* Create satconf */
-  if (lfe->sf_type == DVB_TYPE_S)
+  if (lfe->sf_type == DVB_TYPE_S && master == 0)
     satip_satconf_create(lfe, conf);
+
+  /* Slave networks update */
+  if (master) {
+    satip_frontend_t *lfe2 = satip_frontend_find_by_number(sd, master);
+    if (lfe2) {
+      htsmsg_t *l = (htsmsg_t *)mpegts_input_class_network_get(lfe2);
+      if (l) {
+        mpegts_input_class_network_set(lfe, l);
+        htsmsg_destroy(l);
+      }
+    }
+  }
 
   return lfe;
 }
@@ -1155,7 +1314,7 @@ satip_frontend_create
 void
 satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
 {
-  char id[12];
+  char id[16];
   htsmsg_t *m = htsmsg_create_map();
 
   /* Save frontend */
@@ -1166,6 +1325,7 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
     htsmsg_delete_field(m, "networks");
   }
   htsmsg_delete_field(m, "fe_override");
+  htsmsg_delete_field(m, "fe_master");
 
   /* Add to list */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(lfe->sf_type), lfe->sf_number);
@@ -1173,6 +1333,10 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
   if (lfe->sf_type_override) {
     snprintf(id, sizeof(id), "override #%d", lfe->sf_number);
     htsmsg_add_str(fe, id, lfe->sf_type_override);
+  }
+  if (lfe->sf_master) {
+    snprintf(id, sizeof(id), "master for #%d", lfe->sf_number);
+    htsmsg_add_u32(fe, id, lfe->sf_master);
   }
 }
 

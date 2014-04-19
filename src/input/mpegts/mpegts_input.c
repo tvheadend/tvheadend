@@ -162,7 +162,7 @@ const idclass_t mpegts_input_class =
  * *************************************************************************/
 
 static int
-mpegts_input_is_enabled ( mpegts_input_t *mi )
+mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   return mi->mi_enabled;
 }
