@@ -70,7 +70,7 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 
 int
 satip_rtsp_setup( http_client_t *hc, int src, int fe,
-                  int udp_port, const dvb_mux_conf_t *dmc, int pids0 )
+                  int udp_port, const dvb_mux_conf_t *dmc, int flags )
 {
   static tvh2satip_t msys[] = {
     { .t = DVB_SYS_DVBT,                      "dvbt"  },
@@ -202,12 +202,14 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->u.dmc_fe_ofdm.guard_interval != DVB_GUARD_INTERVAL_NONE)
       ADD(u.dmc_fe_ofdm.guard_interval, gi, "18");
   }
-  if (pids0)
+  if (flags & SATIP_SETUP_PIDS0)
     strcat(buf, "&pids=0");
   tvhtrace("satip", "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
+  if (flags & SATIP_SETUP_PLAY)
+    return rtsp_play(hc, stream, buf);
   return rtsp_setup(hc, stream, buf, NULL, udp_port, udp_port + 1);
 }
 

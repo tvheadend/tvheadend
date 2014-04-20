@@ -101,6 +101,7 @@ struct satip_frontend
   int                        sf_master;
   int                        sf_udp_rtp_port;
   int                        sf_fullmux;
+  int                        sf_play2;
 
   /*
    * Reception
@@ -200,6 +201,9 @@ int satip_satconf_get_position
 /*
  * RTSP part
  */
+
+#define SATIP_SETUP_PLAY  (1<<0)
+#define SATIP_SETUP_PIDS0 (1<<1)
 
 int
 satip_rtsp_setup( http_client_t *hc,

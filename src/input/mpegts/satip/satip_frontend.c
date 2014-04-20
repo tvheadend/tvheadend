@@ -112,6 +112,13 @@ const idclass_t satip_frontend_class =
       .name     = "UDP RTP Port Number (2 ports)",
       .off      = offsetof(satip_frontend_t, sf_udp_rtp_port),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "play2",
+      .name     = "Send full PLAY cmd",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_play2),
+    },
     {}
   }
 };
@@ -874,6 +881,7 @@ satip_frontend_input_thread ( void *aux )
   int changing = 0, ms = -1, fatal = 0;
   uint32_t seq = -1, nseq;
   udp_multirecv_t um;
+  int play2 = 1, position, rtsp_flags = 0;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
@@ -905,19 +913,21 @@ satip_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 4);
   rtsp->hc_efd = efd;
 
-  pos = lfe->sf_position;
+  position = lfe->sf_position;
   if (lfe->sf_master) {
     lfe2 = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master);
     if (lfe2)
-      pos = lfe2->sf_position;
+      position = lfe2->sf_position;
   }
+  if (lfe->sf_device->sd_pids0)
+    rtsp_flags |= SATIP_SETUP_PIDS0;
   r = satip_rtsp_setup(rtsp,
-                       pos, lfe->sf_number,
+                       position, lfe->sf_number,
                        lfe->sf_rtp_port, &lm->lm_tuning,
-                       lfe->sf_device->sd_pids0);
+                       rtsp_flags);
   if (r < 0) {
     tvherror("satip", "%s - failed to tune", buf);
-    return NULL;
+    goto done;
   }
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
@@ -977,9 +987,26 @@ satip_frontend_input_thread ( void *aux )
             pthread_mutex_lock(&global_lock);
             satip_frontend_default_tables(lfe, mmi->mmi_mux);
             pthread_mutex_unlock(&global_lock);
-            satip_frontend_pid_changed(rtsp, lfe, buf);
+            if (lfe->sf_play2) {
+              r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
+                                   lfe->sf_rtp_port, &lm->lm_tuning,
+                                   rtsp_flags | SATIP_SETUP_PLAY);
+              if (r < 0) {
+                tvherror("satip", "%s - failed to tune2", buf);
+                fatal = 1;
+              }
+              continue;
+            } else {
+              satip_frontend_pid_changed(rtsp, lfe, buf);
+            }
           }
           break;
+        case RTSP_CMD_PLAY:
+          if (rtsp->hc_code == 200 && play2) {
+            satip_frontend_pid_changed(rtsp, lfe, buf);
+            play2 = 0;
+          }
+          /* fall thru */
         default:
           if (rtsp->hc_code >= 400) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP cmd error %d (%s) [%i-%i]",
@@ -1087,8 +1114,9 @@ satip_frontend_input_thread ( void *aux )
       }
     }
   }
-  http_client_close(rtsp);
 
+done:
+  http_client_close(rtsp);
   tvhpoll_destroy(efd);
   return NULL;
 #undef PKTS
@@ -1194,6 +1222,15 @@ satip_frontend_tune1
  * Creation/Config
  * *************************************************************************/
 
+static void
+satip_frontend_hacks( satip_frontend_t *lfe )
+{
+  if (strstr(lfe->sf_device->sd_info.location, ":8888/octonet.xml")) {
+    if (lfe->sf_type == DVB_TYPE_S)
+      lfe->sf_play2 = 1;
+  }
+}
+
 satip_frontend_t *
 satip_frontend_create
   ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int t2, int num )
@@ -1255,6 +1292,7 @@ satip_frontend_create
   lfe->sf_type_t2  = t2;
   lfe->sf_master   = master;
   lfe->sf_type_override = override ? strdup(override) : NULL;
+  satip_frontend_hacks(lfe);
   TAILQ_INIT(&lfe->sf_satconf);
   pthread_mutex_init(&lfe->sf_dvr_lock, NULL);
   lfe = (satip_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
