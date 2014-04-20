@@ -162,11 +162,18 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qpsk.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbs");
-    ADD(dmc_fe_modulation,          mtype, "qpsk");
+    if (dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_AUTO)
+      ADD(dmc_fe_modulation,        mtype, "qpsk");
     ADD(u.dmc_fe_qpsk.polarisation, pol,   "h"   );
-    ADD(u.dmc_fe_qpsk.fec_inner,    fec,   "auto");
-    ADD(dmc_fe_rolloff,             ro,    "0.35");
-    if (dmc->dmc_fe_pilot != DVB_PILOT_AUTO)
+    if (dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_NONE &&
+        dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_AUTO)
+      ADD(u.dmc_fe_qpsk.fec_inner,  fec,   "auto");
+    if (dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
+        dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO)
+      ADD(dmc_fe_rolloff,           ro,    "0.35");
+    if (dmc->dmc_fe_pilot != DVB_PILOT_NONE &&
+        dmc->dmc_fe_pilot != DVB_PILOT_AUTO)
       ADD(dmc_fe_pilot,             plts,  "auto");
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
