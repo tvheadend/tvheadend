@@ -202,7 +202,7 @@ struct mpegts_table_feed {
  * Assemble SI section
  */
 void mpegts_psi_section_reassemble
-  ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc,
+  ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc, int ccerr,
     mpegts_psi_section_callback_t cb, void *opaque );
 
 /* **************************************************************************

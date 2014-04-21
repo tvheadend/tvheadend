@@ -66,7 +66,7 @@ static void
 ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
-  int off, pusi, cc, error;
+  int off, pusi, cc, error, ccerr;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -84,6 +84,7 @@ ts_recv_packet0
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->es_cc != -1 && cc != st->es_cc) {
+      ccerr = 1;
       /* Incorrect CC */
       limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
      "Continuity counter error");
@@ -104,7 +105,8 @@ ts_recv_packet0
   case SCT_CA:
     if(st->es_section == NULL)
       st->es_section = calloc(1, sizeof(mpegts_psi_section_t));
-    mpegts_psi_section_reassemble(st->es_section, tsb, 0, got_ca_section, st);
+    mpegts_psi_section_reassemble(st->es_section, tsb, 0, ccerr,
+                                  got_ca_section, st);
     break;
 
   default:

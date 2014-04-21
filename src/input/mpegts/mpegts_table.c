@@ -219,12 +219,15 @@ mpegts_psi_section_reassemble0
  */
 void
 mpegts_psi_section_reassemble
-  (mpegts_psi_section_t *ps, const uint8_t *tsb, int crc,
+  (mpegts_psi_section_t *ps, const uint8_t *tsb, int crc, int ccerr,
    mpegts_psi_section_callback_t cb, void *opaque)
 {
   int off  = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
   int pusi = tsb[1] & 0x40;
   int r;
+
+  if (ccerr)
+    ps->ps_lock = 0;
 
   if(off >= 188) {
     ps->ps_lock = 0;
