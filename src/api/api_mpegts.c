@@ -251,6 +251,43 @@ api_mpegts_service_grid
   }
 }
 
+/*
+ * Mux scheduler
+ */
+static void
+api_mpegts_mux_sched_grid
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  mpegts_mux_sched_t *mms;
+  LIST_FOREACH(mms, &mpegts_mux_sched_all, mms_link)
+    idnode_set_add(ins, (idnode_t*)mms, &conf->filter);
+}
+
+static int
+api_mpegts_mux_sched_create
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err;
+  htsmsg_t *conf;
+  mpegts_mux_sched_t *mms;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  mms = mpegts_mux_sched_create(NULL, conf);
+  if (mms) {
+    err = 0;
+    *resp = htsmsg_create_map();
+    mpegts_mux_sched_save(mms);
+  } else {
+    err = EINVAL;
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  return err;
+}
+
 #if ENABLE_MPEGTS_DVB
 static int
 api_dvb_scanfile_list
@@ -321,6 +358,9 @@ api_mpegts_init ( void )
     { "mpegts/mux/class",          ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_mux_class },
     { "mpegts/service/grid",       ACCESS_ANONYMOUS, api_idnode_grid,  api_mpegts_service_grid },
     { "mpegts/service/class",      ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_service_class },
+    { "mpegts/mux_sched/class",    ACCESS_ANONYMOUS, api_idnode_class, (void*)&mpegts_mux_sched_class },
+    { "mpegts/mux_sched/grid",     ACCESS_ANONYMOUS, api_idnode_grid, api_mpegts_mux_sched_grid },
+    { "mpegts/mux_sched/create",   ACCESS_ANONYMOUS, api_mpegts_mux_sched_create, NULL },
 #if ENABLE_MPEGTS_DVB
     { "dvb/scanfile/list",         ACCESS_ANONYMOUS, api_dvb_scanfile_list, NULL },
 #endif

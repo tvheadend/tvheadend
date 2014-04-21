@@ -771,6 +771,9 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
   linuxdvb_init(adapter_mask);
 #endif
+#if ENABLE_MPEGTS
+  mpegts_mux_sched_init();
+#endif
 
   channel_init();
 
@@ -837,6 +840,9 @@ main(int argc, char **argv)
   tvhftrace("main", webui_done);
   tvhftrace("main", http_client_done);
   tvhftrace("main", fsmonitor_done);
+#if ENABLE_MPEGTS
+  tvhftrace("main", mpegts_mux_sched_done);
+#endif
 #if ENABLE_MPEGTS_DVB
   tvhftrace("main", dvb_network_done);
 #endif

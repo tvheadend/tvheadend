@@ -178,6 +178,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/input/mpegts/dvb_charset.c \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/tsdemux.c \
+	src/input/mpegts/mpegts_mux_sched.c \
 
 # MPEGTS DVB
 SRCS-${CONFIG_MPEGTS_DVB} += \

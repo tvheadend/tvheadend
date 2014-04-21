@@ -137,3 +137,23 @@ tvheadend.services = function(panel)
     }
   });
 }
+
+tvheadend.mux_sched = function(panel)
+{
+  tvheadend.idnode_grid(panel, {
+    url      : 'api/mpegts/mux_sched',
+    comet    : 'mpegts_mux_sched',
+    titleS   : 'Mux Scheduler',
+    titleP   : 'Mux Schedulers',
+    tabIndex : 4,
+    hidemode : true,
+    add      : {
+      url    : 'api/mpegts/mux_sched',
+      titleS : 'Mux Scheduler',
+      create : {
+        url          : 'api/mpegts/mux_sched/create'
+      }
+    },
+    del      : true
+  });
+}

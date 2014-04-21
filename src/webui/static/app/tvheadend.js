@@ -249,6 +249,7 @@ function accessUpdate(o) {
     tvheadend.networks(tvheadend.conf_dvbin);
     tvheadend.muxes(tvheadend.conf_dvbin);
     tvheadend.services(tvheadend.conf_dvbin);
+    tvheadend.mux_sched(tvheadend.conf_dvbin);
     tabs1.push(tvheadend.conf_dvbin);
 
     /* Channel / EPG */
