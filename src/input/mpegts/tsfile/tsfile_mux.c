@@ -42,10 +42,10 @@ iptv_mux_config_save ( mpegts_mux_t *m )
 }
 
 mpegts_mux_t *
-tsfile_mux_create ( mpegts_network_t *mn )
+tsfile_mux_create ( const char *uuid, mpegts_network_t *mn )
 {
   mpegts_mux_t *mm 
-    = mpegts_mux_create1(NULL, mn, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL);
+    = mpegts_mux_create1(uuid, mn, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL);
   mm->mm_config_save = iptv_mux_config_save;
   tvhtrace("tsfile", "mm created %p", mm);
   return mm;

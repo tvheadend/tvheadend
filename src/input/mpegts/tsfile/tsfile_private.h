@@ -78,7 +78,7 @@ tsfile_mux_instance_t *tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm );
 
 mpegts_mux_t *
-tsfile_mux_create ( mpegts_network_t *mn );
+tsfile_mux_create ( const char *uuid, mpegts_network_t *mn );
 
 #endif /* __TVH_TSFILE_PRIVATE_H__ */
 

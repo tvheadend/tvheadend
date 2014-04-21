@@ -110,10 +110,19 @@ void tsfile_add_file ( const char *path )
 {
   tsfile_input_t        *mi;
   mpegts_mux_t          *mm;
-  tvhtrace("tsfile", "add file %s", path);
+  char *uuid = NULL, *tok, *tmp = strdupa(path);
 
+  /* Pull UUID from info */
+  if ((tok = strstr(tmp, "::"))) {
+    *tok = '\0';
+    path = tok + 2;
+    uuid = tmp;
+  }
+
+  tvhtrace("tsfile", "add file %s (uuid:%s)", path, uuid);
+  
   /* Create logical instance */
-  mm = tsfile_mux_create(&tsfile_network);
+  mm = tsfile_mux_create(uuid, &tsfile_network);
   
   /* Create physical instance (for each tuner) */
   LIST_FOREACH(mi, &tsfile_inputs, tsi_link)
