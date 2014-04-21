@@ -153,6 +153,7 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   mpegts_input_t *mi = mmi->mmi_input;
 
   pthread_mutex_lock(&mi->mi_output_lock);
+  s->ths_mmi = NULL;
 
   if (!(s->ths_flags & SUBSCRIPTION_NONE))
     streaming_target_disconnect(&mmi->mmi_streaming_pad, &s->ths_input);
@@ -162,7 +163,6 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
 
   if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX))
     mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
-  s->ths_mmi = NULL;
   LIST_REMOVE(s, ths_mmi_link);
 
   pthread_mutex_unlock(&mi->mi_output_lock);
