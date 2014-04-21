@@ -48,11 +48,14 @@ webui_api_handler
     switch (r) {
       case EACCES:
         r = HTTP_STATUS_UNAUTHORIZED;
+        break;
       case ENOENT:
       case ENOSYS:
         r = HTTP_STATUS_NOT_FOUND;
+        break;
       default:
         r = HTTP_STATUS_BAD_REQUEST;
+        break;
     }
   }
 
