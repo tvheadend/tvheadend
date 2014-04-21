@@ -69,19 +69,34 @@ static http_path_t *
 http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 {
   http_path_t *hp;
-  char *v;
-  LIST_FOREACH(hp, &http_paths, hp_link) {
-    if(!strncmp(hc->hc_url, hp->hp_path, hp->hp_len)) {
-      if(hc->hc_url[hp->hp_len] == 0 || hc->hc_url[hp->hp_len] == '/' ||
-	 hc->hc_url[hp->hp_len] == '?')
-	break;
-    }
+  int n = 0;
+  char *v, *path = tvh_strdupa(hc->hc_url);
+
+  /* Canocalize path (or at least remove excess slashes) */
+  v  = path;
+  while (*v && *v != '?') {
+    if (*v == '/' && v[1] == '/') {
+      int l = strlen(v+1);
+      memmove(v, v+1, l);
+      v[l] = 0;
+      n++;
+    } else
+      v++;
   }
 
+  LIST_FOREACH(hp, &http_paths, hp_link) {
+    if(!strncmp(path, hp->hp_path, hp->hp_len)) {
+      if(path[hp->hp_len] == 0 ||
+         path[hp->hp_len] == '/' ||
+	       path[hp->hp_len] == '?')
+        break;
+    }
+  }
+  
   if(hp == NULL)
     return NULL;
 
-  v = hc->hc_url + hp->hp_len;
+  v = hc->hc_url + n + hp->hp_len;
 
   *remainp = NULL;
   *argsp = NULL;
