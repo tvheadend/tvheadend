@@ -771,9 +771,9 @@ forbid:
     ct->cs_channel = es->es_channel;
     ct->ecm_state = ECM_VALID;
 
-    if(t->s_prefcapid == 0 || t->s_prefcapid != ct->cs_channel) {
-      t->s_prefcapid = ct->cs_channel;
-      tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d", t->s_prefcapid);
+    if(t->s_dvb_prefcapid == 0 || t->s_dvb_prefcapid != ct->cs_channel) {
+      t->s_dvb_prefcapid = ct->cs_channel;
+      tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d", t->s_dvb_prefcapid);
       service_request_save((service_t*)t, 0);
     }
 
@@ -1638,28 +1638,28 @@ cwc_table_input(struct th_descrambler *td, service_t *s,
     if (ct->ecm_state == ECM_RESET) {
       ct->ecm_state = ECM_INIT;
       ct->cs_channel = -1;
-      t->s_prefcapid = 0;
+      t->s_dvb_prefcapid = 0;
       tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_dvb_svcname);
     }
 
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
-      if(t->s_prefcapid != 0) {
+      if(t->s_dvb_prefcapid != 0) {
         struct elementary_stream *prefca
-          = service_stream_find((service_t*)t, t->s_prefcapid);
+          = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
         if (!prefca || prefca->es_type != SCT_CA) {
-          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_prefcapid, t->s_dvb_svcname);
-          t->s_prefcapid = 0;
+          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
+          t->s_dvb_prefcapid = 0;
         }
       }
 
-      if(t->s_prefcapid == st->es_pid) {
+      if(t->s_dvb_prefcapid == st->es_pid) {
         ep = calloc(1, sizeof(ecm_pid_t));
-        ep->ep_pid = t->s_prefcapid;
+        ep->ep_pid = t->s_dvb_prefcapid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-        tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_prefcapid, t->s_dvb_svcname);
+        tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
       }
-      else if(t->s_prefcapid == 0) {
+      else if(t->s_dvb_prefcapid == 0) {
           ep = calloc(1, sizeof(ecm_pid_t));
           ep->ep_pid = st->es_pid;
           LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);

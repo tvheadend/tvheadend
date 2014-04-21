@@ -398,7 +398,6 @@ typedef struct service {
   struct th_descrambler_list s_descramblers;
   int s_scrambled_seen;
   int s_caid;
-  uint16_t s_prefcapid;
 
   /**
    * List of all components.
@@ -462,8 +461,6 @@ service_stream_find(service_t *t, int pid)
 elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
 
-void service_set_priority(service_t *t, int prio);
-
 void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
@@ -492,8 +489,6 @@ service_set_streaming_status_flags(service_t *t, int flag)
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
-
-void service_set_enable(service_t *t, int enabled);
 
 void service_restart(service_t *t, int had_components);
 
@@ -525,14 +520,6 @@ void service_refresh_channel(service_t *t);
 int tss2errcode(int tss);
 
 uint16_t service_get_encryption(service_t *t);
-
-void service_set_dvb_charset(service_t *t, const char *dvb_charset);
-
-void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
-
-void service_set_prefcapid(service_t *t, uint32_t prefcapid);
-
-int service_is_primary_epg (service_t *t);
 
 htsmsg_t *servicetype_list (void);
 

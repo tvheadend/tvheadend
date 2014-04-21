@@ -126,6 +126,13 @@ const idclass_t mpegts_service_class =
       .list   = dvb_charset_enum,
       .opts   = PO_ADVANCED,
     },
+    {
+      .type     = PT_U16,
+      .id       = "prefcapid",
+      .name     = "Pref. CA PID",
+      .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
+      .opts     = PO_ADVANCED,
+    },
     {},
   }
 };

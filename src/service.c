@@ -911,26 +911,6 @@ service_build_stream_start(service_t *t)
 /**
  *
  */
-void
-service_set_enable(service_t *t, int enabled)
-{
-  if(t->s_enabled == enabled)
-    return;
-
-  t->s_enabled = enabled;
-  t->s_config_save(t);
-  subscription_reschedule();
-}
-
-void
-service_set_prefcapid(service_t *t, uint32_t prefcapid)
-{
-  if(t->s_prefcapid == prefcapid)
-    return;
-
-  t->s_prefcapid = prefcapid;
-  t->s_config_save(t);
-}
 
 static pthread_mutex_t pending_save_mutex;
 static pthread_cond_t pending_save_cond;

@@ -360,6 +360,7 @@ struct mpegts_service
   char    *s_dvb_cridauth;
   uint16_t s_dvb_servicetype;
   char    *s_dvb_charset;
+  uint16_t s_dvb_prefcapid;
 
   /*
    * EIT/EPG control
