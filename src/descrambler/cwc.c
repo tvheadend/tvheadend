@@ -463,10 +463,14 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
 {
   cwc_message_t *cm = malloc(sizeof(cwc_message_t));
   uint8_t *buf = cm->cm_data;
+  int seq;
   
-	if (len < 3 || len + 12 > CWS_NETMSGSIZE) return -1;
+	if (len < 3 || len + 12 > CWS_NETMSGSIZE) {
+    free(cm);
+    return -1;
+  }
   
-  int seq = atomic_add(&cwc->cwc_seq, 1);
+  seq = atomic_add(&cwc->cwc_seq, 1);
   
   buf[0] = buf[1] = 0;
   buf[2] = (seq >> 8) & 0xff;
