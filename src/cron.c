@@ -181,10 +181,13 @@ days_in_month ( int year, int mon )
 int
 cron_next ( cron_t *c, const time_t now, time_t *ret )
 {
-  struct tm nxt;
+  struct tm nxt, tmp;
   int endyear; 
   localtime_r(&now, &nxt);
   endyear = nxt.tm_year + 10;
+
+  /* Clear seconds */
+  nxt.tm_sec = 0;
 
   /* Invalid day */
   if (!(c->c_mday & (0x1LL << (nxt.tm_mday-1))) ||
@@ -267,8 +270,9 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   }
 
   /* Create time */
-  // TODO: not sure this will provide the correct time with respect to DST!
-  nxt.tm_isdst = 0;
+  memcpy(&tmp, &nxt, sizeof(tmp));
+  mktime(&tmp);
+  nxt.tm_isdst = tmp.tm_isdst;
   *ret         = mktime(&nxt);
   return 0;
 }
