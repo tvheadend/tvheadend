@@ -837,9 +837,11 @@ mpegts_input_thread_stop ( mpegts_input_t *mi )
   pthread_cond_signal(&mi->mi_table_cond);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
-  /* Join threads */
+  /* Join threads (relinquish lock due to potential deadlock) */
+  pthread_mutex_unlock(&global_lock);
   pthread_join(mi->mi_input_tid, NULL);
   pthread_join(mi->mi_table_tid, NULL);
+  pthread_mutex_lock(&global_lock);
 }
 
 /* **************************************************************************
@@ -936,14 +938,21 @@ void
 mpegts_input_delete ( mpegts_input_t *mi, int delconf )
 {
   mpegts_network_link_t *mnl;
-  mpegts_input_thread_stop(mi);
+
+  /* Remove networks */
   while ((mnl = LIST_FIRST(&mi->mi_networks)))
     mpegts_input_del_network(mnl);
+
+  /* Remove global refs */
   idnode_unlink(&mi->ti_id);
-  pthread_mutex_destroy(&mi->mi_output_lock);
-  pthread_cond_destroy(&mi->mi_table_cond);
   LIST_REMOVE(mi, ti_link);
   LIST_REMOVE(mi, mi_global_link);
+
+  /* Stop threads (will unlock global_lock to join) */
+  mpegts_input_thread_stop(mi);
+
+  pthread_mutex_destroy(&mi->mi_output_lock);
+  pthread_cond_destroy(&mi->mi_table_cond);
   free(mi->mi_name);
   free(mi);
 }
