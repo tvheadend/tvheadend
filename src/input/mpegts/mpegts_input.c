@@ -448,7 +448,7 @@ mpegts_input_recv_packets
   /* Check for sync */
 // could be a bit more efficient
   while ( (len >= (MIN_TS_SYN * 188)) &&
-          ((p = ts_sync_count(tsb, len)) == 0) ) {
+          ((p = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
     --len;
     ++tsb;
     ++off;

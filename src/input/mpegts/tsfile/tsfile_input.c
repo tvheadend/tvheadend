@@ -120,7 +120,7 @@ tsfile_input_thread ( void *aux )
     len += c;
 
     /* Reset */
-    if (len == st.st_size) {
+    if (len >= st.st_size) {
       len = 0;
       c -= rem;
       tvhtrace("tsfile", "adapter %d reached eof, resetting", mi->mi_instance);
@@ -129,7 +129,7 @@ tsfile_input_thread ( void *aux )
     }
 
     /* Process */
-    if (c >= 0) {
+    if (c > 0) {
       pcr = PTS_UNSET;
       mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0,
                                 &pcr, &tmi->mmi_tsfile_pcr_pid);
