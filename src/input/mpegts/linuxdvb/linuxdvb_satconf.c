@@ -632,7 +632,6 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   }
 
   /* Diseqc */  
-  i = ls->ls_diseqc_idx;
   for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
     if (!lds[i]) continue;
     r = lds[i]->ld_tune(lds[i], lm, lse, lfe->lfe_fe_fd);

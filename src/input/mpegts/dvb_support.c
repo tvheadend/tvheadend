@@ -434,7 +434,6 @@ int dvb_str2rolloff(const char *p)
   int res = dvb_str2common(p);
   if (res != DVB_EOD)
     return res;
-  res = atoi(p) * 10;
   return dvb_verify(atoi(p) * 10, rolloff_table);
 }
 
