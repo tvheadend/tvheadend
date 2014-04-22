@@ -189,7 +189,7 @@ ts_recv_packet1
 #endif
 
   /* Extract PCR (do this early for tsfile) */
-  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error) {
+  if(((tsb[3] & 0x30) == 0x30) && (tsb[4] > 5) && (tsb[5] & 0x10) && !error) {
     pcr  = (uint64_t)tsb[6] << 25;
     pcr |= (uint64_t)tsb[7] << 17;
     pcr |= (uint64_t)tsb[8] << 9;
