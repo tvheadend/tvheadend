@@ -185,6 +185,17 @@ mpegts_mux_class_delete ( idnode_t *self )
   if (mm->mm_delete) mm->mm_delete(mm, 1);
 }
 
+static const char *
+mpegts_mux_class_get_title ( idnode_t *self )
+{
+  static __thread char buf[256];
+  mpegts_mux_t *mm = (mpegts_mux_t*)self;
+  *buf = 0;
+  if (mm->mm_display_name)
+    mm->mm_display_name(mm, buf, sizeof(buf));
+  return buf;
+}
+
 static const void *
 mpegts_mux_class_get_num_svc ( void *ptr )
 {
@@ -251,6 +262,7 @@ const idclass_t mpegts_mux_class =
   .ic_event      = "mpegts_mux",
   .ic_save       = mpegts_mux_class_save,
   .ic_delete     = mpegts_mux_class_delete,
+  .ic_get_title  = mpegts_mux_class_get_title,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
