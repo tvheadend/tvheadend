@@ -750,6 +750,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
   if (lfe->sf_pids_count > lfe->sf_device->sd_pids_max)
     any = lfe->sf_device->sd_fullmux_ok ? 1 : 0;
+  if (lfe->sf_fullmux && lfe->sf_device->sd_fullmux_ok)
+    any = 1;
 
   if (any) {
 
