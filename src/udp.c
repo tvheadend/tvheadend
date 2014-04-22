@@ -386,13 +386,10 @@ udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
  * UDP multi packet receive support
  */
 
-#ifndef CONFIG_RECVMMSG
-
-#ifdef __linux__
-
+#if !defined (CONFIG_RECVMMSG) && defined(__linux__)
 /* define the syscall - works only for linux */
-
 #include <linux/unistd.h>
+#ifdef __NR_recvmmsg
 
 struct mmsghdr {
   struct msghdr msg_hdr;
@@ -402,38 +399,44 @@ struct mmsghdr {
 int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
              unsigned int flags, struct timespec *timeout);
 
-#ifdef __NR_recvmmsg
-
 int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
              unsigned int flags, struct timespec *timeout)
 {
   return syscall(__NR_recvmmsg, sockfd, msgvec, vlen, flags, timeout);
 }
 
-#else
+#define CONFIG_RECVMMSG
 
-#undef PKTS
-#define PKTS 1
-/* receive only single packet */
-int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
-             unsigned int flags, struct timespec *timeout)
+#endif
+#endif
+
+
+#ifndef CONFIG_RECVMMSG
+
+struct mmsghdr {
+  struct msghdr msg_hdr;
+  unsigned int  msg_len;
+};
+
+static int
+recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+         unsigned int flags, struct timespec *timeout)
 {
-  ssize_t r = recvmsg(sockfd, &msgvec->msg_hdr, flags);
-  if (r < 0)
-    return r;
-  msgvec->msg_len = r;
-  return 1;
+  ssize_t r;
+  unsigned int i;
+
+  for (i = 0; i < vlen; i++) {
+    r = recvmsg(sockfd, &msgvec->msg_hdr, flags);
+    if (r < 0)
+      return (i > 0) ? i : r;
+    msgvec->msg_len = r;
+    msgvec++;
+  }
+  return i;
 }
 
 #endif
 
-#else /* not __linux__ */
-
-#error "Add recvmmsg() support for your platform!!!"
-
-#endif
-
-#endif /* !CONFIG_RECVMMSG */
 
 void
 udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )

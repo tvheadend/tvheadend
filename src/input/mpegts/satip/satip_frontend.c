@@ -864,7 +864,8 @@ static void *
 satip_frontend_input_thread ( void *aux )
 {
 #define RTP_PKTS      64
-#define RTP_PKT_SIZE  1472  /* this is maximum UDP payload (standard ethernet) */
+#define UDP_PKT_SIZE  1472         /* this is maximum UDP payload (standard ethernet) */
+#define RTP_PKT_SIZE  (UDP_PKT_SIZE - 12)             /* minus RTP minimal RTP header */
 #define HTTP_CMD_NONE 9874
   satip_frontend_t *lfe = aux, *lfe2;
   mpegts_mux_instance_t *mmi = lfe->sf_mmi;
@@ -933,7 +934,7 @@ satip_frontend_input_thread ( void *aux )
   }
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
-  sbuf_init_fixed(&sb, 18800);
+  sbuf_init_fixed(&sb, RTP_PKTS * RTP_PKT_SIZE);
 
   while (tvheadend_running && !fatal) {
 
@@ -1079,9 +1080,9 @@ satip_frontend_input_thread ( void *aux )
       seq = nseq;
       /* Process */
       sbuf_append(&sb, p + pos, c - pos);
-      mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                &sb, 0, NULL, NULL);
     }
+    mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
+                              &sb, 0, NULL, NULL);
   }
 
   sbuf_free(&sb);
