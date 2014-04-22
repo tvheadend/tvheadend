@@ -65,6 +65,13 @@ extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_input_class;
 
 /* **************************************************************************
+ * Setup / Tear down
+ * *************************************************************************/
+
+void mpegts_init ( int linuxdvb_mask, str_list_t *tsfiles, int tstuners );
+void mpegts_done ( void );
+
+/* **************************************************************************
  * Data / SI processing
  * *************************************************************************/
 

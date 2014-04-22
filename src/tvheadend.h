@@ -68,6 +68,13 @@ static inline htsmsg_t *tvheadend_capabilities_list(int check)
   return r;
 }
 
+typedef struct str_list
+{
+  int max;
+  int num;
+  char **str;
+} str_list_t;
+
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
 extern int tvheadend_running;

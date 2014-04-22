@@ -72,12 +72,6 @@
 pthread_t main_tid;
 
 /* Command line option struct */
-typedef struct str_list
-{
-  int max;
-  int num;
-  char **str;
-} str_list_t;
 typedef struct {
   const char  sopt;
   const char *lopt;
@@ -755,24 +749,8 @@ main(int argc, char **argv)
 
   service_init();
 
-#if ENABLE_TSFILE
-  if(opt_tsfile.num) {
-    tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
-    for (i = 0; i < opt_tsfile.num; i++)
-      tsfile_add_file(opt_tsfile.str[i]);
-  }
-#endif
-#if ENABLE_MPEGTS_DVB
-  dvb_network_init();
-#endif
-#if ENABLE_IPTV
-  iptv_init();
-#endif
-#if ENABLE_LINUXDVB
-  linuxdvb_init(adapter_mask);
-#endif
 #if ENABLE_MPEGTS
-  mpegts_mux_sched_init();
+  mpegts_init(adapter_mask, &opt_tsfile, opt_tsfile_tuner);
 #endif
 
   channel_init();
@@ -841,19 +819,7 @@ main(int argc, char **argv)
   tvhftrace("main", http_client_done);
   tvhftrace("main", fsmonitor_done);
 #if ENABLE_MPEGTS
-  tvhftrace("main", mpegts_mux_sched_done);
-#endif
-#if ENABLE_MPEGTS_DVB
-  tvhftrace("main", dvb_network_done);
-#endif
-#if ENABLE_IPTV
-  tvhftrace("main", iptv_done);
-#endif
-#if ENABLE_LINUXDVB
-  tvhftrace("main", linuxdvb_done);
-#endif
-#if ENABLE_TSFILE
-  tvhftrace("main", tsfile_done);
+  tvhftrace("main", mpegts_done);
 #endif
 
   // Note: the locking is obviously a bit redundant, but without

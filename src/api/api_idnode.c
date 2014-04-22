@@ -17,9 +17,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_API_IDNODE_H__
-#define __TVH_API_IDNODE_H__
-
 #include "tvheadend.h"
 #include "access.h"
 #include "idnode.h"
@@ -433,6 +430,3 @@ void api_idnode_init ( void )
 
   api_register_all(ah);
 }
-
-
-#endif /* __TVH_API_IDNODE_H__ */

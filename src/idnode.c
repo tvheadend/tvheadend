@@ -45,9 +45,6 @@ static void*                  idnode_thread(void* p);
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
-static void
-idclass_register(const idclass_t *idc);
-
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
@@ -787,7 +784,7 @@ ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
   return strcmp(a->idc->ic_class, b->idc->ic_class);
 }
 
-static void
+void
 idclass_register(const idclass_t *idc)
 {
   while (idc) {
