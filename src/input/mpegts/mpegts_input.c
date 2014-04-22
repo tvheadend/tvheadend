@@ -458,7 +458,7 @@ mpegts_input_recv_packets
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data + off;
   int     len  = sb->sb_ptr  - off;
-#define MIN_TS_PKT 100
+#define MIN_TS_PKT 10
 #define MIN_TS_SYN 5
 
   if (len < (MIN_TS_PKT * 188))
