@@ -265,6 +265,9 @@ http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
   char addrstr[50];
+
+  if (!http_server) return;
+
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
   tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
@@ -788,7 +791,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
     free(hc->hc_password);
     hc->hc_password = NULL;
 
-  } while(hc->hc_keep_alive);
+  } while(hc->hc_keep_alive && http_server);
 
 error:
   free(hdrline);
@@ -868,12 +871,13 @@ http_server_done(void)
   http_path_t *hp;
 
   pthread_mutex_lock(&global_lock);
+  if (http_server)
+    tcp_server_delete(http_server);
+  http_server = NULL;
   while ((hp = LIST_FIRST(&http_paths)) != NULL) {
     LIST_REMOVE(hp, hp_link);
     free((void *)hp->hp_path);
     free(hp);
   }
   pthread_mutex_unlock(&global_lock);
-  if (http_server)
-    tcp_server_delete(http_server);
 }
