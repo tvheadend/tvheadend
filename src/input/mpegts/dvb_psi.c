@@ -591,8 +591,12 @@ dvb_pat_callback
       tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
-        mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
-                         NULL, "pmt", MT_CRC | MT_QUICKREQ, pid);
+        if (mm->mm_active && mm->mm_active->mmi_input) {
+          mpegts_input_t *mi = mm->mm_active->mmi_input;
+          if (mi->mi_pmtmon)
+            mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
+                             NULL, "pmt", MT_CRC | MT_QUICKREQ, pid);
+        }
 
         if (save)
           service_request_save((service_t*)s, 1);

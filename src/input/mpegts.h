@@ -405,6 +405,12 @@ struct mpegts_service
    */
   int64_t  s_pcr_drift;
 
+  /**
+   * PMT monitoring
+   */
+
+  mpegts_table_t *s_pmt_mon; ///< Table entry for monitoring PMT
+
 };
 
 /* **************************************************************************
@@ -453,6 +459,8 @@ struct mpegts_input
   char *mi_name;
 
   int mi_priority;
+
+  int mi_pmtmon;
 
   LIST_ENTRY(mpegts_input) mi_global_link;
 

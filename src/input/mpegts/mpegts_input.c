@@ -153,6 +153,13 @@ const idclass_t mpegts_input_class =
       .list     = mpegts_input_class_network_enum,
       .rend     = mpegts_input_class_network_rend,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "pmtmon",
+      .name     = "Enable PMT monitor",
+      .off      = offsetof(mpegts_input_t, mi_pmtmon),
+      .opts     = PO_ADVANCED,
+    },
     {}
   }
 };
@@ -319,12 +326,23 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
+
+   /* Add PMT monitor */
+  s->s_pmt_mon =
+    mpegts_table_add(s->s_dvb_mux, DVB_PMT_BASE, DVB_PMT_MASK,
+                     dvb_pmt_callback, s, "pmt",
+                     MT_CRC, s->s_pmt_pid);
 }
 
 void
 mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
   elementary_stream_t *st;
+
+  /* Close PMT table */
+  if (s->s_pmt_mon)
+    mpegts_table_destroy(s->s_pmt_mon);
+  s->s_pmt_mon = NULL;
 
   /* Remove from list */
   pthread_mutex_lock(&mi->mi_output_lock);
@@ -339,6 +357,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
   TAILQ_FOREACH(st, &s->s_components, es_link)
     mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+
 
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
