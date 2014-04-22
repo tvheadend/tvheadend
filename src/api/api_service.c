@@ -92,6 +92,82 @@ api_service_mapper_notify ( void )
   notify_by_msg("servicemapper", api_mapper_status_msg());
 }
 
+static int
+api_service_streams
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const char *uuid;
+  htsmsg_t *e, *st;
+  service_t *s;
+  elementary_stream_t *es;
+
+  /* No UUID */
+  if (!(uuid = htsmsg_get_str(args, "uuid")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+
+  /* Couldn't find */
+  if (!(s = service_find(uuid))) {
+    pthread_mutex_unlock(&global_lock);
+    return EINVAL;
+  }
+
+  /* Build response */
+  pthread_mutex_lock(&s->s_stream_mutex);
+  st = htsmsg_create_list();
+  if (s->s_pcr_pid) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "pid", s->s_pcr_pid);
+    htsmsg_add_str(e, "type", "PCR");
+    htsmsg_add_msg(st, NULL, e);
+  }
+  if (s->s_pmt_pid) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "pid", s->s_pmt_pid);
+    htsmsg_add_str(e, "type", "PMT");
+    htsmsg_add_msg(st, NULL, e);
+  }
+  TAILQ_FOREACH(es, &s->s_components, es_link) {
+    htsmsg_t *e = htsmsg_create_map();
+    htsmsg_add_u32(e, "index",    es->es_index);
+    htsmsg_add_u32(e, "pid",      es->es_pid);
+    htsmsg_add_str(e, "type",     streaming_component_type2txt(es->es_type));
+    htsmsg_add_str(e, "language", es->es_lang);
+    if (SCT_ISSUBTITLE(es->es_type)) {
+      htsmsg_add_u32(e, "composition_id", es->es_composition_id);
+      htsmsg_add_u32(e, "ancillary_id",   es->es_ancillary_id);
+    } else if (SCT_ISAUDIO(es->es_type)) {
+      htsmsg_add_u32(e, "audio_type",     es->es_audio_type);
+    } else if (SCT_ISVIDEO(es->es_type)) {
+      htsmsg_add_u32(e, "width",          es->es_width);
+      htsmsg_add_u32(e, "height",         es->es_height);
+      htsmsg_add_u32(e, "duration",       es->es_frame_duration);
+      htsmsg_add_u32(e, "aspect_num",     es->es_aspect_num);
+      htsmsg_add_u32(e, "aspect_den",     es->es_aspect_den);
+    } else if (es->es_type == SCT_CA) {
+      caid_t *ca;
+      htsmsg_t *e2, *l2 = htsmsg_create_list();
+      LIST_FOREACH(ca, &es->es_caids, link) {
+        e2 = htsmsg_create_map();
+        htsmsg_add_u32(e2, "caid",     ca->caid);
+        htsmsg_add_u32(e2, "provider", ca->providerid);
+        htsmsg_add_msg(l2, NULL, e2);
+      }
+      htsmsg_add_msg(e, "caids", l2);
+    }
+    htsmsg_add_msg(st, NULL, e);
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_str(*resp, "name", s->s_nicename);
+  htsmsg_add_msg(*resp, "streams", st);
+  pthread_mutex_unlock(&s->s_stream_mutex);
+
+  /* Done */
+  pthread_mutex_unlock(&global_lock);
+  return 0;
+}
+
 void api_service_init ( void )
 {
   extern const idclass_t service_class;
@@ -101,6 +177,7 @@ void api_service_init ( void )
     { "service/mapper/status",  ACCESS_ADMIN, api_mapper_status, NULL },
     { "service/list",           ACCESS_ANONYMOUS, api_idnode_load_by_class, 
       (void*)&service_class },
+    { "service/streams",        ACCESS_ANONYMOUS, api_service_streams, NULL },
     { NULL },
   };
 
