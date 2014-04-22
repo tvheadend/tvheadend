@@ -87,12 +87,6 @@ const idclass_t linuxdvb_frontend_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "fullmux",
-      .name     = "Full Mux RX mode",
-      .off      = offsetof(linuxdvb_frontend_t, lfe_fullmux),
-    },
-    {
-      .type     = PT_BOOL,
       .id       = "powersave",
       .name     = "Power Save",
       .off      = offsetof(linuxdvb_frontend_t, lfe_powersave),
@@ -320,8 +314,8 @@ linuxdvb_frontend_open_pid0
   if (mp->mp_fd != -1)
     return;
 
-  /* Not locked OR full mux mode */
-  if (!lfe->lfe_locked || lfe->lfe_fullmux)
+  /* Not locked */
+  if (!lfe->lfe_locked)
     return;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, name, sizeof(name));
@@ -632,8 +626,6 @@ linuxdvb_frontend_input_thread ( void *aux )
   char buf[256];
   int nfds;
   tvhpoll_event_t ev[2];
-  struct dmx_pes_filter_params dmx_param;
-  int fullmux;
   tvhpoll_t *efd;
   sbuf_t sb;
 
@@ -641,31 +633,9 @@ linuxdvb_frontend_input_thread ( void *aux )
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   mmi = LIST_FIRST(&lfe->mi_mux_active);
-  fullmux = lfe->lfe_fullmux;
   pthread_cond_signal(&lfe->lfe_dvr_cond);
   pthread_mutex_unlock(&lfe->lfe_dvr_lock);
   if (mmi == NULL) return NULL;
-
-  /* Open DMX */
-  if (fullmux) {
-    dmx = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
-    if (dmx < 0) {
-      tvherror("linuxdvb", "%s - failed to open %s", buf, lfe->lfe_dmx_path);
-      return NULL;
-    }
-    memset(&dmx_param, 0, sizeof(dmx_param));
-    dmx_param.pid      = 0x2000;
-    dmx_param.input    = DMX_IN_FRONTEND;
-    dmx_param.output   = DMX_OUT_TS_TAP;
-    dmx_param.pes_type = DMX_PES_OTHER;
-    dmx_param.flags    = DMX_IMMEDIATE_START;
-    if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param) == -1) {
-      tvherror("linuxdvb", "%s - open raw filter failed [e=%s]",
-               buf, strerror(errno));
-      close(dmx);
-      return NULL;
-    }
-  }
 
   /* Open DVR */
   dvr = tvh_open(lfe->lfe_dvr_path, O_RDONLY | O_NONBLOCK, 0);
