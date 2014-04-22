@@ -650,6 +650,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var filters = [];
     var fields  = [];
     var buttons = [];
+    var plugins = conf.plugins || [];
     var saveBtn = null;
     var undoBtn = null;
     var addBtn  = null;
@@ -958,6 +959,7 @@ tvheadend.idnode_grid = function(panel, conf)
       items       : [ '-', 'Auto-refresh', auto,
                       '->', '-', 'Per page', count ]
     });
+    plugins.push(filter);
     var grid   = new Ext.grid.EditorGridPanel({
       stateful      : true,
       stateId       : conf.url,
@@ -966,9 +968,7 @@ tvheadend.idnode_grid = function(panel, conf)
       store         : store,
       cm            : model,
       selModel      : select,
-      plugins       : [
-        filter
-      ],
+      plugins       : plugins,
       viewConfig    : {
         forceFit : true
       },

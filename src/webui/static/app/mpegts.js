@@ -95,6 +95,65 @@ tvheadend.muxes = function(panel)
   });
 }
 
+tvheadend.show_service_streams = function ( data ) {
+  var i, j;
+	var html = '';
+
+  html += '<table style="font-size:8pt;font-family:mono;padding:2px"';
+	html += '<tr>';
+	html += '<th style="width:50px;font-weight:bold">Index</th>';
+	html += '<th style="width:120px;font-weight:bold">PID</th>';
+	html += '<th style="width:100px;font-weight:bold">Type</th>';
+	html += '<th style="width:75px;font-weight:bold">Language</th>';
+  html += '<th style="width:*;font-weight:bold">Details</th>';
+	html += '</tr>';
+
+  function hexstr ( d ) {
+    return ('0000' + d.toString(16)).slice(-4);
+  }
+    
+  function fixstr ( d ) {
+    var r = d.toString();
+    var l = r.length;
+    var i;
+    for (i = l; i < 5; i++) {
+      r = '&nbsp;' + r;
+    }
+    return r;
+  }
+
+	for (i = 0; i < data.streams.length; i++) {
+		var s = data.streams[i];
+    var d = '&nbsp;';
+    var p = '0x' + hexstr(s.pid) + '&nbsp;/&nbsp;' + fixstr(s.pid);
+
+		html += '<tr>';
+		html += '<td>' + (s.index > 0 ? s.index : '&nbsp;') + '</td>';
+		html += '<td>' + p + '</td>';
+		html += '<td>' + s.type + '</td>';
+		html += '<td>' + (s.language || '&nbsp;') + '</td>'
+    if (s.type == 'CA') {
+      d = 'CAIDS: ';
+      for (j = 0; j < s.caids.length; j++) {
+        d += s.caids[j].caid + ', ';
+      }
+    }
+		html += '<td>' + d + '</td>';
+		html += '</tr>';
+	}
+
+	var win = new Ext.Window({
+		title : 'Service details for ' + data.name,
+		layout : 'fit',
+		width : 600,
+		height : 300,
+		plain : true,
+		bodyStyle : 'padding: 5px',
+		html : html
+	});
+	win.show();
+}
+
 tvheadend.services = function(panel)
 {
   var mapButton = new Ext.Toolbar.Button({
@@ -111,6 +170,26 @@ tvheadend.services = function(panel)
     else
       mapButton.setText('Map All')
   }
+  var actions = new Ext.ux.grid.RowActions({
+    header    : '',
+    width     : 10,
+    actions   : [ {
+      iconCls : 'info',
+      qtip    : 'Detailed stream info',
+      cb      : function ( grid, rec, act, row, col ) {
+        Ext.Ajax.request({
+          url    : 'api/service/streams',
+          params : {
+            uuid : rec.id
+          },
+          success : function (r, o) {
+            var d = Ext.util.JSON.decode(r.responseText);
+            tvheadend.show_service_streams(d);
+          }
+        });
+      }
+    } ]
+  });
   tvheadend.idnode_grid(panel, {
     url      : 'api/mpegts/service',
     comet    : 'service',
@@ -129,8 +208,10 @@ tvheadend.services = function(panel)
         renderer : function(v, o, r) {
           return "<a href='stream/service/" + r.id + "'>Play</a>";
         }
-      }
+      },
+      actions
     ],
+    plugins   : [ actions ],
     sort     : {
       field  : 'svcname',
       direction : 'ASC'
