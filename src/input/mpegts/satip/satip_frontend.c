@@ -1072,7 +1072,8 @@ satip_frontend_input_thread ( void *aux )
       if (seq == -1)
         seq = nseq;
       else if (((seq + 1) & 0xffff) != nseq)
-        mmi->mmi_stats.unc++;
+        mmi->mmi_stats.unc += ((c - pos) / 188) *
+                              (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
       seq = nseq;
       /* Process */
       sbuf_append(&sb, p + pos, c - pos);
