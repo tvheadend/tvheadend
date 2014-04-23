@@ -678,8 +678,8 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
 
   /* Collate - tables may be removed during callbacks */
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    mpegts_table_grab(mt);
     vec[i++] = mt;
-    mt->mt_refcount++;
   }
   assert(i == len);
 

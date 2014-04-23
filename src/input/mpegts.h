@@ -140,10 +140,12 @@ struct mpegts_table
    */
   int mt_flags;
 
-#define MT_CRC      0x1
-#define MT_FULL     0x2
-#define MT_QUICKREQ 0x4
-#define MT_RECORD   0x8
+#define MT_CRC      0x01
+#define MT_FULL     0x02
+#define MT_QUICKREQ 0x04
+#define MT_RECORD   0x08
+#define MT_SKIPSUBS 0x10
+#define MT_SCANSUBS 0x20
 
   /**
    * Cycle queue
@@ -169,6 +171,7 @@ struct mpegts_table
   int mt_complete;
   int mt_incomplete;
   int mt_finished;
+  int mt_subscribed;
 
   int mt_count;
 
@@ -696,6 +699,8 @@ void mpegts_input_close_pid
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
+static inline void mpegts_table_grab
+  (mpegts_table_t *mt) { mt->mt_refcount++; }
 void mpegts_table_release_
   (mpegts_table_t *mt);
 static inline void mpegts_table_release
@@ -710,6 +715,7 @@ mpegts_table_t *mpegts_table_add
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );
+void mpegts_table_register_caid ( mpegts_mux_t *mm, uint16_t caid );
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,

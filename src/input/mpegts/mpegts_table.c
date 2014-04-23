@@ -105,7 +105,8 @@ mpegts_table_destroy ( mpegts_table_t *mt )
   LIST_REMOVE(mt, mt_link);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_num_tables--;
-  mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  if (mt->mt_subscribed)
+    mt->mt_mux->mm_close_table(mt->mt_mux, mt);
   while ((st = RB_FIRST(&mt->mt_state))) {
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
@@ -126,13 +127,34 @@ mpegts_table_add
     const char *name, int flags, int pid )
 {
   mpegts_table_t *mt;
+  int subscribe = 1;
 
   /* Check for existing */
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
-    if ( mt->mt_pid      == pid      &&
-         mt->mt_callback == callback &&
-         mt->mt_opaque   == opaque )
-      return mt;
+    if (mt->mt_opaque != opaque)
+      continue;
+    if (mt->mt_pid < 0) {
+      if (strcmp(mt->mt_name, name))
+        continue;
+      mt->mt_callback   = callback;
+      mt->mt_pid        = pid;
+      mt->mt_table      = tableid;
+      mt->mt_subscribed = 1;
+      mm->mm_open_table(mm, mt);
+    } else if (pid >= 0) {
+      if (mt->mt_pid != pid)
+        continue;
+      if (mt->mt_callback != callback)
+        continue;
+    } else {
+      if (strcmp(mt->mt_name, name))
+        continue;
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
+        mt->mt_subscribed = 1;
+        mm->mm_open_table(mm, mt);
+      }
+    }
+    return mt;
   }
 
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
@@ -145,7 +167,7 @@ mpegts_table_add
   mt->mt_callback = callback;
   mt->mt_opaque   = opaque;
   mt->mt_pid      = pid;
-  mt->mt_flags    = flags;
+  mt->mt_flags    = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
   mt->mt_table    = tableid;
   mt->mt_mask     = mask;
   mt->mt_mux      = mm;
@@ -154,7 +176,18 @@ mpegts_table_add
   mm->mm_num_tables++;
 
   /* Open table */
-  mm->mm_open_table(mm, mt);
+  if (pid < 0) {
+    subscribe = 0;
+  } else if (flags & MT_SKIPSUBS) {
+    subscribe = 0;
+  } else if (flags & MT_SCANSUBS) {
+    if (mm->mm_initial_scan_status == MM_SCAN_DONE)
+      subscribe = 0;
+  }
+  if (subscribe) {
+    mt->mt_subscribed = 1;
+    mm->mm_open_table(mm, mt);
+  }
   return mt;
 }
 
@@ -167,6 +200,16 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   mpegts_table_t        *mt;
   while ((mt = LIST_FIRST(&mm->mm_tables)))
     mpegts_table_destroy(mt);
+}
+
+/**
+ * Register wanted CAID
+ */
+void
+mpegts_table_register_caid ( mpegts_mux_t *mm, uint16_t caid )
+{
+  uintptr_t ca = caid;
+  mpegts_table_add(mm, 0, 0, NULL, (void *)ca, "ca", MT_FULL, -1);
 }
 
 /*
