@@ -101,12 +101,6 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_number),
     },
     {
-      .type     = PT_BOOL,
-      .id       = "fullmux",
-      .name     = "Full Mux Rx mode",
-      .off      = offsetof(satip_frontend_t, sf_fullmux),
-    },
-    {
       .type     = PT_INT,
       .id       = "udp_rtp_port",
       .name     = "UDP RTP Port Number (2 ports)",
@@ -750,8 +744,6 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
   if (lfe->sf_pids_count > lfe->sf_device->sd_pids_max)
     any = lfe->sf_device->sd_fullmux_ok ? 1 : 0;
-  if (lfe->sf_fullmux && lfe->sf_device->sd_fullmux_ok)
-    any = 1;
 
   if (any) {
 
