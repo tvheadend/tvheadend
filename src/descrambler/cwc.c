@@ -2031,6 +2031,8 @@ cwc_service_start(service_t *t)
 
     if (ct) continue;
 
+    mpegts_table_register_caid(((mpegts_service_t *)t)->s_dvb_mux, pcard->cwc_caid);
+
     ct                   = calloc(1, sizeof(cwc_service_t));
     tvhcsa_init(&ct->cs_csa);
     ct->cs_cwc           = cwc;
