@@ -100,7 +100,6 @@ struct satip_frontend
   char                      *sf_type_override;
   int                        sf_master;
   int                        sf_udp_rtp_port;
-  int                        sf_fullmux;
   int                        sf_play2;
 
   /*
