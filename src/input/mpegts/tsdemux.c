@@ -76,6 +76,7 @@ ts_recv_packet0
   if (!st)
     return;
 
+  ccerr = 0;
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
