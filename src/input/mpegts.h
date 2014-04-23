@@ -460,8 +460,6 @@ struct mpegts_input
 
   int mi_priority;
 
-  int mi_pmtmon;
-
   LIST_ENTRY(mpegts_input) mi_global_link;
 
   mpegts_network_link_list_t mi_networks;
