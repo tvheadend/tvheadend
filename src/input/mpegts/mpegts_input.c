@@ -153,13 +153,6 @@ const idclass_t mpegts_input_class =
       .list     = mpegts_input_class_network_enum,
       .rend     = mpegts_input_class_network_rend,
     },
-    {
-      .type     = PT_BOOL,
-      .id       = "pmtmon",
-      .name     = "Enable PMT monitor",
-      .off      = offsetof(mpegts_input_t, mi_pmtmon),
-      .opts     = PO_ADVANCED,
-    },
     {}
   }
 };
