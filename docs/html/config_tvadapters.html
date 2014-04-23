@@ -1,0 +1,81 @@
+<div class="hts-doc-text">
+
+<h3>The adapters and tuners are listed / edited  in a tree</h3>
+
+<ul>
+  <li>To edit an item, click on it. To commit edited changes back to
+      Tvheadend press the 'Save' button. In order to change a Checkbox cell
+      you only have to click once in it.
+</ul>
+</p>
+
+<h4>The rows have the following functions</h4>
+
+<dl>
+  <dt>Enabled</dt>
+  <dd>If selected, the IPTV service will be enabled an use for channel
+      subscriptions.</dd>
+
+  <dt>Name</dt>
+  <dd>The name of this tuner.</dd>
+
+  <dt>Full Mux Rx mode</dt>
+  <dd>If selected, the whole mux (transponder) will be received without any
+      filtering. It is not usually required to enable this option. It does
+      not have usually any benefit, because tvheadend will filter the
+      unwanted PIDs from the TS stream, except for the malfunctioning drivers.</dd>
+</dl>
+</p>
+
+<h4>LinuxDVB specific rows</h4>
+
+<dl>
+  <dt>Keep FE open</dt>
+  <dd>Enable to not close the LinuxDVB frontend device in the idle state.</dd>
+</dl>      
+
+<h4>SAT>IP specific rows</h4>
+
+<dl>
+  <dt>Full Mux Rx mode supported</dt>
+  <dd>Enable, if the SAT>IP box supports the full mux rx mode (pids=all)
+      parameter.</dd>
+      
+  <dt>Signal scale (240 or 100)</dt>
+  <dd>Some SAT>IP boxes has only 0-100 scale. If your signal is too low, try
+      value 100 here.</dd>
+      
+  <dt>Maximum PIDs<dt>
+  <dd>Maximum supported PIDs in the filter of the SAT>IP box.</dd>
+  
+  <dt>Maximum length of PIDs<dt>
+  <dd>Maximum length in characters for the command setting PIDs to the
+      SAT>IP box.</dd>
+
+  <dt>addpids/delpids supported</dt>
+  <dd>Enable, if the SAT>IP box supports the addpids/delpids command.
+
+  <dt>PIDs in setup</dt>
+  <dd>Enable, if the SAT>IP box requires pids=0 parameter in the SETUP RTSP command.</dd>
+
+  <dt>UDP RTP Port Number (2 ports)</dt>
+  <dd>Force the local UDP Port number here. The number should be even (RTP port).
+      The next odd number (+1) will be used as the RTCP port.</dd>
+
+  <dt>Satellite Positions</dt>
+  <dd>Select the number of satellite positions supported by the SAT>IP
+      hardware and your coaxial cable wiring.</dd>
+
+  <dt>Master Tuner</dt>
+  <dd>Select the master tuner.
+     <p>The signal from the standard universal LNB can be split using
+        a simple coaxial splitter (no multiswitch) to several outputs.
+        In this case, the position, the polarization and low-high
+        band settings must be equal.</p>
+     <p>If you set other tuner as master, then this tuner will act like
+        a slave one and tvheadend will assure that this tuner will not
+        use incompatible parameters (position, polarization, lo-hi).</p>
+  </dd>
+</dl>
+
+</div>

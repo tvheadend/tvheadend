@@ -458,6 +458,7 @@ tvheadend.idnode_editor_form = function ( d, panel )
 tvheadend.idnode_editor = function(item, conf)
 {
   var panel  = null;
+  var buttons = [];
 
   /* Buttons */
   var saveBtn = new Ext.Button({
@@ -476,6 +477,15 @@ tvheadend.idnode_editor = function(item, conf)
       });
     }
   });
+  buttons.push(saveBtn);
+
+  if (conf.help) {
+    var helpBtn = new Ext.Button({
+      text    : 'Help',
+      handler : conf.help
+    });
+    buttons.push(helpBtn);
+  }
 
   panel = new Ext.FormPanel({
     title       : conf.title || null,
@@ -490,7 +500,7 @@ tvheadend.idnode_editor = function(item, conf)
     //defaults: {width: 330},
     defaultType : 'textfield',
     buttonAlign : 'left',
-    buttons     : [ saveBtn ]
+    buttons     : buttons
   });
 
   tvheadend.idnode_editor_form(item.props || item.params, panel);
@@ -1037,7 +1047,8 @@ tvheadend.idnode_tree = function (conf)
         if(!n.isRoot)
           current = panel.add(new tvheadend.idnode_editor(n.attributes, {
             title       : 'Parameters',
-            fixedHeight : true
+            fixedHeight : true,
+            help        : conf.help || null,
           }));
         panel.doLayout();
       }
