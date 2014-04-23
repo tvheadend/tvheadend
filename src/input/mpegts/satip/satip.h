@@ -20,7 +20,7 @@
 #ifndef __TVH_SATIP_H__
 #define __TVH_SATIP_H__
 
-void satip_init( void );
+void satip_init( str_list_t *clients );
 void satip_done( void );
 
 #endif /* __TVH_SATIP_H__ */

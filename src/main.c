@@ -476,6 +476,7 @@ main(int argc, char **argv)
 #endif
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
+  str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
@@ -497,6 +498,10 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
+#endif
+#if ENABLE_SATIP_CLIENT
+    {   0, "satip_xml", "URL with the SAT>IP server XML location",
+      OPT_STR_LIST, &opt_satip_xml },
 #endif
     {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
     { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
@@ -766,7 +771,7 @@ main(int argc, char **argv)
   service_init();
 
 #if ENABLE_MPEGTS
-  mpegts_init(adapter_mask, &opt_tsfile, opt_tsfile_tuner);
+  mpegts_init(adapter_mask, &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
 #endif
 
   channel_init();
@@ -881,6 +886,7 @@ main(int argc, char **argv)
     unlink(opt_pidpath);
     
   free(opt_tsfile.str);
+  free(opt_satip_xml.str);
 
   /* OpenSSL - welcome to the "cleanup" hell */
   ENGINE_cleanup();

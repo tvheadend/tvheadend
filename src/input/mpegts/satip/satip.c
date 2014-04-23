@@ -390,6 +390,19 @@ satip_device_find( const char *satip_uuid )
   return NULL;
 }
 
+static satip_device_t *
+satip_device_find_by_descurl( const char *descurl )
+{
+  tvh_hardware_t *th;
+
+  TVH_HARDWARE_FOREACH(th) {
+    if (idnode_is_instance(&th->th_id, &satip_device_class) &&
+        strcmp(((satip_device_t *)th)->sd_info.location, descurl) == 0)
+      return (satip_device_t *)th;
+  }
+  return NULL;
+}
+
 void
 satip_device_save( satip_device_t *sd )
 {
@@ -483,6 +496,7 @@ static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
 static gtimer_t satip_discovery_timer;
 static gtimer_t satip_discovery_timerq;
+static str_list_t *satip_static_clients;
 
 static void
 satip_discovery_destroy(satip_discovery_t *d, int unlink)
@@ -525,10 +539,12 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   htsmsg_t *xml = NULL, *tags, *root, *device;
   const char *friendlyname, *manufacturer, *manufacturerURL, *modeldesc;
   const char *modelname, *modelnum, *serialnum;
-  const char *presentation, *tunercfg;
+  const char *presentation, *tunercfg, *udn, *uuid;
   const char *cs;
   satip_device_info_t info;
   char errbuf[100];
+  char *argv[10];
+  int i, n;
 
   s = http_arg_get(&hc->hc_args, "Content-Type");
   if (s && strcasecmp(s, "text/xml")) {
@@ -590,11 +606,24 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     goto finish;
   if ((presentation = htsmsg_xml_get_cdata_str(device, "presentationURL")) == NULL)
     goto finish;
+  if ((udn          = htsmsg_xml_get_cdata_str(device, "UDN")) == NULL)
+    goto finish;
   if ((tunercfg     = htsmsg_xml_get_cdata_str(device, "urn:ses-com:satipX_SATIPCAP")) == NULL)
     goto finish;
+
+  uuid = NULL;
+  n = http_tokenize((char *)udn, argv, ARRAY_SIZE(argv), ':');
+  for (i = 0; i < n+1; i++)
+    if (argv[i] && strcmp(argv[i], "uuid") == 0) {
+      uuid = argv[++i];
+      break;
+    }
+  if (uuid == NULL || (d->uuid[0] && strcmp(uuid, d->uuid)))
+    goto finish;
+
   info.myaddr = strdup(d->myaddr);
   info.addr = strdup(d->url.host);
-  info.uuid = strdup(d->uuid);
+  info.uuid = strdup(uuid);
   info.bootid = strdup(d->bootid);
   info.configid = strdup(d->configid);
   info.deviceid = strdup(d->deviceid);
@@ -732,7 +761,7 @@ satip_discovery_service_received
       else if (strcmp(argv[0], "DEVICEID.SES.COM:") == 0)
         deviceid = argv[1];
       else if (strcmp(argv[0], "USN:") == 0) {
-        n = http_tokenize(argv[1], argv, 10, ':');
+        n = http_tokenize(argv[1], argv, ARRAY_SIZE(argv), ':');
         for (i = 0; i < n+1; i++)
           if (argv[i] && strcmp(argv[i], "uuid") == 0) {
             uuid = argv[++i];
@@ -786,6 +815,32 @@ satip_discovery_service_received
 }
 
 static void
+satip_discovery_static(const char *descurl)
+{
+  satip_discovery_t *d;
+
+  lock_assert(&global_lock);
+
+  if (satip_device_find_by_descurl(descurl))
+    return;
+  d = calloc(1, sizeof(satip_discovery_t));
+  if (urlparse(descurl, &d->url)) {
+    satip_discovery_destroy(d, 0);
+    return;
+  }
+  d->myaddr   = strdup(d->url.host);
+  d->location = strdup(descurl);
+  d->server   = strdup("");
+  d->uuid     = strdup("");
+  d->bootid   = strdup("");
+  d->configid = strdup("");
+  d->deviceid = strdup("");
+  TAILQ_INSERT_TAIL(&satip_discoveries, d, disc_link);
+  satip_discoveries_count++;
+  satip_discovery_timerq_cb(NULL);
+}
+
+static void
 satip_discovery_service_destroy(upnp_service_t *us)
 {
   satip_discovery_service = NULL;
@@ -801,7 +856,7 @@ MAN: \"ssdp:discover\"\r\n\
 MX: 2\r\n\
 ST: urn:ses-com:device:SatIPServer:1\r\n\
 \r\n"
-  htsbuf_queue_t q;
+  int i;
 
   if (!tvheadend_running)
     return;
@@ -811,13 +866,20 @@ ST: urn:ses-com:device:SatIPServer:1\r\n\
   }
   if (satip_discovery_service == NULL) {
     satip_discovery_service              = upnp_service_create(upnp_service);
-    satip_discovery_service->us_received = satip_discovery_service_received;
-    satip_discovery_service->us_destroy  = satip_discovery_service_destroy;
+    if (satip_discovery_service) {
+      satip_discovery_service->us_received = satip_discovery_service_received;
+      satip_discovery_service->us_destroy  = satip_discovery_service_destroy;
+    }
   }
-  htsbuf_queue_init(&q, 0);
-  htsbuf_append(&q, MSG, sizeof(MSG)-1);
-  upnp_send(&q, NULL);
-  htsbuf_queue_flush(&q); 
+  if (satip_discovery_service) {
+    htsbuf_queue_t q;
+    htsbuf_queue_init(&q, 0);
+    htsbuf_append(&q, MSG, sizeof(MSG)-1);
+    upnp_send(&q, NULL);
+    htsbuf_queue_flush(&q);
+  }
+  for (i = 0; i < satip_static_clients->num; i++)
+    satip_discovery_static(satip_static_clients->str[i]);
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
 #undef MSG
 }
@@ -832,9 +894,10 @@ satip_device_discovery_start( void )
  * Initialization
  */
 
-void satip_init ( void )
+void satip_init ( str_list_t *clients )
 {
   TAILQ_INIT(&satip_discoveries);
+  satip_static_clients = clients;
   satip_device_discovery_start();
 }
 
