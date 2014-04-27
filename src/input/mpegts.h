@@ -242,14 +242,6 @@ struct mpegts_network
   char                    *mn_network_name;
 
   /*
-   * Scanning
-   */
-  mpegts_mux_queue_t      mn_initial_scan_pending_queue;
-  mpegts_mux_queue_t      mn_initial_scan_current_queue;
-  int                     mn_initial_scan_num;
-  gtimer_t                mn_initial_scan_timer;
-
-  /*
    * Inputs
    */
   mpegts_network_link_list_t   mn_inputs;
@@ -280,6 +272,13 @@ struct mpegts_network
   char    *mn_charset;
 };
 
+typedef enum mpegts_mux_scan_state
+{
+  MM_SCAN_STATE_IDLE,     // Nothing
+  MM_SCAN_STATE_PEND,     // Queue'd pending scan
+  MM_SCAN_STATE_ACTIVE,   // Scan is active
+} mpegts_mux_scan_state_t;
+
 /* Multiplex */
 struct mpegts_mux
 {
@@ -304,17 +303,15 @@ struct mpegts_mux
    * Scanning
    */
 
-  int                     mm_initial_scan_init;
-  gtimer_t                mm_initial_scan_timeout;
-  TAILQ_ENTRY(mpegts_mux) mm_initial_scan_link;
-  enum {
-    MM_SCAN_DONE,     // All done
-    MM_SCAN_PENDING,  // Waiting to be tuned for initial scan
-    MM_SCAN_CURRENT,  // Currently tuned for initial scan
-  }                       mm_initial_scan_status;
-  int                     mm_initial_scan_done;
-  mpegts_mux_t           *mm_dmc_origin;
-  time_t                  mm_dmc_origin_expire;
+  int                      mm_scan_ok;      ///< Has been succesfully scanned
+  int                      mm_scan_weight;  ///< Scan priority
+  int                      mm_scan_init;    ///< Flag to timeout handler
+  gtimer_t                 mm_scan_timeout; ///< Timer to handle timeout
+  TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
+  mpegts_mux_scan_state_t  mm_scan_state;   ///< Scanning state
+
+  mpegts_mux_t            *mm_dmc_origin;
+  time_t                   mm_dmc_origin_expire;
 
   /*
    * Physical instances
@@ -614,9 +611,6 @@ void mpegts_network_class_delete ( const idclass_t *idc, int delconf );
 
 void mpegts_network_delete ( mpegts_network_t *mn, int delconf );
 
-void mpegts_network_schedule_initial_scan
-  ( mpegts_network_t *mm );
-
 int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
 
@@ -638,9 +632,6 @@ mpegts_mux_t *mpegts_mux_create0
 
 #define mpegts_mux_delete_by_uuid(u, delconf)\
   { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm, delconf); }
-
-void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm, int log );
-void mpegts_mux_initial_scan_fail ( mpegts_mux_t *mm );
 
 void mpegts_mux_delete ( mpegts_mux_t *mm, int delconf );
 
@@ -671,6 +662,8 @@ void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
 void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int reason);
 int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
+
+void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 
 mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 

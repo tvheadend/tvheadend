@@ -203,6 +203,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/tsdemux.c \
 	src/input/mpegts/mpegts_mux_sched.c \
+  src/input/mpegts/mpegts_network_scan.c \
 
 # MPEGTS DVB
 SRCS-${CONFIG_MPEGTS_DVB} += \

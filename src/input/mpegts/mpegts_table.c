@@ -24,9 +24,10 @@
 static void
 mpegts_table_fastswitch ( mpegts_mux_t *mm )
 {
+  char buf[256];
   mpegts_table_t   *mt;
 
-  if(mm->mm_initial_scan_status == MM_SCAN_DONE)
+  if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
 
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
@@ -35,8 +36,9 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
       return;
   }
 
-  tvhlog(LOG_DEBUG, "mpegts", "initial scan for mm %p done", mm);
-  mpegts_mux_initial_scan_done(mm, 1);
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s initial scan complete", buf);
+  mpegts_mux_scan_done(mm, buf, 1);
 }
 
 void
@@ -181,7 +183,7 @@ mpegts_table_add
   } else if (flags & MT_SKIPSUBS) {
     subscribe = 0;
   } else if (flags & MT_SCANSUBS) {
-    if (mm->mm_initial_scan_status == MM_SCAN_DONE)
+    if (mm->mm_scan_ok)
       subscribe = 0;
   }
   if (subscribe) {

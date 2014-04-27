@@ -79,15 +79,14 @@ mpegts_network_class_get_num_svc ( void *ptr )
 static const void *
 mpegts_network_class_get_scanq_length ( void *ptr )
 {
-  static int n;
+  static __thread int n;
   mpegts_mux_t *mm;
   mpegts_network_t *mn = ptr;
 
   n = 0;
-  TAILQ_FOREACH(mm, &mn->mn_initial_scan_pending_queue, mm_initial_scan_link)
-    n++;
-  TAILQ_FOREACH(mm, &mn->mn_initial_scan_current_queue, mm_initial_scan_link)
-    n++;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
+      n++;
 
   return &n;
 }
@@ -232,13 +231,6 @@ mpegts_network_delete
     mm->mm_delete(mm, delconf);
   }
 
-  /* Check */
-  assert(TAILQ_FIRST(&mn->mn_initial_scan_pending_queue) == NULL);
-  assert(TAILQ_FIRST(&mn->mn_initial_scan_current_queue) == NULL);
-
-  /* Disable timer */
-  gtimer_disarm(&mn->mn_initial_scan_timer);
-
   /* Remove from input */
   while ((mnl = LIST_FIRST(&mn->mn_inputs)))
     mpegts_network_link_delete(mnl);
@@ -248,62 +240,6 @@ mpegts_network_delete
   free(mn->mn_network_name);
   free(mn->mn_charset);
   free(mn);
-}
-
-/* ****************************************************************************
- * Scanning
- * ***************************************************************************/
-
-static void
-mpegts_network_initial_scan(void *aux)
-{
-  int r;
-  mpegts_network_t  *mn = aux;
-  mpegts_mux_t      *mm, *mark = NULL;
-
-  tvhtrace("mpegts", "setup initial scan for %p", mn);
-  while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
-
-    /* Stop */
-    if (mm == mark) break;
-
-    assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
-    r = mpegts_mux_subscribe(mm, "initscan", SUBSCRIPTION_PRIO_SCAN);
-
-    /* Stop scanning here */
-    if (r == SM_CODE_NO_FREE_ADAPTER)
-      break;
-
-    /* Started */
-    if (!r) {
-      assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
-      continue;
-    }
-
-    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
-
-    /* Available tuners can't be used
-     * Note: this is subtly different it does not imply there are no free
-     *       tuners, just that none of the free ones can service this mux.
-     *       therefore we move this to the back of the queue and see if we
-     *       can find one we can tune
-     */
-    if (r == SM_CODE_NO_VALID_ADAPTER) {
-      if (!mark) mark = mm;
-      TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
-      continue;
-    }
-
-    /* Remove */
-    mpegts_mux_initial_scan_fail(mm);
-  }
-  gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 10);
-}
-
-void
-mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
-{
-  gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 0);
 }
 
 /* ****************************************************************************
@@ -329,10 +265,6 @@ mpegts_network_create0
   mn->mn_create_service = mpegts_network_create_service;
   mn->mn_mux_class      = mpegts_network_mux_class;
   mn->mn_mux_create2    = mpegts_network_mux_create2;
-
-  /* Init Qs */
-  TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
-  TAILQ_INIT(&mn->mn_initial_scan_current_queue);
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_network_all, mn, mn_global_link);

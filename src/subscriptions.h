@@ -28,10 +28,13 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_FULLMUX    0x4
 
 /* Some internal prioties */
-#define SUBSCRIPTION_PRIO_EPG   	1
-#define SUBSCRIPTION_PRIO_SCAN  	2
-#define SUBSCRIPTION_PRIO_MAPPER	3
-#define SUBSCRIPTION_PRIO_MIN	 	10
+#define SUBSCRIPTION_PRIO_SCAN_IDLE   1 ///< Idle scanning
+#define SUBSCRIPTION_PRIO_SCAN_SCHED  2 ///< Scheduled scan
+#define SUBSCRIPTION_PRIO_EPG   	    3 ///< EPG scanner
+#define SUBSCRIPTION_PRIO_SCAN_INIT   4 ///< Initial scan
+#define SUBSCRIPTION_PRIO_SCAN_USER   5 ///< User defined scan
+#define SUBSCRIPTION_PRIO_MAPPER      6 ///< Channel mapper
+#define SUBSCRIPTION_PRIO_MIN	 	     10 ///< User defined / Normal levels
 
 typedef struct th_subscription {
 
