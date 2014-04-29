@@ -168,3 +168,31 @@ qsort_r(void *base, size_t nmemb, size_t size,
   qsort(base, nmemb, size, qsort_r_wrap);
 }
 #endif /* ENABLE_QSORT_R */
+
+
+#if defined(PLATFORM_FREEBSD)
+struct tvh_qsort_data {
+    void *arg;
+    int (*compar)(const void *, const void *, void *);
+};
+
+
+static int
+tvh_qsort_swap(void *arg, const void *a, const void *b)
+{
+    struct tvh_qsort_data *data = arg;
+    return data->compar(a, b, data->arg);
+}
+#endif /* PLATFORM_FREEBSD */
+
+
+void
+tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *, void *), void *arg)
+{
+#if defined(PLATFORM_FREEBSD)
+    struct tvh_qsort_data swap_arg = {arg, compar};
+    qsort_r(base, nmemb, size, &swap_arg, tvh_qsort_swap);
+#else
+    qsort_r(base, nmemb, size, compar, arg);
+#endif
+}
