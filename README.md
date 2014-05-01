@@ -1,13 +1,22 @@
 Tvheadend
 ====================================
-(c) 2006 - 2013 Andreas Öman, et al.
+(c) 2006 - 2014 Tvheadend Foundation CIC
 
 
 What it is
 ----------
 
-Tvheadend is a TV streaming server and digital video recorder, supporting DVB-S, DVB-S2, DVB-C, DVB-T, DVB-T2, ATSC, IPTV, and Analog video (V4L) as input sources.
+Tvheadend is a TV streaming server and digital video recorder.
 
+It supports the following inputs:
+
+  * DVB-C
+  * DVB-T(2)
+  * DVB-S(2)
+  * ATSC
+  * IPTV
+    * UDP
+    * HTTP
 
 How to build for Linux
 ----------------------
