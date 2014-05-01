@@ -462,9 +462,10 @@ mpegts_service_find
   if (create) {
     s = mm->mm_network->mn_create_service(mm, sid, pmt_pid);
     if (save) *save = 1;
+    return s;
   }
   
-  return s;
+  return NULL;
 }
 
 /******************************************************************************

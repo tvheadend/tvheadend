@@ -1,6 +1,6 @@
 /*
  *  MPEG TS Program Specific Information code
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -891,7 +891,7 @@ dvb_sdt_callback
   tvhdebug("sdt", "onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
   /* Find Transport Stream */
-  if (tableid == 0x42) {
+  if (tableid == 0x42 || (strstr(mn->mn_network_name ,"EchoStar")!=NULL && tableid == 0x46)) {
     mpegts_mux_set_onid(mm, onid);
     mpegts_mux_set_tsid(mm, tsid);
   } else {
@@ -921,7 +921,20 @@ dvb_sdt_callback
     DVB_LOOP_INIT(ptr, len, 3, lptr, llen);
   
     /* Find service */
-    s       = mpegts_service_find(mm, service_id, 0, 1, &save);
+
+    /* Avoid creating services from other frequency/Sat
+     * If other SDT x46, don't create new service,
+     * check if service exists and use the data to populate other info, ex: service name */
+
+    if(tableid == 0x46)
+      s       = mpegts_service_find(mm, service_id, 0, 0, &save);
+    else
+      s       = mpegts_service_find(mm, service_id, 0, 1, &save);
+
+    /* x46 and No existing service, then continue */
+    if (s == NULL)
+      continue;
+
     charset = dvb_charset_find(mn, mm, s);
 
     /* Descriptor loop */
