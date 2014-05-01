@@ -492,8 +492,7 @@ tcp_server_loop(void *aux)
 
     if (r == 0) continue;
 
-    ts = ev.data.ptr;
-    if (ts == (tcp_server_t *)&tcp_server_pipe) {
+    if (ev.data.ptr == &tcp_server_pipe) {
       r = read(tcp_server_pipe.rd, &c, 1);
       if (r > 0) {
         pthread_mutex_lock(&global_lock);
@@ -508,6 +507,8 @@ tcp_server_loop(void *aux)
       }
       continue;
     }
+
+    ts = ev.data.ptr;
 
     if(ev.events & TVHPOLL_HUP) {
 	    close(ts->serverfd);
