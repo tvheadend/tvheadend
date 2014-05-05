@@ -1074,6 +1074,8 @@ capmt_service_start(service_t *s)
         tvhlog(LOG_DEBUG, "capmt",
           "New caid 0x%04X for service \"%s\"", c->caid, t->s_dvb_svcname);
 
+        mpegts_table_register_caid(((mpegts_service_t *)s)->s_dvb_mux, c->caid);
+
         /* add it to list */
         cce             = calloc(1, sizeof(capmt_caid_ecm_t));
         cce->cce_caid   = c->caid;

@@ -153,13 +153,6 @@ const idclass_t mpegts_input_class =
       .list     = mpegts_input_class_network_enum,
       .rend     = mpegts_input_class_network_rend,
     },
-    {
-      .type     = PT_BOOL,
-      .id       = "pmtmon",
-      .name     = "Enable PMT monitor",
-      .off      = offsetof(mpegts_input_t, mi_pmtmon),
-      .opts     = PO_ADVANCED,
-    },
     {}
   }
 };
@@ -685,8 +678,8 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
 
   /* Collate - tables may be removed during callbacks */
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    mpegts_table_grab(mt);
     vec[i++] = mt;
-    mt->mt_refcount++;
   }
   assert(i == len);
 
