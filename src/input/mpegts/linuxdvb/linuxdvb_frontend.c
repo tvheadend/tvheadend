@@ -532,6 +532,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Statistics - New API */
 #if DVB_VER_ATLEAST(5,10)
+  memset(&fe_properties, 0, sizeof(fe_properties));
   fe_properties[0].cmd = DTV_STAT_SIGNAL_STRENGTH;
 
   /* BER */
@@ -975,7 +976,7 @@ linuxdvb_frontend_tune0
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
   struct dtv_property cmds[20];
-  struct dtv_properties cmdseq = { .num = 0, .props = cmds };
+  struct dtv_properties cmdseq;
   
   /* Clear Q */
   static struct dtv_property clear_p[] = {
@@ -991,6 +992,9 @@ linuxdvb_frontend_tune0
   if (freq == (uint32_t)-1)
     freq = p.frequency;
 
+  memset(&cmdseq, 0, sizeof(cmdseq));
+  cmdseq.props = cmds;
+  memset(&cmds, 0, sizeof(cmds));
   
   /* Tune */
 #define S2CMD(c, d)\

@@ -361,6 +361,7 @@ static void block_decypher_group (
   int i,g,count_all=GROUP_PARALLELISM;
 
   roff=GROUP_PARALLELISM*56;
+  memset(r + roff, 0, sizeof(r) - roff);
 
 #define FASTTRASP1
 #ifndef FASTTRASP1
