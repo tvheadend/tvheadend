@@ -112,6 +112,10 @@ tvheadend.show_service_streams = function ( data ) {
     return ('0000' + d.toString(16)).slice(-4);
   }
     
+  function hexstr6 ( d ) {
+    return ('000000' + d.toString(16)).slice(-6);
+  }
+    
   function fixstr ( d ) {
     var r = d.toString();
     var l = r.length;
@@ -135,7 +139,9 @@ tvheadend.show_service_streams = function ( data ) {
     if (s.type == 'CA') {
       d = 'CAIDS: ';
       for (j = 0; j < s.caids.length; j++) {
-        d += s.caids[j].caid + ', ';
+        if (j > 0) d += ', ';
+        d += hexstr(s.caids[j].caid) + ':';
+        d += hexstr6(s.caids[j].provider);
       }
     }
 		html += '<td>' + d + '</td>';
@@ -145,7 +151,7 @@ tvheadend.show_service_streams = function ( data ) {
 	var win = new Ext.Window({
 		title : 'Service details for ' + data.name,
 		layout : 'fit',
-		width : 600,
+		width : 650,
 		height : 300,
 		plain : true,
 		bodyStyle : 'padding: 5px',
