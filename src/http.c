@@ -65,6 +65,31 @@ static void http_parse_get_args(http_connection_t *hc, char *args);
 /**
  *
  */
+const char *
+http_cmd2str(int val)
+{
+  return val2str(val, HTTP_cmdtab);
+}
+
+int http_str2cmd(const char *str)
+{
+  return str2val(str, HTTP_cmdtab);
+}
+
+const char *
+http_ver2str(int val)
+{
+  return val2str(val, HTTP_versiontab);
+}
+
+int http_str2ver(const char *str)
+{
+  return str2val(str, HTTP_versiontab);
+}
+
+/**
+ *
+ */
 static http_path_t *
 http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 {
@@ -547,7 +572,6 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
 
 
-
 /*
  * Delete all arguments associated with a connection
  */
@@ -582,7 +606,7 @@ http_arg_get(struct http_arg_list *list, const char *name)
  * Set an argument associated with a connection
  */
 void
-http_arg_set(struct http_arg_list *list, char *key, char *val)
+http_arg_set(struct http_arg_list *list, const char *key, const char *val)
 {
   http_arg_t *ra;
 
@@ -814,8 +838,8 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
-  TAILQ_INIT(&hc.hc_args);
-  TAILQ_INIT(&hc.hc_req_args);
+  http_arg_init(&hc.hc_args);
+  http_arg_init(&hc.hc_req_args);
 
   hc.hc_fd = fd;
   hc.hc_peer = peer;

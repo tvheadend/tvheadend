@@ -51,6 +51,11 @@ mpegts_init ( int linuxdvb_mask, str_list_t *tsfiles, int tstuners )
   linuxdvb_init(linuxdvb_mask);
 #endif
 
+  /* SAT>IP DVB client */
+#if ENABLE_SATIP_CLIENT
+  satip_init();
+#endif
+
   /* Mux schedulers */
 #if ENABLE_MPEGTS
   mpegts_mux_sched_init();
@@ -70,6 +75,9 @@ mpegts_done ( void )
 #endif
 #if ENABLE_LINUXDVB
   tvhftrace("main", linuxdvb_done);
+#endif
+#if ENABLE_SATIP_CLIENT
+  tvhftrace("main", satip_done);
 #endif
 #if ENABLE_TSFILE
   tvhftrace("main", tsfile_done);

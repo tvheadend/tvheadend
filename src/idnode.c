@@ -587,6 +587,7 @@ idnode_filter_clear
       else
         free(ele->u.s);
     }
+    free(ele->key);
     free(ele);
   }
 }

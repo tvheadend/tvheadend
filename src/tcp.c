@@ -142,7 +142,9 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
   free(tmphstbuf);
 
   if(r == -1) {
-    if(errno == EINPROGRESS) {
+    if(errno == EINPROGRESS && timeout < 0) {
+      err = 0;
+    } else if(errno == EINPROGRESS) {
       struct pollfd pfd;
 
       pfd.fd = fd;
@@ -639,6 +641,9 @@ tcp_server_delete(void *server)
 {
   tcp_server_t *ts = server;
   tvhpoll_event_t ev;
+
+  if (server == NULL)
+    return;
 
   memset(&ev, 0, sizeof(ev));
   ev.fd       = ts->serverfd;

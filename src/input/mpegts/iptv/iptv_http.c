@@ -21,27 +21,29 @@
 #include "iptv_private.h"
 #include "http.h"
 
-#if ENABLE_CURL
-
 /*
  * Connected
  */
-static void
-iptv_http_conn ( void *p )
+static int
+iptv_http_header ( http_client_t *hc )
 {
-  pthread_mutex_lock(&global_lock);
-  iptv_input_mux_started(p);
-  pthread_mutex_unlock(&global_lock);
+  /* multiple headers for redirections */
+  if (hc->hc_code == HTTP_STATUS_OK) {
+    pthread_mutex_lock(&global_lock);
+    iptv_input_mux_started(hc->hc_aux);
+    pthread_mutex_unlock(&global_lock);
+  }
+  return 0;
 }
 
 /*
  * Receive data
  */
-static size_t
+static int
 iptv_http_data
-  ( void *p, void *buf, size_t len )
+  ( http_client_t *hc, void *buf, size_t len )
 {
-  iptv_mux_t *im = p;
+  iptv_mux_t *im = hc->hc_aux;
 
   pthread_mutex_lock(&iptv_lock);
 
@@ -52,7 +54,7 @@ iptv_http_data
 
   pthread_mutex_unlock(&iptv_lock);
 
-  return len;
+  return 0;
 }
 
 /*
@@ -63,8 +65,21 @@ iptv_http_start
   ( iptv_mux_t *im, const url_t *u )
 {
   http_client_t *hc;
-  if (!(hc = http_connect(u, iptv_http_conn, iptv_http_data, NULL, im)))
+  int r;
+
+  if (!(hc = http_client_connect(im, HTTP_VERSION_1_1, u->scheme,
+                                 u->host, u->port)))
     return SM_CODE_TUNING_FAILED;
+  hc->hc_hdr_received    = iptv_http_header;
+  hc->hc_data_received   = iptv_http_data;
+  hc->hc_handle_location = 1;        /* allow redirects */
+  hc->hc_chunk_size      = 128*1024; /* increase buffering */
+  http_client_register(hc);          /* register to the HTTP thread */
+  r = http_client_simple(hc, u);
+  if (r < 0) {
+    http_client_close(hc);
+    return SM_CODE_TUNING_FAILED;
+  }
   im->im_data = hc;
 
   return 0;
@@ -77,7 +92,7 @@ static void
 iptv_http_stop
   ( iptv_mux_t *im )
 {
-  http_close(im->im_data);
+  http_client_close(im->im_data);
 }
 
 
@@ -102,12 +117,3 @@ iptv_http_init ( void )
   };
   iptv_handler_register(ih, 2);
 }
-
-#else /* ENABLE_CURL */
-
-void
-iptv_http_init ( void )
-{
-}
-
-#endif /* ENABLE_CURL */

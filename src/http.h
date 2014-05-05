@@ -21,8 +21,9 @@
 
 #include "htsbuf.h"
 #include "url.h"
+#include "tvhpoll.h"
 
-TAILQ_HEAD(http_arg_list, http_arg);
+typedef TAILQ_HEAD(http_arg_list, http_arg) http_arg_list_t;
 
 typedef RB_HEAD(,http_arg) http_arg_tree_t;
 
@@ -33,13 +34,77 @@ typedef struct http_arg {
   char *val;
 } http_arg_t;
 
-#define HTTP_STATUS_OK           200
+#define HTTP_STATUS_CONTINUE        100
+#define HTTP_STATUS_PSWITCH         101
+#define HTTP_STATUS_OK              200
+#define HTTP_STATUS_CREATED         201
+#define HTTP_STATUS_ACCEPTED        202
+#define HTTP_STATUS_NON_AUTH_INFO   203
+#define HTTP_STATUS_NO_CONTENT      204
+#define HTTP_STATUS_RESET_CONTENT   205
 #define HTTP_STATUS_PARTIAL_CONTENT 206
-#define HTTP_STATUS_FOUND        302
-#define HTTP_STATUS_BAD_REQUEST  400
-#define HTTP_STATUS_UNAUTHORIZED 401
-#define HTTP_STATUS_NOT_FOUND    404
+#define HTTP_STATUS_MULTIPLE        300
+#define HTTP_STATUS_MOVED           301
+#define HTTP_STATUS_FOUND           302
+#define HTTP_STATUS_SEE_OTHER       303
+#define HTTP_STATUS_NOT_MODIFIED    304
+#define HTTP_STATUS_USE_PROXY       305
+#define HTTP_STATUS_TMP_REDIR       307
+#define HTTP_STATUS_BAD_REQUEST     400
+#define HTTP_STATUS_UNAUTHORIZED    401
+#define HTTP_STATUS_PAYMENT         402
+#define HTTP_STATUS_FORBIDDEN       403
+#define HTTP_STATUS_NOT_FOUND       404
+#define HTTP_STATUS_NOT_ALLOWED     405
+#define HTTP_STATUS_NOT_ACCEPTABLE  406
+#define HTTP_STATUS_PROXY_AUTH      407
+#define HTTP_STATUS_TIMEOUT         408
+#define HTTP_STATUS_CONFLICT        409
+#define HTTP_STATUS_GONE            410
+#define HTTP_STATUS_LENGTH          411
+#define HTTP_STATUS_PRECONDITION    412
+#define HTTP_STATUS_ENTITY_OVER     413
+#define HTTP_STATUS_URI_TOO_LONG    414
+#define HTTP_STATUS_UNSUPPORTED     415
+#define HTTP_STATUS_BAD_RANGE       417
+#define HTTP_STATUS_EXPECTATION     418
+#define HTTP_STATUS_INTERNAL        500
+#define HTTP_STATUS_NOT_IMPLEMENTED 501
+#define HTTP_STATUS_BAD_GATEWAY     502
+#define HTTP_STATUS_SERVICE         503
+#define HTTP_STATUS_GATEWAY_TIMEOUT 504
+#define HTTP_STATUS_HTTP_VERSION    505
 
+typedef enum http_state {
+  HTTP_CON_WAIT_REQUEST,
+  HTTP_CON_READ_HEADER,
+  HTTP_CON_END,
+  HTTP_CON_POST_DATA,
+  HTTP_CON_SENDING,
+  HTTP_CON_SENT,
+  HTTP_CON_RECEIVING,
+  HTTP_CON_DONE,
+  HTTP_CON_IDLE,
+  HTTP_CON_OK
+} http_state_t;
+
+typedef enum http_cmd {
+  HTTP_CMD_GET,
+  HTTP_CMD_HEAD,
+  HTTP_CMD_POST,
+  RTSP_CMD_DESCRIBE,
+  RTSP_CMD_OPTIONS,
+  RTSP_CMD_SETUP,
+  RTSP_CMD_TEARDOWN,
+  RTSP_CMD_PLAY,
+  RTSP_CMD_PAUSE,
+} http_cmd_t;
+
+typedef enum http_ver {
+  HTTP_VERSION_1_0,
+  HTTP_VERSION_1_1,
+  RTSP_VERSION_1_0,
+} http_ver_t;
 
 typedef struct http_connection {
   int hc_fd;
@@ -51,36 +116,15 @@ typedef struct http_connection {
   char *hc_url_orig;
   int hc_keep_alive;
 
-  htsbuf_queue_t hc_reply;
+  htsbuf_queue_t  hc_reply;
 
-  struct http_arg_list hc_args;
+  http_arg_list_t hc_args;
 
-  struct http_arg_list hc_req_args; /* Argumets from GET or POST request */
+  http_arg_list_t hc_req_args; /* Argumets from GET or POST request */
 
-  enum {
-    HTTP_CON_WAIT_REQUEST,
-    HTTP_CON_READ_HEADER,
-    HTTP_CON_END,
-    HTTP_CON_POST_DATA,
-  } hc_state;
-
-  enum {
-    HTTP_CMD_GET,
-    HTTP_CMD_HEAD,
-    HTTP_CMD_POST,
-    RTSP_CMD_DESCRIBE,
-    RTSP_CMD_OPTIONS,
-    RTSP_CMD_SETUP,
-    RTSP_CMD_TEARDOWN,
-    RTSP_CMD_PLAY,
-    RTSP_CMD_PAUSE,
-  } hc_cmd;
-
-  enum {
-    HTTP_VERSION_1_0,
-    HTTP_VERSION_1_1,
-    RTSP_VERSION_1_0,
-  } hc_version;
+  http_state_t    hc_state;
+  http_cmd_t      hc_cmd;
+  http_ver_t      hc_version;
 
   char *hc_username;
   char *hc_password;
@@ -99,11 +143,21 @@ typedef struct http_connection {
 } http_connection_t;
 
 
+const char *http_cmd2str(int val);
+int http_str2cmd(const char *str);
+const char *http_ver2str(int val);
+int http_str2ver(const char *str);
+
+static inline void http_arg_init(struct http_arg_list *list)
+{
+  TAILQ_INIT(list);
+}
+
 void http_arg_flush(struct http_arg_list *list);
 
 char *http_arg_get(struct http_arg_list *list, const char *name);
 
-void http_arg_set(struct http_arg_list *list, char *key, char *val);
+void http_arg_set(struct http_arg_list *list, const char *key, const char *val);
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
@@ -142,20 +196,144 @@ int http_access_verify(http_connection_t *hc, int mask);
 
 void http_deescape(char *s);
 
+/*
+ * HTTP/RTSP Client
+ */
+
 typedef struct http_client http_client_t;
 
-typedef void   (http_client_conn_cb) (void *p);
-typedef size_t (http_client_data_cb) (void *p, void *buf, size_t len);
-typedef void   (http_client_fail_cb) (void *p);
+typedef struct http_client_wcmd {
+
+  TAILQ_ENTRY(http_client_wcmd) link;
+
+  enum http_cmd wcmd;
+  int           wcseq;
+
+  void         *wbuf;
+  size_t        wpos;
+  size_t        wsize;
+} http_client_wcmd_t;
+
+struct http_client {
+
+  TAILQ_ENTRY(http_client) hc_link;
+
+  int          hc_fd;
+  char        *hc_scheme;
+  char        *hc_host;
+  int          hc_port;
+  tvhpoll_t   *hc_efd;
+  int          hc_pevents;
+
+  int          hc_code;
+  http_ver_t   hc_version;
+  http_cmd_t   hc_cmd;
+
+  struct http_arg_list hc_args; /* header */
+
+  void        *hc_aux;
+  size_t       hc_data_limit;
+  size_t       hc_io_size;
+  char        *hc_data;         /* data body */
+  size_t       hc_data_size;    /* data body size - result for caller */
+
+  time_t       hc_ping_time;    /* last issued command */
+
+  char        *hc_rbuf;         /* read buffer */
+  size_t       hc_rsize;        /* read buffer size */
+  size_t       hc_rpos;         /* read buffer position */
+  size_t       hc_hsize;        /* header size in bytes */
+  size_t       hc_csize;        /* contents size in bytes */
+  char        *hc_chunk;
+  size_t       hc_chunk_size;
+  size_t       hc_chunk_csize;
+  size_t       hc_chunk_alloc;
+  size_t       hc_chunk_pos;
+  char        *hc_location;
+  int          hc_redirects;
+  int          hc_result;
+  int          hc_shutdown:1;
+  int          hc_sending:1;
+  int          hc_reconnected:1;
+  int          hc_keepalive:1;
+  int          hc_in_data:1;
+  int          hc_chunked:1;
+  int          hc_chunk_trails:1;
+  int          hc_handle_location:1; /* handle the redirection (location) requests */
+
+  http_client_wcmd_t            *hc_wcmd;
+  TAILQ_HEAD(,http_client_wcmd)  hc_wqueue;
+
+  int          hc_verify_peer;  /* SSL - verify peer */
+
+  int          hc_cseq;         /* RTSP */
+  int          hc_rcseq;        /* RTSP - expected cseq */
+  char        *hc_rtsp_session;
+  char        *hc_rtp_dest;
+  int          hc_rtp_port;
+  int          hc_rtpc_port;
+  int          hc_rtp_multicast:1;
+  long         hc_rtsp_stream_id;
+  int          hc_rtp_timeout;
+
+  struct http_client_ssl *hc_ssl; /* ssl internals */
+
+  /* callbacks */
+  int     (*hc_hdr_received) (http_client_t *hc);
+  int     (*hc_data_received)(http_client_t *hc, void *buf, size_t len);
+  int     (*hc_data_complete)(http_client_t *hc);
+  void    (*hc_conn_closed)  (http_client_t *hc, int err);
+};
 
 void http_client_init ( void );
 void http_client_done ( void );
+
 http_client_t*
-http_connect ( const url_t *url,
-               http_client_conn_cb conn_cb,
-               http_client_data_cb data_cb,
-               http_client_fail_cb fail_cb,
-               void *p );
-void http_close ( http_client_t *hc );
+http_client_connect ( void *aux, http_ver_t ver,
+                      const char *scheme, const char *host, int port );
+void http_client_register ( http_client_t *hc );
+void http_client_close ( http_client_t *hc );
+
+int http_client_send( http_client_t *hc, http_cmd_t cmd,
+                      const char *path, const char *query,
+                      http_arg_list_t *header, void *body, size_t body_size );
+int http_client_simple( http_client_t *hc, const url_t *url);
+int http_client_clear_state( http_client_t *hc );
+int http_client_run( http_client_t *hc );
+void http_client_ssl_peer_verify( http_client_t *hc, int verify );
+
+/*
+ * RTSP helpers
+ */
+
+int rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr );
+                      
+void rtsp_clear_session( http_client_t *hc );
+
+int rtsp_options_decode( http_client_t *hc );
+static inline int rtsp_options( http_client_t *hc ) {
+  return rtsp_send(hc, RTSP_CMD_OPTIONS, NULL, NULL, NULL);
+}
+
+int rtsp_setup_decode( http_client_t *hc, int satip );
+int rtsp_setup( http_client_t *hc, const char *path, const char *query,
+                const char *multicast_addr, int rtp_port, int rtpc_port );
+
+static inline int
+rtsp_play( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_PLAY, path, query, NULL);
+}
+
+static inline int
+rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_TEARDOWN, path, query, NULL);
+}
+
+int rtsp_describe_decode( http_client_t *hc );
+static inline int
+rtsp_describe( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_DESCRIBE, path, query, NULL);
+}
 
 #endif /* HTTP_H_ */

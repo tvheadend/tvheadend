@@ -505,7 +505,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
