@@ -253,11 +253,61 @@ dvb_network_create_mux
     dmc->dmc_fe_type = lm->lm_tuning.dmc_fe_type;
     // Note: keep original freq, else it can bounce around if diff transponders
     // report it slightly differently.
-    // TODO: Note: should we also leave AUTO settings as is?
-    if (memcmp(&lm->lm_tuning, dmc, sizeof(lm->lm_tuning))) {
-      memcpy(&lm->lm_tuning, dmc, sizeof(lm->lm_tuning));
-      save = 1;
+#if ENABLE_TRACE
+    #define COMPARE(x) ({ \
+      int xr = dmc->x != lm->lm_tuning.x; \
+      if (xr) { \
+        lm->lm_tuning.x = dmc->x; \
+        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+                 " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
+      } xr; })
+    #define COMPAREN(x) ({ \
+      int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
+      if (xr) { \
+        lm->lm_tuning.x = dmc->x; \
+        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+                 " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
+      } xr; })
+#else
+    #define COMPARE(x) ({ \
+      int xr = dmc->x != lm->lm_tuning.x; \
+      if (xr) lm->lm_tuning.x = dmc->x; \
+      xr; })
+    /* note - zero means NONE, one means AUTO */
+    #define COMPAREN(x) ({ \
+      int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
+      if (xr) lm->lm_tuning.x = dmc->x; \
+      xr; })
+#endif
+    save |= COMPAREN(dmc_fe_modulation);
+    save |= COMPAREN(dmc_fe_inversion);
+    save |= COMPAREN(dmc_fe_rolloff);
+    save |= COMPAREN(dmc_fe_pilot);
+    switch (dmc->dmc_fe_type) {
+    case DVB_TYPE_T:
+      save |= COMPAREN(u.dmc_fe_ofdm.bandwidth);
+      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_HP);
+      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_LP);
+      save |= COMPAREN(u.dmc_fe_ofdm.transmission_mode);
+      save |= COMPAREN(u.dmc_fe_ofdm.guard_interval);
+      save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information);
+      break;
+    case DVB_TYPE_S:
+      save |= COMPARE(u.dmc_fe_qpsk.polarisation);
+      save |= COMPARE(u.dmc_fe_qpsk.orbital_pos);
+      save |= COMPARE(u.dmc_fe_qpsk.orbital_dir);
+      save |= COMPARE(u.dmc_fe_qpsk.symbol_rate);
+      save |= COMPAREN(u.dmc_fe_qpsk.fec_inner);
+      break;
+    case DVB_TYPE_C:
+      save |= COMPARE(u.dmc_fe_qam.symbol_rate);
+      save |= COMPAREN(u.dmc_fe_qam.fec_inner);
+      break;
+    default:
+      abort();
     }
+    #undef COMPARE
+    #undef COMPAREN
   }
   if (save)
       mm->mm_config_save(mm);
