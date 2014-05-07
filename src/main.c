@@ -41,6 +41,7 @@
 #include "tcp.h"
 #include "access.h"
 #include "http.h"
+#include "upnp.h"
 #include "webui/webui.h"
 #include "epggrab.h"
 #include "spawn.h"
@@ -60,6 +61,7 @@
 #include "timeshift.h"
 #include "fsmonitor.h"
 #include "lang_codes.h"
+#include "esfilter.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -68,6 +70,11 @@
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
 #endif
+#include <openssl/ssl.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/engine.h>
 
 pthread_t main_tid;
 
@@ -132,6 +139,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #endif
 #if ENABLE_LINUXDVB
   { "linuxdvb", NULL },
+#endif
+#if ENABLE_SATIP_CLIENT
+  { "satip_client", NULL },
 #endif
 #if ENABLE_LIBAV
   { "transcoding", &transcoding_enabled },
@@ -467,6 +477,7 @@ main(int argc, char **argv)
 #endif
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
+  str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
@@ -488,6 +499,10 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
+#endif
+#if ENABLE_SATIP_CLIENT
+    {   0, "satip_xml", "URL with the SAT>IP server XML location",
+      OPT_STR_LIST, &opt_satip_xml },
 #endif
     {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
     { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
@@ -726,6 +741,11 @@ main(int argc, char **argv)
   sigfillset(&set);
   sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
+
+  /* SSL library init */
+  OPENSSL_config(NULL);
+  SSL_load_error_strings();
+  SSL_library_init();
   
   /* Initialise configuration */
   uuid_init();
@@ -747,10 +767,13 @@ main(int argc, char **argv)
 
   imagecache_init();
 
+  http_client_init();
+  esfilter_init();
+
   service_init();
 
 #if ENABLE_MPEGTS
-  mpegts_init(adapter_mask, &opt_tsfile, opt_tsfile_tuner);
+  mpegts_init(adapter_mask, &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
 #endif
 
   channel_init();
@@ -763,10 +786,12 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
-  http_client_init();
   tcp_server_init(opt_ipv6);
   http_server_init(opt_bindaddr);
   webui_init();
+#if ENABLE_UPNP
+  upnp_server_init(opt_bindaddr);
+#endif
 
   service_mapper_init();
 
@@ -813,14 +838,17 @@ main(int argc, char **argv)
 
   mainloop();
 
+#if ENABLE_UPNP
+  tvhftrace("main", upnp_server_done);
+#endif
   tvhftrace("main", htsp_done);
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);
-  tvhftrace("main", http_client_done);
   tvhftrace("main", fsmonitor_done);
 #if ENABLE_MPEGTS
   tvhftrace("main", mpegts_done);
 #endif
+  tvhftrace("main", http_client_done);
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
@@ -851,6 +879,8 @@ main(int argc, char **argv)
   tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
+  tvhftrace("main", esfilter_done);
+  tvhftrace("main", urlparse_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();
@@ -859,6 +889,23 @@ main(int argc, char **argv)
     unlink(opt_pidpath);
     
   free(opt_tsfile.str);
+  free(opt_satip_xml.str);
+
+  /* OpenSSL - welcome to the "cleanup" hell */
+  ENGINE_cleanup();
+  RAND_cleanup();
+  CRYPTO_cleanup_all_ex_data();
+  EVP_cleanup();
+  CONF_modules_free();
+  COMP_zlib_cleanup();
+  ERR_remove_state(0);
+  ERR_free_strings();
+  {
+    struct stack_st_SSL_COMP * pCOMP = SSL_COMP_get_compression_methods();
+    if (pCOMP)
+     sk_SSL_COMP_free(pCOMP);
+  }
+  /* end of OpenSSL cleanup code */
 
   return 0;
 }

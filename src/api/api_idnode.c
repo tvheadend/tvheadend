@@ -377,8 +377,8 @@ exit:
 }
 
 static int
-api_idnode_delete
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+api_idnode_handler
+  ( htsmsg_t *args, htsmsg_t **resp, void (*handler)(idnode_t *in) )
 {
   int err = 0;
   idnode_t *in;
@@ -400,7 +400,7 @@ api_idnode_delete
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
       if (!(in   = idnode_find(uuid, NULL))) continue;
-      idnode_delete(in);
+      handler(in);
     }
   
   /* Single */
@@ -409,7 +409,7 @@ api_idnode_delete
     if (!(in   = idnode_find(uuid, NULL)))
       err = ENOENT;
     else
-      idnode_delete(in);
+      handler(in);
   }
 
   pthread_mutex_unlock(&global_lock);
@@ -417,14 +417,37 @@ api_idnode_delete
   return err;
 }
 
+static int
+api_idnode_delete
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(args, resp, idnode_delete);
+}
+
+static int
+api_idnode_moveup
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(args, resp, idnode_moveup);
+}
+
+static int
+api_idnode_movedown
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(args, resp, idnode_movedown);
+}
+
 void api_idnode_init ( void )
 {
   static api_hook_t ah[] = {
-    { "idnode/load",   ACCESS_ANONYMOUS, api_idnode_load,   NULL },
-    { "idnode/save",   ACCESS_ADMIN,     api_idnode_save,   NULL },
-    { "idnode/tree",   ACCESS_ANONYMOUS, api_idnode_tree,   NULL },
-    { "idnode/class",  ACCESS_ANONYMOUS, api_idnode_class,  NULL },
-    { "idnode/delete", ACCESS_ADMIN,     api_idnode_delete, NULL },
+    { "idnode/load",     ACCESS_ANONYMOUS, api_idnode_load,     NULL },
+    { "idnode/save",     ACCESS_ADMIN,     api_idnode_save,     NULL },
+    { "idnode/tree",     ACCESS_ANONYMOUS, api_idnode_tree,     NULL },
+    { "idnode/class",    ACCESS_ANONYMOUS, api_idnode_class,    NULL },
+    { "idnode/delete",   ACCESS_ADMIN,     api_idnode_delete,   NULL },
+    { "idnode/moveup",   ACCESS_ADMIN,     api_idnode_moveup,   NULL },
+    { "idnode/movedown", ACCESS_ADMIN,     api_idnode_movedown, NULL },
     { NULL },
   };
 

@@ -19,6 +19,7 @@ OPTIONS=(
   "cwc:yes"
   "v4l:no"
   "linuxdvb:yes"
+  "satip_client:yes"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
@@ -29,7 +30,6 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "inotify:auto"
-  "curl:auto"
   "epoll:auto"
   "uriparser:auto"
   "ccache:auto"
@@ -113,6 +113,18 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet recvmmsg '
+#define _GNU_SOURCE
+#include <stdlib.h>
+#include <sys/socket.h>
+#define TEST test
+int test(void)
+{
+  recvmmsg(0, NULL, 0, 0, NULL);
+  return 0;
+}
+'
 #
 # Python
 #
@@ -161,14 +173,10 @@ if enabled_or_auto zlib; then
 fi
 
 #
-# CURL
+# SAT>IP client
 #
-if enabled_or_auto curl; then
-  if check_pkg libcurl; then
-    enable curl
-  elif enabled curl; then
-    die "Curl development support not foun (use --disable-curl)"
-  fi
+if enabled_or_auto satip_client; then
+  enable upnp
 fi
 
 #
@@ -264,11 +272,7 @@ fi
 # Icon caching
 #
 if enabled_or_auto imagecache; then
-  if enabled curl; then
-    enable imagecache
-  elif enabled imagecache; then
-    die "Libcurl support not found (use --disable-imagecache)"
-  fi  
+  enable imagecache
 fi
 
 #

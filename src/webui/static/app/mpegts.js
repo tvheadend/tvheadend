@@ -99,15 +99,6 @@ tvheadend.show_service_streams = function ( data ) {
   var i, j;
 	var html = '';
 
-  html += '<table style="font-size:8pt;font-family:mono;padding:2px"';
-	html += '<tr>';
-	html += '<th style="width:50px;font-weight:bold">Index</th>';
-	html += '<th style="width:120px;font-weight:bold">PID</th>';
-	html += '<th style="width:100px;font-weight:bold">Type</th>';
-	html += '<th style="width:75px;font-weight:bold">Language</th>';
-  html += '<th style="width:*;font-weight:bold">Details</th>';
-	html += '</tr>';
-
   function hexstr ( d ) {
     return ('0000' + d.toString(16)).slice(-4);
   }
@@ -126,8 +117,23 @@ tvheadend.show_service_streams = function ( data ) {
     return r;
   }
 
-	for (i = 0; i < data.streams.length; i++) {
-		var s = data.streams[i];
+  function header ( ) {
+    html += '<table style="font-size:8pt;font-family:mono;padding:2px"';
+    html += '<tr>';
+    html += '<th style="width:50px;font-weight:bold">Index</th>';
+    html += '<th style="width:120px;font-weight:bold">PID</th>';
+    html += '<th style="width:100px;font-weight:bold">Type</th>';
+    html += '<th style="width:75px;font-weight:bold">Language</th>';
+    html += '<th style="width:*;font-weight:bold">Details</th>';
+    html += '</tr>';
+
+  }
+
+  function single ( s ) {
+    html += '<tr><td colspan="5">' + s + '</td></tr>';
+  }
+
+  function stream ( s ) {
     var d = '&nbsp;';
     var p = '0x' + hexstr(s.pid) + '&nbsp;/&nbsp;' + fixstr(s.pid);
 
@@ -146,16 +152,36 @@ tvheadend.show_service_streams = function ( data ) {
     }
 		html += '<td>' + d + '</td>';
 		html += '</tr>';
-	}
+  }
+
+  header();
+
+  if (data.streams.length) {
+ 	  for (i = 0; i < data.streams.length; i++)
+		  stream(data.streams[i]);
+  } else
+    single('None');
+
+  single('&nbsp;');
+  single('<h3>After filtering and reordering (without PCR and PMT)</h3>');
+  header();
+
+  if (data.fstreams.length)
+  	for (i = 0; i < data.fstreams.length; i++)
+  		stream(data.fstreams[i]);
+  else
+    single('<p>None</p>');
 
 	var win = new Ext.Window({
 		title : 'Service details for ' + data.name,
 		layout : 'fit',
 		width : 650,
-		height : 300,
+		height : 400,
 		plain : true,
 		bodyStyle : 'padding: 5px',
-		html : html
+		html : html,
+		autoScroll: true,
+		autoShow: true
 	});
 	win.show();
 }

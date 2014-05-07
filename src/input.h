@@ -128,6 +128,9 @@ void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb.h"
 #endif
+#if ENABLE_SATIP_CLIENT
+#include "input/mpegts/satip/satip.h"
+#endif
 #endif
 
 #endif /* __TVH_INPUT_H__ */

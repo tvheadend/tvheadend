@@ -42,7 +42,8 @@ typedef struct idnode_set
 /*
  * Class definition
  */
-typedef struct idclass {
+typedef struct idclass idclass_t;
+struct idclass {
   const struct idclass  *ic_super;      /// Parent class
   const char            *ic_class;      /// Class name
   const char            *ic_caption;    /// Class description
@@ -51,11 +52,13 @@ typedef struct idclass {
   const char            *ic_event;      /// Events to fire on add/delete/title
 
   /* Callbacks */
-  idnode_set_t   *(*ic_get_childs)(idnode_t *self);
-  const char     *(*ic_get_title) (idnode_t *self);
-  void            (*ic_save)      (idnode_t *self);
-  void            (*ic_delete)    (idnode_t *self);
-} idclass_t;
+  idnode_set_t   *(*ic_get_childs) (idnode_t *self);
+  const char     *(*ic_get_title)  (idnode_t *self);
+  void            (*ic_save)       (idnode_t *self);
+  void            (*ic_delete)     (idnode_t *self);
+  void            (*ic_moveup)     (idnode_t *self);
+  void            (*ic_movedown)   (idnode_t *self);
+};
 
 /*
  * Node definition
@@ -120,6 +123,8 @@ const char   *idnode_get_title    (idnode_t *in);
 int           idnode_is_leaf      (idnode_t *in);
 int           idnode_is_instance  (idnode_t *in, const idclass_t *idc);
 void          idnode_delete       (idnode_t *in);
+void          idnode_moveup       (idnode_t *in);
+void          idnode_movedown     (idnode_t *in);
 
 void         *idnode_find    (const char *uuid, const idclass_t *idc);
 idnode_set_t *idnode_find_all(const idclass_t *idc);

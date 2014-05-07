@@ -74,7 +74,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(TAILQ_FIRST(&t->s_components) != NULL) {
+  if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
 
     if(s->ths_start_message != NULL)
       streaming_msg_free(s->ths_start_message);
@@ -122,7 +122,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
   streaming_target_disconnect(&t->s_streaming_pad, &s->ths_input);
 
   if(stop &&
-     TAILQ_FIRST(&t->s_components) != NULL && 
+     TAILQ_FIRST(&t->s_filt_components) != NULL && 
      s->ths_state == SUBSCRIPTION_GOT_SERVICE) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);

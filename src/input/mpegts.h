@@ -68,7 +68,8 @@ extern const idclass_t mpegts_input_class;
  * Setup / Tear down
  * *************************************************************************/
 
-void mpegts_init ( int linuxdvb_mask, str_list_t *tsfiles, int tstuners );
+void mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
+                   str_list_t *tsfiles, int tstuners );
 void mpegts_done ( void );
 
 /* **************************************************************************
@@ -505,7 +506,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);

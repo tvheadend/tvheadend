@@ -59,6 +59,7 @@ void api_init               ( void );
 void api_done               ( void );
 void api_idnode_init        ( void );
 void api_input_init         ( void );
+void api_input_satip_init   ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );
 void api_mpegts_init        ( void );
@@ -66,12 +67,14 @@ void api_epg_init           ( void );
 void api_epggrab_init       ( void );
 void api_status_init        ( void );
 void api_imagecache_init    ( void );
+void api_esfilter_init      ( void );
 
 /*
  * IDnode
  */
 typedef struct api_idnode_grid_conf
 {
+  int             tindex;
   int             start;
   int             limit;
   idnode_filter_t filter;

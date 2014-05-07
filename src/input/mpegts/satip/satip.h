@@ -1,7 +1,7 @@
 /*
- *  Tvheadend - URL Processing
+ *  Tvheadend - SAT-IP DVB private data
  *
- *  Copyright (C) 2013 Adam Sutton
+ *  Copyright (C) 2014 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,28 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_URL_H__
-#define __TVH_URL_H__
+#ifndef __TVH_SATIP_H__
+#define __TVH_SATIP_H__
 
-#include <stdint.h>
+void satip_init( str_list_t *clients );
+void satip_done( void );
 
-/* URL structure */
-typedef struct url
-{
-  char  *scheme;
-  char  *user;
-  char  *pass;
-  char  *host;
-  short  port;
-  char  *path;
-  char  *query;
-  char  *frag;
-  char  *raw;
-} url_t;
-
-void urlreset ( url_t *url );
-int urlparse ( const char *str, url_t *url );
-void urlparse_done ( void );
-void urlcopy ( url_t *dst, const url_t *src );
-
-#endif
+#endif /* __TVH_SATIP_H__ */

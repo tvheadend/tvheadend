@@ -23,6 +23,7 @@
 #include "input.h"
 #include "htsbuf.h"
 #include "url.h"
+#include "udp.h"
 
 #define IPTV_PKT_SIZE (300*188)
 
@@ -72,6 +73,7 @@ struct iptv_mux
   mpegts_mux_t;
 
   int                   mm_iptv_fd;
+  udp_connection_t     *mm_iptv_connection;
   char                 *mm_iptv_url;
   char                 *mm_iptv_interface;
 

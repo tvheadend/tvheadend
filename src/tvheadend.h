@@ -220,7 +220,10 @@ typedef enum {
   SCT_MP4A,
   SCT_VP8,
   SCT_VORBIS,
+  SCT_LAST = SCT_VORBIS
 } streaming_component_type_t;
+
+#define SCT_MASK(t) (1 << (t))
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 ||	\
 			(t) == SCT_VP8)
@@ -574,6 +577,11 @@ void hexdump(const char *pfx, const uint8_t *data, int len);
 uint32_t tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc);
 
 int base64_decode(uint8_t *out, const char *in, int out_size);
+
+char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size);
+
+/* Calculate the output size needed to base64-encode x bytes. */
+#define BASE64_SIZE(x) (((x)+2) / 3 * 4 + 1)
 
 int put_utf8(char *out, int c);
 
