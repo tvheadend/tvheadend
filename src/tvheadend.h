@@ -657,6 +657,8 @@ qsort_r(void *base, size_t nmemb, size_t size,
        int (*cmp)(const void *, const void *, void *), void *aux);
 #endif /* ENABLE_QSORT_R */
 
+void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *, void *), void *arg);
+
 /* printing */
 #ifndef __WORDSIZE
 # if ULONG_MAX == 0xffffffffffffffff

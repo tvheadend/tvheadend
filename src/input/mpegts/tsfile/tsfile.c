@@ -110,7 +110,10 @@ void tsfile_add_file ( const char *path )
 {
   tsfile_input_t        *mi;
   mpegts_mux_t          *mm;
-  char *uuid = NULL, *tok, *tmp = strdupa(path);
+  char *uuid = NULL, *tok;
+
+  char tmp[strlen(path) + 1];
+  strcpy(tmp, path);
 
   /* Pull UUID from info */
   if ((tok = strstr(tmp, "::"))) {
