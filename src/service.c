@@ -1287,15 +1287,16 @@ service_refresh_channel(service_t *t)
 
 
 /**
- * Weight then prio?
+ * Priority Then Weight
  */
 static int
 si_cmp(const service_instance_t *a, const service_instance_t *b)
 {
   int r;
-  r = a->si_weight - b->si_weight;
+  r = a->si_prio - b->si_prio;
+
   if (!r)
-    r = a->si_prio - b->si_prio;
+    r = a->si_weight - b->si_weight;
   return r;
 }
 
