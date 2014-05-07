@@ -162,16 +162,43 @@ dvr_entry_notify(dvr_entry_t *de)
   notify_by_msg("dvrdb", m);
 }
 
-
 /**
- *
+ * Replace various chars with a dash
+ */
+void
+dvr_cleanupfilename(char *s, int dvr_flags, char rep)
+{
+  int i, len = strlen(s);
+  for(i = 0; i < len; i++) {
+
+    if(s[i] == '/')
+      s[i] = rep;
+
+    else if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
+            (s[i] == ' ' || s[i] == '\t'))
+      s[i] = '-'; /* Replace whitespace in title with '-' */
+
+    else if((dvr_flags & DVR_CLEAN_UNSAFE_CHARACTERS_IN_TITLE) &&
+            ((s[i] < 32) || (s[i] > 122 && s[i] <= 127) ||
+             (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
+      s[i] = rep;
+
+    else if((dvr_flags & DVR_CLEAN_TITLE) &&
+            ((s[i] < 32) || (s[i] > 122) ||
+             (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
+      s[i] = rep;
+  }
+}
+/**
+ * Makes filename based on title, episode date and so on.
+ * Returns filename cleaned from unsafe characters.
  */
 void
 dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
-  int i;
+
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
@@ -220,18 +247,7 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     }
   }
 
-  if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
-        for (i=0;i<strlen(output);i++) {
-                if (
-                        output[i]<32 ||
-                        output[i]>122 ||
-                        output[i]==34 ||
-                        output[i]==39 ||
-                        output[i]==92 ||
-                        output[i]==58
-                        ) output[i]='_';
-        }
-  }
+  dvr_cleanupfilename(output, cfg->dvr_flags, '_');
 }
 
 static void
@@ -1179,7 +1195,10 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "episode-before-date", &u32) && u32)
         cfg->dvr_flags |= DVR_EPISODE_BEFORE_DATE;
 
-		tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
+      if(!htsmsg_get_u32(m, "clean-unsafe-characters-in-title", &u32) && u32)
+        cfg->dvr_flags |= DVR_CLEAN_UNSAFE_CHARACTERS_IN_TITLE;
+
+      tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
     htsmsg_destroy(l);
@@ -1382,6 +1401,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   htsmsg_add_u32(m, "subtitle-in-title", !!(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE));
   htsmsg_add_u32(m, "episode-before-date", !!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE));
+  htsmsg_add_u32(m, "clean-unsafe-characters-in-title", !!(cfg->dvr_flags & DVR_CLEAN_UNSAFE_CHARACTERS_IN_TITLE));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 
