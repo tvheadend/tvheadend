@@ -669,7 +669,7 @@ const static struct strtab typetab[] = {
 dvb_str2val(type);
 
 const static struct strtab pilottab[] = {
-  {"NONE", DVB_PILOT_AUTO},
+  {"NONE", DVB_PILOT_NONE},
   {"AUTO", DVB_PILOT_AUTO},
   {"ON",   DVB_PILOT_ON},
   {"OFF",  DVB_PILOT_OFF}
