@@ -102,7 +102,7 @@ typedef struct source_info {
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {
-#if ENABLE_LOCKOWNER
+#if 0 && ENABLE_LOCKOWNER
   assert(l->__data.__owner == syscall(SYS_gettid));
 #else
   if(pthread_mutex_trylock(l) == EBUSY)

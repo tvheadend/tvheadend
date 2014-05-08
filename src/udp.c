@@ -461,9 +461,10 @@ udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
 void
 udp_multirecv_free( udp_multirecv_t *um )
 {
-  free(um->um_msg);   um->um_msg   = NULL;
-  free(um->um_iovec); um->um_iovec = NULL;
-  free(um->um_data);  um->um_data  = NULL;
+  free(um->um_msg);    um->um_msg   = NULL;
+  free(um->um_riovec); um->um_riovec = NULL;
+  free(um->um_iovec);  um->um_iovec = NULL;
+  free(um->um_data);   um->um_data  = NULL;
   um->um_psize   = 0;
   um->um_packets = 0;
 }
