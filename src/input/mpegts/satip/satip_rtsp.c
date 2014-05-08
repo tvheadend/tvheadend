@@ -55,11 +55,10 @@ satip_rtsp_setup_find(const char *prefix, tvh2satip_t *tbl,
 static void
 satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 {
-  char sec[5];
-
   sprintf(buf + strlen(buf), "&%s=%i", name, val / 1000);
   if (val % 1000) {
-    sprintf(sec, ".%03i", val % 1000);
+    char *sec = buf + strlen(buf);
+    sprintf(sec, ".%03u", val % 1000);
     if (sec[3] == '0') {
       sec[3] = '\0';
       if (sec[2] == '0')
