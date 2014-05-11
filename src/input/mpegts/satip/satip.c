@@ -562,6 +562,19 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
 #endif
 
+  if (d->myaddr == NULL || d->myaddr[0] == '\0') {
+    struct sockaddr_storage ip;
+    socklen_t addrlen = sizeof(ip);
+    errbuf[0] = '\0';
+    getsockname(hc->hc_fd, (struct sockaddr *)&ip, &addrlen);
+    if (ip.ss_family == AF_INET6)
+      inet_ntop(AF_INET6, &IP_AS_V6(ip, addr), errbuf, sizeof(errbuf));
+    else
+      inet_ntop(AF_INET, &IP_AS_V4(ip, addr), errbuf, sizeof(errbuf));
+    free(d->myaddr);
+    d->myaddr = strdup(errbuf);
+  }
+
   s = hc->hc_data + hc->hc_data_size - 1;
   while (s != hc->hc_data && *s != '/')
     s--;
@@ -828,7 +841,7 @@ satip_discovery_static(const char *descurl)
     satip_discovery_destroy(d, 0);
     return;
   }
-  d->myaddr   = strdup(d->url.host);
+  d->myaddr   = strdup("");
   d->location = strdup(descurl);
   d->server   = strdup("");
   d->uuid     = strdup("");
