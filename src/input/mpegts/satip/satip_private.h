@@ -103,6 +103,7 @@ struct satip_frontend
   int                        sf_udp_rtp_port;
   int                        sf_play2;
   int                        sf_tdelay;
+  int                        sf_teardown_delay;
 
   /*
    * Reception

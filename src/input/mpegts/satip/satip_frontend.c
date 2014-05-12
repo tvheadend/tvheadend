@@ -120,6 +120,13 @@ const idclass_t satip_frontend_class =
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_play2),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "teardown_delay",
+      .name     = "Force teardown delay",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_teardown_delay),
+    },
     {}
   }
 };
@@ -1137,6 +1144,12 @@ satip_frontend_input_thread ( void *aux )
   }
 
 done:
+  if (lfe->sf_teardown_delay) {
+    pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+    lfe->sf_last_tune = lfe_master->sf_last_tune = getmonoclock();
+    pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+  }
+
   http_client_close(rtsp);
   tvhpoll_destroy(efd);
   return NULL;
@@ -1248,10 +1261,10 @@ satip_frontend_hacks( satip_frontend_t *lfe )
 {
   lfe->sf_tdelay = 50; /* should not hurt anything */
   if (strstr(lfe->sf_device->sd_info.location, ":8888/octonet.xml")) {
-    if (lfe->sf_type == DVB_TYPE_S) {
+    if (lfe->sf_type == DVB_TYPE_S)
       lfe->sf_play2 = 1;
-      lfe->sf_tdelay = 500;
-    }
+    lfe->sf_tdelay = 250;
+    lfe->sf_teardown_delay = 1;
   }
 }
 
