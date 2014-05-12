@@ -79,6 +79,7 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
   int                        sd_pids0;
+  pthread_mutex_t            sd_tune_mutex;
 };
 
 struct satip_frontend
@@ -101,6 +102,8 @@ struct satip_frontend
   int                        sf_master;
   int                        sf_udp_rtp_port;
   int                        sf_play2;
+  int                        sf_tdelay;
+  int                        sf_teardown_delay;
 
   /*
    * Reception
@@ -124,6 +127,7 @@ struct satip_frontend
   mpegts_mux_instance_t     *sf_mmi;
   signal_state_t             sf_status;
   gtimer_t                   sf_monitor_timer;
+  uint64_t                   sf_last_tune;
  
   /*
    * Configuration

@@ -303,6 +303,8 @@ satip_device_create( satip_device_info_t *info )
     return NULL;
   }
 
+  pthread_mutex_init(&sd->sd_tune_mutex, NULL);
+
   TAILQ_INIT(&sd->sd_frontends);
 
   /* we may check if uuid matches, but the SHA hash should be enough */
@@ -496,6 +498,7 @@ static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
 static gtimer_t satip_discovery_timer;
 static gtimer_t satip_discovery_timerq;
+static gtimer_t satip_discovery_msearch_timer;
 static str_list_t *satip_static_clients;
 
 static void
@@ -561,6 +564,19 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   tvhtrace("satip", "received XML description from %s", hc->hc_host);
   tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
 #endif
+
+  if (d->myaddr == NULL || d->myaddr[0] == '\0') {
+    struct sockaddr_storage ip;
+    socklen_t addrlen = sizeof(ip);
+    errbuf[0] = '\0';
+    getsockname(hc->hc_fd, (struct sockaddr *)&ip, &addrlen);
+    if (ip.ss_family == AF_INET6)
+      inet_ntop(AF_INET6, &IP_AS_V6(ip, addr), errbuf, sizeof(errbuf));
+    else
+      inet_ntop(AF_INET, &IP_AS_V4(ip, addr), errbuf, sizeof(errbuf));
+    free(d->myaddr);
+    d->myaddr = strdup(errbuf);
+  }
 
   s = hc->hc_data + hc->hc_data_size - 1;
   while (s != hc->hc_data && *s != '/')
@@ -828,7 +844,7 @@ satip_discovery_static(const char *descurl)
     satip_discovery_destroy(d, 0);
     return;
   }
-  d->myaddr   = strdup(d->url.host);
+  d->myaddr   = strdup("");
   d->location = strdup(descurl);
   d->server   = strdup("");
   d->uuid     = strdup("");
@@ -847,15 +863,37 @@ satip_discovery_service_destroy(upnp_service_t *us)
 }
 
 static void
-satip_discovery_timer_cb(void *aux)
+satip_discovery_send_msearch(void *aux)
 {
 #define MSG "\
 M-SEARCH * HTTP/1.1\r\n\
 HOST: 239.255.255.250:1900\r\n\
 MAN: \"ssdp:discover\"\r\n\
 MX: 2\r\n\
-ST: urn:ses-com:device:SatIPServer:1\r\n\
-\r\n"
+ST: urn:ses-com:device:SatIPServer:1\r\n"
+  int attempt = ((intptr_t)aux) % 10;
+  htsbuf_queue_t q;
+
+  /* UDP is not reliable - send this message three times */
+  if (attempt < 1 || attempt > 3)
+    return;
+  if (satip_discovery_service == NULL)
+    return;
+
+  htsbuf_queue_init(&q, 0);
+  htsbuf_append(&q, MSG, sizeof(MSG)-1);
+  htsbuf_qprintf(&q, "USER-AGENT: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n", tvheadend_version);
+  htsbuf_append(&q, "\r\n", 2);
+  upnp_send(&q, NULL);
+  htsbuf_queue_flush(&q);
+
+  gtimer_arm_ms(&satip_discovery_msearch_timer, satip_discovery_send_msearch,
+                (void *)(intptr_t)(attempt + 1), attempt * 11);
+}
+
+static void
+satip_discovery_timer_cb(void *aux)
+{
   int i;
 
   if (!tvheadend_running)
@@ -871,13 +909,8 @@ ST: urn:ses-com:device:SatIPServer:1\r\n\
       satip_discovery_service->us_destroy  = satip_discovery_service_destroy;
     }
   }
-  if (satip_discovery_service) {
-    htsbuf_queue_t q;
-    htsbuf_queue_init(&q, 0);
-    htsbuf_append(&q, MSG, sizeof(MSG)-1);
-    upnp_send(&q, NULL);
-    htsbuf_queue_flush(&q);
-  }
+  if (satip_discovery_service)
+    satip_discovery_send_msearch((void *)1);
   for (i = 0; i < satip_static_clients->num; i++)
     satip_discovery_static(satip_static_clients->str[i]);
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
