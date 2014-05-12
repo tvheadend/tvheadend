@@ -869,8 +869,7 @@ M-SEARCH * HTTP/1.1\r\n\
 HOST: 239.255.255.250:1900\r\n\
 MAN: \"ssdp:discover\"\r\n\
 MX: 2\r\n\
-ST: urn:ses-com:device:SatIPServer:1\r\n\
-\r\n"
+ST: urn:ses-com:device:SatIPServer:1\r\n"
   int i;
 
   if (!tvheadend_running)
@@ -890,6 +889,8 @@ ST: urn:ses-com:device:SatIPServer:1\r\n\
     htsbuf_queue_t q;
     htsbuf_queue_init(&q, 0);
     htsbuf_append(&q, MSG, sizeof(MSG)-1);
+    htsbuf_qprintf(&q, "USER-AGENT: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n", tvheadend_version);
+    htsbuf_append(&q, "\r\n", 2);
     upnp_send(&q, NULL);
     htsbuf_queue_flush(&q);
   }
