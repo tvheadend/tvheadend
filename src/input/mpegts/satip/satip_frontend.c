@@ -107,6 +107,13 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_udp_rtp_port),
     },
     {
+      .type     = PT_INT,
+      .id       = "tdelay",
+      .name     = "Next tune delay in ms (0-2000)",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_tdelay),
+    },
+    {
       .type     = PT_BOOL,
       .id       = "play2",
       .name     = "Send full PLAY cmd",
@@ -859,7 +866,7 @@ satip_frontend_input_thread ( void *aux )
 #define UDP_PKT_SIZE  1472         /* this is maximum UDP payload (standard ethernet) */
 #define RTP_PKT_SIZE  (UDP_PKT_SIZE - 12)             /* minus RTP minimal RTP header */
 #define HTTP_CMD_NONE 9874
-  satip_frontend_t *lfe = aux, *lfe2;
+  satip_frontend_t *lfe = aux, *lfe_master = lfe;
   mpegts_mux_instance_t *mmi = lfe->sf_mmi;
   http_client_t *rtsp;
   dvb_mux_t *lm;
@@ -877,6 +884,7 @@ satip_frontend_input_thread ( void *aux )
   uint32_t seq = -1, nseq;
   udp_multirecv_t um;
   int play2 = 1, position, rtsp_flags = 0;
+  uint64_t u64;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
@@ -884,6 +892,28 @@ satip_frontend_input_thread ( void *aux )
     return NULL;
 
   lm = (dvb_mux_t *)mmi->mmi_mux;
+
+  if (lfe->sf_master) {
+    lfe_master = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master);
+    if (lfe_master == NULL)
+      lfe_master = lfe;
+  }
+
+  pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+  u64 = getmonoclock() - lfe_master->sf_last_tune;
+  tvhtrace("satip", "%s - last tune diff = %llu (tdelay = %u)",
+           buf, (unsigned long long)u64, lfe_master->sf_tdelay * 1000);
+  if (u64 < lfe_master->sf_tdelay * 1000) {
+    u64 = (lfe_master->sf_tdelay * 1000) - u64;
+    if (u64 >= 1000000) {
+      unsigned int s = u64 / 1000000;
+      while ((s = sleep(s)) != 0);
+    }
+    u64 %= 1000000;
+    while (usleep(u64));
+  }
+  lfe_master->sf_last_tune = getmonoclock();
+  pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
   rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
                              lfe->sf_device->sd_info.addr, 554);
@@ -908,12 +938,7 @@ satip_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 4);
   rtsp->hc_efd = efd;
 
-  position = lfe->sf_position;
-  if (lfe->sf_master) {
-    lfe2 = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master);
-    if (lfe2)
-      position = lfe2->sf_position;
-  }
+  position = lfe_master->sf_position;
   if (lfe->sf_device->sd_pids0)
     rtsp_flags |= SATIP_SETUP_PIDS0;
   r = satip_rtsp_setup(rtsp,
@@ -1221,9 +1246,12 @@ satip_frontend_tune1
 static void
 satip_frontend_hacks( satip_frontend_t *lfe )
 {
+  lfe->sf_tdelay = 50; /* should not hurt anything */
   if (strstr(lfe->sf_device->sd_info.location, ":8888/octonet.xml")) {
-    if (lfe->sf_type == DVB_TYPE_S)
+    if (lfe->sf_type == DVB_TYPE_S) {
       lfe->sf_play2 = 1;
+      lfe->sf_tdelay = 500;
+    }
   }
 }
 
@@ -1296,6 +1324,8 @@ satip_frontend_create
 
   /* Defaults */
   lfe->sf_position     = -1;
+  if (lfe->sf_tdelay > 2000)
+    lfe->sf_tdelay = 2000;
 
   /* Callbacks */
   lfe->mi_is_free      = satip_frontend_is_free;

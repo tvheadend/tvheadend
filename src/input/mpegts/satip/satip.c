@@ -303,6 +303,8 @@ satip_device_create( satip_device_info_t *info )
     return NULL;
   }
 
+  pthread_mutex_init(&sd->sd_tune_mutex, NULL);
+
   TAILQ_INIT(&sd->sd_frontends);
 
   /* we may check if uuid matches, but the SHA hash should be enough */
