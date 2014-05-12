@@ -118,7 +118,7 @@ upnp_thread( void *aux )
                        NULL, 32*1024);
   if (multicast == NULL || multicast == UDP_FATAL_ERROR)
     goto error;
-  unicast = udp_bind("upnp", "upnp_thread_unicast", bindaddr, 1900,
+  unicast = udp_bind("upnp", "upnp_thread_unicast", bindaddr, 0,
                      NULL, 32*1024);
   if (unicast == NULL || unicast == UDP_FATAL_ERROR)
     goto error;
