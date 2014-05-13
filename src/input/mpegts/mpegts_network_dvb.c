@@ -218,9 +218,19 @@ dvb_network_find_mux
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    if (abs(lm->lm_tuning.dmc_fe_freq
-            - dmc->dmc_fe_freq) > LINUXDVB_FREQ_TOL) continue;
-    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+    /* Note: Thor 0.8W
+         onid 1111 (4369) tsid 000B (11)
+           dvb-s  pos 8W freq 12090000 H sym 280000 fec 7/8 mod QPSK roff 35
+         onid 1111 (4369) tsid 0063 (99)
+           dvb-s  pos 8W freq 12092000 H sym 280000 fec 7/8 mod QPSK roff 35
+     */
+    if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > 1999) continue;
+    if (lm->lm_tuning.dmc_fe_modulation != dmc->dmc_fe_modulation) continue;
+    if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
+      if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+      if (lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate != dmc->u.dmc_fe_qpsk.symbol_rate) continue;
+    }
+    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
     break;
   }
   return mm;
@@ -237,36 +247,57 @@ dvb_network_config_save ( mpegts_network_t *mn )
   htsmsg_destroy(c);
 }
 
+static const idclass_t *
+dvb_network_mux_class
+  ( mpegts_network_t *mn )
+{
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbt_class))
+    return &dvb_mux_dvbt_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
+    return &dvb_mux_dvbc_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class))
+    return &dvb_mux_dvbs_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
+    return &dvb_mux_atsc_class;
+  return NULL;
+}
+
 static mpegts_mux_t *
 dvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
   int save = 0;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
+
   mm = dvb_network_find_mux(ln, dmc);
   if (!mm && ln->mn_autodiscovery) {
-    mm   = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
-    save = 1;
+    const idclass_t *cls;
+    cls = dvb_network_mux_class((mpegts_network_t *)ln);
+    save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
+    save |= cls == &dvb_mux_dvbc_class && dmc->dmc_fe_type == DVB_TYPE_C;
+    save |= cls == &dvb_mux_dvbs_class && dmc->dmc_fe_type == DVB_TYPE_S;
+    save |= cls == &dvb_mux_atsc_class && dmc->dmc_fe_type == DVB_TYPE_ATSC;
+    if (save)
+      mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     dmc->dmc_fe_freq = lm->lm_tuning.dmc_fe_freq;
-    dmc->dmc_fe_type = lm->lm_tuning.dmc_fe_type;
     // Note: keep original freq, else it can bounce around if diff transponders
     // report it slightly differently.
 #if ENABLE_TRACE
     #define COMPARE(x) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
       if (xr) { \
-        lm->lm_tuning.x = dmc->x; \
         tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
+        lm->lm_tuning.x = dmc->x; \
       } xr; })
     #define COMPAREN(x) ({ \
       int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
       if (xr) { \
-        lm->lm_tuning.x = dmc->x; \
         tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
+        lm->lm_tuning.x = dmc->x; \
       } xr; })
 #else
     #define COMPARE(x) ({ \
@@ -309,8 +340,8 @@ dvb_network_create_mux
     #undef COMPARE
     #undef COMPAREN
   }
-  if (save)
-      mm->mm_config_save(mm);
+  if (save && mm)
+    mm->mm_config_save(mm);
   return mm;
 }
 
@@ -319,21 +350,6 @@ dvb_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
   return mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
-}
-
-static const idclass_t *
-dvb_network_mux_class
-  ( mpegts_network_t *mn )
-{
-  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbt_class))
-    return &dvb_mux_dvbt_class;
-  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
-    return &dvb_mux_dvbc_class;
-  if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class))
-    return &dvb_mux_dvbs_class;
-  if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
-    return &dvb_mux_atsc_class;
-  return NULL;
 }
 
 static mpegts_mux_t *

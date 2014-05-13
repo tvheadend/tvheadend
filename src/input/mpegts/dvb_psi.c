@@ -116,6 +116,7 @@ dvb_desc_sat_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_type                = DVB_TYPE_S;
   dmc.dmc_fe_pilot               = DVB_PILOT_AUTO;
   dmc.dmc_fe_inversion           = DVB_INVERSION_AUTO;
   dmc.dmc_fe_freq                = frequency;
@@ -195,6 +196,7 @@ dvb_desc_cable_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_type            = DVB_TYPE_C;
   dmc.dmc_fe_delsys          = DVB_SYS_DVBC_ANNEX_A;
   dmc.dmc_fe_inversion       = DVB_INVERSION_AUTO;
   dmc.dmc_fe_freq            = frequency * 100;
@@ -263,6 +265,7 @@ dvb_desc_terr_del
   }
 
   memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_type             = DVB_TYPE_T;
   dmc.dmc_fe_delsys           = DVB_SYS_DVBT;
   dmc.dmc_fe_inversion        = DVB_INVERSION_AUTO;
   dmc.dmc_fe_freq             = frequency * 10;

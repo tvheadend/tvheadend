@@ -29,9 +29,6 @@
 #define DVB_VER_ATLEAST(maj, min) \
  (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
 
-/* Max allowed frequency variation for something to be considered the same */
-#define LINUXDVB_FREQ_TOL 2000
-
 typedef struct linuxdvb_hardware    linuxdvb_hardware_t;
 typedef struct linuxdvb_adapter     linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend    linuxdvb_frontend_t;
