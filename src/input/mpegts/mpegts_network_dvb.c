@@ -278,6 +278,7 @@ dvb_network_create_mux
   ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
 {
   int save = 0;
+  mpegts_mux_t *mmo = mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
 
   mm = dvb_network_find_mux(ln, dmc);
@@ -304,6 +305,10 @@ dvb_network_create_mux
       mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
+    /* the nit tables may be incosistent (like rolloff ping-pong) */
+    /* accept information only from one origin mux */
+    if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin != mmo)
+      goto noop;
 #if ENABLE_TRACE
     #define COMPARE(x) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
@@ -362,8 +367,13 @@ dvb_network_create_mux
     #undef COMPARE
     #undef COMPAREN
   }
-  if (save && mm)
-    mm->mm_config_save(mm);
+  if (mm) {
+    mm->mm_dmc_origin        = mmo;
+    mm->mm_dmc_origin_expire = dispatch_clock + 3600 * 24; /* one day */
+    if (save)
+      mm->mm_config_save(mm);
+  }
+noop:
   return mm;
 }
 

@@ -313,6 +313,8 @@ struct mpegts_mux
     MM_SCAN_CURRENT,  // Currently tuned for initial scan
   }                       mm_initial_scan_status;
   int                     mm_initial_scan_done;
+  mpegts_mux_t           *mm_dmc_origin;
+  time_t                  mm_dmc_origin_expire;
 
   /*
    * Physical instances
