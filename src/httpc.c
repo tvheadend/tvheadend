@@ -106,7 +106,7 @@ http_port( const char *scheme, int port )
  * Disable
  */
 static void
-http_client_shutdown ( http_client_t *hc, int force )
+http_client_shutdown ( http_client_t *hc, int force, int reconnect )
 {
   struct http_client_ssl *ssl = hc->hc_ssl;
   tvhpoll_t *efd = NULL;
@@ -123,11 +123,11 @@ http_client_shutdown ( http_client_t *hc, int force )
   }
   if (hc->hc_efd) {
     tvhpoll_event_t ev;
-    if (hc->hc_efd == http_poll)
-      TAILQ_REMOVE(&http_clients, hc, hc_link);
     memset(&ev, 0, sizeof(ev));
     ev.fd       = hc->hc_fd;
     tvhpoll_rem(efd = hc->hc_efd, &ev, 1);
+    if (hc->hc_efd == http_poll && !reconnect)
+      TAILQ_REMOVE(&http_clients, hc, hc_link);
     hc->hc_efd  = NULL;
   }
   if (hc->hc_fd >= 0) {
@@ -184,7 +184,7 @@ http_client_flush( http_client_t *hc, int result )
 {
   hc->hc_result       = result;
   if (result < 0)
-    http_client_shutdown(hc, 0);
+    http_client_shutdown(hc, 0, 0);
   hc->hc_in_data      = 0;
   hc->hc_hsize        = 0;
   hc->hc_csize        = 0;
@@ -425,7 +425,7 @@ http_client_ssl_shutdown( http_client_t *hc )
     r = SSL_shutdown(hc->hc_ssl->ssl);
     if (r > 0) {
       /* everything done, bail-out completely */
-      http_client_shutdown(hc, 1);
+      http_client_shutdown(hc, 1, 0);
       return r;
     }
     e = SSL_get_error(hc->hc_ssl->ssl, r);
@@ -618,7 +618,7 @@ http_client_finish( http_client_t *hc )
   if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK)
     return http_client_send_partial(hc);
   if (!hc->hc_keepalive) {
-    http_client_shutdown(hc, 0);
+    http_client_shutdown(hc, 0, 0);
     if (hc->hc_ssl) {
       /* finish the shutdown I/O sequence, notify owner later */
       errno = EAGAIN;
@@ -755,7 +755,7 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
 }
 
 static int
-http_client_data_received( http_client_t *hc, char *buf, ssize_t len )
+http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
 {
   ssize_t l, l2, csize;
   int res, end = 0;
@@ -763,7 +763,9 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len )
   buf[len] = '\0';
 
   if (len == 0) {
-    if (hc->hc_csize == -1 || hc->hc_rpos >= hc->hc_csize)
+    if (hc->hc_csize == -1)
+      return 1;
+    if (!hdr && hc->hc_rpos >= hc->hc_csize)
       return 1;
     return 0;
   }  
@@ -864,7 +866,7 @@ retry:
 #endif
 
   if (hc->hc_in_data) {
-    res = http_client_data_received(hc, buf, r);
+    res = http_client_data_received(hc, buf, r, 0);
     if (res < 0)
       return http_client_flush(hc, res);
     if (res > 0)
@@ -958,7 +960,7 @@ header:
   } else {
     hc->hc_in_data = 1;
   }
-  res = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len);
+  res = http_client_data_received(hc, hc->hc_rbuf + hc->hc_hsize, len, 1);
   if (res < 0)
     return http_client_flush(hc, res);
   if (res > 0)
@@ -975,7 +977,9 @@ http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
   char buf[64];
 
   http_arg_init(h);
-  http_arg_set(h, "Host", url->host);
+  snprintf(buf, sizeof(buf), "%s:%u", url->host,
+                                      http_port(url->scheme, url->port));
+  http_arg_set(h, "Host", buf);
   snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
   http_arg_set(h, "User-Agent", buf);
   if (!keepalive)
@@ -1029,7 +1033,7 @@ http_client_redirected ( http_client_t *hc )
       http_port(u.scheme, u.port) != hc->hc_port ||
       !hc->hc_keepalive) {
     efd = hc->hc_efd;
-    http_client_shutdown(hc, 1);
+    http_client_shutdown(hc, 1, 1);
     r = http_client_reconnect(hc, hc->hc_version,
                               u.scheme, u.host, u.port);
     if (r < 0) {
@@ -1266,7 +1270,7 @@ http_client_close ( http_client_t *hc )
     return;
 
   pthread_mutex_lock(&http_lock);
-  http_client_shutdown(hc, 1);
+  http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
   pthread_mutex_unlock(&http_lock);
   while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
