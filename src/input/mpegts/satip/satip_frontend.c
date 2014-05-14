@@ -508,7 +508,7 @@ satip_frontend_open_pid
   if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner)))
     return NULL;
 
-  if (type == MPEGTS_FULLMUX_PID) {
+  if (pid == MPEGTS_FULLMUX_PID) {
     if (lfe->sf_device->sd_fullmux_ok) {
       if (!lfe->sf_pids_any)
         lfe->sf_pids_any = change = 1;
@@ -526,10 +526,13 @@ satip_frontend_open_pid
     change |= satip_frontend_add_pid(lfe, mp->mp_pid);
   }
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
-  if (change && !lfe->sf_pids_any_tuned)
-    tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  if (change) {
+    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    if (!lfe->sf_pids_any_tuned ||
+        lfe->sf_pids_any != lfe->sf_pids_any_tuned)
+      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  }
 
   return mp;
 }
