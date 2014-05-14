@@ -228,6 +228,8 @@ dvb_network_find_mux
     if (lm->lm_tuning.dmc_fe_modulation != dmc->dmc_fe_modulation) continue;
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
       if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+      if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != dmc->u.dmc_fe_qpsk.orbital_pos) continue;
+      if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir != dmc->u.dmc_fe_qpsk.orbital_dir) continue;
       if (lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate != dmc->u.dmc_fe_qpsk.symbol_rate) continue;
     }
     if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
@@ -277,13 +279,18 @@ dvb_network_create_mux
     save |= cls == &dvb_mux_dvbc_class && dmc->dmc_fe_type == DVB_TYPE_C;
     save |= cls == &dvb_mux_dvbs_class && dmc->dmc_fe_type == DVB_TYPE_S;
     save |= cls == &dvb_mux_atsc_class && dmc->dmc_fe_type == DVB_TYPE_ATSC;
+    if (save && dmc->dmc_fe_type == DVB_TYPE_S) {
+      dvb_mux_t *lm = (dvb_mux_t *)LIST_FIRST(&ln->mn_muxes);
+      /* do not allow to mix sattelite positions */
+      if (lm &&
+          (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != dmc->u.dmc_fe_qpsk.orbital_pos ||
+           lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir != dmc->u.dmc_fe_qpsk.orbital_dir))
+        save = 0;
+    }
     if (save)
       mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    dmc->dmc_fe_freq = lm->lm_tuning.dmc_fe_freq;
-    // Note: keep original freq, else it can bounce around if diff transponders
-    // report it slightly differently.
 #if ENABLE_TRACE
     #define COMPARE(x) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
