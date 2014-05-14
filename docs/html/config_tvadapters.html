@@ -18,6 +18,11 @@
 
   <dt>Name</dt>
   <dd>The name of this tuner.</dd>
+
+  <dt>Priority</dt>
+  <dd>The tuner priority value (higher value = higher priority to use this
+      tuner).</dd>
+
 </dl>
 </p>
 
@@ -70,6 +75,21 @@
         a slave one and tvheadend will assure that this tuner will not
         use incompatible parameters (position, polarization, lo-hi).</p>
   </dd>
+
+  <dt>Next tune delay in ms (0-2000)</dt>
+  <dd>The delay before tuning in milliseconds after tuner stop. If the time
+      after previous start and next start is greater than this value -
+      the delay is not applied.</dt>
+
+  <dt>Send full PLAY cmd</dt>
+  <dd>Send the full RTSP PLAY command after full RTSP SETUP command. Some
+      device firmwares requires this to get MPEG-TS stream.</dd>
+
+  <dt>Force teardown delay<dt>
+  <dd>Force the delay between RTSP TEARDOWN and RTSP SETUP command (value
+      from 'Next tune delay in ms' is used). Some devices are not able to handle
+      quick continuous tuning.</dd>
+
 </dl>
 
 </div>
