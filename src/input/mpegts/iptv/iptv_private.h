@@ -64,6 +64,7 @@ struct iptv_network
 
   uint32_t in_max_streams;
   uint32_t in_max_bandwidth;
+  uint32_t in_max_timeout;
 };
 
 iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf );

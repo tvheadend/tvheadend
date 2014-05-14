@@ -162,6 +162,14 @@ iptv_input_get_weight ( mpegts_input_t *mi )
 }
 
 static int
+iptv_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  iptv_mux_t *im = (iptv_mux_t *)mm;
+  iptv_network_t *in = (iptv_network_t *)im->mm_network;
+  return in->in_max_timeout;
+}
+
+static int
 iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int ret = SM_CODE_TUNING_FAILED;
@@ -406,6 +414,13 @@ const idclass_t iptv_network_class = {
       .off      = offsetof(iptv_network_t, in_max_bandwidth),
       .def.i    = 0,
     },
+    {
+      .type     = PT_U32,
+      .id       = "max_timeout",
+      .name     = "Max timeout (seconds)",
+      .off      = offsetof(iptv_network_t, in_max_timeout),
+      .def.i    = 15,
+    },
     {}
   }
 };
@@ -529,6 +544,7 @@ void iptv_init ( void )
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;
   iptv_input->mi_is_free        = iptv_input_is_free;
   iptv_input->mi_get_weight     = iptv_input_get_weight;
+  iptv_input->mi_get_grace      = iptv_input_get_grace;
   iptv_input->mi_display_name   = iptv_input_display_name;
   iptv_input->mi_enabled        = 1;
 
