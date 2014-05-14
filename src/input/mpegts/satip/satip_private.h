@@ -120,6 +120,7 @@ struct satip_frontend
   int                        sf_pids_count;
   int                        sf_pids_tcount;     /*< tuned count */
   int                        sf_running;
+  int                        sf_shutdown;
   int                        sf_position;
   udp_connection_t          *sf_rtp;
   udp_connection_t          *sf_rtcp;

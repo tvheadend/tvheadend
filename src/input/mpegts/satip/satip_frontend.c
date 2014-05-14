@@ -390,12 +390,10 @@ satip_frontend_stop_mux
   mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - stopping %s", buf1, buf2);
 
-  lfe->sf_running   = 0;
-  lfe->sf_mmi       = NULL;
-
   gtimer_disarm(&lfe->sf_monitor_timer);
 
   /* Stop thread */
+  lfe->sf_shutdown = 1;
   if (lfe->sf_dvr_pipe.wr > 0) {
     tvh_write(lfe->sf_dvr_pipe.wr, "", 1);
     tvhtrace("satip", "%s - waiting for dvr thread", buf1);
@@ -403,6 +401,10 @@ satip_frontend_stop_mux
     tvh_pipe_close(&lfe->sf_dvr_pipe);
     tvhdebug("satip", "%s - stopped dvr thread", buf1);
   }
+  lfe->sf_shutdown = 0;
+
+  lfe->sf_running  = 0;
+  lfe->sf_mmi      = NULL;
 
   udp_close(lfe->sf_rtp);   lfe->sf_rtp        = NULL;
   udp_close(lfe->sf_rtcp);  lfe->sf_rtcp       = NULL;
@@ -751,7 +753,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   int deleted;
   int max_pids_len = lfe->sf_device->sd_pids_len;
 
-  if (!lfe->sf_running)
+  if (!lfe->sf_running || lfe->sf_shutdown)
     return;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
@@ -1212,6 +1214,7 @@ satip_frontend_tune0
 
   assert(lfe->sf_pids == NULL);
   assert(lfe->sf_pids_tuned == NULL);
+
   lfe->sf_pids_count      = 0;
   lfe->sf_pids_tcount     = 0;
   lfe->sf_pids_size       = 512;
@@ -1221,12 +1224,13 @@ satip_frontend_tune0
   lfe->sf_pids_any_tuned  = 0;
   lfe->sf_status          = SIGNAL_NONE;
 
+  lfe->sf_mmi             = mmi;
+  lfe->sf_running         = 1;
+
   tvhtrace("satip", "%s - local RTP port %i RTCP port %i",
                     lfe->mi_name,
                     ntohs(IP_PORT(lfe->sf_rtp->ip)),
                     ntohs(IP_PORT(lfe->sf_rtcp->ip)));
-
-  lfe->sf_mmi = mmi;
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
@@ -1234,7 +1238,6 @@ satip_frontend_tune0
 
   gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);
 
-  lfe->sf_running = 1;
   return 0;
 }
 
