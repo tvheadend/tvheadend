@@ -821,10 +821,12 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
 }
 
 int
-mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid )
+mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
 {
   char buf[256];
   if (tsid == mm->mm_tsid)
+    return 0;
+  if (!force && mm->mm_tsid)
     return 0;
   mm->mm_tsid = tsid;
   mm->mm_display_name(mm, buf, sizeof(buf));

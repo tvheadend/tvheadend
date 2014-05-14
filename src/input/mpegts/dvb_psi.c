@@ -573,7 +573,7 @@ dvb_pat_callback
 
   /* Multiplex */
   tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
-  mpegts_mux_set_tsid(mm, tsid);
+  mpegts_mux_set_tsid(mm, tsid, 1);
   
   /* Process each programme */
   ptr += 5;
@@ -835,7 +835,7 @@ dvb_nit_callback
             mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
           if (mux) {
             mpegts_mux_set_onid(mux, onid);
-            mpegts_mux_set_tsid(mux, tsid);
+            mpegts_mux_set_tsid(mux, tsid, 0);
           }
           break;
         
@@ -893,7 +893,7 @@ dvb_sdt_callback
   /* Find Transport Stream */
   if (tableid == 0x42) {
     mpegts_mux_set_onid(mm, onid);
-    mpegts_mux_set_tsid(mm, tsid);
+    mpegts_mux_set_tsid(mm, tsid, 1);
   } else {
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid)

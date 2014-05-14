@@ -658,7 +658,7 @@ int mpegts_mux_instance_start
 
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 
-int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid );
+int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
