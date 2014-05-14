@@ -452,10 +452,10 @@ muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
   case MC_CACHE_SYSTEM:
     break;
   case MC_CACHE_SYNC:
-    fsync(fd);
+    fdatasync(fd);
     break;
   case MC_CACHE_SYNCDONTKEEP:
-    fsync(fd);
+    fdatasync(fd);
     /* fall through */
   case MC_CACHE_DONTKEEP:
     posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
