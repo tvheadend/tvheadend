@@ -573,7 +573,7 @@ _eit_callback
 
   /* Register interest */
   if (tableid >= 0x50)
-    ota = epggrab_ota_register((epggrab_module_ota_t*)mod, mm, 1200, 3600);
+    ota = epggrab_ota_register((epggrab_module_ota_t*)mod, mm, 3600, 240);
 
   /* Begin */
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 11, &st, &sect, &last, &ver);

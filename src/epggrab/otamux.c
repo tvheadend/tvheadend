@@ -60,11 +60,11 @@ om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
   return strcmp(a->om_mux_uuid, b->om_mux_uuid);
 }
 
-#define EPGGRAB_OTA_MIN_PERIOD  600
+#define EPGGRAB_OTA_MIN_PERIOD   300
 #define EPGGRAB_OTA_MIN_TIMEOUT  30
 
 static int
-epggrab_ota_period ( epggrab_ota_mux_t *ota )
+epggrab_ota_period ( epggrab_ota_mux_t *ota, int divider )
 {
   int period = 0;
   epggrab_ota_map_t *map;
@@ -76,6 +76,8 @@ epggrab_ota_period ( epggrab_ota_mux_t *ota )
       if (!period || map->om_interval < period)
         period = map->om_interval;
   }
+
+  period /= divider;
 
   if (period < EPGGRAB_OTA_MIN_PERIOD)
     period = EPGGRAB_OTA_MIN_PERIOD;
@@ -110,7 +112,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
 
   LIST_REMOVE(ota, om_q_link);
   ota->om_active = 0;
-  ota->om_when   = dispatch_clock + epggrab_ota_period(ota);
+  ota->om_when   = dispatch_clock + epggrab_ota_period(ota, 1);
   LIST_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_time_cmp);
 
   /* Remove subscriber */
@@ -128,10 +130,10 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
 }
 
 static void
-epggrab_ota_start ( epggrab_ota_mux_t *om )
+epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
 {
   epggrab_ota_map_t *map;
-  om->om_when   = dispatch_clock + epggrab_ota_timeout(om);
+  om->om_when   = dispatch_clock + epggrab_ota_timeout(om) + grace;
   om->om_active = 1;
   LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
   if (LIST_FIRST(&epggrab_ota_active) == om)
@@ -242,6 +244,7 @@ epggrab_ota_complete
 {
   int done = 1;
   epggrab_ota_map_t *map;
+  lock_assert(&global_lock);
   tvhdebug(mod->id, "grab complete");
 
   /* Test for completion */
@@ -292,15 +295,18 @@ epggrab_ota_pending_timer_cb ( void *p )
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *om = LIST_FIRST(&epggrab_ota_pending);
   mpegts_mux_t *mm;
+  int extra = 0;
+
   gtimer_disarm(&epggrab_ota_pending_timer);
 
   lock_assert(&global_lock);
   if (!om)
     return;
-  
+
   /* Double check */
   if (om->om_when > dispatch_clock)
     goto done;
+next_one:
   LIST_REMOVE(om, om_q_link);
 
   /* Find the mux */
@@ -326,31 +332,31 @@ epggrab_ota_pending_timer_cb ( void *p )
     char name[256];
     mm->mm_display_name(mm, name, sizeof(name));
     tvhdebug("epggrab", "no modules attached to %s, check again later", name);
-    om->om_when = dispatch_clock + epggrab_ota_period(om) / 2;
+    om->om_when = dispatch_clock + epggrab_ota_period(om, 4);
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
     goto done;
   }
 
-  /* Insert into active (assume success) */
-  // Note: if we don't do this the subscribe below can result in a mux
-  //       start call which means we call it a second time below
-  epggrab_ota_start(om);
-
   /* Subscribe to the mux */
   if (mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
-    LIST_REMOVE(om, om_q_link);
     om->om_active = 0;
-    om->om_when   = dispatch_clock + epggrab_ota_period(om) / 2;
+    om->om_when   = dispatch_clock + epggrab_ota_period(om, 4) + extra;
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
   } else {
-    epggrab_mux_start0(mm, 1);
+    mpegts_mux_instance_t *mmi = mm->mm_active;
+    epggrab_ota_start(om, mpegts_input_grace(mmi->mmi_input, mm));
   }
 
 done:
   om = LIST_FIRST(&epggrab_ota_pending);
-  if (om)
+  if (om) {
+    if (om->om_when <= dispatch_clock) {
+      extra += 60; /* differentiate the mux busy requests */
+      goto next_one;
+    }
     gtimer_arm_abs(&epggrab_ota_pending_timer, epggrab_ota_pending_timer_cb,
                    NULL, om->om_when);
+  }
 }
 
 /* **************************************************************************

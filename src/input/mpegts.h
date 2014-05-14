@@ -574,6 +574,8 @@ void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 
 void mpegts_input_status_timer ( void *p );
 
+int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
+
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
 int         mpegts_input_class_network_set  ( void *o, const void *p );

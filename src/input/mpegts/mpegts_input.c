@@ -1047,6 +1047,16 @@ mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg )
   return save;
 }
 
+int mpegts_input_grace( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  /* Get timeout */
+  int t = 0;
+  if (mi && mi->mi_get_grace)
+    t = mi->mi_get_grace(mi, mm);
+  if (t < 5) t = 5; // lower bound
+  return t;
+}
+
 /******************************************************************************
  * Editor Configuration
  *

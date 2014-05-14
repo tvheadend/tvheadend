@@ -92,10 +92,7 @@ mpegts_mux_add_to_current
                       mm_initial_scan_link);
 
     /* Get timeout */
-    t = 0;
-    if (mi && mi->mi_get_grace)
-      t = mi->mi_get_grace(mi, mm);
-    if (t < 5) t = 5; // lower bound
+    t = mpegts_input_grace(mi, mm);
   
     /* Setup timeout */
     gtimer_arm(&mm->mm_initial_scan_timeout,
