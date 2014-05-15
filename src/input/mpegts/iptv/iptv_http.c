@@ -73,7 +73,7 @@ iptv_http_start
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
   hc->hc_handle_location = 1;        /* allow redirects */
-  hc->hc_chunk_size      = 128*1024; /* increase buffering */
+  hc->hc_io_size         = 128*1024; /* increase buffering */
   http_client_register(hc);          /* register to the HTTP thread */
   r = http_client_simple(hc, u);
   if (r < 0) {
