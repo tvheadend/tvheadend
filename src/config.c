@@ -89,7 +89,7 @@ static void
 config_migrate_v1_dvb_svcs
   ( const char *name, const char *netu, const char *muxu, htsmsg_t *channels )
 {
-  uuid_t svcu;
+  tvh_uuid_t svcu;
   htsmsg_t *c, *e, *svc;
   htsmsg_field_t *f;
   const char *str;
@@ -139,7 +139,7 @@ config_migrate_v1_dvb_network
   ( const char *name, htsmsg_t *c, htsmsg_t *channels )
 {
   int i;
-  uuid_t netu, muxu;
+  tvh_uuid_t netu, muxu;
   htsmsg_t *e, *net, *mux, *tun;
   htsmsg_field_t *f;
   const char *str, *type;
@@ -321,7 +321,7 @@ config_migrate_v1_epggrab ( const char *path, htsmsg_t *channels )
 static void
 config_migrate_v1 ( void )
 {
-  uuid_t netu, muxu, svcu, chnu;
+  tvh_uuid_t netu, muxu, svcu, chnu;
   htsmsg_t *c, *m, *e, *l;
   htsmsg_field_t *f;
   uint32_t u32;
@@ -450,7 +450,7 @@ static void
 config_migrate_v2 ( void )
 {
   htsmsg_t *m;
-  uuid_t u;
+  tvh_uuid_t u;
   char src[1024], dst[1024];
 
   /* Do we have IPTV config to migrate ? */

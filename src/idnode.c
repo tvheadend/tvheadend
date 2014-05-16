@@ -102,7 +102,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class)
 {
   idnode_t *c;
   lock_assert(&global_lock);
-  uuid_t u;
+  tvh_uuid_t u;
   if (uuid_init_bin(&u, uuid))
     return -1;
   memcpy(in->in_uuid, u.bin, sizeof(in->in_uuid));
@@ -192,7 +192,7 @@ idnode_get_short_uuid (const idnode_t *in)
 const char *
 idnode_uuid_as_str(const idnode_t *in)
 {
-  static uuid_t ret[16];
+  static tvh_uuid_t ret[16];
   static uint8_t p = 0;
   bin2hex(ret[p].hex, sizeof(ret[p].hex), in->in_uuid, sizeof(in->in_uuid));
   const char *s = ret[p].hex;

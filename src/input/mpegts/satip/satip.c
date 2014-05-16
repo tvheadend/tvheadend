@@ -256,7 +256,7 @@ satip_device_calc_bin_uuid( uint8_t *uuid, const char *satip_uuid )
 }
 
 static void
-satip_device_calc_uuid( uuid_t *uuid, const char *satip_uuid )
+satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 {
   uint8_t uuidbin[20];
 
@@ -287,7 +287,7 @@ static satip_device_t *
 satip_device_create( satip_device_info_t *info )
 {
   satip_device_t *sd = calloc(1, sizeof(satip_device_t));
-  uuid_t uuid;
+  tvh_uuid_t uuid;
   htsmsg_t *conf = NULL, *feconf = NULL;
   char *argv[10];
   int i, j, n, m, fenum, t2, save = 0;
