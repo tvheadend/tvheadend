@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "settings.h"
+#include "config.h"
 
 #include "tvheadend.h"
 #include "epg.h"
@@ -166,29 +167,15 @@ channel_class_tags_set ( void *obj, const void *p )
 static void
 channel_class_icon_notify ( void *obj )
 {
-  channel_t *ch = obj;
-  if (ch->ch_icon)
-    imagecache_get_id(ch->ch_icon);
+  (void)channel_get_icon(obj);
 }
 
 static const void *
-channel_class_get_imagecache ( void *obj )
+channel_class_get_icon ( void *obj )
 {
-  static char buf[512], *r;
-  uint32_t id;
-  channel_t *ch = obj;
-
-  if (!ch->ch_icon) {
-    r = NULL;
-  } else if ((id = imagecache_get_id(ch->ch_icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-    r = buf;
-  } else {
-    strncpy(buf, ch->ch_icon, sizeof(buf));
-    r = buf;
-  }
-
-  return &r;
+  static const char *s;
+  s = channel_get_icon(obj);
+  return &s;
 }
 
 static const char *
@@ -317,7 +304,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_STR,
       .id       = "icon",
-      .name     = "Icon",
+      .name     = "User Icon",
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
     },
@@ -325,7 +312,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = "Icon URL",
-      .get      = channel_class_get_imagecache,
+      .get      = channel_class_get_icon,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
@@ -543,6 +530,52 @@ channel_get_number ( channel_t *ch )
     if ((n = service_get_channel_number(csm->csm_svc)))
       return n;
   return 0;
+}
+
+const char *
+channel_get_icon ( channel_t *ch )
+{
+  static __thread char buf[512], buf2[512];
+  channel_service_mapping_t *csm;
+  const char *picon = config_get_picon_path(),
+             *icon  = ch->ch_icon;
+  uint32_t id;
+
+  /* No user icon - try access from services */
+  if (!icon && picon) {
+    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+      if (!(icon = service_get_channel_icon(csm->csm_svc))) continue;
+      if (strncmp(icon, "picon://", 8)) {
+        icon = NULL;
+        continue;
+      }
+      sprintf(buf2, "%s/%s", picon, icon+8);
+      ch->ch_icon = strdup(icon);
+      channel_save(ch);
+      idnode_notify_simple(&ch->ch_id);
+    }
+  }
+
+  /* Nothing */
+  if (!icon || !*icon)
+    return NULL;
+
+  /* Picon? */
+  if (!strncmp(icon, "picon://", 8)) {
+    if (!picon) return NULL;
+    sprintf(buf2, "%s/%s", picon, icon+8);
+    icon = buf2;
+  }
+
+  /* Lookup imagecache ID */
+  if ((id = imagecache_get_id(icon))) {
+    snprintf(buf, sizeof(buf), "imagecache/%d", id);
+
+  } else {
+    strncpy(buf, icon, sizeof(buf));
+  }
+
+  return buf;
 }
 
 /* **************************************************************************

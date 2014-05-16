@@ -1586,17 +1586,11 @@ dvr_entry_class_channel_icon_url_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   channel_t *ch = de->de_channel;
   static const char *s;
-  static char buf[256];
-  uint32_t id;
   if (ch == NULL) {
     s = "";
-  } else if ((id = imagecache_get_id(ch->ch_icon)) != 0) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-  } else {
-    strncpy(buf, ch->ch_icon ?: "", sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
+  } else if ((s = channel_get_icon(ch)) == NULL) {
+    s = "";
   }
-  s = buf;
   return &s;
 }
 

@@ -1561,6 +1561,17 @@ service_get_channel_number ( service_t *s )
   return 0;
 }
 
+/*
+ * Get name for channel from service
+ */
+const char *
+service_get_channel_icon ( service_t *s )
+{
+  const char *r = NULL;
+  if (s->s_channel_icon) r = s->s_channel_icon(s);
+  return r;
+}
+
 /**
  * Get the encryption CAID from a service
  * only the first CA stream in a service is returned

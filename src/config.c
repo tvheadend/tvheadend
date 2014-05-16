@@ -1303,3 +1303,13 @@ int config_set_muxconfpath ( const char *path )
 {
   return _config_set_str("muxconfpath", path);
 }
+
+const char *config_get_picon_path ( void )
+{
+  return htsmsg_get_str(config, "piconpath");
+}
+
+int config_set_picon_path ( const char *str )
+{
+  return _config_set_str("piconpath", str);
+}

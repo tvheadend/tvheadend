@@ -53,6 +53,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
 {
   int64_t chnum;
   char buf[32];
+  const char *s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch));
   htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch));
   if ((chnum = channel_get_number(ch)) >= 0) {
@@ -64,8 +65,8 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
       snprintf(buf, sizeof(buf), "%u", maj);
     htsmsg_add_str(m, "channelNumber", buf);
   }
-  if (ch->ch_icon)
-    htsmsg_add_imageurl(m, "channelIcon", "imagecache/%d", ch->ch_icon);
+  if ((s = channel_get_icon(ch)) != NULL)
+    htsmsg_add_str(m, "channelIcon", s);
 }
 
 static htsmsg_t *
