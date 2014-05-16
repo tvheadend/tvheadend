@@ -53,7 +53,7 @@ static RB_HEAD(,iptv_handler) iptv_handlers;
 static int
 ih_cmp ( iptv_handler_t *a, iptv_handler_t *b )
 {
-  return strcasecmp(a->scheme, b->scheme);
+  return strcasecmp(a->scheme ?: "", b->scheme ?: "");
 }
 
 void
@@ -210,9 +210,9 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   }
 
   /* Find scheme handler */
-  ih = iptv_handler_find(url.scheme);
+  ih = iptv_handler_find(url.scheme ?: "");
   if (!ih) {
-    tvherror("iptv", "%s - unsupported scheme [%s]", buf, url.scheme);
+    tvherror("iptv", "%s - unsupported scheme [%s]", buf, url.scheme ?: "none");
     return ret;
   }
 
