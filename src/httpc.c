@@ -34,10 +34,6 @@
 #define SSL_OP_NO_COMPRESSION 0
 #endif
 
-#if ENABLE_TRACE 
-#define HTTPCLIENT_TESTSUITE 1
-#endif
-
 struct http_client_ssl {
   int      connected;
   int      shutdown;
