@@ -930,7 +930,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   off_t content_len, file_start, file_end, chunk;
 #if defined(PLATFORM_LINUX)
   ssize_t r;
-#elif defined(PLATFORM_FREEBSD)
+#elif defined(PLATFORM_FREEBSD) || defined(PLATFORM_DARWIN)
   off_t r;
 #endif
   
@@ -1017,6 +1017,9 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
 #elif defined(PLATFORM_FREEBSD)
       sendfile(fd, hc->hc_fd, 0, chunk, NULL, &r, 0);
+#elif defined(PLATFORM_DARWIN)
+      r = chunk;
+      sendfile(fd, hc->hc_fd, 0, NULL, &r, 0);
 #endif
       if(r == -1) {
   close(fd);

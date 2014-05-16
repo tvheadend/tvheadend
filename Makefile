@@ -32,7 +32,16 @@ CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
-LDFLAGS += -lrt -ldl -lpthread -lm
+LDFLAGS += -ldl -lpthread -lm
+ifneq ($(PLATFORM), darwin)
+LDFLAGS += -lrt
+endif
+
+ifeq ($(COMPILER), clang)
+CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
+CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
+CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
+endif
 
 vpath %.c $(ROOTDIR)
 vpath %.h $(ROOTDIR)

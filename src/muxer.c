@@ -28,6 +28,10 @@
 #include "muxer/muxer_libav.h"
 #endif
 
+#if defined(PLATFORM_DARWIN)
+#define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
+#endif
+
 /**
  * Mime type for containers containing only audio
  */
@@ -458,7 +462,11 @@ muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
     fdatasync(fd);
     /* fall through */
   case MC_CACHE_DONTKEEP:
+#if defined(PLATFORM_DARWIN)
+    fcntl(fd, F_NOCACHE, 1);
+#else
     posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
+#endif
     break;
   default:
     abort();
