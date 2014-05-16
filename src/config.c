@@ -492,7 +492,7 @@ config_migrate_v3 ( void )
 }
 
 /*
- * v3 -> v4 : fix broken DVB network / mux files
+ * v4 -> v5 : fix broken DVB network / mux files
  */
 static void
 config_migrate_v5 ( void )
@@ -518,6 +518,28 @@ config_migrate_v5 ( void )
 }
 
 /*
+ * v5 -> v6 : change channel icon param
+ */
+static void
+config_migrate_v6 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  const char *str;
+
+  /* Remove linux prefix from class */
+  if ((c = hts_settings_load_r(1, "channel"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e   = htsmsg_field_get_map(f)))    	continue;
+      if (!(str = htsmsg_get_str(e, "icon")))   continue;
+      htsmsg_add_str(e, "usericon", str);
+      htsmsg_delete_field(e, "icon");
+      hts_settings_save(e, "channel/%s", f->hmf_name);
+    }
+  }
+}
+
+/*
  * Migration table
  */
 static const config_migrate_t config_migrate_table[] = {
@@ -525,7 +547,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v2,
   config_migrate_v3,
   config_migrate_v3, // Re-run due to bug in previous version of function
-  config_migrate_v5
+  config_migrate_v5,
+  config_migrate_v6,
 };
 
 /*
@@ -669,4 +692,14 @@ const char *config_get_muxconfpath ( void )
 int config_set_muxconfpath ( const char *path )
 {
   return _config_set_str("muxconfpath", path);
+}
+
+const char *config_get_picon_path ( void )
+{
+  return htsmsg_get_str(config, "piconpath");
+}
+
+int config_set_picon_path ( const char *str )
+{
+  return _config_set_str("piconpath", str);
 }

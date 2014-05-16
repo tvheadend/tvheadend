@@ -47,7 +47,7 @@ typedef struct channel
   /* Channel info */
   char *ch_name; // Note: do not access directly!
   int   ch_number;
-  char *ch_icon;
+  char *ch_usericon;
   struct channel_tag_mapping_list ch_ctms;
 
   /* Service/subscriptions */

@@ -530,6 +530,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
+  const char *icon;
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -539,31 +540,30 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_add_u32(out, "channelNumber", channel_get_number(ch));
 
   htsmsg_add_str(out, "channelName", channel_get_name(ch));
-  if(ch->ch_icon != NULL) {
-    uint32_t id;
-    struct sockaddr_storage addr;
-    socklen_t addrlen;
-    if ((id = imagecache_get_id(ch->ch_icon))) {
+  if ((icon = channel_get_icon(ch))) {
+
+    /* Handle older clients */
+    if ((strstr(icon, "imagecache") == icon) && htsp->htsp_version < 8) {
+      struct sockaddr_storage addr;
+      socklen_t addrlen;
       size_t p = 0;
       char url[256];
       char buf[50];
-      if (htsp->htsp_version < 8) {
-        addrlen = sizeof(addr);
-        getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-        tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
-        strcpy(url, "http://");
-        p = strlen(url);
-        p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%d%s",
-                      (addr.ss_family == AF_INET6)?"[":"",
-                      buf,
-                      (addr.ss_family == AF_INET6)?"]":"",
-                      tvheadend_webui_port,
-                      tvheadend_webroot ?: "");
-      }
-      snprintf(url+p, sizeof(url)-p, "/imagecache/%d", id);
+      addrlen = sizeof(addr);
+      getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
+      tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
+      strcpy(url, "http://");
+      p = strlen(url);
+      p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%d%s",
+                    (addr.ss_family == AF_INET6)?"[":"",
+                    buf,
+                    (addr.ss_family == AF_INET6)?"]":"",
+                    tvheadend_webui_port,
+                    tvheadend_webroot ?: "");
+      snprintf(url+p, sizeof(url)-p, "/%s", icon);
       htsmsg_add_str(out, "channelIcon", url);
     } else {
-      htsmsg_add_str(out, "channelIcon", ch->ch_icon);
+      htsmsg_add_str(out, "channelIcon", icon);
     }
   }
 

@@ -37,4 +37,8 @@ const char *config_get_language    ( void );
 int         config_set_language    ( const char *str )
   __attribute__((warn_unused_result));
 
+const char *config_get_picon_path  ( void );
+int         config_set_picon_path  ( const char *str )
+  __attribute__((warn_unused_result));
+
 #endif /* __TVH_CONFIG__H__ */

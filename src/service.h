@@ -294,6 +294,7 @@ typedef struct service {
   int         (*s_channel_number) (struct service *);
   const char *(*s_channel_name)   (struct service *);
   const char *(*s_provider_name)  (struct service *);
+  const char *(*s_channel_icon)   (struct service *);
 
   /**
    * Name usable for displaying to user
@@ -538,5 +539,6 @@ void sort_elementary_streams(service_t *t);
 
 const char *service_get_channel_name (service_t *s);
 int         service_get_channel_number (service_t *s);
+const char *service_get_channel_icon (service_t *s);
 
 #endif // SERVICE_H__

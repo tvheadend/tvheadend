@@ -66,7 +66,7 @@ dumpchannels(htsbuf_queue_t *hq)
 		   ch->ch_refcount,
 		   ch->ch_zombie,
 		   channel_get_number(ch),
-		   ch->ch_icon ?: "<none set>");
+		   channel_get_icon(ch) ?: "<none set>");
   }
 }
 

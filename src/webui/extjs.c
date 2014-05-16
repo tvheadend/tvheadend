@@ -789,8 +789,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     htsmsg_add_str(m, "channel", channel_get_name(ch));
     htsmsg_add_u32(m, "channelid", channel_get_id(ch));
-    if(ch->ch_icon != NULL)
-      htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
+    if ((s = channel_get_icon(ch)))
+      htsmsg_add_str(m, "chicon", s);
 
     if((s = epg_episode_get_title(ee, lang)))
       htsmsg_add_str(m, "title", s);
@@ -876,8 +876,8 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
           m = htsmsg_create_map();
           htsmsg_add_u32(m, "id", ebc->id);
           htsmsg_add_str(m, "channel", channel_get_name(ch));
-          if (ch->ch_icon)
-            htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
+          if ((s = channel_get_icon(ch)))
+            htsmsg_add_str(m, "chicon", s);
           htsmsg_add_u32(m, "start", ebc->start);
           htsmsg_add_msg(array, NULL, m);
         }
@@ -1331,9 +1331,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
     htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
     if(de->de_channel != NULL) {
       htsmsg_add_str(m, "channelid", channel_get_uuid(de->de_channel));
-      if (de->de_channel->ch_icon)
-        htsmsg_add_imageurl(m, "chicon", "imagecache/%d",
-                            de->de_channel->ch_icon);
+      if ((s = channel_get_icon(de->de_channel)))
+        htsmsg_add_str(m, "chicon", s);
     }
 
     htsmsg_add_str(m, "config_name", de->de_config_name);
@@ -1599,6 +1598,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "piconpath")))
+      save |= config_set_picon_path(str);
     if (save)
       config_save();
 

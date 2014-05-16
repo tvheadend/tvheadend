@@ -44,16 +44,4 @@ uint32_t imagecache_get_id  ( const char *url );
 
 int      imagecache_open    ( uint32_t id );
 
-#define htsmsg_add_imageurl(_msg, _fld, _fmt, _url)\
-  {\
-    char _tmp[64];\
-    uint32_t _id = imagecache_get_id(_url);\
-    if (_id) {\
-      snprintf(_tmp, sizeof(_tmp), _fmt, _id);\
-      htsmsg_add_str(_msg, _fld, _tmp);\
-    } else {\
-      htsmsg_add_str(_msg, _fld, _url);\
-    }\
-  }
-
 #endif /* __IMAGE_CACHE_H__ */
