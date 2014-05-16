@@ -427,8 +427,8 @@ main(int argc, char **argv)
 {
   int i;
   sigset_t set;
-#if ENABLE_LINUXDVB
-  uint32_t adapter_mask;
+#if ENABLE_MPEGTS
+  uint32_t adapter_mask = 0;
 #endif
   int  log_level   = LOG_INFO;
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;

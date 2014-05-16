@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include <pthread.h>
 #include <assert.h>
 #include <string.h>
@@ -40,6 +41,9 @@
 #include "input.h"
 #include "tcp.h"
 #include "capmt.h"
+
+#if ENABLE_LINUXDVB
+
 #include "notify.h"
 #include "subscriptions.h"
 #include "dtable.h"
@@ -1299,3 +1303,11 @@ capmt_done(void)
   }
   dtable_delete("capmt");
 }
+
+#else /* ENABLE_LINUXDVB */
+
+void capmt_init ( void ) {}
+void capmt_done ( void ) {}
+void capmt_service_start(service_t *s) {}
+
+#endif

@@ -824,6 +824,7 @@ dvb_nit_callback
           break;
     
         /* nit only */
+#if ENABLE_MPEGTS_DVB
         case DVB_DESC_SAT_DEL:
         case DVB_DESC_CABLE_DEL:
         case DVB_DESC_TERR_DEL:
@@ -838,6 +839,7 @@ dvb_nit_callback
             mpegts_mux_set_tsid(mux, tsid, 0);
           }
           break;
+#endif
         
         /* Both */
         case DVB_DESC_DEF_AUTHORITY:

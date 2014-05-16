@@ -36,7 +36,6 @@ OPTIONS=(
   "bundle:no"
   "dvbcsa:no"
   "kqueue:no"
-  "mpegts_dvb:auto"
 )
 
 #
@@ -155,7 +154,6 @@ check_cc_header 'linux/dvb/version' linuxdvbapi
 if enabled_or_auto linuxdvb; then
   if enabled linuxdvbapi; then
     enable linuxdvb
-    enable mpegts_dvb
   elif enabled linuxdvb; then
     die "Linux DVB API not found (use --disable-linuxdvb)"
   fi
@@ -307,8 +305,13 @@ fi
 #
 disable mpegts
 disable mpegps
-if enabled linuxdvb || enabled iptv || enabled tsfile; then
+disable mpegts_dvb
+if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client;
+then
   enable mpegts
+fi
+if enabled linuxdvb || enabled satip_client; then
+  enable mpegts_dvb
 fi
 
 if enabled v4l; then

@@ -181,7 +181,7 @@ mpegts_network_config_save
 
 static mpegts_mux_t *
 mpegts_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, dvb_mux_conf_t *aux )
+  ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, void *aux )
 {
   return NULL;
 }

@@ -275,11 +275,12 @@ dvb_network_mux_class
 
 static mpegts_mux_t *
 dvb_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *dmc )
+  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *p )
 {
   int save = 0;
   mpegts_mux_t *mmo = mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
+  dvb_mux_conf_t *dmc = p;
 
   mm = dvb_network_find_mux(ln, dmc);
   if (!mm && ln->mn_autodiscovery) {

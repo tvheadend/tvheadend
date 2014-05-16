@@ -265,7 +265,7 @@ struct mpegts_network
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
   void              (*mn_config_save)  (mpegts_network_t*);
   mpegts_mux_t*     (*mn_create_mux)
-    (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
+    (mpegts_mux_t*, uint16_t onid, uint16_t tsid, void *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
   const idclass_t*  (*mn_mux_class)   (mpegts_network_t*);
