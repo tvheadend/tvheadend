@@ -337,6 +337,9 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   /* Stop */
   mm->mm_stop(mm, 1);
 
+  /* Remove from network */
+  LIST_REMOVE(mm, mm_network_link);
+
   /* Cancel scan */
   mpegts_network_scan_mux_cancel(mm, 0);
 

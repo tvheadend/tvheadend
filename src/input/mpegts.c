@@ -27,6 +27,11 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
   idclass_register(&mpegts_mux_class);
   idclass_register(&mpegts_service_class);
 
+  /* Network scanner */
+#if ENABLE_MPEGTS
+  mpegts_network_scan_init();
+#endif
+
   /* Setup DVB networks */
 #if ENABLE_MPEGTS_DVB
   dvb_network_init();
@@ -67,6 +72,7 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
 void
 mpegts_done ( void )
 {
+  tvhftrace("main", mpegts_network_scan_done);
   tvhftrace("main", mpegts_mux_sched_done);
 #if ENABLE_MPEGTS_DVB
   tvhftrace("main", dvb_network_done);

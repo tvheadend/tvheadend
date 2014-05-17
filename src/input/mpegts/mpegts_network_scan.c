@@ -107,6 +107,7 @@ void
 mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm )
 {
   mm->mm_scan_ok = 0;
+  mpegts_mux_unsubscribe_by_name(mm, "scan");
   mpegts_network_scan_queue_del(mm);
 }
 
@@ -115,6 +116,7 @@ void
 mpegts_network_scan_mux_done    ( mpegts_mux_t *mm )
 {
   mm->mm_scan_ok    = 1;
+  mpegts_mux_unsubscribe_by_name(mm, "scan");
   mpegts_network_scan_queue_del(mm);
 }
 
@@ -129,9 +131,8 @@ mpegts_network_scan_mux_timeout ( mpegts_mux_t *mm )
 void
 mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert )
 {
-  assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
-
   /* Remove */
+  mpegts_mux_unsubscribe_by_name(mm, "scan");
   mpegts_network_scan_queue_del(mm);
 
   /* Re-insert */
@@ -162,6 +163,7 @@ mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
     TAILQ_REMOVE(&mpegts_network_scan_active, mm, mm_scan_link);
   mm->mm_scan_state = MM_SCAN_STATE_IDLE;
   gtimer_disarm(&mm->mm_scan_timeout);
+  mpegts_network_scan_timer_arm(0);
 }
 
 void
