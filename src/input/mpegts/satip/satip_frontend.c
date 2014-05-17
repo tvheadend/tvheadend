@@ -550,9 +550,18 @@ satip_frontend_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
+  int change = 0;
   int mid, div;
 
   /* remove PID */
+  if (pid == MPEGTS_FULLMUX_PID && lfe->sf_device->sd_fullmux_ok) {
+    if (lfe->sf_pids_any) {
+      lfe->sf_pids_any = 0;
+      change = 1;
+    }
+    goto finish;
+  }
+
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_pids) {
     mid = div = lfe->sf_pids_count / 2;
@@ -564,6 +573,7 @@ satip_frontend_close_pid
           memmove(&lfe->sf_pids[mid], &lfe->sf_pids[mid+1],
                   (lfe->sf_pids_count - mid - 1) * sizeof(uint16_t));
         lfe->sf_pids_count--;
+        change = 1;
         break;
       } else if (lfe->sf_pids[mid] < pid) {
         if (mid + 1 > lfe->sf_pids_count)
@@ -582,7 +592,16 @@ satip_frontend_close_pid
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
+finish:
   mpegts_input_close_pid(mi, mm, pid, type, owner);
+
+  if (change) {
+    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    if (!lfe->sf_pids_any_tuned ||
+        lfe->sf_pids_any != lfe->sf_pids_any_tuned)
+      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  }
 }
 
 static idnode_set_t *
