@@ -49,7 +49,7 @@ satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm )
 {
   satip_satconf_t *sfc = satip_satconf_find_ele(lfe, mm);
-  return sfc ? sfc->sfc_position : 0;
+  return sfc && sfc->sfc_enabled ? sfc->sfc_position : 0;
 }
 
 /* **************************************************************************

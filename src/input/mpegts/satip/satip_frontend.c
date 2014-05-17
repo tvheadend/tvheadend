@@ -336,7 +336,7 @@ satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
     return 0;
   mm1 = lfe2->sf_mmi->mmi_mux;
   position = satip_satconf_get_position(lfe2, mm2);
-  if (lfe2->sf_position != position)
+  if (position <= 0 || lfe2->sf_position != position)
     return 0;
   mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
   mc2 = &((dvb_mux_t *)mm2)->lm_tuning;
@@ -356,11 +356,16 @@ satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_frontend_t *lfe2;
+  int position;
 
   lock_assert(&global_lock);
 
   if (!lfe->mi_enabled) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
+  /* check if the position is enabled */
+  position = satip_satconf_get_position(lfe, mm);
+  if (position <= 0)
+    return 0;
   /* check if any "blocking" tuner is running */
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
     if (lfe2 == lfe) continue;
@@ -418,8 +423,11 @@ satip_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
-  if (lfe->sf_positions > 0)
+  if (lfe->sf_positions > 0) {
     lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux);
+    if (lfe->sf_position <= 0)
+      return SM_CODE_TUNING_FAILED;
+  }
   return satip_frontend_tune1((satip_frontend_t*)mi, mmi);
 }
 
