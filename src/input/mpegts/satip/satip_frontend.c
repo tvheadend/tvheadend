@@ -551,21 +551,23 @@ satip_frontend_close_pid
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   int change = 0;
-  int mid, div;
+  int mid, div, cnt;
 
   /* remove PID */
-  if (pid == MPEGTS_FULLMUX_PID && lfe->sf_device->sd_fullmux_ok) {
-    if (lfe->sf_pids_any) {
-      lfe->sf_pids_any = 0;
-      change = 1;
+  if (pid == MPEGTS_FULLMUX_PID) {
+    if (lfe->sf_device->sd_fullmux_ok) {
+      if (lfe->sf_pids_any) {
+        lfe->sf_pids_any = 0;
+        change = 1;
+      }
     }
     goto finish;
   }
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_pids) {
-    mid = div = lfe->sf_pids_count / 2;
-    while (1) {
+    mid = div = (cnt = lfe->sf_pids_count) / 2;
+    while (cnt > 0) {
       if (div > 1)
         div /= 2;
       if (lfe->sf_pids[mid] == pid) {
@@ -588,6 +590,7 @@ satip_frontend_close_pid
           break;
         mid -= div;
       }
+      cnt--;
     }
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
