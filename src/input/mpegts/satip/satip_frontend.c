@@ -777,7 +777,7 @@ satip_frontend_store_pids(char *buf, uint16_t *pids, int count)
   }
 }
 
-static void
+static int
 satip_frontend_pid_changed( http_client_t *rtsp,
                             satip_frontend_t *lfe, const char *name )
 {
@@ -787,7 +787,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   int max_pids_len = lfe->sf_device->sd_pids_len;
 
   if (!lfe->sf_running || lfe->sf_shutdown)
-    return;
+    return 0;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
 
@@ -798,7 +798,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
     if (lfe->sf_pids_any_tuned) {
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      return;
+      return 0;
     }
     lfe->sf_pids_any_tuned = 1;
     memcpy(lfe->sf_pids_tuned, lfe->sf_pids,
@@ -807,6 +807,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
     r = satip_rtsp_play(rtsp,  "all", NULL, NULL, max_pids_len);
+    r = r == 0 ? 1 : r;
 
   } else if (!lfe->sf_device->sd_pids_deladd ||
              lfe->sf_pids_any_tuned ||
@@ -827,6 +828,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
     r = satip_rtsp_play(rtsp, add, NULL, NULL, max_pids_len);
+    r = r == 0 ? 1 : r;
 
   } else {
 
@@ -891,14 +893,16 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     lfe->sf_pids_tcount = lfe->sf_pids_count;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-    if (add[0] != '\0' || del[0] != '\0')
-      r = satip_rtsp_play(rtsp, NULL, add, del, max_pids_len);
-    else
-      r = 0;
+    if (add[0] == '\0' && del[0] == '\0')
+      return 0;
+
+    r = satip_rtsp_play(rtsp, NULL, add, del, max_pids_len);
+    r = r == 0 ? 1 : r;
   }
 
   if (r < 0)
     tvherror("satip", "%s - failed to modify pids: %s", name, strerror(-r));
+  return r;
 }
 
 static void *
@@ -1059,14 +1063,16 @@ satip_frontend_input_thread ( void *aux )
               }
               continue;
             } else {
-              satip_frontend_pid_changed(rtsp, lfe, buf);
+              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+                continue;
             }
           }
           break;
         case RTSP_CMD_PLAY:
           if (rtsp->hc_code == 200 && play2) {
-            satip_frontend_pid_changed(rtsp, lfe, buf);
             play2 = 0;
+            if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+              continue;
           }
           /* fall thru */
         default:
