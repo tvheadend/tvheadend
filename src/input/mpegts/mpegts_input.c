@@ -955,10 +955,20 @@ void
 mpegts_input_delete ( mpegts_input_t *mi, int delconf )
 {
   mpegts_network_link_t *mnl;
+  mpegts_mux_instance_t *mmi, *mmi_next;
 
   /* Remove networks */
   while ((mnl = LIST_FIRST(&mi->mi_networks)))
     mpegts_input_del_network(mnl);
+
+  /* Remove mux instances assigned to this input */
+  mmi = LIST_FIRST(&mi->mi_mux_instances);
+  while (mmi) {
+    mmi_next = LIST_NEXT(mmi, mmi_input_link);
+    if (mmi->mmi_input == mi)
+      mmi->mmi_delete(mmi);
+    mmi = mmi_next;
+  }
 
   /* Remove global refs */
   idnode_unlink(&mi->ti_id);
