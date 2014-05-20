@@ -117,7 +117,8 @@ SRCS =  src/version.c \
 	src/rtsp.c \
 	src/fsmonitor.c \
 	src/cron.c \
-	src/esfilter.c
+	src/esfilter.c \
+	src/intlconv.c
 
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
@@ -133,7 +134,8 @@ SRCS += \
 	src/api/api_epg.c \
 	src/api/api_epggrab.c \
 	src/api/api_imagecache.c \
-	src/api/api_esfilter.c
+	src/api/api_esfilter.c \
+	src/api/api_intlconv.c
 
 SRCS += \
 	src/parsers/parsers.c \

@@ -68,6 +68,7 @@ void api_epggrab_init       ( void );
 void api_status_init        ( void );
 void api_imagecache_init    ( void );
 void api_esfilter_init      ( void );
+void api_intlconv_init      ( void );
 
 /*
  * IDnode
