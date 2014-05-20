@@ -84,14 +84,14 @@ static int
 http_port( const char *scheme, int port )
 {
   if (port <= 0 || port > 65535) {
-    if (strcmp(scheme, "http") == 0)
+    if (scheme && strcmp(scheme, "http") == 0)
       port = 80;
-    else if (strcmp(scheme, "https") == 0)
+    else if (scheme && strcmp(scheme, "https") == 0)
       port = 443;
-    else if (strcmp(scheme, "rtsp") == 0)
+    else if (scheme && strcmp(scheme, "rtsp") == 0)
       port = 554;
     else {
-      tvhlog(LOG_ERR, "httpc", "Unknown scheme '%s'", scheme);
+      tvhlog(LOG_ERR, "httpc", "Unknown scheme '%s'", scheme ? scheme : "");
       return -EINVAL;
     }
   }
@@ -1162,6 +1162,8 @@ http_client_reconnect
   hc->hc_scheme  = strdup(scheme);
   hc->hc_host    = strdup(host);
   hc->hc_port    = port;
+  if (port < 0)
+    return -EINVAL;
   hc->hc_fd      = tcp_connect(host, port, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
