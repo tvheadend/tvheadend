@@ -47,8 +47,12 @@ typedef enum {
 typedef struct muxer_config {
   int                  m_flags;
   muxer_cache_type_t m_cache;
-// directory_permissions should really be in dvr.h as it's not really needed for the muxer
-// but it's kept with file_permissions for neatness
+
+/* 
+ * directory_permissions should really be in dvr.h as it's not really needed for the muxer
+ * but it's kept with file_permissions for neatness
+ */
+
   int                  m_file_permissions;
   int                  m_directory_permissions; 
 } muxer_config_t;

@@ -1090,7 +1090,7 @@ dvr_init(void)
   struct stat st;
   uint32_t u32;
   dvr_config_t *cfg;
-  
+
   dvr_iov_max = sysconf(_SC_IOV_MAX);
 
   /* Default settings */
@@ -1134,8 +1134,10 @@ dvr_init(void)
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
 
-// Convert 0xxx format permission strings to integer for internal use
-// Note no checking that strtol won't overflow int - this should never happen with three-digit numbers      
+/* 
+ * Convert 0xxx format permission strings to integer for internal use
+ * Note no checking that strtol won't overflow int - this should never happen with three-digit numbers 
+ */     
 
       if ((s = htsmsg_get_str(m, "file-permissions")))
         cfg->dvr_muxcnf.m_file_permissions = (int)strtol(s,NULL,0);
@@ -1371,7 +1373,7 @@ dvr_save(dvr_config_t *cfg)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
 
-// Convert permissions to 0xxx octal format and output
+/* Convert permissions to 0xxx octal format and output */
 
   snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
   htsmsg_add_str(m, "file-permissions", buffer);

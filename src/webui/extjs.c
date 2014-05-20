@@ -1128,7 +1128,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
 
-// Convert integer permissions to an octal-format 0xxx string and store it in the config file
+/* Convert integer permissions to an octal-format 0xxx string and store it in the config file */
 
     snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
     htsmsg_add_str(r, "filePermissions", buffer);
@@ -1176,8 +1176,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
 
-// Convert 0xxx format permission strings to integer for internal use
-// Note no checking that strtol won't overflow int - this should never happen with three-digit numbers      
+/*
+ * Convert 0xxx format permission strings to integer for internal use
+ * Note no checking that strtol won't overflow int - this should never happen with three-digit numbers
+ */
 
    if((s = http_arg_get(&hc->hc_req_args, "filePermissions")) != NULL)
       dvr_file_permissions_set(cfg,(int)strtol(s,NULL,0));

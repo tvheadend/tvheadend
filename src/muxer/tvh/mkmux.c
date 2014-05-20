@@ -1050,7 +1050,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
 {
   int fd;
 
-  tvhlog(LOG_DEBUG, "mkv", "Creating file \"%s\" with file permissions \"%o\"", filename, permissions);
+  tvhtrace("mkv", "Creating file \"%s\" with file permissions \"%o\"", filename, permissions);
   
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
   

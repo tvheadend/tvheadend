@@ -378,7 +378,7 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  tvhlog(LOG_DEBUG, "pass", "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
+  tvhtrace("pass", "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
  
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
 
