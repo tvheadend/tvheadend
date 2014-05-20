@@ -159,8 +159,11 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
 void
 mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 {
-  if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
+  if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
     TAILQ_REMOVE(&mpegts_network_scan_active, mm, mm_scan_link);
+  } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
+    TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
+  }
   mm->mm_scan_state = MM_SCAN_STATE_IDLE;
   gtimer_disarm(&mm->mm_scan_timeout);
   mpegts_network_scan_timer_arm(0);
