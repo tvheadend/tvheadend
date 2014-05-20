@@ -29,6 +29,7 @@
 #include "notify.h"
 #include "htsp_server.h"
 #include "streaming.h"
+#include "power.h"
 
 static int de_tally;
 
@@ -130,6 +131,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
 static void
 dvrdb_changed(void)
 {
+  power_reschedule_poweron();
+
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("dvrdb", m);

@@ -48,6 +48,7 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 #include "input.h"
+#include "power.h"
 
 #if ENABLE_LIBAV
 #include "plumbing/transcoding.h"
@@ -1547,6 +1548,15 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "tvhtime_ntp_enabled", tvhtime_ntp_enabled);
     htsmsg_add_u32(m, "tvhtime_tolerance", tvhtime_tolerance);
 
+    /* Power */
+    htsmsg_add_u32(m, "power_enabled", power_enabled);
+    htsmsg_add_u32(m, "power_idletime", power_idletime);
+    htsmsg_add_u32(m, "power_prerecordingwakeup", power_prerecordingwakeup);
+    htsmsg_add_str(m, "power_epgwakeup", power_epgwakeup);
+    htsmsg_add_str(m, "power_rtcscript", power_rtcscript);
+    htsmsg_add_str(m, "power_preshutdownscript", power_preshutdownscript);
+    htsmsg_add_str(m, "power_shutdownscript", power_shutdownscript);
+
     /* Transcoding */
 #if ENABLE_LIBAV
     htsmsg_add_u32(m, "transcoding_enabled", transcoding_enabled);
@@ -1577,6 +1587,22 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     tvhtime_set_ntp_enabled(!!str);
     if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_tolerance")))
       tvhtime_set_tolerance(atoi(str));
+
+    /* Power */
+    str = http_arg_get(&hc->hc_req_args, "power_enabled");
+    tvhpower_set_power_enabled(!!str);
+    if((str = http_arg_get(&hc->hc_req_args, "power_idletime")))
+      tvhpower_set_power_idletime(atoi(str));
+    if((str = http_arg_get(&hc->hc_req_args, "power_prerecordingwakeup")))
+      tvhpower_set_power_prerecordingwakeup(atoi(str));
+    if((str = http_arg_get(&hc->hc_req_args, "power_epgwakeup")))
+      tvhpower_set_power_epgwakeup(str);
+    if((str = http_arg_get(&hc->hc_req_args, "power_rtcscript")))
+      tvhpower_set_power_rtcscript(str);
+    if((str = http_arg_get(&hc->hc_req_args, "power_preshutdownscript")))
+      tvhpower_set_power_preshutdownscript(str);
+    if((str = http_arg_get(&hc->hc_req_args, "power_shutdownscript")))
+      tvhpower_set_power_shutdownscript(str);
 
     /* Transcoding */
 #if ENABLE_LIBAV

@@ -79,6 +79,20 @@ find_exec ( const char *name, char *out, size_t len )
   return ret;
 }
 
+uint32_t
+spawn_pending(void)
+{
+  uint32_t count = 0;
+  spawn_t *s;
+  pthread_mutex_lock(&spawn_mutex);
+  LIST_FOREACH(s, &spawns, link) {
+    count++;
+    tvhlog(LOG_DEBUG, "spawn", "Waiting for spawned process %s with pid %d", s->name, s->pid);
+  }
+  pthread_mutex_unlock(&spawn_mutex);
+  return count;
+}
+
 /**
  * The reaper is called once a second to finish of any pending spawns
  */
