@@ -766,20 +766,20 @@ satip_discovery_service_received
   while (1) {
     if (ptr == NULL)
       break;
-    if (http_tokenize(ptr, argv, 2, -1) == 2) {
-      if (strcmp(argv[0], "ST:") == 0)
+    if (http_tokenize(ptr, argv, 2, ':') == 2) {
+      if (strcmp(argv[0], "ST") == 0)
         st = argv[1];
-      else if (strcmp(argv[0], "LOCATION:") == 0)
+      else if (strcmp(argv[0], "LOCATION") == 0)
         location = argv[1];
-      else if (strcmp(argv[0], "SERVER:") == 0)
+      else if (strcmp(argv[0], "SERVER") == 0)
         server = argv[1];
-      else if (strcmp(argv[0], "BOOTID.UPNP.ORG:") == 0)
+      else if (strcmp(argv[0], "BOOTID.UPNP.ORG") == 0)
         bootid = argv[1];
-      else if (strcmp(argv[0], "CONFIGID.UPNP.ORG:") == 0)
+      else if (strcmp(argv[0], "CONFIGID.UPNP.ORG") == 0)
         configid = argv[1];
-      else if (strcmp(argv[0], "DEVICEID.SES.COM:") == 0)
+      else if (strcmp(argv[0], "DEVICEID.SES.COM") == 0)
         deviceid = argv[1];
-      else if (strcmp(argv[0], "USN:") == 0) {
+      else if (strcmp(argv[0], "USN") == 0) {
         n = http_tokenize(argv[1], argv, ARRAY_SIZE(argv), ':');
         for (i = 0; i < n+1; i++)
           if (argv[i] && strcmp(argv[i], "uuid") == 0) {
