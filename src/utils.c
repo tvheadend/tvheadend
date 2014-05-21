@@ -441,6 +441,7 @@ makedirs ( const char *inpath, int mode )
       path[x] = 0;
       if (stat(path, &st)) {
         err = mkdir(path, mode);
+        tvhtrace("settings", "Creating directory \"%s\" with octal permissions \"%o\"", path, mode);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;

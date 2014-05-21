@@ -744,10 +744,11 @@ tvheadend.dvrsettings = function() {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvrSettings'
-	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
+	}, [ 'storage', 'filePermissions', 'dirPermissions', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'cache', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle', 
+		'episodeBeforeDate', 'rewritePAT', 'rewritePMT' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -768,6 +769,215 @@ tvheadend.dvrsettings = function() {
 		disabled : true
 	});
 
+/* Config panel variables */
+
+/* DVR Behaviour */
+
+	var recordingContainer = new Ext.form.ComboBox({
+		store : tvheadend.containers,
+		fieldLabel : 'Media container',
+		triggerAction : 'all',
+		displayField : 'description',
+		valueField : 'name',
+		editable : false,
+		width : 200,
+		hiddenName : 'container' 
+	});
+	
+	var cacheScheme = new Ext.form.ComboBox({
+		store : tvheadend.caches,
+		fieldLabel : 'Cache scheme',
+		triggerAction : 'all',
+		displayField : 'description',
+		valueField : 'index',
+		editable : false,
+		width : 200,
+		hiddenName : 'cache'
+	});
+
+	var logRetention = new Ext.form.NumberField({
+		allowNegative : false,
+		allowDecimals : false,
+		minValue : 1,
+		fieldLabel : 'DVR Log retention time (days)',
+		name : 'retention'
+	});
+
+	var timeBefore = new Ext.form.NumberField({
+		allowDecimals : false,
+		fieldLabel : 'Extra time before recordings (minutes)',
+		name : 'preExtraTime'
+    });
+        
+    var timeAfter = new Ext.form.NumberField({
+        allowDecimals : false,
+        fieldLabel : 'Extra time after recordings (minutes)',
+        name : 'postExtraTime'
+	}); 
+	
+	var postProcessing = new Ext.form.TextField({
+		width : 300,
+		fieldLabel : 'Post-processor command',
+		name : 'postproc'
+	});
+
+/* Recording File Options */
+
+	var recordingPath = new Ext.form.TextField({
+		width : 300,
+		fieldLabel : 'Recording system path',
+		name : 'storage'
+	});
+
+/* NB: recordingPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a number */
+	
+	var recordingPermissions = new Ext.form.TextField({
+		regex : /^[0][0-7]{3}$/,
+	    maskRe : /[0-7]/,
+   		width : 100,
+   		allowBlank : false,
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 0664',
+		fieldLabel : 'File permissions (octal, e.g. 0664)',
+		name : 'filePermissions'
+	});
+
+/* TO DO - Add 'override user umask?' option, then trigger fchmod in mkmux.c, muxer_pass.c after file created */
+		
+	var PATrewrite = new Ext.form.Checkbox({
+		fieldLabel : 'Rewrite PAT in passthrough mode',
+		name : 'rewritePAT'
+	});
+		
+	var PMTrewrite = new Ext.form.Checkbox({
+		fieldLabel : 'Rewrite PMT in passthrough mode',
+		name : 'rewritePMT'
+	}); 
+		
+	var tagMetadata = new Ext.form.Checkbox({
+		fieldLabel : 'Tag files with metadata',
+		name : 'tagFiles'
+	});
+		 
+	var skipCommercials = new Ext.form.Checkbox({
+		fieldLabel : 'Skip commercials',
+		name : 'commSkip'
+	}); 
+		
+/* Subdirectories and filename handling */
+
+/* NB: directoryPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a number */
+
+	var directoryPermissions = new Ext.form.TextField({
+		regex : /^[0][0-7]{3}$/,
+	    maskRe : /[0-7]/,
+   		width : 100,
+   		allowBlank : false,
+   		blankText : 'You must provide a value - use octal chmod notation, e.g. 0775',
+		fieldLabel : 'Directory permissions (octal, e.g. 0775)',
+		name : 'dirPermissions'
+	});
+	
+/* TO DO - Add 'override user umask?' option, then trigger fchmod in utils.c after directory created */
+	
+	var dirsPerDay = new Ext.form.Checkbox({
+		fieldLabel : 'Make subdirectories per day',
+		name : 'dayDirs'
+	}); 
+		
+	var dirsPerChannel = new Ext.form.Checkbox({
+		fieldLabel : 'Make subdirectories per channel',
+		name : 'channelDirs'
+	}); 
+		
+	var dirsPerTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Make subdirectories per title',
+		name : 'titleDirs'
+	}); 
+		
+	var incChannelInTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Include channel name in filename',
+		name : 'channelInTitle'
+	});
+		
+	var incDateInTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Include date in filename',
+		name : 'dateInTitle'
+	});
+		
+	var incTimeInTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Include time in filename',
+		name : 'timeInTitle'
+	});
+		 
+	var incEpisodeInTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Include episode in filename',
+		name : 'episodeInTitle'
+	});
+	
+	var incSubtitleInTitle = new Ext.form.Checkbox({
+		fieldLabel : 'Include subtitle in filename',
+		name : 'subtitleInTitle'
+	}); 
+	
+	var episodeFirst = new Ext.form.Checkbox({
+		fieldLabel : 'Put episode in filename before date and time',
+		name : 'episodeBeforeDate'
+	}); 
+	
+	var stripUnsafeChars = new Ext.form.Checkbox({
+		fieldLabel : 'Remove all unsafe characters from filename',
+		name : 'cleanTitle'
+	});
+		 
+	var stripWhitespace = new Ext.form.Checkbox({
+		fieldLabel : 'Replace whitespace in title with \'-\'',
+		name : 'whitespaceInTitle'
+	}); 
+	
+
+/* Sub-Panel - DVR behaviour */
+		
+	var DVRBehaviour = new Ext.form.FieldSet({
+		title: 'DVR Behaviour',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		items : [ recordingContainer, cacheScheme, logRetention, timeBefore, timeAfter, postProcessing ]
+	});
+
+/* Sub-Panel - File Output */
+
+	var FileOutputPanel = new Ext.form.FieldSet({
+		title: 'Recording File Options',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		items : [ recordingPath, recordingPermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials ]
+	});
+
+/* Sub-Panel - Directory operations */
+
+	var DirHandlingPanel = new Ext.form.FieldSet({
+		title: 'Subdirectory Options',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		items : [ directoryPermissions, dirsPerDay, dirsPerChannel, dirsPerTitle ]
+	});
+		
+/* Sub-Panel - File operations */
+
+	var FileHandlingPanel = new Ext.form.FieldSet({
+		title: 'Filename Options',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		items : [ incChannelInTitle, incDateInTitle, incTimeInTitle, incEpisodeInTitle,
+			incSubtitleInTitle, episodeFirst, stripUnsafeChars, stripWhitespace ]
+	});
+
+/* Main (form) panel */
+				
 	var confpanel = new Ext.FormPanel({
 		title : 'Digital Video Recorder',
 		iconCls : 'drive',
@@ -780,92 +990,8 @@ tvheadend.dvrsettings = function() {
 		reader : confreader,
 		defaultType : 'textfield',
 		layout : 'form',
-		items : [ {
-			width : 300,
-			fieldLabel : 'Recording system path',
-			name : 'storage'
-		}, new Ext.form.ComboBox({
-			store : tvheadend.containers,
-			fieldLabel : 'Media container',
-			triggerAction : 'all',
-			displayField : 'description',
-			valueField : 'name',
-			editable : false,
-			width : 200,
-			hiddenName : 'container'
-		}), new Ext.form.ComboBox({
-			store : tvheadend.caches,
-			fieldLabel : 'Cache scheme',
-			triggerAction : 'all',
-			displayField : 'description',
-			valueField : 'index',
-			editable : false,
-			width : 200,
-			hiddenName : 'cache'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Rewrite PAT in passthrough mode',
-			name : 'rewritePAT'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Rewrite PMT in passthrough mode',
-			name : 'rewritePMT'
-		}), new Ext.form.NumberField({
-			allowNegative : false,
-			allowDecimals : false,
-			minValue : 1,
-			fieldLabel : 'DVR Log retention time (days)',
-			name : 'retention'
-		}), new Ext.form.NumberField({
-			allowDecimals : false,
-			fieldLabel : 'Extra time before recordings (minutes)',
-			name : 'preExtraTime'
-		}), new Ext.form.NumberField({
-			allowDecimals : false,
-			fieldLabel : 'Extra time after recordings (minutes)',
-			name : 'postExtraTime'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Make subdirectories per day',
-			name : 'dayDirs'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Make subdirectories per channel',
-			name : 'channelDirs'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Make subdirectories per title',
-			name : 'titleDirs'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Include channel name in filename',
-			name : 'channelInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Include date in filename',
-			name : 'dateInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Include time in filename',
-			name : 'timeInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Include episode in filename',
-			name : 'episodeInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Remove all unsafe characters from filename',
-			name : 'cleanTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Replace whitespace in title with \'-\'',
-			name : 'whitespaceInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Tag files with metadata',
-			name : 'tagFiles'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Skip commercials',
-			name : 'commSkip'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Include subtitle in filename',
-			name : 'subtitleInTitle'
-		}), new Ext.form.Checkbox({
-			fieldLabel : 'Put episode in filename before date and time',
-			name : 'episodeBeforeDate'
-		}), {
-			width : 300,
-			fieldLabel : 'Post-processor command',
-			name : 'postproc'
-		} ],
+		items : [ DVRBehaviour, FileOutputPanel, DirHandlingPanel, FileHandlingPanel ],
+		
 		tbar : [ confcombo, {
 			tooltip : 'Save changes made to dvr configuration below',
 			iconCls : 'save',

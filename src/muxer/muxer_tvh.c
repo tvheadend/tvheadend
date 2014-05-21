@@ -138,7 +138,7 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
   
-  if(mk_mux_open_file(tm->tm_ref, filename)) {
+  if(mk_mux_open_file(tm->tm_ref, filename, tm->m_config.m_file_permissions)) {
     tm->m_errors++;
     return -1;
   }

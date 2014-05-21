@@ -204,9 +204,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     free(title);
   }
 
-
-  /* */
-  if(makedirs(path, 0755) != 0) {
+  if(makedirs(path, cfg->dvr_muxcnf.m_directory_permissions) != 0) {
     return -1;
   }
   
@@ -324,6 +322,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	 "service: \"%s\"",
+		
 	 de->de_filename ?: lang_str_get(de->de_title, NULL),
 	 si->si_adapter  ?: "<N/A>",
 	 si->si_network  ?: "<N/A>",

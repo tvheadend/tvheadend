@@ -1046,11 +1046,14 @@ mk_mux_open_stream(mk_mux_t *mkm, int fd)
  *
  */
 int
-mk_mux_open_file(mk_mux_t *mkm, const char *filename)
+mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
 {
   int fd;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  tvhtrace("mkv", "Creating file \"%s\" with file permissions \"%o\"", filename, permissions);
+  
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
+  
   if(fd < 0) {
     mkm->error = errno;
     tvhlog(LOG_ERR, "mkv", "%s: Unable to create file, open failed -- %s",

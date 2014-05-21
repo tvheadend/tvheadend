@@ -1140,6 +1140,17 @@ dvr_init(void)
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
 
+/* 
+ * Convert 0xxx format permission strings to integer for internal use
+ * Note no checking that strtol won't overflow int - this should never happen with three-digit numbers 
+ */     
+
+      if ((s = htsmsg_get_str(m, "file-permissions")))
+        cfg->dvr_muxcnf.m_file_permissions = (int)strtol(s,NULL,0);
+	  
+      if ((s = htsmsg_get_str(m, "directory-permissions")))
+        cfg->dvr_muxcnf.m_directory_permissions = (int)strtol(s,NULL,0);
+
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
 
@@ -1319,6 +1330,11 @@ dvr_config_create(const char *name)
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
+  /* Default recording file and directory permissions */
+
+  cfg->dvr_muxcnf.m_file_permissions      = 0664;
+  cfg->dvr_muxcnf.m_directory_permissions = 0775;
+  
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
   return LIST_FIRST(&dvrconfigs);
@@ -1357,9 +1373,20 @@ static void
 dvr_save(dvr_config_t *cfg)
 {
   htsmsg_t *m = htsmsg_create_map();
+  char buffer[5]; // Permissions buffer: leading zero, three octal digits plus terminating null
+  
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
+
+/* Convert permissions to 0xxx octal format and output */
+
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
+  htsmsg_add_str(m, "file-permissions", buffer);
+  
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_directory_permissions);
+  htsmsg_add_str(m, "directory-permissions", buffer);
+
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
   htsmsg_add_u32(m, "cache", cfg->dvr_muxcnf.m_cache);
   htsmsg_add_u32(m, "rewrite-pat",
@@ -1401,6 +1428,32 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
     return;
 
   tvh_str_set(&cfg->dvr_storage, storage);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_file_permissions_set(dvr_config_t *cfg, int permissions)
+{
+  if(cfg->dvr_muxcnf.m_file_permissions == permissions)
+    return;
+
+  cfg->dvr_muxcnf.m_file_permissions = permissions;
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_directory_permissions_set(dvr_config_t *cfg, int permissions)
+{
+  if(cfg->dvr_muxcnf.m_directory_permissions == permissions)
+    return;
+
+  cfg->dvr_muxcnf.m_directory_permissions = permissions;
   dvr_save(cfg);
 }
 
@@ -1468,7 +1521,7 @@ dvr_retention_set(dvr_config_t *cfg, int days)
 
   cfg->dvr_retention_days = days;
 
-  /* Also, rearm all timres */
+  /* Also, rearm all timers */
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if(de->de_sched_state == DVR_COMPLETED)
