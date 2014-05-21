@@ -73,8 +73,6 @@ static void* timeshift_reaper_callback ( void *p )
         tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                dpath, strerror(errno));
 
-    pthread_mutex_lock(&timeshift_reaper_lock);
-
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
       TAILQ_REMOVE(&tsf->iframes, ti, link);
@@ -88,6 +86,8 @@ static void* timeshift_reaper_callback ( void *p )
     }
     free(tsf->path);
     free(tsf);
+
+    pthread_mutex_lock(&timeshift_reaper_lock);
   }
   pthread_mutex_unlock(&timeshift_reaper_lock);
   tvhtrace("timeshift", "reaper thread exit");
