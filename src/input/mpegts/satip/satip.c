@@ -550,9 +550,12 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   int i, n;
 
   s = http_arg_get(&hc->hc_args, "Content-Type");
-  if (s && strcasecmp(s, "text/xml")) {
-    errn = EMEDIUMTYPE;
-    s = NULL;
+  if (s) {
+    n = http_tokenize(s, argv, ARRAY_SIZE(argv), ';');
+    if (n <= 0 || strcasecmp(s, "text/xml")) {
+      errn = EMEDIUMTYPE;
+      s = NULL;
+    }
   }
   if (errn != 0 || s == NULL || hc->hc_code != 200 ||
       hc->hc_data_size == 0 || hc->hc_data == NULL) {
@@ -613,15 +616,15 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   if ((manufacturerURL = htsmsg_xml_get_cdata_str(device, "manufacturerURL")) == NULL)
     goto finish;
   if ((modeldesc    = htsmsg_xml_get_cdata_str(device, "modelDescription")) == NULL)
-    goto finish;
+    modeldesc = "";
   if ((modelname    = htsmsg_xml_get_cdata_str(device, "modelName")) == NULL)
     goto finish;
   if ((modelnum     = htsmsg_xml_get_cdata_str(device, "modelNumber")) == NULL)
-    goto finish;
+    modelnum = "";
   if ((serialnum    = htsmsg_xml_get_cdata_str(device, "serialNumber")) == NULL)
-    goto finish;
+    serialnum = "";
   if ((presentation = htsmsg_xml_get_cdata_str(device, "presentationURL")) == NULL)
-    goto finish;
+    presentation = "";
   if ((udn          = htsmsg_xml_get_cdata_str(device, "UDN")) == NULL)
     goto finish;
   if ((tunercfg     = htsmsg_xml_get_cdata_str(device, "urn:ses-com:satipX_SATIPCAP")) == NULL)
