@@ -1164,7 +1164,7 @@ http_client_reconnect
   hc->hc_port    = port;
   if (port < 0)
     return -EINVAL;
-  hc->hc_fd      = tcp_connect(host, port, errbuf, sizeof(errbuf), -1);
+  hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
     return -EINVAL;
@@ -1217,7 +1217,8 @@ err1:
 
 http_client_t *
 http_client_connect 
-  ( void *aux, http_ver_t ver, const char *scheme, const char *host, int port )
+  ( void *aux, http_ver_t ver, const char *scheme,
+    const char *host, int port, const char *bindaddr )
 {
   http_client_t *hc;
 
@@ -1226,6 +1227,7 @@ http_client_connect
   hc->hc_io_size = 1024;
   hc->hc_rtsp_stream_id = -1;
   hc->hc_verify_peer = -1;
+  hc->hc_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
 
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
@@ -1280,6 +1282,7 @@ http_client_close ( http_client_t *hc )
   free(hc->hc_data);
   free(hc->hc_host);
   free(hc->hc_scheme);
+  free(hc->hc_bindaddr);
   free(hc);
 }
 

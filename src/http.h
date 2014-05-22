@@ -222,6 +222,7 @@ struct http_client {
   char        *hc_scheme;
   char        *hc_host;
   int          hc_port;
+  char        *hc_bindaddr;
   tvhpoll_t   *hc_efd;
   int          hc_pevents;
 
@@ -289,8 +290,8 @@ void http_client_init ( void );
 void http_client_done ( void );
 
 http_client_t*
-http_client_connect ( void *aux, http_ver_t ver,
-                      const char *scheme, const char *host, int port );
+http_client_connect ( void *aux, http_ver_t ver, const char *scheme,
+                      const char *host, int port, const char *bindaddr );
 void http_client_register ( http_client_t *hc );
 void http_client_close ( http_client_t *hc );
 

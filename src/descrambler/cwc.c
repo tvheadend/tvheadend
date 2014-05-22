@@ -1169,7 +1169,7 @@ cwc_thread(void *aux)
 
     pthread_mutex_unlock(&cwc_mutex);
 
-    fd = tcp_connect(hostname, port, errbuf, sizeof(errbuf), 10);
+    fd = tcp_connect(hostname, port, NULL, errbuf, sizeof(errbuf), 10);
 
     pthread_mutex_lock(&cwc_mutex);
 

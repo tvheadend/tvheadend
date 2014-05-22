@@ -166,7 +166,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   pthread_mutex_unlock(&global_lock);
 
   hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
-                           url.host, url.port);
+                           url.host, url.port, NULL);
   if (hc == NULL)
     goto error;
 

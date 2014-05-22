@@ -42,6 +42,15 @@ satip_frontend_find_by_number( satip_device_t *sd, int num )
   return NULL;
 }
 
+static char *
+satip_frontend_bindaddr( satip_frontend_t *lfe )
+{
+  char *bindaddr = lfe->sf_device->sd_bindaddr;
+  if (bindaddr == NULL || bindaddr[0] == '\0')
+    bindaddr = lfe->sf_device->sd_bindaddr;
+  return bindaddr;
+}
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -962,7 +971,8 @@ satip_frontend_input_thread ( void *aux )
   pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
   rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
-                             lfe->sf_device->sd_info.addr, 554);
+                             lfe->sf_device->sd_info.addr, 554,
+                             satip_frontend_bindaddr(lfe));
   if (rtsp == NULL)
     return NULL;
 
@@ -1245,7 +1255,7 @@ satip_frontend_tune0
 
   if (udp_bind_double(&lfe->sf_rtp, &lfe->sf_rtcp,
                       "satip", "rtp", "rtpc",
-                      lfe->sf_device->sd_info.myaddr, lfe->sf_udp_rtp_port,
+                      satip_frontend_bindaddr(lfe), lfe->sf_udp_rtp_port,
                       NULL, SATIP_BUF_SIZE, 16384) < 0)
     return SM_CODE_TUNING_FAILED;
 

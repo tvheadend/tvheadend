@@ -114,6 +114,13 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_STR,
+      .id       = "bindaddr",
+      .name     = "Local bind IP address",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_bindaddr),
+    },
+    {
+      .type     = PT_STR,
       .id       = "addr",
       .name     = "IP Address",
       .opts     = PO_RDONLY | PO_NOSAVE,
@@ -227,7 +234,7 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "myaddr",
-      .name     = "Local IP Address",
+      .name     = "Local Discovery IP Address",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.myaddr),
     },
@@ -455,6 +462,7 @@ satip_device_destroy( satip_device_t *sd )
   FREEM(presentation);
   FREEM(tunercfg);
 #undef FREEM
+  free(sd->sd_bindaddr);
 
   tvh_hardware_delete((tvh_hardware_t*)sd);
   free(sd);
@@ -573,10 +581,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     socklen_t addrlen = sizeof(ip);
     errbuf[0] = '\0';
     getsockname(hc->hc_fd, (struct sockaddr *)&ip, &addrlen);
-    if (ip.ss_family == AF_INET6)
-      inet_ntop(AF_INET6, &IP_AS_V6(ip, addr), errbuf, sizeof(errbuf));
-    else
-      inet_ntop(AF_INET, &IP_AS_V4(ip, addr), errbuf, sizeof(errbuf));
+    inet_ntop(ip.ss_family, IP_IN_ADDR(ip), errbuf, sizeof(errbuf));
     free(d->myaddr);
     d->myaddr = strdup(errbuf);
   }
@@ -703,7 +708,7 @@ satip_discovery_timerq_cb(void *aux)
     }
 
     d->http_client = http_client_connect(d, HTTP_VERSION_1_1, d->url.scheme,
-                                         d->url.host, d->url.port);
+                                         d->url.host, d->url.port, NULL);
     if (d->http_client == NULL)
       satip_discovery_destroy(d, 1);
     else {
@@ -803,7 +808,7 @@ satip_discovery_service_received
   /* Forward information to next layer */
 
   d = calloc(1, sizeof(satip_discovery_t));
-  if (inet_ntop(storage->ss_family, IP_IN_ADDR(conn->ip),
+  if (inet_ntop(conn->ip.ss_family, IP_IN_ADDR(conn->ip),
                 sockbuf, sizeof(sockbuf)) == NULL) {
     satip_discovery_destroy(d, 0);
     return;

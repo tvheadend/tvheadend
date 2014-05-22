@@ -48,8 +48,8 @@ th_pipe_t tcp_server_pipe;
  *
  */
 int
-tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
-	    int timeout)
+tcp_connect(const char *hostname, int port, const char *bindaddr,
+            char *errbuf, size_t errbufsize, int timeout)
 {
   int fd, r, res, err;
   struct addrinfo *ai;
@@ -78,7 +78,19 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
    */
   fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 
-  if ((ai->ai_family != AF_INET) && (ai->ai_family != AF_INET6)) {
+  if (ai->ai_family == AF_INET || ai->ai_family == AF_INET6) {
+    if (bindaddr && bindaddr[0] != '\0') {
+      struct sockaddr_storage ip;
+      memset(&ip, 0, sizeof(ip));
+      ip.ss_family = ai->ai_family;
+      if (inet_pton(AF_INET, bindaddr, IP_IN_ADDR(ip)) <= 0 ||
+          bind(fd, (struct sockaddr *)&ip, IP_IN_ADDRLEN(ip)) < 0) {
+        snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'", bindaddr,
+                                     ai->ai_family == AF_INET6 ? "6" : "4");
+        return -1;
+      }
+    }
+  } else {
     snprintf(errbuf, errbufsize, "Invalid protocol family");
     freeaddrinfo(ai);
     return -1;

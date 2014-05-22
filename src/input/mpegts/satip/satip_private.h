@@ -73,6 +73,7 @@ struct satip_device
   /*
    * RTSP
    */
+  char                      *sd_bindaddr;
   int                        sd_fullmux_ok;
   int                        sd_pids_max;
   int                        sd_pids_len;

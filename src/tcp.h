@@ -22,6 +22,21 @@
 #include "htsbuf.h"
 #include "htsmsg.h"
 
+#define IP_AS_V4(storage, f) ((struct sockaddr_in *)&(storage))->sin_##f
+#define IP_AS_V6(storage, f) ((struct sockaddr_in6 *)&(storage))->sin6_##f
+#define IP_IN_ADDR(storage) \
+  ((storage).ss_family == AF_INET6 ? \
+      &((struct sockaddr_in6 *)&(storage))->sin6_addr : \
+      (void *)&((struct sockaddr_in  *)&(storage))->sin_addr)
+#define IP_IN_ADDRLEN(storage) \
+  ((storage).ss_family == AF_INET6 ? \
+      sizeof(struct sockaddr_in6) : \
+      sizeof(struct sockaddr_in))
+#define IP_PORT(storage) \
+  ((storage).ss_family == AF_INET6 ? \
+      ((struct sockaddr_in6 *)&(storage))->sin6_port : \
+      ((struct sockaddr_in  *)&(storage))->sin_port)
+
 typedef struct tcp_server_ops
 {
   void (*start)  (int fd, void **opaque,
@@ -37,8 +52,8 @@ extern int tcp_preferred_address_family;
 void tcp_server_init(int opt_ipv6);
 void tcp_server_done(void);
 
-int tcp_connect(const char *hostname, int port, char *errbuf,
-		size_t errbufsize, int timeout);
+int tcp_connect(const char *hostname, int port, const char *bindaddr,
+                char *errbuf, size_t errbufsize, int timeout);
 
 typedef void (tcp_server_callback_t)(int fd, void *opaque,
 				     struct sockaddr_storage *peer,

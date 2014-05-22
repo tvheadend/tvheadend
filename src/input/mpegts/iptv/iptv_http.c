@@ -68,7 +68,7 @@ iptv_http_start
   int r;
 
   if (!(hc = http_client_connect(im, HTTP_VERSION_1_1, u->scheme,
-                                 u->host, u->port)))
+                                 u->host, u->port, NULL)))
     return SM_CODE_TUNING_FAILED;
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
