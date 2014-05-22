@@ -61,7 +61,6 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   
   if (res != 0) {
     snprintf(errbuf, errbufsize, "%s", gai_strerror(res));
-    freeaddrinfo(ai);
     return -1;
   }
 
