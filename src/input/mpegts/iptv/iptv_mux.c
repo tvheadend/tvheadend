@@ -74,9 +74,15 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
+  iptv_mux_t *im = (iptv_mux_t*)mm;
+
   if (delconf)
     hts_settings_remove("input/iptv/muxes/%s/config",
                       idnode_uuid_as_str(&mm->mm_id));
+
+  free(im->mm_iptv_url);
+  free(im->mm_iptv_interface);
+  free(im->mm_iptv_svcname);
 
   mpegts_mux_delete(mm, delconf);
 }
@@ -125,7 +131,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
       (void)iptv_service_create0(im, 0, 0, f->hmf_name, e);
     }
   }
-  
+  htsmsg_destroy(c);
 
   return im;
 }

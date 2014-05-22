@@ -564,6 +564,7 @@ void iptv_done ( void )
   tvhpoll_destroy(iptv_poll);
   pthread_mutex_lock(&global_lock);
   mpegts_network_unregister_builder(&iptv_network_class);
+  mpegts_network_class_delete(&iptv_network_class, 0);
   mpegts_input_stop_all((mpegts_input_t*)iptv_input);
   mpegts_input_delete((mpegts_input_t *)iptv_input, 0);
   pthread_mutex_unlock(&global_lock);
