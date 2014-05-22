@@ -226,7 +226,7 @@ const idclass_t satip_frontend_dvbs_class =
     {
       .type     = PT_INT,
       .id       = "positions",
-      .name     = "Sattellite Positions",
+      .name     = "Satellite Positions",
       .set      = satip_frontend_dvbs_class_positions_set,
       .opts     = PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_positions),
