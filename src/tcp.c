@@ -51,63 +51,25 @@ int
 tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
 	    int timeout)
 {
-  const char *errtxt;
-  struct hostent hostbuf, *hp;
-  char *tmphstbuf;
-  size_t hstbuflen;
-  int herr, fd, r, res, err;
-  struct sockaddr_in6 in6;
-  struct sockaddr_in in;
+  int fd, r, res, err;
+  struct addrinfo *ai;
+  char portstr[6];
   socklen_t errlen = sizeof(int);
 
-  hstbuflen = 1024;
-  tmphstbuf = malloc(hstbuflen);
-
-  while((res = gethostbyname_r(hostname, &hostbuf, tmphstbuf, hstbuflen,
-			       &hp, &herr)) == ERANGE) {
-    hstbuflen *= 2;
-    tmphstbuf = realloc(tmphstbuf, hstbuflen);
-  }
+  snprintf(portstr, 6, "%u", port);
+  res = getaddrinfo(hostname, portstr, NULL, &ai);
   
-  if(res != 0) {
-    snprintf(errbuf, errbufsize, "Resolver internal error");
-    free(tmphstbuf);
-    return -1;
-  } else if(herr != 0) {
-    switch(herr) {
-    case HOST_NOT_FOUND:
-      errtxt = "The specified host is unknown";
-      break;
-    case NO_ADDRESS:
-      errtxt = "The requested name is valid but does not have an IP address";
-      break;
-      
-    case NO_RECOVERY:
-      errtxt = "A non-recoverable name server error occurred";
-      break;
-      
-    case TRY_AGAIN:
-      errtxt = "A temporary error occurred on an authoritative name server";
-      break;
-      
-    default:
-      errtxt = "Unknown error";
-      break;
-    }
-
-    snprintf(errbuf, errbufsize, "%s", errtxt);
-    free(tmphstbuf);
-    return -1;
-  } else if(hp == NULL) {
-    snprintf(errbuf, errbufsize, "Resolver internal error");
-    free(tmphstbuf);
+  if (res != 0) {
+    snprintf(errbuf, errbufsize, "%s", gai_strerror(res));
+    freeaddrinfo(ai);
     return -1;
   }
-  fd = tvh_socket(hp->h_addrtype, SOCK_STREAM, 0);
+
+  fd = tvh_socket(ai->ai_family, SOCK_STREAM, 0);
   if(fd == -1) {
     snprintf(errbuf, errbufsize, "Unable to create socket: %s",
 	     strerror(errno));
-    free(tmphstbuf);
+    freeaddrinfo(ai);
     return -1;
   }
 
@@ -116,30 +78,14 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
    */
   fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 
-  switch(hp->h_addrtype) {
-  case AF_INET:
-    memset(&in, 0, sizeof(in));
-    in.sin_family = AF_INET;
-    in.sin_port = htons(port);
-    memcpy(&in.sin_addr, hp->h_addr_list[0], sizeof(struct in_addr));
-    r = connect(fd, (struct sockaddr *)&in, sizeof(struct sockaddr_in));
-    break;
-
-  case AF_INET6:
-    memset(&in6, 0, sizeof(in6));
-    in6.sin6_family = AF_INET6;
-    in6.sin6_port = htons(port);
-    memcpy(&in6.sin6_addr, hp->h_addr_list[0], sizeof(struct in6_addr));
-    r = connect(fd, (struct sockaddr *)&in, sizeof(struct sockaddr_in6));
-    break;
-
-  default:
+  if ((ai->ai_family != AF_INET) && (ai->ai_family != AF_INET6)) {
     snprintf(errbuf, errbufsize, "Invalid protocol family");
-    free(tmphstbuf);
+    freeaddrinfo(ai);
     return -1;
   }
 
-  free(tmphstbuf);
+  r = connect(fd, ai->ai_addr, ai->ai_addrlen);
+  freeaddrinfo(ai);
 
   if(r == -1) {
     if(errno == EINPROGRESS && timeout < 0) {
