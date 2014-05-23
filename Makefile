@@ -277,6 +277,7 @@ BUNDLES-yes               += docs/html docs/docresources src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
+ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
 #
 # Add-on modules
@@ -298,7 +299,7 @@ DEPS       = ${OBJS:%.o=%.d}
 #
 
 # Default
-all: ${PROG}
+all: $(ALL-yes) ${PROG}
 
 # Special
 .PHONY:	clean distclean check_config reconfigure
@@ -356,3 +357,23 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
+
+# dvb-t / git tree
+$(ROOTDIR)/data/dvb-scan/dvb-t/.stamp:
+	@echo "Receiving data/dvb-scan/dvb-t from http://linuxtv.org/git/dtv-scan-tables.git"
+	@rm -rf $(ROOTDIR)/data/dvb-scan/dvb-t/*
+	@$(ROOTDIR)/support/getmuxlist $(ROOTDIR)/data/dvb-scan
+	@touch $(ROOTDIR)/data/dvb-scan/dvb-t/.stamp
+
+# dvb-s / satellites.xml
+$(ROOTDIR)/data/dvb-scan/dvb-s/.stamp: $(ROOTDIR)/data/satellites.xml \
+                                       $(ROOTDIR)/data/dvb-scan/dvb-t/.stamp
+	@echo "Generating data/dvb-scan/dvb-s from data/satellites.xml"
+	@if ! test -d $(ROOTDIR)/data/dvb-scan/dvb-s ; then mkdir $(ROOTDIR)/data/dvb-scan/dvb-s ; fi
+	@rm -rf $(ROOTDIR)/data/dvb-scan/dvb-s/*
+	@$(ROOTDIR)/support/sat_xml_scan.py \
+		$(ROOTDIR)/data/satellites.xml $(ROOTDIR)/data/dvb-scan/dvb-s
+	@touch $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp
+
+.PHONY: check_dvb_scan
+check_dvb_scan: $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp

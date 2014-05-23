@@ -45,8 +45,6 @@ git archive --prefix=tvheadend/ HEAD | tar -C "${TMPDIR}" -x ||\
   die "failed to archive git tree"
 cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
 
-# Fetch scan files
-./support/getmuxlist || die "failed to fetch dvb-scan files"
 cd ..
 
 # For each distro

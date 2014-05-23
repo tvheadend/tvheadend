@@ -332,7 +332,8 @@ scanfile_load_file
   /* Network */
   str = buf;
   while (*str) {
-    if (!isalnum(*str)) *str = '_';
+    if (!isprint(*str))
+      *str = '_';
     str++;
   }
   *str = '\0';
