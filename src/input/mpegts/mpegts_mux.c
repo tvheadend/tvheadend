@@ -690,11 +690,11 @@ mpegts_mux_initial_scan_done ( mpegts_mux_t *mm, int log )
   mpegts_network_t *mn = mm->mm_network;
   mpegts_table_t *mt;
 
+  mm->mm_display_name(mm, buf, sizeof(buf));
+
   /* Log */
-  if (log) {
-    mm->mm_display_name(mm, buf, sizeof(buf));
+  if (log)
     tvhinfo("mpegts", "%s - initial scan complete", buf);
-  }
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
       const char *s = "not found";
