@@ -214,6 +214,37 @@ scanfile_load_dvbc ( dvb_mux_conf_t *mux, const char *line )
  * Sorting
  */
 static int
+scanfile_network_dvbs_pos(char *n, int *rpos)
+{
+  int len = strlen(n), pos = len - 1, frac = 0;
+
+  if (len > 0 && n[pos] != 'W' && n[pos] != 'E')
+    return 0;
+  pos--;
+  while (pos >= 0 && isdigit(n[pos]))
+    pos--;
+  *rpos = 0;
+  if (pos >= 0 && n[pos] == '.') {
+    pos--;
+    while (pos >= 0 && isdigit(n[pos]))
+      pos--;
+    if (len - pos < 3)
+      return 0;
+    sscanf(n + pos + 1, "%i.%i", rpos, &frac);
+  } else {
+    if (len - pos < 2)
+      return 0;
+    sscanf(n + pos + 1, "%i", rpos);
+  }
+  n[pos] = '\0';
+  *rpos *= 10;
+  *rpos += frac;
+  if (n[len-1] == 'W')
+    *rpos = -*rpos;
+  return 1;
+}
+
+static int
 scanfile_network_cmp
   ( scanfile_network_t *a, scanfile_network_t *b )
 {
@@ -297,12 +328,12 @@ static void
 scanfile_load_file
   ( const char *type, fb_dir *dir, const char *name )
 {
-  int i;
+  int i, opos;
   fb_file *fp;
   scanfile_region_t *reg = NULL;
   scanfile_network_t *net;
   char *str;
-  char buf[256], buf2[256];
+  char buf[256], buf2[256], buf3[256];
   tvhtrace("scanfile", "load file %s", name);
 
   fp = fb_open2(dir, name, 1, 0);
@@ -332,10 +363,16 @@ scanfile_load_file
   /* Network */
   str = buf;
   while (*str) {
-    if (!isalnum(*str)) *str = '_';
+    if (!isprint(*str)) *str = '_';
     str++;
   }
   *str = '\0';
+  if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
+    snprintf(buf3, sizeof(buf3), "%c%03i.%i%c:%s", opos < 0 ? '<' : '>',
+                                                   abs(opos) / 10, abs(opos) % 10,
+                                                   opos < 0 ? 'W' :'E', buf);
+    strcpy(buf, buf3);
+  }
   snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
   net = calloc(1, sizeof(scanfile_network_t));
   net->sfn_id   = strdup(buf2);
