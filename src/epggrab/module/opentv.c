@@ -20,7 +20,6 @@
 #include <assert.h>
 #include <unistd.h>
 #include <regex.h>
-#include <linux/dvb/dmx.h>
 #include "tvheadend.h"
 #include "channels.h"
 #include "huffman.h"
