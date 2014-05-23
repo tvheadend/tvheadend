@@ -127,13 +127,13 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
 {
   char bw[20], fec[20], fec2[20], qam[20], mode[20], guard[20], hier[20];
   int r;
-  uint32_t i;
 
   if (*line == '2') {
-    r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
-	             &i, &i, &mux->dmc_fe_freq, bw, fec, fec2, qam,
-                     mode, guard, hier);
-    if(r != 10) return 1;
+    unsigned int plp_id;
+    r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %u",
+	             &mux->dmc_fe_freq, bw, fec, fec2, qam,
+                     mode, guard, hier, &plp_id);
+    if(r != 9) return 1;
     mux->dmc_fe_delsys = DVB_SYS_DVBT2;
   } else {
     r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
