@@ -761,15 +761,7 @@ ok:
 }
 
 static void
-satip_frontend_default_tables 
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm )
-{
-  psi_tables_default(mm);
-  psi_tables_dvb(mm);
-}
-
-static void
-satip_frontend_store_pids(char *buf, uint16_t *pids, int count)
+satip_frontend_store_pids( char *buf, uint16_t *pids, int count )
 {
   int first = 1;
   char *s = buf;
@@ -1060,9 +1052,6 @@ satip_frontend_input_thread ( void *aux )
             tvhdebug("satip", "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
-            pthread_mutex_lock(&global_lock);
-            satip_frontend_default_tables(lfe, mmi->mmi_mux);
-            pthread_mutex_unlock(&global_lock);
             if (lfe->sf_play2) {
               r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
                                    lfe->sf_rtp_port, &lm->lm_tuning,
@@ -1222,6 +1211,11 @@ satip_frontend_signal_cb( void *aux )
 
   if (mmi == NULL)
     return;
+  if (!lfe->sf_tables) {
+    psi_tables_default(mmi->mmi_mux);
+    psi_tables_dvb(mmi->mmi_mux);
+    lfe->sf_tables = 1;
+  }
   sigstat.status_text  = signal2str(lfe->sf_status);
   sigstat.snr          = mmi->mmi_stats.snr;
   sigstat.signal       = mmi->mmi_stats.signal;
@@ -1275,6 +1269,7 @@ satip_frontend_tune0
 
   lfe->sf_mmi             = mmi;
   lfe->sf_running         = 1;
+  lfe->sf_tables          = 0;
 
   tvhtrace("satip", "%s - local RTP port %i RTCP port %i",
                     lfe->mi_name,
@@ -1285,7 +1280,7 @@ satip_frontend_tune0
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
                    satip_frontend_input_thread, lfe, 0);
 
-  gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);
+  gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 50);
 
   return 0;
 }
