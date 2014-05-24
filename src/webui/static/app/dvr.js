@@ -1022,7 +1022,7 @@ tvheadend.dvrsettings = function() {
 		items : [{ 
 			layout: 'column', 
 			border: false, 
-			items : [FileHandlingPanelA, FileHandlingPanelB ] 
+			items : [ FileHandlingPanelA, FileHandlingPanelB ] 
 		}]
 	});
 
