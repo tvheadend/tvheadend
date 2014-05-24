@@ -57,6 +57,15 @@ tvheadend.miscconf = function() {
 		width: 400
 	});
 
+	var dvbscanWrap = new Ext.form.FieldSet({
+		title: 'DVB Scan Files',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		animCollapse: true,
+		items : [ dvbscanPath ]
+	});
+
   /*
    * Language
    */
@@ -74,6 +83,15 @@ tvheadend.miscconf = function() {
 		imagePath: 'static/multiselect/resources',
 		toLegend: 'Selected',
 		fromLegend: 'Available'
+	});
+
+	var languageWrap = new Ext.form.FieldSet({
+		title: 'Language Settings',
+		width: 700,
+		autoHeight: true,
+		collapsible: true,
+		animCollapse: true,
+		items : [ language ]
 	});
 
   /*
@@ -99,6 +117,7 @@ tvheadend.miscconf = function() {
     width: 700,
     autoHeight: true,
     collapsible: true,
+   	animCollapse: true,
     items : [ tvhtimeUpdateEnabled, tvhtimeNtpEnabled, tvhtimeTolerance ]
   });
 
@@ -138,6 +157,7 @@ tvheadend.miscconf = function() {
       width: 700,
       autoHeight: true,
       collapsible: true,
+      animCollapse: true,
       items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
                 imagecacheIgnoreSSLCert ]
     });
@@ -151,6 +171,7 @@ tvheadend.miscconf = function() {
       layout : 'form',
       defaultType : 'textfield',
       autoHeight : true,
+      animCollapse: true,
       items : [ imagecachePanel ]
     });
   } else {
@@ -170,6 +191,7 @@ tvheadend.miscconf = function() {
     width: 700,
     autoHeight: true,
     collapsible: true,
+    animCollapse: true,
     items : [ transcodingEnabled ]
   });
   if (tvheadend.capabilities.indexOf('transcoding') == -1)
@@ -203,7 +225,7 @@ tvheadend.miscconf = function() {
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ language, dvbscanPath,
+		items : [ languageWrap, dvbscanWrap,
 			  tvhtimePanel,
 			  transcodingPanel]
 	});
