@@ -388,6 +388,42 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 	}
 	;
 
+    /* Create combobox to allow user to select page size for upcoming/completed/failed recordings */
+
+	var itemPageCombo = new Ext.form.ComboBox({
+	    name : 'itemsperpage',
+		width: 50,
+		mode : 'local',
+		store: new Ext.data.ArrayStore({
+			fields: ['perpage'],
+			data  : [ ['10'], ['20'], ['30'], ['40'], ['50'], ['60'], ['70'], ['80'], ['90'], ['100']	]
+		}),
+		value : '20',
+		listWidth : 40,
+		triggerAction : 'all',
+		displayField : 'perpage',
+		valueField : 'perpage',
+		editable : true,
+		forceSelection : true,
+		listeners : {
+			scope: this,
+			'select' : function(combo, record) {
+			    bbar.pageSize = parseInt(record.get('perpage'), 10);
+				bbar.doLoad(bbar.cursor);
+			}
+		}
+	});
+
+    /* Bottom toolbar to include default previous/goto-page/next and refresh buttons, also number-of-items combobox */
+    
+	var bbar = new Ext.PagingToolbar({
+		store : dvrStore,
+		displayInfo : true,
+		items   :    [ '-',	'Recordings per page: ', itemPageCombo	],
+		displayMsg : 'Programs {0} - {1} of {2}',
+		emptyMsg : "No programs to display"
+	});
+
 	var panel = new Ext.grid.GridPanel({
 		loadMask : true,
 		stripeRows : true,
@@ -411,14 +447,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 				new tvheadend.help('Digital Video Recorder', 'dvrlog.html');
 			}
 		} ],
-		bbar : new Ext.PagingToolbar({
-			store : dvrStore,
-			pageSize : 20,
-			displayInfo : true,
-			displayMsg : 'Programs {0} - {1} of {2}',
-			emptyMsg : "No programs to display"
-		})
-
+		bbar : bbar
 	});
 
 	panel.on('rowclick', rowclicked);
