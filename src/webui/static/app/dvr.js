@@ -971,6 +971,7 @@ tvheadend.dvrsettings = function() {
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
+		animCollapse : true,
 		items : [ recordingContainer, cacheScheme, logRetention, timeBefore, timeAfter, postProcessing ]
 	});
 
@@ -981,6 +982,7 @@ tvheadend.dvrsettings = function() {
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
+		animCollapse : true,
 		items : [ recordingPath, recordingPermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials ]
 	});
 
@@ -991,18 +993,37 @@ tvheadend.dvrsettings = function() {
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
+		animCollapse : true,
 		items : [ directoryPermissions, dirsPerDay, dirsPerChannel, dirsPerTitle ]
 	});
 		
-/* Sub-Panel - File operations */
+/* Sub-Panel - File operations - Break into two 4-item panels */
+
+	var FileHandlingPanelA = new Ext.form.FieldSet({
+		width: 350,
+		border: false,
+		autoHeight: true,
+		items : [ incChannelInTitle, incDateInTitle, incTimeInTitle, incEpisodeInTitle ]
+	});
+
+	var FileHandlingPanelB = new Ext.form.FieldSet({
+		width: 350,
+		border: false,
+		autoHeight: true,
+		items : [ incSubtitleInTitle, episodeFirst, stripUnsafeChars, stripWhitespace ]
+	});
 
 	var FileHandlingPanel = new Ext.form.FieldSet({
 		title: 'Filename Options',
 		width: 700,
 		autoHeight: true,
 		collapsible: true,
-		items : [ incChannelInTitle, incDateInTitle, incTimeInTitle, incEpisodeInTitle,
-			incSubtitleInTitle, episodeFirst, stripUnsafeChars, stripWhitespace ]
+		animCollapse : true,
+		items : [{ 
+			layout: 'column', 
+			border: false, 
+			items : [FileHandlingPanelA, FileHandlingPanelB ] 
+		}]
 	});
 
 /* Main (form) panel */
