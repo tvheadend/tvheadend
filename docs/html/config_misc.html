@@ -1,34 +1,85 @@
 <div class="hts-doc-text">
 
+ <img src="docresources/configgeneraltab.png">
+ 
  <p>
  This tabs allow configuration of several general parameters that affect the
  core TVH functionality.
  </p>
 
  <dl>
+	   
+  <br><br>
+  <hr>
+  <b>Language Settings</b>
+  <hr>
+  
   <dt>Default Language(s)
   <dd>
   Select the list of languages (in order of priority) to be used for supplying
-  EPG information to clients that don't provide their own configuration.
+  EPG information to clients that don't provide their own configuration.</dd>
   <p>
-  The EPG information is NOT translated, this only applies to EPG providers
-  that give information (titles, descriptions, etc..) in multiple languages.
-
+  <dd>The EPG information is NOT translated, this only applies to EPG providers
+  that give information (titles, descriptions, etc..) in multiple languages.</dd>
+  
+  <br><br>
+  <hr>
+  <b>DVB Scan Files</b>
+  <hr>
+  
   <dt>DVB scan files path:
   <dd>
   Select the path to use for DVB scan configuration files. Typically
   dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
-  file set.
- </dl>
+  file set.</dd>
 
- <p>
- Icon caching - this will cache any channel icons or other images (such as
- EPG metadata). These will then be served from the local webserver, this
- can be useful for multi-client systems and generally to reduce hits on
- upstream providers.
- </p>
+  <br><br>
+  <hr>
+  <b>Time Update</b>
+  <hr>
 
- <dl>
+  <dd>Tvheadend has a built-in capability to update the system time.
+  However, you should bear in mind that DVB time is not highly accurate and is
+  prone to both jitter and variation between different transponders.</dd>
+  <br>
+  <dd>Where possible, it's probably still better to use an internet based NTP source
+  to synchronise the system clock (i.e. through the underlying operating system).</dd>
+
+  <dl>
+    <dt>Update time</dt>
+    <dd>Enable system time updates. This will only work if the user
+    running TVH has rights to update the system clock (normally only root).</dd>
+ 
+    <dt>Enable NTP driver</dt>
+    <dd>This will create an NTP driver (using shmem interface) that you can feed
+    into ntpd. This can be run without root priviledges, but generally the 
+    performance is not that great.</dd>
+  
+    <dt>Update tolerance (milliseconds)</dt>
+    <dd>Only update the system clock (doesn't affect NTP driver) if the delta
+    between the system clock and DVB time is greater than this. This can help
+    stop horrible oscillations on the system clock.</dd>
+
+  </dl>
+
+  <br><br>
+  <hr>
+  <b>Transcoding</b>
+  <hr>
+
+  <dd>If enabled at build time (src/plumbing/transcoding.c), this allows you to switch transcoding support on and off.</dd>
+  
+  <br><br>
+  <hr>
+  <b>Image Caching</b>
+  <hr>
+
+  <dd>This will cache any channel icons or other images (such as
+  EPG metadata) to be served from the local webserver. This
+  can be useful for multi-client systems and, generally, to reduce hits on
+  upstream providers.</dd>
+
+  <dl>
 
   <dt>Enabled
   <dd>
@@ -48,31 +99,7 @@
   <dt>Ignore invalid SSL certificates
   <dd>Ignore invalid/unverifiable (expired, self-certified, etc.) certificates
 
- </dl>
-
- <p>
- Time Update - TVH now has a built-in capability to update the systme time.
- However you should bare in mind that DVB time is not highly accurate and is
- prone to both jitter and variation between different transponders.
- <br/>
- Where possible its probably still better to use an internet based NTP source
- to synchronise the system clock.
- </p>
-
- <dl>
- <dt>Update time
- <dd>Enable system time updates, this will only work if the user
- running TVH has rights to update the system clock (normally only root).
- 
- <dt>Enable NTP driver
- <dd>This will create an NTP driver (using shmem interface) that you can feed
- into ntpd. This can be run without root priviledges, but generally the 
- performance is not that great.
-  
- <dt>Update tolerance (milliseconds)
- <dd>Only update the system clock (doesn't affect NTP driver) if the delta
- between the system clock and DVB time is greater than this. This can help
- stop horrible oscillations on the system clock.
+  </dl>
 
  </dl>  
 </div>
