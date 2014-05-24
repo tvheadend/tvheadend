@@ -36,7 +36,7 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd,
   size_t blen = 7 + strlen(hc->hc_host) + (path ? strlen(path) : 1) + 1;
   char *buf = alloca(blen);
 
-  if (hc->hc_rtsp_session && cmd != RTSP_CMD_OPTIONS) {
+  if (hc->hc_rtsp_session) {
     if (hdr == NULL) {
       hdr = &h;
       http_arg_init(&h);
