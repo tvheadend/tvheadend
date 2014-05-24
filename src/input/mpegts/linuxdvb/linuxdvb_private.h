@@ -22,7 +22,9 @@
 
 #include "input.h"
 
+#if ENABLE_LINUXDVB
 #include <linux/dvb/version.h>
+#endif
 
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
