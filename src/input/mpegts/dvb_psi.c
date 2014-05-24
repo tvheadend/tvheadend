@@ -30,8 +30,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <linux/dvb/version.h>
-#include <linux/dvb/frontend.h>
 
 SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
 
@@ -171,7 +169,7 @@ dvb_desc_cable_del
   int frequency, symrate;
   dvb_mux_conf_t dmc;
 
-  static const fe_modulation_t qtab [6] = {
+  static const dvb_fe_modulation_t qtab [6] = {
     DVB_MOD_QAM_AUTO, DVB_MOD_QAM_16, DVB_MOD_QAM_32, DVB_MOD_QAM_64,
     DVB_MOD_QAM_128,  DVB_MOD_QAM_256
   };
@@ -203,7 +201,7 @@ dvb_desc_cable_del
 
   dmc.u.dmc_fe_qam.symbol_rate  = symrate * 100;
   if((ptr[6] & 0x0f) >= sizeof(qtab))
-    dmc.dmc_fe_modulation    = QAM_AUTO;
+    dmc.dmc_fe_modulation    = DVB_MOD_QAM_AUTO;
   else
     dmc.dmc_fe_modulation    = qtab[ptr[6] & 0x0f];
   dmc.u.dmc_fe_qam.fec_inner = fec_tab[ptr[10] & 0x07];
@@ -227,26 +225,26 @@ dvb_desc_terr_del
   (mpegts_mux_t *mm, uint16_t onid, uint16_t tsid,
    const uint8_t *ptr, int len )
 {
-  static const fe_bandwidth_t btab [8] = {
+  static const dvb_fe_bandwidth_t btab [8] = {
     DVB_BANDWIDTH_8_MHZ, DVB_BANDWIDTH_7_MHZ,
     DVB_BANDWIDTH_6_MHZ, DVB_BANDWIDTH_AUTO,
     DVB_BANDWIDTH_AUTO,  DVB_BANDWIDTH_AUTO,
     DVB_BANDWIDTH_AUTO,  DVB_BANDWIDTH_AUTO
   };
-  static const fe_modulation_t ctab [4] = {
+  static const dvb_fe_modulation_t ctab [4] = {
     DVB_MOD_QPSK, DVB_MOD_QAM_16, DVB_MOD_QAM_64, DVB_MOD_QAM_AUTO
   };
-  static const fe_guard_interval_t gtab [4] = {
+  static const dvb_fe_guard_interval_t gtab [4] = {
     DVB_GUARD_INTERVAL_1_32, DVB_GUARD_INTERVAL_1_16,
     DVB_GUARD_INTERVAL_1_8,  DVB_GUARD_INTERVAL_1_4
   };
-  static const fe_transmit_mode_t ttab [4] = {
+  static const dvb_fe_transmit_mode_t ttab [4] = {
     DVB_TRANSMISSION_MODE_2K,
     DVB_TRANSMISSION_MODE_8K,
     DVB_TRANSMISSION_MODE_4K,
     DVB_TRANSMISSION_MODE_AUTO
   };
-  static const fe_hierarchy_t htab [8] = {
+  static const dvb_fe_hierarchy_t htab [8] = {
     DVB_HIERARCHY_NONE, DVB_HIERARCHY_1, DVB_HIERARCHY_2, DVB_HIERARCHY_4,
     DVB_HIERARCHY_NONE, DVB_HIERARCHY_1, DVB_HIERARCHY_2, DVB_HIERARCHY_4
   };

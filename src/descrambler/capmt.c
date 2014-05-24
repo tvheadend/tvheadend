@@ -34,7 +34,6 @@
 #include <sys/un.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <linux/dvb/ca.h>
 #include <fcntl.h>
 
 #include "tvheadend.h"
@@ -44,6 +43,7 @@
 
 #if ENABLE_LINUXDVB
 
+#include <linux/dvb/ca.h>
 #include "notify.h"
 #include "subscriptions.h"
 #include "dtable.h"

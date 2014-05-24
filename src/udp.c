@@ -300,9 +300,10 @@ udp_connect ( const char *subsystem, const char *name,
   }
 
   /* Bind to interface */
-  memset(&ifr, 0, sizeof(ifr));
   if (ifname && *ifname) {
-    snprintf(ifr.ifr_name, IFNAMSIZ, "%s", ifname);
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+    ifr.ifr_name[IFNAMSIZ-1] = '\0';
     if (ioctl(fd, SIOCGIFINDEX, &ifr)) {
       tvherror(subsystem, "%s - could not find interface %s",
                name, ifname);
