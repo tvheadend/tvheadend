@@ -244,6 +244,7 @@ tvheadend.miscconf = function() {
         title: 'General',
         iconCls: 'wrench',
         border: false,
+        autoScroll: true,
         bodyStyle: 'padding:15px',
         layout: 'form',
         items: _items,

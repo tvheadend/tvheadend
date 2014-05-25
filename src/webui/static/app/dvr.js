@@ -1035,6 +1035,7 @@ tvheadend.dvrsettings = function() {
         anchor: '100% 50%',
         labelAlign: 'right',
         labelWidth: 250,
+        autoScroll: true,
         waitMsgTarget: true,
         reader: confreader,
         defaultType: 'textfield',
