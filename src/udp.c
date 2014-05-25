@@ -95,21 +95,16 @@ udp_resolve( udp_connection_t *uc, int receiver )
 }
 
 static int
-udp_get_ifindex( int fd, const char *ifname )
+udp_get_ifindex( const char *ifname )
 {
-  struct ifreq ifr;
+  unsigned int r;
   if (ifname == NULL || *ifname == '\0')
     return 0;
-  memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
-  ifr.ifr_name[IFNAMSIZ - 1] = '\0';
-  if (ioctl(fd, SIOCGIFINDEX, &ifr))
+
+  r = if_nametoindex(ifname);
+  if (!r)
     return -1;
-#if defined(PLATFORM_LINUX)
-  return ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-  return ifr.ifr_index;
-#endif
+  return r;
 }
 
 static int
@@ -160,7 +155,7 @@ udp_bind ( const char *subsystem, const char *name,
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
   /* Bind to interface */
-  ifindex = uc->multicast ? udp_get_ifindex(fd, ifname) : 0;
+  ifindex = uc->multicast ? udp_get_ifindex(ifname) : 0;
   if (ifindex < 0) {
     tvherror(subsystem, "%s - could not find interface %s",
              name, ifname);
@@ -308,7 +303,7 @@ udp_connect ( const char *subsystem, const char *name,
   }
 
   /* Bind to interface */
-  ifindex = uc->multicast ? udp_get_ifindex(fd, ifname) : 0;
+  ifindex = uc->multicast ? udp_get_ifindex(ifname) : 0;
   if (ifindex < 0) {
     tvherror(subsystem, "%s - could not find interface %s",
              name, ifname);
