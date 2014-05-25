@@ -115,7 +115,7 @@ udp_get_solip( void )
 #else
   struct protoent *pent;
   pent = getprotobyname("ip");
-  return = (pent != NULL) ? pent->p_proto : 0;
+  return (pent != NULL) ? pent->p_proto : 0;
 #endif
 }
 
