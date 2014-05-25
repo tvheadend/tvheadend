@@ -94,13 +94,42 @@ udp_resolve( udp_connection_t *uc, int receiver )
   return 0;
 }
 
+static int
+udp_get_ifindex( int fd, const char *ifname )
+{
+  struct ifreq ifr;
+  if (ifname == NULL || *ifname == '\0')
+    return 0;
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+  ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+  if (ioctl(fd, SIOCGIFINDEX, &ifr))
+    return -1;
+#if defined(PLATFORM_LINUX)
+  return ifr.ifr_ifindex;
+#elif defined(PLATFORM_FREEBSD)
+  return ifr.ifr_index;
+#endif
+}
+
+static int
+udp_get_solip( void )
+{
+#ifdef SOL_IP
+  return SOL_IP;
+#else
+  struct protoent *pent;
+  pent = getprotobyname("ip");
+  return = (pent != NULL) ? pent->p_proto : 0;
+#endif
+}
+
 udp_connection_t *
 udp_bind ( const char *subsystem, const char *name,
            const char *bindaddr, int port,
            const char *ifname, int rxsize )
 {
-  int fd, solip, reuse = 1;
-  struct ifreq ifr;
+  int fd, ifindex, reuse = 1;
   udp_connection_t *uc;
   char buf[256];
   socklen_t addrlen;
@@ -131,14 +160,11 @@ udp_bind ( const char *subsystem, const char *name,
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
   /* Bind to interface */
-  memset(&ifr, 0, sizeof(ifr));
-  if (ifname && *ifname) {
-    snprintf(ifr.ifr_name, IFNAMSIZ, "%s", ifname);
-    if (ioctl(fd, SIOCGIFINDEX, &ifr)) {
-      tvherror(subsystem, "%s - could not find interface %s",
-               name, ifname);
-      goto error;
-    }
+  ifindex = uc->multicast ? udp_get_ifindex(fd, ifname) : 0;
+  if (ifindex < 0) {
+    tvherror(subsystem, "%s - could not find interface %s",
+             name, ifname);
+    goto error;
   }
 
   /* IPv4 */
@@ -158,24 +184,11 @@ udp_bind ( const char *subsystem, const char *name,
       /* Join group */
       m.imr_multiaddr      = IP_AS_V4(uc->ip, addr);
       m.imr_address.s_addr = 0;
-#if defined(PLATFORM_LINUX)
-      m.imr_ifindex        = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-      m.imr_ifindex        = ifr.ifr_index;
-#endif
-#ifdef SOL_IP
-      solip = SOL_IP;
-#else
-      {
-        struct protoent *pent;
-        pent = getprotobyname("ip");
-        solip = (pent != NULL) ? pent->p_proto : 0;
-      }
-#endif
+      m.imr_ifindex        = ifindex;
 
-      if (setsockopt(fd, solip, IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
+      if (setsockopt(fd, udp_get_solip(), IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
         inet_ntop(AF_INET, &m.imr_multiaddr, buf, sizeof(buf));
-        tvhwarn("iptv", "%s - cannot join %s [%s]",
+        tvhwarn(subsystem, "%s - cannot join %s [%s]",
                 name, buf, strerror(errno));
       }
    }
@@ -196,11 +209,7 @@ udp_bind ( const char *subsystem, const char *name,
     if (uc->multicast) {
       /* Join group */
       m.ipv6mr_multiaddr = IP_AS_V6(uc->ip, addr);
-#if defined(PLATFORM_LINUX)
-      m.ipv6mr_interface = ifr.ifr_ifindex;
-#elif defined(PLATFORM_FREEBSD)
-      m.ipv6mr_interface = ifr.ifr_index;
-#endif
+      m.ipv6mr_interface = ifindex;
 #ifdef SOL_IPV6
       if (setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m, sizeof(m))) {
         inet_ntop(AF_INET, &m.ipv6mr_multiaddr, buf, sizeof(buf));
@@ -208,7 +217,7 @@ udp_bind ( const char *subsystem, const char *name,
                 name, buf, strerror(errno));
       }
 #else
-      tvherror("iptv", "IPv6 multicast not supported");
+      tvherror(name, "IPv6 multicast not supported");
       goto error;
 #endif
     }
@@ -219,7 +228,7 @@ udp_bind ( const char *subsystem, const char *name,
     
   /* Increase RX buffer size */
   if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rxsize, sizeof(rxsize)) == -1)
-    tvhwarn("iptv", "%s - cannot increase UDP rx buffer size [%s]",
+    tvhwarn(subsystem, "%s - cannot increase UDP rx buffer size [%s]",
             name, strerror(errno));
 
   uc->fd = fd;
@@ -273,8 +282,7 @@ udp_connect ( const char *subsystem, const char *name,
               const char *host, int port,
               const char *ifname, int txsize )
 {
-  int fd;
-  struct ifreq ifr;
+  int fd, ifindex;
   udp_connection_t *uc;
 
   uc = calloc(1, sizeof(udp_connection_t));
@@ -300,20 +308,40 @@ udp_connect ( const char *subsystem, const char *name,
   }
 
   /* Bind to interface */
-  if (ifname && *ifname) {
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
-    ifr.ifr_name[IFNAMSIZ-1] = '\0';
-    if (ioctl(fd, SIOCGIFINDEX, &ifr)) {
-      tvherror(subsystem, "%s - could not find interface %s",
-               name, ifname);
+  ifindex = uc->multicast ? udp_get_ifindex(fd, ifname) : 0;
+  if (ifindex < 0) {
+    tvherror(subsystem, "%s - could not find interface %s",
+             name, ifname);
+    goto error;
+  }
+
+  if (uc->multicast) {
+    if (uc->ip.ss_family == AF_INET) {
+      struct ip_mreqn m;
+      memset(&m, 0, sizeof(m));
+      m.imr_ifindex = ifindex;
+      if (setsockopt(fd, udp_get_solip(), IP_MULTICAST_IF, &m, sizeof(m)))
+        tvhwarn(subsystem, "%s - cannot set source interface %s [%s]",
+                name, ifname, strerror(errno));
+    } else {
+      struct ipv6_mreq m;
+      memset(&m,   0, sizeof(m));
+      m.ipv6mr_interface = ifindex;
+#ifdef SOL_IPV6
+      if (setsockopt(fd, SOL_IPV6, IPV6_MULTICAST_IF, &m, sizeof(m))) {
+        tvhwarn(subsystem, "%s - cannot set source interface %s [%s]",
+                name, ifname, strerror(errno));
+      }
+#else
+      tvherror(name, "IPv6 multicast not supported");
       goto error;
+#endif
     }
   }
 
   /* Increase TX buffer size */
   if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &txsize, sizeof(txsize)) == -1)
-    tvhwarn("iptv", "%s - cannot increase UDP tx buffer size [%s]",
+    tvhwarn(subsystem, "%s - cannot increase UDP tx buffer size [%s]",
             name, strerror(errno));
 
   uc->fd = fd;
