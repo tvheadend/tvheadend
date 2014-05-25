@@ -217,7 +217,7 @@ udp_bind ( const char *subsystem, const char *name,
                 name, buf, strerror(errno));
       }
 #else
-      tvherror(name, "IPv6 multicast not supported");
+      tvherror(subsystem, "IPv6 multicast not supported");
       goto error;
 #endif
     }
@@ -333,7 +333,7 @@ udp_connect ( const char *subsystem, const char *name,
                 name, ifname, strerror(errno));
       }
 #else
-      tvherror(name, "IPv6 multicast not supported");
+      tvherror(subsystem, "IPv6 multicast not supported");
       goto error;
 #endif
     }
