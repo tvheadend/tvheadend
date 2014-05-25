@@ -61,7 +61,7 @@ tvheadend.miscconf = function() {
         width: 400
     });
 
-	var dvbscanWrap = new Ext.form.FieldSet({
+    var dvbscanWrap = new Ext.form.FieldSet({
         title: 'DVB Scan Files',
         width: 700,
         autoHeight: true,
@@ -89,7 +89,7 @@ tvheadend.miscconf = function() {
         fromLegend: 'Available'
     });
 
-	var languageWrap = new Ext.form.FieldSet({
+    var languageWrap = new Ext.form.FieldSet({
         title: 'Language Settings',
         width: 700,
         autoHeight: true,
