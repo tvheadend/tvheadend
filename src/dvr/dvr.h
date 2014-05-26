@@ -31,6 +31,8 @@ typedef struct dvr_config {
   char *dvr_storage;
   uint32_t dvr_retention_days;
   int dvr_flags;
+  char *dvr_charset;
+  char *dvr_charset_id;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
@@ -329,6 +331,8 @@ dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
+
+void dvr_charset_set(dvr_config_t *cfg, const char *charset);
 
 void dvr_container_set(dvr_config_t *cfg, const char *container);
 

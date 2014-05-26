@@ -27,6 +27,18 @@ tvheadend.containers = new Ext.data.JsonStore({
 });
 
 //For the cache configuration
+tvheadend.charsets = new Ext.data.JsonStore({
+    autoLoad: true,
+    root: 'entries',
+    fields: ['key', 'val'],
+    id: 'key',
+    url: 'api/intlconv/charsets',
+    baseParams: {
+        enum: 1
+    }
+});
+
+//For the charset configuration
 tvheadend.caches = new Ext.data.JsonStore({
     autoLoad: true,
     root: 'entries',
@@ -784,7 +796,7 @@ tvheadend.dvrsettings = function() {
     var confreader = new Ext.data.JsonReader({
         root: 'dvrSettings'
     }, ['storage', 'filePermissions', 'dirPermissions', 'postproc', 'retention', 'dayDirs', 'channelDirs',
-        'channelInTitle', 'container', 'cache', 'dateInTitle', 'timeInTitle',
+        'channelInTitle', 'container', 'cache', 'charset', 'dateInTitle', 'timeInTitle',
         'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
         'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle',
         'episodeBeforeDate', 'rewritePAT', 'rewritePMT']);
@@ -878,6 +890,17 @@ tvheadend.dvrsettings = function() {
         blankText: 'You must provide a value - use octal chmod notation, e.g. 0664',
         fieldLabel: 'File permissions (octal, e.g. 0664)',
         name: 'filePermissions'
+    });
+
+    var charset = new Ext.form.ComboBox({
+        store: tvheadend.charsets,
+        fieldLabel: 'Filename charset',
+        triggerAction: 'all',
+        displayField: 'val',
+        valueField: 'key',
+        editable: false,
+        width: 200,
+        hiddenName: 'charset'
     });
 
     /* TO DO - Add 'override user umask?' option, then trigger fchmod in mkmux.c, muxer_pass.c after file created */
@@ -992,7 +1015,7 @@ tvheadend.dvrsettings = function() {
         autoHeight: true,
         collapsible: true,
         animCollapse: true,
-        items: [recordingPath, recordingPermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials]
+        items: [recordingPath, recordingPermissions, charset, PATrewrite, PMTrewrite, tagMetadata, skipCommercials]
     });
 
     /* Sub-Panel - Directory operations */
