@@ -368,7 +368,7 @@ scanfile_load_file
   }
   *str = '\0';
   if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
-    snprintf(buf3, sizeof(buf3), "%c%03i.%i%c:%s", opos < 0 ? '<' : '>',
+    snprintf(buf3, sizeof(buf3), "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
                                                    abs(opos) / 10, abs(opos) % 10,
                                                    opos < 0 ? 'W' :'E', buf);
     strcpy(buf, buf3);

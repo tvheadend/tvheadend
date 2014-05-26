@@ -201,7 +201,7 @@ int
 http_client_clear_state( http_client_t *hc )
 {
   if (hc->hc_shutdown)
-    return -EBADFD;
+    return -EBADF;
   free(hc->hc_data);
   hc->hc_data = NULL;
   hc->hc_data_size = 0;
@@ -228,7 +228,7 @@ http_client_ssl_read_update( http_client_t *hc )
   }
   r = recv(hc->hc_fd, rbuf, hc->hc_io_size, MSG_DONTWAIT);
   if (r == 0) {
-    errno = ESTRPIPE;
+    errno = EIO;
     return -1;
   }
   if (r < 0) {
@@ -324,10 +324,10 @@ http_client_ssl_recv( http_client_t *hc, void *buf, size_t len )
       if (r < 0)
         return r;
     } else if (e == SSL_ERROR_ZERO_RETURN) {
-      errno = ESTRPIPE;
+      errno = EIO;
       return -1;
     } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
-      errno = EBADFD;
+      errno = EBADF;
       return -1;
     } else if (e == SSL_ERROR_SSL) {
       errno = EPERM;
@@ -398,7 +398,7 @@ write:
       if (r < 0)
         return r;
     } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
-      errno = EBADFD;
+      errno = EBADF;
       return -1;
     } else if (e == SSL_ERROR_SSL) {
       errno = EPERM;
@@ -437,7 +437,7 @@ http_client_ssl_shutdown( http_client_t *hc )
       if (r < 0)
         return r;
     } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
-      errno = EBADFD;
+      errno = EBADF;
       return -1;
     } else if (r == SSL_ERROR_SSL) {
       errno = EPERM;
@@ -813,7 +813,7 @@ http_client_run( http_client_t *hc )
     if (hc->hc_ssl && hc->hc_ssl->shutdown) {
       r = http_client_ssl_shutdown(hc);
       if (r < 0) {
-        if (errno != ESTRPIPE) {
+        if (errno != EIO) {
           if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
             return HTTP_CON_SENDING;
           return r;
@@ -845,10 +845,10 @@ retry:
   if (r == 0) {
     if (hc->hc_in_data && !hc->hc_keepalive)
       return http_client_finish(hc);
-    return http_client_flush(hc, -ESTRPIPE);
+    return http_client_flush(hc, -EIO);
   }
   if (r < 0) {
-    if (errno == ESTRPIPE && hc->hc_in_data && !hc->hc_keepalive)
+    if (errno == EIO && hc->hc_in_data && !hc->hc_keepalive)
       return http_client_finish(hc);
     if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
       return HTTP_CON_RECEIVING;
@@ -1418,6 +1418,7 @@ static struct strtab ERRNO_tab[] = {
   { "EPIPE",           EPIPE },
   { "EDOM",            EDOM },
   { "ERANGE",          ERANGE },
+#ifdef __linux__
   { "EDEADLK",         EDEADLK },
   { "ENAMETOOLONG",    ENAMETOOLONG },
   { "ENOLCK",          ENOLCK },
@@ -1521,6 +1522,7 @@ static struct strtab ERRNO_tab[] = {
 #ifdef EHWPOISON
   { "EHWPOISON",       EHWPOISON },
 #endif
+#endif /* __linux__ */
 };
 
 void
