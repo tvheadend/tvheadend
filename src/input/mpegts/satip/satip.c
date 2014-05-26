@@ -561,7 +561,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   if (s) {
     n = http_tokenize(s, argv, ARRAY_SIZE(argv), ';');
     if (n <= 0 || strcasecmp(s, "text/xml")) {
-      errn = EMEDIUMTYPE;
+      errn = ENOENT;
       s = NULL;
     }
   }
