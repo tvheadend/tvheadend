@@ -867,7 +867,7 @@ tvheadend.dvrsettings = function() {
     });
 
     var postProcessing = new Ext.form.TextField({
-        width: 300,
+        width: 350,
         fieldLabel: 'Post-processor command',
         name: 'postproc'
     });
