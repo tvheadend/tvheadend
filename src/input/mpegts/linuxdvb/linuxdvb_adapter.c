@@ -187,7 +187,7 @@ linuxdvb_adapter_add ( const char *path )
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512];
-  uuid_t uuid;
+  tvh_uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
   SHA_CTX sha1;

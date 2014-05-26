@@ -766,9 +766,9 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
     return 0;
   }  
 
-  csize = hc->hc_csize < 0 ? 0 : hc->hc_csize;
+  csize = hc->hc_csize == (size_t) -1 ? 0 : hc->hc_csize;
   l = len;
-  if (hc->hc_csize && hc->hc_csize != -1 && hc->hc_rpos > csize) {
+  if (hc->hc_csize && hc->hc_csize != (size_t) -1 && hc->hc_rpos > csize) {
     l2 = hc->hc_rpos - csize;
     if (l2 < l)
       l = l2;
@@ -801,7 +801,7 @@ int
 http_client_run( http_client_t *hc )
 {
   char *buf, *saveptr, *argv[3], *d, *p;
-  http_ver_t ver;
+  int ver;
   ssize_t r;
   size_t len;
   int res;

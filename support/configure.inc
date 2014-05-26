@@ -470,9 +470,11 @@ function write_config
 CONFIGURE_ARGS = ${CONFIGURE_ARGS}
 ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${BUILDDIR}
+PLATFORM ?= ${PLATFORM}
 OSENV    ?= ${OSENV}
 ARCH     ?= ${ARCH}
 CPU      ?= ${CPU}
+COMPILER ?= ${COMPILER}
 ifeq (\$(origin CC),default)
 CC        = ${CC}
 endif

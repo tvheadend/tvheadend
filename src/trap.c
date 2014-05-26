@@ -20,7 +20,7 @@
 
 char tvh_binshasum[20];
 
-#if defined(__i386__) || defined(__x86_64__)
+#if (defined(__i386__) || defined(__x86_64__)) && !defined(PLATFORM_DARWIN)
 
 // Only do this on x86 for now
 
@@ -311,6 +311,26 @@ trap_init(const char *ver)
   sigaction(SIGILL,  &sa, &old);
   sigaction(SIGABRT, &sa, &old);
   sigaction(SIGFPE,  &sa, &old);
+
+  sigprocmask(SIG_UNBLOCK, &m, NULL);
+}
+
+#elif defined(PLATFORM_DARWIN)
+
+#include <string.h>
+#include <signal.h>
+
+void
+trap_init(const char *ver)
+{
+  sigset_t m;
+
+  sigemptyset(&m);
+  sigaddset(&m, SIGSEGV);
+  sigaddset(&m, SIGBUS);
+  sigaddset(&m, SIGILL);
+  sigaddset(&m, SIGABRT);
+  sigaddset(&m, SIGFPE);
 
   sigprocmask(SIG_UNBLOCK, &m, NULL);
 }

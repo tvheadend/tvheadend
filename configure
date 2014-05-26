@@ -72,6 +72,16 @@ check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
 
+if check_cc '
+#if !defined(__clang__)
+#error this is not clang
+#endif
+'; then
+  COMPILER=clang
+else
+  COMPILER=gcc
+fi
+
 check_cc_snippet getloadavg '#include <stdlib.h> 
 void test() { getloadavg(NULL,0); }'
 
@@ -145,6 +155,13 @@ elif check_pkg openssl || check_pkg libssl; then
   enable ssl
 else
   die "SSL development support not found"
+fi
+
+#
+# OS X
+#
+if [ ${PLATFORM} = "darwin" ]; then
+  disable linuxdvb
 fi
 
 #
@@ -296,7 +313,7 @@ fi
 #
 # kqueue
 #
-if [ ${PLATFORM} = "freebsd" ]; then
+if [ ${PLATFORM} = "freebsd" ] || [ ${PLATFORM} = "darwin" ]; then
   enable kqueue
 fi
 

@@ -31,30 +31,30 @@ typedef struct uuid {
     uint8_t bin[UUID_BIN_SIZE];
     char    hex[UUID_HEX_SIZE];
   };
-} uuid_t;
+} tvh_uuid_t;
 
 /* Initialise subsystem */
 void uuid_init ( void );
 
 /* Initialise binary */
-int uuid_init_bin ( uuid_t *u, const char *str );
+int uuid_init_bin ( tvh_uuid_t *u, const char *str );
 
 /* Initialise hex string */
-int uuid_init_hex ( uuid_t *u, const char *str );
+int uuid_init_hex ( tvh_uuid_t *u, const char *str );
 
 /**
  * Convert bin to hex string
  *
  * Note: conversion is done such that a and b can be the same
  */
-int uuid_bin2hex  ( const uuid_t *a, uuid_t *b );
+int uuid_bin2hex  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 
 /**
  * Convert hex string to bin (in place)
  *
  * Note: conversion is done such that a and b can be the same
  */
-int uuid_hex2bin  ( const uuid_t *a, uuid_t *b );
+int uuid_hex2bin  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 
 /**
  * Hex string to binary
