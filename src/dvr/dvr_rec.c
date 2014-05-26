@@ -141,7 +141,7 @@ cleanup_filename(char *s, dvr_config_t *cfg)
 
   /* Do not create hidden files */
   if (s[0] == '.')
-    s[0] = '-';
+    s[0] = '_';
 
   for (i = 0, len = strlen(s); i < len; i++) {
 
@@ -155,7 +155,7 @@ cleanup_filename(char *s, dvr_config_t *cfg)
     else if((dvr_flags & DVR_CLEAN_TITLE) &&
             ((s[i] < 32) || (s[i] > 122) ||
              (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
-      s[i] = '-';
+      s[i] = '_';
   }
 
   return s;

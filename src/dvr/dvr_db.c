@@ -188,7 +188,6 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
-  int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
@@ -235,19 +234,6 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
                                   outlen - strlen(output),
                                   ".", "S%02d", NULL, "E%02d", NULL);
     }
-  }
-
-  if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
-        for (i=0;i<strlen(output);i++) {
-                if (
-                        output[i]<32 ||
-                        output[i]>122 ||
-                        output[i]==34 ||
-                        output[i]==39 ||
-                        output[i]==92 ||
-                        output[i]==58
-                        ) output[i]='_';
-        }
   }
 }
 
