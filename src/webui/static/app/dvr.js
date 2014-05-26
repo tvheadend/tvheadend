@@ -14,7 +14,6 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
         ['unimportant', 'Unimportant']]
 });
 
-
 //For the container configuration
 tvheadend.containers = new Ext.data.JsonStore({
     autoLoad: true,
@@ -38,7 +37,6 @@ tvheadend.caches = new Ext.data.JsonStore({
         op: 'list'
     }
 });
-
 
 /**
  * Configuration names
@@ -359,7 +357,6 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
                     text: 'Create',
                     handler: createRecording
                 }]
-
         });
 
         win = new Ext.Window({
@@ -386,6 +383,42 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
     }
     ;
 
+    /* Create combobox to allow user to select page size for upcoming/completed/failed recordings */
+
+    var itemPageCombo = new Ext.form.ComboBox({
+        name : 'itemsperpage',
+        width: 50,
+        mode : 'local',
+        store: new Ext.data.ArrayStore({
+            fields: ['perpage'],
+            data  : [['10'],['20'],['30'],['40'],['50'],['60'],['70'],['80'],['90'],['100']]
+        }),
+        value : '20',
+        listWidth : 40,
+        triggerAction : 'all',
+        displayField : 'perpage',
+        valueField : 'perpage',
+        editable : true,
+        forceSelection : true,
+        listeners : {
+            scope: this,
+            'select' : function(combo, record) {
+                bbar.pageSize = parseInt(record.get('perpage'), 10);
+                bbar.doLoad(bbar.cursor);
+            }
+        }
+    });
+
+    /* Bottom toolbar to include default previous/goto-page/next and refresh buttons, also number-of-items combobox */
+    
+    var bbar = new Ext.PagingToolbar({
+        store : dvrStore,
+        displayInfo : true,
+        items : ['-','Recordings per page: ',itemPageCombo],
+        displayMsg : 'Programs {0} - {1} of {2}',
+        emptyMsg : "No programs to display"
+    });
+
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
         stripeRows: true,
@@ -409,14 +442,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
                     new tvheadend.help('Digital Video Recorder', 'dvrlog.html');
                 }
             }],
-        bbar: new Ext.PagingToolbar({
-            store: dvrStore,
-            pageSize: 20,
-            displayInfo: true,
-            displayMsg: 'Programs {0} - {1} of {2}',
-            emptyMsg: "No programs to display"
-        })
-
+        bbar: bbar
     });
 
     panel.on('rowclick', rowclicked);
@@ -435,7 +461,6 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
  */
 tvheadend.autoreceditor = function() {
     var fm = Ext.form;
-
 
     var cm = new Ext.grid.ColumnModel({
         defaultSortable: true,
@@ -938,7 +963,6 @@ tvheadend.dvrsettings = function() {
         name: 'whitespaceInTitle'
     });
 
-
     /* Sub-Panel - DVR behaviour */
 
     var DVRBehaviour = new Ext.form.FieldSet({
@@ -946,6 +970,7 @@ tvheadend.dvrsettings = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
+        animCollapse: true,
         items: [recordingContainer, cacheScheme, logRetention, timeBefore, timeAfter, postProcessing]
     });
 
@@ -956,6 +981,7 @@ tvheadend.dvrsettings = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
+        animCollapse: true,
         items: [recordingPath, recordingPermissions, PATrewrite, PMTrewrite, tagMetadata, skipCommercials]
     });
 
@@ -966,18 +992,37 @@ tvheadend.dvrsettings = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
+        animCollapse: true,
         items: [directoryPermissions, dirsPerDay, dirsPerChannel, dirsPerTitle]
     });
 
-    /* Sub-Panel - File operations */
+    /* Sub-Panel - File operations - Break into two 4-item panels */
+
+    var FileHandlingPanelA = new Ext.form.FieldSet({
+        width: 350,
+        border: false,
+        autoHeight: true,
+        items : [incChannelInTitle, incDateInTitle, incTimeInTitle, incEpisodeInTitle]
+    });
+
+    var FileHandlingPanelB = new Ext.form.FieldSet({
+        width: 350,
+        border: false,
+        autoHeight: true,
+        items : [incSubtitleInTitle, episodeFirst, stripUnsafeChars, stripWhitespace]
+    });
 
     var FileHandlingPanel = new Ext.form.FieldSet({
         title: 'Filename Options',
         width: 700,
         autoHeight: true,
         collapsible: true,
-        items: [incChannelInTitle, incDateInTitle, incTimeInTitle, incEpisodeInTitle,
-            incSubtitleInTitle, episodeFirst, stripUnsafeChars, stripWhitespace]
+        animCollapse : true,
+        items : [{
+            layout: 'column',
+            border: false,
+            items : [FileHandlingPanelA, FileHandlingPanelB] 
+        }]
     });
 
     /* Main (form) panel */
@@ -990,6 +1035,7 @@ tvheadend.dvrsettings = function() {
         anchor: '100% 50%',
         labelAlign: 'right',
         labelWidth: 250,
+        autoScroll: true,
         waitMsgTarget: true,
         reader: confreader,
         defaultType: 'textfield',

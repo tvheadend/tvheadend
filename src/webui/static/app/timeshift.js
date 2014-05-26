@@ -47,9 +47,9 @@ tvheadend.timeshift = function() {
     });
 
     var timeshiftUnlPeriod = new Ext.form.Checkbox({
-        fieldLabel: '&nbsp;&nbsp;&nbsp;(unlimited)',
+        fieldLabel: 'Unlimited time',
         name: 'timeshift_unlimited_period',
-        Width: 300
+        width: 300
     });
 
     var timeshiftMaxSize = new Ext.form.NumberField({
@@ -60,19 +60,20 @@ tvheadend.timeshift = function() {
     });
 
     var timeshiftUnlSize = new Ext.form.Checkbox({
-        fieldLabel: '&nbsp;&nbsp;&nbsp;(unlimited)',
+        fieldLabel: 'Unlimited size',
         name: 'timeshift_unlimited_size',
-        Width: 300
+        width: 300
     });
 
     /* ****************************************************************
      * Events
      * ***************************************************************/
 
-    timeshiftUnlPeriod.on('check', function(e, c) {
+    timeshiftUnlPeriod.on('check', function(e, c){
         timeshiftMaxPeriod.setDisabled(c);
     });
-    timeshiftUnlSize.on('check', function(e, c) {
+
+    timeshiftUnlSize.on('check', function(e, c){
         timeshiftMaxSize.setDisabled(c);
     });
 
@@ -94,25 +95,53 @@ tvheadend.timeshift = function() {
         }
     });
 
-    var confpanel = new Ext.FormPanel({
-        title: 'Timeshift',
-        iconCls: 'clock',
-        border: false,
-        bodyStyle: 'padding:15px',
-        labelAlign: 'left',
-        labelWidth: 150,
-        waitMsgTarget: true,
-        reader: confreader,
-        layout: 'form',
-        defaultType: 'textfield',
+    var timeshiftPanelA = new Ext.form.FieldSet({
+        width: 500,
         autoHeight: true,
-        items: [
-            timeshiftEnabled, timeshiftOndemand,
+        border: false,
+  	    items : [timeshiftMaxPeriod, timeshiftMaxSize]
+    });
+
+    var timeshiftPanelB = new Ext.form.FieldSet({
+        width: 200,
+        autoHeight: true,
+        border: false,
+        items : [timeshiftUnlPeriod,timeshiftUnlSize]
+    });
+
+    var timeshiftPanel = new Ext.form.FieldSet({
+        title: 'Timeshift Options',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items : [
+            timeshiftEnabled, 
+            timeshiftOndemand, 
             timeshiftPath,
-            timeshiftMaxPeriod, timeshiftUnlPeriod,
-            timeshiftMaxSize, timeshiftUnlSize
-        ],
-        tbar: [saveButton, '->', helpButton]
+            {
+                layout: 'column', 
+                border: false,
+                items: [timeshiftPanelA, timeshiftPanelB]
+            }	
+        ]
+    });
+
+    var confpanel = new Ext.form.FormPanel({
+        title : 'Timeshift',
+        iconCls : 'clock',
+        border : false,
+        bodyStyle : 'padding:15px',
+        labelAlign : 'left',
+        labelWidth : 150,
+        waitMsgTarget : true,
+        reader : confreader,
+        layout : 'form',
+        defaultType : 'textfield',
+        autoHeight : true,
+        animCollapse : true,
+    	items : [timeshiftPanel],
+        tbar : [saveButton, '->', helpButton]
     });
 
     /* ****************************************************************

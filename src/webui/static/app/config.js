@@ -34,8 +34,9 @@ tvheadend.comet.on('config', function(m) {
 tvheadend.miscconf = function() {
 
     /*
-     * Basic Config
-     */
+    * Basic Config
+    */
+
     var confreader = new Ext.data.JsonReader({
         root: 'config'
     },
@@ -46,12 +47,12 @@ tvheadend.miscconf = function() {
     ]);
 
     /* ****************************************************************
-     * Form Fields
-     * ***************************************************************/
+    * Form Fields
+    * ***************************************************************/
 
     /*
-     * DVB path
-     */
+    * DVB path
+    */
 
     var dvbscanPath = new Ext.form.TextField({
         fieldLabel: 'DVB scan files path',
@@ -60,9 +61,18 @@ tvheadend.miscconf = function() {
         width: 400
     });
 
+    var dvbscanWrap = new Ext.form.FieldSet({
+        title: 'DVB Scan Files',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items : [ dvbscanPath ]
+    });
+
     /*
-     * Language
-     */
+    * Language
+    */
 
     var language = new Ext.ux.ItemSelector({
         name: 'language',
@@ -79,9 +89,19 @@ tvheadend.miscconf = function() {
         fromLegend: 'Available'
     });
 
+    var languageWrap = new Ext.form.FieldSet({
+        title: 'Language Settings',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items : [ language ]
+    });
+
     /*
-     * Time/Date
-     */
+    * Time/Date
+    */
+
     var tvhtimeUpdateEnabled = new Ext.form.Checkbox({
         name: 'tvhtime_update_enabled',
         fieldLabel: 'Update time'
@@ -102,12 +122,14 @@ tvheadend.miscconf = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
+        animCollapse: true,
         items: [tvhtimeUpdateEnabled, tvhtimeNtpEnabled, tvhtimeTolerance]
     });
 
     /*
-     * Image cache
-     */
+    * Image cache
+    */
+
     if (tvheadend.capabilities.indexOf('imagecache') !== -1) {
         var imagecache_reader = new Ext.data.JsonReader({
             root: 'entries'
@@ -141,6 +163,7 @@ tvheadend.miscconf = function() {
             width: 700,
             autoHeight: true,
             collapsible: true,
+            animCollapse: true,
             items: [imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
                 imagecacheIgnoreSSLCert]
         });
@@ -161,8 +184,9 @@ tvheadend.miscconf = function() {
     }
 
     /*
-     * Transcoding
-     */
+    * Transcoding
+    */
+
     var transcodingEnabled = new Ext.form.Checkbox({
         name: 'transcoding_enabled',
         fieldLabel: 'Enabled'
@@ -173,15 +197,17 @@ tvheadend.miscconf = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
+        animCollapse: true,
         items: [transcodingEnabled]
     });
+
     if (tvheadend.capabilities.indexOf('transcoding') === -1)
         transcodingPanel.hide();
 
 
     /* ****************************************************************
-     * Form
-     * ***************************************************************/
+    * Form
+    * ***************************************************************/
 
     var saveButton = new Ext.Button({
         text: "Save configuration",
@@ -206,18 +232,19 @@ tvheadend.miscconf = function() {
         layout: 'form',
         defaultType: 'textfield',
         autoHeight: true,
-        items: [language, dvbscanPath,
-            tvhtimePanel,
-            transcodingPanel]
+        items: [languageWrap, dvbscanWrap, tvhtimePanel, transcodingPanel]
     });
 
     var _items = [confpanel];
+
     if (imagecache_form)
         _items.push(imagecache_form);
+
     var panel = new Ext.Panel({
         title: 'General',
         iconCls: 'wrench',
         border: false,
+        autoScroll: true,
         bodyStyle: 'padding:15px',
         layout: 'form',
         items: _items,
@@ -225,8 +252,8 @@ tvheadend.miscconf = function() {
     });
 
     /* ****************************************************************
-     * Load/Save
-     * ***************************************************************/
+    * Load/Save
+    * ***************************************************************/
 
     confpanel.on('render', function() {
         confpanel.getForm().load({
