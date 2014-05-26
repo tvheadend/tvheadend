@@ -88,7 +88,11 @@ def parse_sat(node):
   fp.close()
 
 if len(sys.argv) < 3:
-  print('Usage: %s satellite.xml /output/directory/path')
+  if len(sys.argv) != 1:
+    usage = 'python sat_xml_scan.py'
+  else:
+    usage = sys.argv[0]
+  print('Usage: %s satellite.xml /output/directory/path' % usage)
   sys.exit(0)
 
 DIR = sys.argv[2]
