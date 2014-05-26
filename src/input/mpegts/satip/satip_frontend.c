@@ -1332,7 +1332,7 @@ satip_frontend_create
     override = htsmsg_get_str(conf, id);
     if (override) {
       i = dvb_str2type(override);
-      if ((i == DVB_TYPE_T || i == DVB_TYPE_C || DVB_TYPE_S) && i != type)
+      if ((i == DVB_TYPE_T || i == DVB_TYPE_C || i == DVB_TYPE_S) && i != type)
         type = i;
       else
         override = NULL;
