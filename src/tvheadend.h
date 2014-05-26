@@ -500,6 +500,20 @@ int tvh_str_update(char **strp, const char *src);
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
 
+#ifdef PLATFORM_DARWIN
+#define CLOCK_MONOTONIC 0 
+#define CLOCK_REALTIME 0
+
+static inline int clock_gettime(int clk_id, struct timespec* t) {
+    struct timeval now;
+    int rv = gettimeofday(&now, NULL);
+    if (rv) return rv;
+    t->tv_sec  = now.tv_sec;
+    t->tv_nsec = now.tv_usec * 1000;
+    return 0;
+}
+#endif
+
 static inline int64_t 
 getmonoclock(void)
 {
@@ -677,8 +691,13 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #endif
 #define PRIslongword_t  "ld"
 #define PRIulongword_t  "lu"
+#if defined(PLATFORM_DARWIN)
+#define PRIsize_t       PRIulongword_t
+#define PRIssize_t      PRIslongword_t
+#else
 #define PRIsize_t       PRIuword_t
 #define PRIssize_t      PRIsword_t
+#endif
 #if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
 #define PRItime_t       PRIsword_t
 #else

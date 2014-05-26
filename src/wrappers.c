@@ -109,6 +109,8 @@ thread_wrapper ( void *p )
 #elif defined(PLATFORM_FREEBSD)
   /* Set name of thread */
   pthread_set_name_np(pthread_self(), ts->name);
+#elif defined(PLATFORM_DARWIN)
+  pthread_setname_np(ts->name);
 #endif
 
   sigemptyset(&set);

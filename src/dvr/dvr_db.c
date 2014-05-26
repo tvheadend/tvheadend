@@ -29,6 +29,7 @@
 #include "notify.h"
 #include "htsp_server.h"
 #include "streaming.h"
+#include "intlconv.h"
 
 static int de_tally;
 
@@ -166,12 +167,27 @@ dvr_entry_notify(dvr_entry_t *de)
 /**
  *
  */
+static void
+dvr_charset_update(dvr_config_t *cfg, const char *charset)
+{
+  const char *s, *id;
+
+  free(cfg->dvr_charset);
+  free(cfg->dvr_charset_id);
+  s = charset ? charset : "ASCII";
+  id = intlconv_charset_id(s, 1, 1);
+  cfg->dvr_charset = strdup(s);
+  cfg->dvr_charset_id = id ? strdup(id) : NULL;
+}
+
+/**
+ *
+ */
 void
 dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
-  int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
@@ -218,19 +234,6 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
                                   outlen - strlen(output),
                                   ".", "S%02d", NULL, "E%02d", NULL);
     }
-  }
-
-  if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
-        for (i=0;i<strlen(output);i++) {
-                if (
-                        output[i]<32 ||
-                        output[i]>122 ||
-                        output[i]==34 ||
-                        output[i]==39 ||
-                        output[i]==92 ||
-                        output[i]==58
-                        ) output[i]='_';
-        }
   }
 }
 
@@ -1190,7 +1193,9 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "episode-before-date", &u32) && u32)
         cfg->dvr_flags |= DVR_EPISODE_BEFORE_DATE;
 
-		tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
+      dvr_charset_update(cfg, htsmsg_get_str(m, "charset"));
+
+      tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
     htsmsg_destroy(l);
@@ -1245,6 +1250,8 @@ dvr_done(void)
   pthread_mutex_lock(&global_lock);
   while ((cfg = LIST_FIRST(&dvrconfigs)) != NULL) {
     LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_charset_id);
+    free(cfg->dvr_charset);
     free(cfg->dvr_storage);
     free(cfg->dvr_config_name);
     free(cfg);
@@ -1314,6 +1321,7 @@ dvr_config_create(const char *name)
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
+  dvr_charset_update(cfg, "ASCII");
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
@@ -1359,6 +1367,9 @@ dvr_config_delete(const char *name)
         cfg->dvr_config_name);
     hts_settings_remove("dvr/config%s", cfg->dvr_config_name);
     LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_charset_id);
+    free(cfg->dvr_charset);
+    free(cfg->dvr_storage);
     free(cfg->dvr_config_name);
     free(cfg);
 
@@ -1409,7 +1420,9 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   htsmsg_add_u32(m, "subtitle-in-title", !!(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE));
   htsmsg_add_u32(m, "episode-before-date", !!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE));
-  if(cfg->dvr_postproc != NULL)
+  if (cfg->dvr_charset != NULL)
+    htsmsg_add_str(m, "charset", cfg->dvr_charset);
+  if (cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 
   hts_settings_save(m, "dvr/config%s", cfg->dvr_config_name);
@@ -1428,6 +1441,19 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
     return;
 
   tvh_str_set(&cfg->dvr_storage, storage);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_charset_set(dvr_config_t *cfg, const char *charset)
+{
+  if(cfg->dvr_charset != NULL && !strcmp(cfg->dvr_charset, charset))
+    return;
+
+  dvr_charset_update(cfg, charset);
   dvr_save(cfg);
 }
 

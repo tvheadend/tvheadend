@@ -103,9 +103,9 @@ uuid_init ( void )
 
 /* Initialise binary */
 int
-uuid_init_bin ( uuid_t *u, const char *str )
+uuid_init_bin ( tvh_uuid_t *u, const char *str )
 {
-  memset(u, 0, sizeof(uuid_t));
+  memset(u, 0, sizeof(tvh_uuid_t));
   if (str) {
     return hex2bin(u->bin, sizeof(u->bin), str);
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
@@ -117,9 +117,9 @@ uuid_init_bin ( uuid_t *u, const char *str )
 
 /* Initialise hex string */
 int
-uuid_init_hex ( uuid_t *u, const char *str )
+uuid_init_hex ( tvh_uuid_t *u, const char *str )
 {
-  uuid_t tmp;
+  tvh_uuid_t tmp;
   if (uuid_init_bin(&tmp, str))
     return 1;
   return uuid_bin2hex(&tmp, u);
@@ -127,9 +127,9 @@ uuid_init_hex ( uuid_t *u, const char *str )
 
 /* Convert bin to hex string */
 int
-uuid_bin2hex ( const uuid_t *a, uuid_t *b )
+uuid_bin2hex ( const tvh_uuid_t *a, tvh_uuid_t *b )
 {
-  uuid_t tmp;
+  tvh_uuid_t tmp;
   memset(&tmp, 0, sizeof(tmp));
   bin2hex(tmp.hex, sizeof(tmp.hex), a->bin, sizeof(a->bin));
   memcpy(b, &tmp, sizeof(tmp));
@@ -138,9 +138,9 @@ uuid_bin2hex ( const uuid_t *a, uuid_t *b )
 
 /* Convert hex string to bin (in place) */
 int
-uuid_hex2bin ( const uuid_t *a, uuid_t *b )
+uuid_hex2bin ( const tvh_uuid_t *a, tvh_uuid_t *b )
 { 
-  uuid_t tmp;
+  tvh_uuid_t tmp;
   memset(&tmp, 0, sizeof(tmp));
   if (hex2bin(tmp.bin, sizeof(tmp.bin), a->hex))
     return 1;

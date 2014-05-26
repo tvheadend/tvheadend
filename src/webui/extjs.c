@@ -1127,6 +1127,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
+    htsmsg_add_str(r, "charset", cfg->dvr_charset);
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
 
 /* Convert integer permissions to an octal-format 0xxx string and store it in the config file */
@@ -1174,7 +1175,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if((s = http_arg_get(&hc->hc_req_args, "storage")) != NULL)
       dvr_storage_set(cfg,s);
     
-   if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
+    if((s = http_arg_get(&hc->hc_req_args, "charset")) != NULL)
+      dvr_charset_set(cfg,s);
+
+    if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
       dvr_container_set(cfg,s);
 
 /*
@@ -1182,13 +1186,13 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
  * Note no checking that strtol won't overflow int - this should never happen with three-digit numbers
  */
 
-   if((s = http_arg_get(&hc->hc_req_args, "filePermissions")) != NULL)
+    if((s = http_arg_get(&hc->hc_req_args, "filePermissions")) != NULL)
       dvr_file_permissions_set(cfg,(int)strtol(s,NULL,0));
 
-   if((s = http_arg_get(&hc->hc_req_args, "dirPermissions")) != NULL)
+    if((s = http_arg_get(&hc->hc_req_args, "dirPermissions")) != NULL)
       dvr_directory_permissions_set(cfg,(int)strtol(s,NULL,0));
    
-   if((s = http_arg_get(&hc->hc_req_args, "cache")) != NULL)
+    if((s = http_arg_get(&hc->hc_req_args, "cache")) != NULL)
       dvr_mux_cache_set(cfg,atoi(s));
 
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
@@ -1197,11 +1201,11 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
       dvr_retention_set(cfg,atoi(s));
 
-   if((s = http_arg_get(&hc->hc_req_args, "preExtraTime")) != NULL)
-     dvr_extra_time_pre_set(cfg,atoi(s));
+    if((s = http_arg_get(&hc->hc_req_args, "preExtraTime")) != NULL)
+      dvr_extra_time_pre_set(cfg,atoi(s));
 
-   if((s = http_arg_get(&hc->hc_req_args, "postExtraTime")) != NULL)
-     dvr_extra_time_post_set(cfg,atoi(s));
+    if((s = http_arg_get(&hc->hc_req_args, "postExtraTime")) != NULL)
+      dvr_extra_time_post_set(cfg,atoi(s));
 
     if(http_arg_get(&hc->hc_req_args, "dayDirs") != NULL)
       flags |= DVR_DIR_PER_DAY;
@@ -1319,6 +1323,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
     if(de->de_channel != NULL) {
+      htsmsg_add_str(m, "channelid", channel_get_uuid(de->de_channel));
       if (de->de_channel->ch_icon)
         htsmsg_add_imageurl(m, "chicon", "imagecache/%d",
                             de->de_channel->ch_icon);
