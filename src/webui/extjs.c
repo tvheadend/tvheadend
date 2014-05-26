@@ -150,7 +150,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tvadapters.js");
   extjs_load(hq, "static/app/idnode.js");
   extjs_load(hq, "static/app/esfilter.js");
-#if ENABLE_LINUXDVB
+#if ENABLE_MPEGTS
   extjs_load(hq, "static/app/mpegts.js");
 #endif
   extjs_load(hq, "static/app/iptv.js");
