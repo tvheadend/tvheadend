@@ -1323,6 +1323,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
     if(de->de_channel != NULL) {
+      htsmsg_add_str(m, "channelid", channel_get_uuid(de->de_channel));
       if (de->de_channel->ch_icon)
         htsmsg_add_imageurl(m, "chicon", "imagecache/%d",
                             de->de_channel->ch_icon);
