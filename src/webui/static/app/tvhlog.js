@@ -12,7 +12,7 @@ tvheadend.tvhlog = function() {
      * ***************************************************************/
 
     var tvhlogLogPath = new Ext.form.TextField({
-        fieldLabel: 'Debug Log Path',
+        fieldLabel: 'Debug log path',
         name: 'tvhlog_path',
         allowBlank: true,
         width: 400
@@ -29,14 +29,14 @@ tvheadend.tvhlog = function() {
     });
 
     var tvhlogDebugSubsys = new Ext.form.TextField({
-        fieldLabel: 'Debug Subsystems',
+        fieldLabel: 'Debug subsystems',
         name: 'tvhlog_debug',
         allowBlank: true,
         width: 400
     });
 
     var tvhlogTraceSubsys = new Ext.form.TextField({
-        fieldLabel: 'Trace Subsystems',
+        fieldLabel: 'Trace subsystems',
         name: 'tvhlog_trace',
         allowBlank: true,
         width: 400
@@ -60,6 +60,16 @@ tvheadend.tvhlog = function() {
         }
     });
 
+    var DebuggingPanel = new Ext.form.FieldSet({
+        title: 'Debugging Options',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse : true,
+        items: [tvhlogLogPath, tvhlogToSyslog,
+            tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys]
+    });
+
     var confpanel = new Ext.form.FormPanel({
         title: 'Debugging',
         iconCls: 'wrench',
@@ -72,8 +82,7 @@ tvheadend.tvhlog = function() {
         layout: 'form',
         defaultType: 'textfield',
         autoHeight: true,
-        items: [tvhlogLogPath, tvhlogToSyslog,
-            tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys],
+        items: [DebuggingPanel],
         tbar: [saveButton, '->', helpButton]
     });
 

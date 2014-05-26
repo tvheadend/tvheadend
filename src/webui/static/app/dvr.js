@@ -204,16 +204,19 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 250,
             id: 'title',
             header: "Title",
+            sortable: true,
             dataIndex: 'title'
         }, {
             width: 100,
             id: 'episode',
             header: "Episode",
+            sortable: true,
             dataIndex: 'episode'
         }, {
             width: 100,
             id: 'pri',
             header: "Priority",
+            sortable: true,
             dataIndex: 'pri',
             renderer: renderPri,
             hidden: iconCls !== 'clock'
@@ -221,6 +224,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 100,
             id: 'start',
             header: iconCls === 'clock' ? "Start" : "Date/Time",
+            sortable: true,
             dataIndex: 'start',
             renderer: renderDate
         }, {
@@ -228,18 +232,21 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             hidden: true,
             id: 'end',
             header: "End",
+            sortable: true,
             dataIndex: 'end',
             renderer: renderDate
         }, {
             width: 100,
             id: 'duration',
             header: "Duration",
+            sortable: true,
             dataIndex: 'duration',
             renderer: renderDuration
         }, {
             width: 100,
             id: 'filesize',
             header: "Filesize",
+            sortable: true,
             dataIndex: 'filesize',
             renderer: renderSize,
             hidden: iconCls !== 'television'
@@ -247,17 +254,20 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 250,
             id: 'channel',
             header: "Channel",
+            sortable: true,
             dataIndex: 'channel'
         }, {
             width: 200,
             id: 'creator',
             header: "Created by",
+            sortable: true,
             hidden: true,
             dataIndex: 'creator'
         }, {
             width: 200,
             id: 'config_name',
             header: "DVR Configuration",
+            sortable: true,
             renderer: function(value, metadata, record, row, col, store) {
                 if (!value) {
                     return '<span class="tvh-grid-unset">(default)</span>';
@@ -272,6 +282,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 200,
             id: 'status',
             header: "Status",
+            sortable: true,
             dataIndex: 'status',
             hidden: iconCls !== 'exclamation'
         }]);
@@ -684,8 +695,7 @@ tvheadend.dvr = function() {
                 }],
             url: url,
             autoLoad: true,
-            id: 'id',
-            remoteSort: true
+            id: 'id'
         });
     }
     tvheadend.dvrStoreUpcoming = datastoreBuilder('dvrlist_upcoming');
