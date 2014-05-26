@@ -819,7 +819,7 @@ tvheadend.dvrsettings = function() {
         displayField: 'description',
         valueField: 'name',
         editable: false,
-        width: 200,
+        width: 350,
         hiddenName: 'container'
     });
 
@@ -830,7 +830,7 @@ tvheadend.dvrsettings = function() {
         displayField: 'description',
         valueField: 'index',
         editable: false,
-        width: 200,
+        width: 350,
         hiddenName: 'cache'
     });
 
@@ -863,7 +863,7 @@ tvheadend.dvrsettings = function() {
     /* Recording File Options */
 
     var recordingPath = new Ext.form.TextField({
-        width: 300,
+        width: 350,
         fieldLabel: 'Recording system path',
         name: 'storage'
     });
@@ -873,7 +873,7 @@ tvheadend.dvrsettings = function() {
     var recordingPermissions = new Ext.form.TextField({
         regex: /^[0][0-7]{3}$/,
         maskRe: /[0-7]/,
-        width: 100,
+        width: 125,
         allowBlank: false,
         blankText: 'You must provide a value - use octal chmod notation, e.g. 0664',
         fieldLabel: 'File permissions (octal, e.g. 0664)',
@@ -909,7 +909,7 @@ tvheadend.dvrsettings = function() {
     var directoryPermissions = new Ext.form.TextField({
         regex: /^[0][0-7]{3}$/,
         maskRe: /[0-7]/,
-        width: 100,
+        width: 125,
         allowBlank: false,
         blankText: 'You must provide a value - use octal chmod notation, e.g. 0775',
         fieldLabel: 'Directory permissions (octal, e.g. 0775)',
@@ -1044,7 +1044,7 @@ tvheadend.dvrsettings = function() {
         bodyStyle: 'padding:15px',
         anchor: '100% 50%',
         labelAlign: 'right',
-        labelWidth: 250,
+        labelWidth: 300,
         autoScroll: true,
         waitMsgTarget: true,
         reader: confreader,
