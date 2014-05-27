@@ -413,20 +413,20 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         width: 50,
         mode : 'local',
         store: new Ext.data.ArrayStore({
-            fields: ['perpage'],
-            data  : [['10'],['20'],['30'],['40'],['50'],['60'],['70'],['80'],['90'],['100']]
+            fields: ['perpage','value'],
+            data  : [['10',10],['20',20],['30',30],['40',40],['50',50],['75',75],['100',100],['All',9999999999]]
         }),
         value : '20',
         listWidth : 40,
         triggerAction : 'all',
         displayField : 'perpage',
-        valueField : 'perpage',
+        valueField : 'value',
         editable : true,
         forceSelection : true,
         listeners : {
             scope: this,
             'select' : function(combo, record) {
-                bbar.pageSize = parseInt(record.get('perpage'), 10);
+                bbar.pageSize = parseInt(record.get('value'), 10);
                 bbar.doLoad(bbar.cursor);
             }
         }
