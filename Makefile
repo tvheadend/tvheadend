@@ -35,6 +35,8 @@ CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 LDFLAGS += -ldl -lpthread -lm
 ifneq ($(PLATFORM), darwin)
 LDFLAGS += -lrt
+else
+LDFLAGS += -liconv
 endif
 
 ifeq ($(COMPILER), clang)
