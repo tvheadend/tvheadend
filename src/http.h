@@ -260,6 +260,8 @@ struct http_client {
   int          hc_in_data:1;
   int          hc_chunked:1;
   int          hc_chunk_trails:1;
+  int          hc_running:1;
+  int          hc_shutdown_wait:1;
   int          hc_handle_location:1; /* handle the redirection (location) requests */
 
   http_client_wcmd_t            *hc_wcmd;

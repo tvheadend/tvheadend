@@ -75,6 +75,7 @@ static int                      http_running;
 static tvhpoll_t               *http_poll;
 static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
+static pthread_cond_t           http_cond;
 static th_pipe_t                http_pipe;
 
 /*
@@ -122,9 +123,14 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
     memset(&ev, 0, sizeof(ev));
     ev.fd       = hc->hc_fd;
     tvhpoll_rem(efd = hc->hc_efd, &ev, 1);
-    if (hc->hc_efd == http_poll && !reconnect)
+    if (hc->hc_efd == http_poll && !reconnect) {
+      pthread_mutex_lock(&http_lock);
       TAILQ_REMOVE(&http_clients, hc, hc_link);
-    hc->hc_efd  = NULL;
+      hc->hc_efd = NULL;
+      pthread_mutex_unlock(&http_lock);
+    } else {
+      hc->hc_efd  = NULL;
+    }
   }
   if (hc->hc_fd >= 0) {
     if (hc->hc_conn_closed)
@@ -1119,7 +1125,22 @@ http_client_thread ( void *p )
       TAILQ_FOREACH(hc, &http_clients, hc_link)
         if (hc == ev.data.ptr)
           break;
+      if (hc == NULL || hc->hc_shutdown_wait) {
+        if (hc->hc_shutdown_wait) {
+          pthread_cond_broadcast(&http_cond);
+          /* Disable the poll looping for this moment */
+          http_client_poll_dir(hc, 0, 0);
+        }
+        pthread_mutex_unlock(&http_lock);
+        continue;
+      }
+      hc->hc_running = 1;
+      pthread_mutex_unlock(&http_lock);
       http_client_run(hc);
+      pthread_mutex_lock(&http_lock);
+      hc->hc_running = 0;
+      if (hc->hc_shutdown_wait)
+        pthread_cond_broadcast(&http_cond);
       pthread_mutex_unlock(&http_lock);
     }
   }
@@ -1260,6 +1281,9 @@ http_client_register( http_client_t *hc )
 
 /*
  * Cancel
+ *
+ * This function is not allowed to be called inside the callbacks for
+ * registered clients to the http_client_thread .
  */
 void
 http_client_close ( http_client_t *hc )
@@ -1269,10 +1293,15 @@ http_client_close ( http_client_t *hc )
   if (hc == NULL)
     return;
 
-  pthread_mutex_lock(&http_lock);
+  if (hc->hc_efd == http_poll) { /* http_client_thread */
+    pthread_mutex_lock(&http_lock);
+    hc->hc_shutdown_wait = 1;
+    while (hc->hc_running)
+      pthread_cond_wait(&http_cond, &http_lock);
+    pthread_mutex_unlock(&http_lock);
+  }
   http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
-  pthread_mutex_unlock(&http_lock);
   while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
@@ -1298,6 +1327,7 @@ http_client_init ( void )
 
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
+  pthread_cond_init(&http_cond, NULL);
   TAILQ_INIT(&http_clients);
 
   /* Setup pipe */
