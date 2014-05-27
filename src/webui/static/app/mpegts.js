@@ -118,7 +118,7 @@ tvheadend.show_service_streams = function(data) {
     }
 
     function header( ) {
-        html += '<table style="font-size:8pt;font-family:mono;padding:2px"';
+        html += '<table style="font-size:8pt;font-family:monospace;padding:2px"';
         html += '<tr>';
         html += '<th style="width:50px;font-weight:bold">Index</th>';
         html += '<th style="width:120px;font-weight:bold">PID</th>';
@@ -204,7 +204,7 @@ tvheadend.services = function(panel)
             mapButton.setText('Map All');
     };
     var actions = new Ext.ux.grid.RowActions({
-        header: '',
+        header: 'Details',
         width: 10,
         actions: [{
                 iconCls: 'info',
