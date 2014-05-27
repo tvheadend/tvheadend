@@ -33,7 +33,7 @@ CFLAGS  += -g -funsigned-char -O2
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 LDFLAGS += -ldl -lpthread -lm
-ifeq ($(LIBICONV),yes)
+ifeq ($(CONFIG_LIBICONV),yes)
 LDFLAGS += -liconv
 endif
 ifneq ($(PLATFORM), darwin)
