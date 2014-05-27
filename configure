@@ -134,6 +134,16 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet libiconv '
+#include <iconv.h>
+int test(void)
+{
+  iconv_t ic = iconv_open("ASCII", "ASCII");
+  return 0;
+}
+' -liconv
+
 #
 # Python
 #
