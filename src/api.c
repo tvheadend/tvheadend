@@ -68,7 +68,7 @@ api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp )
   const char *op;
 
   /* Args and response must be set */
-  if (!args || !resp)
+  if (!args || !resp || !subsystem)
     return EINVAL;
 
   // Note: there is no locking while checking the hook tree, its assumed
