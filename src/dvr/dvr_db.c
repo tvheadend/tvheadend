@@ -1321,7 +1321,7 @@ dvr_config_create(const char *name)
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
-  dvr_charset_update(cfg, "ASCII");
+  dvr_charset_update(cfg, intlconv_filesystem_charset());
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
