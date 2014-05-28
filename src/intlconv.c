@@ -34,6 +34,16 @@ intlconv_done( void )
   pthread_mutex_unlock(&intlconv_lock);
 }
 
+const char *
+intlconv_filesystem_charset( void )
+{
+  char *s = getenv("LANG");
+  if (s && strstr(s, ".utf8"))
+    return NULL;
+  /* be safe here */
+  return "ASCII";
+}
+
 static int
 intlconv_cmp ( intlconv_cache_t *a, intlconv_cache_t *b )
 {

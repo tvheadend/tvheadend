@@ -174,7 +174,7 @@ dvr_charset_update(dvr_config_t *cfg, const char *charset)
 
   free(cfg->dvr_charset);
   free(cfg->dvr_charset_id);
-  s = charset ? charset : "ASCII";
+  s = charset ? charset : intlconv_filesystem_charset();
   id = intlconv_charset_id(s, 1, 1);
   cfg->dvr_charset = strdup(s);
   cfg->dvr_charset_id = id ? strdup(id) : NULL;

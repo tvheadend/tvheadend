@@ -23,6 +23,8 @@ extern const char *intlconv_charsets[];
 
 void intlconv_init( void );
 void intlconv_done( void );
+const char *
+intlconv_filesystem_charset( void );
 char *
 intlconv_charset_id( const char *charset,
                      int transil,
