@@ -232,8 +232,9 @@ function accessUpdate(o) {
 
         /* DVB inputs */
         tabs2 = [];
-        if (tvheadend.capabilities.indexOf('linuxdvb') !== -1 ||
-                tvheadend.capabilities.indexOf('v4l') !== -1) {
+        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
+            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
+            tvheadend.capabilities.indexOf('v4l')          !== -1) {
             tabs2.push(new tvheadend.tvadapters);
         }
         /*
