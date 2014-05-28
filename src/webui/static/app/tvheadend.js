@@ -283,15 +283,15 @@ function accessUpdate(o) {
 
         /* CSA */
         if (tvheadend.capabilities.indexOf('cwc') !== -1) {
+            tabs2 = [new tvheadend.cwceditor];
+            if (tvheadend.capabilities.indexOf('linuxdvb') !== -1)
+              tabs2.push(new tvheadend.capmteditor);
             tvheadend.conf_csa = new Ext.TabPanel({
                 activeTab: 0,
                 autoScroll: true,
                 title: 'CSA',
                 iconCls: 'key',
-                items: [
-                    new tvheadend.cwceditor,
-                    new tvheadend.capmteditor
-                ]
+                items: tabs2
             });
             tabs1.push(tvheadend.conf_csa);
         }
