@@ -112,7 +112,6 @@ iptv_rtp_read ( iptv_mux_t *im, size_t *off )
   return len;
 
 ignore:
-  printf("ignore\n");
   im->mm_iptv_buffer.sb_ptr = ptr; // reset
   return len;
 }

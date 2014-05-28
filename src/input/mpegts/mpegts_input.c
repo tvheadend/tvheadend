@@ -375,6 +375,9 @@ static void
 mpegts_input_started_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  /* Deliver first TS packets as fast as possible */
+  mi->mi_last_dispatch = 0;
+
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
     gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer,
@@ -451,11 +454,15 @@ mpegts_input_recv_packets
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data + off;
   int     len  = sb->sb_ptr  - off;
-#define MIN_TS_PKT 10
+#define MIN_TS_PKT 100
 #define MIN_TS_SYN 5
 
-  if (len < (MIN_TS_PKT * 188))
-    return;
+  if (len < (MIN_TS_PKT * 188)) {
+    /* For slow streams, check also against the clock */
+    if (dispatch_clock == mi->mi_last_dispatch)
+      return;
+  }
+  mi->mi_last_dispatch = dispatch_clock;
 
   /* Check for sync */
 // could be a bit more efficient
