@@ -103,6 +103,27 @@ udp_get_ifindex( const char *ifname )
   return r;
 }
 
+#if defined(PLATFORM_DARWIN)
+static int
+udp_get_ifaddr( int fd, const char *ifname, struct in_addr *addr )
+{
+  struct ifreq ifreq;
+
+  if (ifname == NULL || *ifname == '\0')
+    return -1;
+  
+  memset(&ifreq, 0, sizeof(ifreq));
+  strncpy(ifreq.ifr_name, ifname, IFNAMSIZ);
+  
+  if (ioctl(fd, SIOCGIFADDR, &ifreq) < 0)
+    return -1;
+
+  memcpy(addr, &((struct sockaddr_in *) &ifreq.ifr_addr)->sin_addr,
+         sizeof(struct in_addr));
+  return 0;
+}
+#endif
+
 static int
 udp_get_solip( void )
 {
@@ -160,7 +181,11 @@ udp_bind ( const char *subsystem, const char *name,
 
   /* IPv4 */
   if (uc->ip.ss_family == AF_INET) {
+#if defined(PLATFORM_DARWIN)
+    struct ip_mreq       m;
+#else
     struct ip_mreqn      m;
+#endif
     memset(&m,   0, sizeof(m));
 
     /* Bind */
@@ -174,8 +199,16 @@ udp_bind ( const char *subsystem, const char *name,
     if (uc->multicast) {
       /* Join group */
       m.imr_multiaddr      = IP_AS_V4(uc->ip, addr);
+#if !defined(PLATFORM_DARWIN)
       m.imr_address.s_addr = 0;
       m.imr_ifindex        = ifindex;
+#else
+      if (udp_get_ifaddr(fd, ifname, &m.imr_interface) == -1) {
+        tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
+                 name, ifname,  strerror(errno));
+        goto error;
+      }
+#endif
 
       if (setsockopt(fd, udp_get_solip(), IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
         inet_ntop(AF_INET, &m.imr_multiaddr, buf, sizeof(buf));
@@ -308,9 +341,18 @@ udp_connect ( const char *subsystem, const char *name,
 
   if (uc->multicast) {
     if (uc->ip.ss_family == AF_INET) {
+#if !defined(PLATFORM_DARWIN)
       struct ip_mreqn m;
       memset(&m, 0, sizeof(m));
       m.imr_ifindex = ifindex;
+#else
+      struct in_addr m;
+      if (udp_get_ifaddr(fd, ifname, &m) == -1) {
+        tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
+                 name, ifname,  strerror(errno));
+        goto error;
+      }
+#endif
       if (setsockopt(fd, udp_get_solip(), IP_MULTICAST_IF, &m, sizeof(m)))
         tvhwarn(subsystem, "%s - cannot set source interface %s [%s]",
                 name, ifname, strerror(errno));
