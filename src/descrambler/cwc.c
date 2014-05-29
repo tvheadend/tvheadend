@@ -193,7 +193,7 @@ typedef struct cs_card_data {
   card_type_t cwc_card_type;
   
   /* Card providers */
-  cwc_provider_t cwc_providers[256];
+  cwc_provider_t *cwc_providers;
   
   /* Number of Card providers */
   int cwc_num_providers;
@@ -599,8 +599,6 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   pcard = calloc(1, sizeof(struct cs_card_data));
   pcard->cwc_caid = (msg[4] << 8) | msg[5];
   
-  
-  
   n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
   
   memcpy(pcard->cwc_ua, &msg[6], 8);
@@ -610,6 +608,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   plen -= 12;
   
   pcard->cwc_num_providers = nprov;
+  pcard->cwc_providers = calloc(nprov, sizeof(pcard->cwc_providers[0]));
   
   tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
          "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
@@ -899,6 +898,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
         pcard = calloc(1, sizeof(struct cs_card_data));
         pcard->cwc_caid = caid;
         pcard->cwc_num_providers = 1;
+        pcard->cwc_providers = calloc(1, sizeof(pcard->cwc_providers[0]));
         
         n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
         
@@ -910,24 +910,12 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
         
         tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
                "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
-               "with %d providers",
+               "with Provider ID #%d",
                cwc->cwc_hostname, cwc->cwc_port,
                cwc->cwc_username, n, pcard->cwc_caid,
                pcard->cwc_ua[0], pcard->cwc_ua[1], pcard->cwc_ua[2], pcard->cwc_ua[3], pcard->cwc_ua[4], pcard->cwc_ua[5], pcard->cwc_ua[6],
-               pcard->cwc_ua[7],pcard->cwc_num_providers);
-        
-        tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-               cwc->cwc_hostname, cwc->cwc_port, 1,
-               pcard->cwc_providers[0].id,
-               pcard->cwc_providers[0].sa[0],
-               pcard->cwc_providers[0].sa[1],
-               pcard->cwc_providers[0].sa[2],
-               pcard->cwc_providers[0].sa[3],
-               pcard->cwc_providers[0].sa[4],
-               pcard->cwc_providers[0].sa[5],
-               pcard->cwc_providers[0].sa[6],
-               pcard->cwc_providers[0].sa[7]);
-        
+               pcard->cwc_ua[7], pcard->cwc_providers[0].id);
+
         LIST_INSERT_HEAD(&cwc->cwc_cards, pcard, cs_card);
       }
   }
@@ -1229,6 +1217,7 @@ cwc_thread(void *aux)
   }
 
   while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
+    free(cd->cwc_providers);
     LIST_REMOVE(cd, cs_card);
     free(cd);
   }
