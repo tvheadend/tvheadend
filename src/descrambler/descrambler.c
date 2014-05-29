@@ -21,6 +21,7 @@
 #include "capmt.h"
 #include "ffdecsa/FFdecsa.h"
 #include "service.h"
+#include "tvhcsa.h"
 
 static struct strtab caidnametab[] = {
   { "Seca",             0x0100 }, 
@@ -131,6 +132,21 @@ descrambler_service_start ( service_t *t )
   cwc_service_start(t);
   capmt_service_start(t);
 #endif
+}
+
+int
+descrambler_descramble ( th_descrambler_t *td,
+                         struct elementary_stream *st,
+                         const uint8_t *tsb )
+{
+  if (td->td_keystate == DS_FORBIDDEN)
+    return 1;
+  if (td->td_keystate != DS_RESOLVED)
+    return -1;
+  tvhcsa_descramble(td->td_csa,
+                    (struct mpegts_service *)td->td_service,
+                    st, tsb);
+  return 0;
 }
 
 // TODO: might actually put const char* into caid_t

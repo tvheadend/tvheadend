@@ -124,9 +124,7 @@ typedef struct ecm_pid {
  *
  */
 typedef struct cwc_service {
-  th_descrambler_t cs_head;
-
-  mpegts_service_t *cs_service;
+  th_descrambler_t;
 
   struct cwc *cs_cwc;
 
@@ -142,19 +140,6 @@ typedef struct cwc_service {
     ECM_VALID,
     ECM_RESET
   } ecm_state;
-
-  /**
-   * Status of the key(s) in cs_keys
-   */
-  enum {
-    CS_UNKNOWN,
-    CS_RESOLVED,
-    CS_FORBIDDEN,
-    CS_IDLE
-  } cs_keystate;
-
-  uint8_t cs_cw[16];
-  int cs_pending_cw_update;
 
   tvhcsa_t cs_csa;
   
@@ -696,7 +681,7 @@ static void
 handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
-  mpegts_service_t *t = ct->cs_service;
+  mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   ecm_pid_t *ep, *epn;
   cwc_service_t *ct2;
   cwc_t *cwc2;
@@ -714,7 +699,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     if (es->es_nok < 3)
       es->es_nok++;
 
-    if(ct->cs_keystate == CS_FORBIDDEN)
+    if(ct->td_keystate == DS_FORBIDDEN)
       return; // We already know it's bad
 
     if (es->es_nok > 2) {
@@ -727,8 +712,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 
     TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
       LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
-        if (ct != ct2 && ct2->cs_service == t &&
-            ct2->cs_keystate == CS_RESOLVED) {
+        if (ct != ct2 && ct2->td_service == (service_t *)t &&
+            ct2->td_keystate == DS_RESOLVED) {
           tvhlog(LOG_DEBUG, "cwc",
 	    "NOK from %s:%i: Already has a key for service \"%s\", from %s:%i",
             ct->cs_cwc->cwc_hostname, ct->cs_cwc->cwc_port,
@@ -759,7 +744,7 @@ forbid:
 	   "Req delay: %"PRId64" ms)",
 	   t->s_dvb_svcname, seq, delay);
 
-    ct->cs_keystate = CS_FORBIDDEN;
+    ct->td_keystate = DS_FORBIDDEN;
     ct->ecm_state = ECM_RESET;
 
     return;
@@ -790,9 +775,9 @@ forbid:
 
     TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
       LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
-        if (ct != ct2 && ct2->cs_service == t &&
-            ct2->cs_keystate == CS_RESOLVED) {
-          ct->cs_keystate = CS_IDLE;
+        if (ct != ct2 && ct2->td_service == (service_t *)t &&
+            ct2->td_keystate == DS_RESOLVED) {
+          ct->td_keystate = DS_IDLE;
           tvhlog(LOG_DEBUG, "cwc",
 	     "Already has a key for service \"%s\", from %s:%i",
 	     t->s_dvb_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
@@ -801,15 +786,23 @@ forbid:
       }
     }
     
-    if(ct->cs_keystate != CS_RESOLVED)
+    if(ct->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "cwc",
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s:%i",
 	     t->s_dvb_svcname, delay, ct->cs_cwc->cwc_hostname,
 	     ct->cs_cwc->cwc_port);
 
-    ct->cs_keystate = CS_RESOLVED;
-    memcpy(ct->cs_cw, msg + 3, 16);
-    ct->cs_pending_cw_update = 1;
+    ct->td_keystate = DS_RESOLVED;
+    for (i = 3; i < 3 + 8; i++)
+      if (msg[i]) {
+        tvhcsa_set_key_even(&ct->cs_csa, msg + 3);
+        break;
+      }
+    for (i = 3 + 8; i < 3 + 8 + 8; i++)
+      if (msg[i]) {
+        tvhcsa_set_key_odd(&ct->cs_csa, msg + 3 + 8);
+        break;
+      }
 
     ep = LIST_FIRST(&ct->cs_pids);
     while(ep != NULL) {
@@ -1210,9 +1203,9 @@ cwc_thread(void *aux)
          cwc->cwc_hostname, cwc->cwc_port);
 
   while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
-    t = ct->cs_service;
+    t = (mpegts_service_t *)ct->td_service;
     pthread_mutex_lock(&t->s_stream_mutex);
-    cwc_service_destroy(&ct->cs_head);
+    cwc_service_destroy((th_descrambler_t *)&ct);
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
 
@@ -1601,11 +1594,11 @@ cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int mlen
  * t->s_streaming_mutex is held
  */
 static void
-cwc_table_input(struct th_descrambler *td, service_t *s,
+cwc_table_input(struct th_descrambler *td,
 		struct elementary_stream *st, const uint8_t *data, int len)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
-  mpegts_service_t *t = (mpegts_service_t*)s;
+  mpegts_service_t *t = (mpegts_service_t*)td->td_service;
   uint16_t sid = t->s_dvb_service_id;
   cwc_t *cwc = ct->cs_cwc;
   int channel;
@@ -1615,7 +1608,7 @@ cwc_table_input(struct th_descrambler *td, service_t *s,
   char chaninfo[32];
   caid_t *c;
 
-  if (ct->cs_keystate == CS_IDLE)
+  if (ct->td_keystate == DS_IDLE)
     return;
 
   if(len > 4096)
@@ -1708,7 +1701,7 @@ cwc_table_input(struct th_descrambler *td, service_t *s,
       
       if(cwc->cwc_fd == -1) {
         // New key, but we are not connected (anymore), can not descramble
-        ct->cs_keystate = CS_UNKNOWN;
+        ct->td_keystate = DS_UNKNOWN;
         break;
       }
       es->es_channel = channel;
@@ -1898,56 +1891,6 @@ cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int len)
 }
 
 /**
- *
- */
-static void
-update_keys(cwc_service_t *ct)
-{
-  int i;
-  ct->cs_pending_cw_update = 0;
-  for(i = 0; i < 8; i++)
-    if(ct->cs_cw[i]) {
-      tvhcsa_set_key_even(&ct->cs_csa, ct->cs_cw);
-      break;
-    }
-  
-  for(i = 0; i < 8; i++)
-    if(ct->cs_cw[8 + i]) {
-      tvhcsa_set_key_odd(&ct->cs_csa, ct->cs_cw+8);
-      break;
-    }
-}
-
-
-/**
- *
- */
-static int
-cwc_descramble
-  (th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-	 const uint8_t *tsb)
-{
-  cwc_service_t *ct = (cwc_service_t *)td;
-
-  if(ct->cs_keystate == CS_FORBIDDEN)
-    return 1;
-
-  if(ct->cs_keystate != CS_RESOLVED)
-    return -1;
-
-  if(ct->cs_csa.csa_fill == 0 && ct->cs_pending_cw_update)
-    update_keys(ct);
-
-  tvhcsa_descramble(&ct->cs_csa, (mpegts_service_t*)t, st, tsb,
-                    ct->cs_pending_cw_update);
-
-  if(ct->cs_pending_cw_update)
-    update_keys(ct);
-
-  return 0;
-}
-
-/**
  * cwc_mutex is held
  * s_stream_mutex is held
  */
@@ -2012,7 +1955,7 @@ cwc_service_start(service_t *t)
   pthread_mutex_lock(&cwc_mutex);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
-      if (ct->cs_service == (mpegts_service_t*)t && ct->cs_cwc == cwc)
+      if (ct->td_service == t && ct->cs_cwc == cwc)
         break;
     }
     LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
@@ -2029,16 +1972,15 @@ cwc_service_start(service_t *t)
     mpegts_table_register_caid(((mpegts_service_t *)t)->s_dvb_mux, pcard->cwc_caid);
 
     ct                   = calloc(1, sizeof(cwc_service_t));
-    tvhcsa_init(&ct->cs_csa);
     ct->cs_cwc           = cwc;
-    ct->cs_service       = (mpegts_service_t*)t;
     ct->cs_channel       = -1;
     ct->ecm_state        = ECM_INIT;
 
-    td = &ct->cs_head;
-    td->td_stop       = cwc_service_destroy;
-    td->td_table      = cwc_table_input;
-    td->td_descramble = cwc_descramble;
+    td                   = (th_descrambler_t *)ct;
+    tvhcsa_init(td->td_csa = &ct->cs_csa);
+    td->td_service       = t;
+    td->td_stop          = cwc_service_destroy;
+    td->td_table         = cwc_table_input;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);

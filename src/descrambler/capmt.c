@@ -38,6 +38,7 @@
 
 #include "tvheadend.h"
 #include "input.h"
+#include "service.h"
 #include "tcp.h"
 #include "capmt.h"
 
@@ -148,9 +149,7 @@ typedef struct capmt_caid_ecm {
  *
  */
 typedef struct capmt_service {
-  th_descrambler_t ct_head;
-
-  mpegts_service_t *ct_service;
+  th_descrambler_t;
 
   struct capmt *ct_capmt;
 
@@ -158,15 +157,6 @@ typedef struct capmt_service {
 
   /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
-
-  /**
-   * Status of the key(s) in ct_keys
-   */
-  enum {
-    CT_UNKNOWN,
-    CT_RESOLVED,
-    CT_FORBIDDEN
-  } ct_keystate;
 
   tvhcsa_t ct_csa;
 
@@ -336,11 +326,13 @@ capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
 static void 
 capmt_send_stop(capmt_service_t *t)
 {
+  mpegts_service_t *s = (mpegts_service_t *)t->td_service;
+
   if (t->ct_capmt->capmt_oscam) {
     int i;
     // searching for socket to close
     for (i = 0; i < MAX_SOCKETS; i++)
-      if (t->ct_capmt->sids[i] == t->ct_service->s_dvb_service_id)
+      if (t->ct_capmt->sids[i] == s->s_dvb_service_id)
         break;
 
     if (i == MAX_SOCKETS) {
@@ -362,7 +354,7 @@ capmt_send_stop(capmt_service_t *t)
     capmt_header_t head = {
       .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
       .capmt_list_management  = CAPMT_LIST_ONLY,
-      .program_number         = t->ct_service->s_dvb_service_id,
+      .program_number         = s->s_dvb_service_id,
       .version_number         = 0,
       .current_next_indicator = 0,
       .program_info_length    = 0,
@@ -377,13 +369,13 @@ capmt_send_stop(capmt_service_t *t)
     pos    += sizeof(end);
     buf[4]  = ((pos - 6) >> 8);
     buf[5]  = ((pos - 6) & 0xFF);
-    buf[7]  = t->ct_service->s_dvb_service_id >> 8;
-    buf[8]  = t->ct_service->s_dvb_service_id & 0xFF;
+    buf[7]  = s->s_dvb_service_id >> 8;
+    buf[8]  = s->s_dvb_service_id & 0xFF;
     buf[9]  = 1;
     buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
     buf[11] = ((pos - 5 - 12) & 0xFF);
   
-    capmt_send_msg(t->ct_capmt, t->ct_service->s_dvb_service_id, buf, pos);
+    capmt_send_msg(t->ct_capmt, s->s_dvb_service_id, buf, pos);
   }
 }
 
@@ -501,8 +493,8 @@ handle_ca0(capmt_t* capmt) {
 
           // we are not connected any more - set services as unavailable
           LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
-            if (ct->ct_keystate != CT_FORBIDDEN) {
-              ct->ct_keystate = CT_FORBIDDEN;
+            if (ct->td_keystate != DS_FORBIDDEN) {
+              ct->td_keystate = DS_FORBIDDEN;
             }
           }
 
@@ -581,13 +573,13 @@ handle_ca0(capmt_t* capmt) {
     // processing key
     if (process_key) {
       LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
-        t = ct->ct_service;
+        t = (mpegts_service_t *)ct->td_service;
 
         if (!capmt->capmt_oscam && ret < bufsize) {
-          if(ct->ct_keystate != CT_FORBIDDEN) {
+          if(ct->td_keystate != DS_FORBIDDEN) {
             tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->s_dvb_svcname);
 
-            ct->ct_keystate = CT_FORBIDDEN;
+            ct->td_keystate = DS_FORBIDDEN;
           }
 
           continue;
@@ -601,10 +593,10 @@ handle_ca0(capmt_t* capmt) {
         if (memcmp(odd, invalid, 8))
           tvhcsa_set_key_odd(&ct->ct_csa, odd);
 
-        if(ct->ct_keystate != CT_RESOLVED)
+        if(ct->td_keystate != DS_RESOLVED)
           tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",t->s_dvb_svcname);
 
-        ct->ct_keystate = CT_RESOLVED;
+        ct->td_keystate = DS_RESOLVED;
       }
     }
   }
@@ -738,19 +730,19 @@ capmt_thread(void *aux)
  *
  */
 static void
-capmt_table_input(struct th_descrambler *td, struct service *s,
+capmt_table_input(struct th_descrambler *td,
     struct elementary_stream *st, const uint8_t *data, int len)
 {
   extern const idclass_t mpegts_service_class;
   extern const idclass_t linuxdvb_frontend_class; 
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  mpegts_service_t *t = (mpegts_service_t*)s;
+  mpegts_service_t *t = (mpegts_service_t*)td->td_service;
   linuxdvb_frontend_t *lfe;
   int total_caids = 0, current_caid = 0;
 
   /* Validate */
-  if (!idnode_is_instance(&s->s_id, &mpegts_service_class))
+  if (!idnode_is_instance(&td->td_service->s_id, &mpegts_service_class))
     return;
   if (!t->s_dvb_active_input) return;
   lfe = (linuxdvb_frontend_t*)t->s_dvb_active_input;
@@ -805,7 +797,7 @@ capmt_table_input(struct th_descrambler *td, struct service *s,
 
           if(!capmt->capmt_oscam && capmt->capmt_sock[0] == 0) {
             /* New key, but we are not connected (anymore), can not descramble */
-            ct->ct_keystate = CT_UNKNOWN;
+            ct->td_keystate = DS_UNKNOWN;
             break;
           }
 
@@ -833,7 +825,7 @@ static void
 capmt_send_request(capmt_service_t *ct, int es_pid, int lm)
 {
   capmt_t *capmt = ct->ct_capmt;
-  mpegts_service_t *t = ct->ct_service;
+  mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
   uint16_t ecmpid = es_pid;
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
@@ -946,7 +938,7 @@ capmt_send_request(capmt_service_t *ct, int es_pid, int lm)
   buf[8]  = sid & 0xFF;
 
 
-  if(ct->ct_keystate != CT_RESOLVED)
+  if(ct->td_keystate != DS_RESOLVED)
     tvhlog(LOG_DEBUG, "capmt",
       "Trying to obtain key for service \"%s\"",t->s_dvb_svcname);
 
@@ -967,7 +959,7 @@ capmt_enumerate_services(capmt_t *capmt, int es_pid, int force)
   capmt_service_t *ct;
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     all_srv_count++;
-    if (ct->ct_keystate == CT_RESOLVED)
+    if (ct->td_keystate == DS_RESOLVED)
       res_srv_count++;
   }
 
@@ -989,28 +981,6 @@ capmt_enumerate_services(capmt_t *capmt, int es_pid, int force)
       i++;
     }
   }
-}
-
-
-/**
- *
- */
-static int
-capmt_descramble
-  (th_descrambler_t *td, service_t *t, struct elementary_stream *st,
-   const uint8_t *tsb)
-{
-  capmt_service_t *ct = (capmt_service_t *)td;
-
-  if(ct->ct_keystate == CT_FORBIDDEN)
-    return 1;
-
-  if(ct->ct_keystate != CT_RESOLVED)
-    return -1;
-
-  tvhcsa_descramble(&ct->ct_csa, (mpegts_service_t*)t, st, tsb, 0);
-
-  return 0;
 }
 
 /**
@@ -1045,7 +1015,7 @@ capmt_service_start(service_t *s)
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
       /* skip, if we already have this service */
-      if (ct->ct_service == t)
+      if (ct->td_service == (service_t *)t)
         return;
     }
   }
@@ -1063,9 +1033,7 @@ capmt_service_start(service_t *s)
 
     /* create new capmt service */
     ct              = calloc(1, sizeof(capmt_service_t));
-    tvhcsa_init(&ct->ct_csa);
     ct->ct_capmt    = capmt;
-    ct->ct_service  = t;
     ct->ct_seq      = capmt->capmt_seq++;
 
 
@@ -1092,10 +1060,11 @@ capmt_service_start(service_t *s)
       }
     }
 
-    td = &ct->ct_head;
+    td = (th_descrambler_t *)ct;
+    tvhcsa_init(td->td_csa = &ct->ct_csa);
+    td->td_service    = s;
     td->td_stop       = capmt_service_destroy;
     td->td_table      = capmt_table_input;
-    td->td_descramble = capmt_descramble;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
     LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
