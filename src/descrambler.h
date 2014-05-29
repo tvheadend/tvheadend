@@ -20,11 +20,11 @@
 #define __TVH_DESCRAMBLER_H__
 
 #include <stdint.h>
-
 #include "queue.h"
 
 struct service;
 struct elementary_stream;
+struct tvhcsa;
 
 /**
  * Descrambler superclass
@@ -34,12 +34,18 @@ struct elementary_stream;
 typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_service_link;
 
-  void (*td_table)(struct th_descrambler *d, struct service *t,
-		   struct elementary_stream *st, 
-		   const uint8_t *section, int section_len);
+  enum {
+    DS_UNKNOWN,
+    DS_RESOLVED,
+    DS_FORBIDDEN,
+    DS_IDLE
+  } td_keystate;
 
-  int (*td_descramble)(struct th_descrambler *d, struct service *t,
-		       struct elementary_stream *st, const uint8_t *tsb);
+  struct service *td_service;
+  struct tvhcsa  *td_csa;
+
+  void (*td_table)(struct th_descrambler *d, struct elementary_stream *st,
+		   const uint8_t *section, int section_len);
 
   void (*td_stop)(struct th_descrambler *d);
 
@@ -79,9 +85,12 @@ LIST_HEAD(caid_list, caid);
 void descrambler_init          ( void );
 void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
-const char *descrambler_caid2name(uint16_t caid);
-uint16_t descrambler_name2caid(const char *str);
-card_type_t detect_card_type(const uint16_t caid);
+int  descrambler_descramble    ( th_descrambler_t *td,
+                                 struct elementary_stream *st,
+                                 const uint8_t *tsb );
+const char *descrambler_caid2name( uint16_t caid );
+uint16_t descrambler_name2caid ( const char *str );
+card_type_t detect_card_type   ( const uint16_t caid );
 
 #endif /* __TVH_DESCRAMBLER_H__ */
 

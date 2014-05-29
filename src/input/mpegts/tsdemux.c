@@ -56,7 +56,7 @@ got_ca_section(const uint8_t *data, size_t len, void *opaque)
   mpegts_service_t *t = (mpegts_service_t*)st->es_service;
 
   LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-    td->td_table(td, (service_t*)t, st, data, len);
+    td->td_table(td, st, data, len);
 }
 
 /**
@@ -249,7 +249,7 @@ ts_recv_packet1
     LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
       n++;
       
-      r = td->td_descramble(td, (service_t*)t, st, tsb);
+      r = descrambler_descramble(td, st, tsb);
       if(r == 0) {
         pthread_mutex_unlock(&t->s_stream_mutex);
         return 1;

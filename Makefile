@@ -125,7 +125,6 @@ SRCS =  src/version.c \
 	src/lang_str.c \
 	src/imagecache.c \
 	src/tvhtime.c \
-	src/descrambler/descrambler.c \
 	src/service_mapper.c \
 	src/input.c \
 	src/httpc.c \
@@ -193,6 +192,7 @@ SRCS += src/muxer.c \
 
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
+	src/descrambler/descrambler.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \
