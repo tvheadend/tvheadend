@@ -90,6 +90,18 @@ udp_resolve( udp_connection_t *uc, int receiver )
   return 0;
 }
 
+static inline int
+udp_ifindex_required( udp_connection_t *uc )
+{
+  if (!uc->multicast)
+    return 0;
+#if defined(PLATFORM_DARWIN)
+  if (uc->ip.ss_family == AF_INET)
+    return 0;
+#endif
+  return 1;
+}
+
 static int
 udp_get_ifindex( const char *ifname )
 {
@@ -172,7 +184,7 @@ udp_bind ( const char *subsystem, const char *name,
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
   /* Bind to interface */
-  ifindex = uc->multicast ? udp_get_ifindex(ifname) : 0;
+  ifindex = udp_ifindex_required(uc) ? udp_get_ifindex(ifname) : 0;
   if (ifindex < 0) {
     tvherror(subsystem, "%s - could not find interface %s",
              name, ifname);
@@ -332,7 +344,7 @@ udp_connect ( const char *subsystem, const char *name,
   }
 
   /* Bind to interface */
-  ifindex = uc->multicast ? udp_get_ifindex(ifname) : 0;
+  ifindex = udp_ifindex_required(uc) ? udp_get_ifindex(ifname) : 0;
   if (ifindex < 0) {
     tvherror(subsystem, "%s - could not find interface %s",
              name, ifname);
