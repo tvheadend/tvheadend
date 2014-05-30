@@ -113,6 +113,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_pids0),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "piloton",
+      .name     = "Force pilot for DVB-S2",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_pilot_on),
+    },
+    {
       .type     = PT_STR,
       .id       = "bindaddr",
       .name     = "Local bind IP address",
@@ -280,6 +287,9 @@ satip_device_hack( satip_device_t *sd )
   } else if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     /* OctopusNet requires pids in the SETUP RTSP command */
     sd->sd_pids0       = 1;
+  } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
+             strstr(sd->sd_info.modelname, "TSS400")) {
+    sd->sd_pilot_on    = 1;
   }
 }
 

@@ -989,6 +989,8 @@ satip_frontend_input_thread ( void *aux )
   position = lfe_master->sf_position;
   if (lfe->sf_device->sd_pids0)
     rtsp_flags |= SATIP_SETUP_PIDS0;
+  if (lfe->sf_device->sd_pilot_on)
+    rtsp_flags |= SATIP_SETUP_PILOT_ON;
   r = satip_rtsp_setup(rtsp,
                        position, lfe->sf_number,
                        lfe->sf_rtp_port, &lm->lm_tuning,

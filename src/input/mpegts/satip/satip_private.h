@@ -80,6 +80,7 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
   int                        sd_pids0;
+  int                        sd_pilot_on;
   pthread_mutex_t            sd_tune_mutex;
 };
 
@@ -208,14 +209,15 @@ int satip_satconf_get_position
  * RTSP part
  */
 
-#define SATIP_SETUP_PLAY  (1<<0)
-#define SATIP_SETUP_PIDS0 (1<<1)
+#define SATIP_SETUP_PLAY     (1<<0)
+#define SATIP_SETUP_PIDS0    (1<<1)
+#define SATIP_SETUP_PILOT_ON (1<<2)
 
 int
 satip_rtsp_setup( http_client_t *hc,
                   int src, int fe, int udp_port,
                   const dvb_mux_conf_t *dmc,
-                  int pids0 );
+                  int flags );
 
 int
 satip_rtsp_play( http_client_t *hc, const char *pids,
