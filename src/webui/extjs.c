@@ -1127,7 +1127,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
-    htsmsg_add_str(r, "charset", cfg->dvr_charset);
+    htsmsg_add_str(r, "charset", cfg->dvr_charset ? cfg->dvr_charset : "UTF-8");
     htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
 
 /* Convert integer permissions to an octal-format 0xxx string and store it in the config file */
