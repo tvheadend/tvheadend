@@ -332,6 +332,12 @@ tvheadend.epg = function() {
             header: "Duration",
             dataIndex: 'duration',
             renderer: renderDuration
+//IH
+        }, {
+            width: 100,
+            id: 'duration',
+            header: "Duration",
+            dataIndex: 'duration'
         }, {
             width: 250,
             id: 'channel',
@@ -408,16 +414,36 @@ tvheadend.epg = function() {
         emptyText: 'Filter content type...'
     });
 
+//IH
+    var epgFilterDuration = new Ext.form.ComboBox({
+        loadingText: 'Loading...',
+        width: 150,
+        displayField: 'label',
+        store: new Ext.data.ArrayStore({
+            fields: ['label','value'],
+            data: [['Short (< 30m)', 30],['Medium (30m - 90m)', 60],['Long (> 90m)', 21600]]
+        }),
+        mode: 'local',
+        editable: true,
+        forceSelection: true,
+        triggerAction: 'all',
+        emptyText: 'Filter duration...'
+    });
+
     function epgQueryClear() {
         delete epgStore.baseParams.channel;
         delete epgStore.baseParams.tag;
         delete epgStore.baseParams.contenttype;
         delete epgStore.baseParams.title;
+//IH
+        delete epgStore.baseParams.duration;
 
         epgFilterChannels.setValue("");
         epgFilterChannelTags.setValue("");
         epgFilterContentGroup.setValue("");
         epgFilterTitle.setValue("");
+//IH
+        epgFilterDuration.setValue("");
 
         epgStore.reload();
     }
@@ -440,6 +466,16 @@ tvheadend.epg = function() {
         if (epgStore.baseParams.contenttype !== r.data.code) {
             epgStore.baseParams.contenttype = r.data.code;
             epgStore.reload();
+        }
+    });
+
+//IH ------------------
+    epgFilterDuration.on('select', function(c, r) {
+        if (epgStore.baseParams.duration !== r.data.value) {
+            console.log('Duration filter triggered with value',r.data.value);
+            console.log('epgStore.baseParams.duration was ',epgStore.baseParams.duration);
+            epgStore.baseParams.duration = r.data.value;
+            console.log('epgStore.baseParams.duration is ',epgStore.baseParams.duration);
         }
     });
 
@@ -481,6 +517,9 @@ tvheadend.epg = function() {
             epgFilterChannelTags,
             '-',
             epgFilterContentGroup,
+            '-',
+//IH
+            epgFilterDuration,
             '-',
             {
                 text: 'Reset',
