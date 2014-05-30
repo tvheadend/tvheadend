@@ -172,6 +172,8 @@ fi
 #
 if [ ${PLATFORM} = "darwin" ]; then
   disable linuxdvb
+  disable avahi
+  enable bonjour
 fi
 
 #
