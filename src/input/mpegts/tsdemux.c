@@ -175,8 +175,7 @@ ts_recv_packet1
   (mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp, int table)
 {
   elementary_stream_t *st;
-  int pid, n, m, r;
-  th_descrambler_t *td;
+  int pid, r;
   int error = 0;
   int64_t pcr = PTS_UNSET;
   
@@ -244,25 +243,16 @@ ts_recv_packet1
       t->s_scrambled_seen |= service_is_encrypted((service_t*)t);
 
     /* scrambled stream */
-    n = m = 0;
-
-    LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
-      n++;
-      
-      r = descrambler_descramble(td, st, tsb);
-      if(r == 0) {
-        pthread_mutex_unlock(&t->s_stream_mutex);
-        return 1;
-      }
-
-      if(r == 1)
-        m++;
+    r = descrambler_descramble((service_t *)t, st, tsb);
+    if(r > 0) {
+      pthread_mutex_unlock(&t->s_stream_mutex);
+      return 1;
     }
 
-    if(!error && service_is_encrypted((service_t*)t) != 0) {
-      if(n == 0) {
+    if(!error && service_is_encrypted((service_t*)t)) {
+      if(r == 0) {
         service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
-      } else if(m == n) {
+      } else {
         service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
       }
     }

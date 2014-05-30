@@ -134,19 +134,37 @@ descrambler_service_start ( service_t *t )
 #endif
 }
 
+void
+descrambler_service_stop ( service_t *t )
+{
+  th_descrambler_t *td;
+
+  while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
+    td->td_stop(td);
+}
+
 int
-descrambler_descramble ( th_descrambler_t *td,
+descrambler_descramble ( service_t *t,
                          struct elementary_stream *st,
                          const uint8_t *tsb )
 {
-  if (td->td_keystate == DS_FORBIDDEN)
+  th_descrambler_t *td;
+  int count, failed;
+
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
+    count++;
+    if (td->td_keystate == DS_FORBIDDEN) {
+      failed++;
+      continue;
+    }
+    if (td->td_keystate != DS_RESOLVED)
+      continue;
+    tvhcsa_descramble(td->td_csa,
+                      (struct mpegts_service *)td->td_service,
+                      st, tsb);
     return 1;
-  if (td->td_keystate != DS_RESOLVED)
-    return -1;
-  tvhcsa_descramble(td->td_csa,
-                    (struct mpegts_service *)td->td_service,
-                    st, tsb);
-  return 0;
+  }
+  return count == failed ? -1 : 0;
 }
 
 // TODO: might actually put const char* into caid_t
