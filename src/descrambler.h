@@ -20,6 +20,7 @@
 #define __TVH_DESCRAMBLER_H__
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "queue.h"
 
 struct service;
@@ -89,6 +90,8 @@ void descrambler_service_stop  ( struct service *t );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb );
+void descrambler_ca_section    ( struct elementary_stream *st,
+                                 const uint8_t *data, size_t len );
 const char *descrambler_caid2name( uint16_t caid );
 uint16_t descrambler_name2caid ( const char *str );
 card_type_t detect_card_type   ( const uint16_t caid );

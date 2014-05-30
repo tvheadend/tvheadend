@@ -50,13 +50,9 @@ static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 static void
 got_ca_section(const uint8_t *data, size_t len, void *opaque)
 {
-  th_descrambler_t *td;
   elementary_stream_t *st = opaque;
   assert(st->es_service->s_source_type == S_MPEG_TS);
-  mpegts_service_t *t = (mpegts_service_t*)st->es_service;
-
-  LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-    td->td_table(td, st, data, len);
+  descrambler_ca_section(st, data, len);
 }
 
 /**

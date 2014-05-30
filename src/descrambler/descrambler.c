@@ -145,7 +145,7 @@ descrambler_service_stop ( service_t *t )
 
 int
 descrambler_descramble ( service_t *t,
-                         struct elementary_stream *st,
+                         elementary_stream_t *st,
                          const uint8_t *tsb )
 {
   th_descrambler_t *td;
@@ -165,6 +165,16 @@ descrambler_descramble ( service_t *t,
     return 1;
   }
   return count == failed ? -1 : 0;
+}
+
+void
+descrambler_ca_section( elementary_stream_t *st,
+                        const uint8_t *data, size_t len )
+{
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &st->es_service->s_descramblers, td_service_link)
+    td->td_table(td, st, data, len);
 }
 
 // TODO: might actually put const char* into caid_t
