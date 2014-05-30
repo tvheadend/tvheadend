@@ -136,6 +136,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_CWC
   { "cwc", NULL },
 #endif
+#if ENABLE_CAPMT
+  { "capmt", NULL },
+#endif
 #if ENABLE_V4L
   { "v4l", NULL },
 #endif
