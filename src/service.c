@@ -265,7 +265,6 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 static void
 service_stop(service_t *t)
 {
-  th_descrambler_t *td;
   elementary_stream_t *st;
  
   gtimer_disarm(&t->s_receive_timer);
@@ -274,8 +273,7 @@ service_stop(service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  while((td = LIST_FIRST(&t->s_descramblers)) != NULL)
-    td->td_stop(td);
+  descrambler_service_stop(t);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  

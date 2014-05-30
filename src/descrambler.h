@@ -85,7 +85,8 @@ LIST_HEAD(caid_list, caid);
 void descrambler_init          ( void );
 void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
-int  descrambler_descramble    ( th_descrambler_t *td,
+void descrambler_service_stop  ( struct service *t );
+int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb );
 const char *descrambler_caid2name( uint16_t caid );
