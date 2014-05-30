@@ -109,18 +109,22 @@ descrambler_init ( void )
 {
 #if ENABLE_CWC
   cwc_init();
-  capmt_init();
-#if !ENABLE_DVBCSA
-  ffdecsa_init();
 #endif
+#if ENABLE_CAPMT
+  capmt_init();
+#endif
+#if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
+  ffdecsa_init();
 #endif
 }
 
 void
 descrambler_done ( void )
 {
-#if ENABLE_CWC
+#if ENABLE_CAPMT
   capmt_done();
+#endif
+#if ENABLE_CWC
   cwc_done();
 #endif
 }
@@ -130,6 +134,8 @@ descrambler_service_start ( service_t *t )
 {
 #if ENABLE_CWC
   cwc_service_start(t);
+#endif
+#if ENABLE_CAPMT
   capmt_service_start(t);
 #endif
 }
