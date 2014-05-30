@@ -903,7 +903,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
         
         tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
                "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
-               "with Provider ID #%d",
+               "with one Provider ID 0x%06x",
                cwc->cwc_hostname, cwc->cwc_port,
                cwc->cwc_username, n, pcard->cwc_caid,
                pcard->cwc_ua[0], pcard->cwc_ua[1], pcard->cwc_ua[2], pcard->cwc_ua[3], pcard->cwc_ua[4], pcard->cwc_ua[5], pcard->cwc_ua[6],
