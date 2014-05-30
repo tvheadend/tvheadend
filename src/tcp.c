@@ -98,6 +98,11 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   r = connect(fd, ai->ai_addr, ai->ai_addrlen);
   freeaddrinfo(ai);
 
+#if defined(PLATFORM_DARWIN)
+  if (timeout < 0)
+    timeout = 1;
+#endif
+
   if(r == -1) {
     if(errno == EINPROGRESS && timeout < 0) {
       err = 0;
