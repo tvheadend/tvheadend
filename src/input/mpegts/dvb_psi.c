@@ -1,6 +1,6 @@
 /*
  *  MPEG TS Program Specific Information code
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -644,7 +644,7 @@ dvb_cat_callback
   mpegts_table_state_t  *st  = NULL;
 
   /* Start */
-  r = dvb_table_begin(mt, ptr, len, tableid, 0, 7, &st, &sect, &last, &ver);
+  r = dvb_table_begin(mt, ptr, len, tableid, 0, 5, &st, &sect, &last, &ver);
   if (r != 1) return r;
   ptr += 5;
   len -= 5;
