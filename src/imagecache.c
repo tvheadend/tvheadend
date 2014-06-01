@@ -142,7 +142,8 @@ imagecache_image_fetch ( imagecache_image_t *img )
   tvhpoll_t *efd = NULL;
   http_client_t *hc;
 
-  memset(&url, 0, sizeof(url));
+  if (img->url == NULL || img->url[0] == '\0')
+    return res;
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
@@ -423,7 +424,7 @@ imagecache_get_id ( const char *url )
   lock_assert(&global_lock);
 
   /* Invalid */
-  if (!url)
+  if (!url || url[0] == '\0')
     return 0;
 
   /* Disabled */
