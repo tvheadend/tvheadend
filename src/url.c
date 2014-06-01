@@ -122,7 +122,7 @@ urlparse ( const char *str, url_t *url )
   if (url->user) {
     s = strstr(url->user, ":");
     if (s) {
-      strcpy(url->pass, s+1);
+      url->pass = strdup(s + 1);
       *s = 0;
     }
   }
