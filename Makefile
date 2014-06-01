@@ -36,7 +36,9 @@ LDFLAGS += -ldl -lpthread -lm
 ifeq ($(CONFIG_LIBICONV),yes)
 LDFLAGS += -liconv
 endif
-ifneq ($(PLATFORM), darwin)
+ifeq ($(PLATFORM), darwin)
+LDFLAGS += -framework CoreServices
+else
 LDFLAGS += -lrt
 endif
 
@@ -260,6 +262,9 @@ SRCS-${CONFIG_INOTIFY} += \
 
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
+
+# Bonjour
+SRCS-$(CONFIG_BONJOUR) += src/bonjour.c
 
 # libav
 SRCS-$(CONFIG_LIBAV) += src/libav.c \

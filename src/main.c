@@ -51,6 +51,7 @@
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "avahi.h"
+#include "bonjour.h"
 #include "input.h"
 #include "service.h"
 #include "trap.h"
@@ -812,6 +813,7 @@ main(int argc, char **argv)
     subscription_dummy_join(opt_subscribe, 1);
 
   avahi_init();
+  bonjour_init();
 
   epg_updated(); // cleanup now all prev ref's should have been created
 
@@ -874,6 +876,7 @@ main(int argc, char **argv)
   tvhftrace("main", access_done);
   tvhftrace("main", epg_done);
   tvhftrace("main", avahi_done);
+  tvhftrace("main", bonjour_done);
   tvhftrace("main", imagecache_done);
   tvhftrace("main", idnode_done);
   tvhftrace("main", lang_code_done);
