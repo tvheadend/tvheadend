@@ -99,29 +99,45 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   freeaddrinfo(ai);
 
   if(r == -1) {
+    /* timeout < 0 - do not wait at all */
     if(errno == EINPROGRESS && timeout < 0) {
       err = 0;
     } else if(errno == EINPROGRESS) {
-      struct pollfd pfd;
+      tvhpoll_event_t ev;
+      tvhpoll_t *efd;
 
-      pfd.fd = fd;
-      pfd.events = POLLOUT;
-      pfd.revents = 0;
+      efd = tvhpoll_create(1);
+      memset(&ev, 0, sizeof(ev));
+      ev.events   = TVHPOLL_OUT;
+      ev.fd       = fd;
+      ev.data.ptr = &fd;
+      tvhpoll_add(efd, &ev, 1);
 
-      r = poll(&pfd, 1, timeout * 1000);
-      if(r == 0) {
-	      /* Timeout */
-      	snprintf(errbuf, errbufsize, "Connection attempt timed out");
-      	close(fd);
-      	return -1;
+      /* minimal timeout is one second */
+      if (timeout < 1)
+        timeout = 0;
+
+      while (1) {
+        r = tvhpoll_wait(efd, &ev, 1, timeout * 1000);
+        if (r > 0)
+          break;
+        
+        if (r == 0) { /* Timeout */
+          snprintf(errbuf, errbufsize, "Connection attempt timed out");
+          tvhpoll_destroy(efd);
+          close(fd);
+          return -1;
+        }
+      
+        if (errno != EINTR && errno != EWOULDBLOCK && errno != EAGAIN) {
+          snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
+          tvhpoll_destroy(efd);
+          close(fd);
+          return -1;
+        }
       }
       
-      if(r == -1) {
-      	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
-      	close(fd);
-      	return -1;
-      }
-
+      tvhpoll_destroy(efd);
       getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
     } else {
       err = errno;
