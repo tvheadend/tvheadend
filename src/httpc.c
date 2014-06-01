@@ -930,10 +930,12 @@ header:
       hc->hc_csize = -1;
   }
   p = http_arg_get(&hc->hc_args, "Connection");
-  if (p) {
-    if (hc->hc_keepalive && strcasecmp(p, "keep-alive"))
+  if (p && ver != RTSP_VERSION_1_0) {
+    if (strcasecmp(p, "close") == 0)
+      hc->hc_keepalive = 0;
+    else if (hc->hc_keepalive && strcasecmp(p, "keep-alive"))
       return http_client_flush(hc, -EINVAL);
-    if (!hc->hc_keepalive && strcasecmp(p, "close"))
+    else if (!hc->hc_keepalive && strcasecmp(p, "close"))
       return http_client_flush(hc, -EINVAL);
   }
   if (ver == RTSP_VERSION_1_0) {
@@ -1651,8 +1653,10 @@ http_client_testsuite_run( void )
         goto fatal;
     } else if (strncmp(s, "URL=", 4) == 0) {
       urlreset(&u1);
-      if (urlparse(s + 4, &u1) < 0)
+      if (urlparse(s + 4, &u1) < 0) {
+        fprintf(stderr, "HTTPCTS: Parse URL error for '%s'\n", s + 4);
         goto fatal;
+      }
     } else if (strncmp(s, "Command=", 8) == 0) {
       if (strcmp(s + 8, "EXIT") == 0)
         break;
@@ -1670,7 +1674,7 @@ http_client_testsuite_run( void )
         http_client_close(hc);
         if (port)
           u1.port = port;
-        hc = http_client_connect(NULL, ver, u1.scheme, u1.host, u1.port);
+        hc = http_client_connect(NULL, ver, u1.scheme, u1.host, u1.port, NULL);
         if (hc == NULL) {
           fprintf(stderr, "HTTPCTS: Unable to connect to %s:%i (%s)\n", u1.host, u1.port, u1.scheme);
           goto fatal;
@@ -1700,7 +1704,7 @@ http_client_testsuite_run( void )
       while (tvheadend_running) {
         fprintf(stderr, "HTTPCTS: Enter Poll\n");
         r = tvhpoll_wait(efd, &ev, 1, -1);
-        fprintf(stderr, "HTTPCTS: Leave Poll: %i (%s)\n", r, val2str(r, ERRNO_tab));
+        fprintf(stderr, "HTTPCTS: Leave Poll: %i (%s)\n", r, r < 0 ? val2str(-r, ERRNO_tab) : "OK");
         if (r < 0 && (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK))
           continue;
         if (r < 0) {
