@@ -104,12 +104,14 @@ void
 bonjour_init(void)
 {
   txt_rec_t txt_rec_http[] = {
-    { "path", "/" },
+    { "path", tvheadend_webroot },
     { .key = NULL }
   };
   
-  bonjour_start_service(&svc_http, "_http._tcp", 9981, txt_rec_http);
-  bonjour_start_service(&svc_htsp, "_htsp._tcp", 9982, NULL);
+  bonjour_start_service(&svc_http, "_http._tcp", tvheadend_webui_port, 
+                        txt_rec_http);
+
+  bonjour_start_service(&svc_htsp, "_htsp._tcp", tvheadend_htsp_port, NULL);
 }
 
 void
