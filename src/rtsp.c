@@ -119,7 +119,7 @@ rtsp_setup_decode( http_client_t *hc, int satip )
     if (p == NULL)
       return -EIO;
     /* zero is valid stream id per specification */
-    while (*p && (*p == '0' || *p < ' '))
+    while (*p && ((*p == '0' && *(p + 1) == '0') || *p < ' '))
       p++;
     if (p[0] == '0' && p[1] == '\0') {
       hc->hc_rtsp_stream_id = 0;
