@@ -112,6 +112,7 @@ static void
 create_services(AvahiClient *c) 
 {
   char *n;
+  char *path;
   int ret;
   assert(c);
 
@@ -147,13 +148,17 @@ create_services(AvahiClient *c)
       goto fail;
     }
 
+    path = malloc(strlen(tvheadend_webroot) + 6);
+    sprintf(path, "path=%s", tvheadend_webroot);
 
     /* Add the service for HTTP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
 					     "_http._tcp", NULL, NULL, tvheadend_webui_port,
-					     "path=/",
+					     path,
 					     NULL)) < 0) {
+
+    free(path);
 
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
