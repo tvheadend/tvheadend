@@ -152,7 +152,7 @@ create_services(AvahiClient *c)
       path = malloc(strlen(tvheadend_webroot) + 6);
       sprintf(path, "path=%s", tvheadend_webroot);
     } else {
-      path = "/";
+      path = strdup("path=/");
     }
 
     /* Add the service for HTTP */
@@ -162,8 +162,7 @@ create_services(AvahiClient *c)
 					     path,
 					     NULL)) < 0) {
 
-    if (tvheadend_webroot)
-      free(path);
+    free(path);
 
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
