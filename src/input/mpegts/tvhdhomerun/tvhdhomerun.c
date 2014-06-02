@@ -244,13 +244,13 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   tvh_uuid_t uuid;
   int j, save = 0;
   struct hdhomerun_device_t *hdhomerun_tuner;
-  dvb_fe_type_t type = -1;
+  dvb_fe_type_t type = DVB_TYPE_C;
   
   tvhdhomerun_device_calc_uuid(&uuid, dInfo->device_id);
 
   conf = hts_settings_load("input/tvhdhomerun/hdhomerun/adapters/%s", uuid.hex);
 
-  {
+  if ( conf != NULL ) {
     const char *override_type = htsmsg_get_str(conf, "fe_override");
     if ( override_type != NULL) {
       type = dvb_str2type(override_type);
