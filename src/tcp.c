@@ -118,6 +118,12 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
         timeout = 0;
 
       while (1) {
+        if (!tvheadend_running) {
+          tvhpoll_destroy(efd);
+          close(fd);
+          return -1;
+        }
+
         r = tvhpoll_wait(efd, &ev, 1, timeout * 1000);
         if (r > 0)
           break;
