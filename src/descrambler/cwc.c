@@ -955,7 +955,7 @@ cwc_read(cwc_t *cwc, void *buf, size_t len, int timeout)
   r = tcp_read_timeout(cwc->cwc_fd, buf, len, timeout);
   pthread_mutex_lock(&cwc_mutex);
 
-  if (r)
+  if (r && tvheadend_running)
     tvhwarn("cwc", "read error %d (%s)", r, strerror(r));
 
   if(cwc_must_break(cwc))
@@ -975,15 +975,17 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
   int msglen, r;
 
   if((r = cwc_read(cwc, buf, 2, timeout))) {
-    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error (header): %s",
-	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
+    if (tvheadend_running)
+      tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error (header): %s",
+	     cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
   msglen = (buf[0] << 8) | buf[1];
   if(msglen >= CWS_NETMSGSIZE) {
-    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Invalid message size: %d",
-	   cwc->cwc_hostname, cwc->cwc_port, state, msglen);
+    if (tvheadend_running)
+      tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Invalid message size: %d",
+	     cwc->cwc_hostname, cwc->cwc_port, state, msglen);
     return -1;
   }
 
@@ -991,8 +993,9 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
      so just wait 1 second here */
 
   if((r = cwc_read(cwc, cwc->cwc_buf + 2, msglen, 1000))) {
-    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error: %s",
-	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
+    if (tvheadend_running)
+      tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error: %s",
+	     cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
