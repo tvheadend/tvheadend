@@ -104,7 +104,7 @@ void
 bonjour_init(void)
 {
   txt_rec_t txt_rec_http[] = {
-    { "path", tvheadend_webroot },
+    { "path", tvheadend_webroot ? tvheadend_webroot : "/" },
     { .key = NULL }
   };
   
