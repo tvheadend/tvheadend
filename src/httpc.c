@@ -989,14 +989,20 @@ http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
   if (!keepalive)
     http_arg_set(h, "Connection", "close");
   if (url->user && url->user[0] && url->pass && url->pass[0]) {
+#define BASIC "Basic "
     size_t plen = strlen(url->pass);
     size_t ulen = strlen(url->user);
-    size_t len = BASE64_SIZE(plen) + 1;
-    char *buf = alloca(ulen + 1 + len + 1);
+    size_t len = BASE64_SIZE(plen + ulen + 1) + 1;
+    char *buf = alloca(ulen + 1 + plen + 1);
+    char *cbuf = alloca(len + sizeof(BASIC) + 1);
     strcpy(buf, url->user);
-    base64_encode(buf + ulen + 1, len, (uint8_t *)url->pass, plen);
-    buf[ulen] = ':';
-    http_arg_set(h, "Authorization", buf);
+    strcat(buf, ":");
+    strcat(buf, url->pass);
+    strcpy(cbuf, BASIC);
+    base64_encode(cbuf + sizeof(BASIC) - 1, len,
+                  (uint8_t *)buf, ulen + 1 + plen);
+    http_arg_set(h, "Authorization", cbuf);
+#undef BASIC
   }
 }
 
@@ -1572,7 +1578,7 @@ http_client_testsuite_run( void )
   tvhpoll_t *efd;
   url_t u1, u2;
   FILE *fp;
-  int r, expected = HTTP_CON_DONE;
+  int r, expected = HTTP_CON_DONE, expected_code = 200;
   int handle_location = 0;
   int peer_verify = 1;
 
@@ -1613,6 +1619,7 @@ http_client_testsuite_run( void )
       data_limit = 0;
       port = 0;
       expected = HTTP_CON_DONE;
+      expected_code = 200;
       handle_location = 0;
       peer_verify = 1;
     } else if (strcmp(s, "DataTransfer=all") == 0) {
@@ -1643,6 +1650,8 @@ http_client_testsuite_run( void )
         }
       }
       expected = r;
+    } else if (strncmp(s, "ExpectedCode=", 13) == 0) {
+      expected_code = atoi(s + 13);
     } else if (strncmp(s, "Header=", 7) == 0) {
       r = http_client_parse_arg(&args, s + 7);
       if (r < 0)
@@ -1667,8 +1676,7 @@ http_client_testsuite_run( void )
       cmd = http_str2cmd(s + 8);
       if (cmd < 0)
         goto fatal;
-      if (http_arg_get(&args, "Host") == NULL && u1.host && u1.host[0] != '\0')
-        http_arg_set(&args, "Host", u1.host);
+      http_client_basic_args(&args, &u1, 1);
       if (u2.host == NULL || u1.host == NULL || strcmp(u1.host, u2.host) ||
           u2.port != u1.port || !hc->hc_keepalive) {
         http_client_close(hc);
@@ -1725,8 +1733,13 @@ http_client_testsuite_run( void )
         if (cs2 == NULL)
           cs2 = val2str(-expected, ERRNO_tab);
         fprintf(stderr, "HTTPCTS: Run Done, Result = %i (%s), Expected = %i (%s)\n", r, cs, expected, cs2);
-        if (r == expected)
+        if (r == expected) {
+          if (hc->hc_code != expected_code) {
+            fprintf(stderr, "HTTPCTS: HTTP Code Fail: Expected = %i Got = %i\n", expected_code, hc->hc_code);
+            goto fatal;
+          }
           break;
+        }
         if (r < 0)
           goto fatal;
         if (r == HTTP_CON_DONE)
@@ -1750,7 +1763,7 @@ http_client_testsuite_run( void )
   return;
 fatal:
   fprintf(stderr, "HTTPCTS Fatal Error\n");
-  abort();
+  exit(1);
 }
 
 #endif

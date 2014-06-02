@@ -7,6 +7,7 @@
 #  DataTransfer=cont continuous passing data to the data_received callback
 #  DataLimit=        limit data to these bytes
 #  ExpectedError=    expected error
+#  ExpectedCode=     expected HTTP code (default 200)
 #  SSLPeerVerify=    Enable SSL/TLS peer verification (0 or 1)
 #  Reset=1           reset the initial state - close the current keep-alive conn
 #  Command=          HTTP/RTSP command or EXIT
@@ -42,6 +43,7 @@ Command=GET
 HandleLocation=1
 URL=http://httpbin.org/relative-redirect/20
 ExpectedError=ELOOP
+ExpectedCode=302
 Command=GET
 
 #
@@ -59,6 +61,7 @@ Command=GET
 HandleLocation=1
 URL=https://httpbin.org/relative-redirect/20
 ExpectedError=ELOOP
+ExpectedCode=302
 Command=GET
 
 #
@@ -79,4 +82,19 @@ DataTransfer=all
 DataLimit=10
 HandleLocation=1
 ExpectedError=EOVERFLOW
+Command=GET
+
+#
+# HTTP Basic Auth
+#
+
+Reset=1
+
+URL=http://user123:passwd321@httpbin.org/basic-auth/user123/passwd321
+HandleLocation=1
+Command=GET
+
+URL=http://user1231:passwd321@httpbin.org/basic-auth/user123/passwd321
+HandleLocation=1
+ExpectedCode=401
 Command=GET
