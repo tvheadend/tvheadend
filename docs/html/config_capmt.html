@@ -33,11 +33,14 @@
   <dd>If selected, connection will be tried to be established and retained up.
       If unselected, Tvheadend will disconnect (if connected) and not try to reconnect.
 
-  <dt>Camd.socket Filename
+  <dt>Camd.socket Filename / IP Address
   <dd>Socket filename which is usually opened by cam client. Tvheadend
       tries to connect to this socket file.
+      <p>
+      In mode 3 (TCP), enter the IP address of the oscam server. Tvheadend
+      tries to create a TCP connecting to this IP adress and <i>Connect port</i>.
 
-  <dt>Listenport
+  <dt>Listen / Connect port
   <dd>If running on a so called full-featured DVB-Card this can be left
       empty.
       Running on Budget-Cards one has to use a dummy ca-device. This is
@@ -48,15 +51,39 @@
       </dl>
       This module will communicate the received control-words back to
       Tvheadend via Port 9000
+      <p>
+      In mode 3 (TCP), this port is used for the oscam connection. It must
+      be equal to the listen port in the oscam/dvbapi settings.
 
   <dt>OSCam mode
-  <dd>If selected, connection will be made directly to oscam without using LD_PRELOAD hack.<br>
-      Port 9000 will be used automatically.<br>
-      The following lines are required in <b>[dvbapi]</b> section of oscam.conf file:
-      <dl>
-        <dt>boxtype = pc<br>
-        pmt_mode = 4
-      </dl>
+  <dd>
+  
+      <dt>mode 0 (LD_PRELOAD)
+      <dd>LD_PRELOAD hack is active
+      
+      <dt>mode 1 (old OSCam)
+      <dd>If selected, connection will be made directly to oscam without
+          using LD_PRELOAD hack.<br>
+          Port 9000 will be used automatically.<br>
+          The following lines are required in <b>[dvbapi]</b> section of oscam.conf file:
+          <dl>
+            <dt>boxtype = pc<br>
+                pmt_mode = 4
+          </dl>
+          
+      <dt>mode 2 (new OSCam since revision 9095)
+      <dd>In this mode, no UDP connections are required. All communication
+          is processed though the Camd.socket
+          
+      <dt>mode 3 (new OSCam since revision 9574)
+      <dd>A TCP connection to server is created. All emm/ecm data are send
+          to oscam using this connection without a requirement for the real
+          linuxdvb devices in the system with OSCam. This mode is suitable
+          for all DVB devices including SAT>IP and IPTV.
+
+      <dt>mode 4 (new OSCam since revision <i>patched</i>)
+      <dd>Similar to mode 3, but a Camd.socket connection is used instead
+         of the TCP connection.
 
   <dt>Comment
   <dd>Allows the administrator to set a comment only visible in this editor.
