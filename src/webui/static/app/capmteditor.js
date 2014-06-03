@@ -29,6 +29,8 @@ tvheadend.capmteditor = function() {
             fields: ['res', 'name'],
             id: 0,
             data: [
+                ['4', 'Patched OSCam (unix socket)'],
+                ['3', 'Recent OSCam (svn rev >= 9574 - TCP)'],
                 ['2', 'Recent OSCam (svn rev >= 9095)'],
                 ['1', 'Older OSCam'],
                 ['0', 'Wrapper (capmt_ca.so)']
@@ -49,7 +51,7 @@ tvheadend.capmteditor = function() {
                 width: 150,
                 editor: selectMode
             }, {
-                header: "Camd.socket Filename",
+                header: "Camd.socket Filename / IP Address (mode 3)",
                 dataIndex: 'camdfilename',
                 width: 200,
                 renderer: function(value, metadata, record, row, col, store) {
@@ -60,7 +62,7 @@ tvheadend.capmteditor = function() {
                     allowBlank: false
                 })
             }, {
-                header: "Listenport",
+                header: "Listen/Connect Port",
                 dataIndex: 'port',
                 renderer: function(value, metadata, record, row, col, store) {
                     setMetaAttr(metadata, record);
