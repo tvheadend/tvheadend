@@ -87,8 +87,11 @@ page_simple(http_connection_t *hc,
 
 
   if(s != NULL) {
-    
-    epg_query(&eqr, NULL, NULL, NULL, s, lang);
+
+//IH    
+//    epg_query(&eqr, NULL, NULL, NULL, s, lang);
+//IH Force all programme durations for this interface (0 to INT_MAX seconds)
+    epg_query(&eqr, NULL, NULL, NULL, s, lang, 0, INT_MAX);
     epg_query_sort(&eqr);
 
     c = eqr.eqr_entries;

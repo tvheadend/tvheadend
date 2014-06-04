@@ -332,12 +332,6 @@ tvheadend.epg = function() {
             header: "Duration",
             dataIndex: 'duration',
             renderer: renderDuration
-//IH
-        }, {
-            width: 100,
-            id: 'duration',
-            header: "Duration",
-            dataIndex: 'duration'
         }, {
             width: 250,
             id: 'channel',
@@ -414,36 +408,74 @@ tvheadend.epg = function() {
         emptyText: 'Filter content type...'
     });
 
-//IH
-    var epgFilterDuration = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
-        width: 150,
-        displayField: 'label',
-        store: new Ext.data.ArrayStore({
-            fields: ['label','value'],
-            data: [['Short (< 30m)', 30],['Medium (30m - 90m)', 60],['Long (> 90m)', 21600]]
-        }),
-        mode: 'local',
-        editable: true,
-        forceSelection: true,
-        triggerAction: 'all',
-        emptyText: 'Filter duration...'
+    //IH
+    // Slider for duration selection, including tooltip function to display the appropriate string
+    
+    var tip = new Ext.slider.Tip({
+        getText: function(thumb){
+            return thumb.slider.durations[thumb.value];
+        }
     });
+
+    var durationSlider = new Ext.slider.MultiSlider({
+        width: 100,
+        values: [0, 7],
+        minValue: 0,
+        maxValue: 7,
+        increment: 1,
+        durations: {
+            0: '0 min',
+            1: '20 min',
+            2: '45 min',
+            3: '90 min',
+            4: '3 hrs',
+            5: '6 hrs',
+            6: '12 hrs',
+            7: '24 hrs'
+        },
+        seconds: {
+            0: 0,
+            1: 1200,
+            2: 2700,
+            3: 5400,
+            4: 10800,
+            5: 21600,
+            6: 43200,
+            7: 86400 
+        },
+        plugins: tip,
+        listeners: {
+			change: function(slider, thumb, value){
+//            setduration(slider, thumb, value);
+            setduration(slider);
+		}}
+    });
+//
 
     function epgQueryClear() {
         delete epgStore.baseParams.channel;
         delete epgStore.baseParams.tag;
         delete epgStore.baseParams.contenttype;
+//IH
+        delete epgStore.baseParams.contenttypestring;
+//
         delete epgStore.baseParams.title;
 //IH
-        delete epgStore.baseParams.duration;
+        delete epgStore.baseParams.minduration;
+        delete epgStore.baseParams.mindurationstring;
+        delete epgStore.baseParams.maxduration;
+        delete epgStore.baseParams.maxdurationstring;
+//
 
         epgFilterChannels.setValue("");
         epgFilterChannelTags.setValue("");
         epgFilterContentGroup.setValue("");
         epgFilterTitle.setValue("");
+
 //IH
-        epgFilterDuration.setValue("");
+        durationSlider.setValue(0,0);
+        durationSlider.setValue(1,7);
+//
 
         epgStore.reload();
     }
@@ -465,19 +497,34 @@ tvheadend.epg = function() {
     epgFilterContentGroup.on('select', function(c, r) {
         if (epgStore.baseParams.contenttype !== r.data.code) {
             epgStore.baseParams.contenttype = r.data.code;
+//IH
+            epgStore.baseParams.contenttypestring = tvheadend.contentGroupLookupName(r.data.code);
+            console.log('contentype is',epgStore.baseParams.contenttype,'contenttypestring is',epgStore.baseParams.contenttypestring);
+//
             epgStore.reload();
         }
     });
 
 //IH ------------------
-    epgFilterDuration.on('select', function(c, r) {
-        if (epgStore.baseParams.duration !== r.data.value) {
-            console.log('Duration filter triggered with value',r.data.value);
-            console.log('epgStore.baseParams.duration was ',epgStore.baseParams.duration);
-            epgStore.baseParams.duration = r.data.value;
-            console.log('epgStore.baseParams.duration is ',epgStore.baseParams.duration);
-        }
-    });
+//	setduration = function(slider, thumb, value) {
+	setduration = function(slider) {
+
+        console.log('durationSlider fired');
+
+        var min = slider.getValue(0);
+        var max = slider.getValue(1);
+
+        console.log('Min:', min, "Duration:", slider.durations[min], slider.seconds[min]);
+        console.log('Max:', max, "Duration:", slider.durations[max], slider.seconds[max]);
+
+        epgStore.baseParams.minduration = slider.seconds[min];
+        epgStore.baseParams.mindurationstring = slider.durations[min];
+        epgStore.baseParams.maxduration = slider.seconds[max];
+        epgStore.baseParams.maxdurationstring = slider.durations[max];
+        
+        epgStore.reload();
+        };
+//
 
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
@@ -519,8 +566,10 @@ tvheadend.epg = function() {
             epgFilterContentGroup,
             '-',
 //IH
-            epgFilterDuration,
-            '-',
+            'Duration (test env): 0h ',
+            durationSlider,
+            '24h','-',
+//
             {
                 text: 'Reset',
                 handler: epgQueryClear
@@ -567,26 +616,46 @@ tvheadend.epg = function() {
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
                 : "<i>Don't care</i>";
-        var contenttype = epgStore.baseParams.contenttype ? epgStore.baseParams.contenttype
+//IH - correct to display content type as a string as opposed to the underlying (lookup) code
+//        var contenttype = epgStore.baseParams.contenttype ? epgStore.baseParams.contenttype
+        var contenttype = epgStore.baseParams.contenttypestring ? epgStore.baseParams.contenttypestring
+//
                 : "<i>Don't care</i>";
+//IH
+        var minduration = epgStore.baseParams.mindurationstring ? epgStore.baseParams.mindurationstring
+                : "<i>Don't care</i>";
+        var maxduration = epgStore.baseParams.maxdurationstring ? epgStore.baseParams.maxdurationstring
+                : "<i>Don't care</i>";
+//
 
-        Ext.MessageBox.confirm('Auto Recorder',
-                'This will create an automatic rule that '
+        Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
-                + 'to record that matches this query: ' + '<br><br>'
+//IH - correct typo
+                + 'to record that match this query: ' + '<br><br>'
                 + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>'
-                + '<br>' + 'Currently this will match (and record) '
+//IH
+                + '<div class="x-smallhdr">Min duration:</div>' + minduration + '<br>'
+                + '<div class="x-smallhdr">Max duration:</div>' + maxduration + '<br>'
+//
+                + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
-                function(button) {
-                    if (button === 'no')
-                        return;
-                    createAutoRec2(epgStore.baseParams);
-                });
+            function(button) {
+                if (button === 'no')
+                    return;
+                createAutoRec2(epgStore.baseParams);
+            });
     }
 
+//
+// IH: TO DO
+//
+// Check that contenttype is still passed correctly (epgStore.baseParams.contenttype) to autorec vs the new contenttypestring
+// Add min/max to autorec rules (C)
+// Check they're displayed (js)
+//
     function createAutoRec2(params) {
         /* Really do it */
         params.op = 'createAutoRec';
@@ -597,4 +666,4 @@ tvheadend.epg = function() {
     }
 
     return panel;
-};
+}

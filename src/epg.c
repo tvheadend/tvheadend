@@ -2205,16 +2205,25 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
 
 static void _eqr_add 
   ( epg_query_result_t *eqr, epg_broadcast_t *e,
-    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang )
+//IH
+//    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang )
+    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
 {
   const char *title;
+  int duration;
 
   /* Ignore */
   if ( e->stop < start ) return;
   if ( !(title = epg_episode_get_title(e->episode, lang)) ) return;
   if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
   if ( preg && regexec(preg, title, 0, NULL, 0)) return;
-
+  
+  //IH
+  duration = (int)e->stop - (int)e->start;
+  if ( duration < min_duration || duration > max_duration) return;
+  tvhlog(LOG_INFO, "_eqr_add", "episode duration %d vs min_duration %d and max_duration %d", duration, min_duration, max_duration);
+//
+  
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
     eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
@@ -2228,17 +2237,23 @@ static void _eqr_add
 
 static void _eqr_add_channel 
   ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
-    regex_t *preg, time_t start, const char *lang )
+//IH
+//    regex_t *preg, time_t start, const char *lang )
+    regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
 {
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang);
+//IH
+//    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang);
+    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang, min_duration, max_duration);
   }
 }
 
 void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-    epg_genre_t *genre, const char *title, const char *lang )
+//IH
+//    epg_genre_t *genre, const char *title, const char *lang )
+    epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration )
 {
   time_t now;
   channel_tag_mapping_t *ctm;
@@ -2259,19 +2274,25 @@ void epg_query0
   
   /* Single channel */
   if (channel && !tag) {
-    _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+//IH
+//    _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+    _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
   
   /* Tag based */
   } else if ( tag ) {
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
       if(channel == NULL || ctm->ctm_channel == channel)
-        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang);
+//IH
+//        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang);
+        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang, min_duration, max_duration);
     }
 
   /* All channels */
   } else {
     CHANNEL_FOREACH(channel)
-      _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+//IH
+//      _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+      _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
   }
   if (preg) regfree(preg);
 
@@ -2279,11 +2300,14 @@ void epg_query0
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       epg_genre_t *genre, const char *title, const char *lang)
+//IH
+//	       epg_genre_t *genre, const char *title, const char *lang)
+	       epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
 {
   channel_t     *ch = channel ? channel_find(channel)    : NULL;
   channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
-  epg_query0(eqr, ch, ct, genre, title, lang);
+
+  epg_query0(eqr, ch, ct, genre, title, lang, min_duration, max_duration);
 }
 
 void epg_query_free(epg_query_result_t *eqr)

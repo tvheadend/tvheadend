@@ -57,6 +57,8 @@
 #include <sys/statvfs.h>
 #include "settings.h"
 #include <sys/time.h>
+//IH
+#include <limits.h>
 
 /* **************************************************************************
  * Datatypes and variables
@@ -1059,7 +1061,10 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   epg_query_result_t eqr;
   epg_genre_t genre, *eg = NULL;
   const char *lang;
-  
+  //IH
+  int min_duration;
+  int max_duration;
+
   /* Required */
   if( (query = htsmsg_get_str(in, "query")) == NULL )
     return htsp_error("Missing argument 'query'");
@@ -1079,12 +1084,20 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
   full = htsmsg_get_u32_or_default(in, "full", 0);
 
+//IH
+  min_duration = htsmsg_get_u32_or_default(in, "minduration", 0);
+  max_duration = htsmsg_get_u32_or_default(in, "maxduration", INT_MAX);
+  tvhlog(LOG_INFO, "htsp_server", "min_duration %d and max_duration %d", min_duration, max_duration);
+//
+
   /* Check access */
   if (!htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
   //do the query
-  epg_query0(&eqr, ch, ct, eg, query, lang);
+//IH
+//  epg_query0(&eqr, ch, ct, eg, query, lang);
+  epg_query0(&eqr, ch, ct, eg, query, lang, min_duration, max_duration);
 
   // create reply
   out = htsmsg_create_map();

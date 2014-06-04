@@ -758,9 +758,26 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
   const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
+  
+  //IH
+  int min_duration;
+  int max_duration;
+//
 
   if(channel && !channel[0]) channel = NULL;
   if(tag     && !tag[0])     tag = NULL;
+
+//IH
+  if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
+    min_duration = atoi(s);
+  else
+    min_duration = 0;  
+
+  if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
+    max_duration = atoi(s);
+  else
+    max_duration = INT_MAX;
+//
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -780,7 +797,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, eg, title, lang);
+  epg_query(&eqr, channel, tag, eg, title, lang, min_duration, max_duration);
 
   epg_query_sort(&eqr);
 
