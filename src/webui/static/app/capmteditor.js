@@ -29,9 +29,9 @@ tvheadend.capmteditor = function() {
             fields: ['res', 'name'],
             id: 0,
             data: [
-                ['4', 'Patched OSCam (unix socket)'],
-                ['3', 'Recent OSCam (svn rev >= 9574 - TCP)'],
-                ['2', 'Recent OSCam (svn rev >= 9095)'],
+                ['4', 'OSCam pc-nodmx (rev >= 9756)'],
+                ['3', 'OSCam TCP (rev >= 9574)'],
+                ['2', 'OSCam (rev >= 9095)'],
                 ['1', 'Older OSCam'],
                 ['0', 'Wrapper (capmt_ca.so)']
             ]
