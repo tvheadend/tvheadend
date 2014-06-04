@@ -756,11 +756,8 @@ handle_ca0(capmt_t* capmt) {
           tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
 
           // we are not connected any more - set services as unavailable
-          LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
-            if (ct->td_keystate != DS_FORBIDDEN) {
-              ct->td_keystate = DS_FORBIDDEN;
-            }
-          }
+          LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
+            ct->td_keystate = DS_FORBIDDEN;
 
           int still_left = 0;
           if (!capmt_oscam_new(capmt)) {
