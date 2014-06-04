@@ -256,6 +256,7 @@ typedef struct capmt_service {
  */
 typedef struct capmt_filters {
   int max;
+  int adapter;
   dmx_filter_params_t dmx[MAX_FILTER];
 } capmt_filters_t;
 
@@ -363,6 +364,9 @@ static int
 capmt_connect(capmt_t *capmt)
 {
   int fd;
+
+  if (!capmt->capmt_running)
+    return 0;
 
   if (capmt->capmt_oscam == CAPMT_OSCAM_TCP) {
 
@@ -605,6 +609,9 @@ capmt_set_filter(capmt_t *capmt, uint8_t adapter, uint8_t *buf)
       filter_index >= MAX_FILTER)
     return;
   cf = &capmt->capmt_demuxes.filters[demux_index];
+  if (cf->max && cf->adapter != adapter)
+    return;
+  cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
   *filter = *params;
   if (capmt->capmt_demuxes.max <= demux_index)
@@ -791,7 +798,7 @@ handle_ca0(capmt_t* capmt) {
     if (capmt->capmt_oscam) {
       if (!request)
         continue;
-      if (capmt->capmt_oscam != 2) //in mode 2 we read it directly from socket
+      if (!capmt_oscam_new(capmt)) //in mode 2+ we read it directly from socket
         cai = i;
       if (*request == CA_SET_PID) {
         cpd = (ca_pid_t *)&buffer[sizeof(int)];
@@ -987,6 +994,9 @@ capmt_thread(void *aux)
       if (capmt->capmt_sock_ca0[i] > 0)
         close(capmt->capmt_sock_ca0[i]);
 
+    if (!capmt->capmt_running)
+      break;
+
     /* schedule reconnection */
     if(subscriptions_active() && !fatal) {
       d = 3;
@@ -1034,6 +1044,8 @@ capmt_table_input(struct th_descrambler *td,
 
   for (demux_index = 0; demux_index < capmt->capmt_demuxes.max; demux_index++) {
     cf = &capmt->capmt_demuxes.filters[demux_index];
+    if (cf->adapter != ct->ct_adapter)
+      continue;
     for (filter_index = 0; filter_index < cf->max; filter_index++)
       if (cf->dmx[filter_index].pid == st->es_pid) {
         f = &cf->dmx[filter_index].filter;
@@ -1288,9 +1300,10 @@ capmt_service_start(service_t *s)
     if (!capmt->capmt_enabled)
       continue;
 
-    if (tuner < 0 && !capmt_oscam_new(capmt)) {
+    if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
+                     capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET) {
       tvhlog(LOG_WARNING, "capmt",
-             "Virtual adapters are supported only in mode 2 (service \"%s\")",
+             "Virtual adapters are supported only in modes 3 and 4 (service \"%s\")",
              t->s_dvb_svcname);
       continue;
     }
