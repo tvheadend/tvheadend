@@ -25,7 +25,23 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <endian.h>
 #include "tvheadend.h"
+
+#ifndef BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER
+#endif
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN __BIG_ENDIAN
+#endif
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define ENDIAN_SWAP_COND(x) (!(x))
+#else
+#define ENDIAN_SWAP_COND(x) (x)
+#endif
 
 /**
  * CRC32 
@@ -390,6 +406,51 @@ sbuf_put_byte(sbuf_t *sb, uint8_t u8)
   sbuf_append(sb, &u8, 1);
 }
 
+uint16_t sbuf_peek_u16(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  if (ENDIAN_SWAP_COND(sb->sb_bswap))
+    return p[0] | (((uint16_t)p[1]) << 8);
+  else
+    return (((uint16_t)p[0]) << 8) | p[1];
+}
+
+uint16_t sbuf_peek_u16le(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return p[0] | (((uint16_t)p[1]) << 8);
+}
+
+uint16_t sbuf_peek_u16be(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return (((uint16_t)p[0]) << 8) | p[1];
+}
+
+uint32_t sbuf_peek_u32(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  if (ENDIAN_SWAP_COND(sb->sb_bswap))
+    return p[0] | (((uint32_t)p[1]) << 8) |
+           (((uint32_t)p[2]) << 16) | (((uint32_t)p[3]) << 24);
+  else
+    return (((uint16_t)p[0]) << 24) | (((uint16_t)p[1]) << 16) |
+            (((uint16_t)p[2]) << 8) | p[3];
+}
+
+uint32_t sbuf_peek_u32le(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return p[0] | (((uint32_t)p[1]) << 8) |
+         (((uint32_t)p[2]) << 16) | (((uint32_t)p[3]) << 24);
+}
+
+uint32_t sbuf_peek_u32be(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return (((uint16_t)p[0]) << 24) | (((uint16_t)p[1]) << 16) |
+         (((uint16_t)p[2]) << 8) | p[3];
+}
 
 void 
 sbuf_cut(sbuf_t *sb, int off)

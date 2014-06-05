@@ -472,7 +472,8 @@ typedef struct sbuf {
   uint8_t *sb_data;
   int sb_ptr;
   int sb_size;
-  int sb_err;
+  unsigned int sb_err  : 1;
+  unsigned int sb_bswap: 1;
 } sbuf_t;
 
 
@@ -650,6 +651,22 @@ void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
 void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 ssize_t sbuf_read(sbuf_t *sb, int fd);
+
+static inline uint8_t sbuf_peek_u8(sbuf_t *sb, int off) { return sb->sb_data[off]; }
+static inline  int8_t sbuf_peek_s8(sbuf_t *sb, int off) { return sb->sb_data[off]; }
+uint16_t sbuf_peek_u16(sbuf_t *sb, int off);
+static inline int16_t sbuf_peek_s16(sbuf_t *sb, int off) { return sbuf_peek_u16(sb, off); }
+uint16_t sbuf_peek_u16le(sbuf_t *sb, int off);
+static inline int16_t sbuf_peek_s16le(sbuf_t *sb, int off) { return sbuf_peek_u16le(sb, off); }
+uint16_t sbuf_peek_u16be(sbuf_t *sb, int off);
+static inline int16_t sbuf_peek_s16be(sbuf_t *sb, int off) { return sbuf_peek_u16be(sb, off); }
+uint32_t sbuf_peek_u32(sbuf_t *sb, int off);
+static inline int32_t sbuf_peek_s32(sbuf_t *sb, int off) { return sbuf_peek_u32(sb, off); }
+uint32_t sbuf_peek_u32le(sbuf_t *sb, int off);
+static inline int32_t sbuf_peek_s32le(sbuf_t *sb, int off) { return sbuf_peek_u32le(sb, off); }
+uint32_t sbuf_peek_u32be(sbuf_t *sb, int off);
+static inline  int32_t sbuf_peek_s32be(sbuf_t *sb, int off) { return sbuf_peek_u32be(sb, off); }
+static inline uint8_t *sbuf_peek(sbuf_t *sb, int off) { return sb->sb_data + off; }
 
 char *md5sum ( const char *str );
 
