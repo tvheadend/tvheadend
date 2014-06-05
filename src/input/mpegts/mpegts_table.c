@@ -183,7 +183,7 @@ mpegts_table_add
   } else if (flags & MT_SKIPSUBS) {
     subscribe = 0;
   } else if (flags & MT_SCANSUBS) {
-    if (mm->mm_scan_ok)
+    if (mm->mm_scan_state == MM_SCAN_STATE_IDLE)
       subscribe = 0;
   }
   if (subscribe) {

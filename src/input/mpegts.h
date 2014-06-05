@@ -279,6 +279,13 @@ typedef enum mpegts_mux_scan_state
   MM_SCAN_STATE_ACTIVE,   // Scan is active
 } mpegts_mux_scan_state_t;
 
+typedef enum mpegts_mux_scan_result
+{
+  MM_SCAN_NONE,
+  MM_SCAN_OK,
+  MM_SCAN_FAIL
+} mpegts_mux_scan_result_t;
+
 /* Multiplex */
 struct mpegts_mux
 {
@@ -303,13 +310,20 @@ struct mpegts_mux
    * Scanning
    */
 
-  int                      mm_scan_ok;      ///< Has been succesfully scanned
+  mpegts_mux_scan_result_t mm_scan_result;  ///< Result of last scan
   int                      mm_scan_weight;  ///< Scan priority
   int                      mm_scan_init;    ///< Flag to timeout handler
   gtimer_t                 mm_scan_timeout; ///< Timer to handle timeout
   TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
   mpegts_mux_scan_state_t  mm_scan_state;   ///< Scanning state
 
+#if 0
+  enum {
+    MM_ORIG_USER, ///< Manually added
+    MM_ORIG_FILE, ///< Added from scan file
+    MM_ORIG_AUTO  ///< From NIT
+  }                        mm_dmc_origin2;
+#endif
   mpegts_mux_t            *mm_dmc_origin;
   time_t                   mm_dmc_origin_expire;
 

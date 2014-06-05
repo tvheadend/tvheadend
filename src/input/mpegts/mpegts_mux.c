@@ -220,19 +220,63 @@ mpegts_mux_class_get_name ( void *ptr )
   return &s;
 }
 
-static void
-mpegts_mux_class_scan_notify ( void *p )
-{
-  mpegts_mux_t *mm = p;
+static struct strtab
+scan_state_tab[] = {
+  { "IDLE",   MM_SCAN_STATE_IDLE },
+  { "PEND",   MM_SCAN_STATE_PEND },
+  { "ACTIVE", MM_SCAN_STATE_ACTIVE },
+};
 
+static struct strtab
+scan_result_tab[] = {
+ { "NONE",    MM_SCAN_NONE },
+ { "OK",      MM_SCAN_OK   },
+ { "FAIL",    MM_SCAN_FAIL },
+};
+
+static int
+mpegts_mux_class_scan_state_set ( void *o, const void *p )
+{
+  mpegts_mux_t *mm = o;
+  int state = *(int*)p;
+  
   /* Start */
-  if (!mm->mm_scan_ok) {
+  if (state == MM_SCAN_STATE_PEND || state == MM_SCAN_STATE_ACTIVE) {
+
+    /* No change */
+    if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
+      return 0;
+
+    /* Start */
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER);
 
   /* Stop */
-  } else {
+  } else if (state == MM_SCAN_STATE_IDLE) {
+
+    /* No change */
+    if (state == MM_SCAN_STATE_IDLE)
+      return 0;
+
+    /* Update */
     mpegts_network_scan_mux_cancel(mm, 0);
+
+  /* Invalid */
+  } else {
   }
+
+  return 1;
+}
+
+static htsmsg_t *
+mpegts_mux_class_scan_state_enum ( void *p )
+{
+  return strtab2htsmsg(scan_state_tab);
+}
+
+static htsmsg_t *
+mpegts_mux_class_scan_result_enum ( void *p )
+{
+  return strtab2htsmsg(scan_result_tab);
 }
 
 const idclass_t mpegts_mux_class =
@@ -287,13 +331,22 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
-      .type     = PT_BOOL,
-      .id       = "scanned",
-      .name     = "Scan Complete",
-      .off      = offsetof(mpegts_mux_t, mm_scan_ok),
-      .notify   = mpegts_mux_class_scan_notify,
+      .type     = PT_INT,
+      .id       = "scan_state",
+      .name     = "Scan Status",
+      .off      = offsetof(mpegts_mux_t, mm_scan_state),
+      .set      = mpegts_mux_class_scan_state_set,
+      .list     = mpegts_mux_class_scan_state_enum,
+      .opts     = PO_NOSAVE | PO_SORTKEY,
     },
-    // TODO: need flag for ok/fail and fini/notfini
+    {
+      .type     = PT_INT,
+      .id       = "scan_result",
+      .name     = "Scan Result",
+      .off      = offsetof(mpegts_mux_t, mm_scan_result),
+      .opts     = PO_RDONLY | PO_SORTKEY,
+      .list     = mpegts_mux_class_scan_result_enum,
+    },
     {
       .type     = PT_STR,
       .id       = "charset",
@@ -703,7 +756,7 @@ mpegts_mux_create0
     idnode_load(&mm->mm_id, conf);
 
   /* Initial scan */
-  if (!mm->mm_scan_ok || !mn->mn_skipinitscan)
+  if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT);
 
   mm->mm_display_name(mm, buf, sizeof(buf));
