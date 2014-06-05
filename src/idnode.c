@@ -440,7 +440,7 @@ idnode_cmp_sort
   if (!p) return 0;
 
   /* Get display string */
-  if (p->islist || p->list) {
+  if (p->islist || (p->list && !(p->opts & PO_SORTKEY))) {
     int r;
     char *stra = idnode_get_display(ina, p);
     char *strb = idnode_get_display(inb, p);
