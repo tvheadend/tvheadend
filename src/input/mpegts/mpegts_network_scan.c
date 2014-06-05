@@ -63,18 +63,18 @@ mpegts_network_scan_timer_cb ( void *p )
     if (mm == mark) break;
 
     /* Attempt to tune */
-    // TODO: change reason?
     r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight);
-
-    /* Stop (no free tuners) */
-    if (r == SM_CODE_NO_FREE_ADAPTER)
-      break;
 
     /* Started */
     if (!r) {
       assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
       continue;
     }
+    assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
+
+    /* Stop (no free tuners) */
+    if (r == SM_CODE_NO_FREE_ADAPTER)
+      break;
 
     /* Available tuners can't be used
      * Note: this is subtly different it does not imply there are no free
@@ -84,12 +84,15 @@ mpegts_network_scan_timer_cb ( void *p )
      */
     if (r == SM_CODE_NO_VALID_ADAPTER) {
       if (!mark) mark = mm;
+      TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
       TAILQ_INSERT_SORTED(&mpegts_network_scan_pend, mm, mm_scan_link, mm_cmp);
       continue;
     }
 
     /* Failed */
-    mpegts_network_scan_mux_fail(mm);
+    TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
+    mm->mm_scan_ok    = 0;
+    mm->mm_scan_state = MM_SCAN_STATE_IDLE;
   }
 
   /* Re-arm (backstop, most things will auto-rearm at point of next event
