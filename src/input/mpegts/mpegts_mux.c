@@ -239,6 +239,10 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
 {
   mpegts_mux_t *mm = o;
   int state = *(int*)p;
+
+  /* Ignore */
+  if (!mm->mm_is_enabled(mm))
+    return 0;
   
   /* Start */
   if (state == MM_SCAN_STATE_PEND || state == MM_SCAN_STATE_ACTIVE) {
@@ -279,6 +283,16 @@ mpegts_mux_class_scan_result_enum ( void *p )
   return strtab2htsmsg(scan_result_tab);
 }
 
+static void
+mpegts_mux_class_enabled_notify ( void *p )
+{
+  mpegts_mux_t *mm = p;
+  if (!mm->mm_is_enabled(mm)) {
+    mm->mm_stop(mm, 1);
+    mpegts_network_scan_mux_cancel(mm, 0);
+  }
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -294,6 +308,7 @@ const idclass_t mpegts_mux_class =
       .name     = "Enabled",
       .off      = offsetof(mpegts_mux_t, mm_enabled),
       .def.i    = 1,
+      .notify   = mpegts_mux_class_enabled_notify,
     },
     {
       .type     = PT_STR,
@@ -385,7 +400,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   char buf[256];
 
   mm->mm_display_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s - deleting", buf);
+  tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
   
   /* Stop */
   mm->mm_stop(mm, 1);
@@ -758,6 +773,8 @@ mpegts_mux_create0
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT);
+  else if (mm->mm_network->mn_idlescan)
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - created", buf);

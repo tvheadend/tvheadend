@@ -91,6 +91,20 @@ mpegts_network_class_get_scanq_length ( void *ptr )
   return &n;
 }
 
+static void
+mpegts_network_class_idlescan_notify ( void *p )
+{
+  mpegts_network_t *mn = p;
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+    if (mn->mn_idlescan)
+      mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
+    else if (mm->mm_scan_state  == MM_SCAN_STATE_PEND &&
+             mm->mm_scan_weight == SUBSCRIPTION_PRIO_SCAN_IDLE)
+      mpegts_network_scan_queue_del(mm);
+  }
+}
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
@@ -126,6 +140,14 @@ const idclass_t mpegts_network_class =
       .name     = "Skip Initial Scan",
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
       .def.i    = 1
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "idlescan",
+      .name     = "Idle Scan Muxes",
+      .off      = offsetof(mpegts_network_t, mn_idlescan),
+      .def.i    = 0,
+      .notify   = mpegts_network_class_idlescan_notify,
     },
     {
       .type     = PT_STR,

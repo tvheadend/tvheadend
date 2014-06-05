@@ -117,35 +117,45 @@ mpegts_network_scan_timer_cb ( void *p )
  * Mux transition
  *****************************************************************************/
 
+/* Finished */
+static inline void
+mpegts_network_scan_mux_done0
+  ( mpegts_mux_t *mm, mpegts_mux_scan_result_t result, int weight )
+{
+  mpegts_mux_unsubscribe_by_name(mm, "scan");
+  mpegts_network_scan_queue_del(mm);
+
+  if (result != MM_SCAN_NONE && mm->mm_scan_result != result) {
+    mm->mm_scan_result = result;
+    mm->mm_config_save(mm);
+  }
+
+  /* Re-enable? */
+  if (mm->mm_network->mn_idlescan && !weight)
+    weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
+  if (weight > 0)
+    mpegts_network_scan_queue_add(mm, weight);
+}
+
 /* Failed - couldn't start */
 void
 mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm )
 {
-  if (mm->mm_scan_result != MM_SCAN_FAIL) {
-    mm->mm_scan_result = MM_SCAN_FAIL;
-    mm->mm_config_save(mm);
-  }
-  mpegts_mux_unsubscribe_by_name(mm, "scan");
-  mpegts_network_scan_queue_del(mm);
+  mpegts_network_scan_mux_done0(mm, MM_SCAN_FAIL, 0);
 }
 
 /* Completed succesfully */
 void
 mpegts_network_scan_mux_done    ( mpegts_mux_t *mm )
 {
-  if (mm->mm_scan_result != MM_SCAN_OK) {
-    mm->mm_scan_result = MM_SCAN_OK;
-    mm->mm_config_save(mm);
-  }
-  mpegts_mux_unsubscribe_by_name(mm, "scan");
-  mpegts_network_scan_queue_del(mm);
+  mpegts_network_scan_mux_done0(mm, MM_SCAN_OK, 0);
 }
 
 /* Failed - no input */
 void
 mpegts_network_scan_mux_timeout ( mpegts_mux_t *mm )
 {
-  mpegts_network_scan_mux_fail(mm);
+  mpegts_network_scan_mux_done0(mm, MM_SCAN_FAIL, 0);
 }
 
 /* Interrupted (re-add) */
@@ -155,13 +165,8 @@ mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert )
   if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
 
-  /* Remove */
-  mpegts_mux_unsubscribe_by_name(mm, "scan");
-  mpegts_network_scan_queue_del(mm);
-
-  /* Re-insert */
-  if (reinsert)
-    mpegts_network_scan_queue_add(mm, mm->mm_scan_weight);
+  mpegts_network_scan_mux_done0(mm, MM_SCAN_NONE,
+                                reinsert ? mm->mm_scan_weight : 0);
 }
 
 /* Mux has been started */
@@ -198,6 +203,8 @@ void
 mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
 {
   int reload = 0;
+
+  if (!mm->mm_is_enabled(mm)) return;
 
   if (weight <= 0) return;
 

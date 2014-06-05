@@ -270,6 +270,7 @@ struct mpegts_network
   int      mn_autodiscovery;
   int      mn_skipinitscan;
   char    *mn_charset;
+  int      mn_idlescan;
 };
 
 typedef enum mpegts_mux_scan_state
