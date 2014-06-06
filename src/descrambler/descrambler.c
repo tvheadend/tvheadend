@@ -20,7 +20,7 @@
 #include "cwc.h"
 #include "capmt.h"
 #include "ffdecsa/FFdecsa.h"
-#include "service.h"
+#include "input.h"
 #include "tvhcsa.h"
 
 static struct strtab caidnametab[] = {
@@ -149,6 +149,17 @@ descrambler_service_stop ( service_t *t )
     td->td_stop(td);
 }
 
+void
+descrambler_caid_changed ( service_t *t )
+{
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
+    if (td->td_caid_change)
+      td->td_caid_change(td);
+  }
+}
+
 int
 descrambler_descramble ( service_t *t,
                          elementary_stream_t *st,
@@ -173,14 +184,98 @@ descrambler_descramble ( service_t *t,
   return count == failed ? -1 : 0;
 }
 
-void
-descrambler_ca_section( elementary_stream_t *st,
-                        const uint8_t *data, size_t len )
+static int
+descrambler_table_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  th_descrambler_t *td;
+  descrambler_table_t *dt = mt->mt_opaque;
+  descrambler_section_t *ds;
 
-  LIST_FOREACH(td, &st->es_service->s_descramblers, td_service_link)
-    td->td_table(td, st, data, len);
+  pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
+  TAILQ_FOREACH(ds, &dt->sections, link)
+    ds->callback(ds->opaque, mt->mt_pid, ptr, len);
+  pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
+  return 0;
+}
+
+int
+descrambler_open_pid( mpegts_mux_t *mux, void *opaque, int pid,
+                      descrambler_section_callback_t callback )
+{
+  descrambler_table_t *dt;
+  descrambler_section_t *ds;
+
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
+    if (dt->table->mt_pid == pid) {
+      TAILQ_FOREACH(ds, &dt->sections, link) {
+        if (ds->opaque == opaque) {
+          pthread_mutex_unlock(&mux->mm_descrambler_lock);
+          return 0;
+        }
+      }
+    }
+  }
+  if (!dt) {
+    dt = calloc(1, sizeof(*dt));
+    TAILQ_INIT(&dt->sections);
+    dt->table = mpegts_table_add(mux, 0, 0, descrambler_table_callback,
+                                 dt, "descrambler", MT_FULL, pid);
+    TAILQ_INSERT_TAIL(&mux->mm_descrambler_tables, dt, link);
+  }
+  ds = calloc(1, sizeof(*ds));
+  ds->callback    = callback;
+  ds->opaque      = opaque;
+  TAILQ_INSERT_TAIL(&dt->sections, ds, link);
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+  return 1;
+}
+
+int
+descrambler_close_pid( mpegts_mux_t *mux, void *opaque, int pid )
+{
+  descrambler_table_t *dt;
+  descrambler_section_t *ds;
+
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
+    if (dt->table->mt_pid == pid) {
+      TAILQ_FOREACH(ds, &dt->sections, link) {
+        if (ds->opaque == opaque) {
+          TAILQ_REMOVE(&dt->sections, ds, link);
+          free(ds);
+          if (TAILQ_FIRST(&dt->sections) == NULL) {
+            TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
+            mpegts_table_destroy(dt->table);
+            free(dt);
+          }
+          pthread_mutex_unlock(&mux->mm_descrambler_lock);
+          return 1;
+        }
+      }
+    }
+  }
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+  return 0;
+}
+
+void
+descrambler_flush_tables( mpegts_mux_t *mux )
+{
+  descrambler_table_t *dt;
+  descrambler_section_t *ds;
+
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
+    while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
+      TAILQ_REMOVE(&dt->sections, ds, link);
+      free(ds);
+    }
+    TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
+    mpegts_table_destroy(dt->table);
+    free(dt);
+  }
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
 }
 
 // TODO: might actually put const char* into caid_t

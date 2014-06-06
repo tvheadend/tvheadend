@@ -26,6 +26,8 @@
 struct service;
 struct elementary_stream;
 struct tvhcsa;
+struct mpegts_table;
+struct mpegts_mux;
 
 /**
  * Descrambler superclass
@@ -45,13 +47,28 @@ typedef struct th_descrambler {
   struct service *td_service;
   struct tvhcsa  *td_csa;
 
-  void (*td_table)(struct th_descrambler *d, struct elementary_stream *st,
-		   const uint8_t *section, int section_len);
-
-  void (*td_stop)(struct th_descrambler *d);
+  void (*td_stop)       (struct th_descrambler *d);
+  void (*td_caid_change)(struct th_descrambler *d);
 
 } th_descrambler_t;
 
+typedef void (*descrambler_section_callback_t)
+  (void *opaque, int pid, const uint8_t *section, int section_len);
+
+/**
+ * Track required PIDs
+ */
+typedef struct descrambler_section {
+  TAILQ_ENTRY(descrambler_section) link;
+  descrambler_section_callback_t callback;
+  void *opaque;
+} descrambler_section_t;
+
+typedef struct descrambler_table {
+  TAILQ_ENTRY(descrambler_table) link;
+  struct mpegts_table *table;
+  TAILQ_HEAD(,descrambler_section) sections;
+} descrambler_table_t;
 
 /**
  * List of CA ids
@@ -87,11 +104,14 @@ void descrambler_init          ( void );
 void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
+void descrambler_caid_changed  ( struct service *t );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb );
-void descrambler_ca_section    ( struct elementary_stream *st,
-                                 const uint8_t *data, size_t len );
+int  descrambler_open_pid      ( struct mpegts_mux *mux, void *opaque, int pid,
+                                 descrambler_section_callback_t callback );
+int  descrambler_close_pid     ( struct mpegts_mux *mux, void *opaque, int pid );
+void descrambler_flush_tables  ( struct mpegts_mux *mux );
 const char *descrambler_caid2name( uint16_t caid );
 uint16_t descrambler_name2caid ( const char *str );
 card_type_t detect_card_type   ( const uint16_t caid );
