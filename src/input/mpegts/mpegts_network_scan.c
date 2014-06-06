@@ -93,7 +93,8 @@ mpegts_network_scan_timer_cb ( void *p )
     if (r == SM_CODE_NO_VALID_ADAPTER) {
       if (!mark) mark = mm;
       TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
-      TAILQ_INSERT_SORTED(&mpegts_network_scan_pend, mm, mm_scan_link, mm_cmp);
+      TAILQ_INSERT_SORTED_R(&mpegts_network_scan_pend, mpegts_mux_queue,
+                            mm, mm_scan_link, mm_cmp);
       continue;
     }
 
@@ -226,7 +227,8 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
 
   /* Add new entry */
   mm->mm_scan_state = MM_SCAN_STATE_PEND;
-  TAILQ_INSERT_SORTED(&mpegts_network_scan_pend, mm, mm_scan_link, mm_cmp);
+  TAILQ_INSERT_SORTED_R(&mpegts_network_scan_pend, mpegts_mux_queue,
+                        mm, mm_scan_link, mm_cmp);
   mpegts_network_scan_timer_arm(0);
   mpegts_network_scan_notify(mm);
 }
