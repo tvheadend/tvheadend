@@ -314,8 +314,10 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
   pthread_mutex_lock(&s->s_stream_mutex);
   mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
   mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
-  TAILQ_FOREACH(st, &s->s_components, es_link)
-    mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+  TAILQ_FOREACH(st, &s->s_components, es_link) {
+    if (st->es_type != SCT_CA)
+      mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+  }
 
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);

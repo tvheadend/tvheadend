@@ -200,18 +200,9 @@ void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
+  descrambler_flush_tables(mm);
   while ((mt = LIST_FIRST(&mm->mm_tables)))
     mpegts_table_destroy(mt);
-}
-
-/**
- * Register wanted CAID
- */
-void
-mpegts_table_register_caid ( mpegts_mux_t *mm, uint16_t caid )
-{
-  uintptr_t ca = caid;
-  mpegts_table_add(mm, 0, 0, NULL, (void *)ca, "ca", MT_FULL, -1);
 }
 
 /*

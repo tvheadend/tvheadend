@@ -123,6 +123,17 @@ typedef struct ecm_pid {
 /**
  *
  */
+struct cwc_service;
+typedef struct cwc_opaque {
+  struct cwc_service  *service;
+  elementary_stream_t *estream;
+  mpegts_mux_t        *mux;
+} cwc_opaque_t;
+
+
+/**
+ *
+ */
 typedef struct cwc_service {
   th_descrambler_t;
 
@@ -131,6 +142,8 @@ typedef struct cwc_service {
   LIST_ENTRY(cwc_service) cs_link;
 
   int cs_channel;
+  int cs_pid;
+  cwc_opaque_t cs_opaque;
 
   /**
    * ECM Status
@@ -1594,11 +1607,12 @@ cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, uint8_t *data, int mlen
  * t->s_streaming_mutex is held
  */
 static void
-cwc_table_input(struct th_descrambler *td,
-		struct elementary_stream *st, const uint8_t *data, int len)
+cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
 {
-  cwc_service_t *ct = (cwc_service_t *)td;
-  mpegts_service_t *t = (mpegts_service_t*)td->td_service;
+  cwc_opaque_t *o = opaque;
+  elementary_stream_t *st = o->estream;
+  cwc_service_t *ct = o->service;
+  mpegts_service_t *t = (mpegts_service_t*)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
   cwc_t *cwc = ct->cs_cwc;
   int channel;
@@ -1618,10 +1632,11 @@ cwc_table_input(struct th_descrambler *td,
     return;
 
   LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-    if(ep->ep_pid == st->es_pid)
+    if(ep->ep_pid == pid)
       break;
   }
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   if(ep == NULL) {
     if (ct->ecm_state == ECM_RESET) {
       ct->ecm_state = ECM_INIT;
@@ -1641,7 +1656,7 @@ cwc_table_input(struct th_descrambler *td,
         }
       }
 
-      if(t->s_dvb_prefcapid == st->es_pid) {
+      if(t->s_dvb_prefcapid == pid) {
         ep = calloc(1, sizeof(ecm_pid_t));
         ep->ep_pid = t->s_dvb_prefcapid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
@@ -1649,12 +1664,13 @@ cwc_table_input(struct th_descrambler *td,
       }
       else if(t->s_dvb_prefcapid == 0) {
           ep = calloc(1, sizeof(ecm_pid_t));
-          ep->ep_pid = st->es_pid;
+          ep->ep_pid = pid;
           LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", st->es_pid, t->s_dvb_svcname);
+          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", pid, t->s_dvb_svcname);
       }
     }
   }
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   if(ep == NULL)
     return;
@@ -1688,7 +1704,7 @@ cwc_table_input(struct th_descrambler *td,
         section = 0;
       }
       
-      channel = st->es_pid;
+      channel = pid;
       snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", channel);
       
       if(ep->ep_sections[section] == NULL)
@@ -1901,6 +1917,8 @@ cwc_service_destroy(th_descrambler_t *td)
   ecm_pid_t *ep;
   int i;
 
+  descrambler_close_pid(ct->cs_opaque.mux, &ct->cs_opaque, ct->cs_pid);
+
   while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
     for(i = 0; i < 256; i++)
       free(ep->ep_sections[i]);
@@ -1917,25 +1935,6 @@ cwc_service_destroy(th_descrambler_t *td)
 }
 
 /**
- *
- */
-static inline elementary_stream_t *
-cwc_find_stream_by_caid(service_t *t, const short caid)
-{
-  elementary_stream_t *st;
-  caid_t *c;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    LIST_FOREACH(c, &st->es_caids, link) {
-      if(c->caid == caid)
-	      return st;
-    }
-  }
-  return NULL;
-}
-
-
-/**
  * Check if our CAID's matches, and if so, link
  *
  * global_lock is held. Not that we care about that, but either way, it is.
@@ -1946,6 +1945,8 @@ cwc_service_start(service_t *t)
   cwc_t *cwc;
   cwc_service_t *ct;
   th_descrambler_t *td;
+  elementary_stream_t *st;
+  caid_t *c;
   struct cs_card_data *pcard;
 
   extern const idclass_t mpegts_service_class;
@@ -1958,9 +1959,16 @@ cwc_service_start(service_t *t)
       if (ct->td_service == t && ct->cs_cwc == cwc)
         break;
     }
-    LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
-      if((pcard->cwc_caid != 0) && cwc_find_stream_by_caid(t, pcard->cwc_caid))
-        break;
+    LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
+      if (pcard->cwc_caid == 0) continue;
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        LIST_FOREACH(c, &st->es_caids, link) {
+          if (c->caid == pcard->cwc_caid)
+            break;
+        }
+        if (c) break;
+      }
+      if (st) break;
     }
     if (!pcard) {
       if (ct) cwc_service_destroy((th_descrambler_t*)ct);
@@ -1969,21 +1977,25 @@ cwc_service_start(service_t *t)
 
     if (ct) continue;
 
-    mpegts_table_register_caid(((mpegts_service_t *)t)->s_dvb_mux, pcard->cwc_caid);
-
     ct                   = calloc(1, sizeof(cwc_service_t));
     ct->cs_cwc           = cwc;
     ct->cs_channel       = -1;
+    ct->cs_pid           = st->es_pid;
+    ct->cs_opaque.service = ct;
+    ct->cs_opaque.estream = st;
+    ct->cs_opaque.mux    = ((mpegts_service_t *)t)->s_dvb_mux;
     ct->ecm_state        = ECM_INIT;
 
     td                   = (th_descrambler_t *)ct;
     tvhcsa_init(td->td_csa = &ct->cs_csa);
     td->td_service       = t;
     td->td_stop          = cwc_service_destroy;
-    td->td_table         = cwc_table_input;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
+
+    descrambler_open_pid(ct->cs_opaque.mux, &ct->cs_opaque,
+                         ct->cs_pid, cwc_table_input);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
 	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);

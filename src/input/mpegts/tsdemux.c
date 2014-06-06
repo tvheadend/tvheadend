@@ -45,24 +45,13 @@
 static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 
 /**
- * Code for dealing with a complete section
- */
-static void
-got_ca_section(const uint8_t *data, size_t len, void *opaque)
-{
-  elementary_stream_t *st = opaque;
-  assert(st->es_service->s_source_type == S_MPEG_TS);
-  descrambler_ca_section(st, data, len);
-}
-
-/**
  * Continue processing of transport stream packets
  */
 static void
 ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
-  int off, pusi, cc, error, ccerr;
+  int off, pusi, cc, error;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -72,7 +61,6 @@ ts_recv_packet0
   if (!st)
     return;
 
-  ccerr = 0;
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
@@ -81,7 +69,6 @@ ts_recv_packet0
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->es_cc != -1 && cc != st->es_cc) {
-      ccerr = 1;
       /* Incorrect CC */
       limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
      "Continuity counter error");
@@ -100,10 +87,6 @@ ts_recv_packet0
   switch(st->es_type) {
 
   case SCT_CA:
-    if(st->es_section == NULL)
-      st->es_section = calloc(1, sizeof(mpegts_psi_section_t));
-    mpegts_psi_section_reassemble(st->es_section, tsb, 0, ccerr,
-                                  got_ca_section, st);
     break;
 
   default:

@@ -1561,6 +1561,10 @@ psi_parse_pmt
       if(t->s_status == SERVICE_RUNNING)
         ret = 1;
     }
+    
+    // notify descrambler that we found another CAIDs
+    if (update & PMT_UPDATE_NEW_CAID)
+      descrambler_caid_changed((service_t *)t);
   }
   return ret;
 }

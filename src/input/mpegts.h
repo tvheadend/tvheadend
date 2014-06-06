@@ -347,6 +347,9 @@ struct mpegts_mux
   LIST_HEAD(, mpegts_table)   mm_tables;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 
+  TAILQ_HEAD(, descrambler_table) mm_descrambler_tables;
+  pthread_mutex_t             mm_descrambler_lock;
+
   /*
    * Functions
    */
@@ -729,7 +732,6 @@ mpegts_table_t *mpegts_table_add
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );
-void mpegts_table_register_caid ( mpegts_mux_t *mm, uint16_t caid );
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,
