@@ -1549,7 +1549,7 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
   caid_t *c = malloc(sizeof(caid_t));
   c->caid = caid;
   c->providerid = providerid;
-  c->delete_me = 0;
+  c->pid = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 

@@ -73,14 +73,32 @@ typedef struct descrambler_table {
 /**
  * List of CA ids
  */
+#define CAID_REMOVE_ME ((uint16_t)-1)
+
 typedef struct caid {
   LIST_ENTRY(caid) link;
 
-  uint8_t delete_me;
+  uint16_t pid;
   uint16_t caid;
   uint32_t providerid;
 
 } caid_t;
+
+/**
+ * List of EMM subscribers
+ */
+#define EMM_PID_UNKNOWN ((uint16_t)-1)
+
+typedef struct descrambler_emm {
+  TAILQ_ENTRY(descrambler_emm) link;
+
+  uint16_t caid;
+  uint16_t pid;
+  unsigned int to_be_removed:1;
+
+  descrambler_section_callback_t callback;
+  void *opaque;
+} descrambler_emm_t;
 
 /**
  * cards for which emm updates are handled
@@ -112,8 +130,14 @@ int  descrambler_open_pid      ( struct mpegts_mux *mux, void *opaque, int pid,
                                  descrambler_section_callback_t callback );
 int  descrambler_close_pid     ( struct mpegts_mux *mux, void *opaque, int pid );
 void descrambler_flush_tables  ( struct mpegts_mux *mux );
+void descrambler_cat_data      ( struct mpegts_mux *mux, const uint8_t *data, int len );
+int  descrambler_open_emm      ( struct mpegts_mux *mux, void *opaque, int caid,
+                                 descrambler_section_callback_t callback );
+int  descrambler_close_emm     ( struct mpegts_mux *mux, void *opaque, int caid );
+
 const char *descrambler_caid2name( uint16_t caid );
 uint16_t descrambler_name2caid ( const char *str );
+
 card_type_t detect_card_type   ( const uint16_t caid );
 
 #endif /* __TVH_DESCRAMBLER_H__ */

@@ -769,7 +769,9 @@ mpegts_mux_create0
   mm->mm_open_table          = mpegts_mux_open_table;
   mm->mm_close_table         = mpegts_mux_close_table;
   TAILQ_INIT(&mm->mm_table_queue);
+  LIST_INIT(&mm->mm_descrambler_caids);
   TAILQ_INIT(&mm->mm_descrambler_tables);
+  TAILQ_INIT(&mm->mm_descrambler_emms);
   pthread_mutex_init(&mm->mm_descrambler_lock, NULL);
 
   mm->mm_last_pid            = -1;

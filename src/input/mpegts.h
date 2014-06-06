@@ -347,7 +347,9 @@ struct mpegts_mux
   LIST_HEAD(, mpegts_table)   mm_tables;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 
+  LIST_HEAD(, caid)           mm_descrambler_caids;
   TAILQ_HEAD(, descrambler_table) mm_descrambler_tables;
+  TAILQ_HEAD(, descrambler_emm) mm_descrambler_emms;
   pthread_mutex_t             mm_descrambler_lock;
 
   /*

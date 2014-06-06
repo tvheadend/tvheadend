@@ -1281,7 +1281,7 @@ capmt_thread(void *aux)
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
 
     /* Accessible */
-    if (!access(capmt->capmt_sockfile, R_OK | W_OK))
+    if (capmt->capmt_sockfile && !access(capmt->capmt_sockfile, R_OK | W_OK))
       capmt_set_connected(capmt, 1);
     else
       capmt_set_connected(capmt, 0);
@@ -1392,7 +1392,7 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
   dmx_filter_t *f;
 
   /* Validate */
-  if (len > 4096) return;
+  if (data == NULL || len > 4096) return;
 
   for (demux_index = 0; demux_index < capmt->capmt_demuxes.max; demux_index++) {
     cf = &capmt->capmt_demuxes.filters[demux_index];
