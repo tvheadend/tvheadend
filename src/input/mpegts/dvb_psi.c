@@ -618,20 +618,6 @@ dvb_pat_callback
 /*
  * CAT processing
  */
-
-// TODO: might be a better way of handling this
-#include "descrambler/cwc.h"
-static int
-dvb_ca_callback
-  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
-{
-  (void)dvb_table_begin(mt, ptr, len, tableid, 0, 0, NULL, NULL, NULL, NULL);
-#if ENABLE_CWC
-  cwc_emm((uint8_t*)ptr, len, (uintptr_t)mt->mt_opaque, mt->mt_mux);
-#endif
-  return 0;
-}
-
 int
 dvb_cat_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
@@ -649,6 +635,9 @@ dvb_cat_callback
   ptr += 5;
   len -= 5;
 
+  /* Send CAT data for descramblers */
+  descrambler_cat_data(mm, ptr, len);
+
   while(len > 2) {
     dtag = *ptr++;
     dlen = *ptr++;
@@ -656,13 +645,12 @@ dvb_cat_callback
 
     switch(dtag) {
       case DVB_DESC_CA:
-        caid = ( ptr[0]         << 8) | ptr[1];
-        pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
-        tvhdebug("cat", "  caid %04X (%d) pid %04X (%d)",
-                 (uint16_t)caid, (uint16_t)caid, pid, pid);
-        if(pid != 0)
-          mpegts_table_add(mm, 0, 0, dvb_ca_callback,
-                           (void*)caid, "ca", MT_FULL | MT_SKIPSUBS, pid);
+        if (len >= 4 && dlen >= 4) {
+          caid = ( ptr[0]         << 8) | ptr[1];
+          pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
+          tvhdebug("cat", "  caid %04X (%d) pid %04X (%d)",
+                   (uint16_t)caid, (uint16_t)caid, pid, pid);
+        }
         break;
       default:
         break;
@@ -1155,7 +1143,7 @@ psi_desc_add_ca
 
   LIST_FOREACH(c, &st->es_caids, link) {
     if(c->caid == caid) {
-      c->delete_me = 0;
+      c->pid = pid;
 
       if(c->providerid != provid) {
         c->providerid = provid;
@@ -1169,8 +1157,7 @@ psi_desc_add_ca
 
   c->caid = caid;
   c->providerid = provid;
-  
-  c->delete_me = 0;
+  c->pid = pid;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
   return r;
@@ -1327,7 +1314,7 @@ psi_parse_pmt
     st->es_delete_me = 1;
 
     LIST_FOREACH(c, &st->es_caids, link)
-      c->delete_me = 1;
+      c->pid = CAID_REMOVE_ME;
   }
 
   // Common descriptors
@@ -1516,7 +1503,7 @@ psi_parse_pmt
 
     for(c = LIST_FIRST(&st->es_caids); c != NULL; c = cn) {
       cn = LIST_NEXT(c, link);
-      if(c->delete_me) {
+      if (c->pid == CAID_REMOVE_ME) {
         LIST_REMOVE(c, link);
         free(c);
         update |= PMT_UPDATE_CAID_DELETED;
