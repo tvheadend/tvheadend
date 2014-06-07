@@ -211,7 +211,7 @@ tvhdhomerun_device_calc_bin_uuid( uint8_t *uuid, const uint32_t device_id )
 }
 
 static void
-tvhdhomerun_device_calc_uuid( uuid_t *uuid, const uint32_t device_id )
+tvhdhomerun_device_calc_uuid( tvh_uuid_t *uuid, const uint32_t device_id )
 {
   uint8_t uuidbin[20];
 
@@ -241,7 +241,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   tvhdhomerun_device_t *hd = calloc(1, sizeof(tvhdhomerun_device_t));
   htsmsg_t *conf = NULL, *feconf = NULL;
-  uuid_t uuid;
+  tvh_uuid_t uuid;
   int j, save = 0;
   struct hdhomerun_device_t *hdhomerun_tuner;
   dvb_fe_type_t type = -1;
@@ -364,7 +364,7 @@ tvhdhomerun_discovery_timer_cb(void *aux)
         tvhlog(LOG_INFO, "tvhdhomerun","Found device  : %08x",cDev->device_id);
         tvhlog(LOG_INFO, "tvhdhomerun","type       : %d",cDev->device_type);
         tvhlog(LOG_INFO, "tvhdhomerun","tunerCount : %d",cDev->tuner_count);
-        uuid_t uuid;
+        tvh_uuid_t uuid;
         tvhdhomerun_device_calc_uuid(&uuid, cDev->device_id);
 
         if ( !tvhdhomerun_device_find(cDev->device_id) )
