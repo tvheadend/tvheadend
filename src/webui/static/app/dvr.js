@@ -799,7 +799,7 @@ tvheadend.dvrsettings = function() {
         'channelInTitle', 'container', 'cache', 'charset', 'dateInTitle', 'timeInTitle',
         'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
         'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle',
-        'episodeBeforeDate', 'rewritePAT', 'rewritePMT']);
+        'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'episodeDuplicateDetection']);
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
@@ -925,6 +925,11 @@ tvheadend.dvrsettings = function() {
         name: 'commSkip'
     });
 
+    var episodeDuplicateDetection = new Ext.form.Checkbox({
+        fieldLabel: 'Episode Duplicate Detect',
+        name: 'episodeDuplicateDetection'
+    });
+
     /* Subdirectories and filename handling */
 
     /* NB: directoryPermissions is defined as a TextField for validation purposes (leading zeros), but is ultimately a number */
@@ -1015,7 +1020,7 @@ tvheadend.dvrsettings = function() {
         autoHeight: true,
         collapsible: true,
         animCollapse: true,
-        items: [recordingPath, recordingPermissions, charset, PATrewrite, PMTrewrite, tagMetadata, skipCommercials]
+        items: [recordingPath, recordingPermissions, charset, PATrewrite, PMTrewrite, tagMetadata, skipCommercials, episodeDuplicateDetection]
     });
 
     /* Sub-Panel - Directory operations */
