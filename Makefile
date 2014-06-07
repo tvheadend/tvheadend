@@ -48,10 +48,6 @@ CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
 CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
 endif
 
-ifeq ($(CONFIG_HDHOMERUN_CLIENT),yes)
-LDFLAGS += -lhdhomerun
-endif
-
 vpath %.c $(ROOTDIR)
 vpath %.h $(ROOTDIR)
 
