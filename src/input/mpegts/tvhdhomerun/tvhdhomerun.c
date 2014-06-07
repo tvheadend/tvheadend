@@ -258,9 +258,11 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
         type = DVB_TYPE_C;
       }
     }
-    hd->hd_override_type = strdup(dvb_type2str(type));
-    tvhlog(LOG_INFO, "tvheadend","Using Network type : %s", hd->hd_override_type);
   }
+  
+  hd->hd_override_type = strdup(dvb_type2str(type));
+  tvhlog(LOG_INFO, "tvheadend","Using Network type : %s", hd->hd_override_type);
+  
 
   /* some sane defaults */
   hd->hd_fullmux_ok  = 1;
