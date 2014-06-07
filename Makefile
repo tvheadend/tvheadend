@@ -48,6 +48,10 @@ CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
 CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
 endif
 
+ifeq ($(CONFIG_HDHOMERUN_CLIENT),yes)
+LDFLAGS += -lhdhomerun
+endif
+
 vpath %.c $(ROOTDIR)
 vpath %.h $(ROOTDIR)
 
@@ -234,6 +238,10 @@ SRCS-${CONFIG_SATIP_CLIENT} += \
 	src/input/mpegts/satip/satip_frontend.c \
 	src/input/mpegts/satip/satip_satconf.c \
 	src/input/mpegts/satip/satip_rtsp.c
+
+SRCS-${CONFIG_HDHOMERUN_CLIENT} += \
+	src/input/mpegts/tvhdhomerun/tvhdhomerun.c \
+	src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \

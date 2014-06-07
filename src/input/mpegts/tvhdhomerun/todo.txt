@@ -1,0 +1,67 @@
+
+
+
+open mux:
+	mutex_lock(hdhomerun)
+	obtain lock for tuner.
+	clear pid-filter.
+	start input thread.
+	mutex_unlock(hdhomerun)
+	start_monitor()
+
+close mux:
+	stop input-thread. (frontend_running = false)
+	wait pthread_broadcast from input-thread.
+	mutex_lock(hdhomerun)
+	release lock for tuner.
+	close tuner-device.
+	mutex_unlock(hdhomerun)
+	stop_monitor()
+
+tune:
+	check if same, if same just clear the pid-filter.
+	mutex_lock(hdhomerun)
+	clear pid-filter
+	tune to frequency.
+	flush buffer.
+	mutex_unlock(hdhomerun)
+
+
+is_free:
+	 mutex_lock(hdhomerun)
+	 check if tuner is free, ie no-one else has a lock.
+	 mutex_unlock(hdhomerun)
+
+input thread:
+	
+
+	 while(frontend_running == true && tvheadend_running)
+	 {
+	 	mutex_lock(hdhomerun)
+	 	hdhomerun_read
+	 	mutex_unlock(hdhomerun)
+	    mpegts-write
+
+	    usleep(250000) -- 8 reads per second would be the target..
+	 }
+	 pthread_broadcast();
+
+
+add_pid:
+    recalc-pid-list.
+	mutex_lock(hdhomerun)
+	set_pids_dev();
+	mutex_unlock(hdhomerun)
+
+del_pid:
+    recalc-pid-list.
+	mutex_lock(hdhomerun)
+	set_pids_dev();
+	mutex_unlock(hdhomerun)
+
+
+default-tables...
+
+frontend_monitor:
+
+start_monitor()

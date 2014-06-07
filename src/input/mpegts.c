@@ -57,6 +57,10 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
   satip_init(satip_client);
 #endif
 
+#if ENABLE_HDHOMERUN_CLIENT
+  tvhdhomerun_init();
+#endif
+
   /* Mux schedulers */
 #if ENABLE_MPEGTS
   mpegts_mux_sched_init();
@@ -79,6 +83,9 @@ mpegts_done ( void )
 #endif
 #if ENABLE_SATIP_CLIENT
   tvhftrace("main", satip_done);
+#endif
+#if ENABLE_HDHOMERUN
+  tvhftrace("main", tvhdhomerun_done);
 #endif
 #if ENABLE_TSFILE
   tvhftrace("main", tsfile_done);

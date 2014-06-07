@@ -20,6 +20,7 @@ OPTIONS=(
   "v4l:no"
   "linuxdvb:yes"
   "satip_client:yes"
+  "hdhomerun_client:yes"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
@@ -335,11 +336,11 @@ fi
 disable mpegts
 disable mpegps
 disable mpegts_dvb
-if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client;
+if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || enabled hdhomerun_client;
 then
   enable mpegts
 fi
-if enabled linuxdvb || enabled satip_client; then
+if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client; then
   enable mpegts_dvb
 fi
 
