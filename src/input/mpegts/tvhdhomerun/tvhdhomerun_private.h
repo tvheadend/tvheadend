@@ -35,6 +35,7 @@ struct tvhdhomerun_device_info
   char *addr;         /* IP address */
   char *id;
   char *friendlyname;
+  char *deviceModel;
 
   char *uuid;
 
@@ -49,8 +50,8 @@ struct tvhdhomerun_device
   /*
    * Adapter info
    */
-  tvhdhomerun_device_info_t        hd_info;
-
+  tvhdhomerun_device_info_t      hd_info;
+  pthread_mutex_t                hd_hdhomerun_mutex;
   /*
    * Frontends
    */
@@ -64,6 +65,9 @@ struct tvhdhomerun_device
   int                        hd_pids_max;
   int                        hd_pids_len;
   int                        hd_pids_deladd;
+
+  dvb_fe_type_t              hd_type;
+  char                      *hd_override_type;
 
   pthread_mutex_t            hd_tune_mutex;
 };
@@ -79,16 +83,14 @@ struct tvhdhomerun_frontend
    */
   tvhdhomerun_device_t          *hf_device;
   int                            hf_master;
-  pthread_mutex_t                hf_hdhomerun_mutex;
 
   TAILQ_ENTRY(tvhdhomerun_frontend)  hf_link;
 
   /*
    * Frontend info
    */
-  int                            hf_number;
-  dvb_fe_type_t                  hf_type;
-  char                          *hf_type_override;
+  int                            hf_tunerNumber;
+  dvb_fe_type_t                  hf_type; 
   pthread_mutex_t                hf_mutex;          // Anything that is used by both input-thread
                                                     // or monitor. Only for quick read/writes.
 
@@ -136,8 +138,7 @@ void tvhdhomerun_device_destroy_later( tvhdhomerun_device_t *sd, int after_ms );
 
 
 tvhdhomerun_frontend_t * 
-tvhdhomerun_frontend_create
-  ( htsmsg_t *conf, tvhdhomerun_device_t *sd, dvb_fe_type_t type, int num, struct hdhomerun_device_t *hdhomerun_tuner );
+tvhdhomerun_frontend_create( htsmsg_t *conf, tvhdhomerun_device_t *hd, dvb_fe_type_t type, struct hdhomerun_device_t *hdhomerun_tuner, int frontend_number );
 
 void tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *lfe );
 

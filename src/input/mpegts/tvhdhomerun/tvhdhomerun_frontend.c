@@ -34,10 +34,8 @@ tvhdhomerun_frontend_find_by_number( tvhdhomerun_device_t *hd, int num )
 {
   tvhdhomerun_frontend_t *hfe;
 
-printf ("Enter %s\n", __PRETTY_FUNCTION__);
-
   TAILQ_FOREACH(hfe, &hd->hd_frontends, hf_link)
-    if (hfe->hf_number == num)
+    if (hfe->hf_tunerNumber == num)
       return hfe;
   return NULL;
 }
@@ -78,12 +76,12 @@ tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
 static void *
 tvhdhomerun_frontend_input_thread ( void *aux )
 {
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
   tvhdhomerun_frontend_t *hfe = aux;
   mpegts_mux_instance_t *mmi = hfe->hf_mmi;
   sbuf_t sb;
   char buf[256];
-  
+
+  tvhdebug("tvhdhomerun", "Starting input-thread.\n");  
 
   /* Get MMI */
   hfe->mi_display_name((mpegts_input_t*)hfe, buf, sizeof(buf));
@@ -97,49 +95,54 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   assert(hfe->hf_hdhomerun_video_sock == NULL);
 
+  pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
+  int actualTuner = hdhomerun_device_get_tuner(hfe->hf_hdhomerun_tuner);
+
+  tvhdebug("tvhdhomerun", "Actual tuner : %d  Wanted tuner %d\n",actualTuner, hfe->hf_tunerNumber );
   int r = hdhomerun_device_stream_start(hfe->hf_hdhomerun_tuner);
   if ( r == 0 ) {
     tvhlog(LOG_ERR, "tvhdhomerun", "Failed to start stream from HDHomeRun device! (Command rejected!)");
+    // TODO: Needs to be handled.. retry? Remove/rediscover???
     sleep(10);
   } else if ( r == -1 ) {
     tvhlog(LOG_ERR, "tvhdhomerun", "Failed to start stream from HDHomeRun device! (Communication error!)");
-    // TODO: Mark device as invalid and remove and trigger rescan.
+    // TODO: remove the whole device and let it be rediscovered
     sleep(10);
     return NULL;
   }
 
   hfe->hf_hdhomerun_video_sock = hdhomerun_device_get_video_sock(hfe->hf_hdhomerun_tuner);
+  pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
 
-  sbuf_init_fixed(&sb,VIDEO_DATA_BUFFER_SIZE_1S); // Buffersize in hdhomerun.
+  sbuf_init_fixed(&sb,VIDEO_DATA_BUFFER_SIZE_1S); // Buffersize in libhdhomerun.
 
   while (tvheadend_running && hfe->hf_input_thread_terminating == 0 ) {
-
-    const size_t maxRead = 188*100; // Available space in sbuf.
+    const size_t maxRead = sb.sb_size-sb.sb_ptr; // Available space in sbuf.
     size_t readDataSize = 0;
  
-    pthread_mutex_lock(&hfe->hf_hdhomerun_mutex);
+    pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
     uint8_t *readData = hdhomerun_video_recv(hfe->hf_hdhomerun_video_sock, maxRead, &readDataSize);
-    if ( readDataSize > 0 ) {    
-      //printf("readDataSize : %lu\n", readDataSize);
+    if ( readDataSize > 0 ) {
       sbuf_append(&sb, readData, readDataSize);
       mpegts_input_recv_packets((mpegts_input_t*)hfe, mmi,
                                  &sb, 0, NULL, NULL);
     }
-    pthread_mutex_unlock(&hfe->hf_hdhomerun_mutex);
-  
-    if ( readDataSize < 1000 ) {
-      usleep(25000);
-    }
-    
+    pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
+
+    // Sleep for 0.125 seconds. hdhomerun video-socket has a buffer of up to 1 second
+    // so it should be safe.
+    // TODO: Maybe lower this value for the first 3-4 seconds during startup and any
+    // pid-filter changes to allow for faster zap-times.
+    usleep(125000);
   }
-  pthread_mutex_lock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
   hdhomerun_device_stream_stop(hfe->hf_hdhomerun_tuner);
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
   hfe->hf_hdhomerun_video_sock = 0;
 
   sbuf_free(&sb);
 
-  printf("Thread terminating...\n");
+  tvhdebug("tvhdhomerun", "Terminating input-thread.\n");
 
   hfe->hf_input_thread_terminating = 0;
 
@@ -179,25 +182,19 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   struct hdhomerun_tuner_status_t tunerStatus;
   char *tunerBufferString;
 
-  
-  // TODO: Fetch the Debug status message and parse...
-
   if (mmi == NULL) {
     return;
   }
 
-
-  pthread_mutex_lock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
   hdhomerun_device_get_tuner_status(hfe->hf_hdhomerun_tuner, &tunerBufferString, &tunerStatus);
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
 
   mm = mmi->mmi_mux;
 
   if ( tunerStatus.signal_present ) {
-//    printf("Signal GOOD\n");
     hfe->hf_status = SIGNAL_GOOD;
   } else {
-//    printf("Signal BAD!\n");
     hfe->hf_status = SIGNAL_NONE;
   }
 
@@ -235,8 +232,6 @@ static void tvhdhomerun_device_update_pid_filter(tvhdhomerun_frontend_t *hfe, mp
 
   memset(filterBuff,0,sizeof(filterBuff));
 
- // sprintf(filterBuff, "0x00-0x1fff");
-
   pthread_mutex_lock(&hfe->hf_pid_filter_mutex);
   
   pthread_mutex_lock(&hfe->mi_output_lock);
@@ -250,28 +245,24 @@ static void tvhdhomerun_device_update_pid_filter(tvhdhomerun_frontend_t *hfe, mp
     sprintf(filterBuff, "0x00");
   }
   
-  printf("Current pids : %s\n", filterBuff);
+  tvhdebug("tvhdhomerun", "Current pids : %s", filterBuff);
 
   if ( strncmp(hfe->hf_pid_filter_buf, filterBuff,1024) != 0) {
     memset(hfe->hf_pid_filter_buf,0,sizeof(hfe->hf_pid_filter_buf));
     strcat(hfe->hf_pid_filter_buf, filterBuff);
 
-    pthread_mutex_lock(&hfe->hf_hdhomerun_mutex);
-    printf(" ----  Setting pid-filter to : %s\n",filterBuff);
+    pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
+    tvhdebug("tvhdhomerun", " ----  Setting pid-filter to : %s",filterBuff);
     int r = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, filterBuff);
     if ( r == 0 ) {
-      printf("Command rejected!\n");
+      tvhdebug("tvhdhomerun", "Command rejected!");
     } else if ( r == -1) {
-      printf("Communication failure when setting pid filter.!\n");
+      tvhdebug("tvhdhomerun", "Communication failure when setting pid filter.!");
     }
-    pthread_mutex_unlock(&hfe->hf_hdhomerun_mutex);
+    pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
     
   }
   pthread_mutex_unlock(&hfe->hf_pid_filter_mutex);
-  
-
-  // TODO: REMOVE
-
   
 }
 
@@ -283,13 +274,11 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
 
   char freqBuf[64];
   snprintf(freqBuf, 64, "auto:%u", dmc->dmc_fe_freq);
-  pthread_mutex_lock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_lock(&hfe->hf_device->hd_hdhomerun_mutex);
   hdhomerun_device_set_tuner_channel(hfe->hf_hdhomerun_tuner, freqBuf);
   hdhomerun_device_stream_flush(hfe->hf_hdhomerun_tuner);
-  pthread_mutex_unlock(&hfe->hf_hdhomerun_mutex);
+  pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
   hfe->hf_status = SIGNAL_NONE;
-
-  // mpegts_mux_t *mm = mmi->mmi_mux;
 
   return 0;
 }
@@ -300,7 +289,6 @@ static int
 tvhdhomerun_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   char buf1[256], buf2[256];
 
@@ -319,10 +307,6 @@ tvhdhomerun_frontend_start_mux
     cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
   }
 
-  // Used to push a "clean" filter to the device to prevent flooding.
-  // tvhdhomerun_device_update_pid_filter(hfe, mmi->mmi_mux);
-
-  // TODO: mutex-lock when creating thread and in thread...
   assert( hfe->hf_input_thread_running == 0);
   hfe->hf_input_thread_running = 1;
   tvhthread_create(&hfe->hf_input_thread, NULL,
@@ -331,7 +315,6 @@ tvhdhomerun_frontend_start_mux
   gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 1);
 
   int r =  tvhdhomerun_frontend_tune(hfe, mmi);
-  printf ("Exit %s\n", __PRETTY_FUNCTION__);
   return r;
 }
 
@@ -339,7 +322,6 @@ static void
 tvhdhomerun_frontend_stop_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   char buf1[256], buf2[256];
 
@@ -363,17 +345,15 @@ static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_m
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   mpegts_pid_t *mp;
 
-  printf("Open pid 0x%x\n", pid);
+  tvhdebug("tvhdhomerun", "Open pid 0x%x\n", pid);
 
   if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner))) {
-    printf("RET NULL!\n");
+    tvhdebug("tvhdhomerun", "Failed to open pid %d",pid);
     return NULL;
   }
 
-  // reschedule the timer to get a faster update of the pid-filter.
+  // Trigger the monitor to update the pid-filter.
   gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 1);
-
-  //tvhdhomerun_device_update_pid_filter(hfe, mm);
 
   return mp;
 }
@@ -382,14 +362,13 @@ static void tvhdhomerun_frontend_close_pid( mpegts_input_t *mi, mpegts_mux_t *mm
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
 
-  printf("Closing pid 0x%x\n",pid);
+  tvhdebug("tvhdhomerun", "Closing pid 0x%x\n",pid);
 
   mpegts_input_close_pid(mi, mm, pid, type, owner);
 
-  // reschedule the timer to get a faster update of the pid-filter.
+  // Trigger the monitor to update the pid-filter.
   gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 1);
   
-  //tvhdhomerun_device_update_pid_filter(hfe, mm);
 }
 
 static idnode_set_t *
@@ -397,8 +376,6 @@ tvhdhomerun_frontend_network_list ( mpegts_input_t *mi )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   const idclass_t     *idc;
-
-printf ("Enter %s\n", __PRETTY_FUNCTION__);
 
   if (hfe->hf_type == DVB_TYPE_T)
     idc = &dvb_network_dvbt_class;
@@ -413,46 +390,8 @@ printf ("Enter %s\n", __PRETTY_FUNCTION__);
 static void
 tvhdhomerun_frontend_class_save ( idnode_t *in )
 {
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
-
   tvhdhomerun_device_t *la = ((tvhdhomerun_frontend_t*)in)->hf_device;
   tvhdhomerun_device_save(la);
-}
-
-static int
-tvhdhomerun_frontend_set_new_type
-  ( tvhdhomerun_frontend_t *hfe, const char *type )
-{
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
-  free(hfe->hf_type_override);
-  hfe->hf_type_override = strdup(type);
-  tvhdhomerun_device_destroy_later(hfe->hf_device, 100);
-  return 1;
-}
-
-static int
-tvhdhomerun_frontend_class_override_set( void *obj, const void * p )
-{
-  tvhdhomerun_frontend_t *hfe = obj;
-  const char *s = p;
-
-printf ("Enter %s\n", __PRETTY_FUNCTION__);
-  if (hfe->hf_type_override == NULL) {
-    if (strlen(p) > 0)
-      return tvhdhomerun_frontend_set_new_type(hfe, s);
-  } else if (strcmp(hfe->hf_type_override, s))
-    return tvhdhomerun_frontend_set_new_type(hfe, s);
-  return 0;
-}
-
-static htsmsg_t *
-tvhdhomerun_frontend_class_override_enum( void * p )
-{
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "DVB-T");
-  htsmsg_add_str(m, NULL, "DVB-C");
-  return m;
 }
 
 void
@@ -461,23 +400,17 @@ tvhdhomerun_frontend_save ( tvhdhomerun_frontend_t *hfe, htsmsg_t *fe )
   char id[16];
   htsmsg_t *m = htsmsg_create_map();
 
-printf ("Enter %s\n", __PRETTY_FUNCTION__);
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)hfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(hfe->hf_type));
 
-  htsmsg_delete_field(m, "fe_override");
   htsmsg_delete_field(m, "fe_master");
 
   /* Add to list */
-  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(hfe->hf_type), hfe->hf_number);
+  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(hfe->hf_type), hfe->hf_tunerNumber);
   htsmsg_add_msg(fe, id, m);
-  if (hfe->hf_type_override) {
-    snprintf(id, sizeof(id), "override #%d", hfe->hf_number);
-    htsmsg_add_str(fe, id, hfe->hf_type_override);
-  }
   if (hfe->hf_master) {
-    snprintf(id, sizeof(id), "master for #%d", hfe->hf_number);
+    snprintf(id, sizeof(id), "master for #%d", hfe->hf_tunerNumber);
     htsmsg_add_u32(fe, id, hfe->hf_master);
   }
 }
@@ -495,7 +428,7 @@ const idclass_t tvhdhomerun_frontend_class =
       .id       = "fe_number",
       .name     = "Frontend Number",
       .opts     = PO_RDONLY | PO_NOSAVE,
-      .off      = offsetof(tvhdhomerun_frontend_t, hf_number),
+      .off      = offsetof(tvhdhomerun_frontend_t, hf_tunerNumber),
     },
     {}
   }
@@ -507,14 +440,6 @@ const idclass_t tvhdhomerun_frontend_dvbt_class =
   .ic_class      = "tvhdhomerun_frontend_dvbt",
   .ic_caption    = "HDHomeRun DVB-T Frontend",
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "fe_override",
-      .name     = "Network Type",
-      .set      = tvhdhomerun_frontend_class_override_set,
-      .list     = tvhdhomerun_frontend_class_override_enum,
-      .off      = offsetof(tvhdhomerun_frontend_t, hf_type_override),
-    },
     {}
   }
 };
@@ -525,14 +450,6 @@ const idclass_t tvhdhomerun_frontend_dvbc_class =
   .ic_class      = "tvhdhomerun_frontend_dvbc",
   .ic_caption    = "HDHomeRun DVB-C Frontend",
   .ic_properties = (const property_t[]){
-    {
-      .type     = PT_STR,
-      .id       = "fe_override",
-      .name     = "Network Type",
-      .set      = tvhdhomerun_frontend_class_override_set,
-      .list     = tvhdhomerun_frontend_class_override_enum,
-      .off      = offsetof(tvhdhomerun_frontend_t, hf_type_override),
-    },
     {}
   }
 };
@@ -541,8 +458,6 @@ void
 tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *hfe )
 {
   lock_assert(&global_lock);
-
-  printf ("Enter %s\n", __PRETTY_FUNCTION__);
 
   /* Ensure we're stopped */
   mpegts_input_stop_all((mpegts_input_t*)hfe);
@@ -553,8 +468,6 @@ tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *hfe )
   /* Remove from adapter */
   TAILQ_REMOVE(&hfe->hf_device->hd_frontends, hfe, hf_link);
 
-  free(hfe->hf_type_override);
-
   hdhomerun_device_destroy(hfe->hf_hdhomerun_tuner);
 
   /* Finish */
@@ -562,33 +475,16 @@ tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *hfe )
 }
 
 tvhdhomerun_frontend_t * 
-tvhdhomerun_frontend_create( htsmsg_t *conf, tvhdhomerun_device_t *hd, dvb_fe_type_t type, int num, struct hdhomerun_device_t *hdhomerun_tuner )
+tvhdhomerun_frontend_create( htsmsg_t *conf, tvhdhomerun_device_t *hd, dvb_fe_type_t type, struct hdhomerun_device_t *hdhomerun_tuner, int frontend_number )
 {
   const idclass_t *idc;
-  const char *uuid = NULL, *override = NULL;
-  char id[16], lname[256];
+  const char *uuid = NULL;
+  char id[16];
   tvhdhomerun_frontend_t *hfe;
   uint32_t master = 0;
-  int i;
-
-printf ("Enter %s\n", __PRETTY_FUNCTION__);
-  /* Override type */
-  snprintf(id, sizeof(id), "override #%d", num);
-  if (conf) {
-    override = htsmsg_get_str(conf, id);
-    if (override) {
-      i = dvb_str2type(override);
-      if ((i == DVB_TYPE_T || i == DVB_TYPE_C ) && i != type)
-        type = i;
-      else
-        override = NULL;
-    }
-  }
-  /* Tuner slave */
-  snprintf(id, sizeof(id), "master for #%d", num);
 
   /* Internal config ID */
-  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), num);
+  snprintf(id, sizeof(id), "%s #%d", dvb_type2str(type), frontend_number);
   if (conf)
     conf = htsmsg_get_map(conf, id);
   if (conf)
@@ -604,19 +500,16 @@ printf ("Enter %s\n", __PRETTY_FUNCTION__);
     return NULL;
   }
 
-  // Note: there is a bit of a chicken/egg issue below, without the
-  //       correct "fe_type" we cannot set the network (which is done
-  //       in mpegts_input_create()). So we must set early.
   hfe = calloc(1, sizeof(tvhdhomerun_frontend_t));
   hfe->hf_device   = hd;
-  hfe->hf_number   = num;
   hfe->hf_type     = type;
   hfe->hf_master   = master;
-  hfe->hf_type_override = override ? strdup(override) : NULL;
 
   hfe->hf_hdhomerun_tuner = hdhomerun_tuner;
   hfe->hf_input_thread_running = 0;
   hfe->hf_input_thread_terminating = 0;
+
+  hfe->hf_tunerNumber = frontend_number;
 
   hfe = (tvhdhomerun_frontend_t*)mpegts_input_create0((mpegts_input_t*)hfe, idc, uuid, conf);
   if (!hfe) return NULL;
@@ -631,9 +524,10 @@ printf ("Enter %s\n", __PRETTY_FUNCTION__);
   if (!hfe->mi_name ||
       (strncmp(hfe->mi_name, "HDHomeRun ", 7) == 0 &&
        strstr(hfe->mi_name, " Tuner ") &&
-       strstr(hfe->mi_name, " #"))) {
+       strstr(hfe->mi_name, " #"))) { 
+    char lname[256];
     snprintf(lname, sizeof(lname), "HDHomeRun %s Tuner #%i (%s)",
-             dvb_type2str(type), num, hd->hd_info.addr);
+             dvb_type2str(type), hfe->hf_tunerNumber, hd->hd_info.addr);
     free(hfe->mi_name);
     hfe->mi_name = strdup(lname);
   }
@@ -649,7 +543,6 @@ printf ("Enter %s\n", __PRETTY_FUNCTION__);
   // Init Frontend mutexes.
   pthread_mutex_init(&hfe->hf_input_thread_mutex, NULL);
   pthread_mutex_init(&hfe->hf_mutex, NULL);
-  pthread_mutex_init(&hfe->hf_hdhomerun_mutex,NULL);
   pthread_mutex_init(&hfe->hf_pid_filter_mutex,NULL);
   
 
@@ -660,7 +553,7 @@ printf ("Enter %s\n", __PRETTY_FUNCTION__);
 
   /* Slave networks update */
   if (master) {
-    tvhdhomerun_frontend_t *hfe2 = tvhdhomerun_frontend_find_by_number(hd, master);
+    tvhdhomerun_frontend_t *hfe2 = tvhdhomerun_frontend_find_by_number(hfe->hf_device, master);
     if (hfe2) {
       htsmsg_t *l = (htsmsg_t *)mpegts_input_class_network_get(hfe2);
       if (l) {
