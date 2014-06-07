@@ -123,17 +123,6 @@ typedef struct ecm_pid {
 /**
  *
  */
-struct cwc_service;
-typedef struct cwc_opaque {
-  struct cwc_service  *service;
-  elementary_stream_t *estream;
-  mpegts_mux_t        *mux;
-} cwc_opaque_t;
-
-
-/**
- *
- */
 typedef struct cwc_service {
   th_descrambler_t;
 
@@ -142,8 +131,8 @@ typedef struct cwc_service {
   LIST_ENTRY(cwc_service) cs_link;
 
   int cs_channel;
-  int cs_pid;
-  cwc_opaque_t cs_opaque;
+  elementary_stream_t *cs_estream;
+  mpegts_mux_t *cs_mux;
 
   /**
    * ECM Status
@@ -170,18 +159,6 @@ typedef struct cwc_message {
   uint8_t cm_data[CWS_NETMSGSIZE];
 } cwc_message_t;
 
-
-/**
- *
- */
-struct cwc;
-struct cs_card_data;
-typedef struct cwc_opaque_emm {
-  struct cs_card_data *pcard;
-  struct cwc          *cwc;
-  mpegts_mux_t        *mux;
-} cwc_opaque_emm_t;
-
 /**
  *
  */
@@ -190,6 +167,7 @@ typedef struct cwc_provider {
   uint8_t sa[8];
 } cwc_provider_t;
 
+struct cwc;
 
 typedef struct cs_card_data {
   
@@ -209,7 +187,8 @@ typedef struct cs_card_data {
   
   uint8_t cwc_ua[8];
   
-  cwc_opaque_emm_t cwc_opaque;
+  struct cwc *cwc;
+  mpegts_mux_t *cwc_mux;
 
 } cs_card_data_t;
 
@@ -1237,7 +1216,7 @@ cwc_thread(void *aux)
 
   while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
     LIST_REMOVE(cd, cs_card);
-    descrambler_close_emm(cd->cwc_opaque.mux, &cd->cwc_opaque, cd->cwc_caid);
+    descrambler_close_emm(cd->cwc_mux, cd, cd->cwc_caid);
     free(cd->cwc_providers);
     free(cd);
   }
@@ -1302,21 +1281,19 @@ cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
 static void
 cwc_emm(void *opaque, int pid, const uint8_t *data, int len)
 {
-  cwc_opaque_emm_t *o = opaque;
-  struct cs_card_data *pcard;
+  struct cs_card_data *pcard = opaque;
   cwc_t *cwc;
   void *ca_update_id;
 
   if (data == NULL) {  /* end-of-data */
-    o->mux = NULL;
+    pcard->cwc_mux = NULL;
     return;
   }
-  if (o->mux == NULL)
+  if (pcard->cwc_mux == NULL)
     return;
   pthread_mutex_lock(&cwc_mutex);
-  pcard        = o->pcard;
-  cwc          = o->cwc;
-  ca_update_id = o->mux;
+  cwc          = pcard->cwc;
+  ca_update_id = pcard->cwc_mux;
   if (cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
       if (cwc->cwc_update_id != ca_update_id) {
@@ -1629,9 +1606,8 @@ cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, in
 static void
 cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
 {
-  cwc_opaque_t *o = opaque;
-  elementary_stream_t *st = o->estream;
-  cwc_service_t *ct = o->service;
+  cwc_service_t *ct = opaque;
+  elementary_stream_t *st = ct->cs_estream;
   mpegts_service_t *t = (mpegts_service_t*)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
   cwc_t *cwc = ct->cs_cwc;
@@ -1940,7 +1916,7 @@ cwc_service_destroy(th_descrambler_t *td)
   ecm_pid_t *ep;
   int i;
 
-  descrambler_close_pid(ct->cs_opaque.mux, &ct->cs_opaque, ct->cs_pid);
+  descrambler_close_pid(ct->cs_mux, ct, ct->cs_estream->es_pid);
 
   while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
     for(i = 0; i < 256; i++)
@@ -2003,10 +1979,8 @@ cwc_service_start(service_t *t)
     ct                   = calloc(1, sizeof(cwc_service_t));
     ct->cs_cwc           = cwc;
     ct->cs_channel       = -1;
-    ct->cs_pid           = st->es_pid;
-    ct->cs_opaque.service = ct;
-    ct->cs_opaque.estream = st;
-    ct->cs_opaque.mux    = ((mpegts_service_t *)t)->s_dvb_mux;
+    ct->cs_estream       = st;
+    ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
     ct->ecm_state        = ECM_INIT;
 
     td                   = (th_descrambler_t *)ct;
@@ -2017,8 +1991,8 @@ cwc_service_start(service_t *t)
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
-    descrambler_open_pid(ct->cs_opaque.mux, &ct->cs_opaque,
-                         ct->cs_pid, cwc_table_input);
+    descrambler_open_pid(ct->cs_mux, ct, ct->cs_estream->es_pid,
+                         cwc_table_input);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
 	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
@@ -2056,15 +2030,14 @@ cwc_caid_update(mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
     if (cwc->cwc_running) {
       LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
         if (pcard->cwc_caid == caid) {
-          if (pcard->cwc_opaque.mux != mux) continue;
+          if (pcard->cwc_mux != mux) continue;
           if (valid) {
-            pcard->cwc_opaque.cwc   = cwc;
-            pcard->cwc_opaque.pcard = pcard;
-            pcard->cwc_opaque.mux   = mux;
-            descrambler_open_emm(mux, &pcard->cwc_opaque, caid, cwc_emm);
+            pcard->cwc       = cwc;
+            pcard->cwc_mux   = mux;
+            descrambler_open_emm(mux, pcard, caid, cwc_emm);
           } else {
-            pcard->cwc_opaque.mux   = NULL;
-            descrambler_close_emm(mux, &pcard->cwc_opaque, caid);
+            pcard->cwc_mux   = NULL;
+            descrambler_close_emm(mux, pcard, caid);
           }
         }
       }
