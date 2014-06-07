@@ -2,7 +2,7 @@
 /*
  *  Tvheadend - HDHomeRun DVB frontend
  *
- *  Copyright (C) 2014 Jaroslav Kysela
+ *  Copyright (C) 2014 Patric Karlström
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -85,8 +85,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* Get MMI */
   hfe->mi_display_name((mpegts_input_t*)hfe, buf, sizeof(buf));
-  
-  assert(mmi != NULL);
+
   if (mmi == NULL) {
     tvhlog(LOG_ERR, "tvhdhomerun","mmi == 0");
     hfe->hf_input_thread_running = 0;

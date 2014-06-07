@@ -1,7 +1,7 @@
 /*
- *  Tvheadend - tvhdhomerun client
+ *  Tvheadend - HDHomeRun client
  *
- *  Copyright (C) 2014 Jaroslav Kysela
+ *  Copyright (C) 2014 Patric Karlström
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

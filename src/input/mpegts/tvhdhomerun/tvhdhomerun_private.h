@@ -1,5 +1,5 @@
 /*
- *  Tvheadend - tvhdhomerun DVB private data
+ *  Tvheadend - HDHomeRun DVB private data
  *
  *  Copyright (C) 2014 Patric Karlstrom
  *
