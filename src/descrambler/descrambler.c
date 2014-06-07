@@ -198,23 +198,20 @@ descrambler_table_callback
   return 0;
 }
 
-int
-descrambler_open_pid( mpegts_mux_t *mux, void *opaque, int pid,
-                      descrambler_section_callback_t callback )
+static int
+descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
+                       descrambler_section_callback_t callback )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
 
   if (mux == NULL)
     return 0;
-  pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table->mt_pid == pid) {
       TAILQ_FOREACH(ds, &dt->sections, link) {
-        if (ds->opaque == opaque) {
-          pthread_mutex_unlock(&mux->mm_descrambler_lock);
+        if (ds->opaque == opaque)
           return 0;
-        }
       }
     }
   }
@@ -229,40 +226,60 @@ descrambler_open_pid( mpegts_mux_t *mux, void *opaque, int pid,
   ds->callback    = callback;
   ds->opaque      = opaque;
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
-  pthread_mutex_unlock(&mux->mm_descrambler_lock);
   tvhtrace("descrambler", "open pid %04X (%i)", pid, pid);
   return 1;
 }
 
 int
-descrambler_close_pid( mpegts_mux_t *mux, void *opaque, int pid )
+descrambler_open_pid( mpegts_mux_t *mux, void *opaque, int pid,
+                      descrambler_section_callback_t callback )
+{
+  int res;
+
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  res = descrambler_open_pid_(mux, opaque, pid, callback);
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+  return res;
+}
+
+static int
+descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
 
   if (mux == NULL)
     return 0;
-  pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table->mt_pid == pid) {
       TAILQ_FOREACH(ds, &dt->sections, link) {
         if (ds->opaque == opaque) {
           TAILQ_REMOVE(&dt->sections, ds, link);
+          ds->callback(ds->opaque, -1, NULL, 0);
           free(ds);
           if (TAILQ_FIRST(&dt->sections) == NULL) {
             TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
             mpegts_table_destroy(dt->table);
             free(dt);
           }
-          pthread_mutex_unlock(&mux->mm_descrambler_lock);
           tvhtrace("descrambler", "close pid %04X (%i)", pid, pid);
           return 1;
         }
       }
     }
   }
-  pthread_mutex_unlock(&mux->mm_descrambler_lock);
   return 0;
+}
+
+int
+descrambler_close_pid( mpegts_mux_t *mux, void *opaque, int pid )
+{
+  int res;
+
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  res = descrambler_close_pid_(mux, opaque, pid);
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+  return res;
 }
 
 void
@@ -279,6 +296,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
+      ds->callback(ds->opaque, -1, NULL, 0);
       free(ds);
     }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
@@ -332,9 +350,9 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
             break;
           }
         }
-      pthread_mutex_unlock(&mux->mm_descrambler_lock);
       if (emm)
-        descrambler_open_pid(mux, opaque, pid, callback);
+        descrambler_open_pid_(mux, opaque, pid, callback);
+      pthread_mutex_unlock(&mux->mm_descrambler_lock);
 next:
       data += dlen;
       len  -= dlen;
@@ -344,18 +362,20 @@ next:
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
     if (emm->to_be_removed) {
+      if (emm->pid != EMM_PID_UNKNOWN) {
+        caid = emm->caid;
+        pid  = emm->pid;
+        tvhtrace("descrambler", "close emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
+        descrambler_close_pid(mux, emm->opaque, pid);
+      }
       TAILQ_REMOVE(&mux->mm_descrambler_emms, emm, link);
       TAILQ_INSERT_TAIL(&removing, emm, link);
     }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
   while ((emm = TAILQ_FIRST(&removing)) != NULL) {
     if (emm->pid != EMM_PID_UNKNOWN) {
-      caid = emm->caid;
-      pid  = emm->pid;
-      tvhtrace("descrambler", "close emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
-      descrambler_close_pid(mux, emm->opaque, pid);
 #if ENABLE_CWC
-      cwc_caid_update(mux, caid, pid, 0);
+      cwc_caid_update(mux, emm->caid, emm->pid, 0);
 #endif
     }
     TAILQ_REMOVE(&removing, emm, link);
@@ -392,13 +412,13 @@ descrambler_open_emm( mpegts_mux_t *mux, void *opaque, int caid,
     }
   }
   TAILQ_INSERT_TAIL(&mux->mm_descrambler_emms, emm, link);
-  pthread_mutex_unlock(&mux->mm_descrambler_lock);
   if (pid != EMM_PID_UNKNOWN) {
     tvhtrace("descrambler",
              "attach emm caid %04X (%i) pid %04X (%i) - direct",
              caid, caid, pid, pid);
-    descrambler_open_pid(mux, opaque, pid, callback);
+    descrambler_open_pid_(mux, opaque, pid, callback);
   }
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
   return 1;
 }
 
@@ -419,14 +439,14 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid )
     return 0;
   }
   TAILQ_REMOVE(&mux->mm_descrambler_emms, emm, link);
-  pthread_mutex_unlock(&mux->mm_descrambler_lock);
-  caid = emm->caid;
   pid  = emm->pid;
-  free(emm);
   if (pid != EMM_PID_UNKNOWN) {
+    caid = emm->caid;
     tvhtrace("descrambler", "close emm caid %04X (%i) pid %04X (%i) - direct", caid, caid, pid, pid);
-    descrambler_close_pid(mux, opaque, pid);
+    descrambler_close_pid_(mux, opaque, pid);
   }
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+  free(emm);
   return 1;
 }
 
