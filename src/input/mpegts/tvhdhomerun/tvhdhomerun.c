@@ -349,12 +349,6 @@ tvhdhomerun_discovery_timer_cb(void *aux)
                                                           result_list,
                                                           MAX_HDHOMERUN_DEVICES);
 
-  tvhlog(LOG_INFO, "tvhdhomerun","Found %d HDHomerun devices.\n",numDevices);
-
-  if (numDevices < 0) {
-    gtimer_arm(&tvhdhomerun_discovery_timer, tvhdhomerun_discovery_timer_cb, NULL, 10);
-    return;
-  }
 
   if (numDevices > 0)
   {
@@ -362,20 +356,21 @@ tvhdhomerun_discovery_timer_cb(void *aux)
       numDevices--;
       struct hdhomerun_discover_device_t* cDev = &result_list[numDevices];
       if ( cDev->device_type == 0x01 ) {
-        tvhlog(LOG_INFO, "tvhdhomerun","Found device  : %08x",cDev->device_id);
-        tvhlog(LOG_INFO, "tvhdhomerun","type       : %d",cDev->device_type);
-        tvhlog(LOG_INFO, "tvhdhomerun","tunerCount : %d",cDev->tuner_count);
         tvh_uuid_t uuid;
         tvhdhomerun_device_calc_uuid(&uuid, cDev->device_id);
 
-        if ( !tvhdhomerun_device_find(cDev->device_id) )
+        if ( !tvhdhomerun_device_find(cDev->device_id) ) {
+          tvhlog(LOG_INFO, "tvhdhomerun","Found new device  : %08x", cDev->device_id);
+          tvhlog(LOG_INFO, "tvhdhomerun","tunerCount        : %d"  , cDev->tuner_count);
+
           tvhdhomerun_device_create(cDev);
+        }
       }
-    }
-  
+    }  
   }
 
-  gtimer_arm(&tvhdhomerun_discovery_timer, tvhdhomerun_discovery_timer_cb, NULL, 3600);
+  // Do rediscovery every 30 seconds..
+  gtimer_arm_ms(&tvhdhomerun_discovery_timer, tvhdhomerun_discovery_timer_cb, NULL, 30*1000); 
 }
 
 static void
@@ -419,6 +414,7 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
   tvhdhomerun_device_save(hd);
 
   gtimer_disarm(&hd->hd_destroy_timer);
+  gtimer_disarm(&tvhdhomerun_discovery_timer);
 
   while ((lfe = TAILQ_FIRST(&hd->hd_frontends)) != NULL)
     tvhdhomerun_frontend_delete(lfe);
@@ -428,11 +424,17 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
   FREEM(id);
   FREEM(friendlyname);
   FREEM(uuid);
+  FREEM(deviceModel);
 #undef FREEM
 
   tvh_hardware_delete((tvh_hardware_t*)hd);
 
-  free(hd->hd_override_type);  
-  free(hd->hd_info.deviceModel);
+  pthread_mutex_destroy(&hd->hd_tune_mutex);
+  pthread_mutex_destroy(&hd->hd_hdhomerun_mutex);
+
+#define FREEM(x) free(hd->x)
+  FREEM(hd_override_type);
+#undef FREEM
+
   free(hd);
 }

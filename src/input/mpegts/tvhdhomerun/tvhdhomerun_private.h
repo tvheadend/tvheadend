@@ -51,7 +51,7 @@ struct tvhdhomerun_device
    * Adapter info
    */
   tvhdhomerun_device_info_t      hd_info;
-  pthread_mutex_t                hd_hdhomerun_mutex;
+  
   /*
    * Frontends
    */
@@ -69,7 +69,12 @@ struct tvhdhomerun_device
   dvb_fe_type_t              hd_type;
   char                      *hd_override_type;
 
+  /*
+   Locks
+  */
   pthread_mutex_t            hd_tune_mutex;
+  pthread_mutex_t            hd_hdhomerun_mutex;
+  
 };
 
 #define HDHOMERUN_MAX_PIDS 32
