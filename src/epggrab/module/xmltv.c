@@ -215,12 +215,12 @@ static void parse_xmltv_dd_progid
 
   /* Episode */
   if (!strncmp("EP", s, 2)) {
-    int e = strlen(buf);
-    while (e && s[e] != '.') e--;
+    int e = strlen(buf)-1;
+    while (e && buf[e] != '.') e--;
     if (e) {
       buf[e] = '\0';
       *suri = strdup(buf);
-      if (s[e+1]) sscanf(s+e+1, "%hu", &(epnum->e_num));
+      if (buf[e+1]) sscanf(&buf[e+1], "%hu", &(epnum->e_num));
     }
   }
 }

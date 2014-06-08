@@ -453,11 +453,40 @@ dvr_entry_create_by_event(const char *config_name,
                            creator, dae, pri);
 }
 
+/**
+ *
+ */
 static int _dvr_duplicate_event ( epg_broadcast_t *e )
 {
   dvr_entry_t *de;
+  epg_episode_num_t empty_epnum;
+  int has_epnum = 1;
+
+  /* skip episode duplicate check below if no episode number */
+  memset(&empty_epnum, 0, sizeof(empty_epnum));
+  if (epg_episode_number_cmp(&empty_epnum, &e->episode->epnum) == 0)
+    has_epnum = 0;
+
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    if (de->de_bcast && (de->de_bcast->episode == e->episode)) return 1;
+    if (de->de_bcast) {
+      if (de->de_bcast->episode == e->episode) return 1;
+
+      if (has_epnum) {
+        dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+        int ep_dup_det = (cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION);
+
+        if (ep_dup_det) {
+          const char* de_title = lang_str_get(de->de_bcast->episode->title, NULL);
+          const char* e_title = lang_str_get(e->episode->title, NULL);
+
+          /* duplicate if title and episode match */
+          if (de_title && e_title && strcmp(de_title, e_title) == 0
+              && epg_episode_number_cmp(&de->de_bcast->episode->epnum, &e->episode->epnum) == 0) {
+            return 1;
+          }
+        }
+      }
+    }
   }
   return 0;
 }
@@ -1193,6 +1222,9 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "episode-before-date", &u32) && u32)
         cfg->dvr_flags |= DVR_EPISODE_BEFORE_DATE;
 
+      if(!htsmsg_get_u32(m, "episode-duplicate-detection", &u32) && u32)
+        cfg->dvr_flags |= DVR_EPISODE_DUPLICATE_DETECTION;
+
       dvr_charset_update(cfg, htsmsg_get_str(m, "charset"));
 
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
@@ -1420,6 +1452,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   htsmsg_add_u32(m, "subtitle-in-title", !!(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE));
   htsmsg_add_u32(m, "episode-before-date", !!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE));
+  htsmsg_add_u32(m, "episode-duplicate-detection", !!(cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION));
   if (cfg->dvr_charset != NULL)
     htsmsg_add_str(m, "charset", cfg->dvr_charset);
   if (cfg->dvr_postproc != NULL)
