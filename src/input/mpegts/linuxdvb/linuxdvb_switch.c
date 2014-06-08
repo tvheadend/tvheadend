@@ -117,7 +117,7 @@ static int
 linuxdvb_switch_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
-  int i, com, r1 = 0, r2 = 0;
+  int i, com = 0, r1 = 0, r2 = 0;
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 
