@@ -68,7 +68,7 @@ tvhpoll_alloc ( tvhpoll_t *tp, int n )
 tvhpoll_t *
 tvhpoll_create ( size_t n )
 {
-  int fd;
+  int fd = -1;
 #if ENABLE_EPOLL
   if ((fd = epoll_create(n)) < 0) {
     tvhlog(LOG_ERR, "tvhpoll", "failed to create epoll [%s]",
