@@ -259,7 +259,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
       }
     }
   }
-  
+
   hd->hd_override_type = strdup(dvb_type2str(type));
   tvhlog(LOG_INFO, "tvheadend","Using Network type : %s", hd->hd_override_type);
   
@@ -432,6 +432,8 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 #undef FREEM
 
   tvh_hardware_delete((tvh_hardware_t*)hd);
+  
+  free(hd->hd_override_type);  
   free(hd->hd_info.deviceModel);
   free(hd);
 }
