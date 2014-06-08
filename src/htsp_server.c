@@ -2186,7 +2186,7 @@ static void
 htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 	   struct sockaddr_storage *self)
 {
-  htsp_connection_t htsp;
+  htsp_connection_t *htsp = malloc(sizeof(htsp_connection_t));
   char buf[50];
   htsp_subscription_t *s;
   
@@ -2194,35 +2194,35 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   tcp_get_ip_str((struct sockaddr*)source, buf, 50);
 
-  memset(&htsp, 0, sizeof(htsp_connection_t));
-  *opaque = &htsp;
+  memset(htsp, 0, sizeof(htsp_connection_t));
+  *opaque = htsp;
 
-  TAILQ_INIT(&htsp.htsp_active_output_queues);
+  TAILQ_INIT(&htsp->htsp_active_output_queues);
 
-  htsp_init_queue(&htsp.htsp_hmq_ctrl, 0);
-  htsp_init_queue(&htsp.htsp_hmq_qstatus, 1);
-  htsp_init_queue(&htsp.htsp_hmq_epg, 0);
+  htsp_init_queue(&htsp->htsp_hmq_ctrl, 0);
+  htsp_init_queue(&htsp->htsp_hmq_qstatus, 1);
+  htsp_init_queue(&htsp->htsp_hmq_epg, 0);
 
-  htsp.htsp_peername = strdup(buf);
-  htsp_update_logname(&htsp);
+  htsp->htsp_peername = strdup(buf);
+  htsp_update_logname(htsp);
 
-  htsp.htsp_fd = fd;
-  htsp.htsp_peer = source;
-  htsp.htsp_writer_run = 1;
+  htsp->htsp_fd = fd;
+  htsp->htsp_peer = source;
+  htsp->htsp_writer_run = 1;
 
-  LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
+  LIST_INSERT_HEAD(&htsp_connections, htsp, htsp_link);
   pthread_mutex_unlock(&global_lock);
 
-  tvhthread_create(&htsp.htsp_writer_thread, NULL,
-                   htsp_write_scheduler, &htsp, 0);
+  tvhthread_create(&htsp->htsp_writer_thread, NULL,
+                   htsp_write_scheduler, htsp, 0);
 
   /**
    * Reader loop
    */
 
-  htsp_read_loop(&htsp);
+  htsp_read_loop(htsp);
 
-  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp.htsp_logname);
+  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp->htsp_logname);
 
   /**
    * Ok, we're back, other end disconnected. Clean up stuff.
@@ -2233,27 +2233,27 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   /* Beware! Closing subscriptions will invoke a lot of callbacks
      down in the streaming code. So we do this as early as possible
      to avoid any weird lockups */
-  while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL) {
-    htsp_subscription_destroy(&htsp, s);
+  while((s = LIST_FIRST(&htsp->htsp_subscriptions)) != NULL) {
+    htsp_subscription_destroy(htsp, s);
   }
 
-  if(htsp.htsp_async_mode)
-    LIST_REMOVE(&htsp, htsp_async_link);
+  if(htsp->htsp_async_mode)
+    LIST_REMOVE(htsp, htsp_async_link);
 
-  LIST_REMOVE(&htsp, htsp_link);
+  LIST_REMOVE(htsp, htsp_link);
 
   pthread_mutex_unlock(&global_lock);
 
-  pthread_mutex_lock(&htsp.htsp_out_mutex);
-  htsp.htsp_writer_run = 0;
-  pthread_cond_signal(&htsp.htsp_out_cond);
-  pthread_mutex_unlock(&htsp.htsp_out_mutex);
+  pthread_mutex_lock(&htsp->htsp_out_mutex);
+  htsp->htsp_writer_run = 0;
+  pthread_cond_signal(&htsp->htsp_out_cond);
+  pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
-  pthread_join(htsp.htsp_writer_thread, NULL);
+  pthread_join(htsp->htsp_writer_thread, NULL);
 
   htsp_msg_q_t *hmq;
 
-  TAILQ_FOREACH(hmq, &htsp.htsp_active_output_queues, hmq_link) {
+  TAILQ_FOREACH(hmq, &htsp->htsp_active_output_queues, hmq_link) {
     htsp_msg_t *hm;
     while((hm = TAILQ_FIRST(&hmq->hmq_q)) != NULL) {
       TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
@@ -2262,17 +2262,19 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   }
 
   htsp_file_t *hf;
-  while((hf = LIST_FIRST(&htsp.htsp_files)) != NULL)
+  while((hf = LIST_FIRST(&htsp->htsp_files)) != NULL)
     htsp_file_destroy(hf);
 
   close(fd);
   
   /* Free memory (leave lock in place, for parent method) */
   pthread_mutex_lock(&global_lock);
-  free(htsp.htsp_logname);
-  free(htsp.htsp_peername);
-  free(htsp.htsp_username);
-  free(htsp.htsp_clientname);
+  free(htsp->htsp_logname);
+  free(htsp->htsp_peername);
+  free(htsp->htsp_username);
+  free(htsp->htsp_clientname);
+  free(htsp);
+  
   *opaque = NULL;
 }
 
