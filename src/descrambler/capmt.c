@@ -901,7 +901,6 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
 {
   mpegts_service_t *t;
   capmt_service_t *ct;
-  unsigned int i;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
@@ -922,22 +921,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
     if (adapter != ct->ct_adapter)
       continue;
 
-    for (i = 0; i < 8; i++)
-      if (even[i]) {
-        tvhcsa_set_key_even(&ct->ct_csa, even);
-        break;
-      }
-    for (i = 0; i < 8; i++)
-      if (odd[i]) {
-        tvhcsa_set_key_odd(&ct->ct_csa, odd);
-        break;
-      }
-
-    if (ct->td_keystate != DS_RESOLVED)
-      tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",
-                                 t->s_dvb_svcname);
-
-    ct->td_keystate = DS_RESOLVED;
+    descrambler_keys((th_descrambler_t *)ct, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }

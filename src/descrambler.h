@@ -125,6 +125,8 @@ void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
+void descrambler_keys          ( th_descrambler_t *t,
+                                 const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb );

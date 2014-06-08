@@ -160,6 +160,29 @@ descrambler_caid_changed ( service_t *t )
   }
 }
 
+void
+descrambler_keys ( th_descrambler_t *td,
+                   const uint8_t *even, const uint8_t *odd )
+{
+  int i;
+
+  for (i = 0; i < 8; i++)
+    if (even[i]) {
+      tvhcsa_set_key_even(td->td_csa, even);
+      break;
+    }
+  for (i = 0; i < 8; i++)
+    if (odd[i]) {
+      tvhcsa_set_key_odd(td->td_csa, odd);
+      break;
+    }
+
+  if (td->td_keystate != DS_RESOLVED)
+    tvhlog(LOG_DEBUG, "descrambler", "Obtained key for service \"%s\"",
+                      ((mpegts_service_t *)td->td_service)->s_dvb_svcname);
+  td->td_keystate = DS_RESOLVED;
+}
+
 int
 descrambler_descramble ( service_t *t,
                          elementary_stream_t *st,
