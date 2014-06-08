@@ -101,14 +101,15 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   int r = hdhomerun_device_stream_start(hfe->hf_hdhomerun_tuner);
   if ( r == 0 ) {
     tvhlog(LOG_ERR, "tvhdhomerun", "Failed to start stream from HDHomeRun device! (Command rejected!)");
-    // TODO: Needs to be handled.. retry? Remove/rediscover???
-    sleep(10);
+    tvhdhomerun_device_destroy_later( hfe->hf_device, 1 );
+    return NULL;
   } else if ( r == -1 ) {
     tvhlog(LOG_ERR, "tvhdhomerun", "Failed to start stream from HDHomeRun device! (Communication error!)");
-    // TODO: remove the whole device and let it be rediscovered
-    sleep(10);
+    tvhdhomerun_device_destroy_later( hfe->hf_device, 1 );
     return NULL;
   }
+
+  // TODO: We should check return-code for all libhdhomrun functions and do a tvhdhomerun_device_destroy_later if there is an issue.
 
   hfe->hf_hdhomerun_video_sock = hdhomerun_device_get_video_sock(hfe->hf_hdhomerun_tuner);
   pthread_mutex_unlock(&hfe->hf_device->hd_hdhomerun_mutex);
@@ -146,7 +147,6 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   hfe->hf_input_thread_terminating = 0;
 
   return NULL;
-#undef PKTS
 }
 
 static void tvhdhomerun_frontend_default_tables( tvhdhomerun_frontend_t *hfe, dvb_mux_t *lm )
