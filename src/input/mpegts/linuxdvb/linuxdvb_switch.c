@@ -117,7 +117,7 @@ static int
 linuxdvb_switch_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
 {
-  int i, com, r1 = 0, r2 = 0;
+  int i, com = 0, r1 = 0, r2 = 0;
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 
@@ -147,7 +147,7 @@ linuxdvb_switch_tune
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
 
     /* check if uncommitted port set. if not don't send command */
-    if (ls->lsuncomitted > 0) {
+    if (ls->ls_uncomitted > 0) {
       /* Uncommitted */
       if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
                                0xF0 | ls->ls_uncomitted))
@@ -167,12 +167,13 @@ linuxdvb_switch_tune
   }
   /* check if committed port set. if not don't send command */
   if (ls->ls_toneburst > 0) {
-  /* Tone burst */
-  tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
-  if (ioctl(fd, FE_DISEQC_SEND_BURST,
-            ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
-    tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
-    return -1;
+    /* Tone burst */
+    tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+    if (ioctl(fd, FE_DISEQC_SEND_BURST,
+              ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
+      tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
+      return -1;
+    }
   }
 
   return 0;
