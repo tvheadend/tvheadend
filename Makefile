@@ -235,6 +235,10 @@ SRCS-${CONFIG_SATIP_CLIENT} += \
 	src/input/mpegts/satip/satip_satconf.c \
 	src/input/mpegts/satip/satip_rtsp.c
 
+SRCS-${CONFIG_HDHOMERUN_CLIENT} += \
+	src/input/mpegts/tvhdhomerun/tvhdhomerun.c \
+	src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c
+
 # IPTV
 SRCS-${CONFIG_IPTV} += \
 	src/input/mpegts/iptv/iptv.c \
