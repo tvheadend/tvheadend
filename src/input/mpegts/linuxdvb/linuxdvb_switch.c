@@ -147,7 +147,7 @@ linuxdvb_switch_tune
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
 
     /* check if uncommitted port set. if not don't send command */
-    if (ls->lsuncomitted > 0) {
+    if (ls->ls_uncomitted > 0) {
       /* Uncommitted */
       if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
                                0xF0 | ls->ls_uncomitted))
