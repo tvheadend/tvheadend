@@ -118,6 +118,8 @@ typedef enum {
 
 LIST_HEAD(caid_list, caid);
 
+#define DESCRAMBLER_ECM_PID(pid) ((pid) | (MT_FAST << 16))
+
 void descrambler_init          ( void );
 void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );

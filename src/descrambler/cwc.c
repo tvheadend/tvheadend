@@ -1991,7 +1991,8 @@ cwc_service_start(service_t *t)
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
-    descrambler_open_pid(ct->cs_mux, ct, ct->cs_estream->es_pid,
+    descrambler_open_pid(ct->cs_mux, ct,
+                         DESCRAMBLER_ECM_PID(ct->cs_estream->es_pid),
                          cwc_table_input);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
