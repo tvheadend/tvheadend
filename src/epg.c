@@ -23,6 +23,9 @@
 #include <regex.h>
 #include <assert.h>
 #include <inttypes.h>
+//IH
+#include <time.h>
+//
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -2210,7 +2213,7 @@ static void _eqr_add
     epg_genre_t *genre, regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
 {
   const char *title;
-  int duration;
+  double duration;
 
   /* Ignore */
   if ( e->stop < start ) return;
@@ -2219,9 +2222,9 @@ static void _eqr_add
   if ( preg && regexec(preg, title, 0, NULL, 0)) return;
   
   //IH
-  duration = (int)e->stop - (int)e->start;
-  if ( duration < min_duration || duration > max_duration) return;
-  tvhtrace("epg", "Episode duration %d vs min_duration of %d and max_duration of %d", duration, min_duration, max_duration);
+  duration = difftime(e->stop,e->start);
+//  duration = (int)e->stop - (int)e->start;
+  if ( duration < min_duration || duration > max_duration ) return;
 //
   
   /* More space */

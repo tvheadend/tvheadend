@@ -90,7 +90,7 @@ page_simple(http_connection_t *hc,
 
 //IH    
 //    epg_query(&eqr, NULL, NULL, NULL, s, lang);
-//IH Force all programme durations for this interface (0 to INT_MAX seconds)
+//Note: force min/max durations for this interface to 0 and INT_MAX seconds respectively
     epg_query(&eqr, NULL, NULL, NULL, s, lang, 0, INT_MAX);
     epg_query_sort(&eqr);
 

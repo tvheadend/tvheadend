@@ -390,12 +390,15 @@ int dvr_sort_start_ascending(const void *A, const void *B);
  */
 void dvr_autorec_add(const char *dvr_config_name,
                      const char *title, const char *channel,
-		     const char *tag, epg_genre_t *content_type,
-		     const char *creator, const char *comment);
+                     const char *tag, epg_genre_t *content_type,
+//IH
+                     const int min_duration, const int max_duration,
+//
+                     const char *creator, const char *comment);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,
                                  epg_broadcast_t *event,
-                        		     const char *creator, const char *comment);
+                                 const char *creator, const char *comment);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);

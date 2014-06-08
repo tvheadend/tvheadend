@@ -26,6 +26,9 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <math.h>
+//IH
+#include <time.h>
+//
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -71,7 +74,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   channel_tag_mapping_t *ctm;
   dvr_config_t *cfg;
   //IH
-  int duration;
+  double duration;
   //
 
   if (!e->channel) return 0;
@@ -88,7 +91,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_season == NULL &&
      //IH
      &dae->dae_minduration == NULL &&
-     &dae->dae_maxduration == NULL && //IH Think about whether we should be testing INT_MAX here
+     &dae->dae_maxduration == NULL &&
      //
      dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
@@ -144,7 +147,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
   
   //IH
-  duration = &e->stop - &e->start;
+  duration = difftime(e->stop,e->start);
   
   if(dae->dae_minduration) {
     if(duration < dae->dae_minduration) return 0;
@@ -303,27 +306,12 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_msg(e, "weekdays", l);
 
 //IH
-// This is where we add mindurationstring and maxdurationstring to the proceedings, I think
-// Same question as to whether we deal with an offset, and absolute time (s), or the string. 
-// Increasingly, I think it should be the offset... although look at 'channel', above, that translates on the fly
-//
-// It also looks like we need to adjust dea to include the min/max fields (offset, absolute, string...)
-// dvr_autorec_entry in dvr.h
-
-// More thoughts...
-//
-// Channel group and contentype jus start from their base values (string/value
-// as relevant). Start time (approx) does the same, but changes as soon as you 
-// select, so it isn't primed with the existing value - we could default to 0 
-// and max as well, 'you're changing it, here's the full range' sort of logic
-//
-// This way I don't care what it's set to beyond the string value for 
-// initial display purposes
   if (dae->dae_minduration)
     htsmsg_add_u32(e, "minduration", dae->dae_minduration);
   if (dae->dae_maxduration)
     htsmsg_add_u32(e, "maxduration", dae->dae_maxduration);
 //
+
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
   if (dae->dae_brand)
@@ -448,7 +436,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-//IH Need to put something in here that triggers when we update min/max in the autorec rule
+//IH Updated autorec entry
   if(!htsmsg_get_u32(values, "minduration", &u32))
     dae->dae_minduration = u32;
 
@@ -555,7 +543,10 @@ dvr_autorec_update(void)
 static void
 _dvr_autorec_add(const char *config_name,
                 const char *title, channel_t *ch,
-		const char *tag, epg_genre_t *content_type,
+                const char *tag, epg_genre_t *content_type,
+//IH
+                const int min_duration, const int max_duration,
+//
     epg_brand_t *brand, epg_season_t *season,
     epg_serieslink_t *serieslink,
     int approx_time, epg_episode_num_t *epnum,
@@ -592,6 +583,14 @@ _dvr_autorec_add(const char *config_name,
   if (content_type)
     dae->dae_content_type.code = content_type->code;
 
+//IH
+  if (min_duration)
+    dae->dae_minduration = min_duration;
+
+  if (max_duration)
+    dae->dae_maxduration = max_duration;
+//
+    
   if(serieslink) {
     serieslink->getref(serieslink);
     dae->dae_serieslink = serieslink;
@@ -613,12 +612,18 @@ _dvr_autorec_add(const char *config_name,
 void
 dvr_autorec_add(const char *config_name,
                 const char *title, const char *channel,
-		const char *tag, epg_genre_t *content_type,
-		const char *creator, const char *comment)
+                const char *tag, epg_genre_t *content_type,
+//IH
+                const int min_duration, const int max_duration,
+//
+                const char *creator, const char *comment)
 {
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find(channel);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
+//IH
+                   min_duration, max_duration,
+//
                    NULL, NULL, NULL, 0, NULL, creator, comment);
 }
 
@@ -633,6 +638,7 @@ void dvr_autorec_add_series_link
                    title,
                    event->channel,
                    NULL, 0, // tag/content type
+                   0,INT_MAX,
                    NULL,
                    NULL,
                    event->serieslink,

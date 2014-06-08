@@ -1134,18 +1134,38 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
+	//IH
+	int min_duration;
+	int max_duration;
+	//
     epg_genre_t genre, *eg = NULL;
+    
     if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
       genre.code = atoi(s);
       eg = &genre;
     }
 
+//IH
+    if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
+      min_duration = atoi(s);
+    else
+      min_duration = 0;  
+
+    if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
+      max_duration = atoi(s);
+    else
+      max_duration = INT_MAX;
+//
+
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
-		    http_arg_get(&hc->hc_req_args, "channel"),
-		    http_arg_get(&hc->hc_req_args, "tag"),
-        eg,
-		    hc->hc_representative, "Created from EPG query");
+		            http_arg_get(&hc->hc_req_args, "channel"),
+		            http_arg_get(&hc->hc_req_args, "tag"),
+                    eg,
+                    //IH
+                    min_duration,max_duration,
+                    //
+		            hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

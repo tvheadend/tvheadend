@@ -59,6 +59,7 @@
 #include <sys/time.h>
 //IH
 #include <limits.h>
+//
 
 /* **************************************************************************
  * Datatypes and variables
@@ -1064,6 +1065,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   //IH
   int min_duration;
   int max_duration;
+//
 
   /* Required */
   if( (query = htsmsg_get_str(in, "query")) == NULL )

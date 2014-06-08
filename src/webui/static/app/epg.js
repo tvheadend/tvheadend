@@ -455,7 +455,7 @@ tvheadend.epg = function() {
         }
     });
 
-    // Note: is there any way to seed the slider labels in one go, versus with specific lookups?
+    // Q: is there any way to seed the slider labels in one go, versus with specific lookups?
 
     var durationSlider = new Ext.slider.MultiSlider({
         width: 100,
@@ -482,7 +482,8 @@ tvheadend.epg = function() {
 //
 
     function epgQueryClear() {
-//IH - reset the pointers before deleting the underlying variables - otherwise they reset to 0/24h not null/null
+//IH
+        // Reset the pointers before deleting the underlying variables - otherwise they reset to 0/24h not null/null
         durationSlider.setValue(0,0);
         durationSlider.setValue(1,7);
 //
@@ -524,7 +525,7 @@ tvheadend.epg = function() {
         }
     });
 
-//IH ------------------
+//IH
 	setduration = function(slider) {
 
         var min = slider.getValue(0);
@@ -581,7 +582,7 @@ tvheadend.epg = function() {
             epgFilterContentGroup,
             '-',
 //IH
-            'Duration (test env): 0h ',
+            'Duration: 0h ',
             durationSlider,
             '24h','-',
 //
@@ -676,4 +677,4 @@ tvheadend.epg = function() {
     }
 
     return panel;
-}
+};
