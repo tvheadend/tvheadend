@@ -135,7 +135,7 @@ static int
 imagecache_image_fetch ( imagecache_image_t *img )
 {
   int res = 1, r;
-  FILE *fp;
+  FILE *fp = NULL;
   url_t url;
   char tmp[256], path[256];
   tvhpoll_event_t ev;
@@ -201,7 +201,10 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   pthread_mutex_lock(&global_lock);
 
-  fclose(fp);
+  if ( fp ) {
+    fclose(fp);
+    fp = NULL;
+  }
 
   /* Process */
 error:
@@ -221,7 +224,8 @@ error:
   }
   imagecache_image_save(img);
   pthread_cond_broadcast(&imagecache_cond);
-
+  if ( fp )
+    fclose(fp);  
   return res;
 };
 
