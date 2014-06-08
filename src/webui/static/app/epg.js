@@ -30,6 +30,28 @@ tvheadend.contentGroupLookupName = function(code) {
 tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 
 //IH
+tvheadend.channelLookupName = function(key) {
+    channelString = "";
+          
+    var index = tvheadend.channels.find('key', key);
+    
+    if (index !== -1)
+        var channelString = tvheadend.channels.getAt(index).get('val');
+    
+    return channelString;
+};  
+
+tvheadend.durationLookupName = function(value) {
+    durationString = "";
+    
+    var index = tvheadend.DurationStore.find('value', value); 
+
+    if (index !== -1)
+        var durationString = tvheadend.DurationStore.getById(index).data.label;
+    
+    return durationString;
+};  
+
 tvheadend.DurationStore = new Ext.data.SimpleStore({
 	storeId: 'durations',
 	id: 0,
@@ -506,22 +528,15 @@ tvheadend.epg = function() {
 	setduration = function(slider) {
 
         var min = slider.getValue(0);
-        var max = slider.getValue(1);
         var minRec = tvheadend.DurationStore.getById(min);
+        
+        epgStore.baseParams.minduration = minRec.data.value;
+        
+        var max = slider.getValue(1);
         var maxRec = tvheadend.DurationStore.getById(max);
 
-        epgStore.baseParams.minduration = minRec.data.value;
         epgStore.baseParams.maxduration = maxRec.data.value;
   
-//Debugging to test set and lookup        
-        var index = tvheadend.DurationStore.find( 'value', epgStore.baseParams.minduration ); 
-        var string = tvheadend.DurationStore.getById(index).data.label;
-        console.log('Min Duration record:', index, 'string:', string);
-        
-        var index = tvheadend.DurationStore.find( 'value', epgStore.baseParams.maxduration ); 
-        var string = tvheadend.DurationStore.getById(index).data.label;
-        console.log('Max Duration record:', index, 'string:', string);
-//
         epgStore.reload();
         };
 //
@@ -612,7 +627,9 @@ tvheadend.epg = function() {
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";
-        var channel = epgStore.baseParams.channel ? epgStore.baseParams.channel
+//IH - correct to display content type as a string as opposed to the underlying (lookup) code
+        var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
+//
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
                 : "<i>Don't care</i>";
@@ -621,9 +638,9 @@ tvheadend.epg = function() {
 //
                 : "<i>Don't care</i>";
 //IH
-        var minduration = epgStore.baseParams.minduration ? tvheadend.DurationStore.getById(tvheadend.DurationStore.find('value', epgStore.baseParams.minduration)).data.label
+        var minduration = epgStore.baseParams.minduration ? tvheadend.durationLookupName(epgStore.baseParams.minduration)
                 : "<i>Don't care</i>";
-        var maxduration = epgStore.baseParams.maxduration ? tvheadend.DurationStore.getById(tvheadend.DurationStore.find('value', epgStore.baseParams.maxduration)).data.label
+        var maxduration = epgStore.baseParams.maxduration ? tvheadend.durationLookupName(epgStore.baseParams.maxduration)
                 : "<i>Don't care</i>";
 //
 
@@ -649,13 +666,6 @@ tvheadend.epg = function() {
             });
     }
 
-//
-// IH: TO DO
-//
-// Check that contenttype is still passed correctly (epgStore.baseParams.contenttype) to autorec vs the new contenttypestring - SHOULDN'T HAVE CHANGED
-// Add min/max to autorec rules (C)
-// Check they're displayed (js)
-//
     function createAutoRec2(params) {
         /* Really do it */
         params.op = 'createAutoRec';

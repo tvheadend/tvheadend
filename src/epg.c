@@ -2221,7 +2221,7 @@ static void _eqr_add
   //IH
   duration = (int)e->stop - (int)e->start;
   if ( duration < min_duration || duration > max_duration) return;
-  tvhlog(LOG_INFO, "_eqr_add", "episode duration %d vs min_duration %d and max_duration %d", duration, min_duration, max_duration);
+  tvhtrace("epg", "Episode duration %d vs min_duration of %d and max_duration of %d", duration, min_duration, max_duration);
 //
   
   /* More space */

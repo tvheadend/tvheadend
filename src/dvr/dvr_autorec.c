@@ -70,6 +70,9 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
   dvr_config_t *cfg;
+  //IH
+  int duration;
+  //
 
   if (!e->channel) return 0;
   if (!e->episode) return 0;
@@ -83,6 +86,10 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
      dae->dae_season == NULL &&
+     //IH
+     &dae->dae_minduration == NULL &&
+     &dae->dae_maxduration == NULL && //IH Think about whether we should be testing INT_MAX here
+     //
      dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
@@ -135,7 +142,19 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
       return 0;
   }
-
+  
+  //IH
+  duration = &e->stop - &e->start;
+  
+  if(dae->dae_minduration) {
+    if(duration < dae->dae_minduration) return 0;
+  }
+  
+  if(dae->dae_maxduration) {
+    if(duration > dae->dae_maxduration) return 0;
+  }
+  //
+  
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
     localtime_r(&e->start, &tm);
@@ -300,7 +319,11 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 //
 // This way I don't care what it's set to beyond the string value for 
 // initial display purposes
-
+  if (dae->dae_minduration)
+    htsmsg_add_u32(e, "minduration", dae->dae_minduration);
+  if (dae->dae_maxduration)
+    htsmsg_add_u32(e, "maxduration", dae->dae_maxduration);
+//
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
   if (dae->dae_brand)
@@ -424,6 +447,14 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       dae->dae_approx_time = atoi(s);
     }
   }
+
+//IH Need to put something in here that triggers when we update min/max in the autorec rule
+  if(!htsmsg_get_u32(values, "minduration", &u32))
+    dae->dae_minduration = u32;
+
+  if(!htsmsg_get_u32(values, "maxduration", &u32))
+    dae->dae_maxduration = u32;
+//
 
   if((l = htsmsg_get_list(values, "weekdays")) != NULL)
     dae->dae_weekdays = build_weekday_mask(l);

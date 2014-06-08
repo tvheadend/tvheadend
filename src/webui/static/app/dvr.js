@@ -547,12 +547,15 @@ tvheadend.autoreceditor = function() {
                             triggerAction: 'all',
                             emptyText: 'Only include channel...'
                         }),
-                        renderer: function(v, m, r) {
-                            var i = tvheadend.channels.find('key', v);
-                            if (i !== -1)
-                                v = tvheadend.channels.getAt(i).get('val');
-                            return v;
-                        }
+                        renderer: function(v) {
+                            return tvheadend.channelLookupName(v);
+                        },
+//                        renderer: function(v, m, r) {
+//                            var i = tvheadend.channels.find('key', v);
+//                            if (i !== -1)
+//                                v = tvheadend.channels.getAt(i).get('val');
+//                            return v;
+//                        }
                     },
                     {
                         header: "SeriesLink",
@@ -590,30 +593,37 @@ tvheadend.autoreceditor = function() {
                         })
                     },
 // IH
-
-// This will now bring through the real limit (i.e. seconds). We can look that up from the Store to turn it into an index
-// or into a string equivalent, and populate the combobox with the same values so it will automatically match
-// see epg.js for the lookup/conversion code
-
                     {
-                        header: "Min"
-                        /*dataIndex: minduration,
-                        editor: new Ext.ux.form.ComboBox({
+                        header: "Min. Duration",
+                        dataIndex: 'minduration',
+                        width: 75,
+                        renderer: function(v) {
+                            return tvheadend.durationLookupName(v);
+                        },
+                        editor: new Ext.form.ComboBox({
                             store: tvheadend.DurationStore,
                             mode: 'local',
                             valueField: 'value',
-                            displayField: 'label'
-                        })*/
-	            },
-	            {
-                        header: "Max"
-                        /*dataIndex: maxduration
-                        editor: new Ext.ux.form.ComboBox({
+                            displayField: 'label',
+                            editable: false,
+                            triggerAction: 'all',
+                        })
+	                },
+	                {
+                        header: "Max. Duration",
+                        dataIndex: 'maxduration',
+                        width: 75,
+                        renderer: function(v) {
+                            return tvheadend.durationLookupName(v);
+                        },
+                        editor: new Ext.form.ComboBox({
                             store: tvheadend.DurationStore,
                             mode: 'local',
                             valueField: 'value',
-                            displayField: 'label'
-                        })*/
+                            displayField: 'label',
+                            editable: false,
+                            triggerAction: 'all'
+                        })
                     },
 //
                     {
@@ -814,7 +824,7 @@ tvheadend.dvr = function() {
     tvheadend.autorecRecord = Ext.data.Record.create(['enabled', 'title',
         'serieslink', 'channel', 'tag', 'creator', 'contenttype', 'comment',
         //IH
-        'mindurationstring', 'maxdurationstring',
+        'minduration', 'maxduration',
         //
         'weekdays', 'pri', 'approx_time', 'config_name']);
 

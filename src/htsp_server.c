@@ -1087,7 +1087,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 //IH
   min_duration = htsmsg_get_u32_or_default(in, "minduration", 0);
   max_duration = htsmsg_get_u32_or_default(in, "maxduration", INT_MAX);
-  tvhlog(LOG_INFO, "htsp_server", "min_duration %d and max_duration %d", min_duration, max_duration);
+  tvhtrace("htsp", "min_duration %d and max_duration %d", min_duration, max_duration);
 //
 
   /* Check access */

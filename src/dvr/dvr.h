@@ -247,6 +247,10 @@ typedef struct dvr_autorec_entry {
   epg_serieslink_t *dae_serieslink;
   epg_episode_num_t dae_epnum;
 
+//IH
+  int dae_minduration;
+  int dae_maxduration;
+//
 } dvr_autorec_entry_t;
 
 
