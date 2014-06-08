@@ -511,6 +511,8 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   if (hc->hc_shutdown) {
     if (header)
       http_arg_flush(header);
+
+    free(wcmd);
     return -EIO;
   }
 
@@ -521,6 +523,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   s = http_cmd2str(cmd);
   if (s == NULL) {
     http_arg_flush(header);
+    free(wcmd);
     return -EINVAL;
   }
   htsbuf_append(&q, s, strlen(s));
@@ -537,6 +540,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   if (s == NULL) {
     htsbuf_queue_flush(&q);
     http_arg_flush(header);
+    free(wcmd);
     return -EINVAL;
   }
   htsbuf_append(&q, s, strlen(s));
