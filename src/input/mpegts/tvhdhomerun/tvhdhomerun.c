@@ -276,6 +276,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   {
     hd->hd_info.deviceModel = strdup(deviceModel);
   }
+  
   hdhomerun_device_destroy(hdhomerun_tuner);
 
   if (!tvh_hardware_create0((tvh_hardware_t*)hd, &tvhdhomerun_device_class,
@@ -308,11 +309,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
     feconf = htsmsg_get_map(conf, "frontends");
   save = !conf || !feconf;
 
-  // TODO: fetch number of tuners
-  int tunerFrontends = 2; // TODO: fetch the actual number of tuners..
-
-  for (j = 0; j < tunerFrontends; ++j) {
+  for (j = 0; j < dInfo->tuner_count; ++j) {
     hdhomerun_tuner = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, j, NULL);
+
     if (hdhomerun_tuner) {
       if (tvhdhomerun_frontend_create(feconf, hd, type, hdhomerun_tuner, j)) {
         tvhlog(LOG_INFO, "tvhdhomerun", "Created frontend %08X tuner %d", dInfo->device_id, j);
@@ -432,7 +431,7 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 #undef FREEM
 
   tvh_hardware_delete((tvh_hardware_t*)hd);
-  
+
   free(hd->hd_override_type);  
   free(hd->hd_info.deviceModel);
   free(hd);
