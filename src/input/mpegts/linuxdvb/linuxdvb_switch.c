@@ -124,17 +124,14 @@ linuxdvb_switch_tune
   /* LNB settings */
   pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
   band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
+  com  = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
   
   /* Set the voltage */
   if (linuxdvb_diseqc_set_volt(fd, pol))
     return -1;
 
-  /* check if committed port set. if not don't send command */
+  /* Single committed (before repeats) */
   if (ls->ls_committed > 0) {
-    /* Committed command */
-    com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
-
-    /* Single committed (before repeats) */
     if (sc->lse_parent->ls_diseqc_repeats > 0) {
       r2 = 1;
       if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
@@ -146,33 +143,33 @@ linuxdvb_switch_tune
   /* Repeats */
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
 
-    /* check if uncommitted port set. if not don't send command */
-    if (ls->lsuncomitted > 0) {
-      /* Uncommitted */
+    /* Uncommitted */
+    if (ls->ls_uncomitted > 0) {
       if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
                                0xF0 | ls->ls_uncomitted))
         return -1;
       usleep(25000);
     }
 
-    /* check if committed port set. if not don't send command */
+    /* Committed */
     if (ls->ls_committed > 0) {
-      /* Committed */
       if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
         return -1;
       usleep(25000);
     }
+
     /* repeat flag */
     r1 = r2 = 1;
   }
-  /* check if committed port set. if not don't send command */
-  if (ls->ls_toneburst > 0) {
+
   /* Tone burst */
-  tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
-  if (ioctl(fd, FE_DISEQC_SEND_BURST,
-            ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
-    tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
-    return -1;
+  if (ls->ls_toneburst > 0) {
+    tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+    if (ioctl(fd, FE_DISEQC_SEND_BURST,
+              ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
+      tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
+      return -1;
+    }
   }
 
   return 0;
