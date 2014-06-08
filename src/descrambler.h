@@ -61,7 +61,9 @@ typedef void (*descrambler_section_callback_t)
 typedef struct descrambler_section {
   TAILQ_ENTRY(descrambler_section) link;
   descrambler_section_callback_t callback;
-  void *opaque;
+  void     *opaque;
+  uint8_t  *last_data;
+  int       last_data_len;
 } descrambler_section_t;
 
 typedef struct descrambler_table {

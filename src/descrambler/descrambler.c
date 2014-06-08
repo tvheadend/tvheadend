@@ -216,7 +216,18 @@ descrambler_table_callback
 
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
   TAILQ_FOREACH(ds, &dt->sections, link)
-    ds->callback(ds->opaque, mt->mt_pid, ptr, len);
+    if (ds->last_data == NULL || len != ds->last_data_len ||
+        memcmp(ds->last_data, ptr, len)) {
+      free(ds->last_data);
+      ds->last_data = malloc(len);
+      if (ds->last_data) {
+        memcpy(ds->last_data, ptr, len);
+        ds->last_data_len = len;
+      } else {
+        ds->last_data_len = 0;
+      }
+      ds->callback(ds->opaque, mt->mt_pid, ptr, len);
+    }
   pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
   return 0;
 }
@@ -283,6 +294,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
         if (ds->opaque == opaque) {
           TAILQ_REMOVE(&dt->sections, ds, link);
           ds->callback(ds->opaque, -1, NULL, 0);
+          free(ds->last_data);
           free(ds);
           if (TAILQ_FIRST(&dt->sections) == NULL) {
             TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
@@ -324,6 +336,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
       ds->callback(ds->opaque, -1, NULL, 0);
+      free(ds->last_data);
       free(ds);
     }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
