@@ -201,6 +201,8 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   pthread_mutex_lock(&global_lock);
 
+  fclose(fp);
+
   /* Process */
 error:
   urlreset(&url);
