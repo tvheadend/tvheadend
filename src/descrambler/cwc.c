@@ -797,17 +797,7 @@ forbid:
 	     t->s_dvb_svcname, delay, ct->cs_cwc->cwc_hostname,
 	     ct->cs_cwc->cwc_port);
 
-    ct->td_keystate = DS_RESOLVED;
-    for (i = 3; i < 3 + 8; i++)
-      if (msg[i]) {
-        tvhcsa_set_key_even(&ct->cs_csa, msg + 3);
-        break;
-      }
-    for (i = 3 + 8; i < 3 + 8 + 8; i++)
-      if (msg[i]) {
-        tvhcsa_set_key_odd(&ct->cs_csa, msg + 3 + 8);
-        break;
-      }
+    descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 8);
 
     ep = LIST_FIRST(&ct->cs_pids);
     while(ep != NULL) {
