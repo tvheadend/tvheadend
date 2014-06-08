@@ -589,6 +589,33 @@ tvheadend.autoreceditor = function() {
                             emptyText: 'Only include content...'
                         })
                     },
+// IH
+
+// This will now bring through the real limit (i.e. seconds). We can look that up from the Store to turn it into an index
+// or into a string equivalent, and populate the combobox with the same values so it will automatically match
+// see epg.js for the lookup/conversion code
+
+                    {
+                        header: "Min"
+                        /*dataIndex: minduration,
+                        editor: new Ext.ux.form.ComboBox({
+                            store: tvheadend.DurationStore,
+                            mode: 'local',
+                            valueField: 'value',
+                            displayField: 'label'
+                        })*/
+	            },
+	            {
+                        header: "Max"
+                        /*dataIndex: maxduration
+                        editor: new Ext.ux.form.ComboBox({
+                            store: tvheadend.DurationStore,
+                            mode: 'local',
+                            valueField: 'value',
+                            displayField: 'label'
+                        })*/
+                    },
+//
                     {
                         header: "Weekdays",
                         dataIndex: 'weekdays',
@@ -786,6 +813,9 @@ tvheadend.dvr = function() {
 
     tvheadend.autorecRecord = Ext.data.Record.create(['enabled', 'title',
         'serieslink', 'channel', 'tag', 'creator', 'contenttype', 'comment',
+        //IH
+        'mindurationstring', 'maxdurationstring',
+        //
         'weekdays', 'pri', 'approx_time', 'config_name']);
 
     tvheadend.autorecStore = new Ext.data.JsonStore({

@@ -29,6 +29,22 @@ tvheadend.contentGroupLookupName = function(code) {
 
 tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 
+//IH
+tvheadend.DurationStore = new Ext.data.SimpleStore({
+	storeId: 'durations',
+	id: 0,
+    fields: ['identifier','label','value'],
+    data: [['0','0 min',0],
+        ['1','20 min', 1200],
+        ['2','45 min', 2700],
+        ['3','90 min', 5400],
+        ['4','3 hrs', 10800],
+        ['5','6 hrs', 21600],
+        ['6','12 hrs', 43200],
+        ['7','24 hrs', 86400]]
+});
+//
+
 tvheadend.epgDetails = function(event) {
 
     var content = '';
@@ -410,12 +426,14 @@ tvheadend.epg = function() {
 
     //IH
     // Slider for duration selection, including tooltip function to display the appropriate string
-    
+   
     var tip = new Ext.slider.Tip({
         getText: function(thumb){
             return thumb.slider.durations[thumb.value];
         }
     });
+
+    // Note: is there any way to seed the slider labels in one go, versus with specific lookups?
 
     var durationSlider = new Ext.slider.MultiSlider({
         width: 100,
@@ -424,58 +442,41 @@ tvheadend.epg = function() {
         maxValue: 7,
         increment: 1,
         durations: {
-            0: '0 min',
-            1: '20 min',
-            2: '45 min',
-            3: '90 min',
-            4: '3 hrs',
-            5: '6 hrs',
-            6: '12 hrs',
-            7: '24 hrs'
-        },
-        seconds: {
-            0: 0,
-            1: 1200,
-            2: 2700,
-            3: 5400,
-            4: 10800,
-            5: 21600,
-            6: 43200,
-            7: 86400 
+            0: tvheadend.DurationStore.getById(0).data.label,
+            1: tvheadend.DurationStore.getById(1).data.label,
+            2: tvheadend.DurationStore.getById(2).data.label,
+            3: tvheadend.DurationStore.getById(3).data.label,
+            4: tvheadend.DurationStore.getById(4).data.label,
+            5: tvheadend.DurationStore.getById(5).data.label,
+            6: tvheadend.DurationStore.getById(6).data.label,
+            7: tvheadend.DurationStore.getById(7).data.label
         },
         plugins: tip,
         listeners: {
 			change: function(slider, thumb, value){
-//            setduration(slider, thumb, value);
             setduration(slider);
 		}}
     });
 //
 
     function epgQueryClear() {
+//IH - reset the pointers before deleting the underlying variables - otherwise they reset to 0/24h not null/null
+        durationSlider.setValue(0,0);
+        durationSlider.setValue(1,7);
+//
         delete epgStore.baseParams.channel;
         delete epgStore.baseParams.tag;
         delete epgStore.baseParams.contenttype;
-//IH
-        delete epgStore.baseParams.contenttypestring;
-//
         delete epgStore.baseParams.title;
 //IH
         delete epgStore.baseParams.minduration;
-        delete epgStore.baseParams.mindurationstring;
         delete epgStore.baseParams.maxduration;
-        delete epgStore.baseParams.maxdurationstring;
 //
 
         epgFilterChannels.setValue("");
         epgFilterChannelTags.setValue("");
         epgFilterContentGroup.setValue("");
         epgFilterTitle.setValue("");
-
-//IH
-        durationSlider.setValue(0,0);
-        durationSlider.setValue(1,7);
-//
 
         epgStore.reload();
     }
@@ -497,31 +498,30 @@ tvheadend.epg = function() {
     epgFilterContentGroup.on('select', function(c, r) {
         if (epgStore.baseParams.contenttype !== r.data.code) {
             epgStore.baseParams.contenttype = r.data.code;
-//IH
-            epgStore.baseParams.contenttypestring = tvheadend.contentGroupLookupName(r.data.code);
-            console.log('contentype is',epgStore.baseParams.contenttype,'contenttypestring is',epgStore.baseParams.contenttypestring);
-//
             epgStore.reload();
         }
     });
 
 //IH ------------------
-//	setduration = function(slider, thumb, value) {
 	setduration = function(slider) {
-
-        console.log('durationSlider fired');
 
         var min = slider.getValue(0);
         var max = slider.getValue(1);
+        var minRec = tvheadend.DurationStore.getById(min);
+        var maxRec = tvheadend.DurationStore.getById(max);
 
-        console.log('Min:', min, "Duration:", slider.durations[min], slider.seconds[min]);
-        console.log('Max:', max, "Duration:", slider.durations[max], slider.seconds[max]);
-
-        epgStore.baseParams.minduration = slider.seconds[min];
-        epgStore.baseParams.mindurationstring = slider.durations[min];
-        epgStore.baseParams.maxduration = slider.seconds[max];
-        epgStore.baseParams.maxdurationstring = slider.durations[max];
+        epgStore.baseParams.minduration = minRec.data.value;
+        epgStore.baseParams.maxduration = maxRec.data.value;
+  
+//Debugging to test set and lookup        
+        var index = tvheadend.DurationStore.find( 'value', epgStore.baseParams.minduration ); 
+        var string = tvheadend.DurationStore.getById(index).data.label;
+        console.log('Min Duration record:', index, 'string:', string);
         
+        var index = tvheadend.DurationStore.find( 'value', epgStore.baseParams.maxduration ); 
+        var string = tvheadend.DurationStore.getById(index).data.label;
+        console.log('Max Duration record:', index, 'string:', string);
+//
         epgStore.reload();
         };
 //
@@ -617,16 +617,16 @@ tvheadend.epg = function() {
         var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
                 : "<i>Don't care</i>";
 //IH - correct to display content type as a string as opposed to the underlying (lookup) code
-//        var contenttype = epgStore.baseParams.contenttype ? epgStore.baseParams.contenttype
-        var contenttype = epgStore.baseParams.contenttypestring ? epgStore.baseParams.contenttypestring
+        var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
 //
                 : "<i>Don't care</i>";
 //IH
-        var minduration = epgStore.baseParams.mindurationstring ? epgStore.baseParams.mindurationstring
+        var minduration = epgStore.baseParams.minduration ? tvheadend.DurationStore.getById(tvheadend.DurationStore.find('value', epgStore.baseParams.minduration)).data.label
                 : "<i>Don't care</i>";
-        var maxduration = epgStore.baseParams.maxdurationstring ? epgStore.baseParams.maxdurationstring
+        var maxduration = epgStore.baseParams.maxduration ? tvheadend.DurationStore.getById(tvheadend.DurationStore.find('value', epgStore.baseParams.maxduration)).data.label
                 : "<i>Don't care</i>";
 //
+
 
         Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
@@ -652,7 +652,7 @@ tvheadend.epg = function() {
 //
 // IH: TO DO
 //
-// Check that contenttype is still passed correctly (epgStore.baseParams.contenttype) to autorec vs the new contenttypestring
+// Check that contenttype is still passed correctly (epgStore.baseParams.contenttype) to autorec vs the new contenttypestring - SHOULDN'T HAVE CHANGED
 // Add min/max to autorec rules (C)
 // Check they're displayed (js)
 //

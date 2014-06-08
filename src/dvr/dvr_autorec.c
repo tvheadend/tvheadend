@@ -283,6 +283,24 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   build_weekday_tags(l, dae->dae_weekdays);
   htsmsg_add_msg(e, "weekdays", l);
 
+//IH
+// This is where we add mindurationstring and maxdurationstring to the proceedings, I think
+// Same question as to whether we deal with an offset, and absolute time (s), or the string. 
+// Increasingly, I think it should be the offset... although look at 'channel', above, that translates on the fly
+//
+// It also looks like we need to adjust dea to include the min/max fields (offset, absolute, string...)
+// dvr_autorec_entry in dvr.h
+
+// More thoughts...
+//
+// Channel group and contentype jus start from their base values (string/value
+// as relevant). Start time (approx) does the same, but changes as soon as you 
+// select, so it isn't primed with the existing value - we could default to 0 
+// and max as well, 'you're changing it, here's the full range' sort of logic
+//
+// This way I don't care what it's set to beyond the string value for 
+// initial display purposes
+
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
   if (dae->dae_brand)
