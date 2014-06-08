@@ -112,7 +112,7 @@ static void
 create_services(AvahiClient *c) 
 {
   char *n;
-  char *path;
+  char *path = NULL;
   int ret;
   assert(c);
 
@@ -181,7 +181,8 @@ create_services(AvahiClient *c)
       goto fail;
     }
   }
-
+  if (path)
+    free(path);
   return;
 
  collision:
@@ -198,9 +199,13 @@ create_services(AvahiClient *c)
   avahi_entry_group_reset(group);
 
   create_services(c);
+  if (path)
+    free(path);
   return;
 
  fail:
+  if (path)
+    free(path);
   return;
 }
 
