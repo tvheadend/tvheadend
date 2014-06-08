@@ -167,12 +167,13 @@ linuxdvb_switch_tune
   }
   /* check if committed port set. if not don't send command */
   if (ls->ls_toneburst > 0) {
-  /* Tone burst */
-  tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
-  if (ioctl(fd, FE_DISEQC_SEND_BURST,
-            ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
-    tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
-    return -1;
+    /* Tone burst */
+    tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+    if (ioctl(fd, FE_DISEQC_SEND_BURST,
+              ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
+      tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
+      return -1;
+    }
   }
 
   return 0;
