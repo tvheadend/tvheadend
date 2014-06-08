@@ -629,8 +629,11 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  int type = MPS_TABLE;
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   mpegts_input_t *mi;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
@@ -643,8 +646,11 @@ void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
-  int type = MPS_TABLE;
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_output_lock);

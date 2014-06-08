@@ -120,6 +120,7 @@ typedef struct mpegts_pid_sub
 #define MPS_NONE   0x0
 #define MPS_STREAM 0x1
 #define MPS_TABLE  0x2
+#define MPS_FTABLE 0x4
   int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
@@ -147,6 +148,8 @@ struct mpegts_table
 #define MT_RECORD   0x08
 #define MT_SKIPSUBS 0x10
 #define MT_SCANSUBS 0x20
+#define MT_FAST     0x40
+#define MT_SLOW     0x80
 
   /**
    * Cycle queue
