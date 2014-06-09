@@ -133,7 +133,8 @@ int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb );
 int  descrambler_open_pid      ( struct mpegts_mux *mux, void *opaque, int pid,
-                                 descrambler_section_callback_t callback );
+                                 descrambler_section_callback_t callback,
+                                 struct service *service );
 int  descrambler_close_pid     ( struct mpegts_mux *mux, void *opaque, int pid );
 void descrambler_flush_tables  ( struct mpegts_mux *mux );
 void descrambler_cat_data      ( struct mpegts_mux *mux, const uint8_t *data, int len );
