@@ -683,6 +683,9 @@ linuxdvb_satconf_start_mux
   linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
   dvb_mux_t              *lm  = (dvb_mux_t*)mmi->mmi_mux;
 
+  /* Not fully configured */
+  if (!lse) return SM_CODE_TUNING_FAILED;
+
   /* Test run */
   // Note: basically this ensures the tuning params are acceptable
   //       for the FE, so that if they're not we don't have to wait
@@ -940,7 +943,7 @@ linuxdvb_satconf_ele_class_switchtype_set ( void *o, const void *p )
   if (ls->lse_switch && !strcmp(str ?: "", ls->lse_switch->ld_type))
     return 0;
   if (ls->lse_switch) linuxdvb_switch_destroy(ls->lse_switch);
-  ls->lse_switch = linuxdvb_switch_create0(str, NULL, ls, 0, 0);
+  ls->lse_switch = linuxdvb_switch_create0(str, NULL, ls, -1, -1);
   return 1;
 }
 
@@ -1133,7 +1136,7 @@ linuxdvb_satconf_ele_create0
     /* EN50494 */
     if (lse->lse_en50494 && (e = htsmsg_get_map(conf, "en50494_conf")))
       idnode_load(&lse->lse_en50494->ld_id, e);
-}
+  }
 
   /* Create default LNB */
   if (!lse->lse_lnb)

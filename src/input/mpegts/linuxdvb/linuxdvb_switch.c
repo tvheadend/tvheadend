@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "settings.h"
+#include "hts_strtab.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -48,23 +49,50 @@ typedef struct linuxdvb_switch
 static htsmsg_t *
 linuxdvb_switch_class_committed_list ( void *o )
 {
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "NONE");
-  htsmsg_add_str(m, NULL, "AA");
-  htsmsg_add_str(m, NULL, "AB");
-  htsmsg_add_str(m, NULL, "BA");
-  htsmsg_add_str(m, NULL, "BB");
-  return m;
+  static const struct strtab tab[] = {
+    { "NONE", -1 },
+    { "AA",    0 },
+    { "AB",    1 },
+    { "BA",    2 },
+    { "BB",    3 },
+  };
+  return strtab2htsmsg(tab);
+}
+
+static htsmsg_t *
+linuxdvb_switch_class_uncommitted_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "NONE", -1 },
+    {  "0",    0 },
+    {  "1",    1 },
+    {  "2",    2 },
+    {  "3",    3 },
+    {  "4",    4 },
+    {  "5",    5 },
+    {  "6",    6 },
+    {  "7",    7 },
+    {  "8",    8 },
+    {  "9",    9 },
+    { "10",   10 },
+    { "11",   11 },
+    { "12",   12 },
+    { "13",   13 },
+    { "14",   14 },
+    { "15",   15 },
+  };
+  return strtab2htsmsg(tab);
 }
 
 static htsmsg_t *
 linuxdvb_switch_class_toneburst_list ( void *o )
 {
-  htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "NONE");
-  htsmsg_add_str(m, NULL, "A");
-  htsmsg_add_str(m, NULL, "B");
-  return m;
+  static const struct strtab tab[] = {
+    { "NONE", -1 },
+    { "A",     0 },
+    { "B",     1 },
+  };
+  return strtab2htsmsg(tab);
 }
 
 static const char *
@@ -97,6 +125,7 @@ const idclass_t linuxdvb_switch_class =
       .id     = "uncommitted",
       .name   = "Uncommitted",
       .off    = offsetof(linuxdvb_switch_t, ls_uncomitted),
+      .list   = linuxdvb_switch_class_uncommitted_list
     },
     {
       .type   = PT_INT,
@@ -131,7 +160,7 @@ linuxdvb_switch_tune
     return -1;
 
   /* Single committed (before repeats) */
-  if (ls->ls_committed > 0) {
+  if (ls->ls_committed >= 0) {
     if (sc->lse_parent->ls_diseqc_repeats > 0) {
       r2 = 1;
       if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
@@ -144,7 +173,7 @@ linuxdvb_switch_tune
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
 
     /* Uncommitted */
-    if (ls->ls_uncomitted > 0) {
+    if (ls->ls_uncomitted >= 0) {
       if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
                                0xF0 | ls->ls_uncomitted))
         return -1;
@@ -152,7 +181,7 @@ linuxdvb_switch_tune
     }
 
     /* Committed */
-    if (ls->ls_committed > 0) {
+    if (ls->ls_committed >= 0) {
       if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
         return -1;
       usleep(25000);
@@ -163,7 +192,7 @@ linuxdvb_switch_tune
   }
 
   /* Tone burst */
-  if (ls->ls_toneburst > 0) {
+  if (ls->ls_toneburst >= 0) {
     tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
     if (ioctl(fd, FE_DISEQC_SEND_BURST,
               ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
