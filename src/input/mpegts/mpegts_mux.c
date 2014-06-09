@@ -576,6 +576,10 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   if (!force && mpegts_mux_has_subscribers(mm))
     return;
 
+  /* Stop possible recursion */
+  if (!mmi) return;
+  mm->mm_active = NULL;
+
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhdebug("mpegts", "%s - stopping mux", buf);
 
