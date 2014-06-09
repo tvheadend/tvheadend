@@ -620,7 +620,7 @@ htsmsg_get_str(htsmsg_t *msg, const char *name)
 int
 htsmsg_get_time(htsmsg_t *msg, const char *name)
 {
-  int time = 0;
+  int time = -1;
   const char *minutes;
   const char *timestr = htsmsg_get_str(msg, name);
 
@@ -631,6 +631,7 @@ htsmsg_get_time(htsmsg_t *msg, const char *name)
     } else if(strlen(timestr) > 0) {
       time = atoi(timestr);
     }
+    time %= (24*60);
   }
   return time;
 }

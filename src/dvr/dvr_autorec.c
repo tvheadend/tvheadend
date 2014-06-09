@@ -347,6 +347,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 {
   int save;
   dvr_autorec_entry_t *dae;
+  int i;
   const char *s;
   channel_t *ch;
   channel_tag_t *ct;
@@ -400,20 +401,17 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if (!htsmsg_get_u32(values, "contenttype", &u32))
     dae->dae_content_type.code = u32;
 
-  if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
-    int approx_time = htsmsg_get_time(values, "approx_time");
-    if (approx_time != 0) {
-      // convert old approx_time to equivalent tod_after & tod_before values
-      dae->dae_tod_after = (approx_time + (24*60) - 15) % (24*60);
-      dae->dae_tod_before = (approx_time + 15) % (24*60);
-    }
+	if((i = htsmsg_get_time(values, "approx_time")) > 0) {
+    // convert old approx_time to equivalent tod_after & tod_before values
+    dae->dae_tod_after = (i + (24*60) - 15) % (24*60);
+    dae->dae_tod_before = (i + 15) % (24*60);
   }
 
-  if((s = htsmsg_get_str(values, "tod_after")) != NULL)
-    dae->dae_tod_after = htsmsg_get_time(values, "tod_after");
+	if((i = htsmsg_get_time(values, "tod_after")) >= 0) 
+    dae->dae_tod_after = i;
 
-  if((s = htsmsg_get_str(values, "tod_before")) != NULL)
-    dae->dae_tod_before = htsmsg_get_time(values, "tod_before");
+	if((i = htsmsg_get_time(values, "tod_before")) >= 0) 
+    dae->dae_tod_before = i;
 
   if((l = htsmsg_get_list(values, "weekdays")) != NULL)
     dae->dae_weekdays = build_weekday_mask(l);

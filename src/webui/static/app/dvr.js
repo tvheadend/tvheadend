@@ -485,22 +485,14 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 tvheadend.autoreceditor = function() {
     var fm = Ext.form;
 
-    function renderTime(value, metadata, record, row, col, store) {
-        if (typeof value === 'string')
-          if (value == "00:00")
-            return '';
-          else
-            return value;
-
+    function renderTime(value) {
         if (value === 0)
             return '';
 
-        var hours = Math.floor(value / 60);
-        var mins = value % 60;
-        var dt = new Date();
-        dt.setHours(hours);
-        dt.setMinutes(mins);
-        return dt.format('H:i');
+        if (value == "00:00")
+            return '';
+
+        return value;
     }
 
     var cm = new Ext.grid.ColumnModel({
