@@ -401,7 +401,6 @@ typedef struct service {
 
   struct th_descrambler_list s_descramblers;
   int s_scrambled_seen;
-  int s_caid;
 
   /**
    * List of all and filtered components.
