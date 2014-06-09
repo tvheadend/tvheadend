@@ -657,6 +657,8 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 {
   mpegts_table_t *mt;
 
+  assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
+
   /* Log */
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
@@ -686,7 +688,7 @@ mpegts_mux_scan_timeout ( void *aux )
 
   /* Timeout */
   if (mm->mm_scan_init) {
-    tvhinfo("mpegts", "%s - initial scan timed out", buf);
+    tvhinfo("mpegts", "%s - scan timed out", buf);
     mpegts_mux_scan_done(mm, buf, 0);
     return;
   }
@@ -708,18 +710,18 @@ mpegts_mux_scan_timeout ( void *aux )
       
   /* No DATA - give up now */
   if (!c) {
-    tvhinfo("mpegts", "%s - initial scan no data, failed", buf);
+    tvhinfo("mpegts", "%s - scan no data, failed", buf);
     mpegts_mux_scan_done(mm, buf, 0);
 
   /* Pending tables (another 20s - bit arbitrary) */
   } else if (q) {
-    tvhinfo("mepgts", "%s - initial scan needs more time", buf);
+    tvhinfo("mepgts", "%s - scan needs more time", buf);
     gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, 20);
     return;
 
   /* Complete */
   } else {
-    tvhinfo("mpegts", "%s - initial scan complete", buf);
+    tvhinfo("mpegts", "%s - scan complete", buf);
     mpegts_mux_scan_done(mm, buf, 1);
   }
 }
