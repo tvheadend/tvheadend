@@ -401,10 +401,12 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     dae->dae_content_type.code = u32;
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
-    // convert old approx_time to equivalent tod_after & tod_before values
     int approx_time = htsmsg_get_time(values, "approx_time");
-    dae->dae_tod_after = (approx_time + (24*60) - 15) % (24*60);
-    dae->dae_tod_before = (approx_time + 15) % (24*60);
+    if (approx_time != 0) {
+      // convert old approx_time to equivalent tod_after & tod_before values
+      dae->dae_tod_after = (approx_time + (24*60) - 15) % (24*60);
+      dae->dae_tod_before = (approx_time + 15) % (24*60);
+    }
   }
 
   if((s = htsmsg_get_str(values, "tod_after")) != NULL)
