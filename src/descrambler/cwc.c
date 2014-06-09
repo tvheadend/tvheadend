@@ -687,9 +687,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
+  th_descrambler_t *td;
   ecm_pid_t *ep, *epn;
-  cwc_service_t *ct2;
-  cwc_t *cwc2;
   char chaninfo[32];
   int i;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
@@ -709,25 +708,19 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 
     if (es->es_nok > 2) {
       tvhlog(LOG_DEBUG, "cwc",
-             "Too many NOKs for service \"%s\"%s from %s:%i",
-             t->s_dvb_svcname, chaninfo, ct->cs_cwc->cwc_hostname,
-             ct->cs_cwc->cwc_port);
+             "Too many NOKs for service \"%s\"%s from %s",
+             t->s_dvb_svcname, chaninfo, ct->td_nicename);
       goto forbid;
     }
 
-    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
-      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
-        if (ct != ct2 && ct2->td_service == (service_t *)t &&
-            ct2->td_keystate == DS_RESOLVED) {
-          tvhlog(LOG_DEBUG, "cwc",
-	    "NOK from %s:%i: Already has a key for service \"%s\", from %s:%i",
-            ct->cs_cwc->cwc_hostname, ct->cs_cwc->cwc_port,
-	    t->s_dvb_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
-          es->es_nok = 3; /* do not send more ECM requests */
-          goto forbid;
-        }
+    LIST_FOREACH(td, &t->s_descramblers, td_service_link)
+      if (td != (th_descrambler_t *)ct && td->td_keystate == DS_RESOLVED) {
+        tvhlog(LOG_DEBUG, "cwc",
+	       "NOK from %s: Already has a key for service \"%s\", from %s",
+	       ct->td_nicename,  t->s_dvb_svcname, td->td_nicename);
+        es->es_nok = 3; /* do not send more ECM requests */
+        ct->td_keystate = DS_IDLE;
       }
-    }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
 	   "Req delay: %"PRId64" ms)", t->s_dvb_svcname, chaninfo, seq, delay);
@@ -746,8 +739,8 @@ forbid:
     }
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
-	   "Req delay: %"PRId64" ms)",
-	   t->s_dvb_svcname, seq, delay);
+	   "Req delay: %"PRId64" ms) from %s",
+	   t->s_dvb_svcname, seq, delay, ct->td_nicename);
 
     ct->td_keystate = DS_FORBIDDEN;
     ct->ecm_state = ECM_RESET;
@@ -762,7 +755,8 @@ forbid:
 
     if(t->s_dvb_prefcapid == 0 || t->s_dvb_prefcapid != ct->cs_channel) {
       t->s_dvb_prefcapid = ct->cs_channel;
-      tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d", t->s_dvb_prefcapid);
+      tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d for %s",
+                               t->s_dvb_prefcapid, ct->td_nicename);
       service_request_save((service_t*)t, 0);
     }
 
@@ -778,24 +772,10 @@ forbid:
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
 	   msg[3 + 15], seq, delay);
 
-    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
-      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
-        if (ct != ct2 && ct2->td_service == (service_t *)t &&
-            ct2->td_keystate == DS_RESOLVED) {
-          ct->td_keystate = DS_IDLE;
-          tvhlog(LOG_DEBUG, "cwc",
-	     "Already has a key for service \"%s\", from %s:%i",
-	     t->s_dvb_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
-          return;
-        }
-      }
-    }
-    
     if(ct->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "cwc",
-	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s:%i",
-	     t->s_dvb_svcname, delay, ct->cs_cwc->cwc_hostname,
-	     ct->cs_cwc->cwc_port);
+	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s",
+	     t->s_dvb_svcname, delay, ct->td_nicename);
 
     descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 8);
 
@@ -809,7 +789,8 @@ forbid:
         for(i = 0; i < 256; i++)
           free(ep->ep_sections[i]);
         LIST_REMOVE(ep, ep_link);
-        tvhlog(LOG_WARNING, "cwc", "Delete ECM (PID %d) for service \"%s\"", ep->ep_pid, t->s_dvb_svcname);
+        tvhlog(LOG_WARNING, "cwc", "Delete ECM (PID %d) for service \"%s\" from %s",
+                                   ep->ep_pid, t->s_dvb_svcname, ct->td_nicename);
         free(ep);
         ep = epn;
       }
@@ -1920,6 +1901,7 @@ cwc_service_destroy(th_descrambler_t *td)
   LIST_REMOVE(ct, cs_link);
 
   tvhcsa_destroy(&ct->cs_csa);
+  free(ct->td_nicename);
   free(ct);
 }
 
@@ -1937,6 +1919,7 @@ cwc_service_start(service_t *t)
   elementary_stream_t *st;
   caid_t *c;
   struct cs_card_data *pcard;
+  char buf[512];
 
   extern const idclass_t mpegts_service_class;
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
@@ -1975,6 +1958,8 @@ cwc_service_start(service_t *t)
 
     td                   = (th_descrambler_t *)ct;
     tvhcsa_init(td->td_csa = &ct->cs_csa);
+    snprintf(buf, sizeof(buf), "cwc-%s-%i", cwc->cwc_hostname, cwc->cwc_port);
+    td->td_nicename      = strdup(buf);
     td->td_service       = t;
     td->td_stop          = cwc_service_destroy;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);

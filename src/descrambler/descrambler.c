@@ -176,8 +176,28 @@ void
 descrambler_keys ( th_descrambler_t *td,
                    const uint8_t *even, const uint8_t *odd )
 {
-  th_descrambler_runtime_t *dr = td->td_service->s_descramble;
+  service_t *t = td->td_service;
+  th_descrambler_runtime_t *dr;
+  th_descrambler_t *td2;
   int i, j = 0;
+
+  if (t == NULL || (dr = t->s_descramble) == NULL) {
+    td->td_keystate = DS_FORBIDDEN;
+    return;
+  }
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  LIST_FOREACH(td2, &t->s_descramblers, td_service_link)
+    if (td2 != td && td->td_keystate == DS_RESOLVED) {
+      tvhlog(LOG_DEBUG, "descrambler",
+                        "Already has a key from %s for service \"%s\", ignoring %s",
+                        td->td_nicename,
+                        ((mpegts_service_t *)td2->td_service)->s_dvb_svcname,
+                        ((mpegts_service_t *)t)->s_dvb_svcname);
+      td->td_keystate = DS_IDLE;
+      goto fin;
+    }
 
   for (i = 0; i < 8; i++)
     if (even[i]) {
@@ -192,18 +212,23 @@ descrambler_keys ( th_descrambler_t *td,
       break;
     }
 
-  if (j == 0) {
-    tvhlog(LOG_DEBUG, "descrambler", "Empty keys received for service \"%s\"",
-                      ((mpegts_service_t *)td->td_service)->s_dvb_svcname);
-    return;
+  if (j > 0) {
+    if (td->td_keystate != DS_RESOLVED)
+      tvhlog(LOG_DEBUG, "descrambler",
+                        "Obtained key from %s for service \"%s\"",
+                        td->td_nicename,
+                        ((mpegts_service_t *)t)->s_dvb_svcname);
+    dr->dr_ecm_key_time = dispatch_clock;
+    td->td_keystate = DS_RESOLVED;
+  } else {
+    tvhlog(LOG_DEBUG, "descrambler",
+                      "Empty keys received from %s for service \"%s\"",
+                      td->td_nicename,
+                      ((mpegts_service_t *)t)->s_dvb_svcname);
   }
 
-  if (td->td_keystate != DS_RESOLVED)
-    tvhlog(LOG_DEBUG, "descrambler", "Obtained key for service \"%s\"",
-                      ((mpegts_service_t *)td->td_service)->s_dvb_svcname);
-
-  dr->dr_ecm_key_time = dispatch_clock;
-  td->td_keystate = DS_RESOLVED;
+fin:
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 static inline void
@@ -223,6 +248,8 @@ descrambler_descramble ( service_t *t,
   th_descrambler_runtime_t *dr = t->s_descramble;
   int count, failed, off, size;
   uint8_t *tsb2;
+
+  lock_assert(&t->s_stream_mutex);
 
   if (dr == NULL)
     return -1;

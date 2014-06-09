@@ -37,6 +37,8 @@ struct mpegts_mux;
 typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_service_link;
 
+  char *td_nicename;
+
   enum {
     DS_UNKNOWN,
     DS_RESOLVED,
