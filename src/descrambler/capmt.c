@@ -739,6 +739,7 @@ capmt_service_destroy(th_descrambler_t *td)
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   tvhcsa_destroy(&ct->ct_csa);
+  free(ct->td_nicename);
   free(ct);
 }
 
@@ -1660,6 +1661,7 @@ capmt_service_start(service_t *s)
   mpegts_service_t *t = (mpegts_service_t*)s;
   elementary_stream_t *st;
   int tuner = -1, i, change;
+  char buf[512];
   
   lock_assert(&global_lock);
 
@@ -1748,6 +1750,10 @@ capmt_service_start(service_t *s)
 
     td = (th_descrambler_t *)ct;
     tvhcsa_init(td->td_csa = &ct->ct_csa);
+    snprintf(buf, sizeof(buf), "capmt-%s-%i",
+                               capmt->capmt_sockfile,
+                               capmt->capmt_port);
+    td->td_nicename    = strdup(buf);
     td->td_service     = s;
     td->td_stop        = capmt_service_destroy;
     td->td_caid_change = capmt_caid_change;
