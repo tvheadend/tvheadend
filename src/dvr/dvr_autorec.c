@@ -401,16 +401,16 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if (!htsmsg_get_u32(values, "contenttype", &u32))
     dae->dae_content_type.code = u32;
 
-	if((i = htsmsg_get_time(values, "approx_time")) > 0) {
+  if((i = htsmsg_get_time(values, "approx_time")) > 0) {
     // convert old approx_time to equivalent tod_after & tod_before values
     dae->dae_tod_after = (i + (24*60) - 15) % (24*60);
     dae->dae_tod_before = (i + 15) % (24*60);
   }
 
-	if((i = htsmsg_get_time(values, "tod_after")) >= 0) 
+  if((i = htsmsg_get_time(values, "tod_after")) >= 0) 
     dae->dae_tod_after = i;
 
-	if((i = htsmsg_get_time(values, "tod_before")) >= 0) 
+  if((i = htsmsg_get_time(values, "tod_before")) >= 0) 
     dae->dae_tod_before = i;
 
   if((l = htsmsg_get_list(values, "weekdays")) != NULL)
