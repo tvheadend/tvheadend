@@ -68,6 +68,7 @@ prop_write_values
   const void *new;
   double dbl;
   int i;
+  int64_t s64;
   uint32_t u32;
   uint16_t u16;
 #define PROP_UPDATE(v, t)\
@@ -107,9 +108,9 @@ prop_write_values
         break;
       }
       case PT_INT: {
-        if (htsmsg_field_get_u32(f, &u32))
+        if (htsmsg_field_get_s64(f, &s64))
           continue;
-        i = u32;
+        i = s64;
         PROP_UPDATE(i, int);
         break;
       }
@@ -293,7 +294,7 @@ prop_serialize
         htsmsg_add_bool(m, "default", pl->def.i);
         break;
       case PT_INT:
-        htsmsg_add_u32(m, "default", pl->def.i);
+        htsmsg_add_s32(m, "default", pl->def.i);
         break;
       case PT_U16:
         htsmsg_add_u32(m, "default", pl->def.u16);
