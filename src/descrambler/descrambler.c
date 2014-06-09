@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tvheadend.h"
 #include "descrambler.h"
 #include "cwc.h"
 #include "capmt.h"
@@ -132,28 +133,32 @@ descrambler_done ( void )
 void
 descrambler_service_start ( service_t *t )
 {
-  t->s_descramble_key = 0;
+  th_descrambler_runtime_t *dr;
+
 #if ENABLE_CWC
   cwc_service_start(t);
 #endif
 #if ENABLE_CAPMT
   capmt_service_start(t);
 #endif
-  t->s_descramble_buf = calloc(1, sizeof(sbuf_t));
-  sbuf_init(t->s_descramble_buf);
+  t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
+  sbuf_init(&dr->dr_buf);
+  dr->dr_key_index = 0xff;
 }
 
 void
 descrambler_service_stop ( service_t *t )
 {
   th_descrambler_t *td;
+  th_descrambler_runtime_t *dr = t->s_descramble;
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
-  if (t->s_descramble_buf) {
-    sbuf_free(t->s_descramble_buf);
-    t->s_descramble_buf = NULL;
+  if (dr) {
+    sbuf_free(&dr->dr_buf);
+    free(dr);
   }
+  t->s_descramble = NULL;
 }
 
 void
@@ -171,23 +176,42 @@ void
 descrambler_keys ( th_descrambler_t *td,
                    const uint8_t *even, const uint8_t *odd )
 {
-  int i;
+  th_descrambler_runtime_t *dr = td->td_service->s_descramble;
+  int i, j = 0;
 
   for (i = 0; i < 8; i++)
     if (even[i]) {
+      j++;
       tvhcsa_set_key_even(td->td_csa, even);
       break;
     }
   for (i = 0; i < 8; i++)
     if (odd[i]) {
+      j++;
       tvhcsa_set_key_odd(td->td_csa, odd);
       break;
     }
 
+  if (j == 0) {
+    tvhlog(LOG_DEBUG, "descrambler", "Empty keys received for service \"%s\"",
+                      ((mpegts_service_t *)td->td_service)->s_dvb_svcname);
+    return;
+  }
+
   if (td->td_keystate != DS_RESOLVED)
     tvhlog(LOG_DEBUG, "descrambler", "Obtained key for service \"%s\"",
                       ((mpegts_service_t *)td->td_service)->s_dvb_svcname);
+
+  dr->dr_ecm_key_time = dispatch_clock;
   td->td_keystate = DS_RESOLVED;
+}
+
+static inline void
+key_update( th_descrambler_runtime_t *dr, uint8_t key )
+{
+  /* set the even (0) or odd (0x40) key index */
+  dr->dr_key_index = key & 0x40;
+  dr->dr_key_start = dispatch_clock;
 }
 
 int
@@ -196,8 +220,12 @@ descrambler_descramble ( service_t *t,
                          const uint8_t *tsb )
 {
   th_descrambler_t *td;
+  th_descrambler_runtime_t *dr = t->s_descramble;
   int count, failed, off, size;
+  uint8_t *tsb2;
 
+  if (dr == NULL)
+    return -1;
   count = failed = 0;
   LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
     count++;
@@ -207,34 +235,47 @@ descrambler_descramble ( service_t *t,
     }
     if (td->td_keystate != DS_RESOLVED)
       continue;
-    if (t->s_descramble_buf) {
-      for (off = 0, size = t->s_descramble_buf->sb_ptr; off < size; off += 188)
+    if (dr->dr_buf.sb_ptr > 0) {
+      for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {
+        tsb2 = dr->dr_buf.sb_data + off;
+        if ((tsb2[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb2[3] & 0x40)) {
+          if (dr->dr_ecm_key_time < dr->dr_key_start) {
+            sbuf_free(&dr->dr_buf);
+            goto forbid;
+          }
+          key_update(dr, tsb[3]);
+        }
         tvhcsa_descramble(td->td_csa,
                           (mpegts_service_t *)td->td_service,
-                          st, t->s_descramble_buf->sb_data + off);
-      sbuf_free(t->s_descramble_buf);
-      free(t->s_descramble_buf);
-      t->s_descramble_buf = NULL;
+                          st, tsb2);
+      }
+      sbuf_free(&dr->dr_buf);
+    }
+    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb[3] & 0x40)) {
+      if (dr->dr_ecm_key_time < dr->dr_key_start) {
+forbid:
+        td->td_keystate = DS_FORBIDDEN;
+        failed++;
+        continue;
+      }
+      key_update(dr, tsb[3]);
     }
     tvhcsa_descramble(td->td_csa,
                       (mpegts_service_t *)td->td_service,
                       st, tsb);
     return 1;
   }
-  if (t->s_descramble_key && count != failed) {
-    /*
-     * Fill a temporary buffer until the keys are known to make
-     * streaming faster.
-     */
-    if (t->s_descramble_buf == NULL) {
-      t->s_descramble_buf = calloc(1, sizeof(sbuf_t));
-      if (t->s_descramble_buf)
-        sbuf_init(t->s_descramble_buf);
-    }
-    if (t->s_descramble_buf) {
-      if (t->s_descramble_buf->sb_ptr >= 3000 * 188)
-        sbuf_cut(t->s_descramble_buf, 300 * 188);
-      sbuf_append(t->s_descramble_buf, tsb, 188);
+  if (dr->dr_ecm_start) { /* ECM sent */
+    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_start == 0)
+      key_update(dr, tsb[3]);
+    if (count != failed) {
+      /*
+       * Fill a temporary buffer until the keys are known to make
+       * streaming faster.
+       */
+      if (dr->dr_buf.sb_ptr >= 3000 * 188)
+        sbuf_cut(&dr->dr_buf, 300 * 188);
+      sbuf_append(&dr->dr_buf, tsb, 188);
     }
   }
   return count && count == failed ? -1 : count;
@@ -246,6 +287,7 @@ descrambler_table_callback
 {
   descrambler_table_t *dt = mt->mt_opaque;
   descrambler_section_t *ds;
+  th_descrambler_runtime_t *dr;
 
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
   TAILQ_FOREACH(ds, &dt->sections, link)
@@ -263,7 +305,8 @@ descrambler_table_callback
       if ((mt->mt_flags & MT_FAST) != 0) { /* ECM */
         if (mt->mt_service) {
           /* The keys are requested from this moment */
-          mt->mt_service->s_descramble_key |= 1;
+          dr = mt->mt_service->s_descramble;
+          dr->dr_ecm_start = dispatch_clock;
         }
       }
     }

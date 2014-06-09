@@ -52,6 +52,16 @@ typedef struct th_descrambler {
 
 } th_descrambler_t;
 
+typedef struct th_descrambler_runtime {
+  uint32_t dr_key:1;
+  uint32_t dr_key_first:1;
+  uint8_t  dr_key_index;
+  time_t   dr_key_start;
+  time_t   dr_ecm_start;
+  time_t   dr_ecm_key_time;
+  sbuf_t   dr_buf;
+} th_descrambler_runtime_t;
+
 typedef void (*descrambler_section_callback_t)
   (void *opaque, int pid, const uint8_t *section, int section_len);
 
