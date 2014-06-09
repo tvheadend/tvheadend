@@ -784,7 +784,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
   filter->pid = pid;
-  memcpy(&filter->filter, sbuf_peek(sb, offset + 10), sizeof(filter->filter));
+  memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
   filter->flags = 0;
   /* ECM messages have the higher priority */
   t = NULL;
@@ -1433,12 +1433,11 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
           if ((data[i] & f->mask[i]) != f->filter[i])
             break;
         }
-        if (i >= DMX_FILTER_SIZE && i <= len) {
+        if (i >= DMX_FILTER_SIZE && i <= len)
           capmt_filter_data(capmt,
                             o->adapter, demux_index,
                             filter_index, data, len,
                             cf->dmx[filter_index].flags);
-        }
       }
   }
 

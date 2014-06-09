@@ -401,8 +401,7 @@ typedef struct service {
 
   struct th_descrambler_list s_descramblers;
   uint16_t s_scrambled_seen;
-  uint16_t s_descramble_key;
-  sbuf_t *s_descramble_buf;
+  th_descrambler_runtime_t *s_descramble;
 
   /**
    * List of all and filtered components.
