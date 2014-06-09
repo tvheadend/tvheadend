@@ -125,7 +125,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-	if((dae->dae_tod_after != 0) || (dae->dae_tod_before != 0)) {
+  if((dae->dae_tod_after != 0) || (dae->dae_tod_before != 0)) {
     struct tm tm;
     localtime_r(&e->start, &tm);
     int minutes = tm.tm_hour * 60 + tm.tm_min;
@@ -136,8 +136,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     } else {
       if ((minutes < dae->dae_tod_after) && (minutes > dae->dae_tod_before))
         return 0;
-		}
-	}
+    }
+  }
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
@@ -250,6 +250,7 @@ build_weekday_mask(htsmsg_t *l)
       r |= 1 << (u32 - 1);
   return r;
 }
+
 
 /**
  *
