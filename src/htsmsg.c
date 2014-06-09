@@ -263,6 +263,19 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
  *
  */
 void
+htsmsg_add_time(htsmsg_t *msg, const char *name, int time)
+{
+  char buf[8];
+  if((time >= 0) && (time < 24*60)) {
+    snprintf(buf, sizeof(buf), "%02"PRId32":%02"PRId32, time/60, time%60);
+    htsmsg_add_str(msg, name, buf);
+  }
+}
+
+/*
+ *
+ */
+void
 htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BIN, 
@@ -599,6 +612,27 @@ htsmsg_get_str(htsmsg_t *msg, const char *name)
     return NULL;
   return htsmsg_field_get_string(f);
 
+}
+
+/*
+ *
+ */
+int
+htsmsg_get_time(htsmsg_t *msg, const char *name)
+{
+  int time = 0;
+  const char *minutes;
+  const char *timestr = htsmsg_get_str(msg, name);
+
+  if(timestr != NULL) {
+    minutes = strchr(timestr, ':');
+    if(minutes != NULL) {
+      time = (atoi(timestr) * 60) + atoi(minutes + 1);
+    } else if(strlen(timestr) > 0) {
+      time = atoi(timestr);
+    }
+  }
+  return time;
 }
 
 /*

@@ -125,16 +125,19 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-  if(dae->dae_approx_time != 0) {
-    struct tm a_time;
-    struct tm ev_time;
-    localtime_r(&e->start, &a_time);
-    localtime_r(&e->start, &ev_time);
-    a_time.tm_min = dae->dae_approx_time % 60;
-    a_time.tm_hour = dae->dae_approx_time / 60;
-    if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
-      return 0;
-  }
+	if((dae->dae_tod_after != 0) || (dae->dae_tod_before != 0)) {
+    struct tm tm;
+    localtime_r(&e->start, &tm);
+    int minutes = tm.tm_hour * 60 + tm.tm_min;
+
+    if(dae->dae_tod_after < dae->dae_tod_before) {
+      if ((minutes < dae->dae_tod_after) || (minutes > dae->dae_tod_before))
+        return 0;
+    } else {
+      if ((minutes < dae->dae_tod_after) && (minutes > dae->dae_tod_before))
+        return 0;
+		}
+	}
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
@@ -248,7 +251,6 @@ build_weekday_mask(htsmsg_t *l)
   return r;
 }
 
-
 /**
  *
  */
@@ -278,7 +280,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
-  htsmsg_add_u32(e, "approx_time", dae->dae_approx_time);
+  htsmsg_add_time(e, "tod_after", dae->dae_tod_after);
+  htsmsg_add_time(e, "tod_before", dae->dae_tod_before);
 
   build_weekday_tags(l, dae->dae_weekdays);
   htsmsg_add_msg(e, "weekdays", l);
@@ -397,15 +400,17 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     dae->dae_content_type.code = u32;
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
-    if(strchr(s, ':') != NULL) {
-      // formatted time string - convert
-      dae->dae_approx_time = (atoi(s) * 60) + atoi(s + 3);
-    } else if(strlen(s) == 0) {
-      dae->dae_approx_time = 0;
-    } else {
-      dae->dae_approx_time = atoi(s);
-    }
+    // convert old approx_time to equivalent tod_after & tod_before values
+    int approx_time = htsmsg_get_time(values, "approx_time");
+    dae->dae_tod_after = (approx_time + (24*60) - 15) % (24*60);
+    dae->dae_tod_before = (approx_time + 15) % (24*60);
   }
+
+  if((s = htsmsg_get_str(values, "tod_after")) != NULL)
+    dae->dae_tod_after = htsmsg_get_time(values, "tod_after");
+
+  if((s = htsmsg_get_str(values, "tod_before")) != NULL)
+    dae->dae_tod_before = htsmsg_get_time(values, "tod_before");
 
   if((l = htsmsg_get_list(values, "weekdays")) != NULL)
     dae->dae_weekdays = build_weekday_mask(l);
@@ -509,7 +514,7 @@ _dvr_autorec_add(const char *config_name,
 		const char *tag, epg_genre_t *content_type,
     epg_brand_t *brand, epg_season_t *season,
     epg_serieslink_t *serieslink,
-    int approx_time, epg_episode_num_t *epnum,
+    int tod_after, int tod_before, epg_episode_num_t *epnum,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
@@ -548,7 +553,8 @@ _dvr_autorec_add(const char *config_name,
     dae->dae_serieslink = serieslink;
   }
 
-  dae->dae_approx_time = approx_time;
+  dae->dae_tod_after = tod_after;
+  dae->dae_tod_before = tod_before;
 
   m = autorec_record_build(dae);
   hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
@@ -570,7 +576,7 @@ dvr_autorec_add(const char *config_name,
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find(channel);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-                   NULL, NULL, NULL, 0, NULL, creator, comment);
+                   NULL, NULL, NULL, 0, 0, NULL, creator, comment);
 }
 
 void dvr_autorec_add_series_link 
@@ -587,7 +593,7 @@ void dvr_autorec_add_series_link
                    NULL,
                    NULL,
                    event->serieslink,
-                   0, NULL,
+                   0, 0, NULL,
                    creator, comment);
   if (title)
     free(title);
