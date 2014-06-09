@@ -1983,7 +1983,7 @@ cwc_service_start(service_t *t)
 
     descrambler_open_pid(ct->cs_mux, ct,
                          DESCRAMBLER_ECM_PID(ct->cs_estream->es_pid),
-                         cwc_table_input);
+                         cwc_table_input, t);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
 	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);

@@ -72,17 +72,6 @@ typedef struct dmx_filter {
   uint8_t mode[DMX_FILTER_SIZE];
 } dmx_filter_t;
 
-typedef struct dmx_sct_filter_params {
-  uint16_t       pid;
-  dmx_filter_t   filter;
-  uint32_t       timeout;
-  uint32_t       flags;
-#define DMX_CHECK_CRC       1
-#define DMX_ONESHOT         2
-#define DMX_IMMEDIATE_START 4
-#define DMX_KERNEL_CLIENT   0x8000
-} dmx_filter_params_t;
-
 #define CA_SET_DESCR      0x40106f86
 #define CA_SET_DESCR_X    0x866f1040
 #define CA_SET_PID        0x40086f87
@@ -203,10 +192,16 @@ typedef struct capmt_service {
 /**
  **
  */
+typedef struct capmt_dmx {
+  dmx_filter_t filter;
+  uint16_t pid;
+  uint32_t flags;
+} capmt_dmx_t;
+
 typedef struct capmt_filters {
   int max;
   int adapter;
-  dmx_filter_params_t dmx[MAX_FILTER];
+  capmt_dmx_t dmx[MAX_FILTER];
 } capmt_filters_t;
 
 typedef struct capmt_demuxes {
@@ -348,7 +343,7 @@ capmt_poll_rem(capmt_t *capmt, int fd)
 }
 
 static void
-capmt_pid_add(capmt_t *capmt, int adapter, int pid)
+capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
 {
   capmt_adapter_t *ca = &capmt->capmt_adapters[adapter];
   capmt_opaque_t *o = NULL, *t;
@@ -367,7 +362,9 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid)
     o->adapter = adapter;
     o->pid     = pid;
     mmi        = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
-    descrambler_open_pid(mmi->mmi_mux, o, pid, capmt_table_input);
+    descrambler_open_pid(mmi->mmi_mux, o,
+                         s ? DESCRAMBLER_ECM_PID(pid) : pid,
+                         capmt_table_input, (service_t *)s);
   }
 }
 
@@ -766,8 +763,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   uint8_t demux_index  = sbuf_peek_u8 (sb, offset + 4);
   uint8_t filter_index = sbuf_peek_u8 (sb, offset + 5);
   uint16_t pid         = sbuf_peek_u16(sb, offset + 6);
-  dmx_filter_params_t *filter;
-  dmx_filter_params_t *params = (dmx_filter_params_t *)sbuf_peek(sb, offset + 6);
+  capmt_dmx_t *filter;
   capmt_filters_t *cf;
   capmt_service_t *ct;
   mpegts_service_t *t;
@@ -788,11 +784,10 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
   filter->pid = pid;
-  capmt_pid_add(capmt, adapter, pid);
-  memcpy(&filter->filter, &params->filter, sizeof(params->filter));
-  filter->timeout = 0;
+  memcpy(&filter->filter, sbuf_peek(sb, offset + 10), sizeof(filter->filter));
   filter->flags = 0;
   /* ECM messages have the higher priority */
+  t = NULL;
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     t = (mpegts_service_t *)ct->td_service;
     pthread_mutex_lock(&t->s_stream_mutex);
@@ -808,6 +803,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     pthread_mutex_unlock(&t->s_stream_mutex);
     if (st) break;
   }
+  capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
   if (capmt->capmt_demuxes.max <= demux_index)
     capmt->capmt_demuxes.max = demux_index + 1;
@@ -827,7 +823,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 4);
   uint8_t filter_index = sbuf_peek_u8   (sb, offset + 5);
   int16_t pid          = sbuf_peek_s16le(sb, offset + 6);
-  dmx_filter_params_t *filter;
+  capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
   tvhtrace("capmt", "stopping filter: adapter=%d, demux=%d, filter=%d, pid=%d",
@@ -950,7 +946,7 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   else if (cmd == CA_SET_DESCR)
     return 4 + 16;
   else if (oscam_new && cmd == DMX_SET_FILTER)
-    return 4 + 2 + sizeof(dmx_filter_params_t);
+    return 4 + 2 + 60;
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4;
   else {
@@ -1320,6 +1316,8 @@ capmt_thread(void *aux)
 
     pthread_mutex_unlock(&global_lock);
 
+    if (!capmt->capmt_running) continue;
+
     /* open connection to camd.socket */
     capmt_connect(capmt, 0);
 
@@ -1379,8 +1377,7 @@ capmt_thread(void *aux)
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
 
-    if (!capmt->capmt_running)
-      break;
+    if (!capmt->capmt_running) continue;
 
     /* schedule reconnection */
     if(subscriptions_active() && !fatal) {

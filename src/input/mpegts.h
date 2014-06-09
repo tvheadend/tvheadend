@@ -194,6 +194,8 @@ struct mpegts_table
   mpegts_psi_section_t mt_sect;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
+
+  mpegts_service_t *mt_service;
   
   void (*mt_destroy) (mpegts_table_t *mt); // Allow customisable destroy hook
                                            // useful for dynamic allocation of
