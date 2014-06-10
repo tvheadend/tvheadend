@@ -462,7 +462,7 @@ static int
 mpegts_mux_start
   ( mpegts_mux_t *mm, const char *reason, int weight )
 {
-  int havefree = 0, enabled = 0, index, count, size = 0;
+  int havefree = 0, enabled = 0, index, index2, weight2, count, size = 0;
   char buf[256];
   mpegts_mux_instance_t *mmi, **all;
   int64_t aweight, *allw;
@@ -483,7 +483,7 @@ mpegts_mux_start
     mpegts_mux_scan_active(mm, buf, mm->mm_active->mmi_input);
     return 0;
   }
-  
+
   /* Create mux instances (where needed) */
   mm->mm_create_instances(mm);
   if (!LIST_FIRST(&mm->mm_instances)) {
@@ -518,9 +518,9 @@ mpegts_mux_start
 
     aweight = ((int64_t )mmi->mmi_input->mi_get_priority(mmi->mmi_input,
                                                          mmi->mmi_mux) << 32) |
-                        mmi->mmi_input->mi_get_weight(mmi->mmi_input);
+                         mmi->mmi_input->mi_get_weight(mmi->mmi_input);
     for (index = 0; index < count; index++) {
-      if (allw[index] >= index)
+      if (allw[index] >= aweight)
         break;
     }
     if (index < count) {
@@ -537,23 +537,42 @@ mpegts_mux_start
 
   /* Try free inputs */
   for (index = count - 1; index >= 0; index--) {
-    mpegts_input_t *mi = all[index]->mmi_input;
+    mpegts_input_t *mi;
+    mmi = all[index];
+    mi = mmi->mmi_input;
     if (mi->mi_is_free(mi)) {
+      all[index] = NULL;
       havefree = 1;
       tvhtrace("mpegts", "%s - found mmi %p to boot (free)", buf, mmi);
-      if (!mpegts_mux_start1(all[index]))
+      if (!mpegts_mux_start1(mmi))
         return 0;
-      all[index] = NULL;
     }
   }
 
   /* Try the lowest weight */
+  for (index = 0, index2 = -1, weight2 = weight; index < count; index++) {
+    if (all[index] && weight2 > (allw[index] & 0xffffffff)) {
+      weight2 = allw[index] & 0xffffffff;
+      index2  = index;
+    }
+  }
+
+  if (index2 >= 0) {
+    mmi = all[index2];
+    all[index2] = NULL;
+    tvhtrace("mpegts", "%s - found mmi %p to boot (lowest)", buf, mmi);
+    if (!mpegts_mux_start1(mmi))
+      return 0;
+  }
+
+  /* Try the all lowest weights */
   for (index = 0; index < count; index++) {
-    if (all[index] && weight > allw[index]) {
-      tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
-      if (!mpegts_mux_start1(all[index]))
-        return 0;
+    if (all[index] && weight > (allw[index] & 0xffffffff)) {
+      mmi = all[index];
       all[index] = NULL;
+      tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
+      if (!mpegts_mux_start1(mmi))
+        return 0;
     }
   }
 
