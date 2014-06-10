@@ -265,7 +265,6 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 static void
 service_stop(service_t *t)
 {
-  th_descrambler_t *td;
   elementary_stream_t *st;
  
   gtimer_disarm(&t->s_receive_timer);
@@ -274,8 +273,7 @@ service_stop(service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  while((td = LIST_FIRST(&t->s_descramblers)) != NULL)
-    td->td_stop(td);
+  descrambler_service_stop(t);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
@@ -1551,7 +1549,7 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
   caid_t *c = malloc(sizeof(caid_t));
   c->caid = caid;
   c->providerid = providerid;
-  c->delete_me = 0;
+  c->pid = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 

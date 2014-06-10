@@ -27,7 +27,7 @@
 void
 tvhcsa_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, struct elementary_stream *st,
-    const uint8_t *tsb, int cw_update_pending )
+    const uint8_t *tsb )
 {
 #if ENABLE_DVBCSA
   uint8_t *pkt;
@@ -134,9 +134,6 @@ tvhcsa_descramble
       if(r > 0)
 	      memmove(csa->csa_tsbcluster, t0, r * 188);
       csa->csa_fill = r;
-
-      if(cw_update_pending && r > 0)
-	      continue;
     } else {
       csa->csa_fill = 0;
     }

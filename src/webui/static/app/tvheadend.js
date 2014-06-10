@@ -282,10 +282,12 @@ function accessUpdate(o) {
         tabs1.push(tvheadend.conf_tsdvr);
 
         /* CSA */
-        if (tvheadend.capabilities.indexOf('cwc') !== -1) {
-            tabs2 = [new tvheadend.cwceditor];
-            if (tvheadend.capabilities.indexOf('linuxdvb') !== -1)
-              tabs2.push(new tvheadend.capmteditor);
+        tabs2 = [];
+        if (tvheadend.capabilities.indexOf('cwc')   !== -1)
+          tabs2.push(new tvheadend.cwceditor);
+        if (tvheadend.capabilities.indexOf('capmt') !== -1)
+          tabs2.push(new tvheadend.capmteditor);
+        if (tabs2.length > 0) {
             tvheadend.conf_csa = new Ext.TabPanel({
                 activeTab: 0,
                 autoScroll: true,

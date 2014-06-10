@@ -124,7 +124,6 @@ SRCS =  src/version.c \
 	src/lang_str.c \
 	src/imagecache.c \
 	src/tvhtime.c \
-	src/descrambler/descrambler.c \
 	src/service_mapper.c \
 	src/input.c \
 	src/httpc.c \
@@ -192,6 +191,7 @@ SRCS += src/muxer.c \
 
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
+	src/descrambler/descrambler.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \
@@ -272,23 +272,35 @@ SRCS-$(CONFIG_LIBAV) += src/libav.c \
 	src/muxer/muxer_libav.c \
 	src/plumbing/transcoding.c \
 
+# Tvhcsa
+SRCS-${CONFIG_TVHCSA} += \
+	src/descrambler/tvhcsa.c
+
 # CWC
 SRCS-${CONFIG_CWC} += \
-	src/descrambler/tvhcsa.c \
 	src/descrambler/cwc.c \
+	
+# CAPMT
+SRCS-${CONFIG_CAPMT} += \
 	src/descrambler/capmt.c
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-SRCS-${CONFIG_CWC}  += \
-	src/descrambler/ffdecsa/ffdecsa_interface.c \
-	src/descrambler/ffdecsa/ffdecsa_int.c
 ifeq ($(CONFIG_CWC),yes)
+SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
+	    src/descrambler/ffdecsa/ffdecsa_int.c
+SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
+SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
+else
+ifeq ($(CONFIG_CAPMT),yes)
+SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
+	    src/descrambler/ffdecsa/ffdecsa_int.c
 SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
 endif
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+endif
 endif
 
 # File bundles
