@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -468,13 +469,13 @@ http_client_send_partial( http_client_t *hc )
     hc->hc_cmd   = wcmd->wcmd;
     hc->hc_rcseq = wcmd->wcseq;
     if (hc->hc_einprogress) {
-      /* this seems like OSX specific issue */
-      /* send() in the EINPROGRESS state closes the file-descriptor */
-      int err = 0;
-      socklen_t errlen = sizeof(err);
-      getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
-      if (err == EINPROGRESS) {
-        r = err;
+      struct pollfd fds;
+      memset(&fds, 0, sizeof(fds));
+      fds.fd     = hc->hc_fd;
+      fds.events = POLLOUT;
+      if (poll(&fds, 1, 0) == 0) {
+        r = -1;
+        errno = EINPROGRESS;
         goto skip;
       }
       hc->hc_einprogress = 0;
