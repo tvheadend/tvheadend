@@ -1081,9 +1081,9 @@ handle_ca0(capmt_t *capmt) {
         continue;
       }
 
-      adapter = ev[i].data.u32;
+      adapter = ev[i].data.u32 - 1;
 
-      if (adapter >= MAX_CA)
+      if (adapter < 0 || adapter >= MAX_CA)
         continue;
 
       recvsock = capmt->capmt_adapters[adapter].ca_sock;
