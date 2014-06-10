@@ -467,12 +467,24 @@ http_client_send_partial( http_client_t *hc )
   while (wcmd != NULL) {
     hc->hc_cmd   = wcmd->wcmd;
     hc->hc_rcseq = wcmd->wcseq;
+    if (hc->hc_einprogress) {
+      /* this seems like OSX specific issue */
+      /* send() in the EINPROGRESS state closes the file-descriptor */
+      int err;
+      socklen_t errlen = sizeof(err);
+      r = 0;
+      getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
+      if (err == EINPROGRESS)
+        goto skip;
+      hc->hc_einprogress = 0;
+    }
     if (hc->hc_ssl)
       r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos,
                                wcmd->wsize - wcmd->wpos);
     else
       r = send(hc->hc_fd, wcmd->wbuf + wcmd->wpos,
                wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
+skip:
     if (r < 0) {
       if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
           errno == EINPROGRESS) {
@@ -1198,6 +1210,7 @@ http_client_reconnect
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
     return -EINVAL;
   }
+  hc->hc_einprogress = 1;
   tvhtrace("httpc", "Connected to %s:%i", host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
