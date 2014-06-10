@@ -75,8 +75,7 @@ typedef struct tvhcsa
 
 void
 tvhcsa_descramble
-  ( tvhcsa_t *csa, struct mpegts_service *s, struct elementary_stream *st,
-    const uint8_t *tsb );
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb );
 
 void tvhcsa_init    ( tvhcsa_t *csa );
 void tvhcsa_destroy ( tvhcsa_t *csa );

@@ -274,7 +274,7 @@ descrambler_descramble ( service_t *t,
         }
         tvhcsa_descramble(td->td_csa,
                           (mpegts_service_t *)td->td_service,
-                          st, tsb2);
+                          tsb2);
       }
       sbuf_free(&dr->dr_buf);
     }
@@ -289,7 +289,7 @@ forbid:
     }
     tvhcsa_descramble(td->td_csa,
                       (mpegts_service_t *)td->td_service,
-                      st, tsb);
+                      tsb);
     return 1;
   }
   if (dr->dr_ecm_start) { /* ECM sent */

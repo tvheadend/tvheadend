@@ -26,8 +26,7 @@
 
 void
 tvhcsa_descramble
-  ( tvhcsa_t *csa, struct mpegts_service *s, struct elementary_stream *st,
-    const uint8_t *tsb )
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
 #if ENABLE_DVBCSA
   uint8_t *pkt;
