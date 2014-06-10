@@ -130,10 +130,8 @@ api_epg_grid
   const char *ch, *tag, *title, *lang/*, *genre*/;
   uint32_t start, limit, end;
   htsmsg_t *l = NULL, *e;
-//IH
   int min_duration;
   int max_duration;
-//
   
   *resp = htsmsg_create_map();
 
@@ -145,10 +143,8 @@ api_epg_grid
   lang  = htsmsg_get_str(args, "lang");
   // TODO: support multiple tag/genre/channel?
 
-//IH
   min_duration = htsmsg_get_u32_or_default(args, "minduration", 0);
   max_duration = htsmsg_get_u32_or_default(args, "maxduration", INT_MAX);
-//
   
   /* Pagination settings */
   start = htsmsg_get_u32_or_default(args, "start", 0);
@@ -156,8 +152,6 @@ api_epg_grid
 
   /* Query the EPG */
   pthread_mutex_lock(&global_lock); 
-//IH
-//  epg_query(&eqr, ch, tag, NULL, /*genre,*/ title, lang);
   epg_query(&eqr, ch, tag, NULL, /*genre,*/ title, lang, min_duration, max_duration);
   epg_query_sort(&eqr);
   // TODO: optional sorting

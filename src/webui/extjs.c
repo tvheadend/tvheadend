@@ -759,15 +759,12 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
   const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
   
-  //IH
   int min_duration;
   int max_duration;
-//
 
   if(channel && !channel[0]) channel = NULL;
   if(tag     && !tag[0])     tag = NULL;
 
-//IH
   if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
     min_duration = atoi(s);
   else
@@ -777,7 +774,6 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     max_duration = atoi(s);
   else
     max_duration = INT_MAX;
-//
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -1134,10 +1130,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
-	//IH
 	int min_duration;
 	int max_duration;
-	//
     epg_genre_t genre, *eg = NULL;
     
     if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
@@ -1145,7 +1139,6 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       eg = &genre;
     }
 
-//IH
     if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
       min_duration = atoi(s);
     else
@@ -1155,16 +1148,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       max_duration = atoi(s);
     else
       max_duration = INT_MAX;
-//
 
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
 		            http_arg_get(&hc->hc_req_args, "channel"),
 		            http_arg_get(&hc->hc_req_args, "tag"),
-                    eg,
-                    //IH
-                    min_duration,max_duration,
-                    //
+                    eg, min_duration,max_duration,
 		            hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();

@@ -29,7 +29,6 @@ tvheadend.contentGroupLookupName = function(code) {
 
 tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 
-//IH
 tvheadend.channelLookupName = function(key) {
     channelString = "";
           
@@ -53,8 +52,8 @@ tvheadend.durationLookupName = function(value) {
 };  
 
 tvheadend.DurationStore = new Ext.data.SimpleStore({
-	storeId: 'durations',
-	id: 0,
+    storeId: 'durations',
+    id: 0,
     fields: ['identifier','label','value'],
     data: [['0','0 min',0],
         ['1','20 min', 1200],
@@ -65,7 +64,6 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
         ['6','12 hrs', 43200],
         ['7','24 hrs', 86400]]
 });
-//
 
 tvheadend.epgDetails = function(event) {
 
@@ -446,7 +444,6 @@ tvheadend.epg = function() {
         emptyText: 'Filter content type...'
     });
 
-    //IH
     // Slider for duration selection, including tooltip function to display the appropriate string
    
     var tip = new Ext.slider.Tip({
@@ -475,26 +472,23 @@ tvheadend.epg = function() {
         },
         plugins: tip,
         listeners: {
-			change: function(slider, thumb, value){
+            change: function(slider, thumb, value){
             setduration(slider);
-		}}
+        }}
     });
-//
 
     function epgQueryClear() {
-//IH
+
         // Reset the pointers before deleting the underlying variables - otherwise they reset to 0/24h not null/null
         durationSlider.setValue(0,0);
         durationSlider.setValue(1,7);
-//
+
         delete epgStore.baseParams.channel;
         delete epgStore.baseParams.tag;
         delete epgStore.baseParams.contenttype;
         delete epgStore.baseParams.title;
-//IH
         delete epgStore.baseParams.minduration;
         delete epgStore.baseParams.maxduration;
-//
 
         epgFilterChannels.setValue("");
         epgFilterChannelTags.setValue("");
@@ -525,9 +519,7 @@ tvheadend.epg = function() {
         }
     });
 
-//IH
-	setduration = function(slider) {
-
+    setduration = function(slider) {
         var min = slider.getValue(0);
         var minRec = tvheadend.DurationStore.getById(min);
         
@@ -540,7 +532,6 @@ tvheadend.epg = function() {
   
         epgStore.reload();
         };
-//
 
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
@@ -581,11 +572,9 @@ tvheadend.epg = function() {
             '-',
             epgFilterContentGroup,
             '-',
-//IH
             'Duration: 0h ',
             durationSlider,
             '24h','-',
-//
             {
                 text: 'Reset',
                 handler: epgQueryClear
@@ -628,36 +617,27 @@ tvheadend.epg = function() {
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";
-//IH - correct to display content type as a string as opposed to the underlying (lookup) code
         var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
-//
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
                 : "<i>Don't care</i>";
-//IH - correct to display content type as a string as opposed to the underlying (lookup) code
         var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
-//
                 : "<i>Don't care</i>";
-//IH
         var minduration = epgStore.baseParams.minduration ? tvheadend.durationLookupName(epgStore.baseParams.minduration)
                 : "<i>Don't care</i>";
         var maxduration = epgStore.baseParams.maxduration ? tvheadend.durationLookupName(epgStore.baseParams.maxduration)
                 : "<i>Don't care</i>";
-//
 
 
         Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
-//IH - correct typo
                 + 'to record that match this query: ' + '<br><br>'
                 + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>'
-//IH
                 + '<div class="x-smallhdr">Min duration:</div>' + minduration + '<br>'
                 + '<div class="x-smallhdr">Max duration:</div>' + maxduration + '<br>'
-//
                 + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
             function(button) {

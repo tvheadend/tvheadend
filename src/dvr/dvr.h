@@ -247,10 +247,8 @@ typedef struct dvr_autorec_entry {
   epg_serieslink_t *dae_serieslink;
   epg_episode_num_t dae_epnum;
 
-//IH
   int dae_minduration;
   int dae_maxduration;
-//
 } dvr_autorec_entry_t;
 
 
@@ -391,9 +389,7 @@ int dvr_sort_start_ascending(const void *A, const void *B);
 void dvr_autorec_add(const char *dvr_config_name,
                      const char *title, const char *channel,
                      const char *tag, epg_genre_t *content_type,
-//IH
                      const int min_duration, const int max_duration,
-//
                      const char *creator, const char *comment);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,

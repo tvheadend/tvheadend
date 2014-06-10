@@ -510,27 +510,25 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 /**
  *
  */
-//IH --------
 
 // Validation function for min/max duration in autorec grid
 
 Ext.apply(Ext.form.VTypes, {
-	durations: function(val,field) {
-	    var thisvalue = field.getValue();
-		var othervalue = Ext.getCmp(field.otherfield).getValue();
+    durations: function(val,field) {
+        var thisvalue = field.getValue();
+        var othervalue = Ext.getCmp(field.otherfield).getValue();
         
         // Return if otherfield isn't set yet
-		if (!othervalue) return true;
+        if (!othervalue) return true;
 
         // Return if we've changed min and it's <= existing max
-		if (field.id == 'minfield' && thisvalue <= othervalue) return true;
+        if (field.id == 'minfield' && thisvalue <= othervalue) return true;
 
         // Return if we've changed max and it's >= existing min
-		if (field.id == 'maxfield' && thisvalue >= othervalue) return true;
-	},
+        if (field.id == 'maxfield' && thisvalue >= othervalue) return true;
+    },
     durationsText: 'Minimum duration must be more than the maximum'
 });
-//------------		
 
 /**
  *
@@ -613,7 +611,6 @@ tvheadend.autoreceditor = function() {
                             emptyText: 'Only include content...'
                         })
                     },
-// IH
                     {
                         header: "Min. Duration",
                         dataIndex: 'minduration',
@@ -628,14 +625,12 @@ tvheadend.autoreceditor = function() {
                             displayField: 'label',
                             editable: false,
                             triggerAction: 'all',
-                            //IH ------------------
                             id: 'minfield',
                             otherfield: 'maxfield',
                             vtype: 'durations'
-                            // --------------------
                         })
-	                },
-	                {
+                    },
+                    {
                         header: "Max. Duration",
                         dataIndex: 'maxduration',
                         width: 75,
@@ -649,14 +644,11 @@ tvheadend.autoreceditor = function() {
                             displayField: 'label',
                             editable: false,
                             triggerAction: 'all',
-                            //IH ----------------------
                             id: 'maxfield',
                             otherfield: 'minfield',
                             vtype: 'durations'
-                            // ------------------------
                         })
                     },
-//
                     {
                         header: "Weekdays",
                         dataIndex: 'weekdays',
@@ -856,9 +848,7 @@ tvheadend.dvr = function() {
 
     tvheadend.autorecRecord = Ext.data.Record.create(['enabled', 'title',
         'serieslink', 'channel', 'tag', 'creator', 'contenttype', 'comment',
-        //IH
         'minduration', 'maxduration',
-        //
         'weekdays', 'pri', 'approx_time', 'config_name']);
 
     tvheadend.autorecStore = new Ext.data.JsonStore({

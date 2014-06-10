@@ -23,9 +23,7 @@
 #include <regex.h>
 #include <assert.h>
 #include <inttypes.h>
-//IH
 #include <time.h>
-//
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -2208,8 +2206,6 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
 
 static void _eqr_add 
   ( epg_query_result_t *eqr, epg_broadcast_t *e,
-//IH
-//    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang )
     epg_genre_t *genre, regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
 {
   const char *title;
@@ -2221,11 +2217,8 @@ static void _eqr_add
   if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
   if ( preg && regexec(preg, title, 0, NULL, 0)) return;
   
-  //IH
   duration = difftime(e->stop,e->start);
-//  duration = (int)e->stop - (int)e->start;
   if ( duration < min_duration || duration > max_duration ) return;
-//
   
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
@@ -2240,22 +2233,16 @@ static void _eqr_add
 
 static void _eqr_add_channel 
   ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
-//IH
-//    regex_t *preg, time_t start, const char *lang )
     regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
 {
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-//IH
-//    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang);
     if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang, min_duration, max_duration);
   }
 }
 
 void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-//IH
-//    epg_genre_t *genre, const char *title, const char *lang )
     epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration )
 {
   time_t now;
@@ -2277,24 +2264,18 @@ void epg_query0
   
   /* Single channel */
   if (channel && !tag) {
-//IH
-//    _eqr_add_channel(eqr, channel, genre, preg, now, lang);
     _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
   
   /* Tag based */
   } else if ( tag ) {
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
       if(channel == NULL || ctm->ctm_channel == channel)
-//IH
-//        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang);
         _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang, min_duration, max_duration);
     }
 
   /* All channels */
   } else {
     CHANNEL_FOREACH(channel)
-//IH
-//      _eqr_add_channel(eqr, channel, genre, preg, now, lang);
       _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
   }
   if (preg) regfree(preg);
@@ -2303,9 +2284,7 @@ void epg_query0
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-//IH
-//	       epg_genre_t *genre, const char *title, const char *lang)
-	       epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
+            epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
 {
   channel_t     *ch = channel ? channel_find(channel)    : NULL;
   channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
