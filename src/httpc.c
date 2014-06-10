@@ -1198,14 +1198,15 @@ http_client_reconnect
   free(hc->hc_scheme);
   free(hc->hc_host);
 
+  if (scheme == NULL || host == NULL)
+    return -EINVAL;
+
   port           = http_port(scheme, port);
   hc->hc_pevents = 0;
   hc->hc_version = ver;
   hc->hc_scheme  = strdup(scheme);
   hc->hc_host    = strdup(host);
   hc->hc_port    = port;
-  if (port < 0)
-    return -EINVAL;
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
