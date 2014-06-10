@@ -1067,7 +1067,7 @@ handle_ca0(capmt_t *capmt) {
     if (nfds <= 0)
       continue;
 
-    for (i = 0; i < MAX_CA + 1; i++) {
+    for (i = 0; i < nfds; i++) {
 
       if (ev[i].data.u32 == 0) {
         ret = read(capmt->capmt_pipe.rd, buf, 1);
