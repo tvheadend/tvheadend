@@ -510,6 +510,27 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 /**
  *
  */
+//IH --------
+
+// Validation function for min/max duration in autorec grid
+
+Ext.apply(Ext.form.VTypes, {
+	durations: function(val,field) {
+	    var thisvalue = field.getValue();
+		var othervalue = Ext.getCmp(field.otherfield).getValue();
+        
+        // Return if otherfield isn't set yet
+		if (!othervalue) return true;
+
+        // Return if we've changed min and it's <= existing max
+		if (field.id == 'minfield' && thisvalue <= othervalue) return true;
+
+        // Return if we've changed max and it's >= existing min
+		if (field.id == 'maxfield' && thisvalue >= othervalue) return true;
+	},
+    durationsText: 'Minimum duration must be more than the maximum'
+});
+//------------		
 
 /**
  *
@@ -607,6 +628,11 @@ tvheadend.autoreceditor = function() {
                             displayField: 'label',
                             editable: false,
                             triggerAction: 'all',
+                            //IH ------------------
+                            id: 'minfield',
+                            otherfield: 'maxfield',
+                            vtype: 'durations'
+                            // --------------------
                         })
 	                },
 	                {
@@ -622,7 +648,12 @@ tvheadend.autoreceditor = function() {
                             valueField: 'value',
                             displayField: 'label',
                             editable: false,
-                            triggerAction: 'all'
+                            triggerAction: 'all',
+                            //IH ----------------------
+                            id: 'maxfield',
+                            otherfield: 'minfield',
+                            vtype: 'durations'
+                            // ------------------------
                         })
                     },
 //
@@ -726,6 +757,8 @@ tvheadend.autoreceditor = function() {
             tvheadend.autorecRecord, [], tvheadend.autorecStore,
             'autorec.html', 'wand');
 };
+// -------------------------------
+
 /**
  *
  */
