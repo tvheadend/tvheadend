@@ -528,6 +528,7 @@ service_find_instance
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
+  int weight2;
 
   lock_assert(&global_lock);
 
@@ -579,11 +580,16 @@ service_find_instance
         break;
   }
 
-  /* Bump someone */
+  /* Bump the one with lowest weight */
   if (!si) {
+    next = NULL;
+    weight2 = weight;
     TAILQ_FOREACH(si, sil, si_link)
-      if (weight > si->si_weight && si->si_error == 0)
-        break;
+      if (weight2 > si->si_weight && si->si_error == 0) {
+        weight2 = si->si_weight;
+        next = si;
+      }
+    si = next;
   }
 
   /* Failed */
