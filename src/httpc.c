@@ -470,12 +470,13 @@ http_client_send_partial( http_client_t *hc )
     if (hc->hc_einprogress) {
       /* this seems like OSX specific issue */
       /* send() in the EINPROGRESS state closes the file-descriptor */
-      int err;
+      int err = 0;
       socklen_t errlen = sizeof(err);
-      r = 0;
       getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
-      if (err == EINPROGRESS)
+      if (err == EINPROGRESS) {
+        r = err;
         goto skip;
+      }
       hc->hc_einprogress = 0;
     }
     if (hc->hc_ssl)
