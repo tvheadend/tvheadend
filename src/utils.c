@@ -25,8 +25,15 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <endian.h>
 #include "tvheadend.h"
+
+#if defined(PLATFORM_DARWIN)
+#include <machine/endian.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/endian.h>
+#else
+#include <endian.h>
+#endif
 
 #ifndef BYTE_ORDER
 #define BYTE_ORDER __BYTE_ORDER
