@@ -869,6 +869,7 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct)
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
+#if CONFIG_LINUXDVB
 static void
 capmt_abort(capmt_t *capmt, int keystate)
 {
@@ -890,6 +891,7 @@ capmt_abort(capmt_t *capmt, int keystate)
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
+#endif
 
 static void
 capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
@@ -1033,6 +1035,7 @@ show_connection(capmt_t *capmt, const char *what)
   }
 }
 
+#if CONFIG_LINUXDVB
 static void 
 handle_ca0(capmt_t *capmt) {
   int i, ret, recvsock, adapter, nfds, cmd_size;
@@ -1131,6 +1134,7 @@ handle_ca0(capmt_t *capmt) {
   tvhpoll_destroy(capmt->capmt_poll);
   capmt->capmt_poll = NULL;
 }
+#endif
 
 static void
 handle_single(capmt_t *capmt)
@@ -1219,6 +1223,7 @@ handle_single(capmt_t *capmt)
   tvhpoll_destroy(capmt->capmt_poll);
   capmt->capmt_poll = NULL;
 }
+
 #if CONFIG_LINUXDVB
 static void 
 handle_ca0_wrapper(capmt_t *capmt)
