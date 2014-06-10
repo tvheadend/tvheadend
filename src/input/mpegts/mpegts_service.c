@@ -183,6 +183,22 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_forcecaid),
       .opts     = PO_ADVANCED | PO_HEXA,
     },
+    {
+      .type   = PT_S64,
+      .id     = "created",
+      .name   = "Created",
+      .off    = offsetof(mpegts_service_t, s_dvb_created),
+      .opts   = PO_ADVANCED | PO_RDONLY,
+      .istime   = "%F %T",
+    },
+    {
+      .type   = PT_S64,
+      .id     = "updated",
+      .name   = "Updated",
+      .off    = offsetof(mpegts_service_t, s_dvb_updated),
+      .opts   = PO_ADVANCED | PO_RDONLY,
+      .istime   = "%F %T",
+    },
     {},
   }
 };
@@ -514,7 +530,8 @@ mpegts_service_create0
 
   if (service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf) == NULL)
     return NULL;
-
+  s->s_dvb_created = dispatch_clock;
+  
   /* Create */
   sbuf_init(&s->s_tsbuf);
   if (!conf) {

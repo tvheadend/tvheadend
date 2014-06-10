@@ -1011,6 +1011,7 @@ dvb_pat_callback
   /* Multiplex */
   tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
   mpegts_mux_set_tsid(mm, tsid, 1);
+  mm->mm_updated = dispatch_clock;
   
   /* Process each programme */
   ptr += 5;
@@ -1031,6 +1032,7 @@ dvb_pat_callback
       tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
+        s->s_dvb_updated = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                          NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_SCANSUBS,
                          pid);
@@ -1121,11 +1123,13 @@ dvb_pmt_callback
   sid = ptr[0] << 8 | ptr[1];
   r   = dvb_table_begin(mt, ptr, len, tableid, sid, 9, &st, &sect, &last, &ver);
   if (r != 1) return r;
+  mm->mm_updated = dispatch_clock;
 
   /* Find service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     if (s->s_dvb_service_id == sid) break;
   if (!s) return -1;
+  s->s_dvb_updated = dispatch_clock;
 
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
@@ -1486,6 +1490,10 @@ dvb_nit_callback
 #endif
           break;
       }
+
+      /* Update */
+      if (mux)
+        mm->mm_updated  = dispatch_clock;
     }
   }
 
@@ -1528,8 +1536,9 @@ dvb_sdt_callback
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid)
         break;
-    goto done;
+    if (!mm) goto done;
   }
+  mm->mm_updated = dispatch_clock;
 
   /* Service loop */
   len -= 8;
@@ -1553,6 +1562,9 @@ dvb_sdt_callback
     /* Find service */
     s       = mpegts_service_find(mm, service_id, 0, 1, &save);
     charset = dvb_charset_find(mn, mm, s);
+
+    /* Update time and version */
+    s->s_dvb_updated = dispatch_clock;
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -1645,7 +1657,8 @@ dvb_sdt_callback
 
   /* Done */
 done:
-  return dvb_table_end(mt, st, sect);
+  r = dvb_table_end(mt, st, sect);
+  return r;
 }
 
 /*
@@ -1677,6 +1690,7 @@ atsc_vct_callback
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
   tvhdebug("vct", "tsid %04X (%d)", tsid, tsid);
+  mm->mm_updated = dispatch_clock;
 
   /* # channels */
   count = ptr[6];
@@ -1713,6 +1727,7 @@ atsc_vct_callback
     /* Find the service */
     if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
       goto next;
+    s->s_dvb_updated = dispatch_clock;
 
     /* Update */
     if (strcmp(s->s_dvb_svcname ?: "", chname)) {

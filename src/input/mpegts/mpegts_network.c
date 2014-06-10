@@ -154,21 +154,14 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_BOOL,
       .id       = "autodiscovery",
-      .name     = "Network Discovery",
+      .name     = "Autodiscover Muxes",
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
-      .id       = "skipinitscan",
-      .name     = "Skip Initial Scan",
-      .off      = offsetof(mpegts_network_t, mn_skipinitscan),
-      .def.i    = 1
-    },
-    {
-      .type     = PT_BOOL,
       .id       = "idlescan",
-      .name     = "Idle Scan Muxes",
+      .name     = "Autoscan Muxes",
       .off      = offsetof(mpegts_network_t, mn_idlescan),
       .def.i    = 0,
       .notify   = mpegts_network_class_idlescan_notify,
@@ -179,6 +172,27 @@ const idclass_t mpegts_network_class =
       .name     = "Ignore Provider's Channel Numbers",
       .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
       .def.i    = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "autoclean_svc`",
+      .name     = "Autoclean Services", 
+      .off      = offsetof(mpegts_network_t, mn_autoclean_svc),
+      .def.i    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "autoclean_mux",
+      .name     = "Autoclean Muxes",
+      .off      = offsetof(mpegts_network_t, mn_autoclean_mux),
+      .def.i    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "skipinitscan",
+      .name     = "Skip Initial Scan",
+      .off      = offsetof(mpegts_network_t, mn_skipinitscan),
+      .def.i    = 1
     },
     {
       .type     = PT_STR,
