@@ -567,14 +567,21 @@ service_find_instance
       return si;
     }
 
-  /* Forced or Idle */
+  /* Forced */
   TAILQ_FOREACH(si, sil, si_link)
-    if(si->si_weight <= 0 && si->si_error == 0)
+    if(si->si_weight < 0 && si->si_error == 0)
       break;
+
+  /* Idle */
+  if (!si) {
+    TAILQ_FOREACH_REVERSE(si, sil, service_instance_list, si_link)
+      if (si->si_weight == 0 && si->si_error == 0)
+        break;
+  }
 
   /* Bump someone */
   if (!si) {
-    TAILQ_FOREACH_REVERSE(si, sil, service_instance_list, si_link)
+    TAILQ_FOREACH(si, sil, si_link)
       if (weight > si->si_weight && si->si_error == 0)
         break;
   }

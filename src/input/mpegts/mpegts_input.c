@@ -192,12 +192,13 @@ mpegts_input_get_weight ( mpegts_input_t *mi )
   const mpegts_mux_instance_t *mmi;
   const service_t *s;
   const th_subscription_t *ths;
-  int w = 0;
+  int w = 0, count = 0;
 
   /* Direct subs */
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     LIST_FOREACH(ths, &mmi->mmi_subs, ths_mmi_link) {
       w = MAX(w, ths->ths_weight);
+      count++;
     }
   }
 
@@ -206,10 +207,11 @@ mpegts_input_get_weight ( mpegts_input_t *mi )
   LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
     LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
       w = MAX(w, ths->ths_weight);
+      count++;
     }
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
-  return w;
+  return w > 0 ? w + count - 1 : 0;
 }
 
 int
