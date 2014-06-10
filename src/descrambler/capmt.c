@@ -378,7 +378,7 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   for (i = 0; i < MAX_PIDS; i++)
     if (ca->ca_pids[i].pid == pid)
       break;
-  if (i >= MAX_PIDS);
+  if (i >= MAX_PIDS)
     return;
   mmi = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
   descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], pid);
