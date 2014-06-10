@@ -60,15 +60,13 @@ mpegts_network_scan_timer_arm ( int period )
 static void
 mpegts_network_scan_timer_cb ( void *p )
 {
-  mpegts_mux_t *mm, *mark = NULL;
+  mpegts_mux_t *mm, *nxt = NULL;
   int r;
 
   /* Process Q */
-  while ((mm = TAILQ_FIRST(&mpegts_network_scan_pend))) {
+  for (mm = TAILQ_FIRST(&mpegts_network_scan_pend); mm != NULL; mm = nxt) {
+    nxt = TAILQ_NEXT(mm, mm_scan_link);
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
-
-    /* Stop (looped) */
-    if (mm == mark) break;
 
     /* Attempt to tune */
     r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight);
@@ -80,23 +78,16 @@ mpegts_network_scan_timer_cb ( void *p )
     }
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
 
-    /* Stop (no free tuners) */
-    if (r == SM_CODE_NO_FREE_ADAPTER)
-      break;
-
-    /* Available tuners can't be used
-     * Note: this is subtly different it does not imply there are no free
-     *       tuners, just that none of the free ones can service this mux.
-     *       therefore we move this to the back of the queue and see if we
-     *       can find one we can tune
+    /* Either there are no free tuners, or no valid tuners
+     *
+     * Although these are subtly different, the reality is that in this
+     * context we need to treat each the same. We simply skip over this
+     * mux and see if anything else can be tuned as it may use other 
+     * tuners
      */
-    if (r == SM_CODE_NO_VALID_ADAPTER) {
-      if (!mark) mark = mm;
-      TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
-      TAILQ_INSERT_SORTED_R(&mpegts_network_scan_pend, mpegts_mux_queue,
-                            mm, mm_scan_link, mm_cmp);
+    if (r == SM_CODE_NO_FREE_ADAPTER ||
+        r == SM_CODE_NO_VALID_ADAPTER)
       continue;
-    }
 
     /* Failed */
     TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
@@ -105,13 +96,14 @@ mpegts_network_scan_timer_cb ( void *p )
       mm->mm_config_save(mm);
     }
     mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
+    mm->mm_scan_weight = 0;
     mpegts_network_scan_notify(mm);
   }
 
-  /* Re-arm (backstop, most things will auto-rearm at point of next event
-   * such as timeout of scan or completion)
+  /* Re-arm timer. Really this is just a safety measure as we'd normally
+   * expect the timer to be forcefully triggered on finish of a mux scan
    */
-  mpegts_network_scan_timer_arm(10);
+  mpegts_network_scan_timer_arm(120);
 }
 
 /******************************************************************************
@@ -194,7 +186,8 @@ mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
   } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
     TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
   }
-  mm->mm_scan_state = MM_SCAN_STATE_IDLE;
+  mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
+  mm->mm_scan_weight = 0;
   gtimer_disarm(&mm->mm_scan_timeout);
   mpegts_network_scan_timer_arm(0);
   mpegts_network_scan_notify(mm);
@@ -204,6 +197,7 @@ void
 mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
 {
   int reload = 0;
+  char buf[256];
 
   if (!mm->mm_is_enabled(mm)) return;
 
@@ -224,6 +218,9 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
       return;
     TAILQ_REMOVE(&mpegts_network_scan_pend, mm, mm_scan_link);
   }
+
+  mm->mm_display_name(mm, buf, sizeof(buf));
+  tvhdebug("mpegts", "adding mux %p:%s to queue weight %d", mm, buf, weight);
 
   /* Add new entry */
   mm->mm_scan_state = MM_SCAN_STATE_PEND;
