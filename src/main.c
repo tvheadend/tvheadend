@@ -908,9 +908,7 @@ main(int argc, char **argv)
   ERR_remove_state(0);
   ERR_free_strings();
   {
-    struct stack_st_SSL_COMP * pCOMP = SSL_COMP_get_compression_methods();
-    if (pCOMP)
-     sk_SSL_COMP_free(pCOMP);
+    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
   }
   /* end of OpenSSL cleanup code */
 
