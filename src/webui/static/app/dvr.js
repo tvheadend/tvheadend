@@ -569,12 +569,6 @@ tvheadend.autoreceditor = function() {
                         renderer: function(v) {
                             return tvheadend.channelLookupName(v);
                         },
-//                        renderer: function(v, m, r) {
-//                            var i = tvheadend.channels.find('key', v);
-//                            if (i !== -1)
-//                                v = tvheadend.channels.getAt(i).get('val');
-//                            return v;
-//                        }
                     },
                     {
                         header: "SeriesLink",
@@ -749,7 +743,6 @@ tvheadend.autoreceditor = function() {
             tvheadend.autorecRecord, [], tvheadend.autorecStore,
             'autorec.html', 'wand');
 };
-// -------------------------------
 
 /**
  *
