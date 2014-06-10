@@ -409,7 +409,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   LIST_REMOVE(mm, mm_network_link);
 
   /* Cancel scan */
-  mpegts_network_scan_mux_cancel(mm, 0);
+  mpegts_network_scan_queue_del(mm);
 
   /* Remove instances */
   while ((mmi = LIST_FIRST(&mm->mm_instances))) {
