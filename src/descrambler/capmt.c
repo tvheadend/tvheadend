@@ -810,16 +810,6 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     capmt->capmt_demuxes.max = demux_index + 1;
   if (cf->max <= filter_index)
     cf->max = filter_index + 1;
-  /* Position correction */
-  memmove(filter->filter.mask + 3, filter->filter.mask + 1, DMX_FILTER_SIZE - 3);
-  memmove(filter->filter.filter + 3, filter->filter.filter + 1, DMX_FILTER_SIZE - 3);
-  memmove(filter->filter.mode + 3, filter->filter.mode + 1, DMX_FILTER_SIZE - 3);
-  filter->filter.filter[1] = 0;
-  filter->filter.filter[2] = 0;
-  filter->filter.mask[1] = 0;
-  filter->filter.mask[2] = 0;
-  filter->filter.mode[1] = 0;
-  filter->filter.mode[2] = 0;
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
@@ -1443,13 +1433,18 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
     for (filter_index = 0; filter_index < cf->max; filter_index++)
       if (cf->dmx[filter_index].pid == pid) {
         f = &cf->dmx[filter_index].filter;
-        for (i = 0; i < DMX_FILTER_SIZE && i < len; i++) {
+        if (f->mode[0] != 0)
+          continue;
+        if ((data[0] & f->mask[0]) != f->filter[0])
+          continue;
+        /* note that the data offset changes here (+2) !!! */
+        for (i = 1; i < DMX_FILTER_SIZE && i + 2 < len; i++) {
           if (f->mode[i] != 0)
             break;
-          if ((data[i] & f->mask[i]) != f->filter[i])
+          if ((data[i + 2] & f->mask[i]) != f->filter[i])
             break;
         }
-        if (i >= DMX_FILTER_SIZE && i <= len)
+        if (i >= DMX_FILTER_SIZE && i + 2 <= len)
           capmt_filter_data(capmt,
                             o->adapter, demux_index,
                             filter_index, data, len,
