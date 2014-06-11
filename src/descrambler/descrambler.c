@@ -272,7 +272,8 @@ descrambler_descramble ( service_t *t,
     if (dr->dr_buf.sb_ptr > 0) {
       for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {
         tsb2 = dr->dr_buf.sb_data + off;
-        if ((tsb2[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb2[3] & 0x40)) {
+        if ((tsb2[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb2[3] & 0x40) &&
+            dr->dr_key_start + 2 < dispatch_clock) {
           tvhtrace("descrambler", "%s - stream key changed to %s",
                                   ((mpegts_service_t *)t)->s_dvb_svcname,
                                   (tsb2[3] & 0x40) ? "odd" : "even");
@@ -288,7 +289,8 @@ descrambler_descramble ( service_t *t,
       }
       sbuf_free(&dr->dr_buf);
     }
-    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb[3] & 0x40)) {
+    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb[3] & 0x40) &&
+       dr->dr_key_start + 2 < dispatch_clock) {
       tvhtrace("descrambler", "%s - stream key changed to %s",
                               ((mpegts_service_t *)t)->s_dvb_svcname,
                               (tsb[3] & 0x40) ? "odd" : "even");
