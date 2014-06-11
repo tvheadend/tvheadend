@@ -26,6 +26,11 @@
 #include "subscriptions.h"
 
 /*
+ * Timer callback (only to be used in network init)
+ */
+void mpegts_network_scan_timer_cb ( void *p );
+
+/*
  * Registration functions
  */
 void mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight );

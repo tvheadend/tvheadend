@@ -257,6 +257,13 @@ struct mpegts_network
   mpegts_mux_list_t       mn_muxes;
 
   /*
+   * Scanning
+   */
+  mpegts_mux_queue_t mn_scan_pend;    // Pending muxes
+  mpegts_mux_queue_t mn_scan_active;  // Active muxes
+  gtimer_t           mn_scan_timer;   // Timer for activity
+
+  /*
    * Functions
    */
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);

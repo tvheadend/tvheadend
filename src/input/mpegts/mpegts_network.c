@@ -245,6 +245,9 @@ mpegts_network_delete
   mpegts_mux_t *mm;
   mpegts_network_link_t *mnl;
 
+  /* Disarm scanning */
+  gtimer_disarm(&mn->mn_scan_timer);
+
   /* Remove from global list */
   LIST_REMOVE(mn, mn_global_link);
 
@@ -290,6 +293,11 @@ mpegts_network_create0
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_network_all, mn, mn_global_link);
+
+  /* Initialise scanning */
+  TAILQ_INIT(&mn->mn_scan_pend);
+  TAILQ_INIT(&mn->mn_scan_active);
+  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 
   /* Load config */
   if (conf)
