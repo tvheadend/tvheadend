@@ -769,7 +769,6 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_service_t *ct;
   mpegts_service_t *t;
   elementary_stream_t *st;
-  caid_t *c;
 
   tvhtrace("capmt", "setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            adapter, demux_index, filter_index, pid);
@@ -786,6 +785,9 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   filter = &cf->dmx[filter_index];
   filter->pid = pid;
   memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
+  tvhlog_hexdump("capmt", filter->filter.filter, DMX_FILTER_SIZE);
+  tvhlog_hexdump("capmt", filter->filter.mask, DMX_FILTER_SIZE);
+  tvhlog_hexdump("capmt", filter->filter.mode, DMX_FILTER_SIZE);
   filter->flags = 0;
   /* ECM messages have the higher priority */
   t = NULL;
@@ -793,16 +795,14 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     t = (mpegts_service_t *)ct->td_service;
     pthread_mutex_lock(&t->s_stream_mutex);
     TAILQ_FOREACH(st, &t->s_components, es_link) {
-      LIST_FOREACH(c, &st->es_caids, link) {
-        if (c->pid == pid) {
-          filter->flags = CAPMT_MSG_FAST;
-          break;
-        }
+      if (st->es_type == SCT_CA && st->es_pid == pid) {
+        filter->flags = CAPMT_MSG_FAST;
+        break;
       }
-      if (c) break;
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
     if (st) break;
+    t = NULL;
   }
   capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
@@ -814,7 +814,12 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   memmove(filter->filter.mask + 3, filter->filter.mask + 1, DMX_FILTER_SIZE - 3);
   memmove(filter->filter.filter + 3, filter->filter.filter + 1, DMX_FILTER_SIZE - 3);
   memmove(filter->filter.mode + 3, filter->filter.mode + 1, DMX_FILTER_SIZE - 3);
-  filter->filter.mask[1] = filter->filter.mask[2] = 0;
+  filter->filter.filter[1] = 0;
+  filter->filter.filter[2] = 0;
+  filter->filter.mask[1] = 0;
+  filter->filter.mask[2] = 0;
+  filter->filter.mode[1] = 0;
+  filter->filter.mode[2] = 0;
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
@@ -984,6 +989,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
     ca_info_t *cai;
+    static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x", adapter, parity, index, cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index == -1)   // skipping removal request
@@ -993,10 +999,12 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
       memcpy(cai->even, cw, 8); // even key
-      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      if (memcmp(empty, cai->odd, 8))
+        capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
     } else if (parity == 1) {
       memcpy(cai->odd,  cw, 8); // odd  key
-      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      if (memcmp(empty, cai->even, 8))
+        capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
@@ -1786,12 +1794,12 @@ capmt_destroy(capmt_t *capmt)
 {
   lock_assert(&global_lock);
   TAILQ_REMOVE(&capmts, capmt, capmt_link);  
-  capmt->capmt_running = 0;
-  pthread_cond_signal(&capmt->capmt_cond);
   tvhlog(LOG_INFO, "capmt", "mode %i %s %s port %i destroyed",
          capmt->capmt_oscam,
          capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
          capmt->capmt_sockfile, capmt->capmt_port);
+  capmt->capmt_running = 0;
+  pthread_cond_signal(&capmt->capmt_cond);
   pthread_mutex_unlock(&global_lock);
   pthread_join(capmt->capmt_tid, NULL);
   pthread_mutex_lock(&global_lock);
