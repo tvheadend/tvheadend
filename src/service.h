@@ -335,6 +335,11 @@ typedef struct service {
    * will be set to TRANSPORT_STATUS_NO_INPUT
    */
   gtimer_t s_receive_timer;
+  /**
+   * Stream start time
+   */
+  time_t s_start_time;
+
 
   /*********************************************************
    *
