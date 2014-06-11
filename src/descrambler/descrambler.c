@@ -349,13 +349,13 @@ descrambler_table_callback
       }
       ds->callback(ds->opaque, mt->mt_pid, ptr, len);
       if ((mt->mt_flags & MT_FAST) != 0) { /* ECM */
-        if (mt->mt_service) {
+        mpegts_service_t *t = mt->mt_service;
+        if (t) {
           /* The keys are requested from this moment */
-          dr = mt->mt_service->s_descramble;
+          dr = t->s_descramble;
           dr->dr_ecm_start = dispatch_clock;
-          tvhtrace("descrambler", "%s - ECM message (len %d, pid %d) %s",
-                   ((mpegts_service_t *)mt->mt_service)->s_dvb_svcname,
-                   len, mt->mt_pid, mt->mt_name);
+          tvhtrace("descrambler", "%s - ECM message (len %d, pid %d)",
+                   t->s_dvb_svcname, len, mt->mt_pid);
         } else
           tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
                    len, mt->mt_pid);
