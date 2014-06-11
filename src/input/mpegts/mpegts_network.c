@@ -245,9 +245,6 @@ mpegts_network_delete
   mpegts_mux_t *mm;
   mpegts_network_link_t *mnl;
 
-  /* Disarm scanning */
-  gtimer_disarm(&mn->mn_scan_timer);
-
   /* Remove from global list */
   LIST_REMOVE(mn, mn_global_link);
 
@@ -255,6 +252,9 @@ mpegts_network_delete
   while ((mm = LIST_FIRST(&mn->mn_muxes))) {
     mm->mm_delete(mm, delconf);
   }
+
+  /* Disarm scanning */
+  gtimer_disarm(&mn->mn_scan_timer);
 
   /* Remove from input */
   while ((mnl = LIST_FIRST(&mn->mn_inputs)))
