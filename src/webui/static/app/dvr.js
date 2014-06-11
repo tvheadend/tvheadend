@@ -517,8 +517,21 @@ Ext.apply(Ext.form.VTypes, {
     durations: function(val,field) {
         var thisvalue = field.getValue();
         var othervalue = Ext.getCmp(field.otherfield).getValue();
-        
-        // Return if otherfield isn't set yet
+
+        /* 
+         * Workaround for extJS passing the display value instead of the raw value.
+         * 
+         * Simply, see if we can find the value in the store label fields - if we can, 
+         * over-write the passed (display) value with the lookup (raw) value. If we
+         * can't, we were passed a raw seconds value, so stick with that.
+         */
+
+        var index = tvheadend.DurationStore.find('label', thisvalue); 
+
+        if (index !== -1)
+            thisvalue = tvheadend.DurationStore.getById(index).data.value;
+
+        // Return if otherfield isn't set yet 
         if (!othervalue) return true;
 
         // Return if we've changed min and it's <= existing max
@@ -526,6 +539,7 @@ Ext.apply(Ext.form.VTypes, {
 
         // Return if we've changed max and it's >= existing min
         if (field.id == 'maxfield' && thisvalue >= othervalue) return true;
+
     },
     durationsText: 'Minimum duration must be more than the maximum'
 });
