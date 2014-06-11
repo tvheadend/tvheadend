@@ -430,14 +430,15 @@ dvb_mux_dvbs_class_orbital_get ( void *o )
 static int
 dvb_mux_dvbs_class_orbital_set ( void *o, const void *s )
 {
-  int pos, save = 0;
+  float posf;
   char dir;
-  char *tmp = tvh_strdupa(s);
+  int pos, n, save = 0;
+  const char *tmp = s;
   dvb_mux_t *lm = o;
 
-  dir = tmp[strlen(tmp)-1];
-  tmp[strlen(tmp)-1] = '\0';
-  pos = (int)floorf(atof(tmp) * 10.0);
+  if ((n = sscanf(tmp, "%f%c", &posf, &dir)) < 1) return 0;
+  if (n != 2) dir = 0;
+  pos = (int)floorf(posf * 10.0);
 
   if (pos != lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos ||
       dir != lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir) {
