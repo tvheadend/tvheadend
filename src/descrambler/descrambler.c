@@ -212,12 +212,19 @@ descrambler_keys ( th_descrambler_t *td,
       break;
     }
 
-  if (j > 0) {
+  if (j == 2) {
     if (td->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "descrambler",
-                        "Obtained key from %s for service \"%s\"",
+                        "Obtained keys from %s for service \"%s\"",
                         td->td_nicename,
                         ((mpegts_service_t *)t)->s_dvb_svcname);
+    tvhtrace("descrambler", "Obtained keys "
+             "%02X%02X%02X%02X%02X%02X%02X%02X:%02X%02X%02X%02X%02X%02X%02X%02X"
+             " from %s for service \"%s\"",
+             even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
+             odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
+             td->td_nicename,
+             ((mpegts_service_t *)t)->s_dvb_svcname);
     dr->dr_ecm_key_time = dispatch_clock;
     td->td_keystate = DS_RESOLVED;
   } else {
@@ -266,8 +273,11 @@ descrambler_descramble ( service_t *t,
       for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {
         tsb2 = dr->dr_buf.sb_data + off;
         if ((tsb2[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb2[3] & 0x40)) {
+          tvhtrace("descrambler", "%s - stream key changed to %s",
+                                  ((mpegts_service_t *)t)->s_dvb_svcname,
+                                  (tsb2[3] & 0x40) ? "odd" : "even");
           if (dr->dr_ecm_key_time < dr->dr_key_start) {
-            sbuf_free(&dr->dr_buf);
+            sbuf_cut(&dr->dr_buf, off);
             goto forbid;
           }
           key_update(dr, tsb[3]);
@@ -279,8 +289,14 @@ descrambler_descramble ( service_t *t,
       sbuf_free(&dr->dr_buf);
     }
     if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_index != (tsb[3] & 0x40)) {
+      tvhtrace("descrambler", "%s - stream key changed to %s",
+                              ((mpegts_service_t *)t)->s_dvb_svcname,
+                              (tsb[3] & 0x40) ? "odd" : "even");
       if (dr->dr_ecm_key_time < dr->dr_key_start) {
 forbid:
+        tvhtrace("descrambler", "%s - ECM late (%ld seconds)",
+                                ((mpegts_service_t *)t)->s_dvb_svcname,
+                                dispatch_clock - dr->dr_ecm_key_time);
         td->td_keystate = DS_FORBIDDEN;
         failed++;
         continue;
@@ -293,8 +309,11 @@ forbid:
     return 1;
   }
   if (dr->dr_ecm_start) { /* ECM sent */
-    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_start == 0)
+    if ((tsb[3] & 0x80) != 0x00 && dr->dr_key_start == 0) {
+      tvhtrace("descrambler", "initial stream key set to %s",
+                              (tsb[3] & 0x40) ? "odd" : "even");
       key_update(dr, tsb[3]);
+    }
     if (count != failed) {
       /*
        * Fill a temporary buffer until the keys are known to make
@@ -334,7 +353,12 @@ descrambler_table_callback
           /* The keys are requested from this moment */
           dr = mt->mt_service->s_descramble;
           dr->dr_ecm_start = dispatch_clock;
-        }
+          tvhtrace("descrambler", "%s - ECM message (len %d, pid %d) %s",
+                   ((mpegts_service_t *)mt->mt_service)->s_dvb_svcname,
+                   len, mt->mt_pid, mt->mt_name);
+        } else
+          tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
+                   len, mt->mt_pid);
       }
     }
   pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
@@ -375,7 +399,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds->callback    = callback;
   ds->opaque      = opaque;
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
-  tvhtrace("descrambler", "open pid %04X (%i)", pid, pid);
+  tvhtrace("descrambler", "open pid %04X (%i) (flags 0x%04x)", pid, pid, flags);
   return 1;
 }
 
@@ -473,6 +497,8 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
   void *opaque = NULL;
   TAILQ_HEAD(,descrambler_emm) removing;
 
+  tvhtrace("descrambler", "CAT data (len %d)", len);
+  tvhlog_hexdump("descrambler", data, len);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
     emm->to_be_removed = 1;
