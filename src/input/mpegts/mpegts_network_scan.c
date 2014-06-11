@@ -124,8 +124,6 @@ mpegts_network_scan_mux_done0
   }
 
   /* Re-enable? */
-  if (mm->mm_network->mn_idlescan && !weight)
-    weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
   if (weight > 0)
     mpegts_network_scan_queue_add(mm, weight);
 }

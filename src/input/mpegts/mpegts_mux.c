@@ -661,6 +661,9 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Scanning */
   mpegts_network_scan_mux_cancel(mm, 1);
+  if (mm->mm_scan_state == MM_SCAN_STATE_IDLE &&
+      mm->mm_network->mn_idlescan)
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
 
   /* Events */
   mpegts_fire_event(mm, ml_mux_stop);
