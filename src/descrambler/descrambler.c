@@ -277,7 +277,7 @@ descrambler_descramble ( service_t *t,
           tvhtrace("descrambler", "%s - stream key changed to %s",
                                   ((mpegts_service_t *)t)->s_dvb_svcname,
                                   (tsb2[3] & 0x40) ? "odd" : "even");
-          if (dr->dr_ecm_key_time < dr->dr_key_start) {
+          if (dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
             sbuf_cut(&dr->dr_buf, off);
             goto forbid;
           }
@@ -294,7 +294,7 @@ descrambler_descramble ( service_t *t,
       tvhtrace("descrambler", "%s - stream key changed to %s",
                               ((mpegts_service_t *)t)->s_dvb_svcname,
                               (tsb[3] & 0x40) ? "odd" : "even");
-      if (dr->dr_ecm_key_time < dr->dr_key_start) {
+      if (dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
 forbid:
         tvhtrace("descrambler", "%s - ECM late (%ld seconds)",
                                 ((mpegts_service_t *)t)->s_dvb_svcname,
