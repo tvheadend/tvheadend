@@ -329,7 +329,7 @@ dvb_network_create_mux
       mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    /* the nit tables may be incosistent (like rolloff ping-pong) */
+    /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != mmo)
       goto noop;
