@@ -214,7 +214,8 @@ const idclass_t dvb_network_atsc_class =
 static int
 dvb_network_check_orbital_pos ( dvb_mux_t *lm, dvb_mux_conf_t *dmc )
 {
-  if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir) {
+  if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir &&
+      dmc->u.dmc_fe_qpsk.orbital_dir) {
     if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir !=
                  dmc->u.dmc_fe_qpsk.orbital_dir)
       return 1;
