@@ -991,7 +991,6 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
     ca_info_t *cai;
-    static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x", adapter, parity, index, cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index == -1)   // skipping removal request
@@ -1001,12 +1000,10 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
       memcpy(cai->even, cw, 8); // even key
-      if (memcmp(empty, cai->odd, 8))
-        capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
     } else if (parity == 1) {
       memcpy(cai->odd,  cw, 8); // odd  key
-      if (memcmp(empty, cai->even, 8))
-        capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
