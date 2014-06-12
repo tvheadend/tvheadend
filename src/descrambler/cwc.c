@@ -143,8 +143,6 @@ typedef struct cwc_service {
     ECM_RESET
   } ecm_state;
 
-  uint8_t cs_even[8];
-  uint8_t cs_odd[8];
   tvhcsa_t cs_csa;
   
   LIST_HEAD(, ecm_pid) cs_pids;
@@ -695,7 +693,6 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   int i;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
   es->es_pending = 0;
-  static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", es->es_channel);
 
@@ -780,12 +777,7 @@ forbid:
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s",
 	     t->s_dvb_svcname, delay, ct->td_nicename);
 
-    if (memcmp(msg + 3, empty, 8))
-      memcpy(ct->cs_even, msg + 3, 8);
-    if (memcmp(msg + 3 + 8, empty, 8))
-      memcpy(ct->cs_odd, msg + 3 + 8, 8);
-
-    descrambler_keys((th_descrambler_t *)ct, ct->cs_even, ct->cs_odd);
+    descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 8);
 
     ep = LIST_FIRST(&ct->cs_pids);
     while(ep != NULL) {
