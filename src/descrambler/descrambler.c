@@ -214,7 +214,7 @@ descrambler_keys ( th_descrambler_t *td,
       break;
     }
 
-  if (j == 2) {
+  if (j) {
     if (td->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "descrambler",
                         "Obtained keys from %s for service \"%s\"",
