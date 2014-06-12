@@ -211,6 +211,7 @@ typedef struct capmt_demuxes {
 
 typedef struct capmt_message {
   TAILQ_ENTRY(capmt_message) cm_link;
+  int cm_adapter;
   int cm_sid;
   sbuf_t cm_sb;
 } capmt_message_t;
@@ -259,6 +260,7 @@ typedef struct capmt {
 
   /* capmt sockets */
   int   sids[MAX_SOCKETS];
+  int   adps[MAX_SOCKETS];
   int   capmt_sock[MAX_SOCKETS];
   int   capmt_sock_reconnect[MAX_SOCKETS];
 
@@ -495,13 +497,15 @@ capmt_socket_close(capmt_t *capmt, int sock_idx)
   capmt->capmt_sock[sock_idx] = -1;
   if (capmt_oscam_new(capmt))
     capmt_pid_flush(capmt);
+  else if (capmt->capmt_oscam == CAPMT_OSCAM_OLD)
+    capmt->sids[sock_idx] = capmt->adps[sock_idx] = -1;
 }
 
 /**
  *
  */
 static int
-capmt_write_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
+capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t len)
 {
   int i = 0, found = 0, fd;
   ssize_t res;
@@ -518,7 +522,7 @@ capmt_write_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
 
       // searching for the SID and socket
       for (i = 0; i < MAX_SOCKETS; i++) {
-        if (capmt->sids[i] == sid) {
+        if (capmt->sids[i] == sid && capmt->adps[i] == adapter) {
           found = 1;
           break;
         }
@@ -530,6 +534,7 @@ capmt_write_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
         for (i = 0; i < MAX_SOCKETS; i++) {
           if (capmt->sids[i] == 0) {
             capmt->sids[i] = sid;
+            capmt->adps[i] = adapter;
             break;
           }
         }
@@ -588,7 +593,8 @@ capmt_write_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
  */
 static void
 capmt_queue_msg
-  (capmt_t *capmt, int sid, const uint8_t *buf, size_t len, int flags)
+  (capmt_t *capmt, int adapter, int sid,
+   const uint8_t *buf, size_t len, int flags)
 {
   capmt_message_t *msg;
 
@@ -602,6 +608,7 @@ capmt_queue_msg
   msg = malloc(sizeof(*msg));
   sbuf_init_fixed(&msg->cm_sb, len);
   sbuf_append(&msg->cm_sb, buf, len);
+  msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
   if (flags & CAPMT_MSG_FAST)
     TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
@@ -628,7 +635,7 @@ capmt_flush_queue(capmt_t *capmt, int del_only)
       break;
 
     if (!del_only)
-      capmt_write_msg(capmt, msg->cm_sid,
+      capmt_write_msg(capmt, msg->cm_adapter, msg->cm_sid,
                       msg->cm_sb.sb_data, msg->cm_sb.sb_ptr);
     sbuf_free(&msg->cm_sb);
     free(msg);
@@ -659,6 +666,7 @@ capmt_send_stop(capmt_service_t *t)
     // closing socket (oscam handle this as event and stop decrypting)
     tvhlog(LOG_DEBUG, "capmt", "%s: closing socket i=%d, socket_fd=%d", __FUNCTION__, i, t->ct_capmt->capmt_sock[i]);
     t->ct_capmt->sids[i] = 0;
+    t->ct_capmt->adps[i] = 0;
     capmt_socket_close(t->ct_capmt, i);
   } else if (oscam == CAPMT_OSCAM_SO_WRAPPER) {  // standard old capmt mode
     /* buffer for capmt */
@@ -689,7 +697,7 @@ capmt_send_stop(capmt_service_t *t)
     buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
     buf[11] = ((pos - 5 - 12) & 0xFF);
   
-    capmt_queue_msg(t->ct_capmt, s->s_dvb_service_id,
+    capmt_queue_msg(t->ct_capmt, t->ct_adapter, s->s_dvb_service_id,
                     buf, pos, CAPMT_MSG_CLEAR);
   }
 }
@@ -755,7 +763,7 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
   buf[5] = filter_index;
   memcpy(buf + 6, data, len);
   if (len - 3 == ((((uint16_t)buf[7] << 8) | buf[8]) & 0xfff))
-    capmt_queue_msg(capmt, 0, buf, len + 6, flags);
+    capmt_queue_msg(capmt, adapter, 0, buf, len + 6, flags);
 }
 
 static void
@@ -964,9 +972,13 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     uint32_t pid   = sbuf_peek_u32(sb, offset + 4);
     int32_t  index = sbuf_peek_s32(sb, offset + 8);
+    ca_info_t *cai;
+
     tvhlog(LOG_DEBUG, "capmt", "CA_SET_PID adapter %d index %d pid 0x%04x", adapter, index, pid);
     if (adapter < MAX_CA && index >= 0 && index < MAX_INDEX) {
-      capmt->capmt_adapters[adapter].ca_info[index].pid = pid;
+      cai = &capmt->capmt_adapters[adapter].ca_info[index];
+      memset(cai, 0, sizeof(*cai));
+      cai->pid = pid;
     } else if (index < 0) {
       memset(&capmt->capmt_adapters[adapter].ca_info, 0,
              sizeof(capmt->capmt_adapters[adapter].ca_info));
@@ -1302,6 +1314,7 @@ capmt_thread(void *aux)
       capmt->capmt_adapters[i].ca_sock = -1;
     for (i = 0; i < MAX_SOCKETS; i++) {
       capmt->sids[i] = 0;
+      capmt->adps[i] = -1;
       capmt->capmt_sock[i] = -1;
       capmt->capmt_sock_reconnect[i] = 0;
     }
@@ -1620,7 +1633,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[9] = pmtversion;
   pmtversion = (pmtversion + 1) & 0x1F;
 
-  capmt_queue_msg(capmt, sid, buf, pos, 0);
+  capmt_queue_msg(capmt, adapter_num, sid, buf, pos, 0);
 }
 
 static void
@@ -1638,7 +1651,7 @@ capmt_enumerate_services(capmt_t *capmt, int force)
       res_srv_count++;
   }
 
-  if (!all_srv_count && !res_srv_count) {
+  if (!all_srv_count) {
     // closing socket (oscam handle this as event and stop decrypting)
     tvhlog(LOG_DEBUG, "capmt", "%s: no subscribed services, closing socket, fd=%d", __FUNCTION__, capmt->capmt_sock[0]);
     if (capmt->capmt_sock[0] >= 0)
