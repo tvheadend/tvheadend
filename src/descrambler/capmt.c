@@ -1804,7 +1804,7 @@ capmt_destroy(capmt_t *capmt)
          capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
          capmt->capmt_sockfile, capmt->capmt_port);
   capmt->capmt_running = 0;
-  pthread_cond_signal(&capmt->capmt_cond);
+  pthread_cond_broadcast(&capmt->capmt_cond);
   pthread_mutex_unlock(&global_lock);
   pthread_join(capmt->capmt_tid, NULL);
   pthread_mutex_lock(&global_lock);
