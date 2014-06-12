@@ -55,6 +55,7 @@ typedef struct th_descrambler {
 } th_descrambler_t;
 
 typedef struct th_descrambler_runtime {
+  time_t   dr_last_descramble;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
