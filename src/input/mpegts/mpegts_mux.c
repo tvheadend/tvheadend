@@ -409,7 +409,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   LIST_REMOVE(mm, mm_network_link);
 
   /* Cancel scan */
-  mpegts_network_scan_mux_cancel(mm, 0);
+  mpegts_network_scan_queue_del(mm);
 
   /* Remove instances */
   while ((mmi = LIST_FIRST(&mm->mm_instances))) {
@@ -444,17 +444,28 @@ mpegts_mux_create_instances ( mpegts_mux_t *mm )
 {
 }
 
-// TODO: this does not follow the same logic for ordering things
-//       as the service_enlist() routine that's used for service
-//       arbitration
+static int
+mpegts_mux_start1( mpegts_mux_instance_t *mmi )
+{
+  char buf[256], buf2[256];
+
+  if (mpegts_mux_instance_start(&mmi)) {
+    mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf, sizeof(buf));
+    mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
+    tvhwarn("mpegts", "%s - failed to start on %s, try another", buf, buf2);
+    return 1;
+  }
+  return 0;
+}
 
 static int
 mpegts_mux_start
   ( mpegts_mux_t *mm, const char *reason, int weight )
 {
-  int pass, havefree = 0, enabled = 0;
+  int havefree = 0, enabled = 0, index, index2, weight2, count, size = 0;
   char buf[256];
-  mpegts_mux_instance_t *mmi, *tune;
+  mpegts_mux_instance_t *mmi, **all;
+  int64_t aweight, *allw;
 
   mm->mm_display_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - starting for '%s' (weight %d)",
@@ -472,7 +483,7 @@ mpegts_mux_start
     mpegts_mux_scan_active(mm, buf, mm->mm_active->mmi_input);
     return 0;
   }
-  
+
   /* Create mux instances (where needed) */
   mm->mm_create_instances(mm);
   if (!LIST_FIRST(&mm->mm_instances)) {
@@ -480,75 +491,107 @@ mpegts_mux_start
     return SM_CODE_NO_VALID_ADAPTER;
   }
 
-  /* Find */
-  pass = 0;
-  mmi  = NULL;
-  while (pass < 2) {
-    tune = NULL;
-    if (!mmi) mmi = LIST_FIRST(&mm->mm_instances);
-    tvhtrace("mpegts", "%s - checking mmi %p", buf, mmi);
+  /* Get the count of instances */
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    size++;
+  all  = alloca(sizeof(mpegts_mux_instance_t *) * size);
+  allw = alloca(sizeof(int64_t) * size);
 
-    /* First pass - free only */
-    if (!pass) {
-      int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm);
-      int f = mmi->mmi_input->mi_is_free(mmi->mmi_input);
-      tvhtrace("mpegts", "%s -   enabled %d free %d", buf, e, f);
-      if (e) enabled = 1;
+  /* Calculate priority+weight and sort */
+  count = 0;
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm);
+    tvhtrace("mpegts", "%s -   mmi %p enabled %d", buf, mmi, e);
+    if (!e) continue;
+    enabled = 1;
 
-      if (e && f) {
-        havefree = 1;
-        if (!mmi->mmi_tune_failed) {
-          tune = mmi;
-          tvhtrace("mpegts", "%s - found free mmi %p", buf, mmi);
-        }
-      }
-    
-    /* Second pass - non-free */
-    } else {
-
-      /* Enabled, valid and lower weight */
-      if (mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm) &&
-          !mmi->mmi_tune_failed &&
-          (weight > mmi->mmi_input->mi_get_weight(mmi->mmi_input))) {
-        tune = mmi;
-        tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
-      }
-    }
-    
-    /* Tune */
-    if (tune) {
-      tvhinfo("mpegts", "%s - starting for '%s' (weight %d)",
-              buf, reason, weight);
-      if (!mpegts_mux_instance_start(&tune)) break;
-      tune = NULL;
-      tvhwarn("mpegts", "%s - failed to start, try another", buf);
+    /* Already live? Try it... */
+    if (e && mmi->mmi_mux->mm_active == mmi) {
+      if (!mpegts_mux_start1(mmi))
+        return 0;
+      continue;
     }
 
-    /* Next */
-    mmi = LIST_NEXT(mmi, mmi_mux_link);
-    if (!mmi) pass++;
+    if (mmi->mmi_tune_failed) continue;
+
+    tvhtrace("mpegts", "%s - found mmi %p", buf, mmi);
+
+    aweight = ((int64_t )mmi->mmi_input->mi_get_priority(mmi->mmi_input,
+                                                         mmi->mmi_mux) << 32) |
+                         mmi->mmi_input->mi_get_weight(mmi->mmi_input);
+    for (index = 0; index < count; index++) {
+      if (allw[index] >= aweight)
+        break;
+    }
+    if (index < count) {
+      int j;
+      for (j = count; j > index; j--) {
+        allw[j] = allw[j - 1];
+        all [j] = all [j - 1];
+      }
+    }
+    all [index] = mmi;
+    allw[index] = aweight;
+    count++;
   }
-  
-  if (!tune) {
-    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-      if (!mmi->mmi_tune_failed) {
-        if (!enabled) {
-          tvhdebug("mpegts", "%s - no tuners enabled", buf);
-          return SM_CODE_NO_VALID_ADAPTER;
-        } else if (havefree) {
-          tvhdebug("mpegts", "%s - no valid tuner available", buf);
-          return SM_CODE_NO_VALID_ADAPTER;
-        } else {
-          tvhdebug("mpegts", "%s - no free tuner available", buf);
-          return SM_CODE_NO_FREE_ADAPTER;
-        }
+
+  /* Try free inputs */
+  for (index = count - 1; index >= 0; index--) {
+    mpegts_input_t *mi;
+    mmi = all[index];
+    mi = mmi->mmi_input;
+    if (mi->mi_is_free(mi)) {
+      all[index] = NULL;
+      havefree = 1;
+      tvhtrace("mpegts", "%s - found mmi %p to boot (free)", buf, mmi);
+      if (!mpegts_mux_start1(mmi))
+        return 0;
+    }
+  }
+
+  /* Try the lowest weight */
+  for (index = 0, index2 = -1, weight2 = weight; index < count; index++) {
+    if (all[index] && weight2 > (allw[index] & 0xffffffff)) {
+      weight2 = allw[index] & 0xffffffff;
+      index2  = index;
+    }
+  }
+
+  if (index2 >= 0) {
+    mmi = all[index2];
+    all[index2] = NULL;
+    tvhtrace("mpegts", "%s - found mmi %p to boot (lowest)", buf, mmi);
+    if (!mpegts_mux_start1(mmi))
+      return 0;
+  }
+
+  /* Try the all lowest weights */
+  for (index = 0; index < count; index++) {
+    if (all[index] && weight > (allw[index] & 0xffffffff)) {
+      mmi = all[index];
+      all[index] = NULL;
+      tvhtrace("mpegts", "%s - found mmi %p to boot", buf, mmi);
+      if (!mpegts_mux_start1(mmi))
+        return 0;
+    }
+  }
+
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+    if (!mmi->mmi_tune_failed) {
+      if (!enabled) {
+        tvhdebug("mpegts", "%s - no tuners enabled", buf);
+        return SM_CODE_NO_VALID_ADAPTER;
+      } else if (havefree) {
+        tvhdebug("mpegts", "%s - no valid tuner available", buf);
+        return SM_CODE_NO_VALID_ADAPTER;
+      } else {
+        tvhdebug("mpegts", "%s - no free tuner available", buf);
+        return SM_CODE_NO_FREE_ADAPTER;
       }
     }
-    tvhdebug("mpegts", "%s - tuning failed, invalid config?", buf);
-    return SM_CODE_TUNING_FAILED;
   }
-  
-  return 0;
+  tvhdebug("mpegts", "%s - tuning failed, invalid config?", buf);
+  return SM_CODE_TUNING_FAILED;
 }
 
 static int
@@ -618,6 +661,9 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Scanning */
   mpegts_network_scan_mux_cancel(mm, 1);
+  if (mm->mm_scan_state == MM_SCAN_STATE_IDLE &&
+      mm->mm_network->mn_idlescan)
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
 
   /* Events */
   mpegts_fire_event(mm, ml_mux_stop);
@@ -629,8 +675,11 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
-  int type = MPS_TABLE;
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   mpegts_input_t *mi;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
@@ -643,8 +692,11 @@ void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
-  int type = MPS_TABLE;
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   if (!mm->mm_active || !mm->mm_active->mmi_input) return;
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_output_lock);
@@ -769,6 +821,10 @@ mpegts_mux_create0
   mm->mm_open_table          = mpegts_mux_open_table;
   mm->mm_close_table         = mpegts_mux_close_table;
   TAILQ_INIT(&mm->mm_table_queue);
+  LIST_INIT(&mm->mm_descrambler_caids);
+  TAILQ_INIT(&mm->mm_descrambler_tables);
+  TAILQ_INIT(&mm->mm_descrambler_emms);
+  pthread_mutex_init(&mm->mm_descrambler_lock, NULL);
 
   mm->mm_last_pid            = -1;
 

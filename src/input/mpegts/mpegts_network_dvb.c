@@ -35,7 +35,7 @@
 
 static mpegts_mux_t *
 dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc );
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid );
 
 /* ****************************************************************************
  * Class definition
@@ -77,7 +77,7 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
-    if (!(mm = dvb_network_find_mux(o, dmc))) {
+    if (!(mm = dvb_network_find_mux(o, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
       mm = (mpegts_mux_t*)dvb_mux_create0(o,
                                           MPEGTS_ONID_NONE,
                                           MPEGTS_TSID_NONE,
@@ -228,20 +228,43 @@ dvb_network_check_orbital_pos ( dvb_mux_t *lm, dvb_mux_conf_t *dmc )
 
 static mpegts_mux_t *
 dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc )
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid )
 {
+  int deltaf;
   mpegts_mux_t *mm;
 
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    deltaf = 2000; // 2K/MHz
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > 2000) continue;
-    if (lm->lm_tuning.dmc_fe_modulation != dmc->dmc_fe_modulation) continue;
+
+    /* Same FE type - this REALLY should match! */
+    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
+
+    /* Reject if not same ID */
+    if (onid != MPEGTS_ONID_NONE && mm->mm_onid != MPEGTS_ONID_NONE && mm->mm_onid != onid) continue;
+    if (tsid != MPEGTS_TSID_NONE && mm->mm_tsid != MPEGTS_TSID_NONE && mm->mm_tsid != tsid) continue;
+
+    /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
+      if (onid != MPEGTS_ONID_NONE && tsid != MPEGTS_TSID_NONE)
+        deltaf = 16000; // This is slightly crazy, but I have seen 10MHz changes in freq
+                        // and remember the ONID and TSID must agree
+      else
+        deltaf = 4000;
+    }
+
+    /* Reject if not same frequency (some tolerance due to changes and diff in NIT) */
+    if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > deltaf) continue;
+
+    /* DVB-S extra checks */
+    if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
+
+      /* Same polarisation */
       if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
-      if (lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate != dmc->u.dmc_fe_qpsk.symbol_rate) continue;
+
+      /* Same orbital position */
       if (dvb_network_check_orbital_pos(lm, dmc)) continue;
     }
-    if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
     break;
   }
   return mm;
@@ -282,7 +305,7 @@ dvb_network_create_mux
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   dvb_mux_conf_t *dmc = p;
 
-  mm = dvb_network_find_mux(ln, dmc);
+  mm = dvb_network_find_mux(ln, dmc, onid, tsid);
   if (!mm && ln->mn_autodiscovery) {
     const idclass_t *cls;
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
@@ -308,7 +331,7 @@ dvb_network_create_mux
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be incosistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
-    if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin != mmo)
+    if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != mmo)
       goto noop;
 #if ENABLE_TRACE
     #define COMPARE(x) ({ \
@@ -336,6 +359,11 @@ dvb_network_create_mux
       if (xr) lm->lm_tuning.x = dmc->x; \
       xr; })
 #endif
+    /* Handle big diffs that have been allowed through for DVB-S */
+    if (abs(dmc->dmc_fe_freq - lm->lm_tuning.dmc_fe_freq) > 4000) {
+      lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
+      save = 1;
+    }
     save |= COMPAREN(dmc_fe_modulation);
     save |= COMPAREN(dmc_fe_inversion);
     save |= COMPAREN(dmc_fe_rolloff);

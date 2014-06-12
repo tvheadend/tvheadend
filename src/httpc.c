@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -467,12 +468,25 @@ http_client_send_partial( http_client_t *hc )
   while (wcmd != NULL) {
     hc->hc_cmd   = wcmd->wcmd;
     hc->hc_rcseq = wcmd->wcseq;
+    if (hc->hc_einprogress) {
+      struct pollfd fds;
+      memset(&fds, 0, sizeof(fds));
+      fds.fd     = hc->hc_fd;
+      fds.events = POLLOUT;
+      if (poll(&fds, 1, 0) == 0) {
+        r = -1;
+        errno = EINPROGRESS;
+        goto skip;
+      }
+      hc->hc_einprogress = 0;
+    }
     if (hc->hc_ssl)
       r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos,
                                wcmd->wsize - wcmd->wpos);
     else
       r = send(hc->hc_fd, wcmd->wbuf + wcmd->wpos,
                wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
+skip:
     if (r < 0) {
       if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
           errno == EINPROGRESS) {
@@ -1185,19 +1199,21 @@ http_client_reconnect
   free(hc->hc_scheme);
   free(hc->hc_host);
 
+  if (scheme == NULL || host == NULL)
+    return -EINVAL;
+
   port           = http_port(scheme, port);
   hc->hc_pevents = 0;
   hc->hc_version = ver;
   hc->hc_scheme  = strdup(scheme);
   hc->hc_host    = strdup(host);
   hc->hc_port    = port;
-  if (port < 0)
-    return -EINVAL;
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
     return -EINVAL;
   }
+  hc->hc_einprogress = 1;
   tvhtrace("httpc", "Connected to %s:%i", host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {

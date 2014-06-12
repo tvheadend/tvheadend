@@ -19,12 +19,15 @@
 #ifndef CWC_H_
 #define CWC_H_
 
+struct mpegts_mux;
+
 void cwc_init(void);
 
 void cwc_done(void);
 
 void cwc_service_start(struct service *t);
 
-void cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id);
+void cwc_caid_update(struct mpegts_mux *mux,
+                     uint16_t caid, uint16_t pid, int valid);
 
 #endif /* CWC_H_ */

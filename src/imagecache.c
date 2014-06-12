@@ -60,6 +60,7 @@ typedef struct imagecache_image
 static int                            imagecache_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_id;
 static RB_HEAD(,imagecache_image)     imagecache_by_url;
+SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 #if ENABLE_IMAGECACHE
 struct imagecache_config imagecache_conf;
@@ -370,6 +371,7 @@ imagecache_done ( void )
     free((void *)img->url);
     free(img);
   }
+  SKEL_FREE(imagecache_skel);
 }
 
 
@@ -418,8 +420,7 @@ uint32_t
 imagecache_get_id ( const char *url )
 {
   uint32_t id = 0;
-  imagecache_image_t *i;
-  static imagecache_image_t *skel = NULL;
+  imagecache_image_t *i, *j;
 
   lock_assert(&global_lock);
 
@@ -434,18 +435,18 @@ imagecache_get_id ( const char *url )
 #endif
 
   /* Skeleton */
-  if (!skel)
-    skel = calloc(1, sizeof(imagecache_image_t));
-  skel->url = url;
+  SKEL_ALLOC(imagecache_skel);
+  imagecache_skel->url = url;
 
   /* Create/Find */
-  i = RB_INSERT_SORTED(&imagecache_by_url, skel, url_link, url_cmp);
+  i = RB_INSERT_SORTED(&imagecache_by_url, imagecache_skel, url_link, url_cmp);
   if (!i) {
-    i      = skel;
+    i      = imagecache_skel;
     i->url = strdup(url);
     i->id  = ++imagecache_id;
-    skel   = RB_INSERT_SORTED(&imagecache_by_id, i, id_link, id_cmp);
-    assert(!skel);
+    j      = RB_INSERT_SORTED(&imagecache_by_id, i, id_link, id_cmp);
+    assert(!j);
+    SKEL_USED(imagecache_skel);
 #if ENABLE_IMAGECACHE
     imagecache_image_add(i);
 #endif

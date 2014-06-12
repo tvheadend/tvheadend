@@ -265,7 +265,6 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 static void
 service_stop(service_t *t)
 {
-  th_descrambler_t *td;
   elementary_stream_t *st;
  
   gtimer_disarm(&t->s_receive_timer);
@@ -274,8 +273,7 @@ service_stop(service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  while((td = LIST_FIRST(&t->s_descramblers)) != NULL)
-    td->td_stop(td);
+  descrambler_service_stop(t);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
@@ -530,6 +528,7 @@ service_find_instance
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
+  int weight2;
 
   lock_assert(&global_lock);
 
@@ -569,16 +568,28 @@ service_find_instance
       return si;
     }
 
-  /* Forced or Idle */
+  /* Forced */
   TAILQ_FOREACH(si, sil, si_link)
-    if(si->si_weight <= 0 && si->si_error == 0)
+    if(si->si_weight < 0 && si->si_error == 0)
       break;
 
-  /* Bump someone */
+  /* Idle */
   if (!si) {
     TAILQ_FOREACH_REVERSE(si, sil, service_instance_list, si_link)
-      if (weight > si->si_weight && si->si_error == 0)
+      if (si->si_weight == 0 && si->si_error == 0)
         break;
+  }
+
+  /* Bump the one with lowest weight */
+  if (!si) {
+    next = NULL;
+    weight2 = weight;
+    TAILQ_FOREACH(si, sil, si_link)
+      if (weight2 > si->si_weight && si->si_error == 0) {
+        weight2 = si->si_weight;
+        next = si;
+      }
+    si = next;
   }
 
   /* Failed */
@@ -1551,7 +1562,7 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
   caid_t *c = malloc(sizeof(caid_t));
   c->caid = caid;
   c->providerid = providerid;
-  c->delete_me = 0;
+  c->pid = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 

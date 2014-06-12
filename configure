@@ -17,6 +17,7 @@ ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 
 OPTIONS=(
   "cwc:yes"
+  "capmt:yes"
   "v4l:no"
   "linuxdvb:yes"
   "satip_client:yes"
@@ -33,6 +34,7 @@ OPTIONS=(
   "epoll:auto"
   "uriparser:auto"
   "ccache:auto"
+  "tvhcsa:auto"
   "bundle:no"
   "dvbcsa:no"
   "kqueue:no"
@@ -286,13 +288,16 @@ if enabled_or_auto inotify; then
 fi
 
 #
-# libdvbcsa
+# libdvbcsa, tvhcsa
 #
-if enabled cwc && enabled dvbcsa; then
-  (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
-   check_cc_lib    dvbcsa dvbcsa_l) ||\
-  die "Failed to find dvbcsa support (use --disable-dvbcsa)"
-  LDFLAGS="$LDFLAGS -ldvbcsa"
+if enabled cwc || enabled capmt; then
+  enable tvhcsa
+  if enabled dvbcsa; then
+    (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
+     check_cc_lib    dvbcsa dvbcsa_l) ||\
+    die "Failed to find dvbcsa support (use --disable-dvbcsa)"
+    LDFLAGS="$LDFLAGS -ldvbcsa"
+  fi
 fi
 
 #

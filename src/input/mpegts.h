@@ -120,6 +120,7 @@ typedef struct mpegts_pid_sub
 #define MPS_NONE   0x0
 #define MPS_STREAM 0x1
 #define MPS_TABLE  0x2
+#define MPS_FTABLE 0x4
   int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
@@ -147,6 +148,8 @@ struct mpegts_table
 #define MT_RECORD   0x08
 #define MT_SKIPSUBS 0x10
 #define MT_SCANSUBS 0x20
+#define MT_FAST     0x40
+#define MT_SLOW     0x80
 
   /**
    * Cycle queue
@@ -191,6 +194,8 @@ struct mpegts_table
   mpegts_psi_section_t mt_sect;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
+
+  mpegts_service_t *mt_service;
   
   void (*mt_destroy) (mpegts_table_t *mt); // Allow customisable destroy hook
                                            // useful for dynamic allocation of
@@ -250,6 +255,13 @@ struct mpegts_network
    * Multiplexes
    */
   mpegts_mux_list_t       mn_muxes;
+
+  /*
+   * Scanning
+   */
+  mpegts_mux_queue_t mn_scan_pend;    // Pending muxes
+  mpegts_mux_queue_t mn_scan_active;  // Active muxes
+  gtimer_t           mn_scan_timer;   // Timer for activity
 
   /*
    * Functions
@@ -346,6 +358,11 @@ struct mpegts_mux
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
+
+  LIST_HEAD(, caid)           mm_descrambler_caids;
+  TAILQ_HEAD(, descrambler_table) mm_descrambler_tables;
+  TAILQ_HEAD(, descrambler_emm) mm_descrambler_emms;
+  pthread_mutex_t             mm_descrambler_lock;
 
   /*
    * Functions
@@ -729,7 +746,6 @@ mpegts_table_t *mpegts_table_add
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );
-void mpegts_table_register_caid ( mpegts_mux_t *mm, uint16_t caid );
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,

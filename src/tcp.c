@@ -54,7 +54,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   int fd, r, res, err;
   struct addrinfo *ai;
   char portstr[6];
-  socklen_t errlen = sizeof(int);
+  socklen_t errlen = sizeof(err);
 
   snprintf(portstr, 6, "%u", port);
   res = getaddrinfo(hostname, portstr, NULL, &ai);
@@ -159,6 +159,12 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   }
   
   fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
+
+
+  /* Set the keep-alive active */
+  err = 1;
+  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&err, errlen);
+
   return fd;
 }
 

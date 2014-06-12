@@ -27,9 +27,10 @@ PROG    := $(BUILDDIR)/tvheadend
 # Common compiler flags
 #
 
+CFLAGS  += -g -O2
 CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
-CFLAGS  += -Wmissing-prototypes -fms-extensions
-CFLAGS  += -g -funsigned-char -O2
+CFLAGS  += -Wmissing-prototypes
+CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 LDFLAGS += -ldl -lpthread -lm
@@ -124,7 +125,6 @@ SRCS =  src/version.c \
 	src/lang_str.c \
 	src/imagecache.c \
 	src/tvhtime.c \
-	src/descrambler/descrambler.c \
 	src/service_mapper.c \
 	src/input.c \
 	src/httpc.c \
@@ -192,6 +192,7 @@ SRCS += src/muxer.c \
 
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
+	src/descrambler/descrambler.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \
@@ -272,21 +273,29 @@ SRCS-$(CONFIG_LIBAV) += src/libav.c \
 	src/muxer/muxer_libav.c \
 	src/plumbing/transcoding.c \
 
+# Tvhcsa
+SRCS-${CONFIG_TVHCSA} += \
+	src/descrambler/tvhcsa.c
+
 # CWC
 SRCS-${CONFIG_CWC} += \
-	src/descrambler/tvhcsa.c \
 	src/descrambler/cwc.c \
+	
+# CAPMT
+SRCS-${CONFIG_CAPMT} += \
 	src/descrambler/capmt.c
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-SRCS-${CONFIG_CWC}  += \
-	src/descrambler/ffdecsa/ffdecsa_interface.c \
-	src/descrambler/ffdecsa/ffdecsa_int.c
-ifeq ($(CONFIG_CWC),yes)
+FFDECSA-$(CONFIG_CAPMT) = yes
+FFDECSA-$(CONFIG_CWC)   = yes
+endif
+
+ifeq ($(FFDECSA-yes),yes)
+SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
+	    src/descrambler/ffdecsa/ffdecsa_int.c
 SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
-endif
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif

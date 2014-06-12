@@ -45,28 +45,13 @@
 static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 
 /**
- * Code for dealing with a complete section
- */
-static void
-got_ca_section(const uint8_t *data, size_t len, void *opaque)
-{
-  th_descrambler_t *td;
-  elementary_stream_t *st = opaque;
-  assert(st->es_service->s_source_type == S_MPEG_TS);
-  mpegts_service_t *t = (mpegts_service_t*)st->es_service;
-
-  LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-    td->td_table(td, (service_t*)t, st, data, len);
-}
-
-/**
  * Continue processing of transport stream packets
  */
 static void
 ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
-  int off, pusi, cc, error, ccerr;
+  int off, pusi, cc, error;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -76,7 +61,6 @@ ts_recv_packet0
   if (!st)
     return;
 
-  ccerr = 0;
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
@@ -85,7 +69,6 @@ ts_recv_packet0
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->es_cc != -1 && cc != st->es_cc) {
-      ccerr = 1;
       /* Incorrect CC */
       limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
      "Continuity counter error");
@@ -104,10 +87,6 @@ ts_recv_packet0
   switch(st->es_type) {
 
   case SCT_CA:
-    if(st->es_section == NULL)
-      st->es_section = calloc(1, sizeof(mpegts_psi_section_t));
-    mpegts_psi_section_reassemble(st->es_section, tsb, 0, ccerr,
-                                  got_ca_section, st);
     break;
 
   default:
@@ -175,8 +154,7 @@ ts_recv_packet1
   (mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp, int table)
 {
   elementary_stream_t *st;
-  int pid, n, m, r;
-  th_descrambler_t *td;
+  int pid, r;
   int error = 0;
   int64_t pcr = PTS_UNSET;
   
@@ -244,25 +222,16 @@ ts_recv_packet1
       t->s_scrambled_seen |= service_is_encrypted((service_t*)t);
 
     /* scrambled stream */
-    n = m = 0;
-
-    LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
-      n++;
-      
-      r = td->td_descramble(td, (service_t*)t, st, tsb);
-      if(r == 0) {
-        pthread_mutex_unlock(&t->s_stream_mutex);
-        return 1;
-      }
-
-      if(r == 1)
-        m++;
+    r = descrambler_descramble((service_t *)t, st, tsb);
+    if(r > 0) {
+      pthread_mutex_unlock(&t->s_stream_mutex);
+      return 1;
     }
 
-    if(!error && service_is_encrypted((service_t*)t) != 0) {
-      if(n == 0) {
+    if(!error && service_is_encrypted((service_t*)t)) {
+      if(r == 0) {
         service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
-      } else if(m == n) {
+      } else {
         service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
       }
     }

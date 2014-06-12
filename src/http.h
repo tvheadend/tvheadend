@@ -255,6 +255,7 @@ struct http_client {
   int          hc_result;
   int          hc_shutdown:1;
   int          hc_sending:1;
+  int          hc_einprogress:1;
   int          hc_reconnected:1;
   int          hc_keepalive:1;
   int          hc_in_data:1;
