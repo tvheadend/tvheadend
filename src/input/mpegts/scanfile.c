@@ -129,11 +129,20 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
   int r;
 
   if (*line == '2') {
-    unsigned int plp_id;
-    r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %u",
+    unsigned int plp_id, system_id;
+    r = sscanf(line+1, "%u %s", &plp_id, bw);
+    if (r == 2 && plp_id < 1000 && strstr(bw, "MHz") == 0) {
+      r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
+	             &plp_id, &system_id, &mux->dmc_fe_freq, bw, fec, fec2, qam,
+                     mode, guard, hier);
+      if(r != 10) return 1;
+    } else {
+      r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %u",
 	             &mux->dmc_fe_freq, bw, fec, fec2, qam,
                      mode, guard, hier, &plp_id);
-    if(r != 9) return 1;
+      if(r == 8) plp_id = 0; /* auto? */ else
+      if(r != 9) return 1;
+    }
     mux->dmc_fe_delsys = DVB_SYS_DVBT2;
   } else {
     r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
@@ -182,7 +191,6 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
     mux->dmc_fe_rolloff    = DVB_ROLLOFF_35;
     mux->dmc_fe_modulation = DVB_MOD_QPSK;
   }
-  if (v2) return 1;
 
   return 0;
 }
