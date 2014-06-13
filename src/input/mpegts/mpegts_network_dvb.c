@@ -214,7 +214,8 @@ const idclass_t dvb_network_atsc_class =
 static int
 dvb_network_check_orbital_pos ( dvb_mux_t *lm, dvb_mux_conf_t *dmc )
 {
-  if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir) {
+  if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir &&
+      dmc->u.dmc_fe_qpsk.orbital_dir) {
     if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir !=
                  dmc->u.dmc_fe_qpsk.orbital_dir)
       return 1;
@@ -329,7 +330,7 @@ dvb_network_create_mux
       mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    /* the nit tables may be incosistent (like rolloff ping-pong) */
+    /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != mmo)
       goto noop;

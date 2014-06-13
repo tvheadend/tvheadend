@@ -489,6 +489,7 @@ service_start(service_t *t, int instance)
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
   t->s_scrambled_seen   = 0;
+  t->s_start_time       = dispatch_clock;
 
   service_build_filter(t);
 

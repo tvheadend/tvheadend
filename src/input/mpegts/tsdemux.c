@@ -69,9 +69,11 @@ ts_recv_packet0
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->es_cc != -1 && cc != st->es_cc) {
-      /* Incorrect CC */
-      limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
-     "Continuity counter error");
+      /* Let the hardware to stabilize */
+      if (t->s_start_time + 1 < dispatch_clock)
+        /* Incorrect CC */
+        limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
+                   "Continuity counter error");
       avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
 
