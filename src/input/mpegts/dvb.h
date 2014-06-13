@@ -448,6 +448,8 @@ static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
 
 int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
+int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 void dvb_done       ( void );
