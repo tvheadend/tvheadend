@@ -65,6 +65,7 @@ dvb_network_class_scanfile_get ( void *o )
 static int
 dvb_network_class_scanfile_set ( void *o, const void *s )
 {
+  dvb_network_t *ln = o;
   dvb_mux_conf_t *dmc;
   scanfile_network_t *sfn;
   mpegts_mux_t *mm;
@@ -77,13 +78,26 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
-    if (!(mm = dvb_network_find_mux(o, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
+    if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
       mm = (mpegts_mux_t*)dvb_mux_create0(o,
                                           MPEGTS_ONID_NONE,
                                           MPEGTS_TSID_NONE,
                                           dmc, NULL, NULL);
       if (mm)
         mm->mm_config_save(mm);
+#if ENABLE_TRACE
+      char buf[128];
+      dvb_mux_conf_str(dmc, buf, sizeof(buf));
+      tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
+#endif
+    } else {
+#if ENABLE_TRACE
+      char buf[128];
+      dvb_mux_conf_str(dmc, buf, sizeof(buf));
+      tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
+      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+      tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
+#endif
     }
   }
   return 0;
@@ -212,6 +226,23 @@ const idclass_t dvb_network_atsc_class =
  * ***************************************************************************/
 
 static int
+dvb_network_get_symbol_rate( dvb_mux_conf_t *dmc )
+{
+  switch (dmc->dmc_fe_type) {
+  case DVB_TYPE_T:
+    return dmc->u.dmc_fe_ofdm.bandwidth;
+  case DVB_TYPE_C:
+    return dmc->u.dmc_fe_qam.symbol_rate;
+  case DVB_TYPE_S:
+    return dmc->u.dmc_fe_qpsk.symbol_rate;
+  case DVB_TYPE_ATSC:
+    return 0;
+  default:
+    return 0;
+  }
+}
+
+static int
 dvb_network_check_orbital_pos ( dvb_mux_t *lm, dvb_mux_conf_t *dmc )
 {
   if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir &&
@@ -231,11 +262,12 @@ static mpegts_mux_t *
 dvb_network_find_mux
   ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid )
 {
-  int deltaf;
+  int deltaf, deltar;
   mpegts_mux_t *mm;
 
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     deltaf = 2000; // 2K/MHz
+    deltar = 1000;
     dvb_mux_t *lm = (dvb_mux_t*)mm;
 
     /* Same FE type - this REALLY should match! */
@@ -247,6 +279,7 @@ dvb_network_find_mux
 
     /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
+      deltar = 10000;
       if (onid != MPEGTS_ONID_NONE && tsid != MPEGTS_TSID_NONE)
         deltaf = 16000; // This is slightly crazy, but I have seen 10MHz changes in freq
                         // and remember the ONID and TSID must agree
@@ -256,6 +289,10 @@ dvb_network_find_mux
 
     /* Reject if not same frequency (some tolerance due to changes and diff in NIT) */
     if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > deltaf) continue;
+
+    /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
+    if (abs(dvb_network_get_symbol_rate(&lm->lm_tuning) -
+            dvb_network_get_symbol_rate(dmc)) > deltar) continue;
 
     /* DVB-S extra checks */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
@@ -326,8 +363,15 @@ dvb_network_create_mux
       if (mm2 && dvb_network_check_orbital_pos(lm, dmc))
         save = 0;
     }
-    if (save)
+    if (save) {
       mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
+#if ENABLE_TRACE
+      char buf[128];
+      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+      tvhtrace("mpegts", "mux %p %s added to network %s (autodiscovery)",
+               mm, buf, mm->mm_network->mn_network_name);
+#endif      
+    }
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
@@ -360,11 +404,17 @@ dvb_network_create_mux
       if (xr) lm->lm_tuning.x = dmc->x; \
       xr; })
 #endif
+#if ENABLE_TRACE
+    dvb_mux_conf_t tuning_old;
+    char buf[128];
+    tuning_old = lm->lm_tuning;
+#endif
     /* Handle big diffs that have been allowed through for DVB-S */
     if (abs(dmc->dmc_fe_freq - lm->lm_tuning.dmc_fe_freq) > 4000) {
       lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
       save = 1;
     }
+    save |= COMPAREN(dmc_fe_delsys);
     save |= COMPAREN(dmc_fe_modulation);
     save |= COMPAREN(dmc_fe_inversion);
     save |= COMPAREN(dmc_fe_rolloff);
@@ -396,6 +446,16 @@ dvb_network_create_mux
     }
     #undef COMPARE
     #undef COMPAREN
+#if ENABLE_TRACE
+    if (save) {
+      dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
+      tvhtrace("mpegts", "mux %p changed from %s in network %s",
+               mm, buf, mm->mm_network->mn_network_name);
+      dvb_mux_conf_str(&lm->lm_tuning, buf, sizeof(buf));
+      tvhtrace("mpegts", "mux %p changed to %s in network %s",
+               mm, buf, mm->mm_network->mn_network_name);
+    }
+#endif
   }
   if (mm) {
     mm->mm_dmc_origin        = mmo;
