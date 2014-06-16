@@ -40,30 +40,48 @@ tvheadend.channelLookupName = function(key) {
     return channelString;
 };  
 
-tvheadend.durationLookupName = function(value) {
+// Note: triggered by minimum duration only. This would fail if ranges 
+// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't). 
+
+tvheadend.durationLookupRange = function(value) {
     durationString = "";
     
-    var index = tvheadend.DurationStore.find('value', value); 
+    var index = tvheadend.DurationNamesStore.find('minvalue', value); 
 
     if (index !== -1)
-        var durationString = tvheadend.DurationStore.getById(index).data.label;
+        var durationString = tvheadend.DurationNamesStore.getById(index).data.label;
     
     return durationString;
 };  
 
-tvheadend.DurationStore = new Ext.data.SimpleStore({
-    storeId: 'durations',
-    id: 0,
-    fields: ['identifier','label','value'],
-    data: [['0','0 min',0],
-        ['1','20 min', 1200],
-        ['2','45 min', 2700],
-        ['3','90 min', 5400],
-        ['4','3 hrs', 10800],
-        ['5','6 hrs', 21600],
-        ['6','12 hrs', 43200],
-        ['7','24 hrs', 86400]]
+// NB: in the duration stores, 'no max' is defined as 9999999s, or about 3 months...
+
+// Store for autorec dialog and for autorec rules in the DVR grid
+
+tvheadend.DurationNamesStore = new Ext.data.SimpleStore({
+	storeId: 'durationnames',
+	idIndex: 0,
+    fields: ['identifier','label','minvalue','maxvalue'],
+    data: [['0', '(No duration filter)',"",""],
+           ['1','00:00:01 - 00:15:00',1, 900],
+           ['2','00:15:01 - 00:30:00', 901, 1800],
+           ['3','00:30:01 - 01:30:00', 1801, 5400],
+           ['4','01:30:01 - 03:00:00', 5401, 10800],
+           ['5','03:00:01 - No maximum', 10801, 9999999]]
 });
+
+// Store for the main duration filter combobox on the EPG tab
+
+tvheadend.DurationStore = new Ext.data.SimpleStore({
+	storeId: 'durationlabels',
+    fields: ['label','minvalue', 'maxvalue'],
+    data: [['Very short (up to 15 minutes)',1, 900],
+           ['Short (from 15 up to 30 minutes)', 901, 1800],
+           ['Medium (from 30 up to 90 minutes)', 1801, 5400],
+           ['Long (from 90 minutes up to 3 hours)', 5401, 10800], 
+           ['Very long (more than 3 hours)', 10801, 9999999]]
+});
+//
 
 tvheadend.epgDetails = function(event) {
 
@@ -444,44 +462,19 @@ tvheadend.epg = function() {
         emptyText: 'Filter content type...'
     });
 
-    // Slider for duration selection, including tooltip function to display the appropriate string
-   
-    var tip = new Ext.slider.Tip({
-        getText: function(thumb){
-            return thumb.slider.durations[thumb.value];
-        }
-    });
-
-    // Q: is there any way to seed the slider labels in one go, versus with specific lookups?
-
-    var durationSlider = new Ext.slider.MultiSlider({
-        width: 100,
-        values: [0, 7],
-        minValue: 0,
-        maxValue: 7,
-        increment: 1,
-        durations: {
-            0: tvheadend.DurationStore.getById(0).data.label,
-            1: tvheadend.DurationStore.getById(1).data.label,
-            2: tvheadend.DurationStore.getById(2).data.label,
-            3: tvheadend.DurationStore.getById(3).data.label,
-            4: tvheadend.DurationStore.getById(4).data.label,
-            5: tvheadend.DurationStore.getById(5).data.label,
-            6: tvheadend.DurationStore.getById(6).data.label,
-            7: tvheadend.DurationStore.getById(7).data.label
-        },
-        plugins: tip,
-        listeners: {
-            change: function(slider, thumb, value){
-            setduration(slider);
-        }}
+    var epgFilterDuration = new Ext.form.ComboBox({
+        loadingText: 'Loading...',
+        width: 200,
+        displayField: 'label',
+        store: tvheadend.DurationStore,
+        mode: 'local',
+        editable: true,
+        forceSelection: true,
+        triggerAction: 'all',
+        emptyText: 'Filter duration...'
     });
 
     function epgQueryClear() {
-
-        // Reset the pointers before deleting the underlying variables - otherwise they reset to 0/24h not null/null
-        durationSlider.setValue(0,0);
-        durationSlider.setValue(1,7);
 
         delete epgStore.baseParams.channel;
         delete epgStore.baseParams.tag;
@@ -493,6 +486,7 @@ tvheadend.epg = function() {
         epgFilterChannels.setValue("");
         epgFilterChannelTags.setValue("");
         epgFilterContentGroup.setValue("");
+        epgFilterDuration.setValue("");
         epgFilterTitle.setValue("");
 
         epgStore.reload();
@@ -519,19 +513,13 @@ tvheadend.epg = function() {
         }
     });
 
-    setduration = function(slider) {
-        var min = slider.getValue(0);
-        var minRec = tvheadend.DurationStore.getById(min);
-        
-        epgStore.baseParams.minduration = minRec.data.value;
-        
-        var max = slider.getValue(1);
-        var maxRec = tvheadend.DurationStore.getById(max);
-
-        epgStore.baseParams.maxduration = maxRec.data.value;
-  
-        epgStore.reload();
-        };
+    epgFilterDuration.on('select', function(c, r) {
+		if (epgStore.baseParams.minduration !== r.data.minvalue) {
+            epgStore.baseParams.minduration = r.data.minvalue;
+            epgStore.baseParams.maxduration = r.data.maxvalue;
+            epgStore.reload();
+		}
+    });
 
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
@@ -572,9 +560,8 @@ tvheadend.epg = function() {
             '-',
             epgFilterContentGroup,
             '-',
-            'Duration: 0h ',
-            durationSlider,
-            '24h','-',
+            epgFilterDuration,
+            '-',
             {
                 text: 'Reset',
                 handler: epgQueryClear
@@ -623,9 +610,7 @@ tvheadend.epg = function() {
                 : "<i>Don't care</i>";
         var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
                 : "<i>Don't care</i>";
-        var minduration = epgStore.baseParams.minduration ? tvheadend.durationLookupName(epgStore.baseParams.minduration)
-                : "<i>Don't care</i>";
-        var maxduration = epgStore.baseParams.maxduration ? tvheadend.durationLookupName(epgStore.baseParams.maxduration)
+        var duration = epgStore.baseParams.minduration ? tvheadend.durationLookupRange(epgStore.baseParams.minduration)
                 : "<i>Don't care</i>";
 
 
@@ -636,8 +621,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>'
-                + '<div class="x-smallhdr">Min duration:</div>' + minduration + '<br>'
-                + '<div class="x-smallhdr">Max duration:</div>' + maxduration + '<br>'
+                + '<div class="x-smallhdr">Duration:</div>' + duration + '<br>'
                 + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
             function(button) {

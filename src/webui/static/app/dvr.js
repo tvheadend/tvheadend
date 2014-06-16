@@ -510,43 +510,6 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 /**
  *
  */
-
-// Validation function for min/max duration in autorec grid
-
-Ext.apply(Ext.form.VTypes, {
-    durations: function(val,field) {
-        var thisvalue = field.getValue();
-        var othervalue = Ext.getCmp(field.otherfield).getValue();
-
-        /* 
-         * Workaround for extJS passing the display value instead of the raw value.
-         * 
-         * Simply, see if we can find the value in the store label fields - if we can, 
-         * over-write the passed (display) value with the lookup (raw) value. If we
-         * can't, we were passed a raw seconds value, so stick with that.
-         */
-
-        var index = tvheadend.DurationStore.find('label', thisvalue); 
-
-        if (index !== -1)
-            thisvalue = tvheadend.DurationStore.getById(index).data.value;
-
-        // Return if otherfield isn't set yet 
-        if (!othervalue) return true;
-
-        // Return if we've changed min and it's <= existing max
-        if (field.id == 'minfield' && thisvalue <= othervalue) return true;
-
-        // Return if we've changed max and it's >= existing min
-        if (field.id == 'maxfield' && thisvalue >= othervalue) return true;
-
-    },
-    durationsText: 'Minimum duration must be more than the maximum'
-});
-
-/**
- *
- */
 tvheadend.autoreceditor = function() {
     var fm = Ext.form;
 
@@ -620,41 +583,19 @@ tvheadend.autoreceditor = function() {
                         })
                     },
                     {
-                        header: "Min. Duration",
+                        header: "Duration",
                         dataIndex: 'minduration',
-                        width: 75,
                         renderer: function(v) {
-                            return tvheadend.durationLookupName(v);
+                            return tvheadend.durationLookupRange(v);
                         },
-                        editor: new Ext.form.ComboBox({
-                            store: tvheadend.DurationStore,
+                        editor: durationCombo = new Ext.form.ComboBox({
+                            store: tvheadend.DurationNamesStore,
                             mode: 'local',
-                            valueField: 'value',
+                            valueField: 'minvalue',
                             displayField: 'label',
                             editable: false,
                             triggerAction: 'all',
-                            id: 'minfield',
-                            otherfield: 'maxfield',
-                            vtype: 'durations'
-                        })
-                    },
-                    {
-                        header: "Max. Duration",
-                        dataIndex: 'maxduration',
-                        width: 75,
-                        renderer: function(v) {
-                            return tvheadend.durationLookupName(v);
-                        },
-                        editor: new Ext.form.ComboBox({
-                            store: tvheadend.DurationStore,
-                            mode: 'local',
-                            valueField: 'value',
-                            displayField: 'label',
-                            editable: false,
-                            triggerAction: 'all',
-                            id: 'maxfield',
-                            otherfield: 'minfield',
-                            vtype: 'durations'
+                            id: 'minfield'
                         })
                     },
                     {
@@ -753,6 +694,20 @@ tvheadend.autoreceditor = function() {
                         })
                     }]});
 
+    tvheadend.autorecStore.on('update', function (store, record, operation) {
+        if (operation == 'edit' && record.isModified('minduration')) {
+
+            if (record.data.minduration == "")
+                record.set('maxduration',"");
+            else {
+                var index = tvheadend.DurationNamesStore.find('minvalue', record.data.minduration); 
+
+                if (index !== -1)
+                    record.set('maxduration', tvheadend.DurationNamesStore.getById(index).data.maxvalue);
+            }
+        }
+    });
+ 
     return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
             tvheadend.autorecRecord, [], tvheadend.autorecStore,
             'autorec.html', 'wand');
