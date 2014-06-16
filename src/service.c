@@ -475,25 +475,22 @@ filter:
           case ESFA_IGNORE:
             st->es_filter |= ESFM_IGNORE;
             break;
+          case ESFA_ONCE:
+            TAILQ_FOREACH(st2, &t->s_components, es_link) {
+              if (st == st2)
+                continue;
+              if ((st2->es_filter & ESFM_USED) == 0)
+                continue;
+              if (st2->es_type != st->es_type)
+                continue;
+              if (esf->esf_language[0] != '\0' && strcmp(st2->es_lang, st->es_lang))
+                continue;
+            }
+            if (st2 != NULL) break;
+            /* fall through */
+            break;
           case ESFA_USE:
             service_build_filter_add(t, st, sta, &p);
-            break;
-          case ESFA_ONCE:
-            if (esf->esf_language[0] == '\0') {
-              service_build_filter_add(t, st, sta, &p);
-            } else {
-              int present = 0;
-              TAILQ_FOREACH(st2, &t->s_components, es_link) {
-                if ((st2->es_filter & ESFM_USED) == 0)
-                  continue;
-                if (strcmp(st2->es_lang, st->es_lang) == 0) {
-                  present = 1;
-                  break;
-                }
-              }
-              if (!present)
-                service_build_filter_add(t, st, sta, &p);
-            }
             break;
           case ESFA_EXCLUSIVE:
             break;
