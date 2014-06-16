@@ -175,6 +175,8 @@ tvheadend.IdNodeField = function(conf)
                         var nv = st.getAt(r).get('val');
                         if (nv)
                             t.push(nv);
+                    } else {
+                      t.push(d[i]);
                     }
                 }
                 v = t.join(',');
