@@ -409,6 +409,9 @@ filter:
             if (ca == NULL)
               continue;
           }
+          if (esf->esf_log)
+            tvhlog(LOG_INFO, "service", "esfilter: CA match %04x %06x", esf->esf_caid,
+                                                                  esf->esf_caprovider);
         }
         if (esf->esf_log)
           tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s %s %s",
@@ -458,11 +461,13 @@ filter:
             p--;
             TAILQ_REMOVE(&t->s_filt_components, sta[p], es_filt_link);
           }
+          st->es_filter = 0;
           service_build_filter_add(t, st, sta, &p);
           exclusive = 1;
           break;
         }
       }
+      if (exclusive) break;
     }
     if (!exclusive) {
       TAILQ_FOREACH(st, &t->s_components, es_link) {
