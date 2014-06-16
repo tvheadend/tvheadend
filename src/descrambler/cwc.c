@@ -1931,9 +1931,10 @@ cwc_service_start(service_t *t)
       if (ct->td_service == t && ct->cs_cwc == cwc)
         break;
     }
+    pthread_mutex_lock(&t->s_stream_mutex);
     LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
       if (pcard->cwc_caid == 0) continue;
-      TAILQ_FOREACH(st, &t->s_components, es_link) {
+      TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
         LIST_FOREACH(c, &st->es_caids, link) {
           if (c->caid == pcard->cwc_caid)
             break;
@@ -1942,6 +1943,7 @@ cwc_service_start(service_t *t)
       }
       if (st) break;
     }
+    pthread_mutex_unlock(&t->s_stream_mutex);
     if (!pcard) {
       if (ct) cwc_service_destroy((th_descrambler_t*)ct);
       continue;
