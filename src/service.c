@@ -283,7 +283,7 @@ service_stop(service_t *t)
   /**
    * Clean up each stream
    */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
   t->s_status = SERVICE_IDLE;
@@ -491,7 +491,10 @@ service_start(service_t *t, int instance)
   t->s_scrambled_seen   = 0;
   t->s_start_time       = dispatch_clock;
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
+  descrambler_caid_changed(t);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   if((r = t->s_start_feed(t, instance)))
     return r;
