@@ -397,17 +397,18 @@ filter:
           if (esf->esf_pid && esf->esf_pid != st->es_pid)
             continue;
         }
-        if (i == ESF_CLASS_CA &&
-            (esf->esf_caid != -1 || esf->esf_caprovider != -1)) {
-          LIST_FOREACH(ca, &st->es_caids, link) {
-            if (esf->esf_caid != -1 && ca->caid != esf->esf_caid)
+        if (i == ESF_CLASS_CA) {
+          if ((esf->esf_caid != (uint16_t)-1 || esf->esf_caprovider != -1)) {
+            LIST_FOREACH(ca, &st->es_caids, link) {
+              if (esf->esf_caid != -1 && ca->caid != esf->esf_caid)
+                continue;
+              if (esf->esf_caprovider != -1 && ca->providerid != esf->esf_caprovider)
+                continue;
+              break;
+            }
+            if (ca == NULL)
               continue;
-            if (esf->esf_caprovider != -1 && ca->providerid != esf->esf_caprovider)
-              continue;
-            break;
           }
-          if (ca == NULL)
-            continue;
         }
         if (esf->esf_log)
           tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s %s %s",
