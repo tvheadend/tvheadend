@@ -808,7 +808,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
   if (filter->pid && pid != filter->pid)
-    capmt_pid_remove(capmt, adapter, pid);
+    capmt_pid_remove(capmt, adapter, filter->pid);
   filter->pid = pid;
   memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
   tvhlog_hexdump("capmt", filter->filter.filter, DMX_FILTER_SIZE);
