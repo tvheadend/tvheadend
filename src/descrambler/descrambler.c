@@ -356,8 +356,11 @@ idle:
        * Fill a temporary buffer until the keys are known to make
        * streaming faster.
        */
-      if (dr->dr_buf.sb_ptr >= 3000 * 188)
+      if (dr->dr_buf.sb_ptr >= 3000 * 188) {
         sbuf_cut(&dr->dr_buf, 300 * 188);
+        tvhtrace("descrambler", "cannot decode packets for service \"%s\"",
+                 ((mpegts_service_t *)t)->s_dvb_svcname);
+      }
       sbuf_append(&dr->dr_buf, tsb, 188);
     }
   }
