@@ -458,7 +458,7 @@ mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int i, p = 0;
+  int i, p = 0, len2;
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data + off;
   int     len  = sb->sb_ptr  - off;
@@ -476,6 +476,7 @@ mpegts_input_recv_packets
 // could be a bit more efficient
   while ( (len >= (MIN_TS_SYN * 188)) &&
           ((p = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
+    mmi->mmi_stats.unc++;
     --len;
     ++tsb;
     ++off;
@@ -489,27 +490,26 @@ mpegts_input_recv_packets
   /* Extract PCR (used for tsfile playback) */
   if (pcr && pcr_pid) {
     uint8_t *tmp = tsb;
-    for (i = 0; i < p; i++) {
-      int pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
+    for (i = 0; i < p; i++, tmp += 188) {
+      uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
         ts_recv_packet1(NULL, tmp, pcr, 0);
         if (*pcr != PTS_UNSET) *pcr_pid = pid;
       }
-      tmp += 188;
     }
   }
 
   /* Pass */
   if (p >= MIN_TS_SYN) {
-    size_t sz = sizeof(mpegts_packet_t) + (p * 188);
+    len2 = p * 188;
     
-    mp = calloc(1, sz);
+    mp = malloc(sizeof(mpegts_packet_t) + len2);
     mp->mp_mux  = mmi->mmi_mux;
-    mp->mp_len  = p * 188;
+    mp->mp_len  = len2;
     memcpy(mp->mp_data, tsb, mp->mp_len);
 
-    len -= mp->mp_len;
-    off += mp->mp_len;
+    len -= len2;
+    off += len2;
 
     pthread_mutex_lock(&mi->mi_input_lock);
     if (TAILQ_FIRST(&mi->mi_input_queue) == NULL)
