@@ -1497,7 +1497,10 @@ capmt_caid_change(th_descrambler_t *td)
   pthread_mutex_lock(&capmt->capmt_mutex);
 
   t = (mpegts_service_t*)td->td_service;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
+
+  lock_assert(&t->s_stream_mutex);
+
+  TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
     LIST_FOREACH(c, &st->es_caids, link) {
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
@@ -1767,7 +1770,8 @@ capmt_service_start(service_t *s)
     ct->ct_adapter  = tuner;
 
     change = 0;
-    TAILQ_FOREACH(st, &t->s_components, es_link) {
+    pthread_mutex_lock(&t->s_stream_mutex);
+    TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
       caid_t *c;
       LIST_FOREACH(c, &st->es_caids, link) {
         if(c == NULL)
@@ -1785,6 +1789,7 @@ capmt_service_start(service_t *s)
         change = 1;
       }
     }
+    pthread_mutex_unlock(&t->s_stream_mutex);
 
     td = (th_descrambler_t *)ct;
     tvhcsa_init(td->td_csa = &ct->ct_csa);
