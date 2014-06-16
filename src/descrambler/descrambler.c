@@ -441,7 +441,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds->callback    = callback;
   ds->opaque      = opaque;
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
-  tvhtrace("descrambler", "open pid %04X (%i) (flags 0x%04x)", pid, pid, flags);
+  tvhtrace("descrambler", "mux %p open pid %04X (%i) (flags 0x%04x)", mux, pid, pid, flags);
   return 1;
 }
 
@@ -480,7 +480,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
             mpegts_table_destroy(dt->table);
             free(dt);
           }
-          tvhtrace("descrambler", "close pid %04X (%i)", pid, pid);
+          tvhtrace("descrambler", "mux %p close pid %04X (%i)", mux, pid, pid);
           return 1;
         }
       }
@@ -509,7 +509,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
 
   if (mux == NULL)
     return;
-  tvhtrace("descrambler", "flush tables for %p", mux);
+  tvhtrace("descrambler", "mux %p - flush tables", mux);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
