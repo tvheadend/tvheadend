@@ -98,6 +98,8 @@ typedef struct caid {
   uint16_t pid;
   uint16_t caid;
   uint32_t providerid;
+  uint8_t  use;
+  uint8_t  filter;
 
 } caid_t;
 

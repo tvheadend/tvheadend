@@ -1936,7 +1936,7 @@ cwc_service_start(service_t *t)
       if (pcard->cwc_caid == 0) continue;
       TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
         LIST_FOREACH(c, &st->es_caids, link) {
-          if (c->caid == pcard->cwc_caid)
+          if (c->use && c->caid == pcard->cwc_caid)
             break;
         }
         if (c) break;

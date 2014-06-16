@@ -1504,7 +1504,7 @@ capmt_caid_change(th_descrambler_t *td)
     LIST_FOREACH(c, &st->es_caids, link) {
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
-        if (cce->cce_caid == c->caid && cce->cce_providerid == c->providerid)
+        if (c->use && cce->cce_caid == c->caid && cce->cce_providerid == c->providerid)
           break;
       if (cce)
         continue;
@@ -1774,7 +1774,7 @@ capmt_service_start(service_t *s)
     TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
       caid_t *c;
       LIST_FOREACH(c, &st->es_caids, link) {
-        if(c == NULL)
+        if(c == NULL || c->use == 0)
           continue;
 
         tvhlog(LOG_DEBUG, "capmt",
