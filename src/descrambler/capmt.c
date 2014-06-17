@@ -353,6 +353,8 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
   mpegts_mux_instance_t *mmi;
   int i = 0;
 
+  lock_assert(&capmt->capmt_mutex);
+
   for (i = 0; i < MAX_PIDS; i++) {
     t = &ca->ca_pids[i];
     if (t->pid == pid)
@@ -367,9 +369,11 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
     o->pid_refs = 1;
     mmi         = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
     assert(mmi && mmi->mmi_mux);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
     descrambler_open_pid(mmi->mmi_mux, o,
                          s ? DESCRAMBLER_ECM_PID(pid) : pid,
                          capmt_table_input, (service_t *)s);
+    pthread_mutex_lock(&capmt->capmt_mutex);
   }
 }
 
@@ -380,6 +384,8 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   capmt_opaque_t *o;
   mpegts_mux_instance_t *mmi;
   int i = 0;
+
+  lock_assert(&capmt->capmt_mutex);
 
   if (pid <= 0)
     return;
@@ -394,12 +400,15 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   if (i >= MAX_PIDS)
     return;
   mmi = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
+  o->pid = -1; /* block for new registrations */
+  o->pid_refs = 0;
   if (mmi) {
     assert(mmi->mmi_mux);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
     descrambler_close_pid(mmi->mmi_mux, o, pid);
+    pthread_mutex_lock(&capmt->capmt_mutex);
   }
   o->pid = 0;
-  o->pid_refs = 0;
 }
 
 static void
@@ -420,10 +429,15 @@ capmt_pid_flush(capmt_t *capmt)
     for (i = 0; i < MAX_PIDS; i++) {
       o = &ca->ca_pids[i];
       if (o->pid) {
-        if (mmi)
-          descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], o->pid);
-        o->pid = 0;
+        o->pid = -1; /* block for new registrations */
         o->pid_refs = 0;
+        if (mmi) {
+          assert(mmi->mmi_mux);
+          pthread_mutex_unlock(&capmt->capmt_mutex);
+          descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], o->pid);
+          pthread_mutex_lock(&capmt->capmt_mutex);
+        }
+        o->pid = 0;
       }
     }
   }
