@@ -1443,11 +1443,6 @@ capmt_thread(void *aux)
   }
 
   capmt_flush_queue(capmt, 1);
-  free(capmt->capmt_id);
-  free(capmt->capmt_sockfile);
-  free(capmt->capmt_comment);
-  free(capmt);
-
   return NULL;
 }
 
@@ -1836,15 +1831,19 @@ capmt_destroy(capmt_t *capmt)
 {
   lock_assert(&global_lock);
   TAILQ_REMOVE(&capmts, capmt, capmt_link);  
-  tvhlog(LOG_INFO, "capmt", "mode %i %s %s port %i destroyed",
-         capmt->capmt_oscam,
-         capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
-         capmt->capmt_sockfile, capmt->capmt_port);
   capmt->capmt_running = 0;
   pthread_cond_broadcast(&capmt->capmt_cond);
   pthread_mutex_unlock(&global_lock);
   pthread_join(capmt->capmt_tid, NULL);
   pthread_mutex_lock(&global_lock);
+  tvhlog(LOG_INFO, "capmt", "mode %i %s %s port %i destroyed",
+         capmt->capmt_oscam,
+         capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
+         capmt->capmt_sockfile, capmt->capmt_port);
+  free(capmt->capmt_id);
+  free(capmt->capmt_sockfile);
+  free(capmt->capmt_comment);
+  free(capmt);
 }
 
 /**
