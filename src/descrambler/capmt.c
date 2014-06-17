@@ -1536,10 +1536,10 @@ capmt_caid_change(th_descrambler_t *td)
     }
   }
 
+  pthread_mutex_unlock(&capmt->capmt_mutex);
+
   if (change)
     capmt_notify_server(capmt, ct);
-
-  pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
 static void
