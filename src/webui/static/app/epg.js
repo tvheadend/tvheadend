@@ -58,6 +58,10 @@ tvheadend.epgDetails = function(event) {
     content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>';
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';
+    
+    now = new Date();
+    if (event.start < now && event.end > now)
+        content += '<div class="x-epg-meta"><a href="stream/channelid/' + event.channelid + '">Play</a></div>';
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
