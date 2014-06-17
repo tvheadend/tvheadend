@@ -423,6 +423,7 @@ filter:
           case ESFA_NONE:
             break;
           case ESFA_IGNORE:
+ca_ignore:
             if (ca == NULL)
               LIST_FOREACH(ca, &st->es_caids, link)
                 ca->filter |= ESFM_IGNORE;
@@ -434,7 +435,7 @@ filter:
             TAILQ_FOREACH(st2, &t->s_components, es_link)
               if (st2->es_type == SCT_CA && (st2->es_filter & ESFM_USED) != 0)
                 break;
-            if (st2 != NULL) break;
+            if (st2 != NULL) goto ca_ignore;
             /* fall through */
           case ESFA_USE:
             if (ca == NULL)
@@ -473,6 +474,7 @@ filter:
           case ESFA_NONE:
             break;
           case ESFA_IGNORE:
+ignore:
             st->es_filter |= ESFM_IGNORE;
             break;
           case ESFA_ONCE:
@@ -481,14 +483,14 @@ filter:
                 continue;
               if ((st2->es_filter & ESFM_USED) == 0)
                 continue;
-              if (st2->es_type != st->es_type)
+              if ((mask & SCT_MASK(st2->es_type)) == 0)
                 continue;
               if (esf->esf_language[0] != '\0' && strcmp(st2->es_lang, st->es_lang))
                 continue;
+              break;
             }
-            if (st2 != NULL) break;
+            if (st2 != NULL) goto ignore;
             /* fall through */
-            break;
           case ESFA_USE:
             service_build_filter_add(t, st, sta, &p);
             break;
