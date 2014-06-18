@@ -124,7 +124,7 @@ static pthread_cond_t capmt_config_changed;
  * ECM descriptor
  */
 typedef struct ca_info {
-  uint16_t pid;
+  uint16_t seq;		// sequence / service id number
   uint8_t  even[8];
   uint8_t  odd[8];
 } ca_info_t;
@@ -1002,19 +1002,19 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   if (cmd == CA_SET_PID) {
 
-    uint32_t pid   = sbuf_peek_u32(sb, offset + 4);
+    uint32_t seq   = sbuf_peek_u32(sb, offset + 4);
     int32_t  index = sbuf_peek_s32(sb, offset + 8);
     ca_info_t *cai;
 
-    tvhlog(LOG_DEBUG, "capmt", "CA_SET_PID adapter %d index %d pid 0x%04x", adapter, index, pid);
+    tvhlog(LOG_DEBUG, "capmt", "CA_SET_PID adapter %d index %d seq 0x%04x", adapter, index, seq);
     if (adapter < MAX_CA && index >= 0 && index < MAX_INDEX) {
       cai = &capmt->capmt_adapters[adapter].ca_info[index];
       memset(cai, 0, sizeof(*cai));
-      cai->pid = pid;
+      cai->seq = seq;
     } else if (index < 0) {
       for (index = 0; index < MAX_INDEX; index++) {
         cai = &capmt->capmt_adapters[adapter].ca_info[index];
-        if (cai->pid == pid) {
+        if (cai->seq == seq) {
           memset(cai, 0, sizeof(*cai));
           break;
         }
@@ -1037,10 +1037,10 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
       memcpy(cai->even, cw, 8); // even key
-      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
     } else if (parity == 1) {
       memcpy(cai->odd,  cw, 8); // odd  key
-      capmt_process_key(capmt, adapter, cai->pid, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
@@ -1772,16 +1772,22 @@ capmt_service_start(service_t *s)
     }
 
     tvhlog(LOG_INFO, "capmt",
-           "Starting CAPMT server for service \"%s\" on adapter %d",
-           t->s_dvb_svcname, tuner);
+           "Starting CAPMT server for service \"%s\" on adapter %d seq 0x%04x",
+           t->s_dvb_svcname, tuner, capmt->capmt_seq);
 
     capmt->capmt_adapters[tuner].ca_tuner = t->s_dvb_active_input;
 
     /* create new capmt service */
     ct              = calloc(1, sizeof(capmt_service_t));
     ct->ct_capmt    = capmt;
-    ct->ct_seq      = capmt->capmt_seq++;
+    ct->ct_seq      = capmt->capmt_seq;
     ct->ct_adapter  = tuner;
+
+    /* update the sequence (oscam calls it pid?) to a safe value */
+    capmt->capmt_seq++;
+    capmt->capmt_seq &= 0x1fff;
+    if (capmt->capmt_seq == 8191 || capmt->capmt_seq == 0)
+      capmt->capmt_seq = 1;
 
     change = 0;
     pthread_mutex_lock(&t->s_stream_mutex);
@@ -1881,7 +1887,7 @@ capmt_entry_find(const char *id, int create)
   pthread_cond_init(&capmt->capmt_cond, NULL);
   capmt->capmt_id      = strdup(id); 
   capmt->capmt_running = 1; 
-  capmt->capmt_seq     = 0;
+  capmt->capmt_seq     = 1;
   TAILQ_INIT(&capmt->capmt_writeq);
 
   TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);
