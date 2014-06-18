@@ -263,7 +263,7 @@ dvb_network_find_mux
   ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid )
 {
   int deltaf, deltar;
-  mpegts_mux_t *mm;
+  mpegts_mux_t *mm, *mm_alt = NULL;
 
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     deltaf = 2000; // 2K/MHz
@@ -272,10 +272,6 @@ dvb_network_find_mux
 
     /* Same FE type - this REALLY should match! */
     if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
-
-    /* Reject if not same ID */
-    if (onid != MPEGTS_ONID_NONE && mm->mm_onid != MPEGTS_ONID_NONE && mm->mm_onid != onid) continue;
-    if (tsid != MPEGTS_TSID_NONE && mm->mm_tsid != MPEGTS_TSID_NONE && mm->mm_tsid != tsid) continue;
 
     /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
@@ -303,7 +299,20 @@ dvb_network_find_mux
       /* Same orbital position */
       if (dvb_network_check_orbital_pos(lm, dmc)) continue;
     }
+
+    mm_alt = mm;
+
+    /* Reject if not same ID */
+    if (onid != MPEGTS_ONID_NONE && mm->mm_onid != MPEGTS_ONID_NONE && mm->mm_onid != onid) continue;
+    if (tsid != MPEGTS_TSID_NONE && mm->mm_tsid != MPEGTS_TSID_NONE && mm->mm_tsid != tsid) continue;
+
     break;
+  }
+  if (!mm && onid != MPEGTS_ONID_NONE && tsid != MPEGTS_TSID_NONE) {
+    /* use the mux with closest parameters */
+    /* unfortunately, the onid and tsid might DIFFER */
+    /* in the NIT table information and real mux feed */
+    mm = mm_alt;
   }
   return mm;
 }
@@ -368,8 +377,8 @@ dvb_network_create_mux
 #if ENABLE_TRACE
       char buf[128];
       dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-      tvhtrace("mpegts", "mux %p %s added to network %s (autodiscovery)",
-               mm, buf, mm->mm_network->mn_network_name);
+      tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
+               mm, buf, onid, tsid, mm->mm_network->mn_network_name);
 #endif      
     }
   } else if (mm) {
