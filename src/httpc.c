@@ -78,6 +78,7 @@ static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
 static pthread_cond_t           http_cond;
 static th_pipe_t                http_pipe;
+static char                    *http_user_agent;
 
 /*
  *
@@ -998,8 +999,12 @@ http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
   snprintf(buf, sizeof(buf), "%s:%u", url->host,
                                       http_port(url->scheme, url->port));
   http_arg_set(h, "Host", buf);
-  snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
-  http_arg_set(h, "User-Agent", buf);
+  if (http_user_agent) {
+    http_arg_set(h, "User-Agent", http_user_agent);
+  } else {
+    snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
+    http_arg_set(h, "User-Agent", buf);
+  }
   if (!keepalive)
     http_arg_set(h, "Connection", "close");
   if (url->user && url->user[0] && url->pass && url->pass[0]) {
@@ -1345,9 +1350,11 @@ http_client_close ( http_client_t *hc )
 pthread_t http_client_tid;
 
 void
-http_client_init ( void )
+http_client_init ( const char *user_agent )
 {
   tvhpoll_event_t ev;
+
+  http_user_agent = user_agent ? strdup(user_agent) : NULL;
 
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
@@ -1382,6 +1389,7 @@ http_client_done ( void )
   assert(TAILQ_FIRST(&http_clients) == NULL);
   tvh_pipe_close(&http_pipe);
   tvhpoll_destroy(http_poll);
+  free(http_user_agent);
 }
 
 /*

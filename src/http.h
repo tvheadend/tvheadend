@@ -289,7 +289,7 @@ struct http_client {
   void    (*hc_conn_closed)  (http_client_t *hc, int err);
 };
 
-void http_client_init ( void );
+void http_client_init ( const char *user_agent );
 void http_client_done ( void );
 
 http_client_t*

@@ -481,7 +481,8 @@ main(int argc, char **argv)
              *opt_dvb_adapters = NULL,
 #endif
              *opt_bindaddr     = NULL,
-             *opt_subscribe    = NULL;
+             *opt_subscribe    = NULL,
+             *opt_user_agent   = NULL;
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
@@ -520,6 +521,8 @@ main(int argc, char **argv)
       OPT_INT, &tvheadend_htsp_port },
     {   0, "htsp_port2", "Specify extra htsp port",
       OPT_INT, &tvheadend_htsp_port_extra },
+    {   0, "useragent",  "Specify User-Agent header for the http client",
+      OPT_STR, &opt_user_agent },
 
     {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
     { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
@@ -774,7 +777,7 @@ main(int argc, char **argv)
 
   imagecache_init();
 
-  http_client_init();
+  http_client_init(opt_user_agent);
   esfilter_init();
 
   service_init();
