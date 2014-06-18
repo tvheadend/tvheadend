@@ -374,7 +374,7 @@ struct mpegts_mux
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
   int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
   void (*mm_stop)             (mpegts_mux_t *mm, int force);
-  void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
+  void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
 
@@ -688,7 +688,7 @@ int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );
 
-void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
+void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe );
 void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
 
 void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int reason);
