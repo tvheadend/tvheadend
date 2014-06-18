@@ -1012,8 +1012,13 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       memset(cai, 0, sizeof(*cai));
       cai->pid = pid;
     } else if (index < 0) {
-      memset(&capmt->capmt_adapters[adapter].ca_info, 0,
-             sizeof(capmt->capmt_adapters[adapter].ca_info));
+      for (index = 0; index < MAX_INDEX; index++) {
+        cai = &capmt->capmt_adapters[adapter].ca_info[index];
+        if (cai->pid == pid) {
+          memset(cai, 0, sizeof(*cai));
+          break;
+        }
+      }
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid index %d in CA_SET_PID (%d) for adapter %d", index, MAX_INDEX, adapter);
 
