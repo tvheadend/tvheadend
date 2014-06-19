@@ -1986,9 +1986,17 @@ cwc_service_start(service_t *t)
 static void
 cwc_destroy(cwc_t *cwc)
 {
+  pthread_t tid;
+
+  lock_assert(&cwc_mutex);
   TAILQ_REMOVE(&cwcs, cwc, cwc_link);  
   cwc->cwc_running = 0;
   pthread_cond_signal(&cwc->cwc_cond);
+  tid = cwc->cwc_tid;
+  pthread_mutex_unlock(&cwc_mutex);
+  pthread_kill(tid, SIGTERM);
+  pthread_join(tid, NULL);
+  pthread_mutex_lock(&cwc_mutex);
 }
 
 /**
@@ -2308,19 +2316,14 @@ void
 cwc_done(void)
 {
   cwc_t *cwc;
-  pthread_t tid;
 
   dtable_delete("cwc");
+  pthread_mutex_lock(&global_lock);
   pthread_mutex_lock(&cwc_mutex);
-  while ((cwc = TAILQ_FIRST(&cwcs)) != NULL) {
-    tid = cwc->cwc_tid;
+  while ((cwc = TAILQ_FIRST(&cwcs)) != NULL)
     cwc_destroy(cwc);
-    pthread_mutex_unlock(&cwc_mutex);
-    pthread_kill(tid, SIGTERM);
-    pthread_join(tid, NULL);
-    pthread_mutex_lock(&cwc_mutex);
-  }
   pthread_mutex_unlock(&cwc_mutex);
+  pthread_mutex_unlock(&global_lock);
 }
 
 

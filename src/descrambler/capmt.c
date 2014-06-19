@@ -1447,7 +1447,6 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&global_lock);
   }
 
-  capmt_flush_queue(capmt, 1);
   return NULL;
 }
 
@@ -1843,14 +1842,16 @@ capmt_destroy(capmt_t *capmt)
   lock_assert(&global_lock);
   TAILQ_REMOVE(&capmts, capmt, capmt_link);  
   capmt->capmt_running = 0;
-  pthread_cond_broadcast(&capmt->capmt_cond);
+  pthread_cond_signal(&capmt->capmt_cond);
   pthread_mutex_unlock(&global_lock);
+  tvh_write(capmt->capmt_pipe.wr, "", 1);
   pthread_join(capmt->capmt_tid, NULL);
   pthread_mutex_lock(&global_lock);
   tvhlog(LOG_INFO, "capmt", "mode %i %s %s port %i destroyed",
          capmt->capmt_oscam,
          capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
          capmt->capmt_sockfile, capmt->capmt_port);
+  capmt_flush_queue(capmt, 1);
   free(capmt->capmt_id);
   free(capmt->capmt_sockfile);
   free(capmt->capmt_comment);
@@ -2035,16 +2036,13 @@ capmt_init(void)
 void
 capmt_done(void)
 {
-  capmt_t *capmt, *n;
+  capmt_t *capmt;
 
-  for (capmt = TAILQ_FIRST(&capmts); capmt != NULL; capmt = n) {
-    n = TAILQ_NEXT(capmt, capmt_link);
-    pthread_mutex_lock(&global_lock);
-    tvh_write(capmt->capmt_pipe.wr, "", 1);
-    capmt_destroy(capmt);
-    pthread_mutex_unlock(&global_lock);
-  }
   dtable_delete("capmt");
+  pthread_mutex_lock(&global_lock);
+  while ((capmt = TAILQ_FIRST(&capmts)) != NULL)
+    capmt_destroy(capmt);
+  pthread_mutex_unlock(&global_lock);
 }
 
 #else /* ENABLE_CAPMT */
