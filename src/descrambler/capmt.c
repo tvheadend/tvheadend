@@ -351,6 +351,7 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
   capmt_adapter_t *ca = &capmt->capmt_adapters[adapter];
   capmt_opaque_t *o = NULL, *t;
   mpegts_mux_instance_t *mmi;
+  mpegts_mux_t *mux;
   int i = 0;
 
   lock_assert(&capmt->capmt_mutex);
@@ -367,13 +368,15 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
     o->adapter  = adapter;
     o->pid      = pid;
     o->pid_refs = 1;
-    mmi         = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
-    assert(mmi && mmi->mmi_mux);
-    pthread_mutex_unlock(&capmt->capmt_mutex);
-    descrambler_open_pid(mmi->mmi_mux, o,
-                         s ? DESCRAMBLER_ECM_PID(pid) : pid,
-                         capmt_table_input, (service_t *)s);
-    pthread_mutex_lock(&capmt->capmt_mutex);
+    mmi         = ca->ca_tuner ? LIST_FIRST(&ca->ca_tuner->mi_mux_active) : NULL;
+    mux         = mmi ? mmi->mmi_mux : NULL;
+    if (mux) {
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      descrambler_open_pid(mux, o,
+                           s ? DESCRAMBLER_ECM_PID(pid) : pid,
+                           capmt_table_input, (service_t *)s);
+      pthread_mutex_lock(&capmt->capmt_mutex);
+    }
   }
 }
 
@@ -383,6 +386,7 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   capmt_adapter_t *ca = &capmt->capmt_adapters[adapter];
   capmt_opaque_t *o;
   mpegts_mux_instance_t *mmi;
+  mpegts_mux_t *mux;
   int i = 0;
 
   lock_assert(&capmt->capmt_mutex);
@@ -399,13 +403,13 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   }
   if (i >= MAX_PIDS)
     return;
-  mmi = LIST_FIRST(&capmt->capmt_adapters[adapter].ca_tuner->mi_mux_active);
+  mmi = ca->ca_tuner ? LIST_FIRST(&ca->ca_tuner->mi_mux_active) : NULL;
+  mux = mmi ? mmi->mmi_mux : NULL;
   o->pid = -1; /* block for new registrations */
   o->pid_refs = 0;
-  if (mmi) {
-    assert(mmi->mmi_mux);
+  if (mux) {
     pthread_mutex_unlock(&capmt->capmt_mutex);
-    descrambler_close_pid(mmi->mmi_mux, o, pid);
+    descrambler_close_pid(mux, o, pid);
     pthread_mutex_lock(&capmt->capmt_mutex);
   }
   o->pid = 0;
