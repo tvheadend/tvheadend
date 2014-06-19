@@ -218,7 +218,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 40,
             header: "Play",
             renderer: function(v, o, r) {
-                return "<a href='" + r.data['url'] + "'>Play</a>";
+                return '<a href="play/dvrfile/' + r.data['id'] + '">Play</a>';
             }
         });
     cols.push({

@@ -23,7 +23,7 @@
 #include "idnode.h"
 #include "http.h"
 
-void webui_init(void);
+void webui_init(int xspf);
 void webui_done(void);
 
 void simpleui_start(void);
