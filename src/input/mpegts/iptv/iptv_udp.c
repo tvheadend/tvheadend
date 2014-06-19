@@ -27,16 +27,6 @@
 #include <assert.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#if defined(PLATFORM_LINUX)
-#include <linux/netdevice.h>
-#elif defined(PLATFORM_FREEBSD)
-#  include <netdb.h>
-#  include <net/if.h>
-#  ifndef IPV6_ADD_MEMBERSHIP
-#    define IPV6_ADD_MEMBERSHIP	IPV6_JOIN_GROUP
-#    define IPV6_DROP_MEMBERSHIP	IPV6_LEAVE_GROUP
-#  endif
-#endif
 
 
 /*
