@@ -493,10 +493,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         bbar: bbar
     });
 
-    panel.on('rowclick', rowclicked);
-    function rowclicked(grid, index) {
-        new tvheadend.dvrDetails(grid.getStore().getAt(index).data);
+
+    panel.on('cellclick', cellclicked);
+    function cellclicked(grid, rowIndex, colIndex) {
+        if (grid.getColumnModel().getColumnHeader(colIndex) !== 'Play')
+            new tvheadend.dvrDetails(grid.getStore().getAt(rowIndex).data);
     }
+
     return panel;
 };
 
