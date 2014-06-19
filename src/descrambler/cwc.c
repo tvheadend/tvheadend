@@ -664,12 +664,21 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 /**
  * Login command
  */
-static void
+static int
 cwc_send_login(cwc_t *cwc)
 {
   uint8_t buf[CWS_NETMSGSIZE];
-  int ul = strlen(cwc->cwc_username) + 1;
-  int pl = strlen(cwc->cwc_password_salted) + 1;
+  size_t ul, pl;
+
+  if (cwc->cwc_username == NULL ||
+      cwc->cwc_password_salted == NULL)
+    return 1;
+
+  ul = strlen(cwc->cwc_username) + 1;
+  pl = strlen(cwc->cwc_password_salted) + 1;
+
+  if (ul + pl > 255)
+    return 1;
 
   buf[0] = MSG_CLIENT_2_SERVER_LOGIN;
   buf[1] = 0;
@@ -678,6 +687,8 @@ cwc_send_login(cwc_t *cwc)
   memcpy(buf + 3 + ul, cwc->cwc_password_salted, pl);
  
   cwc_send_msg(cwc, buf, ul + pl + 3, TVHEADEND_PROTOCOL_ID, 0, 0, 0);
+
+  return 0;
 }
 
 
@@ -1031,7 +1042,8 @@ cwc_session(cwc_t *cwc)
   /**
    * Login
    */
-  cwc_send_login(cwc);
+  if (cwc_send_login(cwc))
+    return;
   
   if(cwc_read_message(cwc, "Wait login response", 5000) < 0)
     return;
@@ -1121,6 +1133,7 @@ cwc_thread(void *aux)
     while(cwc->cwc_running && cwc->cwc_enabled == 0)
       pthread_cond_wait(&cwc->cwc_cond, &cwc_mutex);
     if (cwc->cwc_running == 0) continue;
+    if (cwc->cwc_hostname == NULL) continue;
 
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
     port = cwc->cwc_port;
