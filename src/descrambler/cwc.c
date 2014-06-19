@@ -49,6 +49,7 @@
  */
 #define TVHEADEND_PROTOCOL_ID 0x6502
 #define CWC_KEEPALIVE_INTERVAL 30
+#define CWC_ES_PIDS           8
 
 #define CWS_NETMSGSIZE 362
 #define CWS_FIRSTCMDNO 0xe0
@@ -131,7 +132,7 @@ typedef struct cwc_service {
   LIST_ENTRY(cwc_service) cs_link;
 
   int cs_channel;
-  elementary_stream_t *cs_estream;
+  int cs_epids[CWC_ES_PIDS];
   mpegts_mux_t *cs_mux;
 
   /**
@@ -1591,7 +1592,7 @@ static void
 cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
 {
   cwc_service_t *ct = opaque;
-  elementary_stream_t *st = ct->cs_estream;
+  elementary_stream_t *st;
   mpegts_service_t *t = (mpegts_service_t*)ct->td_service;
   uint16_t sid = t->s_dvb_service_id;
   cwc_t *cwc = ct->cs_cwc;
@@ -1600,7 +1601,11 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
   ecm_pid_t *ep;
   ecm_section_t *es;
   char chaninfo[32];
+  struct cs_card_data *pcard = NULL;
+  int i_break;
   caid_t *c;
+  uint16_t caid;
+  uint32_t providerid;
 
   if (data == NULL)
     return;
@@ -1621,6 +1626,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
 
   pthread_mutex_lock(&t->s_stream_mutex);
   if(ep == NULL) {
+    tvhlog(LOG_DEBUG, "cwc", "ECM state %i", ct->ecm_state);
     if (ct->ecm_state == ECM_RESET) {
       ct->ecm_state = ECM_INIT;
       ct->cs_channel = -1;
@@ -1653,25 +1659,37 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
       }
     }
   }
-  pthread_mutex_unlock(&t->s_stream_mutex);
 
-  if(ep == NULL)
+  if(ep == NULL) {
+    pthread_mutex_unlock(&t->s_stream_mutex);
     return;
+  }
 
-  struct cs_card_data *pcard = NULL;
-  int i_break = 0;
-  LIST_FOREACH(c, &st->es_caids, link) {
-    LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
-      if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid)){
-        i_break = 1;
-        break;
+  i_break = 0;
+  c = NULL;
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if (st->es_pid != pid) continue;
+    LIST_FOREACH(c, &st->es_caids, link) {
+      LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
+        if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid)){
+          i_break = 1;
+          break;
+       }
       }
+      if (i_break == 1) break;
     }
     if (i_break == 1) break;
   }
 
-  if(c == NULL)
+  if(c == NULL) {
+    pthread_mutex_unlock(&t->s_stream_mutex);
     return;
+  }
+
+  caid = c->caid;
+  providerid = c->providerid;
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   switch(data[0]) {
     case 0x80:
@@ -1717,7 +1735,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         return;
       }
       
-      es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, c->caid, c->providerid);
+      es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, caid, providerid);
       
       tvhlog(LOG_DEBUG, "cwc",
              "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
@@ -1900,7 +1918,9 @@ cwc_service_destroy(th_descrambler_t *td)
   ecm_pid_t *ep;
   int i;
 
-  descrambler_close_pid(ct->cs_mux, ct, ct->cs_estream->es_pid);
+  for (i = 0; i < CWC_ES_PIDS; i++)
+    if (ct->cs_epids[i])
+      descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids[i]);
 
   while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
     for(i = 0; i < 256; i++)
@@ -1933,6 +1953,7 @@ cwc_service_start(service_t *t)
   caid_t *c;
   struct cs_card_data *pcard;
   char buf[512];
+  int i;
 
   extern const idclass_t mpegts_service_class;
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
@@ -1956,18 +1977,18 @@ cwc_service_start(service_t *t)
       }
       if (st) break;
     }
-    pthread_mutex_unlock(&t->s_stream_mutex);
     if (!pcard) {
       if (ct) cwc_service_destroy((th_descrambler_t*)ct);
+      pthread_mutex_unlock(&t->s_stream_mutex);
       continue;
     }
 
+    pthread_mutex_unlock(&t->s_stream_mutex);
     if (ct) continue;
 
     ct                   = calloc(1, sizeof(cwc_service_t));
     ct->cs_cwc           = cwc;
     ct->cs_channel       = -1;
-    ct->cs_estream       = st;
     ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
     ct->ecm_state        = ECM_INIT;
 
@@ -1981,9 +2002,23 @@ cwc_service_start(service_t *t)
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
-    descrambler_open_pid(ct->cs_mux, ct,
-                         DESCRAMBLER_ECM_PID(ct->cs_estream->es_pid),
-                         cwc_table_input, t);
+    pthread_mutex_lock(&t->s_stream_mutex);
+    i = 0;
+    TAILQ_FOREACH(st, &t->s_filt_components, es_link) {
+      LIST_FOREACH(c, &st->es_caids, link)
+        if (c->use && c->caid == pcard->cwc_caid) {
+          ct->cs_epids[i++] = st->es_pid;
+          break;
+        }
+      if (i == CWC_ES_PIDS) break;
+    }
+    pthread_mutex_unlock(&t->s_stream_mutex);
+
+    for (i = 0; i < CWC_ES_PIDS; i++)
+      if (ct->cs_epids[i])
+        descrambler_open_pid(ct->cs_mux, ct,
+                             DESCRAMBLER_ECM_PID(ct->cs_epids[i]),
+                             cwc_table_input, t);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
 	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
