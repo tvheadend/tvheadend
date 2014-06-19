@@ -130,6 +130,11 @@ descrambler_done ( void )
 #endif
 }
 
+/*
+ * This routine is called from two places
+ * a) start a new service
+ * b) restart a running service with possible caid changes
+ */
 void
 descrambler_service_start ( service_t *t )
 {
@@ -141,10 +146,12 @@ descrambler_service_start ( service_t *t )
 #if ENABLE_CAPMT
   capmt_service_start(t);
 #endif
-  t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
-  sbuf_init(&dr->dr_buf);
-  dr->dr_key_index = 0xff;
-  dr->dr_last_descramble = dispatch_clock;
+  if (t->s_descramble == NULL) {
+    t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
+    sbuf_init(&dr->dr_buf);
+    dr->dr_key_index = 0xff;
+    dr->dr_last_descramble = dispatch_clock;
+  }
 }
 
 void
