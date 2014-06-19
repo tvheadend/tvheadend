@@ -84,7 +84,7 @@ tvheadend.muxes = function(panel)
                 width: 50,
                 header: 'Play',
                 renderer: function(v, o, r) {
-                    return "<a href='stream/mux/" + r.id + "'>Play</a>";
+                    return "<a href='play/stream/mux/" + r.id + "'>Play</a>";
                 }
             }
         ],
@@ -239,7 +239,7 @@ tvheadend.services = function(panel)
                 width: 50,
                 header: 'Play',
                 renderer: function(v, o, r) {
-                    return "<a href='stream/service/" + r.id + "'>Play</a>";
+                    return "<a href='play/stream/service/" + r.id + "'>Play</a>";
                 }
             },
             actions
