@@ -28,7 +28,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-
 /*
  * Connect UDP/RTP
  */
@@ -37,11 +36,12 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
 {
   char name[256];
   udp_connection_t *conn;
+  udp_multirecv_t *um;
 
   im->mm_display_name((mpegts_mux_t*)im, name, sizeof(name));
 
   conn = udp_bind("iptv", name, url->host, url->port,
-                  im->mm_iptv_interface, IPTV_PKT_SIZE);
+                  im->mm_iptv_interface, IPTV_BUF_SIZE);
   if (conn == UDP_FATAL_ERROR)
     return SM_CODE_TUNING_FAILED;
   if (conn == NULL)
@@ -50,8 +50,24 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
   /* Done */
   im->mm_iptv_fd         = conn->fd;
   im->mm_iptv_connection = conn;
+
+  um = calloc(1, sizeof(*um));
+  udp_multirecv_init(um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
+  im->im_data = um;
+
   iptv_input_mux_started(im);
   return 0;
+}
+
+static void
+iptv_udp_stop
+  ( iptv_mux_t *im )
+{
+  udp_multirecv_t *um = im->im_data;
+
+  im->im_data = NULL;
+  udp_multirecv_free(um);
+  free(um);
 }
 
 static ssize_t
@@ -64,46 +80,52 @@ static ssize_t
 iptv_rtp_read ( iptv_mux_t *im, size_t *off )
 {
   ssize_t len, hlen;
-  int      ptr = im->mm_iptv_buffer.sb_ptr;
-  uint8_t *rtp = im->mm_iptv_buffer.sb_data + ptr;
+  uint8_t *rtp;
+  int i, n;
+  struct iovec *iovec;
+  udp_multirecv_t *um = im->im_data;
+  ssize_t res = 0;
 
-  /* Raw packet */
-  len = iptv_udp_read(im, NULL);
-  if (len < 0)
+  n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+  if (n < 0)
     return -1;
 
-  /* Strip RTP header */
-  if (len < 12)
-    goto ignore;
+  for (i = 0; i < n; i++, iovec++) {
 
-  /* Version 2 */
-  if ((rtp[0] & 0xC0) != 0x80)
-    goto ignore;
+    /* Raw packet */
+    rtp = iovec->iov_base;
+    len = iovec->iov_len;
 
-  /* MPEG-TS */
-  if ((rtp[1] & 0x7F) != 33)
-    goto ignore;
+    /* Strip RTP header */
+    if (len < 12)
+      continue;
 
-  /* Header length (4bytes per CSRC) */
-  hlen = ((rtp[0] & 0xf) * 4) + 12;
-  if (rtp[0] & 0x10) {
-    if (len < hlen+4)
-      goto ignore;
-    hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
-    hlen += 4;
+    /* Version 2 */
+    if ((rtp[0] & 0xC0) != 0x80)
+      continue;
+
+    /* MPEG-TS */
+    if ((rtp[1] & 0x7F) != 33)
+      continue;
+
+    /* Header length (4bytes per CSRC) */
+    hlen = ((rtp[0] & 0xf) * 4) + 12;
+    if (rtp[0] & 0x10) {
+      if (len < hlen+4)
+        continue;
+      hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
+      hlen += 4;
+    }
+    if (len < hlen || ((len - hlen) % 188) != 0)
+      continue;
+
+    /* Move data */
+    len -= hlen;
+    sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
+    res += len;
   }
-  if (len < hlen || ((len - hlen) % 188) != 0)
-    goto ignore;
 
-  /* Cut header */
-  memmove(rtp, rtp+hlen, len-hlen);
-  im->mm_iptv_buffer.sb_ptr -= hlen;
-
-  return len;
-
-ignore:
-  im->mm_iptv_buffer.sb_ptr = ptr; // reset
-  return len;
+  return res;
 }
 
 /*
@@ -117,11 +139,13 @@ iptv_udp_init ( void )
     {
       .scheme = "udp",
       .start  = iptv_udp_start,
+      .stop   = iptv_udp_stop,
       .read   = iptv_udp_read,
     },
     {
       .scheme = "rtp",
       .start  = iptv_udp_start,
+      .stop   = iptv_udp_stop,
       .read   = iptv_rtp_read,
     }
   };

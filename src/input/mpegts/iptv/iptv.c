@@ -349,7 +349,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
   im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
 
   /* Allocate input buffer */
-  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_PKT_SIZE);
+  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   /* Setup poll */
   if (im->mm_iptv_fd > 0) {

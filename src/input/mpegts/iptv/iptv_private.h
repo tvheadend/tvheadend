@@ -25,7 +25,9 @@
 #include "url.h"
 #include "udp.h"
 
-#define IPTV_PKT_SIZE (300*188)
+#define IPTV_BUF_SIZE    (300*188)
+#define IPTV_PKTS        32
+#define IPTV_PKT_PAYLOAD 1472
 
 extern pthread_mutex_t iptv_lock;
 
