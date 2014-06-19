@@ -1140,6 +1140,7 @@ psi_desc_add_ca
 
   c->caid = caid;
   c->providerid = provid;
+  c->use = 1;
   c->pid = pid;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
