@@ -90,7 +90,7 @@ static void
 _hts_settings_buildpath
   (char *dst, size_t dstsize, const char *fmt, va_list ap, const char *prefix)
 {
-  char tmp[256];
+  char tmp[PATH_MAX];
   char *n = dst;
 
   vsnprintf(tmp, sizeof(tmp), fmt, ap);
@@ -124,8 +124,8 @@ hts_settings_buildpath
 void
 hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 {
-  char path[256];
-  char tmppath[256];
+  char path[PATH_MAX];
+  char tmppath[PATH_MAX];
   int fd;
   va_list ap;
   htsbuf_queue_t hq;
@@ -212,7 +212,7 @@ hts_settings_load_one(const char *filename)
 static htsmsg_t *
 hts_settings_load_path(const char *fullpath, int depth)
 {
-  char child[256];
+  char child[PATH_MAX];
   struct filebundle_stat st;
   fb_dirent **namelist, *d;
   htsmsg_t *r, *c;
@@ -263,7 +263,7 @@ static htsmsg_t *
 hts_settings_vload(const char *pathfmt, va_list ap, int depth)
 {
   htsmsg_t *ret = NULL;
-  char fullpath[256];
+  char fullpath[PATH_MAX];
   va_list ap2;
   va_copy(ap2, ap);
 
@@ -316,7 +316,7 @@ hts_settings_load_r(int depth, const char *pathfmt, ...)
 void
 hts_settings_remove(const char *pathfmt, ...)
 {
-  char fullpath[256];
+  char fullpath[PATH_MAX];
   va_list ap;
   struct stat st;
 
@@ -338,7 +338,7 @@ hts_settings_remove(const char *pathfmt, ...)
 int
 hts_settings_open_file(int for_write, const char *pathfmt, ...)
 {
-  char path[256];
+  char path[PATH_MAX];
   va_list ap;
 
   /* Build path */
@@ -363,7 +363,7 @@ int
 hts_settings_exists ( const char *pathfmt, ... )
 {
   va_list ap;
-  char path[256];
+  char path[PATH_MAX];
   struct stat st;
 
   /* Build path */
