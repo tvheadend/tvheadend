@@ -237,10 +237,6 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   mpegts_network_link_t *mnl;
 
-  // Not active??
-  if (!im->mm_active)
-    return;
-  
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
