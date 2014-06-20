@@ -506,7 +506,7 @@ mpegts_input_recv_packets
     mp = malloc(sizeof(mpegts_packet_t) + len2);
     mp->mp_mux  = mmi->mmi_mux;
     mp->mp_len  = len2;
-    memcpy(mp->mp_data, tsb, mp->mp_len);
+    memcpy(mp->mp_data, tsb, len2);
 
     len -= len2;
     off += len2;
