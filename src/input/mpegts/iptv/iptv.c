@@ -321,6 +321,8 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
+  mpegts_mux_instance_t *mmi;
+
   in->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
@@ -337,8 +339,10 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
   }
 
   /* Pass on */
-  mpegts_input_recv_packets((mpegts_input_t*)iptv_input, im->mm_active,
-                            &im->mm_iptv_buffer, off, NULL, NULL);
+  mmi = im->mm_active;
+  if (mmi)
+    mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
+                              &im->mm_iptv_buffer, off, NULL, NULL);
 }
 
 void
