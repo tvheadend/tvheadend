@@ -24,85 +24,53 @@
 #include "input.h"
 #include "tvhcsa.h"
 
-static struct strtab caidnametab[] = {
-  { "Seca",             0x0100 }, 
-  { "CCETT",            0x0200 }, 
-  { "Deutsche Telecom", 0x0300 }, 
-  { "Eurodec",          0x0400 }, 
-  { "Viaccess",         0x0500 }, 
-  { "Irdeto",           0x0600 }, 
-  { "Irdeto",           0x0602 }, 
-  { "Irdeto",           0x0603 },
-  { "Irdeto",           0x0604 },
-  { "Irdeto",           0x0622 },
-  { "Irdeto",           0x0624 },
-  { "Irdeto",           0x0648 },
-  { "Irdeto",           0x0666 },
-  { "Jerroldgi",        0x0700 }, 
-  { "Matra",            0x0800 }, 
-  { "NDS",              0x0900 },
-  { "NDS",              0x0919 },
-  { "NDS",              0x091F }, 
-  { "NDS",              0x092B },
-  { "NDS",              0x09AF }, 
-  { "NDS",              0x09C4 },
-  { "NDS",              0x0960 },
-  { "NDS",              0x0963 }, 
-  { "Nokia",            0x0A00 }, 
-  { "Conax",            0x0B00 },
-  { "Conax",            0x0B01 },
-  { "Conax",            0x0B02 }, 
-  { "Conax",            0x0BAA },
-  { "NTL",              0x0C00 }, 
-  { "CryptoWorks",      0x0D00 },
-  { "CryptoWorks",      0x0D01 },
-  { "CryptoWorks",      0x0D02 },
-  { "CryptoWorks",      0x0D03 },
-  { "CryptoWorks",      0x0D05 },
-  { "CryptoWorks",      0x0D0F },
-  { "CryptoWorks",      0x0D70 },
-  { "CryptoWorks ICE",	0x0D95 }, 
-  { "CryptoWorks ICE",	0x0D96 },
-  { "CryptoWorks ICE",	0x0D97 },
-  { "PowerVu",          0x0E00 }, 
-  { "PowerVu",          0x0E11 }, 
-  { "Sony",             0x0F00 }, 
-  { "Tandberg",         0x1000 }, 
-  { "Thompson",         0x1100 }, 
-  { "TV-Com",           0x1200 }, 
-  { "HPT",              0x1300 }, 
-  { "HRT",              0x1400 }, 
-  { "IBM",              0x1500 }, 
-  { "Nera",             0x1600 }, 
-  { "BetaCrypt",        0x1700 }, 
-  { "BetaCrypt",        0x1702 }, 
-  { "BetaCrypt",        0x1722 }, 
-  { "BetaCrypt",        0x1762 }, 
-  { "NagraVision",      0x1800 },
-  { "NagraVision",      0x1803 },
-  { "NagraVision",      0x1813 },
-  { "NagraVision",      0x1810 },
-  { "NagraVision",      0x1815 },
-  { "NagraVision",      0x1830 },
-  { "NagraVision",      0x1833 },
-  { "NagraVision",      0x1834 },
-  { "NagraVision",      0x183D },
-  { "NagraVision",      0x1861 },
-  { "Titan",            0x1900 }, 
-  { "Telefonica",       0x2000 }, 
-  { "Stentor",          0x2100 }, 
-  { "Tadiran Scopus",   0x2200 }, 
-  { "BARCO AS",         0x2300 }, 
-  { "StarGuide",        0x2400 }, 
-  { "Mentor",           0x2500 }, 
-  { "EBU",              0x2600 }, 
-  { "GI",               0x4700 }, 
-  { "Telemann",         0x4800 },
-  { "DRECrypt",         0x4ae0 },
-  { "DRECrypt2",        0x4ae1 },
-  { "Bulcrypt",         0x4aee },
-  { "Bulcrypt",         0x5581 },
-  { "Verimatrix",       0x5601 },
+struct caid_tab {
+  const char *name;
+  uint16_t caid;
+  uint16_t mask;
+};
+
+static struct caid_tab caidnametab[] = {
+  { "Seca",             0x0100, 0xff00 },
+  { "CCETT",            0x0200, 0xff00 },
+  { "Deutsche Telecom", 0x0300, 0xff00 },
+  { "Eurodec",          0x0400, 0xff00 },
+  { "Viaccess",         0x0500, 0xff00 },
+  { "Irdeto",           0x0600, 0xff00 },
+  { "Jerroldgi",        0x0700, 0xff00 },
+  { "Matra",            0x0800, 0xff00 },
+  { "NDS",              0x0900, 0xff00 },
+  { "Nokia",            0x0A00, 0xff00 },
+  { "Conax",            0x0B00, 0xff00 },
+  { "NTL",              0x0C00, 0xff00 },
+  { "CryptoWorks",      0x0D00, 0xff80 },
+  { "CryptoWorks ICE",	0x0D80, 0xff80 },
+  { "PowerVu",          0x0E00, 0xff00 },
+  { "Sony",             0x0F00, 0xff00 },
+  { "Tandberg",         0x1000, 0xff00 },
+  { "Thompson",         0x1100, 0xff00 },
+  { "TV-Com",           0x1200, 0xff00 },
+  { "HPT",              0x1300, 0xff00 },
+  { "HRT",              0x1400, 0xff00 },
+  { "IBM",              0x1500, 0xff00 },
+  { "Nera",             0x1600, 0xff00 },
+  { "BetaCrypt",        0x1700, 0xff00 },
+  { "NagraVision",      0x1800, 0xff00 },
+  { "Titan",            0x1900, 0xff00 },
+  { "Telefonica",       0x2000, 0xff00 },
+  { "Stentor",          0x2100, 0xff00 },
+  { "Tadiran Scopus",   0x2200, 0xff00 },
+  { "BARCO AS",         0x2300, 0xff00 },
+  { "StarGuide",        0x2400, 0xff00 },
+  { "Mentor",           0x2500, 0xff00 },
+  { "EBU",              0x2600, 0xff00 },
+  { "GI",               0x4700, 0xff00 },
+  { "Telemann",         0x4800, 0xff00 },
+  { "DRECrypt",         0x4ae0, 0xffff },
+  { "DRECrypt2",        0x4ae1, 0xffff },
+  { "Bulcrypt",         0x4aee, 0xffff },
+  { "Bulcrypt",         0x5581, 0xffff },
+  { "Verimatrix",       0x5601, 0xffff },
 };
 
 void
@@ -685,9 +653,18 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid )
 const char *
 descrambler_caid2name(uint16_t caid)
 {
-  const char *s = val2str(caid, caidnametab);
-  static char buf[20];
+  const char *s = NULL;
+  static char __thread buf[20];
+  struct caid_tab *tab;
+  int i;
 
+  for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
+    tab = &caidnametab[i];
+    if ((caid & tab->mask) == tab->caid) {
+      s = tab->name;
+      break;
+    }
+  }
   if(s != NULL)
     return s;
   snprintf(buf, sizeof(buf), "0x%x", caid);
@@ -697,8 +674,18 @@ descrambler_caid2name(uint16_t caid)
 uint16_t
 descrambler_name2caid(const char *s)
 {
-  int i = str2val(s, caidnametab);
-  return (i < 0) ? strtol(s, NULL, 0) : i;
+  int i, r = -1;
+  struct caid_tab *tab;
+
+  for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
+    tab = &caidnametab[i];
+    if (strcmp(tab->name, s) == 0) {
+      r = tab->caid;
+      break;
+    }
+  }
+
+  return (r < 0) ? strtol(s, NULL, 0) : r;
 }
 
 /**
