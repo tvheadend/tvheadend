@@ -33,7 +33,7 @@ struct caid_tab {
 static struct caid_tab caidnametab[] = {
   { "Seca",             0x0100, 0xff00 },
   { "CCETT",            0x0200, 0xff00 },
-  { "Deutsche Telecom", 0x0300, 0xff00 },
+  { "Deutsche Telekom", 0x0300, 0xff00 },
   { "Eurodec",          0x0400, 0xff00 },
   { "Viaccess",         0x0500, 0xff00 },
   { "Irdeto",           0x0600, 0xff00 },
