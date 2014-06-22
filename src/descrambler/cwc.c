@@ -2064,7 +2064,7 @@ cwc_caid_update(mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
     if (cwc->cwc_running) {
       LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
         if (pcard->cwc_caid == caid) {
-          if (pcard->cwc_mux != mux) continue;
+          if (pcard->cwc_mux && pcard->cwc_mux != mux) continue;
           if (valid) {
             pcard->cwc       = cwc;
             pcard->cwc_mux   = mux;
