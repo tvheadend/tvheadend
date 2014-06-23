@@ -73,7 +73,21 @@ iptv_udp_stop
 static ssize_t
 iptv_udp_read ( iptv_mux_t *im, size_t *off )
 {
-  return sbuf_read(&im->mm_iptv_buffer, im->mm_iptv_fd);
+  int i, n;
+  struct iovec *iovec;
+  udp_multirecv_t *um = im->im_data;
+  ssize_t res = 0;
+
+  n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
+  if (n < 0)
+    return -1;
+
+  for (i = 0; i < n; i++, iovec++) {
+    sbuf_append(&im->mm_iptv_buffer, iovec->iov_base, iovec->iov_len);
+    res += iovec->iov_len;
+  }
+
+  return res;
 }
 
 static ssize_t
