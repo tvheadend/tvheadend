@@ -55,6 +55,7 @@ typedef struct elementary_stream {
   uint16_t es_parent_pid;    /* For subtitle streams originating from 
 				a teletext stream. this is the pid
 				of the teletext stream */
+  int8_t es_pid_opened;      /* PID is opened */
 
   int8_t es_cc;             /* Last CC */
 

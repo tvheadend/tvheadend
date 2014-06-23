@@ -318,8 +318,10 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
   mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
   /* Open only filtered components here */
   TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link) {
-    if (st->es_type != SCT_CA)
+    if (st->es_type != SCT_CA) {
+      st->es_pid_opened = 1;
       mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+    }
   }
 
   pthread_mutex_unlock(&s->s_stream_mutex);
@@ -353,10 +355,12 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_lock(&s->s_stream_mutex);
   mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
   mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
-  /* Close all PIDs (the component filter may be changed at runtime) */
+  /* Close all opened PIDs (the component filter may be changed at runtime) */
   TAILQ_FOREACH(st, &s->s_components, es_link) {
-    if (st->es_type != SCT_CA)
+    if (st->es_pid_opened) {
+      st->es_pid_opened = 0;
       mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+    }
   }
 
 
