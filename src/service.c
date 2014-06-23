@@ -574,7 +574,7 @@ service_start(service_t *t, int instance)
   /**
    * Initialize stream
    */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
     stream_init(st);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
