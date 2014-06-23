@@ -469,7 +469,8 @@ main(int argc, char **argv)
               opt_threadid     = 0,
               opt_ipv6         = 0,
               opt_tsfile_tuner = 0,
-              opt_dump         = 0;
+              opt_dump         = 0,
+              opt_xspf         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -523,6 +524,8 @@ main(int argc, char **argv)
       OPT_INT, &tvheadend_htsp_port_extra },
     {   0, "useragent",  "Specify User-Agent header for the http client",
       OPT_STR, &opt_user_agent },
+    {   0, "xspf",       "Use xspf playlist instead M3U",
+      OPT_BOOL, &opt_xspf },
 
     {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
     { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
@@ -798,7 +801,7 @@ main(int argc, char **argv)
 
   tcp_server_init(opt_ipv6);
   http_server_init(opt_bindaddr);
-  webui_init();
+  webui_init(opt_xspf);
 #if ENABLE_UPNP
   upnp_server_init(opt_bindaddr);
 #endif

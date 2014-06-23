@@ -61,7 +61,7 @@ tvheadend.epgDetails = function(event) {
     
     now = new Date();
     if (event.start < now && event.end > now)
-        content += '<div class="x-epg-meta"><a href="stream/channelid/' + event.channelid + '">Play</a></div>';
+        content += '<div class="x-epg-meta"><a href="play/stream/channelid/' + event.channelid + '">Play</a></div>';
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
