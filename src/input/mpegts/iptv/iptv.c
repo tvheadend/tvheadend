@@ -273,7 +273,6 @@ iptv_input_thread ( void *aux )
 {
   int nfds;
   ssize_t n;
-  size_t off;
   iptv_mux_t *im;
   tvhpoll_event_t ev;
 
@@ -298,13 +297,12 @@ iptv_input_thread ( void *aux )
       goto done;
 
     /* Get data */
-    off = 0;
-    if ((n = im->im_handler->read(im, &off)) < 0) {
+    if ((n = im->im_handler->read(im)) < 0) {
       tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
       im->im_handler->stop(im);
       goto done;
     }
-    iptv_input_recv_packets(im, n, off);
+    iptv_input_recv_packets(im, n);
 
 done:
     pthread_mutex_unlock(&iptv_lock);
@@ -313,7 +311,7 @@ done:
 }
 
 void
-iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
+iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
@@ -338,7 +336,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
   mmi = im->mm_active;
   if (mmi)
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
-                              &im->mm_iptv_buffer, off, NULL, NULL);
+                              &im->mm_iptv_buffer, NULL, NULL);
 }
 
 void

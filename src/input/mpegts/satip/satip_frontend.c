@@ -1148,7 +1148,7 @@ satip_frontend_input_thread ( void *aux )
       sbuf_append(&sb, p + pos, c - pos);
     }
     mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                              &sb, 0, NULL, NULL);
+                              &sb, NULL, NULL);
   }
 
   /* Do not send the SMT_SIGNAL_STATUS packets - we are out of service */

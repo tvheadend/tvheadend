@@ -455,13 +455,13 @@ ts_sync_count ( const uint8_t *tsb, int len )
 
 void
 mpegts_input_recv_packets
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int i, p = 0, len2;
+  int i, p = 0, len2, off = 0;
   mpegts_packet_t *mp;
-  uint8_t *tsb = sb->sb_data + off;
-  int     len  = sb->sb_ptr  - off;
+  uint8_t *tsb = sb->sb_data;
+  int     len  = sb->sb_ptr;
 #define MIN_TS_PKT 100
 #define MIN_TS_SYN 5
 

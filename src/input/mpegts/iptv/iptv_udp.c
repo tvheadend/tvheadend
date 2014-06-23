@@ -71,7 +71,7 @@ iptv_udp_stop
 }
 
 static ssize_t
-iptv_udp_read ( iptv_mux_t *im, size_t *off )
+iptv_udp_read ( iptv_mux_t *im )
 {
   int i, n;
   struct iovec *iovec;
@@ -91,7 +91,7 @@ iptv_udp_read ( iptv_mux_t *im, size_t *off )
 }
 
 static ssize_t
-iptv_rtp_read ( iptv_mux_t *im, size_t *off )
+iptv_rtp_read ( iptv_mux_t *im )
 {
   ssize_t len, hlen;
   uint8_t *rtp;

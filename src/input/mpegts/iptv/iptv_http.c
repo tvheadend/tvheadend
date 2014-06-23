@@ -50,7 +50,7 @@ iptv_http_data
   sbuf_append(&im->mm_iptv_buffer, buf, len);
 
   if (len > 0)
-    iptv_input_recv_packets(im, len, 0);
+    iptv_input_recv_packets(im, len);
 
   pthread_mutex_unlock(&iptv_lock);
 

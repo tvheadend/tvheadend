@@ -709,7 +709,7 @@ mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
 }
 
 void mpegts_input_recv_packets
-  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
+  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
    int64_t *pcr, uint16_t *pcr_pid);
 
 int mpegts_input_is_free ( mpegts_input_t *mi );

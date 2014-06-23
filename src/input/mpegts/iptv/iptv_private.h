@@ -42,7 +42,7 @@ struct iptv_handler
   const char *scheme;
   int     (*start) ( iptv_mux_t *im, const url_t *url );
   void    (*stop)  ( iptv_mux_t *im );
-  ssize_t (*read)  ( iptv_mux_t *im, size_t *off );
+  ssize_t (*read)  ( iptv_mux_t *im );
   
   RB_ENTRY(iptv_handler) link;
 };
@@ -55,7 +55,7 @@ struct iptv_input
 };
 
 void iptv_input_mux_started ( iptv_mux_t *im );
-void iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off );
+void iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
 
 struct iptv_network
 {

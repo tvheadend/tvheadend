@@ -131,7 +131,7 @@ tsfile_input_thread ( void *aux )
     /* Process */
     if (c > 0) {
       pcr = PTS_UNSET;
-      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0,
+      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf,
                                 &pcr, &tmi->mmi_tsfile_pcr_pid);
 
       /* Delay */
