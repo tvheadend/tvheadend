@@ -984,6 +984,19 @@ http://%s/%s\r\n", title, host, remain);
   return 0;
 }
 
+static char *
+page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
+{
+  /*
+   * For curl and wget do not set the playlist, stream directly
+   */
+  const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
+  if (strncasecmp(agent, "curl/", 5) == 0 ||
+      strncasecmp(agent, "wget/", 5) == 0)
+    return strdup(path + 5);
+  return NULL;
+}
+
 static int
 page_play(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -1204,7 +1217,7 @@ webui_init(int xspf)
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
-  http_path_add("/play", NULL, page_play, ACCESS_WEB_INTERFACE);
+  http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEB_INTERFACE);

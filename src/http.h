@@ -177,6 +177,10 @@ void http_send_header(http_connection_t *hc, int rc, const char *content,
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);
 
+typedef char * (http_path_modify_t)(http_connection_t *hc,
+                                    const char * path, int *cut);
+                                 
+
 typedef struct http_path {
   LIST_ENTRY(http_path) hp_link;
   const char *hp_path;
@@ -184,8 +188,13 @@ typedef struct http_path {
   http_callback_t *hp_callback;
   int hp_len;
   uint32_t hp_accessmask;
+  http_path_modify_t *hp_path_modify;
 } http_path_t;
 
+http_path_t *http_path_add_modify(const char *path, void *opaque,
+                                  http_callback_t *callback,
+                                  uint32_t accessmask,
+                                  http_path_modify_t path_modify);
 http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
