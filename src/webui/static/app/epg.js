@@ -60,8 +60,13 @@ tvheadend.epgDetails = function(event) {
     content += '<div id="altbcast"></div>';
     
     now = new Date();
-    if (event.start < now && event.end > now)
-        content += '<div class="x-epg-meta"><a href="play/stream/channelid/' + event.channelid + '">Play</a></div>';
+    if (event.start < now && event.end > now) {
+        var title = event.title;
+        if (event.episode)
+          title += ' / ' + event.episode;
+        content += '<div class="x-epg-meta"><a href="play/stream/channelid/' + event.channelid +
+                   '?title=' + encodeURIComponent(title) + '">Play</a></div>';
+    }
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,

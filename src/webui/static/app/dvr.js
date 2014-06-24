@@ -218,7 +218,11 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             width: 40,
             header: "Play",
             renderer: function(v, o, r) {
-                return '<a href="play/dvrfile/' + r.data['id'] + '">Play</a>';
+                var title = r.data['title'];
+                if (r.data['episode'])
+                    title += ' / ' + r.data['episode'];
+                return '<a href="play/dvrfile/' + r.data['id'] +
+                       '?title=' + encodeURIComponent(title) + '">Play</a>';
             }
         });
     cols.push({

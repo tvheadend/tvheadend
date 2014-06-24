@@ -211,7 +211,12 @@ tvheadend.channel_tab = function(panel)
                 width: 50,
                 header: 'Play',
                 renderer: function(v, o, r) {
-                    return "<a href='play/stream/channel/" + r.id + "'>Play</a>";
+                    var title = '';
+                    if (r.data['number'])
+                      title += r.data['number'] + ' : ';
+                    title += r.data['name'];
+                    return "<a href='play/stream/channel/" + r.id +
+                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
                 }
             }
         ],

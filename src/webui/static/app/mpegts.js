@@ -84,7 +84,9 @@ tvheadend.muxes = function(panel)
                 width: 50,
                 header: 'Play',
                 renderer: function(v, o, r) {
-                    return "<a href='play/stream/mux/" + r.id + "'>Play</a>";
+                    var title = r.data['name'] + ' / ' + r.data['network'];
+                    return "<a href='play/stream/mux/" + r.id +
+                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
                 }
             }
         ],
@@ -239,7 +241,9 @@ tvheadend.services = function(panel)
                 width: 50,
                 header: 'Play',
                 renderer: function(v, o, r) {
-                    return "<a href='play/stream/service/" + r.id + "'>Play</a>";
+                    var title = r.data['svcname'] + ' / ' + r.data['provider'];
+                    return "<a href='play/stream/service/" + r.id +
+                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
                 }
             },
             actions
