@@ -217,37 +217,28 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
 /*
  * Rewrite a PAT packet to only include the service included in the transport stream.
  *
- * This is complicated by the need to deal with PATs that span more than one transport
- * stream packet.  In that scenario, we replace the 2nd and subsequent PAT packets with
- * NULL packets (PID 0x1fff).
- *
+ * Return 0 if packet can be dropped (i.e. isn't the starting packet
+ * in section or doesn't contain the currently active PAT)
  */
 
 static int
 pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 {
   int pusi = tsb[1]  & 0x40;
+  int cur  = tsb[10] & 0x01;
 
-  /* NULL packet */
-  if (!pusi) {
-    tsb[1] = 0x1f;
-    memset(tsb+2, 0xff, 186);
+  /* Ignore next packet or not start */
+  if (!pusi || !cur)
     return 0;
-  }
 
-  /* Ignore Next (TODO: should we wipe it?) */
-  if (!(tsb[10] & 0x1)) {
-    return 0;
-  }
-    
   /* Some sanity checks */
   if (tsb[4]) {
     tvherror("pass", "Unsupported PAT format - pointer_to_data %d", tsb[4]);
-    return 1;
+    return -1;
   }
   if (tsb[12]) {
     tvherror("pass", "Multi-section PAT not supported");
-    return 2;
+    return -2;
   }
 
   /* Rewrite continuity counter, in case this is a multi-packet PAT (we discard all but the first packet) */
@@ -266,7 +257,7 @@ pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
 
   memset(tsb + 21, 0xff, 167); /* Wipe rest of packet */
 
-  return 0;
+  return 1;
 }
 
 /**
@@ -429,39 +420,60 @@ static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  unsigned char* tsb;
+  int e;
+  uint8_t tmp[188], *tsb, *pkt = pb->pb_data;
+  size_t  len = pb->pb_size;
   
   /* Rewrite PAT/PMT in operation */
   if (pm->m_config.m_flags & (MC_REWRITE_PAT | MC_REWRITE_PMT)) {
-
     tsb = pb->pb_data;
+    len = 0;
     while (tsb < pb->pb_data + pb->pb_size) {
       int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-      /* PAT */
-      if (pm->m_config.m_flags & MC_REWRITE_PAT && pid == 0) {
-        if (pass_muxer_rewrite_pat(pm, tsb)) {
-          tvherror("pass", "PAT rewrite failed, disabling");
-          pm->m_config.m_flags &= ~MC_REWRITE_PAT;
-        }
-      /* PMT */
-      } else if (pm->m_config.m_flags & MC_REWRITE_PMT && pid == pm->pm_pmt_pid) {
-        if (tsb[1] & 0x40) { /* pusi - the first PMT packet */  
-          memcpy(tsb, pm->pm_pmt, 188);
-          tsb[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
+      /* Process */
+      if ( ((pm->m_config.m_flags & MC_REWRITE_PAT) && (pid == 0)) ||
+           ((pm->m_config.m_flags & MC_REWRITE_PMT) &&
+            (pid == pm->pm_pmt_pid)) ) {
+
+        /* Flush */
+        if (len)
+          pass_muxer_write(m, pkt, len);
+
+        /* Store new start point (after this packet) */
+        pkt = tsb + 188;
+        len = 0;
+
+        /* PAT */
+        if (pid == 0) {
+          memcpy(tmp, tsb, sizeof(tmp));
+          e = pass_muxer_rewrite_pat(pm, tmp);
+          if (e < 0) {
+            tvherror("pass", "PAT rewrite failed, disabling");
+            pm->m_config.m_flags &= ~MC_REWRITE_PAT;
+          }
+          if (e)
+            pass_muxer_write(m, tmp, 188);
+
+        /* PMT */
+        } else if (tsb[1] & 0x40) { /* pusi - the first PMT packet */
+          pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
           pm->pm_pmt_cc = (pm->pm_pmt_cc + 1) & 0xf;
-        } else {
-          /* Nullify packet */
-          tsb[1] = 0x1f;
-          memset(tsb+2, 0xff, 186);
+          pass_muxer_write(m, pm->pm_pmt, 188);
         }
+
+      /* Record */
+      } else {
+        len += 188;
       }
 
+      /* Next packet */
       tsb += 188;
     }
   }
 
-  pass_muxer_write(m, pb->pb_data, pb->pb_size);
+  if (len)
+    pass_muxer_write(m, pkt, len);
 }
 
 
