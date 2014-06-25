@@ -811,6 +811,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_service_t *ct;
   mpegts_service_t *t;
   elementary_stream_t *st;
+  int i;
 
   tvhtrace("capmt", "setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            adapter, demux_index, filter_index, pid);
@@ -832,6 +833,8 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   tvhlog_hexdump("capmt", filter->filter.filter, DMX_FILTER_SIZE);
   tvhlog_hexdump("capmt", filter->filter.mask, DMX_FILTER_SIZE);
   tvhlog_hexdump("capmt", filter->filter.mode, DMX_FILTER_SIZE);
+  for (i = 0; i < DMX_FILTER_SIZE; i++)
+    filter->filter.filter[i] &= filter->filter.mask[i];
   filter->flags = 0;
   /* ECM messages have the higher priority */
   t = NULL;
