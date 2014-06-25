@@ -139,7 +139,7 @@ static const uint8_t hamtable[] = {
 #define SUBSET_POLISH          8  /* Polski */
 #define SUBSET_PORTUG_SPANISH  9  /* Português / Español */
 #define SUBSET_RUMANIAN        10 /* Româna */
-#define SUBSET_SERB_CRO_SLO    11 /* Srbski / Hrvatski / Slovenscina */
+#define SUBSET_SERB_CRO_SLO    11 /* Srpski / Hrvatski / Slovenscina */
 #define SUBSET_SWE_FIN_HUN     12 /* Svenska / Suomi / Magyar */
 #define SUBSET_TURKISH         13 /* Türkçe */
 #define SUBSET_LAST            SUBSET_TURKISH
