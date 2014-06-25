@@ -467,24 +467,51 @@ http_tag_list_playlist(http_connection_t *hc)
  * Output a flat playlist with all channels
  */
 static int
+http_channel_list_playlist_cmp(const void *a, const void *b)
+{
+  channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
+  int r = channel_get_number(c1) - channel_get_number(c2);
+  if (r == 0)
+    r = strcasecmp(channel_get_name(c1), channel_get_name(c2));
+  return r;
+}
+
+static int
 http_channel_list_playlist(http_connection_t *hc)
 {
   htsbuf_queue_t *hq;
   char buf[255];
   channel_t *ch;
+  channel_t **chlist;
   const char *host;
+  int idx = 0, count = 0;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
+  CHANNEL_FOREACH(ch)
+    count++;
+
+  chlist = malloc(count * sizeof(channel_t *));
+
+  CHANNEL_FOREACH(ch)
+    chlist[idx++] = ch;
+
+  assert(idx == count);
+
+  qsort(chlist, count, sizeof(channel_t *), http_channel_list_playlist_cmp);
+
   htsbuf_qprintf(hq, "#EXTM3U\n");
-  CHANNEL_FOREACH(ch) {
+  for (idx = 0; idx < count; idx++) {
+    ch = chlist[idx];
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
   }
+
+  free(chlist);
 
   http_output_content(hc, "audio/x-mpegurl");
 
