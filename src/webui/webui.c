@@ -339,7 +339,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     streaming_msg_free(sm);
 
     if(mux->m_errors) {
-      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
+      if (!mux->m_eos)
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
       run = 0;
     }
   }

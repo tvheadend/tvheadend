@@ -155,10 +155,13 @@ tvh_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   th_pkt_t *pkt = (th_pkt_t*)data;
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
+  int r;
 
   assert(smt == SMT_PACKET);
 
-  if(mk_mux_write_pkt(tm->tm_ref, pkt)) {
+  if((r = mk_mux_write_pkt(tm->tm_ref, pkt)) != 0) {
+    if (r == EPIPE)
+      tm->m_eos = 1;
     tm->m_errors++;
     return -1;
   }

@@ -81,6 +81,7 @@ typedef struct muxer {
 			       void *);
   int         (*m_add_marker) (struct muxer *);                         // Add a marker (or chapter)
 
+  int                    m_eos;        // End of stream
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
   muxer_config_t         m_config;     // general configuration
