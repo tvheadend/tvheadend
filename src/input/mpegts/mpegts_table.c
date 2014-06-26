@@ -52,17 +52,24 @@ mpegts_table_dispatch
   if(mt->mt_destroyed)
     return;
 
-  /* It seems some hardware (or is it the dvb API?) does not
-     honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
-    tvhwarn(mt->mt_name, "invalid checksum");
-    return;
-  }
-
   /* Table info */
   tid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
-  
+
+  if (r > 2 && tid == 0x72) { /* stuffing section */
+    if (len != r - 3)
+      tvhwarn(mt->mt_name, "stuffing found with trailing data (len %i, total %zi)", len, r);
+    dvb_table_reset(mt);
+    return;
+  }
+
+  /* It seems some hardware (or is it the dvb API?) does not
+     honour the DMX_CHECK_CRC flag, so we check it again */
+  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
+    tvhwarn(mt->mt_name, "invalid checksum (len %zi)", r);
+    return;
+  }
+
   /* Not enough data */
   if(len < r - 3) {
     tvhtrace(mt->mt_name, "not enough data, %d < %d", (int)r, len);

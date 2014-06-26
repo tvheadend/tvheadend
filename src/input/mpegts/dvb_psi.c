@@ -391,6 +391,7 @@ mpegts_table_state_reset
   }
   mt->mt_finished = 0;
   st->complete = 0;
+  st->version = 0xff;  /* invalid */
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
     st->sections[i] = 0xFFFFFFFF;
@@ -529,6 +530,18 @@ dvb_table_begin
   tvhlog_hexdump(mt->mt_name, ptr, len);
 
   return 1;
+}
+
+void
+dvb_table_reset(mpegts_table_t *mt)
+{
+  mpegts_table_state_t *st;
+
+  tvhtrace(mt->mt_name, "pid %02X complete reset", mt->mt_pid);
+  while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
 }
 
 /*
