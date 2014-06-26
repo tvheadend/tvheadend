@@ -2,380 +2,227 @@
  * Channel tags
  */
 tvheadend.channelTags = new Ext.data.JsonStore({
-	autoLoad : true,
-	root : 'entries',
-	fields : [ 'identifier', 'name' ],
-	id : 'identifier',
-	url : 'channeltags',
-	baseParams : {
-		op : 'listTags'
-	}
+    autoLoad: true,
+    root: 'entries',
+    fields: ['identifier', 'name'],
+    id: 'identifier',
+    url: 'channeltags',
+    baseParams: {
+        op: 'listTags'
+    }
 });
 
 tvheadend.channelTags.setDefaultSort('name', 'ASC');
 
 tvheadend.comet.on('channeltags', function(m) {
-	if (m.reload != null) tvheadend.channelTags.reload();
+    if (m.reload != null)
+        tvheadend.channelTags.reload();
 });
 
 /**
  * Channels
  */
 tvheadend.channelrec = new Ext.data.Record.create(
-	[ 'name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
-		'epg_post_end', 'number' ]);
+        ['name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
+            'epg_post_end', 'number']);
 
 tvheadend.channels = new Ext.data.JsonStore({
-	autoLoad : true,
-	root : 'entries',
-	fields : tvheadend.channelrec,
-	id : 'chid',
-	sortInfo : {
-		field : 'number',
-		direction : "ASC"
-	},
-	url : "channels",
-	baseParams : {
-		op : 'list'
-	}
+    url: 'api/channel/list',
+    root: 'entries',
+    fields: ['key', 'val'],
+    id: 'key',
+    autoLoad: true,
+    sortInfo: {
+        field: 'val',
+        direction: 'ASC'
+    }
 });
 
 tvheadend.comet.on('channels', function(m) {
-	if (m.reload != null) tvheadend.channels.reload();
+    if (m.reload != null)
+        tvheadend.channels.reload();
 });
 
-/**
- *
- */
-tvheadend.mergeChannel = function(chan) {
+tvheadend.channel_tab = function(panel)
+{
+    function assign_low_number() {
+        var tab = panel.getActiveTab();
+        var sm = tab.getSelectionModel();
+        var store = tab.getStore();
 
-	function doMerge() {
-		panel.getForm().submit({
-			url : 'mergechannel/' + chan.chid,
-			success : function() {
-				win.close();
-			}
-		});
-	}
+        if (sm.getCount() !== 1)
+            return;
 
-	var panel = new Ext.FormPanel({
-		frame : true,
-		border : true,
-		bodyStyle : 'padding:5px',
-		labelAlign : 'right',
-		labelWidth : 110,
-		defaultType : 'textfield',
-		items : [ new Ext.form.ComboBox({
-			store : tvheadend.channels,
-			fieldLabel : 'Target channel',
-			name : 'targetchannel',
-			hiddenName : 'targetID',
-			editable : false,
-			allowBlank : false,
-			triggerAction : 'all',
-			mode : 'remote',
-			displayField : 'name',
-			valueField : 'chid',
-			emptyText : 'Select a channel...'
-		}) ],
-		buttons : [ {
-			text : 'Merge',
-			handler : doMerge
-		} ]
-	});
+        var nums = [];
+        store.each(function() {
+            if (this.data.number > 0)
+                nums.push(this.data.number);
+        });
 
-	win = new Ext.Window({
-		title : 'Merge channel ' + chan.name + ' into...',
-		layout : 'fit',
-		width : 500,
-		height : 120,
-		modal : true,
-		plain : true,
-		items : panel
-	});
-	win.show();
+        if (nums.length === 0)
+        {
+            sm.getSelected().set('number', 1);
+            return;
+        }
 
-}
+        nums.sort(function(a, b) {
+            return (a - b);
+        });
 
-/**
- *
- */
-tvheadend.chconf = function() {
-	var fm = Ext.form;
+        var max = nums[nums.length - 1];
+        var low = max + 1;
 
-	var actions = new Ext.ux.grid.RowActions({
-		header : '',
-		dataIndex : 'actions',
-		width : 45,
-		actions : [ {
-			iconCls : 'merge',
-			qtip : 'Merge this channel with another channel',
-			cb : function(grid, record, action, row, col) {
-				tvheadend.mergeChannel(record.data);
-			}
-		} ]
-	});
+        for (var i = 1; i <= max; ++i)
+        {
+            var ct = false;
+            for (var j = 0; j < nums.length; ++j)
+                if (nums[j] === i)
+                {
+                    ct = true;
+                    break
+                }
+            if (!ct)
+            {
+                low = i;
+                break;
+            }
+        }
 
-	var cm = new Ext.grid.ColumnModel([ {
-		header : "Number",
-		dataIndex : 'number',
-		sortable : true,
-		width : 50,
-		renderer : function(value, metadata, record, row, col, store) {
-			if (!value) {
-				return '<span class="tvh-grid-unset">Not set</span>';
-			}
-			else {
-				return value;
-			}
-		},
+        sm.getSelected().set('number', low);
+        sm.selectNext();
+    }
 
-		editor : new fm.NumberField({
-			minValue : 0,
-			maxValue : 9999
-		})
-	}, {
-		header : "Name",
-		dataIndex : 'name',
-    sortable: true,
-		width : 150,
-		editor : new fm.TextField({
-			allowBlank : false
-		})
-	}, {
-		header : "Play",
-		dataIndex : 'chid',
-		width : 50,
-		renderer : function(value, metadata, record, row, col, store) {
-			url = 'playlist/channelid/' + value
-			return "<a href=\"javascript:tvheadend.VLC('" + url + "')\">Play</a>"
-		}
-	}, {
-		header : "EPG Grab source",
-		dataIndex : 'epggrabsrc',
-    hiddenName : 'epggrabsrc',
-		width : 150,
-		editor : new Ext.ux.form.LovCombo({
-			loadingText : 'Loading...',
-			store : tvheadend.epggrabChannels,
-			allowBlank : true,
-			typeAhead : true,
-			minChars : 2,
-			lazyRender : true,
-			triggerAction : 'all',
-			mode : 'remote',
-			displayField : 'mod-name',
-			valueField : 'mod-id'
-		})
-	}, {
-		header : "Tags",
-		dataIndex : 'tags',
-		width : 300,
-		renderer : function(value, metadata, record, row, col, store) {
-			if (typeof value === 'undefined' || value.length < 1) {
-				return '<span class="tvh-grid-unset">No tags</span>';
-			}
+    function move_number_up() {
+        var tab = panel.getActiveTab();
+        var sm = tab.getSelectionModel();
+        var store = tab.getStore();
 
-			ret = [];
-			tags = value.split(',');
-			for ( var i = 0; i < tags.length; i++) {
-				var tag = tvheadend.channelTags.getById(tags[i]);
-				if (typeof tag !== 'undefined') {
-					ret.push(tag.data.name);
-				}
-			}
-			return ret.join(', ');
-		},
-		editor : new Ext.ux.form.LovCombo({
-			store : tvheadend.channelTags,
-			mode : 'local',
-			valueField : 'identifier',
-			displayField : 'name'
-		})
-	}, {
-		header : "Icon (full URL)",
-		dataIndex : 'ch_icon',
-		width : 200,
-		editor : new fm.TextField()
-	}, {
-		header : "DVR Pre-Start",
-		dataIndex : 'epg_pre_start',
-		width : 100,
+        if (sm.getCount() !== 1)
+            return;
 
-		renderer : function(value, metadata, record, row, col, store) {
-			if (!value) {
-				return '<span class="tvh-grid-unset">Not set</span>';
-			}
-			else {
-				return value + ' min';
-			}
-		},
+        var sel = sm.getSelected();
+        var num = sel.data.number;
 
-		editor : new fm.NumberField({
-			minValue : 0,
-			maxValue : 1440
-		})
-	}, {
-		header : "DVR Post-End",
-		dataIndex : 'epg_post_end',
-		width : 100,
-		renderer : function(value, metadata, record, row, col, store) {
-			if (!value) {
-				return '<span class="tvh-grid-unset">Not set</span>';
-			}
-			else {
-				return value + ' min';
-			}
-		},
+        if (!num)
+            num = 0;
 
-		editor : new fm.NumberField({
-			minValue : 0,
-			maxValue : 1440
-		})
-	}, actions ]);
+        store.each(function() {
+            if (this.data.number === num + 1)
+                this.set('number', num);
+        });
 
-	function delSelected() {
-		var selectedKeys = grid.selModel.selections.keys;
-		if (selectedKeys.length > 0) {
-			Ext.MessageBox.confirm('Message',
-				'Do you really want to delete selection?', deleteRecord);
-		}
-		else {
-			Ext.MessageBox.alert('Message',
-				'Please select at least one item to delete');
-		}
-	}
+        sel.set('number', num + 1);
+    }
 
-  function addRecord() {
-    Ext.Ajax.request({
-      url : "channels",
-      params : {
-        op : "create"
-      },
-      failure : function(response, options) {
-        Ext.MessageBox.alert('Server Error', 'Unable to create new record');
-      },
-      success : function(response, options) {
-        var responseData = Ext.util.JSON.decode(response.responseText);
-        var p = new tvheadend.channelrec(responseData, responseData.id);
-        grid.stopEditing();
-        store.insert(0, p)
-        grid.startEditing(0, 0);
-      }
-    })
-  }
+    function move_number_down() {
+        var tab = panel.getActiveTab();
+        var sm = tab.getSelectionModel();
+        var store = tab.getStore();
 
-	function deleteRecord(btn) {
-		if (btn == 'yes') {
-			var selectedKeys = grid.selModel.selections.keys;
+        if (sm.getCount() !== 1)
+            return;
 
-			Ext.Ajax.request({
-				url : "channels",
-				params : {
-					op : "delete",
-					entries : Ext.encode(selectedKeys)
-				},
-				failure : function(response, options) {
-					Ext.MessageBox.alert('Server Error', 'Unable to delete');
-				}
-			})
-		}
-	}
+        var sel = sm.getSelected();
+        var num = sel.data.number;
 
-	function saveChanges() {
-		var mr = tvheadend.channels.getModifiedRecords();
-		var out = new Array();
-		for ( var x = 0; x < mr.length; x++) {
-			v = mr[x].getChanges();
-			out[x] = v;
-			out[x].id = mr[x].id;
-		}
+        if (!num)
+            num = 0;
 
-		Ext.Ajax.request({
-			url : "channels",
-			params : {
-				op : "update",
-				entries : Ext.encode(out)
-			},
-			success : function(response, options) {
-				tvheadend.channels.commitChanges();
-			},
-			failure : function(response, options) {
-				Ext.MessageBox.alert('Message', response.statusText);
-			}
-		});
-	}
+        if (num <= 1)
+            return;
 
-	var selModel = new Ext.grid.RowSelectionModel({
-		singleSelect : false
-	});
+        store.each(function() {
+            if (this.data.number === num - 1)
+                this.set('number', num);
+        });
 
-  var addBtn = new Ext.Toolbar.Button({
-    tooltop : 'Add a new channel',
-    iconCls : 'add',
-    text    : 'Add channel',
-    handler : addRecord
-  });
+        sel.set('number', num - 1);
+    }
 
-	var delBtn = new Ext.Toolbar.Button({
-		tooltip : 'Delete one or more selected channels',
-		iconCls : 'remove',
-		text : 'Delete selected',
-		handler : delSelected,
-		disabled : true
-	});
+    function swap_numbers() {
+        var tab = panel.getActiveTab();
+        var sm = tab.getSelectionModel();
+        var store = tab.getStore(); //store is unused
 
-	selModel.on('selectionchange', function(s) {
-		delBtn.setDisabled(s.getCount() == 0);
-	});
+        if (sm.getCount() !== 2)
+            return;
 
-	var saveBtn = new Ext.Toolbar.Button({
-		tooltip : 'Save any changes made (Changed cells have red borders).',
-		iconCls : 'save',
-		text : "Save changes",
-		handler : saveChanges,
-		disabled : true
-	});
+        var sel = sm.getSelections();
+        var tmp = sel[0].data.number;
 
-	var rejectBtn = new Ext.Toolbar.Button({
-		tooltip : 'Revert any changes made (Changed cells have red borders).',
-		iconCls : 'undo',
-		text : "Revert changes",
-		handler : function() {
-			tvheadend.channels.rejectChanges();
-		},
-		disabled : true
-	});
+        sel[0].set('number', sel[1].data.number);
+        sel[1].set('number', tmp);
+    }
 
-	var grid = new Ext.grid.EditorGridPanel({
-		stripeRows : true,
-		title : 'Channels',
-		iconCls : 'television',
-		store : tvheadend.channels,
-		plugins : [ actions ],
-		clicksToEdit : 2,
-		cm : cm,
-		viewConfig : {
-			forceFit : true
-		},
-		selModel : selModel,
-		tbar : [ addBtn, '-', delBtn, '-', saveBtn, rejectBtn, '->', {
-			text : 'Help',
-			handler : function() {
-				new tvheadend.help('Channels', 'config_channels.html');
-			}
-		} ]
-	});
+    var mapButton = new Ext.Toolbar.Button({
+        tooltip: 'Map services to channels',
+        iconCls: 'clone',
+        text: 'Map Services',
+        handler: tvheadend.service_mapper,
+        disabled: false
+    });
 
-	tvheadend.channels.on('update', function(s, r, o) {
-		d = s.getModifiedRecords().length == 0
-		saveBtn.setDisabled(d);
-		rejectBtn.setDisabled(d);
-	});
+    var lowNoButton = new Ext.Toolbar.Button({
+        tooltip: 'Assign lowest free channel number',
+        iconCls: 'bullet_add',
+        text: 'Assign Number',
+        handler: assign_low_number,
+        disabled: false
+    });
 
-	tvheadend.channelTags.on('load', function(s, r, o) {
-		if (grid.rendered) grid.getView().refresh();
-	});
+    var noUpButton = new Ext.Toolbar.Button({
+        tooltip: 'Move channel one number up',
+        iconCls: 'arrow_up',
+        text: 'Number Up',
+        handler: move_number_up,
+        disabled: false
+    });
 
-	return grid;
-}
+    var noDownButton = new Ext.Toolbar.Button({
+        tooltip: 'Move channel one number down',
+        iconCls: 'arrow_down',
+        text: 'Number Down',
+        handler: move_number_down,
+        disabled: false
+    });
+
+    var noSwapButton = new Ext.Toolbar.Button({
+        tooltip: 'Swap the two selected channels numbers',
+        iconCls: 'arrow_switch',
+        text: 'Swap Numbers',
+        handler: swap_numbers,
+        disabled: false
+    });
+
+    tvheadend.idnode_grid(panel, {
+        url: 'api/channel',
+        comet: 'channel',
+        titleS: 'Channel',
+        titleP: 'Channels',
+        tabIndex: 0,
+        add: {
+            url: 'api/channel',
+            create: {}
+        },
+        del: true,
+        tbar: [mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton],
+        lcol: [
+            {
+                width: 50,
+                header: 'Play',
+                renderer: function(v, o, r) {
+                    var title = '';
+                    if (r.data['number'])
+                      title += r.data['number'] + ' : ';
+                    title += r.data['name'];
+                    return "<a href='play/stream/channel/" + r.id +
+                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
+                }
+            }
+        ],
+        sort: {
+            field: 'number',
+            direction: 'ASC'
+        }
+    });
+};

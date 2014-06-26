@@ -56,7 +56,12 @@ htsmsg_t *epggrab_module_list ( void )
   LIST_FOREACH(m, &epggrab_modules, link) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "id", m->id);
-    htsmsg_add_u32(e, "type", m->type);
+    if (m->type == EPGGRAB_INT)
+      htsmsg_add_str(e, "type", "internal");
+    else if (m->type == EPGGRAB_EXT)
+      htsmsg_add_str(e, "type", "external");
+    else
+      htsmsg_add_str(e, "type", "ota");
     htsmsg_add_u32(e, "enabled", m->enabled);
     if(m->name) 
       htsmsg_add_str(e, "name", m->name);
@@ -153,9 +158,9 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
     htsmsg_add_str(m, "name", ch->name);
   if (ch->icon)
     htsmsg_add_str(m, "icon", ch->icon);
-  LIST_FOREACH(ecl, &ch->channels, link) {
+  LIST_FOREACH(ecl, &ch->channels, ecl_epg_link) {
     if (!a) a = htsmsg_create_list();
-    htsmsg_add_u32(a, NULL, ecl->channel->ch_id);
+    htsmsg_add_str(a, NULL, channel_get_uuid(ecl->ecl_channel));
   }
   if (a) htsmsg_add_msg(m, "channels", a);
   if (ch->number)
@@ -175,18 +180,9 @@ void epggrab_module_ch_add ( void *m, channel_t *ch )
 
 void epggrab_module_ch_rem ( void *m, channel_t *ch )
 {
-  epggrab_channel_t *egc;
-  epggrab_channel_link_t *egl;
-  epggrab_module_int_t *mod = m;
-  RB_FOREACH(egc, mod->channels, link) {
-    LIST_FOREACH(egl, &egc->channels, link) {
-      if (egl->channel == ch) {
-        LIST_REMOVE(egl, link);
-        free(egl);
-        break;
-      }
-    }
-  }
+  epggrab_channel_link_t *ecl;
+  while ((ecl = LIST_FIRST(&ch->ch_epggrab)))
+    epggrab_channel_link_delete(ecl);
 }
 
 void epggrab_module_ch_mod ( void *mod, channel_t *ch )
@@ -215,20 +211,16 @@ static void _epggrab_module_channel_load
     egc->number = u32;
   if ((a = htsmsg_get_list(m, "channels"))) {
     HTSMSG_FOREACH(f, a) {
-      if ((ch  = channel_find_by_identifier((uint32_t)f->hmf_s64))) {
-        epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
-        ecl->channel = ch;
-        LIST_INSERT_HEAD(&egc->channels, ecl, link);
+      if ((str = htsmsg_field_get_str(f))) {
+        if ((ch = channel_find_by_uuid(str)))
+          epggrab_channel_link(egc, ch);
       }
     }
 
   /* Compat with older 3.1 code */
   } else if (!htsmsg_get_u32(m, "channel", &u32)) {
-    if ((ch = channel_find_by_identifier(u32))) {
-      epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
-      ecl->channel = ch;
-      LIST_INSERT_HEAD(&egc->channels, ecl, link);
-    }
+    if ((ch = channel_find_by_id(u32)))
+      epggrab_channel_link(egc, ch);
   }
 }
 
@@ -353,7 +345,7 @@ static void *_epggrab_socket_thread ( void *p )
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhlog(LOG_INFO, mod->id, "external socket enabled");
   
-  while ( mod->enabled && mod->sock ) {
+  while ( epggrab_running && mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
     if (s <= 0) continue;
@@ -414,7 +406,7 @@ int epggrab_module_enable_socket ( void *m, uint8_t e )
     tvhlog(LOG_DEBUG, mod->id, "starting socket thread");
     pthread_attr_init(&tattr);
     pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&tid, &tattr, _epggrab_socket_thread, mod);
+    tvhthread_create(&tid, &tattr, _epggrab_socket_thread, mod, 1);
   }
   mod->enabled = e;
   return 1;
@@ -436,8 +428,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
   
   /* Pass through */
-  snprintf(path, 512, "%s/epggrab/%s.sock",
-           hts_settings_get_root(), sockid);
+  hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
                             id, name, priority, path,
                             NULL, parse, trans,
@@ -458,8 +449,9 @@ epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
-                   struct th_dvb_mux_instance *tdmi),
+                   struct mpegts_mux *dm),
     int (*enable) (void *m, uint8_t e ),
+    void (*done) (epggrab_module_ota_t *m),
     epggrab_channel_tree_t *channels )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
@@ -471,7 +463,8 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->type   = EPGGRAB_OTA;
   skel->enable = enable;
   skel->start  = start;
-  TAILQ_INIT(&skel->muxes);
+  skel->done   = done;
+  //TAILQ_INIT(&skel->muxes);
 
   return skel;
 }

@@ -19,7 +19,7 @@
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
 #define __TVH_TIMESHIFT_PRIVATE_H__
 
-#define TIMESHIFT_PLAY_BUF    2000000 // us to buffer in TX
+#define TIMESHIFT_PLAY_BUF     200000 // us to buffer in TX
 #define TIMESHIFT_FILE_PERIOD      60 // number of secs in each buffer file
 
 /**

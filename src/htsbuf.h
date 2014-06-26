@@ -45,11 +45,14 @@ void htsbuf_queue_init(htsbuf_queue_t *hq, unsigned int maxsize);
 
 htsbuf_queue_t *htsbuf_queue_alloc(unsigned int maxsize);
 
+void htsbuf_queue_free(htsbuf_queue_t *hq);
+
 void htsbuf_queue_flush(htsbuf_queue_t *hq);
 
 void htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap);
 
-void htsbuf_qprintf(htsbuf_queue_t *hq, const char *fmt, ...);
+void htsbuf_qprintf(htsbuf_queue_t *hq, const char *fmt, ...)
+  __attribute__((format(printf,2,3)));
 
 void htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len);
 

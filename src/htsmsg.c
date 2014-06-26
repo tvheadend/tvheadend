@@ -24,8 +24,12 @@
 #include <stdarg.h>
 #include <string.h>
 #include "htsmsg.h"
+#include "misc/dbl.h"
+#include "htsmsg_json.h"
 
 static void htsmsg_clear(htsmsg_t *msg);
+static htsmsg_t *
+htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
 
 /**
  *
@@ -107,6 +111,8 @@ htsmsg_field_find(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
+  if (msg == NULL || name == NULL)
+    return NULL;
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     if(f->hmf_name != NULL && !strcmp(f->hmf_name, name))
       return f;
@@ -174,6 +180,16 @@ htsmsg_destroy(htsmsg_t *msg)
   htsmsg_clear(msg);
   free((void *)msg->hm_data);
   free(msg);
+}
+
+/*
+ *
+ */
+void
+htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BOOL, HMF_NAME_ALLOCED);
+  f->hmf_bool = !!b;
 }
 
 /*
@@ -318,7 +334,14 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
 
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
+  
+  return htsmsg_field_get_s64(f, s64p);
+}
 
+int
+htsmsg_field_get_s64
+  (htsmsg_field_t *f, int64_t *s64p)
+{
   switch(f->hmf_type) {
   default:
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
@@ -328,11 +351,64 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
   case HMF_S64:
     *s64p = f->hmf_s64;
     break;
+  case HMF_BOOL:
+    *s64p = f->hmf_bool;
+    break;
   case HMF_DBL:
     *s64p = f->hmf_dbl;
     break;
   }
   return 0;
+}
+
+
+/**
+ *
+ */
+
+int
+htsmsg_field_get_bool
+  ( htsmsg_field_t *f, int *boolp )
+{
+  switch(f->hmf_type) {
+  default:
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  case HMF_STR:
+    if (!strcmp(f->hmf_str, "yes")  ||
+        !strcmp(f->hmf_str, "true") ||
+        !strcmp(f->hmf_str, "on") ||
+        !strcmp(f->hmf_str, "1"))
+      *boolp = 1;
+    else
+      *boolp = 0;
+    break;
+  case HMF_S64:
+    *boolp = f->hmf_s64 ? 1 : 0;
+    break;
+  case HMF_BOOL:
+    *boolp = f->hmf_bool;
+    break;
+  }
+  return 0;
+}
+
+int
+htsmsg_get_bool
+  (htsmsg_t *msg, const char *name, int *boolp)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+  
+  return htsmsg_field_get_bool(f, boolp);
+}
+
+int
+htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def)
+{
+  int ret;
+  return htsmsg_get_bool(msg, name, &ret) ? def : ret;
 }
 
 
@@ -361,6 +437,22 @@ htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p)
 
   if(s64 < 0 || s64 > 0xffffffffLL)
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  
+  *u32p = s64;
+  return 0;
+}
+
+int
+htsmsg_field_get_u32(htsmsg_field_t *f, uint32_t *u32p)
+{
+  int r;
+  int64_t s64;
+    
+  if ((r = htsmsg_field_get_s64(f, &s64)))
+    return r;
+
+  if (s64 < 0 || s64 > 0xffffffffL)
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
   
   *u32p = s64;
   return 0;
@@ -419,14 +511,30 @@ htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp)
 
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
-
-  if(f->hmf_type != HMF_DBL)
-    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
-
-  *dblp = f->hmf_dbl;
-  return 0;
+  
+  return htsmsg_field_get_dbl(f, dblp);
 }
 
+int
+htsmsg_field_get_dbl
+  ( htsmsg_field_t *f, double *dblp )
+{
+  switch (f->hmf_type) {
+    case HMF_S64:
+      *dblp = (double)f->hmf_s64;
+      break;
+    case HMF_DBL:
+      *dblp = f->hmf_dbl;
+      break;
+    case HMF_STR:
+      *dblp = my_str2double(f->hmf_str, NULL);
+      // TODO: better safety checks?
+      break;
+    default:
+      return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  }
+  return 0;
+}
 
 /*
  *
@@ -454,15 +562,25 @@ htsmsg_get_bin(htsmsg_t *msg, const char *name, const void **binp,
 const char *
 htsmsg_field_get_string(htsmsg_field_t *f)
 {
-  char buf[40];
+  char buf[128];
   
   switch(f->hmf_type) {
   default:
     return NULL;
   case HMF_STR:
     break;
+  case HMF_BOOL:
+    f->hmf_str = strdup(f->hmf_bool ? "true" : "false");
+    f->hmf_type = HMF_STR;
+    f->hmf_flags |= HMF_ALLOCED;
   case HMF_S64:
     snprintf(buf, sizeof(buf), "%"PRId64, f->hmf_s64);
+    f->hmf_str = strdup(buf);
+    f->hmf_type = HMF_STR;
+    f->hmf_flags |= HMF_ALLOCED;
+    break;
+  case HMF_DBL:
+    snprintf(buf, sizeof(buf), "%lf", f->hmf_dbl);
     f->hmf_str = strdup(buf);
     f->hmf_type = HMF_STR;
     f->hmf_flags |= HMF_ALLOCED;
@@ -493,10 +611,16 @@ htsmsg_get_map(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
-  if((f = htsmsg_field_find(msg, name)) == NULL || f->hmf_type != HMF_MAP)
+  if((f = htsmsg_field_find(msg, name)) == NULL)
     return NULL;
 
-  return &f->hmf_msg;
+  return htsmsg_field_get_map(f);
+}
+
+htsmsg_t *
+htsmsg_field_get_map(htsmsg_field_t *f)
+{
+  return htsmsg_field_get_msg(f, 0);
 }
 
 /**
@@ -548,10 +672,38 @@ htsmsg_get_list(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
-  if((f = htsmsg_field_find(msg, name)) == NULL || f->hmf_type != HMF_LIST)
+  if((f = htsmsg_field_find(msg, name)) == NULL)
     return NULL;
 
-  return &f->hmf_msg;
+  return htsmsg_field_get_list(f);
+}
+
+htsmsg_t *
+htsmsg_field_get_list ( htsmsg_field_t *f )
+{
+  return htsmsg_field_get_msg(f, 1);
+}
+
+static htsmsg_t *
+htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
+{
+  htsmsg_t *m;
+
+  /* Deserialize JSON (will keep either list or map) */
+  if (f->hmf_type == HMF_STR) {
+    if ((m = htsmsg_json_deserialize(f->hmf_str))) {
+      free((void*)f->hmf_str);
+      f->hmf_type          = m->hm_islist ? HMF_LIST : HMF_MAP;
+      f->hmf_msg.hm_islist = m->hm_islist;
+      TAILQ_MOVE(&f->hmf_msg.hm_fields, &m->hm_fields, hmf_link);
+      free(m);
+    }
+  }
+
+  if (f->hmf_type == (islist ? HMF_LIST : HMF_MAP))
+    return &f->hmf_msg;
+
+  return NULL;
 }
 
 /**
@@ -613,6 +765,10 @@ htsmsg_print0(htsmsg_t *msg, int indent)
       printf("S64) = %" PRId64 "\n", f->hmf_s64);
       break;
 
+    case HMF_BOOL:
+      printf("BOOL) = %s\n", f->hmf_bool ? "true" : "false");
+      break;
+
     case HMF_DBL:
       printf("DBL) = %f\n", f->hmf_dbl);
       break;
@@ -657,6 +813,10 @@ htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
 
     case HMF_S64:
       htsmsg_add_s64(dst, f->hmf_name, f->hmf_s64);
+      break;
+
+    case HMF_BOOL:
+      htsmsg_add_bool(dst, f->hmf_name, f->hmf_bool);
       break;
 
     case HMF_BIN:
@@ -717,5 +877,48 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
   return htsmsg_get_str_multi(m, field, "cdata", NULL);
 }
 
+/**
+ * Convert list to CSV string
+ *
+ * Note: this will NOT work for lists of complex types
+ */
+char *
+htsmsg_list_2_csv(htsmsg_t *m)
+{
+  int alloc, used, first = 1;
+  char *ret;
+  htsmsg_field_t *f;
+  const char *sep = ", ";
+  if (!m->hm_islist) return NULL;
+
+#define MAX(a,b) ((a) < (b)) ? (a) : (b)
+#define REALLOC(l)\
+  if ((alloc - used) < l) {\
+    alloc = MAX((l)*2, alloc*2);\
+    ret   = realloc(ret, alloc);\
+  }\
+
+  ret  = malloc(alloc = 512);
+  *ret = 0;
+  used = 0;
+  HTSMSG_FOREACH(f, m) {
+    if (f->hmf_type == HMF_STR) {
+      REALLOC(2 + strlen(f->hmf_str));
+      used += sprintf(ret+used, "%s%s", !first ? sep : "", f->hmf_str);
+    } else if (f->hmf_type == HMF_S64) {
+      REALLOC(34); // max length is actually 20 chars + 2
+      used += sprintf(ret+used, "%s%"PRId64, !first ? sep : "", f->hmf_s64);
+    } else if (f->hmf_type == HMF_BOOL) {
+      REALLOC(2); // max length is actually 20 chars + 2
+      used += sprintf(ret+used, "%s%d", !first ? sep : "", f->hmf_bool);
+    } else {
+      // TODO: handle doubles
+      free(ret);
+      return NULL;
+    }
+  }
+
+  return ret;
+}
 
 

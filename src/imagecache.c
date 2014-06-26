@@ -33,16 +33,9 @@
 #include "imagecache.h"
 #include "queue.h"
 #include "redblack.h"
-
-#if ENABLE_IMAGECACHE
-#define CURL_STATICLIB
-#include <curl/curl.h>
-#include <curl/easy.h>
-#endif
-
-// TODO: icon cache flushing?
-// TODO: md5 validation?
-// TODO: allow cache to be disabled by users
+#include "notify.h"
+#include "prop.h"
+#include "http.h"
 
 /*
  * Image metadata
@@ -64,385 +57,155 @@ typedef struct imagecache_image
   RB_ENTRY(imagecache_image)    url_link; ///< Index by URL
 } imagecache_image_t;
 
-static int                        _imagecache_id;
-static RB_HEAD(,imagecache_image) _imagecache_by_id;
-static RB_HEAD(,imagecache_image) _imagecache_by_url;
-
-pthread_mutex_t                   imagecache_mutex;
-
-static void  _imagecache_save   ( imagecache_image_t *img );
+static int                            imagecache_id;
+static RB_HEAD(,imagecache_image)     imagecache_by_id;
+static RB_HEAD(,imagecache_image)     imagecache_by_url;
+SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 #if ENABLE_IMAGECACHE
-uint32_t                              imagecache_enabled;
-uint32_t                              imagecache_ok_period;
-uint32_t                              imagecache_fail_period;
-uint32_t                              imagecache_ignore_sslcert;
-
-static pthread_cond_t                 _imagecache_cond;
-static TAILQ_HEAD(, imagecache_image) _imagecache_queue;
-static void  _imagecache_add    ( imagecache_image_t *img );
-static void* _imagecache_thread ( void *p );
-static int   _imagecache_fetch  ( imagecache_image_t *img );
-#endif
-
-static int _url_cmp ( void *a, void *b )
-{
-  return strcmp(((imagecache_image_t*)a)->url, ((imagecache_image_t*)b)->url);
-}
-
-static int _id_cmp  ( void *a, void *b )
-{
-  return ((imagecache_image_t*)a)->id - ((imagecache_image_t*)b)->id;
-}
-
-/*
- * Initialise
- */
-void imagecache_init ( void )
-{
-  htsmsg_t *m, *e;
-  htsmsg_field_t *f;
-  imagecache_image_t *img, *i;
-  const char *url;
-  uint32_t id;
-
-  /* Init vars */
-  _imagecache_id            = 0;
-#if ENABLE_IMAGECACHE
-  imagecache_enabled        = 0;
-  imagecache_ok_period      = 24 * 7; // weekly
-  imagecache_fail_period    = 24;     // daily
-  imagecache_ignore_sslcert = 0;
-#endif
-
-  /* Create threads */
-  pthread_mutex_init(&imagecache_mutex, NULL);
-#if ENABLE_IMAGECACHE
-  pthread_cond_init(&_imagecache_cond, NULL);
-  TAILQ_INIT(&_imagecache_queue);
-#endif
-
-  /* Load settings */
-#if ENABLE_IMAGECACHE
-  if ((m = hts_settings_load("imagecache/config"))) {
-    htsmsg_get_u32(m, "enabled", &imagecache_enabled);
-    htsmsg_get_u32(m, "ok_period", &imagecache_ok_period);
-    htsmsg_get_u32(m, "fail_period", &imagecache_fail_period);
-    htsmsg_get_u32(m, "ignore_sslcert", &imagecache_ignore_sslcert);
-    htsmsg_destroy(m);
-  }
-#endif
-  if ((m = hts_settings_load("imagecache/meta"))) {
-    HTSMSG_FOREACH(f, m) {
-      if (!(e   = htsmsg_get_map_by_field(f))) continue;
-      if (!(id  = atoi(f->hmf_name))) continue;
-      if (!(url = htsmsg_get_str(e, "url"))) continue;
-      img          = calloc(1, sizeof(imagecache_image_t));
-      img->id      = id;
-      img->url     = strdup(url);
-      img->updated = htsmsg_get_s64_or_default(e, "updated", 0);
-      i = RB_INSERT_SORTED(&_imagecache_by_url, img, url_link, _url_cmp);
-      if (i) {
-        hts_settings_remove("imagecache/meta/%d", id);
-        hts_settings_remove("imagecache/data/%d", id);
-        free((void*)img->url);
-        free(img);
-        continue;
-      }
-      i = RB_INSERT_SORTED(&_imagecache_by_id, img, id_link, _id_cmp);
-      assert(!i);
-      if (id > _imagecache_id)
-        _imagecache_id = id;
-#if ENABLE_IMAGECACHE
-      if (!img->updated)
-        _imagecache_add(img);
-#endif
-    }
-    htsmsg_destroy(m);
-  }
-
-  /* Start threads */
-#if ENABLE_IMAGECACHE
+struct imagecache_config imagecache_conf;
+static const property_t  imagecache_props[] = {
   {
-    pthread_t tid;
-    pthread_create(&tid, NULL, _imagecache_thread, NULL);
-  }
+    .type   = PT_BOOL,
+    .id     = "enabled",
+    .name   = "Enabled",
+    .off    = offsetof(struct imagecache_config, enabled),
+  },
+  {
+    .type   = PT_BOOL,
+    .id     = "ignore_sslcert",
+    .name   = "Ignore invalid SSL certificate",
+    .off    = offsetof(struct imagecache_config, ignore_sslcert),
+  },
+  {
+    .type   = PT_U32,
+    .id     = "ok_period",
+    .name   = "Re-try period",
+    .off    = offsetof(struct imagecache_config, ok_period),
+  },
+  {
+    .type   = PT_U32,
+    .id     = "fail_period",
+    .name   = "Re-try period of failed images",
+    .off    = offsetof(struct imagecache_config, fail_period),
+  },
+  {}
+};
+
+static pthread_cond_t                 imagecache_cond;
+static TAILQ_HEAD(, imagecache_image) imagecache_queue;
+static gtimer_t                       imagecache_timer;
 #endif
+
+static int
+url_cmp ( imagecache_image_t *a, imagecache_image_t *b )
+{
+  return strcmp(a->url, b->url);
 }
 
-/*
- * Save settings
- */
-#if ENABLE_IMAGECACHE
-void imagecache_save ( void )
+static int
+id_cmp ( imagecache_image_t *a, imagecache_image_t *b )
+{
+  return (a->id - b->id);
+}
+
+static void
+imagecache_image_save ( imagecache_image_t *img )
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "enabled",        imagecache_enabled);
-  htsmsg_add_u32(m, "ok_period",      imagecache_ok_period);
-  htsmsg_add_u32(m, "fail_period",    imagecache_fail_period);
-  htsmsg_add_u32(m, "ignore_sslcert", imagecache_ignore_sslcert);
-  hts_settings_save(m, "imagecache/config");
-}
-
-/*
- * Enable/disable
- */
-int imagecache_set_enabled ( uint32_t e )
-{
-  if (e == imagecache_enabled)
-    return 0;
-  imagecache_enabled = e;
-  if (e)
-    pthread_cond_broadcast(&_imagecache_cond);
-  return 1;
-}
-
-/*
- * Set ok period
- */
-int imagecache_set_ok_period ( uint32_t p )
-{
-  if (p == imagecache_ok_period)
-    return 0;
-  imagecache_ok_period = p;
-  return 1;
-}
-
-/*
- * Set fail period
- */
-int imagecache_set_fail_period ( uint32_t p )
-{
-  if (p == imagecache_fail_period)
-    return 0;
-  imagecache_fail_period = p;
-  return 1;
-}
-
-/*
- * Set ignore SSL cert
- */
-int imagecache_set_ignore_sslcert ( uint32_t p )
-{
-  if (p == imagecache_ignore_sslcert)
-    return 0;
-  imagecache_ignore_sslcert = p;
-  return 1;
-}
-#endif
-
-/*
- * Fetch a URLs ID
- */
-uint32_t imagecache_get_id ( const char *url )
-{
-  uint32_t id = 0;
-  imagecache_image_t *i;
-  static imagecache_image_t *skel = NULL;
-
-  /* Invalid */
-  if (!url)
-    return 0;
-
-  /* Disabled */
-#if !ENABLE_IMAGECACHE
-  if (strncasecmp(url, "file://", 7))
-    return 0;
-#endif
-
-  /* Skeleton */
-  if (!skel)
-    skel = calloc(1, sizeof(imagecache_image_t));
-  skel->url = url;
-
-  /* Create/Find */
-  pthread_mutex_lock(&imagecache_mutex);
-  i = RB_INSERT_SORTED(&_imagecache_by_url, skel, url_link, _url_cmp);
-  if (!i) {
-    i      = skel;
-    i->url = strdup(url);
-    i->id  = ++_imagecache_id;
-    skel   = RB_INSERT_SORTED(&_imagecache_by_id, i, id_link, _id_cmp);
-    assert(!skel);
-#if ENABLE_IMAGECACHE
-    _imagecache_add(i);
-#endif
-    _imagecache_save(i);
-  }
-#if ENABLE_IMAGECACHE
-  if (!strncasecmp(url, "file://", 7) || imagecache_enabled)
-    id = i->id;
-#else
-  if (!strncasecmp(url, "file://", 7))
-    id = i->id;
-#endif
-  pthread_mutex_unlock(&imagecache_mutex);
-  
-  return id;
-}
-
-/*
- * Get data
- */
-int imagecache_open ( uint32_t id )
-{
-  imagecache_image_t skel, *i;
-  int fd = -1;
-
-  pthread_mutex_lock(&imagecache_mutex);
-
-  /* Find */
-  skel.id = id;
-  i = RB_FIND(&_imagecache_by_id, &skel, id_link, _id_cmp);
-
-  /* Invalid */
-  if (!i) {
-    pthread_mutex_unlock(&imagecache_mutex);
-    return -1;
-  }
-
-  /* Local file */
-  if (!strncasecmp(i->url, "file://", 7))
-    fd = open(i->url + 7, O_RDONLY);
-
-  /* Remote file */
-#if ENABLE_IMAGECACHE
-  else if (imagecache_enabled) {
-    struct timespec ts;
-    int err;
-    if (i->updated) {
-      // use existing
-    } else if (i->state == FETCHING) {
-      ts.tv_nsec = 0;
-      time(&ts.tv_sec);
-      ts.tv_sec += 10; // TODO: sensible timeout?
-      err = pthread_cond_timedwait(&_imagecache_cond, &imagecache_mutex, &ts);
-      if (err == ETIMEDOUT) {
-        pthread_mutex_unlock(&imagecache_mutex);
-        return -1;
-      }
-    } else if (i->state == QUEUED) {
-      i->state = FETCHING;
-      TAILQ_REMOVE(&_imagecache_queue, i, q_link);
-      pthread_mutex_unlock(&imagecache_mutex);
-      if (_imagecache_fetch(i))
-        return -1;
-      pthread_mutex_lock(&imagecache_mutex);
-    }
-    fd = hts_settings_open_file(0, "imagecache/data/%d", i->id);
-  }
-#endif
-  pthread_mutex_unlock(&imagecache_mutex);
-
-  return fd;
-}
-
-static void _imagecache_save ( imagecache_image_t *img )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  
   htsmsg_add_str(m, "url", img->url);
   if (img->updated)
     htsmsg_add_s64(m, "updated", img->updated);
-
   hts_settings_save(m, "imagecache/meta/%d", img->id);
 }
 
 #if ENABLE_IMAGECACHE
-static void _imagecache_add ( imagecache_image_t *img )
+static void
+imagecache_image_add ( imagecache_image_t *img )
 {
   if (strncasecmp("file://", img->url, 7)) {
     img->state = QUEUED;
-    TAILQ_INSERT_TAIL(&_imagecache_queue, img, q_link);
-    pthread_cond_broadcast(&_imagecache_cond);
+    TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
+    pthread_cond_broadcast(&imagecache_cond);
   } else {
     time(&img->updated);
   }
 }
 
-static void *_imagecache_thread ( void *p )
+static int
+imagecache_image_fetch ( imagecache_image_t *img )
 {
-  int err;
-  imagecache_image_t *img;
-  struct timespec ts;
-  ts.tv_nsec = 0;
-
-  while (1) {
-
-    /* Get entry */
-    pthread_mutex_lock(&imagecache_mutex);
-    if (!imagecache_enabled) {
-      pthread_cond_wait(&_imagecache_cond, &imagecache_mutex);
-      pthread_mutex_unlock(&imagecache_mutex);
-      continue;
-    }
-    img = TAILQ_FIRST(&_imagecache_queue);
-    if (!img) {
-      time(&ts.tv_sec);
-      ts.tv_sec += 60;
-      err = pthread_cond_timedwait(&_imagecache_cond, &imagecache_mutex, &ts);
-      if (err == ETIMEDOUT) {
-        uint32_t period;
-        RB_FOREACH(img, &_imagecache_by_url, url_link) {
-          if (img->state != IDLE) continue;
-          period = img->failed ? imagecache_fail_period : imagecache_ok_period;
-          period *= 3600;
-          if (period && ((ts.tv_sec - img->updated) > period))
-            _imagecache_add(img);
-        }
-      }
-      pthread_mutex_unlock(&imagecache_mutex);
-      continue;
-    }
-    img->state = FETCHING;
-    TAILQ_REMOVE(&_imagecache_queue, img, q_link);
-    pthread_mutex_unlock(&imagecache_mutex);
-
-    /* Fetch */
-    _imagecache_fetch(img);
-  }
-
-  return NULL;
-}
-
-static int _imagecache_fetch ( imagecache_image_t *img )
-{
-  int res;
-  CURL *curl;
+  int res = 1, r;
   FILE *fp;
+  url_t url;
   char tmp[256], path[256];
+  tvhpoll_event_t ev;
+  tvhpoll_t *efd = NULL;
+  http_client_t *hc;
+
+  if (img->url == NULL || img->url[0] == '\0')
+    return res;
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
                               img->id))
-    return 1;
+    goto error;
   if (hts_settings_makedirs(path))
-    return 1;
+    goto error;
   snprintf(tmp, sizeof(tmp), "%s.tmp", path);
   if (!(fp = fopen(tmp, "wb")))
-    return 1;
+    goto error;
   
   /* Build command */
-  pthread_mutex_lock(&imagecache_mutex);
   tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
-  curl = curl_easy_init();
-  curl_easy_setopt(curl, CURLOPT_URL,         img->url);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA,   fp);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT,   "TVHeadend");
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT,     120);
-  curl_easy_setopt(curl, CURLOPT_NOPROGRESS,  1);
-  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-  if (imagecache_ignore_sslcert)
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-  pthread_mutex_unlock(&imagecache_mutex);
+  memset(&url, 0, sizeof(url));
+  if (urlparse(img->url, &url)) {
+    tvherror("imagecache", "Unable to parse url '%s'", img->url);
+    goto error;
+  }
 
-  /* Fetch */
-  res = curl_easy_perform(curl);
-  curl_easy_cleanup(curl);
-  fclose(fp);
+  /* Fetch (release lock, incase of delays) */
+  pthread_mutex_unlock(&global_lock);
+
+  hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
+                           url.host, url.port, NULL);
+  if (hc == NULL)
+    goto error;
+
+  http_client_ssl_peer_verify(hc, imagecache_conf.ignore_sslcert ? 0 : 1);
+  hc->hc_handle_location = 1;
+  hc->hc_data_limit  = 256*1024;
+  efd = tvhpoll_create(1);
+  hc->hc_efd = efd;
+
+  r = http_client_simple(hc, &url);
+  if (r < 0)
+    goto error;
+
+  while (tvheadend_running) {
+    r = tvhpoll_wait(efd, &ev, 1, -1);
+    if (r < 0)
+      break;
+    if (r == 0)
+      continue;
+    r = http_client_run(hc);
+    if (r < 0)
+      break;
+    if (r == HTTP_CON_DONE) {
+      if (hc->hc_code == HTTP_STATUS_OK && hc->hc_data_size > 0) {
+        fwrite(hc->hc_data, hc->hc_data_size, 1, fp);
+        res = 0;
+      }
+      break;
+    }
+  }
+
+  pthread_mutex_lock(&global_lock);
 
   /* Process */
-  pthread_mutex_lock(&imagecache_mutex);
+error:
+  urlreset(&url);
+  tvhpoll_destroy(efd);
   img->state = IDLE;
   time(&img->updated); // even if failed (possibly request sooner?)
   if (res) {
@@ -455,10 +218,302 @@ static int _imagecache_fetch ( imagecache_image_t *img )
     rename(tmp, path);
     tvhlog(LOG_DEBUG, "imagecache", "downloaded %s", img->url);
   }
-  _imagecache_save(img);
-  pthread_cond_broadcast(&_imagecache_cond);
-  pthread_mutex_unlock(&imagecache_mutex);
-  
+  imagecache_image_save(img);
+  pthread_cond_broadcast(&imagecache_cond);
+
   return res;
 };
+
+static void *
+imagecache_thread ( void *p )
+{
+  imagecache_image_t *img;
+
+  pthread_mutex_lock(&global_lock);
+  while (tvheadend_running) {
+
+    /* Check we're enabled */
+    if (!imagecache_conf.enabled) {
+      pthread_cond_wait(&imagecache_cond, &global_lock);
+      continue;
+    }
+
+    /* Get entry */
+    if (!(img = TAILQ_FIRST(&imagecache_queue))) {
+      pthread_cond_wait(&imagecache_cond, &global_lock);
+      continue;
+    }
+
+    /* Process */
+    img->state = FETCHING;
+    TAILQ_REMOVE(&imagecache_queue, img, q_link);
+
+    /* Fetch */
+    (void)imagecache_image_fetch(img);
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  return NULL;
+}
+
+static void
+imagecache_timer_cb ( void *p )
+{
+  time_t now, when;
+  imagecache_image_t *img;
+  time(&now);
+  RB_FOREACH(img, &imagecache_by_url, url_link) {
+    if (img->state != IDLE) continue;
+    when = img->failed ? imagecache_conf.fail_period
+                       : imagecache_conf.ok_period;
+    when = img->updated + (when * 3600);
+    if (when < now)
+      imagecache_image_add(img);
+  }
+}
+
+#endif /* ENABLE_IMAGECACHE */
+
+/*
+ * Initialise
+ */
+#if ENABLE_IMAGECACHE
+pthread_t imagecache_tid;
 #endif
+
+void
+imagecache_init ( void )
+{
+  htsmsg_t *m, *e;
+  htsmsg_field_t *f;
+  imagecache_image_t *img, *i;
+  const char *url;
+  uint32_t id;
+
+  /* Init vars */
+  imagecache_id             = 0;
+#if ENABLE_IMAGECACHE
+  imagecache_conf.enabled        = 0;
+  imagecache_conf.ok_period      = 24 * 7; // weekly
+  imagecache_conf.fail_period    = 24;     // daily
+  imagecache_conf.ignore_sslcert = 0;
+#endif
+
+  /* Create threads */
+#if ENABLE_IMAGECACHE
+  pthread_cond_init(&imagecache_cond, NULL);
+  TAILQ_INIT(&imagecache_queue);
+#endif
+
+  /* Load settings */
+#if ENABLE_IMAGECACHE
+  if ((m = hts_settings_load("imagecache/config"))) {
+    imagecache_set_config(m);
+    htsmsg_destroy(m);
+  }
+#endif
+  if ((m = hts_settings_load("imagecache/meta"))) {
+    HTSMSG_FOREACH(f, m) {
+      if (!(e   = htsmsg_get_map_by_field(f))) continue;
+      if (!(id  = atoi(f->hmf_name))) continue;
+      if (!(url = htsmsg_get_str(e, "url"))) continue;
+      img          = calloc(1, sizeof(imagecache_image_t));
+      img->id      = id;
+      img->url     = strdup(url);
+      img->updated = htsmsg_get_s64_or_default(e, "updated", 0);
+      i = RB_INSERT_SORTED(&imagecache_by_url, img, url_link, url_cmp);
+      if (i) {
+        hts_settings_remove("imagecache/meta/%d", id);
+        hts_settings_remove("imagecache/data/%d", id);
+        free((void*)img->url);
+        free(img);
+        continue;
+      }
+      i = RB_INSERT_SORTED(&imagecache_by_id, img, id_link, id_cmp);
+      assert(!i);
+      if (id > imagecache_id)
+        imagecache_id = id;
+#if ENABLE_IMAGECACHE
+      if (!img->updated)
+        imagecache_image_add(img);
+#endif
+    }
+    htsmsg_destroy(m);
+  }
+
+  /* Start threads */
+#if ENABLE_IMAGECACHE
+  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL, 0);
+
+  /* Re-try timer */
+  // TODO: this could be more efficient by being targetted, however
+  //       the reality its not necessary and I'd prefer to avoid dumping
+  //       100's of timers into the global pool
+  gtimer_arm(&imagecache_timer, imagecache_timer_cb, NULL, 600);
+#endif
+}
+
+/*
+ * Shutdown
+ */
+void
+imagecache_done ( void )
+{
+  imagecache_image_t *img;
+
+#if ENABLE_IMAGECACHE
+  pthread_cond_broadcast(&imagecache_cond);
+  pthread_join(imagecache_tid, NULL);
+#endif
+  while ((img = RB_FIRST(&imagecache_by_url)) != NULL) {
+    RB_REMOVE(&imagecache_by_url, img, url_link);
+    RB_REMOVE(&imagecache_by_id, img, id_link);
+    free((void *)img->url);
+    free(img);
+  }
+  SKEL_FREE(imagecache_skel);
+}
+
+
+#if ENABLE_IMAGECACHE
+
+/*
+ * Get config
+ */
+htsmsg_t *
+imagecache_get_config ( void )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  prop_read_values(&imagecache_conf, imagecache_props, m, 0, NULL);
+  return m;
+}
+
+/*
+ * Set config
+ */
+int
+imagecache_set_config ( htsmsg_t *m )
+{
+  int save = prop_write_values(&imagecache_conf, imagecache_props, m, 0, NULL);
+  if (save)
+    pthread_cond_broadcast(&imagecache_cond);
+  return save;
+}
+
+/*
+ * Save
+ */
+void
+imagecache_save ( void )
+{
+  htsmsg_t *m = imagecache_get_config();
+  hts_settings_save(m, "imagecache/config");
+  notify_reload("imagecache");
+}
+
+#endif /* ENABLE_IMAGECACHE */
+
+/*
+ * Fetch a URLs ID
+ */
+uint32_t
+imagecache_get_id ( const char *url )
+{
+  uint32_t id = 0;
+  imagecache_image_t *i, *j;
+
+  lock_assert(&global_lock);
+
+  /* Invalid */
+  if (!url || url[0] == '\0')
+    return 0;
+
+  /* Disabled */
+#if !ENABLE_IMAGECACHE
+  if (strncasecmp(url, "file://", 7))
+    return 0;
+#endif
+
+  /* Skeleton */
+  SKEL_ALLOC(imagecache_skel);
+  imagecache_skel->url = url;
+
+  /* Create/Find */
+  i = RB_INSERT_SORTED(&imagecache_by_url, imagecache_skel, url_link, url_cmp);
+  if (!i) {
+    i      = imagecache_skel;
+    i->url = strdup(url);
+    i->id  = ++imagecache_id;
+    j      = RB_INSERT_SORTED(&imagecache_by_id, i, id_link, id_cmp);
+    assert(!j);
+    SKEL_USED(imagecache_skel);
+#if ENABLE_IMAGECACHE
+    imagecache_image_add(i);
+#endif
+    imagecache_image_save(i);
+  }
+#if ENABLE_IMAGECACHE
+  if (!strncasecmp(url, "file://", 7) || imagecache_conf.enabled)
+    id = i->id;
+#else
+  if (!strncasecmp(url, "file://", 7))
+    id = i->id;
+#endif
+  
+  return id;
+}
+
+/*
+ * Get data
+ */
+int
+imagecache_open ( uint32_t id )
+{
+  imagecache_image_t skel, *i;
+  int fd = -1;
+
+  lock_assert(&global_lock);
+
+  /* Find */
+  skel.id = id;
+  if (!(i = RB_FIND(&imagecache_by_id, &skel, id_link, id_cmp)))
+    return -1;
+
+  /* Local file */
+  if (!strncasecmp(i->url, "file://", 7))
+    fd = open(i->url + 7, O_RDONLY);
+
+  /* Remote file */
+#if ENABLE_IMAGECACHE
+  else if (imagecache_conf.enabled) {
+    int e;
+    struct timespec ts;
+
+    /* Use existing */
+    if (i->updated) {
+
+    /* Wait */
+    } else if (i->state == FETCHING) {
+      time(&ts.tv_sec);
+      ts.tv_nsec = 0;
+      ts.tv_sec += 5;
+      e = pthread_cond_timedwait(&imagecache_cond, &global_lock, &ts);
+      if (e == ETIMEDOUT)
+        return -1;
+
+    /* Attempt to fetch */
+    } else if (i->state == QUEUED) {
+      i->state = FETCHING;
+      TAILQ_REMOVE(&imagecache_queue, i, q_link);
+      pthread_mutex_unlock(&global_lock);
+      e = imagecache_image_fetch(i);
+      pthread_mutex_lock(&global_lock);
+      if (e)
+        return -1;
+    }
+    fd = hts_settings_open_file(0, "imagecache/data/%d", i->id);
+  }
+#endif
+
+  return fd;
+}

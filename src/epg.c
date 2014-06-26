@@ -504,6 +504,8 @@ htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
     lang_str_serialize(brand->summary, m, "summary");
   if (brand->season_count)
     htsmsg_add_u32(m, "season-count", brand->season_count);
+  if (brand->image)
+    htsmsg_add_str(m, "image", brand->image);
   return m;
 }
 
@@ -512,6 +514,7 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
   epg_object_t **skel = _epg_brand_skel();
   epg_brand_t *eb;
   uint32_t u32;
+  const char *str;
   lang_str_t *ls;
   lang_str_ele_t *e;
 
@@ -530,6 +533,9 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
   }
   if ( !htsmsg_get_u32(m, "season-count", &u32) )
     *save |= epg_brand_set_season_count(eb, u32, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_brand_set_image(eb, str, NULL);
 
   return eb;
 }
@@ -686,6 +692,8 @@ htsmsg_t *epg_season_serialize ( epg_season_t *season )
     htsmsg_add_u32(m, "episode-count", season->episode_count);
   if (season->brand)
     htsmsg_add_str(m, "brand", season->brand->uri);
+  if (season->image)
+    htsmsg_add_str(m, "image", season->image);
   return m;
 }
 
@@ -716,6 +724,9 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
   if ( (str = htsmsg_get_str(m, "brand")) )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_season_set_brand(es, eb, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_season_set_image(es, str, NULL);
 
   return es;
 }
@@ -1152,6 +1163,9 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(m, "age_rating", episode->age_rating);
   if (episode->first_aired)
     htsmsg_add_s64(m, "first_aired", episode->first_aired);
+  if (episode->image)
+    htsmsg_add_str(m, "image", episode->image);
+
   return m;
 }
 
@@ -1228,6 +1242,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
   if (!htsmsg_get_s64(m, "first_aired", &s64))
     *save |= epg_episode_set_first_aired(ee, (time_t)s64, NULL);
+
+  if ( (str = htsmsg_get_str(m, "image")) )
+    *save |= epg_episode_set_image(ee, str, NULL);
 
   return ee;
 }
@@ -1376,7 +1393,8 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch));
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1399,16 +1417,16 @@ static void _epg_channel_timer_callback ( void *p )
     tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
            ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
            ch->ch_epg_next ? ch->ch_epg_next->id : 0,
-           ch->ch_name);
+           channel_get_name(ch));
     tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
-           ch->ch_name);
+           channel_get_name(ch));
     htsp_channel_update_nownext(ch);
   }
 
   /* re-arm */
   if ( next ) {
     tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRItime_t" for %s",
-           next, ch->ch_name);
+           next, channel_get_name(ch));
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
 
@@ -1443,7 +1461,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       // Note: sets updated
       _epg_object_getref(ret);
       tvhtrace("epg", "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-               ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
+               ret->id, epg_broadcast_get_title(ret, NULL),
+               channel_get_name(ch), ret->start, ret->stop);
 
     /* Existing */
     } else {
@@ -1458,7 +1477,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
         ret->stop = (*bcast)->stop;
         _epg_object_set_updated(ret);
         tvhtrace("epg", "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-                 ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
+                 ret->id, epg_broadcast_get_title(ret, NULL),
+                 channel_get_name(ch), ret->start, ret->stop);
       }
     }
   }
@@ -1470,7 +1490,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ( (ebc = RB_PREV(ret, sched_link)) != NULL ) {
     if ( ebc->stop <= ret->start ) break;
     tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
@@ -1478,7 +1499,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ( (ebc = RB_NEXT(ret, sched_link)) != NULL ) {
     if ( ebc->start >= ret->stop ) break;
     tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
-             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
+             ebc->id, epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
@@ -1716,8 +1738,8 @@ epg_episode_t *epg_broadcast_get_episode
   if (!ebc) return NULL;
   if (ebc->episode) return ebc->episode;
   if (!create) return NULL;
-  snprintf(uri, sizeof(uri)-1, "tvh://channel-%d/bcast-%u/episode",
-           ebc->channel->ch_id, ebc->id);
+  snprintf(uri, sizeof(uri)-1, "tvh://channel-%s/bcast-%u/episode",
+           idnode_uuid_as_str(&ebc->channel->ch_id), ebc->id);
   if ((ee = epg_episode_find_by_uri(uri, 1, save)))
     *save |= epg_broadcast_set_episode(ebc, ee, ebc->grabber);
   return ee;
@@ -1751,7 +1773,7 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_s64(m, "stop", broadcast->stop);
   htsmsg_add_str(m, "episode", broadcast->episode->uri);
   if (broadcast->channel)
-    htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
+    htsmsg_add_str(m, "channel", channel_get_uuid(broadcast->channel));
   if (broadcast->dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
   if (broadcast->is_widescreen)
@@ -1791,7 +1813,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_serieslink_t *esl;
   lang_str_t *ls;
   const char *str;
-  uint32_t chid, eid, u32;
+  uint32_t eid, u32;
   int64_t start, stop;
 
   if ( htsmsg_get_s64(m, "start", &start) ) return NULL;
@@ -1813,9 +1835,8 @@ epg_broadcast_t *epg_broadcast_deserialize
   }
 
   /* Get channel */
-  if ( !htsmsg_get_u32(m, "channel", &chid) ) {
-    ch  = channel_find_by_identifier(chid);
-  }
+  if ((str = htsmsg_get_str(m, "channel")))
+    ch = channel_find(str);
   if (!ch) return NULL;
 
   /* Create */
@@ -2249,9 +2270,8 @@ void epg_query0
 
   /* All channels */
   } else {
-    RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
+    CHANNEL_FOREACH(channel)
       _eqr_add_channel(eqr, channel, genre, preg, now, lang);
-    }
   }
   if (preg) regfree(preg);
 
@@ -2261,8 +2281,8 @@ void epg_query0
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       epg_genre_t *genre, const char *title, const char *lang)
 {
-  channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
-  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
+  channel_t     *ch = channel ? channel_find(channel)    : NULL;
+  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
   epg_query0(eqr, ch, ct, genre, title, lang);
 }
 
@@ -2293,4 +2313,19 @@ char *epg_hash ( const char *t, const char *s, const char *d )
   if ( s && strlen(s) > 10 ) return md5sum(s);
   if ( t ) return md5sum(t);
   return NULL;
+}
+
+void epg_skel_done(void)
+{
+  epg_object_t **skel;
+  epg_broadcast_t **broad;
+
+  skel = _epg_brand_skel();
+  free(*skel); *skel = NULL;
+  skel = _epg_season_skel();
+  free(*skel); *skel = NULL;
+  skel = _epg_episode_skel();
+  free(*skel); *skel = NULL;
+  broad = _epg_broadcast_skel();
+  free(*broad); *broad = NULL;
 }

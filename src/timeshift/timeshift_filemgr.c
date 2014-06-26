@@ -28,7 +28,7 @@
 #include "streaming.h"
 #include "timeshift.h"
 #include "timeshift/private.h"
-#include "config2.h"
+#include "config.h"
 #include "settings.h"
 #include "atomic.h"
 
@@ -86,6 +86,8 @@ static void* timeshift_reaper_callback ( void *p )
     }
     free(tsf->path);
     free(tsf);
+
+    pthread_mutex_lock(&timeshift_reaper_lock);
   }
   pthread_mutex_unlock(&timeshift_reaper_lock);
   tvhtrace("timeshift", "reaper thread exit");
@@ -110,15 +112,16 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
  *
  * TODO: should this be fixed on startup?
  */
-static void timeshift_filemgr_get_root ( char *buf, size_t len )
+static int
+timeshift_filemgr_get_root ( char *buf, size_t len )
 {
   const char *path = timeshift_path;
   if (!path || !*path) {
-    path = hts_settings_get_root();
-    snprintf(buf, len, "%s/timeshift/buffer", path);
+    return hts_settings_buildpath(buf, len, "timeshift/buffer");
   } else {
     snprintf(buf, len, "%s/buffer", path);
   }
+  return 0;
 }
 
 /*
@@ -126,7 +129,8 @@ static void timeshift_filemgr_get_root ( char *buf, size_t len )
  */
 int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
 {
-  timeshift_filemgr_get_root(buf, len);
+  if (timeshift_filemgr_get_root(buf, len))
+    return 1;
   snprintf(buf+strlen(buf), len-strlen(buf), "/%d", index);
   return makedirs(buf, 0700);
 }
@@ -333,8 +337,8 @@ void timeshift_filemgr_init ( void )
   char path[512];
 
   /* Try to remove any rubbish left from last run */
-  timeshift_filemgr_get_root(path, sizeof(path));
-  rmtree(path);
+  if(!timeshift_filemgr_get_root(path, sizeof(path)))
+    rmtree(path);
 
   /* Size processing */
   timeshift_total_size = 0;
@@ -344,8 +348,8 @@ void timeshift_filemgr_init ( void )
   pthread_mutex_init(&timeshift_reaper_lock, NULL);
   pthread_cond_init(&timeshift_reaper_cond, NULL);
   TAILQ_INIT(&timeshift_reaper_list);
-  pthread_create(&timeshift_reaper_thread, NULL,
-                 timeshift_reaper_callback, NULL);
+  tvhthread_create(&timeshift_reaper_thread, NULL,
+                 timeshift_reaper_callback, NULL, 1);
 }
 
 /*
@@ -363,8 +367,8 @@ void timeshift_filemgr_term ( void )
   pthread_join(timeshift_reaper_thread, NULL);
 
   /* Remove the lot */
-  timeshift_filemgr_get_root(path, sizeof(path));
-  rmtree(path);
+  if (!timeshift_filemgr_get_root(path, sizeof(path)))
+    rmtree(path);
 }
 
 

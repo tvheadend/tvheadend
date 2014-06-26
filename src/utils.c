@@ -27,6 +27,29 @@
 #include <unistd.h>
 #include "tvheadend.h"
 
+#if defined(PLATFORM_DARWIN)
+#include <machine/endian.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/endian.h>
+#else
+#include <endian.h>
+#endif
+
+#ifndef BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER
+#endif
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN __BIG_ENDIAN
+#endif
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define ENDIAN_SWAP_COND(x) (!(x))
+#else
+#define ENDIAN_SWAP_COND(x) (x)
+#endif
+
 /**
  * CRC32 
  */
@@ -77,7 +100,7 @@ static uint32_t crc_tab[256] = {
 };
 
 uint32_t
-tvh_crc32(uint8_t *data, size_t datalen, uint32_t crc)
+tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc)
 {
   while(datalen--)
     crc = (crc << 8) ^ crc_tab[((crc >> 24) ^ *data++) & 0xff];
@@ -193,6 +216,41 @@ base64_decode(uint8_t *out, const char *in, int out_size)
     return dst - out;
 }
 
+/*
+ * b64_encode: Stolen from VLC's http.c.
+ * Simplified by Michael.
+ * Fixed edge cases and made it work from data (vs. strings) by Ryan.
+ */
+
+char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
+{
+    static const char b64[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    char *ret, *dst;
+    unsigned i_bits = 0;
+    int i_shift = 0;
+    int bytes_remaining = in_size;
+
+    if (in_size >= UINT_MAX / 4 ||
+        out_size < BASE64_SIZE(in_size))
+        return NULL;
+    ret = dst = out;
+    while (bytes_remaining) {
+        i_bits = (i_bits << 8) + *in++;
+        bytes_remaining--;
+        i_shift += 8;
+
+        do {
+            *dst++ = b64[(i_bits << 6 >> i_shift) & 0x3f];
+            i_shift -= 6;
+        } while (i_shift > 6 || (bytes_remaining == 0 && i_shift > 0));
+    }
+    while ((dst - ret) & 3)
+        *dst++ = '=';
+    *dst = '\0';
+
+    return ret;
+}
 
 /**
  *
@@ -247,6 +305,12 @@ put_utf8(char *out, int c)
   return 6;
 }
 
+static void
+sbuf_alloc_fail(int len)
+{
+  fprintf(stderr, "Unable to allocate %d bytes\n", len);
+  abort();
+}
 
 void
 sbuf_init(sbuf_t *sb)
@@ -254,41 +318,71 @@ sbuf_init(sbuf_t *sb)
   memset(sb, 0, sizeof(sbuf_t));
 }
 
+void
+sbuf_init_fixed(sbuf_t *sb, int len)
+{
+  memset(sb, 0, sizeof(sbuf_t));
+  sb->sb_data = malloc(len);
+  if (sb->sb_data == NULL)
+    sbuf_alloc_fail(len);
+  sb->sb_size = len;
+}
 
 void
 sbuf_free(sbuf_t *sb)
 {
-  if(sb->sb_data)
-    free(sb->sb_data);
+  free(sb->sb_data);
   sb->sb_size = sb->sb_ptr = sb->sb_err = 0;
   sb->sb_data = NULL;
 }
 
 void
-sbuf_reset(sbuf_t *sb)
+sbuf_reset(sbuf_t *sb, int max_len)
 {
-  sb->sb_ptr = 0;
-  sb->sb_err = 0;
+  sb->sb_ptr = sb->sb_err = 0;
+  if (sb->sb_size > max_len) {
+    void *n = realloc(sb->sb_data, max_len);
+    if (n) {
+      sb->sb_data = n;
+      sb->sb_size = max_len;
+    }
+  }
 }
 
 void
-sbuf_err(sbuf_t *sb)
+sbuf_reset_and_alloc(sbuf_t *sb, int len)
 {
-  sb->sb_err = 1;
+  if (sb->sb_data) {
+    if (len != sb->sb_size) {
+      void *n = realloc(sb->sb_data, len);
+      if (n) {
+        sb->sb_data = n;
+        sb->sb_size = len;
+      }
+    }
+  } else {
+    sb->sb_data = malloc(len);
+    sb->sb_size = len;
+  }
+  if (sb->sb_data == NULL)
+    sbuf_alloc_fail(len);
+  sb->sb_ptr = sb->sb_err = 0;
 }
 
 void
-sbuf_alloc(sbuf_t *sb, int len)
+sbuf_alloc_(sbuf_t *sb, int len)
 {
   if(sb->sb_data == NULL) {
-    sb->sb_size = 4000;
+    sb->sb_size = len * 4 > 4000 ? len * 4 : 4000;
     sb->sb_data = malloc(sb->sb_size);
-  }
-
-  if(sb->sb_ptr + len >= sb->sb_size) {
+    return;
+  } else {
     sb->sb_size += len * 4;
     sb->sb_data = realloc(sb->sb_data, sb->sb_size);
   }
+
+  if(sb->sb_data == NULL)
+    sbuf_alloc_fail(sb->sb_size);
 }
 
 void
@@ -319,6 +413,51 @@ sbuf_put_byte(sbuf_t *sb, uint8_t u8)
   sbuf_append(sb, &u8, 1);
 }
 
+uint16_t sbuf_peek_u16(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  if (ENDIAN_SWAP_COND(sb->sb_bswap))
+    return p[0] | (((uint16_t)p[1]) << 8);
+  else
+    return (((uint16_t)p[0]) << 8) | p[1];
+}
+
+uint16_t sbuf_peek_u16le(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return p[0] | (((uint16_t)p[1]) << 8);
+}
+
+uint16_t sbuf_peek_u16be(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return (((uint16_t)p[0]) << 8) | p[1];
+}
+
+uint32_t sbuf_peek_u32(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  if (ENDIAN_SWAP_COND(sb->sb_bswap))
+    return p[0] | (((uint32_t)p[1]) << 8) |
+           (((uint32_t)p[2]) << 16) | (((uint32_t)p[3]) << 24);
+  else
+    return (((uint16_t)p[0]) << 24) | (((uint16_t)p[1]) << 16) |
+            (((uint16_t)p[2]) << 8) | p[3];
+}
+
+uint32_t sbuf_peek_u32le(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return p[0] | (((uint32_t)p[1]) << 8) |
+         (((uint32_t)p[2]) << 16) | (((uint32_t)p[3]) << 24);
+}
+
+uint32_t sbuf_peek_u32be(sbuf_t *sb, int off)
+{
+  uint8_t *p = sb->sb_data + off;
+  return (((uint16_t)p[0]) << 24) | (((uint16_t)p[1]) << 16) |
+         (((uint16_t)p[2]) << 8) | p[3];
+}
 
 void 
 sbuf_cut(sbuf_t *sb, int off)
@@ -326,6 +465,15 @@ sbuf_cut(sbuf_t *sb, int off)
   assert(off <= sb->sb_ptr);
   sb->sb_ptr = sb->sb_ptr - off;
   memmove(sb->sb_data, sb->sb_data + off, sb->sb_ptr);
+}
+
+ssize_t
+sbuf_read(sbuf_t *sb, int fd)
+{
+  ssize_t n = read(fd, sb->sb_data + sb->sb_ptr, sb->sb_size - sb->sb_ptr);
+  if (n > 0)
+    sb->sb_ptr += n;
+  return n;
 }
 
 char *
@@ -361,6 +509,7 @@ makedirs ( const char *inpath, int mode )
       path[x] = 0;
       if (stat(path, &st)) {
         err = mkdir(path, mode);
+        tvhtrace("settings", "Creating directory \"%s\" with octal permissions \"%o\"", path, mode);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;

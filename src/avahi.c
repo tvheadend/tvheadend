@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <signal.h>
 
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
@@ -54,6 +55,7 @@
 
 static AvahiEntryGroup *group = NULL;
 static char *name = NULL;
+static AvahiSimplePoll *avahi_asp = NULL;
 
 static void create_services(AvahiClient *c);
 
@@ -110,6 +112,7 @@ static void
 create_services(AvahiClient *c) 
 {
   char *n;
+  char *path;
   int ret;
   assert(c);
 
@@ -145,13 +148,21 @@ create_services(AvahiClient *c)
       goto fail;
     }
 
+    if (tvheadend_webroot) {
+      path = malloc(strlen(tvheadend_webroot) + 6);
+      sprintf(path, "path=%s", tvheadend_webroot);
+    } else {
+      path = strdup("path=/");
+    }
 
     /* Add the service for HTTP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
 					     "_http._tcp", NULL, NULL, tvheadend_webui_port,
-					     "path=/",
+					     path,
 					     NULL)) < 0) {
+
+    free(path);
 
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
@@ -247,14 +258,13 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
 static void *
 avahi_thread(void *aux)
 {
-  AvahiSimplePoll *asp = avahi_simple_poll_new();
-  const AvahiPoll *ap = avahi_simple_poll_get(asp);
+  const AvahiPoll *ap = avahi_simple_poll_get(avahi_asp);
 
   name = avahi_strdup("Tvheadend");
 
   avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
  
-  while((avahi_simple_poll_iterate(asp, -1)) != -1) {}
+  while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
 
   return NULL;
   
@@ -264,10 +274,19 @@ avahi_thread(void *aux)
 /**
  *
  */
+pthread_t avahi_tid;
+
 void
 avahi_init(void)
 {
-  pthread_t tid;
+  avahi_asp = avahi_simple_poll_new();
+  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, 0);
+}
 
-  pthread_create(&tid, NULL, avahi_thread, NULL);
+void
+avahi_done(void)
+{
+  avahi_simple_poll_quit(avahi_asp);
+  pthread_kill(avahi_tid, SIGTERM);
+  pthread_join(avahi_tid, NULL);
 }

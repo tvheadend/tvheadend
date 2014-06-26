@@ -19,6 +19,8 @@
 #ifndef STRTAB_H_
 #define STRTAB_H_
 
+#include "htsmsg.h"
+
 #include <strings.h>
 
 struct strtab {
@@ -26,11 +28,11 @@ struct strtab {
   int val;
 };
 
-static int str2val0(const char *str, struct strtab tab[], int l)
+static int str2val0(const char *str, const struct strtab tab[], int l)
      __attribute((unused));
 
 static int
-str2val0(const char *str, struct strtab tab[], int l)
+str2val0(const char *str, const struct strtab tab[], int l)
 {
   int i;
   for(i = 0; i < l; i++)
@@ -62,11 +64,11 @@ str2val0_def(const char *str, struct strtab tab[], int l, int def)
  str2val0_def(str, tab, sizeof(tab) / sizeof(tab[0]), def)
 
 
-static const char * val2str0(int val, struct strtab tab[], int l)
+static const char * val2str0(int val, const struct strtab tab[], int l)
      __attribute__((unused));
 
 static const char *
-val2str0(int val, struct strtab tab[], int l)
+val2str0(int val, const struct strtab tab[], int l)
 {
   int i;
   for(i = 0; i < l; i++)
@@ -76,5 +78,21 @@ val2str0(int val, struct strtab tab[], int l)
 } 
 
 #define val2str(val, tab) val2str0(val, tab, sizeof(tab) / sizeof(tab[0]))
+
+static inline htsmsg_t *
+strtab2htsmsg0(const struct strtab tab[], int n)
+{
+  int i;
+  htsmsg_t *e, *l = htsmsg_create_list();
+  for (i = 0; i < n; i++) {
+    e = htsmsg_create_map();
+    htsmsg_add_s32(e, "key", tab[i].val);
+    htsmsg_add_str(e, "val", tab[i].str);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
+
+#define strtab2htsmsg(tab) strtab2htsmsg0(tab, sizeof(tab) / sizeof(tab[0]))
 
 #endif /* STRTAB_H_ */

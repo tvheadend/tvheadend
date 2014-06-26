@@ -29,6 +29,7 @@
 #include "notify.h"
 #include "htsp_server.h"
 #include "streaming.h"
+#include "intlconv.h"
 
 static int de_tally;
 
@@ -39,6 +40,7 @@ struct dvr_entry_list dvrentries;
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
+static void dvr_timer_stop_recording(void *aux);
 
 /*
  * Completed
@@ -165,12 +167,27 @@ dvr_entry_notify(dvr_entry_t *de)
 /**
  *
  */
+static void
+dvr_charset_update(dvr_config_t *cfg, const char *charset)
+{
+  const char *s, *id;
+
+  free(cfg->dvr_charset);
+  free(cfg->dvr_charset_id);
+  s = charset ? charset : intlconv_filesystem_charset();
+  id = intlconv_charset_id(s, 1, 1);
+  cfg->dvr_charset = s ? strdup(s) : NULL;
+  cfg->dvr_charset_id = id ? strdup(id) : NULL;
+}
+
+/**
+ *
+ */
 void
 dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
-  int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
@@ -180,6 +197,22 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   
   snprintf(output + strlen(output), outlen - strlen(output),
 	   "%s", lang_str_get(de->de_title, NULL));
+
+  if(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE) {
+    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+      if(de->de_bcast && de->de_bcast->episode)
+        epg_episode_number_format(de->de_bcast->episode,
+                                  output + strlen(output),
+                                  outlen - strlen(output),
+                                  ".", "S%02d", NULL, "E%02d", NULL);
+    }
+  }
+
+  if(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE) {
+    if(de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->subtitle)
+      snprintf(output + strlen(output), outlen - strlen(output),
+           ".%s", lang_str_get(de->de_bcast->episode->subtitle, NULL));
+  }
 
   localtime_r(&de->de_start, &tm);
   
@@ -193,25 +226,14 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
-    if(de->de_bcast && de->de_bcast->episode)  
-      epg_episode_number_format(de->de_bcast->episode,
-                                output + strlen(output),
-                                outlen - strlen(output),
-                                ".", "S%02d", NULL, "E%02d", NULL);
-  }
-
-  if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
-        for (i=0;i<strlen(output);i++) {
-                if (
-                        output[i]<32 ||
-                        output[i]>122 ||
-                        output[i]==34 ||
-                        output[i]==39 ||
-                        output[i]==92 ||
-                        output[i]==58
-                        ) output[i]='_';
-        }
+  if(!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE)) {
+    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+      if(de->de_bcast && de->de_bcast->episode)
+        epg_episode_number_format(de->de_bcast->episode,
+                                  output + strlen(output),
+                                  outlen - strlen(output),
+                                  ".", "S%02d", NULL, "E%02d", NULL);
+    }
   }
 }
 
@@ -232,6 +254,10 @@ dvr_entry_set_timer(dvr_entry_t *de)
       _dvr_entry_completed(de);
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + cfg->dvr_retention_days * 86400);
+
+  } else if (de->de_sched_state == DVR_RECORDING)  {
+    gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de,
+		   de->de_stop + (60 * de->de_stop_extra));
 
   } else if (de->de_channel) {
     de->de_sched_state = DVR_SCHEDULED;
@@ -427,11 +453,40 @@ dvr_entry_create_by_event(const char *config_name,
                            creator, dae, pri);
 }
 
+/**
+ *
+ */
 static int _dvr_duplicate_event ( epg_broadcast_t *e )
 {
   dvr_entry_t *de;
+  epg_episode_num_t empty_epnum;
+  int has_epnum = 1;
+
+  /* skip episode duplicate check below if no episode number */
+  memset(&empty_epnum, 0, sizeof(empty_epnum));
+  if (epg_episode_number_cmp(&empty_epnum, &e->episode->epnum) == 0)
+    has_epnum = 0;
+
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    if (de->de_bcast && (de->de_bcast->episode == e->episode)) return 1;
+    if (de->de_bcast) {
+      if (de->de_bcast->episode == e->episode) return 1;
+
+      if (has_epnum) {
+        dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+        int ep_dup_det = (cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION);
+
+        if (ep_dup_det) {
+          const char* de_title = lang_str_get(de->de_bcast->episode->title, NULL);
+          const char* e_title = lang_str_get(e->episode->title, NULL);
+
+          /* duplicate if title and episode match */
+          if (de_title && e_title && strcmp(de_title, e_title) == 0
+              && epg_episode_number_cmp(&de->de_bcast->episode->epnum, &e->episode->epnum) == 0) {
+            return 1;
+          }
+        }
+      }
+    }
   }
   return 0;
 }
@@ -472,6 +527,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if(de->de_autorec != NULL)
     LIST_REMOVE(de, de_autorec_link);
 
+  free(de->de_filename);
   free(de->de_config_name);
   free(de->de_creator);
   if (de->de_title) lang_str_destroy(de->de_title);
@@ -488,9 +544,10 @@ dvr_entry_dec_ref(dvr_entry_t *de)
  *
  */
 static void
-dvr_entry_remove(dvr_entry_t *de)
+dvr_entry_remove(dvr_entry_t *de, int delconf)
 {
-  hts_settings_remove("dvr/log/%d", de->de_id);
+  if (delconf)
+    hts_settings_remove("dvr/log/%d", de->de_id);
 
   htsp_dvr_entry_delete(de);
   
@@ -505,6 +562,7 @@ dvr_entry_remove(dvr_entry_t *de)
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
   free(de->de_channel_name);
+  de->de_channel_name = NULL;
 
   dvrdb_changed();
 
@@ -519,7 +577,7 @@ static void
 dvr_db_load_one(htsmsg_t *c, int id)
 {
   dvr_entry_t *de;
-  const char *chname, *s, *creator;
+  const char *chuuid, *chname, *s, *creator;
   channel_t *ch;
   uint32_t start, stop, bcid, u32;
   int d;
@@ -531,9 +589,15 @@ dvr_db_load_one(htsmsg_t *c, int id)
   if(htsmsg_get_u32(c, "stop", &stop))
     return;
 
-  if((chname = htsmsg_get_str(c, "channel")) == NULL)
-    return;
-  ch = channel_find_by_name(chname, 0, 0);
+  chname = htsmsg_get_str(c, "channelname");
+  chuuid = htsmsg_get_str(c, "channel");
+  ch     = chuuid ? channel_find(chuuid) : NULL;
+
+  /* Backwards compat */
+  if (!ch && !chname) {
+    chname = chuuid;
+    ch     = channel_find_by_name(chname);
+  }
     
   s = htsmsg_get_str(c, "config_name");
   cfg = dvr_config_find_by_name_default(s);
@@ -648,7 +712,9 @@ dvr_entry_save(dvr_entry_t *de)
 
   lock_assert(&global_lock);
 
-  htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
+  if (de->de_channel)
+    htsmsg_add_str(m, "channel", channel_get_uuid(de->de_channel));
+  htsmsg_add_str(m, "channelname", DVR_CH_NAME(de));
   htsmsg_add_u32(m, "start", de->de_start);
   htsmsg_add_u32(m, "stop", de->de_stop);
  
@@ -703,7 +769,7 @@ static void
 dvr_timer_expire(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_remove(de);
+  dvr_entry_remove(de, 1);
  
 }
 
@@ -817,7 +883,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     tvhtrace("dvr",
              "dvr entry %d event replaced %s on %s @ %"PRItime_t
              " to %"PRItime_t,
-             de->de_id, epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+             de->de_id, epg_broadcast_get_title(e, NULL),
+             channel_get_name(e->channel),
              e->start, e->stop);
 
     /* Ignore - already in progress */
@@ -830,7 +897,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 
     /* If this was craeted by autorec - just remove it, it'll get recreated */
     if (de->de_autorec) {
-      dvr_entry_remove(de);
+      dvr_entry_remove(de, 1);
 
     /* Find match */
     } else {
@@ -839,7 +906,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
           tvhtrace("dvr",
                    "  replacement event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
-                   epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+                   epg_broadcast_get_title(e, NULL),
+                   channel_get_name(e->channel),
                    e->start, e->stop);
           e->getref(e);
           de->de_bcast = e;
@@ -867,7 +935,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  "dvr entry %d link to event %s on %s @ %"PRItime_t
                  " to %"PRItime_t,
                  de->de_id, epg_broadcast_get_title(e, NULL),
-                 e->channel->ch_name,
+                 channel_get_name(e->channel),
                  e->start, e->stop);
         e->getref(e);
         de->de_bcast = e;
@@ -882,7 +950,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
  *
  */
 static void
-dvr_stop_recording(dvr_entry_t *de, int stopcode)
+dvr_stop_recording(dvr_entry_t *de, int stopcode, int delconf)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
@@ -898,7 +966,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
-  dvr_entry_save(de);
+  if (delconf)
+    dvr_entry_save(de);
   htsp_dvr_entry_update(de);
   dvr_entry_notify(de);
 
@@ -913,7 +982,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 static void
 dvr_timer_stop_recording(void *aux)
 {
-  dvr_stop_recording(aux, 0);
+  dvr_stop_recording(aux, 0, 1);
 }
 
 
@@ -997,20 +1066,20 @@ dvr_entry_cancel(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, SM_CODE_ABORTED);
+    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
     return de;
 
   case DVR_COMPLETED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   case DVR_MISSED_TIME:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     return NULL;
 
   default:
@@ -1023,25 +1092,25 @@ dvr_entry_cancel(dvr_entry_t *de)
  * Unconditionally remove an entry
  */
 static void
-dvr_entry_purge(dvr_entry_t *de)
+dvr_entry_purge(dvr_entry_t *de, int delconf)
 {
   if(de->de_sched_state == DVR_RECORDING)
-    dvr_stop_recording(de, SM_CODE_SOURCE_DELETED);
+    dvr_stop_recording(de, SM_CODE_SOURCE_DELETED, delconf);
 }
 
 /**
  *
  */
 void
-dvr_destroy_by_channel(channel_t *ch)
+dvr_destroy_by_channel(channel_t *ch, int delconf)
 {
   dvr_entry_t *de;
 
   while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL) {
     LIST_REMOVE(de, de_channel_link);
     de->de_channel = NULL;
-    de->de_channel_name = strdup(ch->ch_name);
-    dvr_entry_purge(de);
+    de->de_channel_name = strdup(channel_get_name(ch));
+    dvr_entry_purge(de, delconf);
   }
 }
 
@@ -1082,11 +1151,37 @@ dvr_init(void)
         cfg = dvr_config_create(s);
 
       cfg->dvr_mc = htsmsg_get_u32_or_default(m, "container", MC_MATROSKA);
+      cfg->dvr_muxcnf.m_cache
+        = htsmsg_get_u32_or_default(m, "cache", MC_CACHE_DONTKEEP);
+
+      if(!htsmsg_get_u32(m, "rewrite-pat", &u32)) {
+        if (u32)
+          cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PAT;
+        else
+          cfg->dvr_muxcnf.m_flags &= ~MC_REWRITE_PAT;
+      }
+      if(!htsmsg_get_u32(m, "rewrite-pmt", &u32)) {
+        if (u32)
+          cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PMT;
+        else
+          cfg->dvr_muxcnf.m_flags &= ~MC_REWRITE_PMT;
+      }
 
       htsmsg_get_s32(m, "pre-extra-time", &cfg->dvr_extra_time_pre);
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
+
+/* 
+ * Convert 0xxx format permission strings to integer for internal use
+ * Note no checking that strtol won't overflow int - this should never happen with three-digit numbers 
+ */     
+
+      if ((s = htsmsg_get_str(m, "file-permissions")))
+        cfg->dvr_muxcnf.m_file_permissions = (int)strtol(s,NULL,0);
+	  
+      if ((s = htsmsg_get_str(m, "directory-permissions")))
+        cfg->dvr_muxcnf.m_directory_permissions = (int)strtol(s,NULL,0);
 
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
@@ -1120,6 +1215,17 @@ dvr_init(void)
 
       if(!htsmsg_get_u32(m, "skip-commercials", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_SKIP_COMMERCIALS;
+
+      if(!htsmsg_get_u32(m, "subtitle-in-title", &u32) && u32)
+        cfg->dvr_flags |= DVR_SUBTITLE_IN_TITLE;
+
+      if(!htsmsg_get_u32(m, "episode-before-date", &u32) && u32)
+        cfg->dvr_flags |= DVR_EPISODE_BEFORE_DATE;
+
+      if(!htsmsg_get_u32(m, "episode-duplicate-detection", &u32) && u32)
+        cfg->dvr_flags |= DVR_EPISODE_DUPLICATE_DETECTION;
+
+      dvr_charset_update(cfg, htsmsg_get_str(m, "charset"));
 
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
@@ -1159,6 +1265,33 @@ dvr_init(void)
   dvr_autorec_init();
   dvr_db_load();
   dvr_autorec_update();
+}
+
+/**
+ *
+ */
+void
+dvr_done(void)
+{
+  dvr_config_t *cfg;
+  dvr_entry_t *de;
+
+#if ENABLE_INOTIFY
+  dvr_inotify_done();
+#endif
+  pthread_mutex_lock(&global_lock);
+  while ((cfg = LIST_FIRST(&dvrconfigs)) != NULL) {
+    LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_charset_id);
+    free(cfg->dvr_charset);
+    free(cfg->dvr_storage);
+    free(cfg->dvr_config_name);
+    free(cfg);
+  }
+  while ((de = LIST_FIRST(&dvrentries)) != NULL)
+    dvr_entry_remove(de, 0);
+  pthread_mutex_unlock(&global_lock);
+  dvr_autorec_done();
 }
 
 /**
@@ -1220,6 +1353,7 @@ dvr_config_create(const char *name)
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
+  dvr_charset_update(cfg, intlconv_filesystem_charset());
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
@@ -1229,9 +1363,18 @@ dvr_config_create(const char *name)
   cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
   cfg->dvr_sl_quality_lock = 1; // Don't attempt to ajust quality
 
+  /* Muxer config */
+  cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
+  cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PAT;
+
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
+  /* Default recording file and directory permissions */
+
+  cfg->dvr_muxcnf.m_file_permissions      = 0664;
+  cfg->dvr_muxcnf.m_directory_permissions = 0775;
+  
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
   return LIST_FIRST(&dvrconfigs);
@@ -1256,6 +1399,10 @@ dvr_config_delete(const char *name)
         cfg->dvr_config_name);
     hts_settings_remove("dvr/config%s", cfg->dvr_config_name);
     LIST_REMOVE(cfg, config_link);
+    free(cfg->dvr_charset_id);
+    free(cfg->dvr_charset);
+    free(cfg->dvr_storage);
+    free(cfg->dvr_config_name);
     free(cfg);
 
     dvrconfig_changed();    
@@ -1269,10 +1416,26 @@ static void
 dvr_save(dvr_config_t *cfg)
 {
   htsmsg_t *m = htsmsg_create_map();
+  char buffer[5]; // Permissions buffer: leading zero, three octal digits plus terminating null
+  
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
+
+/* Convert permissions to 0xxx octal format and output */
+
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_file_permissions);
+  htsmsg_add_str(m, "file-permissions", buffer);
+  
+  snprintf(buffer,sizeof(buffer),"%04o",cfg->dvr_muxcnf.m_directory_permissions);
+  htsmsg_add_str(m, "directory-permissions", buffer);
+
   htsmsg_add_u32(m, "container", cfg->dvr_mc);
+  htsmsg_add_u32(m, "cache", cfg->dvr_muxcnf.m_cache);
+  htsmsg_add_u32(m, "rewrite-pat",
+                 !!(cfg->dvr_muxcnf.m_flags & MC_REWRITE_PAT));
+  htsmsg_add_u32(m, "rewrite-pmt",
+                 !!(cfg->dvr_muxcnf.m_flags & MC_REWRITE_PMT));
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
@@ -1287,7 +1450,12 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
-  if(cfg->dvr_postproc != NULL)
+  htsmsg_add_u32(m, "subtitle-in-title", !!(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE));
+  htsmsg_add_u32(m, "episode-before-date", !!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE));
+  htsmsg_add_u32(m, "episode-duplicate-detection", !!(cfg->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION));
+  if (cfg->dvr_charset != NULL)
+    htsmsg_add_str(m, "charset", cfg->dvr_charset);
+  if (cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 
   hts_settings_save(m, "dvr/config%s", cfg->dvr_config_name);
@@ -1313,6 +1481,45 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
  *
  */
 void
+dvr_charset_set(dvr_config_t *cfg, const char *charset)
+{
+  if(cfg->dvr_charset != NULL && !strcmp(cfg->dvr_charset, charset))
+    return;
+
+  dvr_charset_update(cfg, charset);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_file_permissions_set(dvr_config_t *cfg, int permissions)
+{
+  if(cfg->dvr_muxcnf.m_file_permissions == permissions)
+    return;
+
+  cfg->dvr_muxcnf.m_file_permissions = permissions;
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_directory_permissions_set(dvr_config_t *cfg, int permissions)
+{
+  if(cfg->dvr_muxcnf.m_directory_permissions == permissions)
+    return;
+
+  cfg->dvr_muxcnf.m_directory_permissions = permissions;
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
 dvr_container_set(dvr_config_t *cfg, const char *container)
 {
   muxer_container_type_t mc;
@@ -1325,6 +1532,23 @@ dvr_container_set(dvr_config_t *cfg, const char *container)
     return;
 
   cfg->dvr_mc = mc;
+
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_mux_cache_set(dvr_config_t *cfg, int mcache)
+{
+  if (mcache < MC_CACHE_UNKNOWN || mcache > MC_CACHE_LAST)
+    mcache = MC_CACHE_UNKNOWN;
+
+  if(cfg->dvr_muxcnf.m_cache == mcache)
+    return;
+
+  cfg->dvr_muxcnf.m_cache = mcache;
 
   dvr_save(cfg);
 }
@@ -1356,7 +1580,7 @@ dvr_retention_set(dvr_config_t *cfg, int days)
 
   cfg->dvr_retention_days = days;
 
-  /* Also, rearm all timres */
+  /* Also, rearm all timers */
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if(de->de_sched_state == DVR_COMPLETED)
@@ -1376,6 +1600,19 @@ dvr_flags_set(dvr_config_t *cfg, int flags)
     return;
 
   cfg->dvr_flags = flags;
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_mux_flags_set(dvr_config_t *cfg, int flags)
+{
+  if(cfg->dvr_muxcnf.m_flags == flags)
+    return;
+
+  cfg->dvr_muxcnf.m_flags = flags;
   dvr_save(cfg);
 }
 
@@ -1580,7 +1817,7 @@ dvr_entry_delete(dvr_entry_t *de)
     }
 
   }
-  dvr_entry_remove(de);
+  dvr_entry_remove(de, 1);
 }
 
 /**
@@ -1591,18 +1828,18 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     break;
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, SM_CODE_ABORTED);
+    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
   case DVR_COMPLETED:
     dvr_entry_delete(de);
     break;
 
   case DVR_MISSED_TIME:
-    dvr_entry_remove(de);
+    dvr_entry_remove(de, 1);
     break;
 
   default:

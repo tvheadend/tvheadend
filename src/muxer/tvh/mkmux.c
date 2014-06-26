@@ -85,6 +85,7 @@ typedef struct mk_chapter {
  *
  */
 struct mk_mux {
+  muxer_t *m;
   int fd;
   char *filename;
   int error;
@@ -424,6 +425,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 {
   htsbuf_data_t *hd;
   int i = 0;
+  off_t oldpos = mkm->fdpos;
 
   TAILQ_FOREACH(hd, &hq->hq_q, hd_link)
     i++;
@@ -447,6 +449,8 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     i -= iovcnt;
     iov += iovcnt;
   } while(i);
+
+  muxer_cache_update(mkm->m, mkm->fd, oldpos, 0);
 
   return 0;
 }
@@ -514,7 +518,10 @@ mk_build_segment_header(int64_t size)
 static void
 mk_write_segment_header(mk_mux_t *mkm, int64_t size)
 {
-  mk_write_queue(mkm, mk_build_segment_header(size));
+  htsbuf_queue_t *q;
+  q = mk_build_segment_header(size);
+  mk_write_queue(mkm, q);
+  htsbuf_queue_free(q);
 }
 
 
@@ -675,7 +682,8 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
 
   if(ch)
-    addtag(q, build_tag_string("TVCHANNEL", ch->ch_name, NULL, 0, NULL));
+    addtag(q, build_tag_string("TVCHANNEL", 
+                               channel_get_name(ch), NULL, 0, NULL));
 
   if(de && de->de_desc)
     ls = de->de_desc;
@@ -784,6 +792,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
     mk_write_to_fd(mkm, &q);
   } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
+    mkm->fdpos = mkm->segment_pos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
       mkm->error = errno;
 
@@ -1007,10 +1016,11 @@ mk_write_cues(mk_mux_t *mkm)
 /**
  *
  */
-mk_mux_t *mk_mux_create(int webm)
+mk_mux_t *mk_mux_create(muxer_t *m, int webm)
 {
   mk_mux_t *mkm = calloc(1, sizeof(mk_mux_t));
 
+  mkm->m = m;
   mkm->webm = webm;
   mkm->fd   = -1;
 
@@ -1036,11 +1046,14 @@ mk_mux_open_stream(mk_mux_t *mkm, int fd)
  *
  */
 int
-mk_mux_open_file(mk_mux_t *mkm, const char *filename)
+mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
 {
   int fd;
 
-  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+  tvhtrace("mkv", "Creating file \"%s\" with file permissions \"%o\"", filename, permissions);
+  
+  fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
+  
   if(fd < 0) {
     mkm->error = errno;
     tvhlog(LOG_ERR, "mkv", "%s: Unable to create file, open failed -- %s",
@@ -1063,7 +1076,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
 int
 mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
 {
-  htsbuf_queue_t q;
+  htsbuf_queue_t q, *a;
 
   getuuid(mkm->uuid);
 
@@ -1080,10 +1093,14 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader(mkm));
   
   mkm->segment_header_pos = q.hq_size;
-  htsbuf_appendq(&q, mk_build_segment_header(0));
+  a = mk_build_segment_header(0);
+  htsbuf_appendq(&q, a);
+  htsbuf_queue_free(a);
 
   mkm->segment_pos = q.hq_size;
-  htsbuf_appendq(&q, mk_build_segment(mkm, ss));
+  a = mk_build_segment(mkm, ss);
+  htsbuf_appendq(&q, a);
+  htsbuf_queue_free(a);
  
   mk_write_queue(mkm, &q);
 

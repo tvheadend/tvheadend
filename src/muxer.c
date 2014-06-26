@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <fcntl.h>
 
 #include "tvheadend.h"
 #include "service.h"
@@ -25,6 +26,10 @@
 #include "muxer/muxer_pass.h"
 #if CONFIG_LIBAV
 #include "muxer/muxer_libav.h"
+#endif
+
+#if defined(PLATFORM_DARWIN)
+#define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
 #endif
 
 /**
@@ -236,23 +241,29 @@ muxer_container_mime2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
 {
   muxer_t *m;
 
-  m = pass_muxer_create(mc);
+  assert(m_cfg);
+
+  m = pass_muxer_create(mc, m_cfg);
 
   if(!m)
-    m = tvh_muxer_create(mc);
+    m = tvh_muxer_create(mc, m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)
-    m = lav_muxer_create(mc);
+    m = lav_muxer_create(mc, m_cfg);
 #endif
 
-  if(!m)
+  if(!m) {
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
 	   muxer_container_type2txt(mc));
+    return NULL;
+  }
+  
+  memcpy(&m->m_config, m_cfg, sizeof(muxer_config_t));
 
   return m;
 }
@@ -408,4 +419,77 @@ muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   return m->m_write_pkt(m, smt, data);
 }
 
+/**
+ * cache type conversions
+ */
+static struct strtab cache_types[] = {
+  { "Unknown",            MC_CACHE_UNKNOWN },
+  { "System",             MC_CACHE_SYSTEM },
+  { "Do not keep",        MC_CACHE_DONTKEEP },
+  { "Sync",               MC_CACHE_SYNC },
+  { "Sync + Do not keep", MC_CACHE_SYNCDONTKEEP }
+};
 
+const char*
+muxer_cache_type2txt(muxer_cache_type_t c)
+{
+  return val2str(c, cache_types);
+}
+
+muxer_cache_type_t
+muxer_cache_txt2type(const char *str)
+{
+  int r = str2val(str, cache_types);
+  if (r < 0)
+    r = MC_CACHE_UNKNOWN;
+  return r;
+}
+
+/**
+ * cache scheme
+ */
+void
+muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
+{
+  switch (m->m_config.m_cache) {
+  case MC_CACHE_UNKNOWN:
+  case MC_CACHE_SYSTEM:
+    break;
+  case MC_CACHE_SYNC:
+    fdatasync(fd);
+    break;
+  case MC_CACHE_SYNCDONTKEEP:
+    fdatasync(fd);
+    /* fall through */
+  case MC_CACHE_DONTKEEP:
+#if defined(PLATFORM_DARWIN)
+    fcntl(fd, F_NOCACHE, 1);
+#else
+    posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
+#endif
+    break;
+  default:
+    abort();
+  }
+}
+
+/**
+ * Get a list of supported cache schemes
+ */
+int
+muxer_cache_list(htsmsg_t *array)
+{
+  htsmsg_t *mc;
+  int c;
+  const char *s;
+
+  for (c = 0; c <= MC_CACHE_LAST; c++) {
+    mc = htsmsg_create_map();
+    s = muxer_cache_type2txt(c);
+    htsmsg_add_u32(mc, "index",       c);
+    htsmsg_add_str(mc, "description", s);
+    htsmsg_add_msg(array, NULL, mc);
+  }
+
+  return c;
+}

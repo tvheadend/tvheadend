@@ -39,6 +39,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
   htsmsg_field_t *f;
   char buf[100];
   static const char *indentor = "\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+  const char *s;
 
   htsbuf_append(hq, isarray ? "[" : "{", 1);
 
@@ -67,6 +68,11 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
     case HMF_BIN:
       htsbuf_append_and_escape_jsonstr(hq, "binary");
+      break;
+
+    case HMF_BOOL:
+      s = f->hmf_bool ? "true" : "false";
+      htsbuf_append(hq, s, strlen(s));
       break;
 
     case HMF_S64:
@@ -169,7 +175,7 @@ add_double(void *opaque, void *parent, const char *name, double v)
 static void 
 add_bool(void *opaque, void *parent, const char *name, int v)
 {
-  htsmsg_add_u32(parent, name, v);
+  htsmsg_add_bool(parent, name, v);
 }
 
 static void 

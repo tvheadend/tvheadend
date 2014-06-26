@@ -31,11 +31,14 @@ typedef struct dvr_config {
   char *dvr_storage;
   uint32_t dvr_retention_days;
   int dvr_flags;
+  char *dvr_charset;
+  char *dvr_charset_id;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
   muxer_container_type_t dvr_mc;
+  muxer_config_t         dvr_muxcnf;
 
   /* Series link support */
   int dvr_sl_brand_lock;
@@ -66,6 +69,9 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_CLEAN_TITLE	        0x100
 #define DVR_TAG_FILES           0x200
 #define DVR_SKIP_COMMERCIALS    0x400
+#define DVR_SUBTITLE_IN_TITLE	0x800
+#define DVR_EPISODE_BEFORE_DATE	0x1000
+#define DVR_EPISODE_DUPLICATE_DETECTION 0x2000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -202,7 +208,7 @@ typedef struct dvr_entry {
 
 } dvr_entry_t;
 
-#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : (e)-> de_channel->ch_name)
+#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))
 
 /**
  * Autorec entry
@@ -293,11 +299,15 @@ dvr_entry_t *dvr_entry_update
 
 void dvr_init(void);
 
+void dvr_done(void);
+
 void dvr_autorec_init(void);
+
+void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
 
-void dvr_destroy_by_channel(channel_t *ch);
+void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
 
@@ -323,13 +333,23 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
 
+void dvr_charset_set(dvr_config_t *cfg, const char *charset);
+
 void dvr_container_set(dvr_config_t *cfg, const char *container);
+
+void dvr_file_permissions_set(dvr_config_t *cfg, int permissions);
+
+void dvr_directory_permissions_set(dvr_config_t *cfg, int permissions);
+
+void dvr_mux_cache_set(dvr_config_t *cfg, int mcache);
 
 void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 
 void dvr_retention_set(dvr_config_t *cfg, int days);
 
 void dvr_flags_set(dvr_config_t *cfg, int flags);
+
+void dvr_mux_flags_set(dvr_config_t *cfg, int flags);
 
 void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 
@@ -379,7 +399,7 @@ void dvr_autorec_check_season(epg_season_t *s);
 void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 
-void autorec_destroy_by_channel(channel_t *ch);
+void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 
@@ -394,7 +414,29 @@ const char *dvr_val2pri(dvr_prio_t v);
  * Inotify support
  */
 void dvr_inotify_init ( void );
+void dvr_inotify_done ( void );
 void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
+
+/**
+ * Cutpoints support
+ **/
+
+typedef struct dvr_cutpoint {
+  TAILQ_ENTRY(dvr_cutpoint) dc_link;
+  uint64_t dc_start_ms;
+  uint64_t dc_end_ms;
+  enum {
+    DVR_CP_CUT,
+    DVR_CP_MUTE,
+    DVR_CP_SCENE,
+    DVR_CP_COMM
+  } dc_type;
+} dvr_cutpoint_t;
+
+typedef TAILQ_HEAD(,dvr_cutpoint) dvr_cutpoint_list_t;
+
+dvr_cutpoint_list_t *dvr_get_cutpoint_list (dvr_entry_t *de);
+void dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list);
 
 #endif /* DVR_H  */

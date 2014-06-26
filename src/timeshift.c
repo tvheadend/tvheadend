@@ -20,7 +20,7 @@
 #include "streaming.h"
 #include "timeshift.h"
 #include "timeshift/private.h"
-#include "config2.h"
+#include "config.h"
 #include "settings.h"
 #include "atomic.h"
 
@@ -117,6 +117,7 @@ static void timeshift_input
 {
   int exit = 0;
   timeshift_t *ts = opaque;
+  th_pkt_t *pkt = sm->sm_data;
 
   pthread_mutex_lock(&ts->state_mutex);
 
@@ -134,6 +135,19 @@ static void timeshift_input
     /* Start */
     if (sm->sm_type == SMT_START && ts->state == TS_INIT) {
       ts->state  = TS_LIVE;
+    }
+
+    if (sm->sm_type == SMT_PACKET) {
+      tvhtrace("timeshift",
+               "ts %d pkt in  - stream %d type %c pts %10"PRId64
+               " dts %10"PRId64" dur %10d len %"PRIsize_t,
+               ts->id,
+               pkt->pkt_componentindex,
+               pkt_frametype_to_char(pkt->pkt_frametype),
+               ts_rescale(pkt->pkt_pts, 1000000),
+               ts_rescale(pkt->pkt_dts, 1000000),
+               pkt->pkt_duration,
+               pktbuf_len(pkt->pkt_payload));
     }
 
     /* Pass-thru */
@@ -154,7 +168,6 @@ static void timeshift_input
 
     /* Record (one-off) PTS delta */
     if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET) {
-      th_pkt_t *pkt = sm->sm_data;
       if (pkt->pkt_pts != PTS_UNSET)
         ts->pts_delta = getmonoclock() - ts_rescale(pkt->pkt_pts, 1000000);
     }
@@ -162,6 +175,18 @@ static void timeshift_input
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
       sm->sm_time = getmonoclock();
+      if (sm->sm_type == SMT_PACKET) {
+        tvhtrace("timeshift",
+                 "ts %d pkt buf - stream %d type %c pts %10"PRId64
+                 " dts %10"PRId64" dur %10d len %"PRIsize_t,
+                 ts->id,
+                 pkt->pkt_componentindex,
+                 pkt_frametype_to_char(pkt->pkt_frametype),
+                 ts_rescale(pkt->pkt_pts, 1000000),
+                 ts_rescale(pkt->pkt_dts, 1000000),
+                 pkt->pkt_duration,
+                 pktbuf_len(pkt->pkt_payload));
+      }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else
       streaming_msg_free(sm);
@@ -253,8 +278,8 @@ streaming_target_t *timeshift_create
   /* Initialise input */
   streaming_queue_init(&ts->wr_queue, 0);
   streaming_target_init(&ts->input, timeshift_input, ts, 0);
-  pthread_create(&ts->wr_thread, NULL, timeshift_writer, ts);
-  pthread_create(&ts->rd_thread, NULL, timeshift_reader, ts);
+  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts, 0);
+  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts, 0);
 
   /* Update index */
   timeshift_index++;

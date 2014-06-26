@@ -18,7 +18,7 @@
  */
 
 #ifndef __TVH_TIME_H__
-#define __TVH_TIME_H_
+#define __TVH_TIME_H__
 
 extern uint32_t tvhtime_update_enabled;
 extern uint32_t tvhtime_ntp_enabled;

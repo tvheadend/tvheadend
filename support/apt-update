@@ -18,7 +18,7 @@ DIR=$(cd $(dirname "$0"); pwd)
 
 # Configuration
 TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
-[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid oneiric precise quantal raring"
+[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid precise quantal saucy trusty"
 [ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
 
 # Options
@@ -45,8 +45,6 @@ git archive --prefix=tvheadend/ HEAD | tar -C "${TMPDIR}" -x ||\
   die "failed to archive git tree"
 cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
 
-# Fetch scan files
-./support/getmuxlist || die "failed to fetch dvb-scan files"
 cd ..
 
 # For each distro

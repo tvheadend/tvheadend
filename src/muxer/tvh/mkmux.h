@@ -28,9 +28,9 @@ struct th_pkt;
 struct channel;
 struct event;
 
-mk_mux_t *mk_mux_create(int webm);
+mk_mux_t *mk_mux_create(muxer_t *m, int webm);
 
-int mk_mux_open_file  (mk_mux_t *mkm, const char *filename);
+int mk_mux_open_file  (mk_mux_t *mkm, const char *filename, int permissions);
 int mk_mux_open_stream(mk_mux_t *mkm, int fd);
 
 int mk_mux_init(mk_mux_t *mkm, const char *title, 

@@ -40,7 +40,7 @@ if opts.deps:
 root  = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
 ents  = {}
 for path in args:
-  for (p, ds, fs) in os.walk(path):
+  for (p, ds, fs) in os.walk(path, followlinks=True):
     p = os.path.abspath(p)
     n = p.replace(root+'/', '')
     t = ents

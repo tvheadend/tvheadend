@@ -234,7 +234,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   s = epg_episode_get_title(e->episode, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->channel->ch_name, s ?: "");
+	      channel_get_name(e->channel), s ?: "");
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -484,7 +484,7 @@ page_epgsave(http_connection_t *hc,
                  "<epgflush>1</epgflush>\n");
 
   pthread_mutex_lock(&global_lock);
-  epg_save(NULL);
+  epg_save();
   pthread_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/xml");

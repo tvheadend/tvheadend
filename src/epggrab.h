@@ -19,23 +19,25 @@
 #ifndef __EPGGRAB_H__
 #define __EPGGRAB_H__
 
+#include "idnode.h"
+
 #include <pthread.h>
 
 /* **************************************************************************
  * Typedefs/Forward decls
  * *************************************************************************/
 
-struct th_dvb_mux_instance;
-struct th_dvb_adapter;
-
 typedef struct epggrab_module       epggrab_module_t;
 typedef struct epggrab_module_int   epggrab_module_int_t;
 typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
+typedef struct epggrab_ota_map      epggrab_ota_map_t;
 
 LIST_HEAD(epggrab_module_list, epggrab_module);
 typedef struct epggrab_module_list epggrab_module_list_t;
+
+struct mpegts_mux;
 
 /* **************************************************************************
  * Grabber Stats
@@ -86,14 +88,17 @@ typedef struct epggrab_channel
 
 typedef struct epggrab_channel_link
 {
-  LIST_ENTRY(epggrab_channel_link) link;     ///< Link to grab channel
-  struct channel                   *channel; ///< Real channel
+  int                               ecl_mark;
+  struct channel                    *ecl_channel;
+  struct epggrab_channel            *ecl_epggrab;
+  LIST_ENTRY(epggrab_channel_link)  ecl_chn_link;
+  LIST_ENTRY(epggrab_channel_link)  ecl_epg_link;
 } epggrab_channel_link_t;
 
 /*
  * Access functions
  */
-htsmsg_t*         epggrab_channel_list      ( void );
+htsmsg_t*         epggrab_channel_list      ( int ota );
 
 /*
  * Mutators
@@ -105,7 +110,18 @@ int epggrab_channel_set_number   ( epggrab_channel_t *ch, int number );
 /*
  * Updated/link
  */
-void epggrab_channel_updated   ( epggrab_channel_t *ch );
+void epggrab_channel_updated     ( epggrab_channel_t *ch );
+void epggrab_channel_link_delete ( epggrab_channel_link_t *ecl );
+int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch );
+
+/* ID */
+const char *epggrab_channel_get_id ( epggrab_channel_t *ch );
+epggrab_channel_t *epggrab_channel_find_by_id ( const char *id );
+
+/*
+ * Check type
+ */
+int epggrab_channel_is_ota ( epggrab_channel_t *ec );
 
 /* **************************************************************************
  * Grabber Modules
@@ -119,9 +135,9 @@ struct epggrab_module
   LIST_ENTRY(epggrab_module)   link;      ///< Global list link
 
   enum {
+    EPGGRAB_OTA,
     EPGGRAB_INT,
     EPGGRAB_EXT,
-    EPGGRAB_OTA
   }                            type;      ///< Grabber type
   const char                   *id;       ///< Module identifier
   const char                   *name;     ///< Module name (for display)
@@ -165,32 +181,33 @@ struct epggrab_module_ext
 };
 
 /*
- * OTA / mux link
+ * TODO: this could be embedded in the mux itself, but by using a soft-link
+ *       and keeping it here I can somewhat isolate it from the mpegts code
  */
 struct epggrab_ota_mux
 {
-  TAILQ_ENTRY(epggrab_ota_mux)       glob_link; ///< Grabber link
-  TAILQ_ENTRY(epggrab_ota_mux)       tdmi_link; ///< Link to mux
-  TAILQ_ENTRY(epggrab_ota_mux)       grab_link; ///< Link to grabber
-  struct th_dvb_mux_instance        *tdmi;     ///< Mux  instance
-  epggrab_module_ota_t              *grab;     ///< Grab instance
+  char                              *om_mux_uuid;     ///< Soft-link to mux
+  LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
+  
+  int                                om_active;
+  int                                om_timeout;      ///< User configurable
+  int                                om_interval;
+  time_t                             om_when;         ///< Next event time
 
-  int                               timeout;   ///< Time out if this long
-  int                               interval;  ///< Re-grab this often
+  LIST_ENTRY(epggrab_ota_mux)        om_q_link;
+  RB_ENTRY(epggrab_ota_mux)          om_global_link;
+};
 
-  int                               is_reg;    ///< Permanently registered
-
-  void                              *status;   ///< Status information
-  enum {
-    EPGGRAB_OTA_MUX_IDLE,
-    EPGGRAB_OTA_MUX_RUNNING,
-    EPGGRAB_OTA_MUX_TIMEDOUT,
-    EPGGRAB_OTA_MUX_COMPLETE
-  }                                 state;     ///< Current state
-  time_t                            started;   ///< Time of last start
-  time_t                            completed; ///< Time of last completion
-
-  void (*destroy) (epggrab_ota_mux_t *ota);    ///< (Custom) destroy
+/*
+ * Link between ota_mux and ota_module
+ */
+struct epggrab_ota_map
+{
+  LIST_ENTRY(epggrab_ota_map)         om_link;
+  epggrab_module_ota_t               *om_module;
+  int                                 om_timeout;
+  int                                 om_interval;
+  int                                 om_complete;
 };
 
 /*
@@ -200,10 +217,11 @@ struct epggrab_module_ota
 {
   epggrab_module_t               ;      ///< Parent object
 
-  TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
+  //TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
-  void (*start) ( epggrab_module_ota_t *m, struct th_dvb_mux_instance *tdmi );
+  void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
+  void (*done) ( epggrab_module_ota_t *m );
 };
 
 /*
@@ -221,6 +239,7 @@ htsmsg_t*         epggrab_module_list       ( void );
  */
 extern epggrab_module_list_t epggrab_modules;
 extern pthread_mutex_t       epggrab_mutex;
+extern int                   epggrab_running;
 extern uint32_t              epggrab_interval;
 extern epggrab_module_int_t* epggrab_module;
 extern uint32_t              epggrab_channel_rename;
@@ -245,7 +264,10 @@ int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
  * Load/Save
  */
 void epggrab_init                 ( void );
+void epggrab_done                 ( void );
 void epggrab_save                 ( void );
+void epggrab_ota_init             ( void );
+void epggrab_ota_done_            ( void );
 
 /* **************************************************************************
  * Global Functions
@@ -257,15 +279,6 @@ void epggrab_save                 ( void );
 void epggrab_channel_add ( struct channel *ch );
 void epggrab_channel_rem ( struct channel *ch );
 void epggrab_channel_mod ( struct channel *ch );
-
-/*
- * Transport handling
- */
-void epggrab_mux_start  ( struct th_dvb_mux_instance *tdmi );
-void epggrab_mux_stop   ( struct th_dvb_mux_instance *tdmi, int timeout );
-void epggrab_mux_delete ( struct th_dvb_mux_instance *tdmi );
-int  epggrab_mux_period ( struct th_dvb_mux_instance *tdmi );
-struct th_dvb_mux_instance *epggrab_mux_next ( struct th_dvb_adapter *tda );
 
 /*
  * Re-schedule

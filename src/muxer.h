@@ -21,6 +21,9 @@
 
 #include "htsmsg.h"
 
+#define MC_REWRITE_PAT 0x0001
+#define MC_REWRITE_PMT 0x0002
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,
@@ -31,6 +34,28 @@ typedef enum {
   MC_WEBM        = 6,
 } muxer_container_type_t;
 
+typedef enum {
+  MC_CACHE_UNKNOWN      = 0,
+  MC_CACHE_SYSTEM       = 1,
+  MC_CACHE_DONTKEEP     = 2,
+  MC_CACHE_SYNC         = 3,
+  MC_CACHE_SYNCDONTKEEP = 4,
+  MC_CACHE_LAST         = MC_CACHE_SYNCDONTKEEP
+} muxer_cache_type_t;
+
+/* Muxer configuration used when creating a muxer. */
+typedef struct muxer_config {
+  int                  m_flags;
+  muxer_cache_type_t m_cache;
+
+/* 
+ * directory_permissions should really be in dvr.h as it's not really needed for the muxer
+ * but it's kept with file_permissions for neatness
+ */
+
+  int                  m_file_permissions;
+  int                  m_directory_permissions; 
+} muxer_config_t;
 
 struct muxer;
 struct streaming_start;
@@ -58,6 +83,7 @@ typedef struct muxer {
 
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
+  muxer_config_t         m_config;     // general configuration
 } muxer_t;
 
 
@@ -73,7 +99,7 @@ const char*            muxer_container_suffix(muxer_container_type_t mc, int vid
 int muxer_container_list(htsmsg_t *array);
 
 // Muxer factory
-muxer_t *muxer_create(muxer_container_type_t mc);
+muxer_t *muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);
@@ -87,5 +113,11 @@ int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);
 int         muxer_write_pkt   (muxer_t *m, streaming_message_type_t smt, void *data);
 const char* muxer_mime        (muxer_t *m, const struct streaming_start *ss);
 const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
+
+// Cache
+const char *       muxer_cache_type2txt(muxer_cache_type_t t);
+muxer_cache_type_t muxer_cache_txt2type(const char *str);
+void               muxer_cache_update(muxer_t *m, int fd, off_t off, size_t size);
+int                muxer_cache_list(htsmsg_t *array);
 
 #endif

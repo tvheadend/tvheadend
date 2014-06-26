@@ -52,4 +52,7 @@ void            lang_str_serialize
 lang_str_t     *lang_str_deserialize
   ( htsmsg_t *m, const char *f );
 
+/* Init/Done */
+void            lang_str_done( void );
+
 #endif /* __TVH_LANG_STR_H__ */

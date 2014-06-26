@@ -1,87 +1,109 @@
 tvheadend.capmteditor = function() {
-	var fm = Ext.form;
+    var fm = Ext.form;
 
-	var enabledColumn = new Ext.grid.CheckColumn({
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 60
-	});
+    function setMetaAttr(meta, record) {
+        var enabled = record.get('enabled');
+        if (!enabled)
+            return;
 
-	var oscamColumn = new Ext.grid.CheckColumn({
-		header : "OSCam mode",
-		dataIndex : 'oscam',
-		width : 60
-	});
+        var connected = record.get('connected');
+        if (connected === 2) {
+            meta.attr = 'style="color:green;"';
+        }
+        else if (connected === 1) {
+            meta.attr = 'style="color:orange;"';
+        }
+        else {
+            meta.attr = 'style="color:red;"';
+        }
+    }
+    var selectMode = new Ext.form.ComboBox({
+        displayField: 'name',
+        valueField: 'res',
+        value: 2,
+        mode: 'local',
+        editable: false,
+        triggerAction: 'all',
+        emptyText: 'Select mode...',
+        store: new Ext.data.SimpleStore({
+            fields: ['res', 'name'],
+            id: 0,
+            data: [
+                ['4', 'OSCam pc-nodmx (rev >= 9756)'],
+                ['3', 'OSCam TCP (rev >= 9574)'],
+                ['2', 'OSCam (rev >= 9095)'],
+                ['1', 'Older OSCam'],
+                ['0', 'Wrapper (capmt_ca.so)']
+            ]
+        })
+    });
 
-	function setMetaAttr(meta, record) {
-		var enabled = record.get('enabled');
-		if (!enabled) return;
+    var cm = new Ext.grid.ColumnModel({
+        defaultSortable: true,
+        columns: [{
+                xtype: 'checkcolumn',
+                header: "Enabled",
+                dataIndex: 'enabled',
+                width: 60
+            }, {
+                header: "Mode",
+                dataIndex: 'oscam',
+                width: 150,
+                editor: selectMode
+            }, {
+                header: "Camd.socket Filename / IP Address (mode 3)",
+                dataIndex: 'camdfilename',
+                width: 200,
+                renderer: function(value, metadata, record, row, col, store) {
+                    setMetaAttr(metadata, record);
+                    return value;
+                },
+                editor: new fm.TextField({
+                    allowBlank: false
+                })
+            }, {
+                header: "Listen/Connect Port",
+                dataIndex: 'port',
+                renderer: function(value, metadata, record, row, col, store) {
+                    setMetaAttr(metadata, record);
+                    return value;
+                },
+                editor: new fm.TextField({
+                    allowBlank: false
+                })
+            }, {
+                header: "Comment",
+                dataIndex: 'comment',
+                width: 400,
+                renderer: function(value, metadata, record, row, col, store) {
+                    setMetaAttr(metadata, record);
+                    return value;
+                },
+                editor: new fm.TextField()
+            }]});
 
-		var connected = record.get('connected');
-		if (connected == 1) {
-			meta.attr = 'style="color:green;"';
-		}
-		else {
-			meta.attr = 'style="color:red;"';
-		}
-	}
+    var rec = Ext.data.Record.create(['enabled', 'connected', 'camdfilename',
+        'port', 'oscam', 'comment']);
 
-	var cm = new Ext.grid.ColumnModel({
-  defaultSortable: true,
-  columns: [ enabledColumn, {
-		header : "Camd.socket Filename",
-		dataIndex : 'camdfilename',
-		width : 200,
-		renderer : function(value, metadata, record, row, col, store) {
-			setMetaAttr(metadata, record);
-			return value;
-		},
-		editor : new fm.TextField({
-			allowBlank : false
-		})
-	}, {
-		header : "Listenport",
-		dataIndex : 'port',
-		renderer : function(value, metadata, record, row, col, store) {
-			setMetaAttr(metadata, record);
-			return value;
-		},
-		editor : new fm.TextField({
-			allowBlank : false
-		})
-	}, oscamColumn, {
-		header : "Comment",
-		dataIndex : 'comment',
-		width : 400,
-		renderer : function(value, metadata, record, row, col, store) {
-			setMetaAttr(metadata, record);
-			return value;
-		},
-		editor : new fm.TextField()
-	} ]});
+    store = new Ext.data.JsonStore({
+        root: 'entries',
+        fields: rec,
+        url: "tablemgr",
+        autoLoad: true,
+        id: 'id',
+        baseParams: {
+            table: 'capmt',
+            op: "get"
+        }
+    });
 
-	var rec = Ext.data.Record.create([ 'enabled', 'connected', 'camdfilename',
-		'port', 'oscam', 'comment' ]);
+    tvheadend.comet.on('capmt', function(server) {
+        var rec = store.getById(server.id);
+        if (rec) {
+            rec.set('connected', server.connected);
+        }
+    });
 
-	store = new Ext.data.JsonStore({
-		root : 'entries',
-		fields : rec,
-		url : "tablemgr",
-		autoLoad : true,
-		id : 'id',
-		baseParams : {
-			table : 'capmt',
-			op : "get"
-		}
-	});
-
-	tvheadend.comet.on('capmtStatus', function(server) {
-		var rec = store.getById(server.id);
-		if (rec) {
-			rec.set('connected', server.connected);
-		}
-	});
-
-	return new tvheadend.tableEditor('Capmt Connections', 'capmt', cm, rec,
-		[ enabledColumn, oscamColumn ], store, 'config_capmt.html', 'key');
-}
+    return new tvheadend.tableEditor('Capmt Connections', 'capmt', cm, rec,
+            [], store, 'config_capmt.html', 'key');
+};
