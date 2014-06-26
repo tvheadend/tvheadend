@@ -56,7 +56,7 @@ mpegts_table_dispatch
   tid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
 
-  if (r > 2 && tid == 0x72) { /* stuffing section */
+  if (tid == 0x72) { /* stuffing section */
     if (len != r - 3)
       tvhwarn(mt->mt_name, "stuffing found with trailing data (len %i, total %zi)", len, r);
     dvb_table_reset(mt);
