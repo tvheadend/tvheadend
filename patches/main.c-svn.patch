@@ -1,0 +1,11 @@
+--- src/main.c.orig	2013-10-14 21:11:41.000000000 +0800
++++ src/main.c	2013-10-14 21:10:48.000000000 +0800
+@@ -29,7 +29,7 @@
+ #include <limits.h>
+ #include <time.h>
+ #include <locale.h>
+-
++#include <iconv.h>
+ #include <pwd.h>
+ #include <grp.h>
+ 

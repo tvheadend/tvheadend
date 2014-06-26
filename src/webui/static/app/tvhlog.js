@@ -4,8 +4,7 @@ tvheadend.tvhlog = function() {
 	 */
 	var confreader = new Ext.data.JsonReader({
 		root : 'config'
-	}, [ 'tvhlog_path', 'tvhlog_dbg_syslog', 'tvhlog_trace_on',
-       'tvhlog_debug', 'tvhlog_trace' ]);
+	}, [ 'tvhlog_path', 'tvhlog_dbg_syslog', 'tvhlog_subsys', 'tvhlog_trace' ]);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -23,21 +22,14 @@ tvheadend.tvhlog = function() {
     fieldLabel: 'Debug to syslog'
   });
   
-  var tvhlogTraceOn = new Ext.form.Checkbox({
-    name: 'tvhlog_trace_on',
+  var tvhlogTrace = new Ext.form.Checkbox({
+    name: 'tvhlog_trace',
     fieldLabel: 'Debug trace (low-level stuff)'
   });
 
-	var tvhlogDebugSubsys = new Ext.form.TextField({
+	var tvhlogSubsys = new Ext.form.TextField({
 		fieldLabel : 'Debug Subsystems',
-		name : 'tvhlog_debug',
-		allowBlank : true,
-		width: 400
-	});
-
-	var tvhlogTraceSubsys = new Ext.form.TextField({
-		fieldLabel : 'Trace Subsystems',
-		name : 'tvhlog_trace',
+		name : 'tvhlog_subsys',
 		allowBlank : true,
 		width: 400
 	});
@@ -73,7 +65,7 @@ tvheadend.tvhlog = function() {
 		defaultType : 'textfield',
 		autoHeight : true,
 		items : [ tvhlogLogPath, tvhlogToSyslog,
-              tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys ],
+              tvhlogTrace, tvhlogSubsys ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 

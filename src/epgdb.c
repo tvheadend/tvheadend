@@ -44,7 +44,6 @@ extern epg_object_tree_t epg_serieslinks;
 /*
  * Use for v1 databases
  */
-#if DEPRECATED
 static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
 {
   channel_t *ch;
@@ -95,7 +94,6 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
   /* Set episode */
   save |= epg_broadcast_set_episode(ebc, ee, NULL);
 }
-#endif
 
 /*
  * Process v2 data
@@ -209,7 +207,8 @@ void epg_init ( void )
       case 2:
         _epgdb_v2_process(m, &stats);
         break;
-      default:
+      default: /* v0/1 */
+        _epgdb_v1_process(m, &stats);
         break;
     }
 
@@ -268,10 +267,8 @@ void epg_save ( void *p )
 {
   int fd;
   epg_object_t *eo;
-#if 0
   epg_broadcast_t *ebc;
   channel_t *ch;
-#endif
   epggrab_stats_t stats;
   extern gtimer_t epggrab_save_timer;
 
@@ -303,14 +300,12 @@ void epg_save ( void *p )
     stats.seasons.total++;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
-#if 0
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
       if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
       stats.broadcasts.total++;
     }
   }
-#endif
 
   /* Stats */
   tvhlog(LOG_INFO, "epgdb", "saved");

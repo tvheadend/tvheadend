@@ -20,53 +20,50 @@
 #define CHANNELS_H
 
 #include "epg.h"
-#include "idnode.h"
-
-RB_HEAD(channel_tree, channel);
 
 LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
 TAILQ_HEAD(channel_tag_queue, channel_tag);
 
 extern struct channel_tag_queue channel_tags;
-extern struct channel_tree      channels;
 
-#define CHANNEL_FOREACH(ch) RB_FOREACH(ch, &channels, ch_link)
 
 /*
  * Channel definition
  */ 
-typedef struct channel
-{
-  idnode_t ch_id;
-
-  RB_ENTRY(channel)   ch_link;
+typedef struct channel {
   
   int ch_refcount;
   int ch_zombie;
 
-  /* Channel info */
+  RB_ENTRY(channel) ch_name_link;
   char *ch_name;
-  int   ch_number;
-  char *ch_icon;
-  struct channel_tag_mapping_list ch_ctms;
+  char *ch_sname;
 
-  /* Service/subscriptions */
-  LIST_HEAD(, channel_service_mapping) ch_services;
-  LIST_HEAD(, th_subscription)         ch_subscriptions;
+  RB_ENTRY(channel) ch_identifier_link;
+  int ch_id;		    
+
+  LIST_HEAD(, service) ch_services;
+  LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
   epg_broadcast_tree_t  ch_epg_schedule;
   epg_broadcast_t      *ch_epg_now;
   epg_broadcast_t      *ch_epg_next;
   gtimer_t              ch_epg_timer;
-  gtimer_t              ch_epg_timer_head;
-  gtimer_t              ch_epg_timer_current;
 
-  /* DVR */
-  int                   ch_dvr_extra_time_pre;
-  int                   ch_dvr_extra_time_post;
+  gtimer_t ch_epg_timer_head;
+  gtimer_t ch_epg_timer_current;
+  int ch_dvr_extra_time_pre;
+  int ch_dvr_extra_time_post;
+  int ch_number;  // User configurable number
+  char *ch_icon;
+
   struct dvr_entry_list ch_dvrs;
+  
   struct dvr_autorec_entry_list ch_autorecs;
+
+  struct channel_tag_mapping_list ch_ctms;
+
 
 } channel_t;
 
@@ -88,6 +85,7 @@ typedef struct channel_tag {
   struct dvr_autorec_entry_list ct_autorecs;
 } channel_tag_t;
 
+
 /**
  * Channel tag mapping
  */
@@ -102,41 +100,33 @@ typedef struct channel_tag_mapping {
 
 } channel_tag_mapping_t;
 
-/*
- * Service mappings
- */
-typedef struct channel_service_mapping {
-  LIST_ENTRY(channel_service_mapping) csm_chn_link;
-  LIST_ENTRY(channel_service_mapping) csm_svc_link;
-  
-  struct channel *csm_chn;
-  struct service *csm_svc;
 
-  int csm_mark;
-} channel_service_mapping_t;
 
-extern const idclass_t channel_class;
+void channels_init(void);
 
-void channel_init(void);
+channel_t *channel_create(void);
 
-channel_t *channel_create0
-  (channel_t *ch, const idclass_t *idc, const char *uuid, htsmsg_t *conf,
-   const char *name);
-#define channel_create(u, c, n)\
-  channel_create0(calloc(1, sizeof(channel_t)), &channel_class, u, c, n)
+channel_t *channel_find_by_name(const char *name, int create, int number);
+
+channel_t *channel_find_by_identifier(int id);
+
+void channel_set_teletext_rundown(channel_t *ch, int v);
+
+void channel_settings_write(channel_t *ch);
+
+int channel_rename(channel_t *ch, const char *newname);
 
 void channel_delete(channel_t *ch);
 
-channel_t *channel_find_by_name(const char *name);
-#define channel_find_by_uuid(u)\
-  (channel_t*)idnode_find(u, &channel_class)
+void channel_merge(channel_t *dst, channel_t *src);
 
-channel_t *channel_find_by_id(uint32_t id);
+void channel_set_epg_postpre_time(channel_t *ch, int pre, int mins);
 
-#define channel_find channel_find_by_uuid
+void channel_set_number(channel_t *ch, int number);
 
-int channel_set_tags_by_list ( channel_t *ch, const char *tags );
-int channel_set_services_by_list ( channel_t *ch, const char *svcs );
+void channel_set_icon(channel_t *ch, const char *icon);
+
+void channel_set_tags_from_list(channel_t *ch, const char *maplist);
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
@@ -145,9 +135,5 @@ channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 int channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 
 void channel_save(channel_t *ch);
-
-#define channel_get_uuid(ch) idnode_uuid_as_str(&ch->ch_id)
-
-#define channel_get_id(ch)   idnode_get_short_uuid((&ch->ch_id))
 
 #endif /* CHANNELS_H */

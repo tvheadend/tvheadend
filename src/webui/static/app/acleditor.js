@@ -1,73 +1,77 @@
 tvheadend.acleditor = function() {
 	var fm = Ext.form;
 
-  var cm = new Ext.grid.ColumnModel({
-    defaultSortable: true,
+	var enabledColumn = new Ext.grid.CheckColumn({
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 60
+	});
 
-    columns : [{
-      xtype: 'checkcolumn',
-      header : "Enabled",
-      dataIndex : 'enabled',
-      width : 60
-    }, {
-      header : "Username",
-      dataIndex : 'username',
-      editor : new fm.TextField({
-	allowBlank : false
-      })
-    }, {
-      header : "Password",
-      dataIndex : 'password',
-      renderer : function(value, metadata, record, row, col, store) {
-	return '<span class="tvh-grid-unset">Hidden</span>';
-      },
-      editor : new fm.TextField({
-	allowBlank : false
-      })
-    }, {
-      header : "Prefix",
-      dataIndex : 'prefix',
-      editor : new fm.TextField({
-	allowBlank : false
-      })
-    }, {
-      xtype: 'checkcolumn',
-      header : "Streaming",
-      dataIndex : 'streaming',
-      width : 100
-    }, {
-      xtype: 'checkcolumn',
-      header : "Video Recorder",
-      dataIndex : 'dvr',
-      width : 100
-    }, {
-      xtype: 'checkcolumn',
-      header : "All Configs (VR)",
-      dataIndex : 'dvrallcfg',
-      width : 100
-    }, {
-      xtype: 'checkcolumn',
-      header : "Web Interface",
-      dataIndex : 'webui',
-      width : 100
-    }, {
-      xtype: 'checkcolumn',
-      header : "Admin",
-      dataIndex : 'admin',
-      width : 100
-    }, {
-      header : "Comment",
-      dataIndex : 'comment',
-      width : 400,
-      editor : new fm.TextField({})
-    }]});
+	var streamingColumn = new Ext.grid.CheckColumn({
+		header : "Streaming",
+		dataIndex : 'streaming',
+		width : 100
+	});
 
-  var UserRecord = Ext.data.Record.create(
-    [ 'enabled', 'streaming', 'dvr', 'dvrallcfg', 'admin', 'webui', 'username',
-      'prefix', 'password', 'comment'
-    ]);
+	var dvrColumn = new Ext.grid.CheckColumn({
+		header : "Video Recorder",
+		dataIndex : 'dvr',
+		width : 100
+	});
 
-  return new tvheadend.tableEditor('Access control', 'accesscontrol', cm,
-		                   UserRecord, [], null, 'config_access.html',
-                                   'group');
+	var dvrallcfgColumn = new Ext.grid.CheckColumn({
+		header : "All Configs (VR)",
+		dataIndex : 'dvrallcfg',
+		width : 100
+	});
+
+	var webuiColumn = new Ext.grid.CheckColumn({
+		header : "Web Interface",
+		dataIndex : 'webui',
+		width : 100
+	});
+
+	var adminColumn = new Ext.grid.CheckColumn({
+		header : "Admin",
+		dataIndex : 'admin',
+		width : 100
+	});
+
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns : [ enabledColumn, {
+		header : "Username",
+		dataIndex : 'username',
+		editor : new fm.TextField({
+			allowBlank : false
+		})
+	}, {
+		header : "Password",
+		dataIndex : 'password',
+		renderer : function(value, metadata, record, row, col, store) {
+			return '<span class="tvh-grid-unset">Hidden</span>';
+		},
+		editor : new fm.TextField({
+			allowBlank : false
+		})
+	}, {
+		header : "Prefix",
+		dataIndex : 'prefix',
+		editor : new fm.TextField({
+			allowBlank : false
+		})
+	}, streamingColumn, dvrColumn, dvrallcfgColumn, webuiColumn, adminColumn, {
+		header : "Comment",
+		dataIndex : 'comment',
+		width : 400,
+		editor : new fm.TextField({})
+	} ]});
+
+	var UserRecord = Ext.data.Record.create([ 'enabled', 'streaming', 'dvr',
+		'dvrallcfg', 'admin', 'webui', 'username', 'prefix', 'password',
+		'comment' ]);
+
+	return new tvheadend.tableEditor('Access control', 'accesscontrol', cm,
+		UserRecord, [ enabledColumn, streamingColumn, dvrColumn, dvrallcfgColumn,
+			webuiColumn, adminColumn ], null, 'config_access.html', 'group');
 }

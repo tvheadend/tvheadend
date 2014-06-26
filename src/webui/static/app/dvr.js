@@ -427,18 +427,17 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 tvheadend.autoreceditor = function() {
 	var fm = Ext.form;
 
+	var enabledColumn = new Ext.grid.CheckColumn({
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 30
+	});
 
 	var cm = new Ext.grid.ColumnModel({
   defaultSortable: true,
   columns :
-	  [
-            {
-              header: 'Enabled',
-              dataIndex: 'enabled',
-              width: 30,
-              xtype: 'checkcolumn'
-            },
-
+		[
+			enabledColumn,
 			{
 				header : "Title (Regexp)",
 				dataIndex : 'title',
@@ -586,7 +585,7 @@ tvheadend.autoreceditor = function() {
 			} ]});
 
 	return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
-		tvheadend.autorecRecord, [], tvheadend.autorecStore,
+		tvheadend.autorecRecord, [ enabledColumn ], tvheadend.autorecStore,
 		'autorec.html', 'wand');
 }
 /**

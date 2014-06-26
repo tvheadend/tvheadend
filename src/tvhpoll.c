@@ -76,7 +76,7 @@ tvhpoll_create ( size_t n )
     return NULL;
   }
 #elif ENABLE_KQUEUE
-  if ((fd = kqueue()) < 0) {
+  if ((fd = kqueue()) == -1) {
     tvhlog(LOG_ERR, "tvhpoll", "failed to create kqueue [%s]",
            strerror(errno));
     return NULL;
@@ -118,16 +118,31 @@ int tvhpoll_add
   return 0;
 #elif ENABLE_KQUEUE
   int i;
-  uint32_t fflags;
+  int rc;
   tvhpoll_alloc(tp, num);
   for (i = 0; i < num; i++) {
-    fflags = 0;
-    if (evs[i].events & TVHPOLL_OUT) fflags |= EVFILT_WRITE;
-    if (evs[i].events & TVHPOLL_IN)  fflags |= EVFILT_READ;
-    EV_SET(tp->ev+i, evs[i].fd, fflags, EV_ADD, 0, 0, (void*)evs[i].data.u64);
+    if (evs[i].events & TVHPOLL_OUT){
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
+      rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+      if (rc == -1) {
+        tvhlog(LOG_ERR, "tvhpoll", "failed to add kqueue WRITE filter [%d|%d]",
+           evs[i].fd, rc);
+        return -1;
+      }
+    }
+    if (evs[i].events & TVHPOLL_IN){
+      EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
+      rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
+      if (rc == -1) {
+        tvhlog(LOG_ERR, "tvhpoll", "failed to add kqueue READ filter [%d|%d]",
+           evs[i].fd, rc);
+        return -1;
+      }
+    }
   }
-  return kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
+  return 0;
 #else
+  return -1;
 #endif
 }
 
@@ -141,9 +156,11 @@ int tvhpoll_rem
     epoll_ctl(tp->fd, EPOLL_CTL_DEL, evs[i].fd, NULL);
 #elif ENABLE_KQUEUE
   int i;
-  for (i = 0; i < num; i++)
+  for (i = 0; i < num; i++) {
     EV_SET(tp->ev+i, evs[i].fd, 0, EV_DELETE, 0, 0, NULL);
-  kevent(tp->fd, tp->ev, num, NULL, 0, NULL);
+    if (kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL) == -1)
+      return -1;
+  }
 #else
 #endif
   return 0;
@@ -167,7 +184,7 @@ int tvhpoll_wait
   }
 #elif ENABLE_KQUEUE
   struct timespec tm, *to = NULL;
-  if (ms) {
+  if (ms > 0) {
     tm.tv_sec  = ms / 1000;
     tm.tv_nsec = (ms % 1000) * 1000000LL;
     to = &tm;
@@ -176,9 +193,10 @@ int tvhpoll_wait
   for (i = 0; i < nfds; i++) {
     evs[i].fd       = tp->ev[i].ident;
     evs[i].events   = 0;
-    evs[i].data.u64 = (uint64_t)tp->ev[i].udata;
-    if (tp->ev[i].fflags & EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
-    if (tp->ev[i].fflags & EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    evs[i].data.u64 = (intptr_t)tp->ev[i].udata;
+    if (tp->ev[i].filter == EVFILT_WRITE) evs[i].events |= TVHPOLL_OUT;
+    if (tp->ev[i].filter == EVFILT_READ)  evs[i].events |= TVHPOLL_IN;
+    if (tp->ev[i].flags  & EV_ERROR)     evs[i].events |= TVHPOLL_ERR;
     if (tp->ev[i].flags  & EV_EOF)       evs[i].events |= TVHPOLL_HUP;
   }
 #else

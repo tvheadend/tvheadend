@@ -7,6 +7,12 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
 	var fm = Ext.form;
 
+	var enabledColumn = new Ext.grid.CheckColumn({
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 40
+	});
+
 	var qualityColumn = new Ext.ux.grid.ProgressColumn({
 		header : "Quality",
 		dataIndex : 'quality',
@@ -17,19 +23,15 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
 	var cmlist = Array();
 
-  cmlist.push({
-    xtype: 'checkcolumn',
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 40
-	}, {
+	cmlist.push(enabledColumn, {
 		header : "Play",
 		dataIndex : 'id',
 		width : 50,
 		renderer : function(value, metadata, record, row, col, store) {
-			url = 'stream/mux/' + value;
-			return '<a href="' + url + '">Play</a>';
-  	}}, {
+			url = 'stream/mux/' + value
+			return '<a href="' + url + '">Play</a>'
+		}
+	}, {
 		header : "Network",
 		dataIndex : 'network',
 		width : 200
@@ -361,7 +363,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	var grid = new Ext.grid.EditorGridPanel({
 		stripeRows : true,
 		title : 'Multiplexes',
-		plugins : [ qualityColumn ],
+		plugins : [ enabledColumn, qualityColumn ],
 		store : store,
 		clicksToEdit : 2,
 		cm : cm,
@@ -390,6 +392,17 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
  
 	var fm = Ext.form;
 
+	var enabledColumn = new Ext.grid.CheckColumn({
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 45
+	});
+
+	var eitColumn = new Ext.grid.CheckColumn({
+		header : "EPG",
+		dataIndex : 'dvb_eit_enable',
+		width : 45
+	});
 
 	var actions = new Ext.ux.grid.RowActions({
 		header : '',
@@ -410,15 +423,10 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 		} ]
 	});
 
-	var cm = new Ext.grid.ColumnModel({
-  defaultSortable: true,
-  columns: [
-    {
-      xtype: 'checkcolumn',
-      header : "Enabled",
-      dataIndex : 'enabled',
-      width : 45
-    },
+
+	var cmlist = Array();
+
+	cmlist.push(enabledColumn,
 		{
 			header : "Service name",
 			dataIndex : 'svcname',
@@ -429,8 +437,8 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 			dataIndex : 'id',
 			width : 50,
 			renderer : function(value, metadata, record, row, col, store) {
-				url = 'stream/service/' + value;
-				return '<a href="' + url + '">Play</a>';
+				url = 'stream/service/' + value
+				return '<a href="' + url + '">Play</a>'
 			}
 		},
 		{
@@ -490,12 +498,7 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 				displayField : 'value',
 				valueField : 'key'
 			})
-		}, {
-                  xtype: 'checkcolumn',
-    header : "EPG",
-    dataIndex : 'dvb_eit_enable',
-    width : 45
-  } , {
+		}, eitColumn, {
 			header : "Type",
 			dataIndex : 'type',
 			width : 50
@@ -515,7 +518,7 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 			header : "Multiplex",
 			dataIndex : 'mux',
 			width : 100
-		}]});
+		});
 
 	if (adapterData.satConf) {
 		// Include DVB-S specific stuff
@@ -681,7 +684,7 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 	var grid = new Ext.grid.EditorGridPanel({
 		stripeRows : true,
 		title : 'Services',
-		plugins : [ actions ],
+		plugins : [ enabledColumn, eitColumn, actions ],
 		store : store,
 		clicksToEdit : 2,
 		cm : cm,
@@ -742,7 +745,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 			baseParams : {
 				adapter : adapterData.identifier
 			},
-			dataUrl : 'dvb/locations'
+			dataUrl : 'dvbnetworks'
 		}),
 		root : new Ext.tree.AsyncTreeNode({
 			id : 'root'
@@ -1189,7 +1192,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
-	}, [ 'name', 'enabled', 'automux', 'skip_initialscan',  'diseqcversion',
+	}, [ 'name', 'enabled', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
 		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose', 'grace_period' ]);
@@ -1221,6 +1224,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		new Ext.form.Checkbox({
 			fieldLabel : 'Skip initial scan',
 			name : 'skip_initialscan'
+		}),
+		new Ext.form.Checkbox({
+			fieldLabel : 'Idle scanning',
+			name : 'idlescan'
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Close device handle when idle',
@@ -1342,7 +1349,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			+ '<h3>Symbolrate range:</h3>'
 			+ '{symrateMin} Baud - {symrateMax} Baud</tpl>'
 			+ '<h2 style="font-size: 150%">Status</h2>'
-			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp({reason})'
+			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp'
 			+ '<h3>Services:</h3>{services}' + '<h3>Muxes:</h3>{muxes}'
 			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}'
 			+ '<h3>Signal Strength:</h3>{signal}%'
@@ -1378,13 +1385,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		if (r.data.identifier != adapterId) return;
 		infoTemplate.overwrite(infoPanel.body, r.data);
 
-          serviceScanBtn.enable();
-
 		if (r.data.services > 0 && r.data.initialMuxes == 0) serviceScanBtn
 			.enable();
 		else serviceScanBtn.disable();
 	});
-  serviceScanBtn.enable();
 
 	return panel;
 }

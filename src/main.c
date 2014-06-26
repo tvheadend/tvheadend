@@ -29,7 +29,7 @@
 #include <limits.h>
 #include <time.h>
 #include <locale.h>
-
+#include <iconv.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -37,26 +37,29 @@
 #include <arpa/inet.h>
 
 #include "tvheadend.h"
-#include "api.h"
 #include "tcp.h"
 #include "access.h"
 #include "http.h"
 #include "webui/webui.h"
+#include "dvb/dvb.h"
 #include "epggrab.h"
 #include "spawn.h"
 #include "subscriptions.h"
-#include "service_mapper.h"
-#include "descrambler.h"
+#include "serviceprobe.h"
+#include "cwc.h"
+#include "capmt.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
+#include "rawtsinput.h"
 #include "avahi.h"
-#include "input.h"
+#include "iptv_input.h"
 #include "service.h"
+#include "v4l.h"
 #include "trap.h"
 #include "settings.h"
+#include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
-#include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
 #if ENABLE_LIBAV
@@ -65,12 +68,6 @@
 #endif
 
 /* Command line option struct */
-typedef struct str_list
-{
-  int max;
-  int num;
-  char **str;
-} str_list_t;
 typedef struct {
   const char  sopt;
   const char *lopt;
@@ -78,8 +75,7 @@ typedef struct {
   enum {
     OPT_STR,
     OPT_INT,
-    OPT_BOOL, 
-    OPT_STR_LIST,
+    OPT_BOOL
   }          type;
   void       *param;
 } cmdline_opt_t;
@@ -404,7 +400,7 @@ main(int argc, char **argv)
 #endif
   int  log_level   = LOG_INFO;
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
-  const char *log_debug = NULL, *log_trace = NULL;
+  const char *log_subsys = NULL;
 
   /* Defaults */
   tvheadend_webui_port      = 9981;
@@ -422,23 +418,22 @@ main(int argc, char **argv)
               opt_uidebug      = 0,
               opt_abort        = 0,
               opt_noacl        = 0,
+              opt_trace        = 0,
               opt_fileline     = 0,
-              opt_threadid     = 0,
-              opt_ipv6         = 0,
-              opt_tsfile_tuner = 0;
+              opt_ipv6         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
              *opt_logpath      = NULL,
-             *opt_log_debug    = NULL,
-             *opt_log_trace    = NULL,
+             *opt_log_subsys   = NULL,
              *opt_pidpath      = "/var/run/tvheadend.pid",
 #if ENABLE_LINUXDVB
              *opt_dvb_adapters = NULL,
+             *opt_dvb_raw      = NULL,
 #endif
+             *opt_rawts        = NULL,
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
-  str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
     { 'h', "help",      "Show this page",          OPT_BOOL, &opt_help    },
@@ -476,24 +471,23 @@ main(int argc, char **argv)
     { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
     { 'l', "logfile",   "Enable debug to file",    OPT_STR,  &opt_logpath },
-    {   0, "debug",     "Enable debug subsystems", OPT_STR,  &opt_log_debug },
-#if ENABLE_TRACE
-    {   0, "trace",     "Enable trace subsystems", OPT_STR,  &opt_log_trace },
-#endif
+    {   0, "subsys",    "Enable debug subsystems", OPT_STR,  &opt_log_subsys },
     {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
-    {   0, "threadid",  "Add the thread ID to debug", OPT_BOOL, &opt_threadid },
+#if ENABLE_TRACE
+    {   0, "trace",     "Enable low level debug",  OPT_BOOL, &opt_trace   },
+#endif
     {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
+#if ENABLE_LINUXDVB
+    { 'R', "dvbraw",    "Use rawts file to create virtual adapter",
+      OPT_STR, &opt_dvb_raw },
+#endif
+    { 'r', "rawts",     "Use rawts file to generate virtual services",
+      OPT_STR, &opt_rawts },
     { 'j', "join",      "Subscribe to a service permanently",
-      OPT_STR, &opt_subscribe },
-
-
-    { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
-    { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
-    { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
-
+      OPT_STR, &opt_subscribe }
   };
 
   /* Get current directory */
@@ -524,11 +518,6 @@ main(int argc, char **argv)
                  "option %s requires a value", opt->lopt);
     else if (opt->type == OPT_INT)
       *((int*)opt->param) = atoi(argv[i]);
-    else if (opt->type == OPT_STR_LIST) {
-      str_list_t *strl = opt->param;
-      if (strl->num < strl->max)
-        strl->str[strl->num++] = argv[i];
-    }
     else
       *((char**)opt->param) = argv[i];
 
@@ -584,7 +573,7 @@ main(int argc, char **argv)
   if (isatty(2))
     log_options |= TVHLOG_OPT_DECORATE;
   if (opt_stderr || opt_syslog || opt_logpath) {
-    log_debug      = "all";
+    log_subsys     = "all";
     log_level      = LOG_DEBUG;
     if (opt_stderr)
       log_options   |= TVHLOG_OPT_DBG_STDERR;
@@ -595,18 +584,13 @@ main(int argc, char **argv)
   }
   if (opt_fileline)
     log_options |= TVHLOG_OPT_FILELINE;
-  if (opt_threadid)
-    log_options |= TVHLOG_OPT_THREAD;
-  if (opt_log_trace) {
+  if (opt_trace)
     log_level  = LOG_TRACE;
-    log_trace  = opt_log_trace;
-  }
-  if (opt_log_debug)
-    log_debug  = opt_log_debug;
+  if (opt_log_subsys)
+    log_subsys = opt_log_subsys;
     
   tvhlog_init(log_level, log_options, opt_logpath);
-  tvhlog_set_debug(log_debug);
-  tvhlog_set_trace(log_trace);
+  tvhlog_set_subsys(log_subsys);
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
 
@@ -671,7 +655,6 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
   
   /* Initialise configuration */
-  idnode_init();
   hts_settings_init(opt_config);
 
   /* Setup global mutexes */
@@ -692,8 +675,6 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
-  
-  api_init();
 
 #if ENABLE_LIBAV
   libav_init();
@@ -706,25 +687,22 @@ main(int argc, char **argv)
 
   service_init();
 
-#if ENABLE_TSFILE
-  if(opt_tsfile.num) {
-    tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
-    for (i = 0; i < opt_tsfile.num; i++)
-      tsfile_add_file(opt_tsfile.str[i]);
-  }
-#endif
-#if ENABLE_IPTV
-  iptv_init();
-#endif
-#if ENABLE_LINUXDVB
-  linuxdvb_init(adapter_mask);
-#endif
-
-  channel_init();
+  channels_init();
 
   subscription_init();
 
   access_init(opt_firstrun, opt_noacl);
+
+#if ENABLE_LINUXDVB
+  muxes_init();
+  dvb_init(adapter_mask, opt_dvb_raw);
+#endif
+
+  iptv_input_init();
+
+#if ENABLE_V4L
+  v4l_init();
+#endif
 
 #if ENABLE_TIMESHIFT
   timeshift_init();
@@ -734,9 +712,15 @@ main(int argc, char **argv)
   http_server_init(opt_bindaddr);
   webui_init();
 
-  service_mapper_init();
+  serviceprobe_init();
 
-  descrambler_init();
+#if ENABLE_CWC
+  cwc_init();
+  capmt_init();
+#if (!ENABLE_DVBCSA)
+  ffdecsa_init();
+#endif
+#endif
 
   epggrab_init();
   epg_init();
@@ -745,6 +729,8 @@ main(int argc, char **argv)
 
   htsp_init(opt_bindaddr);
 
+  if(opt_rawts != NULL)
+    rawts_init(opt_rawts);
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);

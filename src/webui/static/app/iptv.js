@@ -16,6 +16,11 @@ tvheadend.iptv = function(adapterId) {
 
 	var fm = Ext.form;
 
+	var enabledColumn = new Ext.grid.CheckColumn({
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 45
+	});
 
 	var actions = new Ext.ux.grid.RowActions({
 		header : '',
@@ -39,12 +44,7 @@ tvheadend.iptv = function(adapterId) {
 	var cm = new Ext.grid.ColumnModel({
   defaultSortable: true,
   columns : [
-    {
-      xtype: 'checkcolumn',
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 45
-    },
+		enabledColumn,
 		{
 			header : "Channel name",
 			dataIndex : 'channelname',
@@ -275,7 +275,7 @@ tvheadend.iptv = function(adapterId) {
 		stripeRows : true,
 		title : 'IPTV',
 		iconCls : 'iptv',
-		plugins : [ actions ],
+		plugins : [ enabledColumn, actions ],
 		store : store,
 		clicksToEdit : 2,
 		cm : cm,

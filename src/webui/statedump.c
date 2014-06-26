@@ -28,7 +28,13 @@
 #include "webui.h"
 #include "access.h"
 #include "epg.h"
+#include "psi.h"
 #include "channels.h"
+#if ENABLE_LINUXDVB
+#include "dvr/dvr.h"
+#include "dvb/dvb.h"
+#include "dvb/dvb_support.h"
+#endif
 
 extern char tvh_binshasum[20];
 
@@ -55,7 +61,7 @@ dumpchannels(htsbuf_queue_t *hq)
   channel_t *ch;
   outputtitle(hq, 0, "Channels");
 
-  CHANNEL_FOREACH(ch) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     
     htsbuf_qprintf(hq, "%s (%d)\n", ch->ch_name, ch->ch_id);
     htsbuf_qprintf(hq,
@@ -70,7 +76,7 @@ dumpchannels(htsbuf_queue_t *hq)
   }
 }
 
-#if 0
+#if ENABLE_LINUXDVB
 static void
 dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 {
@@ -121,11 +127,23 @@ static void
 dumpdvbadapters(htsbuf_queue_t *hq)
 {
   th_dvb_adapter_t *tda;
+  th_dvb_mux_instance_t *tdmi;
 
   outputtitle(hq, 0, "DVB Adapters");
 
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
     htsbuf_qprintf(hq, "%s (%s)\n", tda->tda_displayname, tda->tda_identifier);
+     
+    outputtitle(hq, 4, "Multiplexes");
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      char tdminame[64];
+      dvb_mux_nicename(tdminame, sizeof(tdminame), tdmi);
+      htsbuf_qprintf(hq, "      %s (%s)\n",
+		     tdminame, tdmi->tdmi_identifier);
+      
+      htsbuf_qprintf(hq, "\n");
+      dumptransports(hq, &tdmi->tdmi_transports, 8);
+    }
   }
 }
 #endif
@@ -164,6 +182,10 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[19]);
 
   dumpchannels(hq);
+  
+#if ENABLE_LINUXDVB
+  dumpdvbadapters(hq);
+#endif 
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

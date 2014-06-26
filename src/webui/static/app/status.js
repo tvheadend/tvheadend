@@ -171,10 +171,6 @@ tvheadend.status_adapters = function() {
 		renderer: renderBw
         },{
 		width : 50,
-		header : "Used for",
-		dataIndex : 'reason'
-        },{
-		width : 50,
 		header : "Bit error rate",
 		dataIndex : 'ber'
         },{
