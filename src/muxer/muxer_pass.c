@@ -401,6 +401,8 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
     pm->m_errors++;
   } else if(tvh_write(pm->pm_fd, data, size)) {
     pm->pm_error = errno;
+    if (errno == EPIPE) /* this is an end-of-streaming notification */
+      return;
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
     m->m_errors++;
