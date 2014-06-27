@@ -527,7 +527,7 @@ pass_muxer_close(muxer_t *m)
 
   if(pm->pm_seekable && close(pm->pm_fd)) {
     pm->pm_error = errno;
-    tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
+    tvhlog(LOG_ERR, "pass", "%s: Unable to close file, close failed -- %s",
 	   pm->pm_filename, strerror(errno));
     pm->m_errors++;
     return -1;
