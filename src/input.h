@@ -147,6 +147,9 @@ void tvh_input_stream_destroy ( tvh_input_stream_t *st );
 #if ENABLE_SATIP_CLIENT
 #include "input/mpegts/satip/satip.h"
 #endif
+#if ENABLE_HDHOMERUN_CLIENT
+#include "input/mpegts/tvhdhomerun/tvhdhomerun.h"
+#endif
 #endif
 
 #endif /* __TVH_INPUT_H__ */
