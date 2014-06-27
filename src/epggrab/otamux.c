@@ -480,7 +480,7 @@ epggrab_ota_free ( epggrab_ota_mux_t *ota )
 }
 
 void
-epggrab_ota_done_ ( void )
+epggrab_ota_shutdown ( void )
 {
   epggrab_ota_mux_t *ota;
 

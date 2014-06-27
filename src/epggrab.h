@@ -267,7 +267,7 @@ void epggrab_init                 ( void );
 void epggrab_done                 ( void );
 void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
-void epggrab_ota_done_            ( void );
+void epggrab_ota_shutdown         ( void );
 
 /* **************************************************************************
  * Global Functions

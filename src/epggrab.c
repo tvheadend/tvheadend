@@ -429,6 +429,6 @@ void epggrab_done ( void )
     free(mod);
   }
   pthread_mutex_unlock(&global_lock);
-  epggrab_ota_done_();
+  epggrab_ota_shutdown();
   opentv_done();
 }
