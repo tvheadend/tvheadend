@@ -160,36 +160,30 @@ muxer_container_type2txt(muxer_container_type_t mc)
 /**
  * Get a list of supported containers
  */
+static int
+muxer_container_add(htsmsg_t *array, int type, const char *text)
+{
+  htsmsg_t *mc;
+
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(type));
+  htsmsg_add_str(mc, "description", text);
+  htsmsg_add_msg(array, NULL, mc);
+  return 1;
+}
+
 int
 muxer_container_list(htsmsg_t *array)
 {
-  htsmsg_t *mc;
-  int c = 0;
+  int c;
 
-  mc = htsmsg_create_map();
-  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MATROSKA));
-  htsmsg_add_str(mc, "description", "Matroska");
-  htsmsg_add_msg(array, NULL, mc);
-  c++;
-  
-  mc = htsmsg_create_map();
-  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_PASS));
-  htsmsg_add_str(mc, "description", "Same as source (pass through)");
-  htsmsg_add_msg(array, NULL, mc);
-  c++;
+  c  = muxer_container_add(array, MC_MATROSKA, "Matroska (mkv)");
+  c += muxer_container_add(array, MC_PASS,     "Same as source (pass through)");
 
 #if ENABLE_LIBAV
-  mc = htsmsg_create_map();
-  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGTS));
-  htsmsg_add_str(mc, "description", "MPEG-TS");
-  htsmsg_add_msg(array, NULL, mc);
-  c++;
+  c += muxer_container_add(array, MC_MPEGTS,   "MPEG-TS");
 
-  mc = htsmsg_create_map();
-  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGPS));
-  htsmsg_add_str(mc, "description", "MPEG-PS (DVD)");
-  htsmsg_add_msg(array, NULL, mc);
-  c++;
+  c += muxer_container_add(array, MC_MPEGPS,   "MPEG-PS (DVD)");
 #endif
 
   return c;
