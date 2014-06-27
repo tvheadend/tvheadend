@@ -149,6 +149,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_SATIP_CLIENT
   { "satip_client", NULL },
 #endif
+#if ENABLE_HDHOMERUN_CLIENT
+  { "tvhdhomerun_client", NULL },
+#endif
 #if ENABLE_LIBAV
   { "transcoding", &transcoding_enabled },
 #endif
