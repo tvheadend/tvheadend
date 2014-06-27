@@ -504,8 +504,7 @@ opentv_bat_callback
   /* Register */
   if (!ota) {
     sta->os_ota = ota
-      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux,
-                             1200, 3600);
+      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux);
   }
 
   /* Complete */

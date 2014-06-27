@@ -131,8 +131,7 @@ void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
  */
 
 epggrab_ota_mux_t *epggrab_ota_register   
-  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux,
-    int timeout, int interval );
+  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux );
 
 /*
  * State change

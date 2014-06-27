@@ -191,10 +191,11 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
 
 epggrab_ota_mux_t *
 epggrab_ota_register
-  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm,
-    int interval, int timeout )
+  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm )
 {
   int save = 0;
+  int interval = 3600;
+  int timeout  =  240;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *ota;
 
