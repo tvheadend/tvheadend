@@ -124,9 +124,8 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
     epggrab_ota_pending_timer_cb(NULL);
   
   /* Remove from active */
-  if (!timeout) {
+  if (!timeout)
     epggrab_ota_active_timer_cb(NULL);
-  }
 }
 
 static void
@@ -339,7 +338,8 @@ next_one:
   }
 
   /* Subscribe to the mux */
-  if (mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
+  if (mm->mm_is_epg(mm) <= 0 ||
+      mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
     om->om_active = 0;
     om->om_when   = dispatch_clock + epggrab_ota_period(om, 4) + extra;
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);

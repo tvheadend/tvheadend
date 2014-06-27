@@ -377,6 +377,7 @@ struct mpegts_mux
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
+  int  (*mm_is_epg)           (mpegts_mux_t*);
 
   /*
    * Configuration

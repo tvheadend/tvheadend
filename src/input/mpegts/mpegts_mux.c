@@ -439,6 +439,20 @@ mpegts_mux_is_enabled ( mpegts_mux_t *mm )
   return mm->mm_enabled;
 }
 
+static int
+mpegts_mux_is_epg ( mpegts_mux_t *mm )
+{
+  mpegts_service_t *s;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (LIST_FIRST(&s->s_channels))
+      break;
+
+  return s ? 1 : 0;
+}
+
 static void
 mpegts_mux_create_instances ( mpegts_mux_t *mm )
 {
@@ -833,6 +847,7 @@ mpegts_mux_create0
   mm->mm_display_name        = mpegts_mux_display_name;
   mm->mm_config_save         = mpegts_mux_config_save;
   mm->mm_is_enabled          = mpegts_mux_is_enabled;
+  mm->mm_is_epg              = mpegts_mux_is_epg;
 
   /* Start/stop */
   mm->mm_start               = mpegts_mux_start;
