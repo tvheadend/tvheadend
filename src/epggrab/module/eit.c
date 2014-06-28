@@ -679,15 +679,7 @@ static void _eit_start
 static int _eit_tune
   ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
 {
-  mpegts_service_t *s;
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    if (LIST_FIRST(&s->s_channels))
-      break;
-
-  return s ? 1 : 0;
+  return 1;
 }
 
 void eit_init ( void )
