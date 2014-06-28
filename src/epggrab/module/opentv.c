@@ -693,8 +693,14 @@ static void _opentv_done( epggrab_module_ota_t *m )
 }
 
 static int _opentv_tune
-  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om )
+  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
+  opentv_module_t *mod = (opentv_module_t*)m;
+
+  /* Ignore */
+  if (!m->enabled) return 0;
+  if (mod->tsid != mm->mm_tsid) return 0;
+
   return 1;
 }
 

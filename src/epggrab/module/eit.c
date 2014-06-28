@@ -700,13 +700,16 @@ static void _eit_start
 }
 
 static int _eit_tune
-  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om )
+  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   int r = 0;
   mpegts_service_t *s;
   epggrab_ota_svc_link_t *osl, *nxt;
 
   lock_assert(&global_lock);
+
+  /* Disabled */
+  if (!m->enabled) return 0;
 
   /* Have gathered enough info to decide */
   if (!om->om_complete)

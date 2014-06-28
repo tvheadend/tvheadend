@@ -89,7 +89,8 @@ typedef struct epggrab_ota_module_ops {
     void (*start)  (epggrab_module_ota_t *m, struct mpegts_mux *mm);
     int  (*enable) (void *m, uint8_t e );
     void (*done)   (epggrab_module_ota_t*m);
-    int  (*tune)   (epggrab_module_ota_t *m, epggrab_ota_mux_t *om );
+    int  (*tune)   (epggrab_module_ota_t *m, epggrab_ota_mux_t *om,
+                    struct mpegts_mux *mm);
 } epggrab_ota_module_ops_t;
 
 epggrab_module_ota_t *epggrab_module_ota_create
