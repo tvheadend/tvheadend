@@ -589,7 +589,7 @@ tvheadend.autoreceditor = function() {
                             return tvheadend.durationLookupRange(v);
                         },
                         editor: durationCombo = new Ext.form.ComboBox({
-                            store: tvheadend.DurationNamesStore,
+                            store: tvheadend.DurationStore,
                             mode: 'local',
                             valueField: 'minvalue',
                             displayField: 'label',
@@ -700,10 +700,10 @@ tvheadend.autoreceditor = function() {
             if (record.data.minduration == "")
                 record.set('maxduration',"");
             else {
-                var index = tvheadend.DurationNamesStore.find('minvalue', record.data.minduration); 
+                var index = tvheadend.DurationStore.find('minvalue', record.data.minduration); 
 
                 if (index !== -1)
-                    record.set('maxduration', tvheadend.DurationNamesStore.getById(index).data.maxvalue);
+                    record.set('maxduration', tvheadend.DurationStore.getById(index).data.maxvalue);
             }
         }
     });

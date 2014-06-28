@@ -46,10 +46,10 @@ tvheadend.channelLookupName = function(key) {
 tvheadend.durationLookupRange = function(value) {
     durationString = "";
     
-    var index = tvheadend.DurationNamesStore.find('minvalue', value); 
+    var index = tvheadend.DurationStore.find('minvalue', value); 
 
     if (index !== -1)
-        var durationString = tvheadend.DurationNamesStore.getById(index).data.label;
+        var durationString = tvheadend.DurationStore.getById(index).data.label;
     
     return durationString;
 };  
@@ -58,30 +58,17 @@ tvheadend.durationLookupRange = function(value) {
 
 // Store for autorec dialog and for autorec rules in the DVR grid
 
-tvheadend.DurationNamesStore = new Ext.data.SimpleStore({
+tvheadend.DurationStore = new Ext.data.SimpleStore({
 	storeId: 'durationnames',
 	idIndex: 0,
     fields: ['identifier','label','minvalue','maxvalue'],
-    data: [['0', '(No duration filter)',"",""],
+    data: [['0', '(Clear filter)',"",""],
            ['1','00:00:01 - 00:15:00',1, 900],
            ['2','00:15:01 - 00:30:00', 901, 1800],
            ['3','00:30:01 - 01:30:00', 1801, 5400],
            ['4','01:30:01 - 03:00:00', 5401, 10800],
            ['5','03:00:01 - No maximum', 10801, 9999999]]
 });
-
-// Store for the main duration filter combobox on the EPG tab
-
-tvheadend.DurationStore = new Ext.data.SimpleStore({
-	storeId: 'durationlabels',
-    fields: ['label','minvalue', 'maxvalue'],
-    data: [['Very short (up to 15 minutes)',1, 900],
-           ['Short (from 15 up to 30 minutes)', 901, 1800],
-           ['Medium (from 30 up to 90 minutes)', 1801, 5400],
-           ['Long (from 90 minutes up to 3 hours)', 5401, 10800], 
-           ['Very long (more than 3 hours)', 10801, 9999999]]
-});
-//
 
 tvheadend.epgDetails = function(event) {
 
@@ -515,9 +502,16 @@ tvheadend.epg = function() {
 
     epgFilterDuration.on('select', function(c, r) {
 		if (epgStore.baseParams.minduration !== r.data.minvalue) {
-            epgStore.baseParams.minduration = r.data.minvalue;
-            epgStore.baseParams.maxduration = r.data.maxvalue;
-            epgStore.reload();
+			if (r.data.identifier == 0) {
+		        delete epgStore.baseParams.minduration;
+                delete epgStore.baseParams.maxduration;
+                epgFilterDuration.setValue("");
+			} else
+			{
+                epgStore.baseParams.minduration = r.data.minvalue;
+                epgStore.baseParams.maxduration = r.data.maxvalue;
+			}
+			epgStore.reload();
 		}
     });
 
@@ -563,7 +557,7 @@ tvheadend.epg = function() {
             epgFilterDuration,
             '-',
             {
-                text: 'Reset',
+                text: 'Reset All',
                 handler: epgQueryClear
             },
             '->',
