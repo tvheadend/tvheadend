@@ -1152,12 +1152,14 @@ http_client_thread ( void *p )
       TAILQ_FOREACH(hc, &http_clients, hc_link)
         if (hc == ev.data.ptr)
           break;
-      if (hc == NULL || hc->hc_shutdown_wait) {
-        if (hc->hc_shutdown_wait) {
-          pthread_cond_broadcast(&http_cond);
-          /* Disable the poll looping for this moment */
-          http_client_poll_dir(hc, 0, 0);
-        }
+      if (hc == NULL) {
+        pthread_mutex_unlock(&http_lock);
+        continue;
+      }
+      if (hc->hc_shutdown_wait) {
+        pthread_cond_broadcast(&http_cond);
+        /* Disable the poll looping for this moment */
+        http_client_poll_dir(hc, 0, 0);
         pthread_mutex_unlock(&http_lock);
         continue;
       }
