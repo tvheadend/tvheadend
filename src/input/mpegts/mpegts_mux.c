@@ -311,6 +311,13 @@ const idclass_t mpegts_mux_class =
       .notify   = mpegts_mux_class_enabled_notify,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "epg",
+      .name     = "EPG",
+      .off      = offsetof(mpegts_mux_t, mm_epg),
+      .def.i    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
@@ -445,6 +452,9 @@ mpegts_mux_is_epg ( mpegts_mux_t *mm )
   mpegts_service_t *s;
 
   lock_assert(&global_lock);
+
+  if (!mm->mm_epg)
+    return 0;
 
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     if (LIST_FIRST(&s->s_channels))
@@ -833,6 +843,7 @@ mpegts_mux_create0
 
   /* Enabled by default */
   mm->mm_enabled             = 1;
+  mm->mm_epg                 = 1;
 
   /* Identification */
   mm->mm_onid                = onid;

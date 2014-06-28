@@ -384,6 +384,7 @@ struct mpegts_mux
    */
   char *mm_crid_authority;
   int   mm_enabled;
+  int   mm_epg;
   char *mm_charset;
 };
  
