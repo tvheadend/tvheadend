@@ -764,6 +764,9 @@ mpegts_service_t *mpegts_service_create0
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
+#define mpegts_service_find_by_uuid(u)\
+  idnode_find(u, &mpegts_service_class)
+
 void mpegts_service_delete ( service_t *s, int delconf );
 
 /*

@@ -247,6 +247,12 @@ epggrab_ota_complete
   lock_assert(&global_lock);
   tvhdebug(mod->id, "grab complete");
 
+  /* Mark */
+  if (!ota->om_complete) {
+    ota->om_complete = 1;
+    epggrab_ota_save(ota);
+  }
+
   /* Test for completion */
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     if (map->om_module == mod) {
@@ -326,7 +332,7 @@ next_one:
   /* Check we have modules attached and enabled */
   LIST_FOREACH(map, &om->om_modules, om_link) {
     if (map->om_module->enabled &&
-        map->om_module->tune && map->om_module->tune(map->om_module, mm))
+        map->om_module->tune && map->om_module->tune(map->om_module, om))
       break;
   }
   if (!map) {
@@ -371,6 +377,7 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
   epggrab_ota_map_t *map;
   htsmsg_t *e, *l, *c = htsmsg_create_map();
 
+  htsmsg_add_u32(c, "complete", ota->om_complete);
   htsmsg_add_u32(c, "timeout",  ota->om_timeout);
   htsmsg_add_u32(c, "interval", ota->om_interval);
   l = htsmsg_create_list();
