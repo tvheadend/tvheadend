@@ -479,11 +479,17 @@ static void
 epggrab_ota_free ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_map_t *map;
+  epggrab_ota_svc_link_t *svcl;
 
   LIST_REMOVE(ota, om_q_link);
   while ((map = LIST_FIRST(&ota->om_modules)) != NULL) {
     LIST_REMOVE(map, om_link);
     free(map);
+  }
+  while ((svcl = RB_FIRST(&ota->om_svcs)) != NULL) {
+    RB_REMOVE(&ota->om_svcs, svcl, link);
+    free(svcl->uuid);
+    free(svcl);
   }
   free(ota->om_mux_uuid);
   free(ota);
