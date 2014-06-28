@@ -33,6 +33,7 @@ typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
 typedef struct epggrab_ota_map      epggrab_ota_map_t;
+typedef struct epggrab_ota_svc_link epggrab_ota_svc_link_t;
 
 LIST_HEAD(epggrab_module_list, epggrab_module);
 typedef struct epggrab_module_list epggrab_module_list_t;
@@ -180,6 +181,12 @@ struct epggrab_module_ext
   int                          sock;      ///< Socket descriptor
 };
 
+struct epggrab_ota_svc_link
+{
+  char                          *uuid;
+  RB_ENTRY(epggrab_ota_svc_link) link;
+};
+
 /*
  * TODO: this could be embedded in the mux itself, but by using a soft-link
  *       and keeping it here I can somewhat isolate it from the mpegts code
@@ -189,6 +196,7 @@ struct epggrab_ota_mux
   char                              *om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
+  int                                om_complete;     ///< Has completed a scan
   int                                om_active;
   int                                om_timeout;      ///< User configurable
   int                                om_interval;
@@ -196,6 +204,7 @@ struct epggrab_ota_mux
 
   LIST_ENTRY(epggrab_ota_mux)        om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
+  RB_HEAD(,epggrab_ota_svc_link)     om_svcs;         ///< Muxes we carry data for
 };
 
 /*
@@ -222,7 +231,7 @@ struct epggrab_module_ota
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
   void (*done)  ( epggrab_module_ota_t *m );
-  int  (*tune)  ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
+  int  (*tune)  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om );
 };
 
 /*

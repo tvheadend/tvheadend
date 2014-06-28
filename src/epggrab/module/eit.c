@@ -27,6 +27,14 @@
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
 
+SKEL_DECLARE(svc_link_skel, epggrab_ota_svc_link_t);
+
+static int
+osl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
+{
+  return strcmp(a->uuid, b->uuid);
+}
+
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
@@ -558,6 +566,7 @@ _eit_callback
   epggrab_module_t *mod = mt->mt_opaque;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_table_state_t *st;
+  epggrab_ota_svc_link_t *osl;
 
   /* Validate */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
@@ -609,8 +618,20 @@ _eit_callback
 
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
-  // TODO: have lost the concept of the primary EPG service!
-  if (!svc || !LIST_FIRST(&svc->s_channels))
+  if (!svc)
+    goto done;
+
+  /* Register this */
+  SKEL_ALLOC(svc_link_skel);
+  svc_link_skel->uuid = (char*)idnode_uuid_as_str(&svc->s_id);
+  osl = RB_INSERT_SORTED(&ota->om_svcs, svc_link_skel, link, osl_cmp);
+  if (!osl) {
+    svc_link_skel->uuid = strdup(svc_link_skel->uuid);
+    SKEL_USED(svc_link_skel);
+  }
+
+  /* No point processing */
+  if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
   /* Process events */
@@ -677,9 +698,39 @@ static void _eit_start
 }
 
 static int _eit_tune
-  ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
+  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om )
 {
-  return 1;
+  int r = 0;
+  mpegts_service_t *s;
+  epggrab_ota_svc_link_t *osl, *nxt;
+
+  lock_assert(&global_lock);
+
+  /* Have gathered enough info to decide */
+  if (!om->om_complete)
+    return 1;
+
+  /* Non-standard (known to carry FULL network info) */
+  if (!strcmp(m->id, "uk_freesat") ||
+      !strcmp(m->id, "viasat_baltic"))
+    return 1;
+
+  /* Check if any services are mapped */
+  // TODO: using indirect ref's like this is inefficient, should 
+  //       consider changeing it?
+  for (osl = RB_FIRST(&om->om_svcs); osl != NULL; osl = nxt) {
+    nxt = RB_NEXT(osl, link);
+    if (!(s = mpegts_service_find_by_uuid(osl->uuid))) {
+      RB_REMOVE(&om->om_svcs, osl, link);
+      free(osl->uuid);
+      free(osl);
+    } else {
+      if (LIST_FIRST(&s->s_channels))
+        r = 1;
+    }
+  }
+
+  return r;
 }
 
 void eit_init ( void )
@@ -688,6 +739,8 @@ void eit_init ( void )
     .start = _eit_start,
     .tune  = _eit_tune,
   };
+
+  SKEL_USED(svc_link_skel);
 
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1, &ops, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);

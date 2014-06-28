@@ -692,7 +692,8 @@ static void _opentv_done( epggrab_module_ota_t *m )
   free(mod->summary);
 }
 
-static int _opentv_tune ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
+static int _opentv_tune
+  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om )
 {
   return 1;
 }
