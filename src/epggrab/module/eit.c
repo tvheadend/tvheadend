@@ -27,14 +27,6 @@
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
 
-SKEL_DECLARE(svc_link_skel, epggrab_ota_svc_link_t);
-
-static int
-osl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
-{
-  return strcmp(a->uuid, b->uuid);
-}
-
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
@@ -566,7 +558,6 @@ _eit_callback
   epggrab_module_t *mod = mt->mt_opaque;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_table_state_t *st;
-  epggrab_ota_svc_link_t *osl;
 
   /* Validate */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
@@ -622,15 +613,8 @@ _eit_callback
     goto done;
 
   /* Register this */
-  if (ota) {
-    SKEL_ALLOC(svc_link_skel);
-    svc_link_skel->uuid = (char*)idnode_uuid_as_str(&svc->s_id);
-    osl = RB_INSERT_SORTED(&ota->om_svcs, svc_link_skel, link, osl_cmp);
-    if (!osl) {
-      svc_link_skel->uuid = strdup(svc_link_skel->uuid);
-      SKEL_USED(svc_link_skel);
-    }
-  }
+  if (ota)
+    epggrab_ota_service_add(ota, idnode_uuid_as_str(&svc->s_id), 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))
@@ -726,9 +710,7 @@ static int _eit_tune
   for (osl = RB_FIRST(&om->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
     if (!(s = mpegts_service_find_by_uuid(osl->uuid))) {
-      RB_REMOVE(&om->om_svcs, osl, link);
-      free(osl->uuid);
-      free(osl);
+      epggrab_ota_service_del(om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))
         r = 1;
@@ -753,5 +735,4 @@ void eit_init ( void )
 
 void eit_done ( void )
 {
-  SKEL_FREE(svc_link_skel);
 }

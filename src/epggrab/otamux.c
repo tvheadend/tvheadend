@@ -38,6 +38,7 @@ gtimer_t                    epggrab_ota_pending_timer;
 gtimer_t                    epggrab_ota_active_timer;
 
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
+SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
 
 static void epggrab_ota_active_timer_cb ( void *p );
 static void epggrab_ota_pending_timer_cb ( void *p );
@@ -58,6 +59,12 @@ static int
 om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 {
   return strcmp(a->om_mux_uuid, b->om_mux_uuid);
+}
+
+static int
+om_svcl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
+{
+  return strcmp(a->uuid, b->uuid);
 }
 
 #define EPGGRAB_OTA_MIN_PERIOD   300
@@ -367,6 +374,34 @@ done:
   }
 }
 
+void
+epggrab_ota_service_add ( epggrab_ota_mux_t *ota, const char *uuid, int save )
+{
+  if (uuid == NULL)
+    return;
+  SKEL_ALLOC(epggrab_svc_link_skel);
+  epggrab_svc_link_skel->uuid = (char *)uuid;
+  if (!RB_INSERT_SORTED(&ota->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp)) {
+    epggrab_svc_link_skel->uuid = strdup(uuid);
+    SKEL_USED(epggrab_svc_link_skel);
+    if (save && ota->om_complete)
+      epggrab_ota_save(ota);
+  }
+}
+
+void
+epggrab_ota_service_del ( epggrab_ota_mux_t *ota, epggrab_ota_svc_link_t *svcl,
+                          int save )
+{
+  if (svcl == NULL)
+    return;
+  RB_REMOVE(&ota->om_svcs, svcl, link);
+  free(svcl->uuid);
+  free(svcl);
+  if (save)
+    epggrab_ota_save(ota);
+}
+
 /* **************************************************************************
  * Config
  * *************************************************************************/
@@ -375,11 +410,17 @@ static void
 epggrab_ota_save ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_map_t *map;
+  epggrab_ota_svc_link_t *svcl;
   htsmsg_t *e, *l, *c = htsmsg_create_map();
 
   htsmsg_add_u32(c, "complete", ota->om_complete);
   htsmsg_add_u32(c, "timeout",  ota->om_timeout);
   htsmsg_add_u32(c, "interval", ota->om_interval);
+  l = htsmsg_create_list();
+  RB_FOREACH(svcl, &ota->om_svcs, link)
+    if (svcl->uuid)
+      htsmsg_add_str(l, NULL, svcl->uuid);
+  htsmsg_add_msg(c, "services", l);
   l = htsmsg_create_list();
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     e = htsmsg_create_map();
@@ -416,6 +457,10 @@ epggrab_ota_load_one
   ota->om_mux_uuid = strdup(uuid);
   ota->om_timeout  = htsmsg_get_u32_or_default(c, "timeout", 0);
   ota->om_interval = htsmsg_get_u32_or_default(c, "interval", 0);
+  if ((l = htsmsg_get_list(c, "services")) != NULL) {
+    HTSMSG_FOREACH(f, l)
+      epggrab_ota_service_add(ota, htsmsg_field_get_str(f), 0);
+  }
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
     free(ota->om_mux_uuid);
     free(ota);
@@ -485,11 +530,8 @@ epggrab_ota_free ( epggrab_ota_mux_t *ota )
     LIST_REMOVE(map, om_link);
     free(map);
   }
-  while ((svcl = RB_FIRST(&ota->om_svcs)) != NULL) {
-    RB_REMOVE(&ota->om_svcs, svcl, link);
-    free(svcl->uuid);
-    free(svcl);
-  }
+  while ((svcl = RB_FIRST(&ota->om_svcs)) != NULL)
+    epggrab_ota_service_del(ota, svcl, 0);
   free(ota->om_mux_uuid);
   free(ota);
 }
@@ -506,6 +548,7 @@ epggrab_ota_shutdown ( void )
     epggrab_ota_free(ota);
   pthread_mutex_unlock(&global_lock);
   SKEL_FREE(epggrab_ota_mux_skel);
+  SKEL_FREE(epggrab_svc_link_skel);
 }
 
 /******************************************************************************

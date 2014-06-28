@@ -144,6 +144,15 @@ epggrab_ota_mux_t *epggrab_ota_register
 void epggrab_ota_complete 
   ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota );
 
+/*
+ * Service list
+ */
+void
+epggrab_ota_service_add
+  ( epggrab_ota_mux_t *ota, const char *uuid, int save );
+void
+epggrab_ota_service_del
+  ( epggrab_ota_mux_t *ota, epggrab_ota_svc_link_t *svcl, int save );
 
 /* **************************************************************************
  * Miscellaneous
