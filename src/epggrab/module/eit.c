@@ -622,12 +622,14 @@ _eit_callback
     goto done;
 
   /* Register this */
-  SKEL_ALLOC(svc_link_skel);
-  svc_link_skel->uuid = (char*)idnode_uuid_as_str(&svc->s_id);
-  osl = RB_INSERT_SORTED(&ota->om_svcs, svc_link_skel, link, osl_cmp);
-  if (!osl) {
-    svc_link_skel->uuid = strdup(svc_link_skel->uuid);
-    SKEL_USED(svc_link_skel);
+  if (ota) {
+    SKEL_ALLOC(svc_link_skel);
+    svc_link_skel->uuid = (char*)idnode_uuid_as_str(&svc->s_id);
+    osl = RB_INSERT_SORTED(&ota->om_svcs, svc_link_skel, link, osl_cmp);
+    if (!osl) {
+      svc_link_skel->uuid = strdup(svc_link_skel->uuid);
+      SKEL_USED(svc_link_skel);
+    }
   }
 
   /* No point processing */

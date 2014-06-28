@@ -210,6 +210,7 @@ epggrab_ota_register
     tvhinfo(mod->id, "registering mux %s", buf);
     ota  = epggrab_ota_mux_skel;
     SKEL_USED(epggrab_ota_mux_skel);
+    RB_INIT(&ota->om_svcs);
     ota->om_mux_uuid = strdup(uuid);
     ota->om_when     = dispatch_clock + epggrab_ota_timeout(ota);
     ota->om_active   = 1;
@@ -412,6 +413,7 @@ epggrab_ota_load_one
   }
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
+  RB_INIT(&ota->om_svcs);
   ota->om_mux_uuid = strdup(uuid);
   ota->om_timeout  = htsmsg_get_u32_or_default(c, "timeout", 0);
   ota->om_interval = htsmsg_get_u32_or_default(c, "interval", 0);
