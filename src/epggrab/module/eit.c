@@ -742,10 +742,13 @@ void eit_init ( void )
     .tune  = _eit_tune,
   };
 
-  SKEL_USED(svc_link_skel);
-
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1, &ops, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops, NULL);
+}
+
+void eit_done ( void )
+{
+  SKEL_FREE(svc_link_skel);
 }

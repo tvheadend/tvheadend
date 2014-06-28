@@ -162,6 +162,7 @@ size_t freesat_huffman_decode
 
 /* EIT module */
 void eit_init    ( void );
+void eit_done    ( void );
 void eit_load    ( void );
 
 /* OpenTV module */
