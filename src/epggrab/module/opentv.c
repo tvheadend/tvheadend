@@ -692,6 +692,11 @@ static void _opentv_done( epggrab_module_ota_t *m )
   free(mod->summary);
 }
 
+static int _opentv_tune ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
+{
+  return 1;
+}
+
 static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 {
   char ibuf[100], nbuf[1000];
@@ -701,6 +706,11 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   opentv_dict_t *dict;
   opentv_genre_t *genre;
   opentv_module_t *mod;
+  static epggrab_ota_module_ops_t ops = {
+    .start = _opentv_start,
+    .done  = _opentv_done,
+    .tune =  _opentv_tune,
+  };
 
   /* Check config */
   if (!(name = htsmsg_get_str(m, "name"))) return -1;
@@ -730,9 +740,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   sprintf(nbuf, "OpenTV: %s", name);
   mod = (opentv_module_t*)
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
-                              ibuf, nbuf, 2,
-                              _opentv_start, NULL,
-                              _opentv_done, NULL);
+                              ibuf, nbuf, 2, &ops, NULL);
   
   /* Add provider details */
   mod->dict     = dict;

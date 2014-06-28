@@ -676,14 +676,29 @@ static void _eit_start
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
 }
 
+static int _eit_tune
+  ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
+{
+  mpegts_service_t *s;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (LIST_FIRST(&s->s_channels))
+      break;
+
+  return s ? 1 : 0;
+}
+
 void eit_init ( void )
 {
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
-                            _eit_start, NULL, NULL, NULL);
-  epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
-                            _eit_start, NULL, NULL, NULL);
-  epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
-                            _eit_start, NULL, NULL, NULL);
-  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
-                            _eit_start, NULL, NULL, NULL);
+  static epggrab_ota_module_ops_t ops = {
+    .start = _eit_start,
+    .tune  = _eit_tune,
+  };
+
+  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1, &ops, NULL);
+  epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);
+  epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops, NULL);
+  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops, NULL);
 }

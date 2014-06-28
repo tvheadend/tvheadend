@@ -325,7 +325,8 @@ next_one:
 
   /* Check we have modules attached and enabled */
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module->enabled)
+    if (map->om_module->enabled &&
+        map->om_module->tune && map->om_module->tune(map->om_module, mm))
       break;
   }
   if (!map) {

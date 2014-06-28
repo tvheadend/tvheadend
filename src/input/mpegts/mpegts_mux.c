@@ -449,18 +449,7 @@ mpegts_mux_is_enabled ( mpegts_mux_t *mm )
 static int
 mpegts_mux_is_epg ( mpegts_mux_t *mm )
 {
-  mpegts_service_t *s;
-
-  lock_assert(&global_lock);
-
-  if (!mm->mm_epg)
-    return 0;
-
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    if (LIST_FIRST(&s->s_channels))
-      break;
-
-  return s ? 1 : 0;
+  return mm->mm_epg;
 }
 
 static void
