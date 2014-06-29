@@ -86,10 +86,10 @@ epggrab_module_ext_t *epggrab_module_ext_create
  * *************************************************************************/
 
 typedef struct epggrab_ota_module_ops {
-    void (*start)  (epggrab_module_ota_t *m, struct mpegts_mux *mm);
+    void (*start)  (epggrab_ota_map_t *map, struct mpegts_mux *mm);
     int  (*enable) (void *m, uint8_t e );
     void (*done)   (epggrab_module_ota_t*m);
-    int  (*tune)   (epggrab_module_ota_t *m, epggrab_ota_mux_t *om,
+    int  (*tune)   (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                     struct mpegts_mux *mm);
 } epggrab_ota_module_ops_t;
 
@@ -136,7 +136,8 @@ void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
  */
 
 epggrab_ota_mux_t *epggrab_ota_register   
-  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux );
+  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota,
+    struct mpegts_mux *mux );
 
 /*
  * State change
@@ -149,10 +150,12 @@ void epggrab_ota_complete
  */
 void
 epggrab_ota_service_add
-  ( epggrab_ota_mux_t *ota, const char *uuid, int save );
+  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
+    const char *uuid, int save );
 void
 epggrab_ota_service_del
-  ( epggrab_ota_mux_t *ota, epggrab_ota_svc_link_t *svcl, int save );
+  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
+    epggrab_ota_svc_link_t *svcl, int save );
 
 /* **************************************************************************
  * Miscellaneous

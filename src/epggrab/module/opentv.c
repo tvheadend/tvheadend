@@ -504,7 +504,7 @@ opentv_bat_callback
   /* Register */
   if (!ota) {
     sta->os_ota = ota
-      = epggrab_ota_register((epggrab_module_ota_t*)mod, mt->mt_mux);
+      = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mt->mt_mux);
   }
 
   /* Complete */
@@ -539,10 +539,11 @@ opentv_bat_callback
  * ***********************************************************************/
 
 static void _opentv_start
-  ( epggrab_module_ota_t *m, mpegts_mux_t *mm )
+  ( epggrab_ota_map_t *map, mpegts_mux_t *mm )
 {
   int *t;
-  opentv_module_t *mod = (opentv_module_t*)m;
+  opentv_module_t *mod = (opentv_module_t*)map->om_module;
+  epggrab_module_ota_t *m = map->om_module;
   opentv_status_t *sta = NULL;
   mpegts_table_t *mt;
   static struct mpegts_table_mux_cb bat_desc[] = {
@@ -551,7 +552,7 @@ static void _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled)  return;
+  if (!m->enabled) return;
   if (mod->tsid != mm->mm_tsid) return;
 
   /* Install tables */
@@ -693,8 +694,9 @@ static void _opentv_done( epggrab_module_ota_t *m )
 }
 
 static int _opentv_tune
-  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
+  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
+  epggrab_module_ota_t *m = map->om_module;
   opentv_module_t *mod = (opentv_module_t*)m;
 
   /* Ignore */

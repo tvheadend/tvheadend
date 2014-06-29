@@ -202,12 +202,9 @@ struct epggrab_ota_mux
   int                                om_timeout;      ///< User configurable
   int                                om_interval;
   time_t                             om_when;         ///< Next event time
-  int                                om_first;
-  uint64_t                           om_tune_count;   ///< Tune counter
 
   LIST_ENTRY(epggrab_ota_mux)        om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
-  RB_HEAD(,epggrab_ota_svc_link)     om_svcs;         ///< Muxes we carry data for
 };
 
 /*
@@ -220,6 +217,9 @@ struct epggrab_ota_map
   int                                 om_timeout;
   int                                 om_interval;
   int                                 om_complete;
+  int                                 om_first;
+  uint64_t                            om_tune_count;
+  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
 };
 
 /*
@@ -232,9 +232,9 @@ struct epggrab_module_ota
   //TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
-  void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
+  void (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   void (*done)  ( epggrab_module_ota_t *m );
-  int  (*tune)  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om,
+  int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
 };
 

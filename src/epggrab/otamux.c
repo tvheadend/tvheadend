@@ -141,11 +141,11 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
   epggrab_ota_map_t *map;
   om->om_when   = dispatch_clock + epggrab_ota_timeout(om) + grace;
   om->om_active = 1;
-  om->om_first  = 1;
   LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
   if (LIST_FIRST(&epggrab_ota_active) == om)
     epggrab_ota_active_timer_cb(NULL);
   LIST_FOREACH(map, &om->om_modules, om_link) {
+    map->om_first    = 1;
     map->om_complete = 0;
     tvhdebug(map->om_module->id, "grab started");
   }
@@ -158,22 +158,31 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
 static void
 epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
-  epggrab_module_t *m;
-  epggrab_module_ota_t *om;
-  epggrab_ota_mux_t *ota;
+  epggrab_module_t  *m;
+  epggrab_ota_map_t *map;
+  epggrab_ota_mux_t *ota, ota_skel;
+  const char *uuid = idnode_uuid_as_str(&mm->mm_id);
 
   /* Already started */
   LIST_FOREACH(ota, &epggrab_ota_active, om_q_link)
-    if (!strcmp(ota->om_mux_uuid, idnode_uuid_as_str(&mm->mm_id)))
+    if (!strcmp(ota->om_mux_uuid, uuid))
       return;
 
-  /* Check if already active */
+  /* Find the configuration */
+  ota_skel.om_mux_uuid = (char *)uuid;
+  ota = RB_FIND(&epggrab_ota_all, &ota_skel, om_global_link, om_id_cmp);
+  if (!ota)
+    return;
+
+  /* Register all modules */
   LIST_FOREACH(m, &epggrab_modules, link) {
-    if (m->type == EPGGRAB_OTA) {
-      om = (epggrab_module_ota_t*)m;
-      if (om->start) om->start(om, mm);
-    }
+    if (m->type == EPGGRAB_OTA && m->enabled)
+      epggrab_ota_register((epggrab_module_ota_t *)m, ota, mm);
   }
+
+  /* Check if already active */
+  LIST_FOREACH(map, &ota->om_modules, om_link)
+    map->om_module->start(map, mm);
 }
 
 static void
@@ -190,34 +199,34 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
 
 epggrab_ota_mux_t *
 epggrab_ota_register
-  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm )
+  ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota, mpegts_mux_t *mm )
 {
   int save = 0;
   int interval = 3600;
   int timeout  =  240;
   epggrab_ota_map_t *map;
-  epggrab_ota_mux_t *ota;
 
-  /* Find mux entry */
-  const char *uuid = idnode_uuid_as_str(&mm->mm_id);
-  SKEL_ALLOC(epggrab_ota_mux_skel);
-  epggrab_ota_mux_skel->om_mux_uuid = (char*)uuid;
+  if (ota == NULL) {
+    /* Find mux entry */
+    const char *uuid = idnode_uuid_as_str(&mm->mm_id);
+    SKEL_ALLOC(epggrab_ota_mux_skel);
+    epggrab_ota_mux_skel->om_mux_uuid = (char*)uuid;
 
-  ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
-  if (!ota) {
-    char buf[256];
-    mm->mm_display_name(mm, buf, sizeof(buf));
-    tvhinfo(mod->id, "registering mux %s", buf);
-    ota  = epggrab_ota_mux_skel;
-    SKEL_USED(epggrab_ota_mux_skel);
-    RB_INIT(&ota->om_svcs);
-    ota->om_mux_uuid = strdup(uuid);
-    ota->om_when     = dispatch_clock + epggrab_ota_timeout(ota);
-    ota->om_active   = 1;
-    LIST_INSERT_SORTED(&epggrab_ota_active, ota, om_q_link, om_time_cmp);
-    if (LIST_FIRST(&epggrab_ota_active) == ota)
-      epggrab_ota_active_timer_cb(NULL);
-    save = 1;
+    ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
+    if (!ota) {
+      char buf[256];
+      mm->mm_display_name(mm, buf, sizeof(buf));
+      tvhinfo(mod->id, "registering mux %s", buf);
+      ota  = epggrab_ota_mux_skel;
+      SKEL_USED(epggrab_ota_mux_skel);
+      ota->om_mux_uuid = strdup(uuid);
+      ota->om_when     = dispatch_clock + epggrab_ota_timeout(ota);
+      ota->om_active   = 1;
+      LIST_INSERT_SORTED(&epggrab_ota_active, ota, om_q_link, om_time_cmp);
+      if (LIST_FIRST(&epggrab_ota_active) == ota)
+        epggrab_ota_active_timer_cb(NULL);
+      save = 1;
+    }
   }
   
   /* Find module entry */
@@ -226,6 +235,7 @@ epggrab_ota_register
       break;
   if (!map) {
     map = calloc(1, sizeof(epggrab_ota_map_t));
+    RB_INIT(&map->om_svcs);
     map->om_module   = mod;
     map->om_timeout  = timeout;
     map->om_interval = interval;
@@ -332,7 +342,7 @@ next_one:
 
   /* Check we have modules attached and enabled */
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module->tune(map->om_module, om, mm))
+    if (map->om_module->tune(map, om, mm))
       break;
   }
   if (!map) {
@@ -368,7 +378,8 @@ done:
 }
 
 void
-epggrab_ota_service_add ( epggrab_ota_mux_t *ota, const char *uuid, int save )
+epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
+                          const char *uuid, int save )
 {
   epggrab_ota_svc_link_t *svcl;
 
@@ -376,7 +387,7 @@ epggrab_ota_service_add ( epggrab_ota_mux_t *ota, const char *uuid, int save )
     return;
   SKEL_ALLOC(epggrab_svc_link_skel);
   epggrab_svc_link_skel->uuid = (char *)uuid;
-  svcl = RB_INSERT_SORTED(&ota->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp);
+  svcl = RB_INSERT_SORTED(&map->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp);
   if (svcl == NULL) {
     svcl = epggrab_svc_link_skel;
     SKEL_USED(epggrab_svc_link_skel);
@@ -384,16 +395,15 @@ epggrab_ota_service_add ( epggrab_ota_mux_t *ota, const char *uuid, int save )
     if (save && ota->om_complete)
       epggrab_ota_save(ota);
   }
-  svcl->last_tune_count = ota->om_tune_count;
 }
 
 void
-epggrab_ota_service_del ( epggrab_ota_mux_t *ota, epggrab_ota_svc_link_t *svcl,
-                          int save )
+epggrab_ota_service_del ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
+                          epggrab_ota_svc_link_t *svcl, int save )
 {
   if (svcl == NULL)
     return;
-  RB_REMOVE(&ota->om_svcs, svcl, link);
+  RB_REMOVE(&map->om_svcs, svcl, link);
   free(svcl->uuid);
   free(svcl);
   if (save)
@@ -409,22 +419,22 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_map_t *map;
   epggrab_ota_svc_link_t *svcl;
-  htsmsg_t *e, *l, *c = htsmsg_create_map();
+  htsmsg_t *e, *l, *l2, *c = htsmsg_create_map();
 
   htsmsg_add_u32(c, "complete", ota->om_complete);
   htsmsg_add_u32(c, "timeout",  ota->om_timeout);
   htsmsg_add_u32(c, "interval", ota->om_interval);
-  l = htsmsg_create_list();
-  RB_FOREACH(svcl, &ota->om_svcs, link)
-    if (svcl->uuid)
-      htsmsg_add_str(l, NULL, svcl->uuid);
-  htsmsg_add_msg(c, "services", l);
   l = htsmsg_create_list();
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "id", map->om_module->id);
     htsmsg_add_u32(e, "timeout", map->om_timeout);
     htsmsg_add_u32(e, "interval", map->om_interval);
+    l2 = htsmsg_create_list();
+    RB_FOREACH(svcl, &map->om_svcs, link)
+      if (svcl->uuid)
+        htsmsg_add_str(l2, NULL, svcl->uuid);
+    htsmsg_add_msg(e, "services", l2);
     htsmsg_add_msg(l, NULL, e);
   }
   htsmsg_add_msg(c, "modules", l);
@@ -436,8 +446,8 @@ static void
 epggrab_ota_load_one
   ( const char *uuid, htsmsg_t *c )
 {
-  htsmsg_t *l, *e;
-  htsmsg_field_t *f;
+  htsmsg_t *l, *l2, *e;
+  htsmsg_field_t *f, *f2;
   mpegts_mux_t *mm;
   epggrab_module_ota_t *mod;
   epggrab_ota_mux_t *ota;
@@ -451,14 +461,9 @@ epggrab_ota_load_one
   }
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
-  RB_INIT(&ota->om_svcs);
   ota->om_mux_uuid = strdup(uuid);
   ota->om_timeout  = htsmsg_get_u32_or_default(c, "timeout", 0);
   ota->om_interval = htsmsg_get_u32_or_default(c, "interval", 0);
-  if ((l = htsmsg_get_list(c, "services")) != NULL) {
-    HTSMSG_FOREACH(f, l)
-      epggrab_ota_service_add(ota, htsmsg_field_get_str(f), 0);
-  }
   if (RB_INSERT_SORTED(&epggrab_ota_all, ota, om_global_link, om_id_cmp)) {
     free(ota->om_mux_uuid);
     free(ota);
@@ -474,9 +479,14 @@ epggrab_ota_load_one
       continue;
     
     map = calloc(1, sizeof(epggrab_ota_map_t));
+    RB_INIT(&map->om_svcs);
     map->om_module   = mod;
     map->om_timeout  = htsmsg_get_u32_or_default(e, "timeout", 0);
     map->om_interval = htsmsg_get_u32_or_default(e, "interval", 0);
+    if ((l2 = htsmsg_get_list(e, "services")) != NULL) {
+      HTSMSG_FOREACH(f2, l2)
+        epggrab_ota_service_add(map, ota, htsmsg_field_get_str(f2), 0);
+    }
     LIST_INSERT_HEAD(&ota->om_modules, map, om_link);
   }
 }
@@ -526,10 +536,10 @@ epggrab_ota_free ( epggrab_ota_mux_t *ota )
   LIST_REMOVE(ota, om_q_link);
   while ((map = LIST_FIRST(&ota->om_modules)) != NULL) {
     LIST_REMOVE(map, om_link);
+    while ((svcl = RB_FIRST(&map->om_svcs)) != NULL)
+      epggrab_ota_service_del(map, ota, svcl, 0);
     free(map);
   }
-  while ((svcl = RB_FIRST(&ota->om_svcs)) != NULL)
-    epggrab_ota_service_del(ota, svcl, 0);
   free(ota->om_mux_uuid);
   free(ota);
 }

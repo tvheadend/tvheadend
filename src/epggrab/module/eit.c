@@ -555,7 +555,8 @@ _eit_callback
   uint32_t extraid;
   mpegts_service_t     *svc;
   mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_module_t *mod = mt->mt_opaque;
+  epggrab_ota_map_t    *map = mt->mt_opaque;
+  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_table_state_t *st;
 
@@ -573,7 +574,7 @@ _eit_callback
 
   /* Register interest */
   if (tableid >= 0x50)
-    ota = epggrab_ota_register((epggrab_module_ota_t*)mod, mm);
+    ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 11, &st, &sect, &last, &ver);
@@ -607,9 +608,9 @@ _eit_callback
   if(!mm)
     goto done;
 
-  if (ota && ota->om_first) {
-    ota->om_tune_count++;
-    ota->om_first = 0;
+  if (map->om_first) {
+    map->om_tune_count++;
+    map->om_first = 0;
   }
 
   /* Get service */
@@ -619,7 +620,7 @@ _eit_callback
 
   /* Register this */
   if (ota)
-    epggrab_ota_service_add(ota, idnode_uuid_as_str(&svc->s_id), 1);
+    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id), 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))
@@ -655,8 +656,9 @@ done:
  * ***********************************************************************/
 
 static void _eit_start 
-  ( epggrab_module_ota_t *m, mpegts_mux_t *dm )
+  ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
+  epggrab_module_ota_t *m = map->om_module;
   int pid, opts = 0;
 
   /* Disabled */
@@ -683,15 +685,16 @@ static void _eit_start
     pid  = 0x12;
     opts = MT_RECORD;
   }
-  mpegts_table_add(dm, 0, 0, _eit_callback, m, m->id, MT_CRC | opts, pid);
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid);
   // TODO: might want to limit recording to EITpf only
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
 }
 
 static int _eit_tune
-  ( epggrab_module_ota_t *m, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
+  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   int r = 0;
+  epggrab_module_ota_t *m = map->om_module;
   mpegts_service_t *s;
   epggrab_ota_svc_link_t *osl, *nxt;
 
@@ -704,20 +707,15 @@ static int _eit_tune
   if (!om->om_complete)
     return 1;
 
-  /* Non-standard (known to carry FULL network info) */
-  if (!strcmp(m->id, "uk_freesat") ||
-      !strcmp(m->id, "viasat_baltic"))
-    return 1;
-
   /* Check if any services are mapped */
   // TODO: using indirect ref's like this is inefficient, should 
   //       consider changeing it?
-  for (osl = RB_FIRST(&om->om_svcs); osl != NULL; osl = nxt) {
+  for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
     /* rule: if 5 mux scans fails for this service, remove it */
-    if (osl->last_tune_count + 5 <= om->om_tune_count ||
+    if (osl->last_tune_count + 5 <= map->om_tune_count ||
         !(s = mpegts_service_find_by_uuid(osl->uuid))) {
-      epggrab_ota_service_del(om, osl, 1);
+      epggrab_ota_service_del(map, om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))
         r = 1;
