@@ -21,7 +21,9 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <alloca.h>
 
 /*
  * Parse value
@@ -149,6 +151,43 @@ cron_set ( cron_t *c, const char *str )
 }
 
 /*
+ * Set value
+ */
+cron_multi_t *
+cron_multi_set ( const char *str )
+{
+  char *s = str ? alloca(strlen(str) + 1) : NULL;
+  char *line, *sptr;
+  cron_t cron;
+  cron_multi_t *cm = NULL, *cm2;
+  int count = 0;
+
+  if (s == NULL)
+    return NULL;
+  strcpy(s, str);
+  line = strtok_r(s, "\n", &sptr);
+  while (line) {
+    while (*line && *line <= ' ')
+      line++;
+    if (line[0] != '#')
+      if (!cron_set(&cron, line)) {
+        count++;
+        cm2 = realloc(cm, sizeof(cm) + sizeof(cron) * count);
+        if (cm2 == NULL) {
+          free(cm);
+          return NULL;
+        }
+        cm = cm2;
+        cm->cm_crons[count - 1] = cron;
+      }
+    line = strtok_r(NULL, "\n", &sptr);
+  }
+  if (count)
+    cm->cm_count = count;
+  return cm;
+}
+
+/*
  * Check for leap year
  */
 static int
@@ -182,7 +221,7 @@ int
 cron_next ( cron_t *c, const time_t now, time_t *ret )
 {
   struct tm nxt, tmp;
-  int endyear; 
+  int endyear, loops = 1000;
   localtime_r(&now, &nxt);
   endyear = nxt.tm_year + 10;
 
@@ -239,6 +278,10 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
          !(c->c_wday & (0x1LL << (nxt.tm_wday)))   ||
          !(c->c_mon & (0x1LL << (nxt.tm_mon))) ) {
 
+    /* Endless loop protection */
+    if (loops-- == 0)
+      return -1;
+
     /* Stop possible infinite loop on invalid request */
     if (nxt.tm_year >= endyear)
       return -1;
@@ -274,6 +317,27 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   mktime(&tmp);
   nxt.tm_isdst = tmp.tm_isdst;
   *ret         = mktime(&nxt);
+  return 0;
+}
+
+/*
+ * Find the next time (starting from now) that the cron should fire
+ */
+int
+cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
+{
+  uint32_t i;
+  time_t r = (time_t)-1, t;
+
+  if (cm == NULL)
+    return -1;
+  for (i = 0; i < cm->cm_count; i++)
+    if (!cron_next(&cm->cm_crons[i], now, &t))
+      if (r == (time_t)-1 || t < r)
+        r = t;
+  if (r == (time_t)-1)
+    return -1;
+  *ret = r;
   return 0;
 }
 

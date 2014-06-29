@@ -36,6 +36,7 @@
 #include "htsmsg_xml.h"
 #include "file.h"
 #include "service.h"
+#include "cron.h"
 
 /* Thread protection */
 static int            epggrab_confver;
@@ -44,7 +45,7 @@ static pthread_cond_t epggrab_cond;
 int                   epggrab_running;
 
 /* Config */
-uint32_t              epggrab_interval;
+char                 *epggrab_cron;
 epggrab_module_int_t* epggrab_module;
 epggrab_module_list_t epggrab_modules;
 uint32_t              epggrab_channel_rename;
@@ -53,6 +54,8 @@ uint32_t              epggrab_channel_reicon;
 uint32_t              epggrab_epgdb_periodicsave;
 
 gtimer_t              epggrab_save_timer;
+
+static cron_multi_t  *epggrab_cron_multi;
 
 /* **************************************************************************
  * Internal Grab Thread
@@ -88,6 +91,7 @@ static void* _epggrab_internal_thread ( void* p )
   int err, confver = -1; // force first run
   struct timespec ts;
   epggrab_module_int_t *mod;
+  time_t t;
 
   /* Setup timeout */
   ts.tv_nsec = 0; 
@@ -107,7 +111,10 @@ static void* _epggrab_internal_thread ( void* p )
     }
     confver    = epggrab_confver;
     mod        = epggrab_module;
-    ts.tv_sec += epggrab_interval;
+    if (!cron_multi_next(epggrab_cron_multi, time(NULL), &t))
+      ts.tv_sec = t;
+    else
+      ts.tv_sec += 60;
     pthread_mutex_unlock(&epggrab_mutex);
 
     if ( !epggrab_running)
@@ -129,8 +136,9 @@ static void _epggrab_load ( void )
   epggrab_module_t *mod;
   htsmsg_field_t *f;
   htsmsg_t *m, *a;
-  uint32_t enabled = 1;
+  uint32_t enabled = 1, interval;
   const char *str;
+  char buf[32];
   int old = 0;
 
   /* Load settings */
@@ -149,10 +157,33 @@ static void _epggrab_load ( void )
     if (epggrab_epgdb_periodicsave)
       gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
                  epggrab_epgdb_periodicsave);
-    if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
-                        &epggrab_interval)) {
-      if (old) epggrab_interval *= 3600;
+    if ((str = htsmsg_get_str(m, "cron")) == NULL) {
+      if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
+                          &interval)) {
+        if (old) interval *= 3600;
+        str = buf;
+        if (interval <= 600)
+          strcpy(buf, "*/10 * * * *");
+        else if (interval <= 900)
+          strcpy(buf, "*/15 * * * *");
+        else if (interval <= 1200)
+          strcpy(buf, "*/30 * * * *");
+        else if (interval <= 3600)
+          strcpy(buf, "4 * * * *");
+        else if (interval <= 7200)
+          strcpy(buf, "4 */2 * * *");
+        else if (interval <= 14400)
+          strcpy(buf, "4 */4 * * *");
+        else if (interval <= 28800)
+          strcpy(buf, "4 */8 * * *");
+        else if (interval <= 43200)
+          strcpy(buf, "4 */12 * * *");
+        else
+          strcpy(buf, "4 0 * * *");
+      } else
+        strcpy(buf, "4 */12 * * *");
     }
+    epggrab_set_cron(str);
     htsmsg_get_u32(m, "grab-enabled", &enabled);
     if (enabled) {
       if ( (str = htsmsg_get_str(m, old ? "current-grabber" : "module")) ) {
@@ -215,7 +246,8 @@ static void _epggrab_load ( void )
 
   /* Defaults */
   } else {
-    epggrab_interval   = 12 * 3600;         // hours
+    free(epggrab_cron);
+    epggrab_cron       = strdup("4 */12 * * *"); // each 12 hours (noon)
     epggrab_module     = NULL;              // disabled
     LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
       if (mod->type == EPGGRAB_OTA)
@@ -244,9 +276,8 @@ void epggrab_save ( void )
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "channel_rename", epggrab_channel_rename);
   htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
-  htsmsg_add_u32(m, "channel_reicon", epggrab_channel_reicon);
   htsmsg_add_u32(m, "epgdb_periodicsave", epggrab_epgdb_periodicsave);
-  htsmsg_add_u32(m, "interval",   epggrab_interval);
+  htsmsg_add_str(m, "cron", epggrab_cron);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
   a = NULL;
@@ -261,12 +292,15 @@ void epggrab_save ( void )
   htsmsg_destroy(m);
 }
 
-int epggrab_set_interval ( uint32_t interval )
+int epggrab_set_cron ( const char *cron )
 {
   int save = 0;
-  if ( epggrab_interval != interval ) {
+  if ( epggrab_cron == NULL || strcmp(epggrab_cron, cron) ) {
     save = 1;
-    epggrab_interval = interval;
+    free(epggrab_cron);
+    epggrab_cron       = strdup(cron);
+    free(epggrab_cron_multi);
+    epggrab_cron_multi = cron_multi_set(cron);
   }
   return save;
 }
@@ -377,12 +411,14 @@ pthread_t      epggrab_tid;
 void epggrab_init ( void )
 {
   /* Defaults */
-  epggrab_interval           = 0;
+  epggrab_cron               = NULL;
   epggrab_module             = NULL;
   epggrab_channel_rename     = 0;
   epggrab_channel_renumber   = 0;
   epggrab_channel_reicon     = 0;
   epggrab_epgdb_periodicsave = 0;
+
+  epggrab_cron_multi         = NULL;
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
@@ -432,4 +468,8 @@ void epggrab_done ( void )
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
+  free(epggrab_cron);
+  epggrab_cron = NULL;
+  free(epggrab_cron_multi);
+  epggrab_cron_multi = NULL;
 }

@@ -199,8 +199,6 @@ struct epggrab_ota_mux
   
   int                                om_complete;     ///< Has completed a scan
   int                                om_active;
-  int                                om_timeout;      ///< User configurable
-  int                                om_interval;
   time_t                             om_when;         ///< Next event time
 
   LIST_ENTRY(epggrab_ota_mux)        om_q_link;
@@ -214,8 +212,6 @@ struct epggrab_ota_map
 {
   LIST_ENTRY(epggrab_ota_map)         om_link;
   epggrab_module_ota_t               *om_module;
-  int                                 om_timeout;
-  int                                 om_interval;
   int                                 om_complete;
   int                                 om_first;
   uint64_t                            om_tune_count;
@@ -254,7 +250,7 @@ htsmsg_t*         epggrab_module_list       ( void );
 extern epggrab_module_list_t epggrab_modules;
 extern pthread_mutex_t       epggrab_mutex;
 extern int                   epggrab_running;
-extern uint32_t              epggrab_interval;
+extern char                 *epggrab_cron;
 extern epggrab_module_int_t* epggrab_module;
 extern uint32_t              epggrab_channel_rename;
 extern uint32_t              epggrab_channel_renumber;
@@ -264,7 +260,7 @@ extern uint32_t              epggrab_epgdb_periodicsave;
 /*
  * Set configuration
  */
-int  epggrab_set_interval         ( uint32_t interval );
+int  epggrab_set_cron             ( const char *cron );
 int  epggrab_set_module           ( epggrab_module_t *mod );
 int  epggrab_set_module_by_id     ( const char *id );
 int  epggrab_set_channel_rename   ( uint32_t e );

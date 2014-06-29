@@ -432,7 +432,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create_map();
     if (epggrab_module)
       htsmsg_add_str(r, "module", epggrab_module->id);
-    htsmsg_add_u32(r, "interval", epggrab_interval);
+    htsmsg_add_str(r, "cron", epggrab_cron);
     htsmsg_add_u32(r, "channel_rename", epggrab_channel_rename);
     htsmsg_add_u32(r, "channel_renumber", epggrab_channel_renumber);
     htsmsg_add_u32(r, "channel_reicon", epggrab_channel_reicon);
@@ -461,8 +461,8 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     save |= epggrab_set_channel_reicon(str ? 1 : 0);
     if ( (str = http_arg_get(&hc->hc_req_args, "epgdb_periodicsave")) )
       save |= epggrab_set_periodicsave(atoi(str) * 3600);
-    if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
-      save |= epggrab_set_interval(atoi(str));
+    if ( (str = http_arg_get(&hc->hc_req_args, "cron")) )
+      save |= epggrab_set_cron(str);
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
       save |= epggrab_set_module_by_id(str);
     if ( (str = http_arg_get(&hc->hc_req_args, "external")) ) {
