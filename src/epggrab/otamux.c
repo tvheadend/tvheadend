@@ -141,6 +141,7 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
   epggrab_ota_map_t *map;
   om->om_when   = dispatch_clock + epggrab_ota_timeout(om) + grace;
   om->om_active = 1;
+  om->om_first  = 1;
   LIST_INSERT_SORTED(&epggrab_ota_active, om, om_q_link, om_time_cmp);
   if (LIST_FIRST(&epggrab_ota_active) == om)
     epggrab_ota_active_timer_cb(NULL);
@@ -155,18 +156,16 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
  * *************************************************************************/
 
 static void
-epggrab_mux_start0 ( mpegts_mux_t *mm, int force )
+epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
   epggrab_module_t *m;
   epggrab_module_ota_t *om;
   epggrab_ota_mux_t *ota;
 
   /* Already started */
-  if (!force) {
-    LIST_FOREACH(ota, &epggrab_ota_active, om_q_link)
-      if (!strcmp(ota->om_mux_uuid, idnode_uuid_as_str(&mm->mm_id)))
-        return;
-  }
+  LIST_FOREACH(ota, &epggrab_ota_active, om_q_link)
+    if (!strcmp(ota->om_mux_uuid, idnode_uuid_as_str(&mm->mm_id)))
+      return;
 
   /* Check if already active */
   LIST_FOREACH(m, &epggrab_modules, link) {
@@ -175,12 +174,6 @@ epggrab_mux_start0 ( mpegts_mux_t *mm, int force )
       if (om->start) om->start(om, mm);
     }
   }
-}
-
-static void
-epggrab_mux_start ( mpegts_mux_t *mm, void *p )
-{
-  epggrab_mux_start0(mm, 0);
 }
 
 static void
@@ -377,16 +370,21 @@ done:
 void
 epggrab_ota_service_add ( epggrab_ota_mux_t *ota, const char *uuid, int save )
 {
+  epggrab_ota_svc_link_t *svcl;
+
   if (uuid == NULL)
     return;
   SKEL_ALLOC(epggrab_svc_link_skel);
   epggrab_svc_link_skel->uuid = (char *)uuid;
-  if (!RB_INSERT_SORTED(&ota->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp)) {
-    epggrab_svc_link_skel->uuid = strdup(uuid);
+  svcl = RB_INSERT_SORTED(&ota->om_svcs, epggrab_svc_link_skel, link, om_svcl_cmp);
+  if (svcl == NULL) {
+    svcl = epggrab_svc_link_skel;
     SKEL_USED(epggrab_svc_link_skel);
+    svcl->uuid = strdup(uuid);
     if (save && ota->om_complete)
       epggrab_ota_save(ota);
   }
+  svcl->last_tune_count = ota->om_tune_count;
 }
 
 void

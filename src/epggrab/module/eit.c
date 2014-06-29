@@ -607,6 +607,11 @@ _eit_callback
   if(!mm)
     goto done;
 
+  if (ota && ota->om_first) {
+    ota->om_tune_count++;
+    ota->om_first = 0;
+  }
+
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
   if (!svc)
@@ -709,7 +714,9 @@ static int _eit_tune
   //       consider changeing it?
   for (osl = RB_FIRST(&om->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
-    if (!(s = mpegts_service_find_by_uuid(osl->uuid))) {
+    /* rule: if 5 mux scans fails for this service, remove it */
+    if (osl->last_tune_count + 5 <= om->om_tune_count ||
+        !(s = mpegts_service_find_by_uuid(osl->uuid))) {
       epggrab_ota_service_del(om, osl, 1);
     } else {
       if (LIST_FIRST(&s->s_channels))

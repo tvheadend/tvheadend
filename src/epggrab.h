@@ -184,6 +184,7 @@ struct epggrab_module_ext
 struct epggrab_ota_svc_link
 {
   char                          *uuid;
+  uint64_t                       last_tune_count;
   RB_ENTRY(epggrab_ota_svc_link) link;
 };
 
@@ -201,6 +202,8 @@ struct epggrab_ota_mux
   int                                om_timeout;      ///< User configurable
   int                                om_interval;
   time_t                             om_when;         ///< Next event time
+  int                                om_first;
+  uint64_t                           om_tune_count;   ///< Tune counter
 
   LIST_ENTRY(epggrab_ota_mux)        om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
