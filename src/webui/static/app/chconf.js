@@ -1,6 +1,13 @@
 /**
  * Channel tags
  */
+insertChannelTagsClearOption = function( scope, records, options ){
+	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
+	placeholder.set('identifier',-1);
+	placeholder.set('name',"(Clear filter)");
+	scope.insert(0, placeholder);
+};
+
 tvheadend.channelTags = new Ext.data.JsonStore({
     autoLoad: true,
     root: 'entries',
@@ -9,6 +16,9 @@ tvheadend.channelTags = new Ext.data.JsonStore({
     url: 'channeltags',
     baseParams: {
         op: 'listTags'
+    },
+    listeners: {
+        'load': insertChannelTagsClearOption
     }
 });
 
@@ -26,6 +36,13 @@ tvheadend.channelrec = new Ext.data.Record.create(
         ['name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
             'epg_post_end', 'number']);
 
+insertChannelClearOption = function( scope, records, options ){
+	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
+	placeholder.set('key',-1);
+	placeholder.set('val',"(Clear filter)");
+	scope.insert(0, placeholder);
+};
+
 tvheadend.channels = new Ext.data.JsonStore({
     url: 'api/channel/list',
     root: 'entries',
@@ -35,6 +52,9 @@ tvheadend.channels = new Ext.data.JsonStore({
     sortInfo: {
         field: 'val',
         direction: 'ASC'
+    },
+    listeners: {
+        'load': insertChannelClearOption
     }
 });
 

@@ -7,13 +7,24 @@ tvheadend.brands = new Ext.data.JsonStore({
         op: 'brandList'
     }
 });
+
+insertContentGroupClearOption = function( scope, records, options ){
+	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
+	placeholder.set('code',-1);
+	placeholder.set('name',"(Clear filter)");
+	scope.insert(0, placeholder);
+};
+
 //WIBNI: might want this store to periodically update
 
 tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     root: 'entries',
     fields: ['name', 'code'],
     autoLoad: true,
-    url: 'ecglist'
+    url: 'ecglist',
+    listeners: {
+        'load': insertContentGroupClearOption
+    }
 });
 
 tvheadend.contentGroupLookupName = function(code) {
@@ -40,8 +51,24 @@ tvheadend.channelLookupName = function(key) {
     return channelString;
 };  
 
+// Store for duration filters - EPG, autorec dialog and autorec rules in the DVR grid
+// NB: 'no max' is defined as 9999999s, or about 3 months...
+
+tvheadend.DurationStore = new Ext.data.SimpleStore({
+	storeId: 'durationnames',
+	idIndex: 0,
+    fields: ['identifier','label','minvalue','maxvalue'],
+    data: [['-1', '(Clear filter)',"",""],
+           ['1','00:00:01 - 00:15:00',1, 900],
+           ['2','00:15:01 - 00:30:00', 901, 1800],
+           ['3','00:30:01 - 01:30:00', 1801, 5400],
+           ['4','01:30:01 - 03:00:00', 5401, 10800],
+           ['5','03:00:01 - No maximum', 10801, 9999999]]
+});
+
+// Function to convert numeric duration to corresponding label string
 // Note: triggered by minimum duration only. This would fail if ranges 
-// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't). 
+// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't have). 
 
 tvheadend.durationLookupRange = function(value) {
     durationString = "";
@@ -53,22 +80,6 @@ tvheadend.durationLookupRange = function(value) {
     
     return durationString;
 };  
-
-// NB: in the duration stores, 'no max' is defined as 9999999s, or about 3 months...
-
-// Store for autorec dialog and for autorec rules in the DVR grid
-
-tvheadend.DurationStore = new Ext.data.SimpleStore({
-	storeId: 'durationnames',
-	idIndex: 0,
-    fields: ['identifier','label','minvalue','maxvalue'],
-    data: [['0', '(Clear filter)',"",""],
-           ['1','00:00:01 - 00:15:00',1, 900],
-           ['2','00:15:01 - 00:30:00', 901, 1800],
-           ['3','00:30:01 - 01:30:00', 1801, 5400],
-           ['4','01:30:01 - 03:00:00', 5401, 10800],
-           ['5','03:00:01 - No maximum', 10801, 9999999]]
-});
 
 tvheadend.epgDetails = function(event) {
 
@@ -419,7 +430,17 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter channel...'
+        forceSelection: true,
+        typeAhead: true,
+        emptyText: 'Filter channel...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearChannelFilter();
+                    epgStore.reload();
+                }
+            }
+        }
     });
 
     // Tags, uses global store
@@ -432,7 +453,18 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter tag...'
+        forceSelection: true,
+        typeAhead: true,
+        emptyText: 'Filter tag...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearChannelTagsFilter();
+                    epgStore.reload();
+                }
+            }
+        }
+
     });
 
     // Content groups
@@ -446,75 +478,125 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter content type...'
+        forceSelection: true,
+        typeAhead: true,
+        emptyText: 'Filter content type...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearContentGroupFilter();
+                    epgStore.reload();
+                }
+            }
+        }
     });
 
     var epgFilterDuration = new Ext.form.ComboBox({
         loadingText: 'Loading...',
-        width: 200,
+        width: 150,
         displayField: 'label',
         store: tvheadend.DurationStore,
         mode: 'local',
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter duration...'
+        forceSelection: true,
+        typeAhead: true,
+        emptyText: 'Filter duration...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearDurationFilter();
+                    epgStore.reload();
+                }
+            }
+        }
+
     });
 
-    function epgQueryClear() {
+/* 
+ * Clear filter functions
+ */
 
-        delete epgStore.baseParams.channel;
-        delete epgStore.baseParams.tag;
-        delete epgStore.baseParams.contenttype;
+    clearTitleFilter = function() {
         delete epgStore.baseParams.title;
-        delete epgStore.baseParams.minduration;
-        delete epgStore.baseParams.maxduration;
-
-        epgFilterChannels.setValue("");
-        epgFilterChannelTags.setValue("");
-        epgFilterContentGroup.setValue("");
-        epgFilterDuration.setValue("");
         epgFilterTitle.setValue("");
+    };
 
+    clearChannelFilter = function() {
+        delete epgStore.baseParams.channel;
+        epgFilterChannels.setValue("");
+    };
+
+    clearChannelTagsFilter = function() {
+        delete epgStore.baseParams.tag;
+        epgFilterChannelTags.setValue("");
+    };
+
+    clearContentGroupFilter = function() {
+		delete epgStore.baseParams.contenttype;
+        epgFilterContentGroup.setValue("");
+    };
+
+    clearDurationFilter = function() {
+   	    delete epgStore.baseParams.minduration;
+        delete epgStore.baseParams.maxduration;
+        epgFilterDuration.setValue("");
+    };
+    
+    function epgQueryClear() {
+        clearTitleFilter();
+        clearChannelFilter();
+        clearChannelTagsFilter();
+        clearDurationFilter();
+        clearContentGroupFilter();
         epgStore.reload();
-    }
+    };
 
+/*
+ * Filter selection event handlers
+ */
+ 
     epgFilterChannels.on('select', function(c, r) {
-        if (epgStore.baseParams.channel !== r.data.key) {
-            epgStore.baseParams.channel = r.data.key;
-            epgStore.reload();
-        }
+        if (r.data.key == -1) 
+            clearChannelFilter();
+		else if (epgStore.baseParams.channel !== r.data.key)
+			epgStore.baseParams.channel = r.data.key;
+        epgStore.reload();
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
-        if (epgStore.baseParams.tag !== r.data.name) {
-            epgStore.baseParams.tag = r.data.name;
-            epgStore.reload();
-        }
-    });
+        if (r.data.identifier == -1)
+            clearChannelTagsFilter();
+		else if (epgStore.baseParams.tag !== r.data.name)
+			epgStore.baseParams.tag = r.data.name;
+        epgStore.reload();
+	});
+    
+//IH 
+// TODO - check what gets saved and where, and how we filter out null tages - may happen automatically because there's
+// already a null tag. I think this only applies to tags, as they're saved to config
+//
+// Also, check that the insert method is genuinely inserting and not over-writing the first record.
 
     epgFilterContentGroup.on('select', function(c, r) {
-        if (epgStore.baseParams.contenttype !== r.data.code) {
-            epgStore.baseParams.contenttype = r.data.code;
-            epgStore.reload();
-        }
+        if (r.data.code == -1)
+            clearContentGroupFilter();
+		else if (epgStore.baseParams.contenttype !== r.data.code)
+			epgStore.baseParams.contenttype = r.data.code;
+        epgStore.reload();
     });
 
     epgFilterDuration.on('select', function(c, r) {
-		if (epgStore.baseParams.minduration !== r.data.minvalue) {
-			if (r.data.identifier == 0) {
-		        delete epgStore.baseParams.minduration;
-                delete epgStore.baseParams.maxduration;
-                epgFilterDuration.setValue("");
-			} else
-			{
-                epgStore.baseParams.minduration = r.data.minvalue;
-                epgStore.baseParams.maxduration = r.data.maxvalue;
-			}
-			epgStore.reload();
+		if (r.data.identifier == -1)
+            clearDurationFilter();
+        else if (epgStore.baseParams.minduration !== r.data.minvalue) {
+			epgStore.baseParams.minduration = r.data.minvalue;
+            epgStore.baseParams.maxduration = r.data.maxvalue;
 		}
+		epgStore.reload();
     });
-
+    
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
 
