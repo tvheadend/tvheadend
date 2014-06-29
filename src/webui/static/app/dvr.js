@@ -539,7 +539,9 @@ tvheadend.autoreceditor = function() {
                             valueField: 'key',
                             store: tvheadend.channels,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include channel...'
                         }),
@@ -561,7 +563,9 @@ tvheadend.autoreceditor = function() {
                             displayField: 'name',
                             store: tvheadend.channelTags,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include tag...'
                         })
@@ -577,7 +581,9 @@ tvheadend.autoreceditor = function() {
                             displayField: 'name',
                             store: tvheadend.ContentGroupStore,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include content...'
                         })
@@ -593,7 +599,9 @@ tvheadend.autoreceditor = function() {
                             mode: 'local',
                             valueField: 'minvalue',
                             displayField: 'label',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             id: 'minfield'
                         })
@@ -695,16 +703,26 @@ tvheadend.autoreceditor = function() {
                     }]});
 
     tvheadend.autorecStore.on('update', function (store, record, operation) {
-        if (operation == 'edit' && record.isModified('minduration')) {
+        if (operation == 'edit') {
+            if (record.isModified('minduration')) {
+                if (record.data.minduration == "")
+                    record.set('maxduration',"");
+                else {
+                    var index = tvheadend.DurationStore.find('minvalue', record.data.minduration); 
 
-            if (record.data.minduration == "")
-                record.set('maxduration',"");
-            else {
-                var index = tvheadend.DurationStore.find('minvalue', record.data.minduration); 
-
-                if (index !== -1)
-                    record.set('maxduration', tvheadend.DurationStore.getById(index).data.maxvalue);
+                    if (index !== -1)
+                        record.set('maxduration', tvheadend.DurationStore.getById(index).data.maxvalue);
+                }
             }
+            
+            if (record.isModified('channel') && record.data.channel == -1)
+                record.set('channel',"");
+            
+            if (record.isModified('tag') && record.data.tag == '(Clear filter)')
+                record.set('tag',"");
+            
+            if (record.isModified('contenttype') && record.data.contenttype == -1) 
+                record.set('contenttype',"");
         }
     });
  

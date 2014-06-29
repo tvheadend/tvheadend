@@ -9,10 +9,8 @@ tvheadend.brands = new Ext.data.JsonStore({
 });
 
 insertContentGroupClearOption = function( scope, records, options ){
-	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
-	placeholder.set('code',-1);
-	placeholder.set('name',"(Clear filter)");
-	scope.insert(0, placeholder);
+    var placeholder = Ext.data.Record.create(['code', 'name']);
+    scope.insert(0,new placeholder({code: '-1', name: '(Clear filter)'}));
 };
 
 //WIBNI: might want this store to periodically update
@@ -55,8 +53,8 @@ tvheadend.channelLookupName = function(key) {
 // NB: 'no max' is defined as 9999999s, or about 3 months...
 
 tvheadend.DurationStore = new Ext.data.SimpleStore({
-	storeId: 'durationnames',
-	idIndex: 0,
+    storeId: 'durationnames',
+    idIndex: 0,
     fields: ['identifier','label','minvalue','maxvalue'],
     data: [['-1', '(Clear filter)',"",""],
            ['1','00:00:01 - 00:15:00',1, 900],
@@ -72,11 +70,9 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
 
 tvheadend.durationLookupRange = function(value) {
     durationString = "";
-    
     var index = tvheadend.DurationStore.find('minvalue', value); 
-
     if (index !== -1)
-        var durationString = tvheadend.DurationStore.getById(index).data.label;
+        var durationString = tvheadend.DurationStore.getAt(index).data.label;
     
     return durationString;
 };  
@@ -430,7 +426,6 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        forceSelection: true,
         typeAhead: true,
         emptyText: 'Filter channel...',
         listeners: {
@@ -453,7 +448,6 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        forceSelection: true,
         typeAhead: true,
         emptyText: 'Filter tag...',
         listeners: {
@@ -478,7 +472,6 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        forceSelection: true,
         typeAhead: true,
         emptyText: 'Filter content type...',
         listeners: {
@@ -500,7 +493,6 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        forceSelection: true,
         typeAhead: true,
         emptyText: 'Filter duration...',
         listeners: {
@@ -534,12 +526,12 @@ tvheadend.epg = function() {
     };
 
     clearContentGroupFilter = function() {
-		delete epgStore.baseParams.contenttype;
+        delete epgStore.baseParams.contenttype;
         epgFilterContentGroup.setValue("");
     };
 
     clearDurationFilter = function() {
-   	    delete epgStore.baseParams.minduration;
+           delete epgStore.baseParams.minduration;
         delete epgStore.baseParams.maxduration;
         epgFilterDuration.setValue("");
     };
@@ -560,41 +552,35 @@ tvheadend.epg = function() {
     epgFilterChannels.on('select', function(c, r) {
         if (r.data.key == -1) 
             clearChannelFilter();
-		else if (epgStore.baseParams.channel !== r.data.key)
-			epgStore.baseParams.channel = r.data.key;
+        else if (epgStore.baseParams.channel !== r.data.key)
+            epgStore.baseParams.channel = r.data.key;
         epgStore.reload();
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
         if (r.data.identifier == -1)
             clearChannelTagsFilter();
-		else if (epgStore.baseParams.tag !== r.data.name)
-			epgStore.baseParams.tag = r.data.name;
+        else if (epgStore.baseParams.tag !== r.data.name)
+            epgStore.baseParams.tag = r.data.name;
         epgStore.reload();
-	});
+    });
     
-//IH 
-// TODO - check what gets saved and where, and how we filter out null tages - may happen automatically because there's
-// already a null tag. I think this only applies to tags, as they're saved to config
-//
-// Also, check that the insert method is genuinely inserting and not over-writing the first record.
-
     epgFilterContentGroup.on('select', function(c, r) {
         if (r.data.code == -1)
             clearContentGroupFilter();
-		else if (epgStore.baseParams.contenttype !== r.data.code)
-			epgStore.baseParams.contenttype = r.data.code;
+        else if (epgStore.baseParams.contenttype !== r.data.code)
+            epgStore.baseParams.contenttype = r.data.code;
         epgStore.reload();
     });
 
     epgFilterDuration.on('select', function(c, r) {
-		if (r.data.identifier == -1)
+        if (r.data.identifier == -1)
             clearDurationFilter();
         else if (epgStore.baseParams.minduration !== r.data.minvalue) {
-			epgStore.baseParams.minduration = r.data.minvalue;
+            epgStore.baseParams.minduration = r.data.minvalue;
             epgStore.baseParams.maxduration = r.data.maxvalue;
-		}
-		epgStore.reload();
+        }
+        epgStore.reload();
     });
     
     epgFilterTitle.on('valid', function(c) {

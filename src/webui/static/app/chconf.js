@@ -2,10 +2,8 @@
  * Channel tags
  */
 insertChannelTagsClearOption = function( scope, records, options ){
-	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
-	placeholder.set('identifier',-1);
-	placeholder.set('name',"(Clear filter)");
-	scope.insert(0, placeholder);
+    var placeholder = Ext.data.Record.create(['identifier', 'name']);
+    scope.insert(0,new placeholder({identifier: '-1', name: '(Clear filter)'}));
 };
 
 tvheadend.channelTags = new Ext.data.JsonStore({
@@ -37,10 +35,8 @@ tvheadend.channelrec = new Ext.data.Record.create(
             'epg_post_end', 'number']);
 
 insertChannelClearOption = function( scope, records, options ){
-	var placeholder = scope.getAt(1); //create a 'template' copy of an existing record
-	placeholder.set('key',-1);
-	placeholder.set('val',"(Clear filter)");
-	scope.insert(0, placeholder);
+    var placeholder = Ext.data.Record.create(['key', 'val']);
+    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
 };
 
 tvheadend.channels = new Ext.data.JsonStore({
