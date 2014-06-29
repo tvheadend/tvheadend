@@ -203,7 +203,7 @@ epggrab_ota_register
 {
   int save = 0;
   int interval = 3600;
-  int timeout  =  240;
+  int timeout  =  600;
   epggrab_ota_map_t *map;
 
   if (ota == NULL) {
