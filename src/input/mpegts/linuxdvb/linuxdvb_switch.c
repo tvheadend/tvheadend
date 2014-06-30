@@ -235,7 +235,7 @@ linuxdvb_switch_create0
           ld->ls_toneburst   = c % 2;
         }
         if (u >= 0)
-          ld->ls_uncommitted = c;
+          ld->ls_uncommitted = u;
       }
     }
   }
