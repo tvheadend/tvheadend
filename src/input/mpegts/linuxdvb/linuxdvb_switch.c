@@ -42,7 +42,7 @@ typedef struct linuxdvb_switch
   /* Port settings */
   int ls_toneburst;
   int ls_committed;
-  int ls_uncomitted;
+  int ls_uncommitted;
 
 } linuxdvb_switch_t;
 
@@ -124,7 +124,7 @@ const idclass_t linuxdvb_switch_class =
       .type   = PT_INT,
       .id     = "uncommitted",
       .name   = "Uncommitted",
-      .off    = offsetof(linuxdvb_switch_t, ls_uncomitted),
+      .off    = offsetof(linuxdvb_switch_t, ls_uncommitted),
       .list   = linuxdvb_switch_class_uncommitted_list
     },
     {
@@ -173,9 +173,9 @@ linuxdvb_switch_tune
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
 
     /* Uncommitted */
-    if (ls->ls_uncomitted >= 0) {
+    if (ls->ls_uncommitted >= 0) {
       if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
-                               0xF0 | ls->ls_uncomitted))
+                               0xF0 | ls->ls_uncommitted))
         return -1;
       usleep(25000);
     }
@@ -219,7 +219,7 @@ linuxdvb_switch_list ( void *o )
 
 linuxdvb_diseqc_t *
 linuxdvb_switch_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c )
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int c, int u )
 {
   linuxdvb_switch_t *ld = NULL;
   if (!strcmp(name ?: "", "Generic")) {
@@ -227,13 +227,15 @@ linuxdvb_switch_create0
     if (ld) {
       ld->ld_tune = linuxdvb_switch_tune;
       if (!conf) {
-        if (u >= 0) {
-          ld->ls_committed = (u - 1);
-          ld->ls_toneburst = (u - 1) % 2;
-        }
+        ld->ls_committed     = -1;
+        ld->ls_uncommitted   = -1;
+        ld->ls_toneburst     = -1;
         if (c >= 0) {
-          ld->ls_committed = c;
+          ld->ls_committed   = c;
+          ld->ls_toneburst   = c % 2;
         }
+        if (u >= 0)
+          ld->ls_uncommitted = c;
       }
     }
   }
