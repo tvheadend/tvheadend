@@ -198,10 +198,9 @@ struct epggrab_ota_mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
   int                                om_complete;     ///< Has completed a scan
-  int                                om_active;
-  time_t                             om_when;         ///< Next event time
+  gtimer_t                           om_timer;        ///< Per mux active timer
 
-  LIST_ENTRY(epggrab_ota_mux)        om_q_link;
+  TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 };
 
