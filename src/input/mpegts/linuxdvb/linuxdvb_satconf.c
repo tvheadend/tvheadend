@@ -1259,7 +1259,7 @@ linuxdvb_diseqc_send
 
   /* Send */
   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
-    tvherror("disqec", "failed to send diseqc cmd (e=%s)", strerror(errno));
+    tvherror("diseqc", "failed to send diseqc cmd (e=%s)", strerror(errno));
     return -1;
   }
   return 0;
