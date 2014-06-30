@@ -83,7 +83,8 @@ tvheadend.epggrab = function() {
     var confreader = new Ext.data.JsonReader({
         root: 'epggrabSettings'
     }, ['module', 'cron', 'channel_rename', 'channel_renumber',
-        'channel_reicon', 'epgdb_periodicsave']);
+        'channel_reicon', 'epgdb_periodicsave',
+        'ota_cron', 'ota_timeout', 'ota_initial']);
 
     /* ****************************************************************
      * Basic Fields
@@ -255,13 +256,35 @@ tvheadend.epggrab = function() {
         iconCls: 'icon-grid'
     });
 
+    var otaInitial = new Ext.form.Checkbox({
+        name: 'ota_initial',
+        fieldLabel: 'Force initial EPG scan at startup'
+    });
+
+    var otaCron = new Ext.form.TextArea({
+        fieldLabel: 'Over-the-air Cron multi-line',
+        name: 'ota_cron',
+        width: 300,
+    });
+
+    var otaTimeout = new Ext.form.NumberField({
+        width: 30,
+        allowNegative: false,
+        allowDecimals: false,
+        minValue: 30,
+        maxValue: 7200,
+        value: 600,
+        fieldLabel: 'EPG scan timeout in seconds (30-7200)',
+        name: 'ota_timeout'
+    });
+
     var otaPanel = new Ext.form.FieldSet({
         title: 'Over-the-air Grabbers',
         width: 700,
         autoHeight: true,
         collapsible: true,
         collapsed: true,
-        items: [otaGrid]
+        items: [otaInitial, otaCron, otaTimeout, otaGrid]
     });
 
     /* ****************************************************************

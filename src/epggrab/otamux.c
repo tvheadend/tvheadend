@@ -24,14 +24,15 @@
 #include "epggrab/private.h"
 #include "input.h"
 #include "subscriptions.h"
+#include "cron.h"
 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define EPGGRAB_OTA_MIN_INTERVAL   300
 #define EPGGRAB_OTA_MIN_TIMEOUT     30
+#define EPGGRAB_OTA_MAX_TIMEOUT   7200
 
 #define EPGGRAB_OTA_DONE_COMPLETE    0
 #define EPGGRAB_OTA_DONE_TIMEOUT     1
@@ -39,12 +40,21 @@
 
 typedef TAILQ_HEAD(epggrab_ota_head,epggrab_ota_mux) epggrab_ota_head_t;
 
+uint32_t                     epggrab_ota_initial;
+char                        *epggrab_ota_cron;
+cron_multi_t                *epggrab_ota_cron_multi;
+uint32_t                     epggrab_ota_timeout;
+
 RB_HEAD(,epggrab_ota_mux)    epggrab_ota_all;
 epggrab_ota_head_t           epggrab_ota_pending;
 epggrab_ota_head_t           epggrab_ota_active;
 
 gtimer_t                     epggrab_ota_kick_timer;
-gtimer_t                     epggrab_ota_pending_timer;
+gtimer_t                     epggrab_ota_start_timer;
+
+int                          epggrab_ota_pending_flag;
+
+pthread_mutex_t              epggrab_ota_mutex;
 
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
 SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
@@ -73,12 +83,14 @@ om_svcl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
 }
 
 static int
-epggrab_ota_timeout ( void )
+epggrab_ota_timeout_get ( void )
 {
-  int timeout = 600;
+  int timeout = epggrab_ota_timeout;
 
   if (timeout < EPGGRAB_OTA_MIN_TIMEOUT)
     timeout = EPGGRAB_OTA_MIN_TIMEOUT;
+  if (timeout > EPGGRAB_OTA_MAX_TIMEOUT)
+    timeout = EPGGRAB_OTA_MAX_TIMEOUT;
 
   return timeout;
 }
@@ -86,6 +98,19 @@ epggrab_ota_timeout ( void )
 static void
 epggrab_ota_kick ( int delay )
 {
+  epggrab_ota_mux_t *om;
+
+  if (TAILQ_EMPTY(&epggrab_ota_pending) &&
+      TAILQ_EMPTY(&epggrab_ota_active)) {
+    /* next round is pending? queue all ota muxes */
+    if (epggrab_ota_pending_flag) {
+      epggrab_ota_pending_flag = 0;
+      RB_FOREACH(om, &epggrab_ota_all, om_global_link)
+        TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+    } else {
+      return;
+    }
+  }
   gtimer_arm(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, delay);
 }
 
@@ -121,7 +146,7 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
 
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
   gtimer_arm(&om->om_timer, epggrab_ota_timeout_cb, om,
-             epggrab_ota_timeout() + grace);
+             epggrab_ota_timeout_get() + grace);
   LIST_FOREACH(map, &om->om_modules, om_link) {
     map->om_first    = 1;
     map->om_complete = 0;
@@ -361,6 +386,55 @@ done:
     goto next_one;
 }
 
+/*
+ * Start times management
+ */
+
+static void
+epggrab_ota_start_cb ( void *p )
+{
+  time_t next;
+
+  tvhtrace("epggrab", "ota start callback");
+
+  epggrab_ota_pending_flag = 1;
+
+  /* Finish previous job? */
+  if (TAILQ_EMPTY(&epggrab_ota_pending) &&
+      TAILQ_EMPTY(&epggrab_ota_active)) {
+    tvhtrace("epggrab", "ota - idle - kicked");
+    epggrab_ota_kick(1);
+  }
+
+  pthread_mutex_lock(&epggrab_ota_mutex);
+  if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next)) {
+    tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
+    gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
+  }
+  pthread_mutex_unlock(&epggrab_ota_mutex);
+}
+
+static void
+epggrab_ota_arm ( time_t last )
+{
+  time_t next;
+
+  pthread_mutex_lock(&epggrab_ota_mutex);
+
+  if (!cron_multi_next(epggrab_ota_cron_multi, time(NULL), &next)) {
+    /* do not trigger the next EPG scan for 1/2 hour */
+    if (last != (time_t)-1 && last + 1800 > next)
+      next = last + 1800;
+    tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
+    gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
+  }
+  pthread_mutex_unlock(&epggrab_ota_mutex);
+}
+
+/*
+ * Service management
+ */
+
 void
 epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
                           const char *uuid, int save )
@@ -447,7 +521,6 @@ epggrab_ota_load_one
     free(ota);
     return;
   }
-  TAILQ_INSERT_TAIL(&epggrab_ota_pending, ota, om_q_link);
   
   if (!(l = htsmsg_get_list(c, "modules"))) return;
   HTSMSG_FOREACH(f, l) {
@@ -475,15 +548,24 @@ epggrab_ota_init ( void )
   char path[1024];
   struct stat st;
 
+  epggrab_ota_initial      = 1;
+  epggrab_ota_timeout      = 600;
+  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");;
+  epggrab_ota_cron_multi   = NULL;
+  epggrab_ota_pending_flag = 0;
+
+  RB_INIT(&epggrab_ota_all);
+  TAILQ_INIT(&epggrab_ota_pending);
+  TAILQ_INIT(&epggrab_ota_active);
+
+  pthread_mutex_init(&epggrab_ota_mutex, NULL);
+
   /* Add listener */
   static mpegts_listener_t ml = {
     .ml_mux_start = epggrab_mux_start,
     .ml_mux_stop  = epggrab_mux_stop,
   };
   mpegts_add_listener(&ml);
-
-  TAILQ_INIT(&epggrab_ota_pending);
-  TAILQ_INIT(&epggrab_ota_active);
 
   /* Delete old config */
   hts_settings_buildpath(path, sizeof(path), "epggrab/otamux");
@@ -499,10 +581,22 @@ epggrab_ota_init ( void )
     }
     htsmsg_destroy(c);
   }
-  
+}
+
+void
+epggrab_ota_post ( void )
+{
+  time_t t = (time_t)-1;
+
   /* Init timer (call after full init - wait for network tuners) */
-  if (TAILQ_FIRST(&epggrab_ota_pending))
+  if (epggrab_ota_initial) {
+    epggrab_ota_pending_flag = 1;
     epggrab_ota_kick(15);
+    t = time(NULL);
+  }
+
+  /* arm the first scheduled time */
+  epggrab_ota_arm(t);
 }
 
 static void
@@ -535,6 +629,59 @@ epggrab_ota_shutdown ( void )
   pthread_mutex_unlock(&global_lock);
   SKEL_FREE(epggrab_ota_mux_skel);
   SKEL_FREE(epggrab_svc_link_skel);
+  free(epggrab_ota_cron);
+  epggrab_ota_cron = NULL;
+  free(epggrab_ota_cron_multi);
+  epggrab_ota_cron_multi = NULL;
+}
+
+/*
+ *  Global configuration handlers
+ */
+
+int
+epggrab_ota_set_cron ( const char *cron, int lock )
+{
+  int save = 0;
+  if ( epggrab_ota_cron == NULL || strcmp(epggrab_ota_cron, cron) ) {
+    save = 1;
+    pthread_mutex_lock(&epggrab_ota_mutex);
+    free(epggrab_ota_cron);
+    epggrab_ota_cron       = strdup(cron);
+    free(epggrab_ota_cron_multi);
+    epggrab_ota_cron_multi = cron_multi_set(cron);
+    pthread_mutex_unlock(&epggrab_ota_mutex);
+    if (lock) {
+      pthread_mutex_lock(&global_lock);
+      epggrab_ota_arm((time_t)-1);
+      pthread_mutex_unlock(&global_lock);
+    } else {
+      epggrab_ota_arm((time_t)-1);
+    }
+  }
+  return save;
+}
+
+int
+epggrab_ota_set_timeout( uint32_t e )
+{
+  int save = 0;
+  if (epggrab_ota_timeout != e) {
+    epggrab_ota_timeout = e;
+    save = 1;
+  }
+  return save;
+}
+
+int
+epggrab_ota_set_initial( uint32_t e )
+{
+  int save = 0;
+  if (epggrab_ota_initial != e) {
+    epggrab_ota_initial = e;
+    save = 1;
+  }
+  return save;
 }
 
 /******************************************************************************

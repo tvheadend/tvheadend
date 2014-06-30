@@ -158,10 +158,10 @@ static void _epggrab_load ( void )
       gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
                  epggrab_epgdb_periodicsave);
     if ((str = htsmsg_get_str(m, "cron")) == NULL) {
+      str = buf;
       if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
                           &interval)) {
         if (old) interval *= 3600;
-        str = buf;
         if (interval <= 600)
           strcpy(buf, "*/10 * * * *");
         else if (interval <= 900)
@@ -209,6 +209,10 @@ static void _epggrab_load ( void )
         }
       }
     }
+    htsmsg_get_u32(m, "ota_timeout", &epggrab_ota_timeout);
+    htsmsg_get_u32(m, "ota_initial", &epggrab_ota_initial);
+    if ((str = htsmsg_get_str(m, "ota_cron")) != NULL)
+      epggrab_ota_set_cron(str, 0);
     htsmsg_destroy(m);
 
     /* Finish up migration */
@@ -247,7 +251,7 @@ static void _epggrab_load ( void )
   /* Defaults */
   } else {
     free(epggrab_cron);
-    epggrab_cron       = strdup("4 */12 * * *"); // each 12 hours (noon)
+    epggrab_cron       = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
     epggrab_module     = NULL;              // disabled
     LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
       if (mod->type == EPGGRAB_OTA)
@@ -278,6 +282,9 @@ void epggrab_save ( void )
   htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
   htsmsg_add_u32(m, "epgdb_periodicsave", epggrab_epgdb_periodicsave);
   htsmsg_add_str(m, "cron", epggrab_cron);
+  htsmsg_add_str(m, "ota_cron", epggrab_ota_cron);
+  htsmsg_add_u32(m, "ota_timeout", epggrab_ota_timeout);
+  htsmsg_add_u32(m, "ota_initial", epggrab_ota_initial);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
   a = NULL;
@@ -436,6 +443,9 @@ void epggrab_init ( void )
   
   /* Load config */
   _epggrab_load();
+
+  /* Post-init for OTA subsystem */
+  epggrab_ota_post();
 
   /* Start internal grab thread */
   epggrab_running = 1;

@@ -255,6 +255,9 @@ extern uint32_t              epggrab_channel_rename;
 extern uint32_t              epggrab_channel_renumber;
 extern uint32_t              epggrab_channel_reicon;
 extern uint32_t              epggrab_epgdb_periodicsave;
+extern char                 *epggrab_ota_cron;
+extern uint32_t              epggrab_ota_timeout;
+extern uint32_t              epggrab_ota_initial;
 
 /*
  * Set configuration
@@ -268,6 +271,9 @@ int  epggrab_set_channel_reicon   ( uint32_t e );
 int  epggrab_set_periodicsave     ( uint32_t e );
 int  epggrab_enable_module        ( epggrab_module_t *mod, uint8_t e );
 int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
+int  epggrab_ota_set_cron         ( const char *cron, int lock );
+int  epggrab_ota_set_timeout      ( uint32_t e );
+int  epggrab_ota_set_initial      ( uint32_t e );
 
 /*
  * Load/Save
@@ -276,6 +282,7 @@ void epggrab_init                 ( void );
 void epggrab_done                 ( void );
 void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
+void epggrab_ota_post             ( void );
 void epggrab_ota_shutdown         ( void );
 
 /* **************************************************************************
