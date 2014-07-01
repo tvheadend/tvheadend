@@ -714,7 +714,7 @@ tvheadend.autoreceditor = function() {
                         record.set('maxduration', tvheadend.DurationStore.getById(index).data.maxvalue);
                 }
             }
-            
+
             if (record.isModified('channel') && record.data.channel == -1)
                 record.set('channel',"");
             
