@@ -136,17 +136,11 @@ static void _epggrab_load ( void )
   epggrab_module_t *mod;
   htsmsg_field_t *f;
   htsmsg_t *m, *a;
-  uint32_t enabled = 1, interval;
+  uint32_t enabled = 1;
   const char *str;
-  char buf[32];
-  int old = 0;
 
   /* Load settings */
-  if (!(m = hts_settings_load("epggrab/config"))) {
-    if ((m = hts_settings_load("xmltv/config")))
-      old = 1;
-  }
-  if (old) tvhlog(LOG_INFO, "epggrab", "migrating old configuration");
+  m = hts_settings_load("epggrab/config");
 
   /* Process */
   if (m) {
@@ -157,36 +151,11 @@ static void _epggrab_load ( void )
     if (epggrab_epgdb_periodicsave)
       gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
                  epggrab_epgdb_periodicsave);
-    if ((str = htsmsg_get_str(m, "cron")) == NULL) {
-      str = buf;
-      if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
-                          &interval)) {
-        if (old) interval *= 3600;
-        if (interval <= 600)
-          strcpy(buf, "*/10 * * * *");
-        else if (interval <= 900)
-          strcpy(buf, "*/15 * * * *");
-        else if (interval <= 1200)
-          strcpy(buf, "*/30 * * * *");
-        else if (interval <= 3600)
-          strcpy(buf, "4 * * * *");
-        else if (interval <= 7200)
-          strcpy(buf, "4 */2 * * *");
-        else if (interval <= 14400)
-          strcpy(buf, "4 */4 * * *");
-        else if (interval <= 28800)
-          strcpy(buf, "4 */8 * * *");
-        else if (interval <= 43200)
-          strcpy(buf, "4 */12 * * *");
-        else
-          strcpy(buf, "4 0 * * *");
-      } else
-        strcpy(buf, "4 */12 * * *");
-    }
-    epggrab_set_cron(str);
+    if ((str = htsmsg_get_str(m, "cron")) != NULL)
+      epggrab_set_cron(str);
     htsmsg_get_u32(m, "grab-enabled", &enabled);
     if (enabled) {
-      if ( (str = htsmsg_get_str(m, old ? "current-grabber" : "module")) ) {
+      if ( (str = htsmsg_get_str(m, "module")) ) {
         mod = epggrab_module_find_by_id(str);
         if (mod && mod->type == EPGGRAB_INT) {
           epggrab_module = (epggrab_module_int_t*)mod;
@@ -214,39 +183,6 @@ static void _epggrab_load ( void )
     if ((str = htsmsg_get_str(m, "ota_cron")) != NULL)
       epggrab_ota_set_cron(str, 0);
     htsmsg_destroy(m);
-
-    /* Finish up migration */
-    if (old) {
-
-      /* Enable OTA modules */
-      LIST_FOREACH(mod, &epggrab_modules, link)
-        if (mod->type == EPGGRAB_OTA)
-          epggrab_enable_module(mod, 1);
-
-      /* Migrate XMLTV channels */
-      htsmsg_t *xc, *ch;
-      htsmsg_t *xchs = hts_settings_load("xmltv/channels");
-      htsmsg_t *chs  = hts_settings_load("channels");
-      if (xchs) {
-        HTSMSG_FOREACH(f, chs) {
-          if ((ch = htsmsg_get_map_by_field(f))) {
-            if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
-              if ((xc = htsmsg_get_map(xchs, str))) {
-                htsmsg_add_u32(xc, "channel", atoi(f->hmf_name));
-              }
-            }
-          }
-        }
-        HTSMSG_FOREACH(f, xchs) {
-          if ((xc = htsmsg_get_map_by_field(f))) {
-            hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
-          }
-        }
-      }
-
-      /* Save epggrab config */
-      epggrab_save();
-    }
 
   /* Defaults */
   } else {

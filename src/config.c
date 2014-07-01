@@ -463,6 +463,7 @@ config_migrate_v2 ( void )
     htsmsg_add_u32(m, "skipinitscan", 1);
     htsmsg_add_u32(m, "autodiscovery", 0);
     hts_settings_save(m, "input/iptv/networks/%s/config", u.hex);
+    htsmsg_destroy(m);
 
     /* Move muxes */
     hts_settings_buildpath(src, sizeof(src),
@@ -492,7 +493,7 @@ config_migrate_v3 ( void )
 }
 
 /*
- * v3 -> v4 : fix broken DVB network / mux files
+ * v3 -> v5 : fix broken DVB network / mux files
  */
 static void
 config_migrate_v5 ( void )
@@ -515,6 +516,103 @@ config_migrate_v5 ( void )
       }
     }
   }
+  htsmsg_destroy(c);
+}
+
+/*
+ * v5 -> v6 : epggrab changes, also xmltv/config
+ */
+static void
+config_migrate_v6 ( void )
+{
+  htsmsg_t *c, *m;
+  htsmsg_field_t *f;
+  const char *str;
+  uint32_t interval;
+  char buf[128];
+  const char *s;
+  int old = 0;
+
+  c = hts_settings_load_r(1, "epggrab/config");
+
+  /* xmltv/config -> egpgrab/config */
+  if (!c && (c = hts_settings_load("xmltv/config")))
+    old = 1;
+
+  if (c) {
+    if (!htsmsg_get_u32(c, old ? "grab-interval" : "interval", &interval)) {
+      if (old) interval *= 3600;
+      if (interval <= 600)
+        strcpy(buf, "*/10 * * * *");
+      else if (interval <= 900)
+        strcpy(buf, "*/15 * * * *");
+      else if (interval <= 1200)
+        strcpy(buf, "*/30 * * * *");
+      else if (interval <= 3600)
+        strcpy(buf, "4 * * * *");
+      else if (interval <= 7200)
+        strcpy(buf, "4 */2 * * *");
+      else if (interval <= 14400)
+        strcpy(buf, "4 */4 * * *");
+      else if (interval <= 28800)
+        strcpy(buf, "4 */8 * * *");
+      else if (interval <= 43200)
+        strcpy(buf, "4 */12 * * *");
+      else
+        strcpy(buf, "4 0 * * *");
+    } else
+      strcpy(buf, "4 */12 * * *");
+    htsmsg_add_str(c, "cron", buf);
+    htsmsg_delete_field(c, old ? "grab-interval" : "interval");
+    if (old) {
+      s = htsmsg_get_str(c, "current-grabber");
+      if (s) {
+        htsmsg_add_str(c, "module", s);
+        htsmsg_delete_field(c, "current-grabber");
+      }
+    }
+    if (old) {
+      m = htsmsg_get_map(c, "mod_enabled");
+      if (!m) {
+        m = htsmsg_create_map();
+        htsmsg_add_msg(c, "mod_enabled", m);
+      }
+      htsmsg_add_u32(m, "eit", 1);
+      htsmsg_add_u32(m, "uk_freesat", 1);
+      htsmsg_add_u32(m, "uk_freeview", 1);
+      htsmsg_add_u32(m, "viasat_baltic", 1);
+      htsmsg_add_u32(m, "opentv-skyuk", 1);
+      htsmsg_add_u32(m, "opentv-skyit", 1);
+      htsmsg_add_u32(m, "opentv-ausat", 1);
+    }
+
+    hts_settings_save(c, "epggrab/config");
+  }
+  if (old) {
+    hts_settings_remove("xmltv/config");
+
+    /* Migrate XMLTV channels */
+    htsmsg_t *xc, *ch;
+    htsmsg_t *xchs = hts_settings_load("xmltv/channels");
+    htsmsg_t *chs  = hts_settings_load_r(1, "channel");
+    if (xchs) {
+      HTSMSG_FOREACH(f, chs) {
+        if ((ch = htsmsg_get_map_by_field(f))) {
+          if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
+            if ((xc = htsmsg_get_map(xchs, str))) {
+              htsmsg_add_u32(xc, "channel", atoi(f->hmf_name));
+            }
+          }
+        }
+      }
+      HTSMSG_FOREACH(f, xchs) {
+        if ((xc = htsmsg_get_map_by_field(f))) {
+          hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
+        }
+      }
+    }
+  }
+  htsmsg_destroy(c);
 }
 
 /*
@@ -525,7 +623,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v2,
   config_migrate_v3,
   config_migrate_v3, // Re-run due to bug in previous version of function
-  config_migrate_v5
+  config_migrate_v5,
+  config_migrate_v6,
 };
 
 /*
