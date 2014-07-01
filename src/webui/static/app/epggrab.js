@@ -216,7 +216,6 @@ tvheadend.epggrab = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
-        collapsed: true,
         items: [externalGrid]
     });
 
@@ -283,7 +282,6 @@ tvheadend.epggrab = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
-        collapsed: true,
         items: [otaInitial, otaCron, otaTimeout, otaGrid]
     });
 
