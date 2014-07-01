@@ -9,8 +9,8 @@ tvheadend.brands = new Ext.data.JsonStore({
 });
 
 insertContentGroupClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['code', 'name']);
-    scope.insert(0,new placeholder({code: '-1', name: '(Clear filter)'}));
+    var placeholder = Ext.data.Record.create(['name', 'code']);
+    scope.insert(0,new placeholder({name: '(Clear filter)', code: '-1'}));
 };
 
 //WIBNI: might want this store to periodically update
