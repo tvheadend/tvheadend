@@ -1030,6 +1030,9 @@ page_play(http_connection_t *hc, const char *remain, void *opaque)
 {
   char *playlist;
 
+  if(remain == NULL)
+    return 404;
+
   playlist = http_arg_get(&hc->hc_req_args, "playlist");
   if (playlist) {
     if (strcmp(playlist, "xspf") == 0)
