@@ -997,7 +997,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
 
-  maxlen = strlen(remain) + strlen(title) + 256;
+  maxlen = (remain ? strlen(remain) : 0) + strlen(title) + 256;
   buf = alloca(maxlen);
 
   snprintf(buf, maxlen, "\
