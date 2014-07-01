@@ -662,7 +662,7 @@ static void _eit_start
   int pid, opts = 0;
 
   /* Disabled */
-  if (!m->enabled) return;
+  if (!m->enabled && !map->om_forced) return;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
   // Note: do this as PID is the same

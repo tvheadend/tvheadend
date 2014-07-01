@@ -293,6 +293,24 @@ mpegts_mux_class_enabled_notify ( void *p )
   }
 }
 
+static htsmsg_t *
+mpegts_mux_epg_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "Disable",                  MM_EPG_DISABLE },
+    { "Enable (auto)",            MM_EPG_ENABLE },
+    { "Force (auto)",             MM_EPG_FORCE },
+    { "Force EIT",                MM_EPG_FORCE_EIT },
+    { "Force UK Freesat",         MM_EPG_FORCE_UK_FREESAT },
+    { "Force UK Freeview",        MM_EPG_FORCE_UK_FREEVIEW },
+    { "Force Viasat Baltic",      MM_EPG_FORCE_VIASAT_BALTIC },
+    { "Force OpenTV Sky UK",      MM_EPG_FORCE_OPENTV_SKY_UK },
+    { "Force OpenTV Sky Italia",  MM_EPG_FORCE_OPENTV_SKY_ITALIA },
+    { "Force OpenTV Sky Ausat",   MM_EPG_FORCE_OPENTV_SKY_AUSAT },
+  };
+  return strtab2htsmsg(tab);
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -311,11 +329,12 @@ const idclass_t mpegts_mux_class =
       .notify   = mpegts_mux_class_enabled_notify,
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "epg",
-      .name     = "EPG",
+      .name     = "EPG Scan",
       .off      = offsetof(mpegts_mux_t, mm_epg),
-      .def.i    = 1,
+      .def.i    = MM_EPG_ENABLE,
+      .list     = mpegts_mux_epg_list,
     },
     {
       .type     = PT_STR,

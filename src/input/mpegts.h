@@ -299,6 +299,20 @@ typedef enum mpegts_mux_scan_result
   MM_SCAN_FAIL
 } mpegts_mux_scan_result_t;
 
+enum mpegts_mux_epg_flag
+{
+  MM_EPG_DISABLE,
+  MM_EPG_ENABLE,
+  MM_EPG_FORCE,
+  MM_EPG_FORCE_EIT,
+  MM_EPG_FORCE_UK_FREESAT,
+  MM_EPG_FORCE_UK_FREEVIEW,
+  MM_EPG_FORCE_VIASAT_BALTIC,
+  MM_EPG_FORCE_OPENTV_SKY_UK,
+  MM_EPG_FORCE_OPENTV_SKY_ITALIA,
+  MM_EPG_FORCE_OPENTV_SKY_AUSAT,
+};
+
 /* Multiplex */
 struct mpegts_mux
 {

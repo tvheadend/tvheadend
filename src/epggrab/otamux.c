@@ -140,15 +140,27 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 }
 
 static void
-epggrab_ota_start ( epggrab_ota_mux_t *om, int grace )
+epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm, int grace,
+                    const char *modname )
 {
+  epggrab_module_t  *m;
   epggrab_ota_map_t *map;
 
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
   gtimer_arm(&om->om_timer, epggrab_ota_timeout_cb, om,
              epggrab_ota_timeout_get() + grace);
+  if (modname) {
+    LIST_FOREACH(m, &epggrab_modules, link)
+      if (!strcmp(m->id, modname)) {
+        epggrab_ota_register((epggrab_module_ota_t *)m, om, mm);
+        break;
+      }
+  }
   LIST_FOREACH(map, &om->om_modules, om_link) {
     map->om_first    = 1;
+    map->om_forced   = 0;
+    if (modname && !strcmp(modname, map->om_module->id))
+      map->om_forced = 1;
     map->om_complete = 0;
     tvhdebug(map->om_module->id, "grab started");
   }
@@ -315,7 +327,20 @@ epggrab_ota_kick_cb ( void *p )
     mpegts_network_t *net;
     int failed;
   } networks[64], *net;	/* more than 64 networks? - you're a king */
-  int i, r, networks_count = 0;
+  int i, r, networks_count = 0, epg_flag;
+  const char *modname;
+  static const char *modnames[] = {
+    [MM_EPG_DISABLE]                 = NULL,
+    [MM_EPG_ENABLE]                  = NULL,
+    [MM_EPG_FORCE]                   = NULL,
+    [MM_EPG_FORCE_EIT]               = "eit",
+    [MM_EPG_FORCE_UK_FREESAT]        = "uk_freesat",
+    [MM_EPG_FORCE_UK_FREEVIEW]       = "uk_freeview",
+    [MM_EPG_FORCE_VIASAT_BALTIC]     = "viasat_baltic",
+    [MM_EPG_FORCE_OPENTV_SKY_UK]     = "opentv-skyuk",
+    [MM_EPG_FORCE_OPENTV_SKY_ITALIA] = "opentv-skyit",
+    [MM_EPG_FORCE_OPENTV_SKY_AUSAT]  = "opentv-ausat",
+  };
 
   lock_assert(&global_lock);
 
@@ -347,7 +372,12 @@ next_one:
     net->failed = 0;
   }
 
-  if (mm->mm_is_epg(mm) <= 0) {
+  epg_flag = mm->mm_is_epg(mm);
+  if (ARRAY_SIZE(modnames) >= epg_flag)
+    epg_flag = MM_EPG_ENABLE;
+  modname  = modnames[epg_flag];
+
+  if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
 #if TRACE_ENABLE
     char name[256];
     mm->mm_display_name(mm, name, sizeof(name));
@@ -356,16 +386,18 @@ next_one:
     goto done;
   }
 
-  /* Check we have modules attached and enabled */
-  LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module->tune(map, om, mm))
-      break;
-  }
-  if (!map) {
-    char name[256];
-    mm->mm_display_name(mm, name, sizeof(name));
-    tvhdebug("epggrab", "no modules attached to %s, check again next time", name);
-    goto done;
+  if (epg_flag != MM_EPG_FORCE) {
+    /* Check we have modules attached and enabled */
+    LIST_FOREACH(map, &om->om_modules, om_link) {
+      if (map->om_module->tune(map, om, mm))
+        break;
+    }
+    if (!map) {
+      char name[256];
+      mm->mm_display_name(mm, name, sizeof(name));
+      tvhdebug("epggrab", "no modules attached to %s, check again next time", name);
+      goto done;
+    }
   }
 
   /* Subscribe to the mux */
@@ -377,7 +409,7 @@ next_one:
       first = om;
   } else {
     mpegts_mux_instance_t *mmi = mm->mm_active;
-    epggrab_ota_start(om, mpegts_input_grace(mmi->mmi_input, mm));
+    epggrab_ota_start(om, mm, mpegts_input_grace(mmi->mmi_input, mm), modname);
   }
 
 done:

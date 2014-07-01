@@ -552,7 +552,7 @@ static void _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled) return;
+  if (!m->enabled && !map->om_forced) return;
   if (mod->tsid != mm->mm_tsid) return;
 
   /* Install tables */
