@@ -401,7 +401,7 @@ satip_frontend_stop_mux
   char buf1[256], buf2[256];
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - stopping %s", buf1, buf2);
 
   gtimer_disarm(&lfe->sf_monitor_timer);
@@ -1300,7 +1300,7 @@ satip_frontend_tune1
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - starting %s", buf1, buf2);
 
   /* Tune */

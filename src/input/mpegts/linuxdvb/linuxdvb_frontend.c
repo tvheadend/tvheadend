@@ -271,7 +271,7 @@ linuxdvb_frontend_stop_mux
   
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("linuxdvb", "%s - stopping %s", buf1, buf2);
 
   /* Stop thread */
@@ -1086,7 +1086,7 @@ linuxdvb_frontend_tune1
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
 
   /* Tune */

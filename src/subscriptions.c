@@ -579,7 +579,7 @@ subscription_create_from_service(service_t *t, unsigned int weight,
 static void
 mpegts_mux_setsourceinfo ( mpegts_mux_t *mm, source_info_t *si )
 {
-  char buf[128];
+  char buf[256];
 
   /* Validate */
   lock_assert(&global_lock);
@@ -738,7 +738,7 @@ subscription_create_msg(th_subscription_t *s)
   else if (s->ths_mmi != NULL && s->ths_mmi->mmi_mux != NULL) {
     char buf[512];
     mpegts_mux_t *mm = s->ths_mmi->mmi_mux;
-    mm->mm_display_name(mm, buf, sizeof(buf));
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
     htsmsg_add_str(m, "service", buf);
   }
   

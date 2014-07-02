@@ -127,7 +127,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
     char name[256];
     mpegts_mux_t *mm = mpegts_mux_find(om->om_mux_uuid);
-    mm->mm_display_name(mm, name, sizeof(name));
+    mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhlog(LOG_WARNING, "epggrab", "data completion timeout for %s", name);
   }
 
@@ -233,7 +233,7 @@ epggrab_ota_register
     ota = RB_INSERT_SORTED(&epggrab_ota_all, epggrab_ota_mux_skel, om_global_link, om_id_cmp);
     if (!ota) {
       char buf[256];
-      mm->mm_display_name(mm, buf, sizeof(buf));
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhinfo(mod->id, "registering mux %s", buf);
       ota  = epggrab_ota_mux_skel;
       SKEL_USED(epggrab_ota_mux_skel);
@@ -380,7 +380,7 @@ next_one:
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
 #if TRACE_ENABLE
     char name[256];
-    mm->mm_display_name(mm, name, sizeof(name));
+    mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
 #endif
     goto done;
@@ -394,7 +394,7 @@ next_one:
     }
     if (!map) {
       char name[256];
-      mm->mm_display_name(mm, name, sizeof(name));
+      mpegts_mux_nice_name(mm, name, sizeof(name));
       tvhdebug("epggrab", "no modules attached to %s, check again next time", name);
       goto done;
     }

@@ -202,7 +202,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   }
 
   /* Parse URL */
-  im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
+  mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
   memset(&url, 0, sizeof(url));
   if (urlparse(im->mm_iptv_url ?: "", &url)) {
     tvherror("iptv", "%s - invalid URL [%s]", buf, im->mm_iptv_url);
@@ -344,7 +344,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
 {
   tvhpoll_event_t ev = { 0 };
   char buf[256];
-  im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
+  mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
 
   /* Allocate input buffer */
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);

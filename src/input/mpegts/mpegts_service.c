@@ -286,7 +286,7 @@ mpegts_service_refresh(service_t *t)
 static void
 mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 {
-  char buf[128];
+  char buf[256];
   mpegts_service_t      *s = (mpegts_service_t*)t;
   mpegts_mux_t          *m = s->s_dvb_mux;
 
@@ -424,7 +424,7 @@ mpegts_service_create0
   service_make_nicename((service_t*)s);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
-  mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */

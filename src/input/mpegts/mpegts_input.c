@@ -257,7 +257,7 @@ mpegts_input_open_pid
     mpegts_pid_sub_skel->mps_type  = type;
     mpegts_pid_sub_skel->mps_owner = owner;
     if (!RB_INSERT_SORTED(&mp->mp_subs, mpegts_pid_sub_skel, mps_link, mps_cmp)) {
-      mm->mm_display_name(mm, buf, sizeof(buf));
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhdebug("mpegts", "%s - open PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
       SKEL_USED(mpegts_pid_sub_skel);
@@ -290,7 +290,7 @@ mpegts_input_close_pid
     if (!RB_FIRST(&mp->mp_subs)) {
       RB_REMOVE(&mm->mm_pids, mp, mp_link);
       if (mp->mp_fd != -1) {
-        mm->mm_display_name(mm, buf, sizeof(buf));
+        mpegts_mux_nice_name(mm, buf, sizeof(buf));
         tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
         close(mp->mp_fd);
@@ -831,7 +831,7 @@ mpegts_input_stream_status
   st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
   mi->mi_display_name(mi, buf, sizeof(buf));
   st->input_name  = strdup(buf);
-  mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;

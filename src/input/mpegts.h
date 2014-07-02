@@ -713,6 +713,8 @@ void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 
+void mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len );
+
 mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 
 static inline mpegts_pid_t *
