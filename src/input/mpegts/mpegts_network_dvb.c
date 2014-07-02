@@ -353,6 +353,8 @@ dvb_network_create_mux
   dvb_mux_conf_t *dmc = p;
 
   mm = dvb_network_find_mux(ln, dmc, onid, tsid);
+  /* Ignore change requests from NIT for tuned mux */
+  if (mm == mmo) return mm;
   if (!mm && ln->mn_autodiscovery) {
     const idclass_t *cls;
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
