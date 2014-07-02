@@ -262,7 +262,7 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 /**
  * Service lock must be held
  */
-static void
+void
 service_stop(service_t *t)
 {
   elementary_stream_t *st;

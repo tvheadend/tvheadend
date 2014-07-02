@@ -439,6 +439,7 @@ void service_init(void);
 void service_done(void);
 
 int service_start(service_t *t, int instance);
+void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);
 

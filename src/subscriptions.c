@@ -200,6 +200,7 @@ subscription_reschedule(void)
 {
   static int reenter = 0;
   th_subscription_t *s;
+  service_t *t;
   service_instance_t *si;
   streaming_message_t *sm;
   int error;
@@ -215,16 +216,20 @@ subscription_reschedule(void)
     if (s->ths_mmi) continue;
     if (!s->ths_service && !s->ths_channel) continue;
 
-    if(s->ths_service != NULL && s->ths_current_instance != NULL) {
+    t = s->ths_service;
+    if(t != NULL && s->ths_current_instance != NULL) {
       /* Already got a service */
 
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
 	      continue; /* And it not bad, so we're happy */
 
-      s->ths_service->s_streaming_status = 0;
-      s->ths_service->s_status = SERVICE_IDLE;
+      t->s_streaming_status = 0;
+      t->s_status = SERVICE_IDLE;
 
       subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
+
+      if(t && LIST_FIRST(&t->s_subscriptions) == NULL)
+        service_stop(t);
 
       si = s->ths_current_instance;
 
@@ -240,7 +245,7 @@ subscription_reschedule(void)
     if (s->ths_channel)
       tvhtrace("subscription", "find service for %s weight %d",
                channel_get_name(s->ths_channel), s->ths_weight);
-    else 
+    else
       tvhtrace("subscription", "find instance for %s weight %d",
                s->ths_service->s_nicename, s->ths_weight);
     si = service_find_instance(s->ths_service, s->ths_channel,
