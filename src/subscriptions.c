@@ -373,6 +373,8 @@ void
 subscription_unsubscribe(th_subscription_t *s)
 {
   service_t *t = s->ths_service;
+  char buf[512];
+  size_t buflen;
 
   lock_assert(&global_lock);
 
@@ -384,12 +386,21 @@ subscription_unsubscribe(th_subscription_t *s)
 
   if(s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
-    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
-           s->ths_title, channel_get_name(s->ths_channel));
+    snprintf(buf, sizeof(buf), "\"%s\" unsubscribing from \"%s\"",
+             s->ths_title, channel_get_name(s->ths_channel));
   } else {
-    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
-           s->ths_title);
+    snprintf(buf, sizeof(buf), "\"%s\" unsubscribing", s->ths_title);
   }
+
+  if (s->ths_hostname) {
+    buflen = strlen(buf);
+    snprintf(buf + buflen, sizeof(buf) - buflen,
+             ", hostname=\"%s\", username=\"%s\", client=\"%s\"",
+             s->ths_hostname ?: "<N/A>",
+             s->ths_username ?: "<N/A>",
+             s->ths_client   ?: "<N/A>");
+  }
+  tvhlog(LOG_INFO, "subscription", buf);
 
   if(t)
     service_remove_subscriber(t, s, SM_CODE_OK);
@@ -511,13 +522,16 @@ subscription_create_from_channel_or_service
     tvhlog(LOG_INFO, "subscription", 
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	   "service: \"%s\"",
+	   "service: \"%s\", hostname: \"%s\", username: \"%s\", client: \"%s\"",
 	   s->ths_title, ch ? channel_get_name(ch) : "none", weight,
 	   si.si_adapter  ?: "<N/A>",
 	   si.si_network  ?: "<N/A>",
 	   si.si_mux      ?: "<N/A>",
 	   si.si_provider ?: "<N/A>",
-	   si.si_service  ?: "<N/A>");
+	   si.si_service  ?: "<N/A>",
+	   hostname       ?: "<N/A>",
+	   username       ?: "<N/A>",
+	   client         ?: "<N/A>");
 
     service_source_info_free(&si);
   }
@@ -639,12 +653,16 @@ subscription_create_from_mux
 
   tvhinfo("subscription", 
 	  "'%s' subscribing to mux, weight: %d, adapter: '%s', "
-	  "network: '%s', mux: '%s'",
+	  "network: '%s', mux: '%s', hostname: '%s', username: '%s', "
+	  "client: '%s'",
 	  s->ths_title,
           s->ths_weight,
 	  ss->ss_si.si_adapter  ?: "<N/A>",
 	  ss->ss_si.si_network  ?: "<N/A>",
-	  ss->ss_si.si_mux      ?: "<N/A>");
+	  ss->ss_si.si_mux      ?: "<N/A>",
+	  hostname              ?: "<N/A>",
+	  username              ?: "<N/A>",
+	  client                ?: "<N/A>");
 
   sm = streaming_msg_create_data(SMT_START, ss);
   streaming_target_deliver(s->ths_output, sm);
