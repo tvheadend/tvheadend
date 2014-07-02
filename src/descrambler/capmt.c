@@ -422,7 +422,7 @@ capmt_pid_flush(capmt_t *capmt)
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *tuner;
   capmt_opaque_t *o;
-  int adapter, i;
+  int adapter, pid, i;
 
   for (adapter = 0; adapter < MAX_CA; adapter++) {
     tuner = capmt->capmt_adapters[adapter].ca_tuner;
@@ -432,13 +432,13 @@ capmt_pid_flush(capmt_t *capmt)
     mmi = LIST_FIRST(&tuner->mi_mux_active);
     for (i = 0; i < MAX_PIDS; i++) {
       o = &ca->ca_pids[i];
-      if (o->pid) {
+      if ((pid = o->pid) > 0) {
         o->pid = -1; /* block for new registrations */
         o->pid_refs = 0;
         if (mmi) {
           assert(mmi->mmi_mux);
           pthread_mutex_unlock(&capmt->capmt_mutex);
-          descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], o->pid);
+          descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], pid);
           pthread_mutex_lock(&capmt->capmt_mutex);
         }
         o->pid = 0;
