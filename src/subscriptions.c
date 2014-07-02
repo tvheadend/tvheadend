@@ -405,7 +405,7 @@ subscription_unsubscribe(th_subscription_t *s)
              s->ths_username ?: "<N/A>",
              s->ths_client   ?: "<N/A>");
   }
-  tvhlog(LOG_INFO, "subscription", buf);
+  tvhlog(LOG_INFO, "subscription", "%s", buf);
 
   if(t)
     service_remove_subscriber(t, s, SM_CODE_OK);
