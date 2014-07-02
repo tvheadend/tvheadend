@@ -327,7 +327,7 @@ epggrab_ota_kick_cb ( void *p )
     mpegts_network_t *net;
     int failed;
   } networks[64], *net;	/* more than 64 networks? - you're a king */
-  int i, r, networks_count = 0, epg_flag;
+  int i, r, networks_count = 0, epg_flag, kick = 1;
   const char *modname;
   static const char *modnames[] = {
     [MM_EPG_DISABLE]                 = NULL,
@@ -346,6 +346,8 @@ epggrab_ota_kick_cb ( void *p )
 
   if (!om)
     return;
+
+  tvhtrace("epggrab", "ota - kick callback");
 
 next_one:
   /* Find the mux */
@@ -410,12 +412,15 @@ next_one:
   } else {
     mpegts_mux_instance_t *mmi = mm->mm_active;
     epggrab_ota_start(om, mm, mpegts_input_grace(mmi->mmi_input, mm), modname);
+    kick = 0;
   }
 
 done:
   om = TAILQ_FIRST(&epggrab_ota_pending);
   if (networks_count < ARRAY_SIZE(networks) && om && first != om)
     goto next_one;
+  if (kick)
+    epggrab_ota_kick(64); /* a random number? */
 }
 
 /*
