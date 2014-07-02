@@ -226,15 +226,27 @@ const idclass_t dvb_network_atsc_class =
  * ***************************************************************************/
 
 static int
-dvb_network_get_symbol_rate( dvb_mux_conf_t *dmc )
+dvb_network_check_bandwidth( int bw1, int bw2 )
+{
+  if (bw1 == DVB_BANDWIDTH_NONE || bw1 == DVB_BANDWIDTH_AUTO ||
+      bw2 == DVB_BANDWIDTH_NONE || bw2 == DVB_BANDWIDTH_AUTO)
+    return 0;
+  return bw1 != bw2;
+}
+
+static int
+dvb_network_check_symbol_rate( dvb_mux_t *lm, dvb_mux_conf_t *dmc, int deltar )
 {
   switch (dmc->dmc_fe_type) {
   case DVB_TYPE_T:
-    return dmc->u.dmc_fe_ofdm.bandwidth;
+    return dvb_network_check_bandwidth(lm->lm_tuning.u.dmc_fe_ofdm.bandwidth,
+                                       dmc->u.dmc_fe_ofdm.bandwidth);
   case DVB_TYPE_C:
-    return dmc->u.dmc_fe_qam.symbol_rate;
+    return abs(lm->lm_tuning.u.dmc_fe_qam.symbol_rate -
+               dmc->u.dmc_fe_qam.symbol_rate) > deltar;
   case DVB_TYPE_S:
-    return dmc->u.dmc_fe_qpsk.symbol_rate;
+    return abs(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate -
+               dmc->u.dmc_fe_qpsk.symbol_rate) > deltar;
   case DVB_TYPE_ATSC:
     return 0;
   default:
@@ -287,8 +299,7 @@ dvb_network_find_mux
     if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > deltaf) continue;
 
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
-    if (abs(dvb_network_get_symbol_rate(&lm->lm_tuning) -
-            dvb_network_get_symbol_rate(dmc)) > deltar) continue;
+    if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
 
     /* DVB-S extra checks */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
