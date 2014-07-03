@@ -213,7 +213,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
   {
     { {
-      .ld_type    = "Circular 10750",
+      .ld_type    = "Ku 10750",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,

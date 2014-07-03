@@ -517,7 +517,7 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "advanced",
-    .name  = "Advanced",
+    .name  = "Advanced (Non-Universal LNBs, Rotors, etc.)",
     .idc   = &linuxdvb_satconf_advanced_class,
     .ports = 0, 
   },
