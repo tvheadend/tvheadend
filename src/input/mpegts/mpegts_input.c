@@ -144,6 +144,13 @@ const idclass_t mpegts_input_class =
       .notify   = idnode_notify_title_changed,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "ota_epg",
+      .name     = "Over-the-air EPG",
+      .off      = offsetof(mpegts_input_t, mi_ota_epg),
+      .def.i    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = "Networks",
@@ -161,9 +168,12 @@ const idclass_t mpegts_input_class =
  * Class methods
  * *************************************************************************/
 
-static int
-mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+int
+mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                          const char *reason )
 {
+  if (!strcmp(reason, "epggrab") && !mi->mi_ota_epg)
+    return 0;
   return mi->mi_enabled;
 }
 
@@ -957,6 +967,9 @@ mpegts_input_create0
   pthread_mutex_init(&mi->mi_output_lock, NULL);
   pthread_cond_init(&mi->mi_table_cond, NULL);
   TAILQ_INIT(&mi->mi_table_queue);
+
+  /* Defaults */
+  mi->mi_ota_epg = 1;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);

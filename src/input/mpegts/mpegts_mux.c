@@ -532,7 +532,7 @@ mpegts_mux_start
   /* Calculate priority+weight and sort */
   count = 0;
   LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm);
+    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm, reason);
     tvhtrace("mpegts", "%s -   mmi %p enabled %d", buf, mmi, e);
     if (!e) continue;
     enabled = 1;

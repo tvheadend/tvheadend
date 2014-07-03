@@ -511,6 +511,8 @@ struct mpegts_input
 
   int mi_priority;
 
+  int mi_ota_epg;
+
   LIST_ENTRY(mpegts_input) mi_global_link;
 
   mpegts_network_link_list_t mi_networks;
@@ -554,7 +556,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, const char *reason);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
@@ -623,6 +625,8 @@ void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 void mpegts_input_status_timer ( void *p );
 
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
+
+int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, const char *reason );
 
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );

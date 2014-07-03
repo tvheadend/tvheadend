@@ -254,11 +254,12 @@ linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                               const char *reason )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   if (lfe->lfe_fe_path == NULL) return 0;
-  if (!lfe->mi_enabled) return 0;
+  if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   return 1;
 }
