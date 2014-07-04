@@ -197,8 +197,10 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
   /* Ensure disabled */
   if (!mi->mi_enabled) {
     tvhtrace("linuxdvb", "%s - disabling tuner", buf);
-    if (lfe->lfe_fe_fd > 0)
+    if (lfe->lfe_fe_fd > 0) {
       close(lfe->lfe_fe_fd);
+      lfe->lfe_fe_fd = -1;
+    }
     gtimer_disarm(&lfe->lfe_monitor_timer);
 
   /* Ensure FE opened (if not powersave) */
@@ -623,7 +625,7 @@ linuxdvb_frontend_input_thread ( void *aux )
 {
   linuxdvb_frontend_t *lfe = aux;
   mpegts_mux_instance_t *mmi;
-  int dmx = -1, dvr = -1;
+  int dvr = -1;
   char buf[256];
   int nfds;
   tvhpoll_event_t ev[2];
@@ -641,7 +643,6 @@ linuxdvb_frontend_input_thread ( void *aux )
   /* Open DVR */
   dvr = tvh_open(lfe->lfe_dvr_path, O_RDONLY | O_NONBLOCK, 0);
   if (dvr < 0) {
-    close(dmx);
     tvherror("linuxdvb", "%s - failed to open %s", buf, lfe->lfe_dvr_path);
     return NULL;
   }
@@ -683,7 +684,6 @@ linuxdvb_frontend_input_thread ( void *aux )
 
   sbuf_free(&sb);
   tvhpoll_destroy(efd);
-  if (dmx != -1) close(dmx);
   close(dvr);
   return NULL;
 }
