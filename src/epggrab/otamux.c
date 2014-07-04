@@ -661,7 +661,9 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
   epggrab_ota_map_t *map;
   epggrab_ota_svc_link_t *svcl;
 
-  TAILQ_REMOVE(head, ota, om_q_link);
+  if (head != NULL)
+    TAILQ_REMOVE(head, ota, om_q_link);
+  RB_REMOVE(&epggrab_ota_all, ota, om_global_link);
   while ((map = LIST_FIRST(&ota->om_modules)) != NULL) {
     LIST_REMOVE(map, om_link);
     while ((svcl = RB_FIRST(&map->om_svcs)) != NULL)
@@ -682,6 +684,8 @@ epggrab_ota_shutdown ( void )
     epggrab_ota_free(&epggrab_ota_active, ota);
   while ((ota = TAILQ_FIRST(&epggrab_ota_pending)) != NULL)
     epggrab_ota_free(&epggrab_ota_pending, ota);
+  while ((ota = RB_FIRST(&epggrab_ota_all)) != NULL)
+    epggrab_ota_free(NULL, ota);
   pthread_mutex_unlock(&global_lock);
   SKEL_FREE(epggrab_ota_mux_skel);
   SKEL_FREE(epggrab_svc_link_skel);
