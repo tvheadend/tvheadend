@@ -96,21 +96,38 @@ epggrab_ota_timeout_get ( void )
 }
 
 static void
+epggrab_ota_requeue ( void )
+{
+  epggrab_ota_mux_t *om, *om2;
+
+  /*
+   * enqueue all muxes, but ommit the delayed ones (active+pending)
+   */
+  RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
+    TAILQ_FOREACH(om2, &epggrab_ota_active, om_q_link)
+      if (om2 == om)
+        break;
+    if (om2 == om) continue;
+    TAILQ_FOREACH(om2, &epggrab_ota_pending, om_q_link)
+      if (om2 == om)
+        break;
+    if (om2 == om) continue;
+    TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+  }
+}
+
+static void
 epggrab_ota_kick ( int delay )
 {
-  epggrab_ota_mux_t *om;
-
-  if (TAILQ_EMPTY(&epggrab_ota_pending) &&
-      TAILQ_EMPTY(&epggrab_ota_active)) {
-    /* next round is pending? queue all ota muxes */
-    if (epggrab_ota_pending_flag) {
-      epggrab_ota_pending_flag = 0;
-      RB_FOREACH(om, &epggrab_ota_all, om_global_link)
-        TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
-    } else {
-      return;
-    }
+  /* next round is pending? queue rest of ota muxes */
+  if (epggrab_ota_pending_flag) {
+    epggrab_ota_pending_flag = 0;
+    epggrab_ota_requeue();
   }
+
+  if (TAILQ_EMPTY(&epggrab_ota_pending))
+    return;
+
   gtimer_arm(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, delay);
 }
 
@@ -436,12 +453,7 @@ epggrab_ota_start_cb ( void *p )
 
   epggrab_ota_pending_flag = 1;
 
-  /* Finish previous job? */
-  if (TAILQ_EMPTY(&epggrab_ota_pending) &&
-      TAILQ_EMPTY(&epggrab_ota_active)) {
-    tvhtrace("epggrab", "ota - idle - kicked");
-    epggrab_ota_kick(1);
-  }
+  epggrab_ota_kick(1);
 
   pthread_mutex_lock(&epggrab_ota_mutex);
   if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next)) {
