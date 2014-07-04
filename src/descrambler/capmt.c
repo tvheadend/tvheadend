@@ -1902,7 +1902,7 @@ capmt_entry_find(const char *id, int create)
 
   tvh_pipe(O_NONBLOCK, &capmt->capmt_pipe);
 
-  tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, 1);
+  tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, 0);
 
   return capmt;
 }
