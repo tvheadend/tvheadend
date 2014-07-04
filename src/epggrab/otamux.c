@@ -397,7 +397,7 @@ next_one:
     if (!map) {
       char name[256];
       mpegts_mux_nice_name(mm, name, sizeof(name));
-      tvhdebug("epggrab", "no modules attached to %s, check again next time", name);
+      tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
       goto done;
     }
   }
@@ -472,6 +472,23 @@ epggrab_ota_arm ( time_t last )
  * Service management
  */
 
+static void
+epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
+                            epggrab_ota_svc_link_t *svcl,
+                            const char *op )
+{
+#if ENABLE_TRACE
+  char buf[256];
+  mpegts_mux_t *mm = mpegts_mux_find(ota->om_mux_uuid);
+  mpegts_service_t *svc = mpegts_service_find_by_uuid(svcl->uuid);
+  if (mm && svc) {
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("epggrab", "ota %s %s service %s", buf, op, svc->s_nicename);
+  } else
+    tvhtrace("epggrab", "ota %s, problem? (%p %p)", op, mm, svc);
+#endif
+}
+
 void
 epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
                           const char *uuid, int save )
@@ -489,6 +506,7 @@ epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
     svcl->uuid = strdup(uuid);
     if (save && ota->om_complete)
       epggrab_ota_save(ota);
+    epggrab_ota_service_trace(ota, svcl, "add new");
   }
 }
 
@@ -498,6 +516,7 @@ epggrab_ota_service_del ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
 {
   if (svcl == NULL)
     return;
+  epggrab_ota_service_trace(ota, svcl, "delete");
   RB_REMOVE(&map->om_svcs, svcl, link);
   free(svcl->uuid);
   free(svcl);
