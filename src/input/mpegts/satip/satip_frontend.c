@@ -807,7 +807,7 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     lfe->sf_pids_tcount = lfe->sf_pids_count;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-    r = satip_rtsp_play(rtsp,  "all", NULL, NULL, max_pids_len);
+    r = satip_rtsp_play(rtsp, "all", NULL, NULL, max_pids_len);
     r = r == 0 ? 1 : r;
 
   } else if (!lfe->sf_device->sd_pids_deladd ||
@@ -827,6 +827,9 @@ satip_frontend_pid_changed( http_client_t *rtsp,
            lfe->sf_pids_count * sizeof(uint16_t));
     lfe->sf_pids_tcount = lfe->sf_pids_count;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
+
+    if (!count || add[0] == '\0')
+      return 0;
 
     r = satip_rtsp_play(rtsp, add, NULL, NULL, max_pids_len);
     r = r == 0 ? 1 : r;
