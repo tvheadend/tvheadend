@@ -200,6 +200,9 @@ tvheadend.channel_tab = function(panel)
         titleS: 'Channel',
         titleP: 'Channels',
         tabIndex: 0,
+        help: function() {
+            new tvheadend.help('Channels', 'config_channels.html');
+        },           
         add: {
             url: 'api/channel',
             create: {}
