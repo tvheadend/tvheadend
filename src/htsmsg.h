@@ -136,6 +136,11 @@ void htsmsg_add_s64(htsmsg_t *msg, const char *name,  int64_t s64);
 void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Add a time field where source is an int containing minutes.
+ */
+void htsmsg_add_time(htsmsg_t *msg, const char *name, int time);
+
+/**
  * Add an field where source is a list or map message.
  */
 void htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
@@ -241,6 +246,16 @@ htsmsg_t *htsmsg_field_get_list(htsmsg_field_t *f);
  *         Otherwise a pointer to the data is returned.
  */
 const char *htsmsg_get_str(htsmsg_t *msg, const char *name);
+
+/*
+ * Return the field name as a time in minutes.
+ *
+ * @return An integer containing the time in minutes
+ *         or -1 if the field cannot be found.
+ *         values are normalized to [0 - 24*60>.
+ */
+int
+htsmsg_get_time(htsmsg_t *msg, const char *name);
 
 /**
  * Get a field of type 'map'. No copying is done.
