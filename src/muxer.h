@@ -24,6 +24,8 @@
 #define MC_REWRITE_PAT 0x0001
 #define MC_REWRITE_PMT 0x0002
 
+#define MC_IS_EOS_ERROR(e) ((e) == EPIPE || (e) == ECONNRESET)
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,

@@ -466,7 +466,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 static void
 mk_write_queue(mk_mux_t *mkm, htsbuf_queue_t *q)
 {
-  if(!mkm->error && mk_write_to_fd(mkm, q) && mkm->error != EPIPE)
+  if(!mkm->error && mk_write_to_fd(mkm, q) && !MC_IS_EOS_ERROR(mkm->error))
     tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename, 
 	   strerror(errno));
 

@@ -160,7 +160,7 @@ tvh_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   assert(smt == SMT_PACKET);
 
   if((r = mk_mux_write_pkt(tm->tm_ref, pkt)) != 0) {
-    if (r == EPIPE)
+    if (MC_IS_EOS_ERROR(r))
       tm->m_eos = 1;
     tm->m_errors++;
     return -1;
