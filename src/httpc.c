@@ -240,7 +240,7 @@ http_client_ssl_read_update( http_client_t *hc )
     return -1;
   }
   if (r < 0) {
-    if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+    if (ERRNO_AGAIN(errno)) {
       http_client_poll_dir(hc, 1, 0);
       errno = EAGAIN;
       return r;
@@ -274,7 +274,7 @@ http_client_ssl_write_update( http_client_t *hc )
       memmove(ssl->wbio_buf, ssl->wbio_buf + r, ssl->wbio_pos - r);
       ssl->wbio_pos -= r;
     } else if (r < 0) {
-      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+      if (ERRNO_AGAIN(errno)) {
         http_client_poll_dir(hc, 0, 1);
         errno = EAGAIN;
         return r;
@@ -297,7 +297,7 @@ http_client_ssl_write_update( http_client_t *hc )
       ssl->wbio_pos += len;
     }
     if (r2 < 0) {
-      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
+      if (ERRNO_AGAIN(errno)) {
         http_client_poll_dir(hc, 0, 1);
         errno = EAGAIN;
         return r2;
@@ -383,7 +383,7 @@ write:
       while (1) {
         r2 = http_client_ssl_write_update(hc);
         if (r2 < 0) {
-          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+          if (ERRNO_AGAIN(errno))
             break;
           return r2;
         }
@@ -489,8 +489,7 @@ http_client_send_partial( http_client_t *hc )
                wcmd->wsize - wcmd->wpos, MSG_DONTWAIT);
 skip:
     if (r < 0) {
-      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ||
-          errno == EINPROGRESS) {
+      if (ERRNO_AGAIN(errno) || errno == EINPROGRESS) {
         http_client_direction(hc, 1);
         return HTTP_CON_SENDING;
       }
@@ -838,7 +837,7 @@ http_client_run( http_client_t *hc )
       r = http_client_ssl_shutdown(hc);
       if (r < 0) {
         if (errno != EIO) {
-          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+          if (ERRNO_AGAIN(errno))
             return HTTP_CON_SENDING;
           return r;
         }
@@ -874,7 +873,7 @@ retry:
   if (r < 0) {
     if (errno == EIO && hc->hc_in_data && !hc->hc_keepalive)
       return http_client_finish(hc);
-    if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+    if (ERRNO_AGAIN(errno))
       return HTTP_CON_RECEIVING;
     return http_client_flush(hc, -errno);
   }
@@ -1140,8 +1139,7 @@ http_client_thread ( void *p )
   while (http_running) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
     if (n < 0) {
-      if (http_running &&
-          errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK)
+      if (http_running && !ERRNO_AGAIN(errno))
         tvherror("httpc", "tvhpoll_wait() error");
     } else if (n > 0) {
       if (&http_pipe == ev.data.ptr) {
@@ -1742,7 +1740,7 @@ http_client_testsuite_run( void )
         fprintf(stderr, "HTTPCTS: Enter Poll\n");
         r = tvhpoll_wait(efd, &ev, 1, -1);
         fprintf(stderr, "HTTPCTS: Leave Poll: %i (%s)\n", r, r < 0 ? val2str(-r, ERRNO_tab) : "OK");
-        if (r < 0 && (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK))
+        if (r < 0 && ERRNO_AGAIN(errno))
           continue;
         if (r < 0) {
           fprintf(stderr, "HTTPCTS: Poll result: %s\n", strerror(-r));

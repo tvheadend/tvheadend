@@ -135,7 +135,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
           return -1;
         }
       
-        if (errno != EINTR && errno != EWOULDBLOCK && errno != EAGAIN) {
+        if (!ERRNO_AGAIN(errno)) {
           snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
           tvhpoll_destroy(efd);
           close(fd);
@@ -321,15 +321,15 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     if(x == 0)
       return ETIMEDOUT;
     if(x == -1) {
-      if (errno == EAGAIN)
+      if (ERRNO_AGAIN(errno))
         continue;
       return errno;
     }
 
     x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
     if(x == -1) {
-      if(errno == EAGAIN)
-	      continue;
+      if(ERRNO_AGAIN(errno))
+        continue;
       return errno;
     }
 

@@ -44,7 +44,7 @@ static ssize_t _write
   while ( n < count ) {
     r = write(fd, buf+n, count-n);
     if (r == -1) {
-      if (errno == EAGAIN)
+      if (ERRNO_AGAIN(errno))
         continue;
       else
         return -1;

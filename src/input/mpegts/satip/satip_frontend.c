@@ -1109,7 +1109,7 @@ satip_frontend_input_thread ( void *aux )
     tc = udp_multirecv_read(&um, lfe->sf_rtp->fd, RTP_PKTS, &iovec);
 
     if (tc < 0) {
-      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+      if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
         tvhlog(LOG_WARNING, "satip", "%s - recvmsg() EOVERFLOW", buf);
@@ -1183,7 +1183,7 @@ satip_frontend_input_thread ( void *aux )
           break;
         nfds = tvhpoll_wait(efd, ev, 1, -1);
         if (nfds <= 0) {
-          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+          if (ERRNO_AGAIN(errno))
             continue;
           break;
         }

@@ -111,7 +111,7 @@ tsfile_input_thread ( void *aux )
     /* Read */
     c = sbuf_read(&buf, fd);
     if (c < 0) {
-      if (errno == EAGAIN || errno == EINTR)
+      if (ERRNO_AGAIN(errno))
         continue;
       tvhlog(LOG_ERR, "tsfile", "read() error %d (%s)",
              errno, strerror(errno));

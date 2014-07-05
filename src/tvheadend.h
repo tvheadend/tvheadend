@@ -44,6 +44,8 @@
 
 #include "redblack.h"
 
+#define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
+
 typedef struct {
   const char     *name;
   const uint32_t *enabled;

@@ -667,7 +667,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     
     /* Read */
     if (sbuf_read(&sb, dvr) < 0) {
-      if ((errno == EAGAIN) || (errno == EINTR))
+      if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
         tvhlog(LOG_WARNING, "linuxdvb", "%s - read() EOVERFLOW", buf);

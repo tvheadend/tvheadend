@@ -77,7 +77,7 @@ tvh_write(int fd, const void *buf, size_t len)
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
-      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+      if (ERRNO_AGAIN(errno)) {
         usleep(100);
         continue;
       }
