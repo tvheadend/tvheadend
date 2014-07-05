@@ -45,7 +45,8 @@ extern const idclass_t esfilter_class_ca;
 extern const idclass_t esfilter_class_other;
 
 #define ESF_MASK_VIDEO \
-  (SCT_MASK(SCT_MPEG2VIDEO) | SCT_MASK(SCT_H264) | SCT_MASK(SCT_VP8))
+  (SCT_MASK(SCT_MPEG2VIDEO) | SCT_MASK(SCT_H264) | SCT_MASK(SCT_VP8) | \
+   SCT_MASK(SCT_HEVC))
 
 #define ESF_MASK_AUDIO \
   (SCT_MASK(SCT_MPEG2AUDIO) | SCT_MASK(SCT_AC3) | SCT_MASK(SCT_AAC) | \

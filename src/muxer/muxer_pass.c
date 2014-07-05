@@ -136,6 +136,10 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       c = 0x1b;
       break;
 
+    case SCT_HEVC:
+      c = 0x24;
+      break;
+
     case SCT_AC3:
       c = 0x81;
       break;

@@ -1383,6 +1383,10 @@ psi_parse_pmt
       hts_stream_type = SCT_H264;
       break;
 
+    case 0x24:
+      hts_stream_type = SCT_HEVC;
+      break;
+
     default:
       break;
     }
