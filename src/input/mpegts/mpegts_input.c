@@ -316,9 +316,12 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
   pthread_mutex_lock(&s->s_stream_mutex);
   mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
   mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
-  TAILQ_FOREACH(st, &s->s_components, es_link) {
-    if (st->es_type != SCT_CA)
+  /* Open only filtered components here */
+  TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link) {
+    if (st->es_type != SCT_CA) {
+      st->es_pid_opened = 1;
       mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+    }
   }
 
   pthread_mutex_unlock(&s->s_stream_mutex);
@@ -352,9 +355,12 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_lock(&s->s_stream_mutex);
   mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
   mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
+  /* Close all opened PIDs (the component filter may be changed at runtime) */
   TAILQ_FOREACH(st, &s->s_components, es_link) {
-    if (st->es_type != SCT_CA)
+    if (st->es_pid_opened) {
+      st->es_pid_opened = 0;
       mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+    }
   }
 
 
@@ -453,13 +459,13 @@ ts_sync_count ( const uint8_t *tsb, int len )
 
 void
 mpegts_input_recv_packets
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb, size_t off,
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int i, p = 0;
+  int i, p = 0, len2, off = 0;
   mpegts_packet_t *mp;
-  uint8_t *tsb = sb->sb_data + off;
-  int     len  = sb->sb_ptr  - off;
+  uint8_t *tsb = sb->sb_data;
+  int     len  = sb->sb_ptr;
 #define MIN_TS_PKT 100
 #define MIN_TS_SYN 5
 
@@ -474,6 +480,7 @@ mpegts_input_recv_packets
 // could be a bit more efficient
   while ( (len >= (MIN_TS_SYN * 188)) &&
           ((p = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
+    mmi->mmi_stats.unc++;
     --len;
     ++tsb;
     ++off;
@@ -487,27 +494,26 @@ mpegts_input_recv_packets
   /* Extract PCR (used for tsfile playback) */
   if (pcr && pcr_pid) {
     uint8_t *tmp = tsb;
-    for (i = 0; i < p; i++) {
-      int pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
+    for (i = 0; i < p; i++, tmp += 188) {
+      uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
         ts_recv_packet1(NULL, tmp, pcr, 0);
         if (*pcr != PTS_UNSET) *pcr_pid = pid;
       }
-      tmp += 188;
     }
   }
 
   /* Pass */
   if (p >= MIN_TS_SYN) {
-    size_t sz = sizeof(mpegts_packet_t) + (p * 188);
+    len2 = p * 188;
     
-    mp = calloc(1, sz);
+    mp = malloc(sizeof(mpegts_packet_t) + len2);
     mp->mp_mux  = mmi->mmi_mux;
-    mp->mp_len  = p * 188;
-    memcpy(mp->mp_data, tsb, mp->mp_len);
+    mp->mp_len  = len2;
+    memcpy(mp->mp_data, tsb, len2);
 
-    len -= mp->mp_len;
-    off += mp->mp_len;
+    len -= len2;
+    off += len2;
 
     pthread_mutex_lock(&mi->mi_input_lock);
     if (TAILQ_FIRST(&mi->mi_input_queue) == NULL)
@@ -562,38 +568,45 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 
 static void
 mpegts_input_process
-  ( mpegts_input_t *mi, mpegts_packet_t *mp )
+  ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
-  int len = mp->mp_len;
-  int i = 0, table_wakeup = 0;
-  int table, stream;
-  uint8_t *tsb = mp->mp_data;
-  mpegts_mux_t          *mm  = mp->mp_mux;
+  uint16_t pid;
+  uint8_t cc;
+  uint8_t *tsb = mpkt->mp_data;
+  int len = mpkt->mp_len;
+  int table, stream, f;
+  mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
+  service_t *s;
+  int table_wakeup = 0;
+  uint8_t *end = mpkt->mp_data + len;
+  mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
 
   /* Process */
-  while ( len >= 188 ) {
-    mpegts_pid_t *mp;
-    mpegts_pid_sub_t *mps;
-    service_t *s;
-    int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
-    int cc  = (tsb[i+3] & 0x0f);
-    int pl  = (tsb[i+3] & 0x10) ? 1 : 0;
-    int te  = (tsb[i+1] & 0x80);
-
-    /* Ignore NUL packets */
-    if (pid == 0x1FFF) goto done;
+  assert((len % 188) == 0);
+  while ( tsb < end ) {
+    pid = (tsb[1] << 8) | tsb[2];
+    cc  = tsb[3];
 
     /* Transport error */
-    if (te)
-      ++mmi->mmi_stats.te;
+    if (pid & 0x8000) {
+      if ((pid & 0x1FFF) != 0x1FFF)
+        ++mmi->mmi_stats.te;
+    }
+    
+    pid &= 0x1FFF;
+    
+    /* Ignore NUL packets */
+    if (pid == 0x1FFF) goto done;
 
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
 
       /* Low level CC check */
-      if (pl) {
+      if (cc & 0x10) {
+        cc  &= 0x0f;
         if (mp->mp_cc != -1 && mp->mp_cc != cc) {
           tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, mp->mp_cc);
           ++mmi->mmi_stats.cc;
@@ -630,24 +643,23 @@ mpegts_input_process
       /* Stream data */
       if (stream) {
         LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-          int f;
           if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
           f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb+i, NULL, f);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
         }
       }
 
       /* Table data */
       if (table) {
-        if (!(tsb[i+1] & 0x80)) {
+        if (!(tsb[1] & 0x80)) {
           if (table & MPS_FTABLE)
-            mpegts_input_table_dispatch(mm, tsb+i);
+            mpegts_input_table_dispatch(mm, tsb);
           if (table & MPS_TABLE) {
             // TODO: might be able to optimise this a bit by having slightly
             //       larger buffering and trying to aggregate data (if we get
             //       same PID multiple times in the loop)
             mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
-            memcpy(mtf->mtf_tsb, tsb+i, 188);
+            memcpy(mtf->mtf_tsb, tsb, 188);
             mtf->mtf_mux   = mm;
             TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
             table_wakeup = 1;
@@ -659,14 +671,14 @@ mpegts_input_process
     }
 
 done:
-    i   += 188;
-    len -= 188;
+    tsb += 188;
   }
 
   /* Raw stream */
-  if (i > 0 && LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
+  if (tsb != mpkt->mp_data &&
+      LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
     streaming_message_t sm;
-    pktbuf_t *pb = pktbuf_alloc(tsb, i);
+    pktbuf_t *pb = pktbuf_alloc(mpkt->mp_data, tsb - mpkt->mp_data);
     memset(&sm, 0, sizeof(sm));
     sm.sm_type = SMT_MPEGTS;
     sm.sm_data = pb;
@@ -679,7 +691,7 @@ done:
     pthread_cond_signal(&mi->mi_table_cond);
 
   /* Bandwidth monitoring */
-  atomic_add(&mmi->mmi_stats.bps, i);
+  atomic_add(&mmi->mmi_stats.bps, tsb - mpkt->mp_data);
 }
 
 static void *

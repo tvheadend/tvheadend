@@ -677,6 +677,88 @@ const static struct strtab pilottab[] = {
 dvb_str2val(pilot);
 #undef dvb_str2val
 
+static int
+dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  return
+  snprintf(buf, bufsize,
+           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
+           dvb_delsys2str(dmc->dmc_fe_delsys),
+           dmc->dmc_fe_freq,
+           dvb_bw2str(dmc->u.dmc_fe_ofdm.bandwidth),
+           dvb_qam2str(dmc->dmc_fe_modulation),
+           dvb_hier2str(dmc->u.dmc_fe_ofdm.hierarchy_information),
+           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP),
+           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
+           dvb_guard2str(dmc->u.dmc_fe_ofdm.guard_interval),
+           dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode));
+}
+
+static int
+dvb_mux_conf_str_dvbc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  return
+  snprintf(buf, bufsize,
+           "%s freq %d sym %d mod %s fec %s",
+           dvb_delsys2str(dmc->dmc_fe_delsys),
+           dmc->dmc_fe_freq,
+           dmc->u.dmc_fe_qam.symbol_rate,
+           dvb_qam2str(dmc->dmc_fe_modulation),
+           dvb_fec2str(dmc->u.dmc_fe_qam.fec_inner));
+}
+
+static int
+dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  const char *pol = dvb_pol2str(dmc->u.dmc_fe_qpsk.polarisation);
+  const char dir = dmc->u.dmc_fe_qpsk.orbital_dir;
+  return
+  snprintf(buf, bufsize,
+           "%s pos %d.%d%c freq %d %c sym %d fec %s mod %s roff %s",
+           dvb_delsys2str(dmc->dmc_fe_delsys),
+           dmc->u.dmc_fe_qpsk.orbital_pos / 10,
+           dmc->u.dmc_fe_qpsk.orbital_pos % 10,
+           dir >= ' ' && dir <= 'z' ? dir : '?',
+           dmc->dmc_fe_freq,
+           pol ? pol[0] : 'X',
+           dmc->u.dmc_fe_qpsk.symbol_rate,
+           dvb_fec2str(dmc->u.dmc_fe_qpsk.fec_inner),
+           dvb_qam2str(dmc->dmc_fe_modulation),
+           dvb_rolloff2str(dmc->dmc_fe_rolloff));
+}
+
+static int
+dvb_mux_conf_str_atsc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  return
+  snprintf(buf, bufsize,
+           "%s freq %d mod %s",
+           dvb_delsys2str(dmc->dmc_fe_delsys),
+           dmc->dmc_fe_freq,
+           dvb_qam2str(dmc->dmc_fe_modulation));
+}
+
+int
+dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+{
+  switch (dmc->dmc_fe_type) {
+  case DVB_TYPE_NONE:
+    return
+      snprintf(buf, bufsize, "NONE %s", dvb_delsys2str(dmc->dmc_fe_delsys));
+  case DVB_TYPE_T:
+    return dvb_mux_conf_str_dvbt(dmc, buf, bufsize);
+  case DVB_TYPE_C:
+    return dvb_mux_conf_str_dvbc(dmc, buf, bufsize);
+  case DVB_TYPE_S:
+    return dvb_mux_conf_str_dvbs(dmc, buf, bufsize);
+  case DVB_TYPE_ATSC:
+    return dvb_mux_conf_str_atsc(dmc, buf, bufsize);
+  default:
+    return
+      snprintf(buf, bufsize, "UNKNOWN MUX CONFIG");
+  }
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 /**

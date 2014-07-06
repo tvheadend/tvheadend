@@ -78,6 +78,7 @@ static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
 static pthread_cond_t           http_cond;
 static th_pipe_t                http_pipe;
+static char                    *http_user_agent;
 
 /*
  *
@@ -525,6 +526,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   if (hc->hc_shutdown) {
     if (header)
       http_arg_flush(header);
+    free(wcmd);
     return -EIO;
   }
 
@@ -534,7 +536,10 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   htsbuf_queue_init(&q, 0);
   s = http_cmd2str(cmd);
   if (s == NULL) {
-    http_arg_flush(header);
+error:
+    if (header)
+      http_arg_flush(header);
+    free(wcmd);
     return -EINVAL;
   }
   htsbuf_append(&q, s, strlen(s));
@@ -550,8 +555,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   s = http_ver2str(hc->hc_version);
   if (s == NULL) {
     htsbuf_queue_flush(&q);
-    http_arg_flush(header);
-    return -EINVAL;
+    goto error;
   }
   htsbuf_append(&q, s, strlen(s));
   htsbuf_append(&q, "\r\n", 2);
@@ -998,8 +1002,12 @@ http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
   snprintf(buf, sizeof(buf), "%s:%u", url->host,
                                       http_port(url->scheme, url->port));
   http_arg_set(h, "Host", buf);
-  snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
-  http_arg_set(h, "User-Agent", buf);
+  if (http_user_agent) {
+    http_arg_set(h, "User-Agent", http_user_agent);
+  } else {
+    snprintf(buf, sizeof(buf), "TVHeadend/%s", tvheadend_version);
+    http_arg_set(h, "User-Agent", buf);
+  }
   if (!keepalive)
     http_arg_set(h, "Connection", "close");
   if (url->user && url->user[0] && url->pass && url->pass[0]) {
@@ -1147,12 +1155,14 @@ http_client_thread ( void *p )
       TAILQ_FOREACH(hc, &http_clients, hc_link)
         if (hc == ev.data.ptr)
           break;
-      if (hc == NULL || hc->hc_shutdown_wait) {
-        if (hc->hc_shutdown_wait) {
-          pthread_cond_broadcast(&http_cond);
-          /* Disable the poll looping for this moment */
-          http_client_poll_dir(hc, 0, 0);
-        }
+      if (hc == NULL) {
+        pthread_mutex_unlock(&http_lock);
+        continue;
+      }
+      if (hc->hc_shutdown_wait) {
+        pthread_cond_broadcast(&http_cond);
+        /* Disable the poll looping for this moment */
+        http_client_poll_dir(hc, 0, 0);
         pthread_mutex_unlock(&http_lock);
         continue;
       }
@@ -1345,9 +1355,11 @@ http_client_close ( http_client_t *hc )
 pthread_t http_client_tid;
 
 void
-http_client_init ( void )
+http_client_init ( const char *user_agent )
 {
   tvhpoll_event_t ev;
+
+  http_user_agent = user_agent ? strdup(user_agent) : NULL;
 
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
@@ -1382,6 +1394,7 @@ http_client_done ( void )
   assert(TAILQ_FIRST(&http_clients) == NULL);
   tvh_pipe_close(&http_pipe);
   tvhpoll_destroy(http_poll);
+  free(http_user_agent);
 }
 
 /*

@@ -94,8 +94,9 @@ static http_path_t *
 http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 {
   http_path_t *hp;
-  int n = 0;
+  int n = 0, cut = 0;
   char *v, *path = tvh_strdupa(hc->hc_url);
+  char *npath;
 
   /* Canocalize path (or at least remove excess slashes) */
   v  = path;
@@ -109,19 +110,35 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
       v++;
   }
 
-  LIST_FOREACH(hp, &http_paths, hp_link) {
-    if(!strncmp(path, hp->hp_path, hp->hp_len)) {
-      if(path[hp->hp_len] == 0 ||
-         path[hp->hp_len] == '/' ||
-	       path[hp->hp_len] == '?')
-        break;
-    }
-  }
-  
-  if(hp == NULL)
-    return NULL;
+  while (1) {
 
-  v = hc->hc_url + n + hp->hp_len;
+    LIST_FOREACH(hp, &http_paths, hp_link) {
+      if(!strncmp(path, hp->hp_path, hp->hp_len)) {
+        if(path[hp->hp_len] == 0 ||
+           path[hp->hp_len] == '/' ||
+           path[hp->hp_len] == '?')
+          break;
+      }
+    }
+
+    if(hp == NULL)
+      return NULL;
+
+    cut += hp->hp_len;
+
+    if(hp->hp_path_modify == NULL)
+      break;
+
+    npath = hp->hp_path_modify(hc, path, &cut);
+    if(npath == NULL)
+      break;
+
+    path = tvh_strdupa(npath);
+    free(npath);
+
+  }
+
+  v = hc->hc_url + n + cut;
 
   *remainp = NULL;
   *argsp = NULL;
@@ -648,8 +665,8 @@ http_tokenize(char *buf, char **vec, int vecsize, int delimiter)
  * Add a callback for a given "virtual path" on our HTTP server
  */
 http_path_t *
-http_path_add(const char *path, void *opaque, http_callback_t *callback,
-	      uint32_t accessmask)
+http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
+                     uint32_t accessmask, http_path_modify_t *path_modify)
 {
   http_path_t *hp = malloc(sizeof(http_path_t));
   char *tmp;
@@ -664,10 +681,20 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
   hp->hp_opaque   = opaque;
   hp->hp_callback = callback;
   hp->hp_accessmask = accessmask;
+  hp->hp_path_modify = path_modify;
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
   return hp;
 }
 
+/**
+ * Add a callback for a given "virtual path" on our HTTP server
+ */
+http_path_t *
+http_path_add(const char *path, void *opaque, http_callback_t *callback,
+              uint32_t accessmask)
+{
+  return http_path_add_modify(path, opaque, callback, accessmask, NULL);
+}
 
 /**
  * De-escape HTTP URL

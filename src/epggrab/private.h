@@ -85,13 +85,17 @@ epggrab_module_ext_t *epggrab_module_ext_create
  * OTA module routines
  * *************************************************************************/
 
+typedef struct epggrab_ota_module_ops {
+    void (*start)  (epggrab_module_ota_t *m, struct mpegts_mux *mm);
+    int  (*enable) (void *m, uint8_t e );
+    void (*done)   (epggrab_module_ota_t*m);
+    int  (*tune)   (epggrab_module_ota_t *m, struct mpegts_mux *mm);
+} epggrab_ota_module_ops_t;
+
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
-    void (*start) (epggrab_module_ota_t*m,
-                   struct mpegts_mux *mm),
-    int (*enable) (void *m, uint8_t e ),
-    void (*done) (epggrab_module_ota_t*m),
+    epggrab_ota_module_ops_t *ops,
     epggrab_channel_tree_t *channels );
 
 /* **************************************************************************
@@ -131,8 +135,7 @@ void epggrab_ota_destroy_by_dm     ( struct dvb_mux *dm );
  */
 
 epggrab_ota_mux_t *epggrab_ota_register   
-  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux,
-    int timeout, int interval );
+  ( epggrab_module_ota_t *mod, struct mpegts_mux *mux );
 
 /*
  * State change

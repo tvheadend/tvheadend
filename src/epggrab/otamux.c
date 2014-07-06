@@ -124,9 +124,8 @@ epggrab_ota_done ( epggrab_ota_mux_t *ota, int timeout )
     epggrab_ota_pending_timer_cb(NULL);
   
   /* Remove from active */
-  if (!timeout) {
+  if (!timeout)
     epggrab_ota_active_timer_cb(NULL);
-  }
 }
 
 static void
@@ -191,10 +190,11 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
 
 epggrab_ota_mux_t *
 epggrab_ota_register
-  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm,
-    int interval, int timeout )
+  ( epggrab_module_ota_t *mod, mpegts_mux_t *mm )
 {
   int save = 0;
+  int interval = 3600;
+  int timeout  =  240;
   epggrab_ota_map_t *map;
   epggrab_ota_mux_t *ota;
 
@@ -325,7 +325,8 @@ next_one:
 
   /* Check we have modules attached and enabled */
   LIST_FOREACH(map, &om->om_modules, om_link) {
-    if (map->om_module->enabled)
+    if (map->om_module->enabled &&
+        map->om_module->tune && map->om_module->tune(map->om_module, mm))
       break;
   }
   if (!map) {
@@ -338,7 +339,8 @@ next_one:
   }
 
   /* Subscribe to the mux */
-  if (mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
+  if (mm->mm_is_epg(mm) <= 0 ||
+      mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG)) {
     om->om_active = 0;
     om->om_when   = dispatch_clock + epggrab_ota_period(om, 4) + extra;
     LIST_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_time_cmp);
@@ -479,7 +481,7 @@ epggrab_ota_free ( epggrab_ota_mux_t *ota )
 }
 
 void
-epggrab_ota_done_ ( void )
+epggrab_ota_shutdown ( void )
 {
   epggrab_ota_mux_t *ota;
 

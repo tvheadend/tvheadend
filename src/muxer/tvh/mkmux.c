@@ -273,6 +273,10 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       codec_id = "V_VP8";
       break;
 
+    case SCT_HEVC:
+      tvherror("mkv", "HEVC (H265) codec is not suppored for Matroska muxer (work in progress)");
+      continue;
+
     case SCT_MPEG2AUDIO:
       tracktype = 2;
       codec_id = "A_MPEG/L2";
@@ -462,7 +466,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 static void
 mk_write_queue(mk_mux_t *mkm, htsbuf_queue_t *q)
 {
-  if(!mkm->error && mk_write_to_fd(mkm, q))
+  if(!mkm->error && mk_write_to_fd(mkm, q) && mkm->error != EPIPE)
     tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename, 
 	   strerror(errno));
 

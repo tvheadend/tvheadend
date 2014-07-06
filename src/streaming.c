@@ -508,6 +508,7 @@ static struct strtab streamtypetab[] = {
   { "AAC",        SCT_MP4A },
   { "VP8",        SCT_VP8 },
   { "VORBIS",     SCT_VORBIS },
+  { "HEVC",       SCT_HEVC },
 };
 
 /**

@@ -93,6 +93,7 @@ dvb_desc_sat_del
 {
   int frequency, symrate;
   dvb_mux_conf_t dmc;
+  char buf[128];
 
   /* Not enough data */
   if(len < 11) return NULL;
@@ -133,6 +134,11 @@ dvb_desc_sat_del
   };
   dmc.dmc_fe_delsys     = (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS;
   dmc.dmc_fe_modulation = mtab[ptr[6] & 0x3];
+  if (dmc.dmc_fe_modulation != DVB_MOD_NONE &&
+      dmc.dmc_fe_modulation != DVB_MOD_QPSK)
+    /* standard DVB-S allows only QPSK */
+    /* on 13.0E, there are (ptr[6] & 4) == 0 muxes with 8PSK and DVB-S2 */
+    dmc.dmc_fe_delsys = DVB_SYS_DVBS2;
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
   if (dmc.dmc_fe_delsys == DVB_SYS_DVBS &&
       dmc.dmc_fe_rolloff != DVB_ROLLOFF_35) {
@@ -141,18 +147,8 @@ dvb_desc_sat_del
   }
 
   /* Debug */
-  const char *pol = dvb_pol2str(dmc.u.dmc_fe_qpsk.polarisation);
-  tvhdebug("nit",
-           "    dvb-s%c pos %d%c freq %d %c sym %d fec %s mod %s roff %s",
-           (ptr[6] & 0x4) ? '2' : ' ',
-           dmc.u.dmc_fe_qpsk.orbital_pos, dmc.u.dmc_fe_qpsk.orbital_dir,
-           dmc.dmc_fe_freq,
-           pol ? pol[0] : 'X',
-           symrate,
-           dvb_fec2str(dmc.u.dmc_fe_qpsk.fec_inner),
-           dvb_qam2str(dmc.dmc_fe_modulation),
-           dvb_rolloff2str(dmc.dmc_fe_rolloff)
-          );
+  dvb_mux_conf_str(&dmc, buf, sizeof(buf));
+  tvhdebug("nit", "    %s", buf);
 
   /* Create */
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
@@ -168,6 +164,7 @@ dvb_desc_cable_del
 {
   int frequency, symrate;
   dvb_mux_conf_t dmc;
+  char buf[128];
 
   static const dvb_fe_modulation_t qtab [6] = {
     DVB_MOD_QAM_AUTO, DVB_MOD_QAM_16, DVB_MOD_QAM_32, DVB_MOD_QAM_64,
@@ -207,11 +204,8 @@ dvb_desc_cable_del
   dmc.u.dmc_fe_qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
   /* Debug */
-  tvhdebug("nit", "    dvb-c freq %d sym %d mod %s fec %s",
-           frequency, 
-           symrate,
-           dvb_qam2str(dmc.dmc_fe_modulation),
-           dvb_fec2str(dmc.u.dmc_fe_qam.fec_inner));
+  dvb_mux_conf_str(&dmc, buf, sizeof(buf));
+  tvhdebug("nit", "    %s", buf);
 
   /* Create */
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
@@ -251,6 +245,7 @@ dvb_desc_terr_del
 
   int frequency;
   dvb_mux_conf_t dmc;
+  char buf[128];
 
   /* Not enough data */
   if (len < 11) return NULL;
@@ -277,15 +272,8 @@ dvb_desc_terr_del
   dmc.u.dmc_fe_ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
 
   /* Debug */
-  tvhdebug("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
-           frequency,
-           dvb_bw2str(dmc.u.dmc_fe_ofdm.bandwidth),
-           dvb_qam2str(dmc.dmc_fe_modulation),
-           dvb_hier2str(dmc.u.dmc_fe_ofdm.hierarchy_information),
-           dvb_fec2str(dmc.u.dmc_fe_ofdm.code_rate_HP),
-           dvb_fec2str(dmc.u.dmc_fe_ofdm.code_rate_LP),
-           dvb_guard2str(dmc.u.dmc_fe_ofdm.guard_interval),
-           dvb_mode2str(dmc.u.dmc_fe_ofdm.transmission_mode));
+  dvb_mux_conf_str(&dmc, buf, sizeof(buf));
+  tvhdebug("nit", "    %s", buf);
   
   /* Create */
   return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
@@ -408,6 +396,7 @@ mpegts_table_state_reset
   }
   mt->mt_finished = 0;
   st->complete = 0;
+  st->version = 0xff;  /* invalid */
   memset(st->sections, 0, sizeof(st->sections));
   for (i = 0; i < last / 32; i++)
     st->sections[i] = 0xFFFFFFFF;
@@ -546,6 +535,18 @@ dvb_table_begin
   tvhlog_hexdump(mt->mt_name, ptr, len);
 
   return 1;
+}
+
+void
+dvb_table_reset(mpegts_table_t *mt)
+{
+  mpegts_table_state_t *st;
+
+  tvhtrace(mt->mt_name, "pid %02X complete reset", mt->mt_pid);
+  while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
 }
 
 /*
@@ -1157,6 +1158,7 @@ psi_desc_add_ca
 
   c->caid = caid;
   c->providerid = provid;
+  c->use = 1;
   c->pid = pid;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
@@ -1379,6 +1381,10 @@ psi_parse_pmt
 
     case 0x1b:
       hts_stream_type = SCT_H264;
+      break;
+
+    case 0x24:
+      hts_stream_type = SCT_HEVC;
       break;
 
     default:

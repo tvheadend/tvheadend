@@ -212,19 +212,35 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         return tvheadend.dvrprio.getById(value).data.name;
     }
 
-    var dvrCm = new Ext.grid.ColumnModel([actions, {
-            width: 250,
-            id: 'title',
-            header: "Title",
-            sortable: true,
-            dataIndex: 'title'
-        }, {
-            width: 100,
-            id: 'episode',
-            header: "Episode",
-            sortable: true,
-            dataIndex: 'episode'
-        }, {
+    var cols = [actions];
+    if (iconCls === 'television')
+        cols.push({
+            width: 40,
+            header: "Play",
+            renderer: function(v, o, r) {
+                var title = r.data['title'];
+                if (r.data['episode'])
+                    title += ' / ' + r.data['episode'];
+                return '<a href="play/dvrfile/' + r.data['id'] +
+                       '?title=' + encodeURIComponent(title) + '">Play</a>';
+            }
+        });
+    cols.push({
+        width: 250,
+        id: 'title',
+        header: "Title",
+        sortable: true,
+        dataIndex: 'title'
+    });
+    cols.push({
+        width: 100,
+        id: 'episode',
+        header: "Episode",
+        sortable: true,
+        dataIndex: 'episode'
+    });
+    if (iconCls === 'clock')
+        cols.push({
             width: 100,
             id: 'pri',
             header: "Priority",
@@ -232,29 +248,34 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             dataIndex: 'pri',
             renderer: renderPri,
             hidden: iconCls !== 'clock'
-        }, {
-            width: 100,
-            id: 'start',
-            header: iconCls === 'clock' ? "Start" : "Date/Time",
-            sortable: true,
-            dataIndex: 'start',
-            renderer: renderDate
-        }, {
-            width: 100,
-            hidden: true,
-            id: 'end',
-            header: "End",
-            sortable: true,
-            dataIndex: 'end',
-            renderer: renderDate
-        }, {
-            width: 100,
-            id: 'duration',
-            header: "Duration",
-            sortable: true,
-            dataIndex: 'duration',
-            renderer: renderDuration
-        }, {
+        });
+    cols.push({
+        width: 100,
+        id: 'start',
+        header: iconCls === 'clock' ? "Start" : "Date/Time",
+        sortable: true,
+        dataIndex: 'start',
+        renderer: renderDate
+    });
+    cols.push({
+        width: 100,
+        hidden: true,
+        id: 'end',
+        header: "End",
+        sortable: true,
+        dataIndex: 'end',
+        renderer: renderDate
+    });
+    cols.push({
+        width: 100,
+        id: 'duration',
+        header: "Duration",
+        sortable: true,
+        dataIndex: 'duration',
+        renderer: renderDuration
+    });
+    if (iconCls === 'television')
+        cols.push({
             width: 100,
             id: 'filesize',
             header: "Filesize",
@@ -262,20 +283,24 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             dataIndex: 'filesize',
             renderer: renderSize,
             hidden: iconCls !== 'television'
-        }, {
-            width: 250,
-            id: 'channel',
-            header: "Channel",
-            sortable: true,
-            dataIndex: 'channel'
-        }, {
-            width: 200,
-            id: 'creator',
-            header: "Created by",
-            sortable: true,
-            hidden: true,
-            dataIndex: 'creator'
-        }, {
+        });
+    cols.push({
+        width: 250,
+        id: 'channel',
+        header: "Channel",
+        sortable: true,
+        dataIndex: 'channel'
+    });
+    cols.push({
+        width: 200,
+        id: 'creator',
+        header: "Created by",
+        sortable: true,
+        hidden: true,
+        dataIndex: 'creator'
+    });
+    if (iconCls === 'clock')
+        cols.push({
             width: 200,
             id: 'config_name',
             header: "DVR Configuration",
@@ -290,14 +315,18 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             },
             dataIndex: 'config_name',
             hidden: iconCls !== 'clock'
-        }, {
+        });
+    if (iconCls === 'exclamation')
+        cols.push({
             width: 200,
             id: 'status',
             header: "Status",
             sortable: true,
             dataIndex: 'status',
             hidden: iconCls !== 'exclamation'
-        }]);
+        });
+
+    var dvrCm = new Ext.grid.ColumnModel({columns: cols});
 
     function addEntry() {
 
@@ -468,10 +497,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         bbar: bbar
     });
 
-    panel.on('rowclick', rowclicked);
-    function rowclicked(grid, index) {
-        new tvheadend.dvrDetails(grid.getStore().getAt(index).data);
+
+    panel.on('cellclick', cellclicked);
+    function cellclicked(grid, rowIndex, colIndex) {
+        if (grid.getColumnModel().getColumnHeader(colIndex) !== 'Play')
+            new tvheadend.dvrDetails(grid.getStore().getAt(rowIndex).data);
     }
+
     return panel;
 };
 

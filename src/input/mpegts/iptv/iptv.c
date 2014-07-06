@@ -237,10 +237,6 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   mpegts_network_link_t *mnl;
 
-  // Not active??
-  if (!im->mm_active)
-    return;
-  
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
@@ -277,7 +273,6 @@ iptv_input_thread ( void *aux )
 {
   int nfds;
   ssize_t n;
-  size_t off;
   iptv_mux_t *im;
   tvhpoll_event_t ev;
 
@@ -302,13 +297,12 @@ iptv_input_thread ( void *aux )
       goto done;
 
     /* Get data */
-    off = 0;
-    if ((n = im->im_handler->read(im, &off)) < 0) {
+    if ((n = im->im_handler->read(im)) < 0) {
       tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
       im->im_handler->stop(im);
       goto done;
     }
-    iptv_input_recv_packets(im, n, off);
+    iptv_input_recv_packets(im, n);
 
 done:
     pthread_mutex_unlock(&iptv_lock);
@@ -317,10 +311,12 @@ done:
 }
 
 void
-iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
+iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
+  mpegts_mux_instance_t *mmi;
+
   in->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
@@ -337,8 +333,10 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len, size_t off )
   }
 
   /* Pass on */
-  mpegts_input_recv_packets((mpegts_input_t*)iptv_input, im->mm_active,
-                            &im->mm_iptv_buffer, off, NULL, NULL);
+  mmi = im->mm_active;
+  if (mmi)
+    mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
+                              &im->mm_iptv_buffer, NULL, NULL);
 }
 
 void
@@ -349,7 +347,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
   im->mm_display_name((mpegts_mux_t*)im, buf, sizeof(buf));
 
   /* Allocate input buffer */
-  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_PKT_SIZE);
+  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   /* Setup poll */
   if (im->mm_iptv_fd > 0) {

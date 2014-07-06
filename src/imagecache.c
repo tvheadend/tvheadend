@@ -136,7 +136,7 @@ static int
 imagecache_image_fetch ( imagecache_image_t *img )
 {
   int res = 1, r;
-  FILE *fp;
+  FILE *fp = NULL;
   url_t url;
   char tmp[256], path[256];
   tvhpoll_event_t ev;
@@ -156,21 +156,21 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (!(fp = fopen(tmp, "wb")))
     goto error;
   
+  /* Fetch (release lock, incase of delays) */
+  pthread_mutex_unlock(&global_lock);
+
   /* Build command */
   tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
   memset(&url, 0, sizeof(url));
   if (urlparse(img->url, &url)) {
     tvherror("imagecache", "Unable to parse url '%s'", img->url);
-    goto error;
+    goto error_lock;
   }
-
-  /* Fetch (release lock, incase of delays) */
-  pthread_mutex_unlock(&global_lock);
 
   hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
                            url.host, url.port, NULL);
   if (hc == NULL)
-    goto error;
+    goto error_lock;
 
   http_client_ssl_peer_verify(hc, imagecache_conf.ignore_sslcert ? 0 : 1);
   hc->hc_handle_location = 1;
@@ -180,7 +180,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   r = http_client_simple(hc, &url);
   if (r < 0)
-    goto error;
+    goto error_lock;
 
   while (tvheadend_running) {
     r = tvhpoll_wait(efd, &ev, 1, -1);
@@ -199,11 +199,15 @@ imagecache_image_fetch ( imagecache_image_t *img )
       break;
     }
   }
-
-  pthread_mutex_lock(&global_lock);
+  fclose(fp);
+  fp = NULL;
 
   /* Process */
+error_lock:
+  pthread_mutex_lock(&global_lock);
 error:
+  if (fp)
+    fclose(fp);
   urlreset(&url);
   tvhpoll_destroy(efd);
   img->state = IDLE;

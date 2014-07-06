@@ -448,10 +448,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
-    void (*start) (epggrab_module_ota_t*m,
-                   struct mpegts_mux *dm),
-    int (*enable) (void *m, uint8_t e ),
-    void (*done) (epggrab_module_ota_t *m),
+    epggrab_ota_module_ops_t *ops,
     epggrab_channel_tree_t *channels )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
@@ -461,9 +458,10 @@ epggrab_module_ota_t *epggrab_module_ota_create
 
   /* Setup */
   skel->type   = EPGGRAB_OTA;
-  skel->enable = enable;
-  skel->start  = start;
-  skel->done   = done;
+  skel->enable = ops->enable;
+  skel->start  = ops->start;
+  skel->done   = ops->done;
+  skel->tune   = ops->tune;
   //TAILQ_INIT(&skel->muxes);
 
   return skel;

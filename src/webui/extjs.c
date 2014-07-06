@@ -1447,107 +1447,6 @@ extjs_service_delete(htsmsg_t *in)
  *
  */
 static int
-extjs_servicedetails(http_connection_t *hc, 
-		     const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *streams, *c;
-  service_t *t;
-  elementary_stream_t *st;
-  caid_t *ca;
-  char buf[128];
-
-  pthread_mutex_lock(&global_lock);
-
-  if(remain == NULL || (t = service_find_by_identifier(remain)) == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    return 404;
-  }
-
-  streams = htsmsg_create_list();
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    c = htsmsg_create_map();
-
-    htsmsg_add_u32(c, "pid", st->es_pid);
-
-    htsmsg_add_str(c, "type", streaming_component_type2txt(st->es_type));
-
-    switch(st->es_type) {
-    default:
-      htsmsg_add_str(c, "details", "");
-      break;
-
-    case SCT_CA:
-      buf[0] = 0;
-
-      LIST_FOREACH(ca, &st->es_caids, link) {
-	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), 
-		 "%s (0x%04x) [0x%08x]",
-		 "TODO"/*psi_caid2name(ca->caid)*/, ca->caid, ca->providerid);
-      }
-
-      htsmsg_add_str(c, "details", buf);
-      break;
-
-    case SCT_AC3:
-    case SCT_MP4A:
-    case SCT_AAC:
-    case SCT_MPEG2AUDIO:
-      if (st->es_audio_type) {
-        snprintf(buf, sizeof(buf), "%s (%s)", st->es_lang,
-  	       streaming_component_audio_type2desc(st->es_audio_type));
-        htsmsg_add_str(c, "details", buf);
-      } else {
-        htsmsg_add_str(c, "details", st->es_lang);
-      }
-      break;
-
-    case SCT_DVBSUB:
-      snprintf(buf, sizeof(buf), "%s (%04x %04x)",
-	       st->es_lang, st->es_composition_id, st->es_ancillary_id);
-      htsmsg_add_str(c, "details", buf);
-      break;
-
-    case SCT_MPEG2VIDEO:
-    case SCT_H264:
-      buf[0] = 0;
-      if(st->es_frame_duration)
-	snprintf(buf, sizeof(buf), "%2.2f Hz",
-		 90000.0 / st->es_frame_duration);
-      htsmsg_add_str(c, "details", buf);
-      break;
-    }
-
-    htsmsg_add_msg(streams, NULL, c);
-  }
-
-  out = htsmsg_create_map();
-#ifdef TODO_FIX_THIS
-  htsmsg_add_str(out, "title", t->s_svcname ?: "unnamed service");
-#endif
-
-  htsmsg_add_msg(out, "streams", streams);
-
-#ifdef TODO_FIX_THIS
-  if(t->s_dvb_charset != NULL)
-    htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
-
-  htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
-#endif
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-/**
- *
- */
-static int
 extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1833,7 +1732,6 @@ extjs_start(void)
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
-  http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
 #if ENABLE_TIMESHIFT
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif

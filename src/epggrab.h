@@ -221,7 +221,8 @@ struct epggrab_module_ota
 
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
-  void (*done) ( epggrab_module_ota_t *m );
+  void (*done)  ( epggrab_module_ota_t *m );
+  int  (*tune)  ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
 };
 
 /*
@@ -267,7 +268,7 @@ void epggrab_init                 ( void );
 void epggrab_done                 ( void );
 void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
-void epggrab_ota_done_            ( void );
+void epggrab_ota_shutdown         ( void );
 
 /* **************************************************************************
  * Global Functions

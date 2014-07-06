@@ -260,7 +260,7 @@ void linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld );
 linuxdvb_lnb_t    *linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 linuxdvb_diseqc_t *linuxdvb_switch_create0
-  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int u, int c );
+  ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int c, int u );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
 linuxdvb_diseqc_t *linuxdvb_en50494_create0

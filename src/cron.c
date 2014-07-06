@@ -57,8 +57,8 @@ cron_parse_field
   uint64_t    val = 0;
   while ( 1 ) {
     if ( *str == '*' ) {
-      sn     = 0;
-      en     = bits - 1;
+      sn     = off;
+      en     = bits + off - 1;
       beg    = NULL;
     } else if ( *str == ',' || *str == ' ' || *str == '\0' ) {
       if (beg)
@@ -70,7 +70,7 @@ cron_parse_field
       if (mn < 0) mn = 1;
       while (sn <= en) {
         if ( (sn % mn) == 0 )
-          val |= (0x1LL << (sn - off));
+          val |= (0x1ULL << (sn - off));
         sn++;
       }
       if (*str != ',') break;
@@ -227,7 +227,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
   /* Date */
   if (nxt.tm_wday == 7)
     nxt.tm_wday = 0;
-  if (nxt.tm_mday == days_in_month(nxt.tm_year+1900, nxt.tm_mon+1)) {
+  if (nxt.tm_mday > days_in_month(nxt.tm_year+1900, nxt.tm_mon+1)) {
     nxt.tm_mday = 1;
     nxt.tm_mon++;
     if (nxt.tm_mon == 12) {

@@ -262,7 +262,7 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 /**
  * Service lock must be held
  */
-static void
+void
 service_stop(service_t *t)
 {
   elementary_stream_t *st;
@@ -283,7 +283,7 @@ service_stop(service_t *t)
   /**
    * Clean up each stream
    */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
   t->s_status = SERVICE_IDLE;
@@ -345,7 +345,7 @@ service_build_filter(service_t *t)
 {
   elementary_stream_t *st, *st2, **sta;
   esfilter_t *esf;
-  caid_t *ca;
+  caid_t *ca, *ca2;
   int i, n, p, o, exclusive;
   uint32_t mask;
 
@@ -364,6 +364,10 @@ filter:
   n = 0;
   TAILQ_FOREACH(st, &t->s_components, es_link) {
     st->es_filter = 0;
+    LIST_FOREACH(ca, &st->es_caids, link) {
+      ca->use = 0;
+      ca->filter = 0;
+    }
     n++;
   }
 
@@ -397,77 +401,138 @@ filter:
           if (esf->esf_pid && esf->esf_pid != st->es_pid)
             continue;
         }
-        if (i == ESF_CLASS_CA &&
-            (esf->esf_caid != -1 || esf->esf_caprovider != -1)) {
-          LIST_FOREACH(ca, &st->es_caids, link) {
-            if (esf->esf_caid != -1 && ca->caid != esf->esf_caid)
+        if (i == ESF_CLASS_CA) {
+          ca = NULL;
+          if ((esf->esf_caid != (uint16_t)-1 || esf->esf_caprovider != -1)) {
+            LIST_FOREACH(ca, &st->es_caids, link) {
+              if (esf->esf_caid != -1 && ca->caid != esf->esf_caid)
+                continue;
+              if (esf->esf_caprovider != -1 && ca->providerid != esf->esf_caprovider)
+                continue;
+              break;
+            }
+            if (ca == NULL)
               continue;
-            if (esf->esf_caprovider != -1 && ca->providerid != esf->esf_caprovider)
-              continue;
+          }
+          if (esf->esf_log)
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %04x %06x \"%s\" %s",
+              esfilter_class2txt(i), esf->esf_index, st->es_pid,
+              esf->esf_caid, esf->esf_caprovider, t->s_nicename,
+              esfilter_action2txt(esf->esf_action));
+          switch (esf->esf_action) {
+          case ESFA_NONE:
+            break;
+          case ESFA_IGNORE:
+ca_ignore:
+            if (ca == NULL)
+              LIST_FOREACH(ca, &st->es_caids, link)
+                ca->filter |= ESFM_IGNORE;
+            else
+              ca->filter |= ESFM_IGNORE;
+            st->es_filter |= ESFM_IGNORE;
+            break;
+          case ESFA_ONCE:
+            TAILQ_FOREACH(st2, &t->s_components, es_link)
+              if (st2->es_type == SCT_CA && (st2->es_filter & ESFM_USED) != 0)
+                break;
+            if (st2 != NULL) goto ca_ignore;
+            /* fall through */
+          case ESFA_USE:
+            if (ca == NULL)
+              LIST_FOREACH(ca, &st->es_caids, link)
+                ca->filter |= ESFM_USED;
+            else
+              ca->filter |= ESFM_USED;
+            service_build_filter_add(t, st, sta, &p);
+            break;
+          case ESFA_EXCLUSIVE:
+            if (ca == NULL)
+              LIST_FOREACH(ca, &st->es_caids, link)
+                ca->use = 1;
+            else {
+              LIST_FOREACH(ca2, &st->es_caids, link)
+                ca2->use = 0;
+              ca->use = 1;
+            }
+            break;
+          case ESFA_EMPTY:
+            if (p == o)
+              service_build_filter_add(t, st, sta, &p);
+            break;
+          default:
+            tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
             break;
           }
-          if (ca == NULL)
-            continue;
-        }
-        if (esf->esf_log)
-          tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s %s %s",
-            esfilter_class2txt(i), esf->esf_index,
-            st->es_pid, streaming_component_type2txt(st->es_type),
-            lang_code_get(st->es_lang), t->s_nicename,
-            esfilter_action2txt(esf->esf_action));
-        switch (esf->esf_action) {
-        case ESFA_NONE:
-          break;
-        case ESFA_IGNORE:
-          st->es_filter |= ESFM_IGNORE;
-          break;
-        case ESFA_USE:
-          service_build_filter_add(t, st, sta, &p);
-          break;
-        case ESFA_ONCE:
-          if (esf->esf_language[0] == '\0') {
-            service_build_filter_add(t, st, sta, &p);
-          } else {
-            int present = 0;
+        } else {
+          if (esf->esf_log)
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s \"%s\" %s",
+              esfilter_class2txt(i), esf->esf_index,
+              st->es_pid, streaming_component_type2txt(st->es_type),
+              lang_code_get(st->es_lang), t->s_nicename,
+              esfilter_action2txt(esf->esf_action));
+          switch (esf->esf_action) {
+          case ESFA_NONE:
+            break;
+          case ESFA_IGNORE:
+ignore:
+            st->es_filter |= ESFM_IGNORE;
+            break;
+          case ESFA_ONCE:
             TAILQ_FOREACH(st2, &t->s_components, es_link) {
+              if (st == st2)
+                continue;
               if ((st2->es_filter & ESFM_USED) == 0)
                 continue;
-              if (strcmp(st2->es_lang, st->es_lang) == 0) {
-                present = 1;
-                break;
-              }
+              if ((mask & SCT_MASK(st2->es_type)) == 0)
+                continue;
+              if (esf->esf_language[0] != '\0' && strcmp(st2->es_lang, st->es_lang))
+                continue;
+              break;
             }
-            if (!present)
-              service_build_filter_add(t, st, sta, &p);
-          }
-          break;
-        case ESFA_EXCLUSIVE:
-          break;
-        case ESFA_EMPTY:
-          if (p == o)
+            if (st2 != NULL) goto ignore;
+            /* fall through */
+          case ESFA_USE:
             service_build_filter_add(t, st, sta, &p);
-          break;
-        default:
-          tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
-          break;
+            break;
+          case ESFA_EXCLUSIVE:
+            break;
+          case ESFA_EMPTY:
+            if (p == o)
+              service_build_filter_add(t, st, sta, &p);
+            break;
+          default:
+            tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
+            break;
+          }
         }
         if (esf->esf_action == ESFA_EXCLUSIVE) {
           /* forget previous work */
           while (p > o) {
             p--;
+            LIST_FOREACH(ca, &sta[p]->es_caids, link)
+              ca->use = 0;
             TAILQ_REMOVE(&t->s_filt_components, sta[p], es_filt_link);
           }
+          st->es_filter = 0;
           service_build_filter_add(t, st, sta, &p);
           exclusive = 1;
           break;
         }
       }
+      if (exclusive) break;
     }
     if (!exclusive) {
       TAILQ_FOREACH(st, &t->s_components, es_link) {
         if ((mask & SCT_MASK(st->es_type)) != 0 &&
-            (st->es_filter & (ESFM_USED|ESFM_IGNORE)) == 0)
+            (st->es_filter & (ESFM_USED|ESFM_IGNORE)) == 0) {
           service_build_filter_add(t, st, sta, &p);
+          LIST_FOREACH(ca, &st->es_caids, link)
+            ca->use = 1;
+        } else {
+          LIST_FOREACH(ca, &st->es_caids, link)
+            if (ca->filter & ESFM_USED)
+              ca->use = 1;
+        }
       }
     }
   }
@@ -491,7 +556,10 @@ service_start(service_t *t, int instance)
   t->s_scrambled_seen   = 0;
   t->s_start_time       = dispatch_clock;
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
+  descrambler_caid_changed(t);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   if((r = t->s_start_feed(t, instance)))
     return r;
@@ -506,7 +574,7 @@ service_start(service_t *t, int instance)
   /**
    * Initialize stream
    */
-  TAILQ_FOREACH(st, &t->s_filt_components, es_link)
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
     stream_init(st);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -1021,7 +1089,6 @@ service_restart(service_t *t, int had_components)
   }
 
   service_build_filter(t);
-  descrambler_service_start(t);
 
   if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
     sm = streaming_msg_create_data(SMT_START, 
@@ -1034,6 +1101,8 @@ service_restart(service_t *t, int had_components)
 
   if(t->s_refresh_feed != NULL)
     t->s_refresh_feed(t);
+
+  descrambler_service_start(t);
 }
 
 
@@ -1564,6 +1633,8 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
   c->caid = caid;
   c->providerid = providerid;
   c->pid = 0;
+  c->use = 1;
+  c->filter = 0;
   LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 

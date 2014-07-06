@@ -52,17 +52,24 @@ mpegts_table_dispatch
   if(mt->mt_destroyed)
     return;
 
-  /* It seems some hardware (or is it the dvb API?) does not
-     honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
-    tvhwarn(mt->mt_name, "invalid checksum");
-    return;
-  }
-
   /* Table info */
   tid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
-  
+
+  if (tid == 0x72) { /* stuffing section */
+    if (len != r - 3)
+      tvhwarn(mt->mt_name, "stuffing found with trailing data (len %i, total %zi)", len, r);
+    dvb_table_reset(mt);
+    return;
+  }
+
+  /* It seems some hardware (or is it the dvb API?) does not
+     honour the DMX_CHECK_CRC flag, so we check it again */
+  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
+    tvhwarn(mt->mt_name, "invalid checksum (len %zi)", r);
+    return;
+  }
+
   /* Not enough data */
   if(len < r - 3) {
     tvhtrace(mt->mt_name, "not enough data, %d < %d", (int)r, len);
@@ -104,11 +111,8 @@ void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
   struct mpegts_table_state *st;
-  LIST_REMOVE(mt, mt_link);
   mt->mt_destroyed = 1;
-  mt->mt_mux->mm_num_tables--;
-  if (mt->mt_subscribed)
-    mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  mt->mt_mux->mm_close_table(mt->mt_mux, mt);
   while ((st = RB_FIRST(&mt->mt_state))) {
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
@@ -141,8 +145,7 @@ mpegts_table_add
       mt->mt_callback   = callback;
       mt->mt_pid        = pid;
       mt->mt_table      = tableid;
-      mt->mt_subscribed = 1;
-      mm->mm_open_table(mm, mt);
+      mm->mm_open_table(mm, mt, 1);
     } else if (pid >= 0) {
       if (mt->mt_pid != pid)
         continue;
@@ -151,10 +154,8 @@ mpegts_table_add
     } else {
       if (strcmp(mt->mt_name, name))
         continue;
-      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
-        mt->mt_subscribed = 1;
-        mm->mm_open_table(mm, mt);
-      }
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed)
+        mm->mm_open_table(mm, mt, 1);
     }
     return mt;
   }
@@ -174,8 +175,6 @@ mpegts_table_add
   mt->mt_mask     = mask;
   mt->mt_mux      = mm;
   mt->mt_cc       = -1;
-  LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
-  mm->mm_num_tables++;
 
   /* Open table */
   if (pid < 0) {
@@ -186,10 +185,7 @@ mpegts_table_add
     if (mm->mm_scan_state == MM_SCAN_STATE_IDLE)
       subscribe = 0;
   }
-  if (subscribe) {
-    mt->mt_subscribed = 1;
-    mm->mm_open_table(mm, mt);
-  }
+  mm->mm_open_table(mm, mt, subscribe);
   return mt;
 }
 

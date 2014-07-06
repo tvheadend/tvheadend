@@ -111,6 +111,8 @@ htsmsg_field_find(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
 
+  if (msg == NULL || name == NULL)
+    return NULL;
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     if(f->hmf_name != NULL && !strcmp(f->hmf_name, name))
       return f;

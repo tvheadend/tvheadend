@@ -55,6 +55,8 @@
 #include <sys/uio.h>
 #endif
 
+static int webui_xspf;
+
 /**
  *
  */
@@ -337,7 +339,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     streaming_msg_free(sm);
 
     if(mux->m_errors) {
-      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
+      if (!mux->m_eos)
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
       run = 0;
     }
   }
@@ -465,24 +468,51 @@ http_tag_list_playlist(http_connection_t *hc)
  * Output a flat playlist with all channels
  */
 static int
+http_channel_list_playlist_cmp(const void *a, const void *b)
+{
+  channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
+  int r = channel_get_number(c1) - channel_get_number(c2);
+  if (r == 0)
+    r = strcasecmp(channel_get_name(c1), channel_get_name(c2));
+  return r;
+}
+
+static int
 http_channel_list_playlist(http_connection_t *hc)
 {
   htsbuf_queue_t *hq;
   char buf[255];
   channel_t *ch;
+  channel_t **chlist;
   const char *host;
+  int idx = 0, count = 0;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
+  CHANNEL_FOREACH(ch)
+    count++;
+
+  chlist = malloc(count * sizeof(channel_t *));
+
+  CHANNEL_FOREACH(ch)
+    chlist[idx++] = ch;
+
+  assert(idx == count);
+
+  qsort(chlist, count, sizeof(channel_t *), http_channel_list_playlist_cmp);
+
   htsbuf_qprintf(hq, "#EXTM3U\n");
-  CHANNEL_FOREACH(ch) {
+  for (idx = 0; idx < count; idx++) {
+    ch = chlist[idx];
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
        access_ticket_create(buf));
   }
+
+  free(chlist);
 
   http_output_content(hc, "audio/x-mpegurl");
 
@@ -915,6 +945,107 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * Generate a xspf playlist
+ * http://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format
+ */
+static int
+page_xspf(http_connection_t *hc, const char *remain, void *opaque)
+{
+  size_t maxlen;
+  char *buf;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *title;
+  size_t len;
+
+  if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
+    title = "TVHeadend Stream";
+
+  maxlen = strlen(remain) + strlen(title) + 256;
+  buf = alloca(maxlen);
+
+  snprintf(buf, maxlen, "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\
+<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\r\n\
+  <trackList>\r\n\
+     <track>\r\n\
+       <title>%s</title>\r\n\
+       <location>http://%s/%s</location>\r\n\
+     </track>\r\n\
+  </trackList>\r\n\
+</playlist>\r\n", title, host, remain);
+
+  len = strlen(buf);
+  http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL);
+  tvh_write(hc->hc_fd, buf, len);
+
+  return 0;
+}
+
+/**
+ * Generate an M3U playlist
+ * http://en.wikipedia.org/wiki/M3U
+ */
+static int
+page_m3u(http_connection_t *hc, const char *remain, void *opaque)
+{
+  size_t maxlen;
+  char *buf;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *title;
+  size_t len;
+
+  if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
+    title = "TVHeadend Stream";
+
+  maxlen = strlen(remain) + strlen(title) + 256;
+  buf = alloca(maxlen);
+
+  snprintf(buf, maxlen, "\
+#EXTM3U\r\n\
+#EXTINF:-1,%s\r\n\
+http://%s/%s\r\n", title, host, remain);
+
+  len = strlen(buf);
+  http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL);
+  tvh_write(hc->hc_fd, buf, len);
+
+  return 0;
+}
+
+static char *
+page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
+{
+  /*
+   * For curl and wget do not set the playlist, stream directly
+   */
+  const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
+  if (strncasecmp(agent, "curl/", 5) == 0 ||
+      strncasecmp(agent, "wget/", 5) == 0)
+    return strdup(path + 5);
+  return NULL;
+}
+
+static int
+page_play(http_connection_t *hc, const char *remain, void *opaque)
+{
+  char *playlist;
+
+  if(remain == NULL)
+    return 404;
+
+  playlist = http_arg_get(&hc->hc_req_args, "playlist");
+  if (playlist) {
+    if (strcmp(playlist, "xspf") == 0)
+      return page_xspf(hc, remain, opaque);
+    if (strcmp(playlist, "m3u") == 0)
+      return page_m3u(hc, remain, opaque);
+  }
+  if (webui_xspf)
+    return page_xspf(hc, remain, opaque);
+  return page_m3u(hc, remain, opaque);
+}
+
+/**
  * Download a recorded file
  */
 static int
@@ -1107,14 +1238,17 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
  * WEB user interface
  */
 void
-webui_init(void)
+webui_init(int xspf)
 {
+  webui_xspf = xspf;
+
   if (tvheadend_webui_debug)
     tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
+  http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEB_INTERFACE);

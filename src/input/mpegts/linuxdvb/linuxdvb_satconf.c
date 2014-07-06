@@ -294,7 +294,7 @@ const idclass_t linuxdvb_satconf_2port_class =
 const idclass_t linuxdvb_satconf_4port_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
-  .ic_class      = "linuxdvb_satconf_2port",
+  .ic_class      = "linuxdvb_satconf_4port",
   .ic_caption    = "DVB-S 4-port",
   .ic_properties = (const property_t[]) {
     {
@@ -1259,7 +1259,7 @@ linuxdvb_diseqc_send
 
   /* Send */
   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
-    tvherror("disqec", "failed to send diseqc cmd (e=%s)", strerror(errno));
+    tvherror("diseqc", "failed to send diseqc cmd (e=%s)", strerror(errno));
     return -1;
   }
   return 0;

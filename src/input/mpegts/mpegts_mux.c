@@ -311,6 +311,13 @@ const idclass_t mpegts_mux_class =
       .notify   = mpegts_mux_class_enabled_notify,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "epg",
+      .name     = "EPG",
+      .off      = offsetof(mpegts_mux_t, mm_epg),
+      .def.i    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "network",
       .name     = "Network",
@@ -437,6 +444,12 @@ static int
 mpegts_mux_is_enabled ( mpegts_mux_t *mm )
 {
   return mm->mm_enabled;
+}
+
+static int
+mpegts_mux_is_epg ( mpegts_mux_t *mm )
+{
+  return mm->mm_epg;
 }
 
 static void
@@ -673,18 +686,29 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 }
 
 void
-mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 {
+  mpegts_input_t *mi;
   int type = 0;
+
   if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
   if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
   if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
-  mpegts_input_t *mi;
-  if (!mm->mm_active || !mm->mm_active->mmi_input) return;
+  if (!mm->mm_active || !mm->mm_active->mmi_input) {
+    mt->mt_subscribed = 0;
+    LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
+    mm->mm_num_tables++;
+    return;
+  }
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_output_lock);
-  mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
+  LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
+  mm->mm_num_tables++;
+  if (subscribe) {
+    mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
+    mt->mt_subscribed = 1;
+  }
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
@@ -693,14 +717,25 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
   int type = 0;
+
   if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
   if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
   if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
   if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
-  if (!mm->mm_active || !mm->mm_active->mmi_input) return;
+  if (!mm->mm_active || !mm->mm_active->mmi_input) {
+    mt->mt_subscribed = 0;
+    LIST_REMOVE(mt, mt_link);
+    mm->mm_num_tables--;
+    return;
+  }
   mi = mm->mm_active->mmi_input;
   pthread_mutex_lock(&mi->mi_output_lock);
-  mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
+  LIST_REMOVE(mt, mt_link);
+  mm->mm_num_tables--;
+  if (mt->mt_subscribed) {
+    mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
+    mt->mt_subscribed = 0;
+  }
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
@@ -797,6 +832,7 @@ mpegts_mux_create0
 
   /* Enabled by default */
   mm->mm_enabled             = 1;
+  mm->mm_epg                 = 1;
 
   /* Identification */
   mm->mm_onid                = onid;
@@ -811,6 +847,7 @@ mpegts_mux_create0
   mm->mm_display_name        = mpegts_mux_display_name;
   mm->mm_config_save         = mpegts_mux_config_save;
   mm->mm_is_enabled          = mpegts_mux_is_enabled;
+  mm->mm_is_epg              = mpegts_mux_is_epg;
 
   /* Start/stop */
   mm->mm_start               = mpegts_mux_start;

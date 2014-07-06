@@ -78,8 +78,9 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   iptv_mux_t *im = (iptv_mux_t*)mm;
 
   if (delconf)
-    hts_settings_remove("input/iptv/muxes/%s/config",
-                      idnode_uuid_as_str(&mm->mm_id));
+    hts_settings_remove("input/iptv/networks/%s/muxes/%s/config",
+                        idnode_uuid_as_str(&mm->mm_network->mn_id),
+                        idnode_uuid_as_str(&mm->mm_id));
 
   url = im->mm_iptv_url; // Workaround for silly printing error
   free(im->mm_iptv_interface);
