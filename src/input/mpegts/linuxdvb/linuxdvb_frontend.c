@@ -508,7 +508,7 @@ linuxdvb_frontend_monitor ( void *aux )
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
       pthread_mutex_lock(&lfe->lfe_dvr_lock);
       tvhthread_create(&lfe->lfe_dvr_thread, NULL,
-                       linuxdvb_frontend_input_thread, lfe, 0);
+                       linuxdvb_frontend_input_thread, lfe);
       pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 

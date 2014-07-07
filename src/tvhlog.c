@@ -423,7 +423,7 @@ void
 tvhlog_start ( void )
 {
   tvhlog_run = 1;
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, 0);
+  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
 }
 
 void

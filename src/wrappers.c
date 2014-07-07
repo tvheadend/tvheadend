@@ -131,8 +131,7 @@ thread_wrapper ( void *p )
 int
 tvhthread_create0
   (pthread_t *thread, const pthread_attr_t *attr,
-   void *(*start_routine) (void *), void *arg, const char *name,
-   int detach)
+   void *(*start_routine) (void *), void *arg, const char *name)
 {
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
@@ -140,8 +139,6 @@ tvhthread_create0
   ts->run  = start_routine;
   ts->arg  = arg;
   r = pthread_create(thread, attr, thread_wrapper, ts);
-  if (detach)
-    pthread_detach(*thread);
   return r;
 }
 

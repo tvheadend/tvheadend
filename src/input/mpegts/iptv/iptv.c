@@ -552,7 +552,7 @@ void iptv_init ( void )
   /* Setup TS thread */
   iptv_poll = tvhpoll_create(10);
   pthread_mutex_init(&iptv_lock, NULL);
-  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL, 0);
+  tvhthread_create(&iptv_thread, NULL, iptv_input_thread, NULL);
 }
 
 void iptv_done ( void )

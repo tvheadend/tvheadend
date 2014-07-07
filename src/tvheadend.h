@@ -576,9 +576,9 @@ void doexit(int x);
 int tvhthread_create0
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg,
-   const char *name, int detach);
+   const char *name);
 
-#define tvhthread_create(a, b, c, d, e)  tvhthread_create0(a, b, c, d, #c, e)
+#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

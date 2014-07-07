@@ -73,7 +73,7 @@ idnode_init(void)
   idnode_queue = NULL;
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
-  tvhthread_create(&idnode_tid, NULL, idnode_thread, NULL, 0);
+  tvhthread_create(&idnode_tid, NULL, idnode_thread, NULL);
 }
 
 void

@@ -347,7 +347,7 @@ imagecache_init ( void )
 
   /* Start threads */
 #if ENABLE_IMAGECACHE
-  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL, 0);
+  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL);
 
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however

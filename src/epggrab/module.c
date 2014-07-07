@@ -435,7 +435,7 @@ epggrab_module_enable_socket ( void *m, uint8_t e )
     tvhlog(LOG_DEBUG, mod->id, "starting socket thread");
     pthread_attr_init(&tattr);
     mod->enabled = 1;
-    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, 0);
+    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod);
   }
   return 1;
 }

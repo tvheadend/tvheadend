@@ -1287,7 +1287,7 @@ satip_frontend_tune0
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                   satip_frontend_input_thread, lfe, 0);
+                   satip_frontend_input_thread, lfe);
 
   gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 50);
 
