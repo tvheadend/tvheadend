@@ -517,6 +517,7 @@ udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
 {
   int i;
 
+  assert(um);
   um->um_psize   = psize;
   um->um_packets = packets;
   um->um_data    = malloc(packets * psize);
@@ -535,6 +536,8 @@ udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
 void
 udp_multirecv_free( udp_multirecv_t *um )
 {
+  if (um == NULL)
+    return;
   free(um->um_msg);    um->um_msg   = NULL;
   free(um->um_riovec); um->um_riovec = NULL;
   free(um->um_iovec);  um->um_iovec = NULL;
@@ -548,6 +551,10 @@ udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
                     struct iovec **iovec )
 {
   int n, i;
+  if (um == NULL || iovec == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
   if (packets > um->um_packets)
     packets = um->um_packets;
   n = recvmmsg(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT, NULL);
