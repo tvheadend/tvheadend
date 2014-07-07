@@ -196,7 +196,7 @@ tvheadend.status_streams = function() {
             if (r) {
                 r.data.subs = m.subs;
                 r.data.weight = m.weight;
-                r.data.signal = m.signal;
+                r.data.signal = m.signal / 1000;
                 r.data.ber = m.ber;
                 r.data.unc = m.unc;
                 r.data.snr = m.snr;
