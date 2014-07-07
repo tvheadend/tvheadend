@@ -3,51 +3,56 @@
 		Services are automatically pulled from muxes and can be mapped to Channels.
 	</p>
  	<p>
- 		<img src="docresources/configdvbmuxsched.png">
+ 		<img src="docresources/configdvbservices.png">
 	</p>
  	
  	The columns have the following functions:
 
  	<dl>
-  		<dt>Enabled
-		<dd>If selected, mux is enabled.
-			If unselected, mux is disabled.
+		<dt>Play
+		<dd>Opens a playlist (M3U of XSPF, depending on your startup options) to allow you to stream this service to another application, e.g. to watch a channel in VLC.
 
-		<dt>Service Name
-		<dd>
+		<dt>Details
+		<dd>Display details on this service, e.g. PID, streams, audio/video CODECs, languages, etc.			
+
+  		<dt>Enabled
+		<dd>Whether or not this service is available for use
 
 		<dt>Channel
-		<dd>Channel mapped to this service.
+		<dd>The channel to which the service is mapped
+
+		<dt>Service Name
+		<dd>The name of the service, detected when the service was discovered
 
 		<dt>Encrypted
-		<dd>Service encryption status.
+		<dd>Whether or not the service is scrambled
 
 		<dt>Network
-		<dd>Network the service is running on.
+		<dd>The network on which this service resides (i.e. whether it's a cable channel or a terrestrial one)
 
 		<dt>Mux
-		<dd>Mux the service is served from.
+		<dd>The mux which carries this service. This is typically the frequency of the carrier signal in kHz, with polarisation (H or V) as applicable.
 
 		<dt>Service ID
-		<dd>
+		<dd>A unique identifier for this service within this mux/transport stream.
 
 		<dt>Local Channel Number 
-		<dd>
+		<dd>Channel number as assigned by the broadcaster.
 
 		<dt>Provider
-		<dd>
+		<dd>Any supplied provider string, e.g. where multiple broadcasters share a platform, such as for free-to-air and pay TV.
 
 		<dt>CRID Authority
-		<dd>
+		<dd>The group responsible for the Content Reference Identifier for this service. This is effectively a URL/URI to an authoritative source for programme data (e.g. series link).
 
 		<dt>Service Type
-		<dd>
+		<dd>The service type flag as defined by the DVB specifications (e.g. 0x02 = radio, 0x11 = MPEG2 HD TV, 0x19 = H.264 HD TV)
 
 		<dt>Pref. CA PID
-		<dd>
+		<dd>The Preferred Conditional Access Packet Identifier. Used for decrypting scrambled streams.
 
 		<dt>Character Set
-		<dd>
+		<dd>The character encoding for this service (e.g. UTF-8).
 
 
 

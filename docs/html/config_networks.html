@@ -1,23 +1,30 @@
 <div class="hts-doc-text">
 	<p>
-		Networks
+		A network is the type of carrier for your television signals. Tvheadend supports several different types of network, notably:
+
+		<dd>DVB-C : Cable TV, delivered via a cable to your house
+		<dd>DVB-S : Satellite (includes S2), so any signal coming in via a dish
+		<dd>DVB-T : Terrestrial, so over-the-air broadcasts received through a traditional television aerial
+		<dd>ATSC : Over-the-air terrestrial, common in north and central America and parts of south Asia
+		<dd>IPTV : IP, so over the Internet
+
 	</p>
  	<p>
- 		<img src="docresources/configdvbmuxsched.png">
+ 		<img src="docresources/configdvbnetwork.png">
 	</p>
  	
  	The columns have the following functions:
 
  	<dl>
   		<dt>Network Name
-		<dd>Name of the network.
+		<dd>The name of the network. This can be set automatically or you can give it a name that means something to you (e.g. if you have multiple OTA networks).
 			
 
 		<dt>Network Discovery
-		<dd>
+		<dd>Whether automatic discovery is enabled for this network, i.e. whether Tvheadend looks for muxes or simply stays with the list of muxes as defined initially.
 
 		<dt>Skip initial Scan
-		<dd>
+		<dd>Don't scan this network for muxes at Tvheadend start.
 
 		<dt>Idle Scan Muxes
 		<dd>
@@ -35,7 +42,8 @@
 		<dd>
 
 		<dt>Character Set
-		<dd>
+		<dd>The character encoding for this network (e.g. UTF-8).
+
 
 
 		

@@ -1,40 +1,58 @@
 <div class="hts-doc-text">
 	<p>
-		Muxes are data streams coming from networks
+		Muxes are locations at which services can be found. On traditional networks (DVB-C, -T and -S), these are carrier signals on which the individual channels are multiplexed, hence the name. However, Tvheadend also uses the term 'mux' to describe a source for multiple IP streams - so an IP address, in effect.
 	</p>
  	<p>
- 		<img src="docresources/configdvbmuxsched.png">
+ 		<img src="docresources/configdvbmux.png">
 	</p>
  	
  	The columns have the following functions:
 
  	<dl>
+
+		<dt>Play
+		<dd>Downloads a playlist file (M3U or XSPF, depending on your startup options) so you can tune to the mux from an external application.
+
   		<dt>Enabled
-		<dd>If selected, mux is enabled.
-			If unselected, mux is disabled.
+		<dd>Whether or not the mux is enabled and thus available.
 
 		<dt>EPG
-		<dd>Retrieve EPG informations from mux.
+		<dd>Whether or not to retrieve EPG information from the mux.
+
+		<dt>Network
+		<dd>The name of the network to which the mux belongs. Networks are defined in Configuration -> DVB Inputs -> Networks - DVB-S or ATSC, for example.
+
+		<dt>Original Network ID
+		<dd>The ONID is a code which uniquely identifies a network.
+
+		<dt>Transport Stream ID
+		<dd>The TSID is a code which identifies the network origination source or transmitter.
+
+		<dt>CRID Authority
+		<dd>The group responsible for the Content Reference Identifier for this mux. This is effectively a URL/URI to an authoritative source for programme data (e.g. series link).				
 
 		<dt>Scan Status
-		<dd>Mux scan status.
+		<dd>Whether the mux is being scanned (ACTIVE), is planned to be scanned (PEND) or has reverted to idle scan (IDLE).
+
+		<dt>Scan Result
+		<dd>Whether there were any problems with the last scan of this mux.	
 
 		<dt>URL
 		<dd>Mux URL.
 
-		<dt>Interface
-		<dd>
-
-		<dt>ATSC
-		<dd>
-
-		<dt>Service Name
-		<dd>Mux name
+		<dt># Services
+		<dd>The number of services found on this mux.
 
 		<dt>Character Set
-		<dd>
+		<dd>The character encoding for this mux (e.g. UTF-8).
+
+		<dt>Interface
+		<dd>IPTV : the network interface/card on which the IPTV source can be found.
+
+		<dt>ATSC
+		<dd>whether or not this is an ATSC IPTV source.
 
 
-		
+
  	</dl>
 </div>
