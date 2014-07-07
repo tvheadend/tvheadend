@@ -139,17 +139,17 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
       return 0;
   }
-  
+
   duration = difftime(e->stop,e->start);
-  
+
   if(dae->dae_minduration) {
     if(duration < dae->dae_minduration) return 0;
   }
-  
+
   if(dae->dae_maxduration) {
     if(duration > dae->dae_maxduration) return 0;
   }
-  
+
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
     localtime_r(&e->start, &tm);
@@ -574,7 +574,7 @@ _dvr_autorec_add(const char *config_name,
 
   if (max_duration)
     dae->dae_maxduration = max_duration;
-    
+
   if(serieslink) {
     serieslink->getref(serieslink);
     dae->dae_serieslink = serieslink;

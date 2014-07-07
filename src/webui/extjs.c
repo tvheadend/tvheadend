@@ -758,7 +758,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
   const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
-  
+
   int min_duration;
   int max_duration;
 
@@ -768,7 +768,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
     min_duration = atoi(s);
   else
-    min_duration = 0;  
+    min_duration = 0;
 
   if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
     max_duration = atoi(s);
@@ -1133,7 +1133,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 	int min_duration;
 	int max_duration;
     epg_genre_t genre, *eg = NULL;
-    
+
     if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
       genre.code = atoi(s);
       eg = &genre;
@@ -1142,7 +1142,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
       min_duration = atoi(s);
     else
-      min_duration = 0;  
+      min_duration = 0;
 
     if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
       max_duration = atoi(s);

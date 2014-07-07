@@ -2216,10 +2216,10 @@ static void _eqr_add
   if ( !(title = epg_episode_get_title(e->episode, lang)) ) return;
   if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
   if ( preg && regexec(preg, title, 0, NULL, 0)) return;
-  
+
   duration = difftime(e->stop,e->start);
   if ( duration < min_duration || duration > max_duration ) return;
-  
+
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
     eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);

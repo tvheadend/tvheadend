@@ -717,15 +717,15 @@ tvheadend.autoreceditor = function() {
 
             if (record.isModified('channel') && record.data.channel == -1)
                 record.set('channel',"");
-            
+
             if (record.isModified('tag') && record.data.tag == '(Clear filter)')
                 record.set('tag',"");
-            
+
             if (record.isModified('contenttype') && record.data.contenttype == -1) 
                 record.set('contenttype',"");
         }
     });
- 
+
     return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
             tvheadend.autorecRecord, [], tvheadend.autorecStore,
             'autorec.html', 'wand');

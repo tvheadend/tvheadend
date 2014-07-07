@@ -40,14 +40,14 @@ tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 
 tvheadend.channelLookupName = function(key) {
     channelString = "";
-          
+
     var index = tvheadend.channels.find('key', key);
-    
+
     if (index !== -1)
         var channelString = tvheadend.channels.getAt(index).get('val');
-    
+
     return channelString;
-};  
+};
 
 // Store for duration filters - EPG, autorec dialog and autorec rules in the DVR grid
 // NB: 'no max' is defined as 9999999s, or about 3 months...
@@ -65,17 +65,17 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
 });
 
 // Function to convert numeric duration to corresponding label string
-// Note: triggered by minimum duration only. This would fail if ranges 
+// Note: triggered by minimum duration only. This would fail if ranges
 // had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't have). 
 
 tvheadend.durationLookupRange = function(value) {
     durationString = "";
-    var index = tvheadend.DurationStore.find('minvalue', value); 
+    var index = tvheadend.DurationStore.find('minvalue', value);
     if (index !== -1)
         var durationString = tvheadend.DurationStore.getAt(index).data.label;
-    
+
     return durationString;
-};  
+};
 
 tvheadend.epgDetails = function(event) {
 
@@ -506,7 +506,7 @@ tvheadend.epg = function() {
 
     });
 
-/* 
+/*
  * Clear filter functions
  */
 
@@ -535,7 +535,7 @@ tvheadend.epg = function() {
         delete epgStore.baseParams.maxduration;
         epgFilterDuration.setValue("");
     };
-    
+
     function epgQueryClear() {
         clearTitleFilter();
         clearChannelFilter();
@@ -548,9 +548,9 @@ tvheadend.epg = function() {
 /*
  * Filter selection event handlers
  */
- 
+
     epgFilterChannels.on('select', function(c, r) {
-        if (r.data.key == -1) 
+        if (r.data.key == -1)
             clearChannelFilter();
         else if (epgStore.baseParams.channel !== r.data.key)
             epgStore.baseParams.channel = r.data.key;
@@ -564,7 +564,7 @@ tvheadend.epg = function() {
             epgStore.baseParams.tag = r.data.name;
         epgStore.reload();
     });
-    
+
     epgFilterContentGroup.on('select', function(c, r) {
         if (r.data.code == -1)
             clearContentGroupFilter();
@@ -582,7 +582,7 @@ tvheadend.epg = function() {
         }
         epgStore.reload();
     });
-    
+
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
 

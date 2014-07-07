@@ -132,7 +132,7 @@ api_epg_grid
   htsmsg_t *l = NULL, *e;
   int min_duration;
   int max_duration;
-  
+
   *resp = htsmsg_create_map();
 
   /* Query params */
@@ -145,7 +145,7 @@ api_epg_grid
 
   min_duration = htsmsg_get_u32_or_default(args, "minduration", 0);
   max_duration = htsmsg_get_u32_or_default(args, "maxduration", INT_MAX);
-  
+
   /* Pagination settings */
   start = htsmsg_get_u32_or_default(args, "start", 0);
   limit = htsmsg_get_u32_or_default(args, "limit", 50);
