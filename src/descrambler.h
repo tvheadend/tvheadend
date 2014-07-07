@@ -51,6 +51,7 @@ typedef struct th_descrambler {
 
   void (*td_stop)       (struct th_descrambler *d);
   void (*td_caid_change)(struct th_descrambler *d);
+  int  (*td_ecm_reset)  (struct th_descrambler *d);
 
 } th_descrambler_t;
 

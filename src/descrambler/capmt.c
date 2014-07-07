@@ -182,6 +182,7 @@ typedef struct capmt_service {
 
   /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
+  int ct_constcw; /* fast flag */
 
   tvhcsa_t ct_csa;
 
@@ -935,6 +936,17 @@ capmt_abort(capmt_t *capmt, int keystate)
 }
 #endif
 
+static int
+capmt_ecm_reset(th_descrambler_t *th)
+{
+  capmt_service_t *ct = (capmt_service_t *)th;
+
+  if (ct->ct_constcw)
+    return 1; /* keys will not change */
+  ct->td_keystate = DS_UNKNOWN;
+  return 0;
+}
+
 static void
 capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
                   const uint8_t *even, const uint8_t *odd,
@@ -1538,6 +1550,7 @@ capmt_caid_change(th_descrambler_t *td)
       cce->cce_ecmpid = st->es_pid;
       cce->cce_providerid = c->providerid;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+      ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
       change = 1;
     }
   }
@@ -1812,6 +1825,7 @@ capmt_service_start(service_t *s)
         cce->cce_ecmpid = st->es_pid;
         cce->cce_providerid = c->providerid;
         LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+        ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
         change = 1;
       }
     }
@@ -1826,6 +1840,7 @@ capmt_service_start(service_t *s)
     td->td_service     = s;
     td->td_stop        = capmt_service_destroy;
     td->td_caid_change = capmt_caid_change;
+    td->td_ecm_reset   = capmt_ecm_reset;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
     LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);

@@ -222,6 +222,30 @@ fin:
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
+static void
+descrambler_flush_table_data( service_t *t )
+{
+  mpegts_service_t *ms = (mpegts_service_t *)t;
+  mpegts_mux_t *mux = ms->s_dvb_mux;
+  descrambler_table_t *dt;
+  descrambler_section_t *ds;
+
+  if (mux == NULL)
+    return;
+  tvhtrace("descrabler", "flush table data for service \"%s\"", ms->s_dvb_svcname);
+  pthread_mutex_lock(&mux->mm_descrambler_lock);
+  TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
+    if (dt->table == NULL || dt->table->mt_service != ms)
+      continue;
+    TAILQ_FOREACH(ds, &dt->sections, link) {
+      free(ds->last_data);
+      ds->last_data = NULL;
+      ds->last_data_len = 0;
+    }
+  }
+  pthread_mutex_unlock(&mux->mm_descrambler_lock);
+}
+
 static inline void
 key_update( th_descrambler_runtime_t *dr, uint8_t key )
 {
@@ -238,7 +262,7 @@ descrambler_descramble ( service_t *t,
 #define KEY_MASK(k) (((k) & 0x40) + 0x40) /* 0x40 (for even) or 0x80 (for odd) */
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
-  int count, failed, off, size;
+  int count, failed, off, size, flush_data = 0;
   uint8_t *tsb2, ki;
 
   lock_assert(&t->s_stream_mutex);
@@ -270,7 +294,8 @@ descrambler_descramble ( service_t *t,
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             if (dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
               sbuf_cut(&dr->dr_buf, off);
-              goto idle;
+              if (!td->td_ecm_reset(td))
+                goto next;
             }
             key_update(dr, ki);
           }
@@ -300,7 +325,8 @@ descrambler_descramble ( service_t *t,
           tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
-          goto idle;
+          if (!td->td_ecm_reset(td))
+            goto next;
         }
         key_update(dr, ki);
       }
@@ -310,9 +336,8 @@ descrambler_descramble ( service_t *t,
                       tsb);
     dr->dr_last_descramble = dispatch_clock;
     return 1;
-idle:
-    td->td_keystate = DS_IDLE;
-    failed++;
+next:
+    flush_data = 1;
     continue;
   }
   if (dr->dr_ecm_start) { /* ECM sent */
@@ -344,6 +369,8 @@ idle:
       sbuf_append(&dr->dr_buf, tsb, 188);
     }
   }
+  if (flush_data)
+    descrambler_flush_table_data(t);
   if (dr->dr_last_descramble + 25 < dispatch_clock)
     return -1;
   if (count && count == failed)
