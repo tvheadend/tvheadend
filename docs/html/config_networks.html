@@ -1,0 +1,53 @@
+<div class="hts-doc-text">
+	<p>
+		A network is the type of carrier for your television signals. Tvheadend supports several different types of network, notably:
+		<dl>
+		<li>DVB-C : Cable TV, delivered via a cable to your house
+		<li>DVB-S : Satellite (includes S2), so any signal coming in via a dish
+		<li>DVB-T : Terrestrial, so over-the-air broadcasts received through a traditional television aerial
+		<li>ATSC : Over-the-air terrestrial, common in north and central America and parts of south Asia
+		<li>IPTV : IP, so over the Internet
+		</dl>
+	</p>
+ 	<p>
+ 		<img src="docresources/configdvbnetwork.png">
+	</p>
+ 	
+ 	The columns have the following functions:
+
+ 	<dl>
+  		<dt>Network Name
+		<dd>The name of the network. This can be set automatically or you can give it a name that means something to you (e.g. if you have multiple OTA networks).
+			
+
+		<dt>Network Discovery
+		<dd>Whether automatic discovery is enabled for this network, i.e. whether Tvheadend looks for muxes or simply stays with the list of muxes as defined initially.
+
+		<dt>Skip initial Scan
+		<dd>Don't scan this network for muxes at Tvheadend start.
+
+		<dt>Idle Scan Muxes
+		<dd>When nothing else happens Tvheadend will continuously rotate among all muxes and tune to them to verify that they are still working. If your adapter have problems with lots of tuning, try to disable this.
+
+		<dt>Max Input Streams
+		<dd>IPTV : maximum simultaneous streams that can be played.
+
+		<dt>Max Bandwidth
+		<dd>IPTV : maximum bandwidth allowed for streams. 
+
+		<dt>Max timeout
+		<dd>IPTV : maximum timeout trying to play stream.
+
+		<dt>Network ID
+		<dd>If you experience problems caused by overlaps between multiple network
+  providers this option can be used to filter which network ID is received
+  by a given adapter.
+
+		<dt>Character Set
+		<dd>The character encoding for this network (e.g. UTF-8).
+
+
+
+		
+ 	</dl>
+</div>
