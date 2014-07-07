@@ -402,10 +402,8 @@ void epggrab_done ( void )
   pthread_mutex_lock(&global_lock);
   while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {
     LIST_REMOVE(mod, link);
-    if (mod->type == EPGGRAB_OTA && ((epggrab_module_ota_t *)mod)->done)
-      ((epggrab_module_ota_t *)mod)->done((epggrab_module_ota_t *)mod);
-    if (mod->type == EPGGRAB_INT || mod->type == EPGGRAB_EXT)
-      free((void *)((epggrab_module_int_t *)mod)->path);
+    if (mod->done)
+      mod->done(mod);
     free((void *)mod->id);
     free((void *)mod->name);
     free(mod);

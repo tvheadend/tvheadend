@@ -149,6 +149,9 @@ struct epggrab_module
   /* Enable/Disable */
   int       (*enable)  ( void *m, uint8_t e );
 
+  /* Free */
+  void      (*done)    ( void *m );
+
   /* Channel listings */
   void      (*ch_add)  ( void *m, struct channel *ch );
   void      (*ch_rem)  ( void *m, struct channel *ch );
@@ -179,6 +182,8 @@ struct epggrab_module_ext
   epggrab_module_int_t         ;          ///< Parent object
   
   int                          sock;      ///< Socket descriptor
+
+  pthread_t                    tid;       ///< Thread ID
 };
 
 struct epggrab_ota_svc_link
@@ -229,7 +234,6 @@ struct epggrab_module_ota
 
   /* Transponder tuning */
   void (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
-  void (*done)  ( epggrab_module_ota_t *m );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
 };

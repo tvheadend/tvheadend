@@ -685,7 +685,7 @@ static void _opentv_dict_load ( htsmsg_t *m )
   htsmsg_destroy(m);
 }
 
-static void _opentv_done( epggrab_module_ota_t *m )
+static void _opentv_done( void *m )
 {
   opentv_module_t *mod = (opentv_module_t *)m;
   free(mod->channel);

@@ -38,8 +38,6 @@ void      epggrab_module_ch_rem  ( void *m, struct channel *ch );
 void      epggrab_module_ch_mod  ( void *m, struct channel *ch );
 void      epggrab_module_ch_save ( void *m, epggrab_channel_t *ec );
 
-int       epggrab_module_enable_socket ( void *m, uint8_t e );
-
 void      epggrab_module_parse ( void *m, htsmsg_t *data );
 
 void      epggrab_module_channels_load ( epggrab_module_t *m );
@@ -88,7 +86,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 typedef struct epggrab_ota_module_ops {
     void (*start)  (epggrab_ota_map_t *map, struct mpegts_mux *mm);
     int  (*enable) (void *m, uint8_t e );
-    void (*done)   (epggrab_module_ota_t*m);
+    void (*done)   (void *m);
     int  (*tune)   (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                     struct mpegts_mux *mm);
 } epggrab_ota_module_ops_t;
