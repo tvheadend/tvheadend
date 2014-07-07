@@ -237,11 +237,11 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   mpegts_network_link_t *mnl;
 
+  pthread_mutex_lock(&iptv_lock);
+
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
-
-  pthread_mutex_lock(&iptv_lock);
 
   /* Close file */
   if (im->mm_iptv_fd > 0) {
@@ -292,19 +292,17 @@ iptv_input_thread ( void *aux )
 
     pthread_mutex_lock(&iptv_lock);
 
-    /* No longer active */
-    if (!im->mm_active)
-      goto done;
-
-    /* Get data */
-    if ((n = im->im_handler->read(im)) < 0) {
-      tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
-      im->im_handler->stop(im);
-      goto done;
+    /* Only when active */
+    if (im->mm_active) {
+      /* Get data */
+      if ((n = im->im_handler->read(im)) < 0) {
+        tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
+        im->im_handler->stop(im);
+        break;
+      }
+      iptv_input_recv_packets(im, n);
     }
-    iptv_input_recv_packets(im, n);
 
-done:
     pthread_mutex_unlock(&iptv_lock);
   }
   return NULL;
