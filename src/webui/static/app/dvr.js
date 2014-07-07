@@ -510,10 +510,6 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 /**
  *
  */
-
-/**
- *
- */
 tvheadend.autoreceditor = function() {
     var fm = Ext.form;
 
@@ -543,16 +539,15 @@ tvheadend.autoreceditor = function() {
                             valueField: 'key',
                             store: tvheadend.channels,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include channel...'
                         }),
-                        renderer: function(v, m, r) {
-                            var i = tvheadend.channels.find('key', v);
-                            if (i !== -1)
-                                v = tvheadend.channels.getAt(i).get('val');
-                            return v;
-                        }
+                        renderer: function(v) {
+                            return tvheadend.channelLookupName(v);
+                        },
                     },
                     {
                         header: "SeriesLink",
@@ -568,7 +563,9 @@ tvheadend.autoreceditor = function() {
                             displayField: 'name',
                             store: tvheadend.channelTags,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include tag...'
                         })
@@ -584,9 +581,29 @@ tvheadend.autoreceditor = function() {
                             displayField: 'name',
                             store: tvheadend.ContentGroupStore,
                             mode: 'local',
-                            editable: false,
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
                             triggerAction: 'all',
                             emptyText: 'Only include content...'
+                        })
+                    },
+                    {
+                        header: "Duration",
+                        dataIndex: 'minduration',
+                        renderer: function(v) {
+                            return tvheadend.durationLookupRange(v);
+                        },
+                        editor: durationCombo = new Ext.form.ComboBox({
+                            store: tvheadend.DurationStore,
+                            mode: 'local',
+                            valueField: 'minvalue',
+                            displayField: 'label',
+                            editable: true,
+                            forceSelection: true,
+                            typeAhead: true,
+                            triggerAction: 'all',
+                            id: 'minfield'
                         })
                     },
                     {
@@ -685,10 +702,35 @@ tvheadend.autoreceditor = function() {
                         })
                     }]});
 
+    tvheadend.autorecStore.on('update', function (store, record, operation) {
+        if (operation == 'edit') {
+            if (record.isModified('minduration')) {
+                if (record.data.minduration == "")
+                    record.set('maxduration',"");
+                else {
+                    var index = tvheadend.DurationStore.find('minvalue', record.data.minduration); 
+
+                    if (index !== -1)
+                        record.set('maxduration', tvheadend.DurationStore.getById(index).data.maxvalue);
+                }
+            }
+
+            if (record.isModified('channel') && record.data.channel == -1)
+                record.set('channel',"");
+
+            if (record.isModified('tag') && record.data.tag == '(Clear filter)')
+                record.set('tag',"");
+
+            if (record.isModified('contenttype') && record.data.contenttype == -1) 
+                record.set('contenttype',"");
+        }
+    });
+
     return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
             tvheadend.autorecRecord, [], tvheadend.autorecStore,
             'autorec.html', 'wand');
 };
+
 /**
  *
  */
@@ -786,6 +828,7 @@ tvheadend.dvr = function() {
 
     tvheadend.autorecRecord = Ext.data.Record.create(['enabled', 'title',
         'serieslink', 'channel', 'tag', 'creator', 'contenttype', 'comment',
+        'minduration', 'maxduration',
         'weekdays', 'pri', 'approx_time', 'config_name']);
 
     tvheadend.autorecStore = new Ext.data.JsonStore({
