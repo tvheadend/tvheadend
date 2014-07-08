@@ -20,7 +20,7 @@
 #include "descrambler.h"
 #include "cwc.h"
 #include "capmt.h"
-#include "ffdecsa/FFdecsa.h"
+#include "libaesdec/libaesdec.h"
 #include "input.h"
 #include "tvhcsa.h"
 
@@ -88,7 +88,7 @@ descrambler_init ( void )
   capmt_init();
 #endif
 #if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
-  ffdecsa_init();
+  libaesdec_init();
 #endif
 }
 
