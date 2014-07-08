@@ -33,6 +33,7 @@ typedef struct epggrab_module_ext   epggrab_module_ext_t;
 typedef struct epggrab_module_ota   epggrab_module_ota_t;
 typedef struct epggrab_ota_mux      epggrab_ota_mux_t;
 typedef struct epggrab_ota_map      epggrab_ota_map_t;
+typedef struct epggrab_ota_svc_link epggrab_ota_svc_link_t;
 
 LIST_HEAD(epggrab_module_list, epggrab_module);
 typedef struct epggrab_module_list epggrab_module_list_t;
@@ -148,6 +149,9 @@ struct epggrab_module
   /* Enable/Disable */
   int       (*enable)  ( void *m, uint8_t e );
 
+  /* Free */
+  void      (*done)    ( void *m );
+
   /* Channel listings */
   void      (*ch_add)  ( void *m, struct channel *ch );
   void      (*ch_rem)  ( void *m, struct channel *ch );
@@ -178,6 +182,15 @@ struct epggrab_module_ext
   epggrab_module_int_t         ;          ///< Parent object
   
   int                          sock;      ///< Socket descriptor
+
+  pthread_t                    tid;       ///< Thread ID
+};
+
+struct epggrab_ota_svc_link
+{
+  char                          *uuid;
+  uint64_t                       last_tune_count;
+  RB_ENTRY(epggrab_ota_svc_link) link;
 };
 
 /*
@@ -189,12 +202,10 @@ struct epggrab_ota_mux
   char                              *om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
-  int                                om_active;
-  int                                om_timeout;      ///< User configurable
-  int                                om_interval;
-  time_t                             om_when;         ///< Next event time
+  int                                om_complete;     ///< Has completed a scan
+  gtimer_t                           om_timer;        ///< Per mux active timer
 
-  LIST_ENTRY(epggrab_ota_mux)        om_q_link;
+  TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 };
 
@@ -205,9 +216,11 @@ struct epggrab_ota_map
 {
   LIST_ENTRY(epggrab_ota_map)         om_link;
   epggrab_module_ota_t               *om_module;
-  int                                 om_timeout;
-  int                                 om_interval;
   int                                 om_complete;
+  uint8_t                             om_first;
+  uint8_t                             om_forced;
+  uint64_t                            om_tune_count;
+  RB_HEAD(,epggrab_ota_svc_link)      om_svcs;         ///< Muxes we carry data for
 };
 
 /*
@@ -220,9 +233,9 @@ struct epggrab_module_ota
   //TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
-  void (*start) ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
-  void (*done)  ( epggrab_module_ota_t *m );
-  int  (*tune)  ( epggrab_module_ota_t *m, struct mpegts_mux *mm );
+  void (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
+                  struct mpegts_mux *mm );
 };
 
 /*
@@ -241,17 +254,20 @@ htsmsg_t*         epggrab_module_list       ( void );
 extern epggrab_module_list_t epggrab_modules;
 extern pthread_mutex_t       epggrab_mutex;
 extern int                   epggrab_running;
-extern uint32_t              epggrab_interval;
+extern char                 *epggrab_cron;
 extern epggrab_module_int_t* epggrab_module;
 extern uint32_t              epggrab_channel_rename;
 extern uint32_t              epggrab_channel_renumber;
 extern uint32_t              epggrab_channel_reicon;
 extern uint32_t              epggrab_epgdb_periodicsave;
+extern char                 *epggrab_ota_cron;
+extern uint32_t              epggrab_ota_timeout;
+extern uint32_t              epggrab_ota_initial;
 
 /*
  * Set configuration
  */
-int  epggrab_set_interval         ( uint32_t interval );
+int  epggrab_set_cron             ( const char *cron );
 int  epggrab_set_module           ( epggrab_module_t *mod );
 int  epggrab_set_module_by_id     ( const char *id );
 int  epggrab_set_channel_rename   ( uint32_t e );
@@ -260,6 +276,9 @@ int  epggrab_set_channel_reicon   ( uint32_t e );
 int  epggrab_set_periodicsave     ( uint32_t e );
 int  epggrab_enable_module        ( epggrab_module_t *mod, uint8_t e );
 int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
+int  epggrab_ota_set_cron         ( const char *cron, int lock );
+int  epggrab_ota_set_timeout      ( uint32_t e );
+int  epggrab_ota_set_initial      ( uint32_t e );
 
 /*
  * Load/Save
@@ -268,6 +287,7 @@ void epggrab_init                 ( void );
 void epggrab_done                 ( void );
 void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
+void epggrab_ota_post             ( void );
 void epggrab_ota_shutdown         ( void );
 
 /* **************************************************************************

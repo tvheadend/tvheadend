@@ -36,7 +36,7 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
       return;
   }
 
-  mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s scan complete", buf);
   mpegts_mux_scan_done(mm, buf, 1);
 }

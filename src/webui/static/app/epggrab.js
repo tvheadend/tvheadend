@@ -82,12 +82,22 @@ tvheadend.epggrab = function() {
 
     var confreader = new Ext.data.JsonReader({
         root: 'epggrabSettings'
-    }, ['module', 'interval', 'channel_rename', 'channel_renumber',
-        'channel_reicon', 'epgdb_periodicsave']);
+    }, ['module', 'cron', 'channel_rename', 'channel_renumber',
+        'channel_reicon', 'epgdb_periodicsave',
+        'ota_cron', 'ota_timeout', 'ota_initial']);
 
     /* ****************************************************************
      * Basic Fields
      * ***************************************************************/
+
+    /*
+     * Cron setup
+     */
+    var internalCron = new Ext.form.TextArea({
+        fieldLabel: 'Cron multi-line',
+        name: 'cron',
+        width: 300,
+    });
 
     /*
      * Module selector
@@ -103,68 +113,6 @@ tvheadend.epggrab = function() {
         mode: 'local',
         triggerAction: 'all',
         store: internalModuleStore
-    });
-
-    /*
-     * Interval selector
-     */
-    var intervalUnits = [[86400, 'Days'], [3600, 'Hours'],
-        [60, 'Minutes'], [1, 'Seconds']];
-    var intervalValue = new Ext.form.NumberField({
-        width: 300,
-        allowNegative: false,
-        allowDecimals: false,
-        minValue: 1,
-        maxValue: 7,
-        value: 1,
-        fieldLabel: 'Grab interval',
-        name: 'intervalValue',
-        listeners: {
-            'valid': function(e) {
-                v = e.getValue() * intervalUnit.getValue();
-                interval.setValue(v);
-            }
-        }
-    });
-    var intervalUnit = new Ext.form.ComboBox({
-        name: 'intervalUnit',
-        width: 300,
-        valueField: 'key',
-        displayField: 'value',
-        value: 86400,
-        forceSelection: true,
-        editable: false,
-        triggerAction: 'all',
-        mode: 'local',
-        store: new Ext.data.SimpleStore({
-            fields: ['key', 'value'],
-            data: intervalUnits
-        }),
-        listeners: {
-            'change': function(e, n, o) {
-                intervalValue.maxValue = (7 * 86400) / n;
-                intervalValue.validate();
-            }
-        }
-    });
-    var interval = new Ext.form.Hidden({
-        name: 'interval',
-        value: 86400,
-        listeners: {
-            'enable': function(e) {
-                v = e.getValue();
-                for (i = 0; i < intervalUnits.length; i++) {
-                    u = intervalUnits[i][0];
-                    if ((v % u) === 0) {
-                        intervalUnit.setValue(u);
-                        intervalValue.maxValue = (7 * 86400) / u;
-                        intervalValue.setValue(v / u);
-                        intervalValue.validate();
-                        break;
-                    }
-                }
-            }
-        }
     });
 
     /*
@@ -215,7 +163,7 @@ tvheadend.epggrab = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
-        items: [interval, internalModule, intervalValue, intervalUnit]
+        items: [internalCron, internalModule]
     });
 
     /* ****************************************************************
@@ -268,7 +216,6 @@ tvheadend.epggrab = function() {
         width: 700,
         autoHeight: true,
         collapsible: true,
-        collapsed: true,
         items: [externalGrid]
     });
 
@@ -308,13 +255,34 @@ tvheadend.epggrab = function() {
         iconCls: 'icon-grid'
     });
 
+    var otaInitial = new Ext.form.Checkbox({
+        name: 'ota_initial',
+        fieldLabel: 'Force initial EPG scan at startup'
+    });
+
+    var otaCron = new Ext.form.TextArea({
+        fieldLabel: 'Over-the-air Cron multi-line',
+        name: 'ota_cron',
+        width: 300,
+    });
+
+    var otaTimeout = new Ext.form.NumberField({
+        width: 30,
+        allowNegative: false,
+        allowDecimals: false,
+        minValue: 30,
+        maxValue: 7200,
+        value: 600,
+        fieldLabel: 'EPG scan timeout in seconds (30-7200)',
+        name: 'ota_timeout'
+    });
+
     var otaPanel = new Ext.form.FieldSet({
         title: 'Over-the-air Grabbers',
         width: 700,
         autoHeight: true,
         collapsible: true,
-        collapsed: true,
-        items: [otaGrid]
+        items: [otaInitial, otaCron, otaTimeout, otaGrid]
     });
 
     /* ****************************************************************

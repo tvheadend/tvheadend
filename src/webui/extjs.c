@@ -432,11 +432,14 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create_map();
     if (epggrab_module)
       htsmsg_add_str(r, "module", epggrab_module->id);
-    htsmsg_add_u32(r, "interval", epggrab_interval);
+    htsmsg_add_str(r, "cron", epggrab_cron ? epggrab_cron : "");
     htsmsg_add_u32(r, "channel_rename", epggrab_channel_rename);
     htsmsg_add_u32(r, "channel_renumber", epggrab_channel_renumber);
     htsmsg_add_u32(r, "channel_reicon", epggrab_channel_reicon);
     htsmsg_add_u32(r, "epgdb_periodicsave", epggrab_epgdb_periodicsave / 3600);
+    htsmsg_add_str(r, "ota_cron", epggrab_ota_cron ? epggrab_ota_cron : "");
+    htsmsg_add_u32(r, "ota_timeout", epggrab_ota_timeout);
+    htsmsg_add_u32(r, "ota_initial", epggrab_ota_initial);
     pthread_mutex_unlock(&epggrab_mutex);
 
     out = json_single_record(r, "epggrabSettings");
@@ -461,8 +464,16 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     save |= epggrab_set_channel_reicon(str ? 1 : 0);
     if ( (str = http_arg_get(&hc->hc_req_args, "epgdb_periodicsave")) )
       save |= epggrab_set_periodicsave(atoi(str) * 3600);
-    if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
-      save |= epggrab_set_interval(atoi(str));
+    if ( (str = http_arg_get(&hc->hc_req_args, "cron")) )
+      save |= epggrab_set_cron(str);
+    if ( (str = http_arg_get(&hc->hc_req_args, "ota_cron")) )
+      save |= epggrab_ota_set_cron(str, 1);
+    if ( (str = http_arg_get(&hc->hc_req_args, "ota_timeout")) )
+      save |= epggrab_ota_set_timeout(atoi(str));
+    str = http_arg_get(&hc->hc_req_args, "ota_initial");
+    save |= epggrab_ota_set_initial(str ? 1 : 0);
+    if ( (str = http_arg_get(&hc->hc_req_args, "epgdb_periodicsave")) )
+      save |= epggrab_set_periodicsave(atoi(str) * 3600);
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
       save |= epggrab_set_module_by_id(str);
     if ( (str = http_arg_get(&hc->hc_req_args, "external")) ) {
@@ -748,8 +759,21 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
   const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
 
+  int min_duration;
+  int max_duration;
+
   if(channel && !channel[0]) channel = NULL;
   if(tag     && !tag[0])     tag = NULL;
+
+  if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
+    min_duration = atoi(s);
+  else
+    min_duration = 0;
+
+  if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
+    max_duration = atoi(s);
+  else
+    max_duration = INT_MAX;
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -769,7 +793,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, eg, title, lang);
+  epg_query(&eqr, channel, tag, eg, title, lang, min_duration, max_duration);
 
   epg_query_sort(&eqr);
 
@@ -1106,18 +1130,31 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
+	int min_duration;
+	int max_duration;
     epg_genre_t genre, *eg = NULL;
+
     if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
       genre.code = atoi(s);
       eg = &genre;
     }
 
+    if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
+      min_duration = atoi(s);
+    else
+      min_duration = 0;
+
+    if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
+      max_duration = atoi(s);
+    else
+      max_duration = INT_MAX;
+
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
-		    http_arg_get(&hc->hc_req_args, "channel"),
-		    http_arg_get(&hc->hc_req_args, "tag"),
-        eg,
-		    hc->hc_representative, "Created from EPG query");
+                    http_arg_get(&hc->hc_req_args, "channel"),
+                    http_arg_get(&hc->hc_req_args, "tag"),
+                    eg, min_duration,max_duration,
+                    hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

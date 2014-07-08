@@ -299,6 +299,20 @@ typedef enum mpegts_mux_scan_result
   MM_SCAN_FAIL
 } mpegts_mux_scan_result_t;
 
+enum mpegts_mux_epg_flag
+{
+  MM_EPG_DISABLE,
+  MM_EPG_ENABLE,
+  MM_EPG_FORCE,
+  MM_EPG_FORCE_EIT,
+  MM_EPG_FORCE_UK_FREESAT,
+  MM_EPG_FORCE_UK_FREEVIEW,
+  MM_EPG_FORCE_VIASAT_BALTIC,
+  MM_EPG_FORCE_OPENTV_SKY_UK,
+  MM_EPG_FORCE_OPENTV_SKY_ITALIA,
+  MM_EPG_FORCE_OPENTV_SKY_AUSAT,
+};
+
 /* Multiplex */
 struct mpegts_mux
 {
@@ -497,6 +511,8 @@ struct mpegts_input
 
   int mi_priority;
 
+  int mi_ota_epg;
+
   LIST_ENTRY(mpegts_input) mi_global_link;
 
   mpegts_network_link_list_t mi_networks;
@@ -540,7 +556,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, const char *reason);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
@@ -609,6 +625,8 @@ void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 void mpegts_input_status_timer ( void *p );
 
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
+
+int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, const char *reason );
 
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
@@ -699,6 +717,8 @@ void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 
+void mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len );
+
 mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 
 static inline mpegts_pid_t *
@@ -763,6 +783,9 @@ mpegts_service_t *mpegts_service_create0
 
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
+
+#define mpegts_service_find_by_uuid(u)\
+  idnode_find(u, &mpegts_service_class)
 
 void mpegts_service_delete ( service_t *s, int delconf );
 

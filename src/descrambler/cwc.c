@@ -147,6 +147,7 @@ typedef struct cwc_service {
   tvhcsa_t cs_csa;
   
   LIST_HEAD(, ecm_pid) cs_pids;
+  int cs_constcw;
 
 } cwc_service_t;
 
@@ -692,7 +693,17 @@ cwc_send_login(cwc_t *cwc)
   return 0;
 }
 
+static int
+cwc_ecm_reset(th_descrambler_t *th)
+{
+  cwc_service_t *ct = (cwc_service_t *)th;
 
+  if (ct->cs_constcw)
+    return 1;  /* keys will not change */
+  ct->td_keystate = DS_UNKNOWN;
+  ct->ecm_state = ECM_RESET;
+  return 0;
+}
 
 static void
 handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
@@ -1085,7 +1096,7 @@ cwc_session(cwc_t *cwc)
   pthread_cond_init(&cwc->cwc_writer_cond, NULL);
   pthread_mutex_init(&cwc->cwc_writer_mutex, NULL);
   TAILQ_INIT(&cwc->cwc_writeq);
-  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc, 0);
+  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc);
 
   /**
    * Mainloop
@@ -1991,6 +2002,7 @@ cwc_service_start(service_t *t)
     ct->cs_channel       = -1;
     ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
     ct->ecm_state        = ECM_INIT;
+    ct->cs_constcw       = pcard->cwc_caid == 0x2600;
 
     td                   = (th_descrambler_t *)ct;
     tvhcsa_init(td->td_csa = &ct->cs_csa);
@@ -1998,6 +2010,7 @@ cwc_service_start(service_t *t)
     td->td_nicename      = strdup(buf);
     td->td_service       = t;
     td->td_stop          = cwc_service_destroy;
+    td->td_ecm_reset     = cwc_ecm_reset;
     LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
     LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
@@ -2114,7 +2127,7 @@ cwc_entry_find(const char *id, int create)
   cwc->cwc_running = 1;
   TAILQ_INSERT_TAIL(&cwcs, cwc, cwc_link);  
 
-  tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc, 0);
+  tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc);
 
   return cwc;
 }

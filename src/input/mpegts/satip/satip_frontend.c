@@ -361,7 +361,8 @@ satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
 }
 
 static int
-satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                            const char *reason )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_frontend_t *lfe2;
@@ -369,7 +370,7 @@ satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
 
   lock_assert(&global_lock);
 
-  if (!lfe->mi_enabled) return 0;
+  if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
   /* check if the position is enabled */
   position = satip_satconf_get_position(lfe, mm);
@@ -401,7 +402,7 @@ satip_frontend_stop_mux
   char buf1[256], buf2[256];
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - stopping %s", buf1, buf2);
 
   gtimer_disarm(&lfe->sf_monitor_timer);
@@ -1109,7 +1110,7 @@ satip_frontend_input_thread ( void *aux )
     tc = udp_multirecv_read(&um, lfe->sf_rtp->fd, RTP_PKTS, &iovec);
 
     if (tc < 0) {
-      if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+      if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
         tvhlog(LOG_WARNING, "satip", "%s - recvmsg() EOVERFLOW", buf);
@@ -1183,7 +1184,7 @@ satip_frontend_input_thread ( void *aux )
           break;
         nfds = tvhpoll_wait(efd, ev, 1, -1);
         if (nfds <= 0) {
-          if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+          if (ERRNO_AGAIN(errno))
             continue;
           break;
         }
@@ -1286,7 +1287,7 @@ satip_frontend_tune0
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                   satip_frontend_input_thread, lfe, 0);
+                   satip_frontend_input_thread, lfe);
 
   gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 50);
 
@@ -1300,7 +1301,7 @@ satip_frontend_tune1
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - starting %s", buf1, buf2);
 
   /* Tune */

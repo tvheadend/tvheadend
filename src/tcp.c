@@ -135,7 +135,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
           return -1;
         }
       
-        if (errno != EINTR && errno != EWOULDBLOCK && errno != EAGAIN) {
+        if (!ERRNO_AGAIN(errno)) {
           snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
           tvhpoll_destroy(efd);
           close(fd);
@@ -321,15 +321,15 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     if(x == 0)
       return ETIMEDOUT;
     if(x == -1) {
-      if (errno == EAGAIN)
+      if (ERRNO_AGAIN(errno))
         continue;
       return errno;
     }
 
     x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
     if(x == -1) {
-      if(errno == EAGAIN)
-	      continue;
+      if(ERRNO_AGAIN(errno))
+        continue;
       return errno;
     }
 
@@ -528,7 +528,7 @@ tcp_server_loop(void *aux)
       pthread_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
       pthread_mutex_unlock(&global_lock);
-      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, 0);
+      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl);
     }
   }
   tvhtrace("tcp", "server thread finished");
@@ -692,7 +692,7 @@ tcp_server_init(int opt_ipv6)
   tvhpoll_add(tcp_server_poll, &ev, 1);
 
   tcp_server_running = 1;
-  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, 0);
+  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL);
 }
 
 void

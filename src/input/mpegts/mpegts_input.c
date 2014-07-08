@@ -144,6 +144,13 @@ const idclass_t mpegts_input_class =
       .notify   = idnode_notify_title_changed,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "ota_epg",
+      .name     = "Over-the-air EPG",
+      .off      = offsetof(mpegts_input_t, mi_ota_epg),
+      .def.i    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = "Networks",
@@ -161,9 +168,12 @@ const idclass_t mpegts_input_class =
  * Class methods
  * *************************************************************************/
 
-static int
-mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+int
+mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                          const char *reason )
 {
+  if (!strcmp(reason, "epggrab") && !mi->mi_ota_epg)
+    return 0;
   return mi->mi_enabled;
 }
 
@@ -257,7 +267,7 @@ mpegts_input_open_pid
     mpegts_pid_sub_skel->mps_type  = type;
     mpegts_pid_sub_skel->mps_owner = owner;
     if (!RB_INSERT_SORTED(&mp->mp_subs, mpegts_pid_sub_skel, mps_link, mps_cmp)) {
-      mm->mm_display_name(mm, buf, sizeof(buf));
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhdebug("mpegts", "%s - open PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
       SKEL_USED(mpegts_pid_sub_skel);
@@ -290,7 +300,7 @@ mpegts_input_close_pid
     if (!RB_FIRST(&mp->mp_subs)) {
       RB_REMOVE(&mm->mm_pids, mp, mp_link);
       if (mp->mp_fd != -1) {
-        mm->mm_display_name(mm, buf, sizeof(buf));
+        mpegts_mux_nice_name(mm, buf, sizeof(buf));
         tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
         close(mp->mp_fd);
@@ -831,7 +841,7 @@ mpegts_input_stream_status
   st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
   mi->mi_display_name(mi, buf, sizeof(buf));
   st->input_name  = strdup(buf);
-  mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;
@@ -862,9 +872,9 @@ mpegts_input_thread_start ( mpegts_input_t *mi )
   mi->mi_running = 1;
   
   tvhthread_create(&mi->mi_table_tid, NULL,
-                   mpegts_input_table_thread, mi, 0);
+                   mpegts_input_table_thread, mi);
   tvhthread_create(&mi->mi_input_tid, NULL,
-                   mpegts_input_thread, mi, 0);
+                   mpegts_input_thread, mi);
 }
 
 static void
@@ -957,6 +967,9 @@ mpegts_input_create0
   pthread_mutex_init(&mi->mi_output_lock, NULL);
   pthread_cond_init(&mi->mi_table_cond, NULL);
   TAILQ_INIT(&mi->mi_table_queue);
+
+  /* Defaults */
+  mi->mi_ota_epg = 1;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);

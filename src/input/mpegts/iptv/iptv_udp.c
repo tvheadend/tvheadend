@@ -38,7 +38,7 @@ iptv_udp_start ( iptv_mux_t *im, const url_t *url )
   udp_connection_t *conn;
   udp_multirecv_t *um;
 
-  im->mm_display_name((mpegts_mux_t*)im, name, sizeof(name));
+  mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
 
   conn = udp_bind("iptv", name, url->host, url->port,
                   im->mm_iptv_interface, IPTV_BUF_SIZE);

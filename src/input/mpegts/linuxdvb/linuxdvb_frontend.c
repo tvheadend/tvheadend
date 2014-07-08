@@ -254,11 +254,12 @@ linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                               const char *reason )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   if (lfe->lfe_fe_path == NULL) return 0;
-  if (!lfe->mi_enabled) return 0;
+  if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   return 1;
 }
@@ -271,7 +272,7 @@ linuxdvb_frontend_stop_mux
   
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("linuxdvb", "%s - stopping %s", buf1, buf2);
 
   /* Stop thread */
@@ -507,7 +508,7 @@ linuxdvb_frontend_monitor ( void *aux )
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
       pthread_mutex_lock(&lfe->lfe_dvr_lock);
       tvhthread_create(&lfe->lfe_dvr_thread, NULL,
-                       linuxdvb_frontend_input_thread, lfe, 0);
+                       linuxdvb_frontend_input_thread, lfe);
       pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
@@ -667,7 +668,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     
     /* Read */
     if (sbuf_read(&sb, dvr) < 0) {
-      if ((errno == EAGAIN) || (errno == EINTR))
+      if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
         tvhlog(LOG_WARNING, "linuxdvb", "%s - read() EOVERFLOW", buf);
@@ -1086,7 +1087,7 @@ linuxdvb_frontend_tune1
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
 
   /* Tune */

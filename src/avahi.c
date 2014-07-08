@@ -280,7 +280,7 @@ void
 avahi_init(void)
 {
   avahi_asp = avahi_simple_poll_new();
-  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, 0);
+  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL);
 }
 
 void

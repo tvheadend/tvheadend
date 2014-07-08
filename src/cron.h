@@ -38,6 +38,12 @@ typedef struct cron
   uint8_t  c_wday;    ///< Day of the Week mask
 } cron_t;
 
+typedef struct cron_multi
+{
+  uint32_t cm_count;  ///< Count of multiple crons
+  cron_t   cm_crons[0]; ///< Allocated cron structures
+} cron_multi_t;
+
 /**
  * Initialise from a string
  *
@@ -58,6 +64,26 @@ int cron_set ( cron_t *c, const char *str );
  * @return 0 if next time was found
  */
 int cron_next ( cron_t *c, const time_t cur, time_t *nxt );
+
+/**
+ * Initialise from a string
+ *
+ * @param str String representation of the mutiple cron entries ('\n' delimiter)
+ *
+ * @return cron_multi_t pointer if OK, NULL if failed to parse
+ */
+cron_multi_t *cron_multi_set ( const char *str );
+
+/**
+ * Determine the next time a cron will run (from cur)
+ *
+ * @param c   The cron to check
+ * @param now The current time
+ * @param nxt The next time to execute
+ *
+ * @return 0 if next time was found
+ */
+int cron_multi_next ( cron_multi_t *cm, const time_t cur, time_t *nxt );
 
 #endif /* __TVH_CRON_H__ */
 

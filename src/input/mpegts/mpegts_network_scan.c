@@ -200,7 +200,7 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   }
 
-  mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mn->mn_display_name(mn, buf2, sizeof(buf2));
   tvhdebug("mpegts", "%s - adding mux %s to queue weight %d",
            buf2, buf, weight);

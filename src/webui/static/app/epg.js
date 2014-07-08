@@ -7,13 +7,22 @@ tvheadend.brands = new Ext.data.JsonStore({
         op: 'brandList'
     }
 });
+
+insertContentGroupClearOption = function( scope, records, options ){
+    var placeholder = Ext.data.Record.create(['name', 'code']);
+    scope.insert(0,new placeholder({name: '(Clear filter)', code: '-1'}));
+};
+
 //WIBNI: might want this store to periodically update
 
 tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     root: 'entries',
     fields: ['name', 'code'],
     autoLoad: true,
-    url: 'ecglist'
+    url: 'ecglist',
+    listeners: {
+        'load': insertContentGroupClearOption
+    }
 });
 
 tvheadend.contentGroupLookupName = function(code) {
@@ -28,6 +37,45 @@ tvheadend.contentGroupLookupName = function(code) {
 };
 
 tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
+
+tvheadend.channelLookupName = function(key) {
+    channelString = "";
+
+    var index = tvheadend.channels.find('key', key);
+
+    if (index !== -1)
+        var channelString = tvheadend.channels.getAt(index).get('val');
+
+    return channelString;
+};
+
+// Store for duration filters - EPG, autorec dialog and autorec rules in the DVR grid
+// NB: 'no max' is defined as 9999999s, or about 3 months...
+
+tvheadend.DurationStore = new Ext.data.SimpleStore({
+    storeId: 'durationnames',
+    idIndex: 0,
+    fields: ['identifier','label','minvalue','maxvalue'],
+    data: [['-1', '(Clear filter)',"",""],
+           ['1','00:00:01 - 00:15:00',1, 900],
+           ['2','00:15:01 - 00:30:00', 901, 1800],
+           ['3','00:30:01 - 01:30:00', 1801, 5400],
+           ['4','01:30:01 - 03:00:00', 5401, 10800],
+           ['5','03:00:01 - No maximum', 10801, 9999999]]
+});
+
+// Function to convert numeric duration to corresponding label string
+// Note: triggered by minimum duration only. This would fail if ranges
+// had the same minimum (e.g. 15-30 mins and 15-60 minutes) (which we don't have). 
+
+tvheadend.durationLookupRange = function(value) {
+    durationString = "";
+    var index = tvheadend.DurationStore.find('minvalue', value);
+    if (index !== -1)
+        var durationString = tvheadend.DurationStore.getAt(index).data.label;
+
+    return durationString;
+};
 
 tvheadend.epgDetails = function(event) {
 
@@ -378,7 +426,16 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter channel...'
+        typeAhead: true,
+        emptyText: 'Filter channel...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearChannelFilter();
+                    epgStore.reload();
+                }
+            }
+        }
     });
 
     // Tags, uses global store
@@ -391,7 +448,17 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter tag...'
+        typeAhead: true,
+        emptyText: 'Filter tag...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearChannelTagsFilter();
+                    epgStore.reload();
+                }
+            }
+        }
+
     });
 
     // Content groups
@@ -405,42 +472,115 @@ tvheadend.epg = function() {
         editable: true,
         forceSelection: true,
         triggerAction: 'all',
-        emptyText: 'Filter content type...'
+        typeAhead: true,
+        emptyText: 'Filter content type...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearContentGroupFilter();
+                    epgStore.reload();
+                }
+            }
+        }
     });
 
-    function epgQueryClear() {
-        delete epgStore.baseParams.channel;
-        delete epgStore.baseParams.tag;
-        delete epgStore.baseParams.contenttype;
+    var epgFilterDuration = new Ext.form.ComboBox({
+        loadingText: 'Loading...',
+        width: 150,
+        displayField: 'label',
+        store: tvheadend.DurationStore,
+        mode: 'local',
+        editable: true,
+        forceSelection: true,
+        triggerAction: 'all',
+        typeAhead: true,
+        emptyText: 'Filter duration...',
+        listeners: {
+            blur: function () {
+                if(this.getRawValue() == "" ) {
+                    clearDurationFilter();
+                    epgStore.reload();
+                }
+            }
+        }
+
+    });
+
+/*
+ * Clear filter functions
+ */
+
+    clearTitleFilter = function() {
         delete epgStore.baseParams.title;
-
-        epgFilterChannels.setValue("");
-        epgFilterChannelTags.setValue("");
-        epgFilterContentGroup.setValue("");
         epgFilterTitle.setValue("");
+    };
 
+    clearChannelFilter = function() {
+        delete epgStore.baseParams.channel;
+        epgFilterChannels.setValue("");
+    };
+
+    clearChannelTagsFilter = function() {
+        delete epgStore.baseParams.tag;
+        epgFilterChannelTags.setValue("");
+    };
+
+    clearContentGroupFilter = function() {
+        delete epgStore.baseParams.contenttype;
+        epgFilterContentGroup.setValue("");
+    };
+
+    clearDurationFilter = function() {
+           delete epgStore.baseParams.minduration;
+        delete epgStore.baseParams.maxduration;
+        epgFilterDuration.setValue("");
+    };
+
+    function epgQueryClear() {
+        clearTitleFilter();
+        clearChannelFilter();
+        clearChannelTagsFilter();
+        clearDurationFilter();
+        clearContentGroupFilter();
         epgStore.reload();
-    }
+    };
+
+/*
+ * Filter selection event handlers
+ */
 
     epgFilterChannels.on('select', function(c, r) {
-        if (epgStore.baseParams.channel !== r.data.key) {
+        if (r.data.key == -1)
+            clearChannelFilter();
+        else if (epgStore.baseParams.channel !== r.data.key)
             epgStore.baseParams.channel = r.data.key;
-            epgStore.reload();
-        }
+        epgStore.reload();
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
-        if (epgStore.baseParams.tag !== r.data.name) {
+        if (r.data.identifier == -1)
+            clearChannelTagsFilter();
+        else if (epgStore.baseParams.tag !== r.data.name)
             epgStore.baseParams.tag = r.data.name;
-            epgStore.reload();
-        }
+        epgStore.reload();
     });
 
     epgFilterContentGroup.on('select', function(c, r) {
-        if (epgStore.baseParams.contenttype !== r.data.code) {
+        if (r.data.code == -1)
+            clearContentGroupFilter();
+        else if (epgStore.baseParams.contenttype !== r.data.code)
             epgStore.baseParams.contenttype = r.data.code;
-            epgStore.reload();
+        epgStore.reload();
+    });
+
+    epgFilterDuration.on('select', function(c, r) {
+        if (r.data.identifier == -1)
+            clearDurationFilter();
+        else if (epgStore.baseParams.minduration !== r.data.minvalue) {
+            epgStore.baseParams.minduration = r.data.minvalue;
+            epgStore.baseParams.maxduration = r.data.maxvalue;
         }
+        epgStore.reload();
     });
 
     epgFilterTitle.on('valid', function(c) {
@@ -482,8 +622,10 @@ tvheadend.epg = function() {
             '-',
             epgFilterContentGroup,
             '-',
+            epgFilterDuration,
+            '-',
             {
-                text: 'Reset',
+                text: 'Reset All',
                 handler: epgQueryClear
             },
             '->',
@@ -524,28 +666,31 @@ tvheadend.epg = function() {
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";
-        var channel = epgStore.baseParams.channel ? epgStore.baseParams.channel
+        var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
                 : "<i>Don't care</i>";
-        var contenttype = epgStore.baseParams.contenttype ? epgStore.baseParams.contenttype
+        var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
+                : "<i>Don't care</i>";
+        var duration = epgStore.baseParams.minduration ? tvheadend.durationLookupRange(epgStore.baseParams.minduration)
                 : "<i>Don't care</i>";
 
-        Ext.MessageBox.confirm('Auto Recorder',
-                'This will create an automatic rule that '
+
+        Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
-                + 'to record that matches this query: ' + '<br><br>'
+                + 'to record that match this query: ' + '<br><br>'
                 + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>'
-                + '<br>' + 'Currently this will match (and record) '
+                + '<div class="x-smallhdr">Duration:</div>' + duration + '<br>'
+                + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
-                function(button) {
-                    if (button === 'no')
-                        return;
-                    createAutoRec2(epgStore.baseParams);
-                });
+            function(button) {
+                if (button === 'no')
+                    return;
+                createAutoRec2(epgStore.baseParams);
+            });
     }
 
     function createAutoRec2(params) {
