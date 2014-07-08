@@ -42,7 +42,7 @@ void set_even_control_word(void *keys, const unsigned char *even) {
 }
 
 void set_odd_control_word(void *keys, const unsigned char *odd) {
-	aes_set_even_control_word(keys, odd);
+	aes_set_odd_control_word(keys, odd);
 }
 
 int decrypt_packets(void *keys, unsigned char **cluster) {

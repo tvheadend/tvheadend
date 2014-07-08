@@ -16,29 +16,34 @@
 
 struct aes_keys_t {
 	AES_KEY even;
-	AES_KEY odd;
+	AES_KEY odd; // Reserved for future use
 };
 
+unsigned char * keybuffer;
+
+// Even and Odd cw represent one full 128-bit AES key
 void aes_set_even_control_word(void *keys, const unsigned char *pk) {
-	//AES_set_decrypt_key(pk, 128, &((struct aes_keys_t *) keys)->even);
+	memcpy(keybuffer, pk, 8);
+	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
 }
 
 void aes_set_odd_control_word(void *keys, const unsigned char *pk) {
-	//AES_set_decrypt_key(pk, 128, &((struct aes_keys_t *) keys)->odd);
+	memcpy(keybuffer + 8, pk, 8);
+	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
 }
 
 //-----set control words
 void aes_set_control_words(void *keys, const unsigned char *ev,
 		const unsigned char *od) {
-	unsigned char key[16];
-	memcpy(key, ev, 8);
-	memcpy(key + 8, od, 8);
-	AES_set_decrypt_key(key, 128, &((struct aes_keys_t *) keys)->even);
+	memcpy(keybuffer, ev, 8);
+	memcpy(keybuffer + 8, od, 8);
+	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
 }
 
 //-----key structure
 
 void *aes_get_key_struct(void) {
+	keybuffer = calloc(16, 1);
 	struct aes_keys_t *keys = (struct aes_keys_t *) malloc(
 			sizeof(struct aes_keys_t));
 	if (keys) {
