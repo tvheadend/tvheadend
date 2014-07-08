@@ -47,6 +47,7 @@ void *aes_get_key_struct(void) {
 }
 
 void aes_free_key_struct(void *keys) {
+	free(keybuffer);
 	return free(keys);
 }
 
