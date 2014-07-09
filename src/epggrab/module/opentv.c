@@ -538,7 +538,7 @@ opentv_bat_callback
  * Module callbacks
  * ***********************************************************************/
 
-static void _opentv_start
+static int _opentv_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *mm )
 {
   int *t;
@@ -552,8 +552,8 @@ static void _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled && !map->om_forced) return;
-  if (mod->tsid != mm->mm_tsid) return;
+  if (!m->enabled && !map->om_forced) return -1;
+  if (mod->tsid != mm->mm_tsid) return -1;
 
   /* Install tables */
   tvhdebug(mod->id, "install table handlers");
@@ -585,6 +585,7 @@ static void _opentv_start
 
   // Note: we process the data in a serial fashion, first we do channels
   //       then we do titles, then we do summaries
+  return 0;
 }
 
 /* ************************************************************************

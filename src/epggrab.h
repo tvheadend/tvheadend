@@ -205,6 +205,8 @@ struct epggrab_ota_mux
   int                                om_complete;     ///< Has completed a scan
   gtimer_t                           om_timer;        ///< Per mux active timer
 
+  char                              *om_force_modname;///< Force this module
+
   TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 };
@@ -233,7 +235,7 @@ struct epggrab_module_ota
   //TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
-  void (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
+  int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
 };

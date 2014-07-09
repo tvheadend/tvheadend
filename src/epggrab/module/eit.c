@@ -655,20 +655,20 @@ done:
  * Module Setup
  * ***********************************************************************/
 
-static void _eit_start 
+static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
   epggrab_module_ota_t *m = map->om_module;
   int pid, opts = 0;
 
   /* Disabled */
-  if (!m->enabled && !map->om_forced) return;
+  if (!m->enabled && !map->om_forced) return -1;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
   // Note: do this as PID is the same
   if (!strcmp(m->id, "uk_freeview")) {
     m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    if (m->enabled) return;
+    if (m->enabled) return -1;
   }
 
   /* Freesat (3002/3003) */
@@ -688,6 +688,7 @@ static void _eit_start
   mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid);
   // TODO: might want to limit recording to EITpf only
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
+  return 0;
 }
 
 static int _eit_tune
