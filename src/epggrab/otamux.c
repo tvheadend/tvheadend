@@ -192,7 +192,7 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
   epggrab_module_t  *m;
   epggrab_ota_map_t *map;
-  epggrab_ota_mux_t *ota, ota_skel;
+  epggrab_ota_mux_t *ota;
   const char *uuid = idnode_uuid_as_str(&mm->mm_id);
 
   /* Already started */
@@ -200,16 +200,10 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
     if (!strcmp(ota->om_mux_uuid, uuid))
       return;
 
-  /* Find the configuration */
-  ota_skel.om_mux_uuid = (char *)uuid;
-  ota = RB_FIND(&epggrab_ota_all, &ota_skel, om_global_link, om_id_cmp);
-  if (!ota)
-    return;
-
   /* Register all modules */
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->type == EPGGRAB_OTA && m->enabled)
-      epggrab_ota_register((epggrab_module_ota_t *)m, ota, mm);
+      epggrab_ota_register((epggrab_module_ota_t *)m, NULL, mm);
   }
 
   /* Check if already active */
