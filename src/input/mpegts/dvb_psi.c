@@ -390,10 +390,6 @@ mpegts_table_state_reset
   ( mpegts_table_t *mt, mpegts_table_state_t *st, int last )
 {
   int i;
-  if (st->complete == 2) {
-    mt->mt_complete--;
-    mt->mt_incomplete++;
-  }
   mt->mt_finished = 0;
   st->complete = 0;
   st->version = 0xff;  /* invalid */
@@ -451,7 +447,7 @@ dvb_table_end
 {
   int sa, sb;
   uint32_t rem;
-  if (st) {
+  if (st && !st->complete) {
     assert(sect >= 0 && sect <= 255);
     sa = sect / 32;
     sb = sect % 32;
@@ -467,7 +463,8 @@ dvb_table_end
       mt->mt_incomplete--;
       return dvb_table_complete(mt);
     }
-  }
+  } else if (st)
+    return dvb_table_complete(mt);
   return 2;
 }
 
@@ -505,12 +502,15 @@ dvb_table_begin
     *ret = st = mpegts_table_state_find(mt, tableid, extraid, *last);
 
     /* New version */
-    if (st->complete &&
-        st->version != *ver) {
+    if (st->version != *ver) {
+      if (st->complete == 2)
+        mt->mt_complete--;
+      if (st->complete)
+        mt->mt_incomplete++;
       tvhtrace(mt->mt_name, "  new version, restart");
       mpegts_table_state_reset(mt, st, *last);
+      st->version = *ver;
     }
-    st->version = *ver;
 
     /* Complete? */
     if (st->complete) {
@@ -543,6 +543,8 @@ dvb_table_reset(mpegts_table_t *mt)
   mpegts_table_state_t *st;
 
   tvhtrace(mt->mt_name, "pid %02X complete reset", mt->mt_pid);
+  mt->mt_incomplete = 0;
+  mt->mt_complete   = 0;
   while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
