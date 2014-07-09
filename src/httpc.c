@@ -995,12 +995,16 @@ header:
 static void
 http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
 {
-  char buf[64];
+  char buf[256];
 
   http_arg_init(h);
-  snprintf(buf, sizeof(buf), "%s:%u", url->host,
-                                      http_port(url->scheme, url->port));
-  http_arg_set(h, "Host", buf);
+  if (url->port == 0) { /* default port */
+    http_arg_set(h, "Host", url->host);
+  } else {
+    snprintf(buf, sizeof(buf), "%s:%u", url->host,
+                                        http_port(url->scheme, url->port));
+    http_arg_set(h, "Host", buf);
+  }
   if (http_user_agent) {
     http_arg_set(h, "User-Agent", http_user_agent);
   } else {
