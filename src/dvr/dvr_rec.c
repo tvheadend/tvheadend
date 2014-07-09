@@ -624,7 +624,7 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     return;
   }
 
-  fbasename = strdup(de->de_filename); 
+  fbasename = tvh_strdupa(de->de_filename);
   snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - de->de_start_extra);
   snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + de->de_stop_extra);
 
@@ -652,7 +652,6 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   
   spawnv(args[0], (void *)args);
     
-  free(fbasename);
   htsstr_argsplit_free(args);
 }
 
