@@ -201,14 +201,17 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
       return;
 
   /* Register all modules */
+  ota = NULL;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->type == EPGGRAB_OTA && m->enabled)
-      epggrab_ota_register((epggrab_module_ota_t *)m, NULL, mm);
+      ota = epggrab_ota_register((epggrab_module_ota_t *)m, ota, mm);
   }
 
-  /* Check if already active */
-  LIST_FOREACH(map, &ota->om_modules, om_link)
-    map->om_module->start(map, mm);
+  if (ota) {
+    /* Check if already active */
+    LIST_FOREACH(map, &ota->om_modules, om_link)
+      map->om_module->start(map, mm);
+  }
 }
 
 static void
