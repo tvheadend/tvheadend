@@ -142,9 +142,9 @@ urlparse_done( void )
 
 /* URL regexp - I probably found this online */
 // TODO: does not support ipv6
-#define UC "[a-z0-9_\\-\\.!£$%^&]"
+#define UC "[a-z0-9_\\.!£$%^&-]"
 #define PC UC
-#define HC "[a-z0-9\\-\\.]"
+#define HC "[a-z0-9\\.-]"
 #define URL_RE "^([A-Za-z]+)://(("UC"+)(:("PC"+))?@)?("HC"+)(:([0-9]+))?(/[^\\?]*)?(.([^#]*))?(#(.*))?"
 
 static regex_t *urlparse_exp = NULL;
