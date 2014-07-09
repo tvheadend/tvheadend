@@ -77,7 +77,7 @@ typedef struct dmx_filter {
 #define CA_SET_PID        0x40086f87
 #define CA_SET_PID_X      0x876f0840
 #define DMX_STOP          0x00006f2a
-#define DMX_STOP_X        0x6f2a0000
+#define DMX_STOP_X        0x2a6f0000
 #define DMX_SET_FILTER    0x403c6f2b
 #define DMX_SET_FILTER_X  0x2b6f3c40
 
