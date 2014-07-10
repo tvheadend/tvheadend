@@ -1,0 +1,49 @@
+"targets": {
+  "precise-amd64": {
+
+    "buildenv": "precise-amd64",
+
+    "builddeps": [
+      "git",
+      "build-essential",
+      "pkg-config",
+      "libavahi-client-dev",
+      "libssl-dev",
+      "zlib1g-dev",
+      "wget",
+      "bzip2",
+      "libcurl4-gnutls-dev",
+      "git-core",
+      "liburiparser-dev"
+    ],
+
+    "buildcmd": [
+      "./configure --disable-dvbscan",
+      "make -j ${PARALLEL}"
+    ]
+  },
+
+  "precise-i386": {
+
+    "buildenv": "precise-i386",
+
+    "builddeps": [
+      "git",
+      "build-essential",
+      "pkg-config",
+      "libavahi-client-dev",
+      "libssl-dev",
+      "zlib1g-dev",
+      "wget",
+      "bzip2",
+      "libcurl4-gnutls-dev",
+      "git-core",
+      "liburiparser-dev"
+    ],
+
+    "buildcmd": [
+      "./configure --disable-dvbscan",
+      "make -j ${PARALLEL}"
+    ]
+  }
+}
