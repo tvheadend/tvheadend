@@ -16,34 +16,28 @@
 
 struct aes_keys_t {
 	AES_KEY even;
-	AES_KEY odd; // Reserved for future use
+	AES_KEY odd;
 };
-
-unsigned char * keybuffer;
 
 // Even and Odd cw represent one full 128-bit AES key
 void aes_set_even_control_word(void *keys, const unsigned char *pk) {
-	memcpy(keybuffer, pk, 8);
-	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
+	AES_set_decrypt_key(pk, 128, &((struct aes_keys_t *) keys)->even);
 }
 
 void aes_set_odd_control_word(void *keys, const unsigned char *pk) {
-	memcpy(keybuffer + 8, pk, 8);
-	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
+	AES_set_decrypt_key(pk, 128, &((struct aes_keys_t *) keys)->odd);
 }
 
 //-----set control words
 void aes_set_control_words(void *keys, const unsigned char *ev,
 		const unsigned char *od) {
-	memcpy(keybuffer, ev, 8);
-	memcpy(keybuffer + 8, od, 8);
-	AES_set_decrypt_key(keybuffer, 128, &((struct aes_keys_t *) keys)->even);
+	AES_set_decrypt_key(ev, 128, &((struct aes_keys_t *) keys)->even);
+	AES_set_decrypt_key(od, 128, &((struct aes_keys_t *) keys)->odd);
 }
 
 //-----key structure
 
 void *aes_get_key_struct(void) {
-	keybuffer = calloc(16, 1);
 	struct aes_keys_t *keys = (struct aes_keys_t *) malloc(
 			sizeof(struct aes_keys_t));
 	if (keys) {
@@ -54,7 +48,6 @@ void *aes_get_key_struct(void) {
 }
 
 void aes_free_key_struct(void *keys) {
-	free(keybuffer);
 	return free(keys);
 }
 
@@ -62,6 +55,7 @@ void aes_free_key_struct(void *keys) {
 
 void aes_decrypt_packet(void *keys, unsigned char *packet) {
 	unsigned char *pkt;
+	unsigned char ev_od = 0;
 	int xc0, len, offset, n;
 
 	pkt = packet;
@@ -78,6 +72,7 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
 		}
 	
 	if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted 
+		ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
 		pkt[3] &= 0x3f;  // consider it decrypted now
 		if (pkt[3] & 0x20) { // incomplete packet
 				offset = 4 + pkt[4] + 1;
@@ -95,7 +90,11 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
 		return;
 	}
 
-	k = ((struct aes_keys_t *) keys)->even;
+	if (ev_od == 0) {
+		k = ((struct aes_keys_t *) keys)->even;
+	} else {
+		k = ((struct aes_keys_t *) keys)->odd;
+	}
 
 	// TODO room for improvement?
 	int i;
