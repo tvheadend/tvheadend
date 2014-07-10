@@ -800,7 +800,7 @@ forbid:
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s",
 	     t->s_dvb_svcname, delay, ct->td_nicename);
 
-    descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 8);
+    descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 16);
 
     ep = LIST_FIRST(&ct->cs_pids);
     while(ep != NULL) {
