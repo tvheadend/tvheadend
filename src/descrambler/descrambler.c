@@ -181,14 +181,14 @@ descrambler_keys ( th_descrambler_t *td,
       goto fin;
     }
 
-  for (i = 0; i < 8; i++)
+  for (i = 0; i < 16; i++)
     if (even[i]) {
       j++;
       tvhcsa_set_key_even(td->td_csa, even);
       dr->dr_key_valid |= 0x40;
       break;
     }
-  for (i = 0; i < 8; i++)
+  for (i = 0; i < 16; i++)
     if (odd[i]) {
       j++;
       tvhcsa_set_key_odd(td->td_csa, odd);
