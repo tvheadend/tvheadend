@@ -819,7 +819,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     count = lfe->sf_pids_count;
     if (count > lfe->sf_device->sd_pids_max)
       count = lfe->sf_device->sd_pids_max;
-    add = alloca(count * 5);
+    add = alloca(1 + count * 5);
+    add[0] = '\0';
     /* prioritize higher PIDs (tables are low prio) */
     satip_frontend_store_pids(add,
                               &lfe->sf_pids[lfe->sf_pids_count - count],
@@ -837,8 +838,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
   } else {
 
-    add = alloca(lfe->sf_pids_count * 5);
-    del = alloca(lfe->sf_pids_count * 5);
+    add = alloca(1 + lfe->sf_pids_count * 5);
+    del = alloca(1 + lfe->sf_pids_tcount * 5);
     add[0] = del[0] = '\0';
 
 #if 0
