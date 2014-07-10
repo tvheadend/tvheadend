@@ -429,7 +429,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   if (mux == NULL)
     return 0;
   flags  = pid >> 16;
-  pid   &= 0x3fff;
+  pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table->mt_pid == pid) {
       TAILQ_FOREACH(ds, &dt->sections, link) {
@@ -476,7 +476,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
 
   if (mux == NULL)
     return 0;
-  pid &= 0x3fff;
+  pid &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table->mt_pid == pid) {
       TAILQ_FOREACH(ds, &dt->sections, link) {
