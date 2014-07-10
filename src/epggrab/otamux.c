@@ -400,12 +400,12 @@ next_one:
   }
 
   epg_flag = mm->mm_is_epg(mm);
-  if (ARRAY_SIZE(modnames) >= epg_flag)
+  if (epg_flag > MM_EPG_LAST)
     epg_flag = MM_EPG_ENABLE;
-  modname  = modnames[epg_flag];
+  modname  = epg_flag >= 0 ? modnames[epg_flag] : NULL;
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
-#if TRACE_ENABLE
+#if ENABLE_TRACE
     char name[256];
     mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);

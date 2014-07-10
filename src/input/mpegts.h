@@ -316,6 +316,7 @@ enum mpegts_mux_epg_flag
   MM_EPG_FORCE_OPENTV_SKY_ITALIA,
   MM_EPG_FORCE_OPENTV_SKY_AUSAT,
 };
+#define MM_EPG_LAST MM_EPG_FORCE_OPENTV_SKY_AUSAT
 
 /* Multiplex */
 struct mpegts_mux
