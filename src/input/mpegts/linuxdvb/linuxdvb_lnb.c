@@ -226,6 +226,19 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
   {
     { {
+      .ld_type    = "Ku 10750 (Hi-Band)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_band   = linuxdvb_lnb_standard_band,
+      .lnb_pol    = linuxdvb_lnb_standard_pol,
+    },
+    .lnb_low    = 10750000,
+    .lnb_high   = 10750000,
+    .lnb_switch = 10750000,
+  },
+  {
+    { {
       .ld_type    = "Ku 11300",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
@@ -236,6 +249,19 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_low    = 11300000,
     .lnb_high   = 0,
     .lnb_switch = 0,
+  },
+  {
+    { {
+      .ld_type    = "Ku 11300 (Hi-Band)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_band   = linuxdvb_lnb_standard_band,
+      .lnb_pol    = linuxdvb_lnb_standard_pol,
+    },
+    .lnb_low    = 11300000,
+    .lnb_high   = 11300000,
+    .lnb_switch = 11300000,
   },
   {
     { {
