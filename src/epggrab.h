@@ -207,6 +207,12 @@ struct epggrab_ota_mux
 
   char                              *om_force_modname;///< Force this module
 
+  enum {
+    EPGGRAB_OTA_MUX_IDLE,
+    EPGGRAB_OTA_MUX_PENDING,
+    EPGGRAB_OTA_MUX_ACTIVE
+  }                                  om_q_type;
+
   TAILQ_ENTRY(epggrab_ota_mux)       om_q_link;
   RB_ENTRY(epggrab_ota_mux)          om_global_link;
 };

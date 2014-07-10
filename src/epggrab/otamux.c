@@ -98,21 +98,16 @@ epggrab_ota_timeout_get ( void )
 static void
 epggrab_ota_requeue ( void )
 {
-  epggrab_ota_mux_t *om, *om2;
+  epggrab_ota_mux_t *om;
 
   /*
    * enqueue all muxes, but ommit the delayed ones (active+pending)
    */
   RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
-    TAILQ_FOREACH(om2, &epggrab_ota_active, om_q_link)
-      if (om2 == om)
-        break;
-    if (om2 == om) continue;
-    TAILQ_FOREACH(om2, &epggrab_ota_pending, om_q_link)
-      if (om2 == om)
-        break;
-    if (om2 == om) continue;
+    if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
+      continue;
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
   }
 }
 
@@ -139,10 +134,13 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 
   gtimer_disarm(&om->om_timer);
 
+  assert(om->om_q_type == EPGGRAB_OTA_MUX_ACTIVE);
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
-  if (reason == EPGGRAB_OTA_DONE_STOLEN)
+  om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
+  if (reason == EPGGRAB_OTA_DONE_STOLEN) {
     TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
-  else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
+    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+  } else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
     char name[256];
     mpegts_mux_t *mm = mpegts_mux_find(om->om_mux_uuid);
     mpegts_mux_nice_name(mm, name, sizeof(name));
@@ -164,18 +162,17 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
 {
   epggrab_module_t  *m;
   epggrab_ota_map_t *map;
-  epggrab_ota_mux_t *om2;
   char *modname = om->om_force_modname;
   mpegts_mux_instance_t *mmi = mm->mm_active;
 
   /* In pending queue? Remove.. */
-  TAILQ_FOREACH(om2, &epggrab_ota_pending, om_q_link)
-    if (om2 == om) {
-      TAILQ_REMOVE(&epggrab_ota_pending, om, om_q_link);
-      break;
-    }
+  if (om->om_q_type == EPGGRAB_OTA_MUX_PENDING)
+    TAILQ_REMOVE(&epggrab_ota_pending, om, om_q_link);
+  else
+    assert(om->om_q_type == EPGGRAB_OTA_MUX_IDLE);
 
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
+  om->om_q_type = EPGGRAB_OTA_MUX_ACTIVE;
   gtimer_arm(&om->om_timer, epggrab_ota_timeout_cb, om,
              epggrab_ota_timeout_get() + mpegts_input_grace(mmi->mmi_input, mm));
   if (modname) {
@@ -264,6 +261,7 @@ epggrab_ota_register
       SKEL_USED(epggrab_ota_mux_skel);
       ota->om_mux_uuid = strdup(uuid);
       TAILQ_INSERT_TAIL(&epggrab_ota_pending, ota, om_q_link);
+      ota->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       if (TAILQ_FIRST(&epggrab_ota_pending) == ota)
         epggrab_ota_kick(1);
       save = 1;
@@ -382,7 +380,9 @@ next_one:
     goto done;
   }
 
+  assert(om->om_q_type == EPGGRAB_OTA_MUX_PENDING);
   TAILQ_REMOVE(&epggrab_ota_pending, om, om_q_link);
+  om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
 
   /* Check if this network failed before */
   for (i = 0, net = NULL; i < networks_count; i++) {
@@ -437,6 +437,7 @@ next_one:
   /* Subscribe to the mux */
   if ((r = mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG))) {
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
     if (r == SM_CODE_NO_FREE_ADAPTER)
       net->failed = 1;
     if (first == NULL)
