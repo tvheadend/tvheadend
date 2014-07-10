@@ -197,8 +197,18 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
   descrambler_flush_tables(mm);
-  while ((mt = LIST_FIRST(&mm->mm_tables)))
+  pthread_mutex_lock(&mm->mm_defer_tables_lock);
+  while ((mt = LIST_FIRST(&mm->mm_defer_tables))) {
+    LIST_REMOVE(mt, mt_defer_link);
+    mt->mt_defer_cmd = 0;
+    mpegts_table_release(mt);
+  }
+  pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+  while ((mt = LIST_FIRST(&mm->mm_tables))) {
+    if ((mt->mt_flags & MT_DEFER) && mt->mt_defer_reg)
+      mt->mt_flags &= ~MT_DEFER; /* force destroy */
     mpegts_table_destroy(mt);
+  }
 }
 
 /*

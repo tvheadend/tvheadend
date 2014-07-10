@@ -142,14 +142,15 @@ struct mpegts_table
    */
   int mt_flags;
 
-#define MT_CRC      0x01
-#define MT_FULL     0x02
-#define MT_QUICKREQ 0x04
-#define MT_RECORD   0x08
-#define MT_SKIPSUBS 0x10
-#define MT_SCANSUBS 0x20
-#define MT_FAST     0x40
-#define MT_SLOW     0x80
+#define MT_CRC      0x0001
+#define MT_FULL     0x0002
+#define MT_QUICKREQ 0x0004
+#define MT_RECORD   0x0008
+#define MT_SKIPSUBS 0x0010
+#define MT_SCANSUBS 0x0020
+#define MT_FAST     0x0040
+#define MT_SLOW     0x0080
+#define MT_DEFER    0x0100
 
   /**
    * Cycle queue
@@ -164,6 +165,7 @@ struct mpegts_table
    */
 
   LIST_ENTRY(mpegts_table) mt_link;
+  LIST_ENTRY(mpegts_table) mt_defer_link;
   mpegts_mux_t *mt_mux;
 
   char *mt_name;
@@ -174,8 +176,10 @@ struct mpegts_table
   RB_HEAD(,mpegts_table_state) mt_state;
   int mt_complete;
   int mt_incomplete;
-  int mt_finished;
-  int mt_subscribed;
+  uint8_t mt_finished;
+  uint8_t mt_subscribed;
+  uint8_t mt_defer_cmd;
+  uint8_t mt_defer_reg;
 
   int mt_count;
 
@@ -371,6 +375,8 @@ struct mpegts_mux
 
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
+  LIST_HEAD(, mpegts_table)   mm_defer_tables;
+  pthread_mutex_t             mm_defer_tables_lock;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 
   LIST_HEAD(, caid)           mm_descrambler_caids;

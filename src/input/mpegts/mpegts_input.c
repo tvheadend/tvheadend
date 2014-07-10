@@ -577,6 +577,51 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 }
 
 static void
+mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  mpegts_table_t *mt;
+  int type;
+
+  pthread_mutex_lock(&mm->mm_defer_tables_lock);
+  while ((mt = LIST_FIRST(&mm->mm_defer_tables)) != NULL) {
+    LIST_REMOVE(mt, mt_defer_link);
+    if (mt->mt_destroyed)
+      continue;
+    type = 0;
+    if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+    if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
+    if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+    if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
+    if (mt->mt_defer_cmd == 1) {
+      mt->mt_defer_cmd = 0;
+      mt->mt_defer_reg = 1;
+      LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
+      mm->mm_num_tables++;
+      if (!mt->mt_subscribed) {
+        mt->mt_subscribed = 1;
+        pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+        mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
+      }
+    } else if (mt->mt_defer_cmd == 2) {
+      mt->mt_defer_cmd = 0;
+      mt->mt_defer_reg = 0;
+      LIST_REMOVE(mt, mt_link);
+      mm->mm_num_tables--;
+      if (mt->mt_subscribed) {
+        mt->mt_subscribed = 0;
+        pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+        mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
+      }
+    } else {
+      pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+    }
+    mpegts_table_release(mt);
+    pthread_mutex_lock(&mm->mm_defer_tables_lock);
+  }
+  pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+}
+
+static void
 mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
@@ -723,8 +768,10 @@ mpegts_input_thread ( void * p )
       
     /* Process */
     pthread_mutex_lock(&mi->mi_output_lock);
-    if (mp->mp_mux && mp->mp_mux->mm_active)
+    if (mp->mp_mux && mp->mp_mux->mm_active) {
+      mpegts_input_table_waiting(mi, mp->mp_mux);
       mpegts_input_process(mi, mp);
+    }
     pthread_mutex_unlock(&mi->mi_output_lock);
 
     /* Cleanup */

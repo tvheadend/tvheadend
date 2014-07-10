@@ -442,7 +442,8 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
     dt = calloc(1, sizeof(*dt));
     TAILQ_INIT(&dt->sections);
     dt->table = mpegts_table_add(mux, 0, 0, descrambler_table_callback,
-                                 dt, "descrambler", MT_FULL | flags, pid);
+                                 dt, "descrambler",
+                                 MT_FULL | MT_DEFER | flags, pid);
     if (dt->table)
       dt->table->mt_service = (mpegts_service_t *)service;
     TAILQ_INSERT_TAIL(&mux->mm_descrambler_tables, dt, link);
