@@ -65,7 +65,8 @@ tvhdhomerun_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm )
+tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
+								  const char *reason )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   if (!hfe->mi_enabled) return 0;
@@ -346,7 +347,7 @@ tvhdhomerun_frontend_start_mux
     tvhlog(LOG_INFO, "tvhdhomerun", "Starting input thread.");
     hfe->hf_input_thread_running = 1;
     tvhthread_create(&hfe->hf_input_thread, NULL,
-                     tvhdhomerun_frontend_input_thread, hfe, 0);
+                     tvhdhomerun_frontend_input_thread, hfe);
 
   }
   
