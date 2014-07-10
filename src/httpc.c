@@ -217,6 +217,21 @@ http_client_clear_state( http_client_t *hc )
 }
 
 static int
+http_client_einprogress( http_client_t *hc )
+{
+  struct pollfd fds;
+  fds.fd      = hc->hc_fd;
+  fds.events  = POLLOUT|POLLNVAL|POLLERR;
+  fds.revents = 0;
+  if (poll(&fds, 1, 0) == 0) {
+    http_client_poll_dir(hc, 0, 1);
+    return 1;
+  }
+  hc->hc_einprogress = 0;
+  return 0;
+}
+
+static int
 http_client_ssl_read_update( http_client_t *hc )
 {
   struct http_client_ssl *ssl = hc->hc_ssl;
@@ -469,17 +484,10 @@ http_client_send_partial( http_client_t *hc )
   while (wcmd != NULL) {
     hc->hc_cmd   = wcmd->wcmd;
     hc->hc_rcseq = wcmd->wcseq;
-    if (hc->hc_einprogress) {
-      struct pollfd fds;
-      memset(&fds, 0, sizeof(fds));
-      fds.fd     = hc->hc_fd;
-      fds.events = POLLOUT;
-      if (poll(&fds, 1, 0) == 0) {
-        r = -1;
-        errno = EINPROGRESS;
-        goto skip;
-      }
-      hc->hc_einprogress = 0;
+    if (hc->hc_einprogress && http_client_einprogress(hc)) {
+      errno = EINPROGRESS;
+      r = -1;
+      goto skip;
     }
     if (hc->hc_ssl)
       r = http_client_ssl_send(hc, wcmd->wbuf + wcmd->wpos,
@@ -497,7 +505,6 @@ skip:
     }
     wcmd->wpos += r;
     if (wcmd->wpos >= wcmd->wsize) {
-      http_client_cmd_destroy(hc, wcmd);
       res = HTTP_CON_SENT;
       wcmd = NULL;
     }
@@ -521,6 +528,7 @@ http_client_send( http_client_t *hc, enum http_cmd cmd,
   http_arg_t *h;
   htsbuf_queue_t q;
   const char *s;
+  int empty;
 
   if (hc->hc_shutdown) {
     if (header)
@@ -595,16 +603,20 @@ error:
   wcmd->wbuf  = body;
   wcmd->wsize = body_size;
 
+  empty = TAILQ_EMPTY(&hc->hc_wqueue);
   TAILQ_INSERT_TAIL(&hc->hc_wqueue, wcmd, link);
 
   hc->hc_ping_time = dispatch_clock;
 
-  return http_client_send_partial(hc);
+  if (empty)
+    return http_client_send_partial(hc);
+  return HTTP_CON_SENDING;
 }
 
 static int
 http_client_finish( http_client_t *hc )
 {
+  http_client_wcmd_t *wcmd;
   int res;
 
 #if ENABLE_TRACE
@@ -619,6 +631,9 @@ http_client_finish( http_client_t *hc )
       return http_client_flush(hc, res);
   }
   hc->hc_hsize = hc->hc_csize = 0;
+  wcmd = TAILQ_FIRST(&hc->hc_wqueue);
+  if (wcmd)
+    http_client_cmd_destroy(hc, wcmd);
   if (hc->hc_version != RTSP_VERSION_1_0 &&
       hc->hc_handle_location &&
       (hc->hc_code == HTTP_STATUS_MOVED ||
@@ -634,8 +649,10 @@ http_client_finish( http_client_t *hc )
       return HTTP_CON_RECEIVING;
     }
   }
-  if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK)
+  if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK) {
+    hc->hc_code = 0;
     return http_client_send_partial(hc);
+  }
   if (!hc->hc_keepalive) {
     http_client_shutdown(hc, 0, 0);
     if (hc->hc_ssl) {
