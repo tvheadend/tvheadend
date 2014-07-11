@@ -136,6 +136,7 @@ mpegts_table_add
   int subscribe = 1;
 
   /* Check for existing */
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_opaque != opaque)
       continue;
@@ -154,11 +155,16 @@ mpegts_table_add
     } else {
       if (strcmp(mt->mt_name, name))
         continue;
-      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed)
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
         mm->mm_open_table(mm, mt, 1);
+        return mt;
+      }
     }
+    pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);
