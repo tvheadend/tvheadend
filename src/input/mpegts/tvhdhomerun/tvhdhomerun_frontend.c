@@ -323,15 +323,7 @@ tvhdhomerun_frontend_start_mux
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   char buf1[256], buf2[256];
 
-  PTHREAD_MUTEX_LOCK(&hfe->hf_input_mux_lock);
-
   mpegts_mux_instance_t *cur = LIST_FIRST(&hfe->mi_mux_active);
-
-  hfe->hf_mmi             = mmi;
-  mi->mi_display_name(mi, buf1, sizeof(buf1));
-  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug("tvhdhomerun", "%s - stopping %s", buf1, buf2);
-
   if (cur != NULL) {
     // Already tuned to this MUX
     if (mmi == cur)
@@ -340,6 +332,14 @@ tvhdhomerun_frontend_start_mux
     cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
   }
   assert(LIST_FIRST(&hfe->mi_mux_active) == NULL);
+
+  PTHREAD_MUTEX_LOCK(&hfe->hf_input_mux_lock);
+
+  hfe->hf_mmi             = mmi;
+  mi->mi_display_name(mi, buf1, sizeof(buf1));
+  mmi->mmi_mux->mm_display_name(mmi->mmi_mux, buf2, sizeof(buf2));
+  tvhdebug("tvhdhomerun", "%s - stopping %s", buf1, buf2);
+
 
   tvhdhomerun_frontend_stop_inputthread(hfe);
 
