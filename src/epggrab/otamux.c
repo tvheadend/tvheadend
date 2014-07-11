@@ -129,8 +129,15 @@ epggrab_ota_kick ( int delay )
 static void
 epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 {
+  char name[256];
   mpegts_mux_t *mm;
   epggrab_ota_map_t *map;
+
+  mm = mpegts_mux_find(om->om_mux_uuid);
+  mpegts_mux_nice_name(mm, name, sizeof(name));
+  tvhdebug("epggrab", "grab done for %s (%s)", name,
+           reason == EPGGRAB_OTA_DONE_TIMEOUT ? "timeout" :
+           (reason == EPGGRAB_OTA_DONE_STOLEN ? "stolen" : "complete"));
 
   gtimer_disarm(&om->om_timer);
 
@@ -141,9 +148,6 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
     om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
   } else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
-    char name[256];
-    mpegts_mux_t *mm = mpegts_mux_find(om->om_mux_uuid);
-    mpegts_mux_nice_name(mm, name, sizeof(name));
     LIST_FOREACH(map, &om->om_modules, om_link)
       if (!map->om_complete)
         tvhlog(LOG_WARNING, "epggrab", "%s - data completion timeout for %s", map->om_module->name, name);
@@ -291,7 +295,6 @@ epggrab_ota_complete
   ( epggrab_module_ota_t *mod, epggrab_ota_mux_t *ota )
 {
   int done = 1;
-  epggrab_ota_mux_t *ota2;
   epggrab_ota_map_t *map;
   lock_assert(&global_lock);
   tvhdebug(mod->id, "grab complete");
@@ -313,11 +316,12 @@ epggrab_ota_complete
   if (!done) return;
 
   /* Done */
-  TAILQ_FOREACH(ota2, &epggrab_ota_active, om_q_link)
-    if (ota == ota2) {
-      epggrab_ota_done(ota, EPGGRAB_OTA_DONE_COMPLETE);
-      break;
-    }
+  if (ota->om_q_type == EPGGRAB_OTA_MUX_ACTIVE)
+    epggrab_ota_done(ota, EPGGRAB_OTA_DONE_COMPLETE);
+  else if (ota->om_q_type == EPGGRAB_OTA_MUX_PENDING) {
+    TAILQ_REMOVE(&epggrab_ota_pending, ota, om_q_link);
+    ota->om_q_type = EPGGRAB_OTA_MUX_IDLE;
+  }
 }
 
 /* **************************************************************************
