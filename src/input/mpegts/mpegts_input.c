@@ -543,16 +543,20 @@ static void
 mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 {
   int      i   = 0;
-  int      len = mm->mm_num_tables;
+  int      len;
   uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
   uint8_t  cc  = (tsb[3] & 0x0f);
-  mpegts_table_t *mt, *vec[len];
+  mpegts_table_t *mt, **vec;
 
   /* Collate - tables may be removed during callbacks */
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  len = mm->mm_num_tables;
+  vec = alloca(len * sizeof(mpegts_table_t *));
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     mpegts_table_grab(mt);
     vec[i++] = mt;
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
   assert(i == len);
 
   /* Process */
@@ -582,7 +586,7 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
   mpegts_table_t *mt;
   int type;
 
-  pthread_mutex_lock(&mm->mm_defer_tables_lock);
+  pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = LIST_FIRST(&mm->mm_defer_tables)) != NULL) {
     LIST_REMOVE(mt, mt_defer_link);
     if (mt->mt_destroyed)
@@ -599,7 +603,7 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
       mm->mm_num_tables++;
       if (!mt->mt_subscribed) {
         mt->mt_subscribed = 1;
-        pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+        pthread_mutex_unlock(&mm->mm_tables_lock);
         mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
       }
     } else if (mt->mt_defer_cmd == 2) {
@@ -609,16 +613,16 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
       mm->mm_num_tables--;
       if (mt->mt_subscribed) {
         mt->mt_subscribed = 0;
-        pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+        pthread_mutex_unlock(&mm->mm_tables_lock);
         mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
       }
     } else {
-      pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+      pthread_mutex_unlock(&mm->mm_tables_lock);
     }
     mpegts_table_release(mt);
-    pthread_mutex_lock(&mm->mm_defer_tables_lock);
+    pthread_mutex_lock(&mm->mm_tables_lock);
   }
-  pthread_mutex_unlock(&mm->mm_defer_tables_lock);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
 static void

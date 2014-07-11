@@ -377,7 +377,7 @@ struct mpegts_mux
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
   LIST_HEAD(, mpegts_table)   mm_defer_tables;
-  pthread_mutex_t             mm_defer_tables_lock;
+  pthread_mutex_t             mm_tables_lock;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 
   LIST_HEAD(, caid)           mm_descrambler_caids;
