@@ -206,6 +206,13 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = LIST_FIRST(&mm->mm_defer_tables))) {
     LIST_REMOVE(mt, mt_defer_link);
+    if (!mt->mt_defer_reg) {
+      /* registration not fished, but ... */
+      /* allow the table free in next table destroy loop */
+      mt->mt_defer_reg = 1;
+      LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
+      mm->mm_num_tables++;
+    }
     mt->mt_defer_cmd = 0;
     mpegts_table_release(mt);
   }
