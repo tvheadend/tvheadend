@@ -809,6 +809,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
 
   /* Log */
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
       const char *s = "not found";
@@ -819,6 +820,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
       tvhdebug("mpegts", "%s - %s %s", buf, mt->mt_name, s);
     }
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 
   if (res)
     mpegts_network_scan_mux_done(mm);
@@ -844,18 +846,23 @@ mpegts_mux_scan_timeout ( void *aux )
   mm->mm_scan_init = 1;
   
   /* Check tables */
+again:
+  pthread_mutex_lock(&mm->mm_tables_lock);
   c = q = 0;
   for (mt = LIST_FIRST(&mm->mm_tables); mt != NULL; mt = nxt) {
     nxt = LIST_NEXT(mt, mt_link);
     if (!(mt->mt_flags & MT_QUICKREQ)) continue;
     if (!mt->mt_count) {
+      pthread_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_destroy(mt);
+      goto again;
     } else if (!mt->mt_complete) {
       q++;
     } else {
       c++;
     }
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
       
   /* No DATA - give up now */
   if (!c) {
