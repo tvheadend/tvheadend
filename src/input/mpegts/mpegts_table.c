@@ -30,11 +30,15 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
   if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
 
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ)) continue;
-    if(!mt->mt_complete)
+    if(!mt->mt_complete) {
+      pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
+    }
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s scan complete", buf);
