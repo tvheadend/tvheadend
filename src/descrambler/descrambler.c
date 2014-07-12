@@ -284,28 +284,32 @@ descrambler_descramble ( service_t *t,
         ki = tsb2[3];
         if ((ki & 0x80) != 0x00) {
           if ((dr->dr_key_valid & KEY_MASK(ki)) == 0) {
-            /* key is not valid - just skip from buffer */
-            continue;
+            sbuf_cut(&dr->dr_buf, off);
+            goto next2;
           }
           if (dr->dr_key_index != (ki & 0x40) &&
               dr->dr_key_start + 2 < dispatch_clock) {
             tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                     (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
-            if (dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
+            if (dr->dr_ecm_key_time +
+                  ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
               sbuf_cut(&dr->dr_buf, off);
-              if (!td->td_ecm_reset(td))
+              if (!td->td_ecm_reset(td)) {
+                dr->dr_key_valid = dr->dr_ecm_valid = 0;
                 goto next;
+              }
             }
+            dr->dr_ecm_valid |= KEY_MASK(ki);
             key_update(dr, ki);
           }
         }
         tvhcsa_descramble(td->td_csa,
                           (mpegts_service_t *)td->td_service,
                           tsb2);
+        dr->dr_last_descramble = dispatch_clock;
       }
       sbuf_free(&dr->dr_buf);
-      dr->dr_last_descramble = dispatch_clock;
     }
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
@@ -321,13 +325,17 @@ descrambler_descramble ( service_t *t,
         tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
-        if (dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
+        if (dr->dr_ecm_key_time +
+              ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
           tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
-          if (!td->td_ecm_reset(td))
+          if (!td->td_ecm_reset(td)) {
+            dr->dr_key_valid = dr->dr_ecm_valid = 0;
             goto next;
+          }
         }
+        dr->dr_ecm_valid |= KEY_MASK(ki);
         key_update(dr, ki);
       }
     }
@@ -338,6 +346,7 @@ descrambler_descramble ( service_t *t,
     return 1;
 next:
     flush_data = 1;
+next2:
     continue;
   }
   if (dr->dr_ecm_start) { /* ECM sent */

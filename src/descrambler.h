@@ -61,6 +61,7 @@ typedef struct th_descrambler_runtime {
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
   uint8_t  dr_key_valid;
+  uint8_t  dr_ecm_valid;
   time_t   dr_key_start;
   time_t   dr_ecm_start;
   time_t   dr_ecm_key_time;
