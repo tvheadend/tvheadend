@@ -70,7 +70,9 @@ int
 hts_settings_makedirs ( const char *inpath )
 {
   size_t x = strlen(inpath) - 1;
-  char path[512];
+  char *path = alloca(x + 2);
+
+  if (path == NULL) return -1;
   strcpy(path, inpath);
 
   while (x) {
