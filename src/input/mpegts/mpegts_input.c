@@ -550,7 +550,7 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
   /* Collate - tables may be removed during callbacks */
   pthread_mutex_lock(&mm->mm_tables_lock);
   i = mm->mm_num_tables;
-  vec = alloca(len * sizeof(mpegts_table_t *));
+  vec = alloca(i * sizeof(mpegts_table_t *));
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_destroyed || !mt->mt_subscribed)
       continue;
