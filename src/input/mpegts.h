@@ -766,6 +766,7 @@ void mpegts_table_release_
 static inline void mpegts_table_release
   (mpegts_table_t *mt)
 {
+  assert(mt->mt_refcount > 0);
   if(--mt->mt_refcount == 0) mpegts_table_release_(mt);
 }
 mpegts_table_t *mpegts_table_add
