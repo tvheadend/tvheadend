@@ -542,27 +542,23 @@ mpegts_input_recv_packets
 static void
 mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 {
-  int i = 0, len, err = 0;
+  int i, len = 0;
   uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
   uint8_t  cc  = (tsb[3] & 0x0f);
   mpegts_table_t *mt, **vec;
 
   /* Collate - tables may be removed during callbacks */
   pthread_mutex_lock(&mm->mm_tables_lock);
-  len = mm->mm_num_tables;
+  i = mm->mm_num_tables;
   vec = alloca(len * sizeof(mpegts_table_t *));
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    if (mt->mt_destroyed || !mt->mt_subscribed)
+      continue;
     mpegts_table_grab(mt);
-    if (i < len)
-      vec[i++] = mt;
-    else
-      err++;
+    if (len < i)
+      vec[len++] = mt;
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
-  if (i != len) {
-    tvherror("psi", "tables count inconsistency (num %d, list %d)", len, i + err);
-    len = i;
-  }
 
   /* Process */
   for (i = 0; i < len; i++) {
