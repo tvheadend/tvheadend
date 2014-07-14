@@ -36,12 +36,11 @@ void aes_set_control_words(void *keys, const unsigned char *ev,
 }
 
 //-----key structure
-
 void *aes_get_key_struct(void) {
 	struct aes_keys_t *keys = (struct aes_keys_t *) malloc(
 			sizeof(struct aes_keys_t));
 	if (keys) {
-		static const unsigned char pk[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+		static const unsigned char pk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		aes_set_control_words(keys, pk, pk);
 	}
 	return keys;
@@ -52,38 +51,40 @@ void aes_free_key_struct(void *keys) {
 }
 
 //----- decrypt
-
 void aes_decrypt_packet(void *keys, unsigned char *packet) {
 	unsigned char *pkt;
 	unsigned char ev_od = 0;
-	int xc0, len, offset, n;
-
+	int xc0, offset, n;
+	int len;
+	//int residue;
 	pkt = packet;
 	AES_KEY k;
 
 	// TODO check all flags
-		xc0 = pkt[3] & 0xc0;
-
-		if (xc0 == 0x00) {//skip clear pkt
-			return;
-		}
-		if (xc0 == 0x40) { //skip reserved pkt
-			return;
-		}
-	
+	xc0 = pkt[3] & 0xc0;
+	if (xc0 == 0x00) {//skip clear pkt
+		return;
+	}
+	if (xc0 == 0x40) { //skip reserved pkt
+		return;
+	}	
 	if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted 
 		ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
 		pkt[3] &= 0x3f;  // consider it decrypted now
-		if (pkt[3] & 0x20) { // incomplete packet
-				offset = 4 + pkt[4] + 1;
-				len = 188 - offset;
-				n = len >> 3;
-				//residue = len - (n << 3);
-				if (n == 0) { // decrypted==encrypted!
-					//DBG(fprintf(stderr,"DECRYPTED MINI!\n"));
-					return;  // this doesn't need more processing
-				}
-                return; // TODO Handle incomplete packets?
+		if (pkt[3] & 0x20) { // incomplete packet  TODO Check this
+			offset = 4 + pkt[4] + 1;
+			len = 188 - offset;
+			n = len >> 3;
+			//residue = len - (n << 3);
+			if (n == 0) { // decrypted==encrypted!
+				//DBG(fprintf(stderr,"DECRYPTED MINI!\n"));
+				return;  // this doesn't need more processing
+			}                	
+		} 
+		else {
+			len = 184;
+			offset = 4;
+			//residue = 0;
 		}
 	}
 	else {
@@ -98,7 +99,7 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
 
 	// TODO room for improvement?
 	int i;
-	for (i = 4; i <= 164; i += 16) {
+	for (i = offset; i <= (len - 16); i += 16) {
 		AES_ecb_encrypt(pkt + i, pkt + i, &k, AES_DECRYPT);
 	}
 	return;
