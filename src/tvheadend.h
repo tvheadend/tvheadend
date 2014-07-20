@@ -237,15 +237,30 @@ typedef enum {
 
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
+/*
+ * Scales for signal status values
+ */
+typedef enum {
+  SIGNAL_STATUS_SCALE_UNKNOWN = 0,
+  SIGNAL_STATUS_SCALE_RELATIVE, // value is unsigned, where 0 means 0% and 65535 means 100%
+  SIGNAL_STATUS_SCALE_DECIBEL   // value is measured in dB
+} signal_status_scale_t;
+
 /**
  * The signal status of a tuner
  */
 typedef struct signal_status {
   const char *status_text; /* adapter status text */
   int snr;      /* signal/noise ratio */
+  signal_status_scale_t snr_scale;
   int signal;   /* signal strength */
+  signal_status_scale_t signal_scale;
   int ber;      /* bit error rate */
   int unc;      /* uncorrected blocks */
+  int ec_bit;   /* error bit count */
+  int tc_bit;   /* total bit count */
+  int ec_block; /* error block count */
+  int tc_block; /* total block count */
 } signal_status_t;
 
 /**

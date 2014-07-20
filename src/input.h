@@ -35,17 +35,41 @@ typedef LIST_HEAD(,tvh_input)         tvh_input_list_t;
 typedef LIST_HEAD(,tvh_input_stream)  tvh_input_stream_list_t;
 
 /*
+ * Scales for input stream statistics values
+ */
+typedef enum {
+  INPUT_STREAM_STATS_SCALE_UNKNOWN = 0,
+  INPUT_STREAM_STATS_SCALE_RELATIVE, // value is unsigned, where 0 means 0% and 65535 means 100%
+  INPUT_STREAM_STATS_SCALE_DECIBEL   // value is measured in dB
+} tvh_input_stream_stats_scale_t;
+
+/*
  * Input stream structure - used for getting statistics about active streams
  */
 struct tvh_input_stream_stats
 {
-  int signal; ///< Signal level (0-100)
-  int ber;    ///< Bit error rate (0-100?)
-  int unc;    ///< Uncorrectable errors
-  int snr;    ///< Signal 2 Noise (dB)
-  int bps;    ///< Bandwidth (bps)
-  int cc;     ///< Continuity errors
-  int te;     ///< Transport errors
+  int signal; ///< signal strength, value depending on signal_scale value:
+              ///<  - SCALE_RELATIVE : 0...65535 (which means 0%...100%)
+              ///<  - SCALE DECIBEL  : 0.0001 dBm units. This value is generally negative.
+  int snr;    ///< signal to noise ratio, value depending on snr_scale value:
+              ///<  - SCALE_RELATIVE : 0...65535 (which means 0%...100%)
+              ///<  - SCALE DECIBEL  : 0.0001 dB units.
+  int ber;    ///< bit error rate (driver/vendor specific value!)
+  int unc;    ///< number of uncorrected blocks
+  int bps;    ///< bandwidth (bps)
+  int cc;     ///< number of continuity errors
+  int te;     ///< number of transport errors
+
+  tvh_input_stream_stats_scale_t signal_scale;
+  tvh_input_stream_stats_scale_t snr_scale;
+
+  /* Note: if tc_bit > 0, BER = ec_bit / tc_bit (0...1) else BER = ber (driver specific value) */
+  int ec_bit;    ///< ERROR_BIT_COUNT (same as unc?)
+  int tc_bit;    ///< TOTAL_BIT_COUNT
+
+  /* Note: PER = ec_block / tc_block (0...1) */
+  int ec_block;  ///< ERROR_BLOCK_COUNT
+  int tc_block;  ///< TOTAL_BLOCK_COUNT
 };
 
 struct tvh_input_stream {
