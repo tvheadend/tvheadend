@@ -712,15 +712,19 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (status == SIGNAL_GOOD &&
               mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
             /* some values that we're tuned */
-            mmi->mmi_stats.signal = 50;
-            mmi->mmi_stats.snr = 12;
+            mmi->mmi_stats.signal = 50 * 65535 / 100;
+            mmi->mmi_stats.snr = 12 * 65535 / 100;
           }
           goto ok;          
         } else if (strncmp(s, "ver=1.0;", 8) == 0) {
@@ -733,10 +737,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;          
         } else if (strncmp(s, "ver=1.1;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
@@ -745,10 +753,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;
         }
       }
@@ -1260,6 +1272,12 @@ satip_frontend_signal_cb( void *aux )
   sigstat.signal       = mmi->mmi_stats.signal;
   sigstat.ber          = mmi->mmi_stats.ber;
   sigstat.unc          = mmi->mmi_stats.unc;
+  sigstat.signal_scale = mmi->mmi_stats.signal_scale;
+  sigstat.snr_scale    = mmi->mmi_stats.snr_scale;
+  sigstat.ec_bit       = mmi->mmi_stats.ec_bit;
+  sigstat.tc_bit       = mmi->mmi_stats.tc_bit;
+  sigstat.ec_block     = mmi->mmi_stats.ec_block;
+  sigstat.tc_block     = mmi->mmi_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &lfe->mi_transports, s_active_link) {
