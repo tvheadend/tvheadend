@@ -345,6 +345,9 @@ Ext.reg("multiselect", Ext.ux.Multiselect);
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
+/**
+ * 22/07/2014: ceiling support backported from version 1.2, by Kai Sommerfeld
+ */
 Ext.namespace('Ext.ux.grid');
 
 Ext.ux.grid.ProgressColumn = function(config) {
@@ -355,6 +358,10 @@ Ext.ux.grid.ProgressColumn = function(config) {
 };
 
 Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
+    /**
+     * @cfg {Integer} upper limit for full progress indicator (defaults to 100)
+     */
+    ceiling : 100,
     /**
      * @cfg {String} colored determines whether use special progression coloring
      *      or the standard Ext.ProgressBar coloring for the bar (defaults to
@@ -397,27 +404,30 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
     },
     renderer: function(v, p, record) {
         var style = '';
-        var textClass = (v < 55) ? 'x-progress-text-back' : 'x-progress-text-front' + (Ext.isIE6 ? '-ie6' : '');
+        var textClass = (v < (this.ceiling / 1.818)) ? 'x-progress-text-back' : 'x-progress-text-front' + (Ext.isIE6 ? '-ie6' : '');
+
+        var value = v / this.ceiling * 100;
+        value = value.toFixed(0);
 
         //ugly hack to deal with IE6 issue
         var text = String.format('</div><div class="x-progress-text {0}" style="width:100%;" id="{1}">{2}</div></div>',
-                textClass, Ext.id(), v + this.textPst
+                textClass, Ext.id(), value + this.textPst
                 );
-        text = (v < 96) ? text.substring(0, text.length - 6) : text.substr(6);
+        text = (v < (this.ceiling / 1.031)) ? text.substring(0, text.length - 6) : text.substr(6);
 
         if (this.colored == true) {
-            if (v <= 100 && v > 66)
+            if (v <= this.ceiling && v > (this.ceiling * 0.66))
                 style = '-green';
-            if (v < 67 && v > 33)
+            if (v < (this.ceiling * 0.67) && v > (this.ceiling * 0.33))
                 style = '-orange';
-            if (v < 34)
+            if (v < (this.ceiling * 0.34))
                 style = '-red';
         }
 
         p.css += ' x-grid3-progresscol';
         return String.format(
                 '<div class="x-progress-wrap"><div class="x-progress-inner"><div class="x-progress-bar{0}" style="width:{1}%;">{2}</div>' +
-                '</div>', style, v, text
+                '</div>', style, value, text
                 );
     }
 });

@@ -181,46 +181,23 @@ tvheadend.status_streams = function() {
                 name: 'cc'
             }, {
                 name: 'te'
+            }, {
+                name: 'signal_scale'
+            }, {
+                name: 'snr_scale'
+            }, {
+                name: 'ec_bit'
+            }, {
+                name: 'tc_bit'
+            }, {
+                name: 'ec_block'
+            }, {
+                name: 'tc_block'
             }
         ],
         url: 'api/status/inputs',
         autoLoad: true,
         id: 'uuid'
-    });
-
-    tvheadend.comet.on('input_status', function(m) {
-        if (m.reload != null)
-            tvheadend.streamStatusStore.reload();
-        if (m.update != null) {
-            var r = tvheadend.streamStatusStore.getById(m.uuid);
-            if (r) {
-                r.data.subs = m.subs;
-                r.data.weight = m.weight;
-                r.data.signal = m.signal;
-                r.data.ber = m.ber;
-                r.data.unc = m.unc;
-                r.data.snr = m.snr;
-                r.data.bps = m.bps;
-                r.data.cc = m.cc;
-                r.data.te = m.te;
-
-                tvheadend.streamStatusStore.afterEdit(r);
-                tvheadend.streamStatusStore.fireEvent('updated',
-                        tvheadend.streamStatusStore,
-                        r,
-                        Ext.data.Record.COMMIT);
-            } else {
-                tvheadend.streamStatusStore.reload();
-            }
-        }
-    });
-
-    var signal = new Ext.ux.grid.ProgressColumn({
-        header: "Signal Strength",
-        dataIndex: 'signal',
-        width: 85,
-        textPst: '%',
-        colored: true
     });
 
     function renderBw(value, item, store) {
@@ -229,8 +206,26 @@ tvheadend.status_streams = function() {
         return '<a href="' + href + '">' + txt + '</a>';
     }
 
+    function renderBer(value, item, store) {
+        if (store.data.tc_bit == 0)
+          return value; // fallback (driver/vendor dependent ber)
+
+        // ber = error_bit_count / total_bit_count
+        var ber = store.data.ec_bit / store.data.tc_bit;
+        return ber;
+    }
+
+    function renderPer(value, item, store) {
+        if (value == 0) // value: total_block_count
+          return '<span class="tvh-grid-unset">Unknown</span>';
+
+        // per = error_block_count / total_block_count
+        var per = store.data.ec_block / value;
+        return per;
+    }
+
     var cm = new Ext.grid.ColumnModel([{
-            width: 100,
+            width: 120,
             header: "Input",
             dataIndex: 'input'
         }, {
@@ -253,31 +248,126 @@ tvheadend.status_streams = function() {
         }, {
             width: 50,
             header: "BER",
-            dataIndex: 'ber'
+            dataIndex: 'ber',
+            renderer: renderBer
         }, {
             width: 50,
-            header: "Uncorrected BER",
+            header: "PER",
+            dataIndex: 'tc_block',
+            renderer: renderPer
+        }, {
+            width: 50,
+            header: "Uncorrected Blocks",
             dataIndex: 'unc'
         }, {
             width: 50,
-            header: "Transport Error",
+            header: "Transport Errors",
             dataIndex: 'te'
         }, {
             width: 50,
-            header: "Continuity Error",
+            header: "Continuity Errors",
             dataIndex: 'cc'
-        }, {
-            width: 50,
-            header: "SNR",
-            dataIndex: 'snr',
-            renderer: function(value) {
-                if (value > 0) {
-                    return value.toFixed(1) + " dB";
-                } else {
-                    return '<span class="tvh-grid-unset">Unknown</span>';
+        }]);
+
+    var has_signal_rel = false;
+    var has_signal_dbm = false;
+    var has_snr_rel    = false;
+    var has_snr_db     = false;
+
+    tvheadend.comet.on('input_status', function(m) {
+        if (m.reload != null)
+            tvheadend.streamStatusStore.reload();
+        if (m.update != null) {
+            var r = tvheadend.streamStatusStore.getById(m.uuid);
+            if (r) {
+                r.data.subs = m.subs;
+                r.data.weight = m.weight;
+                r.data.signal = m.signal;
+                r.data.ber = m.ber;
+                r.data.unc = m.unc;
+                r.data.snr = m.snr;
+                r.data.bps = m.bps;
+                r.data.cc = m.cc;
+                r.data.te = m.te;
+                r.data.signal_scale = m.signal_scale;
+                r.data.snr_scale = m.snr_scale;
+                r.data.ec_bit = m.ec_bit;
+                r.data.tc_bit = m.tc_bit;
+                r.data.ec_block = m.ec_block;
+                r.data.tc_block = m.tc_block;
+
+                if (r.data.snr_scale == 1 /* scale_relative */) {
+                    if (!has_snr_rel) {
+                        cm.config.push(new Ext.ux.grid.ProgressColumn({
+                            header: "SNR (%)",
+                            dataIndex: 'snr',
+                            width: 85,
+                            colored: true,
+                            ceiling: 65535
+                        }));
+                        has_snr_rel = true;
+                    }
                 }
+                else if (r.data.snr_scale == 2 /* scale_decibel */) {
+                    if (!has_snr_db) {
+                        cm.config.push(new Ext.grid.Column({
+                            width: 50,
+                            header: "SNR (dB)",
+                            dataIndex: 'snr',
+                            renderer: function(value) {
+                                if (value > 0) {
+                                    var snr = value * 0.0001;
+                                    return snr.toFixed(1) + " dB";
+                                } else {
+                                    return '<span class="tvh-grid-unset">Unknown</span>';
+                                }
+                            }
+                        }));
+                        has_snr_db = true;
+                    }
+                }
+
+                if (r.data.signal_scale == 1 /* scale_relative */) {
+                    if (!has_signal_rel) {
+                        cm.config.push(new Ext.ux.grid.ProgressColumn({
+                            header: "Signal Strength (%)",
+                            dataIndex: 'signal',
+                            width: 85,
+                            colored: true,
+                            ceiling: 65535
+                        }));
+                        has_signal_rel = true;
+                    }
+                }
+                else if (r.data.signal_scale == 2 /* scale_decibel */) {
+                    if (!has_signal_dbm) {
+                        cm.config.push(new Ext.grid.Column({
+                            width: 50,
+                            header: "Signal Strength (dBm)",
+                            dataIndex: 'signal',
+                            renderer: function(value) {
+                                if (value > 0) {
+                                    var snr = value * 0.0001;
+                                    return snr.toFixed(1) + " dBm";
+                                } else {
+                                    return '<span class="tvh-grid-unset">Unknown</span>';
+                                }
+                            }
+                        }));
+                        has_signal_dbm = true;
+                    }
+                }
+
+                tvheadend.streamStatusStore.afterEdit(r);
+                tvheadend.streamStatusStore.fireEvent('updated',
+                        tvheadend.streamStatusStore,
+                        r,
+                        Ext.data.Record.COMMIT);
+            } else {
+                tvheadend.streamStatusStore.reload();
             }
-        }, signal]);
+        }
+    });
 
     var panel = new Ext.grid.GridPanel({
         border: false,

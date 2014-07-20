@@ -2798,9 +2798,9 @@ htsp_subscription_signal_status(htsp_subscription_t *hs, signal_status_t *sig)
   htsmsg_add_str(m, "method", "signalStatus");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_str(m, "feStatus",   sig->status_text);
-  if(sig->snr != -2)
+  if((sig->snr != -2) && (sig->snr_scale == SIGNAL_STATUS_SCALE_RELATIVE))
     htsmsg_add_u32(m, "feSNR",    sig->snr);
-  if(sig->signal != -2)
+  if((sig->signal != -2) && (sig->signal_scale == SIGNAL_STATUS_SCALE_RELATIVE))
     htsmsg_add_u32(m, "feSignal", sig->signal);
   if(sig->ber != -2)
     htsmsg_add_u32(m, "feBER",    sig->ber);
