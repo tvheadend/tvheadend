@@ -1361,6 +1361,7 @@ psi_parse_pmt
     switch(estype) {
     case 0x01:
     case 0x02:
+    case 0x80: // 0x80 is DigiCipher II (North American cable) encrypted MPEG-2
       hts_stream_type = SCT_MPEG2VIDEO;
       break;
 
