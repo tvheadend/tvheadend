@@ -771,6 +771,8 @@ detect_card_type(const uint16_t caid)
   uint8_t c_sys = caid >> 8;
   
   switch(caid) {
+    case 0x4ad2:
+      return CARD_STREAMGUARD;
     case 0x5581:
     case 0x4aee:
       return CARD_BULCRYPT;

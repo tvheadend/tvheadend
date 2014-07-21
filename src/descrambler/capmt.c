@@ -644,9 +644,13 @@ capmt_queue_msg
   msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
   if (flags & CAPMT_MSG_FAST)
+  {
     TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
+  }
   else
-    TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+  {
+      TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+  }
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
 
@@ -1650,10 +1654,13 @@ capmt_send_request(capmt_service_t *ct, int lm)
         cad.cad_length = 0x07;
         cad.cad_data[5] = cce2->cce_providerid >> 8;
         cad.cad_data[6] = cce2->cce_providerid & 0xff;
-      } else if (cce2->cce_caid >> 8 == 0x4a) {
-        cad.cad_length = 0x05;
-        cad.cad_data[4] = cce2->cce_providerid & 0xff;
-      } else
+      } else if (cce2->cce_caid == 0x4ad2) {
+        cad.cad_length = 0x04;
+        cad.cad_data[3] = cce2->cce_providerid & 0xffffff;
+      }else if (cce2->cce_caid >> 8 == 0x4a && cce2->cce_caid!=0x4ad2) {
+          cad.cad_length = 0x05;
+          cad.cad_data[4] = cce2->cce_providerid & 0xff;
+      }else
         tvhlog(LOG_WARNING, "capmt", "Unknown CAID type, don't know where to put provider ID");
     }
     memcpy(&buf[pos], &cad, cad.cad_length + 2);

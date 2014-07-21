@@ -139,6 +139,7 @@ typedef enum {
   CARD_NDS,
   CARD_CRYPTOWORKS,
   CARD_BULCRYPT,
+  CARD_STREAMGUARD,
   CARD_UNKNOWN
 } card_type_t;
 

@@ -1204,11 +1204,14 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
       i += nanolen;
     }
     break;
-  case 0x4a00://DRECrypt
-    if (caid != 0x4aee) { // Bulcrypt
+  case 0x4a00://DRECrypt or streamguard
+     if (caid==0x4ad2) {
+         provid=0;
+     }
+     if (caid != 0x4aee && caid!=0x4ad2) { // Bulcrypt
       provid = size < 4 ? 0 : buffer[4];
-      break;
-    }
+     }
+    break;
   default:
     provid = 0;
     break;
@@ -1369,11 +1372,11 @@ psi_parse_pmt
     case 0x04:
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
-
+            
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
-    
+            
     case 0x0f:
       hts_stream_type = SCT_MP4A;
       break;
