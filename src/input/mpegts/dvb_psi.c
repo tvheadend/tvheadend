@@ -1372,7 +1372,8 @@ psi_parse_pmt
     case 0x04:
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
-            
+
+    case 0x06: //0x06 is Chinese Cable TV ac3 audio track
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
