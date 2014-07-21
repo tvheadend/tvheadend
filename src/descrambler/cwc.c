@@ -286,7 +286,7 @@ void cwc_emm_nagra(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, 
 void cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_cryptoworks(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-
+void cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard,const uint8_t *data, int len);//add by sangood
 
 /**
  *
@@ -1339,6 +1339,9 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len)
       case CARD_BULCRYPT:
         cwc_emm_bulcrypt(cwc, pcard, data, len);
         break;
+      case CARD_STREAMGUARD:
+        cwc_emm_streamguard(cwc, pcard, data, len);
+        break;
       case CARD_UNKNOWN:
         break;
     }
@@ -1846,6 +1849,18 @@ cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len
 
   if (match)
     cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
+}
+/**
+ * streamguard emm handler
+ */
+void
+cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
+{
+    //sangood todo
+    int match = 1;
+    tvhlog(LOG_INFO, "cwc", "cwc_emm_streamguard streamguard card data emm get,here lots of works todo...");
+    if (match)
+        cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
 }
 
 void
