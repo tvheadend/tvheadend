@@ -149,6 +149,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
 
+  if (checkts) {
   if(tf->tf_tsref == PTS_UNSET) {
     pkt_ref_dec(pkt);
     return;
@@ -166,7 +167,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       pkt_ref_dec(pkt);
       return;
     }
-  } else if(checkts) {
+  } else {
     d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
     if(d < 0 || d > 90000) {
@@ -211,6 +212,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	      pkt->pkt_pts,
 	      pkt->pkt_duration,
 	      pktbuf_len(pkt->pkt_payload));
+  }
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(tf->tf_output, sm);
