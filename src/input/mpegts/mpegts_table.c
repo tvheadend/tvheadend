@@ -126,6 +126,19 @@ mpegts_table_destroy ( mpegts_table_t *mt )
   mpegts_table_release(mt);
 }
 
+/**
+ * Determine table type
+ */
+int
+mpegts_table_type ( mpegts_table_t *mt )
+{
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
+  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
+  return type;
+}
 
 /**
  * Add a new DVB table
@@ -206,26 +219,38 @@ void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
+  mpegts_input_t        *mi;
+
   descrambler_flush_tables(mm);
+  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = LIST_FIRST(&mm->mm_defer_tables))) {
     LIST_REMOVE(mt, mt_defer_link);
-    if (!mt->mt_defer_reg) {
-      /* registration not fished, but ... */
-      /* allow the table free in next table destroy loop */
-      mt->mt_defer_reg = 1;
-      LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
-      mm->mm_num_tables++;
+    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
+      if (mi) {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
+        pthread_mutex_lock(&mi->mi_output_lock);
+        if (mt->mt_subscribed) {
+          mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+          mt->mt_subscribed = 0;
+        }
+        pthread_mutex_unlock(&mi->mi_output_lock);
+        pthread_mutex_lock(&mm->mm_tables_lock);
+      } else{
+        mt->mt_subscribed = 0;
+      }
     }
     mt->mt_defer_cmd = 0;
     mpegts_table_release(mt);
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
   while ((mt = LIST_FIRST(&mm->mm_tables))) {
-    if ((mt->mt_flags & MT_DEFER) && mt->mt_defer_reg)
-      mt->mt_flags &= ~MT_DEFER; /* force destroy */
+    mt->mt_flags &= ~MT_DEFER; /* force destroy */
+    mt->mt_destroyed = 1;      /* early destroy mark */
+    pthread_mutex_unlock(&mm->mm_tables_lock);
     mpegts_table_destroy(mt);
+    pthread_mutex_lock(&mm->mm_tables_lock);
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
 /*

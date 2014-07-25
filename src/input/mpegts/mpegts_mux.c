@@ -708,13 +708,12 @@ void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 {
   mpegts_input_t *mi;
-  int type = 0;
 
-  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
-  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
-  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
-  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   pthread_mutex_lock(&mm->mm_tables_lock);
+  if (mt->mt_destroyed) {
+    pthread_mutex_unlock(&mm->mm_tables_lock);
+    return;
+  }
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
     mt->mt_subscribed = 0;
     LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
@@ -723,12 +722,14 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
     return;
   }
   if (mt->mt_flags & MT_DEFER) {
-    if (mt->mt_defer_reg || mt->mt_defer_cmd == 1) {
+    if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
       pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
     mpegts_table_grab(mt); /* thread will release the table */
-    mt->mt_defer_cmd = 1;
+    LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
+    mm->mm_num_tables++;
+    mt->mt_defer_cmd = MT_DEFER_OPEN_PID;
     LIST_INSERT_HEAD(&mm->mm_defer_tables, mt, mt_defer_link);
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
@@ -739,7 +740,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
   pthread_mutex_unlock(&mm->mm_tables_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
   if (subscribe) {
-    mi->mi_open_pid(mi, mm, mt->mt_pid, type, mt);
+    mi->mi_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
     mt->mt_subscribed = 1;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
@@ -749,14 +750,13 @@ void
 mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
-  int type = 0;
 
-  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
-  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
-  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
-  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
   pthread_mutex_lock(&mm->mm_tables_lock);
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
+    if (mt->mt_defer_cmd) {
+      LIST_REMOVE(mt, mt_defer_link);
+      mt->mt_defer_cmd = 0;
+    }
     mt->mt_subscribed = 0;
     LIST_REMOVE(mt, mt_link);
     mm->mm_num_tables--;
@@ -764,23 +764,21 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     return;
   }
   if (mt->mt_flags & MT_DEFER) {
-    if (mt->mt_defer_cmd == 2) {
+    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
       pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
-    if (mt->mt_defer_cmd == 1) {
+    if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
       LIST_REMOVE(mt, mt_defer_link);
       mt->mt_defer_cmd = 0;
       pthread_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_release(mt);
       return;
     }
-    if (!mt->mt_defer_reg) {
-      pthread_mutex_unlock(&mm->mm_tables_lock);
-      return;
-    }
-    mpegts_table_grab(mt); /* thread will release the table */
-    mt->mt_defer_cmd = 2;
+    mpegts_table_grab(mt); /* thread will free the table */
+    LIST_REMOVE(mt, mt_link);
+    mm->mm_num_tables--;
+    mt->mt_defer_cmd = MT_DEFER_CLOSE_PID;
     LIST_INSERT_HEAD(&mm->mm_defer_tables, mt, mt_defer_link);
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
@@ -791,7 +789,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   pthread_mutex_unlock(&mm->mm_tables_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
   if (mt->mt_subscribed) {
-    mi->mi_close_pid(mi, mm, mt->mt_pid, type, mt);
+    mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
     mt->mt_subscribed = 0;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
