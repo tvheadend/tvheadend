@@ -1654,12 +1654,12 @@ capmt_send_request(capmt_service_t *ct, int lm)
         cad.cad_length = 0x07;
         cad.cad_data[5] = cce2->cce_providerid >> 8;
         cad.cad_data[6] = cce2->cce_providerid & 0xff;
-      } else if (cce2->cce_caid == 0x4ad2) {
-        cad.cad_length = 0x04;
-        cad.cad_data[3] = cce2->cce_providerid & 0xffffff;
       }else if (cce2->cce_caid >> 8 == 0x4a && cce2->cce_caid!=0x4ad2) {
           cad.cad_length = 0x05;
           cad.cad_data[4] = cce2->cce_providerid & 0xff;
+      }else if (cce2->cce_caid == 0x4ad2) {
+          cad.cad_length = 0x05;
+          cad.cad_data[4] = cce2->cce_providerid & 0xffffff;
       }else
         tvhlog(LOG_WARNING, "capmt", "Unknown CAID type, don't know where to put provider ID");
     }

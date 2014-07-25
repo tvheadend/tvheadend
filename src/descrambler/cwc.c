@@ -1856,9 +1856,26 @@ cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len
 void
 cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
 {
-    //sangood todo
-    int match = 1;
+    //todo
     tvhlog(LOG_INFO, "cwc", "cwc_emm_streamguard streamguard card data emm get,here lots of works todo...");
+    int match = 0;
+    
+    if (data[0] == 0x87) {
+        if (memcmp(&data[3], &pcard->cwc_ua[4], 4) == 0) {
+            match = 1;
+        }
+    }
+    else if (data[0] == 0x86) {
+        int i;
+        for (i=0; i < pcard->cwc_num_providers; i++) {
+            if (memcmp(&data[40], &pcard->cwc_providers[i].sa[4], 4) == 0) {
+                /*      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
+                match = 1;
+                break;
+            }
+        }
+    }
+    
     if (match)
         cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
 }
