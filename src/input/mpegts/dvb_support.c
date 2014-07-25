@@ -325,8 +325,7 @@ dvb_get_string
     if (auto_pl_charset)
       ic = convert_iso_8859[2];
     else
-      ic=convert_gb;//add
-      //ic = convert_iso6937;
+      ic = convert_iso6937;
     break;
   }
 

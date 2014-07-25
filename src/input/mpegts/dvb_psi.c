@@ -1377,7 +1377,7 @@ psi_parse_pmt
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
-      
+
     case 0x0f:
       hts_stream_type = SCT_MP4A;
       break;
