@@ -646,7 +646,7 @@ capmt_queue_msg
   if (flags & CAPMT_MSG_FAST)
     TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
   else
-      TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+    TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
 
