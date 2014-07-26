@@ -107,6 +107,14 @@ mpegts_table_dispatch
 void
 mpegts_table_release_ ( mpegts_table_t *mt )
 {
+  struct mpegts_table_state *st;
+
+  while ((st = RB_FIRST(&mt->mt_state))) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
+  if (mt->mt_destroy)
+    mt->mt_destroy(mt);
   free(mt->mt_name);
   free(mt);
 }
@@ -114,15 +122,8 @@ mpegts_table_release_ ( mpegts_table_t *mt )
 void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
-  struct mpegts_table_state *st;
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
-  while ((st = RB_FIRST(&mt->mt_state))) {
-    RB_REMOVE(&mt->mt_state, st, link);
-    free(st);
-  }
-  if (mt->mt_destroy)
-    mt->mt_destroy(mt);
   mpegts_table_release(mt);
 }
 
