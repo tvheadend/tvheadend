@@ -712,19 +712,19 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (status == SIGNAL_GOOD &&
               mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
             /* some values that we're tuned */
-            mmi->mmi_stats.signal = 50 * 65535 / 100;
-            mmi->mmi_stats.snr = 12 * 65535 / 100;
+            mmi->mmi_stats.signal = 50 * 0xffff / 100;
+            mmi->mmi_stats.snr = 12 * 0xffff / 15;
           }
           goto ok;          
         } else if (strncmp(s, "ver=1.0;", 8) == 0) {
@@ -737,12 +737,12 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;          
@@ -753,12 +753,12 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            ((atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale) * 65535 / 100;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 65535 / 100;
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
             INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;
