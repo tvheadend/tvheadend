@@ -768,6 +768,8 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
       pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
+    LIST_REMOVE(mt, mt_link);
+    mm->mm_num_tables--;
     if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
       LIST_REMOVE(mt, mt_defer_link);
       mt->mt_defer_cmd = 0;
@@ -776,8 +778,6 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
       return;
     }
     mpegts_table_grab(mt); /* thread will free the table */
-    LIST_REMOVE(mt, mt_link);
-    mm->mm_num_tables--;
     mt->mt_defer_cmd = MT_DEFER_CLOSE_PID;
     LIST_INSERT_HEAD(&mm->mm_defer_tables, mt, mt_defer_link);
     pthread_mutex_unlock(&mm->mm_tables_lock);
