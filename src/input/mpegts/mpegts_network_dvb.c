@@ -632,6 +632,27 @@ dvb_network_find_by_uuid(const char *uuid)
   return (dvb_network_t*)in;
 }
 
+int dvb_network_get_orbital_pos
+  ( mpegts_network_t *mn, int *pos, char *dir )
+{
+  dvb_network_t *ln = (dvb_network_t *)mn;
+  mpegts_mux_t  *mm;
+  dvb_mux_t     *lm = NULL;
+
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    lm = (dvb_mux_t *)mm;
+    if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir)
+      break;
+  }
+  if (lm) {
+    *pos = lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
+    *dir = lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir;
+    return 0;
+  } else {
+    return -1;
+  }
+}
+
 /******************************************************************************
  * Editor Configuration
  *

@@ -46,6 +46,9 @@ dvb_network_t *dvb_network_find_by_uuid(const char *uuid);
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
+int dvb_network_get_orbital_pos
+  ( mpegts_network_t *mn, int *pos, char *dir );
+
 /*
  *
  */

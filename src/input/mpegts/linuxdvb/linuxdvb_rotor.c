@@ -129,12 +129,38 @@ const idclass_t linuxdvb_rotor_usals_class =
  * Class methods
  * *************************************************************************/
 
+static int
+linuxdvb_rotor_check_orbital_pos
+  ( dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls )
+{
+  int  pos;
+  char dir;
+
+
+  if (dvb_network_get_orbital_pos(lm->mm_network, &pos, &dir) < 0)
+    return 0;
+
+  if (dir != ls->lse_parent->ls_orbital_dir)
+    return 0;
+
+  if (abs(pos - ls->lse_parent->ls_orbital_pos) > 2)
+    return 0;
+
+  tvhdebug("diseqc", "rotor already positioned to %i.%i%c",
+                     pos / 10, pos % 10, dir);
+  return 1;
+}
+
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
   ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int i;
+
+  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
+    return 0;
+
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
@@ -199,6 +225,9 @@ linuxdvb_rotor_usals_tune
   int angle_1 = (((motor_angle > 0.0) ? 0xd0 : 0xe0) | (sixteenths >> 8));
   int angle_2 = (sixteenths & 0xff);
  
+  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
+    return 0;
+
   tvhtrace("diseqc", "rotor USALS goto %0.1f%c (motor %0.2f %sclockwise)",
            fabs(pos), (pos > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");

@@ -137,6 +137,12 @@ struct linuxdvb_satconf
    * LNB settings
    */
   int                    ls_lnb_poweroff;
+
+  /*
+   * Position
+   */
+  int                    ls_orbital_pos;
+  char                   ls_orbital_dir;
   
   /*
    * Satconf elements
