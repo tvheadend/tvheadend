@@ -1183,8 +1183,10 @@ satip_frontend_input_thread ( void *aux )
         r = http_client_run(rtsp);
         if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
           break;
-        nfds = tvhpoll_wait(efd, ev, 1, -1);
-        if (nfds <= 0) {
+        nfds = tvhpoll_wait(efd, ev, 1, 500);
+        if (nfds == 0)
+          break;
+        if (nfds < 0) {
           if (ERRNO_AGAIN(errno))
             continue;
           break;
