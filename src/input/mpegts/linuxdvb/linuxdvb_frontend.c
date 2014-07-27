@@ -285,6 +285,7 @@ linuxdvb_frontend_stop_mux
   }
 
   /* Not locked */
+  lfe->lfe_ready  = 0;
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
 
@@ -299,7 +300,21 @@ static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  linuxdvb_frontend_t   *lfe = (linuxdvb_frontend_t*)mi;
+  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
+
+  /* Currently active */
+  if (cur != NULL) {
+
+    /* Already tuned */
+    if (mmi == cur)
+      return 0;
+
+    /* Stop current */
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
+  }
+  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
+
   if (lfe->lfe_satconf)
     return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
@@ -471,7 +486,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Stop timer */
-  if (!mmi) return;
+  if (!mmi || !lfe->lfe_ready) return;
 
   /* re-arm */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
@@ -1045,23 +1060,9 @@ linuxdvb_frontend_tune0
   int r;
   struct dvb_frontend_event ev;
   char buf1[256];
-  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
   dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
   dvb_mux_conf_t *dmc;
   struct dvb_frontend_parameters p;
-
-  // Not sure if this is right place?
-  /* Currently active */
-  if (cur != NULL) {
-
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
 
   /* Open FE */
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
@@ -1246,6 +1247,7 @@ linuxdvb_frontend_tune1
     time(&lfe->lfe_monitor);
     lfe->lfe_monitor += 4;
     gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+    lfe->lfe_ready = 1;
   }
   
   return r;

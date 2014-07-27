@@ -98,6 +98,7 @@ struct linuxdvb_frontend
   /*
    * Tuning
    */
+  int                       lfe_ready;
   int                       lfe_locked;
   int                       lfe_status;
   int                       lfe_ioctls;
