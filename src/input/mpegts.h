@@ -538,7 +538,8 @@ struct mpegts_input
    * Input processing
    */
 
-  int mi_running;
+  uint8_t mi_running;
+  uint8_t mi_live;
   time_t mi_last_dispatch;
 
   /* Data input */

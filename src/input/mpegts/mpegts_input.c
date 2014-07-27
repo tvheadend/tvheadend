@@ -399,6 +399,8 @@ mpegts_input_started_mux
 {
   /* Deliver first TS packets as fast as possible */
   mi->mi_last_dispatch = 0;
+  /* Wait for first TS packet */
+  mi->mi_live = 0;
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
@@ -634,6 +636,8 @@ mpegts_input_process
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
+
+  mi->mi_live = 1;
 
   /* Process */
   assert((len % 188) == 0);

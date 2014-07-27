@@ -553,6 +553,7 @@ service_start(service_t *t, int instance)
 
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
+  t->s_streaming_live   = 0;
   t->s_scrambled_seen   = 0;
   t->s_start_time       = dispatch_clock;
 
@@ -943,13 +944,21 @@ static void
 service_data_timeout(void *aux)
 {
   service_t *t = aux;
+  int flags = 0;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
   if(!(t->s_streaming_status & TSS_PACKETS))
-    service_set_streaming_status_flags(t, TSS_GRACEPERIOD);
+    flags |= TSS_GRACEPERIOD;
+  if(!(t->s_streaming_live & TSS_LIVE))
+    flags |= TSS_TIMEOUT;
+  if (flags)
+    service_set_streaming_status_flags(t, flags);
+  t->s_streaming_live &= ~TSS_LIVE;
 
   pthread_mutex_unlock(&t->s_stream_mutex);
+
+  gtimer_arm(&t->s_receive_timer, service_data_timeout, t, 5);
 }
 
 /**
@@ -1052,7 +1061,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 
   t->s_streaming_status = n;
 
-  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s",
+  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s%s",
 	 service_nicename(t),
 	 n & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
 	 n & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
@@ -1060,7 +1069,8 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 n & TSS_PACKETS        ? "[Reassembled packets] " : "",
 	 n & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
 	 n & TSS_NO_ACCESS      ? "[No access] " : "",
-	 n & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "");
+	 n & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
+	 n & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
   sm = streaming_msg_create_code(SMT_SERVICE_STATUS,
 				 t->s_streaming_status);
@@ -1331,6 +1341,9 @@ service_tss2text(int flags)
   if(flags & TSS_GRACEPERIOD)
     return "No input detected";
 
+  if(flags & TSS_TIMEOUT)
+    return "Data timeout";
+
   return "No status";
 }
 
@@ -1347,7 +1360,7 @@ tss2errcode(int tss)
   if(tss & TSS_NO_DESCRAMBLER)
     return SM_CODE_NO_DESCRAMBLER;
 
-  if(tss & TSS_GRACEPERIOD)
+  if(tss & (TSS_GRACEPERIOD|TSS_TIMEOUT))
     return SM_CODE_NO_INPUT;
 
   return SM_CODE_OK;

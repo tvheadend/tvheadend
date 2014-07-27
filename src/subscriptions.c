@@ -152,6 +152,8 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   mpegts_mux_t   *mm = mmi->mmi_mux;
   mpegts_input_t *mi = mmi->mmi_input;
 
+  gtimer_disarm(&s->ths_receive_timer);
+
   pthread_mutex_lock(&mi->mi_output_lock);
   s->ths_mmi = NULL;
 
@@ -361,6 +363,14 @@ subscription_input(void *opauqe, streaming_message_t *sm)
   if(s->ths_state != SUBSCRIPTION_GOT_SERVICE) {
     streaming_msg_free(sm);
     return;
+  }
+
+  if (sm->sm_type == SMT_SERVICE_STATUS &&
+      sm->sm_code & TSS_TIMEOUT) {
+    error = tss2errcode(sm->sm_code);
+    if (error > s->ths_testing_error)
+      s->ths_testing_error = error;
+    s->ths_state = SUBSCRIPTION_BAD_SERVICE;
   }
 
   /* Pass to direct handler to log traffic */
@@ -598,6 +608,20 @@ mpegts_mux_setsourceinfo ( mpegts_mux_t *mm, source_info_t *si )
   }
 }
 
+static void
+mux_data_timeout ( void *aux )
+{
+  th_subscription_t *s = aux;
+  mpegts_input_t *mi = s->ths_mmi->mmi_input;
+
+  if (!mi->mi_live) {
+    subscription_unlink_mux(s, SM_CODE_NO_INPUT);
+    return;
+  }
+  mi->mi_live = 0;
+
+  gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, 5);
+}
 
 th_subscription_t *
 subscription_create_from_mux
@@ -639,7 +663,7 @@ subscription_create_from_mux
     pthread_mutex_unlock(&mi->mi_output_lock);
   }
 
-  pthread_mutex_lock(&s->ths_mmi->mmi_input->mi_output_lock);
+  pthread_mutex_lock(&mi->mi_output_lock);
 
   /* Store */
   LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
@@ -672,7 +696,10 @@ subscription_create_from_mux
   sm = streaming_msg_create_data(SMT_START, ss);
   streaming_target_deliver(s->ths_output, sm);
 
-  pthread_mutex_unlock(&s->ths_mmi->mmi_input->mi_output_lock);
+  pthread_mutex_unlock(&mi->mi_output_lock);
+
+  r = (mi->mi_get_grace ? mi->mi_get_grace(mi, mm) : 0) + 20;
+  gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, r);
 
   return s;
 }

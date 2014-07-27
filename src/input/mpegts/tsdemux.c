@@ -287,6 +287,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
   pktbuf_ref_dec(pb);
 
   service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
+  t->s_streaming_live |= TSS_LIVE;
 
   sbuf_reset(sb, TS_REMUX_BUFSIZE);
 }
