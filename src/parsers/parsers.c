@@ -1407,6 +1407,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
    * Input is ok
    */
   service_set_streaming_status_flags(t, TSS_PACKETS);
+  t->s_streaming_live |= TSS_LIVE;
 
   /* Forward packet */
   pkt->pkt_componentindex = st->es_index;
