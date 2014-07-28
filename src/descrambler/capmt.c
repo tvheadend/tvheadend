@@ -1043,6 +1043,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR) {
 
+    static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
@@ -1056,10 +1057,10 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
       memcpy(cai->even, cw, 8); // even key
-      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, cai->even, empty, 1);
     } else if (parity == 1) {
       memcpy(cai->odd,  cw, 8); // odd  key
-      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, empty, cai->odd, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
