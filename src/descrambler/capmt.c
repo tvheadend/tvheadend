@@ -125,8 +125,6 @@ static pthread_cond_t capmt_config_changed;
  */
 typedef struct ca_info {
   uint16_t seq;		// sequence / service id number
-  uint8_t  even[8];
-  uint8_t  odd[8];
 } ca_info_t;
 
 /** 
@@ -1056,11 +1054,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      memcpy(cai->even, cw, 8); // even key
-      capmt_process_key(capmt, adapter, cai->seq, cai->even, empty, 1);
+      capmt_process_key(capmt, adapter, cai->seq, cw, empty, 1);
     } else if (parity == 1) {
-      memcpy(cai->odd,  cw, 8); // odd  key
-      capmt_process_key(capmt, adapter, cai->seq, empty, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, empty, cw, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
