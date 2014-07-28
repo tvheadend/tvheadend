@@ -1115,8 +1115,10 @@ satip_frontend_input_thread ( void *aux )
 
     /* We need to keep the session alive */
     if (rtsp->hc_ping_time + rtsp->hc_rtp_timeout / 2 < dispatch_clock &&
-        rtsp->hc_cmd == HTTP_CMD_NONE)
+        rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
+      reply = 1;
+    }
 
     if (ev[0].data.ptr == lfe->sf_rtcp) {
       c = recv(lfe->sf_rtcp->fd, rtcp, sizeof(rtcp), MSG_DONTWAIT);
