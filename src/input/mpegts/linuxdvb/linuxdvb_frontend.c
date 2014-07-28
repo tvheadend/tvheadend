@@ -1135,8 +1135,10 @@ linuxdvb_frontend_tune0
     .num = 1,
     .props = clear_p
   };
-  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0)
+  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
+    tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
     return -1;
+  }
 
   if (freq == (uint32_t)-1)
     freq = p.frequency;
