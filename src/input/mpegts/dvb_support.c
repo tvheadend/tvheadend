@@ -298,12 +298,12 @@ dvb_get_string
     break;
     
   case 0x11:
-    ic =convert_ucs2;
+    ic = convert_ucs2;
     src++; srclen--;
     break;
   
   case 0x13:
-    ic =convert_gb;
+    ic = convert_gb;
     src++; srclen--;
     break;
   
