@@ -309,9 +309,11 @@ epggrab_ota_complete
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     if (map->om_module == mod) {
       map->om_complete = 1;
-    } else if (!map->om_complete) {
+    } else if (!map->om_complete && !map->om_first) {
       done = 0;
     }
+    tvhtrace("epggrab", "%s complete %i first %i",
+                        map->om_module->id, map->om_complete, map->om_first);
   }
   if (!done) return;
 
