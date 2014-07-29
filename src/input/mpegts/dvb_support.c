@@ -36,9 +36,9 @@ static int convert_iso_8859[16] = {
 };
 #define convert_utf8   14
 #define convert_iso6937 15
-//-------------begin---add
 #define convert_ucs2 16
 #define convert_gb   17
+
 static inline int code_convert(const char *from_charset,const char *to_charset,char *inbuf,size_t inlen,char *outbuf,size_t *outlen)
 {
     iconv_t cd;
@@ -53,11 +53,12 @@ static inline int code_convert(const char *from_charset,const char *to_charset,c
     iconv_close(cd);
     return 0;
 }
+
 static inline int gb2u(char *inbuf,int inlen,char *outbuf,size_t *outlen)
 {
     return code_convert("gb2312","utf-8",inbuf,inlen,outbuf,outlen);
 }
-//GB2312-->utf-8
+
 static inline size_t conv_gb(const uint8_t *src, size_t srclen,
                              char *dst, size_t *dstlen)
 {
@@ -66,7 +67,6 @@ static inline size_t conv_gb(const uint8_t *src, size_t srclen,
     dst+=len-*dstlen;
     return 0;
 }
-//----------end----add
 
 static inline int encode_utf8(unsigned int c, char *outb, int outleft)
 {
@@ -92,32 +92,28 @@ static inline int encode_utf8(unsigned int c, char *outb, int outleft)
     return -1;
   }
 }
-//begin--add
-static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,
-                               char *dst, size_t *dstlen)
+
+static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size_t *dstlen)
 {
-	
-	while (srclen>0 && (*dstlen)>0)
-	{
-		uint16_t uc = *src<<8|*(src+1);
-	 	int len = encode_utf8(uc, dst, *dstlen);
-		if (len == -1) {
-            errno = E2BIG;
-            return -1;
-		} else {
-            (*dstlen) -= len;
-            dst += len;
-		}
-		srclen-=2;
-        src+=2;
+  while (srclen>0 && (*dstlen)>0){
+    uint16_t uc = *src<<8|*(src+1);
+    int len = encode_utf8(uc, dst, *dstlen);
+    if (len == -1) {
+      errno = E2BIG;
+      return -1;
+    } else {
+      (*dstlen) -= len;
+      dst += len;
     }
-    if (srclen>0) {
-	    errno = E2BIG;
-	    return -1;
-    }
-    return 0;
+    srclen-=2;
+    src+=2;
+  }
+  if (srclen>0) {
+    errno = E2BIG;
+    return -1;
+  }
+  return 0;
 }
-//end-add
 
 static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
                               char *dst, size_t *dstlen)
@@ -239,8 +235,8 @@ static inline size_t dvb_convert(int conv,
   switch (conv) {
     case convert_utf8: return conv_utf8(src, srclen, dst, dstlen);
     case convert_iso6937: return conv_6937(src, srclen, dst, dstlen);
-    case convert_gb: return conv_gb(src,srclen,dst,dstlen);    //add gb2312-->utf8 convert
-    case convert_ucs2:return conv_UCS2(src,srclen,dst,dstlen); //add usc2-->utf8 convert
+    case convert_gb: return conv_gb(src,srclen,dst,dstlen);
+    case convert_ucs2:return conv_UCS2(src,srclen,dst,dstlen);
     default: return conv_8859(conv, src, srclen, dst, dstlen);
   }
 }
@@ -301,20 +297,20 @@ dvb_get_string
     src+=3; srclen-=3;
     break;
     
-          //add being
   case 0x11:
     ic =convert_ucs2;
     src++; srclen--;
     break;
+  
   case 0x13:
     ic =convert_gb;
     src++; srclen--;
     break;
+  
   case 0x12:
   case 0x14:
     return -1;
-          //add end
-          
+  
   case 0x15:
     ic = convert_utf8;
     break;
@@ -339,8 +335,10 @@ dvb_get_string
       ic = convert_iso6937;
     } else if (!strcmp(dvb_charset, "UTF-8")) {
       ic = convert_utf8;
-    }else{
-        ic= convert_gb;//add
+    } else if (!strcmp(dvb_charset, "GB2312")) {
+      ic= convert_gb;
+    } else if (!strcmp(dvb_charset, "UCS2")) {
+      ic= conv_UCS2;
     }
   }
 
