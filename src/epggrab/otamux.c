@@ -392,8 +392,11 @@ next_one:
   for (i = 0, net = NULL; i < networks_count; i++) {
     net = &networks[i];
     if (net->net == mm->mm_network) {
-      if (net->failed)
+      if (net->failed) {
+        TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+        om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
         goto done;
+      }
       break;
     }
   }
@@ -514,7 +517,7 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
   if (mm && svc) {
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("epggrab", "ota %s %s service %s", buf, op, svc->s_nicename);
-  } else
+  } else if (tvheadend_running)
     tvhtrace("epggrab", "ota %s, problem? (%p %p)", op, mm, svc);
 #endif
 }
@@ -570,11 +573,13 @@ epggrab_ota_save ( epggrab_ota_mux_t *ota )
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "id", map->om_module->id);
-    l2 = htsmsg_create_list();
-    RB_FOREACH(svcl, &map->om_svcs, link)
-      if (svcl->uuid)
-        htsmsg_add_str(l2, NULL, svcl->uuid);
-    htsmsg_add_msg(e, "services", l2);
+    if (RB_FIRST(&map->om_svcs)) {
+      l2 = htsmsg_create_list();
+      RB_FOREACH(svcl, &map->om_svcs, link)
+        if (svcl->uuid)
+          htsmsg_add_str(l2, NULL, svcl->uuid);
+      htsmsg_add_msg(e, "services", l2);
+    }
     htsmsg_add_msg(l, NULL, e);
   }
   htsmsg_add_msg(c, "modules", l);
@@ -599,6 +604,13 @@ epggrab_ota_load_one
     hts_settings_remove("epggrab/otamux/%s", uuid);
     return;
   }
+#if ENABLE_TRACE
+  {
+    char name[256];
+    mpegts_mux_nice_name(mm, name, sizeof(name));
+    tvhtrace("epggrab", "loading config for %s", name);
+  }
+#endif
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = strdup(uuid);
