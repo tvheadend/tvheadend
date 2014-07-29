@@ -1204,13 +1204,12 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
       i += nanolen;
     }
     break;
-  case 0x4a00://DRECrypt or streamguard
-     if (caid==0x4ad2) {
-         provid=0;
-     }
-     if (caid != 0x4aee && caid!=0x4ad2) { // Bulcrypt
-      provid = size < 4 ? 0 : buffer[4];
-     }
+  case 0x4a00:
+    if (caid == 0x4ad2)//streamguard
+       provid=0;
+    if (caid != 0x4aee && caid != 0x4ad2) { // Bulcrypt
+       provid = size < 4 ? 0 : buffer[4];
+    }
     break;
   default:
     provid = 0;
