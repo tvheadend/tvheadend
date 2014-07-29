@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iconv.h>
+
 #include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
@@ -310,7 +311,7 @@ dvb_get_string
   case 0x12:
   case 0x14:
     return -1;
-  
+
   case 0x15:
     ic = convert_utf8;
     break;
