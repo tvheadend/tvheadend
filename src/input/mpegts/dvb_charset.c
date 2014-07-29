@@ -153,6 +153,8 @@ dvb_charset_enum ( void *p )
     "ISO-8859-14",
     "ISO-8859-15",
     "UTF-8",
+    "GB2312",
+    "UCS2",
   };
   htsmsg_t *m = htsmsg_create_list();
   for ( i = 0; i < ARRAY_SIZE(charsets); i++)
