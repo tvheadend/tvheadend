@@ -288,6 +288,7 @@ void cwc_emm_cryptoworks(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *
 void cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 
+
 /**
  *
  */
