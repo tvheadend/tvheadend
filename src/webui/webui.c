@@ -1016,12 +1016,14 @@ static char *
 page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
 {
   /*
-   * For curl and wget do not set the playlist, stream directly
+   * For curl, wget and TVHeadend do not send the playlist, stream directly
    */
   const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
   if (strncasecmp(agent, "curl/", 5) == 0 ||
       strncasecmp(agent, "wget/", 5) == 0)
     return strdup(path + 5);
+  if (strncasecmp(agent, "TVHeadend/", 10) == 0)
+    return strdup(path + 10);
   return NULL;
 }
 
