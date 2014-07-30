@@ -1636,6 +1636,8 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
       tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
     else
       tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
+    if (tvhlog_path && tvhlog_path[0] != '\0')
+      tvhlog_options |= TVHLOG_OPT_DBG_FILE;
     tvhlog_set_trace(http_arg_get(&hc->hc_req_args, "tvhlog_trace"));
     tvhlog_set_debug(http_arg_get(&hc->hc_req_args, "tvhlog_debug"));
     pthread_mutex_unlock(&tvhlog_mutex);
