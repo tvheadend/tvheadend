@@ -129,6 +129,7 @@ typedef struct opentv_event
 typedef struct opentv_status
 {
   opentv_module_t   *os_mod;
+  epggrab_ota_map_t *os_map;
   int                os_refcount;
   epggrab_ota_mux_t *os_ota;
 } opentv_status_t;
@@ -453,6 +454,7 @@ opentv_table_callback
   /* Complete */
 done:
   if (!r) {
+    sta->os_map->om_first = 0; /* valid data mark */
     tvhtrace(mt->mt_name, "pid %d complete remain %d",
              mt->mt_pid, sta->os_refcount-1);
   
@@ -564,6 +566,7 @@ static int _opentv_start
     if (!sta) {
       sta = calloc(1, sizeof(opentv_status_t));
       sta->os_mod = mod;
+      sta->os_map = map;
     }
     mt = mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK,
                           opentv_bat_callback, sta,

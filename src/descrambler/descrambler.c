@@ -186,6 +186,7 @@ descrambler_keys ( th_descrambler_t *td,
       j++;
       tvhcsa_set_key_even(td->td_csa, even);
       dr->dr_key_valid |= 0x40;
+      dr->dr_key_timestamp[0] = dispatch_clock;
       break;
     }
   for (i = 0; i < 8; i++)
@@ -193,6 +194,7 @@ descrambler_keys ( th_descrambler_t *td,
       j++;
       tvhcsa_set_key_odd(td->td_csa, odd);
       dr->dr_key_valid |= 0x80;
+      dr->dr_key_timestamp[1] = dispatch_clock;
       break;
     }
 
@@ -260,10 +262,11 @@ descrambler_descramble ( service_t *t,
                          const uint8_t *tsb )
 {
 #define KEY_MASK(k) (((k) & 0x40) + 0x40) /* 0x40 (for even) or 0x80 (for odd) */
+#define KEY_IDX(k)  (((k) & 0x40) >> 6)
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
   int count, failed, off, size, flush_data = 0;
-  uint8_t *tsb2, ki;
+  uint8_t *tsb2, ki, kidx;
 
   lock_assert(&t->s_stream_mutex);
 
@@ -292,7 +295,9 @@ descrambler_descramble ( service_t *t,
             tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                     (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
-            if (dr->dr_ecm_key_time +
+            kidx = KEY_IDX(ki);
+            if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
+                dr->dr_ecm_key_time +
                   ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
               sbuf_cut(&dr->dr_buf, off);
               if (!td->td_ecm_reset(td)) {
@@ -325,7 +330,9 @@ descrambler_descramble ( service_t *t,
         tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
-        if (dr->dr_ecm_key_time +
+        kidx = KEY_IDX(ki);
+        if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
+            dr->dr_ecm_key_time +
               ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
           tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,

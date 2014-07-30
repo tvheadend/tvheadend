@@ -932,15 +932,14 @@ satip_frontend_input_thread ( void *aux )
   uint8_t rtcp[2048];
   uint8_t *p;
   sbuf_t sb;
-  int pos, nfds, i, r;
+  int pos, nfds, i, r, tc;
   size_t c;
-  int tc;
   tvhpoll_event_t ev[4];
   tvhpoll_t *efd;
-  int changing = 0, ms = -1, fatal = 0;
+  int changing = 0, ms = -1, fatal = 0, running = 1;
   uint32_t seq = -1, nseq;
   udp_multirecv_t um;
-  int play2 = 1, position, rtsp_flags = 0;
+  int play2 = 1, position, rtsp_flags = 0, reply;
   uint64_t u64;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
@@ -1009,13 +1008,17 @@ satip_frontend_input_thread ( void *aux )
     tvherror("satip", "%s - failed to tune", buf);
     goto done;
   }
+  reply = 1;
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
   sbuf_init_fixed(&sb, RTP_PKTS * RTP_PKT_SIZE);
 
-  while (tvheadend_running && !fatal) {
+  while ((reply || running) && !fatal) {
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
+
+    if (!tvheadend_running)
+      running = 0;
 
     if (nfds > 0 && ev[0].data.ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, rtcp, 1);
@@ -1025,13 +1028,15 @@ satip_frontend_input_thread ( void *aux )
         continue;
       }
       tvhtrace("satip", "%s - input thread received shutdown", buf);
-      break;
+      running = 0;
+      continue;
     }
 
     if (changing && rtsp->hc_cmd == HTTP_CMD_NONE) {
       ms = -1;
       changing = 0;
-      satip_frontend_pid_changed(rtsp, lfe, buf);
+      if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+        reply = 1;
       continue;
     }
 
@@ -1044,9 +1049,12 @@ satip_frontend_input_thread ( void *aux )
                buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
         fatal = 1;
       } else if (r == HTTP_CON_DONE) {
+        reply = 0;
         switch (rtsp->hc_cmd) {
         case RTSP_CMD_OPTIONS:
           r = rtsp_options_decode(rtsp);
+          if (!running)
+            break;
           if (r < 0) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP OPTIONS error %d (%s) [%i-%i]",
                    buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
@@ -1055,6 +1063,8 @@ satip_frontend_input_thread ( void *aux )
           break;
         case RTSP_CMD_SETUP:
           r = rtsp_setup_decode(rtsp, 1);
+          if (!running)
+            break;
           if (r < 0 || rtsp->hc_rtp_port != lfe->sf_rtp_port ||
                        rtsp->hc_rtpc_port != lfe->sf_rtp_port + 1) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP SETUP error %d (%s) [%i-%i]",
@@ -1072,18 +1082,25 @@ satip_frontend_input_thread ( void *aux )
                 tvherror("satip", "%s - failed to tune2", buf);
                 fatal = 1;
               }
+              reply = 1;
               continue;
             } else {
-              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
+                reply = 1;
                 continue;
+              }
             }
           }
           break;
         case RTSP_CMD_PLAY:
+          if (!running)
+            break;
           if (rtsp->hc_code == 200 && play2) {
             play2 = 0;
-            if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+            if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
+              reply = 1;
               continue;
+            }
           }
           /* fall thru */
         default:
@@ -1096,12 +1113,17 @@ satip_frontend_input_thread ( void *aux )
         }
         rtsp->hc_cmd = HTTP_CMD_NONE;
       }
+
+      if (!running)
+        continue;
     }
 
     /* We need to keep the session alive */
     if (rtsp->hc_ping_time + rtsp->hc_rtp_timeout / 2 < dispatch_clock &&
-        rtsp->hc_cmd == HTTP_CMD_NONE)
+        rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
+      reply = 1;
+    }
 
     if (ev[0].data.ptr == lfe->sf_rtcp) {
       c = recv(lfe->sf_rtcp->fd, rtcp, sizeof(rtcp), MSG_DONTWAIT);
