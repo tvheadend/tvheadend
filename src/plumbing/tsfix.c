@@ -149,7 +149,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
 
-  if (checkts) {
+  if (checkts || SCT_ISSUBTITLE(tfs->tfs_type)) {
     if(tf->tf_tsref == PTS_UNSET) {
       pkt_ref_dec(pkt);
       return;
@@ -167,7 +167,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
         pkt_ref_dec(pkt);
         return;
       }
-    } else {
+    } else if (checkts) {
       d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
       if(d < 0 || d > 90000) {
