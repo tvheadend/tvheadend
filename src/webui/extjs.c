@@ -1619,8 +1619,6 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     const char *str;
 
     pthread_mutex_lock(&tvhlog_mutex);
-    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_level")))
-      tvhlog_level = atoi(str);
     if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_trace_on")))
       tvhlog_level = LOG_TRACE;
     else
