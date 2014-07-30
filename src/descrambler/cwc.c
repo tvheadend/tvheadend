@@ -1992,6 +1992,9 @@ cwc_service_start(service_t *t)
     LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
       if (pcard->cwc_caid == 0) continue;
       TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+        if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == 2 &&
+            ((mpegts_service_t *)t)->s_dvb_prefcapid != st->es_pid)
+          continue;
         LIST_FOREACH(c, &st->es_caids, link) {
           if (c->use && c->caid == pcard->cwc_caid)
             break;
