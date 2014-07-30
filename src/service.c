@@ -405,9 +405,9 @@ filter:
           ca = NULL;
           if ((esf->esf_caid != (uint16_t)-1 || esf->esf_caprovider != -1)) {
             LIST_FOREACH(ca, &st->es_caids, link) {
-              if (esf->esf_caid != -1 && ca->caid != esf->esf_caid)
+              if (esf->esf_caid != (uint16_t)-1 && ca->caid != esf->esf_caid)
                 continue;
-              if (esf->esf_caprovider != -1 && ca->providerid != esf->esf_caprovider)
+              if (esf->esf_caprovider != (uint32_t)-1 && ca->providerid != esf->esf_caprovider)
                 continue;
               break;
             }
