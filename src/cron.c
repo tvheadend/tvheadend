@@ -17,13 +17,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "build.h"
 #include "cron.h"
 
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if !defined(PLATFORM_FREEBSD)
 #include <alloca.h>
+#endif
 
 /*
  * Parse value

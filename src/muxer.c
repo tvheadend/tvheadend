@@ -30,6 +30,8 @@
 
 #if defined(PLATFORM_DARWIN)
 #define fdatasync(fd)       fcntl(fd, F_FULLFSYNC)
+#elif defined(PLATFORM_FREEBSD)
+#define fdatasync(fd)       fsync(fd)
 #endif
 
 /**
