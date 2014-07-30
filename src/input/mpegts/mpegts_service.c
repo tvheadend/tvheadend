@@ -55,6 +55,17 @@ mpegts_service_class_get_network ( void *ptr )
   return &s;
 }
 
+static htsmsg_t *
+mpegts_service_pref_capid_lock_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "Off",                0 },
+    { "On",                 1 },
+    { "Only Pref. CA PID",  2 },
+  };
+   return strtab2htsmsg(tab);
+}
+
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
@@ -132,6 +143,14 @@ const idclass_t mpegts_service_class =
       .name     = "Pref. CA PID",
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
       .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "prefcapid_lock",
+      .name     = "Lock Pref. CA PID",
+      .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
+      .opts     = PO_ADVANCED,
+      .list     = mpegts_service_pref_capid_lock_list,
     },
     {},
   }
