@@ -782,7 +782,9 @@ forbid:
     ct->cs_channel = es->es_channel;
     ct->ecm_state = ECM_VALID;
 
-    if(t->s_dvb_prefcapid == 0 || t->s_dvb_prefcapid != ct->cs_channel) {
+    if(t->s_dvb_prefcapid == 0 ||
+       (t->s_dvb_prefcapid != ct->cs_channel &&
+        t->s_dvb_prefcapid_lock == 0)) {
       t->s_dvb_prefcapid = ct->cs_channel;
       tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d for %s",
                                t->s_dvb_prefcapid, ct->td_nicename);

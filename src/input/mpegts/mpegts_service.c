@@ -133,6 +133,13 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
       .opts     = PO_ADVANCED,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "prefcapid_lock",
+      .name     = "Lock Pref. CA PID",
+      .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
+      .opts     = PO_ADVANCED,
+    },
     {},
   }
 };
