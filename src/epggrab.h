@@ -203,7 +203,9 @@ struct epggrab_ota_mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
   int                                om_complete;     ///< Has completed a scan
+  int                                om_save;         ///< something changed
   gtimer_t                           om_timer;        ///< Per mux active timer
+  gtimer_t                           om_data_timer;   ///< Any EPG data seen?
 
   char                              *om_force_modname;///< Force this module
 
