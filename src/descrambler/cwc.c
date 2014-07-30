@@ -1205,8 +1205,8 @@ cwc_thread(void *aux)
     ts.tv_nsec = 0;
 
     tvhlog(LOG_INFO, "cwc", 
-	   "%s:%i: Automatic connection attempt in in %d seconds",
-	   cwc->cwc_hostname, cwc->cwc_port, d);
+	   "%s:%i: Automatic connection attempt in %d seconds",
+	   cwc->cwc_hostname, cwc->cwc_port, d-1);
 
     pthread_cond_timedwait(&cwc_config_changed, &cwc_mutex, &ts);
   }
