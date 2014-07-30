@@ -101,6 +101,7 @@ typedef struct ecm_section {
   uint16_t es_seq;
   char es_nok;
   char es_pending;
+  char es_resolved;
   int64_t es_time;  // time request was sent
   size_t es_ecmsize;
   uint8_t es_ecm[4070];
@@ -711,10 +712,12 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   th_descrambler_t *td;
-  ecm_pid_t *ep, *epn;
+  ecm_pid_t *ep;
+  ecm_section_t *es2;
   char chaninfo[32];
-  int i;
+  int i, j;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
+
   es->es_pending = 0;
 
   snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", es->es_channel);
@@ -749,17 +752,20 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 	   "Req delay: %"PRId64" ms)", t->s_dvb_svcname, chaninfo, seq, delay);
 
 forbid:
+    j = 0;
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-      for(i = 0; i <= ep->ep_last_section; i++)
-	if(ep->ep_sections[i] == NULL) {
-          if(es->es_nok < 2) /* only first hit is allowed */
-            return;
-	} else {
-          if(ep->ep_sections[i]->es_pending ||
-	     ep->ep_sections[i]->es_nok == 0)
+      for(i = 0; i <= ep->ep_last_section; i++) {
+        es2 = ep->ep_sections[i];
+        if(es2 && es2 != es && es2->es_nok == 0) {
+          if (es2->es_pending)
 	    return;
+          j++;
         }
+      }
     }
+    if (j && es->es_nok < 2) /* only first hit is allowed */
+      return;
+    
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
 	   "Req delay: %"PRId64" ms) from %s",
@@ -802,20 +808,13 @@ forbid:
 
     descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 8);
 
-    ep = LIST_FIRST(&ct->cs_pids);
-    while(ep != NULL) {
-      if (ct->cs_channel == ep->ep_pid) {
-        ep = LIST_NEXT(ep, ep_link);
-      }
-      else {
-        epn = LIST_NEXT(ep, ep_link);
-        for(i = 0; i < 256; i++)
-          free(ep->ep_sections[i]);
-        LIST_REMOVE(ep, ep_link);
-        tvhlog(LOG_WARNING, "cwc", "Delete ECM (PID %d) for service \"%s\" from %s",
-                                   ep->ep_pid, t->s_dvb_svcname, ct->td_nicename);
-        free(ep);
-        ep = epn;
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
+      for(i = 0; i < ep->ep_last_section; i++) {
+        es2 = ep->ep_sections[i];
+        if (es2) {
+          es2->es_resolved = 1;
+          es2->es_pending = 0;
+        }
       }
     }
   }
@@ -848,9 +847,19 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
           for(i = 0; i <= ep->ep_last_section; i++) {
             es = ep->ep_sections[i];
             if(es != NULL) {
-              if(es->es_seq == seq && es->es_pending) {
-                handle_ecm_reply(ct, es, msg, len, seq);
-                return 0;
+              if(es->es_seq == seq) {
+                if (es->es_resolved) {
+                  mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
+                  tvhlog(LOG_WARNING, "cwc",
+                         "Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                         es->es_pending ? "duplicate " : "",
+                         ep->ep_pid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
+                  return 0;
+                }
+                if (es->es_pending) {
+                  handle_ecm_reply(ct, es, msg, len, seq);
+                  return 0;
+                }
               }
             }
           }
@@ -1735,6 +1744,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
       es->es_channel = channel;
       es->es_section = section;
       es->es_pending = 1;
+      es->es_resolved = 0;
       
       memcpy(es->es_ecm, data, len);
       es->es_ecmsize = len;
