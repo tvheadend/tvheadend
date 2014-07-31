@@ -356,8 +356,11 @@ service_build_filter(service_t *t)
     if (!TAILQ_EMPTY(&esfilters[i]))
       goto filter;
 
-  TAILQ_FOREACH(st, &t->s_components, es_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
     TAILQ_INSERT_TAIL(&t->s_filt_components, st, es_filt_link);
+    LIST_FOREACH(ca, &st->es_caids, link)
+      ca->use = 1;
+  }
   return;
 
 filter:
