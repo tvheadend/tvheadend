@@ -67,9 +67,17 @@ The columns have the following functions:
   <dt>CA Provider
   <dd>The CA provider to compare. Empty field means any.
 
+  <dt>Stream Index
+  <dd>The logical stream index to compare. Note that this index is computed
+      using all filters. Example: If filter is set to AC3 audio type and
+      the language to 'eng' and there are two AC3 'eng' streams in
+      the service, the first stream could be identified using number 1
+      and the second using number 2.
+
   <dt>PID
   <dd>Program identification (PID) number to compare. Zero means any.
-      This comparison is processed only when service comparison is active.
+      This comparison is processed only when service comparison is active
+      and for the Conditional Access filter.
 
   <dt>Action
   <dd>The rule action defines the operation when all comparisons succeeds.

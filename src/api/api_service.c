@@ -93,7 +93,7 @@ api_service_mapper_notify ( void )
 }
 
 static htsmsg_t *
-api_service_streams_get_one ( elementary_stream_t *es )
+api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
 {
   htsmsg_t *e = htsmsg_create_map();
   htsmsg_add_u32(e, "index",    es->es_index);
@@ -115,6 +115,8 @@ api_service_streams_get_one ( elementary_stream_t *es )
     caid_t *ca;
     htsmsg_t *e2, *l2 = htsmsg_create_list();
     LIST_FOREACH(ca, &es->es_caids, link) {
+      if (use_filter && !ca->use)
+        continue;
       e2 = htsmsg_create_map();
       htsmsg_add_u32(e2, "caid",     ca->caid);
       htsmsg_add_u32(e2, "provider", ca->providerid);
@@ -163,12 +165,12 @@ api_service_streams
     htsmsg_add_msg(st, NULL, e);
   }
   TAILQ_FOREACH(es, &s->s_components, es_link)
-    htsmsg_add_msg(st, NULL, api_service_streams_get_one(es));
+    htsmsg_add_msg(st, NULL, api_service_streams_get_one(es, 0));
   if (TAILQ_FIRST(&s->s_filt_components) == NULL ||
       s->s_status == SERVICE_IDLE)
     service_build_filter(s);
   TAILQ_FOREACH(es, &s->s_filt_components, es_filt_link)
-    htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es));
+    htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es, 1));
   *resp = htsmsg_create_map();
   htsmsg_add_str(*resp, "name", s->s_nicename);
   htsmsg_add_msg(*resp, "streams", st);

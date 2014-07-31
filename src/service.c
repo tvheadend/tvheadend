@@ -346,7 +346,7 @@ service_build_filter(service_t *t)
   elementary_stream_t *st, *st2, **sta;
   esfilter_t *esf;
   caid_t *ca, *ca2;
-  int i, n, p, o, exclusive;
+  int i, n, p, o, exclusive, sindex;
   uint32_t mask;
 
   /* rebuild the filtered and ordered components */
@@ -387,6 +387,7 @@ filter:
     TAILQ_FOREACH(esf, &esfilters[i], esf_link) {
       if (!esf->esf_enabled)
         continue;
+      sindex = 0;
       TAILQ_FOREACH(st, &t->s_components, es_link) {
         if ((mask & SCT_MASK(st->es_type)) == 0)
           continue;
@@ -402,6 +403,8 @@ filter:
             continue;
         }
         if (i == ESF_CLASS_CA) {
+          if (esf->esf_pid && esf->esf_pid != st->es_pid)
+            continue;
           ca = NULL;
           if ((esf->esf_caid != (uint16_t)-1 || esf->esf_caprovider != -1)) {
             LIST_FOREACH(ca, &st->es_caids, link) {
@@ -414,9 +417,12 @@ filter:
             if (ca == NULL)
               continue;
           }
+          sindex++;
+          if (esf->esf_sindex && esf->esf_sindex != sindex)
+            continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %04x %06x \"%s\" %s",
-              esfilter_class2txt(i), esf->esf_index, st->es_pid,
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %04x %06x \"%s\" %s",
+              esfilter_class2txt(i), st->es_index, esf->esf_index, st->es_pid,
               esf->esf_caid, esf->esf_caprovider, t->s_nicename,
               esfilter_action2txt(esf->esf_action));
           switch (esf->esf_action) {
@@ -464,9 +470,12 @@ ca_ignore:
             break;
           }
         } else {
+          sindex++;
+          if (esf->esf_sindex && esf->esf_sindex != sindex)
+            continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s \"%s\" %s",
-              esfilter_class2txt(i), esf->esf_index,
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %s %s \"%s\" %s",
+              esfilter_class2txt(i), st->es_index, esf->esf_index,
               st->es_pid, streaming_component_type2txt(st->es_type),
               lang_code_get(st->es_lang), t->s_nicename,
               esfilter_action2txt(esf->esf_action));
