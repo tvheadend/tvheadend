@@ -128,7 +128,7 @@ service_class_channel_enum
 static const char *
 service_class_get_title ( idnode_t *self )
 {
-  return service_get_channel_name((service_t*)self);
+  return service_get_full_channel_name((service_t *)self);
 }
 
 static const void *
@@ -856,25 +856,39 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 void 
 service_make_nicename(service_t *t)
 {
-  char buf[256];
+  char buf[256], buf2[16];
   source_info_t si;
   elementary_stream_t *st;
+  char *service_name;
+  int prefidx;
 
   lock_assert(&t->s_stream_mutex);
 
   t->s_setsourceinfo(t, &si);
 
+  service_name = si.si_service;
+  if (service_name == NULL || si.si_service[0] == '0') {
+    snprintf(buf2, sizeof(buf2), "{PMT:%d}", t->s_pmt_pid);
+    service_name = buf2;
+  }
+
   snprintf(buf, sizeof(buf), 
 	   "%s%s%s%s%s%s%s",
 	   si.si_adapter ?: "", si.si_adapter && si.si_network ? "/" : "",
 	   si.si_network ?: "", si.si_network && si.si_mux     ? "/" : "",
-	   si.si_mux     ?: "", si.si_mux     && si.si_service ? "/" : "",
-	   si.si_service ?: "");
+	   si.si_mux     ?: "", si.si_mux     && service_name  ? "/" : "",
+	   service_name ?: "");
+  prefidx = (si.si_adapter ? strlen(si.si_adapter) : 0) +
+            (si.si_adapter && si.si_network ? 1 : 0) +
+            (si.si_network ? strlen(si.si_network) : 0) +
+            (si.si_network && si.si_mux ? 1 : 0) +
+            (si.si_mux ? strlen(si.si_mux) : 0);
 
   service_source_info_free(&si);
 
   free(t->s_nicename);
   t->s_nicename = strdup(buf);
+  t->s_nicename_prefidx = prefidx;
 
   TAILQ_FOREACH(st, &t->s_components, es_link)
     service_stream_make_nicename(t, st);
@@ -1480,6 +1494,33 @@ service_get_channel_name ( service_t *s )
   if (s->s_channel_name) r = s->s_channel_name(s);
   if (!r) r = s->s_nicename;
   return r;
+}
+
+/*
+ * Get full name for channel from service
+ */
+const char *
+service_get_full_channel_name ( service_t *s )
+{
+  static char __thread buf[256];
+  const char *r = NULL;
+  int         len;
+
+  if (s->s_channel_name)
+    r = s->s_channel_name(s);
+  if (r == NULL)
+    return s->s_nicename;
+
+  len = s->s_nicename_prefidx;
+  if (len >= sizeof(buf))
+    len = sizeof(buf) - 1;
+  strncpy(buf, s->s_nicename, len);
+  if (len < sizeof(buf) - 1)
+    buf[len++] = '/';
+  buf[len] = '\0';
+  if (len < sizeof(buf))
+    snprintf(buf + len, sizeof(buf) - len, "%s", r);
+  return buf;
 }
 
 /*
