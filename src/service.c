@@ -850,7 +850,7 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 void 
 service_make_nicename(service_t *t)
 {
-  char buf[200];
+  char buf[256];
   source_info_t si;
   elementary_stream_t *st;
 
@@ -859,8 +859,9 @@ service_make_nicename(service_t *t)
   t->s_setsourceinfo(t, &si);
 
   snprintf(buf, sizeof(buf), 
-	   "%s%s%s%s%s",
-	   si.si_adapter ?: "", si.si_adapter && si.si_mux     ? "/" : "",
+	   "%s%s%s%s%s%s%s",
+	   si.si_adapter ?: "", si.si_adapter && si.si_network ? "/" : "",
+	   si.si_network ?: "", si.si_network && si.si_mux     ? "/" : "",
 	   si.si_mux     ?: "", si.si_mux     && si.si_service ? "/" : "",
 	   si.si_service ?: "");
 
