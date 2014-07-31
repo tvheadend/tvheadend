@@ -381,8 +381,11 @@ filter:
     mask = esfilterclsmask[i];
     if (TAILQ_EMPTY(&esfilters[i])) {
       TAILQ_FOREACH(st, &t->s_components, es_link) {
-        if ((mask & SCT_MASK(st->es_type)) != 0)
+        if ((mask & SCT_MASK(st->es_type)) != 0) {
           service_build_filter_add(t, st, sta, &p);
+          LIST_FOREACH(ca, &st->es_caids, link)
+            ca->use = 1;
+        }
       }
       continue;
     }
