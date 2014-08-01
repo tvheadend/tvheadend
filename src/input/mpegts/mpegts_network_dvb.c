@@ -644,7 +644,7 @@ int dvb_network_get_orbital_pos
     if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir)
       break;
   }
-  if (lm) {
+  if (mm) {
     *pos = lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
     *dir = lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir;
     return 0;
