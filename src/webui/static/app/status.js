@@ -269,10 +269,41 @@ tvheadend.status_streams = function() {
             dataIndex: 'cc'
         }]);
 
-    var has_signal_rel = false;
-    var has_signal_dbm = false;
-    var has_snr_rel    = false;
-    var has_snr_db     = false;
+    cm.config.push(new Ext.ux.grid.ProgressColumn({
+        header: "SNR",
+        dataIndex: 'snr',
+        width: 85,
+        colored: true,
+        ceiling: 65535,
+        tvh_renderer: function(v, p, record) {
+            var scale = record.get('snr_scale');
+            if (scale == 1)
+              return v;
+            if (scale == 2 && v > 0) {
+              var snr = v * 0.0001;
+              return snr.toFixed(1) + " dB";
+            }
+            return '<span class="tvh-grid-unset">Unknown</span>';
+        }
+    }));
+
+    cm.config.push(new Ext.ux.grid.ProgressColumn({
+        header: "Signal Strength",
+        dataIndex: 'signal',
+        width: 85,
+        colored: true,
+        ceiling: 65535,
+        tvh_renderer: function(v, p, record) {
+            var scale = record.get('snr_scale');
+            if (scale == 1)
+              return v;
+            if (scale == 2 && v > 0) {
+                var snr = v * 0.0001;
+                return snr.toFixed(1) + " dBm";
+            }
+            return '<span class="tvh-grid-unset">Unknown</span>';
+        }
+    }));
 
     tvheadend.comet.on('input_status', function(m) {
         if (m.reload != null)
@@ -295,68 +326,6 @@ tvheadend.status_streams = function() {
                 r.data.tc_bit = m.tc_bit;
                 r.data.ec_block = m.ec_block;
                 r.data.tc_block = m.tc_block;
-
-                if (r.data.snr_scale == 1 /* scale_relative */) {
-                    if (!has_snr_rel) {
-                        cm.config.push(new Ext.ux.grid.ProgressColumn({
-                            header: "SNR (%)",
-                            dataIndex: 'snr',
-                            width: 85,
-                            colored: true,
-                            ceiling: 65535
-                        }));
-                        has_snr_rel = true;
-                    }
-                }
-                else if (r.data.snr_scale == 2 /* scale_decibel */) {
-                    if (!has_snr_db) {
-                        cm.config.push(new Ext.grid.Column({
-                            width: 50,
-                            header: "SNR (dB)",
-                            dataIndex: 'snr',
-                            renderer: function(value) {
-                                if (value > 0) {
-                                    var snr = value * 0.0001;
-                                    return snr.toFixed(1) + " dB";
-                                } else {
-                                    return '<span class="tvh-grid-unset">Unknown</span>';
-                                }
-                            }
-                        }));
-                        has_snr_db = true;
-                    }
-                }
-
-                if (r.data.signal_scale == 1 /* scale_relative */) {
-                    if (!has_signal_rel) {
-                        cm.config.push(new Ext.ux.grid.ProgressColumn({
-                            header: "Signal Strength (%)",
-                            dataIndex: 'signal',
-                            width: 85,
-                            colored: true,
-                            ceiling: 65535
-                        }));
-                        has_signal_rel = true;
-                    }
-                }
-                else if (r.data.signal_scale == 2 /* scale_decibel */) {
-                    if (!has_signal_dbm) {
-                        cm.config.push(new Ext.grid.Column({
-                            width: 50,
-                            header: "Signal Strength (dBm)",
-                            dataIndex: 'signal',
-                            renderer: function(value) {
-                                if (value > 0) {
-                                    var snr = value * 0.0001;
-                                    return snr.toFixed(1) + " dBm";
-                                } else {
-                                    return '<span class="tvh-grid-unset">Unknown</span>';
-                                }
-                            }
-                        }));
-                        has_signal_dbm = true;
-                    }
-                }
 
                 tvheadend.streamStatusStore.afterEdit(r);
                 tvheadend.streamStatusStore.fireEvent('updated',
