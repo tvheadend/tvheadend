@@ -78,6 +78,7 @@ struct iptv_mux
   int                   mm_iptv_fd;
   udp_connection_t     *mm_iptv_connection;
   char                 *mm_iptv_url;
+  char                 *mm_iptv_url_sane;
   char                 *mm_iptv_interface;
 
   int                   mm_iptv_atsc;
