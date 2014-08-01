@@ -154,18 +154,22 @@ descrambler_caid_changed ( service_t *t )
 }
 
 void
-descrambler_keys ( th_descrambler_t *td,
+descrambler_keys ( th_descrambler_t *td, int type,
                    const uint8_t *even, const uint8_t *odd )
 {
   service_t *t = td->td_service;
   th_descrambler_runtime_t *dr;
   th_descrambler_t *td2;
+  tvhcsa_t *csa = td->td_csa;
   int i, j = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
     td->td_keystate = DS_FORBIDDEN;
     return;
   }
+
+  if (tvhcsa_set_type(td->td_csa, type) < 0)
+    return;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -181,18 +185,18 @@ descrambler_keys ( th_descrambler_t *td,
       goto fin;
     }
 
-  for (i = 0; i < 8; i++)
+  for (i = 0; i < csa->csa_keylen; i++)
     if (even[i]) {
       j++;
-      tvhcsa_set_key_even(td->td_csa, even);
+      tvhcsa_set_key_even(csa, even);
       dr->dr_key_valid |= 0x40;
       dr->dr_key_timestamp[0] = dispatch_clock;
       break;
     }
-  for (i = 0; i < 8; i++)
+  for (i = 0; i < csa->csa_keylen; i++)
     if (odd[i]) {
       j++;
-      tvhcsa_set_key_odd(td->td_csa, odd);
+      tvhcsa_set_key_odd(csa, odd);
       dr->dr_key_valid |= 0x80;
       dr->dr_key_timestamp[1] = dispatch_clock;
       break;
@@ -204,13 +208,29 @@ descrambler_keys ( th_descrambler_t *td,
                         "Obtained keys from %s for service \"%s\"",
                         td->td_nicename,
                         ((mpegts_service_t *)t)->s_dvb_svcname);
-    tvhtrace("descrambler", "Obtained keys "
-             "%02X%02X%02X%02X%02X%02X%02X%02X:%02X%02X%02X%02X%02X%02X%02X%02X"
-             " from %s for service \"%s\"",
-             even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
-             odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
-             td->td_nicename,
-             ((mpegts_service_t *)t)->s_dvb_svcname);
+    if (csa->csa_keylen == 8) {
+      tvhtrace("descrambler", "Obtained keys "
+               "%02X%02X%02X%02X%02X%02X%02X%02X:%02X%02X%02X%02X%02X%02X%02X%02X"
+               " from %s for service \"%s\"",
+               even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
+               odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
+               td->td_nicename,
+               ((mpegts_service_t *)t)->s_dvb_svcname);
+    } else if (csa->csa_keylen == 16) {
+      tvhtrace("descrambler", "Obtained keys "
+               "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X:"
+               "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
+               " from %s for service \"%s\"",
+               even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
+               even[8], even[9], even[10], even[11], even[12], even[13], even[14], even[15],
+               odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
+               odd[8], odd[9], odd[10], odd[11], odd[12], odd[13], odd[14], odd[15],
+               td->td_nicename,
+               ((mpegts_service_t *)t)->s_dvb_svcname);
+    } else {
+      tvhtrace("descrambler", "Unknown keys from %s for for service \"%s\"",
+               td->td_nicename, ((mpegts_service_t *)t)->s_dvb_svcname);
+    }
     dr->dr_ecm_key_time = dispatch_clock;
     td->td_keystate = DS_RESOLVED;
   } else {
@@ -309,9 +329,9 @@ descrambler_descramble ( service_t *t,
             key_update(dr, ki);
           }
         }
-        tvhcsa_descramble(td->td_csa,
-                          (mpegts_service_t *)td->td_service,
-                          tsb2);
+        td->td_csa->csa_descramble(td->td_csa,
+                                   (mpegts_service_t *)td->td_service,
+                                   tsb2);
         dr->dr_last_descramble = dispatch_clock;
       }
       sbuf_free(&dr->dr_buf);
@@ -346,9 +366,9 @@ descrambler_descramble ( service_t *t,
         key_update(dr, ki);
       }
     }
-    tvhcsa_descramble(td->td_csa,
-                      (mpegts_service_t *)td->td_service,
-                      tsb);
+    td->td_csa->csa_descramble(td->td_csa,
+                               (mpegts_service_t *)td->td_service,
+                               tsb);
     dr->dr_last_descramble = dispatch_clock;
     return 1;
 next:
