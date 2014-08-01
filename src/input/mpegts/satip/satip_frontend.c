@@ -24,6 +24,11 @@
 #include "http.h"
 #include "satip_private.h"
 
+#if defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 static int
 satip_frontend_tune1
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi );
