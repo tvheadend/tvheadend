@@ -16,10 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tvheadend.h"
-#include "tvhpoll.h"
-#include "upnp.h"
-
 #include <pthread.h>
 #include <assert.h>
 #include <stdio.h>
@@ -33,6 +29,10 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+
+#include "tvheadend.h"
+#include "tvhpoll.h"
+#include "upnp.h"
 
 #if defined(PLATFORM_FREEBSD)
 #include <sys/types.h>
