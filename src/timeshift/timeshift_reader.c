@@ -325,7 +325,7 @@ static int _timeshift_read
                ts->id, (*cur_file)->path);
       *fd = open((*cur_file)->path, O_RDONLY);
     }
-    tvhtrace("timeshift", "ts %d seek to %"PRIoff_t, ts->id, *cur_off);
+    tvhtrace("timeshift", "ts %d seek to %jd", ts->id, (intmax_t)*cur_off);
     lseek(*fd, *cur_off, SEEK_SET);
 
     /* Read msg */
@@ -336,7 +336,7 @@ static int _timeshift_read
       tvhlog(LOG_ERR, "timeshift", "ts %d could not read buffer", ts->id);
       return -1;
     }
-    tvhtrace("timeshift", "ts %d read msg %p (%"PRIssize_t")",
+    tvhtrace("timeshift", "ts %d read msg %p (%zd)",
              ts->id, *sm, r);
 
     /* Incomplete */
@@ -736,7 +736,7 @@ void *timeshift_reader ( void *p )
         th_pkt_t *pkt = sm->sm_data;
         tvhtrace("timeshift",
                  "ts %d pkt out - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64 " dur %10d len %"PRIsize_t" time %"PRId64,
+                 " dts %10"PRId64 " dur %10d len %zu time %"PRId64,
                  ts->id,
                  pkt->pkt_componentindex,
                  pkt_frametype_to_char(pkt->pkt_frametype),

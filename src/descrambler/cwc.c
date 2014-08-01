@@ -486,7 +486,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
     return -1;
   }
 
-  tvhtrace("cwc", "sending message sid %d len %"PRIsize_t" enq %d", sid, len, enq);
+  tvhtrace("cwc", "sending message sid %d len %zu enq %d", sid, len, enq);
   tvhlog_hexdump("cwc", buf, len);
 
   buf[0] = (len - 2) >> 8;

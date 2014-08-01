@@ -702,31 +702,10 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 # endif /* ULONG_MAX */
 #endif /* __WORDSIZE */
 
-# if __WORDSIZE == 64
-#define PRIsword_t      PRId64
-#define PRIuword_t      PRIu64
-#else
-#define PRIsword_t      PRId32
-#define PRIuword_t      PRIu32
-#endif
-#define PRIslongword_t  "ld"
-#define PRIulongword_t  "lu"
-#if defined(PLATFORM_DARWIN)
-#define PRIsize_t       PRIulongword_t
-#define PRIssize_t      PRIslongword_t
-#else
-#define PRIsize_t       PRIuword_t
-#define PRIssize_t      PRIsword_t
-#endif
 #if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
-#define PRItime_t       PRIsword_t
+#define PRItime_t       "d"
 #else
-#define PRItime_t       PRIslongword_t
-#endif
-#if _FILE_OFFSET_BITS == 64
-#define PRIoff_t        PRId64
-#else
-#define PRIoff_t        PRIslongword_t
+#define PRItime_t       "ld"
 #endif
 
 #endif /* TV_HEAD_H */

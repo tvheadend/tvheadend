@@ -1384,7 +1384,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
 
   tvhtrace("parser",
            "pkt stream %2d %-12s type %c dts %10"PRId64" pts %10"PRId64
-           " dur %10d len %10"PRIsize_t,
+           " dur %10d len %10zu",
            st->es_index,
            streaming_component_type2txt(st->es_type),
            pkt_frametype_to_char(pkt->pkt_frametype),

@@ -1060,7 +1060,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   char *fname;
   char range_buf[255];
   char disposition[256];
-  off_t content_len, file_start, file_end, chunk;
+  off_t content_len, chunk;
+  intmax_t file_start, file_end;
 #if defined(PLATFORM_LINUX)
   ssize_t r;
 #elif defined(PLATFORM_FREEBSD) || defined(PLATFORM_DARWIN)
@@ -1099,7 +1100,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   
   range = http_arg_get(&hc->hc_args, "Range");
   if(range != NULL)
-    sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
+    sscanf(range, "bytes=%jd-%jd", &file_start, &file_end);
 
   //Sanity checks
   if(file_start < 0 || file_start >= st.st_size) {
