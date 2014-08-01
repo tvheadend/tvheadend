@@ -26,6 +26,54 @@
 extern const idclass_t mpegts_mux_class;
 extern const idclass_t mpegts_mux_instance_class;
 
+static int
+iptv_mux_url_set ( void *p, const void *v )
+{
+  iptv_mux_t *im = p;
+  const char *str = v;
+  char *buf, port[16] = "";
+  size_t len;
+  url_t url;
+
+  if (strcmp(str, im->mm_iptv_url ?: "")) {
+    if (str == NULL || *str == '\0') {
+      free(im->mm_iptv_url);
+      free(im->mm_iptv_url_sane);
+      im->mm_iptv_url = NULL;
+      im->mm_iptv_url_sane = NULL;
+      return 1;
+    }
+    memset(&url, 0, sizeof(url));
+    if (!urlparse(str ?: "", &url)) {
+      free(im->mm_iptv_url);
+      free(im->mm_iptv_url_sane);
+      im->mm_iptv_url = str ? strdup(str) : NULL;
+      if (im->mm_iptv_url) {
+        len = strlen(url.scheme) + 3 +
+              strlen(url.host) + 1 +
+              /* port */ 16 +
+              strlen(url.path) + 1 +
+              strlen(url.query) + 2;
+        buf = alloca(len);
+        if (url.port)
+          snprintf(port, sizeof(port), "%d", url.port);
+        snprintf(buf, len, "%s%s%s%s%s%s",
+                 url.scheme ?: "", url.scheme ? "://" : "",
+                 url.host ?: "",
+                 url.path ?: "", url.query ? "?" : "",
+                 url.query);
+        im->mm_iptv_url_sane = strdup(buf);
+      } else {
+        im->mm_iptv_url_sane = NULL;
+      }
+      urlreset(&url);
+      return 1;
+    }
+    urlreset(&url);
+  }
+  return 0;
+}                                              
+
 const idclass_t iptv_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -37,6 +85,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_url",
       .name     = "URL",
       .off      = offsetof(iptv_mux_t, mm_iptv_url),
+      .set      = iptv_mux_url_set,
     },
     {
       .type     = PT_STR,
@@ -52,7 +101,13 @@ const idclass_t iptv_mux_class =
     },
     {
       .type     = PT_STR,
-      .id       = "iptv_svcname",
+      .id       = "iptv_muxname",
+      .name     = "Mux Name",
+      .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_sname",
       .name     = "Service Name",
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
@@ -74,7 +129,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url;
+  char *url, *url_sane;
   iptv_mux_t *im = (iptv_mux_t*)mm;
 
   if (delconf)
@@ -83,19 +138,25 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
                         idnode_uuid_as_str(&mm->mm_id));
 
   url = im->mm_iptv_url; // Workaround for silly printing error
+  url_sane = im->mm_iptv_url_sane;
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
   mpegts_mux_delete(mm, delconf);
   free(url);
+  free(url_sane);
 }
 
 static void
 iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm;
-  if(im->mm_iptv_url)
-    strncpy(buf, im->mm_iptv_url, len);
-  else
+  if(im->mm_iptv_muxname) {
+    strncpy(buf, im->mm_iptv_muxname, len);
+    buf[len-1] = '\0';
+  } else if(im->mm_iptv_url_sane) {
+    strncpy(buf, im->mm_iptv_url_sane, len);
+    buf[len-1] = '\0';
+  } else
     *buf = 0;
 }
 

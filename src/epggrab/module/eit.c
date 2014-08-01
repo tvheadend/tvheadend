@@ -608,15 +608,15 @@ _eit_callback
   if(!mm)
     goto done;
 
-  if (map->om_first) {
-    map->om_tune_count++;
-    map->om_first = 0;
-  }
-
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
   if (!svc)
     goto done;
+
+  if (map->om_first) {
+    map->om_tune_count++;
+    map->om_first = 0;
+  }
 
   /* Register this */
   if (ota)

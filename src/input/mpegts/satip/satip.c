@@ -28,6 +28,11 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 
+#if defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 static void satip_device_discovery_start( void );
 
 /*

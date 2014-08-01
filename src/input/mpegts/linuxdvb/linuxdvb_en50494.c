@@ -266,21 +266,23 @@ linuxdvb_en50494_create0
     port = 0;
   }
 
-  ld = linuxdvb_diseqc_create0(calloc(1, sizeof(linuxdvb_en50494_t)),
+  le = calloc(1, sizeof(linuxdvb_en50494_t));
+  if (le == NULL)
+    return NULL;
+  le->le_position  = port;
+  le->le_id        = 0;
+  le->le_frequency = 0;
+  le->le_pin       = LINUXDVB_EN50494_NOPIN;
+
+  ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
                                NULL, &linuxdvb_en50494_class, conf,
                                "en50494", ls);
-  le = (linuxdvb_en50494_t*)ld;
   if (ld) {
     ld->ld_tune  = linuxdvb_en50494_tune;
     /* May not needed: ld->ld_grace = linuxdvb_en50494_grace; */
-
-    le->le_position  = port;
-    le->le_id        = 0;
-    le->le_frequency = 0;
-    le->le_pin       = LINUXDVB_EN50494_NOPIN;
   }
 
-  return (linuxdvb_diseqc_t*)ld;
+  return ld;
 }
 
 void

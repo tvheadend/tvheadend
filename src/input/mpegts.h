@@ -179,7 +179,9 @@ struct mpegts_table
   uint8_t mt_finished;
   uint8_t mt_subscribed;
   uint8_t mt_defer_cmd;
-  uint8_t mt_defer_reg;
+
+#define MT_DEFER_OPEN_PID  1
+#define MT_DEFER_CLOSE_PID 2
 
   int mt_count;
 
@@ -426,6 +428,7 @@ struct mpegts_service
   uint16_t s_dvb_servicetype;
   char    *s_dvb_charset;
   uint16_t s_dvb_prefcapid;
+  int      s_dvb_prefcapid_lock;
 
   /*
    * EIT/EPG control
@@ -536,7 +539,8 @@ struct mpegts_input
    * Input processing
    */
 
-  int mi_running;
+  uint8_t mi_running;
+  uint8_t mi_live;
   time_t mi_last_dispatch;
 
   /* Data input */
@@ -769,6 +773,8 @@ static inline void mpegts_table_release
   assert(mt->mt_refcount > 0);
   if(--mt->mt_refcount == 0) mpegts_table_release_(mt);
 }
+int mpegts_table_type
+  ( mpegts_table_t *mt );
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,

@@ -28,6 +28,11 @@
 #include <fcntl.h>
 #include <poll.h>
 
+#if defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 

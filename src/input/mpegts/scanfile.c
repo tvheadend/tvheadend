@@ -459,6 +459,8 @@ scanfile_init ( void )
   if (!path || !*path)
 #if ENABLE_DVBSCAN
     path = "data/dvb-scan";
+#elif defined(PLATFORM_FREEBSD)
+    path = "/usr/local/share/dtv-scan-tables";
 #else
     path = "/usr/share/dvb";
 #endif

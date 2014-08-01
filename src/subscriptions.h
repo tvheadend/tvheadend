@@ -93,6 +93,7 @@ typedef struct th_subscription {
   //       (repeated) logic elsewhere
   LIST_ENTRY(th_subscription) ths_mmi_link;
   struct mpegts_mux_instance *ths_mmi;
+  gtimer_t ths_receive_timer;
 #endif
 
 } th_subscription_t;

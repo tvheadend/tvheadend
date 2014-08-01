@@ -644,6 +644,12 @@ const idclass_t esfilter_class_video = {
     },
     {
       .type     = PT_INT,
+      .id       = "sindex",
+      .name     = "Stream Index",
+      .off      = offsetof(esfilter_t, esf_sindex),
+    },
+    {
+      .type     = PT_INT,
       .id       = "pid",
       .name     = "PID",
       .off      = offsetof(esfilter_t, esf_pid),
@@ -702,6 +708,12 @@ const idclass_t esfilter_class_audio = {
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "sindex",
+      .name     = "Stream Index",
+      .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
@@ -766,6 +778,12 @@ const idclass_t esfilter_class_teletext = {
     },
     {
       .type     = PT_INT,
+      .id       = "sindex",
+      .name     = "Stream Index",
+      .off      = offsetof(esfilter_t, esf_sindex),
+    },
+    {
+      .type     = PT_INT,
       .id       = "pid",
       .name     = "PID",
       .off      = offsetof(esfilter_t, esf_pid),
@@ -824,6 +842,12 @@ const idclass_t esfilter_class_subtit = {
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "sindex",
+      .name     = "Stream Index",
+      .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
@@ -893,6 +917,12 @@ const idclass_t esfilter_class_ca = {
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "sindex",
+      .name     = "Stream Index",
+      .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,

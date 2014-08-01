@@ -140,7 +140,7 @@ static void timeshift_input
     if (sm->sm_type == SMT_PACKET) {
       tvhtrace("timeshift",
                "ts %d pkt in  - stream %d type %c pts %10"PRId64
-               " dts %10"PRId64" dur %10d len %"PRIsize_t,
+               " dts %10"PRId64" dur %10d len %zu",
                ts->id,
                pkt->pkt_componentindex,
                pkt_frametype_to_char(pkt->pkt_frametype),
@@ -178,7 +178,7 @@ static void timeshift_input
       if (sm->sm_type == SMT_PACKET) {
         tvhtrace("timeshift",
                  "ts %d pkt buf - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64" dur %10d len %"PRIsize_t,
+                 " dts %10"PRId64" dur %10d len %zu",
                  ts->id,
                  pkt->pkt_componentindex,
                  pkt_frametype_to_char(pkt->pkt_frametype),
