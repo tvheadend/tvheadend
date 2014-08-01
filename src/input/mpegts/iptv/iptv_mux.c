@@ -49,11 +49,11 @@ iptv_mux_url_set ( void *p, const void *v )
       free(im->mm_iptv_url_sane);
       im->mm_iptv_url = str ? strdup(str) : NULL;
       if (im->mm_iptv_url) {
-        len = strlen(url.scheme) + 3 +
-              strlen(url.host) + 1 +
+        len = (url.scheme ? strlen(url.scheme) + 3 : 0) +
+              (url.host ? strlen(url.host) + 1 : 0) +
               /* port */ 16 +
-              strlen(url.path) + 1 +
-              strlen(url.query) + 2;
+              (url.path ? strlen(url.path) + 1 : 0) +
+              (url.query ? strlen(url.query) + 2 : 0);
         buf = alloca(len);
         if (url.port)
           snprintf(port, sizeof(port), "%d", url.port);
