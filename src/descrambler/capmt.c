@@ -125,8 +125,6 @@ static pthread_cond_t capmt_config_changed;
  */
 typedef struct ca_info {
   uint16_t seq;		// sequence / service id number
-  uint8_t  even[16];
-  uint8_t  odd[16];
 } ca_info_t;
 
 /** 
@@ -1043,6 +1041,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR) {
 
+    static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
@@ -1055,11 +1054,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      memcpy(cai->even, cw, 16); // even key
-      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, cw, empty, 1);
     } else if (parity == 1) {
-      memcpy(cai->odd,  cw, 16); // odd  key
-      capmt_process_key(capmt, adapter, cai->seq, cai->even, cai->odd, 1);
+      capmt_process_key(capmt, adapter, cai->seq, empty, cw, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
 
@@ -1533,6 +1530,9 @@ capmt_caid_change(th_descrambler_t *td)
   lock_assert(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    if (t->s_dvb_prefcapid_lock == 2 &&
+        t->s_dvb_prefcapid != st->es_pid)
+      continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
@@ -1812,6 +1812,9 @@ capmt_service_start(service_t *s)
     pthread_mutex_lock(&t->s_stream_mutex);
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
       caid_t *c;
+      if (t->s_dvb_prefcapid_lock == 2 &&
+          t->s_dvb_prefcapid != st->es_pid)
+        continue;
       LIST_FOREACH(c, &st->es_caids, link) {
         if(c == NULL || c->use == 0)
           continue;
