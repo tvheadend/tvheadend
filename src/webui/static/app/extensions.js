@@ -347,6 +347,7 @@ Ext.reg("multiselect", Ext.ux.Multiselect);
 
 /**
  * 22/07/2014: ceiling support backported from version 1.2, by Kai Sommerfeld
+ * 01/08/2014: tvh_renderer fcn added by Jaroslav Kysela
  */
 Ext.namespace('Ext.ux.grid');
 
@@ -402,7 +403,14 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
             this.grid.startEditing(rowIndex, colIndex);
         }
     },
+    tvh_renderer: function (v, p, record) {
+      return v;
+    },
     renderer: function(v, p, record) {
+        v = this.tvh_renderer(v, p, record);
+        if (typeof v === "string")
+          return v; // custom string
+
         var style = '';
         var textClass = (v < (this.ceiling / 1.818)) ? 'x-progress-text-back' : 'x-progress-text-front' + (Ext.isIE6 ? '-ie6' : '');
 
