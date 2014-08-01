@@ -29,6 +29,10 @@ struct tvhcsa;
 struct mpegts_table;
 struct mpegts_mux;
 
+#define DESCRAMBLER_NONE 0
+#define DESCRAMBLER_DES  1
+#define DESCRAMBLER_AES  2
+
 /**
  * Descrambler superclass
  *
@@ -147,7 +151,7 @@ void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
-void descrambler_keys          ( th_descrambler_t *t,
+void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,

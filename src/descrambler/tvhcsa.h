@@ -23,6 +23,7 @@ struct mpegts_service;
 struct elementary_stream;
 
 #include "tvheadend.h"
+#include "descrambler.h"
 
 #include <stdint.h>
 #if ENABLE_DVBCSA
@@ -37,6 +38,11 @@ typedef struct tvhcsa
   /**
    * CSA
    */
+  int      csa_type;   /*< see DESCRAMBLER_* defines */
+  int      csa_keylen;
+  void   (*csa_descramble)
+              ( struct tvhcsa *csa, struct mpegts_service *s, const uint8_t *tsb );
+
   int      csa_cluster_size;
   uint8_t *csa_tsbcluster;
   int      csa_fill;
@@ -52,30 +58,14 @@ typedef struct tvhcsa
 #else
   void *csa_keys;
 #endif
+  void *csa_aes_keys;
   
 } tvhcsa_t;
 
-#if ENABLE_DVBCSA
+int  tvhcsa_set_type( tvhcsa_t *csa, int type );
 
-#define tvhcsa_set_key_even(csa, cw)\
-  dvbcsa_bs_key_set(cw, (csa)->csa_key_even)
-
-#define tvhcsa_set_key_odd(csa, cw)\
-  dvbcsa_bs_key_set(cw, (csa)->csa_key_odd)
-
-#else
-
-#define tvhcsa_set_key_even(csa, cw)\
-  set_even_control_word((csa)->csa_keys, cw)
-
-#define tvhcsa_set_key_odd(csa, cw)\
-  set_odd_control_word((csa)->csa_keys, cw)
-
-#endif
-
-void
-tvhcsa_descramble
-  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb );
+void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even );
+void tvhcsa_set_key_odd ( tvhcsa_t *csa, const uint8_t *odd );
 
 void tvhcsa_init    ( tvhcsa_t *csa );
 void tvhcsa_destroy ( tvhcsa_t *csa );

@@ -972,7 +972,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
     if (adapter != ct->ct_adapter)
       continue;
 
-    descrambler_keys((th_descrambler_t *)ct, even, odd);
+    descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
