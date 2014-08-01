@@ -101,7 +101,13 @@ const idclass_t iptv_mux_class =
     },
     {
       .type     = PT_STR,
-      .id       = "iptv_svcname",
+      .id       = "iptv_muxname",
+      .name     = "Mux Name",
+      .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_sname",
       .name     = "Service Name",
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
@@ -142,9 +148,13 @@ static void
 iptv_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm;
-  if(im->mm_iptv_url_sane)
+  if(im->mm_iptv_muxname) {
+    strncpy(buf, im->mm_iptv_muxname, len);
+    buf[len-1] = '\0';
+  } else if(im->mm_iptv_url_sane) {
     strncpy(buf, im->mm_iptv_url_sane, len);
-  else
+    buf[len-1] = '\0';
+  } else
     *buf = 0;
 }
 

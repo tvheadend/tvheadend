@@ -83,6 +83,7 @@ struct iptv_mux
 
   int                   mm_iptv_atsc;
 
+  char                 *mm_iptv_muxname;
   char                 *mm_iptv_svcname;
 
   sbuf_t                mm_iptv_buffer;
