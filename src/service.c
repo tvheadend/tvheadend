@@ -128,7 +128,7 @@ service_class_channel_enum
 static const char *
 service_class_get_title ( idnode_t *self )
 {
-  return service_get_channel_name((service_t*)self);
+  return service_get_full_channel_name((service_t *)self);
 }
 
 static const void *
@@ -346,7 +346,7 @@ service_build_filter(service_t *t)
   elementary_stream_t *st, *st2, **sta;
   esfilter_t *esf;
   caid_t *ca, *ca2;
-  int i, n, p, o, exclusive;
+  int i, n, p, o, exclusive, sindex;
   uint32_t mask;
 
   /* rebuild the filtered and ordered components */
@@ -356,8 +356,11 @@ service_build_filter(service_t *t)
     if (!TAILQ_EMPTY(&esfilters[i]))
       goto filter;
 
-  TAILQ_FOREACH(st, &t->s_components, es_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
     TAILQ_INSERT_TAIL(&t->s_filt_components, st, es_filt_link);
+    LIST_FOREACH(ca, &st->es_caids, link)
+      ca->use = 1;
+  }
   return;
 
 filter:
@@ -378,8 +381,11 @@ filter:
     mask = esfilterclsmask[i];
     if (TAILQ_EMPTY(&esfilters[i])) {
       TAILQ_FOREACH(st, &t->s_components, es_link) {
-        if ((mask & SCT_MASK(st->es_type)) != 0)
+        if ((mask & SCT_MASK(st->es_type)) != 0) {
           service_build_filter_add(t, st, sta, &p);
+          LIST_FOREACH(ca, &st->es_caids, link)
+            ca->use = 1;
+        }
       }
       continue;
     }
@@ -387,6 +393,7 @@ filter:
     TAILQ_FOREACH(esf, &esfilters[i], esf_link) {
       if (!esf->esf_enabled)
         continue;
+      sindex = 0;
       TAILQ_FOREACH(st, &t->s_components, es_link) {
         if ((mask & SCT_MASK(st->es_type)) == 0)
           continue;
@@ -402,6 +409,8 @@ filter:
             continue;
         }
         if (i == ESF_CLASS_CA) {
+          if (esf->esf_pid && esf->esf_pid != st->es_pid)
+            continue;
           ca = NULL;
           if ((esf->esf_caid != (uint16_t)-1 || esf->esf_caprovider != -1)) {
             LIST_FOREACH(ca, &st->es_caids, link) {
@@ -414,9 +423,12 @@ filter:
             if (ca == NULL)
               continue;
           }
+          sindex++;
+          if (esf->esf_sindex && esf->esf_sindex != sindex)
+            continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %04x %06x \"%s\" %s",
-              esfilter_class2txt(i), esf->esf_index, st->es_pid,
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %04x %06x \"%s\" %s",
+              esfilter_class2txt(i), st->es_index, esf->esf_index, st->es_pid,
               esf->esf_caid, esf->esf_caprovider, t->s_nicename,
               esfilter_action2txt(esf->esf_action));
           switch (esf->esf_action) {
@@ -464,9 +476,12 @@ ca_ignore:
             break;
           }
         } else {
+          sindex++;
+          if (esf->esf_sindex && esf->esf_sindex != sindex)
+            continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %05d %s %s \"%s\" %s",
-              esfilter_class2txt(i), esf->esf_index,
+            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %s %s \"%s\" %s",
+              esfilter_class2txt(i), st->es_index, esf->esf_index,
               st->es_pid, streaming_component_type2txt(st->es_type),
               lang_code_get(st->es_lang), t->s_nicename,
               esfilter_action2txt(esf->esf_action));
@@ -841,24 +856,39 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 void 
 service_make_nicename(service_t *t)
 {
-  char buf[200];
+  char buf[256], buf2[16];
   source_info_t si;
   elementary_stream_t *st;
+  char *service_name;
+  int prefidx;
 
   lock_assert(&t->s_stream_mutex);
 
   t->s_setsourceinfo(t, &si);
 
+  service_name = si.si_service;
+  if (service_name == NULL || si.si_service[0] == '0') {
+    snprintf(buf2, sizeof(buf2), "{PMT:%d}", t->s_pmt_pid);
+    service_name = buf2;
+  }
+
   snprintf(buf, sizeof(buf), 
-	   "%s%s%s%s%s",
-	   si.si_adapter ?: "", si.si_adapter && si.si_mux     ? "/" : "",
-	   si.si_mux     ?: "", si.si_mux     && si.si_service ? "/" : "",
-	   si.si_service ?: "");
+	   "%s%s%s%s%s%s%s",
+	   si.si_adapter ?: "", si.si_adapter && si.si_network ? "/" : "",
+	   si.si_network ?: "", si.si_network && si.si_mux     ? "/" : "",
+	   si.si_mux     ?: "", si.si_mux     && service_name  ? "/" : "",
+	   service_name ?: "");
+  prefidx = (si.si_adapter ? strlen(si.si_adapter) : 0) +
+            (si.si_adapter && si.si_network ? 1 : 0) +
+            (si.si_network ? strlen(si.si_network) : 0) +
+            (si.si_network && si.si_mux ? 1 : 0) +
+            (si.si_mux ? strlen(si.si_mux) : 0);
 
   service_source_info_free(&si);
 
   free(t->s_nicename);
   t->s_nicename = strdup(buf);
+  t->s_nicename_prefidx = prefidx;
 
   TAILQ_FOREACH(st, &t->s_components, es_link)
     service_stream_make_nicename(t, st);
@@ -1464,6 +1494,33 @@ service_get_channel_name ( service_t *s )
   if (s->s_channel_name) r = s->s_channel_name(s);
   if (!r) r = s->s_nicename;
   return r;
+}
+
+/*
+ * Get full name for channel from service
+ */
+const char *
+service_get_full_channel_name ( service_t *s )
+{
+  static char __thread buf[256];
+  const char *r = NULL;
+  int         len;
+
+  if (s->s_channel_name)
+    r = s->s_channel_name(s);
+  if (r == NULL)
+    return s->s_nicename;
+
+  len = s->s_nicename_prefidx;
+  if (len >= sizeof(buf))
+    len = sizeof(buf) - 1;
+  strncpy(buf, s->s_nicename, len);
+  if (len < sizeof(buf) - 1)
+    buf[len++] = '/';
+  buf[len] = '\0';
+  if (len < sizeof(buf))
+    snprintf(buf + len, sizeof(buf) - len, "%s", r);
+  return buf;
 }
 
 /*
