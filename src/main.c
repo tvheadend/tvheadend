@@ -196,6 +196,7 @@ static int
 get_user_groups (const struct passwd *pw, gid_t* glist, size_t gmax)
 {
   int num = 0;
+#if !ENABLE_ANDROID
   struct group *gr;
   char **mem;
   glist[num++] = pw->pw_gid;
@@ -205,6 +206,7 @@ get_user_groups (const struct passwd *pw, gid_t* glist, size_t gmax)
       if(!strcmp(*mem, pw->pw_name)) glist[num++] = gr->gr_gid;
     }
   }
+#endif
   return num;
 }
 

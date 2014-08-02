@@ -336,7 +336,7 @@ static int _timeshift_read
       tvhlog(LOG_ERR, "timeshift", "ts %d could not read buffer", ts->id);
       return -1;
     }
-    tvhtrace("timeshift", "ts %d read msg %p (%zd)",
+    tvhtrace("timeshift", "ts %d read msg %p (%ld)",
              ts->id, *sm, r);
 
     /* Incomplete */

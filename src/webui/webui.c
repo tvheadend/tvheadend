@@ -55,6 +55,10 @@
 #include <sys/uio.h>
 #endif
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 static int webui_xspf;
 
 /**

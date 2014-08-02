@@ -226,7 +226,7 @@ satip_rtsp_pids_strip( const char *s, int maxlen )
   while (*s == ',')
     s++;
   while (strlen(s) > maxlen) {
-    ptr = rindex(s, ',');
+    ptr = strrchr(s, ',');
     if (ptr == NULL)
       abort();
     *ptr = '\0';

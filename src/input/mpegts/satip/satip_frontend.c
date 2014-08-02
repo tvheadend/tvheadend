@@ -29,6 +29,10 @@
 #include <sys/socket.h>
 #endif
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 static int
 satip_frontend_tune1
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi );

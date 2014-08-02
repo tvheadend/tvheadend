@@ -19,7 +19,12 @@
 #define __TVH_LOGGING_H__
 
 #include <sys/types.h>
+#include "build.h"
+#if ENABLE_ANDROID
+#include <syslog.h>
+#else
 #include <sys/syslog.h>
+#endif
 #include <pthread.h>
 #include <stdarg.h>
 
