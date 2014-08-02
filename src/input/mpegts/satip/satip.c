@@ -33,6 +33,10 @@
 #include <sys/socket.h>
 #endif
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 static void satip_device_discovery_start( void );
 
 /*

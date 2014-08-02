@@ -39,6 +39,10 @@
 #include <sys/socket.h>
 #endif
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 int              upnp_running;
 static pthread_t upnp_tid;
 pthread_mutex_t  upnp_lock;

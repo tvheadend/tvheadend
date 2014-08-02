@@ -40,6 +40,10 @@
 #define SSL_OP_NO_COMPRESSION 0
 #endif
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 struct http_client_ssl {
   int      connected;
   int      shutdown;
