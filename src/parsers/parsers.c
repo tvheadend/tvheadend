@@ -398,7 +398,7 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
 
   plen = (buf[4] << 8) | buf[5];
 
-  if(plen + 6 > len || next_startcode != sc)
+  if(plen + 6 > len)
     return 3;
 
   if(plen + 6 < len)
@@ -1384,7 +1384,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
 
   tvhtrace("parser",
            "pkt stream %2d %-12s type %c dts %10"PRId64" pts %10"PRId64
-           " dur %10d len %10"PRIsize_t,
+           " dur %10d len %10zu",
            st->es_index,
            streaming_component_type2txt(st->es_type),
            pkt_frametype_to_char(pkt->pkt_frametype),
@@ -1407,6 +1407,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
    * Input is ok
    */
   service_set_streaming_status_flags(t, TSS_PACKETS);
+  t->s_streaming_live |= TSS_LIVE;
 
   /* Forward packet */
   pkt->pkt_componentindex = st->es_index;

@@ -24,8 +24,15 @@
 #include <unistd.h>
 #include <assert.h>
 
-void
-tvhcsa_descramble
+static void
+tvhcsa_aes_descramble
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
+{
+  /* Not Implemented Yet */
+}
+
+static void
+tvhcsa_des_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
 #if ENABLE_DVBCSA
@@ -141,9 +148,72 @@ tvhcsa_descramble
 #endif
 }
 
+int
+tvhcsa_set_type( tvhcsa_t *csa, int type )
+{
+  if (csa->csa_type == type)
+    return 0;
+  if (csa->csa_descramble)
+    return -1;
+  switch (type) {
+  case DESCRAMBLER_DES:
+    csa->csa_descramble = tvhcsa_des_descramble;
+    csa->csa_keylen     = 8;
+    break;
+  case DESCRAMBLER_AES:
+    csa->csa_descramble = tvhcsa_aes_descramble;
+    csa->csa_keylen     = 16;
+    break;
+  default:
+    assert(0);
+  }
+  csa->csa_type = type;
+  return 0;
+}
+
+
+void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
+{
+  switch (csa->csa_type) {
+  case DESCRAMBLER_DES:
+#if ENABLE_DVBCSA
+    dvbcsa_bs_key_set(even, csa->csa_key_even);
+#else
+    set_even_control_word((csa)->csa_keys, even);
+#endif
+    break;
+  case DESCRAMBLER_AES:
+    /* Not Yet Implemented */
+    break;
+  default:
+    assert(0);
+  }
+}
+
+void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
+{
+  assert(csa->csa_type);
+  switch (csa->csa_type) {
+  case DESCRAMBLER_DES:
+#if ENABLE_DVBCSA
+    dvbcsa_bs_key_set(odd, csa->csa_key_odd);
+#else
+    set_odd_control_word((csa)->csa_keys, odd);
+#endif
+    break;
+  case DESCRAMBLER_AES:
+    /* Not Yet Implemented */
+    break;
+  default:
+    assert(0);
+  }
+}
+
 void
 tvhcsa_init ( tvhcsa_t *csa )
 {
+  csa->csa_type          = 0;
+  csa->csa_keylen        = 0;
 #if ENABLE_DVBCSA
   csa->csa_cluster_size  = dvbcsa_bs_batch_size();
 #else

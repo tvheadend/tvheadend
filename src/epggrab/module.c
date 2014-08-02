@@ -386,6 +386,7 @@ epggrab_module_done_socket( void *m )
   mod->tid = 0;
   if (mod->path)
     unlink(mod->path);
+  epggrab_module_int_done(mod);
 }
 
 /*

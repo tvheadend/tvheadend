@@ -34,6 +34,11 @@
 #include "tvhpoll.h"
 #include "upnp.h"
 
+#if defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 int              upnp_running;
 static pthread_t upnp_tid;
 pthread_mutex_t  upnp_lock;

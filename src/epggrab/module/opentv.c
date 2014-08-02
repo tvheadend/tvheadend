@@ -129,6 +129,7 @@ typedef struct opentv_event
 typedef struct opentv_status
 {
   opentv_module_t   *os_mod;
+  epggrab_ota_map_t *os_map;
   int                os_refcount;
   epggrab_ota_mux_t *os_ota;
 } opentv_status_t;
@@ -453,6 +454,7 @@ opentv_table_callback
   /* Complete */
 done:
   if (!r) {
+    sta->os_map->om_first = 0; /* valid data mark */
     tvhtrace(mt->mt_name, "pid %d complete remain %d",
              mt->mt_pid, sta->os_refcount-1);
   
@@ -538,7 +540,7 @@ opentv_bat_callback
  * Module callbacks
  * ***********************************************************************/
 
-static void _opentv_start
+static int _opentv_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *mm )
 {
   int *t;
@@ -552,8 +554,8 @@ static void _opentv_start
   };
 
   /* Ignore */
-  if (!m->enabled && !map->om_forced) return;
-  if (mod->tsid != mm->mm_tsid) return;
+  if (!m->enabled && !map->om_forced) return -1;
+  if (mod->tsid != mm->mm_tsid) return -1;
 
   /* Install tables */
   tvhdebug(mod->id, "install table handlers");
@@ -564,6 +566,7 @@ static void _opentv_start
     if (!sta) {
       sta = calloc(1, sizeof(opentv_status_t));
       sta->os_mod = mod;
+      sta->os_map = map;
     }
     mt = mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK,
                           opentv_bat_callback, sta,
@@ -585,6 +588,7 @@ static void _opentv_start
 
   // Note: we process the data in a serial fashion, first we do channels
   //       then we do titles, then we do summaries
+  return 0;
 }
 
 /* ************************************************************************

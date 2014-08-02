@@ -237,15 +237,30 @@ typedef enum {
 
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
+/*
+ * Scales for signal status values
+ */
+typedef enum {
+  SIGNAL_STATUS_SCALE_UNKNOWN = 0,
+  SIGNAL_STATUS_SCALE_RELATIVE, // value is unsigned, where 0 means 0% and 65535 means 100%
+  SIGNAL_STATUS_SCALE_DECIBEL   // value is measured in dB
+} signal_status_scale_t;
+
 /**
  * The signal status of a tuner
  */
 typedef struct signal_status {
   const char *status_text; /* adapter status text */
   int snr;      /* signal/noise ratio */
+  signal_status_scale_t snr_scale;
   int signal;   /* signal strength */
+  signal_status_scale_t signal_scale;
   int ber;      /* bit error rate */
   int unc;      /* uncorrected blocks */
+  int ec_bit;   /* error bit count */
+  int tc_bit;   /* total bit count */
+  int ec_block; /* error block count */
+  int tc_block; /* total block count */
 } signal_status_t;
 
 /**
@@ -702,31 +717,10 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 # endif /* ULONG_MAX */
 #endif /* __WORDSIZE */
 
-# if __WORDSIZE == 64
-#define PRIsword_t      PRId64
-#define PRIuword_t      PRIu64
-#else
-#define PRIsword_t      PRId32
-#define PRIuword_t      PRIu32
-#endif
-#define PRIslongword_t  "ld"
-#define PRIulongword_t  "lu"
-#if defined(PLATFORM_DARWIN)
-#define PRIsize_t       PRIulongword_t
-#define PRIssize_t      PRIslongword_t
-#else
-#define PRIsize_t       PRIuword_t
-#define PRIssize_t      PRIsword_t
-#endif
 #if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
-#define PRItime_t       PRIsword_t
+#define PRItime_t       "d"
 #else
-#define PRItime_t       PRIslongword_t
-#endif
-#if _FILE_OFFSET_BITS == 64
-#define PRIoff_t        PRId64
-#else
-#define PRIoff_t        PRIslongword_t
+#define PRItime_t       "ld"
 #endif
 
 #endif /* TV_HEAD_H */

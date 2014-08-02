@@ -216,6 +216,7 @@ void epggrab_save ( void )
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "channel_rename", epggrab_channel_rename);
   htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
+  htsmsg_add_u32(m, "channel_reicon", epggrab_channel_reicon);
   htsmsg_add_u32(m, "epgdb_periodicsave", epggrab_epgdb_periodicsave);
   htsmsg_add_str(m, "cron", epggrab_cron);
   htsmsg_add_str(m, "ota_cron", epggrab_ota_cron);

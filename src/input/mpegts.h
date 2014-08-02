@@ -142,14 +142,15 @@ struct mpegts_table
    */
   int mt_flags;
 
-#define MT_CRC      0x01
-#define MT_FULL     0x02
-#define MT_QUICKREQ 0x04
-#define MT_RECORD   0x08
-#define MT_SKIPSUBS 0x10
-#define MT_SCANSUBS 0x20
-#define MT_FAST     0x40
-#define MT_SLOW     0x80
+#define MT_CRC      0x0001
+#define MT_FULL     0x0002
+#define MT_QUICKREQ 0x0004
+#define MT_RECORD   0x0008
+#define MT_SKIPSUBS 0x0010
+#define MT_SCANSUBS 0x0020
+#define MT_FAST     0x0040
+#define MT_SLOW     0x0080
+#define MT_DEFER    0x0100
 
   /**
    * Cycle queue
@@ -164,6 +165,7 @@ struct mpegts_table
    */
 
   LIST_ENTRY(mpegts_table) mt_link;
+  LIST_ENTRY(mpegts_table) mt_defer_link;
   mpegts_mux_t *mt_mux;
 
   char *mt_name;
@@ -174,8 +176,12 @@ struct mpegts_table
   RB_HEAD(,mpegts_table_state) mt_state;
   int mt_complete;
   int mt_incomplete;
-  int mt_finished;
-  int mt_subscribed;
+  uint8_t mt_finished;
+  uint8_t mt_subscribed;
+  uint8_t mt_defer_cmd;
+
+#define MT_DEFER_OPEN_PID  1
+#define MT_DEFER_CLOSE_PID 2
 
   int mt_count;
 
@@ -312,6 +318,7 @@ enum mpegts_mux_epg_flag
   MM_EPG_FORCE_OPENTV_SKY_ITALIA,
   MM_EPG_FORCE_OPENTV_SKY_AUSAT,
 };
+#define MM_EPG_LAST MM_EPG_FORCE_OPENTV_SKY_AUSAT
 
 /* Multiplex */
 struct mpegts_mux
@@ -371,6 +378,8 @@ struct mpegts_mux
 
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
+  LIST_HEAD(, mpegts_table)   mm_defer_tables;
+  pthread_mutex_t             mm_tables_lock;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 
   LIST_HEAD(, caid)           mm_descrambler_caids;
@@ -419,6 +428,7 @@ struct mpegts_service
   uint16_t s_dvb_servicetype;
   char    *s_dvb_charset;
   uint16_t s_dvb_prefcapid;
+  int      s_dvb_prefcapid_lock;
 
   /*
    * EIT/EPG control
@@ -529,7 +539,8 @@ struct mpegts_input
    * Input processing
    */
 
-  int mi_running;
+  uint8_t mi_running;
+  uint8_t mi_live;
   time_t mi_last_dispatch;
 
   /* Data input */
@@ -759,8 +770,11 @@ void mpegts_table_release_
 static inline void mpegts_table_release
   (mpegts_table_t *mt)
 {
+  assert(mt->mt_refcount > 0);
   if(--mt->mt_refcount == 0) mpegts_table_release_(mt);
 }
+int mpegts_table_type
+  ( mpegts_table_t *mt );
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,

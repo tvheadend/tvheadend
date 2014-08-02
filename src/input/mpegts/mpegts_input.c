@@ -399,6 +399,8 @@ mpegts_input_started_mux
 {
   /* Deliver first TS packets as fast as possible */
   mi->mi_last_dispatch = 0;
+  /* Wait for first TS packet */
+  mi->mi_live = 0;
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
@@ -542,18 +544,28 @@ mpegts_input_recv_packets
 static void
 mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 {
-  int      i   = 0;
-  int      len = mm->mm_num_tables;
+  int i, len = 0, c = 0;
   uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
   uint8_t  cc  = (tsb[3] & 0x0f);
-  mpegts_table_t *mt, *vec[len];
+  mpegts_table_t *mt, **vec;
 
   /* Collate - tables may be removed during callbacks */
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  i = mm->mm_num_tables;
+  vec = alloca(i * sizeof(mpegts_table_t *));
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    c++;
+    if (mt->mt_destroyed || !mt->mt_subscribed)
+      continue;
     mpegts_table_grab(mt);
-    vec[i++] = mt;
+    if (len < i)
+      vec[len++] = mt;
   }
-  assert(i == len);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
+  if (i != c) {
+    tvherror("psi", "tables count inconsistency (num %d, list %d)", i, c);
+    assert(0);
+  }
 
   /* Process */
   for (i = 0; i < len; i++) {
@@ -577,6 +589,37 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
 }
 
 static void
+mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  mpegts_table_t *mt;
+
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  while ((mt = LIST_FIRST(&mm->mm_defer_tables)) != NULL) {
+    LIST_REMOVE(mt, mt_defer_link);
+    if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID && !mt->mt_destroyed) {
+      mt->mt_defer_cmd = 0;
+      if (!mt->mt_subscribed) {
+        mt->mt_subscribed = 1;
+        pthread_mutex_unlock(&mm->mm_tables_lock);
+        mi->mi_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+      }
+    } else if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
+      mt->mt_defer_cmd = 0;
+      if (mt->mt_subscribed) {
+        mt->mt_subscribed = 0;
+        pthread_mutex_unlock(&mm->mm_tables_lock);
+        mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+      }
+    } else {
+      pthread_mutex_unlock(&mm->mm_tables_lock);
+    }
+    mpegts_table_release(mt);
+    pthread_mutex_lock(&mm->mm_tables_lock);
+  }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
+}
+
+static void
 mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
@@ -593,6 +636,8 @@ mpegts_input_process
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
+
+  mi->mi_live = 1;
 
   /* Process */
   assert((len % 188) == 0);
@@ -723,8 +768,10 @@ mpegts_input_thread ( void * p )
       
     /* Process */
     pthread_mutex_lock(&mi->mi_output_lock);
-    if (mp->mp_mux && mp->mp_mux->mm_active)
+    if (mp->mp_mux && mp->mp_mux->mm_active) {
+      mpegts_input_table_waiting(mi, mp->mp_mux);
       mpegts_input_process(mi, mp);
+    }
     pthread_mutex_unlock(&mi->mi_output_lock);
 
     /* Cleanup */

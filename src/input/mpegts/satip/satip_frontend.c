@@ -24,6 +24,11 @@
 #include "http.h"
 #include "satip_private.h"
 
+#if defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 static int
 satip_frontend_tune1
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi );
@@ -707,15 +712,19 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (status == SIGNAL_GOOD &&
               mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
             /* some values that we're tuned */
-            mmi->mmi_stats.signal = 50;
-            mmi->mmi_stats.snr = 12;
+            mmi->mmi_stats.signal = 50 * 0xffff / 100;
+            mmi->mmi_stats.snr = 12 * 0xffff / 15;
           }
           goto ok;          
         } else if (strncmp(s, "ver=1.0;", 8) == 0) {
@@ -728,10 +737,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;          
         } else if (strncmp(s, "ver=1.1;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
@@ -740,10 +753,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           if (atoi(argv[0]) != lfe->sf_number)
             return;
           mmi->mmi_stats.signal =
-            (atoi(argv[1]) * 100) / lfe->sf_device->sd_sig_scale;
+            atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
+          mmi->mmi_stats.signal_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]);
+          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->mmi_stats.snr_scale =
+            INPUT_STREAM_STATS_SCALE_RELATIVE;
           goto ok;
         }
       }
@@ -819,7 +836,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     count = lfe->sf_pids_count;
     if (count > lfe->sf_device->sd_pids_max)
       count = lfe->sf_device->sd_pids_max;
-    add = alloca(count * 5);
+    add = alloca(1 + count * 5);
+    add[0] = '\0';
     /* prioritize higher PIDs (tables are low prio) */
     satip_frontend_store_pids(add,
                               &lfe->sf_pids[lfe->sf_pids_count - count],
@@ -837,8 +855,8 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
   } else {
 
-    add = alloca(lfe->sf_pids_count * 5);
-    del = alloca(lfe->sf_pids_count * 5);
+    add = alloca(1 + lfe->sf_pids_count * 5);
+    del = alloca(1 + lfe->sf_pids_tcount * 5);
     add[0] = del[0] = '\0';
 
 #if 0
@@ -926,15 +944,14 @@ satip_frontend_input_thread ( void *aux )
   uint8_t rtcp[2048];
   uint8_t *p;
   sbuf_t sb;
-  int pos, nfds, i, r;
+  int pos, nfds, i, r, tc;
   size_t c;
-  int tc;
   tvhpoll_event_t ev[4];
   tvhpoll_t *efd;
-  int changing = 0, ms = -1, fatal = 0;
+  int changing = 0, ms = -1, fatal = 0, running = 1;
   uint32_t seq = -1, nseq;
   udp_multirecv_t um;
-  int play2 = 1, position, rtsp_flags = 0;
+  int play2 = 1, position, rtsp_flags = 0, reply;
   uint64_t u64;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
@@ -1003,13 +1020,17 @@ satip_frontend_input_thread ( void *aux )
     tvherror("satip", "%s - failed to tune", buf);
     goto done;
   }
+  reply = 1;
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
   sbuf_init_fixed(&sb, RTP_PKTS * RTP_PKT_SIZE);
 
-  while (tvheadend_running && !fatal) {
+  while ((reply || running) && !fatal) {
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
+
+    if (!tvheadend_running)
+      running = 0;
 
     if (nfds > 0 && ev[0].data.ptr == NULL) {
       c = read(lfe->sf_dvr_pipe.rd, rtcp, 1);
@@ -1019,13 +1040,15 @@ satip_frontend_input_thread ( void *aux )
         continue;
       }
       tvhtrace("satip", "%s - input thread received shutdown", buf);
-      break;
+      running = 0;
+      continue;
     }
 
     if (changing && rtsp->hc_cmd == HTTP_CMD_NONE) {
       ms = -1;
       changing = 0;
-      satip_frontend_pid_changed(rtsp, lfe, buf);
+      if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+        reply = 1;
       continue;
     }
 
@@ -1038,9 +1061,12 @@ satip_frontend_input_thread ( void *aux )
                buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
         fatal = 1;
       } else if (r == HTTP_CON_DONE) {
+        reply = 0;
         switch (rtsp->hc_cmd) {
         case RTSP_CMD_OPTIONS:
           r = rtsp_options_decode(rtsp);
+          if (!running)
+            break;
           if (r < 0) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP OPTIONS error %d (%s) [%i-%i]",
                    buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
@@ -1049,6 +1075,8 @@ satip_frontend_input_thread ( void *aux )
           break;
         case RTSP_CMD_SETUP:
           r = rtsp_setup_decode(rtsp, 1);
+          if (!running)
+            break;
           if (r < 0 || rtsp->hc_rtp_port != lfe->sf_rtp_port ||
                        rtsp->hc_rtpc_port != lfe->sf_rtp_port + 1) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP SETUP error %d (%s) [%i-%i]",
@@ -1066,18 +1094,25 @@ satip_frontend_input_thread ( void *aux )
                 tvherror("satip", "%s - failed to tune2", buf);
                 fatal = 1;
               }
+              reply = 1;
               continue;
             } else {
-              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
+                reply = 1;
                 continue;
+              }
             }
           }
           break;
         case RTSP_CMD_PLAY:
+          if (!running)
+            break;
           if (rtsp->hc_code == 200 && play2) {
             play2 = 0;
-            if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
+            if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
+              reply = 1;
               continue;
+            }
           }
           /* fall thru */
         default:
@@ -1090,12 +1125,17 @@ satip_frontend_input_thread ( void *aux )
         }
         rtsp->hc_cmd = HTTP_CMD_NONE;
       }
+
+      if (!running)
+        continue;
     }
 
     /* We need to keep the session alive */
     if (rtsp->hc_ping_time + rtsp->hc_rtp_timeout / 2 < dispatch_clock &&
-        rtsp->hc_cmd == HTTP_CMD_NONE)
+        rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
+      reply = 1;
+    }
 
     if (ev[0].data.ptr == lfe->sf_rtcp) {
       c = recv(lfe->sf_rtcp->fd, rtcp, sizeof(rtcp), MSG_DONTWAIT);
@@ -1182,8 +1222,10 @@ satip_frontend_input_thread ( void *aux )
         r = http_client_run(rtsp);
         if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
           break;
-        nfds = tvhpoll_wait(efd, ev, 1, -1);
-        if (nfds <= 0) {
+        nfds = tvhpoll_wait(efd, ev, 1, 500);
+        if (nfds == 0)
+          break;
+        if (nfds < 0) {
           if (ERRNO_AGAIN(errno))
             continue;
           break;
@@ -1230,6 +1272,12 @@ satip_frontend_signal_cb( void *aux )
   sigstat.signal       = mmi->mmi_stats.signal;
   sigstat.ber          = mmi->mmi_stats.ber;
   sigstat.unc          = mmi->mmi_stats.unc;
+  sigstat.signal_scale = mmi->mmi_stats.signal_scale;
+  sigstat.snr_scale    = mmi->mmi_stats.snr_scale;
+  sigstat.ec_bit       = mmi->mmi_stats.ec_bit;
+  sigstat.tc_bit       = mmi->mmi_stats.tc_bit;
+  sigstat.ec_block     = mmi->mmi_stats.ec_block;
+  sigstat.tc_block     = mmi->mmi_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &lfe->mi_transports, s_active_link) {

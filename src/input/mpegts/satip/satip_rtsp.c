@@ -266,7 +266,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
     if (addpids) {
       if (delpids) {
         /* try to maintain the maximum request size - simple split */
-        if (strlen(addpids) + strlen(delpids) <= max_pids_len)
+        if (strlen(addpids) + strlen(delpids) >= max_pids_len)
           split = 1;
         else
           htsbuf_append(&q, "&", 1);
@@ -281,5 +281,12 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   query = htsbuf_to_string(&q);
   r = rtsp_play(hc, stream, query);
   free(query);
+  if (r >= 0 && split) {
+    htsbuf_queue_init(&q, 0);
+    htsbuf_qprintf(&q, "addpids=%s", addpids);
+    query = htsbuf_to_string(&q);
+    r = rtsp_play(hc, stream, query);
+    free(query);
+  }
   return r;
 }

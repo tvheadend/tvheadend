@@ -432,6 +432,7 @@ linuxdvb_frontend_monitor ( void *aux )
 #if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
+  int gotprop;
 #endif
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
@@ -536,82 +537,194 @@ linuxdvb_frontend_monitor ( void *aux )
   /* Statistics - New API */
 #if DVB_VER_ATLEAST(5,10)
   memset(&fe_properties, 0, sizeof(fe_properties));
+
+  /* Signal strength */
   fe_properties[0].cmd = DTV_STAT_SIGNAL_STRENGTH;
 
   /* BER */
   fe_properties[1].cmd = DTV_STAT_PRE_ERROR_BIT_COUNT;
   fe_properties[2].cmd = DTV_STAT_PRE_TOTAL_BIT_COUNT;
+
+  /* SNR */
   fe_properties[3].cmd = DTV_STAT_CNR;
 
-  /* PER */
+  /* PER / UNC */
   fe_properties[4].cmd = DTV_STAT_ERROR_BLOCK_COUNT;
   fe_properties[5].cmd = DTV_STAT_TOTAL_BLOCK_COUNT;
   dtv_prop.num = 6;
   dtv_prop.props = fe_properties;
 
   if(!ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
+    /* Signal strength */
+    gotprop = 0;
     if(fe_properties[0].u.st.len > 0) {
-      if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE)
-        mmi->mmi_stats.signal = (fe_properties[0].u.st.stat[0].uvalue * 100) / 0xffff;
-      /* TODO: handle other scales */
+      if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
+        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.signal = fe_properties[0].u.st.stat[0].uvalue;
+        gotprop = 1;
+      }
+      else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
+        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_DECIBEL;
+        mmi->mmi_stats.signal = fe_properties[0].u.st.stat[0].svalue;
+        gotprop = 1;
+      }
+      else {
+        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled signal scale: %d",
+               fe_properties[0].u.st.stat[0].scale);
+      }
+    }
+    if(!gotprop) {
+      /* try old API */
+      if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
+        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.signal = u16;
+      }
+      else {
+        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
+      }
     }
 
-    /* Calculate BER from PRE_ERROR and TOTAL_BIT_COUNT */
+    /* ERROR_BIT_COUNT */
+    gotprop = 0;
     if(fe_properties[1].u.st.len > 0) {
-      if(fe_properties[1].u.st.stat[0].scale == FE_SCALE_COUNTER)
-        u16 = fe_properties[1].u.st.stat[0].uvalue;
-    }
-    if(fe_properties[2].u.st.len > 0) {
-      if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
-        if(fe_properties[2].u.st.stat[0].uvalue > 0 )
-          mmi->mmi_stats.ber = u16 / fe_properties[2].u.st.stat[0].uvalue;
-        else
-          mmi->mmi_stats.ber = 0;
+      if(fe_properties[1].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        mmi->mmi_stats.ec_bit = fe_properties[1].u.st.stat[0].uvalue;
+        gotprop = 1;
       }
+      else
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BIT_COUNT scale: %d",
+               fe_properties[1].u.st.stat[0].scale);
+    }
+    /* TOTAL_BIT_COUNT */
+    if(gotprop && (fe_properties[2].u.st.len > 0)) {
+      gotprop = 0;
+      if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        mmi->mmi_stats.tc_bit = fe_properties[2].u.st.stat[0].uvalue;
+        gotprop = 1;
+      }
+      else {
+        mmi->mmi_stats.ec_bit = 0; /* both values or none */
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BIT_COUNT scale: %d",
+               fe_properties[2].u.st.stat[0].scale);
+      }
+    }
+    if(!gotprop) {
+      /* try old API */
+      if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
+        mmi->mmi_stats.ber = u32;
+      else
+        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
     }
     
     /* SNR */
+    gotprop = 0;
     if(fe_properties[3].u.st.len > 0) {
-      /* note that decibel scale means 1 = 0.0001 dB units here */
-      if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL)
-        mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].svalue * 0.0001;
-      /* TODO: handle other scales */
-    }
-
-    /* Calculate PER from PRE_ERROR and TOTAL_BIT_COUNT */
-    if(fe_properties[4].u.st.len > 0) {
-      if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER)
-        u16 = fe_properties[4].u.st.stat[0].uvalue;
-    }
-    if(fe_properties[5].u.st.len > 0) {
-      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
-        if(fe_properties[5].u.st.stat[0].uvalue > 0 )
-          mmi->mmi_stats.unc = u16 / fe_properties[5].u.st.stat[0].uvalue;
-        else
-          mmi->mmi_stats.unc = 0;
+      if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
+        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].uvalue;
+        gotprop = 1;
+      }
+      else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
+        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_DECIBEL;
+        mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].svalue;
+        gotprop = 1;
+      }
+      else {
+        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled SNR scale: %d",
+               fe_properties[3].u.st.stat[0].scale);
       }
     }
-  
+    if(!gotprop) {
+      /* try old API */
+      if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
+        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.snr = u16;
+      }
+      else {
+        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
+      }
+    }
+
+    /* ERROR_BLOCK_COUNT == Uncorrected blocks (UNC) */
+    gotprop = 0;
+    if(fe_properties[4].u.st.len > 0) {
+      if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        mmi->mmi_stats.unc = mmi->mmi_stats.ec_block = fe_properties[4].u.st.stat[0].uvalue;
+        gotprop = 1;
+      }
+      else
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BLOCK_COUNT scale: %d",
+               fe_properties[4].u.st.stat[0].scale);
+    }
+
+    /* TOTAL_BLOCK_COUNT */
+    if(gotprop && (fe_properties[5].u.st.len > 0)) {
+      gotprop = 0;
+      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+        mmi->mmi_stats.tc_block = fe_properties[5].u.st.stat[0].uvalue;
+        gotprop = 1;
+      }
+      else {
+        mmi->mmi_stats.ec_block = mmi->mmi_stats.unc = 0; /* both values or none */
+        tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BLOCK_COUNT scale: %d",
+               fe_properties[5].u.st.stat[0].scale);
+      }
+    }
+    if(!gotprop) {
+      /* try old API */
+      if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32)) {
+        mmi->mmi_stats.unc = u32;
+        gotprop = 1;
+      }
+      else
+        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
+    }
   /* Older API */
   } else
 #endif
   {
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16))
+    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
+      mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
       mmi->mmi_stats.signal = u16;
+    }
+    else {
+      mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+      tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
+    }
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
       mmi->mmi_stats.ber = u32;
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16))
+    else
+      tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
+    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
+      mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
       mmi->mmi_stats.snr = u16;
+    }
+    else {
+      mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+      tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
+    }
     if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       mmi->mmi_stats.unc = u32;
+    else
+      tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
   }
 
   /* Send message */
-  sigstat.status_text = signal2str(status);
-  sigstat.snr         = mmi->mmi_stats.snr;
-  sigstat.signal      = mmi->mmi_stats.signal;
-  sigstat.ber         = mmi->mmi_stats.ber;
-  sigstat.unc         = mmi->mmi_stats.unc;
+  sigstat.status_text  = signal2str(status);
+  sigstat.snr          = mmi->mmi_stats.snr;
+  sigstat.signal       = mmi->mmi_stats.signal;
+  sigstat.ber          = mmi->mmi_stats.ber;
+  sigstat.unc          = mmi->mmi_stats.unc;
+  sigstat.signal_scale = mmi->mmi_stats.signal_scale;
+  sigstat.snr_scale    = mmi->mmi_stats.snr_scale;
+  sigstat.ec_bit       = mmi->mmi_stats.ec_bit;
+  sigstat.tc_bit       = mmi->mmi_stats.tc_bit;
+  sigstat.ec_block     = mmi->mmi_stats.ec_block;
+  sigstat.tc_block     = mmi->mmi_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(s, &lfe->mi_transports, s_active_link) {

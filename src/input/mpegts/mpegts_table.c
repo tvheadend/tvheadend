@@ -30,11 +30,15 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
   if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
 
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ)) continue;
-    if(!mt->mt_complete)
+    if(!mt->mt_complete) {
+      pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
+    }
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s scan complete", buf);
@@ -103,6 +107,14 @@ mpegts_table_dispatch
 void
 mpegts_table_release_ ( mpegts_table_t *mt )
 {
+  struct mpegts_table_state *st;
+
+  while ((st = RB_FIRST(&mt->mt_state))) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
+  if (mt->mt_destroy)
+    mt->mt_destroy(mt);
   free(mt->mt_name);
   free(mt);
 }
@@ -110,18 +122,24 @@ mpegts_table_release_ ( mpegts_table_t *mt )
 void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
-  struct mpegts_table_state *st;
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
-  while ((st = RB_FIRST(&mt->mt_state))) {
-    RB_REMOVE(&mt->mt_state, st, link);
-    free(st);
-  }
-  if (mt->mt_destroy)
-    mt->mt_destroy(mt);
   mpegts_table_release(mt);
 }
 
+/**
+ * Determine table type
+ */
+int
+mpegts_table_type ( mpegts_table_t *mt )
+{
+  int type = 0;
+  if (mt->mt_flags & MT_FAST) type |= MPS_FTABLE;
+  if (mt->mt_flags & MT_SLOW) type |= MPS_TABLE;
+  if (mt->mt_flags & MT_RECORD) type |= MPS_STREAM;
+  if ((type & (MPS_FTABLE | MPS_TABLE)) == 0) type |= MPS_TABLE;
+  return type;
+}
 
 /**
  * Add a new DVB table
@@ -136,6 +154,7 @@ mpegts_table_add
   int subscribe = 1;
 
   /* Check for existing */
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_opaque != opaque)
       continue;
@@ -154,11 +173,16 @@ mpegts_table_add
     } else {
       if (strcmp(mt->mt_name, name))
         continue;
-      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed)
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
         mm->mm_open_table(mm, mt, 1);
+        return mt;
+      }
     }
+    pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);
@@ -196,9 +220,38 @@ void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
+  mpegts_input_t        *mi;
+
   descrambler_flush_tables(mm);
-  while ((mt = LIST_FIRST(&mm->mm_tables)))
+  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
+  pthread_mutex_lock(&mm->mm_tables_lock);
+  while ((mt = LIST_FIRST(&mm->mm_defer_tables))) {
+    LIST_REMOVE(mt, mt_defer_link);
+    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
+      if (mi) {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
+        pthread_mutex_lock(&mi->mi_output_lock);
+        if (mt->mt_subscribed) {
+          mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+          mt->mt_subscribed = 0;
+        }
+        pthread_mutex_unlock(&mi->mi_output_lock);
+        pthread_mutex_lock(&mm->mm_tables_lock);
+      } else{
+        mt->mt_subscribed = 0;
+      }
+    }
+    mt->mt_defer_cmd = 0;
+    mpegts_table_release(mt);
+  }
+  while ((mt = LIST_FIRST(&mm->mm_tables))) {
+    mt->mt_flags &= ~MT_DEFER; /* force destroy */
+    mt->mt_destroyed = 1;      /* early destroy mark */
+    pthread_mutex_unlock(&mm->mm_tables_lock);
     mpegts_table_destroy(mt);
+    pthread_mutex_lock(&mm->mm_tables_lock);
+  }
+  pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
 /*

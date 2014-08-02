@@ -91,6 +91,7 @@ typedef struct esfilter {
   uint32_t esf_type;
   char esf_language[4];
   char esf_service[UUID_HEX_SIZE];
+  int esf_sindex;
   int esf_pid;
   uint16_t esf_caid;
   uint32_t esf_caprovider;
