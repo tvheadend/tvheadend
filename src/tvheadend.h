@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <limits.h>
-#if ENABLE_LOCKOWNER
+#if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
 #endif
 
@@ -45,6 +45,23 @@
 #include "redblack.h"
 
 #define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
+
+#if ENABLE_ANDROID
+#define S_IEXEC S_IXUSR
+#include <time64.h>
+// 32-bit Android has only timegm64() and not timegm().
+// We replicate the behaviour of timegm() when the result overflows time_t.
+static inline time_t timegm(struct tm* const t);
+time_t timegm(struct tm* const t) {
+  // time_t is signed on Android.
+  static const time_t kTimeMax = ~(1L << (sizeof(time_t) * CHAR_BIT - 1));
+  static const time_t kTimeMin = (1L << (sizeof(time_t) * CHAR_BIT - 1));
+  time64_t result = timegm64(t);
+  if (result < kTimeMin || result > kTimeMax)
+    return -1;
+  return result;
+}
+#endif
 
 typedef struct {
   const char     *name;
