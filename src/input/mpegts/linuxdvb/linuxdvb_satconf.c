@@ -649,6 +649,11 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     }
   }
 
+  /* Remember the last network position for rotor */
+  dvb_network_get_orbital_pos(lm->mm_network,
+                              &lse->lse_parent->ls_orbital_pos,
+                              &lse->lse_parent->ls_orbital_dir);
+
   /* Set the tone */
   b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
   tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");

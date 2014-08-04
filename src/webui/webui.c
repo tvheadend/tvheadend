@@ -141,9 +141,9 @@ static int
 page_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   if(is_client_simple(hc)) {
-    http_redirect(hc, "simple.html");
+    http_redirect(hc, "simple.html", &hc->hc_req_args);
   } else {
-    http_redirect(hc, "extjs.html");
+    http_redirect(hc, "extjs.html", &hc->hc_req_args);
   }
   return 0;
 }
@@ -154,7 +154,7 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
   if (!tvheadend_webroot) return 1;
   char *tmp = malloc(strlen(tvheadend_webroot) + 2);
   sprintf(tmp, "%s/", tvheadend_webroot);
-  http_redirect(hc, tmp);
+  http_redirect(hc, tmp, &hc->hc_req_args);
   free(tmp);
   return 0;
 }
@@ -374,7 +374,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
-  htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf, 
+  htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
      access_ticket_create(buf));
 
 #if ENABLE_LIBAV
@@ -415,16 +415,22 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   char buf[255];
   channel_tag_mapping_t *ctm;
   const char *host;
+  muxer_container_type_t mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
+
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = dvr_config_find_by_name_default("")->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf));
+    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -443,9 +449,14 @@ http_tag_list_playlist(http_connection_t *hc)
   char buf[255];
   channel_tag_t *ct;
   const char *host;
+  muxer_container_type_t mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
+
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = dvr_config_find_by_name_default("")->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
@@ -454,8 +465,9 @@ http_tag_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf));
+    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -486,9 +498,14 @@ http_channel_list_playlist(http_connection_t *hc)
   channel_t **chlist;
   const char *host;
   int idx = 0, count = 0;
+  muxer_container_type_t mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
+
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = dvr_config_find_by_name_default("")->dvr_mc;
 
   CHANNEL_FOREACH(ch)
     count++;
@@ -508,8 +525,9 @@ http_channel_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf));
+    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
   free(chlist);
@@ -557,7 +575,7 @@ http_dvr_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
 
@@ -624,7 +642,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   channel_tag_t *tag = NULL;
 
   if(!remain) {
-    http_redirect(hc, "/playlist/channels");
+    http_redirect(hc, "/playlist/channels", &hc->hc_req_args);
     return HTTP_STATUS_FOUND;
   }
 
@@ -1231,7 +1249,7 @@ webui_static_content(const char *http_path, const char *source)
 static int
 favicon(http_connection_t *hc, const char *remain, void *opaque)
 {
-  http_redirect(hc, "static/htslogo.png");
+  http_redirect(hc, "static/htslogo.png", NULL);
   return 0;
 }
 

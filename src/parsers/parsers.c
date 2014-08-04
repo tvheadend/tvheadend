@@ -398,7 +398,7 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
 
   plen = (buf[4] << 8) | buf[5];
 
-  if(plen + 6 > len || next_startcode != sc)
+  if(plen + 6 > len)
     return 3;
 
   if(plen + 6 < len)

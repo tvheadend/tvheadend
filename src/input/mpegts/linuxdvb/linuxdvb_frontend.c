@@ -285,6 +285,7 @@ linuxdvb_frontend_stop_mux
   }
 
   /* Not locked */
+  lfe->lfe_ready  = 0;
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
 
@@ -299,7 +300,21 @@ static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
+  linuxdvb_frontend_t   *lfe = (linuxdvb_frontend_t*)mi;
+  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
+
+  /* Currently active */
+  if (cur != NULL) {
+
+    /* Already tuned */
+    if (mmi == cur)
+      return 0;
+
+    /* Stop current */
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
+  }
+  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
+
   if (lfe->lfe_satconf)
     return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
@@ -414,6 +429,18 @@ linuxdvb_frontend_default_tables
   }
 }
 
+static inline int
+ioctl_check( linuxdvb_frontend_t *lfe, int bit )
+{
+  return !(lfe->lfe_ioctls & (1 << bit));
+}
+
+static inline void
+ioctl_bad( linuxdvb_frontend_t *lfe, int bit )
+{
+  lfe->lfe_ioctls |= 1 << bit;
+}
+
 static void
 linuxdvb_frontend_monitor ( void *aux )
 {
@@ -459,7 +486,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Stop timer */
-  if (!mmi) return;
+  if (!mmi || !lfe->lfe_ready) return;
 
   /* re-arm */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
@@ -554,10 +581,10 @@ linuxdvb_frontend_monitor ( void *aux )
   dtv_prop.num = 6;
   dtv_prop.props = fe_properties;
 
-  if(!ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
+  if(ioctl_check(lfe, 0) && !ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
     /* Signal strength */
     gotprop = 0;
-    if(fe_properties[0].u.st.len > 0) {
+    if(ioctl_check(lfe, 1) && fe_properties[0].u.st.len > 0) {
       if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
         mmi->mmi_stats.signal = fe_properties[0].u.st.stat[0].uvalue;
@@ -569,18 +596,20 @@ linuxdvb_frontend_monitor ( void *aux )
         gotprop = 1;
       }
       else {
+        ioctl_bad(lfe, 1);
         mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled signal scale: %d",
                fe_properties[0].u.st.stat[0].scale);
       }
     }
-    if(!gotprop) {
+    if(!gotprop && ioctl_check(lfe, 2)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
         mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
         mmi->mmi_stats.signal = u16;
       }
       else {
+        ioctl_bad(lfe, 2);
         mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
       }
@@ -588,39 +617,44 @@ linuxdvb_frontend_monitor ( void *aux )
 
     /* ERROR_BIT_COUNT */
     gotprop = 0;
-    if(fe_properties[1].u.st.len > 0) {
+    if(ioctl_check(lfe, 3) && fe_properties[1].u.st.len > 0) {
       if(fe_properties[1].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->mmi_stats.ec_bit = fe_properties[1].u.st.stat[0].uvalue;
         gotprop = 1;
       }
-      else
+      else {
+        ioctl_bad(lfe, 3);
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BIT_COUNT scale: %d",
                fe_properties[1].u.st.stat[0].scale);
+      }
     }
     /* TOTAL_BIT_COUNT */
     if(gotprop && (fe_properties[2].u.st.len > 0)) {
       gotprop = 0;
-      if(fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+      if(ioctl_check(lfe, 4) && fe_properties[2].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->mmi_stats.tc_bit = fe_properties[2].u.st.stat[0].uvalue;
         gotprop = 1;
       }
       else {
+        ioctl_bad(lfe, 4);
         mmi->mmi_stats.ec_bit = 0; /* both values or none */
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BIT_COUNT scale: %d",
                fe_properties[2].u.st.stat[0].scale);
       }
     }
-    if(!gotprop) {
+    if(!gotprop && ioctl_check(lfe, 5)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
         mmi->mmi_stats.ber = u32;
-      else
+      else {
+        ioctl_bad(lfe, 5);
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
+      }
     }
     
     /* SNR */
     gotprop = 0;
-    if(fe_properties[3].u.st.len > 0) {
+    if(ioctl_check(lfe, 6) && fe_properties[3].u.st.len > 0) {
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
         mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].uvalue;
@@ -632,18 +666,20 @@ linuxdvb_frontend_monitor ( void *aux )
         gotprop = 1;
       }
       else {
+        ioctl_bad(lfe, 6);
         mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled SNR scale: %d",
                fe_properties[3].u.st.stat[0].scale);
       }
     }
-    if(!gotprop) {
+    if(!gotprop && ioctl_check(lfe, 7)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
         mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
         mmi->mmi_stats.snr = u16;
       }
       else {
+        ioctl_bad(lfe, 7);
         mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
       }
@@ -651,66 +687,78 @@ linuxdvb_frontend_monitor ( void *aux )
 
     /* ERROR_BLOCK_COUNT == Uncorrected blocks (UNC) */
     gotprop = 0;
-    if(fe_properties[4].u.st.len > 0) {
+    if(ioctl_check(lfe, 8) && fe_properties[4].u.st.len > 0) {
       if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->mmi_stats.unc = mmi->mmi_stats.ec_block = fe_properties[4].u.st.stat[0].uvalue;
         gotprop = 1;
       }
-      else
+      else {
+        ioctl_bad(lfe, 8);
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BLOCK_COUNT scale: %d",
                fe_properties[4].u.st.stat[0].scale);
+      }
     }
 
     /* TOTAL_BLOCK_COUNT */
     if(gotprop && (fe_properties[5].u.st.len > 0)) {
       gotprop = 0;
-      if(fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
+      if(ioctl_check(lfe, 9) && fe_properties[5].u.st.stat[0].scale == FE_SCALE_COUNTER) {
         mmi->mmi_stats.tc_block = fe_properties[5].u.st.stat[0].uvalue;
         gotprop = 1;
       }
       else {
+        ioctl_bad(lfe, 9);
         mmi->mmi_stats.ec_block = mmi->mmi_stats.unc = 0; /* both values or none */
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BLOCK_COUNT scale: %d",
                fe_properties[5].u.st.stat[0].scale);
       }
     }
-    if(!gotprop) {
+    if(!gotprop && ioctl_check(lfe, 10)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32)) {
         mmi->mmi_stats.unc = u32;
         gotprop = 1;
       }
-      else
+      else {
+        ioctl_bad(lfe, 10);
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
+      }
     }
   /* Older API */
   } else
 #endif
   {
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
+    ioctl_bad(lfe, 0);
+    if (ioctl_check(lfe, 1) && !ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
       mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
       mmi->mmi_stats.signal = u16;
     }
     else {
+      ioctl_bad(lfe, 1);
       mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
     }
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
+    if (ioctl_check(lfe, 2) && !ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
       mmi->mmi_stats.ber = u32;
-    else
+    else {
+      ioctl_bad(lfe, 2);
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
+    }
+    if (ioctl_check(lfe, 3) && !ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
       mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
       mmi->mmi_stats.snr = u16;
     }
     else {
+      ioctl_bad(lfe, 3);
       mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
     }
-    if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
+    if (ioctl_check(lfe, 4) && !ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       mmi->mmi_stats.unc = u32;
-    else
+    else {
+      ioctl_bad(lfe, 4);
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
+    }
   }
 
   /* Send message */
@@ -1012,23 +1060,9 @@ linuxdvb_frontend_tune0
   int r;
   struct dvb_frontend_event ev;
   char buf1[256];
-  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
   dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
   dvb_mux_conf_t *dmc;
   struct dvb_frontend_parameters p;
-
-  // Not sure if this is right place?
-  /* Currently active */
-  if (cur != NULL) {
-
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
 
   /* Open FE */
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
@@ -1041,6 +1075,7 @@ linuxdvb_frontend_tune0
   }
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
+  lfe->lfe_ioctls = 0;
 
   /*
    * copy the universal parameters to the Linux kernel structure
@@ -1100,8 +1135,10 @@ linuxdvb_frontend_tune0
     .num = 1,
     .props = clear_p
   };
-  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0)
+  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
+    tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
     return -1;
+  }
 
   if (freq == (uint32_t)-1)
     freq = p.frequency;
@@ -1212,6 +1249,7 @@ linuxdvb_frontend_tune1
     time(&lfe->lfe_monitor);
     lfe->lfe_monitor += 4;
     gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+    lfe->lfe_ready = 1;
   }
   
   return r;
