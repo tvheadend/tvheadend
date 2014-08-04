@@ -1232,6 +1232,25 @@ satip_frontend_input_thread ( void *aux )
         }
       }
     }
+    /* for sure - the second sequence */
+    r = rtsp_teardown(rtsp, (char *)rtcp, NULL);
+    if (r < 0) {
+      tvhtrace("satip", "%s - bad teardown2", buf);
+    } else {
+      while (1) {
+        r = http_client_run(rtsp);
+        if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
+          break;
+        nfds = tvhpoll_wait(efd, ev, 1, 50); /* only small delay here */
+        if (nfds == 0)
+          break;
+        if (nfds < 0) {
+          if (ERRNO_AGAIN(errno))
+            continue;
+          break;
+        }
+      }
+    }
   }
 
 done:
