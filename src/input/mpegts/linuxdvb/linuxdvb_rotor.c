@@ -135,7 +135,7 @@ linuxdvb_rotor_grace
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
-  if (ld->ld_satconf->lse_parent->ls_orbital_pos == 0 || lr->lr_rate != 0)
+  if (!ld->ld_satconf->lse_parent->ls_orbital_dir || lr->lr_rate != 0)
     return 120;
 
   int curpos = ld->ld_satconf->lse_parent->ls_orbital_pos;
