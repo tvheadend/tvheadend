@@ -1105,6 +1105,7 @@ tvheadend.idnode_tree = function(conf)
     var tree = new Ext.tree.TreePanel({
         loader: loader,
         flex: 1,
+        autoScroll: true,
         border: false,
         animate: false,
         root: new Ext.tree.AsyncTreeNode({
