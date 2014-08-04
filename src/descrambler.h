@@ -29,6 +29,10 @@ struct tvhcsa;
 struct mpegts_table;
 struct mpegts_mux;
 
+#define DESCRAMBLER_NONE 0
+#define DESCRAMBLER_DES  1
+#define DESCRAMBLER_AES  2
+
 /**
  * Descrambler superclass
  *
@@ -61,7 +65,6 @@ typedef struct th_descrambler_runtime {
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
   uint8_t  dr_key_valid;
-  uint8_t  dr_ecm_valid;
   time_t   dr_key_start;
   time_t   dr_key_timestamp[2];
   time_t   dr_ecm_start;
@@ -135,6 +138,7 @@ typedef enum {
   CARD_NDS,
   CARD_CRYPTOWORKS,
   CARD_BULCRYPT,
+  CARD_STREAMGUARD,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -147,7 +151,7 @@ void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
-void descrambler_keys          ( th_descrambler_t *t,
+void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,

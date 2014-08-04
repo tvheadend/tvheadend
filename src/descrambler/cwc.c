@@ -286,6 +286,7 @@ void cwc_emm_nagra(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, 
 void cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_cryptoworks(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
+void cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 
 
 /**
@@ -791,29 +792,24 @@ forbid:
       service_request_save((service_t*)t, 0);
     }
 
-
     tvhlog(LOG_DEBUG, "cwc",
-    "Received ECM reply%s for service \"%s\" "
-    "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-    " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
-    "Req delay: %"PRId64" ms)",
-    chaninfo,
-    t->s_dvb_svcname,
-    msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
-    msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
-    msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
-    msg[3 + 15],msg[3 + 16],msg[3 + 17],msg[3 + 18],msg[3 + 19],
-    msg[3 + 20],msg[3 + 21],msg[3 + 22],msg[3 + 23],msg[3 + 24],
-    msg[3 + 25],msg[3 + 26],msg[3 + 27],msg[3 + 28],msg[3 + 29],
-    msg[3 + 30],msg[3 + 31], seq, delay);
-
+	   "Received ECM reply%s for service \"%s\" "
+	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
+	   "Req delay: %"PRId64" ms)",
+	   chaninfo,
+	   t->s_dvb_svcname,
+	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
+	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
+	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
+	   msg[3 + 15], seq, delay);
 
     if(ct->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "cwc",
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s",
 	     t->s_dvb_svcname, delay, ct->td_nicename);
 
-    descrambler_keys((th_descrambler_t *)ct, msg + 3, msg + 3 + 16);
+    descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + 8);
 
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i < ep->ep_last_section; i++) {
@@ -1344,6 +1340,9 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len)
       case CARD_BULCRYPT:
         cwc_emm_bulcrypt(cwc, pcard, data, len);
         break;
+      case CARD_STREAMGUARD:
+        cwc_emm_streamguard(cwc, pcard, data, len);
+        break;
       case CARD_UNKNOWN:
         break;
     }
@@ -1851,6 +1850,36 @@ cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len
 
   if (match)
     cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
+}
+
+/**
+ * streamguard emm handler
+ */
+void
+cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
+{
+    //todo
+    tvhlog(LOG_INFO, "cwc", "cwc_emm_streamguard streamguard card data emm get,here lots of works todo...");
+    int match = 0;
+    
+    if (data[0] == 0x87) {
+        if (memcmp(&data[3], &pcard->cwc_ua[4], 4) == 0) {
+            match = 1;
+        }
+    }
+    else if (data[0] == 0x86) {
+        int i;
+        for (i=0; i < pcard->cwc_num_providers; i++) {
+            if (memcmp(&data[40], &pcard->cwc_providers[i].sa[4], 4) == 0) {
+                /*      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
+                match = 1;
+                break;
+            }
+        }
+    }
+    
+    if (match)
+        cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
 }
 
 void
