@@ -7,6 +7,7 @@ data/dvb-scan
 
 .cproject
 .project
+nbproject
 .settings
 
 *.pyc
