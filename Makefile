@@ -292,10 +292,16 @@ FFDECSA-$(CONFIG_CWC)   = yes
 endif
 
 ifeq ($(FFDECSA-yes),yes)
+SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
+src/descrambler/ffdecsa/ffdecsa_int.c
+SRCS-${CONFIG_MMX} += src/descrambler/ffdecsa/ffdecsa_mmx.c
+SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o : CFLAGS += -mmmx
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+endif
+
 SRCS-yes += src/descrambler/libaesdec/libaesdec_interface.c \
 	    src/descrambler/libaesdec/libaesdec.c
-${BUILDDIR}/src/descrambler/libaesdec/libaesdec.o : CFLAGS += -msse2
-endif
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
