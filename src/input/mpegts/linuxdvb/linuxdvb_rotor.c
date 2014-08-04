@@ -133,14 +133,10 @@ static int
 linuxdvb_rotor_grace
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
 {
-  if (ld->ld_satconf->lse_parent->ls_orbital_pos == 0)
-  {
-    if (lr->lr_rate != 0)
-      return (120 * 500 + 999)/1000;
-    else
-      return 120;
-  }
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+
+  if (ld->ld_satconf->lse_parent->ls_orbital_pos == 0 || lr->lr_rate != 0)
+    return 120;
 
   int curpos = ld->ld_satconf->lse_parent->ls_orbital_pos;
 
@@ -192,8 +188,7 @@ linuxdvb_rotor_gotox_tune
 
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
 
-  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)lr;
-  return linuxdvb_rotor_grace(ld,lm);
+  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 }
 
 /* USALS */
@@ -263,8 +258,7 @@ linuxdvb_rotor_usals_tune
     usleep(25000);
   }
 
-  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)lr;
-  return linuxdvb_rotor_grace(ld,lm);
+  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 
 #undef TO_RAD
 #undef TO_DEG
