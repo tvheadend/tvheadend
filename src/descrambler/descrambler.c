@@ -317,15 +317,13 @@ descrambler_descramble ( service_t *t,
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             kidx = KEY_IDX(ki);
             if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
-                dr->dr_ecm_key_time +
-                  ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
+                dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
               sbuf_cut(&dr->dr_buf, off);
               if (!td->td_ecm_reset(td)) {
-                dr->dr_key_valid = dr->dr_ecm_valid = 0;
+                dr->dr_key_valid = 0;
                 goto next;
               }
             }
-            dr->dr_ecm_valid |= KEY_MASK(ki);
             key_update(dr, ki);
           }
         }
@@ -352,17 +350,15 @@ descrambler_descramble ( service_t *t,
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         kidx = KEY_IDX(ki);
         if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
-            dr->dr_ecm_key_time +
-              ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
+            dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
           tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           if (!td->td_ecm_reset(td)) {
-            dr->dr_key_valid = dr->dr_ecm_valid = 0;
+            dr->dr_key_valid = 0;
             goto next;
           }
         }
-        dr->dr_ecm_valid |= KEY_MASK(ki);
         key_update(dr, ki);
       }
     }
