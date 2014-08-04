@@ -130,6 +130,27 @@ const idclass_t linuxdvb_rotor_usals_class =
  * *************************************************************************/
 
 static int
+linuxdvb_rotor_grace
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
+{
+  if (ld->ld_satconf->lse_parent->ls_orbital_pos == 0)
+  {
+    if (lr->lr_rate != 0)
+      return (120 * 500 + 999)/1000;
+    else
+      return 120;
+  }
+  linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+
+  int curpos = ld->ld_satconf->lse_parent->ls_orbital_pos;
+
+  if (ld->ld_satconf->lse_parent->ls_orbital_dir == 'W')
+    curpos = -(curpos);
+
+  return (lr->lr_rate*(abs(curpos - lr->lr_position))+999)/1000;
+}
+
+static int
 linuxdvb_rotor_check_orbital_pos
   ( dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls )
 {
@@ -170,7 +191,9 @@ linuxdvb_rotor_gotox_tune
   }
 
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
-  return 120; // TODO: calculate period (2 min hardcoded)
+
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)lr;
+  return linuxdvb_rotor_grace(ld,lm);
 }
 
 /* USALS */
@@ -240,7 +263,8 @@ linuxdvb_rotor_usals_tune
     usleep(25000);
   }
 
-  return 120; // TODO: calculate period (2 min hardcoded)
+  linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)lr;
+  return linuxdvb_rotor_grace(ld,lm);
 
 #undef TO_RAD
 #undef TO_DEG
@@ -265,13 +289,6 @@ linuxdvb_rotor_tune
 
   /* USALS */
   return linuxdvb_rotor_usals_tune(lr, lm, ls, fd);
-}
-
-static int
-linuxdvb_rotor_grace
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
-{
-  return 120; // TODO: calculate approx period
 }
 
 /* **************************************************************************
