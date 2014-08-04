@@ -254,7 +254,7 @@ descrambler_flush_table_data( service_t *t )
 
   if (mux == NULL)
     return;
-  tvhtrace("descrabler", "flush table data for service \"%s\"", ms->s_dvb_svcname);
+  tvhtrace("descrambler", "flush table data for service \"%s\"", ms->s_dvb_svcname);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table == NULL || dt->table->mt_service != ms)
