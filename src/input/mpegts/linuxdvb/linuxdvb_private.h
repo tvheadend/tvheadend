@@ -100,6 +100,7 @@ struct linuxdvb_frontend
    */
   int                       lfe_locked;
   int                       lfe_status;
+  int                       lfe_ioctls;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
 
