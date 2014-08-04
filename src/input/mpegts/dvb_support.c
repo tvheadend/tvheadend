@@ -43,10 +43,10 @@ static int convert_iso_8859[16] = {
 static inline int code_convert(const char *from_charset,const char *to_charset,char *inbuf,size_t inlen,char *outbuf,size_t *outlen)
 {
     iconv_t cd;
-    
+
     char **pin = &inbuf;
     char **pout = &outbuf;
-    
+
     cd = iconv_open(to_charset,from_charset);
     if (cd==0) return -1;
     memset(outbuf,0,*outlen);
@@ -302,12 +302,12 @@ dvb_get_string
     ic = convert_ucs2;
     src++; srclen--;
     break;
-  
+
   case 0x13:
     ic = convert_gb;
     src++; srclen--;
     break;
-  
+
   case 0x12:
   case 0x14:
     return -1;
@@ -337,9 +337,9 @@ dvb_get_string
     } else if (!strcmp(dvb_charset, "UTF-8")) {
       ic = convert_utf8;
     } else if (!strcmp(dvb_charset, "GB2312")) {
-      ic= convert_gb;
+      ic = convert_gb;
     } else if (!strcmp(dvb_charset, "UCS2")) {
-      ic= conv_UCS2;
+      ic = convert_ucs2;
     }
   }
 
