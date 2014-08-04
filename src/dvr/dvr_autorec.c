@@ -533,10 +533,10 @@ _dvr_autorec_add(const char *config_name,
                 const char *title, channel_t *ch,
                 const char *tag, epg_genre_t *content_type,
                 const int min_duration, const int max_duration,
-    epg_brand_t *brand, epg_season_t *season,
-    epg_serieslink_t *serieslink, int approx_time,
-    epg_episode_num_t *epnum, int days_of_week,
-		const char *creator, dvr_prio_t pri, const char *comment)
+                epg_brand_t *brand, epg_season_t *season,
+                epg_serieslink_t *serieslink, int approx_time,
+                epg_episode_num_t *epnum, int days_of_week,
+                const char *creator, dvr_prio_t pri, const char *comment)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *m;
@@ -609,7 +609,7 @@ dvr_autorec_add(const char *config_name,
                 const char *creator, dvr_prio_t pri, const char *comment)
 {
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-		           min_duration, max_duration,
+                   min_duration, max_duration,
                    NULL, NULL, NULL, approx_time, NULL, days_of_week, creator, pri, comment);
 }
 

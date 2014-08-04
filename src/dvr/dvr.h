@@ -387,11 +387,11 @@ int dvr_sort_start_ascending(const void *A, const void *B);
  *
  */
 void dvr_autorec_add(const char *config_name,
-                const char *title, channel_t *ch,
-                const char *tag, epg_genre_t *content_type,
-                const int min_duration, const int max_duration,
-                int approx_time, int days_of_week,
-                const char *creator, dvr_prio_t pri, const char *comment);
+                     const char *title, channel_t *ch,
+                     const char *tag, epg_genre_t *content_type,
+                     const int min_duration, const int max_duration,
+                     int approx_time, int days_of_week,
+                     const char *creator, dvr_prio_t pri, const char *comment);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,
                                  epg_broadcast_t *event,
