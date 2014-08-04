@@ -8,14 +8,14 @@
 #ifndef LIBAESDEC_H_
 #define LIBAESDEC_H_
 
-void libaesdec_init(void);
-int get_internal_parallelism(void);
-int get_suggested_cluster_size(void);
-void * get_key_struct(void);
-void free_key_struct(void *keys);
-void set_even_control_word(void *keys, const unsigned char *even);
-void set_odd_control_word(void *keys, const unsigned char *odd);
-int decrypt_packets(void *keys, unsigned char **cluster);
+void libaes_init(void);
+int libaes_get_internal_parallelism(void);
+int libaes_get_suggested_cluster_size(void);
+void * libaes_get_key_struct(void);
+void libaes_free_key_struct(void *keys);
+void libaes_set_even_control_word(void *keys, const unsigned char *even);
+void libaes_set_odd_control_word(void *keys, const unsigned char *odd);
+int libaes_decrypt_packets(void *keys, unsigned char **cluster);
 
 // -- alloc & free the key structure
 void *aes_get_key_struct(void);

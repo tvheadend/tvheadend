@@ -18,34 +18,34 @@
 #include "libaesdec.h"
 
 
-void libaesdec_init(void) {
+void libaes_init(void) {
 	tvhlog(LOG_INFO, "CSA", "Using AES descrambling");
 }
 
-int get_internal_parallelism(void) {
+int libaes_get_internal_parallelism(void) {
 	return 0;
 }
-int get_suggested_cluster_size(void) {
+int libaes_get_suggested_cluster_size(void) {
 	return 1;
 }
 
 void *
-get_key_struct(void) {
+libaes_get_key_struct(void) {
 	return aes_get_key_struct();
 }
-void free_key_struct(void *keys) {
+void libaes_free_key_struct(void *keys) {
 	aes_free_key_struct(keys);
 }
 
-void set_even_control_word(void *keys, const unsigned char *even) {
+void libaes_set_even_control_word(void *keys, const unsigned char *even) {
 	aes_set_even_control_word(keys, even);
 }
 
-void set_odd_control_word(void *keys, const unsigned char *odd) {
+void libaes_set_odd_control_word(void *keys, const unsigned char *odd) {
 	aes_set_odd_control_word(keys, odd);
 }
 
-int decrypt_packets(void *keys, unsigned char **cluster) {
+int libaes_decrypt_packets(void *keys, unsigned char **cluster) {
 	aes_decrypt_packet(keys, cluster[0]);
 	return 1;
 }
