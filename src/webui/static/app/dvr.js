@@ -123,7 +123,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             },
             {
                 iconCls: 'info',
-                qtip: 'Detailed stream info',
+                qtip: 'Recording details',
                 cb: function(grid, rec, act, row) {
                     new tvheadend.dvrDetails(grid.getStore().getAt(row).data);
                 }
