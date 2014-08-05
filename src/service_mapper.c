@@ -78,6 +78,9 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
   int e, tr, qd = 0;
   service_t *s;
 
+  /* Reset stat counters */
+  service_mapper_reset_stats();
+
   /* Store config */
   service_mapper_conf = *conf;
 
@@ -431,4 +434,14 @@ service_mapper_thread ( void *aux )
 
   pthread_mutex_unlock(&global_lock);
   return NULL;
+}
+
+void
+service_mapper_reset_stats (void)
+{
+  service_mapper_stat.total  = 0;
+  service_mapper_stat.ok     = 0;
+  service_mapper_stat.ignore = 0;
+  service_mapper_stat.fail   = 0;
+  service_mapper_stat.active = NULL;
 }

@@ -72,4 +72,7 @@ void service_mapper_unlink ( struct service *s, struct channel *c, void *origin 
  */
 int service_mapper_clean ( struct service *s, struct channel *ch, void *origin );
 
+// Resets the stat counters
+void service_mapper_reset_stats ( void );
+
 #endif /* __TVH_SERVICE_MAPPER_H__ */
