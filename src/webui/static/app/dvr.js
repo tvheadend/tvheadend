@@ -171,12 +171,21 @@ tvheadend.dvrDetails = function(entry) {
 tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 
     var actions = new Ext.ux.grid.RowActions({
-        header: '',
+        header: 'Details',
         dataIndex: 'actions',
         width: 45,
-        actions: [{
+        actions: [
+            {
                 iconIndex: 'schedstate'
-            }]
+            },
+            {
+                iconCls: 'info',
+                qtip: 'Detailed stream info',
+                cb: function(grid, rec, act, row) {
+                    new tvheadend.dvrDetails(grid.getStore().getAt(row).data);
+                }
+            }
+        ]
     });
 
     function renderDate(value) {
@@ -496,13 +505,6 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             }],
         bbar: bbar
     });
-
-
-    panel.on('cellclick', cellclicked);
-    function cellclicked(grid, rowIndex, colIndex) {
-        if (grid.getColumnModel().getColumnHeader(colIndex) !== 'Play')
-            new tvheadend.dvrDetails(grid.getStore().getAt(rowIndex).data);
-    }
 
     return panel;
 };
