@@ -2332,6 +2332,8 @@ void epg_skel_done(void)
   free(*skel); *skel = NULL;
   skel = _epg_episode_skel();
   free(*skel); *skel = NULL;
+  skel = _epg_serieslink_skel();
+  free(*skel); *skel = NULL;
   broad = _epg_broadcast_skel();
   free(*broad); *broad = NULL;
 }
