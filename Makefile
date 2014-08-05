@@ -296,7 +296,7 @@ SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
 src/descrambler/ffdecsa/ffdecsa_int.c
 SRCS-${CONFIG_MMX} += src/descrambler/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
-${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o : CFLAGS += -mmmx
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
