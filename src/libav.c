@@ -50,47 +50,47 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 /**
  * Translate a component type to a libavcodec id
  */
-enum CodecID
+enum AVCodecID
 streaming_component_type2codec_id(streaming_component_type_t type)
 {
-  enum CodecID codec_id = CODEC_ID_NONE;
+  enum AVCodecID codec_id = AV_CODEC_ID_NONE;
 
   switch(type) {
   case SCT_H264:
-    codec_id = CODEC_ID_H264;
+    codec_id = AV_CODEC_ID_H264;
     break;
   case SCT_MPEG2VIDEO:
-    codec_id = CODEC_ID_MPEG2VIDEO;
+    codec_id = AV_CODEC_ID_MPEG2VIDEO;
     break;
   case SCT_VP8:
-    codec_id = CODEC_ID_VP8;
+    codec_id = AV_CODEC_ID_VP8;
     break;
   case SCT_AC3:
-    codec_id = CODEC_ID_AC3;
+    codec_id = AV_CODEC_ID_AC3;
     break;
   case SCT_EAC3:
-    codec_id = CODEC_ID_EAC3;
+    codec_id = AV_CODEC_ID_EAC3;
     break;
   case SCT_AAC:
-    codec_id = CODEC_ID_AAC;
+    codec_id = AV_CODEC_ID_AAC;
     break;
   case SCT_MPEG2AUDIO:
-    codec_id = CODEC_ID_MP2;
+    codec_id = AV_CODEC_ID_MP2;
     break;
   case SCT_VORBIS:
-    codec_id = CODEC_ID_VORBIS;
+    codec_id = AV_CODEC_ID_VORBIS;
     break;
   case SCT_DVBSUB:
-    codec_id = CODEC_ID_DVB_SUBTITLE;
+    codec_id = AV_CODEC_ID_DVB_SUBTITLE;
     break;
   case SCT_TEXTSUB:
-    codec_id = CODEC_ID_TEXT;
+    codec_id = AV_CODEC_ID_TEXT;
     break;
  case SCT_TELETEXT:
-    codec_id = CODEC_ID_DVB_TELETEXT;
+    codec_id = AV_CODEC_ID_DVB_TELETEXT;
     break;
   default:
-    codec_id = CODEC_ID_NONE;
+    codec_id = AV_CODEC_ID_NONE;
     break;
   }
 
@@ -102,45 +102,45 @@ streaming_component_type2codec_id(streaming_component_type_t type)
  * Translate a libavcodec id to a component type
  */
 streaming_component_type_t
-codec_id2streaming_component_type(enum CodecID id)
+codec_id2streaming_component_type(enum AVCodecID id)
 {
-  streaming_component_type_t type = CODEC_ID_NONE;
+  streaming_component_type_t type = AV_CODEC_ID_NONE;
 
   switch(id) {
-  case CODEC_ID_H264:
+  case AV_CODEC_ID_H264:
     type = SCT_H264;
     break;
-  case CODEC_ID_MPEG2VIDEO:
+  case AV_CODEC_ID_MPEG2VIDEO:
     type = SCT_MPEG2VIDEO;
     break;
-  case CODEC_ID_VP8:
+  case AV_CODEC_ID_VP8:
     type = SCT_VP8;
     break;
-  case CODEC_ID_AC3:
+  case AV_CODEC_ID_AC3:
     type = SCT_AC3;
     break;
-  case CODEC_ID_EAC3:
+  case AV_CODEC_ID_EAC3:
     type = SCT_EAC3;
     break;
-  case CODEC_ID_AAC:
+  case AV_CODEC_ID_AAC:
     type = SCT_AAC;
     break;
-  case CODEC_ID_MP2:
+  case AV_CODEC_ID_MP2:
     type = SCT_MPEG2AUDIO;
     break;
-  case CODEC_ID_VORBIS:
+  case AV_CODEC_ID_VORBIS:
     type = SCT_VORBIS;
     break;
-  case CODEC_ID_DVB_SUBTITLE:
+  case AV_CODEC_ID_DVB_SUBTITLE:
     type = SCT_DVBSUB;
     break;
-  case CODEC_ID_TEXT:
+  case AV_CODEC_ID_TEXT:
     type = SCT_TEXTSUB;
     break;
-  case CODEC_ID_DVB_TELETEXT:
+  case AV_CODEC_ID_DVB_TELETEXT:
     type = SCT_TELETEXT;
     break;
-  case CODEC_ID_NONE:
+  case AV_CODEC_ID_NONE:
     type = SCT_NONE;
     break;
   default:
