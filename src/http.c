@@ -355,9 +355,30 @@ http_output_content(http_connection_t *hc, const char *content)
  * Send an HTTP REDIRECT
  */
 void
-http_redirect(http_connection_t *hc, const char *location)
+http_redirect(http_connection_t *hc, const char *location,
+              http_arg_list_t *req_args)
 {
+  const char *loc = location;
   htsbuf_queue_flush(&hc->hc_reply);
+
+  if (req_args) {
+    http_arg_t *ra;
+    htsbuf_queue_t hq;
+    int first = 1;
+    htsbuf_queue_init(&hq, 0);
+    htsbuf_append(&hq, location, strlen(location));
+    htsbuf_append(&hq, "?", 1);
+    TAILQ_FOREACH(ra, req_args, link) {
+      if (!first)
+        htsbuf_append(&hq, "&", 1);
+      first = 0;
+      htsbuf_append_and_escape_url(&hq, ra->key);
+      htsbuf_append(&hq, "=", 1);
+      htsbuf_append_and_escape_url(&hq, ra->val);
+    }
+    loc = htsbuf_to_string(&hq);
+    htsbuf_queue_flush(&hq);
+  }
 
   htsbuf_qprintf(&hc->hc_reply,
 		 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
@@ -366,9 +387,11 @@ http_redirect(http_connection_t *hc, const char *location)
 		 "</HEAD><BODY>\r\n"
 		 "Please follow <a href=\"%s\">%s</a>\r\n"
 		 "</BODY></HTML>\r\n",
-		 location, location);
+		 loc, loc);
 
-  http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, location, 0);
+  http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, loc, 0);
+  if (loc != location)
+    free((void *)loc);
 }
 
 /**

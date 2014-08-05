@@ -1204,11 +1204,13 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
       i += nanolen;
     }
     break;
-  case 0x4a00://DRECrypt
-    if (caid != 0x4aee) { // Bulcrypt
-      provid = size < 4 ? 0 : buffer[4];
-      break;
+  case 0x4a00:
+    if (caid == 0x4ad2)//streamguard
+       provid=0;
+    if (caid != 0x4aee && caid != 0x4ad2) { // Bulcrypt
+       provid = size < 4 ? 0 : buffer[4];
     }
+    break;
   default:
     provid = 0;
     break;
@@ -1370,6 +1372,7 @@ psi_parse_pmt
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
 
+    case 0x06: //0x06 is Chinese Cable TV ac3 audio track
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;

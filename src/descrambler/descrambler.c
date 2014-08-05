@@ -254,7 +254,7 @@ descrambler_flush_table_data( service_t *t )
 
   if (mux == NULL)
     return;
-  tvhtrace("descrabler", "flush table data for service \"%s\"", ms->s_dvb_svcname);
+  tvhtrace("descrambler", "flush table data for service \"%s\"", ms->s_dvb_svcname);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table == NULL || dt->table->mt_service != ms)
@@ -317,15 +317,13 @@ descrambler_descramble ( service_t *t,
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             kidx = KEY_IDX(ki);
             if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
-                dr->dr_ecm_key_time +
-                  ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
+                dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
               sbuf_cut(&dr->dr_buf, off);
               if (!td->td_ecm_reset(td)) {
-                dr->dr_key_valid = dr->dr_ecm_valid = 0;
+                dr->dr_key_valid = 0;
                 goto next;
               }
             }
-            dr->dr_ecm_valid |= KEY_MASK(ki);
             key_update(dr, ki);
           }
         }
@@ -352,17 +350,15 @@ descrambler_descramble ( service_t *t,
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         kidx = KEY_IDX(ki);
         if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1] ||
-            dr->dr_ecm_key_time +
-              ((dr->dr_ecm_valid & KEY_MASK(ki)) ? 0 : 2) < dr->dr_key_start) {
+            dr->dr_ecm_key_time + 2 < dr->dr_key_start) {
           tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           if (!td->td_ecm_reset(td)) {
-            dr->dr_key_valid = dr->dr_ecm_valid = 0;
+            dr->dr_key_valid = 0;
             goto next;
           }
         }
-        dr->dr_ecm_valid |= KEY_MASK(ki);
         key_update(dr, ki);
       }
     }
@@ -771,6 +767,8 @@ detect_card_type(const uint16_t caid)
   uint8_t c_sys = caid >> 8;
   
   switch(caid) {
+    case 0x4ad2:
+      return CARD_STREAMGUARD;
     case 0x5581:
     case 0x4aee:
       return CARD_BULCRYPT;

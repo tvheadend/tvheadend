@@ -98,8 +98,10 @@ struct linuxdvb_frontend
   /*
    * Tuning
    */
+  int                       lfe_ready;
   int                       lfe_locked;
   int                       lfe_status;
+  int                       lfe_ioctls;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
 
@@ -136,6 +138,12 @@ struct linuxdvb_satconf
    * LNB settings
    */
   int                    ls_lnb_poweroff;
+
+  /*
+   * Position
+   */
+  int                    ls_orbital_pos;
+  char                   ls_orbital_dir;
   
   /*
    * Satconf elements
