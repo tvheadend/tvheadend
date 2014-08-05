@@ -108,9 +108,9 @@ typedef struct transcoder {
 
 
 
-#define WORKING_ENCODER(x) (x == CODEC_ID_H264 || x == CODEC_ID_MPEG2VIDEO || \
-			    x == CODEC_ID_VP8  || x == CODEC_ID_AAC ||	\
-			    x == CODEC_ID_MP2  || x == CODEC_ID_VORBIS)
+#define WORKING_ENCODER(x) (x == AV_CODEC_ID_H264 || x == AV_CODEC_ID_MPEG2VIDEO || \
+			    x == AV_CODEC_ID_VP8  || x == AV_CODEC_ID_AAC ||	\
+			    x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
 
 
 uint32_t transcoding_enabled = 0;
@@ -121,11 +121,11 @@ uint32_t transcoding_enabled = 0;
 static AVCodec *
 transcoder_get_decoder(streaming_component_type_t ty)
 {
-  enum CodecID codec_id;
+  enum AVCodecID codec_id;
   AVCodec *codec;
 
   codec_id = streaming_component_type2codec_id(ty);
-  if (codec_id == CODEC_ID_NONE) {
+  if (codec_id == AV_CODEC_ID_NONE) {
     tvhlog(LOG_ERR, "transcode", "Unsupported input codec %s", 
 	   streaming_component_type2txt(ty));
     return NULL;
@@ -150,11 +150,11 @@ transcoder_get_decoder(streaming_component_type_t ty)
 static AVCodec *
 transcoder_get_encoder(streaming_component_type_t ty)
 {
-  enum CodecID codec_id;
+  enum AVCodecID codec_id;
   AVCodec *codec;
 
   codec_id = streaming_component_type2codec_id(ty);
-  if (codec_id == CODEC_ID_NONE) {
+  if (codec_id == AV_CODEC_ID_NONE) {
     tvhlog(LOG_ERR, "transcode", "Unable to find %s codec", 
 	   streaming_component_type2txt(ty));
     return NULL;
@@ -214,7 +214,7 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = ss->sub_icodec;
   //ocodec = ss->sub_ocodec;
 
-  if (ictx->codec_id == CODEC_ID_NONE) {
+  if (ictx->codec_id == AV_CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
@@ -272,7 +272,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = as->aud_icodec;
   ocodec = as->aud_ocodec;
 
-  if (ictx->codec_id == CODEC_ID_NONE) {
+  if (ictx->codec_id == AV_CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
@@ -391,7 +391,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     break;
   }
 
-  if (octx->codec_id == CODEC_ID_NONE) {
+  if (octx->codec_id == AV_CODEC_ID_NONE) {
     octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
@@ -478,7 +478,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   buf = out = deint = NULL;
   opts = NULL;
 
-  if (ictx->codec_id == CODEC_ID_NONE) {
+  if (ictx->codec_id == AV_CODEC_ID_NONE) {
     ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
@@ -523,7 +523,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   vs->vid_enc_frame->sample_aspect_ratio.num = vs->vid_dec_frame->sample_aspect_ratio.num;
   vs->vid_enc_frame->sample_aspect_ratio.den = vs->vid_dec_frame->sample_aspect_ratio.den;
 
-  if(octx->codec_id == CODEC_ID_NONE) {
+  if(octx->codec_id == AV_CODEC_ID_NONE) {
     // Common settings
     octx->width           = vs->vid_width  ? vs->vid_width  : ictx->width;
     octx->height          = vs->vid_height ? vs->vid_height : ictx->height;
@@ -534,7 +534,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
-      octx->codec_id       = CODEC_ID_MPEG2VIDEO;
+      octx->codec_id       = AV_CODEC_ID_MPEG2VIDEO;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
@@ -547,7 +547,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
  
     case SCT_VP8:
-      octx->codec_id       = CODEC_ID_VP8;
+      octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
       octx->qmin = 10;
@@ -561,7 +561,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_H264:
-      octx->codec_id       = CODEC_ID_H264;
+      octx->codec_id       = AV_CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
 
@@ -951,8 +951,8 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
-  as->aud_dec_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
-  as->aud_enc_size = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
+  as->aud_dec_size = 192000*2;
+  as->aud_enc_size = 192000*2;
 
   as->aud_dec_sample = av_malloc(as->aud_dec_size + FF_INPUT_BUFFER_PADDING_SIZE);
   as->aud_enc_sample = av_malloc(as->aud_enc_size + FF_INPUT_BUFFER_PADDING_SIZE);
