@@ -43,17 +43,9 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
     ;
 
     function delSelected() {
-        var selectedKeys = grid.selModel.selections.keys;
-        if (selectedKeys.length > 0) {
-            Ext.MessageBox.confirm('Message',
-                    'Do you really want to delete selection?', deleteRecord);
-        }
-        else {
-            Ext.MessageBox.alert('Message',
-                    'Please select at least one item to delete');
-        }
-    }
-    ;
+        Ext.MessageBox.confirm('Message',
+            'Do you really want to delete selection?', deleteRecord);
+    };
 
     function deleteRecord(btn) {
         if (btn === 'yes') {
