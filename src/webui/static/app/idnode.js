@@ -148,6 +148,7 @@ tvheadend.IdNodeField = function(conf)
             header: this.text,
             editor: this.editor({create: false}),
             renderer: this.renderer(),
+            editable: !this.rdonly,
             hidden: this.hidden,
             filter: {
                 type: ftype,
