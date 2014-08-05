@@ -29,6 +29,7 @@ tvhcsa_aes_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
 	aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb);
+	ts_recv_packet2(s, tsb);
 }
 
 static void
