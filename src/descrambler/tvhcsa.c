@@ -230,6 +230,7 @@ tvhcsa_init ( tvhcsa_t *csa )
 #else
   csa->csa_keys          = get_key_struct();
 #endif
+  csa->csa_aes_keys      = aes_get_key_struct();
 }
 
 void
