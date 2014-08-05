@@ -827,10 +827,10 @@ forbid:
 	   msg[3 + 25],msg[3 + 26],msg[3 + 27],msg[3 + 28],msg[3 + 29],
 	   msg[3 + 30], msg[3 + 31], seq, delay);
 
-    if(ct->td_keystate != DS_RESOLVED)
-      tvhlog(LOG_DEBUG, "cwc",
-	   "Obtained AES keys for service \"%s\" in %"PRId64" ms, from %s",
-	   t->s_dvb_svcname, delay, ct->td_nicename);
+      if(ct->td_keystate != DS_RESOLVED)
+        tvhlog(LOG_DEBUG, "cwc",
+	       "Obtained AES keys for service \"%s\" in %"PRId64" ms, from %s",
+	       t->s_dvb_svcname, delay, ct->td_nicename);
 
       descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
     }
