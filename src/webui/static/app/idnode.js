@@ -141,7 +141,8 @@ tvheadend.IdNodeField = function(conf)
         }
         if (this.enum || this.list)
             w = 300;
-        return {
+        
+        var props = {
             width: w,
             dataIndex: this.id,
             header: this.text,
@@ -153,6 +154,15 @@ tvheadend.IdNodeField = function(conf)
                 dataIndex: this.id
             }
         };
+        
+        // Special handling for checkboxes
+        if (ftype === 'boolean')
+        {
+            props.xtype = 'checkcolumn';
+            props.renderer = Ext.ux.grid.CheckColumn.prototype.renderer;
+        }
+        
+        return props;
     };
 
     this.renderer = function()
