@@ -792,25 +792,48 @@ forbid:
       service_request_save((service_t*)t, 0);
     }
 
-    tvhlog(LOG_DEBUG, "cwc",
+    if(len < 35) {
+      tvhlog(LOG_DEBUG, "cwc",
+	     "Received ECM reply%s for service \"%s\" "
+	     "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	     " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
+	     "Req delay: %"PRId64" ms)",
+	     chaninfo,
+	     t->s_dvb_svcname,
+	     msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
+	     msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
+	     msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
+	     msg[3 + 15], seq, delay);
+
+      if(ct->td_keystate != DS_RESOLVED)
+        tvhlog(LOG_DEBUG, "cwc",
+	       "Obtained DES keys for service \"%s\" in %"PRId64" ms, from %s",
+	       t->s_dvb_svcname, delay, ct->td_nicename);
+
+      descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + 8);
+    } else {
+      tvhlog(LOG_DEBUG, "cwc",
 	   "Received ECM reply%s for service \"%s\" "
-	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
-	   "Req delay: %"PRId64" ms)",
+	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	   "(seqno: %d Req delay: %"PRId64" ms)",
 	   chaninfo,
 	   t->s_dvb_svcname,
 	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
-	   msg[3 + 15], seq, delay);
+	   msg[3 + 15], msg[3 + 16], msg[3 + 17], msg[3 + 18], msg[3 + 19],
+	   msg[3 + 20], msg[3 + 21], msg[3 + 22], msg[3 + 23], msg[3 + 24],
+	   msg[3 + 25],msg[3 + 26],msg[3 + 27],msg[3 + 28],msg[3 + 29],
+	   msg[3 + 30], msg[3 + 31], seq, delay);
 
     if(ct->td_keystate != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "cwc",
-	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s",
-	     t->s_dvb_svcname, delay, ct->td_nicename);
+	   "Obtained AES keys for service \"%s\" in %"PRId64" ms, from %s",
+	   t->s_dvb_svcname, delay, ct->td_nicename);
 
-    descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + 8);
-
+      descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
+    }
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i < ep->ep_last_section; i++) {
         es2 = ep->ep_sections[i];
