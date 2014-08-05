@@ -105,64 +105,7 @@ tvheadend.dvrDetails = function(entry) {
         html: content
     });
 
-    switch (entry.schedstate) {
-        case 'scheduled':
-            win.addButton({
-                handler: cancelEvent,
-                text: "Remove from schedule"
-            });
-            break;
-
-        case 'recording':
-        case 'recordingError':
-            win.addButton({
-                handler: cancelEvent,
-                text: "Abort recording"
-            });
-            break;
-        case 'completedError':
-        case 'completed':
-            win.addButton({
-                handler: deleteEvent,
-                text: "Delete recording"
-            });
-            break;
-    }
-
     win.show();
-
-    function cancelEvent() {
-        Ext.Ajax.request({
-            url: 'dvr',
-            params: {
-                entryId: entry.id,
-                op: 'cancelEntry'
-            },
-            success: function(response, options) {
-                win.close();
-            },
-            failure: function(response, options) {
-                Ext.MessageBox.alert('DVR', response.statusText);
-            }
-        });
-    }
-
-    function deleteEvent() {
-        Ext.Ajax.request({
-            url: 'dvr',
-            params: {
-                entryId: entry.id,
-                op: 'deleteEntry'
-            },
-            success: function(response, options) {
-                win.close();
-            },
-            failure: function(response, options) {
-                Ext.MessageBox.alert('DVR', response.statusText);
-            }
-        });
-    }
-
 };
 
 /**
