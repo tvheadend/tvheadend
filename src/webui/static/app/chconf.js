@@ -111,48 +111,24 @@ tvheadend.channel_tab = function(panel)
     function move_number_up() {
         var tab = panel.getActiveTab();
         var sm = tab.getSelectionModel();
-        var store = tab.getStore();
 
-        if (sm.getCount() !== 1)
-            return;
-
-        var sel = sm.getSelected();
-        var num = sel.data.number;
-
-        if (!num)
-            num = 0;
-
-        store.each(function() {
-            if (this.data.number === num + 1)
-                this.set('number', num);
+        Ext.each(sm.getSelections(), function(channel) {
+            var number = channel.data.number;
+            channel.set('number', number + 1);
         });
-
-        sel.set('number', num + 1);
     }
 
     function move_number_down() {
         var tab = panel.getActiveTab();
         var sm = tab.getSelectionModel();
-        var store = tab.getStore();
 
-        if (sm.getCount() !== 1)
-            return;
-
-        var sel = sm.getSelected();
-        var num = sel.data.number;
-
-        if (!num)
-            num = 0;
-
-        if (num <= 1)
-            return;
-
-        store.each(function() {
-            if (this.data.number === num - 1)
-                this.set('number', num);
+        Ext.each(sm.getSelections(), function(channel) {
+            var number = channel.data.number;
+            
+            // Don't decrement past zero
+            if (number > 0)
+                channel.set('number', number - 1);
         });
-
-        sel.set('number', num - 1);
     }
 
     function swap_numbers() {
