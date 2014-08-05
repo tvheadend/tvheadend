@@ -520,7 +520,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
     // Define which panel buttons should be visible
     var panelButtons = [];
     
-    // Add the "Add entry" button only to "Upcoming recordings"
+    // Add the "Add entry" and "Abort" buttons only to "Upcoming recordings"
     if (iconCls === 'clock') {
         panelButtons.push([
             {
@@ -537,7 +537,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         panelButtons.push(deleteButton);
     }
     
-    // Add the "Delete selected" button to the other panels
+    // Add the help button to all panels
     panelButtons.push([
         '->', 
         {
