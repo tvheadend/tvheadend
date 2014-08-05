@@ -245,5 +245,6 @@ tvhcsa_destroy ( tvhcsa_t *csa )
 #else
   free_key_struct(csa->csa_keys);
 #endif
+  aes_free_key_struct(csa->csa_aes_keys);
   free(csa->csa_tsbcluster);
 }
