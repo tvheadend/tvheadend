@@ -38,6 +38,7 @@ OPTIONS=(
   "bundle:no"
   "dvbcsa:no"
   "kqueue:no"
+  "dbus_1:auto"
 )
 
 #
@@ -343,6 +344,18 @@ fi
 if enabled v4l; then
   enable mpegps
 fi
+
+#
+# DBus
+#
+if enabled_or_auto dbus_1; then
+  if check_pkg dbus-1; then
+    enable dbus_1
+  elif enabled dbus-1; then
+    die "DBus-1 development support not found (use --disable-dbus-1)"
+  fi
+fi
+
 
 # ###########################################################################
 # Write config
