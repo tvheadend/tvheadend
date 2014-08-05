@@ -43,6 +43,8 @@ Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
      * Process and refire events routed from the GridView's processEvent method.
      */
     processEvent : function(name, e, grid, rowIndex, colIndex){
+        if (!this.editable)
+            return false;
         if (name == 'mousedown') {
             var record = grid.store.getAt(rowIndex);
             record.set(this.dataIndex, !record.data[this.dataIndex]);
@@ -54,7 +56,8 @@ Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
 
     renderer : function(v, p, record){
         p.css += ' x-grid3-check-col-td'; 
-        return String.format('<div class="x-grid3-check-col{0}">&#160;</div>', v ? '-on' : '');
+        var cssClass = 'x-grid3-check-col{0}' + (!this.editable ? ' x-item-disabled' : '');
+        return String.format('<div class="' + cssClass + '">&#160;</div>', v ? '-on' : '');
     },
 
     // Deprecate use as a plugin. Remove in 4.0
