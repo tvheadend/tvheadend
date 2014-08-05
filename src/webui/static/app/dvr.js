@@ -792,15 +792,6 @@ tvheadend.dvr = function() {
         tvheadend.dvrStoreFailed];
 
 
-    function updateDvrStore(store, r, m) {
-        r.data.status = m.status;
-        r.data.schedstate = m.schedstate;
-
-        store.afterEdit(r);
-        store.fireEvent('updated', store, r,
-                Ext.data.Record.COMMIT);
-    }
-
     function reloadStores() {
         for (var i = 0; i < tvheadend.dvrStores.length; i++) {
             tvheadend.dvrStores[i].reload();
@@ -808,22 +799,7 @@ tvheadend.dvr = function() {
     }
 
     tvheadend.comet.on('dvrdb', function(m) {
-
-        if (m.reload != null) {
-            reloadStores();
-        }
-
-        if (m.updateEntry != null) {
-            for (var i = 0; i < tvheadend.dvrStores.length; i++) {
-                var store = tvheadend.dvrStores[i];
-                r = tvheadend.dvrStoreUpcoming.getById(m.id);
-                if (typeof r !== 'undefined') {
-                    updateDvrStore(store, r, m);
-                    return;
-                }
-            }
-            reloadStores();
-        }
+        reloadStores();
     });
 
     tvheadend.autorecRecord = Ext.data.Record.create(['enabled', 'title',
