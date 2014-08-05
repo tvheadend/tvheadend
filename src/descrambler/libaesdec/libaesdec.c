@@ -14,7 +14,7 @@
 
 #include "libaesdec.h"
 
-//-----allocate key structure
+//-----key structure
 struct aes_keys_t {
 	AES_KEY even;
 	AES_KEY odd;
