@@ -479,30 +479,146 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         displayMsg : 'Programs {0} - {1} of {2}',
         emptyMsg : "No programs to display"
     });
+    
+    function abortEntry(btn) {
+        if (btn !== 'yes')
+            return;
+        
+        var selectedKeys = panel.selModel.selections.keys;
+            
+        // Delete each entry one by one since the API doesn't support deleting 
+        // multiple
+        for (var i = 0; i < selectedKeys.length; i++) {
+            var recordingId = selectedKeys[i];
+            
+            Ext.Ajax.request({
+                url: 'dvr',
+                params: {
+                    entryId: recordingId,
+                    op: 'cancelEntry'
+                },
+                failure: function(response, options) {
+                    Ext.MessageBox.alert('Server Error', 'Unable to cancel recording');
+                }
+            });
+        }
+    };
+    
+    function deleteEntry(btn) {
+        if (btn !== 'yes')
+            return;
+
+        var selectedKeys = panel.selModel.selections.keys;
+            
+        // Delete each entry one by one since the API doesn't support deleting 
+        // multiple
+        for (var i = 0; i < selectedKeys.length; i++) {
+            var recordingId = selectedKeys[i];
+
+            Ext.Ajax.request({
+                url: 'dvr',
+                params: {
+                    entryId: recordingId,
+                    op: 'deleteEntry'
+                },
+                success: function(response, options) {
+
+                },
+                failure: function(response, options) {
+                    Ext.MessageBox.alert('Server Error', 'Unable to delete recording');
+                }
+            });
+        }
+    };
+    
+    function abortSelected() {
+        Ext.MessageBox.confirm('Message',
+            'Do you really want to abort/unschedule the selection?', abortEntry);
+    };
+    
+    function deleteSelected() {
+        Ext.MessageBox.confirm('Message',
+            'Do you really want to delete the selection?', deleteEntry);
+    };
+    
+    var abortButton = new Ext.Toolbar.Button({
+        tooltip: 'Abort or unschedule one or more selected rows',
+        iconCls: 'remove',
+        text: 'Abort/unschedule selected',
+        handler: abortSelected,
+        disabled: true
+    });
+    
+    var deleteButton = new Ext.Toolbar.Button({
+        tooltip: 'Delete one or more selected rows',
+        iconCls: 'remove',
+        text: 'Delete selected',
+        handler: deleteSelected,
+        disabled: true
+    });
+    
+    // Make multiple rows selectable
+    var selModel = new Ext.grid.RowSelectionModel({
+        singleSelect: false
+    });
+    
+    // Enable/disable some buttons when nothing is selected
+    selModel.on('selectionchange', function(self) {
+        if (self.getCount() > 0) {
+            deleteButton.enable();
+            abortButton.enable();
+        }
+        else {
+            deleteButton.disable();
+            abortButton.disable();
+        }
+    });
+    
+    // Define which panel buttons should be visible
+    var panelButtons = [];
+    
+    // Add the "Add entry" button only to "Upcoming recordings"
+    if (iconCls === 'clock') {
+        panelButtons.push([
+            {
+                tooltip: 'Schedule a new recording session on the server.',
+                iconCls: 'add',
+                text: 'Add entry',
+                handler: addEntry
+            },
+            abortButton
+        ]);
+    }
+    // Add the "Delete recordings" button to the others
+    else {
+        panelButtons.push(deleteButton);
+    }
+    
+    // Add the "Delete selected" button to the other panels
+    panelButtons.push([
+        '->', 
+        {
+            text: 'Help',
+            handler: function() {
+                new tvheadend.help('Digital Video Recorder', 'dvrlog.html');
+            }
+        }
+    ]);
 
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
         stripeRows: true,
-        disableSelection: true,
+        disableSelection: false,
         title: title,
         iconCls: iconCls,
         store: dvrStore,
+        selModel: selModel,
         cm: dvrCm,
         plugins: [actions],
         viewConfig: {
             forceFit: true
         },
-        tbar: [{
-                tooltip: 'Schedule a new recording session on the server.',
-                iconCls: 'add',
-                text: 'Add entry',
-                handler: addEntry
-            }, '->', {
-                text: 'Help',
-                handler: function() {
-                    new tvheadend.help('Digital Video Recorder', 'dvrlog.html');
-                }
-            }],
+        tbar: panelButtons,
         bbar: bbar
     });
 
