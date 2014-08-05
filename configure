@@ -245,19 +245,11 @@ fi
 if enabled_or_auto libav; then
   has_libav=true
 
-  if $has_libav && ! check_pkg libavcodec "<=56.0.0"; then
-    has_libav=false
-  fi
-
   if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
     has_libav=false
   fi
 
   if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
-    has_libav=false
-  fi
-
-  if $has_libav && ! check_pkg libavformat "<=56.0.0"; then
     has_libav=false
   fi
 
