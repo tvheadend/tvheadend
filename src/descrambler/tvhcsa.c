@@ -202,7 +202,7 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
 #endif
     break;
   case DESCRAMBLER_AES:
-	aes_set_even_control_word(csa->csa_aes_keys, odd);
+	aes_set_odd_control_word(csa->csa_aes_keys, odd);
     break;
   default:
     assert(0);
