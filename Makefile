@@ -301,7 +301,7 @@ ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
 # libaesdec
-SRCS-yes += src/descrambler/libaesdec/libaesdec.c
+SRCS-${CONFIG_SSL} += src/descrambler/libaesdec/libaesdec.c
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
