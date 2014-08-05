@@ -64,6 +64,7 @@
 #include "lang_codes.h"
 #include "esfilter.h"
 #include "intlconv.h"
+#include "dbus.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -767,6 +768,8 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  dbus_server_init();
+
   intlconv_init();
   
   api_init();
@@ -815,6 +818,8 @@ main(int argc, char **argv)
 
   dvr_init();
 
+  dbus_server_start();
+
   htsp_init(opt_bindaddr);
 
 
@@ -852,6 +857,9 @@ main(int argc, char **argv)
 
   mainloop();
 
+#if ENABLE_DBUS_1
+  tvhftrace("main", dbus_server_done);
+#endif
 #if ENABLE_UPNP
   tvhftrace("main", upnp_server_done);
 #endif
@@ -921,6 +929,10 @@ main(int argc, char **argv)
   }
   /* end of OpenSSL cleanup code */
 
+#if ENABLE_DBUS_1
+  extern void dbus_shutdown(void);
+  dbus_shutdown();
+#endif
   return 0;
 }
 

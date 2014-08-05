@@ -303,6 +303,9 @@ endif
 # libaesdec
 SRCS-${CONFIG_SSL} += src/descrambler/libaesdec/libaesdec.c
 
+# DBUS
+SRCS-${CONFIG_DBUS_1}  += src/dbus.c
+
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += docs/html docs/docresources src/webui/static
