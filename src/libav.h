@@ -33,7 +33,7 @@ http://git.videolan.org/?p=ffmpeg.git;a=commitdiff;h=104e10fb426f903ba9157fdbfe3
 
 This list must be updated every time we use a new AV_CODEC_ID
 */
-#if LIBAVCODEC_VERSION_MAJOR < 54 && LIBAVCODEC_VERSION_MINOR < 25
+#if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
 #define AVCodecID CodecID
 #define AV_CODEC_ID_AAC          CODEC_ID_AAC
 #define AV_CODEC_ID_AC3          CODEC_ID_AC3
