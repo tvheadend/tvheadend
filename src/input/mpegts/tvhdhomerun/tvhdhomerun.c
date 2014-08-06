@@ -89,9 +89,41 @@ tvhdhomerun_device_class_override_set( void *obj, const void * p )
       free(hd->hd_override_type);
       hd->hd_override_type = strdup(p);
       tvhlog(LOG_INFO, "tvhdhomerun", "Setting override_type : %s", hd->hd_override_type);
+      return 1;
     }
   }
   return 0;
+}
+
+static void
+tvhdhomerun_device_class_override_notify( void * obj )
+{
+  tvhdhomerun_device_t *hd = obj;
+  tvhdhomerun_frontend_t *hfe;
+  dvb_fe_type_t type = dvb_str2type(hd->hd_override_type);
+  struct hdhomerun_discover_device_t discover_info;
+  unsigned int tuner;
+  htsmsg_t *conf;
+
+  conf = hts_settings_load("input/tvhdhomerun/adapters/%s", hd->hd_info.uuid);
+  if (conf)
+    conf = htsmsg_get_map(conf, "frontends");
+
+  lock_assert(&global_lock);
+
+  while ((hfe = TAILQ_FIRST(&hd->hd_frontends)) != NULL)
+  {
+    if (hfe->hf_type == type)
+      break;
+
+    discover_info.device_id = hdhomerun_device_get_device_id(hfe->hf_hdhomerun_tuner);
+    discover_info.ip_addr =  hdhomerun_device_get_device_ip(hfe->hf_hdhomerun_tuner);
+    tuner = hfe->hf_tunerNumber;
+
+    tvhdhomerun_frontend_delete(hfe);
+
+    tvhdhomerun_frontend_create(hd, &discover_info, conf, type, tuner);
+  }
 }
 
 const idclass_t tvhdhomerun_device_class =
@@ -118,10 +150,10 @@ const idclass_t tvhdhomerun_device_class =
     },
     {
       .type     = PT_STR,
-      .id       = "device_id",
+      .id       = "uuid",
       .name     = "UUID",
       .opts     = PO_RDONLY,
-      .off      = offsetof(tvhdhomerun_device_t, hd_info.device_id),
+      .off      = offsetof(tvhdhomerun_device_t, hd_info.uuid),
     },
     {
       .type     = PT_STR,
@@ -143,6 +175,7 @@ const idclass_t tvhdhomerun_device_class =
       .name     = "Network Type",
       .opts     = PO_ADVANCED,
       .set      = tvhdhomerun_device_class_override_set,
+      .notify   = tvhdhomerun_device_class_override_notify,
       .list     = tvhdhomerun_device_class_override_enum,
       .off      = offsetof(tvhdhomerun_device_t, hd_type),
     },    
@@ -229,8 +262,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   int j, save = 0;
   struct hdhomerun_device_t *hdhomerun_tuner;
   dvb_fe_type_t type = DVB_TYPE_C;
-  
-
+  struct in_addr ip_addr;
 
   tvhdhomerun_device_calc_uuid(&uuid, dInfo->device_id);
 
@@ -281,11 +313,8 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   char fName[128];
   snprintf(fName, 128, "HDHomeRun(%08X)",dInfo->device_id);
 
-  char buffer[32];
-  char *ipInt = (char*)&dInfo->ip_addr;
-  sprintf(buffer, "%u.%u.%u.%u", ipInt[3],ipInt[2],ipInt[1],ipInt[0]);
-
-  hd->hd_info.ip_address = strdup(buffer);
+  ip_addr.s_addr = htonl(dInfo->ip_addr);
+  hd->hd_info.ip_address = strdup(inet_ntoa(ip_addr));
   hd->hd_info.uuid = strdup(uuid.hex);
   hd->hd_info.friendlyname = strdup(fName);
   
