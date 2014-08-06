@@ -30,6 +30,7 @@
 #include "htsp_server.h"
 #include "streaming.h"
 #include "intlconv.h"
+#include "dbus.h"
 
 static int de_tally;
 
@@ -38,9 +39,49 @@ int dvr_iov_max;
 struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
 
+static gtimer_t dvr_dbus_timer;
+
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
+
+/*
+ * DBUS next dvr start notifications
+ */
+#if ENABLE_DBUS_1
+static void
+dvr_dbus_timer_cb( void *aux )
+{
+  dvr_entry_t *de;
+  time_t result, preamble, max = 0;
+  static time_t last_result = 0;
+
+  lock_assert(&global_lock);
+
+  /* find the maximum value */
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (de->de_sched_state != DVR_SCHEDULED)
+      continue;
+    preamble = de->de_start - (60 * de->de_start_extra) - 30;
+    if (dispatch_clock < preamble && preamble > max)
+      max = preamble;
+  }
+  /* lower the maximum value */
+  result = max;
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (de->de_sched_state != DVR_SCHEDULED)
+      continue;
+    preamble = de->de_start - (60 * de->de_start_extra) - 30;
+    if (dispatch_clock < preamble && preamble < result)
+      result = preamble;
+  }
+  /* different? send it.... */
+  if (result && result != last_result) {
+    dbus_emit_signal_s64("dvr_next", result);
+    last_result = result;
+  }
+}
+#endif
 
 /*
  * Completed
@@ -264,6 +305,9 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
     tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, preamble);
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
+#if ENABLE_DBUS_1
+    gtimer_arm(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, 5);
+#endif
   } else {
     de->de_sched_state = DVR_NOSTATE;
   }
@@ -556,6 +600,9 @@ dvr_entry_remove(dvr_entry_t *de, int delconf)
 #endif
 
   gtimer_disarm(&de->de_timer);
+#if ENABLE_DBUS_1
+  gtimer_arm(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, 2);
+#endif
 
   if (de->de_channel)
     LIST_REMOVE(de, de_channel_link);
