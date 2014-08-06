@@ -546,7 +546,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   else if (type == DVB_TYPE_C)
     idc = &tvhdhomerun_frontend_dvbc_class;
   else if (type == DVB_TYPE_ATSC) {
-  	idc = &tvhdhomerun_frontend_atsc_class;
+    idc = &tvhdhomerun_frontend_atsc_class;
   } else {
     tvherror("stvhdhomerun", "unknown FE type %d", type);
     return NULL;

@@ -61,7 +61,6 @@ static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
 struct tvhdhomerun_device_info
 {
   char *ip_address;         /* IP address */
-  uint32_t device_id;
   char *friendlyname;
   char *deviceModel;
 
