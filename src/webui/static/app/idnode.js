@@ -141,18 +141,29 @@ tvheadend.IdNodeField = function(conf)
         }
         if (this.enum || this.list)
             w = 300;
-        return {
+
+        var props = {
             width: w,
             dataIndex: this.id,
             header: this.text,
             editor: this.editor({create: false}),
             renderer: this.renderer(),
+            editable: !this.rdonly,
             hidden: this.hidden,
             filter: {
                 type: ftype,
                 dataIndex: this.id
             }
         };
+
+        // Special handling for checkboxes
+        if (ftype === 'boolean')
+        {
+            props.xtype = 'checkcolumn';
+            props.renderer = Ext.ux.grid.CheckColumn.prototype.renderer;
+        }
+        
+        return props;
     };
 
     this.renderer = function()

@@ -28,7 +28,8 @@ static void
 tvhcsa_aes_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
-  /* Not Implemented Yet */
+  aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb);
+  ts_recv_packet2(s, tsb);
 }
 
 static void
@@ -183,7 +184,7 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
 #endif
     break;
   case DESCRAMBLER_AES:
-    /* Not Yet Implemented */
+    aes_set_even_control_word(csa->csa_aes_keys, even);
     break;
   default:
     assert(0);
@@ -202,7 +203,7 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
 #endif
     break;
   case DESCRAMBLER_AES:
-    /* Not Yet Implemented */
+    aes_set_odd_control_word(csa->csa_aes_keys, odd);
     break;
   default:
     assert(0);
@@ -230,6 +231,7 @@ tvhcsa_init ( tvhcsa_t *csa )
 #else
   csa->csa_keys          = get_key_struct();
 #endif
+  csa->csa_aes_keys      = aes_get_key_struct();
 }
 
 void
@@ -243,5 +245,6 @@ tvhcsa_destroy ( tvhcsa_t *csa )
 #else
   free_key_struct(csa->csa_keys);
 #endif
+  aes_free_key_struct(csa->csa_aes_keys);
   free(csa->csa_tsbcluster);
 }

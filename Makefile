@@ -300,6 +300,9 @@ ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
+# libaesdec
+SRCS-${CONFIG_SSL} += src/descrambler/libaesdec/libaesdec.c
+
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += docs/html docs/docresources src/webui/static
