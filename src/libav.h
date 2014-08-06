@@ -23,6 +23,29 @@
 #include <libavformat/avformat.h>
 #include "tvheadend.h"
 
+/*
+Older versions of ffmpeg/libav don't have the AV_* prefix
+
+For version info please see:
+https://github.com/libav/libav/blob/a7153444df9040bf6ae103e0bbf6104b66f974cb/doc/APIchanges#L450-455
+https://github.com/FFmpeg/FFmpeg/blob/97478ef5fe7dd2ff8da98e381de4a6b2b979b485/doc/APIchanges#L811-816
+
+This list must be updated every time we use a new AV_CODEC_ID
+*/
+#ifndef AV_CODEC_ID_NONE
+#define AV_CODEC_ID_AAC          CODEC_ID_AAC
+#define AV_CODEC_ID_AC3          CODEC_ID_AC3
+#define AV_CODEC_ID_DVB          CODEC_ID_DVB
+#define AV_CODEC_ID_EAC3         CODEC_ID_EAC3
+#define AV_CODEC_ID_H264         CODEC_ID_H264
+#define AV_CODEC_ID_MP2          CODEC_ID_MP2
+#define AV_CODEC_ID_MPEG2VIDEO   CODEC_ID_MPEG2VIDEO
+#define AV_CODEC_ID_NONE         CODEC_ID_NONE
+#define AV_CODEC_ID_TEXT         CODEC_ID_TEXT
+#define AV_CODEC_ID_VORBIS       CODEC_ID_VORBIS
+#define AV_CODEC_ID_VP8          CODEC_ID_VP8
+#endif
+
 enum AVCodecID streaming_component_type2codec_id(streaming_component_type_t type);
 streaming_component_type_t codec_id2streaming_component_type(enum AVCodecID id);
 int libav_is_encoder(AVCodec *codec);
