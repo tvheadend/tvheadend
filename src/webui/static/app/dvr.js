@@ -414,7 +414,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
     });
 
     /* Bottom toolbar to include default previous/goto-page/next and refresh buttons, also number-of-items combobox */
-    
+
     var bbar = new Ext.PagingToolbar({
         store : dvrStore,
         displayInfo : true,
@@ -422,14 +422,14 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         displayMsg : 'Programs {0} - {1} of {2}',
         emptyMsg : "No programs to display"
     });
-    
+
     function abortEntry(btn) {
         if (btn !== 'yes')
             return;
-        
+
         var selectedKeys = panel.selModel.selections.keys;
-            
-        // Delete each entry one by one since the API doesn't support deleting 
+
+        // Delete each entry one by one since the API doesn't support deleting
         // multiple
         for (var i = 0; i < selectedKeys.length; i++) {
             var recordingId = selectedKeys[i];
@@ -453,7 +453,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 
         var selectedKeys = panel.selModel.selections.keys;
             
-        // Delete each entry one by one since the API doesn't support deleting 
+        // Delete each entry one by one since the API doesn't support deleting
         // multiple
         for (var i = 0; i < selectedKeys.length; i++) {
             var recordingId = selectedKeys[i];
@@ -473,17 +473,17 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             });
         }
     };
-    
+
     function abortSelected() {
         Ext.MessageBox.confirm('Message',
             'Do you really want to abort/unschedule the selection?', abortEntry);
     };
-    
+
     function deleteSelected() {
         Ext.MessageBox.confirm('Message',
             'Do you really want to delete the selection?', deleteEntry);
     };
-    
+
     var abortButton = new Ext.Toolbar.Button({
         tooltip: 'Abort or unschedule one or more selected rows',
         iconCls: 'remove',
@@ -491,7 +491,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         handler: abortSelected,
         disabled: true
     });
-    
+
     var deleteButton = new Ext.Toolbar.Button({
         tooltip: 'Delete one or more selected rows',
         iconCls: 'remove',
@@ -499,12 +499,12 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         handler: deleteSelected,
         disabled: true
     });
-    
+
     // Make multiple rows selectable
     var selModel = new Ext.grid.RowSelectionModel({
         singleSelect: false
     });
-    
+
     // Enable/disable some buttons when nothing is selected
     selModel.on('selectionchange', function(self) {
         if (self.getCount() > 0) {
@@ -516,10 +516,10 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             abortButton.disable();
         }
     });
-    
+
     // Define which panel buttons should be visible
     var panelButtons = [];
-    
+
     // Add the "Add entry" and "Abort" buttons only to "Upcoming recordings"
     if (iconCls === 'clock') {
         panelButtons.push([
@@ -536,10 +536,10 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
     else {
         panelButtons.push(deleteButton);
     }
-    
+
     // Add the help button to all panels
     panelButtons.push([
-        '->', 
+        '->',
         {
             text: 'Help',
             handler: function() {
