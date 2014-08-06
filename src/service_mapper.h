@@ -1,6 +1,6 @@
 /*
  *  Functions for transport probing
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -71,5 +71,8 @@ void service_mapper_unlink ( struct service *s, struct channel *c, void *origin 
  * @return 1 if changes were made, else 0
  */
 int service_mapper_clean ( struct service *s, struct channel *ch, void *origin );
+
+// Resets the stat counters
+void service_mapper_reset_stats ( void );
 
 #endif /* __TVH_SERVICE_MAPPER_H__ */
