@@ -141,7 +141,7 @@ tvheadend.IdNodeField = function(conf)
         }
         if (this.enum || this.list)
             w = 300;
-        
+
         var props = {
             width: w,
             dataIndex: this.id,
@@ -155,7 +155,7 @@ tvheadend.IdNodeField = function(conf)
                 dataIndex: this.id
             }
         };
-        
+
         // Special handling for checkboxes
         if (ftype === 'boolean')
         {
