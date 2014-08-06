@@ -40,6 +40,7 @@
 #include "notify.h"
 #include "atomic.h"
 #include "input.h"
+#include "dbus.h"
 
 struct th_subscription_list subscriptions;
 struct th_subscription_list subscriptions_remove;
@@ -779,6 +780,9 @@ static void
 subscription_status_callback ( void *p )
 {
   th_subscription_t *s;
+  int64_t count = 0;
+  static int64_t old_count = -1;
+
   gtimer_arm(&subscription_status_timer,
              subscription_status_callback, NULL, 1);
 
@@ -793,6 +797,11 @@ subscription_status_callback ( void *p )
     htsmsg_add_u32(m, "out", out);
     htsmsg_add_u32(m, "updateEntry", 1);
     notify_by_msg("subscriptions", m);
+    count++;
+  }
+  if (old_count != count) {
+    old_count = count;
+    dbus_emit_signal_s64("subscriptions", count);
   }
 }
 
