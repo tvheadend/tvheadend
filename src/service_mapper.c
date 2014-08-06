@@ -1,5 +1,5 @@
 /*
- *  Output functions for fixed multicast streaming
+ *  Service Mapper functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
