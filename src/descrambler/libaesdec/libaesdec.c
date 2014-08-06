@@ -64,15 +64,16 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
   AES_KEY k;
 
   xc0 = pkt[3] & 0xc0;
+
   //skip clear pkt
-  if (xc0 == 0x00) {
+  if (xc0 == 0x00)
     return;
-  }
+
   //skip reserved pkt
-  if (xc0 == 0x40) { 
+  if (xc0 == 0x40)
     return;
-  }	
-  if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted 
+
+  if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted
     ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
     pkt[3] &= 0x3f;  // consider it decrypted now
     if (pkt[3] & 0x20) { // incomplete packet
@@ -81,7 +82,7 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
       n = len >> 3;
       if (n == 0) { // decrypted==encrypted!
         return;  // this doesn't need more processing
-      }                	
+      }
     } else {
         len = 184;
 	offset = 4;
