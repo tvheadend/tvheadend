@@ -25,6 +25,7 @@
 #include "input.h"
 #include "subscriptions.h"
 #include "cron.h"
+#include "dbus.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -524,6 +525,17 @@ done:
  */
 
 static void
+epggrab_ota_start_cb ( void *p );
+
+static void
+epggrab_ota_next_arm( time_t next )
+{
+  tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
+  gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
+  dbus_emit_signal_s64("epggrab_ota_next", next);
+}
+
+static void
 epggrab_ota_start_cb ( void *p )
 {
   time_t next;
@@ -535,10 +547,8 @@ epggrab_ota_start_cb ( void *p )
   epggrab_ota_kick(1);
 
   pthread_mutex_lock(&epggrab_ota_mutex);
-  if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next)) {
-    tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
-    gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
-  }
+  if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next))
+    epggrab_ota_next_arm(next);
   pthread_mutex_unlock(&epggrab_ota_mutex);
 }
 
@@ -553,9 +563,9 @@ epggrab_ota_arm ( time_t last )
     /* do not trigger the next EPG scan for 1/2 hour */
     if (last != (time_t)-1 && last + 1800 > next)
       next = last + 1800;
-    tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
-    gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
+    epggrab_ota_next_arm(next);
   }
+
   pthread_mutex_unlock(&epggrab_ota_mutex);
 }
 
@@ -748,6 +758,8 @@ epggrab_ota_post ( void )
 
   /* Init timer (call after full init - wait for network tuners) */
   if (epggrab_ota_initial) {
+    /* notify another system layers, that we will do EPG OTA */
+    dbus_emit_signal_s64("epggrab_ota_next", time(NULL) + 15);
     epggrab_ota_pending_flag = 1;
     epggrab_ota_kick(15);
     t = time(NULL);
