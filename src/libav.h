@@ -33,6 +33,7 @@ https://github.com/FFmpeg/FFmpeg/blob/97478ef5fe7dd2ff8da98e381de4a6b2b979b485/d
 This list must be updated every time we use a new AV_CODEC_ID
 */
 #ifndef AV_CODEC_ID_NONE
+#define AVCodecID CodecID
 #define AV_CODEC_ID_AAC          CODEC_ID_AAC
 #define AV_CODEC_ID_AC3          CODEC_ID_AC3
 #define AV_CODEC_ID_DVB          CODEC_ID_DVB
@@ -44,6 +45,8 @@ This list must be updated every time we use a new AV_CODEC_ID
 #define AV_CODEC_ID_TEXT         CODEC_ID_TEXT
 #define AV_CODEC_ID_VORBIS       CODEC_ID_VORBIS
 #define AV_CODEC_ID_VP8          CODEC_ID_VP8
+#define AV_CODEC_ID_DVB_SUBTITLE CODEC_ID_DVB_SUBTITLE
+#define AV_CODEC_ID_DVB_TELETEXT CODEC_ID_DVB_TELETEXT
 #endif
 
 enum AVCodecID streaming_component_type2codec_id(streaming_component_type_t type);
