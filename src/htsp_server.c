@@ -2683,6 +2683,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   htsmsg_t *streams = htsmsg_create_list();
   htsmsg_t *c;
   htsmsg_t *sourceinfo = htsmsg_create_map();
+  const char *type;
   int i;
   const source_info_t *si = &ss->ss_si;
   tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
@@ -2692,7 +2693,11 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
     c = htsmsg_create_map();
     htsmsg_add_u32(c, "index", ssc->ssc_index);
-    htsmsg_add_str(c, "type", streaming_component_type2txt(ssc->ssc_type));
+    if (ssc->ssc_type == SCT_MP4A)
+      type = "AAC"; /* override */
+    else
+      type = streaming_component_type2txt(ssc->ssc_type);
+    htsmsg_add_str(c, "type", type);
     if(ssc->ssc_lang[0])
       htsmsg_add_str(c, "language", ssc->ssc_lang);
     
