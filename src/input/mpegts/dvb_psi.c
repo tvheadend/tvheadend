@@ -1328,6 +1328,7 @@ psi_parse_pmt
     dtag = ptr[0];
     dlen = ptr[1];
 
+    tvhlog_hexdump("pmt", ptr, dlen + 2);
     len -= 2; ptr += 2; dllen -= 2; 
     if(dlen > len)
       break;
@@ -1348,6 +1349,7 @@ psi_parse_pmt
     pid     = (ptr[1] & 0x1f) << 8 | ptr[2];
     dllen   = (ptr[3] & 0xf) << 8 | ptr[4];
     tvhdebug("pmt", "  pid %04X estype %d", pid, estype);
+    tvhlog_hexdump("pmt", ptr, 5);
 
     ptr += 5;
     len -= 5;
@@ -1372,7 +1374,7 @@ psi_parse_pmt
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
 
-    case 0x06: //0x06 is Chinese Cable TV ac3 audio track
+    case 0x06: // 0x06 is Chinese Cable TV AC-3 audio track (see DVB_DESC_REGISTRATION)
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
@@ -1401,6 +1403,7 @@ psi_parse_pmt
       dtag = ptr[0];
       dlen = ptr[1];
 
+      tvhlog_hexdump("pmt", ptr, dlen + 2);
       len -= 2; ptr += 2; dllen -= 2; 
       if(dlen > len)
         break;
@@ -1411,9 +1414,14 @@ psi_parse_pmt
         break;
 
       case DVB_DESC_REGISTRATION:
+        /* a right format descriptor present? forget the default */
+        if(estype == 0x06)
+          hts_stream_type = SCT_UNKNOWN;
         if(dlen == 4 && 
            ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
           hts_stream_type = SCT_AC3;
+        /* seen also these formats: */
+        /* LU-A, ADV1 */
         break;
 
       case DVB_DESC_LANGUAGE:
