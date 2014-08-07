@@ -72,22 +72,24 @@ typedef struct dmx_filter {
   uint8_t mode[DMX_FILTER_SIZE];
 } dmx_filter_t;
 
-#define CA_SET_DESCR      0x40106f86
-#define CA_SET_DESCR_X    0x866f1040
-#define CA_SET_PID        0x40086f87
-#define CA_SET_PID_X      0x876f0840
-#define DMX_STOP          0x00006f2a
-#define DMX_STOP_X        0x2a6f0000
-#define DMX_SET_FILTER    0x403c6f2b
-#define DMX_SET_FILTER_X  0x2b6f3c40
+#define CA_SET_DESCR       0x40106f86
+#define CA_SET_DESCR_X     0x866f1040
+#define CA_SET_DESCR_AES   0x40106f87
+#define CA_SET_DESCR_AES_X 0x876f1040
+#define CA_SET_PID         0x40086f87
+#define CA_SET_PID_X       0x876f0840
+#define DMX_STOP           0x00006f2a
+#define DMX_STOP_X         0x2a6f0000
+#define DMX_SET_FILTER     0x403c6f2b
+#define DMX_SET_FILTER_X   0x2b6f3c40
 
 // ca_pmt_list_management values:
-#define CAPMT_LIST_MORE   0x00    // append a 'MORE' CAPMT object the list and start receiving the next object
-#define CAPMT_LIST_FIRST  0x01    // clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
-#define CAPMT_LIST_LAST   0x02    // append a 'LAST' CAPMT object to the list and start working with the list
-#define CAPMT_LIST_ONLY   0x03    // clear the list when an 'ONLY' CAPMT object is received, and start working with the object
-#define CAPMT_LIST_ADD    0x04    // append an 'ADD' CAPMT object to the current list and start working with the updated list
-#define CAPMT_LIST_UPDATE 0x05    // replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
+#define CAPMT_LIST_MORE    0x00    // append a 'MORE' CAPMT object the list and start receiving the next object
+#define CAPMT_LIST_FIRST   0x01    // clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
+#define CAPMT_LIST_LAST    0x02    // append a 'LAST' CAPMT object to the list and start working with the list
+#define CAPMT_LIST_ONLY    0x03    // clear the list when an 'ONLY' CAPMT object is received, and start working with the object
+#define CAPMT_LIST_ADD     0x04    // append an 'ADD' CAPMT object to the current list and start working with the updated list
+#define CAPMT_LIST_UPDATE  0x05    // replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
 // ca_pmt_cmd_id values:
 #define CAPMT_CMD_OK_DESCRAMBLING   0x01  // start descrambling the service in this CAPMT object as soon as the list of CAPMT objects is complete
@@ -947,7 +949,7 @@ capmt_ecm_reset(th_descrambler_t *th)
 
 static void
 capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
-                  const uint8_t *even, const uint8_t *odd,
+                  int type, const uint8_t *even, const uint8_t *odd,
                   int ok)
 {
   mpegts_service_t *t;
@@ -972,7 +974,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
     if (adapter != ct->ct_adapter)
       continue;
 
-    descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, even, odd);
+    descrambler_keys((th_descrambler_t *)ct, type, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
@@ -989,6 +991,7 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   if (!sb->sb_bswap && !sb->sb_err) {
     if (cmd == CA_SET_PID_X ||
         cmd == CA_SET_DESCR_X ||
+        cmd == CA_SET_DESCR_AES_X ||
         cmd == DMX_SET_FILTER_X ||
         cmd == DMX_STOP_X) {
       sb->sb_bswap = 1;
@@ -1000,6 +1003,8 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 8;
   else if (cmd == CA_SET_DESCR)
     return 4 + 16;
+  else if (cmd == CA_SET_DESCR_AES)
+    return 4 + 32;
   else if (oscam_new && cmd == DMX_SET_FILTER)
     return 4 + 2 + 60;
   else if (oscam_new && cmd == DMX_STOP)
@@ -1013,6 +1018,7 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
 static void
 capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
+  static uint8_t empty[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   uint32_t cmd;
 
   cmd = sbuf_peek_u32(sb, offset);
@@ -1041,24 +1047,48 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR) {
 
-    static uint8_t empty[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
     ca_info_t *cai;
 
-    tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x", adapter, parity, index, cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
+    tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
+                      adapter, parity, index, cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index == -1)   // skipping removal request
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, cai->seq, cw, empty, 1);
+      capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_DES, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, cai->seq, empty, cw, 1);
+      capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_DES, empty, cw, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
+
+  } else if (cmd == CA_SET_DESCR_AES) {
+
+    int32_t index  = sbuf_peek_s32(sb, offset + 4);
+    int32_t parity = sbuf_peek_s32(sb, offset + 8);
+    uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    ca_info_t *cai;
+
+    tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR_AES adapter %d par %d idx %d "
+                      "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                      adapter, parity, index,
+                      cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7],
+                      cw[8], cw[9], cw[10], cw[11], cw[12], cw[13], cw[14], cw[15]);
+    if (index == -1)   // skipping removal request
+      return;
+    if (adapter >= MAX_CA || index >= MAX_INDEX)
+      return;
+    cai = &capmt->capmt_adapters[adapter].ca_info[index];
+    if (parity == 0) {
+      capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_AES, cw, empty, 1);
+    } else if (parity == 1) {
+      capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_AES, empty, cw, 1);
+    } else
+      tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR_AES for adapter%d", parity, adapter);
 
   } else if (cmd == DMX_SET_FILTER) {
 
@@ -1317,6 +1347,7 @@ handle_ca0_wrapper(capmt_t *capmt)
 
       capmt_process_key(capmt, 0,
                         buffer[0] | ((uint16_t)buffer[1] << 8),
+                        DESCRAMBLER_DES,
                         buffer + 2, buffer + 10,
                         ret == 18);
     }
