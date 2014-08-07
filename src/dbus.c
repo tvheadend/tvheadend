@@ -27,6 +27,7 @@
 
 #include "tvheadend.h"
 #include "tvhpoll.h"
+#include "subscriptions.h"
 #include "dbus.h"
 
 
@@ -203,6 +204,32 @@ dbus_reply_to_ping(DBusMessage *msg, DBusConnection *conn)
 }
 
 /**
+ * Set the subscription postpone delay
+ */
+static void
+dbus_reply_to_postpone(DBusMessage *msg, DBusConnection *conn)
+{
+  DBusMessageIter args;
+  DBusMessage    *reply;
+  int64_t         param;
+
+  if (!dbus_message_iter_init(msg, &args))
+    return;
+  if (DBUS_TYPE_INT64 != dbus_message_iter_get_arg_type(&args))
+    return;
+  dbus_message_iter_get_basic(&args, &param);
+
+  param = subscription_set_postpone(param);
+
+  reply = dbus_message_new_method_return(msg);
+  dbus_message_iter_init_append(reply, &args);
+  dbus_message_iter_append_basic(&args, DBUS_TYPE_INT64, &param);
+  dbus_connection_send(conn, reply, NULL);
+  dbus_connection_flush(conn);
+  dbus_message_unref(reply);
+}
+
+/**
  *
  */
 
@@ -313,6 +340,8 @@ dbus_server_thread(void *aux)
 
     if (dbus_message_is_method_call(msg, "org.tvheadend", "ping"))
       dbus_reply_to_ping(msg, conn);
+    else if (dbus_message_is_method_call(msg, "org.tvheadend", "postpone"))
+      dbus_reply_to_postpone(msg, conn);
 
     dbus_message_unref(msg);
   }
