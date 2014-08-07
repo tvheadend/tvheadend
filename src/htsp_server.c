@@ -2912,6 +2912,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code));
     break;
 
+  case SMT_GRACE:
   case SMT_MPEGTS:
     break;
 

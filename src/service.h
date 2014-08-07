@@ -340,6 +340,7 @@ typedef struct service {
   /**
    * Stream start time
    */
+  int    s_grace_delay;
   time_t s_start_time;
 
 

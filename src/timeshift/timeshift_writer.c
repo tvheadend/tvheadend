@@ -253,6 +253,7 @@ static void _process_msg
       break;
 
     /* Status */
+    case SMT_GRACE:
     case SMT_NOSTART:
     case SMT_SERVICE_STATUS:
     case SMT_TIMESHIFT_STATUS:
