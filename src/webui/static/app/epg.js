@@ -296,14 +296,6 @@ tvheadend.epg = function() {
             }])
     });
 
-    /**
-     * Listener for DVR notifications. We want to update the EPG grid when a
-     * recording is finished/deleted etc. so the status icon gets updated.
-     */
-    tvheadend.comet.on('dvrdb', function() {
-        epgStore.reload();
-    });
-
     function setMetaAttr(meta, record) {
         var now = new Date;
         var start = record.get('start');
@@ -665,6 +657,11 @@ tvheadend.epg = function() {
     });
 
     panel.on('rowclick', rowclicked);
+    
+    // Always reload the store when the tab is activated
+    panel.on('beforeshow', function() {
+        this.store.reload();
+    });
 
     function rowclicked(grid, index) {
         new tvheadend.epgDetails(grid.getStore().getAt(index).data);
