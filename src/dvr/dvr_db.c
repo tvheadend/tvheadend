@@ -77,7 +77,7 @@ dvr_dbus_timer_cb( void *aux )
   }
   /* different? send it.... */
   if (result && result != last_result) {
-    dbus_emit_signal_s64("dvr_next", result);
+    dbus_emit_signal_s64("/dvr", "next", result);
     last_result = result;
   }
 }

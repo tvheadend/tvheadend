@@ -532,7 +532,7 @@ epggrab_ota_next_arm( time_t next )
 {
   tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
   gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
-  dbus_emit_signal_s64("epggrab_ota_next", next);
+  dbus_emit_signal_s64("/epggrab/ota", "next", next);
 }
 
 static void
@@ -759,7 +759,7 @@ epggrab_ota_post ( void )
   /* Init timer (call after full init - wait for network tuners) */
   if (epggrab_ota_initial) {
     /* notify another system layers, that we will do EPG OTA */
-    dbus_emit_signal_s64("epggrab_ota_next", time(NULL) + 15);
+    dbus_emit_signal_s64("/epggrab/ota", "next", time(NULL) + 15);
     epggrab_ota_pending_flag = 1;
     epggrab_ota_kick(15);
     t = time(NULL);

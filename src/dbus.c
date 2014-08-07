@@ -32,6 +32,7 @@
 
 typedef struct dbus_sig {
   TAILQ_ENTRY(dbus_sig) link;
+  char     *obj_name;
   char     *sig_name;
   htsmsg_t *msg;
 } dbus_sig_t;
@@ -47,14 +48,19 @@ static int dbus_running;
  *
  */
 void
-dbus_emit_signal(const char *sig_name, htsmsg_t *msg)
+dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
 {
   dbus_sig_t *ds = calloc(1, sizeof(dbus_sig_t));
+  size_t l;
 
   if (!dbus_running) {
     htsmsg_destroy(msg);
     return;
   }
+  l = strlen(obj_name);
+  ds->obj_name = malloc(l + 15);
+  strcpy(ds->obj_name, "/org/tvheadend");
+  strcpy(ds->obj_name + 14, obj_name);
   ds->sig_name = strdup(sig_name);
   ds->msg = msg;
   pthread_mutex_lock(&dbus_lock);
@@ -64,19 +70,19 @@ dbus_emit_signal(const char *sig_name, htsmsg_t *msg)
 }
 
 void
-dbus_emit_signal_str(const char *sig_name, const char *value)
+dbus_emit_signal_str(const char *obj_name, const char *sig_name, const char *value)
 {
   htsmsg_t *l = htsmsg_create_list();
   htsmsg_add_str(l, NULL, value);
-  dbus_emit_signal(sig_name, l);
+  dbus_emit_signal(obj_name, sig_name, l);
 }
 
 void
-dbus_emit_signal_s64(const char *sig_name, int64_t value)
+dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value)
 {
   htsmsg_t *l = htsmsg_create_list();
   htsmsg_add_s64(l, NULL, value);
-  dbus_emit_signal(sig_name, l);
+  dbus_emit_signal(obj_name, sig_name, l);
 }
 
 /**
@@ -199,27 +205,11 @@ dbus_reply_to_ping(DBusMessage *msg, DBusConnection *conn)
 /**
  *
  */
-#if 0
-static void
-dbus_server_close_hack(DBusConnection *conn,
-                       DBusDispatchStatus new_status,
-                       void *data)
-{
-  /* buggy refcounting in libdbus */
-  dbus_connection_unref(conn);
-}
-#endif
 
 static void
 dbus_connection_safe_close(DBusConnection *conn)
 {
   dbus_connection_flush(conn);
-
-//#if ENABLE_TRACE /* a little bit wrong condition */
-  /* ugly bug here, note that the fixed version of dbus will broke this */
-//  dbus_connection_set_dispatch_status_function(conn, dbus_server_close_hack, NULL, NULL);
-//#endif
-
   dbus_connection_close(conn);
   dbus_connection_unref(conn);
 }
@@ -243,10 +233,13 @@ dbus_flush_queue(DBusConnection *conn)
       break;
 
     if (conn)
-      dbus_send_signal(conn, "/", "org.tvheadend.notify", ds->sig_name, ds->msg);
+      dbus_send_signal(conn,
+                       ds->obj_name, "org.tvheadend.notify",
+                       ds->sig_name, ds->msg);
 
     htsmsg_destroy(ds->msg);
     free(ds->sig_name);
+    free(ds->obj_name);
     free(ds);
   }
   if (conn)
@@ -344,7 +337,7 @@ dbus_server_init(void)
   tvh_pipe(O_NONBLOCK, &dbus_pipe);
   dbus_threads_init_default();
   dbus_running = 1;
-  dbus_emit_signal_str("start", tvheadend_version);
+  dbus_emit_signal_str("/main", "start", tvheadend_version);
 }
 
 void
@@ -356,7 +349,7 @@ dbus_server_start(void)
 void
 dbus_server_done(void)
 {
-  dbus_emit_signal_str("stop", "bye");
+  dbus_emit_signal_str("/main", "stop", "bye");
   dbus_running = 0;
   tvh_write(dbus_pipe.wr, "", 1);
   pthread_kill(dbus_tid, SIGTERM);
