@@ -24,6 +24,7 @@
 #include "upnp.h"
 #include "settings.h"
 #include "satip_private.h"
+#include "dbus.h"
 
 #include <arpa/inet.h>
 #include <openssl/sha.h>
@@ -34,6 +35,25 @@
 #endif
 
 static void satip_device_discovery_start( void );
+
+/*
+ *
+ */
+
+static void
+satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
+{
+#if ENABLE_DBUS_1
+  char buf[256];
+
+  htsmsg_t *msg = htsmsg_create_list();
+  htsmsg_add_str(msg, NULL, sd->sd_info.addr);
+  htsmsg_add_str(msg, NULL, sd->sd_info.location);
+  htsmsg_add_str(msg, NULL, sd->sd_info.server);
+  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id));
+  dbus_emit_signal(buf, sig_name, msg);
+#endif
+}
 
 /*
  * SAT-IP client
@@ -396,6 +416,8 @@ satip_device_create( satip_device_info_t *info )
 
   htsmsg_destroy(conf);
 
+  satip_device_dbus_notify(sd, "start");
+
   return sd;
 }
 
@@ -457,6 +479,8 @@ satip_device_destroy( satip_device_t *sd )
 
   while ((lfe = TAILQ_FIRST(&sd->sd_frontends)) != NULL)
     satip_frontend_delete(lfe);
+
+  satip_device_dbus_notify(sd, "stop");
 
 #define FREEM(x) free(sd->sd_info.x)
   FREEM(myaddr);
