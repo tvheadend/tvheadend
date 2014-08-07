@@ -564,6 +564,11 @@ struct mpegts_input
   pthread_cond_t                  mi_table_cond;
   mpegts_table_feed_queue_t       mi_table_queue;
 
+  /* DBus */
+#if ENABLE_DBUS_1
+  int64_t                         mi_dbus_subs;
+#endif
+
   /*
    * Functions
    */

@@ -801,7 +801,7 @@ subscription_status_callback ( void *p )
   }
   if (old_count != count) {
     old_count = count;
-    dbus_emit_signal_s64("subscriptions", count);
+    dbus_emit_signal_s64("/status", "subscriptions", count);
   }
 }
 

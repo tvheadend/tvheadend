@@ -25,11 +25,11 @@
 #if ENABLE_DBUS_1
 
 void
-dbus_emit_signal(const char *sig_name, htsmsg_t *msg);
+dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg);
 void
-dbus_emit_signal_str(const char *sig_name, const char *value);
+dbus_emit_signal_str(const char *obj_name, const char *sig_name, const char *value);
 void
-dbus_emit_signal_s64(const char *sig_name, int64_t value);
+dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value);
 
 void dbus_server_init(void);
 void dbus_server_start(void);
