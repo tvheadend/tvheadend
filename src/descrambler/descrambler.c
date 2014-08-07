@@ -273,7 +273,11 @@ key_update( th_descrambler_runtime_t *dr, uint8_t key )
 {
   /* set the even (0) or odd (0x40) key index */
   dr->dr_key_index = key & 0x40;
-  dr->dr_key_start = dispatch_clock;
+  if (dr->dr_key_start)
+    dr->dr_key_start = dispatch_clock;
+  else
+    /* We don't knoe the exact start key switch time */
+    dr->dr_key_start = dispatch_clock - 60;
 }
 
 int
@@ -376,10 +380,20 @@ next2:
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (dr->dr_key_start == 0) {
-        tvhtrace("descrambler", "initial stream key set to %s for service \"%s\"",
-                                (ki & 0x40) ? "odd" : "even",
-                                ((mpegts_service_t *)t)->s_dvb_svcname);
-        key_update(dr, tsb[3]);
+        /* do not use the first TS packet to decide - it may be wrong */
+        if (dr->dr_buf.sb_ptr > 20 * 188) {
+          for (off = 0; off < 20 * 188; off += 188)
+            if ((dr->dr_buf.sb_data[off + 3] & 0xc0) != (ki & 0xc0))
+              break;
+          if (off >= 20 * 188) {
+            tvhtrace("descrambler", "initial stream key set to %s for service \"%s\"",
+                                    (ki & 0x40) ? "odd" : "even",
+                                    ((mpegts_service_t *)t)->s_dvb_svcname);
+            key_update(dr, ki);
+          } else {
+            sbuf_cut(&dr->dr_buf, 188);
+          }
+        }
       } else if (dr->dr_key_index != (ki & 0x40) &&
                  dr->dr_key_start + 2 < dispatch_clock) {
         tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
