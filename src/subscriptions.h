@@ -87,6 +87,12 @@ typedef struct th_subscription {
   service_instance_list_t ths_instances;
   struct service_instance *ths_current_instance;
 
+  /**
+   * Postpone
+   */
+  int    ths_postpone;
+  time_t ths_postpone_end;
+
 #if ENABLE_MPEGTS
   // Note: its a bit ugly linking MPEG-TS code directly here, but to do
   //       otherwise would probably require adding lots of additional
@@ -111,6 +117,8 @@ void subscription_unsubscribe(th_subscription_t *s);
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
 void subscription_reschedule(void);
+
+int subscription_set_postpone(int postpone);
 
 th_subscription_t *subscription_create_from_channel(struct channel *ch,
 						    unsigned int weight,

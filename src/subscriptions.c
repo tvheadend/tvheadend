@@ -45,6 +45,7 @@
 struct th_subscription_list subscriptions;
 struct th_subscription_list subscriptions_remove;
 static gtimer_t             subscription_reschedule_timer;
+static int                  subscription_postpone;
 
 /**
  *
@@ -87,7 +88,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);
 
-  sm = streaming_msg_create_code(SMT_GRACE, t->s_grace_delay);
+  sm = streaming_msg_create_code(SMT_GRACE, s->ths_postpone + t->s_grace_delay);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
 
   if(s->ths_start_message != NULL && t->s_streaming_status & TSS_PACKETS) {
@@ -188,6 +189,49 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 }
 
 
+static void
+subscription_show_none(th_subscription_t *s)
+{
+  channel_t *ch = s->ths_channel;
+  tvhlog(LOG_NOTICE, "subscription",
+	 "No transponder available for subscription \"%s\" "
+	 "to channel \"%s\"",
+	   s->ths_title, ch ? channel_get_name(ch) : "none");
+}
+
+static void
+subscription_show_info(th_subscription_t *s)
+{
+  char buf[512];
+  channel_t *ch = s->ths_channel;
+  source_info_t si;
+  size_t buflen;
+
+  s->ths_service->s_setsourceinfo(s->ths_service, &si);
+  snprintf(buf, sizeof(buf),
+	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
+	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
+	   "service: \"%s\"",
+	   s->ths_title, ch ? channel_get_name(ch) : "none", s->ths_weight,
+	   si.si_adapter  ?: "<N/A>",
+	   si.si_network  ?: "<N/A>",
+	   si.si_mux      ?: "<N/A>",
+	   si.si_provider ?: "<N/A>",
+	   si.si_service  ?: "<N/A>");
+  service_source_info_free(&si);
+
+  if (s->ths_hostname) {
+    buflen = strlen(buf);
+    snprintf(buf + buflen, sizeof(buf) - buflen,
+             ", hostname=\"%s\", username=\"%s\", client=\"%s\"",
+             s->ths_hostname ?: "<N/A>",
+             s->ths_username ?: "<N/A>",
+             s->ths_client   ?: "<N/A>");
+  }
+
+  tvhlog(LOG_INFO, "subscription", "%s", buf);
+}
+
 /**
  *
  */
@@ -209,25 +253,33 @@ subscription_reschedule(void)
   service_t *t;
   service_instance_t *si;
   streaming_message_t *sm;
-  int error;
+  int error, postpone = INT_MAX;
   assert(reenter == 0);
   reenter = 1;
 
   lock_assert(&global_lock);
 
-  gtimer_arm(&subscription_reschedule_timer, 
-	           subscription_reschedule_cb, NULL, 2);
-
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if (s->ths_mmi) continue;
     if (!s->ths_service && !s->ths_channel) continue;
+
+    /* Postpone the tuner decision */
+    /* Leave some time to wakeup tuners through DBus or so */
+    if (s->ths_postpone_end > dispatch_clock) {
+      if (postpone > s->ths_postpone_end - dispatch_clock)
+        postpone = s->ths_postpone_end - dispatch_clock;
+      streaming_message_t *sm;
+      sm = streaming_msg_create_code(SMT_GRACE, (s->ths_postpone_end - dispatch_clock) + 5);
+      streaming_target_deliver(s->ths_output, sm);
+      continue;
+    }
 
     t = s->ths_service;
     if(t != NULL && s->ths_current_instance != NULL) {
       /* Already got a service */
 
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
-	      continue; /* And it not bad, so we're happy */
+	continue; /* And it not bad, so we're happy */
 
       t->s_streaming_status = 0;
       t->s_status = SERVICE_IDLE;
@@ -255,26 +307,63 @@ subscription_reschedule(void)
       tvhtrace("subscription", "find instance for %s weight %d",
                s->ths_service->s_nicename, s->ths_weight);
     si = service_find_instance(s->ths_service, s->ths_channel,
-                               &s->ths_instances, &error, s->ths_weight);
+                               &s->ths_instances, &error, s->ths_weight,
+                               dispatch_clock > s->ths_postpone_end ?
+                                 0 : s->ths_postpone_end - dispatch_clock);
     s->ths_current_instance = si;
 
     if(si == NULL) {
       /* No service available */
-
       sm = streaming_msg_create_code(SMT_NOSTART, error);
       streaming_target_deliver(s->ths_output, sm);
+      subscription_show_none(s);
       continue;
     }
 
     subscription_link_service(s, si->si_s);
+    subscription_show_info(s);
   }
 
   while ((s = LIST_FIRST(&subscriptions_remove))) {
     LIST_REMOVE(s, ths_remove_link);
     subscription_unsubscribe(s);
   }
-  
+
+  if (!postpone)
+    postpone = 2;
+  gtimer_arm(&subscription_reschedule_timer,
+	           subscription_reschedule_cb, NULL, postpone);
+
   reenter = 0;
+}
+
+/**
+ *
+ */
+int
+subscription_set_postpone(int postpone)
+{
+  th_subscription_t *s;
+  time_t now = time(NULL);
+
+  /* some limits that make sense */
+  if (postpone < 0)
+    postpone = 0;
+  if (postpone > 120)
+    postpone = 120;
+  pthread_mutex_lock(&global_lock);
+  if (subscription_postpone != postpone) {
+    subscription_postpone = postpone;
+    LIST_FOREACH(s, &subscriptions, ths_global_link) {
+      s->ths_postpone = postpone;
+      if (s->ths_postpone_end > now && s->ths_postpone_end - now > postpone)
+        s->ths_postpone_end = now + postpone;
+    }
+    gtimer_arm(&subscription_reschedule_timer,
+  	       subscription_reschedule_cb, NULL, 0);
+  }
+  pthread_mutex_unlock(&global_lock);
+  return postpone;
 }
 
 /* **************************************************************************
@@ -492,6 +581,8 @@ subscription_create
   s->ths_total_err         = 0;
   s->ths_output            = st;
   s->ths_flags             = flags;
+  s->ths_postpone          = subscription_postpone;
+  s->ths_postpone_end      = dispatch_clock + s->ths_postpone;
 
   time(&s->ths_start);
 
@@ -530,36 +621,7 @@ subscription_create_from_channel_or_service
   if (ch)
     LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
 
-  // TODO: do we really need this here?
   subscription_reschedule();
-
-  if(s->ths_service == NULL) {
-    tvhlog(LOG_NOTICE, "subscription", 
-	   "No transponder available for subscription \"%s\" "
-	   "to channel \"%s\"",
-	   s->ths_title, ch ? channel_get_name(ch) : "none");
-  } else {
-    source_info_t si;
-
-    s->ths_service->s_setsourceinfo(s->ths_service, &si);
-
-    tvhlog(LOG_INFO, "subscription", 
-	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
-	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	   "service: \"%s\", hostname: \"%s\", username: \"%s\", client: \"%s\"",
-	   s->ths_title, ch ? channel_get_name(ch) : "none", weight,
-	   si.si_adapter  ?: "<N/A>",
-	   si.si_network  ?: "<N/A>",
-	   si.si_mux      ?: "<N/A>",
-	   si.si_provider ?: "<N/A>",
-	   si.si_service  ?: "<N/A>",
-	   hostname       ?: "<N/A>",
-	   username       ?: "<N/A>",
-	   client         ?: "<N/A>");
-
-    service_source_info_free(&si);
-  }
-
   return s;
 }
 
