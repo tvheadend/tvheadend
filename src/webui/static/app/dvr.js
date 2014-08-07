@@ -88,13 +88,6 @@ tvheadend.dvrDetails = function(entry) {
     content += '<hr>';
     content += '<div class="x-epg-meta">Status: ' + entry.status + '</div>';
 
-    if (entry.url != null && entry.filesize > 0) {
-        content += '<div class="x-epg-meta">' + '<a href="' + entry.url
-                + '" target="_blank">Download</a> '
-                + parseInt(entry.filesize / 1000000) + ' MB</div>';
-
-    }
-
     var win = new Ext.Window({
         title: entry.title,
         layout: 'fit',
@@ -473,6 +466,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             });
         }
     };
+    
+    function downloadSelected() {
+        var selectedKey = panel.selModel.selections.keys[0];
+        var entry = dvrStore.getById(selectedKey);
+        
+        window.location = entry.data.url;
+    }
 
     function abortSelected() {
         Ext.MessageBox.confirm('Message',
@@ -489,6 +489,14 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         iconCls: 'remove',
         text: 'Abort/unschedule selected',
         handler: abortSelected,
+        disabled: true
+    });
+    
+    var downloadButton = new Ext.Toolbar.Button({
+        tooltip: 'Download the selected recording',
+        iconCls: 'save',
+        text: 'Download',
+        handler: downloadSelected,
         disabled: true
     });
 
@@ -510,8 +518,15 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
         if (self.getCount() > 0) {
             deleteButton.enable();
             abortButton.enable();
+            
+            // It only makes sense to download one item at a time
+            if (self.getCount() === 1)
+                downloadButton.enable();
+            else
+                downloadButton.disable();
         }
         else {
+            downloadButton.disable();
             deleteButton.disable();
             abortButton.disable();
         }
@@ -532,8 +547,9 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
             abortButton
         ]);
     }
-    // Add the "Delete recordings" button to the others
+    // Add the "Download" and "Delete" button to the others
     else {
+        panelButtons.push(downloadButton);
         panelButtons.push(deleteButton);
     }
 
