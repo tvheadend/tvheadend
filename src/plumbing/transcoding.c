@@ -1253,6 +1253,7 @@ transcoder_input(void *opaque, streaming_message_t *sm)
     transcoder_stop(t);
     // Fallthrough
 
+  case SMT_GRACE:
   case SMT_SPEED:
   case SMT_SKIP:
   case SMT_TIMESHIFT_STATUS:

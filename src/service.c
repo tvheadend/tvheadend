@@ -598,6 +598,7 @@ service_start(service_t *t, int instance)
   if(t->s_grace_period != NULL)
     timeout = t->s_grace_period(t);
 
+  t->s_grace_delay = timeout;
   gtimer_arm(&t->s_receive_timer, service_data_timeout, t, timeout);
   return 0;
 }

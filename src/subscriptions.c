@@ -87,6 +87,9 @@ subscription_link_service(th_subscription_t *s, service_t *t)
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);
 
+  sm = streaming_msg_create_code(SMT_GRACE, t->s_grace_delay);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
+
   if(s->ths_start_message != NULL && t->s_streaming_status & TSS_PACKETS) {
 
     s->ths_state = SUBSCRIPTION_GOT_SERVICE;
@@ -331,6 +334,11 @@ subscription_input(void *opauqe, streaming_message_t *sm)
 
   if(s->ths_state == SUBSCRIPTION_TESTING_SERVICE) {
     // We are just testing if this service is good
+
+    if(sm->sm_type == SMT_GRACE) {
+      streaming_target_deliver(s->ths_output, sm);
+      return;
+    }
 
     if(sm->sm_type == SMT_START) {
       if(s->ths_start_message != NULL) 

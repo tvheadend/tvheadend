@@ -228,7 +228,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int run = 1;
   int started = 0;
   muxer_t *mux = NULL;
-  int timeouts = 0;
+  int timeouts = 0, grace = 20;
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
@@ -256,12 +256,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          if(err) {
-      tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-      run = 0;
-          }else if(timeouts >= 20) {
-      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
-      run = 0;
+          if (err) {
+              tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+              run = 0;
+          } else if(timeouts >= grace) {
+              tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+              run = 0;
           }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
@@ -287,7 +287,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       }
       break;
 
+    case SMT_GRACE:
+      grace = sm->sm_code < 5 ? 5 : grace;
+      break;
+
     case SMT_START:
+      grace = 10;
       if(!started) {
         tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
         http_output_content(hc, muxer_mime(mux, sm->sm_data));
