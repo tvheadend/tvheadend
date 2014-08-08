@@ -276,7 +276,27 @@ tvheadend.epg = function() {
         return '' + value;
     }
 
-    var epgCm = new Ext.grid.ColumnModel([actions, {
+    var epgCm = new Ext.grid.ColumnModel([actions, 
+        new Ext.ux.grid.ProgressColumn({
+            width: 100,
+            header: "Progress",
+            dataIndex: 'progress',
+            colored: false,
+            ceiling: 100,
+            tvh_renderer: function(value, meta, record, rowIndex, colIndex, store) {
+                var entry = record.data;
+                var start = entry.start;
+                var end = entry.end;
+                var duration = entry.duration; // seconds
+                var now = new Date();
+
+                // Only render a progress bar for currently running programmes
+                if (now <= end && now >= start)
+                    return (now - start) / 1000 / duration * 100;
+                else
+                    return "";
+            }
+        }), {
             width: 250,
             id: 'title',
             header: "Title",
