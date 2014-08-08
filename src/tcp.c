@@ -321,6 +321,8 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     if(x == 0)
       return ETIMEDOUT;
     if(x == -1) {
+      if (!tvheadend_running)
+        return ECONNRESET;
       if (ERRNO_AGAIN(errno))
         continue;
       return errno;
