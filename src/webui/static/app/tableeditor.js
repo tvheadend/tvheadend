@@ -139,6 +139,8 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
     });
 
     var grid = new Ext.grid.EditorGridPanel({
+        stateful: true,
+        stateId: dtable,
         title: title,
         iconCls: icon,
         plugins: plugins,
