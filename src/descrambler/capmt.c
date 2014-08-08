@@ -627,7 +627,11 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
 
   res = send(fd, buf, len, MSG_DONTWAIT);
   if (res < len) {
-    tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%li)", fd, res);
+#if ENABLE_ANDROID
+    tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%li)", fd, res); // Android bug, ssize_t is long int
+#else
+    tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%zi)", fd, res);
+#endif
     if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
       capmt_socket_close_lock(capmt, i);
       return -1;

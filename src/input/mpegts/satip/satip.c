@@ -29,12 +29,8 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 
-#if defined(PLATFORM_FREEBSD)
+#if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
 #include <sys/types.h>
-#include <sys/socket.h>
-#endif
-
-#if ENABLE_ANDROID
 #include <sys/socket.h>
 #endif
 
