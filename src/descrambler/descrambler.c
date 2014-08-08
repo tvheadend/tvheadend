@@ -409,8 +409,14 @@ next2:
        */
       if (dr->dr_buf.sb_ptr >= 3000 * 188) {
         sbuf_cut(&dr->dr_buf, 300 * 188);
-        tvhtrace("descrambler", "cannot decode packets for service \"%s\"",
-                 ((mpegts_service_t *)t)->s_dvb_svcname);
+        if (dr->dr_last_err + 10 < dispatch_clock) {
+          dr->dr_last_err = dispatch_clock;
+          tvherror("descrambler", "cannot decode packets for service \"%s\"",
+                   ((mpegts_service_t *)t)->s_dvb_svcname);
+        } else {
+          tvhtrace("descrambler", "cannot decode packets for service \"%s\"",
+                   ((mpegts_service_t *)t)->s_dvb_svcname);
+        }
       }
       sbuf_append(&dr->dr_buf, tsb, 188);
     }
