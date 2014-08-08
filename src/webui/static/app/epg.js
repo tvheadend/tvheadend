@@ -170,76 +170,9 @@ tvheadend.epgDetails = function(event) {
             }
         });
     }
-
-    function showAlternatives(s) {
-        var e = Ext.get('altbcast');
-        html = '';
-        if (s.getTotalCount() > 0) {
-            html += '<div class="x-epg-subtitle">Alternative Broadcasts</div>';
-            for (i = 0; i < s.getTotalCount(); i++) {
-                var ab = s.getAt(i).data;
-                var dt = Date.parseDate(ab.start, 'U');
-                html += '<div class="x-epg-desc">' + dt.format('l H:i')
-                        + '&nbsp;&nbsp;&nbsp;' + ab.channel + '</div>';
-            }
-        }
-        e.dom.innerHTML = html;
-    }
-    function showRelated(s) {
-        var e = Ext.get('related');
-        html = '';
-        if (s.getTotalCount() > 0) {
-            html += '<div class="x-epg-subtitle">Related Episodes</div>';
-            for (i = 0; i < s.getTotalCount(); i++) {
-                var ee = s.getAt(i).data;
-                html += '<div class="x-epg-desc">';
-                if (ee.episode)
-                    html += ee.episode + '&nbsp;&nbsp;&nbsp;';
-                html += ee.title;
-                if (ee.subtitle)
-                    html += ' : ' + ee.subtitle;
-                html += '</div>';
-            }
-        }
-        e.dom.innerHTML = html;
-    }
-
-    var ab = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'epgrelated',
-        autoLoad: false,
-        id: 'id',
-        baseParams: {
-            op: 'get',
-            id: event.id,
-            type: 'alternative'
-        },
-        fields: Ext.data.Record.create(['id', 'channel', 'start']),
-        listeners: {
-            'datachanged': showAlternatives
-        }
-    });
-    var re = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'epgrelated',
-        autoLoad: false,
-        id: 'uri',
-        baseParams: {
-            op: 'get',
-            id: event.id,
-            type: 'related'
-        },
-        fields: Ext.data.Record
-                .create(['uri', 'title', 'subtitle', 'episode']),
-        listeners: {
-            'datachanged': showRelated
-        }
-    });
 };
 
 tvheadend.epg = function() {
-    var xg = Ext.grid;
-
     var actions = new Ext.ux.grid.RowActions({
         header: '',
         width: 20,
