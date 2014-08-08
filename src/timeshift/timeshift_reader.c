@@ -336,9 +336,12 @@ static int _timeshift_read
       tvhlog(LOG_ERR, "timeshift", "ts %d could not read buffer", ts->id);
       return -1;
     }
-    tvhtrace("timeshift", "ts %d read msg %p (%ld)",
-             ts->id, *sm, r);
-
+#if ENABLE_ANDROID
+    tvhtrace("timeshift", "ts %d read msg %p (%ld)", ts->id, *sm, r);  // Android bug, ssize_t is long int
+#else
+    tvhtrace("timeshift", "ts %d read msg %p (%zd)", ts->id, *sm, r);
+#endif
+    
     /* Incomplete */
     if (r == 0) {
       lseek(*fd, *cur_off, SEEK_SET);
