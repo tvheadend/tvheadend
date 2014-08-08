@@ -340,8 +340,8 @@ subscription_reschedule(void)
 /**
  *
  */
-int
-subscription_set_postpone(int postpone)
+static int64_t
+subscription_set_postpone(void *aux, const char *path, int64_t postpone)
 {
   th_subscription_t *s;
   time_t now = time(NULL);
@@ -882,6 +882,7 @@ void
 subscription_init(void)
 {
   subscription_status_callback(NULL);
+  dbus_register_rpc_s64("postpone", NULL, subscription_set_postpone);
 }
 
 /**

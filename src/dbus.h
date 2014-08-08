@@ -31,6 +31,14 @@ dbus_emit_signal_str(const char *obj_name, const char *sig_name, const char *val
 void
 dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value);
 
+void
+dbus_register_rpc_s64(const char *call_name, void *opaque,
+                      int64_t (*fcn)(void *, const char *, int64_t));
+
+void
+dbus_register_rpc_str(const char *call_name, void *opaque,
+                      char *(*fcn)(void *, const char *, char *));
+
 void dbus_server_init(void);
 void dbus_server_start(void);
 void dbus_server_done(void);
@@ -44,7 +52,16 @@ dbus_emit_signal_str(const char *sig_name, const char *value) { }
 static inline void
 dbus_emit_signal_s64(const char *sig_name, int64_t value) { }
 
+static inline void
+dbus_register_rpc_s64(const char *call_name, void *opaque,
+                      int64_t (*fcn)(void *, const char *, int64_t)) { }
+
+static inline void
+dbus_register_rpc_str(const char *call_name, void *opaque,
+                      char *(*fcn)(void *, const char *, char *)) { }
+
 static inline void dbus_server_init(void) { }
+static inline void dbus_server_start(void) { }
 static inline void dbus_server_done(void) { }
 
 #endif

@@ -118,8 +118,6 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
 void subscription_reschedule(void);
 
-int subscription_set_postpone(int postpone);
-
 th_subscription_t *subscription_create_from_channel(struct channel *ch,
 						    unsigned int weight,
 						    const char *name,
