@@ -565,6 +565,8 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
     ]);
 
     var panel = new Ext.grid.GridPanel({
+        stateful: true,
+        stateId: dvrStore.url,
         loadMask: true,
         stripeRows: true,
         disableSelection: false,
