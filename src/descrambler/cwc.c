@@ -2146,11 +2146,11 @@ cwc_caid_update(mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
            mux, caid, caid, pid, pid, valid);
   pthread_mutex_lock(&cwc_mutex);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
-    if (cwc->cwc_running) {
+    if (valid < 0 || cwc->cwc_running) {
       LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
-        if (pcard->cwc_caid == caid) {
+        if (valid < 0 || pcard->cwc_caid == caid) {
           if (pcard->cwc_mux && pcard->cwc_mux != mux) continue;
-          if (valid) {
+          if (valid > 0) {
             pcard->cwc       = cwc;
             pcard->cwc_mux   = mux;
             descrambler_open_emm(mux, pcard, caid, cwc_emm);

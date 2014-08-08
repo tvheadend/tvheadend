@@ -573,6 +573,9 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   if (mux == NULL)
     return;
   tvhtrace("descrambler", "mux %p - flush tables", mux);
+#if ENABLE_CWC
+  cwc_caid_update(mux, 0, 0, -1);
+#endif
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
