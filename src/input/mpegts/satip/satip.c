@@ -55,6 +55,46 @@ satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
 #endif
 }
 
+static void
+satip_device_block( const char *addr, int block )
+{
+  extern const idclass_t satip_device_class;
+  tvh_hardware_t *th;
+  satip_device_t *sd;
+  satip_frontend_t *lfe;
+
+  pthread_mutex_lock(&global_lock);
+  TVH_HARDWARE_FOREACH(th) {
+    if (!idnode_is_instance(&th->th_id, &satip_device_class))
+      continue;
+    sd = (satip_device_t *)th;
+    if (strcmp(sd->sd_info.addr, addr) == 0) {
+      sd->sd_dbus_block = block < 0 ? 0 : block;
+      if (block < 0) {
+        TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+          mpegts_input_stop_all((mpegts_input_t *)lfe);
+      }
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+}
+
+static char *
+satip_device_addr( void *aux, const char *path, char *value )
+{
+  if (strcmp(path, "/stop") == 0) {
+    satip_device_block(value, -1);
+    return strdup("ok");
+  } else if (strcmp(path, "/disable") == 0) {
+    satip_device_block(value, 0);
+    return strdup("ok");
+  } else if (strcmp(path, "/allow") == 0) {
+    satip_device_block(value, 1);
+    return strdup("ok");
+  }
+  return strdup("err");
+}
+
 /*
  * SAT-IP client
  */
@@ -978,6 +1018,7 @@ void satip_init ( str_list_t *clients )
 {
   TAILQ_INIT(&satip_discoveries);
   satip_static_clients = clients;
+  dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
   satip_device_discovery_start();
 }
 

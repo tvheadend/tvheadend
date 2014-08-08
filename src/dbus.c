@@ -227,6 +227,9 @@ dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
   path = dbus_message_get_path(msg);
   if (path == NULL)
     return;
+  if (strncmp(path, "/org/tvheadend/", 15))
+    return;
+  path += 14;
   if (!dbus_message_iter_init(msg, &args))
     return;
   if (rpc->rpc_s64) {
