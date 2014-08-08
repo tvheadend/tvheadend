@@ -165,7 +165,7 @@ struct mpegts_table
    */
 
   LIST_ENTRY(mpegts_table) mt_link;
-  LIST_ENTRY(mpegts_table) mt_defer_link;
+  TAILQ_ENTRY(mpegts_table) mt_defer_link;
   mpegts_mux_t *mt_mux;
 
   char *mt_name;
@@ -378,7 +378,7 @@ struct mpegts_mux
 
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
-  LIST_HEAD(, mpegts_table)   mm_defer_tables;
+  TAILQ_HEAD(, mpegts_table)  mm_defer_tables;
   pthread_mutex_t             mm_tables_lock;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
 

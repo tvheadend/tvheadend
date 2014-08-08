@@ -594,8 +594,8 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
   mpegts_table_t *mt;
 
   pthread_mutex_lock(&mm->mm_tables_lock);
-  while ((mt = LIST_FIRST(&mm->mm_defer_tables)) != NULL) {
-    LIST_REMOVE(mt, mt_defer_link);
+  while ((mt = TAILQ_FIRST(&mm->mm_defer_tables)) != NULL) {
+    TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
     if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID && !mt->mt_destroyed) {
       mt->mt_defer_cmd = 0;
       if (!mt->mt_subscribed) {
