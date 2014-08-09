@@ -69,6 +69,8 @@ satip_device_block( const char *addr, int block )
       continue;
     sd = (satip_device_t *)th;
     if (strcmp(sd->sd_info.addr, addr) == 0) {
+      tvhinfo("satip", "address %s is %s", addr,
+              block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
       sd->sd_dbus_block = block < 0 ? 0 : block;
       if (block < 0) {
         TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
