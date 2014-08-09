@@ -346,6 +346,8 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
   th_subscription_t *s;
   time_t now = time(NULL);
 
+  if (strcmp(path, "set"))
+    return -1;
   /* some limits that make sense */
   if (postpone < 0)
     postpone = 0;
@@ -354,6 +356,7 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
   pthread_mutex_lock(&global_lock);
   if (subscription_postpone != postpone) {
     subscription_postpone = postpone;
+    tvhinfo("subscriptions", "postpone set to %d seconds", (int)postpone);
     LIST_FOREACH(s, &subscriptions, ths_global_link) {
       s->ths_postpone = postpone;
       if (s->ths_postpone_end > now && s->ths_postpone_end - now > postpone)
