@@ -471,7 +471,8 @@ main(int argc, char **argv)
               opt_ipv6         = 0,
               opt_tsfile_tuner = 0,
               opt_dump         = 0,
-              opt_xspf         = 0;
+              opt_xspf         = 0,
+              opt_dbus_session = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -504,6 +505,10 @@ main(int argc, char **argv)
 	                      "to your Tvheadend installation until you edit\n"
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
+#if ENABLE_DBUS_1
+    { 'e', "dbus_session", "DBus - use the session message bus instead system one",
+      OPT_BOOL, &opt_dbus_session },
+#endif
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
@@ -768,7 +773,7 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
-  dbus_server_init();
+  dbus_server_init(opt_dbus_session);
 
   intlconv_init();
   

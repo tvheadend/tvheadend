@@ -53,6 +53,7 @@ static struct dbus_rpc_list dbus_rpcs;
 static th_pipe_t dbus_pipe;
 static pthread_mutex_t dbus_lock;
 static int dbus_running;
+static int dbus_session;
 
 /**
  *
@@ -135,7 +136,7 @@ dbus_create_session(const char *name)
 
   dbus_error_init(&err);
 
-  conn = dbus_bus_get_private(DBUS_BUS_SESSION, &err);
+  conn = dbus_bus_get_private(dbus_session ? DBUS_BUS_SESSION : DBUS_BUS_SYSTEM, &err);
   if (dbus_error_is_set(&err)) {
     tvherror("dbus", "Connection error: %s", err.message);
     dbus_error_free(&err);
@@ -146,11 +147,13 @@ dbus_create_session(const char *name)
   if (dbus_error_is_set(&err)) {
     tvherror("dbus", "Name error: %s", err.message);
     dbus_error_free(&err);
+    dbus_connection_close(conn);
     dbus_connection_unref(conn);
     return NULL;
   }
   if (DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret) {
     tvherror("dbus", "Not primary owner");
+    dbus_connection_close(conn);
     dbus_connection_unref(conn);
     return NULL;
   }
@@ -429,8 +432,9 @@ dbus_server_thread(void *aux)
 pthread_t dbus_tid;
 
 void
-dbus_server_init(void)
+dbus_server_init(int session)
 {
+  dbus_session = session;
   pthread_mutex_init(&dbus_lock, NULL);
   TAILQ_INIT(&dbus_signals);
   LIST_INIT(&dbus_rpcs);
