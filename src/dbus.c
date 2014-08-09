@@ -243,8 +243,8 @@ dbus_reply_to_rpc(dbus_rpc_t *rpc, DBusMessage *msg, DBusConnection *conn)
     reply = dbus_message_new_method_return(msg);
     dbus_message_iter_init_append(reply, &args);
     dbus_message_iter_append_basic(&args, DBUS_TYPE_INT64, &param_s64);
-  } else if (rpc->rpc_s64) {
-    if (DBUS_TYPE_INT64 != dbus_message_iter_get_arg_type(&args))
+  } else if (rpc->rpc_str) {
+    if (DBUS_TYPE_STRING != dbus_message_iter_get_arg_type(&args))
       return;
     dbus_message_iter_get_basic(&args, &param_str);
     param_str = rpc->rpc_str(rpc->opaque, path, param_str);

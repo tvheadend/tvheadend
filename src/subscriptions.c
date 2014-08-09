@@ -346,7 +346,7 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
   th_subscription_t *s;
   time_t now = time(NULL);
 
-  if (strcmp(path, "set"))
+  if (strcmp(path, "/set"))
     return -1;
   /* some limits that make sense */
   if (postpone < 0)
