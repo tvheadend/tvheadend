@@ -376,7 +376,7 @@ satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
   lock_assert(&global_lock);
 
   if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
-  if (lfe->sf_device->sd_dbus_block) return 0;
+  if (lfe->sf_device->sd_dbus_allow <= 0) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
   /* check if the position is enabled */
   position = satip_satconf_get_position(lfe, mm);

@@ -62,20 +62,21 @@ satip_device_block( const char *addr, int block )
   tvh_hardware_t *th;
   satip_device_t *sd;
   satip_frontend_t *lfe;
+  int val = block < 0 ? 0 : block;
 
   pthread_mutex_lock(&global_lock);
   TVH_HARDWARE_FOREACH(th) {
     if (!idnode_is_instance(&th->th_id, &satip_device_class))
       continue;
     sd = (satip_device_t *)th;
-    if (strcmp(sd->sd_info.addr, addr) == 0) {
-      tvhinfo("satip", "address %s is %s", addr,
-              block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
-      sd->sd_dbus_block = block < 0 ? 0 : block;
+    if (strcmp(sd->sd_info.addr, addr) == 0 && val != sd->sd_dbus_allow) {
+      sd->sd_dbus_allow = val;
       if (block < 0) {
         TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
           mpegts_input_stop_all((mpegts_input_t *)lfe);
       }
+      tvhinfo("satip", "address %s is %s", addr,
+              block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
     }
   }
   pthread_mutex_unlock(&global_lock);
@@ -380,6 +381,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_max    = 32;
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
+  sd->sd_dbus_allow  = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
