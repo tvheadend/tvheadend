@@ -54,7 +54,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#if ENABLE_ANDROID
+#include <sys/vfs.h>
+#define statvfs statfs
+#define fstatvfs fstatfs
+#else
 #include <sys/statvfs.h>
+#endif
 #include "settings.h"
 #include <sys/time.h>
 #include <limits.h>

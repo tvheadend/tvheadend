@@ -34,7 +34,7 @@
 #include "tvhpoll.h"
 #include "upnp.h"
 
-#if defined(PLATFORM_FREEBSD)
+#if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
 #include <sys/types.h>
 #include <sys/socket.h>
 #endif

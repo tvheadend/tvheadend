@@ -33,14 +33,20 @@ CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
+ifeq ($(CONFIG_ANDROID),yes)
+LDFLAGS += -ldl -lm
+else
 LDFLAGS += -ldl -lpthread -lm
+endif
 ifeq ($(CONFIG_LIBICONV),yes)
 LDFLAGS += -liconv
 endif
 ifeq ($(PLATFORM), darwin)
 LDFLAGS += -framework CoreServices
 else
+ifeq ($(CONFIG_ANDROID),no)
 LDFLAGS += -lrt
+endif
 endif
 
 ifeq ($(COMPILER), clang)
