@@ -397,26 +397,28 @@ dbus_server_thread(void *aux)
       continue;
     }
 
-    dbus_connection_read_write(conn, 0);
-    msg = dbus_connection_pop_message(conn);
-    if (msg == NULL)
-      continue;
-
-    if (dbus_message_is_method_call(msg, "org.tvheadend", "ping")) {
-      dbus_reply_to_ping(msg, conn);
-      continue;
-    }
-
-    pthread_mutex_lock(&dbus_lock);
-    LIST_FOREACH(rpc, &dbus_rpcs, link)
-      if (dbus_message_is_method_call(msg, "org.tvheadend", rpc->call_name))
+    while (1) {
+      dbus_connection_read_write(conn, 0);
+      msg = dbus_connection_pop_message(conn);
+      if (msg == NULL)
         break;
-    pthread_mutex_unlock(&dbus_lock);
 
-    if (rpc)
-      dbus_reply_to_rpc(rpc, msg, conn);
+      if (dbus_message_is_method_call(msg, "org.tvheadend", "ping")) {
+        dbus_reply_to_ping(msg, conn);
+        continue;
+      }
 
-    dbus_message_unref(msg);
+      pthread_mutex_lock(&dbus_lock);
+      LIST_FOREACH(rpc, &dbus_rpcs, link)
+        if (dbus_message_is_method_call(msg, "org.tvheadend", rpc->call_name))
+          break;
+      pthread_mutex_unlock(&dbus_lock);
+
+      if (rpc)
+        dbus_reply_to_rpc(rpc, msg, conn);
+
+      dbus_message_unref(msg);
+    }
   }
 
   dbus_connection_safe_close(conn);
