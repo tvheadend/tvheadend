@@ -386,11 +386,12 @@ int dvr_sort_start_ascending(const void *A, const void *B);
 /**
  *
  */
-void dvr_autorec_add(const char *dvr_config_name,
-                     const char *title, const char *channel,
+void dvr_autorec_add(const char *config_name,
+                     const char *title, channel_t *ch,
                      const char *tag, epg_genre_t *content_type,
                      const int min_duration, const int max_duration,
-                     const char *creator, const char *comment);
+                     int approx_time, int days_of_week,
+                     const char *creator, dvr_prio_t pri, const char *comment);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,
                                  epg_broadcast_t *event,
@@ -403,6 +404,7 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
+int autorec_destroy_by_id(char *id, int delconf);
 
 dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 

@@ -391,17 +391,17 @@ static dvr_entry_t *_dvr_entry_create (
   de->de_bcast   = e;
   if (e) e->getref((epg_object_t*)e);
 
+  if(dae != NULL) {
+    de->de_autorec = dae;
+    LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
+  }
+
   dvr_entry_link(de);
 
   t = de->de_start - de->de_start_extra * 60;
   localtime_r(&t, &tm);
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
-
-  if(dae != NULL) {
-    de->de_autorec = dae;
-    LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
-  }
 
   tvhlog(LOG_INFO, "dvr", "entry %d \"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
