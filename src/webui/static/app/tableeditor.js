@@ -108,7 +108,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
     var saveBtn = new Ext.Toolbar.Button({
         tooltip: 'Save any changes made (Changed cells have red borders)',
         iconCls: 'save',
-        text: "Save changes",
+        text: "Save",
         handler: saveChanges,
         disabled: true
     });
@@ -116,7 +116,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
     var rejectBtn = new Ext.Toolbar.Button({
         tooltip: 'Revert any changes made (Changed cells have red borders)',
         iconCls: 'undo',
-        text: "Revert changes",
+        text: "Undo",
         handler: function() {
             store.rejectChanges();
         },
@@ -139,6 +139,8 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
     });
 
     var grid = new Ext.grid.EditorGridPanel({
+        stateful: true,
+        stateId: dtable,
         title: title,
         iconCls: icon,
         plugins: plugins,
@@ -151,6 +153,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
         selModel: selModel,
         stripeRows: true,
         tbar: [
+            saveBtn, rejectBtn, '-',
             {
                 tooltip: 'Create a new entry on the server. '
                         + 'The new entry is initially disabled so it must be enabled '
@@ -158,7 +161,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
                 iconCls: 'add',
                 text: 'Add entry',
                 handler: addRecord
-            }, '-', delButton, '-', saveBtn, rejectBtn, '->', {
+            }, '-', delButton, '->', {
                 text: 'Help',
                 handler: function() {
                     new tvheadend.help(title, helpContent);
