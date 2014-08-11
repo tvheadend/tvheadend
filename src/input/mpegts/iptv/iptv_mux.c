@@ -81,6 +81,14 @@ const idclass_t iptv_mux_class =
   .ic_caption    = "IPTV Multiplex",
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Priority",
+      .off      = offsetof(iptv_mux_t, mm_iptv_priority),
+      .def.i    = 0,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "iptv_url",
       .name     = "URL",
