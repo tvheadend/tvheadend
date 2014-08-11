@@ -351,11 +351,14 @@ dbus_server_thread(void *aux)
   uint8_t         c;
 
   conn = dbus_create_session("org.tvheadend.server");
-  if (conn == NULL)
+  if (conn == NULL) {
+    dbus_running = 0;
     return NULL;
+  }
 
   notify = dbus_create_session("org.tvheadend.notify");
   if (notify == NULL) {
+    dbus_running = 0;
     dbus_connection_safe_close(conn);
     return NULL;
   }
@@ -368,6 +371,7 @@ dbus_server_thread(void *aux)
   tvhpoll_add(poll, &ev, 1);
   memset(&ev, 0, sizeof(ev));
   if (!dbus_connection_get_unix_fd(conn, &ev.fd)) {
+    dbus_running = 0;
     tvhpoll_destroy(poll);
     dbus_connection_safe_close(notify);
     dbus_connection_safe_close(conn);
