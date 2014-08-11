@@ -39,7 +39,9 @@ int dvr_iov_max;
 struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
 
+#if ENABLE_DBUS_1
 static gtimer_t dvr_dbus_timer;
+#endif
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
