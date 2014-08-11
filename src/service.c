@@ -611,7 +611,7 @@ service_start(service_t *t, int instance, int postpone)
 service_instance_t *
 service_find_instance
   (service_t *s, channel_t *ch, service_instance_list_t *sil,
-   int *error, int weight, int postpone)
+   int *error, int weight, int flags, int postpone)
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
@@ -626,11 +626,11 @@ service_find_instance
   if (ch) {
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
-      if (s->s_is_enabled(s))
-        s->s_enlist(s, sil);
+      if (s->s_is_enabled(s, flags))
+        s->s_enlist(s, sil, flags);
     }
   } else {
-    s->s_enlist(s, sil);
+    s->s_enlist(s, sil, flags);
   }
 
   /* Clean */

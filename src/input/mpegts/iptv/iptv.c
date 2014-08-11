@@ -127,7 +127,7 @@ iptv_input_is_free ( mpegts_input_t *mi )
 }
 
 static int
-iptv_input_get_weight ( mpegts_input_t *mi )
+iptv_input_get_weight ( mpegts_input_t *mi, int flags )
 {
   int c = 0, w = 0;
   const th_subscription_t *ths;
@@ -170,10 +170,16 @@ iptv_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-iptv_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+iptv_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   iptv_mux_t *im = (iptv_mux_t *)mm;
   iptv_network_t *in = (iptv_network_t *)im->mm_network;
+  if (flags & SUBSCRIPTION_STREAMING) {
+    if (im->mm_iptv_streaming_priority > 0)
+      return im->mm_iptv_streaming_priority;
+    if (in->in_streaming_priority > 0)
+      return in->in_streaming_priority;
+  }
   return im->mm_iptv_priority > 0 ? im->mm_iptv_priority : in->in_priority;
 }
 
@@ -413,6 +419,14 @@ const idclass_t iptv_network_class = {
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_INT,
+      .id       = "spriority",
+      .name     = "Streaming Priority",
+      .off      = offsetof(iptv_network_t, in_streaming_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_U32,
       .id       = "max_streams",
       .name     = "Max Input Streams",
@@ -478,6 +492,7 @@ iptv_network_create0
 
   /* Init Network */
   in->in_priority       = 1;
+  in->in_streaming_priority = 1;
   if (!mpegts_network_create0((mpegts_network_t *)in,
                               &iptv_network_class,
                               uuid, NULL, conf)) {

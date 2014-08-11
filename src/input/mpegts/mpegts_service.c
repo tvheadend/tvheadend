@@ -164,7 +164,7 @@ const idclass_t mpegts_service_class =
  * Check the service is enabled
  */
 static int
-mpegts_service_is_enabled(service_t *t)
+mpegts_service_is_enabled(service_t *t, int flags)
 {
   mpegts_service_t *s = (mpegts_service_t*)t;
   mpegts_mux_t *mm    = s->s_dvb_mux;
@@ -191,7 +191,7 @@ mpegts_service_config_save ( service_t *t )
  * Service instance list
  */
 static void
-mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
+mpegts_service_enlist(service_t *t, struct service_instance_list *sil, int flags)
 {
   int p = 0, w;
   mpegts_service_t      *s = (mpegts_service_t*)t;
@@ -215,8 +215,8 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil)
       w = -1;
       p = -1;
     } else {
-      w = mmi->mmi_input->mi_get_weight(mmi->mmi_input);
-      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input, mmi->mmi_mux);
+      w = mmi->mmi_input->mi_get_weight(mmi->mmi_input, flags);
+      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input, mmi->mmi_mux, flags);
     }
 
     service_instance_add(sil, t, mmi->mmi_input->mi_instance, p, w);

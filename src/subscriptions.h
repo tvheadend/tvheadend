@@ -26,6 +26,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
 #define SUBSCRIPTION_NONE       0x2
 #define SUBSCRIPTION_FULLMUX    0x4
+#define SUBSCRIPTION_STREAMING  0x8
 
 /* Some internal prioties */
 #define SUBSCRIPTION_PRIO_SCAN_IDLE   1 ///< Idle scanning

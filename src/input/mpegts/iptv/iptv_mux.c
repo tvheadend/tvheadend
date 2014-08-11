@@ -89,6 +89,14 @@ const idclass_t iptv_mux_class =
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_INT,
+      .id       = "spriority",
+      .name     = "Streaming Priority",
+      .off      = offsetof(iptv_mux_t, mm_iptv_streaming_priority),
+      .def.i    = 0,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "iptv_url",
       .name     = "URL",

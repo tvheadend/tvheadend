@@ -715,7 +715,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   streaming_target_t *st;
   dvr_config_t *cfg;
   muxer_container_type_t mc;
-  int flags;
+  int flags = SUBSCRIPTION_STREAMING;
   const char *str;
   size_t qsize;
   const char *name;
@@ -739,13 +739,12 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
+    flags |= SUBSCRIPTION_RAW_MPEGTS;
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
     st = tsfix;
-    flags = 0;
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
@@ -794,7 +793,8 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_mux(mm, weight ?: 10, "HTTP", &sq.sq_st,
                                    SUBSCRIPTION_RAW_MPEGTS |
-                                   SUBSCRIPTION_FULLMUX,
+                                   SUBSCRIPTION_FULLMUX |
+                                   SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
                                    http_arg_get(&hc->hc_args, "User-Agent"), NULL);
   if (!s)
@@ -826,7 +826,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   streaming_target_t *tr = NULL;
 #endif
   dvr_config_t *cfg;
-  int flags;
+  int flags = SUBSCRIPTION_STREAMING;
   muxer_container_type_t mc;
   char *str;
   size_t qsize;
@@ -851,7 +851,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
+    flags |= SUBSCRIPTION_RAW_MPEGTS;
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
@@ -865,7 +865,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 #endif
     tsfix = tsfix_create(gh);
     st = tsfix;
-    flags = 0;
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);

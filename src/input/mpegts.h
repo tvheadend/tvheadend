@@ -395,7 +395,7 @@ struct mpegts_mux
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
-  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
+  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w, int flags);
   void (*mm_stop)             (mpegts_mux_t *mm, int force);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
@@ -520,6 +520,7 @@ struct mpegts_input
   char *mi_name;
 
   int mi_priority;
+  int mi_streaming_priority;
 
   int mi_ota_epg;
 
@@ -576,8 +577,8 @@ struct mpegts_input
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
-  int  (*mi_get_weight)     (mpegts_input_t*);
-  int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm);
+  int  (*mi_get_weight)     (mpegts_input_t*, int flags);
+  int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
@@ -752,8 +753,8 @@ void mpegts_input_recv_packets
 
 int mpegts_input_is_free ( mpegts_input_t *mi );
 
-int mpegts_input_get_weight ( mpegts_input_t *mi );
-int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm );
+int mpegts_input_get_weight ( mpegts_input_t *mi, int flags );
+int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
 int mpegts_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm );
 
 void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );

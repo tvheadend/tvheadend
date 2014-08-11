@@ -107,7 +107,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     service_mapper_stat.ignore++;
 
     /* Disabled */
-    if (!s->s_is_enabled(s)) continue;
+    if (!s->s_is_enabled(s, 0)) continue;
     tvhtrace("service_mapper", "  enabled");
 
     /* Get service info */
