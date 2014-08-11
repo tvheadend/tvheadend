@@ -195,6 +195,8 @@ streaming_target_t *hs_transcoder;
 
   int hs_dropstats[PKT_NTYPES];
 
+  int hs_wait_for_video;
+
   int hs_90khz;
 
   int hs_queue_depth;
@@ -2674,15 +2676,27 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 static void
 htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 {
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *streams = htsmsg_create_list();
-  htsmsg_t *c;
-  htsmsg_t *sourceinfo = htsmsg_create_map();
+  htsmsg_t *m,*streams, *c, *sourceinfo;
   const char *type;
   int i;
-  const source_info_t *si = &ss->ss_si;
+  const source_info_t *si;
+
   tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
 
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+    if (ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
+      if (ssc->ssc_width == 0 || ssc->ssc_height == 0) {
+        hs->hs_wait_for_video = 1;
+        return;
+      }
+    }
+  }
+  hs->hs_wait_for_video = 0;
+
+  m = htsmsg_create_map();
+  streams = htsmsg_create_list();
+  sourceinfo = htsmsg_create_map();
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
 
@@ -2729,6 +2743,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   
   htsmsg_add_msg(m, "streams", streams);
 
+  si = &ss->ss_si;
   if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
   if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
@@ -2879,6 +2894,8 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
+    if (hs->hs_wait_for_video)
+      break;
     if (!hs->hs_first)
       tvhdebug("htsp", "%s - first packet", hs->hs_htsp->htsp_logname);
     hs->hs_first = 1;
