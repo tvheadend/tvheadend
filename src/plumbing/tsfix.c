@@ -54,6 +54,7 @@ typedef struct tsfix {
 
   struct tfstream_list tf_streams;
   int tf_hasvideo;
+  int tf_wait_for_video;
   int64_t tf_tsref;
   time_t tf_start_time;
 
@@ -111,19 +112,23 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
 static void
 tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 {
-  int i;
-  int hasvideo = 0;
+  int i, hasvideo = 0, vwait = 0;
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     tsfix_add_stream(tf, ssc->ssc_index, ssc->ssc_type);
-    hasvideo |= SCT_ISVIDEO(ssc->ssc_type);
+    if (SCT_ISVIDEO(ssc->ssc_type)) {
+      hasvideo = 1;
+      if (ssc->ssc_width == 0 || ssc->ssc_height == 0)
+        vwait = 1;
+    }
   }
 
   TAILQ_INIT(&tf->tf_ptsq);
 
   tf->tf_tsref = PTS_UNSET;
   tf->tf_hasvideo = hasvideo;
+  tf->tf_wait_for_video = vwait;
 }
 
 
@@ -355,11 +360,15 @@ tsfix_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
+    if (tf->tf_wait_for_video)
+      return;
     tsfix_input_packet(tf, sm);
     return;
 
   case SMT_START:
     tsfix_start(tf, sm->sm_data);
+    if (tf->tf_wait_for_video)
+      return;
     break;
 
   case SMT_STOP:
