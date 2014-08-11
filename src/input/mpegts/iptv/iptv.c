@@ -170,6 +170,14 @@ iptv_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
+iptv_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  iptv_mux_t *im = (iptv_mux_t *)mm;
+  iptv_network_t *in = (iptv_network_t *)im->mm_network;
+  return in->in_priority;
+}
+
+static int
 iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int ret = SM_CODE_TUNING_FAILED;
@@ -397,6 +405,14 @@ const idclass_t iptv_network_class = {
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Priority",
+      .off      = offsetof(iptv_network_t, in_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_U32,
       .id       = "max_streams",
       .name     = "Max Input Streams",
@@ -457,12 +473,17 @@ iptv_network_t *
 iptv_network_create0
   ( const char *uuid, htsmsg_t *conf )
 {
-  iptv_network_t *in;
+  iptv_network_t *in = calloc(1, sizeof(*in));
   htsmsg_t *c;
 
   /* Init Network */
-  if (!(in = mpegts_network_create(iptv_network, uuid, NULL, conf)))
+  in->in_priority       = 1;
+  if (!mpegts_network_create0((mpegts_network_t *)in,
+                              &iptv_network_class,
+                              uuid, NULL, conf)) {
+    free(in);
     return NULL;
+  }
   in->mn_create_service = iptv_network_create_service;
   in->mn_mux_class      = iptv_network_mux_class;
   in->mn_mux_create2    = iptv_network_create_mux2;
@@ -541,6 +562,7 @@ void iptv_init ( void )
   iptv_input->mi_is_free        = iptv_input_is_free;
   iptv_input->mi_get_weight     = iptv_input_get_weight;
   iptv_input->mi_get_grace      = iptv_input_get_grace;
+  iptv_input->mi_get_priority   = iptv_input_get_priority;
   iptv_input->mi_display_name   = iptv_input_display_name;
   iptv_input->mi_enabled        = 1;
 

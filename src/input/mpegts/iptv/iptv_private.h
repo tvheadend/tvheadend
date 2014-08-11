@@ -64,6 +64,8 @@ struct iptv_network
   int in_bps;
   int in_bw_limited;
 
+  int in_priority;
+
   uint32_t in_max_streams;
   uint32_t in_max_bandwidth;
   uint32_t in_max_timeout;
