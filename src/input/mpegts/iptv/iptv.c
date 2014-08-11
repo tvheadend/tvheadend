@@ -174,7 +174,7 @@ iptv_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   iptv_mux_t *im = (iptv_mux_t *)mm;
   iptv_network_t *in = (iptv_network_t *)im->mm_network;
-  return in->in_priority;
+  return im->mm_iptv_priority > 0 ? im->mm_iptv_priority : in->in_priority;
 }
 
 static int

@@ -77,6 +77,7 @@ struct iptv_mux
 {
   mpegts_mux_t;
 
+  int                   mm_iptv_priority;
   int                   mm_iptv_fd;
   udp_connection_t     *mm_iptv_connection;
   char                 *mm_iptv_url;
