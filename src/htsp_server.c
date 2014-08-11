@@ -159,7 +159,7 @@ typedef struct htsp_connection {
   struct htsp_file_list htsp_files;
   int htsp_file_id;
 
-  uint32_t htsp_granted_access;
+  access_t *htsp_granted_access;
 
   uint8_t htsp_challenge[32];
 
@@ -431,19 +431,10 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 /**
  * Cehck if user can access the channel
  */
-static int
-htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch) {
-  if (!access_tag_only(htsp->htsp_username ?: ""))
-    return 1;
-  else {
-    if (!ch) return 0;
-    channel_tag_mapping_t *ctm;
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      if (!strcmp(htsp->htsp_username ?: "", ctm->ctm_tag->ct_name))
-        return 1;
-    }
-  }
-  return 0;
+static inline int
+htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
+{
+  return channel_access(ch, htsp->htsp_granted_access, htsp->htsp_username);
 }
 
 #define HTSP_CHECK_CHANNEL_ACCESS(htsp, ch)\
@@ -838,7 +829,7 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *r = htsmsg_create_map();
 
-  if(!(htsp->htsp_granted_access & HTSP_PRIV_MASK))
+  if(!(htsp->htsp_granted_access->aa_rights & HTSP_PRIV_MASK))
     htsmsg_add_u32(r, "noaccess", 1);
   
   return r;
@@ -1972,9 +1963,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   const char *username;
   const void *digest;
   size_t digestlen;
-  uint32_t access;
+  access_t *rights;
   int privgain;
-  int match;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return;
@@ -1990,15 +1980,18 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
     return;
 
-  access = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer, &match);
+  rights = access_get_hashed(username, digest, htsp->htsp_challenge,
+			     (struct sockaddr *)htsp->htsp_peer);
 
-  privgain = (access | htsp->htsp_granted_access) != htsp->htsp_granted_access;
+  privgain = (rights->aa_rights |
+              htsp->htsp_granted_access->aa_rights) !=
+                htsp->htsp_granted_access->aa_rights;
     
   if(privgain)
     tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
 
-  htsp->htsp_granted_access |= access;
+  access_destroy(htsp->htsp_granted_access);
+  htsp->htsp_granted_access = rights;
 }
 
 /**
@@ -2081,7 +2074,7 @@ readmsg:
       for(i = 0; i < NUM_METHODS; i++) {
 	      if(!strcmp(method, htsp_methods[i].name)) {
 
-	        if((htsp->htsp_granted_access & htsp_methods[i].privmask) != 
+	        if((htsp->htsp_granted_access->aa_rights & htsp_methods[i].privmask) !=
 	           htsp_methods[i].privmask) {
 
       	    pthread_mutex_unlock(&global_lock);
@@ -2281,6 +2274,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   free(htsp.htsp_peername);
   free(htsp.htsp_username);
   free(htsp.htsp_clientname);
+  access_destroy(htsp.htsp_granted_access);
   *opaque = NULL;
 }
 

@@ -22,6 +22,8 @@
 #include "epg.h"
 #include "idnode.h"
 
+struct access;
+
 RB_HEAD(channel_tree, channel);
 
 LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
@@ -146,6 +148,8 @@ int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
+
+int channel_access(channel_t *ch, struct access *a, const char *username);
 
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);
 

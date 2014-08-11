@@ -368,6 +368,9 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   const char *host;
   muxer_container_type_t mc;
 
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
     mc = dvr_config_find_by_name_default("")->dvr_mc;
@@ -431,6 +434,8 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel))
+      continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
@@ -527,6 +532,10 @@ http_channel_list_playlist(http_connection_t *hc)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
+
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+      continue;
+
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
@@ -566,6 +575,10 @@ http_dvr_list_playlist(http_connection_t *hc)
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     fsize = dvr_get_filesize(de);
     if(!fsize)
+      continue;
+
+    if (de->de_channel &&
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
     durration  = de->de_stop - de->de_start;
@@ -721,6 +734,9 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *name;
   char addrbuf[50];
 
+  if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   cfg = dvr_config_find_by_name_default("");
 
   /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
@@ -788,6 +804,9 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   char addrbuf[50];
   muxer_config_t muxcfg = { 0 };
 
+  if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   streaming_queue_init(&sq, SMT_PACKET);
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
@@ -832,6 +851,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+    return HTTP_STATUS_UNAUTHORIZED;
 
   cfg = dvr_config_find_by_name_default("");
 
