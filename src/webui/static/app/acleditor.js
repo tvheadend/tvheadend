@@ -41,7 +41,7 @@ tvheadend.acleditor = function() {
                 width: 100
             }, {
                 xtype: 'checkcolumn',
-                header: "All Configs (VR)",
+                header: "User Configs (VR)",
                 dataIndex: 'dvrallcfg',
                 width: 100
             }, {
