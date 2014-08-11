@@ -62,6 +62,7 @@ void
 dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
 {
   dbus_sig_t *ds = calloc(1, sizeof(dbus_sig_t));
+  int unused __attribute__((unused));
   size_t l;
 
   if (!dbus_running) {
@@ -77,7 +78,7 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
   pthread_mutex_lock(&dbus_lock);
   TAILQ_INSERT_TAIL(&dbus_signals, ds, link);
   pthread_mutex_unlock(&dbus_lock);
-  (void)write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
+  unused = write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
 }
 
 void
