@@ -77,7 +77,7 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
   pthread_mutex_lock(&dbus_lock);
   TAILQ_INSERT_TAIL(&dbus_signals, ds, link);
   pthread_mutex_unlock(&dbus_lock);
-  write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
+  (void)write(dbus_pipe.wr, "s", 1); /* do not wait here - no tvh_write() */
 }
 
 void

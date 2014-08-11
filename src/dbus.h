@@ -46,11 +46,11 @@ void dbus_server_done(void);
 #else
 
 static inline void
-dbus_emit_signal(const char *sig_name, htsmsg_t *msg) { htsmsg_destroy(msg); }
+dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg) { htsmsg_destroy(msg); }
 static inline void
-dbus_emit_signal_str(const char *sig_name, const char *value) { }
+dbus_emit_signal_str(const char *obj_name, const char *sig_name, const char *value) { }
 static inline void
-dbus_emit_signal_s64(const char *sig_name, int64_t value) { }
+dbus_emit_signal_s64(const char *obj_name, const char *sig_name, int64_t value) { }
 
 static inline void
 dbus_register_rpc_s64(const char *call_name, void *opaque,
