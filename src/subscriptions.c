@@ -308,6 +308,7 @@ subscription_reschedule(void)
                s->ths_service->s_nicename, s->ths_weight);
     si = service_find_instance(s->ths_service, s->ths_channel,
                                &s->ths_instances, &error, s->ths_weight,
+                               s->ths_flags,
                                dispatch_clock > s->ths_postpone_end ?
                                  0 : s->ths_postpone_end - dispatch_clock);
     s->ths_current_instance = si;
@@ -716,7 +717,7 @@ subscription_create_from_mux
   int r;
 
   /* Tune */
-  r = mm->mm_start(mm, name, weight);
+  r = mm->mm_start(mm, name, weight, flags);
   if (r) {
     if (err) *err = r;
     return NULL;

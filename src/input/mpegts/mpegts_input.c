@@ -161,6 +161,14 @@ const idclass_t mpegts_input_class =
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_INT,
+      .id       = "spriority",
+      .name     = "Streaming Priority",
+      .off      = offsetof(mpegts_input_t, mi_streaming_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "displayname",
       .name     = "Name",
@@ -221,7 +229,7 @@ mpegts_input_is_free ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_get_weight ( mpegts_input_t *mi )
+mpegts_input_get_weight ( mpegts_input_t *mi, int flags )
 {
   const mpegts_mux_instance_t *mmi;
   const service_t *s;
@@ -249,8 +257,12 @@ mpegts_input_get_weight ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
+  if (flags & SUBSCRIPTION_STREAMING) {
+    if (mi->mi_streaming_priority > 0)
+      return mi->mi_streaming_priority;
+  }
   return mi->mi_priority;
 }
 

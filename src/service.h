@@ -271,9 +271,9 @@ typedef struct service {
 
   LIST_HEAD(, th_subscription) s_subscriptions;
 
-  int (*s_is_enabled)(struct service *t);
+  int (*s_is_enabled)(struct service *t, int flags);
 
-  void (*s_enlist)(struct service *s, service_instance_list_t *sil);
+  void (*s_enlist)(struct service *s, service_instance_list_t *sil, int flags);
 
   int (*s_start_feed)(struct service *s, int instance);
 
@@ -469,8 +469,8 @@ service_t *service_find(const char *identifier);
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
                                           service_instance_list_t *sil,
-                                          int *error,
-                                          int weight, int postpone);
+                                          int *error, int weight,
+                                          int flags, int postpone);
 
 elementary_stream_t *service_stream_find_(service_t *t, int pid);
 

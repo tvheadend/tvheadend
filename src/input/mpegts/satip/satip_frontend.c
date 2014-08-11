@@ -314,16 +314,16 @@ satip_frontend_is_free ( mpegts_input_t *mi )
 }
 
 static int
-satip_frontend_get_weight ( mpegts_input_t *mi )
+satip_frontend_get_weight ( mpegts_input_t *mi, int flags )
 {
-  return mpegts_input_get_weight(mi);
+  return mpegts_input_get_weight(mi, flags);
 }
 
 static int
-satip_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+satip_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
-  int r = mpegts_input_get_priority(mi, mm);
+  int r = mpegts_input_get_priority(mi, mm, flags);
   if (lfe->sf_positions)
     r += satip_satconf_get_priority(lfe, mm);
   return r;

@@ -65,6 +65,7 @@ struct iptv_network
   int in_bw_limited;
 
   int in_priority;
+  int in_streaming_priority;
 
   uint32_t in_max_streams;
   uint32_t in_max_bandwidth;
@@ -78,6 +79,7 @@ struct iptv_mux
   mpegts_mux_t;
 
   int                   mm_iptv_priority;
+  int                   mm_iptv_streaming_priority;
   int                   mm_iptv_fd;
   udp_connection_t     *mm_iptv_connection;
   char                 *mm_iptv_url;

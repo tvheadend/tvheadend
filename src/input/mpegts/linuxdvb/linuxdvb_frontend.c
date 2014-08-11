@@ -223,21 +223,21 @@ linuxdvb_frontend_is_free ( mpegts_input_t *mi )
 }
 
 static int
-linuxdvb_frontend_get_weight ( mpegts_input_t *mi )
+linuxdvb_frontend_get_weight ( mpegts_input_t *mi, int flags )
 {
   int weight = 0;
   linuxdvb_adapter_t *la = ((linuxdvb_frontend_t*)mi)->lfe_adapter;
   linuxdvb_frontend_t *lfe;
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    weight = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe));
+    weight = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe, flags));
   return weight;
 }
 
 static int
-linuxdvb_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+linuxdvb_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  int r = mpegts_input_get_priority(mi, mm);
+  int r = mpegts_input_get_priority(mi, mm, flags);
   if (lfe->lfe_satconf)
     r += linuxdvb_satconf_get_priority(lfe->lfe_satconf, mm);
   return r;

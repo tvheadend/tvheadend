@@ -492,7 +492,7 @@ mpegts_mux_start1( mpegts_mux_instance_t *mmi )
 
 static int
 mpegts_mux_start
-  ( mpegts_mux_t *mm, const char *reason, int weight )
+  ( mpegts_mux_t *mm, const char *reason, int weight, int flags )
 {
   int havefree = 0, enabled = 0, index, index2, weight2, count, size = 0;
   char buf[256];
@@ -549,8 +549,8 @@ mpegts_mux_start
     tvhtrace("mpegts", "%s - found mmi %p", buf, mmi);
 
     aweight = ((int64_t )mmi->mmi_input->mi_get_priority(mmi->mmi_input,
-                                                         mmi->mmi_mux) << 32) |
-                         mmi->mmi_input->mi_get_weight(mmi->mmi_input);
+                                                         mmi->mmi_mux, flags) << 32) |
+                         mmi->mmi_input->mi_get_weight(mmi->mmi_input, flags);
     for (index = 0; index < count; index++) {
       if (allw[index] >= aweight)
         break;

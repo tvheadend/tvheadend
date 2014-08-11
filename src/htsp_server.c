@@ -1545,7 +1545,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
-					      st, 0,
+					      st,
+					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
 					      htsp->htsp_username,
 					      htsp->htsp_clientname);
