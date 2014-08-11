@@ -37,6 +37,7 @@
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"
+#include "htsmsg.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -155,6 +156,16 @@ access_ticket_verify(const char *id, const char *resource)
 /**
  *
  */
+void
+access_destroy(access_t *a)
+{
+  htsmsg_destroy(a->aa_chtags);
+  free(a);
+}
+
+/**
+ *
+ */
 static int
 netmask_verify(access_entry_t *ae, struct sockaddr *src)
 {
@@ -264,24 +275,96 @@ access_verify(const char *username, const char *password,
   return (mask & bits) == mask ? 0 : -1;
 }
 
+/*
+ *
+ */
+static void
+access_update(access_t *a, access_entry_t *ae)
+{
+  if(ae->ae_chmin || ae->ae_chmax) {
+    if(a->aa_chmin || a->aa_chmax) {
+      if (a->aa_chmin < ae->ae_chmin)
+        a->aa_chmin = ae->ae_chmin;
+      if (a->aa_chmax > ae->ae_chmax)
+        a->aa_chmax = ae->ae_chmax;
+    } else {
+      a->aa_chmin = ae->ae_chmin;
+      a->aa_chmax = ae->ae_chmax;
+    }
+  }
 
+  if(ae->ae_chtag) {
+    if (a->aa_chtags == NULL)
+      a->aa_chtags = htsmsg_create_list();
+    htsmsg_add_str(a->aa_chtags, NULL, ae->ae_chtag);
+  }
+
+  a->aa_rights |= ae->ae_rights;
+}
 
 /**
  *
  */
-uint32_t
-access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src,
-		  int *entrymatch)
+access_t *
+access_get(const char *username, const char *password, struct sockaddr *src)
 {
+  access_t *a = calloc(1, sizeof(*a));
+  access_entry_t *ae;
+
+  if (access_noacl) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
+
+  if(username != NULL && superuser_username != NULL &&
+     password != NULL && superuser_password != NULL &&
+     !strcmp(username, superuser_username) &&
+     !strcmp(password, superuser_password)) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!ae->ae_enabled)
+      continue;
+
+    if(ae->ae_username[0] != '*') {
+      /* acl entry requires username to match */
+      if(username == NULL || password == NULL)
+	continue; /* Didn't get one */
+
+      if(strcmp(ae->ae_username, username) ||
+	 strcmp(ae->ae_password, password))
+	continue; /* username/password mismatch */
+    }
+
+    if(!netmask_verify(ae, src))
+      continue; /* IP based access mismatches */
+
+    a->aa_match = 1;
+    access_update(a, ae);
+  }
+
+  return a;
+}
+
+/**
+ *
+ */
+access_t *
+access_get_hashed(const char *username, const uint8_t digest[20],
+		  const uint8_t *challenge, struct sockaddr *src)
+{
+  access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
   SHA_CTX shactx;
   uint8_t d[20];
-  uint32_t r = 0;
-  int match = 0;
 
-  if(access_noacl)
-    return 0xffffffff;
+  if(access_noacl) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
 
   if(superuser_username != NULL && superuser_password != NULL) {
 
@@ -291,8 +374,10 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     SHA1_Update(&shactx, challenge, 32);
     SHA1_Final(d, &shactx);
 
-    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
-      return 0xffffffff;
+    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
   }
 
 
@@ -312,12 +397,12 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
     if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
       continue;
-    match = 1;
-    r |= ae->ae_rights;
+
+    a->aa_match = 1;
+    access_update(a, ae);
   }
-  if(entrymatch != NULL)
-    *entrymatch = match;
-  return r;
+
+  return a;
 }
 
 
@@ -325,11 +410,11 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 /**
  *
  */
-uint32_t
+access_t *
 access_get_by_addr(struct sockaddr *src)
 {
+  access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
-  uint32_t r = 0;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -342,28 +427,11 @@ access_get_by_addr(struct sockaddr *src)
     if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
-    r |= ae->ae_rights;
+    access_update(a, ae);
   }
-  return r;
+
+  return a;
 }
-
-/**
- *
- */
-uint32_t
-access_tag_only(const char *username)
-{
-  access_entry_t *ae;
-  uint32_t r = 0;
-
-  TAILQ_FOREACH(ae, &access_entries, ae_link) {
-
-    if(!strcmp(ae->ae_username, username))
-      return ae->ae_tagonly;
-  }
-  return r;
-}
-
 
 /**
  *
@@ -536,6 +604,7 @@ access_entry_destroy(access_entry_t *ae)
   free(ae->ae_username);
   free(ae->ae_password);
   free(ae->ae_comment);
+  free(ae->ae_chtag);
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   free(ae);
 }
@@ -579,11 +648,15 @@ access_record_build(access_entry_t *ae)
   htsmsg_add_str(e, "prefix",   buf + 1);
 
   htsmsg_add_u32(e, "streaming", ae->ae_rights & ACCESS_STREAMING     ? 1 : 0);
+  htsmsg_add_u32(e, "adv_streaming", ae->ae_rights & ACCESS_ADVANCED_STREAMING     ? 1 : 0);
   htsmsg_add_u32(e, "dvr"      , ae->ae_rights & ACCESS_RECORDER      ? 1 : 0);
   htsmsg_add_u32(e, "dvrallcfg", ae->ae_rights & ACCESS_RECORDER_ALL  ? 1 : 0);
   htsmsg_add_u32(e, "webui"    , ae->ae_rights & ACCESS_WEB_INTERFACE ? 1 : 0);
   htsmsg_add_u32(e, "admin"    , ae->ae_rights & ACCESS_ADMIN         ? 1 : 0);
-  htsmsg_add_u32(e, "tag_only" , ae->ae_tagonly);
+  htsmsg_add_u32(e, "tag_only" , ae->ae_rights & ACCESS_TAG_ONLY      ? 1 : 0);
+  htsmsg_add_u32(e, "channel_min" , ae->ae_chmin);
+  htsmsg_add_u32(e, "channel_max" , ae->ae_chmax);
+  htsmsg_add_str(e, "channel_tag",  ae->ae_chtag ?: "");
 
 
   htsmsg_add_str(e, "id", ae->ae_id);
@@ -668,6 +741,12 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
   if(!htsmsg_get_u32(values, "streaming", &u32))
     access_update_flag(ae, ACCESS_STREAMING, u32);
 
+  if(!htsmsg_get_u32(values, "adv_streaming", &u32))
+    access_update_flag(ae, ACCESS_ADVANCED_STREAMING, u32);
+  else
+    access_update_flag(ae, ACCESS_ADVANCED_STREAMING,
+                       (ae->ae_rights & ACCESS_STREAMING));
+
   if(!htsmsg_get_u32(values, "dvr", &u32))
     access_update_flag(ae, ACCESS_RECORDER, u32);
 
@@ -686,7 +765,21 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
     access_update_flag(ae, ACCESS_WEB_INTERFACE, u32);
 
   if(!htsmsg_get_u32(values, "tag_only", &u32))
-    ae->ae_tagonly = u32;
+    access_update_flag(ae, ACCESS_TAG_ONLY, u32);
+
+  if(!htsmsg_get_u32(values, "channel_min", &u32))
+    ae->ae_chmin = u32;
+
+  if(!htsmsg_get_u32(values, "channel_max", &u32))
+    ae->ae_chmax = u32;
+
+  if((s = htsmsg_get_str(values, "channel_tag")) != NULL) {
+    free(ae->ae_chtag);
+    if (s[0] == 0)
+      ae->ae_chtag = NULL;
+    else
+      ae->ae_chtag = strdup(s);
+  }
 
   return access_record_build(ae);
 }
@@ -738,7 +831,6 @@ access_init(int createdefault, int noacl)
     struct timeval tv;
   } randseed;
 
-  access_noacl = noacl;
   if (noacl)
     tvhlog(LOG_WARNING, "access", "Access control checking disabled");
 
@@ -759,8 +851,7 @@ access_init(int createdefault, int noacl)
     ae->ae_comment = strdup("Default access entry");
 
     ae->ae_enabled = 1;
-    ae->ae_tagonly = 0;
-    ae->ae_rights = 0xffffffff;
+    ae->ae_rights = ACCESS_FULL;
 
     TAILQ_INIT(&ae->ae_ipmasks);
 

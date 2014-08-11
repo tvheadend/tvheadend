@@ -35,6 +35,7 @@
 #include "http.h"
 #include "access.h"
 #include "notify.h"
+#include "channels.h"
 
 static void *http_server;
 
@@ -395,24 +396,56 @@ http_redirect(http_connection_t *hc, const char *location,
 }
 
 /**
- * Return non-zero if no access
+ *
  */
-int
-http_access_verify(http_connection_t *hc, int mask)
+static int http_access_verify_ticket(http_connection_t *hc)
 {
   const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
 
-  if(!access_ticket_verify(ticket_id, hc->hc_url))
-  {
+  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
     char addrstr[50];
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
     tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
 	   addrstr, ticket_id, hc->hc_url);
     return 0;
   }
+  return -1;
+}
+
+/**
+ * Return non-zero if no access
+ */
+int
+http_access_verify(http_connection_t *hc, int mask)
+{
+  if (!http_access_verify_ticket(hc))
+    return 0;
 
   return access_verify(hc->hc_username, hc->hc_password,
 		       (struct sockaddr *)hc->hc_peer, mask);
+}
+
+/**
+ * Return non-zero if no access
+ */
+int
+http_access_verify_channel(http_connection_t *hc, int mask,
+                           struct channel *ch)
+{
+  access_t *a;
+  int res = -1;
+
+  assert(ch);
+
+  if (!http_access_verify_ticket(hc))
+    return 0;
+
+  a = access_get(hc->hc_username, hc->hc_password,
+                 (struct sockaddr *)hc->hc_peer);
+  if (channel_access(ch, a, hc->hc_username))
+    res = 0;
+  access_destroy(a);
+  return res;
 }
 
 /**

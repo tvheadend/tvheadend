@@ -59,11 +59,16 @@ The columns have the following functions:
   Enables access to streaming function. The 'streaming' access is enough to
   make Showtime (over HTSP) work.
 
+  <dt>Advanced Streaming
+  <dd>
+  Enables access to advanced streaming function for HTTP - like direct
+  service or whole MPEG-TS stream (mux)..
+
   <dt>Video Recorder
   <dd>
   Enables access to all video recording functions. This also include administration of the auto recordings.
 
-  <dt>User Configs (VR)
+  <dt>Username Configs (VR)
   <dd>
   Use a DVR configuration profile matched to the authorized user by name
   (the configuration profile must have same name as the user). If the DVR
@@ -78,12 +83,27 @@ The columns have the following functions:
   <dd>
   Enables access to the Configuration tab.
   
-  <dt>Channel Tag Only
+  <dt>Username Channel Tag Match
   <dd>
   If enabled, the user will only be able to access channels with a tag the
   same name as the username.
 
   This provides a very rudimentary way of limiting access to certain channels.
+
+  <dt>Min Channel Num
+  <dd>
+  If nonzero, the user will only be able to access channels with
+  a channel number equal or greater to this value.
+
+  <dt>Max Channel Num
+  <dd>
+  If nonzero, the user will only be able to access channels with
+  a channel number equal or lower to this value.
+
+  <dt>Channel Tag
+  <dd>
+  If set, the user will only be able to access channels with
+  a channel tag equal to this value.
 
   <dt>Comment
   <dd>

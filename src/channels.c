@@ -413,6 +413,47 @@ channel_find_by_number ( int no )
   return ch;
 }
 
+/**
+ * Check if user can access the channel
+ */
+int
+channel_access(channel_t *ch, access_t *a, const char *username)
+{
+  /* Channel number check */
+  if (ch && (a->aa_chmin || a->aa_chmax)) {
+    int chnum = channel_get_number(ch);
+    if (chnum < a->aa_chmin || chnum > a->aa_chmax)
+      return 0;
+  }
+
+  /* Channel tag check */
+  if (ch && a->aa_chtags) {
+    channel_tag_mapping_t *ctm;
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, a->aa_chtags) {
+      LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+        if (!strcmp(htsmsg_field_get_str(f) ?: "", ctm->ctm_tag->ct_name))
+          goto chtags_ok;
+      }
+    }
+    return 0;
+  }
+chtags_ok:
+
+  /* Channel tag <-> user name match */
+  if (ch && (a->aa_rights & ACCESS_TAG_ONLY) != 0) {
+    channel_tag_mapping_t *ctm;
+    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+      if (!strcmp(username ?: "", ctm->ctm_tag->ct_name))
+        goto tagonly_ok;
+    }
+    return 0;
+  }
+tagonly_ok:
+
+  return 1;
+}
+
 /* **************************************************************************
  * Property updating
  * *************************************************************************/
