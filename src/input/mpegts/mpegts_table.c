@@ -220,27 +220,11 @@ void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
-  mpegts_input_t        *mi;
 
   descrambler_flush_tables(mm);
-  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = TAILQ_FIRST(&mm->mm_defer_tables))) {
     TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
-    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
-      if (mi) {
-        pthread_mutex_unlock(&mm->mm_tables_lock);
-        pthread_mutex_lock(&mi->mi_output_lock);
-        if (mt->mt_subscribed) {
-          mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
-          mt->mt_subscribed = 0;
-        }
-        pthread_mutex_unlock(&mi->mi_output_lock);
-        pthread_mutex_lock(&mm->mm_tables_lock);
-      } else{
-        mt->mt_subscribed = 0;
-      }
-    }
     mt->mt_defer_cmd = 0;
     mpegts_table_release(mt);
   }
