@@ -392,7 +392,7 @@ dvb_network_create_mux
                mm, buf, onid, tsid, mm->mm_network->mn_network_name);
 #endif      
     }
-  } else if (mm) {
+  } else if (mm && ln->mn_autodiscovery) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
@@ -477,11 +477,10 @@ dvb_network_create_mux
     }
 #endif
   }
-  if (mm) {
+  if (mm && save) {
     mm->mm_dmc_origin        = mmo;
     mm->mm_dmc_origin_expire = dispatch_clock + 3600 * 24; /* one day */
-    if (save)
-      mm->mm_config_save(mm);
+    mm->mm_config_save(mm);
   }
 noop:
   return mm;
