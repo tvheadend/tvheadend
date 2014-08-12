@@ -869,7 +869,7 @@ satip_discovery_service_received
         deviceid = argv[1];
       else if (strcmp(argv[0], "USN") == 0) {
         n = http_tokenize(argv[1], argv, ARRAY_SIZE(argv), ':');
-        for (i = 0; i < n+1; i++)
+        for (i = 0; i < n-1; i++)
           if (argv[i] && strcmp(argv[i], "uuid") == 0) {
             uuid = argv[++i];
             break;
