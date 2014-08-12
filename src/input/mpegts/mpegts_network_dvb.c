@@ -75,7 +75,7 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
     return 0;
   if (!(sfn = scanfile_find(s)))
     return 0;
-  
+
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
     if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
@@ -514,6 +514,7 @@ dvb_network_create0
   dvb_network_t *ln;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  const char *s;
 
   ln = calloc(1, sizeof(dvb_network_t));
   if (idc == &dvb_network_dvbt_class)
@@ -540,6 +541,11 @@ dvb_network_create0
   /* No config */
   if (!conf)
     return ln;
+
+  /* Set predefined muxes */
+  /* Because PO_NOSAVE in idnode_load() this value is not set on load */
+  if ((s = htsmsg_get_str(conf, "scanfile")) != NULL)
+    dvb_network_class_scanfile_set(ln, s);
 
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/dvb/networks/%s/muxes", uuid))) {
