@@ -329,7 +329,7 @@ subscription_reschedule(void)
     subscription_unsubscribe(s);
   }
 
-  if (postpone <= 0)
+  if (postpone <= 0 || postpone == INT_MAX)
     postpone = 2;
   gtimer_arm(&subscription_reschedule_timer,
 	           subscription_reschedule_cb, NULL, postpone);
