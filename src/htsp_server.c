@@ -2775,6 +2775,21 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
 }
 
 /**
+ * Send a 'subscriptionGrace' message
+ */
+static void
+htsp_subscription_grace(htsp_subscription_t *hs, int grace)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "subscriptionGrace");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  htsmsg_add_u32(m, "graceTimeout", grace);
+  tvhdebug("htsp", "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
+
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+
+/**
  * Send a 'subscriptionStatus' message
  */
 static void
@@ -2912,6 +2927,10 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code));
     break;
 
+  case SMT_GRACE:
+    htsp_subscription_grace(hs, sm->sm_code);
+    break;
+
   case SMT_SERVICE_STATUS:
     htsp_subscription_service_status(hs, sm->sm_code);
     break;
@@ -2924,7 +2943,6 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code));
     break;
 
-  case SMT_GRACE:
   case SMT_MPEGTS:
     break;
 
