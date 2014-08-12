@@ -268,7 +268,6 @@ subscription_reschedule(void)
     if (s->ths_postpone_end > dispatch_clock) {
       if (postpone > s->ths_postpone_end - dispatch_clock)
         postpone = s->ths_postpone_end - dispatch_clock;
-      streaming_message_t *sm;
       sm = streaming_msg_create_code(SMT_GRACE, (s->ths_postpone_end - dispatch_clock) + 5);
       streaming_target_deliver(s->ths_output, sm);
       continue;
@@ -330,7 +329,7 @@ subscription_reschedule(void)
     subscription_unsubscribe(s);
   }
 
-  if (!postpone)
+  if (postpone <= 0)
     postpone = 2;
   gtimer_arm(&subscription_reschedule_timer,
 	           subscription_reschedule_cb, NULL, postpone);
