@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Update Tvheadend version file (if required)
 #
