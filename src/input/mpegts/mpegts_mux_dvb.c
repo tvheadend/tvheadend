@@ -195,7 +195,6 @@ const idclass_t dvb_mux_dvbt_class =
       .type     = PT_U32,
       .id       = "frequency",
       .name     = "Frequency (Hz)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
     },
     {
@@ -260,14 +259,12 @@ const idclass_t dvb_mux_dvbc_class =
       .type     = PT_U32,
       .id       = "frequency",
       .name     = "Frequency (Hz)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
       .name     = "Symbol Rate (Sym/s)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qam.symbol_rate),
     },
     {
@@ -467,14 +464,12 @@ const idclass_t dvb_mux_dvbs_class =
       .type     = PT_U32,
       .id       = "frequency",
       .name     = "Frequency (kHz)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
       .name     = "Symbol Rate (Sym/s)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qpsk.symbol_rate),
     },
     {
@@ -550,7 +545,6 @@ const idclass_t dvb_mux_atsc_class =
       .type     = PT_U32,
       .id       = "frequency",
       .name     = "Frequency (kHz)",
-      .opts     = PO_WRONCE,
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
     },
     {
