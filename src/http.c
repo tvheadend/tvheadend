@@ -973,6 +973,12 @@ http_server_init(const char *bindaddr)
 }
 
 void
+http_server_register(void)
+{
+  tcp_server_register(http_server);
+}
+
+void
 http_server_done(void)
 {
   http_path_t *hp;

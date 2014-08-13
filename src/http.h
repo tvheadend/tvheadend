@@ -202,6 +202,7 @@ http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
 void http_server_init(const char *bindaddr);
+void http_server_register(void);
 void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
