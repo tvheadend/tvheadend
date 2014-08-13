@@ -545,14 +545,11 @@ tcp_server_create
   (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
 {
   int fd, x;
-  tvhpoll_event_t ev;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
   char port_buf[6];
   int one = 1;
   int zero = 0;
-
-  memset(&ev, 0, sizeof(ev));
 
   snprintf(port_buf, 6, "%d", port);
 
@@ -611,13 +608,25 @@ tcp_server_create
   ts->serverfd = fd;
   ts->ops    = *ops;
   ts->opaque = opaque;
+  return ts;
+}
 
-  ev.fd       = fd;
+
+/**
+ *
+ */
+
+void tcp_server_register(void *server)
+{
+  tcp_server_t *ts = server;
+  tvhpoll_event_t ev;
+
+  memset(&ev, 0, sizeof(ev));
+
+  ev.fd       = ts->serverfd;
   ev.events   = TVHPOLL_IN;
   ev.data.ptr = ts;
   tvhpoll_add(tcp_server_poll, &ev, 1);
-
-  return ts;
 }
 
 /**
@@ -678,12 +687,16 @@ tcp_server_connections ( void )
 pthread_t tcp_server_tid;
 
 void
-tcp_server_init(int opt_ipv6)
+tcp_server_preinit(int opt_ipv6)
 {
-  tvhpoll_event_t ev;
   if(opt_ipv6)
     tcp_preferred_address_family = AF_INET6;
+}
 
+void
+tcp_server_init(void)
+{
+  tvhpoll_event_t ev;
   tvh_pipe(O_NONBLOCK, &tcp_server_pipe);
   tcp_server_poll = tvhpoll_create(10);
 

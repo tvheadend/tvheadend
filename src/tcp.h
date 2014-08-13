@@ -49,7 +49,8 @@ typedef struct tcp_server_ops
 
 extern int tcp_preferred_address_family;
 
-void tcp_server_init(int opt_ipv6);
+void tcp_server_preinit(int opt_ipv6);
+void tcp_server_init(void);
 void tcp_server_done(void);
 
 int tcp_connect(const char *hostname, int port, const char *bindaddr,
@@ -61,6 +62,8 @@ typedef void (tcp_server_callback_t)(int fd, void *opaque,
 
 void *tcp_server_create(const char *bindaddr, int port, 
   tcp_server_ops_t *ops, void *opaque);
+
+void tcp_server_register(void *server);
 
 void tcp_server_delete(void *server);
 

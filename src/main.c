@@ -671,8 +671,13 @@ main(int argc, char **argv)
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_debug(log_debug);
   tvhlog_set_trace(log_trace);
+  tvhinfo("main", "Log started");
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
+
+  tcp_server_preinit(opt_ipv6);
+  http_server_init(opt_bindaddr);  // bind to ports only
+  htsp_init(opt_bindaddr);	   // bind to ports only
 
   /* Daemonise */
   if(opt_fork) {
@@ -807,8 +812,8 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
-  tcp_server_init(opt_ipv6);
-  http_server_init(opt_bindaddr);
+  tcp_server_init();
+  http_server_register();
   webui_init(opt_xspf);
 #if ENABLE_UPNP
   upnp_server_init(opt_bindaddr);
@@ -825,7 +830,7 @@ main(int argc, char **argv)
 
   dbus_server_start();
 
-  htsp_init(opt_bindaddr);
+  htsp_register();
 
 
   if(opt_subscribe != NULL)

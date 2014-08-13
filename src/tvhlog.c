@@ -412,7 +412,7 @@ tvhlog_init ( int level, int options, const char *path )
   tvhlog_path    = path ? strdup(path) : NULL;
   tvhlog_trace   = NULL;
   tvhlog_debug   = NULL;
-  tvhlog_run     = 0;
+  tvhlog_run     = 1;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
   pthread_mutex_init(&tvhlog_mutex, NULL);
   pthread_cond_init(&tvhlog_cond, NULL);
@@ -422,7 +422,6 @@ tvhlog_init ( int level, int options, const char *path )
 void
 tvhlog_start ( void )
 {
-  tvhlog_run = 1;
   tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
 }
 
