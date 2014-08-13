@@ -272,7 +272,7 @@ linuxdvb_en50494_create0
 
   ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
                                NULL, &linuxdvb_en50494_class, conf,
-                               "en50494", ls);
+                               "Generic", ls);
   if (ld) {
     ld->ld_tune  = linuxdvb_en50494_tune;
     /* May not needed: ld->ld_grace = linuxdvb_en50494_grace; */
