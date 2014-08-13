@@ -142,6 +142,32 @@ service_class_encrypted_get ( void *p )
   return &t;
 }
 
+static const void *
+service_class_caid_get ( void *obj )
+{
+  static char buf[256], *s = buf;
+  service_t *svc = obj;
+  elementary_stream_t *st;
+  caid_t *c;
+  size_t l;
+
+  buf[0] = '\0';
+  TAILQ_FOREACH(st, &svc->s_components, es_link) {
+    switch(st->es_type) {
+    case SCT_CA:
+      LIST_FOREACH(c, &st->es_caids, link) {
+        l = strlen(buf);
+        snprintf(buf + l, l - sizeof(buf), "%s%04X:%06X",
+                 l ? "," : "", c->caid, c->providerid);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return &s;
+}
+
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
@@ -171,6 +197,13 @@ const idclass_t service_class = {
       .name     = "Encrypted",
       .get      = service_class_encrypted_get,
       .opts     = PO_NOSAVE | PO_RDONLY
+    },
+    {
+      .type     = PT_STR,
+      .id       = "caid",
+      .name     = "CAID",
+      .get      = service_class_caid_get,
+      .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN,
     },
     {}
   }

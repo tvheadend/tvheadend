@@ -130,12 +130,12 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {
-      .type   = PT_STR,
-      .id     = "charset",
-      .name   = "Character Set",
-      .off    = offsetof(mpegts_service_t, s_dvb_charset),
-      .list   = dvb_charset_enum,
-      .opts   = PO_ADVANCED,
+      .type     = PT_STR,
+      .id       = "charset",
+      .name     = "Character Set",
+      .off      = offsetof(mpegts_service_t, s_dvb_charset),
+      .list     = dvb_charset_enum,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U16,
