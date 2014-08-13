@@ -4,7 +4,7 @@
 #
 
 # Terminate
-function die
+die ()
 {
   echo >&2 "ERROR: $@"
   exit 1
