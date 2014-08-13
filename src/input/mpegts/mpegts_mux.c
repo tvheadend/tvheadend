@@ -175,10 +175,7 @@ static const char *
 mpegts_mux_class_get_title ( idnode_t *self )
 {
   static __thread char buf[256];
-  mpegts_mux_t *mm = (mpegts_mux_t*)self;
-  *buf = 0;
-  if (mm->mm_display_name)
-    mm->mm_display_name(mm, buf, sizeof(buf));
+  mpegts_mux_nice_name((mpegts_mux_t*)self, buf, sizeof(buf));
   return buf;
 }
 
