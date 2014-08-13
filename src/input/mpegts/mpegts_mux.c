@@ -709,29 +709,24 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 {
   mpegts_input_t *mi;
 
-  pthread_mutex_lock(&mm->mm_tables_lock);
-  if (mt->mt_destroyed) {
-    pthread_mutex_unlock(&mm->mm_tables_lock);
+  lock_assert(&mm->mm_tables_lock);
+
+  if (mt->mt_destroyed)
     return;
-  }
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
     mt->mt_subscribed = 0;
     LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
     mm->mm_num_tables++;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
   }
   if (mt->mt_flags & MT_DEFER) {
-    if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
-      pthread_mutex_unlock(&mm->mm_tables_lock);
+    if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID)
       return;
-    }
     mpegts_table_grab(mt); /* thread will release the table */
     LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
     mm->mm_num_tables++;
     mt->mt_defer_cmd = MT_DEFER_OPEN_PID;
     TAILQ_INSERT_TAIL(&mm->mm_defer_tables, mt, mt_defer_link);
-    pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
   }
   mi = mm->mm_active->mmi_input;
@@ -744,6 +739,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
     mt->mt_subscribed = 1;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
+  pthread_mutex_lock(&mm->mm_tables_lock);
 }
 
 void
@@ -751,7 +747,8 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
 
-  pthread_mutex_lock(&mm->mm_tables_lock);
+  lock_assert(&mm->mm_tables_lock);
+
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
     if (mt->mt_defer_cmd) {
       TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
@@ -760,27 +757,22 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     mt->mt_subscribed = 0;
     LIST_REMOVE(mt, mt_link);
     mm->mm_num_tables--;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
   }
   if (mt->mt_flags & MT_DEFER) {
-    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
-      pthread_mutex_unlock(&mm->mm_tables_lock);
+    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID)
       return;
-    }
     LIST_REMOVE(mt, mt_link);
     mm->mm_num_tables--;
     if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
       TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
       mt->mt_defer_cmd = 0;
-      pthread_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_release(mt);
       return;
     }
     mpegts_table_grab(mt); /* thread will free the table */
     mt->mt_defer_cmd = MT_DEFER_CLOSE_PID;
     TAILQ_INSERT_TAIL(&mm->mm_defer_tables, mt, mt_defer_link);
-    pthread_mutex_unlock(&mm->mm_tables_lock);
     return;
   }
   mi = mm->mm_active->mmi_input;
@@ -793,6 +785,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     mt->mt_subscribed = 0;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
+  pthread_mutex_lock(&mm->mm_tables_lock);
 }
 
 /* **************************************************************************
