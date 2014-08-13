@@ -48,7 +48,20 @@ int
 satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm )
 {
-  satip_satconf_t *sfc = satip_satconf_find_ele(lfe, mm);
+  satip_satconf_t *sfc;
+  satip_frontend_t *lfe2;
+  if (lfe->sf_master) {
+    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
+      if (lfe2->sf_number != lfe->sf_number &&
+          lfe2->sf_number == lfe->sf_master &&
+          lfe2->sf_master == 0) {
+        lfe = lfe2;
+        goto found;
+      }
+    return 0;
+  }
+found:
+  sfc = satip_satconf_find_ele(lfe, mm);
   return sfc && sfc->sfc_enabled ? sfc->sfc_position : 0;
 }
 
