@@ -122,8 +122,12 @@ mpegts_table_release_ ( mpegts_table_t *mt )
 void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
+  mpegts_mux_t *mm = mt->mt_mux;
+
+  pthread_mutex_lock(&mm->mm_tables_lock);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
   mpegts_table_release(mt);
 }
 
@@ -173,17 +177,12 @@ mpegts_table_add
     } else {
       if (strcmp(mt->mt_name, name))
         continue;
-      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
-        pthread_mutex_unlock(&mm->mm_tables_lock);
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed)
         mm->mm_open_table(mm, mt, 1);
-        return mt;
-      }
     }
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
-
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);
 
@@ -210,6 +209,7 @@ mpegts_table_add
       subscribe = 0;
   }
   mm->mm_open_table(mm, mt, subscribe);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
   return mt;
 }
 
