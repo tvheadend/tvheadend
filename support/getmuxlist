@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Fetch DVB scan files
 #
