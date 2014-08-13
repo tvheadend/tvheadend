@@ -658,6 +658,17 @@ tvheadend.epg = function() {
 
     panel.on('rowclick', rowclicked);
     
+    /**
+     * Listener for DVR notifications. We want to update the EPG grid when a
+     * recording is finished/deleted etc. so the status icon gets updated. 
+     * Only do this when the tab is visible, otherwise it won't work as 
+     * expected.
+     */
+    tvheadend.comet.on('dvrdb', function() {
+        if (panel.isVisible())
+            epgStore.reload();
+    });
+    
     // Always reload the store when the tab is activated
     panel.on('beforeshow', function() {
         this.store.reload();
