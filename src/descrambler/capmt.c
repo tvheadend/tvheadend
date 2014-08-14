@@ -285,6 +285,7 @@ typedef struct capmt {
 } capmt_t;
 
 static void capmt_enumerate_services(capmt_t *capmt, int force);
+static void capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force);
 static void capmt_send_request(capmt_service_t *ct, int lm);
 static void capmt_table_input(void *opaque, int pid,
                               const uint8_t *data, int len);
@@ -422,6 +423,7 @@ capmt_pid_flush(capmt_t *capmt)
   capmt_adapter_t *ca;
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *tuner;
+  mpegts_mux_t *mux;
   capmt_opaque_t *o;
   int adapter, pid, i;
 
@@ -431,15 +433,15 @@ capmt_pid_flush(capmt_t *capmt)
       continue;
     ca = &capmt->capmt_adapters[adapter];
     mmi = LIST_FIRST(&tuner->mi_mux_active);
+    mux = mmi ? mmi->mmi_mux : NULL;
     for (i = 0; i < MAX_PIDS; i++) {
       o = &ca->ca_pids[i];
       if ((pid = o->pid) > 0) {
         o->pid = -1; /* block for new registrations */
         o->pid_refs = 0;
-        if (mmi) {
-          assert(mmi->mmi_mux);
+        if (mux) {
           pthread_mutex_unlock(&capmt->capmt_mutex);
-          descrambler_close_pid(mmi->mmi_mux, &ca->ca_pids[i], pid);
+          descrambler_close_pid(mux, &ca->ca_pids[i], pid);
           pthread_mutex_lock(&capmt->capmt_mutex);
         }
         o->pid = 0;
@@ -479,7 +481,7 @@ capmt_connect(capmt_t *capmt, int i)
 
     fd = tcp_connect(capmt->capmt_sockfile, capmt->capmt_port, NULL,
                      errbuf, sizeof(errbuf), 2);
-    if (fd < 0) {
+    if (fd < 0 && tvheadend_running) {
       tvhlog(LOG_ERR, "capmt",
              "Cannot connect to %s:%i (%s); Do you have OSCam running?",
              capmt->capmt_sockfile, capmt->capmt_port, errbuf);
@@ -499,9 +501,10 @@ capmt_connect(capmt_t *capmt, int i)
     fd = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
     if (connect(fd, (const struct sockaddr*)&serv_addr_un,
                 sizeof(serv_addr_un)) != 0) {
-      tvhlog(LOG_ERR, "capmt",
-             "Cannot connect to %s (%s); Do you have OSCam running?",
-             capmt->capmt_sockfile, strerror(errno));
+      if (tvheadend_running)
+        tvhlog(LOG_ERR, "capmt",
+               "Cannot connect to %s (%s); Do you have OSCam running?",
+               capmt->capmt_sockfile, strerror(errno));
       close(fd);
       fd = -1;
     }
@@ -525,6 +528,7 @@ static void
 capmt_socket_close(capmt_t *capmt, int sock_idx)
 {
   int fd = capmt->capmt_sock[sock_idx];
+  lock_assert(&capmt->capmt_mutex);
   if (fd < 0)
     return;
   capmt_poll_rem(capmt, fd);
@@ -534,6 +538,14 @@ capmt_socket_close(capmt_t *capmt, int sock_idx)
     capmt_pid_flush(capmt);
   else if (capmt->capmt_oscam == CAPMT_OSCAM_OLD)
     capmt->sids[sock_idx] = capmt->adps[sock_idx] = -1;
+}
+
+static void
+capmt_socket_close_lock(capmt_t *capmt, int sock_idx)
+{
+  pthread_mutex_lock(&capmt->capmt_mutex);
+  capmt_socket_close(capmt, sock_idx);
+  pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
 /**
@@ -595,7 +607,9 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
     // opening socket and sending
     if (capmt->capmt_sock[i] < 0) {
       fd = capmt_connect(capmt, i);
-      capmt_set_connected(capmt, fd ? 2 : 0);
+      capmt_set_connected(capmt, fd >= 0 ? 2 : 0);
+      if (fd >= 0)
+        capmt_notify_server(capmt, NULL, 1);
     }
   } else {  // standard old capmt mode
     i = 0;
@@ -615,7 +629,7 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   if (res < len) {
     tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%zi)", fd, res);
     if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
-      capmt_socket_close(capmt, i);
+      capmt_socket_close_lock(capmt, i);
       return -1;
     }
   }
@@ -685,6 +699,8 @@ capmt_send_stop(capmt_service_t *t)
 {
   mpegts_service_t *s = (mpegts_service_t *)t->td_service;
   int oscam = t->ct_capmt->capmt_oscam;
+
+  lock_assert(&t->ct_capmt->capmt_mutex);
 
   if (oscam == CAPMT_OSCAM_OLD) {
     int i;
@@ -896,12 +912,12 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 }
 
 static void
-capmt_notify_server(capmt_t *capmt, capmt_service_t *ct)
+capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
 {
   pthread_mutex_lock(&capmt->capmt_mutex);
   if (capmt_oscam_new(capmt)) {
     if (!LIST_EMPTY(&capmt->capmt_services))
-      capmt_enumerate_services(capmt, 0);
+      capmt_enumerate_services(capmt, force);
   } else {
     if (ct)
       capmt_send_request(ct, CAPMT_LIST_ONLY);
@@ -1139,7 +1155,7 @@ handle_ca0(capmt_t *capmt) {
   for (i = 0; i < MAX_CA; i++)
     sbuf_init(&buffer[i]);
 
-  capmt_notify_server(capmt, NULL);
+  capmt_notify_server(capmt, NULL, 1);
 
   capmt->capmt_poll = tvhpoll_create(MAX_CA + 1);
   capmt_poll_add(capmt, capmt->capmt_pipe.rd, 0);
@@ -1239,7 +1255,7 @@ handle_single(capmt_t *capmt)
   reconnect = capmt->capmt_sock_reconnect[0];
   sbuf_init(&buffer);
 
-  capmt_notify_server(capmt, NULL);
+  capmt_notify_server(capmt, NULL, 1);
 
   capmt->capmt_poll = tvhpoll_create(2);
   capmt_poll_add(capmt, capmt->capmt_pipe.rd, 0);
@@ -1323,7 +1339,7 @@ handle_ca0_wrapper(capmt_t *capmt)
 
   show_connection(capmt, ".so wrapper");
 
-  capmt_notify_server(capmt, NULL);
+  capmt_notify_server(capmt, NULL, 1);
 
   while (capmt->capmt_running) {
 
@@ -1470,7 +1486,7 @@ capmt_thread(void *aux)
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
-        capmt_socket_close(capmt, i);
+        capmt_socket_close_lock(capmt, i);
     for (i = 0; i < MAX_CA; i++)
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
@@ -1589,7 +1605,7 @@ capmt_caid_change(th_descrambler_t *td)
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
-    capmt_notify_server(capmt, ct);
+    capmt_notify_server(capmt, ct, 0);
 }
 
 static void
@@ -1728,8 +1744,10 @@ capmt_enumerate_services(capmt_t *capmt, int force)
   int all_srv_count = 0;	//all services
   int res_srv_count = 0;	//services with resolved state
   int i = 0;
-
   capmt_service_t *ct;
+
+  lock_assert(&capmt->capmt_mutex);
+
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     all_srv_count++;
     if (ct->td_keystate == DS_RESOLVED)
@@ -1887,7 +1905,7 @@ capmt_service_start(service_t *s)
     pthread_cond_signal(&capmt_config_changed);
 
     if (change)
-      capmt_notify_server(capmt, NULL);
+      capmt_notify_server(capmt, NULL, 0);
   }
 }
 
@@ -1944,6 +1962,7 @@ capmt_entry_find(const char *id, int create)
   }
 
   capmt = calloc(1, sizeof(capmt_t));
+  pthread_mutex_init(&capmt->capmt_mutex, NULL);
   pthread_cond_init(&capmt->capmt_cond, NULL);
   capmt->capmt_id      = strdup(id); 
   capmt->capmt_running = 1; 
