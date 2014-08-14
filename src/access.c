@@ -416,6 +416,11 @@ access_get_by_addr(struct sockaddr *src)
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
 
+  if(access_noacl) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
+
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
     if(!ae->ae_enabled)
