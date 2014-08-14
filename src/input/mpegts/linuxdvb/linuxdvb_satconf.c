@@ -364,7 +364,7 @@ linuxdvb_satconf_class_en50494_id_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_id) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -383,7 +383,7 @@ linuxdvb_satconf_class_en50494_pin_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_pin) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -402,7 +402,7 @@ linuxdvb_satconf_class_en50494_freq_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 const idclass_t linuxdvb_satconf_en50494_class =
