@@ -836,6 +836,7 @@ access_init(int createdefault, int noacl)
     struct timeval tv;
   } randseed;
 
+  access_noacl = noacl;
   if (noacl)
     tvhlog(LOG_WARNING, "access", "Access control checking disabled");
 
@@ -876,13 +877,16 @@ access_init(int createdefault, int noacl)
 	   "Created default wide open access controle entry");
   }
 
+  if(!TAILQ_FIRST(&access_entries) && !noacl)
+    tvherror("access", "No access entries loaded");
+
   /* Load superuser account */
 
   if((m = hts_settings_load("superuser")) != NULL) {
     s = htsmsg_get_str(m, "username");
     superuser_username = s ? strdup(s) : NULL;
     s = htsmsg_get_str(m, "password");
-    superuser_password =s ? strdup(s) : NULL;
+    superuser_password = s ? strdup(s) : NULL;
     htsmsg_destroy(m);
   }
 }
