@@ -134,7 +134,7 @@ const idclass_t linuxdvb_en50494_class =
     {
       .type   = PT_U16,
       .id     = "id",
-      .name   = "ID",
+      .name   = "SCR (ID)",
       .off    = offsetof(linuxdvb_en50494_t, le_id),
       .list   = linuxdvb_en50494_id_list,
     },

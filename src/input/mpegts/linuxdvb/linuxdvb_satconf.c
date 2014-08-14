@@ -414,7 +414,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "id",
-      .name     = "ID",
+      .name     = "SCR (ID)",
       .get      = linuxdvb_satconf_class_en50494_id_get,
       .set      = linuxdvb_satconf_class_en50494_id_set,
       .list     = linuxdvb_en50494_id_list,
