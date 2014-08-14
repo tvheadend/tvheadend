@@ -122,8 +122,12 @@ mpegts_table_release_ ( mpegts_table_t *mt )
 void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
+  mpegts_mux_t *mm = mt->mt_mux;
+
+  pthread_mutex_lock(&mm->mm_tables_lock);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
   mpegts_table_release(mt);
 }
 
@@ -173,17 +177,12 @@ mpegts_table_add
     } else {
       if (strcmp(mt->mt_name, name))
         continue;
-      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed) {
-        pthread_mutex_unlock(&mm->mm_tables_lock);
+      if (!(flags & MT_SKIPSUBS) && !mt->mt_subscribed)
         mm->mm_open_table(mm, mt, 1);
-        return mt;
-      }
     }
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
-  pthread_mutex_unlock(&mm->mm_tables_lock);
-
   tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);
 
@@ -210,6 +209,7 @@ mpegts_table_add
       subscribe = 0;
   }
   mm->mm_open_table(mm, mt, subscribe);
+  pthread_mutex_unlock(&mm->mm_tables_lock);
   return mt;
 }
 
@@ -220,27 +220,11 @@ void
 mpegts_table_flush_all ( mpegts_mux_t *mm )
 {
   mpegts_table_t        *mt;
-  mpegts_input_t        *mi;
 
   descrambler_flush_tables(mm);
-  mi = mm->mm_active ? mm->mm_active->mmi_input : NULL;
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = TAILQ_FIRST(&mm->mm_defer_tables))) {
     TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
-    if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
-      if (mi) {
-        pthread_mutex_unlock(&mm->mm_tables_lock);
-        pthread_mutex_lock(&mi->mi_output_lock);
-        if (mt->mt_subscribed) {
-          mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
-          mt->mt_subscribed = 0;
-        }
-        pthread_mutex_unlock(&mi->mi_output_lock);
-        pthread_mutex_lock(&mm->mm_tables_lock);
-      } else{
-        mt->mt_subscribed = 0;
-      }
-    }
     mt->mt_defer_cmd = 0;
     mpegts_table_release(mt);
   }

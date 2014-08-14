@@ -142,6 +142,32 @@ service_class_encrypted_get ( void *p )
   return &t;
 }
 
+static const void *
+service_class_caid_get ( void *obj )
+{
+  static char buf[256], *s = buf;
+  service_t *svc = obj;
+  elementary_stream_t *st;
+  caid_t *c;
+  size_t l;
+
+  buf[0] = '\0';
+  TAILQ_FOREACH(st, &svc->s_components, es_link) {
+    switch(st->es_type) {
+    case SCT_CA:
+      LIST_FOREACH(c, &st->es_caids, link) {
+        l = strlen(buf);
+        snprintf(buf + l, l - sizeof(buf), "%s%04X:%06X",
+                 l ? "," : "", c->caid, c->providerid);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return &s;
+}
+
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
@@ -171,6 +197,13 @@ const idclass_t service_class = {
       .name     = "Encrypted",
       .get      = service_class_encrypted_get,
       .opts     = PO_NOSAVE | PO_RDONLY
+    },
+    {
+      .type     = PT_STR,
+      .id       = "caid",
+      .name     = "CAID",
+      .get      = service_class_caid_get,
+      .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN,
     },
     {}
   }
@@ -557,7 +590,7 @@ ignore:
  *
  */
 int
-service_start(service_t *t, int instance)
+service_start(service_t *t, int instance, int postpone)
 {
   elementary_stream_t *st;
   int r, timeout = 10;
@@ -598,6 +631,8 @@ service_start(service_t *t, int instance)
   if(t->s_grace_period != NULL)
     timeout = t->s_grace_period(t);
 
+  timeout += postpone;
+  t->s_grace_delay = timeout;
   gtimer_arm(&t->s_receive_timer, service_data_timeout, t, timeout);
   return 0;
 }
@@ -609,7 +644,7 @@ service_start(service_t *t, int instance)
 service_instance_t *
 service_find_instance
   (service_t *s, channel_t *ch, service_instance_list_t *sil,
-   int *error, int weight)
+   int *error, int weight, int flags, int postpone)
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
@@ -624,11 +659,11 @@ service_find_instance
   if (ch) {
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
-      if (s->s_is_enabled(s))
-        s->s_enlist(s, sil);
+      if (s->s_is_enabled(s, flags))
+        s->s_enlist(s, sil, flags);
     }
   } else {
-    s->s_enlist(s, sil);
+    s->s_enlist(s, sil, flags);
   }
 
   /* Clean */
@@ -686,7 +721,7 @@ service_find_instance
 
   /* Start */
   tvhtrace("service", "will start new instance %d", si->si_instance);
-  if (service_start(si->si_s, si->si_instance)) {
+  if (service_start(si->si_s, si->si_instance, postpone)) {
     tvhtrace("service", "tuning failed");
     si->si_error = SM_CODE_TUNING_FAILED;
     if (*error < SM_CODE_TUNING_FAILED)

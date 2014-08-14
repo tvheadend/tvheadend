@@ -24,6 +24,7 @@
 #include "atomic.h"
 #include "notify.h"
 #include "idnode.h"
+#include "dbus.h"
 
 #include <pthread.h>
 #include <assert.h>
@@ -32,6 +33,29 @@ SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
 
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl );
+
+/*
+ * DBUS
+ */
+
+static void
+mpegts_input_dbus_notify(mpegts_input_t *mi, int64_t subs)
+{
+#if ENABLE_DBUS_1
+  char buf[256];
+  htsmsg_t *msg;
+
+  if (mi->mi_dbus_subs == subs)
+    return;
+  mi->mi_dbus_subs = subs;
+  msg = htsmsg_create_list();
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  htsmsg_add_str(msg, NULL, buf);
+  htsmsg_add_s64(msg, NULL, subs);
+  snprintf(buf, sizeof(buf), "/input/mpegts/%s", idnode_uuid_as_str(&mi->ti_id));
+  dbus_emit_signal(buf, "status", msg);
+#endif
+}
 
 /* **************************************************************************
  * Class definition
@@ -137,6 +161,14 @@ const idclass_t mpegts_input_class =
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_INT,
+      .id       = "spriority",
+      .name     = "Streaming Priority",
+      .off      = offsetof(mpegts_input_t, mi_streaming_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "displayname",
       .name     = "Name",
@@ -197,7 +229,7 @@ mpegts_input_is_free ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_get_weight ( mpegts_input_t *mi )
+mpegts_input_get_weight ( mpegts_input_t *mi, int flags )
 {
   const mpegts_mux_instance_t *mmi;
   const service_t *s;
@@ -225,8 +257,12 @@ mpegts_input_get_weight ( mpegts_input_t *mi )
 }
 
 int
-mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
+  if (flags & SUBSCRIPTION_STREAMING) {
+    if (mi->mi_streaming_priority > 0)
+      return mi->mi_streaming_priority;
+  }
   return mi->mi_priority;
 }
 
@@ -411,6 +447,7 @@ mpegts_input_started_mux
   mmi->mmi_mux->mm_active = mmi;
   LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
   notify_reload("input_status");
+  mpegts_input_dbus_notify(mi, 1);
 }
 
 static void
@@ -435,6 +472,7 @@ mpegts_input_stopped_mux
     s = LIST_NEXT(s, s_active_link);
   }
   notify_reload("input_status");
+  mpegts_input_dbus_notify(mi, 0);
 }
 
 static int
@@ -957,6 +995,8 @@ mpegts_input_status_timer ( void *p )
   mpegts_input_t *mi = p;
   mpegts_mux_instance_t *mmi;
   htsmsg_t *e;
+  int64_t subs = 0;
+
   pthread_mutex_lock(&mi->mi_output_lock);
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     memset(&st, 0, sizeof(st));
@@ -964,10 +1004,12 @@ mpegts_input_status_timer ( void *p )
     e = tvh_input_stream_create_msg(&st);
     htsmsg_add_u32(e, "update", 1);
     notify_by_msg("input_status", e);
+    subs += st.subs_count;
     tvh_input_stream_destroy(&st);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer, mi, 1);
+  mpegts_input_dbus_notify(mi, subs);
 }
 
 /* **************************************************************************

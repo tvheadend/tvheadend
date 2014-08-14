@@ -159,7 +159,7 @@ typedef struct htsp_connection {
   struct htsp_file_list htsp_files;
   int htsp_file_id;
 
-  uint32_t htsp_granted_access;
+  access_t *htsp_granted_access;
 
   uint8_t htsp_challenge[32];
 
@@ -194,6 +194,8 @@ streaming_target_t *hs_transcoder;
   time_t hs_last_report; /* Last queue status report sent */
 
   int hs_dropstats[PKT_NTYPES];
+
+  int hs_wait_for_video;
 
   int hs_90khz;
 
@@ -431,19 +433,10 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 /**
  * Cehck if user can access the channel
  */
-static int
-htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch) {
-  if (!access_tag_only(htsp->htsp_username ?: ""))
-    return 1;
-  else {
-    if (!ch) return 0;
-    channel_tag_mapping_t *ctm;
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      if (!strcmp(htsp->htsp_username ?: "", ctm->ctm_tag->ct_name))
-        return 1;
-    }
-  }
-  return 0;
+static inline int
+htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
+{
+  return channel_access(ch, htsp->htsp_granted_access, htsp->htsp_username);
 }
 
 #define HTSP_CHECK_CHANNEL_ACCESS(htsp, ch)\
@@ -838,7 +831,7 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *r = htsmsg_create_map();
 
-  if(!(htsp->htsp_granted_access & HTSP_PRIV_MASK))
+  if(!(htsp->htsp_granted_access->aa_rights & HTSP_PRIV_MASK))
     htsmsg_add_u32(r, "noaccess", 1);
   
   return r;
@@ -1545,7 +1538,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
-					      st, 0,
+					      st,
+					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
 					      htsp->htsp_username,
 					      htsp->htsp_clientname);
@@ -1971,9 +1965,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   const char *username;
   const void *digest;
   size_t digestlen;
-  uint32_t access;
+  access_t *rights;
   int privgain;
-  int match;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return;
@@ -1989,15 +1982,18 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
     return;
 
-  access = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer, &match);
+  rights = access_get_hashed(username, digest, htsp->htsp_challenge,
+			     (struct sockaddr *)htsp->htsp_peer);
 
-  privgain = (access | htsp->htsp_granted_access) != htsp->htsp_granted_access;
+  privgain = (rights->aa_rights |
+              htsp->htsp_granted_access->aa_rights) !=
+                htsp->htsp_granted_access->aa_rights;
     
   if(privgain)
     tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
 
-  htsp->htsp_granted_access |= access;
+  access_destroy(htsp->htsp_granted_access);
+  htsp->htsp_granted_access = rights;
 }
 
 /**
@@ -2080,7 +2076,7 @@ readmsg:
       for(i = 0; i < NUM_METHODS; i++) {
 	      if(!strcmp(method, htsp_methods[i].name)) {
 
-	        if((htsp->htsp_granted_access & htsp_methods[i].privmask) != 
+	        if((htsp->htsp_granted_access->aa_rights & htsp_methods[i].privmask) !=
 	           htsp_methods[i].privmask) {
 
       	    pthread_mutex_unlock(&global_lock);
@@ -2280,6 +2276,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   free(htsp.htsp_peername);
   free(htsp.htsp_username);
   free(htsp.htsp_clientname);
+  access_destroy(htsp.htsp_granted_access);
   *opaque = NULL;
 }
 
@@ -2319,6 +2316,17 @@ htsp_init(const char *bindaddr)
   htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);
   if(tvheadend_htsp_port_extra)
     htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
+}
+
+/*
+ *
+ */
+void
+htsp_register(void)
+{
+  tcp_server_register(htsp_server);
+  if (htsp_server_2)
+    tcp_server_register(htsp_server_2);
 }
 
 /**
@@ -2679,15 +2687,27 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 static void
 htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 {
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *streams = htsmsg_create_list();
-  htsmsg_t *c;
-  htsmsg_t *sourceinfo = htsmsg_create_map();
+  htsmsg_t *m,*streams, *c, *sourceinfo;
   const char *type;
   int i;
-  const source_info_t *si = &ss->ss_si;
+  const source_info_t *si;
+
   tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
 
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+    if (ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
+      if (ssc->ssc_width == 0 || ssc->ssc_height == 0) {
+        hs->hs_wait_for_video = 1;
+        return;
+      }
+    }
+  }
+  hs->hs_wait_for_video = 0;
+
+  m = htsmsg_create_map();
+  streams = htsmsg_create_list();
+  sourceinfo = htsmsg_create_map();
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
 
@@ -2734,6 +2754,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   
   htsmsg_add_msg(m, "streams", streams);
 
+  si = &ss->ss_si;
   if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
   if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
@@ -2760,6 +2781,21 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
 
   if(err != NULL)
     htsmsg_add_str(m, "status", err);
+
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+
+/**
+ * Send a 'subscriptionGrace' message
+ */
+static void
+htsp_subscription_grace(htsp_subscription_t *hs, int grace)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "subscriptionGrace");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  htsmsg_add_u32(m, "graceTimeout", grace);
+  tvhdebug("htsp", "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
 
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 }
@@ -2884,6 +2920,8 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
+    if (hs->hs_wait_for_video)
+      break;
     if (!hs->hs_first)
       tvhdebug("htsp", "%s - first packet", hs->hs_htsp->htsp_logname);
     hs->hs_first = 1;
@@ -2898,6 +2936,10 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   case SMT_STOP:
     htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code));
+    break;
+
+  case SMT_GRACE:
+    htsp_subscription_grace(hs, sm->sm_code);
     break;
 
   case SMT_SERVICE_STATUS:

@@ -252,6 +252,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     streaming_msg_free(sm);
     break;
 
+  case SMT_GRACE:
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
@@ -283,6 +284,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     gh->gh_passthru = 0;
     gh_flush(gh);
     // FALLTHRU
+  case SMT_GRACE:
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:

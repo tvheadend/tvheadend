@@ -24,6 +24,7 @@
 #include "upnp.h"
 #include "settings.h"
 #include "satip_private.h"
+#include "dbus.h"
 
 #include <arpa/inet.h>
 #include <openssl/sha.h>
@@ -34,6 +35,68 @@
 #endif
 
 static void satip_device_discovery_start( void );
+
+/*
+ *
+ */
+
+static void
+satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
+{
+#if ENABLE_DBUS_1
+  char buf[256];
+
+  htsmsg_t *msg = htsmsg_create_list();
+  htsmsg_add_str(msg, NULL, sd->sd_info.addr);
+  htsmsg_add_str(msg, NULL, sd->sd_info.location);
+  htsmsg_add_str(msg, NULL, sd->sd_info.server);
+  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id));
+  dbus_emit_signal(buf, sig_name, msg);
+#endif
+}
+
+static void
+satip_device_block( const char *addr, int block )
+{
+  extern const idclass_t satip_device_class;
+  tvh_hardware_t *th;
+  satip_device_t *sd;
+  satip_frontend_t *lfe;
+  int val = block < 0 ? 0 : block;
+
+  pthread_mutex_lock(&global_lock);
+  TVH_HARDWARE_FOREACH(th) {
+    if (!idnode_is_instance(&th->th_id, &satip_device_class))
+      continue;
+    sd = (satip_device_t *)th;
+    if (strcmp(sd->sd_info.addr, addr) == 0 && val != sd->sd_dbus_allow) {
+      sd->sd_dbus_allow = val;
+      if (block < 0) {
+        TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+          mpegts_input_stop_all((mpegts_input_t *)lfe);
+      }
+      tvhinfo("satip", "address %s is %s", addr,
+              block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+}
+
+static char *
+satip_device_addr( void *aux, const char *path, char *value )
+{
+  if (strcmp(path, "/stop") == 0) {
+    satip_device_block(value, -1);
+    return strdup("ok");
+  } else if (strcmp(path, "/disable") == 0) {
+    satip_device_block(value, 0);
+    return strdup("ok");
+  } else if (strcmp(path, "/allow") == 0) {
+    satip_device_block(value, 1);
+    return strdup("ok");
+  }
+  return strdup("err");
+}
 
 /*
  * SAT-IP client
@@ -318,6 +381,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_max    = 32;
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
+  sd->sd_dbus_allow  = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
@@ -396,6 +460,8 @@ satip_device_create( satip_device_info_t *info )
 
   htsmsg_destroy(conf);
 
+  satip_device_dbus_notify(sd, "start");
+
   return sd;
 }
 
@@ -457,6 +523,8 @@ satip_device_destroy( satip_device_t *sd )
 
   while ((lfe = TAILQ_FIRST(&sd->sd_frontends)) != NULL)
     satip_frontend_delete(lfe);
+
+  satip_device_dbus_notify(sd, "stop");
 
 #define FREEM(x) free(sd->sd_info.x)
   FREEM(myaddr);
@@ -801,7 +869,7 @@ satip_discovery_service_received
         deviceid = argv[1];
       else if (strcmp(argv[0], "USN") == 0) {
         n = http_tokenize(argv[1], argv, ARRAY_SIZE(argv), ':');
-        for (i = 0; i < n+1; i++)
+        for (i = 0; i < n-1; i++)
           if (argv[i] && strcmp(argv[i], "uuid") == 0) {
             uuid = argv[++i];
             break;
@@ -954,6 +1022,7 @@ void satip_init ( str_list_t *clients )
 {
   TAILQ_INIT(&satip_discoveries);
   satip_static_clients = clients;
+  dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
   satip_device_discovery_start();
 }
 

@@ -228,7 +228,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int run = 1;
   int started = 0;
   muxer_t *mux = NULL;
-  int timeouts = 0;
+  int timeouts = 0, grace = 20;
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
@@ -256,12 +256,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          if(err) {
-      tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-      run = 0;
-          }else if(timeouts >= 20) {
-      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
-      run = 0;
+          if (err) {
+              tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+              run = 0;
+          } else if(timeouts >= grace) {
+              tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+              run = 0;
           }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
@@ -287,7 +287,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       }
       break;
 
+    case SMT_GRACE:
+      grace = sm->sm_code < 5 ? 5 : grace;
+      break;
+
     case SMT_START:
+      grace = 10;
       if(!started) {
         tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
         http_output_content(hc, muxer_mime(mux, sm->sm_data));
@@ -363,6 +368,9 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   const char *host;
   muxer_container_type_t mc;
 
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
     mc = dvr_config_find_by_name_default("")->dvr_mc;
@@ -426,6 +434,8 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel))
+      continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
@@ -522,6 +532,10 @@ http_channel_list_playlist(http_connection_t *hc)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
+
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+      continue;
+
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
@@ -561,6 +575,10 @@ http_dvr_list_playlist(http_connection_t *hc)
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     fsize = dvr_get_filesize(de);
     if(!fsize)
+      continue;
+
+    if (de->de_channel &&
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
     durration  = de->de_stop - de->de_start;
@@ -710,11 +728,14 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   streaming_target_t *st;
   dvr_config_t *cfg;
   muxer_container_type_t mc;
-  int flags;
+  int flags = SUBSCRIPTION_STREAMING;
   const char *str;
   size_t qsize;
   const char *name;
   char addrbuf[50];
+
+  if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
+    return HTTP_STATUS_UNAUTHORIZED;
 
   cfg = dvr_config_find_by_name_default("");
 
@@ -734,13 +755,12 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
+    flags |= SUBSCRIPTION_RAW_MPEGTS;
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
     st = tsfix;
-    flags = 0;
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
@@ -784,12 +804,16 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   char addrbuf[50];
   muxer_config_t muxcfg = { 0 };
 
+  if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   streaming_queue_init(&sq, SMT_PACKET);
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_mux(mm, weight ?: 10, "HTTP", &sq.sq_st,
                                    SUBSCRIPTION_RAW_MPEGTS |
-                                   SUBSCRIPTION_FULLMUX,
+                                   SUBSCRIPTION_FULLMUX |
+                                   SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
                                    http_arg_get(&hc->hc_args, "User-Agent"), NULL);
   if (!s)
@@ -821,12 +845,15 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   streaming_target_t *tr = NULL;
 #endif
   dvr_config_t *cfg;
-  int flags;
+  int flags = SUBSCRIPTION_STREAMING;
   muxer_container_type_t mc;
   char *str;
   size_t qsize;
   const char *name;
   char addrbuf[50];
+
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+    return HTTP_STATUS_UNAUTHORIZED;
 
   cfg = dvr_config_find_by_name_default("");
 
@@ -846,7 +873,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
+    flags |= SUBSCRIPTION_RAW_MPEGTS;
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
@@ -860,7 +887,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 #endif
     tsfix = tsfix_create(gh);
     st = tsfix;
-    flags = 0;
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);

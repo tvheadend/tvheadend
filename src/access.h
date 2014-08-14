@@ -19,6 +19,7 @@
 #ifndef ACCESS_H_
 #define ACCESS_H_
 
+#include "htsmsg.h"
 
 typedef struct access_ipmask {
   TAILQ_ENTRY(access_ipmask) ai_link;
@@ -47,7 +48,9 @@ typedef struct access_entry {
   char *ae_comment;
   int ae_enabled;
   int ae_tagonly;
-  
+  uint32_t ae_chmin;
+  uint32_t ae_chmax;
+  char *ae_chtag;
 
   uint32_t ae_rights;
 
@@ -67,13 +70,25 @@ typedef struct access_ticket {
   char *at_resource;
 } access_ticket_t;
 
-#define ACCESS_ANONYMOUS       0x0
-#define ACCESS_STREAMING       0x1
-#define ACCESS_WEB_INTERFACE   0x2
-#define ACCESS_RECORDER        0x4
-#define ACCESS_RECORDER_ALL    0x8
-#define ACCESS_ADMIN           0x10
-#define ACCESS_FULL 0x3f
+typedef struct access {
+  uint32_t  aa_rights;
+  uint32_t  aa_chmin;
+  uint32_t  aa_chmax;
+  htsmsg_t *aa_chtags;
+  int       aa_match;
+} access_t;
+
+#define ACCESS_ANONYMOUS          0
+#define ACCESS_STREAMING          (1<<0)
+#define ACCESS_ADVANCED_STREAMING (1<<1)
+#define ACCESS_WEB_INTERFACE      (1<<2)
+#define ACCESS_RECORDER           (1<<3)
+#define ACCESS_RECORDER_ALL       (1<<4)
+#define ACCESS_TAG_ONLY           (1<<5)
+#define ACCESS_ADMIN              (1<<6)
+
+#define ACCESS_FULL \
+  (ACCESS_STREAMING | ACCESS_WEB_INTERFACE | ACCESS_RECORDER | ACCESS_ADMIN)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
@@ -86,6 +101,12 @@ const char* access_ticket_create(const char *resource);
 int access_ticket_verify(const char *id, const char *resource);
 
 int access_ticket_delete(const char *ticket_id);
+
+/**
+ * Free the access structure
+ */
+void access_destroy(access_t *a);
+
 /**
  * Verifies that the given user in combination with the source ip
  * complies with the requested mask
@@ -96,27 +117,28 @@ int access_verify(const char *username, const char *password,
 		  struct sockaddr *src, uint32_t mask);
 
 /**
- *
+ * Get the access structure
  */
-uint32_t access_get_hashed(const char *username, const uint8_t digest[20],
-			   const uint8_t *challenge, struct sockaddr *src,
-			   int *entrymatch);
+access_t *access_get(const char *username, const char *password,
+                     struct sockaddr *src);
 
 /**
  *
  */
-uint32_t access_get_by_addr(struct sockaddr *src);
+access_t *
+access_get_hashed(const char *username, const uint8_t digest[20],
+		  const uint8_t *challenge, struct sockaddr *src);
 
+/**
+ *
+ */
+access_t *
+access_get_by_addr(struct sockaddr *src);
 
 /**
  *
  */
 void access_init(int createdefault, int noacl);
 void access_done(void);
-
-/**
- *
- */
-uint32_t access_tag_only(const char *username);
 
 #endif /* ACCESS_H_ */

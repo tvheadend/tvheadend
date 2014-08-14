@@ -23,6 +23,8 @@
 #include "url.h"
 #include "tvhpoll.h"
 
+struct channel;
+
 typedef TAILQ_HEAD(http_arg_list, http_arg) http_arg_list_t;
 
 typedef RB_HEAD(,http_arg) http_arg_tree_t;
@@ -200,9 +202,11 @@ http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
 void http_server_init(const char *bindaddr);
+void http_server_register(void);
 void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
+int http_access_verify_channel(http_connection_t *hc, int mask, struct channel *ch);
 
 void http_deescape(char *s);
 

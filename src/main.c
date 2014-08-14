@@ -64,6 +64,7 @@
 #include "lang_codes.h"
 #include "esfilter.h"
 #include "intlconv.h"
+#include "dbus.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #include "plumbing/transcoding.h"
@@ -470,7 +471,8 @@ main(int argc, char **argv)
               opt_ipv6         = 0,
               opt_tsfile_tuner = 0,
               opt_dump         = 0,
-              opt_xspf         = 0;
+              opt_xspf         = 0,
+              opt_dbus_session = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -503,6 +505,10 @@ main(int argc, char **argv)
 	                      "to your Tvheadend installation until you edit\n"
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
+#if ENABLE_DBUS_1
+    { 'e', "dbus_session", "DBus - use the session message bus instead system one",
+      OPT_BOOL, &opt_dbus_session },
+#endif
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
@@ -665,8 +671,13 @@ main(int argc, char **argv)
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_debug(log_debug);
   tvhlog_set_trace(log_trace);
+  tvhinfo("main", "Log started");
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
+
+  tcp_server_preinit(opt_ipv6);
+  http_server_init(opt_bindaddr);  // bind to ports only
+  htsp_init(opt_bindaddr);	   // bind to ports only
 
   /* Daemonise */
   if(opt_fork) {
@@ -767,6 +778,8 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  dbus_server_init(opt_dbus_session);
+
   intlconv_init();
   
   api_init();
@@ -799,8 +812,8 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
-  tcp_server_init(opt_ipv6);
-  http_server_init(opt_bindaddr);
+  tcp_server_init();
+  http_server_register();
   webui_init(opt_xspf);
 #if ENABLE_UPNP
   upnp_server_init(opt_bindaddr);
@@ -815,7 +828,9 @@ main(int argc, char **argv)
 
   dvr_init();
 
-  htsp_init(opt_bindaddr);
+  dbus_server_start();
+
+  htsp_register();
 
 
   if(opt_subscribe != NULL)
@@ -852,6 +867,9 @@ main(int argc, char **argv)
 
   mainloop();
 
+#if ENABLE_DBUS_1
+  tvhftrace("main", dbus_server_done);
+#endif
 #if ENABLE_UPNP
   tvhftrace("main", upnp_server_done);
 #endif
@@ -921,6 +939,10 @@ main(int argc, char **argv)
   }
   /* end of OpenSSL cleanup code */
 
+#if ENABLE_DBUS_1
+  extern void dbus_shutdown(void);
+  dbus_shutdown();
+#endif
   return 0;
 }
 

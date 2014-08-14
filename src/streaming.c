@@ -235,6 +235,7 @@ streaming_msg_clone(streaming_message_t *src)
     memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
     break;
 
+  case SMT_GRACE:
   case SMT_SPEED:
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
@@ -292,6 +293,7 @@ streaming_msg_free(streaming_message_t *sm)
       streaming_start_unref(sm->sm_data);
     break;
 
+  case SMT_GRACE:
   case SMT_STOP:
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:

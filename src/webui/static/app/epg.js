@@ -170,76 +170,9 @@ tvheadend.epgDetails = function(event) {
             }
         });
     }
-
-    function showAlternatives(s) {
-        var e = Ext.get('altbcast');
-        html = '';
-        if (s.getTotalCount() > 0) {
-            html += '<div class="x-epg-subtitle">Alternative Broadcasts</div>';
-            for (i = 0; i < s.getTotalCount(); i++) {
-                var ab = s.getAt(i).data;
-                var dt = Date.parseDate(ab.start, 'U');
-                html += '<div class="x-epg-desc">' + dt.format('l H:i')
-                        + '&nbsp;&nbsp;&nbsp;' + ab.channel + '</div>';
-            }
-        }
-        e.dom.innerHTML = html;
-    }
-    function showRelated(s) {
-        var e = Ext.get('related');
-        html = '';
-        if (s.getTotalCount() > 0) {
-            html += '<div class="x-epg-subtitle">Related Episodes</div>';
-            for (i = 0; i < s.getTotalCount(); i++) {
-                var ee = s.getAt(i).data;
-                html += '<div class="x-epg-desc">';
-                if (ee.episode)
-                    html += ee.episode + '&nbsp;&nbsp;&nbsp;';
-                html += ee.title;
-                if (ee.subtitle)
-                    html += ' : ' + ee.subtitle;
-                html += '</div>';
-            }
-        }
-        e.dom.innerHTML = html;
-    }
-
-    var ab = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'epgrelated',
-        autoLoad: false,
-        id: 'id',
-        baseParams: {
-            op: 'get',
-            id: event.id,
-            type: 'alternative'
-        },
-        fields: Ext.data.Record.create(['id', 'channel', 'start']),
-        listeners: {
-            'datachanged': showAlternatives
-        }
-    });
-    var re = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'epgrelated',
-        autoLoad: false,
-        id: 'uri',
-        baseParams: {
-            op: 'get',
-            id: event.id,
-            type: 'related'
-        },
-        fields: Ext.data.Record
-                .create(['uri', 'title', 'subtitle', 'episode']),
-        listeners: {
-            'datachanged': showRelated
-        }
-    });
 };
 
 tvheadend.epg = function() {
-    var xg = Ext.grid;
-
     var actions = new Ext.ux.grid.RowActions({
         header: '',
         width: 20,
@@ -343,7 +276,27 @@ tvheadend.epg = function() {
         return '' + value;
     }
 
-    var epgCm = new Ext.grid.ColumnModel([actions, {
+    var epgCm = new Ext.grid.ColumnModel([actions, 
+        new Ext.ux.grid.ProgressColumn({
+            width: 100,
+            header: "Progress",
+            dataIndex: 'progress',
+            colored: false,
+            ceiling: 100,
+            tvh_renderer: function(value, meta, record, rowIndex, colIndex, store) {
+                var entry = record.data;
+                var start = entry.start;
+                var end = entry.end;
+                var duration = entry.duration; // seconds
+                var now = new Date();
+
+                // Only render a progress bar for currently running programmes
+                if (now <= end && now >= start)
+                    return (now - start) / 1000 / duration * 100;
+                else
+                    return "";
+            }
+        }), {
             width: 250,
             id: 'title',
             header: "Title",
@@ -657,6 +610,17 @@ tvheadend.epg = function() {
     });
 
     panel.on('rowclick', rowclicked);
+    
+    /**
+     * Listener for DVR notifications. We want to update the EPG grid when a
+     * recording is finished/deleted etc. so the status icon gets updated. 
+     * Only do this when the tab is visible, otherwise it won't work as 
+     * expected.
+     */
+    tvheadend.comet.on('dvrdb', function() {
+        if (panel.isVisible())
+            epgStore.reload();
+    });
     
     // Always reload the store when the tab is activated
     panel.on('beforeshow', function() {

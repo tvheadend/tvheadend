@@ -318,6 +318,14 @@ typedef enum {
   SMT_PACKET,
 
   /**
+   * Stream grace period
+   *
+   * sm_code contains number of seconds to settle things down
+   */
+
+  SMT_GRACE,
+
+  /**
    * Stream start
    *
    * sm_data points to a stream_start struct.
