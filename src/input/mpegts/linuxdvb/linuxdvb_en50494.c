@@ -167,12 +167,12 @@ linuxdvb_en50494_tune
 
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
-  data1  = le->le_id << 5;        /* 3bit user-band */
-  data1 |= le->le_position << 4;  /* 1bit position (satelitte A(0)/B(1)) */
-  data1 |= pol << 3;              /* 1bit polarisation v(0)/h(1) */
-  data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
-  data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
-  data2  = t & 0xFF;              /* 8bit transponder value bit 3-10 */
+  data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
+  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satelitte A(0)/B(1)) */
+  data1 |= (pol & 1) << 3;              /* 1bit polarisation v(0)/h(1) */
+  data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
+  data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
+  data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
   tvhdebug("en50494",
            "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
            le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
