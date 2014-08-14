@@ -66,6 +66,17 @@ linuxdvb_en50494_class_get_title ( idnode_t *o )
   return title;
 }
 
+static htsmsg_t *
+linuxdvb_en50494_position_list ( void *o )
+{
+  uint32_t i;
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < 2; i++) {
+    htsmsg_add_u32(m, NULL, i);
+  }
+  return m;
+}
+
 htsmsg_t *
 linuxdvb_en50494_id_list ( void *o )
 {
@@ -112,6 +123,7 @@ const idclass_t linuxdvb_en50494_class =
       .id     = "position",
       .name   = "Position",
       .off    = offsetof(linuxdvb_en50494_t, le_position),
+      .list   = linuxdvb_en50494_position_list,
     },
     {
       .type   = PT_U16,
