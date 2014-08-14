@@ -626,8 +626,8 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   }
 
   fbasename = tvh_strdupa(de->de_filename);
-  snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - de->de_start_extra);
-  snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + de->de_stop_extra);
+  snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - (60 * de->de_start_extra));
+  snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + (60 * de->de_stop_extra));
 
   memset(fmap, 0, sizeof(fmap));
   fmap['f'] = de->de_filename; /* full path to recoding */
