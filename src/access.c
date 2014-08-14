@@ -389,14 +389,16 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
-    SHA1_Init(&shactx);
-    SHA1_Update(&shactx, (const uint8_t *)ae->ae_password,
-		strlen(ae->ae_password));
-    SHA1_Update(&shactx, challenge, 32);
-    SHA1_Final(d, &shactx);
+    if(ae->ae_username[0] != '*') {
+      SHA1_Init(&shactx);
+      SHA1_Update(&shactx, (const uint8_t *)ae->ae_password,
+                  strlen(ae->ae_password));
+      SHA1_Update(&shactx, challenge, 32);
+      SHA1_Final(d, &shactx);
 
-    if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
-      continue;
+      if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
+        continue;
+    }
 
     a->aa_match = 1;
     access_update(a, ae);
