@@ -554,7 +554,7 @@ channel_create0
 {
   lock_assert(&global_lock);
 
-  idnode_insert(&ch->ch_id, uuid, idc);
+  idnode_insert(&ch->ch_id, uuid, idc, IDNODE_SHORT_UUID);
   if (RB_INSERT_SORTED(&channels, ch, ch_link, ch_id_cmp)) {
     tvherror("channel", "id collision!");
     abort();

@@ -32,7 +32,7 @@ tvh_hardware_create0
   tvh_hardware_t *th = o;
 
   /* Create node */
-  if (idnode_insert(&th->th_id, uuid, idc)) {
+  if (idnode_insert(&th->th_id, uuid, idc, 0)) {
     free(o);
     return NULL;
   }

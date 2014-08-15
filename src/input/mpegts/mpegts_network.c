@@ -281,7 +281,7 @@ mpegts_network_create0
   char buf[256];
 
   /* Setup idnode */
-  idnode_insert(&mn->mn_id, uuid, idc);
+  idnode_insert(&mn->mn_id, uuid, idc, 0);
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;
