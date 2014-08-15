@@ -233,7 +233,7 @@ satip_satconf_create0
 
   if (conf)
     uuid = htsmsg_get_str(conf, "uuid");
-  if (idnode_insert(&sfc->sfc_id, uuid, &satip_satconf_class)) {
+  if (idnode_insert(&sfc->sfc_id, uuid, &satip_satconf_class, 0)) {
     free(sfc);
     return NULL;
   }

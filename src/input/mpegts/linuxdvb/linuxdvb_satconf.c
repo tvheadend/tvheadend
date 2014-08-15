@@ -732,7 +732,7 @@ linuxdvb_satconf_create
   TAILQ_INIT(&ls->ls_elements);
 
   /* Create node */
-  if (idnode_insert(&ls->ls_id, uuid, lst->idc)) {
+  if (idnode_insert(&ls->ls_id, uuid, lst->idc, 0)) {
     free(ls);
     return NULL;
   }
@@ -1113,7 +1113,7 @@ linuxdvb_satconf_ele_create0
 {
   htsmsg_t *e;
   linuxdvb_satconf_ele_t *lse = calloc(1, sizeof(*lse));
-  if (idnode_insert(&lse->lse_id, uuid, &linuxdvb_satconf_ele_class)) {
+  if (idnode_insert(&lse->lse_id, uuid, &linuxdvb_satconf_ele_class, 0)) {
     free(lse);
     return NULL;
   }
@@ -1210,7 +1210,7 @@ linuxdvb_diseqc_create0
     htsmsg_t *conf, const char *type, linuxdvb_satconf_ele_t *parent )
 {
   /* Insert */
-  if (idnode_insert(&ld->ld_id, uuid, idc)) {
+  if (idnode_insert(&ld->ld_id, uuid, idc, 0)) {
     free(ld);
     return NULL;
   }

@@ -259,7 +259,7 @@ mpegts_mux_sched_create ( const char *uuid, htsmsg_t *conf )
   }
 
   /* Insert node */
-  idnode_insert(&mms->mms_id, uuid, &mpegts_mux_sched_class);
+  idnode_insert(&mms->mms_id, uuid, &mpegts_mux_sched_class, 0);
 
   /* Add to list */
   LIST_INSERT_HEAD(&mpegts_mux_sched_all, mms, mms_link);
