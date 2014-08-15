@@ -54,7 +54,7 @@ mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
     mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  idnode_insert(&mmi->mmi_id, uuid, class);
+  idnode_insert(&mmi->mmi_id, uuid, class, 0);
   // TODO: does this need to be an idnode?
 
   /* Setup links */
@@ -881,7 +881,7 @@ mpegts_mux_create0
 {
   char buf[256];
 
-  idnode_insert(&mm->mm_id, uuid, class);
+  idnode_insert(&mm->mm_id, uuid, class, 0);
 
   /* Enabled by default */
   mm->mm_enabled             = 1;

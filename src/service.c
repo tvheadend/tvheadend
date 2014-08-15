@@ -827,7 +827,7 @@ service_create0
   ( service_t *t, const idclass_t *class, const char *uuid,
     int source_type, htsmsg_t *conf )
 {
-  idnode_insert(&t->s_id, uuid, class);
+  idnode_insert(&t->s_id, uuid, class, 0);
 
   lock_assert(&global_lock);
   

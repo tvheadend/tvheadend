@@ -314,7 +314,7 @@ linuxdvb_lnb_create0
   /* Setup static entries */
   for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
     if (!linuxdvb_lnb_all[i].ld_id.in_class)
-      idnode_insert(&linuxdvb_lnb_all[i].ld_id, NULL, &linuxdvb_lnb_class);
+      idnode_insert(&linuxdvb_lnb_all[i].ld_id, NULL, &linuxdvb_lnb_class, 0);
 
   /* Find */
   if (name) {
