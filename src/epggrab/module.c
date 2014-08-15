@@ -353,7 +353,7 @@ static void *_epggrab_socket_thread ( void *p )
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhlog(LOG_INFO, mod->id, "external socket enabled");
   
-  while ( epggrab_running && mod->enabled && mod->sock ) {
+  while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
     if (s <= 0) continue;
