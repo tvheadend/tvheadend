@@ -341,7 +341,7 @@ static int _timeshift_read
 #else
     tvhtrace("timeshift", "ts %d read msg %p (%zd)", ts->id, *sm, r);
 #endif
-    
+
     /* Incomplete */
     if (r == 0) {
       lseek(*fd, *cur_off, SEEK_SET);
