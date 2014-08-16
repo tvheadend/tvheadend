@@ -269,6 +269,9 @@ linuxdvb_en50494_create0
   linuxdvb_diseqc_t *ld;
   linuxdvb_en50494_t *le;
 
+  if (strcmp(name ?: "", "Generic"))
+    return NULL;
+
   if (port > 1) {
     tvherror("en50494", "only 2 ports/positions are posible. given %i", port);
     port = 0;
