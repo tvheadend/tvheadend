@@ -263,7 +263,7 @@ int main() {
 #endif
 }
 EOF
-  $CC $CFLAGS $LDFLAGS $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt 2>&1 /dev/null
+  $CC $CFLAGS $LDFLAGS $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt > /dev/null 2>&1
   RET=$?
   rm -f $TMPDIR/$$.{c,bin}
   return $RET
@@ -356,7 +356,7 @@ check_py ()
   cat >$TMPDIR/$$.py <<EOF
 $hdr
 EOF
-  $PYTHON $TMPDIR/$$.py 2>&1 /dev/null
+  $PYTHON $TMPDIR/$$.py > /dev/null 2>&1
   RET=$?
   rm -f $TMPDIR/$$.py
   return $RET

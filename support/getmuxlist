@@ -11,13 +11,13 @@ DIR=$1
 if [ -d "${DIR}/.git" ]; then
   LAST=$(pwd)
   cd "${DIR}" || exit 1
-  git pull 2>&1 /dev/null || exit 1
-  git reset --hard 2>&1 /dev/null || exit 1
+  git pull > /dev/null 2>&1 || exit 1
+  git reset --hard > /dev/null 2>&1 || exit 1
   cd "${LAST}" || exit 1
 # Fetch
 elif [ ! -d "${DIR}" ]; then
   URL=http://linuxtv.org/git/dtv-scan-tables.git
-  git clone $URL "${DIR}" 2>&1 /dev/null || exit 1
+  git clone $URL "${DIR}" > /dev/null 2>&1 || exit 1
 fi
 
 # Note: will not update existing set (if not .git)
