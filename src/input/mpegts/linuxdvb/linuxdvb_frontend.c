@@ -1080,7 +1080,15 @@ linuxdvb_frontend_tune0
   /*
    * copy the universal parameters to the Linux kernel structure
    */
+
   dmc = &lm->lm_tuning;
+#if ENABLE_TRACE
+  {
+    char buf2[256];
+    dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
+    tvhtrace("linuxdvb", "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
+  }
+#endif
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;
   p.inversion                = TR(inversion, inv_tbl, INVERSION_AUTO);
