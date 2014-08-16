@@ -19,6 +19,7 @@
 #ifndef ACCESS_H_
 #define ACCESS_H_
 
+#include "idnode.h"
 #include "htsmsg.h"
 
 typedef struct access_ipmask {
@@ -40,14 +41,22 @@ TAILQ_HEAD(access_entry_queue, access_entry);
 extern struct access_entry_queue access_entries;
 
 typedef struct access_entry {
-  char *ae_id;
+  idnode_t ae_id;
 
   TAILQ_ENTRY(access_entry) ae_link;
   char *ae_username;
   char *ae_password;
+  char *ae_password2;
   char *ae_comment;
+  int ae_index;
   int ae_enabled;
-  int ae_tagonly;
+  int ae_streaming;
+  int ae_adv_streaming;
+  int ae_dvr;
+  int ae_dvrallcfg;
+  int ae_webui;
+  int ae_admin;
+  int ae_tag_only;
   uint32_t ae_chmin;
   uint32_t ae_chmax;
   char *ae_chtag;
@@ -56,6 +65,8 @@ typedef struct access_entry {
 
   TAILQ_HEAD(, access_ipmask) ae_ipmasks;
 } access_entry_t;
+
+extern const idclass_t access_entry_class;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
 
@@ -135,6 +146,12 @@ access_get_hashed(const char *username, const uint8_t digest[20],
  */
 access_t *
 access_get_by_addr(struct sockaddr *src);
+
+/**
+ *
+ */
+access_entry_t *
+access_entry_create(const char *uuid, htsmsg_t *conf);
 
 /**
  *

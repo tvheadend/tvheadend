@@ -69,6 +69,7 @@ void api_status_init        ( void );
 void api_imagecache_init    ( void );
 void api_esfilter_init      ( void );
 void api_intlconv_init      ( void );
+void api_access_init        ( void );
 
 /*
  * IDnode

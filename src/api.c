@@ -127,6 +127,7 @@ void api_init ( void )
   api_imagecache_init();
   api_esfilter_init();
   api_intlconv_init();
+  api_access_init();
 }
 
 void api_done ( void )

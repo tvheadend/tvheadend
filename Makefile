@@ -155,7 +155,8 @@ SRCS += \
 	src/api/api_epggrab.c \
 	src/api/api_imagecache.c \
 	src/api/api_esfilter.c \
-	src/api/api_intlconv.c
+	src/api/api_intlconv.c \
+	src/api/api_access.c
 
 SRCS += \
 	src/parsers/parsers.c \

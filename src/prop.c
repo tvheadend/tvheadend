@@ -323,6 +323,8 @@ prop_serialize
       htsmsg_add_bool(m, "advanced", 1);
     if (pl->opts & PO_HIDDEN)
       htsmsg_add_bool(m, "hidden", 1);
+    if (pl->opts & PO_PASSWORD)
+      htsmsg_add_bool(m, "password", 1);
 
     /* Enum list */
     if (pl->list)
