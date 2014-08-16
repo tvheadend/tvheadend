@@ -615,6 +615,60 @@ config_migrate_v6 ( void )
   htsmsg_destroy(c);
 }
 
+
+/*
+ * v6 -> v7 : acesscontrol changes
+ */
+static void
+config_migrate_simple ( const char *dir, htsmsg_t **orig,
+                        void (*modify)(htsmsg_t *record) )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  tvh_uuid_t u;
+  uint32_t index = 1;
+
+  if (!(c = hts_settings_load_r(1, dir)))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    htsmsg_delete_field(e, "id");
+    htsmsg_add_u32(e, "index", index++);
+    uuid_init_hex(&u, NULL);
+    hts_settings_save(e, "%s/%s", dir, u.hex);
+    hts_settings_remove("%s/%s", dir, f->hmf_name);
+  }
+
+  if (orig)
+    *orig = c;
+  else
+    htsmsg_destroy(c);
+}
+
+static void
+config_modify_acl( htsmsg_t *c )
+{
+  uint32_t a, b;
+  const char *s;
+  if (htsmsg_get_u32(c, "adv_streaming", &a))
+    if (!htsmsg_get_u32(c, "streaming", &b))
+      htsmsg_add_u32(c, "adv_streaming", b);
+  if ((s = htsmsg_get_str(c, "password")) != NULL) {
+    char buf[256], result[300];
+    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", s);
+    base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
+    htsmsg_add_str(c, "password2", result);
+    htsmsg_delete_field(c, "password");
+  }
+}
+
+static void
+config_migrate_v7 ( void )
+{
+  config_migrate_simple("accesscontrol", NULL, config_modify_acl);
+}
+
 /*
  * Migration table
  */
@@ -625,6 +679,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v3, // Re-run due to bug in previous version of function
   config_migrate_v5,
   config_migrate_v6,
+  config_migrate_v7,
 };
 
 /*

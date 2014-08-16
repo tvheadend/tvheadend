@@ -103,7 +103,10 @@ The columns have the following functions:
   <dt>Channel Tag
   <dd>
   If set, the user will only be able to access channels with
-  a channel tag equal to this value.
+  a channel tag equal to this value. Note that this field stores
+  the tag name (not identified). It means that this field would not be
+  updated when the tag name is changed. A manual re-set of this field
+  is required (for security reasons).
 
   <dt>Comment
   <dd>

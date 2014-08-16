@@ -117,6 +117,7 @@ tvheadend.IdNodeField = function(conf)
     this.wronly = conf.wronly;
     this.wronce = conf.wronce;
     this.hidden = conf.hidden || conf.advanced;
+    this.password = conf.password;
     this.enum = conf.enum;
     this.store = null;
     if (this.enum)
@@ -168,6 +169,11 @@ tvheadend.IdNodeField = function(conf)
 
     this.renderer = function()
     {
+        if (this.password)
+            return function(v) {
+                return '<span class="tvh-grid-unset">********</span>';
+            }
+    
         if (!this.store)
             return null;
 
