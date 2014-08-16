@@ -165,6 +165,7 @@ linuxdvb_satconf_class_orbitalpos_set
   linuxdvb_satconf_t *ls = p;
   int c = *(int*)linuxdvb_satconf_class_orbitalpos_get(p);
   int n = *(int*)v;
+  char buf[20];
 
   if (n == c)
     return 0;
@@ -172,7 +173,11 @@ linuxdvb_satconf_class_orbitalpos_set
   /* Add */
   if (n > c) {
     while (c < n) {
-      linuxdvb_satconf_ele_create0(NULL, NULL, ls);
+      lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
+      if (lse->lse_name == NULL) {
+        snprintf(buf, sizeof(buf), "Position #%i", c + 1);
+        lse->lse_name = strdup(buf);
+      }
       c++;
     }
 
