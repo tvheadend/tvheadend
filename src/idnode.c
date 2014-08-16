@@ -108,7 +108,7 @@ idnode_done(void)
 int
 idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
 {
-  idnode_t *c, skel;
+  idnode_t *c;
   lock_assert(&global_lock);
   tvh_uuid_t u;
   int retries = 5;
@@ -121,11 +121,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
     memcpy(in->in_uuid, u.bin, sizeof(in->in_uuid));
 
     c = NULL;
-    if (flags & IDNODE_SHORT_UUID) {
-      if(hex2bin(skel.in_uuid, sizeof(skel.in_uuid), uuid))
-        return -1;
-      c = RB_FIND(&idnodes, &skel, in_link, in_cmp_short);
-    }
+    if (flags & IDNODE_SHORT_UUID)
+      c = RB_FIND(&idnodes, in, in_link, in_cmp_short);
 
     if (c == NULL)
       c = RB_INSERT_SORTED(&idnodes, in, in_link, in_cmp);
