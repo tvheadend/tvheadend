@@ -486,7 +486,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Stop timer */
-  if (!mmi || !lfe->lfe_ready) return;
+  if (!mmi) return;
 
   /* re-arm */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
@@ -505,6 +505,12 @@ linuxdvb_frontend_monitor ( void *aux )
     status = SIGNAL_FAINT;
   else
     status = SIGNAL_NONE;
+
+  if (!lfe->lfe_ready) {
+    /* send the status message to the higher layers _always_ */
+    status = SIGNAL_NONE;
+    goto status;
+  }
 
   /* Set default period */
   if (fe_status != lfe->lfe_status) {
@@ -761,6 +767,7 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
+status:
   /* Send message */
   sigstat.status_text  = signal2str(status);
   sigstat.snr          = mmi->mmi_stats.snr;
@@ -1080,7 +1087,15 @@ linuxdvb_frontend_tune0
   /*
    * copy the universal parameters to the Linux kernel structure
    */
+
   dmc = &lm->lm_tuning;
+#if ENABLE_TRACE
+  {
+    char buf2[256];
+    dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
+    tvhtrace("linuxdvb", "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
+  }
+#endif
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;
   p.inversion                = TR(inversion, inv_tbl, INVERSION_AUTO);

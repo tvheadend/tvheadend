@@ -39,6 +39,7 @@ OPTIONS=(
   "dvbcsa:no"
   "kqueue:no"
   "dbus_1:auto"
+  "android:no"
 )
 
 #
@@ -165,6 +166,8 @@ if [ ${PLATFORM} = "freebsd" ]; then
   # FreeBSD has libssl in base
   enable ssl
 elif check_pkg openssl || check_pkg libssl; then
+  enable ssl
+elif check_cc_header 'openssl/ssl' ssl; then
   enable ssl
 else
   die "SSL development support not found"

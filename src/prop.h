@@ -48,6 +48,7 @@ typedef enum {
 #define PO_HIDDEN   0x10  // Property is hidden (by default)
 #define PO_USERAW   0x20  // Only save the RAW (off) value if it exists
 #define PO_SORTKEY  0x40  // Sort using key (not display value)
+#define PO_PASSWORD 0x80  // String is a password
 
 /*
  * Property definition

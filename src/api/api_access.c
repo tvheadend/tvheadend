@@ -1,0 +1,61 @@
+/*
+ *  API - access control
+ *
+ *  Copyright (C) 2014 Jaroslav Kysela
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tvheadend.h"
+#include "access.h"
+#include "api.h"
+
+static void
+api_access_entry_grid
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  access_entry_t *ae;
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link)
+    idnode_set_add(ins, (idnode_t*)ae, &conf->filter);
+}
+
+static int
+api_access_entry_create
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  access_entry_create(NULL, conf);
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+void api_access_init ( void )
+{
+  static api_hook_t ah[] = {
+    { "access/entry/class",    ACCESS_ANONYMOUS, api_idnode_class, (void*)&access_entry_class },
+    { "access/entry/grid",     ACCESS_ANONYMOUS, api_idnode_grid,  api_access_entry_grid },
+    { "access/entry/create",   ACCESS_ADMIN,     api_access_entry_create, NULL },
+
+    { NULL },
+  };
+
+  api_register_all(ah);
+}

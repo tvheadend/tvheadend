@@ -119,6 +119,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
 
       while (1) {
         if (!tvheadend_running) {
+          errbuf[0] = '\0';
           tvhpoll_destroy(efd);
           close(fd);
           return -1;

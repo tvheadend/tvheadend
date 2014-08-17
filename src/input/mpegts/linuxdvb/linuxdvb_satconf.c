@@ -165,6 +165,7 @@ linuxdvb_satconf_class_orbitalpos_set
   linuxdvb_satconf_t *ls = p;
   int c = *(int*)linuxdvb_satconf_class_orbitalpos_get(p);
   int n = *(int*)v;
+  char buf[20];
 
   if (n == c)
     return 0;
@@ -172,7 +173,11 @@ linuxdvb_satconf_class_orbitalpos_set
   /* Add */
   if (n > c) {
     while (c < n) {
-      linuxdvb_satconf_ele_create0(NULL, NULL, ls);
+      lse = linuxdvb_satconf_ele_create0(NULL, NULL, ls);
+      if (lse->lse_name == NULL) {
+        snprintf(buf, sizeof(buf), "Position #%i", c + 1);
+        lse->lse_name = strdup(buf);
+      }
       c++;
     }
 
@@ -364,7 +369,7 @@ linuxdvb_satconf_class_en50494_id_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_id) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -383,7 +388,7 @@ linuxdvb_satconf_class_en50494_pin_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_pin) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 static const void *
@@ -402,7 +407,7 @@ linuxdvb_satconf_class_en50494_freq_set
   linuxdvb_satconf_ele_t *lse;
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     (((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency) = *(uint16_t*)v;
-  return 0;
+  return 1;
 }
 
 const idclass_t linuxdvb_satconf_en50494_class =
@@ -414,7 +419,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "id",
-      .name     = "ID",
+      .name     = "SCR (ID)",
       .get      = linuxdvb_satconf_class_en50494_id_get,
       .set      = linuxdvb_satconf_class_en50494_id_set,
       .list     = linuxdvb_en50494_id_list,
@@ -732,7 +737,7 @@ linuxdvb_satconf_create
   TAILQ_INIT(&ls->ls_elements);
 
   /* Create node */
-  if (idnode_insert(&ls->ls_id, uuid, lst->idc)) {
+  if (idnode_insert(&ls->ls_id, uuid, lst->idc, 0)) {
     free(ls);
     return NULL;
   }
@@ -1113,7 +1118,7 @@ linuxdvb_satconf_ele_create0
 {
   htsmsg_t *e;
   linuxdvb_satconf_ele_t *lse = calloc(1, sizeof(*lse));
-  if (idnode_insert(&lse->lse_id, uuid, &linuxdvb_satconf_ele_class)) {
+  if (idnode_insert(&lse->lse_id, uuid, &linuxdvb_satconf_ele_class, 0)) {
     free(lse);
     return NULL;
   }
@@ -1210,7 +1215,7 @@ linuxdvb_diseqc_create0
     htsmsg_t *conf, const char *type, linuxdvb_satconf_ele_t *parent )
 {
   /* Insert */
-  if (idnode_insert(&ld->ld_id, uuid, idc)) {
+  if (idnode_insert(&ld->ld_id, uuid, idc, 0)) {
     free(ld);
     return NULL;
   }

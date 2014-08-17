@@ -33,6 +33,10 @@
 #include "file.h"
 #include "spawn.h"
 
+#if ENABLE_ANDROID
+#define WIFCONTINUED(s) ((s) == 0xffff)
+#endif
+
 extern char **environ;
 
 pthread_mutex_t spawn_mutex = PTHREAD_MUTEX_INITIALIZER;

@@ -66,6 +66,17 @@ linuxdvb_en50494_class_get_title ( idnode_t *o )
   return title;
 }
 
+static htsmsg_t *
+linuxdvb_en50494_position_list ( void *o )
+{
+  uint32_t i;
+  htsmsg_t *m = htsmsg_create_list();
+  for (i = 0; i < 2; i++) {
+    htsmsg_add_u32(m, NULL, i);
+  }
+  return m;
+}
+
 htsmsg_t *
 linuxdvb_en50494_id_list ( void *o )
 {
@@ -112,6 +123,7 @@ const idclass_t linuxdvb_en50494_class =
       .id     = "position",
       .name   = "Position",
       .off    = offsetof(linuxdvb_en50494_t, le_position),
+      .list   = linuxdvb_en50494_position_list,
     },
     {
       .type   = PT_U16,
@@ -122,7 +134,7 @@ const idclass_t linuxdvb_en50494_class =
     {
       .type   = PT_U16,
       .id     = "id",
-      .name   = "ID",
+      .name   = "SCR (ID)",
       .off    = offsetof(linuxdvb_en50494_t, le_id),
       .list   = linuxdvb_en50494_id_list,
     },
@@ -167,12 +179,12 @@ linuxdvb_en50494_tune
 
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
-  data1  = le->le_id << 5;        /* 3bit user-band */
-  data1 |= le->le_position << 4;  /* 1bit position (satelitte A(0)/B(1)) */
-  data1 |= pol << 3;              /* 1bit polarisation v(0)/h(1) */
-  data1 |= band << 2;             /* 1bit band lower(0)/upper(1) */
-  data1 |= t >> 8;                /* 2bit transponder value bit 1-2 */
-  data2  = t & 0xFF;              /* 8bit transponder value bit 3-10 */
+  data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
+  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satelitte A(0)/B(1)) */
+  data1 |= (pol & 1) << 3;              /* 1bit polarisation v(0)/h(1) */
+  data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
+  data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
+  data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
   tvhdebug("en50494",
            "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
            le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
@@ -256,6 +268,9 @@ linuxdvb_en50494_create0
 {
   linuxdvb_diseqc_t *ld;
   linuxdvb_en50494_t *le;
+
+  if (strcmp(name ?: "", "Generic"))
+    return NULL;
 
   if (port > 1) {
     tvherror("en50494", "only 2 ports/positions are posible. given %i", port);

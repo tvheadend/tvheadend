@@ -313,8 +313,9 @@ http_error(http_connection_t *hc, int error)
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
-  tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
-	 addrstr, hc->hc_url, error);
+  if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
+    tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "HTTP", "%s: %s -- %d",
+	   addrstr, hc->hc_url, error);
 
   htsbuf_queue_flush(&hc->hc_reply);
 

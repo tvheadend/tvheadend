@@ -160,7 +160,7 @@ esfilter_create
     abort();
   }
   lock_assert(&global_lock);
-  idnode_insert(&esf->esf_id, uuid, c);
+  idnode_insert(&esf->esf_id, uuid, c, 0);
   if (conf)
     idnode_load(&esf->esf_id, conf);
   if (ESF_CLASS_IS_VALID(cls))
