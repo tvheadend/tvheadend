@@ -261,6 +261,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
   if (lfe->lfe_fe_path == NULL) return 0;
   if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
+  if (lfe->lfe_in_setup) return 0;
   return 1;
 }
 
@@ -288,6 +289,7 @@ linuxdvb_frontend_stop_mux
   lfe->lfe_ready  = 0;
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
+  assert(lfe->lfe_in_setup == 0);
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
@@ -301,6 +303,8 @@ linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_frontend_t   *lfe = (linuxdvb_frontend_t*)mi;
+  lfe->lfe_in_setup = 1;
+  lfe->lfe_ioctls   = 0;
   if (lfe->lfe_satconf)
     return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
@@ -1061,7 +1065,6 @@ linuxdvb_frontend_tune0
   }
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
-  lfe->lfe_ioctls = 0;
 
   /*
    * copy the universal parameters to the Linux kernel structure
@@ -1245,6 +1248,8 @@ linuxdvb_frontend_tune1
     gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
     lfe->lfe_ready = 1;
   }
+
+  lfe->lfe_in_setup = 0;
   
   return r;
 }
