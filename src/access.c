@@ -667,6 +667,7 @@ access_entry_reindex(void)
 static void
 access_entry_class_save(idnode_t *self)
 {
+  access_entry_update_rights((access_entry_t *)self);
   access_entry_save((access_entry_t *)self);
 }
 
@@ -957,8 +958,13 @@ access_init(int createdefault, int noacl)
 
     ae->ae_comment = strdup("Default access entry");
 
-    ae->ae_enabled = 1;
-    ae->ae_rights = ACCESS_FULL;
+    ae->ae_enabled       = 1;
+    ae->ae_streaming     = 1;
+    ae->ae_adv_streaming = 1;
+    ae->ae_dvr           = 1;
+    ae->ae_webui         = 1;
+    ae->ae_admin         = 1;
+    access_entry_update_rights(ae);
 
     TAILQ_INIT(&ae->ae_ipmasks);
 
