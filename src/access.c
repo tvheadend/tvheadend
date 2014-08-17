@@ -562,6 +562,7 @@ access_entry_update_rights(access_entry_t *ae)
  */
 
 static void access_entry_reindex(void);
+static int access_entry_class_password_set(void *o, const void *v);
 
 access_entry_t *
 access_entry_create(const char *uuid, htsmsg_t *conf)
@@ -575,16 +576,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   idnode_insert(&ae->ae_id, uuid, &access_entry_class, 0);
 
-  ae->ae_username = strdup("*");
-  ae->ae_password = strdup("*");
-  ae->ae_comment = strdup("New entry");
   TAILQ_INIT(&ae->ae_ipmasks);
-  ai = calloc(1, sizeof(access_ipmask_t));
-  ai->ai_ipv6 = 1;
-  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
-  ai = calloc(1, sizeof(access_ipmask_t));
-  ai->ai_ipv6 = 0;
-  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
 
   if (conf) {
     idnode_load(&ae->ae_id, conf);
@@ -598,6 +590,21 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
       TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
   } else {
     TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
+  }
+
+  if (ae->ae_username == NULL)
+    ae->ae_username = strdup("*");
+  if (ae->ae_comment == NULL)
+    ae->ae_comment = strdup("New entry");
+  if (ae->ae_password == NULL)
+    access_entry_class_password_set(ae, "*");
+  if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL) {
+    ai = calloc(1, sizeof(access_ipmask_t));
+    ai->ai_ipv6 = 1;
+    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+    ai = calloc(1, sizeof(access_ipmask_t));
+    ai->ai_ipv6 = 0;
+    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
   }
 
   access_entry_reindex();
@@ -956,6 +963,7 @@ access_init(int createdefault, int noacl)
     /* No records available */
     ae = access_entry_create(NULL, NULL);
 
+    free(ae->ae_comment);
     ae->ae_comment = strdup("Default access entry");
 
     ae->ae_enabled       = 1;
