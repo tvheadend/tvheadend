@@ -242,10 +242,10 @@ dvb_network_check_symbol_rate( dvb_mux_t *lm, dvb_mux_conf_t *dmc, int deltar )
     return dvb_network_check_bandwidth(lm->lm_tuning.u.dmc_fe_ofdm.bandwidth,
                                        dmc->u.dmc_fe_ofdm.bandwidth);
   case DVB_TYPE_C:
-    return abs(lm->lm_tuning.u.dmc_fe_qam.symbol_rate -
+    return deltaU32(lm->lm_tuning.u.dmc_fe_qam.symbol_rate,
                dmc->u.dmc_fe_qam.symbol_rate) > deltar;
   case DVB_TYPE_S:
-    return abs(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate -
+    return deltaU32(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate,
                dmc->u.dmc_fe_qpsk.symbol_rate) > deltar;
   case DVB_TYPE_ATSC:
     return 0;
@@ -296,7 +296,7 @@ dvb_network_find_mux
     }
 
     /* Reject if not same frequency (some tolerance due to changes and diff in NIT) */
-    if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > deltaf) continue;
+    if (deltaU32(lm->lm_tuning.dmc_fe_freq, dmc->dmc_fe_freq) > deltaf) continue;
 
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
@@ -430,7 +430,7 @@ dvb_network_create_mux
     tuning_old = lm->lm_tuning;
 #endif
     /* Handle big diffs that have been allowed through for DVB-S */
-    if (abs(dmc->dmc_fe_freq - lm->lm_tuning.dmc_fe_freq) > 4000) {
+    if (deltaU32(dmc->dmc_fe_freq, lm->lm_tuning.dmc_fe_freq) > 4000) {
       lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
       save = 1;
     }
