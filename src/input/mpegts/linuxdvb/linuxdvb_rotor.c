@@ -143,7 +143,7 @@ linuxdvb_rotor_grace
   if (ld->ld_satconf->lse_parent->ls_orbital_dir == 'W')
     curpos = -(curpos);
 
-  return (lr->lr_rate*(abs(curpos - lr->lr_position))+999)/1000;
+  return (lr->lr_rate*(deltaU32(curpos, lr->lr_position))+999)/1000;
 }
 
 static int

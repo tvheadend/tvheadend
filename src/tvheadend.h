@@ -718,7 +718,8 @@ int makedirs ( const char *path, int mode );
 int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
-
+uint32_t deltaU32(uint32_t a, uint32_t b);
+  
 #define SKEL_DECLARE(name, type) type *name;
 #define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
 #define SKEL_USED(name) do { name = NULL; } while (0)
