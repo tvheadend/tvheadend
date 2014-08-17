@@ -486,7 +486,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Stop timer */
-  if (!mmi || !lfe->lfe_ready) return;
+  if (!mmi) return;
 
   /* re-arm */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
@@ -505,6 +505,12 @@ linuxdvb_frontend_monitor ( void *aux )
     status = SIGNAL_FAINT;
   else
     status = SIGNAL_NONE;
+
+  if (!lfe->lfe_ready) {
+    /* send the status message to the higher layers _always_ */
+    status = SIGNAL_NONE;
+    goto status;
+  }
 
   /* Set default period */
   if (fe_status != lfe->lfe_status) {
@@ -761,6 +767,7 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
+status:
   /* Send message */
   sigstat.status_text  = signal2str(status);
   sigstat.snr          = mmi->mmi_stats.snr;
