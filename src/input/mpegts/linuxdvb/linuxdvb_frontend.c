@@ -576,18 +576,18 @@ linuxdvb_frontend_monitor ( void *aux )
     gotprop = 0;
     if(ioctl_check(lfe, 1) && fe_properties[0].u.st.len > 0) {
       if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
-        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->mmi_stats.signal = fe_properties[0].u.st.stat[0].uvalue;
         gotprop = 1;
       }
       else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
-        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_DECIBEL;
+        mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_DECIBEL;
         mmi->mmi_stats.signal = fe_properties[0].u.st.stat[0].svalue;
         gotprop = 1;
       }
       else {
         ioctl_bad(lfe, 1);
-        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled signal scale: %d",
                fe_properties[0].u.st.stat[0].scale);
       }
@@ -595,12 +595,12 @@ linuxdvb_frontend_monitor ( void *aux )
     if(!gotprop && ioctl_check(lfe, 2)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
-        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->mmi_stats.signal = u16;
       }
       else {
         ioctl_bad(lfe, 2);
-        mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
       }
     }
@@ -646,18 +646,18 @@ linuxdvb_frontend_monitor ( void *aux )
     gotprop = 0;
     if(ioctl_check(lfe, 6) && fe_properties[3].u.st.len > 0) {
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
-        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].uvalue;
         gotprop = 1;
       }
       else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
-        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_DECIBEL;
+        mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_DECIBEL;
         mmi->mmi_stats.snr = fe_properties[3].u.st.stat[0].svalue;
         gotprop = 1;
       }
       else {
         ioctl_bad(lfe, 6);
-        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unhandled SNR scale: %d",
                fe_properties[3].u.st.stat[0].scale);
       }
@@ -665,12 +665,12 @@ linuxdvb_frontend_monitor ( void *aux )
     if(!gotprop && ioctl_check(lfe, 7)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
-        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+        mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
         mmi->mmi_stats.snr = u16;
       }
       else {
         ioctl_bad(lfe, 7);
-        mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+        mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
       }
     }
@@ -720,12 +720,12 @@ linuxdvb_frontend_monitor ( void *aux )
   {
     ioctl_bad(lfe, 0);
     if (ioctl_check(lfe, 1) && !ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
-      mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+      mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
       mmi->mmi_stats.signal = u16;
     }
     else {
       ioctl_bad(lfe, 1);
-      mmi->mmi_stats.signal_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+      mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
     }
     if (ioctl_check(lfe, 2) && !ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
@@ -735,12 +735,12 @@ linuxdvb_frontend_monitor ( void *aux )
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
     }
     if (ioctl_check(lfe, 3) && !ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
-      mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_RELATIVE;
+      mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
       mmi->mmi_stats.snr = u16;
     }
     else {
       ioctl_bad(lfe, 3);
-      mmi->mmi_stats.snr_scale = INPUT_STREAM_STATS_SCALE_UNKNOWN;
+      mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
       tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
     }
     if (ioctl_check(lfe, 4) && !ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))

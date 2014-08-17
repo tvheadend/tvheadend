@@ -35,15 +35,6 @@ typedef LIST_HEAD(,tvh_input)         tvh_input_list_t;
 typedef LIST_HEAD(,tvh_input_stream)  tvh_input_stream_list_t;
 
 /*
- * Scales for input stream statistics values
- */
-typedef enum {
-  INPUT_STREAM_STATS_SCALE_UNKNOWN = 0,
-  INPUT_STREAM_STATS_SCALE_RELATIVE, // value is unsigned, where 0 means 0% and 65535 means 100%
-  INPUT_STREAM_STATS_SCALE_DECIBEL   // value is measured in dB
-} tvh_input_stream_stats_scale_t;
-
-/*
  * Input stream structure - used for getting statistics about active streams
  */
 struct tvh_input_stream_stats
@@ -60,8 +51,8 @@ struct tvh_input_stream_stats
   int cc;     ///< number of continuity errors
   int te;     ///< number of transport errors
 
-  tvh_input_stream_stats_scale_t signal_scale;
-  tvh_input_stream_stats_scale_t snr_scale;
+  signal_status_scale_t signal_scale;
+  signal_status_scale_t snr_scale;
 
   /* Note: if tc_bit > 0, BER = ec_bit / tc_bit (0...1) else BER = ber (driver specific value) */
   int ec_bit;    ///< ERROR_BIT_COUNT (same as unc?)
