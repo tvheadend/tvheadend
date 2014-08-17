@@ -292,7 +292,7 @@ access_update(access_t *a, access_entry_t *ae)
     }
   }
 
-  if(ae->ae_chtag) {
+  if(ae->ae_chtag && ae->ae_chtag[0] != '\0') {
     if (a->aa_chtags == NULL)
       a->aa_chtags = htsmsg_create_list();
     htsmsg_add_str(a->aa_chtags, NULL, ae->ae_chtag);
