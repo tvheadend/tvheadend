@@ -76,6 +76,9 @@ typedef struct th_subscription {
 
   int ths_flags;
 
+  time_t ths_last_find;
+  int ths_last_error;
+
   streaming_message_t *ths_start_message;
 
   char *ths_hostname;
