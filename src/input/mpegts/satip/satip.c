@@ -588,6 +588,7 @@ static int satip_discoveries_count;
 static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
 static gtimer_t satip_discovery_timer;
+static gtimer_t satip_discovery_static_timer;
 static gtimer_t satip_discovery_timerq;
 static gtimer_t satip_discovery_msearch_timer;
 static str_list_t *satip_static_clients;
@@ -980,13 +981,24 @@ ST: urn:ses-com:device:SatIPServer:1\r\n"
 
   gtimer_arm_ms(&satip_discovery_msearch_timer, satip_discovery_send_msearch,
                 (void *)(intptr_t)(attempt + 1), attempt * 11);
+#undef MSG
+}
+
+static void
+satip_discovery_static_timer_cb(void *aux)
+{
+  int i;
+
+  if (!tvheadend_running)
+    return;
+  for (i = 0; i < satip_static_clients->num; i++)
+    satip_discovery_static(satip_static_clients->str[i]);
+  gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 3600);
 }
 
 static void
 satip_discovery_timer_cb(void *aux)
 {
-  int i;
-
   if (!tvheadend_running)
     return;
   if (!upnp_running) {
@@ -1002,16 +1014,14 @@ satip_discovery_timer_cb(void *aux)
   }
   if (satip_discovery_service)
     satip_discovery_send_msearch((void *)1);
-  for (i = 0; i < satip_static_clients->num; i++)
-    satip_discovery_static(satip_static_clients->str[i]);
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
-#undef MSG
 }
 
 static void
 satip_device_discovery_start( void )
 {
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
+  gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 1);
 }
 
 /*
