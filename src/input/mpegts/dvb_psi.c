@@ -253,7 +253,7 @@ dvb_desc_terr_del
   /* Extract data */
   frequency     = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
   if (!frequency) {
-    tvhwarn("nit", "dvb-c frequency error");
+    tvhwarn("nit", "dvb-t frequency error");
     return NULL;
   }
 
