@@ -715,12 +715,12 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           mmi->mmi_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
           mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           if (status == SIGNAL_GOOD &&
               mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
             /* some values that we're tuned */
@@ -740,12 +740,12 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           mmi->mmi_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
           mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           goto ok;          
         } else if (strncmp(s, "ver=1.1;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
@@ -756,12 +756,12 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           mmi->mmi_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->mmi_stats.signal_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
           mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
           mmi->mmi_stats.snr_scale =
-            INPUT_STREAM_STATS_SCALE_RELATIVE;
+            SIGNAL_STATUS_SCALE_RELATIVE;
           goto ok;
         }
       }
