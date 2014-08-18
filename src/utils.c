@@ -585,8 +585,3 @@ regexp_escape(const char* str)
   *b = 0;
   return tmp;
 }
-
-uint32_t deltaU32(uint32_t a, uint32_t b)
-{
-  return (a > b) ? (a - b) : (b - a);
-}
