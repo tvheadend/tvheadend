@@ -39,7 +39,7 @@ void
 dbus_register_rpc_str(const char *call_name, void *opaque,
                       char *(*fcn)(void *, const char *, char *));
 
-void dbus_server_init(int session);
+void dbus_server_init(int enabled, int session);
 void dbus_server_start(void);
 void dbus_server_done(void);
 
@@ -60,7 +60,7 @@ static inline void
 dbus_register_rpc_str(const char *call_name, void *opaque,
                       char *(*fcn)(void *, const char *, char *)) { }
 
-static inline void dbus_server_init(int session) { }
+static inline void dbus_server_init(int enabled, int session) { }
 static inline void dbus_server_start(void) { }
 static inline void dbus_server_done(void) { }
 

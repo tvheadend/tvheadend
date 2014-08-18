@@ -474,6 +474,7 @@ main(int argc, char **argv)
               opt_tsfile_tuner = 0,
               opt_dump         = 0,
               opt_xspf         = 0,
+              opt_dbus         = 0,
               opt_dbus_session = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
@@ -508,6 +509,8 @@ main(int argc, char **argv)
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
+    { 'U', "dbus",      "Enable DBus",
+      OPT_BOOL, &opt_dbus },
     { 'e', "dbus_session", "DBus - use the session message bus instead system one",
       OPT_BOOL, &opt_dbus_session },
 #endif
@@ -780,7 +783,7 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
-  dbus_server_init(opt_dbus_session);
+  dbus_server_init(opt_dbus, opt_dbus_session);
 
   intlconv_init();
   

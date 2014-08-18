@@ -439,22 +439,25 @@ dbus_server_thread(void *aux)
 pthread_t dbus_tid;
 
 void
-dbus_server_init(int session)
+dbus_server_init(int enabled, int session)
 {
   dbus_session = session;
   pthread_mutex_init(&dbus_lock, NULL);
   TAILQ_INIT(&dbus_signals);
   LIST_INIT(&dbus_rpcs);
-  tvh_pipe(O_NONBLOCK, &dbus_pipe);
-  dbus_threads_init_default();
-  dbus_running = 1;
-  dbus_emit_signal_str("/main", "start", tvheadend_version);
+  if (enabled) {
+    tvh_pipe(O_NONBLOCK, &dbus_pipe);
+    dbus_threads_init_default();
+    dbus_running = 1;
+    dbus_emit_signal_str("/main", "start", tvheadend_version);
+  }
 }
 
 void
 dbus_server_start(void)
 {
-  tvhthread_create(&dbus_tid, NULL, dbus_server_thread, NULL);
+  if (dbus_pipe.wr > 0)
+    tvhthread_create(&dbus_tid, NULL, dbus_server_thread, NULL);
 }
 
 void
@@ -464,9 +467,11 @@ dbus_server_done(void)
 
   dbus_emit_signal_str("/main", "stop", "bye");
   dbus_running = 0;
-  tvh_write(dbus_pipe.wr, "", 1);
-  pthread_kill(dbus_tid, SIGTERM);
-  pthread_join(dbus_tid, NULL);
+  if (dbus_pipe.wr > 0) {
+    tvh_write(dbus_pipe.wr, "", 1);
+    pthread_kill(dbus_tid, SIGTERM);
+    pthread_join(dbus_tid, NULL);
+  }
   dbus_flush_queue(NULL);
   while ((rpc = LIST_FIRST(&dbus_rpcs)) != NULL) {
     LIST_REMOVE(rpc, link);
