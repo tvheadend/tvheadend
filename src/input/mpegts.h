@@ -580,6 +580,7 @@ struct mpegts_input
   int  (*mi_get_weight)     (mpegts_input_t*, int flags);
   int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
+  int  (*mi_warm_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int first);

@@ -267,6 +267,25 @@ mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 }
 
 static int
+mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  mpegts_mux_instance_t *cur;
+
+  cur = LIST_FIRST(&mi->mi_mux_active);
+  if (cur != NULL) {
+    /* Already tuned */
+    if (mmi == cur)
+      return 0;
+
+    /* Stop current */
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
+  }
+  if (LIST_FIRST(&mi->mi_mux_active))
+    return SM_CODE_TUNING_FAILED;
+  return 0;
+}
+
+static int
 mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   return SM_CODE_TUNING_FAILED;
@@ -1033,6 +1052,7 @@ mpegts_input_create0
   mi->mi_is_free              = mpegts_input_is_free;
   mi->mi_get_weight           = mpegts_input_get_weight;
   mi->mi_get_priority         = mpegts_input_get_priority;
+  mi->mi_warm_mux             = mpegts_input_warm_mux;
   mi->mi_start_mux            = mpegts_input_start_mux;
   mi->mi_stop_mux             = mpegts_input_stop_mux;
   mi->mi_open_service         = mpegts_input_open_service;
