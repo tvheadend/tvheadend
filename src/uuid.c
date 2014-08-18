@@ -107,6 +107,10 @@ uuid_init_bin ( tvh_uuid_t *u, const char *str )
 {
   memset(u, 0, sizeof(tvh_uuid_t));
   if (str) {
+    if (strlen(str) != UUID_HEX_SIZE - 1) {
+      tvherror("uuid", "wrong uuid size");
+      exit(1);
+    }
     return hex2bin(u->bin, sizeof(u->bin), str);
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
     tvherror("uuid", "failed to read from %s", RANDOM_PATH);
