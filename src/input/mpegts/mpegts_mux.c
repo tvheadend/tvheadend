@@ -96,7 +96,6 @@ mpegts_mux_instance_start
   int r;
   char buf[256], buf2[256];
   mpegts_mux_instance_t *mmi = *mmiptr;
-  mpegts_mux_instance_t *cur;
   mpegts_mux_t          * mm = mmi->mmi_mux;
   mpegts_input_t        * mi = mmi->mmi_input;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -109,20 +108,11 @@ mpegts_mux_instance_start
     return 0;
   }
 
-  cur = LIST_FIRST(&mi->mi_mux_active);
-  if (cur != NULL) {
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
-
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+  r = mi->mi_warm_mux(mi, mmi);
+  if (r) return r;
   r = mi->mi_start_mux(mi, mmi);
   if (r) return r;
 
