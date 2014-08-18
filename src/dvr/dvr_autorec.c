@@ -85,8 +85,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
      dae->dae_season == NULL &&
-     &dae->dae_minduration == NULL &&
-     &dae->dae_maxduration == NULL &&
+     dae->dae_minduration == 0 &&
+     dae->dae_maxduration == 0 &&
      dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
