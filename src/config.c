@@ -635,6 +635,7 @@ config_migrate_simple ( const char *dir, htsmsg_t **orig,
     if (!(e = htsmsg_field_get_map(f))) continue;
     htsmsg_delete_field(e, "id");
     htsmsg_add_u32(e, "index", index++);
+    modify(e);
     uuid_init_hex(&u, NULL);
     hts_settings_save(e, "%s/%s", dir, u.hex);
     hts_settings_remove("%s/%s", dir, f->hmf_name);
