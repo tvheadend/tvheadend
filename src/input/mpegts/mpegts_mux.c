@@ -94,34 +94,47 @@ mpegts_mux_instance_start
   ( mpegts_mux_instance_t **mmiptr )
 {
   int r;
-  char buf[256], buf2[256];;
+  char buf[256], buf2[256];
   mpegts_mux_instance_t *mmi = *mmiptr;
-  mpegts_mux_t           *mm = mmi->mmi_mux;
+  mpegts_mux_instance_t *cur;
+  mpegts_mux_t          * mm = mmi->mmi_mux;
+  mpegts_input_t        * mi = mmi->mmi_input;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
 
   /* Already active */
   if (mm->mm_active) {
     *mmiptr = mm->mm_active;
     tvhdebug("mpegts", "%s - already active", buf);
-    mpegts_mux_scan_active(mm, buf, mmi->mmi_input);
+    mpegts_mux_scan_active(mm, buf, (*mmiptr)->mmi_input);
     return 0;
   }
 
+  cur = LIST_FIRST(&mi->mi_mux_active);
+  if (cur != NULL) {
+    /* Already tuned */
+    if (mmi == cur)
+      return 0;
+
+    /* Stop current */
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
+  }
+  assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
+
   /* Start */
-  mmi->mmi_input->mi_display_name(mmi->mmi_input, buf2, sizeof(buf2));
+  mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
-  r = mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi);
+  r = mi->mi_start_mux(mi, mmi);
   if (r) return r;
 
   /* Start */
   tvhdebug("mpegts", "%s - started", buf);
-  mmi->mmi_input->mi_started_mux(mmi->mmi_input, mmi);
+  mi->mi_started_mux(mi, mmi);
 
   /* Event handler */
   mpegts_fire_event(mm, ml_mux_start);
 
   /* Link */
-  mpegts_mux_scan_active(mm, buf, mmi->mmi_input);
+  mpegts_mux_scan_active(mm, buf, mi);
 
   return 0;
 }

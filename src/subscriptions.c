@@ -296,6 +296,8 @@ subscription_reschedule(void)
 
       if (!s->ths_channel)
         s->ths_service = si->si_s;
+
+      s->ths_last_error = 0;
     }
 
     error = s->ths_testing_error;
@@ -313,6 +315,13 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
+      if (s->ths_last_error != error || s->ths_last_find + 2 >= dispatch_clock) {
+        tvhtrace("subscription", "instance not available, retrying");
+        if (s->ths_last_error != error)
+          s->ths_last_find = dispatch_clock;
+        s->ths_last_error = error;
+        continue;
+      }
       /* No service available */
       sm = streaming_msg_create_code(SMT_NOSTART, error);
       streaming_target_deliver(s->ths_output, sm);

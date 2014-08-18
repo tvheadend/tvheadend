@@ -261,6 +261,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
   if (lfe->lfe_fe_path == NULL) return 0;
   if (!mpegts_input_is_enabled(mi, mm, reason)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
+  if (lfe->lfe_in_setup) return 0;
   return 1;
 }
 
@@ -288,6 +289,7 @@ linuxdvb_frontend_stop_mux
   lfe->lfe_ready  = 0;
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
+  assert(lfe->lfe_in_setup == 0);
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
@@ -301,20 +303,8 @@ linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_frontend_t   *lfe = (linuxdvb_frontend_t*)mi;
-  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
-
-  /* Currently active */
-  if (cur != NULL) {
-
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
-
+  lfe->lfe_in_setup = 1;
+  lfe->lfe_ioctls   = 0;
   if (lfe->lfe_satconf)
     return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
   return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
@@ -486,7 +476,7 @@ linuxdvb_frontend_monitor ( void *aux )
   }
 
   /* Stop timer */
-  if (!mmi) return;
+  if (!mmi || !lfe->lfe_ready) return;
 
   /* re-arm */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
@@ -505,12 +495,6 @@ linuxdvb_frontend_monitor ( void *aux )
     status = SIGNAL_FAINT;
   else
     status = SIGNAL_NONE;
-
-  if (!lfe->lfe_ready) {
-    /* send the status message to the higher layers _always_ */
-    status = SIGNAL_NONE;
-    goto status;
-  }
 
   /* Set default period */
   if (fe_status != lfe->lfe_status) {
@@ -767,7 +751,6 @@ linuxdvb_frontend_monitor ( void *aux )
     }
   }
 
-status:
   /* Send message */
   sigstat.status_text  = signal2str(status);
   sigstat.snr          = mmi->mmi_stats.snr;
@@ -1082,7 +1065,6 @@ linuxdvb_frontend_tune0
   }
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
-  lfe->lfe_ioctls = 0;
 
   /*
    * copy the universal parameters to the Linux kernel structure
@@ -1266,6 +1248,8 @@ linuxdvb_frontend_tune1
     gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
     lfe->lfe_ready = 1;
   }
+
+  lfe->lfe_in_setup = 0;
   
   return r;
 }

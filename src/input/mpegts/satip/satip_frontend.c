@@ -1312,18 +1312,6 @@ static int
 satip_frontend_tune0
   ( satip_frontend_t *lfe, mpegts_mux_instance_t *mmi )
 {
-  mpegts_mux_instance_t *cur = LIST_FIRST(&lfe->mi_mux_active);
-
-  if (cur != NULL) {
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&lfe->mi_mux_active) == NULL);
-
   if (udp_bind_double(&lfe->sf_rtp, &lfe->sf_rtcp,
                       "satip", "rtp", "rtpc",
                       satip_frontend_bindaddr(lfe), lfe->sf_udp_rtp_port,
