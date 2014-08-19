@@ -58,14 +58,6 @@ in_cmp(const idnode_t *a, const idnode_t *b)
   return memcmp(a->in_uuid, b->in_uuid, sizeof(a->in_uuid));
 }
 
-static int
-in_cmp_short(const idnode_t *a, const idnode_t *b)
-{
-  if (a->in_class != b->in_class)
-    return memcmp(a->in_uuid, b->in_uuid, sizeof(a->in_uuid));
-  return idnode_get_short_uuid(b) - idnode_get_short_uuid(a);
-}
-
 /* **************************************************************************
  * Registration
  * *************************************************************************/
@@ -102,6 +94,17 @@ idnode_done(void)
   SKEL_FREE(idclasses_skel);
 }
 
+static const idclass_t *
+idnode_root_class(idnode_t *in)
+{
+  const idclass_t *idc;
+
+  idc = in->in_class;
+  while (idc && idc->ic_super)
+    idc = idc->ic_super;
+  return idc;
+}
+
 /**
  *
  */
@@ -112,6 +115,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   lock_assert(&global_lock);
   tvh_uuid_t u;
   int retries = 5;
+  uint32_t u32;
+  const idclass_t *idc;;
 
   in->in_class = class;
   do {
@@ -121,8 +126,16 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
     memcpy(in->in_uuid, u.bin, sizeof(in->in_uuid));
 
     c = NULL;
-    if (flags & IDNODE_SHORT_UUID)
-      c = RB_FIND(&idnodes, in, in_link, in_cmp_short);
+    if (flags & IDNODE_SHORT_UUID) {
+      u32 = idnode_get_short_uuid(in);
+      idc = idnode_root_class(in);
+      RB_FOREACH(c, &idnodes, in_link) {
+        if (idc != idnode_root_class(c))
+          continue;
+        if (idnode_get_short_uuid(c) == u32)
+          break;
+      }
+    }
 
     if (c == NULL)
       c = RB_INSERT_SORTED(&idnodes, in, in_link, in_cmp);
