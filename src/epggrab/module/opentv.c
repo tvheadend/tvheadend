@@ -396,6 +396,7 @@ opentv_desc_channels
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
     tvhtrace(mt->mt_name, "     sid %04X cid %04X cnum %d", sid, cid, cnum);
+    cnum = cnum < 65535 ? cnum : 0;
 
     /* Find the service */
     svc = mpegts_service_find(mm, sid, 0, 0, NULL);
