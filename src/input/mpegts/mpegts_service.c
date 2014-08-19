@@ -102,6 +102,13 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
     },
     {
+      .type     = PT_U16,
+      .id       = "lcn2",
+      .name     = "OpenTV Channel Number",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
+    },
+    {
       .type     = PT_STR,
       .id       = "svcname",
       .name     = "Service Name",
@@ -360,7 +367,10 @@ mpegts_service_grace_period(service_t *t)
 static int
 mpegts_service_channel_number ( service_t *s )
 {
-  return ((mpegts_service_t*)s)->s_dvb_channel_num;
+  int r = ((mpegts_service_t*)s)->s_dvb_channel_num;
+  if (r <= 0)
+    r = ((mpegts_service_t*)s)->s_dvb_opentv_chnum;
+  return r;
 }
 
 static const char *
