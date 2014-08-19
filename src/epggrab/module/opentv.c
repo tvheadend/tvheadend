@@ -400,6 +400,8 @@ opentv_desc_channels
     /* Find the service */
     svc = mpegts_service_find(mm, sid, 0, 0, NULL);
     tvhtrace(mt->mt_name, "     svc %p [%s]", svc, svc ? svc->s_nicename : NULL);
+    if (svc)
+      svc->s_dvb_opentv_chnum = cnum;
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
