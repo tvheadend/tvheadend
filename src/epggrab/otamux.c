@@ -107,6 +107,7 @@ epggrab_ota_requeue ( void )
    * enqueue all muxes, but ommit the delayed ones (active+pending)
    */
   RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
+    om->om_done = 0;
     if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
       continue;
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
@@ -156,8 +157,11 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
-    TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
-    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+    /* Do not requeue completed muxes */
+    if (!om->om_done) {
+      TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
+      om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+    }
   } else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
     LIST_FOREACH(map, &om->om_modules, om_link)
       if (!map->om_complete)
@@ -173,8 +177,9 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 }
 
 static void
-epggrab_ota_complete_mark ( epggrab_ota_mux_t *om )
+epggrab_ota_complete_mark ( epggrab_ota_mux_t *om, int done )
 {
+  om->om_done = 1;
   if (!om->om_complete) {
     om->om_complete = 1;
     epggrab_ota_save(om);
@@ -323,8 +328,6 @@ epggrab_ota_complete
   lock_assert(&global_lock);
   tvhdebug(mod->id, "grab complete");
 
-  epggrab_ota_complete_mark(ota);
-
   /* Test for completion */
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     if (map->om_module == mod) {
@@ -335,6 +338,9 @@ epggrab_ota_complete
     tvhtrace("epggrab", "%s complete %i first %i",
                         map->om_module->id, map->om_complete, map->om_first);
   }
+
+  epggrab_ota_complete_mark(ota, done);
+
   if (!done) return;
 
   /* Done */
@@ -364,7 +370,7 @@ epggrab_ota_timeout_cb ( void *p )
   epggrab_ota_done(om, EPGGRAB_OTA_DONE_TIMEOUT);
   /* Not completed, but no further data for a long period */
   /* wait for a manual mux tuning */
-  epggrab_ota_complete_mark(om);
+  epggrab_ota_complete_mark(om, 1);
 }
 
 static void
@@ -388,7 +394,7 @@ epggrab_ota_data_timeout_cb ( void *p )
     /* Abort */
     epggrab_ota_done(om, EPGGRAB_OTA_DONE_NO_DATA);
     /* Not completed, but no data - wait for a manual mux tuning */
-    epggrab_ota_complete_mark(om);
+    epggrab_ota_complete_mark(om, 1);
   }
 }
 
