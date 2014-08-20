@@ -181,6 +181,16 @@ handle_sigpipe(int x)
   return;
 }
 
+static void
+handle_sigill(int x)
+{
+  /* Note that on some platforms, the SSL library tries */
+  /* to determine the CPU capabilities with possible */
+  /* unknown instructions */
+  tvhwarn("CPU", "Illegal instruction handler (might be OK)");
+  signal(SIGILL, handle_sigill);
+}
+
 void
 doexit(int x)
 {
@@ -678,6 +688,7 @@ main(int argc, char **argv)
   tvhinfo("main", "Log started");
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
+  signal(SIGILL, handle_sigill);   // see handler..
 
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);  // bind to ports only
