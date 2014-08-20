@@ -196,18 +196,6 @@ TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
 
 /**
- * Log limiter
- */
-typedef struct loglimter {
-  time_t last;
-  int events;
-} loglimiter_t;
-
-void limitedlog(loglimiter_t *ll, const char *sys, 
-		const char *o, const char *event);
-
-
-/**
  * Device connection types
  */
 #define HOSTCONNECTION_UNKNOWN    0
@@ -572,7 +560,6 @@ int sri_to_rate(int sri);
 int rate_to_sri(int rate);
 
 
-extern time_t dispatch_clock;
 extern struct service_list all_transports;
 
 extern void scopedunlock(pthread_mutex_t **mtxp);

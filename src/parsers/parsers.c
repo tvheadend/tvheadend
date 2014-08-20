@@ -851,8 +851,9 @@ parse_pes_header(service_t *t, elementary_stream_t *st,
  err:
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
-  limitedlog(&st->es_loglimit_pes, "TS", service_component_nicename(st),
-	     "Corrupted PES header");
+  if (tvhlog_limit(&st->es_pes_log, 10))
+    tvhwarn("TS", "%s Corrupted PES header (errors %zi)",
+            service_component_nicename(st), st->es_pes_log.count);
   return -1;
 } 
 

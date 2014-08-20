@@ -69,11 +69,11 @@ ts_recv_packet0
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->es_cc != -1 && cc != st->es_cc) {
-      /* Let the hardware to stabilize */
-      if (t->s_start_time + 1 < dispatch_clock)
-        /* Incorrect CC */
-        limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
-                   "Continuity counter error");
+      /* Let the hardware to stabilize and don't flood the log */
+      if (t->s_start_time + 1 < dispatch_clock &&
+          tvhlog_limit(&st->es_cc_log, 10))
+        tvhwarn("TS", "%s Continuity counter error (total %zi)",
+                      service_component_nicename(st), st->es_cc_log.count);
       avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
 
@@ -192,8 +192,9 @@ ts_recv_packet1
 
   if(error) {
     /* Transport Error Indicator */
-    limitedlog(&t->s_loglimit_tei, "TS", service_nicename((service_t*)t),
-         "Transport error indicator");
+    if (tvhlog_limit(&t->s_tei_log, 10))
+      tvhwarn("TS", "%s Transport error indicator (total %zi)",
+              service_nicename((service_t*)t), t->s_tei_log.count);
   }
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];

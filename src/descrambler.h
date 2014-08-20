@@ -71,7 +71,7 @@ typedef struct th_descrambler_runtime {
   time_t   dr_ecm_key_time;
   time_t   dr_last_err;
   sbuf_t   dr_buf;
-  loglimiter_t dr_loglimit_key;
+  tvhlog_limit_t dr_loglimit_key;
 } th_descrambler_runtime_t;
 
 typedef void (*descrambler_section_callback_t)
