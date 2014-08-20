@@ -164,7 +164,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { NULL, NULL }
 };
 
-time_t dispatch_clock;
 pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
 pthread_mutex_t fork_lock;
@@ -983,31 +982,6 @@ void
 scopedunlock(pthread_mutex_t **mtxp)
 {
   pthread_mutex_unlock(*mtxp);
-}
-
-
-void
-limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
-{
-  time_t now;
-  char buf[64];
-  time(&now);
-
-  ll->events++;
-  if(ll->last == now)
-    return; // Duplicate event
-
-  if(ll->last <= now - 10) {
-    // Too old, reset duplicate counter
-    ll->events = 0;
-    buf[0] = 0;
-  } else {
-    snprintf(buf, sizeof(buf), ", %d duplicate log lines suppressed", 
-	     ll->events);
-  }
-
-  tvhlog(LOG_WARNING, sys, "%s: %s%s", o, event, buf);
-  ll->last = now;
 }
 
 

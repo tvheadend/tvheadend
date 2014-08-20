@@ -25,6 +25,8 @@
 
 #include "webui/webui.h"
 
+time_t                   dispatch_clock;
+
 int                      tvhlog_run;
 int                      tvhlog_level;
 int                      tvhlog_options;

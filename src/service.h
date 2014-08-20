@@ -115,8 +115,8 @@ typedef struct elementary_stream {
 
   /* Error log limiters */
 
-  loglimiter_t es_loglimit_cc;
-  loglimiter_t es_loglimit_pes;
+  tvhlog_limit_t es_cc_log;
+  tvhlog_limit_t es_pes_log;
   
   char *es_nicename;
 
@@ -434,9 +434,7 @@ typedef struct service {
    */
   streaming_pad_t s_streaming_pad;
 
-
-  loglimiter_t s_loglimit_tei;
-
+  tvhlog_limit_t s_tei_log;
 
   int64_t s_current_pts;
 

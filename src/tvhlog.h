@@ -30,6 +30,14 @@
 
 #include "htsmsg.h"
 
+typedef struct {
+  time_t last;
+  size_t count;
+} tvhlog_limit_t;
+
+/* Globals */
+extern time_t           dispatch_clock;
+
 /* Config */
 extern int              tvhlog_level;
 extern htsmsg_t        *tvhlog_debug;
@@ -57,6 +65,11 @@ void _tvhlog_hexdump   ( const char *file, int line,
                          int notify, int severity,
                          const char *subsys,
                          const uint8_t *data, ssize_t len );
+static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
+  { limit->last = 0; limit->count = 0; }
+static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
+  { time_t t = dispatch_clock; int res = limit->last + delay < t;
+    limit->count++; limit->last = t; return res; }
 
 
 /* Options */

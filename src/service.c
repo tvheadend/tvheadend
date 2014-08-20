@@ -259,6 +259,9 @@ stream_clean(elementary_stream_t *st)
 
   free(st->es_section);
   st->es_section = NULL;
+
+  tvhlog_limit_reset(&st->es_cc_log);
+  tvhlog_limit_reset(&st->es_pes_log);
 }
 
 /**
@@ -320,6 +323,7 @@ service_stop(service_t *t)
     stream_clean(st);
 
   t->s_status = SERVICE_IDLE;
+  tvhlog_limit_reset(&t->s_tei_log);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
 }

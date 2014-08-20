@@ -359,7 +359,8 @@ descrambler_descramble ( service_t *t,
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (key_valid(dr, ki) == 0) {
-        limitedlog(&dr->dr_loglimit_key, "descrambler",
+        if (tvhlog_limit(&dr->dr_loglimit_key, 10))
+          tvhwarn("descrambler", "%s %s",
                    ((mpegts_service_t *)t)->s_dvb_svcname,
                    (ki & 0x40) ? "odd stream key is not valid" :
                                  "even stream key is not valid");
