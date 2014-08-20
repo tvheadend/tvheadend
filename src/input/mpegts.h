@@ -197,6 +197,9 @@ struct mpegts_table
 
   int8_t mt_cc;
 
+  time_t mt_last_perr; // last printer error
+  size_t mt_errors;    // total number of table errors
+
   mpegts_psi_section_t mt_sect;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
