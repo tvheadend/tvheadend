@@ -1043,7 +1043,12 @@ mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid,
     htsmsg_t *c )
 {
-  idnode_insert(&mi->ti_id, uuid, class, 0);
+  if (idnode_insert(&mi->ti_id, uuid, class, 0)) {
+    if (uuid)
+      tvherror("mpegts", "invalid input uuid '%s'", uuid);
+    free(mi);
+    return NULL;
+  }
   LIST_INSERT_HEAD(&tvh_inputs, (tvh_input_t*)mi, ti_link);
   
   /* Defaults */

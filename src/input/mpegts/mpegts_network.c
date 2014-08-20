@@ -281,7 +281,12 @@ mpegts_network_create0
   char buf[256];
 
   /* Setup idnode */
-  idnode_insert(&mn->mn_id, uuid, idc, 0);
+  if (idnode_insert(&mn->mn_id, uuid, idc, 0)) {
+    if (uuid)
+      tvherror("mpegts", "invalid network uuid '%s'", uuid);
+    free(mn);
+    return NULL;
+  }
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;

@@ -54,8 +54,11 @@ mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
     mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  idnode_insert(&mmi->mmi_id, uuid, class, 0);
   // TODO: does this need to be an idnode?
+  if (idnode_insert(&mmi->mmi_id, uuid, class, 0)) {
+    free(mmi);
+    return NULL;
+  }
 
   /* Setup links */
   mmi->mmi_mux   = mm;
@@ -884,7 +887,12 @@ mpegts_mux_create0
 {
   char buf[256];
 
-  idnode_insert(&mm->mm_id, uuid, class, 0);
+  if (idnode_insert(&mm->mm_id, uuid, class, 0)) {
+    if (uuid)
+      tvherror("mpegts", "invalid mux uuid '%s'", uuid);
+    free(mm);
+    return NULL;
+  }
 
   /* Enabled by default */
   mm->mm_enabled             = 1;
