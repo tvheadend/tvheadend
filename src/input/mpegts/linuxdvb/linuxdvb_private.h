@@ -105,6 +105,7 @@ struct linuxdvb_frontend
   int                       lfe_ioctls;
   time_t                    lfe_monitor;
   gtimer_t                  lfe_monitor_timer;
+  tvhlog_limit_t            lfe_status_log;
 
   /*
    * Configuration
