@@ -574,7 +574,12 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   ae = calloc(1, sizeof(access_entry_t));
 
-  idnode_insert(&ae->ae_id, uuid, &access_entry_class, 0);
+  if (idnode_insert(&ae->ae_id, uuid, &access_entry_class, 0)) {
+    if (uuid)
+      tvherror("access", "invalid uuid '%s'", uuid);
+    free(ae);
+    return NULL;
+  }
 
   TAILQ_INIT(&ae->ae_ipmasks);
 

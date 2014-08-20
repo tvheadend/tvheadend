@@ -831,7 +831,12 @@ service_create0
   ( service_t *t, const idclass_t *class, const char *uuid,
     int source_type, htsmsg_t *conf )
 {
-  idnode_insert(&t->s_id, uuid, class, 0);
+  if (idnode_insert(&t->s_id, uuid, class, 0)) {
+    if (uuid)
+      tvherror("service", "invalid uuid '%s'", uuid);
+    free(t);
+    return NULL;
+  }
 
   lock_assert(&global_lock);
   
