@@ -621,22 +621,28 @@ config_migrate_v6 ( void )
  */
 static void
 config_migrate_simple ( const char *dir, htsmsg_t **orig,
-                        void (*modify)(htsmsg_t *record) )
+                        void (*modify)(htsmsg_t *record,
+                                       uint32_t id,
+                                       const char *uuid,
+                                       void *aux),
+                        void *aux )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   tvh_uuid_t u;
-  uint32_t index = 1;
+  uint32_t index = 1, id;
 
   if (!(c = hts_settings_load_r(1, dir)))
     return;
 
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
+    if (htsmsg_get_u32(e, "id", &id))
+      id = 0;
     htsmsg_delete_field(e, "id");
     htsmsg_add_u32(e, "index", index++);
-    modify(e);
     uuid_init_hex(&u, NULL);
+    modify(e, id, u.hex, aux);
     hts_settings_save(e, "%s/%s", dir, u.hex);
     hts_settings_remove("%s/%s", dir, f->hmf_name);
   }
@@ -648,7 +654,7 @@ config_migrate_simple ( const char *dir, htsmsg_t **orig,
 }
 
 static void
-config_modify_acl( htsmsg_t *c )
+config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
 {
   uint32_t a, b;
   const char *s;
@@ -667,7 +673,62 @@ config_modify_acl( htsmsg_t *c )
 static void
 config_migrate_v7 ( void )
 {
-  config_migrate_simple("accesscontrol", NULL, config_modify_acl);
+  config_migrate_simple("accesscontrol", NULL, config_modify_acl, NULL);
+}
+
+static void
+config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+{
+  htsmsg_t *ch = (htsmsg_t *)aux;
+  htsmsg_t *e, *m, *t;
+  htsmsg_field_t *f, *f2;
+  uint32_t u32;
+
+  htsmsg_delete_field(c, "index");
+
+  if (ch == NULL)
+    return;
+
+  HTSMSG_FOREACH(f, ch) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    m = htsmsg_get_list(e, "tags");
+    if (m == NULL)
+      continue;
+    t = htsmsg_get_list(e, "tags_new");
+    HTSMSG_FOREACH(f2, m) {
+      if (!htsmsg_field_get_u32(f2, &u32) && u32 == id) {
+        if (t == NULL) {
+          t = htsmsg_create_list();
+          htsmsg_add_msg(e, "tags_new", t);
+          t = htsmsg_get_list(e, "tags_new");
+        }
+        htsmsg_add_str(t, NULL, uuid);
+      }
+    }
+  }
+}
+
+static void
+config_migrate_v8 ( void )
+{
+  htsmsg_t *ch, *e, *m;
+  htsmsg_field_t *f;
+
+  ch = hts_settings_load_r(1, "channel");
+  config_migrate_simple("channeltags", NULL, config_modify_tag, ch);
+  if (ch == NULL)
+    return;
+  HTSMSG_FOREACH(f, ch) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    htsmsg_delete_field(e, "tags");
+    m = htsmsg_get_list(e, "tags_new");
+    if (m) {
+      htsmsg_add_msg(e, "tags", htsmsg_copy(m));
+      htsmsg_delete_field(e, "tags_new");
+    }
+    hts_settings_save(e, "channel/%s", f->hmf_name);
+  }
+  htsmsg_destroy(ch);
 }
 
 /*
@@ -681,6 +742,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v5,
   config_migrate_v6,
   config_migrate_v7,
+  config_migrate_v8,
 };
 
 /*
