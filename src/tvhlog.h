@@ -68,8 +68,9 @@ void _tvhlog_hexdump   ( const char *file, int line,
 static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
   { limit->last = 0; limit->count = 0; }
 static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
-  { time_t t = dispatch_clock; int res = limit->last + delay < t;
-    limit->count++; limit->last = t; return res; }
+  { time_t t = dispatch_clock; limit->count++;
+    if (limit->last + delay < t) { limit->last = t; return 1; }
+    return 0; }
 
 
 /* Options */
