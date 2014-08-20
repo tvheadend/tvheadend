@@ -112,6 +112,15 @@ void
 descrambler_service_start ( service_t *t )
 {
   th_descrambler_runtime_t *dr;
+  elementary_stream_t *st;
+
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
+    if (LIST_FIRST(&st->es_caids))
+      break;
+
+  /* Do not run descrambler on FTA channels */
+  if (!st)
+    return;
 
 #if ENABLE_CWC
   cwc_service_start(t);
@@ -135,11 +144,11 @@ descrambler_service_stop ( service_t *t )
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
+  t->s_descramble = NULL;
   if (dr) {
     sbuf_free(&dr->dr_buf);
     free(dr);
   }
-  t->s_descramble = NULL;
 }
 
 void
@@ -473,9 +482,11 @@ descrambler_table_callback
         if (t) {
           /* The keys are requested from this moment */
           dr = t->s_descramble;
-          dr->dr_ecm_start = dispatch_clock;
-          tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
-                   len, mt->mt_pid, t->s_dvb_svcname);
+          if (dr) {
+            dr->dr_ecm_start = dispatch_clock;
+            tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
+                     len, mt->mt_pid, t->s_dvb_svcname);
+          }
         } else
           tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
                    len, mt->mt_pid);
