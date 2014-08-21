@@ -95,6 +95,8 @@ typedef struct channel_tag {
 
   struct dvr_autorec_entry_list ct_autorecs;
 
+  int ct_htsp_id;
+
 } channel_tag_t;
 
 /**
