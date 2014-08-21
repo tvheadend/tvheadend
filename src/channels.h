@@ -79,17 +79,22 @@ typedef struct channel
  * Channel tag
  */
 typedef struct channel_tag {
+
+  idnode_t ct_id;
+
   TAILQ_ENTRY(channel_tag) ct_link;
+
   int ct_enabled;
   int ct_internal;
   int ct_titled_icon;
-  int ct_identifier;
   char *ct_name;
   char *ct_comment;
   char *ct_icon;
+
   struct channel_tag_mapping_list ct_ctms;
 
   struct dvr_autorec_entry_list ct_autorecs;
+
 } channel_tag_t;
 
 /**
@@ -120,6 +125,7 @@ typedef struct channel_service_mapping {
 } channel_service_mapping_t;
 
 extern const idclass_t channel_class;
+extern const idclass_t channel_tag_class;
 
 void channel_init(void);
 void channel_done(void);
@@ -145,9 +151,16 @@ channel_t *channel_find_by_number(int no);
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
 
+channel_tag_t *channel_tag_create(const char *uuid, htsmsg_t *conf);
+
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
+
+static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
+  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class); }
+
+void channel_tag_save(channel_tag_t *ct);
 
 int channel_access(channel_t *ch, struct access *a, const char *username);
 

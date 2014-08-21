@@ -395,7 +395,7 @@ tvheadend.epg = function() {
 
     var epgFilterChannelTags = new Ext.form.ComboBox({
         width: 200,
-        displayField: 'name',
+        displayField: 'val',
         store: tvheadend.channelTags,
         mode: 'local',
         editable: true,
@@ -511,10 +511,10 @@ tvheadend.epg = function() {
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
-        if (r.data.identifier == -1)
+        if (r.data.key == -1)
             clearChannelTagsFilter();
-        else if (epgStore.baseParams.tag !== r.data.name)
-            epgStore.baseParams.tag = r.data.name;
+        else if (epgStore.baseParams.tag !== r.data.key)
+            epgStore.baseParams.tag = r.data.key;
         epgStore.reload();
     });
 

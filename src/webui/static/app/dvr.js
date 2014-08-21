@@ -639,7 +639,7 @@ tvheadend.autoreceditor = function() {
                         header: "Channel tag",
                         dataIndex: 'tag',
                         editor: new Ext.form.ComboBox({
-                            displayField: 'name',
+                            displayField: 'val',
                             store: tvheadend.channelTags,
                             mode: 'local',
                             editable: true,

@@ -2,25 +2,24 @@
  * Channel tags
  */
 insertChannelTagsClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['identifier', 'name']);
-    scope.insert(0,new placeholder({identifier: '-1', name: '(Clear filter)'}));
+    var placeholder = Ext.data.Record.create(['key', 'val']);
+    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
 };
 
 tvheadend.channelTags = new Ext.data.JsonStore({
-    autoLoad: true,
+    url: 'api/channeltag/list',
     root: 'entries',
-    fields: ['identifier', 'name'],
-    id: 'identifier',
-    url: 'channeltags',
-    baseParams: {
-        op: 'listTags'
+    fields: ['key', 'val'],
+    id: 'key',
+    autoLoad: true,
+    sortInfo: {
+        field: 'val',
+        direction: 'ASC',
     },
     listeners: {
         'load': insertChannelTagsClearOption
     }
 });
-
-tvheadend.channelTags.setDefaultSort('name', 'ASC');
 
 tvheadend.comet.on('channeltags', function(m) {
     if (m.reload != null)
@@ -59,7 +58,7 @@ tvheadend.comet.on('channels', function(m) {
         tvheadend.channels.reload();
 });
 
-tvheadend.channel_tab = function(panel)
+tvheadend.channel_tab = function(panel, index)
 {
     function assign_low_number() {
         var tab = panel.getActiveTab();
@@ -191,7 +190,7 @@ tvheadend.channel_tab = function(panel)
         comet: 'channel',
         titleS: 'Channel',
         titleP: 'Channels',
-        tabIndex: 0,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Channels', 'config_channels.html');
         },           

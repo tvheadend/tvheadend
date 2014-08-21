@@ -2287,7 +2287,7 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
             epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
 {
   channel_t     *ch = channel ? channel_find(channel)    : NULL;
-  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
+  channel_tag_t *ct = tag     ? channel_tag_find_by_uuid(tag) : NULL;
 
   epg_query0(eqr, ch, ct, genre, title, lang, min_duration, max_duration);
 }
