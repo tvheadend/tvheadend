@@ -34,21 +34,26 @@ typedef enum {
   PT_INT,
   PT_U16,
   PT_U32,
+  PT_S64,
   PT_DBL,
+  PT_TIME,
+  PT_LANGSTR,
+  PT_PERM,                // like PT_U32 but with the special save
 } prop_type_t;
 
 /*
  * Property options
  */
-#define PO_NONE     0x00
-#define PO_RDONLY   0x01  // Property is read-only 
-#define PO_NOSAVE   0x02  // Property is transient (not saved)
-#define PO_WRONCE   0x04  // Property is write-once (i.e. on creation)
-#define PO_ADVANCED 0x08  // Property is advanced
-#define PO_HIDDEN   0x10  // Property is hidden (by default)
-#define PO_USERAW   0x20  // Only save the RAW (off) value if it exists
-#define PO_SORTKEY  0x40  // Sort using key (not display value)
-#define PO_PASSWORD 0x80  // String is a password
+#define PO_NONE     0x0000
+#define PO_RDONLY   0x0001  // Property is read-only
+#define PO_NOSAVE   0x0002  // Property is transient (not saved)
+#define PO_WRONCE   0x0004  // Property is write-once (i.e. on creation)
+#define PO_ADVANCED 0x0008  // Property is advanced
+#define PO_HIDDEN   0x0010  // Property is hidden (by default)
+#define PO_USERAW   0x0020  // Only save the RAW (off) value if it exists
+#define PO_SORTKEY  0x0040  // Sort using key (not display value)
+#define PO_PASSWORD 0x0080  // String is a password
+#define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
 
 /*
  * Property definition
@@ -59,7 +64,8 @@ typedef struct property {
   prop_type_t type;       ///< Type
   int         islist;     ///< Is a list
   size_t      off;        ///< Offset into object
-  int         opts;       ///< Options
+  uint32_t    opts;       ///< Options
+  uint32_t    group;      ///< Visual group ID (like ExtJS FieldSet)
 
   /* String based processing */
   const void *(*get)  (void *ptr);
@@ -72,10 +78,12 @@ typedef struct property {
   /* Default (for UI) */
   union {
     int         i;   // PT_BOOL/PT_INT
-    const char *s;   // PR_STR
+    const char *s;   // PT_STR
     uint16_t    u16; // PT_U16
-    uint32_t    u32; // PR_U32
+    uint32_t    u32; // PT_U32
+    int64_t     s64; // PT_S64
     double      d;   // PT_DBL
+    time_t      tm;  // PT_TIME
   } def;
 
   /* Notification callback */
@@ -89,10 +97,10 @@ int prop_write_values
   (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *updated);
 
 void prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc);
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask);
 
 void prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc);
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask);
 
 #endif /* __TVH_PROP_H__ */
 

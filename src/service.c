@@ -115,13 +115,10 @@ static htsmsg_t *
 service_class_channel_enum
   ( void *obj )
 {
-  htsmsg_t *p, *m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
-  p = htsmsg_create_map();
-  htsmsg_add_u32(p, "enum", 1);
-  htsmsg_add_msg(m, "params", p);
   return m;
 }
 

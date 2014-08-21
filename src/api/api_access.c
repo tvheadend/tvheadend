@@ -23,7 +23,7 @@
 
 static void
 api_access_entry_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   access_entry_t *ae;
 
@@ -33,15 +33,17 @@ api_access_entry_grid
 
 static int
 api_access_entry_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *conf;
+  access_entry_t *ae;
 
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
   pthread_mutex_lock(&global_lock);
-  access_entry_create(NULL, conf);
+  if ((ae = access_entry_create(NULL, conf)) != NULL)
+    access_entry_save(ae);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
