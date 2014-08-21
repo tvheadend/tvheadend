@@ -515,6 +515,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
         if (ds->opaque == opaque)
           return 0;
       }
+      break;
     }
   }
   if (!dt) {
@@ -628,8 +629,6 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
   descrambler_emm_t *emm;
   uint8_t dtag, dlen;
   uint16_t caid = 0, pid = 0;
-  descrambler_section_callback_t callback = NULL;
-  void *opaque = NULL;
   TAILQ_HEAD(,descrambler_emm) removing;
 
   tvhtrace("descrambler", "CAT data (len %d)", len);
@@ -659,13 +658,9 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
           if (emm->pid == EMM_PID_UNKNOWN) {
             tvhtrace("descrambler", "attach emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
             emm->pid = pid;
-            callback = emm->callback;
-            opaque   = emm->opaque;
-            break;
+            descrambler_open_pid_(mux, emm->opaque, pid, emm->callback, NULL);
           }
         }
-      if (emm)
-        descrambler_open_pid_(mux, opaque, pid, callback, NULL);
       pthread_mutex_unlock(&mux->mm_descrambler_lock);
 next:
       data += dlen;
