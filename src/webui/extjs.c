@@ -568,12 +568,8 @@ extjs_dvr_containers(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
-      goto skip;
-
     muxer_container_list(array);
 
-skip:
     htsmsg_add_msg(out, "entries", array);
 
   } else {
@@ -608,12 +604,8 @@ extjs_dvr_caches(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
-      goto skip;
-
     muxer_cache_list(array);
 
-skip:
     htsmsg_add_msg(out, "entries", array);
 
   } else {
