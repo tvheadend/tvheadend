@@ -366,10 +366,46 @@ idnode_get_u32
         *u32 = *(int*)ptr;
         return 0;
       case PT_U16:
-        *u32 = *(uint32_t*)ptr;
+        *u32 = *(uint16_t*)ptr;
         return 0;
       case PT_U32:
-        *u32 = *(uint16_t*)ptr;
+        *u32 = *(uint32_t*)ptr;
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1;
+}
+
+/*
+ * Get field as signed 64-bit int
+ */
+int
+idnode_get_s64
+  ( idnode_t *self, const char *key, int64_t *s64 )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p->islist) return 1;
+  if (p) {
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
+    switch (p->type) {
+      case PT_INT:
+      case PT_BOOL:
+        *s64 = *(int*)ptr;
+        return 0;
+      case PT_U16:
+        *s64 = *(uint16_t*)ptr;
+        return 0;
+      case PT_U32:
+        *s64 = *(uint32_t*)ptr;
+        return 0;
+      case PT_S64:
+        *s64 = *(int64_t*)ptr;
         return 0;
       default:
         break;
@@ -399,6 +435,29 @@ idnode_get_bool
     }
   }
   return 1; 
+}
+
+/*
+ * Get field as time
+ */
+int
+idnode_get_time
+  ( idnode_t *self, const char *key, time_t *tm )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p->islist) return 1;
+  if (p) {
+    void *ptr = self;
+    ptr += p->off;
+    switch (p->type) {
+      case PT_TIME:
+        *tm = *(time_t*)ptr;
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1;
 }
 
 /* **************************************************************************
@@ -493,11 +552,11 @@ idnode_cmp_sort
       {
         int r;
         const char *stra = tvh_strdupa(idnode_get_str(ina, sort->key) ?: "");
-        const char *strb = idnode_get_str(inb, sort->key);
+        const char *strb = idnode_get_str(inb, sort->key) ?: "";
         if (sort->dir == IS_ASC)
-          r = strcmp(stra ?: "", strb ?: "");
+          r = strcmp(stra, strb);
         else
-          r = strcmp(strb ?: "", stra ?: "");
+          r = strcmp(strb, stra);
         return r;
       }
       break;
@@ -505,6 +564,7 @@ idnode_cmp_sort
     case PT_U16:
     case PT_U32:
     case PT_BOOL:
+    case PT_PERM:
       {
         uint32_t u32a = 0, u32b = 0;
         idnode_get_u32(ina, sort->key, &u32a);
@@ -515,8 +575,32 @@ idnode_cmp_sort
           return u32b - u32a;
       }
       break;
+    case PT_S64:
+      {
+        int64_t s64a = 0, s64b = 0;
+        idnode_get_s64(ina, sort->key, &s64a);
+        idnode_get_s64(inb, sort->key, &s64b);
+        if (sort->dir == IS_ASC)
+          return s64a - s64b;
+        else
+          return s64b - s64a;
+      }
+      break;
     case PT_DBL:
       // TODO
+    case PT_TIME:
+      {
+        time_t ta = 0, tb = 0;
+        idnode_get_time(ina, sort->key, &ta);
+        idnode_get_time(inb, sort->key, &tb);
+        if (sort->dir == IS_ASC)
+          return ta - tb;
+        else
+          return tb - ta;
+      }
+      break;
+    case PT_LANGSTR:
+      // TODO?
     case PT_NONE:
       break;
   }
@@ -755,15 +839,12 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
  * Read
  * *************************************************************************/
 
-/*
- * Save
- */
 void
-idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
+idnode_read0 ( idnode_t *self, htsmsg_t *c, htsmsg_t *list, int optmask )
 {
   const idclass_t *idc = self->in_class;
   for (; idc; idc = idc->ic_super)
-    prop_read_values(self, idc->ic_properties, c, optmask, NULL);
+    prop_read_values(self, idc->ic_properties, c, list, optmask);
 }
 
 /**
@@ -771,11 +852,11 @@ idnode_read0 ( idnode_t *self, htsmsg_t *c, int optmask )
  */
 static void
 add_params
-  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, int optmask, htsmsg_t *inc)
+  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, htsmsg_t *list, int optmask)
 {
   /* Parent first */
   if(ic->ic_super != NULL)
-    add_params(self, ic->ic_super, p, optmask, inc);
+    add_params(self, ic->ic_super, p, list, optmask);
 
   /* Seperator (if not empty) */
 #if 0
@@ -788,14 +869,14 @@ add_params
 #endif
 
   /* Properties */
-  prop_serialize(self, ic->ic_properties, p, optmask, inc);
+  prop_serialize(self, ic->ic_properties, p, list, optmask);
 }
 
 static htsmsg_t *
-idnode_params (const idclass_t *idc, idnode_t *self, int optmask)
+idnode_params (const idclass_t *idc, idnode_t *self, htsmsg_t *list, int optmask)
 {
   htsmsg_t *p  = htsmsg_create_list();
-  add_params(self, idc, p, optmask, NULL);
+  add_params(self, idc, p, list, optmask);
   return p;
 }
 
@@ -825,8 +906,39 @@ static const char *
 idclass_get_order (const idclass_t *idc)
 {
   while (idc) {
-    if (idc->ic_class)
+    if (idc->ic_order)
       return idc->ic_order;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
+static htsmsg_t *
+idclass_get_property_groups (const idclass_t *idc)
+{
+  const property_group_t *g;
+  htsmsg_t *e, *m;
+  int count;
+  while (idc) {
+    if (idc->ic_groups) {
+      m = htsmsg_create_list();
+      count = 0;
+      for (g = idc->ic_groups; g->number && g->name; g++) {
+        e = htsmsg_create_map();
+        htsmsg_add_u32(e, "number", g->number);
+        htsmsg_add_str(e, "name",   g->name);
+        if (g->parent)
+          htsmsg_add_u32(e, "parent", g->parent);
+        if (g->column)
+          htsmsg_add_u32(e, "column", g->column);
+        htsmsg_add_msg(m, NULL, e);
+        count++;
+      }
+      if (count)
+        return m;
+      htsmsg_destroy(m);
+      break;
+    }
     idc = idc->ic_super;
   }
   return NULL;
@@ -870,7 +982,7 @@ idclass_find ( const char *class )
  * Just get the class definition
  */
 htsmsg_t *
-idclass_serialize0(const idclass_t *idc, int optmask)
+idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask)
 {
   const char *s;
   htsmsg_t *p, *m = htsmsg_create_map();
@@ -882,9 +994,11 @@ idclass_serialize0(const idclass_t *idc, int optmask)
     htsmsg_add_str(m, "class", s);
   if ((s = idclass_get_order(idc)))
     htsmsg_add_str(m, "order", s);
+  if ((p = idclass_get_property_groups(idc)))
+    htsmsg_add_msg(m, "groups", p);
 
   /* Props */
-  if ((p = idnode_params(idc, NULL, optmask)))
+  if ((p = idnode_params(idc, NULL, list, optmask)))
     htsmsg_add_msg(m, "props", p);
   
   return m;
@@ -894,7 +1008,7 @@ idclass_serialize0(const idclass_t *idc, int optmask)
  *
  */
 htsmsg_t *
-idnode_serialize0(idnode_t *self, int optmask)
+idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
 {
   const idclass_t *idc = self->in_class;
   const char *uuid, *s;
@@ -909,7 +1023,7 @@ idnode_serialize0(idnode_t *self, int optmask)
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
 
-  htsmsg_add_msg(m, "params", idnode_params(idc, self, optmask));
+  htsmsg_add_msg(m, "params", idnode_params(idc, self, list, optmask));
 
   return m;
 }

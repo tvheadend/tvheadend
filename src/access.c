@@ -37,6 +37,7 @@
 #include "access.h"
 #include "settings.h"
 #include "channels.h"
+#include "tcp.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -158,6 +159,8 @@ access_ticket_verify(const char *id, const char *resource)
 void
 access_destroy(access_t *a)
 {
+  free(a->aa_username);
+  free(a->aa_representative);
   htsmsg_destroy(a->aa_chtags);
   free(a);
 }
@@ -309,6 +312,14 @@ access_get(const char *username, const char *password, struct sockaddr *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
+
+  if (username) {
+    a->aa_username = strdup(username);
+    a->aa_representative = strdup(username);
+  } else {
+    a->aa_representative = malloc(50);
+    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+  }
 
   if (access_noacl) {
     a->aa_rights = ACCESS_FULL;
@@ -645,7 +656,7 @@ access_entry_destroy(access_entry_t *ae)
 /**
  *
  */
-static void
+void
 access_entry_save(access_entry_t *ae)
 {
   htsmsg_t *c = htsmsg_create_map();

@@ -26,7 +26,7 @@
 
 #include <regex.h>
 
-struct htsmsg;
+struct access;
 typedef struct idnode idnode_t;
 
 /*
@@ -40,16 +40,28 @@ typedef struct idnode_set
 } idnode_set_t;
 
 /*
+ * Property groups
+ */
+typedef struct property_group
+{
+  const char *name;
+  uint32_t    number;
+  uint32_t    parent;
+  uint32_t    column;
+} property_group_t;
+
+/*
  * Class definition
  */
 typedef struct idclass idclass_t;
 struct idclass {
-  const struct idclass  *ic_super;      /// Parent class
-  const char            *ic_class;      /// Class name
-  const char            *ic_caption;    /// Class description
-  const char            *ic_order;      /// Property order (comma separated)
-  const property_t      *ic_properties; /// Property list
-  const char            *ic_event;      /// Events to fire on add/delete/title
+  const struct idclass   *ic_super;        ///< Parent class
+  const char             *ic_class;        ///< Class name
+  const char             *ic_caption;      ///< Class description
+  const char             *ic_order;        ///< Property order (comma separated)
+  const property_group_t *ic_groups;       ///< Groups for visual representation
+  const property_t       *ic_properties;   ///< Property list
+  const char             *ic_event;        ///< Events to fire on add/delete/title
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);
@@ -58,6 +70,7 @@ struct idclass {
   void            (*ic_delete)     (idnode_t *self);
   void            (*ic_moveup)     (idnode_t *self);
   void            (*ic_movedown)   (idnode_t *self);
+  int             (*ic_perm)       (idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
 };
 
 /*
@@ -139,20 +152,30 @@ void idnode_notify_title_changed (void *in);
 
 void idclass_register ( const idclass_t *idc );
 const idclass_t *idclass_find ( const char *name );
-htsmsg_t *idclass_serialize0 (const idclass_t *idc, int optmask);
-htsmsg_t *idnode_serialize0  (idnode_t *self, int optmask);
-void      idnode_read0  (idnode_t *self, htsmsg_t *m, int optmask);
+htsmsg_t *idclass_serialize0 (const idclass_t *idc, htsmsg_t *list, int optmask);
+htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask);
+void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask);
 int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 
-#define idclass_serialize(idc) idclass_serialize0(idc, 0)
-#define idnode_serialize(in)   idnode_serialize0(in, 0)
+#define idclass_serialize(idc) idclass_serialize0(idc, NULL, 0)
+#define idnode_serialize(in)   idnode_serialize0(in, NULL, 0)
 #define idnode_load(in, m)     idnode_write0(in, m, PO_NOSAVE, 0)
-#define idnode_save(in, m)     idnode_read0(in, m, PO_NOSAVE | PO_USERAW)
+#define idnode_save(in, m)     idnode_read0(in, m, NULL, PO_NOSAVE | PO_USERAW)
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
+
+static inline int
+idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
+{
+  if (self->in_class->ic_perm)
+    return self->in_class->ic_perm(self, a, msg_to_write);
+  return 0;
+}
 
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);
+int         idnode_get_s64 (idnode_t *self, const char *key,  int64_t *s64);
 int         idnode_get_bool(idnode_t *self, const char *key, int *b);
+int         idnode_get_time(idnode_t *self, const char *key, time_t *tm);
 
 void idnode_filter_add_str
   (idnode_filter_t *f, const char *k, const char *v, int t);

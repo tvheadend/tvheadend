@@ -50,6 +50,8 @@ lang_str_t *lang_str_create ( void )
 void lang_str_destroy ( lang_str_t *ls )
 { 
   lang_str_ele_t *e;
+  if (ls == NULL)
+    return;
   while ((e = RB_FIRST(ls))) {
     if (e->str)  free(e->str);
     RB_REMOVE(ls, e, link);
@@ -158,38 +160,95 @@ int lang_str_append
   return _lang_str_add(ls, str, lang, 0, 1);
 }
 
-/* Serialize */
-void lang_str_serialize ( lang_str_t *ls, htsmsg_t *m, const char *f )
+/* Serialize  map */
+htsmsg_t *lang_str_serialize_map ( lang_str_t *ls )
 {
   lang_str_ele_t *e;
-  if (!ls) return;
+  if (!ls) return NULL;
   htsmsg_t *a = htsmsg_create_map();
   RB_FOREACH(e, ls, link) {
     htsmsg_add_str(a, e->lang, e->str);
   }
-  htsmsg_add_msg(m, f, a);
+  return a;
+}
+
+/* Serialize */
+void lang_str_serialize ( lang_str_t *ls, htsmsg_t *m, const char *f )
+{
+  if (!ls) return;
+  htsmsg_add_msg(m, f, lang_str_serialize_map(ls));
+}
+
+/* De-serialize map */
+lang_str_t *lang_str_deserialize_map ( htsmsg_t *map )
+{
+  lang_str_t *ret = lang_str_create();
+  htsmsg_field_t *f;
+  const char *str;
+
+  HTSMSG_FOREACH(f, map) {
+    if ((str = htsmsg_field_get_string(f))) {
+      lang_str_add(ret, str, f->hmf_name, 0);
+    }
+  }
+  return ret;
 }
 
 /* De-serialize */
 lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
 {
-  lang_str_t *ret = NULL;
   htsmsg_t *a;
-  htsmsg_field_t *f;
   const char *str;
   
   if ((a = htsmsg_get_map(m, n))) {
-    ret = lang_str_create();
-    HTSMSG_FOREACH(f, a) {
-      if ((str = htsmsg_field_get_string(f))) {
-        lang_str_add(ret, str, f->hmf_name, 0);
-      }
-    }
+    return lang_str_deserialize_map(a);
   } else if ((str = htsmsg_get_str(m, n))) {
-    ret = lang_str_create();
+    lang_str_t *ret = lang_str_create();
     lang_str_add(ret, str, NULL, 0);
+    return ret;
   }
-  return ret;
+  return NULL;
+}
+
+/* Compare */
+int lang_str_compare( lang_str_t *ls1, lang_str_t *ls2 )
+{
+  lang_str_ele_t *e;
+  const char *s1, *s2;
+  int r;
+
+  if (ls1 == NULL && ls2)
+    return -1;
+  if (ls2 == NULL && ls1)
+    return 1;
+  if (ls1 == ls2)
+    return 0;
+  /* Note: may be optimized to not check languages twice */
+  RB_FOREACH(e, ls1, link) {
+    s1 = lang_str_get(ls1, e->lang);
+    s2 = lang_str_get(ls2, e->lang);
+    if (s1 == NULL && s2 != NULL)
+      return -1;
+    if (s2 == NULL && s1 != NULL)
+      return 1;
+    if (s1 == NULL || s2 == NULL)
+      continue;
+    r = strcmp(s1, s2);
+    if (r) return r;
+  }
+  RB_FOREACH(e, ls2, link) {
+    s1 = lang_str_get(ls1, e->lang);
+    s2 = lang_str_get(ls2, e->lang);
+    if (s1 == NULL && s2 != NULL)
+      return -1;
+    if (s2 == NULL && s1 != NULL)
+      return 1;
+    if (s1 == NULL || s2 == NULL)
+      continue;
+    r = strcmp(s1, s2);
+    if (r) return r;
+  }
+  return 0;
 }
 
 void lang_str_done( void )

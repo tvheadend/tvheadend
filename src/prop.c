@@ -22,6 +22,7 @@
 
 #include "tvheadend.h"
 #include "prop.h"
+#include "lang_str.h"
 
 /* **************************************************************************
  * Utilities
@@ -31,12 +32,16 @@
  *
  */
 const static struct strtab typetab[] = {
-  { "bool",  PT_BOOL },
-  { "int",   PT_INT },
-  { "str",   PT_STR },
-  { "u16",   PT_U16 },
-  { "u32",   PT_U32 },
-  { "dbl",   PT_DBL },
+  { "bool",    PT_BOOL },
+  { "int",     PT_INT },
+  { "str",     PT_STR },
+  { "u16",     PT_U16 },
+  { "u32",     PT_U32 },
+  { "s64",     PT_S64 },
+  { "dbl",     PT_DBL },
+  { "time",    PT_TIME },
+  { "langstr", PT_LANGSTR },
+  { "perm",    PT_PERM },
 };
 
 
@@ -71,6 +76,7 @@ prop_write_values
   int64_t s64;
   uint32_t u32;
   uint16_t u16;
+  time_t tm;
 #define PROP_UPDATE(v, t)\
   new = &v;\
   if (!p->set && (*((t*)cur) != *((t*)new))) {\
@@ -81,6 +87,7 @@ prop_write_values
   if (!pl) return 0;
 
   for (p = pl; p->id; p++) {
+
     if (p->type == PT_NONE) continue;
 
     f = htsmsg_field_find(m, p->id);
@@ -88,6 +95,9 @@ prop_write_values
 
     /* Ignore */
     if(p->opts & optmask) continue;
+
+    /* Sanity check */
+    assert(p->set || p->off);
 
     /* Write */
     save = 0;
@@ -127,6 +137,13 @@ prop_write_values
         PROP_UPDATE(u32, uint32_t);
         break;
       }
+      case PT_S64: {
+        if (htsmsg_field_get_s64(f, &s64))
+          continue;
+        i = s64;
+        PROP_UPDATE(i, int64_t);
+        break;
+      }
       case PT_DBL: {
         if (htsmsg_field_get_dbl(f, &dbl))
           continue;
@@ -142,6 +159,38 @@ prop_write_values
           *str = strdup(new);
           save = 1;
         }
+        break;
+      }
+      case PT_TIME: {
+        if (htsmsg_field_get_s64(f, &s64))
+          continue;
+        tm = s64;
+        PROP_UPDATE(tm, time_t);
+        break;
+      }
+      case PT_LANGSTR: {
+        lang_str_t **lstr1 = cur;
+        lang_str_t  *lstr2;
+        new = htsmsg_field_get_map(f);
+        if (!new)
+          continue;
+        if (!p->set) {
+          lstr2 = lang_str_deserialize_map((htsmsg_t *)new);
+          if (lang_str_compare(*lstr1, lstr2)) {
+            lang_str_destroy(*lstr1);
+            *lstr1 = lstr2;
+            save = 1;
+          } else {
+            lang_str_destroy(lstr2);
+          }
+        }
+        break;
+      }
+      case PT_PERM: {
+        if (!(new = htsmsg_field_get_str(f)))
+          continue;
+        u32 = (int)strtol(new,NULL,0);
+        PROP_UPDATE(u32, uint32_t);
         break;
       }
       case PT_NONE:
@@ -175,19 +224,18 @@ prop_write_values
  */
 static void
 prop_read_value
-  (void *obj, const property_t *p, htsmsg_t *m, const char *name,
-   int optmask, htsmsg_t *inc)
+  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask)
 {
   const char *s;
   const void *val = obj + p->off;
+  char buf[16];
 
   /* Ignore */
   if (p->opts & optmask) return;
   if (p->type == PT_NONE) return;
 
-  /* Ignore */
-  if (inc && !htsmsg_get_u32_or_default(inc, p->id, 0))
-    return;
+  /* Sanity check */
+  assert(p->get || p->off);
 
   /* Get method */
   if (!(optmask & PO_USERAW) || !p->off)
@@ -207,11 +255,14 @@ prop_read_value
     case PT_INT:
       htsmsg_add_s64(m, name, *(int *)val);
       break;
+    case PT_U16:
+      htsmsg_add_u32(m, name, *(uint16_t *)val);
+      break;
     case PT_U32:
       htsmsg_add_u32(m, name, *(uint32_t *)val);
       break;
-    case PT_U16:
-      htsmsg_add_u32(m, name, *(uint16_t *)val);
+    case PT_S64:
+      htsmsg_add_s64(m, name, *(int64_t *)val);
       break;
     case PT_STR:
       if ((s = *(const char **)val))
@@ -219,6 +270,16 @@ prop_read_value
       break;
     case PT_DBL:
       htsmsg_add_dbl(m, name, *(double*)val);
+      break;
+    case PT_TIME:
+      htsmsg_add_s64(m, name, *(time_t *)val);
+      break;
+    case PT_LANGSTR:
+      lang_str_serialize(*(lang_str_t **)val, m, name);
+      break;
+    case PT_PERM:
+      snprintf(buf, sizeof(buf), "%04o", *(uint32_t *)val);
+      htsmsg_add_str(m, name, buf);
       break;
     case PT_NONE:
       break;
@@ -231,12 +292,135 @@ prop_read_value
  */
 void
 prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *inc)
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask)
 {
   if(pl == NULL)
     return;
-  for (; pl->id; pl++)
-    prop_read_value(obj, pl, m, pl->id, optmask, inc);
+
+  if(list == NULL) {
+    for (; pl->id; pl++)
+      prop_read_value(obj, pl, m, pl->id, optmask);
+  } else {
+    const property_t *p;
+    htsmsg_field_t *f;
+    int b;
+    HTSMSG_FOREACH(f, list) {
+      if (!htsmsg_field_get_bool(f, &b) && b > 0) {
+        p = prop_find(pl, f->hmf_name);
+        if (p)
+          prop_read_value(obj, p, m, p->id, optmask);
+      }
+    }
+  }
+}
+
+/**
+ *
+ */
+static void
+prop_serialize_value
+  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
+{
+  htsmsg_field_t *f;
+  char buf[16];
+
+  /* Remove parent */
+  // TODO: this is really horrible and inefficient!
+  HTSMSG_FOREACH(f, msg) {
+    htsmsg_t *t = htsmsg_field_get_map(f);
+    const char *str;
+    if (t && (str = htsmsg_get_str(t, "id"))) {
+      if (!strcmp(str, pl->id)) {
+        htsmsg_field_destroy(msg, f);
+        break;
+      }
+    }
+  }
+
+  htsmsg_t *m = htsmsg_create_map();
+
+  /* ID / type */
+  htsmsg_add_str(m, "id",       pl->id);
+  htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
+
+  /* Skip - special blocker */
+  if (pl->type == PT_NONE) {
+    htsmsg_add_msg(msg, NULL, m);
+    return;
+  }
+
+  /* Metadata */
+  htsmsg_add_str(m, "caption",  pl->name);
+  if (pl->islist)
+    htsmsg_add_u32(m, "list", 1);
+
+  /* Default */
+  // TODO: currently no support for list defaults
+  switch (pl->type) {
+    case PT_BOOL:
+      htsmsg_add_bool(m, "default", pl->def.i);
+      break;
+    case PT_INT:
+      htsmsg_add_s32(m, "default", pl->def.i);
+      break;
+    case PT_U16:
+      htsmsg_add_u32(m, "default", pl->def.u16);
+      break;
+    case PT_U32:
+      htsmsg_add_u32(m, "default", pl->def.u32);
+      break;
+    case PT_S64:
+      htsmsg_add_s64(m, "default", pl->def.s64);
+      break;
+    case PT_DBL:
+      htsmsg_add_dbl(m, "default", pl->def.d);
+      break;
+    case PT_STR:
+      htsmsg_add_str(m, "default", pl->def.s ?: "");
+      break;
+    case PT_TIME:
+      htsmsg_add_s64(m, "default", pl->def.tm);
+      break;
+    case PT_LANGSTR:
+      /* TODO? */
+      break;
+    case PT_PERM:
+      snprintf(buf, sizeof(buf), "%04o", pl->def.u32);
+      htsmsg_add_str(m, "default", buf);
+      break;
+    case PT_NONE:
+      break;
+  }
+
+  /* Options */
+  if (pl->opts & PO_RDONLY)
+    htsmsg_add_bool(m, "rdonly", 1);
+  if (pl->opts & PO_NOSAVE)
+    htsmsg_add_bool(m, "nosave", 1);
+  if (pl->opts & PO_WRONCE)
+    htsmsg_add_bool(m, "wronce", 1);
+  if (pl->opts & PO_ADVANCED)
+    htsmsg_add_bool(m, "advanced", 1);
+  if (pl->opts & PO_HIDDEN)
+    htsmsg_add_bool(m, "hidden", 1);
+  if (pl->opts & PO_PASSWORD)
+    htsmsg_add_bool(m, "password", 1);
+  if (pl->opts & PO_DURATION)
+    htsmsg_add_bool(m, "duration", 1);
+
+  /* Enum list */
+  if (pl->list)
+    htsmsg_add_msg(m, "enum", pl->list(obj));
+
+  /* Visual group */
+  if (pl->group)
+    htsmsg_add_u32(m, "group", pl->group);
+
+  /* Data */
+  if (obj)
+    prop_read_value(obj, pl, m, "value", optmask);
+
+  htsmsg_add_msg(msg, NULL, m);
 }
 
 /**
@@ -244,97 +428,25 @@ prop_read_values
  */
 void
 prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, htsmsg_t *inc)
+  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list, int optmask)
 {
-  htsmsg_field_t *f;
-
   if(pl == NULL)
     return;
 
-  for(; pl->id; pl++) {
-
-    /* Remove parent */
-    // TODO: this is really horrible and inefficient!
-    HTSMSG_FOREACH(f, msg) {
-      htsmsg_t *t = htsmsg_field_get_map(f);
-      const char *str;
-      if (t && (str = htsmsg_get_str(t, "id"))) {
-        if (!strcmp(str, pl->id)) {
-          htsmsg_field_destroy(msg, f);
-          break;
-        }
+  if(list == NULL) {
+    for (; pl->id; pl++)
+      prop_serialize_value(obj, pl, msg, optmask);
+  } else {
+    const property_t *p;
+    htsmsg_field_t *f;
+    int b;
+    HTSMSG_FOREACH(f, list) {
+      if (!htsmsg_field_get_bool(f, &b) && b > 0) {
+        p = prop_find(pl, f->hmf_name);
+        if (p)
+          prop_serialize_value(obj, p, msg, optmask);
       }
     }
-
-    /* Ignore */
-    if (inc && !htsmsg_get_u32_or_default(inc, pl->id, 0))
-      continue;
-
-    htsmsg_t *m = htsmsg_create_map();
-
-    /* ID / type */
-    htsmsg_add_str(m, "id",       pl->id);
-    htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
-
-    /* Skip - special blocker */
-    if (pl->type == PT_NONE) {
-      htsmsg_add_msg(msg, NULL, m);
-      continue;
-    }
-      
-    /* Metadata */
-    htsmsg_add_str(m, "caption",  pl->name);
-    if (pl->islist)
-      htsmsg_add_u32(m, "list", 1);
-
-    /* Default */
-    // TODO: currently no support for list defaults
-    switch (pl->type) {
-      case PT_BOOL:
-        htsmsg_add_bool(m, "default", pl->def.i);
-        break;
-      case PT_INT:
-        htsmsg_add_s32(m, "default", pl->def.i);
-        break;
-      case PT_U16:
-        htsmsg_add_u32(m, "default", pl->def.u16);
-        break;
-      case PT_U32:
-        htsmsg_add_u32(m, "default", pl->def.u32);
-        break;
-      case PT_DBL:
-        htsmsg_add_dbl(m, "default", pl->def.d);
-        break;
-      case PT_STR:
-        htsmsg_add_str(m, "default", pl->def.s ?: "");
-        break;
-      case PT_NONE:
-        break;
-    }
-
-    /* Options */
-    if (pl->opts & PO_RDONLY)
-      htsmsg_add_bool(m, "rdonly", 1);
-    if (pl->opts & PO_NOSAVE)
-      htsmsg_add_bool(m, "nosave", 1);
-    if (pl->opts & PO_WRONCE)
-      htsmsg_add_bool(m, "wronce", 1);
-    if (pl->opts & PO_ADVANCED)
-      htsmsg_add_bool(m, "advanced", 1);
-    if (pl->opts & PO_HIDDEN)
-      htsmsg_add_bool(m, "hidden", 1);
-    if (pl->opts & PO_PASSWORD)
-      htsmsg_add_bool(m, "password", 1);
-
-    /* Enum list */
-    if (pl->list)
-      htsmsg_add_msg(m, "enum", pl->list(obj));
-
-    /* Data */
-    if (obj)
-      prop_read_value(obj, pl, m, "value", optmask, NULL);
-
-    htsmsg_add_msg(msg, NULL, m);
   }
 }
 
