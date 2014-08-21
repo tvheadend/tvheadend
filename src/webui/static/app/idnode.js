@@ -196,6 +196,7 @@ tvheadend.IdNodeField = function(conf)
                       t.push(d[i]);
                     }
                 }
+                t.sort();
                 v = t.join(',');
             }
             return v;

@@ -575,7 +575,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
     if(ct->ct_enabled && !ct->ct_internal)
-      htsmsg_add_u32(tags, NULL, ct->ct_identifier);
+      htsmsg_add_u32(tags, NULL, idnode_get_short_uuid(&ct->ct_id));
   }
 
   LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
@@ -607,7 +607,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
-  htsmsg_add_u32(out, "tagId", ct->ct_identifier);
+  htsmsg_add_u32(out, "tagId", idnode_get_short_uuid(&ct->ct_id));
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
   htsmsg_add_str(out, "tagIcon", ct->ct_icon);
@@ -2461,7 +2461,7 @@ void
 htsp_tag_delete(channel_tag_t *ct)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "tagId", ct->ct_identifier);
+  htsmsg_add_u32(m, "tagId", idnode_get_short_uuid(&ct->ct_id));
   htsmsg_add_str(m, "method", "tagDelete");
   htsp_async_send(m, HTSP_ASYNC_ON);
 }

@@ -78,27 +78,50 @@ api_channel_create
 }
 
 static int
-api_channeltag_enum
+api_channel_tag_list
   ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_tag_t *ct;
   htsmsg_t *l, *e;
   
-  int _enum = htsmsg_get_bool_or_default(args, "enum", 0);
-
-  if (_enum) {
-    l = htsmsg_create_list();
-    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-      e = htsmsg_create_map();
-      htsmsg_add_u32(e, "key", ct->ct_identifier);
-      htsmsg_add_str(e, "val", ct->ct_name);
-      htsmsg_add_msg(l, NULL, e);
-    }
-    *resp = htsmsg_create_map();
-    htsmsg_add_msg(*resp, "entries", l);
-  } else {
-    // TODO: support full listing v enum
+  l = htsmsg_create_list();
+  TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", idnode_uuid_as_str(&ct->ct_id));
+    htsmsg_add_str(e, "val", ct->ct_name);
+    htsmsg_add_msg(l, NULL, e);
   }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+  return 0;
+}
+
+static void
+api_channel_tag_grid
+  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+{
+  channel_tag_t *ct;
+
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
+}
+
+static int
+api_channel_tag_create
+  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  channel_tag_t *ct;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  ct = channel_tag_create(NULL, conf);
+  if (ct)
+    channel_tag_save(ct);
+  pthread_mutex_unlock(&global_lock);
+
   return 0;
 }
 
@@ -110,7 +133,10 @@ void api_channel_init ( void )
     { "channel/list",    ACCESS_ANONYMOUS, api_channel_list, NULL },
     { "channel/create",  ACCESS_ADMIN,     api_channel_create, NULL },
 
-    { "channeltag/list", ACCESS_ANONYMOUS, api_channeltag_enum, NULL },
+    { "channeltag/class",ACCESS_ANONYMOUS, api_idnode_class, (void*)&channel_tag_class },
+    { "channeltag/grid", ACCESS_ANONYMOUS, api_idnode_grid,  api_channel_tag_grid },
+    { "channeltag/list", ACCESS_ANONYMOUS, api_channel_tag_list, NULL },
+    { "channeltag/create",  ACCESS_ADMIN,  api_channel_tag_create, NULL },
 
     { NULL },
   };

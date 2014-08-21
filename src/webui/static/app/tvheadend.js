@@ -259,12 +259,11 @@ function accessUpdate(o) {
             autoScroll: true,
             title: 'Channel / EPG',
             iconCls: 'television',
-            items: [
-                new tvheadend.cteditor,
-                new tvheadend.epggrab
-            ]
+            items: []
         });
-        tvheadend.channel_tab(tvheadend.conf_chepg);
+        tvheadend.channel_tab(tvheadend.conf_chepg, 0);
+        tvheadend.cteditor(tvheadend.conf_chepg, 1);
+        tvheadend.conf_chepg.insert(2, new tvheadend.epggrab);
         tabs1.push(tvheadend.conf_chepg);
 
         /* DVR / Timeshift */

@@ -477,7 +477,7 @@ http_tag_list_playlist(http_connection_t *hc)
     if(!ct->ct_enabled || ct->ct_internal)
       continue;
 
-    snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
+    snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf));

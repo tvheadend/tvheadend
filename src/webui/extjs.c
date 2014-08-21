@@ -506,50 +506,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
-extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
-  htsmsg_t *out, *array, *e;
-  channel_tag_t *ct;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(op != NULL && !strcmp(op, "listTags")) {
-
-    out = htsmsg_create_map();
-    array = htsmsg_create_list();
-
-    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-      if(!ct->ct_enabled)
-	continue;
-
-      e = htsmsg_create_map();
-      htsmsg_add_u32(e, "identifier", ct->ct_identifier);
-      htsmsg_add_str(e, "name", ct->ct_name);
-      htsmsg_add_msg(array, NULL, e);
-    }
-
-    htsmsg_add_msg(out, "entries", array);
-
-  } else {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-
-}
-
-/**
- *
- */
-static int
 extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1752,7 +1708,6 @@ extjs_start(void)
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
-  http_path_add("/channeltags",      NULL, extjs_channeltags,      ACCESS_WEB_INTERFACE);
   http_path_add("/confignames",      NULL, extjs_confignames,      ACCESS_WEB_INTERFACE);
   http_path_add("/epg",              NULL, extjs_epg,              ACCESS_WEB_INTERFACE);
   http_path_add("/epgrelated",       NULL, extjs_epgrelated,       ACCESS_WEB_INTERFACE);
