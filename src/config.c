@@ -642,8 +642,7 @@ config_migrate_simple ( const char *dir, htsmsg_t **orig,
     htsmsg_delete_field(e, "id");
     htsmsg_add_u32(e, "index", index++);
     uuid_init_hex(&u, NULL);
-    if (modify)
-      modify(e, id, u.hex, aux);
+    modify(e, id, u.hex, aux);
     hts_settings_save(e, "%s/%s", dir, u.hex);
     hts_settings_remove("%s/%s", dir, f->hmf_name);
   }
@@ -732,19 +731,6 @@ config_migrate_v8 ( void )
   htsmsg_destroy(ch);
 }
 
-static void
-config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
-{
-  htsmsg_delete_field(c, "index");
-}
-
-static void
-config_migrate_v9 ( void )
-{
-  config_migrate_simple("autorec", NULL, NULL, NULL);
-  config_migrate_simple("dvr/log", NULL, config_modify_dvr_log, NULL);
-}
-
 /*
  * Migration table
  */
@@ -757,7 +743,6 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v6,
   config_migrate_v7,
   config_migrate_v8,
-  config_migrate_v9,
 };
 
 /*
