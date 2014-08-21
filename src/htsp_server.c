@@ -453,6 +453,26 @@ if (!htsp_user_access_channel(htsp, ch))\
  * File helpers
  * *************************************************************************/
 
+static uint32_t
+htsp_channel_tag_get_identifier(channel_tag_t *ct)
+{
+  static int prev = 0;
+  if (ct->ct_htsp_id == 0)
+    ct->ct_htsp_id = ++prev;
+  return ct->ct_htsp_id;
+}
+
+static channel_tag_t *
+htsp_channel_tag_find_by_identifier(uint32_t id)
+{
+  channel_tag_t *ct;
+
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if (id == ct->ct_htsp_id)
+      return ct;
+  return NULL;
+}
+
 /**
  *
  */
@@ -575,7 +595,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
     if(ct->ct_enabled && !ct->ct_internal)
-      htsmsg_add_u32(tags, NULL, idnode_get_short_uuid(&ct->ct_id));
+      htsmsg_add_u32(tags, NULL, htsp_channel_tag_get_identifier(ct));
   }
 
   LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
@@ -607,7 +627,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
-  htsmsg_add_u32(out, "tagId", idnode_get_short_uuid(&ct->ct_id));
+  htsmsg_add_u32(out, "tagId", htsp_channel_tag_get_identifier(ct));
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
   htsmsg_add_str(out, "tagIcon", ct->ct_icon);
@@ -1071,7 +1091,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
   if(!(htsmsg_get_u32(in, "tagId", &u32)))
-    if (!(ct = channel_tag_find_by_identifier(u32)))
+    if (!(ct = htsp_channel_tag_find_by_identifier(u32)))
       return htsp_error("Channel tag does not exist");
   if (!htsmsg_get_u32(in, "contentType", &u32)) {
     if(htsp->htsp_version < 6) u32 <<= 4;
@@ -2461,7 +2481,7 @@ void
 htsp_tag_delete(channel_tag_t *ct)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "tagId", idnode_get_short_uuid(&ct->ct_id));
+  htsmsg_add_u32(m, "tagId", htsp_channel_tag_get_identifier(ct));
   htsmsg_add_str(m, "method", "tagDelete");
   htsp_async_send(m, HTSP_ASYNC_ON);
 }
