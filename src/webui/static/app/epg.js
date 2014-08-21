@@ -13,30 +13,21 @@ insertContentGroupClearOption = function( scope, records, options ){
     scope.insert(0,new placeholder({name: '(Clear filter)', code: '-1'}));
 };
 
-//WIBNI: might want this store to periodically update
-
-tvheadend.ContentGroupStore = new Ext.data.JsonStore({
-    root: 'entries',
-    fields: ['name', 'code'],
-    autoLoad: true,
-    url: 'ecglist',
+tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
+    url: 'api/epg/content_type/list',
     listeners: {
-        'load': insertContentGroupClearOption
+        load: insertContentGroupClearOption
     }
 });
 
 tvheadend.contentGroupLookupName = function(code) {
     ret = "";
     tvheadend.ContentGroupStore.each(function(r) {
-        if (r.data.code === code)
-            ret = r.data.name;
-        else if (ret === "" && r.data.code === (code & 0xF0))
-            ret = r.data.name;
+        if (r.data.key === code)
+            ret = r.data.val;
     });
     return ret;
 };
-
-tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 
 tvheadend.channelLookupName = function(key) {
     channelString = "";
@@ -103,7 +94,7 @@ tvheadend.epgDetails = function(event) {
     content += '<div class="x-epg-desc">' + event.description + '</div>';
     content += '<div class="x-epg-meta">' + event.starrating + '</div>';
     content += '<div class="x-epg-meta">' + event.agerating + '</div>';
-    content += '<div class="x-epg-meta">' + tvheadend.contentGroupLookupName(event.contenttype) + '</div>';
+    content += '<div class="x-epg-meta">' + tvheadend.contentGroupLookupName(event.content_type) + '</div>';
 
     if (event.ext_desc != null)
         content += '<div class="x-epg-meta">' + event.ext_desc + '</div>';
@@ -127,12 +118,29 @@ tvheadend.epgDetails = function(event) {
                    '?title=' + encodeURIComponent(title) + '">Play</a></div>';
     }
 
+    var store = new Ext.data.JsonStore({
+        autoload: true,
+        root: 'entries',
+        fields: ['key','val'],
+        id: 'key',
+        url: 'api/idnode/load',
+        baseParams: {
+            enum: 1,
+            'class': 'dvrconfig'
+        },
+        sortInfo: {
+            field: 'val',
+            direction: 'ASC'
+        }
+    });
+    store.load();
+
     var confcombo = new Ext.form.ComboBox({
-        store: tvheadend.configNames,
+        store: store,
         triggerAction: 'all',
         mode: 'local',
-        valueField: 'identifier',
-        displayField: 'name',
+        valueField: 'key',
+        displayField: 'val',
         name: 'config_name',
         emptyText: '(default)',
         value: '',
@@ -158,20 +166,19 @@ tvheadend.epgDetails = function(event) {
     win.show();
 
     function recordEvent() {
-        record('recordEvent');
+        record('event')
     }
 
     function recordSeries() {
-        record('recordSeries');
+        record('series');
     }
 
     function record(op) {
         Ext.Ajax.request({
-            url: 'dvr',
+            url: 'api/dvr/entry/create_by_' + op,
             params: {
-                eventId: event.id,
-                op: op,
-                config_name: confcombo.getValue()
+                event_id: event.id,
+                config_uuid: confcombo.getValue()
             },
             success: function(response, options) {
                 win.close();
@@ -232,7 +239,7 @@ tvheadend.epg = function() {
             }, {
                 name: 'agerating'
             }, {
-                name: 'contenttype'
+                name: 'content_type'
             }, {
                 name: 'schedstate'
             }, {
@@ -364,9 +371,9 @@ tvheadend.epg = function() {
             renderer: renderInt
         }, {
             width: 250,
-            id: 'contenttype',
+            id: 'content_type',
             header: "Content Type",
-            dataIndex: 'contenttype',
+            dataIndex: 'content_type',
             renderer: function(v) {
                 return tvheadend.contentGroupLookupName(v);
             }
@@ -490,12 +497,12 @@ tvheadend.epg = function() {
     };
 
     clearContentGroupFilter = function() {
-        delete epgStore.baseParams.contenttype;
+        delete epgStore.baseParams.content_type;
         epgFilterContentGroup.setValue("");
     };
 
     clearDurationFilter = function() {
-           delete epgStore.baseParams.minduration;
+        delete epgStore.baseParams.minduration;
         delete epgStore.baseParams.maxduration;
         epgFilterDuration.setValue("");
     };
@@ -532,8 +539,8 @@ tvheadend.epg = function() {
     epgFilterContentGroup.on('select', function(c, r) {
         if (r.data.code == -1)
             clearContentGroupFilter();
-        else if (epgStore.baseParams.contenttype !== r.data.code)
-            epgStore.baseParams.contenttype = r.data.code;
+        else if (epgStore.baseParams.content_type !== r.data.code)
+            epgStore.baseParams.content_type = r.data.code;
         epgStore.reload();
     });
 
@@ -650,11 +657,10 @@ tvheadend.epg = function() {
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.tag ? tvheadend.tagLookupName(epgStore.baseParams.tag)
                 : "<i>Don't care</i>";
-        var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
+        var content_type = epgStore.baseParams.content_type ? tvheadend.contentGroupLookupName(epgStore.baseParams.content_type)
                 : "<i>Don't care</i>";
         var duration = epgStore.baseParams.minduration ? tvheadend.durationLookupRange(epgStore.baseParams.minduration)
                 : "<i>Don't care</i>";
-
 
         Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
@@ -662,7 +668,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
-                + '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>'
+                + '<div class="x-smallhdr">Genre:</div>' + content_type + '<br>'
                 + '<div class="x-smallhdr">Duration:</div>' + duration + '<br>'
                 + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
@@ -675,9 +681,18 @@ tvheadend.epg = function() {
 
     function createAutoRec2(params) {
         /* Really do it */
-        params.op = 'createAutoRec';
+        params.conf = {
+          enabled: 1,
+          comment: 'Created from EPG query',
+        };
+        if (params.title) params['title'] = params.title;
+        if (params.channel) params['channel'] = params.channel;
+        if (params.tag) params['tag'] = params.tag;
+        if (params.content_type) params['content_type'] = params.content_type;
+        if (params.minduration) params['minduration'] = params.minduration;
+        if (params.maxduration) params['maxduration'] = params.maxduration;
         Ext.Ajax.request({
-            url: 'dvr',
+            url: 'api/dvr/autorec/create',
             params: params
         });
     }

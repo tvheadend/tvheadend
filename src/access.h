@@ -82,6 +82,8 @@ typedef struct access_ticket {
 } access_ticket_t;
 
 typedef struct access {
+  char     *aa_username;
+  char     *aa_representative;
   uint32_t  aa_rights;
   uint32_t  aa_chmin;
   uint32_t  aa_chmax;
@@ -129,6 +131,9 @@ void access_destroy(access_t *a);
 int access_verify(const char *username, const char *password,
 		  struct sockaddr *src, uint32_t mask);
 
+static inline int access_verify2(access_t *a, uint32_t mask)
+  { return (a->aa_rights & mask) == mask ? 0 : -1; }
+
 /**
  * Get the access structure
  */
@@ -153,6 +158,12 @@ access_get_by_addr(struct sockaddr *src);
  */
 access_entry_t *
 access_entry_create(const char *uuid, htsmsg_t *conf);
+
+/**
+ *
+ */
+void
+access_entry_save(access_entry_t *ae);
 
 /**
  *

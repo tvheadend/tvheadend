@@ -28,7 +28,7 @@
 // TODO: this will need converting to an idnode system
 static int
 api_channel_list
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_t *ch;
   htsmsg_t *l, *e;
@@ -50,7 +50,7 @@ api_channel_list
 
 static void
 api_channel_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
 {
   channel_t *ch;
 
@@ -60,7 +60,7 @@ api_channel_grid
 
 static int
 api_channel_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *conf;
   channel_t *ch;
@@ -79,7 +79,7 @@ api_channel_create
 
 static int
 api_channel_tag_list
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_tag_t *ct;
   htsmsg_t *l, *e;
@@ -98,7 +98,7 @@ api_channel_tag_list
 
 static void
 api_channel_tag_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
 {
   channel_tag_t *ct;
 
@@ -108,7 +108,7 @@ api_channel_tag_grid
 
 static int
 api_channel_tag_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *conf;
   channel_tag_t *ct;

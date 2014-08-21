@@ -43,10 +43,6 @@ void extjs_start_dvb(void);
 void extjs_start_v4l(void);
 #endif
 
-void extjs_service_update(htsmsg_t *in);
-
-void extjs_service_delete(htsmsg_t *in);
-
 void webui_api_init ( void );
 
 

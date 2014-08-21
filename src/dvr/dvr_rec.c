@@ -74,7 +74,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 
-  if(de->de_mc == MC_PASS) {
+  if(dvr_entry_get_mc(de) == MC_PASS) {
     streaming_queue_init(&de->de_sq, SMT_PACKET);
     de->de_gh = NULL;
     de->de_tsfix = NULL;
@@ -307,7 +307,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
   muxer_container_type_t mc;
 
-  mc = de->de_mc;
+  mc = dvr_entry_get_mc(de);
 
   de->de_mux = muxer_create(mc, &cfg->dvr_muxcnf);
   if(!de->de_mux) {
