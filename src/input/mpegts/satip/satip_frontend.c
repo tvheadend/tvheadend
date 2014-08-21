@@ -947,13 +947,13 @@ satip_frontend_input_thread ( void *aux )
   sbuf_t sb;
   int pos, nfds, i, r, tc;
   size_t c;
-  tvhpoll_event_t ev[4];
+  tvhpoll_event_t ev[3];
   tvhpoll_t *efd;
   int changing = 0, ms = -1, fatal = 0, running = 1;
   uint32_t seq = -1, nseq;
   udp_multirecv_t um;
   int play2 = 1, position, rtsp_flags = 0, reply;
-  uint64_t u64;
+  uint64_t u64, u64_2;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
@@ -968,30 +968,72 @@ satip_frontend_input_thread ( void *aux )
       lfe_master = lfe;
   }
 
+  /* Setup poll */
+  efd = tvhpoll_create(4);
+  memset(ev, 0, sizeof(ev));
+  ev[0].events             = TVHPOLL_IN;
+  ev[0].fd                 = lfe->sf_dvr_pipe.rd;
+  ev[0].data.ptr           = NULL;
+  tvhpoll_add(efd, ev, 1);
+
   pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
-  u64 = getmonoclock() - lfe_master->sf_last_tune;
-  tvhtrace("satip", "%s - last tune diff = %llu (tdelay = %u)",
-           buf, (unsigned long long)u64, lfe_master->sf_tdelay * 1000);
-  if (u64 < lfe_master->sf_tdelay * 1000) {
-    u64 = (lfe_master->sf_tdelay * 1000) - u64;
-    if (u64 >= 1000000) {
-      unsigned int s = u64 / 1000000;
-      while ((s = sleep(s)) != 0);
+  u64 = lfe_master->sf_last_tune;
+  i = lfe_master->sf_tdelay;
+  pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+  if (i < 0)
+    i = 0;
+  if (i > 2000)
+    i = 2000;
+
+  tc = 1;
+  while (i) {
+
+    u64_2 = (getmonoclock() - u64) / 1000;
+    if (u64_2 >= (uint64_t)i)
+      break;
+    r = (uint64_t)i - u64_2;
+      
+    if (tc)
+      tvhtrace("satip", "%s - last tune diff = %llu (delay = %d)",
+               buf, (unsigned long long)u64_2, r);
+
+    tc = 1;
+    nfds = tvhpoll_wait(efd, ev, 1, r);
+
+    if (!tvheadend_running) goto fast_exit;
+
+    if (nfds < 0) continue;
+
+    if (nfds == 0) break;
+
+    if (ev[0].data.ptr == NULL) {
+      c = read(lfe->sf_dvr_pipe.rd, rtcp, 1);
+      if (c == 1 && rtcp[0] == 'c') {
+        tc = 0;
+        ms = 20;
+        changing = 1;
+        continue;
+      }
+      tvhtrace("satip", "%s - input thread received fast shutdown", buf);
+      goto fast_exit;
     }
-    u64 %= 1000000;
-    while (usleep(u64));
+
   }
+
+  pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
   lfe_master->sf_last_tune = getmonoclock();
   pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
   rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
                              lfe->sf_device->sd_info.addr, 554,
                              satip_frontend_bindaddr(lfe));
-  if (rtsp == NULL)
+  if (rtsp == NULL) {
+fast_exit:
+    tvhpoll_destroy(efd);
     return NULL;
+  }
 
   /* Setup poll */
-  efd = tvhpoll_create(4);
   memset(ev, 0, sizeof(ev));
   ev[0].events             = TVHPOLL_IN;
   ev[0].fd                 = lfe->sf_rtp->fd;
@@ -1002,10 +1044,7 @@ satip_frontend_input_thread ( void *aux )
   ev[2].events             = TVHPOLL_IN;
   ev[2].fd                 = rtsp->hc_fd;
   ev[2].data.ptr           = rtsp;
-  ev[3].events             = TVHPOLL_IN;
-  ev[3].fd                 = lfe->sf_dvr_pipe.rd;
-  ev[3].data.ptr           = NULL;
-  tvhpoll_add(efd, ev, 4);
+  tvhpoll_add(efd, ev, 3);
   rtsp->hc_efd = efd;
 
   position = lfe_master->sf_position;
@@ -1223,7 +1262,7 @@ satip_frontend_input_thread ( void *aux )
         r = http_client_run(rtsp);
         if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
           break;
-        nfds = tvhpoll_wait(efd, ev, 1, 500);
+        nfds = tvhpoll_wait(efd, ev, 1, 250);
         if (nfds == 0)
           break;
         if (nfds < 0) {
@@ -1449,8 +1488,6 @@ satip_frontend_create
 
   /* Defaults */
   lfe->sf_position     = -1;
-  if (lfe->sf_tdelay > 2000)
-    lfe->sf_tdelay = 2000;
 
   /* Callbacks */
   lfe->mi_is_free      = satip_frontend_is_free;
