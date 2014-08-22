@@ -387,6 +387,9 @@ print_config ()
   if [ "${CFLAGS}" != "" ]; then
      printf "$fmt" "Using C flags:" "${CFLAGS}"
   fi
+  if [ "${LDFLAGS}" != "" ]; then
+     printf "$fmt" "Using LD flags:" "${LDFLAGS}"
+  fi
   printf "$fmt" "Build for arch:" "${ARCH}"
   echo ""
 
