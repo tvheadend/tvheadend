@@ -165,6 +165,7 @@ show_help ()
   echo "Compiler/Arch"
   printf "  $fmt Build using compiler [$CC]\n" "--cc=CC"
   printf "  $fmt Build using C flags\n" "--cflags=CFLAGS"
+  printf "  $fmt Build using LD flags\n" "--ldflags=LDFLAGS"
   printf "  $fmt Build and optimize for specific CPU\n" "--cpu=CPU"
   printf "  $fmt Build for architecture [$ARCH]\n" "--arch=ARCH"
   printf "  $fmt Build for platform [$PLATFORM]\n" "--platform=PLATFORM"
@@ -185,37 +186,6 @@ show_help ()
   done
   exit 0
 }
-
-# Process command line
-parse_args ()
-{
-  local opt= val=
-  for opt do
-    val=${opt#*=}
-    opt=${opt%=*}
-    opt=${opt#*--}
-    case "$opt" in
-      help)
-        show_help
-        ;;
-      *dir|prefix)
-        eval "$opt=$val"
-        ;;
-      cc|cflags|arch|cpu|platform|python)
-        eval "$(toupper $opt)=$val"
-        ;;
-      enable-*)
-        opt=${opt#*-}
-        enable $opt 1
-        ;;
-      disable-*)
-        opt=${opt#*-}
-        disable $opt 1
-        ;;
-    esac
-  done
-}
-
 
 # ###########################################################################
 # Package tests
