@@ -14,6 +14,7 @@ tvheadend.cteditor = function(panel, index)
             url: 'api/channeltag',
             create: { }
         },
+        del: true,
         sort: {
           field: 'name',
           direction: 'ASC'
