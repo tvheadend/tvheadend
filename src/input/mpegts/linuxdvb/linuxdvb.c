@@ -28,10 +28,10 @@ void linuxdvb_init ( int adapter_mask )
 {
   linuxdvb_adapter_mask = adapter_mask;
 
-  /* Initialise en50494 locks */
+  /* Initialize en50494 locks */
   linuxdvb_en50494_init();
 
-  /* Initialsie devices */
+  /* Initialize devices */
   linuxdvb_adapter_init();
 }
 

@@ -18,9 +18,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Open things:
- *    - TODO: collision dectection
- *      when a en50494-command wasn't executed succesful, retry.
- *      delay time is easly random, but in standard is special (complicated) way described (cap. 8).
+ *    - TODO: collision detection
+ *      when a en50494-command wasn't executed successful, retry.
+ *      delay time is easily random, but in standard is special (complicated) way described (cap. 8).
  */
 
 #include "tvheadend.h"
@@ -180,8 +180,8 @@ linuxdvb_en50494_tune
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
   data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
-  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satelitte A(0)/B(1)) */
-  data1 |= (pol & 1) << 3;              /* 1bit polarisation v(0)/h(1) */
+  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satellite A(0)/B(1)) */
+  data1 |= (pol & 1) << 3;              /* 1bit polarization v(0)/h(1) */
   data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
@@ -273,7 +273,7 @@ linuxdvb_en50494_create0
     return NULL;
 
   if (port > 1) {
-    tvherror("en50494", "only 2 ports/positions are posible. given %i", port);
+    tvherror("en50494", "only 2 ports/positions are possible. given %i", port);
     port = 0;
   }
 
