@@ -437,8 +437,8 @@ typedef enum
 static struct strtab signal_statetab[] = {
   { "GOOD",       SIGNAL_GOOD    },
   { "BAD",        SIGNAL_BAD     },
-  { "FAINT",      SIGNAL_BAD     },
-  { "NONE",       SIGNAL_BAD     },
+  { "FAINT",      SIGNAL_FAINT   },
+  { "NONE",       SIGNAL_NONE    },
 };
 
 static inline const char * signal2str ( signal_state_t st )
