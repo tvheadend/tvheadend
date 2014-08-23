@@ -185,16 +185,27 @@ linuxdvb_en50494_tune
   data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
+
+  /* lock mutex
+   * wait 60ms when mutex is not free, to be sure last diseq signal is finished
+   */
+  if (pthread_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
+    if (pthread_mutex_lock(&linuxdvb_en50494_lock) != 0) {
+	  tvherror("en50494","failed to lock for tuning");
+	  return -1;
+    }
+    usleep(60000);
+  }
+
   tvhdebug("en50494",
            "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
            le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
            band, freq, data1, data2);
-
-  pthread_mutex_lock(&linuxdvb_en50494_lock);
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
-    /* to avoid repeated collision, wait a random time (5-25ms) */
+    /* to avoid repeated collision, wait a random time 68-118
+     * 67,5 is the typical diseq-time range */
     if (i != 0) {
-      int ms = rand()%20 + 5;
+      int ms = rand()%50 + 68;
       usleep(ms*1000);
     }
 
