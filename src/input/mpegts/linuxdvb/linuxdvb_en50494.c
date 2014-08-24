@@ -162,7 +162,7 @@ linuxdvb_en50494_tune
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
   linuxdvb_lnb_t *lnb = sc->lse_lnb;
 
-  /* band & polarisation */
+  /* band & polarization */
   uint8_t  pol  = lnb->lnb_pol(lnb, lm);
   uint8_t  band = lnb->lnb_band(lnb, lm);
   uint32_t freq = lnb->lnb_freq(lnb, lm);
@@ -190,11 +190,12 @@ linuxdvb_en50494_tune
    * wait 60ms when mutex is not free, to be sure last diseq signal is finished
    */
   if (pthread_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
+    tvhinfo("en50494","another tuner is setup multiswitch, waiting until done");
     if (pthread_mutex_lock(&linuxdvb_en50494_lock) != 0) {
-	  tvherror("en50494","failed to lock for tuning");
+	  tvherror("en50494","failed to lock for setup multiswitch");
 	  return -1;
     }
-    usleep(60000);
+    usleep(60*1000);
   }
 
   tvhdebug("en50494",
