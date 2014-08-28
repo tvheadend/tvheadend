@@ -1103,9 +1103,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
   int fd, i;
   struct stat st;
-  const char *content = NULL, *postfix, *range;
+  const char *content = NULL, *range;
   dvr_entry_t *de;
   char *fname;
+  char *basename;
   char range_buf[255];
   char disposition[256];
   off_t content_len, chunk;
@@ -1129,9 +1130,22 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   fname = strdup(de->de_filename);
   content = muxer_container_type2mime(de->de_mc, 1);
-  postfix = muxer_container_suffix(de->de_mc, 1);
 
   pthread_mutex_unlock(&global_lock);
+
+  basename = strrchr(fname, '/');
+  if (basename) {
+    basename++; /* Skip '/' */
+    snprintf(disposition, sizeof(disposition), "attachment; filename=\"%s\"", basename);
+    // Ensure there are no " characters in the filename.
+    i = strlen(disposition)-2;
+    while (i > 21) {
+      if (disposition[i] == '"') { disposition[i] = '_'; }
+      i--;
+    }
+  } else {
+    disposition[0] = 0;
+  }
 
   fd = tvh_open(fname, O_RDONLY, 0);
   free(fname);
@@ -1172,20 +1186,6 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
-
-  if(de->de_title != NULL) {
-    snprintf(disposition, sizeof(disposition),
-       "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
-    i = 20;
-    while(disposition[i]) {
-      if(disposition[i] == ' ')
-  disposition[i] = '_';
-      i++;
-    }
-    
-  } else {
-    disposition[0] = 0;
-  }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
