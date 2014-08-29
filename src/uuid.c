@@ -109,12 +109,12 @@ uuid_init_bin ( tvh_uuid_t *u, const char *str )
   if (str) {
     if (strlen(str) != UUID_HEX_SIZE - 1) {
       tvherror("uuid", "wrong uuid size");
-      exit(1);
+      return -EINVAL;
     }
     return hex2bin(u->bin, sizeof(u->bin), str);
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
     tvherror("uuid", "failed to read from %s", RANDOM_PATH);
-    exit(1);
+    return -EINVAL;
   }
   return 0;
 }
