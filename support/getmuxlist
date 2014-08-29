@@ -11,8 +11,9 @@ DIR=$1
 if [ -d "${DIR}/.git" ]; then
   LAST=$(pwd)
   cd "${DIR}" || exit 1
-  git pull > /dev/null 2>&1 || exit 1
+  git fetch > /dev/null 2>&1 || exit 1
   git reset --hard > /dev/null 2>&1 || exit 1
+  git pull > /dev/null 2>&1 || exit 1
   cd "${LAST}" || exit 1
 # Fetch
 elif [ ! -d "${DIR}" ]; then
