@@ -1274,6 +1274,7 @@ fast_exit:
           break;
       }
     }
+#if !defined(PLATFORM_FREEBSD) // temporary, until kevent is fixed properly
     /* for sure - the second sequence */
     r = rtsp_teardown(rtsp, (char *)rtcp, NULL);
     if (r < 0) {
@@ -1295,6 +1296,7 @@ fast_exit:
           break;
       }
     }
+#endif
   }
 
 done:
