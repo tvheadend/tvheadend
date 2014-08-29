@@ -303,11 +303,17 @@ linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_frontend_t   *lfe = (linuxdvb_frontend_t*)mi;
+  int res;
+
   lfe->lfe_in_setup = 1;
   lfe->lfe_ioctls   = 0;
   if (lfe->lfe_satconf)
-    return linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
-  return linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
+    res = linuxdvb_satconf_start_mux(lfe->lfe_satconf, mmi);
+  else
+    res = linuxdvb_frontend_tune1((linuxdvb_frontend_t*)mi, mmi, -1);
+  if (res)
+    lfe->lfe_in_setup = 0;
+  return res;
 }
 
 static void
