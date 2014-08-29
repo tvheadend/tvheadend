@@ -907,7 +907,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_U32,
       .id       = "channel_max",
-      .name     = "Min Channel Max",
+      .name     = "Max Channel Num",
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
