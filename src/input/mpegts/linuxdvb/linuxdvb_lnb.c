@@ -105,6 +105,9 @@ static int
 linuxdvb_lnb_standard_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
+  if (ls->lse_en50494)
+    return 0;
+
   int pol = linuxdvb_lnb_standard_pol((linuxdvb_lnb_t*)ld, lm);
   return linuxdvb_diseqc_set_volt(fd, pol);
 }
