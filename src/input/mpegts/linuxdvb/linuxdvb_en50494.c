@@ -187,16 +187,24 @@ linuxdvb_en50494_tune
   data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
-  tvhdebug("en50494",
-           "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
-           le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
-           band, freq, data1, data2);
 
-  pthread_mutex_lock(&linuxdvb_en50494_lock);
+  /* wait until no other thread is setting up switch.
+   * when an other thread was blocking, waiting 20ms.
+   */
+  if (pthread_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
+    if (pthread_mutex_lock(&linuxdvb_en50494_lock) != 0) {
+      tvherror("en50494","failed to lock for tuning");
+      return -1;
+    }
+    usleep(20000);
+  }
+
+  /* setup en50494 switch */
   for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
-    /* to avoid repeated collision, wait a random time (5-25ms) */
+    /* to avoid repeated collision, wait a random time 68-118
+     * 67,5 is the typical diseqc-time */
     if (i != 0) {
-      int ms = rand()%20 + 5;
+      int ms = rand()%50 + 68;
       usleep(ms*1000);
     }
 
@@ -209,6 +217,10 @@ linuxdvb_en50494_tune
     usleep(15000); /* standard: 4ms < x < 22ms */
 
     /* send tune command (with/without pin) */
+    tvhdebug("en50494",
+             "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
+             le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
+             band, freq, data1, data2);
     if (le->le_pin != LINUXDVB_EN50494_NOPIN) {
       ret = linuxdvb_diseqc_send(fd,
                                  LINUXDVB_EN50494_FRAME,
@@ -275,7 +287,7 @@ linuxdvb_en50494_create0
     return NULL;
 
   if (port > 1) {
-    tvherror("en50494", "only 2 ports/positions are posible. given %i", port);
+    tvherror("en50494", "only 2 ports/positions are possible. given %i", port);
     port = 0;
   }
 
