@@ -18,9 +18,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Open things:
- *    - TODO: collision dectection
- *      when a en50494-command wasn't executed succesful, retry.
- *      delay time is easly random, but in standard is special (complicated) way described (cap. 8).
+ *    - TODO: collision detection
+ *      * compare transport-stream-id from stream with id in config
+ *      * check continuity of the pcr-counter
+ *      * when one point is given -> retry
+ *      * delay time is easily random, but in standard is special (complicated) way described (cap. 8).
  */
 
 #include "tvheadend.h"
@@ -39,7 +41,7 @@
 #define LINUXDVB_EN50494_NOPIN                 256
 
 #define LINUXDVB_EN50494_FRAME                 0xE0
-/* adresses 0x00, 0x10 and 0x11 are possible */
+/* addresses 0x00, 0x10 and 0x11 are possible */
 #define LINUXDVB_EN50494_ADDRESS               0x10
 
 #define LINUXDVB_EN50494_CMD_NORMAL            0x5A
@@ -162,7 +164,7 @@ linuxdvb_en50494_tune
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
   linuxdvb_lnb_t *lnb = sc->lse_lnb;
 
-  /* band & polarisation */
+  /* band & polarization */
   uint8_t  pol  = lnb->lnb_pol(lnb, lm);
   uint8_t  band = lnb->lnb_band(lnb, lm);
   uint32_t freq = lnb->lnb_freq(lnb, lm);
@@ -180,8 +182,8 @@ linuxdvb_en50494_tune
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
   data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
-  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satelitte A(0)/B(1)) */
-  data1 |= (pol & 1) << 3;              /* 1bit polarisation v(0)/h(1) */
+  data1 |= (le->le_position & 1) << 4;  /* 1bit position (satellite A(0)/B(1)) */
+  data1 |= (pol & 1) << 3;              /* 1bit polarization v(0)/h(1) */
   data1 |= (band & 1) << 2;             /* 1bit band lower(0)/upper(1) */
   data1 |= (t >> 8) & 3;                /* 2bit transponder value bit 1-2 */
   data2  = t & 0xFF;                    /* 8bit transponder value bit 3-10 */
