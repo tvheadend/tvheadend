@@ -929,7 +929,7 @@ tvheadend.dvrsettings = function() {
         'channelInTitle', 'container', 'cache', 'charset', 'dateInTitle', 'timeInTitle',
         'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
         'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip', 'subtitleInTitle',
-        'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'episodeDuplicateDetection']);
+        'episodeBeforeDate', 'rewritePAT', 'rewritePMT', 'episodeDuplicateDetection', 'updateWindow']);
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
@@ -1000,6 +1000,12 @@ tvheadend.dvrsettings = function() {
         width: 350,
         fieldLabel: 'Post-processor command',
         name: 'postproc'
+    });
+
+    var updateWindow = new Ext.form.NumberField({
+        allowDecimals: false,
+        fieldLabel: 'Automatic timer update threshold (minutes)',
+        name: 'updateWindow'
     });
 
     /* Recording File Options */
@@ -1139,7 +1145,7 @@ tvheadend.dvrsettings = function() {
         autoHeight: true,
         collapsible: true,
         animCollapse: true,
-        items: [recordingContainer, cacheScheme, logRetention, timeBefore, timeAfter, postProcessing]
+        items: [recordingContainer, cacheScheme, logRetention, timeBefore, timeAfter, postProcessing, updateWindow]
     });
 
     /* Sub-Panel - File Output */

@@ -338,6 +338,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
 {
   time_t t1, t2;
   const char *title1, *title2;
+  dvr_config_t *cfg;
 
   /* Matching ID */
   if (de->de_dvb_eid && de->de_dvb_eid == e->dvb_eid)
@@ -355,8 +356,13 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
   if ( abs(t2 - t1) > (t1 / 5) )
     return 0;
 
-  /* Outside of window (should it be configurable)? */
-  if ( abs(e->start - de->de_start) > 86400 )
+  /* Automatic timer update disabled? */
+  cfg = dvr_config_find_by_name_default(de->de_config_name);
+  if (cfg->dvr_update_window == 0)
+    return 0;
+
+  /* Outside of window? */
+  if ( abs(e->start - de->de_start) > cfg->dvr_update_window )
     return 0;
   
   /* Title match (or contains?) */
@@ -1277,6 +1283,8 @@ dvr_init(void)
       dvr_charset_update(cfg, htsmsg_get_str(m, "charset"));
 
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
+
+      htsmsg_get_u32(m, "update-window", &cfg->dvr_update_window);
     }
 
     htsmsg_destroy(l);
@@ -1423,6 +1431,8 @@ dvr_config_create(const char *name)
 
   cfg->dvr_muxcnf.m_file_permissions      = 0664;
   cfg->dvr_muxcnf.m_directory_permissions = 0775;
+
+  cfg->dvr_update_window = 86400;
   
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
@@ -1506,6 +1516,7 @@ dvr_save(dvr_config_t *cfg)
     htsmsg_add_str(m, "charset", cfg->dvr_charset);
   if (cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
+  htsmsg_add_u32(m, "update-window", cfg->dvr_update_window);
 
   hts_settings_save(m, "dvr/config%s", cfg->dvr_config_name);
   htsmsg_destroy(m);
@@ -1635,6 +1646,20 @@ dvr_retention_set(dvr_config_t *cfg, int days)
     if(de->de_sched_state == DVR_COMPLETED)
       gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		     de->de_stop + cfg->dvr_retention_days * 86400);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_update_window_set(dvr_config_t *cfg, int minutes)
+{
+  if(minutes < 0 || cfg->dvr_update_window == minutes)
+    return;
+
+  cfg->dvr_update_window = minutes;
+
   dvr_save(cfg);
 }
 
