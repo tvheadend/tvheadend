@@ -840,6 +840,7 @@ dvr_autorec_init(void)
         continue;
       (void *)dvr_autorec_create(f->hmf_name, c);
     }
+    htsmsg_destroy(l);
   }
   dvr_autorec_in_init = 0;
 }
