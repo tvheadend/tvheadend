@@ -827,6 +827,32 @@ config_migrate_v9 ( void )
   }
 }
 
+static void
+config_migrate_move ( const char *dir,
+                      const char *newdir )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if (!(c = hts_settings_load(dir)))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    hts_settings_save(e, "%s/%s", newdir, f->hmf_name);
+    hts_settings_remove("%s/%s", dir, f->hmf_name);
+  }
+
+  htsmsg_destroy(c);
+}
+
+static void
+config_migrate_v10 ( void )
+{
+  config_migrate_move("channel", "channel/config");
+  config_migrate_move("channeltags", "channel/tag");
+}
+
 /*
  * Migration table
  */
@@ -840,6 +866,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v7,
   config_migrate_v8,
   config_migrate_v9,
+  config_migrate_v10,
 };
 
 /*
