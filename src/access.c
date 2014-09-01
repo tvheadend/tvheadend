@@ -877,7 +877,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "dvrallcfg",
-      .name     = "Username Configs (VR)",
+      .name     = "All Configs (VR)",
       .off      = offsetof(access_entry_t, ae_dvrallcfg),
     },
     {

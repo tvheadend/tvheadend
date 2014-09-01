@@ -100,7 +100,8 @@ typedef struct access {
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
-   ACCESS_WEB_INTERFACE | ACCESS_RECORDER | ACCESS_ADMIN)
+   ACCESS_WEB_INTERFACE | ACCESS_RECORDER | \
+   ACCESS_RECORDER_ALL | ACCESS_ADMIN)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
