@@ -1034,7 +1034,7 @@ esfilter_init(void)
   for (i = 0; i <= ESF_CLASS_LAST; i++)
     TAILQ_INIT(&esfilters[i]);
 
-  if (!(c = hts_settings_load_r(1, "esfilter")))
+  if (!(c = hts_settings_load("esfilter")))
     return;
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f)))
