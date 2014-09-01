@@ -171,7 +171,7 @@ page_simple(http_connection_t *hc,
     rstatus = val2str(de->de_sched_state, recstatustxt);
 
 
-    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%d\">", de->de_id);
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_str(&de->de_id));
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
@@ -216,7 +216,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    de = dvr_entry_create_by_event("", e, 0, 0, hc->hc_username ?: "anonymous", NULL,
+    de = dvr_entry_create_by_event(NULL, e, 0, 0, hc->hc_username ?: "anonymous", NULL,
 				   DVR_PRIO_NORMAL);
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
@@ -328,8 +328,8 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   if((rstatus = val2str(de->de_sched_state, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%d\">", 
-	      de->de_id);
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%s\">",
+	         idnode_uuid_as_str(&de->de_id));
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:

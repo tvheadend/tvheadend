@@ -462,8 +462,14 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 
   if(http_access_verify(hc, hp->hp_accessmask))
     err = HTTP_STATUS_UNAUTHORIZED;
-  else
+  else {
+    /* FIXME: Recode to obtain access only once */
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
+    access_destroy(hc->hc_access);
+    hc->hc_access = NULL;
+  }
 
   if(err == -1)
      return 1;

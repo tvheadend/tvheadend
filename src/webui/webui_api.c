@@ -40,12 +40,13 @@ webui_api_handler
   }
       
   /* Call */
-  r = api_exec(remain, args, &resp);
+  r = api_exec(hc->hc_access, remain, args, &resp);
   htsmsg_destroy(args);
   
   /* Convert error */
   if (r) {
     switch (r) {
+      case EPERM:
       case EACCES:
         r = HTTP_STATUS_UNAUTHORIZED;
         break;

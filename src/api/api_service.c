@@ -29,7 +29,7 @@
 
 static int
 api_mapper_start
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   service_mapper_conf_t conf = { 0 };
   htsmsg_t *uuids;
@@ -52,7 +52,7 @@ api_mapper_start
 
 static int
 api_mapper_stop
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   pthread_mutex_lock(&global_lock);
   service_mapper_stop();
@@ -78,7 +78,7 @@ api_mapper_status_msg ( void )
 
 static int
 api_mapper_status
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   pthread_mutex_lock(&global_lock);
   *resp = api_mapper_status_msg();
@@ -129,7 +129,7 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
 
 static int
 api_service_streams
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const char *uuid;
   htsmsg_t *e, *st, *stf;

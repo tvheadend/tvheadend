@@ -566,7 +566,7 @@ http_dvr_list_playlist(http_connection_t *hc)
   htsbuf_queue_t *hq;
   char buf[255];
   dvr_entry_t *de;
-  const char *host;
+  const char *host, *uuid;
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -585,6 +585,7 @@ http_dvr_list_playlist(http_connection_t *hc)
         http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
+
     durration  = de->de_stop - de->de_start;
     durration += (de->de_stop_extra + de->de_start_extra)*60;
     bandwidth = ((8*fsize) / (durration*1024.0));
@@ -593,10 +594,11 @@ http_dvr_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
-    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    uuid = idnode_uuid_as_str(&de->de_id);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
-    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
@@ -614,7 +616,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   char buf[255];
-  const char *ticket_id = NULL;
+  const char *ticket_id = NULL, *uuid;
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0;
@@ -634,10 +636,11 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
-    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    uuid = idnode_uuid_as_str(&de->de_id);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
-    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     ticket_id = access_ticket_create(buf);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 

@@ -25,7 +25,7 @@
 
 static void
 api_esfilter_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args,
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args,
     esfilter_class_t cls )
 {
   esfilter_t *esf;
@@ -37,7 +37,7 @@ api_esfilter_grid
 
 static int
 api_esfilter_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp,
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp,
     esfilter_class_t cls )
 {
   htsmsg_t *conf;
@@ -54,11 +54,11 @@ api_esfilter_create
 
 #define ESFILTER(func, t) \
 static void api_esfilter_grid_##func \
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args ) \
-{ return api_esfilter_grid(ins, conf, args, (t)); } \
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args ) \
+{ return api_esfilter_grid(perm, ins, conf, args, (t)); } \
 static int api_esfilter_create_##func \
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp ) \
-{ return api_esfilter_create(opaque, op, args, resp, (t)); }
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp ) \
+{ return api_esfilter_create(perm, opaque, op, args, resp, (t)); }
 
 ESFILTER(video, ESF_CLASS_VIDEO);
 ESFILTER(audio, ESF_CLASS_AUDIO);

@@ -40,6 +40,30 @@ tvheadend.help = function(title, pagename) {
     });
 };
 
+tvheadend.Ajax = function(conf) {
+  var orig_success = conf.success;
+  var orig_failure = conf.failure;
+  conf.success = function(d) {
+    tvheadend.loading(0);
+    if (orig_success)
+      orig_success(d);
+  }
+  conf.failure = function(d) {
+    tvheadend.loading(0);
+    if (orig_failure)
+      orig_failure(d);
+  }
+  tvheadend.loading(1);
+  Ext.Ajax.request(conf);
+};
+
+tvheadend.loading = function(on) {
+    if (on)
+      Ext.getBody().mask('Loading... Please, wait...', 'loading');
+    else
+      Ext.getBody().unmask();
+};
+
 /*
  * General capabilities
  */
@@ -219,7 +243,7 @@ function accessUpdate(o) {
         return;
 
     if (o.dvr == true && tvheadend.dvrpanel == null) {
-        tvheadend.dvrpanel = new tvheadend.dvr;
+        tvheadend.dvrpanel = tvheadend.dvr();
         tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
     }
 
@@ -267,17 +291,16 @@ function accessUpdate(o) {
         tabs1.push(tvheadend.conf_chepg);
 
         /* DVR / Timeshift */
-        tabs2 = [new tvheadend.dvrsettings];
-        if (tvheadend.capabilities.indexOf('timeshift') !== -1) {
-            tabs2.push(new tvheadend.timeshift);
-        }
         tvheadend.conf_tsdvr = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Recording',
             iconCls: 'drive',
-            items: tabs2
+            items: []
         });
+        tvheadend.dvr_settings(tvheadend.conf_tsdvr, 0);
+        if (tvheadend.capabilities.indexOf('timeshift') !== -1)
+          tvheadend.conf_tsdvr.add(new tvheadend.timeshift);
         tabs1.push(tvheadend.conf_tsdvr);
 
         /* CSA */
