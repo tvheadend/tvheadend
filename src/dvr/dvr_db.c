@@ -1964,7 +1964,9 @@ dvr_config_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (access_verify2(a, ACCESS_RECORDER))
     return -1;
-  if (access_verify2(a, ACCESS_ADMIN) && access_verify2(a, ACCESS_RECORDER_ALL))
+  if (!access_verify2(a, ACCESS_ADMIN))
+    return 0;
+  if (access_verify2(a, ACCESS_RECORDER_ALL))
     return 0;
   if (strcmp(cfg->dvr_config_name ?: "", a->aa_username ?: ""))
     return -1;

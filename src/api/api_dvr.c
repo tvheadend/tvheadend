@@ -71,7 +71,8 @@ api_dvr_config_create
     return EINVAL;
   if (s[0] == '\0')
     return EINVAL;
-  if (access_verify2(perm, ACCESS_RECORDER_ALL | ACCESS_RECORDER))
+  if (access_verify2(perm, ACCESS_ADMIN) &&
+      access_verify2(perm, ACCESS_RECORDER_ALL | ACCESS_RECORDER))
     return EACCES;
 
   pthread_mutex_lock(&global_lock);
