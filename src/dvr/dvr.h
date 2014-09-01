@@ -36,6 +36,7 @@ typedef struct dvr_config {
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
+  uint32_t dvr_update_window;
 
   muxer_container_type_t dvr_mc;
   muxer_config_t         dvr_muxcnf;
@@ -360,6 +361,8 @@ void dvr_extra_time_post_set(dvr_config_t *cfg, int d);
 void dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de);
+
+void dvr_update_window_set(dvr_config_t *cfg, int minutes);
 
 /**
  * Query interface
