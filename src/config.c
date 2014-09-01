@@ -872,7 +872,7 @@ static const config_migrate_t config_migrate_table[] = {
 /*
  * Perform migrations (if required)
  */
-static void
+static int
 config_migrate ( void )
 {
   uint32_t v;
@@ -890,7 +890,7 @@ config_migrate ( void )
 
   /* No changes required */
   if (v == ARRAY_SIZE(config_migrate_table))
-    return;
+    return 0;
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
@@ -901,6 +901,7 @@ config_migrate ( void )
   /* Update */
   htsmsg_set_u32(config, "version", v);
   config_save();
+  return 1;
 }
 
 /*
@@ -922,6 +923,7 @@ config_check_one ( const char *dir )
       exit(1);
     }
   }
+  htsmsg_destroy(c);
 }
 
 /*
@@ -993,8 +995,8 @@ config_init ( const char *path )
   
   /* Perform migrations */
   } else {
-    config_migrate();
-    config_check();
+    if (config_migrate())
+      config_check();
   }
 }
 
