@@ -967,7 +967,7 @@ access_init(int createdefault, int noacl)
   TAILQ_INIT(&access_tickets);
 
   /* Load */
-  if ((c = hts_settings_load_r(1, "accesscontrol")) != NULL) {
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
       (void)access_entry_create(f->hmf_name, m);

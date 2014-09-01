@@ -620,7 +620,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Settings */
   if (delconf)
-    hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
+    hts_settings_remove("channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
 
   /* Free memory */
   RB_REMOVE(&channels, ch, ch_link);
@@ -638,7 +638,7 @@ channel_save ( channel_t *ch )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ch->ch_id, c);
-  hts_settings_save(c, "channel/%s", idnode_uuid_as_str(&ch->ch_id));
+  hts_settings_save(c, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
   htsmsg_destroy(c);
 }
 
@@ -656,7 +656,7 @@ channel_init ( void )
   channel_tag_init();
 
   /* Channels */
-  if (!(c = hts_settings_load_r(1, "channel")))
+  if (!(c = hts_settings_load("channel/config")))
     return;
 
   HTSMSG_FOREACH(f, c) {
@@ -798,7 +798,7 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
       channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
       channel_save(ch);
     }
-    hts_settings_remove("channeltags/%s", idnode_uuid_as_str(&ct->ct_id));
+    hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
   }
 
   if(ct->ct_enabled && !ct->ct_internal)
@@ -821,7 +821,7 @@ channel_tag_save(channel_tag_t *ct)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ct->ct_id, c);
-  hts_settings_save(c, "channeltags/%s", idnode_uuid_as_str(&ct->ct_id));
+  hts_settings_save(c, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
   htsmsg_destroy(c);
 }
 
@@ -946,7 +946,7 @@ channel_tag_init ( void )
   htsmsg_field_t *f;
 
   TAILQ_INIT(&channel_tags);
-  if ((c = hts_settings_load_r(1, "channeltags")) != NULL) {
+  if ((c = hts_settings_load("channel/tag")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
       (void)channel_tag_create(f->hmf_name, m);
