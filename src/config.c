@@ -903,6 +903,42 @@ config_migrate ( void )
   config_save();
 }
 
+/*
+ *
+ */
+static void
+config_check_one ( const char *dir )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if (!(c = hts_settings_load(dir)))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (strlen(f->hmf_name) != UUID_HEX_SIZE - 1) {
+      tvherror("START", "filename %s/%s/%s is invalid", hts_settings_get_root(), dir, f->hmf_name);
+      exit(1);
+    }
+  }
+}
+
+/*
+ * Perform a simple check for UUID files
+ */
+static void
+config_check ( void )
+{
+  config_check_one("accesscontrol");
+  config_check_one("channel/config");
+  config_check_one("channel/tag");
+  config_check_one("dvr/config");
+  config_check_one("dvr/log");
+  config_check_one("dvr/autorec");
+  config_check_one("esfilter");
+}
+
 /* **************************************************************************
  * Initialisation / Shutdown / Saving
  * *************************************************************************/
@@ -958,6 +994,7 @@ config_init ( const char *path )
   /* Perform migrations */
   } else {
     config_migrate();
+    config_check();
   }
 }
 
