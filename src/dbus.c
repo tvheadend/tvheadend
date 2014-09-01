@@ -61,7 +61,7 @@ static int dbus_session;
 void
 dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
 {
-  dbus_sig_t *ds = calloc(1, sizeof(dbus_sig_t));
+  dbus_sig_t *ds;
   int unused __attribute__((unused));
   size_t l;
 
@@ -69,6 +69,7 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
     htsmsg_destroy(msg);
     return;
   }
+  ds = calloc(1, sizeof(dbus_sig_t));
   l = strlen(obj_name);
   ds->obj_name = malloc(l + 15);
   strcpy(ds->obj_name, "/org/tvheadend");
