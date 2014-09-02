@@ -25,13 +25,13 @@ tvheadend.comet.on('mpegts_network', function() {
     tvheadend.network_list.reload();
 });
 
-tvheadend.networks = function(panel)
+tvheadend.networks = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
         titleS: 'Network',
         titleP: 'Networks',
-        tabIndex: 1,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Networks', 'config_networks.html');
         },            
@@ -56,13 +56,13 @@ tvheadend.networks = function(panel)
     });
 };
 
-tvheadend.muxes = function(panel)
+tvheadend.muxes = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux',
         titleS: 'Mux',
         titleP: 'Muxes',
-        tabIndex: 2,
+        tabIndex: index,
         hidemode: true,
         help: function() {
             new tvheadend.help('Muxes', 'config_muxes.html');
@@ -193,7 +193,7 @@ tvheadend.show_service_streams = function(data) {
     win.show();
 };
 
-tvheadend.services = function(panel)
+tvheadend.services = function(panel, index)
 {
     var mapButton = new Ext.Toolbar.Button({
         tooltip: 'Map services to channels',
@@ -233,7 +233,7 @@ tvheadend.services = function(panel)
         url: 'api/mpegts/service',
         titleS: 'Service',
         titleP: 'Services',
-        tabIndex: 3,
+        tabIndex: index,
         hidemode: true,
         add: false,
         del: false,
@@ -262,13 +262,13 @@ tvheadend.services = function(panel)
     });
 };
 
-tvheadend.mux_sched = function(panel)
+tvheadend.mux_sched = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux_sched',
         titleS: 'Mux Scheduler',
         titleP: 'Mux Schedulers',
-        tabIndex: 4,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Mux Schedulers', 'config_muxsched.html');
         },          

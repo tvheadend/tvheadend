@@ -154,10 +154,6 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 #if ENABLE_MPEGTS
   extjs_load(hq, "static/app/mpegts.js");
 #endif
-  extjs_load(hq, "static/app/iptv.js");
-#if ENABLE_V4L
-  extjs_load(hq, "static/app/v4l.js");
-#endif
 #if ENABLE_TIMESHIFT
   extjs_load(hq, "static/app/timeshift.js");
 #endif

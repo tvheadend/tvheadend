@@ -1240,10 +1240,7 @@ tvheadend.idnode_grid = function(panel, conf)
             page.changePage(0);
         });
 
-        if (conf.tabIndex != null)
-            panel.insert(conf.tabIndex, grid);
-        else
-            panel.add(grid);
+        tvheadend.paneladd(panel, grid, conf.tabIndex);
 
         /* Add comet listeners */
         var update = function(o) {
@@ -1496,10 +1493,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
        items: [grid]
     });
 
-    if (conf.tabIndex != null)
-        panel.insert(conf.tabIndex, mpanel);
-    else
-        panel.add(mpanel);
+    tvheadend.paneladd(panel, mpanel, conf.tabIndex);
 
     /* Add comet listeners */
     var update = function(o) {
@@ -1512,7 +1506,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
 /*
  * IDNode Tree
  */
-tvheadend.idnode_tree = function(conf)
+tvheadend.idnode_tree = function(panel, conf)
 {
     var current = null;
     var events = {};
@@ -1576,7 +1570,7 @@ tvheadend.idnode_tree = function(conf)
         }
     });
 
-    var panel = new Ext.Panel({
+    var mpanel = new Ext.Panel({
         title: conf.title || '',
         layout: 'hbox',
         flex: 1,
@@ -1588,11 +1582,10 @@ tvheadend.idnode_tree = function(conf)
         items: [tree]
     });
 
+    tvheadend.paneladd(panel, mpanel, conf.tabIndex);
 
     tree.on('beforerender', function() {
         // To be honest this isn't quite right, but it'll do
         tree.expandAll();
     });
-
-    return panel;
 };
