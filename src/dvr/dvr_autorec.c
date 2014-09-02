@@ -392,18 +392,6 @@ dvr_autorec_entry_class_tag_get(void *o)
   return &ret;
 }
 
-static htsmsg_t *
-dvr_autorec_entry_class_tag_list(void *o)
-{
-  htsmsg_t *e, *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channeltag/list");
-  htsmsg_add_str(m, "event", "channeltag");
-  e = htsmsg_create_map();
-  htsmsg_add_msg(m, "params", e);
-  return m;
-}
-
 static int
 dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
 {
@@ -726,7 +714,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel Tag",
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
-      .list     = dvr_autorec_entry_class_tag_list,
+      .list     = channel_tag_class_get_list,
     },
     {
       .type     = PT_STR,
@@ -913,7 +901,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   CHANNEL_FOREACH(ch) {
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
       if(autorec_cmp(dae, e))
-	      dvr_entry_create_by_autorec(e, dae);
+        dvr_entry_create_by_autorec(e, dae);
     }
   }
 }
@@ -930,6 +918,28 @@ autorec_destroy_by_channel(channel_t *ch, int delconf)
 
   while((dae = LIST_FIRST(&ch->ch_autorecs)) != NULL)
     autorec_entry_destroy(dae, delconf);
+
+  /* Notify web clients that we have messed with the tables */
+  m = htsmsg_create_map();
+  htsmsg_add_u32(m, "reload", 1);
+  notify_by_msg("autorec", m);
+}
+
+/*
+ *
+ */
+void
+autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
+{
+  dvr_autorec_entry_t *dae;
+  htsmsg_t *m;
+
+  while((dae = LIST_FIRST(&ct->ct_autorecs)) != NULL) {
+    LIST_REMOVE(dae, dae_channel_tag_link);
+    dae->dae_channel_tag = NULL;
+    if (delconf)
+      dvr_autorec_save(dae);
+  }
 
   /* Notify web clients that we have messed with the tables */
   m = htsmsg_create_map();

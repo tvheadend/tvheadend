@@ -28,6 +28,7 @@
 
 typedef struct dvr_config {
   idnode_t dvr_id;
+
   LIST_ENTRY(dvr_config) config_link;
 
   int dvr_enabled;
@@ -71,6 +72,10 @@ typedef struct dvr_config {
 
   /* Duplicate detect */
   int dvr_dup_detect_episode;
+
+  struct dvr_entry_list dvr_entries;
+
+  struct access_entry_list dvr_accesses;
 
 } dvr_config_t;
 
@@ -150,7 +155,7 @@ typedef struct dvr_entry {
    */
 
   dvr_config_t *de_config;
-  char *de_config_name;
+  LIST_ENTRY(dvr_entry) de_config_link;
 
   time_t de_start;
   time_t de_stop;
@@ -185,6 +190,7 @@ typedef struct dvr_entry {
    * Recording state (onyl valid if de_sched_state == DVR_RECORDING)
    */
   dvr_rs_state_t de_rec_state;
+  int de_locked;
 
   /**
    * Number of errors (only to be modified by the recording thread)
@@ -346,6 +352,7 @@ dvr_entry_update( dvr_entry_t *de,
                   time_t de_start_extra, time_t de_stop_extra );
 
 void dvr_init(void);
+void dvr_config_init(void);
 
 void dvr_done(void);
 
@@ -437,6 +444,8 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
+
+void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
 
 /**
  *

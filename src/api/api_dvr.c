@@ -25,21 +25,28 @@
 static const char *
 api_dvr_config_name( access_t *perm, const char *config_uuid )
 {
-  dvr_config_t *cfg;
+  dvr_config_t *cfg = NULL;
+  htsmsg_field_t *f;
+  const char *uuid;
 
   lock_assert(&global_lock);
 
-  if (access_verify2(perm, ACCESS_RECORDER_ALL))
+  if (perm->aa_dvrcfgs == NULL)
     return config_uuid; /* no change */
 
-  cfg = dvr_config_find_by_name(perm->aa_username);
-  if (cfg)
-    return cfg->dvr_config_name;
+  config_uuid = config_uuid ?: "";
+  HTSMSG_FOREACH(f, perm->aa_dvrcfgs) {
+    uuid = htsmsg_field_get_str(f) ?: "";
+    if (strcmp(uuid, config_uuid) == 0)
+      return config_uuid;
+    if (!cfg)
+      cfg = dvr_config_find_by_uuid(uuid);
+  }
 
-  if (perm->aa_username)
-    tvhlog(LOG_INFO, "dvr", "User '%s' has no dvr config with identical name, using default...", perm->aa_username);
+  if (!cfg && perm->aa_username)
+    tvhlog(LOG_INFO, "dvr", "User '%s' has no valid dvr config in ACL, using default...", perm->aa_username);
 
-  return NULL; /* default */
+  return cfg ? idnode_uuid_as_str(&cfg->dvr_id) : NULL;
 }
 
 /*
@@ -71,9 +78,6 @@ api_dvr_config_create
     return EINVAL;
   if (s[0] == '\0')
     return EINVAL;
-  if (access_verify2(perm, ACCESS_ADMIN) &&
-      access_verify2(perm, ACCESS_RECORDER_ALL | ACCESS_RECORDER))
-    return EACCES;
 
   pthread_mutex_lock(&global_lock);
   if ((cfg = dvr_config_create(NULL, NULL, conf)))
@@ -153,16 +157,20 @@ api_dvr_entry_create
 {
   dvr_entry_t *de;
   htsmsg_t *conf;
+  const char *s1, *s2;
 
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  if (access_verify2(perm, ACCESS_RECORDER_ALL)) {
+  pthread_mutex_lock(&global_lock);
+  s1 = htsmsg_get_str(conf, "config_name");
+  s2 = api_dvr_config_name(perm, s1);
+  if (strcmp(s1 ?: "", s2 ?: "")) {
     htsmsg_delete_field(conf, "config_name");
-    htsmsg_add_str(conf, "config_name", perm->aa_username ?: "");
+    if (s2)
+      htsmsg_add_str(conf, "config_name", s2);
   }
 
-  pthread_mutex_lock(&global_lock);
   if ((de = dvr_entry_create(NULL, conf)))
     dvr_entry_save(de);
   pthread_mutex_unlock(&global_lock);

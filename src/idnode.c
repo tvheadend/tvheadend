@@ -227,7 +227,7 @@ idnode_get_short_uuid (const idnode_t *in)
 const char *
 idnode_uuid_as_str(const idnode_t *in)
 {
-  static tvh_uuid_t ret[16];
+  static tvh_uuid_t __thread ret[16];
   static uint8_t p = 0;
   bin2hex(ret[p].hex, sizeof(ret[p].hex), in->in_uuid, sizeof(in->in_uuid));
   const char *s = ret[p].hex;
