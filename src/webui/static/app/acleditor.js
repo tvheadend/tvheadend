@@ -18,7 +18,6 @@ tvheadend.acleditor = function(panel)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/access/entry',
-        comet: 'acl_entries',
         titleS: 'Access Entry',
         titleP: 'Access Entries',
         columns: {

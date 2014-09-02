@@ -912,6 +912,7 @@ access_entry_dvr_config_get(void *o)
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = "Access",
+  .ic_event      = "access",
   .ic_save       = access_entry_class_save,
   .ic_get_title  = access_entry_class_get_title,
   .ic_delete     = access_entry_class_delete,

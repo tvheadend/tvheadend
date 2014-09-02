@@ -155,7 +155,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   idclass_register(class); // Note: we never actually unregister
 
   /* Fire event */
-  idnode_notify(in, NULL, 0, 1);
+  idnode_notify_simple(in);
 
   return 0;
 }
@@ -169,7 +169,7 @@ idnode_unlink(idnode_t *in)
   lock_assert(&global_lock);
   RB_REMOVE(&idnodes, in, in_link);
   tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in));
-  idnode_notify(in, NULL, 0, 1);
+  idnode_notify_simple(in);
 }
 
 /**
@@ -826,13 +826,20 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   if (save && dosave)
     idnode_savefn(self);
   if (dosave)
-    idnode_notify(self, NULL, 0, 0);
+    idnode_notify_simple(self);
   // Note: always output event if "dosave", reason is that UI updates on
   //       these, but there are some subtle cases where it will expect
   //       an update and not get one. This include fields being set for
   //       which there is user-configurable value and auto fallback so
   //       the UI state might not atually reflect the user config
   return save;
+}
+
+void
+idnode_changed( idnode_t *self )
+{
+  idnode_notify_simple(self);
+  idnode_savefn(self);
 }
 
 /* **************************************************************************
@@ -897,6 +904,17 @@ idclass_get_class (const idclass_t *idc)
   while (idc) {
     if (idc->ic_class)
       return idc->ic_class;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
+static const char *
+idclass_get_event (const idclass_t *idc)
+{
+  while (idc) {
+    if (idc->ic_event)
+      return idc->ic_event;
     idc = idc->ic_super;
   }
   return NULL;
@@ -992,6 +1010,8 @@ idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask)
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
+  if ((s = idclass_get_event(idc)))
+    htsmsg_add_str(m, "event", s);
   if ((s = idclass_get_order(idc)))
     htsmsg_add_str(m, "order", s);
   if ((p = idclass_get_property_groups(idc)))
@@ -1022,6 +1042,8 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
+  if ((s = idclass_get_event(idc)))
+    htsmsg_add_str(m, "event", s);
 
   htsmsg_add_msg(m, "params", idnode_params(idc, self, list, optmask));
 
@@ -1029,8 +1051,22 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
 }
 
 /* **************************************************************************
- * Notifcation
+ * Notification
  * *************************************************************************/
+
+/**
+ * Delayed notification
+ */
+static void
+idnode_notify_delayed ( idnode_t *in, const char *uuid, const char *event )
+{
+  pthread_mutex_lock(&idnode_mutex);
+  if (!idnode_queue)
+    idnode_queue = htsmsg_create_map();
+  htsmsg_set_str(idnode_queue, uuid, event);
+  pthread_cond_signal(&idnode_cond);
+  pthread_mutex_unlock(&idnode_mutex);
+}
 
 /**
  * Update internal event pipes
@@ -1041,11 +1077,8 @@ idnode_notify_event ( idnode_t *in )
   const idclass_t *ic = in->in_class;
   const char *uuid = idnode_uuid_as_str(in);
   while (ic) {
-    if (ic->ic_event) {
-      htsmsg_t *m = htsmsg_create_map();
-      htsmsg_add_str(m, "uuid", uuid);
-      notify_by_msg(ic->ic_event, m);
-    }
+    if (ic->ic_event)
+      idnode_notify_delayed(in, uuid, ic->ic_event);
     ic = ic->ic_super;
   }
 }
@@ -1055,38 +1088,37 @@ idnode_notify_event ( idnode_t *in )
  */
 void
 idnode_notify
-  (idnode_t *in, const char *chn, int force, int event)
+  (idnode_t *in, int event)
 {
   const char *uuid = idnode_uuid_as_str(in);
 
   if (!tvheadend_running)
     return;
 
-  /* Forced */
-  if (chn || force) {
-    htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "uuid", uuid);
-    notify_by_msg(chn ?: "idnodeUpdated", m);
+  /* Immediate */
+  if (!event) {
+
+    const idclass_t *ic = in->in_class;
+
+    while (ic) {
+      if (ic->ic_event) {
+        htsmsg_t *m = htsmsg_create_map();
+        htsmsg_add_str(m, "uuid", uuid);
+        notify_by_msg(ic->ic_event, m);
+      }
+      ic = ic->ic_super;
+    }
   
   /* Rate-limited */
   } else {
-    pthread_mutex_lock(&idnode_mutex);
-    if (!idnode_queue)
-      idnode_queue = htsmsg_create_map();
-    htsmsg_set_u32(idnode_queue, uuid, 1);
-    pthread_cond_signal(&idnode_cond);
-    pthread_mutex_unlock(&idnode_mutex);
-  }
-
-  /* Send event */
-  if (event)
     idnode_notify_event(in);
+  }
 }
 
 void
 idnode_notify_simple (void *in)
 {
-  idnode_notify(in, NULL, 0, 0);
+  idnode_notify(in, 1);
 }
 
 void
@@ -1095,7 +1127,7 @@ idnode_notify_title_changed (void *in)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in));
   htsmsg_add_str(m, "text", idnode_get_title(in));
-  notify_by_msg("idnodeUpdated", m);
+  notify_by_msg("title", m);
   idnode_notify_event(in);
 }
 
@@ -1108,6 +1140,7 @@ idnode_thread ( void *p )
   idnode_t *node;
   htsmsg_t *m, *q = NULL;
   htsmsg_field_t *f;
+  const char *event;
 
   pthread_mutex_lock(&idnode_mutex);
 
@@ -1126,13 +1159,13 @@ idnode_thread ( void *p )
     pthread_mutex_lock(&global_lock);
 
     HTSMSG_FOREACH(f, q) {
-      node = idnode_find(f->hmf_name, NULL);
-      m    = htsmsg_create_map();
+      node  = idnode_find(f->hmf_name, NULL);
+      event = htsmsg_field_get_str(f);
+      m     = htsmsg_create_map();
       htsmsg_add_str(m, "uuid", f->hmf_name);
-      if (node)
-        notify_by_msg("idnodeUpdated", m);
-      else
-        notify_by_msg("idnodeDeleted", m);      
+      if (!node)
+        htsmsg_add_u32(m, "removed", 1);
+      notify_by_msg(event, m);
     }
     
     /* Finished */

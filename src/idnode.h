@@ -141,12 +141,13 @@ void          idnode_delete       (idnode_t *in);
 void          idnode_moveup       (idnode_t *in);
 void          idnode_movedown     (idnode_t *in);
 
+void          idnode_changed      (idnode_t *in);
+
 void         *idnode_find    (const char *uuid, const idclass_t *idc);
 idnode_set_t *idnode_find_all(const idclass_t *idc);
 
-#define idnode_updated(in) idnode_notify(in, NULL, 0, 0)
-void idnode_notify
-  (idnode_t *in, const char *chn, int force, int event);
+
+void idnode_notify (idnode_t *in, int event);
 void idnode_notify_simple (void *in);
 void idnode_notify_title_changed (void *in);
 

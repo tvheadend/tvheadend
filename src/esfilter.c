@@ -587,6 +587,7 @@ esfilter_class_action_enum(void *o)
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
   .ic_caption    = "Elementary Stream Filter",
+  .ic_event      = "esfilter",
   .ic_save       = esfilter_class_save,
   .ic_get_title  = esfilter_class_get_title,
   .ic_delete     = esfilter_class_delete,

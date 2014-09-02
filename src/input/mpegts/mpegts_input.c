@@ -142,6 +142,7 @@ const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
   .ic_caption    = "MPEGTS Input",
+  .ic_event      = "mpegts_input",
   .ic_get_title  = mpegts_input_class_get_title,
   .ic_properties = (const property_t[]){
     {

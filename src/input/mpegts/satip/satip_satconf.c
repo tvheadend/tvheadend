@@ -169,6 +169,7 @@ const idclass_t satip_satconf_class =
 {
   .ic_class      = "satip_satconf",
   .ic_caption    = "Satconf",
+  .ic_event      = "satip_satconf",
   .ic_get_title  = satip_satconf_class_get_title,
   .ic_save       = satip_satconf_class_save,
   .ic_properties = (const property_t[]) {

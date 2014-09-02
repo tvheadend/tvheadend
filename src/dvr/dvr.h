@@ -312,8 +312,6 @@ void dvr_config_save(dvr_config_t *cfg);
 
 int dvr_entry_get_mc( dvr_entry_t *de);
 
-void dvr_entry_notify(dvr_entry_t *de);
-
 void dvr_entry_save(dvr_entry_t *de);
 
 const char *dvr_entry_status(dvr_entry_t *de);

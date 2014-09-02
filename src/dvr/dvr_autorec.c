@@ -31,7 +31,6 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvr.h"
-#include "notify.h"
 #include "dtable.h"
 #include "epg.h"
 
@@ -683,6 +682,7 @@ dvr_autorec_entry_class_content_type_list(void *o)
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
   .ic_caption    = "DVR Auto-Record Entry",
+  .ic_event      = "dvrautorec",
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,
   .ic_delete     = dvr_autorec_entry_class_delete,
@@ -921,15 +921,9 @@ void
 autorec_destroy_by_channel(channel_t *ch, int delconf)
 {
   dvr_autorec_entry_t *dae;
-  htsmsg_t *m;
 
   while((dae = LIST_FIRST(&ch->ch_autorecs)) != NULL)
     autorec_entry_destroy(dae, delconf);
-
-  /* Notify web clients that we have messed with the tables */
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("autorec", m);
 }
 
 /*
@@ -939,17 +933,12 @@ void
 autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
 {
   dvr_autorec_entry_t *dae;
-  htsmsg_t *m;
 
   while((dae = LIST_FIRST(&ct->ct_autorecs)) != NULL) {
     LIST_REMOVE(dae, dae_channel_tag_link);
     dae->dae_channel_tag = NULL;
+    idnode_notify_simple(&dae->dae_id);
     if (delconf)
       dvr_autorec_save(dae);
   }
-
-  /* Notify web clients that we have messed with the tables */
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("autorec", m);
 }
