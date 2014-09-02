@@ -211,6 +211,7 @@ const idclass_t linuxdvb_satconf_class =
 {
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = "DVB-S Satconf",
+  .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
   .ic_save       = linuxdvb_satconf_class_save,
   .ic_properties = (const property_t[]) {
@@ -1020,6 +1021,7 @@ const idclass_t linuxdvb_satconf_ele_class =
 {
   .ic_class      = "linuxdvb_satconf_ele",
   .ic_caption    = "Satconf",
+  .ic_event      = "linuxdvb_satconf_ele",
   .ic_get_title  = linuxdvb_satconf_ele_class_get_title,
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,
   .ic_save       = linuxdvb_satconf_ele_class_save,
@@ -1205,6 +1207,7 @@ const idclass_t linuxdvb_diseqc_class =
 {
   .ic_class       = "linuxdvb_diseqc",
   .ic_caption     = "DiseqC",
+  .ic_event       = "linuxdvb_diseqc",
   .ic_get_title   = linuxdvb_diseqc_class_get_title,
   .ic_save        = linuxdvb_diseqc_class_save,
 };

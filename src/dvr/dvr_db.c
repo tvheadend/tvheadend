@@ -26,7 +26,6 @@
 
 #include "tvheadend.h"
 #include "dvr.h"
-#include "notify.h"
 #include "htsp_server.h"
 #include "streaming.h"
 #include "intlconv.h"
@@ -208,22 +207,6 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     return "unknown";
   }
 }
-
-/**
- *
- */
-void
-dvr_entry_notify(dvr_entry_t *de)
-{
-  htsmsg_t *m = htsmsg_create_map();
-
-  htsmsg_add_u32(m, "updateEntry", 1);
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&de->de_id));
-  htsmsg_add_str(m, "status", dvr_entry_status(de));
-  htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
-  notify_by_msg("dvrdb", m);
-}
-
 
 /**
  *
@@ -809,9 +792,8 @@ static dvr_entry_t *_dvr_entry_update
 
   /* Save changes */
   if (save) {
-    dvr_entry_save(de);
+    idnode_changed(&de->de_id);
     htsp_dvr_entry_update(de);
-    dvr_entry_notify(de);
     tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer",
            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
   }
@@ -920,7 +902,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
  *
  */
 static void
-dvr_stop_recording(dvr_entry_t *de, int stopcode, int delconf)
+dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 {
   dvr_config_t *cfg = de->de_config;
 
@@ -936,10 +918,12 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int delconf)
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
-  if (delconf)
+  if (saveconf)
+    idnode_changed(&de->de_id);
+  else
+    idnode_notify_simple(&de->de_id);
     dvr_entry_save(de);
   htsp_dvr_entry_update(de);
-  dvr_entry_notify(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + cfg->dvr_retention_days * 86400);
@@ -971,7 +955,7 @@ dvr_timer_start_recording(void *aux)
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
-  dvr_entry_notify(de);
+  idnode_changed(&de->de_id);
   htsp_dvr_entry_update(de);
   dvr_rec_subscribe(de);
 
@@ -1570,6 +1554,7 @@ dvr_entry_class_content_type_list(void *o)
 const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
   .ic_caption   = "DVR Entry",
+  .ic_event     = "dvrentry",
   .ic_save      = dvr_entry_class_save,
   .ic_get_title = dvr_entry_class_get_title,
   .ic_delete    = dvr_entry_class_delete,
@@ -2079,7 +2064,6 @@ dvr_config_class_charset_list(void *o)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "intlconv/charsets");
-  htsmsg_add_str(m, "event", "charsets");
   return m;
 }
 
@@ -2099,6 +2083,7 @@ dvr_config_class_cache_list(void *o)
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
   .ic_caption    = "DVR Configuration Profile",
+  .ic_event      = "dvrconfig",
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,
   .ic_delete     = dvr_config_class_delete,

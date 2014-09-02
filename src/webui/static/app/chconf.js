@@ -6,16 +6,9 @@ insertChannelTagsClearOption = function( scope, records, options ){
     scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
 };
 
-tvheadend.channelTags = new Ext.data.JsonStore({
+tvheadend.channelTags = tvheadend.idnode_get_enum({
     url: 'api/channeltag/list',
-    root: 'entries',
-    fields: ['key', 'val'],
-    id: 'key',
-    autoLoad: true,
-    sortInfo: {
-        field: 'val',
-        direction: 'ASC',
-    },
+    event: 'channeltag',
     listeners: {
         'load': insertChannelTagsClearOption
     }

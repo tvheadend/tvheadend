@@ -29,7 +29,6 @@ tvheadend.networks = function(panel)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
-        comet: 'mpegts_network',
         titleS: 'Network',
         titleP: 'Networks',
         tabIndex: 1,
@@ -61,7 +60,6 @@ tvheadend.muxes = function(panel)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux',
-        comet: 'mpegts_mux',
         titleS: 'Mux',
         titleP: 'Muxes',
         tabIndex: 2,
@@ -233,7 +231,6 @@ tvheadend.services = function(panel)
     });
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/service',
-        comet: 'service',
         titleS: 'Service',
         titleP: 'Services',
         tabIndex: 3,
@@ -269,7 +266,6 @@ tvheadend.mux_sched = function(panel)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux_sched',
-        comet: 'mpegts_mux_sched',
         titleS: 'Mux Scheduler',
         titleP: 'Mux Schedulers',
         tabIndex: 4,

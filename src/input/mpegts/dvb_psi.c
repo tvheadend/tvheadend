@@ -989,8 +989,7 @@ dvb_sdt_callback
 
     /* Save details */
     if (save) {
-      idnode_updated(&s->s_id);
-      s->s_config_save((service_t*)s);
+      idnode_changed(&s->s_id);
       service_refresh_channel((service_t*)s);
     }
   }

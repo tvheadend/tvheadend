@@ -168,6 +168,7 @@ service_class_caid_get ( void *obj )
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
+  .ic_event      = "service",
   .ic_save       = service_class_save,
   .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){

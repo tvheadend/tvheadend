@@ -275,6 +275,7 @@ channel_class_epggrab_list ( void *o )
 const idclass_t channel_class = {
   .ic_class      = "channel",
   .ic_caption    = "Channel",
+  .ic_event      = "channel",
   .ic_save       = channel_class_save,
   .ic_get_title  = channel_class_get_title,
   .ic_delete     = channel_class_delete,
@@ -846,6 +847,7 @@ channel_tag_class_get_list(void *o)
 const idclass_t channel_tag_class = {
   .ic_class      = "channeltag",
   .ic_caption    = "Channel Tag",
+  .ic_event      = "channeltag",
   .ic_save       = channel_tag_class_save,
   .ic_get_title  = channel_tag_class_get_title,
   .ic_delete     = channel_tag_class_delete,

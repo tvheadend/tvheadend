@@ -61,6 +61,7 @@ tvheadend.cometPoller = function() {
         for (x = 0; x < response.messages.length; x++) {
             m = response.messages[x];
             try {
+                console.log('comet:' + m.notificationClass);
                 tvheadend.comet.fireEvent(m.notificationClass, m);
             } catch (e) {
                 tvheadend.log('comet failure [e=' + e.message + ']');

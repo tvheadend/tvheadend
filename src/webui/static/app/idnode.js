@@ -317,6 +317,7 @@ tvheadend.IdNode = function(conf)
      */
     this.clazz = conf.class;
     this.text = conf.caption || this.clazz;
+    this.event = conf.event;
     this.props = conf.props;
     this.order = [];
     this.groups = conf.groups;
@@ -1251,8 +1252,8 @@ tvheadend.idnode_grid = function(panel, conf)
         };
         if (conf.comet)
             tvheadend.comet.on(conf.comet, update);
-        tvheadend.comet.on('idnodeUpdated', update);
-        tvheadend.comet.on('idnodeDeleted', update);
+        if (idnode.event && idnode.event != conf.comet)
+            tvheadend.comet.on(idnode.event, update);
     }
 
     /* Request data */
@@ -1506,8 +1507,6 @@ tvheadend.idnode_form_grid = function(panel, conf)
     };
     if (conf.comet)
         tvheadend.comet.on(conf.comet, update);
-    tvheadend.comet.on('idnodeUpdated', update);
-    tvheadend.comet.on('idnodeDeleted', update);
 };
 
 /*
@@ -1516,12 +1515,23 @@ tvheadend.idnode_form_grid = function(panel, conf)
 tvheadend.idnode_tree = function(conf)
 {
     var current = null;
+    var events = {};
     var params = conf.params || {};
     var loader = new Ext.tree.TreeLoader({
         dataUrl: conf.url,
         baseParams: params,
         preloadChildren: conf.preload,
         nodeParameter: 'uuid'
+    });
+
+    loader.on('load', function(l, n, r) {
+        if (n.uuid && n.event && !(n.event in events)) {
+          events[n.event] = 1;
+          tvheadend.comet.on(n.event, function(o) {
+            if (o.uuid)
+                tree.getRootNode().reload();
+          });
+        }
     });
 
     var tree = new Ext.tree.TreePanel({
@@ -1556,8 +1566,7 @@ tvheadend.idnode_tree = function(conf)
         });
     }
 
-    // TODO: top-level reload
-    tvheadend.comet.on('idnodeUpdated', function(o) {
+    tvheadend.comet.on('title', function(o) {
         var n = tree.getNodeById(o.uuid);
         if (n) {
             if (o.text)

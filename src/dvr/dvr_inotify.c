@@ -211,7 +211,7 @@ _dvr_inotify_moved
     dvr_inotify_del(de);
   
   htsp_dvr_entry_update(de);
-  dvr_entry_notify(de);
+  idnode_notify_simple(&de->de_id);
 }
 
 /*
@@ -239,7 +239,7 @@ _dvr_inotify_moved_all
 
   while ((de = LIST_FIRST(&die->entries))) {
     htsp_dvr_entry_update(de);
-    dvr_entry_notify(de);
+    idnode_notify_simple(&de->de_id);
     dvr_inotify_del(de);
   }
 }

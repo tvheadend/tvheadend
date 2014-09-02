@@ -85,7 +85,6 @@ tvheadend.dvr_upcoming = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_upcoming',
-        comet: 'dvrentry',
         titleS: 'Upcoming Recording',
         titleP: 'Upcoming Recordings',
         iconCls: 'clock',
@@ -127,7 +126,6 @@ tvheadend.dvr_finished = function(panel, index) {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_finished',
         readonly: true,
-        comet: 'dvrentry',
         titleS: 'Finished Recording',
         titleP: 'Finished Recordings',
         iconCls: 'television',
@@ -172,8 +170,8 @@ tvheadend.dvr_failed = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_failed',
-        readonly: true,
         comet: 'dvrentry',
+        readonly: true,
         titleS: 'Failed Recording',
         titleP: 'Failed Recordings',
         iconCls: 'exclamation',
@@ -234,7 +232,6 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        comet: 'dvrautorec',
         titleS: 'DVR AutoRec Entry',
         titleP: 'DVR AutoRec Entries',
         iconCls: 'wand',

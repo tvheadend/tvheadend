@@ -300,7 +300,7 @@ dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
       de->de_errors++;
   }
   if (notify)
-    dvr_entry_notify(de);
+    idnode_notify_simple(&de->de_id);
 }
 
 /**
@@ -521,9 +521,8 @@ dvr_thread(void *aux)
         dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
         if(dvr_rec_start(de, sm->sm_data) == 0) {
           started = 1;
-          dvr_entry_notify(de);
+          idnode_changed(&de->de_id);
           htsp_dvr_entry_update(de);
-          dvr_entry_save(de);
         }
         pthread_mutex_unlock(&global_lock);
       } 
