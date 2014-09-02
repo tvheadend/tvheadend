@@ -853,6 +853,109 @@ config_migrate_v10 ( void )
   config_migrate_move("channeltags", "channel/tag");
 }
 
+static const char *
+config_find_uuid( htsmsg_t *map, const char *name, const char *value )
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  const char *s;
+
+  HTSMSG_FOREACH(f, map) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if ((s = htsmsg_get_str(e, name)) != NULL) {
+      if (!strcmp(s, value))
+        return f->hmf_name;
+    }
+  }
+  return NULL;
+}
+
+static void
+config_modify_acl_dvallcfg( htsmsg_t *c, htsmsg_t *dvr_config )
+{
+  uint32_t a;
+  const char *username, *uuid;
+
+  username = htsmsg_get_str(c, "username");
+  if (!htsmsg_get_u32(c, "dvallcfg", &a))
+    if (a == 0) {
+      uuid = username ? config_find_uuid(dvr_config, "name", username) : NULL;
+      if (uuid)
+        htsmsg_add_str(c, "dvr_config", uuid);
+    }
+  htsmsg_delete_field(c, "dvallcfg");
+}
+
+static void
+config_modify_acl_tag_only( htsmsg_t *c, htsmsg_t *channel_tag )
+{
+  uint32_t a;
+  const char *username, *tag, *uuid;
+
+  username = htsmsg_get_str(c, "username");
+  tag = htsmsg_get_str(c, "channel_tag");
+  if (!tag || tag[0] == '\0')
+    tag = NULL;
+  if (tag == NULL && !htsmsg_get_u32(c, "tag_only", &a)) {
+    if (a) {
+      uuid = username ? config_find_uuid(channel_tag, "name", username) : NULL;
+      if (uuid)
+        htsmsg_add_str(c, "channel_tag", uuid);
+    }
+  } else if (tag) {
+    uuid = config_find_uuid(channel_tag, "name", tag);
+    if (uuid) {
+      htsmsg_delete_field(c, "channel_tag");
+      htsmsg_add_str(c, "channel_tag", uuid);
+    }
+  }
+  htsmsg_delete_field(c, "tag_only");
+}
+
+static void
+config_modify_dvr_config_name( htsmsg_t *c, htsmsg_t *dvr_config )
+{
+  const char *config_name, *uuid;
+
+  config_name = htsmsg_get_str(c, "config_name");
+  uuid = config_name ? config_find_uuid(dvr_config, "name", config_name) : NULL;
+  htsmsg_delete_field(c, "config_name");
+  htsmsg_add_str(c, "config_name", uuid ?: "");
+}
+
+
+static void
+config_migrate_v11 ( void )
+{
+  htsmsg_t *dvr_config;
+  htsmsg_t *channel_tag;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  dvr_config = hts_settings_load("dvr/config");
+  channel_tag = hts_settings_load("channel/tag");
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_modify_acl_dvallcfg(e, dvr_config);
+      config_modify_acl_tag_only(e, channel_tag);
+    }
+    htsmsg_destroy(c);
+  }
+
+  if ((c = hts_settings_load("dvr/log")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_modify_dvr_config_name(e, dvr_config);
+    }
+    htsmsg_destroy(c);
+  }
+
+  htsmsg_destroy(channel_tag);
+  htsmsg_destroy(dvr_config);
+}
+
 /*
  * Migration table
  */
@@ -867,6 +970,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v8,
   config_migrate_v9,
   config_migrate_v10,
+  config_migrate_v11
 };
 
 /*

@@ -652,7 +652,6 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_t *out = htsmsg_create_map();
   const char *s = NULL, *error = NULL;
   const char *p;
-  dvr_config_t *cfg;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   if (de->de_channel)
@@ -666,11 +665,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
     htsmsg_add_str(out, "description", s);
 
-  if( de->de_filename && de->de_config_name ) {
-    if ((cfg = dvr_config_find_by_name_default(de->de_config_name))) {
-      if ((p = tvh_strbegins(de->de_filename, cfg->dvr_storage)))
-        htsmsg_add_str(out, "path", p);
-    }
+  if( de->de_filename && de->de_config ) {
+    if ((p = tvh_strbegins(de->de_filename, de->de_config->dvr_storage)))
+      htsmsg_add_str(out, "path", p);
   }
 
   switch(de->de_sched_state) {

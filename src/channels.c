@@ -163,19 +163,6 @@ channel_class_tags_set ( void *obj, const void *p )
   return channel_set_tags_by_list(obj, (htsmsg_t*)p);
 }
 
-static htsmsg_t *
-channel_class_tags_enum ( void *obj )
-{
-  htsmsg_t *e, *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channeltag/list");
-  htsmsg_add_str(m, "event", "channeltag");
-  e = htsmsg_create_map();
-  htsmsg_add_bool(e, "enum", 1);
-  htsmsg_add_msg(m, "params", e);
-  return m;
-}
-  
 static void
 channel_class_icon_notify ( void *obj )
 {
@@ -369,7 +356,7 @@ const idclass_t channel_class = {
       .name     = "Tags",
       .get      = channel_class_tags_get,
       .set      = channel_class_tags_set,
-      .list     = channel_class_tags_enum,
+      .list     = channel_tag_class_get_list,
       .rend     = channel_class_tags_rend
     },
     {}
@@ -430,24 +417,14 @@ channel_access(channel_t *ch, access_t *a, const char *username)
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, a->aa_chtags) {
       LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-        if (!strcmp(htsmsg_field_get_str(f) ?: "", ctm->ctm_tag->ct_name))
+        if (!strcmp(htsmsg_field_get_str(f) ?: "",
+                    idnode_uuid_as_str(&ctm->ctm_tag->ct_id)))
           goto chtags_ok;
       }
     }
     return 0;
   }
 chtags_ok:
-
-  /* Channel tag <-> user name match */
-  if (ch && (a->aa_rights & ACCESS_TAG_ONLY) != 0) {
-    channel_tag_mapping_t *ctm;
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      if (!strcmp(username ?: "", ctm->ctm_tag->ct_name))
-        goto tagonly_ok;
-    }
-    return 0;
-  }
-tagonly_ok:
 
   return 1;
 }
@@ -761,6 +738,9 @@ channel_tag_create(const char *uuid, htsmsg_t *conf)
   channel_tag_t *ct;
 
   ct = calloc(1, sizeof(channel_tag_t));
+  LIST_INIT(&ct->ct_ctms);
+  LIST_INIT(&ct->ct_autorecs);
+  LIST_INIT(&ct->ct_accesses);
 
   if (idnode_insert(&ct->ct_id, uuid, &channel_tag_class, IDNODE_SHORT_UUID)) {
     if (uuid)
@@ -807,6 +787,9 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
   TAILQ_REMOVE(&channel_tags, ct, ct_link);
   idnode_unlink(&ct->ct_id);
 
+  autorec_destroy_by_channel_tag(ct, delconf);
+  access_destroy_by_channel_tag(ct, delconf);
+
   free(ct->ct_name);
   free(ct->ct_comment);
   free(ct->ct_icon);
@@ -847,6 +830,17 @@ channel_tag_class_get_title (idnode_t *self)
 {
   channel_tag_t *ct = (channel_tag_t *)self;
   return ct->ct_name ?: "";
+}
+
+/* exported for others */
+htsmsg_t *
+channel_tag_class_get_list(void *o)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channeltag/list");
+  htsmsg_add_str(m, "event", "channeltag");
+  return m;
 }
 
 const idclass_t channel_tag_class = {

@@ -66,6 +66,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
   int flags;
 
   assert(de->de_s == NULL);
+  assert(!de->de_locked);
+
+  de->de_locked = 1;
 
   if(de->de_pri < 5)
     weight = prio2weight[de->de_pri];
@@ -117,6 +120,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
     globalheaders_destroy(de->de_gh);
 
   de->de_last_error = stopcode;
+
+  de->de_locked = 0;
 }
 
 
@@ -177,7 +182,10 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   struct stat st;
   char *filename, *s;
   struct tm tm;
-  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  dvr_config_t *cfg = de->de_config;
+
+  if (de == NULL)
+    return -1;
 
   strncpy(path, cfg->dvr_storage, sizeof(path));
   path[sizeof(path)-1] = '\0';
@@ -304,8 +312,13 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   const source_info_t *si = &ss->ss_si;
   const streaming_start_component_t *ssc;
   int i;
-  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  dvr_config_t *cfg = de->de_config;
   muxer_container_type_t mc;
+
+  if (!cfg) {
+    dvr_rec_fatal_error(de, "Unable to determine config profile");
+    return -1;
+  }
 
   mc = dvr_entry_get_mc(de);
 
@@ -427,7 +440,7 @@ static void *
 dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  dvr_config_t *cfg = de->de_config;
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   th_pkt_t *pkt;
@@ -666,7 +679,7 @@ dvr_thread_epilog(dvr_entry_t *de)
   muxer_destroy(de->de_mux);
   de->de_mux = NULL;
 
-  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
-  if(cfg->dvr_postproc && de->de_filename)
+  dvr_config_t *cfg = de->de_config;
+  if(cfg && cfg->dvr_postproc && de->de_filename)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
 }

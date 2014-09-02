@@ -821,6 +821,8 @@ main(int argc, char **argv)
 
   subscription_init();
 
+  dvr_config_init();
+
   access_init(opt_firstrun, opt_noacl);
 
 #if ENABLE_TIMESHIFT

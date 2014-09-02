@@ -22,6 +22,9 @@
 #include "idnode.h"
 #include "htsmsg.h"
 
+struct dvr_config;
+struct channel_tag;
+
 typedef struct access_ipmask {
   TAILQ_ENTRY(access_ipmask) ai_link;
 
@@ -48,18 +51,25 @@ typedef struct access_entry {
   char *ae_password;
   char *ae_password2;
   char *ae_comment;
+
   int ae_index;
   int ae_enabled;
+
   int ae_streaming;
   int ae_adv_streaming;
+
   int ae_dvr;
-  int ae_dvrallcfg;
+  struct dvr_config *ae_dvr_config;
+  LIST_ENTRY(access_entry) ae_dvr_config_link;
+
   int ae_webui;
   int ae_admin;
-  int ae_tag_only;
+
   uint32_t ae_chmin;
   uint32_t ae_chmax;
-  char *ae_chtag;
+
+  struct channel_tag *ae_chtag;
+  LIST_ENTRY(access_entry) ae_channel_tag_link;
 
   uint32_t ae_rights;
 
@@ -85,6 +95,7 @@ typedef struct access {
   char     *aa_username;
   char     *aa_representative;
   uint32_t  aa_rights;
+  htsmsg_t *aa_dvrcfgs;
   uint32_t  aa_chmin;
   uint32_t  aa_chmax;
   htsmsg_t *aa_chtags;
@@ -96,14 +107,11 @@ typedef struct access {
 #define ACCESS_ADVANCED_STREAMING (1<<1)
 #define ACCESS_WEB_INTERFACE      (1<<2)
 #define ACCESS_RECORDER           (1<<3)
-#define ACCESS_RECORDER_ALL       (1<<4)
-#define ACCESS_TAG_ONLY           (1<<5)
-#define ACCESS_ADMIN              (1<<6)
+#define ACCESS_ADMIN              (1<<4)
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
-   ACCESS_WEB_INTERFACE | ACCESS_RECORDER | \
-   ACCESS_RECORDER_ALL | ACCESS_ADMIN)
+   ACCESS_WEB_INTERFACE | ACCESS_RECORDER | ACCESS_ADMIN)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
@@ -164,6 +172,14 @@ access_entry_create(const char *uuid, htsmsg_t *conf);
  */
 void
 access_entry_save(access_entry_t *ae);
+
+/**
+ *
+ */
+void
+access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
+void
+access_destroy_by_channel_tag(struct channel_tag *ct, int delconf);
 
 /**
  *
