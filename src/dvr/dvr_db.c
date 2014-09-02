@@ -1522,15 +1522,15 @@ dvr_entry_class_channel_icon_url_get(void *o)
   return &s;
 }
 
-static htsmsg_t *
-dvr_entry_class_extra_list(void *o)
+htsmsg_t *
+dvr_entry_class_duration_list(void *o, const char *not_set, int max)
 {
   int i;
   htsmsg_t *e, *l = htsmsg_create_list();
   char buf[32];
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 0);
-  htsmsg_add_str(e, "val", "Not set (use channel or DVR config)");
+  htsmsg_add_str(e, "val", not_set);
   htsmsg_add_msg(l, NULL, e);
   for (i = 1; i <= 120;  i++) {
     snprintf(buf, sizeof(buf), "%d min%s", i, i > 1 ? "s" : "");
@@ -1539,7 +1539,7 @@ dvr_entry_class_extra_list(void *o)
     htsmsg_add_str(e, "val", buf);
     htsmsg_add_msg(l, NULL, e);
   }
-  for (i = 120; i <= 240;  i += 30) {
+  for (i = 120; i <= max;  i += 30) {
     if ((i % 60) == 0)
       snprintf(buf, sizeof(buf), "%d hrs", i / 60);
     else
@@ -1551,8 +1551,13 @@ dvr_entry_class_extra_list(void *o)
   }
   return l;
 }
-                                        
 
+static htsmsg_t *
+dvr_entry_class_extra_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60);
+}
+                                        
 static htsmsg_t *
 dvr_entry_class_content_type_list(void *o)
 {

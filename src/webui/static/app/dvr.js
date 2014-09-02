@@ -243,13 +243,13 @@ tvheadend.autorec_editor = function(panel, index) {
             url: 'api/dvr/autorec',
             params: {
                list: 'enable,title,channel,tag,content_type,minduration,' +
-                     'weekdays,approx_time,pri,config_name,comment',
+                     'maxduration,weekdays,approx_time,pri,config_name,comment',
             },
             create: { }
         },
         del: true,
         list: 'enable,title,channel,tag,content_type,minduration,' +
-              'weekdays,approx_time,pri,config_name,creator,comment',
+              'maxduration,weekdays,approx_time,pri,config_name,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'
