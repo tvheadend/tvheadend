@@ -21,7 +21,24 @@ tvheadend.acleditor = function(panel)
         comet: 'acl_entries',
         titleS: 'Access Entry',
         titleP: 'Access Entries',
+        columns: {
+            username:      { width: 250 },
+            password:      { width: 250 },
+            prefix:        { width: 350 },
+            streaming:     { width: 100 },
+            adv_streaming: { width: 100 },
+            dvr:           { width: 100 },
+            webui:         { width: 100 },
+            admin:         { width: 100 },
+            channel_min:   { width: 100 },
+            channel_max:   { width: 100 },
+        },
         tabIndex: 0,
+        edit: {
+            params: {
+                list: list,
+            },
+        },
         add: {
             url: 'api/access/entry',
             params: {
