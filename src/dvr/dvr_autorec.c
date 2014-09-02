@@ -81,8 +81,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
      dae->dae_season == NULL &&
-     dae->dae_minduration == 0 &&
-     (dae->dae_maxduration == 0 || dae->dae_maxduration > 24 * 3600) &&
+     dae->dae_minduration <= 0 &&
+     (dae->dae_maxduration <= 0 || dae->dae_maxduration > 24 * 3600) &&
      dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
@@ -141,11 +141,11 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   duration = difftime(e->stop,e->start);
 
-  if(dae->dae_minduration) {
+  if(dae->dae_minduration > 0) {
     if(duration < dae->dae_minduration) return 0;
   }
 
-  if(dae->dae_maxduration) {
+  if(dae->dae_maxduration > 0) {
     if(duration > dae->dae_maxduration) return 0;
   }
 
@@ -452,6 +452,7 @@ dvr_autorec_entry_class_start_get(void *o)
 static int
 dvr_autorec_entry_class_stop_get(void *o)
 {
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   return dvr_autorec_entry_class_time_get(o, v, &dae->dae_stop);
 }
 #endif
@@ -479,8 +480,13 @@ dvr_autorec_entry_class_time_list(void *o)
 static htsmsg_t *
 dvr_autorec_entry_class_minduration_list(void *o)
 {
-  /* reuse */
-  return dvr_autorec_entry_class_time_list(o);
+  return dvr_entry_class_duration_list(o, "Not set", 24*60);
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_maxduration_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set", 24*60);
 }
 
 static int
@@ -735,16 +741,17 @@ const idclass_t dvr_autorec_entry_class = {
       .rend     = dvr_autorec_entry_class_weekdays_rend,
     },
     {
-      .type     = PT_U32,
+      .type     = PT_INT,
       .id       = "minduration",
       .name     = "Minimal Duration",
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
     },
     {
-      .type     = PT_U32,
+      .type     = PT_INT,
       .id       = "maxduration",
       .name     = "Maximal Duration",
+      .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
     },
     {

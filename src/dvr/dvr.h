@@ -395,6 +395,7 @@ void dvr_entry_cancel_delete(dvr_entry_t *de);
 
 htsmsg_t *dvr_entry_class_pri_list(void *o);
 htsmsg_t *dvr_entry_class_config_name_list(void *o);
+htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max);
 
 /**
  * Query interface
