@@ -133,7 +133,7 @@ tvheadend.IdNodeField = function(conf)
      * Methods
      */
 
-    this.column = function()
+    this.column = function(conf)
     {
         var w = 300;
         var ftype = 'string';
@@ -154,6 +154,11 @@ tvheadend.IdNodeField = function(conf)
         }
         if (this.enum || this.list)
             w = 300;
+
+        if (conf && this.id in conf) {
+          if (conf[this.id].width)
+            w = conf[this.id].width;
+        }
 
         var props = {
             width: w,
@@ -840,7 +845,7 @@ tvheadend.idnode_grid = function(panel, conf)
         var idnode = new tvheadend.IdNode(d);
         for (var i = 0; i < idnode.length(); i++) {
             var f = idnode.field(i);
-            var c = f.column();
+            var c = f.column(conf.columns);
             fields.push(f.id);
             columns.push(c);
             if (c.filter)
@@ -1075,12 +1080,11 @@ tvheadend.idnode_grid = function(panel, conf)
                             });
                             w.show();
                         } else {
-                            var params = {
-                                uuid: r.id,
-                                meta: 1
-                            };
-                            if (conf.listEdit)
-                                params['list'] = conf.listEdit;
+                            var params = {};
+                            if (conf.edit && conf.edit.params)
+                              params = conf.edit.params;
+                            params['uuid'] = r.id;
+                            params['meta'] = 1;
                             tvheadend.Ajax({
                                 url: 'api/idnode/load',
                                 params: params,
