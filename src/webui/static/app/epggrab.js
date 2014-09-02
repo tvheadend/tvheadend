@@ -8,7 +8,7 @@ tvheadend.epggrabChannels = new Ext.data.JsonStore({
         'mod-name']
 });
 
-tvheadend.epggrab = function() {
+tvheadend.epggrab = function(panel, index) {
 
     /* ****************************************************************
      * Data
@@ -394,5 +394,5 @@ tvheadend.epggrab = function() {
         });
     }
 
-    return confpanel;
+    tvheadend.paneladd(panel, confpanel, index);
 };

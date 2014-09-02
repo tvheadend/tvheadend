@@ -1,4 +1,4 @@
-tvheadend.tvhlog = function() {
+tvheadend.tvhlog = function(panel, index) {
     /*
      * Basic Config
      */
@@ -115,5 +115,5 @@ tvheadend.tvhlog = function() {
         });
     }
 
-    return confpanel;
+    tvheadend.paneladd(panel, confpanel, index);
 };

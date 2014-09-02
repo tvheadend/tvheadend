@@ -263,17 +263,17 @@ tvheadend.autorec_editor = function(panel, index) {
 /**
  *
  */
-tvheadend.dvr = function() {
-    var panel = new Ext.TabPanel({
+tvheadend.dvr = function(panel, index) {
+    var p = new Ext.TabPanel({
         activeTab: 0,
         autoScroll: true,
         title: 'Digital Video Recorder',
         iconCls: 'drive',
         items: [],
     });
-    tvheadend.dvr_upcoming(panel, 0);
-    tvheadend.dvr_finished(panel, 1);
-    tvheadend.dvr_failed(panel, 2);
-    tvheadend.autorec_editor(panel, 3);
-    return panel;
+    tvheadend.dvr_upcoming(p, 0);
+    tvheadend.dvr_finished(p, 1);
+    tvheadend.dvr_failed(p, 2);
+    tvheadend.autorec_editor(p, 3);
+    return p;
 }

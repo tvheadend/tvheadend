@@ -2,15 +2,18 @@
  * Access Control
  */
 
-tvheadend.acleditor = function(panel)
+tvheadend.acleditor = function(panel, index)
 {
-    panel = new Ext.TabPanel({
+    panel2 = new Ext.TabPanel({
         activeTab: 0,
         autoScroll: true,
         title: 'Access Control',
         iconCls: 'group',
+        tabIndex: index,
         items: []
     });
+
+    tvheadend.paneladd(panel, panel2, index);
 
     var list = 'enabled,username,password,prefix,streaming,adv_streaming,' +
                'dvr,dvr_config,webui,admin,channel_min,channel_max,channel_tag,' +

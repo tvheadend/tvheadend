@@ -1,9 +1,7 @@
 tvheadend.accessupdate = null;
 tvheadend.capabilties = null;
-tvheadend.conf_chepg = null;
-tvheadend.conf_dvbin = null;
-tvheadend.conf_tsdvr = null;
-tvheadend.conf_csa = null;
+tvheadend.dvrpanel = null;
+tvheadend.confpanel = null;
 
 /* State Provider */
 Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
@@ -38,6 +36,13 @@ tvheadend.help = function(title, pagename) {
 
         }
     });
+};
+
+tvheadend.paneladd = function(dst, add, idx) {
+  if (idx != null)
+    dst.insert(idx, add);
+  else
+    dst.add(add);
 };
 
 tvheadend.Ajax = function(conf) {
@@ -248,102 +253,108 @@ function accessUpdate(o) {
     }
 
     if (o.admin == true && tvheadend.confpanel == null) {
-        var tabs1 = [
-            new tvheadend.miscconf,
-            new tvheadend.acleditor
-        ];
-        var tabs2;
 
-        /* DVB inputs */
-        tabs2 = [];
-        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
-            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
-            tvheadend.capabilities.indexOf('v4l')          !== -1) {
-            tabs2.push(new tvheadend.tvadapters);
-        }
-        /*
-         tabs2.push(new tvheadend.iptv);
-         */
-        tvheadend.conf_dvbin = new Ext.TabPanel({
+        var cp = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: 'Configuration',
+            iconCls: 'wrench',
+            items: []
+        });
+
+        tvheadend.miscconf(cp);
+
+        tvheadend.acleditor(cp);
+
+        /* DVB inputs, networks, muxes, services */
+        var dvbin = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'DVB Inputs',
             iconCls: 'hardware',
-            items: tabs2
+            items: []
         });
-        tvheadend.networks(tvheadend.conf_dvbin);
-        tvheadend.muxes(tvheadend.conf_dvbin);
-        tvheadend.services(tvheadend.conf_dvbin);
-        tvheadend.mux_sched(tvheadend.conf_dvbin);
-        tabs1.push(tvheadend.conf_dvbin);
+
+        var idx = 0;
+
+        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
+            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
+            tvheadend.capabilities.indexOf('v4l')          !== -1)
+            tvheadend.tvadapters(dvbin);
+        tvheadend.networks(dvbin);
+        tvheadend.muxes(dvbin);
+        tvheadend.services(dvbin);
+        tvheadend.mux_sched(dvbin);
+
+        cp.add(dvbin);
 
         /* Channel / EPG */
-        tvheadend.conf_chepg = new Ext.TabPanel({
+        var chepg = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Channel / EPG',
             iconCls: 'television',
             items: []
         });
-        tvheadend.channel_tab(tvheadend.conf_chepg, 0);
-        tvheadend.cteditor(tvheadend.conf_chepg, 1);
-        tvheadend.conf_chepg.insert(2, new tvheadend.epggrab);
-        tabs1.push(tvheadend.conf_chepg);
+        tvheadend.channel_tab(chepg);
+        tvheadend.cteditor(chepg);
+        tvheadend.epggrab(chepg);
+
+        cp.add(chepg);
 
         /* DVR / Timeshift */
-        tvheadend.conf_tsdvr = new Ext.TabPanel({
+        var tsdvr = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Recording',
             iconCls: 'drive',
             items: []
         });
-        tvheadend.dvr_settings(tvheadend.conf_tsdvr, 0);
+        tvheadend.dvr_settings(tsdvr);
         if (tvheadend.capabilities.indexOf('timeshift') !== -1)
-          tvheadend.conf_tsdvr.add(new tvheadend.timeshift);
-        tabs1.push(tvheadend.conf_tsdvr);
+          tvheadend.timeshift(tsdvr);
+
+        cp.add(tsdvr);
 
         /* CSA */
-        tabs2 = [];
-        if (tvheadend.capabilities.indexOf('cwc')   !== -1)
-          tabs2.push(new tvheadend.cwceditor);
-        if (tvheadend.capabilities.indexOf('capmt') !== -1)
-          tabs2.push(new tvheadend.capmteditor);
-        if (tabs2.length > 0) {
-            tvheadend.conf_csa = new Ext.TabPanel({
+        if (tvheadend.capabilities.indexOf('cwc')   !== -1 ||
+            tvheadend.capabilities.indexOf('capmt') !== -1) {
+
+            var csa = new Ext.TabPanel({
                 activeTab: 0,
                 autoScroll: true,
                 title: 'CSA',
                 iconCls: 'key',
-                items: tabs2
+                items: []
             });
-            tabs1.push(tvheadend.conf_csa);
+
+            if (tvheadend.capabilities.indexOf('cwc')   !== -1)
+                tvheadend.cwceditor(csa);
+            if (tvheadend.capabilities.indexOf('capmt') !== -1)
+                tvheadend.capmteditor(csa);
+                
+            cp.add(csa);
         }
 
         /* Stream Config */
-        tvheadend.conf_stream = new Ext.TabPanel({
+        var stream = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Stream',
             iconCls: 'stream_config',
             items: []
         });
-        tvheadend.esfilter_tab(tvheadend.conf_stream);
-        tabs1.push(tvheadend.conf_stream);
+        tvheadend.esfilter_tab(stream);
+
+        cp.add(stream);
 
         /* Debug */
-        tabs1.push(new tvheadend.tvhlog);
+        tvheadend.tvhlog(cp);
 
-        tvheadend.confpanel = new Ext.TabPanel({
-            activeTab: 0,
-            autoScroll: true,
-            title: 'Configuration',
-            iconCls: 'wrench',
-            items: tabs1
-        });
-
-        tvheadend.rootTabPanel.add(tvheadend.confpanel);
-        tvheadend.confpanel.doLayout();
+        /* Finish */
+        tvheadend.rootTabPanel.add(cp);
+        tvheadend.confpanel = cp;
+        cp.doLayout();
     }
 
     if (o.admin == true && tvheadend.statuspanel == null) {
@@ -412,7 +423,7 @@ tvheadend.app = function() {
             tvheadend.rootTabPanel = new Ext.TabPanel({
                 region: 'center',
                 activeTab: 0,
-                items: [new tvheadend.epg]
+                items: [tvheadend.epg()]
             });
 
             var viewport = new Ext.Viewport({
