@@ -422,8 +422,15 @@ http_access_verify(http_connection_t *hc, int mask)
   if (!http_access_verify_ticket(hc))
     return 0;
 
-  return access_verify(hc->hc_username, hc->hc_password,
-		       (struct sockaddr *)hc->hc_peer, mask);
+  if (hc->hc_access)
+    return access_verify2(hc->hc_access, mask);
+
+  hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                             (struct sockaddr *)hc->hc_peer);
+  if (hc->hc_access == NULL)
+    return -1;
+
+  return access_verify2(hc->hc_access, mask);
 }
 
 /**
@@ -433,7 +440,6 @@ int
 http_access_verify_channel(http_connection_t *hc, int mask,
                            struct channel *ch)
 {
-  access_t *a;
   int res = -1;
 
   assert(ch);
@@ -441,11 +447,8 @@ http_access_verify_channel(http_connection_t *hc, int mask,
   if (!http_access_verify_ticket(hc))
     return 0;
 
-  a = access_get(hc->hc_username, hc->hc_password,
-                 (struct sockaddr *)hc->hc_peer);
-  if (channel_access(ch, a, hc->hc_username))
+  if (channel_access(ch, hc->hc_access, hc->hc_username))
     res = 0;
-  access_destroy(a);
   return res;
 }
 
@@ -464,12 +467,10 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
     err = HTTP_STATUS_UNAUTHORIZED;
   else {
     /* FIXME: Recode to obtain access only once */
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
-    access_destroy(hc->hc_access);
-    hc->hc_access = NULL;
   }
+  access_destroy(hc->hc_access);
+  hc->hc_access = NULL;
 
   if(err == -1)
      return 1;
