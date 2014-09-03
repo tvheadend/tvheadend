@@ -572,7 +572,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, create)
             met[number].columns = columns;
             if (columns) {
                 var p = newFieldSet({ title: m.name || "Settings", layout: 'column', border: false });
-                cfs[number] = newFieldSet({ nocollapse: true });
+                cfs[number] = newFieldSet({ nocollapse: true, style: 'border-width: 0px', bodyStyle: ' ' });
                 p.add(cfs[number]);
                 fs[number] = p;
                 mfs[number] = p;
@@ -587,7 +587,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, create)
                 parent = null;
             if (!m.columns) {
                 if (parent) {
-                    p = newFieldSet({ nocollapse: true });
+                    p = newFieldSet({ nocollapse: true, style: 'border-width: 0px', bodyStyle: ' ' });
                     fs[parent].add(p);
                 } else {
                     p = newFieldSet({ title: m.name });
@@ -658,9 +658,9 @@ tvheadend.idnode_editor = function(item, conf)
         bodyStyle: 'padding: 5px',
         labelAlign: 'left',
         labelWidth: conf.labelWidth || 200,
-        autoWidth: true,
+        autoWidth: conf.noautoWidth ? false : true,
         autoHeight: !conf.fixedHeight,
-        width: 600,
+        width: conf.width || 600,
         //defaults: {width: 330},
         defaultType: 'textfield',
         buttonAlign: 'left',
@@ -823,9 +823,22 @@ tvheadend.idnode_create = function(conf, onlyDefault)
  */
 tvheadend.idnode_grid = function(panel, conf)
 {
+    var store = null;
+    var grid = null;
+    var event = null;
+    var auto = null;
+
+    var update = function(o) {
+        if (auto.getValue())
+            store.reload();
+    };
+
     function build(d)
     {
-        var columns = conf.lcol || [];
+        if (conf.builder)
+            conf.builder(conf);
+
+        var columns = [];
         var filters = [];
         var fields = [];
         var buttons = [];
@@ -842,6 +855,11 @@ tvheadend.idnode_grid = function(panel, conf)
         if (conf.add && !conf.add.titleS && conf.titleS)
             conf.add.titleS = conf.titleS;
 
+        /* Left-hand columns (do copy, no reference!) */
+        if (conf.lcol)
+            for (i = 0; i < conf.lcol.length; i++)
+                columns.push(conf.lcol[i]);
+
         /* Model */
         var idnode = new tvheadend.IdNode(d);
         for (var i = 0; i < idnode.length(); i++) {
@@ -856,7 +874,7 @@ tvheadend.idnode_grid = function(panel, conf)
         /* Right-hand columns */
         if (conf.rcol)
             for (i = 0; i < conf.rcol.length; i++)
-                columns.push(conf.rcol[i]);
+               columns.push(conf.rcol[i]);
 
         /* Filters */
         var filter = new Ext.ux.grid.GridFilters({
@@ -865,12 +883,8 @@ tvheadend.idnode_grid = function(panel, conf)
             filters: filters
         });
 
-        var sort = null;
-        if (conf.sort)
-            sort = conf.sort;
-
         /* Store */
-        var store = new Ext.data.JsonStore({
+        store = new Ext.data.JsonStore({
             root: 'entries',
             url: conf.gridURL || (conf.url + '/grid'),
             autoLoad: true,
@@ -879,7 +893,7 @@ tvheadend.idnode_grid = function(panel, conf)
             fields: fields,
             remoteSort: true,
             pruneModifiedRecords: true,
-            sortInfo: sort
+            sortInfo: conf.sort ? conf.sort : null,
         });
 
         /* Model */
@@ -1173,7 +1187,7 @@ tvheadend.idnode_grid = function(panel, conf)
         }
 
         /* Grid Panel */
-        var auto = new Ext.form.Checkbox({
+        auto = new Ext.form.Checkbox({
             checked: true,
             listeners: {
                 check: function(s, c) {
@@ -1222,8 +1236,6 @@ tvheadend.idnode_grid = function(panel, conf)
             stateful: true,
             stateId: conf.gridURL || conf.url,
             stripeRows: true,
-            title: conf.titleP,
-            iconCls: conf.iconCls || '',
             store: store,
             cm: model,
             selModel: select,
@@ -1234,41 +1246,73 @@ tvheadend.idnode_grid = function(panel, conf)
             tbar: buttons,
             bbar: page
         };
-        var grid = conf.readonly ? new Ext.grid.GridPanel(gconf) :
-                                   new Ext.grid.EditorGridPanel(gconf);
+        grid = conf.readonly ? new Ext.grid.GridPanel(gconf) :
+                               new Ext.grid.EditorGridPanel(gconf);
         grid.on('filterupdate', function() {
             page.changePage(0);
         });
 
-        tvheadend.paneladd(panel, grid, conf.tabIndex);
+        dpanel.add(grid);
+        dpanel.doLayout(false, true);
 
         /* Add comet listeners */
-        var update = function(o) {
-            if (auto.getValue())
-                store.reload();
-        };
         if (conf.comet)
             tvheadend.comet.on(conf.comet, update);
-        if (idnode.event && idnode.event != conf.comet)
+        if (idnode.event && idnode.event != conf.comet) {
+            event = idnode.event;
             tvheadend.comet.on(idnode.event, update);
+        }
     }
 
-    /* Request data */
-    if (!conf.fields) {
-        var p = {};
-        if (conf.list) p['list'] = conf.list;
-        tvheadend.Ajax({
-            url: conf.url + '/class',
-            params: p,
-            success: function(d)
-            {
-                var d = json_decode(d);
-                build(d);
-            }
-        });
-    } else {
-        build(conf.fields);
+    function builder() {
+        if (grid)
+            return;
+
+        /* Request data */
+        if (!conf.fields) {
+            var p = {};
+            if (conf.list) p['list'] = conf.list;
+            tvheadend.Ajax({
+                url: conf.url + '/class',
+                params: p,
+                success: function(d)
+                {
+                    var d = json_decode(d);
+                    build(d);
+                }
+            });
+        } else {
+            build(conf.fields);
+        }
     }
+
+    function destroyer() {
+        if (grid === null || !tvheadend.dynamic)
+            return;
+        if (conf.comet)
+            tvheadend.comet.removeListener(conf.comet, update);
+        if (event)
+            tvheadend.comet.removeListener(event, update);
+        dpanel.removeAll(true);
+        store.destroy();
+        grid = null;
+        store = null;
+        auto = null;
+        event = null;
+        if (conf.destroyer)
+            conf.destroyer(conf);
+    }
+
+    var dpanel = new Ext.Panel({
+        border: false,
+        header: false,
+        layout: 'fit',
+        title: conf.titleP || '',
+        iconCls: conf.iconCls || ''
+    });
+
+    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+    tvheadend.panelreg(panel, dpanel, builder, destroyer);
 };
 
 /*
@@ -1276,231 +1320,271 @@ tvheadend.idnode_grid = function(panel, conf)
  */
 tvheadend.idnode_form_grid = function(panel, conf)
 {
-    var buttons = [];
-    var plugins = conf.plugins || [];
-    var saveBtn = null;
-    var undoBtn = null;
-    var addBtn = null;
-    var delBtn = null;
-    var current = null;
-    var grid = null;
     var mpanel = null;
+    var store = null;
 
-    /* Store */
-    var store = new Ext.data.JsonStore({
-        root: 'entries',
-        url: 'api/idnode/load',
-        baseParams: {
-            enum: 1,
-            'class': conf.clazz
-        },
-        autoLoad: true,
-        id: 'key',
-        totalProperty: 'total',
-        fields: ['key','val'],
-        remoteSort: false,
-        pruneModifiedRecords: true,
-        sortInfo: {
-            field: 'val',
-            direction: 'ASC'
-        },
-    });
+    var update = function(o) {
+        if (store)
+            store.reload();
+    };
 
-    /* Model */
-    var model = new Ext.grid.ColumnModel({
-        defaultSortable: true,
-        columns: [{
-            width: 300,
-            id: 'val',
-            header: conf.titleC,
-            sortable: true,
-            dataIndex: 'val'
-        }]
-    });
+    function builder() {
+        if (mpanel)
+            return;
 
-    /* Selection */
-    var select = new Ext.grid.RowSelectionModel({
-        singleSelect: true
-    });
+        if (conf.builder)
+            conf.builder(conf);
 
-    /* Event handlers */
-    select.on('selectionchange', function(s) {
-        roweditor(s.getSelected());
-        if (conf.selected)
-            conf.selected(s);
-    });
+        var buttons = [];
+        var plugins = conf.plugins || [];
+        var saveBtn = null;
+        var undoBtn = null;
+        var addBtn = null;
+        var delBtn = null;
+        var current = null;
 
-    /* Top bar */
-    saveBtn = new Ext.Toolbar.Button({
-        tooltip: 'Save pending changes (marked with red border)',
-        iconCls: 'save',
-        text: 'Save',
-        disabled: true,
-        handler: function() {
-            var node = current.editor.getForm().getFieldValues();
-            node.uuid = current.uuid;
+        /* Store */
+        store = new Ext.data.JsonStore({
+            root: 'entries',
+            url: 'api/idnode/load',
+            baseParams: {
+                enum: 1,
+                'class': conf.clazz
+            },
+            autoLoad: true,
+            id: 'key',
+            totalProperty: 'total',
+            fields: ['key','val'],
+            remoteSort: false,
+            pruneModifiedRecords: true,
+            sortInfo: {
+                field: 'val',
+                direction: 'ASC'
+            }
+        });
+
+        store.on('load', function(st) {
+            if (!current)
+                grid.getSelectionModel().selectFirstRow();
+        });
+
+        /* Model */
+        var model = new Ext.grid.ColumnModel({
+            defaultSortable: true,
+            columns: [{
+                width: 300,
+                id: 'val',
+                header: conf.titleC,
+                sortable: true,
+                dataIndex: 'val'
+            }]
+        });
+
+        /* Selection */
+        var select = new Ext.grid.RowSelectionModel({
+            singleSelect: true
+        });
+
+        /* Event handlers */
+        select.on('selectionchange', function(s) {
+            roweditor(s.getSelected());
+            if (conf.selected)
+                conf.selected(s);
+        });
+
+        /* Top bar */
+        saveBtn = new Ext.Toolbar.Button({
+            tooltip: 'Save pending changes (marked with red border)',
+            iconCls: 'save',
+            text: 'Save',
+            disabled: true,
+            handler: function() {
+                var node = current.editor.getForm().getFieldValues();
+                node.uuid = current.uuid;
+                tvheadend.Ajax({
+                    url: 'api/idnode/save',
+                    params: {
+                        node: Ext.encode(node)
+                    },
+                    success: function() {
+                        store.reload()
+                    }
+                });
+            }
+        });
+        buttons.push(saveBtn);
+        undoBtn = new Ext.Toolbar.Button({
+            tooltip: 'Revert pending changes (marked with red border)',
+            iconCls: 'undo',
+            text: 'Undo',
+            disabled: true,
+            handler: function() {
+                if (current)
+                    current.editor.getForm().reset();
+            }
+        });
+        buttons.push(undoBtn);
+        buttons.push('-');
+        if (conf.add) {
+            addBtn = new Ext.Toolbar.Button({
+                tooltip: 'Add a new entry',
+                iconCls: 'add',
+                text: 'Add',
+                disabled: false,
+                handler: function() {
+                    tvheadend.idnode_create(conf.add, true);
+                }
+            });
+            buttons.push(addBtn);
+        }
+        if (conf.del) {
+            delBtn = new Ext.Toolbar.Button({
+                tooltip: 'Delete selected entries',
+                iconCls: 'remove',
+                text: 'Delete',
+                disabled: true,
+                handler: function() {
+                    if (current) {
+                        tvheadend.Ajax({
+                            url: 'api/idnode/delete',
+                            params: {
+                                uuid: current.uuid
+                            },
+                            success: function(d)
+                            {
+                                store.reload();
+                                grid.getSelectionModel().selectFirstRow();
+                            }
+                        });
+                    }
+                }
+            });
+            buttons.push(delBtn);
+        }
+        if (conf.add || conf.del)
+            buttons.push('-');
+
+        /* Extra buttons */
+        if (conf.tbar) {
+            buttons.push('-');
+            for (i = 0; i < conf.tbar.length; i++) {
+                if (conf.tbar[i].callback) {
+                    conf.tbar[i].handler = function(b, e) {
+                        this.callback(this, e, store, select);
+                    };
+                }
+                buttons.push(conf.tbar[i]);
+            }
+        }
+
+        /* Help */
+        if (conf.help) {
+            buttons.push('->');
+            buttons.push({
+                text: 'Help',
+                handler: conf.help
+            });
+        }
+
+        function roweditor(r) {
+            if (!r || !r.id)
+                return;
             tvheadend.Ajax({
-                url: 'api/idnode/save',
+                url: 'api/idnode/load',
                 params: {
-                    node: Ext.encode(node)
+                    uuid: r.id,
+                    meta: 1
                 },
-                success: function() {
-                    store.reload()
+                success: function(d) {
+                    d = json_decode(d);
+                    if (current)
+                        mpanel.remove(current.editor);
+                    var editor = new tvheadend.idnode_editor(d[0], {
+                                    title: 'Parameters',
+                                    labelWidth: 300,
+                                    fixedHeight: true,
+                                    help: conf.help || null,
+                                    inTabPanel: true,
+                                    noButtons: true,
+                                    noautoWidth: true,
+                                    width: 730
+                                });
+                    current = {
+                        uuid: d[0].id,
+                        editor: editor
+                    }
+                    saveBtn.setDisabled(false);
+                    undoBtn.setDisabled(false);
+                    delBtn.setDisabled(false);
+                    mpanel.add(editor);
+                    mpanel.doLayout();
                 }
             });
         }
-    });
-    buttons.push(saveBtn);
-    undoBtn = new Ext.Toolbar.Button({
-        tooltip: 'Revert pending changes (marked with red border)',
-        iconCls: 'undo',
-        text: 'Undo',
-        disabled: true,
-        handler: function() {
-            if (current)
-                current.editor.getForm().reset();
-        }
-    });
-    buttons.push(undoBtn);
-    buttons.push('-');
-    if (conf.add) {
-        addBtn = new Ext.Toolbar.Button({
-            tooltip: 'Add a new entry',
-            iconCls: 'add',
-            text: 'Add',
-            disabled: false,
-            handler: function() {
-                tvheadend.idnode_create(conf.add, true);
-            }
-        });
-        buttons.push(addBtn);
-    }
-    if (conf.del) {
-        delBtn = new Ext.Toolbar.Button({
-            tooltip: 'Delete selected entries',
-            iconCls: 'remove',
-            text: 'Delete',
-            disabled: true,
-            handler: function() {
-                if (current) {
-                    tvheadend.Ajax({
-                        url: 'api/idnode/delete',
-                        params: {
-                            uuid: current.uuid
-                        },
-                        success: function(d)
-                        {
-                            store.reload();
-                            grid.getSelectionModel().selectFirstRow();
-                        }
-                    });
-                }
-            }
-        });
-        buttons.push(delBtn);
-    }
-    if (conf.add || conf.del)
-        buttons.push('-');
 
-    /* Extra buttons */
-    if (conf.tbar) {
-        buttons.push('-');
-        for (i = 0; i < conf.tbar.length; i++) {
-            if (conf.tbar[i].callback) {
-                conf.tbar[i].handler = function(b, e) {
-                    this.callback(this, e, store, select);
-                };
-            }
-            buttons.push(conf.tbar[i]);
-        }
-    }
-
-    /* Help */
-    if (conf.help) {
-        buttons.push('->');
-        buttons.push({
-            text: 'Help',
-            handler: conf.help
-        });
-    }
-
-    function roweditor(r) {
-        if (!r || !r.id)
-            return;
-        tvheadend.Ajax({
-            url: 'api/idnode/load',
-            params: {
-                uuid: r.id,
-                meta: 1
+        /* Grid Panel (Selector) */
+        var grid = new Ext.grid.GridPanel({
+            width: 200,
+            stripeRows: true,
+            store: store,
+            cm: model,
+            selModel: select,
+            plugins: plugins,
+            border: false,
+            viewConfig: {
+                forceFit: true
             },
-            success: function(d) {
-                d = json_decode(d);
-                if (current)
-                    mpanel.remove(current.editor);
-                var editor = new tvheadend.idnode_editor(d[0], {
-                                title: 'Parameters',
-                                labelWidth: 300,
-                                fixedHeight: true,
-                                help: conf.help || null,
-                                inTabPanel: true,
-                                noButtons: true
-                            });
-                current = {
-                    uuid: d[0].id,
-                    editor: editor
+            listeners : {
+                render : {
+                    fn :  function() {
+                        if (!current)
+                            grid.getSelectionModel().selectFirstRow();
+                    }
                 }
-                saveBtn.setDisabled(false);
-                undoBtn.setDisabled(false);
-                delBtn.setDisabled(false);
-                mpanel.add(editor);
-                mpanel.doLayout();
             }
         });
+
+        var mpanel = new Ext.Panel({
+            tbar: buttons,
+            layout: 'hbox',
+            padding: 5,
+            border: false,
+            layoutConfig: {
+               align: 'stretch'
+            },
+            items: [grid]
+        });
+        
+        dpanel.add(mpanel);
+        dpanel.doLayout(false, true);
+
+        if (conf.comet)
+            tvheadend.comet.on(conf.comet, update);
     }
 
-    /* Grid Panel (Selector) */
-    grid = new Ext.grid.GridPanel({
-        width: 200,
-        stripeRows: true,
-        store: store,
-        cm: model,
-        selModel: select,
-        plugins: plugins,
+    function destroyer() {
+        if (mpanel === null || !tvheadend.dynamic)
+            return;
+        if (conf.comet)
+            tvheadend.comet.removeListener(conf.comet, update);
+        dpanel.removeAll(true);
+        store.destroy();
+        mpanel = null;
+        store = null;
+        if (conf.destroyer)
+            conf.destroyer(conf);
+    }
+
+    var dpanel = new Ext.Panel({
         border: false,
-        viewConfig: {
-            forceFit: true
-        },
-        listeners : {
-            render : {
-                fn :  function() {
-                    if (!current)
-                        grid.getSelectionModel().selectFirstRow();
-                }
-            }
-        }
+        header: false,
+        layout: 'fit',
+        title: conf.titleP || '',
+        iconCls: conf.iconCls || ''
     });
 
-    mpanel = new Ext.Panel({
-       tbar: buttons,
-       title: conf.titleP || '',
-       iconCls: conf.iconCls || '',
-       layout: 'hbox',
-       padding: 5,
-       border: false,
-       layoutConfig: {
-          align: 'stretch'
-       },
-       items: [grid]
-    });
-
-    tvheadend.paneladd(panel, mpanel, conf.tabIndex);
-
-    /* Add comet listeners */
-    var update = function(o) {
-        store.reload();
-    };
-    if (conf.comet)
-        tvheadend.comet.on(conf.comet, update);
+    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+    tvheadend.panelreg(panel, dpanel, builder, destroyer);
 };
 
 /*
@@ -1540,8 +1624,10 @@ tvheadend.idnode_tree = function(panel, conf)
         }),
         listeners: {
             click: function(n) {
-                if (current)
+                if (current) {
                     panel.remove(current);
+                    current = null;
+                }
                 if (!n.isRoot)
                     current = panel.add(new tvheadend.idnode_editor(n.attributes, {
                         title: 'Parameters',

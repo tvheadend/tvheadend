@@ -195,40 +195,54 @@ tvheadend.show_service_streams = function(data) {
 
 tvheadend.services = function(panel, index)
 {
-    var mapButton = new Ext.Toolbar.Button({
-        tooltip: 'Map services to channels',
-        iconCls: 'clone',
-        text: 'Map All',
-        callback: tvheadend.service_mapper,
-        disabled: false
-    });
-    var selected = function(s)
-    {
-        if (s.getCount() > 0)
-            mapButton.setText('Map Selected');
-        else
-            mapButton.setText('Map All');
-    };
-    var actions = new Ext.ux.grid.RowActions({
-        header: 'Details',
-        width: 10,
-        actions: [{
-                iconCls: 'info',
-                qtip: 'Detailed stream info',
-                cb: function(grid, rec, act, row, col) {
-                    Ext.Ajax.request({
-                        url: 'api/service/streams',
-                        params: {
-                            uuid: rec.id
-                        },
-                        success: function(r, o) {
-                            var d = Ext.util.JSON.decode(r.responseText);
-                            tvheadend.show_service_streams(d);
-                        }
-                    });
-                }
-            }]
-    });
+    function builder(conf) {
+        var mapButton = new Ext.Toolbar.Button({
+            tooltip: 'Map services to channels',
+            iconCls: 'clone',
+            text: 'Map All',
+            callback: tvheadend.service_mapper,
+            disabled: false
+        });
+        var selected = function(s)
+        {
+            if (s.getCount() > 0)
+                mapButton.setText('Map Selected');
+            else
+                mapButton.setText('Map All');
+        };
+        var actions = new Ext.ux.grid.RowActions({
+            header: 'Details',
+            width: 10,
+            actions: [{
+                    iconCls: 'info',
+                    qtip: 'Detailed stream info',
+                    cb: function(grid, rec, act, row, col) {
+                        Ext.Ajax.request({
+                            url: 'api/service/streams',
+                            params: {
+                                uuid: rec.id
+                            },
+                            success: function(r, o) {
+                                var d = Ext.util.JSON.decode(r.responseText);
+                                tvheadend.show_service_streams(d);
+                            }
+                        });
+                    }
+            }],
+            destroy: function() {
+            }
+        });
+        conf.tbar = [mapButton];
+        conf.selected = selected;
+        conf.lcol[1] = actions;
+        conf.plugins = [actions];
+    }
+    function destroyer(conf) {
+        delete conf.tbar;
+        delete conf.plugins;
+        conf.lcol[1] = {};
+        conf.selected = null;
+    }
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/service',
         titleS: 'Service',
@@ -237,8 +251,6 @@ tvheadend.services = function(panel, index)
         hidemode: true,
         add: false,
         del: false,
-        selected: selected,
-        tbar: [mapButton],
         help: function() {
             new tvheadend.help('Services', 'config_services.html');
         },         
@@ -252,13 +264,16 @@ tvheadend.services = function(panel, index)
                            "?title=" + encodeURIComponent(title) + "'>Play</a>";
                 }
             },
-            actions
+            {
+                /* placeholder for actions */
+            }
         ],
-        plugins: [actions],
         sort: {
             field: 'svcname',
             direction: 'ASC'
-        }
+        },
+        builder: builder,
+        destroyer: destroyer
     });
 };
 

@@ -4,17 +4,6 @@
 
 tvheadend.acleditor = function(panel, index)
 {
-    panel2 = new Ext.TabPanel({
-        activeTab: 0,
-        autoScroll: true,
-        title: 'Access Control',
-        iconCls: 'group',
-        tabIndex: index,
-        items: []
-    });
-
-    tvheadend.paneladd(panel, panel2, index);
-
     var list = 'enabled,username,password,prefix,streaming,adv_streaming,' +
                'dvr,dvr_config,webui,admin,channel_min,channel_max,channel_tag,' +
                'comment';
@@ -23,6 +12,7 @@ tvheadend.acleditor = function(panel, index)
         url: 'api/access/entry',
         titleS: 'Access Entry',
         titleP: 'Access Entries',
+        iconCls: 'group',
         columns: {
             username:      { width: 250 },
             password:      { width: 250 },
@@ -35,7 +25,7 @@ tvheadend.acleditor = function(panel, index)
             channel_min:   { width: 100 },
             channel_max:   { width: 100 },
         },
-        tabIndex: 0,
+        tabIndex: index,
         edit: {
             params: {
                 list: list,
@@ -55,6 +45,4 @@ tvheadend.acleditor = function(panel, index)
             new tvheadend.help('Access Control Entries', 'config_access.html');
         },
     });
-
-    return panel;
 };

@@ -71,7 +71,9 @@ tvheadend.dvrRowActions = function() {
                     new tvheadend.dvrDetails(grid.getStore().getAt(row).id);
                 }
             }
-        ]
+        ],
+        destroy: function() {
+        }
     });
 }
 
