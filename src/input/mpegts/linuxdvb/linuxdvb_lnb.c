@@ -105,6 +105,7 @@ static int
 linuxdvb_lnb_standard_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
+  /* en50494 does not use the voltage tune. this is happend in the switch */
   if (ls->lse_en50494)
     return 0;
 
