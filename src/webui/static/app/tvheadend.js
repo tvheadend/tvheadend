@@ -1,3 +1,4 @@
+tvheadend.dynamic = false;
 tvheadend.accessupdate = null;
 tvheadend.capabilties = null;
 tvheadend.dvrpanel = null;
@@ -39,27 +40,36 @@ tvheadend.help = function(title, pagename) {
 };
 
 tvheadend.paneladd = function(dst, add, idx) {
-  if (idx != null)
-    dst.insert(idx, add);
-  else
-    dst.add(add);
+    if (idx != null)
+        dst.insert(idx, add);
+    else
+        dst.add(add);
 };
 
+tvheadend.panelreg = function(tabpanel, panel, builder, destroyer) {
+    /* the 'activate' event does not work in ExtJS 3.4 */
+    tabpanel.on('beforetabchange', function(tp, p) {
+        if (p == panel)
+            builder();
+    });
+    panel.on('deactivate', destroyer);
+}
+
 tvheadend.Ajax = function(conf) {
-  var orig_success = conf.success;
-  var orig_failure = conf.failure;
-  conf.success = function(d) {
-    tvheadend.loading(0);
-    if (orig_success)
-      orig_success(d);
-  }
-  conf.failure = function(d) {
-    tvheadend.loading(0);
-    if (orig_failure)
-      orig_failure(d);
-  }
-  tvheadend.loading(1);
-  Ext.Ajax.request(conf);
+    var orig_success = conf.success;
+    var orig_failure = conf.failure;
+    conf.success = function(d) {
+        tvheadend.loading(0);
+        if (orig_success)
+            orig_success(d);
+    }
+    conf.failure = function(d) {
+        tvheadend.loading(0);
+        if (orig_failure)
+            orig_failure(d);
+    }
+    tvheadend.loading(1);
+    Ext.Ajax.request(conf);
 };
 
 tvheadend.loading = function(on) {
