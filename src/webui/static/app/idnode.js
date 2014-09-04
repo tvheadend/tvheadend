@@ -1290,9 +1290,9 @@ tvheadend.idnode_grid = function(panel, conf)
         if (grid === null || !tvheadend.dynamic)
             return;
         if (conf.comet)
-            tvheadend.comet.removeListener(conf.comet, update);
+            tvheadend.comet.un(conf.comet, update);
         if (event)
-            tvheadend.comet.removeListener(event, update);
+            tvheadend.comet.un(event, update);
         dpanel.removeAll(true);
         store.destroy();
         grid = null;
@@ -1566,7 +1566,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (mpanel === null || !tvheadend.dynamic)
             return;
         if (conf.comet)
-            tvheadend.comet.removeListener(conf.comet, update);
+            tvheadend.comet.un(conf.comet, update);
         dpanel.removeAll(true);
         store.destroy();
         mpanel = null;
@@ -1592,61 +1592,20 @@ tvheadend.idnode_form_grid = function(panel, conf)
  */
 tvheadend.idnode_tree = function(panel, conf)
 {
-    var current = null;
+    var tree = null;
     var events = {};
-    var params = conf.params || {};
-    var loader = new Ext.tree.TreeLoader({
-        dataUrl: conf.url,
-        baseParams: params,
-        preloadChildren: conf.preload,
-        nodeParameter: 'uuid'
-    });
 
-    loader.on('load', function(l, n, r) {
-        if (n.uuid && n.event && !(n.event in events)) {
-          events[n.event] = 1;
-          tvheadend.comet.on(n.event, function(o) {
-            if (o.uuid)
-                tree.getRootNode().reload();
-          });
-        }
-    });
-
-    var tree = new Ext.tree.TreePanel({
-        loader: loader,
-        flex: 1,
-        autoScroll: true,
-        border: false,
-        animate: false,
-        root: new Ext.tree.AsyncTreeNode({
-            id: conf.root || 'root',
-            text: conf.title || ''
-        }),
-        listeners: {
-            click: function(n) {
-                if (current) {
-                    panel.remove(current);
-                    current = null;
-                }
-                if (!n.isRoot)
-                    current = panel.add(new tvheadend.idnode_editor(n.attributes, {
-                        title: 'Parameters',
-                        fixedHeight: true,
-                        help: conf.help || null
-                    }));
-                panel.doLayout();
-            }
-        }
-    });
-
-    if (conf.comet) {
-        tvheadend.comet.on(conf.comet, function(o) {
-            if (o.reload)
-                tree.getRootNode().reload();
-        });
+    function update(o) {
+        if (tree && o.reload)
+            tree.getRootNode().reload();
     }
 
-    tvheadend.comet.on('title', function(o) {
+    function updatenode(o) {
+        if (o.uuid)
+            tree.getRootNode().reload();
+    }
+
+    function updatetitle(o) {
         var n = tree.getNodeById(o.uuid);
         if (n) {
             if (o.text)
@@ -1654,24 +1613,114 @@ tvheadend.idnode_tree = function(panel, conf)
             tree.getRootNode().reload();
             // cannot get this to properly reload children and maintain state
         }
-    });
+    }
 
-    var mpanel = new Ext.Panel({
-        title: conf.title || '',
-        layout: 'hbox',
-        flex: 1,
-        padding: 5,
+    function builder() {
+        if (tree)
+            return;
+        if (conf.builder)
+            conf.builder(conf);
+
+        var current = null;
+        var first = true;
+        var params = conf.params || {};
+        var loader = new Ext.tree.TreeLoader({
+            dataUrl: conf.url,
+            baseParams: params,
+            preloadChildren: conf.preload,
+            nodeParameter: 'uuid'
+        });
+
+        loader.on('load', function(l, n, r) {
+            var event = n.attributes.event;
+            if (n.attributes.uuid && event && !(event in events)) {
+                events[event] = 1;
+                tvheadend.comet.on(event, updatenode);
+            }
+            if (first) { /* hack */
+                dpanel.doLayout();
+                first = false;
+            }
+        });
+
+        tree = new Ext.tree.TreePanel({
+            loader: loader,
+            width: 550,
+            flex: 1,
+            autoScroll: true,
+            border: false,
+            animate: false,
+            root: new Ext.tree.AsyncTreeNode({
+                id: conf.root || 'root',
+                text: conf.title || ''
+            }),
+            listeners: {
+                click: function(n) {
+                    if (current) {
+                        mpanel.remove(current);
+                        current = null;
+                    }
+                    if (!n.isRoot)
+                        current = mpanel.add(new tvheadend.idnode_editor(n.attributes, {
+                            title: 'Parameters',
+                            width: 550,
+                            noautoWidth: true,
+                            fixedHeight: true,
+                            help: conf.help || null
+                        }));
+                    mpanel.doLayout();
+                }
+            }
+        });
+
+        var mpanel = new Ext.Panel({
+            layout: 'hbox',
+            flex: 1,
+            padding: 5,
+            border: false,
+            layoutConfig: {
+                align: 'stretch'
+            },
+            items: [tree]
+        });
+
+        tree.on('beforerender', function() {
+            // To be honest this isn't quite right, but it'll do
+            tree.expandAll();
+        });
+
+        dpanel.add(mpanel);
+        dpanel.doLayout(false, true);
+
+        if (conf.comet)
+            tvheadend.comet.on(conf.comet, update);
+
+        tvheadend.comet.on('title', updatetitle);
+    }
+
+    function destroyer() {
+        if (tree === null || !tvheadend.dynamic)
+            return;
+        for (var event in events)
+            tvheadend.comet.un(event, updatenode);
+        delete events;
+        events = {};
+        tvheadend.comet.un('title', updatetitle);
+        if (conf.comet)
+            tvheadend.comet.un(conf.comet, update);
+        dpanel.removeAll(true);
+        tree = null;
+        if (conf.destroyer)
+            conf.destroyer(conf);
+    }
+
+    var dpanel = new Ext.Panel({
         border: false,
-        layoutConfig: {
-            align: 'stretch'
-        },
-        items: [tree]
+        header: false,
+        layout: 'fit',
+        title: conf.title || '',
     });
 
-    tvheadend.paneladd(panel, mpanel, conf.tabIndex);
-
-    tree.on('beforerender', function() {
-        // To be honest this isn't quite right, but it'll do
-        tree.expandAll();
-    });
+    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+    tvheadend.panelreg(panel, dpanel, builder, destroyer);
 };
