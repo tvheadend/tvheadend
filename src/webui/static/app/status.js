@@ -6,31 +6,23 @@ tvheadend.status_subs = function() {
     tvheadend.subsStore = new Ext.data.JsonStore({
         root: 'entries',
         totalProperty: 'totalCount',
-        fields: [{
-                name: 'id'
-            }, {
-                name: 'hostname'
-            }, {
-                name: 'username'
-            }, {
-                name: 'title'
-            }, {
-                name: 'channel'
-            }, {
-                name: 'service'
-            }, {
-                name: 'state'
-            }, {
-                name: 'errors'
-            }, {
-                name: 'in'
-            }, {
-                name: 'out'
-            }, {
+        fields: [
+            { name: 'id' },
+            { name: 'hostname' },
+            { name: 'username' },
+            { name: 'title' },
+            { name: 'channel' },
+            { name: 'service' },
+            { name: 'state' },
+            { name: 'errors' },
+            { name: 'in' },
+            { name: 'out' },
+            {
                 name: 'start',
                 type: 'date',
                 dateFormat: 'U' /* unix time */
-            }],
+            }
+        ],
         url: 'api/status/subscriptions',
         autoLoad: true,
         id: 'id'
@@ -74,60 +66,71 @@ tvheadend.status_subs = function() {
         return '<a href="' + href + '">' + txt + '</a>';
     }
 
-    var subsCm = new Ext.grid.ColumnModel([{
+    var subsCm = new Ext.grid.ColumnModel([
+        {
             width: 50,
             id: 'hostname',
             header: "Hostname",
             dataIndex: 'hostname'
-        }, {
+        },
+        {
             width: 50,
             id: 'username',
             header: "Username",
             dataIndex: 'username'
-        }, {
+        },
+        {
             width: 80,
             id: 'title',
             header: "Title",
             dataIndex: 'title'
-        }, {
+        },
+        {
             width: 50,
             id: 'channel',
             header: "Channel",
             dataIndex: 'channel'
-        }, {
+        },
+        {
             width: 200,
             id: 'service',
             header: "Service",
             dataIndex: 'service'
-        }, {
+        }, 
+        {
             width: 50,
             id: 'start',
             header: "Start",
             dataIndex: 'start',
             renderer: renderDate
-        }, {
+        },
+        {
             width: 50,
             id: 'state',
             header: "State",
             dataIndex: 'state'
-        }, {
+        },
+        {
             width: 50,
             id: 'errors',
             header: "Errors",
             dataIndex: 'errors'
-        }, {
+        },
+        {
             width: 50,
             id: 'in',
             header: "Input (kb/s)",
             dataIndex: 'in',
             renderer: renderBw
-        }, {
+        },
+        {
             width: 50,
             id: 'out',
             header: "Output (kb/s)",
             dataIndex: 'out',
             renderer: renderBw
-        }]);
+        }
+    ]);
 
     var subs = new Ext.grid.GridPanel({
         border: false,
@@ -155,45 +158,26 @@ tvheadend.status_streams = function() {
     tvheadend.streamStatusStore = new Ext.data.JsonStore({
         root: 'entries',
         totalProperty: 'totalCount',
-        fields: [{
-                name: 'uuid'
-            }, {
-                name: 'input'
-            }, {
-                name: 'username'
-            }, {
-                name: 'stream'
-            }, {
-                name: 'subs'
-            }, {
-                name: 'weight'
-            }, {
-                name: 'signal'
-            }, {
-                name: 'ber'
-            }, {
-                name: 'unc'
-            }, {
-                name: 'snr'
-            }, {
-                name: 'bps'
-            }, {
-                name: 'cc'
-            }, {
-                name: 'te'
-            }, {
-                name: 'signal_scale'
-            }, {
-                name: 'snr_scale'
-            }, {
-                name: 'ec_bit'
-            }, {
-                name: 'tc_bit'
-            }, {
-                name: 'ec_block'
-            }, {
-                name: 'tc_block'
-            }
+        fields: [
+            { name: 'uuid' },
+            { name: 'input' },
+            { name: 'username' },
+            { name: 'stream' },
+            { name: 'subs' },
+            { name: 'weight' },
+            { name: 'signal' },
+            { name: 'ber' },
+            { name: 'unc' },
+            { name: 'snr' },
+            { name: 'bps' },
+            { name: 'cc' },
+            { name: 'te' },
+            { name: 'signal_scale' },
+            { name: 'snr_scale' },
+            { name: 'ec_bit' },
+            { name: 'tc_bit' },
+            { name: 'ec_block' },
+            { name: 'tc_block' }
         ],
         url: 'api/status/inputs',
         autoLoad: true,
@@ -224,50 +208,61 @@ tvheadend.status_streams = function() {
         return per;
     }
 
-    var cm = new Ext.grid.ColumnModel([{
+    var cm = new Ext.grid.ColumnModel([
+        {
             width: 120,
             header: "Input",
             dataIndex: 'input'
-        }, {
+        },
+        {
             width: 100,
             header: "Stream",
             dataIndex: 'stream'
-        }, {
+        },
+        {
             width: 50,
             header: "Subs #",
             dataIndex: 'subs'
-        }, {
+        },
+        {
             width: 50,
             header: "Weight",
             dataIndex: 'weight'
-        }, {
+        },
+        {
             width: 50,
             header: "Bandwidth (kb/s)",
             dataIndex: 'bps',
             renderer: renderBw
-        }, {
+        },
+        {
             width: 50,
             header: "BER",
             dataIndex: 'ber',
             renderer: renderBer
-        }, {
+        },
+        {
             width: 50,
             header: "PER",
             dataIndex: 'tc_block',
             renderer: renderPer
-        }, {
+        },
+        {
             width: 50,
             header: "Uncorrected Blocks",
             dataIndex: 'unc'
-        }, {
+        },
+        {
             width: 50,
             header: "Transport Errors",
             dataIndex: 'te'
-        }, {
+        },
+        {
             width: 50,
             header: "Continuity Errors",
             dataIndex: 'cc'
-        }]);
+        }
+    ]);
 
     cm.config.push(new Ext.ux.grid.ProgressColumn({
         header: "SNR",
@@ -363,19 +358,17 @@ tvheadend.status_conns = function() {
     var store = new Ext.data.JsonStore({
         root: 'entries',
         totalProperty: 'totalCount',
-        fields: [{
-                name: 'id'
-            }, {
-                name: 'type'
-            }, {
-                name: 'peer'
-            }, {
-                name: 'user'
-            }, {
+        fields: [
+            { name: 'id' },
+            { name: 'type' },
+            { name: 'peer' },
+            { name: 'user' },
+            {
                 name: 'started',
                 type: 'date',
                 dateFormat: 'U' /* unix time */
-            }],
+            }
+        ],
         url: 'api/status/connections',
         autoLoad: true,
         id: 'id'
