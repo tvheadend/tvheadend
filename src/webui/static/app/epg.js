@@ -49,6 +49,17 @@ tvheadend.channelLookupName = function(key) {
     return channelString;
 };
 
+tvheadend.tagLookupName = function(key) {
+    tagString = "";
+
+    var index = tvheadend.channelTags.find('key', key);
+
+    if (index !== -1)
+        var tagString = tvheadend.channelTags.getAt(index).get('val');
+
+    return tagString;
+};
+
 // Store for duration filters - EPG, autorec dialog and autorec rules in the DVR grid
 // NB: 'no max' is defined as 9999999s, or about 3 months...
 
@@ -637,7 +648,7 @@ tvheadend.epg = function() {
                 : "<i>Don't care</i>";
         var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
                 : "<i>Don't care</i>";
-        var tag = epgStore.baseParams.tag ? epgStore.baseParams.tag
+        var tag = epgStore.baseParams.tag ? tvheadend.tagLookupName(epgStore.baseParams.tag)
                 : "<i>Don't care</i>";
         var contenttype = epgStore.baseParams.contenttype ? tvheadend.contentGroupLookupName(epgStore.baseParams.contenttype)
                 : "<i>Don't care</i>";

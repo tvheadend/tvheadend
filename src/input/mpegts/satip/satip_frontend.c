@@ -1270,6 +1270,8 @@ fast_exit:
             continue;
           break;
         }
+        if(ev[0].events & (TVHPOLL_ERR | TVHPOLL_HUP))
+          break;
       }
     }
     /* for sure - the second sequence */
@@ -1289,6 +1291,8 @@ fast_exit:
             continue;
           break;
         }
+        if(ev[0].events & (TVHPOLL_ERR | TVHPOLL_HUP))
+          break;
       }
     }
   }

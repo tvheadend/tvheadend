@@ -560,7 +560,7 @@ _dvr_autorec_add(const char *config_name,
     dae->dae_title = strdup(title);
   }
 
-  if(tag != NULL && (ct = channel_tag_find_by_name(tag, 0)) != NULL) {
+  if(tag != NULL && (ct = channel_tag_find_by_uuid(tag)) != NULL) {
     LIST_INSERT_HEAD(&ct->ct_autorecs, dae, dae_channel_tag_link);
     dae->dae_channel_tag = ct;
   }

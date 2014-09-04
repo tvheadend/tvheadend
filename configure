@@ -47,7 +47,36 @@ OPTIONS=(
 #
 
 . "$ROOTDIR/support/configure.inc"
-parse_args $*
+
+# ###########################################################################
+# Parse arguments
+# ###########################################################################
+opt=
+val=
+for opt do
+  val=${opt#*=}
+  opt=${opt%=*}
+  opt=${opt#*--}
+  case "$opt" in
+    help)
+      show_help
+      ;;
+    *dir|prefix)
+      eval "$opt=$val"
+      ;;
+    cc|cflags|ldflags|arch|cpu|platform|python)
+      eval "$(toupper $opt)=\"$val\""
+      ;;
+    enable-*)
+      opt=${opt#*-}
+      enable $opt 1
+      ;;
+    disable-*)
+      opt=${opt#*-}
+      disable $opt 1
+      ;;
+  esac
+done
 
 # ###########################################################################
 # Checks
