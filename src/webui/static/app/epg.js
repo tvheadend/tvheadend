@@ -251,7 +251,7 @@ tvheadend.epg = function() {
         var now = new Date;
         var start = record.get('start');
 
-        if (now.getTime() > start.getTime()) {
+        if (now.getTime() >= start.getTime()) {
             meta.attr = 'style="font-weight:bold;"';
         }
     }
@@ -309,7 +309,7 @@ tvheadend.epg = function() {
                 var now = new Date();
 
                 // Only render a progress bar for currently running programmes
-                if (now <= end && now >= start)
+                if (now >= start)
                     return (now - start) / 1000 / duration * 100;
                 else
                     return "";
