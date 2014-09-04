@@ -1,4 +1,4 @@
-tvheadend.dynamic = false;
+tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilties = null;
 tvheadend.dvrpanel = null;
