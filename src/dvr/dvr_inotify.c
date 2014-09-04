@@ -115,16 +115,15 @@ void dvr_inotify_add ( dvr_entry_t *de )
     SKEL_USED(dvr_inotify_entry_skel);
     e->path = strdup(e->path);
     e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
-    if (e->fd == -1) {
-      tvhlog(LOG_ERR, "dvr", "failed to add inotify watch to %s (err=%s)",
-             e->path, strerror(errno));
-      free(path);
-      dvr_inotify_del(de);
-      return;
-    }
   }
 
   LIST_INSERT_HEAD(&e->entries, de, de_inotify_link);
+
+  if (e->fd < 0) {
+    tvhlog(LOG_ERR, "dvr", "failed to add inotify watch to %s (err=%s)",
+           e->path, strerror(errno));
+    dvr_inotify_del(de);
+  }
 
   free(path);
 }
@@ -146,7 +145,8 @@ void dvr_inotify_del ( dvr_entry_t *de )
     LIST_REMOVE(det, de_inotify_link);
     if (LIST_FIRST(&e->entries) == NULL) {
       RB_REMOVE(&_inot_tree, e, link);
-      inotify_rm_watch(_inot_fd, e->fd);
+      if (e->fd >= 0)
+        inotify_rm_watch(_inot_fd, e->fd);
       free(e->path);
       free(e);
     }
@@ -180,7 +180,7 @@ _dvr_inotify_find2
   snprintf(path, sizeof(path), "%s/%s", die->path, name);
   
   LIST_FOREACH(de, &die->entries, de_inotify_link)
-    if (!strcmp(path, de->de_filename))
+    if (de->de_filename && !strcmp(path, de->de_filename))
       break;
   
   return de;

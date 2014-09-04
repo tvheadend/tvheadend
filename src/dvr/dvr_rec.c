@@ -66,9 +66,6 @@ dvr_rec_subscribe(dvr_entry_t *de)
   int flags;
 
   assert(de->de_s == NULL);
-  assert(!de->de_locked);
-
-  de->de_locked = 1;
 
   if(de->de_pri < 5)
     weight = prio2weight[de->de_pri];
@@ -120,8 +117,6 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
     globalheaders_destroy(de->de_gh);
 
   de->de_last_error = stopcode;
-
-  de->de_locked = 0;
 }
 
 

@@ -83,20 +83,21 @@ extern struct dvr_config_list dvrconfigs;
 
 extern struct dvr_entry_list dvrentries;
 
-#define DVR_DIR_PER_DAY		0x1
-#define DVR_DIR_PER_CHANNEL	0x2
-#define DVR_CHANNEL_IN_TITLE	0x4
-#define DVR_DATE_IN_TITLE	0x8
-#define DVR_TIME_IN_TITLE	0x10
-#define DVR_WHITESPACE_IN_TITLE	0x20
-#define DVR_DIR_PER_TITLE	0x40
-#define DVR_EPISODE_IN_TITLE	0x80
-#define DVR_CLEAN_TITLE	        0x100
-#define DVR_TAG_FILES           0x200
-#define DVR_SKIP_COMMERCIALS    0x400
-#define DVR_SUBTITLE_IN_TITLE	0x800
-#define DVR_EPISODE_BEFORE_DATE	0x1000
-#define DVR_EPISODE_DUPLICATE_DETECTION 0x2000
+#define DVR_FLAGS_VALID                    0x1
+#define DVR_DIR_PER_DAY                    0x2
+#define DVR_DIR_PER_CHANNEL                0x4
+#define DVR_CHANNEL_IN_TITLE               0x8
+#define DVR_DATE_IN_TITLE                 0x10
+#define DVR_TIME_IN_TITLE                 0x20
+#define DVR_WHITESPACE_IN_TITLE           0x40
+#define DVR_DIR_PER_TITLE                 0x80
+#define DVR_EPISODE_IN_TITLE	         0x100
+#define DVR_CLEAN_TITLE	                 0x200
+#define DVR_TAG_FILES                    0x400
+#define DVR_SKIP_COMMERCIALS             0x800
+#define DVR_SUBTITLE_IN_TITLE	        0x1000
+#define DVR_EPISODE_BEFORE_DATE	        0x2000
+#define DVR_EPISODE_DUPLICATE_DETECTION 0x4000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -190,7 +191,6 @@ typedef struct dvr_entry {
    * Recording state (onyl valid if de_sched_state == DVR_RECORDING)
    */
   dvr_rs_state_t de_rec_state;
-  int de_locked;
 
   /**
    * Number of errors (only to be modified by the recording thread)
@@ -297,6 +297,12 @@ extern const idclass_t dvr_autorec_entry_class;
 
 void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
+static inline int dvr_config_is_valid(dvr_config_t *cfg)
+  { return !!(cfg->dvr_flags & DVR_FLAGS_VALID); }
+
+static inline int dvr_config_is_default(dvr_config_t *cfg)
+  { return cfg->dvr_config_name == NULL || cfg->dvr_config_name[0] == '\0'; }
+
 dvr_config_t *dvr_config_find_by_name(const char *name);
 
 dvr_config_t *dvr_config_find_by_name_default(const char *name);
@@ -310,7 +316,13 @@ void dvr_config_delete(const char *name);
 
 void dvr_config_save(dvr_config_t *cfg);
 
-int dvr_entry_get_mc( dvr_entry_t *de);
+static inline int dvr_entry_is_editable(dvr_entry_t *de)
+  { return de->de_sched_state == DVR_SCHEDULED; }
+
+static inline int dvr_entry_is_valid(dvr_entry_t *de)
+  { return de->de_refcnt > 0; }
+
+int dvr_entry_get_mc(dvr_entry_t *de);
 
 void dvr_entry_save(dvr_entry_t *de);
 
