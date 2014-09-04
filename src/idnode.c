@@ -473,6 +473,8 @@ idnode_find(const char *uuid, const idclass_t *idc)
   idnode_t skel, *r;
 
   tvhtrace("idnode", "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
+  if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
+    return NULL;
   if(hex2bin(skel.in_uuid, sizeof(skel.in_uuid), uuid))
     return NULL;
   r = RB_FIND(&idnodes, &skel, in_link, in_cmp);

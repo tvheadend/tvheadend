@@ -83,6 +83,8 @@ tvheadend.dvrRowActions = function() {
 tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
+    var list = 'disp_title,start,start_extra,stop,stop_extra,' +
+               'channel,config_name';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
@@ -94,10 +96,14 @@ tvheadend.dvr_upcoming = function(panel, index) {
         add: {
             url: 'api/dvr/entry',
             params: {
-               list: 'disp_title,start,start_extra,stop,stop_extra,' +
-                     'channel,config_name',
+               list: list,
             },
             create: { }
+        },
+        edit: {
+            params: {
+                list: list,
+            }
         },
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
