@@ -852,6 +852,7 @@ mpegts_input_table_thread ( void *aux )
 {
   mpegts_table_feed_t   *mtf;
   mpegts_input_t        *mi = aux;
+  int i;
 
   pthread_mutex_lock(&mi->mi_output_lock);
   while (mi->mi_running) {
@@ -867,7 +868,18 @@ mpegts_input_table_thread ( void *aux )
     /* Process */
     if (mtf->mtf_mux) {
       pthread_mutex_lock(&global_lock);
-      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
+      if (mi->mi_destroyed_muxes) {
+        for (i = 0; i < mi->mi_destroyed_muxes_count; i++)
+          if (mtf->mtf_mux == mi->mi_destroyed_muxes[i])
+            goto clean;
+        mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
+clean:
+        free(mi->mi_destroyed_muxes);
+        mi->mi_destroyed_muxes = NULL;
+        mi->mi_destroyed_muxes_count = 0;
+      } else {
+        mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
+      }
       pthread_mutex_unlock(&global_lock);
     }
 
@@ -893,6 +905,8 @@ mpegts_input_flush_mux
   mpegts_table_feed_t *mtf;
   mpegts_packet_t *mp;
 
+  lock_assert(&global_lock);
+
   // Note: to avoid long delays in here, rather than actually
   //       remove things from the Q, we simply invalidate by clearing
   //       the mux pointer and allow the threads to deal with the deletion
@@ -911,6 +925,10 @@ mpegts_input_flush_mux
     if (mtf->mtf_mux == mm)
       mtf->mtf_mux = NULL;
   }
+  mi->mi_destroyed_muxes = realloc(mi->mi_destroyed_muxes,
+                                   (mi->mi_destroyed_muxes_count + 1) *
+                                     sizeof(mpegts_mux_t *));
+  mi->mi_destroyed_muxes[mi->mi_destroyed_muxes_count++] = mm;
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
@@ -1137,6 +1155,7 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   pthread_mutex_destroy(&mi->mi_output_lock);
   pthread_cond_destroy(&mi->mi_table_cond);
   free(mi->mi_name);
+  free(mi->mi_destroyed_muxes);
   free(mi);
 }
 
