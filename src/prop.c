@@ -94,7 +94,8 @@ prop_write_values
     if (!f) continue;
 
     /* Ignore */
-    if(p->opts & optmask) continue;
+    u32 = p->get_opts ? p->get_opts(obj) : p->opts;
+    if(u32 & optmask) continue;
 
     /* Sanity check */
     assert(p->set || p->off);
@@ -228,10 +229,12 @@ prop_read_value
 {
   const char *s;
   const void *val = obj + p->off;
+  uint32_t u32;
   char buf[16];
 
   /* Ignore */
-  if (p->opts & optmask) return;
+  u32 = p->get_opts ? p->get_opts(obj) : p->opts;
+  if (u32 & optmask) return;
   if (p->type == PT_NONE) return;
 
   /* Sanity check */
@@ -323,6 +326,7 @@ prop_serialize_value
 {
   htsmsg_field_t *f;
   char buf[16];
+  uint32_t opts;
 
   /* Remove parent */
   // TODO: this is really horrible and inefficient!
@@ -393,19 +397,20 @@ prop_serialize_value
   }
 
   /* Options */
-  if (pl->opts & PO_RDONLY)
+  opts = pl->get_opts ? pl->get_opts(obj) : pl->opts;
+  if (opts & PO_RDONLY)
     htsmsg_add_bool(m, "rdonly", 1);
-  if (pl->opts & PO_NOSAVE)
+  if (opts & PO_NOSAVE)
     htsmsg_add_bool(m, "nosave", 1);
-  if (pl->opts & PO_WRONCE)
+  if (opts & PO_WRONCE)
     htsmsg_add_bool(m, "wronce", 1);
-  if (pl->opts & PO_ADVANCED)
+  if (opts & PO_ADVANCED)
     htsmsg_add_bool(m, "advanced", 1);
-  if (pl->opts & PO_HIDDEN)
+  if (opts & PO_HIDDEN)
     htsmsg_add_bool(m, "hidden", 1);
-  if (pl->opts & PO_PASSWORD)
+  if (opts & PO_PASSWORD)
     htsmsg_add_bool(m, "password", 1);
-  if (pl->opts & PO_DURATION)
+  if (opts & PO_DURATION)
     htsmsg_add_bool(m, "duration", 1);
 
   /* Enum list */
