@@ -562,6 +562,9 @@ struct mpegts_input
   /* Active sources */
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
   LIST_HEAD(,service)             mi_transports;
+
+  mpegts_mux_t                  **mi_destroyed_muxes;
+  int                             mi_destroyed_muxes_count;
   
   /* Table processing */
   pthread_t                       mi_table_tid;
