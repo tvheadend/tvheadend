@@ -1113,6 +1113,24 @@ dvr_entry_class_start_set(void *o, const void *v)
   return dvr_entry_class_time_set(de, &de->de_start, *(time_t *)v);
 }
 
+static uint32_t
+dvr_entry_class_start_opts(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de && !dvr_entry_is_editable(de))
+    return PO_RDONLY;
+  return 0;
+}
+
+static uint32_t
+dvr_entry_class_start_extra_opts(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de && !dvr_entry_is_editable(de))
+    return PO_RDONLY | PO_DURATION;
+  return PO_DURATION;
+}
+
 static int
 dvr_entry_class_start_extra_set(void *o, const void *v)
 {
@@ -1191,6 +1209,8 @@ dvr_entry_class_channel_set(void *o, const void *v)
   if (ch == NULL) {
     if (de->de_channel) {
       LIST_REMOVE(de, de_channel_link);
+      free(de->de_channel_name);
+      de->de_channel_name = NULL;
       de->de_channel = NULL;
       return 1;
     }
@@ -1643,6 +1663,7 @@ const idclass_t dvr_entry_class = {
       .name     = "Start Time",
       .set      = dvr_entry_class_start_set,
       .off      = offsetof(dvr_entry_t, de_start),
+      .get_opts = dvr_entry_class_start_opts,
     },
     {
       .type     = PT_TIME,
@@ -1651,6 +1672,7 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_start_extra),
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
+      .get_opts = dvr_entry_class_start_extra_opts,
       .opts     = PO_DURATION,
     },
     {
@@ -1696,6 +1718,7 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_channel_set,
       .get      = dvr_entry_class_channel_get,
       .list     = dvr_entry_class_channel_list,
+      .get_opts = dvr_entry_class_start_opts,
     },
     {
       .type     = PT_STR,
@@ -1766,6 +1789,7 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_config_name_set,
       .get      = dvr_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,
+      .get_opts = dvr_entry_class_start_opts,
     },
     {
       .type     = PT_STR,
@@ -2146,6 +2170,30 @@ dvr_config_class_enabled_set(void *o, const void *v)
   return 0;
 }
 
+static uint32_t
+dvr_config_class_enabled_opts(void *o)
+{
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  if (cfg && dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
+    return PO_RDONLY;
+  return 0;
+}
+
+static int
+dvr_config_class_name_set(void *o, const void *v)
+{
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  if (dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
+    return 0;
+  if (strcmp(cfg->dvr_config_name ?: "", v ?: "")) {
+    if (dvr_config_is_valid(cfg) && (v == NULL || *(char *)v == '\0'))
+      return 0;
+    free(cfg->dvr_config_name);
+    cfg->dvr_config_name = strdup(v);
+    return 1;
+  }
+  return 0;
+}
 
 static const char *
 dvr_config_class_get_title (idnode_t *self)
@@ -2228,14 +2276,17 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_enabled),
       .def.i    = 1,
       .group    = 1,
+      .get_opts = dvr_config_class_enabled_opts,
     },
     {
       .type     = PT_STR,
       .id       = "name",
       .name     = "Config Name",
+      .set      = dvr_config_class_name_set,
       .off      = offsetof(dvr_config_t, dvr_config_name),
       .def.s    = "! New config",
       .group    = 1,
+      .get_opts = dvr_config_class_enabled_opts,
     },
     {
       .type     = PT_INT,

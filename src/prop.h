@@ -86,6 +86,9 @@ typedef struct property {
     time_t      tm;  // PT_TIME
   } def;
 
+  /* Extended options */
+  uint32_t    (*get_opts) (void *ptr);
+
   /* Notification callback */
   void        (*notify)   (void *ptr);
 
