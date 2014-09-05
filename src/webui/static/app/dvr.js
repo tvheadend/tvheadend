@@ -316,16 +316,31 @@ tvheadend.autorec_editor = function(panel, index) {
         titleP: 'DVR AutoRec Entries',
         iconCls: 'wand',
         tabIndex: index,
+        columns: {
+            enabled:      { width: 50 },
+            title:        { width: 300 },
+            channel:      { width: 200 },
+            tag:          { width: 200 },
+            content_type: { width: 100 },
+            minduration:  { width: 80 },
+            maxduration:  { width: 80 },
+            weekdays:     { width: 160 },
+            start:        { width: 100 },
+            pri:          { width: 80 },
+            config_name:  { width: 120 },
+            creator:      { width: 200 },
+            comment:      { width: 200 },
+        },
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enable,title,channel,tag,content_type,minduration,' +
+               list: 'enabled,title,channel,tag,content_type,minduration,' +
                      'maxduration,weekdays,start,pri,config_name,comment',
             },
             create: { }
         },
         del: true,
-        list: 'enable,title,channel,tag,content_type,minduration,' +
+        list: 'enabled,title,channel,tag,content_type,minduration,' +
               'maxduration,weekdays,start,pri,config_name,creator,comment',
         sort: {
           field: 'name',
