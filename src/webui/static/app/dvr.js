@@ -90,7 +90,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         name: 'abort',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Abort selected recording',
+                tooltip: 'Abort the selected recording',
                 iconCls: 'cancel',
                 text: 'Abort',
                 disabled: true,
@@ -176,6 +176,30 @@ tvheadend.dvr_finished = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
 
+    var downloadButton = {
+        name: 'download',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Download the selected recording',
+                iconCls: 'save',
+                text: 'Download',
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r.length > 0) {
+              var url = r[0].data.url;
+              window.location = url;
+            }
+        }
+    };
+
+    function selected(s, abuttons) {
+        var count = s.getCount();
+        abuttons.download.setDisabled(count < 1);
+    }
+
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_finished',
@@ -187,7 +211,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,creator,' +
-              'sched_status',
+              'sched_status,url',
         sort: {
           field: 'start',
           direction: 'DESC'
@@ -206,6 +230,8 @@ tvheadend.dvr_finished = function(panel, index) {
                            '?title=' + encodeURIComponent(title) + '">Play</a>';
                 }
             }],
+        tbar: [downloadButton],
+        selected: selected,
         help: function() {
             new tvheadend.help('DVR', 'config_dvr.html');
         },
