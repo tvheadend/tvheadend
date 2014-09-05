@@ -1343,6 +1343,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         var buttons = [];
         var abuttons = {};
         var plugins = conf.plugins || [];
+        var current = null;
 
         /* Store */
         store = new Ext.data.JsonStore({
