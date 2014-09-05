@@ -464,7 +464,7 @@ dvr_autorec_entry_class_time_list(void *o)
   char buf[16];
   e = htsmsg_create_map();
   htsmsg_add_str(e, "key", "");
-  htsmsg_add_str(e, "val", "Not set");
+  htsmsg_add_str(e, "val", "Any");
   htsmsg_add_msg(l, NULL, e);
   for (i = 0; i < 24*60;  i += 10) {
     snprintf(buf, sizeof(buf), "%02d:%02d", i / 60, (i % 60));
@@ -479,13 +479,13 @@ dvr_autorec_entry_class_time_list(void *o)
 static htsmsg_t *
 dvr_autorec_entry_class_minduration_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Not set", 24*60);
+  return dvr_entry_class_duration_list(o, "Any", 24*60);
 }
 
 static htsmsg_t *
 dvr_autorec_entry_class_maxduration_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Not set", 24*60);
+  return dvr_entry_class_duration_list(o, "Any", 24*60);
 }
 
 static int

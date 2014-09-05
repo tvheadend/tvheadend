@@ -1446,6 +1446,8 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   const char *s = "";
+  if (v == NULL || *((char *)v) == '\0')
+    v = "UnknownTitle";
   if (de->de_title)
     s = lang_str_get(de->de_title, NULL);
   if (strcmp(s, v ?: "")) {
@@ -1864,14 +1866,14 @@ const idclass_t dvr_entry_class = {
       .id       = "episode",
       .name     = "Episode",
       .get      = dvr_entry_class_episode_get,
-      .opts     = PO_RDONLY | PO_NOSAVE,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
       .id       = "url",
       .name     = "URL",
       .get      = dvr_entry_class_url_get,
-      .opts     = PO_RDONLY | PO_NOSAVE,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_S64,
@@ -1885,7 +1887,7 @@ const idclass_t dvr_entry_class = {
       .id       = "status",
       .name     = "Status",
       .get      = dvr_entry_class_status_get,
-      .opts     = PO_RDONLY | PO_NOSAVE,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
