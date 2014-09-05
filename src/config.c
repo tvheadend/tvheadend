@@ -978,6 +978,17 @@ dobackup(const char *oldver)
 
   getcwd(cwd, sizeof(cwd));
 
+  if (!access("/bin/tar", X_OK))
+    argv[0] = "/bin/tar";
+  else if (!access("/usr/bin/tar", X_OK))
+    argv[0] = "/usr/bin/tar";
+  else if (!access("/usr/local/bin/tar", X_OK))
+    argv[0] = "/usr/local/bin/tar";
+  else {
+    tvherror("config", "unable to find tar program");
+    goto fatal;
+  }
+
   snprintf(outfile, sizeof(outfile), "%s/backup", root);
   if (makedirs(outfile, 0700))
     goto fatal;
