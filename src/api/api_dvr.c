@@ -165,11 +165,11 @@ api_dvr_entry_create
   pthread_mutex_lock(&global_lock);
   s1 = htsmsg_get_str(conf, "config_name");
   s2 = api_dvr_config_name(perm, s1);
-  if (strcmp(s1 ?: "", s2 ?: "")) {
-    htsmsg_delete_field(conf, "config_name");
-    if (s2)
-      htsmsg_add_str(conf, "config_name", s2);
-  }
+  if (strcmp(s1 ?: "", s2 ?: ""))
+    htsmsg_set_str(conf, "config_name", s2 ?: "");
+
+  if (perm->aa_representative)
+    htsmsg_set_str(conf, "creator", perm->aa_representative);
 
   if ((de = dvr_entry_create(NULL, conf)))
     dvr_entry_save(de);
@@ -272,9 +272,8 @@ api_dvr_autorec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  htsmsg_delete_field(conf, "creator");
   if (perm->aa_representative)
-    htsmsg_add_str(conf, "creator", perm->aa_representative);
+    htsmsg_set_str(conf, "creator", perm->aa_representative);
 
   pthread_mutex_lock(&global_lock);
   dae = dvr_autorec_create(NULL, conf);

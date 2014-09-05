@@ -194,11 +194,13 @@ tvheadend.IdNodeField = function(conf)
         if (this.type === 'time') {
             if (this.duration)
                 return function(v) {
-                    v = parseInt(v / 60); /* Nevermind the seconds */
-                    if (v === 0 && v !== '0')
+                    if (v < 0 || v === '')
                        return "Not set";
-                    var hours = parseInt(v / 60);
-                    var min = parseInt(v % 60);
+                    var i = parseInt(v / 60); /* Nevermind the seconds */
+                    if (i === 0)
+                       return "0";
+                    var hours = parseInt(i / 60);
+                    var min = parseInt(i % 60);
                     if (hours) {
                         if (min === 0)
                             return hours + ' hrs';
