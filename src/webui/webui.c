@@ -1125,7 +1125,9 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  de = dvr_entry_find_by_id(atoi(remain));
+  de = dvr_entry_find_by_uuid(remain);
+  if (de == NULL)
+    de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;

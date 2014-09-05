@@ -1175,7 +1175,8 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                     abuttons[t.name] = b;
                     buttons.push(b);
-                }
+                } else if (t.name)
+                    buttons.push(t.name);
             }
         }
 
@@ -1479,7 +1480,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     }
                     abuttons[t.name] = b;
                     buttons.push(b);
-                }
+                } else if (t.name)
+                    buttons.push(t.name);
             }
         }
 
