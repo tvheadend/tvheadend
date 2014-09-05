@@ -84,50 +84,56 @@ find_exec ( const char *name, char *out, size_t len )
 }
 
 /**
- * The reaper is called once a second to finish of any pending spawns
+ * Reap one child
  */
-void 
-spawn_reaper(void)
+int
+spawn_reap(char *stxt, size_t stxtlen)
 {
   pid_t pid;
-  int status;
-  char txt[100];
+  int status, res;
   spawn_t *s;
 
-  while(1) {
-    pid = waitpid(-1, &status, WNOHANG);
-    if(pid < 1)
+  pid = waitpid(-1, &status, WNOHANG);
+  if(pid < 1)
+    return -EAGAIN;
+
+  pthread_mutex_lock(&spawn_mutex);
+  LIST_FOREACH(s, &spawns, link)
+    if(s->pid == pid)
       break;
 
-    pthread_mutex_lock(&spawn_mutex);
-    LIST_FOREACH(s, &spawns, link)
-      if(s->pid == pid)
-	break;
-
-    if (WIFEXITED(status)) {
-      snprintf(txt, sizeof(txt), 
-	       "exited, status=%d", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-      snprintf(txt, sizeof(txt), 
-	       "killed by signal %d", WTERMSIG(status));
-    } else if (WIFSTOPPED(status)) {
-      snprintf(txt, sizeof(txt), 
-	       "stopped by signal %d", WSTOPSIG(status));
-    } else if (WIFCONTINUED(status)) {
-      snprintf(txt, sizeof(txt), 
-	       "continued");
-    } else {
-      snprintf(txt, sizeof(txt), 
-	       "unknown status");
-    }
-
-    if(s != NULL) {
-      LIST_REMOVE(s, link);
-      free((void *)s->name);
-      free(s);
-    }
-    pthread_mutex_unlock(&spawn_mutex);
+  res = -EIO;
+  if (WIFEXITED(status)) {
+    res = WEXITSTATUS(status);
+    if (stxt)
+      snprintf(stxt, stxtlen, "exited, status=%d", WEXITSTATUS(status));
+  } else if (WIFSIGNALED(status)) {
+    snprintf(stxt, stxtlen, "killed by signal %d, "
+                            "stopped by signal %d",
+                            WTERMSIG(status),
+                            WSTOPSIG(status));
+  } else if (WIFCONTINUED(status)) {
+    snprintf(stxt, stxtlen, "continued");
+  } else {
+    snprintf(stxt, stxtlen, "unknown status");
   }
+
+  if(s != NULL) {
+    LIST_REMOVE(s, link);
+    free((void *)s->name);
+    free(s);
+  }
+  pthread_mutex_unlock(&spawn_mutex);
+  return res;
+}
+
+/**
+ * The reaper is called once a second to finish of any pending spawns
+ */
+void
+spawn_reaper(void)
+{
+  while (spawn_reap(NULL, 0) != -EAGAIN) ;
 }
 
 

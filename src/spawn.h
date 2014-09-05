@@ -25,6 +25,8 @@ int spawn_and_store_stdout(const char *prog, char *argv[], char **outp);
 
 int spawnv(const char *prog, char *argv[]);
 
+int spawn_reap(char *stxt, size_t stxtlen);
+
 void spawn_reaper(void);
 
 #endif /* SPAWN_H */
