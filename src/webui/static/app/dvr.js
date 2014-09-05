@@ -86,6 +86,49 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name';
 
+    var abortButton = {
+        name: 'abort',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Abort selected recording',
+                iconCls: 'cancel',
+                text: 'Abort',
+                disabled: true,
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/cancel',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
+    function selected(s, abuttons) {
+        var recording = 0;
+        s.each(function(s) {
+            if (s.data.sched_status == 'recording')
+                recording++;
+        });
+        abuttons.abort.setDisabled(recording < 1);
+    }
+
+    function beforeedit(e, grid) {
+        if (e.record.data.sched_status == 'recording')
+            return false;
+    }
+
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_upcoming',
@@ -115,6 +158,9 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         plugins: [actions],
         lcol: [actions],
+        tbar: [abortButton],
+        selected: selected,
+        beforeedit: beforeedit,
         help: function() {
             new tvheadend.help('DVR', 'config_dvr.html');
         },

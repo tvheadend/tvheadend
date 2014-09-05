@@ -196,20 +196,27 @@ tvheadend.show_service_streams = function(data) {
 tvheadend.services = function(panel, index)
 {
     function builder(conf) {
-        var mapButton = new Ext.Toolbar.Button({
-            tooltip: 'Map services to channels',
-            iconCls: 'clone',
-            text: 'Map All',
-            callback: tvheadend.service_mapper,
-            disabled: false
-        });
-        var selected = function(s)
+        var mapButton = {
+            name: 'map',
+            builder: function() {
+                return new Ext.Toolbar.Button({
+                    tooltip: 'Map services to channels',
+                    iconCls: 'clone',
+                    text: 'Map All',
+                    disabled: false
+                });
+            },
+            callback: tvheadend.service_mapper
+        };
+        
+        var selected = function(s, abuttons)
         {
             if (s.getCount() > 0)
-                mapButton.setText('Map Selected');
+                abuttons.map.setText('Map Selected');
             else
-                mapButton.setText('Map All');
+                abuttons.map.setText('Map All');
         };
+
         var actions = new Ext.ux.grid.RowActions({
             header: 'Details',
             width: 10,

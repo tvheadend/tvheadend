@@ -842,14 +842,8 @@ tvheadend.idnode_grid = function(panel, conf)
         var filters = [];
         var fields = [];
         var buttons = [];
+        var abuttons = {};
         var plugins = conf.plugins || [];
-        var saveBtn = null;
-        var undoBtn = null;
-        var addBtn = null;
-        var delBtn = null;
-        var upBtn = null;
-        var downBtn = null;
-        var editBtn = null;
 
         /* Some copies */
         if (conf.add && !conf.add.titleS && conf.titleS)
@@ -913,26 +907,28 @@ tvheadend.idnode_grid = function(panel, conf)
         /* Event handlers */
         store.on('update', function(s, r, o) {
             var d = (s.getModifiedRecords().length === 0);
-            undoBtn.setDisabled(d);
-            saveBtn.setDisabled(d);
+            if (abuttons.undo)
+                abuttons.undo.setDisabled(d);
+            if (abuttons.save)
+                abuttons.save.setDisabled(d);
         });
         select.on('selectionchange', function(s) {
             var count = s.getCount();
-            if (delBtn)
-                delBtn.setDisabled(count === 0);
-            if (upBtn) {
-                upBtn.setDisabled(count === 0);
-                downBtn.setDisabled(count === 0);
+            if (abuttons.del)
+                abuttons.del.setDisabled(count === 0);
+            if (abuttons.up) {
+                abuttons.up.setDisabled(count === 0);
+                abuttons.down.setDisabled(count === 0);
             }
-            if (editBtn)
-                editBtn.setDisabled(count !== 1);
+            if (abuttons.edit)
+                abuttons.edit.setDisabled(count !== 1);
             if (conf.selected)
-                conf.selected(s);
+                conf.selected(s, abuttons);
         });
 
         /* Top bar */
         if (!conf.readonly) {
-            saveBtn = new Ext.Toolbar.Button({
+            abuttons.save = new Ext.Toolbar.Button({
                 tooltip: 'Save pending changes (marked with red border)',
                 iconCls: 'save',
                 text: 'Save',
@@ -958,8 +954,8 @@ tvheadend.idnode_grid = function(panel, conf)
                     });
                 }
             });
-            buttons.push(saveBtn);
-            undoBtn = new Ext.Toolbar.Button({
+            buttons.push(abuttons.save);
+            abuttons.undo = new Ext.Toolbar.Button({
                 tooltip: 'Revert pending changes (marked with red border)',
                 iconCls: 'undo',
                 text: 'Undo',
@@ -968,12 +964,12 @@ tvheadend.idnode_grid = function(panel, conf)
                     store.rejectChanges();
                 }
             });
-            buttons.push(undoBtn);
+            buttons.push(abuttons.undo);
         }
         if (conf.add) {
             if (buttons.length > 0)
                 buttons.push('-');
-            addBtn = new Ext.Toolbar.Button({
+            abuttons.add = new Ext.Toolbar.Button({
                 tooltip: 'Add a new entry',
                 iconCls: 'add',
                 text: 'Add',
@@ -982,12 +978,12 @@ tvheadend.idnode_grid = function(panel, conf)
                     tvheadend.idnode_create(conf.add);
                 }
             });
-            buttons.push(addBtn);
+            buttons.push(abuttons.add);
         }
         if (conf.del) {
             if (!conf.add && buttons.length > 0)
                 buttons.push('-');
-            delBtn = new Ext.Toolbar.Button({
+            abuttons.del = new Ext.Toolbar.Button({
                 tooltip: 'Delete selected entries',
                 iconCls: 'remove',
                 text: 'Delete',
@@ -1012,10 +1008,10 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                 }
             });
-            buttons.push(delBtn);
+            buttons.push(abuttons.del);
         }
         if (conf.move) {
-            upBtn = new Ext.Toolbar.Button({
+            abuttons.up = new Ext.Toolbar.Button({
                 tooltip: 'Move selected entries up',
                 iconCls: 'moveup',
                 text: 'Move Up',
@@ -1039,8 +1035,8 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                 }
             });
-            buttons.push(upBtn);
-            downBtn = new Ext.Toolbar.Button({
+            buttons.push(abuttons.up);
+            abuttons.down = new Ext.Toolbar.Button({
                 tooltip: 'Move selected entries down',
                 iconCls: 'movedown',
                 text: 'Move Down',
@@ -1064,12 +1060,12 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                 }
             });
-            buttons.push(downBtn);
+            buttons.push(abuttons.down);
         }
         if (!conf.readonly) {
             if (buttons.length > 0)
                 buttons.push('-');
-            editBtn = new Ext.Toolbar.Button({
+            abuttons.edit = new Ext.Toolbar.Button({
                 tooltip: 'Edit selected entry',
                 iconCls: 'edit',
                 text: 'Edit',
@@ -1124,7 +1120,7 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                 }
             });
-            buttons.push(editBtn);
+            buttons.push(abuttons.edit);
         }
 
         /* Hide Mode */
@@ -1168,12 +1164,18 @@ tvheadend.idnode_grid = function(panel, conf)
         if (conf.tbar) {
             buttons.push('-');
             for (i = 0; i < conf.tbar.length; i++) {
-                if (conf.tbar[i].callback) {
-                    conf.tbar[i].handler = function(b, e) {
-                        this.callback(this, e, store, select);
-                    };
+                var t = conf.tbar[i];
+                if (t.name && t.builder) {
+                    var b = t.builder();
+                    if (t.callback) {
+                        b.callback = t.callback;
+                        b.handler = function(b, e) {
+                            this.callback(this, e, store, select);
+                        }
+                    }
+                    abuttons[t.name] = b;
+                    buttons.push(b);
                 }
-                buttons.push(conf.tbar[i]);
             }
         }
 
@@ -1251,6 +1253,8 @@ tvheadend.idnode_grid = function(panel, conf)
         grid.on('filterupdate', function() {
             page.changePage(0);
         });
+        if (conf.beforeedit)
+          grid.on('beforeedit', conf.beforeedit);
 
         dpanel.add(grid);
         dpanel.doLayout(false, true);
@@ -1336,12 +1340,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
             conf.builder(conf);
 
         var buttons = [];
+        var abuttons = {};
         var plugins = conf.plugins || [];
-        var saveBtn = null;
-        var undoBtn = null;
-        var addBtn = null;
-        var delBtn = null;
-        var current = null;
 
         /* Store */
         store = new Ext.data.JsonStore({
@@ -1389,11 +1389,11 @@ tvheadend.idnode_form_grid = function(panel, conf)
         select.on('selectionchange', function(s) {
             roweditor(s.getSelected());
             if (conf.selected)
-                conf.selected(s);
+                conf.selected(s, abuttons);
         });
 
         /* Top bar */
-        saveBtn = new Ext.Toolbar.Button({
+        abuttons.save = new Ext.Toolbar.Button({
             tooltip: 'Save pending changes (marked with red border)',
             iconCls: 'save',
             text: 'Save',
@@ -1412,8 +1412,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 });
             }
         });
-        buttons.push(saveBtn);
-        undoBtn = new Ext.Toolbar.Button({
+        buttons.push(abuttons.save);
+        abuttons.undo = new Ext.Toolbar.Button({
             tooltip: 'Revert pending changes (marked with red border)',
             iconCls: 'undo',
             text: 'Undo',
@@ -1423,10 +1423,10 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     current.editor.getForm().reset();
             }
         });
-        buttons.push(undoBtn);
+        buttons.push(abuttons.undo);
         buttons.push('-');
         if (conf.add) {
-            addBtn = new Ext.Toolbar.Button({
+            abuttons.add = new Ext.Toolbar.Button({
                 tooltip: 'Add a new entry',
                 iconCls: 'add',
                 text: 'Add',
@@ -1435,10 +1435,10 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     tvheadend.idnode_create(conf.add, true);
                 }
             });
-            buttons.push(addBtn);
+            buttons.push(abuttons.add);
         }
         if (conf.del) {
-            delBtn = new Ext.Toolbar.Button({
+            abuttons.del = new Ext.Toolbar.Button({
                 tooltip: 'Delete selected entries',
                 iconCls: 'remove',
                 text: 'Delete',
@@ -1459,7 +1459,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     }
                 }
             });
-            buttons.push(delBtn);
+            buttons.push(abuttons.del);
         }
         if (conf.add || conf.del)
             buttons.push('-');
@@ -1468,12 +1468,18 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.tbar) {
             buttons.push('-');
             for (i = 0; i < conf.tbar.length; i++) {
-                if (conf.tbar[i].callback) {
-                    conf.tbar[i].handler = function(b, e) {
-                        this.callback(this, e, store, select);
-                    };
+                var t = conf.tbar[i];
+                if (t.name && t.builder) {
+                    var b = t.builder();
+                    if (t.callback) {
+                        b.callback = t.callback;
+                        b.handler = function(b, e) {
+                            this.callback(this, e, store, select);
+                        }
+                    }
+                    abuttons[t.name] = b;
+                    buttons.push(b);
                 }
-                buttons.push(conf.tbar[i]);
             }
         }
 
@@ -1513,9 +1519,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
                         uuid: d[0].id,
                         editor: editor
                     }
-                    saveBtn.setDisabled(false);
-                    undoBtn.setDisabled(false);
-                    delBtn.setDisabled(false);
+                    abuttons.save.setDisabled(false);
+                    abuttons.undo.setDisabled(false);
+                    abuttons.del.setDisabled(false);
                     mpanel.add(editor);
                     mpanel.doLayout();
                 }
