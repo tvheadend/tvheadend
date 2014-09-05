@@ -148,6 +148,10 @@
     background-image: url(../icons/delete.png) !important;
 }
 
+.cancel {
+    background-image: url(../icons/cancel.png) !important;
+}
+
 .moveup {
     background-image: url(../icons/arrow_up.png) !important;
 }
@@ -294,7 +298,6 @@
 
 .arrow_switch {
     background-image: url(../icons/arrow_switch.png) !important;
-
 }
 
 .stream_config {
