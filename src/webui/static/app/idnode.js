@@ -662,8 +662,7 @@ tvheadend.idnode_editor = function(item, conf)
         labelWidth: conf.labelWidth || 200,
         autoWidth: conf.noautoWidth ? false : true,
         autoHeight: !conf.fixedHeight,
-        width: conf.width || 600,
-        //defaults: {width: 330},
+        width: conf.nowidth ? null : (conf.width || 600),
         defaultType: 'textfield',
         buttonAlign: 'left',
         autoScroll: true,
@@ -1517,8 +1516,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                                     help: conf.help || null,
                                     inTabPanel: true,
                                     noButtons: true,
-                                    noautoWidth: true,
-                                    width: 730
+                                    width: 730,
+                                    noautoWidth: true
                                 });
                     current = {
                         uuid: d[0].id,
@@ -1535,7 +1534,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
 
         /* Grid Panel (Selector) */
         var grid = new Ext.grid.GridPanel({
-            width: 200,
+            flex: 1,
+            autoWidth: true,
+            autoScroll: true,
             stripeRows: true,
             store: store,
             cm: model,
@@ -1656,7 +1657,7 @@ tvheadend.idnode_tree = function(panel, conf)
 
         tree = new Ext.tree.TreePanel({
             loader: loader,
-            width: 550,
+            autoWidth: true,
             flex: 1,
             autoScroll: true,
             border: false,
@@ -1674,7 +1675,7 @@ tvheadend.idnode_tree = function(panel, conf)
                     if (!n.isRoot)
                         current = mpanel.add(new tvheadend.idnode_editor(n.attributes, {
                             title: 'Parameters',
-                            width: 550,
+                            nowidth: true,
                             noautoWidth: true,
                             fixedHeight: true,
                             help: conf.help || null
@@ -1686,7 +1687,6 @@ tvheadend.idnode_tree = function(panel, conf)
 
         var mpanel = new Ext.Panel({
             layout: 'hbox',
-            flex: 1,
             padding: 5,
             border: false,
             layoutConfig: {
