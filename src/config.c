@@ -16,13 +16,15 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+#include <sys/stat.h>
+
 #include "tvheadend.h"
 #include "settings.h"
 #include "config.h"
 #include "uuid.h"
-
-#include <string.h>
-#include <sys/stat.h>
+#include "htsbuf.h"
+#include "spawn.h"
 
 /* *************************************************************************
  * Global data
@@ -957,6 +959,70 @@ config_migrate_v11 ( void )
 }
 
 /*
+ * Perform backup
+ */
+static void
+dobackup(const char *oldver)
+{
+  char outfile[PATH_MAX], cwd[PATH_MAX];
+  const char *argv[] = {
+    "/usr/bin/tar", "cjf", outfile, "--exclude", "backup", ".", NULL
+  };
+  const char *root = hts_settings_get_root();
+  char errtxt[128];
+  const char **arg;
+  int code;
+
+  tvhinfo("config", "backup: migrating config from %s (running %s)",
+                    oldver, tvheadend_version);
+
+  getcwd(cwd, sizeof(cwd));
+
+  snprintf(outfile, sizeof(outfile), "%s/backup", root);
+  if (makedirs(outfile, 0700))
+    goto fatal;
+  if (chdir(root)) {
+    tvherror("config", "unable to find directory '%s'", root);
+    goto fatal;
+  }
+
+  snprintf(outfile, sizeof(outfile), "%s/backup/%s.tar.bz2",
+                                     root, oldver);
+  tvhinfo("config", "backup: running, output file %s", outfile);
+
+  spawnv(argv[0], (void *)argv);
+
+  while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
+    usleep(20000);
+
+  if (code) {
+    htsbuf_queue_t q;
+    char *s;
+    htsbuf_queue_init(&q, 0);
+    for (arg = argv; *arg; arg++) {
+      htsbuf_append(&q, *arg, strlen(*arg));
+      if (arg[1])
+        htsbuf_append(&q, " ", 1);
+    }
+    s = htsbuf_to_string(&q);
+    tvherror("config", "command '%s' returned error code %d", s, code);
+    free(s);
+    htsbuf_queue_flush(&q);
+    goto fatal;
+  }
+
+  if (chdir(cwd)) {
+    tvherror("config", "unable to change directory to '%s'", cwd);
+    goto fatal;
+  }
+  return;
+
+fatal:
+  tvherror("config", "backup: fatal error");
+  exit(EXIT_FAILURE);
+}
+
+/*
  * Migration table
  */
 static const config_migrate_t config_migrate_table[] = {
@@ -977,12 +1043,19 @@ static const config_migrate_t config_migrate_table[] = {
  * Perform migrations (if required)
  */
 static int
-config_migrate ( void )
+config_migrate ( int backup )
 {
   uint32_t v;
+  const char *s;
 
   /* Get the current version */
   v = htsmsg_get_u32_or_default(config, "version", 0);
+  s = htsmsg_get_str(config, "fullversion") ?: "unknown";
+
+  if (backup && strcmp(s, tvheadend_version))
+    dobackup(s);
+  else
+    backup = 0;
 
   /* Attempt to auto-detect versions prior to v2 */
   if (!v) {
@@ -993,8 +1066,11 @@ config_migrate ( void )
   }
 
   /* No changes required */
-  if (v == ARRAY_SIZE(config_migrate_table))
+  if (v == ARRAY_SIZE(config_migrate_table)) {
+    if (backup)
+      goto update;
     return 0;
+  }
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
@@ -1003,7 +1079,9 @@ config_migrate ( void )
   }
 
   /* Update */
+update:
   htsmsg_set_u32(config, "version", v);
+  htsmsg_set_str(config, "fullversion", tvheadend_version);
   config_save();
   return 1;
 }
@@ -1050,7 +1128,7 @@ config_check ( void )
  * *************************************************************************/
 
 void
-config_init ( const char *path )
+config_init ( const char *path, int backup )
 {
   struct stat st;
   char buf[1024];
@@ -1095,11 +1173,12 @@ config_init ( const char *path )
   /* Store version number */
   if (new) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
+    htsmsg_set_str(config, "fullversion", tvheadend_version);
     config_save();
   
   /* Perform migrations */
   } else {
-    if (config_migrate())
+    if (config_migrate(backup))
       config_check();
   }
 }
