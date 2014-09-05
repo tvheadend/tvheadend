@@ -47,15 +47,15 @@ tvhdhomerun_frontend_is_free ( mpegts_input_t *mi )
 }
 
 static int
-tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi )
+tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, int flags )
 {
-  return mpegts_input_get_weight(mi);
+  return mpegts_input_get_weight(mi, flags);
 }
 
 static int
-tvhdhomerun_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm )
+tvhdhomerun_frontend_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  return mpegts_input_get_priority(mi, mm);
+  return mpegts_input_get_priority(mi, mm, flags);
 }
 
 static int
