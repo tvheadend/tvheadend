@@ -50,6 +50,7 @@
 #define TVHEADEND_PROTOCOL_ID 0x6502
 #define CWC_KEEPALIVE_INTERVAL 30
 #define CWC_ES_PIDS           8
+#define CWC_MAX_NOKS          4
 
 #define CWS_NETMSGSIZE 362
 #define CWS_FIRSTCMDNO 0xe0
@@ -90,6 +91,8 @@ static struct cwc_queue cwcs;
 static pthread_cond_t cwc_config_changed;
 static pthread_mutex_t cwc_mutex;
 static char *crypt_md5(const char *pw, const char *salt);
+static cwc_keystate_t cwc_service_keystate(mpegts_service_t* service);
+
 
 /**
  *
@@ -105,6 +108,7 @@ typedef struct ecm_section {
   int64_t es_time;  // time request was sent
   size_t es_ecmsize;
   uint8_t es_ecm[4070];
+  cwc_keystate_t es_keystate;
 
 } ecm_section_t;
 
@@ -702,7 +706,8 @@ cwc_ecm_reset(th_descrambler_t *th)
 
   if (ct->cs_constcw)
     return 1;  /* keys will not change */
-  ct->td_keystate = DS_UNKNOWN;
+
+  cwc_set_keystate(th, DS_UNKNOWN);
   ct->ecm_state = ECM_RESET;
   return 0;
 }
@@ -727,13 +732,13 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     
     /* ERROR */
 
-    if (es->es_nok < 3)
+    if (es->es_nok < CWC_MAX_NOKS)
       es->es_nok++;
 
-    if(ct->td_keystate == DS_FORBIDDEN)
+    if(es->es_keystate == DS_FORBIDDEN)
       return; // We already know it's bad
 
-    if (es->es_nok > 2) {
+    if (es->es_nok >= CWC_MAX_NOKS) {
       tvhlog(LOG_DEBUG, "cwc",
              "Too many NOKs for service \"%s\"%s from %s",
              t->s_dvb_svcname, chaninfo, ct->td_nicename);
@@ -741,12 +746,12 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     }
 
     LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-      if (td != (th_descrambler_t *)ct && td->td_keystate == DS_RESOLVED) {
+      if (td != (th_descrambler_t *)ct && es->es_keystate == DS_RESOLVED) {
         tvhlog(LOG_DEBUG, "cwc",
 	       "NOK from %s: Already has a key for service \"%s\", from %s",
 	       ct->td_nicename,  t->s_dvb_svcname, td->td_nicename);
-        es->es_nok = 3; /* do not send more ECM requests */
-        ct->td_keystate = DS_IDLE;
+        es->es_nok = CWC_MAX_NOKS; /* do not send more ECM requests */
+        es->es_keystate = DS_IDLE;
       }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
@@ -754,26 +759,27 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 
 forbid:
     j = 0;
+    es->es_keystate = DS_FORBIDDEN;
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i <= ep->ep_last_section; i++) {
         es2 = ep->ep_sections[i];
         if(es2 && es2 != es && es2->es_nok == 0) {
           if (es2->es_pending)
-	    return;
+            return;
           j++;
         }
       }
     }
     if (j && es->es_nok < 2) /* only first hit is allowed */
       return;
-    
-    tvhlog(LOG_ERR, "cwc",
-	   "Can not descramble service \"%s\", access denied (seqno: %d "
-	   "Req delay: %"PRId64" ms) from %s",
-	   t->s_dvb_svcname, seq, delay, ct->td_nicename);
 
-    ct->td_keystate = DS_FORBIDDEN;
-    ct->ecm_state = ECM_RESET;
+    if (cwc_service_keystate(t) == DS_FORBIDDEN) {
+      tvhlog(LOG_ERR, "cwc",
+         "Can not descramble service \"%s\", access denied (seqno: %d "
+         "Req delay: %"PRId64" ms) from %s",
+         t->s_dvb_svcname, seq, delay, ct->td_nicename);
+      ct->ecm_state = ECM_RESET;
+    }
 
     return;
 
@@ -805,7 +811,7 @@ forbid:
 	     msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
 	     msg[3 + 15], seq, delay);
 
-      if(ct->td_keystate != DS_RESOLVED)
+      if(es->es_keystate != DS_RESOLVED)
         tvhlog(LOG_DEBUG, "cwc",
 	       "Obtained DES keys for service \"%s\" in %"PRId64" ms, from %s",
 	       t->s_dvb_svcname, delay, ct->td_nicename);
@@ -827,7 +833,7 @@ forbid:
 	   msg[3 + 25],msg[3 + 26],msg[3 + 27],msg[3 + 28],msg[3 + 29],
 	   msg[3 + 30], msg[3 + 31], seq, delay);
 
-      if(ct->td_keystate != DS_RESOLVED)
+      if(es->es_keystate != DS_RESOLVED)
         tvhlog(LOG_DEBUG, "cwc",
 	       "Obtained AES keys for service \"%s\" in %"PRId64" ms, from %s",
 	       t->s_dvb_svcname, delay, ct->td_nicename);
@@ -876,7 +882,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
               if(es->es_seq == seq) {
                 if (es->es_resolved) {
                   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-                  tvhlog(LOG_WARNING, "cwc",
+                  tvhlog(LOG_DEBUG, "cwc",
                          "Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
                          es->es_pending ? "duplicate " : "",
                          ep->ep_pid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
@@ -1659,9 +1665,6 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
   if (data == NULL)
     return;
 
-  if (ct->td_keystate == DS_IDLE)
-    return;
-
   if(len > 4096)
     return;
 
@@ -1761,15 +1764,23 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
       
       es = ep->ep_sections[section];
+
+      if (es->es_keystate == DS_IDLE)
+        break;
       
       if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
         break; /* key already sent */
       
       if(cwc->cwc_fd == -1) {
         // New key, but we are not connected (anymore), can not descramble
-        ct->td_keystate = DS_UNKNOWN;
+        es->es_keystate = DS_UNKNOWN;
         break;
       }
+
+      if (es->es_keystate == DS_FORBIDDEN) {
+          break;
+      }
+
       es->es_channel = channel;
       es->es_section = section;
       es->es_pending = 1;
@@ -1784,7 +1795,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         tvhlog(LOG_DEBUG, "cwc", "Filtering ECM (PID %d)", channel);
         return;
       }
-      
+
       es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, caid, providerid);
       
       tvhlog(LOG_DEBUG, "cwc",
@@ -2589,4 +2600,53 @@ crypt_md5(const char *pw, const char *salt)
     memset(final,0,sizeof final);
 
     return passwd;
+}
+
+cwc_keystate_t
+cwc_keystate(struct th_descrambler *th)
+{
+  cwc_keystate_t retval = DS_UNKNOWN;
+  cwc_service_t *ct = (cwc_service_t *) th;
+  ecm_pid_t *ep;
+  int i;
+
+  LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
+    for (i = 0; i <= ep->ep_last_section; i++) {
+        if (ep->ep_sections[i] && ep->ep_sections[i]->es_keystate > retval)
+          retval = ep->ep_sections[i]->es_keystate;
+    }
+  }
+
+  return retval;
+}
+
+static cwc_keystate_t
+cwc_service_keystate(mpegts_service_t* service)
+{
+  cwc_keystate_t retval = DS_UNKNOWN;
+  cwc_keystate_t curstate;
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &service->s_descramblers, td_service_link) {
+    curstate = cwc_keystate(td);
+    if (curstate > retval)
+      retval = curstate;
+  }
+
+  return retval;
+}
+
+void
+cwc_set_keystate(struct th_descrambler *th, cwc_keystate_t state)
+{
+  cwc_service_t *ct = (cwc_service_t *) th;
+  ecm_pid_t *ep;
+  int i;
+
+  LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
+    for (i = 0; i <= ep->ep_last_section; i++) {
+        if (ep->ep_sections[i])
+          ep->ep_sections[i]->es_keystate = state;
+    }
+  }
 }

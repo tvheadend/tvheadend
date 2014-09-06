@@ -173,7 +173,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
   int i, j = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
-    td->td_keystate = DS_FORBIDDEN;
+    cwc_set_keystate(td, DS_FORBIDDEN);
     return;
   }
 
@@ -183,14 +183,14 @@ descrambler_keys ( th_descrambler_t *td, int type,
   pthread_mutex_lock(&t->s_stream_mutex);
 
   LIST_FOREACH(td2, &t->s_descramblers, td_service_link)
-    if (td2 != td && td2->td_keystate == DS_RESOLVED) {
+    if (td2 != td && cwc_keystate(td2) == DS_RESOLVED) {
       tvhlog(LOG_DEBUG, "descrambler",
                         "Already has a key from %s for service \"%s\", "
                         "ignoring key from \"%s\"",
                         td2->td_nicename,
                         ((mpegts_service_t *)td2->td_service)->s_dvb_svcname,
                         td->td_nicename);
-      td->td_keystate = DS_IDLE;
+      cwc_set_keystate(td, DS_IDLE);
       goto fin;
     }
 
@@ -212,7 +212,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
     }
 
   if (j) {
-    if (td->td_keystate != DS_RESOLVED)
+    if (cwc_keystate(td) != DS_RESOLVED)
       tvhlog(LOG_DEBUG, "descrambler",
                         "Obtained keys from %s for service \"%s\"",
                         td->td_nicename,
@@ -241,7 +241,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
                td->td_nicename, ((mpegts_service_t *)t)->s_dvb_svcname);
     }
     dr->dr_ecm_key_time = dispatch_clock;
-    td->td_keystate = DS_RESOLVED;
+    cwc_set_keystate(td, DS_RESOLVED);
   } else {
     tvhlog(LOG_DEBUG, "descrambler",
                       "Empty keys received from %s for service \"%s\"",
@@ -328,11 +328,11 @@ descrambler_descramble ( service_t *t,
   count = failed = 0;
   LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
     count++;
-    if (td->td_keystate == DS_FORBIDDEN) {
+    if (cwc_keystate(td) == DS_FORBIDDEN) {
       failed++;
       continue;
     }
-    if (td->td_keystate != DS_RESOLVED)
+    if (cwc_keystate(td) != DS_RESOLVED)
       continue;
     if (dr->dr_buf.sb_ptr > 0) {
       for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {

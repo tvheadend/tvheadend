@@ -19,7 +19,10 @@
 #ifndef CWC_H_
 #define CWC_H_
 
+#include "descrambler_types.h"
+
 struct mpegts_mux;
+struct th_descrambler;
 
 void cwc_init(void);
 
@@ -29,5 +32,8 @@ void cwc_service_start(struct service *t);
 
 void cwc_caid_update(struct mpegts_mux *mux,
                      uint16_t caid, uint16_t pid, int valid);
+
+cwc_keystate_t cwc_keystate(struct th_descrambler *th);
+void cwc_set_keystate(struct th_descrambler *th, cwc_keystate_t state);
 
 #endif /* CWC_H_ */
