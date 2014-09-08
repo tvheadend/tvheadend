@@ -212,6 +212,17 @@ tvheadend.dvr_finished = function(panel, index) {
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,creator,' +
               'sched_status,url',
+        columns: {
+            filesize: {
+                renderer: function() {
+                    return function(v) {
+                        if (v == null)
+                            return '';
+                        return parseInt(v / 1000000) + ' MB';
+                    }
+                }
+            }
+        },
         sort: {
           field: 'start',
           direction: 'DESC'

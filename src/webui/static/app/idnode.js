@@ -135,6 +135,7 @@ tvheadend.IdNodeField = function(conf)
 
     this.column = function(conf)
     {
+        var cfg = conf && this.id in conf ? conf[this.id] : {};
         var w = 300;
         var ftype = 'string';
         if (this.type === 'int' || this.type === 'u32' ||
@@ -144,6 +145,7 @@ tvheadend.IdNodeField = function(conf)
             w = 80;
         } else if (this.type === 'time') {
             w = 120;
+            ftype = 'date';
             if (this.durations) {
               ftype = 'numeric';
               w = 80;
@@ -155,17 +157,12 @@ tvheadend.IdNodeField = function(conf)
         if (this.enum || this.list)
             w = 300;
 
-        if (conf && this.id in conf) {
-          if (conf[this.id].width)
-            w = conf[this.id].width;
-        }
-
         var props = {
-            width: w,
+            width: cfg.width || w,
             dataIndex: this.id,
             header: this.text,
             editor: this.editor({create: false}),
-            renderer: this.renderer(),
+            renderer: cfg.renderer ? cfg.renderer() : this.renderer(),
             editable: !this.rdonly,
             hidden: this.hidden,
             filter: {
