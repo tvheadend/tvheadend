@@ -72,6 +72,17 @@ tvheadend.Ajax = function(conf) {
     Ext.Ajax.request(conf);
 };
 
+tvheadend.AjaxConfirm = function(conf) {
+    Ext.MessageBox.confirm(
+        conf.title || 'Message',
+        conf.question || 'Do you really want to delete the selection?',
+        function (btn) {
+            if (btn == 'yes')
+                tvheadend.Ajax(conf);
+        }
+    );
+};
+
 tvheadend.loading = function(on) {
     if (on)
       Ext.getBody().mask('Loading... Please, wait...', 'loading');

@@ -992,7 +992,7 @@ tvheadend.idnode_grid = function(panel, conf)
                         var uuids = [];
                         for (var i = 0; i < r.length; i++)
                             uuids.push(r[i].id);
-                        tvheadend.Ajax({
+                        tvheadend.AjaxConfirm({
                             url: 'api/idnode/delete',
                             params: {
                                 uuid: Ext.encode(uuids)
@@ -1342,6 +1342,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         var abuttons = {};
         var plugins = conf.plugins || [];
         var current = null;
+        var selectuuid = null;
 
         /* Store */
         store = new Ext.data.JsonStore({
@@ -1363,9 +1364,18 @@ tvheadend.idnode_form_grid = function(panel, conf)
             }
         });
 
-        store.on('load', function(st) {
-            if (!current)
-                grid.getSelectionModel().selectFirstRow();
+        store.on('load', function(records) {
+            var s = false;
+            if (selectuuid) {
+                records.each(function(r) {
+                    if (r.id === selectuuid) {
+                        select.selectRecords([r]);
+                        s = true;
+                    }
+                });
+                selectuuid = null;
+            } else if (!current && !select.getSelected())
+                select.selectFirstRow();
         });
 
         /* Model */
@@ -1407,7 +1417,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
                         node: Ext.encode(node)
                     },
                     success: function() {
-                        store.reload()
+                        selectuuid = current.uuid;
+                        roweditor_destroy();
+                        store.reload();
                     }
                 });
             }
@@ -1445,15 +1457,14 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 disabled: true,
                 handler: function() {
                     if (current) {
-                        tvheadend.Ajax({
+                        tvheadend.AjaxConfirm({
                             url: 'api/idnode/delete',
                             params: {
                                 uuid: current.uuid
                             },
-                            success: function(d)
-                            {
+                            success: function(d) {
+                                roweditor_destroy();
                                 store.reload();
-                                grid.getSelectionModel().selectFirstRow();
                             }
                         });
                     }
@@ -1493,8 +1504,16 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
         }
 
+        function roweditor_destroy() {
+            if (current)
+                mpanel.remove(current.editor);
+            current = null;
+        }
+
         function roweditor(r) {
             if (!r || !r.id)
+                return;
+            if (current && current.uuid == r.id)
                 return;
             tvheadend.Ajax({
                 url: 'api/idnode/load',
@@ -1504,8 +1523,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 },
                 success: function(d) {
                     d = json_decode(d);
-                    if (current)
-                        mpanel.remove(current.editor);
+                    roweditor_destroy();
                     var editor = new tvheadend.idnode_editor(d[0], {
                                     title: 'Parameters',
                                     labelWidth: 300,
@@ -1547,7 +1565,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 render : {
                     fn :  function() {
                         if (!current)
-                            grid.getSelectionModel().selectFirstRow();
+                            select.selectFirstRow();
                     }
                 }
             }

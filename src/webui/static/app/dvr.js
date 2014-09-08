@@ -102,14 +102,15 @@ tvheadend.dvr_upcoming = function(panel, index) {
                 var uuids = [];
                 for (var i = 0; i < r.length; i++)
                     uuids.push(r[i].id);
-                tvheadend.Ajax({
+                tvheadend.AjaxConfirm({
                     url: 'api/dvr/entry/cancel',
                     params: {
                         uuid: Ext.encode(uuids)
                     },
                     success: function(d) {
                         store.reload();
-                    }
+                    },
+                    question: 'Do you really want to abort/unschedule the selection?'
                 });
             }
         }
