@@ -1702,15 +1702,17 @@ tvheadend.idnode_tree = function(panel, conf)
                         mpanel.remove(current);
                         current = null;
                     }
-                    if (!n.isRoot)
-                        current = mpanel.add(new tvheadend.idnode_editor(n.attributes, {
+                    if (!n.isRoot) {
+                        current = new tvheadend.idnode_editor(n.attributes, {
                             title: 'Parameters',
-                            nowidth: true,
+                            width: 550,
                             noautoWidth: true,
                             fixedHeight: true,
                             help: conf.help || null
-                        }));
-                    mpanel.doLayout();
+                        });
+                        mpanel.add(current);
+                        mpanel.doLayout();
+                    }
                 }
             }
         });
