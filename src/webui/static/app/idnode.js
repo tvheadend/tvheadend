@@ -239,6 +239,7 @@ tvheadend.IdNodeField = function(conf)
     this.editor = function(conf)
     {
         var cons = null;
+        var combo = false;
 
         /* Editable? */
         var d = this.rdonly;
@@ -269,6 +270,8 @@ tvheadend.IdNodeField = function(conf)
             c['forceSelection'] = false;
             c['triggerAction'] = 'all';
             c['emptyText'] = 'Select ' + this.text + ' ...';
+            
+            combo = true;
 
             /* Single */
         } else {
@@ -302,7 +305,10 @@ tvheadend.IdNodeField = function(conf)
             }
         }
 
-        return new cons(c);
+        var r = new cons(c);
+        if (combo)
+            r.doQuery = tvheadend.doQueryAnyMatch;
+        return r;
     };
 };
 
@@ -410,6 +416,9 @@ tvheadend.idnode_editor_field = function(f, create)
                 }
             }
         });
+
+        r.doQuery = tvheadend.doQueryAnyMatch;
+
         if (st.on) {
             var fn = function() {
                 st.un('load', fn);
@@ -417,50 +426,7 @@ tvheadend.idnode_editor_field = function(f, create)
             };
             st.on('load', fn);
         }
-        
-        // any match mode
-        r.doQuery = function(q, forceAll){
-	        q = Ext.isEmpty(q) ? '' : q;
-	        var qe = {
-	        query: q,
-		        forceAll: forceAll,
-		        combo: this,
-		        cancel:false
-	        };
-	         
-	        if (this.fireEvent('beforequery', qe) === false || qe.cancel)
-	        	return false;
-	        
-	        q = qe.query;
-	        forceAll = qe.forceAll;
-	        if (forceAll === true || (q.length >= this.minChars)) {
-		        if (this.lastQuery !== q) {
-		        	this.lastQuery = q;
-			        if (this.mode == 'local') {
-			        	this.selectedIndex = -1;
-				        if (forceAll) {
-				        	this.store.clearFilter();
-				        }
-				        else {
-				        	this.store.filter(this.displayField, q, true); // supply the anyMatch option
-				        }
-				        this.onLoad();
-			        }
-			        else {
-				        this.store.baseParams[this.queryParam] = q;
-				        this.store.load({
-				        	params: this.getParams(q)
-				        });
-				        this.expand();
-			        }
-		        }
-		        else {
-			        this.selectedIndex = -1;
-			        this.onLoad();
-		        }
-	        }
-        };
-        
+
         return r;
         /* TODO: listeners for regexp?
          listeners       : { 
