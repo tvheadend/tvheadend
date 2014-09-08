@@ -398,7 +398,6 @@ dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
   const char *s = v;
   int t;
 
-  printf("time set: '%s'\n", (char *)v);
   if(s == NULL || s[0] == '\0')
     t = -1;
   else if(strchr(s, ':') != NULL)

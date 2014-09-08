@@ -745,10 +745,11 @@ config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
   uint32_t u32;
   htsmsg_delete_field(c, "index");
   if (!htsmsg_get_u32(c, "approx_time", &u32)) {
-    if (u32 == 0)
-      u32 = -1;
     htsmsg_delete_field(c, "approx_time");
-    htsmsg_add_u32(c, "start", u32);
+    if (u32 != 0)
+      htsmsg_add_u32(c, "start", u32);
+    else
+      htsmsg_add_str(c, "start", "");
   }
   if (!htsmsg_get_u32(c, "contenttype", &u32)) {
     htsmsg_delete_field(c, "contenttype");
@@ -826,6 +827,14 @@ config_migrate_v9 ( void )
       hts_settings_save(e, "dvr/config/%s", u.hex);
     }
     htsmsg_destroy(c);
+  }
+
+  if ((c = hts_settings_load("autorec")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("autorec/%s", f->hmf_name);
+      hts_settings_save(e, "dvr/autorec/%s", f->hmf_name);
+    }
   }
 }
 
