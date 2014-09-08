@@ -95,7 +95,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   if(dae->dae_brand)
     if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
-  
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if(!e->episode->title) return 0;
@@ -110,7 +109,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(dae->dae_channel != NULL &&
        dae->dae_channel != e->channel)
       return 0;
-  
+
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
       if(ctm->ctm_channel == e->channel)
@@ -274,7 +273,9 @@ dvr_autorec_save(dvr_autorec_entry_t *dae)
 static void
 dvr_autorec_entry_class_save(idnode_t *self)
 {
-  dvr_autorec_save((dvr_autorec_entry_t *)self);
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
+  dvr_autorec_save(dae);
+  dvr_autorec_changed(dae, 1);
 }
 
 static void
@@ -397,6 +398,7 @@ dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
   const char *s = v;
   int t;
 
+  printf("time set: '%s'\n", (char *)v);
   if(s == NULL || s[0] == '\0')
     t = -1;
   else if(strchr(s, ':') != NULL)
@@ -435,7 +437,7 @@ dvr_autorec_entry_class_time_get(void *o, int tm)
   if (tm >= 0)
     snprintf(buf, sizeof(buf), "%02d:%02d", tm / 60, tm % 60);
   else
-    strcpy(buf, "Not set");
+    strcpy(buf, "Any");
   ret = buf;
   return &ret;
 }
@@ -579,7 +581,11 @@ dvr_autorec_entry_class_brand_set(void *o, const void *v)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   int save;
-  epg_brand_t *brand = epg_brand_find_by_uri(v, 1, &save);
+  epg_brand_t *brand;
+
+  if (v && *(char *)v == '\0')
+    v = NULL;
+  brand = v ? epg_brand_find_by_uri(v, 1, &save) : NULL;
   if (brand && dae->dae_brand != brand) {
     if (dae->dae_brand)
       dae->dae_brand->putref((epg_object_t*)dae->dae_brand);
@@ -611,7 +617,11 @@ dvr_autorec_entry_class_season_set(void *o, const void *v)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   int save;
-  epg_season_t *season = epg_season_find_by_uri(v, 1, &save);
+  epg_season_t *season;
+
+  if (v && *(char *)v == '\0')
+    v = NULL;
+  season = v ? epg_season_find_by_uri(v, 1, &save) : NULL;
   if (season && dae->dae_season != season) {
     if (dae->dae_season)
       dae->dae_season->putref((epg_object_t*)dae->dae_season);
@@ -643,7 +653,11 @@ dvr_autorec_entry_class_series_link_set(void *o, const void *v)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   int save;
-  epg_serieslink_t *sl = epg_serieslink_find_by_uri(v, 1, &save);
+  epg_serieslink_t *sl;
+
+  if (v && *(char *)v == '\0')
+    v = NULL;
+  sl = v ? epg_serieslink_find_by_uri(v, 1, &save) : NULL;
   if (sl && dae->dae_serieslink != sl) {
     if (dae->dae_serieslink)
       dae->dae_serieslink->putref((epg_object_t*)dae->dae_season);
