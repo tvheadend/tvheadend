@@ -154,7 +154,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
               'duration,channelname,creator,config_name,' +
               'sched_status',
         sort: {
-          field: 'start',
+          field: 'start_real',
           direction: 'DESC'
         },
         plugins: [actions],
@@ -225,7 +225,7 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         },
         sort: {
-          field: 'start',
+          field: 'start_real',
           direction: 'DESC'
         },
         plugins: [actions],
@@ -273,7 +273,7 @@ tvheadend.dvr_failed = function(panel, index) {
               'duration,channelname,creator,' +
               'status,sched_status',
         sort: {
-          field: 'start',
+          field: 'start_real',
           direction: 'DESC'
         },
         plugins: [actions],
