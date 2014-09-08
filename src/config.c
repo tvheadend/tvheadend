@@ -976,7 +976,10 @@ dobackup(const char *oldver)
   tvhinfo("config", "backup: migrating config from %s (running %s)",
                     oldver, tvheadend_version);
 
-  getcwd(cwd, sizeof(cwd));
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    tvherror("config", "unable to get the current working directory");
+    goto fatal;
+  }
 
   if (!access("/bin/tar", X_OK))
     argv[0] = "/bin/tar";
