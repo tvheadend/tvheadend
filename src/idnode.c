@@ -424,8 +424,11 @@ idnode_get_bool
   const property_t *p = idnode_find_prop(self, key);
   if (p->islist) return 1;
   if (p) {
-    void *ptr = self;
-    ptr += p->off;
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_BOOL:
         *b = *(int*)ptr;
@@ -447,8 +450,11 @@ idnode_get_time
   const property_t *p = idnode_find_prop(self, key);
   if (p->islist) return 1;
   if (p) {
-    void *ptr = self;
-    ptr += p->off;
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
     switch (p->type) {
       case PT_TIME:
         *tm = *(time_t*)ptr;
