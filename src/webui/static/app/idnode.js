@@ -603,12 +603,17 @@ tvheadend.idnode_editor_form = function(d, meta, panel, create)
                 panel.add(mfs[number]);
         }
     }
-    if (df.length)
-        panel.add(newFieldSet({ title: "Basic Settings", items: df }));
-    if (af.length)
-        panel.add(newFieldSet({ title: "Advanced Settings", items: af }));
-    if (rf.length)
-        panel.add(newFieldSet({ title: "Read-only Info", items: rf }));
+    if (df.length && !af.length && !rf.length) {
+        var f = newFieldSet({ nocollapse: true, items: df });
+        panel.add(f);
+    } else {
+        if (df.length)
+            panel.add(newFieldSet({ title: "Basic Settings", items: df }));
+        if (af.length)
+            panel.add(newFieldSet({ title: "Advanced Settings", items: af }));
+        if (rf.length)
+            panel.add(newFieldSet({ title: "Read-only Info", items: rf }));
+    }
     panel.doLayout();
 };
 
