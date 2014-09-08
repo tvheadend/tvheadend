@@ -166,16 +166,16 @@ tvheadend.epgDetails = function(event) {
     win.show();
 
     function recordEvent() {
-        record('event')
+        record('api/dvr/entry/create_by_event')
     }
 
     function recordSeries() {
-        record('series');
+        record('api/dvr/autorec/create_by_series');
     }
 
-    function record(op) {
+    function record(url) {
         Ext.Ajax.request({
-            url: 'api/dvr/entry/create_by_' + op,
+            url: url,
             params: {
                 event_id: event.id,
                 config_uuid: confcombo.getValue()
