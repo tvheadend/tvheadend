@@ -289,13 +289,14 @@ linuxdvb_frontend_stop_mux
   lfe->lfe_ready  = 0;
   lfe->lfe_locked = 0;
   lfe->lfe_status = 0;
-  assert(lfe->lfe_in_setup == 0);
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
 
   if (lfe->lfe_satconf)
     linuxdvb_satconf_post_stop_mux(lfe->lfe_satconf);
+
+  lfe->lfe_in_setup = 0;
 }
 
 static int
