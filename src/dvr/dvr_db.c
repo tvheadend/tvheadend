@@ -1163,7 +1163,7 @@ dvr_entry_class_config_name_set(void *o, const void *v)
     return 0;
   cfg = v ? dvr_config_find_by_uuid(v) : NULL;
   if (!cfg)
-    cfg = dvr_config_find_by_name_default("");
+    cfg = dvr_config_find_by_name_default(v);
   if (cfg == NULL) {
     if (de->de_config) {
       LIST_REMOVE(de, de_config_link);
