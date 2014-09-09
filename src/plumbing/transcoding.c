@@ -123,7 +123,7 @@ typedef struct transcoder {
 
 #define WORKING_ENCODER(x) (x == AV_CODEC_ID_H264 || x == AV_CODEC_ID_MPEG2VIDEO || \
 			    x == AV_CODEC_ID_VP8  || x == AV_CODEC_ID_AAC ||	\
-                           x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
+                            x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
 
 
 uint32_t transcoding_enabled = 0;
