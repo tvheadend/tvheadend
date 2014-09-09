@@ -20,6 +20,14 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
+#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
+#include <libavresample/avresample.h>
+#include <libavutil/opt.h>
+#include <libavutil/mathematics.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/frame.h>
+#include <libavutil/audio_fifo.h>
+#endif
 #include <libavutil/dict.h>
 #include <libavutil/audioconvert.h>
 
@@ -65,6 +73,11 @@ typedef struct audio_stream {
 
   int8_t          aud_channels;
   int32_t         aud_bitrate;
+#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
+  AVAudioResampleContext *resample_context;
+  AVAudioFifo     *fifo;
+#endif
+
 } audio_stream_t;
 
 
@@ -110,7 +123,7 @@ typedef struct transcoder {
 
 #define WORKING_ENCODER(x) (x == AV_CODEC_ID_H264 || x == AV_CODEC_ID_MPEG2VIDEO || \
 			    x == AV_CODEC_ID_VP8  || x == AV_CODEC_ID_AAC ||	\
-			    x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
+                           x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
 
 
 uint32_t transcoding_enabled = 0;
@@ -250,6 +263,7 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
 }
 
 
+#if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
 /**
  *
  */
@@ -385,6 +399,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
     octx->channels       = 2; // Only stereo suported by libavcodec
     octx->global_quality = 4*FF_QP2LAMBDA;
+
     break;
 
   default:
@@ -450,7 +465,412 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   av_free_packet(&packet);
   pkt_ref_dec(pkt);
 }
+#else
 
+static char *const get_error_text(const int error)
+{
+  static char error_buffer[255];
+  av_strerror(error, error_buffer, sizeof(error_buffer));
+  return error_buffer;
+}
+
+/**
+ *
+ */
+static void
+transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
+{
+  AVCodec *icodec, *ocodec;
+  AVCodecContext *ictx, *octx;
+  AVPacket packet;
+  int length, len;
+  uint32_t frame_bytes;
+  streaming_message_t *sm;
+  th_pkt_t *n;
+  audio_stream_t *as = (audio_stream_t*)ts;
+  int got_frame, got_packet_ptr;
+  AVFrame *frame = av_frame_alloc();
+  uint8_t **output = NULL;
+
+  ictx = as->aud_ictx;
+  octx = as->aud_octx;
+
+  icodec = as->aud_icodec;
+  ocodec = as->aud_ocodec;
+
+  if (ictx->codec_id == AV_CODEC_ID_NONE) {
+    ictx->codec_id = icodec->id;
+
+    if (avcodec_open2(ictx, icodec, NULL) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", icodec->name);
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    as->aud_dec_pts = pkt->pkt_pts;
+  }
+
+  if (pkt->pkt_pts > as->aud_dec_pts) {
+    tvhlog(LOG_WARNING, "transcode", "Detected framedrop in audio");
+    as->aud_enc_pts += (pkt->pkt_pts - as->aud_dec_pts);
+    as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
+  }
+
+  pkt = pkt_merge_header(pkt);
+
+  av_init_packet(&packet);
+  packet.data     = pktbuf_ptr(pkt->pkt_payload);
+  packet.size     = pktbuf_len(pkt->pkt_payload);
+  packet.pts      = pkt->pkt_pts;
+  packet.dts      = pkt->pkt_dts;
+  packet.duration = pkt->pkt_duration;
+
+  if ((len = as->aud_dec_size - as->aud_dec_offset) <= 0) {
+    tvhlog(LOG_ERR, "transcode", "Decoder buffer overflow");
+    ts->ts_index = 0;
+    goto cleanup;
+  }
+
+  length = avcodec_decode_audio4( ictx
+                                 , frame
+                                 , &got_frame
+                                 , &packet);
+  av_free_packet(&packet);
+
+  tvhlog(LOG_DEBUG, "transcode", "Decoded packet. length-consumed=%d from in-length=%zu, got_frame=%d.\n", length, pktbuf_len(pkt->pkt_payload),got_frame);
+
+  if (!got_frame) {
+    tvhlog(LOG_DEBUG, "transcode", "Did not have a full frame in the packet.\n");
+  }
+
+  if (length < 0) {
+    tvhlog(LOG_ERR, "transcode", "length < 0.\n");
+    ts->ts_index = 0;
+    goto cleanup;
+  }
+
+  if (length != pktbuf_len(pkt->pkt_payload)) {
+    tvhlog(LOG_DEBUG, "transcode", "Not all data from packet was decoded. length=%d from packet.size=%zu.\n", length, pktbuf_len(pkt->pkt_payload));
+  }
+
+  if (length == 0 || !got_frame) {
+    tvhlog(LOG_DEBUG, "transcode", "Not yet enough data for decoding.");
+    goto cleanup;
+  }
+
+  octx->sample_rate     = ictx->sample_rate;
+  octx->sample_fmt      = ictx->sample_fmt;
+
+  octx->time_base.den   = 90000;
+  octx->time_base.num   = 1;
+
+  octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
+  octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
+
+  octx->channels        = MIN(octx->channels, ictx->channels);
+  octx->bit_rate        = MIN(octx->bit_rate,  ictx->bit_rate);
+
+  switch (octx->channels) {
+  case 1:
+    octx->channel_layout = AV_CH_LAYOUT_MONO;
+    break;
+
+  case 2:
+    octx->channel_layout = AV_CH_LAYOUT_STEREO;
+    break;
+
+  case 3:
+    octx->channel_layout = AV_CH_LAYOUT_SURROUND;
+    break;
+
+  case 4:
+    octx->channel_layout = AV_CH_LAYOUT_QUAD;
+    break;
+
+  case 5:
+    octx->channel_layout = AV_CH_LAYOUT_5POINT0;
+    break;
+
+  case 6:
+    octx->channel_layout = AV_CH_LAYOUT_5POINT1;
+    break;
+
+  case 7:
+    octx->channel_layout = AV_CH_LAYOUT_6POINT1;
+    break;
+
+  case 8:
+    octx->channel_layout = AV_CH_LAYOUT_7POINT1;
+    break;
+
+  default:
+    break;
+  }
+
+  switch (ts->ts_type) {
+  case SCT_MPEG2AUDIO:
+    octx->channels = MIN(octx->channels, 2);
+    if (octx->channels == 1)
+      octx->channel_layout = AV_CH_LAYOUT_MONO;
+    else
+      octx->channel_layout = AV_CH_LAYOUT_STEREO;
+
+    octx->sample_fmt     = AV_SAMPLE_FMT_S16;
+    octx->bit_rate = 128000;
+    break;
+
+  case SCT_AAC:
+    octx->global_quality = 4*FF_QP2LAMBDA;
+    octx->flags         |= CODEC_FLAG_QSCALE;
+    break;
+
+  case SCT_VORBIS:
+    octx->flags         |= CODEC_FLAG_QSCALE;
+    octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+    octx->global_quality = 4*FF_QP2LAMBDA;
+    octx->sample_fmt     = AV_SAMPLE_FMT_FLTP;
+    octx->channels       = ictx->channels;
+    octx->channel_layout = ictx->channel_layout;
+    break;
+
+  default:
+    break;
+  }
+
+  int resample = ((ictx->channels != octx->channels) ||
+      (ictx->channel_layout != octx->channel_layout) ||
+      (ictx->sample_fmt != octx->sample_fmt) ||
+      (ictx->sample_rate != octx->sample_rate));
+
+  if (octx->codec_id == AV_CODEC_ID_NONE) {
+    octx->codec_id = ocodec->id;
+
+    if (avcodec_open2(octx, ocodec, NULL) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Unable to open %s encoder", ocodec->name);
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    as->resample_context = NULL;
+    if (resample) {
+      if (!(as->resample_context = avresample_alloc_context())) {
+        tvhlog(LOG_ERR, "transcode", "Could not allocate resample context");
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+
+      // Convert audio
+      tvhlog(LOG_DEBUG, "transcode", "converting audio");
+
+      tvhlog(LOG_DEBUG, "transcode", "ictx->channels:%d", ictx->channels);
+      tvhlog(LOG_DEBUG, "transcode", "ictx->channel_layout:%" PRIu64, ictx->channel_layout);
+      tvhlog(LOG_DEBUG, "transcode", "ictx->sample_rate:%d", ictx->sample_rate);
+      tvhlog(LOG_DEBUG, "transcode", "ictx->sample_fmt:%d", ictx->sample_fmt);
+      tvhlog(LOG_DEBUG, "transcode", "ictx->bit_rate:%d", ictx->bit_rate);
+
+      tvhlog(LOG_DEBUG, "transcode", "octx->channels:%d", octx->channels);
+      tvhlog(LOG_DEBUG, "transcode", "octx->channel_layout:%" PRIu64, octx->channel_layout);
+      tvhlog(LOG_DEBUG, "transcode", "octx->sample_rate:%d", octx->sample_rate);
+      tvhlog(LOG_DEBUG, "transcode", "octx->sample_fmt:%d", octx->sample_fmt);
+      tvhlog(LOG_DEBUG, "transcode", "octx->bit_rate:%d", octx->bit_rate);
+
+      int opt_error;
+      if ((opt_error = av_opt_set_int(as->resample_context, "in_channel_layout", ictx->channel_layout, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option in_channel_layout (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+      if ((opt_error = av_opt_set_int(as->resample_context, "out_channel_layout", octx->channel_layout, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option out_channel_layout (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+      if ((opt_error = av_opt_set_int(as->resample_context, "in_sample_rate", ictx->sample_rate, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option in_sample_rate (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+      if ((opt_error = av_opt_set_int(as->resample_context, "out_sample_rate", octx->sample_rate, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option out_sample_rate (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+      if ((opt_error = av_opt_set_int(as->resample_context, "in_sample_fmt", ictx->sample_fmt, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option in_sample_fmt (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+      if ((opt_error = av_opt_set_int(as->resample_context, "out_sample_fmt", octx->sample_fmt, 0)) != 0) {
+        tvhlog(LOG_ERR, "transcode", "Could not set option out_sample_fmt (error '%s')",get_error_text(opt_error));
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+
+      if (avresample_open(as->resample_context) < 0) {
+        tvhlog(LOG_ERR, "transcode", "Error avresample_open.\n");
+        ts->ts_index = 0;
+        goto cleanup;
+      }
+
+    }
+
+    as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
+    if (!as->fifo) {
+      tvhlog(LOG_ERR, "transcode", "Could not allocate fifo");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+  }
+
+  if (resample) {
+
+    if (!(output = calloc(octx->channels, sizeof(output)))) {
+      tvhlog(LOG_ERR, "transcode", "Could not allocate converted input sample pointers");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    if (av_samples_alloc(output, NULL, octx->channels, frame->nb_samples, octx->sample_fmt, 0) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Could not allocate converted input sample");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    if (!output) {
+      tvhlog(LOG_ERR, "transcode", "Could not allocate memory for converted input sample pointers");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    int out_samples = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
+                                        frame->extended_data, 0, frame->nb_samples);
+    tvhlog(LOG_DEBUG, "transcode", "after avresample_convert. out_samples=%d",out_samples);
+    while (avresample_available(as->resample_context) > 0) {
+      out_samples = avresample_read(as->resample_context, output, frame->nb_samples);
+
+      if (out_samples > 0) {
+        if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + out_samples) < 0) {
+          tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
+          ts->ts_index = 0;
+          goto cleanup;
+        }
+
+        if (av_audio_fifo_write(as->fifo, (void **)output, out_samples) < out_samples) {
+          tvhlog(LOG_ERR, "transcode", "Could not write to FIFO.");
+          ts->ts_index = 0;
+          goto cleanup;
+        }
+      }
+
+    }
+
+/*  Need to find out where we are going to do this. Normally at the end.
+    int delay_samples = avresample_get_delay(as->resample_context);
+    if (delay_samples) {
+      tvhlog(LOG_DEBUG, "transcode", "%d samples in resamples delay buffer.", delay_samples);
+      av_freep(output);
+      goto cleanup;
+    }
+*/
+
+  }
+  else {
+    tvhlog(LOG_DEBUG, "transcode", "No conversion needed");
+    if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + frame->nb_samples) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    if (av_audio_fifo_write(as->fifo, (void **)frame->extended_data, frame->nb_samples) < frame->nb_samples) {
+      tvhlog(LOG_ERR, "transcode", "Could not write to FIFO.");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+  }
+
+  as->aud_dec_pts    += pkt->pkt_duration;
+
+  frame_bytes = av_get_bytes_per_sample(octx->sample_fmt) * octx->frame_size * octx->channels;
+
+  while (av_audio_fifo_size(as->fifo) >= octx->frame_size) {
+    tvhlog(LOG_DEBUG, "transcode", "start encoding loop: av_audio_fifo_size:%d, octx->frame_size=%d", av_audio_fifo_size(as->fifo), octx->frame_size);
+
+    av_frame_free(&frame);
+    frame = av_frame_alloc();
+    frame->nb_samples = octx->frame_size;
+    frame->format = octx->sample_fmt;
+    frame->channel_layout = octx->channel_layout;
+    frame->sample_rate = octx->sample_rate;
+    if (av_frame_get_buffer(frame, 0) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Could not allocate output frame samples.");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    int samples_read;
+    if ((samples_read = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
+      tvhlog(LOG_ERR, "transcode", "Could not read data from FIFO.");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    tvhlog(LOG_DEBUG, "transcode", "before encoding: frame->linesize[0]=%d, samples_read=%d", frame->linesize[0], samples_read);
+
+    av_init_packet(&packet);
+    packet.data = NULL;
+    packet.size = 0;
+    int ret = avcodec_encode_audio2(octx,
+                                   &packet,
+                                   frame,
+                                   &got_packet_ptr);
+     tvhlog(LOG_DEBUG, "transcode", "encoded: packet.size=%d, ret=%d, got_packet_ptr=%d", packet.size, ret, got_packet_ptr);
+
+    if ((ret < 0) || (got_packet_ptr < -1)) {
+      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d:%d)", ret, got_packet_ptr);
+      ts->ts_index = 0;
+      goto cleanup;
+
+    } else if (got_packet_ptr) {
+      length = packet.size;
+      tvhlog(LOG_DEBUG, "transcode", "encoded: packet.pts=%" PRIu64 ", packet.dts=%" PRIu64 ", as->aud_enc_pts=%lu", packet.pts, packet.dts, as->aud_enc_pts);
+      n = pkt_alloc(packet.data, packet.size, as->aud_enc_pts, as->aud_enc_pts);
+      n->pkt_componentindex = ts->ts_index;
+      n->pkt_frametype      = pkt->pkt_frametype;
+      n->pkt_channels       = octx->channels;
+      n->pkt_sri            = pkt->pkt_sri;
+
+      if (octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE)
+	n->pkt_duration = octx->coded_frame->pts - as->aud_enc_pts;
+      else
+	n->pkt_duration = frame_bytes*90000 / (2 * octx->channels * octx->sample_rate);
+
+      as->aud_enc_pts += n->pkt_duration;
+
+      if (octx->extradata_size)
+	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
+
+      sm = streaming_msg_create_pkt(n);
+      streaming_target_deliver2(ts->ts_target, sm);
+      pkt_ref_dec(n);
+    }
+
+    av_free_packet(&packet);
+  }
+
+ cleanup:
+
+  if ((output) && (output[0])) {
+    av_freep(&(output)[0]);
+  }
+  av_freep(output);
+  av_frame_free(&frame);
+  av_free_packet(&packet);
+  pkt_ref_dec(pkt);
+}
+#endif
 
 /**
  *
@@ -657,10 +1077,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
       
  
-  len = avpicture_get_size(octx->pix_fmt, ictx->width, ictx->height);
-  out = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
-  memset(out, 0, len);
-
   vs->vid_enc_frame->pkt_pts = vs->vid_dec_frame->pkt_pts;
   vs->vid_enc_frame->pkt_dts = vs->vid_dec_frame->pkt_dts;
 
@@ -669,8 +1085,66 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   else if (ictx->coded_frame && ictx->coded_frame->pts != AV_NOPTS_VALUE)
     vs->vid_enc_frame->pts = vs->vid_dec_frame->pts;
- 
+
+#if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
+  len = avpicture_get_size(octx->pix_fmt, ictx->width, ictx->height);
+  out = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
+  memset(out, 0, len);
+
   length = avcodec_encode_video(octx, out, len, vs->vid_enc_frame);
+#else
+  AVPacket packet2;
+  int ret, got_output, frame_count;
+
+  av_init_packet(&packet2);
+  packet2.data = NULL; // packet data will be allocated by the encoder
+  packet2.size = 0;
+
+  ret = avcodec_encode_video2(octx, &packet2, vs->vid_enc_frame, &got_output);
+  if (ret < 0) {
+    tvhlog(LOG_ERR, "transcode", "Error encoding frame. avcodec_encode_video2()");
+    ts->ts_index = 0;
+    goto cleanup;
+  }
+  if (!got_output) {
+    tvhlog(LOG_ERR, "transcode", "No output from avcodec_encode_video2()");
+    ts->ts_index = 0;
+    goto cleanup;
+  }
+
+  length = packet2.size;
+
+  out = av_realloc(NULL, length + FF_INPUT_BUFFER_PADDING_SIZE);
+  memset(out, 0, length);
+
+  memcpy(out, packet2.data, packet2.size);
+
+  /* get the delayed frames */
+  av_free_packet(&packet2);
+  frame_count = 2;
+  for (got_output = 1; got_output; frame_count++) {
+    ret = avcodec_encode_video2(octx, &packet2, NULL, &got_output);
+
+    if (ret < 0) {
+      tvhlog(LOG_ERR, "transcode", "Error encoding delayed frames. avcodec_encode_video2()");
+      ts->ts_index = 0;
+      goto cleanup;
+    }
+
+    if (got_output) {
+      tvhlog(LOG_DEBUG, "transcode", "encoding frame %3d (size=%5d)\n", frame_count, packet2.size);
+
+      out = av_realloc(&out, length + packet2.size + FF_INPUT_BUFFER_PADDING_SIZE);
+      memset(out + length, 0, packet2.size);
+
+      // Expand out to be able to contain all data.
+      memcpy(out+length, packet2.data, packet2.size);
+      length =+ packet2.size;
+      av_free_packet(&packet2);
+    }
+  }
+#endif
+
   if (length <= 0) {
     if (length) {
       tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
