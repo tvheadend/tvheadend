@@ -681,19 +681,19 @@ tvheadend.epg = function() {
 
     function createAutoRec2(params) {
         /* Really do it */
-        params.conf = {
+        var conf = {
           enabled: 1,
           comment: 'Created from EPG query',
         };
-        if (params.title) params['title'] = params.title;
-        if (params.channel) params['channel'] = params.channel;
-        if (params.tag) params['tag'] = params.tag;
-        if (params.content_type) params['content_type'] = params.content_type;
-        if (params.minduration) params['minduration'] = params.minduration;
-        if (params.maxduration) params['maxduration'] = params.maxduration;
+        if (params.title) conf.title = params.title;
+        if (params.channel) conf.channel = params.channel;
+        if (params.tag) conf.tag = params.tag;
+        if (params.content_type) conf.content_type = params.content_type;
+        if (params.minduration) conf.minduration = params.minduration;
+        if (params.maxduration) conf.maxduration = params.maxduration;
         Ext.Ajax.request({
             url: 'api/dvr/autorec/create',
-            params: params
+            params: { conf: Ext.encode(conf) }
         });
     }
 
