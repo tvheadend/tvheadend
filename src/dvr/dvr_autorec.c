@@ -195,7 +195,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf;
   char *title;
-  if (!event || !event->episode || !event->serieslink)
+  if (!event || !event->episode)
     return NULL;
   conf = htsmsg_create_map();
   title = regexp_escape(epg_broadcast_get_title(event, NULL));
@@ -203,7 +203,8 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "channel", channel_get_name(event->channel));
-  htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
+  if (event->serieslink)
+    htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
   htsmsg_add_str(conf, "creator", creator ?: "");
   htsmsg_add_str(conf, "comment", comment ?: "");
   dae = dvr_autorec_create(NULL, conf);

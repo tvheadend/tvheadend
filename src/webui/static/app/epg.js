@@ -166,7 +166,7 @@ tvheadend.epgDetails = function(event) {
     win.show();
 
     function recordEvent() {
-        record('api/dvr/entry/create_by_event')
+        record('api/dvr/entry/create_by_event');
     }
 
     function recordSeries() {
