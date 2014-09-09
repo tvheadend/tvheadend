@@ -38,8 +38,6 @@ static int dvr_autorec_in_init = 0;
 
 struct dvr_autorec_entry_queue autorec_entries;
 
-static void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
-
 /**
  * Unlink - and remove any unstarted
  */
@@ -910,7 +908,7 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s)
 /**
  *
  */
-static void
+void
 dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
 {
   channel_t *ch;

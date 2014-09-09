@@ -277,8 +277,10 @@ api_dvr_autorec_create
 
   pthread_mutex_lock(&global_lock);
   dae = dvr_autorec_create(NULL, conf);
-  if (dae)
+  if (dae) {
     dvr_autorec_save(dae);
+    dvr_autorec_changed(dae, 1);
+  }
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -314,8 +316,10 @@ api_dvr_autorec_create_by_series
       dae = dvr_autorec_add_series_link(api_dvr_config_name(perm, config_uuid),
                                         e, perm->aa_representative,
                                         "Created from EPG query");
-      if (dae)
+      if (dae) {
         dvr_autorec_save(dae);
+        dvr_autorec_changed(dae, 1);
+      }
     }
     pthread_mutex_unlock(&global_lock);
     count++;

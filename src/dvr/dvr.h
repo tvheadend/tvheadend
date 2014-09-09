@@ -443,6 +443,8 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 
 void dvr_autorec_save(dvr_autorec_entry_t *dae);
 
+void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
+
 static inline dvr_autorec_entry_t *
 dvr_autorec_find_by_uuid(const char *uuid)
   { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class); }
