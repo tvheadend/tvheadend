@@ -235,10 +235,10 @@ tvheadend.dvr_finished = function(panel, index) {
                 width: 40,
                 header: "Play",
                 renderer: function(v, o, r) {
-                    var title = r.data['title'];
+                    var title = r.data['disp_title'];
                     if (r.data['episode'])
                         title += ' / ' + r.data['episode'];
-                    return '<a href="play/dvrfile/' + r.data['id'] +
+                    return '<a href="play/dvrfile/' + r.id +
                            '?title=' + encodeURIComponent(title) + '">Play</a>';
                 }
             }],
