@@ -411,6 +411,7 @@ struct mpegts_mux
   int   mm_enabled;
   int   mm_epg;
   char *mm_charset;
+  int   mm_pmt_06_ac3;
 };
  
 /* Service */

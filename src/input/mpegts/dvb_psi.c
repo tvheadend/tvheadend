@@ -34,7 +34,7 @@
 SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
 
 static int
-psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len);
+psi_parse_pmt(mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len);
 
 /* **************************************************************************
  * Lookup tables
@@ -695,7 +695,7 @@ dvb_pmt_callback
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
   pthread_mutex_lock(&s->s_stream_mutex);
   had_components = !!TAILQ_FIRST(&s->s_components);
-  r = psi_parse_pmt(s, ptr, len);
+  r = psi_parse_pmt(mt->mt_mux, s, ptr, len);
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (r)
     service_restart((service_t*)s, had_components);
@@ -1279,7 +1279,7 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
  */
 static int
 psi_parse_pmt
-  (mpegts_service_t *t, const uint8_t *ptr, int len)
+  (mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len)
 {
   int ret = 0;
   uint16_t pcr_pid, pid;
@@ -1376,7 +1376,7 @@ psi_parse_pmt
     case 0x06:
       /* 0x06 is Chinese Cable TV AC-3 audio track */
       /* but mark it so only when no more descriptors exist */
-      if (dllen > 1)
+      if (dllen > 1 || !mux || !mux->mm_pmt_06_ac3)
         break;
       /* fall through to SCT_AC3 */
     case 0x81:
