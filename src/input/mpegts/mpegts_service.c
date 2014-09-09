@@ -423,7 +423,9 @@ mpegts_service_create0
 {
   int r;
   char buf[256];
-  service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
+
+  if (service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf) == NULL)
+    return NULL;
 
   /* Create */
   sbuf_init(&s->s_tsbuf);
@@ -457,8 +459,8 @@ mpegts_service_create0
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
-  idnode_updated(&mm->mm_id);
-  idnode_updated(&mm->mm_network->mn_id);
+  idnode_notify_simple(&mm->mm_id);
+  idnode_notify_simple(&mm->mm_network->mn_id);
 
   return s;
 }

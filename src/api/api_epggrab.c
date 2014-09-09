@@ -24,7 +24,7 @@
 
 static int
 api_epggrab_channel_list
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *m;
   pthread_mutex_lock(&global_lock);

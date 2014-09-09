@@ -23,15 +23,17 @@
 #include "htsmsg.h"
 #include "idnode.h"
 #include "redblack.h"
+#include "access.h"
 
-#define TVH_API_VERSION 12
+#define TVH_API_VERSION 14
 
 /*
  * Command hook
  */
 
 typedef int (*api_callback_t)
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+  ( access_t *perm, void *opaque, const char *op,
+    htsmsg_t *args, htsmsg_t **resp );
 
 typedef struct api_hook
 {
@@ -50,7 +52,8 @@ void api_register_all ( const api_hook_t *hooks );
 /*
  * Execute
  */
-int  api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp );
+int  api_exec ( access_t *perm, const char *subsystem,
+                htsmsg_t *args, htsmsg_t **resp );
 
 /*
  * Initialise
@@ -70,6 +73,7 @@ void api_imagecache_init    ( void );
 void api_esfilter_init      ( void );
 void api_intlconv_init      ( void );
 void api_access_init        ( void );
+void api_dvr_init           ( void );
 
 /*
  * IDnode
@@ -84,21 +88,24 @@ typedef struct api_idnode_grid_conf
 } api_idnode_grid_conf_t;
 
 typedef void (*api_idnode_grid_callback_t)
-  (idnode_set_t*, api_idnode_grid_conf_t*, htsmsg_t *args);
+  (access_t *perm, idnode_set_t*, api_idnode_grid_conf_t*, htsmsg_t *args);
 typedef idnode_set_t *(*api_idnode_tree_callback_t)
-  (void);
+  (access_t *perm);
 
 int api_idnode_grid
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 int api_idnode_class
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 int api_idnode_tree
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 int api_idnode_load_by_class
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
+
+int api_idnode_handler
+  ( access_t *perm, htsmsg_t *args, htsmsg_t **resp, void (*handler)(access_t *perm, idnode_t *in) );
 
 /*
  * Service mapper

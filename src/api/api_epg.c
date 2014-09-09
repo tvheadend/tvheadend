@@ -112,7 +112,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang )
     
   /* Recording */
   if ((de = dvr_entry_find_by_event(eb)))
-    htsmsg_add_u32(m, "dvrId", de->de_id);
+    htsmsg_add_str(m, "dvrId", idnode_uuid_as_str(&de->de_id));
 
   /* Next event */
   if ((eb = epg_broadcast_get_next(eb)))
@@ -123,7 +123,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang )
 
 static int
 api_epg_grid
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int i;
   epg_query_result_t eqr;
@@ -176,10 +176,25 @@ api_epg_grid
   return 0;
 }
 
+static int
+api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
+                          htsmsg_t *args, htsmsg_t **resp)
+{
+  htsmsg_t *array;
+
+  *resp = htsmsg_create_map();
+  array = epg_genres_list_all(1, 0);
+  htsmsg_add_msg(*resp, "entries", array);
+  return 0;
+}
+
+
 void api_epg_init ( void )
 {
   static api_hook_t ah[] = {
-    { "epg/grid",  ACCESS_ANONYMOUS, api_epg_grid, NULL },
+    { "epg/data/grid",         ACCESS_ANONYMOUS, api_epg_grid, NULL },
+    { "epg/content_type/list", ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
+
     { NULL },
   };
 

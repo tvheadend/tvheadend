@@ -22,6 +22,7 @@
 #include <pthread.h>
 
 struct imagecache_config {
+  int       __unused__;   // to avoid assert in prop.c (first member should be idnode_t)
   int       enabled;
   int       ignore_sslcert;
   uint32_t  ok_period;

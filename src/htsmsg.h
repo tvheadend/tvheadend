@@ -136,6 +136,11 @@ void htsmsg_add_s64(htsmsg_t *msg, const char *name,  int64_t s64);
 void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Add/update a string field
+ */
+int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);
+
+/**
  * Add an field where source is a list or map message.
  */
 void htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);

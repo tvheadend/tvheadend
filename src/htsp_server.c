@@ -652,9 +652,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_t *out = htsmsg_create_map();
   const char *s = NULL, *error = NULL;
   const char *p;
-  dvr_config_t *cfg;
 
-  htsmsg_add_u32(out, "id", de->de_id);
+  htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   if (de->de_channel)
     htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
 
@@ -666,11 +665,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
     htsmsg_add_str(out, "description", s);
 
-  if( de->de_filename && de->de_config_name ) {
-    if ((cfg = dvr_config_find_by_name_default(de->de_config_name))) {
-      if ((p = tvh_strbegins(de->de_filename, cfg->dvr_storage)))
-        htsmsg_add_str(out, "path", p);
-    }
+  if( de->de_filename && de->de_config ) {
+    if ((p = tvh_strbegins(de->de_filename, de->de_config->dvr_storage)))
+      htsmsg_add_str(out, "path", p);
   }
 
   switch(de->de_sched_state) {
@@ -796,7 +793,7 @@ htsp_build_event
   }
 
   if((de = dvr_entry_find_by_event(e)) != NULL) {
-    htsmsg_add_u32(out, "dvrId", de->de_id);
+    htsmsg_add_u32(out, "dvrId", idnode_get_short_uuid(&de->de_id));
   }
 
   if ((n = epg_broadcast_get_next(e)))
@@ -1217,9 +1214,9 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       desc = "";
 
     // create the dvr entry
-    de = dvr_entry_create(dvr_config_name, ch, start, stop,
-                          start_extra, stop_extra,
-                          title, desc, lang, 0, creator, NULL, priority);
+    de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
+                               start_extra, stop_extra,
+                               title, desc, lang, 0, creator, NULL, priority);
 
   /* Event timer */
   } else {
@@ -1238,7 +1235,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   case DVR_RECORDING:
   case DVR_MISSED_TIME:
   case DVR_COMPLETED:
-    htsmsg_add_u32(out, "id", de->de_id);
+    htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
     htsmsg_add_u32(out, "success", 1);
     break;  
   case DVR_NOSTATE:
@@ -2531,7 +2528,7 @@ void
 htsp_dvr_entry_delete(dvr_entry_t *de)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "id", de->de_id);
+  htsmsg_add_u32(m, "id", idnode_get_short_uuid(&de->de_id));
   htsmsg_add_str(m, "method", "dvrEntryDelete");
   htsp_async_send(m, HTSP_ASYNC_ON);
 }

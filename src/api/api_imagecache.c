@@ -27,7 +27,7 @@
 
 static int
 api_imagecache_load
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *l;
   pthread_mutex_lock(&global_lock);
@@ -41,7 +41,7 @@ api_imagecache_load
 
 static int
 api_imagecache_save
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   pthread_mutex_lock(&global_lock);
   if (imagecache_set_config(args))

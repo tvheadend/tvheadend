@@ -22,6 +22,7 @@
 #include "htsbuf.h"
 #include "url.h"
 #include "tvhpoll.h"
+#include "access.h"
 
 struct channel;
 
@@ -130,6 +131,8 @@ typedef struct http_connection {
 
   char *hc_username;
   char *hc_password;
+  access_t *hc_access;
+  int hc_ticket;
 
   struct config_head *hc_user_config;
 
@@ -206,7 +209,8 @@ void http_server_register(void);
 void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
-int http_access_verify_channel(http_connection_t *hc, int mask, struct channel *ch);
+int http_access_verify_channel(http_connection_t *hc, int mask,
+                               struct channel *ch, int ticket);
 
 void http_deescape(char *s);
 

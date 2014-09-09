@@ -1,4 +1,4 @@
-tvheadend.cwceditor = function() {
+tvheadend.cwceditor = function(panel, index) {
     var fm = Ext.form;
 
     function setMetaAttr(meta, record) {
@@ -125,5 +125,5 @@ tvheadend.cwceditor = function() {
         }
     });
 
-    return grid;
+    tvheadend.paneladd(panel, grid, index);
 };

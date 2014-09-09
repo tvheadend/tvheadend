@@ -176,7 +176,7 @@ cron_multi_set ( const char *str )
     if (line[0] != '#')
       if (!cron_set(&cron, line)) {
         count++;
-        cm2 = realloc(cm, sizeof(cm) + sizeof(cron) * count);
+        cm2 = realloc(cm, sizeof(*cm) + sizeof(cron) * count);
         if (cm2 == NULL) {
           free(cm);
           return NULL;
