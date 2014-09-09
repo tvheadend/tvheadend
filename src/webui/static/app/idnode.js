@@ -133,6 +133,19 @@ tvheadend.IdNodeField = function(conf)
      * Methods
      */
 
+    this.onrefresh = function(callback) {
+        this.rcallback = callback;
+        var st = this.store;
+        if (st && st instanceof Ext.data.JsonStore)
+            st.on('load', callback);
+    }
+
+    this.unrefresh = function(callback) {
+        var st = this.store;
+        if (st && st instanceof Ext.data.JsonStore)
+            st.un('load', callback);
+    }
+
     this.column = function(conf)
     {
         var cfg = conf && this.id in conf ? conf[this.id] : {};
@@ -840,10 +853,15 @@ tvheadend.idnode_grid = function(panel, conf)
     var grid = null;
     var event = null;
     var auto = null;
+    var idnode = null;
 
     var update = function(o) {
         if (auto.getValue())
             store.reload();
+    };
+
+    var update2 = function(o) {
+        grid.getView().refresh();
     };
 
     function build(d)
@@ -868,7 +886,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 columns.push(conf.lcol[i]);
 
         /* Model */
-        var idnode = new tvheadend.IdNode(d);
+        idnode = new tvheadend.IdNode(d);
         for (var i = 0; i < idnode.length(); i++) {
             var f = idnode.field(i);
             var c = f.column(conf.columns);
@@ -876,6 +894,7 @@ tvheadend.idnode_grid = function(panel, conf)
             columns.push(c);
             if (c.filter)
                 filters.push(c.filter);
+            f.onrefresh(update2);
         }
 
         /* Right-hand columns */
@@ -1311,12 +1330,17 @@ tvheadend.idnode_grid = function(panel, conf)
             tvheadend.comet.un(conf.comet, update);
         if (event)
             tvheadend.comet.un(event, update);
+        for (var i = 0; i < idnode.length(); i++) {
+            var f = idnode.field(i);
+            f.unrefresh();
+        }
         dpanel.removeAll(true);
         store.destroy();
         grid = null;
         store = null;
         auto = null;
         event = null;
+        idnode = null;
         if (conf.destroyer)
             conf.destroyer(conf);
     }
