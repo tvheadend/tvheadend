@@ -372,7 +372,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   const char *host;
   muxer_container_type_t mc;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
@@ -438,7 +438,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel, 0))
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
@@ -537,7 +537,7 @@ http_channel_list_playlist(http_connection_t *hc)
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
       continue;
 
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
@@ -582,7 +582,7 @@ http_dvr_list_playlist(http_connection_t *hc)
       continue;
 
     if (de->de_channel &&
-        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel, 0))
       continue;
 
 
@@ -859,7 +859,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   const char *name;
   char addrbuf[50];
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
   cfg = dvr_config_find_by_name_default("");

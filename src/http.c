@@ -403,11 +403,14 @@ static int http_access_verify_ticket(http_connection_t *hc)
 {
   const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
 
+  if (hc->hc_ticket)
+    return 0;
   if(!access_ticket_verify(ticket_id, hc->hc_url)) {
     char addrstr[50];
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
     tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
 	   addrstr, ticket_id, hc->hc_url);
+    hc->hc_ticket = 1;
     return 0;
   }
   return -1;
@@ -422,13 +425,12 @@ http_access_verify(http_connection_t *hc, int mask)
   if (!http_access_verify_ticket(hc))
     return 0;
 
-  if (hc->hc_access)
-    return access_verify2(hc->hc_access, mask);
-
-  hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                             (struct sockaddr *)hc->hc_peer);
-  if (hc->hc_access == NULL)
-    return -1;
+  if (hc->hc_access == NULL) {
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
+    if (hc->hc_access == NULL)
+      return -1;
+  }
 
   return access_verify2(hc->hc_access, mask);
 }
@@ -438,14 +440,21 @@ http_access_verify(http_connection_t *hc, int mask)
  */
 int
 http_access_verify_channel(http_connection_t *hc, int mask,
-                           struct channel *ch)
+                           struct channel *ch, int ticket)
 {
   int res = -1;
 
   assert(ch);
 
-  if (!http_access_verify_ticket(hc))
+  if (ticket && !http_access_verify_ticket(hc))
     return 0;
+
+  if (hc->hc_access == NULL) {
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
+    if (hc->hc_access == NULL)
+      return -1;
+  }
 
   if (channel_access(ch, hc->hc_access, hc->hc_username))
     res = 0;
@@ -465,12 +474,11 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 
   if(http_access_verify(hc, hp->hp_accessmask))
     err = HTTP_STATUS_UNAUTHORIZED;
-  else {
-    /* FIXME: Recode to obtain access only once */
+  else
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
-  }
   access_destroy(hc->hc_access);
   hc->hc_access = NULL;
+  hc->hc_ticket = 0;
 
   if(err == -1)
      return 1;

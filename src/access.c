@@ -160,6 +160,8 @@ access_ticket_verify(const char *id, const char *resource)
 void
 access_destroy(access_t *a)
 {
+  if (a == NULL)
+    return;
   free(a->aa_username);
   free(a->aa_representative);
   htsmsg_destroy(a->aa_dvrcfgs);
