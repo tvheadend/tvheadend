@@ -587,6 +587,7 @@ esfilter_class_action_enum(void *o)
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
   .ic_caption    = "Elementary Stream Filter",
+  .ic_event      = "esfilter",
   .ic_save       = esfilter_class_save,
   .ic_get_title  = esfilter_class_get_title,
   .ic_delete     = esfilter_class_delete,
@@ -1034,7 +1035,7 @@ esfilter_init(void)
   for (i = 0; i <= ESF_CLASS_LAST; i++)
     TAILQ_INIT(&esfilters[i]);
 
-  if (!(c = hts_settings_load_r(1, "esfilter")))
+  if (!(c = hts_settings_load("esfilter")))
     return;
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f)))

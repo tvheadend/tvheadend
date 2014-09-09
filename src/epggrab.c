@@ -417,4 +417,5 @@ void epggrab_done ( void )
   epggrab_cron = NULL;
   free(epggrab_cron_multi);
   epggrab_cron_multi = NULL;
+  epggrab_channel_done();
 }

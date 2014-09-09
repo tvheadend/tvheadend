@@ -95,6 +95,8 @@ typedef struct channel_tag {
 
   struct dvr_autorec_entry_list ct_autorecs;
 
+  struct access_entry_list ct_accesses;
+
   int ct_htsp_id;
 
 } channel_tag_t;
@@ -163,6 +165,8 @@ static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
   {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class); }
 
 void channel_tag_save(channel_tag_t *ct);
+
+htsmsg_t * channel_tag_class_get_list(void *o);
 
 int channel_access(channel_t *ch, struct access *a, const char *username);
 

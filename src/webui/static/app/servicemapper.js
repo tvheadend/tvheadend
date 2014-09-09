@@ -4,10 +4,8 @@
 
 tvheadend.service_mapper_status_panel = null;
 
-tvheadend.service_mapper_status = function()
+tvheadend.service_mapper_status = function(panel, index)
 {
-    var panel;
-
     /* Fields */
     var ok = new Ext.form.Label({
         fieldLabel: 'Mapped',
@@ -31,7 +29,7 @@ tvheadend.service_mapper_status = function()
     });
 
     /* Panel */
-    panel = new Ext.FormPanel({
+    var mpanel = new Ext.FormPanel({
         method: 'get',
         title: 'Service Mapper',
         frame: true,
@@ -72,9 +70,9 @@ tvheadend.service_mapper_status = function()
         }
     });
 
-    tvheadend.service_mapper_status_panel = panel;
-    return panel;
-};
+    tvheadend.service_mapper_status_panel = mpanel;
+    tvheadend.paneladd(panel, mpanel, index);
+}
 
 /*
  * Start mapping
@@ -182,4 +180,4 @@ tvheadend.service_mapper = function(t, e, store, select)
     });
 
     win.show();
-};
+}

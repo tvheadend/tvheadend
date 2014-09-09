@@ -406,6 +406,13 @@ const idclass_t mpegts_mux_class =
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "pmt_06_ac3",
+      .name     = "PMT Descriptor 0x06 = AC-3",
+      .off      = offsetof(mpegts_mux_t, mm_pmt_06_ac3),
+      .opts     = PO_ADVANCED,
+    },
     {}
   }
 };
