@@ -1029,6 +1029,7 @@ dobackup(const char *oldver)
     }
     s = htsbuf_to_string(&q);
     tvherror("config", "command '%s' returned error code %d", s, code);
+    tvherror("config", "executed in directory '%s'", root);
     free(s);
     htsbuf_queue_flush(&q);
     goto fatal;
