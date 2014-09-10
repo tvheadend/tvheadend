@@ -1374,6 +1374,13 @@ transcoder_destroy_audio(transcoder_stream_t *ts)
   if(as->aud_enc_sample)
     av_free(as->aud_enc_sample);
 
+#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
+  if ((as->resample_context) && (avresample_is_open(as->resample_context)) )
+      avresample_close(as->resample_context);
+
+  av_audio_fifo_free(as->fifo);
+#endif
+
   free(ts);
 }
 
@@ -1451,6 +1458,12 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
     as->aud_channels = 0;
 
   as->aud_bitrate = as->aud_channels * 64000;
+
+#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
+  as->resample_context = NULL;
+  as->fifo = NULL;
+#endif
+
   return 1;
 }
 
