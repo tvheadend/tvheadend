@@ -862,10 +862,11 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
 
-  if ((output) && (output[0])) {
+  if ((output) && (output[0]))
     av_freep(&(output)[0]);
-  }
-  av_freep(output);
+
+  if (output)
+    av_freep(output);
   av_frame_free(&frame);
   av_free_packet(&packet);
   pkt_ref_dec(pkt);
