@@ -2454,14 +2454,14 @@ const idclass_t dvr_config_class = {
       .type     = PT_BOOL,
       .id       = "episode-in-title",
       .name     = "Include Episode In Filename",
-      .off      = offsetof(dvr_config_t, dvr_time_in_title),
+      .off      = offsetof(dvr_config_t, dvr_episode_in_title),
       .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "subtitle-in-title",
       .name     = "Include Subtitle In Filename",
-      .off      = offsetof(dvr_config_t, dvr_time_in_title),
+      .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
       .group    = 5,
     },
     {

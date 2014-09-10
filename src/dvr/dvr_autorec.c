@@ -397,7 +397,7 @@ dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
   const char *s = v;
   int t;
 
-  if(s == NULL || s[0] == '\0')
+  if(s == NULL || s[0] == '\0' || !isdigit(s[0]))
     t = -1;
   else if(strchr(s, ':') != NULL)
     // formatted time string - convert
@@ -405,6 +405,8 @@ dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
   else {
     t = atoi(s);
   }
+  if (t >= 24 * 60)
+    t = -1;
   if (t != *tm) {
     *tm = t;
     return 1;
@@ -460,18 +462,12 @@ static htsmsg_t *
 dvr_autorec_entry_class_time_list(void *o)
 {
   int i;
-  htsmsg_t *e, *l = htsmsg_create_list();
+  htsmsg_t *l = htsmsg_create_list();
   char buf[16];
-  e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", "");
-  htsmsg_add_str(e, "val", "Any");
-  htsmsg_add_msg(l, NULL, e);
+  htsmsg_add_str(l, NULL, "Any");
   for (i = 0; i < 24*60;  i += 10) {
     snprintf(buf, sizeof(buf), "%02d:%02d", i / 60, (i % 60));
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", buf);
-    htsmsg_add_str(e, "val", buf);
-    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_str(l, NULL, buf);
   }
   return l;
 }
