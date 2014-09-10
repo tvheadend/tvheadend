@@ -76,6 +76,7 @@ typedef struct audio_stream {
 #if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
   AVAudioResampleContext *resample_context;
   AVAudioFifo     *fifo;
+  int             resample;
 #endif
 
 } audio_stream_t;
@@ -558,92 +559,141 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  octx->sample_rate     = ictx->sample_rate;
-  octx->sample_fmt      = ictx->sample_fmt;
-
-  octx->time_base.den   = 90000;
-  octx->time_base.num   = 1;
-
-  octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
-  octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
-
-  octx->channels        = MIN(octx->channels, ictx->channels);
-  octx->bit_rate        = MIN(octx->bit_rate,  ictx->bit_rate);
-
-  switch (octx->channels) {
-  case 1:
-    octx->channel_layout = AV_CH_LAYOUT_MONO;
-    break;
-
-  case 2:
-    octx->channel_layout = AV_CH_LAYOUT_STEREO;
-    break;
-
-  case 3:
-    octx->channel_layout = AV_CH_LAYOUT_SURROUND;
-    break;
-
-  case 4:
-    octx->channel_layout = AV_CH_LAYOUT_QUAD;
-    break;
-
-  case 5:
-    octx->channel_layout = AV_CH_LAYOUT_5POINT0;
-    break;
-
-  case 6:
-    octx->channel_layout = AV_CH_LAYOUT_5POINT1;
-    break;
-
-  case 7:
-    octx->channel_layout = AV_CH_LAYOUT_6POINT1;
-    break;
-
-  case 8:
-    octx->channel_layout = AV_CH_LAYOUT_7POINT1;
-    break;
-
-  default:
-    break;
-  }
-
-  switch (ts->ts_type) {
-  case SCT_MPEG2AUDIO:
-    octx->channels = MIN(octx->channels, 2);
-    if (octx->channels == 1)
-      octx->channel_layout = AV_CH_LAYOUT_MONO;
-    else
-      octx->channel_layout = AV_CH_LAYOUT_STEREO;
-
-    octx->sample_fmt     = AV_SAMPLE_FMT_S16;
-    octx->bit_rate = 128000;
-    break;
-
-  case SCT_AAC:
-    octx->global_quality = 4*FF_QP2LAMBDA;
-    octx->flags         |= CODEC_FLAG_QSCALE;
-    octx->sample_fmt     = AV_SAMPLE_FMT_FLTP;
-    break;
-
-  case SCT_VORBIS:
-    octx->flags         |= CODEC_FLAG_QSCALE;
-    octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
-    octx->global_quality = 4*FF_QP2LAMBDA;
-    octx->sample_fmt     = AV_SAMPLE_FMT_FLTP;
-    octx->channels       = ictx->channels;
-    octx->channel_layout = ictx->channel_layout;
-    break;
-
-  default:
-    break;
-  }
-
-  int resample = ((ictx->channels != octx->channels) ||
-      (ictx->channel_layout != octx->channel_layout) ||
-      (ictx->sample_fmt != octx->sample_fmt) ||
-      (ictx->sample_rate != octx->sample_rate));
-
   if (octx->codec_id == AV_CODEC_ID_NONE) {
+    octx->sample_rate     = ictx->sample_rate;
+    octx->sample_fmt      = ictx->sample_fmt;
+    if (ocodec->sample_fmts) {
+      // Find if we have a matching sample_fmt;
+      int acount = 0;
+      octx->sample_fmt = -1;
+      while ((octx->sample_fmt == -1) && (ocodec->sample_fmts[acount] > -1)) {
+        if (ocodec->sample_fmts[acount] == ictx->sample_fmt)
+          octx->sample_fmt = ictx->sample_fmt;
+        acount++;
+      }
+      if (octx->sample_fmt == -1) {
+        if (acount > 0) {
+          tvhlog(LOG_DEBUG, "transcode", "Did not find matching sample_fmt for encoder. Will use first supported: %d.", ocodec->sample_fmts[acount-1]);
+          octx->sample_fmt = ocodec->sample_fmts[acount-1];
+        }
+        else {
+          tvhlog(LOG_ERR, "transcode", "Encoder does not support a sample_fmt!!??.");
+          ts->ts_index = 0;
+          goto cleanup;
+        }
+      }
+      else {
+        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same sample_fmt as decoder.");
+      }
+    }
+
+    octx->time_base.den   = 90000;
+    octx->time_base.num   = 1;
+
+    octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
+    octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
+
+    octx->channels        = MIN(octx->channels, ictx->channels);
+    octx->bit_rate        = MIN(octx->bit_rate,  ictx->bit_rate);
+
+    switch (octx->channels) {
+    case 1:
+      octx->channel_layout = AV_CH_LAYOUT_MONO;
+      break;
+
+    case 2:
+      octx->channel_layout = AV_CH_LAYOUT_STEREO;
+      break;
+
+    case 3:
+      octx->channel_layout = AV_CH_LAYOUT_SURROUND;
+      break;
+
+    case 4:
+      octx->channel_layout = AV_CH_LAYOUT_QUAD;
+      break;
+
+    case 5:
+      octx->channel_layout = AV_CH_LAYOUT_5POINT0;
+      break;
+
+    case 6:
+      octx->channel_layout = AV_CH_LAYOUT_5POINT1;
+      break;
+
+    case 7:
+      octx->channel_layout = AV_CH_LAYOUT_6POINT1;
+      break;
+
+    case 8:
+      octx->channel_layout = AV_CH_LAYOUT_7POINT1;
+      break;
+
+    default:
+      break;
+    }
+
+    if (ocodec->channel_layouts) {
+      // Find if we have a matching channel_layout;
+      int acount = 0, maxchannels = 0, maxacount = 0;
+      octx->channel_layout = 0;
+      while ((octx->channel_layout == 0) && (ocodec->channel_layouts[acount] > 0)) {
+        if ((av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) >= maxchannels) && (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= ictx->channels)) {
+          maxchannels = av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]);
+          maxacount = acount;
+        }
+        if (ocodec->channel_layouts[acount] == ictx->channel_layout)
+          octx->channel_layout = ictx->channel_layout;
+        acount++;
+      }
+
+      if (octx->channel_layout == 0) {
+        if (acount > 0) {
+          // find next which has same or less channels than decoder.
+          tvhlog(LOG_DEBUG, "transcode", "Did not find matching channel_layout for encoder. Will use last supported: %zu with %d channels.", ocodec->channel_layouts[maxacount], maxchannels);
+          octx->channel_layout = ocodec->channel_layouts[maxacount];
+          octx->channels = maxchannels;
+        }
+        else {
+          tvhlog(LOG_ERR, "transcode", "Encoder does not support a channel_layout!!??.");
+          ts->ts_index = 0;
+          goto cleanup;
+        }
+      }
+      else {
+        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same channel_layout as decoder.");
+      }
+    }
+    else {
+      tvhlog(LOG_DEBUG, "transcode", "Encoder does not show which channel_layouts it supports.");
+    }
+
+
+    switch (ts->ts_type) {
+    case SCT_MPEG2AUDIO:
+      octx->bit_rate = 128000;
+      break;
+
+    case SCT_AAC:
+      octx->global_quality = 4*FF_QP2LAMBDA;
+      octx->flags         |= CODEC_FLAG_QSCALE;
+      break;
+
+    case SCT_VORBIS:
+      octx->flags         |= CODEC_FLAG_QSCALE;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      octx->global_quality = 4*FF_QP2LAMBDA;
+      break;
+
+    default:
+      break;
+    }
+
+    as->resample = ((ictx->channels != octx->channels) ||
+        (ictx->channel_layout != octx->channel_layout) ||
+        (ictx->sample_fmt != octx->sample_fmt) ||
+        (ictx->sample_rate != octx->sample_rate));
+
     octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
@@ -653,7 +703,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     as->resample_context = NULL;
-    if (resample) {
+    if (as->resample) {
       if (!(as->resample_context = avresample_alloc_context())) {
         tvhlog(LOG_ERR, "transcode", "Could not allocate resample context");
         ts->ts_index = 0;
@@ -724,7 +774,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   }
 
-  if (resample) {
+  if (as->resample) {
 
     if (!(output = calloc(octx->channels, sizeof(output)))) {
       tvhlog(LOG_ERR, "transcode", "Could not allocate converted input sample pointers");
@@ -1464,6 +1514,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 #if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
   as->resample_context = NULL;
   as->fifo = NULL;
+  as->resample = 0;
 #endif
 
   return 1;
