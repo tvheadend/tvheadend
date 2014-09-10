@@ -622,6 +622,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   case SCT_AAC:
     octx->global_quality = 4*FF_QP2LAMBDA;
     octx->flags         |= CODEC_FLAG_QSCALE;
+    octx->sample_fmt     = AV_SAMPLE_FMT_FLTP;
     break;
 
   case SCT_VORBIS:
