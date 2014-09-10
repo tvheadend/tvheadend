@@ -551,7 +551,7 @@ static char *
 dvr_autorec_entry_class_weekdays_rend(void *o)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  static char buf[32];
+  char buf[32];
   size_t l;
   int i;
   if (dae->dae_weekdays == 0x7f)
@@ -567,7 +567,7 @@ dvr_autorec_entry_class_weekdays_rend(void *o)
                  val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
       }
   }
-  return buf + 1;
+  return strdup(buf + 1);
 }
 
 static int

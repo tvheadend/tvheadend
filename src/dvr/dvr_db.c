@@ -1376,24 +1376,6 @@ dvr_entry_class_autorec_get(void *o)
   return &ret;
 }
 
-static char *
-dvr_entry_class_autorec_rend(void *o)
-{
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *s = "";
-  if (de->de_autorec) {
-    if (de->de_autorec->dae_name != NULL &&
-        de->de_autorec->dae_name[0] != '\0')
-      s = de->de_autorec->dae_name;
-    else if (de->de_autorec->dae_comment != NULL &&
-        de->de_autorec->dae_comment[0] != '\0')
-      s = de->de_autorec->dae_comment;
-    else
-      s = de->de_autorec->dae_title;
-  }
-  return strdup(s);
-}
-
 static int
 dvr_entry_class_broadcast_set(void *o, const void *v)
 {
@@ -1429,16 +1411,6 @@ dvr_entry_class_broadcast_get(void *o)
   else
     id = 0;
   return &id;
-}
-
-static char *
-dvr_entry_class_broadcast_rend(void *o)
-{
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *s = "";
-  if (de->de_bcast)
-    s = lang_str_get(de->de_bcast->summary, NULL);
-  return strdup(s);
 }
 
 static int
@@ -1841,7 +1813,6 @@ const idclass_t dvr_entry_class = {
       .name     = "Auto Record",
       .set      = dvr_entry_class_autorec_set,
       .get      = dvr_entry_class_autorec_get,
-      .rend     = dvr_entry_class_autorec_rend,
       .opts     = PO_RDONLY,
     },
     {
@@ -1858,7 +1829,6 @@ const idclass_t dvr_entry_class = {
       .name     = "Broadcast Type",
       .set      = dvr_entry_class_broadcast_set,
       .get      = dvr_entry_class_broadcast_get,
-      .rend     = dvr_entry_class_broadcast_rend,
       .opts     = PO_RDONLY,
     },
     {
