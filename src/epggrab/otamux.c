@@ -615,6 +615,7 @@ epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
       ota->om_save = 1;
     epggrab_ota_service_trace(ota, svcl, "add new");
   }
+  svcl->last_tune_count = map->om_tune_count;
 }
 
 void
