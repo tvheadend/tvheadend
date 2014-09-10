@@ -407,6 +407,8 @@ idnode_get_s64
       case PT_S64:
         *s64 = *(int64_t*)ptr;
         return 0;
+      case PT_TIME:
+        *s64 = *(time_t*)ptr;
       default:
         break;
     }
@@ -650,11 +652,9 @@ idnode_filter
           break;
       }
     } else if (f->type == IF_NUM || f->type == IF_BOOL) {
-      uint32_t u32;
       int64_t a, b;
-      if (idnode_get_u32(in, f->key, &u32))
+      if (idnode_get_s64(in, f->key, &a))
         return 1;
-      a = u32;
       b = (f->type == IF_NUM) ? f->u.n : f->u.b;
       switch (f->comp) {
         case IC_IN:
