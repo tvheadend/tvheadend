@@ -197,6 +197,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
     return NULL;
   conf = htsmsg_create_map();
   title = regexp_escape(epg_broadcast_get_title(event, NULL));
+  htsmsg_add_u32(conf, "enabled", 1);
   htsmsg_add_str(conf, "title", title);
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
