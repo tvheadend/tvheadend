@@ -134,7 +134,6 @@ tvheadend.IdNodeField = function(conf)
      */
 
     this.onrefresh = function(callback) {
-        this.rcallback = callback;
         var st = this.store;
         if (st && st instanceof Ext.data.JsonStore)
             st.on('load', callback);
@@ -175,7 +174,7 @@ tvheadend.IdNodeField = function(conf)
             dataIndex: this.id,
             header: this.text,
             editor: this.editor({create: false}),
-            renderer: cfg.renderer ? cfg.renderer() : this.renderer(),
+            renderer: cfg.renderer ? cfg.renderer(this.store) : this.renderer(this.store),
             editable: !this.rdonly,
             hidden: this.hidden,
             filter: {
@@ -194,7 +193,7 @@ tvheadend.IdNodeField = function(conf)
         return props;
     };
 
-    this.renderer = function()
+    this.renderer = function(st)
     {
         if (this.password)
             return function(v) {
@@ -224,10 +223,9 @@ tvheadend.IdNodeField = function(conf)
             }
         }
 
-        if (!this.store)
+        if (!st)
             return null;
 
-        var st = this.store;
         return function(v) {
             if (st && st instanceof Ext.data.JsonStore) {
                 var t = [];
