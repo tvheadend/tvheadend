@@ -416,13 +416,13 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_DISABLE]                 = NULL,
     [MM_EPG_ENABLE]                  = NULL,
     [MM_EPG_FORCE]                   = NULL,
-    [MM_EPG_FORCE_EIT]               = "eit",
-    [MM_EPG_FORCE_UK_FREESAT]        = "uk_freesat",
-    [MM_EPG_FORCE_UK_FREEVIEW]       = "uk_freeview",
-    [MM_EPG_FORCE_VIASAT_BALTIC]     = "viasat_baltic",
-    [MM_EPG_FORCE_OPENTV_SKY_UK]     = "opentv-skyuk",
-    [MM_EPG_FORCE_OPENTV_SKY_ITALIA] = "opentv-skyit",
-    [MM_EPG_FORCE_OPENTV_SKY_AUSAT]  = "opentv-ausat",
+    [MM_EPG_ONLY_EIT]                = "eit",
+    [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
+    [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
+    [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
+    [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
+    [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
+    [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
   };
 
   lock_assert(&global_lock);
@@ -476,26 +476,25 @@ next_one:
     goto done;
   }
 
-  if (epg_flag != MM_EPG_FORCE) {
-    /* Check we have modules attached and enabled */
-    LIST_FOREACH(map, &om->om_modules, om_link) {
-      if (map->om_module->tune(map, om, mm))
-        break;
+  /* Check we have modules attached and enabled */
+  i = r = 0;
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (map->om_module->tune(map, om, mm)) {
+      i++;
+      if (modname && !strcmp(modname, map->om_module->id))
+        r = 1;
     }
-    if (!map) {
-      char name[256];
-      mpegts_mux_nice_name(mm, name, sizeof(name));
-      tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
-      goto done;
-    }
+  }
+  if ((i == 0 || (r == 0 && modname)) && epg_flag != MM_EPG_FORCE) {
+    char name[256];
+    mpegts_mux_nice_name(mm, name, sizeof(name));
+    tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
+    goto done;
   }
 
   /* Some init stuff */
   free(om->om_force_modname);
-  if (modname)
-    om->om_force_modname = strdup(modname);
-  else
-    om->om_force_modname = NULL;
+  om->om_force_modname = modname ? strdup(modname) : NULL;
 
   /* Subscribe to the mux */
   if ((r = mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG))) {
