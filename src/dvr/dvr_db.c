@@ -51,15 +51,20 @@ static int dvr_entry_class_disp_title_set(void *o, const void *v);
 /*
  * Start / stop time calculators
  */
+static inline int extra_valid(time_t extra)
+{
+  return extra != 0 && extra != (time_t)-1;
+}
+
 static int
 dvr_entry_get_start_time( dvr_entry_t *de )
 {
   time_t extra = de->de_start_extra;
 
-  if (extra == 0) {
+  if (!extra_valid(extra)) {
     if (de->de_channel)
       extra = de->de_channel->ch_dvr_extra_time_pre;
-    else
+    if (!extra_valid(extra))
       extra = de->de_config->dvr_extra_time_pre;
   }
   /* Note 30 seconds might not be enough (rotors) */
@@ -71,11 +76,11 @@ dvr_entry_get_stop_time( dvr_entry_t *de )
 {
   time_t extra = de->de_stop_extra;
 
-  if (extra == 0) {
+  if (!extra_valid(extra)) {
     if (de->de_channel)
       extra = de->de_channel->ch_dvr_extra_time_post;
-    else
-      extra = de->de_config->dvr_extra_time_pre;
+    if (!extra_valid(extra))
+      extra = de->de_config->dvr_extra_time_post;
   }
   return de->de_stop + (60 * extra);
 }
