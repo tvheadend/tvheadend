@@ -155,7 +155,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
               'sched_status',
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [actions],
@@ -226,7 +226,7 @@ tvheadend.dvr_finished = function(panel, index) {
         },
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [
@@ -274,7 +274,7 @@ tvheadend.dvr_failed = function(panel, index) {
               'status,sched_status',
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [actions],
@@ -304,10 +304,6 @@ tvheadend.dvr_settings = function(panel, index) {
             create: { }
         },
         del: true,
-        sort: {
-          field: 'name',
-          direction: 'ASC'
-        },
         help: function() {
             new tvheadend.help('DVR', 'config_dvr.html');
         },
