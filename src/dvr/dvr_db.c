@@ -241,17 +241,17 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   char buf[40];
   dvr_config_t *cfg = de->de_config;
 
-  if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
+  if(cfg->dvr_channel_in_title)
     snprintf(output, outlen, "%s-", DVR_CH_NAME(de));
   else
     output[0] = 0;
   
-  if ((cfg->dvr_flags & DVR_OMIT_TITLE) == 0)
+  if (cfg->dvr_omit_title == 0)
     snprintf(output + strlen(output), outlen - strlen(output),
 	     "%s", lang_str_get(de->de_title, NULL));
 
-  if(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE) {
-    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+  if(cfg->dvr_episode_before_date) {
+    if(cfg->dvr_episode_in_title) {
       if(de->de_bcast && de->de_bcast->episode)
         epg_episode_number_format(de->de_bcast->episode,
                                   output + strlen(output),
@@ -260,7 +260,7 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     }
   }
 
-  if(cfg->dvr_flags & DVR_SUBTITLE_IN_TITLE) {
+  if(cfg->dvr_subtitle_in_title) {
     if(de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->subtitle)
       snprintf(output + strlen(output), outlen - strlen(output),
            ".%s", lang_str_get(de->de_bcast->episode->subtitle, NULL));
@@ -268,18 +268,18 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 
   localtime_r(&de->de_start, &tm);
   
-  if(cfg->dvr_flags & DVR_DATE_IN_TITLE) {
+  if(cfg->dvr_date_in_title) {
     strftime(buf, sizeof(buf), "%F", &tm);
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(cfg->dvr_flags & DVR_TIME_IN_TITLE) {
+  if(cfg->dvr_time_in_title) {
     strftime(buf, sizeof(buf), "%H-%M", &tm);
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(!(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE)) {
-    if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
+  if(!cfg->dvr_episode_before_date) {
+    if(cfg->dvr_episode_in_title) {
       if(de->de_bcast && de->de_bcast->episode)
         epg_episode_number_format(de->de_bcast->episode,
                                   output + strlen(output),
@@ -562,7 +562,7 @@ static int _dvr_duplicate_event ( epg_broadcast_t *e )
       if (de->de_bcast->episode == e->episode) return 1;
 
       if (has_epnum) {
-        int ep_dup_det = (de->de_config->dvr_flags & DVR_EPISODE_DUPLICATE_DETECTION);
+        int ep_dup_det = de->de_config->dvr_episode_duplicate;
 
         if (ep_dup_det) {
           const char* de_title = lang_str_get(de->de_bcast->episode->title, NULL);
@@ -1937,35 +1937,6 @@ dvr_config_find_by_name_default(const char *name)
   return cfg;
 }
 
-/*
- *
- */
-static void
-dvr_config_update_flags(dvr_config_t *cfg)
-{
-  int r = 0;
-  if (cfg->dvr_dir_per_day)          r |= DVR_DIR_PER_DAY;
-  if (cfg->dvr_channel_dir)          r |= DVR_DIR_PER_CHANNEL;
-  if (cfg->dvr_channel_in_title)     r |= DVR_CHANNEL_IN_TITLE;
-  if (cfg->dvr_omit_title)           r |= DVR_OMIT_TITLE;
-  if (cfg->dvr_date_in_title)        r |= DVR_DATE_IN_TITLE;
-  if (cfg->dvr_time_in_title)        r |= DVR_TIME_IN_TITLE;
-  if (cfg->dvr_whitespace_in_title)  r |= DVR_WHITESPACE_IN_TITLE;
-  if (cfg->dvr_title_dir)            r |= DVR_DIR_PER_TITLE;
-  if (cfg->dvr_episode_in_title)     r |= DVR_EPISODE_IN_TITLE;
-  if (cfg->dvr_clean_title)          r |= DVR_CLEAN_TITLE;
-  if (cfg->dvr_tag_files)            r |= DVR_TAG_FILES;
-  if (cfg->dvr_skip_commercials)     r |= DVR_SKIP_COMMERCIALS;
-  if (cfg->dvr_subtitle_in_title)    r |= DVR_SUBTITLE_IN_TITLE;
-  if (cfg->dvr_episode_before_date)  r |= DVR_EPISODE_BEFORE_DATE;
-  if (cfg->dvr_episode_duplicate)    r |= DVR_EPISODE_DUPLICATE_DETECTION;
-  cfg->dvr_flags = r | DVR_FLAGS_VALID;
-  r = 0;
-  if (cfg->dvr_rewrite_pat)          r |= MC_REWRITE_PAT;
-  if (cfg->dvr_rewrite_pmt)          r |= MC_REWRITE_PMT;
-  cfg->dvr_muxcnf.m_flags = r;
-}
-
 /**
  * create a new named dvr config; the caller is responsible
  * to avoid duplicates
@@ -1994,7 +1965,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
     cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
-  cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
+  cfg->dvr_tag_files = 1;
+  cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
 
   /* series link support */
@@ -2007,7 +1979,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
-  cfg->dvr_muxcnf.m_flags |= MC_REWRITE_PAT;
+  cfg->dvr_muxcnf.m_rewrite_pat = 1;
 
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
@@ -2021,7 +1993,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
     idnode_load(&cfg->dvr_id, conf);
     if (dvr_config_is_default(cfg))
       cfg->dvr_enabled = 1;
-    dvr_config_update_flags(cfg);
+    cfg->dvr_valid = 1;
   }
   
   tvhlog(LOG_INFO, "dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
@@ -2098,7 +2070,7 @@ dvr_config_class_save(idnode_t *self)
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (dvr_config_is_default(cfg))
     cfg->dvr_enabled = 1;
-  dvr_config_update_flags(cfg);
+  cfg->dvr_valid = 1;
   dvr_config_save(cfg);
 }
 
@@ -2350,7 +2322,7 @@ const idclass_t dvr_config_class = {
       .type     = PT_BOOL,
       .id       = "rewrite-pat",
       .name     = "Rewrite PAT",
-      .off      = offsetof(dvr_config_t, dvr_rewrite_pat),
+      .off      = offsetof(dvr_config_t, dvr_muxcnf.m_rewrite_pat),
       .def.i    = 1,
       .group    = 2,
     },
@@ -2358,7 +2330,7 @@ const idclass_t dvr_config_class = {
       .type     = PT_BOOL,
       .id       = "rewrite-pmt",
       .name     = "Rewrite PMT",
-      .off      = offsetof(dvr_config_t, dvr_rewrite_pmt),
+      .off      = offsetof(dvr_config_t, dvr_muxcnf.m_rewrite_pmt),
       .group    = 2,
     },
     {
@@ -2624,7 +2596,7 @@ dvr_entry_delete(dvr_entry_t *de)
 
     snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
 
-    if(cfg->dvr_flags & DVR_DIR_PER_TITLE || cfg->dvr_flags & DVR_DIR_PER_CHANNEL || cfg->dvr_flags & DVR_DIR_PER_DAY) {
+    if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day) {
       char *p;
       int l;
 

@@ -316,7 +316,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_pmt_pid = ss->ss_pmt_pid;
   pm->pm_service_id = ss->ss_service_id;
 
-  if (pm->m_config.m_flags & MC_REWRITE_PMT) {
+  if (pm->m_config.m_rewrite_pmt) {
     pm->pm_pmt = realloc(pm->pm_pmt, 188);
     memset(pm->pm_pmt, 0xff, 188);
     pm->pm_pmt[0] = 0x47;
@@ -433,16 +433,15 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   size_t  len = pb->pb_size;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.m_flags & (MC_REWRITE_PAT | MC_REWRITE_PMT)) {
+  if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt) {
     tsb = pb->pb_data;
     len = 0;
     while (tsb < pb->pb_data + pb->pb_size) {
       int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
       /* Process */
-      if ( ((pm->m_config.m_flags & MC_REWRITE_PAT) && (pid == 0)) ||
-           ((pm->m_config.m_flags & MC_REWRITE_PMT) &&
-            (pid == pm->pm_pmt_pid)) ) {
+      if ( (pm->m_config.m_rewrite_pat && (pid == 0)) ||
+           (pm->m_config.m_rewrite_pmt && (pid == pm->pm_pmt_pid)) ) {
 
         /* Flush */
         if (len)
@@ -458,7 +457,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
           e = pass_muxer_rewrite_pat(pm, tmp);
           if (e < 0) {
             tvherror("pass", "PAT rewrite failed, disabling");
-            pm->m_config.m_flags &= ~MC_REWRITE_PAT;
+            pm->m_config.m_rewrite_pat = 0;
           }
           if (e)
             pass_muxer_write(m, tmp, 188);

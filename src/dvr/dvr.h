@@ -32,10 +32,10 @@ typedef struct dvr_config {
   LIST_ENTRY(dvr_config) config_link;
 
   int dvr_enabled;
+  int dvr_valid;
   char *dvr_config_name;
   char *dvr_storage;
   uint32_t dvr_retention_days;
-  int dvr_flags;
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_postproc;
@@ -60,8 +60,6 @@ typedef struct dvr_config {
   int dvr_subtitle_in_title;
   int dvr_episode_before_date;
   int dvr_episode_duplicate;
-  int dvr_rewrite_pat;
-  int dvr_rewrite_pmt;
 
   /* Series link support */
   int dvr_sl_brand_lock;
@@ -83,23 +81,6 @@ typedef struct dvr_config {
 extern struct dvr_config_list dvrconfigs;
 
 extern struct dvr_entry_list dvrentries;
-
-#define DVR_FLAGS_VALID                    0x1
-#define DVR_DIR_PER_DAY                    0x2
-#define DVR_DIR_PER_CHANNEL                0x4
-#define DVR_CHANNEL_IN_TITLE               0x8
-#define DVR_OMIT_TITLE                    0x10
-#define DVR_DATE_IN_TITLE                 0x20
-#define DVR_TIME_IN_TITLE                 0x40
-#define DVR_WHITESPACE_IN_TITLE           0x80
-#define DVR_DIR_PER_TITLE                0x100
-#define DVR_EPISODE_IN_TITLE	         0x200
-#define DVR_CLEAN_TITLE	                 0x400
-#define DVR_TAG_FILES                    0x800
-#define DVR_SKIP_COMMERCIALS            0x1000
-#define DVR_SUBTITLE_IN_TITLE	        0x2000
-#define DVR_EPISODE_BEFORE_DATE	        0x4000
-#define DVR_EPISODE_DUPLICATE_DETECTION 0x8000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -300,7 +281,7 @@ extern const idclass_t dvr_autorec_entry_class;
 void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
 static inline int dvr_config_is_valid(dvr_config_t *cfg)
-  { return !!(cfg->dvr_flags & DVR_FLAGS_VALID); }
+  { return cfg->dvr_valid; }
 
 static inline int dvr_config_is_default(dvr_config_t *cfg)
   { return cfg->dvr_config_name == NULL || cfg->dvr_config_name[0] == '\0'; }
