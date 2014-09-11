@@ -407,8 +407,54 @@ idnode_get_s64
       case PT_S64:
         *s64 = *(int64_t*)ptr;
         return 0;
+      case PT_DBL:
+        *s64 = *(double*)ptr;
+        return 0;
       case PT_TIME:
         *s64 = *(time_t*)ptr;
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1;
+}
+
+/*
+ * Get field as double
+ */
+int
+idnode_get_dbl
+  ( idnode_t *self, const char *key, double *dbl )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p->islist) return 1;
+  if (p) {
+    const void *ptr;
+    if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
+    switch (p->type) {
+      case PT_INT:
+      case PT_BOOL:
+        *dbl = *(int*)ptr;
+        return 0;
+      case PT_U16:
+        *dbl = *(uint16_t*)ptr;
+        return 0;
+      case PT_U32:
+        *dbl = *(uint32_t*)ptr;
+        return 0;
+      case PT_S64:
+        *dbl = *(int64_t*)ptr;
+        return 0;
+      case PT_DBL:
+        *dbl = *(double *)ptr;
+        return 0;
+      case PT_TIME:
+        *dbl = *(time_t*)ptr;
+        return 0;
       default:
         break;
     }
@@ -597,7 +643,16 @@ idnode_cmp_sort
       }
       break;
     case PT_DBL:
-      // TODO
+      {
+        double dbla = 0, dblb = 0;
+        idnode_get_dbl(ina, sort->key, &dbla);
+        idnode_get_dbl(inb, sort->key, &dblb);
+        if (sort->dir == IS_ASC)
+          return dbla - dblb;
+        else
+          return dblb - dbla;
+      }
+      break;
     case PT_TIME:
       {
         time_t ta = 0, tb = 0;
@@ -617,6 +672,31 @@ idnode_cmp_sort
   return 0;
 }
 
+static void
+idnode_filter_init
+  ( idnode_t *in, idnode_filter_t *filter )
+{
+  idnode_filter_ele_t *f;
+  const property_t *p;
+
+  LIST_FOREACH(f, filter, link) {
+    if (f->type == IF_NUM) {
+      p = idnode_find_prop(in, f->key);
+      if (p) {
+        if (p->type == PT_U32 || p->type == PT_S64 ||
+            p->type == PT_TIME) {
+          int64_t v = f->u.n.n;
+          if (p->intsplit != f->u.n.intsplit) {
+            v = (v / (f->u.n.intsplit <= 0 ? 1 : 0)) * p->intsplit;
+            f->u.n.n = v;
+          }
+        }
+      }
+    }
+    f->checked = 1;
+  }
+}
+
 int
 idnode_filter
   ( idnode_t *in, idnode_filter_t *filter )
@@ -624,6 +704,8 @@ idnode_filter
   idnode_filter_ele_t *f;
   
   LIST_FOREACH(f, filter, link) {
+    if (!f->checked)
+      idnode_filter_init(in, filter);
     if (f->type == IF_STR) {
       const char *str;
       str = idnode_get_display(in, idnode_find_prop(in, f->key));
@@ -655,7 +737,29 @@ idnode_filter
       int64_t a, b;
       if (idnode_get_s64(in, f->key, &a))
         return 1;
-      b = (f->type == IF_NUM) ? f->u.n : f->u.b;
+      b = (f->type == IF_NUM) ? f->u.n.n : f->u.b;
+      switch (f->comp) {
+        case IC_IN:
+        case IC_RE:
+          break; // Note: invalid
+        case IC_EQ:
+          if (a != b)
+            return 1;
+          break;
+        case IC_LT:
+          if (a > b)
+            return 1;
+          break;
+        case IC_GT:
+          if (a < b)
+            return 1;
+          break;
+      }
+    } else if (f->type == IF_DBL) {
+      double a, b;
+      if (idnode_get_dbl(in, f->key, &a))
+        return 1;
+      b = f->u.dbl;
       switch (f->comp) {
         case IC_IN:
         case IC_RE:
@@ -699,13 +803,26 @@ idnode_filter_add_str
 
 void
 idnode_filter_add_num
-  ( idnode_filter_t *filt, const char *key, int64_t val, int comp )
+  ( idnode_filter_t *filt, const char *key, int64_t val, int comp, int64_t intsplit )
 {
   idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
   ele->key  = strdup(key);
   ele->type = IF_NUM;
   ele->comp = comp;
-  ele->u.n  = val;
+  ele->u.n.n = val;
+  ele->u.n.intsplit = intsplit;
+  LIST_INSERT_HEAD(filt, ele, link);
+}
+
+void
+idnode_filter_add_dbl
+  ( idnode_filter_t *filt, const char *key, double dbl, int comp )
+{
+  idnode_filter_ele_t *ele = calloc(1, sizeof(idnode_filter_ele_t));
+  ele->key   = strdup(key);
+  ele->type  = IF_DBL;
+  ele->comp  = comp;
+  ele->u.dbl = dbl;
   LIST_INSERT_HEAD(filt, ele, link);
 }
 
