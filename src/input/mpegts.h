@@ -425,6 +425,7 @@ struct mpegts_service
 
   uint16_t s_dvb_service_id;
   uint16_t s_dvb_channel_num;
+  uint16_t s_dvb_channel_minor;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;
   char    *s_dvb_cridauth;
@@ -438,7 +439,7 @@ struct mpegts_service
    */
 
   int      s_dvb_eit_enable;
-  uint16_t s_dvb_opentv_chnum;
+  uint64_t s_dvb_opentv_chnum;
 
   /*
    * Link to carrying multiplex and active adapter

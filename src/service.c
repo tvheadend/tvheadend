@@ -803,7 +803,7 @@ service_destroy(service_t *t, int delconf)
   service_unref(t);
 }
 
-static int
+static int64_t
 service_channel_number ( service_t *s )
 {
   return 0;
@@ -1567,7 +1567,7 @@ service_get_full_channel_name ( service_t *s )
 /*
  * Get number for service
  */
-int
+int64_t
 service_get_channel_number ( service_t *s )
 {
   if (s->s_channel_number) return s->s_channel_number(s);

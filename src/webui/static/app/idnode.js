@@ -122,6 +122,7 @@ tvheadend.IdNodeField = function(conf)
     this.hidden = conf.hidden || conf.advanced;
     this.password = conf.password;
     this.duration = conf.duration;
+    this.intsplit = conf.intsplit;
     this.group = conf.group;
     this.enum = conf.enum;
     this.store = null;
@@ -490,6 +491,17 @@ tvheadend.idnode_editor_field = function(f, create)
         case 'u16':
         case 's64':
         case 'dbl':
+            if (f.intsplit) {
+                /* this should be improved */
+                return new Ext.form.TextField({
+                    fieldLabel: f.caption,
+                    name: f.id,
+                    value: value,
+                    disabled: d,
+                    width: 300,
+                    maskRe: /[0-9\.]/,
+                });
+            }
             return new Ext.form.NumberField({
                 fieldLabel: f.caption,
                 name: f.id,
