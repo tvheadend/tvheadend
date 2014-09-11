@@ -48,6 +48,7 @@ typedef struct dvr_config {
   int dvr_dir_per_day;
   int dvr_channel_dir;
   int dvr_channel_in_title;
+  int dvr_omit_title;
   int dvr_date_in_title;
   int dvr_time_in_title;
   int dvr_whitespace_in_title;
@@ -87,17 +88,18 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_DIR_PER_DAY                    0x2
 #define DVR_DIR_PER_CHANNEL                0x4
 #define DVR_CHANNEL_IN_TITLE               0x8
-#define DVR_DATE_IN_TITLE                 0x10
-#define DVR_TIME_IN_TITLE                 0x20
-#define DVR_WHITESPACE_IN_TITLE           0x40
-#define DVR_DIR_PER_TITLE                 0x80
-#define DVR_EPISODE_IN_TITLE	         0x100
-#define DVR_CLEAN_TITLE	                 0x200
-#define DVR_TAG_FILES                    0x400
-#define DVR_SKIP_COMMERCIALS             0x800
-#define DVR_SUBTITLE_IN_TITLE	        0x1000
-#define DVR_EPISODE_BEFORE_DATE	        0x2000
-#define DVR_EPISODE_DUPLICATE_DETECTION 0x4000
+#define DVR_OMIT_TITLE                    0x10
+#define DVR_DATE_IN_TITLE                 0x20
+#define DVR_TIME_IN_TITLE                 0x40
+#define DVR_WHITESPACE_IN_TITLE           0x80
+#define DVR_DIR_PER_TITLE                0x100
+#define DVR_EPISODE_IN_TITLE	         0x200
+#define DVR_CLEAN_TITLE	                 0x400
+#define DVR_TAG_FILES                    0x800
+#define DVR_SKIP_COMMERCIALS            0x1000
+#define DVR_SUBTITLE_IN_TITLE	        0x2000
+#define DVR_EPISODE_BEFORE_DATE	        0x4000
+#define DVR_EPISODE_DUPLICATE_DETECTION 0x8000
 
 typedef enum {
   DVR_PRIO_IMPORTANT,

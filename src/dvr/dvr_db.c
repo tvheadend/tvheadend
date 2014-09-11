@@ -246,8 +246,9 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   else
     output[0] = 0;
   
-  snprintf(output + strlen(output), outlen - strlen(output),
-	   "%s", lang_str_get(de->de_title, NULL));
+  if ((cfg->dvr_flags & DVR_OMIT_TITLE) == 0)
+    snprintf(output + strlen(output), outlen - strlen(output),
+	     "%s", lang_str_get(de->de_title, NULL));
 
   if(cfg->dvr_flags & DVR_EPISODE_BEFORE_DATE) {
     if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
@@ -1946,6 +1947,7 @@ dvr_config_update_flags(dvr_config_t *cfg)
   if (cfg->dvr_dir_per_day)          r |= DVR_DIR_PER_DAY;
   if (cfg->dvr_channel_dir)          r |= DVR_DIR_PER_CHANNEL;
   if (cfg->dvr_channel_in_title)     r |= DVR_CHANNEL_IN_TITLE;
+  if (cfg->dvr_omit_title)           r |= DVR_OMIT_TITLE;
   if (cfg->dvr_date_in_title)        r |= DVR_DATE_IN_TITLE;
   if (cfg->dvr_time_in_title)        r |= DVR_TIME_IN_TITLE;
   if (cfg->dvr_whitespace_in_title)  r |= DVR_WHITESPACE_IN_TITLE;
@@ -2434,6 +2436,13 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_BOOL,
+      .id       = "episode-before-date",
+      .name     = "Put Episode In Filename Before Date And Time",
+      .off      = offsetof(dvr_config_t, dvr_episode_before_date),
+      .group    = 4,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "subtitle-in-title",
       .name     = "Include Subtitle In Filename",
       .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
@@ -2441,9 +2450,9 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_BOOL,
-      .id       = "episode-before-date",
-      .name     = "Put Episode In Filename Before Date And Time",
-      .off      = offsetof(dvr_config_t, dvr_episode_before_date),
+      .id       = "omit-title",
+      .name     = "Do Not Include Title To Filename",
+      .off      = offsetof(dvr_config_t, dvr_omit_title),
       .group    = 5,
     },
     {
