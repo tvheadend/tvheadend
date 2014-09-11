@@ -1486,7 +1486,6 @@ service_instance_add(service_instance_list_t *sil,
     si->si_s = s;
     service_ref(s);
     si->si_instance = instance;
-    si->si_weight = weight;
   } else {
     si->si_mark = 0;
     if(si->si_prio == prio && si->si_weight == weight)
