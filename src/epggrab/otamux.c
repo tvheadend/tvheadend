@@ -728,8 +728,8 @@ epggrab_ota_init ( void )
 
   epggrab_ota_initial      = 1;
   epggrab_ota_timeout      = 600;
-  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");;
-  epggrab_ota_cron_multi   = NULL;
+  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");
+  epggrab_ota_cron_multi   = cron_multi_set(epggrab_ota_cron);
   epggrab_ota_pending_flag = 0;
 
   RB_INIT(&epggrab_ota_all);
