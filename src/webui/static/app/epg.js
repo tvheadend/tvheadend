@@ -118,34 +118,56 @@ tvheadend.epgDetails = function(event) {
                    '?title=' + encodeURIComponent(title) + '">Play</a></div>';
     }
 
-    var store = new Ext.data.JsonStore({
-        autoload: true,
-        root: 'entries',
-        fields: ['key','val'],
-        id: 'key',
-        url: 'api/idnode/load',
-        baseParams: {
-            enum: 1,
-            'class': 'dvrconfig'
-        },
-        sortInfo: {
-            field: 'val',
-            direction: 'ASC'
-        }
-    });
-    store.load();
+    var buttons = [];
 
-    var confcombo = new Ext.form.ComboBox({
-        store: store,
-        triggerAction: 'all',
-        mode: 'local',
-        valueField: 'key',
-        displayField: 'val',
-        name: 'config_name',
-        emptyText: '(default)',
-        value: '',
-        editable: false
-    });
+    if (tvheadend.accessUpdate.dvr) {
+
+        var store = new Ext.data.JsonStore({
+            autoload: true,
+            root: 'entries',
+            fields: ['key','val'],
+            id: 'key',
+            url: 'api/idnode/load',
+            baseParams: {
+                enum: 1,
+                'class': 'dvrconfig'
+            },
+            sortInfo: {
+                field: 'val',
+                direction: 'ASC'
+            }
+        });
+        store.load();
+
+        var confcombo = new Ext.form.ComboBox({
+            store: store,
+            triggerAction: 'all',
+            mode: 'local',
+            valueField: 'key',
+            displayField: 'val',
+            name: 'config_name',
+            emptyText: '(default)',
+            value: '',
+            editable: false
+        });
+
+        buttons.push(confcombo);
+        buttons.push(new Ext.Button({
+            handler: recordEvent,
+            text: "Record program"
+        }));
+        buttons.push(new Ext.Button({
+            handler: recordSeries,
+            text: event.serieslink ? "Record series" : "Autorec"
+        }));
+
+    } else {
+
+        buttons.push(new Ext.Button({
+            handler: function() { win.close(); },
+            text: "Close"
+        }));
+    }
 
     var win = new Ext.Window({
         title: event.title,
@@ -153,13 +175,7 @@ tvheadend.epgDetails = function(event) {
         width: 500,
         height: 300,
         constrainHeader: true,
-        buttons: [confcombo, new Ext.Button({
-                handler: recordEvent,
-                text: "Record program"
-            }), new Ext.Button({
-                handler: recordSeries,
-                text: event.serieslink ? "Record series" : "Autorec"
-            })],
+        buttons: buttons,
         buttonAlign: 'center',
         html: content
     });
@@ -573,6 +589,44 @@ tvheadend.epg = function() {
         }
     });
 
+    tvheadend.autorecButton = new Ext.Button({
+        text: 'Create AutoRec',
+        iconCls: 'wand',
+        tooltip: 'Create an automatic recording entry that will '
+                 + 'record all future programmes that matches '
+                 + 'the current query.',
+        handler: createAutoRec
+    });
+
+    var tbar = [
+        epgFilterTitle, '-',
+        epgFilterChannels, '-',
+        epgFilterChannelTags, '-',
+        epgFilterContentGroup, '-',
+        epgFilterDuration, '-',
+        {
+            text: 'Reset All',
+            handler: epgQueryClear
+        },
+        '->',
+        {
+            text: 'Watch TV',
+            iconCls: 'eye',
+            handler: function() {
+                new tvheadend.VideoPlayer();
+            }
+        },
+        '-',
+        tvheadend.autorecButton,
+        '-',
+        {
+            text: 'Help',
+            handler: function() {
+                new tvheadend.help('Electronic Program Guide', 'epg.html');
+            }
+        }
+    ];
+
     var panel = new Ext.ux.grid.livegrid.GridPanel({
         stateful: true,
         stateId: 'epggrid',
@@ -584,43 +638,7 @@ tvheadend.epg = function() {
         store: epgStore,
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
         view: epgView,
-        tbar: [
-            epgFilterTitle,
-            '-',
-            epgFilterChannels,
-            '-',
-            epgFilterChannelTags,
-            '-',
-            epgFilterContentGroup,
-            '-',
-            epgFilterDuration,
-            '-',
-            {
-                text: 'Reset All',
-                handler: epgQueryClear
-            },
-            '->',
-            {
-                text: 'Watch TV',
-                iconCls: 'eye',
-                handler: function() {
-                    new tvheadend.VideoPlayer();
-                }
-            },
-            '-',
-            {
-                text: 'Create AutoRec',
-                iconCls: 'wand',
-                tooltip: 'Create an automatic recording entry that will '
-                        + 'record all future programmes that matches '
-                        + 'the current query.',
-                handler: createAutoRec
-            }, '-', {
-                text: 'Help',
-                handler: function() {
-                    new tvheadend.help('Electronic Program Guide', 'epg.html');
-                }
-            }],
+        tbar: tbar,
         bbar: new Ext.ux.grid.livegrid.Toolbar({
             view: epgView,
             displayInfo: true
@@ -650,6 +668,9 @@ tvheadend.epg = function() {
     }
 
     function createAutoRec() {
+    
+        if (!tvheadend.accessUpdate.dvr)
+            return;
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";

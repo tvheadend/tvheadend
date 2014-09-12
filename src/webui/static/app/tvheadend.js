@@ -313,6 +313,9 @@ function accessUpdate(o) {
 
     tvheadend.rootTabPanel.setLogin(o.username);
 
+    if (tvheadend.autorecButton)
+        tvheadend.autorecButton.setDisabled(o.dvr != true);
+
     if (o.dvr == true && tvheadend.dvrpanel == null) {
         tvheadend.dvrpanel = tvheadend.dvr();
         tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
