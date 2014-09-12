@@ -84,6 +84,9 @@ api_exec ( access_t *perm, const char *subsystem,
     return ENOSYS; // TODO: is this really the right error code?
   }
 
+  if (access_verify2(perm, ah->hook->ah_access))
+    return EPERM;
+
   /* Extract method */
   op = htsmsg_get_str(args, "method");
   if (!op)
