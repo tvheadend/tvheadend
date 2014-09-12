@@ -163,13 +163,12 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
  * ***********************************************************************/
 
 /* Patterns for the extraction of season/episode numbers from summary of events*/
-const char *_opentv_se_num_patterns[] = { 
-          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",  /* for ??? */
-          "([0-9]+)'? Stagione +Ep\\. ?([0-9]+)", /* for Sky IT */
-          "([0-9]+)'? Stagione",                  /* for Sky IT */
-          NULL };
-regex_t *_opentv_se_num_pregs;
-
+static const char *_opentv_se_num_patterns[] = { 
+          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",       /* for ???    */
+          " *([0-9]+)'? Stagione +Ep\\. ?([0-9]+) ?-", /* for Sky IT */
+          " *([0-9]+)'? Stagione() ?-",                /* for Sky IT */
+          "() *Ep\\. ?([0-9]+) ?-" };                  /* for Sky IT */
+static regex_t *_opentv_se_num_pregs;
 
 /* Parse huffman encoded string */
 static char *_opentv_parse_string 
@@ -355,7 +354,7 @@ opentv_parse_event_section
 
         /* Parse Series/Episode
          * TODO: HACK: this needs doing properly */
-        for (i = 0; _opentv_se_num_patterns[i]; i++) {
+        for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++) {
           if (!regexec(_opentv_se_num_pregs+i, ev.summary, 3, match, 0)) {
             epg_episode_num_t en;
             memset(&en, 0, sizeof(en));
@@ -363,6 +362,7 @@ opentv_parse_event_section
               en.s_num = atoi(ev.summary + match[1].rm_so);
             if (match[2].rm_so != -1)
               en.e_num = atoi(ev.summary + match[2].rm_so);
+            tvhdebug("opentv", "  extract from summary season %d episode %d", en.s_num, en.e_num);
             save |= epg_episode_set_epnum(ee, &en, src);
             break; /* skip other patterns */
           }
@@ -827,9 +827,8 @@ void opentv_init ( void )
   tvhlog(LOG_DEBUG, "opentv", "providers loaded");
 
   /* Compile some recurring regular-expressions */
-  for (i = 0; _opentv_se_num_patterns[i]; i++) ; /* count the available patterns (NULL-terminated array)*/
-  _opentv_se_num_pregs = calloc(i, sizeof(regex_t));
-  for (i = 0; _opentv_se_num_patterns[i]; i++)
+  _opentv_se_num_pregs = calloc(ARRAY_SIZE(_opentv_se_num_patterns), sizeof(regex_t));
+  for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
     regcomp(_opentv_se_num_pregs+i, _opentv_se_num_patterns[i], REG_ICASE | REG_EXTENDED);
 }
 
@@ -851,7 +850,7 @@ void opentv_done ( void )
     free(genre);
   }
 
-  for (i = 0; _opentv_se_num_patterns[i]; i++)
+  for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
     regfree(_opentv_se_num_pregs+i);
   free(_opentv_se_num_pregs);
 }
