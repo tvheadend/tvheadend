@@ -343,21 +343,30 @@ opentv_parse_event_section
       if (ev.summary) {
         regex_t preg;
         regmatch_t match[3];
+        const char *patterns[] = { 
+          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",
+          "([0-9]+)'? Stagione +Ep\\. ?([0-9]+)", /* for Sky IT */
+          "([0-9]+)'? Stagione",                  /* for Sky IT */
+          NULL };
+        int i;
 
         /* Parse Series/Episode
          * TODO: HACK: this needs doing properly */
-        regcomp(&preg, " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",
-                REG_ICASE | REG_EXTENDED);
-        if (!regexec(&preg, ev.summary, 3, match, 0)) {
-          epg_episode_num_t en;
-          memset(&en, 0, sizeof(en));
-          if (match[1].rm_so != -1)
-            en.s_num = atoi(ev.summary + match[1].rm_so);
-          if (match[2].rm_so != -1)
-            en.e_num = atoi(ev.summary + match[2].rm_so);
-          save |= epg_episode_set_epnum(ee, &en, src);
+        for (i=0; patterns[i]; i++) {
+          regcomp(&preg, patterns[i], REG_ICASE | REG_EXTENDED);
+          if (!regexec(&preg, ev.summary, 3, match, 0)) {
+            epg_episode_num_t en;
+            memset(&en, 0, sizeof(en));
+            if (match[1].rm_so != -1)
+              en.s_num = atoi(ev.summary + match[1].rm_so);
+            if (match[2].rm_so != -1)
+              en.e_num = atoi(ev.summary + match[2].rm_so);
+            save |= epg_episode_set_epnum(ee, &en, src);
+            regfree(&preg);
+            break; /* skip other patterns */
+          } else
+            regfree(&preg);
         }
-        regfree(&preg);
       }
     }
 
