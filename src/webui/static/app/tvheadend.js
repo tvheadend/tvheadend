@@ -311,6 +311,8 @@ function accessUpdate(o) {
     if (!tvheadend.capabilities)
         return;
 
+    tvheadend.rootTabPanel.setLogin(o.username);
+
     if (o.dvr == true && tvheadend.dvrpanel == null) {
         tvheadend.dvrpanel = tvheadend.dvr();
         tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
@@ -466,6 +468,86 @@ tvheadend.log = function(msg, style) {
 /**
  *
  */
+tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
+
+    onRender: function(ct, position) {
+        tvheadend.RootTabPanel.superclass.onRender.call(this, ct, position);
+
+        /* Create login components */
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+
+        if (!this.loginTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}">',
+                '<span class="x-tab-strip-login {iconCls}">{text}</span></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.loginTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+        item.tabEl = this.loginTpl.insertBefore(before, p);
+        this.loginItem = item;
+
+        if (!this.loginCmdTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}"><a href="#">',
+                '<span class="x-tab-strip-login-cmd"></span></a></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.loginCmdTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var el = this.loginCmdTpl.insertBefore(before, p);
+        item.tabEl = Ext.get(el);
+        item.tabEl.select('a').on('click', this.onLoginCmdClicked, this, {preventDefault: true});
+        this.loginCmdItem = item;
+
+        this.on('beforetabchange', function(tp, p) {
+            if (p == this.loginItem || p == this.loginCmdItem)
+                return false;
+        });
+
+        this.setLogin('');
+    },
+
+    getComponent: function(comp) {
+        if (comp === this.loginItem.id || comp == this.loginItem)
+            return this.loginItem;
+        if (comp === this.loginCmdItem.id || comp == this.loginCmdItem)
+            return this.loginCmdItem;
+        return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
+    },
+
+    setLogin: function(login) {
+        this.login = login;
+        if (login) {
+            text = 'Logged in as <b>' + login + '</b>';
+            cmd = '(logout)';
+        } else {
+            text = 'No verified access';
+            cmd = '(login)';
+        }
+        var el = this.loginItem.tabEl;
+        var fly = Ext.fly(this.loginItem.tabEl);
+        var t = fly.child('span.x-tab-strip-login', true);
+        Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
+        Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
+    },
+
+    onLoginCmdClicked: function(e) {
+        window.location.href = this.login ? 'logout' : 'login';
+    }
+
+});
+
+/**
+ *
+ */
 //create application
 tvheadend.app = function() {
 
@@ -484,7 +566,7 @@ tvheadend.app = function() {
                 html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
             });
 
-            tvheadend.rootTabPanel = new Ext.TabPanel({
+            tvheadend.rootTabPanel = new tvheadend.RootTabPanel({
                 region: 'center',
                 activeTab: 0,
                 items: [tvheadend.epg()]

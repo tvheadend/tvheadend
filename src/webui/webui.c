@@ -163,6 +163,32 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static int
+page_login(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access != NULL &&
+      hc->hc_access->aa_username != NULL &&
+      hc->hc_access->aa_username != '\0') {
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
+static int
+page_logout(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access == NULL ||
+      hc->hc_access->aa_username == NULL ||
+      hc->hc_access->aa_username == '\0') {
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
 /**
  * Static download of a file from the filesystem
  */
@@ -1303,6 +1329,8 @@ webui_init(int xspf)
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
+  http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
 
   http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
