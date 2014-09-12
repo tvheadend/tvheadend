@@ -62,10 +62,11 @@ typedef struct property {
   const char  *id;        ///< Property Key
   const char *name;       ///< Textual description
   prop_type_t type;       ///< Type
-  int         islist;     ///< Is a list
+  uint8_t     islist;     ///< Is a list
+  uint8_t     group;      ///< Visual group ID (like ExtJS FieldSet)
   size_t      off;        ///< Offset into object
   uint32_t    opts;       ///< Options
-  uint32_t    group;      ///< Visual group ID (like ExtJS FieldSet)
+  uint32_t    intsplit;   ///< integer/remainder boundary
 
   /* String based processing */
   const void *(*get)  (void *ptr);

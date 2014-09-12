@@ -586,6 +586,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 {
   access_ipmask_t *ai;
   access_entry_t *ae, *ae2;
+  const char *s;
 
   lock_assert(&global_lock);
 
@@ -602,6 +603,9 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     idnode_load(&ae->ae_id, conf);
+    /* note password has PO_NOSAVE, thus it must be set manually */
+    if ((s = htsmsg_get_str(conf, "password")) != NULL)
+      access_entry_class_password_set(ae, s);
     access_entry_update_rights(ae);
     TAILQ_FOREACH(ae2, &access_entries, ae_link)
       if (ae->ae_index < ae2->ae_index)

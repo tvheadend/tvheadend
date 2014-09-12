@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "service.h"
+#include "channels.h"
 #include "input.h"
 #include "settings.h"
 #include "dvb_charset.h"
@@ -100,6 +101,13 @@ const idclass_t mpegts_service_class =
       .name     = "Local Channel Number",
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "lcn_minor",
+      .name     = "Local Channel Minor",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_service_t, s_dvb_channel_minor),
     },
     {
       .type     = PT_U16,
@@ -364,12 +372,13 @@ mpegts_service_grace_period(service_t *t)
 /*
  * Channel number
  */
-static int
+static int64_t
 mpegts_service_channel_number ( service_t *s )
 {
-  int r = ((mpegts_service_t*)s)->s_dvb_channel_num;
+  int r = ((mpegts_service_t*)s)->s_dvb_channel_num * CHANNEL_SPLIT +
+          ((mpegts_service_t*)s)->s_dvb_channel_minor;
   if (r <= 0)
-    r = ((mpegts_service_t*)s)->s_dvb_opentv_chnum;
+    r = ((mpegts_service_t*)s)->s_dvb_opentv_chnum * CHANNEL_SPLIT;
   return r;
 }
 

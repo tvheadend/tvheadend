@@ -100,16 +100,22 @@ typedef struct idnode_filter_ele
 {
   LIST_ENTRY(idnode_filter_ele) link; ///< List link
 
+  int checked;
   char *key;                          ///< Filter key
   enum {
     IF_STR,
     IF_NUM,
+    IF_DBL,
     IF_BOOL
   } type;                             ///< Filter type
   union {
     int      b;
     char    *s;
-    int64_t  n;
+    struct {
+      int64_t n;
+      int64_t intsplit;
+    } n;
+    double   dbl;
     regex_t  re;
   } u;                                ///< Filter data
   enum {
@@ -175,13 +181,16 @@ idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);
 int         idnode_get_s64 (idnode_t *self, const char *key,  int64_t *s64);
+int         idnode_get_dbl (idnode_t *self, const char *key,   double *dbl);
 int         idnode_get_bool(idnode_t *self, const char *key, int *b);
 int         idnode_get_time(idnode_t *self, const char *key, time_t *tm);
 
 void idnode_filter_add_str
   (idnode_filter_t *f, const char *k, const char *v, int t);
 void idnode_filter_add_num
-  (idnode_filter_t *f, const char *k, int64_t s64, int t);
+  (idnode_filter_t *f, const char *k, int64_t s64, int t, int64_t intsplit);
+void idnode_filter_add_dbl
+  (idnode_filter_t *f, const char *k, double dbl, int t);
 void idnode_filter_add_bool
   (idnode_filter_t *f, const char *k, int b, int t);
 void idnode_filter_clear

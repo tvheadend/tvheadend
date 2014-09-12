@@ -197,6 +197,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
     return NULL;
   conf = htsmsg_create_map();
   title = regexp_escape(epg_broadcast_get_title(event, NULL));
+  htsmsg_add_u32(conf, "enabled", 1);
   htsmsg_add_str(conf, "title", title);
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
@@ -551,7 +552,7 @@ static char *
 dvr_autorec_entry_class_weekdays_rend(void *o)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  static char buf[32];
+  char buf[32];
   size_t l;
   int i;
   if (dae->dae_weekdays == 0x7f)
@@ -567,7 +568,7 @@ dvr_autorec_entry_class_weekdays_rend(void *o)
                  val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
       }
   }
-  return buf + 1;
+  return strdup(buf + 1);
 }
 
 static int

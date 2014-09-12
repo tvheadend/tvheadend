@@ -133,16 +133,33 @@ prop_write_values
         break;
       }
       case PT_U32: {
-        if (htsmsg_field_get_u32(f, &u32))
-          continue;
+        if (p->intsplit) {
+          char *s;
+          if (!(new = htsmsg_field_get_str(f)))
+            continue;
+          u32 = atol(new) * p->intsplit;
+          if ((s = strchr(new, '.')) != NULL)
+            u32 += (atol(s + 1) % p->intsplit);
+        } else {
+          if (htsmsg_field_get_u32(f, &u32))
+            continue;
+        }
         PROP_UPDATE(u32, uint32_t);
         break;
       }
       case PT_S64: {
-        if (htsmsg_field_get_s64(f, &s64))
-          continue;
-        i = s64;
-        PROP_UPDATE(i, int64_t);
+        if (p->intsplit) {
+          char *s;
+          if (!(new = htsmsg_field_get_str(f)))
+            continue;
+          s64 = atol(new) * p->intsplit;
+          if ((s = strchr(new, '.')) != NULL)
+            s64 += (atol(s + 1) % p->intsplit);
+        } else {
+          if (htsmsg_field_get_s64(f, &s64))
+            continue;
+        }
+        PROP_UPDATE(s64, int64_t);
         break;
       }
       case PT_DBL: {
@@ -230,7 +247,7 @@ prop_read_value
   const char *s;
   const void *val = obj + p->off;
   uint32_t u32;
-  char buf[16];
+  char buf[24];
 
   /* Ignore */
   u32 = p->get_opts ? p->get_opts(obj) : p->opts;
@@ -262,10 +279,28 @@ prop_read_value
       htsmsg_add_u32(m, name, *(uint16_t *)val);
       break;
     case PT_U32:
-      htsmsg_add_u32(m, name, *(uint32_t *)val);
+      if (p->intsplit) {
+        uint32_t maj = *(int64_t *)val / p->intsplit;
+        uint32_t min = *(int64_t *)val % p->intsplit;
+        if (min) {
+          snprintf(buf, sizeof(buf), "%u.%u", (unsigned int)maj, (unsigned int)min);
+          htsmsg_add_str(m, name, buf);
+        } else
+          htsmsg_add_s64(m, name, maj);
+      } else
+        htsmsg_add_u32(m, name, *(uint32_t *)val);
       break;
     case PT_S64:
-      htsmsg_add_s64(m, name, *(int64_t *)val);
+      if (p->intsplit) {
+        int64_t maj = *(int64_t *)val / p->intsplit;
+        int64_t min = *(int64_t *)val % p->intsplit;
+        if (min) {
+          snprintf(buf, sizeof(buf), "%lu.%lu", (unsigned long)maj, (unsigned long)min);
+          htsmsg_add_str(m, name, buf);
+        } else
+          htsmsg_add_s64(m, name, maj);
+      } else
+        htsmsg_add_s64(m, name, *(int64_t *)val);
       break;
     case PT_STR:
       if ((s = *(const char **)val))
@@ -420,6 +455,10 @@ prop_serialize_value
   /* Visual group */
   if (pl->group)
     htsmsg_add_u32(m, "group", pl->group);
+
+  /* Split integer value */
+  if (pl->intsplit)
+    htsmsg_add_u32(m, "intsplit", pl->intsplit);
 
   /* Data */
   if (obj)

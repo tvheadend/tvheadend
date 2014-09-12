@@ -21,9 +21,6 @@
 
 #include "htsmsg.h"
 
-#define MC_REWRITE_PAT 0x0001
-#define MC_REWRITE_PMT 0x0002
-
 #define MC_IS_EOS_ERROR(e) ((e) == EPIPE || (e) == ECONNRESET)
 
 typedef enum {
@@ -47,7 +44,8 @@ typedef enum {
 
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
-  int                  m_flags;
+  int                  m_rewrite_pat;
+  int                  m_rewrite_pmt;
   int                  m_cache;
 
 /* 

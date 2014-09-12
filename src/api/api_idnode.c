@@ -57,7 +57,7 @@ static void
 api_idnode_grid_conf
   ( htsmsg_t *args, api_idnode_grid_conf_t *conf )
 {
-  htsmsg_field_t *f;
+  htsmsg_field_t *f, *f2;
   htsmsg_t *filter, *e;
   const char *str;
 
@@ -84,11 +84,20 @@ api_idnode_grid_conf
         if ((v = htsmsg_get_str(e, "value")))
           idnode_filter_add_str(&conf->filter, k, v, IC_RE);
       } else if (!strcmp(t, "numeric")) {
-        uint32_t v;
-        if (!htsmsg_get_u32(e, "value", &v)) {
-          int t = str2val(htsmsg_get_str(e, "comparison") ?: "",
-                          filtcmptab);
-          idnode_filter_add_num(&conf->filter, k, v, t == -1 ? IC_EQ : t);
+        f2 = htsmsg_field_find(e, "value");
+        if (f2) {
+          int t = str2val(htsmsg_get_str(e, "comparison") ?: "", filtcmptab);
+          if (f2->hmf_type == HMF_DBL) {
+            double dbl;
+            if (!htsmsg_field_get_dbl(f2, &dbl))
+              idnode_filter_add_dbl(&conf->filter, k, dbl, t == -1 ? IC_EQ : t);
+          } else {
+            int64_t v;
+            int64_t intsplit = 0;
+            htsmsg_get_s64(e, "intsplit", &intsplit);
+            if (!htsmsg_field_get_s64(f2, &v))
+              idnode_filter_add_num(&conf->filter, k, v, t == -1 ? IC_EQ : t, intsplit);
+          }
         }
       } else if (!strcmp(t, "boolean")) {
         uint32_t v;

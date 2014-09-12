@@ -73,7 +73,7 @@ cron_parse_field
       if ((sn - off) >= bits || (en - off) >= bits || mn > bits)
         return 1;
       if (en < 0) en = sn;
-      if (mn < 0) mn = 1;
+      if (mn <= 0) mn = 1;
       while (sn <= en) {
         if ( (sn % mn) == 0 )
           val |= (0x1ULL << (sn - off));
