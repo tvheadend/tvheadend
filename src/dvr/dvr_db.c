@@ -1863,7 +1863,7 @@ const idclass_t dvr_entry_class = {
       .id       = "status",
       .name     = "Status",
       .get      = dvr_entry_class_status_get,
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {
       .type     = PT_STR,
