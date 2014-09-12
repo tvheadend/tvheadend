@@ -303,13 +303,13 @@ mpegts_mux_epg_list ( void *o )
     { "Disable",                  MM_EPG_DISABLE },
     { "Enable (auto)",            MM_EPG_ENABLE },
     { "Force (auto)",             MM_EPG_FORCE },
-    { "Force EIT",                MM_EPG_FORCE_EIT },
-    { "Force UK Freesat",         MM_EPG_FORCE_UK_FREESAT },
-    { "Force UK Freeview",        MM_EPG_FORCE_UK_FREEVIEW },
-    { "Force Viasat Baltic",      MM_EPG_FORCE_VIASAT_BALTIC },
-    { "Force OpenTV Sky UK",      MM_EPG_FORCE_OPENTV_SKY_UK },
-    { "Force OpenTV Sky Italia",  MM_EPG_FORCE_OPENTV_SKY_ITALIA },
-    { "Force OpenTV Sky Ausat",   MM_EPG_FORCE_OPENTV_SKY_AUSAT },
+    { "Only EIT",                 MM_EPG_ONLY_EIT },
+    { "Only UK Freesat",          MM_EPG_ONLY_UK_FREESAT },
+    { "Only UK Freeview",         MM_EPG_ONLY_UK_FREEVIEW },
+    { "Only Viasat Baltic",       MM_EPG_ONLY_VIASAT_BALTIC },
+    { "Only OpenTV Sky UK",       MM_EPG_ONLY_OPENTV_SKY_UK },
+    { "Only OpenTV Sky Italia",   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
+    { "Only OpenTV Sky Ausat",    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
   };
   return strtab2htsmsg(tab);
 }
@@ -405,6 +405,13 @@ const idclass_t mpegts_mux_class =
       .name     = "# Services",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "pmt_06_ac3",
+      .name     = "PMT Descriptor 0x06 = AC-3",
+      .off      = offsetof(mpegts_mux_t, mm_pmt_06_ac3),
+      .opts     = PO_ADVANCED,
     },
     {}
   }

@@ -17,7 +17,40 @@
 		<dd>Whether or not the mux is enabled and thus available.
 
 		<dt>EPG
-		<dd>Whether or not to retrieve EPG information from the mux.
+		<dd>EPG scan setup
+
+			<dl>
+				<dt>Disable
+				<dd>Disable the EPG scan
+
+				<dt>Enable (auto)
+				<dd>Enable the EPG scan (when some services from this mux are assigned to channels)
+
+				<dt>Force (auto)
+				<dd>Force the EPG scan (everytime when the EPG scan is triggered)
+
+				<dt>Only EIT
+				<dd>Do only EIT EPG scan (when some services from this mux are assigned to channels)
+
+				<dt>Only UK Freesat
+				<dd>Do only UK Freesat EPG scan (when some services from this mux are assigned to channels)
+
+				<dt>Only UK Freeview
+				<dd>Do only UK Freeview EPG scan (when some services from this mux are assigned to channels)
+
+				<dt>Only Viasat Baltic
+				<dd>Do only Viasat Baltic EPG scan (when some services from this mux are assigned to channels)
+
+				<dt>Only OpenTV Sky UK
+				<dd>Do only OpenTV Sky UK EPG scan (the TSID must match in the skyuk configuration file)
+
+				<dt>Only OpenTV Sky Italia
+				<dd>Do only OpenTV Sky Italia EPG scan (the TSID must match in the skyit configuration file)
+
+				<dt>Only OpenTV Sky Ausat
+				<dd>Do only OpenTV Sky Ausat EPG scan (the TSID must match in the ausat configuration file)
+
+			</dl>
 
 		<dt>Network
 		<dd>The name of the network to which the mux belongs. Networks are defined in Configuration -> DVB Inputs -> Networks - DVB-S or ATSC, for example.
@@ -45,6 +78,11 @@
 
 		<dt>Character Set
 		<dd>The character encoding for this mux (e.g. UTF-8).
+		
+		<dt>PMT Descriptor 0x06 = AC-3
+		<dd>Whether or not the empty PMT descriptor 0x06 defaults to
+		    the AC-3 stream. Some Chinese cable providers are using
+		    this. If unsure, keep this off.
 
 		<dt>Interface
 		<dd>IPTV : the network interface/card on which the IPTV source can be found.

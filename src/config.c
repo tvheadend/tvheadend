@@ -16,13 +16,15 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+#include <sys/stat.h>
+
 #include "tvheadend.h"
 #include "settings.h"
 #include "config.h"
 #include "uuid.h"
-
-#include <string.h>
-#include <sys/stat.h>
+#include "htsbuf.h"
+#include "spawn.h"
 
 /* *************************************************************************
  * Global data
@@ -620,7 +622,7 @@ config_migrate_v6 ( void )
  * v6 -> v7 : acesscontrol changes
  */
 static void
-config_migrate_simple ( const char *dir, htsmsg_t **orig,
+config_migrate_simple ( const char *dir, htsmsg_t *list,
                         void (*modify)(htsmsg_t *record,
                                        uint32_t id,
                                        const char *uuid,
@@ -632,25 +634,31 @@ config_migrate_simple ( const char *dir, htsmsg_t **orig,
   tvh_uuid_t u;
   uint32_t index = 1, id;
 
-  if (!(c = hts_settings_load_r(1, dir)))
+  if (!(c = hts_settings_load(dir)))
     return;
 
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
+    uuid_init_hex(&u, NULL);
     if (htsmsg_get_u32(e, "id", &id))
       id = 0;
+    else if (list) {
+      htsmsg_t *m = htsmsg_create_map();
+      char buf[16];
+      snprintf(buf, sizeof(buf), "%d", id);
+      htsmsg_add_str(m, "id", buf);
+      htsmsg_add_str(m, "uuid", u.hex);
+      htsmsg_add_msg(list, NULL, m);
+    }
     htsmsg_delete_field(e, "id");
     htsmsg_add_u32(e, "index", index++);
-    uuid_init_hex(&u, NULL);
-    modify(e, id, u.hex, aux);
+    if (modify)
+      modify(e, id, u.hex, aux);
     hts_settings_save(e, "%s/%s", dir, u.hex);
     hts_settings_remove("%s/%s", dir, f->hmf_name);
   }
 
-  if (orig)
-    *orig = c;
-  else
-    htsmsg_destroy(c);
+  htsmsg_destroy(c);
 }
 
 static void
@@ -731,6 +739,313 @@ config_migrate_v8 ( void )
   htsmsg_destroy(ch);
 }
 
+static void
+config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+{
+  uint32_t u32;
+  htsmsg_delete_field(c, "index");
+  if (!htsmsg_get_u32(c, "approx_time", &u32)) {
+    htsmsg_delete_field(c, "approx_time");
+    if (u32 != 0)
+      htsmsg_add_u32(c, "start", u32);
+    else
+      htsmsg_add_str(c, "start", "");
+  }
+  if (!htsmsg_get_u32(c, "contenttype", &u32)) {
+    htsmsg_delete_field(c, "contenttype");
+    htsmsg_add_u32(c, "content_type", u32 / 16);
+  }
+}
+
+static void
+config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+{
+  htsmsg_t *list = aux;
+  const char *chname = htsmsg_get_str(c, "channelname");
+  const char *chuuid = htsmsg_get_str(c, "channel");
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  tvh_uuid_t uuid0;
+  const char *s1;
+  uint32_t u32;
+
+  htsmsg_delete_field(c, "index");
+  if (chname == NULL || (chuuid != NULL && uuid_init_bin(&uuid0, chuuid))) {
+    chname = strdup(chuuid);
+    htsmsg_delete_field(c, "channelname");
+    htsmsg_delete_field(c, "channel");
+    htsmsg_add_str(c, "channelname", chname);
+    free((char *)chname);
+    if (!htsmsg_get_u32(c, "contenttype", &u32)) {
+      htsmsg_delete_field(c, "contenttype");
+      htsmsg_add_u32(c, "content_type", u32 / 16);
+    }
+  }
+  if ((s1 = htsmsg_get_str(c, "autorec")) != NULL) {
+    s1 = strdup(s1);
+    htsmsg_delete_field(c, "autorec");
+    HTSMSG_FOREACH(f, list) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (strcmp(s1, htsmsg_get_str(e, "id")) == 0) {
+        htsmsg_add_str(c, "autorec", htsmsg_get_str(e, "uuid"));
+        break;
+      }
+    }
+  }
+}
+
+static void
+config_migrate_v9 ( void )
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  tvh_uuid_t u;
+
+  config_migrate_simple("autorec", list, config_modify_autorec, NULL);
+  config_migrate_simple("dvr/log", NULL, config_modify_dvr_log, list);
+  htsmsg_destroy(list);
+
+  if ((c = hts_settings_load("dvr")) != NULL) {
+    /* step 1: only "config" */
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (strcmp(f->hmf_name, "config")) continue;
+      htsmsg_add_str(e, "name", f->hmf_name + 6);
+      uuid_init_hex(&u, NULL);
+      hts_settings_remove("dvr/%s", f->hmf_name);
+      hts_settings_save(e, "dvr/config/%s", u.hex);
+    }
+    /* step 2: reset (without "config") */
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (strcmp(f->hmf_name, "config") == 0) continue;
+      if (strncmp(f->hmf_name, "config", 6)) continue;
+      htsmsg_add_str(e, "name", f->hmf_name + 6);
+      uuid_init_hex(&u, NULL);
+      hts_settings_remove("dvr/%s", f->hmf_name);
+      hts_settings_save(e, "dvr/config/%s", u.hex);
+    }
+    htsmsg_destroy(c);
+  }
+
+  if ((c = hts_settings_load("autorec")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("autorec/%s", f->hmf_name);
+      hts_settings_save(e, "dvr/autorec/%s", f->hmf_name);
+    }
+  }
+}
+
+static void
+config_migrate_move ( const char *dir,
+                      const char *newdir )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if (!(c = hts_settings_load(dir)))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    hts_settings_save(e, "%s/%s", newdir, f->hmf_name);
+    hts_settings_remove("%s/%s", dir, f->hmf_name);
+  }
+
+  htsmsg_destroy(c);
+}
+
+static void
+config_migrate_v10 ( void )
+{
+  config_migrate_move("channel", "channel/config");
+  config_migrate_move("channeltags", "channel/tag");
+}
+
+static const char *
+config_find_uuid( htsmsg_t *map, const char *name, const char *value )
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  const char *s;
+
+  HTSMSG_FOREACH(f, map) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if ((s = htsmsg_get_str(e, name)) != NULL) {
+      if (!strcmp(s, value))
+        return f->hmf_name;
+    }
+  }
+  return NULL;
+}
+
+static void
+config_modify_acl_dvallcfg( htsmsg_t *c, htsmsg_t *dvr_config )
+{
+  uint32_t a;
+  const char *username, *uuid;
+
+  username = htsmsg_get_str(c, "username");
+  if (!htsmsg_get_u32(c, "dvallcfg", &a))
+    if (a == 0) {
+      uuid = username ? config_find_uuid(dvr_config, "name", username) : NULL;
+      if (uuid)
+        htsmsg_add_str(c, "dvr_config", uuid);
+    }
+  htsmsg_delete_field(c, "dvallcfg");
+}
+
+static void
+config_modify_acl_tag_only( htsmsg_t *c, htsmsg_t *channel_tag )
+{
+  uint32_t a;
+  const char *username, *tag, *uuid;
+
+  username = htsmsg_get_str(c, "username");
+  tag = htsmsg_get_str(c, "channel_tag");
+  if (!tag || tag[0] == '\0')
+    tag = NULL;
+  if (tag == NULL && !htsmsg_get_u32(c, "tag_only", &a)) {
+    if (a) {
+      uuid = username ? config_find_uuid(channel_tag, "name", username) : NULL;
+      if (uuid)
+        htsmsg_add_str(c, "channel_tag", uuid);
+    }
+  } else if (tag) {
+    uuid = config_find_uuid(channel_tag, "name", tag);
+    if (uuid) {
+      htsmsg_delete_field(c, "channel_tag");
+      htsmsg_add_str(c, "channel_tag", uuid);
+    }
+  }
+  htsmsg_delete_field(c, "tag_only");
+}
+
+static void
+config_modify_dvr_config_name( htsmsg_t *c, htsmsg_t *dvr_config )
+{
+  const char *config_name, *uuid;
+
+  config_name = htsmsg_get_str(c, "config_name");
+  uuid = config_name ? config_find_uuid(dvr_config, "name", config_name) : NULL;
+  htsmsg_delete_field(c, "config_name");
+  htsmsg_add_str(c, "config_name", uuid ?: "");
+}
+
+
+static void
+config_migrate_v11 ( void )
+{
+  htsmsg_t *dvr_config;
+  htsmsg_t *channel_tag;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  dvr_config = hts_settings_load("dvr/config");
+  channel_tag = hts_settings_load("channel/tag");
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_modify_acl_dvallcfg(e, dvr_config);
+      config_modify_acl_tag_only(e, channel_tag);
+    }
+    htsmsg_destroy(c);
+  }
+
+  if ((c = hts_settings_load("dvr/log")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_modify_dvr_config_name(e, dvr_config);
+    }
+    htsmsg_destroy(c);
+  }
+
+  htsmsg_destroy(channel_tag);
+  htsmsg_destroy(dvr_config);
+}
+
+/*
+ * Perform backup
+ */
+static void
+dobackup(const char *oldver)
+{
+  char outfile[PATH_MAX], cwd[PATH_MAX];
+  const char *argv[] = {
+    "/usr/bin/tar", "cjf", outfile, "--exclude", "backup", ".", NULL
+  };
+  const char *root = hts_settings_get_root();
+  char errtxt[128];
+  const char **arg;
+  int code;
+
+  tvhinfo("config", "backup: migrating config from %s (running %s)",
+                    oldver, tvheadend_version);
+
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    tvherror("config", "unable to get the current working directory");
+    goto fatal;
+  }
+
+  if (!access("/bin/tar", X_OK))
+    argv[0] = "/bin/tar";
+  else if (!access("/usr/bin/tar", X_OK))
+    argv[0] = "/usr/bin/tar";
+  else if (!access("/usr/local/bin/tar", X_OK))
+    argv[0] = "/usr/local/bin/tar";
+  else {
+    tvherror("config", "unable to find tar program");
+    goto fatal;
+  }
+
+  snprintf(outfile, sizeof(outfile), "%s/backup", root);
+  if (makedirs(outfile, 0700))
+    goto fatal;
+  if (chdir(root)) {
+    tvherror("config", "unable to find directory '%s'", root);
+    goto fatal;
+  }
+
+  snprintf(outfile, sizeof(outfile), "%s/backup/%s.tar.bz2",
+                                     root, oldver);
+  tvhinfo("config", "backup: running, output file %s", outfile);
+
+  spawnv(argv[0], (void *)argv);
+
+  while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
+    usleep(20000);
+
+  if (code) {
+    htsbuf_queue_t q;
+    char *s;
+    htsbuf_queue_init(&q, 0);
+    for (arg = argv; *arg; arg++) {
+      htsbuf_append(&q, *arg, strlen(*arg));
+      if (arg[1])
+        htsbuf_append(&q, " ", 1);
+    }
+    s = htsbuf_to_string(&q);
+    tvherror("config", "command '%s' returned error code %d", s, code);
+    tvherror("config", "executed in directory '%s'", root);
+    free(s);
+    htsbuf_queue_flush(&q);
+    goto fatal;
+  }
+
+  if (chdir(cwd)) {
+    tvherror("config", "unable to change directory to '%s'", cwd);
+    goto fatal;
+  }
+  return;
+
+fatal:
+  tvherror("config", "backup: fatal error");
+  exit(EXIT_FAILURE);
+}
+
 /*
  * Migration table
  */
@@ -743,18 +1058,28 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v6,
   config_migrate_v7,
   config_migrate_v8,
+  config_migrate_v9,
+  config_migrate_v10,
+  config_migrate_v11
 };
 
 /*
  * Perform migrations (if required)
  */
-static void
-config_migrate ( void )
+static int
+config_migrate ( int backup )
 {
   uint32_t v;
+  const char *s;
 
   /* Get the current version */
   v = htsmsg_get_u32_or_default(config, "version", 0);
+  s = htsmsg_get_str(config, "fullversion") ?: "unknown";
+
+  if (backup && strcmp(s, tvheadend_version))
+    dobackup(s);
+  else
+    backup = 0;
 
   /* Attempt to auto-detect versions prior to v2 */
   if (!v) {
@@ -765,8 +1090,11 @@ config_migrate ( void )
   }
 
   /* No changes required */
-  if (v == ARRAY_SIZE(config_migrate_table))
-    return;
+  if (v == ARRAY_SIZE(config_migrate_table)) {
+    if (backup)
+      goto update;
+    return 0;
+  }
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
@@ -775,8 +1103,48 @@ config_migrate ( void )
   }
 
   /* Update */
+update:
   htsmsg_set_u32(config, "version", v);
+  htsmsg_set_str(config, "fullversion", tvheadend_version);
   config_save();
+  return 1;
+}
+
+/*
+ *
+ */
+static void
+config_check_one ( const char *dir )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if (!(c = hts_settings_load(dir)))
+    return;
+
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if (strlen(f->hmf_name) != UUID_HEX_SIZE - 1) {
+      tvherror("START", "filename %s/%s/%s is invalid", hts_settings_get_root(), dir, f->hmf_name);
+      exit(1);
+    }
+  }
+  htsmsg_destroy(c);
+}
+
+/*
+ * Perform a simple check for UUID files
+ */
+static void
+config_check ( void )
+{
+  config_check_one("accesscontrol");
+  config_check_one("channel/config");
+  config_check_one("channel/tag");
+  config_check_one("dvr/config");
+  config_check_one("dvr/log");
+  config_check_one("dvr/autorec");
+  config_check_one("esfilter");
 }
 
 /* **************************************************************************
@@ -784,7 +1152,7 @@ config_migrate ( void )
  * *************************************************************************/
 
 void
-config_init ( const char *path )
+config_init ( const char *path, int backup )
 {
   struct stat st;
   char buf[1024];
@@ -829,11 +1197,13 @@ config_init ( const char *path )
   /* Store version number */
   if (new) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
+    htsmsg_set_str(config, "fullversion", tvheadend_version);
     config_save();
   
   /* Perform migrations */
   } else {
-    config_migrate();
+    if (config_migrate(backup))
+      config_check();
   }
 }
 

@@ -54,6 +54,8 @@ epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
     epggrab_module_t *owner );
 
+void epggrab_channel_done(void);
+
 /* **************************************************************************
  * Internal module routines
  * *************************************************************************/

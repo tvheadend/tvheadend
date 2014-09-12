@@ -37,6 +37,8 @@
 #include "access.h"
 #include "settings.h"
 #include "channels.h"
+#include "dvr/dvr.h"
+#include "tcp.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -158,6 +160,11 @@ access_ticket_verify(const char *id, const char *resource)
 void
 access_destroy(access_t *a)
 {
+  if (a == NULL)
+    return;
+  free(a->aa_username);
+  free(a->aa_representative);
+  htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
   free(a);
 }
@@ -292,10 +299,16 @@ access_update(access_t *a, access_entry_t *ae)
     }
   }
 
-  if(ae->ae_chtag && ae->ae_chtag[0] != '\0') {
+  if(ae->ae_dvr_config && ae->ae_dvr_config->dvr_config_name[0] != '\0') {
+    if (a->aa_dvrcfgs == NULL)
+      a->aa_dvrcfgs = htsmsg_create_list();
+    htsmsg_add_str(a->aa_dvrcfgs, NULL, idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id));
+  }
+
+  if(ae->ae_chtag && ae->ae_chtag->ct_name[0] != '\0') {
     if (a->aa_chtags == NULL)
       a->aa_chtags = htsmsg_create_list();
-    htsmsg_add_str(a->aa_chtags, NULL, ae->ae_chtag);
+    htsmsg_add_str(a->aa_chtags, NULL, idnode_uuid_as_str(&ae->ae_chtag->ct_id));
   }
 
   a->aa_rights |= ae->ae_rights;
@@ -309,6 +322,14 @@ access_get(const char *username, const char *password, struct sockaddr *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
+
+  if (username) {
+    a->aa_username = strdup(username);
+    a->aa_representative = strdup(username);
+  } else {
+    a->aa_representative = malloc(50);
+    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+  }
 
   if (access_noacl) {
     a->aa_rights = ACCESS_FULL;
@@ -546,12 +567,8 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_ADVANCED_STREAMING;
   if (ae->ae_dvr)
     r |= ACCESS_RECORDER;
-  if (ae->ae_dvrallcfg)
-    r |= ACCESS_RECORDER_ALL;
   if (ae->ae_webui)
     r |= ACCESS_WEB_INTERFACE;
-  if (ae->ae_tag_only)
-    r |= ACCESS_TAG_ONLY;
   if (ae->ae_admin)
     r |= ACCESS_ADMIN;
   ae->ae_rights = r;
@@ -569,6 +586,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 {
   access_ipmask_t *ai;
   access_entry_t *ae, *ae2;
+  const char *s;
 
   lock_assert(&global_lock);
 
@@ -585,6 +603,9 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     idnode_load(&ae->ae_id, conf);
+    /* note password has PO_NOSAVE, thus it must be set manually */
+    if ((s = htsmsg_get_str(conf, "password")) != NULL)
+      access_entry_class_password_set(ae, s);
     access_entry_update_rights(ae);
     TAILQ_FOREACH(ae2, &access_entries, ae_link)
       if (ae->ae_index < ae2->ae_index)
@@ -628,6 +649,11 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   idnode_unlink(&ae->ae_id);
 
+  if (ae->ae_dvr_config)
+    LIST_REMOVE(ae, ae_dvr_config_link);
+  if (ae->ae_chtag)
+    LIST_REMOVE(ae, ae_channel_tag_link);
+
   while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
   {
     TAILQ_REMOVE(&ae->ae_ipmasks, ai, ai_link);
@@ -642,10 +668,42 @@ access_entry_destroy(access_entry_t *ae)
   free(ae);
 }
 
+/*
+ *
+ */
+void
+access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
+{
+  access_entry_t *ae;
+
+  while ((ae = LIST_FIRST(&cfg->dvr_accesses)) != NULL) {
+    LIST_REMOVE(ae, ae_dvr_config_link);
+    ae->ae_dvr_config = NULL;
+    if (delconf)
+      access_entry_save(ae);
+  }
+}
+
+/*
+ *
+ */
+void
+access_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
+{
+  access_entry_t *ae;
+
+  while ((ae = LIST_FIRST(&ct->ct_accesses)) != NULL) {
+    LIST_REMOVE(ae, ae_channel_tag_link);
+    ae->ae_chtag = NULL;
+    if (delconf)
+      access_entry_save(ae);
+  }
+}
+
 /**
  *
  */
-static void
+void
 access_entry_save(access_entry_t *ae)
 {
   htsmsg_t *c = htsmsg_create_map();
@@ -795,19 +853,72 @@ access_entry_class_password2_set(void *o, const void *v)
   return 0;
 }
 
-static htsmsg_t *
-access_entry_chtag_list ( void *o )
+static int
+access_entry_chtag_set(void *o, const void *v)
 {
-  channel_tag_t *ct;
-  htsmsg_t *m = htsmsg_create_list();
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    htsmsg_add_str(m, NULL, ct->ct_name);
-  return m;
+  access_entry_t *ae = (access_entry_t *)o;
+  channel_tag_t *tag = v ? channel_tag_find_by_uuid(v) : NULL;
+  if (tag == NULL && ae->ae_chtag) {
+    LIST_REMOVE(ae, ae_channel_tag_link);
+    ae->ae_chtag = NULL;
+    return 1;
+  } else if (ae->ae_chtag != tag) {
+    if (ae->ae_chtag)
+      LIST_REMOVE(ae, ae_channel_tag_link);
+    ae->ae_chtag = tag;
+    LIST_INSERT_HEAD(&tag->ct_accesses, ae, ae_channel_tag_link);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+access_entry_chtag_get(void *o)
+{
+  static const char *ret;
+  access_entry_t *ae = (access_entry_t *)o;
+  if (ae->ae_chtag)
+    ret = idnode_uuid_as_str(&ae->ae_chtag->ct_id);
+  else
+    ret = "";
+  return &ret;
+}
+
+static int
+access_entry_dvr_config_set(void *o, const void *v)
+{
+  access_entry_t *ae = (access_entry_t *)o;
+  dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
+  if (cfg == NULL && ae->ae_dvr_config) {
+    LIST_REMOVE(ae, ae_dvr_config_link);
+    ae->ae_dvr_config = NULL;
+    return 1;
+  } else if (ae->ae_dvr_config != cfg) {
+    if (ae->ae_dvr_config)
+      LIST_REMOVE(ae, ae_dvr_config_link);
+    ae->ae_dvr_config = cfg;
+    LIST_INSERT_HEAD(&cfg->dvr_accesses, ae, ae_dvr_config_link);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+access_entry_dvr_config_get(void *o)
+{
+  static const char *ret;
+  access_entry_t *ae = (access_entry_t *)o;
+  if (ae->ae_dvr_config)
+    ret = idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id);
+  else
+    ret = "";
+  return &ret;
 }
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = "Access",
+  .ic_event      = "access",
   .ic_save       = access_entry_class_save,
   .ic_get_title  = access_entry_class_get_title,
   .ic_delete     = access_entry_class_delete,
@@ -875,10 +986,13 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_dvr),
     },
     {
-      .type     = PT_BOOL,
-      .id       = "dvrallcfg",
-      .name     = "All Configs (VR)",
-      .off      = offsetof(access_entry_t, ae_dvrallcfg),
+      .type     = PT_STR,
+      .id       = "dvr_config",
+      .name     = "DVR Config Profile",
+      .set      = access_entry_dvr_config_set,
+      .get      = access_entry_dvr_config_get,
+      .list     = dvr_entry_class_config_name_list,
+      .off      = offsetof(access_entry_t, ae_dvr_config),
     },
     {
       .type     = PT_BOOL,
@@ -891,12 +1005,6 @@ const idclass_t access_entry_class = {
       .id       = "admin",
       .name     = "Admin",
       .off      = offsetof(access_entry_t, ae_admin),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "tag_only",
-      .name     = "Username Channel Tag Match",
-      .off      = offsetof(access_entry_t, ae_tag_only),
     },
     {
       .type     = PT_U32,
@@ -915,7 +1023,9 @@ const idclass_t access_entry_class = {
       .id       = "channel_tag",
       .name     = "Channel Tag",
       .off      = offsetof(access_entry_t, ae_chtag),
-      .list     = access_entry_chtag_list,
+      .set      = access_entry_chtag_set,
+      .get      = access_entry_chtag_get,
+      .list     = channel_tag_class_get_list,
     },
     {
       .type     = PT_STR,
@@ -956,7 +1066,7 @@ access_init(int createdefault, int noacl)
   TAILQ_INIT(&access_tickets);
 
   /* Load */
-  if ((c = hts_settings_load_r(1, "accesscontrol")) != NULL) {
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
       (void)access_entry_create(f->hmf_name, m);

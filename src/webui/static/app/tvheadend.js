@@ -1,9 +1,8 @@
+tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilties = null;
-tvheadend.conf_chepg = null;
-tvheadend.conf_dvbin = null;
-tvheadend.conf_tsdvr = null;
-tvheadend.conf_csa = null;
+tvheadend.dvrpanel = null;
+tvheadend.confpanel = null;
 
 /* State Provider */
 Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
@@ -39,6 +38,100 @@ tvheadend.help = function(title, pagename) {
         }
     });
 };
+
+tvheadend.paneladd = function(dst, add, idx) {
+    if (idx != null)
+        dst.insert(idx, add);
+    else
+        dst.add(add);
+};
+
+tvheadend.panelreg = function(tabpanel, panel, builder, destroyer) {
+    /* the 'activate' event does not work in ExtJS 3.4 */
+    tabpanel.on('beforetabchange', function(tp, p) {
+        if (p == panel)
+            builder();
+    });
+    panel.on('deactivate', destroyer);
+}
+
+tvheadend.Ajax = function(conf) {
+    var orig_success = conf.success;
+    var orig_failure = conf.failure;
+    conf.success = function(d) {
+        tvheadend.loading(0);
+        if (orig_success)
+            orig_success(d);
+    }
+    conf.failure = function(d) {
+        tvheadend.loading(0);
+        if (orig_failure)
+            orig_failure(d);
+    }
+    tvheadend.loading(1);
+    Ext.Ajax.request(conf);
+};
+
+tvheadend.AjaxConfirm = function(conf) {
+    Ext.MessageBox.confirm(
+        conf.title || 'Message',
+        conf.question || 'Do you really want to delete the selection?',
+        function (btn) {
+            if (btn == 'yes')
+                tvheadend.Ajax(conf);
+        }
+    );
+};
+
+tvheadend.loading = function(on) {
+    if (on)
+      Ext.getBody().mask('Loading... Please, wait...', 'loading');
+    else
+      Ext.getBody().unmask();
+};
+
+/*
+ * Any Match option in ComboBox queries
+ * This query is identical as in extjs-all.js
+ * except one
+ */
+tvheadend.doQueryAnyMatch = function(q, forceAll) {
+    q = Ext.isEmpty(q) ? '' : q;
+    var qe = {
+        query: q,
+        forceAll: forceAll,
+        combo: this,
+        cancel:false
+    };
+
+    if (this.fireEvent('beforequery', qe) === false || qe.cancel)
+        return false;
+
+    q = qe.query;
+    forceAll = qe.forceAll;
+    if (forceAll === true || (q.length >= this.minChars)) {
+        if (this.lastQuery !== q) {
+            this.lastQuery = q;
+            if (this.mode == 'local') {
+                this.selectedIndex = -1;
+                if (forceAll) {
+                    this.store.clearFilter();
+                } else {
+                    /* supply the anyMatch option (last param) */
+                    this.store.filter(this.displayField, q, true);
+                }
+                this.onLoad();
+            } else {
+                this.store.baseParams[this.queryParam] = q;
+                this.store.load({ params: this.getParams(q) });
+                this.expand();
+            }
+        } else {
+            this.selectedIndex = -1;
+            this.onLoad();
+        }
+    }
+}
 
 /*
  * General capabilities
@@ -218,109 +311,119 @@ function accessUpdate(o) {
     if (!tvheadend.capabilities)
         return;
 
+    tvheadend.rootTabPanel.setLogin(o.username);
+
+    if (tvheadend.autorecButton)
+        tvheadend.autorecButton.setDisabled(o.dvr != true);
+
     if (o.dvr == true && tvheadend.dvrpanel == null) {
-        tvheadend.dvrpanel = new tvheadend.dvr;
+        tvheadend.dvrpanel = tvheadend.dvr();
         tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
     }
 
     if (o.admin == true && tvheadend.confpanel == null) {
-        var tabs1 = [
-            new tvheadend.miscconf,
-            new tvheadend.acleditor
-        ];
-        var tabs2;
 
-        /* DVB inputs */
-        tabs2 = [];
-        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
-            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
-            tvheadend.capabilities.indexOf('v4l')          !== -1) {
-            tabs2.push(new tvheadend.tvadapters);
-        }
-        /*
-         tabs2.push(new tvheadend.iptv);
-         */
-        tvheadend.conf_dvbin = new Ext.TabPanel({
+        var cp = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: 'Configuration',
+            iconCls: 'wrench',
+            items: []
+        });
+
+        tvheadend.miscconf(cp);
+
+        tvheadend.acleditor(cp);
+
+        /* DVB inputs, networks, muxes, services */
+        var dvbin = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'DVB Inputs',
             iconCls: 'hardware',
-            items: tabs2
+            items: []
         });
-        tvheadend.networks(tvheadend.conf_dvbin);
-        tvheadend.muxes(tvheadend.conf_dvbin);
-        tvheadend.services(tvheadend.conf_dvbin);
-        tvheadend.mux_sched(tvheadend.conf_dvbin);
-        tabs1.push(tvheadend.conf_dvbin);
+
+        var idx = 0;
+
+        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
+            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
+            tvheadend.capabilities.indexOf('v4l')          !== -1)
+            tvheadend.tvadapters(dvbin);
+        tvheadend.networks(dvbin);
+        tvheadend.muxes(dvbin);
+        tvheadend.services(dvbin);
+        tvheadend.mux_sched(dvbin);
+
+        cp.add(dvbin);
 
         /* Channel / EPG */
-        tvheadend.conf_chepg = new Ext.TabPanel({
+        var chepg = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Channel / EPG',
             iconCls: 'television',
             items: []
         });
-        tvheadend.channel_tab(tvheadend.conf_chepg, 0);
-        tvheadend.cteditor(tvheadend.conf_chepg, 1);
-        tvheadend.conf_chepg.insert(2, new tvheadend.epggrab);
-        tabs1.push(tvheadend.conf_chepg);
+        tvheadend.channel_tab(chepg);
+        tvheadend.cteditor(chepg);
+        tvheadend.epggrab(chepg);
+
+        cp.add(chepg);
 
         /* DVR / Timeshift */
-        tabs2 = [new tvheadend.dvrsettings];
-        if (tvheadend.capabilities.indexOf('timeshift') !== -1) {
-            tabs2.push(new tvheadend.timeshift);
-        }
-        tvheadend.conf_tsdvr = new Ext.TabPanel({
+        var tsdvr = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Recording',
             iconCls: 'drive',
-            items: tabs2
+            items: []
         });
-        tabs1.push(tvheadend.conf_tsdvr);
+        tvheadend.dvr_settings(tsdvr);
+        if (tvheadend.capabilities.indexOf('timeshift') !== -1)
+          tvheadend.timeshift(tsdvr);
+
+        cp.add(tsdvr);
 
         /* CSA */
-        tabs2 = [];
-        if (tvheadend.capabilities.indexOf('cwc')   !== -1)
-          tabs2.push(new tvheadend.cwceditor);
-        if (tvheadend.capabilities.indexOf('capmt') !== -1)
-          tabs2.push(new tvheadend.capmteditor);
-        if (tabs2.length > 0) {
-            tvheadend.conf_csa = new Ext.TabPanel({
+        if (tvheadend.capabilities.indexOf('cwc')   !== -1 ||
+            tvheadend.capabilities.indexOf('capmt') !== -1) {
+
+            var csa = new Ext.TabPanel({
                 activeTab: 0,
                 autoScroll: true,
                 title: 'CSA',
                 iconCls: 'key',
-                items: tabs2
+                items: []
             });
-            tabs1.push(tvheadend.conf_csa);
+
+            if (tvheadend.capabilities.indexOf('cwc')   !== -1)
+                tvheadend.cwceditor(csa);
+            if (tvheadend.capabilities.indexOf('capmt') !== -1)
+                tvheadend.capmteditor(csa);
+                
+            cp.add(csa);
         }
 
         /* Stream Config */
-        tvheadend.conf_stream = new Ext.TabPanel({
+        var stream = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
             title: 'Stream',
             iconCls: 'stream_config',
             items: []
         });
-        tvheadend.esfilter_tab(tvheadend.conf_stream);
-        tabs1.push(tvheadend.conf_stream);
+        tvheadend.esfilter_tab(stream);
+
+        cp.add(stream);
 
         /* Debug */
-        tabs1.push(new tvheadend.tvhlog);
+        tvheadend.tvhlog(cp);
 
-        tvheadend.confpanel = new Ext.TabPanel({
-            activeTab: 0,
-            autoScroll: true,
-            title: 'Configuration',
-            iconCls: 'wrench',
-            items: tabs1
-        });
-
-        tvheadend.rootTabPanel.add(tvheadend.confpanel);
-        tvheadend.confpanel.doLayout();
+        /* Finish */
+        tvheadend.rootTabPanel.add(cp);
+        tvheadend.confpanel = cp;
+        cp.doLayout();
     }
 
     if (o.admin == true && tvheadend.statuspanel == null) {
@@ -368,6 +471,86 @@ tvheadend.log = function(msg, style) {
 /**
  *
  */
+tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
+
+    onRender: function(ct, position) {
+        tvheadend.RootTabPanel.superclass.onRender.call(this, ct, position);
+
+        /* Create login components */
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+
+        if (!this.loginTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}">',
+                '<span class="x-tab-strip-login {iconCls}">{text}</span></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.loginTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+        item.tabEl = this.loginTpl.insertBefore(before, p);
+        this.loginItem = item;
+
+        if (!this.loginCmdTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}"><a href="#">',
+                '<span class="x-tab-strip-login-cmd"></span></a></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.loginCmdTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var el = this.loginCmdTpl.insertBefore(before, p);
+        item.tabEl = Ext.get(el);
+        item.tabEl.select('a').on('click', this.onLoginCmdClicked, this, {preventDefault: true});
+        this.loginCmdItem = item;
+
+        this.on('beforetabchange', function(tp, p) {
+            if (p == this.loginItem || p == this.loginCmdItem)
+                return false;
+        });
+
+        this.setLogin('');
+    },
+
+    getComponent: function(comp) {
+        if (comp === this.loginItem.id || comp == this.loginItem)
+            return this.loginItem;
+        if (comp === this.loginCmdItem.id || comp == this.loginCmdItem)
+            return this.loginCmdItem;
+        return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
+    },
+
+    setLogin: function(login) {
+        this.login = login;
+        if (login) {
+            text = 'Logged in as <b>' + login + '</b>';
+            cmd = '(logout)';
+        } else {
+            text = 'No verified access';
+            cmd = '(login)';
+        }
+        var el = this.loginItem.tabEl;
+        var fly = Ext.fly(this.loginItem.tabEl);
+        var t = fly.child('span.x-tab-strip-login', true);
+        Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
+        Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
+    },
+
+    onLoginCmdClicked: function(e) {
+        window.location.href = this.login ? 'logout' : 'login';
+    }
+
+});
+
+/**
+ *
+ */
 //create application
 tvheadend.app = function() {
 
@@ -386,10 +569,10 @@ tvheadend.app = function() {
                 html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
             });
 
-            tvheadend.rootTabPanel = new Ext.TabPanel({
+            tvheadend.rootTabPanel = new tvheadend.RootTabPanel({
                 region: 'center',
                 activeTab: 0,
-                items: [new tvheadend.epg]
+                items: [tvheadend.epg()]
             });
 
             var viewport = new Ext.Viewport({
@@ -439,4 +622,3 @@ tvheadend.app = function() {
 
     };
 }(); // end of app
-

@@ -68,13 +68,11 @@ The columns have the following functions:
   <dd>
   Enables access to all video recording functions. This also include administration of the auto recordings.
 
-  <dt>All Configs (VR)
+  <dt>DVR Config Profile
   <dd>
-  Allow to use all DVR configuration profiles. If not set, a DVR
-  configuration profile matched to the authorized user by name is always used
-  (the configuration profile must have same name as the user). If the DVR
-  configuration profile does not exists, the default profile is used.
-  The user is also not allowed to select another profile.
+  If set, the user will only be able to use the DVR config profile
+  equal to this value.
+  Note that this field is unset when the DVR Config Profile is removed.
 
   <dt>Web interface
   <dd>
@@ -84,13 +82,6 @@ The columns have the following functions:
   <dd>
   Enables access to the Configuration tab.
   
-  <dt>Username Channel Tag Match
-  <dd>
-  If enabled, the user will only be able to access channels with a tag the
-  same name as the username.
-
-  This provides a very rudimentary way of limiting access to certain channels.
-
   <dt>Min Channel Num
   <dd>
   If nonzero, the user will only be able to access channels with
@@ -103,11 +94,9 @@ The columns have the following functions:
 
   <dt>Channel Tag
   <dd>
-  If set, the user will only be able to access channels with
-  a channel tag equal to this value. Note that this field stores
-  the tag name (not identified). It means that this field would not be
-  updated when the tag name is changed. A manual re-set of this field
-  is required (for security reasons).
+  If set, the user will only be able to access channels containing
+  this channel tag.
+  Note that this field is unset when the channel tag is removed.
 
   <dt>Comment
   <dd>

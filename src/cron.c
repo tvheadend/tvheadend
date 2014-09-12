@@ -73,7 +73,7 @@ cron_parse_field
       if ((sn - off) >= bits || (en - off) >= bits || mn > bits)
         return 1;
       if (en < 0) en = sn;
-      if (mn < 0) mn = 1;
+      if (mn <= 0) mn = 1;
       while (sn <= en) {
         if ( (sn % mn) == 0 )
           val |= (0x1ULL << (sn - off));
@@ -176,7 +176,7 @@ cron_multi_set ( const char *str )
     if (line[0] != '#')
       if (!cron_set(&cron, line)) {
         count++;
-        cm2 = realloc(cm, sizeof(cm) + sizeof(cron) * count);
+        cm2 = realloc(cm, sizeof(*cm) + sizeof(cron) * count);
         if (cm2 == NULL) {
           free(cm);
           return NULL;

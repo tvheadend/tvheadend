@@ -211,6 +211,7 @@ const idclass_t linuxdvb_satconf_class =
 {
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = "DVB-S Satconf",
+  .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
   .ic_save       = linuxdvb_satconf_class_save,
   .ic_properties = (const property_t[]) {
@@ -632,10 +633,12 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   // TODO: really need to understand whether or not we need to pre configure
   //       and/or re-affirm the switch
 
-  /* Disable tone */
-  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
-    tvherror("diseqc", "failed to disable tone");
-    return -1;
+  /* Disable tone (en50494 don't use tone) */
+  if (!lse->lse_en50494) {
+    if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
+      tvherror("diseqc", "failed to disable tone");
+      return -1;
+    }
   }
 
   /* Diseqc */  
@@ -659,14 +662,16 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
                               &lse->lse_parent->ls_orbital_pos,
                               &lse->lse_parent->ls_orbital_dir);
 
-  /* Set the tone */
-  b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
-  tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
-  if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
-    tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
-    return -1;
+  /* Set the tone (en50494 don't use tone) */
+  if (!lse->lse_en50494) {
+    b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
+    tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
+    if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+      tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
+      return -1;
+    }
+    usleep(20000); // Allow LNB to settle before tuning
   }
-  usleep(20000); // Allow LNB to settle before tuning
 
   /* Frontend */
   /* use en50494 tuning frequency, if needed (not channel frequency) */
@@ -700,13 +705,16 @@ linuxdvb_satconf_start_mux
   // Note: basically this ensures the tuning params are acceptable
   //       for the FE, so that if they're not we don't have to wait
   //       for things like rotors and switches
+  //       the en50494 have to skip this test
   if (!lse->lse_lnb)
     return SM_CODE_TUNING_FAILED;
   f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
   if (f == (uint32_t)-1)
     return SM_CODE_TUNING_FAILED;
-  r = linuxdvb_frontend_tune0(lfe, mmi, f);
-  if (r) return r;
+  if (!lse->lse_en50494) {
+    r = linuxdvb_frontend_tune0(lfe, mmi, f);
+    if (r) return r;
+  }
 
   /* Diseqc */
   ls->ls_mmi        = mmi;
@@ -1020,6 +1028,7 @@ const idclass_t linuxdvb_satconf_ele_class =
 {
   .ic_class      = "linuxdvb_satconf_ele",
   .ic_caption    = "Satconf",
+  .ic_event      = "linuxdvb_satconf_ele",
   .ic_get_title  = linuxdvb_satconf_ele_class_get_title,
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,
   .ic_save       = linuxdvb_satconf_ele_class_save,
@@ -1205,6 +1214,7 @@ const idclass_t linuxdvb_diseqc_class =
 {
   .ic_class       = "linuxdvb_diseqc",
   .ic_caption     = "DiseqC",
+  .ic_event       = "linuxdvb_diseqc",
   .ic_get_title   = linuxdvb_diseqc_class_get_title,
   .ic_save        = linuxdvb_diseqc_class_save,
 };

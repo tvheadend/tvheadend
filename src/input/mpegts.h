@@ -312,15 +312,15 @@ enum mpegts_mux_epg_flag
   MM_EPG_DISABLE,
   MM_EPG_ENABLE,
   MM_EPG_FORCE,
-  MM_EPG_FORCE_EIT,
-  MM_EPG_FORCE_UK_FREESAT,
-  MM_EPG_FORCE_UK_FREEVIEW,
-  MM_EPG_FORCE_VIASAT_BALTIC,
-  MM_EPG_FORCE_OPENTV_SKY_UK,
-  MM_EPG_FORCE_OPENTV_SKY_ITALIA,
-  MM_EPG_FORCE_OPENTV_SKY_AUSAT,
+  MM_EPG_ONLY_EIT,
+  MM_EPG_ONLY_UK_FREESAT,
+  MM_EPG_ONLY_UK_FREEVIEW,
+  MM_EPG_ONLY_VIASAT_BALTIC,
+  MM_EPG_ONLY_OPENTV_SKY_UK,
+  MM_EPG_ONLY_OPENTV_SKY_ITALIA,
+  MM_EPG_ONLY_OPENTV_SKY_AUSAT,
 };
-#define MM_EPG_LAST MM_EPG_FORCE_OPENTV_SKY_AUSAT
+#define MM_EPG_LAST MM_EPG_ONLY_OPENTV_SKY_AUSAT
 
 /* Multiplex */
 struct mpegts_mux
@@ -411,6 +411,7 @@ struct mpegts_mux
   int   mm_enabled;
   int   mm_epg;
   char *mm_charset;
+  int   mm_pmt_06_ac3;
 };
  
 /* Service */
@@ -424,6 +425,7 @@ struct mpegts_service
 
   uint16_t s_dvb_service_id;
   uint16_t s_dvb_channel_num;
+  uint16_t s_dvb_channel_minor;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;
   char    *s_dvb_cridauth;
@@ -437,7 +439,7 @@ struct mpegts_service
    */
 
   int      s_dvb_eit_enable;
-  uint16_t s_dvb_opentv_chnum;
+  uint64_t s_dvb_opentv_chnum;
 
   /*
    * Link to carrying multiplex and active adapter
@@ -562,6 +564,9 @@ struct mpegts_input
   /* Active sources */
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
   LIST_HEAD(,service)             mi_transports;
+
+  mpegts_mux_t                  **mi_destroyed_muxes;
+  int                             mi_destroyed_muxes_count;
   
   /* Table processing */
   pthread_t                       mi_table_tid;

@@ -47,10 +47,17 @@ int             lang_str_append
   ( lang_str_t *ls, const char *str, const char *lang );
 
 /* Serialize/Deserialize */
+htsmsg_t       *lang_str_serialize_map
+  ( lang_str_t *ls );
 void            lang_str_serialize   
   ( lang_str_t *ls, htsmsg_t *msg, const char *f );
+lang_str_t     *lang_str_deserialize_map
+  ( htsmsg_t *map );
 lang_str_t     *lang_str_deserialize
   ( htsmsg_t *m, const char *f );
+
+/* Compare */
+int             lang_str_compare ( lang_str_t *ls1, lang_str_t *ls2 );
 
 /* Init/Done */
 void            lang_str_done( void );

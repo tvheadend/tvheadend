@@ -484,7 +484,8 @@ main(int argc, char **argv)
               opt_dump         = 0,
               opt_xspf         = 0,
               opt_dbus         = 0,
-              opt_dbus_session = 0;
+              opt_dbus_session = 0,
+              opt_nobackup     = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -507,6 +508,7 @@ main(int argc, char **argv)
 
     {   0, NULL,        "Service Configuration",   OPT_BOOL, NULL         },
     { 'c', "config",    "Alternate config path",   OPT_STR,  &opt_config  },
+    { 'B', "nobackup",  "Do not backup config tree at upgrade", OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      "Fork and run as daemon",  OPT_BOOL, &opt_fork    },
     { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
     { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
@@ -787,7 +789,7 @@ main(int argc, char **argv)
   /* Initialise configuration */
   uuid_init();
   idnode_init();
-  config_init(opt_config);
+  config_init(opt_config, opt_nobackup == 0);
 
   /**
    * Initialize subsystems
@@ -820,6 +822,8 @@ main(int argc, char **argv)
   channel_init();
 
   subscription_init();
+
+  dvr_config_init();
 
   access_init(opt_firstrun, opt_noacl);
 

@@ -27,8 +27,8 @@
 static void
 mpegts_network_scan_notify ( mpegts_mux_t *mm )
 {
-  idnode_updated(&mm->mm_id);
-  idnode_updated(&mm->mm_network->mn_id);
+  idnode_notify_simple(&mm->mm_id);
+  idnode_notify_simple(&mm->mm_network->mn_id);
 }
 
 static int

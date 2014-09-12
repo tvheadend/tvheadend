@@ -177,6 +177,7 @@ void gtimer_disarm(gtimer_t *gti);
 /*
  * List / Queue header declarations
  */
+LIST_HEAD(access_entry_list, access_entry);
 LIST_HEAD(th_subscription_list, th_subscription);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);

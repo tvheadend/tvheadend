@@ -27,6 +27,8 @@
 #include <assert.h>
 #include <string.h>
 
+SKEL_DECLARE(epggrab_channel_skel, epggrab_channel_t);
+
 /* **************************************************************************
  * EPG Grab Channel functions
  * *************************************************************************/
@@ -189,13 +191,12 @@ epggrab_channel_t *epggrab_channel_find
 {
   char *s;
   epggrab_channel_t *ec;
-  static epggrab_channel_t *skel = NULL;
-  if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
-  skel->id = tvh_strdupa(id);
+
+  SKEL_ALLOC(epggrab_channel_skel);
+  s = epggrab_channel_skel->id = tvh_strdupa(id);
 
   /* Replace / with # */
   // Note: this is a bit of a nasty fix for #1774, but will do for now
-  s = skel->id;
   while (*s) {
     if (*s == '/') *s = '#';
     s++;
@@ -203,18 +204,19 @@ epggrab_channel_t *epggrab_channel_find
 
   /* Find */
   if (!create) {
-    ec = RB_FIND(tree, skel, link, _ch_id_cmp);
+    ec = RB_FIND(tree, epggrab_channel_skel, link, _ch_id_cmp);
 
   /* Find/Create */
   } else {
-    ec = RB_INSERT_SORTED(tree, skel, link, _ch_id_cmp);
+    ec = RB_INSERT_SORTED(tree, epggrab_channel_skel, link, _ch_id_cmp);
     if (!ec) {
       assert(owner);
-      ec      = skel;
-      ec->id  = strdup(skel->id);
+      ec      = epggrab_channel_skel;
+      SKEL_USED(epggrab_channel_skel);
+      ec->id  = strdup(ec->id);
       ec->mod = owner;
-      skel    = NULL;
       *save   = 1;
+      return ec;
     }
   }
   return ec;
@@ -298,4 +300,10 @@ int
 epggrab_channel_is_ota ( epggrab_channel_t *ec )
 {
   return ec->mod->type == EPGGRAB_OTA;
+}
+
+void
+epggrab_channel_done( void )
+{
+  SKEL_FREE(epggrab_channel_skel);
 }

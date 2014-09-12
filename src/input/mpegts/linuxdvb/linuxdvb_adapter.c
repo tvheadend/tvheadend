@@ -72,6 +72,7 @@ const idclass_t linuxdvb_adapter_class =
 {
   .ic_class      = "linuxdvb_adapter",
   .ic_caption    = "LinuxDVB Adapter",
+  .ic_event      = "linuxdvb_adapter",
   .ic_save       = linuxdvb_adapter_class_save,
   .ic_get_childs = linuxdvb_adapter_class_get_childs,
   .ic_get_title  = linuxdvb_adapter_class_get_title,

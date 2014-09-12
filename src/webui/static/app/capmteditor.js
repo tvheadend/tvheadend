@@ -1,4 +1,5 @@
-tvheadend.capmteditor = function() {
+tvheadend.capmteditor = function(panel, index) {
+
     var fm = Ext.form;
 
     function setMetaAttr(meta, record) {
@@ -104,6 +105,8 @@ tvheadend.capmteditor = function() {
         }
     });
 
-    return new tvheadend.tableEditor('Capmt Connections', 'capmt', cm, rec,
+    var p = new tvheadend.tableEditor('Capmt Connections', 'capmt', cm, rec,
             [], store, 'config_capmt.html', 'key');
+
+    tvheadend.paneladd(panel, p, index);
 };

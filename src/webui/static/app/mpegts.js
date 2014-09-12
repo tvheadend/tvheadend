@@ -25,14 +25,13 @@ tvheadend.comet.on('mpegts_network', function() {
     tvheadend.network_list.reload();
 });
 
-tvheadend.networks = function(panel)
+tvheadend.networks = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
-        comet: 'mpegts_network',
         titleS: 'Network',
         titleP: 'Networks',
-        tabIndex: 1,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Networks', 'config_networks.html');
         },            
@@ -57,14 +56,13 @@ tvheadend.networks = function(panel)
     });
 };
 
-tvheadend.muxes = function(panel)
+tvheadend.muxes = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux',
-        comet: 'mpegts_mux',
         titleS: 'Mux',
         titleP: 'Muxes',
-        tabIndex: 2,
+        tabIndex: index,
         hidemode: true,
         help: function() {
             new tvheadend.help('Muxes', 'config_muxes.html');
@@ -195,53 +193,71 @@ tvheadend.show_service_streams = function(data) {
     win.show();
 };
 
-tvheadend.services = function(panel)
+tvheadend.services = function(panel, index)
 {
-    var mapButton = new Ext.Toolbar.Button({
-        tooltip: 'Map services to channels',
-        iconCls: 'clone',
-        text: 'Map All',
-        callback: tvheadend.service_mapper,
-        disabled: false
-    });
-    var selected = function(s)
-    {
-        if (s.getCount() > 0)
-            mapButton.setText('Map Selected');
-        else
-            mapButton.setText('Map All');
-    };
-    var actions = new Ext.ux.grid.RowActions({
-        header: 'Details',
-        width: 10,
-        actions: [{
-                iconCls: 'info',
-                qtip: 'Detailed stream info',
-                cb: function(grid, rec, act, row, col) {
-                    Ext.Ajax.request({
-                        url: 'api/service/streams',
-                        params: {
-                            uuid: rec.id
-                        },
-                        success: function(r, o) {
-                            var d = Ext.util.JSON.decode(r.responseText);
-                            tvheadend.show_service_streams(d);
-                        }
-                    });
-                }
-            }]
-    });
+    function builder(conf) {
+        var mapButton = {
+            name: 'map',
+            builder: function() {
+                return new Ext.Toolbar.Button({
+                    tooltip: 'Map services to channels',
+                    iconCls: 'clone',
+                    text: 'Map All',
+                    disabled: false
+                });
+            },
+            callback: tvheadend.service_mapper
+        };
+        
+        var selected = function(s, abuttons)
+        {
+            if (s.getCount() > 0)
+                abuttons.map.setText('Map Selected');
+            else
+                abuttons.map.setText('Map All');
+        };
+
+        var actions = new Ext.ux.grid.RowActions({
+            header: 'Details',
+            width: 10,
+            actions: [{
+                    iconCls: 'info',
+                    qtip: 'Detailed stream info',
+                    cb: function(grid, rec, act, row, col) {
+                        Ext.Ajax.request({
+                            url: 'api/service/streams',
+                            params: {
+                                uuid: rec.id
+                            },
+                            success: function(r, o) {
+                                var d = Ext.util.JSON.decode(r.responseText);
+                                tvheadend.show_service_streams(d);
+                            }
+                        });
+                    }
+            }],
+            destroy: function() {
+            }
+        });
+        conf.tbar = [mapButton];
+        conf.selected = selected;
+        conf.lcol[1] = actions;
+        conf.plugins = [actions];
+    }
+    function destroyer(conf) {
+        delete conf.tbar;
+        delete conf.plugins;
+        conf.lcol[1] = {};
+        conf.selected = null;
+    }
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/service',
-        comet: 'service',
         titleS: 'Service',
         titleP: 'Services',
-        tabIndex: 3,
+        tabIndex: index,
         hidemode: true,
         add: false,
         del: false,
-        selected: selected,
-        tbar: [mapButton],
         help: function() {
             new tvheadend.help('Services', 'config_services.html');
         },         
@@ -255,24 +271,26 @@ tvheadend.services = function(panel)
                            "?title=" + encodeURIComponent(title) + "'>Play</a>";
                 }
             },
-            actions
+            {
+                /* placeholder for actions */
+            }
         ],
-        plugins: [actions],
         sort: {
             field: 'svcname',
             direction: 'ASC'
-        }
+        },
+        builder: builder,
+        destroyer: destroyer
     });
 };
 
-tvheadend.mux_sched = function(panel)
+tvheadend.mux_sched = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux_sched',
-        comet: 'mpegts_mux_sched',
         titleS: 'Mux Scheduler',
         titleP: 'Mux Schedulers',
-        tabIndex: 4,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Mux Schedulers', 'config_muxsched.html');
         },          
