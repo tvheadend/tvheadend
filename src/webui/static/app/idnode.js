@@ -107,6 +107,44 @@ tvheadend.idnode_enum_store = function(f)
     return store;
 };
 
+Ext.ux.grid.filter.IntsplitFilter = Ext.extend(Ext.ux.grid.filter.NumericFilter, {
+
+    fieldCls : Ext.form.TextField,
+
+    constructor: function(conf) {
+        this.intsplit = conf.intsplit;
+        if (!conf.fields)
+            conf.fields = {
+                gt: { maskRe: /[0-9\.]/ },
+                lt: { maskRe: /[0-9\.]/ },
+                eq: { maskRe: /[0-9\.]/ }
+            };
+        Ext.ux.grid.filter.IntsplitFilter.superclass.constructor.call(this, conf);
+    },
+
+    getSerialArgs: function () {
+        var key,
+        args = [],
+        values = this.menu.getValue();
+        for (key in values) {
+            var s = values[key].toString().split('.');
+            var v = 0;
+            if (s.length > 0)
+                v = parseInt(s[0]) * this.intsplit;
+            if (s.length > 1)
+                v += parseInt(s[1]);
+            args.push({
+                type: 'numeric',
+                comparison: key,
+                value: v,
+                intsplit: this.intsplit
+            });
+        }
+        return args;
+    }
+
+});
+
 tvheadend.IdNodeField = function(conf)
 {
     /*
@@ -122,6 +160,7 @@ tvheadend.IdNodeField = function(conf)
     this.hidden = conf.hidden || conf.advanced;
     this.password = conf.password;
     this.duration = conf.duration;
+    this.intsplit = conf.intsplit;
     this.group = conf.group;
     this.enum = conf.enum;
     this.store = null;
@@ -134,7 +173,6 @@ tvheadend.IdNodeField = function(conf)
      */
 
     this.onrefresh = function(callback) {
-        this.rcallback = callback;
         var st = this.store;
         if (st && st instanceof Ext.data.JsonStore)
             st.on('load', callback);
@@ -151,7 +189,10 @@ tvheadend.IdNodeField = function(conf)
         var cfg = conf && this.id in conf ? conf[this.id] : {};
         var w = 300;
         var ftype = 'string';
-        if (this.type === 'int' || this.type === 'u32' ||
+        if (this.intsplit) {
+            ftype = 'intsplit';
+            w = 80;
+        } else if (this.type === 'int' || this.type === 'u32' ||
             this.type === 'u16' || this.type === 's64' ||
             this.type === 'dbl') {
             ftype = 'numeric';
@@ -175,12 +216,13 @@ tvheadend.IdNodeField = function(conf)
             dataIndex: this.id,
             header: this.text,
             editor: this.editor({create: false}),
-            renderer: cfg.renderer ? cfg.renderer() : this.renderer(),
+            renderer: cfg.renderer ? cfg.renderer(this.store) : this.renderer(this.store),
             editable: !this.rdonly,
             hidden: this.hidden,
             filter: {
                 type: ftype,
-                dataIndex: this.id
+                dataIndex: this.id,
+                intsplit: this.intsplit
             }
         };
 
@@ -194,7 +236,7 @@ tvheadend.IdNodeField = function(conf)
         return props;
     };
 
-    this.renderer = function()
+    this.renderer = function(st)
     {
         if (this.password)
             return function(v) {
@@ -224,10 +266,9 @@ tvheadend.IdNodeField = function(conf)
             }
         }
 
-        if (!this.store)
+        if (!st)
             return null;
 
-        var st = this.store;
         return function(v) {
             if (st && st instanceof Ext.data.JsonStore) {
                 var t = [];
@@ -308,7 +349,11 @@ tvheadend.IdNodeField = function(conf)
                 case 's32':
                 case 'dbl':
                 case 'time':
-                    cons = Ext.form.NumberField;
+                    if (this.intsplit) {
+                        c['maskRe'] = /[0-9\.]/;
+                        cons = Ext.form.TextField;
+                    } else
+                        cons = Ext.form.NumberField;
                     break;
 
                 /* 'str' and 'perm' */
@@ -492,6 +537,17 @@ tvheadend.idnode_editor_field = function(f, create)
         case 'u16':
         case 's64':
         case 'dbl':
+            if (f.intsplit) {
+                /* this should be improved */
+                return new Ext.form.TextField({
+                    fieldLabel: f.caption,
+                    name: f.id,
+                    value: value,
+                    disabled: d,
+                    width: 300,
+                    maskRe: /[0-9\.]/,
+                });
+            }
             return new Ext.form.NumberField({
                 fieldLabel: f.caption,
                 name: f.id,

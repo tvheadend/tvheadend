@@ -1070,11 +1070,9 @@ atsc_vct_callback
       tvh_str_set(&s->s_dvb_svcname, chname);
       save = 1;
     }
-    if (s->s_dvb_channel_num != maj) {
-      // TODO: ATSC channel numbering is plain weird!
-      //       could shift the major (*100 or something) and append
-      //       minor, but that'll probably confuse people, as will this!
+    if (s->s_dvb_channel_num != maj || s->s_dvb_channel_minor != min) {
       s->s_dvb_channel_num = maj;
+      s->s_dvb_channel_minor = min;
       save = 1;
     }
 

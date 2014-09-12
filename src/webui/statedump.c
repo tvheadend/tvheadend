@@ -54,18 +54,27 @@ dumpchannels(htsbuf_queue_t *hq)
 {
   channel_t *ch;
   outputtitle(hq, 0, "Channels");
+  int64_t chnum;
+  char chbuf[32];
 
   CHANNEL_FOREACH(ch) {
     
     htsbuf_qprintf(hq, "%s (%d)\n", channel_get_name(ch), channel_get_id(ch));
+    chnum = channel_get_number(ch);
+    if (channel_get_minor(chnum))
+      snprintf(chbuf, sizeof(chbuf), "%u.%u",
+               channel_get_major(chnum),
+               channel_get_minor(chnum));
+    else
+      snprintf(chbuf, sizeof(chbuf), "%u", channel_get_major(chnum));
     htsbuf_qprintf(hq,
 		   "  refcount = %d\n"
 		   "  zombie = %d\n"
-		   "  number = %d\n"
+		   "  number = %s\n"
 		   "  icon = %s\n\n",
 		   ch->ch_refcount,
 		   ch->ch_zombie,
-		   channel_get_number(ch),
+		   chbuf,
 		   ch->ch_icon ?: "<none set>");
   }
 }

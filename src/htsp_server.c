@@ -550,13 +550,16 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
+  int64_t chnum = channel_get_number(ch);
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
   htsmsg_t *services = htsmsg_create_list();
 
   htsmsg_add_u32(out, "channelId", channel_get_id(ch));
-  htsmsg_add_u32(out, "channelNumber", channel_get_number(ch));
+  htsmsg_add_u32(out, "channelNumber", channel_get_major(chnum));
+  if (channel_get_minor(chnum))
+    htsmsg_add_u32(out, "channelNumberMinor", channel_get_minor(chnum));
 
   htsmsg_add_str(out, "channelName", channel_get_name(ch));
   if(ch->ch_icon != NULL) {

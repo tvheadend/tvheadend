@@ -155,7 +155,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
               'sched_status',
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [actions],
@@ -226,7 +226,7 @@ tvheadend.dvr_finished = function(panel, index) {
         },
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [
@@ -274,7 +274,7 @@ tvheadend.dvr_failed = function(panel, index) {
               'status,sched_status',
         sort: {
           field: 'start_real',
-          direction: 'DESC'
+          direction: 'ASC'
         },
         plugins: [actions],
         lcol: [actions],
@@ -304,10 +304,6 @@ tvheadend.dvr_settings = function(panel, index) {
             create: { }
         },
         del: true,
-        sort: {
-          field: 'name',
-          direction: 'ASC'
-        },
         help: function() {
             new tvheadend.help('DVR', 'config_dvr.html');
         },
@@ -354,8 +350,36 @@ tvheadend.autorec_editor = function(panel, index) {
         del: true,
         list: 'enabled,title,channel,tag,content_type,minduration,' +
               'maxduration,weekdays,start,pri,config_name,creator,comment',
+        columns: {
+            weekdays: {
+                renderer: function(st) {
+                    return function(v) {
+                        var t = [];
+                        var d = v.push ? v : [v];
+                        if (d.length == 7) {
+                            v = "All days";
+                        } else if (d.length == 0) {
+                            v = "No days";
+                        } else {
+                            for (var i = 0; i < d.length; i++) {
+                                 var r = st.find('key', d[i]);
+                                 if (r !== -1) {
+                                     var nv = st.getAt(r).get('val');
+                                     if (nv)
+                                         t.push(nv);
+                                 } else {
+                                     t.push(d[i]);
+                                 }
+                            }
+                            v = t.join(',');
+                        }
+                        return v;
+                    }
+                }
+            }
+        },
         sort: {
-          field: 'name',
+          field: 'title',
           direction: 'ASC'
         },
         help: function() {

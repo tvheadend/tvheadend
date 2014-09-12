@@ -177,7 +177,12 @@ void channel_save(channel_t *ch);
 const char *channel_get_name ( channel_t *ch );
 int channel_set_name ( channel_t *ch, const char *s );
 
-int channel_get_number ( channel_t *ch );
+#define CHANNEL_SPLIT 1000000
+
+static inline uint32_t channel_get_major ( int64_t chnum ) { return chnum / CHANNEL_SPLIT; }
+static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHANNEL_SPLIT; }
+
+int64_t channel_get_number ( channel_t *ch );
 
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );

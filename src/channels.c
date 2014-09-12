@@ -208,7 +208,7 @@ channel_class_get_name ( void *p )
 static const void *
 channel_class_get_number ( void *p )
 {
-  static int i;
+  static int64_t i;
   i = channel_get_number(p);
   return &i;
 }
@@ -296,7 +296,8 @@ const idclass_t channel_class = {
       .get      = channel_class_get_name,
     },
     {
-      .type     = PT_INT,
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
       .id       = "number",
       .name     = "Number",
       .off      = offsetof(channel_t, ch_number),
@@ -507,7 +508,7 @@ channel_get_name ( channel_t *ch )
   return blank;
 }
 
-int
+int64_t
 channel_get_number ( channel_t *ch )
 {
   int n;

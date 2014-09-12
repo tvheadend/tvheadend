@@ -126,7 +126,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 static char *
 cleanup_filename(char *s, dvr_config_t *cfg)
 {
-  int i, len = strlen(s), dvr_flags = cfg->dvr_flags;
+  int i, len = strlen(s);
   char *s1;
 
   s1 = intlconv_utf8safestr(cfg->dvr_charset_id, s, len * 2);
@@ -148,11 +148,11 @@ cleanup_filename(char *s, dvr_config_t *cfg)
     if(s[i] == '/')
       s[i] = '-';
 
-    else if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
+    else if(cfg->dvr_whitespace_in_title &&
             (s[i] == ' ' || s[i] == '\t'))
       s[i] = '-';	
 
-    else if((dvr_flags & DVR_CLEAN_TITLE) &&
+    else if(cfg->dvr_clean_title &&
             ((s[i] < 32) || (s[i] > 122) ||
              (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
       s[i] = '_';
@@ -190,7 +190,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     path[strlen(path)-1] = '\0';
 
   /* Append per-day directory */
-  if (cfg->dvr_flags & DVR_DIR_PER_DAY) {
+  if (cfg->dvr_dir_per_day) {
     localtime_r(&de->de_start, &tm);
     strftime(fullname, sizeof(fullname), "%F", &tm);
     s = cleanup_filename(fullname, cfg);
@@ -201,7 +201,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   }
 
   /* Append per-channel directory */
-  if (cfg->dvr_flags & DVR_DIR_PER_CHANNEL) {
+  if (cfg->dvr_channel_dir) {
     char *chname = strdup(DVR_CH_NAME(de));
     s = cleanup_filename(chname, cfg);
     free(chname);
@@ -214,7 +214,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   // TODO: per-brand, per-season
 
   /* Append per-title directory */
-  if (cfg->dvr_flags & DVR_DIR_PER_TITLE) {
+  if (cfg->dvr_title_dir) {
     char *title = strdup(lang_str_get(de->de_title, NULL));
     s = cleanup_filename(title, cfg);
     free(title);
@@ -338,7 +338,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
-  if(cfg->dvr_flags & DVR_TAG_FILES && de->de_bcast) {
+  if(cfg->dvr_tag_files && de->de_bcast) {
     if(muxer_write_meta(de->de_mux, de->de_bcast)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
       return -1;
@@ -441,7 +441,7 @@ dvr_thread(void *aux)
   th_pkt_t *pkt;
   int run = 1;
   int started = 0;
-  int comm_skip = (cfg->dvr_flags & DVR_SKIP_COMMERCIALS);
+  int comm_skip = cfg->dvr_skip_commercials;
   int commercial = COMMERCIAL_UNKNOWN;
 
   pthread_mutex_lock(&sq->sq_mutex);
