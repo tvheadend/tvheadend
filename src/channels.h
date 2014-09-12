@@ -47,10 +47,10 @@ typedef struct channel
   int ch_zombie;
 
   /* Channel info */
-  char *ch_name; // Note: do not access directly!
-  int   ch_number;
-  char *ch_icon;
-  struct channel_tag_mapping_list ch_ctms;
+  char   *ch_name; // Note: do not access directly!
+  int64_t ch_number;
+  char   *ch_icon;
+  struct  channel_tag_mapping_list ch_ctms;
 
   /* Service/subscriptions */
   LIST_HEAD(, channel_service_mapping) ch_services;
