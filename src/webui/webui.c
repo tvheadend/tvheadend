@@ -27,8 +27,13 @@
 #include <string.h>
 #include <assert.h>
 #include <arpa/inet.h>
+#include <signal.h>
+#include <poll.h>
 
 #include <sys/stat.h>
+#include <sys/sendfile.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "tvheadend.h"
 #include "access.h"
@@ -46,6 +51,7 @@
 #include "tcp.h"
 #include "config.h"
 #include "atomic.h"
+#include "settings.h"
 
 #if defined(PLATFORM_LINUX)
 #include <sys/sendfile.h>
@@ -246,6 +252,104 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   return ret;
 }
 
+static pid_t
+http_stream_transcode(http_connection_t *hc, muxer_t *mux, char *mime, int *mime_size)
+{
+  pid_t pid = 0;
+  int fd_pipe[2];
+  char tr_bin_path[1024] = {0};
+  const char *base_path = hts_settings_get_root();
+  const char *subdir = "transcoders";
+  const char *transcoder = http_arg_get(&hc->hc_req_args, "transcoder");
+
+  tvhlog(LOG_INFO, "webui", "Transcoding stream with transcoder %s", transcoder);
+
+  if(base_path == 0 || transcoder == 0) {
+    tvhlog(LOG_ERR, "webui", "Transcode-Script argument error");
+    return 0;
+  }
+
+  if(strstr(transcoder, "..") != 0 || strstr(transcoder, "/") != 0) {
+    tvhlog(LOG_ERR, "webui", "Transcode-Script breakout attempt detected");
+    return 0;
+  }
+
+  if(snprintf(tr_bin_path, sizeof(tr_bin_path), "%s/%s/%s.mime", base_path, subdir, transcoder) <= 0) {
+    tvhlog(LOG_ERR, "webui", "snprintf failed!");
+    return 0;
+  }
+
+  if(access(tr_bin_path, R_OK) == 0) {
+    FILE *fp = fopen(tr_bin_path, "r");
+    if(fp != NULL) {
+      if(fgets(mime, *mime_size, fp) == NULL)
+        *mime_size = 0;
+      fclose(fp);
+    }
+  } else {
+    *mime_size = 0;
+  }
+
+  if(snprintf(tr_bin_path, sizeof(tr_bin_path), "%s/%s/%s", base_path, subdir, transcoder) <= 0) {
+    tvhlog(LOG_ERR, "webui", "snprintf failed!");
+    return 0;
+  }
+
+  if(access(tr_bin_path, X_OK)) {
+    tvhlog(LOG_ERR, "webui", "Transcode-Script \"%s\" does not exist or is not executable!", tr_bin_path);
+    return 0;
+  }
+
+  if(pipe(fd_pipe) != 0) {
+    tvhlog(LOG_ERR, "webui", "pipe failed!");
+    return 0;
+  }
+
+  if(muxer_open_stream(mux, fd_pipe[1])) {
+    close(fd_pipe[0]);
+    close(fd_pipe[1]);
+    return 0;
+  }
+
+  if((pid = fork()) < 0 ) {
+    tvhlog(LOG_ERR, "webui", "fork failed!");
+
+    close(fd_pipe[0]);
+    close(fd_pipe[1]);
+    return 0;
+  }
+
+  if(pid == 0) { // Child process
+    dup2(fd_pipe[0], 0); // Replace stdin with pipe
+    dup2(hc->hc_fd, 1); // Replace stdout with http output
+
+    // Close unused fds
+    close(hc->hc_fd);
+    close(fd_pipe[0]);
+    close(fd_pipe[1]);
+
+    // convert all http arguments into env vars
+    http_arg_t *ra;
+    char name[128];
+    TAILQ_FOREACH(ra, &hc->hc_req_args, link)
+    {
+      if(snprintf(name, sizeof(name), "GET_%s", ra->key) <= 0)
+        exit(-100);
+      setenv(name, ra->val, 0);
+    }
+
+    // Execute the transcoder
+    execl(tr_bin_path, tr_bin_path, NULL);
+    exit(-101);
+  }
+
+  close(fd_pipe[0]);
+
+  tvhlog(LOG_INFO, "webui", "Transcoder initialized successfully");
+
+  return pid;
+}
+
 /**
  * HTTP stream loop
  */
@@ -262,11 +366,25 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
+  pid_t transcode_child = 0;
   socklen_t errlen = sizeof(err);
+  fd_set wfds;
+  char mime[128];
+  int mime_size = sizeof(mime);
 
   mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
+
+  if(http_arg_get(&hc->hc_req_args, "transcoder") != NULL) {
+    if((transcode_child = http_stream_transcode(hc, mux, mime, &mime_size)) == 0) {
+      run = 0;
+    }
+  } else {
+    mime_size = 0;
+    if(muxer_open_stream(mux, hc->hc_fd))
+      run = 0;
+  }
 
   /* reduce timeout on write() for streaming */
   tp.tv_sec  = 5;
@@ -276,7 +394,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   while(run && tvheadend_running) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
-    if(sm == NULL) {      
+    if(sm == NULL) {
       gettimeofday(&tp, NULL);
       ts.tv_sec  = tp.tv_sec + 1;
       ts.tv_nsec = tp.tv_usec * 1000;
@@ -306,12 +424,61 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_MPEGTS:
     case SMT_PACKET:
       if(started) {
-        pktbuf_t *pb;;
+        pktbuf_t *pb;
+
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
           pb = sm->sm_data;
+
+        tp.tv_sec  = 5;
+        tp.tv_usec = 0;
+        for(;;)
+        {
+          FD_ZERO(&wfds);
+          FD_SET(hc->hc_fd, &wfds);
+          int result = select(hc->hc_fd + 1, NULL, &wfds, NULL, &tp);
+          if(result < 0 && errno == EINTR)
+          {
+            tvhlog(LOG_DEBUG, "webui", "Select was interrupted, resuming wait");
+            continue;
+          }
+          if(result != 1)
+          {
+            tvhlog(LOG_INFO, "webui", "Stop streaming %s, client write timeout", hc->hc_url_orig);
+            run = 0;
+            break;
+          }
+
+          break;
+        }
+
+        if(run == 0)
+          break;
+
+        for(;;)
+        {
+          struct pollfd pfd = {.fd = hc->hc_fd, .events = POLLERR|POLLRDHUP};
+          int result = poll(&pfd, 1, 0);
+
+          if(result < 0 && errno == EINTR)
+            continue;
+
+          if(result != 0)
+          {
+            tvhlog(LOG_INFO, "webui", "Stop streaming %s, socket error", hc->hc_url_orig);
+            run = 0;
+            break;
+          }
+
+          break;
+        }
+
+        if(run == 0)
+          break;
+
         atomic_add(&s->ths_bytes_out, pktbuf_len(pb));
+
         muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
         sm->sm_data = NULL;
       }
@@ -325,7 +492,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       grace = 10;
       if(!started) {
         tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-        http_output_content(hc, muxer_mime(mux, sm->sm_data));
+        if(mime_size > 0)
+          http_output_content(hc, mime);
+        else
+          http_output_content(hc, muxer_mime(mux, sm->sm_data));
 
         if(muxer_init(mux, sm->sm_data, name) < 0)
           run = 0;
@@ -338,7 +508,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_STOP:
       if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
-        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig,
                streaming_code2txt(sm->sm_code));
         run = 0;
       }
@@ -378,6 +548,26 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
         tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
       run = 0;
     }
+  }
+
+  if(transcode_child > 0) {
+    time_t start;
+
+    tvhlog(LOG_INFO, "webui", "Terminating transcoding child...");
+
+    kill(transcode_child, SIGTERM);
+    start = time(NULL);
+    while(waitpid(transcode_child, NULL, WNOHANG) == 0) {
+      if(difftime(time(NULL), start) >= 5) {
+        kill(transcode_child, SIGKILL);
+        tvhlog(LOG_WARNING, "webui", "Killed transcoding child, you should fix your transcoder to propperly react on SIGTERM within 5 seconds!");
+        break;
+      }
+
+      usleep(50000);
+    }
+
+    tvhlog(LOG_INFO, "webui", "Transcode child terminated.");
   }
 
   if(started)
@@ -618,7 +808,7 @@ http_dvr_list_playlist(http_connection_t *hc)
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
-    
+
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     uuid = idnode_uuid_as_str(&de->de_id);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
@@ -646,12 +836,12 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0;
-  struct tm tm;  
+  struct tm tm;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
   durration  = de->de_stop - de->de_start;
   durration += (de->de_stop_extra + de->de_start_extra)*60;
-    
+
   fsize = dvr_get_filesize(de);
 
   if(fsize) {
@@ -660,7 +850,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
     htsbuf_qprintf(hq, "#EXTM3U\n");
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
-    
+
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     uuid = idnode_uuid_as_str(&de->de_id);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
@@ -1190,7 +1380,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   file_start = 0;
   file_end = st.st_size-1;
-  
+
   range = http_arg_get(&hc->hc_args, "Range");
   if(range != NULL)
     sscanf(range, "bytes=%jd-%jd", &file_start, &file_end);
@@ -1211,7 +1401,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   content_len = file_end - file_start+1;
-  
+
   sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
     file_start, file_end, st.st_size);
 
@@ -1219,7 +1409,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     lseek(fd, file_start, SEEK_SET);
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
-       content, content_len, NULL, NULL, 10, 
+       content, content_len, NULL, NULL, 10,
        range ? range_buf : NULL,
        disposition[0] ? disposition : NULL);
 
