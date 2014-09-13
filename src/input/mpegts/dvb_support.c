@@ -510,8 +510,11 @@ int dvb_str2rolloff(const char *p)
 
 const static struct strtab delsystab[] = {
   { "NONE",         DVB_SYS_NONE },
+  { "DVBC/ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
   { "DVBC_ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
+  { "DVBC/ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
   { "DVBC_ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
+  { "DVBC/ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_AC",DVB_SYS_DVBC_ANNEX_A }, /* for compatibility */
   { "DVBT",         DVB_SYS_DVBT },
@@ -622,14 +625,23 @@ const static struct strtab qamtab[] = {
   { "AUTO",      DVB_MOD_AUTO },
   { "QPSK",      DVB_MOD_QPSK },
   { "QAM4NR",    DVB_MOD_QAM_4_NR },
+  { "QAM/AUTO",  DVB_MOD_QAM_AUTO },
   { "QAM-AUTO",  DVB_MOD_QAM_AUTO },
+  { "QAM/16",    DVB_MOD_QAM_16 },
   { "QAM16",     DVB_MOD_QAM_16 },
+  { "QAM/32",    DVB_MOD_QAM_32 },
   { "QAM32",     DVB_MOD_QAM_32 },
+  { "QAM/64",    DVB_MOD_QAM_64 },
   { "QAM64",     DVB_MOD_QAM_64 },
+  { "QAM/128",   DVB_MOD_QAM_128 },
   { "QAM128",    DVB_MOD_QAM_128 },
+  { "QAM/256",   DVB_MOD_QAM_256 },
   { "QAM256",    DVB_MOD_QAM_256 },
+  { "VSB/8",     DVB_MOD_VSB_8 },
   { "8VSB",      DVB_MOD_VSB_8 },
+  { "VSB/16",    DVB_MOD_VSB_16 },
   { "16VSB",     DVB_MOD_VSB_16 },
+  { "PSK/8",     DVB_MOD_PSK_8 },
   { "8PSK",      DVB_MOD_PSK_8 },
   { "DQPSK",     DVB_MOD_DQPSK },
   { "BPSK",      DVB_MOD_BPSK },
@@ -684,6 +696,14 @@ int dvb_str2bw(const char *p)
   return dvb_verify(hi, bw_table);
 }
 
+const static struct strtab invertab[] = {
+  { "NONE",  DVB_INVERSION_UNDEFINED },
+  { "AUTO",  DVB_INVERSION_AUTO },
+  { "ON",    DVB_INVERSION_ON },
+  { "OFF",   DVB_INVERSION_OFF },
+};
+dvb_str2val(inver);
+
 const static struct strtab modetab[] = {
   { "NONE",  DVB_TRANSMISSION_MODE_NONE },
   { "AUTO",  DVB_TRANSMISSION_MODE_AUTO },
@@ -728,6 +748,7 @@ const static struct strtab poltab[] = {
   { "H", DVB_POLARISATION_HORIZONTAL },
   { "L", DVB_POLARISATION_CIRCULAR_LEFT },
   { "R", DVB_POLARISATION_CIRCULAR_RIGHT },
+  { "O", DVB_POLARISATION_OFF },
 };
 dvb_str2val(pol);
 
