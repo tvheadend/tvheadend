@@ -311,7 +311,8 @@ function accessUpdate(o) {
     if (!tvheadend.capabilities)
         return;
 
-    tvheadend.rootTabPanel.setLogin(o.username);
+    if ('username' in o)
+      tvheadend.rootTabPanel.setLogin(o.username);
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
@@ -514,8 +515,6 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             if (p == this.loginItem || p == this.loginCmdItem)
                 return false;
         });
-
-        this.setLogin('');
     },
 
     getComponent: function(comp) {
