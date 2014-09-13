@@ -476,13 +476,13 @@ dvr_autorec_entry_class_time_list(void *o)
 static htsmsg_t *
 dvr_autorec_entry_class_minduration_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60);
+  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
 }
 
 static htsmsg_t *
 dvr_autorec_entry_class_maxduration_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60);
+  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
 }
 
 static int

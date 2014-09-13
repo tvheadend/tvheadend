@@ -1585,7 +1585,7 @@ dvr_entry_class_channel_icon_url_get(void *o)
 }
 
 htsmsg_t *
-dvr_entry_class_duration_list(void *o, const char *not_set, int max)
+dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
 {
   int i;
   htsmsg_t *e, *l = htsmsg_create_list();
@@ -1597,7 +1597,7 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max)
   for (i = 1; i <= 120;  i++) {
     snprintf(buf, sizeof(buf), "%d min%s", i, i > 1 ? "s" : "");
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "key", i * step);
     htsmsg_add_str(e, "val", buf);
     htsmsg_add_msg(l, NULL, e);
   }
@@ -1607,7 +1607,7 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max)
     else
       snprintf(buf, sizeof(buf), "%d hrs %d min%s", i / 60, i % 60, (i % 60) > 0 ? "s" : "");
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "key", i);
+    htsmsg_add_u32(e, "key", i * step);
     htsmsg_add_str(e, "val", buf);
     htsmsg_add_msg(l, NULL, e);
   }
@@ -1617,7 +1617,7 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max)
 static htsmsg_t *
 dvr_entry_class_extra_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60);
+  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
 }
                                         
 static htsmsg_t *
