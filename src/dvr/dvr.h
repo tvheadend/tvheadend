@@ -311,6 +311,10 @@ int dvr_entry_get_mc(dvr_entry_t *de);
 
 int dvr_entry_get_retention( dvr_entry_t *de );
 
+int dvr_entry_get_extra_time_post( dvr_entry_t *de );
+
+int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
+
 void dvr_entry_save(dvr_entry_t *de);
 
 const char *dvr_entry_status(dvr_entry_t *de);

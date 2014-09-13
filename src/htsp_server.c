@@ -665,10 +665,10 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 
   htsmsg_add_s64(out, "start",       de->de_start);
   htsmsg_add_s64(out, "stop",        de->de_stop);
-  htsmsg_add_s64(out, "startExtra",  de->de_start_extra);
-  htsmsg_add_s64(out, "stopExtra",   de->de_stop_extra);
+  htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de));
+  htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de));
+  htsmsg_add_u32(out, "retention",   dvr_entry_get_retention(de));
   htsmsg_add_u32(out, "priority",    de->de_pri);
-  htsmsg_add_u32(out, "retention",   de->de_retention);
   htsmsg_add_u32(out, "contentType", de->de_content_type);
 
   if( de->de_title && (s = lang_str_get(de->de_title, NULL)))

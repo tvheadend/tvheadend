@@ -59,6 +59,19 @@ static inline int extra_valid(time_t extra)
 static int
 dvr_entry_get_start_time( dvr_entry_t *de )
 {
+  /* Note 30 seconds might not be enough (rotors) */
+  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) - 30;
+}
+
+static int
+dvr_entry_get_stop_time( dvr_entry_t *de )
+{
+  return de->de_stop + (60 * dvr_entry_get_extra_time_post(de));
+}
+
+int
+dvr_entry_get_extra_time_pre( dvr_entry_t *de )
+{
   time_t extra = de->de_start_extra;
 
   if (!extra_valid(extra)) {
@@ -67,12 +80,11 @@ dvr_entry_get_start_time( dvr_entry_t *de )
     if (!extra_valid(extra))
       extra = de->de_config->dvr_extra_time_pre;
   }
-  /* Note 30 seconds might not be enough (rotors) */
-  return de->de_start - (60 * extra) - 30;
+  return extra;
 }
 
-static int
-dvr_entry_get_stop_time( dvr_entry_t *de )
+int
+dvr_entry_get_extra_time_post( dvr_entry_t *de )
 {
   time_t extra = de->de_stop_extra;
 
@@ -82,7 +94,7 @@ dvr_entry_get_stop_time( dvr_entry_t *de )
     if (!extra_valid(extra))
       extra = de->de_config->dvr_extra_time_post;
   }
-  return de->de_stop + (60 * extra);
+  return extra;
 }
 
 int
