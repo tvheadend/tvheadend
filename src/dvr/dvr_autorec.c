@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Automatic recordings
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "dvr.h"
 #include "dtable.h"
 #include "epg.h"
+#include "htsp_server.h"
 
 static int dvr_autorec_in_init = 0;
 
@@ -179,6 +180,58 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   idnode_load(&dae->dae_id, conf);
 
+  htsp_autorec_entry_add(dae);
+
+  return dae;
+}
+
+
+dvr_autorec_entry_t*
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+                            channel_t *ch, uint32_t aroundTime, uint32_t weekdays,
+                            time_t start_extra, time_t stop_extra,
+                            dvr_prio_t pri, int retention,
+                            int min_duration, int max_duration,
+                            const char *creator, const char *comment)
+{
+  dvr_autorec_entry_t *dae;
+  htsmsg_t *conf, *days;
+
+  conf = htsmsg_create_map();
+  days = htsmsg_create_list();
+
+  htsmsg_add_u32(conf, "enabled",     1);
+  htsmsg_add_u32(conf, "retention",   retention);
+  htsmsg_add_u32(conf, "pri",         pri);
+  htsmsg_add_u32(conf, "minduration", min_duration);
+  htsmsg_add_u32(conf, "maxduration", max_duration);
+  htsmsg_add_s64(conf, "start_extra", start_extra);
+  htsmsg_add_s64(conf, "stop_extra",  stop_extra);
+  htsmsg_add_str(conf, "title",       title);
+  htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
+  htsmsg_add_str(conf, "creator",     creator ?: "");
+  htsmsg_add_str(conf, "comment",     comment ?: "");
+
+  if (aroundTime)
+    htsmsg_add_u32(conf, "start", (aroundTime-1));
+  if (ch)
+    htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
+
+  int i;
+  for (i = 0; i < 7; i++)
+    if (weekdays & (1 << i))
+      htsmsg_add_u32(days, NULL, i + 1);
+
+  htsmsg_add_msg(conf, "weekdays", days);
+
+  dae = dvr_autorec_create(NULL, conf);
+  htsmsg_destroy(conf);
+
+  if (dae) {
+    dvr_autorec_save(dae);
+    dvr_autorec_changed(dae, 1);
+  }
+
   return dae;
 }
 
@@ -221,6 +274,8 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 
   if (delconf)
     hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
+
+  htsp_autorec_entry_delete(dae);
 
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
   idnode_unlink(&dae->dae_id);
@@ -740,6 +795,20 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_autorec_entry_class_time_list,
     },
     {
+      .type     = PT_TIME,
+      .id       = "start_extra",
+      .name     = "Extra Start Time",
+      .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
+      .opts     = PO_DURATION,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "stop_extra",
+      .name     = "Extra Stop Time",
+      .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
+      .opts     = PO_DURATION,
+    },
+    {
       .type     = PT_U32,
       .islist   = 1,
       .id       = "weekdays",
@@ -777,6 +846,12 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "retention",
+      .name     = "Retention",
+      .off      = offsetof(dvr_autorec_entry_t, dae_retention),
     },
     {
       .type     = PT_STR,
@@ -920,6 +995,8 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
         dvr_entry_create_by_autorec(e, dae);
     }
   }
+
+  htsp_autorec_entry_update(dae);
 }
 
 
@@ -950,4 +1027,17 @@ autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
     if (delconf)
       dvr_autorec_save(dae);
   }
+}
+
+/*
+ *
+ */
+void
+autorec_destroy_by_id(const char *id, int delconf)
+{
+  dvr_autorec_entry_t *dae;
+  dae = dvr_autorec_find_by_uuid(id);
+
+  if (dae)
+    autorec_entry_destroy(dae, delconf);
 }

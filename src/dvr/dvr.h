@@ -262,6 +262,10 @@ typedef struct dvr_autorec_entry {
 
   int dae_minduration;
   int dae_maxduration;
+  int dae_retention;
+
+  time_t dae_start_extra;
+  time_t dae_stop_extra;
 } dvr_autorec_entry_t;
 
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
@@ -428,6 +432,14 @@ int dvr_sort_start_ascending(const void *A, const void *B);
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
 
+dvr_autorec_entry_t*
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+                            channel_t *ch, uint32_t aroundTime, uint32_t days,
+                            time_t start_extra, time_t stop_extra,
+                            dvr_prio_t pri, int retention,
+                            int min_duration, int max_duration,
+                            const char *creator, const char *comment);
+
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
                             epg_broadcast_t *event,
@@ -451,6 +463,8 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
+
+void autorec_destroy_by_id(const char *id, int delconf);
 
 /**
  *

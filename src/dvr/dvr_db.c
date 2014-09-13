@@ -616,7 +616,7 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
   } else {
     snprintf(buf, sizeof(buf), "Auto recording");
   }
-  dvr_entry_create_by_event(dae->dae_config_name, e, 0, 0, buf, dae, dae->dae_pri, 0);
+  dvr_entry_create_by_event(dae->dae_config_name, e, dae->dae_start_extra, dae->dae_stop_extra, buf, dae, dae->dae_pri, dae->dae_retention);
 }
 
 /**
