@@ -9,8 +9,8 @@ tvheadend.brands = new Ext.data.JsonStore({
 });
 
 insertContentGroupClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['name', 'code']);
-    scope.insert(0,new placeholder({name: '(Clear filter)', code: '-1'}));
+    var placeholder = Ext.data.Record.create(['val', 'key']);
+    scope.insert(0,new placeholder({val: '(Clear filter)', key: '-1'}));
 };
 
 tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
@@ -453,7 +453,7 @@ tvheadend.epg = function() {
     var epgFilterContentGroup = new Ext.form.ComboBox({
         loadingText: 'Loading...',
         width: 200,
-        displayField: 'name',
+        displayField: 'val',
         store: tvheadend.ContentGroupStore,
         mode: 'local',
         editable: true,
@@ -553,10 +553,10 @@ tvheadend.epg = function() {
     });
 
     epgFilterContentGroup.on('select', function(c, r) {
-        if (r.data.code == -1)
+        if (r.data.key == -1)
             clearContentGroupFilter();
-        else if (epgStore.baseParams.content_type !== r.data.code)
-            epgStore.baseParams.content_type = r.data.code;
+        else if (epgStore.baseParams.content_type !== r.data.key)
+            epgStore.baseParams.content_type = r.data.key;
         epgStore.reload();
     });
 
