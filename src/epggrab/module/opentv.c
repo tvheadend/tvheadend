@@ -164,10 +164,10 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 
 /* Patterns for the extraction of season/episode numbers from summary of events*/
 static const char *_opentv_se_num_patterns[] = { 
-          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",       /* for ???    */
-          " *([0-9]+)'? Stagione +Ep\\. ?([0-9]+) ?-", /* for Sky IT, ex.: 4' Stagione Ep.9 - ... */
-          " *([0-9]+)'? Stagione() ?-",                /* for Sky IT, ex.: 4' Stagione - ... */
-          "() *Ep\\. ?([0-9]+) ?-" };                  /* for Sky IT, ex.: Ep.9 - ... */
+          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",               /* for ??? */
+          " *([0-9]+)'? Stagione +Ep\\. ?([0-9]+)([a-z]?) ?-", /* for Sky IT, ex.: 4' Stagione Ep.9B - ... */
+          " *([0-9]+)'? Stagione() ?-",                        /* for Sky IT, ex.: 4' Stagione - ... */
+          "() *Ep\\. ?([0-9]+)([a-z]?) ?-" };                  /* for Sky IT, ex.: Ep.9A - ... */
 static regex_t *_opentv_se_num_pregs;
 
 /* Patterns for the extraction of subtitles from summary of events*/
@@ -354,20 +354,27 @@ opentv_parse_event_section
         epg_genre_list_destroy(egl);
       }
       if (ev.summary) {
-        regmatch_t match[3];
+        regmatch_t match[4];
         char buf[1024];
         int i;
 
         /* Parse Series/Episode */
         for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++) {
-          if (!regexec(_opentv_se_num_pregs+i, ev.summary, 3, match, 0)) {
+          if (!regexec(_opentv_se_num_pregs+i, ev.summary, 4, match, 0)) {
             epg_episode_num_t en;
             memset(&en, 0, sizeof(en));
             if (match[1].rm_so != -1)
               en.s_num = atoi(ev.summary + match[1].rm_so);
             if (match[2].rm_so != -1)
               en.e_num = atoi(ev.summary + match[2].rm_so);
-            tvhdebug("opentv", "  extract from summary season %d episode %d", en.s_num, en.e_num);
+            if (match[3].rm_so != -1) {
+              if (ev.summary[match[3].rm_so] >= 'a' && ev.summary[match[3].rm_so] <= 'z')
+                en.p_num = ev.summary[match[3].rm_so] - 'a' + 1;
+              else 
+                if (ev.summary[match[3].rm_so] >= 'A' && ev.summary[match[3].rm_so] <= 'Z')
+                  en.p_num = ev.summary[match[3].rm_so] - 'A' + 1;
+            }
+            tvhdebug("opentv", "  extract from summary season %d episode %d part %d", en.s_num, en.e_num, en.p_num);
             save |= epg_episode_set_epnum(ee, &en, src);
             break; /* skip other patterns */
           }
@@ -375,7 +382,7 @@ opentv_parse_event_section
 
         /* Parse Subtitle */
         for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++) {
-          if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_eo - match[1].rm_so <= sizeof(buf) - 1 ) {
+          if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_eo - match[1].rm_so <= sizeof(buf) - 1) {
             memcpy(buf, ev.summary + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
             buf[match[1].rm_eo - match[1].rm_so] = '\0';
             tvhdebug("opentv", "  extract from summary subtitle %s", buf);
