@@ -993,7 +993,7 @@ dvr_timer_start_recording(void *aux)
   dvr_rec_subscribe(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
-		 de->de_stop + (60 * de->de_stop_extra));
+                 dvr_entry_get_stop_time(de));
 }
 
 
