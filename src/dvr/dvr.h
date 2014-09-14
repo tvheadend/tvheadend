@@ -83,11 +83,12 @@ extern struct dvr_config_list dvrconfigs;
 extern struct dvr_entry_list dvrentries;
 
 typedef enum {
-  DVR_PRIO_IMPORTANT,
-  DVR_PRIO_HIGH,
-  DVR_PRIO_NORMAL,
-  DVR_PRIO_LOW,
-  DVR_PRIO_UNIMPORTANT,
+  DVR_PRIO_IMPORTANT   = 0,
+  DVR_PRIO_HIGH        = 1,
+  DVR_PRIO_NORMAL      = 2,
+  DVR_PRIO_LOW         = 3,
+  DVR_PRIO_UNIMPORTANT = 4,
+  DVR_PRIO_NOTSET      = 5,
 } dvr_prio_t;
 
 
@@ -159,6 +160,7 @@ typedef struct dvr_entry {
   int de_pri;
   int de_dont_reschedule;
   int de_mc;
+  int de_retention;
 
   /**
    * EPG information / links
@@ -260,6 +262,10 @@ typedef struct dvr_autorec_entry {
 
   int dae_minduration;
   int dae_maxduration;
+  int dae_retention;
+
+  time_t dae_start_extra;
+  time_t dae_stop_extra;
 } dvr_autorec_entry_t;
 
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
@@ -307,6 +313,12 @@ static inline int dvr_entry_is_valid(dvr_entry_t *de)
 
 int dvr_entry_get_mc(dvr_entry_t *de);
 
+int dvr_entry_get_retention( dvr_entry_t *de );
+
+int dvr_entry_get_extra_time_post( dvr_entry_t *de );
+
+int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
+
 void dvr_entry_save(dvr_entry_t *de);
 
 const char *dvr_entry_status(dvr_entry_t *de);
@@ -327,7 +339,7 @@ dvr_entry_create_by_event( const char *dvr_config_uuid,
                            time_t start_extra, time_t stop_extra,
                            const char *creator,
                            dvr_autorec_entry_t *dae,
-                           dvr_prio_t pri );
+                           dvr_prio_t pri, int retention );
 
 dvr_entry_t *
 dvr_entry_create_htsp( const char *dvr_config_uuid,
@@ -336,13 +348,14 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *title, const char *description,
                        const char *lang, epg_genre_t *content_type,
                        const char *creator, dvr_autorec_entry_t *dae,
-                       dvr_prio_t pri );
+                       dvr_prio_t pri, int retention );
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de,
                   const char* de_title, const char *de_desc, const char *lang,
                   time_t de_start, time_t de_stop,
-                  time_t de_start_extra, time_t de_stop_extra );
+                  time_t de_start_extra, time_t de_stop_extra,
+                  dvr_prio_t pri, int retention );
 
 void dvr_init(void);
 void dvr_config_init(void);
@@ -419,6 +432,14 @@ int dvr_sort_start_ascending(const void *A, const void *B);
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
 
+dvr_autorec_entry_t*
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+                            channel_t *ch, uint32_t aroundTime, uint32_t days,
+                            time_t start_extra, time_t stop_extra,
+                            dvr_prio_t pri, int retention,
+                            int min_duration, int max_duration,
+                            const char *creator, const char *comment);
+
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
                             epg_broadcast_t *event,
@@ -442,6 +463,8 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
+
+void autorec_destroy_by_id(const char *id, int delconf);
 
 /**
  *

@@ -40,6 +40,10 @@ void htsp_dvr_entry_add(dvr_entry_t *de);
 void htsp_dvr_entry_update(dvr_entry_t *de);
 void htsp_dvr_entry_delete(dvr_entry_t *de);
 
+void htsp_autorec_entry_add(dvr_autorec_entry_t *dae);
+void htsp_autorec_entry_update(dvr_autorec_entry_t *dae);
+void htsp_autorec_entry_delete(dvr_autorec_entry_t *dae);
+
 void htsp_event_add(epg_broadcast_t *ebc);
 void htsp_event_update(epg_broadcast_t *ebc);
 void htsp_event_delete(epg_broadcast_t *ebc);
