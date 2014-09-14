@@ -177,6 +177,7 @@ void gtimer_disarm(gtimer_t *gti);
 /*
  * List / Queue header declarations
  */
+LIST_HEAD(access_entry_list, access_entry);
 LIST_HEAD(th_subscription_list, th_subscription);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
@@ -194,18 +195,6 @@ TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
 LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
-
-/**
- * Log limiter
- */
-typedef struct loglimter {
-  time_t last;
-  int events;
-} loglimiter_t;
-
-void limitedlog(loglimiter_t *ll, const char *sys, 
-		const char *o, const char *event);
-
 
 /**
  * Device connection types
@@ -449,8 +438,8 @@ typedef enum
 static struct strtab signal_statetab[] = {
   { "GOOD",       SIGNAL_GOOD    },
   { "BAD",        SIGNAL_BAD     },
-  { "FAINT",      SIGNAL_BAD     },
-  { "NONE",       SIGNAL_BAD     },
+  { "FAINT",      SIGNAL_FAINT   },
+  { "NONE",       SIGNAL_NONE    },
 };
 
 static inline const char * signal2str ( signal_state_t st )
@@ -572,7 +561,6 @@ int sri_to_rate(int sri);
 int rate_to_sri(int rate);
 
 
-extern time_t dispatch_clock;
 extern struct service_list all_transports;
 
 extern void scopedunlock(pthread_mutex_t **mtxp);
@@ -719,6 +707,8 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
+  
 #define SKEL_DECLARE(name, type) type *name;
 #define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
 #define SKEL_USED(name) do { name = NULL; } while (0)

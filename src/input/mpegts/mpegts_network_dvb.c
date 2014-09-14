@@ -242,10 +242,10 @@ dvb_network_check_symbol_rate( dvb_mux_t *lm, dvb_mux_conf_t *dmc, int deltar )
     return dvb_network_check_bandwidth(lm->lm_tuning.u.dmc_fe_ofdm.bandwidth,
                                        dmc->u.dmc_fe_ofdm.bandwidth);
   case DVB_TYPE_C:
-    return abs(lm->lm_tuning.u.dmc_fe_qam.symbol_rate -
+    return deltaU32(lm->lm_tuning.u.dmc_fe_qam.symbol_rate,
                dmc->u.dmc_fe_qam.symbol_rate) > deltar;
   case DVB_TYPE_S:
-    return abs(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate -
+    return deltaU32(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate,
                dmc->u.dmc_fe_qpsk.symbol_rate) > deltar;
   case DVB_TYPE_ATSC:
     return 0;
@@ -296,7 +296,7 @@ dvb_network_find_mux
     }
 
     /* Reject if not same frequency (some tolerance due to changes and diff in NIT) */
-    if (abs(lm->lm_tuning.dmc_fe_freq - dmc->dmc_fe_freq) > deltaf) continue;
+    if (deltaU32(lm->lm_tuning.dmc_fe_freq, dmc->dmc_fe_freq) > deltaf) continue;
 
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
@@ -392,7 +392,7 @@ dvb_network_create_mux
                mm, buf, onid, tsid, mm->mm_network->mn_network_name);
 #endif      
     }
-  } else if (mm && ln->mn_autodiscovery) {
+  } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
@@ -429,8 +429,18 @@ dvb_network_create_mux
     char buf[128];
     tuning_old = lm->lm_tuning;
 #endif
+    /* Always save the orbital position */
+    if (dmc->dmc_fe_type == DVB_TYPE_S) {
+      if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir == 0 ||
+          dvb_network_check_orbital_pos(lm, dmc))
+        save |= COMPARE(u.dmc_fe_qpsk.orbital_pos);
+      save |= COMPARE(u.dmc_fe_qpsk.orbital_dir);
+    }
+    /* Do not change anything else without autodiscovery flag */
+    if (!ln->mn_autodiscovery)
+      goto save;
     /* Handle big diffs that have been allowed through for DVB-S */
-    if (abs(dmc->dmc_fe_freq - lm->lm_tuning.dmc_fe_freq) > 4000) {
+    if (deltaU32(dmc->dmc_fe_freq, lm->lm_tuning.dmc_fe_freq) > 4000) {
       lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
       save = 1;
     }
@@ -450,10 +460,6 @@ dvb_network_create_mux
       break;
     case DVB_TYPE_S:
       save |= COMPARE(u.dmc_fe_qpsk.polarisation);
-      if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir == 0 ||
-          dvb_network_check_orbital_pos(lm, dmc))
-        save |= COMPARE(u.dmc_fe_qpsk.orbital_pos);
-      save |= COMPARE(u.dmc_fe_qpsk.orbital_dir);
       save |= COMPARE(u.dmc_fe_qpsk.symbol_rate);
       save |= COMPAREN(u.dmc_fe_qpsk.fec_inner);
       break;
@@ -477,6 +483,7 @@ dvb_network_create_mux
     }
 #endif
   }
+save:
   if (mm && save) {
     mm->mm_dmc_origin        = mmo;
     mm->mm_dmc_origin_expire = dispatch_clock + 3600 * 24; /* one day */

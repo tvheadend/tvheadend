@@ -54,8 +54,11 @@ mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
     mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  idnode_insert(&mmi->mmi_id, uuid, class, 0);
   // TODO: does this need to be an idnode?
+  if (idnode_insert(&mmi->mmi_id, uuid, class, 0)) {
+    free(mmi);
+    return NULL;
+  }
 
   /* Setup links */
   mmi->mmi_mux   = mm;
@@ -96,7 +99,6 @@ mpegts_mux_instance_start
   int r;
   char buf[256], buf2[256];
   mpegts_mux_instance_t *mmi = *mmiptr;
-  mpegts_mux_instance_t *cur;
   mpegts_mux_t          * mm = mmi->mmi_mux;
   mpegts_input_t        * mi = mmi->mmi_input;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -109,20 +111,11 @@ mpegts_mux_instance_start
     return 0;
   }
 
-  cur = LIST_FIRST(&mi->mi_mux_active);
-  if (cur != NULL) {
-    /* Already tuned */
-    if (mmi == cur)
-      return 0;
-
-    /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
-  }
-  assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
-
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+  r = mi->mi_warm_mux(mi, mmi);
+  if (r) return r;
   r = mi->mi_start_mux(mi, mmi);
   if (r) return r;
 
@@ -310,13 +303,13 @@ mpegts_mux_epg_list ( void *o )
     { "Disable",                  MM_EPG_DISABLE },
     { "Enable (auto)",            MM_EPG_ENABLE },
     { "Force (auto)",             MM_EPG_FORCE },
-    { "Force EIT",                MM_EPG_FORCE_EIT },
-    { "Force UK Freesat",         MM_EPG_FORCE_UK_FREESAT },
-    { "Force UK Freeview",        MM_EPG_FORCE_UK_FREEVIEW },
-    { "Force Viasat Baltic",      MM_EPG_FORCE_VIASAT_BALTIC },
-    { "Force OpenTV Sky UK",      MM_EPG_FORCE_OPENTV_SKY_UK },
-    { "Force OpenTV Sky Italia",  MM_EPG_FORCE_OPENTV_SKY_ITALIA },
-    { "Force OpenTV Sky Ausat",   MM_EPG_FORCE_OPENTV_SKY_AUSAT },
+    { "Only EIT",                 MM_EPG_ONLY_EIT },
+    { "Only UK Freesat",          MM_EPG_ONLY_UK_FREESAT },
+    { "Only UK Freeview",         MM_EPG_ONLY_UK_FREEVIEW },
+    { "Only Viasat Baltic",       MM_EPG_ONLY_VIASAT_BALTIC },
+    { "Only OpenTV Sky UK",       MM_EPG_ONLY_OPENTV_SKY_UK },
+    { "Only OpenTV Sky Italia",   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
+    { "Only OpenTV Sky Ausat",    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
   };
   return strtab2htsmsg(tab);
 }
@@ -412,6 +405,13 @@ const idclass_t mpegts_mux_class =
       .name     = "# Services",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "pmt_06_ac3",
+      .name     = "PMT Descriptor 0x06 = AC-3",
+      .off      = offsetof(mpegts_mux_t, mm_pmt_06_ac3),
+      .opts     = PO_ADVANCED,
     },
     {}
   }
@@ -894,7 +894,12 @@ mpegts_mux_create0
 {
   char buf[256];
 
-  idnode_insert(&mm->mm_id, uuid, class, 0);
+  if (idnode_insert(&mm->mm_id, uuid, class, 0)) {
+    if (uuid)
+      tvherror("mpegts", "invalid mux uuid '%s'", uuid);
+    free(mm);
+    return NULL;
+  }
 
   /* Enabled by default */
   mm->mm_enabled             = 1;

@@ -47,10 +47,10 @@ typedef struct channel
   int ch_zombie;
 
   /* Channel info */
-  char *ch_name; // Note: do not access directly!
-  int   ch_number;
-  char *ch_icon;
-  struct channel_tag_mapping_list ch_ctms;
+  char   *ch_name; // Note: do not access directly!
+  int64_t ch_number;
+  char   *ch_icon;
+  struct  channel_tag_mapping_list ch_ctms;
 
   /* Service/subscriptions */
   LIST_HEAD(, channel_service_mapping) ch_services;
@@ -79,17 +79,26 @@ typedef struct channel
  * Channel tag
  */
 typedef struct channel_tag {
+
+  idnode_t ct_id;
+
   TAILQ_ENTRY(channel_tag) ct_link;
+
   int ct_enabled;
   int ct_internal;
   int ct_titled_icon;
-  int ct_identifier;
   char *ct_name;
   char *ct_comment;
   char *ct_icon;
+
   struct channel_tag_mapping_list ct_ctms;
 
   struct dvr_autorec_entry_list ct_autorecs;
+
+  struct access_entry_list ct_accesses;
+
+  int ct_htsp_id;
+
 } channel_tag_t;
 
 /**
@@ -120,6 +129,7 @@ typedef struct channel_service_mapping {
 } channel_service_mapping_t;
 
 extern const idclass_t channel_class;
+extern const idclass_t channel_tag_class;
 
 void channel_init(void);
 void channel_done(void);
@@ -145,9 +155,18 @@ channel_t *channel_find_by_number(int no);
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
 
+channel_tag_t *channel_tag_create(const char *uuid, htsmsg_t *conf);
+
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
+
+static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
+  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class); }
+
+void channel_tag_save(channel_tag_t *ct);
+
+htsmsg_t * channel_tag_class_get_list(void *o);
 
 int channel_access(channel_t *ch, struct access *a, const char *username);
 
@@ -158,7 +177,12 @@ void channel_save(channel_t *ch);
 const char *channel_get_name ( channel_t *ch );
 int channel_set_name ( channel_t *ch, const char *s );
 
-int channel_get_number ( channel_t *ch );
+#define CHANNEL_SPLIT 1000000
+
+static inline uint32_t channel_get_major ( int64_t chnum ) { return chnum / CHANNEL_SPLIT; }
+static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHANNEL_SPLIT; }
+
+int64_t channel_get_number ( channel_t *ch );
 
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );

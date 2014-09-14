@@ -184,21 +184,22 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 static htsmsg_t *
 hts_settings_load_one(const char *filename)
 {
-  ssize_t n;
+  ssize_t n, size;
   char *mem;
   fb_file *fp;
   htsmsg_t *r = NULL;
 
   /* Open */
   if (!(fp = fb_open(filename, 1, 0))) return NULL;
+  size = fb_size(fp);
   
   /* Load data */
-  mem    = malloc(fb_size(fp)+1);
-  n      = fb_read(fp, mem, fb_size(fp));
+  mem    = malloc(size+1);
+  n      = fb_read(fp, mem, size);
   if (n >= 0) mem[n] = 0;
 
   /* Decode */
-  if(n == fb_size(fp))
+  if(n == size)
     r = htsmsg_json_deserialize(mem);
 
   /* Close */

@@ -264,6 +264,25 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+int
+htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
+{
+  htsmsg_field_t *f = htsmsg_field_find(msg, name);
+  if (!f)
+    f = htsmsg_field_add(msg, name, HMF_STR, HMF_ALLOCED | HMF_NAME_ALLOCED);
+  else {
+    if (f->hmf_type != HMF_STR)
+      return 1;
+    if(f->hmf_flags & HMF_ALLOCED)
+      free((void *)f->hmf_str);
+  }
+  f->hmf_str = strdup(str);
+  return 0;
+}
+
+/*
+ *
+ */
 void
 htsmsg_add_bin(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 {

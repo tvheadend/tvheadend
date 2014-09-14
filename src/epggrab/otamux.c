@@ -107,6 +107,7 @@ epggrab_ota_requeue ( void )
    * enqueue all muxes, but ommit the delayed ones (active+pending)
    */
   RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
+    om->om_done = 0;
     if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
       continue;
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
@@ -156,8 +157,11 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
-    TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
-    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+    /* Do not requeue completed muxes */
+    if (!om->om_done) {
+      TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
+      om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+    }
   } else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
     LIST_FOREACH(map, &om->om_modules, om_link)
       if (!map->om_complete)
@@ -173,8 +177,9 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
 }
 
 static void
-epggrab_ota_complete_mark ( epggrab_ota_mux_t *om )
+epggrab_ota_complete_mark ( epggrab_ota_mux_t *om, int done )
 {
+  om->om_done = 1;
   if (!om->om_complete) {
     om->om_complete = 1;
     epggrab_ota_save(om);
@@ -323,8 +328,6 @@ epggrab_ota_complete
   lock_assert(&global_lock);
   tvhdebug(mod->id, "grab complete");
 
-  epggrab_ota_complete_mark(ota);
-
   /* Test for completion */
   LIST_FOREACH(map, &ota->om_modules, om_link) {
     if (map->om_module == mod) {
@@ -335,6 +338,9 @@ epggrab_ota_complete
     tvhtrace("epggrab", "%s complete %i first %i",
                         map->om_module->id, map->om_complete, map->om_first);
   }
+
+  epggrab_ota_complete_mark(ota, done);
+
   if (!done) return;
 
   /* Done */
@@ -364,7 +370,7 @@ epggrab_ota_timeout_cb ( void *p )
   epggrab_ota_done(om, EPGGRAB_OTA_DONE_TIMEOUT);
   /* Not completed, but no further data for a long period */
   /* wait for a manual mux tuning */
-  epggrab_ota_complete_mark(om);
+  epggrab_ota_complete_mark(om, 1);
 }
 
 static void
@@ -388,7 +394,7 @@ epggrab_ota_data_timeout_cb ( void *p )
     /* Abort */
     epggrab_ota_done(om, EPGGRAB_OTA_DONE_NO_DATA);
     /* Not completed, but no data - wait for a manual mux tuning */
-    epggrab_ota_complete_mark(om);
+    epggrab_ota_complete_mark(om, 1);
   }
 }
 
@@ -410,13 +416,13 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_DISABLE]                 = NULL,
     [MM_EPG_ENABLE]                  = NULL,
     [MM_EPG_FORCE]                   = NULL,
-    [MM_EPG_FORCE_EIT]               = "eit",
-    [MM_EPG_FORCE_UK_FREESAT]        = "uk_freesat",
-    [MM_EPG_FORCE_UK_FREEVIEW]       = "uk_freeview",
-    [MM_EPG_FORCE_VIASAT_BALTIC]     = "viasat_baltic",
-    [MM_EPG_FORCE_OPENTV_SKY_UK]     = "opentv-skyuk",
-    [MM_EPG_FORCE_OPENTV_SKY_ITALIA] = "opentv-skyit",
-    [MM_EPG_FORCE_OPENTV_SKY_AUSAT]  = "opentv-ausat",
+    [MM_EPG_ONLY_EIT]                = "eit",
+    [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
+    [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
+    [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
+    [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
+    [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
+    [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
   };
 
   lock_assert(&global_lock);
@@ -470,26 +476,25 @@ next_one:
     goto done;
   }
 
-  if (epg_flag != MM_EPG_FORCE) {
-    /* Check we have modules attached and enabled */
-    LIST_FOREACH(map, &om->om_modules, om_link) {
-      if (map->om_module->tune(map, om, mm))
-        break;
+  /* Check we have modules attached and enabled */
+  i = r = 0;
+  LIST_FOREACH(map, &om->om_modules, om_link) {
+    if (map->om_module->tune(map, om, mm)) {
+      i++;
+      if (modname && !strcmp(modname, map->om_module->id))
+        r = 1;
     }
-    if (!map) {
-      char name[256];
-      mpegts_mux_nice_name(mm, name, sizeof(name));
-      tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
-      goto done;
-    }
+  }
+  if ((i == 0 || (r == 0 && modname)) && epg_flag != MM_EPG_FORCE) {
+    char name[256];
+    mpegts_mux_nice_name(mm, name, sizeof(name));
+    tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
+    goto done;
   }
 
   /* Some init stuff */
   free(om->om_force_modname);
-  if (modname)
-    om->om_force_modname = strdup(modname);
-  else
-    om->om_force_modname = NULL;
+  om->om_force_modname = modname ? strdup(modname) : NULL;
 
   /* Subscribe to the mux */
   if ((r = mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG))) {
@@ -549,6 +554,8 @@ epggrab_ota_start_cb ( void *p )
   pthread_mutex_lock(&epggrab_ota_mutex);
   if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next))
     epggrab_ota_next_arm(next);
+  else
+    tvhwarn("epggrab", "ota cron config invalid or unset");
   pthread_mutex_unlock(&epggrab_ota_mutex);
 }
 
@@ -564,6 +571,8 @@ epggrab_ota_arm ( time_t last )
     if (last != (time_t)-1 && last + 1800 > next)
       next = last + 1800;
     epggrab_ota_next_arm(next);
+  } else {
+    tvhwarn("epggrab", "ota cron config invalid or unset");
   }
 
   pthread_mutex_unlock(&epggrab_ota_mutex);
@@ -609,6 +618,7 @@ epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
       ota->om_save = 1;
     epggrab_ota_service_trace(ota, svcl, "add new");
   }
+  svcl->last_tune_count = map->om_tune_count;
 }
 
 void
@@ -718,8 +728,8 @@ epggrab_ota_init ( void )
 
   epggrab_ota_initial      = 1;
   epggrab_ota_timeout      = 600;
-  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");;
-  epggrab_ota_cron_multi   = NULL;
+  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");
+  epggrab_ota_cron_multi   = cron_multi_set(epggrab_ota_cron);
   epggrab_ota_pending_flag = 0;
 
   RB_INIT(&epggrab_ota_all);

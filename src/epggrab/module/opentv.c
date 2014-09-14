@@ -162,6 +162,14 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
  * OpenTV event processing
  * ***********************************************************************/
 
+/* Patterns for the extraction of season/episode numbers from summary of events*/
+static const char *_opentv_se_num_patterns[] = { 
+          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",       /* for ???    */
+          " *([0-9]+)'? Stagione +Ep\\. ?([0-9]+) ?-", /* for Sky IT */
+          " *([0-9]+)'? Stagione() ?-",                /* for Sky IT */
+          "() *Ep\\. ?([0-9]+) ?-" };                  /* for Sky IT */
+static regex_t *_opentv_se_num_pregs;
+
 /* Parse huffman encoded string */
 static char *_opentv_parse_string 
   ( opentv_module_t *prov, const uint8_t *buf, int len )
@@ -341,23 +349,24 @@ opentv_parse_event_section
         epg_genre_list_destroy(egl);
       }
       if (ev.summary) {
-        regex_t preg;
         regmatch_t match[3];
+        int i;
 
         /* Parse Series/Episode
          * TODO: HACK: this needs doing properly */
-        regcomp(&preg, " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",
-                REG_ICASE | REG_EXTENDED);
-        if (!regexec(&preg, ev.summary, 3, match, 0)) {
-          epg_episode_num_t en;
-          memset(&en, 0, sizeof(en));
-          if (match[1].rm_so != -1)
-            en.s_num = atoi(ev.summary + match[1].rm_so);
-          if (match[2].rm_so != -1)
-            en.e_num = atoi(ev.summary + match[2].rm_so);
-          save |= epg_episode_set_epnum(ee, &en, src);
+        for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++) {
+          if (!regexec(_opentv_se_num_pregs+i, ev.summary, 3, match, 0)) {
+            epg_episode_num_t en;
+            memset(&en, 0, sizeof(en));
+            if (match[1].rm_so != -1)
+              en.s_num = atoi(ev.summary + match[1].rm_so);
+            if (match[2].rm_so != -1)
+              en.e_num = atoi(ev.summary + match[2].rm_so);
+            tvhdebug("opentv", "  extract from summary season %d episode %d", en.s_num, en.e_num);
+            save |= epg_episode_set_epnum(ee, &en, src);
+            break; /* skip other patterns */
+          }
         }
-        regfree(&preg);
       }
     }
 
@@ -396,10 +405,15 @@ opentv_desc_channels
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
     tvhtrace(mt->mt_name, "     sid %04X cid %04X cnum %d", sid, cid, cnum);
+    cnum = cnum < 65535 ? cnum : 0;
 
     /* Find the service */
     svc = mpegts_service_find(mm, sid, 0, 0, NULL);
     tvhtrace(mt->mt_name, "     svc %p [%s]", svc, svc ? svc->s_nicename : NULL);
+    if (svc && svc->s_dvb_opentv_chnum != cnum) {
+      svc->s_dvb_opentv_chnum = cnum;
+      service_request_save((service_t *)svc, 0);
+    }
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
@@ -795,6 +809,7 @@ static void _opentv_prov_load ( htsmsg_t *m )
 void opentv_init ( void )
 {
   htsmsg_t *m;
+  int i;
 
   /* Load dictionaries */
   if ((m = hts_settings_load("epggrab/opentv/dict")))
@@ -810,12 +825,18 @@ void opentv_init ( void )
   if ((m = hts_settings_load("epggrab/opentv/prov")))
     _opentv_prov_load(m);
   tvhlog(LOG_DEBUG, "opentv", "providers loaded");
+
+  /* Compile some recurring regular-expressions */
+  _opentv_se_num_pregs = calloc(ARRAY_SIZE(_opentv_se_num_patterns), sizeof(regex_t));
+  for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
+    regcomp(_opentv_se_num_pregs+i, _opentv_se_num_patterns[i], REG_ICASE | REG_EXTENDED);
 }
 
 void opentv_done ( void )
 {
   opentv_dict_t *dict;
   opentv_genre_t *genre;
+  int i;
   
   while ((dict = RB_FIRST(&_opentv_dicts)) != NULL) {
     RB_REMOVE(&_opentv_dicts, dict, h_link);
@@ -828,6 +849,10 @@ void opentv_done ( void )
     free(genre->id);
     free(genre);
   }
+
+  for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
+    regfree(_opentv_se_num_pregs+i);
+  free(_opentv_se_num_pregs);
 }
 
 void opentv_load ( void )

@@ -152,9 +152,7 @@ intlconv_utf8safestr( const char *dst_charset_id,
     r--;
   str[r++] = '\0';
   res = strdup(str);
-  if (res == NULL) {
-    free(str);
-  } else {
+  if (res != NULL) {
     /* don't terminate string */
     for (i = 0; i < r - 1; i++)
       if (str[i] == '\0')

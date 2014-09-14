@@ -61,8 +61,12 @@ mpegts_table_dispatch
   len = ((sec[1] & 0x0f) << 8) | sec[2];
 
   if (tid == 0x72) { /* stuffing section */
-    if (len != r - 3)
-      tvhwarn(mt->mt_name, "stuffing found with trailing data (len %i, total %zi)", len, r);
+    if (len != r - 3) {
+      if (tvhlog_limit(&mt->mt_err_log, 10))
+        tvhwarn(mt->mt_name, "stuffing found with trailing data "
+                             "(len %i, total %zi, errors %zi)",
+                             len, r, mt->mt_err_log.count);
+    }
     dvb_table_reset(mt);
     return;
   }
@@ -70,7 +74,9 @@ mpegts_table_dispatch
   /* It seems some hardware (or is it the dvb API?) does not
      honour the DMX_CHECK_CRC flag, so we check it again */
   if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
-    tvhwarn(mt->mt_name, "invalid checksum (len %zi)", r);
+    if (tvhlog_limit(&mt->mt_err_log, 10))
+      tvhwarn(mt->mt_name, "invalid checksum (len %zi, errors %zi)",
+                           r, mt->mt_err_log.count);
     return;
   }
 

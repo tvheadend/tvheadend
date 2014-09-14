@@ -164,7 +164,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { NULL, NULL }
 };
 
-time_t dispatch_clock;
 pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
 pthread_mutex_t fork_lock;
@@ -180,6 +179,16 @@ static void
 handle_sigpipe(int x)
 {
   return;
+}
+
+static void
+handle_sigill(int x)
+{
+  /* Note that on some platforms, the SSL library tries */
+  /* to determine the CPU capabilities with possible */
+  /* unknown instructions */
+  tvhwarn("CPU", "Illegal instruction handler (might be OK)");
+  signal(SIGILL, handle_sigill);
 }
 
 void
@@ -474,7 +483,9 @@ main(int argc, char **argv)
               opt_tsfile_tuner = 0,
               opt_dump         = 0,
               opt_xspf         = 0,
-              opt_dbus_session = 0;
+              opt_dbus         = 0,
+              opt_dbus_session = 0,
+              opt_nobackup     = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -497,6 +508,7 @@ main(int argc, char **argv)
 
     {   0, NULL,        "Service Configuration",   OPT_BOOL, NULL         },
     { 'c', "config",    "Alternate config path",   OPT_STR,  &opt_config  },
+    { 'B', "nobackup",  "Do not backup config tree at upgrade", OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      "Fork and run as daemon",  OPT_BOOL, &opt_fork    },
     { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
     { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
@@ -508,6 +520,8 @@ main(int argc, char **argv)
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
+    { 'U', "dbus",      "Enable DBus",
+      OPT_BOOL, &opt_dbus },
     { 'e', "dbus_session", "DBus - use the session message bus instead system one",
       OPT_BOOL, &opt_dbus_session },
 #endif
@@ -676,6 +690,7 @@ main(int argc, char **argv)
   tvhinfo("main", "Log started");
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
+  signal(SIGILL, handle_sigill);   // see handler..
 
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);  // bind to ports only
@@ -774,13 +789,13 @@ main(int argc, char **argv)
   /* Initialise configuration */
   uuid_init();
   idnode_init();
-  config_init(opt_config);
+  config_init(opt_config, opt_nobackup == 0);
 
   /**
    * Initialize subsystems
    */
 
-  dbus_server_init(opt_dbus_session);
+  dbus_server_init(opt_dbus, opt_dbus_session);
 
   intlconv_init();
   
@@ -807,6 +822,8 @@ main(int argc, char **argv)
   channel_init();
 
   subscription_init();
+
+  dvr_config_init();
 
   access_init(opt_firstrun, opt_noacl);
 
@@ -980,31 +997,6 @@ void
 scopedunlock(pthread_mutex_t **mtxp)
 {
   pthread_mutex_unlock(*mtxp);
-}
-
-
-void
-limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
-{
-  time_t now;
-  char buf[64];
-  time(&now);
-
-  ll->events++;
-  if(ll->last == now)
-    return; // Duplicate event
-
-  if(ll->last <= now - 10) {
-    // Too old, reset duplicate counter
-    ll->events = 0;
-    buf[0] = 0;
-  } else {
-    snprintf(buf, sizeof(buf), ", %d duplicate log lines suppressed", 
-	     ll->events);
-  }
-
-  tvhlog(LOG_WARNING, sys, "%s: %s%s", o, event, buf);
-  ll->last = now;
 }
 
 

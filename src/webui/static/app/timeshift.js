@@ -1,4 +1,4 @@
-tvheadend.timeshift = function() {
+tvheadend.timeshift = function(panel, index) {
 
     /* ****************************************************************
      * Data
@@ -177,5 +177,5 @@ tvheadend.timeshift = function() {
         });
     }
 
-    return confpanel;
+    tvheadend.paneladd(panel, confpanel, index);
 };

@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "service.h"
+#include "channels.h"
 #include "input.h"
 #include "settings.h"
 #include "dvb_charset.h"
@@ -100,6 +101,20 @@ const idclass_t mpegts_service_class =
       .name     = "Local Channel Number",
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "lcn_minor",
+      .name     = "Local Channel Minor",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_service_t, s_dvb_channel_minor),
+    },
+    {
+      .type     = PT_U16,
+      .id       = "lcn2",
+      .name     = "OpenTV Channel Number",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
     },
     {
       .type     = PT_STR,
@@ -357,10 +372,14 @@ mpegts_service_grace_period(service_t *t)
 /*
  * Channel number
  */
-static int
+static int64_t
 mpegts_service_channel_number ( service_t *s )
 {
-  return ((mpegts_service_t*)s)->s_dvb_channel_num;
+  int r = ((mpegts_service_t*)s)->s_dvb_channel_num * CHANNEL_SPLIT +
+          ((mpegts_service_t*)s)->s_dvb_channel_minor;
+  if (r <= 0)
+    r = ((mpegts_service_t*)s)->s_dvb_opentv_chnum * CHANNEL_SPLIT;
+  return r;
 }
 
 static const char *
@@ -413,7 +432,9 @@ mpegts_service_create0
 {
   int r;
   char buf[256];
-  service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf);
+
+  if (service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf) == NULL)
+    return NULL;
 
   /* Create */
   sbuf_init(&s->s_tsbuf);
@@ -447,8 +468,8 @@ mpegts_service_create0
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
-  idnode_updated(&mm->mm_id);
-  idnode_updated(&mm->mm_network->mn_id);
+  idnode_notify_simple(&mm->mm_id);
+  idnode_notify_simple(&mm->mm_network->mn_id);
 
   return s;
 }

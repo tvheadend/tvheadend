@@ -29,7 +29,7 @@
 
 static int
 api_status_inputs
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int c = 0;
   htsmsg_t *l, *e;
@@ -59,7 +59,7 @@ api_status_inputs
 
 static int
 api_status_subscriptions
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int c;
   htsmsg_t *l, *e;
@@ -82,7 +82,7 @@ api_status_subscriptions
 
 static int
 api_status_connections
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   pthread_mutex_lock(&global_lock);
   *resp = tcp_server_connections();

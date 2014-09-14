@@ -2,19 +2,7 @@
  * Comet interfaces
  */
 Ext.extend(tvheadend.Comet = function() {
-    this.addEvents({
-        accessUpdate: true,
-        tvAdapter: true,
-        dvbMux: true,
-        dvbStore: true,
-        dvbSatConf: true,
-        logmessage: true,
-        channeltags: true,
-        autorec: true,
-        dvrdb: true,
-        dvrconfig: true,
-        channels: true
-    });
+    this.addEvents({ });
 }, Ext.util.Observable);
 
 tvheadend.comet = new tvheadend.Comet();

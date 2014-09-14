@@ -31,7 +31,7 @@ tvheadend.comet.on('config', function(m) {
     }
 });
 
-tvheadend.miscconf = function() {
+tvheadend.miscconf = function(panel, index) {
 
     /*
     * Basic Config
@@ -240,7 +240,7 @@ tvheadend.miscconf = function() {
     if (imagecache_form)
         _items.push(imagecache_form);
 
-    var panel = new Ext.Panel({
+    var mpanel = new Ext.Panel({
         title: 'General',
         iconCls: 'wrench',
         border: false,
@@ -250,6 +250,8 @@ tvheadend.miscconf = function() {
         items: _items,
         tbar: [saveButton, '->', helpButton]
     });
+
+    tvheadend.paneladd(panel, mpanel, index);
 
     /* ****************************************************************
     * Load/Save
@@ -297,6 +299,4 @@ tvheadend.miscconf = function() {
                 }
             });
     }
-
-    return panel;
 };

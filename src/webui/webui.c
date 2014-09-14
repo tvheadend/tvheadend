@@ -163,6 +163,32 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static int
+page_login(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access != NULL &&
+      hc->hc_access->aa_username != NULL &&
+      hc->hc_access->aa_username != '\0') {
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
+static int
+page_logout(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access == NULL ||
+      hc->hc_access->aa_username == NULL ||
+      hc->hc_access->aa_username == '\0') {
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
 /**
  * Static download of a file from the filesystem
  */
@@ -372,7 +398,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   const char *host;
   muxer_container_type_t mc;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
@@ -438,7 +464,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ctm->ctm_channel, 0))
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
@@ -477,7 +503,7 @@ http_tag_list_playlist(http_connection_t *hc)
     if(!ct->ct_enabled || ct->ct_internal)
       continue;
 
-    snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
+    snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf));
@@ -537,7 +563,7 @@ http_channel_list_playlist(http_connection_t *hc)
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
       continue;
 
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
@@ -566,7 +592,7 @@ http_dvr_list_playlist(http_connection_t *hc)
   htsbuf_queue_t *hq;
   char buf[255];
   dvr_entry_t *de;
-  const char *host;
+  const char *host, *uuid;
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -582,8 +608,9 @@ http_dvr_list_playlist(http_connection_t *hc)
       continue;
 
     if (de->de_channel &&
-        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel, 0))
       continue;
+
 
     durration  = de->de_stop - de->de_start;
     durration += (de->de_stop_extra + de->de_start_extra)*60;
@@ -593,10 +620,11 @@ http_dvr_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
-    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    uuid = idnode_uuid_as_str(&de->de_id);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
-    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
        access_ticket_create(buf));
   }
@@ -614,7 +642,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   char buf[255];
-  const char *ticket_id = NULL;
+  const char *ticket_id = NULL, *uuid;
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0;
@@ -634,10 +662,11 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
-    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    uuid = idnode_uuid_as_str(&de->de_id);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%s,BANDWIDTH=%d\n", uuid, bandwidth);
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
-    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     ticket_id = access_ticket_create(buf);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 
@@ -856,7 +885,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   const char *name;
   char addrbuf[50];
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
   cfg = dvr_config_find_by_name_default("");
@@ -1103,9 +1132,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
   int fd, i;
   struct stat st;
-  const char *content = NULL, *postfix, *range;
+  const char *content = NULL, *range;
   dvr_entry_t *de;
   char *fname;
+  char *basename;
   char range_buf[255];
   char disposition[256];
   off_t content_len, chunk;
@@ -1121,7 +1151,9 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  de = dvr_entry_find_by_id(atoi(remain));
+  de = dvr_entry_find_by_uuid(remain);
+  if (de == NULL)
+    de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
@@ -1129,9 +1161,22 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   fname = strdup(de->de_filename);
   content = muxer_container_type2mime(de->de_mc, 1);
-  postfix = muxer_container_suffix(de->de_mc, 1);
 
   pthread_mutex_unlock(&global_lock);
+
+  basename = strrchr(fname, '/');
+  if (basename) {
+    basename++; /* Skip '/' */
+    snprintf(disposition, sizeof(disposition), "attachment; filename=\"%s\"", basename);
+    // Ensure there are no " characters in the filename.
+    i = strlen(disposition)-2;
+    while (i > 21) {
+      if (disposition[i] == '"') { disposition[i] = '_'; }
+      i--;
+    }
+  } else {
+    disposition[0] = 0;
+  }
 
   fd = tvh_open(fname, O_RDONLY, 0);
   free(fname);
@@ -1172,20 +1217,6 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
-
-  if(de->de_title != NULL) {
-    snprintf(disposition, sizeof(disposition),
-       "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
-    i = 20;
-    while(disposition[i]) {
-      if(disposition[i] == ' ')
-  disposition[i] = '_';
-      i++;
-    }
-    
-  } else {
-    disposition[0] = 0;
-  }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
@@ -1298,6 +1329,8 @@ webui_init(int xspf)
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
+  http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
 
   http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);

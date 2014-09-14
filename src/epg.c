@@ -2190,8 +2190,8 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
     for (j = 0; j < (major_only ? 1 : 16); j++) {
       if (_epg_genre_names[i][j]) {
         e = htsmsg_create_map();
-        htsmsg_add_u32(e, "code", i << 4 | j);
-        htsmsg_add_str(e, "name", _epg_genre_names[i][j]);
+        htsmsg_add_u32(e, "key", major_only ? i : (i << 4 | j));
+        htsmsg_add_str(e, "val", _epg_genre_names[i][j]);
         // TODO: use major_prefix
         htsmsg_add_msg(m, NULL, e);
       }
@@ -2287,7 +2287,7 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
             epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
 {
   channel_t     *ch = channel ? channel_find(channel)    : NULL;
-  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0) : NULL;
+  channel_tag_t *ct = tag     ? channel_tag_find_by_uuid(tag) : NULL;
 
   epg_query0(eqr, ch, ct, genre, title, lang, min_duration, max_duration);
 }

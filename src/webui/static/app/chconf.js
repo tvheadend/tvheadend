@@ -2,25 +2,17 @@
  * Channel tags
  */
 insertChannelTagsClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['identifier', 'name']);
-    scope.insert(0,new placeholder({identifier: '-1', name: '(Clear filter)'}));
+    var placeholder = Ext.data.Record.create(['key', 'val']);
+    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
 };
 
-tvheadend.channelTags = new Ext.data.JsonStore({
-    autoLoad: true,
-    root: 'entries',
-    fields: ['identifier', 'name'],
-    id: 'identifier',
-    url: 'channeltags',
-    baseParams: {
-        op: 'listTags'
-    },
+tvheadend.channelTags = tvheadend.idnode_get_enum({
+    url: 'api/channeltag/list',
+    event: 'channeltag',
     listeners: {
         'load': insertChannelTagsClearOption
     }
 });
-
-tvheadend.channelTags.setDefaultSort('name', 'ASC');
 
 tvheadend.comet.on('channeltags', function(m) {
     if (m.reload != null)
@@ -59,13 +51,9 @@ tvheadend.comet.on('channels', function(m) {
         tvheadend.channels.reload();
 });
 
-tvheadend.channel_tab = function(panel)
+tvheadend.channel_tab = function(panel, index)
 {
-    function assign_low_number() {
-        var tab = panel.getActiveTab();
-        var sm = tab.getSelectionModel();
-        var store = tab.getStore();
-
+    function assign_low_number(ctx, e, store, sm) {
         if (sm.getCount() !== 1)
             return;
 
@@ -108,20 +96,14 @@ tvheadend.channel_tab = function(panel)
         sm.selectNext();
     }
 
-    function move_number_up() {
-        var tab = panel.getActiveTab();
-        var sm = tab.getSelectionModel();
-
+    function move_number_up(ctx, e, store, sm) {
         Ext.each(sm.getSelections(), function(channel) {
             var number = channel.data.number;
             channel.set('number', number + 1);
         });
     }
 
-    function move_number_down() {
-        var tab = panel.getActiveTab();
-        var sm = tab.getSelectionModel();
-
+    function move_number_down(ctx, e, store, sm) {
         Ext.each(sm.getSelections(), function(channel) {
             var number = channel.data.number;
             
@@ -131,11 +113,7 @@ tvheadend.channel_tab = function(panel)
         });
     }
 
-    function swap_numbers() {
-        var tab = panel.getActiveTab();
-        var sm = tab.getSelectionModel();
-        var store = tab.getStore(); //store is unused
-
+    function swap_numbers(ctx, e, store, sm) {
         if (sm.getCount() !== 2)
             return;
 
@@ -146,52 +124,77 @@ tvheadend.channel_tab = function(panel)
         sel[1].set('number', tmp);
     }
 
-    var mapButton = new Ext.Toolbar.Button({
-        tooltip: 'Map services to channels',
-        iconCls: 'clone',
-        text: 'Map Services',
-        handler: tvheadend.service_mapper,
-        disabled: false
-    });
+    var mapButton = {
+        name: 'map',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Map services to channels',
+                iconCls: 'clone',
+                text: 'Map Services',
+                disabled: false
+            });
+        },
+        callback: tvheadend.service_mapper
+    };
 
-    var lowNoButton = new Ext.Toolbar.Button({
-        tooltip: 'Assign lowest free channel number',
-        iconCls: 'bullet_add',
-        text: 'Assign Number',
-        handler: assign_low_number,
-        disabled: false
-    });
+    var lowNoButton = {
+        name: 'lowno',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Assign lowest free channel number',
+                iconCls: 'bullet_add',
+                text: 'Assign Number',
+                disabled: false
+            });
+        },
+        callback: assign_low_number
+    };
 
-    var noUpButton = new Ext.Toolbar.Button({
-        tooltip: 'Move channel one number up',
-        iconCls: 'arrow_up',
-        text: 'Number Up',
-        handler: move_number_up,
-        disabled: false
-    });
+    var noUpButton = {
+        name: 'noup',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Move channel one number up',
+                iconCls: 'arrow_up',
+                text: 'Number Up',
+                disabled: false
+            });
+        },
+        callback: move_number_up
+    };
 
-    var noDownButton = new Ext.Toolbar.Button({
-        tooltip: 'Move channel one number down',
-        iconCls: 'arrow_down',
-        text: 'Number Down',
-        handler: move_number_down,
-        disabled: false
-    });
+    var noDownButton = {
+        name: 'nodown',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Move channel one number down',
+                iconCls: 'arrow_down',
+                text: 'Number Down',
+                disabled: false
+            });
+        },
+        callback: move_number_down
+    };
 
-    var noSwapButton = new Ext.Toolbar.Button({
-        tooltip: 'Swap the two selected channels numbers',
-        iconCls: 'arrow_switch',
-        text: 'Swap Numbers',
-        handler: swap_numbers,
-        disabled: false
-    });
+    var noSwapButton = {
+        name: 'swap',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Swap the two selected channels numbers',
+                iconCls: 'arrow_switch',
+                text: 'Swap Numbers',
+                disabled: false
+            });
+        },
+        callback: swap_numbers
+    };
 
     tvheadend.idnode_grid(panel, {
         url: 'api/channel',
         comet: 'channel',
         titleS: 'Channel',
         titleP: 'Channels',
-        tabIndex: 0,
+        tabIndex: index,
         help: function() {
             new tvheadend.help('Channels', 'config_channels.html');
         },           

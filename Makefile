@@ -156,7 +156,8 @@ SRCS += \
 	src/api/api_imagecache.c \
 	src/api/api_esfilter.c \
 	src/api/api_intlconv.c \
-	src/api/api_access.c
+	src/api/api_access.c \
+	src/api/api_dvr.c
 
 SRCS += \
 	src/parsers/parsers.c \

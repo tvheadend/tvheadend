@@ -61,7 +61,8 @@ api_register_all ( const api_hook_t *hooks )
 }
 
 int
-api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp )
+api_exec ( access_t *perm, const char *subsystem,
+           htsmsg_t *args, htsmsg_t **resp )
 {
   api_hook_t h;
   api_link_t *ah, skel;
@@ -83,6 +84,9 @@ api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp )
     return ENOSYS; // TODO: is this really the right error code?
   }
 
+  if (access_verify2(perm, ah->hook->ah_access))
+    return EPERM;
+
   /* Extract method */
   op = htsmsg_get_str(args, "method");
   if (!op)
@@ -90,12 +94,12 @@ api_exec ( const char *subsystem, htsmsg_t *args, htsmsg_t **resp )
   // Note: this is not required (so no final validation)
 
   /* Execute */
-  return ah->hook->ah_callback(ah->hook->ah_opaque, op, args, resp);
+  return ah->hook->ah_callback(perm, ah->hook->ah_opaque, op, args, resp);
 }
 
 static int
 api_serverinfo
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   *resp = htsmsg_create_map();
   htsmsg_add_str(*resp, "sw_version",   tvheadend_version);
@@ -128,6 +132,7 @@ void api_init ( void )
   api_esfilter_init();
   api_intlconv_init();
   api_access_init();
+  api_dvr_init();
 }
 
 void api_done ( void )

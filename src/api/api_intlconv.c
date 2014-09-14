@@ -27,28 +27,22 @@
 
 static int
 api_intlconv_charset_enum
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const char **chrst;
   htsmsg_t *l, *e;
   
-  int _enum = htsmsg_get_bool_or_default(args, "enum", 0);
-
-  if (_enum) {
-    l = htsmsg_create_list();
-    chrst = intlconv_charsets;
-    while (*chrst) {
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", *chrst);
-      htsmsg_add_str(e, "val", *chrst);
-      htsmsg_add_msg(l, NULL, e);
-      chrst++;
-    }
-    *resp = htsmsg_create_map();
-    htsmsg_add_msg(*resp, "entries", l);
-  } else {
-    // TODO: support full listing v enum
+  l = htsmsg_create_list();
+  chrst = intlconv_charsets;
+  while (*chrst) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", *chrst);
+    htsmsg_add_str(e, "val", *chrst);
+    htsmsg_add_msg(l, NULL, e);
+    chrst++;
   }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
   return 0;
 }
 

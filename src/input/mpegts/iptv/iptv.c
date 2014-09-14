@@ -184,13 +184,9 @@ iptv_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 }
 
 static int
-iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  int ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
-  iptv_handler_t *ih;
-  char buf[256];
-  url_t url;
 
   /* Already active */
   if (im->mm_active)
@@ -214,6 +210,21 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     if (s)
       s->mmi_mux->mm_stop(s->mmi_mux, 1);
   }
+  return 0;
+}
+
+static int
+iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  int ret = SM_CODE_TUNING_FAILED;
+  iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  iptv_handler_t *ih;
+  char buf[256];
+  url_t url;
+
+  /* Already active */
+  if (im->mm_active)
+    return 0;
 
   /* Parse URL */
   mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
@@ -572,6 +583,7 @@ void iptv_init ( void )
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)iptv_input,
                        &iptv_input_class, NULL, NULL);
+  iptv_input->mi_warm_mux       = iptv_input_warm_mux;
   iptv_input->mi_start_mux      = iptv_input_start_mux;
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;
   iptv_input->mi_is_free        = iptv_input_is_free;

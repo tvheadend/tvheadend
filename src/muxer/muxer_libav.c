@@ -375,10 +375,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     av_init_packet(&packet);
 
-    if(st->codec->codec_id == CODEC_ID_MPEG2VIDEO)
+    if(st->codec->codec_id == AV_CODEC_ID_MPEG2VIDEO)
       pkt = pkt_merge_header(pkt);
 
-    if(lm->lm_h264_filter && st->codec->codec_id == CODEC_ID_H264) {
+    if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
       if(av_bitstream_filter_filter(lm->lm_h264_filter,
 				    st->codec, 
 				    NULL, 

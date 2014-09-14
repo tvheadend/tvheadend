@@ -156,9 +156,9 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   else
     buf[0] = '\0';
   sprintf(buf + strlen(buf), "fe=%i", fe);
-  satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq);
   if (dmc->dmc_fe_delsys == DVB_SYS_DVBS ||
       dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq);
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qpsk.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbs");
     if (dmc->dmc_fe_modulation != DVB_MOD_NONE &&
@@ -181,6 +181,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_C) {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qam.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbc");
     ADD(dmc_fe_modulation,          mtype, "64qam");
@@ -190,6 +191,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       /* note: OctopusNet device does not handle 'fec=auto' */
       ADD(u.dmc_fe_qam.fec_inner,   fec,   "auto");
   } else {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     if (dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_AUTO &&
         dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_NONE)
       satip_rtsp_add_val("bw", buf, dmc->u.dmc_fe_ofdm.bandwidth);

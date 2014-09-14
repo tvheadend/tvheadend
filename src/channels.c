@@ -45,11 +45,9 @@
 struct channel_tree channels;
 
 struct channel_tag_queue channel_tags;
-static dtable_t *channeltags_dtable;
 
 static void channel_tag_init ( void );
 static void channel_tag_done ( void );
-static channel_tag_t *channel_tag_find(const char *id, int create);
 static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
 					int flags);
 static void channel_tag_destroy(channel_tag_t *ct, int delconf);
@@ -138,7 +136,7 @@ channel_class_tags_get ( void *obj )
 
   /* Add all */
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    htsmsg_add_u32(m, NULL, ctm->ctm_tag->ct_identifier);
+    htsmsg_add_str(m, NULL, idnode_uuid_as_str(&ctm->ctm_tag->ct_id));
 
   return m;
 }
@@ -165,19 +163,6 @@ channel_class_tags_set ( void *obj, const void *p )
   return channel_set_tags_by_list(obj, (htsmsg_t*)p);
 }
 
-static htsmsg_t *
-channel_class_tags_enum ( void *obj )
-{
-  htsmsg_t *e, *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channeltag/list");
-  htsmsg_add_str(m, "event", "channeltag");
-  e = htsmsg_create_map();
-  htsmsg_add_bool(e, "enum", 1);
-  htsmsg_add_msg(m, "params", e);
-  return m;
-}
-  
 static void
 channel_class_icon_notify ( void *obj )
 {
@@ -223,7 +208,7 @@ channel_class_get_name ( void *p )
 static const void *
 channel_class_get_number ( void *p )
 {
-  static int i;
+  static int64_t i;
   i = channel_get_number(p);
   return &i;
 }
@@ -288,8 +273,9 @@ channel_class_epggrab_list ( void *o )
 }
 
 const idclass_t channel_class = {
-  .ic_class      = "service",
-  .ic_caption    = "Service",
+  .ic_class      = "channel",
+  .ic_caption    = "Channel",
+  .ic_event      = "channel",
   .ic_save       = channel_class_save,
   .ic_get_title  = channel_class_get_title,
   .ic_delete     = channel_class_delete,
@@ -310,7 +296,8 @@ const idclass_t channel_class = {
       .get      = channel_class_get_name,
     },
     {
-      .type     = PT_INT,
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
       .id       = "number",
       .name     = "Number",
       .off      = offsetof(channel_t, ch_number),
@@ -371,7 +358,7 @@ const idclass_t channel_class = {
       .name     = "Tags",
       .get      = channel_class_tags_get,
       .set      = channel_class_tags_set,
-      .list     = channel_class_tags_enum,
+      .list     = channel_tag_class_get_list,
       .rend     = channel_class_tags_rend
     },
     {}
@@ -432,24 +419,14 @@ channel_access(channel_t *ch, access_t *a, const char *username)
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, a->aa_chtags) {
       LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-        if (!strcmp(htsmsg_field_get_str(f) ?: "", ctm->ctm_tag->ct_name))
+        if (!strcmp(htsmsg_field_get_str(f) ?: "",
+                    idnode_uuid_as_str(&ctm->ctm_tag->ct_id)))
           goto chtags_ok;
       }
     }
     return 0;
   }
 chtags_ok:
-
-  /* Channel tag <-> user name match */
-  if (ch && (a->aa_rights & ACCESS_TAG_ONLY) != 0) {
-    channel_tag_mapping_t *ctm;
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      if (!strcmp(username ?: "", ctm->ctm_tag->ct_name))
-        goto tagonly_ok;
-    }
-    return 0;
-  }
-tagonly_ok:
 
   return 1;
 }
@@ -488,7 +465,7 @@ int
 channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
 {
   int save = 0;
-  uint32_t u32;
+  const char *uuid;
   channel_tag_mapping_t *ctm, *n;
   channel_tag_t *ct;
   htsmsg_field_t *f;
@@ -499,8 +476,8 @@ channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
 
   /* Link */
   HTSMSG_FOREACH(f, tags)
-    if (!htsmsg_field_get_u32(f, &u32)) {
-      if ((ct = channel_tag_find_by_identifier(u32)))
+    if ((uuid = htsmsg_field_get_str(f)) != NULL) {
+      if ((ct = channel_tag_find_by_uuid(uuid)))
         save |= channel_tag_map(ch, ct);
     }
     
@@ -531,7 +508,7 @@ channel_get_name ( channel_t *ch )
   return blank;
 }
 
-int
+int64_t
 channel_get_number ( channel_t *ch )
 {
   int n;
@@ -554,7 +531,12 @@ channel_create0
 {
   lock_assert(&global_lock);
 
-  idnode_insert(&ch->ch_id, uuid, idc, IDNODE_SHORT_UUID);
+  if (idnode_insert(&ch->ch_id, uuid, idc, IDNODE_SHORT_UUID)) {
+    if (uuid)
+      tvherror("channel", "invalid uuid '%s'", uuid);
+    free(ch);
+    return NULL;
+  }
   if (RB_INSERT_SORTED(&channels, ch, ch_link, ch_id_cmp)) {
     tvherror("channel", "id collision!");
     abort();
@@ -617,7 +599,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Settings */
   if (delconf)
-    hts_settings_remove("channel/%s", idnode_uuid_as_str(&ch->ch_id));
+    hts_settings_remove("channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
 
   /* Free memory */
   RB_REMOVE(&channels, ch, ch_link);
@@ -635,7 +617,7 @@ channel_save ( channel_t *ch )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ch->ch_id, c);
-  hts_settings_save(c, "channel/%s", idnode_uuid_as_str(&ch->ch_id));
+  hts_settings_save(c, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
   htsmsg_destroy(c);
 }
 
@@ -653,7 +635,7 @@ channel_init ( void )
   channel_tag_init();
 
   /* Channels */
-  if (!(c = hts_settings_load_r(1, "channel")))
+  if (!(c = hts_settings_load("channel/config")))
     return;
 
   HTSMSG_FOREACH(f, c) {
@@ -752,37 +734,33 @@ channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, int flags)
 /**
  *
  */
-static channel_tag_t *
-channel_tag_find(const char *id, int create)
+channel_tag_t *
+channel_tag_create(const char *uuid, htsmsg_t *conf)
 {
   channel_tag_t *ct;
-  char buf[20];
-  static int tally;
-  uint32_t u32;
-
-  if(id != NULL) {
-    u32 = atoi(id);
-    TAILQ_FOREACH(ct, &channel_tags, ct_link)
-      if(ct->ct_identifier == u32)
-	return ct;
-  }
-
-  if(create == 0)
-    return NULL;
 
   ct = calloc(1, sizeof(channel_tag_t));
-  if(id == NULL) {
-    tally++;
-    snprintf(buf, sizeof(buf), "%d", tally);
-    id = buf;
-  } else {
-    tally = MAX(atoi(id), tally);
+  LIST_INIT(&ct->ct_ctms);
+  LIST_INIT(&ct->ct_autorecs);
+  LIST_INIT(&ct->ct_accesses);
+
+  if (idnode_insert(&ct->ct_id, uuid, &channel_tag_class, IDNODE_SHORT_UUID)) {
+    if (uuid)
+      tvherror("channel", "invalid tag uuid '%s'", uuid);
+    free(ct);
+    return NULL;
   }
 
-  ct->ct_identifier = atoi(id);
-  ct->ct_name = strdup("New tag");
-  ct->ct_comment = strdup("");
-  ct->ct_icon = strdup("");
+  if (conf)
+    idnode_load(&ct->ct_id, conf);
+
+  if (ct->ct_name == NULL)
+    ct->ct_name = strdup("New tag");
+  if (ct->ct_comment == NULL)
+    ct->ct_comment = strdup("");
+  if (ct->ct_icon == NULL)
+    ct->ct_icon = strdup("");
+
   TAILQ_INSERT_TAIL(&channel_tags, ct, ct_link);
   return ct;
 }
@@ -802,163 +780,118 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
       channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
       channel_save(ch);
     }
+    hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
   }
 
   if(ct->ct_enabled && !ct->ct_internal)
     htsp_tag_delete(ct);
 
+  TAILQ_REMOVE(&channel_tags, ct, ct_link);
+  idnode_unlink(&ct->ct_id);
+
+  autorec_destroy_by_channel_tag(ct, delconf);
+  access_destroy_by_channel_tag(ct, delconf);
+
   free(ct->ct_name);
   free(ct->ct_comment);
   free(ct->ct_icon);
-  TAILQ_REMOVE(&channel_tags, ct, ct_link);
   free(ct);
 }
 
-
 /**
  *
  */
-static htsmsg_t *
-channel_tag_record_build(channel_tag_t *ct)
+void
+channel_tag_save(channel_tag_t *ct)
 {
-  htsmsg_t *e = htsmsg_create_map();
-  htsmsg_add_u32(e, "enabled",  !!ct->ct_enabled);
-  htsmsg_add_u32(e, "internal",  !!ct->ct_internal);
-  htsmsg_add_u32(e, "titledIcon",  !!ct->ct_titled_icon);
-
-  htsmsg_add_str(e, "name", ct->ct_name);
-  htsmsg_add_str(e, "comment", ct->ct_comment);
-  htsmsg_add_str(e, "icon", ct->ct_icon);
-  htsmsg_add_u32(e, "id", ct->ct_identifier);
-  return e;
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&ct->ct_id, c);
+  hts_settings_save(c, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
+  htsmsg_destroy(c);
 }
 
 
-/**
- *
- */
-static htsmsg_t *
-channel_tag_record_get_all(void *opaque)
+/* **************************************************************************
+ * Channel Tag Class definition
+ * **************************************************************************/
+
+static void
+channel_tag_class_save(idnode_t *self)
 {
-  htsmsg_t *r = htsmsg_create_list();
-  channel_tag_t *ct;
-
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    htsmsg_add_msg(r, NULL, channel_tag_record_build(ct));
-
-  return r;
+  channel_tag_save((channel_tag_t *)self);
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-channel_tag_record_get(void *opaque, const char *id)
+static void
+channel_tag_class_delete(idnode_t *self)
 {
-  channel_tag_t *ct;
-
-  if((ct = channel_tag_find(id, 0)) == NULL)
-    return NULL;
-  return channel_tag_record_build(ct);
+  channel_tag_destroy((channel_tag_t *)self, 1);
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-channel_tag_record_create(void *opaque)
+static const char *
+channel_tag_class_get_title (idnode_t *self)
 {
-  return channel_tag_record_build(channel_tag_find(NULL, 1));
+  channel_tag_t *ct = (channel_tag_t *)self;
+  return ct->ct_name ?: "";
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values, 
-			  int maycreate)
+/* exported for others */
+htsmsg_t *
+channel_tag_class_get_list(void *o)
 {
-  channel_tag_t *ct;
-  uint32_t u32;
-  int was_exposed, is_exposed;
-  channel_tag_mapping_t *ctm;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channeltag/list");
+  htsmsg_add_str(m, "event", "channeltag");
+  return m;
+}
 
-  if((ct = channel_tag_find(id, maycreate)) == NULL)
-    return NULL;
-
-  tvh_str_update(&ct->ct_name,    htsmsg_get_str(values, "name"));
-  tvh_str_update(&ct->ct_comment, htsmsg_get_str(values, "comment"));
-  tvh_str_update(&ct->ct_icon,    htsmsg_get_str(values, "icon"));
-
-  if(!htsmsg_get_u32(values, "titledIcon", &u32))
-    ct->ct_titled_icon = u32;
-
-  was_exposed = ct->ct_enabled && !ct->ct_internal;
-
-  if(!htsmsg_get_u32(values, "enabled", &u32))
-    ct->ct_enabled = u32;
-
-  if(!htsmsg_get_u32(values, "internal", &u32))
-    ct->ct_internal = u32;
-
-  is_exposed = ct->ct_enabled && !ct->ct_internal;
-
-  /* We only export tags to HTSP if enabled == true and internal == false,
-     thus, it's not as simple as just sending updates here.
-     Depending on how the flags transition we add update or delete tags */
-
-  if(was_exposed == 0 && is_exposed == 1) {
-    htsp_tag_add(ct);
-
-    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      htsp_channel_update(ctm->ctm_channel);
-
-  } else if(was_exposed == 1 && is_exposed == 1)
-    htsp_tag_update(ct);
-  else if(was_exposed == 1 && is_exposed == 0) {
-    
-    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      htsp_channel_update(ctm->ctm_channel);
-
-    htsp_tag_delete(ct);
+const idclass_t channel_tag_class = {
+  .ic_class      = "channeltag",
+  .ic_caption    = "Channel Tag",
+  .ic_event      = "channeltag",
+  .ic_save       = channel_tag_class_save,
+  .ic_get_title  = channel_tag_class_get_title,
+  .ic_delete     = channel_tag_class_delete,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(channel_tag_t, ct_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "name",
+      .name     = "Name",
+      .off      = offsetof(channel_tag_t, ct_name),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "internal",
+      .name     = "Internal",
+      .off      = offsetof(channel_tag_t, ct_internal),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "icon",
+      .name     = "Icon (full URL)",
+      .off      = offsetof(channel_tag_t, ct_icon),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "titled_icon",
+      .name     = "Icon has title",
+      .off      = offsetof(channel_tag_t, ct_titled_icon),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "comment",
+      .name     = "Comment",
+      .off      = offsetof(channel_tag_t, ct_comment),
+    },
+    {}
   }
-  return channel_tag_record_build(ct);
-}
-
-
-/**
- *
- */
-static int
-channel_tag_record_delete(void *opaque, const char *id)
-{
-  channel_tag_t *ct;
-
-  if((ct = channel_tag_find(id, 0)) == NULL)
-    return -1;
-  channel_tag_destroy(ct, 1);
-  return 0;
-}
-
-
-/**
- *
- */
-static const dtable_class_t channel_tags_dtc = {
-  .dtc_record_get     = channel_tag_record_get,
-  .dtc_record_get_all = channel_tag_record_get_all,
-  .dtc_record_create  = channel_tag_record_create,
-  .dtc_record_update  = channel_tag_record_update,
-  .dtc_record_delete  = channel_tag_record_delete,
-  .dtc_read_access = ACCESS_ADMIN,
-  .dtc_write_access = ACCESS_ADMIN,
-  .dtc_mutex = &global_lock,
 };
-
-
 
 /**
  *
@@ -967,7 +900,6 @@ channel_tag_t *
 channel_tag_find_by_name(const char *name, int create)
 {
   channel_tag_t *ct;
-  char str[50];
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(!strcasecmp(ct->ct_name, name))
@@ -976,14 +908,11 @@ channel_tag_find_by_name(const char *name, int create)
   if(!create)
     return NULL;
 
-  ct = channel_tag_find(NULL, 1);
+  ct = channel_tag_create(NULL, NULL);
   ct->ct_enabled = 1;
   tvh_str_update(&ct->ct_name, name);
 
-  snprintf(str, sizeof(str), "%d", ct->ct_identifier);
-  dtable_record_store(channeltags_dtable, str, channel_tag_record_build(ct));
-
-  dtable_store_changed(channeltags_dtable);
+  channel_tag_save(ct);
   return ct;
 }
 
@@ -996,19 +925,31 @@ channel_tag_find_by_identifier(uint32_t id) {
   channel_tag_t *ct;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-    if(ct->ct_identifier == id)
+    if(idnode_get_short_uuid(&ct->ct_id) == id)
       return ct;
   }
 
   return NULL;
 }
 
+/**
+ *  Init / Done
+ */
+
 static void
 channel_tag_init ( void )
 {
+  htsmsg_t *c, *m;
+  htsmsg_field_t *f;
+
   TAILQ_INIT(&channel_tags);
-  channeltags_dtable = dtable_create(&channel_tags_dtc, "channeltags", NULL);
-  dtable_load(channeltags_dtable);
+  if ((c = hts_settings_load("channel/tag")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(m = htsmsg_field_get_map(f))) continue;
+      (void)channel_tag_create(f->hmf_name, m);
+    }
+    htsmsg_destroy(c);
+  }
 }
 
 static void
@@ -1020,5 +961,4 @@ channel_tag_done ( void )
   while ((ct = TAILQ_FIRST(&channel_tags)) != NULL)
     channel_tag_destroy(ct, 0);
   pthread_mutex_unlock(&global_lock);
-  dtable_delete("channeltags");
 }

@@ -324,9 +324,13 @@ http_error(http_connection_t *hc, int error)
 		 "<HTML><HEAD>\r\n"
 		 "<TITLE>%d %s</TITLE>\r\n"
 		 "</HEAD><BODY>\r\n"
-		 "<H1>%d %s</H1>\r\n"
-		 "</BODY></HTML>\r\n",
-		 error, errtxt,  error, errtxt);
+		 "<H1>%d %s</H1>\r\n",
+		 error, errtxt, error, errtxt);
+
+  if (error == HTTP_STATUS_UNAUTHORIZED)
+    htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"/\">Default Login</A></P>");
+
+  htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
 
   http_send_reply(hc, error, "text/html", NULL, NULL, 0);
 }
@@ -403,11 +407,14 @@ static int http_access_verify_ticket(http_connection_t *hc)
 {
   const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
 
+  if (hc->hc_ticket)
+    return 0;
   if(!access_ticket_verify(ticket_id, hc->hc_url)) {
     char addrstr[50];
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
     tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
 	   addrstr, ticket_id, hc->hc_url);
+    hc->hc_ticket = 1;
     return 0;
   }
   return -1;
@@ -422,8 +429,14 @@ http_access_verify(http_connection_t *hc, int mask)
   if (!http_access_verify_ticket(hc))
     return 0;
 
-  return access_verify(hc->hc_username, hc->hc_password,
-		       (struct sockaddr *)hc->hc_peer, mask);
+  if (hc->hc_access == NULL) {
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
+    if (hc->hc_access == NULL)
+      return -1;
+  }
+
+  return access_verify2(hc->hc_access, mask);
 }
 
 /**
@@ -431,21 +444,24 @@ http_access_verify(http_connection_t *hc, int mask)
  */
 int
 http_access_verify_channel(http_connection_t *hc, int mask,
-                           struct channel *ch)
+                           struct channel *ch, int ticket)
 {
-  access_t *a;
   int res = -1;
 
   assert(ch);
 
-  if (!http_access_verify_ticket(hc))
+  if (ticket && !http_access_verify_ticket(hc))
     return 0;
 
-  a = access_get(hc->hc_username, hc->hc_password,
-                 (struct sockaddr *)hc->hc_peer);
-  if (channel_access(ch, a, hc->hc_username))
+  if (hc->hc_access == NULL) {
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
+    if (hc->hc_access == NULL)
+      return -1;
+  }
+
+  if (channel_access(ch, hc->hc_access, hc->hc_username))
     res = 0;
-  access_destroy(a);
   return res;
 }
 
@@ -464,6 +480,9 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
     err = HTTP_STATUS_UNAUTHORIZED;
   else
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
+  access_destroy(hc->hc_access);
+  hc->hc_access = NULL;
+  hc->hc_ticket = 0;
 
   if(err == -1)
      return 1;

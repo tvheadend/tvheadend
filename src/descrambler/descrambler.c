@@ -112,6 +112,15 @@ void
 descrambler_service_start ( service_t *t )
 {
   th_descrambler_runtime_t *dr;
+  elementary_stream_t *st;
+
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
+    if (LIST_FIRST(&st->es_caids))
+      break;
+
+  /* Do not run descrambler on FTA channels */
+  if (!st)
+    return;
 
 #if ENABLE_CWC
   cwc_service_start(t);
@@ -135,11 +144,11 @@ descrambler_service_stop ( service_t *t )
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
+  t->s_descramble = NULL;
   if (dr) {
     sbuf_free(&dr->dr_buf);
     free(dr);
   }
-  t->s_descramble = NULL;
 }
 
 void
@@ -359,7 +368,8 @@ descrambler_descramble ( service_t *t,
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (key_valid(dr, ki) == 0) {
-        limitedlog(&dr->dr_loglimit_key, "descrambler",
+        if (tvhlog_limit(&dr->dr_loglimit_key, 10))
+          tvhwarn("descrambler", "%s %s",
                    ((mpegts_service_t *)t)->s_dvb_svcname,
                    (ki & 0x40) ? "odd stream key is not valid" :
                                  "even stream key is not valid");
@@ -472,9 +482,11 @@ descrambler_table_callback
         if (t) {
           /* The keys are requested from this moment */
           dr = t->s_descramble;
-          dr->dr_ecm_start = dispatch_clock;
-          tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
-                   len, mt->mt_pid, t->s_dvb_svcname);
+          if (dr) {
+            dr->dr_ecm_start = dispatch_clock;
+            tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
+                     len, mt->mt_pid, t->s_dvb_svcname);
+          }
         } else
           tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
                    len, mt->mt_pid);
@@ -503,6 +515,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
         if (ds->opaque == opaque)
           return 0;
       }
+      break;
     }
   }
   if (!dt) {
@@ -616,8 +629,6 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
   descrambler_emm_t *emm;
   uint8_t dtag, dlen;
   uint16_t caid = 0, pid = 0;
-  descrambler_section_callback_t callback = NULL;
-  void *opaque = NULL;
   TAILQ_HEAD(,descrambler_emm) removing;
 
   tvhtrace("descrambler", "CAT data (len %d)", len);
@@ -647,13 +658,9 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
           if (emm->pid == EMM_PID_UNKNOWN) {
             tvhtrace("descrambler", "attach emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
             emm->pid = pid;
-            callback = emm->callback;
-            opaque   = emm->opaque;
-            break;
+            descrambler_open_pid_(mux, emm->opaque, pid, emm->callback, NULL);
           }
         }
-      if (emm)
-        descrambler_open_pid_(mux, opaque, pid, callback, NULL);
       pthread_mutex_unlock(&mux->mm_descrambler_lock);
 next:
       data += dlen;

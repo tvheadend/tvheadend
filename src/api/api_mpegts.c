@@ -31,7 +31,7 @@
  */
 static int
 api_mpegts_input_network_list
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int i, err = EINVAL;
   const char *uuid;
@@ -77,7 +77,7 @@ exit:
  */
 static void
 api_mpegts_network_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
 
@@ -88,7 +88,7 @@ api_mpegts_network_grid
 
 static int
 api_mpegts_network_builders
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   mpegts_network_builder_t *mnb;
   htsmsg_t *l, *e;
@@ -108,7 +108,7 @@ api_mpegts_network_builders
 
 static int
 api_mpegts_network_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err;
   const char *class;
@@ -136,7 +136,7 @@ api_mpegts_network_create
 
 static int
 api_mpegts_network_muxclass
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err = EINVAL;
   const idclass_t *idc; 
@@ -164,7 +164,7 @@ exit:
 
 static int
 api_mpegts_network_muxcreate
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err = EINVAL;
   mpegts_network_t *mn;
@@ -198,7 +198,7 @@ exit:
  */
 static void
 api_mpegts_mux_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
@@ -225,7 +225,7 @@ api_mpegts_mux_grid
  */
 static void
 api_mpegts_service_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
@@ -256,7 +256,7 @@ api_mpegts_service_grid
  */
 static void
 api_mpegts_mux_sched_grid
-  ( idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   mpegts_mux_sched_t *mms;
   LIST_FOREACH(mms, &mpegts_mux_sched_all, mms_link)
@@ -265,7 +265,7 @@ api_mpegts_mux_sched_grid
 
 static int
 api_mpegts_mux_sched_create
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err;
   htsmsg_t *conf;
@@ -291,7 +291,7 @@ api_mpegts_mux_sched_create
 #if ENABLE_MPEGTS_DVB
 static int
 api_dvb_scanfile_list
-  ( void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   char buf[512];
   const char *type = htsmsg_get_str(args, "type");

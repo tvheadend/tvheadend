@@ -713,7 +713,7 @@ static int _eit_tune
   //       consider changeing it?
   for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
     nxt = RB_NEXT(osl, link);
-    /* rule: if 5 mux scans fails for this service, remove it */
+    /* rule: if 5 mux scans fail for this service, remove it */
     if (osl->last_tune_count + 5 <= map->om_tune_count ||
         !(s = mpegts_service_find_by_uuid(osl->uuid))) {
       epggrab_ota_service_del(map, om, osl, 1);

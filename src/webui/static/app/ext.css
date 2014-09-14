@@ -24,6 +24,24 @@
     text-shadow: 0 -2px rgba(0, 0, 0, 0.2);
 }
 
+
+.x-tab-strip li.x-tab-login {
+    margin-left: 16px;
+}
+
+.x-tab-strip span.x-tab-strip-login {
+    vertical-align: middle;
+    white-space: nowrap;
+    padding:4px 0px;
+}
+
+.x-tab-strip span.x-tab-strip-login-cmd {
+    vertical-align: middle;
+    cursor:pointer;
+    padding:4px 0;
+    float: right;
+}
+
 .x-tree-col {
     float: left;
     overflow: hidden;
@@ -146,6 +164,10 @@
 
 .remove {
     background-image: url(../icons/delete.png) !important;
+}
+
+.cancel {
+    background-image: url(../icons/cancel.png) !important;
 }
 
 .moveup {
@@ -294,7 +316,6 @@
 
 .arrow_switch {
     background-image: url(../icons/arrow_switch.png) !important;
-
 }
 
 .stream_config {

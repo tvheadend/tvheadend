@@ -144,6 +144,8 @@ esfilter_create
   const idclass_t *c = NULL;
   uint32_t ct;
 
+  lock_assert(&global_lock);
+
   esf->esf_caid = -1;
   esf->esf_caprovider = -1;
   if (ESF_CLASS_IS_VALID(cls)) {
@@ -159,8 +161,12 @@ esfilter_create
     tvherror("esfilter", "wrong class %d!", cls);
     abort();
   }
-  lock_assert(&global_lock);
-  idnode_insert(&esf->esf_id, uuid, c, 0);
+  if (idnode_insert(&esf->esf_id, uuid, c, 0)) {
+    if (uuid)
+      tvherror("esfilter", "invalid uuid '%s'", uuid);
+    free(esf);
+    return NULL;
+  }
   if (conf)
     idnode_load(&esf->esf_id, conf);
   if (ESF_CLASS_IS_VALID(cls))
@@ -581,6 +587,7 @@ esfilter_class_action_enum(void *o)
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
   .ic_caption    = "Elementary Stream Filter",
+  .ic_event      = "esfilter",
   .ic_save       = esfilter_class_save,
   .ic_get_title  = esfilter_class_get_title,
   .ic_delete     = esfilter_class_delete,
@@ -1028,7 +1035,7 @@ esfilter_init(void)
   for (i = 0; i <= ESF_CLASS_LAST; i++)
     TAILQ_INIT(&esfilters[i]);
 
-  if (!(c = hts_settings_load_r(1, "esfilter")))
+  if (!(c = hts_settings_load("esfilter")))
     return;
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f)))

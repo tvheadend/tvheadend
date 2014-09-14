@@ -115,13 +115,10 @@ static htsmsg_t *
 service_class_channel_enum
   ( void *obj )
 {
-  htsmsg_t *p, *m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
-  p = htsmsg_create_map();
-  htsmsg_add_u32(p, "enum", 1);
-  htsmsg_add_msg(m, "params", p);
   return m;
 }
 
@@ -171,6 +168,7 @@ service_class_caid_get ( void *obj )
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
+  .ic_event      = "service",
   .ic_save       = service_class_save,
   .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){
@@ -259,6 +257,9 @@ stream_clean(elementary_stream_t *st)
 
   free(st->es_section);
   st->es_section = NULL;
+
+  tvhlog_limit_reset(&st->es_cc_log);
+  tvhlog_limit_reset(&st->es_pes_log);
 }
 
 /**
@@ -320,6 +321,7 @@ service_stop(service_t *t)
     stream_clean(st);
 
   t->s_status = SERVICE_IDLE;
+  tvhlog_limit_reset(&t->s_tei_log);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
@@ -801,7 +803,7 @@ service_destroy(service_t *t, int delconf)
   service_unref(t);
 }
 
-static int
+static int64_t
 service_channel_number ( service_t *s )
 {
   return 0;
@@ -827,7 +829,12 @@ service_create0
   ( service_t *t, const idclass_t *class, const char *uuid,
     int source_type, htsmsg_t *conf )
 {
-  idnode_insert(&t->s_id, uuid, class, 0);
+  if (idnode_insert(&t->s_id, uuid, class, 0)) {
+    if (uuid)
+      tvherror("service", "invalid uuid '%s'", uuid);
+    free(t);
+    return NULL;
+  }
 
   lock_assert(&global_lock);
   
@@ -1306,6 +1313,8 @@ service_saver(void *aux)
     pthread_mutex_unlock(&global_lock);
     pthread_mutex_lock(&pending_save_mutex);
   }
+
+  pthread_mutex_unlock(&pending_save_mutex);
   return NULL;
 }
 
@@ -1479,7 +1488,6 @@ service_instance_add(service_instance_list_t *sil,
     si->si_s = s;
     service_ref(s);
     si->si_instance = instance;
-    si->si_weight = weight;
   } else {
     si->si_mark = 0;
     if(si->si_prio == prio && si->si_weight == weight)
@@ -1561,7 +1569,7 @@ service_get_full_channel_name ( service_t *s )
 /*
  * Get number for service
  */
-int
+int64_t
 service_get_channel_number ( service_t *s )
 {
   if (s->s_channel_number) return s->s_channel_number(s);

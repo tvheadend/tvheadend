@@ -90,6 +90,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   sm = streaming_msg_create_code(SMT_GRACE, s->ths_postpone + t->s_grace_delay);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
+  streaming_msg_free(sm);
 
   if(s->ths_start_message != NULL && t->s_streaming_status & TSS_PACKETS) {
 
@@ -779,9 +780,12 @@ subscription_create_from_mux
   sm = streaming_msg_create_data(SMT_START, ss);
   streaming_target_deliver(s->ths_output, sm);
 
+  r = (mi->mi_get_grace ? mi->mi_get_grace(mi, mm) : 0) + 20;
+  sm = streaming_msg_create_code(SMT_GRACE, r);
+  streaming_target_deliver(s->ths_output, sm);
+
   pthread_mutex_unlock(&mi->mi_output_lock);
 
-  r = (mi->mi_get_grace ? mi->mi_get_grace(mi, mm) : 0) + 20;
   gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, r);
 
   return s;
