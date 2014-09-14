@@ -612,8 +612,7 @@ http_dvr_list_playlist(http_connection_t *hc)
       continue;
 
 
-    durration  = de->de_stop - de->de_start;
-    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
     bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
@@ -649,8 +648,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   struct tm tm;  
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
-  durration  = de->de_stop - de->de_start;
-  durration += (de->de_stop_extra + de->de_start_extra)*60;
+  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
     
   fsize = dvr_get_filesize(de);
 

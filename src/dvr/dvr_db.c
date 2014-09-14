@@ -56,14 +56,14 @@ static inline int extra_valid(time_t extra)
   return extra != 0 && extra != (time_t)-1;
 }
 
-static int
+int
 dvr_entry_get_start_time( dvr_entry_t *de )
 {
   /* Note 30 seconds might not be enough (rotors) */
   return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) - 30;
 }
 
-static int
+int
 dvr_entry_get_stop_time( dvr_entry_t *de )
 {
   return de->de_stop + (60 * dvr_entry_get_extra_time_post(de));
