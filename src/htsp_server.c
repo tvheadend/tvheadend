@@ -660,10 +660,16 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if (de->de_channel)
     htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
 
-  htsmsg_add_s64(out, "start",     de->de_start);
-  htsmsg_add_s64(out, "stop",      de->de_stop);
-  htsmsg_add_u32(out, "priority",  de->de_pri);
-  htsmsg_add_u32(out, "retention", de->de_retention);
+  if (de->de_bcast)
+    htsmsg_add_u32(out, "eventId",  de->de_bcast->id);
+
+  htsmsg_add_s64(out, "start",       de->de_start);
+  htsmsg_add_s64(out, "stop",        de->de_stop);
+  htsmsg_add_s64(out, "startExtra",  de->de_start_extra);
+  htsmsg_add_s64(out, "stopExtra",   de->de_stop_extra);
+  htsmsg_add_u32(out, "priority",    de->de_pri);
+  htsmsg_add_u32(out, "retention",   de->de_retention);
+  htsmsg_add_u32(out, "contentType", de->de_content_type);
 
   if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
     htsmsg_add_str(out, "title", s);
@@ -681,6 +687,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_RECORDING:
     s = "recording";
+    if (de->de_rec_state == DVR_RS_ERROR)
+      error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_COMPLETED:
     s = "completed";
