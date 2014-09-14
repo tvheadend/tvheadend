@@ -170,6 +170,11 @@ static const char *_opentv_se_num_patterns[] = {
           "() *Ep\\. ?([0-9]+) ?-" };                  /* for Sky IT */
 static regex_t *_opentv_se_num_pregs;
 
+/* Patterns for the extraction of subtitles from summary of events*/
+static const char *_opentv_subtitle_patterns[] = { 
+          "^[^-]+- '(([^']*(' [^A-Z0-9])?('[^ ])?)+)' " }; /* for Sky IT */
+static regex_t *_opentv_subtitle_pregs;
+
 /* Parse huffman encoded string */
 static char *_opentv_parse_string 
   ( opentv_module_t *prov, const uint8_t *buf, int len )
@@ -350,10 +355,10 @@ opentv_parse_event_section
       }
       if (ev.summary) {
         regmatch_t match[3];
+        char buf[1024];
         int i;
 
-        /* Parse Series/Episode
-         * TODO: HACK: this needs doing properly */
+        /* Parse Series/Episode */
         for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++) {
           if (!regexec(_opentv_se_num_pregs+i, ev.summary, 3, match, 0)) {
             epg_episode_num_t en;
@@ -364,6 +369,17 @@ opentv_parse_event_section
               en.e_num = atoi(ev.summary + match[2].rm_so);
             tvhdebug("opentv", "  extract from summary season %d episode %d", en.s_num, en.e_num);
             save |= epg_episode_set_epnum(ee, &en, src);
+            break; /* skip other patterns */
+          }
+        }
+
+        /* Parse Subtitle */
+        for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++) {
+          if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_eo - match[1].rm_so <= sizeof(buf) - 1 ) {
+            memcpy(buf, ev.summary + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
+            buf[match[1].rm_eo - match[1].rm_so] = '\0';
+            tvhdebug("opentv", "  extract from summary subtitle %s", buf);
+            save |= epg_episode_set_subtitle(ee, buf, lang, src);
             break; /* skip other patterns */
           }
         }
@@ -829,7 +845,10 @@ void opentv_init ( void )
   /* Compile some recurring regular-expressions */
   _opentv_se_num_pregs = calloc(ARRAY_SIZE(_opentv_se_num_patterns), sizeof(regex_t));
   for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
-    regcomp(_opentv_se_num_pregs+i, _opentv_se_num_patterns[i], REG_ICASE | REG_EXTENDED);
+    assert(!regcomp(_opentv_se_num_pregs+i, _opentv_se_num_patterns[i], REG_ICASE | REG_EXTENDED));
+  _opentv_subtitle_pregs = calloc(ARRAY_SIZE(_opentv_subtitle_patterns), sizeof(regex_t));
+  for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++)
+    assert(!regcomp(_opentv_subtitle_pregs+i, _opentv_subtitle_patterns[i], REG_EXTENDED));
 }
 
 void opentv_done ( void )
@@ -853,6 +872,9 @@ void opentv_done ( void )
   for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++)
     regfree(_opentv_se_num_pregs+i);
   free(_opentv_se_num_pregs);
+  for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++)
+    regfree(_opentv_subtitle_pregs+i);
+  free(_opentv_subtitle_pregs);
 }
 
 void opentv_load ( void )
