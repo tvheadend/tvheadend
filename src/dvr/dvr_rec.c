@@ -46,12 +46,13 @@ static void dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
 
-const static int prio2weight[5] = {
+const static int prio2weight[6] = {
   [DVR_PRIO_IMPORTANT]   = 500,
   [DVR_PRIO_HIGH]        = 400,
   [DVR_PRIO_NORMAL]      = 300,
   [DVR_PRIO_LOW]         = 200,
   [DVR_PRIO_UNIMPORTANT] = 100,
+  [DVR_PRIO_NOTSET]      = 0,
 };
 
 /**
@@ -67,7 +68,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   assert(de->de_s == NULL);
 
-  if(de->de_pri < 5)
+  if(de->de_pri < ARRAY_SIZE(prio2weight))
     weight = prio2weight[de->de_pri];
   else
     weight = 300;

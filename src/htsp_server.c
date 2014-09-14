@@ -660,8 +660,10 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if (de->de_channel)
     htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
 
-  htsmsg_add_s64(out, "start", de->de_start);
-  htsmsg_add_s64(out, "stop", de->de_stop);
+  htsmsg_add_s64(out, "start",     de->de_start);
+  htsmsg_add_s64(out, "stop",      de->de_stop);
+  htsmsg_add_u32(out, "priority",  de->de_pri);
+  htsmsg_add_u32(out, "retention", de->de_retention);
 
   if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
     htsmsg_add_str(out, "title", s);
@@ -1176,7 +1178,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name, *title, *desc, *creator, *lang;
   int64_t start, stop, start_extra, stop_extra;
-  uint32_t u32, priority;
+  uint32_t u32, priority, retention;
   channel_t *ch = NULL;
 
   /* Options */
@@ -1192,6 +1194,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     e = epg_broadcast_find_by_id(eventid, ch);
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
+  if(htsmsg_get_u32(in, "retention", &retention))
+    retention = 0;
   if (!(creator = htsmsg_get_str(in, "creator")) || !*creator)
     creator = htsp->htsp_username ?: "anonymous";
   if (!(lang        = htsmsg_get_str(in, "language")))
@@ -1219,13 +1223,13 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     // create the dvr entry
     de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
-                               title, desc, lang, 0, creator, NULL, priority);
+                               title, desc, lang, 0, creator, NULL, priority, retention);
 
   /* Event timer */
   } else {
     de = dvr_entry_create_by_event(dvr_config_name, e, 
                                    start_extra, stop_extra,
-                                   creator, NULL, priority);
+                                   creator, NULL, priority, retention);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
@@ -1258,7 +1262,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   uint32_t dvrEntryId;
   dvr_entry_t *de;
-  time_t start, stop, start_extra, stop_extra;
+  time_t start, stop, start_extra, stop_extra, priority, retention;
   const char *title, *desc, *lang;
     
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
@@ -1275,13 +1279,15 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   stop        = htsmsg_get_s64_or_default(in, "stop",        0);
   start_extra = htsmsg_get_s64_or_default(in, "start_extra", 0);
   stop_extra  = htsmsg_get_s64_or_default(in, "stop_extra",  0);
+  retention   = htsmsg_get_u32_or_default(in, "retention",   0);
+  priority    = htsmsg_get_u32_or_default(in, "priority",    DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language");
   if (!lang) lang = htsp->htsp_language;
 
   de = dvr_entry_update(de, title, desc, lang, start, stop,
-                        start_extra, stop_extra);
+                        start_extra, stop_extra, priority, retention);
 
   //create response
   out = htsmsg_create_map();
