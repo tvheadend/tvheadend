@@ -412,7 +412,7 @@ page_status(http_connection_t *hc,
 
     if (DVR_SCHEDULED == de->de_sched_state)
     {
-      timelefttemp = (int) ((de->de_start - now) / 60) - de->de_start_extra; // output minutes
+      timelefttemp = (int) ((dvr_entry_get_start_time(de) - now) / 60); // output minutes
       if (timelefttemp < timeleft)
         timeleft = timelefttemp;
     }
@@ -440,11 +440,11 @@ page_status(http_connection_t *hc,
 		     a.tm_year + 1900, a.tm_mon + 1, a.tm_mday,
 		     a.tm_hour, a.tm_min, 
 		     de->de_start, 
-		     de->de_start_extra, 
+		     (time_t)dvr_entry_get_extra_time_pre(de),
 		     b.tm_year+1900, b.tm_mon + 1, b.tm_mday,
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
-		     de->de_stop_extra,
+		     (time_t)dvr_entry_get_extra_time_post(de),
          buf);
 
       rstatus = val2str(de->de_sched_state, recstatustxt);

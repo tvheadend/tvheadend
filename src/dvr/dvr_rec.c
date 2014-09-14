@@ -85,7 +85,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     streaming_queue_init(&de->de_sq, 0);
     de->de_gh = globalheaders_create(&de->de_sq.sq_st);
     st = de->de_tsfix = tsfix_create(de->de_gh);
-    tsfix_set_start_time(de->de_tsfix, de->de_start - (60 * de->de_start_extra));
+    tsfix_set_start_time(de->de_tsfix, dvr_entry_get_start_time(de));
     flags = 0;
   }
 
@@ -634,8 +634,8 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   }
 
   fbasename = tvh_strdupa(de->de_filename);
-  snprintf(start, sizeof(start), "%"PRItime_t, de->de_start - (60 * de->de_start_extra));
-  snprintf(stop, sizeof(stop),   "%"PRItime_t, de->de_stop  + (60 * de->de_stop_extra));
+  snprintf(start, sizeof(start), "%"PRItime_t, (time_t)dvr_entry_get_start_time(de));
+  snprintf(stop, sizeof(stop),   "%"PRItime_t, (time_t)dvr_entry_get_stop_time(de));
 
   memset(fmap, 0, sizeof(fmap));
   fmap['f'] = de->de_filename; /* full path to recoding */
