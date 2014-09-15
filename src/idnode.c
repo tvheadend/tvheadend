@@ -579,6 +579,8 @@ idnode_cmp_title
   return strcmp(sa ?: "", sb ?: "");
 }
 
+#define safecmp(a, b) ((a) > (b) ? 1 : ((a) < (b) ? -1 : 0))
+
 static int
 idnode_cmp_sort
   ( const void *a, const void *b, void *s )
@@ -618,17 +620,27 @@ idnode_cmp_sort
       break;
     case PT_INT:
     case PT_U16:
-    case PT_U32:
     case PT_BOOL:
     case PT_PERM:
+      {
+        int32_t i32a = 0, i32b = 0;
+        idnode_get_u32(ina, sort->key, (uint32_t *)&i32a);
+        idnode_get_u32(inb, sort->key, (uint32_t *)&i32b);
+        if (sort->dir == IS_ASC)
+          return safecmp(i32a, i32b);
+        else
+          return safecmp(i32b, i32a);
+      }
+      break;
+    case PT_U32:
       {
         uint32_t u32a = 0, u32b = 0;
         idnode_get_u32(ina, sort->key, &u32a);
         idnode_get_u32(inb, sort->key, &u32b);
         if (sort->dir == IS_ASC)
-          return u32a - u32b;
+          return safecmp(u32a, u32b);
         else
-          return u32b - u32a;
+          return safecmp(u32b, u32a);
       }
       break;
     case PT_S64:
@@ -637,9 +649,9 @@ idnode_cmp_sort
         idnode_get_s64(ina, sort->key, &s64a);
         idnode_get_s64(inb, sort->key, &s64b);
         if (sort->dir == IS_ASC)
-          return s64a - s64b;
+          return safecmp(s64a, s64b);
         else
-          return s64b - s64a;
+          return safecmp(s64b, s64a);
       }
       break;
     case PT_DBL:
@@ -648,9 +660,9 @@ idnode_cmp_sort
         idnode_get_dbl(ina, sort->key, &dbla);
         idnode_get_dbl(inb, sort->key, &dblb);
         if (sort->dir == IS_ASC)
-          return dbla - dblb;
+          return safecmp(dbla, dblb);
         else
-          return dblb - dbla;
+          return safecmp(dblb, dbla);
       }
       break;
     case PT_TIME:
@@ -659,9 +671,9 @@ idnode_cmp_sort
         idnode_get_time(ina, sort->key, &ta);
         idnode_get_time(inb, sort->key, &tb);
         if (sort->dir == IS_ASC)
-          return ta - tb;
+          return safecmp(ta, tb);
         else
-          return tb - ta;
+          return safecmp(tb, ta);
       }
       break;
     case PT_LANGSTR:

@@ -324,9 +324,13 @@ http_error(http_connection_t *hc, int error)
 		 "<HTML><HEAD>\r\n"
 		 "<TITLE>%d %s</TITLE>\r\n"
 		 "</HEAD><BODY>\r\n"
-		 "<H1>%d %s</H1>\r\n"
-		 "</BODY></HTML>\r\n",
-		 error, errtxt,  error, errtxt);
+		 "<H1>%d %s</H1>\r\n",
+		 error, errtxt, error, errtxt);
+
+  if (error == HTTP_STATUS_UNAUTHORIZED)
+    htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"/\">Default Login</A></P>");
+
+  htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
 
   http_send_reply(hc, error, "text/html", NULL, NULL, 0);
 }

@@ -163,7 +163,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help('DVR', 'config_dvr.html');
+            new tvheadend.help('DVR', 'config_dvrlog.html');
         },
     });
 
@@ -245,7 +245,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help('DVR', 'config_dvr.html');
+            new tvheadend.help('DVR', 'config_dvrlog.html');
         },
     });
 
@@ -279,7 +279,7 @@ tvheadend.dvr_failed = function(panel, index) {
         plugins: [actions],
         lcol: [actions],
         help: function() {
-            new tvheadend.help('DVR', 'config_dvr.html');
+            new tvheadend.help('DVR', 'config_dvrlog.html');
         },
     });
 
@@ -383,7 +383,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help('DVR', 'config_dvr.html');
+            new tvheadend.help('DVR', 'config_dvrauto.html');
         },
     });
 

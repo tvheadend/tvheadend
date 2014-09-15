@@ -226,7 +226,7 @@ api_dvr_entry_create_by_event
     if ((e = epg_broadcast_find_by_id(atoi(s), NULL))) {
       de = dvr_entry_create_by_event(api_dvr_config_name(perm, config_uuid),
                                      e, 0, 0, perm->aa_representative,
-                                     NULL, DVR_PRIO_NORMAL);
+                                     NULL, DVR_PRIO_NORMAL, 0);
       if (de)
         dvr_entry_save(de);
     }
