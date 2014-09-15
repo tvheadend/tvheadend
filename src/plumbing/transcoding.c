@@ -1224,12 +1224,11 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     ts->ts_index = 0;
     goto cleanup;
   }
-  if (!got_output) {
-    av_free_packet(&packet2);
-    goto cleanup;
+
+  if (got_output) {
+    send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
   }
 
-  send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
 
   av_free_packet(&packet2);
 #endif
