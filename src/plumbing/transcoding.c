@@ -1186,7 +1186,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     if (got_output) {
       tvhlog(LOG_DEBUG, "transcode", "encoding frame %3d (size=%5d)\n", frame_count, packet2.size);
 
-      out = av_realloc(&out, length + packet2.size + FF_INPUT_BUFFER_PADDING_SIZE);
+      out = av_realloc(out, length + packet2.size + FF_INPUT_BUFFER_PADDING_SIZE);
       memset(out + length, 0, packet2.size);
 
       // Expand out to be able to contain all data.
