@@ -402,12 +402,13 @@ static const void *
 dvr_timerec_entry_class_weekdays_get(void *o)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
-  htsmsg_t *m = htsmsg_create_list();
-  int i;
-  for (i = 0; i < 7; i++)
-    if (dte->dte_weekdays & (1 << i))
-      htsmsg_add_u32(m, NULL, i + 1);
-  return m;
+  return dvr_autorec_entry_class_weekdays_get(dte->dte_weekdays);
+}
+
+static htsmsg_t *
+dvr_timerec_entry_class_weekdays_default(void)
+{
+  return dvr_autorec_entry_class_weekdays_get(0x7f);
 }
 
 static char *
@@ -479,7 +480,7 @@ const idclass_t dvr_timerec_entry_class = {
       .get      = dvr_timerec_entry_class_weekdays_get,
       .list     = dvr_autorec_entry_class_weekdays_list,
       .rend     = dvr_timerec_entry_class_weekdays_rend,
-      .def.u32  = 0x7f
+      .def.list = dvr_timerec_entry_class_weekdays_default
     },
     {
       .type     = PT_U32,

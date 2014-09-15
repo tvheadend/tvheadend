@@ -505,6 +505,7 @@ dvr_autorec_find_by_uuid(const char *uuid)
 
 
 htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
+htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
 htsmsg_t * dvr_autorec_entry_class_weekdays_list ( void *o );
 char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays);
 

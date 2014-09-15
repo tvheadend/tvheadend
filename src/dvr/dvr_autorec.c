@@ -554,16 +554,28 @@ dvr_autorec_entry_class_weekdays_set(void *o, const void *v)
   return 0;
 }
 
-static const void *
-dvr_autorec_entry_class_weekdays_get(void *o)
+htsmsg_t *
+dvr_autorec_entry_class_weekdays_get(uint32_t weekdays)
 {
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   htsmsg_t *m = htsmsg_create_list();
   int i;
   for (i = 0; i < 7; i++)
-    if (dae->dae_weekdays & (1 << i))
+    if (weekdays & (1 << i))
       htsmsg_add_u32(m, NULL, i + 1);
   return m;
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_weekdays_default(void)
+{
+  return dvr_autorec_entry_class_weekdays_get(0x7f);
+}
+
+static const void *
+dvr_autorec_entry_class_weekdays_get_(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_weekdays_get(dae->dae_weekdays);
 }
 
 static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
@@ -799,10 +811,10 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "weekdays",
       .name     = "Week Days",
       .set      = dvr_autorec_entry_class_weekdays_set,
-      .get      = dvr_autorec_entry_class_weekdays_get,
+      .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,
       .rend     = dvr_autorec_entry_class_weekdays_rend_,
-      .def.u32  = 0x7f
+      .def.list = dvr_autorec_entry_class_weekdays_default
     },
     {
       .type     = PT_INT,
