@@ -152,7 +152,7 @@ prop_write_values
           char *s;
           if (!(new = htsmsg_field_get_str(f)))
             continue;
-          s64 = atol(new) * p->intsplit;
+          s64 = (int64_t)atol(new) * p->intsplit;
           if ((s = strchr(new, '.')) != NULL)
             s64 += (atol(s + 1) % p->intsplit);
         } else {

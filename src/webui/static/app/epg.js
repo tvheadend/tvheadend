@@ -9,8 +9,8 @@ tvheadend.brands = new Ext.data.JsonStore({
 });
 
 insertContentGroupClearOption = function( scope, records, options ){
-    var placeholder = Ext.data.Record.create(['name', 'code']);
-    scope.insert(0,new placeholder({name: '(Clear filter)', code: '-1'}));
+    var placeholder = Ext.data.Record.create(['val', 'key']);
+    scope.insert(0,new placeholder({val: '(Clear filter)', key: '-1'}));
 };
 
 tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
@@ -59,11 +59,11 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
     idIndex: 0,
     fields: ['identifier','label','minvalue','maxvalue'],
     data: [['-1', '(Clear filter)',"",""],
-           ['1','00:00:01 - 00:15:00',1, 900],
-           ['2','00:15:01 - 00:30:00', 901, 1800],
-           ['3','00:30:01 - 01:30:00', 1801, 5400],
-           ['4','01:30:01 - 03:00:00', 5401, 10800],
-           ['5','03:00:01 - No maximum', 10801, 9999999]]
+           ['1','00:00:00 - 00:15:00', 0, 900],
+           ['2','00:15:00 - 00:30:00', 900, 1800],
+           ['3','00:30:00 - 01:30:00', 1800, 5400],
+           ['4','01:30:00 - 03:00:00', 5400, 10800],
+           ['5','03:00:00 - No maximum', 10800, 9999999]]
 });
 
 // Function to convert numeric duration to corresponding label string
@@ -118,34 +118,56 @@ tvheadend.epgDetails = function(event) {
                    '?title=' + encodeURIComponent(title) + '">Play</a></div>';
     }
 
-    var store = new Ext.data.JsonStore({
-        autoload: true,
-        root: 'entries',
-        fields: ['key','val'],
-        id: 'key',
-        url: 'api/idnode/load',
-        baseParams: {
-            enum: 1,
-            'class': 'dvrconfig'
-        },
-        sortInfo: {
-            field: 'val',
-            direction: 'ASC'
-        }
-    });
-    store.load();
+    var buttons = [];
 
-    var confcombo = new Ext.form.ComboBox({
-        store: store,
-        triggerAction: 'all',
-        mode: 'local',
-        valueField: 'key',
-        displayField: 'val',
-        name: 'config_name',
-        emptyText: '(default)',
-        value: '',
-        editable: false
-    });
+    if (tvheadend.accessUpdate.dvr) {
+
+        var store = new Ext.data.JsonStore({
+            autoload: true,
+            root: 'entries',
+            fields: ['key','val'],
+            id: 'key',
+            url: 'api/idnode/load',
+            baseParams: {
+                enum: 1,
+                'class': 'dvrconfig'
+            },
+            sortInfo: {
+                field: 'val',
+                direction: 'ASC'
+            }
+        });
+        store.load();
+
+        var confcombo = new Ext.form.ComboBox({
+            store: store,
+            triggerAction: 'all',
+            mode: 'local',
+            valueField: 'key',
+            displayField: 'val',
+            name: 'config_name',
+            emptyText: '(default)',
+            value: '',
+            editable: false
+        });
+
+        buttons.push(confcombo);
+        buttons.push(new Ext.Button({
+            handler: recordEvent,
+            text: "Record program"
+        }));
+        buttons.push(new Ext.Button({
+            handler: recordSeries,
+            text: event.serieslink ? "Record series" : "Autorec"
+        }));
+
+    } else {
+
+        buttons.push(new Ext.Button({
+            handler: function() { win.close(); },
+            text: "Close"
+        }));
+    }
 
     var win = new Ext.Window({
         title: event.title,
@@ -153,13 +175,7 @@ tvheadend.epgDetails = function(event) {
         width: 500,
         height: 300,
         constrainHeader: true,
-        buttons: [confcombo, new Ext.Button({
-                handler: recordEvent,
-                text: "Record program"
-            }), new Ext.Button({
-                handler: recordSeries,
-                text: event.serieslink ? "Record series" : "Autorec"
-            })],
+        buttons: buttons,
         buttonAlign: 'center',
         html: content
     });
@@ -437,7 +453,7 @@ tvheadend.epg = function() {
     var epgFilterContentGroup = new Ext.form.ComboBox({
         loadingText: 'Loading...',
         width: 200,
-        displayField: 'name',
+        displayField: 'val',
         store: tvheadend.ContentGroupStore,
         mode: 'local',
         editable: true,
@@ -537,10 +553,10 @@ tvheadend.epg = function() {
     });
 
     epgFilterContentGroup.on('select', function(c, r) {
-        if (r.data.code == -1)
+        if (r.data.key == -1)
             clearContentGroupFilter();
-        else if (epgStore.baseParams.content_type !== r.data.code)
-            epgStore.baseParams.content_type = r.data.code;
+        else if (epgStore.baseParams.content_type !== r.data.key)
+            epgStore.baseParams.content_type = r.data.key;
         epgStore.reload();
     });
 
@@ -573,6 +589,44 @@ tvheadend.epg = function() {
         }
     });
 
+    tvheadend.autorecButton = new Ext.Button({
+        text: 'Create AutoRec',
+        iconCls: 'wand',
+        tooltip: 'Create an automatic recording entry that will '
+                 + 'record all future programmes that matches '
+                 + 'the current query.',
+        handler: createAutoRec
+    });
+
+    var tbar = [
+        epgFilterTitle, '-',
+        epgFilterChannels, '-',
+        epgFilterChannelTags, '-',
+        epgFilterContentGroup, '-',
+        epgFilterDuration, '-',
+        {
+            text: 'Reset All',
+            handler: epgQueryClear
+        },
+        '->',
+        {
+            text: 'Watch TV',
+            iconCls: 'eye',
+            handler: function() {
+                new tvheadend.VideoPlayer();
+            }
+        },
+        '-',
+        tvheadend.autorecButton,
+        '-',
+        {
+            text: 'Help',
+            handler: function() {
+                new tvheadend.help('Electronic Program Guide', 'epg.html');
+            }
+        }
+    ];
+
     var panel = new Ext.ux.grid.livegrid.GridPanel({
         stateful: true,
         stateId: 'epggrid',
@@ -584,43 +638,7 @@ tvheadend.epg = function() {
         store: epgStore,
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
         view: epgView,
-        tbar: [
-            epgFilterTitle,
-            '-',
-            epgFilterChannels,
-            '-',
-            epgFilterChannelTags,
-            '-',
-            epgFilterContentGroup,
-            '-',
-            epgFilterDuration,
-            '-',
-            {
-                text: 'Reset All',
-                handler: epgQueryClear
-            },
-            '->',
-            {
-                text: 'Watch TV',
-                iconCls: 'eye',
-                handler: function() {
-                    new tvheadend.VideoPlayer();
-                }
-            },
-            '-',
-            {
-                text: 'Create AutoRec',
-                iconCls: 'wand',
-                tooltip: 'Create an automatic recording entry that will '
-                        + 'record all future programmes that matches '
-                        + 'the current query.',
-                handler: createAutoRec
-            }, '-', {
-                text: 'Help',
-                handler: function() {
-                    new tvheadend.help('Electronic Program Guide', 'epg.html');
-                }
-            }],
+        tbar: tbar,
         bbar: new Ext.ux.grid.livegrid.Toolbar({
             view: epgView,
             displayInfo: true
@@ -650,6 +668,9 @@ tvheadend.epg = function() {
     }
 
     function createAutoRec() {
+    
+        if (!tvheadend.accessUpdate.dvr)
+            return;
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";

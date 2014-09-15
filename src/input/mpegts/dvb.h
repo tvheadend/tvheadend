@@ -400,7 +400,8 @@ typedef enum dvb_polarisation {
   DVB_POLARISATION_HORIZONTAL     = 0x00,
   DVB_POLARISATION_VERTICAL       = 0x01,
   DVB_POLARISATION_CIRCULAR_LEFT  = 0x02,
-  DVB_POLARISATION_CIRCULAR_RIGHT = 0x03
+  DVB_POLARISATION_CIRCULAR_RIGHT = 0x03,
+  DVB_POLARISATION_OFF            = 0x04
 } dvb_polarisation_t;
 
 typedef struct dvb_qpsk_config {
@@ -452,6 +453,7 @@ const char *dvb_fec2str     ( int fec );
 const char *dvb_qam2str     ( int qam );
 const char *dvb_bw2str      ( int bw );
 const char *dvb_mode2str    ( int mode );
+const char *dvb_inver2str   ( int inver );
 const char *dvb_guard2str   ( int guard );
 const char *dvb_hier2str    ( int hier );
 const char *dvb_pol2str     ( int pol );
@@ -465,6 +467,7 @@ int dvb_str2delsys  ( const char *str );
 int dvb_str2fec     ( const char *str );
 int dvb_str2qam     ( const char *str );
 int dvb_str2bw      ( const char *str );
+int dvb_str2inver   ( const char *str );
 int dvb_str2mode    ( const char *str );
 int dvb_str2guard   ( const char *str );
 int dvb_str2hier    ( const char *str );

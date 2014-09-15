@@ -112,7 +112,7 @@ static void
 create_services(AvahiClient *c) 
 {
   char *n;
-  char *path;
+  char *path = NULL;
   int ret;
   assert(c);
 
@@ -162,8 +162,6 @@ create_services(AvahiClient *c)
 					     path,
 					     NULL)) < 0) {
 
-    free(path);
-
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
 
@@ -182,6 +180,7 @@ create_services(AvahiClient *c)
     }
   }
 
+  free(path);
   return;
 
  collision:
@@ -201,7 +200,7 @@ create_services(AvahiClient *c)
   return;
 
  fail:
-  return;
+  free(path);
 }
 
 

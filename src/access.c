@@ -46,7 +46,7 @@ struct access_ticket_queue access_tickets;
 const char *superuser_username;
 const char *superuser_password;
 
-static int access_noacl;
+int access_noacl;
 
 /**
  *
