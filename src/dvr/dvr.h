@@ -195,6 +195,11 @@ typedef struct dvr_entry {
   struct dvr_autorec_entry *de_autorec;
 
   /**
+   * Timerec linkage
+   */
+  struct dvr_timerec_entry *de_timerec;
+
+  /**
    * Fields for recording
    */
   pthread_t de_thread;
@@ -251,7 +256,7 @@ typedef struct dvr_autorec_entry {
   channel_tag_t *dae_channel_tag;
   LIST_ENTRY(dvr_autorec_entry) dae_channel_tag_link;
 
-  dvr_prio_t dae_pri;
+  int dae_pri;
 
   struct dvr_entry_list dae_spawns;
 
@@ -273,12 +278,49 @@ TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 extern struct dvr_autorec_entry_queue autorec_entries;
 
 /**
+ * Timerec entry
+ */
+typedef struct dvr_timerec_entry {
+  idnode_t dte_id;
+
+  TAILQ_ENTRY(dvr_timerec_entry) dte_link;
+
+  char *dte_name;
+  char *dte_config_name;
+
+  int dte_enabled;
+  char *dte_creator;
+  char *dte_comment;
+
+  char *dte_title;
+
+  int dte_start;  /* Minutes from midnight */
+  int dte_stop;   /* Minutes from midnight */
+
+  uint32_t dte_weekdays;
+
+  channel_t *dte_channel;
+  LIST_ENTRY(dvr_timerec_entry) dte_channel_link;
+
+  int dte_pri;
+
+  dvr_entry_t *dte_spawn;
+
+  int dte_retention;
+} dvr_timerec_entry_t;
+
+TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
+
+extern struct dvr_timerec_entry_queue timerec_entries;
+
+/**
  *
  */
 
 extern const idclass_t dvr_config_class;
 extern const idclass_t dvr_entry_class;
 extern const idclass_t dvr_autorec_entry_class;
+extern const idclass_t dvr_timerec_entry_class;
 
 /**
  * Prototypes
@@ -366,12 +408,6 @@ void dvr_config_init(void);
 
 void dvr_done(void);
 
-void dvr_autorec_init(void);
-
-void dvr_autorec_done(void);
-
-void dvr_autorec_update(void);
-
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
@@ -436,6 +472,16 @@ int dvr_sort_start_ascending(const void *A, const void *B);
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
 
+dvr_entry_t *
+dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
+                  channel_t *ch, time_t start, time_t stop,
+                  time_t start_extra, time_t stop_extra,
+                  const char *title, const char *description,
+                  const char *lang, epg_genre_t *content_type,
+                  const char *creator, dvr_autorec_entry_t *dae,
+                  dvr_timerec_entry_t *tae,
+                  dvr_prio_t pri, int retention);
+
 dvr_autorec_entry_t*
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             channel_t *ch, uint32_t aroundTime, uint32_t days,
@@ -458,17 +504,52 @@ dvr_autorec_find_by_uuid(const char *uuid)
   { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class); }
 
 
+htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
+htsmsg_t * dvr_autorec_entry_class_weekdays_list ( void *o );
+char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays);
+
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);
 void dvr_autorec_check_season(epg_season_t *s);
 void dvr_autorec_check_serieslink(epg_serieslink_t *s);
-
 
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
 
 void autorec_destroy_by_id(const char *id, int delconf);
+
+void dvr_autorec_init(void);
+
+void dvr_autorec_done(void);
+
+void dvr_autorec_update(void);
+
+/**
+ *
+ */
+
+dvr_timerec_entry_t *
+dvr_timerec_create(const char *uuid, htsmsg_t *conf);
+
+static inline dvr_timerec_entry_t *
+dvr_timerec_find_by_uuid(const char *uuid)
+  { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class); }
+
+
+void dvr_timerec_save(dvr_timerec_entry_t *dae);
+
+void dvr_timerec_check(dvr_timerec_entry_t *dae);
+
+void timerec_destroy_by_channel(channel_t *ch, int delconf);
+
+void timerec_destroy_by_id(const char *id, int delconf);
+
+void dvr_timerec_init(void);
+
+void dvr_timerec_done(void);
+
+void dvr_timerec_update(void);
 
 /**
  *

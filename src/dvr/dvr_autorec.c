@@ -385,16 +385,6 @@ dvr_autorec_entry_class_channel_get(void *o)
   return &ret;
 }
 
-static htsmsg_t *
-dvr_autorec_entry_class_channel_list(void *o)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channel/list");
-  htsmsg_add_str(m, "event", "channel");
-  return m;
-}
-
 static int
 dvr_autorec_entry_class_title_set(void *o, const void *v)
 {
@@ -477,14 +467,6 @@ dvr_autorec_entry_class_start_set(void *o, const void *v)
   return dvr_autorec_entry_class_time_set(o, v, &dae->dae_start);
 }
 
-#if 0
-static int
-dvr_autorec_entry_class_stop_set(void *o, const void *v)
-{
-  return dvr_autorec_entry_class_time_set(o, v, &dae->dae_stop);
-}
-#endif
-
 static const void *
 dvr_autorec_entry_class_time_get(void *o, int tm)
 {
@@ -505,27 +487,24 @@ dvr_autorec_entry_class_start_get(void *o)
   return dvr_autorec_entry_class_time_get(o, dae->dae_start);
 }
 
-#if 0
-static int
-dvr_autorec_entry_class_stop_get(void *o)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  return dvr_autorec_entry_class_time_get(o, v, &dae->dae_stop);
-}
-#endif
-
-static htsmsg_t *
-dvr_autorec_entry_class_time_list(void *o)
+htsmsg_t *
+dvr_autorec_entry_class_time_list(void *o, const char *null)
 {
   int i;
   htsmsg_t *l = htsmsg_create_list();
   char buf[16];
-  htsmsg_add_str(l, NULL, "Any");
+  htsmsg_add_str(l, NULL, null);
   for (i = 0; i < 24*60;  i += 10) {
     snprintf(buf, sizeof(buf), "%02d:%02d", i / 60, (i % 60));
     htsmsg_add_str(l, NULL, buf);
   }
   return l;
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_time_list_(void *o)
+{
+  return dvr_autorec_entry_class_time_list(o, "Any");
 }
 
 static htsmsg_t *
@@ -597,33 +576,39 @@ static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
   { "Sun", 7 },
 };
 
-static htsmsg_t *
+htsmsg_t *
 dvr_autorec_entry_class_weekdays_list ( void *o )
 {
   return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab);
 }
 
-static char *
-dvr_autorec_entry_class_weekdays_rend(void *o)
+char *
+dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays)
 {
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   char buf[32];
   size_t l;
   int i;
-  if (dae->dae_weekdays == 0x7f)
+  if (weekdays == 0x7f)
     strcpy(buf + 1, "All days");
-  else if (dae->dae_weekdays == 0)
+  else if (weekdays == 0)
     strcpy(buf + 1, "No days");
   else {
     buf[0] = '\0';
     for (i = 0; i < 7; i++)
-      if (dae->dae_weekdays & (1 << i)) {
+      if (weekdays & (1 << i)) {
         l = strlen(buf);
         snprintf(buf + l, sizeof(buf) - l, ",%s",
                  val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
       }
   }
   return strdup(buf + 1);
+}
+
+static char *
+dvr_autorec_entry_class_weekdays_rend_(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays);
 }
 
 static int
@@ -776,7 +761,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel",
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
-      .list     = dvr_autorec_entry_class_channel_list,
+      .list     = channel_class_get_list,
     },
     {
       .type     = PT_STR,
@@ -792,7 +777,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Starting Around",
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
-      .list     = dvr_autorec_entry_class_time_list,
+      .list     = dvr_autorec_entry_class_time_list_,
     },
     {
       .type     = PT_TIME,
@@ -816,7 +801,8 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_weekdays_set,
       .get      = dvr_autorec_entry_class_weekdays_get,
       .list     = dvr_autorec_entry_class_weekdays_list,
-      .rend     = dvr_autorec_entry_class_weekdays_rend,
+      .rend     = dvr_autorec_entry_class_weekdays_rend_,
+      .def.u32  = 0x7f
     },
     {
       .type     = PT_INT,

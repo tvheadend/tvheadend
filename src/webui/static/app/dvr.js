@@ -77,6 +77,30 @@ tvheadend.dvrRowActions = function() {
     });
 }
 
+tvheadend.weekdaysRenderer = function(v) {
+    var t = [];
+    var d = v.push ? v : [v];
+    if (d.length == 7) {
+        v = "All days";
+    } else if (d.length == 0) {
+        v = "No days";
+    } else {
+        for (var i = 0; i < d.length; i++) {
+             var r = st.find('key', d[i]);
+             if (r !== -1) {
+                 var nv = st.getAt(r).get('val');
+                 if (nv)
+                     t.push(nv);
+             } else {
+                 t.push(d[i]);
+             }
+        }
+        v = t.join(',');
+    }
+    return v;
+}
+
+
 /**
  *
  */
@@ -326,6 +350,7 @@ tvheadend.autorec_editor = function(panel, index) {
         tabIndex: index,
         columns: {
             enabled:      { width: 50 },
+            name:         { width: 200 },
             title:        { width: 300 },
             channel:      { width: 200 },
             tag:          { width: 200 },
@@ -342,48 +367,76 @@ tvheadend.autorec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enabled,title,channel,tag,content_type,minduration,' +
+               list: 'enabled,name,title,channel,tag,content_type,minduration,' +
                      'maxduration,weekdays,start,pri,config_name,comment',
             },
             create: { }
         },
         del: true,
-        list: 'enabled,title,channel,tag,content_type,minduration,' +
+        list: 'enabled,name,title,channel,tag,content_type,minduration,' +
               'maxduration,weekdays,start,pri,config_name,creator,comment',
         columns: {
             weekdays: {
-                renderer: function(st) {
-                    return function(v) {
-                        var t = [];
-                        var d = v.push ? v : [v];
-                        if (d.length == 7) {
-                            v = "All days";
-                        } else if (d.length == 0) {
-                            v = "No days";
-                        } else {
-                            for (var i = 0; i < d.length; i++) {
-                                 var r = st.find('key', d[i]);
-                                 if (r !== -1) {
-                                     var nv = st.getAt(r).get('val');
-                                     if (nv)
-                                         t.push(nv);
-                                 } else {
-                                     t.push(d[i]);
-                                 }
-                            }
-                            v = t.join(',');
-                        }
-                        return v;
-                    }
-                }
+                renderer: function(st) { return tvheadend.weekdaysRenderer; }
             }
         },
         sort: {
-          field: 'title',
+          field: 'name',
           direction: 'ASC'
         },
         help: function() {
             new tvheadend.help('DVR', 'config_dvrauto.html');
+        },
+    });
+
+    return panel;
+
+};
+
+/**
+ *
+ */
+tvheadend.timerec_editor = function(panel, index) {
+
+    tvheadend.idnode_grid(panel, {
+        url: 'api/dvr/timerec',
+        titleS: 'DVR TimeRec Entry',
+        titleP: 'DVR TimeRec Entries',
+        iconCls: 'clock',
+        tabIndex: index,
+        columns: {
+            enabled:      { width: 50 },
+            name:         { width: 200 },
+            title:        { width: 300 },
+            channel:      { width: 200 },
+            weekdays:     { width: 160 },
+            start:        { width: 100 },
+            stop:         { width: 100 },
+            pri:          { width: 80 },
+            config_name:  { width: 120 },
+            creator:      { width: 200 },
+            comment:      { width: 200 },
+        },
+        add: {
+            url: 'api/dvr/timerec',
+            params: {
+               list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment',
+            },
+            create: { }
+        },
+        del: true,
+        list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment',
+        columns: {
+            weekdays: {
+                renderer: function(st) { return tvheadend.weekdaysRenderer; }
+            }
+        },
+        sort: {
+          field: 'name',
+          direction: 'ASC'
+        },
+        help: function() {
+            new tvheadend.help('DVR', 'config_dvrtime.html');
         },
     });
 
@@ -406,5 +459,6 @@ tvheadend.dvr = function(panel, index) {
     tvheadend.dvr_finished(p, 1);
     tvheadend.dvr_failed(p, 2);
     tvheadend.autorec_editor(p, 3);
+    tvheadend.timerec_editor(p, 4);
     return p;
 }
