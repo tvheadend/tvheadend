@@ -927,6 +927,71 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 /**
  *
  */
+static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *out, int length, AVCodecContext *octx)
+{
+  streaming_message_t *sm;
+  th_pkt_t *n;
+
+  if (length <= 0) {
+    if (length) {
+      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
+      ts->ts_index = 0;
+    }
+
+    return;
+  }
+
+  if (!octx->coded_frame)
+    return;
+
+  n = pkt_alloc(out, length, octx->coded_frame->pkt_pts, octx->coded_frame->pkt_dts);
+
+  switch (octx->coded_frame->pict_type) {
+  case AV_PICTURE_TYPE_I:
+    n->pkt_frametype = PKT_I_FRAME;
+    break;
+
+  case AV_PICTURE_TYPE_P:
+    n->pkt_frametype = PKT_P_FRAME;
+    break;
+
+  case AV_PICTURE_TYPE_B:
+    n->pkt_frametype = PKT_B_FRAME;
+    break;
+
+  default:
+    break;
+  }
+
+  n->pkt_duration       = pkt->pkt_duration;
+  n->pkt_commercial     = pkt->pkt_commercial;
+  n->pkt_componentindex = pkt->pkt_componentindex;
+  n->pkt_field          = pkt->pkt_field;
+  n->pkt_aspect_num     = pkt->pkt_aspect_num;
+  n->pkt_aspect_den     = pkt->pkt_aspect_den;
+  
+  if(octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE) {
+    if(n->pkt_dts != PTS_UNSET)
+      n->pkt_dts -= n->pkt_pts;
+
+    n->pkt_pts = octx->coded_frame->pts;
+
+    if(n->pkt_dts != PTS_UNSET)
+      n->pkt_dts += n->pkt_pts;
+  }
+
+  if (octx->extradata_size)
+    n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
+
+  sm = streaming_msg_create_pkt(n);
+  streaming_target_deliver2(ts->ts_target, sm);
+  pkt_ref_dec(n);
+
+}
+
+/**
+ *
+ */
 static void
 transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
@@ -937,8 +1002,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   AVPicture deint_pic;
   uint8_t *buf, *out, *deint;
   int length, len, got_picture;
-  streaming_message_t *sm;
-  th_pkt_t *n;
   video_stream_t *vs = (video_stream_t*)ts;
 
   ictx = vs->vid_ictx;
@@ -1144,9 +1207,11 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   memset(out, 0, len);
 
   length = avcodec_encode_video(octx, out, len, vs->vid_enc_frame);
+
+  send_video_packet(ts, pkt, out, length, octx);
 #else
   AVPacket packet2;
-  int ret, got_output, frame_count;
+  int ret, got_output;
 
   av_init_packet(&packet2);
   packet2.data = NULL; // packet data will be allocated by the encoder
@@ -1155,102 +1220,19 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ret = avcodec_encode_video2(octx, &packet2, vs->vid_enc_frame, &got_output);
   if (ret < 0) {
     tvhlog(LOG_ERR, "transcode", "Error encoding frame. avcodec_encode_video2()");
+    av_free_packet(&packet2);
     ts->ts_index = 0;
     goto cleanup;
   }
   if (!got_output) {
-    tvhlog(LOG_ERR, "transcode", "No output from avcodec_encode_video2()");
-    ts->ts_index = 0;
+    av_free_packet(&packet2);
     goto cleanup;
   }
 
-  length = packet2.size;
+  send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
 
-  out = av_realloc(NULL, length + FF_INPUT_BUFFER_PADDING_SIZE);
-  memset(out, 0, length);
-
-  memcpy(out, packet2.data, packet2.size);
-
-  /* get the delayed frames */
   av_free_packet(&packet2);
-  frame_count = 2;
-  for (got_output = 1; got_output; frame_count++) {
-    ret = avcodec_encode_video2(octx, &packet2, NULL, &got_output);
-
-    if (ret < 0) {
-      tvhlog(LOG_ERR, "transcode", "Error encoding delayed frames. avcodec_encode_video2()");
-      ts->ts_index = 0;
-      goto cleanup;
-    }
-
-    if (got_output) {
-      tvhlog(LOG_DEBUG, "transcode", "encoding frame %3d (size=%5d)\n", frame_count, packet2.size);
-
-      out = av_realloc(&out, length + packet2.size + FF_INPUT_BUFFER_PADDING_SIZE);
-      memset(out + length, 0, packet2.size);
-
-      // Expand out to be able to contain all data.
-      memcpy(out+length, packet2.data, packet2.size);
-      length =+ packet2.size;
-      av_free_packet(&packet2);
-    }
-  }
 #endif
-
-  if (length <= 0) {
-    if (length) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
-      ts->ts_index = 0;
-    }
-
-    goto cleanup;
-  }
-
-  if (!octx->coded_frame)
-    goto cleanup;
-
-  n = pkt_alloc(out, length, octx->coded_frame->pkt_pts, octx->coded_frame->pkt_dts);
-
-  switch (octx->coded_frame->pict_type) {
-  case AV_PICTURE_TYPE_I:
-    n->pkt_frametype = PKT_I_FRAME;
-    break;
-
-  case AV_PICTURE_TYPE_P:
-    n->pkt_frametype = PKT_P_FRAME;
-    break;
-
-  case AV_PICTURE_TYPE_B:
-    n->pkt_frametype = PKT_B_FRAME;
-    break;
-
-  default:
-    break;
-  }
-
-  n->pkt_duration       = pkt->pkt_duration;
-  n->pkt_commercial     = pkt->pkt_commercial;
-  n->pkt_componentindex = pkt->pkt_componentindex;
-  n->pkt_field          = pkt->pkt_field;
-  n->pkt_aspect_num     = pkt->pkt_aspect_num;
-  n->pkt_aspect_den     = pkt->pkt_aspect_den;
-  
-  if(octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE) {
-    if(n->pkt_dts != PTS_UNSET)
-      n->pkt_dts -= n->pkt_pts;
-
-    n->pkt_pts = octx->coded_frame->pts;
-
-    if(n->pkt_dts != PTS_UNSET)
-      n->pkt_dts += n->pkt_pts;
-  }
-
-  if (octx->extradata_size)
-    n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
-
-  sm = streaming_msg_create_pkt(n);
-  streaming_target_deliver2(ts->ts_target, sm);
-  pkt_ref_dec(n);
 
  cleanup:
   av_free_packet(&packet);
