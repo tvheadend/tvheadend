@@ -1211,7 +1211,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   send_video_packet(ts, pkt, out, length, octx);
 #else
   AVPacket packet2;
-  int ret, got_output, frame_count;
+  int ret, got_output;
 
   av_init_packet(&packet2);
   packet2.data = NULL; // packet data will be allocated by the encoder
