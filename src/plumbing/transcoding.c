@@ -929,6 +929,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
  */
 static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *out, int length, AVCodecContext *octx)
 {
+  streaming_message_t *sm;
+  th_pkt_t *n;
+
   if (length <= 0) {
     if (length) {
       tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
@@ -1001,8 +1004,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   AVPicture deint_pic;
   uint8_t *buf, *out, *deint;
   int length, len, got_picture;
-  streaming_message_t *sm;
-  th_pkt_t *n;
   video_stream_t *vs = (video_stream_t*)ts;
 
   ictx = vs->vid_ictx;
