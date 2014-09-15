@@ -1160,7 +1160,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
   if (!got_output) {
     tvhlog(LOG_ERR, "transcode", "No output from avcodec_encode_video2()");
-    ts->ts_index = 0;
+    //ts->ts_index = 0;
     goto cleanup;
   }
 
