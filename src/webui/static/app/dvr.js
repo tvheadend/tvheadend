@@ -77,27 +77,29 @@ tvheadend.dvrRowActions = function() {
     });
 }
 
-tvheadend.weekdaysRenderer = function(v) {
-    var t = [];
-    var d = v.push ? v : [v];
-    if (d.length == 7) {
-        v = "All days";
-    } else if (d.length == 0) {
-        v = "No days";
-    } else {
-        for (var i = 0; i < d.length; i++) {
-             var r = st.find('key', d[i]);
-             if (r !== -1) {
-                 var nv = st.getAt(r).get('val');
-                 if (nv)
-                     t.push(nv);
-             } else {
-                 t.push(d[i]);
-             }
+tvheadend.weekdaysRenderer = function(st) {
+    return function(v) {
+        var t = [];
+        var d = v.push ? v : [v];
+        if (d.length == 7) {
+            v = "All days";
+        } else if (d.length == 0) {
+            v = "No days";
+        } else {
+            for (var i = 0; i < d.length; i++) {
+                 var r = st.find('key', d[i]);
+                 if (r !== -1) {
+                     var nv = st.getAt(r).get('val');
+                     if (nv)
+                         t.push(nv);
+                 } else {
+                     t.push(d[i]);
+                 }
+            }
+            v = t.join(',');
         }
-        v = t.join(',');
+        return v;
     }
-    return v;
 }
 
 
@@ -377,7 +379,7 @@ tvheadend.autorec_editor = function(panel, index) {
               'maxduration,weekdays,start,pri,config_name,creator,comment',
         columns: {
             weekdays: {
-                renderer: function(st) { return tvheadend.weekdaysRenderer; }
+                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
             }
         },
         sort: {
@@ -428,7 +430,7 @@ tvheadend.timerec_editor = function(panel, index) {
         list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment',
         columns: {
             weekdays: {
-                renderer: function(st) { return tvheadend.weekdaysRenderer; }
+                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
             }
         },
         sort: {
