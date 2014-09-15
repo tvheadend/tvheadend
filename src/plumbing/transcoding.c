@@ -938,11 +938,11 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
       ts->ts_index = 0;
     }
 
-    goto cleanup;
+    return;
   }
 
   if (!octx->coded_frame)
-    goto cleanup;
+    return;
 
   n = pkt_alloc(out, length, octx->coded_frame->pkt_pts, octx->coded_frame->pkt_dts);
 
@@ -986,8 +986,6 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
-
- cleanup:
 
 }
 
