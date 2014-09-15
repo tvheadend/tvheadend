@@ -1220,42 +1220,18 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ret = avcodec_encode_video2(octx, &packet2, vs->vid_enc_frame, &got_output);
   if (ret < 0) {
     tvhlog(LOG_ERR, "transcode", "Error encoding frame. avcodec_encode_video2()");
+    av_free_packet(&packet2);
     ts->ts_index = 0;
     goto cleanup;
   }
   if (!got_output) {
-    tvhlog(LOG_DEBUG, "transcode", "No output from avcodec_encode_video2()");
-    //ts->ts_index = 0;
+    av_free_packet(&packet2);
     goto cleanup;
   }
 
   send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
 
-  /* get the delayed frames */
   av_free_packet(&packet2);
-  frame_count = 2;
-  for (got_output = 1; got_output; frame_count++) {
-
-     av_init_packet(&packet2);
-     packet2.data = NULL; // packet data will be allocated by the encoder
-     packet2.size = 0;
-
-     ret = avcodec_encode_video2(octx, &packet2, NULL, &got_output);
-
-    if (ret < 0) {
-      tvhlog(LOG_ERR, "transcode", "Error encoding delayed frames. avcodec_encode_video2()");
-      ts->ts_index = 0;
-      goto cleanup;
-    }
-
-    if (got_output) {
-      tvhlog(LOG_DEBUG, "transcode", "encoding frame %3d (size=%5d)\n", frame_count, packet2.size);
-
-      send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
-
-      av_free_packet(&packet2);
-    }
-  }
 #endif
 
  cleanup:
