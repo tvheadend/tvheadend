@@ -164,18 +164,20 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 
 /* Patterns for the extraction of season/episode numbers from summary of events*/
 static const char *_opentv_se_num_patterns[] = { 
-          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",                /* for ??? */
-          "^ *([0-9]+)'? Stagione +Ep\\. ?([0-9]+)([a-z]?)",    /* for Sky IT, ex.: 4' Stagione Ep.9B ... */
-          "^ *([0-9]+)'? Stagione()",                           /* for Sky IT, ex.: 4' Stagione ... */
-          "^() *Ep\\. ?([0-9]+)([a-z]?)",                       /* for Sky IT, ex.: Ep.9A ... */
-          "^ *([0-9]+)a? Stagione -? ?Puntata ?([0-9]+)",       /* for Sky IT, ex.: 3a Stagione - Puntata 1 ... */
-          "^() *Puntata ?([0-9]+)" };                           /* for Sky IT, ex.: Puntata 5 ... */
+          " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)",             /* for ??? */
+          "([0-9]+)'?a? Stagione +Ep\\. ?([0-9]+)([a-z]?)",  /* for Sky IT, ex.: 4' Stagione Ep.9B ... */
+          "([0-9]+)'?a? Stagione -? ?Puntata ?([0-9]+)",     /* for Sky IT, ex.: 3a Stagione - Puntata 1 ... */
+          "([0-9]+)'?a? Stagione()",                         /* for Sky IT, ex.: 4' Stagione ... */
+          "^() *Ep\\. ?([0-9]+)([a-z]?)",                    /* for Sky IT, ex.: Ep.9A ... */
+          "^() *Puntata ?([0-9]+)" };                        /* for Sky IT, ex.: Puntata 5 ... */
 static regex_t *_opentv_se_num_pregs;
 
 /* Patterns for the extraction of subtitles from summary of events*/
 static const char *_opentv_subtitle_patterns[] = { 
-          "^ *[0-9]+'? Stagione +Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9])?('[^ ])?)+)'",  /* for Sky IT, ex.: 1' Stagione Ep.7 - 'L'Hub' Gli agenti ...: sara' Ward ... // 4' Stagione Ep.9 'Title' ... */
-          "^ *Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9])?('[^ ])?)+)'"};                    /* for Sky IT, ex.: Ep.4 - 'Title' ... */
+          "[0-9]+'?a? Stagione +Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9])?('[^ '])?)+)'", /* for Sky IT, ex.: 1' Stagione Ep.7 - 'L'Hub' Gli agenti ...: sara' Ward ... // 4' Stagione Ep.9 'Title' ... */
+          "Ep\\. ?[0-9]+[A-Za-z]? -? ?'(([^']*(' [^A-Z0-9])?('[^ '])?)+)'",                      /* for Sky IT, ex.: Ep.4 - 'Title' ... */
+          "[0-9]+'?a? Stagione -? ?'(([^']*(' [^A-Z0-9])?('[^ '])?)+)'",                         /* for Sky IT, ex.: 4' Stagione - 'P.R.' ... */
+          "[0-9]+'?a? Stagione -? ?Puntata ?[0-9]+[A-Za-z]? \"\" *([^\"]+) *\"\""};              /* for Sky IT, ex.: 7 Stagione Puntata 8 "" Title "" ... */
 static regex_t *_opentv_subtitle_pregs;
 
 /* Parse huffman encoded string */
