@@ -361,7 +361,7 @@ opentv_parse_event_section
       if (ev.summary) {
         regmatch_t match[4];
         char buf[1024];
-        int i;
+        int i,size;
 
         /* Parse Series/Episode */
         for (i = 0; i < ARRAY_SIZE(_opentv_se_num_patterns); i++) {
@@ -387,9 +387,10 @@ opentv_parse_event_section
 
         /* Parse Subtitle */
         for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++) {
-          if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_eo - match[1].rm_so <= sizeof(buf) - 1) {
-            memcpy(buf, ev.summary + match[1].rm_so, match[1].rm_eo - match[1].rm_so);
-            buf[match[1].rm_eo - match[1].rm_so] = '\0';
+          if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
+            size = MIN(match[1].rm_eo - match[1].rm_so, sizeof(buf) - 1);
+            memcpy(buf, ev.summary + match[1].rm_so, size);
+            buf[size] = '\0';
             tvhdebug("opentv", "  extract from summary subtitle %s", buf);
             save |= epg_episode_set_subtitle(ee, buf, lang, src);
             break; /* skip other patterns */
