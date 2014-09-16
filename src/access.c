@@ -179,37 +179,35 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
   int isv4v6 = 0;
   uint32_t v4v6 = 0;
   
-  if(src->sa_family == AF_INET6)
-  {
+  if (src->sa_family == AF_INET6) {
     struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
     uint32_t *a32 = (uint32_t*)in6->s6_addr;
-    if(a32[0] == 0 && a32[1] == 0 && ntohl(a32[2]) == 0x0000FFFFu)
-    {
+    if (a32[0] == 0 && a32[1] == 0 && ntohl(a32[2]) == 0x0000FFFFu) {
       isv4v6 = 1;
       v4v6 = ntohl(a32[3]);
     }
   }
 
-  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link)
-  {
-    if(ai->ai_ipv6 == 0 && src->sa_family == AF_INET)
-    {
+  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link) {
+
+    if (ai->ai_family == AF_INET && src->sa_family == AF_INET) {
+
       struct sockaddr_in *in4 = (struct sockaddr_in *)src;
       uint32_t b = ntohl(in4->sin_addr.s_addr);
-      if((b & ai->ai_netmask) == ai->ai_network)
+      if ((b & ai->ai_netmask) == ai->ai_network)
         return 1;
-    }
-    else if(ai->ai_ipv6 == 0 && isv4v6)
-    {
+
+    } else if (ai->ai_family == AF_INET && isv4v6) {
+
       if((v4v6 & ai->ai_netmask) == ai->ai_network)
         return 1;
-    }
-    else if(ai->ai_ipv6 && isv4v6)
-    {
+
+    } else if (ai->ai_family == AF_INET6 && isv4v6) {
+
       continue;
-    }
-    else if(ai->ai_ipv6 && src->sa_family == AF_INET6)
-    {
+
+    } else if (ai->ai_family == AF_INET6 && src->sa_family == AF_INET6) {
+
       struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
       uint8_t *a8 = (uint8_t*)in6->s6_addr;
       uint8_t *m8 = (uint8_t*)ai->ai_ip6.s6_addr;
@@ -496,12 +494,54 @@ access_set_prefix_default(access_entry_t *ae)
   access_ipmask_t *ai;
 
   ai = calloc(1, sizeof(access_ipmask_t));
-  ai->ai_ipv6 = 1;
+  ai->ai_family = AF_INET6;
   TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
 
   ai = calloc(1, sizeof(access_ipmask_t));
-  ai->ai_ipv6 = 0;
+  ai->ai_family = AF_INET;
   TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+}
+
+/**
+ *
+ */
+static int access_addr4_empty(const char *s)
+{
+  int empty = 1;
+  while (*s) {
+    if (*s == '0') {
+      /* nothing */
+    } else if (isdigit(*s)) {
+      empty = 0;
+    } else if (*s == '.') {
+      empty = 0;
+    } else {
+      return 1;
+    }
+    s++;
+  }
+  return empty;
+}
+
+/**
+ *
+ */
+static int access_addr6_empty(const char *s)
+{
+  int empty = 1;
+  while (*s) {
+    if (*s == '0') {
+      /* nothing */
+    } else if (isdigit(*s)) {
+      empty = 0;
+    } else if (*s == ':') {
+      empty = 0;
+    } else {
+      return 1;
+    }
+    s++;
+  }
+  return empty;
 }
 
 /**
@@ -510,55 +550,45 @@ access_set_prefix_default(access_entry_t *ae)
 static void
 access_set_prefix(access_entry_t *ae, const char *prefix)
 {
+  static const char *delim = ",;| ";
   char buf[100];
   char tokbuf[4096];
   int prefixlen;
   char *p, *tok, *saveptr;
-  access_ipmask_t *ai;
+  in_addr_t s_addr;
+  access_ipmask_t *ai = NULL;
 
-  while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
-  {
+  while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL) {
     TAILQ_REMOVE(&ae->ae_ipmasks, ai, ai_link);
     free(ai);
   }
 
-  strncpy(tokbuf, prefix, 4095);
-  tokbuf[4095] = 0;
-  tok = strtok_r(tokbuf, ",;| ", &saveptr);
+  strncpy(tokbuf, prefix, sizeof(tokbuf)-1);
+  tokbuf[sizeof(tokbuf) - 1] = 0;
+  tok = strtok_r(tokbuf, delim, &saveptr);
 
-  while(tok != NULL)
-  {
-    ai = calloc(1, sizeof(access_ipmask_t));
+  while (tok != NULL) {
+    if (ai == NULL)
+      ai = calloc(1, sizeof(access_ipmask_t));
 
-    if(strlen(tok) > 90 || strlen(tok) == 0)
-    {
-      free(ai);
-      tok = strtok_r(NULL, ",;| ", &saveptr);
-      continue;
-    }
+    if (strlen(tok) > sizeof(buf) - 1 || *tok == '\0')
+      goto fnext;
 
     strcpy(buf, tok);
 
-    if(strchr(buf, ':') != NULL)
-      ai->ai_ipv6 = 1;
+    if (strchr(buf, ':') != NULL)
+      ai->ai_family = AF_INET6;
     else
-      ai->ai_ipv6 = 0;
+      ai->ai_family = AF_INET;
 
-    if(ai->ai_ipv6)
-    {
-      p = strchr(buf, '/');
-      if(p)
-      {
+    if (ai->ai_family == AF_INET6) {
+      if ((p = strchr(buf, '/')) != NULL) {
         *p++ = 0;
         prefixlen = atoi(p);
-        if(prefixlen > 128)
-        {
-          free(ai);
-          tok = strtok_r(NULL, ",;| ", &saveptr);
-          continue;
-        }
+        if (prefixlen < 0 || prefixlen > 128)
+          goto fnext;
       } else {
-        prefixlen = 128;
+        prefixlen = !access_addr4_empty(buf) ? 128 : 0;
       }
 
       ai->ai_prefixlen = prefixlen;
@@ -566,34 +596,35 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
 
       ai->ai_netmask = 0xffffffff;
       ai->ai_network = 0x00000000;
-    }
-    else
-    {
-      p = strchr(buf, '/');
-      if(p)
-      {
+    } else {
+      if ((p = strchr(buf, '/')) != NULL) {
         *p++ = 0;
         prefixlen = atoi(p);
-        if(prefixlen > 32)
-        {
-          free(ai);
-          tok = strtok_r(NULL, ",;| ", &saveptr);
-          continue;
-        }
+        if (prefixlen < 0 || prefixlen > 32)
+          goto fnext;
       } else {
-        prefixlen = 32;
+        prefixlen = !access_addr6_empty(buf) ? 32 : 0;
       }
 
-      ai->ai_ip.s_addr = inet_addr(buf);
+      s_addr = inet_addr(buf);
       ai->ai_prefixlen = prefixlen;
 
       ai->ai_netmask   = prefixlen ? 0xffffffff << (32 - prefixlen) : 0;
-      ai->ai_network   = ntohl(ai->ai_ip.s_addr) & ai->ai_netmask;
+      ai->ai_network   = ntohl(s_addr) & ai->ai_netmask;
     }
 
     TAILQ_INSERT_TAIL(&ae->ae_ipmasks, ai, ai_link);
+    ai = NULL;
 
-    tok = strtok_r(NULL, ",;| ", &saveptr);
+    tok = strtok_r(NULL, delim, &saveptr);
+    continue;
+
+fnext:
+    tok = strtok_r(NULL, delim, &saveptr);
+    if (tok == NULL) {
+      free(ai);
+      ai = NULL;
+    }
   }
 
   if (!TAILQ_FIRST(&ae->ae_ipmasks))
@@ -631,7 +662,6 @@ static int access_entry_class_password_set(void *o, const void *v);
 access_entry_t *
 access_entry_create(const char *uuid, htsmsg_t *conf)
 {
-  access_ipmask_t *ai;
   access_entry_t *ae, *ae2;
   const char *s;
 
@@ -671,14 +701,8 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_comment = strdup("New entry");
   if (ae->ae_password == NULL)
     access_entry_class_password_set(ae, "*");
-  if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL) {
-    ai = calloc(1, sizeof(access_ipmask_t));
-    ai->ai_ipv6 = 1;
-    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
-    ai = calloc(1, sizeof(access_ipmask_t));
-    ai->ai_ipv6 = 0;
-    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
-  }
+  if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL)
+    access_set_prefix_default(ae);
 
   access_entry_reindex();
 
@@ -845,18 +869,20 @@ access_entry_class_prefix_get(void *o)
   access_entry_t *ae = (access_entry_t *)o;
   access_ipmask_t *ai;
   size_t pos = 0;
+  uint32_t s_addr;
 
   buf[0] = buf[1] = '\0';
   TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link)   {
     if(sizeof(buf)-pos <= 0)
       break;
 
-    if(ai->ai_ipv6) {
+    if(ai->ai_family == AF_INET6) {
       inet_ntop(AF_INET6, &ai->ai_ip6, addrbuf, sizeof(addrbuf));
-      pos += snprintf(buf+pos, sizeof(buf)-pos, ",%s/%d", addrbuf, ai->ai_prefixlen);
     } else {
-      pos += snprintf(buf+pos, sizeof(buf)-pos, ",%s/%d", inet_ntoa(ai->ai_ip), ai->ai_prefixlen);
+      s_addr = htonl(ai->ai_network);
+      inet_ntop(AF_INET, &s_addr, addrbuf, sizeof(addrbuf));
     }
+    pos += snprintf(buf+pos, sizeof(buf)-pos, ",%s/%d", addrbuf, ai->ai_prefixlen);
   }
   return &ret;
 }
