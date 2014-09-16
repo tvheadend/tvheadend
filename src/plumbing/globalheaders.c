@@ -133,6 +133,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
       ssc->ssc_type == SCT_AAC ||
       ssc->ssc_type == SCT_VORBIS))
     return 0;
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete=1");
   return 1;
 }
 
