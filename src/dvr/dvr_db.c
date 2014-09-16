@@ -37,6 +37,7 @@ int dvr_iov_max;
 
 struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
+static dvr_config_t *dvrdefaultconfig = NULL;
 
 #if ENABLE_DBUS_1
 static gtimer_t dvr_dbus_timer;
@@ -417,7 +418,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   }
 
   de->de_mc = -1;
-  de->de_config = dvr_config_find_by_name_default("");
+  de->de_config = dvr_config_find_by_name_default(NULL);
   if (de->de_config)
     LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
 
@@ -709,7 +710,7 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
   while ((de = LIST_FIRST(&cfg->dvr_entries)) != NULL) {
     LIST_REMOVE(de, de_config_link);
     if (def == NULL && delconf)
-      def = dvr_config_find_by_name_default("");
+      def = dvr_config_find_by_name_default(NULL);
     de->de_config = def;
     if (def)
       LIST_INSERT_HEAD(&def->dvr_entries, de, de_config_link);
@@ -2000,20 +2001,24 @@ dvr_config_find_by_name_default(const char *name)
 {
   dvr_config_t *cfg;
 
-  cfg = dvr_config_find_by_name(name);
+  if (dvrdefaultconfig && (name == NULL || *name == '\0'))
+    return dvrdefaultconfig;
+
+  cfg = name ? dvr_config_find_by_name(name) : NULL;
 
   if (cfg == NULL) {
-    if (name && name[0])
-      tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not found", name);
-    cfg = dvr_config_find_by_name("");
+    if (name && *name)
+      tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not found, using default", name);
+    cfg = dvrdefaultconfig;
   } else if (!cfg->dvr_enabled) {
-    tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not enabled", name);
-    cfg = dvr_config_find_by_name("");
+    tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not enabled, using default", name);
+    cfg = dvrdefaultconfig;
   }
 
   if (cfg == NULL) {
     cfg = dvr_config_create("", NULL, NULL);
     dvr_config_save(cfg);
+    dvrdefaultconfig = cfg;
   }
 
   return cfg;
@@ -2762,7 +2767,7 @@ dvr_config_init(void)
 
   /* Create the default entry */
 
-  cfg = dvr_config_find_by_name_default("");
+  cfg = dvr_config_find_by_name_default(NULL);
   assert(cfg);
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link) {

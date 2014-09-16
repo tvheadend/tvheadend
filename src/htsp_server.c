@@ -914,7 +914,7 @@ htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   struct statvfs diskdata;
-  dvr_config_t *cfg = dvr_config_find_by_name_default("");
+  dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
 
   if(statvfs(cfg->dvr_storage,&diskdata) == -1)
     return htsp_error("Unable to stat path");

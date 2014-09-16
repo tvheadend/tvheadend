@@ -187,7 +187,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
   dte->dte_pri = DVR_PRIO_NORMAL;
   dte->dte_start = -1;
   dte->dte_stop = -1;
-  dte->dte_config = dvr_config_find_by_name_default("");
+  dte->dte_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dte->dte_config->dvr_timerec_entries, dte, dte_config_link);
 
   TAILQ_INSERT_TAIL(&timerec_entries, dte, dte_link);
@@ -638,7 +638,7 @@ timerec_destroy_by_config(dvr_config_t *kcfg, int delconf)
   while((dte = LIST_FIRST(&kcfg->dvr_timerec_entries)) != NULL) {
     LIST_REMOVE(dte, dte_config_link);
     if (cfg == NULL && delconf)
-      cfg = dvr_config_find_by_name_default("");
+      cfg = dvr_config_find_by_name_default(NULL);
     if (cfg)
       LIST_INSERT_HEAD(&cfg->dvr_timerec_entries, dte, dte_config_link);
     dte->dte_config = cfg;

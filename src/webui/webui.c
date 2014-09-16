@@ -403,7 +403,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -460,7 +460,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
@@ -496,7 +496,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
@@ -545,7 +545,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   CHANNEL_FOREACH(ch)
     count++;
@@ -768,7 +768,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  cfg = dvr_config_find_by_name_default("");
+  cfg = dvr_config_find_by_name_default(NULL);
 
   /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
@@ -886,7 +886,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  cfg = dvr_config_find_by_name_default("");
+  cfg = dvr_config_find_by_name_default(NULL);
 
   /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));

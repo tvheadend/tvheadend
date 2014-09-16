@@ -176,7 +176,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_weekdays = 0x7f;
   dae->dae_pri = DVR_PRIO_NORMAL;
   dae->dae_start = -1;
-  dae->dae_config = dvr_config_find_by_name_default("");
+  dae->dae_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
@@ -1072,7 +1072,7 @@ autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
   while((dae = LIST_FIRST(&kcfg->dvr_autorec_entries)) != NULL) {
     LIST_REMOVE(dae, dae_config_link);
     if (cfg == NULL && delconf)
-      cfg = dvr_config_find_by_name_default("");
+      cfg = dvr_config_find_by_name_default(NULL);
     if (cfg)
       LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
     dae->dae_config = cfg;
