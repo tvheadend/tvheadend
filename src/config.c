@@ -975,7 +975,9 @@ dobackup(const char *oldver)
 {
   char outfile[PATH_MAX], cwd[PATH_MAX];
   const char *argv[] = {
-    "/usr/bin/tar", "cjf", outfile, "--exclude", "backup", ".", NULL
+    "/usr/bin/tar", "cjf", outfile,
+    "--exclude", "backup", "--exclude", "epggrab/*.sock",
+    ".", NULL
   };
   const char *root = hts_settings_get_root();
   char errtxt[128];
