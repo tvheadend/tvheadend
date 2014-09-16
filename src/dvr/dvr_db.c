@@ -2004,7 +2004,7 @@ dvr_config_find_by_name_default(const char *name)
   if (dvrdefaultconfig && (name == NULL || *name == '\0'))
     return dvrdefaultconfig;
 
-  cfg = name ? dvr_config_find_by_name(name) : NULL;
+  cfg = dvr_config_find_by_name(name);
 
   if (cfg == NULL) {
     if (name && *name)
