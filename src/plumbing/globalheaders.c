@@ -149,6 +149,7 @@ headers_complete(globalheaders_t *gh, int64_t qd)
     if(!header_complete(ssc, threshold)) {
 
       if(threshold) {
+  tvhlog(LOG_DEBUG, "globalheaders", "disabeling headers_complete: ssc->ssc_type=%d", ssc->ssc_type);
 	ssc->ssc_disabled = 1;
       } else {
 	return 0;
