@@ -1625,6 +1625,8 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
   int subtitle = 0;
   streaming_start_component_t *ssc = NULL;
 
+  tvhlog(LOG_DEBUG, "transcoder", "transcoder_calc_stream_count: ss->ss_num_components=%d", ss->ss_num_components);
+
   for (i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
@@ -1656,6 +1658,9 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 	subtitle = 1;
     }
   }
+
+  tvhlog(LOG_DEBUG, "transcoder", "transcoder_calc_stream_count=%d", (video + audio + subtitle));
+
 
   return (video + audio + subtitle);
 }
