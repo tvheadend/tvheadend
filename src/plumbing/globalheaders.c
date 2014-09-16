@@ -111,20 +111,24 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
   tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_type=%d", ssc->ssc_type);
   tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_frameduration=%d", ssc->ssc_frameduration);
   tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_sri=%d", ssc->ssc_sri);
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_channels=%d", ssc->ssc_channels);
   tvhlog(LOG_DEBUG, "globalheaders", "header_complete: SCT_ISAUDIO(ssc->ssc_type)=%d", SCT_ISAUDIO(ssc->ssc_type));
 
   if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
      ssc->ssc_frameduration == 0)
     return 0;
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: A");
 
   if(SCT_ISVIDEO(ssc->ssc_type)) {
     if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0))
       return 0;
   }
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: B");
 
   if(SCT_ISAUDIO(ssc->ssc_type) &&
      (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
     return 0;
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: C");
   
   if(ssc->ssc_gh == NULL &&
      (ssc->ssc_type == SCT_H264 ||
