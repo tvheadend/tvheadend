@@ -124,17 +124,22 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
       goto fail;
   }
 
-  start = dvr_timerec_timecorrection(dispatch_clock, dte->dte_start, &tm_start);
   stop  = dvr_timerec_timecorrection(dispatch_clock, dte->dte_stop,  &tm_stop);
-
+  if (stop < dispatch_clock - 600) {
+    /* next day */
+    start = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
+                                       dte->dte_start,
+                                       &tm_start);
+    stop  = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
+                                       dte->dte_stop,
+                                       &tm_stop);
+  } else {
+    start = dvr_timerec_timecorrection(dispatch_clock, dte->dte_start, &tm_start);
+  }
   /* day boundary correction */
   if (start > stop)
     stop += 24 * 60 * 60;
   assert(start < stop);
-
-  /* if it's really in past, don't queue */
-  if (stop < dispatch_clock - 3600)
-    goto fail;
 
   /* purge the old entry */
   de = dte->dte_spawn;
@@ -558,8 +563,6 @@ static void
 dvr_timerec_timer_cb(void *aux)
 {
   dvr_timerec_entry_t *dte;
-  time_t next;
-  struct tm tm;
 
   tvhtrace("dvr", "timerec update");
 
@@ -568,10 +571,7 @@ dvr_timerec_timer_cb(void *aux)
     dvr_timerec_check(dte);
 
   /* load the timer */
-  next = dispatch_clock + 60 * 60 * 24;     /* next day */
-  next = dvr_timerec_timecorrection(next, 0 /* midnight */, &tm);
-  tvhtrace("dvr", "next timerec check scheduled in %li seconds", (long)(next - dispatch_clock));
-  gtimer_arm(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, next);
+  gtimer_arm(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, 3550);
 }
 
 void
