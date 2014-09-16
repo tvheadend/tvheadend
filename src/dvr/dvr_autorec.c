@@ -103,7 +103,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   // Note: ignore channel test if we allow quality unlocking 
-  cfg = dvr_config_find_by_name_default(dae->dae_config_name);
+  if ((cfg = dae->dae_config) == NULL)
+    return 0;
   if (cfg->dvr_sl_quality_lock)
     if(dae->dae_channel != NULL &&
        dae->dae_channel != e->channel)
@@ -175,6 +176,8 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_weekdays = 0x7f;
   dae->dae_pri = DVR_PRIO_NORMAL;
   dae->dae_start = -1;
+  dae->dae_config = dvr_config_find_by_name_default("");
+  LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
 
@@ -280,8 +283,10 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
   idnode_unlink(&dae->dae_id);
 
+  if(dae->dae_config)
+    LIST_REMOVE(dae, dae_config_link);
+
   free(dae->dae_name);
-  free(dae->dae_config_name);
   free(dae->dae_creator);
   free(dae->dae_comment);
 
@@ -525,15 +530,30 @@ dvr_autorec_entry_class_config_name_set(void *o, const void *v)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
   if (cfg == NULL) cfg = v ? dvr_config_find_by_name_default(v): NULL;
-  if (cfg == NULL && dae->dae_config_name) {
-    free(dae->dae_config_name);
+  if (cfg == NULL && dae->dae_config) {
+    dae->dae_config = NULL;
+    LIST_REMOVE(dae, dae_config_link);
     return 1;
-  } else if (strcmp(dae->dae_config_name ?: "", cfg ? cfg->dvr_config_name : "")) {
-    free(dae->dae_config_name);
-    dae->dae_config_name = strdup(cfg->dvr_config_name);
+  } else if (cfg != dae->dae_config) {
+    if (dae->dae_config)
+      LIST_REMOVE(dae, dae_config_link);
+    LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
+    dae->dae_config = cfg;
     return 1;
   }
   return 0;
+}
+
+static const void *
+dvr_autorec_entry_class_config_name_get(void *o)
+{
+  static const char *ret;
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_config)
+    ret = idnode_uuid_as_str(&dae->dae_config->dvr_id);
+  else
+    ret = "";
+  return &ret;
 }
 
 static int
@@ -856,8 +876,8 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "config_name",
       .name     = "DVR Configuration",
       .set      = dvr_autorec_entry_class_config_name_set,
+      .get      = dvr_autorec_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,
-      .off      = offsetof(dvr_autorec_entry_t, dae_config_name),
     },
     {
       .type     = PT_STR,
@@ -1038,4 +1058,25 @@ autorec_destroy_by_id(const char *id, int delconf)
 
   if (dae)
     autorec_entry_destroy(dae, delconf);
+}
+
+/**
+ *
+ */
+void
+autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
+{
+  dvr_autorec_entry_t *dae;
+  dvr_config_t *cfg = NULL;
+
+  while((dae = LIST_FIRST(&kcfg->dvr_autorec_entries)) != NULL) {
+    LIST_REMOVE(dae, dae_config_link);
+    if (cfg == NULL && delconf)
+      cfg = dvr_config_find_by_name_default("");
+    if (cfg)
+      LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
+    dae->dae_config = cfg;
+    if (delconf)
+      dvr_autorec_save(dae);
+  }
 }

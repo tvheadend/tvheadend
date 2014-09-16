@@ -153,7 +153,8 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   snprintf(buf, sizeof(buf), "Time recording%s%s",
            dte->dte_creator ? " by: " : "",
            dte->dte_creator ?: "");
-  de = dvr_entry_create_(dte->dte_config_name, NULL, dte->dte_channel,
+  de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
+                         NULL, dte->dte_channel,
                          start, stop, 0, 0, title,
                          NULL, NULL, NULL, buf,
                          NULL, dte, dte->dte_pri, dte->dte_retention);
@@ -186,6 +187,8 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
   dte->dte_pri = DVR_PRIO_NORMAL;
   dte->dte_start = -1;
   dte->dte_stop = -1;
+  dte->dte_config = dvr_config_find_by_name_default("");
+  LIST_INSERT_HEAD(&dte->dte_config->dvr_timerec_entries, dte, dte_config_link);
 
   TAILQ_INSERT_TAIL(&timerec_entries, dte, dte_link);
 
@@ -208,8 +211,10 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
   TAILQ_REMOVE(&timerec_entries, dte, dte_link);
   idnode_unlink(&dte->dte_id);
 
+  if(dte->dte_config != NULL)
+    LIST_REMOVE(dte, dte_config_link);
+
   free(dte->dte_name);
-  free(dte->dte_config_name);
   free(dte->dte_creator);
   free(dte->dte_comment);
 
@@ -374,15 +379,30 @@ dvr_timerec_entry_class_config_name_set(void *o, const void *v)
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
   if (cfg == NULL) cfg = v ? dvr_config_find_by_name_default(v): NULL;
-  if (cfg == NULL && dte->dte_config_name) {
-    free(dte->dte_config_name);
+  if (cfg == NULL && dte->dte_config) {
+    dte->dte_config = NULL;
+    LIST_REMOVE(dte, dte_config_link);
     return 1;
-  } else if (strcmp(dte->dte_config_name ?: "", cfg ? cfg->dvr_config_name : "")) {
-    free(dte->dte_config_name);
-    dte->dte_config_name = strdup(cfg->dvr_config_name);
+  } else if (cfg != dte->dte_config) {
+    if (dte->dte_config)
+      LIST_REMOVE(dte, dte_config_link);
+    LIST_INSERT_HEAD(&cfg->dvr_timerec_entries, dte, dte_config_link);
+    dte->dte_config = cfg;
     return 1;
   }
   return 0;
+}
+
+static const void *
+dvr_timerec_entry_class_config_name_get(void *o)
+{
+  static const char *buf;
+  dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
+  if (dte->dte_config)
+    buf = idnode_uuid_as_str(&dte->dte_config->dvr_id);
+  else
+    buf = "";
+  return &buf;
 }
 
 static int
@@ -506,8 +526,8 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "config_name",
       .name     = "DVR Configuration",
       .set      = dvr_timerec_entry_class_config_name_set,
+      .get      = dvr_timerec_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,
-      .off      = offsetof(dvr_timerec_entry_t, dte_config_name),
     },
     {
       .type     = PT_STR,
@@ -593,7 +613,7 @@ timerec_destroy_by_channel(channel_t *ch, int delconf)
     timerec_entry_destroy(dte, delconf);
 }
 
-/*
+/**
  *
  */
 void
@@ -604,4 +624,25 @@ timerec_destroy_by_id(const char *id, int delconf)
 
   if (dte)
     timerec_entry_destroy(dte, delconf);
+}
+
+/**
+ *
+ */
+void
+timerec_destroy_by_config(dvr_config_t *kcfg, int delconf)
+{
+  dvr_timerec_entry_t *dte;
+  dvr_config_t *cfg = NULL;
+
+  while((dte = LIST_FIRST(&kcfg->dvr_timerec_entries)) != NULL) {
+    LIST_REMOVE(dte, dte_config_link);
+    if (cfg == NULL && delconf)
+      cfg = dvr_config_find_by_name_default("");
+    if (cfg)
+      LIST_INSERT_HEAD(&cfg->dvr_timerec_entries, dte, dte_config_link);
+    dte->dte_config = cfg;
+    if (delconf)
+      dvr_timerec_save(dte);
+  }
 }

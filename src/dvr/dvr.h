@@ -73,6 +73,8 @@ typedef struct dvr_config {
   int dvr_dup_detect_episode;
 
   struct dvr_entry_list dvr_entries;
+  struct dvr_autorec_entry_list dvr_autorec_entries;
+  struct dvr_timerec_entry_list dvr_timerec_entries;
 
   struct access_entry_list dvr_accesses;
 
@@ -235,7 +237,8 @@ typedef struct dvr_autorec_entry {
   TAILQ_ENTRY(dvr_autorec_entry) dae_link;
 
   char *dae_name;
-  char *dae_config_name;
+  dvr_config_t *dae_config;
+  LIST_ENTRY(dvr_autorec_entry) dae_config_link;
 
   int dae_enabled;
   char *dae_creator;
@@ -286,7 +289,8 @@ typedef struct dvr_timerec_entry {
   TAILQ_ENTRY(dvr_timerec_entry) dte_link;
 
   char *dte_name;
-  char *dte_config_name;
+  dvr_config_t *dte_config;
+  LIST_ENTRY(dvr_timerec_entry) dte_config_link;
 
   int dte_enabled;
   char *dte_creator;
@@ -514,6 +518,8 @@ void dvr_autorec_check_brand(epg_brand_t *b);
 void dvr_autorec_check_season(epg_season_t *s);
 void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
+void autorec_destroy_by_config(dvr_config_t *cfg, int delconf);
+
 void autorec_destroy_by_channel(channel_t *ch, int delconf);
 
 void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
@@ -541,6 +547,8 @@ dvr_timerec_find_by_uuid(const char *uuid)
 void dvr_timerec_save(dvr_timerec_entry_t *dae);
 
 void dvr_timerec_check(dvr_timerec_entry_t *dae);
+
+void timerec_destroy_by_config(dvr_config_t *cfg, int delconf);
 
 void timerec_destroy_by_channel(channel_t *ch, int delconf);
 

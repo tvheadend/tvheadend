@@ -623,7 +623,9 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
   } else {
     snprintf(buf, sizeof(buf), "Auto recording");
   }
-  dvr_entry_create_by_event(dae->dae_config_name, e, dae->dae_start_extra, dae->dae_stop_extra, buf, dae, dae->dae_pri, dae->dae_retention);
+  dvr_entry_create_by_event(idnode_uuid_as_str(&dae->dae_config->dvr_id), e,
+                            dae->dae_start_extra, dae->dae_stop_extra,
+                            buf, dae, dae->dae_pri, dae->dae_retention);
 }
 
 /**
@@ -2037,6 +2039,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   cfg = calloc(1, sizeof(dvr_config_t));
   LIST_INIT(&cfg->dvr_entries);
+  LIST_INIT(&cfg->dvr_autorec_entries);
+  LIST_INIT(&cfg->dvr_timerec_entries);
   LIST_INIT(&cfg->dvr_accesses);
 
   if (idnode_insert(&cfg->dvr_id, uuid, &dvr_config_class, 0)) {
@@ -2105,6 +2109,8 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 
   dvr_entry_destroy_by_config(cfg, delconf);
   access_destroy_by_dvr_config(cfg, delconf);
+  autorec_destroy_by_config(cfg, delconf);
+  timerec_destroy_by_config(cfg, delconf);
 
   free(cfg->dvr_charset_id);
   free(cfg->dvr_charset);
