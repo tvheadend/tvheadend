@@ -402,8 +402,8 @@ tvheadend.timerec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/timerec',
-        titleS: 'DVR TimeRec Entry',
-        titleP: 'DVR TimeRec Entries',
+        titleS: 'Time Schedule',
+        titleP: 'Time Schedules',
         iconCls: 'clock',
         tabIndex: index,
         columns: {
