@@ -417,6 +417,10 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   }
 
   de->de_mc = -1;
+  de->de_config = dvr_config_find_by_name_default("");
+  if (de->de_config)
+    LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
+
   idnode_load(&de->de_id, conf);
 
   /* special case, becaous PO_NOSAVE, load ignores it */
@@ -704,7 +708,7 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
 
   while ((de = LIST_FIRST(&cfg->dvr_entries)) != NULL) {
     LIST_REMOVE(de, de_config_link);
-    if (!def)
+    if (def == NULL && delconf)
       def = dvr_config_find_by_name_default("");
     de->de_config = def;
     if (def)
@@ -1249,11 +1253,6 @@ dvr_entry_class_channel_set(void *o, const void *v)
   if (!dvr_entry_is_editable(de))
     return 0;
   ch = v ? channel_find_by_uuid(v) : NULL;
-  if (!de->de_config) {
-    de->de_config = dvr_config_find_by_name_default("");
-    if (de->de_config)
-      LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
-  }
   if (ch == NULL) {
     if (de->de_channel) {
       LIST_REMOVE(de, de_channel_link);
@@ -1293,11 +1292,6 @@ dvr_entry_class_channel_name_set(void *o, const void *v)
   channel_t   *ch;
   if (!dvr_entry_is_editable(de))
     return 0;
-  if (!de->de_config) {
-    de->de_config = dvr_config_find_by_name_default("");
-    if (de->de_config)
-      LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
-  }
   if (!strcmp(de->de_channel_name ?: "", v ?: ""))
     return 0;
   ch = v ? channel_find_by_name(v) : NULL;
