@@ -43,6 +43,7 @@ static dvr_config_t *dvrdefaultconfig = NULL;
 static gtimer_t dvr_dbus_timer;
 #endif
 
+static void dvr_config_destroy(dvr_config_t *cfg, int delconf);
 static void dvr_entry_destroy(dvr_entry_t *de, int delconf);
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
@@ -2009,10 +2010,10 @@ dvr_config_find_by_name_default(const char *name)
   if (cfg == NULL) {
     if (name && *name)
       tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not found, using default", name);
-    cfg = dvrdefaultconfig;
+    cfg = dvr_config_find_by_name_default(NULL);
   } else if (!cfg->dvr_enabled) {
     tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not enabled, using default", name);
-    cfg = dvrdefaultconfig;
+    cfg = dvr_config_find_by_name_default(NULL);
   }
 
   if (cfg == NULL) {
@@ -2052,6 +2053,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_enabled = 1;
   if (name)
     cfg->dvr_config_name = strdup(name);
+  else
+    cfg->dvr_config_name = strdup("");
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_tag_files = 1;
@@ -2080,14 +2083,23 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     idnode_load(&cfg->dvr_id, conf);
-    if (dvr_config_is_default(cfg))
-      cfg->dvr_enabled = 1;
     cfg->dvr_valid = 1;
   }
-  
-  tvhlog(LOG_INFO, "dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
 
-  LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
+  tvhinfo("dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
+
+  if (dvr_config_is_default(cfg) && dvr_config_find_by_name(NULL)) {
+    tvherror("dvr", "Unable to create second default config, removing");
+    LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
+    dvr_config_destroy(cfg, 0);
+    cfg = NULL;
+  }
+
+  if (cfg) {
+    LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
+    if (conf && dvr_config_is_default(cfg))
+      cfg->dvr_enabled = 1;
+  }
 
   return cfg;
 }
@@ -2099,8 +2111,7 @@ static void
 dvr_config_destroy(dvr_config_t *cfg, int delconf)
 {
   if (delconf) {
-    tvhlog(LOG_INFO, "dvr", "Deleting configuration '%s'", 
-           cfg->dvr_config_name);
+    tvhinfo("dvr", "Deleting configuration '%s'", cfg->dvr_config_name);
     hts_settings_remove("dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id));
   }
   LIST_REMOVE(cfg, config_link);
@@ -2126,14 +2137,11 @@ dvr_config_delete(const char *name)
 {
   dvr_config_t *cfg;
 
-  if (name == NULL || strlen(name) == 0) {
-    tvhlog(LOG_WARNING,"dvr","Attempt to delete default config ignored");
-    return;
-  }
-
   cfg = dvr_config_find_by_name(name);
-  if (cfg != NULL)
+  if (!dvr_config_is_default(cfg))
     dvr_config_destroy(cfg, 1);
+  else
+    tvhwarn("dvr", "Attempt to delete default config ignored");
 }
 
 /*
@@ -2194,8 +2202,6 @@ dvr_config_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
     return -1;
   }
 fine:
-  if (strcmp(cfg->dvr_config_name ?: "", a->aa_username ?: ""))
-    return -1;
   return 0;
 }
 
@@ -2227,7 +2233,7 @@ dvr_config_class_name_set(void *o, const void *v)
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
     return 0;
-  if (strcmp(cfg->dvr_config_name ?: "", v ?: "")) {
+  if (strcmp(cfg->dvr_config_name, v ?: "")) {
     if (dvr_config_is_valid(cfg) && (v == NULL || *(char *)v == '\0'))
       return 0;
     free(cfg->dvr_config_name);
@@ -2241,7 +2247,7 @@ static const char *
 dvr_config_class_get_title (idnode_t *self)
 {
   dvr_config_t *cfg = (dvr_config_t *)self;
-  if (cfg->dvr_config_name && cfg->dvr_config_name[0] != '\0')
+  if (!dvr_config_is_default(cfg))
     return cfg->dvr_config_name;
   return "(Default Profile)";
 }
