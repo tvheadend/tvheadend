@@ -182,9 +182,22 @@ page_logout(http_connection_t *hc, const char *remain, void *opaque)
   if (hc->hc_access == NULL ||
       hc->hc_access->aa_username == NULL ||
       hc->hc_access->aa_username == '\0') {
+redirect:
     http_redirect(hc, "/", &hc->hc_req_args);
     return 0;
   } else {
+    const char *s = http_arg_get(&hc->hc_args, "Cookie");
+    if (s) {
+      while (*s && *s != ';')
+        s++;
+      if (*s) s++;
+      while (*s && *s <= ' ') s++;
+      if (!strncmp(s, "logout=1", 8)) {
+        hc->hc_logout_cookie = 2;
+        goto redirect;
+      }
+      hc->hc_logout_cookie = 1;
+    }
     return HTTP_STATUS_UNAUTHORIZED;
   }
 }

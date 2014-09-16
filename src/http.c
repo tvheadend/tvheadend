@@ -252,6 +252,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if(rc == HTTP_STATUS_UNAUTHORIZED)
     htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+  if (hc->hc_logout_cookie == 1) {
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
+  } else if (hc->hc_logout_cookie == 2) {
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+  }
 
   htsbuf_qprintf(&hdrs, "Connection: %s\r\n", 
 	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
@@ -917,6 +922,8 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 
     free(hc->hc_password);
     hc->hc_password = NULL;
+
+    hc->hc_logout_cookie = 0;
 
   } while(hc->hc_keep_alive && http_server);
 
