@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <regex.h>
+#include <ctype.h>
 #include "tvheadend.h"
 #include "channels.h"
 #include "huffman.h"
@@ -349,6 +350,12 @@ opentv_parse_event_section
     if ((ee = epg_broadcast_get_episode(ebc, 1, &save))) {
       tvhdebug("opentv", "  find episode %p", ee);
       if (ev.title) {
+        int size;
+
+        size = strlen(ev.title);
+        while (size > 0 && isspace(ev.title[size - 1]))
+          ev.title[--size] = '\0';
+
         tvhdebug("opentv", "    title %s", ev.title);
         save |= epg_episode_set_title(ee, ev.title, lang, src);
       }
@@ -389,6 +396,8 @@ opentv_parse_event_section
         for (i = 0; i < ARRAY_SIZE(_opentv_subtitle_patterns); i++) {
           if (!regexec(_opentv_subtitle_pregs+i, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
             size = MIN(match[1].rm_eo - match[1].rm_so, sizeof(buf) - 1);
+            while (size > 0 && isspace(ev.summary[match[1].rm_so + size - 1]))
+              size--;
             memcpy(buf, ev.summary + match[1].rm_so, size);
             buf[size] = '\0';
             tvhdebug("opentv", "  extract from summary subtitle %s", buf);
