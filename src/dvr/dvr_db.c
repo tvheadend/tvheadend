@@ -112,7 +112,7 @@ dvr_entry_get_mc( dvr_entry_t *de )
 int
 dvr_entry_get_retention( dvr_entry_t *de )
 {
-  if (de->de_retention >= 0)
+  if (de->de_retention > 0)
     return de->de_retention;
   return de->de_config->dvr_retention_days;
 }
