@@ -248,6 +248,7 @@ access_verify(const char *username, const char *password,
 {
   uint32_t bits = 0;
   access_entry_t *ae;
+  int match = 0;
 
   if (access_noacl)
     return 0;
@@ -271,6 +272,8 @@ access_verify(const char *username, const char *password,
       if(strcmp(ae->ae_username, username) ||
 	 strcmp(ae->ae_password, password))
 	continue; /* username/password mismatch */
+
+      match = 1;
     }
 
     if(!netmask_verify(ae, src))
@@ -278,6 +281,13 @@ access_verify(const char *username, const char *password,
 
     bits |= ae->ae_rights;
   }
+
+  /* Username was not matched - no access */
+  if (!match) {
+    if (username && *username != '\0')
+      bits = 0;
+  }
+
   return (mask & bits) == mask ? 0 : -1;
 }
 
@@ -362,8 +372,18 @@ access_get(const char *username, const char *password, struct sockaddr *src)
     if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
-    a->aa_match = 1;
+    if(ae->ae_username[0] != '*')
+      a->aa_match = 1;
+
     access_update(a, ae);
+  }
+
+  /* Username was not matched - no access */
+  if (!a->aa_match) {
+    free(a->aa_username);
+    a->aa_username = NULL;
+    if (username && *username != '\0')
+      a->aa_rights = 0;
   }
 
   return a;
@@ -418,10 +438,17 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
       if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
         continue;
+
+      a->aa_match = 1;
     }
 
-    a->aa_match = 1;
     access_update(a, ae);
+  }
+
+  /* Username was not matched - no access */
+  if (!a->aa_match) {
+    if (username && *username != '\0')
+      a->aa_rights = 0;
   }
 
   return a;
