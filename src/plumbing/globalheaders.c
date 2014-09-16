@@ -92,6 +92,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   case SCT_H264:
   case SCT_MPEG2VIDEO:
   case SCT_VORBIS:
+    tvhlog(LOG_DEBUG, "globalheaders", "apply_header: pkt->pkt_header%s", pkt->pkt_header ? "!=NULL" : "==NULL");
 
     if(pkt->pkt_header != NULL) {
       ssc->ssc_gh = pkt->pkt_header;
