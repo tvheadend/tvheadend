@@ -491,6 +491,23 @@ access_get_by_addr(struct sockaddr *src)
  *
  */
 static void
+access_set_prefix_default(access_entry_t *ae)
+{
+  access_ipmask_t *ai;
+
+  ai = calloc(1, sizeof(access_ipmask_t));
+  ai->ai_ipv6 = 1;
+  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+
+  ai = calloc(1, sizeof(access_ipmask_t));
+  ai->ai_ipv6 = 0;
+  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+}
+
+/**
+ *
+ */
+static void
 access_set_prefix(access_entry_t *ae, const char *prefix)
 {
   char buf[100];
@@ -578,6 +595,9 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
 
     tok = strtok_r(NULL, ",;| ", &saveptr);
   }
+
+  if (!TAILQ_FIRST(&ae->ae_ipmasks))
+    access_set_prefix_default(ae);
 }
 
 /**
@@ -1073,7 +1093,6 @@ access_init(int createdefault, int noacl)
   htsmsg_t *c, *m;
   htsmsg_field_t *f;
   access_entry_t *ae;
-  access_ipmask_t *ai;
   const char *s;
 
   static struct {
@@ -1118,13 +1137,7 @@ access_init(int createdefault, int noacl)
 
     TAILQ_INIT(&ae->ae_ipmasks);
 
-    ai = calloc(1, sizeof(access_ipmask_t));
-    ai->ai_ipv6 = 1;
-    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
-
-    ai = calloc(1, sizeof(access_ipmask_t));
-    ai->ai_ipv6 = 0;
-    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+    access_set_prefix_default(ae);
 
     access_entry_save(ae);
 
