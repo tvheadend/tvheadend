@@ -108,6 +108,11 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_type=%d", ssc->ssc_type);
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_frameduration=%d", ssc->ssc_frameduration);
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_sri=%d", ssc->ssc_sri);
+  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: SCT_ISAUDIO(ssc->ssc_type)=%d", SCT_ISAUDIO(ssc->ssc_type));
+
   if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
      ssc->ssc_frameduration == 0)
     return 0;
