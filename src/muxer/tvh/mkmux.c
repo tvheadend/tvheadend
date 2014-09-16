@@ -246,6 +246,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 
     mkm->tracks[i].disabled = ssc->ssc_disabled;
 
+  tvhlog(LOG_DEBUG, "mkmux1", "mk_build_tracks: ssc->ssc_type=%d", ssc->ssc_type);
     if(ssc->ssc_disabled)
       continue;
 
@@ -258,7 +259,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
 
-  tvhlog(LOG_DEBUG, "mkmux", "mk_build_tracks: ssc->ssc_type=%d", ssc->ssc_type);
+  tvhlog(LOG_DEBUG, "mkmux2", "mk_build_tracks: ssc->ssc_type=%d", ssc->ssc_type);
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
