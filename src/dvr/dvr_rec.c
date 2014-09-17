@@ -104,11 +104,11 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 {
   assert(de->de_s != NULL);
 
-  subscription_unsubscribe(de->de_s);
-
   streaming_target_deliver(&de->de_sq.sq_st, streaming_msg_create(SMT_EXIT));
   
   pthread_join(de->de_thread, NULL);
+
+  subscription_unsubscribe(de->de_s);
   de->de_s = NULL;
 
   if(de->de_tsfix)
