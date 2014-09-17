@@ -986,12 +986,12 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
       uint32_t *mpeg2_header = (uint32_t *)out;
       tvhlog(LOG_DEBUG,"michel", "mpeg2_header=%x",*mpeg2_header);
-      if (*mpeg2_header == 0x000001b3) {
-      //n->pkt_header = pktbuf_alloc(out, length);
+      if (*mpeg2_header == 0xb3010000) {
+        //n->pkt_header = pktbuf_alloc(out, length);
         FILE *fp;
         fp=fopen("/mnt/sdb1/tvheadend/test.mpeg2", "a+");
-        //fwrite((void *)out, length, 1, fp);
-        fwrite((void *)mpeg2_header, 1, sizeof(uint32_t), fp);
+        fwrite((void *)out, length, 1, fp);
+        //fwrite((void *)mpeg2_header, 1, sizeof(uint32_t), fp);
         fclose(fp);
       }
     }
