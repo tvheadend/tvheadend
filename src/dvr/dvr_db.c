@@ -1024,34 +1024,6 @@ dvr_entry_find_by_episode(epg_broadcast_t *e)
 }
 
 /**
- *
- */
-dvr_entry_t *
-dvr_entry_cancel(dvr_entry_t *de)
-{
-  switch(de->de_sched_state) {
-  case DVR_SCHEDULED:
-    dvr_entry_destroy(de, 1);
-    return NULL;
-
-  case DVR_RECORDING:
-    de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
-    return de;
-
-  case DVR_COMPLETED:
-  case DVR_MISSED_TIME:
-  case DVR_NOSTATE:
-    dvr_entry_destroy(de, 1);
-    return NULL;
-
-  default:
-    abort();
-  }
-}
-
-
-/**
  * Unconditionally remove an entry
  */
 static void
@@ -2105,6 +2077,33 @@ dvr_entry_delete(dvr_entry_t *de)
 
   }
   dvr_entry_destroy(de, 1);
+}
+
+/**
+ *
+ */
+dvr_entry_t *
+dvr_entry_cancel(dvr_entry_t *de)
+{
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
+    dvr_entry_destroy(de, 1);
+    return NULL;
+
+  case DVR_RECORDING:
+    de->de_dont_reschedule = 1;
+    dvr_stop_recording(de, SM_CODE_ABORTED, 1);
+    return de;
+
+  case DVR_COMPLETED:
+  case DVR_MISSED_TIME:
+  case DVR_NOSTATE:
+    dvr_entry_destroy(de, 1);
+    return NULL;
+
+  default:
+    abort();
+  }
 }
 
 /**
