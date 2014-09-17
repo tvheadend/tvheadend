@@ -388,6 +388,7 @@ struct mpegts_mux
   TAILQ_HEAD(, descrambler_table) mm_descrambler_tables;
   TAILQ_HEAD(, descrambler_emm) mm_descrambler_emms;
   pthread_mutex_t             mm_descrambler_lock;
+  int                         mm_descrambler_flush;
 
   /*
    * Functions

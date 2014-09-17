@@ -134,6 +134,7 @@ descrambler_service_start ( service_t *t )
     dr->dr_key_index = 0xff;
     dr->dr_last_descramble = dispatch_clock;
   }
+  ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
 }
 
 void
@@ -507,6 +508,8 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
 
   if (mux == NULL)
     return 0;
+  if (mux->mm_descrambler_flush)
+    return 0;
   flags  = pid >> 16;
   pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
@@ -605,6 +608,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   cwc_caid_update(mux, 0, 0, -1);
 #endif
   pthread_mutex_lock(&mux->mm_descrambler_lock);
+  mux->mm_descrambler_flush = 1;
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
@@ -703,8 +707,11 @@ descrambler_open_emm( mpegts_mux_t *mux, void *opaque, int caid,
   if (mux == NULL)
     return 0;
   pthread_mutex_lock(&mux->mm_descrambler_lock);
+  if (mux->mm_descrambler_flush)
+    goto unlock;
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link) {
     if (emm->caid == caid && emm->opaque == opaque) {
+unlock:
       pthread_mutex_unlock(&mux->mm_descrambler_lock);
       return 0;
     }
