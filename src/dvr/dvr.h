@@ -330,8 +330,6 @@ extern const idclass_t dvr_timerec_entry_class;
  * Prototypes
  */
 
-void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
-
 static inline int dvr_config_is_valid(dvr_config_t *cfg)
   { return cfg->dvr_valid; }
 
@@ -351,6 +349,12 @@ void dvr_config_delete(const char *name);
 
 void dvr_config_save(dvr_config_t *cfg);
 
+/*
+ *
+ */
+
+void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
+
 static inline int dvr_entry_is_editable(dvr_entry_t *de)
   { return de->de_sched_state == DVR_SCHEDULED; }
 
@@ -369,7 +373,13 @@ int dvr_entry_get_extra_time_post( dvr_entry_t *de );
 
 int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 
+void dvr_entry_init(void);
+
+void dvr_entry_done(void);
+
 void dvr_entry_save(dvr_entry_t *de);
+
+void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 
 const char *dvr_entry_status(dvr_entry_t *de);
 
@@ -407,11 +417,6 @@ dvr_entry_update( dvr_entry_t *de,
                   time_t de_start_extra, time_t de_stop_extra,
                   dvr_prio_t pri, int retention );
 
-void dvr_init(void);
-void dvr_config_init(void);
-
-void dvr_done(void);
-
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
@@ -443,6 +448,7 @@ void dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de);
 
+htsmsg_t *dvr_entry_class_mc_list (void *o);
 htsmsg_t *dvr_entry_class_pri_list(void *o);
 htsmsg_t *dvr_entry_class_config_name_list(void *o);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
@@ -595,5 +601,15 @@ typedef TAILQ_HEAD(,dvr_cutpoint) dvr_cutpoint_list_t;
 
 dvr_cutpoint_list_t *dvr_get_cutpoint_list (dvr_entry_t *de);
 void dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list);
+
+/**
+ *
+ */
+
+void dvr_init(void);
+void dvr_config_init(void);
+
+void dvr_done(void);
+
 
 #endif /* DVR_H  */
