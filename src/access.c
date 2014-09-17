@@ -588,7 +588,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
         if (prefixlen < 0 || prefixlen > 128)
           goto fnext;
       } else {
-        prefixlen = !access_addr4_empty(buf) ? 128 : 0;
+        prefixlen = !access_addr6_empty(buf) ? 128 : 0;
       }
 
       ai->ai_prefixlen = prefixlen;
@@ -603,7 +603,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
         if (prefixlen < 0 || prefixlen > 32)
           goto fnext;
       } else {
-        prefixlen = !access_addr6_empty(buf) ? 32 : 0;
+        prefixlen = !access_addr4_empty(buf) ? 32 : 0;
       }
 
       s_addr = inet_addr(buf);
