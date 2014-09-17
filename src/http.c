@@ -252,6 +252,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if(rc == HTTP_STATUS_UNAUTHORIZED)
     htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+  if (hc->hc_logout_cookie == 1) {
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
+  } else if (hc->hc_logout_cookie == 2) {
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+  }
 
   htsbuf_qprintf(&hdrs, "Connection: %s\r\n", 
 	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
@@ -324,9 +329,13 @@ http_error(http_connection_t *hc, int error)
 		 "<HTML><HEAD>\r\n"
 		 "<TITLE>%d %s</TITLE>\r\n"
 		 "</HEAD><BODY>\r\n"
-		 "<H1>%d %s</H1>\r\n"
-		 "</BODY></HTML>\r\n",
-		 error, errtxt,  error, errtxt);
+		 "<H1>%d %s</H1>\r\n",
+		 error, errtxt, error, errtxt);
+
+  if (error == HTTP_STATUS_UNAUTHORIZED)
+    htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"/\">Default Login</A></P>");
+
+  htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
 
   http_send_reply(hc, error, "text/html", NULL, NULL, 0);
 }
@@ -913,6 +922,8 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 
     free(hc->hc_password);
     hc->hc_password = NULL;
+
+    hc->hc_logout_cookie = 0;
 
   } while(hc->hc_keep_alive && http_server);
 

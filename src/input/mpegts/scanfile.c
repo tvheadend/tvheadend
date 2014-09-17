@@ -332,13 +332,222 @@ scanfile_load_one ( scanfile_network_t *net, const char *line )
 }
 
 /*
+ * Process mux dvbv5 entry
+ */
+static char *
+str_trim(char *s)
+{
+  char *t;
+  while (*s && *s <= ' ')
+    s++;
+  if (*s) {
+    t = s + strlen(s);
+    while (t != s && *(t - 1) <= ' ')
+      t--;
+    *t = '\0';
+  }
+  for (t = s; *t; t++)
+    *t = toupper(*t);
+  return s;
+}
+
+#define mux_fail0(r, text) do { \
+  tvhtrace("scanfile", text); \
+  ((r) = -1); \
+} while (0)
+#define mux_fail(r, text, val) do { \
+  tvhtrace("scanfile", text, val); \
+  ((r) = -1); \
+} while (0)
+#define mux_ok(r)   ((r) = ((r) > 0) ? 0 : (r))
+
+static int
+scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
+{
+  int res = 1, r = 1;
+  char buf[256];
+  char *s, *t;
+  const char *x;
+  dvb_mux_conf_t *mux;
+  htsmsg_t *l;
+
+  /* validity check for [text] */
+  s = str_trim(line);
+  if (s == '\0' || s[strlen(s) - 1] != ']')
+    return 1;
+
+  l = htsmsg_create_map();
+
+  /* Process file */
+  while (!fb_eof(fp)) {
+    /* Get line */
+    buf[sizeof(buf)-1] = '\0';
+    if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
+    s = str_trim(buf);
+    if (*s == '#' || *s == '\0')
+      continue;
+    if (*s == '[') {
+      res = 0;
+      break;
+    }
+    if ((t = strchr(s, '=')) == NULL)
+      continue;
+    *t = '\0';
+    s = str_trim(s);
+    t = str_trim(t + 1);
+
+    htsmsg_add_str(l, s, t);
+  }
+
+  mux = calloc(1, sizeof(dvb_mux_conf_t));
+
+  x = htsmsg_get_str(l, "DELIVERY_SYSTEM");
+
+  if ((mux->dmc_fe_delsys = dvb_str2delsys(x)) == -1) {
+    if (!strcmp(s, "DVBC"))
+      mux->dmc_fe_delsys = DVB_SYS_DVBC_ANNEX_A;
+  }
+  if ((int)mux->dmc_fe_delsys < 0)
+    mux_fail(r, "wrong system '%s'", x);
+
+  if (mux->dmc_fe_delsys == DVB_SYS_DVBT ||
+      mux->dmc_fe_delsys == DVB_SYS_DVBT2) {
+
+    mux->dmc_fe_type = DVB_TYPE_T;
+    mux->u.dmc_fe_ofdm.bandwidth = DVB_BANDWIDTH_AUTO;
+    mux->u.dmc_fe_ofdm.code_rate_HP = DVB_FEC_AUTO;
+    mux->u.dmc_fe_ofdm.code_rate_LP = DVB_FEC_NONE;
+    mux->dmc_fe_modulation = DVB_MOD_QAM_64;
+    mux->u.dmc_fe_ofdm.transmission_mode = DVB_TRANSMISSION_MODE_8K;
+    mux->u.dmc_fe_ofdm.hierarchy_information = DVB_HIERARCHY_NONE;
+    mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
+
+    if ((x = htsmsg_get_str(l, "BANDWIDTH_HZ")))
+      if ((mux->u.dmc_fe_ofdm.bandwidth = dvb_str2bw(x)) == -1)
+        mux_fail(r, "wrong bandwidth '%s'", x);
+    if ((x = htsmsg_get_str(l, "CODE_RATE_HP")))
+      if ((mux->u.dmc_fe_ofdm.code_rate_HP = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong code rate HP '%s'", x);
+    if ((x = htsmsg_get_str(l, "CODE_RATE_LP")))
+      if ((mux->u.dmc_fe_ofdm.code_rate_LP = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong code rate LP '%s'", x);
+    if ((x = htsmsg_get_str(l, "MODULATION")))
+      if ((mux->dmc_fe_modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "TRANSMISSION_MODE")))
+      if ((mux->u.dmc_fe_ofdm.transmission_mode = dvb_str2mode(x)) == -1)
+        mux_fail(r, "wrong transmission mode '%s'", x);
+    if ((x = htsmsg_get_str(l, "GUARD_INTERVAL")))
+      if ((mux->u.dmc_fe_ofdm.guard_interval = dvb_str2guard(x)) == -1)
+        mux_fail(r, "wrong guard interval '%s'", x);
+    if ((x = htsmsg_get_str(l, "HIERARCHY")))
+      if ((mux->u.dmc_fe_ofdm.hierarchy_information = dvb_str2hier(x)) == -1)
+        mux_fail(r, "wrong hierarchy '%s'", x);
+    if ((x = htsmsg_get_str(l, "INVERSION")))
+      if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
+        mux_fail(r, "wrong inversion '%s'", x);
+
+  } else if (mux->dmc_fe_delsys == DVB_SYS_DVBS ||
+             mux->dmc_fe_delsys == DVB_SYS_DVBS2) {
+
+    mux->dmc_fe_type = DVB_TYPE_S;
+    mux->dmc_fe_modulation =
+      mux->dmc_fe_delsys == DVB_SYS_DVBS2 ? DVB_MOD_PSK_8 : DVB_MOD_QPSK;
+    mux->u.dmc_fe_qam.fec_inner = DVB_FEC_AUTO;
+    mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
+    mux->dmc_fe_rolloff    = DVB_ROLLOFF_35;
+    mux->dmc_fe_pilot      = DVB_PILOT_AUTO;
+
+    if ((x = htsmsg_get_str(l, "MODULATION")))
+      if ((mux->dmc_fe_modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "INNER_FEC")))
+      if ((mux->u.dmc_fe_qpsk.fec_inner = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong inner FEC '%s'", x);
+    if ((x = htsmsg_get_str(l, "INVERSION")))
+      if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
+        mux_fail(r, "wrong inversion '%s'", x);
+    if ((x = htsmsg_get_str(l, "ROLLOFF")))
+      if ((mux->dmc_fe_rolloff = dvb_str2rolloff(x)) == -1)
+        mux_fail(r, "wrong rolloff '%s'", x);
+    if ((x = htsmsg_get_str(l, "PILOT")))
+      if ((mux->dmc_fe_pilot = dvb_str2rolloff(x)) == -1)
+        mux_fail(r, "wrong pilot '%s'", x);
+    if ((x = htsmsg_get_str(l, "POLARIZATION"))) {
+      char pol[2];
+      pol[0] = x[0]; pol[1] = '\0';
+      if ((mux->u.dmc_fe_qpsk.polarisation = dvb_str2pol(pol)) == -1)
+        mux_fail(r, "wrong polarisation '%s'", x);
+    } else {
+      mux_fail0(r, "dvb-s: undefined polarisation");
+    }
+    if (!htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qpsk.symbol_rate))
+      mux_fail0(r, "dvb-s: undefined symbol rate");
+
+  } else if (mux->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
+             mux->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B ||
+             mux->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_C) {
+
+    mux->dmc_fe_type = DVB_TYPE_C;
+    mux->dmc_fe_modulation = DVB_MOD_QAM_128;
+    mux->u.dmc_fe_qam.fec_inner = DVB_FEC_NONE;
+    mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
+
+    if ((x = htsmsg_get_str(l, "MODULATION")))
+      if ((mux->dmc_fe_modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "INNER_FEC")))
+      if ((mux->u.dmc_fe_qam.fec_inner = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong inner FEC '%s'", x);
+    if ((x = htsmsg_get_str(l, "INVERSION")))
+      if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
+        mux_fail(r, "wrong inversion '%s'", x);
+    if (!htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qam.symbol_rate))
+      mux_fail0(r, "dvb-c: undefined symbol rate");
+
+  } else if (mux->dmc_fe_delsys == DVB_SYS_ATSC) {
+
+    mux->dmc_fe_type = DVB_TYPE_ATSC;
+    mux->dmc_fe_modulation = DVB_MOD_VSB_8;
+    mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
+
+    if ((x = htsmsg_get_str(l, "MODULATION")))
+      if ((mux->dmc_fe_modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "INVERSION")))
+      if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
+        mux_fail(r, "wrong inversion '%s'", x);
+
+  } else {
+
+    mux_fail(r, "wrong delivery system '%s'", x);
+
+  }
+
+  if (!htsmsg_get_u32(l, "FREQUENCY", &mux->dmc_fe_freq))
+    mux_ok(r);
+
+  htsmsg_destroy(l);
+
+  if (r) {
+    free(mux);
+  } else {
+    dvb_mux_conf_str(mux, buf, sizeof(buf));
+    tvhtrace("scanfile", "mux %s", buf);
+    LIST_INSERT_HEAD(&net->sfn_muxes, mux, dmc_link);
+  }
+
+  return res;
+}
+
+/*
  * Process a file
  */
 static void
 scanfile_load_file
   ( const char *type, fb_dir *dir, const char *name )
 {
-  int i, opos;
+  int opos, load;
   fb_file *fp;
   scanfile_region_t *reg = NULL;
   scanfile_network_t *net;
@@ -390,19 +599,19 @@ scanfile_load_file
   LIST_INSERT_SORTED(&reg->sfr_networks, net, sfn_link, scanfile_network_cmp);
 
   /* Process file */
+  load = 1;
   while (!fb_eof(fp)) {
 
     /* Get line */
-    memset(buf, 0, sizeof(buf));
-    if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
-    i = 0;
-    while (buf[i]) {
-      if (buf[i] == '#') 
-        buf[i] = '\0';
-      else
-        i++;
+    if (load) {
+      buf[sizeof(buf)-1] = '\0';
+      if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
+      if (buf[0])
+        buf[strlen(buf)-1] = '\0';
+      while (buf[0] && buf[strlen(buf)-1] <= ' ')
+        buf[strlen(buf)-1] = '\0';
     }
-    while (i > 0 && buf[i-1] < 32) buf[--i] = 0;
+    load = 1;
 
     /* Process mux */
     switch (*buf) {
@@ -411,6 +620,10 @@ scanfile_load_file
       case 'T':
       case 'S':
         scanfile_load_one(net, buf);
+        break;
+      case '[':
+        load = scanfile_load_dvbv5(net, buf, fp);
+        break;
       default:
         break;
     }

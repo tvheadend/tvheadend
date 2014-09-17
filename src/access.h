@@ -28,15 +28,14 @@ struct channel_tag;
 typedef struct access_ipmask {
   TAILQ_ENTRY(access_ipmask) ai_link;
 
-  int ai_ipv6;
+  int ai_family;
 
-  struct in_addr ai_ip;
   struct in6_addr ai_ip6;
 
   int ai_prefixlen;
 
-  uint32_t ai_network;
   uint32_t ai_netmask;
+  uint32_t ai_network;
 } access_ipmask_t;
 
 TAILQ_HEAD(access_entry_queue, access_entry);

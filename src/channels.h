@@ -47,10 +47,10 @@ typedef struct channel
   int ch_zombie;
 
   /* Channel info */
-  char *ch_name; // Note: do not access directly!
-  int   ch_number;
-  char *ch_icon;
-  struct channel_tag_mapping_list ch_ctms;
+  char   *ch_name; // Note: do not access directly!
+  int64_t ch_number;
+  char   *ch_icon;
+  struct  channel_tag_mapping_list ch_ctms;
 
   /* Service/subscriptions */
   LIST_HEAD(, channel_service_mapping) ch_services;
@@ -71,6 +71,7 @@ typedef struct channel
   int                   ch_dvr_extra_time_post;
   struct dvr_entry_list ch_dvrs;
   struct dvr_autorec_entry_list ch_autorecs;
+  struct dvr_timerec_entry_list ch_timerecs;
 
 } channel_t;
 
@@ -151,6 +152,8 @@ channel_t *channel_find_by_id(uint32_t id);
 channel_t *channel_find_by_number(int no);
 
 #define channel_find channel_find_by_uuid
+
+htsmsg_t * channel_class_get_list(void *o);
 
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );

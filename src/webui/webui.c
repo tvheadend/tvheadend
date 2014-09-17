@@ -163,6 +163,45 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static int
+page_login(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access != NULL &&
+      hc->hc_access->aa_username != NULL &&
+      hc->hc_access->aa_username != '\0') {
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
+static int
+page_logout(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (hc->hc_access == NULL ||
+      hc->hc_access->aa_username == NULL ||
+      hc->hc_access->aa_username == '\0') {
+redirect:
+    http_redirect(hc, "/", &hc->hc_req_args);
+    return 0;
+  } else {
+    const char *s = http_arg_get(&hc->hc_args, "Cookie");
+    if (s) {
+      while (*s && *s != ';')
+        s++;
+      if (*s) s++;
+      while (*s && *s <= ' ') s++;
+      if (!strncmp(s, "logout=1", 8)) {
+        hc->hc_logout_cookie = 2;
+        goto redirect;
+      }
+      hc->hc_logout_cookie = 1;
+    }
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+}
+
 /**
  * Static download of a file from the filesystem
  */
@@ -377,7 +416,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -434,7 +473,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
@@ -470,7 +509,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
@@ -519,7 +558,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default("")->dvr_mc;
+    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
 
   CHANNEL_FOREACH(ch)
     count++;
@@ -586,8 +625,7 @@ http_dvr_list_playlist(http_connection_t *hc)
       continue;
 
 
-    durration  = de->de_stop - de->de_start;
-    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
     bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
@@ -623,8 +661,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   struct tm tm;  
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
-  durration  = de->de_stop - de->de_start;
-  durration += (de->de_stop_extra + de->de_start_extra)*60;
+  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
     
   fsize = dvr_get_filesize(de);
 
@@ -744,7 +781,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  cfg = dvr_config_find_by_name_default("");
+  cfg = dvr_config_find_by_name_default(NULL);
 
   /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
@@ -862,7 +899,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  cfg = dvr_config_find_by_name_default("");
+  cfg = dvr_config_find_by_name_default(NULL);
 
   /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
@@ -1303,6 +1340,8 @@ webui_init(int xspf)
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
+  http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
 
   http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
