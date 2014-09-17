@@ -330,6 +330,40 @@ api_dvr_autorec_create_by_series
   return !count ? EINVAL : 0;
 }
 
+static void
+api_dvr_timerec_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  dvr_timerec_entry_t *dte;
+
+  TAILQ_FOREACH(dte, &timerec_entries, dte_link)
+    idnode_set_add(ins, (idnode_t*)dte, &conf->filter);
+}
+
+static int
+api_dvr_timerec_create
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  dvr_timerec_entry_t *dte;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  if (perm->aa_representative)
+    htsmsg_set_str(conf, "creator", perm->aa_representative);
+
+  pthread_mutex_lock(&global_lock);
+  dte = dvr_timerec_create(NULL, conf);
+  if (dte) {
+    dvr_timerec_save(dte);
+    dvr_timerec_check(dte);
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
 void api_dvr_init ( void )
 {
   static api_hook_t ah[] = {
@@ -350,6 +384,10 @@ void api_dvr_init ( void )
     { "dvr/autorec/grid",          ACCESS_RECORDER, api_idnode_grid,  api_dvr_autorec_grid },
     { "dvr/autorec/create",        ACCESS_RECORDER, api_dvr_autorec_create, NULL },
     { "dvr/autorec/create_by_series", ACCESS_RECORDER, api_dvr_autorec_create_by_series, NULL },
+
+    { "dvr/timerec/class",         ACCESS_RECORDER, api_idnode_class, (void*)&dvr_timerec_entry_class },
+    { "dvr/timerec/grid",          ACCESS_RECORDER, api_idnode_grid,  api_dvr_timerec_grid },
+    { "dvr/timerec/create",        ACCESS_RECORDER, api_dvr_timerec_create, NULL },
 
     { NULL },
   };

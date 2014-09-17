@@ -137,6 +137,7 @@ typedef struct http_connection {
   struct config_head *hc_user_config;
 
   int hc_no_output;
+  int hc_logout_cookie;
 
   /* Support for HTTP POST */
   

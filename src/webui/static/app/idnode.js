@@ -917,7 +917,8 @@ tvheadend.idnode_grid = function(panel, conf)
     };
 
     var update2 = function(o) {
-        grid.getView().refresh();
+        if (grid)
+            grid.getView().refresh();
     };
 
     function build(d)
