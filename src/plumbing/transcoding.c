@@ -982,6 +982,15 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
 
   if (octx->extradata_size)
     n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
+  else {
+    if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+      //n->pkt_header = pktbuf_alloc(out, length);
+      FILE *fp;
+      fp=fopen("/mnt/sdb1/tvheadend/test.mpeg2", "a+");
+      fwrite((void *)out, length, 1, fp);
+      fclose(fp);
+    }
+  }
 
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
