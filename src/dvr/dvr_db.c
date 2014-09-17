@@ -1082,10 +1082,8 @@ dvr_entry_cancel(dvr_entry_t *de)
     return de;
 
   case DVR_COMPLETED:
-    dvr_entry_destroy(de, 1);
-    return NULL;
-
   case DVR_MISSED_TIME:
+  case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
     return NULL;
 
@@ -2736,6 +2734,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
     break;
 
   case DVR_MISSED_TIME:
+  case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
     break;
 
