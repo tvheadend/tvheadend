@@ -172,6 +172,7 @@ convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
     return avc_convert_pkt(pkt);
 
   default:
+    pkt_ref_inc(pkt);
     return pkt;
   }
 }
@@ -217,10 +218,9 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     apply_header(ssc, pkt);
 
-    pr = pktref_create(pkt);
-    TAILQ_INSERT_TAIL(&gh->gh_holdq, pr, pr_link);
+    pktref_enqueue(&gh->gh_holdq, pkt);
 
-    free(sm);
+    streaming_msg_free(sm);
 
     if(!headers_complete(gh, gh_queue_delay(gh))) 
       break;
@@ -273,7 +273,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 static void
 gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 {
-  th_pkt_t *pkt;
+  th_pkt_t *pkt, *pkt2;
   streaming_start_component_t *ssc;
 
   switch(sm->sm_type) {
@@ -306,8 +306,10 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     pkt = sm->sm_data;
     ssc = streaming_start_component_find_by_index(gh->gh_ss, 
 						  pkt->pkt_componentindex);
-    sm->sm_data = convertpkt(ssc, pkt);
+    sm->sm_data = pkt2 = convertpkt(ssc, pkt);
     streaming_target_deliver2(gh->gh_output, sm);
+    if (pkt == pkt2)
+      pkt_ref_dec(pkt);
     break;
   }
 }
