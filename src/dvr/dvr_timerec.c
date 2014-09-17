@@ -215,6 +215,7 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
     LIST_REMOVE(dte, dte_config_link);
 
   free(dte->dte_name);
+  free(dte->dte_title);
   free(dte->dte_creator);
   free(dte->dte_comment);
 

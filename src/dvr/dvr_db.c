@@ -1899,6 +1899,7 @@ dvr_destroy_by_channel(channel_t *ch, int delconf)
   while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL) {
     LIST_REMOVE(de, de_channel_link);
     de->de_channel = NULL;
+    free(de->de_channel_name);
     de->de_channel_name = strdup(channel_get_name(ch));
     dvr_entry_purge(de, delconf);
   }
