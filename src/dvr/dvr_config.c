@@ -66,6 +66,9 @@ dvr_config_find_by_name_default(const char *name)
 {
   dvr_config_t *cfg;
 
+  if (dvrdefaultconfig == NULL)
+    dvrdefaultconfig = dvr_config_find_by_name(NULL);
+
   if (LIST_FIRST(&dvrconfigs) == NULL) {
     cfg = dvr_config_create("", NULL, NULL);
     assert(cfg);
