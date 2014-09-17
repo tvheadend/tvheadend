@@ -985,7 +985,7 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
   else {
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
       uint32_t *mpeg2_header = (uint32_t *)out;
-      tvhlog(LOG_DEBUG,"michel", "mpeg2_header=%d",*mpeg2_header);
+      tvhlog(LOG_DEBUG,"michel", "mpeg2_header=%x",*mpeg2_header);
       if (*mpeg2_header == 0x000001b3) {
       //n->pkt_header = pktbuf_alloc(out, length);
         FILE *fp;
