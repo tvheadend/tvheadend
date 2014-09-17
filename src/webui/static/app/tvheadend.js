@@ -542,7 +542,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
         Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
     },
-    
+
     setAddress: function(addr) {
         Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
     },
