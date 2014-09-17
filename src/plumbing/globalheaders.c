@@ -44,13 +44,13 @@ typedef struct globalheaders {
 static void
 gh_flush(globalheaders_t *gh)
 {
-  if(gh->gh_ss != NULL)
+  if(gh->gh_ss != NULL) {
     streaming_start_unref(gh->gh_ss);
-  gh->gh_ss = NULL;
+    gh->gh_ss = NULL;
+  }
 
   pktref_clear_queue(&gh->gh_holdq);
 }
-
 
 
 /**
@@ -208,7 +208,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     assert(ssc != NULL);
 
     if(ssc->ssc_type == SCT_TELETEXT) {
-      free(sm);
+      streaming_msg_free(sm);
       ssc->ssc_disabled = 1;
       break;
     }
@@ -278,7 +278,13 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_START:
-    abort(); // Should not happen
+    /* stop */
+    gh->gh_passthru = 0;
+    gh_flush(gh);
+    /* restart */
+    gh->gh_ss = streaming_start_copy(sm->sm_data);
+    streaming_msg_free(sm);
+    break;
     
   case SMT_STOP:
     gh->gh_passthru = 0;
@@ -348,4 +354,3 @@ globalheaders_destroy(streaming_target_t *pad)
   gh_flush(gh);
   free(gh);
 }
-
