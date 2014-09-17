@@ -986,6 +986,25 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
       uint32_t *mpeg2_header = (uint32_t *)out;
       if (*mpeg2_header == 0xb3010000) {  // SEQ_START_CODE
+	// Need to determine lentgh of header.
+/*
+Field Name 	# of bits 	Description
+start code 	32 	0x000001B3
+Horizontal Size 	12 	
+Vertical Size 	12 	
+Aspect ratio 	4 	
+Frame rate code 	4 	
+Bit rate 	18 	Actual bit rate = bit rate * 400, rounded upwards. Use 0x3FFFF for variable bit rate.
+Marker bit 	1 	Always 1.
+VBV buf size 	10 	Size of video buffer verifier = 16*1024*vbv buf size
+constrained parameters flag 	1 	
+load intra quantizer matrix 	1 	If bit set then intra quantizer matrix follows, otherwise use default values.
+intra quantizer matrix 	0 or 64*8 	
+load non intra quantizer matrix 	1 	If bit set then non intra quantizer matrix follows.
+non intra quantizer matrix 	0 or 64*8 	
+
+Minimal of 12 bytes. 
+*/
         n->pkt_header = pktbuf_alloc(out, length);
       }
     }
