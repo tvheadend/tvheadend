@@ -1067,6 +1067,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     if(!st->es_buf.sb_err) {
       if(parse_mpeg2video_seq_start(t, st, &bs))
         return 1;
+      tvhlog( LOG_DEBUG, "parsers", "Sequence start code");
       parser_global_data_move(st, buf, len);
     }
     return 2;
@@ -1096,10 +1097,12 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       th_pkt_t *pkt = st->es_curpkt;
       if(pkt == NULL) {
         /* no packet, may've been discarded by sanity checks here */
-        return 1;
+       tvhlog( LOG_DEBUG, "parsers", "no packet, may've been discarded by sanity checks here");
+       return 1;
       }
 
       if(st->es_global_data) {
+        tvhlog( LOG_DEBUG, "parsers", "st->es_global_data");
         pkt->pkt_header = pktbuf_make(st->es_global_data,
                                       st->es_global_data_len);
         st->es_global_data = NULL;
