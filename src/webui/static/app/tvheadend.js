@@ -313,6 +313,8 @@ function accessUpdate(o) {
 
     if ('username' in o)
       tvheadend.rootTabPanel.setLogin(o.username);
+    if ('address' in o)
+      tvheadend.rootTabPanel.setAddress(o.address);
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
@@ -539,6 +541,10 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         var t = fly.child('span.x-tab-strip-login', true);
         Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
         Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
+    },
+    
+    setAddress: function(addr) {
+        Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
     },
 
     onLoginCmdClicked: function(e) {
