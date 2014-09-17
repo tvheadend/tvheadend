@@ -92,7 +92,6 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   case SCT_H264:
   case SCT_MPEG2VIDEO:
   case SCT_VORBIS:
-    tvhlog(LOG_DEBUG, "globalheaders", "apply_header: ssc->ssc_type=%d, pkt->pkt_header%s", ssc->ssc_type, pkt->pkt_header ? "!=NULL" : "==NULL");
 
     if(pkt->pkt_header != NULL) {
       ssc->ssc_gh = pkt->pkt_header;
@@ -109,27 +108,18 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_type=%d", ssc->ssc_type);
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_frameduration=%d", ssc->ssc_frameduration);
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_sri=%d", ssc->ssc_sri);
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: ssc->ssc_channels=%d", ssc->ssc_channels);
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: SCT_ISAUDIO(ssc->ssc_type)=%d", SCT_ISAUDIO(ssc->ssc_type));
-
   if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
      ssc->ssc_frameduration == 0)
     return 0;
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: A");
 
   if(SCT_ISVIDEO(ssc->ssc_type)) {
     if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0))
       return 0;
   }
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: B");
 
   if(SCT_ISAUDIO(ssc->ssc_type) &&
      (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
     return 0;
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete: C");
   
   if(ssc->ssc_gh == NULL &&
      (ssc->ssc_type == SCT_H264 ||
@@ -138,7 +128,6 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
       ssc->ssc_type == SCT_AAC ||
       ssc->ssc_type == SCT_VORBIS))
     return 0;
-  tvhlog(LOG_DEBUG, "globalheaders", "header_complete=1");
   return 1;
 }
 
@@ -160,7 +149,6 @@ headers_complete(globalheaders_t *gh, int64_t qd)
     if(!header_complete(ssc, threshold)) {
 
       if(threshold) {
-  tvhlog(LOG_DEBUG, "globalheaders", "disabeling headers_complete: ssc->ssc_type=%d", ssc->ssc_type);
 	ssc->ssc_disabled = 1;
       } else {
 	return 0;

@@ -239,14 +239,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
   mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
 
-  tvhlog(LOG_DEBUG, "mkmux", "mk_build_tracks: ss->ss_num_components=%d", ss->ss_num_components);
-  
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
     mkm->tracks[i].disabled = ssc->ssc_disabled;
 
-  tvhlog(LOG_DEBUG, "mkmux1", "mk_build_tracks: ssc->ssc_type=%d", ssc->ssc_type);
     if(ssc->ssc_disabled)
       continue;
 
@@ -258,8 +255,6 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     mkm->tracks[i].commercial = COMMERCIAL_UNKNOWN;
     mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
-
-  tvhlog(LOG_DEBUG, "mkmux2", "mk_build_tracks: ssc->ssc_type=%d", ssc->ssc_type);
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
