@@ -123,7 +123,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
   
   if(ssc->ssc_gh == NULL &&
      (ssc->ssc_type == SCT_H264 ||
-//      ssc->ssc_type == SCT_MPEG2VIDEO ||
+      ssc->ssc_type == SCT_MPEG2VIDEO ||
       ssc->ssc_type == SCT_MP4A ||
       ssc->ssc_type == SCT_AAC ||
       ssc->ssc_type == SCT_VORBIS))
