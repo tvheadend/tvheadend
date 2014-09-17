@@ -197,6 +197,17 @@ channel_class_get_title ( idnode_t *self )
   return channel_get_name((channel_t*)self);
 }
 
+/* exported for others */
+htsmsg_t *
+channel_class_get_list(void *o)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channel/list");
+  htsmsg_add_str(m, "event", "channel");
+  return m;
+}
+
 static const void *
 channel_class_get_name ( void *p )
 {
@@ -531,6 +542,12 @@ channel_create0
 {
   lock_assert(&global_lock);
 
+  LIST_INIT(&ch->ch_services);
+  LIST_INIT(&ch->ch_subscriptions);
+  LIST_INIT(&ch->ch_epggrab);
+  LIST_INIT(&ch->ch_autorecs);
+  LIST_INIT(&ch->ch_timerecs);
+
   if (idnode_insert(&ch->ch_id, uuid, idc, IDNODE_SHORT_UUID)) {
     if (uuid)
       tvherror("channel", "invalid uuid '%s'", uuid);
@@ -578,6 +595,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* DVR */
   autorec_destroy_by_channel(ch, delconf);
+  timerec_destroy_by_channel(ch, delconf);
   dvr_destroy_by_channel(ch, delconf);
 
   /* Services */
