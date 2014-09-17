@@ -1223,8 +1223,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   content_len = file_end - file_start+1;
   
-  sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
-    file_start, file_end, st.st_size);
+  sprintf(range_buf, "bytes %jd-%jd/%zd",
+    file_start, file_end, (size_t)st.st_size);
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
