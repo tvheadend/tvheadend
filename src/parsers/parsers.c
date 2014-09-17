@@ -1023,6 +1023,8 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   bitstream_t bs;
   int frametype;
 
+      tvhlog( LOG_DEBUG, "parsers", "parse_mpeg2video");
+
   if(next_startcode == 0x1e0)
     return 4;
 
