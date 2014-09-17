@@ -66,7 +66,14 @@ dvr_config_find_by_name_default(const char *name)
 {
   dvr_config_t *cfg;
 
-  if (dvrdefaultconfig && (name == NULL || *name == '\0'))
+  if (LIST_FIRST(&dvrconfigs) == NULL) {
+    cfg = dvr_config_create("", NULL, NULL);
+    assert(cfg);
+    dvr_config_save(cfg);
+    dvrdefaultconfig = cfg;
+  }
+
+  if (name == NULL || *name == '\0')
     return dvrdefaultconfig;
 
   cfg = dvr_config_find_by_name(name);
@@ -74,16 +81,10 @@ dvr_config_find_by_name_default(const char *name)
   if (cfg == NULL) {
     if (name && *name)
       tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not found, using default", name);
-    cfg = dvr_config_find_by_name_default(NULL);
+    cfg = dvrdefaultconfig;
   } else if (!cfg->dvr_enabled) {
     tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not enabled, using default", name);
-    cfg = dvr_config_find_by_name_default(NULL);
-  }
-
-  if (cfg == NULL) {
-    cfg = dvr_config_create("", NULL, NULL);
-    dvr_config_save(cfg);
-    dvrdefaultconfig = cfg;
+    cfg = dvrdefaultconfig;
   }
 
   return cfg;
