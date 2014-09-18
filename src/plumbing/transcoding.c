@@ -1007,12 +1007,6 @@ non intra quantizer matrix		0 or 64*8
 Minimal of 12 bytes.
 */
 
-         FILE *fp;
-         fp=fopen("/mnt/sdb1/tvheadend/test.mpeg2", "a+");
-         fwrite((void *)out, 20, 1, fp);
-         //fwrite((void *)mpeg2_header, 1, sizeof(uint32_t), fp);
-         fclose(fp);
-
 	int header_size = 12;
 
         // load intra quantizer matrix
