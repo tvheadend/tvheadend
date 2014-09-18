@@ -988,24 +988,50 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
       if (*mpeg2_header == 0xb3010000) {  // SEQ_START_CODE
 	// Need to determine lentgh of header.
 /*
+From: http://en.wikipedia.org/wiki/Elementary_stream
 Field Name 	# of bits 	Description
-start code 	32 	0x000001B3
-Horizontal Size 	12 	
-Vertical Size 	12 	
-Aspect ratio 	4 	
-Frame rate code 	4 	
-Bit rate 	18 	Actual bit rate = bit rate * 400, rounded upwards. Use 0x3FFFF for variable bit rate.
-Marker bit 	1 	Always 1.
-VBV buf size 	10 	Size of video buffer verifier = 16*1024*vbv buf size
-constrained parameters flag 	1 	
-load intra quantizer matrix 	1 	If bit set then intra quantizer matrix follows, otherwise use default values.
-intra quantizer matrix 	0 or 64*8 	
+start code				32 	0x000001B3
+Horizontal Size				12
+Vertical Size				12
+Aspect ratio				4
+Frame rate code				4
+Bit rate				18 	Actual bit rate = bit rate * 400, rounded upwards. Use 0x3FFFF for variable bit rate.
+Marker bit				1 	Always 1.
+VBV buf size				10 	Size of video buffer verifier = 16*1024*vbv buf size
+constrained parameters flag		1
+load intra quantizer matrix		1 	If bit set then intra quantizer matrix follows, otherwise use default values.
+intra quantizer matrix			0 or 64*8
 load non intra quantizer matrix 	1 	If bit set then non intra quantizer matrix follows.
-non intra quantizer matrix 	0 or 64*8 	
+non intra quantizer matrix		0 or 64*8
 
-Minimal of 12 bytes. 
+Minimal of 12 bytes.
 */
-        n->pkt_header = pktbuf_alloc(out, length);
+	int header_size = 12;
+
+	// load intra quantizer matrix
+	uint8_t matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
+	if (matrix_enabled)
+	  header_size += 64;
+
+	//load non intra quantizer matrix
+	matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
+	if (matrix_enabled)
+	  header_size += 64;
+
+	// See if we have the first EXT_START_CODE. Normally 10 bytes
+	// https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l272
+	mpeg2_header = (uint32_t *)(out+(header_size-1));
+        if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
+          header_size += 10;
+
+	  // See if we have the second EXT_START_CODE. Normally 12 bytes
+	  // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l291
+	  mpeg2_header = (uint32_t *)(out+(header_size-1));
+          if (*mpeg2_header == 0xb5010000)  // EXT_START_CODE
+            header_size += 12;
+        }
+
+        n->pkt_header = pktbuf_alloc(out, header_size);
       }
     }
   }
