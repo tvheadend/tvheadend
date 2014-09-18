@@ -369,6 +369,12 @@ dvr_config_class_cache_list(void *o)
 }
 
 static htsmsg_t *
+dvr_config_class_extra_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set (none or channel config)", 4*60, 1);
+}
+
+static htsmsg_t *
 dvr_config_entry_class_update_window_list(void *o)
 {
   return dvr_entry_class_duration_list(o, "Update Disabled", 24*3600, 60);
@@ -460,6 +466,7 @@ const idclass_t dvr_config_class = {
       .id       = "pre-extra-time",
       .name     = "Extra Time Before Recordings (minutes)",
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
+      .list     = dvr_config_class_extra_list,
       .group    = 1,
     },
     {
@@ -467,6 +474,7 @@ const idclass_t dvr_config_class = {
       .id       = "post-extra-time",
       .name     = "Extra Time After Recordings (minutes)",
       .off      = offsetof(dvr_config_t, dvr_extra_time_post),
+      .list     = dvr_config_class_extra_list,
       .group    = 1,
     },
     {
