@@ -1100,7 +1100,6 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       }
 
       if(st->es_global_data) {
-        tvhlog( LOG_DEBUG, "parsers", "st->es_global_data");
         pkt->pkt_header = pktbuf_make(st->es_global_data,
                                       st->es_global_data_len);
         st->es_global_data = NULL;
