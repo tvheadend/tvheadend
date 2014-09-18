@@ -259,23 +259,19 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_P_FRAME:
 	/* Presentation occures at DTS of next I or P frame,
 	   try to find it */
-	srch = TAILQ_NEXT(pr, pr_link);
-	while(1) {
-	  if(srch == NULL) {
-	    pkt_ref_dec(pkt);
-	    return; /* not arrived yet, wait */
-          }
-	  if(tfs_find(tf, srch->pr_pkt) == tfs && 
-	     srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
+	TAILQ_FOREACH(srch, &tf->tf_ptsq, pr_link)
+	  if (tfs_find(tf, srch->pr_pkt) == tfs &&
+	      srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
 	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %"PRId64"\n",
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts);
 	    break;
 	  }
-	  srch = TAILQ_NEXT(srch, pr_link);
-	}
-	break;
+	if (srch == NULL) {
+	  pkt_ref_dec(pkt);
+	  return; /* not arrived yet, wait */
+        }
       }
       break;
 
