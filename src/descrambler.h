@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "descrambler/descrambler_types.h"
 
 struct service;
 struct elementary_stream;
@@ -38,17 +39,13 @@ struct mpegts_mux;
  *
  * Created/Destroyed on per-transport basis upon transport start/stop
  */
+
 typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_service_link;
 
   char *td_nicename;
 
-  enum {
-    DS_UNKNOWN,
-    DS_RESOLVED,
-    DS_FORBIDDEN,
-    DS_IDLE
-  } td_keystate;
+  cwc_keystate_t td_keystate;
 
   struct service *td_service;
   struct tvhcsa  *td_csa;
