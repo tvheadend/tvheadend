@@ -1586,72 +1586,71 @@ cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, in
         cwc->cwc_viaccess_emm.shared_toggle = data[0];
       }
     }
-      break;
+    break;
     case 0x8e:
       if (cwc->cwc_viaccess_emm.shared_emm &&
           cwc->cwc_viaccess_emm.ca_update_id == cwc->cwc_update_id) {
-	int match = 0;
-	int i;
-	/* Match SA and provider in shared */
-	for(i = 0; i < pcard->cwc_num_providers; i++) {
-	  if(memcmp(&data[3],&pcard->cwc_providers[i].sa[4], 3)) continue;
-	  if((data[6]&2)) continue;
-	  if(via_provider_id(cwc->cwc_viaccess_emm.shared_emm) != pcard->cwc_providers[i].id) continue;
-	  match = 1;
-	  break;
-	}
-	if (!match) break;
+        int match = 0;
+        int i;
+        /* Match SA and provider in shared */
+        for(i = 0; i < pcard->cwc_num_providers; i++) {
+          if(memcmp(&data[3],&pcard->cwc_providers[i].sa[4], 3)) continue;
+          if((data[6]&2)) continue;
+          if(via_provider_id(cwc->cwc_viaccess_emm.shared_emm) != pcard->cwc_providers[i].id) continue;
+            match = 1;
+            break;
+        }
+        if (!match) break;
 
-	uint8_t * tmp = alloca(len + cwc->cwc_viaccess_emm.shared_len);
-	const uint8_t * ass = nano_start(data);
-	len -= (ass - data);
-	if((data[6] & 2) == 0)  {
-	  int addrlen = len - 8;
-	  len=0;
-	  tmp[len++] = 0x9e;
-	  tmp[len++] = addrlen;
-	  memcpy(&tmp[len], &ass[0], addrlen); len += addrlen;
-	  tmp[len++] = 0xf0;
-	  tmp[len++] = 0x08;
-	  memcpy(&tmp[len],&ass[addrlen],8); len += 8;
-	} else {
-	  memcpy(tmp, ass, len);
-	}
-	ass = nano_start(cwc->cwc_viaccess_emm.shared_emm);
-	int l = cwc->cwc_viaccess_emm.shared_len - (ass - cwc->cwc_viaccess_emm.shared_emm);
-	memcpy(&tmp[len], ass, l); len += l;
+        uint8_t * tmp = alloca(len + cwc->cwc_viaccess_emm.shared_len);
+        const uint8_t * ass = nano_start(data);
+        len -= (ass - data);
+        if((data[6] & 2) == 0)  {
+          int addrlen = len - 8;
+          len=0;
+          tmp[len++] = 0x9e;
+          tmp[len++] = addrlen;
+          memcpy(&tmp[len], &ass[0], addrlen); len += addrlen;
+          tmp[len++] = 0xf0;
+          tmp[len++] = 0x08;
+          memcpy(&tmp[len],&ass[addrlen],8); len += 8;
+        } else {
+          memcpy(tmp, ass, len);
+        }
+        ass = nano_start(cwc->cwc_viaccess_emm.shared_emm);
+        int l = cwc->cwc_viaccess_emm.shared_len - (ass - cwc->cwc_viaccess_emm.shared_emm);
+        memcpy(&tmp[len], ass, l); len += l;
 
-	uint8_t *ass2 = (uint8_t*) alloca(len+7);
-	if(ass2) {
-	  uint32_t crc;
+        uint8_t *ass2 = (uint8_t*) alloca(len+7);
+        if(ass2) {
+          uint32_t crc;
 
-	  memcpy(ass2, data, 7);
-	  if (sort_nanos(ass2 + 7, tmp, len)) {
-	    return;
-	  }
+          memcpy(ass2, data, 7);
+          if (sort_nanos(ass2 + 7, tmp, len))
+            return;
 
-	  /* Set SCT len */
-	  len += 4;
-	  ass2[1] = (len>>8) | 0x70;
-	  ass2[2] = len & 0xff;
-	  len += 3;
+          /* Set SCT len */
+          len += 4;
+          ass2[1] = (len>>8) | 0x70;
+          ass2[2] = len & 0xff;
+          len += 3;
 
-	  crc = tvh_crc32(ass2, len, 0xffffffff);
-	  if (!cwc_emm_cache_lookup(cwc, crc)) {
-	    tvhlog(LOG_DEBUG, "cwc",
-		   "Send EMM "
-		   "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-		   "...%02x.%02x.%02x.%02x",
-		   ass2[0], ass2[1], ass2[2], ass2[3],
-		   ass2[4], ass2[5], ass2[6], ass2[7],
-		   ass2[len-4], ass2[len-3], ass2[len-2], ass2[len-1]);
-	    cwc_send_msg(cwc, ass2, len, 0, 1, 0, 0);
-	    cwc_emm_cache_insert(cwc, crc);
-	  }
-	}
+          crc = tvh_crc32(ass2, len, 0xffffffff);
+          if (!cwc_emm_cache_lookup(cwc, crc)) {
+            tvhlog(LOG_DEBUG, "cwc",
+                  "Send EMM "
+                  "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+                  "...%02x.%02x.%02x.%02x",
+                  ass2[0], ass2[1], ass2[2], ass2[3],
+                  ass2[4], ass2[5], ass2[6], ass2[7],
+                  ass2[len-4], ass2[len-3], ass2[len-2], ass2[len-1]);
+            cwc_send_msg(cwc, ass2, len, 0, 1, 0, 0);
+            cwc_emm_cache_insert(cwc, crc);
+          }
+        }
       }
-      break;
-    }
+    break;
+  }
 }
 
 /**
