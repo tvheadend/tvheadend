@@ -1020,13 +1020,13 @@ Minimal of 12 bytes.
 
 	// See if we have the first EXT_START_CODE. Normally 10 bytes
 	// https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l272
-	mpeg2_header = (uint32_t *)(out+(header_size-1));
+	mpeg2_header = (uint32_t *)(out+(header_size));
         if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
           header_size += 10;
 
 	  // See if we have the second EXT_START_CODE. Normally 12 bytes
 	  // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l291
-	  mpeg2_header = (uint32_t *)(out+(header_size-1));
+	  mpeg2_header = (uint32_t *)(out+(header_size));
           if (*mpeg2_header == 0xb5010000)  // EXT_START_CODE
             header_size += 12;
         }
