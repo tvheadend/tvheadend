@@ -50,6 +50,7 @@
 #define TVHEADEND_PROTOCOL_ID 0x6502
 #define CWC_KEEPALIVE_INTERVAL 30
 #define CWC_ES_PIDS           8
+#define CWC_MAX_NOKS          4
 
 #define CWS_NETMSGSIZE 362
 #define CWS_FIRSTCMDNO 0xe0
@@ -95,6 +96,8 @@ static char *crypt_md5(const char *pw, const char *salt);
  *
  */
 typedef struct ecm_section {
+  LIST_ENTRY(ecm_section) es_link;
+
   int es_section;
   int es_channel;
 
@@ -118,7 +121,7 @@ typedef struct ecm_pid {
   uint16_t ep_pid;
 
   int ep_last_section;
-  struct ecm_section *ep_sections[256];
+  LIST_HEAD(, ecm_section) ep_sections;
 } ecm_pid_t;
 
 
@@ -716,7 +719,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   ecm_pid_t *ep;
   ecm_section_t *es2;
   char chaninfo[32];
-  int i, j;
+  int i;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
 
   es->es_pending = 0;
@@ -727,7 +730,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     
     /* ERROR */
 
-    if (es->es_nok < 3)
+    if (es->es_nok < CWC_MAX_NOKS)
       es->es_nok++;
 
     if(ct->td_keystate == DS_FORBIDDEN)
@@ -753,18 +756,15 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 	   "Req delay: %"PRId64" ms)", t->s_dvb_svcname, chaninfo, seq, delay);
 
 forbid:
-    j = 0;
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-      for(i = 0; i <= ep->ep_last_section; i++) {
-        es2 = ep->ep_sections[i];
+    i = 0;
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+      LIST_FOREACH(es2, &ep->ep_sections, es_link)
         if(es2 && es2 != es && es2->es_nok == 0) {
           if (es2->es_pending)
 	    return;
-          j++;
+          i++;
         }
-      }
-    }
-    if (j && es->es_nok < 2) /* only first hit is allowed */
+    if (i && es->es_nok < 2) /* only first hit is allowed */
       return;
     
     tvhlog(LOG_ERR, "cwc",
@@ -834,15 +834,11 @@ forbid:
 
       descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
     }
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-      for(i = 0; i < ep->ep_last_section; i++) {
-        es2 = ep->ep_sections[i];
-        if (es2) {
-          es2->es_resolved = 1;
-          es2->es_pending = 0;
-        }
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+      LIST_FOREACH(es2, &ep->ep_sections, es_link) {
+        es2->es_resolved = 1;
+        es2->es_pending = 0;
       }
-    }
   }
 }
 
@@ -858,7 +854,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   ecm_pid_t *ep;
   ecm_section_t *es;
   uint16_t seq = (msg[2] << 8) | msg[3];
-  int plen,i;
+  int plen;
   short caid;
   const char *n;
   unsigned int nprov;
@@ -868,29 +864,23 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     case 0x81:
       len -= 12;
       msg += 12;
-      LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
-        LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-          for(i = 0; i <= ep->ep_last_section; i++) {
-            es = ep->ep_sections[i];
-            if(es != NULL) {
-              if(es->es_seq == seq) {
-                if (es->es_resolved) {
-                  mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
-                  tvhlog(LOG_WARNING, "cwc",
-                         "Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
-                         es->es_pending ? "duplicate " : "",
-                         ep->ep_pid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
-                  return 0;
-                }
-                if (es->es_pending) {
-                  handle_ecm_reply(ct, es, msg, len, seq);
-                  return 0;
-                }
+      LIST_FOREACH(ct, &cwc->cwc_services, cs_link)
+        LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+          LIST_FOREACH(es, &ep->ep_sections, es_link)
+            if(es->es_seq == seq) {
+              if (es->es_resolved) {
+                mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
+                tvhlog(LOG_WARNING, "cwc",
+                       "Ignore %sECM (PID %d) for service \"%s\" from %s (seq %i)",
+                       es->es_pending ? "duplicate " : "",
+                       ep->ep_pid, t->s_dvb_svcname, ct->td_nicename, es->es_seq);
+                return 0;
+              }
+              if (es->es_pending) {
+                handle_ecm_reply(ct, es, msg, len, seq);
+                return 0;
               }
             }
-          }
-        }
-      }
       tvhlog(LOG_WARNING, "cwc", "Got unexpected ECM reply (seqno: %d)", seq);
       LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
         ct->ecm_state = ECM_RESET;
@@ -1757,10 +1747,14 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
       channel = pid;
       snprintf(chaninfo, sizeof(chaninfo), " (PID %d)", channel);
       
-      if(ep->ep_sections[section] == NULL)
-        ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
-      
-      es = ep->ep_sections[section];
+      LIST_FOREACH(es, &ep->ep_sections, es_link)
+        if (es->es_section == section)
+          break;
+      if (es == NULL) {
+        es = calloc(1, sizeof(ecm_section_t));
+        es->es_section = section;
+        LIST_INSERT_HEAD(&ep->ep_sections, es, es_link);
+      }
       
       if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
         break; /* key already sent */
@@ -1771,7 +1765,6 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         break;
       }
       es->es_channel = channel;
-      es->es_section = section;
       es->es_pending = 1;
       es->es_resolved = 0;
       
@@ -1996,6 +1989,7 @@ cwc_service_destroy(th_descrambler_t *td)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
   ecm_pid_t *ep;
+  ecm_section_t *es;
   int i;
 
   for (i = 0; i < CWC_ES_PIDS; i++)
@@ -2003,8 +1997,10 @@ cwc_service_destroy(th_descrambler_t *td)
       descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids[i]);
 
   while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
-    for(i = 0; i < 256; i++)
-      free(ep->ep_sections[i]);
+    while ((es = LIST_FIRST(&ep->ep_sections)) != NULL) {
+      LIST_REMOVE(es, es_link);
+      free(es);
+    }
     LIST_REMOVE(ep, ep_link);
     free(ep);
   }
