@@ -1014,7 +1014,7 @@ Minimal of 12 bytes.
 	  header_size += 64;
 
         //load non intra quantizer matrix
-	matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
+	matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x80) == 0x80);
 	if (matrix_enabled)
 	  header_size += 64;
 
