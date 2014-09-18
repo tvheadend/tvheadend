@@ -1008,27 +1008,34 @@ Minimal of 12 bytes.
 */
 	int header_size = 12;
 
-	// load intra quantizer matrix
+        // load intra quantizer matrix
 	uint8_t matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
 	if (matrix_enabled)
 	  header_size += 64;
 
-	//load non intra quantizer matrix
+        //load non intra quantizer matrix
 	matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
 	if (matrix_enabled)
 	  header_size += 64;
 
-	// See if we have the first EXT_START_CODE. Normally 10 bytes
+        // See if we have the first EXT_START_CODE. Normally 10 bytes
 	// https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l272
 	mpeg2_header = (uint32_t *)(out+(header_size));
         if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
           header_size += 10;
 
-	  // See if we have the second EXT_START_CODE. Normally 12 bytes
+          // See if we have the second EXT_START_CODE. Normally 12 bytes
 	  // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l291
 	  mpeg2_header = (uint32_t *)(out+(header_size));
-          if (*mpeg2_header == 0xb5010000)  // EXT_START_CODE
+          if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
             header_size += 12;
+
+            // See if we have the second GOP_START_CODE. Normally 31 bits == 4 bytes
+	    // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l304
+	    mpeg2_header = (uint32_t *)(out+(header_size));
+            if (*mpeg2_header == 0xb8010000) { // GOP_START_CODE
+              header_size += 4;
+         }
         }
 
         n->pkt_header = pktbuf_alloc(out, header_size);
