@@ -122,6 +122,7 @@ descrambler_service_start ( service_t *t )
   if (!st)
     return;
 
+  ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
 #if ENABLE_CWC
   cwc_service_start(t);
 #endif
@@ -134,7 +135,6 @@ descrambler_service_start ( service_t *t )
     dr->dr_key_index = 0xff;
     dr->dr_last_descramble = dispatch_clock;
   }
-  ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
 }
 
 void
