@@ -1016,6 +1016,7 @@ Minimal of 12 bytes.
 	int header_size = 12;
 
         // load intra quantizer matrix
+        tvhlog(LOG_DEBUG, "michel3", "matrix_byte=%x", (uint8_t)*(out+(header_size-1)));
 	uint8_t matrix_enabled = (((uint8_t)*(out+(header_size-1)) & 0x40) == 0x40);
 	if (matrix_enabled)
 	  header_size += 64;
