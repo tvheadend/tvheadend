@@ -1120,29 +1120,24 @@ service_servicetype_txt ( service_t *s )
 void
 service_set_streaming_status_flags_(service_t *t, int set)
 {
-  int n;
   streaming_message_t *sm;
   lock_assert(&t->s_stream_mutex);
 
-  n = t->s_streaming_status;
-  
-  n |= set;
-
-  if(n == t->s_streaming_status)
+  if(set == t->s_streaming_status)
     return; // Already set
 
-  t->s_streaming_status = n;
+  t->s_streaming_status = set;
 
   tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s%s",
 	 service_nicename(t),
-	 n & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
-	 n & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
-	 n & TSS_MUX_PACKETS    ? "[Demuxed packets] " : "",
-	 n & TSS_PACKETS        ? "[Reassembled packets] " : "",
-	 n & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
-	 n & TSS_NO_ACCESS      ? "[No access] " : "",
-	 n & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
-	 n & TSS_TIMEOUT        ? "[Data timeout] " : "");
+	 set & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
+	 set & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
+	 set & TSS_MUX_PACKETS    ? "[Demuxed packets] " : "",
+	 set & TSS_PACKETS        ? "[Reassembled packets] " : "",
+	 set & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
+	 set & TSS_NO_ACCESS      ? "[No access] " : "",
+	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
+	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
   sm = streaming_msg_create_code(SMT_SERVICE_STATUS,
 				 t->s_streaming_status);

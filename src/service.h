@@ -379,13 +379,13 @@ typedef struct service {
 #define TSS_INPUT_SERVICE    0x2
 #define TSS_MUX_PACKETS      0x4
 #define TSS_PACKETS          0x8
+#define TSS_NO_ACCESS        0x10
 
 #define TSS_GRACEPERIOD      0x8000
 
   // Errors
 #define TSS_NO_DESCRAMBLER   0x10000
-#define TSS_NO_ACCESS        0x20000
-#define TSS_TIMEOUT          0x40000
+#define TSS_TIMEOUT          0x20000
 
 #define TSS_ERRORS           0xffff0000
 
@@ -506,8 +506,17 @@ void service_set_streaming_status_flags_(service_t *t, int flag);
 static inline void
 service_set_streaming_status_flags(service_t *t, int flag)
 {
-  if ((t->s_streaming_status & flag) != flag)
-    service_set_streaming_status_flags_(t, flag);
+  int n = t->s_streaming_status;
+  if ((n & flag) != flag)
+    service_set_streaming_status_flags_(t, n | flag);
+}
+
+static inline void
+service_reset_streaming_status_flags(service_t *t, int flag)
+{
+  int n = t->s_streaming_status;
+  if ((n & flag) != 0)
+    service_set_streaming_status_flags_(t, n & ~flag);
 }
 
 struct streaming_start;

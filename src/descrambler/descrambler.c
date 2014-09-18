@@ -133,7 +133,6 @@ descrambler_service_start ( service_t *t )
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
     sbuf_init(&dr->dr_buf);
     dr->dr_key_index = 0xff;
-    dr->dr_last_descramble = dispatch_clock;
   }
 }
 
@@ -362,8 +361,8 @@ descrambler_descramble ( service_t *t,
         td->td_csa->csa_descramble(td->td_csa,
                                    (mpegts_service_t *)td->td_service,
                                    tsb2);
-        dr->dr_last_descramble = dispatch_clock;
       }
+      service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
     }
     ki = tsb[3];
@@ -396,7 +395,7 @@ descrambler_descramble ( service_t *t,
     td->td_csa->csa_descramble(td->td_csa,
                                (mpegts_service_t *)td->td_service,
                                tsb);
-    dr->dr_last_descramble = dispatch_clock;
+    service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
     return 1;
 next:
     flush_data = 1;
@@ -446,12 +445,13 @@ next2:
         }
       }
       sbuf_append(&dr->dr_buf, tsb, 188);
+      service_set_streaming_status_flags(t, TSS_NO_ACCESS);
     }
+  } else {
+    service_set_streaming_status_flags(t, TSS_NO_ACCESS);
   }
   if (flush_data)
     descrambler_flush_table_data(t);
-  if (dr->dr_last_descramble + 25 < dispatch_clock)
-    return -1;
   if (count && count == failed)
     return -1;
   return count;
