@@ -1096,7 +1096,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       th_pkt_t *pkt = st->es_curpkt;
       if(pkt == NULL) {
         /* no packet, may've been discarded by sanity checks here */
-       return 1;
+        return 1;
       }
 
       if(st->es_global_data) {

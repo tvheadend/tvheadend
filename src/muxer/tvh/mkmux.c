@@ -238,7 +238,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 
   mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
-
+  
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
