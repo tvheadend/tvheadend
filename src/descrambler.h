@@ -56,6 +56,7 @@ typedef struct th_descrambler {
   void (*td_stop)       (struct th_descrambler *d);
   void (*td_caid_change)(struct th_descrambler *d);
   int  (*td_ecm_reset)  (struct th_descrambler *d);
+  void (*td_ecm_idle)   (struct th_descrambler *d);
 
 } th_descrambler_t;
 
@@ -151,6 +152,7 @@ void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
+int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
 void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,

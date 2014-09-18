@@ -162,6 +162,17 @@ descrambler_caid_changed ( service_t *t )
   }
 }
 
+int
+descrambler_resolved( service_t *t, th_descrambler_t *ignore )
+{
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link)
+    if (td != ignore && td->td_keystate == DS_RESOLVED)
+      return 1;
+  return 0;
+}
+
 void
 descrambler_keys ( th_descrambler_t *td, int type,
                    const uint8_t *even, const uint8_t *odd )
@@ -191,6 +202,8 @@ descrambler_keys ( th_descrambler_t *td, int type,
                         ((mpegts_service_t *)td2->td_service)->s_dvb_svcname,
                         td->td_nicename);
       td->td_keystate = DS_IDLE;
+      if (td->td_ecm_idle)
+        td->td_ecm_idle(td);
       goto fin;
     }
 
