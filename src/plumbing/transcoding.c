@@ -1033,7 +1033,7 @@ Minimal of 12 bytes.
             // See if we have the second GOP_START_CODE. Normally 31 bits == 4 bytes
 	    // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l304
 	    mpeg2_header = (uint32_t *)(out+(header_size));
-            if (*mpeg2_header == 0xb8010000) { // GOP_START_CODE
+            if (*mpeg2_header == 0xb8010000) // GOP_START_CODE
               header_size += 4;
          }
         }
