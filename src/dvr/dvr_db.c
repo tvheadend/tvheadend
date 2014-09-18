@@ -358,8 +358,8 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
   if ( abs(t2 - t1) > (t1 / 5) )
     return 0;
 
-  /* Outside of window (should it be configurable)? */
-  if ( abs(e->start - de->de_start) > 86400 )
+  /* Outside of window */
+  if ( abs(e->start - de->de_start) > de->de_config->dvr_update_window )
     return 0;
   
   /* Title match (or contains?) */
@@ -1598,7 +1598,7 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
     htsmsg_add_str(e, "val", buf);
     htsmsg_add_msg(l, NULL, e);
   }
-  for (i = 120; i <= max;  i += 30) {
+  for (i = 120; i <= max; i += 30) {
     if ((i % 60) == 0)
       snprintf(buf, sizeof(buf), "%d hrs", i / 60);
     else

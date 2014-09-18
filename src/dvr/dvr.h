@@ -41,6 +41,7 @@ typedef struct dvr_config {
   char *dvr_postproc;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
+  uint32_t dvr_update_window;
 
   int dvr_mc;
   muxer_config_t dvr_muxcnf;

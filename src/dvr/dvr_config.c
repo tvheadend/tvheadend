@@ -146,6 +146,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
+  cfg->dvr_update_window = 24 * 3600;
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
@@ -367,6 +368,12 @@ dvr_config_class_cache_list(void *o)
   return strtab2htsmsg(tab);
 }
 
+static htsmsg_t *
+dvr_config_entry_class_update_window_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Update Disabled", 24*3600, 60);
+}
+
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
   .ic_caption    = "DVR Configuration Profile",
@@ -467,6 +474,15 @@ const idclass_t dvr_config_class = {
       .id       = "episode-duplicate-detection",
       .name     = "Episode Duplicate Detect",
       .off      = offsetof(dvr_config_t, dvr_episode_duplicate),
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "epg-update-window",
+      .name     = "EPG Update Window",
+      .off      = offsetof(dvr_config_t, dvr_update_window),
+      .list     = dvr_config_entry_class_update_window_list,
+      .def.u32  = 24*3600,
       .group    = 1,
     },
     {
