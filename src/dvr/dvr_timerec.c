@@ -52,11 +52,13 @@ dvr_timerec_timecorrection(time_t clk, int hm, struct tm *tm)
   localtime_r(&clk, tm);
   tm->tm_min = hm % 60;
   tm->tm_hour = hm / 60;
+  tm->tm_sec = 0;
   isdst = tm->tm_isdst;
   r = mktime(tm);
   if (tm->tm_isdst != isdst) {
     tm->tm_min = hm % 60;
     tm->tm_hour = hm / 60;
+    tm->tm_sec = 0;
     r = mktime(tm);
   }
   return r;
