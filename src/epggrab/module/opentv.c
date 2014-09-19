@@ -272,7 +272,7 @@ static void *_opentv_apply_pattern_list(char *buf, size_t size_buf, const char *
   int size;
 
   if (!l) return NULL;
-  /* search and report the first matching */
+  /* search and report the first match */
   TAILQ_FOREACH(p, l, p_links)
     if (p->compiled && !regexec(p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
       size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
