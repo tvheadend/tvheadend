@@ -71,7 +71,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 13
+#define HTSP_PROTO_VERSION 14
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -616,7 +616,8 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   htsmsg_add_msg(out, "services", services);
   htsmsg_add_msg(out, "tags", tags);
-  htsmsg_add_str(out, "method", method);
+  if (method)
+    htsmsg_add_str(out, "method", method);
   return out;
 }
 
@@ -1025,6 +1026,23 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp_async_connections, htsp, htsp_async_link);
 
   return NULL;
+}
+
+/**
+ * Get information about the given event
+ */
+static htsmsg_t *
+htsp_method_getChannel(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  uint32_t channelId;
+  channel_t *ch = NULL;
+
+  if (htsmsg_get_u32(in, "channelId", &channelId))
+    return htsp_error("Missing argument 'channelId'");
+  if (!(ch = channel_find_by_id(channelId)))
+    return htsp_error("Channel does not exist");
+
+  return htsp_build_channel(ch, NULL, htsp);
 }
 
 /**
@@ -2094,6 +2112,7 @@ struct {
   { "getDiskSpace",             htsp_method_getDiskSpace,       ACCESS_STREAMING},
   { "getSysTime",               htsp_method_getSysTime,         ACCESS_STREAMING},
   { "enableAsyncMetadata",      htsp_method_async,              ACCESS_STREAMING},
+  { "getChannel",               htsp_method_getChannel,         ACCESS_STREAMING},
   { "getEvent",                 htsp_method_getEvent,           ACCESS_STREAMING},
   { "getEvents",                htsp_method_getEvents,          ACCESS_STREAMING},
   { "epgQuery",                 htsp_method_epgQuery,           ACCESS_STREAMING},
