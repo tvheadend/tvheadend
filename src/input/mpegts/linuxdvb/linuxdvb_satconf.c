@@ -651,6 +651,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
     /* Pending */
     if (r != 0) {
+      tvhtrace("diseqc", "waiting %d seconds to finish setup for %s", r, lds[i]->ld_type);
       gtimer_arm(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, r);
       ls->ls_diseqc_idx = i + 1;
       return 0;
