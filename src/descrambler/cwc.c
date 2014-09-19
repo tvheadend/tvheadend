@@ -795,11 +795,14 @@ forbid:
       return;
     
     es->es_keystate = ES_FORBIDDEN;
-    LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       LIST_FOREACH(es2, &ep->ep_sections, es_link)
         if (es2->es_keystate == ES_UNKNOWN ||
             es2->es_keystate == ES_RESOLVED)
           break;
+      if (es2)
+        break;
+    }
 
     if (ep == NULL) { /* !UNKNOWN && !RESOLVED */
       tvhlog(LOG_ERR, "cwc",
