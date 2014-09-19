@@ -165,16 +165,23 @@ headers_complete(globalheaders_t *gh, int64_t qd)
  *
  */
 static th_pkt_t *
-convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
+convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt, int hold)
 {
+  th_pkt_t *r;
+
   switch(ssc->ssc_type) {
   case SCT_H264:
-    return avc_convert_pkt(pkt);
+    r = avc_convert_pkt(pkt);
+    pkt_ref_dec(pkt);
+    break;
 
   default:
-    pkt_ref_inc(pkt);
-    return pkt;
+    r = pkt;
+    if (hold)
+      pkt_ref_inc(r);
+    break;
   }
+  return r;
 }
 
 
@@ -214,7 +221,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
       break;
     }
 
-    pkt = convertpkt(ssc, pkt);
+    pkt = convertpkt(ssc, pkt, 1);
 
     apply_header(ssc, pkt);
 
@@ -273,7 +280,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 static void
 gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 {
-  th_pkt_t *pkt, *pkt2;
+  th_pkt_t *pkt;
   streaming_start_component_t *ssc;
 
   switch(sm->sm_type) {
@@ -306,10 +313,8 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     pkt = sm->sm_data;
     ssc = streaming_start_component_find_by_index(gh->gh_ss, 
 						  pkt->pkt_componentindex);
-    sm->sm_data = pkt2 = convertpkt(ssc, pkt);
+    sm->sm_data = convertpkt(ssc, pkt, 0);
     streaming_target_deliver2(gh->gh_output, sm);
-    if (pkt == pkt2)
-      pkt_ref_dec(pkt);
     break;
   }
 }
