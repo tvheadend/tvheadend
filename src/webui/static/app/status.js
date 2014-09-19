@@ -156,6 +156,7 @@ tvheadend.status_subs = function(panel, index)
     function destroyer() {
         if (subs === null || !tvheadend.dynamic)
             return;
+        tvheadend.comet.un('subscriptions', update);
         dpanel.removeAll()
         tvheadend.subsStore = null;
         store.destroy();
@@ -392,6 +393,7 @@ tvheadend.status_streams = function(panel, index)
     function destroyer() {
         if (grid === null || !tvheadend.dynamic)
             return;
+        tvheadend.comet.un('input_status', update);
         dpanel.removeAll()
         tvheadend.streamStatusStore = null;
         store.destroy();
@@ -497,6 +499,7 @@ tvheadend.status_conns = function(panel, index) {
     function destroyer() {
         if (grid === null || !tvheadend.dynamic)
             return;
+        tvheadend.comet.un('connections', update);
         dpanel.removeAll()
         store.destroy();
         store = null;
