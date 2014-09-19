@@ -511,12 +511,12 @@ descrambler_table_callback
           dr = t->s_descramble;
           if (dr) {
             dr->dr_ecm_start = dispatch_clock;
-            tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
-                     len, mt->mt_pid, t->s_dvb_svcname);
+            tvhtrace("descrambler", "ECM message (section %d, len %d, pid %d) for service \"%s\"",
+                     des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
         } else
-          tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
-                   len, mt->mt_pid);
+          tvhtrace("descrambler", "Unknown fast table message (section %d, len %d, pid %d)",
+                   des->number, len, mt->mt_pid);
       }
     }
   }
