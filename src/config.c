@@ -1032,6 +1032,10 @@ dobackup(const char *oldver)
     s = htsbuf_to_string(&q);
     tvherror("config", "command '%s' returned error code %d", s, code);
     tvherror("config", "executed in directory '%s'", root);
+    tvherror("config", "please, do not report this as an error, you may use --nobackup option");
+    tvherror("config", "... or run the above command in the printed directory");
+    tvherror("config", "... using the same user/group as for the tvheadend executable");
+    tvherror("config", "... to check the reason for the unfinished backup");
     free(s);
     htsbuf_queue_flush(&q);
     goto fatal;
