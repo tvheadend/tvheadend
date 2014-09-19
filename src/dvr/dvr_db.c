@@ -473,10 +473,12 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
     l = lang_str_create();
     lang_str_add(l, title, lang, 0);
     lang_str_serialize(l, conf, "title");
+    lang_str_destroy(l);
     if (description) {
       l = lang_str_create();
       lang_str_add(l, description, lang, 0);
       lang_str_serialize(l, conf, "description");
+      lang_str_destroy(l);
     }
   }
   if (content_type)
