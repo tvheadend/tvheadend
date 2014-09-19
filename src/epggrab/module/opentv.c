@@ -265,6 +265,29 @@ static int _opentv_parse_event
   return slen+4;
 }
 
+static void *_opentv_apply_pattern_list(char *buf, size_t size_buf, const char *text, opentv_pattern_list_t *l)
+{
+  regmatch_t match[2];
+  opentv_pattern_t *p;
+  int size;
+
+  if (!l) return NULL;
+  /* search and report the first matching */
+  TAILQ_FOREACH(p, l, p_links)
+    if (p->compiled && !regexec(p->compiled, text, 2, match, 0) && match[1].rm_so != -1) {
+      size = MIN(match[1].rm_eo - match[1].rm_so, size_buf - 1);
+      while (size > 0 && isspace(text[match[1].rm_so + size - 1]))
+        size--;
+      memcpy(buf, text + match[1].rm_so, size);
+      buf[size] = '\0';
+      if (size) {
+         tvhtrace("opentv","  pattern \"%s\" matches with '%s'", p->text, buf);
+         return buf;
+      }
+    }
+  return NULL;
+}
+
 /* Parse an event section */
 static int
 opentv_parse_event_section
@@ -317,11 +340,11 @@ opentv_parse_event_section
 
     /* Summary / Description */
     if (ev.summary) {
-      tvhdebug("opentv", "  summary %s", ev.summary);
+      tvhdebug("opentv", "  summary '%s'", ev.summary);
       save |= epg_broadcast_set_summary(ebc, ev.summary, lang, src);
     }
     if (ev.desc) {
-      tvhdebug("opentv", "  desc %s", ev.desc);
+      tvhdebug("opentv", "  desc '%s'", ev.desc);
       save |= epg_broadcast_set_description(ebc, ev.desc, lang, src);
     }
 
@@ -350,7 +373,7 @@ opentv_parse_event_section
         while (size > 0 && isspace(ev.title[size - 1]))
           ev.title[--size] = '\0';
 
-        tvhdebug("opentv", "    title %s", ev.title);
+        tvhdebug("opentv", "    title '%s'", ev.title);
         save |= epg_episode_set_title(ee, ev.title, lang, src);
       }
       if (ev.cat) {
@@ -360,58 +383,37 @@ opentv_parse_event_section
         epg_genre_list_destroy(egl);
       }
       if (ev.summary) {
-        int size;
         char buf[1024];
-        regmatch_t match[2];
-        opentv_pattern_t *p;
         epg_episode_num_t en;
 
         memset(&en, 0, sizeof(en));
-        /* search the first matching pattern for season number */
-        if (mod->p_snum)
-          TAILQ_FOREACH(p, mod->p_snum, p_links)
-            if (p->compiled && !regexec(p->compiled, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
-              if ((en.s_num = atoi(ev.summary + match[1].rm_so)))
-                tvhtrace("opentv","  matching season number %d using pattern \"%s\"", en.s_num, p->text);
-              break;
-            }
+        /* search for season number */
+        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, mod->p_snum))
+          if ((en.s_num = atoi(buf)))
+            tvhtrace("opentv","  extract season number %d", en.s_num);
         /* ...for episode number */
-        if (mod->p_enum)
-          TAILQ_FOREACH(p, mod->p_enum, p_links)
-            if (p->compiled && !regexec(p->compiled, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
-              if ((en.e_num = atoi(ev.summary + match[1].rm_so)))
-                tvhtrace("opentv","  matching episode number %d using pattern \"%s\"", en.e_num, p->text);
-              break;
-            }
+        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, mod->p_enum))
+          if ((en.e_num = atoi(buf)))
+            tvhtrace("opentv","  extract episode number %d", en.e_num);
         /* ...for part number */
-        if (mod->p_pnum)
-          TAILQ_FOREACH(p, mod->p_pnum, p_links)
-            if (p->compiled && !regexec(p->compiled, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
-              if (ev.summary[match[1].rm_so] >= 'a' && ev.summary[match[1].rm_so] <= 'z')
-                en.p_num = ev.summary[match[1].rm_so] - 'a' + 1;
-              else
-                if (ev.summary[match[1].rm_so] >= 'A' && ev.summary[match[1].rm_so] <= 'Z')
-                  en.p_num = ev.summary[match[1].rm_so] - 'A' + 1;
-              if (en.p_num)
-                tvhtrace("opentv","  matching part number %d using pattern \"%s\"", en.p_num, p->text);
-              break;
-            }
+        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, mod->p_pnum)) {
+          if (buf[0] >= 'a' && buf[0] <= 'z')
+            en.p_num = buf[0] - 'a' + 1;
+          else
+            if (buf[0] >= 'A' && buf[0] <= 'Z')
+              en.p_num = buf[0] - 'A' + 1;
+          if (en.p_num)
+            tvhtrace("opentv","  extract part number %d", en.p_num);
+        }
+        /* save any found number */
         if (en.s_num || en.e_num || en.p_num)
           save |= epg_episode_set_epnum(ee, &en, src);
 
         /* ...for subtitle */
-        if (mod->p_subt)
-          TAILQ_FOREACH(p, mod->p_subt, p_links)
-            if (p->compiled && !regexec(p->compiled, ev.summary, 2, match, 0) && match[1].rm_so != -1) {
-              size = MIN(match[1].rm_eo - match[1].rm_so, sizeof(buf) - 1);
-              while (size > 0 && isspace(ev.summary[match[1].rm_so + size - 1]))
-                size--;
-              memcpy(buf, ev.summary + match[1].rm_so, size);
-              buf[size] = '\0';
-              tvhdebug("opentv", "  matching subtitle '%s' using pattern \"%s\"", buf, p->text);
-              save |= epg_episode_set_subtitle(ee, buf, lang, src);
-              break;
-            }
+        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, mod->p_subt)) {
+          tvhtrace("opentv", "  extract subtitle '%s'", buf);
+          save |= epg_episode_set_subtitle(ee, buf, lang, src);
+        }
       }
     }
 
