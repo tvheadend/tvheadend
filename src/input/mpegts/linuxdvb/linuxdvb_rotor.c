@@ -259,7 +259,7 @@ linuxdvb_rotor_usals_tune
     return 0;
 
   tvhtrace("diseqc", "rotor USALS goto %0.1f%c (motor %0.2f %sclockwise)",
-           fabs(pos), (pos > 0.0) ? 'E' : 'W',
+           fabs(lr->lr_sat_lon), (lr->lr_sat_lon > 0.0) ? 'E' : 'W',
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
