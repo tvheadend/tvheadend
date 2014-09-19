@@ -273,6 +273,7 @@ descrambler_flush_table_data( service_t *t )
   mpegts_mux_t *mux = ms->s_dvb_mux;
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
 
   if (mux == NULL)
     return;
@@ -281,11 +282,12 @@ descrambler_flush_table_data( service_t *t )
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table == NULL || dt->table->mt_service != ms)
       continue;
-    TAILQ_FOREACH(ds, &dt->sections, link) {
-      free(ds->last_data);
-      ds->last_data = NULL;
-      ds->last_data_len = 0;
-    }
+    TAILQ_FOREACH(ds, &dt->sections, link)
+      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+        LIST_REMOVE(des, link);
+        free(des->last_data);
+        free(des);
+      }
   }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
 }
@@ -476,19 +478,30 @@ descrambler_table_callback
 {
   descrambler_table_t *dt = mt->mt_opaque;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
   th_descrambler_runtime_t *dr;
 
+  if (len < 6)
+    return 0;
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
-  TAILQ_FOREACH(ds, &dt->sections, link)
-    if (ds->last_data == NULL || len != ds->last_data_len ||
-        memcmp(ds->last_data, ptr, len)) {
-      free(ds->last_data);
-      ds->last_data = malloc(len);
-      if (ds->last_data) {
-        memcpy(ds->last_data, ptr, len);
-        ds->last_data_len = len;
+  TAILQ_FOREACH(ds, &dt->sections, link) {
+    LIST_FOREACH(des, &ds->ecmsecs, link)
+      if (des->number == ptr[4])
+        break;
+    if (des == NULL) {
+      des = calloc(1, sizeof(*des));
+      des->number = ptr[4];
+      LIST_INSERT_HEAD(&ds->ecmsecs, des, link);
+    }
+    if (des->last_data == NULL || len != des->last_data_len ||
+        memcmp(des->last_data, ptr, len)) {
+      free(des->last_data);
+      des->last_data = malloc(len);
+      if (des->last_data) {
+        memcpy(des->last_data, ptr, len);
+        des->last_data_len = len;
       } else {
-        ds->last_data_len = 0;
+        des->last_data_len = 0;
       }
       ds->callback(ds->opaque, mt->mt_pid, ptr, len);
       if ((mt->mt_flags & MT_FAST) != 0) { /* ECM */
@@ -506,6 +519,7 @@ descrambler_table_callback
                    len, mt->mt_pid);
       }
     }
+  }
   pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
   return 0;
 }
@@ -547,6 +561,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds = calloc(1, sizeof(*ds));
   ds->callback    = callback;
   ds->opaque      = opaque;
+  LIST_INIT(&ds->ecmsecs);
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
   tvhtrace("descrambler", "mux %p open pid %04X (%i) (flags 0x%04x)", mux, pid, pid, flags);
   return 1;
@@ -570,6 +585,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
 
   if (mux == NULL)
     return 0;
@@ -580,8 +596,11 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
         if (ds->opaque == opaque) {
           TAILQ_REMOVE(&dt->sections, ds, link);
           ds->callback(ds->opaque, -1, NULL, 0);
-          free(ds->last_data);
-          free(ds);
+          while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+            LIST_REMOVE(des, link);
+            free(des->last_data);
+            free(des);
+          }
           if (TAILQ_FIRST(&dt->sections) == NULL) {
             TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
             mpegts_table_destroy(dt->table);
@@ -612,6 +631,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
   descrambler_emm_t *emm;
 
   if (mux == NULL)
@@ -626,8 +646,11 @@ descrambler_flush_tables( mpegts_mux_t *mux )
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
       ds->callback(ds->opaque, -1, NULL, 0);
-      free(ds->last_data);
-      free(ds);
+      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+        LIST_REMOVE(des, link);
+        free(des->last_data);
+        free(des);
+      }
     }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
     mpegts_table_destroy(dt->table);

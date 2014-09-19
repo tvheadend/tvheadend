@@ -80,12 +80,18 @@ typedef void (*descrambler_section_callback_t)
 /**
  * Track required PIDs
  */
+typedef struct descrambler_ecmsec {
+  LIST_ENTRY(descrambler_ecmsec) link;
+  uint8_t   number;
+  uint8_t  *last_data;
+  int       last_data_len;
+} descrambler_ecmsec_t;
+
 typedef struct descrambler_section {
   TAILQ_ENTRY(descrambler_section) link;
   descrambler_section_callback_t callback;
   void     *opaque;
-  uint8_t  *last_data;
-  int       last_data_len;
+  LIST_HEAD(, descrambler_ecmsec) ecmsecs;
 } descrambler_section_t;
 
 typedef struct descrambler_table {
