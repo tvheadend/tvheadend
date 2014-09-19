@@ -238,7 +238,6 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     
     pkt = pr->pr_pkt;
     TAILQ_REMOVE(&tf->tf_ptsq, pr, pr_link);
-    free(pr);
 
     tfs = tfs_find(tf, pkt);
 
@@ -269,7 +268,8 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	    break;
 	  }
 	if (srch == NULL) {
-	  pkt_ref_dec(pkt);
+	  /* return packet back to tf_ptsq */
+	  TAILQ_INSERT_HEAD(&tf->tf_ptsq, pr, pr_link);
 	  return; /* not arrived yet, wait */
         }
       }
@@ -279,6 +279,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       break;
     }
 
+    free(pr);
     normalize_ts(tf, tfs, pkt);
   }
 }
