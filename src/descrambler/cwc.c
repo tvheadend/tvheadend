@@ -113,8 +113,6 @@ typedef struct ecm_section {
   char es_pending;
   char es_resolved;
   int64_t es_time;  // time request was sent
-  size_t es_ecmsize;
-  uint8_t es_ecm[4070];
 
 } ecm_section_t;
 
@@ -1790,9 +1788,6 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         LIST_INSERT_HEAD(&ep->ep_sections, es, es_link);
       }
 
-      if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
-        break; /* key already sent */
-
       if(cwc->cwc_fd == -1) {
         // New key, but we are not connected (anymore), can not descramble
         ct->td_keystate = DS_UNKNOWN;
@@ -1805,9 +1800,6 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
       es->es_channel = channel;
       es->es_pending = 1;
       es->es_resolved = 0;
-
-      memcpy(es->es_ecm, data, len);
-      es->es_ecmsize = len;
 
       if(ct->cs_channel >= 0 && channel != -1 &&
          ct->cs_channel != channel) {
