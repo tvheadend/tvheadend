@@ -769,16 +769,18 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 
     if (descrambler_resolved((service_t *)t, (th_descrambler_t *)ct)) {
       tvhlog(LOG_DEBUG, "cwc",
-            "NOK from %s: Already has a key for service \"%s\"",
-            ct->td_nicename, t->s_dvb_svcname);
+            "NOK[%i] from %s: Already has a key for service \"%s\"",
+            es->es_section, ct->td_nicename, t->s_dvb_svcname);
       es->es_nok = CWC_MAX_NOKS; /* do not send more ECM requests */
       es->es_keystate = ES_IDLE;
       if (ct->td_keystate == DS_UNKNOWN)
         ct->td_keystate = DS_IDLE;
     }
 
-    tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
-          "Req delay: %"PRId64" ms)", t->s_dvb_svcname, chaninfo, seq, delay);
+    tvhlog(LOG_DEBUG, "cwc",
+           "Received NOK[%i] for service \"%s\"%s "
+           "(seqno: %d Req delay: %"PRId64" ms)",
+           es->es_section, t->s_dvb_svcname, chaninfo, seq, delay);
 
 forbid:
     i = 0;
