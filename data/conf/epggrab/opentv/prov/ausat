@@ -1,6 +1,7 @@
 {
   "name": "Ausat",
   "dict": "skyeng",
+  "genre": "ausat",
   "nid": 4096,
   "tsid": 17,
   "sid": 17008,
