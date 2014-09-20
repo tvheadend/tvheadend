@@ -722,7 +722,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   if(nc == 2 && !strcmp(components[0], "channelid"))
     ch = channel_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "channelnumber"))
-    ch = channel_find_by_number(atoi(components[1]));
+    ch = channel_find_by_number(components[1]);
   else if(nc == 2 && !strcmp(components[0], "channelname"))
     ch = channel_find_by_name(components[1]);
   else if(nc == 2 && !strcmp(components[0], "channel"))
@@ -1004,7 +1004,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(components[0], "channelid")) {
     ch = channel_find_by_id(atoi(components[1]));
   } else if(!strcmp(components[0], "channelnumber")) {
-    ch = channel_find_by_number(atoi(components[1]));
+    ch = channel_find_by_number(components[1]);
   } else if(!strcmp(components[0], "channelname")) {
     ch = channel_find_by_name(components[1]);
   } else if(!strcmp(components[0], "channel")) {

@@ -149,7 +149,7 @@ channel_t *channel_find_by_name(const char *name);
 
 channel_t *channel_find_by_id(uint32_t id);
 
-channel_t *channel_find_by_number(int no);
+channel_t *channel_find_by_number(const char *no);
 
 #define channel_find channel_find_by_uuid
 
