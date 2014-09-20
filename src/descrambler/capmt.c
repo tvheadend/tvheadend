@@ -839,7 +839,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   if (adapter >= MAX_CA ||
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER ||
-      (pid < 0 || pid > 8191))
+      pid > 8191)
     return;
   cf = &capmt->capmt_demuxes.filters[demux_index];
   if (cf->max && cf->adapter != adapter)
