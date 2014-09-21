@@ -111,7 +111,6 @@ struct linuxdvb_frontend
    * Configuration
    */
   int                       lfe_powersave;
-  uint32_t                  lfe_max_rotor_move;
 
   /*
    * Satconf (DVB-S only)
@@ -192,10 +191,9 @@ struct linuxdvb_diseqc
   idnode_t              ld_id;
   const char           *ld_type;
   linuxdvb_satconf_ele_t   *ld_satconf;
-  int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-                   linuxdvb_frontend_t *lfe);
+  int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-                   linuxdvb_satconf_ele_t *ls, linuxdvb_frontend_t *lfe);
+                   linuxdvb_satconf_ele_t *ls, int fd);
 };
 
 struct linuxdvb_lnb
@@ -320,7 +318,7 @@ int linuxdvb_satconf_get_priority
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
 
 int linuxdvb_satconf_get_grace
-  ( linuxdvb_frontend_t *lfe, mpegts_mux_t *mm );
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
   
 void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
 

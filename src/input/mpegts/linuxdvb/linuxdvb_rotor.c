@@ -131,14 +131,14 @@ const idclass_t linuxdvb_rotor_usals_class =
 
 static int
 linuxdvb_rotor_grace
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_frontend_t *lfe )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
   int newpos, curpos, delta;
 
   if (!ls->ls_orbital_dir || lr->lr_rate == 0)
-    return lfe->lfe_max_rotor_move;
+    return 120;
 
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
     newpos = lr->lr_position;                /* GotoX */
@@ -183,8 +183,7 @@ linuxdvb_rotor_check_orbital_pos
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
-  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls,
-    linuxdvb_frontend_t *lfe )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   int i;
 
@@ -192,7 +191,7 @@ linuxdvb_rotor_gotox_tune
     return 0;
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
-    if (linuxdvb_diseqc_send(lfe->lfe_fe_fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
     }
@@ -201,14 +200,13 @@ linuxdvb_rotor_gotox_tune
 
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
 
-  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr, lm, lfe);
+  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 }
 
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
-  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls,
-    linuxdvb_frontend_t *lfe )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   /*
    * Code originally written in PR #238 by Jason Millard jsm174
@@ -265,14 +263,14 @@ linuxdvb_rotor_usals_tune
            motor_angle, (motor_angle > 0.0) ? "counter-" : "");
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
-    if (linuxdvb_diseqc_send(lfe->lfe_fe_fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
+    if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2, angle_1, angle_2)) {
       tvherror("diseqc", "failed to send USALS command");
       return -1;
     }
     usleep(25000);
   }
 
-  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr, lm, lfe);
+  return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
 
 #undef TO_RAD
 #undef TO_DEG
@@ -280,13 +278,12 @@ linuxdvb_rotor_usals_tune
 
 static int
 linuxdvb_rotor_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls,
-    linuxdvb_frontend_t *lfe )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
   /* Force to 18v (quicker movement) */
-  if (ioctl(lfe->lfe_fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
+  if (ioctl(fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
     tvherror("diseqc", "failed to set 18v for rotor movement");
     return -1;
   }
@@ -294,10 +291,10 @@ linuxdvb_rotor_tune
 
   /* GotoX */
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
-    return linuxdvb_rotor_gotox_tune(lr, lm, ls, lfe);
+    return linuxdvb_rotor_gotox_tune(lr, lm, ls, fd);
 
   /* USALS */
-  return linuxdvb_rotor_usals_tune(lr, lm, ls, lfe);
+  return linuxdvb_rotor_usals_tune(lr, lm, ls, fd);
 }
 
 /* **************************************************************************
