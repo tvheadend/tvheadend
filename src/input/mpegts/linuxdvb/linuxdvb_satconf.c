@@ -231,6 +231,14 @@ const idclass_t linuxdvb_satconf_class =
       .opts     = PO_ADVANCED,
       .def.i    = 1
     },
+    {
+      .type     = PT_U32,
+      .id       = "max_rotor_move",
+      .name     = "Max Rotor Movement (seconds)",
+      .off      = offsetof(linuxdvb_satconf_t, ls_max_rotor_move),
+      .opts     = PO_ADVANCED,
+      .def.u32  = 120
+    },
     {}
   }
 };
@@ -744,6 +752,8 @@ linuxdvb_satconf_create
   ls->ls_frontend = (mpegts_input_t*)lfe;
   ls->ls_type     = lst->type;
   TAILQ_INIT(&ls->ls_elements);
+
+  ls->ls_max_rotor_move = 120;
 
   /* Create node */
   if (idnode_insert(&ls->ls_id, uuid, lst->idc, 0)) {

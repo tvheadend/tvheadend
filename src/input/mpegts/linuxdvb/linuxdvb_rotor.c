@@ -138,7 +138,7 @@ linuxdvb_rotor_grace
   int newpos, curpos, delta;
 
   if (!ls->ls_orbital_dir || lr->lr_rate == 0)
-    return 120;
+    return ls->ls_max_rotor_move;
 
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
     newpos = lr->lr_position;                /* GotoX */
