@@ -143,7 +143,7 @@ linuxdvb_rotor_grace
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
     newpos = lr->lr_position;                /* GotoX */
   else
-    newpos = (lr->lr_sat_lon + 0.005) * 100; /* USALS */
+    newpos = (lr->lr_sat_lon + 0.05) * 10;   /* USALS */
 
   curpos = ls->ls_orbital_pos;
   if (ls->ls_orbital_dir == 'W')
