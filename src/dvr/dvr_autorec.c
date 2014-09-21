@@ -390,6 +390,15 @@ dvr_autorec_entry_class_channel_get(void *o)
   return &ret;
 }
 
+static char *
+dvr_autorec_entry_class_channel_rend(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_channel)
+    return strdup(channel_get_name(dae->dae_channel));
+  return NULL;
+}
+
 static int
 dvr_autorec_entry_class_title_set(void *o, const void *v)
 {
@@ -440,6 +449,15 @@ dvr_autorec_entry_class_tag_get(void *o)
   else
     ret = "";
   return &ret;
+}
+
+static char *
+dvr_autorec_entry_class_tag_rend(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_channel_tag)
+    return strdup(dae->dae_channel_tag->ct_name);
+  return NULL;
 }
 
 static int
@@ -554,6 +572,15 @@ dvr_autorec_entry_class_config_name_get(void *o)
   else
     ret = "";
   return &ret;
+}
+
+static char *
+dvr_autorec_entry_class_config_name_rend(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_config)
+    return strdup(dae->dae_config->dvr_config_name);
+  return NULL;
 }
 
 static int
@@ -793,6 +820,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel",
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
+      .rend     = dvr_autorec_entry_class_channel_rend,
       .list     = channel_class_get_list,
     },
     {
@@ -801,6 +829,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel Tag",
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
+      .rend     = dvr_autorec_entry_class_tag_rend,
       .list     = channel_tag_class_get_list,
     },
     {
@@ -810,6 +839,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
+      .opts     = PO_SORTKEY
     },
     {
       .type     = PT_TIME,
@@ -877,6 +907,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "DVR Configuration",
       .set      = dvr_autorec_entry_class_config_name_set,
       .get      = dvr_autorec_entry_class_config_name_get,
+      .rend     = dvr_autorec_entry_class_config_name_rend,
       .list     = dvr_entry_class_config_name_list,
     },
     {

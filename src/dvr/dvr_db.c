@@ -1176,6 +1176,29 @@ dvr_entry_class_config_name_get(void *o)
   return &ret;
 }
 
+htsmsg_t *
+dvr_entry_class_config_name_list(void *o)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "idnode/load");
+  htsmsg_add_str(m, "event", "dvrconfig");
+  htsmsg_add_u32(p, "enum",  1);
+  htsmsg_add_str(p, "class", dvr_config_class.ic_class);
+  htsmsg_add_msg(m, "params", p);
+  return m;
+}
+
+static char *
+dvr_entry_class_config_name_rend(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de->de_config)
+    return strdup(de->de_config->dvr_config_name);
+  return NULL;
+}
+
 static int
 dvr_entry_class_channel_set(void *o, const void *v)
 {
@@ -1215,6 +1238,15 @@ dvr_entry_class_channel_get(void *o)
   else
     ret = "";
   return &ret;
+}
+
+static char *
+dvr_entry_class_channel_rend(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de->de_channel)
+    return strdup(channel_get_name(de->de_channel));
+  return NULL;
 }
 
 static int
@@ -1297,21 +1329,6 @@ dvr_entry_class_mc_list ( void *o )
   };
   return strtab2htsmsg(tab);
 }
-
-htsmsg_t *
-dvr_entry_class_config_name_list(void *o)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *p = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "idnode/load");
-  htsmsg_add_str(m, "event", "dvrconfig");
-  htsmsg_add_u32(p, "enum",  1);
-  htsmsg_add_str(p, "class", dvr_config_class.ic_class);
-  htsmsg_add_msg(m, "params", p);
-  return m;
-}
-
 
 static int
 dvr_entry_class_autorec_set(void *o, const void *v)
@@ -1652,7 +1669,7 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
       .get_opts = dvr_entry_class_start_extra_opts,
-      .opts     = PO_DURATION,
+      .opts     = PO_DURATION | PO_SORTKEY,
     },
     {
       .type     = PT_TIME,
@@ -1674,7 +1691,7 @@ const idclass_t dvr_entry_class = {
       .name     = "Extra Stop Time",
       .off      = offsetof(dvr_entry_t, de_stop_extra),
       .list     = dvr_entry_class_extra_list,
-      .opts     = PO_DURATION,
+      .opts     = PO_DURATION | PO_SORTKEY,
     },
     {
       .type     = PT_TIME,
@@ -1696,6 +1713,7 @@ const idclass_t dvr_entry_class = {
       .name     = "Channel",
       .set      = dvr_entry_class_channel_set,
       .get      = dvr_entry_class_channel_get,
+      .rend     = dvr_entry_class_channel_rend,
       .list     = channel_class_get_list,
       .get_opts = dvr_entry_class_start_opts,
     },
@@ -1751,6 +1769,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = DVR_PRIO_NORMAL,
       .set      = dvr_entry_class_pri_set,
       .list     = dvr_entry_class_pri_list,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_INT,
@@ -1767,6 +1786,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = MC_MATROSKA,
       .set      = dvr_entry_class_mc_set,
       .list     = dvr_entry_class_mc_list,
+      .opts     = PO_SORTKEY
     },
     {
       .type     = PT_STR,
@@ -1775,6 +1795,7 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_config_name_set,
       .get      = dvr_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,
+      .rend     = dvr_entry_class_config_name_rend,
       .get_opts = dvr_entry_class_start_opts,
     },
     {
@@ -1841,7 +1862,7 @@ const idclass_t dvr_entry_class = {
       .name     = "Content Type",
       .list     = dvr_entry_class_content_type_list,
       .off      = offsetof(dvr_entry_t, de_content_type),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_SORTKEY,
     },
     {
       .type     = PT_U32,

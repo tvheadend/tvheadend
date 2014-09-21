@@ -306,6 +306,15 @@ dvr_timerec_entry_class_channel_get(void *o)
   return &ret;
 }
 
+static char *
+dvr_timerec_entry_class_channel_rend(void *o)
+{
+  dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
+  if (dte->dte_channel)
+    return strdup(channel_get_name(dte->dte_channel));
+  return NULL;
+}
+
 static int
 dvr_timerec_entry_class_time_set(void *o, const void *v, int *tm)
 {
@@ -408,6 +417,15 @@ dvr_timerec_entry_class_config_name_get(void *o)
   return &buf;
 }
 
+static char *
+dvr_timerec_entry_class_config_name_rend(void *o)
+{
+  dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
+  if (dte->dte_config)
+    return strdup(dte->dte_config->dvr_config_name);
+  return NULL;
+}
+
 static int
 dvr_timerec_entry_class_weekdays_set(void *o, const void *v)
 {
@@ -479,6 +497,7 @@ const idclass_t dvr_timerec_entry_class = {
       .name     = "Channel",
       .set      = dvr_timerec_entry_class_channel_set,
       .get      = dvr_timerec_entry_class_channel_get,
+      .rend     = dvr_timerec_entry_class_channel_rend,
       .list     = channel_class_get_list,
     },
     {
@@ -489,6 +508,7 @@ const idclass_t dvr_timerec_entry_class = {
       .get      = dvr_timerec_entry_class_start_get,
       .list     = dvr_timerec_entry_class_time_list,
       .def.s    = "12:00",
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_STR,
@@ -498,6 +518,7 @@ const idclass_t dvr_timerec_entry_class = {
       .get      = dvr_timerec_entry_class_stop_get,
       .list     = dvr_timerec_entry_class_time_list,
       .def.s    = "12:00",
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_U32,
@@ -517,6 +538,7 @@ const idclass_t dvr_timerec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_timerec_entry_t, dte_pri),
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_INT,
@@ -530,6 +552,7 @@ const idclass_t dvr_timerec_entry_class = {
       .name     = "DVR Configuration",
       .set      = dvr_timerec_entry_class_config_name_set,
       .get      = dvr_timerec_entry_class_config_name_get,
+      .rend     = dvr_timerec_entry_class_config_name_rend,
       .list     = dvr_entry_class_config_name_list,
     },
     {
