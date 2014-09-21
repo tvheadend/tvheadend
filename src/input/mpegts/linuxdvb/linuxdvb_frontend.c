@@ -155,6 +155,14 @@ const idclass_t linuxdvb_frontend_dvbs_class =
       .def.s    = "simple"
     },
     {
+      .type     = PT_U32,
+      .id       = "max_rotor_move",
+      .name     = "Max Rotor Movement (seconds)",
+      .off      = offsetof(linuxdvb_frontend_t, lfe_max_rotor_move),
+      .opts     = PO_ADVANCED,
+      .def.u32  = 120
+    },
+    {
       .id       = "networks",
       .type     = PT_NONE,
     },
@@ -249,7 +257,7 @@ linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   int r = 5;
   if (lfe->lfe_satconf)
-    r = linuxdvb_satconf_get_grace(lfe->lfe_satconf, mm);
+    r = linuxdvb_satconf_get_grace(lfe, mm);
   return r;
 }
 
@@ -1335,6 +1343,7 @@ linuxdvb_frontend_create
   lfe->lfe_type = type;
   strncpy(lfe->lfe_name, name, sizeof(lfe->lfe_name));
   lfe->lfe_name[sizeof(lfe->lfe_name)-1] = '\0';
+  lfe->lfe_max_rotor_move = 120;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 

@@ -144,9 +144,10 @@ const idclass_t linuxdvb_switch_class =
 
 static int
 linuxdvb_switch_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc,
+    linuxdvb_frontend_t *lfe )
 {
-  int i, com, r1 = 0, r2 = 0;
+  int i, com, r1 = 0, r2 = 0, fd = lfe->lfe_fe_fd;
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 

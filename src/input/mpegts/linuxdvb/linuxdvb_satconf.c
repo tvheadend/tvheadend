@@ -590,8 +590,9 @@ linuxdvb_satconf_post_stop_mux
 
 int
 linuxdvb_satconf_get_grace
-  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_t *mm )
 {
+  linuxdvb_satconf_t *ls = lfe->lfe_satconf;
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
   int i, r = 10;
   linuxdvb_diseqc_t      *lds[] = {
@@ -604,7 +605,7 @@ linuxdvb_satconf_get_grace
   /* Add diseqc delay */
   for (i = 0; i < 3; i++) {
     if (lds[i] && lds[i]->ld_grace)
-      r += lds[i]->ld_grace(lds[i], (dvb_mux_t*)mm);
+      r += lds[i]->ld_grace(lds[i], (dvb_mux_t*)mm, lfe);
   }
 
   return r;
@@ -644,7 +645,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* Diseqc */  
   for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
     if (!lds[i]) continue;
-    r = lds[i]->ld_tune(lds[i], lm, lse, lfe->lfe_fe_fd);
+    r = lds[i]->ld_tune(lds[i], lm, lse, lfe);
 
     /* Error */
     if (r < 0) return r;
