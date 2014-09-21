@@ -1577,7 +1577,7 @@ dvr_entry_class_channel_icon_url_get(void *o)
     snprintf(buf, sizeof(buf), "imagecache/%d", id);
   } else {
     strncpy(buf, ch->ch_icon ?: "", sizeof(buf));
-    buf[strlen(buf)-1] = '\0';
+    buf[sizeof(buf)-1] = '\0';
   }
   s = buf;
   return &s;
