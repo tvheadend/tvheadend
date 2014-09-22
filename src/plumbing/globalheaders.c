@@ -172,7 +172,8 @@ convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt, int hold)
   switch(ssc->ssc_type) {
   case SCT_H264:
     r = avc_convert_pkt(pkt);
-    pkt_ref_dec(pkt);
+    if (!hold)
+      pkt_ref_dec(pkt);
     break;
 
   default:
