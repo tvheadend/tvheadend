@@ -606,6 +606,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
             mpegts_table_destroy(dt->table);
             free(dt);
           }
+          free(ds);
           tvhtrace("descrambler", "mux %p close pid %04X (%i)", mux, pid, pid);
           return 1;
         }
@@ -651,6 +652,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
         free(des->last_data);
         free(des);
       }
+      free(ds);
     }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
     mpegts_table_destroy(dt->table);
