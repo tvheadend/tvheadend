@@ -461,7 +461,8 @@ void service_unref(service_t *t);
 
 void service_ref(service_t *t);
 
-service_t *service_find(const char *identifier);
+static inline service_t *service_find(const char *identifier)
+  { return idnode_find(identifier, &service_class, NULL); }
 #define service_find_by_identifier service_find
 
 service_instance_t *service_find_instance(struct service *s,

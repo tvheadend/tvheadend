@@ -862,16 +862,6 @@ service_create0
 }
 
 /**
- * Find a service based on the given identifier
- */
-service_t *
-service_find(const char *identifier)
-{
-  return idnode_find(identifier, &service_class);
-}
-
-
-/**
  *
  */
 static void 

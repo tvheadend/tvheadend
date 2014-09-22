@@ -1456,7 +1456,7 @@ capmt_thread(void *aux)
           int i, n;
           extern const idclass_t linuxdvb_adapter_class;
           linuxdvb_adapter_t *la;
-          idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
+          idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class, NULL);
           for (i = 0; i < is->is_count; i++) {
             la = (linuxdvb_adapter_t*)is->is_array[i];
             if (!la || !la->la_is_enabled(la)) continue;

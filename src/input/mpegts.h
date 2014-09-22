@@ -640,7 +640,8 @@ void mpegts_input_stop_all ( mpegts_input_t *mi );
 
 void mpegts_input_delete ( mpegts_input_t *mi, int delconf );
 
-#define mpegts_input_find(u) idnode_find(u, &mpegts_input_class);
+static inline mpegts_input_t *mpegts_input_find(const char *uuid)
+  { return idnode_find(uuid, &mpegts_input_class, NULL); }
 
 int mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg );
 
@@ -680,8 +681,8 @@ mpegts_network_t *mpegts_network_create0
 
 extern const idclass_t mpegts_network_class;
 
-#define mpegts_network_find(u)\
-  idnode_find(u, &mpegts_network_class)
+static inline mpegts_network_t *mpegts_network_find(const char *uuid)
+  { return idnode_find(uuid, &mpegts_network_class, NULL); }
 
 mpegts_mux_t *mpegts_network_find_mux
   (mpegts_network_t *mn, uint16_t onid, uint16_t tsid);
@@ -706,8 +707,8 @@ mpegts_mux_t *mpegts_mux_create0
   mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
                      mn, onid, tsid, conf)
 
-#define mpegts_mux_find(u)\
-  idnode_find(u, &mpegts_mux_class)
+static inline mpegts_mux_t *mpegts_mux_find(const char *uuid)
+  { return idnode_find(uuid, &mpegts_mux_class, NULL); }
 
 #define mpegts_mux_delete_by_uuid(u, delconf)\
   { mpegts_mux_t *mm = mpegts_mux_find(u); if (mm) mm->mm_delete(mm, delconf); }
@@ -814,8 +815,8 @@ mpegts_service_t *mpegts_service_create0
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
-#define mpegts_service_find_by_uuid(u)\
-  idnode_find(u, &mpegts_service_class)
+static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
+  { return idnode_find(uuid, &mpegts_service_class, NULL); }
 
 void mpegts_service_delete ( service_t *s, int delconf );
 

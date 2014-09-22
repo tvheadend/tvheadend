@@ -344,7 +344,7 @@ dvr_config_t *dvr_config_find_by_name_default(const char *name);
 dvr_config_t *dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf);
 
 static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)
-  { return (dvr_config_t*)idnode_find(uuid, &dvr_config_class); }
+  { return (dvr_config_t*)idnode_find(uuid, &dvr_config_class, NULL); }
 
 void dvr_config_delete(const char *name);
 
@@ -431,7 +431,7 @@ void dvr_event_updated(epg_broadcast_t *e);
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
-  { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class); }
+  { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
 dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 
@@ -490,7 +490,7 @@ void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
 
 static inline dvr_autorec_entry_t *
 dvr_autorec_find_by_uuid(const char *uuid)
-  { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class); }
+  { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class, NULL); }
 
 
 htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
@@ -526,7 +526,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
-  { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class); }
+  { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class, NULL); }
 
 
 void dvr_timerec_save(dvr_timerec_entry_t *dae);
