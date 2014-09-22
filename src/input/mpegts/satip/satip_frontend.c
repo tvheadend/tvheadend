@@ -1262,7 +1262,9 @@ fast_exit:
         r = http_client_run(rtsp);
         if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
           break;
-        nfds = tvhpoll_wait(efd, ev, 1, 250);
+        tvhpoll_t *blocking_delay = tvhpoll_create(1);
+        nfds = tvhpoll_wait(blocking_delay, ev, 1, 250);
+        tvhpoll_destroy(blocking_delay);
         if (nfds == 0)
           break;
         if (nfds < 0) {
@@ -1283,7 +1285,9 @@ fast_exit:
         r = http_client_run(rtsp);
         if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
           break;
-        nfds = tvhpoll_wait(efd, ev, 1, 50); /* only small delay here */
+        tvhpoll_t *blocking_delay = tvhpoll_create(1);
+        nfds = tvhpoll_wait(blocking_delay, ev, 1, 50); /* only small delay here */
+        tvhpoll_destroy(blocking_delay);
         if (nfds == 0)
           break;
         if (nfds < 0) {
