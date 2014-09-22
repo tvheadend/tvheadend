@@ -2350,6 +2350,7 @@ htsp_write_scheduler(void *aux)
   htsp_msg_t *hm;
   void *dptr;
   size_t dlen;
+  int r;
 
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
@@ -2358,7 +2359,7 @@ htsp_write_scheduler(void *aux)
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
       /* No active queues at all */
       if(!htsp->htsp_writer_run)
-	      break; /* Should not run anymore, bail out */
+        break; /* Should not run anymore, bail out */
       
       /* Nothing to be done, go to sleep */
       pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
@@ -2374,7 +2375,7 @@ htsp_write_scheduler(void *aux)
     if(hmq->hmq_length) {
       /* Still messages to be sent, put back in active queues */
       if(hmq->hmq_strict_prio) {
-	      TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
+        TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
       } else {
         TAILQ_INSERT_TAIL(&htsp->htsp_active_output_queues, hmq, hmq_link);
       }
@@ -2385,18 +2386,22 @@ htsp_write_scheduler(void *aux)
     if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
       tvhlog(LOG_WARNING, "htsp", "%s: failed to serialize data",
              htsp->htsp_logname);
+      htsp_msg_destroy(hm);
+      pthread_mutex_lock(&htsp->htsp_out_mutex);
+      continue;
     }
 
     htsp_msg_destroy(hm);
 
-    if (tvh_write(htsp->htsp_fd, dptr, dlen)) {
+    r = tvh_write(htsp->htsp_fd, dptr, dlen);
+    free(dptr);
+    pthread_mutex_lock(&htsp->htsp_out_mutex);
+    
+    if (r) {
       tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
              htsp->htsp_logname, strerror(errno));
       break;
     }
-
-    free(dptr);
-    pthread_mutex_lock(&htsp->htsp_out_mutex);
   }
   // Shutdown socket to make receive thread terminate entire HTSP connection
 
