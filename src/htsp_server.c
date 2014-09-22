@@ -1230,26 +1230,25 @@ htsp_method_getEpgObject(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 static const char *
-htsp_dvr_config_name( access_t *perm, const char *config_name )
+htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
 {
   dvr_config_t *cfg = NULL, *cfg2;
+  access_t *perm = htsp->htsp_granted_access;
   htsmsg_field_t *f;
   const char *uuid;
 
   lock_assert(&global_lock);
 
-  if (config_name == NULL)
-    return "";
+  config_name = config_name ?: "";
 
   if (perm->aa_dvrcfgs == NULL)
-    return config_uuid; /* no change */
+    return config_name; /* no change */
 
-  config_uuid = config_uuid ?: "";
   HTSMSG_FOREACH(f, perm->aa_dvrcfgs) {
     uuid = htsmsg_field_get_str(f) ?: "";
     if (strcmp(uuid, config_name) == 0)
       return config_name;
-    cfg2 = dvr_config_entry_find_by_uuid(uuid);
+    cfg2 = dvr_config_find_by_uuid(uuid);
     if (cfg2 && strcmp(cfg2->dvr_config_name, config_name) == 0)
       return uuid;
     if (!cfg)
@@ -1279,7 +1278,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch = NULL;
 
   /* Options */
-  dvr_config_name = htsp_dvr_config_name(htsmsg_get_str(in, "configName")))
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
@@ -1467,7 +1466,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   /* Options */
   if(!(title = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
-  dvr_config_name = htsp_dvr_config_name(htsmsg_get_str(in, "configName")))
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
   if(htsmsg_get_u32(in, "maxDuration", &max_duration))
