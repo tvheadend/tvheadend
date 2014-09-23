@@ -1370,12 +1370,12 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsp_user_access_channel(htsp, de->de_channel))
     return htsp_error("User does not have access");
 
-  start       = htsmsg_get_s64_or_default(in, "start",       0);
-  stop        = htsmsg_get_s64_or_default(in, "stop",        0);
-  start_extra = htsmsg_get_s64_or_default(in, "start_extra", 0);
-  stop_extra  = htsmsg_get_s64_or_default(in, "stop_extra",  0);
-  retention   = htsmsg_get_u32_or_default(in, "retention",   0);
-  priority    = htsmsg_get_u32_or_default(in, "priority",    DVR_PRIO_NORMAL);
+  start       = htsmsg_get_s64_or_default(in, "start",      0);
+  stop        = htsmsg_get_s64_or_default(in, "stop",       0);
+  start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
+  stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
+  retention   = htsmsg_get_u32_or_default(in, "retention",  0);
+  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language");
