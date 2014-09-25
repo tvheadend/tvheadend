@@ -135,15 +135,18 @@ linuxdvb_rotor_grace
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
-  int newpos, curpos, delta;
+  int newpos, curpos, delta, tunit;
 
   if (!ls->ls_orbital_dir || lr->lr_rate == 0)
     return ls->ls_max_rotor_move;
 
-  if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
+  if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class)) {
     newpos = lr->lr_position;                /* GotoX */
-  else
+    tunit  = 1000;
+  } else {
     newpos = (lr->lr_sat_lon + 0.05) * 10;   /* USALS */
+    tunit  = 10000;
+  }
 
   curpos = ls->ls_orbital_pos;
   if (ls->ls_orbital_dir == 'W')
@@ -155,7 +158,7 @@ linuxdvb_rotor_grace
     return 0;
 
   /* add one extra second, because of the rounding issue */
-  return ((lr->lr_rate*delta+999)/1000) + 1;
+  return ((lr->lr_rate*delta+(tunit-1))/tunit) + 1;
 }
 
 static int
