@@ -19,6 +19,7 @@
 #ifndef EPG_H
 #define EPG_H
 
+#include <regex.h>
 #include "settings.h"
 #include "lang_str.h"
 
@@ -507,6 +508,8 @@ epg_episode_t   *epg_broadcast_get_episode
   ( epg_broadcast_t *b, int create, int *save );
 const char *epg_broadcast_get_title 
   ( epg_broadcast_t *b, const char *lang );
+const char *epg_broadcast_get_subtitle
+  ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_summary
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_description
@@ -528,28 +531,80 @@ void epg_channel_unlink ( struct channel *ch );
  * Querying
  * ***********************************************************************/
 
-/*
- * Query result
- */
-typedef struct epg_query_result {
-  epg_broadcast_t **eqr_array;
-  int               eqr_entries;
-  int               eqr_alloced;
-} epg_query_result_t;
+typedef enum {
+  EC_NO, ///< No filter
+  EC_EQ, ///< Equals
+  EC_LT, ///< LT
+  EC_GT, ///< GT
+  EC_RG, ///< Range
+  EC_IN, ///< contains (STR only)
+  EC_RE, ///< regexp (STR only)
+} epg_comp_t;
 
-void epg_query_free(epg_query_result_t *eqr);
+typedef struct epg_filter_str {
+  char      *str;
+  regex_t    re;
+  epg_comp_t comp;
+} epg_filter_str_t;
 
-/* Sorting */
-// WIBNI: might be useful to have a user defined comparator function
-void epg_query_sort(epg_query_result_t *eqr);
+typedef struct epg_filter_num {
+  int64_t    val1;
+  int64_t    val2;
+  epg_comp_t comp;
+} epg_filter_num_t;
 
-/* Query routines */
-void epg_query0(epg_query_result_t *eqr, struct channel *ch,
-                struct channel_tag *ct, epg_genre_t *genre, const char *title,
-                const char *lang, int min_duration, int max_duration);
-void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration);
+typedef struct epg_query {
+  /* Configuration */
+  char             *lang;
 
+  /* Filter */
+  epg_filter_num_t  start;
+  epg_filter_num_t  stop;
+  epg_filter_num_t  duration;
+  epg_filter_str_t  title;
+  epg_filter_str_t  subtitle;
+  epg_filter_str_t  summary;
+  epg_filter_str_t  description;
+  epg_filter_num_t  episode;
+  epg_filter_num_t  stars;
+  epg_filter_num_t  age;
+  epg_filter_str_t  channel_name;
+  epg_filter_num_t  channel_num;
+  char             *stitle;
+  regex_t           stitle_re;
+  char             *channel;
+  char             *channel_tag;
+  uint32_t          genre_count;
+  uint8_t          *genre;
+  uint8_t           genre_static[16];
+
+  enum {
+    ESK_START,
+    ESK_STOP,
+    ESK_DURATION,
+    ESK_TITLE,
+    ESK_SUBTITLE,
+    ESK_SUMMARY,
+    ESK_DESCRIPTION,
+    ESK_CHANNEL,
+    ESK_CHANNEL_NUM,
+    ESK_STARS,
+    ESK_AGE,
+    ESK_GENRE
+  } sort_key;
+  enum {
+    ES_ASC,
+    ES_DSC
+  } sort_dir;
+
+  /* Result */
+  epg_broadcast_t **result;
+  uint32_t          entries;
+  uint32_t          allocated;
+} epg_query_t;
+
+epg_broadcast_t  **epg_query(epg_query_t *eq);
+void epg_query_free(epg_query_t *eq);
 
 /* ************************************************************************
  * Setup/Shutdown

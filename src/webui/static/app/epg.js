@@ -1,13 +1,3 @@
-tvheadend.brands = new Ext.data.JsonStore({
-    root: 'entries',
-    fields: ['uri', 'title'],
-    autoLoad: true,
-    url: 'epgobject',
-    baseParams: {
-        op: 'brandList'
-    }
-});
-
 insertContentGroupClearOption = function( scope, records, options ){
     var placeholder = Ext.data.Record.create(['val', 'key']);
     scope.insert(0,new placeholder({val: '(Clear filter)', key: '-1'}));
@@ -22,7 +12,23 @@ tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
 
 tvheadend.contentGroupLookupName = function(code) {
     ret = "";
+    if (!code)
+        code = 0;
     tvheadend.ContentGroupStore.each(function(r) {
+        if (r.data.key === code & 0xf0)
+            ret = r.data.val;
+    });
+    return ret;
+};
+
+tvheadend.ContentGroupFullStore = tvheadend.idnode_get_enum({
+    url: 'api/epg/content_type/list',
+    params: { full: 1 }
+});
+
+tvheadend.contentGroupFullLookupName = function(code) {
+    ret = "";
+    tvheadend.ContentGroupFullStore.each(function(r) {
         if (r.data.key === code)
             ret = r.data.val;
     });
@@ -40,7 +46,7 @@ tvheadend.channelLookupName = function(key) {
     return channelString;
 };
 
-tvheadend.tagLookupName = function(key) {
+tvheadend.channelTagLookupName = function(key) {
     tagString = "";
 
     var index = tvheadend.channelTags.find('key', key);
@@ -83,38 +89,46 @@ tvheadend.epgDetails = function(event) {
 
     var content = '';
 
-    if (event.chicon != null && event.chicon.length > 0)
-        content += '<img class="x-epg-chicon" src="' + event.chicon + '">';
+    if (event.channelIcon != null && event.channelIcon.length > 0)
+        content += '<img class="x-epg-chicon" src="' + event.channelIcon + '">';
 
     content += '<div class="x-epg-title">' + event.title;
     if (event.subtitle)
         content += "&nbsp;:&nbsp;" + event.subtitle;
     content += '</div>';
-    content += '<div class="x-epg-desc">' + event.episode + '</div>';
-    content += '<div class="x-epg-desc">' + event.description + '</div>';
-    content += '<div class="x-epg-meta">' + event.starrating + '</div>';
-    content += '<div class="x-epg-meta">' + event.agerating + '</div>';
-    content += '<div class="x-epg-meta">' + tvheadend.contentGroupLookupName(event.content_type) + '</div>';
-
-    if (event.ext_desc != null)
-        content += '<div class="x-epg-meta">' + event.ext_desc + '</div>';
-
-    if (event.ext_item != null)
-        content += '<div class="x-epg-meta">' + event.ext_item + '</div>';
-
-    if (event.ext_text != null)
-        content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
+    if (event.episodeOnscreen)
+        content += '<div class="x-epg-desc">' + event.episodeOnscreen + '</div>';
+    if (event.summary)
+      content += '<div class="x-epg-desc"><b>' + event.summary + '</b></div>';
+    if (event.description)
+      content += '<div class="x-epg-desc"><p>' + event.description + '</p></div>';
+    if (event.starRating)
+      content += '<div class="x-epg-meta">Star Rating: ' + event.starRating + '</div>';
+    if (event.ageRating)
+      content += '<div class="x-epg-meta">Age Rating: ' + event.ageRating + '</div>';
+    if (event.genre) {
+      var genre = [];
+      Ext.each(event.genre, function(g) {
+        var g1 = tvheadend.contentGroupLookupName(g);
+        var g2 = tvheadend.contentGroupFullLookupName(g);
+        if (g1 == g2)
+          g1 = '';
+        if (g1 || g2)
+          genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
+      });
+      content += '<div class="x-epg-meta">Content Type: ' + genre.join(', ') + '</div>';
+    }
 
     content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>';
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';
     
     now = new Date();
-    if (event.start < now && event.end > now) {
+    if (event.start < now && event.stop > now) {
         var title = event.title;
-        if (event.episode)
-          title += ' / ' + event.episode;
-        content += '<div class="x-epg-meta"><a href="play/stream/channelid/' + event.channelid +
+        if (event.episodeOnscreen)
+          title += ' / ' + event.episodeOnscreen;
+        content += '<div class="x-epg-meta"><a href="play/stream/channel/' + event.channelUuid +
                    '?title=' + encodeURIComponent(title) + '">Play</a></div>';
     }
 
@@ -158,7 +172,7 @@ tvheadend.epgDetails = function(event) {
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
-            text: event.serieslink ? "Record series" : "Autorec"
+            text: event.serieslinkId ? "Record series" : "Autorec"
         }));
 
     } else {
@@ -177,6 +191,7 @@ tvheadend.epgDetails = function(event) {
         constrainHeader: true,
         buttons: buttons,
         buttonAlign: 'center',
+        autoScroll: true,
         html: content
     });
     win.show();
@@ -193,7 +208,7 @@ tvheadend.epgDetails = function(event) {
         Ext.Ajax.request({
             url: url,
             params: {
-                event_id: event.id,
+                event_id: event.eventId,
                 config_uuid: confcombo.getValue()
             },
             success: function(response, options) {
@@ -212,55 +227,46 @@ tvheadend.epg = function() {
         width: 20,
         dataIndex: 'actions',
         actions: [{
-                iconIndex: 'schedstate'
+                iconIndex: 'dvrState'
             }]
     });
 
     var epgStore = new Ext.ux.grid.livegrid.Store({
         autoLoad: true,
-        url: 'epg',
+        url: 'api/epg/events/grid',
         bufferSize: 300,
         reader: new Ext.ux.grid.livegrid.JsonReader({
             root: 'entries',
             totalProperty: 'totalCount',
-            id: 'id'
-        }, [{
-                name: 'id'
-            }, {
-                name: 'channel'
-            }, {
-                name: 'channelid'
-            }, {
-                name: 'title'
-            }, {
-                name: 'subtitle'
-            }, {
-                name: 'episode'
-            }, {
-                name: 'description'
-            }, {
-                name: 'chicon'
-            }, {
+            id: 'eventId',
+        },
+        [
+            { name: 'eventId' },
+            { name: 'channelName' },
+            { name: 'channelUuid' },
+            { name: 'channelNumber' },
+            { name: 'channelIcon' },
+            { name: 'title' },
+            { name: 'subtitle' },
+            { name: 'summary' },
+            { name: 'description' },
+            { name: 'episodeOnscreen' },
+            {
                 name: 'start',
                 type: 'date',
                 dateFormat: 'U' /* unix time */
-            }, {
-                name: 'end',
+            },
+            {
+                name: 'stop',
                 type: 'date',
                 dateFormat: 'U' /* unix time */
-            }, {
-                name: 'duration'
-            }, {
-                name: 'starrating'
-            }, {
-                name: 'agerating'
-            }, {
-                name: 'content_type'
-            }, {
-                name: 'schedstate'
-            }, {
-                name: 'serieslink'
-            }])
+            },
+            { name: 'starRating' },
+           { name: 'ageRating' },
+            { name: 'genre' },
+            { name: 'dvrState' },
+            { name: 'serieslinkId' },
+        ]),
     });
 
     function setMetaAttr(meta, record) {
@@ -275,14 +281,21 @@ tvheadend.epg = function() {
     function renderDate(value, meta, record, rowIndex, colIndex, store) {
         setMetaAttr(meta, record);
 
-        var dt = new Date(value);
-        return dt.format('D, M d, H:i');
+        if (value) {
+          var dt = new Date(value);
+          return dt.format('D, M d, H:i');
+        }
+        return "";
     }
 
     function renderDuration(value, meta, record, rowIndex, colIndex, store) {
         setMetaAttr(meta, record);
 
-        value = Math.floor(value / 60);
+        value = record.data.stop - record.data.start;
+        if (!value || value < 0)
+            value = 0;
+
+        value = Math.floor(value / 60000);
 
         if (value >= 60) {
             var min = value % 60;
@@ -310,90 +323,131 @@ tvheadend.epg = function() {
         return '' + value;
     }
 
-    var epgCm = new Ext.grid.ColumnModel([actions, 
-        new Ext.ux.grid.ProgressColumn({
-            width: 100,
-            header: "Progress",
-            dataIndex: 'progress',
-            colored: false,
-            ceiling: 100,
-            tvh_renderer: function(value, meta, record, rowIndex, colIndex, store) {
-                var entry = record.data;
-                var start = entry.start;
-                var end = entry.end;
-                var duration = entry.duration; // seconds
-                var now = new Date();
+    var epgCm = new Ext.grid.ColumnModel({
+        defaultSortable: true,
+        columns: [
+            actions,
+            new Ext.ux.grid.ProgressColumn({
+                width: 100,
+                header: "Progress",
+                dataIndex: 'progress',
+                colored: false,
+                ceiling: 100,
+                tvh_renderer: function(value, meta, record, rowIndex, colIndex, store) {
+                    var entry = record.data;
+                    var start = entry.start;           // milliseconds
+                    var duration = entry.stop - start; // milliseconds
+                    var now = new Date();
 
-                // Only render a progress bar for currently running programmes
-                if (now >= start)
-                    return (now - start) / 1000 / duration * 100;
-                else
-                    return "";
+                    if (!duration || duration < 0) duration = 0;
+                    // Only render a progress bar for currently running programmes
+                    if (now >= start && now - start <= duration)
+                        return (now - start) / duration * 100;
+                    else
+                        return "";
+                }
+            }),
+            {
+                width: 250,
+                id: 'title',
+                header: "Title",
+                dataIndex: 'title',
+                renderer: renderText
+            },
+            {
+                width: 250,
+                id: 'subtitle',
+                header: "SubTitle",
+                dataIndex: 'subtitle',
+                renderer: renderText
+            },
+            {
+                width: 100,
+                id: 'episodeOnscreen',
+                header: "Episode",
+                dataIndex: 'episodeOnscreen',
+                renderer: renderText
+            },
+            {
+                width: 100,
+                id: 'start',
+                header: "Start",
+                dataIndex: 'start',
+                renderer: renderDate
+            },
+            {
+                width: 100,
+                hidden: true,
+                id: 'stop',
+                header: "End",
+                dataIndex: 'stop',
+                renderer: renderDate
+            },
+            {
+                width: 100,
+                id: 'duration',
+                header: "Duration",
+                renderer: renderDuration
+            },
+            {
+                width: 60,
+                id: 'channelNumber',
+                header: "Number",
+                align: 'right',
+                dataIndex: 'channelNumber',
+                renderer: renderText
+            },
+            {
+                width: 250,
+                id: 'channelName',
+                header: "Channel",
+                dataIndex: 'channelName',
+                renderer: renderText
+            },
+            {
+                width: 50,
+                id: 'starRating',
+                header: "Stars",
+                dataIndex: 'starRating',
+                renderer: renderInt
+            },
+            {
+                width: 50,
+                id: 'ageRating',
+                header: "Age",
+                dataIndex: 'ageRating',
+                renderer: renderInt
+            }, {
+                width: 250,
+                id: 'genre',
+                header: "Content Type",
+                dataIndex: 'genre',
+                renderer: function(vals) {
+                    var r = [];
+                    Ext.each(vals, function(v) {
+                        v = tvheadend.contentGroupFullLookupName(v);
+                        if (v)
+                          r.push(v);
+                    });
+                    return r.join(',');
+                }
             }
-        }), {
-            width: 250,
-            id: 'title',
-            header: "Title",
-            dataIndex: 'title',
-            renderer: renderText
-        }, {
-            width: 250,
-            id: 'subtitle',
-            header: "SubTitle",
-            dataIndex: 'subtitle',
-            renderer: renderText
-        }, {
-            width: 100,
-            id: 'episode',
-            header: "Episode",
-            dataIndex: 'episode',
-            renderer: renderText
-        }, {
-            width: 100,
-            id: 'start',
-            header: "Start",
-            dataIndex: 'start',
-            renderer: renderDate
-        }, {
-            width: 100,
-            hidden: true,
-            id: 'end',
-            header: "End",
-            dataIndex: 'end',
-            renderer: renderDate
-        }, {
-            width: 100,
-            id: 'duration',
-            header: "Duration",
-            dataIndex: 'duration',
-            renderer: renderDuration
-        }, {
-            width: 250,
-            id: 'channel',
-            header: "Channel",
-            dataIndex: 'channel',
-            renderer: renderText
-        }, {
-            width: 50,
-            id: 'starrating',
-            header: "Stars",
-            dataIndex: 'starrating',
-            renderer: renderInt
-        }, {
-            width: 50,
-            id: 'agerating',
-            header: "Age",
-            dataIndex: 'agerating',
-            renderer: renderInt
-        }, {
-            width: 250,
-            id: 'content_type',
-            header: "Content Type",
-            dataIndex: 'content_type',
-            renderer: function(v) {
-                return tvheadend.contentGroupLookupName(v);
-            }
-        }]);
+        ]
+    });
+
+    var filter = new Ext.ux.grid.GridFilters({
+        encode: true,
+        local: false,
+        filters: [
+            { type: 'string',   dataIndex: 'title' },
+            { type: 'string',   dataIndex: 'subtitle' },
+            { type: 'string',   dataIndex: 'episodeOnscreen' },
+            { type: 'intsplit', dataIndex: 'channelNumber', intsplit: 1000000 },
+            { type: 'string',   dataIndex: 'channelName' },
+            { type: 'numeric',  dataIndex: 'starRating' },
+            { type: 'numeric',  dataIndex: 'ageRating' }
+        ]
+    });
 
     // Title search box
 
@@ -419,7 +473,7 @@ tvheadend.epg = function() {
             blur: function () {
                 if(this.getRawValue() == "" ) {
                     clearChannelFilter();
-                    epgStore.reload();
+                    epgView.reset();
                 }
             }
         }
@@ -441,7 +495,7 @@ tvheadend.epg = function() {
             blur: function () {
                 if(this.getRawValue() == "" ) {
                     clearChannelTagsFilter();
-                    epgStore.reload();
+                    epgView.reset();
                 }
             }
         }
@@ -465,7 +519,7 @@ tvheadend.epg = function() {
             blur: function () {
                 if(this.getRawValue() == "" ) {
                     clearContentGroupFilter();
-                    epgStore.reload();
+                    epgView.reset();
                 }
             }
         }
@@ -486,7 +540,7 @@ tvheadend.epg = function() {
             blur: function () {
                 if(this.getRawValue() == "" ) {
                     clearDurationFilter();
-                    epgStore.reload();
+                    epgView.reset();
                 }
             }
         }
@@ -508,18 +562,18 @@ tvheadend.epg = function() {
     };
 
     clearChannelTagsFilter = function() {
-        delete epgStore.baseParams.tag;
+        delete epgStore.baseParams.channelTag;
         epgFilterChannelTags.setValue("");
     };
 
     clearContentGroupFilter = function() {
-        delete epgStore.baseParams.content_type;
+        delete epgStore.baseParams.contentType;
         epgFilterContentGroup.setValue("");
     };
 
     clearDurationFilter = function() {
-        delete epgStore.baseParams.minduration;
-        delete epgStore.baseParams.maxduration;
+        delete epgStore.baseParams.durationMin;
+        delete epgStore.baseParams.durationMax;
         epgFilterDuration.setValue("");
     };
 
@@ -529,7 +583,9 @@ tvheadend.epg = function() {
         clearChannelTagsFilter();
         clearDurationFilter();
         clearContentGroupFilter();
-        epgStore.reload();
+        filter.clearFilters();
+        delete epgStore.sortInfo;
+        epgView.reset();
     };
 
 /*
@@ -541,33 +597,33 @@ tvheadend.epg = function() {
             clearChannelFilter();
         else if (epgStore.baseParams.channel !== r.data.key)
             epgStore.baseParams.channel = r.data.key;
-        epgStore.reload();
+        epgView.reset();
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
         if (r.data.key == -1)
             clearChannelTagsFilter();
-        else if (epgStore.baseParams.tag !== r.data.key)
-            epgStore.baseParams.tag = r.data.key;
-        epgStore.reload();
+        else if (epgStore.baseParams.channelTag !== r.data.key)
+            epgStore.baseParams.channelTag = r.data.key;
+        epgView.reset();
     });
 
     epgFilterContentGroup.on('select', function(c, r) {
         if (r.data.key == -1)
             clearContentGroupFilter();
-        else if (epgStore.baseParams.content_type !== r.data.key)
-            epgStore.baseParams.content_type = r.data.key;
-        epgStore.reload();
+        else if (epgStore.baseParams.contentType !== r.data.key)
+            epgStore.baseParams.contentType = r.data.key;
+        epgView.reset();
     });
 
     epgFilterDuration.on('select', function(c, r) {
         if (r.data.identifier == -1)
             clearDurationFilter();
-        else if (epgStore.baseParams.minduration !== r.data.minvalue) {
-            epgStore.baseParams.minduration = r.data.minvalue;
-            epgStore.baseParams.maxduration = r.data.maxvalue;
+        else if (epgStore.baseParams.durationMin !== r.data.minvalue) {
+            epgStore.baseParams.durationMin = r.data.minvalue;
+            epgStore.baseParams.durationMax = r.data.maxvalue;
         }
-        epgStore.reload();
+        epgView.reset();
     });
 
     epgFilterTitle.on('valid', function(c) {
@@ -578,7 +634,7 @@ tvheadend.epg = function() {
 
         if (epgStore.baseParams.title !== value) {
             epgStore.baseParams.title = value;
-            epgStore.reload();
+            epgView.reset();
         }
     });
 
@@ -586,6 +642,14 @@ tvheadend.epg = function() {
         nearLimit: 100,
         loadMask: {
             msg: 'Buffering. Please wait...'
+        },
+        listeners: {
+            beforebuffer: {
+                fn: function(view, ds, index, range, total, options) {
+                    /* filters hack */
+                    filter.onBeforeLoad(ds, options);
+                }
+            }
         }
     });
 
@@ -632,7 +696,7 @@ tvheadend.epg = function() {
         stateId: 'epggrid',
         enableDragDrop: false,
         cm: epgCm,
-        plugins: [actions],
+        plugins: [filter, actions],
         title: 'Electronic Program Guide',
         iconCls: 'newspaper',
         store: epgStore,
@@ -646,7 +710,10 @@ tvheadend.epg = function() {
     });
 
     panel.on('rowclick', rowclicked);
-    
+    panel.on('filterupdate', function() {
+        epgView.reset();
+    });
+
     /**
      * Listener for DVR notifications. We want to update the EPG grid when a
      * recording is finished/deleted etc. so the status icon gets updated. 
@@ -660,7 +727,7 @@ tvheadend.epg = function() {
     
     // Always reload the store when the tab is activated
     panel.on('beforeshow', function() {
-        this.store.reload();
+        epgStore.reload();
     });
 
     function rowclicked(grid, index) {
@@ -676,11 +743,11 @@ tvheadend.epg = function() {
                 : "<i>Don't care</i>";
         var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
                 : "<i>Don't care</i>";
-        var tag = epgStore.baseParams.tag ? tvheadend.tagLookupName(epgStore.baseParams.tag)
+        var tag = epgStore.baseParams.channelTag ? tvheadend.channelTagLookupName(epgStore.baseParams.channelTag)
                 : "<i>Don't care</i>";
-        var content_type = epgStore.baseParams.content_type ? tvheadend.contentGroupLookupName(epgStore.baseParams.content_type)
+        var contentType = epgStore.baseParams.contentType ? tvheadend.contentGroupLookupName(epgStore.baseParams.contentType)
                 : "<i>Don't care</i>";
-        var duration = epgStore.baseParams.minduration ? tvheadend.durationLookupRange(epgStore.baseParams.minduration)
+        var duration = epgStore.baseParams.durationMin ? tvheadend.durationLookupRange(epgStore.baseParams.durationMin)
                 : "<i>Don't care</i>";
 
         Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
@@ -689,7 +756,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
-                + '<div class="x-smallhdr">Genre:</div>' + content_type + '<br>'
+                + '<div class="x-smallhdr">Genre:</div>' + contentType + '<br>'
                 + '<div class="x-smallhdr">Duration:</div>' + duration + '<br>'
                 + '<br><br>' + 'Currently this will match (and record) '
                 + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
@@ -709,9 +776,9 @@ tvheadend.epg = function() {
         if (params.title) conf.title = params.title;
         if (params.channel) conf.channel = params.channel;
         if (params.tag) conf.tag = params.tag;
-        if (params.content_type) conf.content_type = params.content_type;
-        if (params.minduration) conf.minduration = params.minduration;
-        if (params.maxduration) conf.maxduration = params.maxduration;
+        if (params.contentType) conf.content_type = params.contentType;
+        if (params.durationMin) conf.minduration = params.durationMin;
+        if (params.durationMax) conf.maxduration = params.durationMax;
         Ext.Ajax.request({
             url: 'api/dvr/autorec/create',
             params: { conf: Ext.encode(conf) }

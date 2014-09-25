@@ -164,7 +164,6 @@ page_simple(http_connection_t *hc,
   dvr_entry_t *de;
   dvr_query_result_t dqr;
   const char *rstatus = NULL;
-  epg_query_result_t eqr;
   const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
 
   htsbuf_qprintf(hq, "<html>");
@@ -184,14 +183,17 @@ page_simple(http_connection_t *hc,
 
 
   if(s != NULL) {
+    epg_query_t eq;
+
+    memset(&eq, 0, sizeof(eq));
+    eq.lang = strdup(lang);
 
     //Note: force min/max durations for this interface to 0 and INT_MAX seconds respectively
-    epg_query(&eqr, NULL, NULL, NULL, s, lang, 0, INT_MAX);
-    epg_query_sort(&eqr);
+    epg_query(&eq);
 
-    c = eqr.eqr_entries;
+    c = eq.entries;
 
-    if(eqr.eqr_entries == 0) {
+    if(eq.entries == 0) {
       htsbuf_qprintf(hq, "<b>No matching entries found</b>");
     } else {
 
@@ -206,7 +208,7 @@ page_simple(http_connection_t *hc,
 
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
-	e = eqr.eqr_array[k];
+	e = eq.result[k];
       
 	localtime_r(&e->start, &a);
 	localtime_r(&e->stop, &b);
@@ -234,7 +236,7 @@ page_simple(http_connection_t *hc,
       }
     }
     htsbuf_qprintf(hq, "<hr>");
-    epg_query_free(&eqr);
+    epg_query_free(&eq);
   }
 
 

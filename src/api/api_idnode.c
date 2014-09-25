@@ -101,7 +101,7 @@ api_idnode_grid_conf
   /* Sort */
   if ((str = htsmsg_get_str(args, "sort"))) {
     conf->sort.key = str;
-    if ((str = htsmsg_get_str(args, "dir")) && !strcmp(str, "DESC"))
+    if ((str = htsmsg_get_str(args, "dir")) && !strcasecmp(str, "DESC"))
       conf->sort.dir = IS_DSC;
     else
       conf->sort.dir = IS_ASC;

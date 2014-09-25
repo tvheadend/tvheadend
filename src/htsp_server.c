@@ -1142,8 +1142,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t u32, full;
   channel_t *ch = NULL;
   channel_tag_t *ct = NULL;
-  epg_query_result_t eqr;
-  epg_genre_t genre, *eg = NULL;
+  epg_query_t eq;
   const char *lang;
   int min_duration;
   int max_duration;
@@ -1151,48 +1150,61 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   /* Required */
   if( (query = htsmsg_get_str(in, "query")) == NULL )
     return htsp_error("Missing argument 'query'");
+
+  memset(&eq, 0, sizeof(eq));
   
   /* Optional */
-  if(!(htsmsg_get_u32(in, "channelId", &u32)))
+  if(!(htsmsg_get_u32(in, "channelId", &u32))) {
     if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
-  if(!(htsmsg_get_u32(in, "tagId", &u32)))
+    else
+      eq.channel = strdup(idnode_uuid_as_str(&ch->ch_id));
+  }
+  if(!(htsmsg_get_u32(in, "tagId", &u32))) {
     if (!(ct = htsp_channel_tag_find_by_identifier(u32)))
       return htsp_error("Channel tag does not exist");
+    else
+      eq.channel_tag = strdup(idnode_uuid_as_str(&ct->ct_id));
+  }
   if (!htsmsg_get_u32(in, "contentType", &u32)) {
     if(htsp->htsp_version < 6) u32 <<= 4;
-    genre.code = u32;
-    eg         = &genre;
+    eq.genre_count = 1;
+    eq.genre = eq.genre_static;
+    eq.genre[0] = u32;
   }
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
+  eq.lang = lang ? strdup(lang) : NULL;
   full = htsmsg_get_u32_or_default(in, "full", 0);
 
   min_duration = htsmsg_get_u32_or_default(in, "minduration", 0);
   max_duration = htsmsg_get_u32_or_default(in, "maxduration", INT_MAX);
+  eq.duration.comp = EC_RG;
+  eq.duration.val1 = min_duration;
+  eq.duration.val2 = max_duration;
   tvhtrace("htsp", "min_duration %d and max_duration %d", min_duration, max_duration);
 
   /* Check access */
   if (!htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  //do the query
-  epg_query0(&eqr, ch, ct, eg, query, lang, min_duration, max_duration);
+  /* Query */
+  epg_query(&eq);
 
-  // create reply
+  /* Create Reply */
   out = htsmsg_create_map();
-  if( eqr.eqr_entries ) {
+  if( eq.entries ) {
     array = htsmsg_create_list();
-    for(i = 0; i < eqr.eqr_entries; ++i) {
+    for(i = 0; i < eq.entries; ++i) {
       if (full)
         htsmsg_add_msg(array, NULL,
-                       htsp_build_event(eqr.eqr_array[i], NULL, lang, 0, htsp));
+                       htsp_build_event(eq.result[i], NULL, lang, 0, htsp));
       else
-        htsmsg_add_u32(array, NULL, eqr.eqr_array[i]->id);
+        htsmsg_add_u32(array, NULL, eq.result[i]->id);
     }
     htsmsg_add_msg(out, full ? "events" : "eventIds", array);
   }
   
-  epg_query_free(&eqr);
+  epg_query_free(&eq);
   
   return out;
 }

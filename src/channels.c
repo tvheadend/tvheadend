@@ -386,6 +386,8 @@ channel_t *
 channel_find_by_name ( const char *name )
 {
   channel_t *ch;
+  if (name == NULL)
+    return NULL;
   CHANNEL_FOREACH(ch)
     if (!strcmp(channel_get_name(ch), name))
       break;
@@ -930,6 +932,9 @@ channel_tag_t *
 channel_tag_find_by_name(const char *name, int create)
 {
   channel_tag_t *ct;
+
+  if (name == NULL)
+    return NULL;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(!strcasecmp(ct->ct_name, name))

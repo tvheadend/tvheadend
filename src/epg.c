@@ -1752,6 +1752,12 @@ const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
   return epg_episode_get_title(b->episode, lang);
 }
 
+const char *epg_broadcast_get_subtitle ( epg_broadcast_t *b, const char *lang )
+{
+  if (!b || !b->episode) return NULL;
+  return epg_episode_get_subtitle(b->episode, lang);
+}
+
 const char *epg_broadcast_get_summary ( epg_broadcast_t *b, const char *lang )
 {
   if (!b || !b->summary) return NULL;
@@ -2190,7 +2196,7 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
     for (j = 0; j < (major_only ? 1 : 16); j++) {
       if (_epg_genre_names[i][j]) {
         e = htsmsg_create_map();
-        htsmsg_add_u32(e, "key", major_only ? i : (i << 4 | j));
+        htsmsg_add_u32(e, "key", (i << 4) | (major_only ? 0 : j));
         htsmsg_add_str(e, "val", _epg_genre_names[i][j]);
         // TODO: use major_prefix
         htsmsg_add_msg(m, NULL, e);
@@ -2204,109 +2210,393 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
  * Querying
  * *************************************************************************/
 
-static void _eqr_add 
-  ( epg_query_result_t *eqr, epg_broadcast_t *e,
-    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
+static inline int
+_eq_comp_num ( epg_filter_num_t *f, int64_t val )
 {
-  const char *title;
-  double duration;
-
-  /* Ignore */
-  if ( e->stop < start ) return;
-  if ( !(title = epg_episode_get_title(e->episode, lang)) ) return;
-  if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
-  if ( preg && regexec(preg, title, 0, NULL, 0)) return;
-
-  duration = difftime(e->stop,e->start);
-  if ( duration < min_duration || duration > max_duration ) return;
-
-  /* More space */
-  if ( eqr->eqr_entries == eqr->eqr_alloced ) {
-    eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
-    eqr->eqr_array   = realloc(eqr->eqr_array, 
-                               eqr->eqr_alloced * sizeof(epg_broadcast_t));
+  switch (f->comp) {
+    case EC_EQ: return val != f->val1;
+    case EC_LT: return val > f->val1;
+    case EC_GT: return val < f->val1;
+    case EC_RG: return val < f->val1 || val > f->val2;
+    default: return 0;
   }
-  
-  /* Store */
-  eqr->eqr_array[eqr->eqr_entries++] = e;
 }
 
-static void _eqr_add_channel 
-  ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
-    regex_t *preg, time_t start, const char *lang, int min_duration, int max_duration )
+static inline int
+_eq_comp_str ( epg_filter_str_t *f, const char *str )
+{
+  switch (f->comp) {
+    case EC_EQ: return strcmp(str, f->str);
+    case EC_LT: return strcmp(str, f->str) > 0;
+    case EC_GT: return strcmp(str, f->str) < 0;
+    case EC_IN: return strstr(str, f->str) != NULL;
+    case EC_RE: return regexec(&f->re, str, 0, NULL, 0) != 0;
+    default: return 0;
+  }
+}
+
+static void
+_eq_add ( epg_query_t *eq, epg_broadcast_t *e )
+{
+  const char *s, *lang = eq->lang;
+  epg_episode_t *ep;
+
+  /* Filtering */
+  if (e->stop < dispatch_clock) return;
+  if (_eq_comp_num(&eq->start, e->start)) return;
+  if (_eq_comp_num(&eq->stop, e->stop)) return;
+  if (eq->duration.comp != EC_NO) {
+    int64_t duration = (int64_t)e->stop - (int64_t)e->start;
+    if (_eq_comp_num(&eq->duration, duration)) return;
+  }
+  ep = e->episode;
+  if (eq->stars.comp != EC_NO) {
+    if (e == NULL) return;
+    if (_eq_comp_num(&eq->stars, ep->star_rating)) return;
+  }
+  if (eq->age.comp != EC_NO) {
+    if (e == NULL) return;
+    if (_eq_comp_num(&eq->age, ep->age_rating)) return;
+  }
+  if (eq->channel_num.comp != EC_NO)
+    if (_eq_comp_num(&eq->channel_num, channel_get_number(e->channel))) return;
+  if (eq->channel_name.comp != EC_NO)
+    if (_eq_comp_str(&eq->channel_name, channel_get_name(e->channel))) return;
+  if (eq->genre_count) {
+    epg_genre_t genre;
+    uint32_t i, r = 0;
+    for (i = 0; i < eq->genre_count; i++) {
+      genre.code = eq->genre[i];
+      if (genre.code == 0) continue;
+      if (epg_genre_list_contains(&e->episode->genre, &genre, 1)) r++;
+    }
+    if (!r) return;
+  }
+  if (eq->title.comp != EC_NO || eq->stitle) {
+    if ((s = epg_episode_get_title(ep, lang)) == NULL) return;
+    if (eq->stitle)
+      if (regexec(&eq->stitle_re, s, 0, NULL, 0)) return;
+    if (_eq_comp_str(&eq->title, s)) return;
+  }
+  if (eq->subtitle.comp != EC_NO) {
+    if ((s = epg_episode_get_subtitle(ep, lang)) == NULL) return;
+    if (_eq_comp_str(&eq->subtitle, s)) return;
+  }
+  if (eq->summary.comp != EC_NO) {
+    if ((s = epg_episode_get_summary(ep, lang)) == NULL) return;
+    if (_eq_comp_str(&eq->summary, s)) return;
+  }
+  if (eq->description.comp != EC_NO) {
+    if ((s = epg_episode_get_description(ep, lang)) == NULL) return;
+    if (_eq_comp_str(&eq->description, s)) return;
+  }
+
+  /* More space */
+  if (eq->entries == eq->allocated) {
+    eq->allocated = MAX(100, eq->allocated + 100);
+    eq->result    = realloc(eq->result, eq->allocated * sizeof(epg_broadcast_t *));
+  }
+
+  /* Store */
+  eq->result[eq->entries++] = e;
+}
+
+static void
+_eq_add_channel ( epg_query_t *eq, channel_t *ch )
 {
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang, min_duration, max_duration);
+    if (ebc->episode)
+      _eq_add(eq, ebc);
   }
 }
 
-void epg_query0
-  ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-    epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration )
+static int
+_eq_init_str( epg_filter_str_t *f )
 {
-  time_t now;
-  channel_tag_mapping_t *ctm;
-  regex_t preg0, *preg;
-  time(&now);
+  if (f->comp != EC_RE) return 0;
+  return regcomp(&f->re, f->str, REG_ICASE | REG_EXTENDED | REG_NOSUB);
+}
 
-  /* Clear (just incase) */
-  memset(eqr, 0, sizeof(epg_query_result_t));
+static void
+_eq_done_str( epg_filter_str_t *f )
+{
+  if (f->comp == EC_RE)
+    regfree(&f->re);
+  free(f->str);
+  f->str = NULL;
+}
+
+static int _epg_sort_start_ascending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)a)->start - (*(epg_broadcast_t**)b)->start;
+}
+
+static int _epg_sort_start_descending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)b)->start - (*(epg_broadcast_t**)a)->start;
+}
+
+static int _epg_sort_stop_ascending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)a)->stop - (*(epg_broadcast_t**)b)->stop;
+}
+
+static int _epg_sort_stop_descending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)b)->stop - (*(epg_broadcast_t**)a)->stop;
+}
+
+static inline int64_t _epg_sort_duration( const epg_broadcast_t *b )
+{
+  return b->stop - b->start;
+}
+
+static int _epg_sort_duration_ascending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_duration(*(epg_broadcast_t**)a) - _epg_sort_duration(*(epg_broadcast_t**)b);
+}
+
+static int _epg_sort_duration_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_duration(*(epg_broadcast_t**)b) - _epg_sort_duration(*(epg_broadcast_t**)a);
+}
+
+static int _epg_sort_title_ascending ( const void *a, const void *b, void *eq )
+{
+  const char *s1 = epg_broadcast_get_title(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
+  const char *s2 = epg_broadcast_get_title(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+  if (s1 == NULL && s2) return 1;
+  if (s1 && s2 == NULL) return -1;
+  return strcmp(s1, s2);
+}
+
+static int _epg_sort_title_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_title_ascending(a, b, eq) * -1;
+}
+
+static int _epg_sort_subtitle_ascending ( const void *a, const void *b, void *eq )
+{
+  const char *s1 = epg_broadcast_get_subtitle(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
+  const char *s2 = epg_broadcast_get_subtitle(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+  if (s1 == NULL && s2 == NULL) return 0;
+  if (s1 == NULL && s2) return 1;
+  if (s1 && s2 == NULL) return -1;
+  return strcmp(s1, s2);
+}
+
+static int _epg_sort_subtitle_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_subtitle_ascending(a, b, eq) * -1;
+}
+
+static int _epg_sort_summary_ascending ( const void *a, const void *b, void *eq )
+{
+  const char *s1 = epg_broadcast_get_summary(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
+  const char *s2 = epg_broadcast_get_summary(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+  if (s1 == NULL && s2 == NULL) return 0;
+  if (s1 == NULL && s2) return 1;
+  if (s1 && s2 == NULL) return -1;
+  return strcmp(s1, s2);
+}
+
+static int _epg_sort_summary_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_summary_ascending(a, b, eq) * -1;
+}
+
+static int _epg_sort_description_ascending ( const void *a, const void *b, void *eq )
+{
+  const char *s1 = epg_broadcast_get_description(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
+  const char *s2 = epg_broadcast_get_description(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+  if (s1 == NULL && s2 == NULL) return 0;
+  if (s1 == NULL && s2) return 1;
+  if (s1 && s2 == NULL) return -1;
+  return strcmp(s1, s2);
+}
+
+static int _epg_sort_description_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_description_ascending(a, b, eq) * -1;
+}
+
+static int _epg_sort_channel_ascending ( const void *a, const void *b, void *eq )
+{
+  char *s1 = strdup(channel_get_name((*(epg_broadcast_t**)a)->channel));
+  char *s2 = strdup(channel_get_name((*(epg_broadcast_t**)b)->channel));
+  int r = strcmp(s1, s2);
+  free(s2);
+  free(s1);
+  return r;
+}
+
+static int _epg_sort_channel_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_description_ascending(a, b, eq) * -1;
+}
+
+static int _epg_sort_channel_num_ascending ( const void *a, const void *b, void *eq )
+{
+  int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
+  int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
+  return v1 - v2;
+}
+
+static int _epg_sort_channel_num_descending ( const void *a, const void *b, void *eq )
+{
+  int64_t v1 = channel_get_number((*(epg_broadcast_t**)a)->channel);
+  int64_t v2 = channel_get_number((*(epg_broadcast_t**)b)->channel);
+  return v2 - v1;
+}
+
+static int _epg_sort_stars_ascending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)a)->episode->star_rating - (*(epg_broadcast_t**)b)->episode->star_rating;
+}
+
+static int _epg_sort_stars_descending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)b)->episode->star_rating - (*(epg_broadcast_t**)a)->episode->star_rating;
+}
+
+static int _epg_sort_age_ascending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)a)->episode->age_rating - (*(epg_broadcast_t**)b)->episode->age_rating;
+}
+
+static int _epg_sort_age_descending ( const void *a, const void *b, void *eq )
+{
+  return (*(epg_broadcast_t**)b)->episode->age_rating - (*(epg_broadcast_t**)a)->episode->age_rating;
+}
+
+static uint64_t _epg_sort_genre_hash( epg_episode_t *ep )
+{
+  uint64_t h = 0, t;
+  epg_genre_t *g;
+
+  LIST_FOREACH(g, &ep->genre, link) {
+    t = h >> 28;
+    h <<= 8;
+    h += (uint64_t)g->code + t;
+  }
+  return h;
+}
+
+static int _epg_sort_genre_ascending ( const void *a, const void *b, void *eq )
+{
+  uint64_t v1 = _epg_sort_genre_hash((*(epg_broadcast_t**)a)->episode);
+  uint64_t v2 = _epg_sort_genre_hash((*(epg_broadcast_t**)b)->episode);
+  return v1 - v2;
+}
+
+static int _epg_sort_genre_descending ( const void *a, const void *b, void *eq )
+{
+  return _epg_sort_genre_ascending(a, b, eq) * -1;
+}
+
+epg_broadcast_t **
+epg_query ( epg_query_t *eq )
+{
+  channel_t *channel;
+  channel_tag_t *tag;
+  int (*fcn)(const void *, const void *, void *) = NULL;
 
   /* Setup exp */
-  if ( title ) {
-    if (regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB) )
-      return;
-    preg = &preg0;
-  } else {
-    preg = NULL;
-  }
-  
+  if (_eq_init_str(&eq->title)) goto fin;
+  if (_eq_init_str(&eq->subtitle)) goto fin;
+  if (_eq_init_str(&eq->summary)) goto fin;
+  if (_eq_init_str(&eq->description)) goto fin;
+  if (_eq_init_str(&eq->channel_name)) goto fin;
+
+  if (eq->stitle)
+    if (regcomp(&eq->stitle_re, eq->stitle, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+      goto fin;
+
+  channel = channel_find_by_uuid(eq->channel) ?:
+            channel_find_by_name(eq->channel);
+
+  tag = channel_tag_find_by_uuid(eq->channel_tag) ?:
+        channel_tag_find_by_name(eq->channel_tag, 0);
+
   /* Single channel */
-  if (channel && !tag) {
-    _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
+  if (channel && tag == NULL) {
+    _eq_add_channel(eq, channel);
   
   /* Tag based */
-  } else if ( tag ) {
+  } else if (tag) {
+    channel_tag_mapping_t *ctm;
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
       if(channel == NULL || ctm->ctm_channel == channel)
-        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang, min_duration, max_duration);
+        _eq_add_channel(eq, ctm->ctm_channel);
     }
 
   /* All channels */
   } else {
     CHANNEL_FOREACH(channel)
-      _eqr_add_channel(eqr, channel, genre, preg, now, lang, min_duration, max_duration);
+      _eq_add_channel(eq, channel);
   }
-  if (preg) regfree(preg);
 
-  return;
+  switch (eq->sort_dir) {
+  case ES_ASC:
+    switch (eq->sort_key) {
+    case ESK_START:       fcn = _epg_sort_start_ascending;        break;
+    case ESK_STOP:        fcn = _epg_sort_stop_ascending;         break;
+    case ESK_DURATION:    fcn = _epg_sort_duration_ascending;     break;
+    case ESK_TITLE:       fcn = _epg_sort_title_ascending;        break;
+    case ESK_SUBTITLE:    fcn = _epg_sort_subtitle_ascending;     break;
+    case ESK_SUMMARY:     fcn = _epg_sort_summary_ascending;      break;
+    case ESK_DESCRIPTION: fcn = _epg_sort_description_ascending;  break;
+    case ESK_CHANNEL:     fcn = _epg_sort_channel_ascending;      break;
+    case ESK_CHANNEL_NUM: fcn = _epg_sort_channel_num_ascending;  break;
+    case ESK_STARS:       fcn = _epg_sort_stars_ascending;        break;
+    case ESK_AGE:         fcn = _epg_sort_age_ascending;          break;
+    case ESK_GENRE:       fcn = _epg_sort_genre_ascending;        break;
+    }
+    break;
+  case ES_DSC:
+    switch (eq->sort_key) {
+    case ESK_START:       fcn = _epg_sort_start_descending;       break;
+    case ESK_STOP:        fcn = _epg_sort_stop_descending;        break;
+    case ESK_DURATION:    fcn = _epg_sort_duration_descending;    break;
+    case ESK_TITLE:       fcn = _epg_sort_title_descending;       break;
+    case ESK_SUBTITLE:    fcn = _epg_sort_subtitle_descending;    break;
+    case ESK_SUMMARY:     fcn = _epg_sort_summary_descending;     break;
+    case ESK_DESCRIPTION: fcn = _epg_sort_description_descending; break;
+    case ESK_CHANNEL:     fcn = _epg_sort_channel_descending;     break;
+    case ESK_CHANNEL_NUM: fcn = _epg_sort_channel_num_descending; break;
+    case ESK_STARS:       fcn = _epg_sort_stars_descending;       break;
+    case ESK_AGE:         fcn = _epg_sort_age_descending;         break;
+    case ESK_GENRE:       fcn = _epg_sort_genre_descending;       break;
+    }
+    break;
+  }
+
+  tvh_qsort_r(eq->result, eq->entries, sizeof(epg_broadcast_t *), fcn, eq);
+
+fin:
+  _eq_done_str(&eq->title);
+  _eq_done_str(&eq->subtitle);
+  _eq_done_str(&eq->summary);
+  _eq_done_str(&eq->description);
+  _eq_done_str(&eq->channel_name);
+
+  free(eq->lang); eq->lang = NULL;
+  free(eq->channel); eq->channel = NULL;
+  free(eq->channel_tag); eq->channel_tag = NULL;
+  free(eq->stitle); eq->stitle = NULL;
+  if (eq->genre != eq->genre_static)
+    free(eq->genre);
+  eq->genre = NULL;
+
+  return eq->result;
 }
 
-void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-            epg_genre_t *genre, const char *title, const char *lang, int min_duration, int max_duration)
+void epg_query_free(epg_query_t *eq)
 {
-  channel_t     *ch = channel ? channel_find(channel)    : NULL;
-  channel_tag_t *ct = tag     ? channel_tag_find_by_uuid(tag) : NULL;
-
-  epg_query0(eqr, ch, ct, genre, title, lang, min_duration, max_duration);
+  free(eq->result); eq->result = NULL;
 }
 
-void epg_query_free(epg_query_result_t *eqr)
-{
-  free(eqr->eqr_array);
-}
-
-static int _epg_sort_start_ascending ( const void *a, const void *b )
-{
-  return (*(epg_broadcast_t**)a)->start - (*(epg_broadcast_t**)b)->start;
-}
-
-void epg_query_sort(epg_query_result_t *eqr)
-{
-  qsort(eqr->eqr_array, eqr->eqr_entries, sizeof(epg_broadcast_t*),
-        _epg_sort_start_ascending);
-}
 
 /* **************************************************************************
  * Miscellaneous
