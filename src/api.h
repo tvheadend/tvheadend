@@ -80,9 +80,8 @@ void api_dvr_init           ( void );
  */
 typedef struct api_idnode_grid_conf
 {
-  int             tindex;
-  int             start;
-  int             limit;
+  uint32_t        start;
+  uint32_t        limit;
   idnode_filter_t filter;
   idnode_sort_t   sort;
 } api_idnode_grid_conf_t;

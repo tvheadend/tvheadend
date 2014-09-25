@@ -61,17 +61,8 @@ api_idnode_grid_conf
   htsmsg_t *filter, *e;
   const char *str;
 
-  /* Start */
-  if ((str = htsmsg_get_str(args, "start")))
-    conf->start = atoi(str);
-  else
-    conf->start = 0;
-
-  /* Limit */
-  if ((str = htsmsg_get_str(args, "limit")))
-    conf->limit = atoi(str);
-  else
-    conf->limit = 50;
+  conf->start = htsmsg_get_u32_or_default(args, "start", 0);
+  conf->limit = htsmsg_get_u32_or_default(args, "limit", 50);
 
   /* Filter */
   if ((filter = htsmsg_get_list(args, "filter"))) {
