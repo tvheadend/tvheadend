@@ -562,10 +562,4 @@ void epg_save    (void);
 void epg_save_callback (void *p);
 void epg_updated (void);
 
-/* ************************************************************************
- * Miscellaneous
- * ***********************************************************************/
-
-char *epg_hash ( const char *t, const char *s, const char *d );
-
 #endif /* EPG_H */
