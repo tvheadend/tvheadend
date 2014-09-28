@@ -98,11 +98,11 @@ tvheadend.epgDetails = function(event) {
         content += "&nbsp;:&nbsp;" + event.subtitle;
     content += '</div>';
     if (event.episodeOnscreen)
-        content += '<div class="x-epg-desc">' + event.episodeOnscreen + '</div>';
+        content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
     if (event.summary)
-      content += '<div class="x-epg-desc"><b>' + event.summary + '</b></div>';
+      content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
-      content += '<div class="x-epg-desc"><p>' + event.description + '</p></div>';
+      content += '<div class="x-epg-desc">' + event.description + '</div>';
     if (event.starRating)
       content += '<div class="x-epg-meta">Star Rating: ' + event.starRating + '</div>';
     if (event.ageRating)

@@ -349,8 +349,13 @@
     font-weight: bold;
 }
 
-.x-epg-desc {
+.x-epg-summary {
     margin: 5px;
+    font-weight: bold;
+}
+
+.x-epg-desc {
+    margin: 10px;
 }
 
 .x-epg-chicon {
