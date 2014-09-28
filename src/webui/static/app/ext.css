@@ -322,6 +322,16 @@
     background-image: url(../icons/film_edit.png) !important;
 }
 
+.zoom {
+    background-image: url(../icons/zoom.png) !important;
+}
+
+.x-zoom {
+    display: inline-block;
+    background-image: url(../icons/zoom.png) !important;
+    width: 16px;
+}
+
 .x-smallhdr {
     float: left;
     width: 100px;

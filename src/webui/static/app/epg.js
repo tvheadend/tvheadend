@@ -14,8 +14,9 @@ tvheadend.contentGroupLookupName = function(code) {
     ret = "";
     if (!code)
         code = 0;
+    code &= 0xf0;
     tvheadend.ContentGroupStore.each(function(r) {
-        if (r.data.key === code & 0xf0)
+        if (r.data.key === code)
             ret = r.data.val;
     });
     return ret;
@@ -222,6 +223,8 @@ tvheadend.epgDetails = function(event) {
 };
 
 tvheadend.epg = function() {
+    var lookup = '<span class="x-zoom">&nbsp;</span>';
+
     var actions = new Ext.ux.grid.RowActions({
         header: '',
         width: 20,
@@ -262,7 +265,7 @@ tvheadend.epg = function() {
                 dateFormat: 'U' /* unix time */
             },
             { name: 'starRating' },
-           { name: 'ageRating' },
+            { name: 'ageRating' },
             { name: 'genre' },
             { name: 'dvrState' },
             { name: 'serieslinkId' },
@@ -317,6 +320,13 @@ tvheadend.epg = function() {
         return value;
     }
 
+    function renderTextLookup(value, meta, record, rowIndex, colIndex, store) {
+        setMetaAttr(meta, record);
+
+        if (!value) return "";
+        return lookup + value;
+    }
+
     function renderInt(value, meta, record, rowIndex, colIndex, store) {
         setMetaAttr(meta, record);
 
@@ -352,7 +362,8 @@ tvheadend.epg = function() {
                 id: 'title',
                 header: "Title",
                 dataIndex: 'title',
-                renderer: renderText
+                renderer: renderTextLookup,
+                listeners: { click: { fn: clicked } },
             },
             {
                 width: 250,
@@ -402,7 +413,8 @@ tvheadend.epg = function() {
                 id: 'channelName',
                 header: "Channel",
                 dataIndex: 'channelName',
-                renderer: renderText
+                renderer: renderTextLookup,
+                listeners: { click: { fn: clicked } },
             },
             {
                 width: 50,
@@ -429,8 +441,10 @@ tvheadend.epg = function() {
                         if (v)
                           r.push(v);
                     });
-                    return r.join(',');
-                }
+                    if (r.length < 1) return "";
+                    return lookup + r.join(',');
+                },
+                listeners: { click: { fn: clicked } },
             }
         ]
     });
@@ -592,12 +606,16 @@ tvheadend.epg = function() {
  * Filter selection event handlers
  */
 
-    epgFilterChannels.on('select', function(c, r) {
-        if (r.data.key == -1)
+    function epgFilterChannelSet(val) {
+        if (!val)
             clearChannelFilter();
-        else if (epgStore.baseParams.channel !== r.data.key)
-            epgStore.baseParams.channel = r.data.key;
+        else if (epgStore.baseParams.channel !== val)
+            epgStore.baseParams.channel = val;
         epgView.reset();
+    }
+
+    epgFilterChannels.on('select', function(c, r) {
+        epgFilterChannelSet(r.data.key == -1 ? "" : r.data.key);
     });
 
     epgFilterChannelTags.on('select', function(c, r) {
@@ -608,12 +626,16 @@ tvheadend.epg = function() {
         epgView.reset();
     });
 
-    epgFilterContentGroup.on('select', function(c, r) {
-        if (r.data.key == -1)
+    function epgFilterContentGroupSet(val) {
+        if (!val)
             clearContentGroupFilter();
-        else if (epgStore.baseParams.contentType !== r.data.key)
-            epgStore.baseParams.contentType = r.data.key;
+        else if (epgStore.baseParams.contentType !== val)
+            epgStore.baseParams.contentType = val;
         epgView.reset();
+    }
+
+    epgFilterContentGroup.on('select', function(c, r) {
+        epgFilterContentGroupSet(r.data.key == -1 ? "" : r.data.key);
     });
 
     epgFilterDuration.on('select', function(c, r) {
@@ -730,7 +752,35 @@ tvheadend.epg = function() {
         epgStore.reload();
     });
 
-    function rowclicked(grid, index) {
+    function clicked(column, grid, index, e) {
+        if (column.dataIndex === 'title') {
+            var value = grid.getStore().getAt(index).data[column.dataIndex];
+            if (value && epgStore.baseParams.title !== value) {
+                epgFilterTitle.setValue(value);
+                return false;
+            }
+        } else if (column.dataIndex === 'channelName') {
+            var value = grid.getStore().getAt(index).data[column.dataIndex];
+            if (value && epgStore.baseParams.channel !== value) {
+                epgFilterChannels.setValue(value);
+                epgFilterChannelSet(value);
+                return false;
+            }
+        } else if (column.dataIndex === 'genre') {
+            var value = grid.getStore().getAt(index).data[column.dataIndex];
+            if (value && value.length > 0) {
+                value = parseInt(value[0]) & 0xf0;
+                if (value && epgStore.baseParams.channelTag !== value) {
+                    var l = tvheadend.contentGroupLookupName(value);
+                    epgFilterContentGroup.setValue(l);
+                    epgFilterContentGroupSet(value);
+                    return false;
+                }
+            }
+        }
+    }
+
+    function rowclicked(grid, index, e) {
         new tvheadend.epgDetails(grid.getStore().getAt(index).data);
     }
 
