@@ -453,7 +453,7 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     mux->dmc_fe_type = DVB_TYPE_S;
     mux->dmc_fe_modulation =
       mux->dmc_fe_delsys == DVB_SYS_DVBS2 ? DVB_MOD_PSK_8 : DVB_MOD_QPSK;
-    mux->u.dmc_fe_qam.fec_inner = DVB_FEC_AUTO;
+    mux->u.dmc_fe_qpsk.fec_inner = DVB_FEC_AUTO;
     mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
     mux->dmc_fe_rolloff    = DVB_ROLLOFF_35;
     mux->dmc_fe_pilot      = DVB_PILOT_AUTO;
@@ -481,7 +481,7 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     } else {
       mux_fail0(r, "dvb-s: undefined polarisation");
     }
-    if (!htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qpsk.symbol_rate))
+    if (htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qpsk.symbol_rate))
       mux_fail0(r, "dvb-s: undefined symbol rate");
 
   } else if (mux->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_A ||
@@ -502,7 +502,7 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     if ((x = htsmsg_get_str(l, "INVERSION")))
       if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
         mux_fail(r, "wrong inversion '%s'", x);
-    if (!htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qam.symbol_rate))
+    if (htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qam.symbol_rate))
       mux_fail0(r, "dvb-c: undefined symbol rate");
 
   } else if (mux->dmc_fe_delsys == DVB_SYS_ATSC) {

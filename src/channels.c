@@ -402,11 +402,23 @@ channel_find_by_id ( uint32_t i )
 }
 
 channel_t *
-channel_find_by_number ( int no )
+channel_find_by_number ( const char *no )
 {
   channel_t *ch;
+  uint32_t maj, min = 0;
+  uint64_t cno;
+  char *s;
+
+  if (no == NULL)
+    return NULL;
+  if ((s = strchr(no, '.')) != NULL) {
+    *s = '\0';
+    min = atoi(s + 1);
+  }
+  maj = atoi(no);
+  cno = (uint64_t)maj * CHANNEL_SPLIT + (uint64_t)min;
   CHANNEL_FOREACH(ch)
-    if(channel_get_number(ch) == no)
+    if(channel_get_number(ch) == cno)
       break;
   return ch;
 }

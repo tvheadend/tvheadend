@@ -924,7 +924,6 @@ main(int argc, char **argv)
   tvhftrace("main", avahi_done);
   tvhftrace("main", bonjour_done);
   tvhftrace("main", imagecache_done);
-  tvhftrace("main", idnode_done);
   tvhftrace("main", lang_code_done);
   tvhftrace("main", api_done);
   tvhftrace("main", config_done);
@@ -934,6 +933,7 @@ main(int argc, char **argv)
   tvhftrace("main", esfilter_done);
   tvhftrace("main", intlconv_done);
   tvhftrace("main", urlparse_done);
+  tvhftrace("main", idnode_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();

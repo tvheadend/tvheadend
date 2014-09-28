@@ -71,7 +71,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 13
+#define HTSP_PROTO_VERSION 14
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -616,7 +616,8 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   htsmsg_add_msg(out, "services", services);
   htsmsg_add_msg(out, "tags", tags);
-  htsmsg_add_str(out, "method", method);
+  if (method)
+    htsmsg_add_str(out, "method", method);
   return out;
 }
 
@@ -1031,6 +1032,23 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
  * Get information about the given event
  */
 static htsmsg_t *
+htsp_method_getChannel(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  uint32_t channelId;
+  channel_t *ch = NULL;
+
+  if (htsmsg_get_u32(in, "channelId", &channelId))
+    return htsp_error("Missing argument 'channelId'");
+  if (!(ch = channel_find_by_id(channelId)))
+    return htsp_error("Channel does not exist");
+
+  return htsp_build_channel(ch, NULL, htsp);
+}
+
+/**
+ * Get information about the given event
+ */
+static htsmsg_t *
 htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 {
   uint32_t eventId;
@@ -1211,6 +1229,38 @@ htsp_method_getEpgObject(htsp_connection_t *htsp, htsmsg_t *in)
   return out;
 }
 
+static const char *
+htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
+{
+  dvr_config_t *cfg = NULL, *cfg2;
+  access_t *perm = htsp->htsp_granted_access;
+  htsmsg_field_t *f;
+  const char *uuid;
+
+  lock_assert(&global_lock);
+
+  config_name = config_name ?: "";
+
+  if (perm->aa_dvrcfgs == NULL)
+    return config_name; /* no change */
+
+  HTSMSG_FOREACH(f, perm->aa_dvrcfgs) {
+    uuid = htsmsg_field_get_str(f) ?: "";
+    if (strcmp(uuid, config_name) == 0)
+      return config_name;
+    cfg2 = dvr_config_find_by_uuid(uuid);
+    if (cfg2 && strcmp(cfg2->dvr_config_name, config_name) == 0)
+      return uuid;
+    if (!cfg)
+      cfg = cfg2;
+  }
+
+  if (!cfg && perm->aa_username)
+    tvhlog(LOG_INFO, "htsp", "User '%s' has no valid dvr config in ACL, using default...", perm->aa_username);
+
+  return cfg ? idnode_uuid_as_str(&cfg->dvr_id) : NULL;
+}
+
 /**
  * add a Dvrentry
  */
@@ -1228,8 +1278,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch = NULL;
 
   /* Options */
-  if(!(dvr_config_name = htsmsg_get_str(in, "configName")))
-    dvr_config_name = "";
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
@@ -1321,12 +1370,12 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsp_user_access_channel(htsp, de->de_channel))
     return htsp_error("User does not have access");
 
-  start       = htsmsg_get_s64_or_default(in, "start",       0);
-  stop        = htsmsg_get_s64_or_default(in, "stop",        0);
-  start_extra = htsmsg_get_s64_or_default(in, "start_extra", 0);
-  stop_extra  = htsmsg_get_s64_or_default(in, "stop_extra",  0);
-  retention   = htsmsg_get_u32_or_default(in, "retention",   0);
-  priority    = htsmsg_get_u32_or_default(in, "priority",    DVR_PRIO_NORMAL);
+  start       = htsmsg_get_s64_or_default(in, "start",      0);
+  stop        = htsmsg_get_s64_or_default(in, "stop",       0);
+  start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
+  stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
+  retention   = htsmsg_get_u32_or_default(in, "retention",  0);
+  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language");
@@ -1417,8 +1466,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   /* Options */
   if(!(title = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
-  if(!(dvr_config_name = htsmsg_get_str(in, "configName")))
-    dvr_config_name = "";
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
   if(htsmsg_get_u32(in, "maxDuration", &max_duration))
@@ -2094,6 +2142,7 @@ struct {
   { "getDiskSpace",             htsp_method_getDiskSpace,       ACCESS_STREAMING},
   { "getSysTime",               htsp_method_getSysTime,         ACCESS_STREAMING},
   { "enableAsyncMetadata",      htsp_method_async,              ACCESS_STREAMING},
+  { "getChannel",               htsp_method_getChannel,         ACCESS_STREAMING},
   { "getEvent",                 htsp_method_getEvent,           ACCESS_STREAMING},
   { "getEvents",                htsp_method_getEvents,          ACCESS_STREAMING},
   { "epgQuery",                 htsp_method_epgQuery,           ACCESS_STREAMING},
@@ -2301,6 +2350,7 @@ htsp_write_scheduler(void *aux)
   htsp_msg_t *hm;
   void *dptr;
   size_t dlen;
+  int r;
 
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
@@ -2309,7 +2359,7 @@ htsp_write_scheduler(void *aux)
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
       /* No active queues at all */
       if(!htsp->htsp_writer_run)
-	      break; /* Should not run anymore, bail out */
+        break; /* Should not run anymore, bail out */
       
       /* Nothing to be done, go to sleep */
       pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
@@ -2325,7 +2375,7 @@ htsp_write_scheduler(void *aux)
     if(hmq->hmq_length) {
       /* Still messages to be sent, put back in active queues */
       if(hmq->hmq_strict_prio) {
-	      TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
+        TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
       } else {
         TAILQ_INSERT_TAIL(&htsp->htsp_active_output_queues, hmq, hmq_link);
       }
@@ -2336,18 +2386,22 @@ htsp_write_scheduler(void *aux)
     if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
       tvhlog(LOG_WARNING, "htsp", "%s: failed to serialize data",
              htsp->htsp_logname);
+      htsp_msg_destroy(hm);
+      pthread_mutex_lock(&htsp->htsp_out_mutex);
+      continue;
     }
 
     htsp_msg_destroy(hm);
 
-    if (tvh_write(htsp->htsp_fd, dptr, dlen)) {
+    r = tvh_write(htsp->htsp_fd, dptr, dlen);
+    free(dptr);
+    pthread_mutex_lock(&htsp->htsp_out_mutex);
+    
+    if (r) {
       tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
              htsp->htsp_logname, strerror(errno));
       break;
     }
-
-    free(dptr);
-    pthread_mutex_lock(&htsp->htsp_out_mutex);
   }
   // Shutdown socket to make receive thread terminate entire HTSP connection
 

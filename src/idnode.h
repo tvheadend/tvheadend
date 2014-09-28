@@ -73,12 +73,17 @@ struct idclass {
   int             (*ic_perm)       (idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
 };
 
+
+typedef RB_HEAD(, idnode) idnodes_rb_t;
+
 /*
  * Node definition
  */
 struct idnode {
   uint8_t           in_uuid[UUID_BIN_SIZE]; ///< Unique ID
   RB_ENTRY(idnode)  in_link;                ///< Global hash
+  RB_ENTRY(idnode)  in_domain_link;         ///< Root class link (domain)
+  idnodes_rb_t     *in_domain;              ///< Domain nodes
   const idclass_t  *in_class;               ///< Class definition
 };
 
@@ -149,8 +154,8 @@ void          idnode_movedown     (idnode_t *in);
 
 void          idnode_changed      (idnode_t *in);
 
-void         *idnode_find    (const char *uuid, const idclass_t *idc);
-idnode_set_t *idnode_find_all(const idclass_t *idc);
+void         *idnode_find    (const char *uuid, const idclass_t *idc, const idnodes_rb_t *nodes);
+idnode_set_t *idnode_find_all(const idclass_t *idc, const idnodes_rb_t *nodes);
 
 
 void idnode_notify (idnode_t *in, int event);

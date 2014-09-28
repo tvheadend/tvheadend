@@ -839,7 +839,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   if (adapter >= MAX_CA ||
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER ||
-      (pid < 0 || pid > 8191))
+      pid > 8191)
     return;
   cf = &capmt->capmt_demuxes.filters[demux_index];
   if (cf->max && cf->adapter != adapter)
@@ -1456,7 +1456,7 @@ capmt_thread(void *aux)
           int i, n;
           extern const idclass_t linuxdvb_adapter_class;
           linuxdvb_adapter_t *la;
-          idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class);
+          idnode_set_t *is = idnode_find_all(&linuxdvb_adapter_class, NULL);
           for (i = 0; i < is->is_count; i++) {
             la = (linuxdvb_adapter_t*)is->is_array[i];
             if (!la || !la->la_is_enabled(la)) continue;
