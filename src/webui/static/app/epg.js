@@ -226,12 +226,21 @@ tvheadend.epg = function() {
     var lookup = '<span class="x-zoom">&nbsp;</span>';
 
     var actions = new Ext.ux.grid.RowActions({
-        header: '',
-        width: 20,
+        id: 'details',
+        header: 'Details',
+        width: 45,
         dataIndex: 'actions',
-        actions: [{
-                iconIndex: 'dvrState'
-            }]
+        actions: [
+            {
+                iconCls: 'info',
+                qtip: 'Broadcast details',
+                cb: function(grid, rec, act, row) {
+                    new tvheadend.epgDetails(grid.getStore().getAt(row).data);
+                }
+            },
+            { iconIndex: 'dvrState' }
+                                                                                                          
+        ]
     });
 
     var epgStore = new Ext.ux.grid.livegrid.Store({
