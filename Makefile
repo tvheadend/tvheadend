@@ -179,6 +179,7 @@ SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
 	src/dvr/dvr_timerec.c \
+	src/dvr/dvr_config.c \
 	src/dvr/dvr_cutpoints.c \
 
 SRCS += src/webui/webui.c \

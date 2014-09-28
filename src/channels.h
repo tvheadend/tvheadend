@@ -145,11 +145,11 @@ void channel_delete(channel_t *ch, int delconf);
 
 channel_t *channel_find_by_name(const char *name);
 #define channel_find_by_uuid(u)\
-  (channel_t*)idnode_find(u, &channel_class)
+  (channel_t*)idnode_find(u, &channel_class, NULL)
 
 channel_t *channel_find_by_id(uint32_t id);
 
-channel_t *channel_find_by_number(int no);
+channel_t *channel_find_by_number(const char *no);
 
 #define channel_find channel_find_by_uuid
 
@@ -165,7 +165,7 @@ channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 
 static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
-  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class); }
+  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class, NULL); }
 
 void channel_tag_save(channel_tag_t *ct);
 

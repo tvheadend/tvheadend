@@ -708,6 +708,7 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
   
 #define SKEL_DECLARE(name, type) type *name;

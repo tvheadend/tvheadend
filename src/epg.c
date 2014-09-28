@@ -2312,15 +2312,6 @@ void epg_query_sort(epg_query_result_t *eqr)
  * Miscellaneous
  * *************************************************************************/
 
-/* Hash title/summary/description to form URI */
-char *epg_hash ( const char *t, const char *s, const char *d )
-{
-  if ( d && strlen(d) > 10 ) return md5sum(d);
-  if ( s && strlen(s) > 10 ) return md5sum(s);
-  if ( t ) return md5sum(t);
-  return NULL;
-}
-
 void epg_skel_done(void)
 {
   epg_object_t **skel;

@@ -237,6 +237,8 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   while((pr = TAILQ_FIRST(&tf->tf_ptsq)) != NULL) {
     
     pkt = pr->pr_pkt;
+    TAILQ_REMOVE(&tf->tf_ptsq, pr, pr_link);
+
     tfs = tfs_find(tf, pkt);
 
     switch(tfs->tfs_type) {
@@ -256,21 +258,20 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_P_FRAME:
 	/* Presentation occures at DTS of next I or P frame,
 	   try to find it */
-	srch = TAILQ_NEXT(pr, pr_link);
-	while(1) {
-	  if(srch == NULL)
-	    return; /* not arrived yet, wait */
-	  if(tfs_find(tf, srch->pr_pkt) == tfs && 
-	     srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
+	TAILQ_FOREACH(srch, &tf->tf_ptsq, pr_link)
+	  if (tfs_find(tf, srch->pr_pkt) == tfs &&
+	      srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
 	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %"PRId64"\n",
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts);
 	    break;
 	  }
-	  srch = TAILQ_NEXT(srch, pr_link);
-	}
-	break;
+	if (srch == NULL) {
+	  /* return packet back to tf_ptsq */
+	  TAILQ_INSERT_HEAD(&tf->tf_ptsq, pr, pr_link);
+	  return; /* not arrived yet, wait */
+        }
       }
       break;
 
@@ -278,9 +279,8 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       break;
     }
 
-    TAILQ_REMOVE(&tf->tf_ptsq, pr, pr_link);
-    normalize_ts(tf, tfs, pkt);
     free(pr);
+    normalize_ts(tf, tfs, pkt);
   }
 }
 
@@ -360,15 +360,19 @@ tsfix_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
-    if (tf->tf_wait_for_video)
+    if (tf->tf_wait_for_video) {
+      streaming_msg_free(sm);
       return;
+    }
     tsfix_input_packet(tf, sm);
     return;
 
   case SMT_START:
     tsfix_start(tf, sm->sm_data);
-    if (tf->tf_wait_for_video)
+    if (tf->tf_wait_for_video) {
+      streaming_msg_free(sm);
       return;
+    }
     break;
 
   case SMT_STOP:

@@ -30,14 +30,19 @@
 #include "settings.h"
 #include "uuid.h"
 
+static const idnodes_rb_t * idnode_domain ( const idclass_t *idc );
+static void idclass_root_register ( idnode_t *in );
+
 typedef struct idclass_link
 {
-  const idclass_t        *idc;
+  const idclass_t       *idc;
+  idnodes_rb_t           nodes;
   RB_ENTRY(idclass_link) link;
 } idclass_link_t;
 
-static RB_HEAD(,idnode)       idnodes;
+static idnodes_rb_t           idnodes;
 static RB_HEAD(,idclass_link) idclasses;
+static RB_HEAD(,idclass_link) idrootclasses;
 static pthread_cond_t         idnode_cond;
 static pthread_mutex_t        idnode_mutex;
 static htsmsg_t              *idnode_queue;
@@ -58,6 +63,14 @@ in_cmp(const idnode_t *a, const idnode_t *b)
   return memcmp(a->in_uuid, b->in_uuid, sizeof(a->in_uuid));
 }
 
+static int
+ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
+{
+  assert(a->idc->ic_class);
+  assert(b->idc->ic_class);
+  return strcmp(a->idc->ic_class, b->idc->ic_class);
+}
+
 /* **************************************************************************
  * Registration
  * *************************************************************************/
@@ -71,6 +84,9 @@ void
 idnode_init(void)
 {
   idnode_queue = NULL;
+  RB_INIT(&idnodes);
+  RB_INIT(&idclasses);
+  RB_INIT(&idrootclasses);
   pthread_mutex_init(&idnode_mutex, NULL);
   pthread_cond_init(&idnode_cond, NULL);
   tvhthread_create(&idnode_tid, NULL, idnode_thread, NULL);
@@ -91,15 +107,16 @@ idnode_done(void)
     RB_REMOVE(&idclasses, il, link);
     free(il);
   }
+  while ((il = RB_FIRST(&idrootclasses)) != NULL) {
+    RB_REMOVE(&idrootclasses, il, link);
+    free(il);
+  }
   SKEL_FREE(idclasses_skel);
 }
 
 static const idclass_t *
-idnode_root_class(idnode_t *in)
+idnode_root_class(const idclass_t *idc)
 {
-  const idclass_t *idc;
-
-  idc = in->in_class;
   while (idc && idc->ic_super)
     idc = idc->ic_super;
   return idc;
@@ -112,11 +129,12 @@ int
 idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
 {
   idnode_t *c;
-  lock_assert(&global_lock);
   tvh_uuid_t u;
   int retries = 5;
   uint32_t u32;
   const idclass_t *idc;;
+
+  lock_assert(&global_lock);
 
   in->in_class = class;
   do {
@@ -130,9 +148,9 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
     c = NULL;
     if (flags & IDNODE_SHORT_UUID) {
       u32 = idnode_get_short_uuid(in);
-      idc = idnode_root_class(in);
+      idc = idnode_root_class(in->in_class);
       RB_FOREACH(c, &idnodes, in_link) {
-        if (idc != idnode_root_class(c))
+        if (idc != idnode_root_class(c->in_class))
           continue;
         if (idnode_get_short_uuid(c) == u32)
           break;
@@ -153,6 +171,10 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
 
   /* Register the class */
   idclass_register(class); // Note: we never actually unregister
+  idclass_root_register(in);
+  assert(in->in_domain);
+  c = RB_INSERT_SORTED(in->in_domain, in, in_domain_link, in_cmp);
+  assert(c == NULL);
 
   /* Fire event */
   idnode_notify_simple(in);
@@ -168,6 +190,7 @@ idnode_unlink(idnode_t *in)
 {
   lock_assert(&global_lock);
   RB_REMOVE(&idnodes, in, in_link);
+  RB_REMOVE(in->in_domain, in, in_domain_link);
   tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in));
   idnode_notify_simple(in);
 }
@@ -521,8 +544,24 @@ idnode_get_time
 /**
  *
  */
+static const idnodes_rb_t *
+idnode_domain(const idclass_t *idc)
+{
+  if (idc) {
+    idclass_link_t lskel, *l;
+    const idclass_t *root = idnode_root_class(idc);
+    lskel.idc = root;
+    l = RB_FIND(&idrootclasses, &lskel, link, ic_cmp);
+    if (l == NULL)
+      return NULL;
+    return &l->nodes;
+  } else {
+    return NULL;
+  }
+}
+
 void *
-idnode_find(const char *uuid, const idclass_t *idc)
+idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain )
 {
   idnode_t skel, *r;
 
@@ -531,7 +570,12 @@ idnode_find(const char *uuid, const idclass_t *idc)
     return NULL;
   if(hex2bin(skel.in_uuid, sizeof(skel.in_uuid), uuid))
     return NULL;
-  r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+  if (domain == NULL)
+    domain = idnode_domain(idc);
+  if (domain == NULL)
+    r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+  else
+    r = RB_FIND(domain, &skel, in_domain_link, in_cmp);
   if(r != NULL && idc != NULL) {
     const idclass_t *c = r->in_class;
     for(;c != NULL; c = c->ic_super) {
@@ -544,21 +588,37 @@ idnode_find(const char *uuid, const idclass_t *idc)
 }
 
 idnode_set_t *
-idnode_find_all ( const idclass_t *idc )
+idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
 {
   idnode_t *in;
   const idclass_t *ic;
   tvhtrace("idnode", "find class %s", idc->ic_class);
   idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
-  RB_FOREACH(in, &idnodes, in_link) {
-    ic = in->in_class;
-    while (ic) {
-      if (ic == idc) {
-        tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
-        idnode_set_add(is, in, NULL);
-        break;
+  if (domain == NULL)
+    domain = idnode_domain(idc);
+  if (domain == NULL) {
+    RB_FOREACH(in, &idnodes, in_link) {
+      ic = in->in_class;
+      while (ic) {
+        if (ic == idc) {
+          tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
+          idnode_set_add(is, in, NULL);
+          break;
+        }
+        ic = ic->ic_super;
       }
-      ic = ic->ic_super;
+    }
+  } else {
+    RB_FOREACH(in, domain, in_domain_link) {
+      ic = in->in_class;
+      while (ic) {
+        if (ic == idc) {
+          tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
+          idnode_set_add(is, in, NULL);
+          break;
+        }
+        ic = ic->ic_super;
+      }
     }
   }
   return is;
@@ -1099,14 +1159,6 @@ idclass_get_property_groups (const idclass_t *idc)
   return NULL;
 }
 
-static int
-ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
-{
-  assert(a->idc->ic_class);
-  assert(b->idc->ic_class);
-  return strcmp(a->idc->ic_class, b->idc->ic_class);
-}
-
 void
 idclass_register(const idclass_t *idc)
 {
@@ -1115,10 +1167,31 @@ idclass_register(const idclass_t *idc)
     idclasses_skel->idc = idc;
     if (RB_INSERT_SORTED(&idclasses, idclasses_skel, link, ic_cmp))
       break;
+    RB_INIT(&idclasses_skel->nodes); /* not used, but for sure */
     SKEL_USED(idclasses_skel);
     tvhtrace("idnode", "register class %s", idc->ic_class);
     idc = idc->ic_super;
   }
+}
+
+static void
+idclass_root_register(idnode_t *in)
+{
+  const idclass_t *idc = in->in_class;
+  idclass_link_t *r;
+  idc = idnode_root_class(idc);
+  SKEL_ALLOC(idclasses_skel);
+  idclasses_skel->idc = idc;
+  r = RB_INSERT_SORTED(&idrootclasses, idclasses_skel, link, ic_cmp);
+  if (r) {
+    in->in_domain = &r->nodes;
+    return;
+  }
+  RB_INIT(&idclasses_skel->nodes);
+  r = idclasses_skel;
+  SKEL_USED(idclasses_skel);
+  tvhtrace("idnode", "register root class %s", idc->ic_class);
+  in->in_domain = &r->nodes;
 }
 
 const idclass_t *
@@ -1296,7 +1369,7 @@ idnode_thread ( void *p )
     pthread_mutex_lock(&global_lock);
 
     HTSMSG_FOREACH(f, q) {
-      node  = idnode_find(f->hmf_name, NULL);
+      node  = idnode_find(f->hmf_name, NULL, NULL);
       event = htsmsg_field_get_str(f);
       m     = htsmsg_create_map();
       htsmsg_add_str(m, "uuid", f->hmf_name);

@@ -51,6 +51,103 @@ const char *days[7] = {
   "Saturday",
 };
 
+typedef struct dvr_query_result {
+  dvr_entry_t **dqr_array;
+  int dqr_entries;
+  int dqr_alloced;
+} dvr_query_result_t;
+
+typedef int (dvr_entry_filter)(dvr_entry_t *entry);
+typedef int (dvr_entry_comparator)(const void *a, const void *b);
+
+/**
+ *
+ */
+static void
+dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
+{
+  if(dqr->dqr_entries == dqr->dqr_alloced) {
+    /* Need to alloc more space */
+
+    dqr->dqr_alloced = MAX(100, dqr->dqr_alloced * 2);
+    dqr->dqr_array = realloc(dqr->dqr_array,
+			     dqr->dqr_alloced * sizeof(dvr_entry_t *));
+  }
+  dqr->dqr_array[dqr->dqr_entries++] = de;
+}
+
+static void
+dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter)
+{
+  dvr_entry_t *de;
+
+  memset(dqr, 0, sizeof(dvr_query_result_t));
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (filter(de))
+      dvr_query_add_entry(dqr, de);
+}
+
+static int all_filter(dvr_entry_t *entry)
+{
+  return 1;
+}
+
+/**
+ *
+ */
+static void
+dvr_query(dvr_query_result_t *dqr)
+{
+  return dvr_query_filter(dqr, all_filter);
+}
+
+/**
+ *
+ */
+static void
+dvr_query_free(dvr_query_result_t *dqr)
+{
+  free(dqr->dqr_array);
+}
+
+/**
+ * Sorting functions
+ */
+static int
+dvr_sort_start_descending(const void *A, const void *B)
+{
+  dvr_entry_t *a = *(dvr_entry_t **)A;
+  dvr_entry_t *b = *(dvr_entry_t **)B;
+  return b->de_start - a->de_start;
+}
+
+#if 0
+static int
+dvr_sort_start_ascending(const void *A, const void *B)
+{
+  return -dvr_sort_start_descending(A, B);
+}
+#endif
+
+/**
+ *
+ */
+static void
+dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator sf)
+{
+  if(dqr->dqr_array == NULL)
+    return;
+
+  qsort(dqr->dqr_array, dqr->dqr_entries, sizeof(dvr_entry_t *), sf);
+}
+
+static void
+dvr_query_sort(dvr_query_result_t *dqr)
+{
+  dvr_query_sort_cmp(dqr, dvr_sort_start_descending);
+}
+
 /**
  * Root page, we direct the client to different pages depending
  * on if it is a full blown browser or just some mobile app

@@ -44,13 +44,13 @@ typedef struct globalheaders {
 static void
 gh_flush(globalheaders_t *gh)
 {
-  if(gh->gh_ss != NULL)
+  if(gh->gh_ss != NULL) {
     streaming_start_unref(gh->gh_ss);
-  gh->gh_ss = NULL;
+    gh->gh_ss = NULL;
+  }
 
   pktref_clear_queue(&gh->gh_holdq);
 }
-
 
 
 /**
@@ -165,15 +165,24 @@ headers_complete(globalheaders_t *gh, int64_t qd)
  *
  */
 static th_pkt_t *
-convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
+convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt, int hold)
 {
+  th_pkt_t *r;
+
   switch(ssc->ssc_type) {
   case SCT_H264:
-    return avc_convert_pkt(pkt);
+    r = avc_convert_pkt(pkt);
+    if (!hold)
+      pkt_ref_dec(pkt);
+    break;
 
   default:
-    return pkt;
+    r = pkt;
+    if (hold)
+      pkt_ref_inc(r);
+    break;
   }
+  return r;
 }
 
 
@@ -208,19 +217,18 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     assert(ssc != NULL);
 
     if(ssc->ssc_type == SCT_TELETEXT) {
-      free(sm);
+      streaming_msg_free(sm);
       ssc->ssc_disabled = 1;
       break;
     }
 
-    pkt = convertpkt(ssc, pkt);
+    pkt = convertpkt(ssc, pkt, 1);
 
     apply_header(ssc, pkt);
 
-    pr = pktref_create(pkt);
-    TAILQ_INSERT_TAIL(&gh->gh_holdq, pr, pr_link);
+    pktref_enqueue(&gh->gh_holdq, pkt);
 
-    free(sm);
+    streaming_msg_free(sm);
 
     if(!headers_complete(gh, gh_queue_delay(gh))) 
       break;
@@ -278,7 +286,13 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_START:
-    abort(); // Should not happen
+    /* stop */
+    gh->gh_passthru = 0;
+    gh_flush(gh);
+    /* restart */
+    gh->gh_ss = streaming_start_copy(sm->sm_data);
+    streaming_msg_free(sm);
+    break;
     
   case SMT_STOP:
     gh->gh_passthru = 0;
@@ -300,7 +314,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     pkt = sm->sm_data;
     ssc = streaming_start_component_find_by_index(gh->gh_ss, 
 						  pkt->pkt_componentindex);
-    sm->sm_data = convertpkt(ssc, pkt);
+    sm->sm_data = convertpkt(ssc, pkt, 0);
     streaming_target_deliver2(gh->gh_output, sm);
     break;
   }
@@ -348,4 +362,3 @@ globalheaders_destroy(streaming_target_t *pad)
   gh_flush(gh);
   free(gh);
 }
-

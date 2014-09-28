@@ -640,8 +640,7 @@ void dvb_network_done ( void )
 dvb_network_t*
 dvb_network_find_by_uuid(const char *uuid)
 {
-  idnode_t *in = idnode_find(uuid, &dvb_network_class);
-  return (dvb_network_t*)in;
+  return idnode_find(uuid, &dvb_network_class, NULL);
 }
 
 int dvb_network_get_orbital_pos

@@ -41,6 +41,7 @@ typedef struct dvr_config {
   char *dvr_postproc;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
+  uint32_t dvr_update_window;
 
   int dvr_mc;
   muxer_config_t dvr_muxcnf;
@@ -330,8 +331,6 @@ extern const idclass_t dvr_timerec_entry_class;
  * Prototypes
  */
 
-void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
-
 static inline int dvr_config_is_valid(dvr_config_t *cfg)
   { return cfg->dvr_valid; }
 
@@ -345,11 +344,17 @@ dvr_config_t *dvr_config_find_by_name_default(const char *name);
 dvr_config_t *dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf);
 
 static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)
-  { return (dvr_config_t*)idnode_find(uuid, &dvr_config_class); }
+  { return (dvr_config_t*)idnode_find(uuid, &dvr_config_class, NULL); }
 
 void dvr_config_delete(const char *name);
 
 void dvr_config_save(dvr_config_t *cfg);
+
+/*
+ *
+ */
+
+void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
 static inline int dvr_entry_is_editable(dvr_entry_t *de)
   { return de->de_sched_state == DVR_SCHEDULED; }
@@ -369,7 +374,13 @@ int dvr_entry_get_extra_time_post( dvr_entry_t *de );
 
 int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 
+void dvr_entry_init(void);
+
+void dvr_entry_done(void);
+
 void dvr_entry_save(dvr_entry_t *de);
+
+void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 
 const char *dvr_entry_status(dvr_entry_t *de);
 
@@ -407,11 +418,6 @@ dvr_entry_update( dvr_entry_t *de,
                   time_t de_start_extra, time_t de_stop_extra,
                   dvr_prio_t pri, int retention );
 
-void dvr_init(void);
-void dvr_config_init(void);
-
-void dvr_done(void);
-
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
@@ -425,7 +431,7 @@ void dvr_event_updated(epg_broadcast_t *e);
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
-  { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class); }
+  { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
 dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 
@@ -443,31 +449,10 @@ void dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de);
 
+htsmsg_t *dvr_entry_class_mc_list (void *o);
 htsmsg_t *dvr_entry_class_pri_list(void *o);
 htsmsg_t *dvr_entry_class_config_name_list(void *o);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
-
-/**
- * Query interface
- */
-typedef struct dvr_query_result {
-  dvr_entry_t **dqr_array;
-  int dqr_entries;
-  int dqr_alloced;
-} dvr_query_result_t;
-
-typedef int (dvr_entry_filter)(dvr_entry_t *entry);
-typedef int (dvr_entry_comparator)(const void *a, const void *b);
-
-void dvr_query(dvr_query_result_t *dqr);
-void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
-void dvr_query_free(dvr_query_result_t *dqr);
-
-void dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator cmp);
-void dvr_query_sort(dvr_query_result_t *dqr);
-
-int dvr_sort_start_descending(const void *A, const void *B);
-int dvr_sort_start_ascending(const void *A, const void *B);
 
 /**
  *
@@ -505,7 +490,7 @@ void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
 
 static inline dvr_autorec_entry_t *
 dvr_autorec_find_by_uuid(const char *uuid)
-  { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class); }
+  { return (dvr_autorec_entry_t*)idnode_find(uuid, &dvr_autorec_entry_class, NULL); }
 
 
 htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
@@ -541,7 +526,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
-  { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class); }
+  { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class, NULL); }
 
 
 void dvr_timerec_save(dvr_timerec_entry_t *dae);
@@ -595,5 +580,15 @@ typedef TAILQ_HEAD(,dvr_cutpoint) dvr_cutpoint_list_t;
 
 dvr_cutpoint_list_t *dvr_get_cutpoint_list (dvr_entry_t *de);
 void dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list);
+
+/**
+ *
+ */
+
+void dvr_init(void);
+void dvr_config_init(void);
+
+void dvr_done(void);
+
 
 #endif /* DVR_H  */

@@ -588,7 +588,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
         if (prefixlen < 0 || prefixlen > 128)
           goto fnext;
       } else {
-        prefixlen = !access_addr4_empty(buf) ? 128 : 0;
+        prefixlen = !access_addr6_empty(buf) ? 128 : 0;
       }
 
       ai->ai_prefixlen = prefixlen;
@@ -603,7 +603,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
         if (prefixlen < 0 || prefixlen > 32)
           goto fnext;
       } else {
-        prefixlen = !access_addr6_empty(buf) ? 32 : 0;
+        prefixlen = !access_addr4_empty(buf) ? 32 : 0;
       }
 
       s_addr = inet_addr(buf);
@@ -735,7 +735,6 @@ access_entry_destroy(access_entry_t *ae)
   free(ae->ae_password);
   free(ae->ae_password2);
   free(ae->ae_comment);
-  free(ae->ae_chtag);
   free(ae);
 }
 
@@ -1065,7 +1064,6 @@ const idclass_t access_entry_class = {
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
-      .off      = offsetof(access_entry_t, ae_dvr_config),
     },
     {
       .type     = PT_BOOL,
@@ -1095,7 +1093,6 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .id       = "channel_tag",
       .name     = "Channel Tag",
-      .off      = offsetof(access_entry_t, ae_chtag),
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,

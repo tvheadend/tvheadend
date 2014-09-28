@@ -236,6 +236,5 @@ avc_convert_pkt(th_pkt_t *src)
 		      pktbuf_len(src->pkt_payload));
   
   pkt->pkt_payload = pktbuf_make(payload.sb_data, payload.sb_ptr);
-  pkt_ref_dec(src);
   return pkt;
 }

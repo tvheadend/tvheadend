@@ -622,6 +622,9 @@ void tcp_server_register(void *server)
   tcp_server_t *ts = server;
   tvhpoll_event_t ev;
 
+  if (ts == NULL)
+    return;
+
   memset(&ev, 0, sizeof(ev));
 
   ev.fd       = ts->serverfd;
