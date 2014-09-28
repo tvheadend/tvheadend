@@ -63,8 +63,7 @@ tvheadend.status_subs = function(panel, index)
 
         function renderBw(value, item, record) {
             var txt = parseInt(value / 125);
-            var href = 'javascript:tvheadend.subscription_bw_monitor(' + record.id + ');';
-            return '<a href="' + href + '">' + txt + '</a>';
+            return '<span class="x-zoom">&nbsp;</span>' + txt;
         }
 
         var subsCm = new Ext.grid.ColumnModel([
@@ -125,6 +124,7 @@ tvheadend.status_subs = function(panel, index)
                 id: 'in',
                 header: "Input (kb/s)",
                 dataIndex: 'in',
+                listeners: { click: { fn: clicked } },
                 renderer: renderBw,
             },
             {
@@ -132,9 +132,18 @@ tvheadend.status_subs = function(panel, index)
                 id: 'out',
                 header: "Output (kb/s)",
                 dataIndex: 'out',
-                renderer: renderBw
+                listeners: { click: { fn: clicked } },
+                renderer: renderBw,
             }
         ]);
+        
+        function clicked(column, grid, index, e) {
+            if (column.dataIndex == 'in' || column.dataIndex == 'out') {
+                var id = grid.getStore().getAt(index).id;
+                tvheadend.subscription_bw_monitor(id);
+                return false;
+            }
+        }
 
         subs = new Ext.grid.GridPanel({
             border: false,
@@ -152,7 +161,7 @@ tvheadend.status_subs = function(panel, index)
         dpanel.add(subs);
         dpanel.doLayout(false, true);
     }
-    
+
     function destroyer() {
         if (subs === null || !tvheadend.dynamic)
             return;
@@ -255,8 +264,7 @@ tvheadend.status_streams = function(panel, index)
 
         function renderBw(value, item, record) {
             var txt = parseInt(value / 1024);
-            var href = "javascript:tvheadend.stream_bw_monitor('" + record.id + "');";
-            return '<a href="' + href + '">' + txt + '</a>';
+            return '<span class="x-zoom">&nbsp;</span>' + txt;
         }
 
         function renderBer(value, item, store) {
@@ -302,7 +310,8 @@ tvheadend.status_streams = function(panel, index)
                 width: 50,
                 header: "Bandwidth (kb/s)",
                 dataIndex: 'bps',
-                renderer: renderBw
+                renderer: renderBw,
+                listeners: { click: { fn: clicked } },
             },
             {
                 width: 50,
@@ -332,6 +341,14 @@ tvheadend.status_streams = function(panel, index)
                 dataIndex: 'cc'
             }
         ]);
+
+        function clicked(column, grid, index, e) {
+            if (column.dataIndex == 'bps') {
+                var id = grid.getStore().getAt(index).id;
+                tvheadend.stream_bw_monitor(id);
+                return false;
+            }
+        }
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
             header: "SNR",
@@ -680,13 +697,13 @@ tvheadend.stream_bw_monitor = function(id) {
                 render: {
                     scope: this,
                     fn: function(item) {
-                        chart.streamTo(item.el.dom, 1000);
+                        chart.streamTo(item.el.dom, 15000);
                     }
                 },
                 resize: {
                     scope: this,
                     fn: function(item) {
-                        chart.render(item.el.dom, 1000);
+                        chart.render(item.el.dom, 15000);
                     }
                 }
             }
@@ -694,7 +711,7 @@ tvheadend.stream_bw_monitor = function(id) {
     });
 
     var task = {
-        interval: 10000,
+        interval: 1000,
         run: function() {
             var store = tvheadend.streamStatusStore;
             var r = store ? store.getById(id) : null;
