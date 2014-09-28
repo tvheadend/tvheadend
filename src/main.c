@@ -451,6 +451,7 @@ main(int argc, char **argv)
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
+  FILE *pidfile;
 
   main_tid = pthread_self();
 
@@ -696,6 +697,9 @@ main(int argc, char **argv)
   http_server_init(opt_bindaddr);  // bind to ports only
   htsp_init(opt_bindaddr);	   // bind to ports only
 
+  if (opt_fork)
+    pidfile = fopen(opt_pidpath, "w+");
+
   /* Set priviledges */
   if(opt_fork || opt_group || opt_user) {
     const char *homedir;
@@ -741,8 +745,6 @@ main(int argc, char **argv)
 
   /* Daemonise */
   if(opt_fork) {
-    FILE *pidfile = fopen(opt_pidpath, "w+");
-
     if(daemon(0, 0)) {
       exit(2);
     }
