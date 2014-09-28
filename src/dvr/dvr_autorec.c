@@ -531,6 +531,12 @@ dvr_autorec_entry_class_time_list_(void *o)
 }
 
 static htsmsg_t *
+dvr_autorec_entry_class_extra_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
+}
+
+static htsmsg_t *
 dvr_autorec_entry_class_minduration_list(void *o)
 {
   return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
@@ -846,14 +852,16 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "start_extra",
       .name     = "Extra Start Time",
       .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
-      .opts     = PO_DURATION,
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
     },
     {
       .type     = PT_TIME,
       .id       = "stop_extra",
       .name     = "Extra Stop Time",
       .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
-      .opts     = PO_DURATION,
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
     },
     {
       .type     = PT_U32,
