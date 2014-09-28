@@ -696,14 +696,13 @@ main(int argc, char **argv)
   http_server_init(opt_bindaddr);  // bind to ports only
   htsp_init(opt_bindaddr);	   // bind to ports only
 
-  /* Daemonise */
-  if(opt_fork) {
+  /* Set priviledges */
+  if(opt_fork || opt_group || opt_user) {
     const char *homedir;
     gid_t gid;
     uid_t uid;
     struct group  *grp = getgrnam(opt_group ?: "video");
     struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
-    FILE   *pidfile    = fopen(opt_pidpath, "w+");
 
     if(grp != NULL) {
       gid = grp->gr_gid;
@@ -715,7 +714,7 @@ main(int argc, char **argv)
       if (getuid() != pw->pw_uid) {
         gid_t glist[10];
         int gnum;
-        gnum = get_user_groups(pw, glist, 10);
+        gnum = get_user_groups(pw, glist, ARRAY_SIZE(glist));
         if (setgroups(gnum, glist)) {
           tvhlog(LOG_ALERT, "START",
                  "setgroups() failed, do you have permission?");
@@ -738,6 +737,11 @@ main(int argc, char **argv)
              "setuid() failed, do you have permission?");
       return 1;
     }
+  }
+
+  /* Daemonise */
+  if(opt_fork) {
+    FILE *pidfile = fopen(opt_pidpath, "w+");
 
     if(daemon(0, 0)) {
       exit(2);
