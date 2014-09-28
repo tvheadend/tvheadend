@@ -29,7 +29,7 @@ static htsmsg_t *
 api_epg_get_list ( const char *s )
 {
   htsmsg_t *m = NULL;
-  char *r, *saveptr;
+  char *r, *saveptr = NULL;
   if (s && s[0] != '\0') {
     s = r = strdup(s);
     r = strtok_r(r, ";", &saveptr);
