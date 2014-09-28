@@ -53,14 +53,24 @@ tvheadend.comet.on('channels', function(m) {
 
 tvheadend.channel_tab = function(panel, index)
 {
+    function decode_dot_number(number) {
+        var a = number.split('.');
+        if (a.length !== 2)
+            return null;
+        a[0] = parseInt(a[0]);
+        a[1] = parseInt(a[1]);
+        return a;
+    }
+
     function assign_low_number(ctx, e, store, sm) {
         if (sm.getCount() !== 1)
             return;
 
         var nums = [];
         store.each(function() {
-            if (this.data.number > 0)
-                nums.push(this.data.number);
+            var number = this.data.number;
+            if (typeof number === "number" && number > 0)
+                nums.push(number);
         });
 
         if (nums.length === 0)
@@ -99,17 +109,26 @@ tvheadend.channel_tab = function(panel, index)
     function move_number_up(ctx, e, store, sm) {
         Ext.each(sm.getSelections(), function(channel) {
             var number = channel.data.number;
-            channel.set('number', number + 1);
+            if (typeof number !== "string")
+                channel.set('number', number + 1);
+            else {
+                a = decode_dot_number(number);
+                if (a !== null)
+                    channel.set('number', a[0] + '.' + (a[1] + 1));
+            }
         });
     }
 
     function move_number_down(ctx, e, store, sm) {
         Ext.each(sm.getSelections(), function(channel) {
             var number = channel.data.number;
-            
-            // Don't decrement past zero
-            if (number > 0)
+            if (typeof number !== "string" && number > 0)
                 channel.set('number', number - 1);
+            else {
+                a = decode_dot_number(number);
+                if (a !== null && a[1] > 0)
+                  channel.set('number', a[0] + '.' + (a[1] - 1));
+            }
         });
     }
 
