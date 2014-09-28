@@ -764,6 +764,7 @@ tvheadend.epg = function() {
     function clicked(column, grid, index, e) {
         if (column.dataIndex === 'title') {
             var value = grid.getStore().getAt(index).data[column.dataIndex];
+            value = tvheadend.regexEscape(value);
             if (value && epgStore.baseParams.title !== value) {
                 epgFilterTitle.setValue(value);
                 return false;

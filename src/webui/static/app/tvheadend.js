@@ -10,6 +10,10 @@ Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
     expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
 }));
 
+tvheadend.regexEscape = function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 /**
  * Displays a help popup window
  */
