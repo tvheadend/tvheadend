@@ -451,7 +451,7 @@ main(int argc, char **argv)
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
-  FILE *pidfile;
+  FILE *pidfile = NULL;
 
   main_tid = pthread_self();
 
