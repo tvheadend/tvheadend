@@ -813,7 +813,8 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
 {
   uint8_t *buf = alloca(len + 6);
 
-  buf[0] = buf[1] = buf[2] = buf[3] = 0xff;
+  buf[0] = buf[1] = 0xff;
+  buf[2] = buf[3] = 0;
   buf[4] = demux_index;
   buf[5] = filter_index;
   memcpy(buf + 6, data, len);
