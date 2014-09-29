@@ -61,8 +61,9 @@ tvheadend.status_subs = function(panel, index)
 
         tvheadend.comet.on('subscriptions', update);
 
-        function renderBw(value, item, record) {
+        function renderBw(value, meta, record) {
             var txt = parseInt(value / 125);
+            meta.attr = 'style="cursor:alias;"';
             return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 
@@ -262,8 +263,9 @@ tvheadend.status_streams = function(panel, index)
 
         tvheadend.comet.on('input_status', update);
 
-        function renderBw(value, item, record) {
+        function renderBw(value, meta, record) {
             var txt = parseInt(value / 1024);
+            meta.attr = 'style="cursor:alias;"';
             return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 

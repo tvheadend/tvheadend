@@ -281,16 +281,16 @@ tvheadend.epg = function() {
         ]),
     });
 
-    function setMetaAttr(meta, record) {
+    function setMetaAttr(meta, record, cursor) {
         var now = new Date;
         var start = record.get('start');
+        var extra = cursor ? 'cursor:alias;' : '';
 
-        if (now.getTime() >= start.getTime()) {
-            meta.attr = 'style="font-weight:bold;"';
-        }
+        if (now.getTime() >= start.getTime())
+            meta.attr = 'style="font-weight:bold;' + extra + '"';
     }
 
-    function renderDate(value, meta, record, rowIndex, colIndex, store) {
+    function renderDate(value, meta, record) {
         setMetaAttr(meta, record);
 
         if (value) {
@@ -300,7 +300,7 @@ tvheadend.epg = function() {
         return "";
     }
 
-    function renderDuration(value, meta, record, rowIndex, colIndex, store) {
+    function renderDuration(value, meta, record) {
         setMetaAttr(meta, record);
 
         value = record.data.stop - record.data.start;
@@ -323,20 +323,20 @@ tvheadend.epg = function() {
         }
     }
 
-    function renderText(value, meta, record, rowIndex, colIndex, store) {
+    function renderText(value, meta, record) {
         setMetaAttr(meta, record);
 
         return value;
     }
 
-    function renderTextLookup(value, meta, record, rowIndex, colIndex, store) {
-        setMetaAttr(meta, record);
+    function renderTextLookup(value, meta, record) {
+        setMetaAttr(meta, record, value);
 
         if (!value) return "";
         return lookup + value;
     }
 
-    function renderInt(value, meta, record, rowIndex, colIndex, store) {
+    function renderInt(value, meta, record) {
         setMetaAttr(meta, record);
 
         return '' + value;
@@ -352,7 +352,7 @@ tvheadend.epg = function() {
                 dataIndex: 'progress',
                 colored: false,
                 ceiling: 100,
-                tvh_renderer: function(value, meta, record, rowIndex, colIndex, store) {
+                tvh_renderer: function(value, meta, record) {
                     var entry = record.data;
                     var start = entry.start;           // milliseconds
                     var duration = entry.stop - start; // milliseconds
@@ -443,13 +443,14 @@ tvheadend.epg = function() {
                 id: 'genre',
                 header: "Content Type",
                 dataIndex: 'genre',
-                renderer: function(vals) {
+                renderer: function(vals, meta, record) {
                     var r = [];
                     Ext.each(vals, function(v) {
                         v = tvheadend.contentGroupFullLookupName(v);
                         if (v)
                           r.push(v);
                     });
+                    setMetaAttr(meta, record, r.length > 0);
                     if (r.length < 1) return "";
                     return lookup + r.join(',');
                 },
