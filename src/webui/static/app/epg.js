@@ -771,9 +771,10 @@ tvheadend.epg = function() {
                 return false;
             }
         } else if (column.dataIndex === 'channelName') {
-            var value = grid.getStore().getAt(index).data[column.dataIndex];
+            var rec = grid.getStore().getAt(index).data;
+            var value = rec['channelUuid'];
             if (value && epgStore.baseParams.channel !== value) {
-                epgFilterChannels.setValue(value);
+                epgFilterChannels.setValue(rec['channelName']);
                 epgFilterChannelSet(value);
                 return false;
             }
