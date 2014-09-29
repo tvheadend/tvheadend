@@ -288,6 +288,8 @@ tvheadend.epg = function() {
 
         if (now.getTime() >= start.getTime())
             meta.attr = 'style="font-weight:bold;' + extra + '"';
+        else if (extra)
+            meta.attr = 'style="' + extra + '"';
     }
 
     function renderDate(value, meta, record) {
@@ -331,7 +333,6 @@ tvheadend.epg = function() {
 
     function renderTextLookup(value, meta, record) {
         setMetaAttr(meta, record, value);
-
         if (!value) return "";
         return lookup + value;
     }
@@ -371,7 +372,12 @@ tvheadend.epg = function() {
                 id: 'title',
                 header: "Title",
                 dataIndex: 'title',
-                renderer: renderTextLookup,
+                renderer: function(value, meta, record) {
+                    var clickable = tvheadend.regexEscape(record.data['title']) !=
+                                    epgStore.baseParams.title;
+                    setMetaAttr(meta, record, value && clickable);
+                    return !value ? '' : (clickable ? lookup : '') + value;
+                },
                 listeners: { click: { fn: clicked } },
             },
             {
@@ -422,7 +428,12 @@ tvheadend.epg = function() {
                 id: 'channelName',
                 header: "Channel",
                 dataIndex: 'channelName',
-                renderer: renderTextLookup,
+                renderer: function(value, meta, record) {
+                    var clickable = record.data['channelUuid'] !==
+                                    epgStore.baseParams.channel;
+                    setMetaAttr(meta, record, value && clickable);
+                    return !value ? '' : (clickable ? lookup : '') + value;
+                },
                 listeners: { click: { fn: clicked } },
             },
             {
@@ -450,9 +461,14 @@ tvheadend.epg = function() {
                         if (v)
                           r.push(v);
                     });
-                    setMetaAttr(meta, record, r.length > 0);
+                    var clickable = false;
+                    if (r.length > 0 && vals[0]) {
+                        var v = vals[0] & 0xf0;
+                        clickable = v !== epgStore.baseParams.contentType;
+                    }
+                    setMetaAttr(meta, record, clickable);
                     if (r.length < 1) return "";
-                    return lookup + r.join(',');
+                    return (clickable ? lookup : '') + r.join(',');
                 },
                 listeners: { click: { fn: clicked } },
             }
