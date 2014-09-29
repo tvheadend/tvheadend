@@ -716,12 +716,17 @@ main(int argc, char **argv)
 
     if (pw != NULL) {
       if (getuid() != pw->pw_uid) {
-        gid_t glist[10];
+        gid_t glist[16];
         int gnum;
         gnum = get_user_groups(pw, glist, ARRAY_SIZE(glist));
-        if (setgroups(gnum, glist)) {
+        if (gnum > 0 && setgroups(gnum, glist)) {
+          char buf[256] = "";
+          int i;
+          for (i = 0; i < gnum; i++)
+            snprintf(buf + strlen(buf), sizeof(buf) - 1 - strlen(buf),
+                     ",%d", glist[i]);
           tvhlog(LOG_ALERT, "START",
-                 "setgroups() failed, do you have permission?");
+                 "setgroups(%s) failed, do you have permission?", buf+1);
           return 1;
         }
       }
@@ -733,12 +738,12 @@ main(int argc, char **argv)
     }
     if ((getgid() != gid) && setgid(gid)) {
       tvhlog(LOG_ALERT, "START",
-             "setgid() failed, do you have permission?");
+             "setgid(%d) failed, do you have permission?", gid);
       return 1;
     }
     if ((getuid() != uid) && setuid(uid)) {
       tvhlog(LOG_ALERT, "START",
-             "setuid() failed, do you have permission?");
+             "setuid(%d) failed, do you have permission?", uid);
       return 1;
     }
   }
