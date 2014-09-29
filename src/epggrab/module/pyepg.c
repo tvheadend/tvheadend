@@ -422,6 +422,8 @@ void pyepg_init ( void )
 {
   char buf[256];
 
+  RB_INIT(&_pyepg_channels);
+
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
     epggrab_module_int_create(NULL, "pyepg-internal", "PyEPG", 4, buf,
@@ -432,6 +434,11 @@ void pyepg_init ( void )
     epggrab_module_ext_create(NULL, "pyepg", "PyEPG", 4, "pyepg",
                               _pyepg_parse, NULL,
                               &_pyepg_channels);
+}
+
+void pyepg_done ( void )
+{
+  epggrab_channel_flush(&_pyepg_channels, 0);
 }
 
 void pyepg_load ( void )

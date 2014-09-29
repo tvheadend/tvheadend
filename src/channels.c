@@ -263,7 +263,7 @@ channel_class_epggrab_set ( void *o, const void *v )
   for (ecl = LIST_FIRST(&ch->ch_epggrab); ecl != NULL; ecl = n) {
     n = LIST_NEXT(ecl, ecl_chn_link);
     if (ecl->ecl_mark) {
-      epggrab_channel_link_delete(ecl);
+      epggrab_channel_link_delete(ecl, 1);
       save = 1;
     }
   }

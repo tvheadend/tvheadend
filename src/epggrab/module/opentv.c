@@ -468,7 +468,7 @@ opentv_desc_channels
       tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
 
       if (ecl && ecl->ecl_channel != ch) {
-        epggrab_channel_link_delete(ecl);
+        epggrab_channel_link_delete(ecl, 1);
         ecl = NULL;
       }
       
@@ -900,6 +900,8 @@ void opentv_init ( void )
 {
   htsmsg_t *m;
 
+  RB_INIT(&_opentv_channels);
+
   /* Load dictionaries */
   if ((m = hts_settings_load("epggrab/opentv/dict")))
     _opentv_dict_load(m);
@@ -920,7 +922,8 @@ void opentv_done ( void )
 {
   opentv_dict_t *dict;
   opentv_genre_t *genre;
-  
+
+  epggrab_channel_flush(&_opentv_channels, 0);
   while ((dict = RB_FIRST(&_opentv_dicts)) != NULL) {
     RB_REMOVE(&_opentv_dicts, dict, h_link);
     huffman_tree_destroy(dict->codes);

@@ -749,6 +749,8 @@ static void _xmltv_load_grabbers ( void )
 
 void xmltv_init ( void )
 {
+  RB_INIT(&_xmltv_channels);
+
   /* External module */
   _xmltv_module = (epggrab_module_t*)
     epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
@@ -757,6 +759,11 @@ void xmltv_init ( void )
 
   /* Standard modules */
   _xmltv_load_grabbers();
+}
+
+void xmltv_done ( void )
+{
+  epggrab_channel_flush(&_xmltv_channels, 0);
 }
 
 void xmltv_load ( void )
