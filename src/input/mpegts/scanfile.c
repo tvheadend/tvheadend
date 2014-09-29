@@ -422,9 +422,17 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     mux->u.dmc_fe_ofdm.hierarchy_information = DVB_HIERARCHY_NONE;
     mux->dmc_fe_inversion  = DVB_INVERSION_AUTO;
 
-    if ((x = htsmsg_get_str(l, "BANDWIDTH_HZ")))
+    if ((x = htsmsg_get_str(l, "BANDWIDTH_HZ"))) {
+      if (isdigit(x[0])) {
+        /* convert to kHz */
+        int64_t ll = strtoll(x, NULL, 0);
+        ll /= 1000;
+        snprintf(buf, sizeof(buf), "%llu", (long long unsigned)ll);
+        x = buf;
+      }
       if ((mux->u.dmc_fe_ofdm.bandwidth = dvb_str2bw(x)) == -1)
         mux_fail(r, "wrong bandwidth '%s'", x);
+    }
     if ((x = htsmsg_get_str(l, "CODE_RATE_HP")))
       if ((mux->u.dmc_fe_ofdm.code_rate_HP = dvb_str2fec(x)) == -1)
         mux_fail(r, "wrong code rate HP '%s'", x);
