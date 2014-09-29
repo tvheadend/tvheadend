@@ -63,7 +63,7 @@ tvheadend.status_subs = function(panel, index)
 
         function renderBw(value, item, record) {
             var txt = parseInt(value / 125);
-            return '<span class="x-zoom">&nbsp;</span>' + txt;
+            return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 
         var subsCm = new Ext.grid.ColumnModel([
@@ -264,7 +264,7 @@ tvheadend.status_streams = function(panel, index)
 
         function renderBw(value, item, record) {
             var txt = parseInt(value / 1024);
-            return '<span class="x-zoom">&nbsp;</span>' + txt;
+            return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 
         function renderBer(value, item, store) {

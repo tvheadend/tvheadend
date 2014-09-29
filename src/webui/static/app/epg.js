@@ -223,7 +223,7 @@ tvheadend.epgDetails = function(event) {
 };
 
 tvheadend.epg = function() {
-    var lookup = '<span class="x-zoom">&nbsp;</span>';
+    var lookup = '<span class="x-linked">&nbsp;</span>';
 
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',

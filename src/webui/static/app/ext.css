@@ -322,14 +322,11 @@
     background-image: url(../icons/film_edit.png) !important;
 }
 
-.zoom {
-    background-image: url(../icons/zoom.png) !important;
-}
-
-.x-zoom {
+.x-linked {
     display: inline-block;
-    background-image: url(../icons/zoom.png) !important;
-    width: 16px;
+    background-image: url(../icons/linked.gif) !important;
+    background-repeat: no-repeat;
+    width: 4px;
 }
 
 .x-smallhdr {
