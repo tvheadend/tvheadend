@@ -120,7 +120,7 @@ tvheadend.epgDetails = function(event) {
       content += '<div class="x-epg-meta">Content Type: ' + genre.join(', ') + '</div>';
     }
 
-    content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>';
+    content += '<div class="x-epg-action"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>';
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';
     
@@ -129,7 +129,7 @@ tvheadend.epgDetails = function(event) {
         var title = event.title;
         if (event.episodeOnscreen)
           title += ' / ' + event.episodeOnscreen;
-        content += '<div class="x-epg-meta"><a href="play/stream/channel/' + event.channelUuid +
+        content += '<div class="x-epg-action"><a href="play/stream/channel/' + event.channelUuid +
                    '?title=' + encodeURIComponent(title) + '">Play</a></div>';
     }
 

@@ -336,7 +336,7 @@
 
 .x-epg-title {
     margin: 5px;
-    font: normal 15px arial, tahoma, helvetica, sans-serif;
+    font: normal 16px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
 }
 
@@ -363,6 +363,12 @@
 }
 
 .x-epg-meta {
+    font-style: italic;
+    margin: 5px;
+}
+
+.x-epg-action {
+    font-weight: bold;
     margin: 5px;
 }
 
