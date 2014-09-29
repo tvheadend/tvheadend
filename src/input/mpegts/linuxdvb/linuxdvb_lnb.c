@@ -101,6 +101,13 @@ linuxdvb_lnb_standard_pol
          dmc->u.dmc_fe_qpsk.polarisation == DVB_POLARISATION_CIRCULAR_LEFT;
 }
 
+static int
+linuxdvb_lnb_inverted_pol
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
+{
+  return !linuxdvb_lnb_standard_pol(l, lm);
+}
+
 static int 
 linuxdvb_lnb_standard_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
@@ -236,6 +243,19 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .lnb_freq   = linuxdvb_lnb_standard_freq,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
+    },
+    .lnb_low    = 10750000,
+    .lnb_high   = 10750000,
+    .lnb_switch = 10750000,
+  },
+  {
+    { {
+      .ld_type    = "Ku 10750 (Hi-Band, Inverted-Polar.)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_band   = linuxdvb_lnb_standard_band,
+      .lnb_pol    = linuxdvb_lnb_inverted_pol,
     },
     .lnb_low    = 10750000,
     .lnb_high   = 10750000,
