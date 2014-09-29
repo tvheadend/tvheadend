@@ -282,8 +282,6 @@ api_epg_grid
   htsmsg_field_t *f, *f2;
   htsmsg_t *l = NULL, *e, *filter;
 
-  *resp = htsmsg_create_map();
-
   memset(&eq, 0, sizeof(eq));
 
   lang = htsmsg_get_str(args, "lang");
