@@ -65,7 +65,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
     htsmsg_add_str(m, "channelNumber", buf);
   }
   if (ch->ch_icon)
-    htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
+    htsmsg_add_imageurl(m, "channelIcon", "imagecache/%d", ch->ch_icon);
 }
 
 static htsmsg_t *
