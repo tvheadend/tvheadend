@@ -31,7 +31,6 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvr.h"
-#include "dtable.h"
 #include "epg.h"
 
 static int dvr_timerec_in_init = 0;

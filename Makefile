@@ -95,7 +95,6 @@ SRCS =  src/version.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \
-	src/dtable.c \
 	src/tcp.c \
 	src/udp.c \
 	src/url.c \

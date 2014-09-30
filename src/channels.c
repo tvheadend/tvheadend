@@ -34,7 +34,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "channels.h"
-#include "dtable.h"
+#include "access.h"
 #include "notify.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"

@@ -34,7 +34,6 @@
 #include "http.h"
 #include "webui.h"
 #include "access.h"
-#include "dtable.h"
 #include "channels.h"
 
 #include "dvr/dvr.h"
@@ -272,86 +271,6 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 tvheadend_version);
 
   http_output_html(hc);
-  return 0;
-}
-
-/**
- *
- */
-static int
-extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  dtable_t *dt;
-  htsmsg_t *out = NULL, *in, *array;
-
-  const char *tablename = http_arg_get(&hc->hc_req_args, "table");
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-
-  if(op == NULL)
-    return 400;
-
-  if(tablename == NULL || (dt = dtable_find(tablename)) == NULL)
-    return 404;
-  
-  if(http_access_verify(hc, dt->dt_dtc->dtc_read_access))
-    return HTTP_STATUS_UNAUTHORIZED;
-
-  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
-
-  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
-
-  if(!strcmp(op, "create")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    out = dtable_record_create(dt);
-
-  } else if(!strcmp(op, "get")) {
-    array = dtable_record_get_all(dt);
-
-    out = htsmsg_create_map();
-    htsmsg_add_msg(out, "entries", array);
-
-  } else if(!strcmp(op, "update")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    if(in == NULL)
-      goto bad;
-
-    dtable_record_update_by_array(dt, in);
-
-  } else if(!strcmp(op, "delete")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    if(in == NULL)
-      goto bad;
-
-    dtable_record_delete_by_array(dt, in);
-
-  } else {
-  bad:
-    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-    return HTTP_STATUS_BAD_REQUEST;
-
-  noaccess:
-    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-
-  if(in != NULL)
-    htsmsg_destroy(in);
-
-  if(out == NULL)
-    out = htsmsg_create_map();
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -810,7 +729,6 @@ extjs_start(void)
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
   http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
-  http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
