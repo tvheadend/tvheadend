@@ -18,8 +18,7 @@
 
 #include "tvheadend.h"
 #include "descrambler.h"
-#include "cwc.h"
-#include "capmt.h"
+#include "caclient.h"
 #include "ffdecsa/FFdecsa.h"
 #include "input.h"
 #include "tvhcsa.h"
@@ -81,26 +80,16 @@ static struct caid_tab caidnametab[] = {
 void
 descrambler_init ( void )
 {
-#if ENABLE_CWC
-  cwc_init();
-#endif
-#if ENABLE_CAPMT
-  capmt_init();
-#endif
 #if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
   ffdecsa_init();
 #endif
+  caclient_init();
 }
 
 void
 descrambler_done ( void )
 {
-#if ENABLE_CAPMT
-  capmt_done();
-#endif
-#if ENABLE_CWC
-  cwc_done();
-#endif
+  caclient_done();
 }
 
 /*
@@ -123,12 +112,7 @@ descrambler_service_start ( service_t *t )
     return;
 
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
-#if ENABLE_CWC
-  cwc_service_start(t);
-#endif
-#if ENABLE_CAPMT
-  capmt_service_start(t);
-#endif
+  caclient_start(t);
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
     sbuf_init(&dr->dr_buf);
@@ -638,9 +622,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   if (mux == NULL)
     return;
   tvhtrace("descrambler", "mux %p - flush tables", mux);
-#if ENABLE_CWC
-  cwc_caid_update(mux, 0, 0, -1);
-#endif
+  caclient_caid_update(mux, 0, 0, -1);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
   mux->mm_descrambler_flush = 1;
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
@@ -690,9 +672,7 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
       pid  = ((data[2] << 8) | data[3]) & 0x1fff;
       if (pid == 0)
         goto next;
-#if ENABLE_CWC
-      cwc_caid_update(mux, caid, pid, 1);
-#endif
+      caclient_caid_update(mux, caid, pid, 1);
       pthread_mutex_lock(&mux->mm_descrambler_lock);
       TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
         if (emm->caid == caid) {
@@ -724,11 +704,8 @@ next:
     }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
   while ((emm = TAILQ_FIRST(&removing)) != NULL) {
-    if (emm->pid != EMM_PID_UNKNOWN) {
-#if ENABLE_CWC
-      cwc_caid_update(mux, emm->caid, emm->pid, 0);
-#endif
-    }
+    if (emm->pid != EMM_PID_UNKNOWN)
+      caclient_caid_update(mux, emm->caid, emm->pid, 0);
     TAILQ_REMOVE(&removing, emm, link);
     free(emm);
   }

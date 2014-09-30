@@ -157,7 +157,8 @@ SRCS += \
 	src/api/api_esfilter.c \
 	src/api/api_intlconv.c \
 	src/api/api_access.c \
-	src/api/api_dvr.c
+	src/api/api_dvr.c \
+	src/api/api_caclient.c
 
 SRCS += \
 	src/parsers/parsers.c \
@@ -203,6 +204,7 @@ SRCS += src/muxer.c \
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
 	src/descrambler/descrambler.c \
+	src/descrambler/caclient.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \

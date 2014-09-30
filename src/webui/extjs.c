@@ -142,11 +142,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tableeditor.js");
   extjs_load(hq, "static/app/cteditor.js");
   extjs_load(hq, "static/app/acleditor.js");
-#if ENABLE_CWC
-  extjs_load(hq, "static/app/cwceditor.js");
-#endif
-#if ENABLE_CAPMT
-  extjs_load(hq, "static/app/capmteditor.js");
+#if ENABLE_CWC || ENABLE_CAPMT
+  extjs_load(hq, "static/app/caclient.js");
 #endif
   extjs_load(hq, "static/app/tvadapters.js");
   extjs_load(hq, "static/app/idnode.js");

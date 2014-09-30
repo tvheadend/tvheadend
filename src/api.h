@@ -62,7 +62,6 @@ void api_init               ( void );
 void api_done               ( void );
 void api_idnode_init        ( void );
 void api_input_init         ( void );
-void api_input_satip_init   ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );
 void api_mpegts_init        ( void );
@@ -74,6 +73,7 @@ void api_esfilter_init      ( void );
 void api_intlconv_init      ( void );
 void api_access_init        ( void );
 void api_dvr_init           ( void );
+void api_caclient_init      ( void );
 
 /*
  * IDnode

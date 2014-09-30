@@ -107,6 +107,21 @@ tvheadend.idnode_enum_store = function(f)
     return store;
 };
 
+tvheadend.idnode_filter_fields = function(d, list)
+{
+  if (!list)
+    return d;
+  var o = list.split(',');
+  var r = [];
+  for (var i = 0; i < o.length; i++)
+    for (var j = 0; j < d.length; j++)
+      if (d[j].id === o[i]) {
+        r.push(d[j]);
+        break;
+      }
+  return r;
+}
+
 Ext.ux.grid.filter.IntsplitFilter = Ext.extend(Ext.ux.grid.filter.NumericFilter, {
 
     fieldCls : Ext.form.TextField,
@@ -838,6 +853,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                 if (r) {
                     var d = r.get(conf.select.propField);
                     if (d) {
+                        d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
                         win.setTitle('Add ' + s.lastSelectionText);
                         panel.remove(s);
@@ -980,11 +996,8 @@ tvheadend.idnode_grid = function(panel, conf)
         });
 
         /* Model */
-        var sortable = true;
-        if (conf.move)
-            sortable = false;
         var model = new Ext.grid.ColumnModel({
-            defaultSortable: sortable,
+            defaultSortable: conf.move ? false : true,
             columns: columns
         });
 
@@ -1441,10 +1454,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
         var selectuuid = null;
 
         /* Store */
+        var listurl = conf.list ? conf.list.url : null;
+        var params = conf.list ? conf.list.params : null;
         store = new Ext.data.JsonStore({
             root: 'entries',
-            url: 'api/idnode/load',
-            baseParams: {
+            url: listurl || 'api/idnode/load',
+            baseParams: params || {
                 enum: 1,
                 'class': conf.clazz
             },
@@ -1454,10 +1469,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             fields: ['key','val'],
             remoteSort: false,
             pruneModifiedRecords: true,
-            sortInfo: {
-                field: 'val',
-                direction: 'ASC'
-            }
+            sortInfo: conf.move ? null : { field: 'val', direction: 'ASC' }
         });
 
         store.on('load', function(records) {
@@ -1476,12 +1488,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
 
         /* Model */
         var model = new Ext.grid.ColumnModel({
-            defaultSortable: true,
+            defaultSortable: conf.move ? false : true,
             columns: [{
                 width: 300,
                 id: 'val',
                 header: conf.titleC,
-                sortable: true,
+                sortable: conf.move ? false : true,
                 dataIndex: 'val'
             }]
         });
@@ -1568,7 +1580,55 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.del);
         }
-        if (conf.add || conf.del)
+        if (conf.move) {
+            abuttons.up = new Ext.Toolbar.Button({
+                tooltip: 'Move selected entry up',
+                iconCls: 'moveup',
+                text: 'Move Up',
+                disabled: true,
+                handler: function() {
+                    var r = select.getSelections();
+                    if (r && r.length > 0) {
+                        var uuid = r[0].id;
+                        tvheadend.Ajax({
+                            url: 'api/idnode/moveup',
+                            params: {
+                                uuid: uuid
+                            },
+                            success: function(d)
+                            {
+                                store.reload();
+                            }
+                        });
+                    }
+                }
+            });
+            buttons.push(abuttons.up);
+            abuttons.down = new Ext.Toolbar.Button({
+                tooltip: 'Move selected entry down',
+                iconCls: 'movedown',
+                text: 'Move Down',
+                disabled: true,
+                handler: function() {
+                    var r = select.getSelections();
+                    if (r && r.length > 0) {
+                        var uuid = r[0].id;
+                        tvheadend.Ajax({
+                            url: 'api/idnode/movedown',
+                            params: {
+                                uuid: uuid
+                            },
+                            success: function(d)
+                            {
+                                store.reload();
+                            }
+                        });
+                    }
+                }
+            });
+            buttons.push(abuttons.down);
+        }
+        if (conf.add || conf.del || conf.move)
             buttons.push('-');
 
         /* Extra buttons */
@@ -1611,12 +1671,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 return;
             if (current && current.uuid == r.id)
                 return;
+            var params = conf.edit ? (conf.edit.params || {}) : {};
+            params.uuid = r.id;
+            params.meta = 1;
             tvheadend.Ajax({
                 url: 'api/idnode/load',
-                params: {
-                    uuid: r.id,
-                    meta: 1
-                },
+                params: params,
                 success: function(d) {
                     d = json_decode(d);
                     roweditor_destroy();
@@ -1636,7 +1696,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     }
                     abuttons.save.setDisabled(false);
                     abuttons.undo.setDisabled(false);
-                    abuttons.del.setDisabled(false);
+                    if (abuttons.del)
+                      abuttons.del.setDisabled(false);
+                    if (abuttons.up) {
+                      abuttons.up.setDisabled(false);
+                      abuttons.down.setDisabled(false);
+                    }
                     mpanel.add(editor);
                     mpanel.doLayout();
                 }

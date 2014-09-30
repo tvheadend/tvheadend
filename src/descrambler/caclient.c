@@ -1,0 +1,320 @@
+/*
+ *  Tvheadend - conditional access key client superclass
+ *  Copyright (C) 2014 Jaroslav Kysela <perex@perex.cz>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tvheadend.h"
+#include "settings.h"
+#include "caclient.h"
+
+const idclass_t *caclient_classes[] = {
+#if ENABLE_CWC
+  &caclient_cwc_class,
+#endif
+#if ENABLE_CAPMT
+  &caclient_capmt_class,
+#endif
+  NULL
+};
+
+struct caclient_entry_queue caclients;
+static pthread_mutex_t caclients_mutex;
+
+static void caclient_class_save ( idnode_t *in );
+
+static const idclass_t *
+caclient_class_find(const char *name)
+{
+  const idclass_t **r;
+  for (r = caclient_classes; *r; r++) {
+    if (strcmp((*r)->ic_class, name) == 0)
+      return *r;
+  }
+  return NULL;
+}
+
+static void
+caclient_reindex(void)
+{
+  caclient_t *cac;
+  int i = 1;
+
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    cac->cac_save = 0;
+  TAILQ_FOREACH(cac, &caclients, cac_link) {
+    if (cac->cac_index != i) {
+      cac->cac_index = i;
+      cac->cac_save = 1;
+    }
+    i++;
+  }
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    if (cac->cac_save) {
+      cac->cac_save = 0;
+      caclient_class_save((idnode_t *)cac);
+    }
+}
+
+static int
+cac_cmp(caclient_t *a, caclient_t *b)
+{
+  return a->cac_index - b->cac_index;
+}
+
+caclient_t *
+caclient_create
+  (const char *uuid, htsmsg_t *conf, int save)
+{
+  caclient_t *cac = NULL;
+  const idclass_t *c = NULL;
+  const char *s;
+
+  lock_assert(&global_lock);
+
+  if ((s = htsmsg_get_str(conf, "class")) != NULL)
+    c = caclient_class_find(s);
+  if (c == NULL) {
+    tvherror("caclient", "wrong class %s!", s);
+    abort();
+  }
+#if ENABLE_CWC
+  if (c == &caclient_cwc_class)
+    cac = cwc_create();
+#endif
+#if ENABLE_CAPMT
+  if (c == &caclient_capmt_class)
+    cac = capmt_create();
+#endif
+  if (cac == NULL)
+    abort();
+  if (cac == NULL) {
+    tvherror("caclient", "CA Client class %s is not available!", s);
+    return NULL;
+  }
+  if (idnode_insert(&cac->cac_id, uuid, c, 0)) {
+    if (uuid)
+      tvherror("caclient", "invalid uuid '%s'", uuid);
+    free(cac);
+    return NULL;
+  }
+  if (conf)
+    idnode_load(&cac->cac_id, conf);
+  pthread_mutex_lock(&caclients_mutex);
+  if (cac->cac_index) {
+    TAILQ_INSERT_SORTED(&caclients, cac, cac_link, cac_cmp);
+  } else {
+    TAILQ_INSERT_TAIL(&caclients, cac, cac_link);
+    caclient_reindex();
+  }
+  pthread_mutex_unlock(&caclients_mutex);
+  if (save)
+    caclient_class_save((idnode_t *)cac);
+  cac->cac_conf_changed(cac);
+  return cac;
+}
+
+static void
+caclient_delete(caclient_t *cac, int delconf)
+{
+  cac->cac_enabled = 0;
+  cac->cac_conf_changed(cac);
+  if (delconf)
+    hts_settings_remove("caclient/%s", idnode_uuid_as_str(&cac->cac_id));
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_REMOVE(&caclients, cac, cac_link);
+  pthread_mutex_unlock(&caclients_mutex);
+  idnode_unlink(&cac->cac_id);
+  if (cac->cac_free)
+    cac->cac_free(cac);
+  free(cac->cac_name);
+  free(cac->cac_comment);
+  free(cac);
+}
+
+static void
+caclient_class_save ( idnode_t *in )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(in, c);
+  hts_settings_save(c, "caclient/%s", idnode_uuid_as_str(in));
+  htsmsg_destroy(c);
+}
+
+static const char *
+caclient_class_get_title ( idnode_t *in )
+{
+  caclient_t *cac = (caclient_t *)in;
+  static char buf[32];
+  if (cac->cac_name && cac->cac_name[0])
+    return cac->cac_name;
+  snprintf(buf, sizeof(buf), "CA Client %i", cac->cac_index);
+  return buf;
+}
+
+static void
+caclient_class_delete(idnode_t *self)
+{
+  caclient_t *cac = (caclient_t *)self;
+  caclient_delete(cac, 1);
+}
+
+static void
+caclient_class_moveup(idnode_t *self)
+{
+  caclient_t *cac = (caclient_t *)self;
+  caclient_t *prev = TAILQ_PREV(cac, caclient_entry_queue, cac_link);
+  if (prev) {
+    TAILQ_REMOVE(&caclients, cac, cac_link);
+    TAILQ_INSERT_BEFORE(prev, cac, cac_link);
+    caclient_reindex();
+  }
+}
+
+static void
+caclient_class_movedown(idnode_t *self)
+{
+  caclient_t *cac = (caclient_t *)self;
+  caclient_t *next = TAILQ_NEXT(cac, cac_link);
+  if (next) {
+    TAILQ_REMOVE(&caclients, cac, cac_link);
+    TAILQ_INSERT_AFTER(&caclients, next, cac, cac_link);
+    caclient_reindex();
+  }
+}
+
+static const void *
+caclient_class_class_get(void *o)
+{
+  caclient_t *cac = o;
+  static const char *ret;
+  ret = cac->cac_id.in_class->ic_class;
+  return &ret;
+}
+
+static int
+caclient_class_class_set(void *o, const void *v)
+{
+  /* just ignore, create fcn does the right job */
+  return 0;
+}
+
+const idclass_t caclient_class =
+{
+  .ic_class      = "caclient",
+  .ic_caption    = "Conditional Access Client",
+  .ic_save       = caclient_class_save,
+  .ic_event      = "caclient",
+  .ic_get_title  = caclient_class_get_title,
+  .ic_delete     = caclient_class_delete,
+  .ic_moveup     = caclient_class_moveup,
+  .ic_movedown   = caclient_class_movedown,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "class",
+      .name     = "Class",
+      .opts     = PO_RDONLY | PO_HIDDEN,
+      .get      = caclient_class_class_get,
+      .set      = caclient_class_class_set,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "index",
+      .name     = "Index",
+      .opts     = PO_RDONLY | PO_HIDDEN,
+      .off      = offsetof(caclient_t, cac_index),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(caclient_t, cac_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "name",
+      .name     = "Client Name",
+      .off      = offsetof(caclient_t, cac_name),
+      .notify   = idnode_notify_title_changed,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "comment",
+      .name     = "Comment",
+      .off      = offsetof(caclient_t, cac_comment),
+    },
+    { }
+  }
+};
+
+void
+caclient_start ( struct service *t )
+{
+  caclient_t *cac;
+
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    if (cac->cac_enabled)
+      cac->cac_start(cac, t);
+  pthread_mutex_unlock(&caclients_mutex);
+}
+
+void
+caclient_caid_update(struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int valid)
+{
+  caclient_t *cac;
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_lock(&caclients_mutex);
+  TAILQ_FOREACH(cac, &caclients, cac_link)
+    if (cac->cac_caid_update && cac->cac_enabled)
+      cac->cac_caid_update(cac, mux, caid, pid, valid);
+  pthread_mutex_unlock(&caclients_mutex);
+}
+
+/*
+ *  Initialize
+ */
+void
+caclient_init(void)
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  pthread_mutex_init(&caclients_mutex, NULL);
+  TAILQ_INIT(&caclients);
+
+  if (!(c = hts_settings_load("caclient")))
+    return;
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f)))
+      continue;
+    caclient_create(f->hmf_name, e, 0);
+  }
+  htsmsg_destroy(c);
+}
+
+void
+caclient_done(void)
+{
+  caclient_t *cac;
+
+  pthread_mutex_lock(&global_lock);
+  while ((cac = TAILQ_FIRST(&caclients)) != NULL)
+    caclient_delete(cac, 0);
+  pthread_mutex_unlock(&global_lock);
+}

@@ -173,8 +173,10 @@ prop_write_values
         if (!(new = htsmsg_field_get_str(f)))
           continue;
         if (!p->set && strcmp((*str) ?: "", new)) {
-          free(*str);
+          /* make sure that the string is valid all time */
+          void *old = *str;
           *str = strdup(new);
+          free(old);
           save = 1;
         }
         break;
