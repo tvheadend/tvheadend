@@ -754,7 +754,16 @@ tvheadend.epg = function() {
         bbar: new Ext.ux.grid.livegrid.Toolbar({
             view: epgView,
             displayInfo: true
-        })
+        }),
+        listeners: {
+            beforestaterestore: {
+               fn: function(grid, state) {
+                   /* do not restore sorting and filters */
+                   state.sort = {};
+                   state.filters = {};
+               }
+            }
+        }
     });
 
     panel.on('rowclick', rowclicked);
@@ -768,7 +777,7 @@ tvheadend.epg = function() {
      * Only do this when the tab is visible, otherwise it won't work as 
      * expected.
      */
-    tvheadend.comet.on('dvrdb', function() {
+    tvheadend.comet.on('dvrentry', function() {
         if (panel.isVisible())
             epgStore.reload();
     });
