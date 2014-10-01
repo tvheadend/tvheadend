@@ -626,8 +626,8 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
                         void (*modify)(htsmsg_t *record,
                                        uint32_t id,
                                        const char *uuid,
-                                       void *aux),
-                        void *aux )
+                                       const void *aux),
+                        const void *aux )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
@@ -662,7 +662,7 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
 }
 
 static void
-config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   uint32_t a, b;
   const char *s;
@@ -685,7 +685,7 @@ config_migrate_v7 ( void )
 }
 
 static void
-config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   htsmsg_t *ch = (htsmsg_t *)aux;
   htsmsg_t *e, *m, *t;
@@ -740,7 +740,7 @@ config_migrate_v8 ( void )
 }
 
 static void
-config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   uint32_t u32;
   htsmsg_delete_field(c, "index");
@@ -758,9 +758,9 @@ config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
 }
 
 static void
-config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
-  htsmsg_t *list = aux;
+  const htsmsg_t *list = aux;
   const char *chname = htsmsg_get_str(c, "channelname");
   const char *chuuid = htsmsg_get_str(c, "channel");
   htsmsg_t *e;
@@ -967,6 +967,45 @@ config_migrate_v11 ( void )
   htsmsg_destroy(dvr_config);
 }
 
+static void
+config_modify_caclient( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
+{
+  uint32_t u;
+
+  htsmsg_delete_field(c, "index");
+  htsmsg_delete_field(c, "connected");
+  htsmsg_add_str(c, "class", aux);
+  if (!htsmsg_get_u32(c, "oscam", &u)) {
+    htsmsg_delete_field(c, "oscam");
+    htsmsg_add_u32(c, "mode", u);
+  }
+}
+
+static void
+config_migrate_v12 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  config_migrate_simple("cwc", NULL, config_modify_caclient, "caclient_cwc");
+  config_migrate_simple("capmt", NULL, config_modify_caclient, "caclient_capmt");
+
+  if ((c = hts_settings_load("cwc")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("cwc/%s", f->hmf_name);
+      hts_settings_save(e, "caclient/%s", f->hmf_name);
+    }
+  }
+  if ((c = hts_settings_load("capmt")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("capmt/%s", f->hmf_name);
+      hts_settings_save(e, "caclient/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1066,7 +1105,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v8,
   config_migrate_v9,
   config_migrate_v10,
-  config_migrate_v11
+  config_migrate_v11,
+  config_migrate_v12
 };
 
 /*
