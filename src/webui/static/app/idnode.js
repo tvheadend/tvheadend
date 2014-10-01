@@ -180,7 +180,7 @@ tvheadend.IdNodeField = function(conf)
     this.wronly = conf.wronly;
     this.wronce = conf.wronce;
     this.hidden = conf.hidden || conf.advanced;
-    this.password = conf.password;
+    this.password = conf.showpwd ? false : conf.password;
     this.duration = conf.duration;
     this.intsplit = conf.intsplit;
     this.group = conf.group;
@@ -461,10 +461,10 @@ tvheadend.IdNode = function(conf)
 /*
  * Field editor
  */
-tvheadend.idnode_editor_field = function(f, create)
+tvheadend.idnode_editor_field = function(f, conf)
 {
     var d = f.rdonly || false;
-    if (f.wronly && !create)
+    if (f.wronly && !conf.create)
         d = false;
     var value = f.value;
     if (value == null)
@@ -598,6 +598,7 @@ tvheadend.idnode_editor_field = function(f, create)
                 name: f.id,
                 value: value,
                 disabled: d,
+                inputType: f.password && !conf.showpwd ? 'password' : 'text',
                 width: 300
             });
 
@@ -607,7 +608,7 @@ tvheadend.idnode_editor_field = function(f, create)
 /*
  * ID node editor form fields
  */
-tvheadend.idnode_editor_form = function(d, meta, panel, create)
+tvheadend.idnode_editor_form = function(d, meta, panel, conf)
 {
     var af = [];
     var rf = [];
@@ -617,7 +618,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, create)
     /* Fields */
     for (var i = 0; i < d.length; i++) {
         var p = d[i];
-        var f = tvheadend.idnode_editor_field(p, create);
+        var f = tvheadend.idnode_editor_field(p, conf);
         if (!f)
             continue;
         if (p.group && meta.groups) {
@@ -772,7 +773,8 @@ tvheadend.idnode_editor = function(item, conf)
         buttons: buttons,
     });
 
-    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel, false);
+    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel,
+                                 { showpwd: conf.showpwd });
 
     return panel;
 };
@@ -864,7 +866,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         pclass = r.get(conf.select.valueField);
                         win.setTitle('Add ' + s.lastSelectionText);
                         panel.remove(s);
-                        tvheadend.idnode_editor_form(d, null, panel, true);
+                        tvheadend.idnode_editor_form(d, null, panel, { create: true });
                         saveBtn.setVisible(true);
                     }
                 }
@@ -879,7 +881,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                     success: function(d) {
                         panel.remove(s);
                         d = json_decode(d);
-                        tvheadend.idnode_editor_form(d.props, d, panel, true);
+                        tvheadend.idnode_editor_form(d.props, d, panel, { create: true });
                         saveBtn.setVisible(true);
                     }
                 });
@@ -910,7 +912,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             params: conf.params,
             success: function(d) {
                 d = json_decode(d);
-                tvheadend.idnode_editor_form(d.props, d, panel, true);
+                tvheadend.idnode_editor_form(d.props, d, panel, { create: true });
                 saveBtn.setVisible(true);
                 if (onlyDefault) {
                     saveBtn.handler();
@@ -1641,8 +1643,22 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.down);
         }
-        if (conf.add || conf.del || conf.move)
+        if (conf.hidepwd) {
             buttons.push('-');
+            abuttons.add = new Ext.Toolbar.Button({
+                tooltip: 'Show or hide passwords',
+                iconCls: 'eye',
+                text: 'Show passwords',
+                disabled: false,
+                handler: function() {
+                    conf.showpwd = !conf.showpwd ? true : false;
+                    this.setText(conf.showpwd ? 'Hide passwords' : 'Show passwords');
+                    roweditor_destroy();
+                    roweditor(select.getSelected());
+                }
+            });
+            buttons.push(abuttons.add);
+        }
 
         /* Extra buttons */
         if (conf.tbar) {
@@ -1679,10 +1695,10 @@ tvheadend.idnode_form_grid = function(panel, conf)
             current = null;
         }
 
-        function roweditor(r) {
+        function roweditor(r, force) {
             if (!r || !r.id)
                 return;
-            if (current && current.uuid == r.id)
+            if (!force && current && current.uuid == r.id)
                 return;
             var params = conf.edit ? (conf.edit.params || {}) : {};
             params.uuid = r.id;
@@ -1701,7 +1717,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                                     inTabPanel: true,
                                     noButtons: true,
                                     width: 730,
-                                    noautoWidth: true
+                                    noautoWidth: true,
+                                    showpwd: conf.showpwd
                                 });
                     current = {
                         uuid: d[0].id,

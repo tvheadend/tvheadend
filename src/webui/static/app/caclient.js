@@ -3,11 +3,11 @@
  */
 
 tvheadend.caclient_builders = new Ext.data.JsonStore({
-  url: 'api/caclient/builders',
-  root: 'entries',
-  fields: ['class', 'caption', 'props'],
-  id: 'class',
-  autoLoad: true
+    url: 'api/caclient/builders',
+    root: 'entries',
+    fields: ['class', 'caption', 'props'],
+    id: 'class',
+    autoLoad: true
 });
 
 tvheadend.caclient = function(panel, index) {
@@ -51,6 +51,7 @@ tvheadend.caclient = function(panel, index) {
         },
         del: true,
         move: true,
+        hidepwd: true,
         lcol: [actions],
         plugins: [actions],
         help: function() {
