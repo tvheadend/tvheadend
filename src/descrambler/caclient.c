@@ -211,6 +211,15 @@ caclient_class_class_set(void *o, const void *v)
   return 0;
 }
 
+static const void *
+caclient_class_status_get(void *o)
+{
+  caclient_t *cac = o;
+  static const char *ret;
+  ret = caclient_get_status(cac);
+  return &ret;
+}
+
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
@@ -256,6 +265,13 @@ const idclass_t caclient_class =
       .name     = "Comment",
       .off      = offsetof(caclient_t, cac_comment),
     },
+    {
+      .type     = PT_STR,
+      .id       = "status",
+      .name     = "Status",
+      .get      = caclient_class_status_get,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
+    },
     { }
   }
 };
@@ -284,6 +300,27 @@ caclient_caid_update(struct mpegts_mux *mux, uint16_t caid, uint16_t pid, int va
     if (cac->cac_caid_update && cac->cac_enabled)
       cac->cac_caid_update(cac, mux, caid, pid, valid);
   pthread_mutex_unlock(&caclients_mutex);
+}
+
+void
+caclient_set_status(caclient_t *cac, caclient_status_t status)
+{
+  if (cac->cac_status != status) {
+    cac->cac_status = status;
+    idnode_notify_simple(&cac->cac_id);
+  }
+}
+
+const char *
+caclient_get_status(caclient_t *cac)
+{
+  switch (cac->cac_status) {
+  case CACLIENT_STATUS_NONE:         return "caclientNone";
+  case CACLIENT_STATUS_READY:        return "caclientReady";
+  case CACLIENT_STATUS_CONNECTED:    return "caclientConnected";
+  case CACLIENT_STATUS_DISCONNECTED: return "caclientDisconnected";
+  default:                           return "caclientUnknown";
+  }
 }
 
 /*

@@ -35,7 +35,6 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "caclient.h"
-#include "notify.h"
 #include "atomic.h"
 #include "subscriptions.h"
 #include "service.h"
@@ -206,7 +205,6 @@ typedef struct cwc {
   caclient_t;
 
   int cwc_fd;
-  int cwc_connected;
 
   int cwc_retry_delay;
 
@@ -269,7 +267,6 @@ typedef struct cwc {
 
   const char *cwc_errtxt;
 
-  int cwc_enabled;
   int cwc_running;
   int cwc_reconfigure;
 } cwc_t;
@@ -546,19 +543,6 @@ cwc_send_ka(cwc_t *cwc)
 }
 
 /**
- *
- */
-static void 
-cwc_comet_status_update(cwc_t *cwc)
-{
-  htsmsg_t *m = htsmsg_create_map();
-
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&cwc->cac_id));
-  htsmsg_add_u32(m, "connected", !!cwc->cwc_connected);
-  notify_by_msg("caclient_status", m);
-}
-
-/**
  * Handle reply to card data request
  */
 static int
@@ -590,8 +574,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     return -1;
   }
 
-  cwc->cwc_connected = 1;
-  cwc_comet_status_update(cwc);
+  caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
   struct cs_card_data *pcard;
   pcard = calloc(1, sizeof(struct cs_card_data));
   pcard->cwc_caid = (msg[4] << 8) | msg[5];
@@ -938,8 +921,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
           tvhlog(LOG_INFO, "cwc", "Invalid card data reply (provider list)");
           return -1;
         }
-        cwc->cwc_connected = 1;
-        cwc_comet_status_update(cwc);
+        caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
         struct cs_card_data *pcard;
         pcard = calloc(1, sizeof(struct cs_card_data));
         pcard->cwc_caid = caid;
@@ -974,7 +956,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 static int
 cwc_must_break(cwc_t *cwc)
 {
-  return !cwc->cwc_running || !cwc->cwc_enabled || cwc->cwc_reconfigure;
+  return !cwc->cwc_running || !cwc->cac_enabled || cwc->cwc_reconfigure;
 }
 
 /**
@@ -1192,6 +1174,8 @@ cwc_thread(void *aux)
   pthread_mutex_lock(&cwc->cwc_mutex);
 
   while(cwc->cwc_running) {
+
+    caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_READY);
     
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
     port = cwc->cwc_port;
@@ -1226,16 +1210,16 @@ cwc_thread(void *aux)
 
       cwc->cwc_fd = -1;
       close(fd);
-      cwc->cwc_connected = 0;
-      cwc_comet_status_update(cwc);
       tvhlog(LOG_INFO, "cwc", "Disconnected from %s:%i", 
              cwc->cwc_hostname, cwc->cwc_port);
     }
 
     if(cwc->cwc_running == 0) continue;
     if(attempts == 1) continue; // Retry immediately
-    d = 3;
 
+    caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_DISCONNECTED);
+
+    d = 3;
     ts.tv_sec = time(NULL) + d;
     ts.tv_nsec = 0;
 
@@ -2199,8 +2183,10 @@ cwc_conf_changed(caclient_t *cac)
     cwc->cwc_password ? crypt_md5(cwc->cwc_password, "$1$abcdefgh$") : NULL;
 
   if (cac->cac_enabled) {
-    if (cwc->cwc_hostname == NULL || cwc->cwc_hostname[0] == '\0')
+    if (cwc->cwc_hostname == NULL || cwc->cwc_hostname[0] == '\0') {
+      caclient_set_status(cac, CACLIENT_STATUS_NONE);
       return;
+    }
     if (!cwc->cwc_running) {
       cwc->cwc_running = 1;
       tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc);
@@ -2222,6 +2208,7 @@ cwc_conf_changed(caclient_t *cac)
     pthread_mutex_unlock(&cwc->cwc_mutex);
     pthread_kill(tid, SIGTERM);
     pthread_join(tid, NULL);
+    caclient_set_status(cac, CACLIENT_STATUS_NONE);
   }
 
 }

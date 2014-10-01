@@ -1447,6 +1447,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.builder)
             conf.builder(conf);
 
+        var columns = [];
         var buttons = [];
         var abuttons = {};
         var plugins = conf.plugins || [];
@@ -1464,12 +1465,13 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 'class': conf.clazz
             },
             autoLoad: true,
-            id: 'key',
+            id: conf.key || 'key',
             totalProperty: 'total',
-            fields: ['key','val'],
+            fields: conf.fields || ['key','val'],
             remoteSort: false,
             pruneModifiedRecords: true,
-            sortInfo: conf.move ? null : { field: 'val', direction: 'ASC' }
+            sortInfo: conf.move ? conf.sort :
+                      (conf.sort || { field: conf.val || 'val', direction: 'ASC' })
         });
 
         store.on('load', function(records) {
@@ -1486,16 +1488,23 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 select.selectFirstRow();
         });
 
+        /* Left-hand columns (do copy, no reference!) */
+        if (conf.lcol)
+            for (i = 0; i < conf.lcol.length; i++)
+                columns.push(conf.lcol[i]);
+
+        columns.push({
+            width: 300,
+            id: conf.val || 'val',
+            header: conf.titleC,
+            sortable: conf.move ? false : true,
+            dataIndex: conf.val || 'val'
+        });
+
         /* Model */
         var model = new Ext.grid.ColumnModel({
             defaultSortable: conf.move ? false : true,
-            columns: [{
-                width: 300,
-                id: 'val',
-                header: conf.titleC,
-                sortable: conf.move ? false : true,
-                dataIndex: 'val'
-            }]
+            columns: columns,
         });
 
         /* Selection */
@@ -1587,13 +1596,11 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 text: 'Move Up',
                 disabled: true,
                 handler: function() {
-                    var r = select.getSelections();
-                    if (r && r.length > 0) {
-                        var uuid = r[0].id;
+                    if (current) {
                         tvheadend.Ajax({
                             url: 'api/idnode/moveup',
                             params: {
-                                uuid: uuid
+                                uuid: current.uuid
                             },
                             success: function(d)
                             {
@@ -1610,13 +1617,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 text: 'Move Down',
                 disabled: true,
                 handler: function() {
-                    var r = select.getSelections();
-                    if (r && r.length > 0) {
+                    if (current) {
                         var uuid = r[0].id;
                         tvheadend.Ajax({
                             url: 'api/idnode/movedown',
                             params: {
-                                uuid: uuid
+                                uuid: current.uuid
                             },
                             success: function(d)
                             {

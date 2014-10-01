@@ -36,8 +36,9 @@ api_caclient_list
   l = htsmsg_create_list();
   TAILQ_FOREACH(cac, &caclients, cac_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&cac->cac_id));
-    htsmsg_add_str(e, "val", idnode_get_title(&cac->cac_id));
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&cac->cac_id));
+    htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id));
+    htsmsg_add_str(e, "status", caclient_get_status(cac));
     htsmsg_add_msg(l, NULL, e);
   }
   *resp = htsmsg_create_map();

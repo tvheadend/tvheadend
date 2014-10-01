@@ -44,7 +44,6 @@
 #include "tcp.h"
 #include "tvhpoll.h"
 
-#include "notify.h"
 #include "subscriptions.h"
 #include "tvhcsa.h"
 #if ENABLE_LINUXDVB
@@ -262,7 +261,6 @@ typedef struct capmt {
 
   /* thread flags */
   int   capmt_connected;
-  int   capmt_enabled;
   int   capmt_running;
   int   capmt_reconfigure;
 
@@ -424,22 +422,6 @@ capmt_pid_flush(capmt_t *capmt)
   }
 }
 
-/**
- *
- */
-static void
-capmt_set_connected(capmt_t *capmt, int c)
-{
-  htsmsg_t *m;
-  if (c == capmt->capmt_connected)
-    return;
-  m = htsmsg_create_map();
-  capmt->capmt_connected = c;
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&capmt->cac_id));
-  htsmsg_add_u32(m, "connected", capmt->capmt_connected);
-  notify_by_msg("caclient_status", m);
-}
-
 /*
  *
  */
@@ -585,7 +567,9 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
     // opening socket and sending
     if (capmt->capmt_sock[i] < 0) {
       fd = capmt_connect(capmt, i);
-      capmt_set_connected(capmt, fd >= 0 ? 2 : 0);
+      caclient_set_status((caclient_t *)capmt,
+                          fd >= 0 ? CACLIENT_STATUS_CONNECTED :
+                                    CACLIENT_STATUS_READY);
       if (fd >= 0)
         capmt_notify_server(capmt, NULL, 1);
     }
@@ -1401,14 +1385,15 @@ capmt_thread(void *aux)
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
 
     /* Accessible */
-    if (capmt->capmt_sockfile && !access(capmt->capmt_sockfile, R_OK | W_OK))
-      capmt_set_connected(capmt, 1);
+    if (capmt->capmt_sockfile && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
+        !access(capmt->capmt_sockfile, R_OK | W_OK))
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_NONE);
     else
-      capmt_set_connected(capmt, 0);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     
     pthread_mutex_lock(&capmt->capmt_mutex);
 
-    while(capmt->capmt_running && capmt->capmt_enabled == 0)
+    while(capmt->capmt_running && capmt->cac_enabled == 0)
       pthread_cond_wait(&capmt->capmt_cond, &capmt->capmt_mutex);
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1419,7 +1404,7 @@ capmt_thread(void *aux)
     capmt_connect(capmt, 0);
 
     if (capmt->capmt_sock[0] >= 0) {
-      capmt_set_connected(capmt, 2);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_CONNECTED);
 #if CONFIG_LINUXDVB
       if (capmt_oscam_new(capmt)) {
         handle_single(capmt);
@@ -1465,7 +1450,7 @@ capmt_thread(void *aux)
 #endif
     }
 
-    capmt_set_connected(capmt, 0);
+    caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -1741,7 +1726,7 @@ capmt_enumerate_services(capmt_t *capmt, int force)
     // closing socket (oscam handle this as event and stop decrypting)
     tvhlog(LOG_DEBUG, "capmt", "%s: no subscribed services, closing socket, fd=%d", __FUNCTION__, capmt->capmt_sock[0]);
     if (capmt->capmt_sock[0] >= 0)
-      capmt_set_connected(capmt, 1);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     capmt_socket_close(capmt, 0);
   }
   else if (force || (res_srv_count != all_srv_count)) {
@@ -1917,8 +1902,10 @@ capmt_conf_changed(caclient_t *cac)
   pthread_t tid;
 
   if (capmt->cac_enabled) {
-    if (capmt->capmt_sockfile == NULL || capmt->capmt_sockfile[0] == '\0')
+    if (capmt->capmt_sockfile == NULL || capmt->capmt_sockfile[0] == '\0') {
+      caclient_set_status(cac, CACLIENT_STATUS_NONE);
       return;
+    }
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
       tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
@@ -1938,6 +1925,7 @@ capmt_conf_changed(caclient_t *cac)
     pthread_mutex_unlock(&capmt->capmt_mutex);
     tvh_write(capmt->capmt_pipe.wr, "", 1);
     pthread_join(tid, NULL);
+    caclient_set_status(cac, CACLIENT_STATUS_NONE);
   }
 
 }

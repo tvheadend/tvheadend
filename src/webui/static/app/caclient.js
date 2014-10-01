@@ -11,6 +11,14 @@ tvheadend.caclient_builders = new Ext.data.JsonStore({
 });
 
 tvheadend.caclient = function(panel, index) {
+    var actions = new Ext.ux.grid.RowActions({
+        id: 'status',
+        header: '',
+        width: 45,
+        actions: [ { iconIndex: 'status' } ],
+        destroy: function() { }
+    });
+
     var list = 'enabled,name,username,password,hostname,mode,camdfilename,' +
                'port,deskey,emm,emmex,comment';
 
@@ -22,6 +30,9 @@ tvheadend.caclient = function(panel, index) {
         titleP: 'CAs',
         titleC: 'Client Name',
         iconCls: 'key',
+        key: 'uuid',
+        val: 'title',
+        fields: ['uuid', 'title', 'status'],
         tabIndex: index,
         list: { url: 'api/caclient/list', params: { } },
         edit: { params: { list: list } },
@@ -40,6 +51,8 @@ tvheadend.caclient = function(panel, index) {
         },
         del: true,
         move: true,
+        lcol: [actions],
+        plugins: [actions],
         help: function() {
             new tvheadend.help('Conditional Access Client', 'config_caclient.html');
         },

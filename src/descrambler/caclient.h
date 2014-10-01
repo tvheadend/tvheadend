@@ -34,6 +34,13 @@ extern struct caclient_entry_queue caclients;
 
 extern const idclass_t *caclient_classes[];
 
+typedef enum caclient_status {
+  CACLIENT_STATUS_NONE,
+  CACLIENT_STATUS_READY,
+  CACLIENT_STATUS_CONNECTED,
+  CACLIENT_STATUS_DISCONNECTED
+} caclient_status_t;
+
 typedef struct caclient {
   idnode_t cac_id;
   TAILQ_ENTRY(caclient) cac_link;
@@ -43,6 +50,7 @@ typedef struct caclient {
   int cac_enabled;
   char *cac_name;
   char *cac_comment;
+  int cac_status;
 
   void (*cac_free)(struct caclient *cac);
   void (*cac_start)(struct caclient *cac, struct service *t);
@@ -58,6 +66,9 @@ caclient_t *caclient_create
 void caclient_start( struct service *t );
 void caclient_caid_update(struct mpegts_mux *mux,
                           uint16_t caid, uint16_t pid, int valid);
+
+void caclient_set_status(caclient_t *cac, caclient_status_t status);
+const char *caclient_get_status(caclient_t *cac);
 
 void caclient_init(void);
 void caclient_done(void);

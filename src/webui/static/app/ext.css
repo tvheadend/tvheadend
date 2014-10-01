@@ -322,6 +322,22 @@
     background-image: url(../icons/film_edit.png) !important;
 }
 
+.caclientNone {
+    background-image: url(../icons/stop.png) !important;
+}
+
+.caclientReady {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.caclientConnected {
+    background-image: url(../icons/tick.png) !important;
+}
+
+.caclientDisconnected {
+    background-image: url(../icons/exclamation.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
