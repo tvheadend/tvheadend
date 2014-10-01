@@ -147,10 +147,12 @@ caclient_delete(caclient_t *cac, int delconf)
 static void
 caclient_class_save ( idnode_t *in )
 {
+  caclient_t *cac = (caclient_t *)in;
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(in, c);
   hts_settings_save(c, "caclient/%s", idnode_uuid_as_str(in));
   htsmsg_destroy(c);
+  cac->cac_conf_changed(cac);
 }
 
 static const char *

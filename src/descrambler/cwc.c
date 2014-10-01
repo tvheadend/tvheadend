@@ -1156,7 +1156,6 @@ cwc_session(cwc_t *cwc)
   tvhlog(LOG_DEBUG, "cwc", "Write thread joined");
 }
 
-
 /**
  *
  */
@@ -2194,7 +2193,7 @@ cwc_conf_changed(caclient_t *cac)
     }
     pthread_mutex_lock(&cwc->cwc_mutex);
     cwc->cwc_reconfigure = 1;
-    if(cwc->cwc_fd != -1)
+    if(cwc->cwc_fd >= 0)
       shutdown(cwc->cwc_fd, SHUT_RDWR);
     pthread_cond_signal(&cwc->cwc_cond);
     pthread_mutex_unlock(&cwc->cwc_mutex);
@@ -2205,8 +2204,10 @@ cwc_conf_changed(caclient_t *cac)
     cwc->cwc_running = 0;
     pthread_cond_signal(&cwc->cwc_cond);
     tid = cwc->cwc_tid;
+    if (cwc->cwc_fd >= 0)
+      shutdown(cwc->cwc_fd, SHUT_RDWR);
     pthread_mutex_unlock(&cwc->cwc_mutex);
-    pthread_kill(tid, SIGTERM);
+    pthread_kill(tid, SIGHUP);
     pthread_join(tid, NULL);
     caclient_set_status(cac, CACLIENT_STATUS_NONE);
   }
