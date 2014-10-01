@@ -31,24 +31,11 @@ insertChannelClearOption = function( scope, records, options ){
     scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
 };
 
-tvheadend.channels = new Ext.data.JsonStore({
+tvheadend.channels = tvheadend.idnode_get_enum({
     url: 'api/channel/list',
-    root: 'entries',
-    fields: ['key', 'val'],
-    id: 'key',
-    autoLoad: true,
-    sortInfo: {
-        field: 'val',
-        direction: 'ASC'
-    },
     listeners: {
         'load': insertChannelClearOption
     }
-});
-
-tvheadend.comet.on('channels', function(m) {
-    if (m.reload != null)
-        tvheadend.channels.reload();
 });
 
 tvheadend.channel_tab = function(panel, index)

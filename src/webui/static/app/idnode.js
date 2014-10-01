@@ -21,7 +21,14 @@ tvheadend.idnode_get_enum = function(conf)
         root: conf.root || 'entries',
         url: conf.url,
         baseParams: conf.params || {},
-        fields: conf.fields || ['key', 'val'],
+        fields: conf.fields ||
+            [
+                'key',
+                {
+                    name: 'val',
+                    sortType: Ext.data.SortTypes.asUCString
+                }
+            ],
         id: conf.id || 'key',
         autoLoad: true,
         listeners: conf.listeners || {},
