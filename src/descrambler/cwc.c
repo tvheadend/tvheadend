@@ -2286,7 +2286,6 @@ const idclass_t caclient_cwc_class =
       .type     = PT_STR,
       .id       = "hostname",
       .name     = "Hostname / IP",
-      .opts     = PO_PASSWORD,
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
     },
@@ -2300,9 +2299,9 @@ const idclass_t caclient_cwc_class =
       .type     = PT_STR,
       .id       = "deskey",
       .name     = "DES Key",
-      .opts     = PO_PASSWORD,
       .set      = caclient_cwc_class_deskey_set,
       .get      = caclient_cwc_class_deskey_get,
+      .opts     = PO_PASSWORD,
       .def.s    = "00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d",
     },
     {
