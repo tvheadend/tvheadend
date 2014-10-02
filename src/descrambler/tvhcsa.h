@@ -22,9 +22,6 @@
 struct mpegts_service;
 struct elementary_stream;
 
-#include "tvheadend.h"
-#include "descrambler.h"
-
 #include <stdint.h>
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>

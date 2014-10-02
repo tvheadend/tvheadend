@@ -45,7 +45,6 @@
 #include "tvhpoll.h"
 
 #include "subscriptions.h"
-#include "tvhcsa.h"
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
 #endif
@@ -184,8 +183,6 @@ typedef struct capmt_service {
   /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
   int ct_constcw; /* fast flag */
-
-  tvhcsa_t ct_csa;
 
   /* current sequence number */
   uint16_t ct_seq;
@@ -770,7 +767,6 @@ capmt_service_destroy(th_descrambler_t *td)
 
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
-  tvhcsa_destroy(&ct->ct_csa);
   free(ct->td_nicename);
   free(ct);
 }
@@ -1872,7 +1868,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   td = (th_descrambler_t *)ct;
-  tvhcsa_init(td->td_csa = &ct->ct_csa);
   snprintf(buf, sizeof(buf), "capmt-%s-%i",
                              capmt->capmt_sockfile,
                              capmt->capmt_port);

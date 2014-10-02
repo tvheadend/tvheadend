@@ -21,7 +21,6 @@
 #include "caclient.h"
 #include "service.h"
 #include "input.h"
-#include "tvhcsa.h"
 
 /**
  *
@@ -29,7 +28,6 @@
 typedef struct constcw_service {
   th_descrambler_t;  
   LIST_ENTRY(constcw_service) cs_link;
-  tvhcsa_t cs_csa;
 } constcw_service_t;
 
 /**
@@ -89,7 +87,6 @@ constcw_service_destroy(th_descrambler_t *td)
   
   LIST_REMOVE(td, td_service_link);
   LIST_REMOVE(ct, cs_link);
-  tvhcsa_destroy(&ct->cs_csa);
   free(ct->td_nicename);
   free(ct);
 }   
@@ -140,7 +137,6 @@ constcw_service_start(caclient_t *cac, service_t *t)
 
   ct                   = calloc(1, sizeof(constcw_service_t));
   td                   = (th_descrambler_t *)ct;
-  tvhcsa_init(td->td_csa = &ct->cs_csa);
   snprintf(buf, sizeof(buf), "constcw-%s", constcw_name(ccw));
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
