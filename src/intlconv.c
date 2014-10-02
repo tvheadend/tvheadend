@@ -12,10 +12,27 @@ static RB_HEAD(,intlconv_cache) intlconv_all;
 static intlconv_cache_t        *intlconv_last_ic;
 pthread_mutex_t                 intlconv_lock;
 
+static RB_HEAD(,intlconv_cache) intlconv_src_all;
+static intlconv_cache_t        *intlconv_last_src_ic;
+pthread_mutex_t                 intlconv_lock_src;
+
+static inline size_t
+tvh_iconv(iconv_t cd, char **inbuf, size_t *inbytesleft,
+                      char **outbuf, size_t *outbytesleft)
+{
+#ifdef PLATFORM_FREEBSD
+  return iconv(cd, (const char **)inbuf, inbytesleft,
+                   (const char **)outbuf, outbytesleft);
+#else
+  return iconv(cd, inbuf, inbytesleft, outbuf, outbytesleft);
+#endif
+}
+
 void
 intlconv_init( void )
 {
   pthread_mutex_init(&intlconv_lock, NULL);
+  pthread_mutex_init(&intlconv_lock_src, NULL);
 }
 
 void
@@ -29,6 +46,13 @@ intlconv_done( void )
     iconv_close(ic->ic_handle);
     free(ic->ic_charset_id);
     RB_REMOVE(&intlconv_all, ic, ic_link);
+    free(ic);
+  }
+  intlconv_last_src_ic = NULL;
+  while ((ic = RB_FIRST(&intlconv_src_all)) != NULL) {
+    iconv_close(ic->ic_handle);
+    free(ic->ic_charset_id);
+    RB_REMOVE(&intlconv_src_all, ic, ic_link);
     free(ic);
   }
   pthread_mutex_unlock(&intlconv_lock);
@@ -121,18 +145,16 @@ intlconv_utf8( char *dst, size_t dst_size,
     ic->ic_handle = c;
     RB_INSERT_SORTED(&intlconv_all, ic, ic_link, intlconv_cmp);
   }
+  intlconv_last_ic = ic;
 found:
+  pthread_mutex_unlock(&intlconv_lock);
   inbuf       = (char **)&src_utf8;
   inbuf_left  = strlen(src_utf8);
   outbuf      = &dst;
   outbuf_left = dst_size;
-  res = iconv(ic->ic_handle, inbuf, &inbuf_left, outbuf, &outbuf_left);
-  if (res == -1) {
+  res = tvh_iconv(ic->ic_handle, inbuf, &inbuf_left, outbuf, &outbuf_left);
+  if (res == -1)
     res = -errno;
-  } else {
-    intlconv_last_ic = ic;
-  }
-  pthread_mutex_unlock(&intlconv_lock);
   if (res >= 0)
     res = dst_size - outbuf_left;
   return res;
@@ -158,6 +180,65 @@ intlconv_utf8safestr( const char *dst_charset_id,
       if (str[i] == '\0')
         str[i] = ' ';
   }
+  return res;
+}
+
+ssize_t
+intlconv_to_utf8( char *dst, size_t dst_size,
+                  const char *src_charset_id,
+                  const char *src, size_t src_size )
+{
+  intlconv_cache_t templ, *ic;
+  char **inbuf, **outbuf;
+  size_t inbuf_left, outbuf_left;
+  ssize_t res;
+
+  if (src_charset_id == NULL) {
+    strncpy(dst, src, dst_size);
+    dst[dst_size - 1] = '\0';
+    return strlen(dst);
+  }
+  templ.ic_charset_id = (char *)src_charset_id;
+  pthread_mutex_lock(&intlconv_lock_src);
+  if (intlconv_last_src_ic &&
+      strcmp(intlconv_last_src_ic->ic_charset_id, src_charset_id) == 0) {
+    ic = intlconv_last_src_ic;
+    goto found;
+  }
+  ic = RB_FIND(&intlconv_src_all, &templ, ic_link, intlconv_cmp);
+  if (!ic) {
+    iconv_t c = iconv_open("UTF-8", src_charset_id);
+    if ((iconv_t)-1 == c) {
+      pthread_mutex_unlock(&intlconv_lock_src);
+      return -EIO;
+    }
+    ic = malloc(sizeof(*ic));
+    if (ic == NULL) {
+      pthread_mutex_unlock(&intlconv_lock_src);
+      return -ENOMEM;
+    }
+    ic->ic_charset_id = strdup(src_charset_id);
+    if (ic->ic_charset_id == NULL) {
+      pthread_mutex_unlock(&intlconv_lock_src);
+      free(ic);
+      iconv_close(c);
+      return -ENOMEM;
+    }
+    ic->ic_handle = c;
+    RB_INSERT_SORTED(&intlconv_src_all, ic, ic_link, intlconv_cmp);
+  }
+  intlconv_last_src_ic = ic;
+found:
+  pthread_mutex_unlock(&intlconv_lock_src);
+  inbuf       = (char **)&src;
+  inbuf_left  = src_size;
+  outbuf      = &dst;
+  outbuf_left = dst_size;
+  res = tvh_iconv(ic->ic_handle, inbuf, &inbuf_left, outbuf, &outbuf_left);
+  if (res == -1)
+    res = -errno;
+  if (res >= 0)
+    res = dst_size - outbuf_left;
   return res;
 }
 
