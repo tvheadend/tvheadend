@@ -1190,5 +1190,9 @@ access_done(void)
   pthread_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
     access_entry_destroy(ae);
+  free((void *)superuser_username);
+  superuser_username = NULL;
+  free((void *)superuser_password);
+  superuser_password = NULL;
   pthread_mutex_unlock(&global_lock);
 }
