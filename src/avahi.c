@@ -56,6 +56,7 @@
 static AvahiEntryGroup *group = NULL;
 static char *name = NULL;
 static AvahiSimplePoll *avahi_asp = NULL;
+static const AvahiPoll *avahi_poll = NULL;
 
 static void create_services(AvahiClient *c);
 
@@ -257,18 +258,19 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
 static void *
 avahi_thread(void *aux)
 {
-  const AvahiPoll *ap = avahi_simple_poll_get(avahi_asp);
   AvahiClient *ac;
+  char *name2;
 
-  name = avahi_strdup("Tvheadend");
+  name = name2 = avahi_strdup("Tvheadend");
 
-  ac = avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
+  ac = avahi_client_new(avahi_poll, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
  
   while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
 
   avahi_client_free(ac);
-  avahi_simple_poll_free((AvahiSimplePoll *)ap);
-  free(name);
+
+  name = NULL;
+  free(name2);
 
   return NULL;
   
@@ -284,6 +286,7 @@ void
 avahi_init(void)
 {
   avahi_asp = avahi_simple_poll_new();
+  avahi_poll = avahi_simple_poll_get(avahi_asp);
   tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL);
 }
 
@@ -293,4 +296,5 @@ avahi_done(void)
   avahi_simple_poll_quit(avahi_asp);
   pthread_kill(avahi_tid, SIGTERM);
   pthread_join(avahi_tid, NULL);
+  avahi_simple_poll_free((AvahiSimplePoll *)avahi_poll);
 }
