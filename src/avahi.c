@@ -258,12 +258,17 @@ static void *
 avahi_thread(void *aux)
 {
   const AvahiPoll *ap = avahi_simple_poll_get(avahi_asp);
+  AvahiClient *ac;
 
   name = avahi_strdup("Tvheadend");
 
-  avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
+  ac = avahi_client_new(ap, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
  
   while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
+
+  avahi_client_free(ac);
+  avahi_simple_poll_free((AvahiSimplePoll *)ap);
+  free(name);
 
   return NULL;
   
