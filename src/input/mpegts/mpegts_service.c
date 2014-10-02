@@ -406,7 +406,7 @@ mpegts_service_channel_icon ( service_t *s )
   if (ms->s_dvb_mux &&
       idnode_is_instance(&ms->s_dvb_mux->mm_id, &dvb_mux_class)) {
     int32_t hash = 0;
-    static __thread char buf[1024];
+    static __thread char buf[128];
     dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
 
     switch ( mmd->lm_tuning.dmc_fe_type) {
