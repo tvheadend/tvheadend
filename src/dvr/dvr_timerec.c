@@ -67,17 +67,19 @@ dvr_timerec_timecorrection(time_t clk, int hm, struct tm *tm)
  * Unlink - and remove any unstarted
  */
 static void
-dvr_timerec_purge_spawn(dvr_timerec_entry_t *dte)
+dvr_timerec_purge_spawn(dvr_timerec_entry_t *dte, int delconf)
 {
   dvr_entry_t *de = dte->dte_spawn;
 
   if (de && de->de_timerec) {
     dte->dte_spawn = NULL;
     de->de_timerec = NULL;
-    if (de->de_sched_state == DVR_SCHEDULED)
-      dvr_entry_cancel(de);
-    else
-      dvr_entry_save(de);
+    if (delconf) {
+      if (de->de_sched_state == DVR_SCHEDULED)
+        dvr_entry_cancel(de);
+      else
+        dvr_entry_save(de);
+    }
   }
 }
 
@@ -147,7 +149,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   if (de) {
     if (de->de_start == start && de->de_stop == stop)
       return;
-    dvr_timerec_purge_spawn(dte);
+    dvr_timerec_purge_spawn(dte, 1);
   }
 
   title = dvr_timerec_title(dte, &tm_start);
@@ -163,7 +165,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   return;
 
 fail:
-  dvr_timerec_purge_spawn(dte);
+  dvr_timerec_purge_spawn(dte, 1);
 }
 
 /**
@@ -204,7 +206,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
 static void
 timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
 {
-  dvr_timerec_purge_spawn(dte);
+  dvr_timerec_purge_spawn(dte, delconf);
 
   if (delconf)
     hts_settings_remove("dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id));
