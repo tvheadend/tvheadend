@@ -23,6 +23,7 @@ struct mpegts_service;
 struct elementary_stream;
 
 #include <stdint.h>
+#include "build.h"
 #if ENABLE_DVBCSA
 #include <dvbcsa/dvbcsa.h>
 #else
