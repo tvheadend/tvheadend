@@ -71,7 +71,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 14
+#define HTSP_PROTO_VERSION 15
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -586,6 +586,14 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       snprintf(url+p, sizeof(url)-p, "/%s", icon);
       htsmsg_add_str(out, "channelIcon", url);
     } else {
+      if (htsp->htsp_version < 15) {
+        /* older clients expects '/imagecache/' */
+        static char buf[64];
+        if (strncmp(icon, "imagecache/", 11) == 0) {
+          snprintf(buf, sizeof(buf), "/%s", icon);
+          icon = buf;
+        }
+      }
       htsmsg_add_str(out, "channelIcon", icon);
     }
   }
