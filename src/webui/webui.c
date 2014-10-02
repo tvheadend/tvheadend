@@ -1274,6 +1274,11 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL)
     return 404;
 
+  if(hc->hc_access == NULL ||
+     (access_verify2(hc->hc_access, ACCESS_WEB_INTERFACE) &&
+      access_verify2(hc->hc_access, ACCESS_STREAMING)))
+    return 405;
+
   if(sscanf(remain, "%d", &id) != 1)
     return HTTP_STATUS_BAD_REQUEST;
 
@@ -1352,7 +1357,7 @@ webui_init(int xspf)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEB_INTERFACE);
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
