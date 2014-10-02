@@ -302,8 +302,9 @@ SRCS-${CONFIG_CONSTCW} += \
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-FFDECSA-$(CONFIG_CAPMT) = yes
-FFDECSA-$(CONFIG_CWC)   = yes
+FFDECSA-$(CONFIG_CAPMT)   = yes
+FFDECSA-$(CONFIG_CWC)     = yes
+FFDECSA-$(CONFIG_CONSTCW) = yes
 endif
 
 ifeq ($(FFDECSA-yes),yes)
