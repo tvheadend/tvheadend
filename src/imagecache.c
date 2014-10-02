@@ -117,6 +117,7 @@ imagecache_image_save ( imagecache_image_t *img )
   if (img->updated)
     htsmsg_add_s64(m, "updated", img->updated);
   hts_settings_save(m, "imagecache/meta/%d", img->id);
+  htsmsg_destroy(m);
 }
 
 #if ENABLE_IMAGECACHE
