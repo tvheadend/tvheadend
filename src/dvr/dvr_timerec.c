@@ -33,8 +33,6 @@
 #include "dvr.h"
 #include "epg.h"
 
-static int dvr_timerec_in_init = 0;
-
 struct dvr_timerec_entry_queue timerec_entries;
 
 static gtimer_t dvr_timerec_timer;
@@ -583,7 +581,6 @@ dvr_timerec_init(void)
   htsmsg_field_t *f;
 
   TAILQ_INIT(&timerec_entries);
-  dvr_timerec_in_init = 1;
   if((l = hts_settings_load("dvr/timerec")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -592,7 +589,6 @@ dvr_timerec_init(void)
     }
     htsmsg_destroy(l);
   }
-  dvr_timerec_in_init = 0;
 }
 
 void
