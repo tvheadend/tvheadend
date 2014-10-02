@@ -2581,6 +2581,9 @@ fin:
   _eq_done_str(&eq->description);
   _eq_done_str(&eq->channel_name);
 
+  if (eq->stitle)
+    regfree(&eq->stitle_re);
+
   free(eq->lang); eq->lang = NULL;
   free(eq->channel); eq->channel = NULL;
   free(eq->channel_tag); eq->channel_tag = NULL;
