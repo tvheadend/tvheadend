@@ -50,7 +50,7 @@ epggrab_channel_link_delete
 {
   LIST_REMOVE(ecl, ecl_chn_link);
   LIST_REMOVE(ecl, ecl_epg_link);
-  if (!delconf && ecl->ecl_epggrab->mod->ch_save)
+  if (delconf && ecl->ecl_epggrab->mod->ch_save)
     ecl->ecl_epggrab->mod->ch_save(ecl->ecl_epggrab->mod, ecl->ecl_epggrab);
   free(ecl);
 }
