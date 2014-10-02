@@ -112,12 +112,12 @@ descrambler_service_start ( service_t *t )
     return;
 
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
-  caclient_start(t);
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
     sbuf_init(&dr->dr_buf);
     dr->dr_key_index = 0xff;
   }
+  caclient_start(t);
 }
 
 void

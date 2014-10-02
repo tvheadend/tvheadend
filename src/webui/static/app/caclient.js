@@ -20,7 +20,8 @@ tvheadend.caclient = function(panel, index) {
     });
 
     var list = 'enabled,name,username,password,hostname,mode,camdfilename,' +
-               'port,deskey,emm,emmex,comment';
+               'port,deskey,emm,emmex,caid,providerid,tsid,sid,' +
+               'key_even,key_odd,comment';
 
     tvheadend.idnode_form_grid(panel, {
         url: 'api/caclient',

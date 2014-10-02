@@ -54,6 +54,7 @@ typedef enum {
 #define PO_SORTKEY  0x0040  // Sort using key (not display value)
 #define PO_PASSWORD 0x0080  // String is a password
 #define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
+#define PO_HEXA     0x0200  // Hexadecimal value
 
 /*
  * Property definition

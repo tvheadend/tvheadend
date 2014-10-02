@@ -27,6 +27,10 @@ const idclass_t *caclient_classes[] = {
 #if ENABLE_CAPMT
   &caclient_capmt_class,
 #endif
+#if ENABLE_CONSTCW
+  &caclient_ccw_des_class,
+  &caclient_ccw_aes_class,
+#endif
   NULL
 };
 
@@ -97,6 +101,12 @@ caclient_create
 #if ENABLE_CAPMT
   if (c == &caclient_capmt_class)
     cac = capmt_create();
+#endif
+#if ENABLE_CONSTCW
+  if (c == &caclient_ccw_des_class)
+    cac = constcw_create();
+  if (c == &caclient_ccw_aes_class)
+    cac = constcw_create();
 #endif
   if (cac == NULL)
     abort();

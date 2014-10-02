@@ -134,7 +134,7 @@ int              tvheadend_htsp_port_extra;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
 const tvh_caps_t tvheadend_capabilities[] = {
-#if ENABLE_CWC || ENABLE_CAPMT
+#if ENABLE_CWC || ENABLE_CAPMT || ENABLE_CONSTCW
   { "caclient", NULL },
 #endif
 #if ENABLE_V4L

@@ -451,6 +451,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "password", 1);
   if (opts & PO_DURATION)
     htsmsg_add_bool(m, "duration", 1);
+  if (opts & PO_HEXA)
+    htsmsg_add_bool(m, "hexa", 1);
 
   /* Enum list */
   if (pl->list)

@@ -183,6 +183,7 @@ tvheadend.IdNodeField = function(conf)
     this.password = conf.showpwd ? false : conf.password;
     this.duration = conf.duration;
     this.intsplit = conf.intsplit;
+    this.hexa = conf.hexa;
     this.group = conf.group;
     this.enum = conf.enum;
     this.store = null;
@@ -217,7 +218,7 @@ tvheadend.IdNodeField = function(conf)
         } else if (this.type === 'int' || this.type === 'u32' ||
             this.type === 'u16' || this.type === 's64' ||
             this.type === 'dbl') {
-            ftype = 'numeric';
+            ftype = this.hexa ? 'string' : 'numeric';
             w = 80;
         } else if (this.type === 'time') {
             w = 120;
@@ -371,7 +372,9 @@ tvheadend.IdNodeField = function(conf)
                 case 's32':
                 case 'dbl':
                 case 'time':
-                    if (this.intsplit) {
+                    if (this.hexa) {
+                        cons = Ext.form.TextField;
+                    } else if (this.intsplit) {
                         c['maskRe'] = /[0-9\.]/;
                         cons = Ext.form.TextField;
                     } else
@@ -559,6 +562,16 @@ tvheadend.idnode_editor_field = function(f, conf)
         case 'u16':
         case 's64':
         case 'dbl':
+            if (f.hexa) {
+                return new Ext.form.TextField({
+                    fieldLabel: f.caption,
+                    name: f.id,
+                    value: '0x' + value.toString(16),
+                    disabled: d,
+                    width: 300,
+                    maskRe: /[xX0-9a-fA-F\.]/,
+                });
+            }
             if (f.intsplit) {
                 /* this should be improved */
                 return new Ext.form.TextField({
@@ -866,7 +879,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         pclass = r.get(conf.select.valueField);
                         win.setTitle('Add ' + s.lastSelectionText);
                         panel.remove(s);
-                        tvheadend.idnode_editor_form(d, null, panel, { create: true });
+                        tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
                     }
                 }
@@ -881,7 +894,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                     success: function(d) {
                         panel.remove(s);
                         d = json_decode(d);
-                        tvheadend.idnode_editor_form(d.props, d, panel, { create: true });
+                        tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
                     }
                 });
@@ -912,7 +925,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             params: conf.params,
             success: function(d) {
                 d = json_decode(d);
-                tvheadend.idnode_editor_form(d.props, d, panel, { create: true });
+                tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                 saveBtn.setVisible(true);
                 if (onlyDefault) {
                     saveBtn.handler();

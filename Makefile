@@ -296,6 +296,10 @@ SRCS-${CONFIG_CWC} += \
 SRCS-${CONFIG_CAPMT} += \
 	src/descrambler/capmt.c
 
+# CONSTCW
+SRCS-${CONFIG_CONSTCW} += \
+	src/descrambler/constcw.c
+
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
 FFDECSA-$(CONFIG_CAPMT) = yes

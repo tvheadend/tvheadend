@@ -27,6 +27,8 @@ struct mpegts_mux;
 extern const idclass_t caclient_class;
 extern const idclass_t caclient_cwc_class;
 extern const idclass_t caclient_capmt_class;
+extern const idclass_t caclient_ccw_des_class;
+extern const idclass_t caclient_ccw_aes_class;
 
 TAILQ_HEAD(caclient_entry_queue, caclient);
 
@@ -75,5 +77,6 @@ void caclient_done(void);
 
 caclient_t *cwc_create(void);
 caclient_t *capmt_create(void);
+caclient_t *constcw_create(void);
 
 #endif /* __TVH_CACLIENT_H__ */
