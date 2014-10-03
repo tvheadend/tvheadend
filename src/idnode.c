@@ -376,10 +376,11 @@ idnode_get_u32
   ( idnode_t *self, const char *key, uint32_t *u32 )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -409,10 +410,11 @@ idnode_get_s64
   ( idnode_t *self, const char *key, int64_t *s64 )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -451,10 +453,11 @@ idnode_get_dbl
   ( idnode_t *self, const char *key, double *dbl )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -493,10 +496,11 @@ idnode_get_bool
   ( idnode_t *self, const char *key, int *b )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
-  if (p) {
+ if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -519,9 +523,10 @@ idnode_get_time
   ( idnode_t *self, const char *key, time_t *tm )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
+    if (p->islist)
+      return 1;
     if (p->get)
       ptr = p->get(self);
     else
