@@ -730,7 +730,8 @@ tcp_server_done(void)
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->ops.cancel)
       tsl->ops.cancel(tsl->opaque);
-    close(tsl->fd);
+    if (tsl->fd >= 0)
+      close(tsl->fd);
     tsl->fd = -1;
     pthread_kill(tsl->tid, SIGTERM);
   }
