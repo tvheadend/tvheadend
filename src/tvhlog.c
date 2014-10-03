@@ -270,7 +270,7 @@ void tvhlogv ( const char *file, int line,
   pthread_mutex_lock(&tvhlog_mutex);
 
   /* Check for full */
-  if (tvhlog_queue_full || !tvhlog_run) {
+  if (tvhlog_queue_full) {
     pthread_mutex_unlock(&tvhlog_mutex);
     return;
   }
@@ -428,11 +428,22 @@ tvhlog_start ( void )
 void
 tvhlog_end ( void )
 {
+  FILE *fp = NULL;
+  tvhlog_msg_t *msg;
   pthread_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
   pthread_cond_signal(&tvhlog_cond);
   pthread_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
+  pthread_mutex_lock(&tvhlog_mutex);
+  while (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
+    TAILQ_REMOVE(&tvhlog_queue, msg, link);
+    tvhlog_process(msg, tvhlog_options, &fp, tvhlog_path);
+  }
+  tvhlog_queue_full = 1;
+  pthread_mutex_unlock(&tvhlog_mutex);
+  if (fp)
+    fclose(fp);
   free(tvhlog_path);
   htsmsg_destroy(tvhlog_debug);
   htsmsg_destroy(tvhlog_trace);
