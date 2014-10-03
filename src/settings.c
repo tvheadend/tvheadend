@@ -117,6 +117,7 @@ hts_settings_buildpath
   if (!settingspath)
     return 1;
   _hts_settings_buildpath(dst, dstsize, fmt, va, settingspath);
+  va_end(va);
   return 0;
 }
 
