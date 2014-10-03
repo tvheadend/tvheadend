@@ -106,8 +106,10 @@ void dvr_inotify_add ( dvr_entry_t *de )
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);
   
-  if (stat(dvr_inotify_entry_skel->path, &st))
+  if (stat(dvr_inotify_entry_skel->path, &st)) {
+    free(path);
     return;
+  }
   
   e = RB_INSERT_SORTED(&_inot_tree, dvr_inotify_entry_skel, link, _str_cmp);
   if (!e) {
