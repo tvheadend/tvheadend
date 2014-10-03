@@ -787,7 +787,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
     htsmsg_delete_field(c, "autorec");
     HTSMSG_FOREACH(f, list) {
       if (!(e = htsmsg_field_get_map(f))) continue;
-      if (strcmp(s1, htsmsg_get_str(e, "id")) == 0) {
+      if (strcmp(s1, htsmsg_get_str(e, "id") ?: "") == 0) {
         htsmsg_add_str(c, "autorec", htsmsg_get_str(e, "uuid"));
         break;
       }
