@@ -53,7 +53,7 @@ fsmonitor_thread ( void* p )
   fsmonitor_link_t *fml;
   fsmonitor_t *fsm;
 
-  while (1) {
+  while (fsmonitor_fd >= 0) {
 
     /* Wait for event */
     c = read(fsmonitor_fd, buf, sizeof(buf));
