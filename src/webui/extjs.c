@@ -485,6 +485,10 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     /* Misc */
     pthread_mutex_lock(&global_lock);
     m = config_get_all();
+    if (!m) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
 
     /* Time */
     htsmsg_add_u32(m, "tvhtime_update_enabled", tvhtime_update_enabled);
@@ -498,7 +502,6 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_unlock(&global_lock);
 
-    if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
   /* Save settings */
