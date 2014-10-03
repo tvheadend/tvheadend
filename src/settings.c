@@ -283,6 +283,8 @@ hts_settings_vload(const char *pathfmt, va_list ap, int depth)
     ret = hts_settings_load_path(fullpath, depth);
   }
 
+  va_end(ap2);
+
   return ret;
 }
 
