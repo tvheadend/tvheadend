@@ -296,6 +296,8 @@ void epg_save ( void )
     gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL, epggrab_epgdb_periodicsave);
   
   fd = hts_settings_open_file(1, "epgdb.v%d", EPG_DB_VERSION);
+  if (fd < 0)
+    return;
 
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(fd, "brands") ) return;
