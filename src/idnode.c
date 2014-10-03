@@ -1377,13 +1377,11 @@ idnode_thread ( void *p )
     /* Finished */
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(q);
-    q = NULL;
 
     /* Wait */
     usleep(500000);
     pthread_mutex_lock(&idnode_mutex);
   }
-  if (q) htsmsg_destroy(q);
   pthread_mutex_unlock(&idnode_mutex);
   
   return NULL;
