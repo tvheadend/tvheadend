@@ -183,7 +183,9 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
   if( xtype==xGENERIC && precision>0 ) precision--;
   for(idx=precision, rounder=0.5; idx>0; idx--, rounder*=0.1){}
 
+#if 0 /* coverity - dead code 'xtype == xGENERIC' here */
   if( xtype==xFLOAT ) realvalue += rounder;
+#endif
   /* Normalize realvalue to within 10.0 > realvalue >= 1.0 */
   exp = 0;
 
@@ -268,9 +270,12 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
     while( bufpt[-1]=='0' ) *(--bufpt) = 0;
     assert( bufpt>buf );
     if( bufpt[-1]=='.' ){
+#if 0 /* coverity - dead code - flag_altform2 == 0 here */
       if( flag_altform2 ){
 	*(bufpt++) = '0';
-      }else{
+      }else
+#endif
+      {
 	*(--bufpt) = 0;
       }
     }
