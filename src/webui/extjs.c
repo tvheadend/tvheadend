@@ -580,6 +580,10 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     /* Get config */
     pthread_mutex_lock(&tvhlog_mutex);
     m = htsmsg_create_map();
+    if (!m) {
+      pthread_mutex_unlock(&tvhlog_mutex);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
     htsmsg_add_u32(m, "tvhlog_level",      tvhlog_level);
     htsmsg_add_u32(m, "tvhlog_trace_on",   tvhlog_level > LOG_DEBUG);
     tvhlog_get_trace(str, sizeof(str));
@@ -592,7 +596,6 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
                    tvhlog_options & TVHLOG_OPT_DBG_SYSLOG);
     pthread_mutex_unlock(&tvhlog_mutex);
     
-    if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
   /* Save settings */
