@@ -578,6 +578,7 @@ config_migrate_v6 ( void )
       if (!m) {
         m = htsmsg_create_map();
         htsmsg_add_msg(c, "mod_enabled", m);
+        m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
