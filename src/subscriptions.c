@@ -741,7 +741,9 @@ subscription_create_from_mux
 
   /* Install full mux handler */
   mi = s->ths_mmi->mmi_input;
-  if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX)) {
+  assert(mi);
+
+  if (s->ths_flags & SUBSCRIPTION_FULLMUX) {
     pthread_mutex_lock(&mi->mi_output_lock);
     mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
     pthread_mutex_unlock(&mi->mi_output_lock);
