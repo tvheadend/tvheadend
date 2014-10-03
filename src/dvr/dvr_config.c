@@ -324,7 +324,7 @@ dvr_config_class_name_set(void *o, const void *v)
     if (dvr_config_is_valid(cfg) && (v == NULL || *(char *)v == '\0'))
       return 0;
     free(cfg->dvr_config_name);
-    cfg->dvr_config_name = strdup(v);
+    cfg->dvr_config_name = strdup(v ?: "");
     return 1;
   }
   return 0;
