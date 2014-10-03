@@ -914,6 +914,8 @@ access_entry_class_password2_set(void *o, const void *v)
   if (strcmp(v ?: "", ae->ae_password2 ?: "")) {
     if (v && ((const char *)v)[0] != '\0') {
       l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
+      if (l < 0)
+        l = 0;
       result[l] = '\0';
       free(ae->ae_password);
       ae->ae_password = strdup(result + 15);
