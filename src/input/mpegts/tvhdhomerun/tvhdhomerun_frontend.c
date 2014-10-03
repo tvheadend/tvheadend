@@ -421,7 +421,7 @@ tvhdhomerun_frontend_network_list ( mpegts_input_t *mi )
   else
     return NULL;
 
-  return idnode_find_all(idc);
+  return idnode_find_all(idc, NULL);
 }
 
 static void
