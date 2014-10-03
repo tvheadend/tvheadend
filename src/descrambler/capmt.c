@@ -1354,6 +1354,10 @@ static int
 capmt_create_udp_socket(capmt_t *capmt, int *socket, int port)
 {
   *socket = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (*socket < 0) {
+    tvherror("capmt", "%s: failed to create UDP socket", capmt_name(capmt));
+    return 0;
+  }
 
   struct sockaddr_in serv_addr;
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
