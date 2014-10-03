@@ -585,8 +585,10 @@ tcp_server_create
   }
 
   fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
-  if(fd == -1)
+  if(fd == -1) {
+    freeaddrinfo(ressave);
     return NULL;
+  }
 
   if(use->ai_family == AF_INET6)
     setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
