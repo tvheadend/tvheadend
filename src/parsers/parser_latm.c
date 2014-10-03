@@ -123,7 +123,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
     read_audio_specific_config(st, latm, bs);
   else {
     return;
-#if 0
+#if 0 // see bellow (look for dead code)
     uint32_t ascLen = latm_get_value(bs);
     abort(); // ascLen -= read_audio_specific_config(filter, gb);
     skip_bits(bs, ascLen);
@@ -151,9 +151,12 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
   }
 
   if(read_bits(bs, 1)) {                   // other data?
+#if 0 // coverity - dead code - see above
     if(audio_mux_version)
       latm_get_value(bs);              // other_data_bits
-    else {
+    else
+#endif
+    {
       int esc;
       do {
 	esc = read_bits(bs, 1);
