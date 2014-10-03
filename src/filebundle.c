@@ -344,7 +344,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     const filebundle_entry_t *fb;
     ret = dir->b.root->d.count;
     fb  = dir->b.root->d.child;
-    *list = malloc(ret * sizeof(fb_dirent));
+    *list = malloc(ret * sizeof(fb_dirent*));
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
