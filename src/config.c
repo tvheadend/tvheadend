@@ -695,7 +695,7 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 
   htsmsg_delete_field(c, "index");
 
-  if (ch == NULL)
+  if (ch == NULL || uuid == NULL)
     return;
 
   HTSMSG_FOREACH(f, ch) {
