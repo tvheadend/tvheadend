@@ -408,14 +408,14 @@ mpegts_service_channel_icon ( service_t *s )
     int32_t hash = 0;
     static __thread char buf[128];
     dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
+    char dir;
+    int pos;
 
     switch ( mmd->lm_tuning.dmc_fe_type) {
       case DVB_TYPE_S:
-        if (mmd->lm_tuning.u.dmc_fe_qpsk.orbital_dir == 'E')
-          hash = mmd->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
-        else
-          hash = 0xFFFF - mmd->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
-        hash <<= 16;
+        if (dvb_network_get_orbital_pos(mmd->mm_network, &pos, &dir) < 0)
+          return NULL;
+        hash = (dir == 'E' ? pos : 0xFFFF - pos) << 16;
         break;
       case DVB_TYPE_C:
         hash = 0xFFFF0000;

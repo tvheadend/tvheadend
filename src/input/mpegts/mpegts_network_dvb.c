@@ -650,6 +650,8 @@ int dvb_network_get_orbital_pos
   mpegts_mux_t  *mm;
   dvb_mux_t     *lm = NULL;
 
+  if (!mn)
+    return -1;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     lm = (dvb_mux_t *)mm;
     if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir)
