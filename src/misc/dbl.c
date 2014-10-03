@@ -228,9 +228,12 @@ my_double2str(char *buf, size_t bufsize, double realvalue)
       precision = precision - exp;
       xtype = xFLOAT;
     }
-  }else{
+  }
+#if 0 /* coverity - dead code - xtype == xGENERIC here */
+    else{
     flag_rtz = 0;
   }
+#endif
   if( xtype==xEXP ){
     e2 = 0;
   }else{

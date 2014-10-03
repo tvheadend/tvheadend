@@ -713,7 +713,8 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
           htsmsg_add_msg(e, "tags_new", t);
           t = htsmsg_get_list(e, "tags_new");
         }
-        htsmsg_add_str(t, NULL, uuid);
+        if (t)
+          htsmsg_add_str(t, NULL, uuid);
       }
     }
   }
@@ -791,7 +792,9 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
       HTSMSG_FOREACH(f, list) {
         if (!(e = htsmsg_field_get_map(f))) continue;
         if (strcmp(s1, htsmsg_get_str(e, "id") ?: "") == 0) {
-          htsmsg_add_str(c, "autorec", htsmsg_get_str(e, "uuid"));
+          const char *s2 = htsmsg_get_str(e, "uuid");
+          if (s2)
+            htsmsg_add_str(c, "autorec", s2);
           break;
         }
       }
@@ -877,6 +880,8 @@ config_find_uuid( htsmsg_t *map, const char *name, const char *value )
   htsmsg_field_t *f;
   const char *s;
 
+  if (!map || !name || !value)
+    return NULL;
   HTSMSG_FOREACH(f, map) {
     if (!(e = htsmsg_field_get_map(f))) continue;
     if ((s = htsmsg_get_str(e, name)) != NULL) {

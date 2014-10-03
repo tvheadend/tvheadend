@@ -656,14 +656,14 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   struct tm tm;
   localtime_r(de ? &de->de_start : &ebc->start, &tm);
   epg_episode_t *ee = NULL;
-  channel_t *ch;
+  channel_t *ch = NULL;
   lang_str_t *ls = NULL;
 
   if (ebc)                     ee = ebc->episode;
   else if (de && de->de_bcast) ee = de->de_bcast->episode;
 
-  if (de) ch = de->de_channel;
-  else    ch = ebc->channel;
+  if (de)       ch = de->de_channel;
+  else if (ebc) ch = ebc->channel;
 
   snprintf(datestr, sizeof(datestr),
 	   "%04d-%02d-%02d %02d:%02d:%02d",

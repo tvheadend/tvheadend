@@ -1447,8 +1447,7 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
   if (strcmp(s, v)) {
     lang_str_destroy(de->de_title);
     de->de_title = lang_str_create();
-    if (v)
-      lang_str_add(de->de_title, v, NULL, 0);
+    lang_str_add(de->de_title, v, NULL, 0);
     return 1;
   }
   return 0;
