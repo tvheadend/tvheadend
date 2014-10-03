@@ -775,7 +775,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
 
   htsmsg_delete_field(c, "index");
   if (chname == NULL || (chuuid != NULL && uuid_init_bin(&uuid0, chuuid))) {
-    chname = strdup(chuuid);
+    chname = strdup(chuuid ?: "");
     htsmsg_delete_field(c, "channelname");
     htsmsg_delete_field(c, "channel");
     htsmsg_add_str(c, "channelname", chname);
