@@ -749,8 +749,8 @@ void *timeshift_reader ( void *p )
                  pktbuf_len(pkt->pkt_payload), sm->sm_time);
 #endif
       }
-      streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;
+      streaming_target_deliver2(ts->output, sm);
       sm        = NULL;
       wait      = 0;
     } else if (sm) {
