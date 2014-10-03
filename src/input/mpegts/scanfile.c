@@ -403,11 +403,11 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
 
   x = htsmsg_get_str(l, "DELIVERY_SYSTEM");
 
-  if ((mux->dmc_fe_delsys = dvb_str2delsys(x)) == -1) {
+  if (x && (mux->dmc_fe_delsys = dvb_str2delsys(x)) == -1) {
     if (!strcmp(s, "DVBC"))
       mux->dmc_fe_delsys = DVB_SYS_DVBC_ANNEX_A;
   }
-  if ((int)mux->dmc_fe_delsys < 0)
+  if (!x || (int)mux->dmc_fe_delsys < 0)
     mux_fail(r, "wrong system '%s'", x);
 
   if (mux->dmc_fe_delsys == DVB_SYS_DVBT ||
@@ -568,6 +568,7 @@ scanfile_load_file
 
   /* Region */
   strncpy(buf, name, sizeof(buf));
+  buf[sizeof(buf)-1] = '\0';
   if (!strcmp(type, "dvb-s")) {
     reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
   } else {
