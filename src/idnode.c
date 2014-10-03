@@ -759,7 +759,7 @@ idnode_filter_init
             p->type == PT_TIME) {
           int64_t v = f->u.n.n;
           if (p->intsplit != f->u.n.intsplit) {
-            v = (v / (f->u.n.intsplit <= 0 ? 1 : 0)) * p->intsplit;
+            v = (v / MIN(1, f->u.n.intsplit)) * p->intsplit;
             f->u.n.n = v;
           }
         }
