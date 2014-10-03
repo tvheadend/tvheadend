@@ -160,6 +160,8 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
 
   gtimer_disarm(&s->ths_receive_timer);
 
+  assert(mi);
+
   pthread_mutex_lock(&mi->mi_output_lock);
   s->ths_mmi = NULL;
 
@@ -169,7 +171,7 @@ subscription_unlink_mux(th_subscription_t *s, int reason)
   sm = streaming_msg_create_code(SMT_STOP, reason);
   streaming_target_deliver(s->ths_output, sm);
 
-  if (mi && (s->ths_flags & SUBSCRIPTION_FULLMUX))
+  if (s->ths_flags & SUBSCRIPTION_FULLMUX)
     mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
   LIST_REMOVE(s, ths_mmi_link);
 
