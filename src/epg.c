@@ -2242,6 +2242,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
   epg_episode_t *ep;
 
   /* Filtering */
+  if (e == NULL) return;
   if (e->stop < dispatch_clock) return;
   if (_eq_comp_num(&eq->start, e->start)) return;
   if (_eq_comp_num(&eq->stop, e->stop)) return;
@@ -2250,14 +2251,10 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     if (_eq_comp_num(&eq->duration, duration)) return;
   }
   ep = e->episode;
-  if (eq->stars.comp != EC_NO) {
-    if (e == NULL) return;
+  if (eq->stars.comp != EC_NO)
     if (_eq_comp_num(&eq->stars, ep->star_rating)) return;
-  }
-  if (eq->age.comp != EC_NO) {
-    if (e == NULL) return;
+  if (eq->age.comp != EC_NO)
     if (_eq_comp_num(&eq->age, ep->age_rating)) return;
-  }
   if (eq->channel_num.comp != EC_NO)
     if (_eq_comp_num(&eq->channel_num, channel_get_number(e->channel))) return;
   if (eq->channel_name.comp != EC_NO)
