@@ -1263,7 +1263,7 @@ dvr_entry_class_channel_name_set(void *o, const void *v)
     return dvr_entry_class_channel_set(o, idnode_uuid_as_str(&ch->ch_id));
   } else {
     free(de->de_channel_name);
-    de->de_channel_name = strdup(v);
+    de->de_channel_name = v ? strdup(v) : NULL;
     return 1;
   }
 }
