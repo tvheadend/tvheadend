@@ -667,23 +667,24 @@ const char *
 htsmsg_get_str_multi(htsmsg_t *msg, ...)
 {
   va_list ap;
-  const char *n;
+  const char *n, *r = NULL;
   htsmsg_field_t *f;
 
   va_start(ap, msg);
   while((n = va_arg(ap, char *)) != NULL) {
     if((f = htsmsg_field_find(msg, n)) == NULL)
       break;
-    else if(f->hmf_type == HMF_STR)
-      return f->hmf_str;
-    else if(f->hmf_type == HMF_MAP)
+    else if(f->hmf_type == HMF_STR) {
+      r = f->hmf_str;
+      break;
+    } else if(f->hmf_type == HMF_MAP)
       msg = &f->hmf_msg;
     else
       break;
   }
   va_end(ap);
 
-  return NULL;
+  return r;
 }
 
 
