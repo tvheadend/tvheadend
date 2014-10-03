@@ -99,10 +99,12 @@ static int _eit_get_string_with_len
 
   /* Enable huffman decode (for freeview and/or freesat) */
   m = epggrab_module_find_by_id("uk_freesat");
-  if (m && m->enabled) cptr = _eit_freesat_conv;
-  else
+  if (m && m->enabled) {
+    cptr = _eit_freesat_conv;
+  } else {
     m = epggrab_module_find_by_id("uk_freeview");
     if (m && m->enabled) cptr = _eit_freesat_conv;
+  }
 
   /* Convert */
   return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, cptr);
