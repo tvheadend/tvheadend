@@ -460,6 +460,7 @@ mpegts_service_delete ( service_t *t, int delconf )
   /* Free memory */
   free(ms->s_dvb_svcname);
   free(ms->s_dvb_provider);
+  free(ms->s_dvb_cridauth);
   free(ms->s_dvb_charset);
   LIST_REMOVE(ms, s_dvb_mux_link);
   sbuf_free(&ms->s_tsbuf);
