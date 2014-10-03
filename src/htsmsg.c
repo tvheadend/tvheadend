@@ -651,10 +651,12 @@ htsmsg_get_map_multi(htsmsg_t *msg, ...)
 {
   va_list ap;
   const char *n;
-  va_start(ap, msg);
 
+  va_start(ap, msg);
   while(msg != NULL && (n = va_arg(ap, char *)) != NULL)
     msg = htsmsg_get_map(msg, n);
+  va_end(ap);
+
   return msg;
 }
 
@@ -667,18 +669,20 @@ htsmsg_get_str_multi(htsmsg_t *msg, ...)
   va_list ap;
   const char *n;
   htsmsg_field_t *f;
-  va_start(ap, msg);
 
+  va_start(ap, msg);
   while((n = va_arg(ap, char *)) != NULL) {
     if((f = htsmsg_field_find(msg, n)) == NULL)
-      return NULL;
+      break;
     else if(f->hmf_type == HMF_STR)
       return f->hmf_str;
     else if(f->hmf_type == HMF_MAP)
       msg = &f->hmf_msg;
     else
-      return NULL;
+      break;
   }
+  va_end(ap);
+
   return NULL;
 }
 
