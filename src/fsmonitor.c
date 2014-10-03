@@ -66,6 +66,8 @@ fsmonitor_thread ( void* p )
     while ( i < c ) {
       ev = (struct inotify_event*)&buf[i];
       i += sizeof(struct inotify_event) + ev->len;
+      if (i > c)
+        break;
       tvhtrace("fsmonitor", "event fd %d name %s mask %08X",
                ev->wd, ev->len ? ev->name : NULL, ev->mask);
 
