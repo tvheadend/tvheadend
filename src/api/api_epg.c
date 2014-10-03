@@ -382,15 +382,15 @@ api_epg_grid
       } else if (!strcmp(t, "numeric")) {
         f2 = htsmsg_field_find(e, "value");
         if (f2) {
-          int64_t v1, v2 = 0;
+          int64_t v1 = 0, v2 = 0;
           if (f2->hmf_type == HMF_STR) {
             const char *z = htsmsg_field_get_str(f2);
             if (z) {
               const char *z2 = strchr(z, ';');
               if (z2)
                 v2 = strtoll(z2 + 1, NULL, 0);
+              v1 = strtoll(z, NULL, 0);
             }
-            v1 = strtoll(z, NULL, 0);
             api_epg_filter_add_num(&eq, k, v1, v2, comp);
           } else {
             if (!htsmsg_field_get_s64(f2, &v1))
