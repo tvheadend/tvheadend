@@ -185,12 +185,12 @@ void epg_init ( void )
   while ( remain > 4 ) {
 
     /* Get message length */
-    int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
+    uint32_t msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
     remain    -= 4;
     rp        += 4;
 
     /* Safety check */
-    if (msglen > remain) {
+    if ((int64_t)msglen > remain) {
       tvhlog(LOG_ERR, "epgdb", "corruption detected, some/all data lost");
       break;
     }
