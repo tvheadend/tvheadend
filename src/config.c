@@ -598,7 +598,7 @@ config_migrate_v6 ( void )
     htsmsg_t *xc, *ch;
     htsmsg_t *xchs = hts_settings_load("xmltv/channels");
     htsmsg_t *chs  = hts_settings_load_r(1, "channel");
-    if (xchs) {
+    if (chs) {
       HTSMSG_FOREACH(f, chs) {
         if ((ch = htsmsg_get_map_by_field(f))) {
           if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
@@ -608,6 +608,8 @@ config_migrate_v6 ( void )
           }
         }
       }
+    }
+    if (xchs) {
       HTSMSG_FOREACH(f, xchs) {
         if ((xc = htsmsg_get_map_by_field(f))) {
           hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
