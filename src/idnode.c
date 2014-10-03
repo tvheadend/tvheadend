@@ -338,12 +338,14 @@ static char *
 idnode_get_display
   ( idnode_t *self, const property_t *p )
 {
-  if (p->rend)
-    return p->rend(self);
-  if (p->islist) {
-    htsmsg_t *l = (htsmsg_t*)p->get(self);
-    if (l)
-      return htsmsg_list_2_csv(l);
+  if (p) {
+    if (p->rend)
+      return p->rend(self);
+    if (p->islist) {
+      htsmsg_t *l = (htsmsg_t*)p->get(self);
+      if (l)
+        return htsmsg_list_2_csv(l);
+    }
   }
   return NULL;
 }
