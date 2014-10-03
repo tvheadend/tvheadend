@@ -330,21 +330,6 @@ des_key_spread(uint8_t *normal, uint8_t *spread)
 /**
  *
  */
-static void 
-des_random_get(uint8_t *buffer, uint8_t len)
-{
-  uint8_t idx = 0;
-  int randomNo = 0;
- 
-  for (idx = 0; idx < len; idx++) {
-    if (!(idx % 3)) randomNo = rand();
-    buffer[idx] = (randomNo >> ((idx % 3) << 3)) & 0xff;
-  }
-}
-
-/**
- *
- */
 static int
 des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
 {
@@ -356,11 +341,11 @@ des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
 
   noPadBytes = (8 - ((len - 1) % 8)) % 8;
   if (len + noPadBytes + 1 >= CWS_NETMSGSIZE-8) return -1;
-  des_random_get(padBytes, noPadBytes);
+  uuid_random(padBytes, noPadBytes);
   for (i = 0; i < noPadBytes; i++) buffer[len++] = padBytes[i];
   for (i = 2; i < len; i++) checksum ^= buffer[i];
   buffer[len++] = checksum;
-  des_random_get((uint8_t *)ivec, 8);
+  uuid_random((uint8_t *)ivec, 8);
   memcpy(buffer+len, ivec, 8);
   for (i = 2; i < len; i += 8) {
     DES_ncbc_encrypt(buffer+i, buffer+i, 8,  &cwc->cwc_k1, &ivec, 1);
