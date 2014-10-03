@@ -1444,7 +1444,7 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
     v = "UnknownTitle";
   if (de->de_title)
     s = lang_str_get(de->de_title, NULL);
-  if (strcmp(s, v ?: "")) {
+  if (strcmp(s, v)) {
     lang_str_destroy(de->de_title);
     de->de_title = lang_str_create();
     if (v)
