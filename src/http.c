@@ -638,6 +638,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
       n = base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
+      if (n < 0)
+        n = 0;
       authbuf[n] = 0;
       if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
 	      hc->hc_username = strdup(argv[0]);
