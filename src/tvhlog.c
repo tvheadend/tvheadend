@@ -222,11 +222,10 @@ tvhlog_thread ( void *p )
   tvhlog_msg_t *msg;
 
   pthread_mutex_lock(&tvhlog_mutex);
-  while (1) {
+  while (tvhlog_run) {
 
     /* Wait */
     if (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
-      if (!tvhlog_run) break;
       if (fp) {
         fclose(fp); // only issue here is we close with mutex!
                     // but overall performance will be higher
@@ -235,7 +234,6 @@ tvhlog_thread ( void *p )
       pthread_cond_wait(&tvhlog_cond, &tvhlog_mutex);
       continue;
     }
-    if (!msg) break;
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
     tvhlog_queue_size--;
     if (tvhlog_queue_size < (TVHLOG_QUEUE_MAXSIZE / 2))
