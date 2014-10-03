@@ -154,7 +154,7 @@ service_class_caid_get ( void *obj )
     case SCT_CA:
       LIST_FOREACH(c, &st->es_caids, link) {
         l = strlen(buf);
-        snprintf(buf + l, l - sizeof(buf), "%s%04X:%06X",
+        snprintf(buf + l, sizeof(buf) - l, "%s%04X:%06X",
                  l ? "," : "", c->caid, c->providerid);
       }
       break;
