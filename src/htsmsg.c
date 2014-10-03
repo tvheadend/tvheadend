@@ -940,6 +940,7 @@ htsmsg_list_2_csv(htsmsg_t *m)
       free(ret);
       return NULL;
     }
+    first = 0;
   }
 
   return ret;
