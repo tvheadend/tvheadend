@@ -133,6 +133,7 @@ intlconv_utf8( char *dst, size_t dst_size,
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
       pthread_mutex_unlock(&intlconv_lock);
+      iconv_close(c);
       return -ENOMEM;
     }
     ic->ic_charset_id = strdup(dst_charset_id);
@@ -215,6 +216,7 @@ intlconv_to_utf8( char *dst, size_t dst_size,
     ic = malloc(sizeof(*ic));
     if (ic == NULL) {
       pthread_mutex_unlock(&intlconv_lock_src);
+      iconv_close(c);
       return -ENOMEM;
     }
     ic->ic_charset_id = strdup(src_charset_id);
