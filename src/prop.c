@@ -265,11 +265,12 @@ prop_read_value
       val = p->get(obj);
 
   /* List */
-  if (p->islist)
+  if (p->islist) {
+    assert(p->get); /* requirement */
     htsmsg_add_msg(m, name, (htsmsg_t*)val);
   
   /* Single */
-  else {
+  } else {
     switch(p->type) {
     case PT_BOOL:
       htsmsg_add_bool(m, name, *(int *)val);
