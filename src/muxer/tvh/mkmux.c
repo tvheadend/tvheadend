@@ -659,8 +659,8 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   channel_t *ch;
   lang_str_t *ls = NULL;
 
-  if (ebc)               ee = ebc->episode;
-  else if (de->de_bcast) ee = de->de_bcast->episode;
+  if (ebc)                     ee = ebc->episode;
+  else if (de && de->de_bcast) ee = de->de_bcast->episode;
 
   if (de) ch = de->de_channel;
   else    ch = ebc->channel;

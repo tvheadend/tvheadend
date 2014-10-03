@@ -118,9 +118,11 @@ static int
 linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
 {
   linuxdvb_frontend_t *lfe = self;
-  if (lfe->lfe_satconf && !strcmp(str ?: "", lfe->lfe_satconf->ls_type))
-    return 0;
-  linuxdvb_satconf_delete(lfe->lfe_satconf, 1);
+  if (lfe->lfe_satconf) {
+    if (!strcmp(str ?: "", lfe->lfe_satconf->ls_type))
+      return 0;
+    linuxdvb_satconf_delete(lfe->lfe_satconf, 1);
+  }
   lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str, NULL, NULL);
   return 1;
 }
