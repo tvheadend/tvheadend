@@ -2006,7 +2006,7 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
     int fd = imagecache_open(atoi(s2));
-    if (fd <= 0)
+    if (fd < 0)
       return htsp_error("failed to open image");
     return htsp_file_open(htsp, str, fd);
 
