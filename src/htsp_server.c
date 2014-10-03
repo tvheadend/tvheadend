@@ -2246,7 +2246,7 @@ static int
 htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
 {
   int v;
-  size_t len;
+  uint32_t len;
   uint8_t data[4];
   void *buf;
 
