@@ -893,12 +893,12 @@ access_entry_class_password_set(void *o, const void *v)
   char buf[256], result[300];
 
   if (strcmp(v ?: "", ae->ae_password ?: "")) {
-    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v);
+    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v ?: "");
     base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
     free(ae->ae_password2);
     ae->ae_password2 = strdup(result);
     free(ae->ae_password);
-    ae->ae_password = strdup((const char *)v);
+    ae->ae_password = strdup((const char *)v ?: "");
     return 1;
   }
   return 0;
