@@ -462,14 +462,17 @@ capmt_connect(capmt_t *capmt, int i)
              "%s", capmt->capmt_sockfile);
 
     fd = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
-    if (connect(fd, (const struct sockaddr*)&serv_addr_un,
+    if (fd < 0 ||
+        connect(fd, (const struct sockaddr*)&serv_addr_un,
                 sizeof(serv_addr_un)) != 0) {
       if (tvheadend_running)
         tvhlog(LOG_ERR, "capmt",
                "%s: Cannot connect to %s (%s); Do you have OSCam running?",
                capmt_name(capmt), capmt->capmt_sockfile, strerror(errno));
-      close(fd);
-      fd = -1;
+      if (fd >= 0) {
+        close(fd);
+        fd = -1;
+      }
     }
 
   }
