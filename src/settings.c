@@ -113,9 +113,9 @@ hts_settings_buildpath
   (char *dst, size_t dstsize, const char *fmt, ...)
 {
   va_list va;
-  va_start(va, fmt);
   if (!settingspath)
     return 1;
+  va_start(va, fmt);
   _hts_settings_buildpath(dst, dstsize, fmt, va, settingspath);
   va_end(va);
   return 0;
