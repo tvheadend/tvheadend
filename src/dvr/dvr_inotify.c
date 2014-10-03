@@ -64,7 +64,7 @@ pthread_t dvr_inotify_tid;
 void dvr_inotify_init ( void )
 {
   _inot_fd = inotify_init();
-  if (_inot_fd == -1) {
+  if (_inot_fd < 0) {
     tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
            strerror(errno));
     return;
@@ -95,7 +95,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
   char *path;
   struct stat st;
 
-  if (_inot_fd == -1)
+  if (_inot_fd < 0)
     return;
 
   if (!de->de_filename || stat(de->de_filename, &st))
@@ -267,7 +267,7 @@ void* _dvr_inotify_thread ( void *p )
   int fromfd;
   int cookie;
 
-  while (1) {
+  while (_inot_fd >= 0) {
 
     /* Read events */
     fromfd = 0;
@@ -283,6 +283,8 @@ void* _dvr_inotify_thread ( void *p )
     while ( i < len ) {
       struct inotify_event *ev = (struct inotify_event*)&buf[i];
       i += EVENT_SIZE + ev->len;
+      if (i > len)
+        break;
 
       /* Moved */
       if (ev->mask & IN_MOVED_FROM) {
