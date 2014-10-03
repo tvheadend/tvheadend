@@ -780,31 +780,22 @@ idnode_filter
       idnode_filter_init(in, filter);
     if (f->type == IF_STR) {
       const char *str;
-      str = idnode_get_display(in, idnode_find_prop(in, f->key));
+      char *strdisp;
+      int r = 1;
+      str = strdisp = idnode_get_display(in, idnode_find_prop(in, f->key));
       if (!str)
         if (!(str = idnode_get_str(in, f->key)))
           return 1;
       switch(f->comp) {
-        case IC_IN:
-          if (strstr(str, f->u.s) == NULL)
-            return 1;
-          break;
-        case IC_EQ:
-          if (strcmp(str, f->u.s) != 0)
-            return 1;
-        case IC_LT:
-          if (strcmp(str, f->u.s) > 0)
-            return 1;
-          break;
-        case IC_GT:
-          if (strcmp(str, f->u.s) < 0)
-            return 1;
-          break;
-        case IC_RE:
-          if (regexec(&f->u.re, str, 0, NULL, 0))
-            return 1;
-          break;
+        case IC_IN: r = strstr(str, f->u.s) == NULL; break;
+        case IC_EQ: r = strcmp(str, f->u.s) != 0; break;
+        case IC_LT: r = strcmp(str, f->u.s) > 0; break;
+        case IC_GT: r = strcmp(str, f->u.s) < 0; break;
+        case IC_RE: r = !!regexec(&f->u.re, str, 0, NULL, 0); break;
       }
+      if (strdisp)
+        free(strdisp);
+      return r;
     } else if (f->type == IF_NUM || f->type == IF_BOOL) {
       int64_t a, b;
       if (idnode_get_s64(in, f->key, &a))
