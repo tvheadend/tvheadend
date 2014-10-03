@@ -2374,13 +2374,9 @@ htsp_write_scheduler(void *aux)
 
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
-  while(tvheadend_running) {
+  while(htsp->htsp_writer_run) {
 
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
-      /* No active queues at all */
-      if(!htsp->htsp_writer_run)
-        break; /* Should not run anymore, bail out */
-      
       /* Nothing to be done, go to sleep */
       pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
       continue;
@@ -2481,17 +2477,19 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   pthread_mutex_lock(&global_lock);
 
+  /* no async notifications from now */
+  if(htsp.htsp_async_mode)
+    LIST_REMOVE(&htsp, htsp_async_link);
+
+  /* deregister this client */
+  LIST_REMOVE(&htsp, htsp_link);
+
   /* Beware! Closing subscriptions will invoke a lot of callbacks
      down in the streaming code. So we do this as early as possible
      to avoid any weird lockups */
   while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL) {
     htsp_subscription_destroy(&htsp, s);
   }
-
-  if(htsp.htsp_async_mode)
-    LIST_REMOVE(&htsp, htsp_async_link);
-
-  LIST_REMOVE(&htsp, htsp_link);
 
   pthread_mutex_unlock(&global_lock);
 
@@ -2601,6 +2599,7 @@ htsp_async_send(htsmsg_t *m, int mode)
 {
   htsp_connection_t *htsp;
 
+  lock_assert(&global_lock);
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
     if (htsp->htsp_async_mode & mode)
       htsp_send_message(htsp, htsmsg_copy(m), NULL);
