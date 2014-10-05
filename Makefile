@@ -405,7 +405,7 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
 	$(CC) -I${ROOTDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundle.c:
+$(BUILDDIR)/bundle.c: check_dvb_scan
 	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
