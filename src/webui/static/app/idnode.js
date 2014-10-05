@@ -1640,7 +1640,6 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 disabled: true,
                 handler: function() {
                     if (current) {
-                        var uuid = r[0].id;
                         tvheadend.Ajax({
                             url: 'api/idnode/movedown',
                             params: {
