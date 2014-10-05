@@ -1469,6 +1469,11 @@ capmt_thread(void *aux)
 #endif
     }
 
+    if (capmt->capmt_reconfigure) {
+      capmt->capmt_reconfigure = 0;
+      capmt->capmt_running = 1;
+    }
+
     caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
 
     /* close opened sockets */
@@ -1929,6 +1934,7 @@ capmt_conf_changed(caclient_t *cac)
     }
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
+      capmt->capmt_reconfigure = 0;
       tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
       return;
     }
@@ -1942,6 +1948,7 @@ capmt_conf_changed(caclient_t *cac)
       return;
     pthread_mutex_lock(&capmt->capmt_mutex);
     capmt->capmt_running = 0;
+    capmt->capmt_reconfigure = 0;
     pthread_cond_signal(&capmt->capmt_cond);
     tid = capmt->capmt_tid;
     pthread_mutex_unlock(&capmt->capmt_mutex);
