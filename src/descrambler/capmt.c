@@ -1469,12 +1469,16 @@ capmt_thread(void *aux)
 #endif
     }
 
+    caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
+
+    pthread_mutex_lock(&capmt->capmt_mutex);
     if (capmt->capmt_reconfigure) {
       capmt->capmt_reconfigure = 0;
       capmt->capmt_running = 1;
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
     }
-
-    caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -1483,7 +1487,12 @@ capmt_thread(void *aux)
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
 
-    if (!capmt->capmt_running) continue;
+    pthread_mutex_lock(&capmt->capmt_mutex);
+
+    if (!capmt->capmt_running) {
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
+    }
 
     /* schedule reconnection */
     if(subscriptions_active() && !fatal) {
@@ -1497,9 +1506,9 @@ capmt_thread(void *aux)
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id), d);
 
-    pthread_mutex_lock(&global_lock);
     pthread_cond_timedwait(&capmt->capmt_cond, &global_lock, &ts);
-    pthread_mutex_unlock(&global_lock);
+
+    pthread_mutex_unlock(&capmt->capmt_mutex);
   }
 
   tvhlog(LOG_INFO, "capmt", "%s inactive", capmt_name(capmt));
