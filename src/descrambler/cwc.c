@@ -1195,7 +1195,10 @@ cwc_thread(void *aux)
     }
 
     if(cwc->cwc_running == 0) continue;
-    if(attempts == 1) continue; // Retry immediately
+    if(attempts == 1 || cwc->cwc_reconfigure) {
+      cwc->cwc_reconfigure = 0;
+      continue; // Retry immediately
+    }
 
     caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_DISCONNECTED);
 
