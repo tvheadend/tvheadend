@@ -1506,7 +1506,7 @@ capmt_thread(void *aux)
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id), d);
 
-    pthread_cond_timedwait(&capmt->capmt_cond, &global_lock, &ts);
+    pthread_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, &ts);
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
   }
