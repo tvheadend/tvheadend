@@ -54,6 +54,7 @@ typedef enum {
 #define PO_SORTKEY  0x0040  // Sort using key (not display value)
 #define PO_PASSWORD 0x0080  // String is a password
 #define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
+#define PO_HEXA     0x0200  // Hexadecimal value
 
 /*
  * Property definition
@@ -85,6 +86,7 @@ typedef struct property {
     int64_t     s64; // PT_S64
     double      d;   // PT_DBL
     time_t      tm;  // PT_TIME
+    htsmsg_t *(*list)(void); // islist != 0
   } def;
 
   /* Extended options */

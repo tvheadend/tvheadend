@@ -31,8 +31,8 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvr.h"
-#include "dtable.h"
 #include "epg.h"
+#include "htsp_server.h"
 
 static int dvr_autorec_in_init = 0;
 
@@ -42,13 +42,14 @@ struct dvr_autorec_entry_queue autorec_entries;
  * Unlink - and remove any unstarted
  */
 static void
-dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
+dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del)
 {
   dvr_entry_t *de;
 
   while((de = LIST_FIRST(&dae->dae_spawns)) != NULL) {
     LIST_REMOVE(de, de_autorec_link);
     de->de_autorec = NULL;
+    if (!del) continue;
     if (de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
     else
@@ -102,7 +103,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   // Note: ignore channel test if we allow quality unlocking 
-  cfg = dvr_config_find_by_name_default(dae->dae_config_name);
+  if ((cfg = dae->dae_config) == NULL)
+    return 0;
   if (cfg->dvr_sl_quality_lock)
     if(dae->dae_channel != NULL &&
        dae->dae_channel != e->channel)
@@ -174,10 +176,64 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_weekdays = 0x7f;
   dae->dae_pri = DVR_PRIO_NORMAL;
   dae->dae_start = -1;
+  dae->dae_config = dvr_config_find_by_name_default(NULL);
+  LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
 
   idnode_load(&dae->dae_id, conf);
+
+  htsp_autorec_entry_add(dae);
+
+  return dae;
+}
+
+
+dvr_autorec_entry_t*
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+                            channel_t *ch, uint32_t aroundTime, uint32_t weekdays,
+                            time_t start_extra, time_t stop_extra,
+                            dvr_prio_t pri, int retention,
+                            int min_duration, int max_duration,
+                            const char *creator, const char *comment)
+{
+  dvr_autorec_entry_t *dae;
+  htsmsg_t *conf, *days;
+
+  conf = htsmsg_create_map();
+  days = htsmsg_create_list();
+
+  htsmsg_add_u32(conf, "enabled",     1);
+  htsmsg_add_u32(conf, "retention",   retention);
+  htsmsg_add_u32(conf, "pri",         pri);
+  htsmsg_add_u32(conf, "minduration", min_duration);
+  htsmsg_add_u32(conf, "maxduration", max_duration);
+  htsmsg_add_s64(conf, "start_extra", start_extra);
+  htsmsg_add_s64(conf, "stop_extra",  stop_extra);
+  htsmsg_add_str(conf, "title",       title);
+  htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
+  htsmsg_add_str(conf, "creator",     creator ?: "");
+  htsmsg_add_str(conf, "comment",     comment ?: "");
+
+  if (aroundTime)
+    htsmsg_add_u32(conf, "start", (aroundTime-1));
+  if (ch)
+    htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
+
+  int i;
+  for (i = 0; i < 7; i++)
+    if (weekdays & (1 << i))
+      htsmsg_add_u32(days, NULL, i + 1);
+
+  htsmsg_add_msg(conf, "weekdays", days);
+
+  dae = dvr_autorec_create(NULL, conf);
+  htsmsg_destroy(conf);
+
+  if (dae) {
+    dvr_autorec_save(dae);
+    dvr_autorec_changed(dae, 1);
+  }
 
   return dae;
 }
@@ -217,16 +273,20 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 static void
 autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
-  dvr_autorec_purge_spawns(dae);
+  dvr_autorec_purge_spawns(dae, delconf);
 
   if (delconf)
     hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
 
+  htsp_autorec_entry_delete(dae);
+
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
   idnode_unlink(&dae->dae_id);
 
+  if(dae->dae_config)
+    LIST_REMOVE(dae, dae_config_link);
+
   free(dae->dae_name);
-  free(dae->dae_config_name);
   free(dae->dae_creator);
   free(dae->dae_comment);
 
@@ -330,14 +390,13 @@ dvr_autorec_entry_class_channel_get(void *o)
   return &ret;
 }
 
-static htsmsg_t *
-dvr_autorec_entry_class_channel_list(void *o)
+static char *
+dvr_autorec_entry_class_channel_rend(void *o)
 {
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channel/list");
-  htsmsg_add_str(m, "event", "channel");
-  return m;
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_channel)
+    return strdup(channel_get_name(dae->dae_channel));
+  return NULL;
 }
 
 static int
@@ -351,7 +410,7 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
        free(dae->dae_title);
        dae->dae_title = NULL;
     }
-    if (title != NULL && title[0] != '\0' &&
+    if (title[0] != '\0' &&
         !regcomp(&dae->dae_title_preg, title,
                  REG_ICASE | REG_EXTENDED | REG_NOSUB))
       dae->dae_title = strdup(title);
@@ -392,6 +451,15 @@ dvr_autorec_entry_class_tag_get(void *o)
   return &ret;
 }
 
+static char *
+dvr_autorec_entry_class_tag_rend(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_channel_tag)
+    return strdup(dae->dae_channel_tag->ct_name);
+  return NULL;
+}
+
 static int
 dvr_autorec_entry_class_time_set(void *o, const void *v, int *tm)
 {
@@ -422,14 +490,6 @@ dvr_autorec_entry_class_start_set(void *o, const void *v)
   return dvr_autorec_entry_class_time_set(o, v, &dae->dae_start);
 }
 
-#if 0
-static int
-dvr_autorec_entry_class_stop_set(void *o, const void *v)
-{
-  return dvr_autorec_entry_class_time_set(o, v, &dae->dae_stop);
-}
-#endif
-
 static const void *
 dvr_autorec_entry_class_time_get(void *o, int tm)
 {
@@ -450,27 +510,30 @@ dvr_autorec_entry_class_start_get(void *o)
   return dvr_autorec_entry_class_time_get(o, dae->dae_start);
 }
 
-#if 0
-static int
-dvr_autorec_entry_class_stop_get(void *o)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  return dvr_autorec_entry_class_time_get(o, v, &dae->dae_stop);
-}
-#endif
-
-static htsmsg_t *
-dvr_autorec_entry_class_time_list(void *o)
+htsmsg_t *
+dvr_autorec_entry_class_time_list(void *o, const char *null)
 {
   int i;
   htsmsg_t *l = htsmsg_create_list();
   char buf[16];
-  htsmsg_add_str(l, NULL, "Any");
+  htsmsg_add_str(l, NULL, null);
   for (i = 0; i < 24*60;  i += 10) {
     snprintf(buf, sizeof(buf), "%02d:%02d", i / 60, (i % 60));
     htsmsg_add_str(l, NULL, buf);
   }
   return l;
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_time_list_(void *o)
+{
+  return dvr_autorec_entry_class_time_list(o, "Any");
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_extra_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
 }
 
 static htsmsg_t *
@@ -491,15 +554,39 @@ dvr_autorec_entry_class_config_name_set(void *o, const void *v)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
   if (cfg == NULL) cfg = v ? dvr_config_find_by_name_default(v): NULL;
-  if (cfg == NULL && dae->dae_config_name) {
-    free(dae->dae_config_name);
+  if (cfg == NULL && dae->dae_config) {
+    dae->dae_config = NULL;
+    LIST_REMOVE(dae, dae_config_link);
     return 1;
-  } else if (strcmp(dae->dae_config_name ?: "", cfg ? cfg->dvr_config_name : "")) {
-    free(dae->dae_config_name);
-    dae->dae_config_name = strdup(cfg->dvr_config_name);
+  } else if (cfg != dae->dae_config) {
+    if (dae->dae_config)
+      LIST_REMOVE(dae, dae_config_link);
+    LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
+    dae->dae_config = cfg;
     return 1;
   }
   return 0;
+}
+
+static const void *
+dvr_autorec_entry_class_config_name_get(void *o)
+{
+  static const char *ret;
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_config)
+    ret = idnode_uuid_as_str(&dae->dae_config->dvr_id);
+  else
+    ret = "";
+  return &ret;
+}
+
+static char *
+dvr_autorec_entry_class_config_name_rend(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae->dae_config)
+    return strdup(dae->dae_config->dvr_config_name);
+  return NULL;
 }
 
 static int
@@ -520,16 +607,28 @@ dvr_autorec_entry_class_weekdays_set(void *o, const void *v)
   return 0;
 }
 
-static const void *
-dvr_autorec_entry_class_weekdays_get(void *o)
+htsmsg_t *
+dvr_autorec_entry_class_weekdays_get(uint32_t weekdays)
 {
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   htsmsg_t *m = htsmsg_create_list();
   int i;
   for (i = 0; i < 7; i++)
-    if (dae->dae_weekdays & (1 << i))
+    if (weekdays & (1 << i))
       htsmsg_add_u32(m, NULL, i + 1);
   return m;
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_weekdays_default(void)
+{
+  return dvr_autorec_entry_class_weekdays_get(0x7f);
+}
+
+static const void *
+dvr_autorec_entry_class_weekdays_get_(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_weekdays_get(dae->dae_weekdays);
 }
 
 static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
@@ -542,33 +641,39 @@ static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
   { "Sun", 7 },
 };
 
-static htsmsg_t *
+htsmsg_t *
 dvr_autorec_entry_class_weekdays_list ( void *o )
 {
   return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab);
 }
 
-static char *
-dvr_autorec_entry_class_weekdays_rend(void *o)
+char *
+dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays)
 {
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   char buf[32];
   size_t l;
   int i;
-  if (dae->dae_weekdays == 0x7f)
+  if (weekdays == 0x7f)
     strcpy(buf + 1, "All days");
-  else if (dae->dae_weekdays == 0)
+  else if (weekdays == 0)
     strcpy(buf + 1, "No days");
   else {
     buf[0] = '\0';
     for (i = 0; i < 7; i++)
-      if (dae->dae_weekdays & (1 << i)) {
+      if (weekdays & (1 << i)) {
         l = strlen(buf);
         snprintf(buf + l, sizeof(buf) - l, ",%s",
                  val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
       }
   }
   return strdup(buf + 1);
+}
+
+static char *
+dvr_autorec_entry_class_weekdays_rend_(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays);
 }
 
 static int
@@ -721,7 +826,8 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel",
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
-      .list     = dvr_autorec_entry_class_channel_list,
+      .rend     = dvr_autorec_entry_class_channel_rend,
+      .list     = channel_class_get_list,
     },
     {
       .type     = PT_STR,
@@ -729,6 +835,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Channel Tag",
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
+      .rend     = dvr_autorec_entry_class_tag_rend,
       .list     = channel_tag_class_get_list,
     },
     {
@@ -737,7 +844,24 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Starting Around",
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
-      .list     = dvr_autorec_entry_class_time_list,
+      .list     = dvr_autorec_entry_class_time_list_,
+      .opts     = PO_SORTKEY
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "start_extra",
+      .name     = "Extra Start Time",
+      .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "stop_extra",
+      .name     = "Extra Stop Time",
+      .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
     },
     {
       .type     = PT_U32,
@@ -745,9 +869,10 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "weekdays",
       .name     = "Week Days",
       .set      = dvr_autorec_entry_class_weekdays_set,
-      .get      = dvr_autorec_entry_class_weekdays_get,
+      .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,
-      .rend     = dvr_autorec_entry_class_weekdays_rend,
+      .rend     = dvr_autorec_entry_class_weekdays_rend_,
+      .def.list = dvr_autorec_entry_class_weekdays_default
     },
     {
       .type     = PT_INT,
@@ -779,12 +904,19 @@ const idclass_t dvr_autorec_entry_class = {
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
     },
     {
+      .type     = PT_INT,
+      .id       = "retention",
+      .name     = "Retention",
+      .off      = offsetof(dvr_autorec_entry_t, dae_retention),
+    },
+    {
       .type     = PT_STR,
       .id       = "config_name",
       .name     = "DVR Configuration",
       .set      = dvr_autorec_entry_class_config_name_set,
+      .get      = dvr_autorec_entry_class_config_name_get,
+      .rend     = dvr_autorec_entry_class_config_name_rend,
       .list     = dvr_entry_class_config_name_list,
-      .off      = offsetof(dvr_autorec_entry_t, dae_config_name),
     },
     {
       .type     = PT_STR,
@@ -912,7 +1044,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   epg_broadcast_t *e;
 
   if (purge)
-    dvr_autorec_purge_spawns(dae);
+    dvr_autorec_purge_spawns(dae, 1);
 
   CHANNEL_FOREACH(ch) {
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
@@ -920,6 +1052,8 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
         dvr_entry_create_by_autorec(e, dae);
     }
   }
+
+  htsp_autorec_entry_update(dae);
 }
 
 
@@ -947,6 +1081,40 @@ autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
     LIST_REMOVE(dae, dae_channel_tag_link);
     dae->dae_channel_tag = NULL;
     idnode_notify_simple(&dae->dae_id);
+    if (delconf)
+      dvr_autorec_save(dae);
+  }
+}
+
+/*
+ *
+ */
+void
+autorec_destroy_by_id(const char *id, int delconf)
+{
+  dvr_autorec_entry_t *dae;
+  dae = dvr_autorec_find_by_uuid(id);
+
+  if (dae)
+    autorec_entry_destroy(dae, delconf);
+}
+
+/**
+ *
+ */
+void
+autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
+{
+  dvr_autorec_entry_t *dae;
+  dvr_config_t *cfg = NULL;
+
+  while((dae = LIST_FIRST(&kcfg->dvr_autorec_entries)) != NULL) {
+    LIST_REMOVE(dae, dae_config_link);
+    if (cfg == NULL && delconf)
+      cfg = dvr_config_find_by_name_default(NULL);
+    if (cfg)
+      LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
+    dae->dae_config = cfg;
     if (delconf)
       dvr_autorec_save(dae);
   }

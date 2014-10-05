@@ -586,7 +586,7 @@ void dvb_network_init ( void )
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
   const char *s;
-  int i, move = 0;
+  int i;
 
   /* Load scan files */
   scanfile_init();
@@ -608,7 +608,7 @@ void dvb_network_init ( void )
     if (!(e = htsmsg_get_map(e, "config"))) continue;
     if (!(s = htsmsg_get_str(e, "class")))  continue;
     for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++) {
-      if(!strcmp(dvb_network_classes[i]->ic_class, s + (move ? 5 : 0))) {
+      if(!strcmp(dvb_network_classes[i]->ic_class, s)) {
         dvb_network_create0(f->hmf_name, dvb_network_classes[i], e);
         break;
       }
@@ -640,8 +640,7 @@ void dvb_network_done ( void )
 dvb_network_t*
 dvb_network_find_by_uuid(const char *uuid)
 {
-  idnode_t *in = idnode_find(uuid, &dvb_network_class);
-  return (dvb_network_t*)in;
+  return idnode_find(uuid, &dvb_network_class, NULL);
 }
 
 int dvb_network_get_orbital_pos
@@ -651,6 +650,8 @@ int dvb_network_get_orbital_pos
   mpegts_mux_t  *mm;
   dvb_mux_t     *lm = NULL;
 
+  if (!mn)
+    return -1;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
     lm = (dvb_mux_t *)mm;
     if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir)

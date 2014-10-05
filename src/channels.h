@@ -71,6 +71,7 @@ typedef struct channel
   int                   ch_dvr_extra_time_post;
   struct dvr_entry_list ch_dvrs;
   struct dvr_autorec_entry_list ch_autorecs;
+  struct dvr_timerec_entry_list ch_timerecs;
 
 } channel_t;
 
@@ -144,13 +145,15 @@ void channel_delete(channel_t *ch, int delconf);
 
 channel_t *channel_find_by_name(const char *name);
 #define channel_find_by_uuid(u)\
-  (channel_t*)idnode_find(u, &channel_class)
+  (channel_t*)idnode_find(u, &channel_class, NULL)
 
 channel_t *channel_find_by_id(uint32_t id);
 
-channel_t *channel_find_by_number(int no);
+channel_t *channel_find_by_number(const char *no);
 
 #define channel_find channel_find_by_uuid
+
+htsmsg_t * channel_class_get_list(void *o);
 
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
@@ -162,7 +165,7 @@ channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 
 static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
-  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class); }
+  {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class, NULL); }
 
 void channel_tag_save(channel_tag_t *ct);
 

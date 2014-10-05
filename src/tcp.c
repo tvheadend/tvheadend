@@ -86,6 +86,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
           bind(fd, (struct sockaddr *)&ip, IP_IN_ADDRLEN(ip)) < 0) {
         snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'", bindaddr,
                                      ai->ai_family == AF_INET6 ? "6" : "4");
+        freeaddrinfo(ai);
         return -1;
       }
     }
@@ -585,8 +586,10 @@ tcp_server_create
   }
 
   fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
-  if(fd == -1)
+  if(fd == -1) {
+    freeaddrinfo(ressave);
     return NULL;
+  }
 
   if(use->ai_family == AF_INET6)
     setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
@@ -621,6 +624,9 @@ void tcp_server_register(void *server)
 {
   tcp_server_t *ts = server;
   tvhpoll_event_t ev;
+
+  if (ts == NULL)
+    return;
 
   memset(&ev, 0, sizeof(ev));
 
@@ -724,7 +730,8 @@ tcp_server_done(void)
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->ops.cancel)
       tsl->ops.cancel(tsl->opaque);
-    close(tsl->fd);
+    if (tsl->fd >= 0)
+      close(tsl->fd);
     tsl->fd = -1;
     pthread_kill(tsl->tid, SIGTERM);
   }

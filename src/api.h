@@ -25,7 +25,7 @@
 #include "redblack.h"
 #include "access.h"
 
-#define TVH_API_VERSION 14
+#define TVH_API_VERSION 15
 
 /*
  * Command hook
@@ -62,7 +62,6 @@ void api_init               ( void );
 void api_done               ( void );
 void api_idnode_init        ( void );
 void api_input_init         ( void );
-void api_input_satip_init   ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );
 void api_mpegts_init        ( void );
@@ -74,15 +73,15 @@ void api_esfilter_init      ( void );
 void api_intlconv_init      ( void );
 void api_access_init        ( void );
 void api_dvr_init           ( void );
+void api_caclient_init      ( void );
 
 /*
  * IDnode
  */
 typedef struct api_idnode_grid_conf
 {
-  int             tindex;
-  int             start;
-  int             limit;
+  uint32_t        start;
+  uint32_t        limit;
   idnode_filter_t filter;
   idnode_sort_t   sort;
 } api_idnode_grid_conf_t;

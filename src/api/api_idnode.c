@@ -28,7 +28,7 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
 {
   htsmsg_t *m = NULL;
   const char *s = htsmsg_get_str(args, name);
-  char *r, *saveptr;
+  char *r, *saveptr = NULL;
   if (s && s[0] != '\0') {
     s = r = strdup(s);
     r = strtok_r(r, ",;:", &saveptr);
@@ -61,17 +61,8 @@ api_idnode_grid_conf
   htsmsg_t *filter, *e;
   const char *str;
 
-  /* Start */
-  if ((str = htsmsg_get_str(args, "start")))
-    conf->start = atoi(str);
-  else
-    conf->start = 0;
-
-  /* Limit */
-  if ((str = htsmsg_get_str(args, "limit")))
-    conf->limit = atoi(str);
-  else
-    conf->limit = 50;
+  conf->start = htsmsg_get_u32_or_default(args, "start", 0);
+  conf->limit = htsmsg_get_u32_or_default(args, "limit", 50);
 
   /* Filter */
   if ((filter = htsmsg_get_list(args, "filter"))) {
@@ -110,7 +101,7 @@ api_idnode_grid_conf
   /* Sort */
   if ((str = htsmsg_get_str(args, "sort"))) {
     conf->sort.key = str;
-    if ((str = htsmsg_get_str(args, "dir")) && !strcmp(str, "DESC"))
+    if ((str = htsmsg_get_str(args, "dir")) && !strcasecmp(str, "DESC"))
       conf->sort.dir = IS_DSC;
     else
       conf->sort.dir = IS_ASC;
@@ -185,7 +176,7 @@ api_idnode_load_by_class
   assert(idc);
 
   l = htsmsg_create_list();
-  if ((is = idnode_find_all(idc))) {
+  if ((is = idnode_find_all(idc, NULL))) {
     for (i = 0; i < is->is_count; i++) {
       in = is->is_array[i];
 
@@ -256,10 +247,12 @@ api_idnode_load
 
   /* Multiple */
   if (uuids) {
+    const idnodes_rb_t *domain = NULL;
     l = htsmsg_create_list();
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
-      if (!(in   = idnode_find(uuid, NULL))) continue;
+      if (!(in   = idnode_find(uuid, NULL, domain))) continue;
+      domain = in->in_domain;
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
         continue;
@@ -276,7 +269,7 @@ api_idnode_load
 
   /* Single */
   } else {
-    if (!(in = idnode_find(uuid, NULL)))
+    if (!(in = idnode_find(uuid, NULL, NULL)))
       err = ENOENT;
     else {
       if (idnode_perm(in, perm, NULL)) {
@@ -326,7 +319,7 @@ api_idnode_save
   if (!msg->hm_islist) {
     if (!(uuid = htsmsg_get_str(msg, "uuid")))
       goto exit;
-    if (!(in = idnode_find(uuid, NULL)))
+    if (!(in = idnode_find(uuid, NULL, NULL)))
       goto exit;
     if (idnode_perm(in, perm, msg)) {
       err = EPERM;
@@ -337,13 +330,15 @@ api_idnode_save
 
   /* Multiple */
   } else {
+    const idnodes_rb_t *domain = NULL;
     HTSMSG_FOREACH(f, msg) {
       if (!(conf = htsmsg_field_get_map(f)))
         continue;
       if (!(uuid = htsmsg_get_str(conf, "uuid")))
         continue;
-      if (!(in = idnode_find(uuid, NULL)))
+      if (!(in = idnode_find(uuid, NULL, domain)))
         continue;
+      domain = in->in_domain;
       if (idnode_perm(in, perm, conf)) {
         err = EPERM;
         continue;
@@ -389,7 +384,7 @@ api_idnode_tree
   pthread_mutex_lock(&global_lock);
 
   if (!isroot || root) {
-    if (!(node = idnode_find(isroot ? root : uuid, NULL))) {
+    if (!(node = idnode_find(isroot ? root : uuid, NULL, NULL))) {
       pthread_mutex_unlock(&global_lock);
       return EINVAL;
     }
@@ -477,16 +472,18 @@ api_idnode_handler
 
   /* Multiple */
   if (uuids) {
+    const idnodes_rb_t *domain = NULL;
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
-      if (!(in   = idnode_find(uuid, NULL))) continue;
+      if (!(in   = idnode_find(uuid, NULL, domain))) continue;
+      domain = in->in_domain;
       handler(perm, in);
     }
   
   /* Single */
   } else {
     uuid = htsmsg_field_get_string(f);
-    if (!(in   = idnode_find(uuid, NULL)))
+    if (!(in   = idnode_find(uuid, NULL, NULL)))
       err = ENOENT;
     else
       handler(perm, in);

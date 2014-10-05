@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "descrambler/tvhcsa.h"
 
 struct service;
 struct elementary_stream;
@@ -51,16 +52,16 @@ typedef struct th_descrambler {
   } td_keystate;
 
   struct service *td_service;
-  struct tvhcsa  *td_csa;
 
   void (*td_stop)       (struct th_descrambler *d);
   void (*td_caid_change)(struct th_descrambler *d);
   int  (*td_ecm_reset)  (struct th_descrambler *d);
+  void (*td_ecm_idle)   (struct th_descrambler *d);
 
 } th_descrambler_t;
 
 typedef struct th_descrambler_runtime {
-  time_t   dr_last_descramble;
+  tvhcsa_t dr_csa;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
@@ -80,12 +81,18 @@ typedef void (*descrambler_section_callback_t)
 /**
  * Track required PIDs
  */
+typedef struct descrambler_ecmsec {
+  LIST_ENTRY(descrambler_ecmsec) link;
+  uint8_t   number;
+  uint8_t  *last_data;
+  int       last_data_len;
+} descrambler_ecmsec_t;
+
 typedef struct descrambler_section {
   TAILQ_ENTRY(descrambler_section) link;
   descrambler_section_callback_t callback;
   void     *opaque;
-  uint8_t  *last_data;
-  int       last_data_len;
+  LIST_HEAD(, descrambler_ecmsec) ecmsecs;
 } descrambler_section_t;
 
 typedef struct descrambler_table {
@@ -152,6 +159,7 @@ void descrambler_done          ( void );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
+int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
 void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,

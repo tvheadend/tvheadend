@@ -95,7 +95,6 @@ SRCS =  src/version.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \
-	src/dtable.c \
 	src/tcp.c \
 	src/udp.c \
 	src/url.c \
@@ -157,7 +156,8 @@ SRCS += \
 	src/api/api_esfilter.c \
 	src/api/api_intlconv.c \
 	src/api/api_access.c \
-	src/api/api_dvr.c
+	src/api/api_dvr.c \
+	src/api/api_caclient.c
 
 SRCS += \
 	src/parsers/parsers.c \
@@ -178,6 +178,8 @@ SRCS += src/plumbing/tsfix.c \
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
+	src/dvr/dvr_timerec.c \
+	src/dvr/dvr_config.c \
 	src/dvr/dvr_cutpoints.c \
 
 SRCS += src/webui/webui.c \
@@ -201,6 +203,7 @@ SRCS += src/muxer.c \
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
 	src/descrambler/descrambler.c \
+	src/descrambler/caclient.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \
@@ -293,10 +296,15 @@ SRCS-${CONFIG_CWC} += \
 SRCS-${CONFIG_CAPMT} += \
 	src/descrambler/capmt.c
 
+# CONSTCW
+SRCS-${CONFIG_CONSTCW} += \
+	src/descrambler/constcw.c
+
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-FFDECSA-$(CONFIG_CAPMT) = yes
-FFDECSA-$(CONFIG_CWC)   = yes
+FFDECSA-$(CONFIG_CAPMT)   = yes
+FFDECSA-$(CONFIG_CWC)     = yes
+FFDECSA-$(CONFIG_CONSTCW) = yes
 endif
 
 ifeq ($(FFDECSA-yes),yes)
@@ -397,7 +405,7 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
 	$(CC) -I${ROOTDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundle.c:
+$(BUILDDIR)/bundle.c: check_dvb_scan
 	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 

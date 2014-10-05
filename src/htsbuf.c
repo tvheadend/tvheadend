@@ -254,8 +254,8 @@ htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap0)
   char buf[100], *p, *np;
 
   va_copy(ap, ap0);
-
   n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
   if(n > -1 && n < sizeof(buf)) {
     htsbuf_append(hq, buf, n);
     return;
@@ -269,6 +269,7 @@ htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap0)
     /* Try to print in the allocated space. */
     va_copy(ap, ap0);
     n = vsnprintf(p, size, fmt, ap);
+    va_end(ap);
     if(n > -1 && n < size) {
       htsbuf_append_prealloc(hq, p, n);
       return;

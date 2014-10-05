@@ -173,8 +173,10 @@ prop_write_values
         if (!(new = htsmsg_field_get_str(f)))
           continue;
         if (!p->set && strcmp((*str) ?: "", new)) {
-          free(*str);
+          /* make sure that the string is valid all time */
+          void *old = *str;
           *str = strdup(new);
+          free(old);
           save = 1;
         }
         break;
@@ -263,11 +265,12 @@ prop_read_value
       val = p->get(obj);
 
   /* List */
-  if (p->islist)
+  if (p->islist) {
+    assert(p->get); /* requirement */
     htsmsg_add_msg(m, name, (htsmsg_t*)val);
   
   /* Single */
-  else {
+  } else {
     switch(p->type) {
     case PT_BOOL:
       htsmsg_add_bool(m, name, *(int *)val);
@@ -390,45 +393,47 @@ prop_serialize_value
 
   /* Metadata */
   htsmsg_add_str(m, "caption",  pl->name);
-  if (pl->islist)
+  if (pl->islist) {
     htsmsg_add_u32(m, "list", 1);
-
-  /* Default */
-  // TODO: currently no support for list defaults
-  switch (pl->type) {
-    case PT_BOOL:
-      htsmsg_add_bool(m, "default", pl->def.i);
-      break;
-    case PT_INT:
-      htsmsg_add_s32(m, "default", pl->def.i);
-      break;
-    case PT_U16:
-      htsmsg_add_u32(m, "default", pl->def.u16);
-      break;
-    case PT_U32:
-      htsmsg_add_u32(m, "default", pl->def.u32);
-      break;
-    case PT_S64:
-      htsmsg_add_s64(m, "default", pl->def.s64);
-      break;
-    case PT_DBL:
-      htsmsg_add_dbl(m, "default", pl->def.d);
-      break;
-    case PT_STR:
-      htsmsg_add_str(m, "default", pl->def.s ?: "");
-      break;
-    case PT_TIME:
-      htsmsg_add_s64(m, "default", pl->def.tm);
-      break;
-    case PT_LANGSTR:
-      /* TODO? */
-      break;
-    case PT_PERM:
-      snprintf(buf, sizeof(buf), "%04o", pl->def.u32);
-      htsmsg_add_str(m, "default", buf);
-      break;
-    case PT_NONE:
-      break;
+    if (pl->def.list)
+      htsmsg_add_msg(m, "default", pl->def.list());
+  } else {
+    /* Default */
+    switch (pl->type) {
+      case PT_BOOL:
+        htsmsg_add_bool(m, "default", pl->def.i);
+        break;
+      case PT_INT:
+        htsmsg_add_s32(m, "default", pl->def.i);
+        break;
+      case PT_U16:
+        htsmsg_add_u32(m, "default", pl->def.u16);
+        break;
+      case PT_U32:
+        htsmsg_add_u32(m, "default", pl->def.u32);
+        break;
+      case PT_S64:
+        htsmsg_add_s64(m, "default", pl->def.s64);
+        break;
+      case PT_DBL:
+        htsmsg_add_dbl(m, "default", pl->def.d);
+        break;
+      case PT_STR:
+        htsmsg_add_str(m, "default", pl->def.s ?: "");
+        break;
+      case PT_TIME:
+        htsmsg_add_s64(m, "default", pl->def.tm);
+        break;
+      case PT_LANGSTR:
+        /* TODO? */
+        break;
+      case PT_PERM:
+        snprintf(buf, sizeof(buf), "%04o", pl->def.u32);
+        htsmsg_add_str(m, "default", buf);
+        break;
+      case PT_NONE:
+        break;
+    }
   }
 
   /* Options */
@@ -447,6 +452,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "password", 1);
   if (opts & PO_DURATION)
     htsmsg_add_bool(m, "duration", 1);
+  if (opts & PO_HEXA)
+    htsmsg_add_bool(m, "hexa", 1);
 
   /* Enum list */
   if (pl->list)

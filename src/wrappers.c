@@ -136,6 +136,7 @@ tvhthread_create0
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
   strncpy(ts->name, name, sizeof(ts->name));
+  ts->name[sizeof(ts->name)-1] = '\0';
   ts->run  = start_routine;
   ts->arg  = arg;
   r = pthread_create(thread, attr, thread_wrapper, ts);

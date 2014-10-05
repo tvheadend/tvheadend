@@ -36,6 +36,9 @@ typedef struct uuid {
 /* Initialise subsystem */
 void uuid_init ( void );
 
+/* Random bytes */
+void uuid_random ( uint8_t *buf, size_t bufsize );
+
 /* Initialise binary */
 int uuid_init_bin ( tvh_uuid_t *u, const char *str );
 

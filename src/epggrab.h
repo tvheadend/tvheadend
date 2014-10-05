@@ -112,7 +112,7 @@ int epggrab_channel_set_number   ( epggrab_channel_t *ch, int number );
  * Updated/link
  */
 void epggrab_channel_updated     ( epggrab_channel_t *ch );
-void epggrab_channel_link_delete ( epggrab_channel_link_t *ecl );
+void epggrab_channel_link_delete ( epggrab_channel_link_t *ecl, int delconf );
 int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch );
 
 /* ID */

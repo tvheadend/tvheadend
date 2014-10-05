@@ -231,6 +231,14 @@ const idclass_t linuxdvb_satconf_class =
       .opts     = PO_ADVANCED,
       .def.i    = 1
     },
+    {
+      .type     = PT_U32,
+      .id       = "max_rotor_move",
+      .name     = "Max Rotor Movement (seconds)",
+      .off      = offsetof(linuxdvb_satconf_t, ls_max_rotor_move),
+      .opts     = PO_ADVANCED,
+      .def.u32  = 120
+    },
     {}
   }
 };
@@ -575,7 +583,7 @@ linuxdvb_satconf_get_priority
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
 {
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
-  return lse->lse_priority;
+  return lse ? lse->lse_priority : 0;
 }
 
 void
@@ -593,6 +601,9 @@ linuxdvb_satconf_get_grace
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
 {
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
+  if (lse == NULL)
+    return 0;
+
   int i, r = 10;
   linuxdvb_diseqc_t      *lds[] = {
     (linuxdvb_diseqc_t*)lse->lse_en50494,
@@ -651,6 +662,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
     /* Pending */
     if (r != 0) {
+      tvhtrace("diseqc", "waiting %d seconds to finish setup for %s", r, lds[i]->ld_type);
       gtimer_arm(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, r);
       ls->ls_diseqc_idx = i + 1;
       return 0;
@@ -743,6 +755,8 @@ linuxdvb_satconf_create
   ls->ls_frontend = (mpegts_input_t*)lfe;
   ls->ls_type     = lst->type;
   TAILQ_INIT(&ls->ls_elements);
+
+  ls->ls_max_rotor_move = 120;
 
   /* Create node */
   if (idnode_insert(&ls->ls_id, uuid, lst->idc, 0)) {

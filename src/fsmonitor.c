@@ -53,7 +53,7 @@ fsmonitor_thread ( void* p )
   fsmonitor_link_t *fml;
   fsmonitor_t *fsm;
 
-  while (1) {
+  while (fsmonitor_fd >= 0) {
 
     /* Wait for event */
     c = read(fsmonitor_fd, buf, sizeof(buf));
@@ -66,6 +66,8 @@ fsmonitor_thread ( void* p )
     while ( i < c ) {
       ev = (struct inotify_event*)&buf[i];
       i += sizeof(struct inotify_event) + ev->len;
+      if (i > c)
+        break;
       tvhtrace("fsmonitor", "event fd %d name %s mask %08X",
                ev->wd, ev->len ? ev->name : NULL, ev->mask);
 

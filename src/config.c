@@ -578,6 +578,7 @@ config_migrate_v6 ( void )
       if (!m) {
         m = htsmsg_create_map();
         htsmsg_add_msg(c, "mod_enabled", m);
+        m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
@@ -597,7 +598,7 @@ config_migrate_v6 ( void )
     htsmsg_t *xc, *ch;
     htsmsg_t *xchs = hts_settings_load("xmltv/channels");
     htsmsg_t *chs  = hts_settings_load_r(1, "channel");
-    if (xchs) {
+    if (chs) {
       HTSMSG_FOREACH(f, chs) {
         if ((ch = htsmsg_get_map_by_field(f))) {
           if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
@@ -607,6 +608,8 @@ config_migrate_v6 ( void )
           }
         }
       }
+    }
+    if (xchs) {
       HTSMSG_FOREACH(f, xchs) {
         if ((xc = htsmsg_get_map_by_field(f))) {
           hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
@@ -626,8 +629,8 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
                         void (*modify)(htsmsg_t *record,
                                        uint32_t id,
                                        const char *uuid,
-                                       void *aux),
-                        void *aux )
+                                       const void *aux),
+                        const void *aux )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
@@ -662,7 +665,7 @@ config_migrate_simple ( const char *dir, htsmsg_t *list,
 }
 
 static void
-config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_acl( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   uint32_t a, b;
   const char *s;
@@ -685,7 +688,7 @@ config_migrate_v7 ( void )
 }
 
 static void
-config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   htsmsg_t *ch = (htsmsg_t *)aux;
   htsmsg_t *e, *m, *t;
@@ -694,7 +697,7 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
 
   htsmsg_delete_field(c, "index");
 
-  if (ch == NULL)
+  if (ch == NULL || uuid == NULL)
     return;
 
   HTSMSG_FOREACH(f, ch) {
@@ -710,7 +713,8 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
           htsmsg_add_msg(e, "tags_new", t);
           t = htsmsg_get_list(e, "tags_new");
         }
-        htsmsg_add_str(t, NULL, uuid);
+        if (t)
+          htsmsg_add_str(t, NULL, uuid);
       }
     }
   }
@@ -740,7 +744,7 @@ config_migrate_v8 ( void )
 }
 
 static void
-config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
   uint32_t u32;
   htsmsg_delete_field(c, "index");
@@ -758,9 +762,9 @@ config_modify_autorec( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
 }
 
 static void
-config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
+config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 {
-  htsmsg_t *list = aux;
+  const htsmsg_t *list = aux;
   const char *chname = htsmsg_get_str(c, "channelname");
   const char *chuuid = htsmsg_get_str(c, "channel");
   htsmsg_t *e;
@@ -771,7 +775,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
 
   htsmsg_delete_field(c, "index");
   if (chname == NULL || (chuuid != NULL && uuid_init_bin(&uuid0, chuuid))) {
-    chname = strdup(chuuid);
+    chname = strdup(chuuid ?: "");
     htsmsg_delete_field(c, "channelname");
     htsmsg_delete_field(c, "channel");
     htsmsg_add_str(c, "channelname", chname);
@@ -784,12 +788,17 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, void *aux )
   if ((s1 = htsmsg_get_str(c, "autorec")) != NULL) {
     s1 = strdup(s1);
     htsmsg_delete_field(c, "autorec");
-    HTSMSG_FOREACH(f, list) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
-      if (strcmp(s1, htsmsg_get_str(e, "id")) == 0) {
-        htsmsg_add_str(c, "autorec", htsmsg_get_str(e, "uuid"));
-        break;
+    if (s1 != NULL) {
+      HTSMSG_FOREACH(f, list) {
+        if (!(e = htsmsg_field_get_map(f))) continue;
+        if (strcmp(s1, htsmsg_get_str(e, "id") ?: "") == 0) {
+          const char *s2 = htsmsg_get_str(e, "uuid");
+          if (s2)
+            htsmsg_add_str(c, "autorec", s2);
+          break;
+        }
       }
+      free((char *)s1);
     }
   }
 }
@@ -871,6 +880,8 @@ config_find_uuid( htsmsg_t *map, const char *name, const char *value )
   htsmsg_field_t *f;
   const char *s;
 
+  if (!map || !name || !value)
+    return NULL;
   HTSMSG_FOREACH(f, map) {
     if (!(e = htsmsg_field_get_map(f))) continue;
     if ((s = htsmsg_get_str(e, name)) != NULL) {
@@ -967,6 +978,45 @@ config_migrate_v11 ( void )
   htsmsg_destroy(dvr_config);
 }
 
+static void
+config_modify_caclient( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
+{
+  uint32_t u;
+
+  htsmsg_delete_field(c, "index");
+  htsmsg_delete_field(c, "connected");
+  htsmsg_add_str(c, "class", aux);
+  if (!htsmsg_get_u32(c, "oscam", &u)) {
+    htsmsg_delete_field(c, "oscam");
+    htsmsg_add_u32(c, "mode", u);
+  }
+}
+
+static void
+config_migrate_v12 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  config_migrate_simple("cwc", NULL, config_modify_caclient, "caclient_cwc");
+  config_migrate_simple("capmt", NULL, config_modify_caclient, "caclient_capmt");
+
+  if ((c = hts_settings_load("cwc")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("cwc/%s", f->hmf_name);
+      hts_settings_save(e, "caclient/%s", f->hmf_name);
+    }
+  }
+  if ((c = hts_settings_load("capmt")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      hts_settings_remove("capmt/%s", f->hmf_name);
+      hts_settings_save(e, "caclient/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -975,7 +1025,9 @@ dobackup(const char *oldver)
 {
   char outfile[PATH_MAX], cwd[PATH_MAX];
   const char *argv[] = {
-    "/usr/bin/tar", "cjf", outfile, "--exclude", "backup", ".", NULL
+    "/usr/bin/tar", "cjf", outfile,
+    "--exclude", "backup", "--exclude", "epggrab/*.sock",
+    ".", NULL
   };
   const char *root = hts_settings_get_root();
   char errtxt[128];
@@ -1030,6 +1082,10 @@ dobackup(const char *oldver)
     s = htsbuf_to_string(&q);
     tvherror("config", "command '%s' returned error code %d", s, code);
     tvherror("config", "executed in directory '%s'", root);
+    tvherror("config", "please, do not report this as an error, you may use --nobackup option");
+    tvherror("config", "... or run the above command in the printed directory");
+    tvherror("config", "... using the same user/group as for the tvheadend executable");
+    tvherror("config", "... to check the reason for the unfinished backup");
     free(s);
     htsbuf_queue_flush(&q);
     goto fatal;
@@ -1060,7 +1116,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v8,
   config_migrate_v9,
   config_migrate_v10,
-  config_migrate_v11
+  config_migrate_v11,
+  config_migrate_v12
 };
 
 /*
@@ -1256,4 +1313,14 @@ const char *config_get_muxconfpath ( void )
 int config_set_muxconfpath ( const char *path )
 {
   return _config_set_str("muxconfpath", path);
+}
+
+const char *config_get_picon_path ( void )
+{
+  return htsmsg_get_str(config, "piconpath");
+}
+
+int config_set_picon_path ( const char *str )
+{
+  return _config_set_str("piconpath", str);
 }

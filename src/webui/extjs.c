@@ -34,7 +34,6 @@
 #include "http.h"
 #include "webui.h"
 #include "access.h"
-#include "dtable.h"
 #include "channels.h"
 
 #include "dvr/dvr.h"
@@ -142,11 +141,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tableeditor.js");
   extjs_load(hq, "static/app/cteditor.js");
   extjs_load(hq, "static/app/acleditor.js");
-#if ENABLE_CWC
-  extjs_load(hq, "static/app/cwceditor.js");
-#endif
-#if ENABLE_CAPMT
-  extjs_load(hq, "static/app/capmteditor.js");
+#if ENABLE_CWC || ENABLE_CAPMT
+  extjs_load(hq, "static/app/caclient.js");
 #endif
   extjs_load(hq, "static/app/tvadapters.js");
   extjs_load(hq, "static/app/idnode.js");
@@ -275,86 +271,6 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 tvheadend_version);
 
   http_output_html(hc);
-  return 0;
-}
-
-/**
- *
- */
-static int
-extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  dtable_t *dt;
-  htsmsg_t *out = NULL, *in, *array;
-
-  const char *tablename = http_arg_get(&hc->hc_req_args, "table");
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-
-  if(op == NULL)
-    return 400;
-
-  if(tablename == NULL || (dt = dtable_find(tablename)) == NULL)
-    return 404;
-  
-  if(http_access_verify(hc, dt->dt_dtc->dtc_read_access))
-    return HTTP_STATUS_UNAUTHORIZED;
-
-  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
-
-  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
-
-  if(!strcmp(op, "create")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    out = dtable_record_create(dt);
-
-  } else if(!strcmp(op, "get")) {
-    array = dtable_record_get_all(dt);
-
-    out = htsmsg_create_map();
-    htsmsg_add_msg(out, "entries", array);
-
-  } else if(!strcmp(op, "update")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    if(in == NULL)
-      goto bad;
-
-    dtable_record_update_by_array(dt, in);
-
-  } else if(!strcmp(op, "delete")) {
-    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
-      goto noaccess;
-
-    if(in == NULL)
-      goto bad;
-
-    dtable_record_delete_by_array(dt, in);
-
-  } else {
-  bad:
-    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-    return HTTP_STATUS_BAD_REQUEST;
-
-  noaccess:
-    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
-
-  if(in != NULL)
-    htsmsg_destroy(in);
-
-  if(out == NULL)
-    out = htsmsg_create_map();
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -544,253 +460,6 @@ extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
-extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array, *m;
-  epg_query_result_t eqr;
-  epg_broadcast_t *e;
-  epg_episode_t *ee = NULL;
-  epg_genre_t *eg = NULL, genre;
-  channel_t *ch;
-  int start = 0, end, limit, i;
-  const char *s;
-  char buf[100];
-  const char *channel = http_arg_get(&hc->hc_req_args, "channel");
-  const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
-  const char *title   = http_arg_get(&hc->hc_req_args, "title");
-  const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
-
-  int min_duration;
-  int max_duration;
-
-  if(channel && !channel[0]) channel = NULL;
-  if(tag     && !tag[0])     tag = NULL;
-
-  if((s = http_arg_get(&hc->hc_req_args, "minduration")) != NULL)
-    min_duration = atoi(s);
-  else
-    min_duration = 0;
-
-  if((s = http_arg_get(&hc->hc_req_args, "maxduration")) != NULL)
-    max_duration = atoi(s);
-  else
-    max_duration = INT_MAX;
-
-  if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
-    start = atoi(s);
-
-  if((s = http_arg_get(&hc->hc_req_args, "limit")) != NULL)
-    limit = atoi(s);
-  else
-    limit = 20; /* XXX */
-
-  if ((s = http_arg_get(&hc->hc_req_args, "content_type"))) {
-    genre.code = atoi(s) * 16;
-    eg = &genre;
-  }
-
-  out = htsmsg_create_map();
-  array = htsmsg_create_list();
-
-  pthread_mutex_lock(&global_lock);
-
-  epg_query(&eqr, channel, tag, eg, title, lang, min_duration, max_duration);
-
-  epg_query_sort(&eqr);
-
-  htsmsg_add_u32(out, "totalCount", eqr.eqr_entries);
-
-
-  start = MIN(start, eqr.eqr_entries);
-  end = MIN(start + limit, eqr.eqr_entries);
-
-  for(i = start; i < end; i++) {
-    e  = eqr.eqr_array[i];
-    ee = e->episode;
-    ch = e->channel;
-    if (!ch||!ee) continue;
-
-    m = htsmsg_create_map();
-
-    htsmsg_add_str(m, "channel", channel_get_name(ch));
-    htsmsg_add_u32(m, "channelid", channel_get_id(ch));
-    if(ch->ch_icon != NULL)
-      htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
-
-    if((s = epg_episode_get_title(ee, lang)))
-      htsmsg_add_str(m, "title", s);
-    if((s = epg_episode_get_subtitle(ee, lang)))
-      htsmsg_add_str(m, "subtitle", s);
-
-    if((s = epg_broadcast_get_description(e, lang)))
-      htsmsg_add_str(m, "description", s);
-    else if((s = epg_broadcast_get_summary(e, lang)))
-      htsmsg_add_str(m, "description", s);
-
-    if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".",
-                                  "Episode %d", "/%d"))
-      htsmsg_add_str(m, "episode", buf);
-
-    htsmsg_add_u32(m, "id", e->id);
-    htsmsg_add_u32(m, "start", e->start);
-    htsmsg_add_u32(m, "end", e->stop);
-    htsmsg_add_u32(m, "duration", e->stop - e->start);
-    if(ee->star_rating)
-    	htsmsg_add_u32(m, "starrating", ee->star_rating);
-    if(ee->age_rating)
-    	htsmsg_add_u32(m, "agerating", ee->age_rating);
-
-    if(e->serieslink)
-      htsmsg_add_str(m, "serieslink", e->serieslink->uri);
-    
-    if((eg = LIST_FIRST(&ee->genre))) {
-      htsmsg_add_u32(m, "content_type", eg->code / 16);
-    }
-
-    dvr_entry_t *de;
-    if((de = dvr_entry_find_by_event(e)) != NULL)
-      htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
-
-    htsmsg_add_msg(array, NULL, m);
-  }
-
-  epg_query_free(&eqr);
-
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_add_msg(out, "entries", array);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-static int
-extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array, *m;
-  epg_broadcast_t *e, *ebc;
-  epg_episode_t *ee, *ee2;
-  channel_t *ch;
-  uint32_t count = 0;
-  const char *s;
-  char buf[100];
-
-  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
-  const char *id    = http_arg_get(&hc->hc_req_args, "id");
-  const char *type  = http_arg_get(&hc->hc_req_args, "type");
-
-  out = htsmsg_create_map();
-  array = htsmsg_create_list();
-
-  pthread_mutex_lock(&global_lock);
-  if ( id && type ) {
-    e = epg_broadcast_find_by_id(atoi(id), NULL);
-    if ( e && e->episode ) {
-      ee = e->episode;
-
-      /* Alternative broadcasts */
-      if (!strcmp(type, "alternative")) {
-        LIST_FOREACH(ebc, &ee->broadcasts, ep_link) {
-          ch = ebc->channel;
-          if ( !ch ) continue; // skip something not viewable
-          if ( ebc == e ) continue; // skip self
-          count++;
-          m = htsmsg_create_map();
-          htsmsg_add_u32(m, "id", ebc->id);
-          htsmsg_add_str(m, "channel", channel_get_name(ch));
-          if (ch->ch_icon)
-            htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
-          htsmsg_add_u32(m, "start", ebc->start);
-          htsmsg_add_msg(array, NULL, m);
-        }
-      
-      /* Related */
-      } else if (!strcmp(type, "related")) {
-        if (ee->brand) {
-          LIST_FOREACH(ee2, &ee->brand->episodes, blink) {
-            if (ee2 == ee) continue;
-            if (!ee2->title) continue;
-            count++;
-            m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->uri);
-            if ((s = epg_episode_get_title(ee2, lang)))
-              htsmsg_add_str(m, "title", s);
-            if ((s = epg_episode_get_subtitle(ee2, lang)))
-              htsmsg_add_str(m, "subtitle", s);
-            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d",
-                                          ".", "Episode %d", "/%d"))
-              htsmsg_add_str(m, "episode", buf);
-            htsmsg_add_msg(array, NULL, m);
-          }
-        } else if (ee->season) {
-          LIST_FOREACH(ee2, &ee->season->episodes, slink) {
-            if (ee2 == ee) continue;
-            if (!ee2->title) continue;
-            count++;
-            m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->uri);
-            if ((s = epg_episode_get_title(ee2, lang)))
-              htsmsg_add_str(m, "title", s);
-            if ((s = epg_episode_get_subtitle(ee2, lang)))
-              htsmsg_add_str(m, "subtitle", s);
-            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d",
-                                          ".", "Episode %d", "/%d"))
-              htsmsg_add_str(m, "episode", buf);
-            htsmsg_add_msg(array, NULL, m);
-          }
-        }
-      }
-    }
-  }
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_add_u32(out, "totalCount", count);
-  htsmsg_add_msg(out, "entries", array);
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-/**
- *
- */
-static int
-extjs_epgobject(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
-  htsmsg_t *out, *array;
-
-  if(op == NULL)
-    return 400;
-
-  if (!strcmp(op, "brandList")) {
-    out   = htsmsg_create_map();
-    pthread_mutex_lock(&global_lock);
-    array = epg_brand_list();
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_add_msg(out, "entries", array);
-
-  } else {
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-
-  return 0;
-}
-
-/**
- *
- */
-static int
 extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -816,6 +485,10 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     /* Misc */
     pthread_mutex_lock(&global_lock);
     m = config_get_all();
+    if (!m) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
 
     /* Time */
     htsmsg_add_u32(m, "tvhtime_update_enabled", tvhtime_update_enabled);
@@ -829,7 +502,6 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_unlock(&global_lock);
 
-    if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
   /* Save settings */
@@ -842,6 +514,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "piconpath")))
+      save |= config_set_picon_path(str);
     if (save)
       config_save();
 
@@ -906,6 +580,10 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
     /* Get config */
     pthread_mutex_lock(&tvhlog_mutex);
     m = htsmsg_create_map();
+    if (!m) {
+      pthread_mutex_unlock(&tvhlog_mutex);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
     htsmsg_add_u32(m, "tvhlog_level",      tvhlog_level);
     htsmsg_add_u32(m, "tvhlog_trace_on",   tvhlog_level > LOG_DEBUG);
     tvhlog_get_trace(str, sizeof(str));
@@ -918,7 +596,6 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
                    tvhlog_options & TVHLOG_OPT_DBG_SYSLOG);
     pthread_mutex_unlock(&tvhlog_mutex);
     
-    if (!m) return HTTP_STATUS_BAD_REQUEST;
     out = json_single_record(m, "config");
 
   /* Save settings */
@@ -1060,11 +737,7 @@ extjs_start(void)
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
   http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
-  http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
-  http_path_add("/epg",              NULL, extjs_epg,              ACCESS_WEB_INTERFACE);
-  http_path_add("/epgrelated",       NULL, extjs_epgrelated,       ACCESS_WEB_INTERFACE);
-  http_path_add("/epgobject",        NULL, extjs_epgobject,        ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
 #if ENABLE_TIMESHIFT

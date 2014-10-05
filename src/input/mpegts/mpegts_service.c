@@ -24,6 +24,7 @@
 #include "input.h"
 #include "settings.h"
 #include "dvb_charset.h"
+#include "config.h"
 
 /* **************************************************************************
  * Class definition
@@ -394,6 +395,55 @@ mpegts_service_provider_name ( service_t *s )
   return ((mpegts_service_t*)s)->s_dvb_provider;
 }
 
+static const char *
+mpegts_service_channel_icon ( service_t *s )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)s;
+
+  /* DVB? */
+#if ENABLE_MPEGTS_DVB
+  extern const idclass_t dvb_mux_class;
+  if (ms->s_dvb_mux &&
+      idnode_is_instance(&ms->s_dvb_mux->mm_id, &dvb_mux_class)) {
+    int32_t hash = 0;
+    static __thread char buf[128];
+    dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
+    char dir;
+    int pos;
+
+    switch ( mmd->lm_tuning.dmc_fe_type) {
+      case DVB_TYPE_S:
+        if (dvb_network_get_orbital_pos(mmd->mm_network, &pos, &dir) < 0)
+          return NULL;
+        hash = (dir == 'E' ? pos : 0xFFFF - pos) << 16;
+        break;
+      case DVB_TYPE_C:
+        hash = 0xFFFF0000;
+        break;
+      case DVB_TYPE_T:
+        hash = 0xEEEE0000;
+        break;
+      case DVB_TYPE_ATSC:
+        hash = 0xDDDD0000;
+        break;
+      default:
+        return NULL;
+    }
+
+    snprintf(buf, sizeof(buf),
+             "picon://1_0_%X_%X_%X_%X_%X_0_0_0.png",
+             ms->s_dvb_servicetype,
+             ms->s_dvb_service_id,
+             ms->s_dvb_mux->mm_tsid,
+             ms->s_dvb_mux->mm_onid,
+             hash);
+    return buf;
+  }
+#endif
+
+  return NULL;
+}
+
 void
 mpegts_service_delete ( service_t *t, int delconf )
 {
@@ -410,6 +460,7 @@ mpegts_service_delete ( service_t *t, int delconf )
   /* Free memory */
   free(ms->s_dvb_svcname);
   free(ms->s_dvb_provider);
+  free(ms->s_dvb_cridauth);
   free(ms->s_dvb_charset);
   LIST_REMOVE(ms, s_dvb_mux_link);
   sbuf_free(&ms->s_tsbuf);
@@ -459,6 +510,7 @@ mpegts_service_create0
   s->s_channel_number = mpegts_service_channel_number;
   s->s_channel_name   = mpegts_service_channel_name;
   s->s_provider_name  = mpegts_service_provider_name;
+  s->s_channel_icon   = mpegts_service_channel_icon;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);

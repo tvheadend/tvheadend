@@ -10,6 +10,10 @@ Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
     expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
 }));
 
+tvheadend.regexEscape = function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 /**
  * Displays a help popup window
  */
@@ -313,6 +317,8 @@ function accessUpdate(o) {
 
     if ('username' in o)
       tvheadend.rootTabPanel.setLogin(o.username);
+    if ('address' in o)
+      tvheadend.rootTabPanel.setAddress(o.address);
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
@@ -387,24 +393,8 @@ function accessUpdate(o) {
         cp.add(tsdvr);
 
         /* CSA */
-        if (tvheadend.capabilities.indexOf('cwc')   !== -1 ||
-            tvheadend.capabilities.indexOf('capmt') !== -1) {
-
-            var csa = new Ext.TabPanel({
-                activeTab: 0,
-                autoScroll: true,
-                title: 'CSA',
-                iconCls: 'key',
-                items: []
-            });
-
-            if (tvheadend.capabilities.indexOf('cwc')   !== -1)
-                tvheadend.cwceditor(csa);
-            if (tvheadend.capabilities.indexOf('capmt') !== -1)
-                tvheadend.capmteditor(csa);
-                
-            cp.add(csa);
-        }
+        if (tvheadend.capabilities.indexOf('caclient') !== -1)
+            tvheadend.caclient(cp, null);
 
         /* Stream Config */
         var stream = new Ext.TabPanel({
@@ -539,6 +529,10 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         var t = fly.child('span.x-tab-strip-login', true);
         Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
         Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
+    },
+
+    setAddress: function(addr) {
+        Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
     },
 
     onLoginCmdClicked: function(e) {

@@ -18,6 +18,7 @@ ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 OPTIONS=(
   "cwc:yes"
   "capmt:yes"
+  "constcw:yes"
   "v4l:no"
   "linuxdvb:yes"
   "satip_client:yes"
@@ -315,7 +316,7 @@ fi
 #
 # libdvbcsa, tvhcsa
 #
-if enabled cwc || enabled capmt; then
+if enabled cwc || enabled capmt || enabled constcw; then
   enable tvhcsa
   if enabled dvbcsa; then
     (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\

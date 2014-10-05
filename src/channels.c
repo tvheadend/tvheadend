@@ -29,12 +29,13 @@
 #include <string.h>
 
 #include "settings.h"
+#include "config.h"
 
 #include "tvheadend.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "channels.h"
-#include "dtable.h"
+#include "access.h"
 #include "notify.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
@@ -166,35 +167,32 @@ channel_class_tags_set ( void *obj, const void *p )
 static void
 channel_class_icon_notify ( void *obj )
 {
-  channel_t *ch = obj;
-  if (ch->ch_icon)
-    imagecache_get_id(ch->ch_icon);
+  (void)channel_get_icon(obj);
 }
 
 static const void *
-channel_class_get_imagecache ( void *obj )
+channel_class_get_icon ( void *obj )
 {
-  static char buf[512], *r;
-  uint32_t id;
-  channel_t *ch = obj;
-
-  if (!ch->ch_icon) {
-    r = NULL;
-  } else if ((id = imagecache_get_id(ch->ch_icon))) {
-    snprintf(buf, sizeof(buf), "imagecache/%d", id);
-    r = buf;
-  } else {
-    strncpy(buf, ch->ch_icon, sizeof(buf));
-    r = buf;
-  }
-
-  return &r;
+  static const char *s;
+  s = channel_get_icon(obj);
+  return &s;
 }
 
 static const char *
 channel_class_get_title ( idnode_t *self )
 {
   return channel_get_name((channel_t*)self);
+}
+
+/* exported for others */
+htsmsg_t *
+channel_class_get_list(void *o)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "channel/list");
+  htsmsg_add_str(m, "event", "channel");
+  return m;
 }
 
 static const void *
@@ -252,7 +250,7 @@ channel_class_epggrab_set ( void *o, const void *v )
   for (ecl = LIST_FIRST(&ch->ch_epggrab); ecl != NULL; ecl = n) {
     n = LIST_NEXT(ecl, ecl_chn_link);
     if (ecl->ecl_mark) {
-      epggrab_channel_link_delete(ecl);
+      epggrab_channel_link_delete(ecl, 1);
       save = 1;
     }
   }
@@ -306,7 +304,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_STR,
       .id       = "icon",
-      .name     = "Icon",
+      .name     = "User Icon",
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
     },
@@ -314,7 +312,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = "Icon URL",
-      .get      = channel_class_get_imagecache,
+      .get      = channel_class_get_icon,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
@@ -375,6 +373,8 @@ channel_t *
 channel_find_by_name ( const char *name )
 {
   channel_t *ch;
+  if (name == NULL)
+    return NULL;
   CHANNEL_FOREACH(ch)
     if (!strcmp(channel_get_name(ch), name))
       break;
@@ -391,11 +391,23 @@ channel_find_by_id ( uint32_t i )
 }
 
 channel_t *
-channel_find_by_number ( int no )
+channel_find_by_number ( const char *no )
 {
   channel_t *ch;
+  uint32_t maj, min = 0;
+  uint64_t cno;
+  char *s;
+
+  if (no == NULL)
+    return NULL;
+  if ((s = strchr(no, '.')) != NULL) {
+    *s = '\0';
+    min = atoi(s + 1);
+  }
+  maj = atoi(no);
+  cno = (uint64_t)maj * CHANNEL_SPLIT + (uint64_t)min;
   CHANNEL_FOREACH(ch)
-    if(channel_get_number(ch) == no)
+    if(channel_get_number(ch) == cno)
       break;
   return ch;
 }
@@ -520,6 +532,53 @@ channel_get_number ( channel_t *ch )
   return 0;
 }
 
+const char *
+channel_get_icon ( channel_t *ch )
+{
+  static __thread char buf[512], buf2[512];
+  channel_service_mapping_t *csm;
+  const char *picon = config_get_picon_path(),
+             *icon  = ch->ch_icon;
+  uint32_t id;
+
+  /* No user icon - try access from services */
+  if (!icon && picon) {
+    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+      if (!(icon = service_get_channel_icon(csm->csm_svc))) continue;
+      if (strncmp(icon, "picon://", 8)) {
+        icon = NULL;
+        continue;
+      }
+      sprintf(buf2, "%s/%s", picon, icon+8);
+      ch->ch_icon = strdup(icon);
+      channel_save(ch);
+      idnode_notify_simple(&ch->ch_id);
+    }
+  }
+
+  /* Nothing */
+  if (!icon || !*icon)
+    return NULL;
+
+  /* Picon? */
+  if (!strncmp(icon, "picon://", 8)) {
+    if (!picon) return NULL;
+    sprintf(buf2, "%s/%s", picon, icon+8);
+    icon = buf2;
+  }
+
+  /* Lookup imagecache ID */
+  if ((id = imagecache_get_id(icon))) {
+    snprintf(buf, sizeof(buf), "imagecache/%d", id);
+
+  } else {
+    strncpy(buf, icon, sizeof(buf));
+    buf[sizeof(buf)-1] = '\0';
+  }
+
+  return buf;
+}
+
 /* **************************************************************************
  * Creation/Deletion
  * *************************************************************************/
@@ -530,6 +589,12 @@ channel_create0
     const char *name )
 {
   lock_assert(&global_lock);
+
+  LIST_INIT(&ch->ch_services);
+  LIST_INIT(&ch->ch_subscriptions);
+  LIST_INIT(&ch->ch_epggrab);
+  LIST_INIT(&ch->ch_autorecs);
+  LIST_INIT(&ch->ch_timerecs);
 
   if (idnode_insert(&ch->ch_id, uuid, idc, IDNODE_SHORT_UUID)) {
     if (uuid)
@@ -578,6 +643,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* DVR */
   autorec_destroy_by_channel(ch, delconf);
+  timerec_destroy_by_channel(ch, delconf);
   dvr_destroy_by_channel(ch, delconf);
 
   /* Services */
@@ -900,6 +966,9 @@ channel_tag_t *
 channel_tag_find_by_name(const char *name, int create)
 {
   channel_tag_t *ct;
+
+  if (name == NULL)
+    return NULL;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(!strcasecmp(ct->ct_name, name))

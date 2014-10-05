@@ -660,6 +660,8 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
         mt->mt_subscribed = 1;
         pthread_mutex_unlock(&mm->mm_tables_lock);
         mi->mi_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+      } else {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
       }
     } else if (mt->mt_defer_cmd == MT_DEFER_CLOSE_PID) {
       mt->mt_defer_cmd = 0;
@@ -667,6 +669,8 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
         mt->mt_subscribed = 0;
         pthread_mutex_unlock(&mm->mm_tables_lock);
         mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+      } else {
+        pthread_mutex_unlock(&mm->mm_tables_lock);
       }
     } else {
       pthread_mutex_unlock(&mm->mm_tables_lock);

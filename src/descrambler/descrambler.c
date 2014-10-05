@@ -18,11 +18,9 @@
 
 #include "tvheadend.h"
 #include "descrambler.h"
-#include "cwc.h"
-#include "capmt.h"
+#include "caclient.h"
 #include "ffdecsa/FFdecsa.h"
 #include "input.h"
-#include "tvhcsa.h"
 
 struct caid_tab {
   const char *name;
@@ -81,26 +79,16 @@ static struct caid_tab caidnametab[] = {
 void
 descrambler_init ( void )
 {
-#if ENABLE_CWC
-  cwc_init();
-#endif
-#if ENABLE_CAPMT
-  capmt_init();
-#endif
 #if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
   ffdecsa_init();
 #endif
+  caclient_init();
 }
 
 void
 descrambler_done ( void )
 {
-#if ENABLE_CAPMT
-  capmt_done();
-#endif
-#if ENABLE_CWC
-  cwc_done();
-#endif
+  caclient_done();
 }
 
 /*
@@ -122,18 +110,14 @@ descrambler_service_start ( service_t *t )
   if (!st)
     return;
 
-#if ENABLE_CWC
-  cwc_service_start(t);
-#endif
-#if ENABLE_CAPMT
-  capmt_service_start(t);
-#endif
+  ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
     sbuf_init(&dr->dr_buf);
     dr->dr_key_index = 0xff;
-    dr->dr_last_descramble = dispatch_clock;
+    tvhcsa_init(&dr->dr_csa);
   }
+  caclient_start(t);
 }
 
 void
@@ -146,6 +130,7 @@ descrambler_service_stop ( service_t *t )
     td->td_stop(td);
   t->s_descramble = NULL;
   if (dr) {
+    tvhcsa_destroy(&dr->dr_csa);
     sbuf_free(&dr->dr_buf);
     free(dr);
   }
@@ -162,6 +147,17 @@ descrambler_caid_changed ( service_t *t )
   }
 }
 
+int
+descrambler_resolved( service_t *t, th_descrambler_t *ignore )
+{
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link)
+    if (td != ignore && td->td_keystate == DS_RESOLVED)
+      return 1;
+  return 0;
+}
+
 void
 descrambler_keys ( th_descrambler_t *td, int type,
                    const uint8_t *even, const uint8_t *odd )
@@ -169,7 +165,6 @@ descrambler_keys ( th_descrambler_t *td, int type,
   service_t *t = td->td_service;
   th_descrambler_runtime_t *dr;
   th_descrambler_t *td2;
-  tvhcsa_t *csa = td->td_csa;
   int i, j = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
@@ -177,7 +172,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
     return;
   }
 
-  if (tvhcsa_set_type(td->td_csa, type) < 0)
+  if (tvhcsa_set_type(&dr->dr_csa, type) < 0)
     return;
 
   pthread_mutex_lock(&t->s_stream_mutex);
@@ -191,21 +186,23 @@ descrambler_keys ( th_descrambler_t *td, int type,
                         ((mpegts_service_t *)td2->td_service)->s_dvb_svcname,
                         td->td_nicename);
       td->td_keystate = DS_IDLE;
+      if (td->td_ecm_idle)
+        td->td_ecm_idle(td);
       goto fin;
     }
 
-  for (i = 0; i < csa->csa_keylen; i++)
+  for (i = 0; i < dr->dr_csa.csa_keylen; i++)
     if (even[i]) {
       j++;
-      tvhcsa_set_key_even(csa, even);
+      tvhcsa_set_key_even(&dr->dr_csa, even);
       dr->dr_key_valid |= 0x40;
       dr->dr_key_timestamp[0] = dispatch_clock;
       break;
     }
-  for (i = 0; i < csa->csa_keylen; i++)
+  for (i = 0; i < dr->dr_csa.csa_keylen; i++)
     if (odd[i]) {
       j++;
-      tvhcsa_set_key_odd(csa, odd);
+      tvhcsa_set_key_odd(&dr->dr_csa, odd);
       dr->dr_key_valid |= 0x80;
       dr->dr_key_timestamp[1] = dispatch_clock;
       break;
@@ -217,7 +214,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
                         "Obtained keys from %s for service \"%s\"",
                         td->td_nicename,
                         ((mpegts_service_t *)t)->s_dvb_svcname);
-    if (csa->csa_keylen == 8) {
+    if (dr->dr_csa.csa_keylen == 8) {
       tvhtrace("descrambler", "Obtained keys "
                "%02X%02X%02X%02X%02X%02X%02X%02X:%02X%02X%02X%02X%02X%02X%02X%02X"
                " from %s for service \"%s\"",
@@ -225,7 +222,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
                odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
                td->td_nicename,
                ((mpegts_service_t *)t)->s_dvb_svcname);
-    } else if (csa->csa_keylen == 16) {
+    } else if (dr->dr_csa.csa_keylen == 16) {
       tvhtrace("descrambler", "Obtained keys "
                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X:"
                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
@@ -260,6 +257,7 @@ descrambler_flush_table_data( service_t *t )
   mpegts_mux_t *mux = ms->s_dvb_mux;
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
 
   if (mux == NULL)
     return;
@@ -268,11 +266,12 @@ descrambler_flush_table_data( service_t *t )
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
     if (dt->table == NULL || dt->table->mt_service != ms)
       continue;
-    TAILQ_FOREACH(ds, &dt->sections, link) {
-      free(ds->last_data);
-      ds->last_data = NULL;
-      ds->last_data_len = 0;
-    }
+    TAILQ_FOREACH(ds, &dt->sections, link)
+      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+        LIST_REMOVE(des, link);
+        free(des->last_data);
+        free(des);
+      }
   }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
 }
@@ -358,11 +357,11 @@ descrambler_descramble ( service_t *t,
             key_update(dr, ki);
           }
         }
-        td->td_csa->csa_descramble(td->td_csa,
-                                   (mpegts_service_t *)td->td_service,
-                                   tsb2);
-        dr->dr_last_descramble = dispatch_clock;
+        dr->dr_csa.csa_descramble(&dr->dr_csa,
+                                  (mpegts_service_t *)td->td_service,
+                                  tsb2);
       }
+      service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
     }
     ki = tsb[3];
@@ -392,10 +391,10 @@ descrambler_descramble ( service_t *t,
         key_update(dr, ki);
       }
     }
-    td->td_csa->csa_descramble(td->td_csa,
-                               (mpegts_service_t *)td->td_service,
-                               tsb);
-    dr->dr_last_descramble = dispatch_clock;
+    dr->dr_csa.csa_descramble(&dr->dr_csa,
+                              (mpegts_service_t *)td->td_service,
+                              tsb);
+    service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
     return 1;
 next:
     flush_data = 1;
@@ -445,12 +444,13 @@ next2:
         }
       }
       sbuf_append(&dr->dr_buf, tsb, 188);
+      service_set_streaming_status_flags(t, TSS_NO_ACCESS);
     }
+  } else {
+    service_set_streaming_status_flags(t, TSS_NO_ACCESS);
   }
   if (flush_data)
     descrambler_flush_table_data(t);
-  if (dr->dr_last_descramble + 25 < dispatch_clock)
-    return -1;
   if (count && count == failed)
     return -1;
   return count;
@@ -462,19 +462,30 @@ descrambler_table_callback
 {
   descrambler_table_t *dt = mt->mt_opaque;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
   th_descrambler_runtime_t *dr;
 
+  if (len < 6)
+    return 0;
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
-  TAILQ_FOREACH(ds, &dt->sections, link)
-    if (ds->last_data == NULL || len != ds->last_data_len ||
-        memcmp(ds->last_data, ptr, len)) {
-      free(ds->last_data);
-      ds->last_data = malloc(len);
-      if (ds->last_data) {
-        memcpy(ds->last_data, ptr, len);
-        ds->last_data_len = len;
+  TAILQ_FOREACH(ds, &dt->sections, link) {
+    LIST_FOREACH(des, &ds->ecmsecs, link)
+      if (des->number == ptr[4])
+        break;
+    if (des == NULL) {
+      des = calloc(1, sizeof(*des));
+      des->number = ptr[4];
+      LIST_INSERT_HEAD(&ds->ecmsecs, des, link);
+    }
+    if (des->last_data == NULL || len != des->last_data_len ||
+        memcmp(des->last_data, ptr, len)) {
+      free(des->last_data);
+      des->last_data = malloc(len);
+      if (des->last_data) {
+        memcpy(des->last_data, ptr, len);
+        des->last_data_len = len;
       } else {
-        ds->last_data_len = 0;
+        des->last_data_len = 0;
       }
       ds->callback(ds->opaque, mt->mt_pid, ptr, len);
       if ((mt->mt_flags & MT_FAST) != 0) { /* ECM */
@@ -484,14 +495,15 @@ descrambler_table_callback
           dr = t->s_descramble;
           if (dr) {
             dr->dr_ecm_start = dispatch_clock;
-            tvhtrace("descrambler", "ECM message (len %d, pid %d) for service \"%s\"",
-                     len, mt->mt_pid, t->s_dvb_svcname);
+            tvhtrace("descrambler", "ECM message (section %d, len %d, pid %d) for service \"%s\"",
+                     des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
         } else
-          tvhtrace("descrambler", "Unknown fast table message (len %d, pid %d)",
-                   len, mt->mt_pid);
+          tvhtrace("descrambler", "Unknown fast table message (section %d, len %d, pid %d)",
+                   des->number, len, mt->mt_pid);
       }
     }
+  }
   pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
   return 0;
 }
@@ -506,6 +518,8 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   int flags;
 
   if (mux == NULL)
+    return 0;
+  if (mux->mm_descrambler_flush)
     return 0;
   flags  = pid >> 16;
   pid   &= 0x1fff;
@@ -531,6 +545,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds = calloc(1, sizeof(*ds));
   ds->callback    = callback;
   ds->opaque      = opaque;
+  LIST_INIT(&ds->ecmsecs);
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
   tvhtrace("descrambler", "mux %p open pid %04X (%i) (flags 0x%04x)", mux, pid, pid, flags);
   return 1;
@@ -554,6 +569,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
 
   if (mux == NULL)
     return 0;
@@ -564,13 +580,17 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
         if (ds->opaque == opaque) {
           TAILQ_REMOVE(&dt->sections, ds, link);
           ds->callback(ds->opaque, -1, NULL, 0);
-          free(ds->last_data);
-          free(ds);
+          while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+            LIST_REMOVE(des, link);
+            free(des->last_data);
+            free(des);
+          }
           if (TAILQ_FIRST(&dt->sections) == NULL) {
             TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
             mpegts_table_destroy(dt->table);
             free(dt);
           }
+          free(ds);
           tvhtrace("descrambler", "mux %p close pid %04X (%i)", mux, pid, pid);
           return 1;
         }
@@ -596,20 +616,24 @@ descrambler_flush_tables( mpegts_mux_t *mux )
 {
   descrambler_table_t *dt;
   descrambler_section_t *ds;
+  descrambler_ecmsec_t *des;
   descrambler_emm_t *emm;
 
   if (mux == NULL)
     return;
   tvhtrace("descrambler", "mux %p - flush tables", mux);
-#if ENABLE_CWC
-  cwc_caid_update(mux, 0, 0, -1);
-#endif
+  caclient_caid_update(mux, 0, 0, -1);
   pthread_mutex_lock(&mux->mm_descrambler_lock);
+  mux->mm_descrambler_flush = 1;
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
       ds->callback(ds->opaque, -1, NULL, 0);
-      free(ds->last_data);
+      while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+        LIST_REMOVE(des, link);
+        free(des->last_data);
+        free(des);
+      }
       free(ds);
     }
     TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
@@ -648,9 +672,7 @@ descrambler_cat_data( mpegts_mux_t *mux, const uint8_t *data, int len )
       pid  = ((data[2] << 8) | data[3]) & 0x1fff;
       if (pid == 0)
         goto next;
-#if ENABLE_CWC
-      cwc_caid_update(mux, caid, pid, 1);
-#endif
+      caclient_caid_update(mux, caid, pid, 1);
       pthread_mutex_lock(&mux->mm_descrambler_lock);
       TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link)
         if (emm->caid == caid) {
@@ -682,11 +704,8 @@ next:
     }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
   while ((emm = TAILQ_FIRST(&removing)) != NULL) {
-    if (emm->pid != EMM_PID_UNKNOWN) {
-#if ENABLE_CWC
-      cwc_caid_update(mux, emm->caid, emm->pid, 0);
-#endif
-    }
+    if (emm->pid != EMM_PID_UNKNOWN)
+      caclient_caid_update(mux, emm->caid, emm->pid, 0);
     TAILQ_REMOVE(&removing, emm, link);
     free(emm);
   }
@@ -703,8 +722,11 @@ descrambler_open_emm( mpegts_mux_t *mux, void *opaque, int caid,
   if (mux == NULL)
     return 0;
   pthread_mutex_lock(&mux->mm_descrambler_lock);
+  if (mux->mm_descrambler_flush)
+    goto unlock;
   TAILQ_FOREACH(emm, &mux->mm_descrambler_emms, link) {
     if (emm->caid == caid && emm->opaque == opaque) {
+unlock:
       pthread_mutex_unlock(&mux->mm_descrambler_lock);
       return 0;
     }
