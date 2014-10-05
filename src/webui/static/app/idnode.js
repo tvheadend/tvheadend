@@ -297,13 +297,13 @@ tvheadend.IdNodeField = function(conf)
                 var t = [];
                 var d = v.push ? v : [v];
                 for (var i = 0; i < d.length; i++) {
-                    var r = st.find('key', d[i]);
-                    if (r !== -1) {
-                        var nv = st.getAt(r).get('val');
+                    var r = st.getById(d[i]);
+                    if (r) {
+                        var nv = r.data.val;
                         if (nv)
                             t.push(nv);
                     } else {
-                      t.push(d[i]);
+                        t.push(d[i]);
                     }
                 }
                 t.sort();
