@@ -1067,7 +1067,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Missing argument 'eventId'");
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
+  if((e = epg_broadcast_find_by_id(eventId)) == NULL)
     return htsp_error("Event does not exist");
 
   return htsp_build_event(e, NULL, lang, 0, htsp);
@@ -1092,7 +1092,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
   if (!htsmsg_get_u32(in, "eventId", &u32))
-    if (!(e = epg_broadcast_find_by_id(u32, ch)))
+    if (!(e = epg_broadcast_find_by_id(u32)))
       return htsp_error("Event does not exist");
 
   /* Check access */
@@ -1306,7 +1306,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
   if(!htsmsg_get_u32(in, "eventId", &eventid))
-    e = epg_broadcast_find_by_id(eventid, ch);
+    e = epg_broadcast_find_by_id(eventid);
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))

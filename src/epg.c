@@ -1608,10 +1608,8 @@ epg_broadcast_t* epg_broadcast_find_by_time
   return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
 
-epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id, channel_t *ch )
+epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
 {
-  // Note: I have left channel_t param, just in case I decide to change
-  //       to use it for shorter search
   return (epg_broadcast_t*)epg_object_find_by_id(id, EPG_BROADCAST);
 }
 

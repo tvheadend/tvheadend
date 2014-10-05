@@ -474,7 +474,7 @@ api_epg_alternative
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
-  e = epg_broadcast_find_by_id(id, NULL);
+  e = epg_broadcast_find_by_id(id);
   if (e && e->episode)
     api_epg_episode_broadcasts(l, lang, e->episode, &entries, e);
   pthread_mutex_unlock(&global_lock);
@@ -501,7 +501,7 @@ api_epg_related
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
-  e = epg_broadcast_find_by_id(id, NULL);
+  e = epg_broadcast_find_by_id(id);
   ep = e ? e->episode : NULL;
   if (ep && ep->brand) {
     LIST_FOREACH(ep2, &ep->brand->episodes, blink) {

@@ -1406,7 +1406,7 @@ dvr_entry_class_broadcast_set(void *o, const void *v)
   epg_broadcast_t *bcast;
   if (!dvr_entry_is_editable(de))
     return 0;
-  bcast = epg_broadcast_find_by_id(id, de->de_channel);
+  bcast = epg_broadcast_find_by_id(id);
   if (bcast == NULL) {
     if (de->de_bcast) {
       de->de_bcast->putref((epg_object_t*)de->de_bcast);
@@ -1860,7 +1860,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_U32,
       .id       = "broadcast",
-      .name     = "Broadcast Type",
+      .name     = "Broadcast",
       .set      = dvr_entry_class_broadcast_set,
       .get      = dvr_entry_class_broadcast_get,
       .opts     = PO_RDONLY,

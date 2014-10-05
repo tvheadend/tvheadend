@@ -307,7 +307,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  if(remain == NULL || (e = epg_broadcast_find_by_id(atoi(remain), NULL)) == NULL) {
+  if(remain == NULL || (e = epg_broadcast_find_by_id(strtoll(remain, NULL, 10))) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
   }

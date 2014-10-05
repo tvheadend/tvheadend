@@ -451,7 +451,7 @@ epg_broadcast_t *epg_broadcast_find_by_time
   ( struct channel *ch, time_t start, time_t stop, 
     uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
-epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id, struct channel *ch );
+epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
 
 /* Mutators */
 int epg_broadcast_set_episode
