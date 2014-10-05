@@ -131,6 +131,10 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
   } else if ( !strcmp(*sect, "broadcasts") ) {
     if (epg_broadcast_deserialize(m, 1, &save)) stats->broadcasts.total++;
 
+  /* Global config */
+  } else if ( !strcmp(*sect, "config") ) {
+    if (epg_config_deserialize(m)) stats->config.total++;
+
   /* Unknown */
   } else {
     tvhlog(LOG_DEBUG, "epgdb", "malformed database section [%s]", *sect);
@@ -220,8 +224,17 @@ void epg_init ( void )
 
   free(sect);
 
+  if (!stats.config.total) {
+    htsmsg_t *m = htsmsg_create_map();
+    /* it's not correct, but at least something */
+    htsmsg_add_u32(m, "last_id", 64 * 1024 * 1024);
+    if (!epg_config_deserialize(m))
+      assert(0);
+  }
+
   /* Stats */
   tvhlog(LOG_INFO, "epgdb", "loaded v%d", ver);
+  tvhlog(LOG_INFO, "epgdb", "  config     %d", stats.config.total);
   tvhlog(LOG_INFO, "epgdb", "  channels   %d", stats.channels.total);
   tvhlog(LOG_INFO, "epgdb", "  brands     %d", stats.brands.total);
   tvhlog(LOG_INFO, "epgdb", "  seasons    %d", stats.seasons.total);
@@ -300,31 +313,32 @@ void epg_save ( void )
     return;
 
   memset(&stats, 0, sizeof(stats));
-  if ( _epg_write_sect(fd, "brands") ) return;
+  if ( _epg_write_sect(fd, "config") ) goto fin;
+  if (_epg_write(fd, epg_config_serialize())) goto fin;
+  if ( _epg_write_sect(fd, "brands") ) goto fin;
   RB_FOREACH(eo,  &epg_brands, uri_link) {
-    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) return;
+    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) goto fin;
     stats.brands.total++;
   }
-  if ( _epg_write_sect(fd, "seasons") ) return;
+  if ( _epg_write_sect(fd, "seasons") ) goto fin;
   RB_FOREACH(eo,  &epg_seasons, uri_link) {
-    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) return;
+    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) goto fin;
     stats.seasons.total++;
   }
-  if ( _epg_write_sect(fd, "episodes") ) return;
+  if ( _epg_write_sect(fd, "episodes") ) goto fin;
   RB_FOREACH(eo,  &epg_episodes, uri_link) {
-    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
+    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) goto fin;
     stats.episodes.total++;
   }
-  if ( _epg_write_sect(fd, "serieslinks") ) return;
+  if ( _epg_write_sect(fd, "serieslinks") ) goto fin;
   RB_FOREACH(eo, &epg_serieslinks, uri_link) {
-    if (_epg_write(fd, epg_serieslink_serialize((epg_serieslink_t*)eo)))
-      return;
+    if (_epg_write(fd, epg_serieslink_serialize((epg_serieslink_t*)eo))) goto fin;
     stats.seasons.total++;
   }
-  if ( _epg_write_sect(fd, "broadcasts") ) return;
+  if ( _epg_write_sect(fd, "broadcasts") ) goto fin;
   CHANNEL_FOREACH(ch) {
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-      if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
+      if (_epg_write(fd, epg_broadcast_serialize(ebc))) goto fin;
       stats.broadcasts.total++;
     }
   }
@@ -335,4 +349,7 @@ void epg_save ( void )
   tvhlog(LOG_INFO, "epgdb", "  seasons    %d", stats.seasons.total);
   tvhlog(LOG_INFO, "epgdb", "  episodes   %d", stats.episodes.total);
   tvhlog(LOG_INFO, "epgdb", "  broadcasts %d", stats.broadcasts.total);
+
+fin:
+  close(fd);
 }

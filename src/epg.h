@@ -104,7 +104,7 @@ typedef enum epg_object_type
 struct epg_object
 {
   RB_ENTRY(epg_object)    uri_link;   ///< Global URI link
-  LIST_ENTRY(epg_object)  id_link;    ///< Global (ID) link
+  RB_ENTRY(epg_object)    id_link;    ///< Global (ID) link
   LIST_ENTRY(epg_object)  un_link;    ///< Global unref'd link
   LIST_ENTRY(epg_object)  up_link;    ///< Global updated link
  
@@ -526,6 +526,12 @@ epg_broadcast_t *epg_broadcast_deserialize
 
 /* Unlink */
 void epg_channel_unlink ( struct channel *ch );
+
+/* ************************************************************************
+ * Global config
+ * ***********************************************************************/
+htsmsg_t        *epg_config_serialize ( void );
+int              epg_config_deserialize ( htsmsg_t *m );
 
 /* ************************************************************************
  * Querying

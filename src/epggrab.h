@@ -58,6 +58,7 @@ typedef struct epggrab_stats
   epggrab_stats_part_t seasons;
   epggrab_stats_part_t episodes;
   epggrab_stats_part_t broadcasts;
+  epggrab_stats_part_t config;
 } epggrab_stats_t;
 
 /* **************************************************************************
