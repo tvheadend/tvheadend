@@ -280,7 +280,6 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   hd->hd_override_type = strdup(dvb_type2str(type));
   tvhlog(LOG_INFO, "tvheadend","Using Network type : %s", hd->hd_override_type);
-  
 
   /* some sane defaults */
   hd->hd_fullmux_ok  = 1;
@@ -291,8 +290,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   hdhomerun_tuner = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, 0, NULL);
   {
     const char *deviceModel =  hdhomerun_device_get_model_str(hdhomerun_tuner);
-    if ( deviceModel != NULL )
-    {
+    if(deviceModel != NULL) {
       hd->hd_info.deviceModel = strdup(deviceModel);
     }
     hdhomerun_device_destroy(hdhomerun_tuner);
@@ -337,8 +335,6 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   htsmsg_destroy(conf);
 }
 
-
-
 static void
 tvhdhomerun_discovery_timer_cb(void *aux)
 {
@@ -348,7 +344,7 @@ tvhdhomerun_discovery_timer_cb(void *aux)
     return;
 
   int numDevices = hdhomerun_discover_find_devices_custom(0,
-                                                          HDHOMERUN_DEVICE_TYPE_TUNER,                                                    
+                                                          HDHOMERUN_DEVICE_TYPE_TUNER,
                                                           HDHOMERUN_DEVICE_ID_WILDCARD,
                                                           result_list,
                                                           MAX_HDHOMERUN_DEVICES);
