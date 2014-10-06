@@ -436,7 +436,7 @@ tvhlog_end ( void )
   pthread_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
   pthread_mutex_lock(&tvhlog_mutex);
-  while (!(msg = TAILQ_FIRST(&tvhlog_queue))) {
+  while ((msg = TAILQ_FIRST(&tvhlog_queue)) != NULL) {
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
     tvhlog_process(msg, tvhlog_options, &fp, tvhlog_path);
   }
@@ -447,4 +447,5 @@ tvhlog_end ( void )
   free(tvhlog_path);
   htsmsg_destroy(tvhlog_debug);
   htsmsg_destroy(tvhlog_trace);
+  closelog();
 }
