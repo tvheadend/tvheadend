@@ -260,7 +260,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * HTTP stream status callback
+ * HTTP subscription handling
  */
 static void
 http_stream_status ( void *opaque, htsmsg_t *m )
@@ -269,6 +269,18 @@ http_stream_status ( void *opaque, htsmsg_t *m )
   htsmsg_add_str(m, "type", "HTTP");
   if (hc->hc_username)
     htsmsg_add_str(m, "user", hc->hc_username);
+}
+
+static inline void *
+http_stream_preop ( http_connection_t *hc )
+{
+  return tcp_connection_launch(hc->hc_fd, http_stream_status, hc->hc_access);
+}
+
+static inline void
+http_stream_postop ( void *tcp_id )
+{
+  tcp_connection_land(tcp_id);
 }
 
 /**
@@ -288,13 +300,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
-  void *tcp_id;
-
-  tcp_id = tcp_connection_launch(hc->hc_fd, http_stream_status);
-  if (tcp_id == NULL)
-    return;
-
-  pthread_mutex_unlock(&global_lock);
 
   mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
@@ -416,10 +421,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     muxer_close(mux);
 
   muxer_destroy(mux);
-
-  pthread_mutex_lock(&global_lock);
-
-  tcp_connection_land(tcp_id);
 }
 
 
@@ -800,9 +801,14 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  void *tcp_id;
+  int res = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   cfg = dvr_config_find_by_name_default(NULL);
 
@@ -838,8 +844,12 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
     name = tvh_strdupa(service->s_nicename);
+    pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
+    pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
   }
 
   if(gh)
@@ -850,7 +860,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+  return res;
 }
 
 /**
@@ -868,9 +879,14 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   const char *name;
   char addrbuf[50];
   muxer_config_t muxcfg = { 0 };
+  void *tcp_id;
+  int res = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   streaming_queue_init(&sq, SMT_PACKET);
 
@@ -881,15 +897,21 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
                                    SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
                                    http_arg_get(&hc->hc_args, "User-Agent"), NULL);
-  if (!s)
-    return HTTP_STATUS_BAD_REQUEST;
-  name = tvh_strdupa(s->ths_title);
-  http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
-  subscription_unsubscribe(s);
+  if (s) {
+    name = tvh_strdupa(s->ths_title);
+    pthread_mutex_unlock(&global_lock);
+    http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
+  }
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+
+  return res;
 }
 #endif
 
@@ -914,9 +936,14 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  void *tcp_id;
+  int res = 0;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   cfg = dvr_config_find_by_name_default(NULL);
 
@@ -960,8 +987,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   if(s) {
     name = tvh_strdupa(channel_get_name(ch));
+    pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
+    pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
   }
 
   if(gh)
@@ -977,7 +1008,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+
+  return res;
 }
 
 

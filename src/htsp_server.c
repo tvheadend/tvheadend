@@ -2202,7 +2202,7 @@ struct {
 /**
  * Raise privs by field in message
  */
-static void
+static int
 htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 {
   const char *username;
@@ -2212,7 +2212,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   int privgain;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
-    return;
+    return 0;
 
   if(strcmp(htsp->htsp_username ?: "", username)) {
     tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
@@ -2223,7 +2223,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   }
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
-    return;
+    return 0;
 
   rights = access_get_hashed(username, digest, htsp->htsp_challenge,
 			     (struct sockaddr *)htsp->htsp_peer);
@@ -2237,6 +2237,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   access_destroy(htsp->htsp_granted_access);
   htsp->htsp_granted_access = rights;
+  return privgain;
 }
 
 /**
@@ -2281,6 +2282,18 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   return 0;
 }
 
+/*
+ * Status callback
+ */
+static void
+htsp_server_status ( void *opaque, htsmsg_t *m )
+{
+  htsp_connection_t *htsp = opaque;
+  htsmsg_add_str(m, "type", "HTSP");
+  if (htsp->htsp_username)
+    htsmsg_add_str(m, "user", htsp->htsp_username);
+}
+
 /**
  *
  */
@@ -2290,6 +2303,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   htsmsg_t *m = NULL, *reply;
   int r, i;
   const char *method;
+  void *tcp_id = NULL;;
 
   if(htsp_generate_challenge(htsp)) {
     tvhlog(LOG_ERR, "htsp", "%s: Unable to generate challenge",
@@ -2298,9 +2312,17 @@ htsp_read_loop(htsp_connection_t *htsp)
   }
 
   pthread_mutex_lock(&global_lock);
+
   htsp->htsp_granted_access = 
     access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
+
+  tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
+                                 htsp->htsp_granted_access);
+
   pthread_mutex_unlock(&global_lock);
+
+  if (tcp_id == NULL)
+    return 0;
 
   tvhlog(LOG_INFO, "htsp", "Got connection from %s", htsp->htsp_logname);
 
@@ -2312,37 +2334,46 @@ readmsg:
       return r;
 
     pthread_mutex_lock(&global_lock);
-    htsp_authenticate(htsp, m);
+    if (htsp_authenticate(htsp, m)) {
+      tcp_connection_land(tcp_id);
+      tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
+                                     htsp->htsp_granted_access);
+      if (tcp_id == NULL) {
+        htsmsg_destroy(m);
+        pthread_mutex_unlock(&global_lock);
+        return 1;
+      }
+    }
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
       tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
       for(i = 0; i < NUM_METHODS; i++) {
-	      if(!strcmp(method, htsp_methods[i].name)) {
+        if(!strcmp(method, htsp_methods[i].name)) {
 
-	        if((htsp->htsp_granted_access->aa_rights & htsp_methods[i].privmask) !=
-	           htsp_methods[i].privmask) {
+          if((htsp->htsp_granted_access->aa_rights &
+              htsp_methods[i].privmask) !=
+                htsp_methods[i].privmask) {
 
       	    pthread_mutex_unlock(&global_lock);
+            /* Classic authentication failed delay */
+            usleep(250000);
 
-	          /* Classic authentication failed delay */
-	          usleep(250000);
-	    
-	          reply = htsmsg_create_map();
-	          htsmsg_add_u32(reply, "noaccess", 1);
-	          htsp_reply(htsp, m, reply);
+            reply = htsmsg_create_map();
+            htsmsg_add_u32(reply, "noaccess", 1);
+            htsp_reply(htsp, m, reply);
 
-	          htsmsg_destroy(m);
-	          goto readmsg;
+            htsmsg_destroy(m);
+            goto readmsg;
 
-	        } else {
-	          reply = htsp_methods[i].fn(htsp, m);
-	        }
-	        break;
-	      }
+          } else {
+            reply = htsp_methods[i].fn(htsp, m);
+          }
+          break;
+        }
       }
 
       if(i == NUM_METHODS) {
-	      reply = htsp_error("Method not found");
+        reply = htsp_error("Method not found");
       }
 
     } else {
@@ -2356,6 +2387,10 @@ readmsg:
 
     htsmsg_destroy(m);
   }
+
+  pthread_mutex_lock(&global_lock);
+  tcp_connection_land(tcp_id);
+  pthread_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -2527,18 +2562,6 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 }
 
 /*
- * Status callback
- */
-static void
-htsp_server_status ( void *opaque, htsmsg_t *m )
-{
-  htsp_connection_t *htsp = opaque;
-  htsmsg_add_str(m, "type", "HTSP");
-  if (htsp->htsp_username)
-    htsmsg_add_str(m, "user", htsp->htsp_username);
-}
-
-/*
  * Cancel callback
  */
 static void
@@ -2556,7 +2579,6 @@ htsp_init(const char *bindaddr)
   static tcp_server_ops_t ops = {
     .start  = htsp_serve,
     .stop   = NULL,
-    .status = htsp_server_status,
     .cancel = htsp_server_cancel
   };
   htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);

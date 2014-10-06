@@ -996,7 +996,7 @@ http_server_init(const char *bindaddr)
   static tcp_server_ops_t ops = {
     .start  = http_serve,
     .stop   = NULL,
-    .status = NULL,
+    .cancel = NULL
   };
   http_server = tcp_server_create(bindaddr, tvheadend_webui_port, &ops, NULL);
 }

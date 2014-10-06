@@ -57,6 +57,8 @@ typedef struct access_entry {
   int ae_streaming;
   int ae_adv_streaming;
 
+  uint32_t ae_conn_limit;
+
   int ae_dvr;
   struct dvr_config *ae_dvr_config;
   LIST_ENTRY(access_entry) ae_dvr_config_link;
@@ -99,6 +101,7 @@ typedef struct access {
   uint32_t  aa_chmax;
   htsmsg_t *aa_chtags;
   int       aa_match;
+  uint32_t  aa_conn_limit;
 } access_t;
 
 #define ACCESS_ANONYMOUS          0

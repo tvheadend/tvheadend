@@ -270,12 +270,13 @@ access_verify(const char *username, const char *password,
       if(strcmp(ae->ae_username, username) ||
 	 strcmp(ae->ae_password, password))
 	continue; /* username/password mismatch */
-
-      match = 1;
     }
 
     if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
+
+    if (ae->ae_username[0] != '*')
+      match = 1;
 
     bits |= ae->ae_rights;
   }
@@ -295,6 +296,9 @@ access_verify(const char *username, const char *password,
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
+  if(a->aa_conn_limit < ae->ae_conn_limit)
+    a->aa_conn_limit = ae->ae_conn_limit;
+
   if(ae->ae_chmin || ae->ae_chmax) {
     if(a->aa_chmin || a->aa_chmax) {
       if (a->aa_chmin < ae->ae_chmin)
@@ -399,6 +403,14 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   SHA_CTX shactx;
   uint8_t d[20];
 
+  if (username) {
+    a->aa_username = strdup(username);
+    a->aa_representative = strdup(username);
+  } else {
+    a->aa_representative = malloc(50);
+    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+  }
+
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
     return a;
@@ -417,7 +429,6 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       return a;
     }
   }
-
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -445,6 +456,8 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
   /* Username was not matched - no access */
   if (!a->aa_match) {
+    free(a->aa_username);
+    a->aa_username = NULL;
     if (username && *username != '\0')
       a->aa_rights = 0;
   }
@@ -1078,6 +1091,12 @@ const idclass_t access_entry_class = {
       .id       = "admin",
       .name     = "Admin",
       .off      = offsetof(access_entry_t, ae_admin),
+    },
+    {
+      .type     = PT_U32,
+      .id       = "conn_limit",
+      .name     = "Limit Connections",
+      .off      = offsetof(access_entry_t, ae_conn_limit),
     },
     {
       .type     = PT_U32,
