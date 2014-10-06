@@ -862,7 +862,7 @@ tvheadend.epg = function() {
         };
         if (params.title) conf.title = params.title;
         if (params.channel) conf.channel = params.channel;
-        if (params.tag) conf.tag = params.channelTag;
+        if (params.channelTag) conf.tag = params.channelTag;
         if (params.contentType) conf.content_type = params.contentType;
         if (params.durationMin) conf.minduration = params.durationMin;
         if (params.durationMax) conf.maxduration = params.durationMax;
