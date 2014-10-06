@@ -459,13 +459,13 @@ try_again:
  *
  */
 void
-tcp_connection_land(void *id)
+tcp_connection_land(void *tcp_id)
 {
-  tcp_server_launch_t *tsl = id;
+  tcp_server_launch_t *tsl = tcp_id;
 
   lock_assert(&global_lock);
 
-  if (id == NULL)
+  if (tsl == NULL)
     return;
 
   LIST_REMOVE(tsl, link);
@@ -473,6 +473,24 @@ tcp_connection_land(void *id)
 
   free(tsl->representative);
   tsl->representative = NULL;
+}
+
+/**
+ *
+ */
+void
+tcp_connection_cancel(uint32_t id)
+{
+  tcp_server_launch_t *tsl;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(tsl, &tcp_server_active, alink)
+    if (tsl->id == id) {
+      if (tsl->ops.cancel)
+        tsl->ops.cancel(tsl->opaque);
+      break;
+    }
 }
 
 /*

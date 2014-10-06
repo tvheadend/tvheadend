@@ -83,7 +83,8 @@ struct access;
 
 void *tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m),
                             struct access *aa);
-void tcp_connection_land(void *id);
+void tcp_connection_land(void *tcp_id);
+void tcp_connection_cancel(uint32_t id);
 
 htsmsg_t *tcp_server_connections ( void );
 

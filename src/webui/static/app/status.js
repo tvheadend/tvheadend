@@ -449,6 +449,33 @@ tvheadend.status_conns = function(panel, index) {
         if (grid)
             return;
 
+        var actions = new Ext.ux.grid.RowActions({
+            header: '',
+            width: 10,
+            actions: [
+                {
+                    iconCls: 'cancel',
+                    qtip: 'Cancel this connection',
+                    cb: function(grid, rec, act, row) {
+                        var id = grid.getStore().getAt(row).data.id;
+                        Ext.MessageBox.confirm('Cancel Connection',
+                            'Cancel the selected connection?',
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: id },
+                                });
+                            }
+                       );
+                   }
+               },
+            ],
+            destroy: function() {
+            }
+        });
+
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
@@ -475,7 +502,9 @@ tvheadend.status_conns = function(panel, index) {
             return dt.format('Y-m-d H:i:s');
         }
 
-        var cm = new Ext.grid.ColumnModel([{
+        var cm = new Ext.grid.ColumnModel([
+            actions,
+            {
                 width: 50,
                 id: 'type',
                 header: "Type",
@@ -508,7 +537,8 @@ tvheadend.status_conns = function(panel, index) {
             flex: 1,
             viewConfig: {
                 forceFit: true
-            }
+            },
+            plugins: [actions],
         });
         
         dpanel.add(grid);

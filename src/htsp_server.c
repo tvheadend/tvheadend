@@ -2567,6 +2567,10 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 static void
 htsp_server_cancel ( void *opaque )
 {
+  htsp_connection_t *htsp = opaque;
+
+  if (htsp)
+    shutdown(htsp->htsp_fd, SHUT_RDWR);
 }
 
 /**
