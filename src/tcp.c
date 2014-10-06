@@ -376,6 +376,7 @@ tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
  *
  */
 static tvhpoll_t *tcp_server_poll;
+static uint32_t tcp_server_launch_id;
 
 typedef struct tcp_server {
   int serverfd;
@@ -385,9 +386,11 @@ typedef struct tcp_server {
 
 typedef struct tcp_server_launch {
   pthread_t tid;
+  uint32_t id;
   int fd;
   tcp_server_ops_t ops;
   void *opaque;
+  void (*status) (void *opaque, htsmsg_t *m);
   struct sockaddr_storage peer;
   struct sockaddr_storage self;
   time_t started;
@@ -401,6 +404,43 @@ static LIST_HEAD(, tcp_server_launch) tcp_server_active = { 0 };
 static LIST_HEAD(, tcp_server_launch) tcp_server_join = { 0 };
 
 /**
+ *
+ */
+void *
+tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m))
+{
+  tcp_server_launch_t *tsl;
+
+  lock_assert(&global_lock);
+
+  assert(status);
+
+  LIST_FOREACH(tsl, &tcp_server_active, alink) {
+    if (tsl->fd == fd) {
+      tsl->status = status;
+      LIST_INSERT_HEAD(&tcp_server_launches, tsl, link);
+      notify_reload("connections");
+      return tsl;
+    }
+  }
+  return NULL;
+}
+
+/**
+ *
+ */
+void
+tcp_connection_land(void *id)
+{
+  tcp_server_launch_t *tsl = id;
+
+  lock_assert(&global_lock);
+
+  LIST_REMOVE(tsl, link);
+  notify_reload("connections");
+}
+
+/*
  *
  */
 static void *
@@ -438,21 +478,19 @@ tcp_server_start(void *aux)
 
   /* Start */
   time(&tsl->started);
+  pthread_mutex_lock(&global_lock);
+  tsl->id = ++tcp_server_launch_id;
+  if (!tsl->id) tsl->id = ++tcp_server_launch_id;
   if (tsl->ops.status) {
-    pthread_mutex_lock(&global_lock);
+    tsl->status = tsl->ops.status;
     LIST_INSERT_HEAD(&tcp_server_launches, tsl, link);
     notify_reload("connections");
-    pthread_mutex_unlock(&global_lock);
   }
-  pthread_mutex_lock(&global_lock);
   tsl->ops.start(tsl->fd, &tsl->opaque, &tsl->peer, &tsl->self);
 
   /* Stop */
   if (tsl->ops.stop) tsl->ops.stop(tsl->opaque);
-  if (tsl->ops.status) {
-    LIST_REMOVE(tsl, link);
-    notify_reload("connections");
-  }
+  if (tsl->ops.status) tcp_connection_land(tsl);
   LIST_REMOVE(tsl, alink);
   LIST_INSERT_HEAD(&tcp_server_join, tsl, jlink);
   pthread_mutex_unlock(&global_lock);
@@ -667,13 +705,14 @@ tcp_server_connections ( void )
   /* Build list */
   l = htsmsg_create_list();
   LIST_FOREACH(tsl, &tcp_server_launches, link) {
-    if (!tsl->ops.status) continue;
+    if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
     tcp_get_ip_str((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
+    htsmsg_add_u32(e, "id", tsl->id);
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_s64(e, "started", tsl->started);
-    tsl->ops.status(tsl->opaque, e);
+    tsl->status(tsl->opaque, e);
     htsmsg_add_msg(l, NULL, e);
   }
 

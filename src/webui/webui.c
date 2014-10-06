@@ -260,6 +260,18 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * HTTP stream status callback
+ */
+static void
+http_stream_status ( void *opaque, htsmsg_t *m )
+{
+  http_connection_t *hc = opaque;
+  htsmsg_add_str(m, "type", "HTTP");
+  if (hc->hc_username)
+    htsmsg_add_str(m, "user", hc->hc_username);
+}
+
+/**
  * HTTP stream loop
  */
 static void
@@ -276,6 +288,13 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
+  void *tcp_id;
+
+  tcp_id = tcp_connection_launch(hc->hc_fd, http_stream_status);
+  if (tcp_id == NULL)
+    return;
+
+  pthread_mutex_unlock(&global_lock);
 
   mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
@@ -397,6 +416,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     muxer_close(mux);
 
   muxer_destroy(mux);
+
+  pthread_mutex_lock(&global_lock);
+
+  tcp_connection_land(tcp_id);
 }
 
 
@@ -815,9 +838,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
     name = tvh_strdupa(service->s_nicename);
-    pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
-    pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
 
@@ -863,9 +884,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   if (!s)
     return HTTP_STATUS_BAD_REQUEST;
   name = tvh_strdupa(s->ths_title);
-  pthread_mutex_unlock(&global_lock);
   http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
-  pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
   streaming_queue_deinit(&sq);
@@ -941,9 +960,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   if(s) {
     name = tvh_strdupa(channel_get_name(ch));
-    pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
-    pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
 
