@@ -502,32 +502,32 @@ tcp_server_loop(void *aux)
     ts = ev.data.ptr;
 
     if(ev.events & TVHPOLL_HUP) {
-	    close(ts->serverfd);
-    	free(ts);
+      close(ts->serverfd);
+      free(ts);
       continue;
     } 
 
     if(ev.events & TVHPOLL_IN) {
-	    tsl = malloc(sizeof(tcp_server_launch_t));
+      tsl = malloc(sizeof(tcp_server_launch_t));
       tsl->ops    = ts->ops;
       tsl->opaque = ts->opaque;
       slen = sizeof(struct sockaddr_storage);
 
       tsl->fd = accept(ts->serverfd, 
-			                 (struct sockaddr *)&tsl->peer, &slen);
-     	if(tsl->fd == -1) {
-     	  perror("accept");
-     	  free(tsl);
-     	  sleep(1);
-     	  continue;
-     	}
+                       (struct sockaddr *)&tsl->peer, &slen);
+      if(tsl->fd == -1) {
+     	perror("accept");
+     	free(tsl);
+     	sleep(1);
+     	continue;
+      }
 
-     	slen = sizeof(struct sockaddr_storage);
-	    if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
+      slen = sizeof(struct sockaddr_storage);
+      if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
         close(tsl->fd);
         free(tsl);
         continue;
-     	}
+      }
 
       pthread_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
@@ -571,15 +571,11 @@ tcp_server_create
   }
 
   ressave = res;
-  while(res)
-  {
-    if(res->ai_family == tcp_preferred_address_family)
-    {
+  while(res) {
+    if(res->ai_family == tcp_preferred_address_family) {
       use = res;
       break;
-    }
-    else if(use == NULL)
-    {
+    } else if(use == NULL) {
       use = res;
     }
     res = res->ai_next;
