@@ -592,6 +592,7 @@ htsmsg_field_get_string(htsmsg_field_t *f)
     f->hmf_str = strdup(f->hmf_bool ? "true" : "false");
     f->hmf_type = HMF_STR;
     f->hmf_flags |= HMF_ALLOCED;
+    break;
   case HMF_S64:
     snprintf(buf, sizeof(buf), "%"PRId64, f->hmf_s64);
     f->hmf_str = strdup(buf);
@@ -650,10 +651,12 @@ htsmsg_get_map_multi(htsmsg_t *msg, ...)
 {
   va_list ap;
   const char *n;
-  va_start(ap, msg);
 
+  va_start(ap, msg);
   while(msg != NULL && (n = va_arg(ap, char *)) != NULL)
     msg = htsmsg_get_map(msg, n);
+  va_end(ap);
+
   return msg;
 }
 
@@ -664,21 +667,24 @@ const char *
 htsmsg_get_str_multi(htsmsg_t *msg, ...)
 {
   va_list ap;
-  const char *n;
+  const char *n, *r = NULL;
   htsmsg_field_t *f;
-  va_start(ap, msg);
 
+  va_start(ap, msg);
   while((n = va_arg(ap, char *)) != NULL) {
     if((f = htsmsg_field_find(msg, n)) == NULL)
-      return NULL;
-    else if(f->hmf_type == HMF_STR)
-      return f->hmf_str;
-    else if(f->hmf_type == HMF_MAP)
+      break;
+    else if(f->hmf_type == HMF_STR) {
+      r = f->hmf_str;
+      break;
+    } else if(f->hmf_type == HMF_MAP)
       msg = &f->hmf_msg;
     else
-      return NULL;
+      break;
   }
-  return NULL;
+  va_end(ap);
+
+  return r;
 }
 
 
@@ -935,6 +941,7 @@ htsmsg_list_2_csv(htsmsg_t *m)
       free(ret);
       return NULL;
     }
+    first = 0;
   }
 
   return ret;

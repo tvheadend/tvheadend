@@ -52,8 +52,8 @@ static ssize_t _read_pktbuf ( int fd, pktbuf_t **pktbuf )
   if (r != sizeof(sz)) return 0;
   cnt += r;
 
-  /* Empty */
-  if (!sz) {
+  /* Empty And Sanity Check */
+  if (!sz || sz > 1024 * 1024) {
     *pktbuf = NULL;
     return cnt;
   }
@@ -92,6 +92,9 @@ static ssize_t _read_msg ( int fd, streaming_message_t **sm )
 
   /* EOF */
   if (sz == 0) return cnt;
+
+  /* Wrong data size */
+  if (sz > 1024 * 1024) return -1;
 
   /* Type */
   r = read(fd, &type, sizeof(type));
@@ -320,10 +323,12 @@ static int _timeshift_read
   if (*cur_file) {
 
     /* Open file */
-    if (*fd == -1) {
+    if (*fd < 0) {
       tvhtrace("timeshift", "ts %d open file %s",
                ts->id, (*cur_file)->path);
       *fd = open((*cur_file)->path, O_RDONLY);
+      if (*fd < 0)
+        return -1;
     }
     tvhtrace("timeshift", "ts %d seek to %jd", ts->id, (intmax_t)*cur_off);
     lseek(*fd, *cur_off, SEEK_SET);
@@ -749,8 +754,8 @@ void *timeshift_reader ( void *p )
                  pktbuf_len(pkt->pkt_payload), sm->sm_time);
 #endif
       }
-      streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;
+      streaming_target_deliver2(ts->output, sm);
       sm        = NULL;
       wait      = 0;
     } else if (sm) {

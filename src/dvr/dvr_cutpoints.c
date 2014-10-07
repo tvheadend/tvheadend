@@ -228,8 +228,10 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
   path = alloca(strlen(de->de_filename) + 3);
   strcpy(path, de->de_filename);
   sptr = strrchr(path, '.');
-  if (!sptr)
+  if (!sptr) {
+    free(cuts);
     return NULL;
+  }
 
   /* Check each parser */
   for (i = 0; i < ARRAY_SIZE(dvr_cutpoint_parsers); i++) {

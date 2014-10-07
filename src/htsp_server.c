@@ -120,6 +120,7 @@ typedef struct htsp_msg_q {
   int hmq_strict_prio;      /* Serve this queue 'til it's empty */
   int hmq_length;
   int hmq_payload;          /* Bytes of streaming payload that's enqueued */
+  int hmq_dead;
 } htsp_msg_q_t;
 
 /**
@@ -162,6 +163,7 @@ typedef struct htsp_connection {
   htsp_msg_q_t htsp_hmq_qstatus;
 
   struct htsp_subscription_list htsp_subscriptions;
+  struct htsp_subscription_list htsp_dead_subscriptions;
   struct htsp_file_list htsp_files;
   int htsp_file_id;
 
@@ -303,7 +305,7 @@ htsp_init_queue(htsp_msg_q_t *hmq, int strict_prio)
  *
  */
 static void
-htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
+htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
 {
   htsp_msg_t *hm;
 
@@ -320,6 +322,7 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
   // reset
   hmq->hmq_length = 0;
   hmq->hmq_payload = 0;
+  hmq->hmq_dead = dead;
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
@@ -330,6 +333,8 @@ static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
+  LIST_INSERT_HEAD(&htsp->htsp_dead_subscriptions, hs, hs_link);
+
   subscription_unsubscribe(hs->hs_s);
 
   if(hs->hs_tsfix != NULL)
@@ -340,14 +345,22 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
     transcoder_destroy(hs->hs_transcoder);
 #endif
 
-  htsp_flush_queue(htsp, &hs->hs_q);
-
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
     timeshift_destroy(hs->hs_tshift);
 #endif
 
+  htsp_flush_queue(htsp, &hs->hs_q, 1);
+}
 
+/**
+ *
+ */
+static void
+htsp_subscription_free(htsp_connection_t *htsp, htsp_subscription_t *hs)
+{
+  LIST_REMOVE(hs, hs_link);
+  htsp_flush_queue(htsp, &hs->hs_q, 1);
   free(hs);
 }
 
@@ -367,6 +380,8 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
   hm->hm_payloadsize = payloadsize;
   
   pthread_mutex_lock(&htsp->htsp_out_mutex);
+
+  assert(!hmq->hmq_dead);
 
   TAILQ_INSERT_TAIL(&hmq->hmq_q, hm, hm_link);
 
@@ -1067,7 +1082,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Missing argument 'eventId'");
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
+  if((e = epg_broadcast_find_by_id(eventId)) == NULL)
     return htsp_error("Event does not exist");
 
   return htsp_build_event(e, NULL, lang, 0, htsp);
@@ -1092,7 +1107,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     if (!(ch = channel_find_by_id(u32)))
       return htsp_error("Channel does not exist");
   if (!htsmsg_get_u32(in, "eventId", &u32))
-    if (!(e = epg_broadcast_find_by_id(u32, ch)))
+    if (!(e = epg_broadcast_find_by_id(u32)))
       return htsp_error("Event does not exist");
 
   /* Check access */
@@ -1306,7 +1321,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
   if(!htsmsg_get_u32(in, "eventId", &eventid))
-    e = epg_broadcast_find_by_id(eventid, ch);
+    e = epg_broadcast_find_by_id(eventid);
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))
@@ -2006,7 +2021,7 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
     int fd = imagecache_open(atoi(s2));
-    if (fd <= 0)
+    if (fd < 0)
       return htsp_error("failed to open image");
     return htsp_file_open(htsp, str, fd);
 
@@ -2202,7 +2217,7 @@ struct {
 /**
  * Raise privs by field in message
  */
-static void
+static int
 htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 {
   const char *username;
@@ -2212,7 +2227,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   int privgain;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
-    return;
+    return 0;
 
   if(strcmp(htsp->htsp_username ?: "", username)) {
     tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
@@ -2223,7 +2238,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   }
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
-    return;
+    return 0;
 
   rights = access_get_hashed(username, digest, htsp->htsp_challenge,
 			     (struct sockaddr *)htsp->htsp_peer);
@@ -2237,6 +2252,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   access_destroy(htsp->htsp_granted_access);
   htsp->htsp_granted_access = rights;
+  return privgain;
 }
 
 /**
@@ -2246,7 +2262,7 @@ static int
 htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
 {
   int v;
-  size_t len;
+  uint32_t len;
   uint8_t data[4];
   void *buf;
 
@@ -2281,6 +2297,18 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   return 0;
 }
 
+/*
+ * Status callback
+ */
+static void
+htsp_server_status ( void *opaque, htsmsg_t *m )
+{
+  htsp_connection_t *htsp = opaque;
+  htsmsg_add_str(m, "type", "HTSP");
+  if (htsp->htsp_username)
+    htsmsg_add_str(m, "user", htsp->htsp_username);
+}
+
 /**
  *
  */
@@ -2290,6 +2318,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   htsmsg_t *m = NULL, *reply;
   int r, i;
   const char *method;
+  void *tcp_id = NULL;;
 
   if(htsp_generate_challenge(htsp)) {
     tvhlog(LOG_ERR, "htsp", "%s: Unable to generate challenge",
@@ -2298,9 +2327,17 @@ htsp_read_loop(htsp_connection_t *htsp)
   }
 
   pthread_mutex_lock(&global_lock);
+
   htsp->htsp_granted_access = 
     access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
+
+  tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
+                                 htsp->htsp_granted_access);
+
   pthread_mutex_unlock(&global_lock);
+
+  if (tcp_id == NULL)
+    return 0;
 
   tvhlog(LOG_INFO, "htsp", "Got connection from %s", htsp->htsp_logname);
 
@@ -2309,40 +2346,49 @@ htsp_read_loop(htsp_connection_t *htsp)
   while(tvheadend_running) {
 readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
-      return r;
+      break;
 
     pthread_mutex_lock(&global_lock);
-    htsp_authenticate(htsp, m);
+    if (htsp_authenticate(htsp, m)) {
+      tcp_connection_land(tcp_id);
+      tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
+                                     htsp->htsp_granted_access);
+      if (tcp_id == NULL) {
+        htsmsg_destroy(m);
+        pthread_mutex_unlock(&global_lock);
+        return 1;
+      }
+    }
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
       tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
       for(i = 0; i < NUM_METHODS; i++) {
-	      if(!strcmp(method, htsp_methods[i].name)) {
+        if(!strcmp(method, htsp_methods[i].name)) {
 
-	        if((htsp->htsp_granted_access->aa_rights & htsp_methods[i].privmask) !=
-	           htsp_methods[i].privmask) {
+          if((htsp->htsp_granted_access->aa_rights &
+              htsp_methods[i].privmask) !=
+                htsp_methods[i].privmask) {
 
       	    pthread_mutex_unlock(&global_lock);
+            /* Classic authentication failed delay */
+            usleep(250000);
 
-	          /* Classic authentication failed delay */
-	          usleep(250000);
-	    
-	          reply = htsmsg_create_map();
-	          htsmsg_add_u32(reply, "noaccess", 1);
-	          htsp_reply(htsp, m, reply);
+            reply = htsmsg_create_map();
+            htsmsg_add_u32(reply, "noaccess", 1);
+            htsp_reply(htsp, m, reply);
 
-	          htsmsg_destroy(m);
-	          goto readmsg;
+            htsmsg_destroy(m);
+            goto readmsg;
 
-	        } else {
-	          reply = htsp_methods[i].fn(htsp, m);
-	        }
-	        break;
-	      }
+          } else {
+            reply = htsp_methods[i].fn(htsp, m);
+          }
+          break;
+        }
       }
 
       if(i == NUM_METHODS) {
-	      reply = htsp_error("Method not found");
+        reply = htsp_error("Method not found");
       }
 
     } else {
@@ -2356,7 +2402,11 @@ readmsg:
 
     htsmsg_destroy(m);
   }
-  return 0;
+
+  pthread_mutex_lock(&global_lock);
+  tcp_connection_land(tcp_id);
+  pthread_mutex_unlock(&global_lock);
+  return tvheadend_running ? r : 0;
 }
 
 /**
@@ -2374,13 +2424,9 @@ htsp_write_scheduler(void *aux)
 
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
-  while(tvheadend_running) {
+  while(htsp->htsp_writer_run) {
 
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
-      /* No active queues at all */
-      if(!htsp->htsp_writer_run)
-        break; /* Should not run anymore, bail out */
-      
       /* Nothing to be done, go to sleep */
       pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
       continue;
@@ -2481,17 +2527,18 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   pthread_mutex_lock(&global_lock);
 
-  /* Beware! Closing subscriptions will invoke a lot of callbacks
-     down in the streaming code. So we do this as early as possible
-     to avoid any weird lockups */
-  while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL) {
-    htsp_subscription_destroy(&htsp, s);
-  }
-
+  /* no async notifications from now */
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
 
+  /* deregister this client */
   LIST_REMOVE(&htsp, htsp_link);
+
+  /* Beware! Closing subscriptions will invoke a lot of callbacks
+     down in the streaming code. So we do this as early as possible
+     to avoid any weird lockups */
+  while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL)
+    htsp_subscription_destroy(&htsp, s);
 
   pthread_mutex_unlock(&global_lock);
 
@@ -2501,6 +2548,9 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  while((s = LIST_FIRST(&htsp.htsp_dead_subscriptions)) != NULL)
+    htsp_subscription_free(&htsp, s);
 
   htsp_msg_q_t *hmq;
 
@@ -2529,23 +2579,15 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 }
 
 /*
- * Status callback
- */
-static void
-htsp_server_status ( void *opaque, htsmsg_t *m )
-{
-  htsp_connection_t *htsp = opaque;
-  htsmsg_add_str(m, "type", "HTSP");
-  if (htsp->htsp_username)
-    htsmsg_add_str(m, "user", htsp->htsp_username);
-}
-
-/*
  * Cancel callback
  */
 static void
 htsp_server_cancel ( void *opaque )
 {
+  htsp_connection_t *htsp = opaque;
+
+  if (htsp)
+    shutdown(htsp->htsp_fd, SHUT_RDWR);
 }
 
 /**
@@ -2558,7 +2600,6 @@ htsp_init(const char *bindaddr)
   static tcp_server_ops_t ops = {
     .start  = htsp_serve,
     .stop   = NULL,
-    .status = htsp_server_status,
     .cancel = htsp_server_cancel
   };
   htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);
@@ -2601,6 +2642,7 @@ htsp_async_send(htsmsg_t *m, int mode)
 {
   htsp_connection_t *htsp;
 
+  lock_assert(&global_lock);
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
     if (htsp->htsp_async_mode & mode)
       htsp_send_message(htsp, htsmsg_copy(m), NULL);
@@ -3177,7 +3219,7 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
 
   /* Flush pkt buffers */
   if (skip->type != SMT_SKIP_ERROR)
-    htsp_flush_queue(hs->hs_htsp, &hs->hs_q);
+    htsp_flush_queue(hs->hs_htsp, &hs->hs_q, 0);
 
   if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
     htsmsg_add_u32(m, "absolute", 1);

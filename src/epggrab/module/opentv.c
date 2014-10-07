@@ -253,7 +253,7 @@ static int _opentv_parse_event
     const uint8_t *buf, int len, int cid, time_t mjd,
     opentv_event_t *ev )
 {
-  int      slen = ((int)buf[2] & 0xf << 8) | buf[3];
+  int      slen = (((int)buf[2] & 0xf) << 8) | buf[3];
   int      i    = 4;
 
   ev->eid = ((uint16_t)buf[0] << 8) | buf[1];

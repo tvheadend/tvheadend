@@ -578,6 +578,7 @@ config_migrate_v6 ( void )
       if (!m) {
         m = htsmsg_create_map();
         htsmsg_add_msg(c, "mod_enabled", m);
+        m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
@@ -597,7 +598,7 @@ config_migrate_v6 ( void )
     htsmsg_t *xc, *ch;
     htsmsg_t *xchs = hts_settings_load("xmltv/channels");
     htsmsg_t *chs  = hts_settings_load_r(1, "channel");
-    if (xchs) {
+    if (chs) {
       HTSMSG_FOREACH(f, chs) {
         if ((ch = htsmsg_get_map_by_field(f))) {
           if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
@@ -607,6 +608,8 @@ config_migrate_v6 ( void )
           }
         }
       }
+    }
+    if (xchs) {
       HTSMSG_FOREACH(f, xchs) {
         if ((xc = htsmsg_get_map_by_field(f))) {
           hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
@@ -694,7 +697,7 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
 
   htsmsg_delete_field(c, "index");
 
-  if (ch == NULL)
+  if (ch == NULL || uuid == NULL)
     return;
 
   HTSMSG_FOREACH(f, ch) {
@@ -710,7 +713,8 @@ config_modify_tag( htsmsg_t *c, uint32_t id, const char *uuid, const void *aux )
           htsmsg_add_msg(e, "tags_new", t);
           t = htsmsg_get_list(e, "tags_new");
         }
-        htsmsg_add_str(t, NULL, uuid);
+        if (t)
+          htsmsg_add_str(t, NULL, uuid);
       }
     }
   }
@@ -771,7 +775,7 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
 
   htsmsg_delete_field(c, "index");
   if (chname == NULL || (chuuid != NULL && uuid_init_bin(&uuid0, chuuid))) {
-    chname = strdup(chuuid);
+    chname = strdup(chuuid ?: "");
     htsmsg_delete_field(c, "channelname");
     htsmsg_delete_field(c, "channel");
     htsmsg_add_str(c, "channelname", chname);
@@ -784,12 +788,17 @@ config_modify_dvr_log( htsmsg_t *c, uint32_t id, const char *uuid, const void *a
   if ((s1 = htsmsg_get_str(c, "autorec")) != NULL) {
     s1 = strdup(s1);
     htsmsg_delete_field(c, "autorec");
-    HTSMSG_FOREACH(f, list) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
-      if (strcmp(s1, htsmsg_get_str(e, "id")) == 0) {
-        htsmsg_add_str(c, "autorec", htsmsg_get_str(e, "uuid"));
-        break;
+    if (s1 != NULL) {
+      HTSMSG_FOREACH(f, list) {
+        if (!(e = htsmsg_field_get_map(f))) continue;
+        if (strcmp(s1, htsmsg_get_str(e, "id") ?: "") == 0) {
+          const char *s2 = htsmsg_get_str(e, "uuid");
+          if (s2)
+            htsmsg_add_str(c, "autorec", s2);
+          break;
+        }
       }
+      free((char *)s1);
     }
   }
 }
@@ -871,6 +880,8 @@ config_find_uuid( htsmsg_t *map, const char *name, const char *value )
   htsmsg_field_t *f;
   const char *s;
 
+  if (!map || !name || !value)
+    return NULL;
   HTSMSG_FOREACH(f, map) {
     if (!(e = htsmsg_field_get_map(f))) continue;
     if ((s = htsmsg_get_str(e, name)) != NULL) {

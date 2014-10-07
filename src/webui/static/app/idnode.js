@@ -297,13 +297,13 @@ tvheadend.IdNodeField = function(conf)
                 var t = [];
                 var d = v.push ? v : [v];
                 for (var i = 0; i < d.length; i++) {
-                    var r = st.find('key', d[i]);
-                    if (r !== -1) {
-                        var nv = st.getAt(r).get('val');
+                    var r = st.getById(d[i]);
+                    if (r) {
+                        var nv = r.data.val;
                         if (nv)
                             t.push(nv);
                     } else {
-                      t.push(d[i]);
+                        t.push(d[i]);
                     }
                 }
                 t.sort();
@@ -1331,7 +1331,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 id: 0,
                 fields: ['key', 'val'],
                 data: [[25, '25'], [50, '50'], [100, '100'],
-                    [200, '200'], [9999999999, 'All']]
+                    [200, '200'], [999999999, 'All']]
             }),
             value: 50,
             mode: 'local',
@@ -1640,7 +1640,6 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 disabled: true,
                 handler: function() {
                     if (current) {
-                        var uuid = r[0].id;
                         tvheadend.Ajax({
                             url: 'api/idnode/movedown',
                             params: {

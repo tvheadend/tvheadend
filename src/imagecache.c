@@ -139,13 +139,15 @@ imagecache_image_fetch ( imagecache_image_t *img )
   int res = 1, r;
   FILE *fp = NULL;
   url_t url;
-  char tmp[256], path[256];
+  char tmp[256] = "", path[256];
   tvhpoll_event_t ev;
   tvhpoll_t *efd = NULL;
   http_client_t *hc;
 
   if (img->url == NULL || img->url[0] == '\0')
     return res;
+
+  memset(&url, 0, sizeof(url));
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
@@ -215,7 +217,8 @@ error:
   time(&img->updated); // even if failed (possibly request sooner?)
   if (res) {
     img->failed = 1;
-    unlink(tmp);
+    if (tmp[0])
+      unlink(tmp);
     tvhlog(LOG_WARNING, "imagecache", "failed to download %s", img->url);
   } else {
     img->failed = 0;

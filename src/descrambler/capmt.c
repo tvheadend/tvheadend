@@ -462,14 +462,17 @@ capmt_connect(capmt_t *capmt, int i)
              "%s", capmt->capmt_sockfile);
 
     fd = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
-    if (connect(fd, (const struct sockaddr*)&serv_addr_un,
+    if (fd < 0 ||
+        connect(fd, (const struct sockaddr*)&serv_addr_un,
                 sizeof(serv_addr_un)) != 0) {
       if (tvheadend_running)
         tvhlog(LOG_ERR, "capmt",
                "%s: Cannot connect to %s (%s); Do you have OSCam running?",
                capmt_name(capmt), capmt->capmt_sockfile, strerror(errno));
-      close(fd);
-      fd = -1;
+      if (fd >= 0) {
+        close(fd);
+        fd = -1;
+      }
     }
 
   }
@@ -1354,6 +1357,10 @@ static int
 capmt_create_udp_socket(capmt_t *capmt, int *socket, int port)
 {
   *socket = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (*socket < 0) {
+    tvherror("capmt", "%s: failed to create UDP socket", capmt_name(capmt));
+    return 0;
+  }
 
   struct sockaddr_in serv_addr;
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -1464,6 +1471,15 @@ capmt_thread(void *aux)
 
     caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
 
+    pthread_mutex_lock(&capmt->capmt_mutex);
+    if (capmt->capmt_reconfigure) {
+      capmt->capmt_reconfigure = 0;
+      capmt->capmt_running = 1;
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
+    }
+    pthread_mutex_unlock(&capmt->capmt_mutex);
+
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
         capmt_socket_close_lock(capmt, i);
@@ -1471,7 +1487,12 @@ capmt_thread(void *aux)
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
 
-    if (!capmt->capmt_running) continue;
+    pthread_mutex_lock(&capmt->capmt_mutex);
+
+    if (!capmt->capmt_running) {
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
+    }
 
     /* schedule reconnection */
     if(subscriptions_active() && !fatal) {
@@ -1485,9 +1506,9 @@ capmt_thread(void *aux)
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id), d);
 
-    pthread_mutex_lock(&global_lock);
-    pthread_cond_timedwait(&capmt->capmt_cond, &global_lock, &ts);
-    pthread_mutex_unlock(&global_lock);
+    pthread_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, &ts);
+
+    pthread_mutex_unlock(&capmt->capmt_mutex);
   }
 
   tvhlog(LOG_INFO, "capmt", "%s inactive", capmt_name(capmt));
@@ -1922,6 +1943,7 @@ capmt_conf_changed(caclient_t *cac)
     }
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
+      capmt->capmt_reconfigure = 0;
       tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
       return;
     }
@@ -1935,6 +1957,7 @@ capmt_conf_changed(caclient_t *cac)
       return;
     pthread_mutex_lock(&capmt->capmt_mutex);
     capmt->capmt_running = 0;
+    capmt->capmt_reconfigure = 0;
     pthread_cond_signal(&capmt->capmt_cond);
     tid = capmt->capmt_tid;
     pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1975,7 +1998,7 @@ const idclass_t caclient_capmt_class =
     {
       .type     = PT_STR,
       .id       = "camdfilename",
-      .name     = "Camd.socket Filename / IP Address (mode 3)",
+      .name     = "Camd.socket Filename / IP Address (TCP mode)",
       .off      = offsetof(capmt_t, capmt_sockfile),
       .def.s    = "/tmp/camd.socket",
     },

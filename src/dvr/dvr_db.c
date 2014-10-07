@@ -1263,7 +1263,7 @@ dvr_entry_class_channel_name_set(void *o, const void *v)
     return dvr_entry_class_channel_set(o, idnode_uuid_as_str(&ch->ch_id));
   } else {
     free(de->de_channel_name);
-    de->de_channel_name = strdup(v);
+    de->de_channel_name = v ? strdup(v) : NULL;
     return 1;
   }
 }
@@ -1406,7 +1406,7 @@ dvr_entry_class_broadcast_set(void *o, const void *v)
   epg_broadcast_t *bcast;
   if (!dvr_entry_is_editable(de))
     return 0;
-  bcast = epg_broadcast_find_by_id(id, de->de_channel);
+  bcast = epg_broadcast_find_by_id(id);
   if (bcast == NULL) {
     if (de->de_bcast) {
       de->de_bcast->putref((epg_object_t*)de->de_bcast);
@@ -1444,11 +1444,10 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
     v = "UnknownTitle";
   if (de->de_title)
     s = lang_str_get(de->de_title, NULL);
-  if (strcmp(s, v ?: "")) {
+  if (strcmp(s, v)) {
     lang_str_destroy(de->de_title);
     de->de_title = lang_str_create();
-    if (v)
-      lang_str_add(de->de_title, v, NULL, 0);
+    lang_str_add(de->de_title, v, NULL, 0);
     return 1;
   }
   return 0;
@@ -1831,7 +1830,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_BOOL,
       .id       = "noresched",
       .name     = "Do Not Reschedule",
-      .off      = offsetof(dvr_entry_t, de_dvb_eid),
+      .off      = offsetof(dvr_entry_t, de_dont_reschedule),
       .opts     = PO_RDONLY,
     },
     {
@@ -1861,7 +1860,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_U32,
       .id       = "broadcast",
-      .name     = "Broadcast Type",
+      .name     = "Broadcast",
       .set      = dvr_entry_class_broadcast_set,
       .get      = dvr_entry_class_broadcast_get,
       .opts     = PO_RDONLY,

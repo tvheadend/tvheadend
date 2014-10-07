@@ -67,7 +67,8 @@ static time_t _xmltv_str2time(const char *in)
   char str[32];
 
   memset(&tm, 0, sizeof(tm));
-  strcpy(str, in);
+  strncpy(str, in, sizeof(str));
+  str[sizeof(str)-1] = '\0';
 
   /* split tz */
   while (str[sp] && str[sp] != ' ')

@@ -261,7 +261,7 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
   } else if (state == MM_SCAN_STATE_IDLE) {
 
     /* No change */
-    if (state == MM_SCAN_STATE_IDLE)
+    if (mm->mm_scan_state == MM_SCAN_STATE_IDLE)
       return 0;
 
     /* Update */
@@ -1009,8 +1009,11 @@ mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len )
 {
   size_t len2;
 
-  if (len == 0 || buf == NULL)
+  if (len == 0 || buf == NULL || mm == NULL) {
+    if (buf && len > 0)
+      *buf = '\0';
     return;
+  }
   if (mm->mm_display_name)
     mm->mm_display_name(mm, buf, len);
   else
@@ -1023,7 +1026,7 @@ mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len )
   strcpy(buf, " in ");
   buf += 4;
   len -= 4;
-  if (mm && mm->mm_network && mm->mm_network->mn_display_name)
+  if (mm->mm_network && mm->mm_network->mn_display_name)
     mm->mm_network->mn_display_name(mm->mm_network, buf, len);
 }
 

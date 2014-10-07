@@ -127,8 +127,8 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
+  if (!ec || !icon) return 0;
   if (!ec->icon || strcmp(ec->icon, icon) ) {
-  if (!ec | !icon) return 0;
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
 #if TODO_CHAN_UPDATE
@@ -313,6 +313,7 @@ epggrab_channel_find_by_id ( const char *id )
   char *mid, *cid;
   epggrab_module_t *mod;
   strncpy(buf, id, sizeof(buf));
+  buf[sizeof(buf)-1] = '\0';
   if ((mid = strtok_r(buf, "|", &cid)) && cid)
     if ((mod = epggrab_module_find_by_id(mid)) && mod->channels)
       return epggrab_channel_find(mod->channels, cid, 0, NULL, NULL);

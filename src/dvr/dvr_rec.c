@@ -178,11 +178,12 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   struct stat st;
   char *filename, *s;
   struct tm tm;
-  dvr_config_t *cfg = de->de_config;
+  dvr_config_t *cfg;
 
   if (de == NULL)
     return -1;
 
+  cfg = de->de_config;
   strncpy(path, cfg->dvr_storage, sizeof(path));
   path[sizeof(path)-1] = '\0';
 

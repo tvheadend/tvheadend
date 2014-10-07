@@ -410,7 +410,7 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
        free(dae->dae_title);
        dae->dae_title = NULL;
     }
-    if (title != NULL && title[0] != '\0' &&
+    if (title[0] != '\0' &&
         !regcomp(&dae->dae_title_preg, title,
                  REG_ICASE | REG_EXTENDED | REG_NOSUB))
       dae->dae_title = strdup(title);

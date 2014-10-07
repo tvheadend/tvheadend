@@ -137,10 +137,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   }
 
   cfg->dvr_enabled = 1;
-  if (name)
-    cfg->dvr_config_name = strdup(name);
-  else
-    cfg->dvr_config_name = strdup("");
+  cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_tag_files = 1;
@@ -324,7 +321,7 @@ dvr_config_class_name_set(void *o, const void *v)
     if (dvr_config_is_valid(cfg) && (v == NULL || *(char *)v == '\0'))
       return 0;
     free(cfg->dvr_config_name);
-    cfg->dvr_config_name = strdup(v);
+    cfg->dvr_config_name = strdup(v ?: "");
     return 1;
   }
   return 0;

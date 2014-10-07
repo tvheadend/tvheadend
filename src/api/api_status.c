@@ -90,12 +90,43 @@ api_status_connections
   return 0;
 }
 
+static int
+api_connections_cancel
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_field_t *f;
+  htsmsg_t *ids;
+  uint32_t id;
+
+  if (!(f = htsmsg_field_find(args, "id")))
+    return EINVAL;
+  if (!(ids = htsmsg_field_get_list(f)))
+    if (htsmsg_field_get_u32(f, &id))
+      return EINVAL;
+
+  if (ids) {
+    HTSMSG_FOREACH(f, ids) {
+      if (htsmsg_field_get_u32(f, &id)) continue;
+      if (!id) continue;
+      pthread_mutex_lock(&global_lock);
+      tcp_connection_cancel(id);
+      pthread_mutex_unlock(&global_lock);
+    }
+  } else {
+    pthread_mutex_lock(&global_lock);
+    tcp_connection_cancel(id);
+    pthread_mutex_unlock(&global_lock);
+  }
+  return 0;
+}
+
 void api_status_init ( void )
 {
   static api_hook_t ah[] = {
     { "status/connections",   ACCESS_ADMIN, api_status_connections, NULL },
     { "status/subscriptions", ACCESS_ADMIN, api_status_subscriptions, NULL },
     { "status/inputs",        ACCESS_ADMIN, api_status_inputs, NULL },
+    { "connections/cancel",   ACCESS_ADMIN, api_connections_cancel, NULL },
     { NULL },
   };
 

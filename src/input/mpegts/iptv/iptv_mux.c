@@ -35,7 +35,7 @@ iptv_mux_url_set ( void *p, const void *v )
   size_t len;
   url_t url;
 
-  if (strcmp(str, im->mm_iptv_url ?: "")) {
+  if (strcmp(str ?: "", im->mm_iptv_url ?: "")) {
     if (str == NULL || *str == '\0') {
       free(im->mm_iptv_url);
       free(im->mm_iptv_url_sane);
@@ -44,10 +44,10 @@ iptv_mux_url_set ( void *p, const void *v )
       return 1;
     }
     memset(&url, 0, sizeof(url));
-    if (!urlparse(str ?: "", &url)) {
+    if (!urlparse(str, &url)) {
       free(im->mm_iptv_url);
       free(im->mm_iptv_url_sane);
-      im->mm_iptv_url = str ? strdup(str) : NULL;
+      im->mm_iptv_url = strdup(str);
       if (im->mm_iptv_url) {
         len = (url.scheme ? strlen(url.scheme) + 3 : 0) +
               (url.host ? strlen(url.host) + 1 : 0) +

@@ -382,15 +382,15 @@ api_epg_grid
       } else if (!strcmp(t, "numeric")) {
         f2 = htsmsg_field_find(e, "value");
         if (f2) {
-          int64_t v1, v2 = 0;
+          int64_t v1 = 0, v2 = 0;
           if (f2->hmf_type == HMF_STR) {
             const char *z = htsmsg_field_get_str(f2);
             if (z) {
               const char *z2 = strchr(z, ';');
               if (z2)
                 v2 = strtoll(z2 + 1, NULL, 0);
+              v1 = strtoll(z, NULL, 0);
             }
-            v1 = strtoll(z, NULL, 0);
             api_epg_filter_add_num(&eq, k, v1, v2, comp);
           } else {
             if (!htsmsg_field_get_s64(f2, &v1))
@@ -474,7 +474,7 @@ api_epg_alternative
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
-  e = epg_broadcast_find_by_id(id, NULL);
+  e = epg_broadcast_find_by_id(id);
   if (e && e->episode)
     api_epg_episode_broadcasts(l, lang, e->episode, &entries, e);
   pthread_mutex_unlock(&global_lock);
@@ -501,7 +501,7 @@ api_epg_related
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
-  e = epg_broadcast_find_by_id(id, NULL);
+  e = epg_broadcast_find_by_id(id);
   ep = e ? e->episode : NULL;
   if (ep && ep->brand) {
     LIST_FOREACH(ep2, &ep->brand->episodes, blink) {

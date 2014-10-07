@@ -39,6 +39,9 @@
 #define EPG_HASH_WIDTH 1024
 #define EPG_HASH_MASK  (EPG_HASH_WIDTH - 1)
 
+/* Objects tree */
+epg_object_tree_t epg_objects[EPG_HASH_WIDTH];
+
 /* URI lists */
 epg_object_tree_t epg_brands;
 epg_object_tree_t epg_seasons;
@@ -46,16 +49,28 @@ epg_object_tree_t epg_episodes;
 epg_object_tree_t epg_serieslinks;
 
 /* Other special case lists */
-epg_object_list_t epg_objects[EPG_HASH_WIDTH];
 epg_object_list_t epg_object_unref;
 epg_object_list_t epg_object_updated;
 
 /* Global counter */
 static uint32_t _epg_object_idx    = 0;
 
+/*
+ *
+ */
+static inline epg_object_tree_t *epg_id_tree( epg_object_t *eo )
+{
+  return &epg_objects[eo->id & EPG_HASH_MASK];
+}
+
 /* **************************************************************************
  * Comparators / Ordering
  * *************************************************************************/
+
+static int _id_cmp ( const void *a, const void *b )
+{
+  return ((epg_object_t*)a)->id - ((epg_object_t*)b)->id;
+}
 
 static int _uri_cmp ( const void *a, const void *b )
 {
@@ -132,7 +147,7 @@ static void _epg_object_destroy
   if (eo->uri) free(eo->uri);
   if (tree) RB_REMOVE(tree, eo, uri_link);
   if (eo->_updated) LIST_REMOVE(eo, up_link);
-  LIST_REMOVE(eo, id_link);
+  RB_REMOVE(epg_id_tree(eo), eo, id_link);
 }
 
 static void _epg_object_getref ( void *o )
@@ -169,15 +184,25 @@ static void _epg_object_set_updated ( void *o )
 static void _epg_object_create ( void *o )
 {
   epg_object_t *eo = o;
+  uint32_t id = eo->id;
+  if (!id) eo->id = ++_epg_object_idx;
   if (!eo->id) eo->id = ++_epg_object_idx;
-  else if (eo->id > _epg_object_idx) _epg_object_idx = eo->id;
   if (!eo->getref) eo->getref = _epg_object_getref;
   if (!eo->putref) eo->putref = _epg_object_putref;
   tvhtrace("epg", "eo [%p, %u, %d, %s] created",
            eo, eo->id, eo->type, eo->uri);
   _epg_object_set_updated(eo);
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
-  LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
+  while (1) {
+    if (!RB_INSERT_SORTED(epg_id_tree(eo), eo, id_link, _id_cmp))
+      break;
+    if (id) {
+      tvherror("epg", "fatal error, duplicate EPG ID");
+      abort();
+    }
+    eo->id = ++_epg_object_idx;
+    if (!eo->id) eo->id = ++_epg_object_idx;
+  }
 }
 
 static epg_object_t *_epg_object_find_by_uri 
@@ -211,11 +236,11 @@ static epg_object_t *_epg_object_find_by_uri
 
 epg_object_t *epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 {
-  epg_object_t *eo;
-  LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_MASK], id_link) {
-    if (eo->id == id)
-      return ((type == EPG_UNDEF) || (eo->type == type)) ? eo : NULL;
-  }
+  epg_object_t *eo, temp;
+  temp.id = id;
+  eo = RB_FIND(epg_id_tree(&temp), &temp, id_link, _id_cmp);
+  if (eo && eo->type == type)
+    return eo;
   return NULL;
 }
 
@@ -1583,10 +1608,8 @@ epg_broadcast_t* epg_broadcast_find_by_time
   return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
 
-epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id, channel_t *ch )
+epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
 {
-  // Note: I have left channel_t param, just in case I decide to change
-  //       to use it for shorter search
   return (epg_broadcast_t*)epg_object_find_by_id(id, EPG_BROADCAST);
 }
 
@@ -2242,6 +2265,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
   epg_episode_t *ep;
 
   /* Filtering */
+  if (e == NULL) return;
   if (e->stop < dispatch_clock) return;
   if (_eq_comp_num(&eq->start, e->start)) return;
   if (_eq_comp_num(&eq->stop, e->stop)) return;
@@ -2250,14 +2274,10 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     if (_eq_comp_num(&eq->duration, duration)) return;
   }
   ep = e->episode;
-  if (eq->stars.comp != EC_NO) {
-    if (e == NULL) return;
+  if (eq->stars.comp != EC_NO)
     if (_eq_comp_num(&eq->stars, ep->star_rating)) return;
-  }
-  if (eq->age.comp != EC_NO) {
-    if (e == NULL) return;
+  if (eq->age.comp != EC_NO)
     if (_eq_comp_num(&eq->age, ep->age_rating)) return;
-  }
   if (eq->channel_num.comp != EC_NO)
     if (_eq_comp_num(&eq->channel_num, channel_get_number(e->channel))) return;
   if (eq->channel_name.comp != EC_NO)
@@ -2366,6 +2386,7 @@ static int _epg_sort_title_ascending ( const void *a, const void *b, void *eq )
 {
   const char *s1 = epg_broadcast_get_title(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
   const char *s2 = epg_broadcast_get_title(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+  if (s1 == NULL && s2 == NULL) return 0;
   if (s1 == NULL && s2) return 1;
   if (s1 && s2 == NULL) return -1;
   return strcmp(s1, s2);
@@ -2604,6 +2625,20 @@ void epg_query_free(epg_query_t *eq)
 /* **************************************************************************
  * Miscellaneous
  * *************************************************************************/
+
+htsmsg_t *epg_config_serialize( void )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_u32(m, "last_id", _epg_object_idx);
+  return m;
+}
+
+int epg_config_deserialize( htsmsg_t *m )
+{
+  if (htsmsg_get_u32(m, "last_id", &_epg_object_idx))
+    return 0;
+  return 1; /* ok */
+}
 
 void epg_skel_done(void)
 {
