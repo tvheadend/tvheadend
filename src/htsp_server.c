@@ -120,6 +120,7 @@ typedef struct htsp_msg_q {
   int hmq_strict_prio;      /* Serve this queue 'til it's empty */
   int hmq_length;
   int hmq_payload;          /* Bytes of streaming payload that's enqueued */
+  int hmq_dead;
 } htsp_msg_q_t;
 
 /**
@@ -162,6 +163,7 @@ typedef struct htsp_connection {
   htsp_msg_q_t htsp_hmq_qstatus;
 
   struct htsp_subscription_list htsp_subscriptions;
+  struct htsp_subscription_list htsp_dead_subscriptions;
   struct htsp_file_list htsp_files;
   int htsp_file_id;
 
@@ -303,7 +305,7 @@ htsp_init_queue(htsp_msg_q_t *hmq, int strict_prio)
  *
  */
 static void
-htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
+htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
 {
   htsp_msg_t *hm;
 
@@ -320,6 +322,7 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
   // reset
   hmq->hmq_length = 0;
   hmq->hmq_payload = 0;
+  hmq->hmq_dead = dead;
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
@@ -330,6 +333,8 @@ static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
+  LIST_INSERT_HEAD(&htsp->htsp_dead_subscriptions, hs, hs_link);
+
   subscription_unsubscribe(hs->hs_s);
 
   if(hs->hs_tsfix != NULL)
@@ -340,14 +345,22 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
     transcoder_destroy(hs->hs_transcoder);
 #endif
 
-  htsp_flush_queue(htsp, &hs->hs_q);
+  htsp_flush_queue(htsp, &hs->hs_q, 1);
 
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
     timeshift_destroy(hs->hs_tshift);
 #endif
+}
 
-
+/**
+ *
+ */
+static void
+htsp_subscription_free(htsp_connection_t *htsp, htsp_subscription_t *hs)
+{
+  LIST_REMOVE(hs, hs_link);
+  htsp_flush_queue(htsp, &hs->hs_q, 1);
   free(hs);
 }
 
@@ -367,6 +380,8 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
   hm->hm_payloadsize = payloadsize;
   
   pthread_mutex_lock(&htsp->htsp_out_mutex);
+
+  assert(!hmq->hmq_dead);
 
   TAILQ_INSERT_TAIL(&hmq->hmq_q, hm, hm_link);
 
@@ -2522,9 +2537,8 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   /* Beware! Closing subscriptions will invoke a lot of callbacks
      down in the streaming code. So we do this as early as possible
      to avoid any weird lockups */
-  while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL) {
+  while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL)
     htsp_subscription_destroy(&htsp, s);
-  }
 
   pthread_mutex_unlock(&global_lock);
 
@@ -2534,6 +2548,9 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  while((s = LIST_FIRST(&htsp.htsp_dead_subscriptions)) != NULL)
+    htsp_subscription_free(&htsp, s);
 
   htsp_msg_q_t *hmq;
 
@@ -3202,7 +3219,7 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
 
   /* Flush pkt buffers */
   if (skip->type != SMT_SKIP_ERROR)
-    htsp_flush_queue(hs->hs_htsp, &hs->hs_q);
+    htsp_flush_queue(hs->hs_htsp, &hs->hs_q, 0);
 
   if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
     htsmsg_add_u32(m, "absolute", 1);
