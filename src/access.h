@@ -79,19 +79,6 @@ typedef struct access_entry {
 
 extern const idclass_t access_entry_class;
 
-TAILQ_HEAD(access_ticket_queue, access_ticket);
-
-extern struct access_ticket_queue access_tickets;
-
-typedef struct access_ticket {
-  char *at_id;
-
-  TAILQ_ENTRY(access_ticket) at_link;
-
-  gtimer_t at_timer;
-  char *at_resource;
-} access_ticket_t;
-
 typedef struct access {
   char     *aa_username;
   char     *aa_representative;
@@ -103,6 +90,20 @@ typedef struct access {
   int       aa_match;
   uint32_t  aa_conn_limit;
 } access_t;
+
+TAILQ_HEAD(access_ticket_queue, access_ticket);
+
+extern struct access_ticket_queue access_tickets;
+
+typedef struct access_ticket {
+  char *at_id;
+
+  TAILQ_ENTRY(access_ticket) at_link;
+
+  gtimer_t at_timer;
+  char *at_resource;
+  access_t *at_access;
+} access_ticket_t;
 
 #define ACCESS_ANONYMOUS          0
 #define ACCESS_STREAMING          (1<<0)
@@ -118,12 +119,12 @@ typedef struct access {
 /**
  * Create a new ticket for the requested resource and generate a id for it
  */
-const char* access_ticket_create(const char *resource);
+const char* access_ticket_create(const char *resource, access_t *a);
 
 /**
  * Verifies that a given ticket id matches a resource
  */
-int access_ticket_verify(const char *id, const char *resource);
+access_t *access_ticket_verify2(const char *id, const char *resource);
 
 int access_ticket_delete(const char *ticket_id);
 
@@ -131,6 +132,11 @@ int access_ticket_delete(const char *ticket_id);
  * Free the access structure
  */
 void access_destroy(access_t *a);
+
+/**
+ * Copy the access structure
+ */
+access_t *access_copy(access_t *src);
 
 /**
  * Verifies that the given user in combination with the source ip

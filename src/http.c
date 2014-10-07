@@ -410,19 +410,20 @@ http_redirect(http_connection_t *hc, const char *location,
  */
 static int http_access_verify_ticket(http_connection_t *hc)
 {
-  const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+  const char *ticket_id;
 
-  if (hc->hc_ticket)
+  if (hc->hc_ticket || hc->hc_access)
     return 0;
-  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
-    char addrstr[50];
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
-    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
-	   addrstr, ticket_id, hc->hc_url);
-    hc->hc_ticket = 1;
-    return 0;
-  }
-  return -1;
+  ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+  hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
+  if (hc->hc_access == NULL)
+    return -1;
+  char addrstr[50];
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
+  tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s",
+	 addrstr, ticket_id, hc->hc_url);
+  hc->hc_ticket = 1;
+  return 0;
 }
 
 /**

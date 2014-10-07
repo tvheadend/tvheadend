@@ -450,7 +450,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
   htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-     access_ticket_create(buf));
+     access_ticket_create(buf, hc->hc_access));
 
 #if ENABLE_LIBAV
   transcoder_props_t props;
@@ -506,7 +506,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -543,7 +543,7 @@ http_tag_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -607,7 +607,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -662,7 +662,7 @@ http_dvr_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -702,7 +702,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
-    ticket_id = access_ticket_create(buf);
+    ticket_id = access_ticket_create(buf, hc->hc_access);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 
     http_output_content(hc, "application/x-mpegURL");

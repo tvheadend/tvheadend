@@ -1653,7 +1653,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("User does not have access");
 
     snprintf(path, sizeof(path), "/stream/channelid/%d", id);
-    ticket = access_ticket_create(path);
+    ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
     if (!(de = dvr_entry_find_by_id(id)))
       return htsp_error("DVR entry does not exist");
@@ -1661,7 +1661,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("User does not have access");
 
     snprintf(path, sizeof(path), "/dvrfile/%d", id);
-    ticket = access_ticket_create(path);
+    ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else {
     return htsp_error("Missing argument 'channelId' or 'dvrId'");
   }
