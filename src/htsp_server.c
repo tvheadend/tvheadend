@@ -2346,7 +2346,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   while(tvheadend_running) {
 readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
-      return r;
+      break;
 
     pthread_mutex_lock(&global_lock);
     if (htsp_authenticate(htsp, m)) {
@@ -2406,7 +2406,7 @@ readmsg:
   pthread_mutex_lock(&global_lock);
   tcp_connection_land(tcp_id);
   pthread_mutex_unlock(&global_lock);
-  return 0;
+  return tvheadend_running ? r : 0;
 }
 
 /**
