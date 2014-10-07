@@ -411,7 +411,7 @@ void *
 tcp_connection_launch
   (int fd, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
 {
-  tcp_server_launch_t *tsl, *res = NULL;
+  tcp_server_launch_t *tsl, *res;
   uint32_t used = 0;
   time_t started = dispatch_clock;
 
@@ -423,6 +423,7 @@ tcp_connection_launch
     return NULL;
 
 try_again:
+  res = NULL;
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
       res = tsl;
@@ -433,6 +434,8 @@ try_again:
     if (!strcmp(aa->aa_representative ?: "", tsl->representative ?: ""))
       used++;
   }
+  if (res == NULL)
+    return NULL;
 
   if (aa->aa_conn_limit && used >= aa->aa_conn_limit) {
     if (started + 3 < dispatch_clock) {
@@ -571,13 +574,14 @@ tcp_server_loop(void *aux)
     if (ev.data.ptr == &tcp_server_pipe) {
       r = read(tcp_server_pipe.rd, &c, 1);
       if (r > 0) {
+next:
         pthread_mutex_lock(&global_lock);
         while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
           LIST_REMOVE(tsl, jlink);
           pthread_mutex_unlock(&global_lock);
           pthread_join(tsl->tid, NULL);
           free(tsl);
-          pthread_mutex_lock(&global_lock);
+          goto next;
         }
         pthread_mutex_unlock(&global_lock);
       }
