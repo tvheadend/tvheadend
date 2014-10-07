@@ -124,6 +124,7 @@ struct tvhdhomerun_frontend
 
   // Tuning information
   int                            hf_locked;
+  int                            hf_ready;
   int                            hf_status;
 
   pthread_mutex_t                hf_input_mux_lock;           // Lock to make sure we are not running the input-thread

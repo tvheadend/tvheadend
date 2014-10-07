@@ -112,7 +112,6 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   /* local IP */
   /* TODO: this is nasty */
   local_ip = hdhomerun_device_get_local_machine_addr(hfe->hf_hdhomerun_tuner);
-  tvhdebug("tvhdhomerun", "local ip in uint32_t %u", local_ip);  
 
   /* first setup a local socket for the device to stream to */
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -154,15 +153,12 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* and tell the device to stream to the local port */
   memset(target, 0, sizeof(target));
-  /*
   snprintf(target, sizeof(target), "udp://%u.%u.%u.%u:%u",
-    (unsigned int)(local_ip >> 24) && 0xFF,
-    (unsigned int)(local_ip >> 16) && 0xFF,
-    (unsigned int)(local_ip >>  8) && 0xFF,
-    (unsigned int)(local_ip >>  0) && 0xFF,
-    sock_addr.sin_port);
-  */
-  snprintf(target, sizeof(target), "udp://192.168.1.12:%u", (unsigned int) ntohs(sock_addr.sin_port));
+    (unsigned int)(local_ip >> 24) & 0xFF,
+    (unsigned int)(local_ip >> 16) & 0xFF,
+    (unsigned int)(local_ip >>  8) & 0xFF,
+    (unsigned int)(local_ip >>  0) & 0xFF,
+    ntohs(sock_addr.sin_port));
   tvhdebug("tvhdhomerun", "setting target to: %s", target);  
   pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
   r = hdhomerun_device_set_tuner_target(hfe->hf_hdhomerun_tuner, target);
@@ -259,7 +255,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   char *tuner_status_str;
 
   /* Stop timer */
-  if (!mmi) return;
+  if (!mmi || !hfe->hf_ready) return;
 
   /* re-arm */
   gtimer_arm(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 1);
@@ -387,6 +383,7 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
 
   /* start the monitoring */
   gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 50);
+  hfe->hf_ready = 1;
 
   return 0;
 }
@@ -435,6 +432,12 @@ tvhdhomerun_frontend_stop_mux
     tvh_pipe_close(&hfe->hf_input_thread_pipe);
     tvhtrace("tvhdhomerun", "%s - input thread stopped", buf1);
   }
+
+  hfe->hf_locked = 0;
+  hfe->hf_status = 0;
+  hfe->hf_ready = 0;
+
+  gtimer_arm(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 2);
 }
 
 static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
