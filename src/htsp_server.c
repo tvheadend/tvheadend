@@ -345,12 +345,12 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
     transcoder_destroy(hs->hs_transcoder);
 #endif
 
-  htsp_flush_queue(htsp, &hs->hs_q, 1);
-
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
     timeshift_destroy(hs->hs_tshift);
 #endif
+
+  htsp_flush_queue(htsp, &hs->hs_q, 1);
 }
 
 /**
