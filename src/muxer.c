@@ -159,6 +159,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
 }
 
 
+#if 0
 /**
  * Get a list of supported containers
  */
@@ -190,6 +191,7 @@ muxer_container_list(htsmsg_t *array)
 
   return c;
 }
+#endif
 
 
 /**
@@ -237,25 +239,25 @@ muxer_container_mime2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
+muxer_create(const muxer_config_t *m_cfg)
 {
   muxer_t *m;
 
   assert(m_cfg);
 
-  m = pass_muxer_create(mc, m_cfg);
+  m = pass_muxer_create(m_cfg);
 
   if(!m)
-    m = tvh_muxer_create(mc, m_cfg);
+    m = tvh_muxer_create(m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)
-    m = lav_muxer_create(mc, m_cfg);
+    m = lav_muxer_create(m_cfg);
 #endif
 
   if(!m) {
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
-	   muxer_container_type2txt(mc));
+	   muxer_container_type2txt(m_cfg->m_type));
     return NULL;
   }
   

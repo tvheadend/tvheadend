@@ -37,15 +37,17 @@
 #include "dvr/dvr.h"
 #include "filebundle.h"
 #include "streaming.h"
-#include "plumbing/tsfix.h"
-#include "plumbing/globalheaders.h"
 #include "plumbing/transcoding.h"
+#include "profile.h"
 #include "epg.h"
 #include "muxer.h"
 #include "imagecache.h"
 #include "tcp.h"
 #include "config.h"
 #include "atomic.h"
+#if ENABLE_MPEGTS
+#include "input.h"
+#endif
 
 #if defined(PLATFORM_LINUX)
 #include <sys/sendfile.h>
@@ -287,21 +289,20 @@ http_stream_postop ( void *tcp_id )
  * HTTP stream loop
  */
 static void
-http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
-		const char *name, muxer_container_type_t mc,
-                th_subscription_t *s, muxer_config_t *mcfg)
+http_stream_run(http_connection_t *hc, profile_chain_t *prch,
+		const char *name, th_subscription_t *s)
 {
   streaming_message_t *sm;
   int run = 1;
   int started = 0;
-  muxer_t *mux = NULL;
+  streaming_queue_t *sq = &prch->prch_sq;
+  muxer_t *mux = prch->prch_muxer;
   int timeouts = 0, grace = 20;
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
 
-  mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
@@ -419,8 +420,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
   if(started)
     muxer_close(mux);
-
-  muxer_destroy(mux);
 }
 
 
@@ -433,14 +432,12 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_queue_t *hq;
   char buf[255];
   const char *host;
-  muxer_container_type_t mc;
+  char *profile;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
+  profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -472,10 +469,11 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
       htsbuf_qprintf(hq, "&scodec=%s", streaming_component_type2txt(props.tp_scodec));
   }
 #endif
-  htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
+  htsbuf_qprintf(hq, "&profile=%s\n", profile);
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(profile);
   return 0;
 }
 
@@ -490,14 +488,12 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   char buf[255];
   channel_tag_mapping_t *ctm;
   const char *host;
-  muxer_container_type_t mc;
+  char *profile;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
+  profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
@@ -507,11 +503,12 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf, hc->hc_access));
-    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
+    htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(profile);
   return 0;
 }
 
@@ -526,14 +523,12 @@ http_tag_list_playlist(http_connection_t *hc)
   char buf[255];
   channel_tag_t *ct;
   const char *host;
-  muxer_container_type_t mc;
+  char *profile;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
+  profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
@@ -544,11 +539,12 @@ http_tag_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf, hc->hc_access));
-    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
+    htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(profile);
   return 0;
 }
 
@@ -575,14 +571,12 @@ http_channel_list_playlist(http_connection_t *hc)
   channel_t **chlist;
   const char *host;
   int idx = 0, count = 0;
-  muxer_container_type_t mc;
+  char *profile;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = dvr_config_find_by_name_default(NULL)->dvr_mc;
+  profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   CHANNEL_FOREACH(ch)
     count++;
@@ -608,13 +602,14 @@ http_channel_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
        access_ticket_create(buf, hc->hc_access));
-    htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
+    htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
 
   free(chlist);
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(profile);
   return 0;
 }
 
@@ -789,77 +784,51 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 static int
 http_stream_service(http_connection_t *hc, service_t *service, int weight)
 {
-  streaming_queue_t sq;
   th_subscription_t *s;
-  streaming_target_t *gh;
-  streaming_target_t *tsfix;
-  streaming_target_t *st;
-  dvr_config_t *cfg;
-  muxer_container_type_t mc;
-  int flags = SUBSCRIPTION_STREAMING;
+  profile_t *pro;
+  profile_chain_t prch;
   const char *str;
   size_t qsize;
   const char *name;
   char addrbuf[50];
   void *tcp_id;
-  int res = 0;
+  int res = HTTP_STATUS_BAD_REQUEST;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if((tcp_id = http_stream_preop(hc)) == NULL)
+  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"))))
     return HTTP_STATUS_NOT_ALLOWED;
 
-  cfg = dvr_config_find_by_name_default(NULL);
-
-  /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN) {
-    mc = cfg->dvr_mc;
-  }
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
   else
     qsize = 1500000;
 
-  if(mc == MC_PASS || mc == MC_RAW) {
-    streaming_queue_init2(&sq, SMT_PACKET, qsize);
-    gh = NULL;
-    tsfix = NULL;
-    st = &sq.sq_st;
-    flags |= SUBSCRIPTION_RAW_MPEGTS;
-  } else {
-    streaming_queue_init2(&sq, 0, qsize);
-    gh = globalheaders_create(&sq.sq_st);
-    tsfix = tsfix_create(gh);
-    st = tsfix;
+  if (!pro->pro_open(pro, &prch, NULL, qsize)) {
+
+    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+
+    s = subscription_create_from_service(service, weight ?: 100, "HTTP",
+                                         prch.prch_st,
+                                         prch.prch_flags | SUBSCRIPTION_STREAMING,
+                                         addrbuf,
+				         hc->hc_username,
+				         http_arg_get(&hc->hc_args, "User-Agent"));
+    if(s) {
+      name = tvh_strdupa(service->s_nicename);
+      pthread_mutex_unlock(&global_lock);
+      http_stream_run(hc, &prch, name, s);
+      pthread_mutex_lock(&global_lock);
+      subscription_unsubscribe(s);
+      res = 0;
+    }
   }
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-
-  s = subscription_create_from_service(service, weight ?: 100, "HTTP", st, flags,
-				       addrbuf,
-				       hc->hc_username,
-				       http_arg_get(&hc->hc_args, "User-Agent"));
-  if(s) {
-    name = tvh_strdupa(service->s_nicename);
-    pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
-    pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(s);
-  } else {
-    res = HTTP_STATUS_BAD_REQUEST;
-  }
-
-  if(gh)
-    globalheaders_destroy(gh);
-
-  if(tsfix)
-    tsfix_destroy(tsfix);
-
-  streaming_queue_deinit(&sq);
-
+  profile_chain_close(&prch);
   http_stream_postop(tcp_id);
   return res;
 }
@@ -870,17 +839,17 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
  * TODO: can't currently force this to be on a particular input
  */
 #if ENABLE_MPEGTS
-#include "input.h"
 static int
 http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 {
   th_subscription_t *s;
-  streaming_queue_t sq;
+  profile_chain_t prch;
+  size_t qsize;
   const char *name;
   char addrbuf[50];
-  muxer_config_t muxcfg = { 0 };
   void *tcp_id;
-  int res = 0;
+  const char *str;
+  int res = HTTP_STATUS_BAD_REQUEST;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -888,27 +857,33 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   if((tcp_id = http_stream_preop(hc)) == NULL)
     return HTTP_STATUS_NOT_ALLOWED;
 
-  streaming_queue_init(&sq, SMT_PACKET);
+  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
+    qsize = atoll(str);
+  else
+    qsize = 10000000;
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_mux(mm, weight ?: 10, "HTTP", &sq.sq_st,
-                                   SUBSCRIPTION_RAW_MPEGTS |
-                                   SUBSCRIPTION_FULLMUX |
-                                   SUBSCRIPTION_STREAMING,
-                                   addrbuf, hc->hc_username,
-                                   http_arg_get(&hc->hc_args, "User-Agent"), NULL);
-  if (s) {
-    name = tvh_strdupa(s->ths_title);
-    pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
-    pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(s);
-  } else {
-    res = HTTP_STATUS_BAD_REQUEST;
+  if (!profile_chain_raw_open(&prch, qsize)) {
+
+    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+
+    s = subscription_create_from_mux(mm, weight ?: 10, "HTTP",
+                                     prch.prch_st,
+                                     prch.prch_flags |
+                                     SUBSCRIPTION_FULLMUX |
+                                     SUBSCRIPTION_STREAMING,
+                                     addrbuf, hc->hc_username,
+                                     http_arg_get(&hc->hc_args, "User-Agent"), NULL);
+    if (s) {
+      name = tvh_strdupa(s->ths_title);
+      pthread_mutex_unlock(&global_lock);
+      http_stream_run(hc, &prch, name, s);
+      pthread_mutex_lock(&global_lock);
+      subscription_unsubscribe(s);
+      res = 0;
+    }
   }
 
-  streaming_queue_deinit(&sq);
-
+  profile_chain_close(&prch);
   http_stream_postop(tcp_id);
 
   return res;
@@ -921,93 +896,50 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 static int
 http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 {
-  streaming_queue_t sq;
   th_subscription_t *s;
-  streaming_target_t *gh;
-  streaming_target_t *tsfix;
-  streaming_target_t *st;
-#if ENABLE_LIBAV
-  streaming_target_t *tr = NULL;
-#endif
-  dvr_config_t *cfg;
-  int flags = SUBSCRIPTION_STREAMING;
-  muxer_container_type_t mc;
+  profile_t *pro;
+  profile_chain_t prch;
   char *str;
   size_t qsize;
   const char *name;
   char addrbuf[50];
   void *tcp_id;
-  int res = 0;
+  int res = HTTP_STATUS_BAD_REQUEST;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if((tcp_id = http_stream_preop(hc)) == NULL)
+  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"))))
     return HTTP_STATUS_NOT_ALLOWED;
 
-  cfg = dvr_config_find_by_name_default(NULL);
-
-  /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN) {
-    mc = cfg->dvr_mc;
-  }
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
   else
     qsize = 1500000;
 
-  if(mc == MC_PASS || mc == MC_RAW) {
-    streaming_queue_init2(&sq, SMT_PACKET, qsize);
-    gh = NULL;
-    tsfix = NULL;
-    st = &sq.sq_st;
-    flags |= SUBSCRIPTION_RAW_MPEGTS;
-  } else {
-    streaming_queue_init2(&sq, 0, qsize);
-    gh = globalheaders_create(&sq.sq_st);
-#if ENABLE_LIBAV
-    transcoder_props_t props;
-    if(http_get_transcoder_properties(&hc->hc_req_args, &props)) {
-      tr = transcoder_create(gh);
-      transcoder_set_properties(tr, &props);
-      tsfix = tsfix_create(tr);
-    } else
-#endif
-    tsfix = tsfix_create(gh);
-    st = tsfix;
+  if (!pro->pro_open(pro, &prch, NULL, qsize)) {
+
+    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
+
+    s = subscription_create_from_channel(ch, weight ?: 100, "HTTP",
+                 prch.prch_st, prch.prch_flags | SUBSCRIPTION_STREAMING,
+                 addrbuf, hc->hc_username,
+                 http_arg_get(&hc->hc_args, "User-Agent"));
+
+    if(s) {
+      name = tvh_strdupa(channel_get_name(ch));
+      pthread_mutex_unlock(&global_lock);
+      http_stream_run(hc, &prch, name, s);
+      pthread_mutex_lock(&global_lock);
+      subscription_unsubscribe(s);
+      res = 0;
+    }
   }
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_channel(ch, weight ?: 100, "HTTP", st, flags,
-               addrbuf,
-               hc->hc_username,
-               http_arg_get(&hc->hc_args, "User-Agent"));
-
-  if(s) {
-    name = tvh_strdupa(channel_get_name(ch));
-    pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
-    pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(s);
-  } else {
-    res = HTTP_STATUS_BAD_REQUEST;
-  }
-
-  if(gh)
-    globalheaders_destroy(gh);
-
-#if ENABLE_LIBAV
-  if(tr)
-    transcoder_destroy(tr);
-#endif
-
-  if(tsfix)
-    tsfix_destroy(tsfix);
-
-  streaming_queue_deinit(&sq);
-
+  profile_chain_close(&prch);
   http_stream_postop(tcp_id);
 
   return res;

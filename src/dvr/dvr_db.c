@@ -103,7 +103,7 @@ dvr_entry_get_mc( dvr_entry_t *de )
 {
   if (de->de_mc >= 0)
     return de->de_mc;
-  return de->de_config->dvr_mc;
+  return profile_get_mc(de->de_config->dvr_profile);
 }
 
 int
@@ -1779,7 +1779,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = MC_MATROSKA,
       .set      = dvr_entry_class_mc_set,
       .list     = dvr_entry_class_mc_list,
-      .opts     = PO_SORTKEY
+      .opts     = PO_RDONLY
     },
     {
       .type     = PT_STR,

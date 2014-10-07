@@ -378,6 +378,18 @@ function accessUpdate(o) {
 
         cp.add(chepg);
 
+        /* Stream Config */
+        var stream = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: 'Stream',
+            iconCls: 'stream_config',
+            items: []
+        });
+        tvheadend.esfilter_tab(stream);
+
+        cp.add(stream);
+
         /* DVR / Timeshift */
         var tsdvr = new Ext.TabPanel({
             activeTab: 0,
@@ -395,18 +407,6 @@ function accessUpdate(o) {
         /* CSA */
         if (tvheadend.capabilities.indexOf('caclient') !== -1)
             tvheadend.caclient(cp, null);
-
-        /* Stream Config */
-        var stream = new Ext.TabPanel({
-            activeTab: 0,
-            autoScroll: true,
-            title: 'Stream',
-            iconCls: 'stream_config',
-            items: []
-        });
-        tvheadend.esfilter_tab(stream);
-
-        cp.add(stream);
 
         /* Debug */
         tvheadend.tvhlog(cp);

@@ -139,7 +139,6 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_enabled = 1;
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
-  cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
@@ -155,7 +154,6 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
-  cfg->dvr_muxcnf.m_rewrite_pat = 1;
 
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes
@@ -171,6 +169,12 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   }
 
   tvhinfo("dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
+
+  if (cfg->dvr_profile == NULL) {
+    cfg->dvr_profile = profile_find_by_name(NULL);
+    assert(cfg->dvr_profile);
+    LIST_INSERT_HEAD(&cfg->dvr_profile->pro_dvr_configs, cfg, profile_link);
+  }
 
   if (dvr_config_is_default(cfg) && dvr_config_find_by_name(NULL)) {
     tvherror("dvr", "Unable to create second default config, removing");
@@ -200,6 +204,11 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
   }
   LIST_REMOVE(cfg, config_link);
   idnode_unlink(&cfg->dvr_id);
+
+  if (cfg->dvr_profile) {
+    LIST_REMOVE(cfg, profile_link);
+    cfg->dvr_profile = NULL;
+  }
 
   dvr_entry_destroy_by_config(cfg, delconf);
   access_destroy_by_dvr_config(cfg, delconf);
@@ -327,6 +336,51 @@ dvr_config_class_name_set(void *o, const void *v)
   return 0;
 }
 
+static int
+dvr_config_class_profile_set(void *o, const void *v)
+{
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  profile_t *pro;
+
+  pro = v ? profile_find_by_uuid(v) : NULL;
+  pro = pro ?: profile_find_by_name(v);
+  if (pro == NULL) {
+    if (cfg->dvr_profile) {
+      LIST_REMOVE(cfg, profile_link);
+      cfg->dvr_profile = NULL;
+      return 1;
+    }
+  } else if (cfg->dvr_profile != pro) {
+    if (cfg->dvr_profile)
+      LIST_REMOVE(cfg, profile_link);
+    cfg->dvr_profile = pro;
+    LIST_INSERT_HEAD(&pro->pro_dvr_configs, cfg, profile_link);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+dvr_config_class_profile_get(void *o)
+{
+  static const char *ret;
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  if (cfg->dvr_profile)
+    ret = idnode_uuid_as_str(&cfg->dvr_profile->pro_id);
+  else
+    ret = "";
+  return &ret;
+}
+
+static char *
+dvr_config_class_profile_rend(void *o)
+{
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  if (cfg->dvr_profile)
+    return strdup(profile_get_name(cfg->dvr_profile));
+  return NULL;
+}
+
 static const char *
 dvr_config_class_get_title (idnode_t *self)
 {
@@ -433,12 +487,14 @@ const idclass_t dvr_config_class = {
       .get_opts = dvr_config_class_enabled_opts,
     },
     {
-      .type     = PT_INT,
-      .id       = "container",
-      .name     = "Container",
-      .off      = offsetof(dvr_config_t, dvr_mc),
-      .def.i    = MC_MATROSKA,
-      .list     = dvr_entry_class_mc_list,
+      .type     = PT_STR,
+      .id       = "profile",
+      .name     = "Stream Profile",
+      .off      = offsetof(dvr_config_t, dvr_profile),
+      .set      = dvr_config_class_profile_set,
+      .get      = dvr_config_class_profile_get,
+      .rend     = dvr_config_class_profile_rend,
+      .list     = profile_class_get_list,
       .group    = 1,
     },
     {
@@ -520,21 +576,6 @@ const idclass_t dvr_config_class = {
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,
       .def.s    = "UTF-8",
-      .group    = 2,
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "rewrite-pat",
-      .name     = "Rewrite PAT",
-      .off      = offsetof(dvr_config_t, dvr_muxcnf.m_rewrite_pat),
-      .def.i    = 1,
-      .group    = 2,
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "rewrite-pmt",
-      .name     = "Rewrite PMT",
-      .off      = offsetof(dvr_config_t, dvr_muxcnf.m_rewrite_pmt),
       .group    = 2,
     },
     {
@@ -648,6 +689,20 @@ const idclass_t dvr_config_class = {
     {}
   },
 };
+
+/**
+ *
+ */
+void
+dvr_config_destroy_by_profile(profile_t *pro, int delconf)
+{
+  dvr_config_t *cfg;
+
+  while((cfg = LIST_FIRST(&pro->pro_dvr_configs)) != NULL) {
+    LIST_REMOVE(cfg, profile_link);
+    cfg->dvr_profile = profile_find_by_name(NULL);
+  }
+}
 
 /**
  *

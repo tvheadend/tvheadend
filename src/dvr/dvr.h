@@ -24,16 +24,19 @@
 #include "channels.h"
 #include "subscriptions.h"
 #include "muxer.h"
+#include "profile.h"
 #include "lang_str.h"
 
 typedef struct dvr_config {
   idnode_t dvr_id;
 
   LIST_ENTRY(dvr_config) config_link;
+  LIST_ENTRY(dvr_config) profile_link;
 
   int dvr_enabled;
   int dvr_valid;
   char *dvr_config_name;
+  profile_t *dvr_profile;
   char *dvr_storage;
   uint32_t dvr_retention_days;
   char *dvr_charset;
@@ -43,7 +46,6 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
 
-  int dvr_mc;
   muxer_config_t dvr_muxcnf;
 
   int dvr_dir_per_day;
@@ -208,15 +210,11 @@ typedef struct dvr_entry {
   pthread_t de_thread;
 
   th_subscription_t *de_s;
-  streaming_queue_t de_sq;
-  streaming_target_t *de_tsfix;
-  streaming_target_t *de_gh;
-  
-  /**
-   * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
-   */
 
-  struct muxer *de_mux;
+  /**
+   * Stream worker chain
+   */
+  profile_chain_t *de_chain;
 
   /**
    * Inotify
@@ -349,6 +347,8 @@ static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)
 void dvr_config_delete(const char *name);
 
 void dvr_config_save(dvr_config_t *cfg);
+
+void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 /*
  *

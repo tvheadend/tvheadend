@@ -69,6 +69,7 @@
 #include "libav.h"
 #include "plumbing/transcoding.h"
 #endif
+#include "profile.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -816,6 +817,8 @@ main(int argc, char **argv)
   transcoding_init();
 #endif
 
+  profile_init();
+
   imagecache_init();
 
   http_client_init(opt_user_agent);
@@ -939,6 +942,7 @@ main(int argc, char **argv)
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
   tvhftrace("main", esfilter_done);
+  tvhftrace("main", profile_done);
   tvhftrace("main", intlconv_done);
   tvhftrace("main", urlparse_done);
   tvhftrace("main", idnode_done);

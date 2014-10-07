@@ -63,10 +63,11 @@ dvr_rec_subscribe(dvr_entry_t *de)
 {
   char buf[100];
   int weight;
-  streaming_target_t *st;
-  int flags;
+  profile_t *pro;
+  profile_chain_t *prch;
 
   assert(de->de_s == NULL);
+  assert(de->de_chain == NULL);
 
   if(de->de_pri < ARRAY_SIZE(prio2weight))
     weight = prio2weight[de->de_pri];
@@ -75,23 +76,28 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 
-  if(dvr_entry_get_mc(de) == MC_PASS) {
-    streaming_queue_init(&de->de_sq, SMT_PACKET);
-    de->de_gh = NULL;
-    de->de_tsfix = NULL;
-    st = &de->de_sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
-  } else {
-    streaming_queue_init(&de->de_sq, 0);
-    de->de_gh = globalheaders_create(&de->de_sq.sq_st);
-    st = de->de_tsfix = tsfix_create(de->de_gh);
-    tsfix_set_start_time(de->de_tsfix, dvr_entry_get_start_time(de));
-    flags = 0;
+  pro = de->de_config->dvr_profile;
+  prch = malloc(sizeof(*prch));
+  if (pro->pro_open(pro, prch, &de->de_config->dvr_muxcnf, 0)) {
+    tvherror("dvr", "unable to create new channel streaming chain for '%s'",
+             channel_get_name(de->de_channel));
+    return;
   }
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
-					      buf, st, flags,
+					      buf, prch->prch_st,
+					      prch->prch_flags,
 					      NULL, NULL, NULL);
+  if (de->de_s == NULL) {
+    tvherror("dvr", "unable to create new channel subcription for '%s'",
+             channel_get_name(de->de_channel));
+    profile_chain_close(prch);
+    free(prch);
+    de->de_chain = NULL;
+    return;
+  }
+
+  de->de_chain = prch;
 
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de);
 }
@@ -102,20 +108,21 @@ dvr_rec_subscribe(dvr_entry_t *de)
 void
 dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 {
-  assert(de->de_s != NULL);
+  profile_chain_t *prch = de->de_chain;
 
-  streaming_target_deliver(&de->de_sq.sq_st, streaming_msg_create(SMT_EXIT));
+  assert(de->de_s != NULL);
+  assert(prch != NULL);
+
+  streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
   
   pthread_join(de->de_thread, NULL);
 
   subscription_unsubscribe(de->de_s);
   de->de_s = NULL;
 
-  if(de->de_tsfix)
-    tsfix_destroy(de->de_tsfix);
-
-  if(de->de_gh)
-    globalheaders_destroy(de->de_gh);
+  de->de_chain = NULL;
+  profile_chain_close(prch);
+  free(prch);
 
   de->de_last_error = stopcode;
 }
@@ -235,7 +242,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if (filename == NULL)
     return -1;
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, muxer_suffix(de->de_mux, ss));
+	   path, filename, muxer_suffix(de->de_chain->prch_muxer, ss));
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -250,7 +257,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     tally++;
 
     snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, muxer_suffix(de->de_mux, ss));
+	     path, filename, tally, muxer_suffix(de->de_chain->prch_muxer, ss));
   }
   free(filename);
 
@@ -310,17 +317,23 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   const streaming_start_component_t *ssc;
   int i;
   dvr_config_t *cfg = de->de_config;
-  muxer_container_type_t mc;
+  profile_chain_t *prch = de->de_chain;
+  muxer_t *muxer;
 
   if (!cfg) {
     dvr_rec_fatal_error(de, "Unable to determine config profile");
     return -1;
   }
 
-  mc = dvr_entry_get_mc(de);
+  if (!prch) {
+    dvr_rec_fatal_error(de, "Unable to determine stream profile");
+    return -1;
+  }
 
-  de->de_mux = muxer_create(mc, &cfg->dvr_muxcnf);
-  if(!de->de_mux) {
+  if (!(muxer = prch->prch_muxer))
+    muxer = prch->prch_muxer = muxer_create(&cfg->dvr_muxcnf);
+
+  if(!muxer) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
     return -1;
   }
@@ -330,18 +343,18 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
-  if(muxer_open_file(de->de_mux, de->de_filename)) {
+  if(muxer_open_file(muxer, de->de_filename)) {
     dvr_rec_fatal_error(de, "Unable to open file");
     return -1;
   }
 
-  if(muxer_init(de->de_mux, ss, lang_str_get(de->de_title, NULL))) {
+  if(muxer_init(muxer, ss, lang_str_get(de->de_title, NULL))) {
     dvr_rec_fatal_error(de, "Unable to init file");
     return -1;
   }
 
   if(cfg->dvr_tag_files && de->de_bcast) {
-    if(muxer_write_meta(de->de_mux, de->de_bcast)) {
+    if(muxer_write_meta(muxer, de->de_bcast)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
       return -1;
     }
@@ -438,7 +451,8 @@ dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
   dvr_config_t *cfg = de->de_config;
-  streaming_queue_t *sq = &de->de_sq;
+  profile_chain_t *prch = de->de_chain;
+  streaming_queue_t *sq = &prch->prch_sq;
   streaming_message_t *sm;
   th_pkt_t *pkt;
   int run = 1;
@@ -482,12 +496,12 @@ dvr_thread(void *aux)
 	break;
 
       if(commercial != pkt->pkt_commercial)
-	muxer_add_marker(de->de_mux);
+	muxer_add_marker(prch->prch_muxer);
 
       commercial = pkt->pkt_commercial;
 
       if(started) {
-	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
+	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
       }
       break;
@@ -495,14 +509,14 @@ dvr_thread(void *aux)
     case SMT_MPEGTS:
       if(started) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
+	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
       }
       break;
 
     case SMT_START:
       if(started &&
-	 muxer_reconfigure(de->de_mux, sm->sm_data) < 0) {
+	 muxer_reconfigure(prch->prch_muxer, sm->sm_data) < 0) {
 	tvhlog(LOG_WARNING,
 	       "dvr", "Unable to reconfigure \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
@@ -607,7 +621,7 @@ dvr_thread(void *aux)
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  if(de->de_mux)
+  if(prch->prch_muxer)
     dvr_thread_epilog(de);
 
   return NULL;
@@ -671,9 +685,11 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
-  muxer_close(de->de_mux);
-  muxer_destroy(de->de_mux);
-  de->de_mux = NULL;
+  profile_chain_t *prch = de->de_chain;
+
+  muxer_close(prch->prch_muxer);
+  muxer_destroy(prch->prch_muxer);
+  prch->prch_muxer = NULL;
 
   dvr_config_t *cfg = de->de_config;
   if(cfg && cfg->dvr_postproc && de->de_filename)

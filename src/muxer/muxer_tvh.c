@@ -56,9 +56,9 @@ tvh_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   }
 
   if(has_video)
-    return muxer_container_type2mime(m->m_container, 1);
+    return muxer_container_type2mime(m->m_config.m_type, 1);
   else if(has_audio)
-    return muxer_container_type2mime(m->m_container, 0);
+    return muxer_container_type2mime(m->m_config.m_type, 0);
   else
     return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
@@ -223,11 +223,11 @@ tvh_muxer_destroy(muxer_t *m)
  * Create a new builtin muxer
  */
 muxer_t*
-tvh_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
+tvh_muxer_create(const muxer_config_t *m_cfg)
 {
   tvh_muxer_t *tm;
 
-  if(mc != MC_MATROSKA && mc != MC_WEBM)
+  if(m_cfg->m_type != MC_MATROSKA && m_cfg->m_type != MC_WEBM)
     return NULL;
 
   tm = calloc(1, sizeof(tvh_muxer_t));
@@ -241,8 +241,7 @@ tvh_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
   tm->m_write_pkt    = tvh_muxer_write_pkt;
   tm->m_close        = tvh_muxer_close;
   tm->m_destroy      = tvh_muxer_destroy;
-  tm->m_container    = mc;
-  tm->tm_ref         = mk_mux_create((muxer_t *)tm, mc == MC_WEBM);
+  tm->tm_ref         = mk_mux_create((muxer_t *)tm, m_cfg->m_type == MC_WEBM);
 
   return (muxer_t*)tm;
 }
