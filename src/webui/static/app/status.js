@@ -61,10 +61,10 @@ tvheadend.status_subs = function(panel, index)
 
         tvheadend.comet.on('subscriptions', update);
 
-        function renderBw(value, item, record) {
+        function renderBw(value, meta, record) {
             var txt = parseInt(value / 125);
-            var href = 'javascript:tvheadend.subscription_bw_monitor(' + record.id + ');';
-            return '<a href="' + href + '">' + txt + '</a>';
+            meta.attr = 'style="cursor:alias;"';
+            return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 
         var subsCm = new Ext.grid.ColumnModel([
@@ -125,6 +125,7 @@ tvheadend.status_subs = function(panel, index)
                 id: 'in',
                 header: "Input (kb/s)",
                 dataIndex: 'in',
+                listeners: { click: { fn: clicked } },
                 renderer: renderBw,
             },
             {
@@ -132,9 +133,18 @@ tvheadend.status_subs = function(panel, index)
                 id: 'out',
                 header: "Output (kb/s)",
                 dataIndex: 'out',
-                renderer: renderBw
+                listeners: { click: { fn: clicked } },
+                renderer: renderBw,
             }
         ]);
+        
+        function clicked(column, grid, index, e) {
+            if (column.dataIndex == 'in' || column.dataIndex == 'out') {
+                var id = grid.getStore().getAt(index).id;
+                tvheadend.subscription_bw_monitor(id);
+                return false;
+            }
+        }
 
         subs = new Ext.grid.GridPanel({
             border: false,
@@ -152,7 +162,7 @@ tvheadend.status_subs = function(panel, index)
         dpanel.add(subs);
         dpanel.doLayout(false, true);
     }
-    
+
     function destroyer() {
         if (subs === null || !tvheadend.dynamic)
             return;
@@ -253,10 +263,10 @@ tvheadend.status_streams = function(panel, index)
 
         tvheadend.comet.on('input_status', update);
 
-        function renderBw(value, item, record) {
+        function renderBw(value, meta, record) {
             var txt = parseInt(value / 1024);
-            var href = "javascript:tvheadend.stream_bw_monitor('" + record.id + "');";
-            return '<a href="' + href + '">' + txt + '</a>';
+            meta.attr = 'style="cursor:alias;"';
+            return '<span class="x-linked">&nbsp;</span>' + txt;
         }
 
         function renderBer(value, item, store) {
@@ -302,7 +312,8 @@ tvheadend.status_streams = function(panel, index)
                 width: 50,
                 header: "Bandwidth (kb/s)",
                 dataIndex: 'bps',
-                renderer: renderBw
+                renderer: renderBw,
+                listeners: { click: { fn: clicked } },
             },
             {
                 width: 50,
@@ -332,6 +343,14 @@ tvheadend.status_streams = function(panel, index)
                 dataIndex: 'cc'
             }
         ]);
+
+        function clicked(column, grid, index, e) {
+            if (column.dataIndex == 'bps') {
+                var id = grid.getStore().getAt(index).id;
+                tvheadend.stream_bw_monitor(id);
+                return false;
+            }
+        }
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
             header: "SNR",
@@ -430,6 +449,33 @@ tvheadend.status_conns = function(panel, index) {
         if (grid)
             return;
 
+        var actions = new Ext.ux.grid.RowActions({
+            header: '',
+            width: 10,
+            actions: [
+                {
+                    iconCls: 'cancel',
+                    qtip: 'Cancel this connection',
+                    cb: function(grid, rec, act, row) {
+                        var id = grid.getStore().getAt(row).data.id;
+                        Ext.MessageBox.confirm('Cancel Connection',
+                            'Cancel the selected connection?',
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/connections/cancel',
+                                    params: { id: id },
+                                });
+                            }
+                       );
+                   }
+               },
+            ],
+            destroy: function() {
+            }
+        });
+
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
@@ -456,7 +502,9 @@ tvheadend.status_conns = function(panel, index) {
             return dt.format('Y-m-d H:i:s');
         }
 
-        var cm = new Ext.grid.ColumnModel([{
+        var cm = new Ext.grid.ColumnModel([
+            actions,
+            {
                 width: 50,
                 id: 'type',
                 header: "Type",
@@ -489,7 +537,8 @@ tvheadend.status_conns = function(panel, index) {
             flex: 1,
             viewConfig: {
                 forceFit: true
-            }
+            },
+            plugins: [actions],
         });
         
         dpanel.add(grid);
@@ -680,13 +729,13 @@ tvheadend.stream_bw_monitor = function(id) {
                 render: {
                     scope: this,
                     fn: function(item) {
-                        chart.streamTo(item.el.dom, 1000);
+                        chart.streamTo(item.el.dom, 15000);
                     }
                 },
                 resize: {
                     scope: this,
                     fn: function(item) {
-                        chart.render(item.el.dom, 1000);
+                        chart.render(item.el.dom, 15000);
                     }
                 }
             }
@@ -694,7 +743,7 @@ tvheadend.stream_bw_monitor = function(id) {
     });
 
     var task = {
-        interval: 10000,
+        interval: 1000,
         run: function() {
             var store = tvheadend.streamStatusStore;
             var r = store ? store.getById(id) : null;

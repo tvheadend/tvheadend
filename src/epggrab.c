@@ -413,6 +413,8 @@ void epggrab_done ( void )
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
+  pyepg_done();
+  xmltv_done();
   free(epggrab_cron);
   epggrab_cron = NULL;
   free(epggrab_cron_multi);

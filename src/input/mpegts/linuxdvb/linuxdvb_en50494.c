@@ -204,7 +204,9 @@ linuxdvb_en50494_tune
     /* to avoid repeated collision, wait a random time 68-118
      * 67,5 is the typical diseqc-time */
     if (i != 0) {
-      int ms = rand()%50 + 68;
+      uint8_t rnd;
+      uuid_random(&rnd, 1);
+      int ms = ((int)rnd)%50 + 68;
       usleep(ms*1000);
     }
 

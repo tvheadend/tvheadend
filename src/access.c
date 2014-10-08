@@ -57,6 +57,7 @@ access_ticket_destroy(access_ticket_t *at)
   free(at->at_id);
   free(at->at_resource);
   TAILQ_REMOVE(&access_tickets, at, at_link);
+  access_destroy(at->at_access);
   free(at);
 }
 
@@ -92,13 +93,15 @@ access_ticket_timout(void *aux)
  * Create a new ticket for the requested resource and generate a id for it
  */
 const char *
-access_ticket_create(const char *resource)
+access_ticket_create(const char *resource, access_t *a)
 {
   uint8_t buf[20];
   char id[41];
   unsigned int i;
   access_ticket_t *at;
   static const char hex_string[16] = "0123456789ABCDEF";
+
+  assert(a);
 
   at = calloc(1, sizeof(access_ticket_t));
 
@@ -113,6 +116,8 @@ access_ticket_create(const char *resource)
 
   at->at_id = strdup(id);
   at->at_resource = strdup(resource);
+
+  at->at_access = access_copy(a);
 
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
   gtimer_arm(&at->at_timer, access_ticket_timout, at, 60*5);
@@ -140,18 +145,37 @@ access_ticket_delete(const char *id)
 /**
  *
  */
-int
-access_ticket_verify(const char *id, const char *resource)
+access_t *
+access_ticket_verify2(const char *id, const char *resource)
 {
   access_ticket_t *at;
 
   if((at = access_ticket_find(id)) == NULL)
-    return -1;
+    return NULL;
 
   if(strcmp(at->at_resource, resource))
-    return -1;
+    return NULL;
 
-  return 0;
+  return access_copy(at->at_access);
+}
+
+/**
+ *
+ */
+access_t *
+access_copy(access_t *src)
+{
+  access_t *dst = malloc(sizeof(*dst));
+  *dst = *src;
+  if (src->aa_username)
+    dst->aa_username = strdup(src->aa_username);
+  if (src->aa_representative)
+    dst->aa_representative = strdup(src->aa_representative);
+  if (src->aa_dvrcfgs)
+    dst->aa_dvrcfgs = htsmsg_copy(src->aa_dvrcfgs);
+  if (src->aa_chtags)
+    dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
+  return dst;
 }
 
 /**
@@ -270,12 +294,13 @@ access_verify(const char *username, const char *password,
       if(strcmp(ae->ae_username, username) ||
 	 strcmp(ae->ae_password, password))
 	continue; /* username/password mismatch */
-
-      match = 1;
     }
 
     if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
+
+    if (ae->ae_username[0] != '*')
+      match = 1;
 
     bits |= ae->ae_rights;
   }
@@ -295,6 +320,9 @@ access_verify(const char *username, const char *password,
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
+  if(a->aa_conn_limit < ae->ae_conn_limit)
+    a->aa_conn_limit = ae->ae_conn_limit;
+
   if(ae->ae_chmin || ae->ae_chmax) {
     if(a->aa_chmin || a->aa_chmax) {
       if (a->aa_chmin < ae->ae_chmin)
@@ -399,6 +427,14 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   SHA_CTX shactx;
   uint8_t d[20];
 
+  if (username) {
+    a->aa_username = strdup(username);
+    a->aa_representative = strdup(username);
+  } else {
+    a->aa_representative = malloc(50);
+    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+  }
+
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
     return a;
@@ -417,7 +453,6 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       return a;
     }
   }
-
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -445,6 +480,8 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
   /* Username was not matched - no access */
   if (!a->aa_match) {
+    free(a->aa_username);
+    a->aa_username = NULL;
     if (username && *username != '\0')
       a->aa_rights = 0;
   }
@@ -893,12 +930,12 @@ access_entry_class_password_set(void *o, const void *v)
   char buf[256], result[300];
 
   if (strcmp(v ?: "", ae->ae_password ?: "")) {
-    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v);
+    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v ?: "");
     base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
     free(ae->ae_password2);
     ae->ae_password2 = strdup(result);
     free(ae->ae_password);
-    ae->ae_password = strdup((const char *)v);
+    ae->ae_password = strdup((const char *)v ?: "");
     return 1;
   }
   return 0;
@@ -914,6 +951,8 @@ access_entry_class_password2_set(void *o, const void *v)
   if (strcmp(v ?: "", ae->ae_password2 ?: "")) {
     if (v && ((const char *)v)[0] != '\0') {
       l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
+      if (l < 0)
+        l = 0;
       result[l] = '\0';
       free(ae->ae_password);
       ae->ae_password = strdup(result + 15);
@@ -1079,6 +1118,12 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_U32,
+      .id       = "conn_limit",
+      .name     = "Limit Connections",
+      .off      = offsetof(access_entry_t, ae_conn_limit),
+    },
+    {
+      .type     = PT_U32,
       .id       = "channel_min",
       .name     = "Min Channel Num",
       .off      = offsetof(access_entry_t, ae_chmin),
@@ -1186,9 +1231,16 @@ void
 access_done(void)
 {
   access_entry_t *ae;
+  access_ticket_t *at;
 
   pthread_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
     access_entry_destroy(ae);
+  while ((at = TAILQ_FIRST(&access_tickets)) != NULL)
+    access_ticket_destroy(at);
+  free((void *)superuser_username);
+  superuser_username = NULL;
+  free((void *)superuser_password);
+  superuser_password = NULL;
   pthread_mutex_unlock(&global_lock);
 }

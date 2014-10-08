@@ -21,7 +21,14 @@ tvheadend.idnode_get_enum = function(conf)
         root: conf.root || 'entries',
         url: conf.url,
         baseParams: conf.params || {},
-        fields: conf.fields || ['key', 'val'],
+        fields: conf.fields ||
+            [
+                'key',
+                {
+                    name: 'val',
+                    sortType: Ext.data.SortTypes.asUCString
+                }
+            ],
         id: conf.id || 'key',
         autoLoad: true,
         listeners: conf.listeners || {},
@@ -107,6 +114,21 @@ tvheadend.idnode_enum_store = function(f)
     return store;
 };
 
+tvheadend.idnode_filter_fields = function(d, list)
+{
+  if (!list)
+    return d;
+  var o = list.split(',');
+  var r = [];
+  for (var i = 0; i < o.length; i++)
+    for (var j = 0; j < d.length; j++)
+      if (d[j].id === o[i]) {
+        r.push(d[j]);
+        break;
+      }
+  return r;
+}
+
 Ext.ux.grid.filter.IntsplitFilter = Ext.extend(Ext.ux.grid.filter.NumericFilter, {
 
     fieldCls : Ext.form.TextField,
@@ -158,9 +180,10 @@ tvheadend.IdNodeField = function(conf)
     this.wronly = conf.wronly;
     this.wronce = conf.wronce;
     this.hidden = conf.hidden || conf.advanced;
-    this.password = conf.password;
+    this.password = conf.showpwd ? false : conf.password;
     this.duration = conf.duration;
     this.intsplit = conf.intsplit;
+    this.hexa = conf.hexa;
     this.group = conf.group;
     this.enum = conf.enum;
     this.store = null;
@@ -195,7 +218,7 @@ tvheadend.IdNodeField = function(conf)
         } else if (this.type === 'int' || this.type === 'u32' ||
             this.type === 'u16' || this.type === 's64' ||
             this.type === 'dbl') {
-            ftype = 'numeric';
+            ftype = this.hexa ? 'string' : 'numeric';
             w = 80;
         } else if (this.type === 'time') {
             w = 120;
@@ -274,13 +297,13 @@ tvheadend.IdNodeField = function(conf)
                 var t = [];
                 var d = v.push ? v : [v];
                 for (var i = 0; i < d.length; i++) {
-                    var r = st.find('key', d[i]);
-                    if (r !== -1) {
-                        var nv = st.getAt(r).get('val');
+                    var r = st.getById(d[i]);
+                    if (r) {
+                        var nv = r.data.val;
                         if (nv)
                             t.push(nv);
                     } else {
-                      t.push(d[i]);
+                        t.push(d[i]);
                     }
                 }
                 t.sort();
@@ -349,7 +372,9 @@ tvheadend.IdNodeField = function(conf)
                 case 's32':
                 case 'dbl':
                 case 'time':
-                    if (this.intsplit) {
+                    if (this.hexa) {
+                        cons = Ext.form.TextField;
+                    } else if (this.intsplit) {
                         c['maskRe'] = /[0-9\.]/;
                         cons = Ext.form.TextField;
                     } else
@@ -439,10 +464,10 @@ tvheadend.IdNode = function(conf)
 /*
  * Field editor
  */
-tvheadend.idnode_editor_field = function(f, create)
+tvheadend.idnode_editor_field = function(f, conf)
 {
     var d = f.rdonly || false;
-    if (f.wronly && !create)
+    if (f.wronly && !conf.create)
         d = false;
     var value = f.value;
     if (value == null)
@@ -537,6 +562,16 @@ tvheadend.idnode_editor_field = function(f, create)
         case 'u16':
         case 's64':
         case 'dbl':
+            if (f.hexa) {
+                return new Ext.form.TextField({
+                    fieldLabel: f.caption,
+                    name: f.id,
+                    value: '0x' + value.toString(16),
+                    disabled: d,
+                    width: 300,
+                    maskRe: /[xX0-9a-fA-F\.]/,
+                });
+            }
             if (f.intsplit) {
                 /* this should be improved */
                 return new Ext.form.TextField({
@@ -576,6 +611,7 @@ tvheadend.idnode_editor_field = function(f, create)
                 name: f.id,
                 value: value,
                 disabled: d,
+                inputType: f.password && !conf.showpwd ? 'password' : 'text',
                 width: 300
             });
 
@@ -585,7 +621,7 @@ tvheadend.idnode_editor_field = function(f, create)
 /*
  * ID node editor form fields
  */
-tvheadend.idnode_editor_form = function(d, meta, panel, create)
+tvheadend.idnode_editor_form = function(d, meta, panel, conf)
 {
     var af = [];
     var rf = [];
@@ -595,7 +631,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, create)
     /* Fields */
     for (var i = 0; i < d.length; i++) {
         var p = d[i];
-        var f = tvheadend.idnode_editor_field(p, create);
+        var f = tvheadend.idnode_editor_field(p, conf);
         if (!f)
             continue;
         if (p.group && meta.groups) {
@@ -750,7 +786,8 @@ tvheadend.idnode_editor = function(item, conf)
         buttons: buttons,
     });
 
-    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel, false);
+    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel,
+                                 { showpwd: conf.showpwd });
 
     return panel;
 };
@@ -838,10 +875,11 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                 if (r) {
                     var d = r.get(conf.select.propField);
                     if (d) {
+                        d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
                         win.setTitle('Add ' + s.lastSelectionText);
                         panel.remove(s);
-                        tvheadend.idnode_editor_form(d, null, panel, true);
+                        tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
                     }
                 }
@@ -856,7 +894,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                     success: function(d) {
                         panel.remove(s);
                         d = json_decode(d);
-                        tvheadend.idnode_editor_form(d.props, d, panel, true);
+                        tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
                     }
                 });
@@ -887,7 +925,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             params: conf.params,
             success: function(d) {
                 d = json_decode(d);
-                tvheadend.idnode_editor_form(d.props, d, panel, true);
+                tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                 saveBtn.setVisible(true);
                 if (onlyDefault) {
                     saveBtn.handler();
@@ -980,11 +1018,8 @@ tvheadend.idnode_grid = function(panel, conf)
         });
 
         /* Model */
-        var sortable = true;
-        if (conf.move)
-            sortable = false;
         var model = new Ext.grid.ColumnModel({
-            defaultSortable: sortable,
+            defaultSortable: conf.move ? false : true,
             columns: columns
         });
 
@@ -1296,7 +1331,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 id: 0,
                 fields: ['key', 'val'],
                 data: [[25, '25'], [50, '50'], [100, '100'],
-                    [200, '200'], [9999999999, 'All']]
+                    [200, '200'], [999999999, 'All']]
             }),
             value: 50,
             mode: 'local',
@@ -1434,6 +1469,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.builder)
             conf.builder(conf);
 
+        var columns = [];
         var buttons = [];
         var abuttons = {};
         var plugins = conf.plugins || [];
@@ -1441,23 +1477,23 @@ tvheadend.idnode_form_grid = function(panel, conf)
         var selectuuid = null;
 
         /* Store */
+        var listurl = conf.list ? conf.list.url : null;
+        var params = conf.list ? conf.list.params : null;
         store = new Ext.data.JsonStore({
             root: 'entries',
-            url: 'api/idnode/load',
-            baseParams: {
+            url: listurl || 'api/idnode/load',
+            baseParams: params || {
                 enum: 1,
                 'class': conf.clazz
             },
             autoLoad: true,
-            id: 'key',
+            id: conf.key || 'key',
             totalProperty: 'total',
-            fields: ['key','val'],
+            fields: conf.fields || ['key','val'],
             remoteSort: false,
             pruneModifiedRecords: true,
-            sortInfo: {
-                field: 'val',
-                direction: 'ASC'
-            }
+            sortInfo: conf.move ? conf.sort :
+                      (conf.sort || { field: conf.val || 'val', direction: 'ASC' })
         });
 
         store.on('load', function(records) {
@@ -1474,16 +1510,23 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 select.selectFirstRow();
         });
 
+        /* Left-hand columns (do copy, no reference!) */
+        if (conf.lcol)
+            for (i = 0; i < conf.lcol.length; i++)
+                columns.push(conf.lcol[i]);
+
+        columns.push({
+            width: 300,
+            id: conf.val || 'val',
+            header: conf.titleC,
+            sortable: conf.move ? false : true,
+            dataIndex: conf.val || 'val'
+        });
+
         /* Model */
         var model = new Ext.grid.ColumnModel({
-            defaultSortable: true,
-            columns: [{
-                width: 300,
-                id: 'val',
-                header: conf.titleC,
-                sortable: true,
-                dataIndex: 'val'
-            }]
+            defaultSortable: conf.move ? false : true,
+            columns: columns,
         });
 
         /* Selection */
@@ -1568,8 +1611,66 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.del);
         }
-        if (conf.add || conf.del)
+        if (conf.move) {
+            abuttons.up = new Ext.Toolbar.Button({
+                tooltip: 'Move selected entry up',
+                iconCls: 'moveup',
+                text: 'Move Up',
+                disabled: true,
+                handler: function() {
+                    if (current) {
+                        tvheadend.Ajax({
+                            url: 'api/idnode/moveup',
+                            params: {
+                                uuid: current.uuid
+                            },
+                            success: function(d)
+                            {
+                                store.reload();
+                            }
+                        });
+                    }
+                }
+            });
+            buttons.push(abuttons.up);
+            abuttons.down = new Ext.Toolbar.Button({
+                tooltip: 'Move selected entry down',
+                iconCls: 'movedown',
+                text: 'Move Down',
+                disabled: true,
+                handler: function() {
+                    if (current) {
+                        tvheadend.Ajax({
+                            url: 'api/idnode/movedown',
+                            params: {
+                                uuid: current.uuid
+                            },
+                            success: function(d)
+                            {
+                                store.reload();
+                            }
+                        });
+                    }
+                }
+            });
+            buttons.push(abuttons.down);
+        }
+        if (conf.hidepwd) {
             buttons.push('-');
+            abuttons.add = new Ext.Toolbar.Button({
+                tooltip: 'Show or hide passwords',
+                iconCls: 'eye',
+                text: 'Show passwords',
+                disabled: false,
+                handler: function() {
+                    conf.showpwd = !conf.showpwd ? true : false;
+                    this.setText(conf.showpwd ? 'Hide passwords' : 'Show passwords');
+                    roweditor_destroy();
+                    roweditor(select.getSelected());
+                }
+            });
+            buttons.push(abuttons.add);
+        }
 
         /* Extra buttons */
         if (conf.tbar) {
@@ -1606,17 +1707,17 @@ tvheadend.idnode_form_grid = function(panel, conf)
             current = null;
         }
 
-        function roweditor(r) {
+        function roweditor(r, force) {
             if (!r || !r.id)
                 return;
-            if (current && current.uuid == r.id)
+            if (!force && current && current.uuid == r.id)
                 return;
+            var params = conf.edit ? (conf.edit.params || {}) : {};
+            params.uuid = r.id;
+            params.meta = 1;
             tvheadend.Ajax({
                 url: 'api/idnode/load',
-                params: {
-                    uuid: r.id,
-                    meta: 1
-                },
+                params: params,
                 success: function(d) {
                     d = json_decode(d);
                     roweditor_destroy();
@@ -1628,7 +1729,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                                     inTabPanel: true,
                                     noButtons: true,
                                     width: 730,
-                                    noautoWidth: true
+                                    noautoWidth: true,
+                                    showpwd: conf.showpwd
                                 });
                     current = {
                         uuid: d[0].id,
@@ -1636,7 +1738,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     }
                     abuttons.save.setDisabled(false);
                     abuttons.undo.setDisabled(false);
-                    abuttons.del.setDisabled(false);
+                    if (abuttons.del)
+                      abuttons.del.setDisabled(false);
+                    if (abuttons.up) {
+                      abuttons.up.setDisabled(false);
+                      abuttons.down.setDisabled(false);
+                    }
                     mpanel.add(editor);
                     mpanel.doLayout();
                 }

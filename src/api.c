@@ -133,6 +133,7 @@ void api_init ( void )
   api_intlconv_init();
   api_access_init();
   api_dvr_init();
+  api_caclient_init();
 }
 
 void api_done ( void )

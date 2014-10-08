@@ -36,6 +36,8 @@ static int
 cron_parse_val ( const char *str, const char **key, int *v )
 {
   int i = 0;
+  if (!str)
+    return 0;
   if (key) {
     while (key[i]) {
       if (!strncasecmp(str, key[i], strlen(key[i]))) {

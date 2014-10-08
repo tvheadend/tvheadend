@@ -38,18 +38,13 @@
 
 #include "tvheadend.h"
 
-#if ENABLE_CAPMT
-
 #include "input.h"
+#include "caclient.h"
 #include "service.h"
 #include "tcp.h"
 #include "tvhpoll.h"
-#include "capmt.h"
 
-#include "notify.h"
 #include "subscriptions.h"
-#include "dtable.h"
-#include "tvhcsa.h"
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb/linuxdvb_private.h"
 #endif
@@ -113,14 +108,19 @@ typedef struct dmx_filter {
 #define MAX_SOCKETS 16   // max sockets (simultaneous channels) per demux
 #define MAX_PIDS    64   // max opened pids
 
+typedef enum {
+    CAPMT_OSCAM_SO_WRAPPER,
+    CAPMT_OSCAM_OLD,
+    CAPMT_OSCAM_MULTILIST,
+    CAPMT_OSCAM_TCP,
+    CAPMT_OSCAM_UNIX_SOCKET
+} capmt_oscam_mode_t;
+
 /**
  *
  */
-TAILQ_HEAD(capmt_queue, capmt);
 LIST_HEAD(capmt_service_list, capmt_service);
 LIST_HEAD(capmt_caid_ecm_list, capmt_caid_ecm);
-static struct capmt_queue capmts;
-static pthread_cond_t capmt_config_changed;
 
 /*
  * ECM descriptor
@@ -184,8 +184,6 @@ typedef struct capmt_service {
   struct capmt_caid_ecm_list ct_caid_ecm;
   int ct_constcw; /* fast flag */
 
-  tvhcsa_t ct_csa;
-
   /* current sequence number */
   uint16_t ct_seq;
 } capmt_service_t;
@@ -239,9 +237,9 @@ typedef struct capmt_adapter {
  *
  */
 typedef struct capmt {
-  pthread_cond_t capmt_cond;
+  caclient_t;
 
-  TAILQ_ENTRY(capmt) capmt_link; /* Linkage protected via global_lock */
+  pthread_cond_t capmt_cond;
 
   struct capmt_service_list capmt_services;
 
@@ -250,15 +248,7 @@ typedef struct capmt {
   /* from capmt configuration */
   char *capmt_sockfile;
   int   capmt_port;
-  char *capmt_comment;
-  char *capmt_id;
-  enum {
-    CAPMT_OSCAM_SO_WRAPPER,
-    CAPMT_OSCAM_OLD,
-    CAPMT_OSCAM_MULTILIST,
-    CAPMT_OSCAM_TCP,
-    CAPMT_OSCAM_UNIX_SOCKET
-  } capmt_oscam;
+  int   capmt_oscam;
 
   /* capmt sockets */
   int   sids[MAX_SOCKETS];
@@ -268,7 +258,6 @@ typedef struct capmt {
 
   /* thread flags */
   int   capmt_connected;
-  int   capmt_enabled;
   int   capmt_running;
   int   capmt_reconfigure;
 
@@ -293,26 +282,12 @@ static void capmt_table_input(void *opaque, int pid,
 /**
  *
  */
-static htsmsg_t *
-capmt_record_build(capmt_t *capmt)
+static inline const char *
+capmt_name(capmt_t *capmt)
 {
-  htsmsg_t *e = htsmsg_create_map();
-
-  htsmsg_add_str(e, "id", capmt->capmt_id);
-  htsmsg_add_u32(e, "enabled",  !!capmt->capmt_enabled);
-  htsmsg_add_u32(e, "connected", capmt->capmt_connected);
-
-  htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
-  htsmsg_add_u32(e, "port", capmt->capmt_port);
-  htsmsg_add_u32(e, "oscam", capmt->capmt_oscam);
-  htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
-  
-  return e;
+  return idnode_get_title(&capmt->cac_id);
 }
 
-/**
- *
- */
 static inline int
 capmt_oscam_new(capmt_t *capmt)
 {
@@ -450,18 +425,6 @@ capmt_pid_flush(capmt_t *capmt)
   }
 }
 
-/**
- *
- */
-static void
-capmt_set_connected(capmt_t *capmt, int c)
-{
-  if (c == capmt->capmt_connected)
-    return;
-  capmt->capmt_connected = c;
-  notify_by_msg("capmt", capmt_record_build(capmt));
-}
-
 /*
  *
  */
@@ -483,8 +446,8 @@ capmt_connect(capmt_t *capmt, int i)
                      errbuf, sizeof(errbuf), 2);
     if (fd < 0 && tvheadend_running) {
       tvhlog(LOG_ERR, "capmt",
-             "Cannot connect to %s:%i (%s); Do you have OSCam running?",
-             capmt->capmt_sockfile, capmt->capmt_port, errbuf);
+             "%s: Cannot connect to %s:%i (%s); Do you have OSCam running?",
+             capmt_name(capmt), capmt->capmt_sockfile, capmt->capmt_port, errbuf);
       fd = -1;
     }
 
@@ -499,20 +462,23 @@ capmt_connect(capmt_t *capmt, int i)
              "%s", capmt->capmt_sockfile);
 
     fd = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
-    if (connect(fd, (const struct sockaddr*)&serv_addr_un,
+    if (fd < 0 ||
+        connect(fd, (const struct sockaddr*)&serv_addr_un,
                 sizeof(serv_addr_un)) != 0) {
       if (tvheadend_running)
         tvhlog(LOG_ERR, "capmt",
-               "Cannot connect to %s (%s); Do you have OSCam running?",
-               capmt->capmt_sockfile, strerror(errno));
-      close(fd);
-      fd = -1;
+               "%s: Cannot connect to %s (%s); Do you have OSCam running?",
+               capmt_name(capmt), capmt->capmt_sockfile, strerror(errno));
+      if (fd >= 0) {
+        close(fd);
+        fd = -1;
+      }
     }
 
   }
 
   if (fd) {
-    tvhlog(LOG_DEBUG, "capmt", "Created socket %d", fd);
+    tvhlog(LOG_DEBUG, "capmt", "%s: Created socket %d", capmt_name(capmt), fd);
     capmt->capmt_sock[i] = fd;
     capmt->capmt_sock_reconnect[i]++;
     capmt_poll_add(capmt, fd, i + 1);
@@ -561,9 +527,9 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
     if (capmt->capmt_oscam == CAPMT_OSCAM_OLD) {
       // dumping current SID table
       for (i = 0; i < MAX_SOCKETS; i++)
-        tvhlog(LOG_DEBUG, "capmt", "%s: SOCKETS TABLE DUMP [%d]: sid=%d socket=%d", __FUNCTION__, i, capmt->sids[i], capmt->capmt_sock[i]);
+        tvhlog(LOG_DEBUG, "capmt", "%s: %s: SOCKETS TABLE DUMP [%d]: sid=%d socket=%d", capmt_name(capmt), __FUNCTION__, i, capmt->sids[i], capmt->capmt_sock[i]);
       if (sid == 0) {
-        tvhlog(LOG_DEBUG, "capmt", "%s: got empty SID - returning from function", __FUNCTION__);
+        tvhlog(LOG_DEBUG, "capmt", "%s: %s: got empty SID - returning from function", capmt_name(capmt), __FUNCTION__);
         return -1;
       }
 
@@ -576,7 +542,7 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
       }
 
       if (found)
-        tvhlog(LOG_DEBUG, "capmt", "%s: found sid, reusing socket, i=%d", __FUNCTION__, i);
+        tvhlog(LOG_DEBUG, "capmt", "%s: %s: found sid, reusing socket, i=%d", capmt_name(capmt), __FUNCTION__, i);
       else {                       //not found - adding to first free in table
         for (i = 0; i < MAX_SOCKETS; i++) {
           if (capmt->sids[i] == 0) {
@@ -587,11 +553,11 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
         }
       }
       if (i == MAX_SOCKETS) {
-        tvhlog(LOG_DEBUG, "capmt", "%s: no free space for new SID!!!", __FUNCTION__);
+        tvhlog(LOG_DEBUG, "capmt", "%s: %s: no free space for new SID!!!", capmt_name(capmt), __FUNCTION__);
         return -1;
       } else {
         capmt->sids[i] = sid;
-        tvhlog(LOG_DEBUG, "capmt", "%s: added: i=%d", __FUNCTION__, i);
+        tvhlog(LOG_DEBUG, "capmt", "%s: %s: added: i=%d", capmt_name(capmt), __FUNCTION__, i);
       }
     }
 
@@ -607,7 +573,9 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
     // opening socket and sending
     if (capmt->capmt_sock[i] < 0) {
       fd = capmt_connect(capmt, i);
-      capmt_set_connected(capmt, fd >= 0 ? 2 : 0);
+      caclient_set_status((caclient_t *)capmt,
+                          fd >= 0 ? CACLIENT_STATUS_CONNECTED :
+                                    CACLIENT_STATUS_READY);
       if (fd >= 0)
         capmt_notify_server(capmt, NULL, 1);
     }
@@ -618,19 +586,19 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   fd = capmt->capmt_sock[i];
 
   if (fd <= 0) {
-    tvhtrace("capmt", "Unable to send message for sid %i", sid);
+    tvhtrace("capmt", "%s: Unable to send message for sid %i", capmt_name(capmt), sid);
     return -1;
   }
 
-  tvhtrace("capmt", "Sending message to socket %i (sid %i)", fd, sid);
+  tvhtrace("capmt", "%s: Sending message to socket %i (sid %i)", capmt_name(capmt), fd, sid);
   tvhlog_hexdump("capmt", buf, len);
 
   res = send(fd, buf, len, MSG_DONTWAIT);
   if (res < len) {
 #if ENABLE_ANDROID
-    tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%li)", fd, res); // Android bug, ssize_t is long int
+    tvhlog(LOG_DEBUG, "capmt", "%s: Message send failed to socket %i (%li)", capmt_name(capmt), fd, res); // Android bug, ssize_t is long int
 #else
-    tvhlog(LOG_DEBUG, "capmt", "Message send failed to socket %i (%zi)", fd, res);
+    tvhlog(LOG_DEBUG, "capmt", "%s: Message send failed to socket %i (%zi)", capmt_name(capmt), fd, res);
 #endif
     if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
       capmt_socket_close_lock(capmt, i);
@@ -702,27 +670,28 @@ static void
 capmt_send_stop(capmt_service_t *t)
 {
   mpegts_service_t *s = (mpegts_service_t *)t->td_service;
-  int oscam = t->ct_capmt->capmt_oscam;
+  capmt_t *capmt = t->ct_capmt;
+  int oscam = capmt->capmt_oscam;
 
-  lock_assert(&t->ct_capmt->capmt_mutex);
+  lock_assert(&capmt->capmt_mutex);
 
   if (oscam == CAPMT_OSCAM_OLD) {
     int i;
     // searching for socket to close
     for (i = 0; i < MAX_SOCKETS; i++)
-      if (t->ct_capmt->sids[i] == s->s_dvb_service_id)
+      if (capmt->sids[i] == s->s_dvb_service_id)
         break;
 
     if (i == MAX_SOCKETS) {
-      tvhlog(LOG_DEBUG, "capmt", "%s: socket to close not found", __FUNCTION__);
+      tvhlog(LOG_DEBUG, "capmt", "%s: %s: socket to close not found", capmt_name(capmt), __FUNCTION__);
       return;
     }
 
     // closing socket (oscam handle this as event and stop decrypting)
-    tvhlog(LOG_DEBUG, "capmt", "%s: closing socket i=%d, socket_fd=%d", __FUNCTION__, i, t->ct_capmt->capmt_sock[i]);
-    t->ct_capmt->sids[i] = 0;
-    t->ct_capmt->adps[i] = 0;
-    capmt_socket_close(t->ct_capmt, i);
+    tvhlog(LOG_DEBUG, "capmt", "%s: %s: closing socket i=%d, socket_fd=%d", capmt_name(capmt), __FUNCTION__, i, capmt->capmt_sock[i]);
+    capmt->sids[i] = 0;
+    capmt->adps[i] = 0;
+    capmt_socket_close(capmt, i);
   } else if (oscam == CAPMT_OSCAM_SO_WRAPPER) {  // standard old capmt mode
     /* buffer for capmt */
     int pos = 0;
@@ -752,7 +721,7 @@ capmt_send_stop(capmt_service_t *t)
     buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
     buf[11] = ((pos - 5 - 12) & 0xFF);
   
-    capmt_queue_msg(t->ct_capmt, t->ct_adapter, s->s_dvb_service_id,
+    capmt_queue_msg(capmt, t->ct_adapter, s->s_dvb_service_id,
                     buf, pos, CAPMT_MSG_CLEAR);
   }
 }
@@ -771,8 +740,8 @@ capmt_service_destroy(th_descrambler_t *td)
   capmt_t *capmt = ct->ct_capmt;
 
   tvhlog(LOG_INFO, "capmt",
-         "Removing CAPMT Server from service \"%s\" on adapter %d",
-         s->s_dvb_svcname, ct->ct_adapter);
+         "%s: Removing CAPMT Server from service \"%s\" on adapter %d",
+         capmt_name(capmt), s->s_dvb_svcname, ct->ct_adapter);
 
   pthread_mutex_lock(&capmt->capmt_mutex);
 
@@ -801,7 +770,6 @@ capmt_service_destroy(th_descrambler_t *td)
 
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
-  tvhcsa_destroy(&ct->ct_csa);
   free(ct->td_nicename);
   free(ct);
 }
@@ -813,7 +781,8 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
 {
   uint8_t *buf = alloca(len + 6);
 
-  buf[0] = buf[1] = buf[2] = buf[3] = 0xff;
+  buf[0] = buf[1] = 0xff;
+  buf[2] = buf[3] = 0;
   buf[4] = demux_index;
   buf[5] = filter_index;
   memcpy(buf + 6, data, len);
@@ -834,8 +803,8 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   elementary_stream_t *st;
   int i;
 
-  tvhtrace("capmt", "setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
-           adapter, demux_index, filter_index, pid);
+  tvhtrace("capmt", "%s: setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
+           capmt_name(capmt), adapter, demux_index, filter_index, pid);
   if (adapter >= MAX_CA ||
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER ||
@@ -890,8 +859,8 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
-  tvhtrace("capmt", "stopping filter: adapter=%d, demux=%d, filter=%d, pid=%d",
-           adapter, demux_index, filter_index, pid);
+  tvhtrace("capmt", "%s: stopping filter: adapter=%d, demux=%d, filter=%d, pid=%d",
+           capmt_name(capmt), adapter, demux_index, filter_index, pid);
   if (adapter >= MAX_CA ||
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER)
@@ -945,7 +914,8 @@ capmt_abort(capmt_t *capmt, int keystate)
 
     if (ct->td_keystate != keystate) {
       tvhlog(LOG_ERR, "capmt",
-             "Can not descramble service \"%s\", %s",
+             "%s: Can not descramble service \"%s\", %s",
+             capmt_name(capmt),
              t->s_dvb_svcname,
              keystate == DS_FORBIDDEN ?
                "access denied" : "connection close");
@@ -982,8 +952,8 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
     if (!ok) {
       if (ct->td_keystate != DS_FORBIDDEN) {
         tvhlog(LOG_ERR, "capmt",
-               "Can not descramble service \"%s\", access denied",
-               t->s_dvb_svcname);
+               "%s: Can not descramble service \"%s\", access denied",
+               capmt_name(capmt), t->s_dvb_svcname);
         ct->td_keystate = DS_FORBIDDEN;
       }
       continue;
@@ -1049,7 +1019,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t  index = sbuf_peek_s32(sb, offset + 8);
     ca_info_t *cai;
 
-    tvhlog(LOG_DEBUG, "capmt", "CA_SET_PID adapter %d index %d seq 0x%04x", adapter, index, seq);
+    tvhlog(LOG_DEBUG, "capmt", "%s: CA_SET_PID adapter %d index %d seq 0x%04x", capmt_name(capmt), adapter, index, seq);
     if (adapter < MAX_CA && index >= 0 && index < MAX_INDEX) {
       cai = &capmt->capmt_adapters[adapter].ca_info[index];
       memset(cai, 0, sizeof(*cai));
@@ -1063,7 +1033,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
         }
       }
     } else
-      tvhlog(LOG_ERR, "capmt", "Invalid index %d in CA_SET_PID (%d) for adapter %d", index, MAX_INDEX, adapter);
+      tvhlog(LOG_ERR, "capmt", "%s: Invalid index %d in CA_SET_PID (%d) for adapter %d", capmt_name(capmt), index, MAX_INDEX, adapter);
 
   } else if (cmd == CA_SET_DESCR) {
 
@@ -1072,8 +1042,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
     ca_info_t *cai;
 
-    tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
-                      adapter, parity, index, cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
+    tvhlog(LOG_DEBUG, "capmt", "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
+                      capmt_name(capmt), adapter, parity, index,
+                      cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index == -1)   // skipping removal request
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
@@ -1084,7 +1055,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     } else if (parity == 1) {
       capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_DES, empty, cw, 1);
     } else
-      tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR for adapter%d", parity, adapter);
+      tvhlog(LOG_ERR, "capmt", "%s: Invalid parity %d in CA_SET_DESCR for adapter%d", capmt_name(capmt), parity, adapter);
 
   } else if (cmd == CA_SET_DESCR_AES) {
 
@@ -1093,9 +1064,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
     ca_info_t *cai;
 
-    tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR_AES adapter %d par %d idx %d "
+    tvhlog(LOG_DEBUG, "capmt", "%s: CA_SET_DESCR_AES adapter %d par %d idx %d "
                       "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                      adapter, parity, index,
+                      capmt_name(capmt), adapter, parity, index,
                       cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7],
                       cw[8], cw[9], cw[10], cw[11], cw[12], cw[13], cw[14], cw[15]);
     if (index == -1)   // skipping removal request
@@ -1108,7 +1079,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     } else if (parity == 1) {
       capmt_process_key(capmt, adapter, cai->seq, DESCRAMBLER_AES, empty, cw, 1);
     } else
-      tvhlog(LOG_ERR, "capmt", "Invalid parity %d in CA_SET_DESCR_AES for adapter%d", parity, adapter);
+      tvhlog(LOG_ERR, "capmt", "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
   } else if (cmd == DMX_SET_FILTER) {
 
@@ -1126,19 +1097,22 @@ show_connection(capmt_t *capmt, const char *what)
 {
   if (capmt->capmt_oscam == CAPMT_OSCAM_TCP) {
     tvhlog(LOG_INFO, "capmt",
-           "mode %i connected to %s:%i (%s)",
+           "%s: mode %i connected to %s:%i (%s)",
+           capmt_name(capmt),
            capmt->capmt_oscam,
            capmt->capmt_sockfile, capmt->capmt_port,
            what);
   } else if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET) {
     tvhlog(LOG_INFO, "capmt",
-           "mode %i sockfile %s got connection from client (%s)",
+           "%s: mode %i sockfile %s got connection from client (%s)",
+           capmt_name(capmt),
            capmt->capmt_oscam,
            capmt->capmt_sockfile,
            what);
   } else {
     tvhlog(LOG_INFO, "capmt",
-           "mode %i sockfile %s port %i got connection from client (%s)",
+           "%s: mode %i sockfile %s port %i got connection from client (%s)",
+           capmt_name(capmt),
            capmt->capmt_oscam,
            capmt->capmt_sockfile, capmt->capmt_port,
            what);
@@ -1186,7 +1160,7 @@ handle_ca0(capmt_t *capmt) {
           continue;
         }
 
-        tvhtrace("capmt", "thread received shutdown");
+        tvhtrace("capmt", "%s: thread received shutdown", capmt_name(capmt));
         capmt->capmt_running = 0;
         continue;
       }
@@ -1204,7 +1178,7 @@ handle_ca0(capmt_t *capmt) {
       ret = recv(recvsock, buf, sizeof(buf), MSG_DONTWAIT);
 
       if (ret == 0) {
-        tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+        tvhlog(LOG_INFO, "capmt", "%s: normal socket shutdown", capmt_name(capmt));
 
         close(recvsock);
         capmt_poll_rem(capmt, recvsock);
@@ -1215,7 +1189,7 @@ handle_ca0(capmt_t *capmt) {
       if (ret < 0)
         continue;
 
-      tvhtrace("capmt", "Received message from socket %i", recvsock);
+      tvhtrace("capmt", "%s: Received message from socket %i", capmt_name(capmt), recvsock);
       tvhlog_hexdump("capmt", buf, ret);
 
       pbuf = &buffer[adapter];
@@ -1279,7 +1253,7 @@ handle_single(capmt_t *capmt)
         continue;
       }
       
-      tvhtrace("capmt", "thread received shutdown");
+      tvhtrace("capmt", "%s: thread received shutdown", capmt_name(capmt));
       capmt->capmt_running = 0;
       continue;
     }
@@ -1295,7 +1269,7 @@ handle_single(capmt_t *capmt)
     ret = recv(recvsock, buf, sizeof(buf), MSG_DONTWAIT);
 
     if (ret == 0) {
-      tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+      tvhlog(LOG_INFO, "capmt", "%s: normal socket shutdown", capmt_name(capmt));
       capmt_poll_rem(capmt, recvsock);
       break;
     }
@@ -1303,7 +1277,7 @@ handle_single(capmt_t *capmt)
     if (ret < 0)
       continue;
 
-    tvhtrace("capmt", "Received message from socket %i", recvsock);
+    tvhtrace("capmt", "%s: Received message from socket %i", capmt_name(capmt), recvsock);
     tvhlog_hexdump("capmt", buf, ret);
 
     sbuf_append(&buffer, buf, ret);
@@ -1354,15 +1328,15 @@ handle_ca0_wrapper(capmt_t *capmt)
     ret = recv(capmt->capmt_adapters[0].ca_sock, buffer, 18, MSG_WAITALL);
 
     if (ret < 0) {
-      tvhlog(LOG_ERR, "capmt", "error receiving over socket");
+      tvhlog(LOG_ERR, "capmt", "%s: error receiving over socket", capmt_name(capmt));
       break;
     } else if (ret == 0) {
       /* normal socket shutdown */
-      tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+      tvhlog(LOG_INFO, "capmt", "%s: normal socket shutdown", capmt_name(capmt));
       break;
     } else {
 
-      tvhtrace("capmt", "Received message from socket %i", capmt->capmt_adapters[0].ca_sock);
+      tvhtrace("capmt", "%s: Received message from socket %i", capmt_name(capmt), capmt->capmt_adapters[0].ca_sock);
       tvhlog_hexdump("capmt", buffer, ret);
 
       capmt_process_key(capmt, 0,
@@ -1374,15 +1348,19 @@ handle_ca0_wrapper(capmt_t *capmt)
   }
 
   capmt_abort(capmt, DS_UNKNOWN);
-  tvhlog(LOG_INFO, "capmt", "connection from client closed ...");
+  tvhlog(LOG_INFO, "capmt", "%s: connection from client closed ...", capmt_name(capmt));
 }
 #endif
 
 #if ENABLE_LINUXDVB
 static int
-capmt_create_udp_socket(int *socket, int port)
+capmt_create_udp_socket(capmt_t *capmt, int *socket, int port)
 {
   *socket = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (*socket < 0) {
+    tvherror("capmt", "%s: failed to create UDP socket", capmt_name(capmt));
+    return 0;
+  }
 
   struct sockaddr_in serv_addr;
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -1391,7 +1369,7 @@ capmt_create_udp_socket(int *socket, int port)
 
   if (bind(*socket, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0)
   {
-    tvherror("capmt", "failed to bind to ca0 (port %d)", port);
+    tvherror("capmt", "%s: failed to bind to ca0 (port %d)", capmt_name(capmt), port);
     return 0;
   }
   else
@@ -1409,6 +1387,8 @@ capmt_thread(void *aux)
   struct timespec ts;
   int d, i, fatal;
 
+  tvhlog(LOG_INFO, "capmt", "%s active", capmt_name(capmt));
+
   while (capmt->capmt_running) {
     fatal = 0;
     for (i = 0; i < MAX_CA; i++)
@@ -1422,17 +1402,18 @@ capmt_thread(void *aux)
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
 
     /* Accessible */
-    if (capmt->capmt_sockfile && !access(capmt->capmt_sockfile, R_OK | W_OK))
-      capmt_set_connected(capmt, 1);
+    if (capmt->capmt_sockfile && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
+        !access(capmt->capmt_sockfile, R_OK | W_OK))
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_NONE);
     else
-      capmt_set_connected(capmt, 0);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     
-    pthread_mutex_lock(&global_lock);
+    pthread_mutex_lock(&capmt->capmt_mutex);
 
-    while(capmt->capmt_running && capmt->capmt_enabled == 0)
-      pthread_cond_wait(&capmt->capmt_cond, &global_lock);
+    while(capmt->capmt_running && capmt->cac_enabled == 0)
+      pthread_cond_wait(&capmt->capmt_cond, &capmt->capmt_mutex);
 
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
 
     if (!capmt->capmt_running) continue;
 
@@ -1440,7 +1421,7 @@ capmt_thread(void *aux)
     capmt_connect(capmt, 0);
 
     if (capmt->capmt_sock[0] >= 0) {
-      capmt_set_connected(capmt, 2);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_CONNECTED);
 #if CONFIG_LINUXDVB
       if (capmt_oscam_new(capmt)) {
         handle_single(capmt);
@@ -1448,7 +1429,8 @@ capmt_thread(void *aux)
         int bind_ok = 0;
         /* open connection to emulated ca0 device */
         if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER) {
-          bind_ok = capmt_create_udp_socket(&capmt->capmt_adapters[0].ca_sock,
+          bind_ok = capmt_create_udp_socket(capmt,
+                                            &capmt->capmt_adapters[0].ca_sock,
                                             capmt->capmt_port);
           if (bind_ok)
             handle_ca0_wrapper(capmt);
@@ -1462,11 +1444,12 @@ capmt_thread(void *aux)
             if (!la || !la->la_is_enabled(la)) continue;
             n = la->la_dvb_number;
             if (n < 0 || n > MAX_CA) {
-              tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
+              tvhlog(LOG_ERR, "capmt", "%s: adapter number > MAX_CA", capmt_name(capmt));
               continue;
             }
-            tvhlog(LOG_INFO, "capmt", "created UDP socket %d", n);
-            bind_ok = capmt_create_udp_socket(&capmt->capmt_adapters[n].ca_sock,
+            tvhlog(LOG_INFO, "capmt", "%s: created UDP socket %d", capmt_name(capmt), n);
+            bind_ok = capmt_create_udp_socket(capmt,
+                                              &capmt->capmt_adapters[n].ca_sock,
                                               capmt->capmt_port + n);
           }
           if (bind_ok)
@@ -1480,13 +1463,22 @@ capmt_thread(void *aux)
          capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET) {
        handle_single(capmt);
      } else {
-       tvhlog(LOG_ERR, "capmt", "Only modes 3 and 4 are supported for non-linuxdvb devices");
+       tvhlog(LOG_ERR, "capmt", "%s: Only modes 3 and 4 are supported for non-linuxdvb devices", capmt_name(capmt));
        fatal = 1;
      }
 #endif
     }
 
-    capmt_set_connected(capmt, 0);
+    caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_DISCONNECTED);
+
+    pthread_mutex_lock(&capmt->capmt_mutex);
+    if (capmt->capmt_reconfigure) {
+      capmt->capmt_reconfigure = 0;
+      capmt->capmt_running = 1;
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
+    }
+    pthread_mutex_unlock(&capmt->capmt_mutex);
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
@@ -1495,7 +1487,12 @@ capmt_thread(void *aux)
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
 
-    if (!capmt->capmt_running) continue;
+    pthread_mutex_lock(&capmt->capmt_mutex);
+
+    if (!capmt->capmt_running) {
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      continue;
+    }
 
     /* schedule reconnection */
     if(subscriptions_active() && !fatal) {
@@ -1507,13 +1504,14 @@ capmt_thread(void *aux)
     ts.tv_sec = time(NULL) + d;
     ts.tv_nsec = 0;
 
-    tvhlog(LOG_INFO, "capmt", "Automatic reconnection attempt in in %d seconds", d);
+    tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id), d);
 
-    pthread_mutex_lock(&global_lock);
-    pthread_cond_timedwait(&capmt_config_changed, &global_lock, &ts);
-    pthread_mutex_unlock(&global_lock);
+    pthread_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, &ts);
+
+    pthread_mutex_unlock(&capmt->capmt_mutex);
   }
 
+  tvhlog(LOG_INFO, "capmt", "%s inactive", capmt_name(capmt));
   return NULL;
 }
 
@@ -1592,8 +1590,8 @@ capmt_caid_change(th_descrambler_t *td)
       if (cce)
         continue;
       tvhlog(LOG_DEBUG, "capmt",
-             "New caid 0x%04X:0x%06X for service \"%s\"",
-              c->caid, c->providerid, t->s_dvb_svcname);
+             "%s: New caid 0x%04X:0x%06X for service \"%s\"",
+              capmt_name(capmt), c->caid, c->providerid, t->s_dvb_svcname);
 
       /* ecmpid not already seen, add it to list */
       cce             = calloc(1, sizeof(capmt_caid_ecm_t));
@@ -1708,11 +1706,12 @@ capmt_send_request(capmt_service_t *ct, int lm)
           cad.cad_length = 0x04;
           cad.cad_data[3] = cce2->cce_providerid & 0xffffff;
       }else
-        tvhlog(LOG_WARNING, "capmt", "Unknown CAID type, don't know where to put provider ID");
+        tvhlog(LOG_WARNING, "capmt", "%s: Unknown CAID type, don't know where to put provider ID", capmt_name(capmt));
     }
     memcpy(&buf[pos], &cad, cad.cad_length + 2);
     pos += cad.cad_length + 2;
-    tvhlog(LOG_DEBUG, "capmt", "adding ECMPID=0x%X (%d), CAID=0x%X (%d) PROVID=0x%X (%d)",
+    tvhlog(LOG_DEBUG, "capmt", "%s: adding ECMPID=0x%X (%d), CAID=0x%X (%d) PROVID=0x%X (%d)",
+      capmt_name(capmt),
       cce2->cce_ecmpid, cce2->cce_ecmpid,
       cce2->cce_caid, cce2->cce_caid,
       cce2->cce_providerid, cce2->cce_providerid);
@@ -1733,7 +1732,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
 
   if(ct->td_keystate != DS_RESOLVED)
     tvhlog(LOG_DEBUG, "capmt",
-      "Trying to obtain key for service \"%s\"",t->s_dvb_svcname);
+      "%s: Trying to obtain key for service \"%s\"", capmt_name(capmt), t->s_dvb_svcname);
 
   buf[9] = pmtversion;
   pmtversion = (pmtversion + 1) & 0x1F;
@@ -1760,9 +1759,9 @@ capmt_enumerate_services(capmt_t *capmt, int force)
 
   if (!all_srv_count) {
     // closing socket (oscam handle this as event and stop decrypting)
-    tvhlog(LOG_DEBUG, "capmt", "%s: no subscribed services, closing socket, fd=%d", __FUNCTION__, capmt->capmt_sock[0]);
+    tvhlog(LOG_DEBUG, "capmt", "%s: %s: no subscribed services, closing socket, fd=%d", capmt_name(capmt), __FUNCTION__, capmt->capmt_sock[0]);
     if (capmt->capmt_sock[0] >= 0)
-      capmt_set_connected(capmt, 1);
+      caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     capmt_socket_close(capmt, 0);
   }
   else if (force || (res_srv_count != all_srv_count)) {
@@ -1781,10 +1780,10 @@ capmt_enumerate_services(capmt_t *capmt, int force)
  *
  * global_lock is held
  */
-void
-capmt_service_start(service_t *s)
+static void
+capmt_service_start(caclient_t *cac, service_t *s)
 {
-  capmt_t *capmt;
+  capmt_t *capmt = (capmt_t *)cac;
   capmt_service_t *ct;
   capmt_caid_ecm_t *cce;
   th_descrambler_t *td;
@@ -1808,109 +1807,107 @@ capmt_service_start(service_t *s)
     tuner = lfe->lfe_adapter->la_dvb_number;
 #endif
 
-  TAILQ_FOREACH(capmt, &capmts, capmt_link) {
-    LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
-      /* skip, if we already have this service */
-      if (ct->td_service == (service_t *)t)
-        return;
+  pthread_mutex_lock(&capmt->capmt_mutex);
+
+  LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+    /* skip, if we already have this service */
+    if (ct->td_service == (service_t *)t) {
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      return;
     }
   }
 
-  TAILQ_FOREACH(capmt, &capmts, capmt_link) {
-    /* skip, if we're not active */
-    if (!capmt->capmt_enabled)
-      continue;
-
-    if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
-                     capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET) {
-      tvhlog(LOG_WARNING, "capmt",
-             "Virtual adapters are supported only in modes 3 and 4 (service \"%s\")",
-             t->s_dvb_svcname);
-      continue;
-    }
-
-    if (tuner < 0) {
-      for (i = 0; i < MAX_CA; i++) {
-        if (capmt->capmt_adapters[i].ca_tuner == NULL && tuner < 0)
-          tuner = i;
-        if (capmt->capmt_adapters[i].ca_tuner == t->s_dvb_active_input) {
-          tuner = i;
-          break;
-        }
-      }
-      if (tuner < 0 || tuner >= MAX_CA) {
-        tvhlog(LOG_ERR, "capmt",
-               "No free adapter slot available for service \"%s\"",
-               t->s_dvb_svcname);
-        continue;
-      }
-    }
-
-    tvhlog(LOG_INFO, "capmt",
-           "Starting CAPMT server for service \"%s\" on adapter %d seq 0x%04x",
-           t->s_dvb_svcname, tuner, capmt->capmt_seq);
-
-    capmt->capmt_adapters[tuner].ca_tuner = t->s_dvb_active_input;
-
-    /* create new capmt service */
-    ct              = calloc(1, sizeof(capmt_service_t));
-    ct->ct_capmt    = capmt;
-    ct->ct_seq      = capmt->capmt_seq;
-    ct->ct_adapter  = tuner;
-
-    /* update the sequence (oscam calls it pid?) to a safe value */
-    capmt->capmt_seq++;
-    capmt->capmt_seq &= 0x1fff;
-    if (capmt->capmt_seq == 8191 || capmt->capmt_seq == 0)
-      capmt->capmt_seq = 1;
-
-    change = 0;
-    pthread_mutex_lock(&t->s_stream_mutex);
-    TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-      caid_t *c;
-      if (t->s_dvb_prefcapid_lock == 2 &&
-          t->s_dvb_prefcapid != st->es_pid)
-        continue;
-      LIST_FOREACH(c, &st->es_caids, link) {
-        if(c == NULL || c->use == 0)
-          continue;
-
-        tvhlog(LOG_DEBUG, "capmt",
-          "New caid 0x%04X for service \"%s\"", c->caid, t->s_dvb_svcname);
-
-        /* add it to list */
-        cce             = calloc(1, sizeof(capmt_caid_ecm_t));
-        cce->cce_caid   = c->caid;
-        cce->cce_ecmpid = st->es_pid;
-        cce->cce_providerid = c->providerid;
-        LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
-        ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
-        change = 1;
-      }
-    }
-    pthread_mutex_unlock(&t->s_stream_mutex);
-
-    td = (th_descrambler_t *)ct;
-    tvhcsa_init(td->td_csa = &ct->ct_csa);
-    snprintf(buf, sizeof(buf), "capmt-%s-%i",
-                               capmt->capmt_sockfile,
-                               capmt->capmt_port);
-    td->td_nicename    = strdup(buf);
-    td->td_service     = s;
-    td->td_stop        = capmt_service_destroy;
-    td->td_caid_change = capmt_caid_change;
-    td->td_ecm_reset   = capmt_ecm_reset;
-    LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
-
-    LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
-
-    /* wake-up idle thread */
-    pthread_cond_signal(&capmt->capmt_cond);
-    pthread_cond_signal(&capmt_config_changed);
-
-    if (change)
-      capmt_notify_server(capmt, NULL, 0);
+  if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
+                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET) {
+    tvhlog(LOG_WARNING, "capmt",
+           "%s: Virtual adapters are supported only in modes 3 and 4 (service \"%s\")",
+           capmt_name(capmt), t->s_dvb_svcname);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
+    return;
   }
+
+  if (tuner < 0) {
+    for (i = 0; i < MAX_CA; i++) {
+      if (capmt->capmt_adapters[i].ca_tuner == NULL && tuner < 0)
+        tuner = i;
+      if (capmt->capmt_adapters[i].ca_tuner == t->s_dvb_active_input) {
+        tuner = i;
+        break;
+      }
+    }
+    if (tuner < 0 || tuner >= MAX_CA) {
+      tvhlog(LOG_ERR, "capmt",
+             "%s: No free adapter slot available for service \"%s\"",
+             capmt_name(capmt), t->s_dvb_svcname);
+      pthread_mutex_unlock(&capmt->capmt_mutex);
+      return;
+    }
+  }
+
+  tvhlog(LOG_INFO, "capmt",
+         "%s: Starting CAPMT server for service \"%s\" on adapter %d seq 0x%04x",
+         capmt_name(capmt), t->s_dvb_svcname, tuner, capmt->capmt_seq);
+
+  capmt->capmt_adapters[tuner].ca_tuner = t->s_dvb_active_input;
+
+  /* create new capmt service */
+  ct              = calloc(1, sizeof(capmt_service_t));
+  ct->ct_capmt    = capmt;
+  ct->ct_seq      = capmt->capmt_seq;
+  ct->ct_adapter  = tuner;
+
+  /* update the sequence (oscam calls it pid?) to a safe value */
+  capmt->capmt_seq++;
+  capmt->capmt_seq &= 0x1fff;
+  if (capmt->capmt_seq == 8191 || capmt->capmt_seq == 0)
+    capmt->capmt_seq = 1;
+
+  change = 0;
+  pthread_mutex_lock(&t->s_stream_mutex);
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    caid_t *c;
+    if (t->s_dvb_prefcapid_lock == 2 &&
+        t->s_dvb_prefcapid != st->es_pid)
+      continue;
+    LIST_FOREACH(c, &st->es_caids, link) {
+      if(c == NULL || c->use == 0)
+        continue;
+
+      tvhlog(LOG_DEBUG, "capmt",
+        "%s: New caid 0x%04X for service \"%s\"", capmt_name(capmt), c->caid, t->s_dvb_svcname);
+
+      /* add it to list */
+      cce             = calloc(1, sizeof(capmt_caid_ecm_t));
+      cce->cce_caid   = c->caid;
+      cce->cce_ecmpid = st->es_pid;
+      cce->cce_providerid = c->providerid;
+      LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+      ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
+      change = 1;
+    }
+  }
+  pthread_mutex_unlock(&t->s_stream_mutex);
+
+  td = (th_descrambler_t *)ct;
+  snprintf(buf, sizeof(buf), "capmt-%s-%i",
+                             capmt->capmt_sockfile,
+                             capmt->capmt_port);
+  td->td_nicename    = strdup(buf);
+  td->td_service     = s;
+  td->td_stop        = capmt_service_destroy;
+  td->td_caid_change = capmt_caid_change;
+  td->td_ecm_reset   = capmt_ecm_reset;
+
+  LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
+  LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
+
+  /* wake-up idle thread */
+  pthread_cond_signal(&capmt->capmt_cond);
+
+  pthread_mutex_unlock(&capmt->capmt_mutex);
+
+  if (change)
+    capmt_notify_server(capmt, NULL, 0);
 }
 
 
@@ -1918,219 +1915,120 @@ capmt_service_start(service_t *s)
  *
  */
 static void
-capmt_destroy(capmt_t *capmt)
+capmt_free(caclient_t *cac)
 {
-  lock_assert(&global_lock);
-  TAILQ_REMOVE(&capmts, capmt, capmt_link);  
-  capmt->capmt_running = 0;
-  pthread_cond_signal(&capmt->capmt_cond);
-  pthread_mutex_unlock(&global_lock);
-  tvh_write(capmt->capmt_pipe.wr, "", 1);
-  pthread_join(capmt->capmt_tid, NULL);
-  pthread_mutex_lock(&global_lock);
-  tvhlog(LOG_INFO, "capmt", "mode %i %s %s port %i destroyed",
+  capmt_t *capmt = (capmt_t *)cac;
+  tvhlog(LOG_INFO, "capmt", "%s: mode %i %s %s port %i destroyed",
+         capmt_name(capmt),
          capmt->capmt_oscam,
          capmt->capmt_oscam == CAPMT_OSCAM_TCP ? "IP address" : "sockfile",
          capmt->capmt_sockfile, capmt->capmt_port);
   capmt_flush_queue(capmt, 1);
-  free(capmt->capmt_id);
   free(capmt->capmt_sockfile);
-  free(capmt->capmt_comment);
-  free(capmt);
 }
 
 /**
  *
  */
-static capmt_t *
-capmt_entry_find(const char *id, int create)
+static void
+capmt_conf_changed(caclient_t *cac)
 {
-  char buf[20];
-  capmt_t *capmt;
-  static int tally;
+  capmt_t *capmt = (capmt_t *)cac;
+  pthread_t tid;
 
-  if(id != NULL) {
-    TAILQ_FOREACH(capmt, &capmts, capmt_link)
-      if(!strcmp(capmt->capmt_id, id))
-  return capmt;
-  }
-  if(create == 0)
-    return NULL;
-
-  if(id == NULL) {
-    tally++;
-    snprintf(buf, sizeof(buf), "%d", tally);
-    id = buf;
+  if (capmt->cac_enabled) {
+    if (capmt->capmt_sockfile == NULL || capmt->capmt_sockfile[0] == '\0') {
+      caclient_set_status(cac, CACLIENT_STATUS_NONE);
+      return;
+    }
+    if (!capmt->capmt_running) {
+      capmt->capmt_running = 1;
+      capmt->capmt_reconfigure = 0;
+      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
+      return;
+    }
+    pthread_mutex_lock(&capmt->capmt_mutex);
+    capmt->capmt_reconfigure = 1;
+    pthread_cond_signal(&capmt->capmt_cond);
+    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_write(capmt->capmt_pipe.wr, "", 1);
   } else {
-    tally = MAX(atoi(id), tally);
+    if (!capmt->capmt_running)
+      return;
+    pthread_mutex_lock(&capmt->capmt_mutex);
+    capmt->capmt_running = 0;
+    capmt->capmt_reconfigure = 0;
+    pthread_cond_signal(&capmt->capmt_cond);
+    tid = capmt->capmt_tid;
+    pthread_mutex_unlock(&capmt->capmt_mutex);
+    tvh_write(capmt->capmt_pipe.wr, "", 1);
+    pthread_join(tid, NULL);
+    caclient_set_status(cac, CACLIENT_STATUS_NONE);
   }
 
-  capmt = calloc(1, sizeof(capmt_t));
-  pthread_mutex_init(&capmt->capmt_mutex, NULL);
-  pthread_cond_init(&capmt->capmt_cond, NULL);
-  capmt->capmt_id      = strdup(id); 
-  capmt->capmt_running = 1; 
-  capmt->capmt_seq     = 1;
-  TAILQ_INIT(&capmt->capmt_writeq);
-
-  TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);
-
-  tvh_pipe(O_NONBLOCK, &capmt->capmt_pipe);
-
-  tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
-
-  return capmt;
 }
 
-
-/**
- *
- */
 static htsmsg_t *
-capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
+caclient_capmt_class_oscam_mode_list ( void *o )
 {
-  capmt_t *capmt;
-  const char *s;
-  uint32_t u32;
+  static const struct strtab tab[] = {
+    { "OSCam pc-nodmx (rev >= 9756)", CAPMT_OSCAM_UNIX_SOCKET},
+    { "OSCam TCP (rev >= 9574)",      CAPMT_OSCAM_TCP },
+    { "OSCam (rev >= 9095)",          CAPMT_OSCAM_MULTILIST },
+    { "Older OSCam",                  CAPMT_OSCAM_OLD },
+    { "Wrapper (capmt_ca.so)",        CAPMT_OSCAM_SO_WRAPPER },
+  };
+  return strtab2htsmsg(tab);
+}
 
-  if((capmt = capmt_entry_find(id, maycreate)) == NULL)
-    return NULL;
-
-  lock_assert(&global_lock);
-  
-  if((s = htsmsg_get_str(values, "camdfilename")) != NULL) {
-    free(capmt->capmt_sockfile);
-    capmt->capmt_sockfile = strdup(s);
+const idclass_t caclient_capmt_class =
+{
+  .ic_super      = &caclient_class,
+  .ic_class      = "caclient_capmt",
+  .ic_caption    = "CAPMT (Linux DVBAPI)",
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_INT,
+      .id       = "mode",
+      .name     = "Mode",
+      .off      = offsetof(capmt_t, capmt_oscam),
+      .list     = caclient_capmt_class_oscam_mode_list,
+      .def.i    = CAPMT_OSCAM_MULTILIST,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "camdfilename",
+      .name     = "Camd.socket Filename / IP Address (TCP mode)",
+      .off      = offsetof(capmt_t, capmt_sockfile),
+      .def.s    = "/tmp/camd.socket",
+    },
+    {
+      .type     = PT_U16,
+      .id       = "port",
+      .name     = "Listen/Connect Port",
+      .off      = offsetof(capmt_t, capmt_port),
+      .def.i    = 9000
+    },
+    { }
   }
-  
-  if(!htsmsg_get_u32(values, "port", &u32))
-    capmt->capmt_port = u32;
-
-  if(!htsmsg_get_u32(values, "oscam", &u32)) 
-    capmt->capmt_oscam = u32;
-
-  if((s = htsmsg_get_str(values, "comment")) != NULL) {
-    free(capmt->capmt_comment);
-    capmt->capmt_comment = strdup(s);
-  }
-
-  if(!htsmsg_get_u32(values, "enabled", &u32)) 
-    capmt->capmt_enabled = u32;
-
-
-  capmt->capmt_reconfigure = 1;
-
-  pthread_cond_signal(&capmt->capmt_cond);
-
-  pthread_cond_broadcast(&capmt_config_changed);
-
-  return capmt_record_build(capmt);
-}
-  
-
-
-/**
- *
- */
-static int
-capmt_entry_delete(void *opaque, const char *id)
-{
-  capmt_t *capmt;
-
-  pthread_cond_broadcast(&capmt_config_changed);
-
-  if((capmt = capmt_entry_find(id, 0)) == NULL)
-    return -1;
-  capmt_destroy(capmt);
-  return 0;
-}
-
-
-/**
- *
- */
-static htsmsg_t *
-capmt_entry_get_all(void *opaque)
-{
-  htsmsg_t *r = htsmsg_create_list();
-  capmt_t *capmt;
-
-  TAILQ_FOREACH(capmt, &capmts, capmt_link)
-    htsmsg_add_msg(r, NULL, capmt_record_build(capmt));
-
-  return r;
-}
-
-/**
- *
- */
-static htsmsg_t *
-capmt_entry_get(void *opaque, const char *id)
-{
-  capmt_t *capmt;
-
-
-  if((capmt = capmt_entry_find(id, 0)) == NULL)
-    return NULL;
-  return capmt_record_build(capmt);
-}
-
-/**
- *
- */
-static htsmsg_t *
-capmt_entry_create(void *opaque)
-{
-  pthread_cond_broadcast(&capmt_config_changed);
-  return capmt_record_build(capmt_entry_find(NULL, 1));
-}
-
-/**
- *
- */
-static const dtable_class_t capmt_dtc = {
-  .dtc_record_get     = capmt_entry_get,
-  .dtc_record_get_all = capmt_entry_get_all,
-  .dtc_record_create  = capmt_entry_create,
-  .dtc_record_update  = capmt_entry_update,
-  .dtc_record_delete  = capmt_entry_delete,
-  .dtc_read_access = ACCESS_ADMIN,
-  .dtc_write_access = ACCESS_ADMIN,
-  .dtc_mutex = &global_lock,
 };
 
-/**
+/*
  *
  */
-void
-capmt_init(void)
+caclient_t *capmt_create(void)
 {
-  dtable_t *dt;
+  capmt_t *capmt = calloc(1, sizeof(*capmt));
 
-  TAILQ_INIT(&capmts);
+  pthread_mutex_init(&capmt->capmt_mutex, NULL);
+  pthread_cond_init(&capmt->capmt_cond, NULL);
+  capmt->capmt_seq = 1;
+  TAILQ_INIT(&capmt->capmt_writeq);
+  tvh_pipe(O_NONBLOCK, &capmt->capmt_pipe);
 
-  pthread_cond_init(&capmt_config_changed, NULL);
+  capmt->cac_free         = capmt_free;
+  capmt->cac_start        = capmt_service_start;
+  capmt->cac_conf_changed = capmt_conf_changed;
 
-  dt = dtable_create(&capmt_dtc, "capmt", NULL);
-  dtable_load(dt);
+  return (caclient_t *)capmt;
 }
-
-void
-capmt_done(void)
-{
-  capmt_t *capmt;
-
-  dtable_delete("capmt");
-  pthread_mutex_lock(&global_lock);
-  while ((capmt = TAILQ_FIRST(&capmts)) != NULL)
-    capmt_destroy(capmt);
-  pthread_mutex_unlock(&global_lock);
-}
-
-#else /* ENABLE_CAPMT */
-
-void capmt_init ( void ) {}
-void capmt_done ( void ) {}
-void capmt_service_start(service_t *s) {}
-
-#endif

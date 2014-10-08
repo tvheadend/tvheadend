@@ -25,12 +25,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <iconv.h>
 
 #include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
 #include "input.h"
+#include "intlconv.h"
 
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
@@ -40,32 +40,14 @@ static int convert_iso_8859[16] = {
 #define convert_ucs2 16
 #define convert_gb   17
 
-static inline int code_convert(const char *from_charset,const char *to_charset,char *inbuf,size_t inlen,char *outbuf,size_t *outlen)
-{
-    iconv_t cd;
-
-    char **pin = &inbuf;
-    char **pout = &outbuf;
-
-    cd = iconv_open(to_charset,from_charset);
-    if (cd==0) return -1;
-    memset(outbuf,0,*outlen);
-    if (iconv(cd,pin,&inlen,pout,outlen)==-1) return -1;
-    iconv_close(cd);
-    return 0;
-}
-
-static inline int gb2u(char *inbuf,int inlen,char *outbuf,size_t *outlen)
-{
-    return code_convert("gb2312","utf-8",inbuf,inlen,outbuf,outlen);
-}
-
 static inline size_t conv_gb(const uint8_t *src, size_t srclen,
                              char *dst, size_t *dstlen)
 {
-    size_t len=*dstlen;
-    gb2u((char *)src,srclen,dst,dstlen);
-    dst+=len-*dstlen;
+    ssize_t len;
+    len = intlconv_to_utf8(dst, *dstlen, "gb2312", (char *)src, srclen);
+    if (len < 0 || len > *dstlen)
+      return -1;
+    *dstlen -= len;
     return 0;
 }
 

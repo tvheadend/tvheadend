@@ -471,7 +471,7 @@ esfilter_build_ca_enum(int provider)
     e = htsmsg_create_map();
     snprintf(buf, sizeof(buf), provider ? "%06x" : "%04x", a[i]);
     if (!provider)
-      snprintf(buf2, sizeof(buf2), provider ? "%06x %s" : "%04x - %s",
+      snprintf(buf2, sizeof(buf2), "%04x - %s",
                a[i], descrambler_caid2name(a[i]));
     htsmsg_add_str(e, "key", buf);
     htsmsg_add_str(e, "val", provider ? buf : buf2);

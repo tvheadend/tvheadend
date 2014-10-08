@@ -113,10 +113,11 @@ hts_settings_buildpath
   (char *dst, size_t dstsize, const char *fmt, ...)
 {
   va_list va;
-  va_start(va, fmt);
   if (!settingspath)
     return 1;
+  va_start(va, fmt);
   _hts_settings_buildpath(dst, dstsize, fmt, va, settingspath);
+  va_end(va);
   return 0;
 }
 
@@ -281,6 +282,8 @@ hts_settings_vload(const char *pathfmt, va_list ap, int depth)
                             pathfmt, ap2, "data/conf");
     ret = hts_settings_load_path(fullpath, depth);
   }
+
+  va_end(ap2);
 
   return ret;
 }

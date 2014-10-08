@@ -54,6 +54,11 @@ epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
     epggrab_module_t *owner );
 
+void epggrab_channel_destroy
+  ( epggrab_channel_tree_t *tree, epggrab_channel_t *ec, int delconf );
+void epggrab_channel_flush
+  ( epggrab_channel_tree_t *tree, int delconf );
+
 void epggrab_channel_done(void);
 
 /* **************************************************************************
@@ -185,10 +190,12 @@ void opentv_load ( void );
 
 /* PyEPG module */
 void pyepg_init  ( void );
+void pyepg_done  ( void );
 void pyepg_load  ( void );
 
 /* XMLTV module */
 void xmltv_init  ( void );
+void xmltv_done  ( void );
 void xmltv_load  ( void );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */

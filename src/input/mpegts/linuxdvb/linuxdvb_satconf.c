@@ -583,7 +583,7 @@ linuxdvb_satconf_get_priority
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
 {
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
-  return lse->lse_priority;
+  return lse ? lse->lse_priority : 0;
 }
 
 void
@@ -601,6 +601,9 @@ linuxdvb_satconf_get_grace
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
 {
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mm);
+  if (lse == NULL)
+    return 0;
+
   int i, r = 10;
   linuxdvb_diseqc_t      *lds[] = {
     (linuxdvb_diseqc_t*)lse->lse_en50494,

@@ -67,7 +67,8 @@ static time_t _xmltv_str2time(const char *in)
   char str[32];
 
   memset(&tm, 0, sizeof(tm));
-  strcpy(str, in);
+  strncpy(str, in, sizeof(str));
+  str[sizeof(str)-1] = '\0';
 
   /* split tz */
   while (str[sp] && str[sp] != ' ')
@@ -749,6 +750,8 @@ static void _xmltv_load_grabbers ( void )
 
 void xmltv_init ( void )
 {
+  RB_INIT(&_xmltv_channels);
+
   /* External module */
   _xmltv_module = (epggrab_module_t*)
     epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
@@ -757,6 +760,11 @@ void xmltv_init ( void )
 
   /* Standard modules */
   _xmltv_load_grabbers();
+}
+
+void xmltv_done ( void )
+{
+  epggrab_channel_flush(&_xmltv_channels, 0);
 }
 
 void xmltv_load ( void )

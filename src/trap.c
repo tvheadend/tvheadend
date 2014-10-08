@@ -245,7 +245,8 @@ trap_init(const char *ver)
     self[0] = 0;
   else
     self[r] = 0;
-  
+
+  memset(digest, 0, sizeof(digest));  
   if((fd = open("/proc/self/exe", O_RDONLY)) != -1) {
     struct stat st;
     if(!fstat(fd, &st)) {

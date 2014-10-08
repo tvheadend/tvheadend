@@ -46,11 +46,11 @@ int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 /* Destroy */
 void
 epggrab_channel_link_delete
-  ( epggrab_channel_link_t *ecl )
+  ( epggrab_channel_link_t *ecl, int delconf )
 {
   LIST_REMOVE(ecl, ecl_chn_link);
   LIST_REMOVE(ecl, ecl_epg_link);
-  if (ecl->ecl_epggrab->mod->ch_save)
+  if (delconf && ecl->ecl_epggrab->mod->ch_save)
     ecl->ecl_epggrab->mod->ch_save(ecl->ecl_epggrab->mod, ecl->ecl_epggrab);
   free(ecl);
 }
@@ -127,8 +127,8 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
+  if (!ec || !icon) return 0;
   if (!ec->icon || strcmp(ec->icon, icon) ) {
-  if (!ec | !icon) return 0;
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
 #if TODO_CHAN_UPDATE
@@ -222,6 +222,29 @@ epggrab_channel_t *epggrab_channel_find
   return ec;
 }
 
+void epggrab_channel_destroy
+  ( epggrab_channel_tree_t *tree, epggrab_channel_t *ec, int delconf )
+{
+  epggrab_channel_link_t *ecl;
+
+  if (!ec) return;
+
+  /* Already linked */
+  while ((ecl = LIST_FIRST(&ec->channels)) != NULL)
+    epggrab_channel_link_delete(ecl, delconf);
+  RB_REMOVE(tree, ec, link);
+  free(ec->id);
+  free(ec);
+}
+
+void epggrab_channel_flush
+  ( epggrab_channel_tree_t *tree, int delconf )
+{
+  epggrab_channel_t *ec;
+  while ((ec = RB_FIRST(tree)) != NULL)
+    epggrab_channel_destroy(tree, ec, delconf);
+}
+
 /* **************************************************************************
  * Global routines
  * *************************************************************************/
@@ -290,6 +313,7 @@ epggrab_channel_find_by_id ( const char *id )
   char *mid, *cid;
   epggrab_module_t *mod;
   strncpy(buf, id, sizeof(buf));
+  buf[sizeof(buf)-1] = '\0';
   if ((mid = strtok_r(buf, "|", &cid)) && cid)
     if ((mod = epggrab_module_find_by_id(mid)) && mod->channels)
       return epggrab_channel_find(mod->channels, cid, 0, NULL, NULL);

@@ -471,7 +471,7 @@ http_client_ssl_shutdown( http_client_t *hc )
     } else if (e == SSL_ERROR_WANT_CONNECT || e == SSL_ERROR_WANT_ACCEPT) {
       errno = EBADF;
       return -1;
-    } else if (r == SSL_ERROR_SSL) {
+    } else if (e == SSL_ERROR_SSL) {
       errno = EPERM;
       return -1;
     } else {

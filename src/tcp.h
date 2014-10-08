@@ -43,7 +43,6 @@ typedef struct tcp_server_ops
                      struct sockaddr_storage *peer,
                      struct sockaddr_storage *self);
   void (*stop)   (void *opaque);
-  void (*status) (void *opaque, htsmsg_t *m);
   void (*cancel) (void *opaque);
 } tcp_server_ops_t;
 
@@ -79,6 +78,13 @@ int tcp_write_queue(int fd, htsbuf_queue_t *q);
 int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
 
 char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
+
+struct access;
+
+void *tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m),
+                            struct access *aa);
+void tcp_connection_land(void *tcp_id);
+void tcp_connection_cancel(uint32_t id);
 
 htsmsg_t *tcp_server_connections ( void );
 

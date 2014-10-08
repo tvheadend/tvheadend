@@ -10,6 +10,10 @@ Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
     expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
 }));
 
+tvheadend.regexEscape = function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 /**
  * Displays a help popup window
  */
@@ -389,24 +393,8 @@ function accessUpdate(o) {
         cp.add(tsdvr);
 
         /* CSA */
-        if (tvheadend.capabilities.indexOf('cwc')   !== -1 ||
-            tvheadend.capabilities.indexOf('capmt') !== -1) {
-
-            var csa = new Ext.TabPanel({
-                activeTab: 0,
-                autoScroll: true,
-                title: 'CSA',
-                iconCls: 'key',
-                items: []
-            });
-
-            if (tvheadend.capabilities.indexOf('cwc')   !== -1)
-                tvheadend.cwceditor(csa);
-            if (tvheadend.capabilities.indexOf('capmt') !== -1)
-                tvheadend.capmteditor(csa);
-                
-            cp.add(csa);
-        }
+        if (tvheadend.capabilities.indexOf('caclient') !== -1)
+            tvheadend.caclient(cp, null);
 
         /* Stream Config */
         var stream = new Ext.TabPanel({
