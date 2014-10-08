@@ -410,19 +410,20 @@ http_redirect(http_connection_t *hc, const char *location,
  */
 static int http_access_verify_ticket(http_connection_t *hc)
 {
-  const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+  const char *ticket_id;
 
-  if (hc->hc_ticket)
+  if (hc->hc_ticket || hc->hc_access)
     return 0;
-  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
-    char addrstr[50];
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
-    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
-	   addrstr, ticket_id, hc->hc_url);
-    hc->hc_ticket = 1;
-    return 0;
-  }
-  return -1;
+  ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+  hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
+  if (hc->hc_access == NULL)
+    return -1;
+  char addrstr[50];
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
+  tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s",
+	 addrstr, ticket_id, hc->hc_url);
+  hc->hc_ticket = 1;
+  return 0;
 }
 
 /**
@@ -638,6 +639,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
       n = base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
+      if (n < 0)
+        n = 0;
       authbuf[n] = 0;
       if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
 	      hc->hc_username = strdup(argv[0]);
@@ -974,16 +977,14 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   *opaque = NULL;
 }
 
-#if 0
 static void
-http_server_status ( void *opaque, htsmsg_t *m )
+http_cancel( void *opaque )
 {
-//  http_connection_t *hc = opaque;
-  htsmsg_add_str(m, "type", "HTTP");
-  if (hc->hc_username)
-    htsmsg_add_str(m, "user", hc->hc_username);
+  http_connection_t *hc = opaque;
+
+  if (hc)
+    shutdown(hc->hc_fd, SHUT_RDWR);
 }
-#endif
 
 /**
  *  Fire up HTTP server
@@ -994,7 +995,7 @@ http_server_init(const char *bindaddr)
   static tcp_server_ops_t ops = {
     .start  = http_serve,
     .stop   = NULL,
-    .status = NULL,
+    .cancel = http_cancel
   };
   http_server = tcp_server_create(bindaddr, tvheadend_webui_port, &ops, NULL);
 }

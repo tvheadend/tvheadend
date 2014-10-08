@@ -173,8 +173,10 @@ prop_write_values
         if (!(new = htsmsg_field_get_str(f)))
           continue;
         if (!p->set && strcmp((*str) ?: "", new)) {
-          free(*str);
+          /* make sure that the string is valid all time */
+          void *old = *str;
           *str = strdup(new);
+          free(old);
           save = 1;
         }
         break;
@@ -263,11 +265,12 @@ prop_read_value
       val = p->get(obj);
 
   /* List */
-  if (p->islist)
+  if (p->islist) {
+    assert(p->get); /* requirement */
     htsmsg_add_msg(m, name, (htsmsg_t*)val);
   
   /* Single */
-  else {
+  } else {
     switch(p->type) {
     case PT_BOOL:
       htsmsg_add_bool(m, name, *(int *)val);
@@ -449,6 +452,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "password", 1);
   if (opts & PO_DURATION)
     htsmsg_add_bool(m, "duration", 1);
+  if (opts & PO_HEXA)
+    htsmsg_add_bool(m, "hexa", 1);
 
   /* Enum list */
   if (pl->list)

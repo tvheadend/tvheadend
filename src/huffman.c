@@ -62,7 +62,6 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
           if (!node->b1) node->b1 = calloc(1, sizeof(huffman_node_t));
           node = node->b1;
         } else {
-          htsmsg_destroy(m);
           huffman_tree_destroy(root);
           return NULL;
         }

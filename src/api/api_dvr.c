@@ -223,7 +223,7 @@ api_dvr_entry_create_by_event
       continue;
 
     pthread_mutex_lock(&global_lock);
-    if ((e = epg_broadcast_find_by_id(atoi(s), NULL))) {
+    if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       de = dvr_entry_create_by_event(api_dvr_config_name(perm, config_uuid),
                                      e, 0, 0, perm->aa_representative,
                                      NULL, DVR_PRIO_NORMAL, 0);
@@ -312,7 +312,7 @@ api_dvr_autorec_create_by_series
       continue;
 
     pthread_mutex_lock(&global_lock);
-    if ((e = epg_broadcast_find_by_id(atoi(s), NULL))) {
+    if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dae = dvr_autorec_add_series_link(api_dvr_config_name(perm, config_uuid),
                                         e, perm->aa_representative,
                                         "Created from EPG query");

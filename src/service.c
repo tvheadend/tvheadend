@@ -154,7 +154,7 @@ service_class_caid_get ( void *obj )
     case SCT_CA:
       LIST_FOREACH(c, &st->es_caids, link) {
         l = strlen(buf);
-        snprintf(buf + l, l - sizeof(buf), "%s%04X:%06X",
+        snprintf(buf + l, sizeof(buf) - l, "%s%04X:%06X",
                  l ? "," : "", c->caid, c->providerid);
       }
       break;
@@ -437,7 +437,7 @@ filter:
         if (esf->esf_language[0] &&
             strncmp(esf->esf_language, st->es_lang, 4))
           continue;
-        if (esf->esf_service && esf->esf_service[0]) {
+        if (esf->esf_service[0]) {
           if (strcmp(esf->esf_service, idnode_uuid_as_str(&t->s_id)))
             continue;
           if (esf->esf_pid && esf->esf_pid != st->es_pid)
@@ -1559,6 +1559,17 @@ service_get_channel_number ( service_t *s )
 {
   if (s->s_channel_number) return s->s_channel_number(s);
   return 0;
+}
+
+/*
+ * Get name for channel from service
+ */
+const char *
+service_get_channel_icon ( service_t *s )
+{
+  const char *r = NULL;
+  if (s->s_channel_icon) r = s->s_channel_icon(s);
+  return r;
 }
 
 /**

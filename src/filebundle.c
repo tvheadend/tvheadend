@@ -280,7 +280,8 @@ fb_dirent *fb_readdir ( fb_dir *dir )
   fb_dirent *ret = NULL;
   if (dir->type == FB_BUNDLE) {
     if (dir->b.cur) {
-      strcpy(dir->dirent.name, dir->b.cur->name);
+      strncpy(dir->dirent.name, dir->b.cur->name, sizeof(dir->dirent.name)-1);
+      dir->dirent.name[sizeof(dir->dirent.name)-1] = '\0';
       dir->dirent.type = dir->b.cur->type;
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
@@ -344,11 +345,12 @@ int fb_scandir ( const char *path, fb_dirent ***list )
     const filebundle_entry_t *fb;
     ret = dir->b.root->d.count;
     fb  = dir->b.root->d.child;
-    *list = malloc(ret * sizeof(fb_dirent));
+    *list = malloc(ret * sizeof(fb_dirent*));
     i = 0;
     while (fb) {
       (*list)[i] = calloc(1, sizeof(fb_dirent));
-      strcpy((*list)[i]->name, fb->name);
+      strncpy((*list)[i]->name, fb->name, sizeof((*list)[i]->name));
+      (*list)[i]->name[sizeof((*list)[i]->name)-1] = '\0';
       fb = fb->next;
       i++;
     }

@@ -134,11 +134,8 @@ int              tvheadend_htsp_port_extra;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
 const tvh_caps_t tvheadend_capabilities[] = {
-#if ENABLE_CWC
-  { "cwc", NULL },
-#endif
-#if ENABLE_CAPMT
-  { "capmt", NULL },
+#if ENABLE_CWC || ENABLE_CAPMT || ENABLE_CONSTCW
+  { "caclient", NULL },
 #endif
 #if ENABLE_V4L
   { "v4l", NULL },
@@ -451,6 +448,7 @@ main(int argc, char **argv)
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
+  FILE *pidfile = NULL;
 
   main_tid = pthread_self();
 
@@ -696,14 +694,16 @@ main(int argc, char **argv)
   http_server_init(opt_bindaddr);  // bind to ports only
   htsp_init(opt_bindaddr);	   // bind to ports only
 
-  /* Daemonise */
-  if(opt_fork) {
+  if (opt_fork)
+    pidfile = fopen(opt_pidpath, "w+");
+
+  /* Set priviledges */
+  if(opt_fork || opt_group || opt_user) {
     const char *homedir;
     gid_t gid;
     uid_t uid;
     struct group  *grp = getgrnam(opt_group ?: "video");
     struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
-    FILE   *pidfile    = fopen(opt_pidpath, "w+");
 
     if(grp != NULL) {
       gid = grp->gr_gid;
@@ -713,12 +713,17 @@ main(int argc, char **argv)
 
     if (pw != NULL) {
       if (getuid() != pw->pw_uid) {
-        gid_t glist[10];
+        gid_t glist[16];
         int gnum;
-        gnum = get_user_groups(pw, glist, 10);
-        if (setgroups(gnum, glist)) {
+        gnum = get_user_groups(pw, glist, ARRAY_SIZE(glist));
+        if (gnum > 0 && setgroups(gnum, glist)) {
+          char buf[256] = "";
+          int i;
+          for (i = 0; i < gnum; i++)
+            snprintf(buf + strlen(buf), sizeof(buf) - 1 - strlen(buf),
+                     ",%d", glist[i]);
           tvhlog(LOG_ALERT, "START",
-                 "setgroups() failed, do you have permission?");
+                 "setgroups(%s) failed, do you have permission?", buf+1);
           return 1;
         }
       }
@@ -730,15 +735,18 @@ main(int argc, char **argv)
     }
     if ((getgid() != gid) && setgid(gid)) {
       tvhlog(LOG_ALERT, "START",
-             "setgid() failed, do you have permission?");
+             "setgid(%d) failed, do you have permission?", gid);
       return 1;
     }
     if ((getuid() != uid) && setuid(uid)) {
       tvhlog(LOG_ALERT, "START",
-             "setuid() failed, do you have permission?");
+             "setuid(%d) failed, do you have permission?", uid);
       return 1;
     }
+  }
 
+  /* Daemonise */
+  if(opt_fork) {
     if(daemon(0, 0)) {
       exit(2);
     }

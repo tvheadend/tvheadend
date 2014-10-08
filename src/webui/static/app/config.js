@@ -43,7 +43,8 @@ tvheadend.miscconf = function(panel, index) {
     [
         'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
-        'tvhtime_tolerance', 'transcoding_enabled'
+        'tvhtime_tolerance', 'transcoding_enabled',
+        'piconpath'
     ]);
 
     /* ****************************************************************
@@ -124,6 +125,25 @@ tvheadend.miscconf = function(panel, index) {
         collapsible: true,
         animCollapse: true,
         items: [tvhtimeUpdateEnabled, tvhtimeNtpEnabled, tvhtimeTolerance]
+    });
+
+    /*
+    * Picons
+    */
+
+    var piconPath = new Ext.form.TextField({
+        name: 'piconpath',
+        fieldLabel: 'Picon path (e.g. file:///tmp/picons)',
+        width: 400
+    });
+
+    var piconPanel = new Ext.form.FieldSet({
+        title: 'Picon',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items: [piconPath]
     });
 
     /*
@@ -232,7 +252,7 @@ tvheadend.miscconf = function(panel, index) {
         layout: 'form',
         defaultType: 'textfield',
         autoHeight: true,
-        items: [languageWrap, dvbscanWrap, tvhtimePanel, transcodingPanel]
+        items: [languageWrap, dvbscanWrap, tvhtimePanel, transcodingPanel, piconPanel]
     });
 
     var _items = [confpanel];

@@ -322,6 +322,29 @@
     background-image: url(../icons/film_edit.png) !important;
 }
 
+.caclientNone {
+    background-image: url(../icons/stop.png) !important;
+}
+
+.caclientReady {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.caclientConnected {
+    background-image: url(../icons/tick.png) !important;
+}
+
+.caclientDisconnected {
+    background-image: url(../icons/exclamation.png) !important;
+}
+
+.x-linked {
+    display: inline-block;
+    background-image: url(../icons/linked.gif) !important;
+    background-repeat: no-repeat;
+    width: 4px;
+}
+
 .x-smallhdr {
     float: left;
     width: 100px;
@@ -329,7 +352,7 @@
 
 .x-epg-title {
     margin: 5px;
-    font: normal 15px arial, tahoma, helvetica, sans-serif;
+    font: normal 16px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
 }
 
@@ -339,8 +362,13 @@
     font-weight: bold;
 }
 
-.x-epg-desc {
+.x-epg-summary {
     margin: 5px;
+    font-weight: bold;
+}
+
+.x-epg-desc {
+    margin: 10px;
 }
 
 .x-epg-chicon {
@@ -351,6 +379,12 @@
 }
 
 .x-epg-meta {
+    font-style: italic;
+    margin: 5px;
+}
+
+.x-epg-action {
+    font-weight: bold;
     margin: 5px;
 }
 

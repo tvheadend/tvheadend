@@ -260,6 +260,30 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * HTTP subscription handling
+ */
+static void
+http_stream_status ( void *opaque, htsmsg_t *m )
+{
+  http_connection_t *hc = opaque;
+  htsmsg_add_str(m, "type", "HTTP");
+  if (hc->hc_username)
+    htsmsg_add_str(m, "user", hc->hc_username);
+}
+
+static inline void *
+http_stream_preop ( http_connection_t *hc )
+{
+  return tcp_connection_launch(hc->hc_fd, http_stream_status, hc->hc_access);
+}
+
+static inline void
+http_stream_postop ( void *tcp_id )
+{
+  tcp_connection_land(tcp_id);
+}
+
+/**
  * HTTP stream loop
  */
 static void
@@ -426,7 +450,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
   htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-     access_ticket_create(buf));
+     access_ticket_create(buf, hc->hc_access));
 
 #if ENABLE_LIBAV
   transcoder_props_t props;
@@ -482,7 +506,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -519,7 +543,7 @@ http_tag_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -583,7 +607,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&mux=%s\n", muxer_container_type2txt(mc));
   }
 
@@ -638,7 +662,7 @@ http_dvr_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
-       access_ticket_create(buf));
+       access_ticket_create(buf, hc->hc_access));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -678,7 +702,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
-    ticket_id = access_ticket_create(buf);
+    ticket_id = access_ticket_create(buf, hc->hc_access);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 
     http_output_content(hc, "application/x-mpegURL");
@@ -777,9 +801,14 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  void *tcp_id;
+  int res = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   cfg = dvr_config_find_by_name_default(NULL);
 
@@ -819,6 +848,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
   }
 
   if(gh)
@@ -829,7 +860,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+  return res;
 }
 
 /**
@@ -847,9 +879,14 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   const char *name;
   char addrbuf[50];
   muxer_config_t muxcfg = { 0 };
+  void *tcp_id;
+  int res = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   streaming_queue_init(&sq, SMT_PACKET);
 
@@ -860,17 +897,21 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
                                    SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
                                    http_arg_get(&hc->hc_args, "User-Agent"), NULL);
-  if (!s)
-    return HTTP_STATUS_BAD_REQUEST;
-  name = tvh_strdupa(s->ths_title);
-  pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
+  if (s) {
+    name = tvh_strdupa(s->ths_title);
+    pthread_mutex_unlock(&global_lock);
+    http_stream_run(hc, &sq, name, MC_RAW, s, &muxcfg);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
+  }
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+
+  return res;
 }
 #endif
 
@@ -895,9 +936,14 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  void *tcp_id;
+  int res = 0;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
+
+  if((tcp_id = http_stream_preop(hc)) == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
 
   cfg = dvr_config_find_by_name_default(NULL);
 
@@ -945,6 +991,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
     http_stream_run(hc, &sq, name, mc, s, &cfg->dvr_muxcnf);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
+  } else {
+    res = HTTP_STATUS_BAD_REQUEST;
   }
 
   if(gh)
@@ -960,7 +1008,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
   streaming_queue_deinit(&sq);
 
-  return 0;
+  http_stream_postop(tcp_id);
+
+  return res;
 }
 
 
@@ -1274,6 +1324,11 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL)
     return 404;
 
+  if(hc->hc_access == NULL ||
+     (access_verify2(hc->hc_access, ACCESS_WEB_INTERFACE) &&
+      access_verify2(hc->hc_access, ACCESS_STREAMING)))
+    return 405;
+
   if(sscanf(remain, "%d", &id) != 1)
     return HTTP_STATUS_BAD_REQUEST;
 
@@ -1352,7 +1407,7 @@ webui_init(int xspf)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEB_INTERFACE);
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");

@@ -141,7 +141,7 @@ linuxdvb_adapter_create
   la = calloc(1, sizeof(linuxdvb_adapter_t));
   if (!tvh_hardware_create0((tvh_hardware_t*)la, &linuxdvb_adapter_class,
                             uuid, conf)) {
-    free(la);
+    /* Note: la variable is freed in tvh_hardware_create0() */
     return NULL;
   }
 
@@ -237,10 +237,10 @@ linuxdvb_adapter_add ( const char *path )
 
     /* Get frontend info */
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
-      if ((fd = tvh_open(fe_path, O_RDWR, 0)) > 0) break;
+      if ((fd = tvh_open(fe_path, O_RDWR, 0)) >= 0) break;
       usleep(100000);
     }
-    if (fd == -1) {
+    if (fd < 0) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", fe_path);
       continue;
     }

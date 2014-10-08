@@ -31,7 +31,6 @@
 #include "tvheadend.h"
 #include "settings.h"
 #include "dvr.h"
-#include "dtable.h"
 #include "epg.h"
 #include "htsp_server.h"
 
@@ -43,13 +42,14 @@ struct dvr_autorec_entry_queue autorec_entries;
  * Unlink - and remove any unstarted
  */
 static void
-dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
+dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del)
 {
   dvr_entry_t *de;
 
   while((de = LIST_FIRST(&dae->dae_spawns)) != NULL) {
     LIST_REMOVE(de, de_autorec_link);
     de->de_autorec = NULL;
+    if (!del) continue;
     if (de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
     else
@@ -273,7 +273,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 static void
 autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
-  dvr_autorec_purge_spawns(dae);
+  dvr_autorec_purge_spawns(dae, delconf);
 
   if (delconf)
     hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
@@ -410,7 +410,7 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
        free(dae->dae_title);
        dae->dae_title = NULL;
     }
-    if (title != NULL && title[0] != '\0' &&
+    if (title[0] != '\0' &&
         !regcomp(&dae->dae_title_preg, title,
                  REG_ICASE | REG_EXTENDED | REG_NOSUB))
       dae->dae_title = strdup(title);
@@ -528,6 +528,12 @@ static htsmsg_t *
 dvr_autorec_entry_class_time_list_(void *o)
 {
   return dvr_autorec_entry_class_time_list(o, "Any");
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_extra_list(void *o)
+{
+  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
 }
 
 static htsmsg_t *
@@ -846,14 +852,16 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "start_extra",
       .name     = "Extra Start Time",
       .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
-      .opts     = PO_DURATION,
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
     },
     {
       .type     = PT_TIME,
       .id       = "stop_extra",
       .name     = "Extra Stop Time",
       .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
-      .opts     = PO_DURATION,
+      .list     = dvr_autorec_entry_class_extra_list,
+      .opts     = PO_DURATION | PO_SORTKEY
     },
     {
       .type     = PT_U32,
@@ -1036,7 +1044,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   epg_broadcast_t *e;
 
   if (purge)
-    dvr_autorec_purge_spawns(dae);
+    dvr_autorec_purge_spawns(dae, 1);
 
   CHANNEL_FOREACH(ch) {
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {

@@ -385,7 +385,7 @@ satip_device_create( satip_device_info_t *info )
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
-    free(sd);
+    /* Note: sd is freed in above fcn */
     return NULL;
   }
 
@@ -882,9 +882,9 @@ satip_discovery_service_received
   /* Sanity checks */
   if (st == NULL || strcmp(st, "urn:ses-com:device:SatIPServer:1"))
     return;
-  if (uuid == NULL && strlen(uuid) < 16)
+  if (uuid == NULL || strlen(uuid) < 16)
     return;
-  if (location == NULL && strncmp(location, "http://", 7))
+  if (location == NULL || strncmp(location, "http://", 7))
     return;
   if (bootid == NULL || configid == NULL || server == NULL)
     return;

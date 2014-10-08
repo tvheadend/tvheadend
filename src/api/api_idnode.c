@@ -28,7 +28,7 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
 {
   htsmsg_t *m = NULL;
   const char *s = htsmsg_get_str(args, name);
-  char *r, *saveptr;
+  char *r, *saveptr = NULL;
   if (s && s[0] != '\0') {
     s = r = strdup(s);
     r = strtok_r(r, ",;:", &saveptr);
@@ -101,7 +101,7 @@ api_idnode_grid_conf
   /* Sort */
   if ((str = htsmsg_get_str(args, "sort"))) {
     conf->sort.key = str;
-    if ((str = htsmsg_get_str(args, "dir")) && !strcmp(str, "DESC"))
+    if ((str = htsmsg_get_str(args, "dir")) && !strcasecmp(str, "DESC"))
       conf->sort.dir = IS_DSC;
     else
       conf->sort.dir = IS_ASC;

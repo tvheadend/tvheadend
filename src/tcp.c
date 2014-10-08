@@ -34,11 +34,11 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
-#include "tcp.h"
 #include "tvheadend.h"
+#include "tcp.h"
 #include "tvhpoll.h"
-#include "queue.h"
 #include "notify.h"
+#include "access.h"
 
 int tcp_preferred_address_family = AF_INET;
 int tcp_server_running;
@@ -86,6 +86,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
           bind(fd, (struct sockaddr *)&ip, IP_IN_ADDRLEN(ip)) < 0) {
         snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'", bindaddr,
                                      ai->ai_family == AF_INET6 ? "6" : "4");
+        freeaddrinfo(ai);
         return -1;
       }
     }
@@ -375,6 +376,7 @@ tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
  *
  */
 static tvhpoll_t *tcp_server_poll;
+static uint32_t tcp_server_launch_id;
 
 typedef struct tcp_server {
   int serverfd;
@@ -384,9 +386,12 @@ typedef struct tcp_server {
 
 typedef struct tcp_server_launch {
   pthread_t tid;
+  uint32_t id;
   int fd;
   tcp_server_ops_t ops;
   void *opaque;
+  char *representative;
+  void (*status) (void *opaque, htsmsg_t *m);
   struct sockaddr_storage peer;
   struct sockaddr_storage self;
   time_t started;
@@ -400,6 +405,98 @@ static LIST_HEAD(, tcp_server_launch) tcp_server_active = { 0 };
 static LIST_HEAD(, tcp_server_launch) tcp_server_join = { 0 };
 
 /**
+ *
+ */
+void *
+tcp_connection_launch
+  (int fd, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
+{
+  tcp_server_launch_t *tsl, *res;
+  uint32_t used = 0;
+  time_t started = dispatch_clock;
+
+  lock_assert(&global_lock);
+
+  assert(status);
+
+  if (aa == NULL)
+    return NULL;
+
+try_again:
+  res = NULL;
+  LIST_FOREACH(tsl, &tcp_server_active, alink) {
+    if (tsl->fd == fd) {
+      res = tsl;
+      if (!aa->aa_conn_limit)
+        break;
+      continue;
+    }
+    if (!strcmp(aa->aa_representative ?: "", tsl->representative ?: ""))
+      used++;
+  }
+  if (res == NULL)
+    return NULL;
+
+  if (aa->aa_conn_limit && used >= aa->aa_conn_limit) {
+    if (started + 3 < dispatch_clock) {
+      tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' (limit %u)",
+               aa->aa_username ?: "", aa->aa_representative ?: "", aa->aa_conn_limit);
+      return NULL;
+    }
+    pthread_mutex_unlock(&global_lock);
+    usleep(250000);
+    pthread_mutex_lock(&global_lock);
+    if (tvheadend_running)
+      goto try_again;
+    return NULL;
+  }
+
+  res->representative = aa->aa_representative ? strdup(aa->aa_representative) : NULL;
+  res->status = status;
+  LIST_INSERT_HEAD(&tcp_server_launches, res, link);
+  notify_reload("connections");
+  return res;
+}
+
+/**
+ *
+ */
+void
+tcp_connection_land(void *tcp_id)
+{
+  tcp_server_launch_t *tsl = tcp_id;
+
+  lock_assert(&global_lock);
+
+  if (tsl == NULL)
+    return;
+
+  LIST_REMOVE(tsl, link);
+  notify_reload("connections");
+
+  free(tsl->representative);
+  tsl->representative = NULL;
+}
+
+/**
+ *
+ */
+void
+tcp_connection_cancel(uint32_t id)
+{
+  tcp_server_launch_t *tsl;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(tsl, &tcp_server_active, alink)
+    if (tsl->id == id) {
+      if (tsl->ops.cancel)
+        tsl->ops.cancel(tsl->opaque);
+      break;
+    }
+}
+
+/*
  *
  */
 static void *
@@ -437,21 +534,13 @@ tcp_server_start(void *aux)
 
   /* Start */
   time(&tsl->started);
-  if (tsl->ops.status) {
-    pthread_mutex_lock(&global_lock);
-    LIST_INSERT_HEAD(&tcp_server_launches, tsl, link);
-    notify_reload("connections");
-    pthread_mutex_unlock(&global_lock);
-  }
   pthread_mutex_lock(&global_lock);
+  tsl->id = ++tcp_server_launch_id;
+  if (!tsl->id) tsl->id = ++tcp_server_launch_id;
   tsl->ops.start(tsl->fd, &tsl->opaque, &tsl->peer, &tsl->self);
 
   /* Stop */
   if (tsl->ops.stop) tsl->ops.stop(tsl->opaque);
-  if (tsl->ops.status) {
-    LIST_REMOVE(tsl, link);
-    notify_reload("connections");
-  }
   LIST_REMOVE(tsl, alink);
   LIST_INSERT_HEAD(&tcp_server_join, tsl, jlink);
   pthread_mutex_unlock(&global_lock);
@@ -485,13 +574,14 @@ tcp_server_loop(void *aux)
     if (ev.data.ptr == &tcp_server_pipe) {
       r = read(tcp_server_pipe.rd, &c, 1);
       if (r > 0) {
+next:
         pthread_mutex_lock(&global_lock);
         while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
           LIST_REMOVE(tsl, jlink);
           pthread_mutex_unlock(&global_lock);
           pthread_join(tsl->tid, NULL);
           free(tsl);
-          pthread_mutex_lock(&global_lock);
+          goto next;
         }
         pthread_mutex_unlock(&global_lock);
       }
@@ -501,32 +591,34 @@ tcp_server_loop(void *aux)
     ts = ev.data.ptr;
 
     if(ev.events & TVHPOLL_HUP) {
-	    close(ts->serverfd);
-    	free(ts);
+      close(ts->serverfd);
+      free(ts);
       continue;
     } 
 
     if(ev.events & TVHPOLL_IN) {
-	    tsl = malloc(sizeof(tcp_server_launch_t));
-      tsl->ops    = ts->ops;
-      tsl->opaque = ts->opaque;
+      tsl = malloc(sizeof(tcp_server_launch_t));
+      tsl->ops            = ts->ops;
+      tsl->opaque         = ts->opaque;
+      tsl->status         = NULL;
+      tsl->representative = NULL;
       slen = sizeof(struct sockaddr_storage);
 
       tsl->fd = accept(ts->serverfd, 
-			                 (struct sockaddr *)&tsl->peer, &slen);
-     	if(tsl->fd == -1) {
-     	  perror("accept");
-     	  free(tsl);
-     	  sleep(1);
-     	  continue;
-     	}
+                       (struct sockaddr *)&tsl->peer, &slen);
+      if(tsl->fd == -1) {
+     	perror("accept");
+     	free(tsl);
+     	sleep(1);
+     	continue;
+      }
 
-     	slen = sizeof(struct sockaddr_storage);
-	    if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
+      slen = sizeof(struct sockaddr_storage);
+      if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
         close(tsl->fd);
         free(tsl);
         continue;
-     	}
+      }
 
       pthread_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
@@ -570,23 +662,21 @@ tcp_server_create
   }
 
   ressave = res;
-  while(res)
-  {
-    if(res->ai_family == tcp_preferred_address_family)
-    {
+  while(res) {
+    if(res->ai_family == tcp_preferred_address_family) {
       use = res;
       break;
-    }
-    else if(use == NULL)
-    {
+    } else if(use == NULL) {
       use = res;
     }
     res = res->ai_next;
   }
 
   fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
-  if(fd == -1)
+  if(fd == -1) {
+    freeaddrinfo(ressave);
     return NULL;
+  }
 
   if(use->ai_family == AF_INET6)
     setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
@@ -668,13 +758,14 @@ tcp_server_connections ( void )
   /* Build list */
   l = htsmsg_create_list();
   LIST_FOREACH(tsl, &tcp_server_launches, link) {
-    if (!tsl->ops.status) continue;
+    if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
     tcp_get_ip_str((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
+    htsmsg_add_u32(e, "id", tsl->id);
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_s64(e, "started", tsl->started);
-    tsl->ops.status(tsl->opaque, e);
+    tsl->status(tsl->opaque, e);
     htsmsg_add_msg(l, NULL, e);
   }
 
@@ -727,7 +818,8 @@ tcp_server_done(void)
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->ops.cancel)
       tsl->ops.cancel(tsl->opaque);
-    close(tsl->fd);
+    if (tsl->fd >= 0)
+      close(tsl->fd);
     tsl->fd = -1;
     pthread_kill(tsl->tid, SIGTERM);
   }

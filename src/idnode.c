@@ -338,12 +338,14 @@ static char *
 idnode_get_display
   ( idnode_t *self, const property_t *p )
 {
-  if (p->rend)
-    return p->rend(self);
-  if (p->islist) {
-    htsmsg_t *l = (htsmsg_t*)p->get(self);
-    if (l)
-      return htsmsg_list_2_csv(l);
+  if (p) {
+    if (p->rend)
+      return p->rend(self);
+    if (p->islist) {
+      htsmsg_t *l = (htsmsg_t*)p->get(self);
+      if (l)
+        return htsmsg_list_2_csv(l);
+    }
   }
   return NULL;
 }
@@ -376,10 +378,11 @@ idnode_get_u32
   ( idnode_t *self, const char *key, uint32_t *u32 )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -409,10 +412,11 @@ idnode_get_s64
   ( idnode_t *self, const char *key, int64_t *s64 )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -451,10 +455,11 @@ idnode_get_dbl
   ( idnode_t *self, const char *key, double *dbl )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -493,10 +498,11 @@ idnode_get_bool
   ( idnode_t *self, const char *key, int *b )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
-  if (p) {
+ if (p) {
     const void *ptr;
-    if (p->get)
+    if (p->islist)
+      return 1;
+    else if (p->get)
       ptr = p->get(self);
     else
       ptr = ((void*)self) + p->off;
@@ -519,9 +525,10 @@ idnode_get_time
   ( idnode_t *self, const char *key, time_t *tm )
 {
   const property_t *p = idnode_find_prop(self, key);
-  if (p->islist) return 1;
   if (p) {
     const void *ptr;
+    if (p->islist)
+      return 1;
     if (p->get)
       ptr = p->get(self);
     else
@@ -759,7 +766,7 @@ idnode_filter_init
             p->type == PT_TIME) {
           int64_t v = f->u.n.n;
           if (p->intsplit != f->u.n.intsplit) {
-            v = (v / (f->u.n.intsplit <= 0 ? 1 : 0)) * p->intsplit;
+            v = (v / MIN(1, f->u.n.intsplit)) * p->intsplit;
             f->u.n.n = v;
           }
         }
@@ -780,31 +787,22 @@ idnode_filter
       idnode_filter_init(in, filter);
     if (f->type == IF_STR) {
       const char *str;
-      str = idnode_get_display(in, idnode_find_prop(in, f->key));
+      char *strdisp;
+      int r = 1;
+      str = strdisp = idnode_get_display(in, idnode_find_prop(in, f->key));
       if (!str)
         if (!(str = idnode_get_str(in, f->key)))
           return 1;
       switch(f->comp) {
-        case IC_IN:
-          if (strstr(str, f->u.s) == NULL)
-            return 1;
-          break;
-        case IC_EQ:
-          if (strcmp(str, f->u.s) != 0)
-            return 1;
-        case IC_LT:
-          if (strcmp(str, f->u.s) > 0)
-            return 1;
-          break;
-        case IC_GT:
-          if (strcmp(str, f->u.s) < 0)
-            return 1;
-          break;
-        case IC_RE:
-          if (regexec(&f->u.re, str, 0, NULL, 0))
-            return 1;
-          break;
+        case IC_IN: r = strstr(str, f->u.s) == NULL; break;
+        case IC_EQ: r = strcmp(str, f->u.s) != 0; break;
+        case IC_LT: r = strcmp(str, f->u.s) > 0; break;
+        case IC_GT: r = strcmp(str, f->u.s) < 0; break;
+        case IC_RE: r = !!regexec(&f->u.re, str, 0, NULL, 0); break;
       }
+      if (strdisp)
+        free(strdisp);
+      return r;
     } else if (f->type == IF_NUM || f->type == IF_BOOL) {
       int64_t a, b;
       if (idnode_get_s64(in, f->key, &a))
@@ -1381,13 +1379,11 @@ idnode_thread ( void *p )
     /* Finished */
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(q);
-    q = NULL;
 
     /* Wait */
     usleep(500000);
     pthread_mutex_lock(&idnode_mutex);
   }
-  if (q) htsmsg_destroy(q);
   pthread_mutex_unlock(&idnode_mutex);
   
   return NULL;

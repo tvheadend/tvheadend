@@ -182,7 +182,7 @@ void epggrab_module_ch_rem ( void *m, channel_t *ch )
 {
   epggrab_channel_link_t *ecl;
   while ((ecl = LIST_FIRST(&ch->ch_epggrab)))
-    epggrab_channel_link_delete(ecl);
+    epggrab_channel_link_delete(ecl, 1);
 }
 
 void epggrab_module_ch_mod ( void *mod, channel_t *ch )

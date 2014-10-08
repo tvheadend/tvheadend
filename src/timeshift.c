@@ -87,6 +87,8 @@ void timeshift_init ( void )
 void timeshift_term ( void )
 {
   timeshift_filemgr_term();
+  free(timeshift_path);
+  timeshift_path = NULL;
 }
 
 /*

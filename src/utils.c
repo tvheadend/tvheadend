@@ -502,7 +502,8 @@ makedirs ( const char *inpath, int mode )
 
   x  = 1;
   ok = 1;
-  strcpy(path, inpath);
+  strncpy(path, inpath, sizeof(path)-1);
+  path[sizeof(path)-1] = '\0';
   while(ok) {
     ok = path[x];
     if (path[x] == '/' || !path[x]) {

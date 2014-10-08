@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "descrambler/tvhcsa.h"
 
 struct service;
 struct elementary_stream;
@@ -51,7 +52,6 @@ typedef struct th_descrambler {
   } td_keystate;
 
   struct service *td_service;
-  struct tvhcsa  *td_csa;
 
   void (*td_stop)       (struct th_descrambler *d);
   void (*td_caid_change)(struct th_descrambler *d);
@@ -61,6 +61,7 @@ typedef struct th_descrambler {
 } th_descrambler_t;
 
 typedef struct th_descrambler_runtime {
+  tvhcsa_t dr_csa;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;

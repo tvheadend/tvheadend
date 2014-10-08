@@ -101,6 +101,15 @@ uuid_init ( void )
   }
 }
 
+void
+uuid_random ( uint8_t *buf, size_t bufsize )
+{
+  if (read(fd, buf, bufsize) != bufsize) {
+    tvherror("uuid", "random failed: %s", strerror(errno));
+    exit(1);
+  }
+}
+
 /* Initialise binary */
 int
 uuid_init_bin ( tvh_uuid_t *u, const char *str )
