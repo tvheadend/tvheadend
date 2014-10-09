@@ -125,6 +125,8 @@ profile_class_save ( idnode_t *in )
 {
   profile_t *pro = (profile_t *)in;
   htsmsg_t *c = htsmsg_create_map();
+  if (pro == profile_default)
+    pro->pro_enabled = 1;
   idnode_save(in, c);
   if (pro->pro_shield)
     htsmsg_add_bool(c, "shield", 1);
