@@ -1291,6 +1291,33 @@ htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
 }
 
 /**
+ *
+ */
+static htsmsg_t *
+htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *l, *c;
+  dvr_config_t *cfg;
+
+  l = htsmsg_create_list();
+
+  LIST_FOREACH(cfg, &dvrconfigs, config_link)
+    if (cfg->dvr_enabled) {
+      c = htsmsg_create_map();
+      htsmsg_add_str(c, "uuid", idnode_uuid_as_str(&cfg->dvr_id));
+      htsmsg_add_str(c, "name", cfg->dvr_config_name);
+      htsmsg_add_str(c, "comment", cfg->dvr_comment);
+      htsmsg_add_msg(l, NULL, c);
+    }
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "dvrconfigs", l);
+
+  return out;
+}
+
+/**
  * add a Dvrentry
  */
 static htsmsg_t * 
@@ -2158,6 +2185,7 @@ struct {
   { "getEvents",                htsp_method_getEvents,          ACCESS_STREAMING},
   { "epgQuery",                 htsp_method_epgQuery,           ACCESS_STREAMING},
   { "getEpgObject",             htsp_method_getEpgObject,       ACCESS_STREAMING},
+  { "getDvrConfigs",            htsp_method_getDvrConfigs,      ACCESS_RECORDER},
   { "addDvrEntry",              htsp_method_addDvrEntry,        ACCESS_RECORDER},
   { "updateDvrEntry",           htsp_method_updateDvrEntry,     ACCESS_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry,     ACCESS_RECORDER},

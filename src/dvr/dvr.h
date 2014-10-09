@@ -36,6 +36,7 @@ typedef struct dvr_config {
   int dvr_enabled;
   int dvr_valid;
   char *dvr_config_name;
+  char *dvr_comment;
   profile_t *dvr_profile;
   char *dvr_storage;
   uint32_t dvr_retention_days;

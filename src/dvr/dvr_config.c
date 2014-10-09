@@ -488,6 +488,13 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_STR,
+      .id       = "comment",
+      .name     = "Comment",
+      .off      = offsetof(dvr_config_t, dvr_comment),
+      .group    = 1,
+    },
+    {
+      .type     = PT_STR,
       .id       = "profile",
       .name     = "Stream Profile",
       .off      = offsetof(dvr_config_t, dvr_profile),
