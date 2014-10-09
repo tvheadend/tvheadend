@@ -12,6 +12,8 @@ tvheadend.caclient_builders = new Ext.data.JsonStore({
 
 tvheadend.esfilter_tab = function(panel)
 {
+    var list = '-class';
+
     tvheadend.idnode_form_grid(panel, {
         url: 'api/profile',
         clazz: 'profile',
@@ -19,7 +21,8 @@ tvheadend.esfilter_tab = function(panel)
         titleS: 'Stream Profile',
         titleP: 'Stream Profiles',
         titleC: 'Stream Profile Name',
-        iconCls: 'stream_profile',
+        iconCls: 'film',
+        edit: { params: { list: list } },
         add: {
             url: 'api/profile',
             titleS: 'Stream Profile',
@@ -28,7 +31,8 @@ tvheadend.esfilter_tab = function(panel)
                 store: tvheadend.caclient_builders,
                 displayField: 'caption',
                 valueField: 'class',
-                propField: 'props'
+                propField: 'props',
+                list: list,
             },
             create: { },
         },
@@ -38,14 +42,19 @@ tvheadend.esfilter_tab = function(panel)
         }
     });
 
+    var eslist = '-class,index';
+
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/video',
         titleS: 'Video Stream Filter',
         titleP: 'Video Stream Filters',
+        iconCls: 'film_edit',
         tabIndex: 1,
+        edit: { params: { list: eslist } },
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/video',
-            create: {}
+            create: { }
         },
         del: true,
         move: true,
@@ -58,8 +67,11 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/esfilter/audio',
         titleS: 'Audio Stream Filter',
         titleP: 'Audio Stream Filters',
+        iconCls: 'control_volume',
         tabIndex: 2,
+        edit: { params: { list: eslist } },
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/audio',
             create: {}
         },
@@ -75,7 +87,9 @@ tvheadend.esfilter_tab = function(panel)
         titleS: 'Teletext Stream Filter',
         titleP: 'Teletext Stream Filters',
         tabIndex: 3,
+        edit: { params: { list: eslist } },
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/teletext',
             create: {}
         },
@@ -91,7 +105,9 @@ tvheadend.esfilter_tab = function(panel)
         titleS: 'Subtitle Stream Filter',
         titleP: 'Subtitle Stream Filters',
         tabIndex: 4,
+        edit: { params: { list: eslist } },
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/subtit',
             create: {}
         },
@@ -106,8 +122,10 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/esfilter/ca',
         titleS: 'CA Stream Filter',
         titleP: 'CA Stream Filters',
+        iconCls: 'film_key',
         tabIndex: 5,
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/ca',
             create: {}
         },
@@ -123,7 +141,9 @@ tvheadend.esfilter_tab = function(panel)
         titleS: 'Other Stream Filter',
         titleP: 'Other Stream Filters',
         tabIndex: 6,
+        edit: { params: { list: eslist } },
         add: {
+            params: { list: eslist },
             url: 'api/esfilter/other',
             create: {}
         },

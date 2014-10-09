@@ -318,8 +318,16 @@
     background-image: url(../icons/arrow_switch.png) !important;
 }
 
-.stream_config {
+.film {
+    background-image: url(../icons/film.png) !important;
+}
+
+.film_edit {
     background-image: url(../icons/film_edit.png) !important;
+}
+
+.film_key {
+    background-image: url(../icons/film_key.png) !important;
 }
 
 .caclientNone {

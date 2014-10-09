@@ -383,7 +383,7 @@ function accessUpdate(o) {
             activeTab: 0,
             autoScroll: true,
             title: 'Stream',
-            iconCls: 'stream_config',
+            iconCls: 'film_edit',
             items: []
         });
         tvheadend.esfilter_tab(stream);
