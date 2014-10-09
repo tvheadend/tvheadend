@@ -750,6 +750,7 @@ profile_transcode_work(profile_t *_pro, streaming_target_t *src,
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
   transcoder_props_t props;
+  streaming_target_t *st;
 
   memset(&props, 0, sizeof(props));
   props.tp_vcodec     = pro->pro_vcodec;
@@ -763,7 +764,10 @@ profile_transcode_work(profile_t *_pro, streaming_target_t *src,
   if (destroy)
     *destroy = profile_transcode_work_destroy;
 
-  return transcoder_create(src);
+  st = transcoder_create(src);
+  if (st)
+    transcoder_set_properties(st, &props);
+  return st;
 }
 
 static int
