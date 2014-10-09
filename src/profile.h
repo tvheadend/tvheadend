@@ -31,8 +31,6 @@ extern const idclass_t profile_class;
 extern const idclass_t profile_mpegts_pass_class;
 extern const idclass_t profile_matroska_class;
 
-#define PROFILE_TIMESHIFT (1<<0)
-
 TAILQ_HEAD(profile_entry_queue, profile);
 
 extern struct profile_entry_queue profiles;
@@ -56,6 +54,9 @@ typedef struct profile_chain {
   struct muxer            *prch_muxer;
   struct streaming_target *prch_gh;
   struct streaming_target *prch_tsfix;
+#if ENABLE_LIBAV
+  struct streaming_target *prch_transcoder;
+#endif
 } profile_chain_t;
 
 typedef struct profile {
@@ -73,6 +74,9 @@ typedef struct profile {
   void (*pro_conf_changed)(struct profile *pro);
   muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
+  struct streaming_target *(*pro_work)(struct profile *pro,
+                                       struct streaming_target *src,
+                                       void (**destroy)(struct streaming_target *));
   int  (*pro_open)(struct profile *pro, profile_chain_t *prch,
                    muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
@@ -81,6 +85,12 @@ void profile_register(const idclass_t *clazz, profile_builder_t builder);
 
 profile_t *profile_create
   (const char *uuid, htsmsg_t *conf, int save);
+
+static inline struct streaming_target *
+profile_work(profile_t *pro, struct streaming_target *src,
+             void (**destroy)(struct streaming_target *st))
+  { return pro && pro->pro_work ? pro->pro_work(pro, src, destroy) : NULL; }
+
 
 static inline int
 profile_chain_open(profile_t *pro, profile_chain_t *prch,
@@ -101,6 +111,8 @@ const char *profile_get_name(profile_t *pro);
 
 static inline muxer_container_type_t profile_get_mc(profile_t *pro)
   { return pro->pro_get_mc(pro); }
+
+void profile_get_htsp_list(htsmsg_t *array);
 
 void profile_init(void);
 void profile_done(void);

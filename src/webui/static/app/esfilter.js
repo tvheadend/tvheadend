@@ -17,6 +17,7 @@ tvheadend.esfilter_tab = function(panel)
         clazz: 'profile',
         comet: 'profile',
         titleS: 'Stream Profile',
+        titleP: 'Stream Profiles',
         titleC: 'Stream Profile Name',
         iconCls: 'stream_profile',
         add: {

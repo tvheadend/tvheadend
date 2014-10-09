@@ -37,7 +37,6 @@
 #include "dvr/dvr.h"
 #include "filebundle.h"
 #include "streaming.h"
-#include "plumbing/transcoding.h"
 #include "profile.h"
 #include "epg.h"
 #include "muxer.h"
@@ -81,63 +80,6 @@ is_client_simple(http_connection_t *hc)
   }
   return 0;
 }
-
-
-
-#if ENABLE_LIBAV
-static int
-http_get_transcoder_properties(struct http_arg_list *args, 
-			       transcoder_props_t *props)
-{
-  int transcode;
-  const char *s;
-
-  memset(props, 0, sizeof(transcoder_props_t));
-
-  if ((s = http_arg_get(args, "transcode")))
-    transcode = atoi(s);
-  else
-    transcode = 0;
-
-  if ((s = http_arg_get(args, "resolution")))
-    props->tp_resolution = atoi(s);
-  else
-    props->tp_resolution = 384;
-
-  if ((s = http_arg_get(args, "channels")))
-    props->tp_channels = atoi(s);
-  else
-    props->tp_channels = 0; //same as source
-
-  if ((s = http_arg_get(args, "bandwidth")))
-    props->tp_bandwidth = atoi(s);
-  else
-    props->tp_bandwidth = 0; //same as source
-
-  if ((s = http_arg_get(args, "language")))
-    strncpy(props->tp_language, s, 3);
-  else
-    strncpy(props->tp_language, config_get_language() ?: "", 3);
-
-  if ((s = http_arg_get(args, "vcodec")))
-    props->tp_vcodec = streaming_component_txt2type(s);
-  else
-    props->tp_vcodec = SCT_UNKNOWN;
-
-  if ((s = http_arg_get(args, "acodec")))
-    props->tp_acodec = streaming_component_txt2type(s);
-  else
-    props->tp_acodec = SCT_UNKNOWN;
-
-  if ((s = http_arg_get(args, "scodec")))
-    props->tp_scodec = streaming_component_txt2type(s);
-  else
-    props->tp_scodec = SCT_UNKNOWN;
-
-  return transcode && transcoding_enabled;
-}
-#endif
-
 
 /**
  * Root page, we direct the client to different pages depending
@@ -449,26 +391,6 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
      access_ticket_create(buf, hc->hc_access));
 
-#if ENABLE_LIBAV
-  transcoder_props_t props;
-  if(http_get_transcoder_properties(&hc->hc_req_args, &props)) {
-    htsbuf_qprintf(hq, "&transcode=1");
-    if(props.tp_resolution)
-      htsbuf_qprintf(hq, "&resolution=%d", props.tp_resolution);
-    if(props.tp_channels)
-      htsbuf_qprintf(hq, "&channels=%d", props.tp_channels);
-    if(props.tp_bandwidth)
-      htsbuf_qprintf(hq, "&bandwidth=%d", props.tp_bandwidth);
-    if(props.tp_language[0])
-      htsbuf_qprintf(hq, "&language=%s", props.tp_language);
-    if(props.tp_vcodec)
-      htsbuf_qprintf(hq, "&vcodec=%s", streaming_component_type2txt(props.tp_vcodec));
-    if(props.tp_acodec)
-      htsbuf_qprintf(hq, "&acodec=%s", streaming_component_type2txt(props.tp_acodec));
-    if(props.tp_scodec)
-      htsbuf_qprintf(hq, "&scodec=%s", streaming_component_type2txt(props.tp_scodec));
-  }
-#endif
   htsbuf_qprintf(hq, "&profile=%s\n", profile);
 
   http_output_content(hc, "audio/x-mpegurl");

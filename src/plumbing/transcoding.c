@@ -1321,12 +1321,12 @@ transcoder_destroy(streaming_target_t *st)
 /**
  * 
  */ 
-void
-transcoder_get_capabilities(htsmsg_t *array)
+htsmsg_t *
+transcoder_get_capabilities(void)
 {
   AVCodec *p = NULL;
-  const char *name;
   streaming_component_type_t sct;
+  htsmsg_t *array = htsmsg_create_list();
 
   while ((p = av_codec_next(p))) {
 
@@ -1340,9 +1340,9 @@ transcoder_get_capabilities(htsmsg_t *array)
     if (sct == SCT_NONE)
       continue;
 
-    name = streaming_component_type2txt(sct);
-    htsmsg_add_str(array, NULL, name);
+    htsmsg_add_s32(array, NULL, sct);
   }
+  return array;
 }
 
 

@@ -147,9 +147,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_SATIP_CLIENT
   { "satip_client", NULL },
 #endif
-#if ENABLE_LIBAV
-  { "transcoding", &transcoding_enabled },
-#endif
 #if ENABLE_IMAGECACHE
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },
 #endif
