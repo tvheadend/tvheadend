@@ -31,6 +31,8 @@ extern const idclass_t profile_class;
 extern const idclass_t profile_mpegts_pass_class;
 extern const idclass_t profile_matroska_class;
 
+#define PROFILE_TIMESHIFT (1<<0)
+
 TAILQ_HEAD(profile_entry_queue, profile);
 
 extern struct profile_entry_queue profiles;
@@ -67,12 +69,12 @@ typedef struct profile {
   char *pro_name;
   char *pro_comment;
 
-  void (*pro_free)(struct profile *cac);
-  void (*pro_conf_changed)(struct profile *cac);
-  muxer_container_type_t (*pro_get_mc)(struct profile *cac);
+  void (*pro_free)(struct profile *pro);
+  void (*pro_conf_changed)(struct profile *pro);
+  muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
-  int  (*pro_open)(struct profile *cac, profile_chain_t *prch,
-                   muxer_config_t *m_cfg, size_t qsize);
+  int  (*pro_open)(struct profile *pro, profile_chain_t *prch,
+                   muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
 
 void profile_register(const idclass_t *clazz, profile_builder_t builder);
@@ -80,6 +82,10 @@ void profile_register(const idclass_t *clazz, profile_builder_t builder);
 profile_t *profile_create
   (const char *uuid, htsmsg_t *conf, int save);
 
+static inline int
+profile_chain_open(profile_t *pro, profile_chain_t *prch,
+                   muxer_config_t *m_cfg, int flags, size_t qsize)
+  { return pro->pro_open(pro, prch, m_cfg, flags, qsize); }
 int  profile_chain_raw_open(profile_chain_t *prch, size_t qsize);
 void profile_chain_close(profile_chain_t *prch);
 

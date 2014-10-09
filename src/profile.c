@@ -368,7 +368,7 @@ const idclass_t profile_mpegts_pass_class =
 
 static int
 profile_mpegts_pass_open(profile_t *_pro, profile_chain_t *prch,
-                         muxer_config_t *m_cfg, size_t qsize)
+                         muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   profile_mpegts_t *pro = (profile_mpegts_t *)_pro;
   muxer_config_t c;
@@ -432,7 +432,7 @@ const idclass_t profile_matroska_class =
 
 static int
 profile_matroska_open(profile_t *_pro, profile_chain_t *prch,
-                      muxer_config_t *m_cfg, size_t qsize)
+                      muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   profile_matroska_t *pro = (profile_matroska_t *)_pro;
   muxer_config_t c;
