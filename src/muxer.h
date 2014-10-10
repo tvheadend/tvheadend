@@ -104,16 +104,36 @@ const char*            muxer_container_suffix(muxer_container_type_t mc, int vid
 muxer_t *muxer_create(const muxer_config_t *m_cfg);
 
 // Wrapper functions
-int         muxer_open_file   (muxer_t *m, const char *filename);
-int         muxer_open_stream (muxer_t *m, int fd);
-int         muxer_init        (muxer_t *m, const struct streaming_start *ss, const char *name);
-int         muxer_reconfigure (muxer_t *m, const struct streaming_start *ss);
-int         muxer_add_marker  (muxer_t *m);
-int         muxer_close       (muxer_t *m);
-int         muxer_destroy     (muxer_t *m);
-int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);
-int         muxer_write_pkt   (muxer_t *m, streaming_message_type_t smt, void *data);
-const char* muxer_mime        (muxer_t *m, const struct streaming_start *ss);
+static inline int muxer_open_file (muxer_t *m, const char *filename)
+  { if(m && filename) return m->m_open_file(m, filename); return -1; }
+
+static inline int muxer_open_stream (muxer_t *m, int fd)
+  { if(m && fd >= 0) return m->m_open_stream(m, fd); return -1; }
+
+static inline int muxer_init (muxer_t *m, const struct streaming_start *ss, const char *name)
+  { if(m && ss) return m->m_init(m, ss, name); return -1; }
+
+static inline int muxer_reconfigure (muxer_t *m, const struct streaming_start *ss)
+  { if(m && ss) return m->m_reconfigure(m, ss); return -1; }
+
+static inline int muxer_add_marker (muxer_t *m)
+  { if (m) return m->m_add_marker(m); return -1; }
+
+static inline int muxer_close (muxer_t *m)
+  { if (m) return m->m_close(m); return -1; }
+
+static inline int muxer_destroy (muxer_t *m)
+  { if (m) { m->m_destroy(m); return 0; } return -1; }
+
+static inline int muxer_write_meta (muxer_t *m, struct epg_broadcast *eb)
+  { if (m && eb) return m->m_write_meta(m, eb); return -1; }
+
+static inline int muxer_write_pkt (muxer_t *m, streaming_message_type_t smt, void *data)
+  { if (m && data) return m->m_write_pkt(m, smt, data); return -1; }
+
+static inline const char* muxer_mime (muxer_t *m, const struct streaming_start *ss)
+  { if (m && ss) return m->m_mime(m, ss); return NULL; }
+
 const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
 
 // Cache
