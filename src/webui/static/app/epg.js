@@ -703,7 +703,7 @@ tvheadend.epg = function() {
 
     tvheadend.autorecButton = new Ext.Button({
         text: 'Create AutoRec',
-        iconCls: 'wand',
+        iconCls: 'autoRec',
         tooltip: 'Create an automatic recording entry that will '
                  + 'record all future programmes that matches '
                  + 'the current query.',
@@ -723,7 +723,7 @@ tvheadend.epg = function() {
         '->',
         {
             text: 'Watch TV',
-            iconCls: 'eye',
+            iconCls: 'watchTv',
             handler: function() {
                 new tvheadend.VideoPlayer();
             }
@@ -733,6 +733,7 @@ tvheadend.epg = function() {
         '-',
         {
             text: 'Help',
+			iconCls: 'help',
             handler: function() {
                 new tvheadend.help('Electronic Program Guide', 'epg.html');
             }

@@ -216,6 +216,7 @@ tvheadend.miscconf = function(panel, index) {
 
     var helpButton = new Ext.Button({
         text: 'Help',
+		iconCls: 'help',
         handler: function() {
             new tvheadend.help('General Configuration', 'config_misc.html');
         }

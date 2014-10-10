@@ -390,6 +390,18 @@
     background-image: url(../icons/channel_tags.png) !important;
 }
 
+.help{
+    background-image: url(../icons/help.png) !important;
+}
+
+.watchTv{
+    background-image: url(../icons/watch_tv.png) !important;
+}
+
+.autoRec{
+    background-image: url(../icons/auto_rec.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
