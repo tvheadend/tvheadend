@@ -1960,6 +1960,7 @@ tvheadend.idnode_tree = function(panel, conf)
         header: false,
         layout: 'fit',
         title: conf.title || '',
+        iconCls: conf.iconCls || ''
     });
 
     tvheadend.paneladd(panel, dpanel, conf.tabIndex);
