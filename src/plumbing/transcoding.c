@@ -77,6 +77,7 @@ typedef struct audio_stream {
   AVAudioResampleContext *resample_context;
   AVAudioFifo     *fifo;
   int             resample;
+  int             resample_is_open;
 #endif
 
 } audio_stream_t;
@@ -543,7 +544,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   if (length < 0) {
-    tvhlog(LOG_ERR, "transcode", "length < 0.\n");
+    tvhlog(LOG_ERR, "transcode", "length < 0 (%i).\n", length);
     ts->ts_index = 0;
     goto cleanup;
   }
@@ -760,6 +761,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
         ts->ts_index = 0;
         goto cleanup;
       }
+      as->resample_is_open = 1;
 
     }
 
@@ -1467,8 +1469,9 @@ transcoder_destroy_audio(transcoder_stream_t *ts)
     av_free(as->aud_enc_sample);
 
 #if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
-  if ((as->resample_context) && (avresample_is_open(as->resample_context)) )
+  if ((as->resample_context) && as->resample_is_open )
       avresample_close(as->resample_context);
+  avresample_free(&as->resample_context);
 
   av_audio_fifo_free(as->fifo);
 #endif

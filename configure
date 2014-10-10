@@ -295,7 +295,7 @@ if enabled_or_auto libav; then
     has_libav=false
   fi
 
-  if $has_libav && ! check_pkg libavresample ">=2.1.0"; then
+  if $has_libav && ! check_pkg libavresample ">=1.1.0"; then
     has_libav=false
   fi
 
