@@ -382,6 +382,14 @@
     background-image: url(../icons/other_filters.png) !important;
 }
 
+.channels {
+    background-image: url(../icons/channels.png) !important;
+}
+
+.channelTags{
+    background-image: url(../icons/channel_tags.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
