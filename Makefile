@@ -122,7 +122,7 @@ SRCS =  src/version.c \
 	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
-  src/tvhpoll.c \
+        src/tvhpoll.c \
 	src/huffman.c \
 	src/filebundle.c \
 	src/config.c \
@@ -137,7 +137,8 @@ SRCS =  src/version.c \
 	src/fsmonitor.c \
 	src/cron.c \
 	src/esfilter.c \
-	src/intlconv.c
+	src/intlconv.c \
+	src/profile.c
 
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
@@ -157,7 +158,8 @@ SRCS += \
 	src/api/api_intlconv.c \
 	src/api/api_access.c \
 	src/api/api_dvr.c \
-	src/api/api_caclient.c
+	src/api/api_caclient.c \
+	src/api/api_profile.c
 
 SRCS += \
 	src/parsers/parsers.c \

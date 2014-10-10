@@ -57,6 +57,7 @@ access_ticket_destroy(access_ticket_t *at)
   free(at->at_id);
   free(at->at_resource);
   TAILQ_REMOVE(&access_tickets, at, at_link);
+  access_destroy(at->at_access);
   free(at);
 }
 
@@ -92,13 +93,15 @@ access_ticket_timout(void *aux)
  * Create a new ticket for the requested resource and generate a id for it
  */
 const char *
-access_ticket_create(const char *resource)
+access_ticket_create(const char *resource, access_t *a)
 {
   uint8_t buf[20];
   char id[41];
   unsigned int i;
   access_ticket_t *at;
   static const char hex_string[16] = "0123456789ABCDEF";
+
+  assert(a);
 
   at = calloc(1, sizeof(access_ticket_t));
 
@@ -113,6 +116,8 @@ access_ticket_create(const char *resource)
 
   at->at_id = strdup(id);
   at->at_resource = strdup(resource);
+
+  at->at_access = access_copy(a);
 
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
   gtimer_arm(&at->at_timer, access_ticket_timout, at, 60*5);
@@ -140,18 +145,37 @@ access_ticket_delete(const char *id)
 /**
  *
  */
-int
-access_ticket_verify(const char *id, const char *resource)
+access_t *
+access_ticket_verify2(const char *id, const char *resource)
 {
   access_ticket_t *at;
 
   if((at = access_ticket_find(id)) == NULL)
-    return -1;
+    return NULL;
 
   if(strcmp(at->at_resource, resource))
-    return -1;
+    return NULL;
 
-  return 0;
+  return access_copy(at->at_access);
+}
+
+/**
+ *
+ */
+access_t *
+access_copy(access_t *src)
+{
+  access_t *dst = malloc(sizeof(*dst));
+  *dst = *src;
+  if (src->aa_username)
+    dst->aa_username = strdup(src->aa_username);
+  if (src->aa_representative)
+    dst->aa_representative = strdup(src->aa_representative);
+  if (src->aa_dvrcfgs)
+    dst->aa_dvrcfgs = htsmsg_copy(src->aa_dvrcfgs);
+  if (src->aa_chtags)
+    dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
+  return dst;
 }
 
 /**
@@ -1207,10 +1231,13 @@ void
 access_done(void)
 {
   access_entry_t *ae;
+  access_ticket_t *at;
 
   pthread_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
     access_entry_destroy(ae);
+  while ((at = TAILQ_FIRST(&access_tickets)) != NULL)
+    access_ticket_destroy(at);
   free((void *)superuser_username);
   superuser_username = NULL;
   free((void *)superuser_password);

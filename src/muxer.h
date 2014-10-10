@@ -44,6 +44,8 @@ typedef enum {
 
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
+  int                  m_type; /* MC_* */
+
   int                  m_rewrite_pat;
   int                  m_rewrite_pmt;
   int                  m_cache;
@@ -83,7 +85,6 @@ typedef struct muxer {
 
   int                    m_eos;        // End of stream
   int                    m_errors;     // Number of errors
-  muxer_container_type_t m_container;  // The type of the container
   muxer_config_t         m_config;     // general configuration
 } muxer_t;
 
@@ -97,10 +98,10 @@ muxer_container_type_t muxer_container_mime2type (const char *str);
 
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
-int muxer_container_list(htsmsg_t *array);
+//int muxer_container_list(htsmsg_t *array);
 
 // Muxer factory
-muxer_t *muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg);
+muxer_t *muxer_create(const muxer_config_t *m_cfg);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);

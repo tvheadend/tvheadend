@@ -116,17 +116,27 @@ tvheadend.idnode_enum_store = function(f)
 
 tvheadend.idnode_filter_fields = function(d, list)
 {
-  if (!list)
-    return d;
-  var o = list.split(',');
-  var r = [];
-  for (var i = 0; i < o.length; i++)
-    for (var j = 0; j < d.length; j++)
-      if (d[j].id === o[i]) {
-        r.push(d[j]);
-        break;
-      }
-  return r;
+    if (!list)
+        return d;
+    var r = [];
+    if (list.charAt(0) === '-') {
+        var o = list.substring(1).split(',');
+        r = d.slice();
+        for (var i = 0; i < o.length; i++)
+           for (var j = 0; j < r.length; j++)
+              if (r[j].id === o[i]) {
+                  r.splice(i, 1);
+                  break;
+              }
+    } else {
+        for (var i = 0; i < o.length; i++)
+           for (var j = 0; j < d.length; j++)
+              if (d[j].id === o[i]) {
+                  r.push(d[j]);
+                  break;
+              }
+    }
+    return r;
 }
 
 Ext.ux.grid.filter.IntsplitFilter = Ext.extend(Ext.ux.grid.filter.NumericFilter, {

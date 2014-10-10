@@ -75,7 +75,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
  *
  */
 void
-streaming_queue_init2(streaming_queue_t *sq, int reject_filter, size_t maxsize)
+streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 {
   streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
 
@@ -85,16 +85,6 @@ streaming_queue_init2(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 
   sq->sq_maxsize = maxsize;
 }
-
-/**
- *
- */
-void
-streaming_queue_init(streaming_queue_t *sq, int reject_filter)
-{
-  streaming_queue_init2(sq, reject_filter, 0); // 0 = unlimited
-}
-
 
 /**
  *

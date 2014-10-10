@@ -334,7 +334,7 @@ service_mapper_thread ( void *aux )
   streaming_message_t *sm;
   const char *err = NULL;
 
-  streaming_queue_init(&sq, 0);
+  streaming_queue_init(&sq, 0, 0);
 
   pthread_mutex_lock(&global_lock);
 

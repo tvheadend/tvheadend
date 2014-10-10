@@ -67,8 +67,8 @@
 #include "dbus.h"
 #if ENABLE_LIBAV
 #include "libav.h"
-#include "plumbing/transcoding.h"
 #endif
+#include "profile.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -148,9 +148,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #endif
 #if ENABLE_HDHOMERUN_CLIENT
   { "tvhdhomerun_client", NULL },
-#endif
-#if ENABLE_LIBAV
-  { "transcoding", &transcoding_enabled },
 #endif
 #if ENABLE_IMAGECACHE
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },
@@ -816,8 +813,9 @@ main(int argc, char **argv)
 
 #if ENABLE_LIBAV
   libav_init();
-  transcoding_init();
 #endif
+
+  profile_init();
 
   imagecache_init();
 
@@ -942,6 +940,7 @@ main(int argc, char **argv)
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
   tvhftrace("main", esfilter_done);
+  tvhftrace("main", profile_done);
   tvhftrace("main", intlconv_done);
   tvhftrace("main", urlparse_done);
   tvhftrace("main", idnode_done);

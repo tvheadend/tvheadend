@@ -29,6 +29,11 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
   htsmsg_t *m = NULL;
   const char *s = htsmsg_get_str(args, name);
   char *r, *saveptr = NULL;
+  int use = 1;
+  if (s && s[0] == '-') {
+    use = 0;
+    s++;
+  }
   if (s && s[0] != '\0') {
     s = r = strdup(s);
     r = strtok_r(r, ",;:", &saveptr);
@@ -38,7 +43,7 @@ api_idnode_flist_conf( htsmsg_t *args, const char *name )
       if (*r != '\0') {
         if (m == NULL)
           m = htsmsg_create_map();
-        htsmsg_add_bool(m, r, 1);
+        htsmsg_add_bool(m, r, use);
       }
       r = strtok_r(NULL, ",;:", &saveptr);
     }

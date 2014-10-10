@@ -562,11 +562,11 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
+pass_muxer_create(const muxer_config_t *m_cfg)
 {
   pass_muxer_t *pm;
 
-  if(mc != MC_PASS && mc != MC_RAW)
+  if(m_cfg->m_type != MC_PASS && m_cfg->m_type != MC_RAW)
     return NULL;
 
   pm = calloc(1, sizeof(pass_muxer_t));

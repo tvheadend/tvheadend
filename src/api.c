@@ -134,6 +134,7 @@ void api_init ( void )
   api_access_init();
   api_dvr_init();
   api_caclient_init();
+  api_profile_init();
 }
 
 void api_done ( void )

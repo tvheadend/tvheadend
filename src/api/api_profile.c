@@ -1,5 +1,5 @@
 /*
- *  tvheadend - API access to Conditional Access Clients
+ *  tvheadend - API access to Stream Profile
  *
  *  Copyright (C) 2014 Jaroslav Kysela
  *
@@ -21,25 +21,24 @@
 #include "access.h"
 #include "htsmsg.h"
 #include "api.h"
-#include "descrambler/caclient.h"
+#include "profile.h"
 
 /*
  *
  */
 static int
-api_caclient_list
+api_profile_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  caclient_t *cac;
+  profile_t *pro;
   htsmsg_t *l, *e;
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
-  TAILQ_FOREACH(cac, &caclients, cac_link) {
+  TAILQ_FOREACH(pro, &profiles, pro_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&cac->cac_id));
-    htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id));
-    htsmsg_add_str(e, "status", caclient_get_status(cac));
+    htsmsg_add_str(e, "key", idnode_uuid_as_str(&pro->pro_id));
+    htsmsg_add_str(e, "val", profile_get_name(pro));
     htsmsg_add_msg(l, NULL, e);
   }
   pthread_mutex_unlock(&global_lock);
@@ -49,17 +48,20 @@ api_caclient_list
 }
 
 static int
-api_caclient_builders
+api_profile_builders
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  const idclass_t **r;
+  profile_build_t *pb;
   htsmsg_t *l, *e;
 
-  /* List of available builder classes */
   l = htsmsg_create_list();
-  for (r = caclient_classes; *r; r++)
-    if ((e = idclass_serialize(*r)))
+
+  pthread_mutex_lock(&global_lock);
+  /* List of available builder classes */
+  LIST_FOREACH(pb, &profile_builders, link)
+    if ((e = idclass_serialize(pb->clazz)))
       htsmsg_add_msg(l, NULL, e);
+  pthread_mutex_unlock(&global_lock);
 
   /* Output */
   *resp = htsmsg_create_map();
@@ -69,7 +71,7 @@ api_caclient_builders
 }
 
 static int
-api_caclient_create
+api_profile_create
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int err = 0;
@@ -83,7 +85,7 @@ api_caclient_create
   htsmsg_set_str(conf, "class", clazz);
 
   pthread_mutex_lock(&global_lock);
-  if (caclient_create(NULL, conf, 1) == NULL)
+  if (profile_create(NULL, conf, 1) == NULL)
     err = -EINVAL;
   pthread_mutex_unlock(&global_lock);
 
@@ -94,13 +96,13 @@ api_caclient_create
  * Init
  */
 void
-api_caclient_init ( void )
+api_profile_init ( void )
 {
   static api_hook_t ah[] = {
-    { "caclient/list",       ACCESS_ADMIN, api_caclient_list,     NULL },
-    { "caclient/class",      ACCESS_ADMIN, api_idnode_class, (void*)&caclient_class },
-    { "caclient/builders",   ACCESS_ADMIN, api_caclient_builders, NULL },
-    { "caclient/create",     ACCESS_ADMIN, api_caclient_create,   NULL },
+    { "profile/list",       ACCESS_ADMIN, api_profile_list,     NULL },
+    { "profile/class",      ACCESS_ADMIN, api_idnode_class, (void*)&profile_class },
+    { "profile/builders",   ACCESS_ADMIN, api_profile_builders, NULL },
+    { "profile/create",     ACCESS_ADMIN, api_profile_create,   NULL },
     { NULL },
   };
 

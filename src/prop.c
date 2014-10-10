@@ -344,12 +344,26 @@ prop_read_values
   } else {
     const property_t *p;
     htsmsg_field_t *f;
-    int b;
+    int b, total = 0, count = 0;
+    
     HTSMSG_FOREACH(f, list) {
-      if (!htsmsg_field_get_bool(f, &b) && b > 0) {
-        p = prop_find(pl, f->hmf_name);
-        if (p)
-          prop_read_value(obj, p, m, p->id, optmask);
+      total++;
+      if (!htsmsg_field_get_bool(f, &b)) {
+        if (b > 0) {
+          p = prop_find(pl, f->hmf_name);
+          if (p)
+            prop_read_value(obj, p, m, p->id, optmask);
+          count++;
+        }
+      }
+    }
+    if (total && !count) {
+      for (; pl->id; pl++) {
+        HTSMSG_FOREACH(f, list)
+          if (!strcmp(pl->id, f->hmf_name))
+            break;
+        if (f == NULL)
+          prop_read_value(obj, pl, m, pl->id, optmask);
       }
     }
   }
@@ -490,12 +504,23 @@ prop_serialize
   } else {
     const property_t *p;
     htsmsg_field_t *f;
-    int b;
+    int b, total = 0, count = 0;
     HTSMSG_FOREACH(f, list) {
+      total++;
       if (!htsmsg_field_get_bool(f, &b) && b > 0) {
         p = prop_find(pl, f->hmf_name);
         if (p)
           prop_serialize_value(obj, p, msg, optmask);
+        count++;
+      }
+    }
+    if (total && !count) {
+      for (; pl->id; pl++) {
+        HTSMSG_FOREACH(f, list)
+          if (!strcmp(pl->id, f->hmf_name))
+            break;
+        if (f == NULL)
+          prop_serialize_value(obj, pl, msg, optmask);
       }
     }
   }

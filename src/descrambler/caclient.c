@@ -108,8 +108,6 @@ caclient_create
   if (c == &caclient_ccw_aes_class)
     cac = constcw_create();
 #endif
-  if (cac == NULL)
-    abort();
   if (cac == NULL) {
     tvherror("caclient", "CA Client class %s is not available!", s);
     return NULL;
