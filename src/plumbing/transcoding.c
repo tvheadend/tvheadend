@@ -872,7 +872,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     frame = av_frame_alloc();
     frame->nb_samples = octx->frame_size;
     frame->format = octx->sample_fmt;
+#if LIBAVUTIL_VERSION_MICRO >= 100 /* FFMPEG */
     frame->channels = octx->channels;
+#endif
     frame->channel_layout = octx->channel_layout;
     frame->sample_rate = octx->sample_rate;
     if (av_frame_get_buffer(frame, 0) < 0) {
