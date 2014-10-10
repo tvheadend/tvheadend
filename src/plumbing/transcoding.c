@@ -537,24 +537,23 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
                                  , &packet);
   av_free_packet(&packet);
 
-  tvhlog(LOG_DEBUG, "transcode", "Decoded packet. length-consumed=%d from in-length=%zu, got_frame=%d.\n", length, pktbuf_len(pkt->pkt_payload),got_frame);
+  tvhtrace("transcode", "Decoded packet. length-consumed=%d from in-length=%zu, got_frame=%d", length, pktbuf_len(pkt->pkt_payload),got_frame);
 
-  if (!got_frame) {
-    tvhlog(LOG_DEBUG, "transcode", "Did not have a full frame in the packet.\n");
-  }
+  if (!got_frame)
+    tvhtrace("transcode", "Did not have a full frame in the packet");
 
   if (length < 0) {
-    tvhlog(LOG_ERR, "transcode", "length < 0 (%i).\n", length);
+    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d)", length);
     ts->ts_index = 0;
     goto cleanup;
   }
 
   if (length != pktbuf_len(pkt->pkt_payload)) {
-    tvhlog(LOG_DEBUG, "transcode", "Not all data from packet was decoded. length=%d from packet.size=%zu.\n", length, pktbuf_len(pkt->pkt_payload));
+    tvhtrace("transcode", "Not all data from packet was decoded. length=%d from packet.size=%zu", length, pktbuf_len(pkt->pkt_payload));
   }
 
   if (length == 0 || !got_frame) {
-    tvhlog(LOG_DEBUG, "transcode", "Not yet enough data for decoding.");
+    tvhtrace("transcode", "Not yet enough data for decoding");
     goto cleanup;
   }
 
@@ -576,13 +575,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
           octx->sample_fmt = ocodec->sample_fmts[acount-1];
         }
         else {
-          tvhlog(LOG_ERR, "transcode", "Encoder does not support a sample_fmt!!??.");
+          tvhlog(LOG_ERR, "transcode", "Encoder does not support a sample_fmt!!??");
           ts->ts_index = 0;
           goto cleanup;
         }
       }
       else {
-        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same sample_fmt as decoder.");
+        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same sample_fmt as decoder");
       }
     }
 
@@ -649,22 +648,22 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->channel_layout == 0) {
         if (acount > 0) {
           // find next which has same or less channels than decoder.
-          tvhlog(LOG_DEBUG, "transcode", "Did not find matching channel_layout for encoder. Will use last supported: %zu with %d channels.", ocodec->channel_layouts[maxacount], maxchannels);
+          tvhlog(LOG_DEBUG, "transcode", "Did not find matching channel_layout for encoder. Will use last supported: %zu with %d channels", ocodec->channel_layouts[maxacount], maxchannels);
           octx->channel_layout = ocodec->channel_layouts[maxacount];
           octx->channels = maxchannels;
         }
         else {
-          tvhlog(LOG_ERR, "transcode", "Encoder does not support a channel_layout!!??.");
+          tvhlog(LOG_ERR, "transcode", "Encoder does not support a channel_layout!!??");
           ts->ts_index = 0;
           goto cleanup;
         }
       }
       else {
-        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same channel_layout as decoder.");
+        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same channel_layout as decoder");
       }
     }
     else {
-      tvhlog(LOG_DEBUG, "transcode", "Encoder does not show which channel_layouts it supports.");
+      tvhlog(LOG_DEBUG, "transcode", "Encoder does not show which channel_layouts it supports");
     }
 
 
@@ -710,19 +709,19 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       }
 
       // Convert audio
-      tvhlog(LOG_DEBUG, "transcode", "converting audio");
+      tvhtrace("transcode", "converting audio");
 
-      tvhlog(LOG_DEBUG, "transcode", "ictx->channels:%d", ictx->channels);
-      tvhlog(LOG_DEBUG, "transcode", "ictx->channel_layout:%" PRIu64, ictx->channel_layout);
-      tvhlog(LOG_DEBUG, "transcode", "ictx->sample_rate:%d", ictx->sample_rate);
-      tvhlog(LOG_DEBUG, "transcode", "ictx->sample_fmt:%d", ictx->sample_fmt);
-      tvhlog(LOG_DEBUG, "transcode", "ictx->bit_rate:%d", ictx->bit_rate);
+      tvhtrace("transcode", "ictx->channels:%d", ictx->channels);
+      tvhtrace("transcode", "ictx->channel_layout:%" PRIu64, ictx->channel_layout);
+      tvhtrace("transcode", "ictx->sample_rate:%d", ictx->sample_rate);
+      tvhtrace("transcode", "ictx->sample_fmt:%d", ictx->sample_fmt);
+      tvhtrace("transcode", "ictx->bit_rate:%d", ictx->bit_rate);
 
-      tvhlog(LOG_DEBUG, "transcode", "octx->channels:%d", octx->channels);
-      tvhlog(LOG_DEBUG, "transcode", "octx->channel_layout:%" PRIu64, octx->channel_layout);
-      tvhlog(LOG_DEBUG, "transcode", "octx->sample_rate:%d", octx->sample_rate);
-      tvhlog(LOG_DEBUG, "transcode", "octx->sample_fmt:%d", octx->sample_fmt);
-      tvhlog(LOG_DEBUG, "transcode", "octx->bit_rate:%d", octx->bit_rate);
+      tvhtrace("transcode", "octx->channels:%d", octx->channels);
+      tvhtrace("transcode", "octx->channel_layout:%" PRIu64, octx->channel_layout);
+      tvhtrace("transcode", "octx->sample_rate:%d", octx->sample_rate);
+      tvhtrace("transcode", "octx->sample_fmt:%d", octx->sample_fmt);
+      tvhtrace("transcode", "octx->bit_rate:%d", octx->bit_rate);
 
       int opt_error;
       if ((opt_error = av_opt_set_int(as->resample_context, "in_channel_layout", ictx->channel_layout, 0)) != 0) {
@@ -868,7 +867,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    tvhlog(LOG_DEBUG, "transcode", "before encoding: frame->linesize[0]=%d, samples_read=%d", frame->linesize[0], samples_read);
+    tvhtrace("transcode", "before encoding: frame->linesize[0]=%d, samples_read=%d", frame->linesize[0], samples_read);
 
     av_init_packet(&packet);
     packet.data = NULL;
@@ -886,7 +885,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
     } else if (got_packet_ptr) {
       length = packet.size;
-      tvhlog(LOG_DEBUG, "transcode", "encoded: packet.pts=%" PRIu64 ", packet.dts=%" PRIu64 ", as->aud_enc_pts=%lu", packet.pts, packet.dts, as->aud_enc_pts);
+      tvhtrace("transcode", "encoded: packet.pts=%" PRIu64 ", packet.dts=%" PRIu64 ", as->aud_enc_pts=%lu", packet.pts, packet.dts, as->aud_enc_pts);
       n = pkt_alloc(packet.data, packet.size, as->aud_enc_pts, as->aud_enc_pts);
       n->pkt_componentindex = ts->ts_index;
       n->pkt_frametype      = pkt->pkt_frametype;
