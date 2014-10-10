@@ -2,7 +2,7 @@
  * Stream Profiles, Elementary Stream Filters
  */
 
-tvheadend.caclient_builders = new Ext.data.JsonStore({
+tvheadend.profile_builders = new Ext.data.JsonStore({
     url: 'api/profile/builders',
     root: 'entries',
     fields: ['class', 'caption', 'props'],
@@ -28,7 +28,7 @@ tvheadend.esfilter_tab = function(panel)
             titleS: 'Stream Profile',
             select: {
                 label: 'Type',
-                store: tvheadend.caclient_builders,
+                store: tvheadend.profile_builders,
                 displayField: 'caption',
                 valueField: 'class',
                 propField: 'props',
