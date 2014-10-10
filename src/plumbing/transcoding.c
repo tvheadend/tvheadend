@@ -668,7 +668,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->channel_layout == 0) {
         if (acount > 0) {
           // find next which has same or less channels than decoder.
-          tvhlog(LOG_DEBUG, "transcode", "Did not find matching channel_layout for encoder. Will use last supported: %zu with %d channels", ocodec->channel_layouts[maxacount], maxchannels);
+          tvhlog(LOG_DEBUG, "transcode", "Did not find matching channel_layout for encoder. Will use last supported: %i with %d channels", (int)ocodec->channel_layouts[maxacount], maxchannels);
           octx->channel_layout = ocodec->channel_layouts[maxacount];
           octx->channels = maxchannels;
         }
