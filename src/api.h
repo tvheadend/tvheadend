@@ -74,6 +74,7 @@ void api_intlconv_init      ( void );
 void api_access_init        ( void );
 void api_dvr_init           ( void );
 void api_caclient_init      ( void );
+void api_profile_init       ( void );
 
 /*
  * IDnode

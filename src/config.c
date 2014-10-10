@@ -1017,6 +1017,30 @@ config_migrate_v12 ( void )
   }
 }
 
+static void
+config_migrate_v13 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  int i;
+
+  if ((c = hts_settings_load("dvr/config")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!htsmsg_get_bool(e, "container", &i)) {
+        htsmsg_delete_field(e, "container");
+        if (i == 1)
+          htsmsg_add_str(e, "profile", "matroska");
+        else if (i == 4)
+          htsmsg_add_str(e, "profile", "pass");
+      }
+      htsmsg_delete_field(e, "rewrite-pat");
+      htsmsg_delete_field(e, "rewrite-pmt");
+      hts_settings_save(e, "dvr/config/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1117,7 +1141,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v9,
   config_migrate_v10,
   config_migrate_v11,
-  config_migrate_v12
+  config_migrate_v12,
+  config_migrate_v13
 };
 
 /*

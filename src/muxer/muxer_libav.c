@@ -75,7 +75,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   c = st->codec;
   c->codec_id = streaming_component_type2codec_id(ssc->ssc_type);
 
-  switch(lm->m_container) {
+  switch(lm->m_config.m_type) {
   case MC_MATROSKA:
     st->time_base.num = 1000000;
     st->time_base.den = 1;
@@ -205,7 +205,7 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     if(ssc->ssc_disabled)
       continue;
 
-    if(!lav_muxer_support_stream(m->m_container, ssc->ssc_type))
+    if(!lav_muxer_support_stream(m->m_config.m_type, ssc->ssc_type))
       continue;
 
     has_video |= SCT_ISVIDEO(ssc->ssc_type);
@@ -213,9 +213,9 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   }
 
   if(has_video)
-    return muxer_container_type2mime(m->m_container, 1);
+    return muxer_container_type2mime(m->m_config.m_type, 1);
   else if(has_audio)
-    return muxer_container_type2mime(m->m_container, 0);
+    return muxer_container_type2mime(m->m_config.m_type, 0);
   else
     return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
@@ -241,7 +241,7 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
 
-  if(lm->m_container == MC_MPEGTS)
+  if(lm->m_config.m_type == MC_MPEGTS)
     lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
 
   oc->max_delay = 0.7 * AV_TIME_BASE;
@@ -252,10 +252,10 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
     if(ssc->ssc_disabled)
       continue;
 
-    if(!lav_muxer_support_stream(lm->m_container, ssc->ssc_type)) {
+    if(!lav_muxer_support_stream(lm->m_config.m_type, ssc->ssc_type)) {
       tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s", 
 	     streaming_component_type2txt(ssc->ssc_type), 
-	     muxer_container_type2txt(lm->m_container));
+	     muxer_container_type2txt(lm->m_config.m_type));
       continue;
     }
 
@@ -272,7 +272,7 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
     return -1;
   } else if(avformat_write_header(lm->lm_oc, NULL) < 0) {
     tvhlog(LOG_ERR, "libav",  "Failed to write %s header", 
-	   muxer_container_type2txt(lm->m_container));
+	   muxer_container_type2txt(lm->m_config.m_type));
     lm->m_errors++;
     return -1;
   }
@@ -454,7 +454,7 @@ lav_muxer_close(muxer_t *m)
 
   if(lm->lm_init && av_write_trailer(lm->lm_oc) < 0) {
     tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
-	   muxer_container_type2txt(lm->m_container));
+	   muxer_container_type2txt(lm->m_config.m_type));
     lm->m_errors++;
     ret = -1;
   }
@@ -493,18 +493,18 @@ lav_muxer_destroy(muxer_t *m)
  * Create a new libavformat based muxer
  */
 muxer_t*
-lav_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
+lav_muxer_create(const muxer_config_t *m_cfg)
 {
   const char *mux_name;
   lav_muxer_t *lm;
   AVOutputFormat *fmt;
 
-  switch(mc) {
+  switch(m_cfg->m_type) {
   case MC_MPEGPS:
     mux_name = "dvd";
     break;
   default:
-    mux_name = muxer_container_type2txt(mc);
+    mux_name = muxer_container_type2txt(m_cfg->m_type);
     break;
   }
 
@@ -525,7 +525,6 @@ lav_muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
   lm->m_write_pkt    = lav_muxer_write_pkt;
   lm->m_close        = lav_muxer_close;
   lm->m_destroy      = lav_muxer_destroy;
-  lm->m_container    = mc;
   lm->lm_oc          = avformat_alloc_context();
   lm->lm_oc->oformat = fmt;
   lm->lm_fd          = -1;

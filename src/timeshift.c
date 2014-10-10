@@ -278,7 +278,7 @@ streaming_target_t *timeshift_create
   tvh_pipe(O_NONBLOCK, &ts->rd_pipe);
 
   /* Initialise input */
-  streaming_queue_init(&ts->wr_queue, 0);
+  streaming_queue_init(&ts->wr_queue, 0, 0);
   streaming_target_init(&ts->input, timeshift_input, ts, 0);
   tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts);
   tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts);

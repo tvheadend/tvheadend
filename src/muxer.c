@@ -159,6 +159,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
 }
 
 
+#if 0
 /**
  * Get a list of supported containers
  */
@@ -190,6 +191,7 @@ muxer_container_list(htsmsg_t *array)
 
   return c;
 }
+#endif
 
 
 /**
@@ -237,25 +239,25 @@ muxer_container_mime2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
+muxer_create(const muxer_config_t *m_cfg)
 {
   muxer_t *m;
 
   assert(m_cfg);
 
-  m = pass_muxer_create(mc, m_cfg);
+  m = pass_muxer_create(m_cfg);
 
   if(!m)
-    m = tvh_muxer_create(mc, m_cfg);
+    m = tvh_muxer_create(m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)
-    m = lav_muxer_create(mc, m_cfg);
+    m = lav_muxer_create(m_cfg);
 #endif
 
   if(!m) {
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
-	   muxer_container_type2txt(mc));
+	   muxer_container_type2txt(m_cfg->m_type));
     return NULL;
   }
   
@@ -263,20 +265,6 @@ muxer_create(muxer_container_type_t mc, const muxer_config_t *m_cfg)
 
   return m;
 }
-
-
-/**
- * sanity wrapper arround m_mime()
- */
-const char*
-muxer_mime(muxer_t *m,  const struct streaming_start *ss)
-{
-  if(!m || !ss)
-    return NULL;
-
-  return m->m_mime(m, ss);
-}
-
 
 /**
  * Figure out the file suffix by looking at the mime type
@@ -296,123 +284,6 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
   mc = muxer_container_mime2type(mime);
 
   return muxer_container_suffix(mc, video);
-}
-
-
-/**
- * sanity wrapper arround m_init()
- */
-int
-muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
-{
-  if(!m || !ss)
-    return -1;
-
-  return m->m_init(m, ss, name);
-}
-
-
-/**
- * sanity wrapper arround m_reconfigure()
- */
-int
-muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
-{
-  if(!m || !ss)
-    return -1;
-
-  return m->m_reconfigure(m, ss);
-}
-
-
-/**
- * sanity wrapper arround m_add_marker()
- */
-int
-muxer_add_marker(muxer_t *m)
-{
-  if(!m)
-    return -1;
-
-  return m->m_add_marker(m);
-}
-
-/**
- * sanity wrapper arround m_open_file()
- */
-int
-muxer_open_file(muxer_t *m, const char *filename)
-{
-  if(!m || !filename)
-    return -1;
-
-  return m->m_open_file(m, filename);
-}
-
-
-/**
- * sanity wrapper arround m_open_stream()
- */
-int
-muxer_open_stream(muxer_t *m, int fd)
-{
-  if(!m || fd < 0)
-    return -1;
-
-  return m->m_open_stream(m, fd);
-}
-
-
-/**
- * sanity wrapper arround m_close()
- */
-int
-muxer_close(muxer_t *m)
-{
-  if(!m)
-    return -1;
-
-  return m->m_close(m);
-}
-
-/**
- * sanity wrapper arround m_destroy()
- */
-int
-muxer_destroy(muxer_t *m)
-{
-  if(!m)
-    return -1;
-
-  m->m_destroy(m);
-
-  return 0;
-}
-
-
-/**
- * sanity wrapppper arround m_write_meta()
- */
-int
-muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
-{
-  if(!m || !eb)
-    return -1;
-
-  return m->m_write_meta(m, eb);
-}
-
-
-/**
- * sanity wrapper arround m_write_pkt()
- */
-int
-muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
-{
-  if(!m || !data)
-    return -1;
-
-  return m->m_write_pkt(m, smt, data);
 }
 
 /**

@@ -43,7 +43,7 @@ tvheadend.miscconf = function(panel, index) {
     [
         'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
-        'tvhtime_tolerance', 'transcoding_enabled',
+        'tvhtime_tolerance',
         'piconpath'
     ]);
 
@@ -203,28 +203,6 @@ tvheadend.miscconf = function(panel, index) {
         var imagecache_form = null;
     }
 
-    /*
-    * Transcoding
-    */
-
-    var transcodingEnabled = new Ext.form.Checkbox({
-        name: 'transcoding_enabled',
-        fieldLabel: 'Enabled'
-    });
-
-    var transcodingPanel = new Ext.form.FieldSet({
-        title: 'Transcoding',
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items: [transcodingEnabled]
-    });
-
-    if (tvheadend.capabilities.indexOf('transcoding') === -1)
-        transcodingPanel.hide();
-
-
     /* ****************************************************************
     * Form
     * ***************************************************************/
@@ -252,7 +230,7 @@ tvheadend.miscconf = function(panel, index) {
         layout: 'form',
         defaultType: 'textfield',
         autoHeight: true,
-        items: [languageWrap, dvbscanWrap, tvhtimePanel, transcodingPanel, piconPanel]
+        items: [languageWrap, dvbscanWrap, tvhtimePanel, piconPanel]
     });
 
     var _items = [confpanel];

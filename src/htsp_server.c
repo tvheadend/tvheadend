@@ -34,9 +34,6 @@
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
-#if ENABLE_LIBAV
-#include "plumbing/transcoding.h"
-#endif
 
 #include <pthread.h>
 #include <assert.h>
@@ -71,7 +68,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 15
+#define HTSP_PROTO_VERSION 16
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -193,9 +190,8 @@ typedef struct htsp_subscription {
   streaming_target_t *hs_tshift;
 #endif
 
-#if ENABLE_LIBAV
-streaming_target_t *hs_transcoder;
-#endif
+  streaming_target_t *hs_work;
+  void (*hs_work_destroy)(streaming_target_t *);
 
   htsp_msg_q_t hs_q;
 
@@ -340,10 +336,8 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
   if(hs->hs_tsfix != NULL)
     tsfix_destroy(hs->hs_tsfix);
 
-#if ENABLE_LIBAV
-  if(hs->hs_transcoder != NULL)
-    transcoder_destroy(hs->hs_transcoder);
-#endif
+  if(hs->hs_work != NULL)
+    hs->hs_work_destroy(hs->hs_work);
 
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
@@ -1297,6 +1291,33 @@ htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
 }
 
 /**
+ *
+ */
+static htsmsg_t *
+htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *l, *c;
+  dvr_config_t *cfg;
+
+  l = htsmsg_create_list();
+
+  LIST_FOREACH(cfg, &dvrconfigs, config_link)
+    if (cfg->dvr_enabled) {
+      c = htsmsg_create_map();
+      htsmsg_add_str(c, "uuid", idnode_uuid_as_str(&cfg->dvr_id));
+      htsmsg_add_str(c, "name", cfg->dvr_config_name);
+      htsmsg_add_str(c, "comment", cfg->dvr_comment);
+      htsmsg_add_msg(l, NULL, c);
+    }
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "dvrconfigs", l);
+
+  return out;
+}
+
+/**
  * add a Dvrentry
  */
 static htsmsg_t * 
@@ -1763,27 +1784,13 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 #endif
 
 #if ENABLE_LIBAV
-  if (transcoding_enabled) {
-    transcoder_props_t props;
+  const char *profile_id = htsmsg_get_str(in, "profile");
+  profile_t *pro = profile_find_by_uuid(profile_id) ?: profile_find_by_name(profile_id);
 
-    props.tp_vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
-    props.tp_acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
-    props.tp_scodec = streaming_component_txt2type(htsmsg_get_str(in, "subtitleCodec"));
-
-    props.tp_resolution = htsmsg_get_u32_or_default(in, "maxResolution", 0);
-    props.tp_channels   = htsmsg_get_u32_or_default(in, "channels", 0);
-    props.tp_bandwidth  = htsmsg_get_u32_or_default(in, "bandwidth", 0);
-
-    if ((str = htsmsg_get_str(in, "language")))
-      strncpy(props.tp_language, str, 3);
-
-    if(props.tp_vcodec != SCT_UNKNOWN ||
-       props.tp_acodec != SCT_UNKNOWN ||
-       props.tp_scodec != SCT_UNKNOWN) {
-      st = hs->hs_transcoder = transcoder_create(st);
-      transcoder_set_properties(st, &props);
-      normts = 1;
-    }
+  hs->hs_work = profile_work(pro, st, &hs->hs_work_destroy);
+  if (hs->hs_work) {
+    st = hs->hs_work;
+    normts = 1;
   }
 #endif
 
@@ -2142,27 +2149,23 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
-
-#if ENABLE_LIBAV
 /**
  *
  */
 static htsmsg_t *
-htsp_method_getCodecs(htsp_connection_t *htsp, htsmsg_t *in)
+htsp_method_getProfiles(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out, *l;
 
   l = htsmsg_create_list();
-  transcoder_get_capabilities(l);
+  profile_get_htsp_list(l);
 
   out = htsmsg_create_map();
 
-  htsmsg_add_msg(out, "encoders", l);
+  htsmsg_add_msg(out, "profiles", l);
 
   return out;
 }
-#endif
-
 
 /**
  * HTSP methods
@@ -2182,6 +2185,7 @@ struct {
   { "getEvents",                htsp_method_getEvents,          ACCESS_STREAMING},
   { "epgQuery",                 htsp_method_epgQuery,           ACCESS_STREAMING},
   { "getEpgObject",             htsp_method_getEpgObject,       ACCESS_STREAMING},
+  { "getDvrConfigs",            htsp_method_getDvrConfigs,      ACCESS_RECORDER},
   { "addDvrEntry",              htsp_method_addDvrEntry,        ACCESS_RECORDER},
   { "updateDvrEntry",           htsp_method_updateDvrEntry,     ACCESS_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry,     ACCESS_RECORDER},
@@ -2198,9 +2202,7 @@ struct {
   { "subscriptionSpeed",        htsp_method_speed,              ACCESS_STREAMING},
   { "subscriptionLive",         htsp_method_live,               ACCESS_STREAMING},
   { "subscriptionFilterStream", htsp_method_filter_stream,      ACCESS_STREAMING},
-#if ENABLE_LIBAV
-  { "getCodecs",                htsp_method_getCodecs,          ACCESS_STREAMING},
-#endif
+  { "getProfiles",              htsp_method_getProfiles,        ACCESS_STREAMING},
   { "fileOpen",                 htsp_method_file_open,          ACCESS_RECORDER},
   { "fileRead",                 htsp_method_file_read,          ACCESS_RECORDER},
   { "fileClose",                htsp_method_file_close,         ACCESS_RECORDER},

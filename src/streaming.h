@@ -72,9 +72,7 @@ void streaming_target_init(streaming_target_t *st,
 			   st_callback_t *cb, void *opaque,
 			   int reject_filter);
 
-void streaming_queue_init(streaming_queue_t *sq, int reject_filter);
-
-void streaming_queue_init2
+void streaming_queue_init
   (streaming_queue_t *sq, int reject_filter, size_t maxsize);
 
 void streaming_queue_clear(struct streaming_message_queue *q);
