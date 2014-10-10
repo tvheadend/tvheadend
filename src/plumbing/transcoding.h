@@ -42,5 +42,3 @@ void transcoder_set_properties  (streaming_target_t *tr,
 
 
 void transcoding_init(void);
-void transcoding_save(void);
-int  transcoding_set_enabled(uint32_t e);
