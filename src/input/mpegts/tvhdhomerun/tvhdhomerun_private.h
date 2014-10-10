@@ -54,10 +54,6 @@ static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
 
 #endif
 
-
-// static pthread_mutex_t global_hdhomerun_device_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 struct tvhdhomerun_device_info
 {
   char *ip_address;         /* IP address */
@@ -117,7 +113,6 @@ struct tvhdhomerun_frontend
    */
   int                            hf_tunerNumber;
   dvb_fe_type_t                  hf_type; 
-  pthread_mutex_t                hf_mutex;          // Anything that is used by both input-thread
 
   // libhdhomerun objects.
   struct hdhomerun_device_t     *hf_hdhomerun_tuner;
@@ -127,8 +122,6 @@ struct tvhdhomerun_frontend
   int                            hf_ready;
   int                            hf_status;
 
-  pthread_mutex_t                hf_input_mux_lock;           // Lock to make sure we are not running the input-thread
-                                                              // reader during a mux start/stop.
   // input thread..
   pthread_t                      hf_input_thread;
   pthread_mutex_t                hf_input_thread_mutex;        /* used in condition signaling */
@@ -137,16 +130,13 @@ struct tvhdhomerun_frontend
   uint8_t                        hf_input_thread_running;      // Indicates if input_thread is running.
   uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
 
-
   // Global lock for the libhdhomerun library since it seems to have some threading-issues.
   pthread_mutex_t               hf_hdhomerun_device_mutex;
-
 
   /*
    * Reception
    */
   char                           hf_pid_filter_buf[1024];
-  pthread_mutex_t                hf_pid_filter_mutex;
 
   gtimer_t                       hf_monitor_timer;
 
