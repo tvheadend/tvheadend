@@ -793,11 +793,11 @@ profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
 
   memset(prch, 0, sizeof(*prch));
   streaming_queue_init(&prch->prch_sq, 0, qsize);
-  prch->prch_transcoder = profile_transcode_work(_pro, &prch->prch_sq.sq_st, NULL);
-  prch->prch_gh         = globalheaders_create(prch->prch_transcoder);
-  prch->prch_tsfix      = tsfix_create(prch->prch_gh);
+  prch->prch_gh         = globalheaders_create(&prch->prch_sq.sq_st);
+  prch->prch_transcoder = profile_transcode_work(_pro, prch->prch_gh, NULL);
+  prch->prch_tsfix      = tsfix_create(prch->prch_transcoder);
   prch->prch_muxer      = muxer_create(&c);
-  prch->prch_st         = prch->prch_transcoder;
+  prch->prch_st         = prch->prch_tsfix;
   return 0;
 }
 

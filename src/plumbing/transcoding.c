@@ -131,6 +131,26 @@ typedef struct transcoder {
 /**
  * 
  */
+static AVCodecContext *
+avcodec_alloc_context3_tvh(const AVCodec *codec)
+{
+  AVCodecContext *ctx = avcodec_alloc_context3(codec);
+  if (ctx)
+    ctx->codec_id = AV_CODEC_ID_NONE;
+  return ctx;
+}
+
+static char *const
+get_error_text(const int error)
+{
+  static char __thread error_buffer[255];
+  av_strerror(error, error_buffer, sizeof(error_buffer));
+  return error_buffer;
+}
+
+/**
+ *
+ */
 static AVCodec *
 transcoder_get_decoder(streaming_component_type_t ty)
 {
@@ -200,6 +220,7 @@ transcoder_stream_packet(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
   streaming_message_t *sm;
 
+  tvhtrace("transcode", "deliver copy (pts = %" PRIu64 ")", pkt->pkt_pts);
   sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(pkt);
@@ -246,8 +267,8 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   length = avcodec_decode_subtitle2(ictx,  &sub, &got_subtitle, &packet);
   if (length <= 0) {
-    tvhlog(LOG_ERR, "transcode", "Unable to decode subtitle (%d)", length);
-    ts->ts_index = 0;
+    if (length == AVERROR_INVALIDDATA) goto cleanup;
+    tvhlog(LOG_ERR, "transcode", "Unable to decode subtitle (%d, %s)", length, get_error_text(length));
     goto cleanup;
   }
 
@@ -321,8 +342,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   samples = (short*)(as->aud_dec_sample + as->aud_dec_offset);
   if ((length = avcodec_decode_audio3(ictx, samples, &len, &packet)) <= 0) {
-    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d)", length);
-    ts->ts_index = 0;
+    if (length == AVERROR_INVALIDDATA) goto cleanup;
+    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d, %s)", length, get_error_text(length));
     goto cleanup;
   }
 
@@ -407,6 +428,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   if (octx->codec_id == AV_CODEC_ID_NONE) {
+    as->aud_enc_pts = pkt->pkt_pts;
     octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
@@ -449,6 +471,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
+      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
@@ -466,13 +489,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   pkt_ref_dec(pkt);
 }
 #else
-
-static char *const get_error_text(const int error)
-{
-  static char error_buffer[255];
-  av_strerror(error, error_buffer, sizeof(error_buffer));
-  return error_buffer;
-}
 
 /**
  *
@@ -543,7 +559,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     tvhtrace("transcode", "Did not have a full frame in the packet");
 
   if (length < 0) {
-    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d)", length);
+    if (length == AVERROR_INVALIDDATA) goto cleanup;
+    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d, %s)", length, get_error_text(length));
     ts->ts_index = 0;
     goto cleanup;
   }
@@ -558,6 +575,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   if (octx->codec_id == AV_CODEC_ID_NONE) {
+    as->aud_enc_pts       = pkt->pkt_pts;
     octx->sample_rate     = ictx->sample_rate;
     octx->sample_fmt      = ictx->sample_fmt;
     if (ocodec->sample_fmts) {
@@ -565,13 +583,15 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       int acount = 0;
       octx->sample_fmt = -1;
       while ((octx->sample_fmt == -1) && (ocodec->sample_fmts[acount] > -1)) {
-        if (ocodec->sample_fmts[acount] == ictx->sample_fmt)
+        if (ocodec->sample_fmts[acount] == ictx->sample_fmt) {
           octx->sample_fmt = ictx->sample_fmt;
+          break;
+        }
         acount++;
       }
       if (octx->sample_fmt == -1) {
         if (acount > 0) {
-          tvhlog(LOG_DEBUG, "transcode", "Did not find matching sample_fmt for encoder. Will use first supported: %d.", ocodec->sample_fmts[acount-1]);
+          tvhtrace("transcode", "Did not find matching sample_fmt for encoder. Will use first supported: %d", ocodec->sample_fmts[acount-1]);
           octx->sample_fmt = ocodec->sample_fmts[acount-1];
         }
         else {
@@ -581,7 +601,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
         }
       }
       else {
-        tvhlog(LOG_DEBUG, "transcode", "Encoder supports same sample_fmt as decoder");
+        tvhtrace("transcode", "Encoder supports same sample_fmt as decoder");
       }
     }
 
@@ -852,6 +872,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     frame = av_frame_alloc();
     frame->nb_samples = octx->frame_size;
     frame->format = octx->sample_fmt;
+    frame->channels = octx->channels;
     frame->channel_layout = octx->channel_layout;
     frame->sample_rate = octx->sample_rate;
     if (av_frame_get_buffer(frame, 0) < 0) {
@@ -885,7 +906,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
     } else if (got_packet_ptr) {
       length = packet.size;
-      tvhtrace("transcode", "encoded: packet.pts=%" PRIu64 ", packet.dts=%" PRIu64 ", as->aud_enc_pts=%lu", packet.pts, packet.dts, as->aud_enc_pts);
       n = pkt_alloc(packet.data, packet.size, as->aud_enc_pts, as->aud_enc_pts);
       n->pkt_componentindex = ts->ts_index;
       n->pkt_frametype      = pkt->pkt_frametype;
@@ -902,6 +922,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
+      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
@@ -1043,6 +1064,7 @@ Minimal of 12 bytes.
     }
   }
 
+  tvhtrace("transcode", "deliver video (pts = %" PRIu64 ")", pkt->pkt_pts);
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
@@ -1104,8 +1126,8 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   length = avcodec_decode_video2(ictx, vs->vid_dec_frame, &got_picture, &packet);
   if (length <= 0) {
-    tvhlog(LOG_ERR, "transcode", "Unable to decode video (%d)", length);
-    ts->ts_index = 0;
+    if (length == AVERROR_INVALIDDATA) goto cleanup;
+    tvhlog(LOG_ERR, "transcode", "Unable to decode video (%d, %s)", length, get_error_text(length));
     goto cleanup;
   }
 
@@ -1426,8 +1448,8 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   ss->sub_icodec = icodec;
   ss->sub_ocodec = ocodec;
 
-  ss->sub_ictx = avcodec_alloc_context3(icodec);
-  ss->sub_octx = avcodec_alloc_context3(ocodec);
+  ss->sub_ictx = avcodec_alloc_context3_tvh(icodec);
+  ss->sub_octx = avcodec_alloc_context3_tvh(ocodec);
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)ss, ts_link);
 
@@ -1520,8 +1542,8 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_icodec = icodec;
   as->aud_ocodec = ocodec;
 
-  as->aud_ictx = avcodec_alloc_context3(icodec);
-  as->aud_octx = avcodec_alloc_context3(ocodec);
+  as->aud_ictx = avcodec_alloc_context3_tvh(icodec);
+  as->aud_octx = avcodec_alloc_context3_tvh(ocodec);
 
   as->aud_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   as->aud_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -1628,8 +1650,8 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_icodec = icodec;
   vs->vid_ocodec = ocodec;
 
-  vs->vid_ictx = avcodec_alloc_context3(icodec);
-  vs->vid_octx = avcodec_alloc_context3(ocodec);
+  vs->vid_ictx = avcodec_alloc_context3_tvh(icodec);
+  vs->vid_octx = avcodec_alloc_context3_tvh(ocodec);
 
   vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
