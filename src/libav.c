@@ -175,4 +175,3 @@ libav_init(void)
   av_log_set_level(AV_LOG_VERBOSE);
   av_register_all();
 }
-

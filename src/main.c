@@ -67,7 +67,6 @@
 #include "dbus.h"
 #if ENABLE_LIBAV
 #include "libav.h"
-#include "plumbing/transcoding.h"
 #endif
 #include "profile.h"
 
@@ -811,7 +810,6 @@ main(int argc, char **argv)
 
 #if ENABLE_LIBAV
   libav_init();
-  transcoding_init();
 #endif
 
   profile_init();
