@@ -32,6 +32,7 @@ tvheadend.service_mapper_status = function(panel, index)
     var mpanel = new Ext.FormPanel({
         method: 'get',
         title: 'Service Mapper',
+		iconCls: 'serviceMapper',
         frame: true,
         border: true,
         bodyStyle: 'padding: 5px',

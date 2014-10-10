@@ -346,6 +346,42 @@
     background-image: url(../icons/exclamation.png) !important;
 }
 
+.tvCards {
+    background-image: url(../icons/tv_cards.png) !important;
+}
+
+.networks {
+    background-image: url(../icons/networks.png) !important;
+}
+
+.muxes {
+    background-image: url(../icons/muxes.png) !important;
+}
+
+.muxSchedulers {
+    background-image: url(../icons/mux_schedulers.png) !important;
+}
+
+.services {
+    background-image: url(../icons/services.png) !important;
+}
+
+.teletext {
+    background-image: url(../icons/teletext.png) !important;
+}
+
+.subtitle {
+    background-image: url(../icons/subtitle.png) !important;
+}
+
+.serviceMapper {
+    background-image: url(../icons/service_mapper.png) !important;
+}
+
+.otherFilters {
+    background-image: url(../icons/other_filters.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
