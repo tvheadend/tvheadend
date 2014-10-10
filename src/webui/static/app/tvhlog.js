@@ -55,6 +55,7 @@ tvheadend.tvhlog = function(panel, index) {
 
     var helpButton = new Ext.Button({
         text: 'Help',
+		iconCls: 'help',
         handler: function() {
             new tvheadend.help('Debug Configuration', 'config_tvhlog.html');
         }
@@ -72,7 +73,7 @@ tvheadend.tvhlog = function(panel, index) {
 
     var confpanel = new Ext.form.FormPanel({
         title: 'Debugging',
-        iconCls: 'wrench',
+        iconCls: 'debug',
         border: false,
         bodyStyle: 'padding:15px',
         labelAlign: 'left',

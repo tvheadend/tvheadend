@@ -298,6 +298,7 @@ tvheadend.epggrab = function(panel, index) {
 
     var helpButton = new Ext.Button({
         text: 'Help',
+		iconCls: 'help',
         handler: function() {
             new tvheadend.help('EPG Grab Configuration', 'config_epggrab.html');
         }

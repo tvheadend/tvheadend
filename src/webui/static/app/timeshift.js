@@ -90,6 +90,7 @@ tvheadend.timeshift = function(panel, index) {
 
     var helpButton = new Ext.Button({
         text: 'Help',
+		iconCls: 'help',
         handler: function() {
             new tvheadend.help('Timeshift Configuration', 'config_timeshift.html');
         }
