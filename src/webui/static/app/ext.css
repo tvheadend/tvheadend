@@ -402,6 +402,10 @@
     background-image: url(../icons/auto_rec.png) !important;
 }
 
+.debug{
+    background-image: url(../icons/debug.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;

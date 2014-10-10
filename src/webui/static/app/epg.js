@@ -724,6 +724,7 @@ tvheadend.epg = function() {
         {
             text: 'Watch TV',
             iconCls: 'watchTv',
+			tooltip: 'Watch TV online in the window by web',
             handler: function() {
                 new tvheadend.VideoPlayer();
             }
