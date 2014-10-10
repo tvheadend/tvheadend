@@ -348,7 +348,7 @@ tvheadend.autorec_editor = function(panel, index) {
         url: 'api/dvr/autorec',
         titleS: 'DVR AutoRec Entry',
         titleP: 'DVR AutoRec Entries',
-        iconCls: 'wand',
+        iconCls: 'autoRec',
         tabIndex: index,
         columns: {
             enabled:      { width: 50 },
