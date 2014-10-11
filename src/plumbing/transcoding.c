@@ -473,7 +473,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
-      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
+      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", n->pkt_pts);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
@@ -502,7 +502,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodecContext *ictx, *octx;
   AVPacket packet;
   int length, len;
-  uint32_t frame_bytes;
   streaming_message_t *sm;
   th_pkt_t *n;
   audio_stream_t *as = (audio_stream_t*)ts;
@@ -549,16 +548,15 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  length = avcodec_decode_audio4( ictx
-                                 , frame
-                                 , &got_frame
-                                 , &packet);
+  length = avcodec_decode_audio4(ictx, frame, &got_frame, &packet);
   av_free_packet(&packet);
 
-  tvhtrace("transcode", "Decoded packet. length-consumed=%d from in-length=%zu, got_frame=%d", length, pktbuf_len(pkt->pkt_payload),got_frame);
+  tvhtrace("transcode", "audio decode: consumed=%d size=%zu, got=%d", length, pktbuf_len(pkt->pkt_payload), got_frame);
 
-  if (!got_frame)
+  if (!got_frame) {
     tvhtrace("transcode", "Did not have a full frame in the packet");
+    goto cleanup;
+  }
 
   if (length < 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
@@ -567,9 +565,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (length != pktbuf_len(pkt->pkt_payload)) {
+  if (length != pktbuf_len(pkt->pkt_payload))
     tvhtrace("transcode", "Not all data from packet was decoded. length=%d from packet.size=%zu", length, pktbuf_len(pkt->pkt_payload));
-  }
 
   if (length == 0 || !got_frame) {
     tvhtrace("transcode", "Not yet enough data for decoding");
@@ -734,13 +731,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhtrace("transcode", "converting audio");
 
       tvhtrace("transcode", "ictx->channels:%d", ictx->channels);
-      tvhtrace("transcode", "ictx->channel_layout:%" PRIu64, ictx->channel_layout);
+      tvhtrace("transcode", "ictx->channel_layout:%" PRIi64, ictx->channel_layout);
       tvhtrace("transcode", "ictx->sample_rate:%d", ictx->sample_rate);
       tvhtrace("transcode", "ictx->sample_fmt:%d", ictx->sample_fmt);
       tvhtrace("transcode", "ictx->bit_rate:%d", ictx->bit_rate);
 
       tvhtrace("transcode", "octx->channels:%d", octx->channels);
-      tvhtrace("transcode", "octx->channel_layout:%" PRIu64, octx->channel_layout);
+      tvhtrace("transcode", "octx->channel_layout:%" PRIi64, octx->channel_layout);
       tvhtrace("transcode", "octx->sample_rate:%d", octx->sample_rate);
       tvhtrace("transcode", "octx->sample_fmt:%d", octx->sample_fmt);
       tvhtrace("transcode", "octx->bit_rate:%d", octx->bit_rate);
@@ -815,20 +812,20 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    int out_samples = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
-                                        frame->extended_data, 0, frame->nb_samples);
-    tvhlog(LOG_DEBUG, "transcode", "after avresample_convert. out_samples=%d",out_samples);
+    length = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
+                                frame->extended_data, 0, frame->nb_samples);
+    tvhtrace("transcode", "avresample_convert: out=%d", length);
     while (avresample_available(as->resample_context) > 0) {
-      out_samples = avresample_read(as->resample_context, output, frame->nb_samples);
+      length = avresample_read(as->resample_context, output, frame->nb_samples);
 
-      if (out_samples > 0) {
-        if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + out_samples) < 0) {
+      if (length > 0) {
+        if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + length) < 0) {
           tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
           ts->ts_index = 0;
           goto cleanup;
         }
 
-        if (av_audio_fifo_write(as->fifo, (void **)output, out_samples) < out_samples) {
+        if (av_audio_fifo_write(as->fifo, (void **)output, length) < length) {
           tvhlog(LOG_ERR, "transcode", "Could not write to FIFO.");
           ts->ts_index = 0;
           goto cleanup;
@@ -846,8 +843,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 */
 
-  }
-  else {
+  } else {
+
     tvhlog(LOG_DEBUG, "transcode", "No conversion needed");
     if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + frame->nb_samples) < 0) {
       tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
@@ -863,12 +860,10 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   }
 
-  as->aud_dec_pts    += pkt->pkt_duration;
-
-  frame_bytes = av_get_bytes_per_sample(octx->sample_fmt) * octx->frame_size * octx->channels;
+  as->aud_dec_pts += pkt->pkt_duration;
 
   while (av_audio_fifo_size(as->fifo) >= octx->frame_size) {
-    tvhlog(LOG_DEBUG, "transcode", "start encoding loop: av_audio_fifo_size:%d, octx->frame_size=%d", av_audio_fifo_size(as->fifo), octx->frame_size);
+    tvhtrace("transcode", "audio loop: fifo=%d, frame=%d", av_audio_fifo_size(as->fifo), octx->frame_size);
 
     av_frame_free(&frame);
     frame = av_frame_alloc();
@@ -885,51 +880,47 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    int samples_read;
-    if ((samples_read = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
+    if ((length = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
       tvhlog(LOG_ERR, "transcode", "Could not read data from FIFO.");
       ts->ts_index = 0;
       goto cleanup;
     }
 
-    tvhtrace("transcode", "before encoding: frame->linesize[0]=%d, samples_read=%d", frame->linesize[0], samples_read);
+    tvhtrace("transcode", "before encoding: linesize=%d, samples=%d", frame->linesize[0], length);
+
+    frame->pts = as->aud_enc_pts;
+    as->aud_enc_pts += (octx->frame_size * 90000) / octx->sample_rate;
 
     av_init_packet(&packet);
     packet.data = NULL;
     packet.size = 0;
-    int ret = avcodec_encode_audio2(octx,
-                                   &packet,
-                                   frame,
-                                   &got_packet_ptr);
-     tvhlog(LOG_DEBUG, "transcode", "encoded: packet.size=%d, ret=%d, got_packet_ptr=%d", packet.size, ret, got_packet_ptr);
+    length = avcodec_encode_audio2(octx, &packet, frame, &got_packet_ptr);
+    tvhlog(LOG_DEBUG, "transcode", "encoded: packet=%d, ret=%d, got=%d, pts=%" PRIi64, packet.size, length, got_packet_ptr, packet.pts);
 
-    if ((ret < 0) || (got_packet_ptr < -1)) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d:%d)", ret, got_packet_ptr);
+    if ((length < 0) || (got_packet_ptr < -1)) {
+
+      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d:%d)", length, got_packet_ptr);
       ts->ts_index = 0;
       goto cleanup;
 
     } else if (got_packet_ptr) {
-      length = packet.size;
-      n = pkt_alloc(packet.data, packet.size, as->aud_enc_pts, as->aud_enc_pts);
+
+      n = pkt_alloc(packet.data, packet.size, packet.pts, packet.pts);
       n->pkt_componentindex = ts->ts_index;
       n->pkt_frametype      = pkt->pkt_frametype;
       n->pkt_channels       = octx->channels;
       n->pkt_sri            = pkt->pkt_sri;
 
-      if (octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE)
-	n->pkt_duration = octx->coded_frame->pts - as->aud_enc_pts;
-      else
-	n->pkt_duration = frame_bytes*90000 / (2 * octx->channels * octx->sample_rate);
-
-      as->aud_enc_pts += n->pkt_duration;
+      n->pkt_duration = packet.duration;
 
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
-      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
+      tvhtrace("transcode", "deliver audio (pts = %" PRIi64 ", delay = %i)", n->pkt_pts, octx->delay);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
+
     }
 
     av_free_packet(&packet);
@@ -1068,7 +1059,7 @@ Minimal of 12 bytes.
     }
   }
 
-  tvhtrace("transcode", "deliver video (pts = %" PRIu64 ")", pkt->pkt_pts);
+  tvhtrace("transcode", "deliver video (pts = %" PRIu64 ")", n->pkt_pts);
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
