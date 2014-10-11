@@ -773,24 +773,34 @@ profile_transcode_work(profile_t *_pro, streaming_target_t *src,
 }
 
 static int
+profile_transcode_mc_valid(int mc)
+{
+  switch (mc) {
+  case MC_MATROSKA:
+  case MC_WEBM:
+  case MC_MPEGTS:
+  case MC_MPEGPS:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static int
 profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
                        muxer_config_t *m_cfg, int flags, size_t qsize)
 {
+  profile_transcode_t *pro = (profile_transcode_t *)_pro;
   muxer_config_t c;
 
   if (m_cfg)
     c = *m_cfg; /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
-  switch (c.m_type) {
-  case MC_MATROSKA:
-  case MC_WEBM:
-  case MC_MPEGTS:
-  case MC_MPEGPS:
-    break;
-  default:
-    c.m_type = MC_MATROSKA;
-    break;
+  if (!profile_transcode_mc_valid(c.m_type)) {
+    c.m_type = pro->pro_mc;
+    if (!profile_transcode_mc_valid(c.m_type))
+      c.m_type = MC_MATROSKA;
   }
 
   memset(prch, 0, sizeof(*prch));
