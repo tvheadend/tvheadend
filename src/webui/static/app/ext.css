@@ -382,6 +382,30 @@
     background-image: url(../icons/other_filters.png) !important;
 }
 
+.channels {
+    background-image: url(../icons/channels.png) !important;
+}
+
+.channelTags{
+    background-image: url(../icons/channel_tags.png) !important;
+}
+
+.help{
+    background-image: url(../icons/help.png) !important;
+}
+
+.watchTv{
+    background-image: url(../icons/watch_tv.png) !important;
+}
+
+.autoRec{
+    background-image: url(../icons/auto_rec.png) !important;
+}
+
+.debug{
+    background-image: url(../icons/debug.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;

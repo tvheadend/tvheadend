@@ -163,6 +163,8 @@ typedef struct capmt_caid_ecm {
   uint16_t cce_ecmpid;
   /** provider id */
   uint32_t cce_providerid;
+  /** service */
+  mpegts_service_t *cce_service;
 
   LIST_ENTRY(capmt_caid_ecm) cce_link;
 } capmt_caid_ecm_t;
@@ -800,7 +802,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_filters_t *cf;
   capmt_service_t *ct;
   mpegts_service_t *t;
-  elementary_stream_t *st;
+  capmt_caid_ecm_t *cce;
   int i;
 
   tvhtrace("capmt", "%s: setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
@@ -829,16 +831,13 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   /* ECM messages have the higher priority */
   t = NULL;
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
-    t = (mpegts_service_t *)ct->td_service;
-    pthread_mutex_lock(&t->s_stream_mutex);
-    TAILQ_FOREACH(st, &t->s_components, es_link) {
-      if (st->es_type == SCT_CA && st->es_pid == pid) {
+    LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
+      if (cce->cce_ecmpid == pid) {
         filter->flags = CAPMT_MSG_FAST;
+        t = cce->cce_service;
         break;
       }
-    }
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    if (st) break;
+    if (cce) break;
     t = NULL;
   }
   capmt_pid_add(capmt, adapter, pid, t);
@@ -1598,6 +1597,7 @@ capmt_caid_change(th_descrambler_t *td)
       cce->cce_caid   = c->caid;
       cce->cce_ecmpid = st->es_pid;
       cce->cce_providerid = c->providerid;
+      cce->cce_service = t;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
       ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
       change = 1;
@@ -1789,7 +1789,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   th_descrambler_t *td;
   mpegts_service_t *t = (mpegts_service_t*)s;
   elementary_stream_t *st;
-  int tuner = -1, i, change;
+  int tuner = -1, i, change = 0;
   char buf[512];
   
   lock_assert(&global_lock);
@@ -1807,23 +1807,20 @@ capmt_service_start(caclient_t *cac, service_t *s)
     tuner = lfe->lfe_adapter->la_dvb_number;
 #endif
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&capmt->capmt_mutex);
 
-  LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+  LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
     /* skip, if we already have this service */
-    if (ct->td_service == (service_t *)t) {
-      pthread_mutex_unlock(&capmt->capmt_mutex);
-      return;
-    }
-  }
+    if (ct->td_service == (service_t *)t)
+      goto fin;
 
   if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
                    capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET) {
     tvhlog(LOG_WARNING, "capmt",
            "%s: Virtual adapters are supported only in modes 3 and 4 (service \"%s\")",
            capmt_name(capmt), t->s_dvb_svcname);
-    pthread_mutex_unlock(&capmt->capmt_mutex);
-    return;
+    goto fin;
   }
 
   if (tuner < 0) {
@@ -1862,8 +1859,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
   if (capmt->capmt_seq == 8191 || capmt->capmt_seq == 0)
     capmt->capmt_seq = 1;
 
-  change = 0;
-  pthread_mutex_lock(&t->s_stream_mutex);
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     caid_t *c;
     if (t->s_dvb_prefcapid_lock == 2 &&
@@ -1886,7 +1881,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
       change = 1;
     }
   }
-  pthread_mutex_unlock(&t->s_stream_mutex);
 
   td = (th_descrambler_t *)ct;
   snprintf(buf, sizeof(buf), "capmt-%s-%i",
@@ -1904,7 +1898,9 @@ capmt_service_start(caclient_t *cac, service_t *s)
   /* wake-up idle thread */
   pthread_cond_signal(&capmt->capmt_cond);
 
+fin:
   pthread_mutex_unlock(&capmt->capmt_mutex);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 
   if (change)
     capmt_notify_server(capmt, NULL, 0);
