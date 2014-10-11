@@ -907,6 +907,72 @@ profile_init(void)
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
   }
+
+#if ENABLE_LIBAV
+  profile_t *pro;
+  const char *name;
+
+  name = "webtv-vp8-vorbis-webm";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile VP8/Vorbis/WEBM");
+    htsmsg_add_s32 (conf, "container", MC_WEBM);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_VP8);
+    htsmsg_add_s32 (conf, "acodec", SCT_VORBIS);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+  name = "webtv-h264-aac-mpegts";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/MPEG-TS");
+    htsmsg_add_s32 (conf, "container", MC_MPEGTS);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_H264);
+    htsmsg_add_s32 (conf, "acodec", SCT_AAC);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+  name = "webtv-h264-aac-matroska";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/Matroska");
+    htsmsg_add_s32 (conf, "container", MC_MATROSKA);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_H264);
+    htsmsg_add_s32 (conf, "acodec", SCT_AAC);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+#endif
 }
 
 void
