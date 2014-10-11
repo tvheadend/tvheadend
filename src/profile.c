@@ -505,6 +505,8 @@ profile_matroska_builder(void)
 
 #if ENABLE_LIBAV
 
+static int profile_transcode_experimental_codecs = 1;
+
 /*
  *  Transcoding + packet-like muxers
  */
@@ -600,7 +602,7 @@ profile_class_vcodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISVIDEO(i))
       continue;
@@ -629,7 +631,7 @@ profile_class_acodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISAUDIO(i))
       continue;
@@ -658,7 +660,7 @@ profile_class_scodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISSUBTITLE(i))
       continue;
@@ -835,6 +837,8 @@ profile_init(void)
   profile_register(&profile_mpegts_pass_class, profile_mpegts_pass_builder);
   profile_register(&profile_matroska_class, profile_matroska_builder);
 #if ENABLE_LIBAV
+  profile_transcode_experimental_codecs =
+    getenv("TVHEADEND_LIBAV_NO_EXPERIMENTAL_CODECS") ? 0 : 1;
   profile_register(&profile_transcode_class, profile_transcode_builder);
 #endif
 

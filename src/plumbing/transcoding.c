@@ -135,8 +135,11 @@ static AVCodecContext *
 avcodec_alloc_context3_tvh(const AVCodec *codec)
 {
   AVCodecContext *ctx = avcodec_alloc_context3(codec);
-  if (ctx)
+  if (ctx) {
     ctx->codec_id = AV_CODEC_ID_NONE;
+    ctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+
+  }
   return ctx;
 }
 
@@ -205,7 +208,6 @@ transcoder_get_encoder(streaming_component_type_t ty)
 	   streaming_component_type2txt(ty));
     return NULL;
   }
-
   tvhlog(LOG_DEBUG, "transcode", "Using encoder %s", codec->name);
 
   return codec;
@@ -1933,7 +1935,7 @@ transcoder_destroy(streaming_target_t *st)
  * 
  */ 
 htsmsg_t *
-transcoder_get_capabilities(void)
+transcoder_get_capabilities(int experimental)
 {
   AVCodec *p = NULL;
   streaming_component_type_t sct;
@@ -1945,6 +1947,9 @@ transcoder_get_capabilities(void)
       continue;
 
     if (!WORKING_ENCODER(p->id))
+      continue;
+
+    if ((p->capabilities & CODEC_CAP_EXPERIMENTAL) && !experimental)
       continue;
 
     sct = codec_id2streaming_component_type(p->id);
