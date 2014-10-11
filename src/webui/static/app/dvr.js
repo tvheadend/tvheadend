@@ -161,7 +161,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         gridURL: 'api/dvr/entry/grid_upcoming',
         titleS: 'Upcoming Recording',
         titleP: 'Upcoming Recordings',
-        iconCls: 'clock',
+        iconCls: 'upcomingRec',
         tabIndex: index,
         add: {
             url: 'api/dvr/entry',
@@ -233,7 +233,7 @@ tvheadend.dvr_finished = function(panel, index) {
         readonly: true,
         titleS: 'Finished Recording',
         titleP: 'Finished Recordings',
-        iconCls: 'television',
+        iconCls: 'finishedRec',
         tabIndex: index,
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
