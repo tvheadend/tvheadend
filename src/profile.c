@@ -156,6 +156,16 @@ profile_class_delete(idnode_t *self)
   profile_delete(pro, 1);
 }
 
+static uint32_t
+profile_class_enabled_opts(void *o)
+{
+  profile_t *pro = o;
+  uint32_t r = 0;
+  if (pro && profile_default == pro)
+    r |= PO_RDONLY;
+  return r;
+}
+
 static const void *
 profile_class_class_get(void *o)
 {
@@ -194,6 +204,16 @@ profile_class_default_set(void *o, const void *v)
   return 0;
 }
 
+static uint32_t
+profile_class_name_opts(void *o)
+{
+  profile_t *pro = o;
+  uint32_t r = 0;
+  if (pro && pro->pro_shield)
+    r |= PO_RDONLY;
+  return r;
+}
+
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
@@ -216,6 +236,7 @@ const idclass_t profile_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(profile_t, pro_enabled),
+      .get_opts = profile_class_enabled_opts,
     },
     {
       .type     = PT_BOOL,
@@ -229,6 +250,7 @@ const idclass_t profile_class =
       .id       = "name",
       .name     = "Profile Name",
       .off      = offsetof(profile_t, pro_name),
+      .get_opts = profile_class_name_opts,
       .notify   = idnode_notify_title_changed,
     },
     {
@@ -505,6 +527,8 @@ profile_matroska_builder(void)
 
 #if ENABLE_LIBAV
 
+static int profile_transcode_experimental_codecs = 1;
+
 /*
  *  Transcoding + packet-like muxers
  */
@@ -600,7 +624,7 @@ profile_class_vcodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISVIDEO(i))
       continue;
@@ -629,7 +653,7 @@ profile_class_acodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISAUDIO(i))
       continue;
@@ -658,7 +682,7 @@ profile_class_scodec_list(void *o)
   htsmsg_add_s32(e, "key", 0);
   htsmsg_add_str(e, "val", "Copy codec type");
   htsmsg_add_msg(l, NULL, e);
-  c = transcoder_get_capabilities();
+  c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   for (i = 0; i <= SCT_LAST; i++) {
     if (!SCT_ISSUBTITLE(i))
       continue;
@@ -771,24 +795,34 @@ profile_transcode_work(profile_t *_pro, streaming_target_t *src,
 }
 
 static int
+profile_transcode_mc_valid(int mc)
+{
+  switch (mc) {
+  case MC_MATROSKA:
+  case MC_WEBM:
+  case MC_MPEGTS:
+  case MC_MPEGPS:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static int
 profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
                        muxer_config_t *m_cfg, int flags, size_t qsize)
 {
+  profile_transcode_t *pro = (profile_transcode_t *)_pro;
   muxer_config_t c;
 
   if (m_cfg)
     c = *m_cfg; /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
-  switch (c.m_type) {
-  case MC_MATROSKA:
-  case MC_WEBM:
-  case MC_MPEGTS:
-  case MC_MPEGPS:
-    break;
-  default:
-    c.m_type = MC_MATROSKA;
-    break;
+  if (!profile_transcode_mc_valid(c.m_type)) {
+    c.m_type = pro->pro_mc;
+    if (!profile_transcode_mc_valid(c.m_type))
+      c.m_type = MC_MATROSKA;
   }
 
   memset(prch, 0, sizeof(*prch));
@@ -835,6 +869,8 @@ profile_init(void)
   profile_register(&profile_mpegts_pass_class, profile_mpegts_pass_builder);
   profile_register(&profile_matroska_class, profile_matroska_builder);
 #if ENABLE_LIBAV
+  profile_transcode_experimental_codecs =
+    getenv("TVHEADEND_LIBAV_NO_EXPERIMENTAL_CODECS") ? 0 : 1;
   profile_register(&profile_transcode_class, profile_transcode_builder);
 #endif
 
@@ -871,6 +907,72 @@ profile_init(void)
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
   }
+
+#if ENABLE_LIBAV
+  profile_t *pro;
+  const char *name;
+
+  name = "webtv-vp8-vorbis-webm";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile VP8/Vorbis/WEBM");
+    htsmsg_add_s32 (conf, "container", MC_WEBM);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_VP8);
+    htsmsg_add_s32 (conf, "acodec", SCT_VORBIS);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+  name = "webtv-h264-aac-mpegts";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/MPEG-TS");
+    htsmsg_add_s32 (conf, "container", MC_MPEGTS);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_H264);
+    htsmsg_add_s32 (conf, "acodec", SCT_AAC);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+  name = "webtv-h264-aac-matroska";
+  pro = profile_find_by_name(name);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-transcode");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/Matroska");
+    htsmsg_add_s32 (conf, "container", MC_MATROSKA);
+    htsmsg_add_u32 (conf, "resolution", 384);
+    htsmsg_add_u32 (conf, "channels", 2);
+    htsmsg_add_s32 (conf, "vcodec", SCT_H264);
+    htsmsg_add_s32 (conf, "acodec", SCT_AAC);
+    htsmsg_add_s32 (conf, "scodec", SCT_NONE);
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+#endif
 }
 
 void
