@@ -156,6 +156,16 @@ profile_class_delete(idnode_t *self)
   profile_delete(pro, 1);
 }
 
+static uint32_t
+profile_class_enabled_opts(void *o)
+{
+  profile_t *pro = o;
+  uint32_t r = 0;
+  if (pro && profile_default == pro)
+    r |= PO_RDONLY;
+  return r;
+}
+
 static const void *
 profile_class_class_get(void *o)
 {
@@ -194,6 +204,16 @@ profile_class_default_set(void *o, const void *v)
   return 0;
 }
 
+static uint32_t
+profile_class_name_opts(void *o)
+{
+  profile_t *pro = o;
+  uint32_t r = 0;
+  if (pro && pro->pro_shield)
+    r |= PO_RDONLY;
+  return r;
+}
+
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
@@ -216,6 +236,7 @@ const idclass_t profile_class =
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(profile_t, pro_enabled),
+      .get_opts = profile_class_enabled_opts,
     },
     {
       .type     = PT_BOOL,
@@ -229,6 +250,7 @@ const idclass_t profile_class =
       .id       = "name",
       .name     = "Profile Name",
       .off      = offsetof(profile_t, pro_name),
+      .get_opts = profile_class_name_opts,
       .notify   = idnode_notify_title_changed,
     },
     {
