@@ -21,9 +21,9 @@
 #include "htsmsg.h"
 
 typedef struct transcoder_prop {
-  streaming_component_type_t tp_vcodec;
-  streaming_component_type_t tp_acodec;
-  streaming_component_type_t tp_scodec;
+  char     tp_vcodec[32];
+  char     tp_acodec[32];
+  char     tp_scodec[32];
 
   int8_t   tp_channels;
   int32_t  tp_bandwidth;
@@ -36,7 +36,7 @@ extern uint32_t transcoding_enabled;
 streaming_target_t *transcoder_create (streaming_target_t *output);
 void                transcoder_destroy(streaming_target_t *tr);
 
-htsmsg_t *transcoder_get_capabilities(void);
+htsmsg_t *transcoder_get_capabilities(int experimental);
 void transcoder_set_properties  (streaming_target_t *tr, 
 				 transcoder_props_t *prop);
 

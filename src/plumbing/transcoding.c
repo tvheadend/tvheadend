@@ -135,8 +135,11 @@ static AVCodecContext *
 avcodec_alloc_context3_tvh(const AVCodec *codec)
 {
   AVCodecContext *ctx = avcodec_alloc_context3(codec);
-  if (ctx)
+  if (ctx) {
     ctx->codec_id = AV_CODEC_ID_NONE;
+    ctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+
+  }
   return ctx;
 }
 
@@ -181,31 +184,15 @@ transcoder_get_decoder(streaming_component_type_t ty)
  * 
  */
 static AVCodec *
-transcoder_get_encoder(streaming_component_type_t ty)
+transcoder_get_encoder(const char *codec_name)
 {
-  enum AVCodecID codec_id;
   AVCodec *codec;
 
-  codec_id = streaming_component_type2codec_id(ty);
-  if (codec_id == AV_CODEC_ID_NONE) {
-    tvhlog(LOG_ERR, "transcode", "Unable to find %s codec", 
-	   streaming_component_type2txt(ty));
-    return NULL;
-  }
-
-  if (!WORKING_ENCODER(codec_id)) {
-    tvhlog(LOG_WARNING, "transcode", "Unsupported output codec %s", 
-	   streaming_component_type2txt(ty));
-    return NULL;
-  }
-
-  codec = avcodec_find_encoder(codec_id);
+  codec = avcodec_find_encoder_by_name(codec_name);
   if (!codec) {
-    tvhlog(LOG_ERR, "transcode", "Unable to find %s encoder", 
-	   streaming_component_type2txt(ty));
+    tvhlog(LOG_ERR, "transcode", "Unable to find %s encoder", codec_name);
     return NULL;
   }
-
   tvhlog(LOG_DEBUG, "transcode", "Using encoder %s", codec->name);
 
   return codec;
@@ -471,7 +458,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
-      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
+      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", n->pkt_pts);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
@@ -500,7 +487,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodecContext *ictx, *octx;
   AVPacket packet;
   int length, len;
-  uint32_t frame_bytes;
   streaming_message_t *sm;
   th_pkt_t *n;
   audio_stream_t *as = (audio_stream_t*)ts;
@@ -547,16 +533,15 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  length = avcodec_decode_audio4( ictx
-                                 , frame
-                                 , &got_frame
-                                 , &packet);
+  length = avcodec_decode_audio4(ictx, frame, &got_frame, &packet);
   av_free_packet(&packet);
 
-  tvhtrace("transcode", "Decoded packet. length-consumed=%d from in-length=%zu, got_frame=%d", length, pktbuf_len(pkt->pkt_payload),got_frame);
+  tvhtrace("transcode", "audio decode: consumed=%d size=%zu, got=%d", length, pktbuf_len(pkt->pkt_payload), got_frame);
 
-  if (!got_frame)
+  if (!got_frame) {
     tvhtrace("transcode", "Did not have a full frame in the packet");
+    goto cleanup;
+  }
 
   if (length < 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
@@ -565,9 +550,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (length != pktbuf_len(pkt->pkt_payload)) {
+  if (length != pktbuf_len(pkt->pkt_payload))
     tvhtrace("transcode", "Not all data from packet was decoded. length=%d from packet.size=%zu", length, pktbuf_len(pkt->pkt_payload));
-  }
 
   if (length == 0 || !got_frame) {
     tvhtrace("transcode", "Not yet enough data for decoding");
@@ -732,13 +716,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhtrace("transcode", "converting audio");
 
       tvhtrace("transcode", "ictx->channels:%d", ictx->channels);
-      tvhtrace("transcode", "ictx->channel_layout:%" PRIu64, ictx->channel_layout);
+      tvhtrace("transcode", "ictx->channel_layout:%" PRIi64, ictx->channel_layout);
       tvhtrace("transcode", "ictx->sample_rate:%d", ictx->sample_rate);
       tvhtrace("transcode", "ictx->sample_fmt:%d", ictx->sample_fmt);
       tvhtrace("transcode", "ictx->bit_rate:%d", ictx->bit_rate);
 
       tvhtrace("transcode", "octx->channels:%d", octx->channels);
-      tvhtrace("transcode", "octx->channel_layout:%" PRIu64, octx->channel_layout);
+      tvhtrace("transcode", "octx->channel_layout:%" PRIi64, octx->channel_layout);
       tvhtrace("transcode", "octx->sample_rate:%d", octx->sample_rate);
       tvhtrace("transcode", "octx->sample_fmt:%d", octx->sample_fmt);
       tvhtrace("transcode", "octx->bit_rate:%d", octx->bit_rate);
@@ -813,20 +797,20 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    int out_samples = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
-                                        frame->extended_data, 0, frame->nb_samples);
-    tvhlog(LOG_DEBUG, "transcode", "after avresample_convert. out_samples=%d",out_samples);
+    length = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
+                                frame->extended_data, 0, frame->nb_samples);
+    tvhtrace("transcode", "avresample_convert: out=%d", length);
     while (avresample_available(as->resample_context) > 0) {
-      out_samples = avresample_read(as->resample_context, output, frame->nb_samples);
+      length = avresample_read(as->resample_context, output, frame->nb_samples);
 
-      if (out_samples > 0) {
-        if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + out_samples) < 0) {
+      if (length > 0) {
+        if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + length) < 0) {
           tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
           ts->ts_index = 0;
           goto cleanup;
         }
 
-        if (av_audio_fifo_write(as->fifo, (void **)output, out_samples) < out_samples) {
+        if (av_audio_fifo_write(as->fifo, (void **)output, length) < length) {
           tvhlog(LOG_ERR, "transcode", "Could not write to FIFO.");
           ts->ts_index = 0;
           goto cleanup;
@@ -844,8 +828,8 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 */
 
-  }
-  else {
+  } else {
+
     tvhlog(LOG_DEBUG, "transcode", "No conversion needed");
     if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + frame->nb_samples) < 0) {
       tvhlog(LOG_ERR, "transcode", "Could not reallocate FIFO.");
@@ -861,12 +845,10 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   }
 
-  as->aud_dec_pts    += pkt->pkt_duration;
-
-  frame_bytes = av_get_bytes_per_sample(octx->sample_fmt) * octx->frame_size * octx->channels;
+  as->aud_dec_pts += pkt->pkt_duration;
 
   while (av_audio_fifo_size(as->fifo) >= octx->frame_size) {
-    tvhlog(LOG_DEBUG, "transcode", "start encoding loop: av_audio_fifo_size:%d, octx->frame_size=%d", av_audio_fifo_size(as->fifo), octx->frame_size);
+    tvhtrace("transcode", "audio loop: fifo=%d, frame=%d", av_audio_fifo_size(as->fifo), octx->frame_size);
 
     av_frame_free(&frame);
     frame = av_frame_alloc();
@@ -883,51 +865,47 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    int samples_read;
-    if ((samples_read = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
+    if ((length = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
       tvhlog(LOG_ERR, "transcode", "Could not read data from FIFO.");
       ts->ts_index = 0;
       goto cleanup;
     }
 
-    tvhtrace("transcode", "before encoding: frame->linesize[0]=%d, samples_read=%d", frame->linesize[0], samples_read);
+    tvhtrace("transcode", "before encoding: linesize=%d, samples=%d", frame->linesize[0], length);
+
+    frame->pts = as->aud_enc_pts;
+    as->aud_enc_pts += (octx->frame_size * 90000) / octx->sample_rate;
 
     av_init_packet(&packet);
     packet.data = NULL;
     packet.size = 0;
-    int ret = avcodec_encode_audio2(octx,
-                                   &packet,
-                                   frame,
-                                   &got_packet_ptr);
-     tvhlog(LOG_DEBUG, "transcode", "encoded: packet.size=%d, ret=%d, got_packet_ptr=%d", packet.size, ret, got_packet_ptr);
+    length = avcodec_encode_audio2(octx, &packet, frame, &got_packet_ptr);
+    tvhlog(LOG_DEBUG, "transcode", "encoded: packet=%d, ret=%d, got=%d, pts=%" PRIi64, packet.size, length, got_packet_ptr, packet.pts);
 
-    if ((ret < 0) || (got_packet_ptr < -1)) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d:%d)", ret, got_packet_ptr);
+    if ((length < 0) || (got_packet_ptr < -1)) {
+
+      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d:%d)", length, got_packet_ptr);
       ts->ts_index = 0;
       goto cleanup;
 
     } else if (got_packet_ptr) {
-      length = packet.size;
-      n = pkt_alloc(packet.data, packet.size, as->aud_enc_pts, as->aud_enc_pts);
+
+      n = pkt_alloc(packet.data, packet.size, packet.pts, packet.pts);
       n->pkt_componentindex = ts->ts_index;
       n->pkt_frametype      = pkt->pkt_frametype;
       n->pkt_channels       = octx->channels;
       n->pkt_sri            = pkt->pkt_sri;
 
-      if (octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE)
-	n->pkt_duration = octx->coded_frame->pts - as->aud_enc_pts;
-      else
-	n->pkt_duration = frame_bytes*90000 / (2 * octx->channels * octx->sample_rate);
-
-      as->aud_enc_pts += n->pkt_duration;
+      n->pkt_duration = packet.duration;
 
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
-      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", pkt->pkt_pts);
+      tvhtrace("transcode", "deliver audio (pts = %" PRIi64 ", delay = %i)", n->pkt_pts, octx->delay);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
+
     }
 
     av_free_packet(&packet);
@@ -949,14 +927,14 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 /**
  *
  */
-static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *out, int length, AVCodecContext *octx)
+static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, AVPacket *epkt, AVCodecContext *octx)
 {
   streaming_message_t *sm;
   th_pkt_t *n;
 
-  if (length <= 0) {
-    if (length) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
+  if (epkt->size <= 0) {
+    if (epkt->size) {
+      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", epkt->size);
       ts->ts_index = 0;
     }
 
@@ -966,7 +944,7 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
   if (!octx->coded_frame)
     return;
 
-  n = pkt_alloc(out, length, octx->coded_frame->pkt_pts, octx->coded_frame->pkt_dts);
+  n = pkt_alloc(epkt->data, epkt->size, epkt->pts, epkt->dts);
 
   switch (octx->coded_frame->pict_type) {
   case AV_PICTURE_TYPE_I:
@@ -1006,6 +984,7 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
     n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
   else {
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+      uint8_t *out = epkt->data;
       uint32_t *mpeg2_header = (uint32_t *)out;
       if (*mpeg2_header == 0xb3010000) {  // SEQ_START_CODE
 	// Need to determine lentgh of header.
@@ -1066,7 +1045,7 @@ Minimal of 12 bytes.
     }
   }
 
-  tvhtrace("transcode", "deliver video (pts = %" PRIu64 ")", pkt->pkt_pts);
+  tvhtrace("transcode", "deliver video (pts = %" PRIu64 ")", n->pkt_pts);
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
@@ -1309,10 +1288,8 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (got_output) {
-    send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
-  }
-
+  if (got_output)
+    send_video_packet(ts, pkt, &packet2, octx);
 
   av_free_packet(&packet2);
 #endif
@@ -1423,11 +1400,12 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   subtitle_stream_t *ss;
   AVCodec *icodec, *ocodec;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_scodec == SCT_NONE)
+  if (tp->tp_scodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_scodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_scodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1436,13 +1414,15 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   else if (!(ocodec = transcoder_get_encoder(tp->tp_scodec)))
     return transcoder_init_stream(t, ssc);
 
-  if (tp->tp_scodec == ssc->ssc_type)
+  sct = codec_id2streaming_component_type(ocodec->id);
+
+  if (sct == ssc->ssc_type)
     return transcoder_init_stream(t, ssc);
 
   ss = calloc(1, sizeof(subtitle_stream_t));
 
   ss->ts_index      = ssc->ssc_index;
-  ss->ts_type       = tp->tp_scodec;
+  ss->ts_type       = sct;
   ss->ts_target     = t->t_output;
   ss->ts_handle_pkt = transcoder_stream_subtitle;
   ss->ts_destroy    = transcoder_destroy_subtitle;
@@ -1460,7 +1440,7 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
 	 streaming_component_type2txt(ssc->ssc_type),
 	 streaming_component_type2txt(ss->ts_type));
 
-  ssc->ssc_type = tp->tp_scodec;
+  ssc->ssc_type = sct;
   ssc->ssc_gh = NULL;
 
   return 1;
@@ -1513,11 +1493,12 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   transcoder_stream_t *ts;
   AVCodec *icodec, *ocodec;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_acodec == SCT_NONE)
+  if (tp->tp_acodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_acodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_acodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1530,13 +1511,15 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
     if (SCT_ISAUDIO(ts->ts_type))
        return 0;
 
-  if (tp->tp_acodec == ssc->ssc_type)
+  sct = codec_id2streaming_component_type(ocodec->id);
+
+  if (sct == ssc->ssc_type)
     return transcoder_init_stream(t, ssc);
 
   as = calloc(1, sizeof(audio_stream_t));
 
   as->ts_index      = ssc->ssc_index;
-  as->ts_type       = tp->tp_acodec;
+  as->ts_type       = sct;
   as->ts_target     = t->t_output;
   as->ts_handle_pkt = transcoder_stream_audio;
   as->ts_destroy    = transcoder_destroy_audio;
@@ -1566,7 +1549,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 	 streaming_component_type2txt(ssc->ssc_type),
 	 streaming_component_type2txt(as->ts_type));
 
-  ssc->ssc_type     = tp->tp_acodec;
+  ssc->ssc_type     = sct;
   ssc->ssc_gh       = NULL;
 
   // resampling not implemented yet
@@ -1628,11 +1611,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   AVCodec *icodec, *ocodec;
   double aspect;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_vcodec == SCT_NONE)
+  if (tp->tp_vcodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_vcodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_vcodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1641,10 +1625,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   else if (!(ocodec = transcoder_get_encoder(tp->tp_vcodec)))
     return transcoder_init_stream(t, ssc);
 
+  sct = codec_id2streaming_component_type(ocodec->id);
+
   vs = calloc(1, sizeof(video_stream_t));
 
   vs->ts_index      = ssc->ssc_index;
-  vs->ts_type       = tp->tp_vcodec;
+  vs->ts_type       = sct;
   vs->ts_target     = t->t_output;
   vs->ts_handle_pkt = transcoder_stream_video;
   vs->ts_destroy    = transcoder_destroy_video;
@@ -1690,7 +1676,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 	 vs->vid_width,
 	 vs->vid_height);
 
-  ssc->ssc_type   = tp->tp_vcodec;
+  ssc->ssc_type   = sct;
   ssc->ssc_width  = vs->vid_width;
   ssc->ssc_height = vs->vid_height;
   ssc->ssc_gh     = NULL;
@@ -1719,7 +1705,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
       continue;
 
     if (SCT_ISVIDEO(ssc->ssc_type)) {
-      if (t->t_props.tp_vcodec == SCT_NONE)
+      if (t->t_props.tp_vcodec[0] == '\0')
 	video = 0;
       else if (t->t_props.tp_vcodec == SCT_UNKNOWN)
 	video++;
@@ -1727,7 +1713,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 	video = 1;
 
     } else if (SCT_ISAUDIO(ssc->ssc_type)) {
-      if (t->t_props.tp_acodec == SCT_NONE)
+      if (t->t_props.tp_acodec[0] == '\0')
 	audio = 0;
       else if (t->t_props.tp_acodec == SCT_UNKNOWN)
 	audio++;
@@ -1735,7 +1721,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 	audio = 1;
 
     } else if (SCT_ISSUBTITLE(ssc->ssc_type)) {
-      if (t->t_props.tp_scodec == SCT_NONE)
+      if (t->t_props.tp_scodec[0] == '\0')
 	subtitle = 0;
       else if (t->t_props.tp_scodec == SCT_UNKNOWN)
 	subtitle++;
@@ -1905,9 +1891,9 @@ transcoder_set_properties(streaming_target_t *st,
   transcoder_t *t = (transcoder_t *)st;
   transcoder_props_t *tp = &t->t_props;
 
-  tp->tp_vcodec     = props->tp_vcodec;
-  tp->tp_acodec     = props->tp_acodec;
-  tp->tp_scodec     = props->tp_scodec;
+  strncpy(tp->tp_vcodec, props->tp_vcodec, sizeof(tp->tp_vcodec)-1);
+  strncpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec)-1);
+  strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
   tp->tp_channels   = props->tp_channels;
   tp->tp_bandwidth  = props->tp_bandwidth;
   tp->tp_resolution = props->tp_resolution;
@@ -1933,11 +1919,11 @@ transcoder_destroy(streaming_target_t *st)
  * 
  */ 
 htsmsg_t *
-transcoder_get_capabilities(void)
+transcoder_get_capabilities(int experimental)
 {
   AVCodec *p = NULL;
   streaming_component_type_t sct;
-  htsmsg_t *array = htsmsg_create_list();
+  htsmsg_t *array = htsmsg_create_list(), *m;
 
   while ((p = av_codec_next(p))) {
 
@@ -1947,11 +1933,20 @@ transcoder_get_capabilities(void)
     if (!WORKING_ENCODER(p->id))
       continue;
 
+    if ((p->capabilities & CODEC_CAP_EXPERIMENTAL) && !experimental)
+      continue;
+
     sct = codec_id2streaming_component_type(p->id);
     if (sct == SCT_NONE)
       continue;
 
-    htsmsg_add_s32(array, NULL, sct);
+    m = htsmsg_create_map();
+    htsmsg_add_s32(m, "type", sct);
+    htsmsg_add_u32(m, "id", p->id);
+    htsmsg_add_str(m, "name", p->name);
+    if (p->long_name)
+      htsmsg_add_str(m, "long_name", p->long_name);
+    htsmsg_add_msg(array, NULL, m);
   }
   return array;
 }

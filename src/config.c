@@ -1041,6 +1041,46 @@ config_migrate_v13 ( void )
   }
 }
 
+static const char *
+config_migrate_v14_codec(int i)
+{
+  switch (i) {
+  case 1: return "mpeg2video";
+  case 2: return "mp2";
+  case 3: return "libx264";
+  case 4: return "ac3";
+  case 8: return "aac";
+  case 13: return "libvpx";
+  case 14: return "libvorbis";
+  default: return "";
+  }
+}
+
+static void
+config_migrate_v14 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  int i;
+
+  if ((c = hts_settings_load("profile")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (!htsmsg_get_s32(e, "vcodec", &i)) {
+        htsmsg_delete_field(e, "vcodec");
+        htsmsg_set_str(e, "vcodec", config_migrate_v14_codec(i));
+      }
+      if (!htsmsg_get_s32(e, "acodec", &i)) {
+        htsmsg_delete_field(e, "acodec");
+        htsmsg_set_str(e, "acodec", config_migrate_v14_codec(i));
+      }
+      if (!htsmsg_get_s32(e, "scodec", &i))
+        htsmsg_delete_field(e, "scodec");
+      hts_settings_save(e, "profile/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1142,7 +1182,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v10,
   config_migrate_v11,
   config_migrate_v12,
-  config_migrate_v13
+  config_migrate_v13,
+  config_migrate_v14
 };
 
 /*

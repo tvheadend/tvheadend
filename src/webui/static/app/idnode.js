@@ -129,6 +129,7 @@ tvheadend.idnode_filter_fields = function(d, list)
                   break;
               }
     } else {
+        var o = list.split(',');
         for (var i = 0; i < o.length; i++)
            for (var j = 0; j < d.length; j++)
               if (d[j].id === o[i]) {
