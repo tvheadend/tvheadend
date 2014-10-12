@@ -927,14 +927,14 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 /**
  *
  */
-static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *out, int length, AVCodecContext *octx)
+static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, AVPacket *epkt, AVCodecContext *octx)
 {
   streaming_message_t *sm;
   th_pkt_t *n;
 
-  if (length <= 0) {
-    if (length) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", length);
+  if (epkt->size <= 0) {
+    if (epkt->size) {
+      tvhlog(LOG_ERR, "transcode", "Unable to encode video (%d)", epkt->size);
       ts->ts_index = 0;
     }
 
@@ -944,7 +944,7 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
   if (!octx->coded_frame)
     return;
 
-  n = pkt_alloc(out, length, octx->coded_frame->pkt_pts, octx->coded_frame->pkt_dts);
+  n = pkt_alloc(epkt->data, epkt->size, epkt->pts, epkt->dts);
 
   switch (octx->coded_frame->pict_type) {
   case AV_PICTURE_TYPE_I:
@@ -984,6 +984,7 @@ static void send_video_packet(transcoder_stream_t *ts, th_pkt_t *pkt, uint8_t *o
     n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
   else {
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+      uint8_t *out = epkt->data;
       uint32_t *mpeg2_header = (uint32_t *)out;
       if (*mpeg2_header == 0xb3010000) {  // SEQ_START_CODE
 	// Need to determine lentgh of header.
@@ -1287,10 +1288,8 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (got_output) {
-    send_video_packet(ts, pkt, packet2.data, packet2.size, octx);
-  }
-
+  if (got_output)
+    send_video_packet(ts, pkt, &packet2, octx);
 
   av_free_packet(&packet2);
 #endif
