@@ -184,28 +184,13 @@ transcoder_get_decoder(streaming_component_type_t ty)
  * 
  */
 static AVCodec *
-transcoder_get_encoder(streaming_component_type_t ty)
+transcoder_get_encoder(const char *codec_name)
 {
-  enum AVCodecID codec_id;
   AVCodec *codec;
 
-  codec_id = streaming_component_type2codec_id(ty);
-  if (codec_id == AV_CODEC_ID_NONE) {
-    tvhlog(LOG_ERR, "transcode", "Unable to find %s codec", 
-	   streaming_component_type2txt(ty));
-    return NULL;
-  }
-
-  if (!WORKING_ENCODER(codec_id)) {
-    tvhlog(LOG_WARNING, "transcode", "Unsupported output codec %s", 
-	   streaming_component_type2txt(ty));
-    return NULL;
-  }
-
-  codec = avcodec_find_encoder(codec_id);
+  codec = avcodec_find_encoder_by_name(codec_name);
   if (!codec) {
-    tvhlog(LOG_ERR, "transcode", "Unable to find %s encoder", 
-	   streaming_component_type2txt(ty));
+    tvhlog(LOG_ERR, "transcode", "Unable to find %s encoder", codec_name);
     return NULL;
   }
   tvhlog(LOG_DEBUG, "transcode", "Using encoder %s", codec->name);
@@ -1416,11 +1401,12 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   subtitle_stream_t *ss;
   AVCodec *icodec, *ocodec;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_scodec == SCT_NONE)
+  if (tp->tp_scodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_scodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_scodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1429,13 +1415,15 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
   else if (!(ocodec = transcoder_get_encoder(tp->tp_scodec)))
     return transcoder_init_stream(t, ssc);
 
-  if (tp->tp_scodec == ssc->ssc_type)
+  sct = codec_id2streaming_component_type(ocodec->id);
+
+  if (sct == ssc->ssc_type)
     return transcoder_init_stream(t, ssc);
 
   ss = calloc(1, sizeof(subtitle_stream_t));
 
   ss->ts_index      = ssc->ssc_index;
-  ss->ts_type       = tp->tp_scodec;
+  ss->ts_type       = sct;
   ss->ts_target     = t->t_output;
   ss->ts_handle_pkt = transcoder_stream_subtitle;
   ss->ts_destroy    = transcoder_destroy_subtitle;
@@ -1453,7 +1441,7 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
 	 streaming_component_type2txt(ssc->ssc_type),
 	 streaming_component_type2txt(ss->ts_type));
 
-  ssc->ssc_type = tp->tp_scodec;
+  ssc->ssc_type = sct;
   ssc->ssc_gh = NULL;
 
   return 1;
@@ -1506,11 +1494,12 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   transcoder_stream_t *ts;
   AVCodec *icodec, *ocodec;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_acodec == SCT_NONE)
+  if (tp->tp_acodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_acodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_acodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1523,13 +1512,15 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
     if (SCT_ISAUDIO(ts->ts_type))
        return 0;
 
-  if (tp->tp_acodec == ssc->ssc_type)
+  sct = codec_id2streaming_component_type(ocodec->id);
+
+  if (sct == ssc->ssc_type)
     return transcoder_init_stream(t, ssc);
 
   as = calloc(1, sizeof(audio_stream_t));
 
   as->ts_index      = ssc->ssc_index;
-  as->ts_type       = tp->tp_acodec;
+  as->ts_type       = sct;
   as->ts_target     = t->t_output;
   as->ts_handle_pkt = transcoder_stream_audio;
   as->ts_destroy    = transcoder_destroy_audio;
@@ -1559,7 +1550,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 	 streaming_component_type2txt(ssc->ssc_type),
 	 streaming_component_type2txt(as->ts_type));
 
-  ssc->ssc_type     = tp->tp_acodec;
+  ssc->ssc_type     = sct;
   ssc->ssc_gh       = NULL;
 
   // resampling not implemented yet
@@ -1621,11 +1612,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   AVCodec *icodec, *ocodec;
   double aspect;
   transcoder_props_t *tp = &t->t_props;
+  int sct;
 
-  if (tp->tp_vcodec == SCT_NONE)
+  if (tp->tp_vcodec[0] == '\0')
     return 0;
 
-  else if (tp->tp_vcodec == SCT_UNKNOWN)
+  else if (!strcmp(tp->tp_vcodec, "copy"))
     return transcoder_init_stream(t, ssc);
 
   else if (!(icodec = transcoder_get_decoder(ssc->ssc_type)))
@@ -1634,10 +1626,12 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   else if (!(ocodec = transcoder_get_encoder(tp->tp_vcodec)))
     return transcoder_init_stream(t, ssc);
 
+  sct = codec_id2streaming_component_type(ocodec->id);
+
   vs = calloc(1, sizeof(video_stream_t));
 
   vs->ts_index      = ssc->ssc_index;
-  vs->ts_type       = tp->tp_vcodec;
+  vs->ts_type       = sct;
   vs->ts_target     = t->t_output;
   vs->ts_handle_pkt = transcoder_stream_video;
   vs->ts_destroy    = transcoder_destroy_video;
@@ -1683,7 +1677,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 	 vs->vid_width,
 	 vs->vid_height);
 
-  ssc->ssc_type   = tp->tp_vcodec;
+  ssc->ssc_type   = sct;
   ssc->ssc_width  = vs->vid_width;
   ssc->ssc_height = vs->vid_height;
   ssc->ssc_gh     = NULL;
@@ -1712,7 +1706,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
       continue;
 
     if (SCT_ISVIDEO(ssc->ssc_type)) {
-      if (t->t_props.tp_vcodec == SCT_NONE)
+      if (t->t_props.tp_vcodec[0] == '\0')
 	video = 0;
       else if (t->t_props.tp_vcodec == SCT_UNKNOWN)
 	video++;
@@ -1720,7 +1714,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 	video = 1;
 
     } else if (SCT_ISAUDIO(ssc->ssc_type)) {
-      if (t->t_props.tp_acodec == SCT_NONE)
+      if (t->t_props.tp_acodec[0] == '\0')
 	audio = 0;
       else if (t->t_props.tp_acodec == SCT_UNKNOWN)
 	audio++;
@@ -1728,7 +1722,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 	audio = 1;
 
     } else if (SCT_ISSUBTITLE(ssc->ssc_type)) {
-      if (t->t_props.tp_scodec == SCT_NONE)
+      if (t->t_props.tp_scodec[0] == '\0')
 	subtitle = 0;
       else if (t->t_props.tp_scodec == SCT_UNKNOWN)
 	subtitle++;
@@ -1898,9 +1892,9 @@ transcoder_set_properties(streaming_target_t *st,
   transcoder_t *t = (transcoder_t *)st;
   transcoder_props_t *tp = &t->t_props;
 
-  tp->tp_vcodec     = props->tp_vcodec;
-  tp->tp_acodec     = props->tp_acodec;
-  tp->tp_scodec     = props->tp_scodec;
+  strncpy(tp->tp_vcodec, props->tp_vcodec, sizeof(tp->tp_vcodec)-1);
+  strncpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec)-1);
+  strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
   tp->tp_channels   = props->tp_channels;
   tp->tp_bandwidth  = props->tp_bandwidth;
   tp->tp_resolution = props->tp_resolution;
@@ -1930,7 +1924,7 @@ transcoder_get_capabilities(int experimental)
 {
   AVCodec *p = NULL;
   streaming_component_type_t sct;
-  htsmsg_t *array = htsmsg_create_list();
+  htsmsg_t *array = htsmsg_create_list(), *m;
 
   while ((p = av_codec_next(p))) {
 
@@ -1947,7 +1941,13 @@ transcoder_get_capabilities(int experimental)
     if (sct == SCT_NONE)
       continue;
 
-    htsmsg_add_s32(array, NULL, sct);
+    m = htsmsg_create_map();
+    htsmsg_add_s32(m, "type", sct);
+    htsmsg_add_u32(m, "id", p->id);
+    htsmsg_add_str(m, "name", p->name);
+    if (p->long_name)
+      htsmsg_add_str(m, "long_name", p->long_name);
+    htsmsg_add_msg(array, NULL, m);
   }
   return array;
 }
