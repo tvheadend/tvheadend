@@ -639,7 +639,7 @@ profile_class_codec_list(int (*check)(int sct))
       continue;
     s2 = htsmsg_get_str(m, "long_name");
     if (s2)
-      snprintf(buf, sizeof(buf), "%s (%s)", s, s2);
+      snprintf(buf, sizeof(buf), "%s: %s", s, s2);
     else
       snprintf(buf, sizeof(buf), "%s", s);
     e = htsmsg_create_map();
