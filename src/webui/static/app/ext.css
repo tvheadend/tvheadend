@@ -406,6 +406,14 @@
     background-image: url(../icons/debug.png) !important;
 }
 
+.upcomingRec{
+    background-image: url(../icons/upcoming_rec.png) !important;
+}
+
+.finishedRec{
+    background-image: url(../icons/accept.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
