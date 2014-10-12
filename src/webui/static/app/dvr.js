@@ -160,7 +160,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_upcoming',
         titleS: 'Upcoming Recording',
-        titleP: 'Upcoming Recordings',
+        titleP: 'Upcoming / Now Recordings',
         iconCls: 'upcomingRec',
         tabIndex: index,
         add: {
