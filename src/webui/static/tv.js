@@ -49,51 +49,31 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 
     var profiles = {
 	pass: {
-	    muxer:   'pass',
-	    mimetype: 'video/MP2T'
+	    profile:   'pass',
+	    mimetype:  'video/MP2T'
 	},
 	hls: {
-	    muxer:     'mpegts',
-	    transcode: true,
-	    audio:     'AAC',
-	    video:     'H264',
-	    subs:      'NONE',
+	    profile:   'webtv-h264-aac-mpegts',
 	    playlist:  true,
 	    mimetype:  'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
 	},
 	apple: {
-	    muxer:     'mpegts',
-	    transcode: true,
-	    audio:     'AAC',
-	    video:     'H264',
-	    subs:      'NONE',
+	    profile:   'webtv-h264-aac-mpegts',
 	    playlist:  true,
 	    mimetype:  'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
 	},
 	ts: {
-	    muxer:     'mpegts',
-	    transcode: true,
-	    audio:     'AAC',
-	    video:     'H264',
-	    subs:      'NONE',
+	    profile:   'webtv-h264-aac-mpegts',
 	    playlist:  false,
 	    mimetype:  'video/MP2T; codecs="avc1.42E01E, mp4a.40.2"'
 	},
 	mkv: {
-	    muxer:     'matroska',
-	    transcode: true,
-	    audio:     'AAC',
-	    video:     'H264',
-	    subs:      'NONE',
+	    profile:   'webtv-h264-aac-matroska',
 	    playlist:  false,
 	    mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
 	},
 	webm: {
-	    muxer:     'webm',
-	    transcode: true,
-	    audio:     'VORBIS',
-	    video:     'VP8',
-	    subs:      'NONE',
+	    profile:   'webtv-vp8-vorbis-webm',
 	    mimetype:  'video/webm; codecs="vp8.0, vorbis"'
 	}
     };
@@ -104,15 +84,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    tv.ui.VideoPlayer.superclass.constructor.call(this, config);
 
 	    Ext.applyIf(this.params, {
-		transcode : 0,
-		resolution: 288,
-		channels  : 0,         // same as source
-		bandwidth : 0,         // same as source
-		language  : '',        // same as source
-		audio     : 'UNKNOWN', // same as source
-		video     : 'UNKNOWN', // same as source
-		subs      : 'UNKNOWN', // same as source
-		muxer     : '',        // default dvr config
+	        profile   : '',        // stream profile
 		playlist  : false      // don't use m3u8 playlist
 	    });
 	},
@@ -177,14 +149,8 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 		url += 'stream/channel/'
 	    
 	    url += uuid;
-	    url += "?transcode="  + new Number(params.transcode);
-	    url += "&mux="        + params.muxer;
-	    url += "&acodec="     + params.audio;
-	    url += "&vcodec="     + params.video;
-	    url += "&scodec="     + params.subs;
-	    url += "&resolution=" + params.resolution;
-	    url += "&bandwidth="  + params.bandwidth;
-	    url += "&language="   + params.language;
+	    if (params.profile)
+	        url += "?profile=" + params.profile;
 	    
 	    return url;
 	},
@@ -337,7 +303,7 @@ tv.ui.ChannelList = Ext.extend(Ext.DataView, {
 	    tpl: new Ext.XTemplate(
 		'<tpl for=".">',
 		'<div class="tv-list-item" id="{uuid}">',
-		'<img src="{icon}" title="{name}">{name}',
+		'<img src="{icon_public_url}" title="{name}">{name}',
 		'</div>',
 		'</tpl>'),
 
@@ -443,9 +409,7 @@ tv.app = function() {
 	init: function() {
 
 	    var videoPlayer = new tv.ui.VideoPlayer({
-		params: {
-		    resolution: 384
-		},
+		params: { },
 		renderTo: Ext.getBody()
 	    });
 	    videoPlayer.setDisplaySize('100%', '00%');
@@ -454,7 +418,7 @@ tv.app = function() {
 		store: new Ext.data.JsonStore({
 		    autoLoad : true,
 		    root : 'entries',
-		    fields : ['icon', 'number', 'name', 'uuid'],
+		    fields : ['icon_public_url', 'number', 'name', 'uuid'],
 		    id : 'uuid',
 		    sortInfo : {
 			field : 'number',
@@ -468,6 +432,7 @@ tv.app = function() {
 		title:'Channels',
 		items: chList,
 		cls: 'tv-channel-list',
+		autoScroll: true,
 		renderTo: Ext.getBody()
 	    });
 

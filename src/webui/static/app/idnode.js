@@ -129,6 +129,7 @@ tvheadend.idnode_filter_fields = function(d, list)
                   break;
               }
     } else {
+        var o = list.split(',');
         for (var i = 0; i < o.length; i++)
            for (var j = 0; j < d.length; j++)
               if (d[j].id === o[i]) {
@@ -1960,6 +1961,7 @@ tvheadend.idnode_tree = function(panel, conf)
         header: false,
         layout: 'fit',
         title: conf.title || '',
+        iconCls: conf.iconCls || ''
     });
 
     tvheadend.paneladd(panel, dpanel, conf.tabIndex);

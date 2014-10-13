@@ -160,8 +160,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_upcoming',
         titleS: 'Upcoming Recording',
-        titleP: 'Upcoming Recordings',
-        iconCls: 'clock',
+        titleP: 'Upcoming / Now Recordings',
+        iconCls: 'upcomingRec',
         tabIndex: index,
         add: {
             url: 'api/dvr/entry',
@@ -233,7 +233,7 @@ tvheadend.dvr_finished = function(panel, index) {
         readonly: true,
         titleS: 'Finished Recording',
         titleP: 'Finished Recordings',
-        iconCls: 'television',
+        iconCls: 'finishedRec',
         tabIndex: index,
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
@@ -348,7 +348,7 @@ tvheadend.autorec_editor = function(panel, index) {
         url: 'api/dvr/autorec',
         titleS: 'DVR AutoRec Entry',
         titleP: 'DVR AutoRec Entries',
-        iconCls: 'wand',
+        iconCls: 'autoRec',
         tabIndex: index,
         columns: {
             enabled:      { width: 50 },

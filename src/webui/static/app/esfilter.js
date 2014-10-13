@@ -2,7 +2,7 @@
  * Stream Profiles, Elementary Stream Filters
  */
 
-tvheadend.caclient_builders = new Ext.data.JsonStore({
+tvheadend.profile_builders = new Ext.data.JsonStore({
     url: 'api/profile/builders',
     root: 'entries',
     fields: ['class', 'caption', 'props'],
@@ -28,7 +28,7 @@ tvheadend.esfilter_tab = function(panel)
             titleS: 'Stream Profile',
             select: {
                 label: 'Type',
-                store: tvheadend.caclient_builders,
+                store: tvheadend.profile_builders,
                 displayField: 'caption',
                 valueField: 'class',
                 propField: 'props',
@@ -86,6 +86,7 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/esfilter/teletext',
         titleS: 'Teletext Stream Filter',
         titleP: 'Teletext Stream Filters',
+		iconCls: 'teletext',
         tabIndex: 3,
         edit: { params: { list: eslist } },
         add: {
@@ -104,6 +105,7 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/esfilter/subtit',
         titleS: 'Subtitle Stream Filter',
         titleP: 'Subtitle Stream Filters',
+		iconCls: 'subtitle',
         tabIndex: 4,
         edit: { params: { list: eslist } },
         add: {
@@ -140,6 +142,7 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/esfilter/other',
         titleS: 'Other Stream Filter',
         titleP: 'Other Stream Filters',
+		iconCls: 'otherFilters',
         tabIndex: 6,
         edit: { params: { list: eslist } },
         add: {

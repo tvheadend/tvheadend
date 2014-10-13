@@ -102,6 +102,7 @@ struct mk_mux {
   int64_t cluster_tc;
   off_t cluster_pos;
   int cluster_maxsize;
+  time_t cluster_last_close;
 
   off_t segment_header_pos;
 
@@ -891,6 +892,7 @@ mk_close_cluster(mk_mux_t *mkm)
   if(mkm->cluster != NULL)
     mk_write_master(mkm, 0x1f43b675, mkm->cluster);
   mkm->cluster = NULL;
+  mkm->cluster_last_close = dispatch_clock;
 }
 
 
@@ -982,6 +984,9 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
   c_delta_flags[2] = (keyframe << 7) | skippable;
   htsbuf_append(mkm->cluster, c_delta_flags, 3);
   htsbuf_append(mkm->cluster, data, len);
+
+  if (mkm->cluster_last_close + 1 < dispatch_clock)
+    mk_close_cluster(mkm);
 }
 
 

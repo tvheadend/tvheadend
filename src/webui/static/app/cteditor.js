@@ -9,6 +9,7 @@ tvheadend.cteditor = function(panel, index)
         comet: 'channeltag',
         titleS: 'Channel Tag',
         titleP: 'Channel Tags',
+		iconCls: 'channelTags',
         tabIndex: index,
         add: {
             url: 'api/channeltag',

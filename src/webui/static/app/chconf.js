@@ -200,6 +200,7 @@ tvheadend.channel_tab = function(panel, index)
         comet: 'channel',
         titleS: 'Channel',
         titleP: 'Channels',
+		iconCls: 'channels',
         tabIndex: index,
         help: function() {
             new tvheadend.help('Channels', 'config_channels.html');
