@@ -74,7 +74,7 @@ profile_create
     pb = profile_class_find(s);
   if (pb == NULL) {
     tvherror("profile", "wrong class %s!", s);
-    abort();
+    return NULL;
   }
   pro = pb->build();
   if (pro == NULL) {
