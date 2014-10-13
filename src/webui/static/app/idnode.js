@@ -1710,7 +1710,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             buttons.push('->');
             buttons.push({
                 text: 'Help',
-		  iconCls: 'help',
+				iconCls: 'help',
                 handler: conf.help
             });
         }

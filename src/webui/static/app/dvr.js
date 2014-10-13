@@ -305,7 +305,7 @@ tvheadend.dvr_failed = function(panel, index) {
         plugins: [actions],
         lcol: [actions],
         help: function() {
-            new tvheadend.help('DVR', 'config_dvrlog.html');
+            new tvheadend.help('DVR-Failed Recordings', 'dvrfailed.html');
         },
     });
 
