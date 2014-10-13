@@ -132,6 +132,20 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 # libx264
 #
 
+ARCH = $(shell arch)
+
+ifeq ($(ARCH),i386)
+
+$(LIBAVDIR)/$(LIBX264)/.tvh_download:
+	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
+	@touch $@
+
+$(LIBAVDIR)/$(LIBX264)/.tvh_build:
+	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
+	@touch $@
+
+else
+
 $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX264_URL),$(LIBAVDIR)/$(LIBX264_TB))
 	#rm -rf $(LIBAVDIR)/x264-snapshot-*
@@ -155,6 +169,8 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
 	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(LIBX264) install
 	@touch $@
+
+endif
 
 #
 # libvpx (VP8)

@@ -434,7 +434,6 @@ ${SRCS_LIBAV}: ${BUILDDIR}/libffmpeg_stamp
 endif
 
 ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
-	echo "$(DEPS)"
 	@touch $@
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
