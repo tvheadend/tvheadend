@@ -49,6 +49,14 @@ LDFLAGS += -lrt
 endif
 endif
 
+ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
+LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
+           -lavresample -lswresample -lswscale -lavformat -lavcodec -lavutil \
+           -lvorbisenc -lvorbis -logg -lx264 -lvpx \
+           -Wl,-Bdynamic
+endif
+
 ifeq ($(COMPILER), clang)
 CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
 CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
@@ -332,6 +340,9 @@ BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
 ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
+# Static libav
+ALL-$(CONFIG_LIBFFMPEG_STATIC) += ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
+
 #
 # Add-on modules
 #
@@ -387,6 +398,7 @@ clean:
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
+	rm -rf ${ROOTDIR}/libav_static
 	rm -rf ${ROOTDIR}/build.*
 	rm -f ${ROOTDIR}/.config.mk
 
@@ -411,12 +423,16 @@ $(BUILDDIR)/bundle.c: check_dvb_scan
 	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
+# Static FFMPEG
+${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
+	$(MAKE) -f Makefile.ffmpeg build
+
 # linuxdvb git tree
 $(ROOTDIR)/data/dvb-scan/.stamp:
 	@echo "Receiving data/dvb-scan/dvb-t from http://linuxtv.org/git/dtv-scan-tables.git"
 	@rm -rf $(ROOTDIR)/data/dvb-scan/*
 	@$(ROOTDIR)/support/getmuxlist $(ROOTDIR)/data/dvb-scan
-	@touch $(ROOTDIR)/data/dvb-scan/.stamp
+	@touch $@
 
 .PHONY: check_dvb_scan
 check_dvb_scan: $(ROOTDIR)/data/dvb-scan/.stamp

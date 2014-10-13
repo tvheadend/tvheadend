@@ -1,0 +1,177 @@
+#
+#  Static Audio/Video libs (ffmpeg version) build
+#  Copyright (C) 2014 Jaroslav Kysela
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
+
+define DOWNLOAD
+	@mkdir -p $(LIBAVDIR)/build
+	wget -O $(2) $(1)
+endef
+
+define UNTAR
+	tar x -C $(LIBAVDIR) -$(2)f $(LIBAVDIR)/$(1)
+endef
+
+LIBAVDIR = $(ROOTDIR)/libav_static
+
+ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
+ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
+
+FFMPEG          = ffmpeg-2.4.2
+FFMPEG_TB       = $(FFMPEG).tar.bz2
+FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
+
+EXTLIBS         = libx264 libvorbis libvpx
+COMPONENTS      = avutil avformat avcodec swresample swscale avresample
+DECODERS        = mpeg2video mp2 h264 h264_vdpau aac aac_latm vorbis libvorbis
+ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
+MUXERS          = mpegts mpeg2dvd
+
+LIBOGG          = libogg-1.3.2
+LIBOGG_TB       = $(LIBOGG).tar.gz
+LIBOGG_URL      = http://downloads.xiph.org/releases/ogg/$(LIBOGG_TB)
+
+LIBVORBIS       = libvorbis-1.3.4
+LIBVORBIS_TB    = $(LIBVORBIS).tar.gz
+LIBVORBIS_URL   = http://downloads.xiph.org/releases/vorbis/$(LIBVORBIS_TB)
+
+LIBX264         = last_x264
+LIBX264_TB      = $(LIBX264).tar.bz2
+LIBX264_URL     = ftp://ftp.videolan.org/pub/x264/snapshots/$(LIBX264_TB)
+
+LIBVPX          = libvpx-v1.3.0
+LIBVPX_TB       = $(LIBVPX).tar.bz2
+LIBVPX_URL      = https://webm.googlecode.com/files/$(LIBVPX_TB)
+
+.PHONY: build
+build: $(LIBAVDIR)/$(FFMPEG)/.tvh_build
+
+#
+# libogg & libvorbis
+#
+
+$(LIBAVDIR)/$(LIBOGG)/.tvh_download:
+	$(call DOWNLOAD,$(LIBOGG_URL),$(LIBAVDIR)/$(LIBOGG_TB))
+	$(call UNTAR,$(LIBOGG_TB),z)
+	@touch $@
+
+$(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBOGG)/.tvh_download
+	cd $(LIBAVDIR)/$(LIBOGG) && ./configure \
+                --prefix=/ffmpeg \
+		--enable-static \
+		--disable-shared
+	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBOGG) install
+	@touch $@
+
+$(LIBAVDIR)/$(LIBVORBIS)/.tvh_download: \
+		$(LIBAVDIR)/$(LIBOGG)/.tvh_download
+	$(call DOWNLOAD,$(LIBVORBIS_URL),$(LIBAVDIR)/$(LIBVORBIS_TB))
+	$(call UNTAR,$(LIBVORBIS_TB),z)
+	@touch $@
+
+$(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_download \
+		$(LIBAVDIR)/$(LIBOGG)/.tvh_build
+	cd $(LIBAVDIR)/$(LIBVORBIS) && ./configure \
+		--prefix=/ffmpeg \
+		--enable-static \
+		--disable-shared \
+		--with-ogg=$(LIBAVDIR)/build/ffmpeg
+	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBVORBIS) install
+	@touch $@
+
+#
+# libx264
+#
+
+$(LIBAVDIR)/$(LIBX264)/.tvh_download:
+	$(call DOWNLOAD,$(LIBX264_URL),$(LIBAVDIR)/$(LIBX264_TB))
+	rm -rf $(LIBAVDIR)/x264-snapshot-*
+	$(call UNTAR,$(LIBX264_TB),j)
+	{ ln -sf $$(basename $(LIBAVDIR)/x264-snapshot-*) $(LIBAVDIR)/$(LIBX264); }
+	@touch $@
+
+$(LIBAVDIR)/$(LIBX264)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBX264)/.tvh_download
+	cd $(LIBAVDIR)/$(LIBX264) && ./configure \
+		--prefix=/ffmpeg \
+		--enable-static \
+		--disable-shared \
+		--disable-avs \
+		--disable-swscale \
+		--disable-lavf \
+		--disable-ffms \
+		--disable-gpac \
+		--disable-lsmash
+	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBX264) install
+	@touch $@
+
+#
+# libvpx (VP8)
+#
+
+$(LIBAVDIR)/$(LIBVPX)/.tvh_download:
+	@mkdir -p $(LIBAVDIR)
+	$(call DOWNLOAD,$(LIBVPX_URL),$(LIBAVDIR)/$(LIBVPX_TB))
+	$(call UNTAR,$(LIBVPX_TB),j)
+	@touch $@
+
+$(LIBAVDIR)/$(LIBVPX)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBVPX)/.tvh_download
+	cd $(LIBAVDIR)/$(LIBVPX) && ./configure \
+		--prefix=/ffmpeg \
+		--enable-static \
+		--disable-shared
+	DIST_DIR=$(LIBAVDIR)/build/ffmpeg make -C $(LIBAVDIR)/$(LIBVPX) install
+	@touch $@
+
+#
+# FFMPEG
+#
+
+$(LIBAVDIR)/$(FFMPEG)/.tvh_download:
+	@mkdir -p $(LIBAVDIR)/build
+	$(call DOWNLOAD,$(FFMPEG_URL),$(LIBAVDIR)/$(FFMPEG_TB))
+	$(call UNTAR,$(FFMPEG_TB),j)
+	@touch $@
+
+$(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_build \
+		$(LIBAVDIR)/$(LIBX264)/.tvh_build \
+		$(LIBAVDIR)/$(LIBVPX)/.tvh_build \
+		$(LIBAVDIR)/$(FFMPEG)/.tvh_download
+	cd $(LIBAVDIR)/$(FFMPEG) && ./configure \
+                --prefix=/ffmpeg \
+		--disable-all \
+		--enable-static \
+		--disable-shared \
+		--enable-gpl \
+		--extra-cflags="$(ECFLAGS)" \
+		--extra-libs="$(ELIBS)" \
+		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
+		$(foreach component,$(COMPONENTS),--enable-$(component)) \
+		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
+		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
+		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer))
+	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(FFMPEG) install
+	@touch $@
+
+.PHONY: static_libav_clean
+static_libav_clean:
+	@rm -rf $(LIBAVDIR)
