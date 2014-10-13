@@ -138,11 +138,10 @@ ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
+	@mkdir -p $(LIBAVDIR)/$(LIBX264)
 	@touch $@
 
-$(LIBAVDIR)/$(LIBX264)/.tvh_build:
-	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
-	@touch $@
+$(LIBAVDIR)/$(LIBX264)/.tvh_build: $(LIBAVDIR)/$(LIBX264)/.tvh_download
 
 else
 
