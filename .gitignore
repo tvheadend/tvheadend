@@ -5,6 +5,8 @@ src/version.c
 
 data/dvb-scan
 
+libav_static
+
 .cproject
 .project
 nbproject

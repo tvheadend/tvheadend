@@ -31,6 +31,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
+  "libffmpeg_static:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -276,34 +277,43 @@ fi
 #
 # libav
 #
-if enabled_or_auto libav; then
+if enabled libffmpeg_static; then
+
+  enable libav
   has_libav=true
 
-  if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
-    has_libav=false
+else
+
+  if enabled_or_auto libav; then
+    has_libav=true
+
+    if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
+      has_libav=false
+    fi
+
+    if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
+      has_libav=false
+    fi
+
+    if $has_libav && ! check_pkg libavformat ">=53.10.0"; then
+      has_libav=false
+    fi
+
+    if $has_libav && ! check_pkg libswscale ">=0.13.0"; then
+      has_libav=false
+    fi
+
+    if $has_libav && ! check_pkg libavresample ">=1.1.0"; then
+      has_libav=false
+    fi
+
+    if $has_libav; then
+      enable libav
+    elif enabled libav; then
+      die "libav development support not found (use --disable-libav)"
+    fi
   fi
 
-  if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
-    has_libav=false
-  fi
-
-  if $has_libav && ! check_pkg libavformat ">=53.10.0"; then
-    has_libav=false
-  fi
-
-  if $has_libav && ! check_pkg libswscale ">=0.13.0"; then
-    has_libav=false
-  fi
-
-  if $has_libav && ! check_pkg libavresample ">=1.1.0"; then
-    has_libav=false
-  fi
-
-  if $has_libav; then
-    enable libav
-  elif enabled libav; then
-    die "libav development support not found (use --disable-libav)"
-  fi
 fi
 
 #
