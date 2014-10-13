@@ -290,9 +290,11 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 SRCS-$(CONFIG_BONJOUR) += src/bonjour.c
 
 # libav
-SRCS-$(CONFIG_LIBAV) += src/libav.c \
+SRCS_LIBAV = \
+	src/libav.c \
 	src/muxer/muxer_libav.c \
-	src/plumbing/transcoding.c \
+	src/plumbing/transcoding.c
+SRCS-$(CONFIG_LIBAV) += $(SRCS_LIBAV)
 
 # Tvhcsa
 SRCS-${CONFIG_TVHCSA} += \
@@ -340,9 +342,6 @@ BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)
 ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
-# Static libav
-ALL-$(CONFIG_LIBFFMPEG_STATIC) += ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
-
 #
 # Add-on modules
 #
@@ -357,6 +356,12 @@ SRCS      += $(SRCS-yes)
 OBJS       = $(SRCS:%.c=$(BUILDDIR)/%.o)
 OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
 DEPS       = ${OBJS:%.o=%.d}
+
+# Static libav
+ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+OBJS_LIBAV = $(SRCS_LIBAV:%.c=$(BUILDDIR)/%.o)
+DEPS      += ${OBJS_LIBAV:%.o=${BUILDDIR}/libffmpeg_stamp}
+endif
 
 #
 # Build Rules
@@ -398,7 +403,7 @@ clean:
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
-	rm -rf ${ROOTDIR}/libav_static
+	rm -rf ${ROOTDIR)/.tvh${ROOTDIR}/libav_static
 	rm -rf ${ROOTDIR}/build.*
 	rm -f ${ROOTDIR}/.config.mk
 
@@ -424,6 +429,9 @@ $(BUILDDIR)/bundle.c: check_dvb_scan
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
 # Static FFMPEG
+${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
+	@touch $@
+
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
 	$(MAKE) -f Makefile.ffmpeg build
 
