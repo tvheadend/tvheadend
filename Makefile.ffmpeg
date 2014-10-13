@@ -132,9 +132,9 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 # libx264
 #
 
-ARCH = $(shell arch)
+ARCH = $(shell $(CC) -dumpmachine | cut -d '-' -f 1)
 
-ifeq ($(ARCH),i386)
+ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
