@@ -17,6 +17,8 @@ if [ -d ".git" ]; then
   VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
 elif [ -f "$(dirname "$0")/../debian/changelog" ]; then
   VER=$(head -1 "$(dirname "$0")/../debian/changelog" | awk '{ print $2 }' | tr -d '()' | cut -d '-' -f 1)
+elif [ -r "$(dirname "$0")/rpm/version" ]; then
+  VER=$(cat "$(dirname "$0")/rpm/version")
 else
   VER="0.0.0~unknown"
 fi
