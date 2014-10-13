@@ -271,7 +271,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help('DVR', 'config_dvrlog.html');
+            new tvheadend.help('DVR-Finished Recordings', 'dvrfinished.html');
         },
     });
 
