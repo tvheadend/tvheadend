@@ -481,6 +481,19 @@ hebrew_g0[37] = {
   /* 0x78 */ 0x05E8, 0x05E9, 0x05EA, 0x20AA, 0x2016, 0x00BE, 0x00F7, 0x25A0
 };
 
+static const uint8_t* COLOR_MAP[8] = {
+  // black (grey for visibility), red, green, yellow, blue, magenta, cyan, white
+  (uint8_t*) "<font color=\"#888888\">",
+  (uint8_t*) "<font color=\"#ff0000\">",
+  (uint8_t*) "<font color=\"#00ff00\">",
+  (uint8_t*) "<font color=\"#ffff00\">",
+  (uint8_t*) "<font color=\"#0000ff\">",
+  (uint8_t*) "<font color=\"#ff00ff\">",
+  (uint8_t*) "<font color=\"#00ffff\">",
+  (uint8_t*) "<font color=\"#ffffff\">"
+};
+static const uint8_t* CLOSE_FONT = (uint8_t*) "</font>";
+
 /**
  * cs Teletext character set as listed in ETS 300 706 section 15.
  * ss National character subset as listed in section 15, only
@@ -686,16 +699,18 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 		 tt_mag_t *ttm, int64_t pts)
 {
   int i, j, start, off = 0;
+  int k, current_color, is_font_tag_open, use_color_subs = 1;
   uint8_t sub[2000];
   uint8_t *cset, ch;
   int is_box = 0;
-  uint8_t first = 0;
 
   if ((cset = get_cset((ttm->ttm_charset[0] & ~7) + ttm->ttm_national)) == NULL)
     if ((cset = get_cset(ttm->ttm_charset[0])) == NULL)
       cset = char_table[0]; /* fallback */
 
   for (i = 0; i < 23; i++) {
+    is_font_tag_open = 0;
+    current_color = 7; /* white = default */
     start = off;
 
     for (j = 0; j < 40; j++) {
@@ -703,6 +718,26 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 
       switch(ch) {
       case 0 ... 7:
+        if (use_color_subs) {
+          if (ch != current_color) {
+            if (is_font_tag_open) {
+              for (k = 0; k < 7; k++) {
+                if (off < sizeof(sub))
+                  sub[off++] = CLOSE_FONT[k];
+              }
+              is_font_tag_open = 0;
+            }
+            /* no need for font-tag for default-color */
+            if (ch != 7) {
+              for (k = 0; k < 22; k++) {
+                if (off < sizeof(sub))
+                  sub[off++] = COLOR_MAP[ch][k];
+              }
+              is_font_tag_open = 1;
+            }
+            current_color = ch;
+          }
+        }
 	break;
 
       case 0x0a:
@@ -715,9 +750,6 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 
       default:
 	if (ch >= 0x20 && is_box && (start != off || ch > 0x20)) {
-
-          if (!first)
-            first = ch;
 
 	  uint16_t ucs2 = teletext_to_ucs2(cset[0], cset[2], ch);
 
@@ -742,6 +774,13 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
           }
 	}
       }
+    }
+    if (use_color_subs && is_font_tag_open) {
+      for (k = 0; k < 7; k++) {
+        if (off < sizeof(sub))
+          sub[off++] = CLOSE_FONT[k];
+      }
+      is_font_tag_open = 0;
     }
     if(start != off && off < sizeof(sub))
       sub[off++] = '\n';
