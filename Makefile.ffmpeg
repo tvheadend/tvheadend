@@ -21,7 +21,7 @@ include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 define DOWNLOAD
 	@mkdir -p $(LIBAVDIR)/build
 	if test -z "$${TVHEADEND_FILE_CACHE}"; then \
-          wget -O $(2) $(1); \
+          wget --no-verbose -O $(2) $(1); \
         else \
           file=$$(basename $(2)); \
           cp "$$TVHEADEND_FILE_CACHE/$$(file)" $(2); \
@@ -33,6 +33,8 @@ define UNTAR
 endef
 
 LIBAVDIR = $(ROOTDIR)/libav_static
+
+export PATH := $(LIBAVDIR)/build/ffmpeg/bin:$(PATH)
 
 ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
@@ -103,8 +105,7 @@ $(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
                 --prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
-	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
-		DESTDIR=$(LIBAVDIR)/build \
+	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(LIBOGG) install
 	@touch $@
 
@@ -123,8 +124,7 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 		--enable-static \
 		--disable-shared \
 		--with-ogg=$(LIBAVDIR)/build/ffmpeg
-	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
-		DESTDIR=$(LIBAVDIR)/build \
+	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(LIBVORBIS) install
 	@touch $@
 
@@ -152,8 +152,7 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
 		--disable-ffms \
 		--disable-gpac \
 		--disable-lsmash
-	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
-		DESTDIR=$(LIBAVDIR)/build \
+	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(LIBX264) install
 	@touch $@
 
@@ -174,8 +173,7 @@ $(LIBAVDIR)/$(LIBVPX)/.tvh_build: \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
-	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
-		DIST_DIR=$(LIBAVDIR)/build/ffmpeg \
+	DIST_DIR=$(LIBAVDIR)/build/ffmpeg \
 		make -C $(LIBAVDIR)/$(LIBVPX) install
 	@touch $@
 
@@ -208,8 +206,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer))
-	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
-		DESTDIR=$(LIBAVDIR)/build \
+	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(FFMPEG) install
 	@touch $@
 

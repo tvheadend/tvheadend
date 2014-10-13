@@ -357,10 +357,8 @@ OBJS       = $(SRCS:%.c=$(BUILDDIR)/%.o)
 OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
 DEPS       = ${OBJS:%.o=%.d}
 
-# Static libav
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
-OBJS_LIBAV = $(SRCS_LIBAV:%.c=$(BUILDDIR)/%.o)
-DEPS      += ${OBJS_LIBAV:%.o=${BUILDDIR}/libffmpeg_stamp}
+DEPS      += ${BUILDDIR}/libffmpeg_stamp
 endif
 
 #
@@ -429,7 +427,14 @@ $(BUILDDIR)/bundle.c: check_dvb_scan
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
 # Static FFMPEG
+
+ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+${ROOTDIR}/src/libav.h: ${BUILDDIR}/libffmpeg_stamp
+${SRCS_LIBAV}: ${BUILDDIR}/libffmpeg_stamp
+endif
+
 ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
+	echo "$(DEPS)"
 	@touch $@
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
