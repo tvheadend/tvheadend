@@ -150,6 +150,13 @@ const idclass_t mpegts_network_class =
       .notify   = mpegts_network_class_idlescan_notify,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "ignore_chnum",
+      .name     = "Ignore Provider's Channel Numbers",
+      .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
+      .def.i    = 0,
+    },
+    {
       .type     = PT_STR,
       .id       = "charset",
       .name     = "Character Set",
