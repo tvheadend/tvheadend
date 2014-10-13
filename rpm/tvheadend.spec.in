@@ -31,6 +31,7 @@ to Showtime, XBMC and various other clients.
 #%patch999 -p1 -b .test
 
 %build
+echo %{version} > %{_builddir}/%{buildsubdir}/rpm/version
 %configure --disable-lockowner --enable-bundle --enable-libffmpeg_static
 %{__make}
 
@@ -40,9 +41,30 @@ mkdir -p -m755 %{buildroot}%{_bindir}
 install -p -m 755 build.linux/tvheadend %{buildroot}%{_bindir}
 # systemd
 mkdir -p -m755 %{buildroot}%{_sysconfdir}/sysconfig
-install -p -m 644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig
+install -p -m 644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/tvheadend
 mkdir -p -m755 %{buildroot}%{_unitdir}
 install -p -m 644 rpm/tvheadend.service %{buildroot}%{_unitdir}
+
+%pre
+getent group tvheadend >/dev/null || groupadd -f -g 283 -r tvheadend
+if ! getent passwd tvheadend > /dev/null ; then
+  if ! getent passwd 283 > /dev/null ; then
+    useradd -r -l -u 283 -g tvheadend -d /home/tvheadend -s /sbin/nologin -c "Tvheadend TV server" tvheadend
+  else
+    useradd -r -l -g tvheadend -d /home/tvheadend -s /sbin/nologin -c "Tvheadend TV server" tvheadend
+  fi
+fi
+if ! test -d /home/tvheadend ; then
+  mkdir -m 0755 /home/tvheadend || exit 1
+  chown tvheadend.tvheadend /home/tvheadend || exit 1
+fi
+exit 0
+
+%post
+%systemd_post tvheadend.service
+
+%postun
+%systemd_postun_with_restart tvheadend.service
 
 %files
 %{_bindir}/*
