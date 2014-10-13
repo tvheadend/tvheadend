@@ -775,6 +775,7 @@ tvheadend.idnode_editor = function(item, conf)
         if (conf.help) {
             var helpBtn = new Ext.Button({
                 text: 'Help',
+                iconCls: 'help',
                 handler: conf.help
             });
             buttons.push(helpBtn);
@@ -1320,6 +1321,7 @@ tvheadend.idnode_grid = function(panel, conf)
             buttons.push('->');
             buttons.push({
                 text: 'Help',
+                iconCls: 'help',
                 handler: conf.help
             });
         }
@@ -1708,6 +1710,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             buttons.push('->');
             buttons.push({
                 text: 'Help',
+		  iconCls: 'help',
                 handler: conf.help
             });
         }
