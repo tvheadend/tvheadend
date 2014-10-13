@@ -142,6 +142,7 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	@touch $@
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_build: $(LIBAVDIR)/$(LIBX264)/.tvh_download
+	@touch $@
 
 else
 
