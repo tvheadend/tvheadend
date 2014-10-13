@@ -63,8 +63,29 @@ LIBVPX          = libvpx-v1.3.0
 LIBVPX_TB       = $(LIBVPX).tar.bz2
 LIBVPX_URL      = https://webm.googlecode.com/files/$(LIBVPX_TB)
 
+YASM            = yasm-1.3.0
+YASM_TB         = $(YASM).tar.gz
+YASM_URL        = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
+
 .PHONY: build
 build: $(LIBAVDIR)/$(FFMPEG)/.tvh_build
+
+#
+# YASM
+#
+
+$(LIBAVDIR)/$(YASM)/.tvh_download:
+	$(call DOWNLOAD,$(YASM_URL),$(LIBAVDIR)/$(YASM_TB))
+	$(call UNTAR,$(YASM_TB),z)
+	@touch $@
+
+$(LIBAVDIR)/$(YASM)/.tvh_build: \
+		$(LIBAVDIR)/$(YASM)/.tvh_download
+	cd $(LIBAVDIR)/$(YASM) && ./configure \
+                --prefix=/ffmpeg
+	DESTDIR=$(LIBAVDIR)/build \
+		make -C $(LIBAVDIR)/$(YASM) install
+	@touch $@
 
 #
 # libogg & libvorbis
@@ -76,12 +97,15 @@ $(LIBAVDIR)/$(LIBOGG)/.tvh_download:
 	@touch $@
 
 $(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
+		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBOGG)/.tvh_download
 	cd $(LIBAVDIR)/$(LIBOGG) && ./configure \
                 --prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
-	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBOGG) install
+	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
+		DESTDIR=$(LIBAVDIR)/build \
+		make -C $(LIBAVDIR)/$(LIBOGG) install
 	@touch $@
 
 $(LIBAVDIR)/$(LIBVORBIS)/.tvh_download: \
@@ -92,13 +116,16 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_download: \
 
 $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_download \
+		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBOGG)/.tvh_build
 	cd $(LIBAVDIR)/$(LIBVORBIS) && ./configure \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared \
 		--with-ogg=$(LIBAVDIR)/build/ffmpeg
-	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBVORBIS) install
+	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
+		DESTDIR=$(LIBAVDIR)/build \
+		make -C $(LIBAVDIR)/$(LIBVORBIS) install
 	@touch $@
 
 #
@@ -113,7 +140,8 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	@touch $@
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
-		$(LIBAVDIR)/$(LIBX264)/.tvh_download
+		$(LIBAVDIR)/$(LIBX264)/.tvh_download \
+		$(LIBAVDIR)/$(YASM)/.tvh_build
 	cd $(LIBAVDIR)/$(LIBX264) && ./configure \
 		--prefix=/ffmpeg \
 		--enable-static \
@@ -124,7 +152,9 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
 		--disable-ffms \
 		--disable-gpac \
 		--disable-lsmash
-	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(LIBX264) install
+	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
+		DESTDIR=$(LIBAVDIR)/build \
+		make -C $(LIBAVDIR)/$(LIBX264) install
 	@touch $@
 
 #
@@ -138,12 +168,15 @@ $(LIBAVDIR)/$(LIBVPX)/.tvh_download:
 	@touch $@
 
 $(LIBAVDIR)/$(LIBVPX)/.tvh_build: \
-		$(LIBAVDIR)/$(LIBVPX)/.tvh_download
+		$(LIBAVDIR)/$(LIBVPX)/.tvh_download \
+		$(LIBAVDIR)/$(YASM)/.tvh_build
 	cd $(LIBAVDIR)/$(LIBVPX) && ./configure \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
-	DIST_DIR=$(LIBAVDIR)/build/ffmpeg make -C $(LIBAVDIR)/$(LIBVPX) install
+	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
+		DIST_DIR=$(LIBAVDIR)/build/ffmpeg \
+		make -C $(LIBAVDIR)/$(LIBVPX) install
 	@touch $@
 
 #
@@ -157,6 +190,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_download:
 	@touch $@
 
 $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
+		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_build \
 		$(LIBAVDIR)/$(LIBX264)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVPX)/.tvh_build \
@@ -174,7 +208,9 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer))
-	DESTDIR=$(LIBAVDIR)/build make -C $(LIBAVDIR)/$(FFMPEG) install
+	PATH="$(LIBAVDIR)/build/ffmpeg/bin:$(PATH)" \
+		DESTDIR=$(LIBAVDIR)/build \
+		make -C $(LIBAVDIR)/$(FFMPEG) install
 	@touch $@
 
 .PHONY: static_libav_clean
