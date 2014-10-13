@@ -18,6 +18,9 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 
+unexport CFLAGS
+unexport LDFLAGS
+
 define DOWNLOAD
 	@mkdir -p $(LIBAVDIR)/build
 	if test -z "$${TVHEADEND_FILE_CACHE}"; then \
