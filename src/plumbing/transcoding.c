@@ -640,7 +640,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       int acount = 0, maxchannels = 0, maxacount = 0;
       octx->channel_layout = 0;
       while ((octx->channel_layout == 0) && (ocodec->channel_layouts[acount] > 0)) {
-        if ((av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) >= maxchannels) && (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= ictx->channels)) {
+        if ((av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) >= maxchannels) && (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= octx->channels)) {
           maxchannels = av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]);
           maxacount = acount;
         }
@@ -1554,7 +1554,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   // resampling not implemented yet
   if(tp->tp_channels > 0)
-    as->aud_channels = 0; //tp->tp_channels; 
+    as->aud_channels = tp->tp_channels; 
   else
     as->aud_channels = 0;
 
