@@ -104,7 +104,7 @@ void
 dvr_timerec_check(dvr_timerec_entry_t *dte)
 {
   dvr_entry_t *de;
-  time_t start, stop;
+  time_t start, stop, limit;
   struct tm tm_start, tm_stop;
   const char *title;
   char buf[200];
@@ -114,19 +114,13 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   if(dte->dte_start < 0 || dte->dte_start >= 24*60 ||
      dte->dte_stop < 0 || dte->dte_stop >= 24*60)
     goto fail;
-  if(dte->dte_start >= dte->dte_stop)
-    goto fail;
-  if(dte->dte_channel ==  NULL)
+  if(dte->dte_channel == NULL)
     goto fail;
 
-  if(dte->dte_weekdays != 0x7f) {
-    localtime_r(&dispatch_clock, &tm_start);
-    if(!((1 << ((tm_start.tm_wday ?: 7) - 1)) & dte->dte_weekdays))
-      goto fail;
-  }
-
+  limit = dispatch_clock - 600;
+  start = dvr_timerec_timecorrection(dispatch_clock, dte->dte_start, &tm_start);
   stop  = dvr_timerec_timecorrection(dispatch_clock, dte->dte_stop,  &tm_stop);
-  if (stop < dispatch_clock - 600) {
+  if (start < limit && stop < limit) {
     /* next day */
     start = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
                                        dte->dte_start,
@@ -134,13 +128,17 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
     stop  = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
                                        dte->dte_stop,
                                        &tm_stop);
-  } else {
-    start = dvr_timerec_timecorrection(dispatch_clock, dte->dte_start, &tm_start);
   }
   /* day boundary correction */
   if (start > stop)
     stop += 24 * 60 * 60;
   assert(start < stop);
+
+  if(dte->dte_weekdays != 0x7f) {
+    localtime_r(&start, &tm_start);
+    if(!((1 << ((tm_start.tm_wday ?: 7) - 1)) & dte->dte_weekdays))
+      goto fail;
+  }
 
   /* purge the old entry */
   de = dte->dte_spawn;
