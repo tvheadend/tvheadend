@@ -262,7 +262,7 @@ const idclass_t profile_class =
     {
       .type     = PT_INT,
       .id       = "timeout",
-      .name     = "Timeout (sec)",
+      .name     = "Timeout (sec) (0=infinite)",
       .off      = offsetof(profile_t, pro_timeout),
       .def.i    = 5,
     },
