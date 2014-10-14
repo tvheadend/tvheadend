@@ -49,18 +49,24 @@ LDFLAGS += -lrt
 endif
 endif
 
-ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
-CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
-LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
-           -lavresample -lswresample -lswscale -lavutil -lavformat -lavcodec -lavutil \
-           -lvorbisenc -lvorbis -logg -lx264 -lvpx \
-           -Wl,-Bdynamic
-endif
-
 ifeq ($(COMPILER), clang)
 CFLAGS  += -Wno-microsoft -Qunused-arguments -Wno-unused-function
 CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
 CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
+endif
+
+ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
+LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
+           -lavresample -lswresample -lswscale \
+           -lavutil -lavformat -lavcodec -lavutil \
+           -lvorbisenc -lvorbis -logg -lx264 -lvpx \
+           -Wl,-Bdynamic
+endif
+ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
+CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
+LDFLAGS += -L${ROOTDIR}/libhdhomerun_static/libhdhomerun \
+           -Wl,-Bstatic -lhdhomerun -Wl,-Bdynamic
 endif
 
 vpath %.c $(ROOTDIR)
@@ -259,9 +265,10 @@ SRCS-${CONFIG_SATIP_CLIENT} += \
 	src/input/mpegts/satip/satip_rtsp.c
 
 # HDHOMERUN
-SRCS-${CONFIG_HDHOMERUN_CLIENT} += \
+SRCS_HDHOMERUN = \
         src/input/mpegts/tvhdhomerun/tvhdhomerun.c \
         src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c
+SRCS-${CONFIG_HDHOMERUN_CLIENT} += $(SRCS_HDHOMERUN)
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \
@@ -365,6 +372,9 @@ DEPS       = ${OBJS:%.o=%.d}
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 DEPS      += ${BUILDDIR}/libffmpeg_stamp
 endif
+ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
+DEPS      += ${BUILDDIR}/libhdhomerun_stamp
+endif
 
 #
 # Build Rules
@@ -443,6 +453,19 @@ ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
 	$(MAKE) -f Makefile.ffmpeg build
+
+# Static HDHOMERUN library
+
+ifeq ($(CONFIG_LIBHDHOMERUN_STATIC),yes)
+${ROOTDIR}/src/input/mpegts/tvhdhomerun/tvhdhomerun_private.h: ${BUILDDIR}/libhdhomerun_stamp
+${SRCS_HDHOMERUN}: ${BUILDDIR}/libhdhomerun_stamp
+endif
+
+${BUILDDIR}/libhdhomerun_stamp: ${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a
+	@touch $@
+
+${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a:
+	$(MAKE) -f Makefile.hdhomerun build
 
 # linuxdvb git tree
 $(ROOTDIR)/data/dvb-scan/.stamp:

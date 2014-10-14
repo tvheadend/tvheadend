@@ -23,6 +23,7 @@ OPTIONS=(
   "linuxdvb:yes"
   "satip_client:yes"
   "hdhomerun_client:auto"
+  "hdhomerun_static:no"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
@@ -229,11 +230,19 @@ fi
 #
 # HDHomeRun - libhdhomerun
 #
-if enabled_or_auto hdhomerun_client; then
-  if ! check_cc_lib hdhomerun; then
-    enable  hdhomerun_client
-    LDFLAGS="$LDFLAGS -lhdhomerun"
+if enabled hdhomerun_static; then
+
+  enable hdhomerun_client
+
+else
+
+  if enabled_or_auto hdhomerun_client; then
+    if ! check_cc_lib hdhomerun; then
+      enable  hdhomerun_client
+      LDFLAGS="$LDFLAGS -lhdhomerun"
+    fi
   fi
+
 fi
 
 #
