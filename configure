@@ -230,7 +230,7 @@ fi
 # HDHomeRun - libhdhomerun
 #
 if enabled_or_auto hdhomerun_client; then
-  if check_cc_lib hdhomerun; then
+  if ! check_cc_lib hdhomerun; then
     enable  hdhomerun_client
     LDFLAGS="$LDFLAGS -lhdhomerun"
   fi

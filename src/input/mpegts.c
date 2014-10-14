@@ -91,7 +91,7 @@ mpegts_done ( void )
 #if ENABLE_SATIP_CLIENT
   tvhftrace("main", satip_done);
 #endif
-#if ENABLE_HDHOMERUN
+#if ENABLE_HDHOMERUN_CLIENT
   tvhftrace("main", tvhdhomerun_done);
 #endif
 #if ENABLE_TSFILE
