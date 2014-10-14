@@ -301,16 +301,18 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   }
 
   if(tuner_status.signal_present) {
-    mmi->mmi_stats.snr = tuner_status.signal_to_noise_quality;
+    /* TODO: totaly stupid conversion from 0-100 scale to 0-655.35 */
+    mmi->mmi_stats.snr = tuner_status.signal_to_noise_quality * 655.35;
+    mmi->mmi_stats.signal = tuner_status.signal_strength * 655.35;
   } else {
     mmi->mmi_stats.snr = 0;
   }
 
-  mmi->mmi_stats.signal = tuner_status.signal_strength;
-
   sigstat.status_text  = signal2str(hfe->hf_status);
   sigstat.snr          = mmi->mmi_stats.snr;
+  sigstat.snr_scale    = mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
   sigstat.signal       = mmi->mmi_stats.signal;
+  sigstat.signal_scale = mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
   sigstat.ber          = mmi->mmi_stats.ber;
   sigstat.unc          = mmi->mmi_stats.unc;
   sm.sm_type = SMT_SIGNAL_STATUS;

@@ -34,7 +34,7 @@ typedef struct tvhdhomerun_frontend    tvhdhomerun_frontend_t;
 static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
 
 // Defines for debugging locks...
-#if 0
+#if 1
 
 #define PTHREAD_MUTEX_LOCK(x) \
         tvhdebug("tvhdhomerun", "lock "#x": %s:%d", __FUNCTION__,__LINE__); \
