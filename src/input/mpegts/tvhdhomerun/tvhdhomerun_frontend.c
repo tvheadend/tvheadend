@@ -127,11 +127,20 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   }
 
   /* enable broadcast */
-  setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *) &sock_opt, sizeof(sock_opt));
-  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &sock_opt, sizeof(sock_opt));
+  if(setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *) &sock_opt, sizeof(sock_opt)) < 0) {
+    tvhlog(LOG_ERR, "tvhdhomerun", "failed to enable broadcast on socket (%d)", errno);
+    return NULL;
+  }
+
+  if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &sock_opt, sizeof(sock_opt)) < 0) {
+    tvhlog(LOG_ERR, "tvhdhomerun", "failed to set address reuse on socket (%d)", errno);
+    return NULL;
+  }
 
   /* important: we need large rx buffers to accomodate the large amount of traffic */
-  setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, (char *) &rx_size, sizeof(rx_size));
+  if(setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, (char *) &rx_size, sizeof(rx_size)) < 0) {
+    tvhlog(LOG_WARNING, "tvhdhomerun", "failed set socket rx buffer size, expect CC errors (%d)", errno);
+  }
 
   memset(&sock_addr, 0, sizeof(sock_addr));
   sock_addr.sin_family = AF_INET;
