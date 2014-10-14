@@ -136,7 +136,7 @@ SRCS =  src/version.c \
 	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
-        src/tvhpoll.c \
+	src/tvhpoll.c \
 	src/huffman.c \
 	src/filebundle.c \
 	src/config.c \
