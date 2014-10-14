@@ -388,7 +388,7 @@ void tvhdhomerun_done ( void )
   tvh_hardware_t *th, *n;
   tvhdhomerun_discovery_t *d, *nd;
 
-  PTHREAD_MUTEX_LOCK(&global_lock);
+  pthread_mutex_lock(&global_lock);
   for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
     n = LIST_NEXT(th, th_link);
     if (idnode_is_instance(&th->th_id, &tvhdhomerun_device_class)) {
@@ -399,7 +399,7 @@ void tvhdhomerun_done ( void )
     nd = TAILQ_NEXT(d, disc_link);
     tvhdhomerun_discovery_destroy(d, 1);
   }
-  PTHREAD_MUTEX_UNLOCK(&global_lock);
+  pthread_mutex_unlock(&global_lock);
 }
 
 void

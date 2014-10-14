@@ -33,39 +33,12 @@ typedef struct tvhdhomerun_frontend    tvhdhomerun_frontend_t;
 
 static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
 
-// Defines for debugging locks...
-#if 1
-
-#define PTHREAD_MUTEX_LOCK(x) \
-        tvhdebug("tvhdhomerun", "lock "#x": %s:%d", __FUNCTION__,__LINE__); \
-        pthread_mutex_lock(x);
-
-#define PTHREAD_MUTEX_UNLOCK(x) \
-        tvhdebug("tvhdhomerun", "unlock "#x": %s:%d", __FUNCTION__,__LINE__); \
-        pthread_mutex_unlock(x);
-
-#else
-
-#define PTHREAD_MUTEX_LOCK(x) \
-        pthread_mutex_lock(x);
-
-#define PTHREAD_MUTEX_UNLOCK(x) \
-        pthread_mutex_unlock(x);
-
-#endif
-
-
-// static pthread_mutex_t global_hdhomerun_device_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 struct tvhdhomerun_device_info
 {
   char *ip_address;         /* IP address */
   char *friendlyname;
   char *deviceModel;
-
   char *uuid;
-
 };
 
 struct tvhdhomerun_device
@@ -117,7 +90,6 @@ struct tvhdhomerun_frontend
    */
   int                            hf_tunerNumber;
   dvb_fe_type_t                  hf_type; 
-  pthread_mutex_t                hf_mutex;          // Anything that is used by both input-thread
 
   // libhdhomerun objects.
   struct hdhomerun_device_t     *hf_hdhomerun_tuner;
@@ -127,8 +99,6 @@ struct tvhdhomerun_frontend
   int                            hf_ready;
   int                            hf_status;
 
-  pthread_mutex_t                hf_input_mux_lock;           // Lock to make sure we are not running the input-thread
-                                                              // reader during a mux start/stop.
   // input thread..
   pthread_t                      hf_input_thread;
   pthread_mutex_t                hf_input_thread_mutex;        /* used in condition signaling */
@@ -137,16 +107,13 @@ struct tvhdhomerun_frontend
   uint8_t                        hf_input_thread_running;      // Indicates if input_thread is running.
   uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
 
-
   // Global lock for the libhdhomerun library since it seems to have some threading-issues.
   pthread_mutex_t               hf_hdhomerun_device_mutex;
-
 
   /*
    * Reception
    */
   char                           hf_pid_filter_buf[1024];
-  pthread_mutex_t                hf_pid_filter_mutex;
 
   gtimer_t                       hf_monitor_timer;
 
@@ -154,20 +121,14 @@ struct tvhdhomerun_frontend
  
 };
 
-
 /*
  * Methods
  */
   
 void tvhdhomerun_device_init ( void );
-
 void tvhdhomerun_device_done ( void );
-
 void tvhdhomerun_device_destroy ( tvhdhomerun_device_t *sd );
-
 void tvhdhomerun_device_destroy_later( tvhdhomerun_device_t *sd, int after_ms );
-
-
 
 tvhdhomerun_frontend_t * 
 tvhdhomerun_frontend_create( tvhdhomerun_device_t *hd, struct hdhomerun_discover_device_t *discover_info, htsmsg_t *conf, dvb_fe_type_t type, unsigned int frontend_number );
@@ -176,7 +137,5 @@ void tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *lfe );
 
 void tvhdhomerun_device_save ( tvhdhomerun_device_t *sd );
 void tvhdhomerun_frontend_save ( tvhdhomerun_frontend_t *lfe, htsmsg_t *m );
-
-
 
 #endif
