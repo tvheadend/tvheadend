@@ -411,38 +411,66 @@ tv.app = function() {
     return {
 	init: function() {
 
+	    var channelStore = new Ext.data.JsonStore({
+	        autoLoad: {params:{start: 0, limit: 8}}, // limit initial page size to 8
+	        root : 'entries',
+	        fields : ['icon_public_url', 'number', 'name', 'uuid'],
+	        id : 'uuid',
+	        sortInfo : {
+	            field : 'number', // WIBI: Ideally, sort the whole channel list at source
+	            direction : "ASC"
+	        },
+	        url : "api/channel/grid"
+	    });
+
 	    var videoPlayer = new tv.ui.VideoPlayer({
 		params: { },
 		renderTo: Ext.getBody()
 	    });
 	    videoPlayer.setDisplaySize('100%', '00%');
 
-	    var chList = new tv.ui.ChannelList({
-		store: new Ext.data.JsonStore({
-		    autoLoad : true,
-		    root : 'entries',
-		    fields : ['icon_public_url', 'number', 'name', 'uuid'],
-		    id : 'uuid',
-		    sortInfo : {
-			field : 'number',
-			direction : "ASC"
-		    },
-		    url : "api/channel/grid"
-		})
+        var chList = new tv.ui.ChannelList({
+	        autoScroll: true,
+	        store: channelStore
+	    });
+
+// Play button that calls the "I've pressed Enter!" event when clicked
+
+        var playButton = new Ext.Button({
+	        text: 'Play Selected Channel',
+	        handler: function() {
+	            chList.fireEvent('naventer');
+	        }
+	    });
+
+// Paging bar so you can move through the list of channels
+
+	    var pageBar = new Ext.PagingToolbar({
+	        store: channelStore,
+	        pageSize: 8 // replicates initial page size
+	    });
+
+	    var chListPanel1 = new Ext.Panel({
+		items: [ pageBar, playButton ],
+		cls: 'tv-channel-list-header'
+	    });
+
+	    var chListPanel2 = new Ext.Panel({
+		items: [ chList ],
+		cls: 'tv-channel-list-content'
 	    });
 
 	    var chListPanel = new Ext.Panel({
 		title:'Channels',
-		items: chList,
+		items: [ chListPanel1, chListPanel2 ],
 		cls: 'tv-channel-list',
-		autoScroll: true,
 		renderTo: Ext.getBody()
 	    });
 
 	    window.onresize = function() {
 		var h = chListPanel.el.getHeight();
 		h -= chListPanel.header.getHeight();
-		h -= 25;
+		h -= 250;
 		
 		chList.setHeight(h);
 	    };
