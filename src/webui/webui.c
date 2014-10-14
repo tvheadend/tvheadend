@@ -870,7 +870,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
 /**
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
- *                          http://tvheadend/stream/channel/<chname>
+ *                          http://tvheadend/stream/channel/<uuid>
+ *                          http://tvheadend/stream/channelnumber/<channelnumber>
+ *                          http://tvheadend/stream/channelname/<channelname>
  *                          http://tvheadend/stream/service/<servicename>
  *                          http://tvheadend/stream/mux/<muxid>
  */
@@ -946,13 +948,15 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   size_t maxlen;
   char *buf;
   const char *host = http_arg_get(&hc->hc_args, "Host");
-  const char *title;
+  const char *title, *profile, *image;
   size_t len;
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
+  profile = http_arg_get(&hc->hc_req_args, "profile");
+  image   = http_arg_get(&hc->hc_req_args, "image");
 
-  maxlen = strlen(remain) + strlen(title) + 256;
+  maxlen = strlen(remain) + strlen(title) + 512;
   buf = alloca(maxlen);
 
   snprintf(buf, maxlen, "\
@@ -961,10 +965,11 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   <trackList>\r\n\
      <track>\r\n\
        <title>%s</title>\r\n\
-       <location>http://%s/%s</location>\r\n\
+       <location>http://%s/%s%s%s</location>\r\n%s%s%s\
      </track>\r\n\
   </trackList>\r\n\
-</playlist>\r\n", title, host, remain);
+</playlist>\r\n", title, host, remain, profile ? "?profile=" : "", profile ?: "",
+  image ? "       <image>" : "", image ?: "", image ? "</image>\r\n" : "");
 
   len = strlen(buf);
   http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL);
@@ -983,11 +988,12 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   size_t maxlen;
   char *buf;
   const char *host = http_arg_get(&hc->hc_args, "Host");
-  const char *title;
+  const char *title, *profile;
   size_t len;
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
+  profile = http_arg_get(&hc->hc_req_args, "profile");
 
   maxlen = strlen(remain) + strlen(title) + 256;
   buf = alloca(maxlen);
@@ -995,7 +1001,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   snprintf(buf, maxlen, "\
 #EXTM3U\r\n\
 #EXTINF:-1,%s\r\n\
-http://%s/%s\r\n", title, host, remain);
+http://%s/%s%s%s\r\n", title, host, remain, profile ? "?profile=" : "", profile ?: "");
 
   len = strlen(buf);
   http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL);
@@ -1013,9 +1019,9 @@ page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
   const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
   if (strncasecmp(agent, "curl/", 5) == 0 ||
       strncasecmp(agent, "wget/", 5) == 0)
-    return strdup(path + 5);
+    return strdup(path + 5); /* note: skip the /play */
   if (strncasecmp(agent, "TVHeadend/", 10) == 0)
-    return strdup(path + 10);
+    return strdup(path + 5); /* note: skip the /play */
   return NULL;
 }
 
