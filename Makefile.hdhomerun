@@ -1,0 +1,76 @@
+#
+#  HDhomerun library build
+#  Copyright (C) 2014 Jaroslav Kysela
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
+
+unexport CFLAGS
+unexport LDFLAGS
+
+define DOWNLOAD
+	@mkdir -p $(LIBHDHRDIR)/build
+	if test -z "$${TVHEADEND_FILE_CACHE}"; then \
+          wget --no-verbose -O $(2) $(1); \
+        else \
+          file=$$(basename $(2)); \
+          cp "$$TVHEADEND_FILE_CACHE/$$(file)" $(2); \
+        fi
+endef
+
+define UNTAR
+	tar x -C $(LIBHDHRDIR) -$(2)f $(LIBHDHRDIR)/$(1)
+endef
+
+LIBHDHRDIR = $(ROOTDIR)/libhdhomerun_static
+
+export PATH := $(LIBHDHRDIR)/build/bin:$(PATH)
+
+LIBHDHR         = libhdhomerun_20140604
+LIBHDHR_TB      = $(LIBHDHR).tgz
+LIBHDHR_URL     = http://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
+
+.PHONY: build
+build: $(LIBHDHRDIR)/$(LIBHDHR)/.tvh_build
+
+#
+# libhdhomerun
+#
+
+-include $(LIBHDHRDIR)/$(LIBHDHR)/Makefile
+
+OBJS = $(foreach file,$(LIBSRCS),$(LIBHDHRDIR)/$(LIBHDHR)/$(basename $(file)).o)
+
+$(LIBHDHRDIR)/$(LIBHDHR)/%.o: $(LIBHDHRDIR)/$(LIBHDHR)/%.c
+	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
+
+$(LIBHDHRDIR)/$(LIBHDHR)/libhdhomerun.a: $(OBJS)
+	$(AR) rcs $@ $^
+
+$(LIBHDHRDIR)/$(LIBHDHR)/.tvh_download:
+	$(call DOWNLOAD,$(LIBHDHR_URL),$(LIBHDHRDIR)/$(LIBHDHR_TB))
+	$(call UNTAR,$(LIBHDHR_TB),z)
+	ln -sf libhdhomerun $(LIBHDHRDIR)/$(LIBHDHR)
+	@touch $@
+
+$(LIBHDHRDIR)/$(LIBHDHR)/.tvh_build: \
+		$(LIBHDHRDIR)/$(LIBHDHR)/.tvh_download
+	$(MAKE) -f Makefile.hdhomerun $(LIBHDHRDIR)/$(LIBHDHR)/libhdhomerun.a
+	@touch $@
+
+.PHONY: static_libhdhr_clean
+static_libhdhr_clean:
+	@rm -rf $(LIBHDHRDIR)
