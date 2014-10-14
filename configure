@@ -22,6 +22,7 @@ OPTIONS=(
   "v4l:no"
   "linuxdvb:yes"
   "satip_client:yes"
+  "hdhomerun_client:auto"
   "iptv:yes"
   "tsfile:yes"
   "dvbscan:yes"
@@ -226,6 +227,16 @@ if enabled_or_auto linuxdvb; then
 fi
 
 #
+# HDHomeRun - libhdhomerun
+#
+if enabled_or_auto hdhomerun_client; then
+  if check_cc_lib hdhomerun; then
+    enable  hdhomerun_client
+    LDFLAGS="$LDFLAGS -lhdhomerun"
+  fi
+fi
+
+#
 # Gzip
 #
 if enabled_or_auto zlib; then
@@ -380,11 +391,11 @@ fi
 disable mpegts
 disable mpegps
 disable mpegts_dvb
-if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client;
+if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || enabled hdhomerun_client;
 then
   enable mpegts
 fi
-if enabled linuxdvb || enabled satip_client; then
+if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client; then
   enable mpegts_dvb
 fi
 
