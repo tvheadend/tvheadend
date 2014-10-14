@@ -65,6 +65,8 @@ static void epggrab_ota_timeout_cb ( void *p );
 static void epggrab_ota_data_timeout_cb ( void *p );
 static void epggrab_ota_kick_cb ( void *p );
 
+static void epggrab_mux_start ( mpegts_mux_t *mm, void *p );
+
 static void epggrab_ota_save ( epggrab_ota_mux_t *ota );
 
 static void epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota );
@@ -506,6 +508,9 @@ next_one:
       first = om;
   } else {
     kick = 0;
+    /* note: it is possible that the mux_start listener is not called */
+    /* for reshared mux subscriptions, so call it (maybe second time) here.. */
+    epggrab_mux_start(mm, NULL);
   }
 
 done:
@@ -786,6 +791,7 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
   epggrab_ota_svc_link_t *svcl;
 
   gtimer_disarm(&ota->om_timer);
+  gtimer_disarm(&ota->om_data_timer);
   if (head != NULL)
     TAILQ_REMOVE(head, ota, om_q_link);
   RB_REMOVE(&epggrab_ota_all, ota, om_global_link);
