@@ -23,9 +23,6 @@
 #if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
 #include <libavresample/avresample.h>
 #include <libavutil/opt.h>
-#include <libavutil/mathematics.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/frame.h>
 #include <libavutil/audio_fifo.h>
 #endif
 #include <libavutil/dict.h>
