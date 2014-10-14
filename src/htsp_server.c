@@ -1792,13 +1792,15 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     st = hs->hs_work;
     normts = 1;
   }
+#else
+  profile_t *pro = NULL;
 #endif
 
   if(normts)
     st = hs->hs_tsfix = tsfix_create(st);
 
   tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
-  hs->hs_s = subscription_create_from_channel(ch, weight,
+  hs->hs_s = subscription_create_from_channel(ch, pro, weight,
 					      htsp->htsp_logname,
 					      st,
 					      SUBSCRIPTION_STREAMING,

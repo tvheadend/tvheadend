@@ -341,6 +341,7 @@ typedef struct service {
   /**
    * Stream start time
    */
+  int    s_timeout;
   int    s_grace_delay;
   time_t s_start_time;
 
@@ -448,7 +449,7 @@ typedef struct service {
 void service_init(void);
 void service_done(void);
 
-int service_start(service_t *t, int instance, int postpone);
+int service_start(service_t *t, int instance, int timeout, int postpone);
 void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);
@@ -470,7 +471,8 @@ service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
                                           service_instance_list_t *sil,
                                           int *error, int weight,
-                                          int flags, int postpone);
+                                          int flags, int timeout,
+                                          int postpone);
 
 elementary_stream_t *service_stream_find_(service_t *t, int pid);
 

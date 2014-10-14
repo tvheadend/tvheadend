@@ -21,12 +21,15 @@
 
 #include "service.h"
 
+struct profile;
+
 extern struct th_subscription_list subscriptions;
 
-#define SUBSCRIPTION_RAW_MPEGTS 0x1
-#define SUBSCRIPTION_NONE       0x2
-#define SUBSCRIPTION_FULLMUX    0x4
-#define SUBSCRIPTION_STREAMING  0x8
+#define SUBSCRIPTION_RAW_MPEGTS 0x01
+#define SUBSCRIPTION_NONE       0x02
+#define SUBSCRIPTION_FULLMUX    0x04
+#define SUBSCRIPTION_STREAMING  0x08
+#define SUBSCRIPTION_RESTART    0x10
 
 /* Some internal prioties */
 #define SUBSCRIPTION_PRIO_SCAN_IDLE   1 ///< Idle scanning
@@ -75,6 +78,7 @@ typedef struct th_subscription {
   streaming_target_t *ths_output;
 
   int ths_flags;
+  int ths_timeout;
 
   time_t ths_last_find;
   int ths_last_error;
@@ -122,39 +126,45 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
 void subscription_reschedule(void);
 
-th_subscription_t *subscription_create_from_channel(struct channel *ch,
-						    unsigned int weight,
-						    const char *name,
-						    streaming_target_t *st,
-						    int flags,
-						    const char *hostname,
-						    const char *username,
-						    const char *client);
+th_subscription_t *
+subscription_create_from_channel(struct channel *ch,
+                                 struct profile *pro,
+				 unsigned int weight,
+				 const char *name,
+				 streaming_target_t *st,
+				 int flags,
+				 const char *hostname,
+				 const char *username,
+				 const char *client);
 
 
-th_subscription_t *subscription_create_from_service(struct service *t,
-                                                    unsigned int weight,
-						    const char *name,
-						    streaming_target_t *st,
-						    int flags,
-						    const char *hostname,
-						    const char *username,
-						    const char *client);
+th_subscription_t *
+subscription_create_from_service(struct service *t,
+                                 struct profile *pro,
+                                 unsigned int weight,
+				 const char *name,
+				 streaming_target_t *st,
+				 int flags,
+				 const char *hostname,
+				 const char *username,
+				 const char *client);
 
 #if ENABLE_MPEGTS
 struct mpegts_mux;
-th_subscription_t *subscription_create_from_mux
-  (struct mpegts_mux *m,
-  unsigned int weight,
-  const char *name,
-  streaming_target_t *st,
-  int flags,
-  const char *hostname,
-  const char *username,
-  const char *client, int *err);
+th_subscription_t *
+subscription_create_from_mux(struct mpegts_mux *m,
+                             struct profile *pro,
+                             unsigned int weight,
+                             const char *name,
+                             streaming_target_t *st,
+                             int flags,
+                             const char *hostname,
+                             const char *username,
+                             const char *client, int *err);
 #endif
 
-th_subscription_t *subscription_create(int weight, const char *name,
+th_subscription_t *subscription_create(struct profile *pro,
+                                       int weight, const char *name,
 				       streaming_target_t *st,
 				       int flags, st_callback_t *cb,
 				       const char *hostname,

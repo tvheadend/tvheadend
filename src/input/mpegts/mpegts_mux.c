@@ -1048,7 +1048,7 @@ mpegts_mux_subscribe
 {
   int err = 0;
   th_subscription_t *s;
-  s = subscription_create_from_mux(mm, weight, name, NULL,
+  s = subscription_create_from_mux(mm, NULL, weight, name, NULL,
                                    SUBSCRIPTION_NONE,
                                    NULL, NULL, NULL, &err);
   return s ? 0 : err;

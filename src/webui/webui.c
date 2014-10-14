@@ -734,7 +734,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_service(service, weight ?: 100, "HTTP",
+    s = subscription_create_from_service(service, pro, weight ?: 100, "HTTP",
                                          prch.prch_st,
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
                                          addrbuf,
@@ -788,7 +788,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_mux(mm, weight ?: 10, "HTTP",
+    s = subscription_create_from_mux(mm, NULL, weight ?: 10, "HTTP",
                                      prch.prch_st,
                                      prch.prch_flags |
                                      SUBSCRIPTION_FULLMUX |
@@ -846,7 +846,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_channel(ch, weight ?: 100, "HTTP",
+    s = subscription_create_from_channel(ch, pro, weight ?: 100, "HTTP",
                  prch.prch_st, prch.prch_flags | SUBSCRIPTION_STREAMING,
                  addrbuf, hc->hc_username,
                  http_arg_get(&hc->hc_args, "User-Agent"));

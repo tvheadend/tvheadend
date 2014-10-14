@@ -69,6 +69,8 @@ typedef struct profile {
   int pro_shield;
   char *pro_name;
   char *pro_comment;
+  int pro_timeout;
+  int pro_restart;
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);

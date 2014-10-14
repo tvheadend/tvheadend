@@ -1081,6 +1081,24 @@ config_migrate_v14 ( void )
   }
 }
 
+static void
+config_migrate_v15 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  int i;
+
+  if ((c = hts_settings_load("profile")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (htsmsg_get_s32(e, "timeout", &i)) {
+        htsmsg_set_s32(e, "timeout", 5);
+        hts_settings_save(e, "profile/%s", f->hmf_name);
+      }
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1183,7 +1201,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v11,
   config_migrate_v12,
   config_migrate_v13,
-  config_migrate_v14
+  config_migrate_v14,
+  config_migrate_v15
 };
 
 /*

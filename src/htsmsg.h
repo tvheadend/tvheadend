@@ -111,24 +111,42 @@ void htsmsg_destroy(htsmsg_t *msg);
 void htsmsg_add_bool(htsmsg_t *msg, const char *name, int b);
 
 /**
+ * Add an integer field where source is signed 64 bit.
+ */
+void htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64);
+
+/**
+ * Add/update an integer field where source is signed 64 bit.
+ */
+int  htsmsg_set_s64(htsmsg_t *msg, const char *name, int64_t s64);
+
+/**
  * Add an integer field where source is unsigned 32 bit.
  */
-void htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32);
+static inline void
+htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32)
+  { htsmsg_add_s64(msg, name, u32); }
 
 /**
  * Add/update an integer field
  */
-int  htsmsg_set_u32(htsmsg_t *msg, const char *name, uint32_t u32);
+static inline int
+htsmsg_set_u32(htsmsg_t *msg, const char *name, uint32_t u32)
+  { return htsmsg_set_s64(msg, name, u32); }
 
 /**
  * Add an integer field where source is signed 32 bit.
  */
-void htsmsg_add_s32(htsmsg_t *msg, const char *name,  int32_t s32);
+static inline void
+htsmsg_add_s32(htsmsg_t *msg, const char *name,  int32_t s32)
+  { htsmsg_add_s64(msg, name, s32); }
 
 /**
- * Add an integer field where source is signed 64 bit.
+ * Add/update an integer field
  */
-void htsmsg_add_s64(htsmsg_t *msg, const char *name,  int64_t s64);
+static inline int
+htsmsg_set_s32(htsmsg_t *msg, const char *name,  int32_t s32)
+  { return htsmsg_set_s64(msg, name, s32); }
 
 /**
  * Add a string field.

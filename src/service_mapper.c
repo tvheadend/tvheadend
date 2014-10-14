@@ -30,6 +30,7 @@
 #include "service_mapper.h"
 #include "streaming.h"
 #include "service.h"
+#include "profile.h"
 #include "api.h"
 
 static service_mapper_status_t service_mapper_stat; 
@@ -361,7 +362,7 @@ service_mapper_thread ( void *aux )
 
     /* Subscribe */
     tvhinfo("service_mapper", "checking %s", s->s_nicename);
-    sub = subscription_create_from_service(s, SUBSCRIPTION_PRIO_MAPPER,
+    sub = subscription_create_from_service(s, NULL, SUBSCRIPTION_PRIO_MAPPER,
                                            "service_mapper", &sq.sq_st,
                                            0, NULL, NULL, "service_mapper");
 

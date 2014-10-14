@@ -259,6 +259,20 @@ const idclass_t profile_class =
       .name     = "Comment",
       .off      = offsetof(profile_t, pro_comment),
     },
+    {
+      .type     = PT_INT,
+      .id       = "timeout",
+      .name     = "Timeout (sec)",
+      .off      = offsetof(profile_t, pro_timeout),
+      .def.i    = 5,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "restart",
+      .name     = "Restart On Error",
+      .off      = offsetof(profile_t, pro_restart),
+      .def.i    = 0,
+    },
     { }
   }
 };

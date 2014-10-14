@@ -36,6 +36,7 @@
 #include "streaming.h"
 #include "channels.h"
 #include "service.h"
+#include "profile.h"
 #include "htsmsg.h"
 #include "notify.h"
 #include "atomic.h"
@@ -312,7 +313,7 @@ subscription_reschedule(void)
                s->ths_service->s_nicename, s->ths_weight);
     si = service_find_instance(s->ths_service, s->ths_channel,
                                &s->ths_instances, &error, s->ths_weight,
-                               s->ths_flags,
+                               s->ths_flags, s->ths_timeout,
                                dispatch_clock > s->ths_postpone_end ?
                                  0 : s->ths_postpone_end - dispatch_clock);
     s->ths_current_instance = si;
@@ -323,6 +324,18 @@ subscription_reschedule(void)
         if (s->ths_last_error != error)
           s->ths_last_find = dispatch_clock;
         s->ths_last_error = error;
+        continue;
+      }
+      if (s->ths_flags & SUBSCRIPTION_RESTART) {
+        if (s->ths_channel)
+          tvhwarn("subscription", "restarting channel %s",
+                  channel_get_name(s->ths_channel));
+        else
+          tvhwarn("subscription", "restarting service %s",
+                  s->ths_service->s_nicename);
+        s->ths_testing_error = 0;
+        s->ths_current_instance = NULL;
+        service_instance_list_clear(&s->ths_instances);
         continue;
       }
       /* No service available */
@@ -564,7 +577,7 @@ subscription_unsubscribe(th_subscription_t *s)
  */
 th_subscription_t *
 subscription_create
-  (int weight, const char *name, streaming_target_t *st,
+  (profile_t *pro, int weight, const char *name, streaming_target_t *st,
    int flags, st_callback_t *cb, const char *hostname,
    const char *username, const char *client)
 {
@@ -596,8 +609,12 @@ subscription_create
   s->ths_total_err         = 0;
   s->ths_output            = st;
   s->ths_flags             = flags;
+  s->ths_timeout           = pro ? pro->pro_timeout : 0;
   s->ths_postpone          = subscription_postpone;
   s->ths_postpone_end      = dispatch_clock + s->ths_postpone;
+
+  if (pro && pro->pro_restart)
+    s->ths_flags |= SUBSCRIPTION_RESTART;
 
   time(&s->ths_start);
 
@@ -616,11 +633,16 @@ subscription_create
  *
  */
 static th_subscription_t *
-subscription_create_from_channel_or_service
-  (channel_t *ch, service_t *t, unsigned int weight, 
-   const char *name, streaming_target_t *st,
-   int flags, const char *hostname,
-   const char *username, const char *client)
+subscription_create_from_channel_or_service(channel_t *ch,
+                                            service_t *t,
+                                            profile_t *pro,
+                                            unsigned int weight,
+                                            const char *name,
+                                            streaming_target_t *st,
+                                            int flags,
+                                            const char *hostname,
+                                            const char *username,
+                                            const char *client)
 {
   th_subscription_t *s;
   assert(!ch || !t);
@@ -629,7 +651,7 @@ subscription_create_from_channel_or_service
   if (ch)
     tvhtrace("subscription", "creating subscription for %s weight %d",
              channel_get_name(ch), weight);
-  s = subscription_create(weight, name, st, flags, subscription_input,
+  s = subscription_create(pro, weight, name, st, flags, subscription_input,
                           hostname, username, client);
   s->ths_channel = ch;
   s->ths_service = t;
@@ -641,27 +663,29 @@ subscription_create_from_channel_or_service
 }
 
 th_subscription_t *
-subscription_create_from_channel(channel_t *ch, unsigned int weight, 
+subscription_create_from_channel(channel_t *ch, profile_t *pro,
+                                 unsigned int weight,
 				 const char *name, streaming_target_t *st,
 				 int flags, const char *hostname,
 				 const char *username, const char *client)
 {
   return subscription_create_from_channel_or_service
-           (ch, NULL, weight, name, st, flags, hostname, username, client);
+           (ch, NULL, pro, weight, name, st, flags, hostname, username, client);
 }
 
 /**
  *
  */
 th_subscription_t *
-subscription_create_from_service(service_t *t, unsigned int weight,
+subscription_create_from_service(service_t *t, profile_t *pro,
+                                 unsigned int weight,
                                  const char *name,
 				 streaming_target_t *st, int flags,
 				 const char *hostname, const char *username, 
 				 const char *client)
 {
   return subscription_create_from_channel_or_service
-           (NULL, t, weight, name, st, flags, hostname, username, client);
+           (NULL, t, pro, weight, name, st, flags, hostname, username, client);
 }
 
 /**
@@ -706,20 +730,20 @@ mux_data_timeout ( void *aux )
   }
   mi->mi_live = 0;
 
-  gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, 5);
+  if (s->ths_timeout > 0)
+    gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, s->ths_timeout);
 }
 
 th_subscription_t *
-subscription_create_from_mux
-  (mpegts_mux_t *mm,
-   unsigned int weight,
-   const char *name,
-   streaming_target_t *st,
-   int flags,
-   const char *hostname,
-   const char *username, 
-   const char *client,
-   int *err)
+subscription_create_from_mux(mpegts_mux_t *mm, profile_t *pro,
+                             unsigned int weight,
+                             const char *name,
+                             streaming_target_t *st,
+                             int flags,
+                             const char *hostname,
+                             const char *username,
+                             const char *client,
+                             int *err)
 {
   th_subscription_t *s;
   streaming_message_t *sm;
@@ -737,7 +761,7 @@ subscription_create_from_mux
   /* Create subscription */
   if (!st)
     flags |= SUBSCRIPTION_NONE;
-  s = subscription_create(weight, name, st, flags, NULL,
+  s = subscription_create(pro, weight, name, st, flags, NULL,
                           hostname, username, client);
   s->ths_mmi = mm->mm_active;
 
@@ -790,7 +814,8 @@ subscription_create_from_mux
 
   pthread_mutex_unlock(&mi->mi_output_lock);
 
-  gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, r);
+  if (r > 0)
+    gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, r);
 
   return s;
 }
@@ -1045,10 +1070,8 @@ subscription_dummy_join(const char *id, int first)
 
   st = calloc(1, sizeof(streaming_target_t));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  subscription_create_from_service(t, 1, "dummy", st, 0, NULL, NULL, "dummy");
+  subscription_create_from_service(t, NULL, 1, "dummy", st, 0, NULL, NULL, "dummy");
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);
 }
-
-
