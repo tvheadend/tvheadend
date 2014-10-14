@@ -20,13 +20,15 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
-#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
 #include <libavresample/avresample.h>
 #include <libavutil/opt.h>
 #include <libavutil/audio_fifo.h>
-#endif
 #include <libavutil/dict.h>
 #include <libavutil/audioconvert.h>
+
+#if LIBAVUTIL_VERSION_MICRO >= 100 /* FFMPEG */
+#define USING_FFMPEG 1
+#endif
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -70,12 +72,11 @@ typedef struct audio_stream {
 
   int8_t          aud_channels;
   int32_t         aud_bitrate;
-#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
+
   AVAudioResampleContext *resample_context;
   AVAudioFifo     *fifo;
   int             resample;
   int             resample_is_open;
-#endif
 
 } audio_stream_t;
 
@@ -267,212 +268,6 @@ transcoder_stream_subtitle(transcoder_stream_t *ts, th_pkt_t *pkt)
   avsubtitle_free(&sub);
 }
 
-
-#if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
-/**
- *
- */
-static void
-transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
-{
-  AVCodec *icodec, *ocodec;
-  AVCodecContext *ictx, *octx;
-  AVPacket packet;
-  int length, len, i;
-  uint32_t frame_bytes;
-  short *samples;
-  streaming_message_t *sm;
-  th_pkt_t *n;
-  audio_stream_t *as = (audio_stream_t*)ts;
-
-  ictx = as->aud_ictx;
-  octx = as->aud_octx;
-
-  icodec = as->aud_icodec;
-  ocodec = as->aud_ocodec;
-
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-    ictx->codec_id = icodec->id;
-
-    if (avcodec_open2(ictx, icodec, NULL) < 0) {
-      tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", icodec->name);
-      ts->ts_index = 0;
-      goto cleanup;
-    }
-
-    as->aud_dec_pts = pkt->pkt_pts;
-  }
-
-  if (pkt->pkt_pts > as->aud_dec_pts) {
-    tvhlog(LOG_WARNING, "transcode", "Detected framedrop in audio");
-    as->aud_enc_pts += (pkt->pkt_pts - as->aud_dec_pts);
-    as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
-  }
-
-  pkt = pkt_merge_header(pkt);
-
-  av_init_packet(&packet);
-  packet.data     = pktbuf_ptr(pkt->pkt_payload);
-  packet.size     = pktbuf_len(pkt->pkt_payload);
-  packet.pts      = pkt->pkt_pts;
-  packet.dts      = pkt->pkt_dts;
-  packet.duration = pkt->pkt_duration;
-
-  if ((len = as->aud_dec_size - as->aud_dec_offset) <= 0) {
-    tvhlog(LOG_ERR, "transcode", "Decoder buffer overflow");
-    ts->ts_index = 0;
-    goto cleanup;
-  }
-
-  samples = (short*)(as->aud_dec_sample + as->aud_dec_offset);
-  if ((length = avcodec_decode_audio3(ictx, samples, &len, &packet)) <= 0) {
-    if (length == AVERROR_INVALIDDATA) goto cleanup;
-    tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d, %s)", length, get_error_text(length));
-    goto cleanup;
-  }
-
-  as->aud_dec_pts    += pkt->pkt_duration;
-  as->aud_dec_offset += len;
-
-
-  octx->sample_rate     = ictx->sample_rate;
-  octx->sample_fmt      = ictx->sample_fmt;
-
-  octx->time_base.den   = 90000;
-  octx->time_base.num   = 1;
-
-  octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
-  octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
-
-  octx->channels        = MIN(octx->channels, ictx->channels);
-  octx->bit_rate        = MIN(octx->bit_rate,  ictx->bit_rate);
-
-  switch (octx->channels) {
-  case 1:
-    octx->channel_layout = AV_CH_LAYOUT_MONO; 
-    break;
-
-  case 2:
-    octx->channel_layout = AV_CH_LAYOUT_STEREO;
-    break;
-
-  case 3:
-    octx->channel_layout = AV_CH_LAYOUT_SURROUND;
-    break;
-
-  case 4:
-    octx->channel_layout = AV_CH_LAYOUT_QUAD;
-    break;
-
-  case 5:
-    octx->channel_layout = AV_CH_LAYOUT_5POINT0;
-    break;
-
-  case 6:
-    octx->channel_layout = AV_CH_LAYOUT_5POINT1;
-    break;
-
-  case 7:
-    octx->channel_layout = AV_CH_LAYOUT_6POINT1;
-    break;
-
-  case 8:
-    octx->channel_layout = AV_CH_LAYOUT_7POINT1;
-    break;
-
-  default: 
-    break;
-  }
-
-  switch (ts->ts_type) {
-  case SCT_MPEG2AUDIO:
-    octx->channels = MIN(octx->channels, 2);
-    if (octx->channels == 1)
-      octx->channel_layout = AV_CH_LAYOUT_MONO;
-    else
-      octx->channel_layout = AV_CH_LAYOUT_STEREO;
-
-    break;
-
-  case SCT_AAC:
-    octx->global_quality = 4*FF_QP2LAMBDA;
-    octx->flags         |= CODEC_FLAG_QSCALE;
-    break;
-
-  case SCT_VORBIS:
-    octx->flags         |= CODEC_FLAG_QSCALE;
-    octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
-    octx->channels       = 2; // Only stereo suported by libavcodec
-    octx->global_quality = 4*FF_QP2LAMBDA;
-
-    break;
-
-  default:
-    break;
-  }
-
-  if (octx->codec_id == AV_CODEC_ID_NONE) {
-    as->aud_enc_pts = pkt->pkt_pts;
-    octx->codec_id = ocodec->id;
-
-    if (avcodec_open2(octx, ocodec, NULL) < 0) {
-      tvhlog(LOG_ERR, "transcode", "Unable to open %s encoder", ocodec->name);
-      ts->ts_index = 0;
-      goto cleanup;
-    }
-  }
-
-  frame_bytes = av_get_bytes_per_sample(octx->sample_fmt) *
-    octx->frame_size *
-    octx->channels;
-
-  len = as->aud_dec_offset;
-
-  for (i = 0; i <= (len - frame_bytes); i += frame_bytes) {
-    length = avcodec_encode_audio(octx,
-				  as->aud_enc_sample,
-				  as->aud_enc_size,
-				  (short *)(as->aud_dec_sample + i));
-    if (length < 0) {
-      tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d)", length);
-      ts->ts_index = 0;
-      goto cleanup;
-
-    } else if (length) {
-      n = pkt_alloc(as->aud_enc_sample, length, as->aud_enc_pts, as->aud_enc_pts);
-      n->pkt_componentindex = ts->ts_index;
-      n->pkt_frametype      = pkt->pkt_frametype;
-      n->pkt_channels       = octx->channels;
-      n->pkt_sri            = pkt->pkt_sri;
-
-      if (octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE)
-	n->pkt_duration = octx->coded_frame->pts - as->aud_enc_pts;
-      else
-	n->pkt_duration = frame_bytes*90000 / (2 * octx->channels * octx->sample_rate);
-
-      as->aud_enc_pts += n->pkt_duration;
-
-      if (octx->extradata_size)
-	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
-
-      tvhtrace("transcode", "deliver audio (pts = %" PRIu64 ")", n->pkt_pts);
-      sm = streaming_msg_create_pkt(n);
-      streaming_target_deliver2(ts->ts_target, sm);
-      pkt_ref_dec(n);
-    }
-
-    as->aud_dec_offset -= frame_bytes;
-  }
-
-  if (as->aud_dec_offset)
-    memmove(as->aud_dec_sample, as->aud_dec_sample + len - as->aud_dec_offset, 
-	    as->aud_dec_offset);
-
- cleanup:
-  av_free_packet(&packet);
-  pkt_ref_dec(pkt);
-}
-#else
 
 /**
  *
@@ -851,7 +646,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     frame = av_frame_alloc();
     frame->nb_samples = octx->frame_size;
     frame->format = octx->sample_fmt;
-#if LIBAVUTIL_VERSION_MICRO >= 100 /* FFMPEG */
+#if USING_FFMPEG
     frame->channels = octx->channels;
 #endif
     frame->channel_layout = octx->channel_layout;
@@ -919,7 +714,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   av_free_packet(&packet);
   pkt_ref_dec(pkt);
 }
-#endif
 
 /**
  *
@@ -1261,15 +1055,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   else if (ictx->coded_frame && ictx->coded_frame->pts != AV_NOPTS_VALUE)
     vs->vid_enc_frame->pts = vs->vid_dec_frame->pts;
 
-#if LIBAVCODEC_VERSION_MAJOR < 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR < 25)
-  len = avpicture_get_size(octx->pix_fmt, ictx->width, ictx->height);
-  out = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
-  memset(out, 0, len);
-
-  length = avcodec_encode_video(octx, out, len, vs->vid_enc_frame);
-
-  send_video_packet(ts, pkt, out, length, octx);
-#else
   AVPacket packet2;
   int ret, got_output;
 
@@ -1289,7 +1074,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     send_video_packet(ts, pkt, &packet2, octx);
 
   av_free_packet(&packet2);
-#endif
 
  cleanup:
   av_free_packet(&packet);
@@ -1468,13 +1252,11 @@ transcoder_destroy_audio(transcoder_stream_t *ts)
   if(as->aud_enc_sample)
     av_free(as->aud_enc_sample);
 
-#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
   if ((as->resample_context) && as->resample_is_open )
       avresample_close(as->resample_context);
   avresample_free(&as->resample_context);
 
   av_audio_fifo_free(as->fifo);
-#endif
 
   free(ts);
 }
@@ -1557,11 +1339,9 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   as->aud_bitrate = as->aud_channels * 64000;
 
-#if LIBAVCODEC_VERSION_MAJOR > 54 || (LIBAVCODEC_VERSION_MAJOR == 54 && LIBAVCODEC_VERSION_MINOR >= 25)
   as->resample_context = NULL;
   as->fifo = NULL;
   as->resample = 0;
-#endif
 
   return 1;
 }
