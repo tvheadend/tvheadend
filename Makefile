@@ -52,7 +52,7 @@ endif
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
 LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
-           -lavresample -lswresample -lswscale -lavformat -lavcodec -lavutil \
+           -lavresample -lswresample -lswscale -lavutil -lavformat -lavcodec -lavutil \
            -lvorbisenc -lvorbis -logg -lx264 -lvpx \
            -Wl,-Bdynamic
 endif
