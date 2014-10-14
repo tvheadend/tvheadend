@@ -319,9 +319,9 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   sm.sm_data = &sigstat;
 
   LIST_FOREACH(svc, &hfe->mi_transports, s_active_link) {
-    PTHREAD_MUTEX_LOCK(&svc->s_stream_mutex);
+    pthread_mutex_lock(&svc->s_stream_mutex);
     streaming_pad_deliver(&svc->s_streaming_pad, &sm);
-    PTHREAD_MUTEX_UNLOCK(&svc->s_stream_mutex);
+    pthread_mutex_unlock(&svc->s_stream_mutex);
   }
 }
 
@@ -580,10 +580,7 @@ tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *hfe )
   TAILQ_REMOVE(&hfe->hf_device->hd_frontends, hfe, hf_link);
 
   pthread_mutex_destroy(&hfe->hf_input_thread_mutex);
-  pthread_mutex_destroy(&hfe->hf_input_thread_mutex);
-  pthread_mutex_destroy(&hfe->hf_mutex);
-  pthread_mutex_destroy(&hfe->hf_pid_filter_mutex);
-  pthread_mutex_destroy(&hfe->hf_input_mux_lock);
+  pthread_mutex_destroy(&hfe->hf_hdhomerun_device_mutex);
   
   /* Finish */
   mpegts_input_delete((mpegts_input_t*)hfe, 0);
@@ -678,9 +675,6 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   pthread_mutex_init(&hfe->hf_hdhomerun_device_mutex, NULL);
   pthread_mutex_init(&hfe->hf_input_thread_mutex, NULL);
   pthread_cond_init(&hfe->hf_input_thread_cond, NULL);
-
-  // TODO: Need a better heartbeat, or we will need to recreate the hdhomerun-device if something fails.
-  //gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 1);
 
   return hfe;
 }
