@@ -376,10 +376,15 @@ mpegts_service_grace_period(service_t *t)
 static int64_t
 mpegts_service_channel_number ( service_t *s )
 {
-  int r = ((mpegts_service_t*)s)->s_dvb_channel_num * CHANNEL_SPLIT +
-          ((mpegts_service_t*)s)->s_dvb_channel_minor;
+  mpegts_service_t *ms = (mpegts_service_t*)s;
+  int r;
+
+  if (ms->s_dvb_mux->mm_network->mn_ignore_chnum)
+    return 0;
+
+  r = ms->s_dvb_channel_num * CHANNEL_SPLIT + ms->s_dvb_channel_minor;
   if (r <= 0)
-    r = ((mpegts_service_t*)s)->s_dvb_opentv_chnum * CHANNEL_SPLIT;
+    r = ms->s_dvb_opentv_chnum * CHANNEL_SPLIT;
   return r;
 }
 

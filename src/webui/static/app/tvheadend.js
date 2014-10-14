@@ -234,7 +234,7 @@ tvheadend.VideoPlayer = function(url) {
         width: 682 + 14,
         height: 384 + 56,
         constrainHeader: true,
-        iconCls: 'eye',
+        iconCls: 'watchTv',
         resizable: true,
         tbar: [
             selectChannel,

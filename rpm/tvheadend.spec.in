@@ -1,0 +1,72 @@
+%global commit @COMMIT@
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
+Summary:        Tvheadend - a TV streaming server and DVR
+Name:           tvheadend
+Version:        @VERSION@
+Release:        1
+
+License:        GPLv3
+Group:          Applications/Multimedia
+URL:            http://tvheadend.org
+
+Source:		https://github.com/tvheadend/tvheadend/archive/%{commit}/tvheadend-%{commit}.tar.gz
+#Patch999:      test.patch
+
+BuildRequires:  systemd-units >= 1
+BuildRequires:  dbus-devel
+BuildRequires:  avahi-libs
+BuildRequires:  openssl-devel
+BuildRequires:  git wget
+
+Requires:       systemd-units >= 1
+
+%description
+Tvheadend is a TV streaming server with DVR for Linux supporting
+DVB, ATSC, IPTV, SAT>IP as input sources. Can be used as a backend
+to Showtime, XBMC and various other clients.
+
+%prep
+%setup -q -n tvheadend-%{commit}
+#%patch999 -p1 -b .test
+
+%build
+echo %{version} > %{_builddir}/%{buildsubdir}/rpm/version
+%configure --disable-lockowner --enable-bundle --enable-libffmpeg_static
+%{__make}
+
+%install
+# binary
+mkdir -p -m755 %{buildroot}%{_bindir}
+install -p -m 755 build.linux/tvheadend %{buildroot}%{_bindir}
+# systemd
+mkdir -p -m755 %{buildroot}%{_sysconfdir}/sysconfig
+install -p -m 644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/tvheadend
+mkdir -p -m755 %{buildroot}%{_unitdir}
+install -p -m 644 rpm/tvheadend.service %{buildroot}%{_unitdir}
+
+%pre
+getent group tvheadend >/dev/null || groupadd -f -g 283 -r tvheadend
+if ! getent passwd tvheadend > /dev/null ; then
+  if ! getent passwd 283 > /dev/null ; then
+    useradd -r -l -u 283 -g tvheadend -d /home/tvheadend -s /sbin/nologin -c "Tvheadend TV server" tvheadend
+  else
+    useradd -r -l -g tvheadend -d /home/tvheadend -s /sbin/nologin -c "Tvheadend TV server" tvheadend
+  fi
+fi
+if ! test -d /home/tvheadend ; then
+  mkdir -m 0755 /home/tvheadend || exit 1
+  chown tvheadend.tvheadend /home/tvheadend || exit 1
+fi
+exit 0
+
+%post
+%systemd_post tvheadend.service
+
+%postun
+%systemd_postun_with_restart tvheadend.service
+
+%files
+%{_bindir}/*
+%{_sysconfdir}/sysconfig/*
+%{_unitdir}/*

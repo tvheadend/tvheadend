@@ -1,0 +1,3 @@
+# Configuration file for the tvheadend service.
+
+OPTIONS="-c /home/tvheadend/config -u tvheadend -g tvheadend -6 --http_port 9981 --htsp_port 9982"

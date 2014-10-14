@@ -12,16 +12,12 @@
         "zlib1g-dev",
         "wget",
         "bzip2",
-        "libcurl4-gnutls-dev",
         "git-core",
-        "liburiparser-dev",
-        "libavformat-dev",
-        "libswscale-dev",
-        "libavcodec-dev"
+        "liburiparser-dev"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan",
+        "./configure --disable-dvbscan --enable-libffmpeg_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -37,16 +33,13 @@
         "zlib1g-dev",
         "wget",
         "bzip2",
-        "libcurl4-gnutls-dev",
         "git-core",
         "liburiparser-dev",
-        "libavformat-dev",
-        "libswscale-dev",
-        "libavcodec-dev"
+	"libx264-dev"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan",
+        "./configure --disable-dvbscan --enable-libffmpeg_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -62,16 +55,12 @@
         "zlib1g-dev",
         "wget",
         "bzip2",
-        "libcurl4-gnutls-dev",
         "git-core",
-        "liburiparser-dev",
-        "libavformat-dev",
-        "libswscale-dev",
-        "libavcodec-dev"
+        "liburiparser-dev"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan",
+        "./configure --disable-dvbscan --enable-libffmpeg_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -87,16 +76,13 @@
         "zlib1g-dev",
         "wget",
         "bzip2",
-        "libcurl4-gnutls-dev",
         "git-core",
         "liburiparser-dev",
-        "libavformat-dev",
-        "libswscale-dev",
-        "libavcodec-dev"
+	"libx264-dev"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan",
+        "./configure --disable-dvbscan --enable-libffmpeg_static",
         "make -j ${PARALLEL}"
       ]
     }

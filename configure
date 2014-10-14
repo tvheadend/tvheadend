@@ -32,7 +32,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
-  "libffmpeg_static:yes"
+  "libffmpeg_static:no"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"

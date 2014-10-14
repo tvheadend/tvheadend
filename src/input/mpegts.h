@@ -291,6 +291,7 @@ struct mpegts_network
   int      mn_skipinitscan;
   char    *mn_charset;
   int      mn_idlescan;
+  int      mn_ignore_chnum;
 };
 
 typedef enum mpegts_mux_scan_state
