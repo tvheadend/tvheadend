@@ -37,11 +37,11 @@ static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
 #if 0
 
 #define PTHREAD_MUTEX_LOCK(x) \
-        printf("LOCK: %s:%s:%u "#x"\n",__FILE__,__FUNCTION__,__LINE__); \
+        tvhdebug("tvhdhomerun", "lock "#x": %s:%d", __FUNCTION__,__LINE__); \
         pthread_mutex_lock(x);
 
 #define PTHREAD_MUTEX_UNLOCK(x) \
-        printf("UNLOCK: %s:%s:%u "#x"\n",__FILE__,__FUNCTION__,__LINE__); \
+        tvhdebug("tvhdhomerun", "unlock "#x": %s:%d", __FUNCTION__,__LINE__); \
         pthread_mutex_unlock(x);
 
 #else
@@ -118,23 +118,22 @@ struct tvhdhomerun_frontend
   int                            hf_tunerNumber;
   dvb_fe_type_t                  hf_type; 
   pthread_mutex_t                hf_mutex;          // Anything that is used by both input-thread
-                                                    // or monitor. Only for quick read/writes.
 
   // libhdhomerun objects.
   struct hdhomerun_device_t     *hf_hdhomerun_tuner;
 
-
   // Tuning information
   int                            hf_locked;
+  int                            hf_ready;
   int                            hf_status;
 
   pthread_mutex_t                hf_input_mux_lock;           // Lock to make sure we are not running the input-thread
                                                               // reader during a mux start/stop.
-
-
   // input thread..
   pthread_t                      hf_input_thread;
-  pthread_mutex_t                hf_input_thread_mutex;        // Used for sending signals.
+  pthread_mutex_t                hf_input_thread_mutex;        /* used in condition signaling */
+  pthread_cond_t                 hf_input_thread_cond;         /* used in condition signaling */
+  th_pipe_t                      hf_input_thread_pipe;         /* IPC with input thread */
   uint8_t                        hf_input_thread_running;      // Indicates if input_thread is running.
   uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
 
