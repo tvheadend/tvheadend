@@ -189,7 +189,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help('DVR', 'config_dvrlog.html');
+            new tvheadend.help('DVR-Upcoming/Current Recordings', 'dvrupcoming.html');
         },
     });
 
@@ -285,6 +285,30 @@ tvheadend.dvr_failed = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
 
+    var downloadButton = {
+        name: 'download',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Download the selected recording',
+                iconCls: 'save',
+                text: 'Download',
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r.length > 0) {
+              var url = r[0].data.url;
+              window.location = url;
+            }
+        }
+    };
+
+    function selected(s, abuttons) {
+        var count = s.getCount();
+        abuttons.download.setDisabled(count < 1);
+    }
+
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_failed',
@@ -297,15 +321,40 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,channelname,creator,' +
-              'status,sched_status',
+              'status,sched_status,url',
+		columns: {
+            filesize: {
+                renderer: function() {
+                    return function(v) {
+                        if (v == null)
+                            return '';
+                        return parseInt(v / 1000000) + ' MB';
+                    }
+                }
+            }
+        },
         sort: {
           field: 'start_real',
           direction: 'ASC'
         },
         plugins: [actions],
-        lcol: [actions],
+		lcol: [
+            actions,
+            {
+                width: 40,
+                header: "Play",
+                renderer: function(v, o, r) {
+                    var title = r.data['disp_title'];
+                    if (r.data['episode'])
+                        title += ' / ' + r.data['episode'];
+                    return '<a href="play/dvrfile/' + r.id +
+                           '?title=' + encodeURIComponent(title) + '">Play</a>';
+                }
+            }],
+        tbar: [downloadButton],
+        selected: selected,
         help: function() {
-            new tvheadend.help('DVR', 'config_dvrlog.html');
+            new tvheadend.help('DVR-Failed Recordings', 'dvrfailed.html');
         },
     });
 
