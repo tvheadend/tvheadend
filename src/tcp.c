@@ -647,7 +647,7 @@ tcp_server_create
   snprintf(port_buf, 6, "%d", port);
 
   memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_flags = AI_PASSIVE;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
   if (bindaddr != NULL)
       hints.ai_flags |= AI_NUMERICHOST;
   hints.ai_family = AF_UNSPEC;

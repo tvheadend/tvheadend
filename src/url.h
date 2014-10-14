@@ -29,7 +29,7 @@ typedef struct url
   char  *user;
   char  *pass;
   char  *host;
-  short  port;
+  int    port;
   char  *path;
   char  *query;
   char  *frag;

@@ -48,7 +48,7 @@ udp_resolve( udp_connection_t *uc, int receiver )
   snprintf(port_buf, 6, "%d", uc->port);
 
   memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_flags = receiver ? AI_PASSIVE : 0;
+  hints.ai_flags = (receiver ? AI_PASSIVE : 0) | AI_NUMERICSERV;
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
   
