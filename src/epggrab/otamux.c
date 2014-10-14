@@ -169,7 +169,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   }
 
   /* Remove subscriber */
-  if ((mm = mpegts_mux_find(om->om_mux_uuid)))
+  if (mm)
     mpegts_mux_unsubscribe_by_name(mm, "epggrab");
 
   /* Kick - try start waiting muxes */
