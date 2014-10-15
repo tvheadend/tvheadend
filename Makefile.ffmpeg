@@ -32,7 +32,7 @@ define DOWNLOAD
 	@{ \
 	  sum=$$(sha1sum $(2) | cut -d ' ' -f 1); \
 	  printf "SHA1SUM test '$${sum}' == '$(3)': "; \
-	  test "y$${sum}" == "y$(3)"; \
+	  test "y$${sum}" = "y$(3)"; \
 	}
 	@echo "OK"
 endef
