@@ -128,11 +128,13 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* enable broadcast */
   if(setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *) &sock_opt, sizeof(sock_opt)) < 0) {
+    close(sockfd);
     tvhlog(LOG_ERR, "tvhdhomerun", "failed to enable broadcast on socket (%d)", errno);
     return NULL;
   }
 
   if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &sock_opt, sizeof(sock_opt)) < 0) {
+    close(sockfd);
     tvhlog(LOG_ERR, "tvhdhomerun", "failed to set address reuse on socket (%d)", errno);
     return NULL;
   }
@@ -148,12 +150,14 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   sock_addr.sin_port = 0;
   if(bind(sockfd, (struct sockaddr *) &sock_addr, sizeof(sock_addr)) != 0) {
     tvhlog(LOG_ERR, "tvhdhomerun", "failed bind socket: %d", errno);
+    close(sockfd);
     return NULL;
   }
 
   memset(&sock_addr, 0, sizeof(sock_addr));
   if(getsockname(sockfd, (struct sockaddr *) &sock_addr, &sockaddr_len) != 0) {
     tvhlog(LOG_ERR, "tvhdhomerun", "failed to getsockname: %d", errno);
+    close(sockfd);
     return NULL;
   }
 
@@ -227,7 +231,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   sbuf_free(&sb);
   tvhpoll_destroy(efd);
-  shutdown(sockfd, SHUT_RD);
+  close(sockfd);
   return NULL;
 }
 
