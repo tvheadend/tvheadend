@@ -372,7 +372,7 @@ else
 
     if $has_libav; then
       enable libav
-    elif enabled libav; then
+    elif enabled_or_auto libav; then
 
       die "libav development support not found
 (use --disable-libav or --enable-libffmpeg_static)
