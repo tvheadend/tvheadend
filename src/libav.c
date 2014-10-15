@@ -30,6 +30,11 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
     else if(level == AV_LOG_PANIC)
       level = LOG_EMERG;
 
+    if (level == LOG_INFO) {
+      if (!strncmp(message, "--prefix=/", 10))
+        return;
+    }
+
     while(l < message + sizeof(message)) {
       nl = strstr(l, "\n");
       if(nl)

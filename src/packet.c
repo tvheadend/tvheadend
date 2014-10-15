@@ -22,6 +22,10 @@
 #include "string.h"
 #include "atomic.h"
 
+#ifndef PKTBUF_DATA_ALIGN
+#define PKTBUF_DATA_ALIGN 64
+#endif
+
 /*
  *
  */
@@ -217,7 +221,7 @@ pktbuf_alloc(const void *data, size_t size)
   pb->pb_size = size;
 
   if(size > 0) {
-    pb->pb_data = malloc(size);
+    pb->pb_data = aligned_alloc(PKTBUF_DATA_ALIGN, size + 8);
     if(data != NULL)
       memcpy(pb->pb_data, data, size);
   }

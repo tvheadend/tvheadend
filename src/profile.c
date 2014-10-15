@@ -391,7 +391,7 @@ profile_chain_close(profile_chain_t *prch)
   if (prch->prch_gh)
     globalheaders_destroy(prch->prch_gh);
 #if ENABLE_LIBAV
-  if (prch->prch_transcoder != NULL)
+  if (prch->prch_transcoder)
     transcoder_destroy(prch->prch_transcoder);
 #endif
   if (prch->prch_muxer)
