@@ -12,10 +12,31 @@ This tab show your all upcoming/current recordings.
 Buttons have the following functions:
 <br><br>
 <dl>
+  <dt><b>Add</b>
+  <dd>
+  Add and configure a recording event by hand as opposed to choosing something from the EPG. This is useful if you wish to record something that isn't yet in the EPG, or record at a particular time that perhaps spans several EPG events.
+  <p>
   <dt><b>Delete</b>
   <dd>
   If clicked delete selected upcoming/current recordings you delete recordings. Before deleted show message: Do you really want to delete the selection ? Answer Yes or No.
-</dl>
+  <p>
+  <dt><b>Abort</b>
+  <dd>
+  Abort an already-underway recording. Note that this does not remove the (partial) recording file from disk.
+  <p>
+  <dt><b>Edit</b>
+  <dd>
+  Manually edit an already-scheduled recording event. This uses the same fields as <b>Add</b>, but they're obviously pre-populated with their current values.
+  <p>
+  <dt><b>Save</b>
+  <dd>
+  Saves any changes made to the recording list.
+  <p>
+  <dt><b>Undo</b>
+  <dd>
+  Undoes any changes made to the recording list.
+  <p>
+  </dl>
 <p>
 <br>
 <hr>
@@ -26,49 +47,57 @@ The columns have the following functions:
  <dl>
   <dt><b>Details</b>
   <dd>
-  Show clock status or red point status and blue icon "i". Red point status means current recording and clock status means scheduled recording. After click on icon "i" you see info about select upcoming/current recordings.
+  Shows the status of the recording event:<br>
+  <br>
+  <b>Clock</b> - the recording is scheduled (upcoming).<br>
+  <br>
+  <b>Record symbol (red circle)</b> - the recording is active and underway (current).<br>
+  <br>
+  <b>InInfo</b> - displays detailed information about the selected recording (upcoming or current).<br>
  <p>
  <img src="docresources/upcomingrecordings2.png">
   <p>
 <dt><b>Title</b>
   <dd>
-  Showing title of record.
+  The title (name) of the recording. While this is copied from the EPG when you create a recording, it's not used to match the event itself and is thus used here as the name of the event (see also: adding an event manually with the <b>Add</b> button).
  <p>
- <dt><b>Episod</b>
+ <dt><b>Episode</b>
   <dd>
-  Showing number episod of record.
+  The episode number of the recording (whether this is available depends on your broadcaster and/or EPG data source).
  <p>
  <dt><b>Priority</b>
   <dd>
-  Showing priority of record.
+  The priority of the recording: Not set, Important, High, Normal, Low, Unimportant.
+  <br>
+  If there is a clash, more important recordings will take priority over less important ones.
  <p>
  <dt><b>Scheduled Start Time</b>
   <dd>
-  Showing date and time when the recording was started.
+  The date and time when the scheduled recording will start. Note that this includes any extra time defined in the recording profile (e.g. "start two minutes earlier than the EPG start time").
  <p>
  <dt><b>Scheduled Stop Time</b>
   <dd>
-  Showing date and time when the recording was stoped.
+  The date and time when the scheduled recording will stop. Note that this includes any extra time defined in the recording profile (e.g. "finish recording five minutes after the EPG stop time").
  <p>
  <dt><b>Duration</b>
   <dd>
-  Showing how long it took the recording.
+  The total duration of the scheduled recording, including any extra time before or after.
  <p>
   <dt><b>Channel Name</b>
   <dd>
-  Showing the name of the channel from which the recording will be made.
+  The channel to be recorded.
  <p>
  <dt><b>Creator</b>
   <dd>
-  Showing the name of the user who created the recording.
+  The user who created the recording or the auto-recording source and IP address if scheduled by a matching rule.
  <p>
  <dt><b>DVR Configuration</b>
   <dd>
-  Showing the name of DVR Configuration which is use to record.
+  The DVR configuration to be used for this recording.
  <p>
  <dt><b>Schedule Status</b>
   <dd>
-  Showing the status info of record.
+  The status of the recording(scheduled or recording).
  <p>
 
 </div>
