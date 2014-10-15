@@ -41,18 +41,15 @@ The columns have the following functions:
 
 <dl>
  <dt><b>Enabled</b>
- <dd>Make the entry participate in access control. If disabled, the entry
-     is inactive.
+ <dd>Enable this access control rule. Uncheck the box to disable.
 
   <dt><b>Username</b>
   <dd>
-  Name of user, if no username is needed for match it should contain a
-  single asterisk (*).
+  Login name to be used. If no username is required, this entry should contain a single asterisk (*).
 
   <dt><b>Password</b>
   <dd>
-  Password to combine with user, if username is '*' (unused), the password
-  should be the same.
+  Login password to be used. If username is '*' (unused), the password should be the same (i.e. match any username/password combination, or no username/password required).
 
   <dt><b>Network prefix</b>
   <dd>
@@ -61,8 +58,7 @@ The columns have the following functions:
 
   <dt><b>Streaming</b>
   <dd>
-  Enables access to streaming function. The 'streaming' access is enough to
-  make Showtime (over HTSP) work.
+  Enables access to streaming functionality. This permission is enough to stream over HTSP to VLC, Showtime and similar.
 
   <dt><b>Advanced Streaming</b>
   <dd>
@@ -89,18 +85,15 @@ The columns have the following functions:
   
   <dt><b>Limit Connections</b>
   <dd>
-  If nonzero, the user will be limited to this amount of streaming
-  connection at a time.
+  If set, this will limit the number of concurrent streaming connections a user is permitted to have. 0=disabled
 
   <dt><b>Min Channel Num</b>
   <dd>
-  If nonzero, the user will only be able to access channels with
-  a channel number equal or greater to this value.
+  If non-zero, this sets the lower limit of the channels accessible by a user, i.e. the user will only be able to access channels where the channel number is equal to or greater than this value.
 
   <dt><b>Max Channel Num</b>
   <dd>
-  If nonzero, the user will only be able to access channels with
-  a channel number equal or lower to this value.
+  If non-zero, this sets the upper limit of the channels accessible by a user, i.e. the user will only be able to access channels where the channel number is equal to or less than this value.
 
   <dt><b>Channel Tag</b>
   <dd>
