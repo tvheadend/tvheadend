@@ -189,7 +189,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help('DVR-Upcoming/Current Recordings', 'dvrupcoming.html');
+            new tvheadend.help('DVR-Upcoming/Current Recordings', 'config_dvrupcoming.html');
         },
     });
 
@@ -271,7 +271,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help('DVR-Finished Recordings', 'dvrfinished.html');
+            new tvheadend.help('DVR-Finished Recordings', 'config_dvrfinished.html');
         },
     });
 
@@ -354,7 +354,7 @@ tvheadend.dvr_failed = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help('DVR-Failed Recordings', 'dvrfailed.html');
+            new tvheadend.help('DVR-Failed Recordings', 'config_dvrfailed.html');
         },
     });
 

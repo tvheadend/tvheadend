@@ -32,84 +32,91 @@ The access rules are listed / edited  in a grid.
 </ul>
 
 <p>
+<br>
+<hr>
+<b>Columns</b>
+<hr>
 The columns have the following functions:
+<br><br>
 
 <dl>
- <dt>Enabled
+ <dt><b>Enabled</b>
  <dd>Make the entry participate in access control. If disabled, the entry
      is inactive.
 
-  <dt>Username
+  <dt><b>Username</b>
   <dd>
   Name of user, if no username is needed for match it should contain a
   single asterisk (*).
 
-  <dt>Password
+  <dt><b>Password</b>
   <dd>
   Password to combine with user, if username is '*' (unused), the password
   should be the same.
 
-  <dt>Prefix
+  <dt><b>Network prefix</b>
   <dd>
   IPv4 prefix for matching based on source IP address.
   If set to 0.0.0.0/0 it will match everything.
 
-  <dt>Streaming
+  <dt><b>Streaming</b>
   <dd>
   Enables access to streaming function. The 'streaming' access is enough to
   make Showtime (over HTSP) work.
 
-  <dt>Advanced Streaming
+  <dt><b>Advanced Streaming</b>
   <dd>
   Enables access to advanced streaming function for HTTP - like direct
   service or whole MPEG-TS stream (mux)..
 
-  <dt>Video Recorder
+  <dt><b>Video Recorder</b>
   <dd>
   Enables access to all video recording functions. This also include administration of the auto recordings.
 
-  <dt>DVR Config Profile
+  <dt><b>DVR Config Profile</b>
   <dd>
   If set, the user will only be able to use the DVR config profile
   equal to this value.
   Note that this field is unset when the DVR Config Profile is removed.
 
-  <dt>Web interface
+  <dt><b>Web interface</b>
   <dd>
   Required for web user interface access. Also gives access to the EPG.
 
-  <dt>Admin
+  <dt><b>Admin</b>
   <dd>
   Enables access to the Configuration tab.
   
-  <dt>Limit Connections
+  <dt><b>Limit Connections</b>
   <dd>
   If nonzero, the user will be limited to this amount of streaming
   connection at a time.
 
-  <dt>Min Channel Num
+  <dt><b>Min Channel Num</b>
   <dd>
   If nonzero, the user will only be able to access channels with
   a channel number equal or greater to this value.
 
-  <dt>Max Channel Num
+  <dt><b>Max Channel Num</b>
   <dd>
   If nonzero, the user will only be able to access channels with
   a channel number equal or lower to this value.
 
-  <dt>Channel Tag
+  <dt><b>Channel Tag</b>
   <dd>
   If set, the user will only be able to access channels containing
   this channel tag.
   Note that this field is unset when the channel tag is removed.
 
-  <dt>Comment
+  <dt><b>Comment</b>
   <dd>
   Allows the administrator to set a comment only visible in this editor.
   It does not serve any active purpose.
  </dl>
 
 <p>
+<br>
+<hr>
 Let's also take a look at an example:
 <p>
 <img src="docresources/accessconfigexample.png">
