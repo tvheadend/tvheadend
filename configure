@@ -237,7 +237,7 @@ if enabled hdhomerun_static; then
 else
 
   if enabled_or_auto hdhomerun_client; then
-    if check_cc_header 'libhdhomerun/hdhomerun'; then
+    if check_cc_header 'libhdhomerun/hdhomerun' libhdhomerun; then
       enable  hdhomerun_client
       LDFLAGS="$LDFLAGS -lhdhomerun"
     fi

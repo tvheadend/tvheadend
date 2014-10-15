@@ -171,6 +171,8 @@ void channel_tag_save(channel_tag_t *ct);
 
 htsmsg_t * channel_tag_class_get_list(void *o);
 
+const char * channel_tag_get_icon(channel_tag_t *ct);
+
 int channel_access(channel_t *ch, struct access *a, const char *username);
 
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);

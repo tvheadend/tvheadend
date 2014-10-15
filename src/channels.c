@@ -535,7 +535,7 @@ channel_get_number ( channel_t *ch )
 const char *
 channel_get_icon ( channel_t *ch )
 {
-  static __thread char buf[512], buf2[512];
+  static char buf[512], buf2[512];
   channel_service_mapping_t *csm;
   const char *picon = config_get_picon_path(),
              *icon  = ch->ch_icon;
@@ -570,7 +570,6 @@ channel_get_icon ( channel_t *ch )
   /* Lookup imagecache ID */
   if ((id = imagecache_get_id(icon))) {
     snprintf(buf, sizeof(buf), "imagecache/%d", id);
-
   } else {
     strncpy(buf, icon, sizeof(buf));
     buf[sizeof(buf)-1] = '\0';
@@ -877,6 +876,24 @@ channel_tag_save(channel_tag_t *ct)
 }
 
 
+/**
+ *
+ */
+const char *
+channel_tag_get_icon(channel_tag_t *ct)
+{
+  static char buf[64];
+  const char *icon  = ct->ct_icon;
+  uint32_t id;
+
+  /* Lookup imagecache ID */
+  if ((id = imagecache_get_id(icon))) {
+    snprintf(buf, sizeof(buf), "imagecache/%d", id);
+    return buf;
+  }
+  return icon;
+}
+
 /* **************************************************************************
  * Channel Tag Class definition
  * **************************************************************************/
@@ -898,6 +915,20 @@ channel_tag_class_get_title (idnode_t *self)
 {
   channel_tag_t *ct = (channel_tag_t *)self;
   return ct->ct_name ?: "";
+}
+
+static void
+channel_tag_class_icon_notify ( void *obj )
+{
+  (void)channel_tag_get_icon(obj);
+}
+
+static const void *
+channel_tag_class_get_icon ( void *obj )
+{
+  static const char *s;
+  s = channel_tag_get_icon(obj);
+  return &s;
 }
 
 /* exported for others */
@@ -942,6 +973,14 @@ const idclass_t channel_tag_class = {
       .id       = "icon",
       .name     = "Icon (full URL)",
       .off      = offsetof(channel_tag_t, ct_icon),
+      .notify   = channel_tag_class_icon_notify,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "icon_public_url",
+      .name     = "Icon URL",
+      .get      = channel_tag_class_get_icon,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_BOOL,

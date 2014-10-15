@@ -677,7 +677,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* Set the tone (en50494 don't use tone) */
   if (!lse->lse_en50494) {
     b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
-    tvhtrace("disqec", "set diseqc tone %s", b ? "on" : "off");
+    tvhtrace("diseqc", "set diseqc tone %s", b ? "on" : "off");
     if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
       tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
       return -1;
