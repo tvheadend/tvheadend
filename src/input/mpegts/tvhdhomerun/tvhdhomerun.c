@@ -400,6 +400,7 @@ void tvhdhomerun_done ( void )
     tvhdhomerun_discovery_destroy(d, 1);
   }
   pthread_mutex_unlock(&global_lock);
+  hdhomerun_debug_destroy(hdhomerun_debug_obj);
 }
 
 void
