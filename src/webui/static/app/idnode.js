@@ -346,8 +346,10 @@ tvheadend.IdNodeField = function(conf)
         /* ComboBox */
         if (this.enum) {
             cons = Ext.form.ComboBox;
-            if (this.list)
+            if (this.list) {
                 cons = Ext.ux.form.LovCombo;
+                c['checkField'] = 'checked_' + this.id;
+            }
 
             /* Combo settings */
             c['mode'] = 'local';
@@ -499,6 +501,7 @@ tvheadend.idnode_editor_field = function(f, conf)
             mode: 'local',
             valueField: 'key',
             displayField: 'val',
+            checkField: 'checked_' + f.id,
             store: st,
             typeAhead: true, // TODO: this does strange things in multi
             forceSelection: false,
