@@ -274,6 +274,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       codec_id = "V_VP8";
       break;
 
+    case SCT_VP9:
+      tracktype = 1;
+      codec_id = "V_VP9";
+      break;
+
     case SCT_HEVC:
       tvherror("mkv", "HEVC (H265) codec is not suppored for Matroska muxer (work in progress)");
       continue;

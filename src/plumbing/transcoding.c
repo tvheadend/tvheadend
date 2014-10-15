@@ -121,10 +121,11 @@ typedef struct transcoder {
 
 
 
-#define WORKING_ENCODER(x) (x == AV_CODEC_ID_H264 || x == AV_CODEC_ID_MPEG2VIDEO || \
-			    x == AV_CODEC_ID_VP8  || x == AV_CODEC_ID_AAC ||	\
-                            x == AV_CODEC_ID_MP2  || x == AV_CODEC_ID_VORBIS)
-
+#define WORKING_ENCODER(x) \
+  ((x) == AV_CODEC_ID_H264 || (x) == AV_CODEC_ID_MPEG2VIDEO || \
+   (x) == AV_CODEC_ID_VP8  || /* (x) == AV_CODEC_ID_VP9 || */ \
+   (x) == AV_CODEC_ID_AAC  || \
+   (x) == AV_CODEC_ID_MP2  || (x) == AV_CODEC_ID_VORBIS)
 
 /**
  * 
@@ -1420,7 +1421,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 
   vs->vid_ictx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   vs->vid_octx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
- 
+
   vs->vid_dec_frame = avcodec_alloc_frame();
   vs->vid_enc_frame = avcodec_alloc_frame();
 
