@@ -451,9 +451,11 @@ imagecache_get_id ( const char *url )
   if (!i) {
     i      = imagecache_skel;
     i->url = strdup(url);
-    i->id  = ++imagecache_id;
-    j      = RB_INSERT_SORTED(&imagecache_by_id, i, id_link, id_cmp);
-    assert(!j);
+    do {
+      i->id = ++imagecache_id % INT_MAX;
+      if (!i->id) i->id = ++imagecache_id % INT_MAX;
+      j = RB_INSERT_SORTED(&imagecache_by_id, i, id_link, id_cmp);
+    } while (j);
     SKEL_USED(imagecache_skel);
 #if ENABLE_IMAGECACHE
     imagecache_image_add(i);
