@@ -2008,7 +2008,9 @@ cwc_service_start(caclient_t *cac, service_t *t)
         continue;
       LIST_FOREACH(c, &st->es_caids, link) {
         if (c->use && c->caid == pcard->cwc_caid)
-          break;
+          if (!((mpegts_service_t *)t)->s_dvb_forcecaid ||
+               ((mpegts_service_t *)t)->s_dvb_forcecaid == c->caid)
+            break;
       }
       if (c) break;
     }

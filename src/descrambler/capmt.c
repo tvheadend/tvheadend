@@ -1585,7 +1585,8 @@ capmt_caid_change(th_descrambler_t *td)
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
         if (c->use && cce->cce_caid == c->caid && cce->cce_providerid == c->providerid)
-          break;
+          if (!t->s_dvb_forcecaid || t->s_dvb_forcecaid == cce->cce_caid)
+            break;
       if (cce)
         continue;
       tvhlog(LOG_DEBUG, "capmt",
@@ -1866,6 +1867,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       if(c == NULL || c->use == 0)
+        continue;
+      if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid)
         continue;
 
       tvhlog(LOG_DEBUG, "capmt",
