@@ -340,6 +340,8 @@ dvr_config_t *dvr_config_find_by_name(const char *name);
 
 dvr_config_t *dvr_config_find_by_name_default(const char *name);
 
+dvr_config_t *dvr_config_find_by_list(htsmsg_t *list, const char *name);
+
 dvr_config_t *dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf);
 
 static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)

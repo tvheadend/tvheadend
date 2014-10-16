@@ -22,6 +22,7 @@
 #include "idnode.h"
 #include "htsmsg.h"
 
+struct profile;
 struct dvr_config;
 struct channel_tag;
 
@@ -57,6 +58,9 @@ typedef struct access_entry {
   int ae_streaming;
   int ae_adv_streaming;
 
+  struct profile *ae_profile;
+  LIST_ENTRY(access_entry) ae_profile_link;
+
   uint32_t ae_conn_limit;
 
   int ae_dvr;
@@ -83,6 +87,7 @@ typedef struct access {
   char     *aa_username;
   char     *aa_representative;
   uint32_t  aa_rights;
+  htsmsg_t *aa_profiles;
   htsmsg_t *aa_dvrcfgs;
   uint32_t  aa_chmin;
   uint32_t  aa_chmax;
@@ -184,6 +189,8 @@ access_entry_save(access_entry_t *ae);
 /**
  *
  */
+void
+access_destroy_by_profile(struct profile *pro, int delconf);
 void
 access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
 void
