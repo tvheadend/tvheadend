@@ -102,13 +102,17 @@ descrambler_service_start ( service_t *t )
   th_descrambler_runtime_t *dr;
   elementary_stream_t *st;
 
-  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-    if (LIST_FIRST(&st->es_caids))
-      break;
+  if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
 
-  /* Do not run descrambler on FTA channels */
-  if (!st)
-    return;
+    TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
+      if (LIST_FIRST(&st->es_caids))
+        break;
+
+    /* Do not run descrambler on FTA channels */
+    if (!st)
+      return;
+
+  }
 
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
   if (t->s_descramble == NULL) {

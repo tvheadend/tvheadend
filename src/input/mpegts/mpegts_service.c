@@ -168,6 +168,13 @@ const idclass_t mpegts_service_class =
       .opts     = PO_ADVANCED,
       .list     = mpegts_service_pref_capid_lock_list,
     },
+    {
+      .type     = PT_U16,
+      .id       = "force_caid",
+      .name     = "Force CA ID (e.g. 0x2600)",
+      .off      = offsetof(mpegts_service_t, s_dvb_forcecaid),
+      .opts     = PO_ADVANCED | PO_HEXA,
+    },
     {},
   }
 };
