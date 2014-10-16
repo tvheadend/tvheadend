@@ -372,13 +372,14 @@ else
 
     if $has_libav; then
       enable libav
-    elif enabled_or_auto libav; then
-
-      die "libav development support not found
-(use --disable-libav or --enable-libffmpeg_static)
-((supported ffmpeg libs n1.2+))
-((supported libav  libs v10+))"
-
+    else
+      echo "WARNING: none or old libav or libffmpeg libraries were detected"
+      echo "         * use --disable-libav or --enable-libffmpeg_static"
+      echo "         ** supported ffmpeg libs n1.2+"
+      echo "         ** supported libav  libs v10+"
+      if enabled libav; then
+        die "libav development support not found"
+      fi
     fi
   fi
 
