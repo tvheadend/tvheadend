@@ -44,6 +44,7 @@
 #include "lang_codes.h"
 #include "descrambler.h"
 #include "input.h"
+#include "access.h"
 #include "esfilter.h"
 
 static void service_data_timeout(void *aux);
@@ -169,6 +170,7 @@ const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = "Service",
   .ic_event      = "service",
+  .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = service_class_save,
   .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){

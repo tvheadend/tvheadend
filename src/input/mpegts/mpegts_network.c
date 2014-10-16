@@ -18,6 +18,7 @@
 
 #include "input.h"
 #include "subscriptions.h"
+#include "access.h"
 #include "dvb_charset.h"
 
 #include <assert.h>
@@ -109,8 +110,9 @@ const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
   .ic_caption    = "MPEGTS Network",
-  .ic_save       = mpegts_network_class_save,
   .ic_event      = "mpegts_network",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = mpegts_network_class_save,
   .ic_get_title  = mpegts_network_class_get_title,
   .ic_properties = (const property_t[]){
     {

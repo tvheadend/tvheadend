@@ -2,16 +2,18 @@
  * Stream Profiles, Elementary Stream Filters
  */
 
-tvheadend.profile_builders = new Ext.data.JsonStore({
-    url: 'api/profile/builders',
-    root: 'entries',
-    fields: ['class', 'caption', 'props'],
-    id: 'class',
-    autoLoad: true
-});                    
-
 tvheadend.esfilter_tab = function(panel)
 {
+    if (!tvheadend.profile_builders) {
+        tvheadend.profile_builders = new Ext.data.JsonStore({
+            url: 'api/profile/builders',
+            root: 'entries',
+            fields: ['class', 'caption', 'props'],
+            id: 'class',
+            autoLoad: true
+        });
+    }
+
     var list = '-class';
 
     tvheadend.idnode_form_grid(panel, {

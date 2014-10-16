@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "lang_codes.h"
 #include "service.h"
+#include "access.h"
 #include "esfilter.h"
 
 struct esfilter_entry_queue esfilters[ESF_CLASS_LAST + 1];
@@ -588,6 +589,7 @@ const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
   .ic_caption    = "Elementary Stream Filter",
   .ic_event      = "esfilter",
+  .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = esfilter_class_save,
   .ic_get_title  = esfilter_class_get_title,
   .ic_delete     = esfilter_class_delete,

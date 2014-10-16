@@ -189,9 +189,9 @@ void api_service_init ( void )
     { "service/mapper/start",   ACCESS_ADMIN, api_mapper_start,  NULL },
     { "service/mapper/stop",    ACCESS_ADMIN, api_mapper_stop,   NULL },
     { "service/mapper/status",  ACCESS_ADMIN, api_mapper_status, NULL },
-    { "service/list",           ACCESS_ANONYMOUS, api_idnode_load_by_class, 
+    { "service/list",           ACCESS_ADMIN, api_idnode_load_by_class,
       (void*)&service_class },
-    { "service/streams",        ACCESS_ANONYMOUS, api_service_streams, NULL },
+    { "service/streams",        ACCESS_ADMIN, api_service_streams, NULL },
     { NULL },
   };
 

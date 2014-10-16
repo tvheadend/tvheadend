@@ -62,6 +62,7 @@ struct idclass {
   const property_group_t *ic_groups;       ///< Groups for visual representation
   const property_t       *ic_properties;   ///< Property list
   const char             *ic_event;        ///< Events to fire on add/delete/title
+  uint32_t                ic_perm_def;     ///< Default permissions
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);
@@ -175,13 +176,7 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 #define idnode_save(in, m)     idnode_read0(in, m, NULL, PO_NOSAVE | PO_USERAW)
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
 
-static inline int
-idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
-{
-  if (self->in_class->ic_perm)
-    return self->in_class->ic_perm(self, a, msg_to_write);
-  return 0;
-}
+int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
 
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);

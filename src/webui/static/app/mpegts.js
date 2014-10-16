@@ -2,31 +2,31 @@
  * DVB network
  */
 
-tvheadend.network_builders = new Ext.data.JsonStore({
-    url: 'api/mpegts/network/builders',
-    root: 'entries',
-    fields: ['class', 'caption', 'props'],
-    id: 'class',
-    autoLoad: true
-});
-
-tvheadend.network_list = new Ext.data.JsonStore({
-    url: 'api/idnode/load',
-    baseParams: {class: 'mpegts_network', enum: 1},
-    root: 'entries',
-    fields: ['key', 'val'],
-    id: 'key',
-    autoLoad: true
-});
-
-tvheadend.comet.on('mpegts_network', function() {
-    // TODO: Might be a bit excessive
-    tvheadend.network_builders.reload();
-    tvheadend.network_list.reload();
-});
-
 tvheadend.networks = function(panel, index)
 {
+    if (!tvheadend.network_list) {
+        tvheadend.network_list = new Ext.data.JsonStore({
+            url: 'api/idnode/load',
+            baseParams: {class: 'mpegts_network', enum: 1},
+            root: 'entries',
+            fields: ['key', 'val'],
+            id: 'key',
+            autoLoad: true
+        });
+        tvheadend.network_builders = new Ext.data.JsonStore({
+            url: 'api/mpegts/network/builders',
+            root: 'entries',
+            fields: ['class', 'caption', 'props'],
+            id: 'class',
+            autoLoad: true
+        });
+        tvheadend.comet.on('mpegts_network', function() {
+            // TODO: Might be a bit excessive
+            tvheadend.network_builders.reload();
+            tvheadend.network_list.reload();
+        });
+    }
+
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
         titleS: 'Network',

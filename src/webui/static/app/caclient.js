@@ -2,15 +2,18 @@
  * Conditional Access Client (cwc,capmt)
  */
 
-tvheadend.caclient_builders = new Ext.data.JsonStore({
-    url: 'api/caclient/builders',
-    root: 'entries',
-    fields: ['class', 'caption', 'props'],
-    id: 'class',
-    autoLoad: true
-});
-
 tvheadend.caclient = function(panel, index) {
+
+    if (!tvheadend.caclient_builders) {
+        tvheadend.caclient_builders = new Ext.data.JsonStore({
+            url: 'api/caclient/builders',
+            root: 'entries',
+            fields: ['class', 'caption', 'props'],
+            id: 'class',
+            autoLoad: true
+        });
+    }
+
     var actions = new Ext.ux.grid.RowActions({
         id: 'status',
         header: '',

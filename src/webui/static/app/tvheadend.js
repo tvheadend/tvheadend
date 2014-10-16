@@ -1,8 +1,6 @@
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
-tvheadend.capabilties = null;
-tvheadend.dvrpanel = null;
-tvheadend.confpanel = null;
+tvheadend.capabilities = null;
 
 /* State Provider */
 Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
@@ -353,9 +351,7 @@ function accessUpdate(o) {
 
         var idx = 0;
 
-        if (tvheadend.capabilities.indexOf('linuxdvb')     !== -1 ||
-            tvheadend.capabilities.indexOf('satip_client') !== -1 ||
-            tvheadend.capabilities.indexOf('v4l')          !== -1)
+        if (tvheadend.capabilities.indexOf('tvadapters') !== -1)
             tvheadend.tvadapters(dvbin);
         tvheadend.networks(dvbin);
         tvheadend.muxes(dvbin);
