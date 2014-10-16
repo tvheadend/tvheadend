@@ -204,12 +204,15 @@ check_pkg ()
 
   printf "$TAB" "checking for pkg $pkg $ver ..."
 
+  dver=$(pkg-config --modversion $pkg 2> /dev/null)
+  test -z "$dver" && dver="<none>"
+
   # Check for package
   if pkg-config $pkg $cver; then
-    echo "ok"
+    echo "ok (detected ${dver})"
     enable_pkg $pkg
   else
-    echo "fail"
+    echo "fail (detected ${dver})"
     return 1
   fi
 }
