@@ -4,9 +4,10 @@
 
 tvheadend.acleditor = function(panel, index)
 {
-    var list = 'enabled,username,password,prefix,streaming,adv_streaming,' +
-               'dvr,dvr_config,webui,admin,conn_limit,channel_min,channel_max,' +
-               'channel_tag,comment';
+    var list = 'enabled,username,password,prefix,' +
+               'streaming,adv_streaming,profile,' +
+               'dvr,dvr_config,webui,admin,conn_limit,' +
+               'channel_min,channel_max,channel_tag,comment';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/access/entry',

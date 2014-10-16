@@ -83,6 +83,7 @@ profile_create
     return NULL;
   }
   LIST_INIT(&pro->pro_dvr_configs);
+  LIST_INIT(&pro->pro_accesses);
   if (idnode_insert(&pro->pro_id, uuid, pb->clazz, 0)) {
     if (uuid)
       tvherror("profile", "invalid uuid '%s'", uuid);
@@ -114,6 +115,7 @@ profile_delete(profile_t *pro, int delconf)
   TAILQ_REMOVE(&profiles, pro, pro_link);
   idnode_unlink(&pro->pro_id);
   dvr_config_destroy_by_profile(pro, delconf);
+  access_destroy_by_profile(pro, delconf);
   if (pro->pro_free)
     pro->pro_free(pro);
   free(pro->pro_name);
@@ -308,18 +310,47 @@ profile_find_by_name(const char *name, const char *alt)
     return profile_default;
 
   TAILQ_FOREACH(pro, &profiles, pro_link) {
-    if (!strcmp(pro->pro_name, name))
+    if (pro->pro_enabled && !strcmp(pro->pro_name, name))
       return pro;
   }
 
   if (alt) {
     TAILQ_FOREACH(pro, &profiles, pro_link) {
-      if (!strcmp(pro->pro_name, alt))
+      if (pro->pro_enabled && !strcmp(pro->pro_name, alt))
         return pro;
     }
   }
 
   return profile_default;
+}
+
+/*
+ *
+ */
+profile_t *
+profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt)
+{
+  profile_t *pro, *res = NULL;
+  htsmsg_field_t *f;
+  const char *uuid, *uuid2;
+
+  pro  = profile_find_by_name(name, alt);
+  uuid = idnode_uuid_as_str(&pro->pro_id);
+  if (uuids) {
+    HTSMSG_FOREACH(f, uuids) {
+      uuid2 = htsmsg_field_get_str(f) ?: "";
+      if (strcmp(uuid, uuid2) == 0)
+        return res;
+      if (!res) {
+        res = profile_find_by_uuid(uuid2);
+        if (!res->pro_enabled)
+          res = NULL;
+      }
+    }
+  }
+  if (!res)
+    res = profile_find_by_name(NULL, NULL);
+  return res;
 }
 
 /*

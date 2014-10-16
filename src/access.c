@@ -171,6 +171,8 @@ access_copy(access_t *src)
     dst->aa_username = strdup(src->aa_username);
   if (src->aa_representative)
     dst->aa_representative = strdup(src->aa_representative);
+  if (src->aa_profiles)
+    dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
     dst->aa_dvrcfgs = htsmsg_copy(src->aa_dvrcfgs);
   if (src->aa_chtags)
@@ -188,6 +190,7 @@ access_destroy(access_t *a)
     return;
   free(a->aa_username);
   free(a->aa_representative);
+  htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
   free(a);
@@ -333,6 +336,12 @@ access_update(access_t *a, access_entry_t *ae)
       a->aa_chmin = ae->ae_chmin;
       a->aa_chmax = ae->ae_chmax;
     }
+  }
+
+  if(ae->ae_profile && ae->ae_profile->pro_name[0] != '\0') {
+    if (a->aa_profiles == NULL)
+      a->aa_profiles = htsmsg_create_list();
+    htsmsg_add_str(a->aa_profiles, NULL, idnode_uuid_as_str(&ae->ae_profile->pro_id));
   }
 
   if(ae->ae_dvr_config && ae->ae_dvr_config->dvr_config_name[0] != '\0') {
@@ -757,6 +766,8 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   idnode_unlink(&ae->ae_id);
 
+  if (ae->ae_profile)
+    LIST_REMOVE(ae, ae_profile_link);
   if (ae->ae_dvr_config)
     LIST_REMOVE(ae, ae_dvr_config_link);
   if (ae->ae_chtag)
@@ -779,13 +790,29 @@ access_entry_destroy(access_entry_t *ae)
  *
  */
 void
+access_destroy_by_profile(profile_t *pro, int delconf)
+{
+  access_entry_t *ae;
+
+  while ((ae = LIST_FIRST(&pro->pro_accesses)) != NULL) {
+    LIST_REMOVE(ae, ae_profile_link);
+    ae->ae_dvr_config = NULL;
+    if (delconf)
+      access_entry_save(ae);
+  }
+}
+
+/*
+ *
+ */
+void
 access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 {
   access_entry_t *ae;
 
   while ((ae = LIST_FIRST(&cfg->dvr_accesses)) != NULL) {
     LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = NULL;
+    ae->ae_profile = profile_find_by_name(NULL, NULL);
     if (delconf)
       access_entry_save(ae);
   }
@@ -1026,6 +1053,37 @@ access_entry_dvr_config_get(void *o)
   return &ret;
 }
 
+static int
+access_entry_profile_set(void *o, const void *v)
+{
+  access_entry_t *ae = (access_entry_t *)o;
+  profile_t *pro = v ? profile_find_by_uuid(v) : NULL;
+  if (pro == NULL && ae->ae_profile) {
+    LIST_REMOVE(ae, ae_profile_link);
+    ae->ae_profile = NULL;
+    return 1;
+  } else if (ae->ae_profile != pro) {
+    if (ae->ae_profile)
+      LIST_REMOVE(ae, ae_profile_link);
+    ae->ae_profile = pro;
+    LIST_INSERT_HEAD(&pro->pro_accesses, ae, ae_profile_link);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+access_entry_profile_get(void *o)
+{
+  static const char *ret;
+  access_entry_t *ae = (access_entry_t *)o;
+  if (ae->ae_profile)
+    ret = idnode_uuid_as_str(&ae->ae_profile->pro_id);
+  else
+    ret = "";
+  return &ret;
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = "Access",
@@ -1090,6 +1148,14 @@ const idclass_t access_entry_class = {
       .id       = "adv_streaming",
       .name     = "Advanced Streaming",
       .off      = offsetof(access_entry_t, ae_adv_streaming),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "profile",
+      .name     = "Streaming Profile",
+      .set      = access_entry_profile_set,
+      .get      = access_entry_profile_get,
+      .list     = profile_class_get_list,
     },
     {
       .type     = PT_BOOL,

@@ -1783,18 +1783,14 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   }
 #endif
 
-#if ENABLE_LIBAV
+  profile_t *pro;
   const char *profile_id = htsmsg_get_str(in, "profile");
-  profile_t *pro = NULL;
   if (profile_id) {
     pro = profile_find_by_uuid(profile_id);
-    if (pro == NULL)
-      pro = profile_find_by_name(profile_id, "htsp");
+    if (pro)
+      profile_id = pro->pro_name;
   }
-
-#else
-  profile_t *pro = profile_find_by_name("htsp", NULL);
-#endif
+  pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
 
   hs->hs_work = profile_work(pro, st, &hs->hs_work_destroy);
   if (hs->hs_work) {

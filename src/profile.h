@@ -64,6 +64,7 @@ typedef struct profile {
   TAILQ_ENTRY(profile) pro_link;
 
   LIST_HEAD(,dvr_config) pro_dvr_configs;
+  LIST_HEAD(,access_entry) pro_accesses;
 
   int pro_enabled;
   int pro_shield;
@@ -104,6 +105,7 @@ void profile_chain_close(profile_chain_t *prch);
 static inline profile_t *profile_find_by_uuid(const char *uuid)
   {  return (profile_t*)idnode_find(uuid, &profile_class, NULL); }
 profile_t *profile_find_by_name(const char *name, const char *alt);
+profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt);
 
 htsmsg_t * profile_class_get_list(void *o);
 
