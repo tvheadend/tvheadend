@@ -22,33 +22,6 @@
 #include "epg.h"
 #include "api.h"
 
-static const char *
-api_dvr_config_name( access_t *perm, const char *config_uuid )
-{
-  dvr_config_t *cfg = NULL;
-  htsmsg_field_t *f;
-  const char *uuid;
-
-  lock_assert(&global_lock);
-
-  if (perm->aa_dvrcfgs == NULL)
-    return config_uuid; /* no change */
-
-  config_uuid = config_uuid ?: "";
-  HTSMSG_FOREACH(f, perm->aa_dvrcfgs) {
-    uuid = htsmsg_field_get_str(f) ?: "";
-    if (strcmp(uuid, config_uuid) == 0)
-      return config_uuid;
-    if (!cfg)
-      cfg = dvr_config_find_by_uuid(uuid);
-  }
-
-  if (!cfg && perm->aa_username)
-    tvhlog(LOG_INFO, "dvr", "User '%s' has no valid dvr config in ACL, using default...", perm->aa_username);
-
-  return cfg ? idnode_uuid_as_str(&cfg->dvr_id) : NULL;
-}
-
 /*
  *
  */
@@ -156,26 +129,31 @@ api_dvr_entry_create
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   dvr_entry_t *de;
+  dvr_config_t *cfg;
   htsmsg_t *conf;
-  const char *s1, *s2;
+  const char *s1;
+  int res = EPERM;
 
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
   pthread_mutex_lock(&global_lock);
   s1 = htsmsg_get_str(conf, "config_name");
-  s2 = api_dvr_config_name(perm, s1);
-  if (strcmp(s1 ?: "", s2 ?: ""))
-    htsmsg_set_str(conf, "config_name", s2 ?: "");
+  cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
+  if (cfg) {
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
 
-  if (perm->aa_representative)
-    htsmsg_set_str(conf, "creator", perm->aa_representative);
+    if (perm->aa_representative)
+       htsmsg_set_str(conf, "creator", perm->aa_representative);
 
-  if ((de = dvr_entry_create(NULL, conf)))
-    dvr_entry_save(de);
+    if ((de = dvr_entry_create(NULL, conf)))
+      dvr_entry_save(de);
+
+    res = 0;
+  }
   pthread_mutex_unlock(&global_lock);
 
-  return 0;
+  return res;
 }
 
 static htsmsg_t *
@@ -224,11 +202,14 @@ api_dvr_entry_create_by_event
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
-      de = dvr_entry_create_by_event(api_dvr_config_name(perm, config_uuid),
-                                     e, 0, 0, perm->aa_representative,
-                                     NULL, DVR_PRIO_NORMAL, 0);
-      if (de)
-        dvr_entry_save(de);
+      dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
+      if (cfg) {
+        de = dvr_entry_create_by_event(idnode_uuid_as_str(&cfg->dvr_id),
+                                       e, 0, 0, perm->aa_representative,
+                                       NULL, DVR_PRIO_NORMAL, 0);
+        if (de)
+          dvr_entry_save(de);
+      }
     }
     pthread_mutex_unlock(&global_lock);
     count++;
@@ -313,12 +294,15 @@ api_dvr_autorec_create_by_series
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
-      dae = dvr_autorec_add_series_link(api_dvr_config_name(perm, config_uuid),
-                                        e, perm->aa_representative,
-                                        "Created from EPG query");
-      if (dae) {
-        dvr_autorec_save(dae);
-        dvr_autorec_changed(dae, 1);
+      dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
+      if (cfg) {
+        dae = dvr_autorec_add_series_link(idnode_uuid_as_str(&cfg->dvr_id),
+                                          e, perm->aa_representative,
+                                          "Created from EPG query");
+        if (dae) {
+          dvr_autorec_save(dae);
+          dvr_autorec_changed(dae, 1);
+        }
       }
     }
     pthread_mutex_unlock(&global_lock);

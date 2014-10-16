@@ -340,7 +340,7 @@ profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt)
     HTSMSG_FOREACH(f, uuids) {
       uuid2 = htsmsg_field_get_str(f) ?: "";
       if (strcmp(uuid, uuid2) == 0)
-        return res;
+        return pro;
       if (!res) {
         res = profile_find_by_uuid(uuid2);
         if (!res->pro_enabled)
