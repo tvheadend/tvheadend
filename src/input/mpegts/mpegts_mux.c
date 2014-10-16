@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "input.h"
 #include "subscriptions.h"
+#include "channels.h"
 #include "access.h"
 #include "dvb_charset.h"
 
@@ -197,6 +198,22 @@ mpegts_mux_class_get_num_svc ( void *ptr )
   n = 0;
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     n++;
+
+  return &n;
+}
+
+static const void *
+mpegts_mux_class_get_num_chn ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm = ptr;
+  mpegts_service_t *s;
+  channel_service_mapping_t *csm;
+
+  n = 0;
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
+      n++;
 
   return &n;
 }
@@ -408,6 +425,13 @@ const idclass_t mpegts_mux_class =
       .name     = "# Services",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "num_chn",
+      .name     = "# Channels",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_mux_class_get_num_chn,
     },
     {
       .type     = PT_BOOL,
