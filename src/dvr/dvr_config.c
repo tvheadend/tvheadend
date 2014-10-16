@@ -118,6 +118,8 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
           res = NULL;
       }
     }
+  } else {
+    res = cfg;
   }
   if (!res)
     res = dvr_config_find_by_name_default(NULL);
