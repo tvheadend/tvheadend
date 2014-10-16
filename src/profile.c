@@ -293,11 +293,16 @@ profile_get_name(profile_t *pro)
  *
  */
 profile_t *
-profile_find_by_name(const char *name)
+profile_find_by_name(const char *name, const char *alt)
 {
   profile_t *pro;
 
   lock_assert(&global_lock);
+
+  if (!name && alt) {
+    name = alt;
+    alt = NULL;
+  }
 
   if (!name)
     return profile_default;
@@ -305,6 +310,13 @@ profile_find_by_name(const char *name)
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     if (!strcmp(pro->pro_name, name))
       return pro;
+  }
+
+  if (alt) {
+    TAILQ_FOREACH(pro, &profiles, pro_link) {
+      if (!strcmp(pro->pro_name, alt))
+        return pro;
+    }
   }
 
   return profile_default;
@@ -402,6 +414,35 @@ profile_chain_close(profile_chain_t *prch)
 }
 
 /*
+ *  HTSP Profile Class
+ */
+const idclass_t profile_htsp_class =
+{
+  .ic_super      = &profile_class,
+  .ic_class      = "profile-htsp",
+  .ic_caption    = "HTSP Stream Profile",
+  .ic_properties = (const property_t[]){
+    /* Ready for future extensions */
+    { }
+  }
+};
+
+static muxer_container_type_t
+profile_htsp_get_mc(profile_t *_pro)
+{
+  return MC_UNKNOWN;
+}
+
+static profile_t *
+profile_htsp_builder(void)
+{
+  profile_t *pro = calloc(1, sizeof(*pro));
+  pro->pro_open   = NULL;
+  pro->pro_get_mc = profile_htsp_get_mc;
+  return pro;
+}
+
+/*
  *  MPEG-TS passthrough muxer
  */
 typedef struct profile_mpegts {
@@ -412,7 +453,7 @@ typedef struct profile_mpegts {
 
 const idclass_t profile_mpegts_pass_class =
 {
-  .ic_super     = &profile_class,
+  .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
   .ic_caption    = "MPEG-TS Pass-through",
   .ic_properties = (const property_t[]){
@@ -483,7 +524,7 @@ typedef struct profile_matroska {
 
 const idclass_t profile_matroska_class =
 {
-  .ic_super     = &profile_class,
+  .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
   .ic_caption    = "Matroska (mkv)",
   .ic_properties = (const property_t[]){
@@ -705,7 +746,7 @@ profile_class_scodec_list(void *o)
 
 const idclass_t profile_transcode_class =
 {
-  .ic_super     = &profile_class,
+  .ic_super      = &profile_class,
   .ic_class      = "profile-transcode",
   .ic_caption    = "Transcode",
   .ic_properties = (const property_t[]){
@@ -878,12 +919,15 @@ profile_init(void)
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  profile_t *pro;
+  const char *name;
 
   LIST_INIT(&profile_builders);
   TAILQ_INIT(&profiles);
 
   profile_register(&profile_mpegts_pass_class, profile_mpegts_pass_builder);
   profile_register(&profile_matroska_class, profile_matroska_builder);
+  profile_register(&profile_htsp_class, profile_htsp_builder);
 #if ENABLE_LIBAV
   profile_transcode_experimental_codecs =
     getenv("TVHEADEND_LIBAV_NO_EXPERIMENTAL_CODECS") ? 0 : 1;
@@ -899,37 +943,58 @@ profile_init(void)
     htsmsg_destroy(c);
   }
 
-  if (TAILQ_EMPTY(&profiles)) {
+  name = "pass";
+  pro = profile_find_by_name(name, NULL);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
     conf = htsmsg_create_map();
     htsmsg_add_str (conf, "class", "profile-mpegts");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_bool(conf, "default", 1);
-    htsmsg_add_str (conf, "name", "pass");
+    htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "MPEG-TS Pass-through");
     htsmsg_add_bool(conf, "rewrite_pmt", 1);
     htsmsg_add_bool(conf, "rewrite_pat", 1);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
+  }
+
+  name = "matroska";
+  pro = profile_find_by_name(name, NULL);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
 
     conf = htsmsg_create_map();
     htsmsg_add_str (conf, "class", "profile-matroska");
     htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", "matroska");
+    htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "Matroska");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
   }
 
+  name = "htsp";
+  pro = profile_find_by_name(name, NULL);
+  if (pro == NULL || strcmp(pro->pro_name, name)) {
+    htsmsg_t *conf;
+
+    conf = htsmsg_create_map();
+    htsmsg_add_str (conf, "class", "profile-htsp");
+    htsmsg_add_bool(conf, "enabled", 1);
+    htsmsg_add_str (conf, "name", name);
+    htsmsg_add_str (conf, "comment", "HTSP Default Stream Settings");
+    htsmsg_add_bool(conf, "shield", 1);
+    (void)profile_create(NULL, conf, 1);
+    htsmsg_destroy(conf);
+  }
+
 #if ENABLE_LIBAV
-  profile_t *pro;
-  const char *name;
 
   name = "webtv-vp8-vorbis-webm";
-  pro = profile_find_by_name(name);
+  pro = profile_find_by_name(name, NULL);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -948,7 +1013,7 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
   name = "webtv-h264-aac-mpegts";
-  pro = profile_find_by_name(name);
+  pro = profile_find_by_name(name, NULL);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -967,7 +1032,7 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
   name = "webtv-h264-aac-matroska";
-  pro = profile_find_by_name(name);
+  pro = profile_find_by_name(name, NULL);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 

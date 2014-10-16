@@ -171,7 +171,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   tvhinfo("dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
 
   if (cfg->dvr_profile == NULL) {
-    cfg->dvr_profile = profile_find_by_name(NULL);
+    cfg->dvr_profile = profile_find_by_name("dvr", NULL);
     assert(cfg->dvr_profile);
     LIST_INSERT_HEAD(&cfg->dvr_profile->pro_dvr_configs, cfg, profile_link);
   }
@@ -343,7 +343,7 @@ dvr_config_class_profile_set(void *o, const void *v)
   profile_t *pro;
 
   pro = v ? profile_find_by_uuid(v) : NULL;
-  pro = pro ?: profile_find_by_name(v);
+  pro = pro ?: profile_find_by_name(v, "dvr");
   if (pro == NULL) {
     if (cfg->dvr_profile) {
       LIST_REMOVE(cfg, profile_link);
@@ -707,7 +707,7 @@ dvr_config_destroy_by_profile(profile_t *pro, int delconf)
 
   while((cfg = LIST_FIRST(&pro->pro_dvr_configs)) != NULL) {
     LIST_REMOVE(cfg, profile_link);
-    cfg->dvr_profile = profile_find_by_name(NULL);
+    cfg->dvr_profile = profile_find_by_name(NULL, "dvr");
   }
 }
 

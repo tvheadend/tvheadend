@@ -719,7 +719,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"))))
+  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"), "service")))
     return HTTP_STATUS_NOT_ALLOWED;
 
   if((tcp_id = http_stream_preop(hc)) == NULL)
@@ -831,7 +831,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"))))
+  if(!(pro = profile_find_by_name(http_arg_get(&hc->hc_req_args, "profile"), "channel")))
     return HTTP_STATUS_NOT_ALLOWED;
 
   if((tcp_id = http_stream_preop(hc)) == NULL)

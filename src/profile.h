@@ -103,7 +103,7 @@ void profile_chain_close(profile_chain_t *prch);
 
 static inline profile_t *profile_find_by_uuid(const char *uuid)
   {  return (profile_t*)idnode_find(uuid, &profile_class, NULL); }
-profile_t *profile_find_by_name(const char *name);
+profile_t *profile_find_by_name(const char *name, const char *alt);
 
 htsmsg_t * profile_class_get_list(void *o);
 
