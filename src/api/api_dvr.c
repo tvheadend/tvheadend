@@ -195,10 +195,10 @@ api_dvr_entry_create_by_event
   HTSMSG_FOREACH(f, entries) {
     if (!(m = htsmsg_get_map_by_field(f))) continue;
 
-    if (!(config_uuid = htsmsg_get_str(m, "config_uuid")))
-      continue;
     if (!(s = htsmsg_get_str(m, "event_id")))
       continue;
+
+    config_uuid = htsmsg_get_str(m, "config_uuid");
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
@@ -287,10 +287,10 @@ api_dvr_autorec_create_by_series
   HTSMSG_FOREACH(f, entries) {
     if (!(m = htsmsg_get_map_by_field(f))) continue;
 
-    if (!(config_uuid = htsmsg_get_str(m, "config_uuid")))
-      continue;
     if (!(s = htsmsg_get_str(m, "event_id")))
       continue;
+
+    config_uuid = htsmsg_get_str(m, "config_uuid");
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {

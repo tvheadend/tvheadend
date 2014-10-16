@@ -334,8 +334,10 @@ profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt)
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
 
-  pro  = profile_find_by_name(name, alt);
-  uuid = idnode_uuid_as_str(&pro->pro_id);
+  pro = profile_find_by_uuid(name);
+  if (!pro)
+    pro  = profile_find_by_name(name, alt);
+  uuid = pro ? idnode_uuid_as_str(&pro->pro_id) : "";
   if (uuids) {
     HTSMSG_FOREACH(f, uuids) {
       uuid2 = htsmsg_field_get_str(f) ?: "";

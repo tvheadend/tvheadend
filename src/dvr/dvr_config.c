@@ -105,8 +105,10 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
 
-  cfg  = dvr_config_find_by_name(name);
-  uuid = idnode_uuid_as_str(&cfg->dvr_id);
+  cfg  = dvr_config_find_by_uuid(name);
+  if (!cfg)
+    cfg  = dvr_config_find_by_name(name);
+  uuid = cfg ? idnode_uuid_as_str(&cfg->dvr_id) : "";
   if (uuids) {
     HTSMSG_FOREACH(f, uuids) {
       uuid2 = htsmsg_field_get_str(f) ?: "";
@@ -530,7 +532,6 @@ const idclass_t dvr_config_class = {
       .type     = PT_STR,
       .id       = "profile",
       .name     = "Stream Profile",
-      .off      = offsetof(dvr_config_t, dvr_profile),
       .set      = dvr_config_class_profile_set,
       .get      = dvr_config_class_profile_get,
       .rend     = dvr_config_class_profile_rend,
