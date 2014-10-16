@@ -8,16 +8,19 @@
       you only have to click once in it.
 </ul>
 </p>
+<p>
+ 		<img src="docresources/configtvadapters.png">
+	</p>
 <br>
 <hr>
 <b>Rows</b>
 <hr>
 The rows have the following functions
 <br><br>
+<dt><u><i><b>Basic Settings</b></i></u></dt>
 <dl>
   <dt><b>Enabled</b></dt>
-  <dd>If selected, the IPTV service will be enabled an use for channel
-      subscriptions.</dd>
+  <dd>If selected, this tuner/adapter will be enabled and will become available to receive broadcasts or programmes.</dd>
 <p>
   <dt><b>Name</b></dt>
   <dd>The name of this tuner.</dd>
@@ -28,6 +31,12 @@ The rows have the following functions
   <dt><b>Networks</b></dt>
   <dd>Associate this device with one or more networks.</dd>
  <p> 
+ <dt><b>Power Save</b></dt>
+  <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
+ <p>
+ </dl>
+ <dt><u><i><b>Advanced Settings</b></i></u></dt>
+ <dl>
   <dt><b>Priority</b></dt>
   <dd>The tuner priority value (higher value = higher priority to use this
       tuner).</dd>
@@ -41,18 +50,17 @@ The rows have the following functions
 </p>     
 <br>
 <hr>
-<b>SAT>IP specific rows</b>
+<b>SAT>IP Specific Rows</b>
 <hr>
-
 
 <dl>
   <dt><b>Full Mux Rx mode supported</b></dt>
-  <dd>Enable, if the SAT>IP box supports the full mux rx mode (pids=all)
-      parameter.</dd>
+  <dd>Enable if the SAT>IP box supports the full mux rx mode (pids=all)<br>
+	note: no comma after 'Enable'</dd>
       <p>
   <dt><b>Signal scale (240 or 100)</b></dt>
-  <dd>Some SAT>IP boxes has only 0-100 scale. If your signal is too low, try
-      value 100 here.</dd>
+  <dd>Some SAT>IP boxes only report a 0-100 (percentage) signal strength. If your signal strength reports as too low, try
+setting this to 100.</dd>
      <p> 
   <dt><b>Maximum PIDs</b><dt>
   <dd>Maximum supported PIDs in the filter of the SAT>IP box.</dd>
@@ -62,7 +70,7 @@ The rows have the following functions
       SAT>IP box.</dd>
 <p>
   <dt><b>Addpids/delpids supported</b></dt>
-  <dd>Enable, if the SAT>IP box supports the addpids/delpids command.
+  <dd>Enable if the SAT>IP box supports the addpids/delpids command.
 <p>
   <dt><b>PIDs in setup</b></dt>
   <dd>Enable, if the SAT>IP box requires pids=0 parameter in the SETUP RTSP command.</dd>
