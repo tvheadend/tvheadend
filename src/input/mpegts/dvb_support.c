@@ -251,7 +251,7 @@ dvb_get_string
   }
 
   // check for automatic polish charset detection
-  if (dvb_charset && strcmp("PL_AUTO", dvb_charset) == 0) {
+  if (dvb_charset && strcmp("AUTO_POLISH", dvb_charset) == 0) {
     auto_pl_charset = 1;
     dvb_charset = NULL;
   }
