@@ -52,6 +52,11 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    profile:   'pass',
 	    mimetype:  'video/MP2T'
 	},
+	webm: {
+	    profile:   'webtv-vp8-vorbis-webm',
+	    playlist:  false,
+	    mimetype:  'video/webm; codecs="vp8.0, vorbis"'
+	},
 	hls: {
 	    profile:   'webtv-h264-aac-mpegts',
 	    playlist:  true,
@@ -72,10 +77,6 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    playlist:  false,
 	    mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
 	},
-	webm: {
-	    profile:   'webtv-vp8-vorbis-webm',
-	    mimetype:  'video/webm; codecs="vp8.0, vorbis"'
-	}
     };
 
     return {
@@ -236,8 +237,8 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    this.video.setSize(width, height);
 	},
 
-	setResolution: function(res) {
-	    this.params.resolution = res;
+	setProfile: function(pro) {
+	    this.params.profile = pro;
 	},
 
 	isIdle: function() {
@@ -271,7 +272,10 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 	    var config = config || {}
 	    var params = {}
 
-	    Ext.apply(params, this._getProfile(), this.params);
+            if (!this.params.profile)
+	      Ext.apply(params, this._getProfile(), this.params);
+	    else
+	      Ext.apply(params, this.params);
 	    Ext.apply(params, config);
 
 	    this.video.hide();
@@ -402,7 +406,6 @@ tv.ui.ChannelList = Ext.extend(Ext.DataView, {
 	}.bind(this));
     }
 });
-
 
 tv.app = function() {
     return {
