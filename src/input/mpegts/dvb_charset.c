@@ -155,6 +155,7 @@ dvb_charset_enum ( void *p )
     "UTF-8",
     "GB2312",
     "UCS2",
+    "AUTO_POLISH",
   };
   htsmsg_t *m = htsmsg_create_list();
   for ( i = 0; i < ARRAY_SIZE(charsets); i++)
