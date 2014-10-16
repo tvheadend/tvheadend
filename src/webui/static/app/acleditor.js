@@ -14,7 +14,7 @@ tvheadend.acleditor = function(panel, index)
         titleP: 'Access Entries',
         iconCls: 'group',
         columns: {
-			enabled:       { width: 120 },
+            enabled:       { width: 120 },
             username:      { width: 250 },
             password:      { width: 250 },
             prefix:        { width: 350 },

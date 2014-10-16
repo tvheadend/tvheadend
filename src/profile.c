@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "profile.h"
 #include "streaming.h"
+#include "access.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #if ENABLE_LIBAV
@@ -218,8 +219,9 @@ const idclass_t profile_class =
 {
   .ic_class      = "profile",
   .ic_caption    = "Stream Profile",
-  .ic_save       = profile_class_save,
   .ic_event      = "profile",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = profile_class_save,
   .ic_get_title  = profile_class_get_title,
   .ic_delete     = profile_class_delete,
   .ic_properties = (const property_t[]){

@@ -408,22 +408,21 @@ http_redirect(http_connection_t *hc, const char *location,
 /**
  *
  */
-static int http_access_verify_ticket(http_connection_t *hc)
+static void
+http_access_verify_ticket(http_connection_t *hc)
 {
   const char *ticket_id;
 
-  if (hc->hc_ticket || hc->hc_access)
-    return 0;
+  if (hc->hc_access)
+    return;
   ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
-    return -1;
+    return;
   char addrstr[50];
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
   tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s",
 	 addrstr, ticket_id, hc->hc_url);
-  hc->hc_ticket = 1;
-  return 0;
 }
 
 /**
@@ -432,8 +431,7 @@ static int http_access_verify_ticket(http_connection_t *hc)
 int
 http_access_verify(http_connection_t *hc, int mask)
 {
-  if (!http_access_verify_ticket(hc))
-    return 0;
+  http_access_verify_ticket(hc);
 
   if (hc->hc_access == NULL) {
     hc->hc_access = access_get(hc->hc_username, hc->hc_password,
@@ -456,8 +454,8 @@ http_access_verify_channel(http_connection_t *hc, int mask,
 
   assert(ch);
 
-  if (ticket && !http_access_verify_ticket(hc))
-    return 0;
+  if (ticket)
+    http_access_verify_ticket(hc);
 
   if (hc->hc_access == NULL) {
     hc->hc_access = access_get(hc->hc_username, hc->hc_password,
@@ -488,7 +486,6 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
   access_destroy(hc->hc_access);
   hc->hc_access = NULL;
-  hc->hc_ticket = 0;
 
   if(err == -1)
      return 1;

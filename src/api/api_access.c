@@ -52,9 +52,9 @@ api_access_entry_create
 void api_access_init ( void )
 {
   static api_hook_t ah[] = {
-    { "access/entry/class",    ACCESS_ANONYMOUS, api_idnode_class, (void*)&access_entry_class },
-    { "access/entry/grid",     ACCESS_ANONYMOUS, api_idnode_grid,  api_access_entry_grid },
-    { "access/entry/create",   ACCESS_ADMIN,     api_access_entry_create, NULL },
+    { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
+    { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
+    { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },
 
     { NULL },
   };

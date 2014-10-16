@@ -137,17 +137,8 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_CWC || ENABLE_CAPMT || ENABLE_CONSTCW
   { "caclient", NULL },
 #endif
-#if ENABLE_V4L
-  { "v4l", NULL },
-#endif
-#if ENABLE_LINUXDVB
-  { "linuxdvb", NULL },
-#endif
-#if ENABLE_SATIP_CLIENT
-  { "satip_client", NULL },
-#endif
-#if ENABLE_HDHOMERUN_CLIENT
-  { "tvhdhomerun_client", NULL },
+#if ENABLE_V4L || ENABLE_LINUXDVB || ENABLE_SATIP_CLIENT || ENABLE_HDHOMERUN_CLIENT
+  { "tvadapters", NULL },
 #endif
 #if ENABLE_IMAGECACHE
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },

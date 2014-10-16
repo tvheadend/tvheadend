@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "input.h"
 #include "subscriptions.h"
+#include "access.h"
 #include "dvb_charset.h"
 
 #include <assert.h>
@@ -37,6 +38,7 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_class      = "mpegts_mux_instance",
   .ic_caption    = "MPEGTS Multiplex Phy",
+  .ic_perm_def   = ACCESS_ADMIN
 };
 
 static void
@@ -319,6 +321,7 @@ const idclass_t mpegts_mux_class =
   .ic_class      = "mpegts_mux",
   .ic_caption    = "MPEGTS Multiplex",
   .ic_event      = "mpegts_mux",
+  .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
   .ic_delete     = mpegts_mux_class_delete,
   .ic_get_title  = mpegts_mux_class_get_title,
