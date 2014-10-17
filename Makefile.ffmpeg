@@ -58,6 +58,7 @@ COMPONENTS      = avutil avformat avcodec swresample swscale avresample
 DECODERS        = mpeg2video mp2 ac3 eac3 h264 h264_vdpau aac aac_latm vorbis libvorbis
 ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
 MUXERS          = mpegts mpeg2dvd matroska
+BSFS            = h264_mp4toannexb
 
 LIBOGG          = libogg-1.3.2
 LIBOGG_TB       = $(LIBOGG).tar.gz
@@ -236,7 +237,8 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
-		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer))
+		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
+		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf))
 	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(FFMPEG) install
 	@touch $@
