@@ -47,6 +47,7 @@ export PATH := $(LIBAVDIR)/build/ffmpeg/bin:$(PATH)
 
 ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
+SLIBS           = -lx264 -lvpx -lvorbisenc -lvorbis -logg
 
 FFMPEG          = ffmpeg-2.4.2
 FFMPEG_TB       = $(FFMPEG).tar.bz2
@@ -239,6 +240,17 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf))
+	#
+	# Modify EXTRALIBS to link statically at first shot
+	#
+	@{ \
+	  libs=$$(cat $(LIBAVDIR)/$(FFMPEG)/config.mak | grep -E "^EXTRALIBS=" | cut -d '=' -f 2-) ; \
+	  cat $(LIBAVDIR)/$(FFMPEG)/config.mak | grep -Ev "^EXTRALIBS=" > \
+		$(LIBAVDIR)/$(FFMPEG)/config.mak.new ; \
+	  echo "EXTRALIBS=-L$(LIBAVDIR)/build/ffmpeg/lib -Wl,-Bstatic $(SLIBS) -Wl,-Bdynamic $${libs}" > \
+		$(LIBAVDIR)/$(FFMPEG)/config.mak ; \
+	  cat $(LIBAVDIR)/$(FFMPEG)/config.mak.new >> $(LIBAVDIR)/$(FFMPEG)/config.mak ; \
+	}
 	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(FFMPEG) install
 	@touch $@
