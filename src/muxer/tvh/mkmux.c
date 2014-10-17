@@ -236,6 +236,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
   htsbuf_queue_t *q = htsbuf_queue_alloc(0), *t;
   int tracknum = 0;
   uint8_t buf4[4];
+  uint32_t bit_depth = 0;
 
   mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
@@ -302,6 +303,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     case SCT_AAC:
       tracktype = 2;
       codec_id = "A_AAC";
+      bit_depth = 16;
       break;
 
     case SCT_VORBIS:
@@ -385,15 +387,13 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       break;
     }
 
-    if(ssc->ssc_frameduration) {
-      int d = ts_rescale(ssc->ssc_frameduration, 1000000000);
-      ebml_append_uint(t, 0x23e383, d);
-    }
-    
-
     if(SCT_ISVIDEO(ssc->ssc_type)) {
       htsbuf_queue_t *vi = htsbuf_queue_alloc(0);
 
+      if(ssc->ssc_frameduration) {
+        int d = ts_rescale(ssc->ssc_frameduration, 1000000000);
+        ebml_append_uint(t, 0x23e383, d);
+      }
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
@@ -416,6 +416,8 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 
       ebml_append_float(au, 0xb5, sri_to_rate(ssc->ssc_sri));
       ebml_append_uint(au, 0x9f, ssc->ssc_channels);
+      if (bit_depth)
+        ebml_append_uint(au, 0x6264, bit_depth);
 
       ebml_append_master(t, 0xe1, au);
     }
@@ -978,7 +980,6 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
     len -= 7;
     data += 7;
   }
-
 
   ebml_append_id(mkm->cluster, 0xa3 ); // SimpleBlock
   ebml_append_size(mkm->cluster, len + 4);

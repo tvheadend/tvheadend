@@ -37,6 +37,7 @@
 #include "packet.h"
 #include "transcoding.h"
 #include "libav.h"
+#include "parsers/bitstream.h"
 
 static long transcoder_nrprocessors;
 
@@ -200,6 +201,10 @@ transcoder_get_decoder(transcoder_t *t, streaming_component_type_t ty)
   enum AVCodecID codec_id;
   AVCodec *codec;
 
+  /* the MP4A and AAC packet format is same, reduce to one type */
+  if (ty == SCT_MP4A)
+    ty = SCT_AAC;
+
   codec_id = streaming_component_type2codec_id(ty);
   if (codec_id == AV_CODEC_ID_NONE) {
     tvherror("transcode", "%04X: Unsupported input codec %s",
@@ -313,6 +318,31 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   avsubtitle_free(&sub);
 }
 
+static void
+create_adts_header(pktbuf_t *pb, int sri, int channels)
+{
+   bitstream_t bs;
+
+   /* 7 bytes of ADTS header */
+   init_wbits(&bs, pktbuf_ptr(pb), 56);
+
+   put_bits(&bs, 0xfff, 12); // Sync marker
+   put_bits(&bs, 0, 1);      // ID 0 = MPEG 4
+   put_bits(&bs, 0, 2);      // Layer
+   put_bits(&bs, 1, 1);      // Protection absent
+   put_bits(&bs, 2, 2);      // AOT
+   put_bits(&bs, sri, 4);
+   put_bits(&bs, 1, 1);      // Private bit
+   put_bits(&bs, channels, 3);
+   put_bits(&bs, 1, 1);      // Original
+   put_bits(&bs, 1, 1);      // Copy
+
+   put_bits(&bs, 1, 1);      // Copyright identification bit
+   put_bits(&bs, 1, 1);      // Copyright identification start
+   put_bits(&bs, pktbuf_len(pb), 13);
+   put_bits(&bs, 0, 11);     // Buffer fullness
+   put_bits(&bs, 0, 2);      // RDB in frame
+}
 
 /**
  *
@@ -690,12 +720,24 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     } else if (got_packet_ptr && packet.pts >= 0) {
 
-      n = pkt_alloc(packet.data, packet.size, packet.pts, packet.pts);
+      int extra_size = 0;
+      
+      if (ts->ts_type == SCT_AAC) {
+        /* only if ADTS header is missing, create it */
+        if (packet.size < 2 || packet.data[0] != 0xff || (packet.data[1] & 0xf0) != 0xf0)
+          extra_size = 7;
+      }
+      
+      n = pkt_alloc(NULL, packet.size + extra_size, packet.pts, packet.pts);
+      memcpy(pktbuf_ptr(n->pkt_payload) + extra_size, packet.data, packet.size);
+
       n->pkt_componentindex = ts->ts_index;
       n->pkt_channels       = octx->channels;
       n->pkt_sri            = rate_to_sri(octx->sample_rate);
+      n->pkt_duration       = packet.duration;
 
-      n->pkt_duration = packet.duration;
+      if (extra_size && ts->ts_type == SCT_AAC)
+        create_adts_header(pkt->pkt_payload, n->pkt_sri, octx->channels);
 
       if (octx->extradata_size)
 	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
@@ -705,7 +747,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
       pkt_ref_dec(n);
-
     }
 
     av_free_packet(&packet);

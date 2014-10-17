@@ -114,6 +114,8 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 #if 0
     c->time_base.num = 1;
     c->time_base.den = c->sample_rate;
+#else
+    c->time_base     = st->time_base;
 #endif
 
     av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
@@ -123,10 +125,8 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->width      = ssc->ssc_width;
     c->height     = ssc->ssc_height;
 
-#if 0
-    c->time_base.num  = 1;
+    c->time_base.num = 1;
     c->time_base.den = 25;
-#endif
 
     c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
     c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
@@ -396,6 +396,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
 	break;
       }
+    } else if (st->codec->codec_id == AV_CODEC_ID_AAC) {
+      /* remove ADTS header */
+      packet.data = pktbuf_ptr(pkt->pkt_payload) + 7;
+      packet.size = pktbuf_len(pkt->pkt_payload) - 7;
     } else {
       packet.data = pktbuf_ptr(pkt->pkt_payload);
       packet.size = pktbuf_len(pkt->pkt_payload);

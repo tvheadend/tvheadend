@@ -79,6 +79,7 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_EAC3:
     codec_id = AV_CODEC_ID_EAC3;
     break;
+  case SCT_MP4A:
   case SCT_AAC:
     codec_id = AV_CODEC_ID_AAC;
     break;

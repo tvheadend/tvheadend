@@ -222,11 +222,11 @@ typedef enum {
   SCT_TELETEXT,
   SCT_DVBSUB,
   SCT_CA,
-  SCT_AAC,
+  SCT_AAC,     /* AAC-LATM in MPEG-TS, ADTS + AAC in packet form */
   SCT_MPEGTS,
   SCT_TEXTSUB,
   SCT_EAC3,
-  SCT_MP4A,
+  SCT_MP4A,    /* ADTS + AAC in MPEG-TS and packet form */
   SCT_VP8,
   SCT_VORBIS,
   SCT_HEVC,
