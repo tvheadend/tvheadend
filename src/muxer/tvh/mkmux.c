@@ -258,6 +258,10 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
 
+    if (mkm->webm && ssc->ssc_type != SCT_VP8 && ssc->ssc_type != SCT_VORBIS)
+      tvhwarn("mkv", "WEBM format supports only VP8+VORBIS streams (detected %s)",
+              streaming_component_type2txt(ssc->ssc_type));
+
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
       tracktype = 1;

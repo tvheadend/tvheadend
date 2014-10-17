@@ -646,6 +646,7 @@ profile_class_mc_list ( void *o )
     { "MPEG-TS /av-lib",               MC_MPEGTS },
     { "MPEG-PS (DVD) /av-lib",         MC_MPEGPS },
     { "Matroska (mkv) /av-lib",        MC_AVMATROSKA },
+    { "WEBM /av-lib",                  MC_AVWEBM },
   };
   return strtab2htsmsg(tab);
 }

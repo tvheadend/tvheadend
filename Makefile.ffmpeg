@@ -57,7 +57,7 @@ EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avresample
 DECODERS        = mpeg2video mp2 ac3 eac3 h264 h264_vdpau aac aac_latm vorbis libvorbis
 ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
-MUXERS          = mpegts mpeg2dvd matroska
+MUXERS          = mpegts mpeg2dvd matroska webm
 BSFS            = h264_mp4toannexb
 
 LIBOGG          = libogg-1.3.2

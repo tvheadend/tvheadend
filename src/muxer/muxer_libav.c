@@ -163,6 +163,12 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= SCT_ISSUBTITLE(type);
     break;
 
+  case MC_WEBM:
+  case MC_AVWEBM:
+    ret |= type == SCT_VP8;
+    ret |= type == SCT_VORBIS;
+    break;
+
   case MC_MPEGTS:
     ret |= (type == SCT_MPEG2VIDEO);
     ret |= (type == SCT_H264);
@@ -516,6 +522,10 @@ lav_muxer_create(const muxer_config_t *m_cfg)
   case MC_MATROSKA:
   case MC_AVMATROSKA:
     mux_name = "matroska";
+    break;
+  case MC_WEBM:
+  case MC_AVWEBM:
+    mux_name = "webm";
     break;
   default:
     mux_name = muxer_container_type2txt(m_cfg->m_type);
