@@ -179,7 +179,7 @@ tvheadend.status_subs = function(panel, index)
         header: false,
         layout: 'fit',
         title: 'Subscriptions',
-        iconCls: 'eye'
+        iconCls: 'subscriptions'
     });
 
     tvheadend.paneladd(panel, dpanel, index);
@@ -425,7 +425,7 @@ tvheadend.status_streams = function(panel, index)
         header: false,
         layout: 'fit',
         title: 'Stream',
-        iconCls: 'hardware'
+        iconCls: 'stream'
     });
 
     tvheadend.paneladd(panel, dpanel, index);
@@ -560,7 +560,7 @@ tvheadend.status_conns = function(panel, index) {
         header: false,
         layout: 'fit',
         title: 'Connections',
-        iconCls: 'eye'
+        iconCls: 'connections'
     });
 
     tvheadend.paneladd(panel, dpanel, index);

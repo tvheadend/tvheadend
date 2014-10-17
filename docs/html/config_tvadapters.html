@@ -8,79 +8,86 @@
       you only have to click once in it.
 </ul>
 </p>
-
-<h4>The rows have the following functions</h4>
-
+<p>
+ 		<img src="docresources/configtvadapters.png">
+	</p>
+<br>
+<hr>
+<b>Rows</b>
+<hr>
+The rows have the following functions
+<br><br>
+<dt><u><i><b>Basic Settings</b></i></u></dt>
 <dl>
-  <dt>Enabled</dt>
-  <dd>If selected, the IPTV service will be enabled an use for channel
-      subscriptions.</dd>
-
-  <dt>Name</dt>
+  <dt><b>Enabled</b></dt>
+  <dd>If selected, this tuner/adapter will be enabled and will become available to receive broadcasts or programmes.</dd>
+<p>
+  <dt><b>Name</b></dt>
   <dd>The name of this tuner.</dd>
-
-  <dt>Over-the-Air EPG</dt>
+<p>
+  <dt><b>Over-the-Air EPG</b></dt>
   <dd>Enable over-the-air programme guide (EPG) scanning on this input device.</dd>
-
-  <dt>Networks</dt>
+<p>
+  <dt><b>Networks</b></dt>
   <dd>Associate this device with one or more networks.</dd>
-  
-  <dt>Priority</dt>
+ <p> 
+ <dt><b>Power Save</b></dt>
+  <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
+ <p>
+ </dl>
+ <dt><u><i><b>Advanced Settings</b></i></u></dt>
+ <dl>
+  <dt><b>Priority</b></dt>
   <dd>The tuner priority value (higher value = higher priority to use this
       tuner).</dd>
-
-  <dt>Streaming Priority</dt>
+<p>
+  <dt><b>Streaming Priority</b></dt>
   <dd>The tuner priority value for streamed channels through HTTP or HTSP
       (higher value = higher priority to use this tuner). If not set (zero),
       the standard priority value is used.</dd>
 
 </dl>
-</p>
-
-<h4>LinuxDVB specific rows</h4>
-
-<dl>
-  <dt>Keep FE open</dt>
-  <dd>Enable to not close the LinuxDVB frontend device in the idle state.</dd>
-</dl>      
-
-<h4>SAT>IP specific rows</h4>
+</p>     
+<br>
+<hr>
+<b>SAT>IP Specific Rows</b>
+<hr>
 
 <dl>
-  <dt>Full Mux Rx mode supported</dt>
-  <dd>Enable, if the SAT>IP box supports the full mux rx mode (pids=all)
-      parameter.</dd>
-      
-  <dt>Signal scale (240 or 100)</dt>
-  <dd>Some SAT>IP boxes has only 0-100 scale. If your signal is too low, try
-      value 100 here.</dd>
-      
-  <dt>Maximum PIDs<dt>
+  <dt><b>Full Mux Rx mode supported</b></dt>
+  <dd>Enable if the SAT>IP box supports the full mux rx mode (pids=all)<br>
+	note: no comma after 'Enable'</dd>
+      <p>
+  <dt><b>Signal scale (240 or 100)</b></dt>
+  <dd>Some SAT>IP boxes only report a 0-100 (percentage) signal strength. If your signal strength reports as too low, try
+setting this to 100.</dd>
+     <p> 
+  <dt><b>Maximum PIDs</b><dt>
   <dd>Maximum supported PIDs in the filter of the SAT>IP box.</dd>
-  
-  <dt>Maximum length of PIDs<dt>
+  <p>
+  <dt><b>Maximum length of PIDs</b><dt>
   <dd>Maximum length in characters for the command setting PIDs to the
       SAT>IP box.</dd>
-
-  <dt>addpids/delpids supported</dt>
-  <dd>Enable, if the SAT>IP box supports the addpids/delpids command.
-
-  <dt>PIDs in setup</dt>
+<p>
+  <dt><b>Addpids/delpids supported</b></dt>
+  <dd>Enable if the SAT>IP box supports the addpids/delpids command.
+<p>
+  <dt><b>PIDs in setup</b></dt>
   <dd>Enable, if the SAT>IP box requires pids=0 parameter in the SETUP RTSP command.</dd>
-
-  <dt>Force pilot for DVB-S2</dt>
+<p>
+  <dt><b>Force pilot for DVB-S2</b></dt>
   <dd>Enable, if the SAT>IP box requiest plts=on parameter in the SETUP RTSP
       command for DVB-S2 muxes.</dd>
-
-  <dt>UDP RTP Port Number (2 ports)</dt>
+<p>
+  <dt><b>UDP RTP Port Number (2 ports)</b></dt>
   <dd>Force the local UDP Port number here. The number should be even (RTP port).
       The next odd number (+1) will be used as the RTCP port.</dd>
-
-  <dt>Satellite Positions</dt>
+<p>
+  <dt><b>Satellite Positions</b></dt>
   <dd>Select the number of satellite positions supported by the SAT>IP
       hardware and your coaxial cable wiring.</dd>
-
-  <dt>Master Tuner</dt>
+<p>
+  <dt><b>Master Tuner</b></dt>
   <dd>Select the master tuner.
      <p>The signal from the standard universal LNB can be split using
         a simple coaxial splitter (no multiswitch) to several outputs.
@@ -90,17 +97,17 @@
         a slave one and tvheadend will assure that this tuner will not
         use incompatible parameters (position, polarization, lo-hi).</p>
   </dd>
-
-  <dt>Next tune delay in ms (0-2000)</dt>
+<P>
+  <dt><b>Next tune delay in ms (0-2000)</b></dt>
   <dd>The delay before tuning in milliseconds after tuner stop. If the time
       after previous start and next start is greater than this value -
       the delay is not applied.</dt>
-
-  <dt>Send full PLAY cmd</dt>
+<p>
+  <dt><b>Send full PLAY cmd</b></dt>
   <dd>Send the full RTSP PLAY command after full RTSP SETUP command. Some
       device firmwares requires this to get MPEG-TS stream.</dd>
-
-  <dt>Force teardown delay<dt>
+<p>
+  <dt><b>Force teardown delay</b><dt>
   <dd>Force the delay between RTSP TEARDOWN and RTSP SETUP command (value
       from 'Next tune delay in ms' is used). Some devices are not able to handle
       quick continuous tuning.</dd>

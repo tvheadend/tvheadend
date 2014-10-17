@@ -372,7 +372,7 @@ tvheadend.dvr_settings = function(panel, index) {
         titleS: 'Digital Video Recorder Profile',
         titleP: 'Digital Video Recorder Profiles',
         titleC: 'Profile Name',
-        iconCls: 'drive',
+        iconCls: 'dvrprofiles',
         tabIndex: index,
         add: {
             url: 'api/dvr/config',
