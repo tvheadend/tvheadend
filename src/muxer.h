@@ -31,6 +31,7 @@ typedef enum {
   MC_PASS        = 4,
   MC_RAW         = 5,
   MC_WEBM        = 6,
+  MC_AVMATROSKA  = 7,
 } muxer_container_type_t;
 
 typedef enum {

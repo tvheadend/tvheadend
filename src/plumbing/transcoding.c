@@ -368,8 +368,8 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   length = avcodec_decode_audio4(ictx, frame, &got_frame, &packet);
   av_free_packet(&packet);
 
-  tvhtrace("transcode", "%04X: audio decode: consumed=%d size=%zu, got=%d",
-           shortid(t), length, pktbuf_len(pkt->pkt_payload), got_frame);
+  tvhtrace("transcode", "%04X: audio decode: consumed=%d size=%zu, got=%d, pts=%" PRIi64,
+           shortid(t), length, pktbuf_len(pkt->pkt_payload), got_frame, pkt->pkt_pts);
 
   if (!got_frame) {
     tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
@@ -422,14 +422,14 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
     }
 
-    octx->time_base.den   = 90000;
-    octx->time_base.num   = 1;
+    octx->time_base.den   = ictx->time_base.den;
+    octx->time_base.num   = ictx->time_base.num;
 
     octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
     octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
 
     octx->channels        = MIN(octx->channels, ictx->channels);
-    octx->bit_rate        = MIN(octx->bit_rate,  ictx->bit_rate);
+    octx->bit_rate        = MIN(octx->bit_rate, ictx->bit_rate);
 
     switch (octx->channels) {
     case 1:
@@ -504,8 +504,8 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_AAC:
-      octx->global_quality = 4*FF_QP2LAMBDA;
-      octx->flags         |= CODEC_FLAG_QSCALE;
+      octx->bit_rate       = 128000;
+      octx->flags         |= CODEC_FLAG_BITEXACT;
       break;
 
     case SCT_VORBIS:
@@ -596,7 +596,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     length = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
                                 frame->extended_data, 0, frame->nb_samples);
-    tvhtrace("transcode", "%04X: avresample_convert: out=%d", shortid(t), length);
+    tvhtrace("transcode", "%04X: avresample_convert: %d", shortid(t), length);
     while (avresample_available(as->resample_context) > 0) {
       length = avresample_read(as->resample_context, &output, frame->nb_samples);
 
@@ -662,14 +662,14 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    if ((length = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) < 0) {
+    if ((length = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) != octx->frame_size) {
       tvherror("transcode", "%04X: Could not read data from FIFO", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
 
-    tvhtrace("transcode", "%04X: pre-encode: linesize=%d, samples=%d",
-             shortid(t), frame->linesize[0], length);
+    tvhtrace("transcode", "%04X: pre-encode: linesize=%d, samples=%d, pts=%" PRIi64,
+             shortid(t), frame->linesize[0], length, as->aud_enc_pts);
 
     frame->pts = as->aud_enc_pts;
     as->aud_enc_pts += (octx->frame_size * 90000) / octx->sample_rate;
@@ -688,13 +688,12 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       transcoder_stream_invalidate(ts);
       goto cleanup;
 
-    } else if (got_packet_ptr) {
+    } else if (got_packet_ptr && packet.pts >= 0) {
 
       n = pkt_alloc(packet.data, packet.size, packet.pts, packet.pts);
       n->pkt_componentindex = ts->ts_index;
-      n->pkt_frametype      = pkt->pkt_frametype;
       n->pkt_channels       = octx->channels;
-      n->pkt_sri            = pkt->pkt_sri;
+      n->pkt_sri            = rate_to_sri(octx->sample_rate);
 
       n->pkt_duration = packet.duration;
 
@@ -1233,10 +1232,11 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)ss, ts_link);
 
-  tvhinfo("transcode", "%04X: %d:%s ==> %s",
+  tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
 	  shortid(t), ssc->ssc_index,
 	  streaming_component_type2txt(ssc->ssc_type),
-	  streaming_component_type2txt(ss->ts_type));
+	  streaming_component_type2txt(ss->ts_type),
+	  ocodec->name);
 
   ssc->ssc_type = sct;
   ssc->ssc_gh = NULL;
@@ -1325,10 +1325,11 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)as, ts_link);
 
-  tvhinfo("transcode", "%04X: %d:%s ==> %s",
+  tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
 	  shortid(t), ssc->ssc_index,
 	  streaming_component_type2txt(ssc->ssc_type),
-	  streaming_component_type2txt(as->ts_type));
+	  streaming_component_type2txt(as->ts_type),
+	  ocodec->name);
 
   ssc->ssc_type     = sct;
   ssc->ssc_gh       = NULL;
@@ -1440,7 +1441,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
     vs->vid_width  = ssc->ssc_width;
   }
 
-  tvhinfo("transcode", "%04X: %d:%s %dx%d ==> %s %dx%d",
+  tvhinfo("transcode", "%04X: %d:%s %dx%d ==> %s %dx%d (%s)",
           shortid(t),
           ssc->ssc_index,
           streaming_component_type2txt(ssc->ssc_type),
@@ -1448,7 +1449,8 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
           ssc->ssc_height,
           streaming_component_type2txt(vs->ts_type),
           vs->vid_width,
-          vs->vid_height);
+          vs->vid_height,
+          ocodec->name);
 
   ssc->ssc_type   = sct;
   ssc->ssc_width  = vs->vid_width;
@@ -1502,7 +1504,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
     }
   }
 
-  tvhtrace("transcoder", "%04X: transcoder_calc_stream_count=%d",
+  tvhtrace("transcode", "%04X: transcoder_calc_stream_count=%d",
            shortid(t), (video + audio + subtitle));
 
 
