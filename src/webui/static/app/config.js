@@ -241,7 +241,7 @@ tvheadend.miscconf = function(panel, index) {
 
     var mpanel = new Ext.Panel({
         title: 'General',
-        iconCls: 'wrench',
+        iconCls: 'general',
         border: false,
         autoScroll: true,
         bodyStyle: 'padding:15px',
