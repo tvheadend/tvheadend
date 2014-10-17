@@ -641,10 +641,11 @@ profile_class_mc_list ( void *o )
 {
   static const struct strtab tab[] = {
     { "Not set",                       MC_UNKNOWN },
-    { "Matroska (mkv)",                MC_MATROSKA, },
-    { "WEBM",                          MC_WEBM, },
-    { "MPEG-TS",                       MC_MPEGTS },
-    { "MPEG-PS (DVD)",                 MC_MPEGPS },
+    { "Matroska (mkv) /built-in",      MC_MATROSKA, },
+    { "WEBM /built-in",                MC_WEBM, },
+    { "MPEG-TS /av-lib",               MC_MPEGTS },
+    { "MPEG-PS (DVD) /av-lib",         MC_MPEGPS },
+    { "Matroska (mkv) /av-lib",        MC_AVMATROSKA },
   };
   return strtab2htsmsg(tab);
 }
@@ -884,6 +885,7 @@ profile_transcode_mc_valid(int mc)
   case MC_WEBM:
   case MC_MPEGTS:
   case MC_MPEGPS:
+  case MC_AVMATROSKA:
     return 1;
   default:
     return 0;

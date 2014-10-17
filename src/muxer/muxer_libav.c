@@ -77,6 +77,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 
   switch(lm->m_config.m_type) {
   case MC_MATROSKA:
+  case MC_AVMATROSKA:
     st->time_base.num = 1000000;
     st->time_base.den = 1;
     break;
@@ -110,8 +111,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->sample_rate   = sri_to_rate(ssc->ssc_sri);
     c->channels      = ssc->ssc_channels;
 
+#if 0
     c->time_base.num = 1;
     c->time_base.den = c->sample_rate;
+#endif
 
     av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
 
@@ -120,8 +123,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->width      = ssc->ssc_width;
     c->height     = ssc->ssc_height;
 
+#if 0
     c->time_base.num  = 1;
     c->time_base.den = 25;
+#endif
 
     c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
     c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
@@ -152,6 +157,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
 
   switch(mc) {
   case MC_MATROSKA:
+  case MC_AVMATROSKA:
     ret |= SCT_ISAUDIO(type);
     ret |= SCT_ISVIDEO(type);
     ret |= SCT_ISSUBTITLE(type);
@@ -502,6 +508,10 @@ lav_muxer_create(const muxer_config_t *m_cfg)
   switch(m_cfg->m_type) {
   case MC_MPEGPS:
     mux_name = "dvd";
+    break;
+  case MC_MATROSKA:
+  case MC_AVMATROSKA:
+    mux_name = "matroska";
     break;
   default:
     mux_name = muxer_container_type2txt(m_cfg->m_type);

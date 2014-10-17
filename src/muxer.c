@@ -40,6 +40,7 @@
 static struct strtab container_audio_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "audio/x-matroska",         MC_MATROSKA },
+  { "audio/x-matroska",         MC_AVMATROSKA },
   { "audio/webm",               MC_WEBM },
   { "audio/x-mpegts",           MC_MPEGTS },
   { "audio/mpeg",               MC_MPEGPS },
@@ -54,6 +55,7 @@ static struct strtab container_audio_mime[] = {
 static struct strtab container_video_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "video/x-matroska",         MC_MATROSKA },
+  { "video/x-matroska",         MC_AVMATROSKA },
   { "video/webm",               MC_WEBM },
   { "video/x-mpegts",           MC_MPEGTS },
   { "video/mpeg",               MC_MPEGPS },
@@ -66,13 +68,14 @@ static struct strtab container_video_mime[] = {
  * Name of the container
  */
 static struct strtab container_name[] = {
-  { "unknown",  MC_UNKNOWN },
-  { "matroska", MC_MATROSKA },
-  { "webm",     MC_WEBM },
-  { "mpegts",   MC_MPEGTS },
-  { "mpegps",   MC_MPEGPS },
-  { "pass",     MC_PASS },
-  { "raw",      MC_RAW },
+  { "unknown",    MC_UNKNOWN },
+  { "matroska",   MC_MATROSKA },
+  { "webm",       MC_WEBM },
+  { "mpegts",     MC_MPEGTS },
+  { "mpegps",     MC_MPEGPS },
+  { "pass",       MC_PASS },
+  { "raw",        MC_RAW },
+  { "avmatroska", MC_AVMATROSKA },
 };
 
 
@@ -87,6 +90,7 @@ static struct strtab container_audio_file_suffix[] = {
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
   { "bin",  MC_RAW },
+  { "mka",  MC_AVMATROSKA },
 };
 
 
@@ -101,6 +105,7 @@ static struct strtab container_video_file_suffix[] = {
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
   { "bin",  MC_RAW },
+  { "mkv",  MC_AVMATROSKA },
 };
 
 
@@ -157,41 +162,6 @@ muxer_container_type2txt(muxer_container_type_t mc)
  
   return str;
 }
-
-
-#if 0
-/**
- * Get a list of supported containers
- */
-static int
-muxer_container_add(htsmsg_t *array, int type, const char *text)
-{
-  htsmsg_t *mc;
-
-  mc = htsmsg_create_map();
-  htsmsg_add_str(mc, "name",        muxer_container_type2txt(type));
-  htsmsg_add_str(mc, "description", text);
-  htsmsg_add_msg(array, NULL, mc);
-  return 1;
-}
-
-int
-muxer_container_list(htsmsg_t *array)
-{
-  int c;
-
-  c  = muxer_container_add(array, MC_MATROSKA, "Matroska (mkv)");
-  c += muxer_container_add(array, MC_PASS,     "Same as source (pass through)");
-
-#if ENABLE_LIBAV
-  c += muxer_container_add(array, MC_MPEGTS,   "MPEG-TS");
-
-  c += muxer_container_add(array, MC_MPEGPS,   "MPEG-PS (DVD)");
-#endif
-
-  return c;
-}
-#endif
 
 
 /**
