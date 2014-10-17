@@ -414,6 +414,34 @@
     background-image: url(../icons/accept.png) !important;
 }
 
+.general{
+    background-image: url(../icons/general.png) !important;
+}
+
+.dvrprofiles{
+    background-image: url(../icons/dvrprofiles.png) !important;
+}
+
+.recording{
+    background-image: url(../icons/recording.png) !important;
+}
+
+.timeshift{
+    background-image: url(../icons/timeshift.png) !important;
+}
+
+.stream{
+    background-image: url(../icons/stream.png) !important;
+}
+
+.connections{
+    background-image: url(../icons/connections.png) !important;
+}
+
+.subscriptions{
+    background-image: url(../icons/subscriptions.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
