@@ -59,7 +59,6 @@ gh_flush(globalheaders_t *gh)
 static void
 apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 {
-  uint8_t *d;
   if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
     ssc->ssc_frameduration = pkt->pkt_duration;
 
@@ -78,26 +77,19 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   if(ssc->ssc_gh != NULL)
     return;
 
-  switch(ssc->ssc_type) {
-  case SCT_MP4A:
-  case SCT_AAC:
+  if(pkt->pkt_header != NULL) {
+    ssc->ssc_gh = pkt->pkt_header;
+    pktbuf_ref_inc(ssc->ssc_gh);
+    return;
+  }
+
+  if (ssc->ssc_type == SCT_MP4A || ssc->ssc_type == SCT_AAC) {
     ssc->ssc_gh = pktbuf_alloc(NULL, 2);
-    d = pktbuf_ptr(ssc->ssc_gh);
+    uint8_t *d = pktbuf_ptr(ssc->ssc_gh);
 
     const int profile = 2;
     d[0] = (profile << 3) | ((pkt->pkt_sri & 0xe) >> 1);
     d[1] = ((pkt->pkt_sri & 0x1) << 7) | (pkt->pkt_channels << 3);
-    break;
-
-  case SCT_H264:
-  case SCT_MPEG2VIDEO:
-  case SCT_VORBIS:
-
-    if(pkt->pkt_header != NULL) {
-      ssc->ssc_gh = pkt->pkt_header;
-      pktbuf_ref_inc(ssc->ssc_gh);
-    }
-    break;
   }
 }
 
