@@ -365,7 +365,8 @@ descrambler_descramble ( service_t *t,
                                   (mpegts_service_t *)td->td_service,
                                   tsb2);
       }
-      service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
+      if (off > 0)
+        service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
     }
     ki = tsb[3];
