@@ -2,6 +2,14 @@
 Ext.namespace('tv');
 Ext.namespace('tv.ui');
 
+/* Define key code mappings for navigation keys */
+
+if (VK_END === undefined)
+    var VK_END = 0x23;
+
+if (VK_HOME === undefined)
+    var VK_HOME = 0x24;
+
 if (VK_LEFT === undefined)
     var VK_LEFT = 0x25;
 
@@ -48,249 +56,257 @@ if (VK_PAGE_DOWN === undefined)
 tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 
     var profiles = {
-	pass: {
-	    profile:   'pass',
-	    mimetype:  'video/MP2T'
-	},
-	webm: {
-	    profile:   'webtv-vp8-vorbis-webm',
-	    playlist:  false,
-	    mimetype:  'video/webm; codecs="vp8.0, vorbis"'
-	},
-	hls: {
-	    profile:   'webtv-h264-aac-mpegts',
-	    playlist:  true,
-	    mimetype:  'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
-	},
-	apple: {
-	    profile:   'webtv-h264-aac-mpegts',
-	    playlist:  true,
-	    mimetype:  'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
-	},
-	ts: {
-	    profile:   'webtv-h264-aac-mpegts',
-	    playlist:  false,
-	    mimetype:  'video/MP2T; codecs="avc1.42E01E, mp4a.40.2"'
-	},
-	mkv: {
-	    profile:   'webtv-h264-aac-matroska',
-	    playlist:  false,
-	    mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
-	},
+        pass: {
+            profile:   'pass',
+            mimetype:  'video/MP2T'
+        },
+        webm: {
+            profile:   'webtv-vp8-vorbis-webm',
+            playlist:  false,
+            mimetype:  'video/webm; codecs="vp8.0, vorbis"'
+        },
+        hls: {
+            profile:   'webtv-h264-aac-mpegts',
+            playlist:  true,
+            mimetype:  'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
+        },
+        apple: {
+            profile:   'webtv-h264-aac-mpegts',
+            playlist:  true,
+            mimetype:  'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
+        },
+        ts: {
+            profile:   'webtv-h264-aac-mpegts',
+            playlist:  false,
+            mimetype:  'video/MP2T; codecs="avc1.42E01E, mp4a.40.2"'
+        },
+        mkv: {
+            profile:   'webtv-h264-aac-matroska',
+            playlist:  false,
+            mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
+        },
     };
 
     return {
-	constructor: function(config) {
-	    this.params = {};
-	    tv.ui.VideoPlayer.superclass.constructor.call(this, config);
+    constructor: function(config) {
+        this.params = {};
+        tv.ui.VideoPlayer.superclass.constructor.call(this, config);
 
-	    Ext.applyIf(this.params, {
-	        profile   : '',        // stream profile
-		playlist  : false      // don't use m3u8 playlist
-	    });
-	},
+        Ext.applyIf(this.params, {
+            profile   : '',        // stream profile
+            playlist  : false      // don't use m3u8 playlist
+        });
+    },
 
-	initComponent: function() {
-	    Ext.apply(this, {
-		baseCls     : 'tv-video-player',
-		html        : '',
-		bufferLength: 3000, //ms
+    initComponent: function() {
+        Ext.apply(this, {
+        baseCls     : 'tv-video-player',
+        html        : '',
+        bufferLength: 3000, //ms
 
-		listeners: {
-		    beforedestroy: {
-			fn: function(dv, items) {
-			    this.video = null;
-			}
-		    },
-		    bodyresize: {
-			fn: function(panel, width, height) {
-			    this.video.setSize(width, height);
-			}
-		    },
-		    render: {
-			fn: function() {
-			    this.message = this.body.createChild({
-				tag : 'div',
-				cls : 'tv-video-message',
-				html: ''
-			    });
-			    this.message.setVisibilityMode(Ext.Element.DISPLAY);
-			    this.message.hide();
+        listeners: {
+            beforedestroy: {
+                fn: function(dv, items) {
+                    this.video = null;
+                }
+            },
+            bodyresize: {
+                fn: function(panel, width, height) {
+                    this.video.setSize(width, height);
+                }
+            },
+            render: {
+                fn: function() {
+                    this.message = this.body.createChild({
+                        tag : 'div',
+                        cls : 'tv-video-message',
+                        html: ''
+                    });
+                    this.message.setVisibilityMode(Ext.Element.DISPLAY);
+                    this.message.hide();
 
-			    this.video = this.body.createChild({
-				tag     : 'video',
-				html    : "Your browser doesn't support html5 video"
-			    });
+                    this.video = this.body.createChild({
+                        tag     : 'video',
+                        html    : "Your browser doesn't support html5 video"
+                    });
 
-			    this.source = this.video.createChild({tag: 'source'});
-			    this.source.dom.addEventListener('error', this.error.bind(this));
+                    this.source = this.video.createChild({tag: 'source'});
+                    this.source.dom.addEventListener('error', this.error.bind(this));
 
-			    this.stop();
+                    this.stop();
 
-			    var self = this;
-			    this.video.dom.addEventListener('error', this.error.bind(this));
-			    this.video.dom.addEventListener('loadeddata', function() {
-				setTimeout(function() {
-				    self.play();
-				}, self.bufferLength);
-			    });
-			}
-		    }
-		}
-	    });
-	    tv.ui.VideoPlayer.superclass.initComponent.apply(this, arguments);
-	},
+                    var self = this;
+                    this.video.dom.addEventListener('error', this.error.bind(this));
+                    this.video.dom.addEventListener('loadeddata', function() {
+                        setTimeout(function() {
+                            self.play();
+                        }, 
+                        self.bufferLength);
+                    });
+                }
+            }
+        }
+        });
+        tv.ui.VideoPlayer.superclass.initComponent.apply(this, arguments);
+    },
 
-	_getUrl: function(uuid, params) {
-	    var url = '';
+    _getUrl: function(uuid, params) {
+        var url = '';
 
-	    if(params.playlist)
-		url += 'playlist/channel/'
-	    else
-		url += 'stream/channel/'
-	    
-	    url += uuid;
-	    if (params.profile)
-	        url += "?profile=" + params.profile;
-	    
-	    return url;
-	},
+        if(params.playlist)
+            url += 'playlist/channel/'
+        else
+            url += 'stream/channel/'
+        
+        url += uuid;
 
-	_getProfile: function() {
-	    var el = this.video.dom;
+        if (params.profile)
+            url += "?profile=" + params.profile;
+        
+        return url;
+    },
 
-	    // chrome can handle h264+aac within mkv, given that h264 codecs are available
-	    if(Ext.isChrome && 
-	       el.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') == 'probably')
-		return profiles['mkv'];
+    _getProfile: function() {
+        var el = this.video.dom;
 
-	    for (var key in profiles)
-		if(el.canPlayType(profiles[key].mimetype) == 'probably')
-		    return profiles[key];
-	    
-	    for (var key in profiles)
-		if(el.canPlayType(profiles[key].mimetype) == 'maybe')
-		    return profiles[key];
-	    
-	    return {};
-	},
+        // chrome can handle h264+aac within mkv, given that h264 codecs are available
+        if(Ext.isChrome && 
+           el.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') == 'probably')
+        return profiles['mkv'];
 
-	error: function(e) {
-	    var url = this.source.dom.src;
-	    if(url && url != document.location.href) {
-		this.body.removeClass('tv-video-loading');
-		this.body.removeClass('tv-video-idle');
-		this.body.addClass('tv-video-error');
-		this.video.hide();
+        for (var key in profiles)
+            if(el.canPlayType(profiles[key].mimetype) == 'probably')
+                return profiles[key];
+        
+        for (var key in profiles)
+            if(el.canPlayType(profiles[key].mimetype) == 'maybe')
+                return profiles[key];
+        
+        return {};
+    },
 
-		this.message.update('An unknown error occurred.');
+    error: function(e) {
+        var url = this.source.dom.src;
 
-		var err = e.target.error;
-		if(err) {
-		    switch (err.code) {
-		    case err.MEDIA_ERR_ABORTED:
-			this.message.update('You aborted the video playback.');
-			break;
-			
-		    case err.MEDIA_ERR_NETWORK:
-			this.message.update('A network error caused the video ' +
-					    'download to fail part-way.');
-			break;
-		    case err.MEDIA_ERR_DECODE:
-			this.message.update('The video playback was aborted due to ' +
-					    'a corruption problem or because the video ' +
-					    'used features your browser did not support.');
-			break;
-		    case err.MEDIA_ERR_SRC_NOT_SUPPORTED:
-			this.message.update('The video could not be loaded, either because ' +
-					    'the server or network failed or because the ' +
-					    'format is not supported.');
-			break;
-		    }
-		}
-		this.message.show();
-	    }
-	},
+        if(url && url != document.location.href) {
+            this.body.removeClass('tv-video-loading');
+            this.body.removeClass('tv-video-idle');
+            this.body.addClass('tv-video-error');
+            this.video.hide();
 
-	stop: function() {
-	    this.message.hide();
-	    this.body.removeClass('tv-video-loading');
-	    this.body.removeClass('tv-video-error');
-	    this.body.addClass('tv-video-idle');
-	    this.source.dom.src = '';
-	    this.video.dom.load();
-	},
+            this.message.update('An unknown error occurred.');
 
-	pause: function() {
-	    this.video.dom.pause();
-	},
+            var err = e.target.error;
 
-	setVolume: function(vol) {
-	    this.video.dom.volume = vol / 100.0;
-	},
+            if(err) {
+                switch (err.code) {
 
-	getVolume: function() {
-	    return Math.round(100 * this.video.dom.volume);
-	},
+                case err.MEDIA_ERR_ABORTED:
+                    this.message.update('You aborted the video playback.');
+                break;
 
-	setDisplaySize: function(width, height) {
-	    this.video.setSize(width, height);
-	},
+                case err.MEDIA_ERR_NETWORK:
+                    this.message.update('A network error caused the video ' +
+                         'download to fail part-way.');
+                break;
+                                
+                case err.MEDIA_ERR_DECODE:
+                    this.message.update('The video playback was aborted due to ' +
+                        'a corruption problem or because the video ' +
+                        'used features your browser did not support.');
+                break;
+                
+                case err.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                    this.message.update('The video could not be loaded, either because ' +
+                        'the server or network failed or because the ' +
+                        'format is not supported.');
+                break;
+                }
+            }
+            this.message.show();
+        }
+    },
 
-	setProfile: function(pro) {
-	    this.params.profile = pro;
-	},
+    stop: function() {
+        this.message.hide();
+        this.body.removeClass('tv-video-loading');
+        this.body.removeClass('tv-video-error');
+        this.body.addClass('tv-video-idle');
+        this.source.dom.src = '';
+        this.video.dom.load();
+    },
 
-	isIdle: function() {
-	    return this.body.hasClass('tv-video-idle');
-	},
+    pause: function() {
+        this.video.dom.pause();
+    },
 
-	fullscreen: function() {
-	    var dom  = this.video.dom;
+    setVolume: function(vol) {
+        this.video.dom.volume = vol / 100.0;
+    },
 
-	    if(typeof dom.requestFullScreen !== 'undefined')
-		dom.requestFullScreen();
+    getVolume: function() {
+        return Math.round(100 * this.video.dom.volume);
+    },
 
-	    else if(typeof dom.mozRequestFullScreen !== 'undefined')
-		dom.mozRequestFullScreen();
+    setDisplaySize: function(width, height) {
+        this.video.setSize(width, height);
+    },
 
-	    else if(typeof dom.webkitRequestFullScreen !== 'undefined')
-		dom.webkitEnterFullscreen();
-	},
+    setProfile: function(pro) {
+        this.params.profile = pro;
+    },
 
-	play: function() {
-	    this.message.hide();
-	    this.body.removeClass('tv-video-loading');
-	    this.body.removeClass('tv-video-idle');
-	    this.body.removeClass('tv-video-error');
+    isIdle: function() {
+        return this.body.hasClass('tv-video-idle');
+    },
 
-	    this.video.show();
-	    this.video.dom.play();
-	},
+    fullscreen: function() {
+        var dom  = this.video.dom;
 
-	zapTo: function(uuid, config) {
-	    var config = config || {}
-	    var params = {}
+        if(typeof dom.requestFullScreen !== 'undefined')
+            dom.requestFullScreen();
 
-            if (!this.params.profile)
-	      Ext.apply(params, this._getProfile(), this.params);
-	    else
-	      Ext.apply(params, this.params);
-	    Ext.apply(params, config);
+        else if(typeof dom.mozRequestFullScreen !== 'undefined')
+            dom.mozRequestFullScreen();
 
-	    this.video.hide();
-	    this.stop();
+        else if(typeof dom.webkitRequestFullScreen !== 'undefined')
+            dom.webkitEnterFullscreen();
+    },
 
-	    this.message.update('Loading...');
-	    this.message.show();
+    play: function() {
+        this.message.hide();
+        this.body.removeClass('tv-video-loading');
+        this.body.removeClass('tv-video-idle');
+        this.body.removeClass('tv-video-error');
 
-	    this.body.removeClass('tv-video-idle');
-	    this.body.removeClass('tv-video-error');
-	    this.body.addClass('tv-video-loading');
+        this.video.show();
+        this.video.dom.play();
+    },
 
-	    this.source.dom.src = this._getUrl(uuid, params);
-	    this.video.dom.load();
-	}
+    zapTo: function(uuid, config) {
+        var config = config || {}
+        var params = {}
+
+        if (!this.params.profile)
+            Ext.apply(params, this._getProfile(), this.params);
+        else
+            Ext.apply(params, this.params);
+
+        Ext.apply(params, config);
+
+        this.video.hide();
+        this.stop();
+
+        this.message.update('Loading...');
+        this.message.show();
+
+        this.body.removeClass('tv-video-idle');
+        this.body.removeClass('tv-video-error');
+        this.body.addClass('tv-video-loading');
+
+        this.source.dom.src = this._getUrl(uuid, params);
+        this.video.dom.load();
+    }
     };
 }()));
 
@@ -298,241 +314,278 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
 tv.ui.ChannelList = Ext.extend(Ext.DataView, {
 
     initComponent: function() {
-	Ext.apply(this, {
-	    cls: 'tv-list',
-	    overClass: 'tv-list-item-over',
-	    selectedClass: 'tv-list-item-selected',
-	    itemSelector:'div.tv-list-item',
-	    singleSelect: true,
-	    tpl: new Ext.XTemplate(
-		'<tpl for=".">',
-		'<div class="tv-list-item" id="{uuid}">',
-		'<img src="{icon_public_url}" title="{name}">{name}',
-		'</div>',
-		'</tpl>'),
+    Ext.apply(this, {
+        cls: 'tv-list',
+        overClass: 'tv-list-item-over',
+        selectedClass: 'tv-list-item-selected',
+        itemSelector:'div.tv-list-item',
+        singleSelect: true,
+        tpl: new Ext.XTemplate(
+        '<tpl for=".">',
+        '<div class="tv-list-item" id="{uuid}">',
+        '<img src="{icon_public_url}" title="{name}">{name}',
+        '</div>',
+        '</tpl>'),
 
-	    listeners: {
-		selectionchange: {
-		    fn: function(dv, items) {
-			if(items.length == 0)
-			    return;
+        listeners: {
+        selectionchange: {
+            fn: function(dv, items) {
+            if(items.length == 0)
+                return;
 
-			var node = this.getNode(items[0]);
-			node = Ext.get(node);
-			node.scrollIntoView(this.el);
-		    }
-		},
-		dblclick: {
-		    fn: function() {
-			this.fireEvent('naventer');
-		    }
-		}
-	    }
-	});
+            var node = this.getNode(items[0]);
+            node = Ext.get(node);
+            node.scrollIntoView(this.el);
+            }
+        },
+        dblclick: {
+            fn: function() {
+            this.fireEvent('naventer');
+            }
+        }
+        }
+    });
 
-	this.addEvents(
-            'navup',
-            'navdown',
-	    'navleft',
-	    'navright',
-	    'navback',
-	    'naventer'
+    this.addEvents(
+        'navup',
+        'navdown',
+        'navleft',
+        'navright',
+        'navback',
+        'naventer',
+        'pageup',
+        'pagedown'
         );
-	tv.ui.ChannelList.superclass.initComponent.apply(this, arguments);
+    tv.ui.ChannelList.superclass.initComponent.apply(this, arguments);
     },
 
     visibleItems: function() {
-	var nodes = this.getNodes(0, 0);
-	if(nodes.length == 0)
-	    return 0;
+        var nodes = this.getNodes(0, 0);
+        if(nodes.length == 0)
+            return 0;
 
-	var height = this.getTemplateTarget().getHeight();
-	var itemHeight = Ext.get(nodes[0]).getHeight()
-	return Math.floor(height / itemHeight);
+        var height = this.getTemplateTarget().getHeight();
+        var itemHeight = Ext.get(nodes[0]).getHeight()
+        return Math.floor(height / itemHeight);
     },
 
     onRender : function(ct, position) {
         tv.ui.ChannelList.superclass.onRender.call(this, ct, position);
-	Ext.dd.ScrollManager.register(this.el);
+    Ext.dd.ScrollManager.register(this.el);
 
-	this.getTemplateTarget().set({tabindex: Ext.id(undefined, '0')});
-	this.getTemplateTarget().on('keydown', function(e) {
-	    switch(e.getKey()) {
+    this.getTemplateTarget().set({tabindex: Ext.id(undefined, '0')});
+    this.getTemplateTarget().on('keydown', function(e) {
 
-	    case VK_LEFT:
-		this.fireEvent('navleft');
-		break;
+//IH
+    console.log('keypress:', e.getKey());
+//
+        switch(e.getKey()) {
 
-	    case VK_RIGHT:
-		this.fireEvent('navright');
-		break;
+        case VK_LEFT:
+            this.fireEvent('navleft');
+            break;
 
-	    case VK_UP:
-		this.fireEvent('navup', 1);
-		break;
+        case VK_RIGHT:
+            this.fireEvent('navright');
+        break;
 
-	    case VK_DOWN:
-		this.fireEvent('navdown', 1);
-		break;
+        case VK_UP:
+            this.fireEvent('navup', 1);
+        break;
 
-	    case VK_PAGE_UP:
-		var cnt = this.visibleItems();
-		this.fireEvent('navup', cnt);
-		break;
+        case VK_DOWN:
+            this.fireEvent('navdown', 1);
+        break;
 
-	    case VK_PAGE_DOWN:
-		var cnt = this.visibleItems();
-		this.fireEvent('navdown', cnt);
-		break;
+        case VK_PAGE_UP:
+            var cnt = this.visibleItems();
+            this.fireEvent('pageup', cnt);
+        break;
 
-	    case VK_SPACE:
-	    case VK_ENTER:
-		this.fireEvent('naventer');
-		break;
+        case VK_PAGE_DOWN:
+            var cnt = this.visibleItems();
+            this.fireEvent('pagedown', cnt);
+        break;
 
-	    case VK_BACKSPACE:
-	    case VK_ESCAPE:
-	    case VK_BACK:
-		this.fireEvent('navback');
-		break;
+        case VK_HOME:
+            this.fireEvent('pagefirst');
+        break;
 
-	    default:
-		return false;
-	    }
+        case VK_END:
+            this.fireEvent('pagelast');
+        break;
 
-	    e.stopEvent();
-	    return true;
+        case VK_SPACE:
+        case VK_ENTER:
+            this.fireEvent('naventer');
+        break;
 
-	}.bind(this));
+        case VK_BACKSPACE:
+        case VK_ESCAPE:
+        case VK_BACK:
+            this.fireEvent('navback');
+        break;
+
+        default:
+        return false;
+        }
+
+        e.stopEvent();
+        return true;
+
+    }.bind(this));
     }
 });
 
 tv.app = function() {
     return {
-	init: function() {
+    init: function() {
 
-	    var channelStore = new Ext.data.JsonStore({
-	        autoLoad: {params:{start: 0, limit: 8}}, // limit initial page size to 8
-	        root : 'entries',
-	        fields : ['icon_public_url', 'number', 'name', 'uuid'],
-	        id : 'uuid',
-	        sortInfo : {
-	            field : 'number', // WIBI: Ideally, sort the whole channel list at source
-	            direction : "ASC"
-	        },
-	        url : "api/channel/grid"
-	    });
+        var channelStore = new Ext.data.JsonStore({
+            autoLoad: {params:{start: 0, limit: 8}}, // limit initial page size to 8
+            root : 'entries',
+            fields : ['icon_public_url', 'number', 'name', 'uuid'],
+            id : 'uuid',
+            sortInfo : {
+                field : 'number', // WIBI: Ideally, sort the whole channel list at source
+                direction : "ASC"
+            },
+            url : "api/channel/grid"
+        });
 
-	    var videoPlayer = new tv.ui.VideoPlayer({
-		params: { },
-		renderTo: Ext.getBody()
-	    });
-	    videoPlayer.setDisplaySize('100%', '00%');
+        var videoPlayer = new tv.ui.VideoPlayer({
+            params: { },
+            renderTo: Ext.getBody()
+        });
+        
+        videoPlayer.setDisplaySize('100%', '00%');
 
         var chList = new tv.ui.ChannelList({
-	        autoScroll: true,
-	        store: channelStore
-	    });
+            autoScroll: true,
+            store: channelStore
+        });
 
 // Play button that calls the "I've pressed Enter!" event when clicked
 
         var playButton = new Ext.Button({
-	        text: 'Play Selected Channel',
-	        handler: function() {
-	            chList.fireEvent('naventer');
-	        }
-	    });
+            text: 'Play Selected Channel',
+            handler: function() {
+                chList.fireEvent('naventer');
+            }
+        });
 
 // Paging bar so you can move through the list of channels
 
-	    var pageBar = new Ext.PagingToolbar({
-	        store: channelStore,
-	        pageSize: 8 // replicates initial page size
-	    });
+        var pageBar = new Ext.PagingToolbar({
+            store: channelStore,
+            pageSize: 8 // replicates initial page size
+        });
 
-	    var chListPanel1 = new Ext.Panel({
-		items: [ pageBar, playButton ],
-		cls: 'tv-channel-list-header'
-	    });
+        var chListPanel1 = new Ext.Panel({
+            items: [ pageBar, playButton ],
+            cls: 'tv-channel-list-header'
+        });
 
-	    var chListPanel2 = new Ext.Panel({
-		items: [ chList ],
-		cls: 'tv-channel-list-content'
-	    });
+        var chListPanel2 = new Ext.Panel({
+            items: [ chList ],
+            cls: 'tv-channel-list-content'
+        });
 
-	    var chListPanel = new Ext.Panel({
-		title:'Channels',
-		items: [ chListPanel1, chListPanel2 ],
-		cls: 'tv-channel-list',
-		renderTo: Ext.getBody()
-	    });
+        var chListPanel = new Ext.Panel({
+            title:'Channels',
+            items: [ chListPanel1, chListPanel2 ],
+            cls: 'tv-channel-list',
+            renderTo: Ext.getBody()
+        });
 
-	    window.onresize = function() {
-		var h = chListPanel.el.getHeight();
-		h -= chListPanel.header.getHeight();
-		h -= 250;
-		
-		chList.setHeight(h);
-	    };
+        window.onresize = function() {
+            var h = chListPanel.el.getHeight();
+            h -= chListPanel.header.getHeight();
+            h -= 250;
+            chList.setHeight(h);
+        };
 
-	    chListPanel.on('show', function() {
-		window.onresize();
-	    });
+        chListPanel.on('show', function() {
+            window.onresize();
+        });
 
-	    chList.on('navback', function() {
-		chListPanel.hide();
-		chList.blur();
-	    });
+        chList.on('navback', function() {
+            chListPanel.hide();
+            chList.blur();
+        });
 
-	    chList.on('naventer', function() {
-		var indices = this.getSelectedIndexes();
-		if(indices.length == 0)
-		    return;
-		    
-		var item = this.store.getAt(indices[0]);
-		videoPlayer.zapTo(item.id);
-		chListPanel.hide();
-		chList.blur();
-	    });
+        chList.on('naventer', function() {
+            var indices = this.getSelectedIndexes();
+            if(indices.length == 0)
+                return;
 
-	    chList.on('navup', function(cnt) {
-		var indices = chList.getSelectedIndexes();
-		if(indices.length == 0)
-		    this.select(this.store.getTotalCount() - 1);
-		else if(indices[0] - cnt >= 0)
-		    this.select(indices[0] - cnt);
-		else
-		    this.select(0);
-	    });
+            var item = this.store.getAt(indices[0]);
+            videoPlayer.zapTo(item.id);
+            chListPanel.hide();
+            chList.blur();
+        });
 
-	    chList.on('navdown', function(cnt) {
-		var indices = chList.getSelectedIndexes();
-		if(indices.length == 0)
-		    this.select(0);
-		else if(indices[0] + cnt < this.store.getTotalCount())
-		    this.select(indices[0] + cnt);
-		else
-		    this.select(this.store.getTotalCount() - 1);
-	    });
+        chList.on('navup', function(cnt) {
+            var indices = chList.getSelectedIndexes();
 
-	    chList.on('navleft', function() {
+//IH
+            console.log(indices);
+            console.log(indices.length);
+            console.log(this.store.getTotalCount());
+//
 
-	    });
+            if(indices.length == 0)
+                this.select(this.store.getTotalCount() - 1);
+            else if(indices[0] - cnt >= 0)
+                this.select(indices[0] - cnt);
+            else
+                this.select(0);
+        });
 
-	    chList.on('navright', function() {
+        chList.on('navdown', function(cnt) {
+            var indices = chList.getSelectedIndexes();
+            if(indices.length == 0)
+                this.select(0);
+            else if(indices[0] + cnt < this.store.getTotalCount())
+                this.select(indices[0] + cnt);
+            else
+                this.select(this.store.getTotalCount() - 1);
+        });
 
-	    });
+        chList.on('navleft', function() {
+            pageBar.movePrevious();
+        });
 
-	    Ext.getDoc().on('keydown', function(e) {
-		switch(e.getKey()) {
-		case VK_ENTER:
-		    chListPanel.show();
-		    chList.focus();   
-		}
-	    });
-	    
-	    chListPanel.show();
-	    chList.focus();
-	}
+        chList.on('navright', function() {
+            pageBar.moveNext();
+        });
+
+        chList.on('pageup', function() {
+            pageBar.movePrevious();
+        });
+        
+        chList.on('pagedown', function() {
+            pageBar.moveNext();
+        });
+
+        chList.on('pagefirst', function() {
+            pageBar.moveFirst();
+        });
+        
+        chList.on('pagelast', function() {
+            pageBar.moveLast();
+        });
+
+        Ext.getDoc().on('keydown', function(e) {
+            switch(e.getKey()) {
+            case VK_ENTER:
+                chListPanel.show();
+                chList.focus();   
+            }
+        });
+        
+        chListPanel.show();
+        chList.focus();
+    }
     };
 }(); // end of app
