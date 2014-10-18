@@ -379,11 +379,11 @@ tv.ui.ChannelList = Ext.extend(Ext.DataView, {
             switch(e.getKey()) {
 
                 case VK_UP:
-                    this.fireEvent('navup', 1);
+                    this.fireEvent('navup');
                     break;
 
                 case VK_DOWN:
-                    this.fireEvent('navdown', 1);
+                    this.fireEvent('navdown');
                     break;
 
                 case VK_LEFT:
