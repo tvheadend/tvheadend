@@ -140,7 +140,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
                     this.video.dom.addEventListener('loadeddata', function() {
                         setTimeout(function() {
                             self.play();
-                        }, 
+                        },
                         self.bufferLength);
                     });
                 }
@@ -157,12 +157,12 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
             url += 'playlist/channel/'
         else
             url += 'stream/channel/'
-        
+
         url += uuid;
 
         if (params.profile)
             url += "?profile=" + params.profile;
-        
+
         return url;
     },
 
@@ -170,18 +170,18 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
         var el = this.video.dom;
 
         // chrome can handle h264+aac within mkv, given that h264 codecs are available
-        if(Ext.isChrome && 
+        if(Ext.isChrome &&
            el.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') == 'probably')
         return profiles['mkv'];
 
         for (var key in profiles)
             if(el.canPlayType(profiles[key].mimetype) == 'probably')
                 return profiles[key];
-        
+
         for (var key in profiles)
             if(el.canPlayType(profiles[key].mimetype) == 'maybe')
                 return profiles[key];
-        
+
         return {};
     },
 
@@ -209,13 +209,13 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
                     this.message.update('A network error caused the video ' +
                          'download to fail part-way.');
                 break;
-                                
+
                 case err.MEDIA_ERR_DECODE:
                     this.message.update('The video playback was aborted due to ' +
                         'a corruption problem or because the video ' +
                         'used features your browser did not support.');
                 break;
-                
+
                 case err.MEDIA_ERR_SRC_NOT_SUPPORTED:
                     this.message.update('The video could not be loaded, either because ' +
                         'the server or network failed or because the ' +
@@ -457,7 +457,7 @@ tv.app = function() {
             params: { },
             renderTo: Ext.getBody()
         });
-        
+
         videoPlayer.setDisplaySize('100%', '00%');
 
         var chList = new tv.ui.ChannelList({
@@ -563,7 +563,7 @@ tv.app = function() {
         chList.on('pageup', function() {
             pageBar.movePrevious();
         });
-        
+
         chList.on('pagedown', function() {
             pageBar.moveNext();
         });
@@ -571,7 +571,7 @@ tv.app = function() {
         chList.on('pagefirst', function() {
             pageBar.moveFirst();
         });
-        
+
         chList.on('pagelast', function() {
             pageBar.moveLast();
         });
@@ -580,10 +580,10 @@ tv.app = function() {
             switch(e.getKey()) {
             case VK_ENTER:
                 chListPanel.show();
-                chList.focus();   
+                chList.focus();
             }
         });
-        
+
         chListPanel.show();
         chList.focus();
     }
