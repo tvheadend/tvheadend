@@ -435,8 +435,9 @@ tv.app = function() {
                 root : 'entries',
                 fields : ['icon_public_url', 'number', 'name', 'uuid'],
                 id : 'uuid',
+                remoteSort: true,
                 sortInfo : {
-                    field : 'number', // WIBI: Ideally, sort the whole channel list at source
+                    field : 'number', // WIBNI: Ideally, sort the whole channel list at source
                     direction : "ASC"
                 },
                 url : "api/channel/grid"
