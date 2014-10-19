@@ -77,8 +77,8 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   if(ssc->ssc_gh != NULL)
     return;
 
-  if(pkt->pkt_header != NULL) {
-    ssc->ssc_gh = pkt->pkt_header;
+  if(pkt->pkt_meta != NULL) {
+    ssc->ssc_gh = pkt->pkt_meta;
     pktbuf_ref_inc(ssc->ssc_gh);
     return;
   }

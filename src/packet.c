@@ -32,11 +32,9 @@
 static void
 pkt_destroy(th_pkt_t *pkt)
 {
-  if(pkt->pkt_payload != NULL)
-    pktbuf_ref_dec(pkt->pkt_payload);
+  pktbuf_ref_dec(pkt->pkt_payload);
+  pktbuf_ref_dec(pkt->pkt_meta);
 
-  if(pkt->pkt_header != NULL)
-    pktbuf_ref_dec(pkt->pkt_header);
   free(pkt);
 }
 
@@ -133,41 +131,6 @@ pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr)
  *
  */
 th_pkt_t *
-pkt_merge_header(th_pkt_t *pkt)
-{
-  th_pkt_t *n;
-  size_t s;
-
-  if(pkt->pkt_header == NULL)
-    return pkt;
-
-  n = malloc(sizeof(th_pkt_t));
-  *n = *pkt;
-
-  n->pkt_refcount = 1;
-  n->pkt_header = NULL;
-
-  s = pktbuf_len(pkt->pkt_payload) + pktbuf_len(pkt->pkt_header);
-  n->pkt_payload = pktbuf_alloc(NULL, s);
-
-  memcpy(pktbuf_ptr(n->pkt_payload),
-	 pktbuf_ptr(pkt->pkt_header),
-	 pktbuf_len(pkt->pkt_header));
-
-  memcpy(pktbuf_ptr(n->pkt_payload) + pktbuf_len(pkt->pkt_header),
-	 pktbuf_ptr(pkt->pkt_payload),
-	 pktbuf_len(pkt->pkt_payload));
-
-  pkt_ref_dec(pkt);
-  return n;
-}
-
-
-
-/**
- *
- */
-th_pkt_t *
 pkt_copy_shallow(th_pkt_t *pkt)
 {
   th_pkt_t *n = malloc(sizeof(th_pkt_t));
@@ -175,11 +138,8 @@ pkt_copy_shallow(th_pkt_t *pkt)
 
   n->pkt_refcount = 1;
 
-  if(n->pkt_header)
-    pktbuf_ref_inc(n->pkt_header);
-
-  if(n->pkt_payload)
-    pktbuf_ref_inc(n->pkt_payload);
+  pktbuf_ref_inc(n->pkt_meta);
+  pktbuf_ref_inc(n->pkt_payload);
 
   return n;
 }
@@ -196,21 +156,29 @@ pktref_create(th_pkt_t *pkt)
   return pr;
 }
 
+/*
+ *
+ */
 
-
-void 
+void
 pktbuf_ref_dec(pktbuf_t *pb)
 {
-  if((atomic_add(&pb->pb_refcount, -1)) == 1) {
-    free(pb->pb_data);
-    free(pb);
+  if (pb) {
+    if((atomic_add(&pb->pb_refcount, -1)) == 1) {
+      free(pb->pb_data);
+      free(pb);
+    }
   }
 }
 
-void
+pktbuf_t *
 pktbuf_ref_inc(pktbuf_t *pb)
 {
-  atomic_add(&pb->pb_refcount, 1);
+  if (pb) {
+    atomic_add(&pb->pb_refcount, 1);
+    return pb;
+  }
+  return NULL;
 }
 
 pktbuf_t *

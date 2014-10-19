@@ -386,8 +386,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
   }
 
-  pkt = pkt_merge_header(pkt);
-
   av_init_packet(&packet);
   packet.data     = pktbuf_ptr(pkt->pkt_payload);
   packet.size     = pktbuf_len(pkt->pkt_payload);
@@ -740,7 +738,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         create_adts_header(pkt->pkt_payload, n->pkt_sri, octx->channels);
 
       if (octx->extradata_size)
-	n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
+	n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
       tvhtrace("transcode", "%04X: deliver audio (pts = %" PRIi64 ", delay = %i)",
                shortid(t), n->pkt_pts, octx->delay);
@@ -823,7 +821,7 @@ Minimal of 12 bytes.
      }
     }
 
-    n->pkt_header = pktbuf_alloc(data, header_size);
+    n->pkt_meta = pktbuf_alloc(data, header_size);
   }
 }
 
@@ -886,7 +884,7 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   }
 
   if (octx->extradata_size)
-    n->pkt_header = pktbuf_alloc(octx->extradata, octx->extradata_size);
+    n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
   else {
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO)
       extract_mpeg2_global_data(n, epkt->data, epkt->size);
@@ -932,8 +930,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
   }
-
-  pkt = pkt_merge_header(pkt);
 
   av_init_packet(&packet);
   packet.data     = pktbuf_ptr(pkt->pkt_payload);

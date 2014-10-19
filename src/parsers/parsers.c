@@ -1094,22 +1094,30 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     if(next_startcode == 0x100 || next_startcode > 0x1af) {
       /* Last picture slice (because next not a slice) */
       th_pkt_t *pkt = st->es_curpkt;
+      size_t metalen = 0;
       if(pkt == NULL) {
         /* no packet, may've been discarded by sanity checks here */
         return 1;
       }
 
       if(st->es_global_data) {
-        pkt->pkt_header = pktbuf_make(st->es_global_data,
-                                      st->es_global_data_len);
+        pkt->pkt_meta = pktbuf_make(st->es_global_data,
+                                    metalen = st->es_global_data_len);
         st->es_global_data = NULL;
         st->es_global_data_len = 0;
       }
 
-      pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
-                                     st->es_buf.sb_ptr - 4);
+      if (metalen) {
+        pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
+        memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
+        memcpy(pktbuf_ptr(pkt->pkt_payload) + metalen, st->es_buf.sb_data, st->es_buf.sb_ptr - 4);
+        sbuf_reset(&st->es_buf, 16000);
+      } else {
+        pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
+                                       st->es_buf.sb_ptr - 4);
+        sbuf_steal_data(&st->es_buf);
+      }
       pkt->pkt_duration = st->es_frame_duration;
-      sbuf_steal_data(&st->es_buf);
 
       parser_deliver(t, st, pkt, st->es_buf.sb_err);
       st->es_curpkt = NULL;
@@ -1226,8 +1234,8 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     if(pkt != NULL) {
       
       if(st->es_global_data) {
-        pkt->pkt_header = pktbuf_make(st->es_global_data,
-                                      st->es_global_data_len);
+        pkt->pkt_meta = pktbuf_make(st->es_global_data,
+                                    st->es_global_data_len);
         st->es_global_data = NULL;
         st->es_global_data_len = 0;
       }
@@ -1374,18 +1382,16 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
     t->s_current_pts = pkt->pkt_pts;
 
   tvhtrace("parser",
-           "pkt stream %2d %-12s type %c dts %10"PRId64" pts %10"PRId64
+           "pkt stream %2d %-12s type %c"
+           " dts %10"PRId64" (%10"PRId64") pts %10"PRId64" (%10"PRId64")"
            " dur %10d len %10zu",
            st->es_index,
            streaming_component_type2txt(st->es_type),
            pkt_frametype_to_char(pkt->pkt_frametype),
-#if 1
            ts_rescale(pkt->pkt_pts, 1000000),
-           ts_rescale(pkt->pkt_dts, 1000000),
-#else
            pkt->pkt_dts,
+           ts_rescale(pkt->pkt_dts, 1000000),
            pkt->pkt_pts,
-#endif
            pkt->pkt_duration,
            pktbuf_len(pkt->pkt_payload));
 

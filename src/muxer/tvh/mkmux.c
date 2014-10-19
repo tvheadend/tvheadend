@@ -47,7 +47,6 @@ TAILQ_HEAD(mk_chapter_queue, mk_chapter);
 typedef struct mk_track {
   int index;
   int enabled;
-  int merge;
   int type;
   int tracknum;
   int disabled;
@@ -266,7 +265,6 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     case SCT_MPEG2VIDEO:
       tracktype = 1;
       codec_id = "V_MPEG2";
-      mkm->tracks[i].merge = 1;
       break;
 
     case SCT_H264:
@@ -1182,9 +1180,6 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 
   if(mark)
     mk_mux_insert_chapter(mkm);
-
-  if(t->merge)
-    pkt = pkt_merge_header(pkt);
 
   mk_write_frame_i(mkm, t, pkt);
 

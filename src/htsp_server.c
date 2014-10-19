@@ -68,7 +68,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 16
+#define HTSP_PROTO_VERSION 17
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -210,6 +210,8 @@ typedef struct htsp_subscription {
   uint32_t hs_filtered_streams[16]; // one bit per stream
 
   int hs_first;
+
+  int hs_merge_meta_compomentidx;
 
 } htsp_subscription_t;
 
@@ -2912,6 +2914,21 @@ const static char frametypearray[PKT_NTYPES] = {
   [PKT_B_FRAME] = 'B',
 };
 
+static th_pkt_t *merge_pkt(th_pkt_t *pkt, size_t payloadlen)
+{
+  th_pkt_t *n = pkt_alloc(NULL, 0, 0, 0);
+  *n = *pkt;
+  n->pkt_refcount = 1;
+  n->pkt_meta = NULL;
+  n->pkt_payload = pktbuf_alloc(NULL, payloadlen);
+  memcpy(pktbuf_ptr(n->pkt_payload),
+         pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
+  memcpy(pktbuf_ptr(n->pkt_payload) + pktbuf_len(pkt->pkt_meta),
+         pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload));
+  pkt_ref_dec(pkt);
+  return n;
+}
+
 /**
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP service
  */
@@ -2923,6 +2940,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
+  size_t payloadlen;
 
   if(!htsp_is_stream_enabled(hs, pkt->pkt_componentindex)) {
     pkt_ref_dec(pkt);
@@ -2962,16 +2980,22 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
   
-  pkt = pkt_merge_header(pkt);
-
+  if (pkt->pkt_meta &&
+      hs->hs_merge_meta_compomentidx == pkt->pkt_componentindex) {
+    payloadlen = pktbuf_len(pkt->pkt_meta) + pktbuf_len(pkt->pkt_payload);
+    pkt = merge_pkt(pkt, payloadlen);
+    /* do it only once */
+    hs->hs_merge_meta_compomentidx = -1;
+  } else {
+    payloadlen = pktbuf_len(pkt->pkt_payload);
+  }
   /**
    * Since we will serialize directly we use 'binptr' which is a binary
    * object that just points to data, thus avoiding a copy.
    */
-  htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload),
-		    pktbuf_len(pkt->pkt_payload));
-  htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, pktbuf_len(pkt->pkt_payload));
-  atomic_add(&hs->hs_s->ths_bytes_out, pktbuf_len(pkt->pkt_payload));
+  htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
+  htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, payloadlen);
+  atomic_add(&hs->hs_s->ths_bytes_out, payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
 
@@ -3041,9 +3065,11 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
   tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
 
+  hs->hs_merge_meta_compomentidx = -1;
+
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
-    if (ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
+    if (SCT_ISVIDEO(ssc->ssc_type)) {
       if (ssc->ssc_width == 0 || ssc->ssc_height == 0) {
         hs->hs_wait_for_video = 1;
         return;
@@ -3073,7 +3099,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
       htsmsg_add_u32(c, "ancillary_id", ssc->ssc_ancillary_id);
     }
 
-    if(ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
+    if(SCT_ISVIDEO(ssc->ssc_type)) {
       if(ssc->ssc_width)
         htsmsg_add_u32(c, "width", ssc->ssc_width);
       if(ssc->ssc_height)
@@ -3096,7 +3122,18 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
         htsmsg_add_u32(c, "rate", ssc->ssc_sri);
     }
 
+    if (ssc->ssc_gh)
+      htsmsg_add_binptr(m, "meta", pktbuf_ptr(ssc->ssc_gh),
+		        pktbuf_len(ssc->ssc_gh));
+
     htsmsg_add_msg(streams, NULL, c);
+
+    if (ssc->ssc_type == SCT_H264 && hs->hs_htsp->htsp_version < 17) {
+      if (hs->hs_merge_meta_compomentidx < 0)
+        hs->hs_merge_meta_compomentidx = ssc->ssc_index;
+      else
+        tvherror("htsp", "multiple H264 video streams?");
+    }
   }
   
   htsmsg_add_msg(m, "streams", streams);

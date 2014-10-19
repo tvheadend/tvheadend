@@ -213,24 +213,24 @@ avc_convert_pkt(th_pkt_t *src)
   th_pkt_t *pkt = malloc(sizeof(th_pkt_t));
   *pkt = *src;
   pkt->pkt_refcount = 1;
-  pkt->pkt_header = NULL;
+  pkt->pkt_meta = NULL;
   pkt->pkt_payload = NULL;
 
-  if (src->pkt_header) {
+  if (src->pkt_meta) {
     sbuf_t headers;
     sbuf_init(&headers);
     
-    isom_write_avcc(&headers, pktbuf_ptr(src->pkt_header),
-		    pktbuf_len(src->pkt_header));
-    pkt->pkt_header = pktbuf_make(headers.sb_data, headers.sb_ptr);
+    isom_write_avcc(&headers, pktbuf_ptr(src->pkt_meta),
+		    pktbuf_len(src->pkt_meta));
+    pkt->pkt_meta = pktbuf_make(headers.sb_data, headers.sb_ptr);
   }
 
   sbuf_t payload;
   sbuf_init(&payload);
 
-  if(src->pkt_header)
-    avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_header),
-			pktbuf_len(src->pkt_header));
+  if(src->pkt_meta)
+    avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_meta),
+			pktbuf_len(src->pkt_meta));
 
   avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_payload),
 		      pktbuf_len(src->pkt_payload));

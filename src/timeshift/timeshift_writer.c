@@ -116,7 +116,7 @@ ssize_t timeshift_write_packet ( int fd, int64_t time, th_pkt_t *pkt )
   ssize_t ret = 0, err;
   ret = err = _write_msg(fd, SMT_PACKET, time, pkt, sizeof(th_pkt_t));
   if (err <= 0) return err;
-  err = _write_pktbuf(fd, pkt->pkt_header);
+  err = _write_pktbuf(fd, pkt->pkt_meta);
   if (err <= 0) return err;
   ret += err;
   err = _write_pktbuf(fd, pkt->pkt_payload);
