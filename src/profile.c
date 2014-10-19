@@ -395,15 +395,28 @@ profile_class_get_list(void *o)
  *
  */
 void
-profile_get_htsp_list(htsmsg_t *array)
+profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter)
 {
   profile_t *pro;
   htsmsg_t *m;
+  htsmsg_field_t *f;
+  const char *uuid, *s;
 
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     if (pro->pro_work) {
+      uuid = idnode_uuid_as_str(&pro->pro_id);
+      if (filter) {
+        HTSMSG_FOREACH(f, filter) {
+          if (!(s = htsmsg_field_get_str(f)))
+            continue;
+          if (strcmp(s, uuid) == 0)
+            break;
+        }
+        if (f == NULL)
+          continue;
+      }
       m = htsmsg_create_map();
-      htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&pro->pro_id));
+      htsmsg_add_str(m, "uuid", uuid);
       htsmsg_add_str(m, "name", pro->pro_name ?: "");
       htsmsg_add_str(m, "comment", pro->pro_comment ?: "");
       htsmsg_add_msg(array, NULL, m);

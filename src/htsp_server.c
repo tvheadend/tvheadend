@@ -1299,16 +1299,29 @@ static htsmsg_t *
 htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out, *l, *c;
+  htsmsg_field_t *f;
   dvr_config_t *cfg;
+  const char *uuid, *s;
 
   l = htsmsg_create_list();
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
     if (cfg->dvr_enabled) {
+      uuid = idnode_uuid_as_str(&cfg->dvr_id);
+      if (htsp->htsp_granted_access->aa_dvrcfgs) {
+        HTSMSG_FOREACH(f, htsp->htsp_granted_access->aa_dvrcfgs) {
+          if (!(s = htsmsg_field_get_str(f)))
+            continue;
+          if (strcmp(s, uuid) == 0)
+            break;
+        }
+        if (f == NULL)
+          continue;
+      }
       c = htsmsg_create_map();
       htsmsg_add_str(c, "uuid", idnode_uuid_as_str(&cfg->dvr_id));
-      htsmsg_add_str(c, "name", cfg->dvr_config_name);
-      htsmsg_add_str(c, "comment", cfg->dvr_comment);
+      htsmsg_add_str(c, "name", cfg->dvr_config_name ?: "");
+      htsmsg_add_str(c, "comment", cfg->dvr_comment ?: "");
       htsmsg_add_msg(l, NULL, c);
     }
 
@@ -2163,7 +2176,7 @@ htsp_method_getProfiles(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out, *l;
 
   l = htsmsg_create_list();
-  profile_get_htsp_list(l);
+  profile_get_htsp_list(l, htsp->htsp_granted_access->aa_profiles);
 
   out = htsmsg_create_map();
 

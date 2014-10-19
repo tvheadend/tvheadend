@@ -116,7 +116,7 @@ const char *profile_get_name(profile_t *pro);
 static inline muxer_container_type_t profile_get_mc(profile_t *pro)
   { return pro->pro_get_mc(pro); }
 
-void profile_get_htsp_list(htsmsg_t *array);
+void profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter);
 
 void profile_init(void);
 void profile_done(void);
