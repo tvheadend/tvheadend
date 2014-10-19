@@ -1577,22 +1577,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
     if (ssc_src->ssc_disabled)
       continue;
 
-    ssc->ssc_index          = ssc_src->ssc_index;
-    ssc->ssc_type           = ssc_src->ssc_type;
-    ssc->ssc_composition_id = ssc_src->ssc_composition_id;
-    ssc->ssc_ancillary_id   = ssc_src->ssc_ancillary_id;
-    ssc->ssc_pid            = ssc_src->ssc_pid;
-    ssc->ssc_width          = ssc_src->ssc_width;
-    ssc->ssc_height         = ssc_src->ssc_height;
-    ssc->ssc_aspect_num     = ssc_src->ssc_aspect_num;
-    ssc->ssc_aspect_den     = ssc_src->ssc_aspect_den;
-    ssc->ssc_sri            = ssc_src->ssc_sri;
-    ssc->ssc_channels       = ssc_src->ssc_channels;
-    ssc->ssc_disabled       = ssc_src->ssc_disabled;
-    ssc->ssc_frameduration  = ssc_src->ssc_frameduration;
-    ssc->ssc_gh             = ssc_src->ssc_gh;
-
-    memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
+    *ssc = *ssc_src;
 
     if (SCT_ISVIDEO(ssc->ssc_type)) 
       rc = transcoder_init_video(t, ssc);
