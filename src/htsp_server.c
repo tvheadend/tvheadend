@@ -494,7 +494,7 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
 
   if (fd <= 0) {
     fd = open(path, O_RDONLY);
-    tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+    tvhlog(LOG_DEBUG, "htsp", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
     if(fd == -1)
       return htsp_error("Unable to open file");
   }
@@ -539,7 +539,7 @@ htsp_file_find(const htsp_connection_t *htsp, htsmsg_t *in)
 static void
 htsp_file_destroy(htsp_file_t *hf)
 {
-  tvhlog(LOG_DEBUG, "HTSP", "Closed opened file %s", hf->hf_path);
+  tvhlog(LOG_DEBUG, "htsp", "Closed opened file %s", hf->hf_path);
   free(hf->hf_path);
   close(hf->hf_fd);
   LIST_REMOVE(hf, hf_link);
