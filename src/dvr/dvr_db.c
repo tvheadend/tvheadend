@@ -1642,6 +1642,7 @@ const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
   .ic_caption   = "DVR Entry",
   .ic_event     = "dvrentry",
+  .ic_perm_def  = ACCESS_RECORDER,
   .ic_save      = dvr_entry_class_save,
   .ic_get_title = dvr_entry_class_get_title,
   .ic_delete    = dvr_entry_class_delete,
