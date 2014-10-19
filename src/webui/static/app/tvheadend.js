@@ -386,7 +386,7 @@ function accessUpdate(o) {
             activeTab: 0,
             autoScroll: true,
             title: 'Recording',
-            iconCls: 'recording',
+            iconCls: 'recordingtab',
             items: []
         });
         tvheadend.dvr_settings(tsdvr);
