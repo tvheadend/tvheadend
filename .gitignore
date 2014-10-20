@@ -25,3 +25,12 @@ debian/tvheadend*.debhelper*
 
 rpm/tvheadend.spec
 rpm/test.patch
+
+#############
+###Windows###
+#############
+
+#windows image file cache
+Thumbs.db
+#Folder config file
+Desktop.ini
