@@ -959,12 +959,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   av_init_packet(&packet);
 
-  if (ictx->codec_id == AV_CODEC_ID_H264 && pkt->pkt_meta) {
-    uint8_t *buf = av_packet_new_side_data(&packet, AV_PKT_DATA_NEW_EXTRADATA,
-                                           pktbuf_len(pkt->pkt_meta));
-    memcpy(buf, pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
-  }
-
   packet.data     = pktbuf_ptr(pkt->pkt_payload);
   packet.size     = pktbuf_len(pkt->pkt_payload);
   packet.pts      = pkt->pkt_pts;

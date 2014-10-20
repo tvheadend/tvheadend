@@ -1232,7 +1232,6 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     th_pkt_t *pkt = st->es_curpkt;
 
     if(pkt != NULL) {
-      
       if(st->es_global_data) {
         pkt->pkt_meta = pktbuf_make(st->es_global_data,
                                     st->es_global_data_len);
