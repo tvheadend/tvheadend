@@ -368,6 +368,19 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   ocodec = as->aud_ocodec;
 
   if (ictx->codec_id == AV_CODEC_ID_NONE) {
+
+    if (icodec->id == AV_CODEC_ID_AAC || icodec->id == AV_CODEC_ID_VORBIS) {
+      if (pkt->pkt_meta) {
+        ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
+        ictx->extradata = av_malloc(ictx->extradata_size);
+        memcpy(ictx->extradata,
+               pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
+      } else {
+        /* wait for metadata */
+        return;
+      }
+    }
+
     ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
@@ -922,6 +935,19 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   opts = NULL;
 
   if (ictx->codec_id == AV_CODEC_ID_NONE) {
+
+    if (icodec->id == AV_CODEC_ID_H264) {
+      if (pkt->pkt_meta) {
+        ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
+        ictx->extradata = av_malloc(ictx->extradata_size);
+        memcpy(ictx->extradata,
+               pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
+      } else {
+        /* wait for metadata */
+        return;
+      }
+    }
+
     ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
@@ -932,6 +958,13 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   av_init_packet(&packet);
+
+  if (ictx->codec_id == AV_CODEC_ID_H264 && pkt->pkt_meta) {
+    uint8_t *buf = av_packet_new_side_data(&packet, AV_PKT_DATA_NEW_EXTRADATA,
+                                           pktbuf_len(pkt->pkt_meta));
+    memcpy(buf, pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
+  }
+
   packet.data     = pktbuf_ptr(pkt->pkt_payload);
   packet.size     = pktbuf_len(pkt->pkt_payload);
   packet.pts      = pkt->pkt_pts;
