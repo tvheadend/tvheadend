@@ -1971,6 +1971,22 @@ dvr_val2pri(dvr_prio_t v)
 void
 dvr_entry_delete(dvr_entry_t *de)
 {
+  time_t t;
+  struct tm tm;
+  char tbuf[64];
+
+  t = dvr_entry_get_start_time(de);
+  localtime_r(&t, &tm);
+  if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
+    *tbuf = 0;
+
+  tvhlog(LOG_INFO, "dvr", "delete entry %s \"%s\" on \"%s\" start time %s, "
+	 "scheduled for recording by \"%s\", retention %d days",
+         idnode_uuid_as_str(&de->de_id),
+	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
+	 de->de_creator ?: "",
+	 dvr_entry_get_retention(de));
+
   if(de->de_filename != NULL) {
 #if ENABLE_INOTIFY
     dvr_inotify_del(de);
