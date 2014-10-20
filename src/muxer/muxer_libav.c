@@ -361,7 +361,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVPacket packet;
   th_pkt_t *pkt = (th_pkt_t*)data;
   lav_muxer_t *lm = (lav_muxer_t*)m;
-  int rc = 0;
+  int rc = 0, free_data = 0;
 
   assert(smt == SMT_PACKET);
 
@@ -399,6 +399,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
 	break;
       }
+      free_data = 1;
     } else if (st->codec->codec_id == AV_CODEC_ID_AAC) {
       /* remove ADTS header */
       packet.data = pktbuf_ptr(pkt->pkt_payload) + 7;
@@ -420,8 +421,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if((rc = av_interleaved_write_frame(oc, &packet)))
       tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
 
-    // h264_mp4toannexb filter might allocate new data.
-    if(packet.data != pktbuf_ptr(pkt->pkt_payload))
+    if(free_data)
       av_free(packet.data);
 
     break;
@@ -461,7 +461,6 @@ lav_muxer_add_marker(muxer_t* m)
 static int
 lav_muxer_close(muxer_t *m)
 {
-  int i;
   int ret = 0;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
@@ -471,15 +470,6 @@ lav_muxer_close(muxer_t *m)
     lm->m_errors++;
     ret = -1;
   }
-
-  if(lm->lm_h264_filter)
-    av_bitstream_filter_close(lm->lm_h264_filter);
-
-  for(i=0; i<lm->lm_oc->nb_streams; i++)
-    av_freep(&lm->lm_oc->streams[i]->codec->extradata);
- 
-  lm->lm_oc->nb_streams = 0;
-
   return ret;
 }
 
@@ -490,13 +480,24 @@ lav_muxer_close(muxer_t *m)
 static void
 lav_muxer_destroy(muxer_t *m)
 {
+  int i;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
-  if(lm->lm_oc && lm->lm_oc->pb)
-    av_free(lm->lm_oc->pb);
+  if(lm->lm_h264_filter)
+    av_bitstream_filter_close(lm->lm_h264_filter);
 
-  if(lm->lm_oc)
-    av_free(lm->lm_oc);
+  for(i=0; i<lm->lm_oc->nb_streams; i++)
+    av_freep(&lm->lm_oc->streams[i]->codec->extradata);
+
+  if(lm->lm_oc && lm->lm_oc->pb) {
+    av_freep(&lm->lm_oc->pb->buffer);
+    av_freep(&lm->lm_oc->pb);
+  }
+
+  if(lm->lm_oc) {
+    avformat_free_context(lm->lm_oc);
+    lm->lm_oc = NULL;
+  }
 
   free(lm);
 }
@@ -553,4 +554,3 @@ lav_muxer_create(const muxer_config_t *m_cfg)
 
   return (muxer_t*)lm;
 }
-
