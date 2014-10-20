@@ -838,6 +838,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 
   /* Log */
   pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_consistency_check(mm);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
       const char *s = "not found";
@@ -862,7 +863,7 @@ mpegts_mux_scan_timeout ( void *aux )
   int c, q;
   char buf[256];
   mpegts_mux_t *mm = aux;
-  mpegts_table_t *mt, *nxt;
+  mpegts_table_t *mt;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
 
   /* Timeout */
@@ -876,13 +877,15 @@ mpegts_mux_scan_timeout ( void *aux )
   /* Check tables */
 again:
   pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_consistency_check(mm);
   c = q = 0;
-  for (mt = LIST_FIRST(&mm->mm_tables); mt != NULL; mt = nxt) {
-    nxt = LIST_NEXT(mt, mt_link);
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ)) continue;
     if (!mt->mt_count) {
+      mpegts_table_grab(mt);
       pthread_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_destroy(mt);
+      mpegts_table_release(mt);
       goto again;
     } else if (!mt->mt_complete) {
       q++;

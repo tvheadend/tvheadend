@@ -655,6 +655,7 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
 
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = TAILQ_FIRST(&mm->mm_defer_tables)) != NULL) {
+    mpegts_table_consistency_check(mm);
     TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
     if (mt->mt_defer_cmd == MT_DEFER_OPEN_PID && !mt->mt_destroyed) {
       mt->mt_defer_cmd = 0;
@@ -680,6 +681,7 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
     mpegts_table_release(mt);
     pthread_mutex_lock(&mm->mm_tables_lock);
   }
+  mpegts_table_consistency_check(mm);
   pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
@@ -925,8 +927,7 @@ mpegts_input_flush_mux
   }
   pthread_mutex_unlock(&mi->mi_input_lock);
 
-  /* Flush table Q */
-  pthread_mutex_lock(&mi->mi_output_lock);
+  /* Flush table Q - the global lock is already held */
   TAILQ_FOREACH(mtf, &mi->mi_table_queue, mtf_link) {
     if (mtf->mtf_mux == mm)
       mtf->mtf_mux = NULL;
@@ -935,7 +936,6 @@ mpegts_input_flush_mux
                                    (mi->mi_destroyed_muxes_count + 1) *
                                      sizeof(mpegts_mux_t *));
   mi->mi_destroyed_muxes[mi->mi_destroyed_muxes_count++] = mm;
-  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 static void
