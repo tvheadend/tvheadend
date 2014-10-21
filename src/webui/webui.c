@@ -714,7 +714,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *name;
   char addrbuf[50];
   void *tcp_id;
-  int res = HTTP_STATUS_BAD_REQUEST;
+  int res = HTTP_STATUS_SERVICE;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -773,7 +773,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   char addrbuf[50];
   void *tcp_id;
   const char *str;
-  int res = HTTP_STATUS_BAD_REQUEST;
+  int res = HTTP_STATUS_SERVICE;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -828,7 +828,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   const char *name;
   char addrbuf[50];
   void *tcp_id;
-  int res = HTTP_STATUS_BAD_REQUEST;
+  int res = HTTP_STATUS_SERVICE;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
     return HTTP_STATUS_UNAUTHORIZED;
