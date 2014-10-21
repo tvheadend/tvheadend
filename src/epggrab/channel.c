@@ -233,6 +233,8 @@ void epggrab_channel_destroy
   while ((ecl = LIST_FIRST(&ec->channels)) != NULL)
     epggrab_channel_link_delete(ecl, delconf);
   RB_REMOVE(tree, ec, link);
+  free(ec->name);
+  free(ec->icon);
   free(ec->id);
   free(ec);
 }
