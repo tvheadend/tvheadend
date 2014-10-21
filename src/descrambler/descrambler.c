@@ -529,13 +529,13 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   flags  = pid >> 16;
   pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
-    if (dt->table->mt_pid == pid) {
-      TAILQ_FOREACH(ds, &dt->sections, link) {
-        if (ds->opaque == opaque)
-          return 0;
-      }
-      break;
+    if (dt->table->mt_pid != pid)
+      continue;
+    TAILQ_FOREACH(ds, &dt->sections, link) {
+      if (ds->opaque == opaque)
+        return 0;
     }
+    break;
   }
   if (!dt) {
     dt = calloc(1, sizeof(*dt));
@@ -552,7 +552,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   ds->opaque      = opaque;
   LIST_INIT(&ds->ecmsecs);
   TAILQ_INSERT_TAIL(&dt->sections, ds, link);
-  tvhtrace("descrambler", "mux %p open pid %04X (%i) (flags 0x%04x)", mux, pid, pid, flags);
+  tvhtrace("descrambler", "mux %p open pid %04X (%i) (flags 0x%04x) for %p", mux, pid, pid, flags, opaque);
   return 1;
 }
 
@@ -580,25 +580,25 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
     return 0;
   pid &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
-    if (dt->table->mt_pid == pid) {
-      TAILQ_FOREACH(ds, &dt->sections, link) {
-        if (ds->opaque == opaque) {
-          TAILQ_REMOVE(&dt->sections, ds, link);
-          ds->callback(ds->opaque, -1, NULL, 0);
-          while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
-            LIST_REMOVE(des, link);
-            free(des->last_data);
-            free(des);
-          }
-          if (TAILQ_FIRST(&dt->sections) == NULL) {
-            TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
-            mpegts_table_destroy(dt->table);
-            free(dt);
-          }
-          free(ds);
-          tvhtrace("descrambler", "mux %p close pid %04X (%i)", mux, pid, pid);
-          return 1;
+    if (dt->table->mt_pid != pid)
+      continue;
+    TAILQ_FOREACH(ds, &dt->sections, link) {
+      if (ds->opaque == opaque) {
+        TAILQ_REMOVE(&dt->sections, ds, link);
+        ds->callback(ds->opaque, -1, NULL, 0);
+        while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
+          LIST_REMOVE(des, link);
+          free(des->last_data);
+          free(des);
         }
+        if (TAILQ_FIRST(&dt->sections) == NULL) {
+          TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
+          mpegts_table_destroy(dt->table);
+          free(dt);
+        }
+        free(ds);
+        tvhtrace("descrambler", "mux %p close pid %04X (%i) for %p", mux, pid, pid, opaque);
+        return 1;
       }
     }
   }
