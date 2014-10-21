@@ -145,7 +145,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane;
+  char *url, *url_sane, *muxname;
   iptv_mux_t *im = (iptv_mux_t*)mm;
 
   if (delconf)
@@ -155,11 +155,13 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   url = im->mm_iptv_url; // Workaround for silly printing error
   url_sane = im->mm_iptv_url_sane;
+  muxname = im->mm_iptv_muxname;
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
   mpegts_mux_delete(mm, delconf);
   free(url);
   free(url_sane);
+  free(muxname);
 }
 
 static void
