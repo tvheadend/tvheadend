@@ -1843,13 +1843,17 @@ tvheadend.idnode_tree = function(panel, conf)
     var events = {};
 
     function update(o) {
-        if (tree && o.reload)
+        if (tree && o.reload) {
             tree.getRootNode().reload();
+            tree.expandAll();
+        }
     }
 
     function updatenode(o) {
-        if (o.uuid)
+        if (o.uuid) {
             tree.getRootNode().reload();
+            tree.expandAll();
+        }
     }
 
     function updatetitle(o) {
@@ -1868,8 +1872,9 @@ tvheadend.idnode_tree = function(panel, conf)
         if (conf.builder)
             conf.builder(conf);
 
-        var current = null;
         var first = true;
+        var current = null;
+        var uuid = null;
         var params = conf.params || {};
         var loader = new Ext.tree.TreeLoader({
             dataUrl: conf.url,
@@ -1878,12 +1883,20 @@ tvheadend.idnode_tree = function(panel, conf)
             nodeParameter: 'uuid'
         });
 
-        loader.on('load', function(l, n, r) {
+        var node_added = function(n) {
             var event = n.attributes.event;
             if (n.attributes.uuid && event && !(event in events)) {
                 events[event] = 1;
                 tvheadend.comet.on(event, updatenode);
             }
+            if (n.attributes.uuid === uuid)
+                n.select();
+        }
+
+        loader.on('load', function(l, n, r) {
+            node_added(n);
+            for (var i = 0; i < n.childNodes.length; i++)
+                node_added(n.childNodes[i]);
             if (first) { /* hack */
                 dpanel.doLayout();
                 first = false;
@@ -1906,8 +1919,10 @@ tvheadend.idnode_tree = function(panel, conf)
                     if (current) {
                         mpanel.remove(current);
                         current = null;
+                        uuid = null;
                     }
                     if (!n.isRoot) {
+                        uuid = n.attributes.uuid;
                         current = new tvheadend.idnode_editor(n.attributes, {
                             title: 'Parameters',
                             width: 550,
