@@ -467,9 +467,20 @@ mpegts_input_started_mux
 
   /* Update */
   mmi->mmi_mux->mm_active = mmi;
+  /* Accept packets */
+  mi->mi_stop = 0;
   LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 1);
+}
+
+static void
+mpegts_input_stopping_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  pthread_mutex_lock(&mi->mi_output_lock);
+  mi->mi_stop = 1;
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 static void
@@ -834,7 +845,7 @@ mpegts_input_thread ( void * p )
       
     /* Process */
     pthread_mutex_lock(&mi->mi_output_lock);
-    if (mp->mp_mux && mp->mp_mux->mm_active) {
+    if (!mi->mi_stop && mp->mp_mux) {
       mpegts_input_table_waiting(mi, mp->mp_mux);
       mpegts_input_process(mi, mp);
     }
@@ -860,7 +871,6 @@ mpegts_input_table_thread ( void *aux )
 {
   mpegts_table_feed_t   *mtf;
   mpegts_input_t        *mi = aux;
-  int i;
 
   pthread_mutex_lock(&mi->mi_output_lock);
   while (mi->mi_running) {
@@ -876,18 +886,8 @@ mpegts_input_table_thread ( void *aux )
     /* Process */
     if (mtf->mtf_mux) {
       pthread_mutex_lock(&global_lock);
-      if (mi->mi_destroyed_muxes) {
-        for (i = 0; i < mi->mi_destroyed_muxes_count; i++)
-          if (mtf->mtf_mux == mi->mi_destroyed_muxes[i])
-            goto clean;
+      if (!mi->mi_stop)
         mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
-clean:
-        free(mi->mi_destroyed_muxes);
-        mi->mi_destroyed_muxes = NULL;
-        mi->mi_destroyed_muxes_count = 0;
-      } else {
-        mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
-      }
       pthread_mutex_unlock(&global_lock);
     }
 
@@ -932,10 +932,9 @@ mpegts_input_flush_mux
     if (mtf->mtf_mux == mm)
       mtf->mtf_mux = NULL;
   }
-  mi->mi_destroyed_muxes = realloc(mi->mi_destroyed_muxes,
-                                   (mi->mi_destroyed_muxes_count + 1) *
-                                     sizeof(mpegts_mux_t *));
-  mi->mi_destroyed_muxes[mi->mi_destroyed_muxes_count++] = mm;
+  /* stop flag must be set here */
+  /* otherwise the picked mtf might be processed after mux deactivation */
+  assert(mi->mi_stop);
 }
 
 static void
@@ -1091,6 +1090,7 @@ mpegts_input_create0
   mi->mi_close_pid            = mpegts_input_close_pid;
   mi->mi_create_mux_instance  = mpegts_input_create_mux_instance;
   mi->mi_started_mux          = mpegts_input_started_mux;
+  mi->mi_stopping_mux         = mpegts_input_stopping_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;
   mi->mi_has_subscription     = mpegts_input_has_subscription;
   mi->ti_get_streams          = mpegts_input_get_streams;
@@ -1109,6 +1109,9 @@ mpegts_input_create0
 
   /* Defaults */
   mi->mi_ota_epg = 1;
+
+  /* Stop processing until subscribed */
+  mi->mi_stop = 1;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);
@@ -1161,7 +1164,6 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   pthread_mutex_destroy(&mi->mi_output_lock);
   pthread_cond_destroy(&mi->mi_table_cond);
   free(mi->mi_name);
-  free(mi->mi_destroyed_muxes);
   free(mi);
 }
 

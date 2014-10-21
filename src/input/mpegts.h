@@ -548,8 +548,9 @@ struct mpegts_input
    * Input processing
    */
 
-  uint8_t mi_running;
-  uint8_t mi_live;
+  uint8_t mi_running;            /* threads running */
+  uint8_t mi_stop;               /* mux is in the stop state */
+  uint8_t mi_live;               /* stream is live */
   time_t mi_last_dispatch;
 
   /* Data input */
@@ -568,9 +569,6 @@ struct mpegts_input
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
   LIST_HEAD(,service)             mi_transports;
 
-  mpegts_mux_t                  **mi_destroyed_muxes;
-  int                             mi_destroyed_muxes_count;
-  
   /* Table processing */
   pthread_t                       mi_table_tid;
   pthread_cond_t                  mi_table_cond;
@@ -600,6 +598,7 @@ struct mpegts_input
   void (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,void*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
+  void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
   idnode_set_t *(*mi_network_list) (mpegts_input_t*);

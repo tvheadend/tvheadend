@@ -696,9 +696,10 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   tvhdebug("mpegts", "%s - stopping mux", buf);
 
   if (mmi) {
+    mi = mmi->mmi_input;
+    mi->mi_stopping_mux(mi, mmi);
     LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
       subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-    mi = mmi->mmi_input;
     mi->mi_stop_mux(mi, mmi);
     mi->mi_stopped_mux(mi, mmi);
   }
