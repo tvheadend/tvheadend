@@ -438,6 +438,10 @@
     background-image: url(../icons/connections.png) !important;
 }
 
+.clean{
+    background-image: url(../icons/clean.png) !important;
+}
+
 .subscriptions{
     background-image: url(../icons/subscriptions.png) !important;
 }
