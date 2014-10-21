@@ -43,9 +43,13 @@ static int
 api_imagecache_save
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
+  int b;
+
   pthread_mutex_lock(&global_lock);
   if (imagecache_set_config(args))
     imagecache_save();
+  if (!htsmsg_get_bool(args, "clean", &b) && b)
+    imagecache_clean();
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_u32(*resp, "success", 1);

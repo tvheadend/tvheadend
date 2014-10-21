@@ -163,7 +163,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   pthread_mutex_unlock(&global_lock);
 
   /* Build command */
-  tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
+  tvhdebug("imagecache", "fetch %s", img->url);
   memset(&url, 0, sizeof(url));
   if (urlparse(img->url, &url)) {
     tvherror("imagecache", "Unable to parse url '%s'", img->url);
@@ -219,12 +219,13 @@ error:
     img->failed = 1;
     if (tmp[0])
       unlink(tmp);
-    tvhlog(LOG_WARNING, "imagecache", "failed to download %s", img->url);
+    tvhwarn("imagecache", "failed to download %s", img->url);
   } else {
     img->failed = 0;
     unlink(path);
-    rename(tmp, path);
-    tvhlog(LOG_DEBUG, "imagecache", "downloaded %s", img->url);
+    if (rename(tmp, path))
+      tvherror("imagecache", "unable to rename file '%s' to '%s'", tmp, path);
+    tvhdebug("imagecache", "downloaded %s", img->url);
   }
   imagecache_image_save(img);
   pthread_cond_broadcast(&imagecache_cond);
@@ -361,6 +362,23 @@ imagecache_init ( void )
 #endif
 }
 
+
+/*
+ * Destroy
+ */
+static void
+imagecache_destroy ( imagecache_image_t *img, int delconf )
+{
+  if (delconf) {
+    hts_settings_remove("imagecache/meta/%d", img->id);
+    hts_settings_remove("imagecache/data/%d", img->id);
+  }
+  RB_REMOVE(&imagecache_by_url, img, url_link);
+  RB_REMOVE(&imagecache_by_id, img, id_link);
+  free((void *)img->url);
+  free(img);
+}
+
 /*
  * Shutdown
  */
@@ -373,12 +391,8 @@ imagecache_done ( void )
   pthread_cond_broadcast(&imagecache_cond);
   pthread_join(imagecache_tid, NULL);
 #endif
-  while ((img = RB_FIRST(&imagecache_by_url)) != NULL) {
-    RB_REMOVE(&imagecache_by_url, img, url_link);
-    RB_REMOVE(&imagecache_by_id, img, id_link);
-    free((void *)img->url);
-    free(img);
-  }
+  while ((img = RB_FIRST(&imagecache_by_id)) != NULL)
+    imagecache_destroy(img, 0);
   SKEL_FREE(imagecache_skel);
 }
 
@@ -417,6 +431,52 @@ imagecache_save ( void )
   htsmsg_t *m = imagecache_get_config();
   hts_settings_save(m, "imagecache/config");
   notify_reload("imagecache");
+}
+
+/*
+ * Clean
+ */
+void
+imagecache_clean( void )
+{
+  imagecache_image_t *img, *next, skel;
+  fb_dirent **namelist;
+  char path[PATH_MAX], *name;
+  int i, n;
+
+  lock_assert(&global_lock);
+
+#if ENABLE_IMAGECACHE
+  /* remove all cached data, except the one actually fetched */
+  for (img = RB_FIRST(&imagecache_by_id); img; img = next) {
+    next = RB_NEXT(img, id_link);
+    if (img->state == FETCHING)
+      continue;
+    imagecache_destroy(img, 1);
+  }
+#endif
+
+  tvhinfo("imagecache", "clean request");
+  /* remove unassociated data*/
+  if (hts_settings_buildpath(path, sizeof(path), "imagecache/data")) {
+    tvherror("imagecache", "clean - buildpath");
+    return;
+  }
+  if((n = fb_scandir(path, &namelist)) < 0)
+    return;
+  for (i = 0; i < n; i++) {
+    name = namelist[i]->name;
+    if (name[0] == '.')
+      continue;
+    skel.id = atoi(name);
+    img = RB_FIND(&imagecache_by_id, &skel, id_link, id_cmp);
+    if (img)
+      continue;
+    tvhinfo("imagecache", "clean: removing unassociated file '%s/%s'", path, name);
+    hts_settings_remove("imagecache/meta/%s", name);
+    hts_settings_remove("imagecache/data/%s", name);
+  }
+  free(namelist);
 }
 
 #endif /* ENABLE_IMAGECACHE */

@@ -221,6 +221,13 @@ tvheadend.miscconf = function(panel, index) {
         handler: saveChanges
     });
 
+    var imagecacheButton = new Ext.Button({
+        text: "Clean image (icon) cache",
+        tooltip: 'Clean image cache on storage',
+        iconCls: 'drive',
+        handler: cleanImagecache
+    });
+
     var helpButton = new Ext.Button({
         text: 'Help',
 		iconCls: 'help',
@@ -254,7 +261,7 @@ tvheadend.miscconf = function(panel, index) {
         bodyStyle: 'padding:15px',
         layout: 'form',
         items: _items,
-        tbar: [saveButton, '->', helpButton]
+        tbar: [saveButton, '-', imagecacheButton, '->', helpButton]
     });
 
     tvheadend.paneladd(panel, mpanel, index);
@@ -285,6 +292,18 @@ tvheadend.miscconf = function(panel, index) {
             });
     });
 
+    function saveChangesImagecache(params) {
+        if (imagecache_form)
+            imagecache_form.getForm().submit({
+                url: 'api/imagecache/config/save',
+                params: params || {},
+                waitMsg: 'Saving data...',
+                failure: function(form, action) {
+                    Ext.Msg.alert('Imagecache save failed', action.result.errormsg);
+                }
+            });
+    }
+
     function saveChanges() {
         confpanel.getForm().submit({
             url: 'config',
@@ -296,13 +315,10 @@ tvheadend.miscconf = function(panel, index) {
                 Ext.Msg.alert('Save failed', action.result.errormsg);
             }
         });
-        if (imagecache_form)
-            imagecache_form.getForm().submit({
-                url: 'api/imagecache/config/save',
-                waitMsg: 'Saving data...',
-                failure: function(form, action) {
-                    Ext.Msg.alert('Imagecache save failed', action.result.errormsg);
-                }
-            });
+        saveChangesImagecache();
+    }
+
+    function cleanImagecache() {
+        saveChangesImagecache({'clean': 1});
     }
 };

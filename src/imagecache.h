@@ -39,6 +39,7 @@ void	 imagecache_done     ( void );
 htsmsg_t *imagecache_get_config ( void );
 int       imagecache_set_config ( htsmsg_t *c );
 void      imagecache_save       ( void );
+void      imagecache_clean      ( void );
 
 // Note: will return 0 if invalid (must serve original URL)
 uint32_t imagecache_get_id  ( const char *url );
