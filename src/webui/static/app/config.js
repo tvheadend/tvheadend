@@ -44,6 +44,7 @@ tvheadend.miscconf = function(panel, index) {
         'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
+        'chiconpath',
         'piconpath'
     ]);
 
@@ -131,9 +132,15 @@ tvheadend.miscconf = function(panel, index) {
     * Picons
     */
 
+    var chiconPath = new Ext.form.TextField({
+        name: 'chiconpath',
+        fieldLabel: 'Channel icon path<br/>(e.g. file:///tmp/icons/%C.png or http://...)',
+        width: 400
+    });
+
     var piconPath = new Ext.form.TextField({
         name: 'piconpath',
-        fieldLabel: 'Picon path (e.g. file:///tmp/picons)',
+        fieldLabel: 'Picon path<br/>(e.g. file:///tmp/picons or http://...)',
         width: 400
     });
 
@@ -143,7 +150,7 @@ tvheadend.miscconf = function(panel, index) {
         autoHeight: true,
         collapsible: true,
         animCollapse: true,
-        items: [piconPath]
+        items: [chiconPath, piconPath]
     });
 
     /*

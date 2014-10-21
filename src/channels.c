@@ -42,6 +42,7 @@
 #include "imagecache.h"
 #include "service_mapper.h"
 #include "htsbuf.h"
+#include "intlconv.h"
 
 struct channel_tree channels;
 
@@ -292,6 +293,7 @@ const idclass_t channel_class = {
       .name     = "Name",
       .off      = offsetof(channel_t, ch_name),
       .get      = channel_class_get_name,
+      .notify   = channel_class_icon_notify, /* try to re-render default icon path */
     },
     {
       .type     = PT_S64,
@@ -537,9 +539,46 @@ channel_get_icon ( channel_t *ch )
 {
   static char buf[512], buf2[512];
   channel_service_mapping_t *csm;
-  const char *picon = config_get_picon_path(),
-             *icon  = ch->ch_icon;
+  const char *chicon = config_get_chicon_path(),
+             *picon  = config_get_picon_path(),
+             *icon   = ch->ch_icon,
+             *chname;
   uint32_t id;
+
+  if (icon && *icon == '\0')
+    icon = NULL;
+
+  /* No user icon - try to get the channel icon by name */
+  if (!icon && chicon && chicon[0] >= ' ' && chicon[0] <= 122 &&
+      (chname = channel_get_name(ch)) != NULL && chname[0]) {
+    const char *send, *sname, *s;
+    chicon = strdup(chicon);
+    send = strstr(chicon, "%C");
+    if (send == NULL) {
+      buf[0] = '\0';
+      sname = "";
+    } else {
+      *(char *)send = '\0';
+      send += 2;
+      sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                   chname, strlen(chname) * 2);
+      /* Remove problematic characters */
+      s = sname;
+      while (*s) {
+        if (*s <= ' ' || *s > 122 ||
+            strchr("/:\\<>|*?'\"", *s) != NULL)
+          *(char *)s = '_';
+        s++;
+      }
+    }
+    snprintf(buf, sizeof(buf), "%s%s%s", chicon, sname, send);
+    if (send)
+      free((char *)sname);
+    free((char *)chicon);
+
+    icon = ch->ch_icon = strdup(buf);
+    channel_save(ch);
+  }
 
   /* No user icon - try access from services */
   if (!icon && picon) {

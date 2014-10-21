@@ -433,7 +433,7 @@ imagecache_get_id ( const char *url )
   lock_assert(&global_lock);
 
   /* Invalid */
-  if (!url || url[0] == '\0')
+  if (!url || url[0] == '\0' || !strstr(url, "://"))
     return 0;
 
   /* Disabled */
