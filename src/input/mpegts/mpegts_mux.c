@@ -713,19 +713,26 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
     mpegts_input_flush_mux(mi, mm);
 
   /* Ensure PIDs are cleared */
-  mm->mm_last_pid = -1;
-  mm->mm_last_mp = NULL;
-  while ((mp = RB_FIRST(&mm->mm_pids))) {
-    while ((mps = RB_FIRST(&mp->mp_subs))) {
-      RB_REMOVE(&mp->mp_subs, mps, mps_link);
-      free(mps);
+  if (mi) {
+    pthread_mutex_lock(&mi->mi_output_lock);
+    mm->mm_last_pid = -1;
+    mm->mm_last_mp = NULL;
+    while ((mp = RB_FIRST(&mm->mm_pids))) {
+      assert(mi);
+      while ((mps = RB_FIRST(&mp->mp_subs))) {
+        RB_REMOVE(&mp->mp_subs, mps, mps_link);
+        free(mps);
+      }
+      RB_REMOVE(&mm->mm_pids, mp, mp_link);
+      if (mp->mp_fd != -1) {
+        tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
+        close(mp->mp_fd);
+      }
+      free(mp);
     }
-    RB_REMOVE(&mm->mm_pids, mp, mp_link);
-    if (mp->mp_fd != -1) {
-      tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
-      close(mp->mp_fd);
-    }
-    free(mp);
+    pthread_mutex_unlock(&mi->mi_output_lock);
+  } else {
+    assert(RB_FIRST(&mm->mm_pids) == NULL);
   }
 
   /* Scanning */
