@@ -776,6 +776,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
   mi = mm->mm_active->mmi_input;
   LIST_INSERT_HEAD(&mm->mm_tables, mt, mt_link);
   mm->mm_num_tables++;
+  mpegts_table_grab(mt);
   pthread_mutex_unlock(&mm->mm_tables_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
   if (subscribe) {
@@ -784,6 +785,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_release(mt);
 }
 
 void
@@ -797,6 +799,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     if (mt->mt_defer_cmd) {
       TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
       mt->mt_defer_cmd = 0;
+      mpegts_table_release(mt);
     }
     mt->mt_subscribed = 0;
     LIST_REMOVE(mt, mt_link);
@@ -822,6 +825,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   mi = mm->mm_active->mmi_input;
   LIST_REMOVE(mt, mt_link);
   mm->mm_num_tables--;
+  mpegts_table_grab(mt);
   pthread_mutex_unlock(&mm->mm_tables_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
   if (mt->mt_subscribed) {
@@ -830,6 +834,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   pthread_mutex_lock(&mm->mm_tables_lock);
+  mpegts_table_release(mt);
 }
 
 /* **************************************************************************

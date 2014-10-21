@@ -139,6 +139,9 @@ mpegts_table_release_ ( mpegts_table_t *mt )
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
   }
+  tvhtrace("mpegts", "table: free %s %02X/%02X (%d) pid %04X (%d)",
+           mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
+           mt->mt_pid, mt->mt_pid);
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
@@ -213,7 +216,7 @@ mpegts_table_add
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
-  tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
+  tvhtrace("mpegts", "table: %s add %02X/%02X (%d) pid %04X (%d)",
            name, tableid, mask, tableid, pid, pid);
 
   /* Create */
