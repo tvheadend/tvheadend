@@ -416,7 +416,8 @@ clean:
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
-	rm -rf ${ROOTDIR)/.tvh${ROOTDIR}/libav_static
+	rm -rf ${ROOTDIR}/libav_static
+	rm -rf ${ROOTDIR}/libhdhomerun_static
 	rm -rf ${ROOTDIR}/build.*
 	rm -f ${ROOTDIR}/.config.mk
 
