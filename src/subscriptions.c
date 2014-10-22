@@ -577,13 +577,16 @@ subscription_unsubscribe(th_subscription_t *s)
  */
 th_subscription_t *
 subscription_create
-  (profile_t *pro, int weight, const char *name, streaming_target_t *st,
+  (profile_chain_t *prch, int weight, const char *name,
    int flags, st_callback_t *cb, const char *hostname,
    const char *username, const char *client)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
+  profile_t *pro = prch ? prch->prch_pro : NULL;
+  streaming_target_t *st = prch ? prch->prch_st : NULL;
   int reject = 0;
   static int tally;
+
   TAILQ_INIT(&s->ths_instances);
 
   if(flags & SUBSCRIPTION_NONE)
@@ -601,6 +604,7 @@ subscription_create
 
   streaming_target_init(&s->ths_input, cb, s, reject);
 
+  s->ths_prch              = prch->prch_st ? prch : NULL;
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
   s->ths_hostname          = hostname ? strdup(hostname) : NULL;
@@ -633,22 +637,29 @@ subscription_create
  *
  */
 static th_subscription_t *
-subscription_create_from_channel_or_service(channel_t *ch,
-                                            service_t *t,
-                                            profile_t *pro,
+subscription_create_from_channel_or_service(profile_chain_t *prch,
                                             unsigned int weight,
                                             const char *name,
-                                            streaming_target_t *st,
                                             int flags,
                                             const char *hostname,
                                             const char *username,
-                                            const char *client)
+                                            const char *client,
+                                            int service)
 {
   th_subscription_t *s;
-  assert(!ch || !t);
-  assert(st);
+  channel_t *ch = NULL;
+  service_t *t  = NULL;
 
-  s = subscription_create(pro, weight, name, st, flags, subscription_input,
+  assert(prch);
+  assert(prch->prch_id);
+  assert(prch->prch_st);
+
+  if (service)
+    t  = prch->prch_id;
+  else
+    ch = prch->prch_id;
+
+  s = subscription_create(prch, weight, name, flags, subscription_input,
                           hostname, username, client);
   if (ch)
     tvhtrace("subscription", "%04X: creating subscription for %s weight %d",
@@ -666,29 +677,29 @@ subscription_create_from_channel_or_service(channel_t *ch,
 }
 
 th_subscription_t *
-subscription_create_from_channel(channel_t *ch, profile_t *pro,
+subscription_create_from_channel(profile_chain_t *prch,
                                  unsigned int weight,
-				 const char *name, streaming_target_t *st,
+				 const char *name,
 				 int flags, const char *hostname,
 				 const char *username, const char *client)
 {
   return subscription_create_from_channel_or_service
-           (ch, NULL, pro, weight, name, st, flags, hostname, username, client);
+           (prch, weight, name, flags, hostname, username, client, 0);
 }
 
 /**
  *
  */
 th_subscription_t *
-subscription_create_from_service(service_t *t, profile_t *pro,
+subscription_create_from_service(profile_chain_t *prch,
                                  unsigned int weight,
                                  const char *name,
-				 streaming_target_t *st, int flags,
+				 int flags,
 				 const char *hostname, const char *username, 
 				 const char *client)
 {
   return subscription_create_from_channel_or_service
-           (NULL, t, pro, weight, name, st, flags, hostname, username, client);
+           (prch, weight, name, flags, hostname, username, client, 1);
 }
 
 /**
@@ -738,16 +749,16 @@ mux_data_timeout ( void *aux )
 }
 
 th_subscription_t *
-subscription_create_from_mux(mpegts_mux_t *mm, profile_t *pro,
+subscription_create_from_mux(profile_chain_t *prch,
                              unsigned int weight,
                              const char *name,
-                             streaming_target_t *st,
                              int flags,
                              const char *hostname,
                              const char *username,
                              const char *client,
                              int *err)
 {
+  mpegts_mux_t *mm = prch->prch_id;
   th_subscription_t *s;
   streaming_message_t *sm;
   streaming_start_t *ss;
@@ -762,9 +773,9 @@ subscription_create_from_mux(mpegts_mux_t *mm, profile_t *pro,
   }
 
   /* Create subscription */
-  if (!st)
+  if (!prch->prch_st)
     flags |= SUBSCRIPTION_NONE;
-  s = subscription_create(pro, weight, name, st, flags, NULL,
+  s = subscription_create(prch, weight, name, flags, NULL,
                           hostname, username, client);
   s->ths_mmi = mm->mm_active;
 
@@ -784,7 +795,7 @@ subscription_create_from_mux(mpegts_mux_t *mm, profile_t *pro,
   LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
 
   /* Connect */
-  if (st)
+  if (prch->prch_st)
     streaming_target_connect(&s->ths_mmi->mmi_streaming_pad, &s->ths_input);
 
   /* Deliver a start message */
@@ -1057,6 +1068,7 @@ void
 subscription_dummy_join(const char *id, int first)
 {
   service_t *t = service_find_by_identifier(id);
+  profile_chain_t *prch;
   streaming_target_t *st;
   th_subscription_t *s;
 
@@ -1073,9 +1085,12 @@ subscription_dummy_join(const char *id, int first)
     return;
   }
 
-  st = calloc(1, sizeof(streaming_target_t));
+  prch = calloc(1, sizeof(*prch));
+  prch->prch_id = t;
+  st = calloc(1, sizeof(*st));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  s = subscription_create_from_service(t, NULL, 1, "dummy", st, 0, NULL, NULL, "dummy");
+  prch->prch_st = st;
+  s = subscription_create_from_service(prch, 1, "dummy", 0, NULL, NULL, "dummy");
 
   tvhlog(LOG_NOTICE, "subscription",
          "%04X: Dummy join %s ok", shortid(s), id);

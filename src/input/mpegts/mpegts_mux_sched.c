@@ -22,6 +22,7 @@
 #include "input/mpegts/mpegts_mux_sched.h"
 #include "streaming.h"
 #include "settings.h"
+#include "profile.h"
 
 static void mpegts_mux_sched_timer ( void *p );
 static void mpegts_mux_sched_input ( void *p, streaming_message_t *sm );
@@ -204,10 +205,14 @@ mpegts_mux_sched_timer ( void *p )
   if (!mms->mms_active) {
     assert(mms->mms_sub == NULL);
 
+    if (!mms->mms_prch)
+      mms->mms_prch = calloc(1, sizeof(mms->mms_prch));
+    mms->mms_prch->prch_id = mm;
+    mms->mms_prch->prch_st = &mms->mms_input;
+
     mms->mms_sub
-      = subscription_create_from_mux(mm, NULL, mms->mms_weight,
+      = subscription_create_from_mux(mms->mms_prch, mms->mms_weight,
                                      mms->mms_creator ?: "",
-                                     &mms->mms_input,
                                      SUBSCRIPTION_NONE,
                                      NULL, NULL, NULL, NULL);
 
@@ -311,6 +316,7 @@ mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf )
   free(mms->mms_cronstr);
   free(mms->mms_mux);
   free(mms->mms_creator);
+  free(mms->mms_prch);
   free(mms);
 }
 

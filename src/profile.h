@@ -51,6 +51,8 @@ extern profile_builders_queue profile_builders;
 #define PRCH_FLAG_TSFIX       (1<<1)
 
 typedef struct profile_chain {
+  struct profile          *prch_pro;
+  void                    *prch_id;
   int                      prch_flags;
   struct streaming_queue   prch_sq;
   struct streaming_target *prch_st;
@@ -69,6 +71,8 @@ typedef struct profile {
   idnode_t pro_id;
   TAILQ_ENTRY(profile) pro_link;
 
+  int pro_refcount;
+
   LIST_HEAD(,dvr_config) pro_dvr_configs;
   LIST_HEAD(,access_entry) pro_accesses;
 
@@ -83,10 +87,9 @@ typedef struct profile {
   void (*pro_conf_changed)(struct profile *pro);
   muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
-  int (*pro_work)(struct profile *pro, profile_chain_t *prch,
-                  void *id, struct streaming_target *dst,
+  int (*pro_work)(profile_chain_t *prch, struct streaming_target *dst,
                   uint32_t timeshift_period, int flags);
-  int (*pro_open)(struct profile *pro, profile_chain_t *prch, void *id,
+  int (*pro_open)(profile_chain_t *prch,
                   muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
 
@@ -95,17 +98,24 @@ void profile_register(const idclass_t *clazz, profile_builder_t builder);
 profile_t *profile_create
   (const char *uuid, htsmsg_t *conf, int save);
 
-static inline int
-profile_work(profile_t *pro, profile_chain_t *prch,
-             void *id, struct streaming_target *dst,
-             uint32_t timeshift_period, int flags)
-  { return pro && pro->pro_work ? pro->pro_work(pro, prch, id, dst, timeshift_period, flags) : -1; }
+static inline void profile_grab( profile_t *pro )
+  { pro->pro_refcount++; }
 
-static inline int
-profile_chain_open(profile_t *pro, profile_chain_t *prch, void *id,
-                   muxer_config_t *m_cfg, int flags, size_t qsize)
-  { return pro && pro->pro_open ? pro->pro_open(pro, prch, id, m_cfg, flags, qsize) : -1; }
-int  profile_chain_raw_open(profile_chain_t *prch, size_t qsize);
+void profile_release_( profile_t *pro );
+static inline void profile_release( profile_t *pro )
+  {
+    assert(pro->pro_refcount > 0);
+    if (--pro->pro_refcount == 0) profile_release_(pro);
+  }
+
+int
+profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
+                   uint32_t timeshift_period, int flags);
+int
+profile_chain_open(profile_chain_t *prch,
+                   muxer_config_t *m_cfg, int flags, size_t qsize);
+void profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id);
+int  profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize);
 void profile_chain_close(profile_chain_t *prch);
 
 static inline profile_t *profile_find_by_uuid(const char *uuid)

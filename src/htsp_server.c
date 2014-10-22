@@ -1762,7 +1762,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 #endif
 
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
-  if (!profile_work(pro, &hs->hs_prch, ch, &hs->hs_input, timeshiftPeriod, pflags)) {
+  profile_chain_init(&hs->hs_prch, pro, ch);
+  if (!profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, pflags)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
     free(hs);
     return htsp_error("Stream setup error");
@@ -1795,9 +1796,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
   tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
-  hs->hs_s = subscription_create_from_channel(ch, pro, weight,
+  hs->hs_s = subscription_create_from_channel(&hs->hs_prch, weight,
 					      htsp->htsp_logname,
-					      hs->hs_prch.prch_st,
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
 					      htsp->htsp_username,

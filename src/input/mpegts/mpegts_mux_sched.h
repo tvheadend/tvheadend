@@ -25,6 +25,8 @@
 #include "idnode.h"
 #include "subscriptions.h"
 
+struct profile_chain;
+
 typedef LIST_HEAD(,mpegts_mux_sched) mpegts_mux_sched_list_t;
 
 extern mpegts_mux_sched_list_t mpegts_mux_sched_all;
@@ -57,8 +59,9 @@ typedef struct mpegts_mux_sched
   /*
    * Subscription
    */
-  th_subscription_t  *mms_sub;      ///< Subscription handler
-  streaming_target_t  mms_input;    ///< Streaming input
+  struct profile_chain *mms_prch;     ///< Dummy profile chain
+  th_subscription_t    *mms_sub;      ///< Subscription handler
+  streaming_target_t    mms_input;    ///< Streaming input
 
 } mpegts_mux_sched_t;
 

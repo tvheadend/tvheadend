@@ -23,6 +23,7 @@
 #include "subscriptions.h"
 #include "channels.h"
 #include "access.h"
+#include "profile.h"
 #include "dvb_charset.h"
 
 #include <assert.h>
@@ -1090,8 +1091,11 @@ mpegts_mux_subscribe
   ( mpegts_mux_t *mm, const char *name, int weight )
 {
   int err = 0;
+  profile_chain_t prch;
   th_subscription_t *s;
-  s = subscription_create_from_mux(mm, NULL, weight, name, NULL,
+  memset(&prch, 0, sizeof(prch));
+  prch.prch_id = mm;
+  s = subscription_create_from_mux(&prch, weight, name,
                                    SUBSCRIPTION_NONE,
                                    NULL, NULL, NULL, &err);
   return s ? 0 : err;

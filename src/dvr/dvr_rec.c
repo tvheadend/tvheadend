@@ -78,15 +78,15 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   pro = de->de_config->dvr_profile;
   prch = malloc(sizeof(*prch));
-  if (profile_chain_open(pro, prch, de->de_channel, &de->de_config->dvr_muxcnf, 0, 0)) {
+  profile_chain_init(prch, pro, de->de_channel);
+  if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
     tvherror("dvr", "unable to create new channel streaming chain for '%s'",
              channel_get_name(de->de_channel));
     return;
   }
 
-  de->de_s = subscription_create_from_channel(de->de_channel, pro, weight,
-					      buf, prch->prch_st,
-					      prch->prch_flags,
+  de->de_s = subscription_create_from_channel(prch, weight,
+					      buf, prch->prch_flags,
 					      NULL, NULL, NULL);
   if (de->de_s == NULL) {
     tvherror("dvr", "unable to create new channel subcription for '%s'",

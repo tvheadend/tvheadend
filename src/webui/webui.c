@@ -732,12 +732,12 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   else
     qsize = 1500000;
 
-  if (!profile_chain_open(pro, &prch, service, NULL, 0, qsize)) {
+  profile_chain_init(&prch, pro, service);
+  if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_service(service, pro, weight ?: 100, "HTTP",
-                                         prch.prch_st,
+    s = subscription_create_from_service(&prch, weight ?: 100, "HTTP",
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
                                          addrbuf,
 				         hc->hc_username,
@@ -786,12 +786,11 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   else
     qsize = 10000000;
 
-  if (!profile_chain_raw_open(&prch, qsize)) {
+  if (!profile_chain_raw_open(&prch, mm, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_mux(mm, NULL, weight ?: 10, "HTTP",
-                                     prch.prch_st,
+    s = subscription_create_from_mux(&prch, weight ?: 10, "HTTP",
                                      prch.prch_flags |
                                      SUBSCRIPTION_FULLMUX |
                                      SUBSCRIPTION_STREAMING,
@@ -846,12 +845,13 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   else
     qsize = 1500000;
 
-  if (!profile_chain_open(pro, &prch, ch, NULL, 0, qsize)) {
+  profile_chain_init(&prch, pro, ch);
+  if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_channel(ch, pro, weight ?: 100, "HTTP",
-                 prch.prch_st, prch.prch_flags | SUBSCRIPTION_STREAMING,
+    s = subscription_create_from_channel(&prch, weight ?: 100, "HTTP",
+                 prch.prch_flags | SUBSCRIPTION_STREAMING,
                  addrbuf, hc->hc_username,
                  http_arg_get(&hc->hc_args, "User-Agent"));
 

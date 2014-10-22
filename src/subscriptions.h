@@ -21,7 +21,7 @@
 
 #include "service.h"
 
-struct profile;
+struct profile_chain;
 
 extern struct th_subscription_list subscriptions;
 
@@ -46,6 +46,9 @@ typedef struct th_subscription {
   
   LIST_ENTRY(th_subscription) ths_global_link;
   LIST_ENTRY(th_subscription) ths_remove_link;
+
+  struct profile_chain *ths_prch;
+
   int ths_weight;
 
   enum {
@@ -127,11 +130,9 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 void subscription_reschedule(void);
 
 th_subscription_t *
-subscription_create_from_channel(struct channel *ch,
-                                 struct profile *pro,
+subscription_create_from_channel(struct profile_chain *prch,
 				 unsigned int weight,
 				 const char *name,
-				 streaming_target_t *st,
 				 int flags,
 				 const char *hostname,
 				 const char *username,
@@ -139,11 +140,9 @@ subscription_create_from_channel(struct channel *ch,
 
 
 th_subscription_t *
-subscription_create_from_service(struct service *t,
-                                 struct profile *pro,
+subscription_create_from_service(struct profile_chain *prch,
                                  unsigned int weight,
 				 const char *name,
-				 streaming_target_t *st,
 				 int flags,
 				 const char *hostname,
 				 const char *username,
@@ -152,20 +151,17 @@ subscription_create_from_service(struct service *t,
 #if ENABLE_MPEGTS
 struct mpegts_mux;
 th_subscription_t *
-subscription_create_from_mux(struct mpegts_mux *m,
-                             struct profile *pro,
+subscription_create_from_mux(struct profile_chain *prch,
                              unsigned int weight,
                              const char *name,
-                             streaming_target_t *st,
                              int flags,
                              const char *hostname,
                              const char *username,
                              const char *client, int *err);
 #endif
 
-th_subscription_t *subscription_create(struct profile *pro,
+th_subscription_t *subscription_create(struct profile_chain *prch,
                                        int weight, const char *name,
-				       streaming_target_t *st,
 				       int flags, st_callback_t *cb,
 				       const char *hostname,
 				       const char *username,

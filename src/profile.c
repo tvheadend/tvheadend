@@ -99,12 +99,23 @@ profile_create
     if (!htsmsg_get_bool(conf, "shield", &b))
       pro->pro_shield = !!b;
   }
+  pro->pro_refcount = 1;
   TAILQ_INSERT_TAIL(&profiles, pro, pro_link);
   if (save)
     profile_class_save((idnode_t *)pro);
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);
   return pro;
+}
+
+void
+profile_release_(profile_t *pro)
+{
+  if (pro->pro_free)
+    pro->pro_free(pro);
+  free(pro->pro_name);
+  free(pro->pro_comment);
+  free(pro);
 }
 
 static void
@@ -119,11 +130,7 @@ profile_delete(profile_t *pro, int delconf)
   idnode_unlink(&pro->pro_id);
   dvr_config_destroy_by_profile(pro, delconf);
   access_destroy_by_profile(pro, delconf);
-  if (pro->pro_free)
-    pro->pro_free(pro);
-  free(pro->pro_name);
-  free(pro->pro_comment);
-  free(pro);
+  profile_release(pro);
 }
 
 static void
@@ -430,14 +437,55 @@ profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter)
 /*
  *
  */
+void
+profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id)
+{
+  memset(prch, 0, sizeof(*prch));
+  if (pro)
+    profile_grab(pro);
+  prch->prch_pro = pro;
+  prch->prch_id  = id;
+  streaming_queue_init(&prch->prch_sq, 0, 0);
+}
+
+/*
+ *
+ */
 int
-profile_chain_raw_open(profile_chain_t *prch, size_t qsize)
+profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
+                   uint32_t timeshift_period, int flags)
+{
+  profile_t *pro = prch->prch_pro;
+  if (pro && pro->pro_work)
+    return pro->pro_work(prch, dst, timeshift_period, flags);
+  return -1;
+}
+
+/*
+ *
+ */
+int
+profile_chain_open(profile_chain_t *prch,
+                   muxer_config_t *m_cfg, int flags, size_t qsize)
+{
+  profile_t *pro = prch->prch_pro;
+  if (pro && pro->pro_open)
+    return pro->pro_open(prch, m_cfg, flags, qsize);
+  return -1;
+}
+
+/*
+ *
+ */
+int
+profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize)
 {
   muxer_config_t c;
 
   memset(&c, 0, sizeof(c));
   c.m_type = MC_RAW;
   memset(prch, 0, sizeof(*prch));
+  prch->prch_id    = id;
   prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
   streaming_queue_init(&prch->prch_sq, SMT_PACKET, qsize);
   prch->prch_st    = &prch->prch_sq.sq_st;
@@ -467,6 +515,8 @@ profile_chain_close(profile_chain_t *prch)
     muxer_destroy(prch->prch_muxer);
   streaming_queue_deinit(&prch->prch_sq);
   prch->prch_st = NULL;
+  if (prch->prch_pro)
+    profile_release(prch->prch_pro);
 }
 
 /*
@@ -484,13 +534,10 @@ const idclass_t profile_htsp_class =
 };
 
 static int
-profile_htsp_work(profile_t *_pro, profile_chain_t *prch,
-                  void *id, streaming_target_t *dst,
+profile_htsp_work(profile_chain_t *prch,
+                  streaming_target_t *dst,
                   uint32_t timeshift_period, int flags)
 {
-  if (!(flags & PRCH_FLAG_SKIPZEROING))
-    memset(prch, 0, sizeof(*prch));
-
   if (flags & PRCH_FLAG_TSFIX)
     dst = prch->prch_tsfix = tsfix_create(prch->prch_transcoder);
 
@@ -548,10 +595,10 @@ const idclass_t profile_mpegts_pass_class =
 };
 
 static int
-profile_mpegts_pass_open(profile_t *_pro, profile_chain_t *prch, void *id,
+profile_mpegts_pass_open(profile_chain_t *prch,
                          muxer_config_t *m_cfg, int flags, size_t qsize)
 {
-  profile_mpegts_t *pro = (profile_mpegts_t *)_pro;
+  profile_mpegts_t *pro = (profile_mpegts_t *)prch->prch_pro;
   muxer_config_t c;
 
   if (m_cfg)
@@ -563,7 +610,6 @@ profile_mpegts_pass_open(profile_t *_pro, profile_chain_t *prch, void *id,
   c.m_rewrite_pat = pro->pro_rewrite_pat;
   c.m_rewrite_pmt = pro->pro_rewrite_pmt;
 
-  memset(prch, 0, sizeof(*prch));
   prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
   streaming_queue_init(&prch->prch_sq, SMT_PACKET, qsize);
   prch->prch_muxer = muxer_create(&c);
@@ -612,10 +658,10 @@ const idclass_t profile_matroska_class =
 };
 
 static int
-profile_matroska_open(profile_t *_pro, profile_chain_t *prch, void *id,
+profile_matroska_open(profile_chain_t *prch,
                       muxer_config_t *m_cfg, int flags, size_t qsize)
 {
-  profile_matroska_t *pro = (profile_matroska_t *)_pro;
+  profile_matroska_t *pro = (profile_matroska_t *)prch->prch_pro;
   muxer_config_t c;
 
   if (m_cfg)
@@ -627,7 +673,6 @@ profile_matroska_open(profile_t *_pro, profile_chain_t *prch, void *id,
   if (pro->pro_webm)
     c.m_type = MC_WEBM;
 
-  memset(prch, 0, sizeof(*prch));
   streaming_queue_init(&prch->prch_sq, 0, qsize);
   prch->prch_gh    = globalheaders_create(&prch->prch_sq.sq_st);
   prch->prch_tsfix = tsfix_create(prch->prch_gh);
@@ -883,11 +928,11 @@ const idclass_t profile_transcode_class =
 };
 
 static int
-profile_transcode_work(profile_t *_pro, profile_chain_t *prch,
-                       void *id, streaming_target_t *dst,
+profile_transcode_work(profile_chain_t *prch,
+                       streaming_target_t *dst,
                        uint32_t timeshift_period, int flags)
 {
-  profile_transcode_t *pro = (profile_transcode_t *)_pro;
+  profile_transcode_t *pro = (profile_transcode_t *)prch->prch_pro;
   transcoder_props_t props;
 
   memset(&props, 0, sizeof(props));
@@ -898,9 +943,6 @@ profile_transcode_work(profile_t *_pro, profile_chain_t *prch,
   props.tp_channels   = pro->pro_channels;
   props.tp_bandwidth  = pro->pro_bandwidth >= 64 ? pro->pro_bandwidth : 64;
   strncpy(props.tp_language, pro->pro_language ?: "", 3);
-
-  if (!(flags & PRCH_FLAG_SKIPZEROING))
-    memset(prch, 0, sizeof(*prch));
 
 #if ENABLE_TIMESHIFT
   if (timeshift_period > 0)
@@ -935,10 +977,10 @@ profile_transcode_mc_valid(int mc)
 }
 
 static int
-profile_transcode_open(profile_t *_pro, profile_chain_t *prch, void *id,
+profile_transcode_open(profile_chain_t *prch,
                        muxer_config_t *m_cfg, int flags, size_t qsize)
 {
-  profile_transcode_t *pro = (profile_transcode_t *)_pro;
+  profile_transcode_t *pro = (profile_transcode_t *)prch->prch_pro;
   muxer_config_t c;
   int r;
 
@@ -952,12 +994,10 @@ profile_transcode_open(profile_t *_pro, profile_chain_t *prch, void *id,
       c.m_type = MC_MATROSKA;
   }
 
-  memset(prch, 0, sizeof(*prch));
-
   streaming_queue_init(&prch->prch_sq, 0, qsize);
   prch->prch_gh = globalheaders_create(&prch->prch_sq.sq_st);
 
-  r = profile_transcode_work(_pro, prch, prch->prch_gh, id, 0,
+  r = profile_transcode_work(prch, prch->prch_gh, 0,
                              PRCH_FLAG_SKIPZEROING | PRCH_FLAG_TSFIX);
   if (r)
     return r;

@@ -329,13 +329,15 @@ static void *
 service_mapper_thread ( void *aux )
 {
   service_t *s;
+  profile_chain_t prch;
   th_subscription_t *sub;
   int run, working = 0;
-  streaming_queue_t sq;
+  streaming_queue_t *sq;
   streaming_message_t *sm;
   const char *err = NULL;
 
-  streaming_queue_init(&sq, 0, 0);
+  profile_chain_init(&prch, NULL, NULL);
+  sq = &prch.prch_sq;
 
   pthread_mutex_lock(&global_lock);
 
@@ -362,8 +364,9 @@ service_mapper_thread ( void *aux )
 
     /* Subscribe */
     tvhinfo("service_mapper", "checking %s", s->s_nicename);
-    sub = subscription_create_from_service(s, NULL, SUBSCRIPTION_PRIO_MAPPER,
-                                           "service_mapper", &sq.sq_st,
+    prch.prch_id = s;
+    sub = subscription_create_from_service(&prch, SUBSCRIPTION_PRIO_MAPPER,
+                                           "service_mapper",
                                            0, NULL, NULL, "service_mapper");
 
     /* Failed */
@@ -380,20 +383,20 @@ service_mapper_thread ( void *aux )
 
     /* Wait */
     run = 1;
-    pthread_mutex_lock(&sq.sq_mutex);
+    pthread_mutex_lock(&sq->sq_mutex);
     while(tvheadend_running && run) {
 
       /* Wait for message */
-      while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL) {
-        pthread_cond_wait(&sq.sq_cond, &sq.sq_mutex);
+      while((sm = TAILQ_FIRST(&sq->sq_queue)) == NULL) {
+        pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
         if (!tvheadend_running)
           break;
       }
       if (!tvheadend_running)
         break;
 
-      TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
-      pthread_mutex_unlock(&sq.sq_mutex);
+      TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+      pthread_mutex_unlock(&sq->sq_mutex);
 
       if(sm->sm_type == SMT_PACKET) {
         run = 0;
@@ -411,13 +414,13 @@ service_mapper_thread ( void *aux )
       }
 
       streaming_msg_free(sm);
-      pthread_mutex_lock(&sq.sq_mutex);
+      pthread_mutex_lock(&sq->sq_mutex);
     }
     if (!tvheadend_running)
       break;
 
-    streaming_queue_clear(&sq.sq_queue);
-    pthread_mutex_unlock(&sq.sq_mutex);
+    streaming_queue_clear(&sq->sq_queue);
+    pthread_mutex_unlock(&sq->sq_mutex);
  
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(sub);
@@ -434,6 +437,7 @@ service_mapper_thread ( void *aux )
   }
 
   pthread_mutex_unlock(&global_lock);
+  profile_chain_close(&prch);
   return NULL;
 }
 
