@@ -47,9 +47,9 @@ tvheadend.tvhlog = function(panel, index) {
      * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
-        iconCls: 'save',
+        text: "Apply configuration (run-time only)",
+        tooltip: 'Apply changes made bellow to the run-time configuration<br/>They will be lost on restart.',
+        iconCls: 'apply',
         handler: saveChanges
     });
 
@@ -109,9 +109,9 @@ tvheadend.tvhlog = function(panel, index) {
             params: {
                 op: 'saveSettings'
             },
-            waitMsg: 'Saving Data...',
+            waitMsg: 'Applying Data...',
             failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
+                Ext.Msg.alert('Apply failed', action.result.errormsg);
             }
         });
     }
