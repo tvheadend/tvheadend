@@ -450,6 +450,10 @@
     background-image: url(../icons/subscriptions.png) !important;
 }
 
+.reseticon{
+    background-image: url(../icons/reseticon.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
