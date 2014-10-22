@@ -301,7 +301,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   uint32_t u32;
 
   if(op == NULL)
-    return 400;
+    return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
 
@@ -464,7 +464,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
   const char *str;
 
   if(op == NULL)
-    return 400;
+    return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
 
@@ -549,7 +549,7 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *out, *m;
 
   if(op == NULL)
-    return 400;
+    return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
 
@@ -654,7 +654,7 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
   const char *str;
 
   if(op == NULL)
-    return 400;
+    return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
 

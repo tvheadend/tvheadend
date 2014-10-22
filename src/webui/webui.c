@@ -161,7 +161,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   const char *gzip;
 
   if(remain == NULL)
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
 
   if(strstr(remain, ".."))
     return HTTP_STATUS_BAD_REQUEST;
@@ -181,7 +181,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   fb_file *fp = fb_open(path, 0, 1);
   if (!fp) {
     tvhlog(LOG_ERR, "webui", "failed to open %s", path);
-    return 500;
+    return HTTP_STATUS_INTERNAL;
   }
   size = fb_size(fp);
   gzip = fb_gzipped(fp) ? "gzip" : NULL;
@@ -190,11 +190,11 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   while (!fb_eof(fp)) {
     ssize_t c = fb_read(fp, buf, sizeof(buf));
     if (c < 0) {
-      ret = 500;
+      ret = HTTP_STATUS_INTERNAL;
       break;
     }
     if (tvh_write(hc->hc_fd, buf, c)) {
-      ret = 500;
+      ret = HTTP_STATUS_INTERNAL;
       break;
     }
   }
@@ -412,6 +412,10 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   const char *host;
   char *profile;
 
+  if(hc->hc_access == NULL ||
+     access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return HTTP_STATUS_NOT_ALLOWED;
+
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
 
@@ -446,6 +450,10 @@ http_tag_list_playlist(http_connection_t *hc)
   channel_tag_t *ct;
   const char *host;
   char *profile;
+
+  if(hc->hc_access == NULL ||
+     access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return HTTP_STATUS_NOT_ALLOWED;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -494,6 +502,10 @@ http_channel_list_playlist(http_connection_t *hc)
   const char *host;
   int idx = 0, count = 0;
   char *profile;
+
+  if(hc->hc_access == NULL ||
+     access_verify2(hc->hc_access, ACCESS_STREAMING))
+    return HTTP_STATUS_NOT_ALLOWED;
 
   hq = &hc->hc_reply;
   host = http_arg_get(&hc->hc_args, "Host");
@@ -602,6 +614,9 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   struct tm tm;  
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
+  if(http_access_verify(hc, ACCESS_RECORDER))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
     
   fsize = dvr_get_filesize(de);
@@ -624,7 +639,6 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
     http_output_content(hc, "application/x-mpegURL");
   } else {
-    http_error(hc, HTTP_STATUS_NOT_FOUND);
     return HTTP_STATUS_NOT_FOUND;
   }
 
@@ -650,10 +664,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   nc = http_tokenize((char *)remain, components, 2, '/');
-  if(!nc) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+  if(!nc)
     return HTTP_STATUS_BAD_REQUEST;
-  }
 
   if(nc == 2)
     http_deescape(components[1]);
@@ -690,7 +702,6 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   else if(!strcmp(components[0], "recordings"))
     r = http_dvr_list_playlist(hc);
   else {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
     r = HTTP_STATUS_BAD_REQUEST;
   }
 
@@ -894,15 +905,11 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 
   hc->hc_keep_alive = 0;
 
-  if(remain == NULL) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+  if(remain == NULL)
     return HTTP_STATUS_BAD_REQUEST;
-  }
 
-  if(http_tokenize((char *)remain, components, 2, '/') != 2) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+  if(http_tokenize((char *)remain, components, 2, '/') != 2)
     return HTTP_STATUS_BAD_REQUEST;
-  }
 
   http_deescape(components[1]);
 
@@ -937,7 +944,6 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return http_stream_mux(hc, mm, weight);
 #endif
   } else {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   }
 }
@@ -1035,7 +1041,13 @@ page_play(http_connection_t *hc, const char *remain, void *opaque)
   char *playlist;
 
   if(remain == NULL)
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
+
+  if(hc->hc_access == NULL ||
+     (access_verify2(hc->hc_access, ACCESS_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+    return HTTP_STATUS_NOT_ALLOWED;
 
   playlist = http_arg_get(&hc->hc_req_args, "playlist");
   if (playlist) {
@@ -1072,7 +1084,13 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 #endif
   
   if(remain == NULL)
-    return 404;
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if(hc->hc_access == NULL ||
+     (access_verify2(hc->hc_access, ACCESS_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+    return HTTP_STATUS_NOT_ALLOWED;
 
   pthread_mutex_lock(&global_lock);
 
@@ -1081,7 +1099,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
     pthread_mutex_unlock(&global_lock);
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
   }
 
   fname = strdup(de->de_filename);
@@ -1106,11 +1124,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   fd = tvh_open(fname, O_RDONLY, 0);
   free(fname);
   if(fd < 0)
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
 
   if(fstat(fd, &st) < 0) {
     close(fd);
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
   }
 
   file_start = 0;
@@ -1123,16 +1141,16 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   //Sanity checks
   if(file_start < 0 || file_start >= st.st_size) {
     close(fd);
-    return 200;
+    return HTTP_STATUS_OK;
   }
   if(file_end < 0 || file_end >= st.st_size) {
     close(fd);
-    return 200;
+    return HTTP_STATUS_OK;
   }
 
   if(file_start > file_end) {
     close(fd);
-    return 200;
+    return HTTP_STATUS_OK;
   }
 
   content_len = file_end - file_start+1;
@@ -1141,7 +1159,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     file_start, file_end, (size_t)st.st_size);
 
   if(file_start > 0)
-    lseek(fd, file_start, SEEK_SET);
+    if (lseek(fd, file_start, SEEK_SET)) {
+      close(fd);
+      return HTTP_STATUS_INTERNAL;
+    }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
@@ -1159,9 +1180,9 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       r = chunk;
       sendfile(fd, hc->hc_fd, 0, NULL, &r, 0);
 #endif
-      if(r == -1) {
-  close(fd);
-  return -1;
+      if(r < 0) {
+        close(fd);
+        return -1;
       }
       content_len -= r;
     }
@@ -1186,12 +1207,14 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
   ssize_t c;
 
   if(remain == NULL)
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
 
   if(hc->hc_access == NULL ||
      (access_verify2(hc->hc_access, ACCESS_WEB_INTERFACE) &&
-      access_verify2(hc->hc_access, ACCESS_STREAMING)))
-    return 405;
+      access_verify2(hc->hc_access, ACCESS_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
+      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+    return HTTP_STATUS_NOT_ALLOWED;
 
   if(sscanf(remain, "%d", &id) != 1)
     return HTTP_STATUS_BAD_REQUEST;
@@ -1203,10 +1226,10 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
 
   /* Check result */
   if (fd < 0)
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
   if (fstat(fd, &st)) {
     close(fd);
-    return 404;
+    return HTTP_STATUS_NOT_FOUND;
   }
 
   http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL);
@@ -1262,10 +1285,10 @@ webui_init(int xspf)
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
 
-  http_path_add_modify("/play", NULL, page_play, ACCESS_WEB_INTERFACE, page_play_path_modify);
-  http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
+  http_path_add_modify("/play", NULL, page_play, ACCESS_ANONYMOUS, page_play_path_modify);
+  http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_ANONYMOUS);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
-  http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEB_INTERFACE);
+  http_path_add("/playlist", NULL, page_http_playlist, ACCESS_ANONYMOUS);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
