@@ -1762,7 +1762,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 #endif
 
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
-  if (!profile_work(pro, &hs->hs_prch, &hs->hs_input, timeshiftPeriod, pflags)) {
+  if (!profile_work(pro, &hs->hs_prch, ch, &hs->hs_input, timeshiftPeriod, pflags)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
     free(hs);
     return htsp_error("Stream setup error");

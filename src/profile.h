@@ -84,9 +84,9 @@ typedef struct profile {
   muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
   int (*pro_work)(struct profile *pro, profile_chain_t *prch,
-                  struct streaming_target *dst,
+                  void *id, struct streaming_target *dst,
                   uint32_t timeshift_period, int flags);
-  int (*pro_open)(struct profile *pro, profile_chain_t *prch,
+  int (*pro_open)(struct profile *pro, profile_chain_t *prch, void *id,
                   muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
 
@@ -97,14 +97,14 @@ profile_t *profile_create
 
 static inline int
 profile_work(profile_t *pro, profile_chain_t *prch,
-             struct streaming_target *dst,
+             void *id, struct streaming_target *dst,
              uint32_t timeshift_period, int flags)
-  { return pro && pro->pro_work ? pro->pro_work(pro, prch, dst, timeshift_period, flags) : -1; }
+  { return pro && pro->pro_work ? pro->pro_work(pro, prch, id, dst, timeshift_period, flags) : -1; }
 
 static inline int
-profile_chain_open(profile_t *pro, profile_chain_t *prch,
+profile_chain_open(profile_t *pro, profile_chain_t *prch, void *id,
                    muxer_config_t *m_cfg, int flags, size_t qsize)
-  { return pro && pro->pro_open ? pro->pro_open(pro, prch, m_cfg, flags, qsize) : -1; }
+  { return pro && pro->pro_open ? pro->pro_open(pro, prch, id, m_cfg, flags, qsize) : -1; }
 int  profile_chain_raw_open(profile_chain_t *prch, size_t qsize);
 void profile_chain_close(profile_chain_t *prch);
 

@@ -485,7 +485,7 @@ const idclass_t profile_htsp_class =
 
 static int
 profile_htsp_work(profile_t *_pro, profile_chain_t *prch,
-                  streaming_target_t *dst,
+                  void *id, streaming_target_t *dst,
                   uint32_t timeshift_period, int flags)
 {
   if (!(flags & PRCH_FLAG_SKIPZEROING))
@@ -548,7 +548,7 @@ const idclass_t profile_mpegts_pass_class =
 };
 
 static int
-profile_mpegts_pass_open(profile_t *_pro, profile_chain_t *prch,
+profile_mpegts_pass_open(profile_t *_pro, profile_chain_t *prch, void *id,
                          muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   profile_mpegts_t *pro = (profile_mpegts_t *)_pro;
@@ -612,7 +612,7 @@ const idclass_t profile_matroska_class =
 };
 
 static int
-profile_matroska_open(profile_t *_pro, profile_chain_t *prch,
+profile_matroska_open(profile_t *_pro, profile_chain_t *prch, void *id,
                       muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   profile_matroska_t *pro = (profile_matroska_t *)_pro;
@@ -884,7 +884,7 @@ const idclass_t profile_transcode_class =
 
 static int
 profile_transcode_work(profile_t *_pro, profile_chain_t *prch,
-                       streaming_target_t *dst,
+                       void *id, streaming_target_t *dst,
                        uint32_t timeshift_period, int flags)
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
@@ -935,7 +935,7 @@ profile_transcode_mc_valid(int mc)
 }
 
 static int
-profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
+profile_transcode_open(profile_t *_pro, profile_chain_t *prch, void *id,
                        muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
@@ -957,7 +957,7 @@ profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
   streaming_queue_init(&prch->prch_sq, 0, qsize);
   prch->prch_gh = globalheaders_create(&prch->prch_sq.sq_st);
 
-  r = profile_transcode_work(_pro, prch, prch->prch_gh, 0,
+  r = profile_transcode_work(_pro, prch, prch->prch_gh, id, 0,
                              PRCH_FLAG_SKIPZEROING | PRCH_FLAG_TSFIX);
   if (r)
     return r;

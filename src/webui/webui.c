@@ -732,7 +732,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   else
     qsize = 1500000;
 
-  if (!profile_chain_open(pro, &prch, NULL, 0, qsize)) {
+  if (!profile_chain_open(pro, &prch, service, NULL, 0, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
@@ -846,7 +846,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   else
     qsize = 1500000;
 
-  if (!profile_chain_open(pro, &prch, NULL, 0, qsize)) {
+  if (!profile_chain_open(pro, &prch, ch, NULL, 0, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
