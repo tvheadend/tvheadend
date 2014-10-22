@@ -337,6 +337,7 @@ service_mapper_thread ( void *aux )
   const char *err = NULL;
 
   profile_chain_init(&prch, NULL, NULL);
+  prch.prch_st = &prch.prch_sq.sq_st;
   sq = &prch.prch_sq;
 
   pthread_mutex_lock(&global_lock);
