@@ -1400,6 +1400,18 @@ int config_set_muxconfpath ( const char *path )
   return _config_set_str("muxconfpath", path);
 }
 
+int config_get_prefer_picon ( void )
+{
+  int b = 0;
+  htsmsg_get_bool(config, "picon_prefer", &b);
+  return b;
+}
+
+int config_set_prefer_picon ( const char *str )
+{
+  return _config_set_str("picon_prefer", str);
+}
+
 const char *config_get_chicon_path ( void )
 {
   return htsmsg_get_str(config, "chiconpath");

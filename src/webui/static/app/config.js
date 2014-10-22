@@ -44,6 +44,7 @@ tvheadend.miscconf = function(panel, index) {
         'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
+        'prefer_picon',
         'chiconpath',
         'piconpath'
     ]);
@@ -132,6 +133,11 @@ tvheadend.miscconf = function(panel, index) {
     * Picons
     */
 
+    var preferPicon = new Ext.ux.form.XCheckbox({
+        name: 'prefer_picon',
+        fieldLabel: 'Prefer picons over channel name',
+    });
+
     var chiconPath = new Ext.form.TextField({
         name: 'chiconpath',
         fieldLabel: 'Channel icon path<br/>(e.g. file:///tmp/icons/%C.png or http://...)',
@@ -150,7 +156,7 @@ tvheadend.miscconf = function(panel, index) {
         autoHeight: true,
         collapsible: true,
         animCollapse: true,
-        items: [chiconPath, piconPath]
+        items: [preferPicon, chiconPath, piconPath]
     });
 
     /*
