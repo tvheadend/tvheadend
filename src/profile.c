@@ -539,7 +539,7 @@ profile_htsp_work(profile_chain_t *prch,
                   uint32_t timeshift_period, int flags)
 {
   if (flags & PRCH_FLAG_TSFIX)
-    dst = prch->prch_tsfix = tsfix_create(prch->prch_transcoder);
+    dst = prch->prch_tsfix = tsfix_create(dst);
 
   prch->prch_st = dst;
 
