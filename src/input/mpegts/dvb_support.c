@@ -270,7 +270,7 @@ dvb_get_string
     break;
 
   case 0x0c ... 0x0f:
-    return -1;
+    break;
 
   case 0x10: /* Table A.4 */
     if(srclen < 3 || src[1] != 0 || src[2] == 0 || src[2] > 0x0f)
@@ -292,13 +292,13 @@ dvb_get_string
 
   case 0x12:
   case 0x14:
-    return -1;
+    break;
 
   case 0x15:
     ic = convert_utf8;
     break;
   case 0x16 ... 0x1f:
-    return -1;
+    break;
 
   default:
     if (auto_pl_charset)
