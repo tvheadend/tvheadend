@@ -98,7 +98,7 @@ profile_work(profile_t *pro, struct streaming_target *src,
 static inline int
 profile_chain_open(profile_t *pro, profile_chain_t *prch,
                    muxer_config_t *m_cfg, int flags, size_t qsize)
-  { return pro->pro_open(pro, prch, m_cfg, flags, qsize); }
+  { return pro && pro->pro_open ? pro->pro_open(pro, prch, m_cfg, flags, qsize) : -1; }
 int  profile_chain_raw_open(profile_chain_t *prch, size_t qsize);
 void profile_chain_close(profile_chain_t *prch);
 
