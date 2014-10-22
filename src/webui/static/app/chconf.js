@@ -130,6 +130,12 @@ tvheadend.channel_tab = function(panel, index)
         sel[1].set('number', tmp);
     }
 
+    function reset_icons(ctx, e, store, sm) {
+        Ext.each(sm.getSelections(), function(channel) {
+           channel.set('icon', '');
+        });
+    }
+
     var mapButton = {
         name: 'map',
         builder: function() {
@@ -195,6 +201,19 @@ tvheadend.channel_tab = function(panel, index)
         callback: swap_numbers
     };
 
+    var iconResetButton = {
+        name: 'iconreset',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Reset (clear) the selected icon URLs',
+                iconCls: 'cancel',
+                text: 'Reset Icon',
+                disabled: false
+            });
+        },
+        callback: reset_icons
+    };
+
     tvheadend.idnode_grid(panel, {
         url: 'api/channel',
         comet: 'channel',
@@ -210,7 +229,7 @@ tvheadend.channel_tab = function(panel, index)
             create: {}
         },
         del: true,
-        tbar: [mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton],
+        tbar: [mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton, iconResetButton],
         lcol: [
             {
                 width: 50,
