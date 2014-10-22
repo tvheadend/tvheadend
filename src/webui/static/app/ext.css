@@ -446,6 +446,14 @@
     background-image: url(../icons/subscriptions.png) !important;
 }
 
+.reseticon{
+    background-image: url(../icons/reseticon.png) !important;
+}
+
+.clean{
+    background-image: url(../icons/clean.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
