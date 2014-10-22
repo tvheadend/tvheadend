@@ -1027,10 +1027,24 @@ page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
    * For curl, wget and TVHeadend do not send the playlist, stream directly
    */
   const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
-  if (strncasecmp(agent, "curl/", 5) == 0 ||
-      strncasecmp(agent, "wget/", 5) == 0)
-    return strdup(path + 5); /* note: skip the /play */
-  if (strncasecmp(agent, "TVHeadend/", 10) == 0)
+  int direct = 0;
+
+  if (strncasecmp(agent, "VLC/", 4) == 0)
+    direct = 1;
+  else if (strncasecmp(agent, "MPlayer ", 8) == 0)
+    direct = 1;
+  else if (strncasecmp(agent, "curl/", 5) == 0)
+    direct = 1;
+  else if (strncasecmp(agent, "wget/", 5) == 0)
+    direct = 1;
+  else if (strncasecmp(agent, "TVHeadend/", 10) == 0)
+    direct = 1;
+  else if (strncasecmp(agent, "Lavf/", 5) == 0) /* ffmpeg, libav */
+    direct = 1;
+  else if (strstr(agent, "shoutcastsource")) /* some media players */
+    direct = 1;
+
+  if (direct)
     return strdup(path + 5); /* note: skip the /play */
   return NULL;
 }
