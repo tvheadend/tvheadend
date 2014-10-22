@@ -27,6 +27,9 @@
 #include "lang_codes.h"
 #include "plumbing/transcoding.h"
 #endif
+#if ENABLE_TIMESHIFT
+#include "timeshift.h"
+#endif
 #include "dvr/dvr.h"
 
 profile_builders_queue profile_builders;
@@ -403,24 +406,24 @@ profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter)
   const char *uuid, *s;
 
   TAILQ_FOREACH(pro, &profiles, pro_link) {
-    if (pro->pro_work) {
-      uuid = idnode_uuid_as_str(&pro->pro_id);
-      if (filter) {
-        HTSMSG_FOREACH(f, filter) {
-          if (!(s = htsmsg_field_get_str(f)))
-            continue;
-          if (strcmp(s, uuid) == 0)
-            break;
-        }
-        if (f == NULL)
+    if (!pro->pro_work)
+      continue;
+    uuid = idnode_uuid_as_str(&pro->pro_id);
+    if (filter) {
+      HTSMSG_FOREACH(f, filter) {
+        if (!(s = htsmsg_field_get_str(f)))
           continue;
+        if (strcmp(s, uuid) == 0)
+          break;
       }
-      m = htsmsg_create_map();
-      htsmsg_add_str(m, "uuid", uuid);
-      htsmsg_add_str(m, "name", pro->pro_name ?: "");
-      htsmsg_add_str(m, "comment", pro->pro_comment ?: "");
-      htsmsg_add_msg(array, NULL, m);
+      if (f == NULL)
+        continue;
     }
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "uuid", uuid);
+    htsmsg_add_str(m, "name", pro->pro_name ?: "");
+    htsmsg_add_str(m, "comment", pro->pro_comment ?: "");
+    htsmsg_add_msg(array, NULL, m);
   }
 }
 
@@ -448,6 +451,10 @@ profile_chain_raw_open(profile_chain_t *prch, size_t qsize)
 void
 profile_chain_close(profile_chain_t *prch)
 {
+#if ENABLE_TIMESHIFT
+  if (prch->prch_timeshift)
+    timeshift_destroy(prch->prch_timeshift);
+#endif
   if (prch->prch_tsfix)
     tsfix_destroy(prch->prch_tsfix);
   if (prch->prch_gh)
@@ -459,6 +466,7 @@ profile_chain_close(profile_chain_t *prch)
   if (prch->prch_muxer)
     muxer_destroy(prch->prch_muxer);
   streaming_queue_deinit(&prch->prch_sq);
+  prch->prch_st = NULL;
 }
 
 /*
@@ -475,6 +483,22 @@ const idclass_t profile_htsp_class =
   }
 };
 
+static int
+profile_htsp_work(profile_t *_pro, profile_chain_t *prch,
+                  streaming_target_t *dst,
+                  uint32_t timeshift_period, int flags)
+{
+  if (!(flags & PRCH_FLAG_SKIPZEROING))
+    memset(prch, 0, sizeof(*prch));
+
+  if (flags & PRCH_FLAG_TSFIX)
+    dst = prch->prch_tsfix = tsfix_create(prch->prch_transcoder);
+
+  prch->prch_st = dst;
+
+  return 0;
+}
+
 static muxer_container_type_t
 profile_htsp_get_mc(profile_t *_pro)
 {
@@ -485,7 +509,7 @@ static profile_t *
 profile_htsp_builder(void)
 {
   profile_t *pro = calloc(1, sizeof(*pro));
-  pro->pro_open   = NULL;
+  pro->pro_work   = profile_htsp_work;
   pro->pro_get_mc = profile_htsp_get_mc;
   return pro;
 }
@@ -605,7 +629,7 @@ profile_matroska_open(profile_t *_pro, profile_chain_t *prch,
 
   memset(prch, 0, sizeof(*prch));
   streaming_queue_init(&prch->prch_sq, 0, qsize);
-  prch->prch_gh = globalheaders_create(&prch->prch_sq.sq_st);
+  prch->prch_gh    = globalheaders_create(&prch->prch_sq.sq_st);
   prch->prch_tsfix = tsfix_create(prch->prch_gh);
   prch->prch_muxer = muxer_create(&c);
   prch->prch_st    = prch->prch_tsfix;
@@ -858,20 +882,13 @@ const idclass_t profile_transcode_class =
   }
 };
 
-static void
-profile_transcode_work_destroy(streaming_target_t *st)
-{
-  if (st)
-    transcoder_destroy(st);
-}
-
-static streaming_target_t *
-profile_transcode_work(profile_t *_pro, streaming_target_t *src,
-                       void (**destroy)(streaming_target_t *st))
+static int
+profile_transcode_work(profile_t *_pro, profile_chain_t *prch,
+                       streaming_target_t *dst,
+                       uint32_t timeshift_period, int flags)
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
   transcoder_props_t props;
-  streaming_target_t *st;
 
   memset(&props, 0, sizeof(props));
   strncpy(props.tp_vcodec, pro->pro_vcodec ?: "", sizeof(props.tp_vcodec)-1);
@@ -882,13 +899,24 @@ profile_transcode_work(profile_t *_pro, streaming_target_t *src,
   props.tp_bandwidth  = pro->pro_bandwidth >= 64 ? pro->pro_bandwidth : 64;
   strncpy(props.tp_language, pro->pro_language ?: "", 3);
 
-  if (destroy)
-    *destroy = profile_transcode_work_destroy;
+  if (!(flags & PRCH_FLAG_SKIPZEROING))
+    memset(prch, 0, sizeof(*prch));
 
-  st = transcoder_create(src);
-  if (st)
-    transcoder_set_properties(st, &props);
-  return st;
+#if ENABLE_TIMESHIFT
+  if (timeshift_period > 0)
+    dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
+#endif
+  dst = prch->prch_transcoder = transcoder_create(dst);
+  if (!dst) {
+    profile_chain_close(prch);
+    return -1;
+  }
+  transcoder_set_properties(dst, &props);
+  prch->prch_tsfix = tsfix_create(dst);
+
+  prch->prch_st = prch->prch_tsfix;
+
+  return 0;
 }
 
 static int
@@ -912,6 +940,7 @@ profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
   muxer_config_t c;
+  int r;
 
   if (m_cfg)
     c = *m_cfg; /* do not alter the original parameter */
@@ -924,12 +953,16 @@ profile_transcode_open(profile_t *_pro, profile_chain_t *prch,
   }
 
   memset(prch, 0, sizeof(*prch));
+
   streaming_queue_init(&prch->prch_sq, 0, qsize);
-  prch->prch_gh         = globalheaders_create(&prch->prch_sq.sq_st);
-  prch->prch_transcoder = profile_transcode_work(_pro, prch->prch_gh, NULL);
-  prch->prch_tsfix      = tsfix_create(prch->prch_transcoder);
-  prch->prch_muxer      = muxer_create(&c);
-  prch->prch_st         = prch->prch_tsfix;
+  prch->prch_gh = globalheaders_create(&prch->prch_sq.sq_st);
+
+  r = profile_transcode_work(_pro, prch, prch->prch_gh, 0,
+                             PRCH_FLAG_SKIPZEROING | PRCH_FLAG_TSFIX);
+  if (r)
+    return r;
+
+  prch->prch_muxer = muxer_create(&c);
   return 0;
 }
 

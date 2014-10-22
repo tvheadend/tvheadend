@@ -47,6 +47,9 @@ typedef LIST_HEAD(, profile_build) profile_builders_queue;
 
 extern profile_builders_queue profile_builders;
 
+#define PRCH_FLAG_SKIPZEROING (1<<0)
+#define PRCH_FLAG_TSFIX       (1<<1)
+
 typedef struct profile_chain {
   int                      prch_flags;
   struct streaming_queue   prch_sq;
@@ -56,6 +59,9 @@ typedef struct profile_chain {
   struct streaming_target *prch_tsfix;
 #if ENABLE_LIBAV
   struct streaming_target *prch_transcoder;
+#endif
+#if ENABLE_TIMESHIFT
+  struct streaming_target *prch_timeshift;
 #endif
 } profile_chain_t;
 
@@ -77,11 +83,11 @@ typedef struct profile {
   void (*pro_conf_changed)(struct profile *pro);
   muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
-  struct streaming_target *(*pro_work)(struct profile *pro,
-                                       struct streaming_target *src,
-                                       void (**destroy)(struct streaming_target *));
-  int  (*pro_open)(struct profile *pro, profile_chain_t *prch,
-                   muxer_config_t *m_cfg, int flags, size_t qsize);
+  int (*pro_work)(struct profile *pro, profile_chain_t *prch,
+                  struct streaming_target *dst,
+                  uint32_t timeshift_period, int flags);
+  int (*pro_open)(struct profile *pro, profile_chain_t *prch,
+                  muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
 
 void profile_register(const idclass_t *clazz, profile_builder_t builder);
@@ -89,11 +95,11 @@ void profile_register(const idclass_t *clazz, profile_builder_t builder);
 profile_t *profile_create
   (const char *uuid, htsmsg_t *conf, int save);
 
-static inline struct streaming_target *
-profile_work(profile_t *pro, struct streaming_target *src,
-             void (**destroy)(struct streaming_target *st))
-  { return pro && pro->pro_work ? pro->pro_work(pro, src, destroy) : NULL; }
-
+static inline int
+profile_work(profile_t *pro, profile_chain_t *prch,
+             struct streaming_target *dst,
+             uint32_t timeshift_period, int flags)
+  { return pro && pro->pro_work ? pro->pro_work(pro, prch, dst, timeshift_period, flags) : -1; }
 
 static inline int
 profile_chain_open(profile_t *pro, profile_chain_t *prch,

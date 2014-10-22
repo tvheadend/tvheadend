@@ -184,14 +184,7 @@ typedef struct htsp_subscription {
   th_subscription_t *hs_s; // Temporary
 
   streaming_target_t hs_input;
-  streaming_target_t *hs_tsfix;
-
-#if ENABLE_TIMESHIFT
-  streaming_target_t *hs_tshift;
-#endif
-
-  streaming_target_t *hs_work;
-  void (*hs_work_destroy)(streaming_target_t *);
+  profile_chain_t    hs_prch;
 
   htsp_msg_q_t hs_q;
 
@@ -335,16 +328,8 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 
   subscription_unsubscribe(hs->hs_s);
 
-  if(hs->hs_tsfix != NULL)
-    tsfix_destroy(hs->hs_tsfix);
-
-  if(hs->hs_work != NULL)
-    hs->hs_work_destroy(hs->hs_work);
-
-#if ENABLE_TIMESHIFT
-  if(hs->hs_tshift)
-    timeshift_destroy(hs->hs_tshift);
-#endif
+  if(hs->hs_prch.prch_st != NULL)
+    profile_chain_close(&hs->hs_prch);
 
   htsp_flush_queue(htsp, &hs->hs_q, 1);
 }
@@ -1716,13 +1701,13 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  uint32_t chid, sid, weight, req90khz, normts;
-#if ENABLE_TIMESHIFT
-  uint32_t timeshiftPeriod = 0;
-#endif
-  const char *str;
+  uint32_t chid, sid, weight, req90khz, timeshiftPeriod = 0;
+  const char *str, *profile_id;
   channel_t *ch;
+  int pflags = 0;
   htsp_subscription_t *hs;
+  profile_t *pro;
+
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
@@ -1740,7 +1725,10 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
-  normts = htsmsg_get_u32_or_default(in, "normts", 0);
+  if (htsmsg_get_u32_or_default(in, "normts", 0))
+    pflags |= PRCH_FLAG_TSFIX;
+
+  profile_id = htsmsg_get_str(in, "profile");
 
 #if ENABLE_TIMESHIFT
   if (timeshift_enabled) {
@@ -1749,27 +1737,6 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
       timeshiftPeriod = MIN(timeshiftPeriod, timeshift_max_period);
   }
 #endif
-
-  /*
-   * We send the reply now to avoid the user getting the 'subscriptionStart'
-   * async message before the reply to 'subscribe'.
-   *
-   * Send some opiotanl boolean flags back to the subscriber so it can infer
-   * if we support those
-   *
-   */
-  htsmsg_t *rep = htsmsg_create_map();
-  if(req90khz)
-    htsmsg_add_u32(rep, "90khz", 1);
-  if(normts)
-    htsmsg_add_u32(rep, "normts", 1);
-
-#if ENABLE_TIMESHIFT
-  if(timeshiftPeriod)
-    htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
-#endif
-
-  htsp_reply(htsp, in, rep);
 
   /* Initialize the HTSP subscription structure */
 
@@ -1782,10 +1749,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   htsp_init_queue(&hs->hs_q, 0);
 
   hs->hs_sid = sid;
-  LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
-
-  streaming_target_t *st = &hs->hs_input;
 
 #if ENABLE_TIMESHIFT
   if (timeshiftPeriod != 0) {
@@ -1793,32 +1757,47 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
       tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (unlimited)");
     else
       tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
-    st = hs->hs_tshift = timeshift_create(st, timeshiftPeriod);
-    normts = 1;
+    pflags |= PRCH_FLAG_TSFIX;
   }
 #endif
 
-  profile_t *pro;
-  const char *profile_id = htsmsg_get_str(in, "profile");
-  if (profile_id) {
-    pro = profile_find_by_uuid(profile_id);
-    if (pro)
-      profile_id = pro->pro_name;
-  }
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
-
-  hs->hs_work = profile_work(pro, st, &hs->hs_work_destroy);
-  if (hs->hs_work) {
-    st = hs->hs_work;
-    normts = 1;
+  if (!profile_work(pro, &hs->hs_prch, &hs->hs_input, timeshiftPeriod, pflags)) {
+    tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
+    free(hs);
+    return htsp_error("Stream setup error");
   }
-  if(normts)
-    st = hs->hs_tsfix = tsfix_create(st);
+
+  /*
+   * We send the reply now to avoid the user getting the 'subscriptionStart'
+   * async message before the reply to 'subscribe'.
+   *
+   * Send some optional boolean flags back to the subscriber so it can infer
+   * if we support those
+   *
+   */
+  htsmsg_t *rep = htsmsg_create_map();
+  if(req90khz)
+    htsmsg_add_u32(rep, "90khz", 1);
+  if(hs->hs_prch.prch_tsfix)
+    htsmsg_add_u32(rep, "normts", 1);
+
+#if ENABLE_TIMESHIFT
+  if(timeshiftPeriod)
+    htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
+#endif
+
+  htsp_reply(htsp, in, rep);
+
+  /*
+   * subscribe now...
+   */
+  LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
   tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
   hs->hs_s = subscription_create_from_channel(ch, pro, weight,
 					      htsp->htsp_logname,
-					      st,
+					      hs->hs_prch.prch_st,
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
 					      htsp->htsp_username,
