@@ -505,6 +505,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "prefer_picon")))
+      save |= config_set_prefer_picon(str);
     if ((str = http_arg_get(&hc->hc_req_args, "chiconpath")))
       save |= config_set_chicon_path(str);
     if ((str = http_arg_get(&hc->hc_req_args, "piconpath")))

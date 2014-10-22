@@ -534,6 +534,14 @@ channel_get_number ( channel_t *ch )
   return 0;
 }
 
+static int
+check_file( const char *url )
+{
+  if (url && !strncmp(url, "file://", 7))
+    return access(url + 7, R_OK) == 0;
+  return 1;
+}
+
 const char *
 channel_get_icon ( channel_t *ch )
 {
@@ -543,56 +551,73 @@ channel_get_icon ( channel_t *ch )
              *picon  = config_get_picon_path(),
              *icon   = ch->ch_icon,
              *chname;
-  uint32_t id;
+  uint32_t id, i, pick, prefer = config_get_prefer_picon() ? 1 : 0;
 
   if (icon && *icon == '\0')
     icon = NULL;
 
-  /* No user icon - try to get the channel icon by name */
-  if (!icon && chicon && chicon[0] >= ' ' && chicon[0] <= 122 &&
-      (chname = channel_get_name(ch)) != NULL && chname[0]) {
-    const char *send, *sname, *s;
-    chicon = strdup(chicon);
-    send = strstr(chicon, "%C");
-    if (send == NULL) {
-      buf[0] = '\0';
-      sname = "";
-    } else {
-      *(char *)send = '\0';
-      send += 2;
-      sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                   chname, strlen(chname) * 2);
-      /* Remove problematic characters */
-      s = sname;
-      while (*s) {
-        if (*s <= ' ' || *s > 122 ||
-            strchr("/:\\<>|*?'\"", *s) != NULL)
-          *(char *)s = '_';
-        s++;
+  /*
+   * 4 iterations:
+   * 0,1: try channel name or picon
+   * 2,3: force channel name or picon
+   */
+  for (i = 0; icon == NULL && i < 4; i++) {
+
+    pick = (i ^ prefer) & 1;
+
+    /* No user icon - try to get the channel icon by name */
+    if (!pick && chicon && chicon[0] >= ' ' && chicon[0] <= 122 &&
+        (chname = channel_get_name(ch)) != NULL && chname[0]) {
+      const char *chi, *send, *sname, *s;
+      chi = strdup(chicon);
+      send = strstr(chi, "%C");
+      if (send == NULL) {
+        buf[0] = '\0';
+        sname = "";
+      } else {
+        *(char *)send = '\0';
+        send += 2;
+        sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                     chname, strlen(chname) * 2);
+        if (sname == NULL)
+          sname = strdup(chname);
+        /* Remove problematic characters */
+        s = sname;
+        while (s && *s) {
+          if (*s <= ' ' || *s > 122 ||
+              strchr("/:\\<>|*?'\"", *s) != NULL)
+            *(char *)s = '_';
+          s++;
+        }
+      }
+      snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
+      if (send)
+        free((char *)sname);
+      free((char *)chi);
+
+      if (i > 1 || check_file(buf)) {
+        icon = ch->ch_icon = strdup(buf);
+        channel_save(ch);
+        idnode_notify_simple(&ch->ch_id);
       }
     }
-    snprintf(buf, sizeof(buf), "%s%s%s", chicon, sname, send);
-    if (send)
-      free((char *)sname);
-    free((char *)chicon);
 
-    icon = ch->ch_icon = strdup(buf);
-    channel_save(ch);
-  }
-
-  /* No user icon - try access from services */
-  if (!icon && picon) {
-    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-      if (!(icon = service_get_channel_icon(csm->csm_svc))) continue;
-      if (strncmp(icon, "picon://", 8)) {
-        icon = NULL;
-        continue;
+    /* No user icon - try access from services */
+    if (pick && picon) {
+      LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+        const char *icn;
+        if (!(icn = service_get_channel_icon(csm->csm_svc))) continue;
+        if (strncmp(icn, "picon://", 8))
+          continue;
+        snprintf(buf2, sizeof(buf2), "%s/%s", picon, icn+8);
+        if (i > 1 || check_file(buf2)) {
+          ch->ch_icon = strdup(icn);
+          channel_save(ch);
+          idnode_notify_simple(&ch->ch_id);
+        }
       }
-      sprintf(buf2, "%s/%s", picon, icon+8);
-      ch->ch_icon = strdup(icon);
-      channel_save(ch);
-      idnode_notify_simple(&ch->ch_id);
     }
+
   }
 
   /* Nothing */

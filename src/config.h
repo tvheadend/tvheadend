@@ -37,6 +37,10 @@ const char *config_get_language    ( void );
 int         config_set_language    ( const char *str )
   __attribute__((warn_unused_result));
 
+int         config_get_prefer_picon ( void );
+int         config_set_prefer_picon ( const char *str )
+  __attribute__((warn_unused_result));
+
 const char *config_get_chicon_path  ( void );
 int         config_set_chicon_path  ( const char *str )
   __attribute__((warn_unused_result));
