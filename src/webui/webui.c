@@ -1029,8 +1029,8 @@ page_play_path_modify(http_connection_t *hc, const char *path, int *cut)
   const char *agent = http_arg_get(&hc->hc_args, "User-Agent");
   int direct = 0;
 
-  if (strncasecmp(agent, "VLC/", 4) == 0)
-    direct = 1;
+  if (agent == NULL)
+    direct = 1; /* direct streaming for no user-agent providers */
   else if (strncasecmp(agent, "MPlayer ", 8) == 0)
     direct = 1;
   else if (strncasecmp(agent, "curl/", 5) == 0)
