@@ -260,7 +260,7 @@ tvheadend.services = function(panel, index)
         tabIndex: index,
         hidemode: true,
         add: false,
-        del: false,
+        del: true,
         help: function() {
             new tvheadend.help('Services', 'config_services.html');
         },         

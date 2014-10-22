@@ -48,6 +48,7 @@
 #include "esfilter.h"
 
 static void service_data_timeout(void *aux);
+static void service_class_delete(struct idnode *self);
 static void service_class_save(struct idnode *self);
 
 struct service_queue service_all;
@@ -171,6 +172,7 @@ const idclass_t service_class = {
   .ic_caption    = "Service",
   .ic_event      = "service",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_delete     = service_class_delete,
   .ic_save       = service_class_save,
   .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){
@@ -1256,6 +1258,15 @@ service_request_save(service_t *t, int restart)
   pthread_mutex_unlock(&pending_save_mutex);
 }
 
+
+/**
+ *
+ */
+static void
+service_class_delete(struct idnode *self)
+{
+  service_destroy((service_t *)self, 1);
+}
 
 /**
  *
