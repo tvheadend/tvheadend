@@ -182,6 +182,10 @@
     background-image: url(../icons/save.png) !important;
 }
 
+.apply {
+    background-image: url(../icons/accept.png) !important;
+}
+
 .rec {
     background-image: url(../icons/rec.png) !important;
 }
