@@ -538,6 +538,13 @@ profile_htsp_work(profile_chain_t *prch,
                   streaming_target_t *dst,
                   uint32_t timeshift_period, int flags)
 {
+#if ENABLE_TIMESHIFT
+  if (timeshift_period > 0) {
+    dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
+    flags |= PRCH_FLAG_TSFIX;
+  }
+#endif
+
   if (flags & PRCH_FLAG_TSFIX)
     dst = prch->prch_tsfix = tsfix_create(dst);
 

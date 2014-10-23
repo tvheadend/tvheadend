@@ -1757,7 +1757,6 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
       tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (unlimited)");
     else
       tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
-    pflags |= PRCH_FLAG_TSFIX;
   }
 #endif
 
@@ -1887,9 +1886,12 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
+    tvhtrace("htsp", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
+             skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
     skip.size = s64;
+    tvhtrace("htsp", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
   } else {
     return htsp_error("Missing argument 'time' or 'size'");
   }
@@ -1922,6 +1924,7 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
+  tvhtrace("htsp", "speed: %d", speed);
   subscription_set_speed(hs->hs_s, speed);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -1949,6 +1952,7 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested subscription does not exist");
 
   skip.type = SMT_SKIP_LIVE;
+  tvhtrace("htsp", "live");
   subscription_set_skip(hs->hs_s, &skip);
 
   htsp_reply(htsp, in, htsmsg_create_map());
