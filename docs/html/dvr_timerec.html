@@ -1,9 +1,11 @@
 <div class="hts-doc-text">
- This tab is used to manipulate with the Digital Video Recorder entries -
- the time-based automatic recording.
+This tab is used to create and maintain Digital Video Recorder rules. These can be EPG-driven (such as those created from the initial EPG tab) through the DVR AutoRec Entries tab , or can be timer-based through the Time Schedules tab.
+<br>
+<br>
+This tab controls timer-driven recording rules.
 <p>
 <img src="docresources/timeschedules.png">
- <p>
+<p>
 <br>
 <hr>
 <b>Buttons</b>
@@ -11,73 +13,80 @@
 Buttons have the following functions:
 <br><br>
 <dl>
-  <dt><b>Add</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Delete</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Edit</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Save</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Undo</b>
-  <dd>
-  ?
-  <p>
-  </dl>
-  <p>
+<dt><b>Add</b>
+<dd>
+Add and configure a recording rule - define the channel, schedule, DVR configuration, priority, etc.
+<p>
+<dt><b>Delete</b>
+<dd>
+Delete an existing recording rule.
+<p>
+<dt><b>Edit</b>
+<dd>
+Manually edit an existing recording rule. This uses the same fields as Add, but they're pre-populated with their current values.
+<p>
+<dt><b>Save</b>
+<dd>
+Saves any changes made to the recording rule list.
+<p>
+<dt><b>Undo</b>
+<dd>
+Undoes any changes made to the recording rules list (any changed fields will be marked with a small red triangle).
+<p>
+</dl>
+<p>
 <br>
 <hr>
 <b>Columns</b>
 <hr>
 The columns have the following functions:
 <br><br>
- <dl>
-  <dt><b>Enabled</b>
-  <dd>
-  ?
-  <p>
+<dl>
+<dt><b>Enabled</b>
+<dd>
+Check or clear this box to enable or disable this rule.
+<p>
 <dt><b>Name</b>
-  <dd>
-  ?
- <p>
- <dt><b>Title</b>
-  <dd>
-  ?
- <p>
- <dt><b>Channel</b>
-  <dd>
-  ?
- <p>
- <dt><b>Week Days</b>
-  <dd>
-  ?
- <p>
- <dt><b>Start</b>
-  <dd>
-  ?
- <p>
- <dt><b>Stop</b>
-  <dd>
-  ?
- <p>
-  <dt><b>Priority</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>DVR Configuration</b>
-  <dd>
-  ?
- <p>
- <dt><b>Comment</b>
-  <dd>
-  ?
- <p>
+<dd>
+The name you've given to the rule, e.g. 'Evening cartoons for the children'.
+<p>
+<dt><b>Title</b>
+<dd>
+Not sure how this differs from **Name* *
+<br>
+<br>
+The default format string suggests Time-[date]-[time]:
+<br>
+<br>
+%x The local date, formatted according to your locale settings
+%R The time in HH;MM format
+<p>
+<dt><b>Channel</b>
+<dd>
+The channel on which this rule applies, i.e. the channel you're aiming to record.
+<p>
+<dt><b>Week Days</b>
+<dd>
+On which specific days of the week you wish this rule to be active (e.g. only record channel XXX at xx:yy on Saturdays and Sundays).
+<p>
+<dt><b>Start</b>
+<dd>
+Start recording at this time.
+<p>
+<dt><b>Stop</b>
+<dd>
+Stop recording at this time.
+<p>
+<dt><b>Priority</b>
+<dd>
+The priority of any recordings set because of this rule: important, high, normal, low, unimportant.
+<p>
+<dt><b>DVR Configuration</b>
+<dd>
+The DVR configuration (e.g. extra start/stop time, post-processing rules) to be used for any recordings set because of this rule.
+<p>
+<dt><b>Comment</b>
+<dd>
+A free-text comment. Not used otherwise.
+<p>
 </div>
