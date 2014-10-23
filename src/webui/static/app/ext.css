@@ -446,6 +446,14 @@
     background-image: url(../icons/subscriptions.png) !important;
 }
 
+.clean{
+    background-image: url(../icons/clean.png) !important;
+}
+
+.resetIcon{
+    background-image: url(../icons/reseticon.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
