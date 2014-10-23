@@ -230,7 +230,7 @@ tvheadend.miscconf = function(panel, index) {
     var imagecacheButton = new Ext.Button({
         text: "Clean image (icon) cache",
         tooltip: 'Clean image cache on storage',
-        iconCls: 'drive',
+        iconCls: 'clean',
         handler: cleanImagecache
     });
 

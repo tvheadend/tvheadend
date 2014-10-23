@@ -206,7 +206,7 @@ tvheadend.channel_tab = function(panel, index)
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: 'Reset (clear) the selected icon URLs',
-                iconCls: 'cancel',
+                iconCls: 'resetIcon',
                 text: 'Reset Icon',
                 disabled: false
             });
