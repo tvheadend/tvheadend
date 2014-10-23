@@ -168,11 +168,9 @@ static void timeshift_input
         (sm->sm_type == SMT_STOP && sm->sm_code == 0))
       exit = 1;
 
-    /* Record (one-off) PTS delta */
-    if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET) {
-      if (pkt->pkt_pts != PTS_UNSET)
-        ts->pts_delta = getmonoclock() - ts_rescale(pkt->pkt_pts, 1000000);
-    }
+    /* Record PTS */
+    if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET)
+      ts->pts_delta = getmonoclock();
 
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
