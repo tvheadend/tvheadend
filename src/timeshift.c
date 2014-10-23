@@ -171,6 +171,12 @@ static void timeshift_input
     /* Record (one-off) PTS delta */
     if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET) {
       if (pkt->pkt_pts != PTS_UNSET) {
+        /*
+         * Gather some packets and select the lowest pts to identify
+         * the correct start. Note that for timeshift, the tsfix
+         * stream plugin is applied, so the starting pts should be
+         * near zero. If not - it's a bug.
+         */
         int i;
         int64_t smallest = INT64_MAX;
         for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++) {
