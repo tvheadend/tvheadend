@@ -99,7 +99,7 @@ static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size
 }
 
 static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
-                              char *dst, size_t *dstlen)
+                               char *dst, size_t *dstlen)
 {
   while (srclen>0 && (*dstlen)>0) {
     *dst = (char) *src;
@@ -270,6 +270,7 @@ dvb_get_string
     break;
 
   case 0x0c ... 0x0f:
+    src++; srclen--;
     break;
 
   case 0x10: /* Table A.4 */
@@ -291,13 +292,21 @@ dvb_get_string
     break;
 
   case 0x12:
+    src++; srclen--;
+    break;
+
   case 0x14:
+    ic = convert_ucs2;
+    src++; srclen--;
     break;
 
   case 0x15:
     ic = convert_utf8;
+    src++; srclen--;
     break;
+
   case 0x16 ... 0x1f:
+    src++; srclen--;
     break;
 
   default:
