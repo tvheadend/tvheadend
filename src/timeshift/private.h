@@ -83,6 +83,7 @@ typedef struct timeshift {
   time_t                      max_time;   ///< Maximum period to shift
   int                         ondemand;   ///< Whether this is an on-demand timeshift
   int64_t                     pts_delta;  ///< Delta between system clock and PTS
+  int64_t                     pts_val[6]; ///< Decision PTS values for multiple packets
 
   enum {
     TS_INIT,

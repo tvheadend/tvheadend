@@ -170,8 +170,21 @@ static void timeshift_input
 
     /* Record (one-off) PTS delta */
     if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET) {
-      if (pkt->pkt_pts != PTS_UNSET)
-        ts->pts_delta = getmonoclock() - ts_rescale(pkt->pkt_pts, 1000000);
+      if (pkt->pkt_pts != PTS_UNSET) {
+        int i;
+        int64_t smallest = INT64_MAX;
+        for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++) {
+          int64_t i64 = ts->pts_val[i];
+          if (i64 == PTS_UNSET) {
+            ts->pts_val[i] = pkt->pkt_pts;
+            break;
+          }
+          if (i64 < smallest)
+            smallest = i64;
+        }
+        if (i >= ARRAY_SIZE(ts->pts_val))
+          ts->pts_delta = getmonoclock() - ts_rescale(smallest, 1000000);
+      }
     }
 
     /* Buffer to disk */
@@ -256,6 +269,7 @@ streaming_target_t *timeshift_create
   (streaming_target_t *out, time_t max_time)
 {
   timeshift_t *ts = calloc(1, sizeof(timeshift_t));
+  int i;
 
   /* Must hold global lock */
   lock_assert(&global_lock);
@@ -271,6 +285,8 @@ streaming_target_t *timeshift_create
   ts->id         = timeshift_index;
   ts->ondemand   = timeshift_ondemand;
   ts->pts_delta  = PTS_UNSET;
+  for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++)
+    ts->pts_val[i] = PTS_UNSET;
   pthread_mutex_init(&ts->rdwr_mutex, NULL);
   pthread_mutex_init(&ts->state_mutex, NULL);
 
