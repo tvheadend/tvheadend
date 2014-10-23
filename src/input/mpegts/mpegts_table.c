@@ -35,7 +35,7 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
     c++;
 
   if (i != c) {
-    tvherror("mpegts", "tables count inconsistency (num %d, list %d)", i, c);
+    tvherror("mpegts", "table: mux %p count inconsistency (num %d, list %d)", mm, i, c);
     abort();
   }
 #endif
@@ -139,8 +139,8 @@ mpegts_table_release_ ( mpegts_table_t *mt )
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
   }
-  tvhtrace("mpegts", "table: free %s %02X/%02X (%d) pid %04X (%d)",
-           mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
+  tvhtrace("mpegts", "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
+           mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
            mt->mt_pid, mt->mt_pid);
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
@@ -154,6 +154,9 @@ mpegts_table_destroy ( mpegts_table_t *mt )
   mpegts_mux_t *mm = mt->mt_mux;
 
   pthread_mutex_lock(&mm->mm_tables_lock);
+  tvhtrace("mpegts", "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
+           mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
+           mt->mt_pid, mt->mt_pid);
   mpegts_table_consistency_check(mm);
   mt->mt_destroyed = 1;
   mt->mt_mux->mm_close_table(mt->mt_mux, mt);
@@ -216,8 +219,8 @@ mpegts_table_add
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
-  tvhtrace("mpegts", "table: %s add %02X/%02X (%d) pid %04X (%d)",
-           name, tableid, mask, tableid, pid, pid);
+  tvhtrace("mpegts", "table: mux %p add %s %02X/%02X (%d) pid %04X (%d)",
+           mm, name, tableid, mask, tableid, pid, pid);
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));
