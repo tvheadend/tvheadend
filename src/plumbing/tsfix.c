@@ -152,72 +152,67 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
   int64_t dts, d;
 
-  int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
+  if(tf->tf_tsref == PTS_UNSET) {
+    pkt_ref_dec(pkt);
+    return;
+  }
 
-  if (1 /* all streams */) {
-    if(tf->tf_tsref == PTS_UNSET) {
+  pkt->pkt_dts &= PTS_MASK;
+  pkt->pkt_pts &= PTS_MASK;
+
+  /* Subtract the transport wide start offset */
+  dts = pkt->pkt_dts - tf->tf_tsref;
+
+  if(tfs->tfs_last_dts_norm == PTS_UNSET) {
+    if(dts < 0) {
+      /* Early packet with negative time stamp, drop those */
       pkt_ref_dec(pkt);
       return;
     }
+  } else {
+    d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
-    pkt->pkt_dts &= PTS_MASK;
-    pkt->pkt_pts &= PTS_MASK;
+    if(d < 0 || d > 90000) {
 
-    /* Subtract the transport wide start offset */
-    dts = pkt->pkt_dts - tf->tf_tsref;
+      if(d < -PTS_MASK || d > -PTS_MASK + 180000) {
 
-    if(tfs->tfs_last_dts_norm == PTS_UNSET) {
-      if(dts < 0) {
-        /* Early packet with negative time stamp, drop those */
-        pkt_ref_dec(pkt);
-        return;
-      }
-    } else if (checkts) {
-      d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
+	tfs->tfs_bad_dts++;
 
-      if(d < 0 || d > 90000) {
-
-        if(d < -PTS_MASK || d > -PTS_MASK + 180000) {
-
-	  tfs->tfs_bad_dts++;
-
-	  if(tfs->tfs_bad_dts < 5) {
-	    tvhlog(LOG_ERR, "parser",
-		   "transport stream %s, DTS discontinuity. "
-		   "DTS = %" PRId64 ", last = %" PRId64,
-		   streaming_component_type2txt(tfs->tfs_type),
-		   dts, tfs->tfs_last_dts_norm);
-	  }
-        } else {
-	  /* DTS wrapped, increase upper bits */
-	  tfs->tfs_dts_epoch += PTS_MASK + 1;
-	  tfs->tfs_bad_dts = 0;
-        }
+	if(tfs->tfs_bad_dts < 5) {
+	  tvhlog(LOG_ERR, "parser",
+		 "transport stream %s, DTS discontinuity. "
+		 "DTS = %" PRId64 ", last = %" PRId64,
+		 streaming_component_type2txt(tfs->tfs_type),
+		 dts, tfs->tfs_last_dts_norm);
+	}
       } else {
-        tfs->tfs_bad_dts = 0;
+	/* DTS wrapped, increase upper bits */
+	tfs->tfs_dts_epoch += PTS_MASK + 1;
+	tfs->tfs_bad_dts = 0;
       }
+    } else {
+      tfs->tfs_bad_dts = 0;
     }
+  }
 
-    dts += tfs->tfs_dts_epoch;
-    tfs->tfs_last_dts_norm = dts;
+  dts += tfs->tfs_dts_epoch;
+  tfs->tfs_last_dts_norm = dts;
 
-    if(pkt->pkt_pts != PTS_UNSET) {
-      /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
-      int64_t ptsoff = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
+  if(pkt->pkt_pts != PTS_UNSET) {
+    /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
+    d = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
+    pkt->pkt_pts = dts + d;
+  }
 
-      pkt->pkt_pts = dts + ptsoff;
-    }
+  pkt->pkt_dts = dts;
 
-    pkt->pkt_dts = dts;
-
-    tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %zd\n",
+  tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %zd\n",
 	      streaming_component_type2txt(tfs->tfs_type),
 	      pkt->pkt_frametype,
 	      pkt->pkt_dts,
 	      pkt->pkt_pts,
 	      pkt->pkt_duration,
 	      pktbuf_len(pkt->pkt_payload));
-  }
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(tf->tf_output, sm);
