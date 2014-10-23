@@ -154,7 +154,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
 
-  if (checkts || SCT_ISSUBTITLE(tfs->tfs_type)) {
+  if (1 /* all streams */) {
     if(tf->tf_tsref == PTS_UNSET) {
       pkt_ref_dec(pkt);
       return;
