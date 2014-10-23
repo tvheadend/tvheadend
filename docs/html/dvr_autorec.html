@@ -1,10 +1,12 @@
 <div class="hts-doc-text">
- This tab is used to manipulate with the Digital Video Recorder entries -
- the automatic recording.
- <p>
- <img src="docresources/dvrautorecentries.png">
- </p>
- <p>
+This tab is used to create and maintain Digital Video Recorder rules. These can be EPG-driven (such as those created from the initial EPG tab) through the DVR AutoRec Entries tab , or can be timer-based through the Time Schedules tab.
+<br>
+<br>
+This tab controls EPG-driven recording rules.
+<p>
+<img src="docresources/dvrautorecentries.png">
+</p>
+<p>
 <br>
 <hr>
 <b>Buttons</b>
@@ -12,90 +14,95 @@
 Buttons have the following functions:
 <br><br>
 <dl>
-  <dt><b>Add</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Delete</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Edit</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Save</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Undo</b>
-  <dd>
-  ?
-  <p>
-  </dl>
-  <p>
+<dt><b>Add</b>
+<dd>
+Add and configure a recording rule - define the channel, schedule, DVR configuration, priority, etc.
+<p>
+<dt><b>Delete</b>
+<dd>
+Delete an existing recording rule.
+<p>
+<dt><b>Edit</b>
+<dd>
+Manually edit an existing recording rule. This uses the same fields as <b>Add</b>, but they're pre-populated with their current values.
+<p>
+<dt><b>Save</b>
+<dd>
+Saves any changes made to the recording rule list.
+<p>
+<dt><b>Undo</b>
+<dd>
+Undoes any changes made to the recording rules list (any changed fields will be marked with a small red triangle).
+<p>
+</dl>
+<p>
 <br>
 <hr>
 <b>Columns</b>
 <hr>
 The columns have the following functions:
 <br><br>
- <dl>
-  <dt><b>Checkbox</b>
-  <dd>
-  ?
-  <p>
+<dl>
+<dt><b>Enabled</b>
+<dd>
+Check or clear this box to enable or disable this rule.
+<p>
 <dt><b>Name</b>
-  <dd>
-  ?
- <p>
- <dt><b>Title (Regexp)</b>
-  <dd>
-  ?
- <p>
- <dt><b>Channel</b>
-  <dd>
-  ?
- <p>
- <dt><b>Channel Tag</b>
-  <dd>
-  ?
- <p>
- <dt><b>Content Type</b>
-  <dd>
-  ?
- <p>
- <dt><b>Minimal Duration</b>
-  <dd>
-  ?
- <p>
-  <dt><b>Maximal Duration</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Week Days</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Starting Around</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>Priority</b>
-  <dd>
-  ?
-  <p>
-  <dt><b>DVR Configuration</b>
-  <dd>
-  ?
- <p>
- <dt><b>Creator</b>
-  <dd>
-  ?
- <p>
- <dt><b>Comment</b>
-  <dd>
-  ?
- <p>
-
+<dd>
+The name you've given to the rule, e.g. 'Stuff involving Jeremy Clarkson'.
+<p>
+<dt><b>Title (Regexp)</b>
+<dd>
+The title of the programme to look for. Note that this accepts case-insensitive regular expressions, so you can use pattern matching as Tvheadend scans the EPG for programmes to record.
+<p>
+<dt><b>Channel</b>
+<dd>
+The channel on which this rule applies, i.e. the channel you're aiming to record.
+<p>
+<dt><b>Channel Tag</b>
+<dd>
+A channel tag (e.g. a group of channels) on which this rule applies.
+<p>
+<dt><b>Content Type</b>
+<dd>
+The content type (Movie/Drama, Sports...) to be used to filter matching events/programmes.
+<p>
+<dt><b>Minimal Duration</b>
+<dd>
+The minimal duration of a matching event - in other words, only match programmes that are no shorter than this duration.
+<p>
+<dt><b>Maximal Duration</b>
+<dd>
+The maximal duration of a matching event - in other words, only match programmes that are no longer than this duration.
+<p>
+<dt><b>Week Days</b>
+<dd>
+On which specific days of the week to find matching programmes.
+<p>
+<dt><b>Starting Around</b>
+<dd>
+An approximate starting time for matching programmes.
+<br>
+<br>
+I'd need to check the code to see how this works to expand on this any further. It used to be:
+<br>
+<br>
+Only record events if they are scheduled +-15 minutes from this given time.
+<p>
+<dt><b>Priority</b>
+<dd>
+The priority of any recordings set because of this rule: important, high, normal, low, unimportant.
+<p>
+<dt><b>DVR Configuration</b>
+<dd>
+The DVR configuration (e.g. extra start/stop time, post-processing rules) to be used for any recordings set because of this rule.
+<p>
+<dt><b>Creator</b>
+<dd>
+The creator of the rule. Automatically set.
+<p>
+<dt><b>Comment</b>
+<dd>
+A free-text comment. Not used otherwise.
+<p>
 </div>
