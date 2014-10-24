@@ -464,6 +464,9 @@ http_access_verify_channel(http_connection_t *hc, int mask,
       return -1;
   }
 
+  if (access_verify2(hc->hc_access, mask))
+    return -1;
+
   if (channel_access(ch, hc->hc_access, hc->hc_username))
     res = 0;
   return res;
