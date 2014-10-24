@@ -26,6 +26,7 @@
 struct profile;
 struct muxer;
 struct streaming_target;
+struct streaming_start;
 
 extern const idclass_t profile_class;
 extern const idclass_t profile_mpegts_pass_class;
@@ -47,24 +48,46 @@ typedef LIST_HEAD(, profile_build) profile_builders_queue;
 
 extern profile_builders_queue profile_builders;
 
-#define PRCH_FLAG_SKIPZEROING (1<<0)
-#define PRCH_FLAG_TSFIX       (1<<1)
+typedef struct profile_sharer {
+  streaming_target_t        prsh_input;
+  LIST_HEAD(,profile_chain) prsh_chains;
+  struct profile_chain     *prsh_master;
+  struct streaming_start   *prsh_start_msg;
+  struct streaming_target  *prsh_tsfix;
+#if ENABLE_LIBAV
+  struct streaming_target  *prsh_transcoder;
+#endif
+} profile_sharer_t;
 
 typedef struct profile_chain {
-  struct profile          *prch_pro;
-  void                    *prch_id;
-  int                      prch_flags;
-  struct streaming_queue   prch_sq;
-  struct streaming_target *prch_st;
-  struct muxer            *prch_muxer;
-  struct streaming_target *prch_gh;
-  struct streaming_target *prch_tsfix;
-#if ENABLE_LIBAV
-  struct streaming_target *prch_transcoder;
-#endif
+  LIST_ENTRY(profile_chain) prch_link;
+  int                       prch_linked;
+
+  struct profile_sharer    *prch_sharer;
+  LIST_ENTRY(profile_chain) prch_sharer_link;
+
+  struct profile           *prch_pro;
+  void                     *prch_id;
+
+  int64_t                   prch_ts_delta;
+
+  int                       prch_flags;
+  int                       prch_stop;
+  int                       prch_start_pending;
+  struct streaming_queue    prch_sq;
+  struct streaming_target  *prch_post_share;
+  struct streaming_target  *prch_st;
+  struct muxer             *prch_muxer;
+  struct streaming_target  *prch_gh;
+  struct streaming_target  *prch_tsfix;
 #if ENABLE_TIMESHIFT
-  struct streaming_target *prch_timeshift;
+  struct streaming_target  *prch_timeshift;
 #endif
+  struct streaming_target   prch_input;
+  struct streaming_target  *prch_share;
+
+  int (*prch_can_share)(struct profile_chain *prch,
+                        struct profile_chain *joiner);
 } profile_chain_t;
 
 typedef struct profile {

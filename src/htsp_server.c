@@ -1704,7 +1704,6 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t chid, sid, weight, req90khz, timeshiftPeriod = 0;
   const char *str, *profile_id;
   channel_t *ch;
-  int pflags = 0;
   htsp_subscription_t *hs;
   profile_t *pro;
 
@@ -1725,8 +1724,6 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
-  if (htsmsg_get_u32_or_default(in, "normts", 0))
-    pflags |= PRCH_FLAG_TSFIX;
 
   profile_id = htsmsg_get_str(in, "profile");
 
@@ -1762,7 +1759,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
   profile_chain_init(&hs->hs_prch, pro, ch);
-  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, pflags)) {
+  if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
     free(hs);
     return htsp_error("Stream setup error");
@@ -1779,7 +1776,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *rep = htsmsg_create_map();
   if(req90khz)
     htsmsg_add_u32(rep, "90khz", 1);
-  if(hs->hs_prch.prch_tsfix)
+  if(hs->hs_prch.prch_sharer->prsh_tsfix)
     htsmsg_add_u32(rep, "normts", 1);
 
 #if ENABLE_TIMESHIFT

@@ -615,8 +615,10 @@ _eit_callback
 
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
-  if (!svc)
+  if (!svc) {
+    tvhtrace("eit", "sid %i not found", sid);
     goto done;
+  }
 
   if (map->om_first) {
     map->om_tune_count++;
