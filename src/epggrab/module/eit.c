@@ -428,7 +428,9 @@ static int _eit_process_event
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, start, stop, eid, 1, &save2);
-  tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
+  tvhtrace("eit", "svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+                  " stop=%"PRItime_t", ebc=%p",
+           svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
            eid, start, stop, ebc);
   if (!ebc) return dllen + 12;
 
