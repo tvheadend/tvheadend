@@ -272,6 +272,9 @@ streaming_start_unref(streaming_start_t *ss)
 void
 streaming_msg_free(streaming_message_t *sm)
 {
+  if (!sm)
+    return;
+
   switch(sm->sm_type) {
   case SMT_PACKET:
     if(sm->sm_data)

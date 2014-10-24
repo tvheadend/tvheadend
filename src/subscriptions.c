@@ -79,8 +79,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
 
-    if(s->ths_start_message != NULL)
-      streaming_msg_free(s->ths_start_message);
+    streaming_msg_free(s->ths_start_message);
 
     s->ths_start_message =
       streaming_msg_create_data(SMT_START, service_build_stream_start(t));
@@ -459,8 +458,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     }
 
     if(sm->sm_type == SMT_START) {
-      if(s->ths_start_message != NULL) 
-        streaming_msg_free(s->ths_start_message);
+      streaming_msg_free(s->ths_start_message);
       s->ths_start_message = sm;
       return;
     }
@@ -552,8 +550,7 @@ subscription_unsubscribe(th_subscription_t *s)
     mpegts_mux_remove_subscriber(s->ths_mmi->mmi_mux, s, SM_CODE_OK);
 #endif
 
-  if(s->ths_start_message != NULL) 
-    streaming_msg_free(s->ths_start_message);
+  streaming_msg_free(s->ths_start_message);
 
   if(s->ths_output->st_cb == subscription_input_null)
    free(s->ths_output);
