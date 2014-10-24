@@ -77,7 +77,7 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
   ts2 &= PTS_MASK;
 
   r = abs(ts1 - ts2);
-  if (r > (PTS_MASK / 4)) {
+  if (r > (PTS_MASK / 2)) {
     /* try to wrap the lowest value */
     if (ts1 < ts2)
       ts1 += PTS_MASK + 1;
@@ -354,8 +354,13 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         tf->tf_tsref != PTS_UNSET) {
       int64_t diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
+        tfstream_t *tfs2;
         tvhwarn("parser", "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
         tfs->tfs_local_ref = pkt->pkt_dts;
+        /* Text subtitles extracted from teletext have same timebase */
+        LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
+          if(tfs2->tfs_type == SCT_TEXTSUB)
+            tfs2->tfs_local_ref = pkt->pkt_dts;
       } else {
         tfs->tfs_local_ref = tf->tf_tsref;
       }
