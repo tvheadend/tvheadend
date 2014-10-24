@@ -1345,7 +1345,7 @@ satip_frontend_signal_cb( void *aux )
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &lfe->mi_transports, s_active_link) {
     pthread_mutex_lock(&svc->s_stream_mutex);
-    streaming_pad_deliver(&svc->s_streaming_pad, &sm);
+    streaming_pad_deliver(&svc->s_streaming_pad, streaming_msg_clone(&sm));
     pthread_mutex_unlock(&svc->s_stream_mutex);
   }
   gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);

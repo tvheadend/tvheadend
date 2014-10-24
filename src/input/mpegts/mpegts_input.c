@@ -814,7 +814,7 @@ done:
     memset(&sm, 0, sizeof(sm));
     sm.sm_type = SMT_MPEGTS;
     sm.sm_data = pb;
-    streaming_pad_deliver(&mmi->mmi_streaming_pad, &sm);
+    streaming_pad_deliver(&mmi->mmi_streaming_pad, streaming_msg_clone(&sm));
     pktbuf_ref_dec(pb);
   }
 

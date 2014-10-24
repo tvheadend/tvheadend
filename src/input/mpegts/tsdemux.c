@@ -283,7 +283,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
 
   sm.sm_type = SMT_MPEGTS;
   sm.sm_data = pb;
-  streaming_pad_deliver(&t->s_streaming_pad, &sm);
+  streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_clone(&sm));
 
   pktbuf_ref_dec(pb);
 

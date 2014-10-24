@@ -316,10 +316,10 @@ streaming_msg_free(streaming_message_t *sm)
 void
 streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 {
-  if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+  if (st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
     streaming_msg_free(sm);
   else
-    st->st_cb(st->st_opaque, sm);
+    streaming_target_deliver(st, sm);
 }
 
 /**
@@ -328,17 +328,22 @@ streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
 void
 streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 {
-  streaming_target_t *st, *next;
+  streaming_target_t *st, *next, *run = NULL;
 
-  for(st = LIST_FIRST(&sp->sp_targets);st; st = next) {
+  for (st = LIST_FIRST(&sp->sp_targets); st; st = next) {
     next = LIST_NEXT(st, st_link);
     assert(next != st);
-    if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+    if (st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
       continue;
-    st->st_cb(st->st_opaque, streaming_msg_clone(sm));
+    if (run)
+      streaming_target_deliver(run, streaming_msg_clone(sm));
+    run = st;
   }
+  if (run)
+    streaming_target_deliver(run, sm);
+  else
+    streaming_msg_free(sm);
 }
-
 
 /**
  *

@@ -1117,7 +1117,6 @@ service_servicetype_txt ( service_t *s )
 void
 service_set_streaming_status_flags_(service_t *t, int set)
 {
-  streaming_message_t *sm;
   lock_assert(&t->s_stream_mutex);
 
   if(set == t->s_streaming_status)
@@ -1136,10 +1135,9 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
 	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
-  sm = streaming_msg_create_code(SMT_SERVICE_STATUS,
-				 t->s_streaming_status);
-  streaming_pad_deliver(&t->s_streaming_pad, sm);
-  streaming_msg_free(sm);
+  streaming_pad_deliver(&t->s_streaming_pad,
+                        streaming_msg_create_code(SMT_SERVICE_STATUS,
+                                                  t->s_streaming_status));
 
   pthread_cond_broadcast(&t->s_tss_cond);
 }
@@ -1153,22 +1151,20 @@ service_set_streaming_status_flags_(service_t *t, int set)
 void
 service_restart(service_t *t, int had_components)
 {
-  streaming_message_t *sm;
   pthread_mutex_lock(&t->s_stream_mutex);
 
   if(had_components) {
-    sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
-    streaming_pad_deliver(&t->s_streaming_pad, sm);
-    streaming_msg_free(sm);
+    streaming_pad_deliver(&t->s_streaming_pad,
+                          streaming_msg_create_code(SMT_STOP,
+                                                    SM_CODE_SOURCE_RECONFIGURED));
   }
 
   service_build_filter(t);
 
   if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
-    sm = streaming_msg_create_data(SMT_START, 
-				   service_build_stream_start(t));
-    streaming_pad_deliver(&t->s_streaming_pad, sm);
-    streaming_msg_free(sm);
+    streaming_pad_deliver(&t->s_streaming_pad,
+                          streaming_msg_create_data(SMT_START,
+                                                    service_build_stream_start(t)));
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);

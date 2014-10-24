@@ -1408,10 +1408,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt, int error)
   /* Forward packet */
   pkt->pkt_componentindex = st->es_index;
 
-  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
-
-  streaming_pad_deliver(&t->s_streaming_pad, sm);
-  streaming_msg_free(sm);
+  streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
