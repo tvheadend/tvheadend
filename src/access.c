@@ -320,6 +320,87 @@ access_verify(const char *username, const char *password,
 /*
  *
  */
+#if ENABLE_TRACE
+static void
+access_dump_a(access_t *a)
+{
+  htsmsg_field_t *f;
+  char buf[1024];
+  int first;
+
+  snprintf(buf, sizeof(buf),
+    "%s:%s [%s%s%s%s%s], conn=%u, chmin=%u, chmax=%u%s",
+    a->aa_representative ?: "<no-id>",
+    a->aa_username ?: "<no-user>",
+    a->aa_rights & ACCESS_STREAMING          ? "S" : "",
+    a->aa_rights & ACCESS_ADVANCED_STREAMING ? "A" : "",
+    a->aa_rights & ACCESS_WEB_INTERFACE      ? "W" : "",
+    a->aa_rights & ACCESS_RECORDER           ? "R" : "",
+    a->aa_rights & ACCESS_ADMIN              ? "*" : "",
+    a->aa_conn_limit,
+    a->aa_chmin, a->aa_chmax,
+    a->aa_match ? ", matched" : "");
+
+  if (a->aa_profiles) {
+    first = 1;
+    HTSMSG_FOREACH(f, a->aa_profiles) {
+      profile_t *pro = profile_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (pro) {
+        if (first)
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", profile=");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s'%s'",
+                 first ? "" : ",", pro->pro_name ?: "");
+        first = 0;
+      }
+    }
+  } else {
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", profile=ANY");
+  }
+
+  if (a->aa_dvrcfgs) {
+    first = 1;
+    HTSMSG_FOREACH(f, a->aa_dvrcfgs) {
+      dvr_config_t *cfg = dvr_config_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (cfg) {
+        if (first)
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", dvr=");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s'%s'",
+                 first ? "" : ",", cfg->dvr_config_name ?: "");
+        first = 0;
+      }
+    }
+  } else {
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", dvr=ANY");
+  }
+
+  if (a->aa_chtags) {
+    first = 1;
+    HTSMSG_FOREACH(f, a->aa_chtags) {
+      channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (ct) {
+        if (first)
+          snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", tags=");
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s'%s'",
+                 first ? "" : ",", ct->ct_name ?: "");
+        first = 0;
+      }
+    }
+  } else {
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), ", tag=ANY");
+  }
+
+  tvhtrace("access", "%s", buf);
+}
+#else
+static inline void
+acess_dump_a(access_t *a)
+{
+}
+#endif
+
+/*
+ *
+ */
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
@@ -421,6 +502,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
       a->aa_rights = 0;
   }
 
+  access_dump_a(a);
   return a;
 }
 
@@ -495,6 +577,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       a->aa_rights = 0;
   }
 
+  access_dump_a(a);
   return a;
 }
 
