@@ -291,9 +291,8 @@ udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
                   const char *ifname, int rxsize1, int rxsize2 )
 {
   udp_connection_t *u1 = NULL, *u2 = NULL;
-  udp_connection_t *ucs[10] = { NULL, NULL, NULL, NULL, NULL,
-                                NULL, NULL, NULL, NULL, NULL };
-  int pos = 0, i, port2;
+  udp_connection_t *ucs[10];
+  int tst = 40, pos = 0, i, port2;
 
   memset(&ucs, 0, sizeof(ucs));
   while (1) {
@@ -306,6 +305,11 @@ udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
       u2 = udp_bind(subsystem, name2, host, port2 + 1, ifname, rxsize2);
       if (u2 != NULL && u2 != UDP_FATAL_ERROR)
         break;
+    }
+    if (tst) {
+      udp_close(u1);
+      tst--;
+      continue;
     }
     ucs[pos++] = u1;
     if (port || pos >= ARRAY_SIZE(ucs))
