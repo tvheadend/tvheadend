@@ -168,7 +168,9 @@ channel_class_tags_set ( void *obj, const void *p )
 static void
 channel_class_icon_notify ( void *obj )
 {
-  (void)channel_get_icon(obj);
+  channel_t *ch = obj;
+  if (!ch->ch_load)
+    (void)channel_get_icon(obj);
 }
 
 static const void *
@@ -670,8 +672,11 @@ channel_create0
     abort();
   }
 
-  if (conf)
+  if (conf) {
+    ch->ch_load = 1;
     idnode_load(&ch->ch_id, conf);
+    ch->ch_load = 0;
+  }
 
   /* Override the name */
   if (name) {
@@ -684,6 +689,9 @@ channel_create0
 
   /* HTSP */
   htsp_channel_add(ch);
+
+  /* determine icon URL */
+  (void)channel_get_icon(ch);
 
   return ch;
 }

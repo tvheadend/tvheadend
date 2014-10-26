@@ -45,6 +45,7 @@ typedef struct channel
   
   int ch_refcount;
   int ch_zombie;
+  int ch_load;
 
   /* Channel info */
   char   *ch_name; // Note: do not access directly!
