@@ -478,6 +478,9 @@ static void
 mpegts_input_stopping_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  pthread_mutex_lock(&mi->mi_input_lock);
+  mi->mi_stop = 1;
+  pthread_mutex_unlock(&mi->mi_input_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
   mi->mi_stop = 1;
   pthread_mutex_unlock(&mi->mi_output_lock);
@@ -599,9 +602,10 @@ mpegts_input_recv_packets
     off += len2;
 
     pthread_mutex_lock(&mi->mi_input_lock);
-    if (TAILQ_FIRST(&mi->mi_input_queue) == NULL)
+    if (!mi->mi_stop) {
+      TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
       pthread_cond_signal(&mi->mi_input_cond);
-    TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
+    }
     pthread_mutex_unlock(&mi->mi_input_lock);
   }
 
@@ -790,11 +794,13 @@ mpegts_input_process
             // TODO: might be able to optimise this a bit by having slightly
             //       larger buffering and trying to aggregate data (if we get
             //       same PID multiple times in the loop)
-            mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
-            memcpy(mtf->mtf_tsb, tsb, 188);
-            mtf->mtf_mux   = mm;
-            TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
-            table_wakeup = 1;
+            if (!mi->mi_stop) {
+              mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
+              memcpy(mtf->mtf_tsb, tsb, 188);
+              mtf->mtf_mux   = mm;
+              TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
+              table_wakeup = 1;
+            }
           }
         } else {
           //tvhdebug("tsdemux", "%s - SI packet had errors", name);
@@ -884,12 +890,10 @@ mpegts_input_table_thread ( void *aux )
     pthread_mutex_unlock(&mi->mi_output_lock);
     
     /* Process */
-    if (mtf->mtf_mux) {
-      pthread_mutex_lock(&global_lock);
-      if (!mi->mi_stop)
-        mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
-      pthread_mutex_unlock(&global_lock);
-    }
+    pthread_mutex_lock(&global_lock);
+    if (!mi->mi_stop && mtf->mtf_mux)
+      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
+    pthread_mutex_unlock(&global_lock);
 
     /* Cleanup */
     free(mtf);
@@ -927,11 +931,13 @@ mpegts_input_flush_mux
   }
   pthread_mutex_unlock(&mi->mi_input_lock);
 
-  /* Flush table Q - the global lock is already held */
+  /* Flush table Q */
+  pthread_mutex_lock(&mi->mi_output_lock);
   TAILQ_FOREACH(mtf, &mi->mi_table_queue, mtf_link) {
     if (mtf->mtf_mux == mm)
       mtf->mtf_mux = NULL;
   }
+  pthread_mutex_unlock(&mi->mi_output_lock);
   /* stop flag must be set here */
   /* otherwise the picked mtf might be processed after mux deactivation */
   assert(mi->mi_stop);

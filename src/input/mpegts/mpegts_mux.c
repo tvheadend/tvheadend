@@ -691,19 +691,20 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Stop possible recursion */
   if (!mmi) return;
+
+  /* Clear */
   mm->mm_active = NULL;
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhdebug("mpegts", "%s - stopping mux", buf);
 
-  if (mmi) {
-    mi = mmi->mmi_input;
-    mi->mi_stopping_mux(mi, mmi);
-    LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
-      subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-    mi->mi_stop_mux(mi, mmi);
-    mi->mi_stopped_mux(mi, mmi);
-  }
+  mi = mmi->mmi_input;
+  assert(mi);
+  mi->mi_stopping_mux(mi, mmi);
+  LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
+    subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+  mi->mi_stop_mux(mi, mmi);
+  mi->mi_stopped_mux(mi, mmi);
 
   /* Flush all tables */
   tvhtrace("mpegts", "%s - flush tables", buf);
@@ -711,31 +712,26 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   tvhtrace("mpegts", "%s - mi=%p", buf, (void *)mi);
   /* Flush table data queue */
-  if (mi)
-    mpegts_input_flush_mux(mi, mm);
+  mpegts_input_flush_mux(mi, mm);
 
   /* Ensure PIDs are cleared */
-  if (mi) {
-    pthread_mutex_lock(&mi->mi_output_lock);
-    mm->mm_last_pid = -1;
-    mm->mm_last_mp = NULL;
-    while ((mp = RB_FIRST(&mm->mm_pids))) {
-      assert(mi);
-      while ((mps = RB_FIRST(&mp->mp_subs))) {
-        RB_REMOVE(&mp->mp_subs, mps, mps_link);
-        free(mps);
-      }
-      RB_REMOVE(&mm->mm_pids, mp, mp_link);
-      if (mp->mp_fd != -1) {
-        tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
-        close(mp->mp_fd);
-      }
-      free(mp);
+  pthread_mutex_lock(&mi->mi_output_lock);
+  mm->mm_last_pid = -1;
+  mm->mm_last_mp = NULL;
+  while ((mp = RB_FIRST(&mm->mm_pids))) {
+    assert(mi);
+    while ((mps = RB_FIRST(&mp->mp_subs))) {
+      RB_REMOVE(&mp->mp_subs, mps, mps_link);
+      free(mps);
     }
-    pthread_mutex_unlock(&mi->mi_output_lock);
-  } else {
-    assert(RB_FIRST(&mm->mm_pids) == NULL);
+    RB_REMOVE(&mm->mm_pids, mp, mp_link);
+    if (mp->mp_fd != -1) {
+      tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
+      close(mp->mp_fd);
+    }
+    free(mp);
   }
+  pthread_mutex_unlock(&mi->mi_output_lock);
 
   /* Scanning */
   mpegts_network_scan_mux_cancel(mm, 1);
@@ -745,9 +741,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Events */
   mpegts_fire_event(mm, ml_mux_stop);
-
-  /* Clear */
-  mm->mm_active = NULL;
 }
 
 void
