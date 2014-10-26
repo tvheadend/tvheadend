@@ -137,13 +137,12 @@ typedef struct http_connection {
 
   int hc_no_output;
   int hc_logout_cookie;
+  int hc_shutdown;
 
   /* Support for HTTP POST */
   
   char *hc_post_data;
   unsigned int hc_post_len;
-
-  struct rtsp *hc_rtsp_session;
 
 } http_connection_t;
 

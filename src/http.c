@@ -1016,8 +1016,10 @@ http_cancel( void *opaque )
 {
   http_connection_t *hc = opaque;
 
-  if (hc)
+  if (hc) {
     shutdown(hc->hc_fd, SHUT_RDWR);
+    hc->hc_shutdown = 1;
+  }
 }
 
 /**
