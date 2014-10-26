@@ -728,7 +728,7 @@ profile_chain_close(profile_chain_t *prch)
     prch->prch_gh = NULL;
   }
   if (prch->prch_tsfix) {
-    globalheaders_destroy(prch->prch_tsfix);
+    tsfix_destroy(prch->prch_tsfix);
     prch->prch_tsfix = NULL;
   }
   if (prch->prch_muxer) {
