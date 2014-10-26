@@ -330,8 +330,13 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
-  if (!(muxer = prch->prch_muxer))
-    muxer = prch->prch_muxer = muxer_create(&cfg->dvr_muxcnf);
+  if (!(muxer = prch->prch_muxer)) {
+    if (profile_chain_reopen(prch, &cfg->dvr_muxcnf, 0)) {
+      dvr_rec_fatal_error(de, "Unable to reopen muxer");
+      return -1;
+    }
+    muxer = prch->prch_muxer;
+  }
 
   if(!muxer) {
     dvr_rec_fatal_error(de, "Unable to create muxer");

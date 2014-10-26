@@ -112,6 +112,8 @@ typedef struct profile {
 
   int (*pro_work)(profile_chain_t *prch, struct streaming_target *dst,
                   uint32_t timeshift_period, int flags);
+  int (*pro_reopen)(profile_chain_t *prch,
+                    muxer_config_t *m_cfg, int flags);
   int (*pro_open)(profile_chain_t *prch,
                   muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
@@ -134,6 +136,9 @@ static inline void profile_release( profile_t *pro )
 int
 profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
                    uint32_t timeshift_period, int flags);
+int
+profile_chain_reopen(profile_chain_t *prch,
+                     muxer_config_t *m_cfg, int flags);
 int
 profile_chain_open(profile_chain_t *prch,
                    muxer_config_t *m_cfg, int flags, size_t qsize);
