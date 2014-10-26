@@ -195,11 +195,22 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       return;
     }
   } else {
+    int64_t low   =  90000; /* one second */
+    int64_t upper = 180000; /* two seconds */
     d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
-    if(d < 0 || d > 90000) {
+    if (SCT_ISSUBTITLE(tfs->tfs_type)) {
+      /*
+       * special conditions for subtitles, because they may be broadcasted
+       * with large time gaps
+       */
+      low   = PTS_MASK / 2; /* more than 13 hours */
+      upper = low - 1;
+    }
 
-      if(d < -PTS_MASK || d > -PTS_MASK + 180000) {
+    if (d < 0 || d > low) {
+
+      if(d < -PTS_MASK || d > -PTS_MASK + upper) {
 
 	tfs->tfs_bad_dts++;
 
