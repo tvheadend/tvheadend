@@ -262,23 +262,22 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       ts.tv_nsec = tp.tv_usec * 1000;
 
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
-          timeouts++;
+        timeouts++;
 
-          //Check socket status
-          getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          if (err) {
-              tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-              run = 0;
-          } else if(timeouts >= grace) {
-              tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
-              run = 0;
-          }
+        /* Check socket status */
+        if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err) {
+          tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+          run = 0;
+        } else if(timeouts >= grace) {
+          tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+          run = 0;
+        }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
       continue;
     }
 
-    timeouts = 0; //Reset timeout counter
+    timeouts = 0; /* Reset timeout counter */
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
     pthread_mutex_unlock(&sq->sq_mutex);
 
