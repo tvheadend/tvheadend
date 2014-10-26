@@ -50,6 +50,11 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
   int r;
   lav_muxer_t *lm = (lav_muxer_t*)opaque;
 
+  if (lm->m_errors) {
+    lm->m_errors++;
+    return buf_size;
+  }
+
   r = write(lm->lm_fd, buf, buf_size);
   if (r != buf_size)
     lm->m_errors++;
