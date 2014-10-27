@@ -1037,8 +1037,15 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->qmin           = 1;
       octx->qmax           = FF_LAMBDA_MAX;
 
-      octx->bit_rate       = 2 * octx->width * octx->height;
-      octx->rc_max_rate    = 4 * octx->bit_rate;
+      if (t->t_props.tp_vbitrate == 0) {
+        octx->bit_rate       = 2 * octx->width * octx->height;
+        octx->rc_max_rate    = 4 * octx->bit_rate;
+
+      } else {
+        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate    = octx->bit_rate * 1.05;
+      }
+
       octx->rc_buffer_size = 2 * octx->rc_max_rate;
       break;
  
@@ -1046,14 +1053,17 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
-      octx->qmin = 10;
-      octx->qmax = 20;
-
       av_dict_set(&opts, "quality",  "realtime", 0);
 
-      octx->bit_rate       = 3 * octx->width * octx->height;
+      if (t->t_props.tp_vbitrate == 0) {
+        octx->qmin = 10;
+        octx->qmax = 20;
+      } else {
+        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate    = octx->bit_rate * 1.05;
+      }
+
       octx->rc_buffer_size = 8 * 1024 * 224;
-      octx->rc_max_rate    = 2 * octx->bit_rate;
       break;
 
     case SCT_H264:
@@ -1072,18 +1082,25 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
       // Minimum quantizer. Doesn't need to be changed.
       // Recommended default: -qmin 10
-      octx->qmin = 10;
+      // octx->qmin = 10;
 
       // Maximum quantizer. Doesn't need to be changed.
       // Recommended default: -qmax 51
-      octx->qmax = 30;
+      // octx->qmax = 30;
 
       av_dict_set(&opts, "preset",  "medium", 0);
       av_dict_set(&opts, "profile", "baseline", 0);
+      av_dict_set(&opts, "tune",    "zerolatency", 0);
 
-      octx->bit_rate       = 2 * octx->width * octx->height;
+      if (t->t_props.tp_vbitrate == 0) {
+        octx->qmin = 10;
+        octx->qmax = 30;
+      } else {
+        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate    = octx->bit_rate * 1.05;
+      }
+
       octx->rc_buffer_size = 8 * 1024 * 224;
-      octx->rc_max_rate    = 2 * octx->rc_buffer_size;
       break;
 
     default:
@@ -1749,6 +1766,7 @@ transcoder_set_properties(streaming_target_t *st,
   strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
   tp->tp_channels   = props->tp_channels;
   tp->tp_bandwidth  = props->tp_bandwidth;
+  tp->tp_vbitrate   = props->tp_vbitrate;
   tp->tp_resolution = props->tp_resolution;
 
   memcpy(tp->tp_language, props->tp_language, 4);
