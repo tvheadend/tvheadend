@@ -145,7 +145,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
     function selected(s, abuttons) {
         var recording = 0;
         s.each(function(s) {
-            if (s.data.sched_status == 'recording')
+            if (s.data.sched_status.indexOf('recording') == 0)
                 recording++;
         });
         abuttons.abort.setDisabled(recording < 1);
