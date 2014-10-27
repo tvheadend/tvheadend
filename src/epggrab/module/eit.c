@@ -633,6 +633,9 @@ _eit_callback
   if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
+  if (svc->s_dvb_ignore_eit)
+    goto done;
+
   /* Process events */
   save = resched = 0;
   len -= 11;

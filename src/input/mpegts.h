@@ -432,6 +432,7 @@ struct mpegts_service
   char    *s_dvb_provider;
   char    *s_dvb_cridauth;
   uint16_t s_dvb_servicetype;
+  int      s_dvb_ignore_eit;
   char    *s_dvb_charset;
   uint16_t s_dvb_prefcapid;
   int      s_dvb_prefcapid_lock;

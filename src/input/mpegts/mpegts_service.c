@@ -146,6 +146,13 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "dvb_ignore_eit",
+      .name     = "Ignore EPG (EIT)",
+      .off      = offsetof(mpegts_service_t, s_dvb_ignore_eit),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "charset",
       .name     = "Character Set",
