@@ -1019,6 +1019,7 @@ typedef struct profile_transcode {
   uint32_t pro_resolution;
   uint32_t pro_channels;
   uint32_t pro_bandwidth;
+  uint32_t pro_vbitrate;
   char    *pro_language;
   char    *pro_vcodec;
   char    *pro_acodec;
@@ -1215,6 +1216,13 @@ const idclass_t profile_transcode_class =
       .list     = profile_class_vcodec_list,
     },
     {
+      .type     = PT_U32,
+      .id       = "vbitrate",
+      .name     = "Video Bitrate (kb/s) (0=Auto)",
+      .off      = offsetof(profile_transcode_t, pro_vbitrate),
+      .def.u32  = 0,
+    },
+    {
       .type     = PT_STR,
       .id       = "acodec",
       .name     = "Audio Codec",
@@ -1247,6 +1255,12 @@ profile_transcode_bandwidth(profile_transcode_t *pro)
 }
 
 static int
+profile_transcode_vbitrate(profile_transcode_t *pro)
+{
+  return pro->pro_vbitrate;
+}
+
+static int
 profile_transcode_can_share(profile_chain_t *prch,
                             profile_chain_t *joiner)
 {
@@ -1269,6 +1283,8 @@ profile_transcode_can_share(profile_chain_t *prch,
   if (profile_transcode_resolution(pro1) != profile_transcode_resolution(pro2))
     return 0;
   if (profile_transcode_bandwidth(pro1) != profile_transcode_bandwidth(pro2))
+    return 0;
+  if (profile_transcode_vbitrate(pro1) != profile_transcode_vbitrate(pro2))
     return 0;
   if (strcmp(pro1->pro_language ?: "", pro2->pro_language ?: ""))
     return 0;
@@ -1297,6 +1313,7 @@ profile_transcode_work(profile_chain_t *prch,
   props.tp_resolution = profile_transcode_resolution(pro);
   props.tp_channels   = pro->pro_channels;
   props.tp_bandwidth  = profile_transcode_bandwidth(pro);
+  props.tp_vbitrate   = profile_transcode_vbitrate(pro);
   strncpy(props.tp_language, pro->pro_language ?: "", 3);
 
   dst = prch->prch_gh = globalheaders_create(dst);
@@ -1506,6 +1523,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libvpx");
+    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "libvorbis");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1525,6 +1543,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
+    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1544,6 +1563,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
+    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
