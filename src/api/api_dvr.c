@@ -69,7 +69,7 @@ static int is_dvr_entry_finished(dvr_entry_t *entry)
 static int is_dvr_entry_upcoming(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_RECORDING || state == DVR_SCHEDULED;
+  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
 }
 
 static int is_dvr_entry_failed(dvr_entry_t *entry)
