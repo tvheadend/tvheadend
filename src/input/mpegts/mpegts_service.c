@@ -225,6 +225,7 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil, int flags
 {
   int p = 0, w;
   mpegts_service_t      *s = (mpegts_service_t*)t;
+  mpegts_input_t        *mi;
   mpegts_mux_t          *m = s->s_dvb_mux;
   mpegts_mux_instance_t *mmi;
 
@@ -238,18 +239,20 @@ mpegts_service_enlist(service_t *t, struct service_instance_list *sil, int flags
     if (mmi->mmi_tune_failed)
       continue;
 
-    if (!mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mmi->mmi_mux, "service")) continue;
+    mi = mmi->mmi_input;
+
+    if (!mi->mi_is_enabled(mi, mmi->mmi_mux, "service")) continue;
 
     /* Set weight to -1 (forced) for already active mux */
     if (mmi->mmi_mux->mm_active == mmi) {
       w = -1;
       p = -1;
     } else {
-      w = mmi->mmi_input->mi_get_weight(mmi->mmi_input, flags);
-      p = mmi->mmi_input->mi_get_priority(mmi->mmi_input, mmi->mmi_mux, flags);
+      w = mi->mi_get_weight(mi, flags);
+      p = mi->mi_get_priority(mi, mmi->mmi_mux, flags);
     }
 
-    service_instance_add(sil, t, mmi->mmi_input->mi_instance, p, w);
+    service_instance_add(sil, t, mi->mi_instance, mi->mi_name, p, w);
   }
 }
 

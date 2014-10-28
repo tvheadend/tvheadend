@@ -160,6 +160,8 @@ typedef struct service_instance {
 
   int si_mark;           // For mark & sweep
 
+  char si_source[128];
+
 } service_instance_t;
 
 
@@ -169,6 +171,7 @@ typedef struct service_instance {
 service_instance_t *service_instance_add(service_instance_list_t *sil,
                                          struct service *s,
                                          int instance,
+                                         const char *source,
                                          int prio,
                                          int weight);
 

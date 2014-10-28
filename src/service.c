@@ -685,8 +685,9 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link) {
     const char *name = ch ? channel_get_name(ch) : NULL;
     if (!name && s) name = s->s_nicename;
-    tvhdebug("service", "%s si %p weight %d prio %d error %d",
-             name, si, si->si_weight, si->si_prio, si->si_error);
+    tvhdebug("service", "%s si %p %s weight %d prio %d error %d",
+             name, si, si->si_source, si->si_weight, si->si_prio,
+             si->si_error);
   }
 
   /* Already running? */
@@ -1470,8 +1471,8 @@ si_cmp(const service_instance_t *a, const service_instance_t *b)
  */
 service_instance_t *
 service_instance_add(service_instance_list_t *sil,
-                     struct service *s, int instance, int prio,
-                     int weight)
+                     struct service *s, int instance,
+                     const char *source, int prio, int weight)
 {
   service_instance_t *si;
 
@@ -1493,6 +1494,7 @@ service_instance_add(service_instance_list_t *sil,
   }
   si->si_weight = weight;
   si->si_prio   = prio;
+  strncpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
   TAILQ_INSERT_SORTED(sil, si, si_link, si_cmp);
   return si;
 }
