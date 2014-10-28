@@ -29,6 +29,7 @@ tvheadend.help = function(title, pagename) {
 
             var win = new Ext.Window({
                 title: 'Help for ' + title,
+				iconCls: 'help',
                 layout: 'fit',
                 width: 900,
                 height: 400,
