@@ -27,8 +27,7 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 
-static void tvhdhomerun_device_discovery_start( void );
-
+static void tvhdhomerun_device_discovery( void );
 
 static void
 tvhdhomerun_device_class_save ( idnode_t *in )
@@ -47,8 +46,6 @@ tvhdhomerun_device_class_get_childs ( idnode_t *in )
     idnode_set_add(is, &lfe->ti_id, NULL);
   return is;
 }
-
-static gtimer_t tvhdhomerun_discovery_timer;
 
 typedef struct tvhdhomerun_discovery {
   TAILQ_ENTRY(tvhdhomerun_discovery) disc_link; 
@@ -336,7 +333,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 }
 
 static void
-tvhdhomerun_discovery_timer_cb(void *aux)
+tvhdhomerun_device_discovery( void )
 {
   struct hdhomerun_discover_device_t result_list[MAX_HDHOMERUN_DEVICES];
 
@@ -362,15 +359,6 @@ tvhdhomerun_discovery_timer_cb(void *aux)
       }
     }  
   }
-
-  // Do rediscovery every 30 seconds..
-  gtimer_arm_ms(&tvhdhomerun_discovery_timer, tvhdhomerun_discovery_timer_cb, NULL, 15*1000); 
-}
-
-static void
-tvhdhomerun_device_discovery_start( void )
-{
-  gtimer_arm(&tvhdhomerun_discovery_timer, tvhdhomerun_discovery_timer_cb, NULL, 1);
 }
 
 void tvhdhomerun_init ( void )
@@ -380,7 +368,7 @@ void tvhdhomerun_init ( void )
   hdhomerun_debug_set_filename(hdhomerun_debug_obj, "/tmp/tvheadend_hdhomerun_errors.log");
   hdhomerun_debug_enable(hdhomerun_debug_obj);
   TAILQ_INIT(&tvhdhomerun_discoveries);
-  tvhdhomerun_device_discovery_start();
+  tvhdhomerun_device_discovery();
 }
 
 void tvhdhomerun_done ( void )
@@ -411,7 +399,6 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
   lock_assert(&global_lock);
 
   gtimer_disarm(&hd->hd_destroy_timer);
-  gtimer_disarm(&tvhdhomerun_discovery_timer);
 
   tvhlog(LOG_INFO, "tvhdhomerun", "Releaseing locks for devices");
   while ((lfe = TAILQ_FIRST(&hd->hd_frontends)) != NULL) {
