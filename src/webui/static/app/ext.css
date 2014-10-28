@@ -299,7 +299,7 @@
 }
 
 .completed {
-    background-image: url(../icons/tick.png) !important;
+    background-image: url(../icons/accept.png) !important;
 }
 
 .completedError {
