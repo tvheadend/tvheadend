@@ -605,6 +605,8 @@ mpegts_input_recv_packets
     if (!mi->mi_stop) {
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
       pthread_cond_signal(&mi->mi_input_cond);
+    } else {
+      free(mp);
     }
     pthread_mutex_unlock(&mi->mi_input_lock);
   }
@@ -717,6 +719,8 @@ mpegts_input_process
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
+
+  assert(mmi);
 
   mi->mi_live = 1;
 

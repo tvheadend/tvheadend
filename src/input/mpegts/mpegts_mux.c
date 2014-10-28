@@ -692,9 +692,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   /* Stop possible recursion */
   if (!mmi) return;
 
-  /* Clear */
-  mm->mm_active = NULL;
-
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhdebug("mpegts", "%s - stopping mux", buf);
 
@@ -705,6 +702,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
     subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
   mi->mi_stop_mux(mi, mmi);
   mi->mi_stopped_mux(mi, mmi);
+
+  assert(mm->mm_active == NULL);
 
   /* Flush all tables */
   tvhtrace("mpegts", "%s - flush tables", buf);
