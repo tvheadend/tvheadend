@@ -1523,7 +1523,6 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libvpx");
-    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "libvorbis");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1543,7 +1542,6 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
-    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1563,7 +1561,6 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
-    htsmsg_add_str (conf, "vbitrate", 0);
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
