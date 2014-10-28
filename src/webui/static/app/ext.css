@@ -234,6 +234,10 @@
     background-image: url(../icons/eye.png) !important;
 }
 
+.broadcast_details {
+    background-image: url(../icons/broadcast_details.png) !important;
+}
+
 .control_play {
     background-image: url(../icons/control_play.png) !important;
 }

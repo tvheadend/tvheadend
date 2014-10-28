@@ -226,7 +226,7 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     if(de->de_last_error || dvr_get_filesize(de) == -1)
       return "completedError";
     else
-      return "completed";
+      return "finishedRec";
   case DVR_MISSED_TIME:
     return "completedError";
   default:

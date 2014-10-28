@@ -204,7 +204,7 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: false,
         triggerAction: 'all',
-        emptyText: 'Select profile...',
+        emptyText: 'Select stream profile...',
         store: tvheadend.profiles,
     });
 
