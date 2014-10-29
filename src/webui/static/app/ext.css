@@ -454,6 +454,10 @@
     background-image: url(../icons/reseticon.png) !important;
 }
 
+.dvr{
+    background-image: url(../icons/dvr.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;

@@ -503,7 +503,7 @@ tvheadend.dvr = function(panel, index) {
         activeTab: 0,
         autoScroll: true,
         title: 'Digital Video Recorder',
-        iconCls: 'drive',
+        iconCls: 'dvr',
         items: [],
     });
     tvheadend.dvr_upcoming(p, 0);
