@@ -59,6 +59,10 @@ struct mpegts_mux;
 #define DVB_BAT_BASE                  0x48
 #define DVB_BAT_MASK                  0xF8
 
+#define DVB_FASTSCAN_NIT_BASE         0xBC
+#define DVB_FASTSCAN_SDT_BASE         0xBD
+#define DVB_FASTSCAN_MASK             0xFF
+
 #define DVB_VCT_T_BASE                0xC8
 #define DVB_VCT_C_BASE                0xC9
 #define DVB_VCT_MASK                  0xFF
@@ -209,6 +213,8 @@ int dvb_pmt_callback
 int dvb_nit_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_bat_callback  
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_fs_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);

@@ -199,4 +199,4 @@ void api_service_init ( void )
 }
 
 
-#endif /* __TVH_API_IDNODE_H__ */
+#endif /* __TVH_API_SERVICE_H__ */

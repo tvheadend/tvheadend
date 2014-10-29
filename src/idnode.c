@@ -164,8 +164,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   } while (c != NULL && --retries > 0);
 
   if(c != NULL) {
-    fprintf(stderr, "Id node collision%s\n",
-            (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
+    fprintf(stderr, "Id node collision (%s) %s\n",
+            uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     abort();
   }
   tvhtrace("idnode", "insert node %s", idnode_uuid_as_str(in));
@@ -956,6 +956,21 @@ idnode_set_add
     is->is_array = realloc(is->is_array, is->is_alloc * sizeof(idnode_t*));
   }
   is->is_array[is->is_count++] = in;
+}
+
+void
+idnode_set_remove
+  ( idnode_set_t *is, idnode_t *in )
+{
+  size_t z;
+
+  for (z = 0; z < is->is_count; z++)
+    if (is->is_array[z] == in) {
+      memmove(&is->is_array[z], &is->is_array[z+1],
+              (is->is_count - z - 1) * sizeof(idnode_t *));
+      is->is_count--;
+      break;
+    }
 }
 
 int

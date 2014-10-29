@@ -443,6 +443,11 @@ typedef struct service {
 
   int64_t s_current_pts;
 
+  /*
+   *
+   */
+  void *s_master_bouquet;
+
 } service_t;
 
 

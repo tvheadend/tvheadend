@@ -24,6 +24,8 @@
 #include "lang_codes.h"
 #include "service.h"
 #include "dvb_charset.h"
+#include "bouquet.h"
+#include "fastscan.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -321,7 +323,7 @@ dvb_desc_service
 
 static int
 dvb_desc_service_list
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm )
+  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm, bouquet_t *bq )
 {
   uint16_t stype, sid;
   int i;
@@ -333,6 +335,8 @@ dvb_desc_service_list
     if (mm) {
       int save = 0;
       s = mpegts_service_find(mm, sid, 0, 1, &save);
+      if (bq)
+        bouquet_add_service(bq, (service_t *)s);
       if (save)
         s->s_config_save((service_t*)s);
     }
@@ -342,7 +346,7 @@ dvb_desc_service_list
 
 static int
 dvb_desc_local_channel
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm )
+  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm, bouquet_t *bq )
 {
   int save = 0;
   uint16_t sid, lcn;
@@ -354,6 +358,11 @@ dvb_desc_local_channel
     if (lcn && mm) {
       mpegts_service_t *s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
+        if (bq && bq->bq_lcn_offset &&
+            (!s->s_master_bouquet || s->s_master_bouquet == bq)) {
+          lcn += bq->bq_lcn_offset;
+          s->s_master_bouquet = bq;
+        }
         if (s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_num = lcn;
           s->s_config_save((service_t*)s);
@@ -721,18 +730,20 @@ dvb_nit_callback
   mpegts_network_t *mn = mm->mm_network;
   char name[256], dauth[256];
   mpegts_table_state_t  *st  = NULL;
+  bouquet_t *bq = NULL;
   const char *charset;
 
   /* Net/Bat ID */
   nbid = (ptr[0] << 8) | ptr[1];
 
   /* Begin */
-  if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A) return -1;
+  if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A && tableid != 0xBC)
+    return -1;
   r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
   if (r != 1) return r;
 
   /* NIT */
-  if (tableid != 0x4A) {
+  if (tableid != 0x4A && tableid != 0xBC /* fastscan */) {
 
     /* Specific NID */
     if (mn->mn_nid) {
@@ -764,8 +775,13 @@ dvb_nit_callback
     }
   }
 
+  /* Fastscan */
+  if (tableid == 0xBC) {
+    tvhdebug(mt->mt_name, "fastscan %04X (%d) [%s]", nbid, nbid, name);
+    bq = mt->mt_opaque;
+
   /* BAT */
-  if (tableid == 0x4A) {
+  } else if (tableid == 0x4A) {
     tvhdebug(mt->mt_name, "bouquet %04X (%d) [%s]", nbid, nbid, name);
 
   /* NIT */
@@ -780,13 +796,39 @@ dvb_nit_callback
   DVB_LOOP_FOREACH(ptr, len, 0, lptr, llen, 6) {
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
-    tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
       if (mux->mm_onid == onid && mux->mm_tsid == tsid)
         break;
     charset = dvb_charset_find(mn, mux, NULL);
+
+#if ENABLE_MPEGTS_DVB
+    dauth[0] = 0;
+    if (mux && *name && tableid == 0x4A /* BAT */) {
+      if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbs_class)) {
+        dvb_mux_conf_t *mc = &((dvb_mux_t *)mux)->lm_tuning;
+        if (mc->u.dmc_fe_qpsk.orbital_dir) {
+          int pos = mc->u.dmc_fe_qpsk.orbital_pos;
+          if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
+            pos = -pos;
+          snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbs,%d/%s", pos, name);
+        }
+      } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbt_class)) {
+        snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbt/%s", name);
+      } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbc_class)) {
+        snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbc/%s", name);
+      }
+    }
+    if (dauth[0]) {
+      bouquet_t *bq2 = bouquet_find_by_source(name, dauth, 1);
+      if (bq2 != bq && bq && bq->bq_saveflag)
+        bouquet_save(bq, 1);
+      bq = bq2;
+    }
+#endif
+
+    tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %p bq %p", onid, onid, tsid, tsid, mux, bq);
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
       tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
@@ -839,16 +881,19 @@ dvb_nit_callback
             mpegts_mux_set_crid_authority(mux, dauth);
           break;
         case DVB_DESC_LOCAL_CHAN:
-          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux, bq))
             return -1;
           break;
         case DVB_DESC_SERVICE_LIST:
-          if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux))
+          if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux, bq))
             return -1;
           break;
       }
     }
   }
+
+  if (bq && bq->bq_saveflag)
+    bouquet_save(bq, 1);
 
   /* End */
   return dvb_table_end(mt, st, sect);
@@ -940,7 +985,7 @@ dvb_sdt_callback
       int r;
       s->s_dvb_servicetype = stype;
       save = 1;
-      tvhtrace("sdt", "    type changed");
+      tvhtrace("sdt", "    type changed (old %i)", s->s_dvb_servicetype);
 
       /* Set tvh service type */
       if ((r = dvb_servicetype_lookup(stype)) != -1)
@@ -1099,6 +1144,144 @@ dvb_bat_callback
 {
   return dvb_nit_callback(mt, ptr, len, tableid);
 }
+
+#if ENABLE_MPEGTS_DVB
+/*
+ * DVB fastscan table processing
+ */
+int
+dvb_fs_sdt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r, sect, last, ver;
+  uint8_t dtag;
+  int llen, dlen;
+  const uint8_t *lptr, *dptr;
+  uint16_t nbid = 0, onid, tsid, service_id;
+  mpegts_mux_t     *mm = mt->mt_mux, *mux;
+  mpegts_network_t *mn = mm->mm_network;
+  mpegts_table_state_t  *st  = NULL;
+  bouquet_t *bq = mt->mt_opaque;
+
+  /* Fastscan ID */
+  nbid = (ptr[0] << 8) | ptr[1];
+
+  /* Begin */
+  if (tableid != 0xBD)
+    return -1;
+  r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
+  if (r != 1) return r;
+  if (len < 5) return -1;
+  ptr += 5;
+  len -= 5;
+
+  while (len > 0) {
+    const char *charset;
+    char sprov[256] = "", sname[256] = "";
+    mpegts_service_t *s;
+    int stype = 0, save = 0;
+
+    onid = (ptr[0] << 8) | ptr[1];
+    tsid = (ptr[2] << 8) | ptr[3];
+    service_id = (ptr[4] << 8) | ptr[5];
+    /* (ptr[6] << 8) | ptr[7]   - video pid */
+    /* (ptr[7] << 8) | ptr[8]   - audio pid */
+    /* (ptr[9] << 8) | ptr[10]  - video ecm pid */
+    /* (ptr[10] << 8) | ptr[12] - audio ecm pid */
+    /* (ptr[14] << 8) | ptr[15] - pcr pid */
+
+    tvhdebug(mt->mt_name, "  service %04X (%d) onid %04X (%d) tsid %04X (%d)",
+             service_id, service_id, onid, onid, tsid, tsid);
+
+    /* Initialise the loop */
+    DVB_LOOP_INIT(ptr, len, 16, lptr, llen);
+
+    /* Find service */
+    s       = mpegts_service_find(mm, service_id, 0, 1, &save);
+    charset = dvb_charset_find(mn, mm, s);
+    if (bq && s)
+      bouquet_add_service(bq, (service_t *)s);
+
+    /* Descriptor loop */
+    DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
+      tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+      switch (dtag) {
+        case DVB_DESC_SERVICE:
+          if (dvb_desc_service(dptr, dlen, &stype, sprov,
+                                sizeof(sprov), sname, sizeof(sname), charset))
+            return -1;
+          break;
+        case DVB_DESC_LOCAL_CHAN:
+          /* Find existing mux */
+          LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
+            if (mux->mm_onid == onid && mux->mm_tsid == tsid)
+              break;
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux, bq))
+            return -1;
+          break;
+        case DVB_DESC_SAT_DEL:
+          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
+          if (mux) {
+            mpegts_mux_set_onid(mux, onid);
+            mpegts_mux_set_tsid(mux, tsid, 0);
+          }
+          break;
+      }
+    }
+
+    tvhtrace(mt->mt_name, "    type %d name [%s] provider [%s]",
+             stype, sname, sprov);
+
+    /* Update service type */
+    if (stype && !s->s_dvb_servicetype) {
+      int r;
+      s->s_dvb_servicetype = stype;
+      save = 1;
+      tvhtrace(mt->mt_name, "    type changed");
+
+      /* Set tvh service type */
+      if ((r = dvb_servicetype_lookup(stype)) != -1)
+        s->s_servicetype = r;
+    }
+
+    /* Update name */
+    if (*sname && strcmp(s->s_dvb_svcname ?: "", sname)) {
+      if (!s->s_dvb_svcname) {
+        tvh_str_update(&s->s_dvb_svcname, sname);
+        save = 1;
+        tvhtrace(mt->mt_name, "    name changed");
+      }
+    }
+
+    /* Update provider */
+    if (*sprov && strcmp(s->s_dvb_provider ?: "", sprov)) {
+      if (!s->s_dvb_provider) {
+        tvh_str_update(&s->s_dvb_provider, sprov);
+        save = 1;
+        tvhtrace(mt->mt_name, "    provider changed");
+      }
+    }
+
+    if (save) {
+      /* Update nice name */
+      pthread_mutex_lock(&s->s_stream_mutex);
+      service_make_nicename((service_t*)s);
+      pthread_mutex_unlock(&s->s_stream_mutex);
+      tvhdebug(mt->mt_name, "  nicename %s", s->s_nicename);
+      /* Save changes */
+      idnode_changed(&s->s_id);
+      service_refresh_channel((service_t*)s);
+    }
+  }
+
+  if (bq && bq->bq_saveflag)
+    bouquet_save(bq, 1);
+
+  /* End */
+  return dvb_table_end(mt, st, sect);
+
+}
+#endif
 
 /**
  * PMT update reason flags
@@ -1589,6 +1772,18 @@ psi_tables_default ( mpegts_mux_t *mm )
                    NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID);
 }
 
+#if ENABLE_MPEGTS_DVB
+static void
+psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
+{
+  tvhtrace("fastscan", "adding table %04X (%i) for '%s'", pid, pid, name);
+  mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,
+                   dvb_nit_callback, bq, "fs_nit", MT_CRC, pid);
+  mpegts_table_add(aux, DVB_FASTSCAN_SDT_BASE, DVB_FASTSCAN_MASK,
+                   dvb_fs_sdt_callback, bq, "fs_sdt", MT_CRC, pid);
+}
+#endif
+
 void
 psi_tables_dvb ( mpegts_mux_t *mm )
 {
@@ -1599,6 +1794,17 @@ psi_tables_dvb ( mpegts_mux_t *mm )
                    DVB_SDT_PID);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                    NULL, "bat", MT_CRC, DVB_BAT_PID);
+#if ENABLE_MPEGTS_DVB
+  if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
+    dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
+    if (mc->dmc_fe_type == DVB_TYPE_S) {
+      int pos = mc->u.dmc_fe_qpsk.orbital_pos;
+      if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
+        pos = -pos;
+      dvb_fastscan_each(mm, pos, mc->dmc_fe_freq, psi_tables_dvb_fastscan);
+    }
+  }
+#endif
 }
 
 void
