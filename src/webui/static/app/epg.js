@@ -748,7 +748,7 @@ tvheadend.epg = function() {
         cm: epgCm,
         plugins: [filter, actions],
         title: 'Electronic Program Guide',
-        iconCls: 'newspaper',
+        iconCls: 'epg',
         store: epgStore,
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
         view: epgView,
