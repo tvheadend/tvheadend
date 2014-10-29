@@ -26,6 +26,7 @@ tvheadend.dvrDetails = function(uuid) {
 
         var win = new Ext.Window({
             title: title,
+            iconCls: 'info',
             layout: 'fit',
             width: 400,
             height: 300,
