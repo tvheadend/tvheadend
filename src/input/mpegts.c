@@ -17,6 +17,7 @@
  */
 
 #include "input.h"
+#include "mpegts/fastscan.h"
 
 void
 mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
@@ -26,6 +27,9 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
   idclass_register(&mpegts_network_class);
   idclass_register(&mpegts_mux_class);
   idclass_register(&mpegts_service_class);
+
+  /* FastScan init */
+  dvb_fastscan_init();
 
   /* Network scanner */
 #if ENABLE_MPEGTS
@@ -97,6 +101,7 @@ mpegts_done ( void )
 #if ENABLE_TSFILE
   tvhftrace("main", tsfile_done);
 #endif
+  dvb_fastscan_done();
 }
 
 /******************************************************************************

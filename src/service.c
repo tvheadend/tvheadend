@@ -46,6 +46,7 @@
 #include "input.h"
 #include "access.h"
 #include "esfilter.h"
+#include "bouquet.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
@@ -798,6 +799,8 @@ service_destroy(service_t *t, int delconf)
     service_stop(t);
 
   t->s_status = SERVICE_ZOMBIE;
+
+  bouquet_destroy_by_service(t);
 
   TAILQ_INIT(&t->s_filt_components);
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)

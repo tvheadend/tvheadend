@@ -152,7 +152,8 @@ SRCS =  src/version.c \
 	src/cron.c \
 	src/esfilter.c \
 	src/intlconv.c \
-	src/profile.c
+	src/profile.c \
+	src/bouquet.c
 
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
@@ -173,7 +174,8 @@ SRCS += \
 	src/api/api_access.c \
 	src/api/api_dvr.c \
 	src/api/api_caclient.c \
-	src/api/api_profile.c
+	src/api/api_profile.c \
+	src/api/api_bouquet.c
 
 SRCS += \
 	src/parsers/parsers.c \
@@ -229,6 +231,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/input/mpegts/dvb_support.c \
 	src/input/mpegts/dvb_charset.c \
 	src/input/mpegts/dvb_psi.c \
+	src/input/mpegts/fastscan.c \
 	src/input/mpegts/tsdemux.c \
 	src/input/mpegts/mpegts_mux_sched.c \
   src/input/mpegts/mpegts_network_scan.c \

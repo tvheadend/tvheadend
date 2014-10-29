@@ -425,9 +425,9 @@ struct mpegts_service
    * Fields defined by DVB standard EN 300 468
    */
 
-  uint16_t s_dvb_service_id;
-  uint16_t s_dvb_channel_num;
+  uint32_t s_dvb_channel_num;
   uint16_t s_dvb_channel_minor;
+  uint16_t s_dvb_service_id;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;
   char    *s_dvb_cridauth;
