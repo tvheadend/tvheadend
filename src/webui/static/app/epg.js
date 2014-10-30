@@ -188,6 +188,7 @@ tvheadend.epgDetails = function(event) {
 
     var win = new Ext.Window({
         title: 'Broadcast Details',
+        iconCls: 'broadcast_details',
         layout: 'fit',
         width: 600,
         height: 400,
