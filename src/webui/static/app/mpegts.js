@@ -183,6 +183,7 @@ tvheadend.show_service_streams = function(data) {
 
     var win = new Ext.Window({
         title: 'Service details for ' + data.name,
+        iconCls: 'info',
         layout: 'fit',
         width: 650,
         height: 400,
