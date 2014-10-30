@@ -295,7 +295,7 @@
 }
 
 .completed {
-    background-image: url(../icons/tick.png) !important;
+    background-image: url(../icons/accept.png) !important;
 }
 
 .completedError {
@@ -452,6 +452,18 @@
 
 .resetIcon{
     background-image: url(../icons/reseticon.png) !important;
+}
+
+.dvr{
+    background-image: url(../icons/dvr.png) !important;
+}
+
+.epg{
+    background-image: url(../icons/epg.png) !important;
+}
+
+.broadcast_details{
+    background-image: url(../icons/broadcast_details.png) !important;
 }
 
 .x-linked {
