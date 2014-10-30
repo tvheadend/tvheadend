@@ -161,7 +161,7 @@ tvheadend.epgDetails = function(event) {
             valueField: 'key',
             displayField: 'val',
             name: 'config_name',
-            emptyText: '(default)',
+            emptyText: '(default DVR Profile)',
             value: '',
             editable: false
         });
@@ -169,10 +169,12 @@ tvheadend.epgDetails = function(event) {
         buttons.push(confcombo);
         buttons.push(new Ext.Button({
             handler: recordEvent,
+            iconCls: 'rec',
             text: "Record program"
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
+            iconCls: 'autoRec',
             text: event.serieslinkId ? "Record series" : "Autorec"
         }));
 
@@ -187,8 +189,8 @@ tvheadend.epgDetails = function(event) {
     var win = new Ext.Window({
         title: 'Broadcast Details',
         layout: 'fit',
-        width: 500,
-        height: 300,
+        width: 600,
+        height: 400,
         constrainHeader: true,
         buttons: buttons,
         buttonAlign: 'center',
@@ -232,7 +234,7 @@ tvheadend.epg = function() {
         dataIndex: 'actions',
         actions: [
             {
-                iconCls: 'info',
+                iconCls: 'broadcast_details',
                 qtip: 'Broadcast details',
                 cb: function(grid, rec, act, row) {
                     new tvheadend.epgDetails(grid.getStore().getAt(row).data);
@@ -748,7 +750,7 @@ tvheadend.epg = function() {
         cm: epgCm,
         plugins: [filter, actions],
         title: 'Electronic Program Guide',
-        iconCls: 'newspaper',
+        iconCls: 'epg',
         store: epgStore,
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
         view: epgView,

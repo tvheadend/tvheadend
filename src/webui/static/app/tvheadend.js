@@ -29,6 +29,7 @@ tvheadend.help = function(title, pagename) {
 
             var win = new Ext.Window({
                 title: 'Help for ' + title,
+                iconCls: 'help',
                 layout: 'fit',
                 width: 900,
                 height: 400,
@@ -204,7 +205,7 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: false,
         triggerAction: 'all',
-        emptyText: 'Select profile...',
+        emptyText: 'Select stream profile...',
         store: tvheadend.profiles,
     });
 
