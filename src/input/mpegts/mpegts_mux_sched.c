@@ -206,7 +206,7 @@ mpegts_mux_sched_timer ( void *p )
     assert(mms->mms_sub == NULL);
 
     if (!mms->mms_prch)
-      mms->mms_prch = calloc(1, sizeof(mms->mms_prch));
+      mms->mms_prch = calloc(1, sizeof(*mms->mms_prch));
     mms->mms_prch->prch_id = mm;
     mms->mms_prch->prch_st = &mms->mms_input;
 
