@@ -466,6 +466,10 @@
     background-image: url(../icons/broadcast_details.png) !important;
 }
 
+.time_schedules{
+    background-image: url(../icons/time_schedules.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
