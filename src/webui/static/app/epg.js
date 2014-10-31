@@ -120,19 +120,10 @@ tvheadend.epgDetails = function(event) {
       content += '<div class="x-epg-meta">Content Type: ' + genre.join(', ') + '</div>';
     }
 
-    content += '<div class="x-epg-action"><a target="_blank" href="http://akas.imdb.com/find?q=' + event.title + '">Search IMDB</a></div>';
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';
     
-    now = new Date();
-    if (event.start < now && event.stop > now) {
-        var title = event.title;
-        if (event.episodeOnscreen)
-          title += ' / ' + event.episodeOnscreen;
-        content += '<div class="x-epg-action"><a href="play/stream/channel/' + event.channelUuid +
-                   '?title=' + encodeURIComponent(title) + '">Play</a></div>';
-    }
-
+    var now = new Date();
     var buttons = [];
 
     if (tvheadend.accessUpdate.dvr) {
@@ -155,6 +146,15 @@ tvheadend.epgDetails = function(event) {
         store.load();
 
         buttons.push(new Ext.Button({
+            disabled: !event.title,
+            handler: searchIMDB,
+            iconCls: 'find',
+            tooltip: 'Search IMDB (for title)',
+            text: "Search IMDB"
+        }));
+
+        buttons.push(new Ext.Button({
+            disabled: event.start > now || event.stop < now,
             handler: playProgram,
             iconCls: 'control_play',
             tooltip: 'Play this program',
@@ -210,6 +210,19 @@ tvheadend.epgDetails = function(event) {
         html: content
     });
     win.show();
+
+    function searchIMDB() {
+        window.open('http://akas.imdb.com/find?q=' +
+                    encodeURIComponent(event.title), '_blank');
+    }
+
+    function playProgram() {
+        var title = event.title;
+        if (event.episodeOnscreen)
+          title += ' / ' + event.episodeOnscreen;
+        window.open('play/stream/channel/' + event.channelUuid +
+                    '?title=' + encodeURIComponent(title), '_blank');
+    }
 
     function recordEvent() {
         record('api/dvr/entry/create_by_event');
