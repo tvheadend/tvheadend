@@ -23,6 +23,7 @@
 #include "idnode.h"
 
 struct access;
+struct bouquet;
 
 RB_HEAD(channel_tree, channel);
 
@@ -52,6 +53,7 @@ typedef struct channel
   int64_t ch_number;
   char   *ch_icon;
   struct  channel_tag_mapping_list ch_ctms;
+  struct bouquet *ch_bouquet;
 
   /* Service/subscriptions */
   LIST_HEAD(, channel_service_mapping) ch_services;

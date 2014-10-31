@@ -346,7 +346,7 @@ dvb_desc_service_list
 
 static int
 dvb_desc_local_channel
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm, bouquet_t *bq )
+  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm )
 {
   int save = 0;
   uint16_t sid, lcn;
@@ -358,11 +358,6 @@ dvb_desc_local_channel
     if (lcn && mm) {
       mpegts_service_t *s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
-        if (bq && bq->bq_lcn_offset &&
-            (!s->s_master_bouquet || s->s_master_bouquet == bq)) {
-          lcn += bq->bq_lcn_offset;
-          s->s_master_bouquet = bq;
-        }
         if (s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_num = lcn;
           s->s_config_save((service_t*)s);
@@ -740,6 +735,13 @@ dvb_nit_callback
   if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A && tableid != 0xBC)
     return -1;
   r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
+  if (r == 0) {
+    if (tableid != 0xBC /* fastscan */) {
+      RB_FOREACH(st, &mt->mt_state, link)
+        if (st->bouquet)
+          bouquet_completed((bouquet_t *)st->bouquet);
+    }
+  }
   if (r != 1) return r;
 
   /* NIT */
@@ -805,9 +807,9 @@ dvb_nit_callback
 
 #if ENABLE_MPEGTS_DVB
     dauth[0] = 0;
-    if (mux && *name && tableid == 0x4A /* BAT */) {
-      if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbs_class)) {
-        dvb_mux_conf_t *mc = &((dvb_mux_t *)mux)->lm_tuning;
+    if (!bq && *name && tableid == 0x4A /* BAT */) {
+      if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
+        dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
         if (mc->u.dmc_fe_qpsk.orbital_dir) {
           int pos = mc->u.dmc_fe_qpsk.orbital_pos;
           if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
@@ -825,6 +827,7 @@ dvb_nit_callback
       if (bq2 != bq && bq && bq->bq_saveflag)
         bouquet_save(bq, 1);
       bq = bq2;
+      st->bouquet = bq;
     }
 #endif
 
@@ -881,7 +884,7 @@ dvb_nit_callback
             mpegts_mux_set_crid_authority(mux, dauth);
           break;
         case DVB_DESC_LOCAL_CHAN:
-          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux, bq))
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
             return -1;
           break;
         case DVB_DESC_SERVICE_LIST:
@@ -1170,6 +1173,7 @@ dvb_fs_sdt_callback
   if (tableid != 0xBD)
     return -1;
   r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
+  if (r == 0) bouquet_completed(bq);
   if (r != 1) return r;
   if (len < 5) return -1;
   ptr += 5;
@@ -1216,7 +1220,7 @@ dvb_fs_sdt_callback
           LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
             if (mux->mm_onid == onid && mux->mm_tsid == tsid)
               break;
-          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux, bq))
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
             return -1;
           break;
         case DVB_DESC_SAT_DEL:

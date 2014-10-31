@@ -111,6 +111,7 @@ typedef struct mpegts_table_state
   int      version;
   int      complete;
   uint32_t sections[8];
+  void    *bouquet;
   RB_ENTRY(mpegts_table_state)   link;
 } mpegts_table_state_t;
 

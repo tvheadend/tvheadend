@@ -31,6 +31,7 @@
 #include "streaming.h"
 #include "service.h"
 #include "profile.h"
+#include "bouquet.h"
 #include "api.h"
 
 static service_mapper_status_t service_mapper_stat; 
@@ -38,7 +39,6 @@ static pthread_cond_t          service_mapper_cond;
 static struct service_queue    service_mapper_queue;
 static service_mapper_conf_t   service_mapper_conf;
 
-static void service_mapper_process ( service_t *s );
 static void *service_mapper_thread ( void *p );
 
 /**
@@ -80,7 +80,8 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
   service_t *s;
 
   /* Reset stat counters */
-  service_mapper_reset_stats();
+  if (TAILQ_EMPTY(&service_mapper_queue))
+    service_mapper_reset_stats();
 
   /* Store config */
   service_mapper_conf = *conf;
@@ -135,7 +136,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     /* Process */
     } else {
       tvhtrace("service_mapper", "  process");
-      service_mapper_process(s);
+      service_mapper_process(s, NULL);
     }
   }
   
@@ -264,29 +265,32 @@ service_mapper_clean ( service_t *s, channel_t *c, void *origin )
  * Process a service 
  */
 void
-service_mapper_process ( service_t *s )
+service_mapper_process ( service_t *s, bouquet_t *bq )
 {
   channel_t *chn = NULL;
   const char *name;
 
   /* Ignore */
   if (s->s_status == SERVICE_ZOMBIE) {
-    service_mapper_stat.ignore++;
+    if (!bq)
+      service_mapper_stat.ignore++;
     goto exit;
   }
 
   /* Safety check (in-case something has been mapped manually in the interim) */
-  if (LIST_FIRST(&s->s_channels)) {
+  if (!bq && LIST_FIRST(&s->s_channels)) {
     service_mapper_stat.ignore++;
     goto exit;
   }
 
   /* Find existing channel */
   name = service_get_channel_name(s);
-  if (service_mapper_conf.merge_same_name && name && *name)
+  if (!bq && service_mapper_conf.merge_same_name && name && *name)
     chn = channel_find_by_name(name);
-  if (!chn)
+  if (!chn) {
     chn = channel_create(NULL, NULL, NULL);
+    chn->ch_bouquet = bq;
+  }
     
   /* Map */
   if (chn) {
@@ -313,9 +317,12 @@ service_mapper_process ( service_t *s )
     idnode_notify_simple(&chn->ch_id);
     channel_save(chn);
   }
-  service_mapper_stat.ok++;
-
-  tvhinfo("service_mapper", "%s: success", s->s_nicename);
+  if (!bq) {
+    service_mapper_stat.ok++;
+    tvhinfo("service_mapper", "%s: success", s->s_nicename);
+  } else {
+    tvhinfo("bouquet", "%s: mapped service from %s", s->s_nicename, bq->bq_name ?: "<unknown>");
+  }
 
   /* Remove */
 exit:
@@ -430,7 +437,7 @@ service_mapper_thread ( void *aux )
       tvhinfo("service_mapper", "%s: failed [err %s]", s->s_nicename, err);
       service_mapper_stat.fail++;
     } else
-      service_mapper_process(s);
+      service_mapper_process(s, NULL);
 
     service_unref(s);
     service_mapper_stat.active = NULL;

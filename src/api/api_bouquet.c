@@ -25,6 +25,28 @@
 #include "access.h"
 #include "api.h"
 
+static int
+api_bouquet_list
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  bouquet_t *bq;
+  htsmsg_t *l, *e;
+
+  l = htsmsg_create_list();
+  pthread_mutex_lock(&global_lock);
+  RB_FOREACH(bq, &bouquets, bq_link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", idnode_uuid_as_str(&bq->bq_id));
+    htsmsg_add_str(e, "val", bq->bq_name ?: "");
+    htsmsg_add_msg(l, NULL, e);
+  }
+  pthread_mutex_unlock(&global_lock);
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  return 0;
+}
+
 static void
 api_bouquet_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
@@ -57,6 +79,7 @@ api_bouquet_create
 void api_bouquet_init ( void )
 {
   static api_hook_t ah[] = {
+    { "bouquet/list",    ACCESS_ADMIN, api_bouquet_list, NULL },
     { "bouquet/class",   ACCESS_ADMIN, api_idnode_class, (void*)&bouquet_class },
     { "bouquet/grid",    ACCESS_ADMIN, api_idnode_grid,  api_bouquet_grid },
     { "bouquet/create",  ACCESS_ADMIN, api_bouquet_create, NULL },
