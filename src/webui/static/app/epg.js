@@ -154,6 +154,13 @@ tvheadend.epgDetails = function(event) {
         });
         store.load();
 
+        buttons.push(new Ext.Button({
+            handler: playProgram,
+            iconCls: 'control_play',
+            tooltip: 'Play this program',
+            text: "Play program"
+        }));
+		
         var confcombo = new Ext.form.ComboBox({
             store: store,
             triggerAction: 'all',
@@ -170,11 +177,15 @@ tvheadend.epgDetails = function(event) {
         buttons.push(new Ext.Button({
             handler: recordEvent,
             iconCls: 'rec',
+            tooltip: 'Record now this program',
             text: "Record program"
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
             iconCls: 'autoRec',
+            tooltip: 'Create an automatic recording entry for this program that will '
+                 + 'record all future programmes that matches '
+                 + 'the current query.',
             text: event.serieslinkId ? "Record series" : "Autorec"
         }));
 
@@ -188,6 +199,7 @@ tvheadend.epgDetails = function(event) {
 
     var win = new Ext.Window({
         title: 'Broadcast Details',
+        iconCls: 'broadcast_details',
         layout: 'fit',
         width: 600,
         height: 400,
