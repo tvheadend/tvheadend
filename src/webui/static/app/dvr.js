@@ -25,12 +25,12 @@ tvheadend.dvrDetails = function(uuid) {
 
         content += '<div class="x-epg-title">' + title + '</div>';
         content += '<div class="x-epg-title">' + episode + '</div>';
-        content += '<div class="x-epg-desc">Scheduled Start Time: ' + start_real + '</div>';
-        content += '<div class="x-epg-desc">Scheduled Stop Time: ' + stop_real + '</div>';
+        content += '<div class="x-epg-desc">Scheduled Start Time: ' + new Date(start_real * 1000) + '</div>';
+        content += '<div class="x-epg-desc">Scheduled Stop Time: ' + new Date(stop_real * 1000) + '</div>';
         content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';
         content += '<div class="x-epg-meta">Status: ' + status + '</div>';
-        content += '<div class="x-epg-meta">File size: ' + filesize/1000000 + ' MB</div>';
+        content += '<div class="x-epg-meta">File size: ' + parseInt(filesize / 1000000) + ' MB</div>';
 
         var win = new Ext.Window({
             title: title,
