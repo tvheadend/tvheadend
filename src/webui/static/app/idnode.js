@@ -758,6 +758,7 @@ tvheadend.idnode_editor = function(item, conf)
     if (!conf.noButtons) {
         var saveBtn = new Ext.Button({
             text: 'Save',
+            iconCls: 'save',
             handler: function() {
                 var node = panel.getForm().getFieldValues();
                 node.uuid = item.uuid;
