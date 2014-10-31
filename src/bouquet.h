@@ -29,13 +29,16 @@ typedef struct bouquet {
 
   int           bq_saveflag;
   int           bq_in_load;
+  time_t        bq_updated;
 
   int           bq_shield;
   int           bq_enabled;
+  int           bq_maptoch;
   char         *bq_name;
   char         *bq_src;
   char         *bq_comment;
   idnode_set_t *bq_services;
+  idnode_set_t *bq_active_services;
   htsmsg_t     *bq_services_waiting;
   uint32_t      bq_lcn_offset;
 
@@ -50,37 +53,30 @@ extern const idclass_t bouquet_class;
 /**
  *
  */
-bouquet_t *
-bouquet_create(const char *uuid, htsmsg_t *conf,
-               const char *name, const char *src);
+
+htsmsg_t * bouquet_class_get_list(void *o);
+
+bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
+                           const char *name, const char *src);
+
+void bouquet_destroy_by_service(service_t *t);
+
+static inline bouquet_t *
+bouquet_find_by_uuid(const char *uuid)
+  { return (bouquet_t *)idnode_find(uuid, &bouquet_class, NULL); }
+
+bouquet_t * bouquet_find_by_source(const char *name, const char *src, int create);
+
+void bouquet_map_to_channels(bouquet_t *bq);
+void bouquet_add_service(bouquet_t *bq, service_t *s);
+void bouquet_completed(bouquet_t *bq);
+
+void bouquet_save(bouquet_t *bq, int notify);
 
 /**
  *
  */
-void
-bouquet_destroy_by_service(service_t *t);
 
-/**
- *
- */
-bouquet_t *
-bouquet_find_by_source(const char *name, const char *src, int create);
-
-/**
- *
- */
-void
-bouquet_add_service(bouquet_t *bq, service_t *s);
-
-/**
- *
- */
-void
-bouquet_save(bouquet_t *bq, int notify);
-
-/**
- *
- */
 void bouquet_init(void);
 void bouquet_service_resolve(void);
 void bouquet_done(void);

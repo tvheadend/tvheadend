@@ -42,6 +42,7 @@
 #include "imagecache.h"
 #include "service_mapper.h"
 #include "htsbuf.h"
+#include "bouquet.h"
 #include "intlconv.h"
 
 struct channel_tree channels;
@@ -273,6 +274,33 @@ channel_class_epggrab_list ( void *o )
   return m;
 }
 
+static const void *
+channel_class_bouquet_get ( void *o )
+{
+  static const char *sbuf;
+  channel_t *ch = o;
+  if (ch->ch_bouquet)
+    sbuf = idnode_uuid_as_str(&ch->ch_bouquet->bq_id);
+  else
+    sbuf = "";
+  return &sbuf;
+}
+
+static int
+channel_class_bouquet_set ( void *o, const void *v )
+{
+  channel_t *ch = o;
+  bouquet_t *bq = bouquet_find_by_uuid(v);
+  if (bq == NULL && ch->ch_bouquet) {
+    ch->ch_bouquet = NULL;
+    return 1;
+  } else if (bq != ch->ch_bouquet) {
+    ch->ch_bouquet = bq;
+    return 1;
+  }
+  return 0;
+}
+
 const idclass_t channel_class = {
   .ic_class      = "channel",
   .ic_caption    = "Channel",
@@ -362,6 +390,15 @@ const idclass_t channel_class = {
       .set      = channel_class_tags_set,
       .list     = channel_tag_class_get_list,
       .rend     = channel_class_tags_rend
+    },
+    {
+      .type     = PT_STR,
+      .id       = "bouquet",
+      .name     = "Bouquet (auto)",
+      .get      = channel_class_bouquet_get,
+      .set      = channel_class_bouquet_set,
+      .list     = bouquet_class_get_list,
+      .opts     = PO_RDONLY
     },
     {}
   }
@@ -527,12 +564,20 @@ channel_get_name ( channel_t *ch )
 int64_t
 channel_get_number ( channel_t *ch )
 {
-  int n;
+  int64_t n = 0;
   channel_service_mapping_t *csm;
-  if (ch->ch_number) return ch->ch_number;
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
-    if ((n = service_get_channel_number(csm->csm_svc)))
-      return n;
+  if (ch->ch_number) {
+    n = ch->ch_number;
+  } else {
+    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
+      if ((n = service_get_channel_number(csm->csm_svc)))
+        break;
+  }
+  if (n) {
+    if (ch->ch_bouquet)
+      n += (int64_t)ch->ch_bouquet->bq_lcn_offset * CHANNEL_SPLIT;
+    return n;
+  }
   return 0;
 }
 
