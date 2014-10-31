@@ -259,7 +259,7 @@
 }
 
 .clock {
-    background-image: url(../icons/clock.png) !important;
+    background-image: url(../icons/schedule.png) !important;
 }
 
 .exclamation {
@@ -464,6 +464,10 @@
 
 .broadcast_details{
     background-image: url(../icons/broadcast_details.png) !important;
+}
+
+.time_schedules{
+    background-image: url(../icons/time_schedules.png) !important;
 }
 
 .x-linked {
