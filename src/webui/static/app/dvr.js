@@ -11,8 +11,13 @@ tvheadend.dvrDetails = function(uuid) {
         var params = d[0].params;
         var chicon = params[0].value;
         var title = params[1].value;
-        var desc = params[2].value;
-        var status = params[3].value;
+        var episode = params[2].value;
+        var start_real = params[3].value;
+        var stop_real = params[4].value;
+        var duration = params[5].value;
+        var desc = params[6].value;
+        var status = params[7].value;
+        var filesize = params[8].value;
         var content = '';
         var but;
 
@@ -20,16 +25,21 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<img class="x-epg-chicon" src="' + chicon + '">';
 
         content += '<div class="x-epg-title">' + title + '</div>';
+        content += '<div class="x-epg-title">' + episode + '</div>';
+        content += '<div class="x-epg-meta">Scheduled Start Time: ' + new Date(start_real * 1000).toLocaleString() + '</div>';
+        content += '<div class="x-epg-meta">Scheduled Stop Time: ' + new Date(stop_real * 1000).toLocaleString() + '</div>';
+        content += '<div class="x-epg-meta">Duration: ' + parseInt(duration / 60) + ' min</div>';        
         content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';
         content += '<div class="x-epg-meta">Status: ' + status + '</div>';
+        content += '<div class="x-epg-meta">File size: ' + parseInt(filesize / 1000000) + ' MB</div>';
 
         var win = new Ext.Window({
             title: title,
             iconCls: 'info',
             layout: 'fit',
-            width: 400,
-            height: 300,
+            width: 500,
+            height: 400,
             constrainHeader: true,
             buttonAlign: 'center',
             html: content
@@ -43,7 +53,8 @@ tvheadend.dvrDetails = function(uuid) {
         url: 'api/idnode/load',
         params: {
             uuid: uuid,
-            list: 'channel_icon,disp_title,disp_description,status'
+            list: 'channel_icon,disp_title,episode,start_real,stop_real,' +
+                  'duration,disp_description,status,filesize'
         },
         success: function(d) {
             d = json_decode(d);
