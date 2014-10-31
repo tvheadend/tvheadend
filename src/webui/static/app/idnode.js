@@ -864,6 +864,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
     /* Create window */
     win = new Ext.Window({
         title: 'Add ' + conf.titleS,
+        iconCls: 'add',
         layout: 'fit',
         autoWidth: true,
         autoHeight: true,
@@ -1222,6 +1223,7 @@ tvheadend.idnode_grid = function(panel, conf)
                             p.setSize(800, 600);
                             var w = new Ext.Window({
                                 title: 'Edit ' + conf.titleS,
+                                iconCls: 'edit',
                                 layout: 'fit',
                                 autoWidth: true,
                                 autoHeight: true,
@@ -1245,6 +1247,7 @@ tvheadend.idnode_grid = function(panel, conf)
                                     var p = tvheadend.idnode_editor(d[0], c);
                                     w = new Ext.Window({
                                         title: 'Edit ' + conf.titleS,
+                                        iconCls: 'edit',
                                         layout: 'fit',
                                         autoWidth: true,
                                         autoHeight: true,
