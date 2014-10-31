@@ -30,7 +30,7 @@ tvheadend.dvrDetails = function(uuid) {
         content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';
         content += '<div class="x-epg-meta">Status: ' + status + '</div>';
-        content += '<div class="x-epg-meta">File size: ' + filesize + ' MB</div>';
+        content += '<div class="x-epg-meta">File size: ' + filesize/1000000 + ' MB</div>';
 
         var win = new Ext.Window({
             title: title,
