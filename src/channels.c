@@ -912,6 +912,25 @@ channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, int flags)
   }
 }
 
+/**
+ *
+ */
+void
+channel_tag_unmap(channel_t *ch, channel_tag_t *ct)
+{
+  channel_tag_mapping_t *ctm, *n;
+
+  for (ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
+    n = LIST_NEXT(ctm, ctm_channel_link);
+    if (ctm->ctm_channel == ch) {
+      LIST_REMOVE(ctm, ctm_channel_link);
+      LIST_REMOVE(ctm, ctm_tag_link);
+      free(ctm);
+      channel_tag_save(ct);
+      return;
+    }
+  }
+}
 
 /**
  *
