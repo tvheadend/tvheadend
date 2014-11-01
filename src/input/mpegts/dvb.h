@@ -492,6 +492,10 @@ int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
 int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
 
+int dvb_sat_position( const dvb_mux_conf_t *mc );
+
+const char *dvb_sat_position_to_str( int position, char *buf, size_t buflen );
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 void dvb_done       ( void );

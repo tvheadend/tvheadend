@@ -811,10 +811,9 @@ dvb_nit_callback
       if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
         dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
         if (mc->u.dmc_fe_qpsk.orbital_dir) {
-          int pos = mc->u.dmc_fe_qpsk.orbital_pos;
-          if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
-            pos = -pos;
-          snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbs,%d/%s", pos, name);
+          char buf[16];
+          dvb_sat_position_to_str(dvb_sat_position(mc), buf, sizeof(buf));
+          snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbs,%s/%s", buf, name);
         }
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbt_class)) {
         snprintf(dauth, sizeof(dauth), "dvb-bouquet://dvbt/%s", name);
@@ -1801,12 +1800,9 @@ psi_tables_dvb ( mpegts_mux_t *mm )
 #if ENABLE_MPEGTS_DVB
   if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
-    if (mc->dmc_fe_type == DVB_TYPE_S) {
-      int pos = mc->u.dmc_fe_qpsk.orbital_pos;
-      if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
-        pos = -pos;
-      dvb_fastscan_each(mm, pos, mc->dmc_fe_freq, psi_tables_dvb_fastscan);
-    }
+    if (mc->dmc_fe_type == DVB_TYPE_S)
+      dvb_fastscan_each(mm, dvb_sat_position(mc),
+                        mc->dmc_fe_freq, psi_tables_dvb_fastscan);
   }
 #endif
 }
