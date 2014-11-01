@@ -842,6 +842,32 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   }
 }
 
+int
+dvb_sat_position(const dvb_mux_conf_t *mc)
+{
+  int pos = mc->u.dmc_fe_qpsk.orbital_pos;
+  assert(mc->dmc_fe_type == DVB_TYPE_S);
+  if (!mc->u.dmc_fe_qpsk.orbital_dir)
+    return INT_MAX;
+  if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
+    return -pos;
+  return pos;
+}
+
+const char *
+dvb_sat_position_to_str(int position, char *buf, size_t buflen)
+{
+  const int dec = position % 10;
+
+  if (!buf || !buflen)
+    return "";
+  snprintf(buf, buflen, "%d", position / 10);
+  if (dec)
+    snprintf(buf + strlen(buf), buflen - strlen(buf), ".%d", dec);
+  snprintf(buf + strlen(buf), buflen - strlen(buf), "%c", dec < 0 ? 'W' : 'E');
+  return buf;
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 /**
