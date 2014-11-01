@@ -143,16 +143,53 @@ bouquet_find_by_source(const char *name, const char *src, int create)
 /*
  *
  */
+static channel_tag_t *
+bouquet_tag(bouquet_t *bq, int create)
+{
+  char buf[128];
+  /* TODO: cache the channel_tag_t * pointer */
+  snprintf(buf, sizeof(buf), "*** %s", bq->bq_name ?: "???");
+  return channel_tag_find_by_name(buf, create);
+}
+
+/*
+ *
+ */
+static int
+noname(const char *s)
+{
+  if (!s)
+    return 1;
+  while (*s) {
+    if (*s > ' ')
+      return 0;
+    s++;
+  }
+  return 1;
+}
+
+/*
+ *
+ */
 static void
 bouquet_map_channel(bouquet_t *bq, service_t *t)
 {
+  channel_t *ch = NULL;
   channel_service_mapping_t *csm;
 
+  if (!bq->bq_mapnolcn && service_get_channel_number(t) <= 0)
+    return;
+  if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
+    return;
   LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
     if (csm->csm_chn->ch_bouquet == bq)
       break;
   if (!csm)
-    service_mapper_process(t, bq);
+    ch = service_mapper_process(t, bq);
+  else
+    ch = csm->csm_chn;
+  if (ch && bq->bq_chtag)
+    channel_tag_map(ch, bouquet_tag(bq, 1));
 }
 
 /*
@@ -324,6 +361,68 @@ bouquet_class_maptoch_notify ( void *obj )
   bouquet_map_to_channels((bouquet_t *)obj);
 }
 
+static void
+bouquet_class_mapnolcn_notify ( void *obj )
+{
+  bouquet_t *bq = obj;
+  service_t *t;
+  size_t z;
+
+  if (!bq->bq_mapnolcn && bq->bq_enabled && bq->bq_maptoch) {
+    for (z = 0; z < bq->bq_services->is_count; z++) {
+      t = (service_t *)bq->bq_services->is_array[z];
+      if (service_get_channel_number(t) <= 0)
+        bouquet_unmap_channel(bq, t);
+    }
+  } else {
+    bouquet_map_to_channels((bouquet_t *)obj);
+  }
+}
+
+static void
+bouquet_class_mapnoname_notify ( void *obj )
+{
+  bouquet_t *bq = obj;
+  service_t *t;
+  size_t z;
+
+  if (!bq->bq_mapnoname && bq->bq_enabled && bq->bq_maptoch) {
+    for (z = 0; z < bq->bq_services->is_count; z++) {
+      t = (service_t *)bq->bq_services->is_array[z];
+      if (noname(service_get_channel_name(t)))
+        bouquet_unmap_channel(bq, t);
+    }
+  } else {
+    bouquet_map_to_channels((bouquet_t *)obj);
+  }
+}
+
+static void
+bouquet_class_chtag_notify ( void *obj )
+{
+  bouquet_t *bq = obj;
+  service_t *t;
+  channel_service_mapping_t *csm;
+  channel_tag_t *ct;
+  size_t z;
+
+  if (!bq->bq_chtag && bq->bq_enabled && bq->bq_maptoch) {
+    ct = bouquet_tag(bq, 0);
+    if (!ct)
+      return;
+    for (z = 0; z < bq->bq_services->is_count; z++) {
+      t = (service_t *)bq->bq_services->is_array[z];
+      LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
+        if (csm->csm_chn->ch_bouquet == bq)
+          break;
+      if (csm)
+        channel_tag_unmap(csm->csm_chn, ct);
+    }
+  } else {
+    bouquet_map_to_channels((bouquet_t *)obj);
+  }
+}
+
 static const void *
 bouquet_class_services_get ( void *obj )
 {
@@ -392,6 +491,27 @@ const idclass_t bouquet_class = {
       .name     = "Auto-Map to Channels",
       .off      = offsetof(bouquet_t, bq_maptoch),
       .notify   = bouquet_class_maptoch_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "mapnolcn",
+      .name     = "Map Zero Numbers",
+      .off      = offsetof(bouquet_t, bq_mapnolcn),
+      .notify   = bouquet_class_mapnolcn_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "mapnoname",
+      .name     = "Map No Name",
+      .off      = offsetof(bouquet_t, bq_mapnoname),
+      .notify   = bouquet_class_mapnoname_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "chtag",
+      .name     = "Create Tag",
+      .off      = offsetof(bouquet_t, bq_chtag),
+      .notify   = bouquet_class_chtag_notify,
     },
     {
       .type     = PT_STR,

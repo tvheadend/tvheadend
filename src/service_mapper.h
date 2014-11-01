@@ -75,7 +75,7 @@ void service_mapper_unlink ( struct service *s, struct channel *c, void *origin 
 int service_mapper_clean ( struct service *s, struct channel *ch, void *origin );
 
 // Process one service
-void service_mapper_process ( struct service *s, struct bouquet *bq );
+struct channel *service_mapper_process ( struct service *s, struct bouquet *bq );
 
 // Resets the stat counters
 void service_mapper_reset_stats ( void );

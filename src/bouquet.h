@@ -34,6 +34,9 @@ typedef struct bouquet {
   int           bq_shield;
   int           bq_enabled;
   int           bq_maptoch;
+  int           bq_mapnolcn;
+  int           bq_mapnoname;
+  int           bq_chtag;
   char         *bq_name;
   char         *bq_src;
   char         *bq_comment;

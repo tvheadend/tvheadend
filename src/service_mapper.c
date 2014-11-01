@@ -264,7 +264,7 @@ service_mapper_clean ( service_t *s, channel_t *c, void *origin )
 /*
  * Process a service 
  */
-void
+channel_t *
 service_mapper_process ( service_t *s, bouquet_t *bq )
 {
   channel_t *chn = NULL;
@@ -327,6 +327,7 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
   /* Remove */
 exit:
   service_mapper_remove(s);
+  return chn;
 }
 
 /**
