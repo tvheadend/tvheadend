@@ -71,6 +71,7 @@ bouquet_find_by_uuid(const char *uuid)
 bouquet_t * bouquet_find_by_source(const char *name, const char *src, int create);
 
 void bouquet_map_to_channels(bouquet_t *bq);
+void bouquet_notify_channels(bouquet_t *bq);
 void bouquet_add_service(bouquet_t *bq, service_t *s);
 void bouquet_completed(bouquet_t *bq);
 
