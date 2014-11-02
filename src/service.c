@@ -1166,6 +1166,10 @@ service_restart(service_t *t, int had_components)
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_data(SMT_START,
                                                     service_build_stream_start(t)));
+  } else {
+    streaming_pad_deliver(&t->s_streaming_pad,
+                          streaming_msg_create_code(SMT_STOP,
+                                                    SM_CODE_NO_SERVICE));
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);

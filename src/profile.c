@@ -466,8 +466,11 @@ profile_input(void *opaque, streaming_message_t *sm)
   profile_chain_t *prch = opaque, *prch2;
   profile_sharer_t *prsh = prch->prch_sharer;
 
-  if (sm->sm_type == SMT_START)
+  if (sm->sm_type == SMT_START) {
+    if (!prsh->prsh_master)
+      prsh->prsh_master = prch;
     prch->prch_stop = 0;
+  }
 
   if (prch == prsh->prsh_master) {
     if (sm->sm_type == SMT_STOP) {

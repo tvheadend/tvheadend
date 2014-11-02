@@ -483,4 +483,3 @@ tsfix_destroy(streaming_target_t *pad)
   tsfix_destroy_streams(tf);
   free(tf);
 }
-
