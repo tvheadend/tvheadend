@@ -305,8 +305,8 @@ profile_get_name(profile_t *pro)
 /*
  *
  */
-profile_t *
-profile_find_by_name(const char *name, const char *alt)
+static profile_t *
+profile_find_by_name2(const char *name, const char *alt, int all)
 {
   profile_t *pro;
 
@@ -321,18 +321,27 @@ profile_find_by_name(const char *name, const char *alt)
     return profile_default;
 
   TAILQ_FOREACH(pro, &profiles, pro_link) {
-    if (pro->pro_enabled && !strcmp(pro->pro_name, name))
+    if ((all || pro->pro_enabled) && !strcmp(pro->pro_name, name))
       return pro;
   }
 
   if (alt) {
     TAILQ_FOREACH(pro, &profiles, pro_link) {
-      if (pro->pro_enabled && !strcmp(pro->pro_name, alt))
+      if ((all || pro->pro_enabled) && !strcmp(pro->pro_name, alt))
         return pro;
     }
   }
 
   return profile_default;
+}
+
+/*
+ *
+ */
+profile_t *
+profile_find_by_name(const char *name, const char *alt)
+{
+  return profile_find_by_name2(name, alt, 0);
 }
 
 /*
@@ -1431,7 +1440,7 @@ profile_init(void)
   }
 
   name = "pass";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL,1 );
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1449,7 +1458,7 @@ profile_init(void)
   }
 
   name = "matroska";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1464,7 +1473,7 @@ profile_init(void)
   }
 
   name = "htsp";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1481,7 +1490,7 @@ profile_init(void)
 #if ENABLE_LIBAV
 
   name = "webtv-vp8-vorbis-webm";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1500,7 +1509,7 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
   name = "webtv-h264-aac-mpegts";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1519,7 +1528,7 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
   name = "webtv-h264-aac-matroska";
-  pro = profile_find_by_name(name, NULL);
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
