@@ -364,7 +364,7 @@ profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt)
     res = pro;
   }
   if (!res)
-    res = profile_find_by_name(NULL, NULL);
+    res = profile_find_by_name(!strcmp(alt, "htsp") ? "htsp" : NULL, NULL);
   return res;
 }
 
