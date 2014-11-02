@@ -98,6 +98,8 @@ bouquet_destroy(bouquet_t *bq)
 
   idnode_set_free(bq->bq_active_services);
   idnode_set_free(bq->bq_services);
+  assert(bq->bq_services_waiting == NULL);
+  free((char *)bq->bq_chtag_waiting);
   free(bq->bq_name);
   free(bq->bq_src);
   free(bq);
@@ -116,6 +118,21 @@ bouquet_destroy_by_service(service_t *t)
   RB_FOREACH(bq, &bouquets, bq_link)
     if (idnode_set_exists(bq->bq_services, &t->s_id))
       idnode_set_remove(bq->bq_services, &t->s_id);
+}
+
+/**
+ *
+ */
+void
+bouquet_destroy_by_channel_tag(channel_tag_t *ct)
+{
+  bouquet_t *bq;
+
+  lock_assert(&global_lock);
+
+  RB_FOREACH(bq, &bouquets, bq_link)
+    if (bq->bq_chtag_ptr == ct)
+      bq->bq_chtag_ptr = NULL;
 }
 
 /*
@@ -146,10 +163,24 @@ bouquet_find_by_source(const char *name, const char *src, int create)
 static channel_tag_t *
 bouquet_tag(bouquet_t *bq, int create)
 {
+  channel_tag_t *ct;
   char buf[128];
-  /* TODO: cache the channel_tag_t * pointer */
+
+  assert(!bq->bq_in_load);
+  if (bq->bq_chtag_waiting) {
+    bq->bq_chtag_ptr = channel_tag_find_by_uuid(bq->bq_chtag_waiting);
+    free((char *)bq->bq_chtag_waiting);
+    bq->bq_chtag_waiting = NULL;
+  }
+  if (bq->bq_chtag_ptr)
+    return bq->bq_chtag_ptr;
   snprintf(buf, sizeof(buf), "*** %s", bq->bq_name ?: "???");
-  return channel_tag_find_by_name(buf, create);
+  ct = channel_tag_find_by_name(buf, create);
+  if (ct) {
+    bq->bq_chtag_ptr = ct;
+    bouquet_save(bq, 0);
+  }
+  return ct;
 }
 
 /*
@@ -386,6 +417,8 @@ bouquet_class_mapnolcn_notify ( void *obj )
   service_t *t;
   size_t z;
 
+  if (bq->bq_in_load)
+    return;
   if (!bq->bq_mapnolcn && bq->bq_enabled && bq->bq_maptoch) {
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
@@ -404,6 +437,8 @@ bouquet_class_mapnoname_notify ( void *obj )
   service_t *t;
   size_t z;
 
+  if (bq->bq_in_load)
+    return;
   if (!bq->bq_mapnoname && bq->bq_enabled && bq->bq_maptoch) {
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
@@ -424,6 +459,8 @@ bouquet_class_chtag_notify ( void *obj )
   channel_tag_t *ct;
   size_t z;
 
+  if (bq->bq_in_load)
+    return;
   if (!bq->bq_chtag && bq->bq_enabled && bq->bq_maptoch) {
     ct = bouquet_tag(bq, 0);
     if (!ct)
@@ -444,7 +481,44 @@ bouquet_class_chtag_notify ( void *obj )
 static void
 bouquet_class_lcn_offset_notify ( void *obj )
 {
+  if (((bouquet_t *)obj)->bq_in_load)
+    return;
   bouquet_notify_channels((bouquet_t *)obj);
+}
+
+static const void *
+bouquet_class_chtag_ref_get ( void *obj )
+{
+  static const char *buf;
+  bouquet_t *bq = obj;
+
+  if (bq->bq_chtag_ptr)
+    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id);
+  else
+    buf = "";
+  return &buf;
+}
+
+static char *
+bouquet_class_chtag_ref_rend ( void *obj )
+{
+  bouquet_t *bq = obj;
+  if (bq->bq_chtag_ptr)
+    return strdup(bq->bq_chtag_ptr->ct_name ?: "");
+  else
+    return strdup("");
+}
+
+static int
+bouquet_class_chtag_ref_set ( void *obj, const void *p )
+{
+  bouquet_t *bq = obj;
+
+  free((char *)bq->bq_chtag_waiting);
+  bq->bq_chtag_waiting = NULL;
+  if (bq->bq_in_load)
+    bq->bq_chtag_waiting = strdup((const char *)p);
+  return 0;
 }
 
 static const void *
@@ -536,6 +610,15 @@ const idclass_t bouquet_class = {
       .name     = "Create Tag",
       .off      = offsetof(bouquet_t, bq_chtag),
       .notify   = bouquet_class_chtag_notify,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "chtag_ref",
+      .name     = "Channel Tag Reference",
+      .get      = bouquet_class_chtag_ref_get,
+      .set      = bouquet_class_chtag_ref_set,
+      .rend     = bouquet_class_chtag_ref_rend,
+      .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_STR,

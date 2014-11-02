@@ -926,7 +926,12 @@ channel_tag_unmap(channel_t *ch, channel_tag_t *ct)
       LIST_REMOVE(ctm, ctm_channel_link);
       LIST_REMOVE(ctm, ctm_tag_link);
       free(ctm);
-      channel_tag_save(ct);
+      channel_save(ch);
+      idnode_notify_simple(&ch->ch_id);
+      if (ct->ct_enabled && !ct->ct_internal) {
+        htsp_tag_update(ct);
+        htsp_channel_update(ch);
+      }
       return;
     }
   }
@@ -990,6 +995,7 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
   TAILQ_REMOVE(&channel_tags, ct, ct_link);
   idnode_unlink(&ct->ct_id);
 
+  bouquet_destroy_by_channel_tag(ct);
   autorec_destroy_by_channel_tag(ct, delconf);
   access_destroy_by_channel_tag(ct, delconf);
 

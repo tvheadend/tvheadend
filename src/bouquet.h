@@ -22,6 +22,7 @@
 #include "idnode.h"
 #include "htsmsg.h"
 #include "service.h"
+#include "channels.h"
 
 typedef struct bouquet {
   idnode_t bq_id;
@@ -37,6 +38,8 @@ typedef struct bouquet {
   int           bq_mapnolcn;
   int           bq_mapnoname;
   int           bq_chtag;
+  channel_tag_t*bq_chtag_ptr;
+  const char   *bq_chtag_waiting;
   char         *bq_name;
   char         *bq_src;
   char         *bq_comment;
@@ -63,6 +66,7 @@ bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
                            const char *name, const char *src);
 
 void bouquet_destroy_by_service(service_t *t);
+void bouquet_destroy_by_channel_tag(channel_tag_t *ct);
 
 static inline bouquet_t *
 bouquet_find_by_uuid(const char *uuid)
