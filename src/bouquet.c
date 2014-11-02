@@ -286,6 +286,24 @@ bouquet_map_to_channels(bouquet_t *bq)
   }
 }
 
+/*
+ *
+ */
+void
+bouquet_notify_channels(bouquet_t *bq)
+{
+  channel_service_mapping_t *csm;
+  service_t *t;
+  size_t z;
+
+  for (z = 0; z < bq->bq_services->is_count; z++) {
+    t = (service_t *)bq->bq_services->is_array[z];
+    LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
+      if (csm->csm_chn->ch_bouquet == bq)
+        idnode_notify_simple(&csm->csm_chn->ch_id);
+  }
+}
+
 /**
  *
  */
@@ -375,7 +393,7 @@ bouquet_class_mapnolcn_notify ( void *obj )
         bouquet_unmap_channel(bq, t);
     }
   } else {
-    bouquet_map_to_channels((bouquet_t *)obj);
+    bouquet_map_to_channels(bq);
   }
 }
 
@@ -393,7 +411,7 @@ bouquet_class_mapnoname_notify ( void *obj )
         bouquet_unmap_channel(bq, t);
     }
   } else {
-    bouquet_map_to_channels((bouquet_t *)obj);
+    bouquet_map_to_channels(bq);
   }
 }
 
@@ -419,8 +437,14 @@ bouquet_class_chtag_notify ( void *obj )
         channel_tag_unmap(csm->csm_chn, ct);
     }
   } else {
-    bouquet_map_to_channels((bouquet_t *)obj);
+    bouquet_map_to_channels(bq);
   }
+}
+
+static void
+bouquet_class_lcn_offset_notify ( void *obj )
+{
+  bouquet_notify_channels((bouquet_t *)obj);
 }
 
 static const void *
@@ -554,6 +578,7 @@ const idclass_t bouquet_class = {
       .id       = "lcn_off",
       .name     = "Channel Number Offset",
       .off      = offsetof(bouquet_t, bq_lcn_offset),
+      .notify   = bouquet_class_lcn_offset_notify,
     },
     {}
   }
