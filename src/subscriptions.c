@@ -647,10 +647,13 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
   th_subscription_t *s;
   channel_t *ch = NULL;
   service_t *t  = NULL;
+  const char *pro_name;
 
   assert(prch);
   assert(prch->prch_id);
   assert(prch->prch_st);
+
+  pro_name = prch->prch_pro ? (prch->prch_pro->pro_name ?: "") : "<none>";
 
   if (service)
     t  = prch->prch_id;
@@ -660,11 +663,11 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
   s = subscription_create(prch, weight, name, flags, subscription_input,
                           hostname, username, client);
   if (ch)
-    tvhtrace("subscription", "%04X: creating subscription for %s weight %d",
-             shortid(s), channel_get_name(ch), weight);
+    tvhtrace("subscription", "%04X: creating subscription for %s weight %d using profile %s",
+             shortid(s), channel_get_name(ch), weight, pro_name);
   else
-    tvhtrace("subscription", "%04X: creating subscription for service %s weight %d",
-             shortid(s), t->s_nicename, weight);
+    tvhtrace("subscription", "%04X: creating subscription for service %s weight %d sing profile %s",
+             shortid(s), t->s_nicename, weight, pro_name);
   s->ths_channel = ch;
   s->ths_service = t;
   if (ch)

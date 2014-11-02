@@ -1791,7 +1791,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
    */
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
-  tvhdebug("htsp", "%s - subscribe to %s\n", htsp->htsp_logname, ch->ch_name ?: "");
+  tvhdebug("htsp", "%s - subscribe to %s using profile %s\n",
+           htsp->htsp_logname, channel_get_name(ch), pro->pro_name ?: "");
   hs->hs_s = subscription_create_from_channel(&hs->hs_prch, weight,
 					      htsp->htsp_logname,
 					      SUBSCRIPTION_STREAMING,
