@@ -961,7 +961,7 @@ main(int argc, char **argv)
 
 #if ENABLE_DBUS_1
   extern void dbus_shutdown(void);
-  dbus_shutdown();
+  if (opt_dbus) dbus_shutdown();
 #endif
   return 0;
 }
