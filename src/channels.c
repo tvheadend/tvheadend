@@ -569,9 +569,13 @@ channel_get_number ( channel_t *ch )
   if (ch->ch_number) {
     n = ch->ch_number;
   } else {
-    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
+    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+      if (ch->ch_bouquet &&
+          (n = bouquet_get_channel_number(ch->ch_bouquet, csm->csm_svc)))
+        break;
       if ((n = service_get_channel_number(csm->csm_svc)))
         break;
+    }
   }
   if (n) {
     if (ch->ch_bouquet)
@@ -661,6 +665,7 @@ channel_get_icon ( channel_t *ch )
           ch->ch_icon = strdup(icn);
           channel_save(ch);
           idnode_notify_simple(&ch->ch_id);
+          break;
         }
       }
     }

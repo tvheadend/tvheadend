@@ -183,6 +183,17 @@ void service_instance_list_clear(service_instance_list_t *sil);
 /**
  *
  */
+typedef struct service_lcn {
+  LIST_ENTRY(service_lcn) sl_link;
+  void     *sl_bouquet;
+  uint32_t  sl_lcn;
+  uint8_t   sl_seen;
+} service_lcn_t;
+
+
+/**
+ *
+ */
 typedef struct service {
   idnode_t s_id;
 
@@ -442,6 +453,11 @@ typedef struct service {
   tvhlog_limit_t s_tei_log;
 
   int64_t s_current_pts;
+
+  /*
+   * Local channel numbers per bouquet
+   */
+  LIST_HEAD(,service_lcn) s_lcns;
 
 } service_t;
 
