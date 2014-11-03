@@ -111,7 +111,6 @@ typedef struct mpegts_table_state
   int      version;
   int      complete;
   uint32_t sections[8];
-  void    *bouquet;
   RB_ENTRY(mpegts_table_state)   link;
 } mpegts_table_state_t;
 
@@ -172,6 +171,7 @@ struct mpegts_table
   char *mt_name;
 
   void *mt_opaque;
+  void *mt_bat;
   mpegts_table_callback_t mt_callback;
 
   RB_HEAD(,mpegts_table_state) mt_state;

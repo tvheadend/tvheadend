@@ -131,6 +131,9 @@ struct mpegts_mux;
 #define DVB_DESC_AAC                  0x7C
 #define DVB_DESC_LOCAL_CHAN           0x83
 
+#define DVB_DESC_FREESAT_LCN          0xD3
+#define DVB_DESC_FREESAT_REGIONS      0xD4
+
 /* Service type lookup */
 
 int dvb_servicetype_lookup ( int t );
@@ -202,7 +205,9 @@ int dvb_table_begin
    int tableid, uint64_t extraid, int minlen,
    struct mpegts_table_state **st, int *sect, int *last, int *ver);
 void dvb_table_reset
-  (struct mpegts_table *mt );
+  (struct mpegts_table *mt);
+void dvb_bat_destroy
+  (struct mpegts_table *mt);
 
 int dvb_pat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
