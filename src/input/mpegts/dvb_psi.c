@@ -497,7 +497,7 @@ dvb_freesat_add_service
   char name[64], src[64];
   if (!fr->bouquet) {
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
-    snprintf(src, sizeof(src), "dvb-freesat://28.2E,%04X,%u", bi->nbid, fr->regionid);
+    snprintf(src, sizeof(src), "dvb-freesat://dvbs,28.2E,%04X,%u", bi->nbid, fr->regionid);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
   bouquet_add_service(fr->bouquet, (service_t *)s, lcn);
@@ -935,7 +935,7 @@ dvb_bat_destroy( mpegts_table_t *mt )
 
 static void
 dvb_bat_completed
-  ( dvb_bat_t *b, const char *dstr, int tableid, int nbid, mpegts_mux_t *mux )
+  ( dvb_bat_t *b, const char *dstr, int tableid, int tsid, int nbid, mpegts_mux_t *mux )
 {
   dvb_bat_id_t *bi;
   dvb_bat_svc_t *bs;
@@ -966,12 +966,12 @@ dvb_bat_completed
         if (mc->u.dmc_fe_qpsk.orbital_dir) {
           char buf[16];
           dvb_sat_position_to_str(dvb_sat_position(mc), buf, sizeof(buf));
-          snprintf(src, sizeof(src), "dvb-bouquet://dvbs,%s,%04X", buf, bi->nbid);
+          snprintf(src, sizeof(src), "dvb-bouquet://dvbs,%s,%04X,%04X", buf, tsid, bi->nbid);
         }
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbt_class)) {
-        snprintf(src, sizeof(src), "dvb-bouquet://dvbt,%04X", bi->nbid);
+        snprintf(src, sizeof(src), "dvb-bouquet://dvbt,%04X,%04X", tsid, bi->nbid);
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbc_class)) {
-        snprintf(src, sizeof(src), "dvb-bouquet://dvbc,%04X", bi->nbid);
+        snprintf(src, sizeof(src), "dvb-bouquet://dvbc,%04X,%04X", tsid, bi->nbid);
       }
       if (src[0])
         bq = bouquet_find_by_source(bi->name, src, !TAILQ_EMPTY(&bi->services));
@@ -1022,7 +1022,7 @@ dvb_nit_callback
     if (tableid == 0x4A) {
       if ((b = mt->mt_bat) != NULL) {
         if (!b->complete)
-          dvb_bat_completed(b, mt->mt_name, tableid, nbid, mm);
+          dvb_bat_completed(b, mt->mt_name, tableid, mm->mm_tsid, nbid, mm);
         if (b->complete)
           dvb_bat_destroy_lists(mt);
       }
