@@ -863,7 +863,7 @@ dvb_sat_position_to_str(int position, char *buf, size_t buflen)
     return "";
   snprintf(buf, buflen, "%d", position / 10);
   if (dec)
-    snprintf(buf + strlen(buf), buflen - strlen(buf), ".%d", dec);
+    snprintf(buf + strlen(buf), buflen - strlen(buf), ".%d", abs(dec));
   snprintf(buf + strlen(buf), buflen - strlen(buf), "%c", dec < 0 ? 'W' : 'E');
   return buf;
 }
