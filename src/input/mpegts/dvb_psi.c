@@ -1465,7 +1465,7 @@ dvb_fs_sdt_callback
   mpegts_mux_t     *mm = mt->mt_mux, *mux;
   mpegts_network_t *mn = mm->mm_network;
   mpegts_table_state_t  *st  = NULL;
-  bouquet_t *bq = mt->mt_bat;
+  bouquet_t *bq = mt->mt_opaque;
 
   /* Fastscan ID */
   nbid = (ptr[0] << 8) | ptr[1];
@@ -1501,11 +1501,24 @@ dvb_fs_sdt_callback
     /* Initialise the loop */
     DVB_LOOP_INIT(ptr, len, 16, lptr, llen);
 
+    /* Find existing mux */
+    LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
+      if (mux->mm_onid == onid && mux->mm_tsid == tsid)
+        break;
+
+    if (!mux) {
+      tvhtrace(mt->mt_name, "    mux not found");
+      continue;
+    }
+
     /* Find service */
-    s       = mpegts_service_find(mm, service_id, 0, 1, &save);
-    charset = dvb_charset_find(mn, mm, s);
-    if (bq && s)
+    s       = mpegts_service_find(mux, service_id, 0, 1, &save);
+    charset = dvb_charset_find(mn, mux, s);
+    if (bq && s) {
       bouquet_add_service(bq, (service_t *)s, 0);
+    } else {
+      tvhtrace(mt->mt_name, "    service not found (bq %p, svc %p)", bq, s);
+    }
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -1513,14 +1526,10 @@ dvb_fs_sdt_callback
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
-                                sizeof(sprov), sname, sizeof(sname), charset))
+                               sizeof(sprov), sname, sizeof(sname), charset))
             return -1;
           break;
         case DVB_DESC_LOCAL_CHAN:
-          /* Find existing mux */
-          LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
-            if (mux->mm_onid == onid && mux->mm_tsid == tsid)
-              break;
           if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux))
             return -1;
           break;
