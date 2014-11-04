@@ -202,7 +202,7 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = "# Channels",
+      .name     = "# Mapped Channels",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_chn,
     },
