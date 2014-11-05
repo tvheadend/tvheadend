@@ -54,6 +54,7 @@ typedef struct dvb_bat_svc {
   TAILQ_ENTRY(dvb_bat_svc) link;
   mpegts_service_t *svc;
   dvb_freesat_svc_t *fallback;
+  uint32_t used:1;
 } dvb_bat_svc_t;
 
 typedef struct dvb_bat_id {
@@ -515,6 +516,9 @@ dvb_freesat_completed
   uint16_t sid;
   uint32_t total = 0, regions = 0, uregions = 0;
 
+  tvhtrace(dstr, "completed %s [%04X] bouquets '%s'",
+           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
+
   /* Find all "fallback" services and region specific */
   TAILQ_FOREACH(bs, &bi->services, link) {
     total++;
@@ -532,8 +536,10 @@ dvb_freesat_completed
             break;
         if (!fr)
           tvhtrace(dstr, "cannot find freesat region id %u", fs->regionid);
-        else
+        else {
+          bs->used = 1;
           TAILQ_INSERT_TAIL(&fr->services, fs, region_link);
+        }
       }
   }
 
@@ -544,11 +550,13 @@ dvb_freesat_completed
     uregions++;
     TAILQ_FOREACH(fs, &fr->services, region_link)
       dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
-    TAILQ_FOREACH(bs, &bi->services, link)
+    TAILQ_FOREACH(bs, &bi->services, link) {
+      if (bs->used) continue;
       if ((fs = bs->fallback) != NULL)
         dvb_freesat_add_service(bi, fr, bs->svc, fs->lcn);
       else
         dvb_freesat_add_service(bi, fr, bs->svc, 0);
+    }
   }
 
   tvhtrace(dstr, "completed %s [%04X] bouquets '%s' total %u regions %u (%u)",
@@ -566,8 +574,14 @@ dvb_freesat_completed
   }
 
   /* Clear all "fallback/default" services */
-  TAILQ_FOREACH(bs, &bi->services, link)
+  TAILQ_FOREACH(bs, &bi->services, link) {
     bs->fallback = NULL;
+    bs->used = 0;
+  }
+
+  tvhtrace(dstr, "completed %s [%04X] bouquets '%s' update finished",
+           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
+
 }
 
 /*
@@ -621,7 +635,7 @@ dvb_bskyb_local_channels
   len -= 2;
   ptr += 2;
 
-  tvhtrace(dstr, "      region id %02X (%d) unknown %02X (%d)\n",
+  tvhtrace(dstr, "      region id %02X (%d) unknown %02X (%d)",
            regionid, regionid, ptr[0], ptr[0]);
 
   while (len > 8) {
@@ -632,7 +646,7 @@ dvb_bskyb_local_channels
     ptr += 9;
     len -= 9;
 
-    tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)\n",
+    tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)",
              sid, sid, stype, stype, lcn, unk, unk);
 
     TAILQ_FOREACH(fs, &b->fservices, link)
