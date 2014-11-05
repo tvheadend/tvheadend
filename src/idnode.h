@@ -37,6 +37,7 @@ typedef struct idnode_set
   idnode_t **is_array;  ///< Array of nodes
   size_t     is_alloc;  ///< Size of is_array
   size_t     is_count;  ///< Current usage of is_array
+  uint8_t    is_sorted; ///< Sorted array of nodes
 } idnode_set_t;
 
 /*
@@ -197,11 +198,15 @@ void idnode_filter_clear
   (idnode_filter_t *f);
 int  idnode_filter
   ( idnode_t *in, idnode_filter_t *filt );
-#define idnode_set_create() calloc(1, sizeof(idnode_set_t))
+static inline idnode_set_t * idnode_set_create(int sorted)
+  { idnode_set_t *is = calloc(1, sizeof(idnode_set_t));
+    is->is_sorted = sorted; return is; }
 void idnode_set_add
   ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt );
 void idnode_set_remove ( idnode_set_t *is, idnode_t *in );
-int idnode_set_exists ( idnode_set_t *is, idnode_t *in );
+ssize_t idnode_set_find_index( idnode_set_t *is, idnode_t *in );
+static inline int idnode_set_exists ( idnode_set_t *is, idnode_t *in )
+  { return idnode_set_find_index(is, in) >= 0; }
 void idnode_set_sort ( idnode_set_t *is, idnode_sort_t *s );
 void idnode_set_sort_by_title ( idnode_set_t *is );
 htsmsg_t *idnode_set_as_htsmsg ( idnode_set_t *is );

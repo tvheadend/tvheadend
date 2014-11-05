@@ -198,7 +198,7 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
 {
   linuxdvb_satconf_t *ls = (linuxdvb_satconf_t*)o;
   linuxdvb_satconf_ele_t *lse;
-  idnode_set_t *is = idnode_set_create();
+  idnode_set_t *is = idnode_set_create(0);
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link)
     idnode_set_add(is, &lse->lse_id, NULL);
   return is;
@@ -869,7 +869,7 @@ linuxdvb_satconf_ele_class_network_set( void *o, const void *p )
   linuxdvb_satconf_ele_t *ls  = o;
   const htsmsg_t *msg = p;
   mpegts_network_t *mn;
-  idnode_set_t *n = idnode_set_create();
+  idnode_set_t *n = idnode_set_create(0);
   htsmsg_field_t *f;
   const char *str;
   int i, save;
@@ -1019,7 +1019,7 @@ static idnode_set_t *
 linuxdvb_satconf_ele_class_get_childs ( idnode_t *o )
 {
   linuxdvb_satconf_ele_t *ls = (linuxdvb_satconf_ele_t*)o;
-  idnode_set_t *is = idnode_set_create();
+  idnode_set_t *is = idnode_set_create(0);
   if (ls->lse_lnb)
     idnode_set_add(is, &ls->lse_lnb->ld_id, NULL);
   if (ls->lse_switch)
@@ -1145,7 +1145,7 @@ linuxdvb_satconf_ele_create0
     free(lse);
     return NULL;
   }
-  lse->lse_networks = idnode_set_create();
+  lse->lse_networks = idnode_set_create(0);
   lse->lse_parent = ls;
   TAILQ_INSERT_TAIL(&ls->ls_elements, lse, lse_link);
   if (conf)
