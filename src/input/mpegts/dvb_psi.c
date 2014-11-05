@@ -1165,8 +1165,11 @@ dvb_nit_callback
   if (r == 0) {
     if (tableid == 0x4A) {
       if ((b = mt->mt_bat) != NULL) {
-        if (!b->complete)
+        if (!b->complete) {
           dvb_bat_completed(b, mt->mt_name, tableid, mm->mm_tsid, nbid, mm);
+          mt->mt_working -= st->working;
+          st->working = 0;
+        }
         if (b->complete)
           dvb_bat_destroy_lists(mt);
       }
@@ -1204,6 +1207,11 @@ dvb_nit_callback
       bi->nbid = nbid;
       TAILQ_INIT(&bi->services);
       LIST_INSERT_HEAD(&b->bats, bi, link);
+    }
+    if (!st->working) {
+      st->working = 1;
+      mt->mt_working++;
+      mt->mt_flags |= MT_FASTSWITCH;
     }
   }
 
@@ -1639,7 +1647,11 @@ dvb_fs_sdt_callback
   if (tableid != 0xBD)
     return -1;
   r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
-  if (r == 0) bouquet_completed(bq);
+  if (r == 0) {
+    mt->mt_working -= st->working;
+    st->working = 0;
+    bouquet_completed(bq);
+  }
   if (r != 1) return r;
   if (len < 5) return -1;
   ptr += 5;
@@ -1751,6 +1763,12 @@ dvb_fs_sdt_callback
       idnode_changed(&s->s_id);
       service_refresh_channel((service_t*)s);
     }
+
+    if (!st->working) {
+      st->working = 1;
+      mt->mt_working++;
+      mt->mt_flags |= MT_FASTSWITCH;
+    }
   }
 
   if (bq && bq->bq_saveflag)
@@ -1758,7 +1776,6 @@ dvb_fs_sdt_callback
 
   /* End */
   return dvb_table_end(mt, st, sect);
-
 }
 #endif
 
