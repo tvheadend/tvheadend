@@ -364,7 +364,8 @@ dvb_desc_service
 
 static int
 dvb_desc_service_list
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm, dvb_bat_id_t *bi )
+  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm,
+    dvb_bat_id_t *bi, bouquet_t *bq )
 {
   uint16_t stype, sid;
   int i;
@@ -381,6 +382,8 @@ dvb_desc_service_list
         bs = calloc(1, sizeof(*bs));
         bs->svc = s;
         TAILQ_INSERT_TAIL(&bi->services, bs, link);
+      } else if (bq) {
+        bouquet_add_service(bq, (service_t *)s, 0);
       }
       if (save)
         s->s_config_save((service_t*)s);
@@ -1278,7 +1281,7 @@ dvb_nit_callback
     charset = dvb_charset_find(mn, mux, NULL);
 
 
-    tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %p bq %p", onid, onid, tsid, tsid, mux, bq);
+    tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %p", onid, onid, tsid, tsid, mux);
 
     DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
       tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
@@ -1335,7 +1338,7 @@ dvb_nit_callback
             return -1;
           break;
         case DVB_DESC_SERVICE_LIST:
-          if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux, bi))
+          if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux, bi, bq))
             return -1;
           break;
         case DVB_DESC_PRIVATE_DATA:
