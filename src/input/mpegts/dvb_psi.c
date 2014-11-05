@@ -64,6 +64,7 @@ typedef struct dvb_bat_id {
   uint32_t bskyb:1;
   uint16_t nbid;
   char name[32];
+  mpegts_mux_t *mm;
   TAILQ_HEAD(,dvb_bat_svc) services;
 } dvb_bat_id_t;
 
@@ -108,6 +109,19 @@ dvb_servicetype_lookup ( int t )
       return dvb_servicetype_map[i][1];
   }
   return -1;
+}
+
+static void
+dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
+{
+  char comment[128];
+
+  if (bq->bq_comment && bq->bq_comment[0])
+    return;
+  free(bq->bq_comment);
+  mpegts_mux_nice_name(mm, comment, sizeof(comment));
+  bq->bq_comment = strdup(comment);
+  bq->bq_saveflag = 1;
 }
 
 /* **************************************************************************
@@ -571,6 +585,7 @@ dvb_freesat_completed
     while ((fs = TAILQ_FIRST(&fr->services)) != NULL)
       TAILQ_REMOVE(&fr->services, fs, region_link);
     if (fr->bouquet) {
+      dvb_bouquet_comment(fr->bouquet, bi->mm);
       bouquet_completed(fr->bouquet);
       fr->bouquet = NULL;
     }
@@ -692,7 +707,9 @@ dvb_bskyb_local_channels
       if (!fr) {
         fr = calloc(1, sizeof(*fr));
         fr->regionid = regionid;
-        if ((str = val2str(regionid, bskyb_regions)) == NULL) {
+        /* Note: Poland provider on 13E uses also this bouquet format */
+        if (bi->nbid < 0x1000 || bi->nbid > 0x1010 ||
+           (str = val2str(regionid, bskyb_regions)) == NULL) {
           snprintf(buf, sizeof(buf), "Region %d", regionid);
           str = buf;
         }
@@ -1127,6 +1144,8 @@ dvb_bat_completed
 
     if (!bq) continue;
 
+    dvb_bouquet_comment(bq, bi->mm);
+
     TAILQ_FOREACH(bs, &bi->services, link)
       bouquet_add_service(bq, (service_t *)bs->svc, 0);
 
@@ -1210,6 +1229,7 @@ dvb_nit_callback
       bi->nbid = nbid;
       TAILQ_INIT(&bi->services);
       LIST_INSERT_HEAD(&b->bats, bi, link);
+      bi->mm = mm;
     }
     if (!st->working) {
       st->working = 1;
@@ -1252,6 +1272,7 @@ dvb_nit_callback
   if (tableid == DVB_FASTSCAN_NIT_BASE) {
     tvhdebug(mt->mt_name, "fastscan %04X (%d) [%s]", nbid, nbid, name);
     bq = mt->mt_opaque;
+    dvb_bouquet_comment(bq, mm);
 
   /* BAT */
   } else if (tableid == 0x4A) {
