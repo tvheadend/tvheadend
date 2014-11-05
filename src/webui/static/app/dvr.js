@@ -465,7 +465,7 @@ tvheadend.timerec_editor = function(panel, index) {
         url: 'api/dvr/timerec',
         titleS: 'Time Schedule',
         titleP: 'Time Schedules',
-        iconCls: 'clock',
+        iconCls: 'time_schedules',
         tabIndex: index,
         columns: {
             enabled:      { width: 50 },

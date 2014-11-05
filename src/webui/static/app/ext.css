@@ -73,6 +73,10 @@
     border-right: 1px solid #d0d0d0;
 }
 
+.x-tree-node-leaf .x-tree-node-icon {
+    background-image:url(../icons/tv_cards.gif);
+}
+
 .ux-mselect {
     overflow: auto;
     background: white;
@@ -263,7 +267,7 @@
 }
 
 .clock {
-    background-image: url(../icons/schedule.png) !important;
+    background-image: url(../icons/clock.png) !important;
 }
 
 .exclamation {
@@ -291,7 +295,7 @@
 }
 
 .scheduled {
-    background-image: url(../icons/clock.png) !important;
+    background-image: url(../icons/scheduled.png) !important;
 }
 
 .recordingError {
