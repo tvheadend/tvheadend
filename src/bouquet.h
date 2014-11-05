@@ -37,6 +37,7 @@ typedef struct bouquet {
   int           bq_maptoch;
   int           bq_mapnolcn;
   int           bq_mapnoname;
+  int           bq_mapradio;
   int           bq_chtag;
   channel_tag_t*bq_chtag_ptr;
   const char   *bq_chtag_waiting;

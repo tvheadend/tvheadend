@@ -45,6 +45,7 @@ tvheadend.bouquet = function(panel, index)
             name:           { width: 200 },
             maptoch:        { width: 100 },
             mapnolcn:       { width: 100 },
+            mapradio:       { width: 100 },
             lcn_off:        { width: 100 },
             mapnoname:      { width: 100 },
             chtag:          { width: 100 },
