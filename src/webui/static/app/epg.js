@@ -745,6 +745,7 @@ tvheadend.epg = function() {
         epgFilterDuration, '-',
         {
             text: 'Reset All',
+            tooltip: 'Reset all filters to no filters',
             handler: epgQueryClear
         },
         '->',
