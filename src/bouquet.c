@@ -222,7 +222,11 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   channel_t *ch = NULL;
   channel_service_mapping_t *csm;
 
-  if (!bq->bq_mapnolcn && service_get_channel_number(t) <= 0)
+  if (!bq->bq_mapradio && service_is_radio(t))
+    return;
+  if (!bq->bq_mapnolcn &&
+      service_get_channel_number(t) <= 0 &&
+      bouquet_get_channel_number(bq, t) <= 0)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
     return;
@@ -492,7 +496,8 @@ bouquet_class_mapnolcn_notify ( void *obj )
   if (!bq->bq_mapnolcn && bq->bq_enabled && bq->bq_maptoch) {
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
-      if (service_get_channel_number(t) <= 0)
+      if (service_get_channel_number(t) <= 0 &&
+          bouquet_get_channel_number(bq, t) <= 0)
         bouquet_unmap_channel(bq, t);
     }
   } else {
@@ -513,6 +518,26 @@ bouquet_class_mapnoname_notify ( void *obj )
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
       if (noname(service_get_channel_name(t)))
+        bouquet_unmap_channel(bq, t);
+    }
+  } else {
+    bouquet_map_to_channels(bq);
+  }
+}
+
+static void
+bouquet_class_mapradio_notify ( void *obj )
+{
+  bouquet_t *bq = obj;
+  service_t *t;
+  size_t z;
+
+  if (bq->bq_in_load)
+    return;
+  if (!bq->bq_mapradio && bq->bq_enabled && bq->bq_maptoch) {
+    for (z = 0; z < bq->bq_services->is_count; z++) {
+      t = (service_t *)bq->bq_services->is_array[z];
+      if (service_is_radio(t))
         bouquet_unmap_channel(bq, t);
     }
   } else {
@@ -677,6 +702,13 @@ const idclass_t bouquet_class = {
       .name     = "Map No Name",
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "mapradio",
+      .name     = "Map Radio",
+      .off      = offsetof(bouquet_t, bq_mapradio),
+      .notify   = bouquet_class_mapradio_notify,
     },
     {
       .type     = PT_BOOL,
