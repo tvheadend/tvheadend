@@ -305,7 +305,8 @@ bouquet_unmap_channel(bouquet_t *bq, service_t *t)
 static void
 bouquet_remove_service(bouquet_t *bq, service_t *s)
 {
-  tvhtrace("bouquet", "remove service %s from %s", s->s_nicename, bq->bq_name ?: "<unknown>");
+  tvhtrace("bouquet", "remove service %s from %s",
+           s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
 }
 
@@ -323,8 +324,9 @@ bouquet_completed(bouquet_t *bq)
   if (!bq)
     return;
 
-  tvhtrace("bouquet", "completed: active=%zi old=%zi",
-            bq->bq_active_services->is_count, bq->bq_services->is_count);
+  tvhtrace("bouquet", "%s: completed: active=%zi old=%zi",
+            bq->bq_name ?: "", bq->bq_active_services->is_count,
+            bq->bq_services->is_count);
 
   /* Add/Remove services */
   remove = idnode_set_create();
