@@ -110,6 +110,7 @@ epggrab_ota_requeue ( void )
    */
   RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
     om->om_done = 0;
+    om->om_requeue = 1;
     if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
       continue;
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
@@ -160,7 +161,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
     /* Do not requeue completed muxes */
-    if (!om->om_done) {
+    if (!om->om_done && om->om_requeue) {
       TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
     }
@@ -499,6 +500,7 @@ next_one:
   om->om_force_modname = modname ? strdup(modname) : NULL;
 
   /* Subscribe to the mux */
+  om->om_requeue = 1;
   if ((r = mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG))) {
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
     om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
