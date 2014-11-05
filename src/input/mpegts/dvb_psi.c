@@ -632,6 +632,16 @@ dvb_bskyb_local_channels
     return;
 
   regionid = ptr[1];
+
+  if (regionid != 0xff && regionid != 0 && regionid != 1) {
+    if ((str = getenv("TVHEADEND_BSKYB_REGIONID")) != NULL) {
+      if (regionid != atoi(str))
+        return;
+    } else {
+      return;
+    }
+  }
+
   len -= 2;
   ptr += 2;
 
