@@ -167,7 +167,7 @@ static idnode_set_t *
 satip_frontend_dvbs_class_get_childs ( idnode_t *self )
 {
   satip_frontend_t   *lfe = (satip_frontend_t*)self;
-  idnode_set_t        *is  = idnode_set_create();
+  idnode_set_t        *is  = idnode_set_create(0);
   satip_satconf_t *sfc;
   TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link)
     idnode_set_add(is, &sfc->sfc_id, NULL);

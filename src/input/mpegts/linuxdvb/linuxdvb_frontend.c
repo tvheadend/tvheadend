@@ -109,7 +109,7 @@ static idnode_set_t *
 linuxdvb_frontend_dvbs_class_get_childs ( idnode_t *self )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)self;
-  idnode_set_t        *is  = idnode_set_create();
+  idnode_set_t        *is  = idnode_set_create(0);
   idnode_set_add(is, &lfe->lfe_satconf->ls_id, NULL);
   return is;
 }

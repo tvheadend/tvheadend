@@ -48,8 +48,8 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   lock_assert(&global_lock);
 
   bq = calloc(1, sizeof(bouquet_t));
-  bq->bq_services = idnode_set_create();
-  bq->bq_active_services = idnode_set_create();
+  bq->bq_services = idnode_set_create(1);
+  bq->bq_active_services = idnode_set_create(1);
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
@@ -329,7 +329,7 @@ bouquet_completed(bouquet_t *bq)
             bq->bq_services->is_count);
 
   /* Add/Remove services */
-  remove = idnode_set_create();
+  remove = idnode_set_create(0);
   for (z = 0; z < bq->bq_services->is_count; z++)
     if (!idnode_set_exists(bq->bq_active_services, bq->bq_services->is_array[z]))
       idnode_set_add(remove, bq->bq_services->is_array[z], NULL);
@@ -354,7 +354,7 @@ bouquet_completed(bouquet_t *bq)
 
 
   idnode_set_free(bq->bq_active_services);
-  bq->bq_active_services = idnode_set_create();
+  bq->bq_active_services = idnode_set_create(1);
 
   if (bq->bq_saveflag)
     bouquet_save(bq, 1);
@@ -448,7 +448,7 @@ bouquet_class_delete(idnode_t *self)
     bouquet_destroy(bq);
   } else {
     idnode_set_free(bq->bq_services);
-    bq->bq_services = idnode_set_create();
+    bq->bq_services = idnode_set_create(1);
     bouquet_save(bq, 1);
   }
 }
