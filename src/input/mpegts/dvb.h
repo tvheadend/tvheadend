@@ -131,6 +131,10 @@ struct mpegts_mux;
 #define DVB_DESC_AAC                  0x7C
 #define DVB_DESC_LOCAL_CHAN           0x83
 
+#define DVB_DESC_BSKYB_LCN            0xB1
+
+#define DVB_DESC_BSKYB_NVOD           0xC0
+
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 

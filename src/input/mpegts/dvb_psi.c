@@ -46,7 +46,7 @@ typedef struct dvb_freesat_region {
   LIST_ENTRY(dvb_freesat_region) link;
   TAILQ_HEAD(,dvb_freesat_svc) services;
   uint16_t regionid;
-  char name[32];
+  char name[52];
   bouquet_t *bouquet;
 } dvb_freesat_region_t;
 
@@ -60,6 +60,7 @@ typedef struct dvb_bat_id {
   LIST_ENTRY(dvb_bat_id) link;
   uint32_t complete:1;
   uint32_t freesat:1;
+  uint32_t bskyb:1;
   uint16_t nbid;
   char name[32];
   TAILQ_HEAD(,dvb_bat_svc) services;
@@ -420,7 +421,7 @@ dvb_desc_local_channel
 
 static void
 dvb_freesat_local_channels
-  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len, uint16_t nbid )
+  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len )
 {
   uint16_t sid, unk, lcn, regionid;
   dvb_freesat_svc_t *fs;
@@ -459,7 +460,7 @@ dvb_freesat_local_channels
 
 static void
 dvb_freesat_regions
-  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len, uint16_t nbid )
+  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len )
 {
   uint16_t id;
   char name[32];
@@ -494,10 +495,11 @@ static void
 dvb_freesat_add_service
   ( dvb_bat_id_t *bi, dvb_freesat_region_t *fr, mpegts_service_t *s, uint32_t lcn )
 {
-  char name[64], src[64];
+  char name[96], src[64];
   if (!fr->bouquet) {
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
-    snprintf(src, sizeof(src), "dvb-freesat://dvbs,28.2E,%04X,%u", bi->nbid, fr->regionid);
+    snprintf(src, sizeof(src), "dvb-%s://dvbs,28.2E,%04X,%u",
+             bi->freesat ? "freesat" : "bskyb", bi->nbid, fr->regionid);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
   bouquet_add_service(fr->bouquet, (service_t *)s, lcn);
@@ -505,21 +507,24 @@ dvb_freesat_add_service
 
 static void
 dvb_freesat_completed
-  ( dvb_bat_t *b, dvb_bat_id_t *bi, const char *dstr, int nbid )
+  ( dvb_bat_t *b, dvb_bat_id_t *bi, const char *dstr )
 {
   dvb_bat_svc_t *bs;
   dvb_freesat_svc_t *fs;
   dvb_freesat_region_t *fr;
   uint16_t sid;
+  uint32_t total = 0, regions = 0, uregions = 0;
 
   /* Find all "fallback" services and region specific */
   TAILQ_FOREACH(bs, &bi->services, link) {
+    total++;
     sid = bs->svc->s_dvb_service_id;
     TAILQ_FOREACH(fs, &b->fservices, link)
       if (fs->sid == sid) {
         fs->svc = bs->svc;
-        if ((fs->regionid == 0 && !bs->fallback) || fs->regionid == 65535) {
-          bs->fallback = fs;
+        if (fs->regionid == 0 || fs->regionid == 0xffff) {
+          if (fs->regionid != 0 || !bs->fallback)
+            bs->fallback = fs;
           continue;
         }
         LIST_FOREACH(fr, &b->fregions, link)
@@ -534,7 +539,9 @@ dvb_freesat_completed
 
   /* create bouquets, one per region */
   LIST_FOREACH(fr, &b->fregions, link) {
+    regions++;
     if (TAILQ_EMPTY(&fr->services)) continue;
+    uregions++;
     TAILQ_FOREACH(fs, &fr->services, region_link)
       dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
     TAILQ_FOREACH(bs, &bi->services, link)
@@ -543,6 +550,10 @@ dvb_freesat_completed
       else
         dvb_freesat_add_service(bi, fr, bs->svc, 0);
   }
+
+  tvhtrace(dstr, "completed %s [%04X] bouquets '%s' total %u regions %u (%u)",
+           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name,
+           total, regions, uregions);
 
   /* Remove all services associated to region, notify the completed status */
   LIST_FOREACH(fr, &b->fregions, link) {
@@ -558,6 +569,115 @@ dvb_freesat_completed
   TAILQ_FOREACH(bs, &bi->services, link)
     bs->fallback = NULL;
 }
+
+/*
+ * UK BSkyB
+ */
+
+static struct strtab bskyb_regions[] = {
+  { "BBC London/ITV Lon/C4 Lon/C5 Reg.1",                 0x01 }, /*   1 */
+  { "BBC East(E)/ITV Anglia E/C4 South&E/C5 Reg.2",       0x02 }, /*   2 */
+  { "BBC West Mids/ITV Central W/C4 Mids/C5 Reg.2",       0x03 }, /*   3 */
+  { "BBC West/ITV Westctr. West/C4 South&E/C5 Reg.2",     0x04 }, /*   4 */
+  { "BBC South/ITV Meridian S/C4 South&E/C5 Reg.2",       0x05 }, /*   5 */
+  { "BBC S West/ITV Westctr. S West/C4 South&E/C5 Reg.2", 0x06 }, /*   6 */
+  { "BBC N West/ITV Granada/C4 North/C5 Reg.3",           0x07 }, /*   7 */
+  { "BBC Yorks/ITV Yorks West/C4 North/C5 Reg.3",         0x08 }, /*   8 */
+  { "BBC South/ITV Mer N/C4 South&E/C5 Reg.2",            0x09 }, /*   9 */
+  { "BBC S East/ITV Mer SE/C4 South&E/C5 Reg.2",          0x0a }, /*  10 */
+  { "BBC S East/ITV Mer SE/C4 South&E/C5 Reg.2",          0x0b }, /*  11 */
+  { "BBC NE & Cumbria/ITV Border/C4 Scotland/C5 Reg.4",   0x0c }, /*  12 */
+  { "BBC NE & Cumbria/ITV Tyne Tees/C4 North/C5 Reg.3",   0x0d }, /*  13 */
+  { "BBC East(E)/ITV London/C4 Lon/C5 Reg.1",             0x12 }, /*  18 */
+  { "BBC East Mids/ITV Central W/C4 Mids/C5 Reg.2",       0x13 }, /*  19 */
+  { "BBC East Mids/ITV Central E/C4 Mids/C5 Reg.2",       0x14 }, /*  20 */
+  { "BBC East(E)/ITV Anglia E/C4 South&E/C5 Reg.2",       0x15 }, /*  21 */
+  { "BBC West/ITV Westcrt.W/C4 Mids/C5 Reg.2",            0x18 }, /*  24 */
+  { "BBC East(W)/ITV Anglia W/C4 South&E/C5 Reg.2",       0x19 }, /*  25 */
+  { "BBC Yorks/ITV Tyne Tees/C4 North/C5 Reg.3",          0x1a }, /*  26 */
+  { "BBC East(W)/ITV Central S/C4 Mids/C5 Reg.2",         0x1b }, /*  27 */
+  { "BBC N West/ITV Border/C4 Scotland/C5 Reg.4",         0x1c }, /*  28 */
+  { "BBC Yorks&Li/ITV Yorks E/C4 North/C5 Reg.3",         0x1d }, /*  29 */
+  { "BBC ?/ITV London",                                   0xfc }, /* 252 */
+};
+
+static void
+dvb_bskyb_local_channels
+  ( dvb_bat_t *b, dvb_bat_id_t *bi, const char *dstr,
+    const uint8_t *ptr, int len, mpegts_mux_t *mm )
+{
+  uint16_t sid, unk, lcn, regionid, stype;
+  dvb_freesat_region_t *fr;
+  dvb_freesat_svc_t *fs;
+  dvb_bat_svc_t *bs;
+  mpegts_service_t *s;
+  const char *str;
+  char buf[16];
+
+  if (len < 2)
+    return;
+
+  regionid = ptr[1];
+  len -= 2;
+  ptr += 2;
+
+  tvhtrace(dstr, "      region id %02X (%d) unknown %02X (%d)\n",
+           regionid, regionid, ptr[0], ptr[0]);
+
+  while (len > 8) {
+    sid = (ptr[0] << 8) | ptr[1];
+    stype = ptr[2];
+    lcn = (ptr[5] << 8) | ptr[6];
+    unk = (ptr[3] << 8) | ptr[4];
+    ptr += 9;
+    len -= 9;
+
+    tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)\n",
+             sid, sid, stype, stype, lcn, unk, unk);
+
+    TAILQ_FOREACH(fs, &b->fservices, link)
+      if (fs->sid == sid && fs->regionid == regionid)
+        break;
+    if (!fs) {
+      fs = calloc(1, sizeof(*fs));
+      fs->sid = sid;
+      fs->regionid = regionid == 0xff ? 0xffff : regionid;
+      fs->lcn = lcn != 0xffff ? lcn : 0;
+      TAILQ_INSERT_TAIL(&b->fservices, fs, link);
+    }
+
+    TAILQ_FOREACH(bs, &bi->services, link)
+      if (bs->svc->s_dvb_service_id == sid)
+        break;
+    if (mm && !bs) {
+      s = mpegts_service_find(mm, sid, 0, 0, NULL);
+      if (bi && s) {
+        bs = calloc(1, sizeof(*bs));
+        bs->svc = s;
+        TAILQ_INSERT_TAIL(&bi->services, bs, link);
+      }
+    }
+
+    if (regionid && regionid != 0xff) {
+      LIST_FOREACH(fr, &b->fregions, link)
+        if (fr->regionid == regionid)
+          break;
+      if (!fr) {
+        fr = calloc(1, sizeof(*fr));
+        fr->regionid = regionid;
+        if ((str = val2str(regionid, bskyb_regions)) == NULL) {
+          snprintf(buf, sizeof(buf), "Region %d", regionid);
+          str = buf;
+        }
+        strncpy(fr->name, str, sizeof(fr->name)-1);
+        fr->name[sizeof(fr->name)-1] = '\0';
+        TAILQ_INIT(&fr->services);
+        LIST_INSERT_HEAD(&b->fregions, fr, link);
+      }
+    }
+  }
+}
+
 
 /* **************************************************************************
  * Tables
@@ -906,7 +1026,7 @@ dvb_bat_destroy_lists( mpegts_table_t *mt )
   dvb_bat_svc_t *bs;
   dvb_freesat_region_t *fr;
   dvb_freesat_svc_t *fs;
-  
+
   while ((bi = LIST_FIRST(&b->bats)) != NULL) {
     while ((bs = TAILQ_FIRST(&bi->services)) != NULL) {
       TAILQ_REMOVE(&bi->services, bs, link);
@@ -952,8 +1072,8 @@ dvb_bat_completed
       continue;
     }
 
-    if (bi->freesat) {
-      dvb_freesat_completed(b, bi, dstr, nbid);
+    if (bi->freesat || bi->bskyb) {
+      dvb_freesat_completed(b, bi, dstr);
       goto complete;
     }
 
@@ -995,7 +1115,7 @@ dvb_nit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int save = 0;
-  int r, sect, last, ver, fsat = 0;
+  int r, sect, last, ver, fsat = 0, p02 = 0;
   uint8_t  dtag;
   int llen, dllen, dlen;
   const uint8_t *lptr, *dlptr, *dptr;
@@ -1079,12 +1199,16 @@ dvb_nit_callback
         // TODO: implement this?
         break;
       case DVB_DESC_PRIVATE_DATA:
-        if (tableid == 0x4A && dlen == 4 && !memcmp(dptr, "FSAT", 4))
-          fsat = 1;
+        if (tableid == 0x4A && dlen == 4) {
+          if (!memcmp(dptr, "FSAT", 4))
+            fsat = 1;
+          else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
+            p02 = 1;
+        }
         break;
       case DVB_DESC_FREESAT_REGIONS:
         if (fsat)
-          dvb_freesat_regions(b, mt->mt_name, dptr, dlen, nbid);
+          dvb_freesat_regions(b, mt->mt_name, dptr, dlen);
         break;
     }
   }
@@ -1185,11 +1309,19 @@ dvb_nit_callback
         case DVB_DESC_PRIVATE_DATA:
           if (dlen == 4 && !memcmp(dptr, "FSAT", 4))
             fsat = 1;
+          else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
+            p02 = 1;
           break;
         case DVB_DESC_FREESAT_LCN:
           if (tableid == 0x4A && fsat) {
-            dvb_freesat_local_channels(b, mt->mt_name, dptr, dlen, nbid);
+            dvb_freesat_local_channels(b, mt->mt_name, dptr, dlen);
             bi->freesat = 1;
+          }
+          break;
+        case DVB_DESC_BSKYB_LCN:
+          if (tableid == 0x4A && p02) {
+            dvb_bskyb_local_channels(b, bi, mt->mt_name, dptr, dlen, mux);
+            bi->bskyb = 1;
           }
           break;
       }
@@ -1210,7 +1342,7 @@ int
 dvb_sdt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, extraid;
+  int r, sect, last, ver, extraid, p02 = 0;
   uint16_t onid, tsid;
   uint8_t dtag;
   int llen, dlen;
@@ -1276,6 +1408,15 @@ dvb_sdt_callback
         case DVB_DESC_DEF_AUTHORITY:
           if (dvb_get_string(sauth, sizeof(sauth), dptr, dlen, charset, NULL))
             return -1;
+          break;
+        case DVB_DESC_PRIVATE_DATA:
+          if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
+            p02 = 1;
+          break;
+        case DVB_DESC_BSKYB_NVOD:
+          if (p02)
+            if (dvb_get_string(sname, sizeof(sname), dptr, dlen, charset, NULL))
+              return -1;
           break;
       }
     }
