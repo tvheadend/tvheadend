@@ -745,6 +745,7 @@ tvheadend.epg = function() {
         epgFilterDuration, '-',
         {
             text: 'Reset All',
+            iconCls: 'resetIcon',
             handler: epgQueryClear
         },
         '->',
