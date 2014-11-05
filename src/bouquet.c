@@ -163,8 +163,11 @@ bouquet_find_by_source(const char *name, const char *src, int create)
     }
     return bq;
   }
-  if (create && name)
-    return bouquet_create(NULL, NULL, name, src);
+  if (create && name) {
+    bq = bouquet_create(NULL, NULL, name, src);
+    tvhinfo("bouquet", "new bouquet '%s'", name);
+    return bq;
+  }
   return NULL;
 }
 
