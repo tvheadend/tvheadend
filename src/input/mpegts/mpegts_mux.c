@@ -866,7 +866,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 static void
 mpegts_mux_scan_timeout ( void *aux )
 {
-  int c, q;
+  int c, q, w;
   char buf[256];
   mpegts_mux_t *mm = aux;
   mpegts_table_t *mt;
@@ -884,17 +884,19 @@ mpegts_mux_scan_timeout ( void *aux )
 again:
   pthread_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);
-  c = q = 0;
+  c = q = w = 0;
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
-    if (!(mt->mt_flags & MT_QUICKREQ)) continue;
+    if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working) continue;
     if (!mt->mt_count) {
       mpegts_table_grab(mt);
       pthread_mutex_unlock(&mm->mm_tables_lock);
       mpegts_table_destroy(mt);
       mpegts_table_release(mt);
       goto again;
-    } else if (!mt->mt_complete) {
+    } else if (!mt->mt_complete || mt->mt_working) {
       q++;
+      if (mt->mt_working)
+        w++;
     } else {
       c++;
     }
@@ -906,10 +908,10 @@ again:
     tvhinfo("mpegts", "%s - scan no data, failed", buf);
     mpegts_mux_scan_done(mm, buf, 0);
 
-  /* Pending tables (another 20s - bit arbitrary) */
+  /* Pending tables (another 20s or 30s - bit arbitrary) */
   } else if (q) {
-    tvhinfo("mepgts", "%s - scan needs more time", buf);
-    gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, 20);
+    tvhinfo("mpegts", "%s - scan needs more time", buf);
+    gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, w ? 30 : 20);
     return;
 
   /* Complete */

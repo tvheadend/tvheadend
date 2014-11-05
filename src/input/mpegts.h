@@ -110,6 +110,7 @@ typedef struct mpegts_table_state
   uint64_t extraid;
   int      version;
   int      complete;
+  int      working;
   uint32_t sections[8];
   RB_ENTRY(mpegts_table_state)   link;
 } mpegts_table_state_t;
@@ -142,15 +143,16 @@ struct mpegts_table
    */
   int mt_flags;
 
-#define MT_CRC      0x0001
-#define MT_FULL     0x0002
-#define MT_QUICKREQ 0x0004
-#define MT_RECORD   0x0008
-#define MT_SKIPSUBS 0x0010
-#define MT_SCANSUBS 0x0020
-#define MT_FAST     0x0040
-#define MT_SLOW     0x0080
-#define MT_DEFER    0x0100
+#define MT_CRC        0x0001
+#define MT_FULL       0x0002
+#define MT_QUICKREQ   0x0004
+#define MT_FASTSWITCH 0x0008
+#define MT_RECORD     0x0010
+#define MT_SKIPSUBS   0x0020
+#define MT_SCANSUBS   0x0040
+#define MT_FAST       0x0080
+#define MT_SLOW       0x0100
+#define MT_DEFER      0x0200
 
   /**
    * Cycle queue
@@ -183,6 +185,8 @@ struct mpegts_table
 
 #define MT_DEFER_OPEN_PID  1
 #define MT_DEFER_CLOSE_PID 2
+
+  int mt_working;
 
   int mt_count;
 

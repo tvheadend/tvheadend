@@ -52,8 +52,9 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
 
   pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
-    if (!(mt->mt_flags & MT_QUICKREQ)) continue;
-    if(!mt->mt_complete) {
+    if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working)
+      continue;
+    if(!mt->mt_complete || mt->mt_working) {
       pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
@@ -126,7 +127,7 @@ mpegts_table_dispatch
   if(ret >= 0)
     mt->mt_count++;
 
-  if(!ret && mt->mt_flags & MT_QUICKREQ)
+  if(!ret && mt->mt_flags & (MT_QUICKREQ|MT_FASTSWITCH))
     mpegts_table_fastswitch(mt->mt_mux);
 }
 
