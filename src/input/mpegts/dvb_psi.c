@@ -515,9 +515,13 @@ dvb_freesat_add_service
 {
   char name[96], src[64];
   if (!fr->bouquet) {
+    strcpy(name, "???");
+    if (idnode_is_instance(&bi->mm->mm_id, &dvb_mux_dvbs_class))
+      dvb_sat_position_to_str(dvb_sat_position(&((dvb_mux_t *)bi->mm)->lm_tuning),
+                              name, sizeof(name));
+    snprintf(src, sizeof(src), "dvb-%s://dvbs,%s,%04X,%u",
+             bi->freesat ? "freesat" : "bskyb", name, bi->nbid, fr->regionid);
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
-    snprintf(src, sizeof(src), "dvb-%s://dvbs,28.2E,%04X,%u",
-             bi->freesat ? "freesat" : "bskyb", bi->nbid, fr->regionid);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
   bouquet_add_service(fr->bouquet, (service_t *)s, lcn);
