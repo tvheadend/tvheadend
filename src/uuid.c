@@ -36,7 +36,7 @@ static int fd = -1;
 /**
  *
  */
-static int
+static inline int
 hexnibble(char c)
 {
   switch(c) {
