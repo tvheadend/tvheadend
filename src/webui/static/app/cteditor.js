@@ -32,7 +32,8 @@ tvheadend.cteditor = function(panel, index)
  */
 tvheadend.bouquet = function(panel, index)
 {
-    var list = 'enabled,name,maptoch,mapnolcn,lcn_off,mapnoname,chtag,source,services_count,comment';
+    var list = 'enabled,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
+               'chtag,source,services_count,comment';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/bouquet',
