@@ -251,6 +251,9 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn)
 
   lock_assert(&global_lock);
 
+  if (!bq->bq_enabled)
+    return;
+
   if (!idnode_set_exists(bq->bq_services, &s->s_id)) {
     tvhtrace("bouquet", "add service %s to %s", s->s_nicename, bq->bq_name ?: "<unknown>");
     idnode_set_add(bq->bq_services, &s->s_id, NULL);
@@ -317,7 +320,7 @@ bouquet_remove_service(bouquet_t *bq, service_t *s)
  *
  */
 void
-bouquet_completed(bouquet_t *bq)
+bouquet_completed(bouquet_t *bq, uint32_t seen)
 {
   idnode_set_t *remove;
   service_t *s;
@@ -327,9 +330,17 @@ bouquet_completed(bouquet_t *bq)
   if (!bq)
     return;
 
-  tvhtrace("bouquet", "%s: completed: active=%zi old=%zi",
-            bq->bq_name ?: "", bq->bq_active_services->is_count,
-            bq->bq_services->is_count);
+  if (seen != bq->bq_services_seen) {
+    bq->bq_services_seen = seen;
+    bq->bq_saveflag = 1;
+  }
+
+  tvhtrace("bouquet", "%s: completed: enabled=%d active=%zi old=%zi seen=%u",
+            bq->bq_name ?: "", bq->bq_enabled, bq->bq_active_services->is_count,
+            bq->bq_services->is_count, seen);
+
+  if (!bq->bq_enabled)
+    goto save;
 
   /* Add/Remove services */
   remove = idnode_set_create(0);
@@ -359,6 +370,7 @@ bouquet_completed(bouquet_t *bq)
   idnode_set_free(bq->bq_active_services);
   bq->bq_active_services = idnode_set_create(1);
 
+save:
   if (bq->bq_saveflag)
     bouquet_save(bq, 1);
 }
@@ -378,6 +390,18 @@ bouquet_map_to_channels(bouquet_t *bq)
       bouquet_map_channel(bq, t);
     } else {
       bouquet_unmap_channel(bq, t);
+    }
+  }
+
+  if (!bq->bq_enabled) {
+    if (bq->bq_services->is_count) {
+      idnode_set_free(bq->bq_services);
+      bq->bq_services = idnode_set_create(1);
+      bq->bq_saveflag = 1;
+    }
+    if (bq->bq_active_services->is_count) {
+      idnode_set_free(bq->bq_active_services);
+      bq->bq_active_services = idnode_set_create(1);
     }
   }
 }
@@ -446,6 +470,8 @@ bouquet_class_delete(idnode_t *self)
 {
   bouquet_t *bq = (bouquet_t *)self;
 
+  bq->bq_enabled = 0;
+  bouquet_map_to_channels(bq);
   if (!bq->bq_shield) {
     hts_settings_remove("bouquet/%s", idnode_uuid_as_str(&bq->bq_id));
     bouquet_destroy(bq);
@@ -478,9 +504,24 @@ bouquet_class_get_list(void *o)
 }
 
 static void
+bouquet_class_rescan_notify ( void *obj )
+{
+  void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+  bouquet_t *bq = obj;
+
+  if (bq->bq_rescan)
+    mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
+  bq->bq_rescan = 0;
+}
+
+static void
 bouquet_class_enabled_notify ( void *obj )
 {
-  bouquet_map_to_channels((bouquet_t *)obj);
+  bouquet_t *bq = obj;
+
+  if (bq->bq_enabled)
+    bouquet_class_rescan_notify(obj);
+  bouquet_map_to_channels(bq);
 }
 
 static void
@@ -689,6 +730,14 @@ const idclass_t bouquet_class = {
     },
     {
       .type     = PT_BOOL,
+      .id       = "rescan",
+      .name     = "Rescan",
+      .off      = offsetof(bouquet_t, bq_rescan),
+      .notify   = bouquet_class_rescan_notify,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "maptoch",
       .name     = "Auto-Map to Channels",
       .off      = offsetof(bouquet_t, bq_maptoch),
@@ -756,6 +805,13 @@ const idclass_t bouquet_class = {
     },
     {
       .type     = PT_U32,
+      .id       = "services_seen",
+      .name     = "# Seen Services",
+      .off      = offsetof(bouquet_t, bq_services_seen),
+      .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_U32,
       .id       = "services_count",
       .name     = "# Services",
       .get      = bouquet_class_services_count_get,
@@ -816,11 +872,13 @@ bouquet_service_resolve(void)
     if (!bq->bq_services_waiting)
       continue;
     saveflag = bq->bq_saveflag;
-    HTSMSG_FOREACH(f, bq->bq_services_waiting) {
-      if (htsmsg_field_get_u32(f, &lcn)) continue;
-      s = service_find_by_identifier(f->hmf_name);
-      if (s)
-        bouquet_add_service(bq, s, lcn);
+    if (bq->bq_enabled) {
+      HTSMSG_FOREACH(f, bq->bq_services_waiting) {
+        if (htsmsg_field_get_u32(f, &lcn)) continue;
+        s = service_find_by_identifier(f->hmf_name);
+        if (s)
+          bouquet_add_service(bq, s, lcn);
+      }
     }
     htsmsg_destroy(bq->bq_services_waiting);
     bq->bq_services_waiting = NULL;

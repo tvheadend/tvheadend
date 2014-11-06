@@ -257,7 +257,7 @@ scan_result_tab[] = {
  { "FAIL",    MM_SCAN_FAIL },
 };
 
-static int
+int
 mpegts_mux_class_scan_state_set ( void *o, const void *p )
 {
   mpegts_mux_t *mm = o;

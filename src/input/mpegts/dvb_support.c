@@ -868,6 +868,31 @@ dvb_sat_position_to_str(int position, char *buf, size_t buflen)
   return buf;
 }
 
+const int
+dvb_sat_position_from_str( const char *buf )
+{
+  const char *s = buf;
+  int min, maj;
+  char c;
+
+  if (!buf)
+    return INT_MAX;
+  maj = atoi(s);
+  while (*s && *s != '.')
+    s++;
+  min = *s == '.' ? atoi(s + 1) : 0;
+  do {
+    c = *s++;
+  } while (c && c != 'W' && c != 'E');
+  if (!c)
+    return INT_MAX;
+  if (maj > 180 || maj < 0)
+    return INT_MAX;
+  if (min > 9 || min < 0)
+    return INT_MAX;
+  return (maj * 10 + min) * (c == 'W' ? -1 : 1);
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 /**

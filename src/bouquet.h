@@ -34,6 +34,7 @@ typedef struct bouquet {
 
   int           bq_shield;
   int           bq_enabled;
+  int           bq_rescan;
   int           bq_maptoch;
   int           bq_mapnolcn;
   int           bq_mapnoname;
@@ -47,6 +48,8 @@ typedef struct bouquet {
   idnode_set_t *bq_services;
   idnode_set_t *bq_active_services;
   htsmsg_t     *bq_services_waiting;
+  uint32_t      bq_services_seen;
+  uint32_t      bq_services_tmp; /* for fastscan tables */
   uint32_t      bq_lcn_offset;
 
 } bouquet_t;
@@ -78,7 +81,7 @@ bouquet_t * bouquet_find_by_source(const char *name, const char *src, int create
 void bouquet_map_to_channels(bouquet_t *bq);
 void bouquet_notify_channels(bouquet_t *bq);
 void bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn);
-void bouquet_completed(bouquet_t *bq);
+void bouquet_completed(bouquet_t *bq, uint32_t seen);
 
 uint64_t bouquet_get_channel_number(bouquet_t *bq, service_t *t);
 

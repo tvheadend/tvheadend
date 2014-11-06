@@ -63,6 +63,7 @@ typedef struct dvb_bat_id {
   uint32_t freesat:1;
   uint32_t bskyb:1;
   uint16_t nbid;
+  uint32_t services_count;
   char name[32];
   mpegts_mux_t *mm;
   TAILQ_HEAD(,dvb_bat_svc) services;
@@ -389,6 +390,8 @@ dvb_desc_service_list
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
     tvhdebug(dstr, "    service %04X (%d) type %d", sid, sid, stype);
+    if (bi)
+      bi->services_count++;
     if (mm) {
       int save = 0;
       s = mpegts_service_find(mm, sid, 0, 1, &save);
@@ -524,7 +527,7 @@ dvb_freesat_add_service
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
-  bouquet_add_service(fr->bouquet, (service_t *)s, lcn * CHANNEL_SPLIT);
+  bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT);
 }
 
 static void
@@ -590,7 +593,7 @@ dvb_freesat_completed
       TAILQ_REMOVE(&fr->services, fs, region_link);
     if (fr->bouquet) {
       dvb_bouquet_comment(fr->bouquet, bi->mm);
-      bouquet_completed(fr->bouquet);
+      bouquet_completed(fr->bouquet, total);
       fr->bouquet = NULL;
     }
   }
@@ -653,9 +656,9 @@ dvb_bskyb_local_channels
   if (len < 2)
     return;
 
-  regionid = ptr[1];
+  regionid = (ptr[1] != 0xff) ? ptr[1] : 0xffff;
 
-  if (regionid != 0xff && regionid != 0 && regionid != 1) {
+  if (regionid != 0xffff && regionid != 0 && regionid != 1) {
     if ((str = getenv("TVHEADEND_BSKYB_REGIONID")) != NULL) {
       if (regionid != atoi(str))
         return;
@@ -667,7 +670,7 @@ dvb_bskyb_local_channels
   len -= 2;
   ptr += 2;
 
-  tvhtrace(dstr, "      region id %02X (%d) unknown %02X (%d)",
+  tvhtrace(dstr, "      region id %04X (%d) unknown %02X (%d)",
            regionid, regionid, ptr[0], ptr[0]);
 
   while (len > 8) {
@@ -687,7 +690,7 @@ dvb_bskyb_local_channels
     if (!fs) {
       fs = calloc(1, sizeof(*fs));
       fs->sid = sid;
-      fs->regionid = regionid != 0xff ? regionid : 0xffff;
+      fs->regionid = regionid;
       fs->lcn = lcn != 0xffff ? lcn : 0;
       TAILQ_INSERT_TAIL(&b->fservices, fs, link);
     }
@@ -704,7 +707,7 @@ dvb_bskyb_local_channels
       }
     }
 
-    if (regionid && regionid != 0xff) {
+    if (regionid && regionid != 0xffff) {
       LIST_FOREACH(fr, &b->fregions, link)
         if (fr->regionid == regionid)
           break;
@@ -1153,7 +1156,7 @@ dvb_bat_completed
     TAILQ_FOREACH(bs, &bi->services, link)
       bouquet_add_service(bq, (service_t *)bs->svc, 0);
 
-    bouquet_completed(bq);
+    bouquet_completed(bq, bi->services_count);
 
 complete:
     bi->complete = 1;
@@ -1678,7 +1681,7 @@ dvb_fs_sdt_callback
   if (r == 0) {
     mt->mt_working -= st->working;
     st->working = 0;
-    bouquet_completed(bq);
+    bouquet_completed(bq, bq->bq_services_tmp);
   }
   if (r != 1) return r;
   if (len < 5) return -1;
@@ -1730,6 +1733,7 @@ dvb_fs_sdt_callback
       tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
       switch (dtag) {
         case DVB_DESC_SERVICE:
+          bq->bq_services_tmp++;
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
                                sizeof(sprov), sname, sizeof(sname), charset))
             return -1;
@@ -2301,6 +2305,7 @@ static void
 psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 {
   tvhtrace("fastscan", "adding table %04X (%i) for '%s'", pid, pid, name);
+  bq->bq_services_tmp = 0;
   mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,
                    dvb_nit_callback, bq, "fs_nit", MT_CRC, pid);
   mpegts_table_add(aux, DVB_FASTSCAN_SDT_BASE, DVB_FASTSCAN_MASK,

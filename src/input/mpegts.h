@@ -752,7 +752,14 @@ void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 
+void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+
 void mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len );
+
+int mpegts_mux_class_scan_state_set ( void *, const void * );
+
+static inline int mpegts_mux_scan_state_set ( mpegts_mux_t *m, int state )
+  { return mpegts_mux_class_scan_state_set ( m, &state ); }
 
 mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 
