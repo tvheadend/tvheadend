@@ -30,6 +30,7 @@ typedef struct bouquet {
 
   int           bq_saveflag;
   int           bq_in_load;
+  int           bq_only_bq_lcn;
   time_t        bq_updated;
 
   int           bq_shield;
@@ -51,6 +52,7 @@ typedef struct bouquet {
   uint32_t      bq_services_seen;
   uint32_t      bq_services_tmp; /* for fastscan tables */
   uint32_t      bq_lcn_offset;
+  uint64_t      bq_last_lcn;
 
 } bouquet_t;
 

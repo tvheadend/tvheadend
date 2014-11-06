@@ -54,7 +54,6 @@ typedef struct dvb_bat_svc {
   TAILQ_ENTRY(dvb_bat_svc) link;
   mpegts_service_t *svc;
   dvb_freesat_svc_t *fallback;
-  uint32_t used:1;
 } dvb_bat_svc_t;
 
 typedef struct dvb_bat_id {
@@ -66,14 +65,14 @@ typedef struct dvb_bat_id {
   uint32_t services_count;
   char name[32];
   mpegts_mux_t *mm;
-  TAILQ_HEAD(,dvb_bat_svc) services;
+  TAILQ_HEAD(,dvb_bat_svc)     services;
+  TAILQ_HEAD(,dvb_freesat_svc) fservices;
 } dvb_bat_id_t;
 
 typedef struct dvb_bat {
   int complete;
   LIST_HEAD(,dvb_bat_id)          bats;
   LIST_HEAD(,dvb_freesat_region)  fregions;
-  TAILQ_HEAD(,dvb_freesat_svc)    fservices;
 } dvb_bat_t;
 
 SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
@@ -442,7 +441,7 @@ dvb_desc_local_channel
 
 static void
 dvb_freesat_local_channels
-  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len )
+  ( dvb_bat_id_t *bi, const char *dstr, const uint8_t *ptr, int len )
 {
   uint16_t sid, unk, lcn, regionid;
   dvb_freesat_svc_t *fs;
@@ -461,8 +460,8 @@ dvb_freesat_local_channels
       lcn = ((ptr[0] & 0x0f) << 8) | ptr[1];
       regionid = (ptr[2] << 8) | ptr[3];
       tvhtrace(dstr, "        lcn %d region %d\n", lcn, regionid);
-
-      TAILQ_FOREACH(fs, &b->fservices, link)
+      
+      TAILQ_FOREACH(fs, &bi->fservices, link)
         if (fs->sid == sid && fs->regionid == regionid)
           break;
       if (!fs) {
@@ -470,8 +469,9 @@ dvb_freesat_local_channels
         fs->sid = sid;
         fs->regionid = regionid;
         fs->lcn = lcn;
-        TAILQ_INSERT_TAIL(&b->fservices, fs, link);
+        TAILQ_INSERT_TAIL(&bi->fservices, fs, link);
       }
+
       ptr += 4;
       len -= 4;
       len2 -= 4;
@@ -547,7 +547,7 @@ dvb_freesat_completed
   TAILQ_FOREACH(bs, &bi->services, link) {
     total++;
     sid = bs->svc->s_dvb_service_id;
-    TAILQ_FOREACH(fs, &b->fservices, link)
+    TAILQ_FOREACH(fs, &bi->fservices, link)
       if (fs->sid == sid) {
         fs->svc = bs->svc;
         if (fs->regionid == 0 || fs->regionid == 0xffff) {
@@ -560,10 +560,8 @@ dvb_freesat_completed
             break;
         if (!fr)
           tvhtrace(dstr, "cannot find freesat region id %u", fs->regionid);
-        else {
-          bs->used = 1;
+        else
           TAILQ_INSERT_TAIL(&fr->services, fs, region_link);
-        }
       }
   }
 
@@ -575,7 +573,10 @@ dvb_freesat_completed
     TAILQ_FOREACH(fs, &fr->services, region_link)
       dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
     TAILQ_FOREACH(bs, &bi->services, link) {
-      if (bs->used) continue;
+      TAILQ_FOREACH(fs, &fr->services, region_link)
+        if (fs->svc == bs->svc)
+          break;
+      if (fs) continue;
       if ((fs = bs->fallback) != NULL)
         dvb_freesat_add_service(bi, fr, bs->svc, fs->lcn);
       else
@@ -599,10 +600,8 @@ dvb_freesat_completed
   }
 
   /* Clear all "fallback/default" services */
-  TAILQ_FOREACH(bs, &bi->services, link) {
+  TAILQ_FOREACH(bs, &bi->services, link)
     bs->fallback = NULL;
-    bs->used = 0;
-  }
 
   tvhtrace(dstr, "completed %s [%04X] bouquets '%s' update finished",
            bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
@@ -614,30 +613,53 @@ dvb_freesat_completed
  */
 
 static struct strtab bskyb_regions[] = {
-  { "BBC London/ITV Lon/C4 Lon/C5 Reg.1",                 0x01 }, /*   1 */
-  { "BBC East(E)/ITV Anglia E/C4 South&E/C5 Reg.2",       0x02 }, /*   2 */
-  { "BBC West Mids/ITV Central W/C4 Mids/C5 Reg.2",       0x03 }, /*   3 */
-  { "BBC West/ITV Westctr. West/C4 South&E/C5 Reg.2",     0x04 }, /*   4 */
-  { "BBC South/ITV Meridian S/C4 South&E/C5 Reg.2",       0x05 }, /*   5 */
-  { "BBC S West/ITV Westctr. S West/C4 South&E/C5 Reg.2", 0x06 }, /*   6 */
-  { "BBC N West/ITV Granada/C4 North/C5 Reg.3",           0x07 }, /*   7 */
-  { "BBC Yorks/ITV Yorks West/C4 North/C5 Reg.3",         0x08 }, /*   8 */
-  { "BBC South/ITV Mer N/C4 South&E/C5 Reg.2",            0x09 }, /*   9 */
-  { "BBC S East/ITV Mer SE/C4 South&E/C5 Reg.2",          0x0a }, /*  10 */
-  { "BBC S East/ITV Mer SE/C4 South&E/C5 Reg.2",          0x0b }, /*  11 */
-  { "BBC NE & Cumbria/ITV Border/C4 Scotland/C5 Reg.4",   0x0c }, /*  12 */
-  { "BBC NE & Cumbria/ITV Tyne Tees/C4 North/C5 Reg.3",   0x0d }, /*  13 */
-  { "BBC East(E)/ITV London/C4 Lon/C5 Reg.1",             0x12 }, /*  18 */
-  { "BBC East Mids/ITV Central W/C4 Mids/C5 Reg.2",       0x13 }, /*  19 */
-  { "BBC East Mids/ITV Central E/C4 Mids/C5 Reg.2",       0x14 }, /*  20 */
-  { "BBC East(E)/ITV Anglia E/C4 South&E/C5 Reg.2",       0x15 }, /*  21 */
-  { "BBC West/ITV Westcrt.W/C4 Mids/C5 Reg.2",            0x18 }, /*  24 */
-  { "BBC East(W)/ITV Anglia W/C4 South&E/C5 Reg.2",       0x19 }, /*  25 */
-  { "BBC Yorks/ITV Tyne Tees/C4 North/C5 Reg.3",          0x1a }, /*  26 */
-  { "BBC East(W)/ITV Central S/C4 Mids/C5 Reg.2",         0x1b }, /*  27 */
-  { "BBC N West/ITV Border/C4 Scotland/C5 Reg.4",         0x1c }, /*  28 */
-  { "BBC Yorks&Li/ITV Yorks E/C4 North/C5 Reg.3",         0x1d }, /*  29 */
-  { "BBC ?/ITV London",                                   0xfc }, /* 252 */
+  { "Atherstone",                  19 },
+  { "Border England",              12 },
+  { "Border Scotland",             36 },
+  { "Brighton",                    65 },
+  { "Central Midlands",             3 },
+  { "Channel Isles",               34 },
+  { "Dundee",                      39 },
+  { "East Midlands",               20 },
+  { "Essex",                        2 },
+  { "Gloucester",                  24 },
+  { "Grampian",                    35 },
+  { "Granada",                      7 },
+  { "Henley On Thames",            70 },
+  { "HTV Wales",                   43 },
+  { "HTV West",                     4 },
+  { "HTV West / Thames Valley",    63 },
+  { "Humber",                      29 },
+  { "London",                       1 },
+  { "London / Essex",              18 },
+  { "London / Thames Valley",      66 },
+  { "London Kent",                 64 },
+  { "Meridian East",               11 },
+  { "Meridian North",              68 },
+  { "Meridian South",               5 },
+  { "Meridian South East",         10 },
+  { "Merseyside",                  45 },
+  { "Norfolk",                     21 },
+  { "North East Midlands",         62 },
+  { "North West Yorkshire",         8 },
+  { "North Yorkshire",             26 },
+  { "Northern Ireland",            33 },
+  { "Oxford",                      71 },
+  { "Republic of Ireland",         50 },
+  { "Ridge Hill",                  41 },
+  { "Scarborough",                 61 },
+  { "Scottish East",               37 },
+  { "Scottish West",               38 },
+  { "Sheffield",                   60 },
+  { "South Lakeland",              28 },
+  { "South Yorkshire",             72 },
+  { "Tees",                        69 },
+  { "Thames Valley",                9 },
+  { "Tring",                       27 },
+  { "Tyne",                        13 },
+  { "West Anglia",                 25 },
+  { "West Dorset",                 67 },
+  { "Westcountry",                  6 },
 };
 
 static void
@@ -658,6 +680,7 @@ dvb_bskyb_local_channels
 
   regionid = (ptr[1] != 0xff) ? ptr[1] : 0xffff;
 
+#if 0
   if (regionid != 0xffff && regionid != 0 && regionid != 1) {
     if ((str = getenv("TVHEADEND_BSKYB_REGIONID")) != NULL) {
       if (regionid != atoi(str))
@@ -666,6 +689,7 @@ dvb_bskyb_local_channels
       return;
     }
   }
+#endif
 
   len -= 2;
   ptr += 2;
@@ -684,7 +708,7 @@ dvb_bskyb_local_channels
     tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)",
              sid, sid, stype, stype, lcn, unk, unk);
 
-    TAILQ_FOREACH(fs, &b->fservices, link)
+    TAILQ_FOREACH(fs, &bi->fservices, link)
       if (fs->sid == sid && fs->regionid == regionid)
         break;
     if (!fs) {
@@ -692,7 +716,7 @@ dvb_bskyb_local_channels
       fs->sid = sid;
       fs->regionid = regionid;
       fs->lcn = lcn != 0xffff ? lcn : 0;
-      TAILQ_INSERT_TAIL(&b->fservices, fs, link);
+      TAILQ_INSERT_TAIL(&bi->fservices, fs, link);
     }
 
     TAILQ_FOREACH(bs, &bi->services, link)
@@ -1083,16 +1107,16 @@ dvb_bat_destroy_lists( mpegts_table_t *mt )
       TAILQ_REMOVE(&bi->services, bs, link);
       free(bs);
     }
+    while ((fs = TAILQ_FIRST(&bi->fservices)) != NULL) {
+      TAILQ_REMOVE(&bi->fservices, fs, link);
+      free(fs);
+    }
     LIST_REMOVE(bi, link);
     free(bi);
   }
   while ((fr = LIST_FIRST(&b->fregions)) != NULL) {
     LIST_REMOVE(fr, link);
     free(fr);
-  }
-  while ((fs = TAILQ_FIRST(&b->fservices)) != NULL) {
-    TAILQ_REMOVE(&b->fservices, fs, link);
-    free(fs);
   }
 }
 
@@ -1225,7 +1249,6 @@ dvb_nit_callback
   if (tableid == 0x4A) {
     if ((b = mt->mt_bat) == NULL) {
       b = calloc(1, sizeof(*b));
-      TAILQ_INIT(&b->fservices);
       mt->mt_bat = b;
     }
     LIST_FOREACH(bi, &b->bats, link)
@@ -1235,6 +1258,7 @@ dvb_nit_callback
       bi = calloc(1, sizeof(*bi));
       bi->nbid = nbid;
       TAILQ_INIT(&bi->services);
+      TAILQ_INIT(&bi->fservices);
       LIST_INSERT_HEAD(&b->bats, bi, link);
       bi->mm = mm;
     }
@@ -1377,7 +1401,7 @@ dvb_nit_callback
           break;
         case DVB_DESC_FREESAT_LCN:
           if (tableid == 0x4A && fsat) {
-            dvb_freesat_local_channels(b, mt->mt_name, dptr, dlen);
+            dvb_freesat_local_channels(bi, mt->mt_name, dptr, dlen);
             bi->freesat = 1;
           }
           break;

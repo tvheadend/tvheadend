@@ -26,6 +26,8 @@
 
 bouquet_tree_t bouquets;
 
+static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
+
 /**
  *
  */
@@ -225,8 +227,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!bq->bq_mapradio && service_is_radio(t))
     return;
   if (!bq->bq_mapnolcn &&
-      service_get_channel_number(t) <= 0 &&
-      bouquet_get_channel_number(bq, t) <= 0)
+      (bq->bq_only_bq_lcn || service_get_channel_number(t) <= 0) &&
+      bouquet_get_channel_number0(bq, t) <= 0)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
     return;
@@ -248,6 +250,7 @@ void
 bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn)
 {
   service_lcn_t *tl;
+  channel_service_mapping_t *csm;
 
   lock_assert(&global_lock);
 
@@ -273,8 +276,18 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn)
     if (tl->sl_lcn != lcn)
       bq->bq_saveflag = 1;
   }
-  tl->sl_lcn = lcn;
+  if (lcn != tl->sl_lcn) {
+    tl->sl_lcn = lcn;
+    LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
+      idnode_notify_simple(&csm->csm_chn->ch_id);
+  }
   tl->sl_seen = 1;
+
+  if (lcn) {
+    bq->bq_only_bq_lcn = 1;
+    if (bq->bq_last_lcn < lcn)
+      bq->bq_last_lcn = lcn;
+  }
 
   if (bq->bq_enabled && bq->bq_maptoch)
     bouquet_map_channel(bq, s);
@@ -427,14 +440,28 @@ bouquet_notify_channels(bouquet_t *bq)
 /*
  *
  */
-uint64_t
-bouquet_get_channel_number(bouquet_t *bq, service_t *t)
+static uint64_t
+bouquet_get_channel_number0(bouquet_t *bq, service_t *t)
 {
   service_lcn_t *tl;
 
   LIST_FOREACH(tl, &t->s_lcns, sl_link)
     if (tl->sl_bouquet == bq)
       return (int64_t)tl->sl_lcn;
+  return 0;
+}
+
+/*
+ *
+ */
+uint64_t
+bouquet_get_channel_number(bouquet_t *bq, service_t *t)
+{
+  int64_t r = bouquet_get_channel_number0(bq, t);
+  if (r)
+    return r;
+  if (bq->bq_only_bq_lcn)
+    return bq->bq_last_lcn + 10 * CHANNEL_SPLIT;
   return 0;
 }
 
@@ -542,8 +569,8 @@ bouquet_class_mapnolcn_notify ( void *obj )
   if (!bq->bq_mapnolcn && bq->bq_enabled && bq->bq_maptoch) {
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
-      if (service_get_channel_number(t) <= 0 &&
-          bouquet_get_channel_number(bq, t) <= 0)
+      if ((bq->bq_only_bq_lcn || service_get_channel_number(t) <= 0) &&
+          bouquet_get_channel_number0(bq, t) <= 0)
         bouquet_unmap_channel(bq, t);
     }
   } else {
@@ -674,7 +701,7 @@ bouquet_class_services_get ( void *obj )
   for (z = 0; z < bq->bq_services->is_count; z++) {
     t = (service_t *)bq->bq_services->is_array[z];
     htsmsg_add_s64(m, idnode_uuid_as_str(&t->s_id),
-                   bouquet_get_channel_number(bq, t));
+                   bouquet_get_channel_number0(bq, t));
   }
 
   return m;
