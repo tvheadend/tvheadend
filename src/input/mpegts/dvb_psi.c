@@ -524,7 +524,7 @@ dvb_freesat_add_service
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
-  bouquet_add_service(fr->bouquet, (service_t *)s, lcn);
+  bouquet_add_service(fr->bouquet, (service_t *)s, lcn * CHANNEL_SPLIT);
 }
 
 static void
@@ -687,7 +687,7 @@ dvb_bskyb_local_channels
     if (!fs) {
       fs = calloc(1, sizeof(*fs));
       fs->sid = sid;
-      fs->regionid = regionid == 0xff ? 0xffff : regionid;
+      fs->regionid = regionid != 0xff ? regionid : 0xffff;
       fs->lcn = lcn != 0xffff ? lcn : 0;
       TAILQ_INSERT_TAIL(&b->fservices, fs, link);
     }

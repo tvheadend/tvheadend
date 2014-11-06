@@ -245,7 +245,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
  *
  */
 void
-bouquet_add_service(bouquet_t *bq, service_t *s, uint32_t lcn)
+bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn)
 {
   service_lcn_t *tl;
 
@@ -254,25 +254,28 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint32_t lcn)
   if (!idnode_set_exists(bq->bq_services, &s->s_id)) {
     tvhtrace("bouquet", "add service %s to %s", s->s_nicename, bq->bq_name ?: "<unknown>");
     idnode_set_add(bq->bq_services, &s->s_id, NULL);
-
-    LIST_FOREACH(tl, &s->s_lcns, sl_link)
-      if (tl->sl_bouquet == bq) {
-        tl->sl_lcn = lcn;
-        break;
-      }
-
-    if (!tl) {
-      tl = calloc(1, sizeof(*tl));
-      tl->sl_bouquet = bq;
-      tl->sl_lcn = lcn;
-      LIST_INSERT_HEAD(&s->s_lcns, tl, sl_link);
-    }
-    tl->sl_seen = 1;
-
     bq->bq_saveflag = 1;
-    if (bq->bq_enabled && bq->bq_maptoch)
-      bouquet_map_channel(bq, s);
   }
+
+  LIST_FOREACH(tl, &s->s_lcns, sl_link)
+    if (tl->sl_bouquet == bq)
+      break;
+
+  if (!tl) {
+    tl = calloc(1, sizeof(*tl));
+    tl->sl_bouquet = bq;
+    LIST_INSERT_HEAD(&s->s_lcns, tl, sl_link);
+    bq->bq_saveflag = 1;
+  } else {
+    if (tl->sl_lcn != lcn)
+      bq->bq_saveflag = 1;
+  }
+  tl->sl_lcn = lcn;
+  tl->sl_seen = 1;
+
+  if (bq->bq_enabled && bq->bq_maptoch)
+    bouquet_map_channel(bq, s);
+
   if (!bq->bq_in_load &&
       !idnode_set_exists(bq->bq_active_services, &s->s_id))
     idnode_set_add(bq->bq_active_services, &s->s_id, NULL);
@@ -407,7 +410,7 @@ bouquet_get_channel_number(bouquet_t *bq, service_t *t)
 
   LIST_FOREACH(tl, &t->s_lcns, sl_link)
     if (tl->sl_bouquet == bq)
-      return (int64_t)tl->sl_lcn * CHANNEL_SPLIT;
+      return (int64_t)tl->sl_lcn;
   return 0;
 }
 
@@ -629,7 +632,7 @@ bouquet_class_services_get ( void *obj )
   /* Add all */
   for (z = 0; z < bq->bq_services->is_count; z++) {
     t = (service_t *)bq->bq_services->is_array[z];
-    htsmsg_add_u32(m, idnode_uuid_as_str(&t->s_id),
+    htsmsg_add_s64(m, idnode_uuid_as_str(&t->s_id),
                    bouquet_get_channel_number(bq, t));
   }
 

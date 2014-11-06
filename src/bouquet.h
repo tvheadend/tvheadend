@@ -77,7 +77,7 @@ bouquet_t * bouquet_find_by_source(const char *name, const char *src, int create
 
 void bouquet_map_to_channels(bouquet_t *bq);
 void bouquet_notify_channels(bouquet_t *bq);
-void bouquet_add_service(bouquet_t *bq, service_t *s, uint32_t lcn);
+void bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn);
 void bouquet_completed(bouquet_t *bq);
 
 uint64_t bouquet_get_channel_number(bouquet_t *bq, service_t *t);

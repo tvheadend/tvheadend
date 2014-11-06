@@ -186,7 +186,7 @@ void service_instance_list_clear(service_instance_list_t *sil);
 typedef struct service_lcn {
   LIST_ENTRY(service_lcn) sl_link;
   void     *sl_bouquet;
-  uint32_t  sl_lcn;
+  uint64_t  sl_lcn;
   uint8_t   sl_seen;
 } service_lcn_t;
 
