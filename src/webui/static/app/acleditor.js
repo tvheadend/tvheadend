@@ -26,18 +26,18 @@ tvheadend.acleditor = function(panel, index)
             admin:         { width: 100 },
             conn_limit:    { width: 160 },
             channel_min:   { width: 160 },
-            channel_max:   { width: 160 },
+            channel_max:   { width: 160 }
         },
         tabIndex: index,
         edit: {
             params: {
-                list: list,
-            },
+                list: list
+            }
         },
         add: {
             url: 'api/access/entry',
             params: {
-                list: list,
+                list: list
             },
             create: { }
         },
@@ -46,6 +46,6 @@ tvheadend.acleditor = function(panel, index)
         list: list,
         help: function() {
             new tvheadend.help('Access Control Entries', 'config_access.html');
-        },
+        }
     });
 };

@@ -43,7 +43,7 @@ tvheadend.dvrDetails = function(uuid) {
         url: 'api/idnode/load',
         params: {
             uuid: uuid,
-            list: 'channel_icon,disp_title,disp_description,status',
+            list: 'channel_icon,disp_title,disp_description,status'
         },
         success: function(d) {
             d = json_decode(d);
@@ -120,7 +120,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
                 tooltip: 'Abort the selected recording',
                 iconCls: 'cancel',
                 text: 'Abort',
-                disabled: true,
+                disabled: true
             });
         },
         callback: function(conf, e, store, select) {
@@ -167,13 +167,13 @@ tvheadend.dvr_upcoming = function(panel, index) {
         add: {
             url: 'api/dvr/entry',
             params: {
-               list: list,
+               list: list
             },
             create: { }
         },
         edit: {
             params: {
-                list: list,
+                list: list
             }
         },
         del: true,
@@ -191,7 +191,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         beforeedit: beforeedit,
         help: function() {
             new tvheadend.help('DVR-Upcoming/Current Recordings', 'dvr_upcoming.html');
-        },
+        }
     });
 
     return panel;
@@ -273,7 +273,7 @@ tvheadend.dvr_finished = function(panel, index) {
         selected: selected,
         help: function() {
             new tvheadend.help('DVR-Finished Recordings', 'dvr_finished.html');
-        },
+        }
     });
 
     return panel;
@@ -356,7 +356,7 @@ tvheadend.dvr_failed = function(panel, index) {
         selected: selected,
         help: function() {
             new tvheadend.help('DVR-Failed Recordings', 'dvr_failed.html');
-        },
+        }
     });
 
     return panel;
@@ -382,7 +382,7 @@ tvheadend.dvr_settings = function(panel, index) {
         del: true,
         help: function() {
             new tvheadend.help('DVR', 'config_dvr.html');
-        },
+        }
     });
 
     return panel;
@@ -414,13 +414,13 @@ tvheadend.autorec_editor = function(panel, index) {
             pri:          { width: 80 },
             config_name:  { width: 120 },
             creator:      { width: 200 },
-            comment:      { width: 200 },
+            comment:      { width: 200 }
         },
         add: {
             url: 'api/dvr/autorec',
             params: {
                list: 'enabled,name,title,channel,tag,content_type,minduration,' +
-                     'maxduration,weekdays,start,pri,config_name,comment',
+                     'maxduration,weekdays,start,pri,config_name,comment'
             },
             create: { }
         },
@@ -438,7 +438,7 @@ tvheadend.autorec_editor = function(panel, index) {
         },
         help: function() {
             new tvheadend.help('DVR', 'dvr_autorec.html');
-        },
+        }
     });
 
     return panel;
@@ -467,12 +467,12 @@ tvheadend.timerec_editor = function(panel, index) {
             pri:          { width: 80 },
             config_name:  { width: 120 },
             creator:      { width: 200 },
-            comment:      { width: 200 },
+            comment:      { width: 200 }
         },
         add: {
             url: 'api/dvr/timerec',
             params: {
-               list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment',
+               list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment'
             },
             create: { }
         },
@@ -489,7 +489,7 @@ tvheadend.timerec_editor = function(panel, index) {
         },
         help: function() {
             new tvheadend.help('DVR', 'dvr_timerec.html');
-        },
+        }
     });
 
     return panel;
@@ -505,7 +505,7 @@ tvheadend.dvr = function(panel, index) {
         autoScroll: true,
         title: 'Digital Video Recorder',
         iconCls: 'dvr',
-        items: [],
+        items: []
     });
     tvheadend.dvr_upcoming(p, 0);
     tvheadend.dvr_finished(p, 1);

@@ -82,7 +82,7 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
             profile:   'webtv-h264-aac-matroska',
             playlist:  false,
             mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
-        },
+        }
     };
 
     return {

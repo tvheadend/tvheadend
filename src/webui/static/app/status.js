@@ -21,7 +21,7 @@ tvheadend.status_subs = function(panel, index)
             r.data.service = m.service;
             r.data.state = m.state;
             r.data.errors = m.errors;
-            r.data.in = m.in;
+            r.data['in'] = m['in'];
             r.data.out = m.out;
 
             store.afterEdit(r);
@@ -126,7 +126,7 @@ tvheadend.status_subs = function(panel, index)
                 header: "Input (kb/s)",
                 dataIndex: 'in',
                 listeners: { click: { fn: clicked } },
-                renderer: renderBw,
+                renderer: renderBw
             },
             {
                 width: 50,
@@ -134,7 +134,7 @@ tvheadend.status_subs = function(panel, index)
                 header: "Output (kb/s)",
                 dataIndex: 'out',
                 listeners: { click: { fn: clicked } },
-                renderer: renderBw,
+                renderer: renderBw
             }
         ]);
         
@@ -313,7 +313,7 @@ tvheadend.status_streams = function(panel, index)
                 header: "Bandwidth (kb/s)",
                 dataIndex: 'bps',
                 renderer: renderBw,
-                listeners: { click: { fn: clicked } },
+                listeners: { click: { fn: clicked } }
             },
             {
                 width: 50,
@@ -465,7 +465,7 @@ tvheadend.status_conns = function(panel, index) {
                                     return;
                                 Ext.Ajax.request({
                                     url: 'api/connections/cancel',
-                                    params: { id: id },
+                                    params: { id: id }
                                 });
                             }
                        );
@@ -538,7 +538,7 @@ tvheadend.status_conns = function(panel, index) {
             viewConfig: {
                 forceFit: true
             },
-            plugins: [actions],
+            plugins: [actions]
         });
         
         dpanel.add(grid);
@@ -573,7 +573,7 @@ tvheadend.status = function() {
         autoScroll: true,
         activeTab: 0,
         iconCls: 'eye',
-        items: [],
+        items: []
     });
     tvheadend.status_streams(panel);
     tvheadend.status_subs(panel);
@@ -660,9 +660,9 @@ tvheadend.subscription_bw_monitor = function(id) {
                 return;
             }
 
-            var input = Math.round(r.data.in / 125);
+            var input = Math.round(r.data['in'] / 125);
             var output = Math.round(r.data.out / 125);
-            var ratio = new Number(r.data.in / r.data.out).toPrecision(3);
+            var ratio = new Number(r.data['in'] / r.data.out).toPrecision(3);
 
             win.setTitle(r.data.channel);
             inputLbl.setText('In: ' + input + ' kb/s');

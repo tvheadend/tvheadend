@@ -71,24 +71,24 @@ tvheadend.idnode_enum_store = function(f)
     var store = null;
 
     /* API fetch */
-    if (f.enum.type === 'api') {
+    if (f['enum'].type === 'api') {
         return tvheadend.idnode_get_enum({
-            url: 'api/' + f.enum.uri,
-            params: f.enum.params,
-            event: f.enum.event
+            url: 'api/' + f['enum'].uri,
+            params: f['enum'].params,
+            event: f['enum'].event
         });
     }
 
     switch (f.type) {
         case 'str':
-            if (f.enum.length > 0 && f.enum[0] instanceof Object)
+            if (f['enum'].length > 0 && f['enum'][0] instanceof Object)
                 store = new Ext.data.JsonStore({
                     id: 'key',
                     fields: ['key', 'val'],
-                    data: f.enum
+                    data: f['enum']
                 });
             else
-                store = f.enum;
+                store = f['enum'];
             break;
         case 'int':
         case 'u32':
@@ -97,12 +97,12 @@ tvheadend.idnode_enum_store = function(f)
         case 'dbl':
         case 'time':
             var data = null;
-            if (f.enum.length > 0 && f.enum[0] instanceof Object) {
-                data = f.enum;
+            if (f['enum'].length > 0 && f['enum'][0] instanceof Object) {
+                data = f['enum'];
             } else {
                 data = [];
-                for (i = 0; i < f.enum.length; i++)
-                    data.push({key: i, val: f.enum[i]});
+                for (i = 0; i < f['enum'].length; i++)
+                    data.push({key: i, val: f['enum'][i]});
             }
             store = new Ext.data.JsonStore({
                 id: 'key',
@@ -196,9 +196,9 @@ tvheadend.IdNodeField = function(conf)
     this.intsplit = conf.intsplit;
     this.hexa = conf.hexa;
     this.group = conf.group;
-    this.enum = conf.enum;
+    this['enum'] = conf['enum'];
     this.store = null;
-    if (this.enum)
+    if (this['enum'])
         this.store = tvheadend.idnode_enum_store(this);
     this.ordered = false;
 
@@ -242,7 +242,7 @@ tvheadend.IdNodeField = function(conf)
             ftype = 'boolean';
             w = 60;
         }
-        if (this.enum || this.list)
+        if (this['enum'] || this.list)
             w = 300;
 
         var props = {
@@ -344,7 +344,7 @@ tvheadend.IdNodeField = function(conf)
         };
         
         /* ComboBox */
-        if (this.enum) {
+        if (this['enum']) {
             cons = Ext.form.ComboBox;
             if (this.list) {
                 cons = Ext.ux.form.LovCombo;
@@ -416,7 +416,7 @@ tvheadend.IdNode = function(conf)
     /*
      * Properties
      */
-    this.clazz = conf.class;
+    this.clazz = conf['class'];
     this.text = conf.caption || this.clazz;
     this.event = conf.event;
     this.props = conf.props;
@@ -484,10 +484,10 @@ tvheadend.idnode_editor_field = function(f, conf)
         d = false;
     var value = f.value;
     if (value == null)
-        value = f.default;
+        value = f['default'];
 
     /* Enumerated (combobox) type */
-    if (f.enum) {
+    if (f['enum']) {
         var cons = Ext.form.ComboBox;
         if (f.list)
             cons = Ext.ux.form.LovCombo;
@@ -561,12 +561,12 @@ tvheadend.idnode_editor_field = function(f, conf)
                     timeConfig: {
                         altFormats: 'H:i:s',
                         allowBlank: true,
-                        increment: 10,
+                        increment: 10
                     },
                     dateFormat:'d.n.Y',
                     dateConfig: {
                         altFormats: 'Y-m-d|Y-n-d',
-                        allowBlank: true,
+                        allowBlank: true
                     }
                 });
             /* fall thru!!! */
@@ -583,7 +583,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                     value: '0x' + value.toString(16),
                     disabled: d,
                     width: 300,
-                    maskRe: /[xX0-9a-fA-F\.]/,
+                    maskRe: /[xX0-9a-fA-F\.]/
                 });
             }
             if (f.intsplit) {
@@ -594,7 +594,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                     value: value,
                     disabled: d,
                     width: 300,
-                    maskRe: /[0-9\.]/,
+                    maskRe: /[0-9\.]/
                 });
             }
             return new Ext.form.NumberField({
@@ -798,7 +798,7 @@ tvheadend.idnode_editor = function(item, conf)
         defaultType: 'textfield',
         buttonAlign: 'left',
         autoScroll: true,
-        buttons: buttons,
+        buttons: buttons
     });
 
     tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel,
@@ -1030,7 +1030,7 @@ tvheadend.idnode_grid = function(panel, conf)
             fields: fields,
             remoteSort: true,
             pruneModifiedRecords: true,
-            sortInfo: conf.sort ? conf.sort : null,
+            sortInfo: conf.sort ? conf.sort : null
         });
 
         /* Model */
@@ -1502,7 +1502,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             root: 'entries',
             url: listurl || 'api/idnode/load',
             baseParams: params || {
-                enum: 1,
+                'enum': 1,
                 'class': conf.clazz
             },
             autoLoad: true,
@@ -1545,7 +1545,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         /* Model */
         var model = new Ext.grid.ColumnModel({
             defaultSortable: conf.move ? false : true,
-            columns: columns,
+            columns: columns
         });
 
         /* Selection */
