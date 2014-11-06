@@ -34,9 +34,9 @@ tvheadend.esfilter_tab = function(panel)
                 displayField: 'caption',
                 valueField: 'class',
                 propField: 'props',
-                list: list,
+                list: list
             },
-            create: { },
+            create: { }
         },
         del: true,
         help: function() {

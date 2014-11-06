@@ -135,7 +135,7 @@ tvheadend.miscconf = function(panel, index) {
 
     var preferPicon = new Ext.ux.form.XCheckbox({
         name: 'prefer_picon',
-        fieldLabel: 'Prefer picons over channel name',
+        fieldLabel: 'Prefer picons over channel name'
     });
 
     var chiconPath = new Ext.form.TextField({

@@ -194,7 +194,7 @@ tvheadend.VideoPlayer = function(url) {
     if (!tvheadend.profiles) {
         tvheadend.profiles = tvheadend.idnode_get_enum({
             url: 'api/profile/list',
-            event: 'profile',
+            event: 'profile'
         });
     }
 
@@ -206,7 +206,7 @@ tvheadend.VideoPlayer = function(url) {
         editable: false,
         triggerAction: 'all',
         emptyText: 'Select stream profile...',
-        store: tvheadend.profiles,
+        store: tvheadend.profiles
     });
 
     selectProfile.on('select', function(c, r) {
