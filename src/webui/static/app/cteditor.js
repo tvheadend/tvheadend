@@ -22,7 +22,7 @@ tvheadend.cteditor = function(panel, index)
         },
         help: function() {
             new tvheadend.help('Channel Tags', 'config_tags.html');
-        },
+        }
     });
 
     return panel;

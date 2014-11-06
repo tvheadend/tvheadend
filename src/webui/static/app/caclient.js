@@ -51,7 +51,7 @@ tvheadend.caclient = function(panel, index) {
                 propField: 'props',
                 list: list
             },
-            create: { },
+            create: { }
         },
         del: true,
         move: true,
@@ -60,7 +60,7 @@ tvheadend.caclient = function(panel, index) {
         plugins: [actions],
         help: function() {
             new tvheadend.help('Conditional Access Client', 'config_caclient.html');
-        },
+        }
     });
 
     return panel;

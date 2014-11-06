@@ -135,7 +135,7 @@ tvheadend.epgDetails = function(event) {
             id: 'key',
             url: 'api/idnode/load',
             baseParams: {
-                enum: 1,
+                'enum': 1,
                 'class': 'dvrconfig'
             },
             sortInfo: {
@@ -277,7 +277,7 @@ tvheadend.epg = function() {
         reader: new Ext.ux.grid.livegrid.JsonReader({
             root: 'entries',
             totalProperty: 'totalCount',
-            id: 'eventId',
+            id: 'eventId'
         },
         [
             { name: 'eventId' },
@@ -304,8 +304,8 @@ tvheadend.epg = function() {
             { name: 'ageRating' },
             { name: 'genre' },
             { name: 'dvrState' },
-            { name: 'serieslinkId' },
-        ]),
+            { name: 'serieslinkId' }
+        ])
     });
 
     function setMetaAttr(meta, record, cursor) {
@@ -405,7 +405,7 @@ tvheadend.epg = function() {
                     setMetaAttr(meta, record, value && clickable);
                     return !value ? '' : (clickable ? lookup : '') + value;
                 },
-                listeners: { click: { fn: clicked } },
+                listeners: { click: { fn: clicked } }
             },
             {
                 width: 250,
@@ -461,7 +461,7 @@ tvheadend.epg = function() {
                     setMetaAttr(meta, record, value && clickable);
                     return !value ? '' : (clickable ? lookup : '') + value;
                 },
-                listeners: { click: { fn: clicked } },
+                listeners: { click: { fn: clicked } }
             },
             {
                 width: 50,
@@ -497,7 +497,7 @@ tvheadend.epg = function() {
                     if (r.length < 1) return "";
                     return (clickable ? lookup : '') + r.join(',');
                 },
-                listeners: { click: { fn: clicked } },
+                listeners: { click: { fn: clicked } }
             }
         ]
     });
@@ -888,7 +888,7 @@ tvheadend.epg = function() {
         /* Really do it */
         var conf = {
           enabled: 1,
-          comment: 'Created from EPG query',
+          comment: 'Created from EPG query'
         };
         if (params.title) conf.title = params.title;
         if (params.channel) conf.channel = params.channel;
