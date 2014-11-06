@@ -32,8 +32,8 @@ tvheadend.cteditor = function(panel, index)
  */
 tvheadend.bouquet = function(panel, index)
 {
-    var list = 'enabled,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
-               'chtag,source,services_count,comment';
+    var list = 'enabled,rescan,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
+               'chtag,source,services_count,services_seen,comment';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/bouquet',
@@ -43,6 +43,7 @@ tvheadend.bouquet = function(panel, index)
         tabIndex: index,
         columns: {
             enabled:        { width: 50 },
+            rescan:         { width: 50 },
             name:           { width: 200 },
             maptoch:        { width: 100 },
             mapnolcn:       { width: 100 },
@@ -52,6 +53,7 @@ tvheadend.bouquet = function(panel, index)
             chtag:          { width: 100 },
             source:         { width: 200 },
             services_count: { width: 100 },
+            services_seen:  { width: 100 },
             comment:        { width: 200 },
         },
         list: list,
