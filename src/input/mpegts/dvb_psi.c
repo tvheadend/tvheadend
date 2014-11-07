@@ -55,6 +55,7 @@ typedef struct dvb_bat_svc {
   mpegts_service_t *svc;
   uint32_t lcn;
   dvb_freesat_svc_t *fallback;
+  int used;
 } dvb_bat_svc_t;
 
 typedef struct dvb_bat_id {
@@ -594,12 +595,14 @@ dvb_freesat_completed
     TAILQ_FOREACH(fs, &fr->services, region_link) {
       dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
       TAILQ_FOREACH(bs, &bi->services, link)
-        if (bs->fallback && fs->lcn == bs->fallback->lcn) {
-          bs->fallback = NULL;
-          break;
-        }
+        if (bs->fallback && fs->lcn == bs->fallback->lcn)
+          bs->used = 1;
     }
     TAILQ_FOREACH(bs, &bi->services, link) {
+      if (bs->used) {
+        bs->used = 0;
+        continue;
+      }
       TAILQ_FOREACH(fs, &fr->services, region_link)
         if (fs->svc == bs->svc)
           break;
