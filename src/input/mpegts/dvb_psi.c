@@ -1202,7 +1202,7 @@ dvb_bat_completed
     dvb_bouquet_comment(bq, bi->mm);
 
     TAILQ_FOREACH(bs, &bi->services, link)
-      bouquet_add_service(bq, (service_t *)bs->svc, bs->lcn, 0);
+      bouquet_add_service(bq, (service_t *)bs->svc, (int64_t)bs->lcn * CHANNEL_SPLIT, 0);
 
     bouquet_completed(bq, bi->services_count);
 
