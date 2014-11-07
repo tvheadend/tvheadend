@@ -881,6 +881,7 @@ dvb_sat_position_from_str( const char *buf )
   while (*s && *s != '.')
     s++;
   min = *s == '.' ? atoi(s + 1) : 0;
+  if (*s != '.') s = buf;
   do {
     c = *s++;
   } while (c && c != 'W' && c != 'E');
