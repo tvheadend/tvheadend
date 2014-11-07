@@ -70,7 +70,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
 }
 
 static htsmsg_t *
-api_epg_entry ( epg_broadcast_t *eb, const char *lang )
+api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
 {
   const char *s;
   char buf[64];
@@ -163,7 +163,10 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang )
   }
 
   /* Recording */
-  if ((de = dvr_entry_find_by_event(eb))) {
+  if (!access_verify2(perm, ACCESS_RECORDER) &&
+      (de = dvr_entry_find_by_event(eb)) &&
+      !access_verify_list(perm->aa_dvrcfgs,
+                          idnode_uuid_as_str(&de->de_config->dvr_id))) {
     htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_str(&de->de_id));
     htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
   }
@@ -426,7 +429,7 @@ api_epg_grid
   end   = MIN(eq.entries, start + limit);
   l     = htsmsg_create_list();
   for (i = start; i < end; i++) {
-    if (!(e = api_epg_entry(eq.result[i], lang))) continue;
+    if (!(e = api_epg_entry(eq.result[i], lang, perm))) continue;
     htsmsg_add_msg(l, NULL, e);
   }
   pthread_mutex_unlock(&global_lock);
@@ -443,7 +446,7 @@ api_epg_grid
 
 static void
 api_epg_episode_broadcasts
-  ( htsmsg_t *l, const char *lang, epg_episode_t *ep,
+  ( access_t *perm, htsmsg_t *l, const char *lang, epg_episode_t *ep,
     uint32_t *entries, epg_broadcast_t *ebc_skip )
 {
   epg_broadcast_t *ebc;
@@ -454,7 +457,7 @@ api_epg_episode_broadcasts
     ch = ebc->channel;
     if (ch == NULL) continue;
     if (ebc == ebc_skip) continue;
-    m = api_epg_entry(ebc, lang);
+    m = api_epg_entry(ebc, lang, perm);
     htsmsg_add_msg(l, NULL, m);
     (*entries)++;
   }
@@ -476,7 +479,7 @@ api_epg_alternative
   pthread_mutex_lock(&global_lock);
   e = epg_broadcast_find_by_id(id);
   if (e && e->episode)
-    api_epg_episode_broadcasts(l, lang, e->episode, &entries, e);
+    api_epg_episode_broadcasts(perm, l, lang, e->episode, &entries, e);
   pthread_mutex_unlock(&global_lock);
 
   /* Build response */
@@ -507,14 +510,14 @@ api_epg_related
     LIST_FOREACH(ep2, &ep->brand->episodes, blink) {
       if (ep2 == ep) continue;
       if (!ep2->title) continue;
-      api_epg_episode_broadcasts(l, lang, ep2, &entries, e);
+      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
       entries++;
     }
   } else if (ep && ep->season) {
     LIST_FOREACH(ep2, &ep->season->episodes, slink) {
       if (ep2 == ep) continue;
       if (!ep2->title) continue;
-      api_epg_episode_broadcasts(l, lang, ep2, &entries, e);
+      api_epg_episode_broadcasts(perm, l, lang, ep2, &entries, e);
     }
   }
   pthread_mutex_unlock(&global_lock);

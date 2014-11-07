@@ -155,6 +155,8 @@ int access_verify(const char *username, const char *password,
 static inline int access_verify2(access_t *a, uint32_t mask)
   { return (a->aa_rights & mask) == mask ? 0 : -1; }
 
+int access_verify_list(htsmsg_t *list, const char *item);
+
 /**
  * Get the access structure
  */

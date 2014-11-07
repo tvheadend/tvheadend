@@ -162,6 +162,23 @@ access_ticket_verify2(const char *id, const char *resource)
 /**
  *
  */
+int
+access_verify_list(htsmsg_t *list, const char *item)
+{
+  htsmsg_field_t *f;
+
+  if (list) {
+    HTSMSG_FOREACH(f, list)
+      if (!strcmp(htsmsg_field_get_str(f) ?: "", item))
+        return 0;
+    return -1;
+  }
+  return 0;
+}
+
+/**
+ *
+ */
 access_t *
 access_copy(access_t *src)
 {
