@@ -54,7 +54,7 @@ tvheadend.bouquet = function(panel, index)
             source:         { width: 200 },
             services_count: { width: 100 },
             services_seen:  { width: 100 },
-            comment:        { width: 200 },
+            comment:        { width: 200 }
         },
         list: list,
         del: true,
