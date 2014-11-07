@@ -591,8 +591,14 @@ dvb_freesat_completed
     regions++;
     if (TAILQ_EMPTY(&fr->services)) continue;
     uregions++;
-    TAILQ_FOREACH(fs, &fr->services, region_link)
+    TAILQ_FOREACH(fs, &fr->services, region_link) {
       dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
+      TAILQ_FOREACH(bs, &bi->services, link)
+        if (bs->fallback && fs->lcn == bs->fallback->lcn) {
+          bs->fallback = NULL;
+          break;
+        }
+    }
     TAILQ_FOREACH(bs, &bi->services, link) {
       TAILQ_FOREACH(fs, &fr->services, region_link)
         if (fs->svc == bs->svc)
