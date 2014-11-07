@@ -125,6 +125,25 @@ tvheadend.epgDetails = function(event) {
     
     var now = new Date();
     var buttons = [];
+    var recording = event.dvrState.indexOf('recording') == 0;
+
+    if (!recording) {
+        buttons.push(new Ext.Button({
+            disabled: !event.title,
+            handler: searchIMDB,
+            iconCls: 'find',
+            tooltip: 'Search IMDB (for title)',
+            text: "Search IMDB"
+        }));
+    }
+
+    buttons.push(new Ext.Button({
+        disabled: event.start > now || event.stop < now,
+        handler: playProgram,
+        iconCls: 'control_play',
+        tooltip: 'Play this program',
+        text: "Play program"
+    }));
 
     if (tvheadend.accessUpdate.dvr) {
 
@@ -145,22 +164,15 @@ tvheadend.epgDetails = function(event) {
         });
         store.load();
 
-        buttons.push(new Ext.Button({
-            disabled: !event.title,
-            handler: searchIMDB,
-            iconCls: 'find',
-            tooltip: 'Search IMDB (for title)',
-            text: "Search IMDB"
-        }));
+        if (recording) {
+          buttons.push(new Ext.Button({
+              handler: stopDVR,
+              iconCls: 'cancel',
+              tooltip: 'Stop recording of this program',
+              text: "Stop DVR"
+          }));
+        }
 
-        buttons.push(new Ext.Button({
-            disabled: event.start > now || event.stop < now,
-            handler: playProgram,
-            iconCls: 'control_play',
-            tooltip: 'Play this program',
-            text: "Play program"
-        }));
-		
         var confcombo = new Ext.form.ComboBox({
             store: store,
             triggerAction: 'all',
@@ -178,7 +190,7 @@ tvheadend.epgDetails = function(event) {
             handler: recordEvent,
             iconCls: 'rec',
             tooltip: 'Record now this program',
-            text: "Record program"
+            text: 'Record program'
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
@@ -195,6 +207,7 @@ tvheadend.epgDetails = function(event) {
             handler: function() { win.close(); },
             text: "Close"
         }));
+
     }
 
     var win = new Ext.Window({
@@ -230,6 +243,18 @@ tvheadend.epgDetails = function(event) {
 
     function recordSeries() {
         record('api/dvr/autorec/create_by_series');
+    }
+
+    function stopDVR() {
+        tvheadend.AjaxConfirm({
+            url: 'api/idnode/delete',
+            params: {
+                uuid: event.dvrUuid,
+            },
+            success: function(d) {
+                win.close();
+            }
+        });
     }
 
     function record(url) {
@@ -303,6 +328,7 @@ tvheadend.epg = function() {
             { name: 'starRating' },
             { name: 'ageRating' },
             { name: 'genre' },
+            { name: 'dvrUuid' },
             { name: 'dvrState' },
             { name: 'serieslinkId' }
         ])
