@@ -476,11 +476,11 @@ dvb_freesat_local_channels
     len -= 5;
     if (len2 > len)
       break;
-    tvhtrace(dstr, "      sid %04X (%d) uknown %04X (%d)\n", sid, sid, unk, unk);
+    tvhtrace(dstr, "      sid %04X (%d) uknown %04X (%d)", sid, sid, unk, unk);
     while (len2 > 3) {
       lcn = ((ptr[0] & 0x0f) << 8) | ptr[1];
       regionid = (ptr[2] << 8) | ptr[3];
-      tvhtrace(dstr, "        lcn %d region %d\n", lcn, regionid);
+      tvhtrace(dstr, "        lcn %d region %d", lcn, regionid);
       
       TAILQ_FOREACH(fs, &bi->fservices, link)
         if (fs->sid == sid && fs->regionid == regionid)
@@ -514,7 +514,7 @@ dvb_freesat_regions
     /* language: ptr[2-4]: 'eng' */
     if ((r = dvb_get_string_with_len(name, sizeof(name), ptr + 5, len - 5, NULL, NULL)) < 0)
       break;
-    tvhtrace(dstr, "    region %u - '%s'\n", id, name);
+    tvhtrace(dstr, "    region %u - '%s'", id, name);
 
     LIST_FOREACH(fr, &b->fregions, link)
       if (fr->regionid == id)
