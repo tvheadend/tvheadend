@@ -247,7 +247,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
  *
  */
 void
-bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn)
+bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
 {
   service_lcn_t *tl;
   channel_service_mapping_t *csm;
@@ -462,6 +462,15 @@ bouquet_get_channel_number(bouquet_t *bq, service_t *t)
     return r;
   if (bq->bq_only_bq_lcn)
     return bq->bq_last_lcn + 10 * CHANNEL_SPLIT;
+  return 0;
+}
+
+/*
+ *
+ */
+static uint32_t
+bouquet_get_tag_number(bouquet_t *bq, service_t *t)
+{
   return 0;
 }
 
@@ -692,16 +701,22 @@ bouquet_class_chtag_ref_set ( void *obj, const void *p )
 static const void *
 bouquet_class_services_get ( void *obj )
 {
-  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map(), *e;
   bouquet_t *bq = obj;
   service_t *t;
+  int64_t lcn;
+  uint32_t tag;
   size_t z;
 
   /* Add all */
   for (z = 0; z < bq->bq_services->is_count; z++) {
     t = (service_t *)bq->bq_services->is_array[z];
-    htsmsg_add_s64(m, idnode_uuid_as_str(&t->s_id),
-                   bouquet_get_channel_number0(bq, t));
+    e = htsmsg_create_map();
+    if ((lcn = bouquet_get_channel_number0(bq, t)) != 0)
+      htsmsg_add_s64(e, "lcn", lcn);
+    if ((tag = bouquet_get_tag_number(bq, t)) != 0)
+      htsmsg_add_s64(e, "tag", lcn);
+    htsmsg_add_msg(m, idnode_uuid_as_str(&t->s_id), e);
   }
 
   return m;
@@ -888,9 +903,11 @@ void
 bouquet_service_resolve(void)
 {
   bouquet_t *bq;
+  htsmsg_t *e;
   htsmsg_field_t *f;
   service_t *s;
-  uint32_t lcn;
+  int64_t lcn;
+  uint32_t tag;
   int saveflag;
 
   lock_assert(&global_lock);
@@ -901,10 +918,12 @@ bouquet_service_resolve(void)
     saveflag = bq->bq_saveflag;
     if (bq->bq_enabled) {
       HTSMSG_FOREACH(f, bq->bq_services_waiting) {
-        if (htsmsg_field_get_u32(f, &lcn)) continue;
+        if ((e = htsmsg_field_get_map(f)) == NULL) continue;
+        lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
+        tag = htsmsg_get_u32_or_default(e, "tag", 0);
         s = service_find_by_identifier(f->hmf_name);
         if (s)
-          bouquet_add_service(bq, s, lcn);
+          bouquet_add_service(bq, s, lcn, tag);
       }
     }
     htsmsg_destroy(bq->bq_services_waiting);
