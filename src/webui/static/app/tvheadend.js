@@ -366,6 +366,7 @@ function accessUpdate(o) {
         });
         tvheadend.channel_tab(chepg);
         tvheadend.cteditor(chepg);
+        tvheadend.bouquet(chepg);
         tvheadend.epggrab(chepg);
 
         cp.add(chepg);

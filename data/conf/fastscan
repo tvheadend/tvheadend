@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Canal Digitaal",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 900
+  },
+  {
+    "name": "TV Vlaanderen",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 901
+  },
+  {
+    "name": "TéléSAT",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 920
+  },
+  {
+    "name": "Mobistar NL",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 930
+  },
+  {
+    "name": "Mobistar FR",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 940
+  },
+  {
+    "name": "AustriaSat",
+    "position": 192,
+    "frequency": 12515000,
+    "pid": 950
+  },
+  {
+    "name": "Skylink: Czech Republic",
+    "position": 235,
+    "frequency": 12070000,
+    "pid": 30
+  },
+  {
+    "name": "Skylink: Slovak Republic",
+    "position": 235,
+    "frequency": 12070000,
+    "pid": 31
+  }
+]

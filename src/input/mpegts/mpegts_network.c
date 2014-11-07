@@ -202,7 +202,7 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = "# Channels",
+      .name     = "# Mapped Channels",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_chn,
     },
@@ -382,7 +382,7 @@ mpegts_network_set_network_name
 {
   char buf[256];
   if (mn->mn_network_name) return 0;
-  if (!name || !strcmp(name, mn->mn_network_name ?: ""))
+  if (!name || name[0] == '\0' || !strcmp(name, mn->mn_network_name ?: ""))
     return 0;
   tvh_str_update(&mn->mn_network_name, name);
   mn->mn_display_name(mn, buf, sizeof(buf));

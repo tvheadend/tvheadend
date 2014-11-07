@@ -17,8 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_API_SERVICE_H__
-#define __TVH_API_SERVICE_H__
+#ifndef __TVH_API_CHANNEL_H__
+#define __TVH_API_CHANNEL_H__
 
 #include "tvheadend.h"
 #include "channels.h"
@@ -145,4 +145,4 @@ void api_channel_init ( void )
 }
 
 
-#endif /* __TVH_API_IDNODE_H__ */
+#endif /* __TVH_API_CHANNEL_H__ */

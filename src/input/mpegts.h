@@ -110,6 +110,7 @@ typedef struct mpegts_table_state
   uint64_t extraid;
   int      version;
   int      complete;
+  int      working;
   uint32_t sections[8];
   RB_ENTRY(mpegts_table_state)   link;
 } mpegts_table_state_t;
@@ -142,15 +143,16 @@ struct mpegts_table
    */
   int mt_flags;
 
-#define MT_CRC      0x0001
-#define MT_FULL     0x0002
-#define MT_QUICKREQ 0x0004
-#define MT_RECORD   0x0008
-#define MT_SKIPSUBS 0x0010
-#define MT_SCANSUBS 0x0020
-#define MT_FAST     0x0040
-#define MT_SLOW     0x0080
-#define MT_DEFER    0x0100
+#define MT_CRC        0x0001
+#define MT_FULL       0x0002
+#define MT_QUICKREQ   0x0004
+#define MT_FASTSWITCH 0x0008
+#define MT_RECORD     0x0010
+#define MT_SKIPSUBS   0x0020
+#define MT_SCANSUBS   0x0040
+#define MT_FAST       0x0080
+#define MT_SLOW       0x0100
+#define MT_DEFER      0x0200
 
   /**
    * Cycle queue
@@ -171,6 +173,7 @@ struct mpegts_table
   char *mt_name;
 
   void *mt_opaque;
+  void *mt_bat;
   mpegts_table_callback_t mt_callback;
 
   RB_HEAD(,mpegts_table_state) mt_state;
@@ -182,6 +185,8 @@ struct mpegts_table
 
 #define MT_DEFER_OPEN_PID  1
 #define MT_DEFER_CLOSE_PID 2
+
+  int mt_working;
 
   int mt_count;
 
@@ -425,9 +430,9 @@ struct mpegts_service
    * Fields defined by DVB standard EN 300 468
    */
 
-  uint16_t s_dvb_service_id;
-  uint16_t s_dvb_channel_num;
+  uint32_t s_dvb_channel_num;
   uint16_t s_dvb_channel_minor;
+  uint16_t s_dvb_service_id;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;
   char    *s_dvb_cridauth;
@@ -747,7 +752,14 @@ void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 
+void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+
 void mpegts_mux_nice_name( mpegts_mux_t *mm, char *buf, size_t len );
+
+int mpegts_mux_class_scan_state_set ( void *, const void * );
+
+static inline int mpegts_mux_scan_state_set ( mpegts_mux_t *m, int state )
+  { return mpegts_mux_class_scan_state_set ( m, &state ); }
 
 mpegts_pid_t *mpegts_mux_find_pid_(mpegts_mux_t *mm, int pid, int create);
 

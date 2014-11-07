@@ -19,6 +19,8 @@
 #ifndef __TVH_SERVICE_MAPPER_H__
 #define __TVH_SERVICE_MAPPER_H__
 
+struct bouquet;
+
 typedef struct service_mapper_conf
 {
   int check_availability; ///< Check service is receivable
@@ -71,6 +73,9 @@ void service_mapper_unlink ( struct service *s, struct channel *c, void *origin 
  * @return 1 if changes were made, else 0
  */
 int service_mapper_clean ( struct service *s, struct channel *ch, void *origin );
+
+// Process one service
+struct channel *service_mapper_process ( struct service *s, struct bouquet *bq );
 
 // Resets the stat counters
 void service_mapper_reset_stats ( void );

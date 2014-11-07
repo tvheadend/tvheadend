@@ -23,6 +23,7 @@
 #include "idnode.h"
 
 struct access;
+struct bouquet;
 
 RB_HEAD(channel_tree, channel);
 
@@ -52,6 +53,7 @@ typedef struct channel
   int64_t ch_number;
   char   *ch_icon;
   struct  channel_tag_mapping_list ch_ctms;
+  struct bouquet *ch_bouquet;
 
   /* Service/subscriptions */
   LIST_HEAD(, channel_service_mapping) ch_services;
@@ -177,6 +179,7 @@ const char * channel_tag_get_icon(channel_tag_t *ct);
 int channel_access(channel_t *ch, struct access *a, const char *username);
 
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);
+void channel_tag_unmap(channel_t *ch, channel_tag_t *ct);
 
 void channel_save(channel_t *ch);
 

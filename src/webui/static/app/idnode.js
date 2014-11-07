@@ -383,6 +383,7 @@ tvheadend.IdNodeField = function(conf)
                 case 'u32':
                 case 'u16':
                 case 's32':
+                case 's64':
                 case 'dbl':
                 case 'time':
                     if (this.hexa) {

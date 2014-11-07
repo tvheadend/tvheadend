@@ -214,6 +214,102 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
 }
 
 /******************************************************************************
+ * Bouquet helper
+ *****************************************************************************/
+
+static ssize_t
+startswith( const char *str, const char *start )
+{
+  size_t len = strlen(start);
+  if (!strncmp(str, start, len))
+    return len;
+  return -1;
+}
+
+void
+mpegts_mux_bouquet_rescan ( const char *src, const char *extra )
+{
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  ssize_t l;
+#if ENABLE_MPEGTS_DVB
+  const idclass_t *ic;
+  uint32_t freq;
+  int satpos;
+#endif
+
+  if (!src)
+    return;
+#if ENABLE_MPEGTS_DVB
+  if ((l = startswith(src, "dvb-bouquet://dvbs,")) > 0) {
+    uint32_t tsid, nbid;
+    src += l;
+    if ((satpos = dvb_sat_position_from_str(src)) == INT_MAX)
+      return;
+    while (*src && *src != ',')
+      src++;
+    if (sscanf(src, ",%x,%x", &tsid, &nbid) != 2)
+      return;
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+        if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
+            mm->mm_tsid == tsid &&
+            dvb_sat_position(&((dvb_mux_t *)mm)->lm_tuning) == satpos)
+          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+    return;
+  }
+  if ((l = startswith(src, "dvb-bouquet://dvbt,")) > 0) {
+    uint32_t tsid, nbid;
+    if (sscanf(src, "%x,%x", &tsid, &nbid) != 2)
+      return;
+    ic = &dvb_mux_dvbt_class;
+    goto tsid_lookup;
+  }
+  if ((l = startswith(src, "dvb-bouquet://dvbc,")) > 0) {
+    uint32_t tsid, nbid;
+    if (sscanf(src, "%x,%x", &tsid, &nbid) != 2)
+      return;
+    ic = &dvb_mux_dvbc_class;
+tsid_lookup:
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+        if (idnode_is_instance(&mm->mm_id, ic) &&
+            mm->mm_tsid == tsid)
+          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+    return;
+  }
+  if ((l = startswith(src, "dvb-bskyb://dvbs,")) > 0 ||
+      (l = startswith(src, "dvb-freesat://dvbs,")) > 0) {
+    if ((satpos = dvb_sat_position_from_str(src + l)) == INT_MAX)
+      return;
+    /* a bit tricky, but we don't have other info */
+    if (!extra)
+      return;
+    freq = strtod(extra, NULL) * 1000;
+    goto freq;
+  }
+  if ((l = startswith(src, "dvb-fastscan://dvbs,")) > 0) {
+    uint32_t pid;
+    src += l;
+    if ((satpos = dvb_sat_position_from_str(src)) == INT_MAX)
+      return;
+    while (*src && *src != ',')
+      src++;
+    if (sscanf(src, ",%u,%u", &freq, &pid) != 2)
+      return;
+freq:
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+        if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
+            ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq == freq &&
+            dvb_sat_position(&((dvb_mux_t *)mm)->lm_tuning) == satpos)
+          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+    return;
+  }
+#endif
+}
+
+/******************************************************************************
  * Subsystem setup / tear down
  *****************************************************************************/
 

@@ -59,6 +59,10 @@ struct mpegts_mux;
 #define DVB_BAT_BASE                  0x48
 #define DVB_BAT_MASK                  0xF8
 
+#define DVB_FASTSCAN_NIT_BASE         0xBC
+#define DVB_FASTSCAN_SDT_BASE         0xBD
+#define DVB_FASTSCAN_MASK             0xFF
+
 #define DVB_VCT_T_BASE                0xC8
 #define DVB_VCT_C_BASE                0xC9
 #define DVB_VCT_MASK                  0xFF
@@ -125,7 +129,16 @@ struct mpegts_mux;
 #define DVB_DESC_CRID                 0x76
 #define DVB_DESC_EAC3                 0x7A
 #define DVB_DESC_AAC                  0x7C
-#define DVB_DESC_LOCAL_CHAN           0x83
+
+#define DVB_DESC_LOCAL_CHAN1          0x81  /* UPC - 1W */
+#define DVB_DESC_LOCAL_CHAN2          0x83
+
+#define DVB_DESC_BSKYB_LCN            0xB1
+
+#define DVB_DESC_BSKYB_NVOD           0xC0
+
+#define DVB_DESC_FREESAT_LCN          0xD3
+#define DVB_DESC_FREESAT_REGIONS      0xD4
 
 /* Service type lookup */
 
@@ -198,7 +211,9 @@ int dvb_table_begin
    int tableid, uint64_t extraid, int minlen,
    struct mpegts_table_state **st, int *sect, int *last, int *ver);
 void dvb_table_reset
-  (struct mpegts_table *mt );
+  (struct mpegts_table *mt);
+void dvb_bat_destroy
+  (struct mpegts_table *mt);
 
 int dvb_pat_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
@@ -209,6 +224,8 @@ int dvb_pmt_callback
 int dvb_nit_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_bat_callback  
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_fs_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
@@ -485,6 +502,12 @@ static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
 int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
 int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
+
+int dvb_sat_position( const dvb_mux_conf_t *mc );
+
+const char *dvb_sat_position_to_str( int position, char *buf, size_t buflen );
+
+const int dvb_sat_position_from_str( const char *buf );
 
 #endif /* ENABLE_MPEGTS_DVB */
 

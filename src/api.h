@@ -64,6 +64,7 @@ void api_idnode_init        ( void );
 void api_input_init         ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );
+void api_bouquet_init       ( void );
 void api_mpegts_init        ( void );
 void api_epg_init           ( void );
 void api_epggrab_init       ( void );

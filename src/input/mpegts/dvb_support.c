@@ -842,6 +842,58 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   }
 }
 
+int
+dvb_sat_position(const dvb_mux_conf_t *mc)
+{
+  int pos = mc->u.dmc_fe_qpsk.orbital_pos;
+  assert(mc->dmc_fe_type == DVB_TYPE_S);
+  if (!mc->u.dmc_fe_qpsk.orbital_dir)
+    return INT_MAX;
+  if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
+    return -pos;
+  return pos;
+}
+
+const char *
+dvb_sat_position_to_str(int position, char *buf, size_t buflen)
+{
+  const int dec = position % 10;
+
+  if (!buf || !buflen)
+    return "";
+  snprintf(buf, buflen, "%d", abs(position / 10));
+  if (dec)
+    snprintf(buf + strlen(buf), buflen - strlen(buf), ".%d", abs(dec));
+  snprintf(buf + strlen(buf), buflen - strlen(buf), "%c", position < 0 ? 'W' : 'E');
+  return buf;
+}
+
+const int
+dvb_sat_position_from_str( const char *buf )
+{
+  const char *s = buf;
+  int min, maj;
+  char c;
+
+  if (!buf)
+    return INT_MAX;
+  maj = atoi(s);
+  while (*s && *s != '.')
+    s++;
+  min = *s == '.' ? atoi(s + 1) : 0;
+  if (*s != '.') s = buf;
+  do {
+    c = *s++;
+  } while (c && c != 'W' && c != 'E');
+  if (!c)
+    return INT_MAX;
+  if (maj > 180 || maj < 0)
+    return INT_MAX;
+  if (min > 9 || min < 0)
+    return INT_MAX;
+  return (maj * 10 + min) * (c == 'W' ? -1 : 1);
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 /**

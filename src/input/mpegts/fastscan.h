@@ -1,7 +1,6 @@
 /*
- *  API - channel related calls
- *
- *  Copyright (C) 2013 Adam Sutton
+ *  Tvheadend - FastScan support
+ *  Copyright (C) 2014 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,34 +16,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_API_INPUT_H__
-#define __TVH_API_INPUT_H__
+#ifndef __TVH_DVB_FASTSCAN_H__
+#define __TVH_DVB_FASTSCAN_H__
 
-#include "tvheadend.h"
-#include "idnode.h"
-#include "input.h"
-#include "access.h"
-#include "api.h"
+struct bouquet;
 
-static idnode_set_t *
-api_input_hw_tree ( void )
-{
-  tvh_hardware_t *th;
-  idnode_set_t *is = idnode_set_create(0);
-  TVH_HARDWARE_FOREACH(th)
-    idnode_set_add(is, &th->th_id, NULL);
-  return is;
-}
+void
+dvb_fastscan_each(void *aux, int position, uint32_t frequency,
+                  void (*job)(void *aux, struct bouquet *,
+                              const char *name, int pid));
 
-void api_input_init ( void )
-{
-  static api_hook_t ah[] = {
-    { "hardware/tree", ACCESS_ADMIN,     api_idnode_tree, api_input_hw_tree }, 
-    { NULL },
-  };
+void dvb_fastscan_init ( void );
+void dvb_fastscan_done ( void );
 
-  api_register_all(ah);
-}
-
-
-#endif /* __TVH_API_INPUT_H__ */
+#endif /* TVH_DVB_FASTSCAN_H */

@@ -107,7 +107,9 @@ prop_write_values
 
     /* List */
     if (p->islist)
-      new = htsmsg_field_get_list(f);
+      new = (f->hmf_type == HMF_MAP) ?
+              htsmsg_field_get_map(f) :
+              htsmsg_field_get_list(f);
 
     /* Singular */
     else {

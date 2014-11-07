@@ -203,9 +203,10 @@ struct epggrab_ota_mux
   char                              *om_mux_uuid;     ///< Soft-link to mux
   LIST_HEAD(,epggrab_ota_map)        om_modules;      ///< List of linked mods
   
-  int                                om_done;         ///< The full completion mark for this round
-  int                                om_complete;     ///< Has completed a scan
-  int                                om_save;         ///< something changed
+  uint8_t                            om_done;         ///< The full completion mark for this round
+  uint8_t                            om_complete;     ///< Has completed a scan
+  uint8_t                            om_requeue;      ///< Requeue when stolen
+  uint8_t                            om_save;         ///< something changed
   gtimer_t                           om_timer;        ///< Per mux active timer
   gtimer_t                           om_data_timer;   ///< Any EPG data seen?
 

@@ -69,6 +69,7 @@
 #include "libav.h"
 #endif
 #include "profile.h"
+#include "bouquet.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -813,6 +814,8 @@ main(int argc, char **argv)
   http_client_init(opt_user_agent);
   esfilter_init();
 
+  bouquet_init();
+
   service_init();
 
 #if ENABLE_MPEGTS
@@ -820,6 +823,8 @@ main(int argc, char **argv)
 #endif
 
   channel_init();
+
+  bouquet_service_resolve();
 
   subscription_init();
 
@@ -917,6 +922,7 @@ main(int argc, char **argv)
   tvhftrace("main", service_mapper_done);
   tvhftrace("main", service_done);
   tvhftrace("main", channel_done);
+  tvhftrace("main", bouquet_done);
   tvhftrace("main", dvr_done);
   tvhftrace("main", subscription_done);
   tvhftrace("main", access_done);

@@ -55,7 +55,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe;
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  idnode_set_t *is = idnode_set_create();
+  idnode_set_t *is = idnode_set_create(0);
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     idnode_set_add(is, &lfe->ti_id, NULL);
   return is;

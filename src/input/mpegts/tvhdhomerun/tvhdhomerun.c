@@ -39,7 +39,7 @@ static idnode_set_t *
 tvhdhomerun_device_class_get_childs ( idnode_t *in )
 {
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
-  idnode_set_t *is = idnode_set_create();
+  idnode_set_t *is = idnode_set_create(0);
   tvhdhomerun_frontend_t *lfe;
 
   TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
