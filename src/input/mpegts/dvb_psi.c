@@ -399,7 +399,7 @@ dvb_desc_service_list
         bs->svc = s;
         TAILQ_INSERT_TAIL(&bi->services, bs, link);
       } else if (bq) {
-        bouquet_add_service(bq, (service_t *)s, 0);
+        bouquet_add_service(bq, (service_t *)s, 0, 0);
       }
       if (save)
         s->s_config_save((service_t*)s);
@@ -527,7 +527,7 @@ dvb_freesat_add_service
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
-  bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT);
+  bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT, 0);
 }
 
 static void
@@ -1178,7 +1178,7 @@ dvb_bat_completed
     dvb_bouquet_comment(bq, bi->mm);
 
     TAILQ_FOREACH(bs, &bi->services, link)
-      bouquet_add_service(bq, (service_t *)bs->svc, 0);
+      bouquet_add_service(bq, (service_t *)bs->svc, 0, 0);
 
     bouquet_completed(bq, bi->services_count);
 
@@ -1747,7 +1747,7 @@ dvb_fs_sdt_callback
     s       = mpegts_service_find(mux, service_id, 0, 1, &save);
     charset = dvb_charset_find(mn, mux, s);
     if (bq && s) {
-      bouquet_add_service(bq, (service_t *)s, 0);
+      bouquet_add_service(bq, (service_t *)s, 0, 0);
     } else {
       tvhtrace(mt->mt_name, "    service not found (bq %p, svc %p)", bq, s);
     }
