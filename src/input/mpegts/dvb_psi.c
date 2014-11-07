@@ -407,7 +407,7 @@ dvb_desc_service_list
   for (i = 0; i < len; i += 3) {
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
-    tvhdebug(dstr, "    service %04X (%d) type %d", sid, sid, stype);
+    tvhdebug(dstr, "    service %04X (%d) type %02X (%d)", sid, sid, stype, stype);
     if (bi)
       bi->services_count++;
     if (mm) {
@@ -1531,8 +1531,8 @@ dvb_sdt_callback
       }
     }
 
-    tvhtrace("sdt", "  type %d name [%s] provider [%s] def_auth [%s]",
-             stype, sname, sprov, sauth);
+    tvhtrace("sdt", "  type %02X (%d) name [%s] provider [%s] def_auth [%s]",
+             stype, stype, sname, sprov, sauth);
     if (!s) continue;
 
     /* Update service type */
@@ -1540,7 +1540,8 @@ dvb_sdt_callback
       int r;
       s->s_dvb_servicetype = stype;
       save = 1;
-      tvhtrace("sdt", "    type changed (old %i)", s->s_dvb_servicetype);
+      tvhtrace("sdt", "    type changed / old %02X (%i)",
+               s->s_dvb_servicetype, s->s_dvb_servicetype);
 
       /* Set tvh service type */
       if ((r = dvb_servicetype_lookup(stype)) != -1)
