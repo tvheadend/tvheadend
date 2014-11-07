@@ -818,7 +818,8 @@ idnode_filter
       }
       if (strdisp)
         free(strdisp);
-      return r;
+      if (r)
+        return r;
     } else if (f->type == IF_NUM || f->type == IF_BOOL) {
       int64_t a, b;
       if (idnode_get_s64(in, f->key, &a))
