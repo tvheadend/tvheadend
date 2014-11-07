@@ -50,7 +50,6 @@ typedef struct bouquet {
   idnode_set_t *bq_active_services;
   htsmsg_t     *bq_services_waiting;
   uint32_t      bq_services_seen;
-  uint32_t      bq_services_tmp; /* for fastscan tables */
   uint32_t      bq_lcn_offset;
   uint64_t      bq_last_lcn;
 
