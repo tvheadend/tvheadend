@@ -198,6 +198,10 @@
     background-image: url(../icons/rec.png) !important;
 }
 
+.stopRec {
+    background-image: url(../icons/stop_rec.png) !important;
+}
+
 .info {
     background-image: url(../icons/information.png) !important;
 }
