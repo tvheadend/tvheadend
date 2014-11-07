@@ -540,14 +540,20 @@ bouquet_class_get_list(void *o)
 }
 
 static void
-bouquet_class_rescan_notify ( void *obj )
+bouquet_class_rescan_notify0 ( bouquet_t *bq )
 {
   void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+  mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
+  bq->bq_rescan = 0;
+}
+
+static void
+bouquet_class_rescan_notify ( void *obj )
+{
   bouquet_t *bq = obj;
 
   if (bq->bq_rescan)
-    mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
-  bq->bq_rescan = 0;
+    bouquet_class_rescan_notify0(bq);
 }
 
 static void
@@ -556,7 +562,7 @@ bouquet_class_enabled_notify ( void *obj )
   bouquet_t *bq = obj;
 
   if (bq->bq_enabled)
-    bouquet_class_rescan_notify(obj);
+    bouquet_class_rescan_notify0(bq);
   bouquet_map_to_channels(bq);
 }
 
