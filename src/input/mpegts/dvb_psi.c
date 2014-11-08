@@ -534,7 +534,7 @@ dvb_freesat_regions
   }
 }
 
-static void
+static int
 dvb_freesat_add_service
   ( dvb_bat_id_t *bi, dvb_freesat_region_t *fr, mpegts_service_t *s, uint32_t lcn )
 {
@@ -550,6 +550,7 @@ dvb_freesat_add_service
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
   bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT, 0);
+  return fr->bouquet->bq_enabled;
 }
 
 static void
@@ -593,11 +594,12 @@ dvb_freesat_completed
     if (TAILQ_EMPTY(&fr->services)) continue;
     uregions++;
     TAILQ_FOREACH(fs, &fr->services, region_link) {
-      dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn);
+      if (!dvb_freesat_add_service(bi, fr, fs->svc, fs->lcn)) break;
       TAILQ_FOREACH(bs, &bi->services, link)
         if (bs->fallback && fs->lcn == bs->fallback->lcn)
           bs->used = 1;
     }
+    if (fs) continue;
     TAILQ_FOREACH(bs, &bi->services, link) {
       if (bs->used) {
         bs->used = 0;
@@ -607,10 +609,11 @@ dvb_freesat_completed
         if (fs->svc == bs->svc)
           break;
       if (fs) continue;
-      if ((fs = bs->fallback) != NULL)
-        dvb_freesat_add_service(bi, fr, bs->svc, fs->lcn);
-      else
-        dvb_freesat_add_service(bi, fr, bs->svc, 0);
+      if ((fs = bs->fallback) != NULL) {
+        if (!dvb_freesat_add_service(bi, fr, bs->svc, fs->lcn)) break;
+      } else {
+        if (!dvb_freesat_add_service(bi, fr, bs->svc, 0)) break;
+      }
     }
   }
 
@@ -1210,8 +1213,11 @@ dvb_bat_completed
 
     dvb_bouquet_comment(bq, bi->mm);
 
-    TAILQ_FOREACH(bs, &bi->services, link)
-      bouquet_add_service(bq, (service_t *)bs->svc, (int64_t)bs->lcn * CHANNEL_SPLIT, 0);
+    if (bq->bq_enabled) {
+      TAILQ_FOREACH(bs, &bi->services, link)
+        bouquet_add_service(bq, (service_t *)bs->svc,
+                            (int64_t)bs->lcn * CHANNEL_SPLIT, 0);
+    }
 
     bouquet_completed(bq, bi->services_count);
 
