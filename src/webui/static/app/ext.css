@@ -482,6 +482,14 @@
     background-image: url(../icons/time_schedules.png) !important;
 }
 
+.download{
+    background-image: url(../icons/download.png) !important;
+}
+
+.abort{
+    background-image: url(../icons/abort.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;

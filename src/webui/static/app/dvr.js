@@ -129,7 +129,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: 'Abort the selected recording',
-                iconCls: 'cancel',
+                iconCls: 'abort',
                 text: 'Abort',
                 disabled: true
             });
@@ -220,7 +220,7 @@ tvheadend.dvr_finished = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: 'Download the selected recording',
-                iconCls: 'save',
+                iconCls: 'download',
                 text: 'Download',
                 disabled: true
             });
@@ -302,7 +302,7 @@ tvheadend.dvr_failed = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: 'Download the selected recording',
-                iconCls: 'save',
+                iconCls: 'download',
                 text: 'Download',
                 disabled: true
             });
