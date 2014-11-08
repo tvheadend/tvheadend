@@ -802,7 +802,10 @@ static inline void mpegts_table_release
   (mpegts_table_t *mt)
 {
   assert(mt->mt_refcount > 0);
-  if(--mt->mt_refcount == 0) mpegts_table_release_(mt);
+  if(--mt->mt_refcount == 0) {
+    assert(mt->mt_destroyed == 1);
+    mpegts_table_release_(mt);
+  }
 }
 int mpegts_table_type
   ( mpegts_table_t *mt );

@@ -148,7 +148,28 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
+#if ENABLE_TRACE
+  /* poison */
+  memset(mt, 0xa5, sizeof(*mt));
+#endif
   free(mt);
+}
+
+static void
+mpegts_table_destroy_ ( mpegts_table_t *mt )
+{
+  mpegts_mux_t *mm = mt->mt_mux;
+
+  lock_assert(&mm->mm_tables_lock);
+
+  tvhtrace("mpegts", "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
+           mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
+           mt->mt_pid, mt->mt_pid);
+  mpegts_table_consistency_check(mm);
+  mt->mt_destroyed = 1;
+  mt->mt_mux->mm_close_table(mt->mt_mux, mt);
+  mpegts_table_consistency_check(mm);
+  mpegts_table_release(mt);
 }
 
 void
@@ -157,15 +178,8 @@ mpegts_table_destroy ( mpegts_table_t *mt )
   mpegts_mux_t *mm = mt->mt_mux;
 
   pthread_mutex_lock(&mm->mm_tables_lock);
-  tvhtrace("mpegts", "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
-           mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
-           mt->mt_pid, mt->mt_pid);
-  mpegts_table_consistency_check(mm);
-  mt->mt_destroyed = 1;
-  mt->mt_mux->mm_close_table(mt->mt_mux, mt);
-  mpegts_table_consistency_check(mm);
+  mpegts_table_destroy_(mt);
   pthread_mutex_unlock(&mm->mm_tables_lock);
-  mpegts_table_release(mt);
 }
 
 /**
@@ -271,13 +285,8 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   }
   while ((mt = LIST_FIRST(&mm->mm_tables))) {
     mt->mt_flags &= ~MT_DEFER; /* force destroy */
-    mt->mt_destroyed = 1;      /* early destroy mark */
-    mpegts_table_grab(mt);
     mpegts_table_consistency_check(mm);
-    pthread_mutex_unlock(&mm->mm_tables_lock);
-    mpegts_table_destroy(mt);
-    mpegts_table_release(mt);
-    pthread_mutex_lock(&mm->mm_tables_lock);
+    mpegts_table_destroy_(mt);
     mpegts_table_consistency_check(mm);
   }
   assert(mm->mm_num_tables == 0);
