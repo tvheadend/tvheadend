@@ -67,14 +67,14 @@ typedef struct dvb_bat_id {
   uint32_t services_count;
   char name[32];
   mpegts_mux_t *mm;
-  TAILQ_HEAD(,dvb_bat_svc)     services;
-  TAILQ_HEAD(,dvb_freesat_svc) fservices;
+  TAILQ_HEAD(,dvb_bat_svc)       services;
+  TAILQ_HEAD(,dvb_freesat_svc)   fservices;
+  LIST_HEAD(,dvb_freesat_region) fregions;
 } dvb_bat_id_t;
 
 typedef struct dvb_bat {
   int complete;
   LIST_HEAD(,dvb_bat_id)          bats;
-  LIST_HEAD(,dvb_freesat_region)  fregions;
 } dvb_bat_t;
 
 SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
@@ -503,7 +503,7 @@ dvb_freesat_local_channels
 
 static void
 dvb_freesat_regions
-  ( dvb_bat_t *b, const char *dstr, const uint8_t *ptr, int len )
+  ( dvb_bat_id_t *bi, const char *dstr, const uint8_t *ptr, int len )
 {
   uint16_t id;
   char name[32];
@@ -517,7 +517,7 @@ dvb_freesat_regions
       break;
     tvhtrace(dstr, "    region %u - '%s'", id, name);
 
-    LIST_FOREACH(fr, &b->fregions, link)
+    LIST_FOREACH(fr, &bi->fregions, link)
       if (fr->regionid == id)
         break;
     if (!fr) {
@@ -526,7 +526,7 @@ dvb_freesat_regions
       strncpy(fr->name, name, sizeof(fr->name)-1);
       fr->name[sizeof(fr->name)-1] = '\0';
       TAILQ_INIT(&fr->services);
-      LIST_INSERT_HEAD(&b->fregions, fr, link);
+      LIST_INSERT_HEAD(&bi->fregions, fr, link);
     }
 
     ptr += 5 + r;
@@ -578,7 +578,7 @@ dvb_freesat_completed
             bs->fallback = fs;
           continue;
         }
-        LIST_FOREACH(fr, &b->fregions, link)
+        LIST_FOREACH(fr, &bi->fregions, link)
           if (fr->regionid == fs->regionid)
             break;
         if (!fr)
@@ -589,7 +589,7 @@ dvb_freesat_completed
   }
 
   /* create bouquets, one per region */
-  LIST_FOREACH(fr, &b->fregions, link) {
+  LIST_FOREACH(fr, &bi->fregions, link) {
     regions++;
     if (TAILQ_EMPTY(&fr->services)) continue;
     uregions++;
@@ -622,9 +622,8 @@ dvb_freesat_completed
            total, regions, uregions);
 
   /* Remove all services associated to region, notify the completed status */
-  LIST_FOREACH(fr, &b->fregions, link) {
-    while ((fs = TAILQ_FIRST(&fr->services)) != NULL)
-      TAILQ_REMOVE(&fr->services, fs, region_link);
+  LIST_FOREACH(fr, &bi->fregions, link) {
+    TAILQ_INIT(&fr->services);
     if (fr->bouquet) {
       dvb_bouquet_comment(fr->bouquet, bi->mm);
       bouquet_completed(fr->bouquet, total);
@@ -697,7 +696,7 @@ static struct strtab bskyb_regions[] = {
 
 static void
 dvb_bskyb_local_channels
-  ( dvb_bat_t *b, dvb_bat_id_t *bi, const char *dstr,
+  ( dvb_bat_id_t *bi, const char *dstr,
     const uint8_t *ptr, int len, mpegts_mux_t *mm )
 {
   uint16_t sid, unk, lcn, regionid, stype;
@@ -765,7 +764,7 @@ dvb_bskyb_local_channels
     }
 
     if (regionid && regionid != 0xffff) {
-      LIST_FOREACH(fr, &b->fregions, link)
+      LIST_FOREACH(fr, &bi->fregions, link)
         if (fr->regionid == regionid)
           break;
       if (!fr) {
@@ -780,7 +779,7 @@ dvb_bskyb_local_channels
         strncpy(fr->name, str, sizeof(fr->name)-1);
         fr->name[sizeof(fr->name)-1] = '\0';
         TAILQ_INIT(&fr->services);
-        LIST_INSERT_HEAD(&b->fregions, fr, link);
+        LIST_INSERT_HEAD(&bi->fregions, fr, link);
       }
     }
   }
@@ -1144,12 +1143,12 @@ dvb_bat_destroy_lists( mpegts_table_t *mt )
       TAILQ_REMOVE(&bi->fservices, fs, link);
       free(fs);
     }
+    while ((fr = LIST_FIRST(&bi->fregions)) != NULL) {
+      LIST_REMOVE(fr, link);
+      free(fr);
+    }
     LIST_REMOVE(bi, link);
     free(bi);
-  }
-  while ((fr = LIST_FIRST(&b->fregions)) != NULL) {
-    LIST_REMOVE(fr, link);
-    free(fr);
   }
 }
 
@@ -1334,7 +1333,7 @@ dvb_nit_callback
         break;
       case DVB_DESC_FREESAT_REGIONS:
         if (fsat)
-          dvb_freesat_regions(b, mt->mt_name, dptr, dlen);
+          dvb_freesat_regions(bi, mt->mt_name, dptr, dlen);
         break;
     }
   }
@@ -1448,7 +1447,7 @@ dvb_nit_callback
           break;
         case DVB_DESC_BSKYB_LCN:
           if (tableid == 0x4A && p02) {
-            dvb_bskyb_local_channels(b, bi, mt->mt_name, dptr, dlen, mux);
+            dvb_bskyb_local_channels(bi, mt->mt_name, dptr, dlen, mux);
             bi->bskyb = 1;
           }
           break;
