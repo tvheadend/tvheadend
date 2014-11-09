@@ -58,7 +58,9 @@ Buttons have the following functions:
 		<dd>Don't scan this network for muxes at Tvheadend start.
 <p>
 		<dt><b>Idle Scan Muxes</b>
-		<dd>When nothing else happens Tvheadend will continuously rotate among all muxes and tune to them to verify that they are still working. If your adapter have problems with lots of tuning, try to disable this.
+		<dd>When nothing else happens Tvheadend will continuously rotate among all muxes and tune to them to verify that they are still working
+		    when the inputs are not used for streaming. If your adapter have problems with lots of (endless) tuning, try to disable this.
+		    Note that this option should be OFF for the normal operation. This type of mux probing is not required.
 <p>
 		<dt><b>Ignore Provider's Channel Numbers</b>
 		<dd>Some providers will try to set a channel number so that every receiver is consistent - "tune to Channel x on 150". This option allows you to ignore this and let tvhheadend allocate a channel number itself.

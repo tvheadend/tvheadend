@@ -95,8 +95,26 @@ static inline void
 mpegts_network_scan_mux_done0
   ( mpegts_mux_t *mm, mpegts_mux_scan_result_t result, int weight )
 {
+  mpegts_network_t *mn = mm->mm_network;
+
   mpegts_mux_unsubscribe_by_name(mm, "scan");
-  mpegts_network_scan_queue_del(mm);
+  if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
+    if (weight || mn->mn_idlescan) {
+      if (!weight)
+        mm->mm_scan_weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
+      TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
+      TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
+                            mm, mm_scan_link, mm_cmp);
+      gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 10);
+      weight = 0;
+    } else {
+      mpegts_network_scan_queue_del(mm);
+    }
+  } else {
+    if (!weight && mn->mn_idlescan)
+      weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
+    mpegts_network_scan_queue_del(mm);
+  }
 
   if (result != MM_SCAN_NONE && mm->mm_scan_result != result) {
     mm->mm_scan_result = result;
@@ -105,7 +123,7 @@ mpegts_network_scan_mux_done0
 
   /* Re-enable? */
   if (weight > 0)
-    mpegts_network_scan_queue_add(mm, weight);
+    mpegts_network_scan_queue_add(mm, weight, 10);
 }
 
 /* Failed - couldn't start */
@@ -161,11 +179,15 @@ void
 mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
+  char buf[256], buf2[256];
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
     TAILQ_REMOVE(&mn->mn_scan_active, mm, mm_scan_link);
   } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   }
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  mn->mn_display_name(mn, buf2, sizeof(buf2));
+  tvhdebug("mpegts", "%s - removing mux %s from scan queue", buf2, buf);
   mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
   mm->mm_scan_weight = 0;
   gtimer_disarm(&mm->mm_scan_timeout);
@@ -174,7 +196,7 @@ mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 }
 
 void
-mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
+mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight, int delay )
 {
   int reload = 0;
   char buf[256], buf2[256];;
@@ -202,14 +224,14 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight )
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mn->mn_display_name(mn, buf2, sizeof(buf2));
-  tvhdebug("mpegts", "%s - adding mux %s to queue weight %d",
+  tvhdebug("mpegts", "%s - adding mux %s to scan queue weight %d",
            buf2, buf, weight);
 
   /* Add new entry */
   mm->mm_scan_state = MM_SCAN_STATE_PEND;
   TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
                         mm, mm_scan_link, mm_cmp);
-  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
+  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, delay);
   mpegts_network_scan_notify(mm);
 }
 

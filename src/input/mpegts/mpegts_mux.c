@@ -275,7 +275,7 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
       return 0;
 
     /* Start */
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER, 0);
 
   /* Stop */
   } else if (state == MM_SCAN_STATE_IDLE) {
@@ -734,9 +734,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Scanning */
   mpegts_network_scan_mux_cancel(mm, 1);
-  if (mm->mm_scan_state == MM_SCAN_STATE_IDLE &&
-      mm->mm_network->mn_idlescan)
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
 
   /* Events */
   mpegts_fire_event(mm, ml_mux_stop);
@@ -982,9 +979,9 @@ mpegts_mux_create0
 
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT, 10);
   else if (mm->mm_network->mn_idlescan)
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE, 10);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - created", buf);
