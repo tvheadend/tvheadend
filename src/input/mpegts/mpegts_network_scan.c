@@ -239,6 +239,7 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight, int delay )
  * Bouquet helper
  *****************************************************************************/
 
+#if ENABLE_MPEGTS_DVB
 static ssize_t
 startswith( const char *str, const char *start )
 {
@@ -247,14 +248,15 @@ startswith( const char *str, const char *start )
     return len;
   return -1;
 }
+#endif
 
 void
 mpegts_mux_bouquet_rescan ( const char *src, const char *extra )
 {
+#if ENABLE_MPEGTS_DVB
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
   ssize_t l;
-#if ENABLE_MPEGTS_DVB
   const idclass_t *ic;
   uint32_t freq;
   int satpos;

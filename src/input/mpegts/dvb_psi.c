@@ -457,6 +457,8 @@ dvb_desc_local_channel
   return 0;
 }
 
+#if ENABLE_MPEGTS_DVB
+
 /*
  * UK FreeSat
  */
@@ -785,6 +787,7 @@ dvb_bskyb_local_channels
   }
 }
 
+#endif /* ENABLE_MPEGTS_DVB */
 
 /* **************************************************************************
  * Tables
@@ -1167,7 +1170,6 @@ dvb_bat_completed
 {
   dvb_bat_id_t *bi;
   dvb_bat_svc_t *bs;
-  char src[64];
   bouquet_t *bq;
 
   b->complete = 1;
@@ -1181,7 +1183,9 @@ dvb_bat_completed
     }
 
     if (bi->freesat || bi->bskyb) {
+#if ENABLE_MPEGTS_DVB
       dvb_freesat_completed(b, bi, dstr);
+#endif
       goto complete;
     }
 
@@ -1189,6 +1193,7 @@ dvb_bat_completed
 
 #if ENABLE_MPEGTS_DVB
     if (tableid == 0x4A /* BAT */) {
+      char src[64] = "";
       if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbs_class)) {
         dvb_mux_conf_t *mc = &((dvb_mux_t *)mux)->lm_tuning;
         if (mc->u.dmc_fe_qpsk.orbital_dir) {
@@ -1230,7 +1235,10 @@ dvb_nit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int save = 0;
-  int r, sect, last, ver, fsat = 0, p02 = 0;
+  int r, sect, last, ver;
+#if ENABLE_MPEGTS_DVB
+  int fsat = 0, p02 = 0;
+#endif
   uint8_t  dtag;
   int llen, dllen, dlen;
   const uint8_t *lptr, *dlptr, *dptr;
@@ -1324,16 +1332,20 @@ dvb_nit_callback
         // TODO: implement this?
         break;
       case DVB_DESC_PRIVATE_DATA:
+#if ENABLE_MPEGTS_DVB
         if (tableid == 0x4A && dlen == 4) {
           if (!memcmp(dptr, "FSAT", 4))
             fsat = 1;
           else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
             p02 = 1;
         }
+#endif
         break;
       case DVB_DESC_FREESAT_REGIONS:
+#if ENABLE_MPEGTS_DVB
         if (fsat)
           dvb_freesat_regions(bi, mt->mt_name, dptr, dlen);
+#endif
         break;
     }
   }
@@ -1434,22 +1446,28 @@ dvb_nit_callback
             return -1;
           break;
         case DVB_DESC_PRIVATE_DATA:
+#if ENABLE_MPEGTS_DVB
           if (dlen == 4 && !memcmp(dptr, "FSAT", 4))
             fsat = 1;
           else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
             p02 = 1;
+#endif
           break;
         case DVB_DESC_FREESAT_LCN:
+#if ENABLE_MPEGTS_DVB
           if (tableid == 0x4A && fsat) {
             dvb_freesat_local_channels(bi, mt->mt_name, dptr, dlen);
             bi->freesat = 1;
           }
+#endif
           break;
         case DVB_DESC_BSKYB_LCN:
+#if ENABLE_MPEGTS_DVB
           if (tableid == 0x4A && p02) {
             dvb_bskyb_local_channels(bi, mt->mt_name, dptr, dlen, mux);
             bi->bskyb = 1;
           }
+#endif
           break;
       }
     }

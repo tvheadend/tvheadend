@@ -19,12 +19,16 @@
 #ifndef __TVH_DVB_FASTSCAN_H__
 #define __TVH_DVB_FASTSCAN_H__
 
+#if ENABLE_MPEGTS_DVB
+
 struct bouquet;
 
 void
 dvb_fastscan_each(void *aux, int position, uint32_t frequency,
                   void (*job)(void *aux, struct bouquet *,
                               const char *name, int pid));
+
+#endif
 
 void dvb_fastscan_init ( void );
 void dvb_fastscan_done ( void );

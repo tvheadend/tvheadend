@@ -22,6 +22,8 @@
 #include "dvb.h"
 #include "fastscan.h"
 
+#if ENABLE_MPEGTS_DVB
+
 typedef struct dvb_fastscan_item {
   LIST_ENTRY(dvb_fastscan_item) ilink;
 
@@ -174,3 +176,15 @@ void dvb_fastscan_done ( void )
   }
   SKEL_FREE(fastscan_rb_skel);
 }
+
+#else
+
+void dvb_fastscan_init ( void )
+{
+}
+
+void dvb_fastscan_done ( void )
+{
+}
+
+#endif
