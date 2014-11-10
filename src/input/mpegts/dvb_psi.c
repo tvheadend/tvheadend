@@ -467,19 +467,26 @@ static void
 dvb_freesat_local_channels
   ( dvb_bat_id_t *bi, const char *dstr, const uint8_t *ptr, int len )
 {
-  uint16_t sid, unk, lcn, regionid;
+  uint16_t sid, lcn, regionid;
+#if ENABLE_TRACE
+  uint16_t unk;
+#endif
   dvb_freesat_svc_t *fs;
   int len2;
 
   while (len > 4) {
     sid = (ptr[0] << 8) | ptr[1];
+#if ENABLE_TRACE
     unk = (ptr[2] << 8) | ptr[3];
+#endif
     len2 = ptr[4];
     ptr += 5;
     len -= 5;
     if (len2 > len)
       break;
+#if ENABLE_TRACE
     tvhtrace(dstr, "      sid %04X (%d) uknown %04X (%d)", sid, sid, unk, unk);
+#endif
     while (len2 > 3) {
       lcn = ((ptr[0] & 0x0f) << 8) | ptr[1];
       regionid = (ptr[2] << 8) | ptr[3];
@@ -701,7 +708,10 @@ dvb_bskyb_local_channels
   ( dvb_bat_id_t *bi, const char *dstr,
     const uint8_t *ptr, int len, mpegts_mux_t *mm )
 {
-  uint16_t sid, unk, lcn, regionid, stype;
+  uint16_t sid, lcn, regionid;
+#if ENABLE_TRACE
+  uint16_t unk, stype;
+#endif
   dvb_freesat_region_t *fr;
   dvb_freesat_svc_t *fs;
   dvb_bat_svc_t *bs;
@@ -735,14 +745,18 @@ dvb_bskyb_local_channels
 
   while (len > 8) {
     sid = (ptr[0] << 8) | ptr[1];
-    stype = ptr[2];
     lcn = (ptr[5] << 8) | ptr[6];
+#if ENABLE_TRACE
+    stype = ptr[2];
     unk = (ptr[3] << 8) | ptr[4];
+#endif
     ptr += 9;
     len -= 9;
 
+#if ENABLE_TRACE
     tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)",
              sid, sid, stype, stype, lcn, unk, unk);
+#endif
 
     TAILQ_FOREACH(fs, &bi->fservices, link)
       if (fs->sid == sid && fs->regionid == regionid)
