@@ -548,7 +548,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     return a;
   }
 
-  if(superuser_username != NULL && superuser_password != NULL) {
+  if(username && superuser_username != NULL && superuser_password != NULL) {
 
     SHA1_Init(&shactx);
     SHA1_Update(&shactx, (const uint8_t *)superuser_password,
