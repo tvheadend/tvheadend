@@ -276,11 +276,6 @@ static int _epg_write ( int fd, htsmsg_t *m )
   } else {
     ret = 0;
   }
-  if(ret) {
-    tvhlog(LOG_ERR, "epgdb", "failed to store epg to disk");
-    close(fd);
-    hts_settings_remove("epgdb.v%d", EPG_DB_VERSION);
-  }
   return ret;
 }
 
@@ -313,35 +308,36 @@ void epg_save ( void )
     return;
 
   memset(&stats, 0, sizeof(stats));
-  if ( _epg_write_sect(fd, "config") ) goto fin;
-  if (_epg_write(fd, epg_config_serialize())) goto fin;
-  if ( _epg_write_sect(fd, "brands") ) goto fin;
+  if ( _epg_write_sect(fd, "config") ) goto error;
+  if (_epg_write(fd, epg_config_serialize())) goto error;
+  if ( _epg_write_sect(fd, "brands") ) goto error;
   RB_FOREACH(eo,  &epg_brands, uri_link) {
-    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) goto fin;
+    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) goto error;
     stats.brands.total++;
   }
-  if ( _epg_write_sect(fd, "seasons") ) goto fin;
+  if ( _epg_write_sect(fd, "seasons") ) goto error;
   RB_FOREACH(eo,  &epg_seasons, uri_link) {
-    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) goto fin;
+    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) goto error;
     stats.seasons.total++;
   }
-  if ( _epg_write_sect(fd, "episodes") ) goto fin;
+  if ( _epg_write_sect(fd, "episodes") ) goto error;
   RB_FOREACH(eo,  &epg_episodes, uri_link) {
-    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) goto fin;
+    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) goto error;
     stats.episodes.total++;
   }
-  if ( _epg_write_sect(fd, "serieslinks") ) goto fin;
+  if ( _epg_write_sect(fd, "serieslinks") ) goto error;
   RB_FOREACH(eo, &epg_serieslinks, uri_link) {
-    if (_epg_write(fd, epg_serieslink_serialize((epg_serieslink_t*)eo))) goto fin;
+    if (_epg_write(fd, epg_serieslink_serialize((epg_serieslink_t*)eo))) goto error;
     stats.seasons.total++;
   }
-  if ( _epg_write_sect(fd, "broadcasts") ) goto fin;
+  if ( _epg_write_sect(fd, "broadcasts") ) goto error;
   CHANNEL_FOREACH(ch) {
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-      if (_epg_write(fd, epg_broadcast_serialize(ebc))) goto fin;
+      if (_epg_write(fd, epg_broadcast_serialize(ebc))) goto error;
       stats.broadcasts.total++;
     }
   }
+  close(fd);
 
   /* Stats */
   tvhlog(LOG_INFO, "epgdb", "saved");
@@ -350,6 +346,10 @@ void epg_save ( void )
   tvhlog(LOG_INFO, "epgdb", "  episodes   %d", stats.episodes.total);
   tvhlog(LOG_INFO, "epgdb", "  broadcasts %d", stats.broadcasts.total);
 
-fin:
+  return;
+
+error:
+  tvhlog(LOG_ERR, "epgdb", "failed to store epg to disk");
+  hts_settings_remove("epgdb.v%d", EPG_DB_VERSION);
   close(fd);
 }

@@ -919,10 +919,10 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodec *icodec, *ocodec;
   AVCodecContext *ictx, *octx;
   AVDictionary *opts;
-  AVPacket packet;
+  AVPacket packet, packet2;
   AVPicture deint_pic;
-  uint8_t *buf, *out, *deint;
-  int length, len, got_picture;
+  uint8_t *buf, *deint;
+  int length, len, ret, got_picture, got_output;
   video_stream_t *vs = (video_stream_t*)ts;
 
   ictx = vs->vid_ictx;
@@ -931,7 +931,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = vs->vid_icodec;
   ocodec = vs->vid_ocodec;
 
-  buf = out = deint = NULL;
+  buf = deint = NULL;
   opts = NULL;
 
   if (ictx->codec_id == AV_CODEC_ID_NONE) {
@@ -1136,8 +1136,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   else if (ictx->coded_frame && ictx->coded_frame->pts != AV_NOPTS_VALUE)
     vs->vid_enc_frame->pts = vs->vid_dec_frame->pts;
 
-  AVPacket packet2;
-  int ret, got_output;
 
   av_init_packet(&packet2);
   packet2.data = NULL; // packet data will be allocated by the encoder
@@ -1161,9 +1159,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if(buf)
     av_free(buf);
-
-  if(out)
-    av_free(out);
 
   if(deint)
     av_free(deint);

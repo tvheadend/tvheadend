@@ -602,7 +602,7 @@ subscription_create
 
   streaming_target_init(&s->ths_input, cb, s, reject);
 
-  s->ths_prch              = prch->prch_st ? prch : NULL;
+  s->ths_prch              = prch && prch->prch_st ? prch : NULL;
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
   s->ths_hostname          = hostname ? strdup(hostname) : NULL;

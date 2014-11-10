@@ -712,6 +712,8 @@ dvb_bskyb_local_channels
   if (len < 2)
     return;
 
+  assert(bi);
+
   regionid = (ptr[1] != 0xff) ? ptr[1] : 0xffff;
 
 #if 0
@@ -758,7 +760,7 @@ dvb_bskyb_local_channels
         break;
     if (mm && !bs) {
       s = mpegts_service_find(mm, sid, 0, 0, NULL);
-      if (bi && s) {
+      if (s) {
         bs = calloc(1, sizeof(*bs));
         bs->svc = s;
         TAILQ_INSERT_TAIL(&bi->services, bs, link);

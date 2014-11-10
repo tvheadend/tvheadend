@@ -1502,6 +1502,7 @@ service_instance_add(service_instance_list_t *sil,
   si->si_weight = weight;
   si->si_prio   = prio;
   strncpy(si->si_source, source ?: "<unknown>", sizeof(si->si_source));
+  si->si_source[sizeof(si->si_source)-1] = '\0';
   TAILQ_INSERT_SORTED(sil, si, si_link, si_cmp);
   return si;
 }

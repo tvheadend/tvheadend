@@ -497,8 +497,10 @@ lav_muxer_destroy(muxer_t *m)
   if(lm->lm_h264_filter)
     av_bitstream_filter_close(lm->lm_h264_filter);
 
-  for(i=0; i<lm->lm_oc->nb_streams; i++)
-    av_freep(&lm->lm_oc->streams[i]->codec->extradata);
+  if (lm->lm_oc) {
+    for(i=0; i<lm->lm_oc->nb_streams; i++)
+      av_freep(&lm->lm_oc->streams[i]->codec->extradata);
+  }
 
   if(lm->lm_oc && lm->lm_oc->pb) {
     av_freep(&lm->lm_oc->pb->buffer);

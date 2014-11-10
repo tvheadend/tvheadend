@@ -571,6 +571,10 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       continue; /* IP based access mismatches */
 
     if(ae->ae_username[0] != '*') {
+
+      if (!username)
+        continue;
+
       SHA1_Init(&shactx);
       SHA1_Update(&shactx, (const uint8_t *)ae->ae_password,
                   strlen(ae->ae_password));

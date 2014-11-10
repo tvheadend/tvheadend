@@ -219,7 +219,7 @@ static int
 api_idnode_load
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  int err = 0, meta = 0, count = 0;
+  int err = 0, meta, count = 0;
   idnode_t *in;
   htsmsg_t *uuids, *l = NULL, *m;
   htsmsg_t *flist;
@@ -244,7 +244,7 @@ api_idnode_load
   if (!(uuids = htsmsg_field_get_list(f)))
     if (!(uuid = htsmsg_field_get_str(f)))
       return EINVAL;
-  htsmsg_get_s32(args, "meta", &meta);
+  meta = htsmsg_get_s32_or_default(args, "meta", 0);
 
   flist = api_idnode_flist_conf(args, "list");
 
