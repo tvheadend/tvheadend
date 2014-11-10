@@ -104,6 +104,7 @@ bouquet_destroy(bouquet_t *bq)
   free((char *)bq->bq_chtag_waiting);
   free(bq->bq_name);
   free(bq->bq_src);
+  free(bq->bq_comment);
   free(bq);
 }
 
