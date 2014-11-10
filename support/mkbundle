@@ -78,7 +78,7 @@ def output_file ( path, name, idx, next = -1 ):
   if opts.gzip:
     o = len(d)
     l = opts.gzlevel
-    t = cStringIO.StringIO()
+    t = StringIO()
     if l < 0: l = 1
     if l > 9: l = 9
     z = gzip.GzipFile(filename=name, mode='w', compresslevel=l, fileobj=t)
