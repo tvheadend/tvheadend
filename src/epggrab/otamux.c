@@ -61,6 +61,8 @@ pthread_mutex_t              epggrab_ota_mutex;
 SKEL_DECLARE(epggrab_ota_mux_skel, epggrab_ota_mux_t);
 SKEL_DECLARE(epggrab_svc_link_skel, epggrab_ota_svc_link_t);
 
+static void epggrab_ota_kick ( int delay );
+
 static void epggrab_ota_timeout_cb ( void *p );
 static void epggrab_ota_data_timeout_cb ( void *p );
 static void epggrab_ota_kick_cb ( void *p );
@@ -100,6 +102,41 @@ epggrab_ota_timeout_get ( void )
   return timeout;
 }
 
+static int
+epggrab_ota_queue_one( epggrab_ota_mux_t *om )
+{
+  om->om_done = 0;
+  om->om_requeue = 1;
+  if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
+    return 0;
+  TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+  om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+  return 1;
+}
+
+void
+epggrab_ota_queue_mux( mpegts_mux_t *mm )
+{
+  const char *id = idnode_uuid_as_str(&mm->mm_id);
+  epggrab_ota_mux_t *om;
+  int epg_flag;
+
+  if (!mm)
+    return;
+
+  lock_assert(&global_lock);
+
+  epg_flag = mm->mm_is_epg(mm);
+  if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE)
+    return;
+  RB_FOREACH(om, &epggrab_ota_all, om_global_link)
+    if (!strcmp(om->om_mux_uuid, id)) {
+      if (epggrab_ota_queue_one(om))
+        epggrab_ota_kick(4);
+      break;
+    }
+}
+
 static void
 epggrab_ota_requeue ( void )
 {
@@ -108,14 +145,8 @@ epggrab_ota_requeue ( void )
   /*
    * enqueue all muxes, but ommit the delayed ones (active+pending)
    */
-  RB_FOREACH(om, &epggrab_ota_all, om_global_link) {
-    om->om_done = 0;
-    om->om_requeue = 1;
-    if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
-      continue;
-    TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
-    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-  }
+  RB_FOREACH(om, &epggrab_ota_all, om_global_link)
+    epggrab_ota_queue_one(om);
 }
 
 static void

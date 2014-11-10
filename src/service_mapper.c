@@ -217,6 +217,7 @@ service_mapper_link ( service_t *s, channel_t *c, void *origin )
   csm->csm_svc = s;
   LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
   LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
+  service_mapped( s );
   service_mapper_notify( csm, origin );
   return 1;
 }

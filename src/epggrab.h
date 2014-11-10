@@ -319,6 +319,11 @@ void epggrab_channel_mod ( struct channel *ch );
  */
 void epggrab_resched     ( void );
 
+/*
+ * OTA kick
+ */
+void epggrab_ota_queue_mux( struct mpegts_mux *mm );
+
 #endif /* __EPGGRAB_H__ */
 
 /* **************************************************************************

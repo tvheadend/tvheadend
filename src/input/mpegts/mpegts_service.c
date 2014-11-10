@@ -25,6 +25,7 @@
 #include "settings.h"
 #include "dvb_charset.h"
 #include "config.h"
+#include "epggrab.h"
 
 /* **************************************************************************
  * Class definition
@@ -427,7 +428,7 @@ mpegts_service_channel_icon ( service_t *s )
   if (ms->s_dvb_mux &&
       idnode_is_instance(&ms->s_dvb_mux->mm_id, &dvb_mux_class)) {
     int32_t hash = 0;
-    static __thread char buf[128];
+    static char buf[128];
     dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
     char dir;
     int pos;
@@ -463,6 +464,12 @@ mpegts_service_channel_icon ( service_t *s )
 #endif
 
   return NULL;
+}
+
+static void
+mpegts_service_mapped ( service_t *t )
+{
+  epggrab_ota_queue_mux(((mpegts_service_t *)t)->s_dvb_mux);
 }
 
 void
@@ -532,6 +539,7 @@ mpegts_service_create0
   s->s_channel_name   = mpegts_service_channel_name;
   s->s_provider_name  = mpegts_service_provider_name;
   s->s_channel_icon   = mpegts_service_channel_icon;
+  s->s_mapped         = mpegts_service_mapped;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);

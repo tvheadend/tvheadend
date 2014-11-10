@@ -310,6 +310,7 @@ typedef struct service {
   const char *(*s_channel_name)   (struct service *);
   const char *(*s_provider_name)  (struct service *);
   const char *(*s_channel_icon)   (struct service *);
+  void        (*s_mapped)         (struct service *);
 
   /**
    * Name usable for displaying to user
@@ -588,5 +589,7 @@ const char *service_get_channel_name (service_t *s);
 const char *service_get_full_channel_name (service_t *s);
 int64_t     service_get_channel_number (service_t *s);
 const char *service_get_channel_icon (service_t *s);
+
+void service_mapped (service_t *s);
 
 #endif // SERVICE_H__

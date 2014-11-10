@@ -1616,6 +1616,15 @@ service_get_encryption(service_t *t)
 }
 
 /*
+ *
+ */
+void
+service_mapped(service_t *s)
+{
+  if (s->s_mapped) s->s_mapped(s);
+}
+
+/*
  * Find the primary EPG service (to stop EPG trying to update
  * from multiple OTA sources)
  */
