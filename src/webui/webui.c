@@ -1172,7 +1172,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     file_start, file_end, (size_t)st.st_size);
 
   if(file_start > 0)
-    if (lseek(fd, file_start, SEEK_SET)) {
+    if (lseek(fd, file_start, SEEK_SET) != file_start) {
       close(fd);
       return HTTP_STATUS_INTERNAL;
     }
