@@ -80,9 +80,6 @@ static time_t _xmltv_str2time(const char *in)
     sscanf(str+sp+1, "%d", &tz);
     tz = (tz % 100) + (tz / 100) * 3600; // Convert from HHMM to seconds
     str[sp] = 0;
-    sp = 1;
-  } else {
-    sp = 0;
   }
 
   /* parse time */
@@ -96,10 +93,7 @@ static time_t _xmltv_str2time(const char *in)
   tm.tm_isdst = -1;
 
   if (r >= 5) {
-    if(sp)
-      return timegm(&tm) - tz;
-    else
-      return mktime(&tm);
+    return timegm(&tm) - tz;
   } else {
     return 0;
   }
