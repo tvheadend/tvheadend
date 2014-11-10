@@ -410,7 +410,7 @@ access_dump_a(access_t *a)
 }
 #else
 static inline void
-acess_dump_a(access_t *a)
+access_dump_a(access_t *a)
 {
 }
 #endif
