@@ -180,8 +180,9 @@ esfilter_create
     TAILQ_INSERT_SORTED(&esfilters[esf->esf_class], esf, esf_link, esfilter_cmp);
   } else {
     TAILQ_INSERT_TAIL(&esfilters[esf->esf_class], esf, esf_link);
-    esfilter_reindex(esf->esf_class);
   }
+  if (!conf)
+    esfilter_reindex(esf->esf_class);
   if (save)
     esfilter_class_save((idnode_t *)esf);
   return esf;
@@ -1045,6 +1046,9 @@ esfilter_init(void)
     esfilter_create(-1, f->hmf_name, e, 0);
   }
   htsmsg_destroy(c);
+
+  for (i = 0; i <= ESF_CLASS_LAST; i++)
+    esfilter_reindex(i);
 }
 
 void

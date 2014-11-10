@@ -843,6 +843,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
       TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
   } else {
     TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
+    access_entry_reindex();
   }
 
   if (ae->ae_username == NULL)
@@ -853,8 +854,6 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     access_entry_class_password_set(ae, "*");
   if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL)
     access_set_prefix_default(ae);
-
-  access_entry_reindex();
 
   return ae;
 }
@@ -1357,6 +1356,7 @@ access_init(int createdefault, int noacl)
       (void)access_entry_create(f->hmf_name, m);
     }
     htsmsg_destroy(c);
+    access_entry_reindex();
   }
 
   if(TAILQ_FIRST(&access_entries) == NULL) {
