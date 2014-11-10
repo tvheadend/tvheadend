@@ -167,9 +167,9 @@ tvheadend.epgDetails = function(event) {
         if (recording) {
           buttons.push(new Ext.Button({
               handler: stopDVR,
-              iconCls: 'cancel',
+              iconCls: 'stopRec',
               tooltip: 'Stop recording of this program',
-              text: "Stop DVR"
+              text: "Stop record"
           }));
         }
 
@@ -214,8 +214,8 @@ tvheadend.epgDetails = function(event) {
         title: 'Broadcast Details',
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 600,
-        height: 400,
+        width: 650,
+        height: 450,
         constrainHeader: true,
         buttons: buttons,
         buttonAlign: 'center',

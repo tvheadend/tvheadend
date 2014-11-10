@@ -198,6 +198,10 @@
     background-image: url(../icons/rec.png) !important;
 }
 
+.stopRec {
+    background-image: url(../icons/stop_rec.png) !important;
+}
+
 .info {
     background-image: url(../icons/information.png) !important;
 }
@@ -476,6 +480,14 @@
 
 .time_schedules{
     background-image: url(../icons/time_schedules.png) !important;
+}
+
+.download{
+    background-image: url(../icons/download.png) !important;
+}
+
+.abort{
+    background-image: url(../icons/abort.png) !important;
 }
 
 .x-linked {
