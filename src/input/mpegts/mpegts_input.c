@@ -320,6 +320,7 @@ mpegts_input_open_pid
   char buf[512];
   mpegts_pid_t *mp;
   assert(owner != NULL);
+  lock_assert(&mi->mi_output_lock);
   if ((mp = mpegts_mux_find_pid(mm, pid, 1))) {
     SKEL_ALLOC(mpegts_pid_sub_skel);
     mpegts_pid_sub_skel->mps_type  = type;
@@ -342,6 +343,7 @@ mpegts_input_close_pid
   mpegts_pid_sub_t *mps, skel;
   mpegts_pid_t *mp;
   assert(owner != NULL);
+  lock_assert(&mi->mi_output_lock);
   if (!(mp = mpegts_mux_find_pid(mm, pid, 1)))
     return;
   skel.mps_type  = type;
