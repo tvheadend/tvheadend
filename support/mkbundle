@@ -4,7 +4,11 @@
 #
 
 import os, sys, re
-import gzip, cStringIO
+import gzip
+try:
+  from io import StringIO
+except ImportError:
+  from cStringIO import StringIO
 from optparse import OptionParser
 
 # Add reverse path split
