@@ -362,7 +362,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     /* For teletext, the encoders might use completely different timestamps */
     /* If the difference is greater than 2 seconds, use the actual dts value */
     if (tfs->tfs_type == SCT_TELETEXT && tfs->tfs_local_ref == PTS_UNSET &&
-        tf->tf_tsref != PTS_UNSET) {
+        tf->tf_tsref != PTS_UNSET && pkt->pkt_dts != PTS_UNSET) {
       int64_t diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
         tfstream_t *tfs2;
@@ -382,6 +382,10 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
   if(pkt->pkt_dts == PTS_UNSET) {
     if(tfs->tfs_last_dts_in == PTS_UNSET) {
+      if(tfs->tfs_type == SCT_TELETEXT) {
+        sm = streaming_msg_create_pkt(pkt);
+        streaming_target_deliver2(tf->tf_output, sm);
+      }
       pkt_ref_dec(pkt);
       return;
     }
