@@ -83,7 +83,7 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON)3 $(ROOTDIR)/support/mkbundle
 
 #
 # Debug/Output
