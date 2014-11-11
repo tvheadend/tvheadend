@@ -92,7 +92,9 @@ static void
 iptv_http_stop
   ( iptv_mux_t *im )
 {
+  pthread_mutex_unlock(&iptv_lock);
   http_client_close(im->im_data);
+  pthread_mutex_lock(&iptv_lock);
 }
 
 
