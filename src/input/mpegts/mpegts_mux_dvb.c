@@ -575,21 +575,23 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_mux_t *lm = (dvb_mux_t*)mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
-  char pol[2] = { 0 };
+  char extra[8];
   if (ln->ln_type == DVB_TYPE_S) {
     const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
-    if (s) pol[0] = *s;
+    if (s) extra[0] = *s;
+    extra[1] = '\0';
   } else {
     freq /= 1000;
+    strcpy(extra, "MHz");
   }
   freq2 = freq % 1000;
   freq /= 1000;
   while (freq2 && (freq2 % 10) == 0)
     freq2 /= 10;
   if (freq2)
-    snprintf(buf, len, "%d.%d%s", freq, freq2, pol);
+    snprintf(buf, len, "%d.%d%s", freq, freq2, extra);
   else
-    snprintf(buf, len, "%d%s", freq, pol);
+    snprintf(buf, len, "%d%s", freq, extra);
 }
 
 static void
