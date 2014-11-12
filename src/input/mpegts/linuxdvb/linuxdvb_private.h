@@ -111,6 +111,7 @@ struct linuxdvb_frontend
    * Configuration
    */
   int                       lfe_powersave;
+  uint32_t                  lfe_skip_bytes;
 
   /*
    * Satconf (DVB-S only)

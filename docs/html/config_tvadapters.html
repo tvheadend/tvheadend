@@ -34,6 +34,11 @@ The rows have the following functions
  <dt><b>Power Save</b></dt>
   <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
  <p>
+ <dt><b>Skip Initial Bytes</b></dt>
+  <dd>If set, first bytes from the MPEG-TS stream are discarded. It may be
+      required for some drivers / hardware which does not flush completely
+      the MPEG-TS buffers after a frequency/parameters change.</dd>
+ <p>
  </dl>
  <dt><u><i><b>Advanced Settings</b></i></u></dt>
  <dl>

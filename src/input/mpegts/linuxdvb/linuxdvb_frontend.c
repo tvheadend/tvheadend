@@ -91,6 +91,13 @@ const idclass_t linuxdvb_frontend_class =
       .name     = "Power Save",
       .off      = offsetof(linuxdvb_frontend_t, lfe_powersave),
     },
+    {
+      .type     = PT_U32,
+      .id       = "skip_bytes",
+      .name     = "Skip Initial Bytes",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_skip_bytes),
+    },
     {}
   }
 };
@@ -808,6 +815,9 @@ linuxdvb_frontend_input_thread ( void *aux )
   int nfds;
   tvhpoll_event_t ev[2];
   tvhpoll_t *efd;
+  ssize_t n;
+  size_t skip = (MIN(lfe->lfe_skip_bytes, 1024*1024) / 188) * 188;
+  size_t counter = 0;
   sbuf_t sb;
 
   /* Get MMI */
@@ -844,7 +854,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     if (ev[0].data.fd != dvr) break;
     
     /* Read */
-    if (sbuf_read(&sb, dvr) < 0) {
+    if ((n = sbuf_read(&sb, dvr)) < 0) {
       if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
@@ -854,6 +864,16 @@ linuxdvb_frontend_input_thread ( void *aux )
       tvhlog(LOG_ERR, "linuxdvb", "%s - read() error %d (%s)",
              buf, errno, strerror(errno));
       break;
+    }
+
+    /* Skip the initial bytes */
+    if (counter < skip) {
+      counter += n;
+      if (counter < skip) {
+        sbuf_cut(&sb, n);
+      } else {
+        sbuf_cut(&sb, skip - (counter - n));
+      }
     }
     
     /* Process */
