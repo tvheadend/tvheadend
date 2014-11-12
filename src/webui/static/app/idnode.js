@@ -823,6 +823,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
     var saveBtn = new Ext.Button({
         tooltip: 'Create new entry',
         text: 'Create',
+        iconCls: 'add',
         hidden: true,
         handler: function() {
             var params = conf.create.params || {};
@@ -843,6 +844,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
     var undoBtn = new Ext.Button({
         tooltip: 'Cancel operation',
         text: 'Cancel',
+        iconCls: 'cancelButton',
         handler: function() {
             win.close();
         }

@@ -494,6 +494,10 @@
     background-image: url(../icons/bouquets.png) !important;
 }
 
+.cancelButton{
+    background-image: url(../icons/cancel_button.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
