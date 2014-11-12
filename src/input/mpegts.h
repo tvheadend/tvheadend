@@ -24,6 +24,7 @@
 #error "Use header file input.h not input/mpegts.h"
 #endif
 
+#include "atomic.h"
 #include "input.h"
 #include "service.h"
 #include "mpegts/dvb.h"
@@ -198,7 +199,7 @@ struct mpegts_table
   int mt_mask;  //              mask
 
   int mt_destroyed; // Refcounting
-  int mt_refcount;
+  int mt_arefcount;
 
   int8_t mt_cc;
 
@@ -794,14 +795,19 @@ void mpegts_input_close_pid
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
 static inline void mpegts_table_grab
-  (mpegts_table_t *mt) { mt->mt_refcount++; }
+  (mpegts_table_t *mt)
+{
+  int v = atomic_add(&mt->mt_arefcount, 1);
+  assert(v > 0);
+}
 void mpegts_table_release_
   (mpegts_table_t *mt);
 static inline void mpegts_table_release
   (mpegts_table_t *mt)
 {
-  assert(mt->mt_refcount > 0);
-  if(--mt->mt_refcount == 0) {
+  int v = atomic_dec(&mt->mt_arefcount, 1);
+  assert(v > 0);
+  if (v == 1) {
     assert(mt->mt_destroyed == 1);
     mpegts_table_release_(mt);
   }

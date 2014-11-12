@@ -25,6 +25,12 @@ atomic_add(volatile int *ptr, int incr)
 }
 
 static inline int
+atomic_dec(volatile int *ptr, int decr)
+{
+  return __sync_fetch_and_sub(ptr, decr);
+}
+
+static inline int
 atomic_exchange(volatile int *ptr, int new)
 {
   return  __sync_lock_test_and_set(ptr, new);

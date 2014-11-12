@@ -241,16 +241,16 @@ mpegts_table_add
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));
-  mt->mt_refcount = 1;
-  mt->mt_name     = strdup(name);
-  mt->mt_callback = callback;
-  mt->mt_opaque   = opaque;
-  mt->mt_pid      = pid;
-  mt->mt_flags    = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
-  mt->mt_table    = tableid;
-  mt->mt_mask     = mask;
-  mt->mt_mux      = mm;
-  mt->mt_cc       = -1;
+  mt->mt_arefcount = 1;
+  mt->mt_name      = strdup(name);
+  mt->mt_callback  = callback;
+  mt->mt_opaque    = opaque;
+  mt->mt_pid       = pid;
+  mt->mt_flags     = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
+  mt->mt_table     = tableid;
+  mt->mt_mask      = mask;
+  mt->mt_mux       = mm;
+  mt->mt_cc        = -1;
 
   /* Open table */
   if (pid < 0) {
