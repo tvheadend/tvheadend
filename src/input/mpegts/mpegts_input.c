@@ -724,10 +724,10 @@ mpegts_input_process
   int table_wakeup = 0;
   uint8_t *end = mpkt->mp_data + len;
   mpegts_mux_t          *mm  = mpkt->mp_mux;
-  mpegts_mux_instance_t *mmi = mm->mm_active;
+  mpegts_mux_instance_t *mmi;
   mpegts_pid_t *last_mp = NULL;
 
-  if (!mmi)
+  if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return;
 
   mi->mi_live = 1;
