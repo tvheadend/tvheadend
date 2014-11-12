@@ -247,13 +247,14 @@ tvheadend.epgDetails = function(event) {
 
     function stopDVR() {
         tvheadend.AjaxConfirm({
-            url: 'api/idnode/delete',
+            url: 'api/dvr/entry/cancel',
             params: {
                 uuid: event.dvrUuid,
             },
             success: function(d) {
                 win.close();
-            }
+            },
+            question: 'Do you really want to abort/unschedule this event?'
         });
     }
 
