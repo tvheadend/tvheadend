@@ -114,6 +114,21 @@ tvheadend.weekdaysRenderer = function(st) {
     }
 }
 
+tvheadend.filesizeRenderer = function(st) {
+    return function() {
+        return function(v) {
+            if (v == null)
+                return '';
+            if (!v || v < 0)
+                return '---';
+            if (v > 1000000)
+                return parseInt(v / 1000000) + ' MB';
+            if (v > 1000)
+                return parseInt(v / 1000) + ' KB';
+            return parseInt(v) + ' B';
+        }
+    }
+}
 
 /**
  *
@@ -235,8 +250,9 @@ tvheadend.dvr_finished = function(panel, index) {
     };
 
     function selected(s, abuttons) {
-        var count = s.getCount();
-        abuttons.download.setDisabled(count < 1);
+        var r = s.getSelections();
+        var b = r.length > 0 && r[0].data.filesize > 0;
+        abuttons.download.setDisabled(!b);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -253,13 +269,7 @@ tvheadend.dvr_finished = function(panel, index) {
               'sched_status,url',
         columns: {
             filesize: {
-                renderer: function() {
-                    return function(v) {
-                        if (v == null)
-                            return '';
-                        return parseInt(v / 1000000) + ' MB';
-                    }
-                }
+                renderer: tvheadend.filesizeRenderer()
             }
         },
         sort: {
@@ -317,8 +327,9 @@ tvheadend.dvr_failed = function(panel, index) {
     };
 
     function selected(s, abuttons) {
-        var count = s.getCount();
-        abuttons.download.setDisabled(count < 1);
+        var r = s.getSelections();
+        var b = r.length > 0 && r[0].data.filesize > 0;
+        abuttons.download.setDisabled(!b);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -332,17 +343,11 @@ tvheadend.dvr_failed = function(panel, index) {
         tabIndex: index,
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
-              'duration,channelname,creator,' +
+              'duration,filesize,channelname,creator,' +
               'status,sched_status,url',
-		columns: {
+        columns: {
             filesize: {
-                renderer: function() {
-                    return function(v) {
-                        if (v == null)
-                            return '';
-                        return parseInt(v / 1000000) + ' MB';
-                    }
-                }
+                renderer: tvheadend.filesizeRenderer()
             }
         },
         sort: {
