@@ -469,8 +469,8 @@ mpegts_input_started_mux
 
   /* Update */
   mmi->mmi_mux->mm_active = mmi;
+
   /* Accept packets */
-  mi->mi_stop = 0;
   LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 1);
@@ -480,11 +480,13 @@ static void
 mpegts_input_stopping_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  assert(mmi->mmi_mux->mm_active);
+
   pthread_mutex_lock(&mi->mi_input_lock);
-  mi->mi_stop = 1;
+  mmi->mmi_mux->mm_active = NULL;
   pthread_mutex_unlock(&mi->mi_input_lock);
   pthread_mutex_lock(&mi->mi_output_lock);
-  mi->mi_stop = 1;
+  mmi->mmi_mux->mm_active = NULL;
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
@@ -494,7 +496,8 @@ mpegts_input_stopped_mux
 {
   char buf[256];
   service_t *s;
-  mmi->mmi_mux->mm_active = NULL;
+
+  /* no longer active */
   LIST_REMOVE(mmi, mmi_active_link);
 
   /* Disarm timer */
@@ -604,7 +607,7 @@ mpegts_input_recv_packets
     off += len2;
 
     pthread_mutex_lock(&mi->mi_input_lock);
-    if (!mi->mi_stop) {
+    if (mmi->mmi_mux->mm_active == mmi) {
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
       pthread_cond_signal(&mi->mi_input_cond);
     } else {
@@ -672,6 +675,8 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   mpegts_table_t *mt;
 
+  if (!mm || !mm->mm_active)
+    return;
   pthread_mutex_lock(&mm->mm_tables_lock);
   while ((mt = TAILQ_FIRST(&mm->mm_defer_tables)) != NULL) {
     mpegts_table_consistency_check(mm);
@@ -722,7 +727,8 @@ mpegts_input_process
   mpegts_mux_instance_t *mmi = mm->mm_active;
   mpegts_pid_t *last_mp = NULL;
 
-  assert(mmi);
+  if (!mmi)
+    return;
 
   mi->mi_live = 1;
 
@@ -800,13 +806,11 @@ mpegts_input_process
             // TODO: might be able to optimise this a bit by having slightly
             //       larger buffering and trying to aggregate data (if we get
             //       same PID multiple times in the loop)
-            if (!mi->mi_stop) {
-              mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
-              memcpy(mtf->mtf_tsb, tsb, 188);
-              mtf->mtf_mux   = mm;
-              TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
-              table_wakeup = 1;
-            }
+            mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
+            memcpy(mtf->mtf_tsb, tsb, 188);
+            mtf->mtf_mux   = mm;
+            TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
+            table_wakeup = 1;
           }
         } else {
           //tvhdebug("tsdemux", "%s - SI packet had errors", name);
@@ -857,10 +861,8 @@ mpegts_input_thread ( void * p )
       
     /* Process */
     pthread_mutex_lock(&mi->mi_output_lock);
-    if (!mi->mi_stop && mp->mp_mux) {
-      mpegts_input_table_waiting(mi, mp->mp_mux);
-      mpegts_input_process(mi, mp);
-    }
+    mpegts_input_table_waiting(mi, mp->mp_mux);
+    mpegts_input_process(mi, mp);
     pthread_mutex_unlock(&mi->mi_output_lock);
 
     /* Cleanup */
@@ -897,7 +899,7 @@ mpegts_input_table_thread ( void *aux )
     
     /* Process */
     pthread_mutex_lock(&global_lock);
-    if (!mi->mi_stop && mtf->mtf_mux)
+    if (mtf->mtf_mux && mtf->mtf_mux->mm_active)
       mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
     pthread_mutex_unlock(&global_lock);
 
@@ -944,9 +946,9 @@ mpegts_input_flush_mux
       mtf->mtf_mux = NULL;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
-  /* stop flag must be set here */
+  /* mux active must be NULL here */
   /* otherwise the picked mtf might be processed after mux deactivation */
-  assert(mi->mi_stop);
+  assert(mm->mm_active == NULL);
 }
 
 static void
@@ -1121,9 +1123,6 @@ mpegts_input_create0
 
   /* Defaults */
   mi->mi_ota_epg = 1;
-
-  /* Stop processing until subscribed */
-  mi->mi_stop = 1;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);

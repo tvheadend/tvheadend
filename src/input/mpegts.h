@@ -555,7 +555,6 @@ struct mpegts_input
    */
 
   uint8_t mi_running;            /* threads running */
-  uint8_t mi_stop;               /* mux is in the stop state */
   uint8_t mi_live;               /* stream is live */
   time_t mi_last_dispatch;
 
