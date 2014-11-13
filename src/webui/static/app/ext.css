@@ -528,6 +528,7 @@
 }
 
 .x-epg-desc {
+    font: normal 13px arial, tahoma, helvetica, sans-serif;
     margin: 10px;
 }
 
@@ -545,6 +546,10 @@
 
 .x-epg-action {
     font-weight: bold;
+    margin: 5px;
+}
+
+.x-epg-time {
     margin: 5px;
 }
 
