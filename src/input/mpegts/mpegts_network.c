@@ -118,10 +118,13 @@ mpegts_network_class_idlescan_notify ( void *p )
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
     if (mn->mn_idlescan)
-      mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE, 0);
+      mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE,
+                                    SUBSCRIPTION_IDLESCAN, 0);
     else if (mm->mm_scan_state  == MM_SCAN_STATE_PEND &&
-             mm->mm_scan_weight == SUBSCRIPTION_PRIO_SCAN_IDLE)
+             mm->mm_scan_weight == SUBSCRIPTION_PRIO_SCAN_IDLE) {
+      mm->mm_scan_flags = 0;
       mpegts_network_scan_queue_del(mm);
+    }
   }
 }
 

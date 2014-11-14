@@ -50,7 +50,8 @@ mpegts_network_scan_timer_cb ( void *p )
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
 
     /* Attempt to tune */
-    r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight);
+    printf("mm->mm_scan_flags = 0x%x\n", mm->mm_scan_flags);
+    r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight, mm->mm_scan_flags);
 
     /* Started */
     if (!r) {
@@ -123,7 +124,7 @@ mpegts_network_scan_mux_done0
 
   /* Re-enable? */
   if (weight > 0)
-    mpegts_network_scan_queue_add(mm, weight, 10);
+    mpegts_network_scan_queue_add(mm, weight, mm->mm_scan_flags, 10);
 }
 
 /* Failed - couldn't start */
@@ -137,6 +138,7 @@ mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm )
 void
 mpegts_network_scan_mux_done    ( mpegts_mux_t *mm )
 {
+  mm->mm_scan_flags = 0;
   mpegts_network_scan_mux_done0(mm, MM_SCAN_OK, 0);
 }
 
@@ -153,6 +155,9 @@ mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert )
 {
   if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
+
+  if (!reinsert)
+    mm->mm_scan_flags = 0;
 
   mpegts_network_scan_mux_done0(mm, MM_SCAN_NONE,
                                 reinsert ? mm->mm_scan_weight : 0);
@@ -196,7 +201,8 @@ mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 }
 
 void
-mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight, int delay )
+mpegts_network_scan_queue_add
+  ( mpegts_mux_t *mm, int weight, int flags, int delay )
 {
   int reload = 0;
   char buf[256], buf2[256];;
@@ -228,7 +234,10 @@ mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight, int delay )
            buf2, buf, weight);
 
   /* Add new entry */
-  mm->mm_scan_state = MM_SCAN_STATE_PEND;
+  mm->mm_scan_state  = MM_SCAN_STATE_PEND;
+  mm->mm_scan_flags |= flags;
+  if (mm->mm_scan_flags == 0)
+    mm->mm_scan_flags = SUBSCRIPTION_IDLE;
   TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
                         mm, mm_scan_link, mm_cmp);
   gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, delay);

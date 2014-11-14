@@ -64,12 +64,9 @@ tvhdhomerun_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
-								  const char *reason )
+tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
-  if (!hfe->mi_enabled) return 0;
-  return 1;
+  return mpegts_input_is_enabled(mi, mm, flags);
 }
 
 static void *

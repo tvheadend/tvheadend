@@ -355,6 +355,7 @@ struct mpegts_mux
 
   mpegts_mux_scan_result_t mm_scan_result;  ///< Result of last scan
   int                      mm_scan_weight;  ///< Scan priority
+  int                      mm_scan_flags;   ///< Subscription flags
   int                      mm_scan_init;    ///< Flag to timeout handler
   gtimer_t                 mm_scan_timeout; ///< Timer to handle timeout
   TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
@@ -539,6 +540,9 @@ struct mpegts_input
 
   int mi_ota_epg;
 
+  int mi_initscan;
+  int mi_idlescan;
+
   LIST_ENTRY(mpegts_input) mi_global_link;
 
   mpegts_network_link_list_t mi_networks;
@@ -588,7 +592,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, const char *reason);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_is_free)        (mpegts_input_t*);
@@ -661,7 +665,7 @@ void mpegts_input_status_timer ( void *p );
 
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
-int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, const char *reason );
+int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags );
 
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
@@ -747,7 +751,7 @@ void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe
 void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
 
 void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int reason);
-int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight);
+int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight, int flags);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );

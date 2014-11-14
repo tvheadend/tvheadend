@@ -33,7 +33,8 @@ void mpegts_network_scan_timer_cb ( void *p );
 /*
  * Registration functions
  */
-void mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight, int delay );
+void mpegts_network_scan_queue_add ( mpegts_mux_t *mm, int weight,
+                                     int flags, int delay );
 void mpegts_network_scan_queue_del ( mpegts_mux_t *mm );
 
 /*

@@ -186,6 +186,22 @@ const idclass_t mpegts_input_class =
       .def.i    = 1,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "initscan",
+      .name     = "Initial Scan",
+      .off      = offsetof(mpegts_input_t, mi_initscan),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "idlescan",
+      .name     = "Idle Scan",
+      .off      = offsetof(mpegts_input_t, mi_idlescan),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = "Networks",
@@ -204,10 +220,13 @@ const idclass_t mpegts_input_class =
  * *************************************************************************/
 
 int
-mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm,
-                          const char *reason )
+mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  if (!strcmp(reason, "epggrab") && !mi->mi_ota_epg)
+  if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
+    return 0;
+  if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
+    return 0;
+  if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
     return 0;
   return mi->mi_enabled;
 }
@@ -1123,6 +1142,8 @@ mpegts_input_create0
 
   /* Defaults */
   mi->mi_ota_epg = 1;
+  mi->mi_initscan = 1;
+  mi->mi_idlescan = 1;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_input_all, mi, mi_global_link);

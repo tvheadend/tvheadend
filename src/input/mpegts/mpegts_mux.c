@@ -275,7 +275,8 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
       return 0;
 
     /* Start */
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER, 0);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER,
+                                  SUBSCRIPTION_USERSCAN, 0);
 
   /* Stop */
   } else if (state == MM_SCAN_STATE_IDLE) {
@@ -570,7 +571,7 @@ mpegts_mux_start
   /* Calculate priority+weight and sort */
   count = 0;
   LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm, reason);
+    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm, flags);
     tvhtrace("mpegts", "%s -   mmi %p enabled %d", buf, mmi, e);
     if (!e) continue;
     enabled = 1;
@@ -979,9 +980,11 @@ mpegts_mux_create0
 
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT, 10);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_INIT,
+                                  SUBSCRIPTION_INITSCAN, 10);
   else if (mm->mm_network->mn_idlescan)
-    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE, 10);
+    mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_IDLE,
+                                  SUBSCRIPTION_IDLESCAN, 10);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - created", buf);
@@ -1079,7 +1082,7 @@ mpegts_mux_remove_subscriber
 
 int
 mpegts_mux_subscribe
-  ( mpegts_mux_t *mm, const char *name, int weight )
+  ( mpegts_mux_t *mm, const char *name, int weight, int flags )
 {
   int err = 0;
   profile_chain_t prch;
@@ -1087,7 +1090,7 @@ mpegts_mux_subscribe
   memset(&prch, 0, sizeof(prch));
   prch.prch_id = mm;
   s = subscription_create_from_mux(&prch, weight, name,
-                                   SUBSCRIPTION_NONE,
+                                   SUBSCRIPTION_NONE | flags,
                                    NULL, NULL, NULL, &err);
   return s ? 0 : err;
 }
