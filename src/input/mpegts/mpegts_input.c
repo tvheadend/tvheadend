@@ -363,7 +363,7 @@ mpegts_input_close_pid
   mpegts_pid_t *mp;
   assert(owner != NULL);
   lock_assert(&mi->mi_output_lock);
-  if (!(mp = mpegts_mux_find_pid(mm, pid, 1)))
+  if (!(mp = mpegts_mux_find_pid(mm, pid, 0)))
     return;
   skel.mps_type  = type;
   skel.mps_owner = owner;
@@ -373,17 +373,15 @@ mpegts_input_close_pid
     mm->mm_last_mp = NULL;
   }
   if (mps) {
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]",
+             buf, mp->mp_pid, mp->mp_pid, type, owner);
     RB_REMOVE(&mp->mp_subs, mps, mps_link);
     free(mps);
-
     if (!RB_FIRST(&mp->mp_subs)) {
       RB_REMOVE(&mm->mm_pids, mp, mp_link);
-      if (mp->mp_fd != -1) {
-        mpegts_mux_nice_name(mm, buf, sizeof(buf));
-        tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]",
-               buf, mp->mp_pid, mp->mp_pid, type, owner);
+      if (mp->mp_fd != -1)
         close(mp->mp_fd);
-      }
       free(mp);
     }
   }
@@ -767,6 +765,8 @@ mpegts_input_process
     
     /* Ignore NUL packets */
     if (pid == 0x1FFF) goto done;
+
+    lock_assert(&mi->mi_output_lock);
 
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {

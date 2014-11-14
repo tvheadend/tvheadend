@@ -721,14 +721,14 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   while ((mp = RB_FIRST(&mm->mm_pids))) {
     assert(mi);
     while ((mps = RB_FIRST(&mp->mp_subs))) {
+      tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]", buf,
+               mp->mp_pid, mp->mp_pid, mps->mps_type, mps->mps_owner);
       RB_REMOVE(&mp->mp_subs, mps, mps_link);
       free(mps);
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
-    if (mp->mp_fd != -1) {
-      tvhdebug("mpegts", "%s - close PID %04X (%d)", buf, mp->mp_pid, mp->mp_pid);
+    if (mp->mp_fd != -1)
       close(mp->mp_fd);
-    }
     free(mp);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
@@ -1130,17 +1130,16 @@ mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid)
 static int mp_cmp ( mpegts_pid_t *a, mpegts_pid_t *b )
 {
   return a->mp_pid - b->mp_pid;
-};
+}
 
 mpegts_pid_t *
 mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
 {
-  mpegts_pid_t *mp;
-  
+  mpegts_pid_t skel, *mp;
+
   if (pid > 0x2000) return NULL;
 
   if (!create) {
-    mpegts_pid_t skel;
     skel.mp_pid = pid;
     mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
   } else {

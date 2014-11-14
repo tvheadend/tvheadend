@@ -785,13 +785,10 @@ subscription_create_from_mux(profile_chain_t *prch,
   mi = s->ths_mmi->mmi_input;
   assert(mi);
 
-  if (s->ths_flags & SUBSCRIPTION_FULLMUX) {
-    pthread_mutex_lock(&mi->mi_output_lock);
-    mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-  }
-
   pthread_mutex_lock(&mi->mi_output_lock);
+
+  if (s->ths_flags & SUBSCRIPTION_FULLMUX)
+    mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_NONE, s);
 
   /* Store */
   LIST_INSERT_HEAD(&mm->mm_active->mmi_subs, s, ths_mmi_link);
