@@ -50,7 +50,6 @@ mpegts_network_scan_timer_cb ( void *p )
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
 
     /* Attempt to tune */
-    printf("mm->mm_scan_flags = 0x%x\n", mm->mm_scan_flags);
     r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight, mm->mm_scan_flags);
 
     /* Started */
