@@ -747,6 +747,8 @@ mpegts_input_process
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return;
 
+  assert(mm == mmi->mmi_mux);
+
   mi->mi_live = 1;
 
   /* Process */
@@ -800,7 +802,7 @@ mpegts_input_process
 
           /* Special case streams */
           LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-            if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
+            if (((mpegts_service_t*)s)->s_dvb_mux != mm) continue;
                  if (pid == s->s_pmt_pid) stream = MPS_STREAM;
             else if (pid == s->s_pcr_pid) stream = MPS_STREAM;
           }
@@ -810,7 +812,7 @@ mpegts_input_process
       /* Stream data */
       if (stream) {
         LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-          if (((mpegts_service_t*)s)->s_dvb_mux != mmi->mmi_mux) continue;
+          if (((mpegts_service_t*)s)->s_dvb_mux != mm) continue;
           f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
           ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
         }
