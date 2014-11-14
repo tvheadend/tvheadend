@@ -734,7 +734,7 @@ mpegts_input_process
   uint8_t cc;
   uint8_t *tsb = mpkt->mp_data;
   int len = mpkt->mp_len;
-  int table, stream, f;
+  int table = 0, stream = 0, f;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   service_t *s;
@@ -768,6 +768,7 @@ mpegts_input_process
     /* Ignore NUL packets */
     if (pid == 0x1FFF) goto done;
 
+    /* Remove in future or move it outside this loop */
     lock_assert(&mi->mi_output_lock);
 
     /* Find PID */
@@ -783,10 +784,8 @@ mpegts_input_process
         mp->mp_cc = (cc + 1) & 0xF;
       }
 
-      // Note: there is a minor danger this caching will get things
-      //       wrong for a brief period of time if the registrations on
-      //       the PID change
       if (mp != last_mp) {
+        last_mp = mp;
         if (pid == 0) {
           stream = MPS_STREAM;
           table  = MPS_TABLE;
