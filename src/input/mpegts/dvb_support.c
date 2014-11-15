@@ -899,13 +899,19 @@ dvb_sat_position_from_str( const char *buf )
 /**
  *
  */
+extern pthread_mutex_t mpegts_pid_skel_mutex;
+
+void dvb_init( void )
+{
+  pthread_mutex_init(&mpegts_pid_skel_mutex, NULL);
+}
+
 void dvb_done( void )
 {
   extern SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
-  extern SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
   extern SKEL_DECLARE(mpegts_pid_skel, mpegts_pid_t);
 
   SKEL_FREE(mpegts_table_state_skel);
-  SKEL_FREE(mpegts_pid_sub_skel);
   SKEL_FREE(mpegts_pid_skel);
+  pthread_mutex_destroy(&mpegts_pid_skel_mutex);
 }

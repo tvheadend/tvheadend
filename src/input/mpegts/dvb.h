@@ -511,6 +511,7 @@ const int dvb_sat_position_from_str( const char *buf );
 
 #endif /* ENABLE_MPEGTS_DVB */
 
+void dvb_init       ( void );
 void dvb_done       ( void );
 
 #endif /* DVB_SUPPORT_H */

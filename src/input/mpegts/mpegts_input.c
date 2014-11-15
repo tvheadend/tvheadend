@@ -30,8 +30,6 @@
 #include <pthread.h>
 #include <assert.h>
 
-SKEL_DECLARE(mpegts_pid_sub_skel, mpegts_pid_sub_t);
-
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl );
 
@@ -338,17 +336,19 @@ mpegts_input_open_pid
 {
   char buf[512];
   mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
   assert(owner != NULL);
   lock_assert(&mi->mi_output_lock);
   if ((mp = mpegts_mux_find_pid(mm, pid, 1))) {
-    SKEL_ALLOC(mpegts_pid_sub_skel);
-    mpegts_pid_sub_skel->mps_type  = type;
-    mpegts_pid_sub_skel->mps_owner = owner;
-    if (!RB_INSERT_SORTED(&mp->mp_subs, mpegts_pid_sub_skel, mps_link, mps_cmp)) {
+    mps = calloc(1, sizeof(*mps));
+    mps->mps_type  = type;
+    mps->mps_owner = owner;
+    if (!RB_INSERT_SORTED(&mp->mp_subs, mps, mps_link, mps_cmp)) {
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhdebug("mpegts", "%s - open PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
-      SKEL_USED(mpegts_pid_sub_skel);
+    } else {
+      free(mps);
     }
   }
   return mp;

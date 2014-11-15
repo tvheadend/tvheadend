@@ -28,6 +28,7 @@
 
 #include <assert.h>
 
+pthread_mutex_t mpegts_pid_skel_mutex;
 SKEL_DECLARE(mpegts_pid_skel, mpegts_pid_t);
 
 static void mpegts_mux_scan_timeout ( void *p );
@@ -1143,6 +1144,7 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
     skel.mp_pid = pid;
     mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
   } else {
+    pthread_mutex_lock(&mpegts_pid_skel_mutex);
     SKEL_ALLOC(mpegts_pid_skel);
     mpegts_pid_skel->mp_pid = pid;
     mp = RB_INSERT_SORTED(&mm->mm_pids, mpegts_pid_skel, mp_link, mp_cmp);
@@ -1152,6 +1154,7 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
       mp->mp_fd = -1;
       mp->mp_cc = -1;
     }
+    pthread_mutex_unlock(&mpegts_pid_skel_mutex);
   }
   if (mp) {
     mm->mm_last_pid = pid;

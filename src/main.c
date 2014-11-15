@@ -818,6 +818,8 @@ main(int argc, char **argv)
 
   service_init();
 
+  dvb_init();
+
 #if ENABLE_MPEGTS
   mpegts_init(adapter_mask, &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
 #endif
