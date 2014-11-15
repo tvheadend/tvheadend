@@ -419,5 +419,4 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 #undef FREEM
 
   free(hd);
-  hdhomerun_debug_destroy(hdhomerun_debug_obj);
 }
