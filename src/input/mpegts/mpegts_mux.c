@@ -1140,10 +1140,9 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
 
   if (pid > 0x2000) return NULL;
 
-  if (!create) {
-    skel.mp_pid = pid;
-    mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
-  } else {
+  skel.mp_pid = pid;
+  mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
+  if (mp == NULL && create) {
     pthread_mutex_lock(&mpegts_pid_skel_mutex);
     SKEL_ALLOC(mpegts_pid_skel);
     mpegts_pid_skel->mp_pid = pid;
