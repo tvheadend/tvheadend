@@ -540,8 +540,8 @@ mpegts_mux_start
   int64_t aweight, *allw;
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - starting for '%s' (weight %d)",
-           buf, reason, weight);
+  tvhtrace("mpegts", "%s - starting for '%s' (weight %d. flags %04X)",
+           buf, reason, weight, flags);
 
   /* Disabled */
   if (!mm->mm_is_enabled(mm)) {
