@@ -233,9 +233,6 @@ spawn_enq(const char *name, int pid)
   return s;
 }
 
-
-
-
 /**
  * Execute the given program and return its output in a malloc()ed buffer
  * 
@@ -310,6 +307,77 @@ spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
   return file_readall(fd[0], outp);
 }
 
+/**
+ * Execute the given program and return its standard output as file-descriptor (pipe).
+ */
+
+int
+spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
+{
+  pid_t p;
+  int fd[2], f;
+  char bin[256];
+  const char *local_argv[2] = { NULL, NULL };
+
+  if (*prog != '/' && *prog != '.') {
+    if (!find_exec(prog, bin, sizeof(bin))) return -1;
+    prog = bin;
+  }
+
+  if(!argv) argv = (void *)local_argv;
+  if (!argv[0]) argv[0] = (char*)prog;
+
+  pthread_mutex_lock(&fork_lock);
+
+  if(pipe(fd) == -1) {
+    pthread_mutex_unlock(&fork_lock);
+    return -1;
+  }
+
+  p = fork();
+
+  if(p == -1) {
+    pthread_mutex_unlock(&fork_lock);
+    tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
+             prog, strerror(errno));
+    return -1;
+  }
+
+  if(p == 0) {
+    close(0);
+    close(2);
+    close(fd[0]);
+    dup2(fd[1], 1);
+    close(fd[1]);
+
+    f = open("/dev/null", O_RDWR);
+    if(f == -1) {
+      spawn_error("pid %d cannot open /dev/null for redirect %s -- %s",
+                  getpid(), prog, strerror(errno));
+      exit(1);
+    }
+
+    dup2(f, 0);
+    dup2(redir_stderr ? spawn_pipe_error.wr : f, 2);
+    close(f);
+
+    spawn_info("Executing \"%s\"\n", prog);
+
+    execve(prog, argv, environ);
+    spawn_error("pid %d cannot execute %s -- %s\n",
+                getpid(), prog, strerror(errno));
+    exit(1);
+  }
+
+  pthread_mutex_unlock(&fork_lock);
+
+  spawn_enq(prog, p);
+
+  close(fd[1]);
+
+  *rd = fd[0];
+  return 0;
+}
 
 /**
  * Execute the given program with arguments
