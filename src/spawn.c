@@ -108,14 +108,17 @@ spawn_reap(char *stxt, size_t stxtlen)
     if (stxt)
       snprintf(stxt, stxtlen, "exited, status=%d", WEXITSTATUS(status));
   } else if (WIFSIGNALED(status)) {
-    snprintf(stxt, stxtlen, "killed by signal %d, "
-                            "stopped by signal %d",
-                            WTERMSIG(status),
-                            WSTOPSIG(status));
+    if (stxt)
+      snprintf(stxt, stxtlen, "killed by signal %d, "
+                              "stopped by signal %d",
+                              WTERMSIG(status),
+                              WSTOPSIG(status));
   } else if (WIFCONTINUED(status)) {
-    snprintf(stxt, stxtlen, "continued");
+    if (stxt)
+      snprintf(stxt, stxtlen, "continued");
   } else {
-    snprintf(stxt, stxtlen, "unknown status");
+    if (stxt)
+      snprintf(stxt, stxtlen, "unknown status");
   }
 
   if(s != NULL) {
