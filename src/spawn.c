@@ -192,8 +192,8 @@ spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
 
   if(p == -1) {
     pthread_mutex_unlock(&fork_lock);
-    syslog(LOG_ERR, "spawn: Unable to fork() for \"%s\" -- %s",
-	   prog, strerror(errno));
+    tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
+             prog, strerror(errno));
     return -1;
   }
 
@@ -256,8 +256,8 @@ spawnv(const char *prog, char *argv[])
   p = fork();
 
   if(p == -1) {
-    syslog(LOG_ERR, "spawn: Unable to fork() for \"%s\" -- %s",
-	   prog, strerror(errno));
+    tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
+	     prog, strerror(errno));
     return -1;
   }
 
