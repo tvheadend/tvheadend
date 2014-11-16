@@ -62,7 +62,7 @@ iptv_http_data
  */
 static int
 iptv_http_start
-  ( iptv_mux_t *im, const url_t *u )
+  ( iptv_mux_t *im, const char *raw, const url_t *u )
 {
   http_client_t *hc;
   int r;

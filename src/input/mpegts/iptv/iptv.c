@@ -220,6 +220,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   iptv_handler_t *ih;
   char buf[256];
+  const char *scheme;
   url_t url;
 
   /* Already active */
@@ -229,15 +230,25 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   /* Parse URL */
   mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
   memset(&url, 0, sizeof(url));
-  if (urlparse(im->mm_iptv_url ?: "", &url)) {
-    tvherror("iptv", "%s - invalid URL [%s]", buf, im->mm_iptv_url);
-    return ret;
+
+  if (im->mm_iptv_url && !strncmp(im->mm_iptv_url, "pipe://", 7)) {
+
+    scheme = "pipe";
+
+  } else {
+
+    if (urlparse(im->mm_iptv_url ?: "", &url)) {
+      tvherror("iptv", "%s - invalid URL [%s]", buf, im->mm_iptv_url);
+      return ret;
+    }
+    scheme = url.scheme;
+
   }
 
   /* Find scheme handler */
-  ih = iptv_handler_find(url.scheme ?: "");
+  ih = iptv_handler_find(scheme ?: "");
   if (!ih) {
-    tvherror("iptv", "%s - unsupported scheme [%s]", buf, url.scheme ?: "none");
+    tvherror("iptv", "%s - unsupported scheme [%s]", buf, scheme ?: "none");
     return ret;
   }
 
@@ -245,7 +256,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   pthread_mutex_lock(&iptv_lock);
   im->mm_active = mmi; // Note: must set here else mux_started call
                        // will not realise we're ready to accept pid open calls
-  ret            = ih->start(im, &url);
+  ret            = ih->start(im, im->mm_iptv_url, &url);
   if (!ret)
     im->im_handler = ih;
   else
@@ -577,6 +588,7 @@ void iptv_init ( void )
   /* Register handlers */
   iptv_http_init();
   iptv_udp_init();
+  iptv_pipe_init();
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
 

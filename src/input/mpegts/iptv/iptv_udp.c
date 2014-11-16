@@ -32,7 +32,7 @@
  * Connect UDP/RTP
  */
 static int
-iptv_udp_start ( iptv_mux_t *im, const url_t *url )
+iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 {
   char name[256];
   udp_connection_t *conn;

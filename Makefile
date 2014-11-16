@@ -280,6 +280,7 @@ SRCS-${CONFIG_IPTV} += \
         src/input/mpegts/iptv/iptv_service.c \
         src/input/mpegts/iptv/iptv_http.c \
         src/input/mpegts/iptv/iptv_udp.c \
+        src/input/mpegts/iptv/iptv_pipe.c
 
 # TSfile
 SRCS-$(CONFIG_TSFILE) += \

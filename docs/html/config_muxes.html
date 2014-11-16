@@ -73,6 +73,31 @@
 		<dt>URL
 		<dd>Mux URL.
 
+			<dl>
+				<dt>udp://
+				<dd>Raw MPEG-TS UDP packets
+
+				<dt>rtp://
+				<dd>MPEG-TS UDP packets with RTP header
+
+				<dt>http://
+				<dd>HTTP stream (MPEG-TS)
+
+				<dt>https://
+				<dd>Secure HTTP stream (MPEG-TS)
+
+				<dt>pipe://
+				<dd>Read standard output from an external program.
+				    If the program name does not have the first
+				    character '/', the PATH environment variable
+				    is used to find the program name in all
+				    directories specified by PATH.
+				    Additional arguments may be separated
+				    using spaces. A raw MPEG-TS stream is
+				    expected.
+
+			</dl>
+                
 		<dt># Services
 		<dd>The number of services found on this mux.
 
