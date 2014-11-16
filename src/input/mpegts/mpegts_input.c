@@ -349,7 +349,7 @@ mpegts_input_open_pid
                buf, mp->mp_pid, mp->mp_pid, type, owner);
     } else {
       free(mps);
-      mps = NULL;
+      mp = NULL;
     }
   }
   return mp;
