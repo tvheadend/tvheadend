@@ -795,6 +795,8 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  spawn_init();
+
   dbus_server_init(opt_dbus, opt_dbus_session);
 
   intlconv_init();
@@ -943,6 +945,7 @@ main(int argc, char **argv)
   tvhftrace("main", intlconv_done);
   tvhftrace("main", urlparse_done);
   tvhftrace("main", idnode_done);
+  tvhftrace("main", spawn_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();
