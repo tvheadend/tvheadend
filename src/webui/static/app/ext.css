@@ -522,8 +522,18 @@
     font-weight: bold;
 }
 
-.x-epg-summary {
+.x-epg-time {
     margin: 5px;
+}
+
+.x-epg-prefix {
+    display: inline-block;
+    width: 12em;
+    font-weight: bold;
+}
+
+.x-epg-summary {
+    margin: 10px 5px 5px 5px;
     font-weight: bold;
 }
 
@@ -540,11 +550,6 @@
 
 .x-epg-meta {
     font-style: italic;
-    margin: 5px;
-}
-
-.x-epg-action {
-    font-weight: bold;
     margin: 5px;
 }
 

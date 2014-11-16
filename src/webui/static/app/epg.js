@@ -99,14 +99,18 @@ tvheadend.epgDetails = function(event) {
     content += '</div>';
     if (event.episodeOnscreen)
         content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
+    if (event.start)
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Start time:</div> ' + new Date(event.start).toLocaleString() + '</div>';
+    if (event.stop)
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Stop time:</div> ' + new Date(event.stop).toLocaleString() + '</div>';
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
       content += '<div class="x-epg-desc">' + event.description + '</div>';
     if (event.starRating)
-      content += '<div class="x-epg-meta">Star Rating: ' + event.starRating + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Star Rating:</div> ' + event.starRating + '</div>';
     if (event.ageRating)
-      content += '<div class="x-epg-meta">Age Rating: ' + event.ageRating + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Age Rating:</div> ' + event.ageRating + '</div>';
     if (event.genre) {
       var genre = [];
       Ext.each(event.genre, function(g) {
@@ -117,7 +121,7 @@ tvheadend.epgDetails = function(event) {
         if (g1 || g2)
           genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
       });
-      content += '<div class="x-epg-meta">Content Type: ' + genre.join(', ') + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Content Type:</div> ' + genre.join(', ') + '</div>';
     }
 
     content += '<div id="related"></div>';
