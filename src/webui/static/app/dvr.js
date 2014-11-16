@@ -26,20 +26,20 @@ tvheadend.dvrDetails = function(uuid) {
 
         content += '<div class="x-epg-title">' + title + '</div>';
         content += '<div class="x-epg-title">' + episode + '</div>';
-        content += '<div class="x-epg-meta">Scheduled Start Time: ' + new Date(start_real * 1000).toLocaleString() + '</div>';
-        content += '<div class="x-epg-meta">Scheduled Stop Time: ' + new Date(stop_real * 1000).toLocaleString() + '</div>';
-        content += '<div class="x-epg-meta">Duration: ' + parseInt(duration / 60) + ' min</div>';        
+        content += '<div class="x-epg-time"><b>Scheduled Start Time:</b> ' + new Date(start_real * 1000).toLocaleString() + '</div>';
+        content += '<div class="x-epg-time"><b>Scheduled Stop Time:</b> ' + new Date(stop_real * 1000).toLocaleString() + '</div>';
+        content += '<div class="x-epg-time"><b>Duration:</b> ' + parseInt(duration / 60) + ' min</div>';        
         content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';
-        content += '<div class="x-epg-meta">Status: ' + status + '</div>';
-        content += '<div class="x-epg-meta">File size: ' + parseInt(filesize / 1000000) + ' MB</div>';
+        content += '<div class="x-epg-meta"><b>Status:</b> ' + status + '</div>';
+        content += '<div class="x-epg-meta"><b>File size:</b> ' + parseInt(filesize / 1000000) + ' MB</div>';
 
         var win = new Ext.Window({
             title: title,
             iconCls: 'info',
             layout: 'fit',
-            width: 500,
-            height: 400,
+            width: 600,
+            height: 500,
             constrainHeader: true,
             buttonAlign: 'center',
             html: content
