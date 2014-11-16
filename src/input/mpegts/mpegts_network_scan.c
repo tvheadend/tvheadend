@@ -229,14 +229,14 @@ mpegts_network_scan_queue_add
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mn->mn_display_name(mn, buf2, sizeof(buf2));
-  tvhdebug("mpegts", "%s - adding mux %s to scan queue weight %d",
-           buf2, buf, weight);
+  tvhdebug("mpegts", "%s - adding mux %s to scan queue weight %d flags %04X",
+           buf2, buf, weight, flags);
 
   /* Add new entry */
   mm->mm_scan_state  = MM_SCAN_STATE_PEND;
   mm->mm_scan_flags |= flags;
   if (mm->mm_scan_flags == 0)
-    mm->mm_scan_flags = SUBSCRIPTION_IDLE;
+    mm->mm_scan_flags = SUBSCRIPTION_IDLESCAN;
   TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
                         mm, mm_scan_link, mm_cmp);
   gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, delay);
