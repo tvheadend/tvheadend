@@ -198,13 +198,11 @@ typedef struct htsp_subscription {
 
   int hs_queue_depth;
 
-#define NUM_FILTERED_STREAMS (32*16)
+#define NUM_FILTERED_STREAMS (64*8)
 
-  uint32_t hs_filtered_streams[16]; // one bit per stream
+  uint64_t hs_filtered_streams[8]; // one bit per stream
 
   int hs_first;
-
-  int hs_merge_meta_compomentidx;
 
 } htsp_subscription_t;
 
@@ -229,7 +227,7 @@ static void
 htsp_disable_stream(htsp_subscription_t *hs, unsigned int id)
 {
   if(id < NUM_FILTERED_STREAMS)
-    hs->hs_filtered_streams[id / 32] |= 1 << (id & 31);
+    hs->hs_filtered_streams[id / 64] |= 1 << (id & 63);
 }
 
 
@@ -237,7 +235,7 @@ static void
 htsp_enable_stream(htsp_subscription_t *hs, unsigned int id)
 {
   if(id < NUM_FILTERED_STREAMS)
-    hs->hs_filtered_streams[id / 32] &= ~(1 << (id & 31));
+    hs->hs_filtered_streams[id / 64] &= ~(1 << (id & 63));
 }
 
 
@@ -245,10 +243,9 @@ static inline int
 htsp_is_stream_enabled(htsp_subscription_t *hs, unsigned int id)
 {
   if(id < NUM_FILTERED_STREAMS)
-    return !(hs->hs_filtered_streams[id / 32] & (1 << (id & 31)));
+    return !(hs->hs_filtered_streams[id / 64] & (1 << (id & 63)));
   return 1;
 }
-
 
 /**
  *
@@ -2908,21 +2905,6 @@ const static char frametypearray[PKT_NTYPES] = {
   [PKT_B_FRAME] = 'B',
 };
 
-static th_pkt_t *merge_pkt(th_pkt_t *pkt, size_t payloadlen)
-{
-  th_pkt_t *n = pkt_alloc(NULL, 0, 0, 0);
-  *n = *pkt;
-  n->pkt_refcount = 1;
-  n->pkt_meta = NULL;
-  n->pkt_payload = pktbuf_alloc(NULL, payloadlen);
-  memcpy(pktbuf_ptr(n->pkt_payload),
-         pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
-  memcpy(pktbuf_ptr(n->pkt_payload) + pktbuf_len(pkt->pkt_meta),
-         pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload));
-  pkt_ref_dec(pkt);
-  return n;
-}
-
 /**
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP service
  */
@@ -2974,19 +2956,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
   
-  if (pkt->pkt_meta &&
-      hs->hs_merge_meta_compomentidx == pkt->pkt_componentindex) {
-    payloadlen = pktbuf_len(pkt->pkt_meta) + pktbuf_len(pkt->pkt_payload);
-    pkt = merge_pkt(pkt, payloadlen);
-    /* do it only once */
-    hs->hs_merge_meta_compomentidx = -1;
-  } else {
-    payloadlen = pktbuf_len(pkt->pkt_payload);
-  }
   /**
    * Since we will serialize directly we use 'binptr' which is a binary
    * object that just points to data, thus avoiding a copy.
    */
+  payloadlen = pktbuf_len(pkt->pkt_payload);
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
   htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, payloadlen);
   atomic_add(&hs->hs_s->ths_bytes_out, payloadlen);
@@ -3059,8 +3033,6 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
   tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
 
-  hs->hs_merge_meta_compomentidx = -1;
-
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     if (SCT_ISVIDEO(ssc->ssc_type)) {
@@ -3121,13 +3093,6 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 		        pktbuf_len(ssc->ssc_gh));
 
     htsmsg_add_msg(streams, NULL, c);
-
-    if (ssc->ssc_type == SCT_H264 && hs->hs_htsp->htsp_version < 17) {
-      if (hs->hs_merge_meta_compomentidx < 0)
-        hs->hs_merge_meta_compomentidx = ssc->ssc_index;
-      else
-        tvherror("htsp", "multiple H264 video streams?");
-    }
   }
   
   htsmsg_add_msg(m, "streams", streams);
@@ -3147,7 +3112,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 }
 
 /**
- * Send a 'subscriptionStart' stop
+ * Send a 'subscriptionStop' stop
  */
 static void
 htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
