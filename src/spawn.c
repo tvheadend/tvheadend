@@ -335,12 +335,6 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
   }
 
   if(p == 0) {
-    close(0);
-    close(2);
-    close(fd[0]);
-    dup2(fd[1], 1);
-    close(fd[1]);
-
     f = open("/dev/null", O_RDWR);
     if(f == -1) {
       spawn_error("pid %d cannot open /dev/null for redirect %s -- %s",
@@ -348,6 +342,11 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
       exit(1);
     }
 
+    close(0);
+    close(2);
+    close(fd[0]);
+    dup2(fd[1], 1);
+    close(fd[1]);
     dup2(f, 0);
     dup2(redir_stderr ? spawn_pipe_error.wr : f, 2);
     close(f);
