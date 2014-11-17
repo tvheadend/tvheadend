@@ -340,11 +340,6 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
     close(fd[0]);
     dup2(fd[1], 1);
     close(fd[1]);
-    if (redir_stderr)
-      dup2(spawn_pipe_error.wr, 2);
-
-    for (f = 3; f < maxfd; f++)
-      close(f);
 
     f = open("/dev/null", O_RDWR);
     if(f == -1) {
@@ -354,11 +349,13 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
     }
 
     dup2(f, 0);
-    if (!redir_stderr)
-      dup2(f, 2);
+    dup2(redir_stderr ? spawn_pipe_error.wr : f, 2);
     close(f);
 
     spawn_info("Executing \"%s\"\n", prog);
+
+    for (f = 3; f < maxfd; f++)
+      close(f);
 
     execve(prog, argv, environ);
     spawn_error("pid %d cannot execute %s -- %s\n",
