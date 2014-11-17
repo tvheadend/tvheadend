@@ -101,7 +101,7 @@ spawn_pipe_write( th_pipe_t *p, const char *fmt, va_list ap )
   char buf[512];
 
   vsnprintf(buf, sizeof(buf), fmt, ap);
-  write(p->wr, buf, strlen(buf));
+  (void)write(p->wr, buf, strlen(buf));
 }
 
 void
