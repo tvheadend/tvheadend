@@ -90,9 +90,15 @@ spawn_pipe_read( th_pipe_t *p, char **_buf, int level )
     }
     buf[len + r] = '\0';
     tvhlog_hexdump("spawn", buf + len, r);
-    while ((s = strchr(buf, '\n')) != NULL) {
+    while (1) {
+      s = buf;
+      while (*s && *s != '\n' && *s != '\r')
+        s++;
+      if (*s == '\0')
+        break;
       *s++ = '\0';
-      tvhlog(level, "spawn", "%s", buf);
+      if (buf[0])
+        tvhlog(level, "spawn", "%s", buf);
       memmove(buf, s, strlen(s) + 1);
     }
     if (strlen(buf) == SPAWN_PIPE_READ_SIZE - 1) {
