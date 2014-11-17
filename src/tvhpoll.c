@@ -70,7 +70,7 @@ tvhpoll_create ( size_t n )
 {
   int fd;
 #if ENABLE_EPOLL
-  if ((fd = epoll_create(n)) < 0) {
+  if ((fd = epoll_create1(EPOLL_CLOEXEC)) < 0) {
     tvhlog(LOG_ERR, "tvhpoll", "failed to create epoll [%s]",
            strerror(errno));
     return NULL;

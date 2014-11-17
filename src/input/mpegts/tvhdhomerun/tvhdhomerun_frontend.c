@@ -111,7 +111,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   local_ip = hdhomerun_device_get_local_machine_addr(hfe->hf_hdhomerun_tuner);
 
   /* first setup a local socket for the device to stream to */
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  sockfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd == -1) {
     tvherror("stvhdhomerun", "failed to open socket (%d)", errno);
     return NULL;

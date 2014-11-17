@@ -33,7 +33,7 @@
 static int
 iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
 {
-  char *argv[32], *f, *raw, *s, *p, *a;
+  char *argv[64], *f, *raw, *s, *p, *a;
   int i = 1, rd;
 
   if (strncmp(_raw, "pipe://", 7))

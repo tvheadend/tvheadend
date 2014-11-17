@@ -63,7 +63,7 @@ pthread_t dvr_inotify_tid;
 
 void dvr_inotify_init ( void )
 {
-  _inot_fd = inotify_init();
+  _inot_fd = inotify_init1(IN_CLOEXEC);
   if (_inot_fd < 0) {
     tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
            strerror(errno));
