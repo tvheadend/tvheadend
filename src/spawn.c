@@ -381,7 +381,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
     prog = bin;
   }
 
-  if(!argv) argv = (void *)local_argv;
+  if (!argv) argv = (void *)local_argv;
   if (!argv[0]) argv[0] = (char*)prog;
 
   pthread_mutex_lock(&fork_lock);

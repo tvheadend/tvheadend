@@ -33,7 +33,7 @@
 static int
 iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
 {
-  char *argv[32], *f, *raw, *s;
+  char *argv[32], *f, *raw, *s, *p, *a;
   int i = 1, rd;
 
   if (strncmp(_raw, "pipe://", 7))
@@ -55,9 +55,20 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
     while (*s && *s != ' ')
       s++;
     if (f != s) {
-      *(char *)s = '\0';
+      if (*s) {
+        *(char *)s = '\0';
+        s++;
+      }
+      p = strstr(f, "${service_name}");
+      if (p) {
+        a = alloca(strlen(f) + strlen(im->mm_iptv_svcname ?: ""));
+        *p = '\0';
+        strcpy(a, f);
+        strcat(a, im->mm_iptv_svcname ?: "");
+        strcat(a, p + 15);
+        f = a;
+      }
       argv[i++] = f;
-      s++;
     }
   }
   argv[i] = NULL;
