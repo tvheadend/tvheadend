@@ -685,7 +685,7 @@ main(int argc, char **argv)
   htsp_init(opt_bindaddr);	   // bind to ports only
 
   if (opt_fork)
-    pidfile = fopen(opt_pidpath, "w+");
+    pidfile = tvh_fopen(opt_pidpath, "w+");
 
   /* Set priviledges */
   if(opt_fork || opt_group || opt_user) {

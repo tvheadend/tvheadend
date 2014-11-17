@@ -1642,7 +1642,7 @@ http_client_testsuite_run( void )
   path = getenv("TVHEADEND_HTTPC_TEST");
   if (path == NULL)
     path = TVHEADEND_DATADIR "/support/httpc-test.txt";
-  fp = fopen(path, "r");
+  fp = tvh_fopen(path, "r");
   if (fp == NULL) {
     tvhlog(LOG_NOTICE, "httpc", "Test: unable to open '%s': %s", path, strerror(errno));
     return;

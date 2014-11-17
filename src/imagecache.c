@@ -156,7 +156,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (hts_settings_makedirs(path))
     goto error;
   snprintf(tmp, sizeof(tmp), "%s.tmp", path);
-  if (!(fp = fopen(tmp, "wb")))
+  if (!(fp = tvh_fopen(tmp, "wb")))
     goto error;
   
   /* Fetch (release lock, incase of delays) */

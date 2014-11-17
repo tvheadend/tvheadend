@@ -413,7 +413,7 @@ fb_file *fb_open2
   } else {
     char path[512];
     snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
-    FILE *fp = fopen(path, "rb");
+    FILE *fp = tvh_fopen(path, "rb");
     if (fp) {
       struct stat st;
       stat(path, &st);

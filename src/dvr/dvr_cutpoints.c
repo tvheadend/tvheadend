@@ -145,7 +145,7 @@ dvr_parse_file
   dvr_cutpoint_t *cp = NULL;
   float frate = 0.0;
   char line[DVR_MAX_CUTPOINT_LINE];
-  FILE *file = fopen(path, "r");
+  FILE *file = tvh_fopen(path, "r");
 
   if (file == NULL)
     return -1;

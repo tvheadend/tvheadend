@@ -202,7 +202,7 @@ tvhlog_process
     if (options & TVHLOG_OPT_DBG_FILE || msg->severity < LOG_DEBUG) {
       const char *ltxt = logtxtmeta[msg->severity][0];
       if (!*fp)
-        *fp = fopen(path, "a");
+        *fp = tvh_fopen(path, "a");
       if (*fp)
         fprintf(*fp, "%s [%7s]:%s\n", t, ltxt, msg->msg);
     }

@@ -457,9 +457,12 @@ spawnv(const char *prog, char *argv[])
   if(!argv) argv = (void *)local_argv;
   if (!argv[0]) argv[0] = (char*)prog;
 
+  pthread_mutex_lock(&fork_lock);
+
   p = fork();
 
   if(p == -1) {
+    pthread_mutex_unlock(&fork_lock);
     tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
 	     prog, strerror(errno));
     return -1;
@@ -476,7 +479,10 @@ spawnv(const char *prog, char *argv[])
     exit(1);
   }
 
+  pthread_mutex_unlock(&fork_lock);
+
   spawn_enq(prog, p);
+
   return 0;
 }
 
