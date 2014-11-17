@@ -46,8 +46,6 @@ size_t file_readall ( int fd, char **outp )
     totalsize += r;
   } 
 
-  close(fd);
-
   *outp = outbuf;
   if (totalsize == outsize) {
     n = realloc(outbuf, outsize += 1);

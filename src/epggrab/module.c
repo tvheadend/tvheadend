@@ -279,7 +279,7 @@ epggrab_module_int_t *epggrab_module_int_create
 
 char *epggrab_module_grab_spawn ( void *m )
 { 
-  int        outlen;
+  int        rd = -1, outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
 
@@ -287,13 +287,24 @@ char *epggrab_module_grab_spawn ( void *m )
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
   /* Grab */
-  outlen = spawn_and_store_stdout(mod->path, NULL, &outbuf);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, mod->id, "no output detected");
-    return NULL;
-  }
+  outlen = spawn_and_give_stdout(mod->path, NULL, &rd, 1);
+
+  if (outlen < 0)
+    goto error;
+
+  outlen = file_readall(rd, &outbuf);
+  if (outlen < 1)
+    goto error;
+
+  close(rd);
 
   return outbuf;
+
+error:
+  if (rd >= 0)
+    close(rd);
+  tvhlog(LOG_ERR, mod->id, "no output detected");
+  return NULL;
 }
 
 

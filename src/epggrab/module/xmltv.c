@@ -32,6 +32,7 @@
 #include "tvheadend.h"
 #include "channels.h"
 #include "spawn.h"
+#include "file.h"
 #include "htsstr.h"
 
 #include "lang_str.h"
@@ -675,14 +676,17 @@ static int _xmltv_parse
 
 static void _xmltv_load_grabbers ( void )
 {
-  int outlen;
+  int outlen = -1, rd = -1;
   size_t i, p, n;
   char *outbuf;
   char name[1000];
   char *tmp, *tmp2 = NULL, *path;
 
   /* Load data */
-  outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);
+  if (spawn_and_give_stdout(XMLTV_FIND, NULL, &rd, 1) >= 0)
+    outlen = file_readall(rd, &outbuf);
+  if (rd >= 0)
+    close(rd);
 
   /* Process */
   if ( outlen > 0 ) {
@@ -726,12 +730,18 @@ static void _xmltv_load_grabbers ( void )
           if (stat(bin, &st)) continue;
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
-          if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf)) > 0) {
+          rd = -1;
+          if (spawn_and_give_stdout(bin, argv, &rd, 1) >= 0 &&
+              (outlen = file_readall(rd, &outbuf)) > 0) {
+            close(rd);
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
             epggrab_module_int_create(NULL, bin, name, 3, bin,
                                       NULL, _xmltv_parse, NULL, NULL);
             free(outbuf);
+          } else {
+            if (rd >= 0)
+              close(rd);
           }
         }
         closedir(dir);
