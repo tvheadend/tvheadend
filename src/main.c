@@ -375,8 +375,6 @@ mainloop(void)
     if (ts.tv_sec > dispatch_clock) {
       dispatch_clock = ts.tv_sec;
 
-      spawn_reaper(); /* reap spawned processes */
-
       comet_flush(); /* Flush idle comet mailboxes */
     }
 
