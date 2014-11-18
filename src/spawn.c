@@ -282,6 +282,31 @@ spawn_reaper(void)
   while (spawn_reap(NULL, 0) != -EAGAIN) ;
 }
 
+/**
+ * Kill the pid (only if waiting)
+ */
+int
+spawn_kill(pid_t pid, int sig)
+{
+  int r = -ESRCH;
+  spawn_t *s;
+
+  if (pid > 0) {
+    spawn_reaper();
+
+    pthread_mutex_lock(&spawn_mutex);
+    LIST_FOREACH(s, &spawns, link)
+      if(s->pid == pid)
+        break;
+    if (s) {
+      r = kill(pid, sig);
+      if (r < 0)
+        r = -errno;
+    }
+    pthread_mutex_unlock(&spawn_mutex);
+  }
+  return r;
+}
 
 /**
  * Enqueue a spawn on the pending spawn list
@@ -298,12 +323,13 @@ spawn_enq(const char *name, int pid)
   return s;
 }
 
+
+
 /**
  * Execute the given program and return its standard output as file-descriptor (pipe).
  */
-
 int
-spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
+spawn_and_give_stdout(const char *prog, char *argv[], int *rd, pid_t *pid, int redir_stderr)
 {
   pid_t p;
   int fd[2], f, maxfd;
@@ -374,6 +400,8 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
   close(fd[1]);
 
   *rd = fd[0];
+  if (pid)
+    *pid = p;
   return 0;
 }
 
@@ -384,7 +412,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
  * The function will return the size of the buffer
  */
 int
-spawnv(const char *prog, char *argv[], int redir_stdout, int redir_stderr)
+spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr)
 {
   pid_t p, f, maxfd;
   char bin[256];
@@ -444,6 +472,9 @@ spawnv(const char *prog, char *argv[], int redir_stdout, int redir_stderr)
   pthread_mutex_unlock(&fork_lock);
 
   spawn_enq(prog, p);
+
+  if (pid)
+    *pid = p;
 
   return 0;
 }

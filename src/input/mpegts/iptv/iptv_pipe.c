@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <assert.h>
 
 /*
@@ -35,6 +36,7 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
 {
   char *argv[64], *f, *raw, *s, *p, *a;
   int i = 1, rd;
+  pid_t pid;
 
   if (strncmp(_raw, "pipe://", 7))
     return -1;
@@ -73,7 +75,7 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
   }
   argv[i] = NULL;
 
-  if (spawn_and_give_stdout(raw, argv, &rd, 1)) {
+  if (spawn_and_give_stdout(raw, argv, &rd, &pid, 1)) {
     tvherror("iptv", "Unable to start pipe '%s' (wrong executable?)", raw);
     return -1;
   }
@@ -82,6 +84,7 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
   fcntl(rd, F_SETFL, fcntl(rd, F_GETFL) | O_NONBLOCK);
 
   im->mm_iptv_fd = rd;
+  im->im_data = (void *)(intptr_t)pid;
 
   iptv_input_mux_started(im);
   return 0;
@@ -92,6 +95,8 @@ iptv_pipe_stop
   ( iptv_mux_t *im )
 {
   int rd = im->mm_iptv_fd;
+  pid_t pid = (intptr_t)im->im_data;
+  spawn_kill(pid, SIGKILL);
   if (rd > 0)
     close(rd);
   im->mm_iptv_fd = -1;
@@ -103,17 +108,24 @@ iptv_pipe_read ( iptv_mux_t *im )
   int r, rd = im->mm_iptv_fd;
   ssize_t res = 0;
   char buf[64*1024];
+  pid_t pid;
 
-  while (rd > 0 && res < 1024*1024) {
+  while (rd > 0 && res < sizeof(buf)) {
     r = read(rd, buf, sizeof(buf));
     if (r < 0) {
+      if (errno == EAGAIN)
+        break;
       if (ERRNO_AGAIN(errno))
         continue;
-      break;
     }
-    if (!r) {
+    if (r <= 0) {
+      tvherror("iptv", "stdin pipe unexpectedly closed: %s",
+               r < 0 ? strerror(errno) : "No data");
       close(rd);
+      pid = (intptr_t)im->im_data;
+      spawn_kill(pid, SIGKILL);
       im->mm_iptv_fd = -1;
+      im->im_data = NULL;
       break;
     }
     sbuf_append(&im->mm_iptv_buffer, buf, r);
