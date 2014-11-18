@@ -679,7 +679,7 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     args[i] = s;
   }
   
-  spawnv(args[0], (void *)args);
+  spawnv(args[0], (void *)args, 1, 1);
     
   htsstr_argsplit_free(args);
 }

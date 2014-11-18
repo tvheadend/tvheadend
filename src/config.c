@@ -1147,7 +1147,7 @@ dobackup(const char *oldver)
                                      root, oldver);
   tvhinfo("config", "backup: running, output file %s", outfile);
 
-  spawnv(argv[0], (void *)argv);
+  spawnv(argv[0], (void *)argv, 1, 1);
 
   while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
     usleep(20000);

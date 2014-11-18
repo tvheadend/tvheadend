@@ -60,6 +60,8 @@ typedef struct spawn {
   const char *name;
 } spawn_t;
 
+static void spawn_reaper(void);
+
 /*
  *
  */
@@ -274,7 +276,7 @@ spawn_reap(char *stxt, size_t stxtlen)
 /**
  * The reaper is called once a second to finish of any pending spawns
  */
-void
+static void
 spawn_reaper(void)
 {
   while (spawn_reap(NULL, 0) != -EAGAIN) ;
@@ -343,12 +345,15 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
     }
 
     close(0);
+    close(1);
     close(2);
-    close(fd[0]);
-    dup2(fd[1], 1);
-    close(fd[1]);
+
     dup2(f, 0);
+    dup2(fd[1], 1);
     dup2(redir_stderr ? spawn_pipe_error.wr : f, 2);
+
+    close(fd[0]);
+    close(fd[1]);
     close(f);
 
     spawn_info("Executing \"%s\"\n", prog);
@@ -379,9 +384,9 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr)
  * The function will return the size of the buffer
  */
 int
-spawnv(const char *prog, char *argv[])
+spawnv(const char *prog, char *argv[], int redir_stdout, int redir_stderr)
 {
-  pid_t p;
+  pid_t p, f, maxfd;
   char bin[256];
   const char *local_argv[2] = { NULL, NULL };
 
@@ -392,6 +397,8 @@ spawnv(const char *prog, char *argv[])
 
   if(!argv) argv = (void *)local_argv;
   if (!argv[0]) argv[0] = (char*)prog;
+
+  maxfd = sysconf(_SC_OPEN_MAX);
 
   pthread_mutex_lock(&fork_lock);
 
@@ -405,9 +412,28 @@ spawnv(const char *prog, char *argv[])
   }
 
   if(p == 0) {
+    f = open("/dev/null", O_RDWR);
+    if(f == -1) {
+      spawn_error("pid %d cannot open /dev/null for redirect %s -- %s",
+                  getpid(), prog, strerror(errno));
+      exit(1);
+    }
+
     close(0);
+    close(1);
     close(2);
+
+    dup2(f, 0);
+    dup2(redir_stdout ? spawn_pipe_info.wr : f, 1);
+    dup2(redir_stderr ? spawn_pipe_error.wr : f, 2);
+
+    close(f);
+
     spawn_info("Executing \"%s\"\n", prog);
+
+    for (f = 3; f < maxfd; f++)
+      close(f);
+
     execve(prog, argv, environ);
     spawn_error("pid %d cannot execute %s -- %s\n",
 	        getpid(), prog, strerror(errno));

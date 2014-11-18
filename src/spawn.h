@@ -27,11 +27,9 @@ int find_exec ( const char *name, char *out, size_t len );
 
 int spawn_and_give_stdout(const char *prog, char *argv[], int *rd, int redir_stderr);
 
-int spawnv(const char *prog, char *argv[]);
+int spawnv(const char *prog, char *argv[], int redir_stdout, int redir_stderr);
 
 int spawn_reap(char *stxt, size_t stxtlen);
-
-void spawn_reaper(void);
 
 void spawn_init(void);
 

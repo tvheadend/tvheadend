@@ -787,13 +787,12 @@ main(int argc, char **argv)
   /* Initialise configuration */
   uuid_init();
   idnode_init();
+  spawn_init();
   config_init(opt_config, opt_nobackup == 0);
 
   /**
    * Initialize subsystems
    */
-
-  spawn_init();
 
   dbus_server_init(opt_dbus, opt_dbus_session);
 
