@@ -498,7 +498,38 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
   return 0;
 }
 
+/*
+ * Dump request
+ */
+#if ENABLE_TRACE
+static void
+dump_request(http_connection_t *hc)
+{
+  char buf[2048] = "";
+  http_arg_t *ra;
+  int first;
 
+  first = 1;
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
+    first = 0;
+  }
+
+  first = 1;
+  TAILQ_FOREACH(ra, &hc->hc_args, link) {
+    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
+    first = 0;
+  }
+  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "}}");
+
+  tvhtrace("http", "%s%s", hc->hc_url, buf);
+}
+#else
+static inline void
+dump_request(http_connection_t *hc)
+{
+}
+#endif
 
 /**
  * HTTP GET
@@ -509,6 +540,8 @@ http_cmd_get(http_connection_t *hc)
   http_path_t *hp;
   char *remain;
   char *args;
+
+  dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -560,7 +593,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
   if(tcp_read_data(hc->hc_fd, hc->hc_post_data, hc->hc_post_len, spill) < 0)
     return -1;
 
- /* Parse content-type */
+  /* Parse content-type */
   v = http_arg_get(&hc->hc_args, "Content-Type");
   if(v != NULL) {
     char  *argv[2];
@@ -573,6 +606,8 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
     if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
       http_parse_get_args(hc, hc->hc_post_data);
   }
+
+  dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -603,39 +638,6 @@ http_process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   }
 }
 
-/*
- *
- */
-#if ENABLE_TRACE
-static void
-dump_request(http_connection_t *hc)
-{
-  char buf[2048] = "";
-  http_arg_t *ra;
-  int first;
-
-  first = 1;
-  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
-    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
-    first = 0;
-  }
-
-  first = 1;
-  TAILQ_FOREACH(ra, &hc->hc_args, link) {
-    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
-    first = 0;
-  }
-  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "}}");
-
-  tvhtrace("http", "%s%s", hc->hc_url, buf);
-}
-#else
-static inline void
-dump_request(http_connection_t *hc)
-{
-}
-#endif
-
 /**
  * Process a request, extract info from headers, dispatch command and
  * clean up
@@ -647,8 +649,6 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   int n, rval = -1;
   uint8_t authbuf[150];
 
-  dump_request(hc);
-  
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
 
   /* Set keep-alive status */
