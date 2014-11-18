@@ -5,7 +5,7 @@
 typedef struct intlconv_cache {
   RB_ENTRY(intlconv_cache) ic_link;
   char    *ic_charset_id;
-  iconv_t *ic_handle;
+  iconv_t ic_handle;
 } intlconv_cache_t;
 
 static RB_HEAD(,intlconv_cache) intlconv_all;
