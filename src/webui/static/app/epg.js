@@ -107,6 +107,7 @@ tvheadend.epgDetails = function(event) {
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
       content += '<div class="x-epg-desc">' + event.description + '</div>';
+    content += '<hr>';
     if (event.starRating)
       content += '<div class="x-epg-meta"><div class="x-epg-prefix">Star Rating:</div> ' + event.starRating + '</div>';
     if (event.ageRating)
