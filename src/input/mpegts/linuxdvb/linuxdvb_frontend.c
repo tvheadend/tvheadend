@@ -395,6 +395,9 @@ linuxdvb_frontend_network_list ( mpegts_input_t *mi )
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
   const idclass_t     *idc;
 
+  tvhtrace("linuxdvb", "%s: network list for %s",
+           mi->mi_name ?: "", dvb_type2str(lfe->lfe_type));
+
   if (lfe->lfe_type == DVB_TYPE_T)
     idc = &dvb_network_dvbt_class;
   else if (lfe->lfe_type == DVB_TYPE_C)
