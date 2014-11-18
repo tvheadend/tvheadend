@@ -81,7 +81,6 @@ struct tvhdhomerun_frontend
    * Device
    */
   tvhdhomerun_device_t          *hf_device;
-  int                            hf_master;
 
   TAILQ_ENTRY(tvhdhomerun_frontend)  hf_link;
 
