@@ -195,11 +195,16 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
     if (!om->om_done && om->om_requeue) {
       TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+    } else {
+      om->om_requeue = 0;
     }
   } else if (reason == EPGGRAB_OTA_DONE_TIMEOUT) {
+    om->om_requeue = 0;
     LIST_FOREACH(map, &om->om_modules, om_link)
       if (!map->om_complete)
         tvhlog(LOG_WARNING, "epggrab", "%s - data completion timeout for %s", map->om_module->name, name);
+  } else {
+    om->om_requeue = 0;
   }
 
   /* Remove subscriber */
