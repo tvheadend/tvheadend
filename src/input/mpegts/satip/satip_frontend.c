@@ -1549,6 +1549,7 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->sf_type));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->ti_id));
   if (lfe->ti_id.in_class == &satip_frontend_dvbs_class) {
     satip_satconf_save(lfe, m);
     htsmsg_delete_field(m, "networks");

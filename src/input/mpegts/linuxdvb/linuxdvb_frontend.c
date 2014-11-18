@@ -1419,6 +1419,7 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *fe )
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_type));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->ti_id));
   if (lfe->lfe_satconf) {
     htsmsg_t *s = htsmsg_create_map();
     linuxdvb_satconf_save(lfe->lfe_satconf, s);
