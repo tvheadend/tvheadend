@@ -642,6 +642,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if (de->de_title) lang_str_destroy(de->de_title);
   if (de->de_desc)  lang_str_destroy(de->de_desc);
   if (de->de_bcast) de->de_bcast->putref((epg_object_t*)de->de_bcast);
+  free(de->de_channel_name);
+  free(de->de_episode);
 
   free(de);
 }
@@ -670,10 +672,6 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
     LIST_REMOVE(de, de_channel_link);
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
-  free(de->de_channel_name);
-  de->de_channel_name = NULL;
-  free(de->de_episode);
-  de->de_episode = NULL;
 
   dvr_entry_dec_ref(de);
 }
