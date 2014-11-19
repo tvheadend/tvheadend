@@ -26,8 +26,8 @@ tvheadend.dvrDetails = function(uuid) {
 
         content += '<div class="x-epg-title">' + title + '</div>';
         content += '<div class="x-epg-title">' + episode + '</div>';
-        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Start Time:</div> ' + new Date(start_real * 1000).toLocaleString() + '</div>';
-        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Stop Time:</div> ' + new Date(stop_real * 1000).toLocaleString() + '</div>';
+        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Start Time:</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
+        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Stop Time:</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
         content += '<div class="x-epg-time"><div class="x-epg-prefix">Duration:</div> ' + parseInt(duration / 60) + ' min</div>';
         content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';

@@ -510,6 +510,17 @@
     width: 100px;
 }
 
+.x-date-date {
+    display: inline-block;
+    width: 6em;
+}
+
+.x-date-time {
+    display: inline-block;
+    width: 4em;
+    text-align: right;
+}
+
 .x-epg-title {
     margin: 5px;
     font: normal 16px arial, tahoma, helvetica, sans-serif;
