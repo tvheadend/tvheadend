@@ -100,9 +100,9 @@ tvheadend.epgDetails = function(event) {
     if (event.episodeOnscreen)
         content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
     if (event.start)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Start time:</div> ' + new Date(event.start).toLocaleString() + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-start-prefix">Start time:</div> ' + new Date(event.start).toLocaleString() + '</div>';
     if (event.stop)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Stop time:</div> ' + new Date(event.stop).toLocaleString() + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-stop-prefix">Stop time:</div> ' + new Date(event.stop).toLocaleString() + '</div>';
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)

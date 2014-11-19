@@ -510,6 +510,20 @@
     width: 100px;
 }
 
+.x-start-time-prefix {
+    display: inline-block;
+    width: 12em;
+    color: #008000;
+    font-weight: bold;
+}
+
+.x-stop-time-prefix {
+    display: inline-block;
+    width: 12em;
+    color: #FF0000;
+    font-weight: bold;
+}
+
 .x-epg-title {
     margin: 5px;
     font: normal 16px arial, tahoma, helvetica, sans-serif;
@@ -529,6 +543,20 @@
 .x-epg-prefix {
     display: inline-block;
     width: 12em;
+    font-weight: bold;
+}
+
+.x-epg-start-prefix {
+    display: inline-block;
+    width: 12em;
+    color: #008000;
+    font-weight: bold;
+}
+
+.x-epg-stop-prefix {
+    display: inline-block;
+    width: 12em;
+    color: #FF0000;
     font-weight: bold;
 }
 
