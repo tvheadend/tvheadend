@@ -662,7 +662,7 @@ channel_get_icon ( channel_t *ch )
           continue;
         snprintf(buf2, sizeof(buf2), "%s/%s", picon, icn+8);
         if (i > 1 || check_file(buf2)) {
-          ch->ch_icon = strdup(icn);
+          icon = ch->ch_icon = strdup(icn);
           channel_save(ch);
           idnode_notify_simple(&ch->ch_id);
           break;
