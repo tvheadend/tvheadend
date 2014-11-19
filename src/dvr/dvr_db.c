@@ -365,6 +365,21 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
 }
 
 /**
+ * Set episode name
+ */
+static char *
+dvr_entry_get_episode(epg_broadcast_t *bcast, char *buf, int len)
+{
+  if (!bcast || !bcast->episode)
+    return NULL;
+  if (epg_episode_number_format(bcast->episode,
+                                buf, len, NULL,
+                                "Season %d", ".", "Episode %d", "/%d"))
+    return buf;
+  return NULL;
+}
+
+/**
  * Create the event from config
  */
 dvr_entry_t *
@@ -439,7 +454,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   dvr_prio_t pri, int retention)
 {
   dvr_entry_t *de;
-  char tbuf[64];
+  char tbuf[64], *s;
   struct tm tm;
   time_t t;
   lang_str_t *l;
@@ -467,6 +482,8 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
       lang_str_serialize(e->summary, conf, "description");
     else if (e->episode && e->episode->summary)
       lang_str_serialize(e->episode->summary, conf, "description");
+    if (e->episode && (s = dvr_entry_get_episode(e, tbuf, sizeof(tbuf))))
+      htsmsg_add_str(conf, "episode", s);
   } else if (title) {
     l = lang_str_create();
     lang_str_add(l, title, lang, 0);
@@ -804,15 +821,11 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   /* Episode */
-  if (de->de_bcast && de->de_bcast->episode) {
-    if (epg_episode_number_format(de->de_bcast->episode,
-                                  buf, sizeof(buf), NULL,
-                                  "Season %d", ".", "Episode %d", "/%d")) {
-      if (strcmp(de->de_episode ?: "", buf)) {
-        free(de->de_episode);
-        de->de_episode = strdup(buf);
-        save = 1;
-      }
+  if (dvr_entry_get_episode(de->de_bcast, buf, sizeof(buf))) {
+    if (strcmp(de->de_episode ?: "", buf)) {
+      free(de->de_episode);
+      de->de_episode = strdup(buf);
+      save = 1;
     }
   }
 
