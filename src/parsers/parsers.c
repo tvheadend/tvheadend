@@ -1230,27 +1230,18 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     if (st->es_incomplete)
       return 4;
     th_pkt_t *pkt = st->es_curpkt;
-    size_t metalen = 0;
 
     if(pkt != NULL) {
       if(st->es_global_data) {
         pkt->pkt_meta = pktbuf_make(st->es_global_data,
-                                    metalen = st->es_global_data_len);
+                                    st->es_global_data_len);
         st->es_global_data = NULL;
         st->es_global_data_len = 0;
       }
 
-      if (metalen) {
-        pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
-        memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
-        memcpy(pktbuf_ptr(pkt->pkt_payload) + metalen, st->es_buf.sb_data, st->es_buf.sb_ptr - 4);
-        sbuf_reset(&st->es_buf, 16000);
-      } else {
-        pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
-                                       st->es_buf.sb_ptr - 4);
-        sbuf_steal_data(&st->es_buf);
-      }
-
+      pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
+                                     st->es_buf.sb_ptr - 4);
+      sbuf_steal_data(&st->es_buf);
       parser_deliver(t, st, pkt, st->es_buf.sb_err);
 
       st->es_curpkt = NULL;
