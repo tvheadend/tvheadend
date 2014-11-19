@@ -742,7 +742,7 @@ epggrab_ota_load_one
     free(ota);
     return;
   }
-  htsmsg_get_u32(c, "complete", (uint32_t *)&ota->om_complete);
+  ota->om_complete = htsmsg_get_u32_or_default(c, "complete", 0) != 0;
   
   if (!(l = htsmsg_get_list(c, "modules"))) return;
   HTSMSG_FOREACH(f, l) {
