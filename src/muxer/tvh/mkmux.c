@@ -32,6 +32,7 @@
 #include "dvr/dvr.h"
 #include "mkmux.h"
 #include "ebml.h"
+#include "parsers/parser_avc.h"
 
 extern int dvr_iov_max;
 
@@ -47,6 +48,7 @@ TAILQ_HEAD(mk_chapter_queue, mk_chapter);
 typedef struct mk_track {
   int index;
   int enabled;
+  int avc;
   int type;
   int tracknum;
   int disabled;
@@ -236,26 +238,28 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
   int tracknum = 0;
   uint8_t buf4[4];
   uint32_t bit_depth = 0;
+  mk_track_t *tr;
 
   mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
   
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
+    tr = &mkm->tracks[i];
 
-    mkm->tracks[i].disabled = ssc->ssc_disabled;
+    tr->disabled = ssc->ssc_disabled;
 
     if(ssc->ssc_disabled)
       continue;
 
-    mkm->tracks[i].index = ssc->ssc_index;
-    mkm->tracks[i].type = ssc->ssc_type;
-    mkm->tracks[i].channels = ssc->ssc_channels;
-    mkm->tracks[i].aspect_num = ssc->ssc_aspect_num;
-    mkm->tracks[i].aspect_den = ssc->ssc_aspect_den;
-    mkm->tracks[i].commercial = COMMERCIAL_UNKNOWN;
-    mkm->tracks[i].sri = ssc->ssc_sri;
-    mkm->tracks[i].nextpts = PTS_UNSET;
+    tr->index = ssc->ssc_index;
+    tr->type = ssc->ssc_type;
+    tr->channels = ssc->ssc_channels;
+    tr->aspect_num = ssc->ssc_aspect_num;
+    tr->aspect_den = ssc->ssc_aspect_den;
+    tr->commercial = COMMERCIAL_UNKNOWN;
+    tr->sri = ssc->ssc_sri;
+    tr->nextpts = PTS_UNSET;
 
     if (mkm->webm && ssc->ssc_type != SCT_VP8 && ssc->ssc_type != SCT_VORBIS)
       tvhwarn("mkv", "WEBM format supports only VP8+VORBIS streams (detected %s)",
@@ -270,6 +274,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     case SCT_H264:
       tracktype = 1;
       codec_id = "V_MPEG4/ISO/AVC";
+      tr->avc = 1;
       break;
 
     case SCT_VP8:
@@ -327,15 +332,14 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       continue;
     }
 
-    mkm->tracks[i].enabled = 1;
-    tracknum++;
-    mkm->tracks[i].tracknum = tracknum;
+    tr->enabled = 1;
+    tr->tracknum = ++tracknum;
     mkm->has_video |= (tracktype == 1);
     
     t = htsbuf_queue_alloc(0);
 
-    ebml_append_uint(t, 0xd7, mkm->tracks[i].tracknum);
-    ebml_append_uint(t, 0x73c5, mkm->tracks[i].tracknum);
+    ebml_append_uint(t, 0xd7, tr->tracknum);
+    ebml_append_uint(t, 0x73c5, tr->tracknum);
     ebml_append_uint(t, 0x83, tracktype);
     ebml_append_uint(t, 0x9c, 0); // Lacing
     ebml_append_string(t, 0x86, codec_id);
@@ -348,10 +352,19 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     case SCT_MPEG2VIDEO:
     case SCT_MP4A:
     case SCT_AAC:
-      if(ssc->ssc_gh)
-	ebml_append_bin(t, 0x63a2, 
-			pktbuf_ptr(ssc->ssc_gh),
-			pktbuf_len(ssc->ssc_gh));
+      if(ssc->ssc_gh) {
+        sbuf_t hdr;
+        sbuf_init(&hdr);
+        if (tr->avc) {
+          isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                                pktbuf_len(ssc->ssc_gh));
+        } else {
+          sbuf_append(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                            pktbuf_len(ssc->ssc_gh));
+        }
+        ebml_append_bin(t, 0x63a2, hdr.sb_data, hdr.sb_ptr);
+        sbuf_free(&hdr);
+      }
       break;
       
     case SCT_VORBIS:
@@ -1138,12 +1151,12 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 {
   int i, mark;
   mk_track_t *t = NULL;
-  for(i = 0; i < mkm->ntracks;i++) {
-    if(mkm->tracks[i].index == pkt->pkt_componentindex &&
-       mkm->tracks[i].enabled) {
-      t = &mkm->tracks[i];
+  th_pkt_t *opkt;
+
+  for (i = 0; i < mkm->ntracks; i++) {
+    t = &mkm->tracks[i];
+    if (t->index == pkt->pkt_componentindex && t->enabled)
       break;
-    }
   }
   
   if(t == NULL || t->disabled) {
@@ -1180,6 +1193,11 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 
   if(mark)
     mk_mux_insert_chapter(mkm);
+
+  if(t->avc) {
+    pkt = avc_convert_pkt(opkt = pkt);
+    pkt_ref_dec(opkt);
+  }
 
   mk_write_frame_i(mkm, t, pkt);
 

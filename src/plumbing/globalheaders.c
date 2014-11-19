@@ -20,7 +20,6 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "globalheaders.h"
-#include "parsers/parser_avc.h"
 
 typedef struct globalheaders {
   streaming_target_t gh_input;
@@ -152,32 +151,6 @@ headers_complete(globalheaders_t *gh, int64_t qd)
 }
 
 
-
-/**
- *
- */
-static th_pkt_t *
-convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt, int hold)
-{
-  th_pkt_t *r;
-
-  switch(ssc->ssc_type) {
-  case SCT_H264:
-    r = avc_convert_pkt(pkt);
-    if (!hold)
-      pkt_ref_dec(pkt);
-    break;
-
-  default:
-    r = pkt;
-    if (hold)
-      pkt_ref_inc(r);
-    break;
-  }
-  return r;
-}
-
-
 /**
  *
  */
@@ -214,7 +187,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
       break;
     }
 
-    pkt = convertpkt(ssc, pkt, 1);
+    pkt_ref_inc(pkt);
 
     apply_header(ssc, pkt);
 
@@ -273,9 +246,6 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 static void
 gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 {
-  th_pkt_t *pkt;
-  streaming_start_component_t *ssc;
-
   switch(sm->sm_type) {
   case SMT_START:
     /* stop */
@@ -295,18 +265,11 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
+  case SMT_PACKET:
   case SMT_MPEGTS:
   case SMT_SKIP:
   case SMT_SPEED:
   case SMT_TIMESHIFT_STATUS:
-    streaming_target_deliver2(gh->gh_output, sm);
-    break;
-
-  case SMT_PACKET:
-    pkt = sm->sm_data;
-    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
-						  pkt->pkt_componentindex);
-    sm->sm_data = convertpkt(ssc, pkt, 0);
     streaming_target_deliver2(gh->gh_output, sm);
     break;
   }

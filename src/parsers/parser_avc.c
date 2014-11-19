@@ -120,7 +120,7 @@ RB24(const uint8_t *d)
 
 #define FFMIN(a, b) ((a) > (b) ? (b) : (a))
 
-static int
+int
 isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
 {
   if (len > 6) {
