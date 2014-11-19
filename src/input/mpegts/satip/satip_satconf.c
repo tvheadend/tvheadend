@@ -256,7 +256,7 @@ satip_satconf_create0
 
 void
 satip_satconf_create
-  ( satip_frontend_t *lfe, htsmsg_t *conf )
+  ( satip_frontend_t *lfe, htsmsg_t *conf, int def_positions )
 {
   htsmsg_t *l, *e;
   htsmsg_field_t *f;
@@ -272,7 +272,7 @@ satip_satconf_create
   }
 
   if (lfe->sf_positions == 0)
-    for ( ; lfe->sf_positions < 4; lfe->sf_positions++)
+    for ( ; lfe->sf_positions < def_positions; lfe->sf_positions++)
       satip_satconf_create0(lfe, NULL, lfe->sf_positions);
 }
 

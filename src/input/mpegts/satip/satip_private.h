@@ -195,7 +195,7 @@ void satip_satconf_save ( satip_frontend_t *lfe, htsmsg_t *m );
 void satip_satconf_destroy ( satip_frontend_t *lfe );
 
 void satip_satconf_create
-  ( satip_frontend_t *lfe, htsmsg_t *conf );
+  ( satip_frontend_t *lfe, htsmsg_t *conf, int def_positions );
 
 void satip_satconf_updated_positions
   ( satip_frontend_t *lfe );

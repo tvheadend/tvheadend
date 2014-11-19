@@ -1411,14 +1411,18 @@ satip_frontend_tune1
  * *************************************************************************/
 
 static void
-satip_frontend_hacks( satip_frontend_t *lfe )
+satip_frontend_hacks( satip_frontend_t *lfe, int *def_positions )
 {
+  satip_device_t *sd = lfe->sf_device;
+
   lfe->sf_tdelay = 50; /* should not hurt anything */
-  if (strstr(lfe->sf_device->sd_info.location, ":8888/octonet.xml")) {
+  if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     if (lfe->sf_type == DVB_TYPE_S)
       lfe->sf_play2 = 1;
     lfe->sf_tdelay = 250;
     lfe->sf_teardown_delay = 1;
+  } else if (!strcmp(sd->sd_info.modelname, "IPLNB")) {
+    *def_positions = 1;
   }
 }
 
@@ -1431,7 +1435,7 @@ satip_frontend_create
   char id[16], lname[256];
   satip_frontend_t *lfe;
   uint32_t master = 0;
-  int i;
+  int i, def_positions = 4;
 
   /* Override type */
   snprintf(id, sizeof(id), "override #%d", num);
@@ -1483,7 +1487,7 @@ satip_frontend_create
   lfe->sf_type_t2  = t2;
   lfe->sf_master   = master;
   lfe->sf_type_override = override ? strdup(override) : NULL;
-  satip_frontend_hacks(lfe);
+  satip_frontend_hacks(lfe, &def_positions);
   TAILQ_INIT(&lfe->sf_satconf);
   pthread_mutex_init(&lfe->sf_dvr_lock, NULL);
   lfe = (satip_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
@@ -1523,7 +1527,7 @@ satip_frontend_create
 
   /* Create satconf */
   if (lfe->sf_type == DVB_TYPE_S && master == 0)
-    satip_satconf_create(lfe, conf);
+    satip_satconf_create(lfe, conf, def_positions);
 
   /* Slave networks update */
   if (master) {
