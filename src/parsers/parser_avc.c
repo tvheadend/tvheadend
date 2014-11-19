@@ -211,7 +211,7 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
 th_pkt_t *
 avc_convert_pkt(th_pkt_t *src)
 {
-  sbuf_t payload, headers;
+  sbuf_t payload;
   th_pkt_t *pkt = malloc(sizeof(*pkt));
 
   *pkt = *src;
@@ -219,13 +219,6 @@ avc_convert_pkt(th_pkt_t *src)
   pkt->pkt_meta = NULL;
 
   sbuf_init(&payload);
-
-  if (src->pkt_meta) {
-    sbuf_init(&headers);
-    isom_write_avcc(&headers, pktbuf_ptr(src->pkt_meta),
-		              pktbuf_len(src->pkt_meta));
-    pkt->pkt_meta = pktbuf_make(headers.sb_data, headers.sb_ptr);
-  }
 
   if(src->pkt_meta)
     avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_meta),
