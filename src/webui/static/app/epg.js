@@ -106,7 +106,7 @@ tvheadend.epgDetails = function(event) {
     if (event.start)
       content += '<div class="x-epg-meta"><div class="x-epg-prefix">Start Time:</div> ' + tvheadend.niceDate(event.start) + '</div>';
     if (event.stop)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Stop Time:</div> ' + tvheadend.niceDate(event.stop) + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">End Time:</div> ' + tvheadend.niceDate(event.stop) + '</div>';
     if (duration)
       content += '<div class="x-epg-meta"><div class="x-epg-prefix">Duration:</div> ' + parseInt(duration / 60) + ' min</div>';
     if (event.summary)
