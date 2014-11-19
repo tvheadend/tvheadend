@@ -57,8 +57,11 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
     while (*s && *s != ' ') {
       while (*s && *s != ' ' && *s != '\\')
         s++;
-      if (*s == '\\')
+      if (*s == '\\') {
         memmove(s, s + 1, strlen(s));
+        if (*s)
+          s++;
+      }
     }
     if (f != s) {
       if (*s) {
