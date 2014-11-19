@@ -172,6 +172,7 @@ typedef struct dvr_entry {
    * EPG information / links
    */
   epg_broadcast_t *de_bcast;
+  char *de_episode;
 
   /**
    * Major State

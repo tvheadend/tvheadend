@@ -253,17 +253,15 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
     snprintf(output + strlen(output), outlen - strlen(output),
 	     "%s", lang_str_get(de->de_title, NULL));
 
-  if(cfg->dvr_episode_before_date) {
-    if(cfg->dvr_episode_in_title) {
-      if(de->de_bcast && de->de_bcast->episode)
-        epg_episode_number_format(de->de_bcast->episode,
-                                  output + strlen(output),
-                                  outlen - strlen(output),
-                                  ".", "S%02d", NULL, "E%02d", NULL);
-    }
+  if (cfg->dvr_episode_before_date) {
+    if (cfg->dvr_episode_in_title && de->de_bcast && de->de_bcast->episode)
+      epg_episode_number_format(de->de_bcast->episode,
+                                output + strlen(output),
+                                outlen - strlen(output),
+                                ".", "S%02d", NULL, "E%02d", NULL);
   }
 
-  if(cfg->dvr_subtitle_in_title) {
+  if (cfg->dvr_subtitle_in_title) {
     if(de->de_bcast && de->de_bcast->episode && de->de_bcast->episode->subtitle)
       snprintf(output + strlen(output), outlen - strlen(output),
            ".%s", lang_str_get(de->de_bcast->episode->subtitle, NULL));
@@ -271,17 +269,17 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 
   localtime_r(&de->de_start, &tm);
   
-  if(cfg->dvr_date_in_title) {
+  if (cfg->dvr_date_in_title) {
     strftime(buf, sizeof(buf), "%F", &tm);
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(cfg->dvr_time_in_title) {
+  if (cfg->dvr_time_in_title) {
     strftime(buf, sizeof(buf), "%H-%M", &tm);
     snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
-  if(!cfg->dvr_episode_before_date) {
+  if (!cfg->dvr_episode_before_date) {
     if(cfg->dvr_episode_in_title) {
       if(de->de_bcast && de->de_bcast->episode)
         epg_episode_number_format(de->de_bcast->episode,
@@ -674,6 +672,8 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   de->de_channel = NULL;
   free(de->de_channel_name);
   de->de_channel_name = NULL;
+  free(de->de_episode);
+  de->de_episode = NULL;
 
   dvr_entry_dec_ref(de);
 }
@@ -731,6 +731,7 @@ static dvr_entry_t *_dvr_entry_update
     const char *desc, const char *lang, time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,  dvr_prio_t pri, int retention )
 {
+  char buf[40];
   int save = 0;
 
   if (!dvr_entry_is_editable(de))
@@ -801,6 +802,20 @@ static dvr_entry_t *_dvr_entry_update
     de->de_bcast = e;
     e->getref(e);
     save = 1;
+
+  }
+
+  /* Episode */
+  if (de->de_bcast && de->de_bcast->episode) {
+    if (epg_episode_number_format(de->de_bcast->episode,
+                                  buf, sizeof(buf), NULL,
+                                  "Season %d", ".", "Episode %d", "/%d")) {
+      if (strcmp(de->de_episode ?: "", buf)) {
+        free(de->de_episode);
+        de->de_episode = strdup(buf);
+        save = 1;
+      }
+    }
   }
 
   /* Save changes */
@@ -861,7 +876,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     e->putref(e);
     de->de_bcast = NULL;
 
-    /* If this was craeted by autorec - just remove it, it'll get recreated */
+    /* If this was created by autorec - just remove it, it'll get recreated */
     if (de->de_autorec) {
       dvr_entry_destroy(de, 1);
 
@@ -1482,21 +1497,6 @@ dvr_entry_class_disp_description_get(void *o)
 }
 
 static const void *
-dvr_entry_class_episode_get(void *o)
-{
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  static const char *s;
-  static char buf[100];
-  s = "";
-  if (de->de_bcast && de->de_bcast->episode)
-    if (epg_episode_number_format(de->de_bcast->episode,
-                                  buf, sizeof(buf), NULL,
-                                  "Season %d", ".", "Episode %d", "/%d"))
-      s = buf;
-  return &s;
-}
-
-static const void *
 dvr_entry_class_url_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
@@ -1870,8 +1870,8 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "episode",
       .name     = "Episode",
-      .get      = dvr_entry_class_episode_get,
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .off      = offsetof(dvr_entry_t, de_episode),
+      .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
