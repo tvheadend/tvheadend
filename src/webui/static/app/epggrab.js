@@ -267,7 +267,7 @@ tvheadend.epggrab = function(panel, index) {
     });
 
     var otaTimeout = new Ext.form.NumberField({
-        width: 30,
+        width: 70,
         allowNegative: false,
         allowDecimals: false,
         minValue: 30,
