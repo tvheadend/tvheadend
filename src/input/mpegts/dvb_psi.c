@@ -934,8 +934,9 @@ dvb_table_begin
     *sect = ptr[3];
     *last = ptr[4];
     *ver  = (ptr[2] >> 1) & 0x1F;
-    tvhtrace(mt->mt_name, "  section %d last %d ver %d", *sect, *last, *ver);
     *ret = st = mpegts_table_state_find(mt, tableid, extraid, *last);
+    tvhtrace(mt->mt_name, "  section %d last %d ver %d (ver %d st %d incomp %d comp %d)",
+             *sect, *last, *ver, st->version, st->complete, mt->mt_incomplete, mt->mt_complete);
 
     /* New version */
     if (st->version != *ver) {
@@ -950,13 +951,15 @@ dvb_table_begin
 
     /* Complete? */
     if (st->complete) {
-      tvhtrace(mt->mt_name, "  skip, already complete");
+      tvhtrace(mt->mt_name, "  skip, already complete (%i)", st->complete);
       if (st->complete == 1) {
         st->complete = 2;
         mt->mt_complete++;
         return dvb_table_complete(mt);
+      } else if (st->complete == 2) {
+        return dvb_table_complete(mt);
       }
-      return -1;
+      assert(0);
     }
 
     /* Already seen? */
