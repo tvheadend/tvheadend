@@ -329,12 +329,14 @@ spawn_enq(const char *name, int pid)
  * Execute the given program and return its standard output as file-descriptor (pipe).
  */
 int
-spawn_and_give_stdout(const char *prog, char *argv[], int *rd, pid_t *pid, int redir_stderr)
+spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
+                      int *rd, pid_t *pid, int redir_stderr)
 {
   pid_t p;
-  int fd[2], f, maxfd;
+  int fd[2], f, i, maxfd;
   char bin[256];
   const char *local_argv[2] = { NULL, NULL };
+  char **e, **e0, **e2, **e3, *p1, *p2;
 
   if (*prog != '/' && *prog != '.') {
     if (!find_exec(prog, bin, sizeof(bin))) return -1;
@@ -343,6 +345,32 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, pid_t *pid, int r
 
   if (!argv) argv = (void *)local_argv;
   if (!argv[0]) argv[0] = (char*)prog;
+
+  if (!envp || !envp[0]) {
+    e = environ;
+  } else {
+    for (i = 0, e2 = environ; *e2; i++, e2++);
+    for (f = 0, e2 = envp; *e2; f++, e2++);
+    e = alloca((i + f + 1) * sizeof(char *));
+    memcpy(e, environ, i * sizeof(char *));
+    e0 = e + i;
+    *e0 = NULL;
+    for (e2 = envp; *e2; e2++) {
+      for (e3 = e; *e3; e3++) {
+        p1 = strchr(*e2, '=');
+        p2 = strchr(*e3, '=');
+        if (p1 - *e2 == p2 - *e3 && !strncmp(*e2, *e3, p1 - *e2)) {
+          *e3 = *e2;
+          break;
+        }
+      }
+      if (!*e3) {
+        *e0++ = *e2;
+        *e0 = NULL;
+      }
+    }
+    *e0 = NULL;
+  }
 
   maxfd = sysconf(_SC_OPEN_MAX);
 
@@ -387,7 +415,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], int *rd, pid_t *pid, int r
     for (f = 3; f < maxfd; f++)
       close(f);
 
-    execve(prog, argv, environ);
+    execve(prog, argv, e);
     spawn_error("pid %d cannot execute %s -- %s\n",
                 getpid(), prog, strerror(errno));
     exit(1);

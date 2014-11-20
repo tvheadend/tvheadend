@@ -287,7 +287,7 @@ char *epggrab_module_grab_spawn ( void *m )
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
   /* Grab */
-  outlen = spawn_and_give_stdout(mod->path, NULL, &rd, NULL, 1);
+  outlen = spawn_and_give_stdout(mod->path, NULL, NULL, &rd, NULL, 1);
 
   if (outlen < 0)
     goto error;

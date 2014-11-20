@@ -683,7 +683,7 @@ static void _xmltv_load_grabbers ( void )
   char *tmp, *tmp2 = NULL, *path;
 
   /* Load data */
-  if (spawn_and_give_stdout(XMLTV_FIND, NULL, &rd, NULL, 1) >= 0)
+  if (spawn_and_give_stdout(XMLTV_FIND, NULL, NULL, &rd, NULL, 1) >= 0)
     outlen = file_readall(rd, &outbuf);
   if (rd >= 0)
     close(rd);
@@ -731,7 +731,7 @@ static void _xmltv_load_grabbers ( void )
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
           rd = -1;
-          if (spawn_and_give_stdout(bin, argv, &rd, NULL, 1) >= 0 &&
+          if (spawn_and_give_stdout(bin, argv, NULL, &rd, NULL, 1) >= 0 &&
               (outlen = file_readall(rd, &outbuf)) > 0) {
             close(rd);
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';

@@ -138,6 +138,20 @@ const idclass_t iptv_mux_class =
       .name     = "Service Name",
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "iptv_respawn",
+      .name     = "Respawn (pipe)",
+      .off      = offsetof(iptv_mux_t, mm_iptv_respawn),
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_env",
+      .name     = "Environment (pipe)",
+      .off      = offsetof(iptv_mux_t, mm_iptv_env),
+      .opts     = PO_ADVANCED,
+    },
     {}
   }
 };

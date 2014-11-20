@@ -34,7 +34,7 @@
 static int
 iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
 {
-  char *argv[64], *f, *raw, *s, *p, *a;
+  char *argv[64], *envp[32], *f, *raw, *s, *p, *a;
   int i = 1, rd;
   pid_t pid;
 
@@ -82,7 +82,34 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
   }
   argv[i] = NULL;
 
-  if (spawn_and_give_stdout(raw, argv, &rd, &pid, 1)) {
+  s = im->mm_iptv_env ? tvh_strdupa(im->mm_iptv_env) : (char *)"";
+  i = 0;
+  while (*s && i < ARRAY_SIZE(envp) - 1) {
+    f = s;
+    while (*s && *s != '=')
+      s++;
+    if (*s != '=')
+      break;
+    while (*s && *s != ' ') {
+      while (*s && *s != ' ' && *s != '\\')
+        s++;
+      if (*s == '\\') {
+        memmove(s, s + 1, strlen(s));
+        if (*s)
+          s++;
+      }
+    }
+    if (f != s) {
+      if (*s) {
+        *s = '\0';
+        s++;
+      }
+      envp[i++] = f;
+    }
+  }
+  envp[i] = NULL;
+
+  if (spawn_and_give_stdout(raw, argv, envp, &rd, &pid, 1)) {
     tvherror("iptv", "Unable to start pipe '%s' (wrong executable?)", raw);
     return -1;
   }
@@ -93,7 +120,10 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
   im->mm_iptv_fd = rd;
   im->im_data = (void *)(intptr_t)pid;
 
-  iptv_input_mux_started(im);
+  im->mm_iptv_respawn_last = dispatch_clock;
+
+  if (url)
+    iptv_input_mux_started(im);
   return 0;
 }
 
@@ -126,13 +156,31 @@ iptv_pipe_read ( iptv_mux_t *im )
         continue;
     }
     if (r <= 0) {
-      tvherror("iptv", "stdin pipe unexpectedly closed: %s",
-               r < 0 ? strerror(errno) : "No data");
       close(rd);
       pid = (intptr_t)im->im_data;
       spawn_kill(pid, SIGKILL);
       im->mm_iptv_fd = -1;
       im->im_data = NULL;
+      if (dispatch_clock < im->mm_iptv_respawn_last + 2) {
+        tvherror("iptv", "stdin pipe unexpectedly closed: %s",
+                 r < 0 ? strerror(errno) : "No data");
+      } else {
+        /* avoid deadlock here */
+        pthread_mutex_unlock(&iptv_lock);
+        pthread_mutex_lock(&global_lock);
+        pthread_mutex_lock(&iptv_lock);
+        if (im->mm_active) {
+          if (iptv_pipe_start(im, im->mm_iptv_url, NULL)) {
+            tvherror("iptv", "unable to respawn %s", im->mm_iptv_url);
+          } else {
+            iptv_input_fd_started(im);
+            im->mm_iptv_respawn_last = dispatch_clock;
+          }
+        }
+        pthread_mutex_unlock(&iptv_lock);
+        pthread_mutex_unlock(&global_lock);
+        pthread_mutex_lock(&iptv_lock);
+      }
       break;
     }
     sbuf_append(&im->mm_iptv_buffer, buf, r);

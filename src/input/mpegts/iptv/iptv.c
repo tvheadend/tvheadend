@@ -373,15 +373,11 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
                               &im->mm_iptv_buffer, NULL, NULL);
 }
 
-void
-iptv_input_mux_started ( iptv_mux_t *im )
+int
+iptv_input_fd_started ( iptv_mux_t *im )
 {
-  tvhpoll_event_t ev = { 0 };
   char buf[256];
-  mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
-
-  /* Allocate input buffer */
-  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  tvhpoll_event_t ev = { 0 };
 
   /* Setup poll */
   if (im->mm_iptv_fd > 0) {
@@ -391,12 +387,25 @@ iptv_input_mux_started ( iptv_mux_t *im )
 
     /* Error? */
     if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
+      mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
       tvherror("iptv", "%s - failed to add to poll q", buf);
       close(im->mm_iptv_fd);
       im->mm_iptv_fd = -1;
-      return;
+      return -1;
     }
   }
+  return 0;
+}
+
+void
+iptv_input_mux_started ( iptv_mux_t *im )
+{
+
+  /* Allocate input buffer */
+  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+
+  if (iptv_input_fd_started(im))
+    return;
 
   /* Install table handlers */
   mpegts_mux_t *mm = (mpegts_mux_t*)im;
