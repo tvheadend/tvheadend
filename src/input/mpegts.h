@@ -434,6 +434,7 @@ struct mpegts_service
 
   uint32_t s_dvb_channel_num;
   uint16_t s_dvb_channel_minor;
+  uint8_t  s_dvb_channel_dtag;
   uint16_t s_dvb_service_id;
   char    *s_dvb_svcname;
   char    *s_dvb_provider;

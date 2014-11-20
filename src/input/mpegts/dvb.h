@@ -130,9 +130,6 @@ struct mpegts_mux;
 #define DVB_DESC_EAC3                 0x7A
 #define DVB_DESC_AAC                  0x7C
 
-#define DVB_DESC_LOCAL_CHAN1          0x81  /* UPC - 1W */
-#define DVB_DESC_LOCAL_CHAN2          0x83
-
 #define DVB_DESC_BSKYB_LCN            0xB1
 
 #define DVB_DESC_BSKYB_NVOD           0xC0

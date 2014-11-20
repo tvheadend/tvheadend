@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PRIV_FSAT (('F' << 24) | ('S' << 16) | ('A' << 8) | 'T')
+
 typedef struct dvb_freesat_svc {
   TAILQ_ENTRY(dvb_freesat_svc) link;
   TAILQ_ENTRY(dvb_freesat_svc) region_link;
@@ -53,6 +55,7 @@ typedef struct dvb_freesat_region {
 typedef struct dvb_bat_svc {
   TAILQ_ENTRY(dvb_bat_svc) link;
   mpegts_service_t *svc;
+  uint8_t lcn_dtag;
   uint32_t lcn;
   dvb_freesat_svc_t *fallback;
   int used;
@@ -64,7 +67,6 @@ typedef struct dvb_bat_id {
   uint32_t freesat:1;
   uint32_t bskyb:1;
   uint16_t nbid;
-  uint32_t services_count;
   char name[32];
   mpegts_mux_t *mm;
   TAILQ_HEAD(,dvb_bat_svc)       services;
@@ -379,7 +381,8 @@ dvb_desc_service
 }
 
 static dvb_bat_svc_t *
-dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s, uint32_t lcn )
+dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s,
+                      uint8_t lcn_dtag, uint32_t lcn )
 {
   dvb_bat_svc_t *bs;
 
@@ -391,8 +394,10 @@ dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s, uint32_t lcn )
     bs->svc = s;
     TAILQ_INSERT_TAIL(&bi->services, bs, link);
   }
-  if (lcn != UINT_MAX)
+  if (lcn != UINT_MAX && !bs->lcn_dtag) {
+    bs->lcn_dtag = lcn_dtag;
     bs->lcn = lcn;
+  }
   return bs;
 }
 
@@ -409,13 +414,11 @@ dvb_desc_service_list
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
     tvhdebug(dstr, "    service %04X (%d) type %02X (%d)", sid, sid, stype, stype);
-    if (bi)
-      bi->services_count++;
     if (mm) {
       int save = 0;
       s = mpegts_service_find(mm, sid, 0, 1, &save);
       if (bi)
-        dvb_bat_find_service(bi, s, UINT_MAX);
+        dvb_bat_find_service(bi, s, 0, UINT_MAX);
       if (save)
         s->s_config_save((service_t*)s);
     }
@@ -425,8 +428,8 @@ dvb_desc_service_list
 
 static int
 dvb_desc_local_channel
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm,
-    dvb_bat_id_t *bi )
+  ( const char *dstr, const uint8_t *ptr, int len,
+    uint8_t dtag, mpegts_mux_t *mm, dvb_bat_id_t *bi )
 {
   int save = 0;
   uint16_t sid, lcn;
@@ -439,12 +442,15 @@ dvb_desc_local_channel
     sid = (ptr[0] << 8) | ptr[1];
     lcn = ((ptr[2] & 3) << 8) | ptr[3];
     tvhdebug(dstr, "    sid %d lcn %d", sid, lcn);
-    if (lcn && mm) {
+    if (sid && lcn && mm) {
       s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
         if (bi) {
-          dvb_bat_find_service(bi, s, lcn);
-        } else if (s->s_dvb_channel_num != lcn) {
+          dvb_bat_find_service(bi, s, dtag, lcn);
+        } else if ((!s->s_dvb_channel_dtag ||
+                    s->s_dvb_channel_dtag == dtag) &&
+                    s->s_dvb_channel_num != lcn) {
+          s->s_dvb_channel_dtag = dtag;
           s->s_dvb_channel_num = lcn;
           s->s_config_save((service_t*)s);
           service_refresh_channel((service_t*)s);
@@ -1189,6 +1195,7 @@ dvb_bat_completed
 {
   dvb_bat_id_t *bi;
   dvb_bat_svc_t *bs;
+  uint32_t services_count;
   bouquet_t *bq;
 
   b->complete = 1;
@@ -1236,13 +1243,15 @@ dvb_bat_completed
 
     dvb_bouquet_comment(bq, bi->mm);
 
-    if (bq->bq_enabled) {
-      TAILQ_FOREACH(bs, &bi->services, link)
+    services_count = 0;
+    TAILQ_FOREACH(bs, &bi->services, link) {
+      services_count++;
+      if (bq->bq_enabled)
         bouquet_add_service(bq, (service_t *)bs->svc,
                             (int64_t)bs->lcn * CHANNEL_SPLIT, 0);
     }
 
-    bouquet_completed(bq, bi->services_count);
+    bouquet_completed(bq, services_count);
 
 complete:
     bi->complete = 1;
@@ -1256,7 +1265,7 @@ dvb_nit_callback
   int save = 0;
   int r, sect, last, ver;
 #if ENABLE_MPEGTS_DVB
-  int fsat = 0, p02 = 0;
+  uint32_t priv = 0;
 #endif
   uint8_t  dtag;
   int llen, dllen, dlen;
@@ -1353,16 +1362,14 @@ dvb_nit_callback
       case DVB_DESC_PRIVATE_DATA:
 #if ENABLE_MPEGTS_DVB
         if (tableid == 0x4A && dlen == 4) {
-          if (!memcmp(dptr, "FSAT", 4))
-            fsat = 1;
-          else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
-            p02 = 1;
+          priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
+          tvhtrace(mt->mt_name, "    private %08X", priv);
         }
 #endif
         break;
       case DVB_DESC_FREESAT_REGIONS:
 #if ENABLE_MPEGTS_DVB
-        if (fsat)
+        if (priv == PRIV_FSAT)
           dvb_freesat_regions(bi, mt->mt_name, dptr, dlen);
 #endif
         break;
@@ -1392,6 +1399,7 @@ dvb_nit_callback
   }
 
   /* Transport length */
+  priv = 0;
   DVB_LOOP_FOREACH(ptr, len, 0, lptr, llen, 6) {
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
@@ -1455,26 +1463,36 @@ dvb_nit_callback
           if (mux && *dauth)
             mpegts_mux_set_crid_authority(mux, dauth);
           break;
-        case DVB_DESC_LOCAL_CHAN1:
-        case DVB_DESC_LOCAL_CHAN2:
-          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, mux, bi))
-            return -1;
-          break;
         case DVB_DESC_SERVICE_LIST:
           if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux, bi))
             return -1;
           break;
         case DVB_DESC_PRIVATE_DATA:
 #if ENABLE_MPEGTS_DVB
-          if (dlen == 4 && !memcmp(dptr, "FSAT", 4))
-            fsat = 1;
-          else if (!memcmp(dptr, "\x00\x00\x00\x02", 4))
-            p02 = 1;
+          if (dlen == 4) {
+            priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
+            tvhtrace(mt->mt_name, "      private %08X", priv);
+          }
 #endif
+          break;
+        case 0x81:
+          if (priv == 0) goto lcn;
+        case 0x82:
+          if (priv == 0) goto lcn;
+        case 0x83:
+          if (priv == 0 || priv == 0x28 || priv == 0xa5) goto lcn;
+        case 0x86:
+          if (priv == 0) goto lcn;
+        case 0x93:
+          if (priv == 0 || priv == 0x362275)
+          /* fall thru */
+lcn:
+          if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi))
+            return -1;
           break;
         case DVB_DESC_FREESAT_LCN:
 #if ENABLE_MPEGTS_DVB
-          if (tableid == 0x4A && fsat) {
+          if (tableid == 0x4A && priv == PRIV_FSAT) {
             dvb_freesat_local_channels(bi, mt->mt_name, dptr, dlen);
             bi->freesat = 1;
           }
@@ -1482,7 +1500,7 @@ dvb_nit_callback
           break;
         case DVB_DESC_BSKYB_LCN:
 #if ENABLE_MPEGTS_DVB
-          if (tableid == 0x4A && p02) {
+          if (tableid == 0x4A && priv == 2) {
             dvb_bskyb_local_channels(bi, mt->mt_name, dptr, dlen, mux);
             bi->bskyb = 1;
           }
