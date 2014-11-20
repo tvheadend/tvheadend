@@ -47,15 +47,13 @@ static SKEL_DECLARE(fastscan_rb_skel, dvb_fastscan_t);
 static int
 _fs_cmp(const void *a, const void *b)
 {
-  int64_t aa = ((dvb_fastscan_t *)a)->position * 1000000000LL +
-               ((dvb_fastscan_t *)a)->frequency;
-  int64_t bb = ((dvb_fastscan_t *)b)->position * 1000000000LL +
-               ((dvb_fastscan_t *)b)->frequency;
-  if (aa < bb)
-    return -1;
-  if (aa > bb)
-    return 1;
-  return 0;
+  int r = ((dvb_fastscan_t *)a)->position - ((dvb_fastscan_t *)b)->position;
+  if (r == 0) {
+    r = ((dvb_fastscan_t *)a)->frequency - ((dvb_fastscan_t *)b)->frequency;
+    if (abs(r) < 2000)
+      return 0;
+  }
+  return r;
 }
 
 void
