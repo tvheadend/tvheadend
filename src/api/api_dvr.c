@@ -351,8 +351,10 @@ api_dvr_timerec_create
 void api_dvr_init ( void )
 {
   static api_hook_t ah[] = {
-    { "dvr/config/class",          ACCESS_RECORDER, api_idnode_class, (void*)&dvr_config_class },
-    { "dvr/config/grid",           ACCESS_RECORDER, api_idnode_grid, api_dvr_config_grid },
+    { "dvr/config/class",          ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER,
+                                     api_idnode_class, (void*)&dvr_config_class },
+    { "dvr/config/grid",           ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER,
+                                     api_idnode_grid, api_dvr_config_grid },
     { "dvr/config/create",         ACCESS_ADMIN, api_dvr_config_create, NULL },
 
     { "dvr/entry/class",           ACCESS_RECORDER, api_idnode_class, (void*)&dvr_entry_class },

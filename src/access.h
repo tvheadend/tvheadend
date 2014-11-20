@@ -116,6 +116,7 @@ typedef struct access_ticket {
 #define ACCESS_WEB_INTERFACE      (1<<2)
 #define ACCESS_RECORDER           (1<<3)
 #define ACCESS_ADMIN              (1<<4)
+#define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
@@ -153,7 +154,9 @@ int access_verify(const char *username, const char *password,
 		  struct sockaddr *src, uint32_t mask);
 
 static inline int access_verify2(access_t *a, uint32_t mask)
-  { return (a->aa_rights & mask) == mask ? 0 : -1; }
+  { return (mask & ACCESS_OR) ?
+      ((a->aa_rights & mask) ? 0 : -1) :
+      ((a->aa_rights & mask) == mask ? 0 : -1); }
 
 int access_verify_list(htsmsg_t *list, const char *item);
 

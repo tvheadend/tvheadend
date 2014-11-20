@@ -331,7 +331,9 @@ access_verify(const char *username, const char *password,
       bits = 0;
   }
 
-  return (mask & bits) == mask ? 0 : -1;
+  return (mask & ACCESS_OR) ?
+         ((mask & bits) ? 0 : -1) :
+         ((mask & bits) == mask ? 0 : -1);
 }
 
 /*

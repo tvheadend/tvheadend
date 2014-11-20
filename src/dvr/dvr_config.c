@@ -316,7 +316,7 @@ dvr_config_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
   htsmsg_field_t *f;
   const char *uuid, *my_uuid;
 
-  if (access_verify2(a, ACCESS_RECORDER))
+  if (access_verify2(a, ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER))
     return -1;
   if (!access_verify2(a, ACCESS_ADMIN))
     return 0;
