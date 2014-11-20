@@ -333,7 +333,7 @@ freq:
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
         if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
-            ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq == freq &&
+            abs(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq - freq) < 2000 &&
             dvb_sat_position(&((dvb_mux_t *)mm)->lm_tuning) == satpos)
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
     return;
