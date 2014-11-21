@@ -676,7 +676,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
                        autoHeight: true,
                        autoWidth: true,
                        collapsible: conf.nocollapse ? false : true,
-                       collapsed: false,
+                       collapsed: conf.collapsed ? true : false,
                        items: conf.items
                    });
     }
@@ -742,7 +742,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
         if (af.length)
             panel.add(newFieldSet({ title: "Advanced Settings", items: af }));
         if (rf.length)
-            panel.add(newFieldSet({ title: "Read-only Info", items: rf }));
+            panel.add(newFieldSet({ title: "Read-only Info", items: rf, collapsed: 'true'}));
     }
     panel.doLayout();
 };
