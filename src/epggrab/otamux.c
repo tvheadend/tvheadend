@@ -300,6 +300,7 @@ epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
   epggrab_ota_mux_t *ota;
   const char *uuid = idnode_uuid_as_str(&mm->mm_id);
 
+  tvhtrace("epggrab", "mux %p (%s) stop", mm, uuid);
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
     if (!strcmp(ota->om_mux_uuid, uuid)) {
       epggrab_ota_done(ota, EPGGRAB_OTA_DONE_STOLEN);
@@ -434,6 +435,8 @@ epggrab_ota_data_timeout_cb ( void *p )
     epggrab_ota_done(om, EPGGRAB_OTA_DONE_NO_DATA);
     /* Not completed, but no data - wait for a manual mux tuning */
     epggrab_ota_complete_mark(om, 1);
+  } else {
+    tvhtrace("epggrab", "data timeout check succeed");
   }
 }
 
@@ -546,6 +549,7 @@ next_one:
     if (first == NULL)
       first = om;
   } else {
+    tvhtrace("epggrab", "mux %p started", mm);
     kick = 0;
     /* note: it is possible that the mux_start listener is not called */
     /* for reshared mux subscriptions, so call it (maybe second time) here.. */
