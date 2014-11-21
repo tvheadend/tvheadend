@@ -422,7 +422,7 @@ api_epg_grid
 
   /* Query the EPG */
   pthread_mutex_lock(&global_lock); 
-  epg_query(&eq);
+  epg_query(&eq, perm);
 
   /* Build response */
   start = MIN(eq.entries, start);

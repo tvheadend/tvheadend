@@ -512,12 +512,14 @@ http_channel_list_playlist(http_connection_t *hc)
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   CHANNEL_FOREACH(ch)
-    count++;
+    if (ch->ch_enabled)
+      count++;
 
   chlist = malloc(count * sizeof(channel_t *));
 
   CHANNEL_FOREACH(ch)
-    chlist[idx++] = ch;
+    if (ch->ch_enabled)
+      chlist[idx++] = ch;
 
   assert(idx == count);
 

@@ -309,14 +309,12 @@ const idclass_t channel_class = {
   .ic_get_title  = channel_class_get_title,
   .ic_delete     = channel_class_delete,
   .ic_properties = (const property_t[]){
-#if 0
     {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(channel_t, ch_enabled),
     },
-#endif
     {
       .type     = PT_STR,
       .id       = "name",
@@ -417,7 +415,7 @@ channel_find_by_name ( const char *name )
   if (name == NULL)
     return NULL;
   CHANNEL_FOREACH(ch)
-    if (!strcmp(channel_get_name(ch), name))
+    if (ch->ch_enabled && !strcmp(channel_get_name(ch), name))
       break;
   return ch;
 }
@@ -457,17 +455,23 @@ channel_find_by_number ( const char *no )
  * Check if user can access the channel
  */
 int
-channel_access(channel_t *ch, access_t *a, const char *username)
+channel_access(channel_t *ch, access_t *a, int disabled)
 {
+  if (!ch)
+    return 0;
+
+  if (!disabled && !ch->ch_enabled)
+    return 0;
+
   /* Channel number check */
-  if (ch && (a->aa_chmin || a->aa_chmax)) {
-    int chnum = channel_get_number(ch);
+  if (a->aa_chmin || a->aa_chmax) {
+    int64_t chnum = channel_get_number(ch);
     if (chnum < a->aa_chmin || chnum > a->aa_chmax)
       return 0;
   }
 
   /* Channel tag check */
-  if (ch && a->aa_chtags) {
+  if (a->aa_chtags) {
     channel_tag_mapping_t *ctm;
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, a->aa_chtags) {
@@ -721,6 +725,9 @@ channel_create0
     tvherror("channel", "id collision!");
     abort();
   }
+
+  /* Defaults */
+  ch->ch_enabled = 1;
 
   if (conf) {
     ch->ch_load = 1;

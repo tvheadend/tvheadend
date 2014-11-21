@@ -70,8 +70,8 @@ typedef struct access_entry {
   int ae_webui;
   int ae_admin;
 
-  uint32_t ae_chmin;
-  uint32_t ae_chmax;
+  uint64_t ae_chmin;
+  uint64_t ae_chmax;
 
   struct channel_tag *ae_chtag;
   LIST_ENTRY(access_entry) ae_channel_tag_link;
@@ -89,8 +89,8 @@ typedef struct access {
   uint32_t  aa_rights;
   htsmsg_t *aa_profiles;
   htsmsg_t *aa_dvrcfgs;
-  uint32_t  aa_chmin;
-  uint32_t  aa_chmax;
+  uint64_t  aa_chmin;
+  uint64_t  aa_chmax;
   htsmsg_t *aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;

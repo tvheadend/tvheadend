@@ -189,7 +189,7 @@ page_simple(http_connection_t *hc,
     eq.lang = strdup(lang);
 
     //Note: force min/max durations for this interface to 0 and INT_MAX seconds respectively
-    epg_query(&eq);
+    epg_query(&eq, hc->hc_access);
 
     c = eq.entries;
 

@@ -22,6 +22,7 @@
 #include <regex.h>
 #include "settings.h"
 #include "lang_str.h"
+#include "access.h"
 
 /*
  * External forward decls
@@ -609,7 +610,7 @@ typedef struct epg_query {
   uint32_t          allocated;
 } epg_query_t;
 
-epg_broadcast_t  **epg_query(epg_query_t *eq);
+epg_broadcast_t  **epg_query(epg_query_t *eq, access_t *perm);
 void epg_query_free(epg_query_t *eq);
 
 /* ************************************************************************

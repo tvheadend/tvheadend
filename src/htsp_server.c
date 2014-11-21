@@ -435,7 +435,7 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 static inline int
 htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
 {
-  return channel_access(ch, htsp->htsp_granted_access, htsp->htsp_username);
+  return channel_access(ch, htsp->htsp_granted_access, 0);
 }
 
 #define HTSP_CHECK_CHANNEL_ACCESS(htsp, ch)\
@@ -1189,7 +1189,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access");
 
   /* Query */
-  epg_query(&eq);
+  epg_query(&eq, htsp->htsp_granted_access);
 
   /* Create Reply */
   out = htsmsg_create_map();

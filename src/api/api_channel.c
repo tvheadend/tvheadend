@@ -25,21 +25,28 @@
 #include "access.h"
 #include "api.h"
 
+static void
+api_channel_key_val(htsmsg_t *dst, const char *key, const char *val)
+{
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_str(e, "key", key);
+  htsmsg_add_str(e, "val", val ?: "");
+  htsmsg_add_msg(dst, NULL, e);
+}
+
 // TODO: this will need converting to an idnode system
 static int
 api_channel_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_t *ch;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&ch->ch_id));
-    htsmsg_add_str(e, "val", channel_get_name(ch));
-    htsmsg_add_msg(l, NULL, e);
+    if (!channel_access(ch, perm, 0)) continue;
+    api_channel_key_val(l, idnode_uuid_as_str(&ch->ch_id), channel_get_name(ch));
   }
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
@@ -55,7 +62,8 @@ api_channel_grid
   channel_t *ch;
 
   CHANNEL_FOREACH(ch)
-    idnode_set_add(ins, (idnode_t*)ch, &conf->filter);
+    if (channel_access(ch, perm, 1))
+      idnode_set_add(ins, (idnode_t*)ch, &conf->filter);
 }
 
 static int
@@ -82,14 +90,19 @@ api_channel_tag_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   channel_tag_t *ct;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
   
   l = htsmsg_create_list();
-  TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&ct->ct_id));
-    htsmsg_add_str(e, "val", ct->ct_name);
-    htsmsg_add_msg(l, NULL, e);
+  if (perm->aa_chtags) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, perm->aa_chtags) {
+      ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (ct)
+        api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
+    }
+  } else {
+    TAILQ_FOREACH(ct, &channel_tags, ct_link)
+      api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
   }
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
@@ -102,8 +115,17 @@ api_channel_tag_grid
 {
   channel_tag_t *ct;
 
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
+  if (perm->aa_chtags) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, perm->aa_chtags) {
+      ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
+      if (ct)
+        idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
+    }
+  } else {
+    TAILQ_FOREACH(ct, &channel_tags, ct_link)
+      idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
+  }
 }
 
 static int

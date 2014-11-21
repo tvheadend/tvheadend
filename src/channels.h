@@ -43,12 +43,13 @@ typedef struct channel
   idnode_t ch_id;
 
   RB_ENTRY(channel)   ch_link;
-  
+
   int ch_refcount;
   int ch_zombie;
   int ch_load;
 
   /* Channel info */
+  int     ch_enabled;
   char   *ch_name; // Note: do not access directly!
   int64_t ch_number;
   char   *ch_icon;
@@ -176,7 +177,7 @@ htsmsg_t * channel_tag_class_get_list(void *o);
 
 const char * channel_tag_get_icon(channel_tag_t *ct);
 
-int channel_access(channel_t *ch, struct access *a, const char *username);
+int channel_access(channel_t *ch, struct access *a, int disabled);
 
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);
 void channel_tag_unmap(channel_t *ch, channel_tag_t *ct);

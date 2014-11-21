@@ -59,7 +59,8 @@ dumpchannels(htsbuf_queue_t *hq)
 
   CHANNEL_FOREACH(ch) {
     
-    htsbuf_qprintf(hq, "%s (%d)\n", channel_get_name(ch), channel_get_id(ch));
+    htsbuf_qprintf(hq, "%s%s (%d)\n", !ch->ch_enabled ? "[DISABLED] " : "",
+                                      channel_get_name(ch), channel_get_id(ch));
     chnum = channel_get_number(ch);
     if (channel_get_minor(chnum))
       snprintf(chbuf, sizeof(chbuf), "%u.%u",

@@ -2517,7 +2517,7 @@ static int _epg_sort_genre_descending ( const void *a, const void *b, void *eq )
 }
 
 epg_broadcast_t **
-epg_query ( epg_query_t *eq )
+epg_query ( epg_query_t *eq, access_t *perm )
 {
   channel_t *channel;
   channel_tag_t *tag;
@@ -2542,20 +2542,25 @@ epg_query ( epg_query_t *eq )
 
   /* Single channel */
   if (channel && tag == NULL) {
-    _eq_add_channel(eq, channel);
+    if (channel_access(channel, perm, 0))
+      _eq_add_channel(eq, channel);
   
   /* Tag based */
   } else if (tag) {
     channel_tag_mapping_t *ctm;
+    channel_t *ch2;
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-      if(channel == NULL || ctm->ctm_channel == channel)
-        _eq_add_channel(eq, ctm->ctm_channel);
+      ch2 = ctm->ctm_channel;
+      if(ch2 == channel || channel == NULL)
+        if (channel_access(channel, perm, 0))
+          _eq_add_channel(eq, ch2);
     }
 
   /* All channels */
   } else {
     CHANNEL_FOREACH(channel)
-      _eq_add_channel(eq, channel);
+      if (channel_access(channel, perm, 0))
+        _eq_add_channel(eq, channel);
   }
 
   switch (eq->sort_dir) {

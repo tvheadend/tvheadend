@@ -348,7 +348,7 @@ access_dump_a(access_t *a)
   int first;
 
   snprintf(buf, sizeof(buf),
-    "%s:%s [%s%s%s%s%s], conn=%u, chmin=%u, chmax=%u%s",
+    "%s:%s [%s%s%s%s%s], conn=%u, chmin=%llu, chmax=%llu%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? "S" : "",
@@ -357,7 +357,7 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_RECORDER           ? "R" : "",
     a->aa_rights & ACCESS_ADMIN              ? "*" : "",
     a->aa_conn_limit,
-    a->aa_chmin, a->aa_chmax,
+    (long long)a->aa_chmin, (long long)a->aa_chmax,
     a->aa_match ? ", matched" : "");
 
   if (a->aa_profiles) {
@@ -1295,13 +1295,15 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_conn_limit),
     },
     {
-      .type     = PT_U32,
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
       .name     = "Min Channel Num",
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
-      .type     = PT_U32,
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
       .name     = "Max Channel Num",
       .off      = offsetof(access_entry_t, ae_chmax),
