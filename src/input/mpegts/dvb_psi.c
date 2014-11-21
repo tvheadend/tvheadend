@@ -81,6 +81,8 @@ typedef struct dvb_bat {
 
 SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
 
+int dvb_bouquets_parse = 1;
+
 static int
 psi_parse_pmt(mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len);
 
@@ -386,6 +388,7 @@ dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s,
 {
   dvb_bat_svc_t *bs;
 
+  assert(bi);
   TAILQ_FOREACH(bs, &bi->services, link)
     if (bs->svc == s)
       break;
@@ -524,6 +527,9 @@ dvb_freesat_regions
   char name[32];
   dvb_freesat_region_t *fr;
   int r;
+
+  if (!bi)
+    return;
 
   while (len > 5) {
     id = (ptr[0] << 8) | ptr[1];
@@ -727,8 +733,6 @@ dvb_bskyb_local_channels
 
   if (len < 2)
     return;
-
-  assert(bi);
 
   regionid = (ptr[1] != 0xff) ? ptr[1] : 0xffff;
 
@@ -1319,7 +1323,8 @@ dvb_nit_callback
   }
 
   /* BAT ID lookup */
-  if (tableid == 0x4A || tableid == DVB_FASTSCAN_NIT_BASE) {
+  if (dvb_bouquets_parse &&
+      (tableid == 0x4A || tableid == DVB_FASTSCAN_NIT_BASE)) {
     if ((b = mt->mt_bat) == NULL) {
       b = calloc(1, sizeof(*b));
       mt->mt_bat = b;
@@ -1490,7 +1495,7 @@ lcn:
           break;
         case DVB_DESC_FREESAT_LCN:
 #if ENABLE_MPEGTS_DVB
-          if (tableid == 0x4A && priv == PRIV_FSAT) {
+          if (bi && tableid == 0x4A && priv == PRIV_FSAT) {
             dvb_freesat_local_channels(bi, mt->mt_name, dptr, dlen);
             bi->freesat = 1;
           }
@@ -1498,7 +1503,7 @@ lcn:
           break;
         case DVB_DESC_BSKYB_LCN:
 #if ENABLE_MPEGTS_DVB
-          if (tableid == 0x4A && priv == 2) {
+          if (bi && tableid == 0x4A && priv == 2) {
             dvb_bskyb_local_channels(bi, mt->mt_name, dptr, dlen, mux);
             bi->bskyb = 1;
           }

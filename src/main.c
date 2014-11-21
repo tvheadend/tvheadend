@@ -439,6 +439,7 @@ main(int argc, char **argv)
   const char *log_debug = NULL, *log_trace = NULL;
   char buf[512];
   FILE *pidfile = NULL;
+  extern int dvb_bouquets_parse;
 
   main_tid = pthread_self();
 
@@ -473,7 +474,8 @@ main(int argc, char **argv)
               opt_xspf         = 0,
               opt_dbus         = 0,
               opt_dbus_session = 0,
-              opt_nobackup     = 0;
+              opt_nobackup     = 0,
+              opt_nobat        = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -552,6 +554,8 @@ main(int argc, char **argv)
     { 'D', "dump",      "Enable coredumps for daemon", OPT_BOOL, &opt_dump },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
+    {   0, "nobat",     "Disable DVB bouquets",
+      OPT_BOOL, &opt_nobat },
     { 'j', "join",      "Subscribe to a service permanently",
       OPT_STR, &opt_subscribe },
 
@@ -606,6 +610,8 @@ main(int argc, char **argv)
   }
 
   /* Additional cmdline processing */
+  if (opt_nobat)
+    dvb_bouquets_parse = 0;
 #if ENABLE_LINUXDVB
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
