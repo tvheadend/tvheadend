@@ -677,6 +677,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
                        autoWidth: true,
                        collapsible: conf.nocollapse ? false : true,
                        collapsed: conf.collapsed ? true : false,
+                       animCollapse: true,
                        items: conf.items
                    });
     }
