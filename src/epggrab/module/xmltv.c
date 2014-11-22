@@ -710,10 +710,10 @@ static void _xmltv_load_grabbers ( void )
   } else if ((tmp = getenv("PATH"))) {
     tvhdebug("epggrab", "using internal grab search");
     char bin[256];
-    char desc[] = "--description";
     char *argv[] = {
       NULL,
-      desc,
+      (char *)"--description",
+      (char *)"--quiet",
       NULL
     };
     path = strdup(tmp);
