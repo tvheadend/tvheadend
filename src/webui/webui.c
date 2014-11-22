@@ -364,6 +364,22 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 }
 
 
+static char *
+http_get_hostpath(http_connection_t *hc)
+{  
+  char buf[255];
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *forwarded_host = http_arg_get(&hc->hc_args, "X-Forwarded-Host");
+  const char *proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
+
+  snprintf(buf, sizeof(buf), "%s://%s%s", 
+     proto ? proto : "http", 
+     forwarded_host ? forwarded_host : host,
+     tvheadend_webroot ? tvheadend_webroot : "");
+
+  return strdup(buf);
+}
+
 /**
  * Output a playlist containing a single channel
  */
@@ -372,7 +388,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 {
   htsbuf_queue_t *hq;
   char buf[255];
-  const char *host;
+  const char *hostpath = http_get_hostpath(hc);  
   char *profile;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
@@ -381,13 +397,12 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
   hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
 
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(channel));
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
-  htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
+  htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
      access_ticket_create(buf, hc->hc_access));
 
   htsbuf_qprintf(hq, "&profile=%s\n", profile);
@@ -408,7 +423,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   htsbuf_queue_t *hq;
   char buf[255];
   channel_tag_mapping_t *ctm;
-  const char *host;
+  const char *hostpath = http_get_hostpath(hc);
   char *profile;
 
   if(hc->hc_access == NULL ||
@@ -416,7 +431,6 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     return HTTP_STATUS_UNAUTHORIZED;
 
   hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
@@ -426,7 +440,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ctm->ctm_channel));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ctm->ctm_channel));
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
+    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
        access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
@@ -447,7 +461,7 @@ http_tag_list_playlist(http_connection_t *hc)
   htsbuf_queue_t *hq;
   char buf[255];
   channel_tag_t *ct;
-  const char *host;
+  const char *hostpath = http_get_hostpath(hc);
   char *profile;
 
   if(hc->hc_access == NULL ||
@@ -455,7 +469,6 @@ http_tag_list_playlist(http_connection_t *hc)
     return HTTP_STATUS_UNAUTHORIZED;
 
   hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
@@ -466,7 +479,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
+    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
        access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
@@ -498,7 +511,7 @@ http_channel_list_playlist(http_connection_t *hc)
   char buf[255];
   channel_t *ch;
   channel_t **chlist;
-  const char *host;
+  const char *hostpath = http_get_hostpath(hc);
   int idx = 0, count = 0;
   char *profile;
 
@@ -507,7 +520,6 @@ http_channel_list_playlist(http_connection_t *hc)
     return HTTP_STATUS_UNAUTHORIZED;
 
   hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
 
@@ -535,7 +547,7 @@ http_channel_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s", host, buf,
+    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
        access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
@@ -559,14 +571,14 @@ http_dvr_list_playlist(http_connection_t *hc)
   htsbuf_queue_t *hq;
   char buf[255];
   dvr_entry_t *de;
-  const char *host, *uuid;
+  const char *uuid;
+  const char *hostpath = http_get_hostpath(hc);
   off_t fsize;
   time_t durration;
   struct tm tm;
   int bandwidth;
 
   hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
@@ -591,7 +603,7 @@ http_dvr_list_playlist(http_connection_t *hc)
     htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf,
+    htsbuf_qprintf(hq, "%s%s?ticket=%s\n", hostpath, buf,
        access_ticket_create(buf, hc->hc_access));
   }
 
@@ -613,7 +625,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   off_t fsize = 0;
   int bandwidth = 0;
   struct tm tm;  
-  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *hostpath = http_get_hostpath(hc);
 
   if(http_access_verify(hc, ACCESS_RECORDER))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -636,7 +648,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     ticket_id = access_ticket_create(buf, hc->hc_access);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
+    htsbuf_qprintf(hq, "%s%s?ticket=%s\n", hostpath, buf, ticket_id);
 
     http_output_content(hc, "application/x-mpegURL");
   } else {
@@ -958,7 +970,7 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
   char *buf;
-  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *hostpath = http_get_hostpath(hc);
   const char *title, *profile, *image;
   size_t len;
 
@@ -976,10 +988,10 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   <trackList>\r\n\
      <track>\r\n\
        <title>%s</title>\r\n\
-       <location>http://%s/%s%s%s</location>\r\n%s%s%s\
+       <location>%s/%s%s%s</location>\r\n%s%s%s\
      </track>\r\n\
   </trackList>\r\n\
-</playlist>\r\n", title, host, remain, profile ? "?profile=" : "", profile ?: "",
+</playlist>\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "",
   image ? "       <image>" : "", image ?: "", image ? "</image>\r\n" : "");
 
   len = strlen(buf);
@@ -998,7 +1010,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
   char *buf;
-  const char *host = http_arg_get(&hc->hc_args, "Host");
+  const char *hostpath = http_get_hostpath(hc);
   const char *title, *profile;
   size_t len;
 
@@ -1012,7 +1024,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   snprintf(buf, maxlen, "\
 #EXTM3U\r\n\
 #EXTINF:-1,%s\r\n\
-http://%s/%s%s%s\r\n", title, host, remain, profile ? "?profile=" : "", profile ?: "");
+%s/%s%s%s\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "");
 
   len = strlen(buf);
   http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL);
