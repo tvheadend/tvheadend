@@ -901,7 +901,7 @@ access_destroy_by_profile(profile_t *pro, int delconf)
 
   while ((ae = LIST_FIRST(&pro->pro_accesses)) != NULL) {
     LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_dvr_config = NULL;
+    ae->ae_profile = NULL;
     if (delconf)
       access_entry_save(ae);
   }
@@ -917,7 +917,7 @@ access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 
   while ((ae = LIST_FIRST(&cfg->dvr_accesses)) != NULL) {
     LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_profile = profile_find_by_name(NULL, NULL);
+    ae->ae_dvr_config = NULL;
     if (delconf)
       access_entry_save(ae);
   }
