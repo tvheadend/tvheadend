@@ -74,6 +74,10 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_ON   0x01
 #define HTSP_ASYNC_EPG  0x02
 
+#define HTSP_ASYNC_AUX_CHTAG   0x01
+#define HTSP_ASYNC_AUX_DVR     0x02
+#define HTSP_ASYNC_AUX_AUTOREC 0x03
+
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
 extern char *dvr_storage;
@@ -456,13 +460,16 @@ htsp_channel_tag_get_identifier(channel_tag_t *ct)
 }
 
 static channel_tag_t *
-htsp_channel_tag_find_by_identifier(uint32_t id)
+htsp_channel_tag_find_by_identifier(htsp_connection_t *htsp, uint32_t id)
 {
   channel_tag_t *ct;
 
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if (id == ct->ct_htsp_id)
+  TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+    if (!channel_tag_access(ct, htsp->htsp_granted_access, 0))
+      continue;
+    if (!ct->ct_internal && id == ct->ct_htsp_id)
       return ct;
+  }
   return NULL;
 }
 
@@ -598,7 +605,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
-    if(ct->ct_enabled && !ct->ct_internal)
+    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsmsg_add_u32(tags, NULL, htsp_channel_tag_get_identifier(ct));
   }
 
@@ -984,7 +991,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all enabled and external tags */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(ct->ct_enabled && !ct->ct_internal)
+    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
   
   /* Send all channels */
@@ -994,7 +1001,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   
   /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(ct->ct_enabled && !ct->ct_internal)
+    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsp_send_message(htsp, htsp_build_tag(ct, "tagUpdate", 1), NULL);
 
   /* Send all autorecs */
@@ -1162,7 +1169,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
       eq.channel = strdup(idnode_uuid_as_str(&ch->ch_id));
   }
   if(!(htsmsg_get_u32(in, "tagId", &u32))) {
-    if (!(ct = htsp_channel_tag_find_by_identifier(u32)))
+    if (!(ct = htsp_channel_tag_find_by_identifier(htsp, u32)))
       return htsp_error("Channel tag does not exist");
     else
       eq.channel_tag = strdup(idnode_uuid_as_str(&ct->ct_id));
@@ -2636,14 +2643,18 @@ htsp_done(void)
  *
  */
 static void
-htsp_async_send(htsmsg_t *m, int mode)
+htsp_async_send(htsmsg_t *m, int mode, int aux_type, void *aux)
 {
   htsp_connection_t *htsp;
 
   lock_assert(&global_lock);
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
-    if (htsp->htsp_async_mode & mode)
+    if (htsp->htsp_async_mode & mode) {
+      if (aux_type == HTSP_ASYNC_AUX_CHTAG &&
+          !channel_tag_access(aux, htsp->htsp_granted_access, 0))
+        continue;
       htsp_send_message(htsp, htsmsg_copy(m), NULL);
+    }
   htsmsg_destroy(m);
 }
 
@@ -2722,7 +2733,8 @@ htsp_channel_delete(channel_t *ch)
 void
 htsp_tag_add(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1), HTSP_ASYNC_ON);
+  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1), HTSP_ASYNC_ON,
+                  HTSP_ASYNC_AUX_CHTAG, ct);
 }
 
 
@@ -2732,7 +2744,8 @@ htsp_tag_add(channel_tag_t *ct)
 void
 htsp_tag_update(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON);
+  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON,
+                  HTSP_ASYNC_AUX_CHTAG, ct);
 }
 
 
@@ -2745,7 +2758,7 @@ htsp_tag_delete(channel_tag_t *ct)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", htsp_channel_tag_get_identifier(ct));
   htsmsg_add_str(m, "method", "tagDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON);
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_CHTAG, ct);
 }
 
 /**
@@ -2795,7 +2808,7 @@ htsp_dvr_entry_delete(dvr_entry_t *de)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", idnode_get_short_uuid(&de->de_id));
   htsmsg_add_str(m, "method", "dvrEntryDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON);
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_DVR, de);
 }
 
 /**
@@ -2847,7 +2860,7 @@ htsp_autorec_entry_delete(dvr_autorec_entry_t *dae)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", idnode_uuid_as_str(&dae->dae_id));
   htsmsg_add_str(m, "method", "autorecEntryDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON);
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_AUTOREC, dae);
 }
 
 /**

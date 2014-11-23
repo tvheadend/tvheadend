@@ -182,6 +182,8 @@ int channel_access(channel_t *ch, struct access *a, int disabled);
 int channel_tag_map(channel_t *ch, channel_tag_t *ct);
 void channel_tag_unmap(channel_t *ch, channel_tag_t *ct);
 
+int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
+
 void channel_save(channel_t *ch);
 
 const char *channel_get_name ( channel_t *ch );
