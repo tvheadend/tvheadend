@@ -1048,6 +1048,32 @@ channel_tag_get_icon(channel_tag_t *ct)
   return icon;
 }
 
+/**
+ * Check if user can access the channel tag
+ */
+int
+channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
+{
+  if (!ct)
+    return 0;
+
+  if (!disabled && (!ct->ct_enabled || ct->ct_internal))
+    return 0;
+
+  /* Channel tag check */
+  if (a->aa_chtags) {
+    htsmsg_field_t *f;
+    const char *uuid = idnode_uuid_as_str(&ct->ct_id);
+    HTSMSG_FOREACH(f, a->aa_chtags)
+      if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
+        goto chtags_ok;
+    return 0;
+  }
+chtags_ok:
+
+  return 1;
+}
+
 /* **************************************************************************
  * Channel Tag Class definition
  * **************************************************************************/

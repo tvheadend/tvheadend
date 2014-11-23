@@ -220,10 +220,6 @@ avc_convert_pkt(th_pkt_t *src)
 
   sbuf_init(&payload);
 
-  if(src->pkt_meta)
-    avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_meta),
-                                  pktbuf_len(src->pkt_meta));
-
   avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_payload),
 		                pktbuf_len(src->pkt_payload));
   

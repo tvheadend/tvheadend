@@ -62,7 +62,7 @@ api_channel_grid
   channel_t *ch;
 
   CHANNEL_FOREACH(ch)
-    if (channel_access(ch, perm, 1))
+    if (channel_access(ch, perm, !access_verify2(perm, ACCESS_ADMIN)))
       idnode_set_add(ins, (idnode_t*)ch, &conf->filter);
 }
 
@@ -93,17 +93,9 @@ api_channel_tag_list
   htsmsg_t *l;
   
   l = htsmsg_create_list();
-  if (perm->aa_chtags) {
-    htsmsg_field_t *f;
-    HTSMSG_FOREACH(f, perm->aa_chtags) {
-      ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
-      if (ct)
-        api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
-    }
-  } else {
-    TAILQ_FOREACH(ct, &channel_tags, ct_link)
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if (channel_tag_access(ct, perm, 0))
       api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
-  }
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
@@ -115,17 +107,9 @@ api_channel_tag_grid
 {
   channel_tag_t *ct;
 
-  if (perm->aa_chtags) {
-    htsmsg_field_t *f;
-    HTSMSG_FOREACH(f, perm->aa_chtags) {
-      ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
-      if (ct)
-        idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
-    }
-  } else {
-    TAILQ_FOREACH(ct, &channel_tags, ct_link)
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if (channel_tag_access(ct, perm, !access_verify2(perm, ACCESS_ADMIN)))
       idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
-  }
 }
 
 static int

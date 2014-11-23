@@ -1159,10 +1159,23 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
-    if(len >= 9){
+    if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
-      if(plen >= 0xffe9) st->es_incomplete =1;
-      parse_pes_header(t, st, buf + 6, len - 6);
+      th_pkt_t *pkt = st->es_curpkt;
+      if(plen >= 0xffe9) st->es_incomplete = 1;
+      l2 = parse_pes_header(t, st, buf + 6, len - 6);
+
+      if (pkt) {
+        if (l2 + 1 <= len - 6) {
+          /* This is the rest of this frame. */
+          /* Do not include trailing zero. */
+          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2 - 1);
+        }
+
+        parser_deliver(t, st, pkt, st->es_buf.sb_err);
+
+        st->es_curpkt = NULL;
+      }
     }
     st->es_prevdts = st->es_curdts;
     return 1;
@@ -1250,13 +1263,6 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
                                        st->es_buf.sb_ptr - 4);
         sbuf_steal_data(&st->es_buf);
       }
-
-      parser_deliver(t, st, pkt, st->es_buf.sb_err);
-
-      st->es_curpkt = NULL;
-
-      st->es_curdts = PTS_UNSET;
-      st->es_curpts = PTS_UNSET;
     }
     return 1;
   }

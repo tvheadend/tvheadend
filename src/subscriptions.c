@@ -100,6 +100,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
     // Send a START message to the subscription client
     streaming_target_deliver(s->ths_output, s->ths_start_message);
     s->ths_start_message = NULL;
+    t->s_running = 1;
 
     // Send status report
     sm = streaming_msg_create_code(SMT_SERVICE_STATUS, 
@@ -134,6 +135,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);
     streaming_target_deliver(s->ths_output, sm);
+    t->s_running = 0;
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -480,6 +482,8 @@ subscription_input(void *opauqe, streaming_message_t *sm)
       if(s->ths_start_message != NULL) {
         streaming_target_deliver(s->ths_output, s->ths_start_message);
         s->ths_start_message = NULL;
+        if (s->ths_service)
+          s->ths_service->s_running = 1;
       }
       s->ths_state = SUBSCRIPTION_GOT_SERVICE;
     }

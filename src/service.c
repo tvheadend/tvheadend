@@ -1153,26 +1153,32 @@ service_set_streaming_status_flags_(service_t *t, int set)
  * (i.e. an AC3 stream disappears, etc)
  */
 void
-service_restart(service_t *t, int had_components)
+service_restart(service_t *t)
 {
+  int had_components;
+
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(had_components) {
-    streaming_pad_deliver(&t->s_streaming_pad,
-                          streaming_msg_create_code(SMT_STOP,
-                                                    SM_CODE_SOURCE_RECONFIGURED));
-  }
+  had_components = TAILQ_FIRST(&t->s_filt_components) != NULL &&
+                   t->s_running;
 
   service_build_filter(t);
 
   if(TAILQ_FIRST(&t->s_filt_components) != NULL) {
+    if (had_components)
+      streaming_pad_deliver(&t->s_streaming_pad,
+                            streaming_msg_create_code(SMT_STOP,
+                                                      SM_CODE_SOURCE_RECONFIGURED));
+      
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_data(SMT_START,
                                                     service_build_stream_start(t)));
+    t->s_running = 1;
   } else {
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_code(SMT_STOP,
                                                     SM_CODE_NO_SERVICE));
+    t->s_running = 0;
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -1255,7 +1261,7 @@ service_request_save(service_t *t, int restart)
     TAILQ_INSERT_TAIL(&pending_save_queue, t, s_ps_link);
     service_ref(t);
     pthread_cond_signal(&pending_save_cond);
-  } else if(restart) {
+  } else if (restart) {
     t->s_ps_onqueue = 2; // upgrade to restart too
   }
 
@@ -1291,6 +1297,7 @@ service_saver(void *aux)
 {
   service_t *t;
   int restart;
+
   pthread_mutex_lock(&pending_save_mutex);
 
   while(tvheadend_running) {
@@ -1310,9 +1317,8 @@ service_saver(void *aux)
 
     if(t->s_status != SERVICE_ZOMBIE)
       t->s_config_save(t);
-    if(t->s_status == SERVICE_RUNNING && restart) {
-      service_restart(t, 1);
-    }
+    if(t->s_status == SERVICE_RUNNING && restart)
+      service_restart(t);
     service_unref(t);
 
     pthread_mutex_unlock(&global_lock);

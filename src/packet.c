@@ -205,3 +205,14 @@ pktbuf_make(void *data, size_t size)
   pb->pb_data = data;
   return pb;
 }
+
+pktbuf_t *
+pktbuf_append(pktbuf_t *pb, const void *data, size_t size)
+{
+  if (pb == NULL)
+    return pktbuf_alloc(data, size);
+  pb->pb_data = realloc(pb->pb_data, pb->pb_size + size);
+  memcpy(pb->pb_data + pb->pb_size, data, size);
+  pb->pb_size += size;
+  return pb;
+}
