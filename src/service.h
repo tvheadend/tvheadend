@@ -546,7 +546,7 @@ service_reset_streaming_status_flags(service_t *t, int flag)
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
 
-void service_restart(service_t *t, int had_components);
+void service_restart(service_t *t);
 
 void service_stream_destroy(service_t *t, elementary_stream_t *st);
 

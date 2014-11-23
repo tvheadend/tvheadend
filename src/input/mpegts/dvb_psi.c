@@ -1124,7 +1124,7 @@ int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver, had_components;
+  int r, sect, last, ver;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
@@ -1143,11 +1143,10 @@ dvb_pmt_callback
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
   pthread_mutex_lock(&s->s_stream_mutex);
-  had_components = !!TAILQ_FIRST(&s->s_components);
   r = psi_parse_pmt(mt->mt_mux, s, ptr, len);
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (r)
-    service_restart((service_t*)s, had_components);
+    service_restart((service_t*)s);
 
   /* Finish */
   return dvb_table_end(mt, st, sect);
@@ -2373,7 +2372,7 @@ psi_parse_pmt
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    service_request_save((service_t*)t, 0);
+    service_request_save((service_t*)t, 1);
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
