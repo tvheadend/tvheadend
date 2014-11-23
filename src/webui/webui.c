@@ -368,14 +368,10 @@ static char *
 http_get_hostpath(http_connection_t *hc)
 {  
   char buf[255];
-  const char *host = http_arg_get(&hc->hc_args, "Host");
-  const char *forwarded_host = http_arg_get(&hc->hc_args, "X-Forwarded-Host");
+  const char *host = http_arg_get(&hc->hc_args, "Host") ?: http_arg_get(&hc->hc_args, "X-Forwarded-Host");
   const char *proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
 
-  snprintf(buf, sizeof(buf), "%s://%s%s", 
-     proto ? proto : "http", 
-     forwarded_host ? forwarded_host : host,
-     tvheadend_webroot ? tvheadend_webroot : "");
+  snprintf(buf, sizeof(buf), "%s://%s%s", proto ?: "http", host, tvheadend_webroot ?: "");
 
   return strdup(buf);
 }
