@@ -1060,6 +1060,9 @@ channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
   if (!disabled && (!ct->ct_enabled || ct->ct_internal))
     return 0;
 
+  if (!ct->ct_private)
+    return 1;
+
   /* Channel tag check */
   if (a->aa_chtags) {
     htsmsg_field_t *f;
@@ -1147,6 +1150,12 @@ const idclass_t channel_tag_class = {
       .id       = "internal",
       .name     = "Internal",
       .off      = offsetof(channel_tag_t, ct_internal),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "private",
+      .name     = "Private",
+      .off      = offsetof(channel_tag_t, ct_private),
     },
     {
       .type     = PT_STR,

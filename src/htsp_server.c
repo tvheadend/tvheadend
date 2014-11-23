@@ -467,7 +467,7 @@ htsp_channel_tag_find_by_identifier(htsp_connection_t *htsp, uint32_t id)
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
     if (!channel_tag_access(ct, htsp->htsp_granted_access, 0))
       continue;
-    if (!ct->ct_internal && id == ct->ct_htsp_id)
+    if (id == ct->ct_htsp_id)
       return ct;
   }
   return NULL;
@@ -605,7 +605,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
-    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
+    if(channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsmsg_add_u32(tags, NULL, htsp_channel_tag_get_identifier(ct));
   }
 
@@ -991,7 +991,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all enabled and external tags */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
+    if(channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
   
   /* Send all channels */
@@ -1001,7 +1001,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   
   /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(!ct->ct_internal && channel_tag_access(ct, htsp->htsp_granted_access, 0))
+    if(channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsp_send_message(htsp, htsp_build_tag(ct, "tagUpdate", 1), NULL);
 
   /* Send all autorecs */

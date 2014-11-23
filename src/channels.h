@@ -91,6 +91,7 @@ typedef struct channel_tag {
 
   int ct_enabled;
   int ct_internal;
+  int ct_private;
   int ct_titled_icon;
   char *ct_name;
   char *ct_comment;
