@@ -149,15 +149,20 @@ access_t *
 access_ticket_verify2(const char *id, const char *resource)
 {
   access_ticket_t *at;
+  char buf[256], *r;
 
   if((at = access_ticket_find(id)) == NULL)
     return NULL;
 
-  char buf[256];
-  strcpy(buf, tvheadend_webroot ?: "");
-  strcat(buf, at->at_resource);
+  if (tvheadend_webroot) {
+    strcpy(buf, tvheadend_webroot);
+    strcat(buf, at->at_resource);
+    r = buf;
+  } else {
+    r = at->at_resource;
+  }
 
-  if(strcmp(buf, resource))
+  if(strcmp(r, resource))
     return NULL;
 
   return access_copy(at->at_access);
