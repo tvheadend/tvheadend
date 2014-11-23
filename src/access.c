@@ -153,7 +153,11 @@ access_ticket_verify2(const char *id, const char *resource)
   if((at = access_ticket_find(id)) == NULL)
     return NULL;
 
-  if(strcmp(at->at_resource, resource))
+  char at_resource_with_webroot[256];
+  strcat(at_resource_with_webroot, tvheadend_webroot ?: "");
+  strcat(at_resource_with_webroot, at->at_resource);
+
+  if(strcmp(at->at_resource, resource) && strcmp(at_resource_with_webroot, resource))
     return NULL;
 
   return access_copy(at->at_access);
