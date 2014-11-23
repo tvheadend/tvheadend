@@ -1159,7 +1159,8 @@ service_restart(service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  had_components = TAILQ_FIRST(&t->s_filt_components) != NULL;
+  had_components = TAILQ_FIRST(&t->s_filt_components) != NULL &&
+                   t->s_running;
 
   service_build_filter(t);
 
@@ -1172,10 +1173,12 @@ service_restart(service_t *t)
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_data(SMT_START,
                                                     service_build_stream_start(t)));
+    t->s_running = 1;
   } else {
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_code(SMT_STOP,
                                                     SM_CODE_NO_SERVICE));
+    t->s_running = 0;
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);

@@ -411,6 +411,7 @@ typedef struct service {
    *
    */
   int s_streaming_live;
+  int s_running;
 
   // Live status
 #define TSS_LIVE             0x01
