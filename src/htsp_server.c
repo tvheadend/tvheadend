@@ -1096,7 +1096,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("Event does not exist");
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, ch))
+  if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
   numFollowing = htsmsg_get_u32_or_default(in, "numFollowing", 0);
@@ -1192,7 +1192,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   tvhtrace("htsp", "min_duration %d and max_duration %d", min_duration, max_duration);
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, ch))
+  if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
   /* Query */
@@ -1345,8 +1345,10 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     stop_extra  = 0;
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
-  if(!htsmsg_get_u32(in, "eventId", &eventid))
+  if(!htsmsg_get_u32(in, "eventId", &eventid)) {
     e = epg_broadcast_find_by_id(eventid);
+    ch = e->channel;
+  }
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))
@@ -1357,7 +1359,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     lang    = htsp->htsp_language;
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, ch))
+  if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
   /* Manual timer */
@@ -1553,7 +1555,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     comment = "";
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, ch))
+  if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
   dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, approx_time, days_of_week,
