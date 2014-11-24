@@ -38,6 +38,7 @@
 #include "transcoding.h"
 #include "libav.h"
 #include "parsers/bitstream.h"
+#include "parsers/parser_avc.h"
 
 static long transcoder_nrprocessors;
 
@@ -896,9 +897,9 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
       n->pkt_dts += n->pkt_pts;
   }
 
-  if (octx->extradata_size)
+  if (octx->extradata_size) {
     n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
-  else {
+  } else {
     if (octx->codec_id == AV_CODEC_ID_MPEG2VIDEO)
       extract_mpeg2_global_data(n, epkt->data, epkt->size);
   }
@@ -935,18 +936,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   opts = NULL;
 
   if (ictx->codec_id == AV_CODEC_ID_NONE) {
-
-    if (icodec->id == AV_CODEC_ID_H264) {
-      if (pkt->pkt_meta) {
-        ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
-        ictx->extradata = av_malloc(ictx->extradata_size);
-        memcpy(ictx->extradata,
-               pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
-      } else {
-        /* wait for metadata */
-        return;
-      }
-    }
 
     ictx->codec_id = icodec->id;
 

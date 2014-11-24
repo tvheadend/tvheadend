@@ -27,6 +27,7 @@
 #include "channels.h"
 #include "libav.h"
 #include "muxer_libav.h"
+#include "parsers/parser_avc.h"
 
 typedef struct lav_muxer {
   muxer_t;
@@ -107,10 +108,21 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 
 
   if(ssc->ssc_gh) {
-    c->extradata_size = pktbuf_len(ssc->ssc_gh);
-    c->extradata = av_malloc(c->extradata_size);
-    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh), 
-	   pktbuf_len(ssc->ssc_gh));
+    if (ssc->ssc_type == SCT_H264) {
+      sbuf_t hdr;
+      sbuf_init(&hdr);
+      isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                      pktbuf_len(ssc->ssc_gh));
+      c->extradata_size = hdr.sb_ptr;
+      c->extradata = av_malloc(hdr.sb_ptr);
+      memcpy(c->extradata, hdr.sb_data, hdr.sb_ptr);
+      sbuf_free(&hdr);
+    } else {
+      c->extradata_size = pktbuf_len(ssc->ssc_gh);
+      c->extradata = av_malloc(c->extradata_size);
+      memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh),
+             pktbuf_len(ssc->ssc_gh));
+    }
   }
 
   if(SCT_ISAUDIO(ssc->ssc_type)) {
@@ -368,7 +380,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVFormatContext *oc;
   AVStream *st;
   AVPacket packet;
-  th_pkt_t *pkt = (th_pkt_t*)data;
+  th_pkt_t *pkt = (th_pkt_t*)data, *opkt;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   int rc = 0, free_data = 0;
 
@@ -398,6 +410,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
       free_data = 1;
+      pkt = avc_convert_pkt(opkt = pkt);
+      pkt_ref_dec(opkt);
       if(av_bitstream_filter_filter(lm->lm_h264_filter,
 				    st->codec, 
 				    NULL, 
