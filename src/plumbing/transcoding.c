@@ -51,6 +51,7 @@ typedef struct transcoder_stream {
   streaming_component_type_t    ts_type;
   streaming_target_t           *ts_target;
   LIST_ENTRY(transcoder_stream) ts_link;
+  int                           ts_first;
 
   void (*ts_handle_pkt) (struct transcoder *, struct transcoder_stream *, th_pkt_t *);
   void (*ts_destroy)    (struct transcoder *, struct transcoder_stream *);
@@ -861,7 +862,15 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   if (!octx->coded_frame)
     return;
 
-  n = pkt_alloc(epkt->data, epkt->size, epkt->pts, epkt->dts);
+  if (ts->ts_type == SCT_H264 && octx->extradata_size &&
+      (ts->ts_first || octx->coded_frame->pict_type == AV_PICTURE_TYPE_I)) {
+    n = pkt_alloc(NULL, octx->extradata_size + epkt->size, epkt->pts, epkt->dts);
+    memcpy(pktbuf_ptr(n->pkt_payload), octx->extradata, octx->extradata_size);
+    memcpy(pktbuf_ptr(n->pkt_payload) + octx->extradata_size, epkt->data, epkt->size);
+    ts->ts_first = 0;
+  } else {
+    n = pkt_alloc(epkt->data, epkt->size, epkt->pts, epkt->dts);
+  }
 
   switch (octx->coded_frame->pict_type) {
   case AV_PICTURE_TYPE_I:
