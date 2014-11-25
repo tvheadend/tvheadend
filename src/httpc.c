@@ -850,10 +850,9 @@ int
 http_client_run( http_client_t *hc )
 {
   char *buf, *saveptr, *argv[3], *d, *p;
-  int ver;
+  int ver, res, delimsize = 4;
   ssize_t r;
   size_t len;
-  int res;
 
   if (hc == NULL)
     return 0;
@@ -882,9 +881,14 @@ http_client_run( http_client_t *hc )
 
   buf = alloca(hc->hc_io_size);
 
-  if (!hc->hc_in_data && hc->hc_rpos > 3 &&
-      (d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
-    goto header;
+  if (!hc->hc_in_data && hc->hc_rpos > 3) {
+    if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
+      goto header;
+    if ((d = strstr(hc->hc_rbuf, "\n\n")) != NULL) {
+      delimsize = 2;
+      goto header;
+    }
+  }
 
 retry:
   if (hc->hc_ssl)
@@ -934,8 +938,11 @@ retry:
 next_header:
   if (hc->hc_rpos < 3)
     return HTTP_CON_RECEIVING;
-  if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL)
-    return HTTP_CON_RECEIVING;
+  if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL) {
+    delimsize = 2;
+    if ((d = strstr(hc->hc_rbuf, "\n\n")) == NULL)
+      return HTTP_CON_RECEIVING;
+  }
 
 header:
   *d = '\0';
@@ -943,7 +950,7 @@ header:
   hc->hc_reconnected = 0;
   http_client_clear_state(hc);
   hc->hc_rpos  = len;
-  hc->hc_hsize = d - hc->hc_rbuf + 4;
+  hc->hc_hsize = d - hc->hc_rbuf + delimsize;
   p = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
   if (p == NULL)
     return http_client_flush(hc, -EINVAL);
