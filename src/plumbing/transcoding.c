@@ -361,7 +361,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   audio_stream_t *as = (audio_stream_t*)ts;
   int got_frame, got_packet_ptr;
   AVFrame *frame = av_frame_alloc();
-  uint8_t *output = NULL;
 
   ictx = as->aud_ictx;
   octx = as->aud_octx;
@@ -631,7 +630,9 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if (as->resample) {
 
-    if (av_samples_alloc(&output, NULL, octx->channels, frame->nb_samples, octx->sample_fmt, 0) < 0) {
+    uint8_t **output = alloca(octx->channels * sizeof(uint8_t *));
+
+    if (av_samples_alloc(output, NULL, octx->channels, frame->nb_samples, octx->sample_fmt, 1) < 0) {
       tvherror("transcode", "%04X: av_resamples_alloc failed", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
@@ -641,7 +642,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
                                 frame->extended_data, 0, frame->nb_samples);
     tvhtrace("transcode", "%04X: avresample_convert: %d", shortid(t), length);
     while (avresample_available(as->resample_context) > 0) {
-      length = avresample_read(as->resample_context, &output, frame->nb_samples);
+      length = avresample_read(as->resample_context, output, frame->nb_samples);
 
       if (length > 0) {
         if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + length) < 0) {
@@ -650,7 +651,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
           goto cleanup;
         }
 
-        if (av_audio_fifo_write(as->fifo, (void **)&output, length) < length) {
+        if (av_audio_fifo_write(as->fifo, (void **)output, length) < length) {
           tvhlog(LOG_ERR, "transcode", "%04X: Could not write to FIFO", shortid(t));
           transcoder_stream_invalidate(ts);
           goto cleanup;
@@ -767,8 +768,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
 
-  if (output)
-    av_freep(&output);
   av_frame_free(&frame);
   av_free_packet(&packet);
 
