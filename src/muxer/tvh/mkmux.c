@@ -962,10 +962,14 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
     return;
   }
 
-  if(vkeyframe && mkm->cluster && mkm->cluster->hq_size > mkm->cluster_maxsize)
+  if(vkeyframe && mkm->cluster &&
+     (mkm->cluster->hq_size > mkm->cluster_maxsize ||
+      mkm->cluster_last_close + 1 < dispatch_clock))
     mk_close_cluster(mkm);
 
-  else if(!mkm->has_video && mkm->cluster && mkm->cluster->hq_size > clusersizemax/40)
+  else if(!mkm->has_video && mkm->cluster &&
+          (mkm->cluster->hq_size > clusersizemax/40 ||
+           mkm->cluster_last_close + 1 < dispatch_clock))
     mk_close_cluster(mkm);
 
   else if(mkm->cluster && mkm->cluster->hq_size > clusersizemax)
@@ -1005,9 +1009,6 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
   c_delta_flags[2] = (keyframe << 7) | skippable;
   htsbuf_append(mkm->cluster, c_delta_flags, 3);
   htsbuf_append(mkm->cluster, data, len);
-
-  if (mkm->cluster_last_close + 1 < dispatch_clock)
-    mk_close_cluster(mkm);
 }
 
 
