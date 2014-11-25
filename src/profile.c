@@ -571,6 +571,9 @@ profile_sharer_input(void *opaque, streaming_message_t *sm)
         profile_sharer_deliver(run, streaming_msg_clone(sm));
       run = prch;
       continue;
+    } else if (sm->sm_type == SMT_STOP) {
+      run = prch;
+      continue;
     }
     if (sm->sm_type != SMT_PACKET && sm->sm_type != SMT_MPEGTS)
       continue;
