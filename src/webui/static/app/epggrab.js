@@ -96,7 +96,7 @@ tvheadend.epggrab = function(panel, index) {
     var internalCron = new Ext.form.TextArea({
         fieldLabel: 'Cron multi-line',
         name: 'cron',
-        width: 300
+        width: 350
     });
 
     /*
@@ -105,7 +105,7 @@ tvheadend.epggrab = function(panel, index) {
     var internalModule = new Ext.form.ComboBox({
         fieldLabel: 'Module',
         hiddenName: 'module',
-        width: 300,
+        width: 350,
         valueField: 'id',
         displayField: 'name',
         forceSelection: true,
@@ -263,7 +263,7 @@ tvheadend.epggrab = function(panel, index) {
     var otaCron = new Ext.form.TextArea({
         fieldLabel: 'Over-the-air Cron multi-line',
         name: 'ota_cron',
-        width: 300
+        width: 350
     });
 
     var otaTimeout = new Ext.form.NumberField({
