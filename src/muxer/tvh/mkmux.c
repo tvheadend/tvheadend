@@ -47,7 +47,6 @@ TAILQ_HEAD(mk_chapter_queue, mk_chapter);
  */
 typedef struct mk_track {
   int index;
-  int enabled;
   int avc;
   int type;
   int tracknum;
@@ -248,11 +247,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     tr = &mkm->tracks[i];
 
     tr->disabled = ssc->ssc_disabled;
+    tr->index = ssc->ssc_index;
 
-    if(ssc->ssc_disabled)
+    if(tr->disabled)
       continue;
 
-    tr->index = ssc->ssc_index;
     tr->type = ssc->ssc_type;
     tr->channels = ssc->ssc_channels;
     tr->aspect_num = ssc->ssc_aspect_num;
@@ -329,10 +328,10 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       break;
 
     default:
+      tr->disabled = 1;
       continue;
     }
 
-    tr->enabled = 1;
     tr->tracknum = ++tracknum;
     mkm->has_video |= (tracktype == 1);
     
@@ -1156,11 +1155,11 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 
   for (i = 0; i < mkm->ntracks; i++) {
     t = &mkm->tracks[i];
-    if (t->index == pkt->pkt_componentindex && t->enabled)
+    if (t->index == pkt->pkt_componentindex && !t->disabled)
       break;
   }
   
-  if(t == NULL || t->disabled) {
+  if(t == NULL) {
     pkt_ref_dec(pkt);
     return mkm->error;
   }
