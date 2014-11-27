@@ -48,6 +48,8 @@ export PATH := $(LIBAVDIR)/build/ffmpeg/bin:$(PATH)
 ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
 
+CONFIGURE        = PKG_CONFIG=/tmp/nobin/pkg-config ./configure
+
 FFMPEG          = ffmpeg-2.4.2
 FFMPEG_TB       = $(FFMPEG).tar.bz2
 FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
@@ -99,7 +101,7 @@ $(LIBAVDIR)/$(YASM)/.tvh_download:
 
 $(LIBAVDIR)/$(YASM)/.tvh_build: \
 		$(LIBAVDIR)/$(YASM)/.tvh_download
-	cd $(LIBAVDIR)/$(YASM) && ./configure \
+	cd $(LIBAVDIR)/$(YASM) && $(CONFIGURE) \
                 --prefix=/ffmpeg
 	DESTDIR=$(LIBAVDIR)/build \
 		make -C $(LIBAVDIR)/$(YASM) install
@@ -117,7 +119,7 @@ $(LIBAVDIR)/$(LIBOGG)/.tvh_download:
 $(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
 		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBOGG)/.tvh_download
-	cd $(LIBAVDIR)/$(LIBOGG) && ./configure \
+	cd $(LIBAVDIR)/$(LIBOGG) && $(CONFIGURE) \
                 --prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
@@ -135,7 +137,7 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_download \
 		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBOGG)/.tvh_build
-	cd $(LIBAVDIR)/$(LIBVORBIS) && ./configure \
+	cd $(LIBAVDIR)/$(LIBVORBIS) && $(CONFIGURE) \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared \
@@ -172,7 +174,7 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBX264)/.tvh_download \
 		$(LIBAVDIR)/$(YASM)/.tvh_build
-	cd $(LIBAVDIR)/$(LIBX264) && ./configure \
+	cd $(LIBAVDIR)/$(LIBX264) && $(CONFIGURE) \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared \
@@ -201,7 +203,7 @@ $(LIBAVDIR)/$(LIBVPX)/.tvh_download:
 $(LIBAVDIR)/$(LIBVPX)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBVPX)/.tvh_download \
 		$(LIBAVDIR)/$(YASM)/.tvh_build
-	cd $(LIBAVDIR)/$(LIBVPX) && ./configure \
+	cd $(LIBAVDIR)/$(LIBVPX) && $(CONFIGURE) \
 		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
@@ -225,7 +227,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBX264)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVPX)/.tvh_build \
 		$(LIBAVDIR)/$(FFMPEG)/.tvh_download
-	cd $(LIBAVDIR)/$(FFMPEG) && ./configure \
+	cd $(LIBAVDIR)/$(FFMPEG) && $(CONFIGURE) \
                 --prefix=/ffmpeg \
 		--disable-all \
 		--enable-static \
