@@ -94,7 +94,7 @@ bin2hex(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 void
 uuid_init ( void )
 {
-  fd = open(RANDOM_PATH, O_RDONLY|O_CLOEXEC);
+  fd = tvh_open(RANDOM_PATH, O_RDONLY, 0);
   if (fd == -1) {
     tvherror("uuid", "failed to open %s", RANDOM_PATH);
     exit(1);
