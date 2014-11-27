@@ -775,8 +775,15 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 }
 
 /**
- *
+ * Parse MPEG2 header, simplifier version (we know what ffmpeg/libav generates
  */
+static inline uint32_t
+RB32(const uint8_t *d)
+{
+  return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
+}
+
+
 static void
 extract_mpeg2_global_data(th_pkt_t *n, uint8_t *data, int len)
 {
@@ -799,43 +806,39 @@ non intra quantizer matrix		0 or 64*8
 
 Minimal of 12 bytes.
 */
-  uint32_t *mpeg2_header = (uint32_t *)data;
-  if (*mpeg2_header == 0xb3010000) {  // SEQ_START_CODE
-    // Need to determine lentgh of header.
+  int hs = 12;
 
-    int header_size = 12;
+  if (len >= hs && RB32(data) == 0x000001b3) {  // SEQ_START_CODE
 
     // load intra quantizer matrix
-    uint8_t matrix_enabled = (((uint8_t)*(data+(header_size-1)) & 0x02) == 0x02);
-    if (matrix_enabled) 
-      header_size += 64;
+    if (data[hs-1] & 0x02) {
+      if (hs + 64 < len) return;
+      hs += 64;
+    }
 
-    //load non intra quantizer matrix
-    matrix_enabled = (((uint8_t)*(data+(header_size-1)) & 0x01) == 0x01);
-    if (matrix_enabled)
-      header_size += 64;
+    // load non intra quantizer matrix
+    if (data[hs-1] & 0x01) {
+      if (hs + 64 < len) return;
+      hs += 64;
+    }
 
     // See if we have the first EXT_START_CODE. Normally 10 bytes
     // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l272
-    mpeg2_header = (uint32_t *)(data+(header_size));
-    if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
-      header_size += 10;
+    if (hs + 10 <= len && RB32(data + hs) == 0x000001b5) // EXT_START_CODE
+      hs += 10;
 
-      // See if we have the second EXT_START_CODE. Normally 12 bytes
-      // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l291
-      mpeg2_header = (uint32_t *)(data+(header_size));
-      if (*mpeg2_header == 0xb5010000) { // EXT_START_CODE
-        header_size += 12;
+    // See if we have the second EXT_START_CODE. Normally 12 bytes
+    // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l291
+    // ffmpeg libs might have this block missing
+    if (hs + 12 <= len && RB32(data + hs) == 0x000001b5) // EXT_START_CODE
+      hs += 12;
 
-        // See if we have the second GOP_START_CODE. Normally 31 bits == 4 bytes
-        // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l304
-        mpeg2_header = (uint32_t *)(data+(header_size));
-        if (*mpeg2_header == 0xb8010000) // GOP_START_CODE
-          header_size += 4;
-     }
-    }
+    // See if we have the second GOP_START_CODE. Normally 31 bits == 4 bytes
+    // https://git.libav.org/?p=libav.git;a=blob;f=libavcodec/mpeg12enc.c;h=3376f1075f4b7582a8e4556e98deddab3e049dab;hb=HEAD#l304
+    if (hs + 4 <= len && RB32(data + hs) == 0x000001b8) // GOP_START_CODE
+      hs += 4;
 
-    n->pkt_meta = pktbuf_alloc(data, header_size);
+    n->pkt_meta = pktbuf_alloc(data, hs);
   }
 }
 

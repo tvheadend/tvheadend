@@ -106,13 +106,13 @@ avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size)
 }
 
 
-static uint32_t 
+static inline uint32_t
 RB32(const uint8_t *d)
 {
   return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
 }
 
-static uint32_t 
+static inline uint32_t
 RB24(const uint8_t *d)
 {
   return (d[0] << 16) | (d[1] << 8) | d[2];
