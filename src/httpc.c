@@ -740,7 +740,7 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
     }
     l = 0;
     if (hc->hc_chunk_csize) {
-      s = d = hc->hc_chunk;
+      s = hc->hc_chunk;
       if (buf[0] == '\n' && s[hc->hc_chunk_csize-1] == '\r')
         l = 1;
       else if (len > 1 && buf[0] == '\r' && buf[1] == '\n')
@@ -766,7 +766,10 @@ http_client_data_chunked( http_client_t *hc, char *buf, size_t len, int *end )
           return res;
         continue;
       }
-      if (s[0] == '0' && s[1] == '\0')
+      d = s + 1;
+      while (*d == '0' && *d)
+        d++;
+      if (s[0] == '0' && *d == '\0')
         hc->hc_chunk_trails = 1;
       else {
         hc->hc_chunk_size = strtoll(s, NULL, 16);
