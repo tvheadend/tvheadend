@@ -2552,7 +2552,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
       ch2 = ctm->ctm_channel;
       if(ch2 == channel || channel == NULL)
-        if (channel_access(channel, perm, 0))
+        if (channel_access(ch2, perm, 0))
           _eq_add_channel(eq, ch2);
     }
 
