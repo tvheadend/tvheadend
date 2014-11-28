@@ -84,8 +84,9 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
       ip.ss_family = ai->ai_family;
       if (inet_pton(AF_INET, bindaddr, IP_IN_ADDR(ip)) <= 0 ||
           bind(fd, (struct sockaddr *)&ip, IP_IN_ADDRLEN(ip)) < 0) {
-        snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'", bindaddr,
-                                     ai->ai_family == AF_INET6 ? "6" : "4");
+        snprintf(errbuf, errbufsize, "Cannot bind to IPv%s addr '%s'",
+                                     ai->ai_family == AF_INET6 ? "6" : "4",
+                                     bindaddr);
         freeaddrinfo(ai);
         return -1;
       }
