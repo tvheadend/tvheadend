@@ -144,6 +144,8 @@ imagecache_image_fetch ( imagecache_image_t *img )
   tvhpoll_t *efd = NULL;
   http_client_t *hc;
 
+  lock_assert(&global_lock);
+
   if (img->url == NULL || img->url[0] == '\0')
     return res;
 
@@ -575,9 +577,7 @@ imagecache_open ( uint32_t id )
     } else if (i->state == QUEUED) {
       i->state = FETCHING;
       TAILQ_REMOVE(&imagecache_queue, i, q_link);
-      pthread_mutex_unlock(&global_lock);
       e = imagecache_image_fetch(i);
-      pthread_mutex_lock(&global_lock);
       if (e)
         return -1;
     }
