@@ -193,9 +193,12 @@ htsmsg_t *
 channel_class_get_list(void *o)
 {
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channel/list");
   htsmsg_add_str(m, "event", "channel");
+  htsmsg_add_u32(p, "all",  1);
+  htsmsg_add_msg(m, "params", p);
   return m;
 }
 
@@ -1119,9 +1122,12 @@ htsmsg_t *
 channel_tag_class_get_list(void *o)
 {
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "channeltag/list");
   htsmsg_add_str(m, "event", "channeltag");
+  htsmsg_add_u32(p, "all",  1);
+  htsmsg_add_msg(m, "params", p);
   return m;
 }
 

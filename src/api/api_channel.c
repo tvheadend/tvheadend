@@ -34,6 +34,13 @@ api_channel_key_val(htsmsg_t *dst, const char *key, const char *val)
   htsmsg_add_msg(dst, NULL, e);
 }
 
+static int
+api_channel_is_all(access_t *perm, htsmsg_t *args)
+{
+  return htsmsg_get_bool_or_default(args, "all", 0) &&
+         !access_verify2(perm, ACCESS_ADMIN);
+}
+
 // TODO: this will need converting to an idnode system
 static int
 api_channel_list
@@ -41,11 +48,12 @@ api_channel_list
 {
   channel_t *ch;
   htsmsg_t *l;
+  int cfg = api_channel_is_all(perm, args);
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch) {
-    if (!channel_access(ch, perm, 0)) continue;
+    if (!cfg && !channel_access(ch, perm, 0)) continue;
     api_channel_key_val(l, idnode_uuid_as_str(&ch->ch_id), channel_get_name(ch));
   }
   pthread_mutex_unlock(&global_lock);
@@ -57,12 +65,13 @@ api_channel_list
 
 static void
 api_channel_grid
-  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   channel_t *ch;
+  int cfg = api_channel_is_all(perm, args);
 
   CHANNEL_FOREACH(ch)
-    if (channel_access(ch, perm, !access_verify2(perm, ACCESS_ADMIN)))
+    if (cfg || channel_access(ch, perm, 0))
       idnode_set_add(ins, (idnode_t*)ch, &conf->filter);
 }
 
@@ -91,10 +100,11 @@ api_channel_tag_list
 {
   channel_tag_t *ct;
   htsmsg_t *l;
-  
+  int cfg = api_channel_is_all(perm, args);
+
   l = htsmsg_create_list();
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if (channel_tag_access(ct, perm, 0))
+    if (cfg || channel_tag_access(ct, perm, 0))
       api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
@@ -103,12 +113,13 @@ api_channel_tag_list
 
 static void
 api_channel_tag_grid
-  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   channel_tag_t *ct;
+  int cfg = api_channel_is_all(perm, args);
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if (channel_tag_access(ct, perm, !access_verify2(perm, ACCESS_ADMIN)))
+    if (cfg || channel_tag_access(ct, perm, 0))
       idnode_set_add(ins, (idnode_t*)ct, &conf->filter);
 }
 

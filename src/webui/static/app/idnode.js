@@ -1026,9 +1026,12 @@ tvheadend.idnode_grid = function(panel, conf)
         });
 
         /* Store */
+        var params = {};
+        if (conf.all) params['all'] = 1;
         store = new Ext.data.JsonStore({
             root: 'entries',
             url: conf.gridURL || (conf.url + '/grid'),
+            baseParams: params,
             autoLoad: true,
             id: 'uuid',
             totalProperty: 'total',
@@ -1425,6 +1428,7 @@ tvheadend.idnode_grid = function(panel, conf)
         if (!conf.fields) {
             var p = {};
             if (conf.list) p['list'] = conf.list;
+            if (conf.all) p['all'] = 1;
             tvheadend.Ajax({
                 url: conf.url + '/class',
                 params: p,

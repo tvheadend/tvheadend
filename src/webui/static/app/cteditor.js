@@ -6,6 +6,7 @@ tvheadend.cteditor = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/channeltag',
+        all: 1,
         titleS: 'Channel Tag',
         titleP: 'Channel Tags',
         iconCls: 'channelTags',
