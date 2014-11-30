@@ -156,7 +156,8 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
                          NULL, dte->dte_channel,
                          start, stop, 0, 0, title,
                          NULL, NULL, NULL, buf,
-                         NULL, dte, dte->dte_pri, dte->dte_retention);
+                         NULL, dte, dte->dte_pri, dte->dte_retention,
+                         dte->dte_comment);
 
   return;
 

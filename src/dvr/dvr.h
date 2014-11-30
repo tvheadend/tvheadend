@@ -155,6 +155,7 @@ typedef struct dvr_entry {
   time_t de_stop_extra;
 
   char *de_creator;
+  char *de_comment;
   char *de_filename;   /* Initially null if no filename has been
 			  generated yet */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
@@ -404,7 +405,8 @@ dvr_entry_create_by_event( const char *dvr_config_uuid,
                            time_t start_extra, time_t stop_extra,
                            const char *creator,
                            dvr_autorec_entry_t *dae,
-                           dvr_prio_t pri, int retention );
+                           dvr_prio_t pri, int retention,
+                           const char *comment );
 
 dvr_entry_t *
 dvr_entry_create_htsp( const char *dvr_config_uuid,
@@ -413,7 +415,8 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *title, const char *description,
                        const char *lang, epg_genre_t *content_type,
                        const char *creator, dvr_autorec_entry_t *dae,
-                       dvr_prio_t pri, int retention );
+                       dvr_prio_t pri, int retention,
+                       const char *comment );
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de,
@@ -473,9 +476,9 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   const char *lang, epg_genre_t *content_type,
                   const char *creator, dvr_autorec_entry_t *dae,
                   dvr_timerec_entry_t *tae,
-                  dvr_prio_t pri, int retention);
+                  dvr_prio_t pri, int retention, const char *comment);
 
-dvr_autorec_entry_t*
+dvr_autorec_entry_t *
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             channel_t *ch, uint32_t aroundTime, uint32_t days,
                             time_t start_extra, time_t stop_extra,

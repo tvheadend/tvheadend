@@ -1332,7 +1332,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   epg_broadcast_t *e = NULL;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
-  const char *dvr_config_name, *title, *desc, *creator, *lang;
+  const char *dvr_config_name, *title, *desc, *creator, *lang, *comment;
   int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority, retention;
   channel_t *ch = NULL;
@@ -1353,8 +1353,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;
-  if (!(creator = htsmsg_get_str(in, "creator")) || !*creator)
-    creator = htsp->htsp_username ?: "anonymous";
+  comment = htsmsg_get_str(in, "comment");
+  creator = htsp->htsp_username;
   if (!(lang        = htsmsg_get_str(in, "language")))
     lang    = htsp->htsp_language;
 
@@ -1380,13 +1380,15 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     // create the dvr entry
     de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
-                               title, desc, lang, 0, creator, NULL, priority, retention);
+                               title, desc, lang, 0, creator, NULL,
+                               priority, retention, comment);
 
   /* Event timer */
   } else {
     de = dvr_entry_create_by_event(dvr_config_name, e, 
                                    start_extra, stop_extra,
-                                   creator, NULL, priority, retention);
+                                   creator, NULL,
+                                   priority, retention, comment);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
@@ -1549,8 +1551,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     start_extra = 0;     // 0 = dvr config
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
     stop_extra  = 0;     // 0 = dvr config
-  if (!(creator = htsmsg_get_str(in, "creator")) || !*creator)
-    creator = htsp->htsp_username ?: "anonymous";
+  creator = htsp->htsp_username;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
 

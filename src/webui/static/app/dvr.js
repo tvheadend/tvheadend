@@ -18,6 +18,7 @@ tvheadend.dvrDetails = function(uuid) {
         var desc = params[6].value;
         var status = params[7].value;
         var filesize = params[8].value;
+        var comment = params[9].value;
         var content = '';
         var but;
 
@@ -33,6 +34,8 @@ tvheadend.dvrDetails = function(uuid) {
         content += '<hr>';
         content += '<div class="x-epg-meta"><div class="x-epg-prefix">Status:</div> ' + status + '</div>';
         content += '<div class="x-epg-meta"><div class="x-epg-prefix">File size:</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
+        if (comment)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">Comment:</div> ' + comment + '</div>';
 
         var win = new Ext.Window({
             title: title,
@@ -54,7 +57,7 @@ tvheadend.dvrDetails = function(uuid) {
         params: {
             uuid: uuid,
             list: 'channel_icon,disp_title,episode,start_real,stop_real,' +
-                  'duration,disp_description,status,filesize'
+                  'duration,disp_description,status,filesize,comment'
         },
         success: function(d) {
             d = json_decode(d);
@@ -137,7 +140,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
-               'channel,config_name';
+               'channel,config_name,comment';
 
     var abortButton = {
         name: 'abort',
@@ -205,7 +208,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
               'duration,channelname,creator,config_name,' +
-              'sched_status',
+              'sched_status,comment',
         sort: {
           field: 'start_real',
           direction: 'ASC'
@@ -266,7 +269,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,creator,' +
-              'sched_status,url',
+              'sched_status,url,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -344,7 +347,7 @@ tvheadend.dvr_failed = function(panel, index) {
         del: true,
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,creator,' +
-              'status,sched_status,url',
+              'status,sched_status,url,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()

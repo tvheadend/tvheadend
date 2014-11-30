@@ -160,16 +160,19 @@ static htsmsg_t *
 api_dvr_entry_create_from_single(htsmsg_t *args)
 {
   htsmsg_t *entries, *m;
-  const char *s1, *s2;
+  const char *s1, *s2, *s3;
 
   if (!(s1 = htsmsg_get_str(args, "config_uuid")))
     return NULL;
   if (!(s2 = htsmsg_get_str(args, "event_id")))
     return NULL;
+  s3 = htsmsg_get_str(args, "comment");
   entries = htsmsg_create_list();
   m = htsmsg_create_map();
   htsmsg_add_str(m, "config_uuid", s1);
   htsmsg_add_str(m, "event_id", s2);
+  if (s3)
+    htsmsg_add_str(m, "comment", s3);
   htsmsg_add_msg(entries, NULL, m);
   return entries;
 }
@@ -179,7 +182,7 @@ api_dvr_entry_create_by_event
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   dvr_entry_t *de;
-  const char *config_uuid;
+  const char *config_uuid, *comment;
   epg_broadcast_t *e;
   htsmsg_t *entries, *entries2 = NULL, *m;
   htsmsg_field_t *f;
@@ -199,6 +202,7 @@ api_dvr_entry_create_by_event
       continue;
 
     config_uuid = htsmsg_get_str(m, "config_uuid");
+    comment = htsmsg_get_str(m, "comment");
 
     pthread_mutex_lock(&global_lock);
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
@@ -206,7 +210,7 @@ api_dvr_entry_create_by_event
       if (cfg) {
         de = dvr_entry_create_by_event(idnode_uuid_as_str(&cfg->dvr_id),
                                        e, 0, 0, perm->aa_representative,
-                                       NULL, DVR_PRIO_NORMAL, 0);
+                                       NULL, DVR_PRIO_NORMAL, 0, comment);
         if (de)
           dvr_entry_save(de);
       }

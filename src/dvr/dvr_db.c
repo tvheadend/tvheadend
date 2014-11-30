@@ -451,7 +451,8 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   const char *lang, epg_genre_t *content_type,
                   const char *creator, dvr_autorec_entry_t *dae,
                   dvr_timerec_entry_t *dte,
-                  dvr_prio_t pri, int retention)
+                  dvr_prio_t pri, int retention,
+                  const char *comment)
 {
   dvr_entry_t *de;
   char tbuf[64], *s;
@@ -470,6 +471,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
   htsmsg_add_s64(conf, "start_extra", start_extra);
   htsmsg_add_s64(conf, "stop_extra", stop_extra);
   htsmsg_add_str(conf, "creator", creator ?: "");
+  htsmsg_add_str(conf, "comment", comment ?: "");
   if (e) {
     htsmsg_add_u32(conf, "dvb_eid", e->dvb_eid);
     if (e->episode && e->episode->title)
@@ -537,7 +539,8 @@ dvr_entry_create_htsp(const char *config_uuid,
                       const char *description, const char *lang,
                       epg_genre_t *content_type,
                       const char *creator, dvr_autorec_entry_t *dae,
-                      dvr_prio_t pri, int retention)
+                      dvr_prio_t pri, int retention,
+                      const char *comment)
 {
   dvr_config_t *cfg = dvr_config_find_by_uuid(config_uuid);
   if (!cfg)
@@ -546,7 +549,8 @@ dvr_entry_create_htsp(const char *config_uuid,
                            NULL,
                            ch, start, stop, start_extra, stop_extra,
                            title, description, lang, content_type,
-                           creator, dae, NULL, pri, retention);
+                           creator, dae, NULL, pri, retention,
+                           comment);
 }
 
 /**
@@ -557,7 +561,8 @@ dvr_entry_create_by_event(const char *config_uuid,
                           epg_broadcast_t *e,
                           time_t start_extra, time_t stop_extra,
                           const char *creator, dvr_autorec_entry_t *dae,
-                          dvr_prio_t pri, int retention)
+                          dvr_prio_t pri, int retention,
+                          const char *comment)
 {
   if(!e->channel || !e->episode || !e->episode->title)
     return NULL;
@@ -567,7 +572,8 @@ dvr_entry_create_by_event(const char *config_uuid,
                            start_extra, stop_extra,
                            NULL, NULL, NULL,
                            LIST_FIRST(&e->episode->genre),
-                           creator, dae, NULL, pri, retention);
+                           creator, dae, NULL, pri, retention,
+                           comment);
 }
 
 /**
@@ -618,14 +624,14 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
   /* Dup detection */
   if (_dvr_duplicate_event(e)) return;
 
-  if(dae->dae_creator) {
-    snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
-  } else {
-    snprintf(buf, sizeof(buf), "Auto recording");
-  }
+  snprintf(buf, sizeof(buf), "Auto recording%s%s",
+           dae->dae_creator ? " by: " : "",
+           dae->dae_creator ?: "");
+
   dvr_entry_create_by_event(idnode_uuid_as_str(&dae->dae_config->dvr_id), e,
                             dae->dae_start_extra, dae->dae_stop_extra,
-                            buf, dae, dae->dae_pri, dae->dae_retention);
+                            buf, dae, dae->dae_pri, dae->dae_retention,
+                            dae->dae_comment);
 }
 
 /**
@@ -656,6 +662,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 
   free(de->de_filename);
   free(de->de_creator);
+  free(de->de_comment);
   if (de->de_title) lang_str_destroy(de->de_title);
   if (de->de_desc)  lang_str_destroy(de->de_desc);
   if (de->de_bcast) de->de_bcast->putref((epg_object_t*)de->de_bcast);
@@ -1911,6 +1918,12 @@ const idclass_t dvr_entry_class = {
       .name     = "Schedule Status",
       .get      = dvr_entry_class_sched_status_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "comment",
+      .name     = "Comment",
+      .off      = offsetof(dvr_entry_t, de_comment),
     },
     {}
   }
