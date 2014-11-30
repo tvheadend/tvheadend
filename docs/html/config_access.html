@@ -56,19 +56,35 @@ The columns have the following functions:
   IPv4 prefix for matching based on source IP address.
   If set to 0.0.0.0/0 it will match everything.
 
+  <dt><b>Web interface</b>
+  <dd>
+  Required for web user interface access. Also gives access to the EPG.
+
+  <dt><b>Admin</b>
+  <dd>
+  Enables access to the Configuration tab.
+
   <dt><b>Streaming</b>
   <dd>
-  Enables access to streaming functionality. This permission is enough to stream over HTSP to VLC, Showtime and similar.
+  Enables access to streaming functionality for HTTP (web).
 
   <dt><b>Advanced Streaming</b>
   <dd>
-  Enables access to advanced streaming function for HTTP - like direct
+  Enables access to advanced streaming function for HTTP (web) - like direct
   service or whole MPEG-TS stream (mux)..
   
+  <dt><b>HTSP Streaming</b>
+  <dd>
+  Enables access to streaming for the HTSP protocol (Showtime, XBMC etc.).
+
   <dt><b>Streaming Profile</b>
   <dd>
   Specify a streaming profile to be used when this user logs in; use the (default) stream if not specified.
   
+  <dt><b>Limit Connections</b>
+  <dd>
+  If set, this will limit the number of concurrent streaming connections a user is permitted to have. 0=disabled
+
   <dt><b>Video Recorder</b>
   <dd>
   Enables access to all video recording functions. This also include administration of the auto recordings.
@@ -78,18 +94,6 @@ The columns have the following functions:
   If set, the user will only be able to use the DVR config profile
   equal to this value.
   Note that this field is unset when the DVR Config Profile is removed.
-
-  <dt><b>Web interface</b>
-  <dd>
-  Required for web user interface access. Also gives access to the EPG.
-
-  <dt><b>Admin</b>
-  <dd>
-  Enables access to the Configuration tab.
-  
-  <dt><b>Limit Connections</b>
-  <dd>
-  If set, this will limit the number of concurrent streaming connections a user is permitted to have. 0=disabled
 
   <dt><b>Min Channel Num</b>
   <dd>

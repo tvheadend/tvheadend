@@ -78,7 +78,7 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_AUX_DVR     0x02
 #define HTSP_ASYNC_AUX_AUTOREC 0x03
 
-#define HTSP_PRIV_MASK (ACCESS_STREAMING)
+#define HTSP_PRIV_MASK (ACCESS_HTSP_STREAMING)
 
 extern char *dvr_storage;
 
@@ -2182,14 +2182,14 @@ struct {
 } htsp_methods[] = {
   { "hello",                    htsp_method_hello,              ACCESS_ANONYMOUS},
   { "authenticate",             htsp_method_authenticate,       ACCESS_ANONYMOUS},
-  { "getDiskSpace",             htsp_method_getDiskSpace,       ACCESS_STREAMING},
-  { "getSysTime",               htsp_method_getSysTime,         ACCESS_STREAMING},
-  { "enableAsyncMetadata",      htsp_method_async,              ACCESS_STREAMING},
-  { "getChannel",               htsp_method_getChannel,         ACCESS_STREAMING},
-  { "getEvent",                 htsp_method_getEvent,           ACCESS_STREAMING},
-  { "getEvents",                htsp_method_getEvents,          ACCESS_STREAMING},
-  { "epgQuery",                 htsp_method_epgQuery,           ACCESS_STREAMING},
-  { "getEpgObject",             htsp_method_getEpgObject,       ACCESS_STREAMING},
+  { "getDiskSpace",             htsp_method_getDiskSpace,       ACCESS_HTSP_STREAMING},
+  { "getSysTime",               htsp_method_getSysTime,         ACCESS_HTSP_STREAMING},
+  { "enableAsyncMetadata",      htsp_method_async,              ACCESS_HTSP_STREAMING},
+  { "getChannel",               htsp_method_getChannel,         ACCESS_HTSP_STREAMING},
+  { "getEvent",                 htsp_method_getEvent,           ACCESS_HTSP_STREAMING},
+  { "getEvents",                htsp_method_getEvents,          ACCESS_HTSP_STREAMING},
+  { "epgQuery",                 htsp_method_epgQuery,           ACCESS_HTSP_STREAMING},
+  { "getEpgObject",             htsp_method_getEpgObject,       ACCESS_HTSP_STREAMING},
   { "getDvrConfigs",            htsp_method_getDvrConfigs,      ACCESS_RECORDER},
   { "addDvrEntry",              htsp_method_addDvrEntry,        ACCESS_RECORDER},
   { "updateDvrEntry",           htsp_method_updateDvrEntry,     ACCESS_RECORDER},
@@ -2198,16 +2198,16 @@ struct {
   { "addAutorecEntry",          htsp_method_addAutorecEntry,    ACCESS_RECORDER},
   { "deleteAutorecEntry",       htsp_method_deleteAutorecEntry, ACCESS_RECORDER},
   { "getDvrCutpoints",          htsp_method_getDvrCutpoints,    ACCESS_RECORDER},
-  { "getTicket",                htsp_method_getTicket,          ACCESS_STREAMING},
-  { "subscribe",                htsp_method_subscribe,          ACCESS_STREAMING},
-  { "unsubscribe",              htsp_method_unsubscribe,        ACCESS_STREAMING},
-  { "subscriptionChangeWeight", htsp_method_change_weight,      ACCESS_STREAMING},
-  { "subscriptionSeek",         htsp_method_skip,               ACCESS_STREAMING},
-  { "subscriptionSkip",         htsp_method_skip,               ACCESS_STREAMING},
-  { "subscriptionSpeed",        htsp_method_speed,              ACCESS_STREAMING},
-  { "subscriptionLive",         htsp_method_live,               ACCESS_STREAMING},
-  { "subscriptionFilterStream", htsp_method_filter_stream,      ACCESS_STREAMING},
-  { "getProfiles",              htsp_method_getProfiles,        ACCESS_STREAMING},
+  { "getTicket",                htsp_method_getTicket,          ACCESS_HTSP_STREAMING},
+  { "subscribe",                htsp_method_subscribe,          ACCESS_HTSP_STREAMING},
+  { "unsubscribe",              htsp_method_unsubscribe,        ACCESS_HTSP_STREAMING},
+  { "subscriptionChangeWeight", htsp_method_change_weight,      ACCESS_HTSP_STREAMING},
+  { "subscriptionSeek",         htsp_method_skip,               ACCESS_HTSP_STREAMING},
+  { "subscriptionSkip",         htsp_method_skip,               ACCESS_HTSP_STREAMING},
+  { "subscriptionSpeed",        htsp_method_speed,              ACCESS_HTSP_STREAMING},
+  { "subscriptionLive",         htsp_method_live,               ACCESS_HTSP_STREAMING},
+  { "subscriptionFilterStream", htsp_method_filter_stream,      ACCESS_HTSP_STREAMING},
+  { "getProfiles",              htsp_method_getProfiles,        ACCESS_HTSP_STREAMING},
   { "fileOpen",                 htsp_method_file_open,          ACCESS_RECORDER},
   { "fileRead",                 htsp_method_file_read,          ACCESS_RECORDER},
   { "fileClose",                htsp_method_file_close,         ACCESS_RECORDER},

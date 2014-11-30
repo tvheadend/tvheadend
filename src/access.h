@@ -57,6 +57,7 @@ typedef struct access_entry {
 
   int ae_streaming;
   int ae_adv_streaming;
+  int ae_htsp_streaming;
 
   struct profile *ae_profile;
   LIST_ENTRY(access_entry) ae_profile_link;
@@ -113,13 +114,15 @@ typedef struct access_ticket {
 #define ACCESS_ANONYMOUS          0
 #define ACCESS_STREAMING          (1<<0)
 #define ACCESS_ADVANCED_STREAMING (1<<1)
-#define ACCESS_WEB_INTERFACE      (1<<2)
-#define ACCESS_RECORDER           (1<<3)
-#define ACCESS_ADMIN              (1<<4)
+#define ACCESS_HTSP_STREAMING     (1<<2)
+#define ACCESS_WEB_INTERFACE      (1<<3)
+#define ACCESS_RECORDER           (1<<4)
+#define ACCESS_ADMIN              (1<<5)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
+   ACCESS_HTSP_STREAMING | \
    ACCESS_WEB_INTERFACE | ACCESS_RECORDER | ACCESS_ADMIN)
 
 /**

@@ -840,6 +840,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
   TAILQ_INIT(&ae->ae_ipmasks);
 
   if (conf) {
+    ae->ae_htsp_streaming = 1;
     idnode_load(&ae->ae_id, conf);
     /* note password has PO_NOSAVE, thus it must be set manually */
     if ((s = htsmsg_get_str(conf, "password")) != NULL)
@@ -1264,6 +1265,12 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_adv_streaming),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "htsp_streaming",
+      .name     = "HTSP Streaming",
+      .off      = offsetof(access_entry_t, ae_htsp_streaming),
+    },
+    {
       .type     = PT_STR,
       .id       = "profile",
       .name     = "Streaming Profile",
@@ -1379,12 +1386,13 @@ access_init(int createdefault, int noacl)
     free(ae->ae_comment);
     ae->ae_comment = strdup("Default access entry");
 
-    ae->ae_enabled       = 1;
-    ae->ae_streaming     = 1;
-    ae->ae_adv_streaming = 1;
-    ae->ae_dvr           = 1;
-    ae->ae_webui         = 1;
-    ae->ae_admin         = 1;
+    ae->ae_enabled        = 1;
+    ae->ae_streaming      = 1;
+    ae->ae_adv_streaming  = 1;
+    ae->ae_htsp_streaming = 1;
+    ae->ae_dvr            = 1;
+    ae->ae_webui          = 1;
+    ae->ae_admin          = 1;
     access_entry_update_rights(ae);
 
     TAILQ_INIT(&ae->ae_ipmasks);
