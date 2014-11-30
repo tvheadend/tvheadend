@@ -713,7 +713,6 @@ static void _xmltv_load_grabbers ( void )
     char *argv[] = {
       NULL,
       (char *)"--description",
-      (char *)"--quiet",
       NULL
     };
     path = strdup(tmp);
