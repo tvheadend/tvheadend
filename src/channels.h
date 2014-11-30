@@ -68,6 +68,7 @@ typedef struct channel
   gtimer_t              ch_epg_timer_head;
   gtimer_t              ch_epg_timer_current;
 
+  int ch_epgauto;
   LIST_HEAD(,epggrab_channel_link) ch_epggrab;
 
   /* DVR */

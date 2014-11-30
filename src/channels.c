@@ -248,9 +248,11 @@ channel_class_epggrab_set ( void *o, const void *v )
   }
     
   /* Link */
-  HTSMSG_FOREACH(f, l) {
-    if ((ec = epggrab_channel_find_by_id(htsmsg_field_get_str(f))))
-      save |= epggrab_channel_link(ec, ch);
+  if (ch->ch_epgauto && l) {
+    HTSMSG_FOREACH(f, l) {
+      if ((ec = epggrab_channel_find_by_id(htsmsg_field_get_str(f))))
+        save |= epggrab_channel_link(ec, ch);
+    }
   }
 
   /* Delete */
@@ -275,6 +277,14 @@ channel_class_epggrab_list ( void *o )
   htsmsg_add_bool(e, "enum", 1);
   htsmsg_add_msg(m, "params", e);
   return m;
+}
+
+static void
+channel_class_epgauto_notify ( void *obj )
+{
+  channel_t *ch = obj;
+  if (!ch->ch_epgauto)
+    channel_class_epggrab_set(obj, NULL);
 }
 
 static const void *
@@ -347,6 +357,13 @@ const idclass_t channel_class = {
       .name     = "Icon URL",
       .get      = channel_class_get_icon,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "epgauto",
+      .name     = "Auto EPG Channel",
+      .off      = offsetof(channel_t, ch_epgauto),
+      .notify   = channel_class_epgauto_notify,
     },
     {
       .type     = PT_STR,
@@ -731,6 +748,7 @@ channel_create0
 
   /* Defaults */
   ch->ch_enabled = 1;
+  ch->ch_epgauto = 1;
 
   if (conf) {
     ch->ch_load = 1;
