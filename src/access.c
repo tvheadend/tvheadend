@@ -804,6 +804,8 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_STREAMING;
   if (ae->ae_adv_streaming)
     r |= ACCESS_ADVANCED_STREAMING;
+  if (ae->ae_htsp_streaming)
+    r |= ACCESS_HTSP_STREAMING;
   if (ae->ae_dvr)
     r |= ACCESS_RECORDER;
   if (ae->ae_webui)
