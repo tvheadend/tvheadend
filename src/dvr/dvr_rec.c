@@ -359,7 +359,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   }
 
   if(cfg->dvr_tag_files && de->de_bcast) {
-    if(muxer_write_meta(muxer, de->de_bcast)) {
+    if(muxer_write_meta(muxer, de->de_bcast, de->de_comment)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
       return -1;
     }

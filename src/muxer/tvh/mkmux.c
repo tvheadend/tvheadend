@@ -32,6 +32,7 @@
 #include "dvr/dvr.h"
 #include "mkmux.h"
 #include "ebml.h"
+#include "lang_codes.h"
 #include "parsers/parser_avc.h"
 
 extern int dvr_iov_max;
@@ -669,7 +670,8 @@ addtag(htsbuf_queue_t *q, htsbuf_queue_t *t)
  *
  */
 static htsbuf_queue_t *
-_mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
+_mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
+                   const char *comment)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
   char datestr[64], ctype[100];
@@ -680,6 +682,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   epg_episode_t *ee = NULL;
   channel_t *ch = NULL;
   lang_str_t *ls = NULL;
+  const char **langs, *lang;
 
   if (ebc)                     ee = ebc->episode;
   else if (de && de->de_bcast) ee = de->de_bcast->episode;
@@ -745,6 +748,16 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
     if (num.text)
       addtag(q, build_tag_string("SYNOPSIS", 
 			       num.text, NULL, 0, NULL));
+  }
+
+  if (comment) {
+    lang = "eng";
+    if ((langs = lang_code_split(NULL))) {
+      lang = tvh_strdupa(langs[0]);
+      free(langs);
+    }
+
+    addtag(q, build_tag_string("COMMENT", comment, lang, 0, NULL));
   }
 
   return q;
@@ -1212,7 +1225,8 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
  */
 int
 mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de, 
-		  const epg_broadcast_t *ebc)
+		  const epg_broadcast_t *ebc,
+		  const char *comment)
 {
   htsbuf_queue_t q;
 
@@ -1220,7 +1234,7 @@ mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de,
     mkm->metadata_pos = mkm->fdpos;
 
   htsbuf_queue_init(&q, 0);
-  ebml_append_master(&q, 0x1254c367, _mk_build_metadata(de, ebc));
+  ebml_append_master(&q, 0x1254c367, _mk_build_metadata(de, ebc, comment));
   mk_write_queue(mkm, &q);
 
   return mkm->error;

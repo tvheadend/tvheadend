@@ -79,7 +79,8 @@ typedef struct muxer {
 			       const struct streaming_start *);         // stream changes
   int         (*m_close)      (struct muxer *);                         // Close the muxer
   void        (*m_destroy)    (struct muxer *);                         // Free the memory
-  int         (*m_write_meta) (struct muxer *, struct epg_broadcast *); // Append epg data
+  int         (*m_write_meta) (struct muxer *, struct epg_broadcast *,
+                               const char *comment);                    // Append epg data
   int         (*m_write_pkt)  (struct muxer *,                          // Append a media packet
 			       streaming_message_type_t,
 			       void *);
@@ -127,8 +128,8 @@ static inline int muxer_close (muxer_t *m)
 static inline int muxer_destroy (muxer_t *m)
   { if (m) { m->m_destroy(m); return 0; } return -1; }
 
-static inline int muxer_write_meta (muxer_t *m, struct epg_broadcast *eb)
-  { if (m && eb) return m->m_write_meta(m, eb); return -1; }
+static inline int muxer_write_meta (muxer_t *m, struct epg_broadcast *eb, const char *comment)
+  { if (m && eb) return m->m_write_meta(m, eb, comment); return -1; }
 
 static inline int muxer_write_pkt (muxer_t *m, streaming_message_type_t smt, void *data)
   { if (m && data) return m->m_write_pkt(m, smt, data); return -1; }

@@ -464,7 +464,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
  * NOP
  */
 static int
-lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
+lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb, const char *comment)
 {
   return 0;
 }

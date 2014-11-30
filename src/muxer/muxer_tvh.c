@@ -174,11 +174,12 @@ tvh_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
  * Append meta data when a channel changes its programme
  */
 static int
-tvh_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
+tvh_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb,
+                     const char *comment)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  if(mk_mux_write_meta(tm->tm_ref, NULL, eb)) {
+  if(mk_mux_write_meta(tm->tm_ref, NULL, eb, comment)) {
     tm->m_errors++;
     return -1;
   }

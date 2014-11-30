@@ -38,7 +38,8 @@ int mk_mux_init(mk_mux_t *mkm, const char *title,
 
 int mk_mux_write_pkt (mk_mux_t *mkm, struct th_pkt *pkt);
 int mk_mux_write_meta(mk_mux_t *mkm, const struct dvr_entry *de,
-		      const struct epg_broadcast *eb);
+		      const struct epg_broadcast *eb,
+		      const char *comment);
 
 int mk_mux_insert_chapter(mk_mux_t *mkm);
 
