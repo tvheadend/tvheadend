@@ -248,6 +248,7 @@ epggrab_module_int_done( void *m )
 {
   epggrab_module_int_t *mod = m;
   free((char *)mod->path);
+  mod->path = NULL;
 }
 
 epggrab_module_int_t *epggrab_module_int_create
@@ -416,7 +417,7 @@ epggrab_module_done_socket( void *m )
   shutdown(sock, SHUT_RDWR);
   close(sock);
   if (mod->tid) {
-    pthread_kill(mod->tid, SIGTERM);
+    pthread_kill(mod->tid, SIGQUIT);
     pthread_join(mod->tid, NULL);
   }
   mod->tid = 0;

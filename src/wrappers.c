@@ -104,6 +104,9 @@ tvh_fopen(const char *filename, const char *mode)
   return f;
 }
 
+static void doquit(int sig)
+{
+}
 
 struct
 thread_state {
@@ -130,9 +133,11 @@ thread_wrapper ( void *p )
 
   sigemptyset(&set);
   sigaddset(&set, SIGTERM);
+  sigaddset(&set, SIGQUIT);
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   signal(SIGTERM, doexit);
+  signal(SIGQUIT, doquit);
 
   /* Run */
   tvhtrace("thread", "created thread %ld [%s / %p(%p)]",
