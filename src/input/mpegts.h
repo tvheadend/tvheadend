@@ -739,6 +739,9 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
   (struct type*)mpegts_mux_instance_create0(calloc(1, sizeof(struct type)),\
                                             &type##_class, uuid,\
                                             mi, mm);
+
+void mpegts_mux_instance_delete ( mpegts_mux_instance_t *mmi );
+
 int mpegts_mux_instance_start
   ( mpegts_mux_instance_t **mmiptr );
 

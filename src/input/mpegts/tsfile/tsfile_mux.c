@@ -22,6 +22,15 @@
 extern const idclass_t mpegts_mux_class;
 extern const idclass_t mpegts_mux_instance_class;
 
+static void
+tsfile_mux_instance_delete( mpegts_mux_instance_t *_mmi )
+{
+  tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t *)_mmi;
+
+  free(mmi->mmi_tsfile_path);
+  mpegts_mux_instance_delete(_mmi);
+}
+
 tsfile_mux_instance_t *
 tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm )
@@ -32,6 +41,7 @@ tsfile_mux_instance_create
 #undef tsfile_mux_instance_class
   mmi->mmi_tsfile_path    = strdup(path);
   mmi->mmi_tsfile_pcr_pid = MPEGTS_PID_NONE;
+  mmi->mmi_delete         = tsfile_mux_instance_delete;
   tvhtrace("tsfile", "mmi created %p path %s", mmi, mmi->mmi_tsfile_path);
   return mmi;
 }

@@ -41,7 +41,7 @@ const idclass_t mpegts_mux_instance_class =
   .ic_perm_def   = ACCESS_ADMIN
 };
 
-static void
+void
 mpegts_mux_instance_delete
   ( mpegts_mux_instance_t *mmi )
 {

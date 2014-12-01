@@ -27,7 +27,7 @@
  * Globals
  */
 pthread_mutex_t          tsfile_lock;
-mpegts_network_t         tsfile_network;
+mpegts_network_t         *tsfile_network;
 tsfile_input_list_t      tsfile_inputs;
 
 extern const idclass_t mpegts_service_class;
@@ -70,18 +70,19 @@ void tsfile_init ( int tuners )
   pthread_mutex_init(&tsfile_lock, NULL);
 
   /* Shared network */
-  mpegts_network_create0(&tsfile_network, &mpegts_network_class, NULL,
+  tsfile_network = calloc(1, sizeof(*tsfile_network));
+  mpegts_network_create0(tsfile_network, &mpegts_network_class, NULL,
                          "TSfile Network", NULL);
-  tsfile_network.mn_create_service = tsfile_network_create_service;
+  tsfile_network->mn_create_service = tsfile_network_create_service;
 
   /* IPTV like setup */
   if (tuners <= 0) {
     mi = tsfile_input_create(0);
-    mpegts_input_add_network((mpegts_input_t*)mi, &tsfile_network);
+    mpegts_input_add_network((mpegts_input_t*)mi, tsfile_network);
   } else {
     for (i = 0; i < tuners; i++) {
       mi = tsfile_input_create(i+1);
-      mpegts_input_add_network((mpegts_input_t*)mi, &tsfile_network);
+      mpegts_input_add_network((mpegts_input_t*)mi, tsfile_network);
     }
   }
 }
@@ -100,6 +101,7 @@ tsfile_done ( void )
     mpegts_input_delete((mpegts_input_t*)mi, 0);
     // doesn't close the pipe!
   }
+  mpegts_network_class_delete(&mpegts_network_class, 1);
   pthread_mutex_unlock(&global_lock);
 }
 
@@ -125,7 +127,7 @@ void tsfile_add_file ( const char *path )
   tvhtrace("tsfile", "add file %s (uuid:%s)", path, uuid);
   
   /* Create logical instance */
-  mm = tsfile_mux_create(uuid, &tsfile_network);
+  mm = tsfile_mux_create(uuid, tsfile_network);
   
   /* Create physical instance (for each tuner) */
   LIST_FOREACH(mi, &tsfile_inputs, tsi_link)
