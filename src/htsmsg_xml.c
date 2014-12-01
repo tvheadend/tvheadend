@@ -829,7 +829,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   char *src0 = src;
   int i;
 
-  xp.xp_errmsg[0] = 0;
+  memset(&xp, 0, sizeof(xp));
   xp.xp_encoding = XML_ENCODING_UTF8;
   LIST_INIT(&xp.xp_namespaces);
 
