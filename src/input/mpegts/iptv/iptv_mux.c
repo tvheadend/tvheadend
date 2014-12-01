@@ -183,6 +183,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   muxname = im->mm_iptv_muxname;
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
+  free(im->mm_iptv_env);
   mpegts_mux_delete(mm, delconf);
   free(url);
   free(url_sane);
