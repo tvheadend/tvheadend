@@ -696,8 +696,13 @@ static void _xmltv_load_grabbers ( void )
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
         epggrab_module_int_create(NULL, &outbuf[p], name, 3, &outbuf[p],
-                                NULL, _xmltv_parse, NULL, NULL);
+                                  NULL, _xmltv_parse, NULL, NULL);
         p = n = i + 1;
+      } else if ( outbuf[i] == '\\') {
+        memmove(outbuf, outbuf + 1, strlen(outbuf));
+        if (outbuf[i])
+          i++;
+        continue;
       } else if ( outbuf[i] == '|' ) {
         outbuf[i] = '\0';
         n = i + 1;
