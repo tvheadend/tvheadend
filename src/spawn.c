@@ -324,6 +324,71 @@ spawn_enq(const char *name, int pid)
 }
 
 
+/**
+ *
+ */
+int
+spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
+{
+  char *s, *f, *p, *a;
+  const char **r;
+  int i = 0, l;
+
+  if (!argv || !cmd)
+    return -1;
+
+  s = tvh_strdupa(cmd);
+  *argv = calloc(argc, sizeof(char *));
+
+  while (*s && i < argc - 1) {
+    f = s;
+    while (*s && *s != ' ') {
+      while (*s && *s != ' ' && *s != '\\')
+        s++;
+      if (*s == '\\') {
+        memmove(s, s + 1, strlen(s));
+        if (*s)
+          s++;
+      }
+    }
+    if (f != s) {
+      if (*s) {
+        *(char *)s = '\0';
+        s++;
+      }
+      for (r = replace; r && *r; r += 2) {
+        p = strstr(f, *r);
+        if (p) {
+          l = strlen(*r);
+          a = malloc(strlen(f) + strlen(r[1]) + 1);
+          *p = '\0';
+          strcpy(a, f);
+          strcat(a, r[1]);
+          strcat(a, p + l);
+          *argv[i++] = f;
+          break;
+        }
+      }
+      if (r && *r)
+        continue;
+      (*argv)[i++] = strdup(f);
+    }
+  }
+  (*argv)[i] = NULL;
+  return 0;
+}
+
+/**
+ *
+ */
+void
+spawn_free_args(char **argv)
+{
+  char **a = argv;
+  for (; *a; a++)
+    free(*a);
+  free(argv);
+}
 
 /**
  * Execute the given program and return its standard output as file-descriptor (pipe).

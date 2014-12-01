@@ -32,87 +32,29 @@
  * Connect UDP/RTP
  */
 static int
-iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
+iptv_pipe_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 {
-  char *argv[64], *envp[32], *f, *raw, *s, *p, *a;
-  int i = 1, rd;
+  char **argv = NULL, **envp = NULL;
+  const char *replace[] = { "${service_name}", im->mm_iptv_svcname ?: "", NULL };
+  int rd;
   pid_t pid;
 
-  if (strncmp(_raw, "pipe://", 7))
-    return -1;
+  if (strncmp(raw, "pipe://", 7))
+    goto err;
 
-  s = raw = tvh_strdupa(_raw + 7);
+  if (spawn_parse_args(&argv, 64, raw + 7, replace))
+    goto err;
 
-  argv[0] = NULL;
+  if (spawn_parse_args(&envp, 64, im->mm_iptv_env ?: "", NULL))
+    goto err;
 
-  while (*s && *s != ' ')
-    s++;
-  if (*s == ' ') {
-    *(char *)s = '\0';
-    s++;
-  }
-
-  while (*s && i < ARRAY_SIZE(argv) - 1) {
-    f = s;
-    while (*s && *s != ' ') {
-      while (*s && *s != ' ' && *s != '\\')
-        s++;
-      if (*s == '\\') {
-        memmove(s, s + 1, strlen(s));
-        if (*s)
-          s++;
-      }
-    }
-    if (f != s) {
-      if (*s) {
-        *(char *)s = '\0';
-        s++;
-      }
-      p = strstr(f, "${service_name}");
-      if (p) {
-        a = alloca(strlen(f) + strlen(im->mm_iptv_svcname ?: ""));
-        *p = '\0';
-        strcpy(a, f);
-        strcat(a, im->mm_iptv_svcname ?: "");
-        strcat(a, p + 15);
-        f = a;
-      }
-      argv[i++] = f;
-    }
-  }
-  argv[i] = NULL;
-
-  s = im->mm_iptv_env ? tvh_strdupa(im->mm_iptv_env) : (char *)"";
-  i = 0;
-  while (*s && i < ARRAY_SIZE(envp) - 1) {
-    f = s;
-    while (*s && *s != '=')
-      s++;
-    if (*s != '=')
-      break;
-    while (*s && *s != ' ') {
-      while (*s && *s != ' ' && *s != '\\')
-        s++;
-      if (*s == '\\') {
-        memmove(s, s + 1, strlen(s));
-        if (*s)
-          s++;
-      }
-    }
-    if (f != s) {
-      if (*s) {
-        *s = '\0';
-        s++;
-      }
-      envp[i++] = f;
-    }
-  }
-  envp[i] = NULL;
-
-  if (spawn_and_give_stdout(raw, argv, envp, &rd, &pid, 1)) {
+  if (spawn_and_give_stdout(argv[0], argv, envp, &rd, &pid, 1)) {
     tvherror("iptv", "Unable to start pipe '%s' (wrong executable?)", raw);
-    return -1;
+    goto err;
   }
+
+  spawn_free_args(argv);
+  spawn_free_args(envp);
 
   fcntl(rd, F_SETFD, fcntl(rd, F_GETFD) | FD_CLOEXEC);
   fcntl(rd, F_SETFL, fcntl(rd, F_GETFL) | O_NONBLOCK);
@@ -125,6 +67,13 @@ iptv_pipe_start ( iptv_mux_t *im, const char *_raw, const url_t *url )
   if (url)
     iptv_input_mux_started(im);
   return 0;
+
+err:
+  if (argv)
+    spawn_free_args(argv);
+  if (envp)
+    spawn_free_args(envp);
+  return -1;
 }
 
 static void

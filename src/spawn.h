@@ -25,6 +25,10 @@ void spawn_error ( const char *fmt, ... );
 
 int find_exec ( const char *name, char *out, size_t len );
 
+int spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace);
+
+void spawn_free_args(char **argv);
+
 int spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
                           int *rd, pid_t *pid, int redir_stderr);
 
