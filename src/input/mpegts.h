@@ -445,6 +445,7 @@ struct mpegts_service
   uint16_t s_dvb_prefcapid;
   int      s_dvb_prefcapid_lock;
   uint16_t s_dvb_forcecaid;
+  time_t   s_dvb_last_seen;
 
   /*
    * EIT/EPG control

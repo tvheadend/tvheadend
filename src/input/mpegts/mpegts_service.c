@@ -183,6 +183,13 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_forcecaid),
       .opts     = PO_ADVANCED | PO_HEXA,
     },
+    {
+      .type     = PT_TIME,
+      .id       = "last_seen",
+      .name     = "Last Seen",
+      .off      = offsetof(mpegts_service_t, s_dvb_last_seen),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
     {},
   }
 };
@@ -575,6 +582,10 @@ mpegts_service_find
         s->s_pmt_pid = pmt_pid;
         if (save) *save = 1;
       }
+      if (create && (*save || s->s_dvb_last_seen + 3600 < dispatch_clock)) {
+        s->s_dvb_last_seen = dispatch_clock;
+        if (save) *save = 1;
+      }
       return s;
     }
   }
@@ -582,9 +593,10 @@ mpegts_service_find
   /* Create */
   if (create) {
     s = mm->mm_network->mn_create_service(mm, sid, pmt_pid);
+    s->s_dvb_last_seen = dispatch_clock;
     if (save) *save = 1;
   }
-  
+
   return s;
 }
 
