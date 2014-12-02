@@ -355,7 +355,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodec *icodec, *ocodec;
   AVCodecContext *ictx, *octx;
   AVPacket packet;
-  int length;
+  int i, length;
   streaming_message_t *sm;
   th_pkt_t *n;
   audio_stream_t *as = (audio_stream_t*)ts;
@@ -648,23 +648,30 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + length) < 0) {
           tvhlog(LOG_ERR, "transcode", "%04X: Could not reallocate FIFO", shortid(t));
           transcoder_stream_invalidate(ts);
-          goto cleanup;
+          goto scleanup;
         }
 
         if (av_audio_fifo_write(as->fifo, (void **)output, length) < length) {
           tvhlog(LOG_ERR, "transcode", "%04X: Could not write to FIFO", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
+          goto scleanup;
         }
       }
+      continue;
 
+scleanup:
+      transcoder_stream_invalidate(ts);
+      for (i = 0; i < octx->channels; i++)
+        av_freep(&output[i]);
+      goto cleanup;
     }
+
+    for (i = 0; i < octx->channels; i++)
+      av_freep(&output[i]);
 
 /*  Need to find out where we are going to do this. Normally at the end.
     int delay_samples = avresample_get_delay(as->resample_context);
     if (delay_samples) {
       tvhlog(LOG_DEBUG, "transcode", "%d samples in resamples delay buffer.", delay_samples);
-      av_freep(&output);
       goto cleanup;
     }
 */
@@ -934,8 +941,13 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   AVPacket packet, packet2;
   AVPicture deint_pic;
   uint8_t *buf, *deint;
-  int length, len, ret, got_picture, got_output;
+  int length, len, ret, got_picture, got_output, got_ref;
   video_stream_t *vs = (video_stream_t*)ts;
+
+  av_init_packet(&packet);
+  av_init_packet(&packet2);
+  packet2.data = NULL;
+  packet2.size = 0;
 
   ictx = vs->vid_ictx;
   octx = vs->vid_octx;
@@ -945,6 +957,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   buf = deint = NULL;
   opts = NULL;
+
+  got_ref = 0;
 
   if (ictx->codec_id == AV_CODEC_ID_NONE) {
 
@@ -956,8 +970,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
   }
-
-  av_init_packet(&packet);
 
   packet.data     = pktbuf_ptr(pkt->pkt_payload);
   packet.size     = pktbuf_len(pkt->pkt_payload);
@@ -985,6 +997,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if (!got_picture)
     goto cleanup;
+
+  got_ref = 1;
 
   octx->sample_aspect_ratio.num = ictx->sample_aspect_ratio.num;
   octx->sample_aspect_ratio.den = ictx->sample_aspect_ratio.den;
@@ -1125,7 +1139,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     transcoder_stream_invalidate(ts);
     goto cleanup;
   }
-      
  
   vs->vid_enc_frame->pkt_pts = vs->vid_dec_frame->pkt_pts;
   vs->vid_enc_frame->pkt_dts = vs->vid_dec_frame->pkt_dts;
@@ -1136,15 +1149,9 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   else if (ictx->coded_frame && ictx->coded_frame->pts != AV_NOPTS_VALUE)
     vs->vid_enc_frame->pts = vs->vid_dec_frame->pts;
 
-
-  av_init_packet(&packet2);
-  packet2.data = NULL; // packet data will be allocated by the encoder
-  packet2.size = 0;
-
   ret = avcodec_encode_video2(octx, &packet2, vs->vid_enc_frame, &got_output);
   if (ret < 0) {
     tvherror("transcode", "%04X: Error encoding frame", shortid(t));
-    av_free_packet(&packet2);
     transcoder_stream_invalidate(ts);
     goto cleanup;
   }
@@ -1152,9 +1159,12 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   if (got_output)
     send_video_packet(t, ts, pkt, &packet2, octx);
 
+ cleanup:
+  if (got_ref)
+    av_frame_unref(vs->vid_dec_frame);
+
   av_free_packet(&packet2);
 
- cleanup:
   av_free_packet(&packet);
 
   if(buf)
