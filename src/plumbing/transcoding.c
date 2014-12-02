@@ -355,7 +355,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodec *icodec, *ocodec;
   AVCodecContext *ictx, *octx;
   AVPacket packet;
-  int i, length;
+  int length;
   streaming_message_t *sm;
   th_pkt_t *n;
   audio_stream_t *as = (audio_stream_t*)ts;
@@ -635,7 +635,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     if (av_samples_alloc(output, NULL, octx->channels, frame->nb_samples, octx->sample_fmt, 1) < 0) {
       tvherror("transcode", "%04X: av_resamples_alloc failed", shortid(t));
       transcoder_stream_invalidate(ts);
-      goto cleanup;
+      goto scleanup;
     }
 
     length = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
@@ -660,13 +660,11 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
 scleanup:
       transcoder_stream_invalidate(ts);
-      for (i = 0; i < octx->channels; i++)
-        av_freep(&output[i]);
+      av_freep(&output[0]);
       goto cleanup;
     }
 
-    for (i = 0; i < octx->channels; i++)
-      av_freep(&output[i]);
+    av_freep(&output[0]);
 
 /*  Need to find out where we are going to do this. Normally at the end.
     int delay_samples = avresample_get_delay(as->resample_context);
