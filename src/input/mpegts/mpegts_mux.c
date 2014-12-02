@@ -440,7 +440,23 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_pmt_06_ac3),
       .opts     = PO_ADVANCED,
     },
-    {}
+    {
+      .type     = PT_S64,
+      .id       = "created",
+      .name     = "Created",
+      .off      = offsetof(mpegts_mux_t, mm_created),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+      .istime   = "%F %T",
+    },
+    {
+      .type     = PT_S64,
+      .id       = "updated",
+      .name     = "Updated",
+      .off      = offsetof(mpegts_mux_t, mm_updated),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+      .istime   = "%F %T",
+    },
+    {},
   }
 };
 
@@ -463,7 +479,10 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   char buf[256];
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
+  if (delconf)
+    tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
+  else
+    tvhtrace("mpegts", "%s (%p) - deleting", buf, mm);
   
   /* Stop */
   mm->mm_stop(mm, 1);
@@ -831,6 +850,21 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
  * Scanning
  * *************************************************************************/
 
+#define MPEGTS_AUTOCLEAN_PERIOD (86400L * 7) // 1 week
+
+static void
+mpegts_mux_clean_services ( const char *mname, mpegts_mux_t *mm )
+{
+  mpegts_service_t *s, *n;
+  for (s = LIST_FIRST(&mm->mm_services); s != NULL; s = n) {
+    n = LIST_NEXT(s, s_dvb_mux_link);
+    if (dispatch_clock < (s->s_dvb_updated + MPEGTS_AUTOCLEAN_PERIOD))
+      continue;
+    tvhinfo("mpegts", "%s - autoclean svc %s", mname, s->s_nicename);
+    service_destroy((service_t*)s, 1);
+  }
+}
+
 void
 mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 {
@@ -852,6 +886,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
     }
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
+
+  /* Check for out of date services */
+  if (mm->mm_network->mn_autoclean_svc)
+    mpegts_mux_clean_services(buf, mm);
 
   if (res)
     mpegts_network_scan_mux_done(mm);
@@ -904,6 +942,15 @@ again:
     tvhinfo("mpegts", "%s - scan no data, failed", buf);
     mpegts_mux_scan_done(mm, buf, 0);
 
+    /* Mark disabled */
+    if (mm->mm_network->mn_autoclean_mux) {
+      if (dispatch_clock > (mm->mm_updated + MPEGTS_AUTOCLEAN_PERIOD)) {
+	tvhinfo("mpegts", "%s - autoclean mux", buf);
+        mm->mm_delete(mm, 1);
+        return;
+      }
+    }
+
   /* Pending tables (another 20s or 30s - bit arbitrary) */
   } else if (q) {
     tvhinfo("mpegts", "%s - scan needs more time", buf);
@@ -934,6 +981,9 @@ mpegts_mux_create0
     free(mm);
     return NULL;
   }
+
+  /* Set time */
+  mm->mm_created             = dispatch_clock;
 
   /* Enabled by default */
   mm->mm_enabled             = 1;
