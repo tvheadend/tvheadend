@@ -284,7 +284,6 @@ char *epggrab_module_grab_spawn ( void *m )
   char       *outbuf;
   epggrab_module_int_t *mod = m;
   char **argv = NULL;
-  char *dargv[] = { (char *)mod->path, (char *)"--quiet", NULL };
 
   /* Debug */
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
@@ -293,17 +292,6 @@ char *epggrab_module_grab_spawn ( void *m )
   if (spawn_parse_args(&argv, 64, mod->path, NULL)) {
     tvhlog(LOG_ERR, mod->id, "unable to parse arguments");
     return NULL;
-  }
-
-  if (argv && argv[1] == NULL) {
-    spawn_free_args(argv);
-    argv = dargv;
-  } else {
-    /* -- means no arguments */
-    if (argv && !strcmp(argv[1], "--") && argv[2] == NULL) {
-      free(argv[1]);
-      argv[1] = NULL;
-    }
   }
 
   /* Grab */
@@ -318,14 +306,10 @@ char *epggrab_module_grab_spawn ( void *m )
 
   close(rd);
 
-  if (argv != dargv)
-    spawn_free_args(argv);
-
   return outbuf;
 
 error:
-  if (argv && argv != dargv)
-    spawn_free_args(argv);
+  spawn_free_args(argv);
   if (rd >= 0)
     close(rd);
   tvhlog(LOG_ERR, mod->id, "no output detected");
