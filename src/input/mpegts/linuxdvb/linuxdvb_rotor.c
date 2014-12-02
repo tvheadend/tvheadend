@@ -42,6 +42,7 @@ typedef struct linuxdvb_rotor
   double    lr_site_lat;
   double    lr_site_lon;
   double    lr_sat_lon;
+  double    lr_zero_lon;
   
   /* GOTOX */
   uint32_t  lr_position;
@@ -85,6 +86,12 @@ const idclass_t linuxdvb_rotor_gotox_class =
       .id     = "sat_lon",
       .name   = "Satellite Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
+    },
+    {
+      .type   = PT_DBL,
+      .id     = "zero_lon",
+      .name   = "Zero Sat Longitude",
+      .off    = offsetof(linuxdvb_rotor_t, lr_zero_lon),
     },
     {
       .type   = PT_U16,
@@ -236,7 +243,7 @@ linuxdvb_rotor_usals_tune
 
   double lat = TO_RAD(lr->lr_site_lat);
   double lon = TO_RAD(lr->lr_site_lon);
-  double pos = TO_RAD(lr->lr_sat_lon);
+  double pos = TO_RAD(lr->lr_sat_lon - lr->lr_zero_lon);
      
   double dishVector[3] = {
     (r_eq * cos(lat)),
