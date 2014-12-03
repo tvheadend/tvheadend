@@ -1233,10 +1233,12 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_FOUND;
 
   if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_WEB_INTERFACE) &&
-      access_verify2(hc->hc_access, ACCESS_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+     (access_verify2(hc->hc_access, ACCESS_OR |
+                                    ACCESS_WEB_INTERFACE |
+                                    ACCESS_STREAMING |
+                                    ACCESS_ADVANCED_STREAMING |
+                                    ACCESS_HTSP_STREAMING |
+                                    ACCESS_RECORDER)))
     return HTTP_STATUS_UNAUTHORIZED;
 
   if(sscanf(remain, "%d", &id) != 1)
