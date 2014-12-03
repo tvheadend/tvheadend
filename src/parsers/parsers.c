@@ -1157,6 +1157,23 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
   bitstream_t bs;
   int ret = 0;
 
+  /* delimiter - finished frame */
+  if ((sc & 0x1f) == 9 && st->es_curpkt && st->es_curpkt->pkt_payload) {
+    if (st->es_curdts != PTS_UNSET && st->es_frame_duration) {
+       parser_deliver(t, st, st->es_curpkt, st->es_buf.sb_err);
+       st->es_curpkt = NULL;
+
+      st->es_curdts += st->es_frame_duration;
+      if (st->es_curpts != PTS_UNSET)
+        st->es_curpts += st->es_frame_duration;
+      st->es_prevdts = st->es_curdts;
+    } else {
+      pkt_ref_dec(st->es_curpkt);
+      st->es_curpkt = NULL;
+    }
+    return 1;
+  }
+
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
     if(len >= 9) {
@@ -1238,8 +1255,9 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     }
   }
 
-  if(next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) {
-    /* Complete frame */
+  if((next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) ||
+     (next_startcode & 0x1f) == 9) {
+    /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return 4;
     th_pkt_t *pkt = st->es_curpkt;
