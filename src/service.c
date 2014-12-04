@@ -1574,7 +1574,7 @@ service_get_channel_name ( service_t *s )
 const char *
 service_get_full_channel_name ( service_t *s )
 {
-  static char __thread buf[256];
+  static char buf[256];
   const char *r = NULL;
   int         len;
 
@@ -1591,7 +1591,7 @@ service_get_full_channel_name ( service_t *s )
     buf[len++] = '/';
   buf[len] = '\0';
   if (len < sizeof(buf))
-    snprintf(buf + len, sizeof(buf) - len, "%s", r);
+    snprintf(buf + len, sizeof(buf) - len, "%s%s", !s->s_enabled ? "---" : "", r);
   return buf;
 }
 
