@@ -185,6 +185,13 @@ const idclass_t mpegts_service_class =
     },
     {
       .type     = PT_TIME,
+      .id       = "created",
+      .name     = "Created",
+      .off      = offsetof(mpegts_service_t, s_dvb_created),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
       .id       = "last_seen",
       .name     = "Last Seen",
       .off      = offsetof(mpegts_service_t, s_dvb_last_seen),
@@ -519,6 +526,9 @@ mpegts_service_create0
   int r;
   char buf[256];
 
+  /* defaults for older version */
+  s->s_dvb_created = dispatch_clock;
+
   if (service_create0((service_t*)s, class, uuid, S_MPEG_TS, conf) == NULL)
     return NULL;
 
@@ -559,6 +569,10 @@ mpegts_service_create0
   idnode_notify_simple(&mm->mm_id);
   idnode_notify_simple(&mm->mm_network->mn_id);
 
+  /* Save the create time */
+  if (s->s_dvb_created == dispatch_clock)
+    service_request_save((service_t *)s, 0);
+
   return s;
 }
 
@@ -582,9 +596,11 @@ mpegts_service_find
         s->s_pmt_pid = pmt_pid;
         if (save) *save = 1;
       }
-      if (create && (*save || s->s_dvb_last_seen + 3600 < dispatch_clock)) {
-        s->s_dvb_last_seen = dispatch_clock;
-        if (save) *save = 1;
+      if (create) {
+        if ((save && *save) || s->s_dvb_last_seen + 3600 < dispatch_clock) {
+          s->s_dvb_last_seen = dispatch_clock;
+          if (save) *save = 1;
+        }
       }
       return s;
     }
@@ -593,7 +609,7 @@ mpegts_service_find
   /* Create */
   if (create) {
     s = mm->mm_network->mn_create_service(mm, sid, pmt_pid);
-    s->s_dvb_last_seen = dispatch_clock;
+    s->s_dvb_created = s->s_dvb_last_seen = dispatch_clock;
     if (save) *save = 1;
   }
 
