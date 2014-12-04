@@ -820,6 +820,17 @@ service_destroy(service_t *t, int delconf)
   service_unref(t);
 }
 
+void
+service_set_enabled(service_t *t, int enabled)
+{
+  if (t->s_enabled != !!enabled) {
+    t->s_enabled = !!enabled;
+    service_class_notify_enabled(t);
+    service_request_save(t, 0);
+    idnode_notify_simple(&t->s_id);
+  }
+}
+
 static int64_t
 service_channel_number ( service_t *s )
 {

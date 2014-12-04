@@ -447,6 +447,7 @@ struct mpegts_service
   uint16_t s_dvb_forcecaid;
   time_t   s_dvb_created;
   time_t   s_dvb_last_seen;
+  time_t   s_dvb_check_seen;
 
   /*
    * EIT/EPG control

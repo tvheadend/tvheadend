@@ -521,6 +521,8 @@ int service_is_other(service_t *t);
 
 int service_is_encrypted ( service_t *t );
 
+void service_set_enabled ( service_t *t, int enabled );
+
 void service_destroy(service_t *t, int delconf);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
