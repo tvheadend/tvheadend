@@ -1347,7 +1347,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     ch = channel_find_by_id(u32);
   if(!htsmsg_get_u32(in, "eventId", &eventid)) {
     e = epg_broadcast_find_by_id(eventid);
-    ch = e->channel;
+    ch = e ? e->channel : ch;
   }
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
