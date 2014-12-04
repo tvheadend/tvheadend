@@ -225,6 +225,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   channel_t *ch = NULL;
   channel_service_mapping_t *csm;
 
+  if (!t->s_enabled)
+    return;
   if (!bq->bq_mapradio && service_is_radio(t))
     return;
   if (!bq->bq_mapnolcn &&
@@ -317,6 +319,25 @@ bouquet_unmap_channel(bouquet_t *bq, service_t *t)
     }
     csm = csm_next;
   }
+}
+
+/**
+ *
+ */
+void
+bouquet_notify_service_enabled(service_t *t)
+{
+  bouquet_t *bq;
+
+  lock_assert(&global_lock);
+
+  RB_FOREACH(bq, &bouquets, bq_link)
+    if (idnode_set_exists(bq->bq_services, &t->s_id)) {
+      if (!t->s_enabled)
+        bouquet_unmap_channel(bq, t);
+      else if (bq->bq_enabled && bq->bq_maptoch)
+        bouquet_map_channel(bq, t);
+    }
 }
 
 /*

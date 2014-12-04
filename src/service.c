@@ -54,6 +54,12 @@ static void service_class_save(struct idnode *self);
 
 struct service_queue service_all;
 
+static void
+service_class_notify_enabled ( void *obj )
+{
+  bouquet_notify_service_enabled((service_t *)obj);
+}
+
 static const void *
 service_class_channel_get ( void *obj )
 {
@@ -182,6 +188,7 @@ const idclass_t service_class = {
       .id       = "enabled",
       .name     = "Enabled",
       .off      = offsetof(service_t, s_enabled),
+      .notify   = service_class_notify_enabled,
     },
     {
       .type     = PT_STR,

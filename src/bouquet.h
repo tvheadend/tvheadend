@@ -73,6 +73,8 @@ bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
 void bouquet_destroy_by_service(service_t *t);
 void bouquet_destroy_by_channel_tag(channel_tag_t *ct);
 
+void bouquet_notify_service_enabled(service_t *t);
+
 static inline bouquet_t *
 bouquet_find_by_uuid(const char *uuid)
   { return (bouquet_t *)idnode_find(uuid, &bouquet_class, NULL); }
