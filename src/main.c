@@ -939,7 +939,6 @@ main(int argc, char **argv)
   tvhftrace("main", imagecache_done);
   tvhftrace("main", lang_code_done);
   tvhftrace("main", api_done);
-  tvhftrace("main", config_done);
   tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
@@ -952,6 +951,8 @@ main(int argc, char **argv)
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
   tvhlog_end();
+
+  tvhftrace("main", config_done);
 
   if(opt_fork)
     unlink(opt_pidpath);

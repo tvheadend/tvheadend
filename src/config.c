@@ -25,12 +25,15 @@
 #include "uuid.h"
 #include "htsbuf.h"
 #include "spawn.h"
+#include "lock.h"
 
 /* *************************************************************************
  * Global data
  * ************************************************************************/
 
 static htsmsg_t *config;
+static char config_lock[PATH_MAX];
+static int config_lock_fd;
 
 /* *************************************************************************
  * Config migration
@@ -1329,6 +1332,11 @@ config_init ( const char *path, int backup )
   /* Configure settings routines */
   hts_settings_init(path);
 
+  /* Lock it */
+  hts_settings_buildpath(config_lock, sizeof(config_lock), ".lock");
+  if ((config_lock_fd = file_lock(config_lock, 3)) < 0)
+    exit(78); /* config error */
+
   /* Load global settings */
   config = hts_settings_load("config");
   if (!config) {
@@ -1351,7 +1359,9 @@ config_init ( const char *path, int backup )
 
 void config_done ( void )
 {
+  /* note: tvhlog is inactive !!! */
   htsmsg_destroy(config);
+  file_unlock(config_lock, config_lock_fd);
 }
 
 void config_save ( void )

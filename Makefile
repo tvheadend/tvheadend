@@ -153,7 +153,8 @@ SRCS =  src/version.c \
 	src/esfilter.c \
 	src/intlconv.c \
 	src/profile.c \
-	src/bouquet.c
+	src/bouquet.c \
+	src/lock.c
 
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
