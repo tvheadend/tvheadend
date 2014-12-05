@@ -1035,9 +1035,10 @@ dvb_pat_callback
         last_seen = s->s_dvb_check_seen;
     for (s = LIST_FIRST(&mm->mm_services); s; s = snext) {
       snext = LIST_NEXT(s, s_dvb_mux_link);
-      if (s->s_enabled && s->s_dvb_check_seen + 24 * 3600 < last_seen) {
+      if (s->s_enabled && s->s_auto != SERVICE_AUTO_OFF &&
+          s->s_dvb_check_seen + 24 * 3600 < last_seen) {
         tvhinfo("mpegts", "disabling service %s (missing in PAT)", s->s_nicename ?: "<unknown>");
-        service_set_enabled((service_t *)s, 0);
+        service_set_enabled((service_t *)s, 0, SERVICE_AUTO_PAT_MISSING);
       }
     }
     mt->mt_opaque = mm;
