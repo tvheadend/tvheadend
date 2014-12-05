@@ -88,12 +88,6 @@ const idclass_t linuxdvb_rotor_gotox_class =
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {
-      .type   = PT_DBL,
-      .id     = "zero_lon",
-      .name   = "Zero Sat Longitude",
-      .off    = offsetof(linuxdvb_rotor_t, lr_zero_lon),
-    },
-    {
       .type   = PT_U16,
       .id     = "rate",
       .name   = "Rate (millis/click)",
@@ -126,6 +120,12 @@ const idclass_t linuxdvb_rotor_usals_class =
       .id     = "sat_lon",
       .name   = "Satellite Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
+    },
+    {
+      .type   = PT_DBL,
+      .id     = "zero_lon",
+      .name   = "Zero Sat Longitude",
+      .off    = offsetof(linuxdvb_rotor_t, lr_zero_lon),
     },
     {
       .type   = PT_U16,
