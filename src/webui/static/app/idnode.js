@@ -1162,7 +1162,7 @@ tvheadend.idnode_grid = function(panel, conf)
                         var uuids = [];
                         for (var i = 0; i < r.length; i++)
                             uuids.push(r[i].id);
-                        tvheadend.AjaxConfirm({
+                        c = {
                             url: 'api/idnode/delete',
                             params: {
                                 uuid: Ext.encode(uuids)
@@ -1172,7 +1172,10 @@ tvheadend.idnode_grid = function(panel, conf)
                                 if (!auto.getValue())
                                     store.reload();
                             }
-                        });
+                        };
+                        if (conf.delquestion)
+                            c['question'] = conf.delquestion;
+                        tvheadend.AjaxConfirm(c);
                     }
                 }
             });
@@ -1644,7 +1647,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 disabled: true,
                 handler: function() {
                     if (current) {
-                        tvheadend.AjaxConfirm({
+                        var c = {
                             url: 'api/idnode/delete',
                             params: {
                                 uuid: current.uuid
@@ -1653,7 +1656,10 @@ tvheadend.idnode_form_grid = function(panel, conf)
                                 roweditor_destroy();
                                 store.reload();
                             }
-                        });
+                        };
+                        if (conf.delquestion)
+                            c['delquestion'] = conf.delquestion;
+                        tvheadend.AjaxConfirm(c);
                     }
                 }
             });
