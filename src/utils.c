@@ -498,14 +498,14 @@ makedirs ( const char *inpath, int mode )
   int err, ok;
   size_t x;
   struct stat st;
-  char path[512];
+  char *path;
 
   if (!inpath || !*inpath) return -1;
 
   x  = 1;
   ok = 1;
-  strncpy(path, inpath, sizeof(path)-1);
-  path[sizeof(path)-1] = '\0';
+  path = alloca(strlen(inpath) + 1);
+  strcpy(path, inpath);
   while(ok) {
     ok = path[x];
     if (path[x] == '/' || !path[x]) {
@@ -535,7 +535,7 @@ rmtree ( const char *path )
   int err = 0;
   struct dirent de, *der;
   struct stat st;
-  char buf[512];
+  char buf[PATH_MAX];
   DIR *dir = opendir(path);
   if (!dir) return -1;
   while (!readdir_r(dir, &de, &der) && der) {
