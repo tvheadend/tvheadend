@@ -342,10 +342,28 @@ idnode_get_display
   if (p) {
     if (p->rend)
       return p->rend(self);
-    if (p->islist) {
+    else if (p->islist) {
       htsmsg_t *l = (htsmsg_t*)p->get(self);
       if (l)
         return htsmsg_list_2_csv(l);
+    } else if (p->list) {
+      htsmsg_t *l = p->list(self), *m;
+      htsmsg_field_t *f;
+      uint32_t k, v;
+      char *r = NULL;
+      const char *s;
+      if (l && !idnode_get_u32(self, p->id, &v))
+        HTSMSG_FOREACH(f, l) {
+          m = htsmsg_field_get_map(f);
+          if (!htsmsg_get_u32(m, "key", &k) &&
+              (s = htsmsg_get_str(m, "val")) != NULL &&
+              v == k) {
+            r = strdup(s);
+            break;
+          }
+        }
+      htsmsg_destroy(l);
+      return r;
     }
   }
   return NULL;
