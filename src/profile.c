@@ -1443,7 +1443,7 @@ profile_init(void)
   }
 
   name = "pass";
-  pro = profile_find_by_name2(name, NULL,1 );
+  pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(pro->pro_name, name)) {
     htsmsg_t *conf;
 
@@ -1550,6 +1550,13 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
 #endif
+
+  /* Assign the default profile if config files are corrupted */
+  if (!profile_default) {
+    pro = profile_find_by_name2("pass", NULL, 1);
+    assert(pro);
+    profile_default = pro;
+  }
 }
 
 void
