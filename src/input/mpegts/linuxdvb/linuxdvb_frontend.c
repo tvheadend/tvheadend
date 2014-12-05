@@ -856,7 +856,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     if (ev[0].data.fd != dvr) break;
     
     /* Read */
-    if ((n = sbuf_read(&sb, dvr)) < 0) {
+    if ((n = sbuf_tsdebug_read(mmi->mmi_mux, &sb, dvr)) < 0) {
       if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {

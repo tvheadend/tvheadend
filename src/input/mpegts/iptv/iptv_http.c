@@ -47,6 +47,7 @@ iptv_http_data
 
   pthread_mutex_lock(&iptv_lock);
 
+  tsdebug_write((mpegts_mux_t *)im, buf, len);
   sbuf_append(&im->mm_iptv_buffer, buf, len);
 
   if (len > 0)

@@ -329,6 +329,12 @@ enum mpegts_mux_epg_flag
 };
 #define MM_EPG_LAST MM_EPG_ONLY_OPENTV_SKY_AUSAT
 
+typedef struct tsdebug_packet {
+  TAILQ_ENTRY(tsdebug_packet) link;
+  uint8_t pkt[188];
+  off_t pos;
+} tsdebug_packet_t;
+
 /* Multiplex */
 struct mpegts_mux
 {
@@ -421,6 +427,16 @@ struct mpegts_mux
   int   mm_epg;
   char *mm_charset;
   int   mm_pmt_06_ac3;
+
+  /*
+   * TSDEBUG
+   */
+#if ENABLE_TSDEBUG
+  int   mm_tsdebug_fd;
+  int   mm_tsdebug_fd2;
+  off_t mm_tsdebug_pos;
+  TAILQ_HEAD(, tsdebug_packet) mm_tsdebug_packets;
+#endif
 };
  
 /* Service */
@@ -802,6 +818,28 @@ mpegts_pid_t * mpegts_input_open_pid
 
 void mpegts_input_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
+
+static inline void
+tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
+{
+#if ENABLE_TSDEBUG
+  ssize_t r = write(mm->mm_tsdebug_fd2, buf, len);
+  if (r != len && mm->mm_tsdebug_fd2 >= 0)
+    tvherror("tsdebug", "unable to write input data (%i)", errno);
+#endif
+}
+
+static inline ssize_t
+sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd)
+{
+#if ENABLE_TSDEBUG
+  ssize_t r = sbuf_read(sb, fd);
+  tsdebug_write(mm, sb->sb_data + sb->sb_ptr - r, r);
+  return r;
+#else
+  return sbuf_read(sb, fd);
+#endif
+}
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);

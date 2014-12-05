@@ -137,6 +137,7 @@ iptv_rtp_read ( iptv_mux_t *im )
 
     /* Move data */
     len -= hlen;
+    tsdebug_write((mpegts_mux_t *)im, rtp + hlen, len);
     sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
     res += len;
   }

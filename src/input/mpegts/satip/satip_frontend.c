@@ -1228,6 +1228,7 @@ fast_exit:
                               (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
       seq = nseq;
       /* Process */
+      tsdebug_write((mpegts_mux_t *)lm, p + pos, c - pos);
       sbuf_append(&sb, p + pos, c - pos);
     }
     mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,

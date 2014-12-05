@@ -329,6 +329,10 @@ SRCS-${CONFIG_CAPMT} += \
 SRCS-${CONFIG_CONSTCW} += \
 	src/descrambler/constcw.c
 
+# TSDEBUGCW
+SRCS-${CONFIG_TSDEBUG} += \
+	src/descrambler/tsdebugcw.c
+
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
 FFDECSA-$(CONFIG_CAPMT)   = yes

@@ -214,8 +214,8 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
-    tvhlog(LOG_ERR, "tsfile", "mmi %p could not stat %s",
-           mmi, mmi->mmi_tsfile_path);
+    tvhlog(LOG_ERR, "tsfile", "mmi %p could not stat '%s' (%i)",
+           mmi, mmi->mmi_tsfile_path, errno);
     mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
   }

@@ -29,6 +29,9 @@
 
 #include <pthread.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl );
@@ -475,6 +478,34 @@ static void
 mpegts_input_started_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+#if ENABLE_TSDEBUG
+  extern char *tvheadend_tsdebug;
+  static const char *tmpdir = "/tmp/tvheadend.tsdebug/";
+  char buf[128];
+  char path[PATH_MAX];
+  struct stat st;
+  if (!tvheadend_tsdebug && !stat(tmpdir, &st) && (st.st_mode & S_IFDIR) != 0)
+    tvheadend_tsdebug = (char *)tmpdir;
+  if (tvheadend_tsdebug && !strcmp(tvheadend_tsdebug, tmpdir) && stat(tmpdir, &st))
+    tvheadend_tsdebug = NULL;
+  if (tvheadend_tsdebug) {
+    mpegts_mux_nice_name(mmi->mmi_mux, buf, sizeof(buf));
+    snprintf(path, sizeof(path), "%s/%s-%li-%p-mux.ts", tvheadend_tsdebug,
+             buf, (long)dispatch_clock, mi);
+    mmi->mmi_mux->mm_tsdebug_fd = tvh_open(path, O_WRONLY | O_CREAT, 0600);
+    if (mmi->mmi_mux->mm_tsdebug_fd < 0)
+      tvherror("tsdebug", "unable to create file '%s' (%i)", path, errno);
+    snprintf(path, sizeof(path), "%s/%s-%li-%p-input.ts", tvheadend_tsdebug,
+             buf, (long)dispatch_clock, mi);
+    mmi->mmi_mux->mm_tsdebug_fd2 = tvh_open(path, O_WRONLY | O_CREAT, 0600);
+    if (mmi->mmi_mux->mm_tsdebug_fd2 < 0)
+      tvherror("tsdebug", "unable to create file '%s' (%i)", path, errno);
+  } else {
+    mmi->mmi_mux->mm_tsdebug_fd = -1;
+    mmi->mmi_mux->mm_tsdebug_fd2 = -1;
+  }
+#endif
+
   /* Deliver first TS packets as fast as possible */
   mi->mi_last_dispatch = 0;
   /* Wait for first TS packet */
@@ -532,6 +563,19 @@ mpegts_input_stopped_mux
   }
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 0);
+
+#if ENABLE_TSDEBUG
+  tsdebug_packet_t *tp;
+  close(mmi->mmi_mux->mm_tsdebug_fd);
+  close(mmi->mmi_mux->mm_tsdebug_fd2);
+  mmi->mmi_mux->mm_tsdebug_fd = -1;
+  mmi->mmi_mux->mm_tsdebug_fd2 = -1;
+  mmi->mmi_mux->mm_tsdebug_pos = 0;
+  while ((tp = TAILQ_FIRST(&mmi->mmi_mux->mm_tsdebug_packets)) != NULL) {
+    TAILQ_REMOVE(&mmi->mmi_mux->mm_tsdebug_packets, tp, link);
+    free(tp);
+  }
+#endif
 }
 
 static int
@@ -727,6 +771,37 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
   pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
+#if ENABLE_TSDEBUG
+static void
+tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt )
+{
+  void tsdebugcw_new_keys(service_t *t, int type, uint8_t *odd, uint8_t *even);
+  uint32_t pos, type, keylen, sid, crc;
+  mpegts_service_t *t;
+
+  if (memcmp(pkt + 4, "TVHeadendDescramblerKeys", 24))
+    return;
+  pos = 4 + 24;
+  type = pkt[pos + 0];
+  keylen = pkt[pos + 1];
+  sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
+  pos += 4 + 2 * keylen;
+  if (pos > 184)
+    return;
+  crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |
+        (pkt[pos + 2] << 8) | pkt[pos + 3];
+  if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
+    return;
+  LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
+    if (t->s_dvb_service_id == sid) break;
+  if (!t)
+    return;
+  pos =  4 + 24 + 4;
+  tvhdebug("descrambler", "Keys from MPEG-TS source (PID 0x1FFF)!");
+  tsdebugcw_new_keys((service_t *)t, type, pkt + pos, pkt + pos + keylen);
+}
+#endif
+
 static void
 mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
@@ -744,6 +819,9 @@ mpegts_input_process
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
   mpegts_pid_t *last_mp = NULL;
+#if ENABLE_TSDEBUG
+  off_t tsdebug_pos = mm->mm_tsdebug_pos;
+#endif
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return;
@@ -767,7 +845,12 @@ mpegts_input_process
     pid &= 0x1FFF;
     
     /* Ignore NUL packets */
-    if (pid == 0x1FFF) goto done;
+    if (pid == 0x1FFF) {
+#if ENABLE_TSDEBUG
+      tsdebug_check_tspkt(mm, tsb);
+#endif
+      goto done;
+    }
 
     /* Remove in future or move it outside this loop */
     lock_assert(&mi->mi_output_lock);
@@ -841,11 +924,15 @@ mpegts_input_process
 
 done:
     tsb += 188;
+#if ENABLE_TSDEBUG
+    mm->mm_tsdebug_pos += 188;
+#endif
   }
 
   /* Raw stream */
   if (tsb != mpkt->mp_data &&
       LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
+
     streaming_message_t sm;
     pktbuf_t *pb = pktbuf_alloc(mpkt->mp_data, tsb - mpkt->mp_data);
     memset(&sm, 0, sizeof(sm));
@@ -854,6 +941,27 @@ done:
     streaming_pad_deliver(&mmi->mmi_streaming_pad, streaming_msg_clone(&sm));
     pktbuf_ref_dec(pb);
   }
+#if ENABLE_TSDEBUG
+  {
+    tsdebug_packet_t *tp, *tp_next;
+    off_t pos = 0;
+    size_t used = tsb - mpkt->mp_data;
+    for (tp = TAILQ_FIRST(&mm->mm_tsdebug_packets); tp; tp = tp_next) {
+      tp_next = TAILQ_NEXT(tp, link);
+      assert((tp->pos % 188) == 0);
+      assert(tp->pos >= tsdebug_pos && tp->pos < tsdebug_pos + used);
+      if (mm->mm_tsdebug_fd >= 0) {
+        tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, tp->pos - tsdebug_pos - pos);
+        tvh_write(mm->mm_tsdebug_fd, tp->pkt, 188);
+      }
+      pos = tp->pos - tsdebug_pos;
+      TAILQ_REMOVE(&mm->mm_tsdebug_packets, tp, link);
+      free(tp);
+    }
+    if (pos < used && mm->mm_tsdebug_fd >= 0)
+      tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, used - pos);
+  }
+#endif
 
   /* Wake table */
   if (table_wakeup)
@@ -888,6 +996,14 @@ mpegts_input_thread ( void * p )
 
     /* Cleanup */
     free(mp);
+
+#if ENABLE_TSDEBUG
+    {
+      extern void tsdebugcw_go(void);
+      tsdebugcw_go();
+    }
+#endif
+
     pthread_mutex_lock(&mi->mi_input_lock);
   }
 

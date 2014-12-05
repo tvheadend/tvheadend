@@ -75,8 +75,14 @@ const char *caclient_get_status(caclient_t *cac);
 void caclient_init(void);
 void caclient_done(void);
 
+void tsdebugcw_service_start(struct service *t);
+void tsdebugcw_new_keys(struct service *t, int type, uint8_t *odd, uint8_t *even);
+void tsdebugcw_go(void);
+void tsdebugcw_init(void);
+
 caclient_t *cwc_create(void);
 caclient_t *capmt_create(void);
 caclient_t *constcw_create(void);
+caclient_t *tsdebugcw_create(void);
 
 #endif /* __TVH_CACLIENT_H__ */

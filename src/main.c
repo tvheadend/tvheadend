@@ -132,6 +132,7 @@ int              tvheadend_webui_port;
 int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
 int              tvheadend_htsp_port_extra;
+const char      *tvheadend_tsdebug;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
 const tvh_caps_t tvheadend_capabilities[] = {
@@ -469,7 +470,9 @@ main(int argc, char **argv)
               opt_fileline     = 0,
               opt_threadid     = 0,
               opt_ipv6         = 0,
+#if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
+#endif
               opt_dump         = 0,
               opt_xspf         = 0,
               opt_dbus         = 0,
@@ -560,9 +563,16 @@ main(int argc, char **argv)
       OPT_STR, &opt_subscribe },
 
 
+#if ENABLE_TSFILE || ENABLE_TSDEBUG
     { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
+#if ENABLE_TSFILE
     { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
     { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
+#endif
+#if ENABLE_TSDEBUG
+    { 0, "tsdebug", "Output directory for tsdebug", OPT_STR, &tvheadend_tsdebug },
+#endif
+#endif
 
   };
 
@@ -957,7 +967,9 @@ main(int argc, char **argv)
   if(opt_fork)
     unlink(opt_pidpath);
     
+#if ENABLE_TSFILE
   free(opt_tsfile.str);
+#endif
   free(opt_satip_xml.str);
 
   /* OpenSSL - welcome to the "cleanup" hell */

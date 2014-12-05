@@ -296,6 +296,9 @@ caclient_start ( struct service *t )
     if (cac->cac_enabled)
       cac->cac_start(cac, t);
   pthread_mutex_unlock(&caclients_mutex);
+#if ENABLE_TSDEBUG
+  tsdebugcw_service_start(t);
+#endif
 }
 
 void
@@ -344,6 +347,9 @@ caclient_init(void)
 
   pthread_mutex_init(&caclients_mutex, NULL);
   TAILQ_INIT(&caclients);
+#if ENABLE_TSDEBUG
+  tsdebugcw_init();
+#endif
 
   if (!(c = hts_settings_load("caclient")))
     return;
