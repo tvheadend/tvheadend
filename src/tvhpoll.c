@@ -82,6 +82,7 @@ tvhpoll_create ( size_t n )
     return NULL;
   }
 #else
+  fd = -1;
 #endif
   tvhpoll_t *tp = calloc(1, sizeof(tvhpoll_t));
   tp->fd = fd;
