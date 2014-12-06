@@ -384,13 +384,13 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 {
   htsbuf_queue_t *hq;
   char buf[255];
-  const char *hostpath = http_get_hostpath(hc);  
-  char *profile;
+  char *profile, *hostpath;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
     return HTTP_STATUS_UNAUTHORIZED;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
+  hostpath = http_get_hostpath(hc);
 
   hq = &hc->hc_reply;
 
@@ -405,6 +405,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(hostpath);
   free(profile);
   return 0;
 }
@@ -419,8 +420,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   htsbuf_queue_t *hq;
   char buf[255];
   channel_tag_mapping_t *ctm;
-  const char *hostpath = http_get_hostpath(hc);
-  char *profile;
+  char *profile, *hostpath;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -429,6 +429,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   hq = &hc->hc_reply;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
+  hostpath = http_get_hostpath(hc);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
@@ -443,6 +444,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(hostpath);
   free(profile);
   return 0;
 }
@@ -457,8 +459,7 @@ http_tag_list_playlist(http_connection_t *hc)
   htsbuf_queue_t *hq;
   char buf[255];
   channel_tag_t *ct;
-  const char *hostpath = http_get_hostpath(hc);
-  char *profile;
+  char *profile, *hostpath;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -467,6 +468,7 @@ http_tag_list_playlist(http_connection_t *hc)
   hq = &hc->hc_reply;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
+  hostpath = http_get_hostpath(hc);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   TAILQ_FOREACH(ct, &channel_tags, ct_link) {
@@ -482,6 +484,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(hostpath);
   free(profile);
   return 0;
 }
@@ -507,9 +510,8 @@ http_channel_list_playlist(http_connection_t *hc)
   char buf[255];
   channel_t *ch;
   channel_t **chlist;
-  const char *hostpath = http_get_hostpath(hc);
   int idx = 0, count = 0;
-  char *profile;
+  char *profile, *hostpath;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -518,6 +520,7 @@ http_channel_list_playlist(http_connection_t *hc)
   hq = &hc->hc_reply;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
+  hostpath = http_get_hostpath(hc);
 
   CHANNEL_FOREACH(ch)
     if (ch->ch_enabled)
@@ -552,6 +555,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(hostpath);
   free(profile);
   return 0;
 }
@@ -568,7 +572,7 @@ http_dvr_list_playlist(http_connection_t *hc)
   char buf[255];
   dvr_entry_t *de;
   const char *uuid;
-  const char *hostpath = http_get_hostpath(hc);
+  char *hostpath = http_get_hostpath(hc);
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -605,6 +609,7 @@ http_dvr_list_playlist(http_connection_t *hc)
 
   http_output_content(hc, "audio/x-mpegurl");
 
+  free(hostpath);
   return 0;
 }
 
@@ -619,15 +624,15 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   const char *ticket_id = NULL, *uuid;
   time_t durration = 0;
   off_t fsize = 0;
-  int bandwidth = 0;
+  int bandwidth = 0, ret = 0;
   struct tm tm;  
-  const char *hostpath = http_get_hostpath(hc);
+  char *hostpath;
 
   if(http_access_verify(hc, ACCESS_RECORDER))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  hostpath  = http_get_hostpath(hc);
   durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
-    
   fsize = dvr_get_filesize(de);
 
   if(fsize) {
@@ -648,10 +653,11 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
     http_output_content(hc, "application/x-mpegURL");
   } else {
-    return HTTP_STATUS_NOT_FOUND;
+    ret = HTTP_STATUS_NOT_FOUND;
   }
 
-  return 0;
+  free(hostpath);
+  return ret;
 }
 
 
@@ -965,8 +971,7 @@ static int
 page_xspf(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
-  char *buf;
-  const char *hostpath = http_get_hostpath(hc);
+  char *buf, *hostpath = http_get_hostpath(hc);
   const char *title, *profile, *image;
   size_t len;
 
@@ -994,6 +999,7 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL);
   tvh_write(hc->hc_fd, buf, len);
 
+  free(hostpath);
   return 0;
 }
 
@@ -1005,8 +1011,7 @@ static int
 page_m3u(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
-  char *buf;
-  const char *hostpath = http_get_hostpath(hc);
+  char *buf, *hostpath = http_get_hostpath(hc);
   const char *title, *profile;
   size_t len;
 
@@ -1026,6 +1031,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL);
   tvh_write(hc->hc_fd, buf, len);
 
+  free(hostpath);
   return 0;
 }
 
