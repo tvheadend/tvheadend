@@ -371,6 +371,16 @@ descrambler_descramble ( service_t *t,
     }
     if (td->td_keystate != DS_RESOLVED)
       continue;
+
+    if (dr->dr_key_changed) {
+      dr->dr_csa.csa_flush(&dr->dr_csa, (mpegts_service_t *)td->td_service);
+      if (dr->dr_key_changed & 1)
+        tvhcsa_set_key_even(&dr->dr_csa, dr->dr_key_even);
+      if (dr->dr_key_changed & 2)
+        tvhcsa_set_key_odd(&dr->dr_csa, dr->dr_key_odd);
+      dr->dr_key_changed = 0;
+    }
+
     if (dr->dr_buf.sb_ptr > 0) {
       for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {
         tsb2 = dr->dr_buf.sb_data + off;
@@ -402,15 +412,6 @@ descrambler_descramble ( service_t *t,
       if (off > 0)
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
-    }
-
-    if (dr->dr_key_changed) {
-      dr->dr_csa.csa_flush(&dr->dr_csa, (mpegts_service_t *)td->td_service);
-      if (dr->dr_key_changed & 1)
-        tvhcsa_set_key_even(&dr->dr_csa, dr->dr_key_even);
-      if (dr->dr_key_changed & 2)
-        tvhcsa_set_key_odd(&dr->dr_csa, dr->dr_key_odd);
-      dr->dr_key_changed = 0;
     }
 
     ki = tsb[3];
