@@ -3056,6 +3056,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
         hs->hs_wait_for_video = 1;
         return;
       }
+      break;
     }
   }
   hs->hs_wait_for_video = 0;

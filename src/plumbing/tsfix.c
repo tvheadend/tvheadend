@@ -144,9 +144,10 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     tsfix_add_stream(tf, ssc->ssc_index, ssc->ssc_type);
     if (SCT_ISVIDEO(ssc->ssc_type)) {
-      hasvideo = 1;
       if (ssc->ssc_width == 0 || ssc->ssc_height == 0)
-        vwait = 1;
+        /* only first video stream may be valid */
+        vwait = !hasvideo ? 1 : 0;
+      hasvideo = 1;
     }
   }
 
