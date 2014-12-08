@@ -34,7 +34,7 @@ typedef struct globalheaders {
 
 } globalheaders_t;
 
-#define MAX_SCAN_TIME 5000  // in ms
+#define MAX_SCAN_TIME 1500  // in ms
 
 
 /**
@@ -140,6 +140,11 @@ headers_complete(globalheaders_t *gh, int64_t qd)
     if(!header_complete(ssc, threshold)) {
 
       if(threshold) {
+        tvhwarn("parser", "stream %d %s%s%s (PID %i) disabled (no packets)",
+                ssc->ssc_index,
+                streaming_component_type2txt(ssc->ssc_type),
+                ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang,
+                ssc->ssc_pid);
 	ssc->ssc_disabled = 1;
       } else {
 	return 0;
