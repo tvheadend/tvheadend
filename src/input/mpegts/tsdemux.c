@@ -129,8 +129,8 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
     if(d < -90000LL || d > 90000LL) {
       st->es_pcr_recovery_fails++;
       if(st->es_pcr_recovery_fails > 10) {
-  st->es_pcr_recovery_fails = 0;
-  st->es_pcr_real_last = PTS_UNSET;
+        st->es_pcr_recovery_fails = 0;
+        st->es_pcr_real_last = PTS_UNSET;
       }
       return;
     }
@@ -139,8 +139,7 @@ ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
     
     if(t->s_pcr_pid == st->es_pid) {
       /* This is the registered PCR PID, adjust service PCR drift
-   via an IIR filter */
-      
+         via an IIR filter */
       t->s_pcr_drift = (t->s_pcr_drift * 255 + st->es_pcr_drift) / 256;
     }
   }
@@ -170,7 +169,7 @@ ts_recv_packet1
 #endif
 
   /* Extract PCR (do this early for tsfile) */
-  if(((tsb[3] & 0x30) == 0x30) && (tsb[4] > 5) && (tsb[5] & 0x10) && !error) {
+  if((tsb[3] & 0x20) && (tsb[4] > 5) && (tsb[5] & 0x10) && !error) {
     pcr  = (uint64_t)tsb[6] << 25;
     pcr |= (uint64_t)tsb[7] << 17;
     pcr |= (uint64_t)tsb[8] << 9;

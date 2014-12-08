@@ -602,10 +602,23 @@ static int inline
 ts_sync_count ( const uint8_t *tsb, int len )
 {
   int i = 0;
-  while (len >= 188 && *tsb == 0x47) {
-    ++i;
-    len -= 188;
-    tsb += 188;
+  while (len >= 188) {
+    if (len >= 1880 &&
+        tsb[0*188] == 0x47 && tsb[1*188] == 0x47 &&
+        tsb[2*188] == 0x47 && tsb[3*188] == 0x47 &&
+        tsb[4*188] == 0x47 && tsb[5*188] == 0x47 &&
+        tsb[6*188] == 0x47 && tsb[7*188] == 0x47 &&
+        tsb[8*188] == 0x47 && tsb[9*188] == 0x47) {
+      i += 10;
+      len -= 1880;
+      tsb += 1880;
+    } else if (*tsb == 0x47) {
+      ++i;
+      len -= 188;
+      tsb += 188;
+    } else {
+      break;
+    }
   }
   return i;
 }
@@ -615,7 +628,7 @@ mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int i, p = 0, len2, off = 0;
+  int p = 0, len2, off = 0;
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data;
   int     len  = sb->sb_ptr;
@@ -630,7 +643,6 @@ mpegts_input_recv_packets
   mi->mi_last_dispatch = dispatch_clock;
 
   /* Check for sync */
-// could be a bit more efficient
   while ( (len >= (MIN_TS_SYN * 188)) &&
           ((p = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
     mmi->mmi_stats.unc++;
@@ -646,12 +658,12 @@ mpegts_input_recv_packets
 
   /* Extract PCR (used for tsfile playback) */
   if (pcr && pcr_pid) {
-    uint8_t *tmp = tsb;
-    for (i = 0; i < p; i++, tmp += 188) {
+    uint8_t *tmp, *end;
+    for (tmp = tsb, end = tsb + p * 188; tmp < end; tmp += 188) {
       uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
         ts_recv_packet1(NULL, tmp, pcr, 0);
-        if (*pcr != PTS_UNSET) *pcr_pid = pid;
+       if (*pcr != PTS_UNSET) *pcr_pid = pid;
       }
     }
   }
