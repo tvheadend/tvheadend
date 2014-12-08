@@ -166,10 +166,11 @@ void
 descrambler_keys ( th_descrambler_t *td, int type,
                    const uint8_t *even, const uint8_t *odd )
 {
+  static uint8_t empty[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   service_t *t = td->td_service;
   th_descrambler_runtime_t *dr;
   th_descrambler_t *td2;
-  int i, j = 0;
+  int j = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
     td->td_keystate = DS_FORBIDDEN;
@@ -195,22 +196,20 @@ descrambler_keys ( th_descrambler_t *td, int type,
       goto fin;
     }
 
-  for (i = 0; i < dr->dr_csa.csa_keylen; i++)
-    if (even[i]) {
-      j++;
-      tvhcsa_set_key_even(&dr->dr_csa, even);
-      dr->dr_key_valid |= 0x40;
-      dr->dr_key_timestamp[0] = dispatch_clock;
-      break;
-    }
-  for (i = 0; i < dr->dr_csa.csa_keylen; i++)
-    if (odd[i]) {
-      j++;
-      tvhcsa_set_key_odd(&dr->dr_csa, odd);
-      dr->dr_key_valid |= 0x80;
-      dr->dr_key_timestamp[1] = dispatch_clock;
-      break;
-    }
+  if (memcmp(empty, even, dr->dr_csa.csa_keylen)) {
+    j++;
+    memcpy(dr->dr_key_even, even, dr->dr_csa.csa_keylen);
+    dr->dr_key_changed |= 1;
+    dr->dr_key_valid |= 0x40;
+    dr->dr_key_timestamp[0] = dispatch_clock;
+  }
+  if (memcmp(empty, odd, dr->dr_csa.csa_keylen)) {
+    j++;
+    memcpy(dr->dr_key_odd, odd, dr->dr_csa.csa_keylen);
+    dr->dr_key_changed |= 2;
+    dr->dr_key_valid |= 0x80;
+    dr->dr_key_timestamp[1] = dispatch_clock;
+  }
 
   if (j) {
     if (td->td_keystate != DS_RESOLVED)
@@ -322,7 +321,7 @@ key_update( th_descrambler_runtime_t *dr, uint8_t key )
   if (dr->dr_key_start)
     dr->dr_key_start = dispatch_clock;
   else
-    /* We don't knoe the exact start key switch time */
+    /* We don't know the exact start key switch time */
     dr->dr_key_start = dispatch_clock - 60;
 }
 
@@ -362,6 +361,7 @@ descrambler_descramble ( service_t *t,
 
   if (dr == NULL)
     return -1;
+
   count = failed = 0;
   LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
     count++;
@@ -403,6 +403,16 @@ descrambler_descramble ( service_t *t,
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
     }
+
+    if (dr->dr_key_changed) {
+      dr->dr_csa.csa_flush(&dr->dr_csa, (mpegts_service_t *)td->td_service);
+      if (dr->dr_key_changed & 1)
+        tvhcsa_set_key_even(&dr->dr_csa, dr->dr_key_even);
+      if (dr->dr_key_changed & 2)
+        tvhcsa_set_key_odd(&dr->dr_csa, dr->dr_key_odd);
+      dr->dr_key_changed = 0;
+    }
+
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (key_valid(dr, ki) == 0) {

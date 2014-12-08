@@ -66,6 +66,7 @@ typedef struct th_descrambler_runtime {
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
   uint8_t  dr_key_valid;
+  uint8_t  dr_key_changed;
   time_t   dr_key_start;
   time_t   dr_key_timestamp[2];
   time_t   dr_ecm_start;
@@ -73,6 +74,8 @@ typedef struct th_descrambler_runtime {
   time_t   dr_last_err;
   sbuf_t   dr_buf;
   tvhlog_limit_t dr_loglimit_key;
+  uint8_t  dr_key_even[16];
+  uint8_t  dr_key_odd[16];
 } th_descrambler_runtime_t;
 
 typedef void (*descrambler_section_callback_t)

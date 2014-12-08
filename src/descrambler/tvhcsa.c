@@ -25,11 +25,82 @@
 #include <assert.h>
 
 static void
+tvhcsa_aes_flush
+  ( tvhcsa_t *csa, struct mpegts_service *s )
+{
+  /* empty - no queue */
+}
+
+static void
 tvhcsa_aes_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
   aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb);
   ts_recv_packet2(s, tsb);
+}
+
+static void
+tvhcsa_des_flush
+  ( tvhcsa_t *csa, struct mpegts_service *s )
+{
+#if ENABLE_DVBCSA
+
+  int i;
+  const uint8_t *t0;
+
+  if(csa->csa_fill_even) {
+    csa->csa_tsbbatch_even[csa->csa_fill_even].data = NULL;
+    dvbcsa_bs_decrypt(csa->csa_key_even, csa->csa_tsbbatch_even, 184);
+    csa->csa_fill_even = 0;
+  }
+  if(csa->csa_fill_odd) {
+    csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = NULL;
+    dvbcsa_bs_decrypt(csa->csa_key_odd, csa->csa_tsbbatch_odd, 184);
+    csa->csa_fill_odd = 0;
+  }
+
+  t0 = csa->csa_tsbcluster;
+
+  for(i = 0; i < csa->csa_fill; i++) {
+    ts_recv_packet2(s, t0);
+    t0 += 188;
+  }
+  csa->csa_fill = 0;
+
+#else
+
+  int r;
+  unsigned char *vec[3];
+
+  while(1) {
+
+    vec[0] = csa->csa_tsbcluster;
+    vec[1] = csa->csa_tsbcluster + csa->csa_fill * 188;
+    vec[2] = NULL;
+
+    r = decrypt_packets(csa->csa_keys, vec);
+    if(r > 0) {
+      int i;
+      const uint8_t *t0 = csa->csa_tsbcluster;
+
+      for(i = 0; i < r; i++) {
+        ts_recv_packet2(s, t0);
+        t0 += 188;
+      }
+
+      r = csa->csa_fill - r;
+      assert(r >= 0);
+
+      if(r > 0)
+        memmove(csa->csa_tsbcluster, t0, r * 188);
+      csa->csa_fill = r;
+    } else {
+      csa->csa_fill = 0;
+    }
+    break;
+  }
+
+#endif
 }
 
 static void
@@ -43,8 +114,6 @@ tvhcsa_des_descramble
   int len;
   int offset;
   int n;
-  int i;
-  const uint8_t *t0;
 
   pkt = csa->csa_tsbcluster + csa->csa_fill * 188;
   memcpy(pkt, tsb, 188);
@@ -90,28 +159,9 @@ tvhcsa_des_descramble
   if(csa->csa_fill != csa->csa_cluster_size)
     return;
 
-  if(csa->csa_fill_even) {
-    csa->csa_tsbbatch_even[csa->csa_fill_even].data = NULL;
-    dvbcsa_bs_decrypt(csa->csa_key_even, csa->csa_tsbbatch_even, 184);
-    csa->csa_fill_even = 0;
-  }
-  if(csa->csa_fill_odd) {
-    csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = NULL;
-    dvbcsa_bs_decrypt(csa->csa_key_odd, csa->csa_tsbbatch_odd, 184);
-    csa->csa_fill_odd = 0;
-  }
-
-  t0 = csa->csa_tsbcluster;
-
-  for(i = 0; i < csa->csa_fill; i++) {
-	  ts_recv_packet2(s, t0);
-	  t0 += 188;
-  }
-  csa->csa_fill = 0;
+  tvhcsa_des_flush(csa, s);
 
 #else
-  int r;
-  unsigned char *vec[3];
 
   memcpy(csa->csa_tsbcluster + csa->csa_fill * 188, tsb, 188);
   csa->csa_fill++;
@@ -119,33 +169,8 @@ tvhcsa_des_descramble
   if(csa->csa_fill != csa->csa_cluster_size)
     return;
 
-  while(1) {
+  tvhcsa_des_flush(csa, s);
 
-    vec[0] = csa->csa_tsbcluster;
-    vec[1] = csa->csa_tsbcluster + csa->csa_fill * 188;
-    vec[2] = NULL;
-    
-    r = decrypt_packets(csa->csa_keys, vec);
-    if(r > 0) {
-      int i;
-      const uint8_t *t0 = csa->csa_tsbcluster;
-
-      for(i = 0; i < r; i++) {
-	      ts_recv_packet2(s, t0);
-	      t0 += 188;
-      }
-
-      r = csa->csa_fill - r;
-      assert(r >= 0);
-
-      if(r > 0)
-	      memmove(csa->csa_tsbcluster, t0, r * 188);
-      csa->csa_fill = r;
-    } else {
-      csa->csa_fill = 0;
-    }
-    break;
-  }
 #endif
 }
 
@@ -159,10 +184,12 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
   switch (type) {
   case DESCRAMBLER_DES:
     csa->csa_descramble = tvhcsa_des_descramble;
+    csa->csa_flush      = tvhcsa_des_flush;
     csa->csa_keylen     = 8;
     break;
   case DESCRAMBLER_AES:
     csa->csa_descramble = tvhcsa_aes_descramble;
+    csa->csa_flush      = tvhcsa_aes_flush;
     csa->csa_keylen     = 16;
     break;
   default:

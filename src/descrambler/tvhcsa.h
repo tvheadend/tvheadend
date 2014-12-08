@@ -42,6 +42,8 @@ typedef struct tvhcsa
   int      csa_keylen;
   void   (*csa_descramble)
               ( struct tvhcsa *csa, struct mpegts_service *s, const uint8_t *tsb );
+  void   (*csa_flush)
+              ( struct tvhcsa *csa, struct mpegts_service *s );
 
   int      csa_cluster_size;
   uint8_t *csa_tsbcluster;
