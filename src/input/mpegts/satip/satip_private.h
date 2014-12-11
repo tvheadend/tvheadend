@@ -30,6 +30,7 @@
 
 typedef struct satip_device_info satip_device_info_t;
 typedef struct satip_device      satip_device_t;
+typedef struct satip_tune_req    satip_tune_req_t;
 typedef struct satip_frontend    satip_frontend_t;
 typedef struct satip_satconf     satip_satconf_t;
 
@@ -85,6 +86,18 @@ struct satip_device
   pthread_mutex_t            sd_tune_mutex;
 };
 
+struct satip_tune_req {
+  mpegts_mux_instance_t     *sf_mmi;
+
+  uint16_t                  *sf_pids;
+  uint16_t                  *sf_pids_tuned;
+  int                        sf_pids_any;
+  int                        sf_pids_any_tuned;
+  int                        sf_pids_size;
+  int                        sf_pids_count;
+  int                        sf_pids_tcount;     /*< tuned count */
+};
+
 struct satip_frontend
 {
   mpegts_input_t;
@@ -114,25 +127,15 @@ struct satip_frontend
   pthread_t                  sf_dvr_thread;
   th_pipe_t                  sf_dvr_pipe;
   pthread_mutex_t            sf_dvr_lock;
-  pthread_cond_t             sf_dvr_cond;
-  uint16_t                  *sf_pids;
-  uint16_t                  *sf_pids_tuned;
-  int                        sf_pids_any;
-  int                        sf_pids_any_tuned;
-  int                        sf_pids_size;
-  int                        sf_pids_count;
-  int                        sf_pids_tcount;     /*< tuned count */
+  int                        sf_thread;
   int                        sf_running;
-  int                        sf_shutdown;
   int                        sf_tables;
   int                        sf_position;
-  udp_connection_t          *sf_rtp;
-  udp_connection_t          *sf_rtcp;
-  int                        sf_rtp_port;
-  mpegts_mux_instance_t     *sf_mmi;
   signal_state_t             sf_status;
   gtimer_t                   sf_monitor_timer;
   uint64_t                   sf_last_tune;
+  satip_tune_req_t          *sf_req;
+  satip_tune_req_t          *sf_req_thread;
  
   /*
    * Configuration
