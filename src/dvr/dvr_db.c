@@ -332,6 +332,21 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
 
 /**
+ * Get episode name
+ */
+static char *
+dvr_entry_get_episode(epg_broadcast_t *bcast, char *buf, int len)
+{
+  if (!bcast || !bcast->episode)
+    return NULL;
+  if (epg_episode_number_format(bcast->episode,
+                                buf, len, NULL,
+                                "Season %d", ".", "Episode %d", "/%d"))
+    return buf;
+  return NULL;
+}
+
+/**
  * Find dvr entry using 'fuzzy' search
  */
 static int
@@ -339,6 +354,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
 {
   time_t t1, t2;
   const char *title1, *title2;
+  char buf[64];
 
   /* Matching ID */
   if (de->de_dvb_eid && de->de_dvb_eid == e->dvb_eid)
@@ -357,26 +373,19 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
     return 0;
 
   /* Outside of window */
-  if ( abs(e->start - de->de_start) > de->de_config->dvr_update_window )
+  if (abs(e->start - de->de_start) > de->de_config->dvr_update_window)
     return 0;
   
   /* Title match (or contains?) */
-  return strcmp(title1, title2) == 0;
-}
+  if (strcmp(title1, title2))
+    return 0;
 
-/**
- * Set episode name
- */
-static char *
-dvr_entry_get_episode(epg_broadcast_t *bcast, char *buf, int len)
-{
-  if (!bcast || !bcast->episode)
-    return NULL;
-  if (epg_episode_number_format(bcast->episode,
-                                buf, len, NULL,
-                                "Season %d", ".", "Episode %d", "/%d"))
-    return buf;
-  return NULL;
+  /* episode check */
+  if (dvr_entry_get_episode(e, buf, sizeof(buf)) && de->de_episode)
+    if (strcmp(buf, de->de_episode))
+      return 0;
+
+  return 1;
 }
 
 /**
