@@ -46,7 +46,6 @@ typedef struct linuxdvb_rotor
   
   /* GOTOX */
   uint32_t  lr_position;
-
   uint32_t  lr_rate;
 
 } linuxdvb_rotor_t;
@@ -271,6 +270,12 @@ linuxdvb_rotor_usals_tune
 
   int angle_1 = (((motor_angle > 0.0) ? 0xd0 : 0xe0) | (sixteenths >> 8));
   int angle_2 = (sixteenths & 0xff);
+
+  tvhtrace("diseqc", "rotor USALS site lat %0.4f%c site lon %0.4f%c sat lon %0.1f%c zero %0.1f%c",
+           fabs(lr->lr_site_lat), (lr->lr_site_lat > 0.0) ? 'N' : 'S',
+           fabs(lr->lr_site_lon), (lr->lr_site_lon > 0.0) ? 'E' : 'W',
+           fabs(lr->lr_sat_lon),  (lr->lr_sat_lon > 0.0)  ? 'E' : 'w',
+           fabs(lr->lr_zero_lon), (lr->lr_zero_lon > 0.0) ? 'E' : 'W');
  
   if (linuxdvb_rotor_check_orbital_pos(lm, ls))
     return 0;
