@@ -285,6 +285,9 @@ dvb_network_find_mux
     /* Same FE type - this REALLY should match! */
     if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
 
+    /* Also, the system type should match (DVB-S/DVB-S2) */
+    if (lm->lm_tuning.dmc_fe_delsys != dmc->dmc_fe_delsys) continue;
+
     /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
       deltar = 10000;
@@ -444,7 +447,6 @@ dvb_network_create_mux
       lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
       save = 1;
     }
-    save |= COMPAREN(dmc_fe_delsys);
     save |= COMPAREN(dmc_fe_modulation);
     save |= COMPAREN(dmc_fe_inversion);
     save |= COMPAREN(dmc_fe_rolloff);
