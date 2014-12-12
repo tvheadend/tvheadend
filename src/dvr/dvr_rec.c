@@ -576,10 +576,9 @@ dvr_thread(void *aux)
     case SMT_SERVICE_STATUS:
       if(sm->sm_code & TSS_PACKETS) {
 	
-      } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+      } else if(sm->sm_code & TSS_ERRORS) {
 
 	int code = SM_CODE_UNDEFINED_ERROR;
-
 
 	if(sm->sm_code & TSS_NO_DESCRAMBLER)
 	  code = SM_CODE_NO_DESCRAMBLER;

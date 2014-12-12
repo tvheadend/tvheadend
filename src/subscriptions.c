@@ -464,7 +464,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
-       sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+       sm->sm_code & TSS_ERRORS) {
       // No, mark our subscription as bad_service
       // the scheduler will take care of things
       error = tss2errcode(sm->sm_code);
@@ -493,7 +493,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
   }
 
   if (sm->sm_type == SMT_SERVICE_STATUS &&
-      sm->sm_code & TSS_TIMEOUT) {
+      sm->sm_code & (TSS_TUNING|TSS_TIMEOUT)) {
     error = tss2errcode(sm->sm_code);
     if (error > s->ths_testing_error)
       s->ths_testing_error = error;

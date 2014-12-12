@@ -999,6 +999,18 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   return r;
 }
 
+static void
+satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
+{
+  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  if (lfe->sf_running && lfe->sf_req == tr &&
+      tr->sf_mmi && tr->sf_mmi->mmi_mux)
+    mpegts_mux_tuning_error(tr->sf_mmi->mmi_mux);
+  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  pthread_mutex_unlock(&global_lock);
+}
+
 static void *
 satip_frontend_input_thread ( void *aux )
 {
@@ -1086,7 +1098,7 @@ new_tune:
 
   mmi        = tr->sf_mmi;
   changing   = 0;
-  ms         = -1;
+  ms         = 500;
   fatal      = 0;
   running    = 1;
   seq        = -1;
@@ -1096,8 +1108,10 @@ new_tune:
   if (udp_bind_double(&rtp, &rtcp,
                       "satip", "rtp", "rtpc",
                       satip_frontend_bindaddr(lfe), lfe->sf_udp_rtp_port,
-                      NULL, SATIP_BUF_SIZE, 16384) < 0)
+                      NULL, SATIP_BUF_SIZE, 16384) < 0) {
+    satip_frontend_tuning_error(lfe, tr);
     goto done;
+  }
 
   rtp_port = ntohs(IP_PORT(rtp->ip));
 
@@ -1106,8 +1120,10 @@ new_tune:
                     ntohs(IP_PORT(rtp->ip)),
                     ntohs(IP_PORT(rtcp->ip)));
 
-  if (rtp == NULL || rtcp == NULL || mmi == NULL)
+  if (rtp == NULL || rtcp == NULL || mmi == NULL) {
+    satip_frontend_tuning_error(lfe, tr);
     goto done;
+  }
 
   lm = (dvb_mux_t *)mmi->mmi_mux;
 
@@ -1176,8 +1192,10 @@ new_tune:
   rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
                              lfe->sf_device->sd_info.addr, 554,
                              satip_frontend_bindaddr(lfe));
-  if (rtsp == NULL)
+  if (rtsp == NULL) {
+    satip_frontend_tuning_error(lfe, tr);
     goto done;
+  }
 
   /* Setup poll */
   memset(ev, 0, sizeof(ev));
@@ -1198,7 +1216,7 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PIDS0;
   if (lfe->sf_device->sd_pilot_on)
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
-  r = 0xa59234;
+  r = -12345678;
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req == lfe->sf_req_thread)
     r = satip_rtsp_setup(rtsp,
@@ -1207,15 +1225,15 @@ new_tune:
                          rtsp_flags);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
   if (r < 0) {
-    if (r != 0xa59234)
-      tvherror("satip", "%s - failed to tune", buf);
+    tvherror("satip", "%s - failed to tune", buf);
+    satip_frontend_tuning_error(lfe, tr);
     goto done;
   }
   reply = 1;
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
   sbuf_init_fixed(&sb, RTP_PKTS * RTP_PKT_SIZE);
-
+  
   while ((reply || running) && !fatal) {
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
@@ -1247,7 +1265,7 @@ new_tune:
     }
 
     if (changing && rtsp->hc_cmd == HTTP_CMD_NONE) {
-      ms = -1;
+      ms = 500;
       changing = 0;
       if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0)
         reply = 1;
@@ -1261,6 +1279,7 @@ new_tune:
       if (r < 0) {
         tvhlog(LOG_ERR, "satip", "%s - RTSP error %d (%s) [%i-%i]",
                buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+        satip_frontend_tuning_error(lfe, tr);
         fatal = 1;
       } else if (r == HTTP_CON_DONE) {
         reply = 0;
@@ -1272,6 +1291,7 @@ new_tune:
           if (r < 0) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP OPTIONS error %d (%s) [%i-%i]",
                    buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+            satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           }
           break;
@@ -1283,13 +1303,14 @@ new_tune:
                        rtsp->hc_rtpc_port != rtp_port + 1) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP SETUP error %d (%s) [%i-%i]",
                    buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+            satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           } else {
             tvhdebug("satip", "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
             if (lfe->sf_play2) {
-              r = 0xa59234;
+              r = -12345678;
               pthread_mutex_lock(&lfe->sf_dvr_lock);
               if (lfe->sf_req == lfe->sf_req_thread)
                 r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
@@ -1297,8 +1318,8 @@ new_tune:
                                      rtsp_flags | SATIP_SETUP_PLAY);
               pthread_mutex_unlock(&lfe->sf_dvr_lock);
               if (r < 0) {
-                if (r != 0xa59234)
-                  tvherror("satip", "%s - failed to tune2", buf);
+                tvherror("satip", "%s - failed to tune2", buf);
+                satip_frontend_tuning_error(lfe, tr);
                 fatal = 1;
               }
               reply = 1;
@@ -1326,6 +1347,7 @@ new_tune:
           if (rtsp->hc_code >= 400) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP cmd error %d (%s) [%i-%i]",
                    buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
+            satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           }
           break;

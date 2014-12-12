@@ -414,7 +414,7 @@ service_mapper_thread ( void *aux )
       } else if (sm->sm_type == SMT_SERVICE_STATUS) {
         int status = sm->sm_code;
 
-        if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+        if(status & TSS_ERRORS) {
           run = 0;
           err = service_tss2text(status);
         }

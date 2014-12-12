@@ -21,6 +21,7 @@
 #include "queue.h"
 #include "input.h"
 #include "subscriptions.h"
+#include "streaming.h"
 #include "channels.h"
 #include "access.h"
 #include "profile.h"
@@ -1111,12 +1112,31 @@ mpegts_mux_unsubscribe_by_name
   }
 }
 
+void
+mpegts_mux_tuning_error ( mpegts_mux_t *mm )
+{
+  th_subscription_t *sub;
+  mpegts_mux_instance_t *mmi;
+  streaming_message_t *sm;
+
+  lock_assert(&global_lock);
+
+  if ((mmi = mm->mm_active) != NULL) {
+    LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link) {
+      sm = streaming_msg_create_code(SMT_SERVICE_STATUS, TSS_TUNING);
+      streaming_target_deliver(sub->ths_output, sm);
+    }
+    if (mmi->mmi_input)
+      mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
+  }
+}
+
 /* **************************************************************************
  * Search
  * *************************************************************************/
 
 mpegts_service_t *
-mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid)
+mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid )
 {
   mpegts_service_t *ms;
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)

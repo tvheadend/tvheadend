@@ -544,7 +544,7 @@ mpegts_input_stopped_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   char buf[256];
-  service_t *s;
+  service_t *s, *s_next;
 
   /* no longer active */
   LIST_REMOVE(mmi, mmi_active_link);
@@ -555,11 +555,10 @@ mpegts_input_stopped_mux
 
   mi->mi_display_name(mi, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - flush subscribers", buf);
-  s = LIST_FIRST(&mi->mi_transports);
-  while (s) {
+  for (s = LIST_FIRST(&mi->mi_transports); s; s = s_next) {
+    s_next = LIST_NEXT(s, s_active_link);
     if (((mpegts_service_t*)s)->s_dvb_mux == mmi->mmi_mux)
       service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-    s = LIST_NEXT(s, s_active_link);
   }
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 0);
@@ -595,6 +594,22 @@ mpegts_input_has_subscription ( mpegts_input_t *mi, mpegts_mux_t *mm )
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   return ret;
+}
+
+static void
+mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  service_t *t, *t_next;
+  pthread_mutex_lock(&mi->mi_output_lock);
+  for (t = LIST_FIRST(&mi->mi_transports); t; t = t_next) {
+    t_next = LIST_NEXT(t, s_active_link);
+    if (((mpegts_service_t*)t)->s_dvb_mux == mm) {
+      pthread_mutex_lock(&t->s_stream_mutex);
+      service_set_streaming_status_flags(t, TSS_TUNING);
+      pthread_mutex_unlock(&t->s_stream_mutex);
+    }
+  }
+  pthread_mutex_unlock(&mi->mi_output_lock);
 }
 
 /* **************************************************************************
@@ -866,9 +881,6 @@ mpegts_input_process
 #endif
       goto done;
     }
-
-    /* Remove in future or move it outside this loop */
-    lock_assert(&mi->mi_output_lock);
 
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
@@ -1259,6 +1271,7 @@ mpegts_input_create0
   mi->mi_stopping_mux         = mpegts_input_stopping_mux;
   mi->mi_stopped_mux          = mpegts_input_stopped_mux;
   mi->mi_has_subscription     = mpegts_input_has_subscription;
+  mi->mi_tuning_error         = mpegts_input_tuning_error;
   mi->ti_get_streams          = mpegts_input_get_streams;
 
   /* Index */
@@ -1405,7 +1418,8 @@ mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg )
   return save;
 }
 
-int mpegts_input_grace( mpegts_input_t *mi, mpegts_mux_t *mm )
+int
+mpegts_input_grace( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   /* Get timeout */
   int t = 0;

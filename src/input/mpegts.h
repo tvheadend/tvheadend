@@ -631,6 +631,7 @@ struct mpegts_input
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
+  void (*mi_tuning_error)   (mpegts_input_t*,mpegts_mux_t *);
   idnode_set_t *(*mi_network_list) (mpegts_input_t*);
 };
 
@@ -747,6 +748,8 @@ static inline mpegts_mux_t *mpegts_mux_find(const char *uuid)
 void mpegts_mux_delete ( mpegts_mux_t *mm, int delconf );
 
 void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
+
+void mpegts_mux_tuning_error( mpegts_mux_t *mm );
 
 mpegts_mux_instance_t *mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,

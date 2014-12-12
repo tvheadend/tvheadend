@@ -3184,7 +3184,7 @@ htsp_subscription_service_status(htsp_subscription_t *hs, int status)
 {
   if(status & TSS_PACKETS) {
     htsp_subscription_status(hs, NULL);
-  } else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+  } else if(status & TSS_ERRORS) {
     htsp_subscription_status(hs, service_tss2text(status));
   }
 }

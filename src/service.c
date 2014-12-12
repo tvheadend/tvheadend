@@ -1168,7 +1168,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 
   t->s_streaming_status = set;
 
-  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s%s",
+  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s%s%s",
 	 service_nicename(t),
 	 set & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
 	 set & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
@@ -1176,6 +1176,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 set & TSS_PACKETS        ? "[Reassembled packets] " : "",
 	 set & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
 	 set & TSS_NO_ACCESS      ? "[No access] " : "",
+	 set & TSS_TUNING         ? "[Tuning failed] " : "",
 	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
 	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
@@ -1448,6 +1449,9 @@ service_tss2text(int flags)
   if(flags & TSS_NO_ACCESS)
     return "No access";
 
+  if(flags & TSS_TUNING)
+    return "Tuning failed";
+
   if(flags & TSS_NO_DESCRAMBLER)
     return "No descrambler";
 
@@ -1481,6 +1485,9 @@ tss2errcode(int tss)
 {
   if(tss & TSS_NO_ACCESS)
     return SM_CODE_NO_ACCESS;
+
+  if(tss & TSS_TUNING)
+    return SM_CODE_TUNING_FAILED;
 
   if(tss & TSS_NO_DESCRAMBLER)
     return SM_CODE_NO_DESCRAMBLER;
