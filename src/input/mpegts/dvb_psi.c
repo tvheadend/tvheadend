@@ -948,6 +948,14 @@ dvb_table_begin
     tvhtrace(mt->mt_name, "  section %d last %d ver %d (ver %d st %d incomp %d comp %d)",
              *sect, *last, *ver, st->version, st->complete, mt->mt_incomplete, mt->mt_complete);
 
+    /* Ignore previous version */
+    /* This check is for the broken PMT tables where:
+     * last 0 version 21 = PCR + Audio PID 0x0044
+     * last 0 version 22 = Audio PID 0x0044, PCR + Video PID 0x0045
+     */
+    if (*last == 0 && st->version - 1 == *ver)
+      return -1;
+
     /* New version */
     if (st->version != *ver) {
       if (st->complete == 2)
