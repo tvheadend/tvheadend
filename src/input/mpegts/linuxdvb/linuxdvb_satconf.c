@@ -670,9 +670,12 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   }
 
   /* Remember the last network position for rotor */
-  dvb_network_get_orbital_pos(lm->mm_network,
-                              &lse->lse_parent->ls_orbital_pos,
-                              &lse->lse_parent->ls_orbital_dir);
+  if (dvb_network_get_orbital_pos(lm->mm_network,
+                                  &ls->ls_orbital_pos,
+                                  &ls->ls_orbital_dir) < 0) {
+    ls->ls_orbital_pos = 0;
+    ls->ls_orbital_dir = 0;
+  }
 
   /* Set the tone (en50494 don't use tone) */
   if (!lse->lse_en50494) {

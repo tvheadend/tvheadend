@@ -177,17 +177,19 @@ static int
 linuxdvb_rotor_check_orbital_pos
   ( dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls )
 {
+  linuxdvb_satconf_t *lsp;
   int  pos;
   char dir;
-
 
   if (dvb_network_get_orbital_pos(lm->mm_network, &pos, &dir) < 0)
     return 0;
 
-  if (dir != ls->lse_parent->ls_orbital_dir)
+  lsp = ls->lse_parent;
+
+  if (dir != lsp->ls_orbital_dir)
     return 0;
 
-  if (abs(pos - ls->lse_parent->ls_orbital_pos) > 2)
+  if (abs(pos - lsp->ls_orbital_pos) > 2)
     return 0;
 
   tvhdebug("diseqc", "rotor already positioned to %i.%i%c",
