@@ -95,6 +95,7 @@ typedef struct th_subscription {
   char *ths_hostname;
   char *ths_username;
   char *ths_client;
+  char *ths_dvrfile;
 
   /**
    * This is the list of service candidates we have

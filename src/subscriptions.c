@@ -561,6 +561,7 @@ subscription_unsubscribe(th_subscription_t *s)
   free(s->ths_hostname);
   free(s->ths_username);
   free(s->ths_client);
+  free(s->ths_dvrfile);
   free(s);
 
   gtimer_arm(&subscription_reschedule_timer, 
@@ -893,6 +894,9 @@ subscription_create_msg(th_subscription_t *s)
   
   if(s->ths_service != NULL)
     htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
+
+  else if(s->ths_dvrfile != NULL)
+    htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
 
   else if (s->ths_mmi != NULL && s->ths_mmi->mmi_mux != NULL) {
     char buf[512];
