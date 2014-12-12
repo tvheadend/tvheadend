@@ -482,7 +482,7 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
   struct stat st;
 
   if (fd <= 0) {
-    fd = open(path, O_RDONLY);
+    fd = tvh_open(path, O_RDONLY, 0);
     tvhlog(LOG_DEBUG, "htsp", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
     if(fd == -1)
       return htsp_error("Unable to open file");
@@ -2050,8 +2050,11 @@ static htsmsg_t *
 htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsp_file_t *hf = htsp_file_find(htsp, in);
+  htsmsg_t *rep = NULL;
+  const char *e = NULL;
   int64_t off;
   int64_t size;
+  int fd;
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
@@ -2059,26 +2062,38 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_s64(in, "size", &size))
     return htsp_error("Missing field 'size'");
 
+  fd = hf->hf_fd;
+
+  pthread_mutex_unlock(&global_lock);
+
   /* Seek (optional) */
   if (!htsmsg_get_s64(in, "offset", &off))
-    if(lseek(hf->hf_fd, off, SEEK_SET) != off)
-      return htsp_error("Seek error");
+    if(lseek(fd, off, SEEK_SET) != off) {
+      e = "Seek error";
+      goto error;
+    }
 
   /* Read */
   void *m = malloc(size);
-  if(m == NULL)
-    return htsp_error("Too big segment");
-
-  int r = read(hf->hf_fd, m, size);
-  if(r < 0) {
-    free(m);
-    return htsp_error("Read error");
+  if(m == NULL) {
+    e = "Too big segment";
+    goto error;
   }
 
-  htsmsg_t *rep = htsmsg_create_map();
+  int r = read(fd, m, size);
+  if(r < 0) {
+    free(m);
+    e = "Read error";
+    goto error;
+  }
+
+  rep = htsmsg_create_map();
   htsmsg_add_bin(rep, "data", m, r);
   free(m);
-  return rep;
+
+error:
+  pthread_mutex_lock(&global_lock);
+  return e ? htsp_error(e) : rep;
 }
 
 /**
@@ -2103,16 +2118,23 @@ static htsmsg_t *
 htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsp_file_t *hf = htsp_file_find(htsp, in);
+  htsmsg_t *rep;
   struct stat st;
+  int fd;
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
 
-  htsmsg_t *rep = htsmsg_create_map();
-  if(!fstat(hf->hf_fd, &st)) {
+  fd = hf->hf_fd;
+
+  pthread_mutex_unlock(&global_lock);
+  rep = htsmsg_create_map();
+  if(!fstat(fd, &st)) {
     htsmsg_add_s64(rep, "size", st.st_size);
     htsmsg_add_s64(rep, "mtime", st.st_mtime);
   }
+  pthread_mutex_lock(&global_lock);
+
   return rep;
 }
 
@@ -2126,7 +2148,7 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *rep;
   const char *str;
   int64_t off;
-  int whence;
+  int fd, whence;
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
@@ -2147,11 +2169,18 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
     whence = SEEK_SET;
   }
 
-  if ((off = lseek(hf->hf_fd, off, whence)) < 0)
+  fd = hf->hf_fd;
+  pthread_mutex_unlock(&global_lock);
+
+  if ((off = lseek(fd, off, whence)) < 0) {
+    pthread_mutex_lock(&global_lock);
     return htsp_error("Seek error");
+  }
 
   rep = htsmsg_create_map();
   htsmsg_add_s64(rep, "offset", off);
+
+  pthread_mutex_lock(&global_lock);
   return rep;
 }
 
