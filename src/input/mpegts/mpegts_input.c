@@ -566,13 +566,16 @@ mpegts_input_stopped_mux
 
 #if ENABLE_TSDEBUG
   tsdebug_packet_t *tp;
-  close(mmi->mmi_mux->mm_tsdebug_fd);
-  close(mmi->mmi_mux->mm_tsdebug_fd2);
-  mmi->mmi_mux->mm_tsdebug_fd = -1;
-  mmi->mmi_mux->mm_tsdebug_fd2 = -1;
-  mmi->mmi_mux->mm_tsdebug_pos = 0;
-  while ((tp = TAILQ_FIRST(&mmi->mmi_mux->mm_tsdebug_packets)) != NULL) {
-    TAILQ_REMOVE(&mmi->mmi_mux->mm_tsdebug_packets, tp, link);
+  mpegts_mux_t *mm = mmi->mmi_mux;
+  if (mm->mm_tsdebug_fd >= 0)
+    close(mm->mm_tsdebug_fd);
+  if (mm->mm_tsdebug_fd2 >= 0)
+    close(mm->mm_tsdebug_fd2);
+  mm->mm_tsdebug_fd = -1;
+  mm->mm_tsdebug_fd2 = -1;
+  mm->mm_tsdebug_pos = 0;
+  while ((tp = TAILQ_FIRST(&mm->mm_tsdebug_packets)) != NULL) {
+    TAILQ_REMOVE(&mm->mm_tsdebug_packets, tp, link);
     free(tp);
   }
 #endif
