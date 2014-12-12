@@ -1473,6 +1473,7 @@ new_tune:
           break;
       }
     }
+#if !defined(PLATFORM_FREEBSD) // temporary, until kevent is fixed properly
     /* for sure - the second sequence */
     if (lfe->sf_device->sd_shutdown2) {
       r = rtsp_teardown(rtsp, (char *)b, NULL);
@@ -1496,6 +1497,7 @@ new_tune:
         }
       }
     }
+#endif
   }
 
 done:
