@@ -1073,9 +1073,10 @@ page_play(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_FOUND;
 
   if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+     access_verify2(hc->hc_access, ACCESS_OR |
+                                   ACCESS_STREAMING |
+                                   ACCESS_ADVANCED_STREAMING |
+                                   ACCESS_RECORDER))
     return HTTP_STATUS_UNAUTHORIZED;
 
   playlist = http_arg_get(&hc->hc_req_args, "playlist");
@@ -1116,9 +1117,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_ADVANCED_STREAMING) &&
-      access_verify2(hc->hc_access, ACCESS_RECORDER)))
+     (access_verify2(hc->hc_access, ACCESS_OR |
+                                    ACCESS_STREAMING |
+                                    ACCESS_ADVANCED_STREAMING |
+                                    ACCESS_RECORDER)))
     return HTTP_STATUS_UNAUTHORIZED;
 
   pthread_mutex_lock(&global_lock);
@@ -1244,6 +1246,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
                                     ACCESS_STREAMING |
                                     ACCESS_ADVANCED_STREAMING |
                                     ACCESS_HTSP_STREAMING |
+                                    ACCESS_HTSP_RECORDER |
                                     ACCESS_RECORDER)))
     return HTTP_STATUS_UNAUTHORIZED;
 

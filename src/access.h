@@ -65,6 +65,7 @@ typedef struct access_entry {
   uint32_t ae_conn_limit;
 
   int ae_dvr;
+  int ae_htsp_dvr;
   struct dvr_config *ae_dvr_config;
   LIST_ENTRY(access_entry) ae_dvr_config_link;
 
@@ -117,7 +118,8 @@ typedef struct access_ticket {
 #define ACCESS_HTSP_STREAMING     (1<<2)
 #define ACCESS_WEB_INTERFACE      (1<<3)
 #define ACCESS_RECORDER           (1<<4)
-#define ACCESS_ADMIN              (1<<5)
+#define ACCESS_HTSP_RECORDER      (1<<5)
+#define ACCESS_ADMIN              (1<<6)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
