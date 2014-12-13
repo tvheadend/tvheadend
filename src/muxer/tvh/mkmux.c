@@ -681,7 +681,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   localtime_r(de ? &de->de_start : &ebc->start, &tm);
   epg_episode_t *ee = NULL;
   channel_t *ch = NULL;
-  lang_str_t *ls = NULL;
+  lang_str_t *ls = NULL, *ls2 = NULL;
   const char **langs, *lang;
 
   if (ebc)                     ee = ebc->episode;
@@ -717,20 +717,31 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
     addtag(q, build_tag_string("TVCHANNEL", 
                                channel_get_name(ch), NULL, 0, NULL));
 
-  if(de && de->de_desc)
-    ls = de->de_desc;
-  else if (ee && ee->description)
-    ls = ee->description;
-  else if (ee && ee->summary)
+  if (ee && ee->summary)
     ls = ee->summary;
-  else if (ebc && ebc->description)
-    ls = ebc->description;
   else if (ebc && ebc->summary)
     ls = ebc->summary;
+
+  if(de && de->de_desc)
+    ls2 = de->de_desc;
+  else if (ee && ee->description)
+    ls2 = ee->description;
+  else if (ebc && ebc->description)
+    ls2 = ebc->description;
+
+  if (!ls)
+    ls = ls2;
+
   if (ls) {
     lang_str_ele_t *e;
     RB_FOREACH(e, ls, link)
       addtag(q, build_tag_string("SUMMARY", e->str, e->lang, 0, NULL));
+  }
+
+  if (ls2 && ls != ls2) {
+    lang_str_ele_t *e;
+    RB_FOREACH(e, ls2, link)
+      addtag(q, build_tag_string("DESCRIPTION", e->str, e->lang, 0, NULL));
   }
 
   if (ee) {
