@@ -239,6 +239,30 @@ const idclass_t linuxdvb_satconf_class =
       .opts     = PO_ADVANCED,
       .def.u32  = 120
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "site_lat_south",
+      .name     = "Latitude Direction South",
+      .off      = offsetof(linuxdvb_satconf_t, ls_site_lat_south),
+      .opts     = PO_ADVANCED,
+      .def.i    = 0
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "site_lat_south",
+      .name     = "Longtitude Direction West",
+      .off      = offsetof(linuxdvb_satconf_t, ls_site_lon_west),
+      .opts     = PO_ADVANCED,
+      .def.i    = 0
+    },
+    {
+      .type     = PT_INT,
+      .id       = "site_altitude",
+      .name     = "Altitude (meters)",
+      .off      = offsetof(linuxdvb_satconf_t, ls_site_altitude),
+      .opts     = PO_ADVANCED,
+      .def.i    = 0
+    },
     {}
   }
 };

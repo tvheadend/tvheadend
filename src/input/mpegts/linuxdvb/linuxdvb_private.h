@@ -142,6 +142,9 @@ struct linuxdvb_satconf
    */
   int                    ls_lnb_poweroff;
   uint32_t               ls_max_rotor_move;
+  int                    ls_site_lat_south;
+  int                    ls_site_lon_west;
+  int                    ls_site_altitude;
 
   /*
    * Position
