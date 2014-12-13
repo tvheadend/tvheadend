@@ -274,7 +274,7 @@ linuxdvb_rotor_usals_tune
   tvhtrace("diseqc", "rotor USALS site lat %0.4f%c site lon %0.4f%c sat lon %0.1f%c zero %0.1f%c",
            fabs(lr->lr_site_lat), (lr->lr_site_lat > 0.0) ? 'N' : 'S',
            fabs(lr->lr_site_lon), (lr->lr_site_lon > 0.0) ? 'E' : 'W',
-           fabs(lr->lr_sat_lon),  (lr->lr_sat_lon > 0.0)  ? 'E' : 'w',
+           fabs(lr->lr_sat_lon),  (lr->lr_sat_lon > 0.0)  ? 'E' : 'W',
            fabs(lr->lr_zero_lon), (lr->lr_zero_lon > 0.0) ? 'E' : 'W');
  
   if (linuxdvb_rotor_check_orbital_pos(lm, ls))

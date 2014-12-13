@@ -110,8 +110,10 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   for (i = 1; i < n; i++) {
     if (strncasecmp(argv[i], "timeout=", 8) == 0) {
       hc->hc_rtp_timeout = atoi(argv[i] + 8);
-      if (hc->hc_rtp_timeout <= 20 || hc->hc_rtp_timeout > 3600)
+      if (hc->hc_rtp_timeout < 20 || hc->hc_rtp_timeout > 3600) {
+        tvhwarn("rtsp", "timeout value out of range 20-3600 (%i)", hc->hc_rtp_timeout);
         return -EIO;
+      }
     }
   }
   if (satip) {
