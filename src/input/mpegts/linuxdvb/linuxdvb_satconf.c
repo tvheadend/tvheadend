@@ -232,6 +232,13 @@ const idclass_t linuxdvb_satconf_class =
       .def.i    = 1
     },
     {
+      .type     = PT_BOOL,
+      .id       = "switch_rotor",
+      .name     = "Switch Then Rotor",
+      .off      = offsetof(linuxdvb_satconf_t, ls_switch_rotor),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_U32,
       .id       = "max_rotor_move",
       .name     = "Max Rotor Movement (seconds)",
@@ -659,9 +666,10 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   linuxdvb_frontend_t   *lfe   = (linuxdvb_frontend_t*)ls->ls_frontend;
   dvb_mux_t             *lm    = (dvb_mux_t*)mmi->mmi_mux;
   linuxdvb_diseqc_t     *lds[] = {
-    lse->lse_rotor ? (linuxdvb_diseqc_t*)lse->lse_switch : NULL,
-    (linuxdvb_diseqc_t*)lse->lse_rotor,
-    (linuxdvb_diseqc_t*)lse->lse_switch,
+    ls->ls_switch_rotor ? (linuxdvb_diseqc_t*)lse->lse_switch :
+                          (linuxdvb_diseqc_t*)lse->lse_rotor,
+    ls->ls_switch_rotor ? (linuxdvb_diseqc_t*)lse->lse_rotor  :
+                          (linuxdvb_diseqc_t*)lse->lse_switch,
     (linuxdvb_diseqc_t*)lse->lse_en50494,
     (linuxdvb_diseqc_t*)lse->lse_lnb
   };

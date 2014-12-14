@@ -136,6 +136,7 @@ struct linuxdvb_satconf
   gtimer_t               ls_diseqc_timer;
   int                    ls_diseqc_idx;
   int                    ls_diseqc_repeats;
+  int                    ls_switch_rotor;
 
   /*
    * LNB settings
