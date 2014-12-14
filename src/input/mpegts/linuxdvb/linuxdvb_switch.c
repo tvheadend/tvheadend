@@ -158,11 +158,14 @@ linuxdvb_switch_tune
 
     lsp->ls_last_pol = 0;
 
-    /* Set the voltage */
-    if (linuxdvb_diseqc_set_volt(fd, pol))
-      return -1;
+    /* EN50494 devices have another mechanism to select polarization */
+    if (!sc->lse_en50494) {
+      /* Set the voltage */
+      if (linuxdvb_diseqc_set_volt(fd, pol))
+        return -1;
 
-    lsp->ls_last_pol = pol + 1;
+      lsp->ls_last_pol = pol + 1;
+    }
   }
 
   if (lsp->ls_diseqc_full || lsp->ls_last_switch != sc) {

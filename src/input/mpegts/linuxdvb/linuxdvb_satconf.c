@@ -680,14 +680,21 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     (linuxdvb_diseqc_t*)lse->lse_en50494,
     (linuxdvb_diseqc_t*)lse->lse_lnb
   };
-  // TODO: really need to understand whether or not we need to pre configure
-  //       and/or re-affirm the switch
 
-  /* Disable tone (en50494 don't use tone) */
-  if (!lse->lse_en50494) {
-    if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
-      tvherror("diseqc", "failed to disable tone");
-      return -1;
+  /*
+   * Disable tone (en50494 don't use tone)
+   * The 22khz tone is used for signalling band (universal LNB)
+   * and also for the DiseqC commands. It's necessary to turn
+   * tone off before communication with DiseqC devices.
+   */
+
+  if (!lse->lse_en50494 || lse->lse_switch || lse->lse_rotor) {
+    if (ls->ls_diseqc_full || ls->ls_last_tone_off != 1) {
+      if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
+        tvherror("diseqc", "failed to disable tone");
+        return -1;
+      }
+      ls->ls_last_tone_off = 1;
     }
   }
 
@@ -718,13 +725,17 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* Set the tone (en50494 don't use tone) */
   if (!lse->lse_en50494) {
+    ls->ls_last_tone_off = 0;
     b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
     tvhtrace("diseqc", "set diseqc tone %s", b ? "on" : "off");
-    if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+    if (b && ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
       tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
       return -1;
     }
-    usleep(20000); // Allow LNB to settle before tuning
+    if (b) {
+      ls->ls_last_tone_off = 2;
+      usleep(20000); // Allow LNB to settle before tuning
+    }
   }
 
   /* Frontend */
@@ -786,6 +797,7 @@ linuxdvb_satconf_reset
   ls->ls_last_switch = NULL;
   ls->ls_last_pol = 0;
   ls->ls_last_toneburst = 0;
+  ls->ls_last_tone_off = 0;
 }
 
 /* **************************************************************************

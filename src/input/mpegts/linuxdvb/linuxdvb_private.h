@@ -161,6 +161,7 @@ struct linuxdvb_satconf
   linuxdvb_satconf_ele_t *ls_last_switch;
   int                    ls_last_pol;
   int                    ls_last_toneburst;
+  int                    ls_last_tone_off;
 };
 
 /*
