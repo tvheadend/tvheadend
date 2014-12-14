@@ -314,12 +314,6 @@ usals_sat_angle( double site_lat, double site_lon,
   if (azimuth < 90)
     value = 180 - value;
 
-  if (value < 180) {
-    return round(fabs(180 - value) * 10.0);
-  } else {
-    return -round(fabs(180 - value) * 10.0);
-  }
-
   return value;
 }
 
@@ -366,7 +360,7 @@ linuxdvb_rotor_usals_tune
 
   tvhtrace("diseqc", "rotor USALS goto %0.1f%c (motor %0.1f %sclockwise)",
            fabs(lr->lr_sat_lon), (lr->lr_sat_lon > 0.0) ? 'E' : 'W',
-           ((double)tmp / 10.0), (cmd & 0xE000) == 0xE000 ? "counter-" : "");
+           ((double)tmp / 10.0), (cmd & 0xF000) == 0xD000 ? "counter-" : "");
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2,
