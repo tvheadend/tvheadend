@@ -151,27 +151,11 @@ linuxdvb_switch_tune
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
   linuxdvb_satconf_t *lsp = sc->lse_parent;
 
-  /* LNB settings */
-  pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
-
-  if (lsp->ls_diseqc_full || lsp->ls_last_pol != pol + 1) {
-
-    lsp->ls_last_pol = 0;
-
-    /* EN50494 devices have another mechanism to select polarization */
-    if (!sc->lse_en50494) {
-      /* Set the voltage */
-      if (linuxdvb_diseqc_set_volt(fd, pol))
-        return -1;
-
-      lsp->ls_last_pol = pol + 1;
-    }
-  }
-
   if (lsp->ls_diseqc_full || lsp->ls_last_switch != sc) {
 
     lsp->ls_last_switch = NULL;
 
+    pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
     band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
     com  = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
 

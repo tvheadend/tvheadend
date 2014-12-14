@@ -664,7 +664,7 @@ static void linuxdvb_satconf_ele_tune_cb ( void *o );
 static int
 linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 {
-  int r, i, b;
+  int r, i, b, pol;
   uint32_t f;
   linuxdvb_satconf_t *ls = lse->lse_parent;
 
@@ -722,6 +722,24 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
                                   &ls->ls_orbital_dir) < 0) {
     ls->ls_orbital_pos = 0;
     ls->ls_orbital_dir = 0;
+  }
+
+  /* LNB settings */
+  pol  = (lse->lse_lnb) ? lse->lse_lnb->lnb_pol (lse->lse_lnb, lm) & 0x1 : 0;
+
+  if (ls->ls_diseqc_full || ls->ls_last_pol != pol + 1) {
+
+    ls->ls_last_pol = 0;
+
+    /* EN50494 devices have another mechanism to select polarization */
+    if (!lse->lse_en50494) {
+
+      /* Set the voltage */
+      if (linuxdvb_diseqc_set_volt(lfe->lfe_fe_fd, pol))
+        return -1;
+
+      ls->ls_last_pol = pol + 1;
+    }
   }
 
   /* Set the tone (en50494 don't use tone) */
