@@ -118,7 +118,13 @@ linuxdvb_lnb_standard_tune
 
   /* note: differentiate between linuxdvb_lnb_standard_pol / linuxdvb_lnb_inverted_pol */
   int pol = ((linuxdvb_lnb_t*)ld)->lnb_pol((linuxdvb_lnb_t*)ld, lm);
-  return linuxdvb_diseqc_set_volt(fd, pol);
+
+  if (ls->lse_parent->ls_diseqc_full || ls->lse_parent->ls_last_pol != pol + 1) {
+    ls->lse_parent->ls_last_pol = pol + 1;
+    return linuxdvb_diseqc_set_volt(fd, pol);
+  }
+
+  return 0;
 }
 
 /*

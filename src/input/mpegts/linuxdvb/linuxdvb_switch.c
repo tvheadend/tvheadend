@@ -149,64 +149,79 @@ linuxdvb_switch_tune
   int i, com, r1 = 0, r2 = 0;
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
-
-  if (!sc->lse_parent->ls_diseqc_full && sc->lse_parent->ls_last_switch == sc)
-    return 0;
-
-  sc->lse_parent->ls_last_switch = NULL;
+  linuxdvb_satconf_t *lsp = sc->lse_parent;
 
   /* LNB settings */
   pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
-  band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
-  com  = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
-  
-  /* Set the voltage */
-  if (linuxdvb_diseqc_set_volt(fd, pol))
-    return -1;
 
-  /* Single committed (before repeats) */
-  if (ls->ls_committed >= 0) {
-    if (sc->lse_parent->ls_diseqc_repeats > 0) {
-      r2 = 1;
-      if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
-        return -1;
-      usleep(25000); // 25ms
-    }
+  if (lsp->ls_diseqc_full || lsp->ls_last_pol != pol + 1) {
+
+    lsp->ls_last_pol = 0;
+
+    /* Set the voltage */
+    if (linuxdvb_diseqc_set_volt(fd, pol))
+      return -1;
+
+    lsp->ls_last_pol = pol + 1;
   }
 
-  /* Repeats */
-  for (i = 0; i <= sc->lse_parent->ls_diseqc_repeats; i++) {
+  if (lsp->ls_diseqc_full || lsp->ls_last_switch != sc) {
 
-    /* Uncommitted */
-    if (ls->ls_uncommitted >= 0) {
-      if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
-                               0xF0 | ls->ls_uncommitted))
-        return -1;
-      usleep(25000);
-    }
+    lsp->ls_last_switch = NULL;
 
-    /* Committed */
+    band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
+    com  = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
+
+    /* Single committed (before repeats) */
     if (ls->ls_committed >= 0) {
-      if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
-        return -1;
-      usleep(25000);
+      if (lsp->ls_diseqc_repeats > 0) {
+        r2 = 1;
+        if (linuxdvb_diseqc_send(fd, 0xE0, 0x10, 0x38, 1, com))
+          return -1;
+        usleep(25000); // 25ms
+      }
     }
 
-    /* repeat flag */
-    r1 = r2 = 1;
+    /* Repeats */
+    for (i = 0; i <= lsp->ls_diseqc_repeats; i++) {
+
+      /* Uncommitted */
+      if (ls->ls_uncommitted >= 0) {
+        if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x39, 1,
+                                 0xF0 | ls->ls_uncommitted))
+          return -1;
+        usleep(25000);
+      }
+
+      /* Committed */
+      if (ls->ls_committed >= 0) {
+        if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x38, 1, com))
+          return -1;
+        usleep(25000);
+      }
+
+      /* repeat flag */
+      r1 = r2 = 1;
+    }
+
+    lsp->ls_last_switch = sc;
+
+    /* port was changed, new LNB has not received toneburst yet */
+    lsp->ls_last_toneburst = 0;
   }
 
   /* Tone burst */
-  if (ls->ls_toneburst >= 0) {
+  if (ls->ls_toneburst >= 0 &&
+      (lsp->ls_diseqc_full || lsp->ls_last_toneburst != ls->ls_toneburst + 1)) {
+    lsp->ls_last_toneburst = 0;
     tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
     if (ioctl(fd, FE_DISEQC_SEND_BURST,
               ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
       tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
       return -1;
     }
+    lsp->ls_last_toneburst = ls->ls_toneburst + 1;
   }
-
-  sc->lse_parent->ls_last_switch = sc;
 
   return 0;
 }
