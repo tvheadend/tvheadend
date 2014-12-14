@@ -690,6 +690,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   if (!lse->lse_en50494 || lse->lse_switch || lse->lse_rotor) {
     if (ls->ls_diseqc_full || ls->ls_last_tone_off != 1) {
+      tvhtrace("diseqc", "initial tone off");
       if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
         tvherror("diseqc", "failed to disable tone");
         return -1;
