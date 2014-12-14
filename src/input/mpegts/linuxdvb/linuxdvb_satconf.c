@@ -716,13 +716,9 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     }
   }
 
-  /* Remember the last network position for rotor */
-  if (dvb_network_get_orbital_pos(lm->mm_network,
-                                  &ls->ls_orbital_pos,
-                                  &ls->ls_orbital_dir) < 0) {
-    ls->ls_orbital_pos = 0;
-    ls->ls_orbital_dir = 0;
-  }
+  /* Do post things (store position for rotor) */
+  if (lse->lse_rotor)
+    lse->lse_rotor->ld_post(lse->lse_rotor, lm, lse, lfe->lfe_fe_fd);
 
   /* LNB settings */
   pol  = (lse->lse_lnb) ? lse->lse_lnb->lnb_pol (lse->lse_lnb, lm) & 0x1 : 0;

@@ -141,9 +141,9 @@ linuxdvb_rotor_grace
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
-  int newpos, curpos, delta, tunit;
+  int newpos, delta, tunit;
 
-  if (!ls->ls_orbital_dir || lr->lr_rate == 0)
+  if (!ls->ls_last_orbital_pos || lr->lr_rate == 0)
     return ls->ls_max_rotor_move;
 
   newpos = (lr->lr_sat_lon + 0.05) * 10;
@@ -153,10 +153,7 @@ linuxdvb_rotor_grace
     tunit  = 10000; /* USALS */
   }
 
-  curpos = ls->ls_orbital_pos;
-  if (ls->ls_orbital_dir == 'W')
-    curpos = -(curpos);
-  delta = abs(deltaI32(curpos, newpos));
+  delta = abs(deltaI32(ls->ls_last_orbital_pos, newpos));
 
   /* ignore very small movements like 0.8W and 1W */
   if (delta <= 2)
@@ -168,23 +165,23 @@ linuxdvb_rotor_grace
 
 static int
 linuxdvb_rotor_check_orbital_pos
-  ( dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls )
 {
-  linuxdvb_satconf_t *lsp;
-  int  pos;
+  linuxdvb_satconf_t *lsp = ls->lse_parent;
+  int pos = lsp->ls_last_orbital_pos;
   char dir;
 
-  if (dvb_network_get_orbital_pos(lm->mm_network, &pos, &dir) < 0)
+  if (!pos)
     return 0;
 
-  lsp = ls->lse_parent;
-
-  if (dir != lsp->ls_orbital_dir)
+  if (abs((int)((lr->lr_sat_lon + 0.05) / 10) - pos) > 2)
     return 0;
 
-  if (abs(pos - lsp->ls_orbital_pos) > 2)
-    return 0;
-
+  dir = 'E';
+  if (pos < 0) {
+    pos = -(pos);
+    dir = 'W';
+  }
   tvhdebug("diseqc", "rotor already positioned to %i.%i%c",
                      pos / 10, pos % 10, dir);
   return 1;
@@ -377,7 +374,7 @@ linuxdvb_rotor_tune
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
-  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
+  if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
 
   /* Force to 18v (quicker movement) */
@@ -394,6 +391,16 @@ linuxdvb_rotor_tune
 
   /* USALS */
   return linuxdvb_rotor_usals_tune(lr, lm, ls, fd);
+}
+
+static int
+linuxdvb_rotor_post
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+{
+  linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
+
+  ls->lse_parent->ls_last_orbital_pos = lr->lr_sat_lon;
+  return 0;
 }
 
 /* **************************************************************************
@@ -440,6 +447,7 @@ linuxdvb_rotor_create0
       if (ld) {
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;
+        ld->ld_post  = linuxdvb_rotor_post;
       }
     }
   }

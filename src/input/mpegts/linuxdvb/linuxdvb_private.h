@@ -147,12 +147,6 @@ struct linuxdvb_satconf
   int                    ls_site_lat_south;
   int                    ls_site_lon_west;
   int                    ls_site_altitude;
-
-  /*
-   * Position
-   */
-  int                    ls_orbital_pos;
-  char                   ls_orbital_dir;
   
   /*
    * Satconf elements
@@ -162,6 +156,7 @@ struct linuxdvb_satconf
   int                    ls_last_pol;
   int                    ls_last_toneburst;
   int                    ls_last_tone_off;
+  int                    ls_last_orbital_pos;
 };
 
 /*
@@ -204,6 +199,8 @@ struct linuxdvb_diseqc
   linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+                   linuxdvb_satconf_ele_t *ls, int fd);
+  int (*ld_post)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_ele_t *ls, int fd);
 };
 
