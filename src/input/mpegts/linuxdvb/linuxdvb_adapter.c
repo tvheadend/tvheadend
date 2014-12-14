@@ -164,7 +164,6 @@ linuxdvb_adapter_create
 static dvb_fe_type_t
 linux_dvb_get_type(int linux_type)
 {
-  return DVB_TYPE_S;
   switch (linux_type) {
   case FE_QPSK:
     return DVB_TYPE_S;
