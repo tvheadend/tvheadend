@@ -197,9 +197,6 @@ linuxdvb_rotor_gotox_tune
 {
   int i;
 
-  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
-    return 0;
-
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
@@ -332,9 +329,6 @@ linuxdvb_rotor_usals_tune
   uint32_t tmp, cmd;
   int i;
 
-  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
-    return 0;
-
   if (ls->lse_parent->ls_site_lat_south)
     site_lat = -site_lat;
   if (ls->lse_parent->ls_site_lon_west)
@@ -383,12 +377,16 @@ linuxdvb_rotor_tune
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
+  if (linuxdvb_rotor_check_orbital_pos(lm, ls))
+    return 0;
+
   /* Force to 18v (quicker movement) */
   if (ioctl(fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
     tvherror("diseqc", "failed to set 18v for rotor movement");
     return -1;
   }
   usleep(15000);
+  ls->lse_parent->ls_last_pol = 2;
 
   /* GotoX */
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
