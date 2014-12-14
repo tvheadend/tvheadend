@@ -249,7 +249,7 @@ const idclass_t linuxdvb_satconf_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "site_lat_south",
+      .id       = "site_lon_west",
       .name     = "Longtitude Direction West",
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lon_west),
       .opts     = PO_ADVANCED,
