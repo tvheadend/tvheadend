@@ -209,6 +209,8 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
     if (lfe->lfe_fe_fd > 0) {
       close(lfe->lfe_fe_fd);
       lfe->lfe_fe_fd = -1;
+      if (lfe->lfe_satconf)
+        linuxdvb_satconf_reset(lfe->lfe_satconf);
     }
     gtimer_disarm(&lfe->lfe_monitor_timer);
 
@@ -483,6 +485,8 @@ linuxdvb_frontend_monitor ( void *aux )
     tvhtrace("linuxdvb", "%s - closing frontend", buf);
     close(lfe->lfe_fe_fd);
     lfe->lfe_fe_fd = -1;
+    if (lfe->lfe_satconf)
+      linuxdvb_satconf_reset(lfe->lfe_satconf);
   }
 
   /* Check accessibility */

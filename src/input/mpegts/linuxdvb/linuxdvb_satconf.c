@@ -776,6 +776,18 @@ linuxdvb_satconf_start_mux
   return linuxdvb_satconf_ele_tune(lse);
 }
 
+/*
+ *
+ */
+void
+linuxdvb_satconf_reset
+  ( linuxdvb_satconf_t *ls )
+{
+  ls->ls_last_switch = NULL;
+  ls->ls_last_pol = 0;
+  ls->ls_last_toneburst = 0;
+}
+
 /* **************************************************************************
  * Create/Delete satconf
  * *************************************************************************/

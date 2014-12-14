@@ -335,4 +335,7 @@ void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
 int linuxdvb_satconf_start_mux
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
 
+void linuxdvb_satconf_reset
+  ( linuxdvb_satconf_t *ls );
+
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */
