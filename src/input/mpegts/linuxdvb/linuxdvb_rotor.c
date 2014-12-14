@@ -174,7 +174,7 @@ linuxdvb_rotor_check_orbital_pos
   if (!pos)
     return 0;
 
-  if (abs((int)((lr->lr_sat_lon + 0.05) / 10) - pos) > 2)
+  if (abs((int)((lr->lr_sat_lon + 0.05) * 10) - pos) > 2)
     return 0;
 
   dir = 'E';
