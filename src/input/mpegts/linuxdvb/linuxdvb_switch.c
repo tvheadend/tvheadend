@@ -150,6 +150,11 @@ linuxdvb_switch_tune
   int pol, band;
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
 
+  if (!sc->lse_parent->ls_diseqc_full && sc->lse_parent->ls_last_switch == sc)
+    return 0;
+
+  sc->lse_parent->ls_last_switch = NULL;
+
   /* LNB settings */
   pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
   band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
@@ -200,6 +205,8 @@ linuxdvb_switch_tune
       return -1;
     }
   }
+
+  sc->lse_parent->ls_last_switch = sc;
 
   return 0;
 }

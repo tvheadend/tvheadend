@@ -225,6 +225,13 @@ const idclass_t linuxdvb_satconf_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "diseqc_full",
+      .name     = "Full DiseqC",
+      .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_full),
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "lnb_poweroff",
       .name     = "Turn off LNB when idle",
       .off      = offsetof(linuxdvb_satconf_t, ls_lnb_poweroff),

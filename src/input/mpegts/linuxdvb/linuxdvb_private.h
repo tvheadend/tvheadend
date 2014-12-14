@@ -136,6 +136,7 @@ struct linuxdvb_satconf
   gtimer_t               ls_diseqc_timer;
   int                    ls_diseqc_idx;
   int                    ls_diseqc_repeats;
+  int                    ls_diseqc_full;
   int                    ls_switch_rotor;
 
   /*
@@ -157,6 +158,7 @@ struct linuxdvb_satconf
    * Satconf elements
    */
   linuxdvb_satconf_ele_list_t ls_elements;
+  linuxdvb_satconf_ele_t *ls_last_switch;
 };
 
 /*
