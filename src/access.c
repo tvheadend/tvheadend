@@ -1404,6 +1404,7 @@ access_init(int createdefault, int noacl)
     ae->ae_adv_streaming  = 1;
     ae->ae_htsp_streaming = 1;
     ae->ae_dvr            = 1;
+    ae->ae_htsp_dvr       = 1;
     ae->ae_webui          = 1;
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
