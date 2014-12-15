@@ -102,11 +102,12 @@ tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
   while ( t ) {
     subsys = NULL;
     a      = 1;
-    if (!*t) goto next;
-    if (t[0] == '+' || t[0] == '-' || t[0] <= ' ') {
-      a = t[0] == '+';
+    while (*t && (*t == '+' || *t == '-' || *t <= ' ')) {
+      if (*t > ' ')
+        a = *t == '+';
       t++;
     }
+    if (!*t) goto next;
     if (!strcmp(t, "all")) {
       if (*c)
         htsmsg_destroy(*c);
