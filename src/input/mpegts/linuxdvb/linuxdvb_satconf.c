@@ -248,7 +248,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_U32,
       .id       = "max_rotor_move",
-      .name     = "Max Rotor Movement (seconds)",
+      .name     = "Init Rotor Time (seconds)",
       .off      = offsetof(linuxdvb_satconf_t, ls_max_rotor_move),
       .opts     = PO_ADVANCED,
       .def.u32  = 120
