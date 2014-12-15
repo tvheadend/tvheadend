@@ -131,6 +131,37 @@ const idclass_t linuxdvb_rotor_usals_class =
   }
 };
 
+/*
+ *
+ */
+
+static inline
+int pos_to_integer( double pos )
+{
+  if (pos < 0)
+    return (pos - 0.05) * 10;
+  else
+    return (pos + 0.05) * 10;
+}
+
+static inline
+double to_radians( double val )
+{
+  return ((val * M_PI) / 180.0);
+}
+
+static inline
+double to_degrees( double val )
+{
+  return ((val * 180.0) / M_PI);
+}
+
+static inline
+double to_rev( double val )
+{
+  return val - floor(val / 360.0) * 360;
+}
+
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
@@ -146,7 +177,7 @@ linuxdvb_rotor_grace
   if (!ls->ls_last_orbital_pos || lr->lr_rate == 0)
     return ls->ls_max_rotor_move;
 
-  newpos = (lr->lr_sat_lon + 0.05) * 10;
+  newpos = pos_to_integer(lr->lr_sat_lon);
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class)) {
     tunit  = 1000;  /* GOTOX */
   } else {
@@ -174,7 +205,7 @@ linuxdvb_rotor_check_orbital_pos
   if (!pos)
     return 0;
 
-  if (abs((int)((lr->lr_sat_lon + 0.05) * 10) - pos) > 2)
+  if (abs(pos_to_integer(lr->lr_sat_lon) - pos) > 2)
     return 0;
 
   dir = 'E';
@@ -205,24 +236,6 @@ linuxdvb_rotor_gotox_tune
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
 
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
-}
-
-static inline
-double to_radians( double val )
-{
-  return ((val * M_PI) / 180.0);
-}
-
-static inline
-double to_degrees( double val )
-{
-  return ((val * 180.0) / M_PI);
-}
-
-static inline
-double to_rev( double val )
-{
-  return val - floor(val / 360.0) * 360;
 }
 
 static
@@ -399,7 +412,7 @@ linuxdvb_rotor_post
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
-  ls->lse_parent->ls_last_orbital_pos = lr->lr_sat_lon;
+  ls->lse_parent->ls_last_orbital_pos = pos_to_integer(lr->lr_sat_lon);
   return 0;
 }
 
