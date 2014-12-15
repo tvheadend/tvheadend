@@ -111,6 +111,7 @@ struct linuxdvb_frontend
    * Configuration
    */
   int                       lfe_powersave;
+  int                       lfe_tune_repeats;
   uint32_t                  lfe_skip_bytes;
 
   /*

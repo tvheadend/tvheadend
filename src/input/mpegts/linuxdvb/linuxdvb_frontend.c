@@ -93,6 +93,13 @@ const idclass_t linuxdvb_frontend_class =
     },
     {
       .type     = PT_U32,
+      .id       = "tune_repeats",
+      .name     = "Tune Repeats",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_tune_repeats),
+    },
+    {
+      .type     = PT_U32,
       .id       = "skip_bytes",
       .name     = "Skip Initial Bytes",
       .opts     = PO_ADVANCED,
@@ -1283,7 +1290,7 @@ int
 linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
 {
-  int r;
+  int r, i, rep;
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
@@ -1292,7 +1299,14 @@ linuxdvb_frontend_tune1
 
   /* Tune */
   tvhtrace("linuxdvb", "%s - tuning", buf1);
-  r = linuxdvb_frontend_tune0(lfe, mmi, freq);
+  rep = lfe->lfe_tune_repeats > 0 ? lfe->lfe_tune_repeats : 0;
+  for (i = 0; i <= rep; i++) {
+    if (i > 0)
+      usleep(15000);
+    r = linuxdvb_frontend_tune0(lfe, mmi, freq);
+    if (r)
+      break;
+  }
 
   /* Start monitor */
   if (!r) {
