@@ -103,7 +103,7 @@ tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
     subsys = NULL;
     a      = 1;
     if (!*t) goto next;
-    if (t[0] == '+' || t[0] == '-') {
+    if (t[0] == '+' || t[0] == '-' || t[0] <= ' ') {
       a = t[0] == '+';
       t++;
     }
