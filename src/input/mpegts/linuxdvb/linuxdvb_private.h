@@ -256,6 +256,8 @@ void linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe );
 void linuxdvb_frontend_add_network
   ( linuxdvb_frontend_t *lfe, linuxdvb_network_t *net );
 
+int linuxdvb_frontend_clear
+  ( linuxdvb_frontend_t *lfe );
 int linuxdvb_frontend_tune0
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 int linuxdvb_frontend_tune1

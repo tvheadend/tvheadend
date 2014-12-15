@@ -979,6 +979,41 @@ int linuxdvb2tvh_delsys ( int delsys )
 }
 #endif
 
+int
+linuxdvb_frontend_clear
+  ( linuxdvb_frontend_t *lfe )
+{
+  char buf1[256];
+
+  /* Open FE */
+  lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
+
+  if (lfe->lfe_fe_fd <= 0) {
+    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
+    if (lfe->lfe_fe_fd <= 0) {
+      return SM_CODE_TUNING_FAILED;
+    }
+  }
+  lfe->lfe_locked = 0;
+  lfe->lfe_status = 0;
+
+#if DVB_API_VERSION >= 5
+  static struct dtv_property clear_p[] = {
+    { .cmd = DTV_CLEAR },
+  };
+  static struct dtv_properties clear_cmdseq = {
+    .num = 1,
+    .props = clear_p
+  };
+  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
+    tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
+    return -1;
+  }
+#endif
+
+  return 0;
+}
 
 int
 linuxdvb_frontend_tune0
@@ -1113,18 +1148,10 @@ linuxdvb_frontend_tune0
   dvb_mux_conf_t *dmc;
   struct dvb_frontend_parameters p;
 
-  /* Open FE */
-  lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
+  r = linuxdvb_frontend_clear(lfe);
+  if (r) return r;
 
-  if (lfe->lfe_fe_fd <= 0) {
-    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
-    if (lfe->lfe_fe_fd <= 0) {
-      return SM_CODE_TUNING_FAILED;
-    }
-  }
-  lfe->lfe_locked = 0;
-  lfe->lfe_status = 0;
+  lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
 
   /*
    * copy the universal parameters to the Linux kernel structure
@@ -1184,18 +1211,6 @@ linuxdvb_frontend_tune0
   struct dtv_property cmds[20];
   struct dtv_properties cmdseq;
   
-  /* Clear Q */
-  static struct dtv_property clear_p[] = {
-    { .cmd = DTV_CLEAR },
-  };
-  static struct dtv_properties clear_cmdseq = {
-    .num = 1,
-    .props = clear_p
-  };
-  if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
-    tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
-    return -1;
-  }
 
   if (freq == (uint32_t)-1)
     freq = p.frequency;

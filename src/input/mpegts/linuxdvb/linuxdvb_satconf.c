@@ -790,10 +790,23 @@ linuxdvb_satconf_start_mux
   f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
   if (f == (uint32_t)-1)
     return SM_CODE_TUNING_FAILED;
+#if 0
+  // Note: unfortunately, this test also "delays" the valid
+  //       tune request, so it's disabled now until we create
+  //       own parameter validator
   if (!lse->lse_en50494) {
     r = linuxdvb_frontend_tune0(lfe, mmi, f);
     if (r) return r;
+  } else {
+    /* Clear the frontend settings, open frontend fd */
+    r = linuxdvb_frontend_clear(lfe);
+    if (r) return r;
   }
+#else
+  /* Clear the frontend settings, open frontend fd */
+  r = linuxdvb_frontend_clear(lfe);
+  if (r) return r;
+#endif
 
   /* Diseqc */
   ls->ls_mmi        = mmi;
