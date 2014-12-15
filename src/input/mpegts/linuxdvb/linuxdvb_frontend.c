@@ -334,6 +334,13 @@ linuxdvb_frontend_start_mux
   return res;
 }
 
+void
+linuxdvb_filter_close
+  ( int fd )
+{
+  close(fd);
+}
+
 static void
 linuxdvb_frontend_open_pid0
   ( linuxdvb_frontend_t *lfe, mpegts_pid_t *mp )

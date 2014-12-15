@@ -385,7 +385,7 @@ mpegts_input_close_pid
     if (!RB_FIRST(&mp->mp_subs)) {
       RB_REMOVE(&mm->mm_pids, mp, mp_link);
       if (mp->mp_fd != -1)
-        close(mp->mp_fd);
+        linuxdvb_filter_close(mp->mp_fd);
       free(mp);
     }
   }

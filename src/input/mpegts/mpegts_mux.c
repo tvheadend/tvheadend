@@ -727,7 +727,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
     if (mp->mp_fd != -1)
-      close(mp->mp_fd);
+      linuxdvb_filter_close(mp->mp_fd);
     free(mp);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);

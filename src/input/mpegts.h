@@ -925,6 +925,15 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
     if (ml->op) ml->op(t, ml->ml_opaque);\
 } (void)0
 
+/*
+ * Misc
+ */
+#if ENABLE_LINUXDVB
+void linuxdvb_filter_close ( int fd );
+#else
+static inline void linuxdvb_filter_close ( int fd ) { assert(0); };
+#endif
+
 #endif /* __TVH_MPEGTS_H__ */
 
 /******************************************************************************
