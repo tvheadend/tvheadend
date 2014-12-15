@@ -357,6 +357,9 @@ linuxdvb_rotor_tune
   if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
 
+  if (linuxdvb_satconf_tone_off(ls, fd, 1))
+    return -1;
+
   /* Force to 18v (quicker movement) */
   if (ioctl(fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
     tvherror("diseqc", "failed to set 18v for rotor movement");

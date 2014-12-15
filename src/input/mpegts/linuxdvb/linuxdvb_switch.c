@@ -155,6 +155,9 @@ linuxdvb_switch_tune
 
     lsp->ls_last_switch = NULL;
 
+    if (linuxdvb_satconf_tone_off(sc, fd, 1))
+      return -1;
+
     pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
     band = (sc->lse_lnb) ? sc->lse_lnb->lnb_band(sc->lse_lnb, lm) & 0x1 : 0;
     com  = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
@@ -200,6 +203,10 @@ linuxdvb_switch_tune
   /* Tone burst */
   if (ls->ls_toneburst >= 0 &&
       (lsp->ls_diseqc_full || lsp->ls_last_toneburst != ls->ls_toneburst + 1)) {
+
+    if (linuxdvb_satconf_tone_off(sc, fd, 1))
+      return -1;
+
     lsp->ls_last_toneburst = 0;
     tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
     if (ioctl(fd, FE_DISEQC_SEND_BURST,

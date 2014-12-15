@@ -339,6 +339,8 @@ void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
 int linuxdvb_satconf_start_mux
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
 
+int linuxdvb_satconf_tone_off( linuxdvb_satconf_ele_t *ls, int fd, int delay );
+
 void linuxdvb_satconf_reset
   ( linuxdvb_satconf_t *ls );
 

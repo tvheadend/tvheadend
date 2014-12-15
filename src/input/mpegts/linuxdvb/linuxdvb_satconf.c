@@ -679,6 +679,23 @@ linuxdvb_satconf_get_grace
   return r;
 }
 
+int
+linuxdvb_satconf_tone_off ( linuxdvb_satconf_ele_t *lse, int fd, int delay )
+{
+  linuxdvb_satconf_t *ls = lse->lse_parent;
+
+  if (ls->ls_last_tone_off != 1) {
+    if (ioctl(fd, FE_SET_TONE, SEC_TONE_OFF)) {
+      tvherror("diseqc", "failed to disable tone");
+      return -1;
+    }
+    ls->ls_last_tone_off = 1;
+  }
+  if (delay)
+    usleep(10000);
+  return 0;
+}
+
 static void linuxdvb_satconf_ele_tune_cb ( void *o );
 
 static int
@@ -711,11 +728,8 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   if (!lse->lse_en50494 || lse->lse_switch || lse->lse_rotor) {
     if (ls->ls_diseqc_full || ls->ls_last_tone_off != 1) {
       tvhtrace("diseqc", "initial tone off");
-      if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, SEC_TONE_OFF)) {
-        tvherror("diseqc", "failed to disable tone");
+      if (linuxdvb_satconf_tone_off(lse, lfe->lfe_fe_fd, 0))
         return -1;
-      }
-      ls->ls_last_tone_off = 1;
     }
   }
 
