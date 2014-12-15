@@ -156,8 +156,8 @@ Ext.Ajax.request({
  */
 tvheadend.niceDate = function(dt) {
     var d = new Date(dt);
-    return '<div class="x-date-date">' + d.toLocaleDateString() + '</div>' +
-           '<div class="x-date-time">' + d.toLocaleTimeString() + '</div>';
+    return '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>' +
+           '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
 }
 
 /**
