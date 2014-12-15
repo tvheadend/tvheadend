@@ -777,14 +777,16 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   if (!lse->lse_en50494) {
     ls->ls_last_tone_off = 0;
     b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
-    tvhtrace("diseqc", "set diseqc tone %s", b ? "on" : "off");
-    if (b && ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
-      tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
-      return -1;
+    if (ls->ls_diseqc_full || ls->ls_last_tone_off != b + 1) {
+      tvhtrace("diseqc", "set diseqc tone %s", b ? "on" : "off");
+      if (b && ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+        tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
+        return -1;
+      }
+      ls->ls_last_tone_off = b + 1;
+      if (b)
+        usleep(20000); // Allow LNB to settle before tuning
     }
-    ls->ls_last_tone_off = b + 1;
-    if (b)
-      usleep(20000); // Allow LNB to settle before tuning
   }
 
   /* Frontend */
