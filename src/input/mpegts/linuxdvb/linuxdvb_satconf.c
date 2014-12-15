@@ -254,6 +254,20 @@ const idclass_t linuxdvb_satconf_class =
       .def.u32  = 120
     },
     {
+      .type     = PT_DBL,
+      .id       = "site_lat",
+      .name     = "Site Latitude",
+      .off      = offsetof(linuxdvb_satconf_t, ls_site_lat),
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_DBL,
+      .id       = "site_lon",
+      .name     = "Site Longitude",
+      .off      = offsetof(linuxdvb_satconf_t, ls_site_lon),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_BOOL,
       .id       = "site_lat_south",
       .name     = "Latitude Direction South",
@@ -276,6 +290,12 @@ const idclass_t linuxdvb_satconf_class =
       .off      = offsetof(linuxdvb_satconf_t, ls_site_altitude),
       .opts     = PO_ADVANCED,
       .def.i    = 0
+    },
+    {
+      .type     = PT_U32,
+      .id       = "motor_rate",
+      .name     = "Motor Rate (millis/deg)",
+      .off      = offsetof(linuxdvb_satconf_t, ls_motor_rate),
     },
     {}
   }

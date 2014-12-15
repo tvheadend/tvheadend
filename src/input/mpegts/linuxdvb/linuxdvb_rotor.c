@@ -38,15 +38,8 @@ typedef struct linuxdvb_rotor
 {
   linuxdvb_diseqc_t;
 
-  /* USALS */
-  double    lr_site_lat;
-  double    lr_site_lon;
   double    lr_sat_lon;
-  double    lr_zero_lon;
-  
-  /* GOTOX */
   uint32_t  lr_position;
-  uint32_t  lr_rate;
 
 } linuxdvb_rotor_t;
 
@@ -86,12 +79,6 @@ const idclass_t linuxdvb_rotor_gotox_class =
       .name   = "Satellite Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
-    {
-      .type   = PT_U16,
-      .id     = "rate",
-      .name   = "Rate (millis/click)",
-      .off    = offsetof(linuxdvb_rotor_t, lr_rate),
-    },
     {}
   }
 };
@@ -104,27 +91,9 @@ const idclass_t linuxdvb_rotor_usals_class =
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_DBL,
-      .id     = "site_lat",
-      .name   = "Site Latitude",
-      .off    = offsetof(linuxdvb_rotor_t, lr_site_lat),
-    },
-    {
-      .type   = PT_DBL,
-      .id     = "site_lon",
-      .name   = "Site Longitude",
-      .off    = offsetof(linuxdvb_rotor_t, lr_site_lon),
-    },
-    {
-      .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = "Satellite Longitude",
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
-    },
-    {
-      .type   = PT_U16,
-      .id     = "rate",
-      .name   = "Rate (millis/deg)",
-      .off    = offsetof(linuxdvb_rotor_t, lr_rate),
     },
  
     {}
@@ -174,15 +143,11 @@ linuxdvb_rotor_grace
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
   int newpos, delta, tunit;
 
-  if (!ls->ls_last_orbital_pos || lr->lr_rate == 0)
+  if (!ls->ls_last_orbital_pos || ls->ls_motor_rate == 0)
     return ls->ls_max_rotor_move;
 
   newpos = pos_to_integer(lr->lr_sat_lon);
-  if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class)) {
-    tunit  = 1000;  /* GOTOX */
-  } else {
-    tunit  = 10000; /* USALS */
-  }
+  tunit  = 10000; /* 1/1000 sec per one degree */
 
   delta = abs(deltaI32(ls->ls_last_orbital_pos, newpos));
 
@@ -191,7 +156,7 @@ linuxdvb_rotor_grace
     return 0;
 
   /* add one extra second, because of the rounding issue */
-  return ((lr->lr_rate*delta+(tunit-1))/tunit) + 1;
+  return ((ls->ls_motor_rate*delta+(tunit-1))/tunit) + 1;
 }
 
 static int
@@ -332,23 +297,25 @@ linuxdvb_rotor_usals_tune
   static const uint8_t xtable[10] =
          { 0x00, 0x02, 0x03, 0x05, 0x06, 0x08, 0x0A, 0x0B, 0x0D, 0x0E };
 
-  double site_lat = lr->lr_site_lat;
-  double site_lon = lr->lr_site_lon;
+  linuxdvb_satconf_t *lsp = ls->lse_parent;
+
+  double site_lat = lsp->ls_site_lat;
+  double site_lon = lsp->ls_site_lon;
   double sat_lon  = lr->lr_sat_lon;
   double motor_angle;
   uint32_t tmp, cmd;
   int i;
 
-  if (ls->lse_parent->ls_site_lat_south)
+  if (lsp->ls_site_lat_south)
     site_lat = -site_lat;
-  if (ls->lse_parent->ls_site_lon_west)
+  if (lsp->ls_site_lon_west)
     site_lon = 360 - site_lon;
   if (sat_lon < 0)
     sat_lon = 360 - sat_lon;
 
-  motor_angle = usals_sat_angle(lr->lr_site_lat, lr->lr_site_lon,
-                                ls->lse_parent->ls_site_altitude,
-                                lr->lr_sat_lon);
+  motor_angle = usals_sat_angle(site_lat, site_lon,
+                                lsp->ls_site_altitude,
+                                sat_lon);
 
   if (site_lat >= 0) {
     tmp = round(fabs(180 - motor_angle) * 10.0);
@@ -362,11 +329,11 @@ linuxdvb_rotor_usals_tune
     cmd = ((tmp / 10) * 0x10 + xtable[tmp % 10]) | 0xE000;
   }
 
-  tvhtrace("diseqc", "rotor USALS goto %0.1f%c (motor %0.1f %sclockwise)",
+  tvhdebug("diseqc", "rotor USALS goto %0.1f%c (motor %0.1f %sclockwise)",
            fabs(lr->lr_sat_lon), (lr->lr_sat_lon > 0.0) ? 'E' : 'W',
            ((double)tmp / 10.0), (cmd & 0xF000) == 0xD000 ? "counter-" : "");
 
-  for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
+  for (i = 0; i <= lsp->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6E, 2,
                              (cmd >> 8) & 0xff, cmd & 0xff)) {
       tvherror("diseqc", "failed to send USALS command");
