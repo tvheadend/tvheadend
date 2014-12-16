@@ -197,7 +197,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
-                            const char *creator, const char *comment)
+                            const char *owner, const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf, *days;
@@ -214,6 +214,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_s64(conf, "stop_extra",  stop_extra);
   htsmsg_add_str(conf, "title",       title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
+  htsmsg_add_str(conf, "owner",       owner ?: "");
   htsmsg_add_str(conf, "creator",     creator ?: "");
   htsmsg_add_str(conf, "comment",     comment ?: "");
 
@@ -248,7 +249,8 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
                             epg_broadcast_t *event,
-                            const char *creator, const char *comment)
+                            const char *owner, const char *creator,
+                            const char *comment)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf;
@@ -264,6 +266,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   htsmsg_add_str(conf, "channel", channel_get_name(event->channel));
   if (event->serieslink)
     htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
+  htsmsg_add_str(conf, "owner", owner ?: "");
   htsmsg_add_str(conf, "creator", creator ?: "");
   htsmsg_add_str(conf, "comment", comment ?: "");
   dae = dvr_autorec_create(NULL, conf);
@@ -291,6 +294,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
     LIST_REMOVE(dae, dae_config_link);
 
   free(dae->dae_name);
+  free(dae->dae_owner);
   free(dae->dae_creator);
   free(dae->dae_comment);
 
@@ -957,6 +961,13 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Series Link",
       .set      = dvr_autorec_entry_class_series_link_set,
       .get      = dvr_autorec_entry_class_series_link_get,
+      .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "owner",
+      .name     = "Owner",
+      .off      = offsetof(dvr_autorec_entry_t, dae_owner),
       .opts     = PO_RDONLY,
     },
     {

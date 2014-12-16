@@ -155,7 +155,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
                          NULL, dte->dte_channel,
                          start, stop, 0, 0, title,
-                         NULL, NULL, NULL, buf,
+                         NULL, NULL, NULL, dte->dte_owner, buf,
                          NULL, dte, dte->dte_pri, dte->dte_retention,
                          dte->dte_comment);
 
@@ -216,6 +216,7 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
 
   free(dte->dte_name);
   free(dte->dte_title);
+  free(dte->dte_owner);
   free(dte->dte_creator);
   free(dte->dte_comment);
 
@@ -552,6 +553,13 @@ const idclass_t dvr_timerec_entry_class = {
       .get      = dvr_timerec_entry_class_config_name_get,
       .rend     = dvr_timerec_entry_class_config_name_rend,
       .list     = dvr_entry_class_config_name_list,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "owner",
+      .name     = "Owner",
+      .off      = offsetof(dvr_timerec_entry_t, dte_creator),
+      .opts     = PO_RDONLY,
     },
     {
       .type     = PT_STR,

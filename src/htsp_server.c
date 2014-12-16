@@ -1384,13 +1384,16 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     // create the dvr entry
     de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
-                               title, desc, lang, 0, creator, NULL,
+                               title, desc, lang, 0,
+                               htsp->htsp_granted_access->aa_username,
+                               creator, NULL,
                                priority, retention, comment);
 
   /* Event timer */
   } else {
     de = dvr_entry_create_by_event(dvr_config_name, e, 
                                    start_extra, stop_extra,
+                                   htsp->htsp_granted_access->aa_username,
                                    creator, NULL,
                                    priority, retention, comment);
   }
@@ -1574,7 +1577,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access");
 
   dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, start, start_window, days_of_week,
-      start_extra, stop_extra, priority, retention, min_duration, max_duration, creator, comment);
+      start_extra, stop_extra, priority, retention, min_duration, max_duration,
+      htsp->htsp_granted_access->aa_username, creator, comment);
 
   /* create response */
   out = htsmsg_create_map();

@@ -209,7 +209,9 @@ api_dvr_entry_create_by_event
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
         de = dvr_entry_create_by_event(idnode_uuid_as_str(&cfg->dvr_id),
-                                       e, 0, 0, perm->aa_representative,
+                                       e, 0, 0,
+                                       perm->aa_username,
+                                       perm->aa_representative,
                                        NULL, DVR_PRIO_NORMAL, 0, comment);
         if (de)
           dvr_entry_save(de);
@@ -257,6 +259,8 @@ api_dvr_autorec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
+  if (perm->aa_username)
+    htsmsg_set_str(conf, "owner", perm->aa_username);
   if (perm->aa_representative)
     htsmsg_set_str(conf, "creator", perm->aa_representative);
 
@@ -301,7 +305,9 @@ api_dvr_autorec_create_by_series
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
         dae = dvr_autorec_add_series_link(idnode_uuid_as_str(&cfg->dvr_id),
-                                          e, perm->aa_representative,
+                                          e,
+                                          perm->aa_username,
+                                          perm->aa_representative,
                                           "Created from EPG query");
         if (dae) {
           dvr_autorec_save(dae);
@@ -338,6 +344,8 @@ api_dvr_timerec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
+  if (perm->aa_username)
+    htsmsg_set_str(conf, "owner", perm->aa_username);
   if (perm->aa_representative)
     htsmsg_set_str(conf, "creator", perm->aa_representative);
 

@@ -207,7 +207,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
-              'duration,channelname,creator,config_name,' +
+              'duration,channelname,owner,creator,config_name,' +
               'sched_status,comment',
         sort: {
           field: 'start_real',
@@ -270,7 +270,7 @@ tvheadend.dvr_finished = function(panel, index) {
         delquestion: 'Do you really want to delete the selected recordings?<br/><br/>' +
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
-              'duration,filesize,channelname,creator,' +
+              'duration,filesize,channelname,owner,creator,' +
               'sched_status,url,comment',
         columns: {
             filesize: {
@@ -350,7 +350,7 @@ tvheadend.dvr_failed = function(panel, index) {
         delquestion: 'Do you really want to delete the selected recordings?<br/><br/>' +
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
-              'duration,filesize,channelname,creator,' +
+              'duration,filesize,channelname,owner,creator,' +
               'status,sched_status,url,comment',
         columns: {
             filesize: {
@@ -437,6 +437,7 @@ tvheadend.autorec_editor = function(panel, index) {
             start_window: { width: 100 },
             pri:          { width: 80 },
             config_name:  { width: 120 },
+            owner:        { width: 100 },
             creator:      { width: 200 },
             comment:      { width: 200 }
         },
@@ -450,7 +451,7 @@ tvheadend.autorec_editor = function(panel, index) {
         },
         del: true,
         list: 'enabled,name,title,channel,tag,content_type,minduration,' +
-              'maxduration,weekdays,start,start_window,pri,config_name,creator,comment',
+              'maxduration,weekdays,start,start_window,pri,config_name,owner,creator,comment',
         columns: {
             weekdays: {
                 renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
@@ -490,6 +491,7 @@ tvheadend.timerec_editor = function(panel, index) {
             stop:         { width: 100 },
             pri:          { width: 80 },
             config_name:  { width: 120 },
+            owner:        { width: 100 },
             creator:      { width: 200 },
             comment:      { width: 200 }
         },
@@ -501,7 +503,7 @@ tvheadend.timerec_editor = function(panel, index) {
             create: { }
         },
         del: true,
-        list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment',
+        list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,owner,creator,comment',
         columns: {
             weekdays: {
                 renderer: function(st) { return tvheadend.weekdaysRenderer(st); }

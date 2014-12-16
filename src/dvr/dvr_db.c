@@ -458,6 +458,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   time_t start_extra, time_t stop_extra,
                   const char *title, const char *description,
                   const char *lang, epg_genre_t *content_type,
+                  const char *owner,
                   const char *creator, dvr_autorec_entry_t *dae,
                   dvr_timerec_entry_t *dte,
                   dvr_prio_t pri, int retention,
@@ -479,6 +480,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
   htsmsg_add_str(conf, "config_name", config_uuid ?: "");
   htsmsg_add_s64(conf, "start_extra", start_extra);
   htsmsg_add_s64(conf, "stop_extra", stop_extra);
+  htsmsg_add_str(conf, "owner", owner ?: "");
   htsmsg_add_str(conf, "creator", creator ?: "");
   htsmsg_add_str(conf, "comment", comment ?: "");
   if (e) {
@@ -547,6 +549,7 @@ dvr_entry_create_htsp(const char *config_uuid,
                       const char *title,
                       const char *description, const char *lang,
                       epg_genre_t *content_type,
+                      const char *owner,
                       const char *creator, dvr_autorec_entry_t *dae,
                       dvr_prio_t pri, int retention,
                       const char *comment)
@@ -558,7 +561,7 @@ dvr_entry_create_htsp(const char *config_uuid,
                            NULL,
                            ch, start, stop, start_extra, stop_extra,
                            title, description, lang, content_type,
-                           creator, dae, NULL, pri, retention,
+                           owner, creator, dae, NULL, pri, retention,
                            comment);
 }
 
@@ -569,6 +572,7 @@ dvr_entry_t *
 dvr_entry_create_by_event(const char *config_uuid,
                           epg_broadcast_t *e,
                           time_t start_extra, time_t stop_extra,
+                          const char *owner,
                           const char *creator, dvr_autorec_entry_t *dae,
                           dvr_prio_t pri, int retention,
                           const char *comment)
@@ -581,7 +585,7 @@ dvr_entry_create_by_event(const char *config_uuid,
                            start_extra, stop_extra,
                            NULL, NULL, NULL,
                            LIST_FIRST(&e->episode->genre),
-                           creator, dae, NULL, pri, retention,
+                           owner, creator, dae, NULL, pri, retention,
                            comment);
 }
 
@@ -639,7 +643,7 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 
   dvr_entry_create_by_event(idnode_uuid_as_str(&dae->dae_config->dvr_id), e,
                             dae->dae_start_extra, dae->dae_stop_extra,
-                            buf, dae, dae->dae_pri, dae->dae_retention,
+                            dae->dae_owner, buf, dae, dae->dae_pri, dae->dae_retention,
                             dae->dae_comment);
 }
 
@@ -670,6 +674,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
     LIST_REMOVE(de, de_config_link);
 
   free(de->de_filename);
+  free(de->de_owner);
   free(de->de_creator);
   free(de->de_comment);
   if (de->de_title) lang_str_destroy(de->de_title);
@@ -1818,6 +1823,13 @@ const idclass_t dvr_entry_class = {
       .list     = dvr_entry_class_config_name_list,
       .rend     = dvr_entry_class_config_name_rend,
       .get_opts = dvr_entry_class_start_opts,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "owner",
+      .name     = "Owner",
+      .off      = offsetof(dvr_entry_t, de_owner),
+      .opts     = PO_RDONLY,
     },
     {
       .type     = PT_STR,
