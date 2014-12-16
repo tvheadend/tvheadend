@@ -738,7 +738,11 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
   htsmsg_add_u32(out, "retention",   dae->dae_retention);
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
-  htsmsg_add_u32(out, "approxTime",  dae->dae_start);
+  htsmsg_add_u32(out, "approxTime",
+                 dae->dae_start_window == 30 && dae->dae_start >= 0 ?
+                   dae->dae_start + 15 : -1);
+  htsmsg_add_u32(out, "start",       dae->dae_start);
+  htsmsg_add_u32(out, "startWindow", dae->dae_start_window);
   htsmsg_add_u32(out, "priority",    dae->dae_pri);
   htsmsg_add_s64(out, "startExtra",  dae->dae_start_extra);
   htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
@@ -1523,8 +1527,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *dvr_config_name, *title, *creator, *comment;
   int64_t start_extra, stop_extra;
-  uint32_t u32, days_of_week, priority, approx_time,
-  min_duration, max_duration, retention;
+  uint32_t u32, days_of_week, priority, approx_time, start, start_window,
+           min_duration, max_duration, retention;
   channel_t *ch = NULL;
 
   /* Options */
@@ -1544,9 +1548,19 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "approxTime", &approx_time))
-    approx_time = 0;
-  else
-    approx_time++;
+    approx_time = -1;
+  if(htsmsg_get_u32(in, "start", &start))
+    start = -1;
+  if(htsmsg_get_u32(in, "startWindow", &start_window))
+    start_window = -1;
+  if (start < 0 || start_window < 0)
+    start = start_window = -1;
+  if (start < 0 && approx_time >= 0) {
+    start = approx_time - 15;
+    if (start < 0)
+      start += 24 * 60;
+    start_window = 60;
+  }
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;     // 0 = dvr config
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
@@ -1559,7 +1573,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, approx_time, days_of_week,
+  dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration, creator, comment);
 
   /* create response */

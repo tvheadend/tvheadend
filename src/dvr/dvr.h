@@ -251,7 +251,8 @@ typedef struct dvr_autorec_entry {
   
   uint32_t dae_content_type;
 
-  int dae_start;  /* Minutes from midnight */
+  int dae_start;        /* Minutes from midnight */
+  int dae_start_window; /* Minutes (duration) */
 
   uint32_t dae_weekdays;
 
@@ -480,8 +481,8 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
 
 dvr_autorec_entry_t *
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t aroundTime, uint32_t days,
-                            time_t start_extra, time_t stop_extra,
+                            channel_t *ch, uint32_t start, uint32_t start_window,
+                            uint32_t days, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
                             const char *creator, const char *comment);

@@ -434,6 +434,7 @@ tvheadend.autorec_editor = function(panel, index) {
             maxduration:  { width: 80 },
             weekdays:     { width: 160 },
             start:        { width: 100 },
+            start_window: { width: 100 },
             pri:          { width: 80 },
             config_name:  { width: 120 },
             creator:      { width: 200 },
@@ -443,13 +444,13 @@ tvheadend.autorec_editor = function(panel, index) {
             url: 'api/dvr/autorec',
             params: {
                list: 'enabled,name,title,channel,tag,content_type,minduration,' +
-                     'maxduration,weekdays,start,pri,config_name,comment'
+                     'maxduration,weekdays,start,start_window,pri,config_name,comment'
             },
             create: { }
         },
         del: true,
         list: 'enabled,name,title,channel,tag,content_type,minduration,' +
-              'maxduration,weekdays,start,pri,config_name,creator,comment',
+              'maxduration,weekdays,start,start_window,pri,config_name,creator,comment',
         columns: {
             weekdays: {
                 renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
