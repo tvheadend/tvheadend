@@ -17,6 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef ROTOR_TEST
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "settings.h"
@@ -30,18 +31,46 @@
 #include <math.h>
 #include <linux/dvb/frontend.h>
 
+#else /* ROTOR_TEST */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <math.h>
+
+typedef struct {
+  double   ls_site_lat;
+  double   ls_site_lon;
+  double   ls_site_altitude;
+  int      ls_site_lat_south;
+  int      ls_site_lon_west;
+} linuxdvb_satconf_t;
+
+typedef struct {
+  linuxdvb_satconf_t *lse_parent;
+} linuxdvb_satconf_ele_t;
+
+double gazimuth, gelevation;
+
+#endif
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
 
 typedef struct linuxdvb_rotor
 {
+#ifndef ROTOR_TEST
   linuxdvb_diseqc_t;
+#endif
 
   double    lr_sat_lon;
   uint32_t  lr_position;
 
 } linuxdvb_rotor_t;
+
+#ifndef ROTOR_TEST
 
 static const char *
 linuxdvb_rotor_class_get_title ( idnode_t *o )
@@ -99,6 +128,8 @@ const idclass_t linuxdvb_rotor_usals_class =
     {}
   }
 };
+
+#endif /* ROTOR_TEST */
 
 /*
  *
@@ -201,10 +232,20 @@ sat_angle( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *ls )
 
   double azimuth, elevation;
 
+#ifndef ROTOR_TEST
+  tvhtrace("diseqc", "site: lat %.4f, lon %.4f, alt %.4f; sat lon %.4f",
+                     site_lat, site_lon, site_alt, sat_lon);
+#endif
+
   sat_azimuth_and_elevation(site_lat, site_lon, site_alt, sat_lon,
                             &azimuth, &elevation);
 
+#ifndef ROTOR_TEST
   tvhtrace("diseqc", "rotor angle azimuth %.4f elevation %.4f", azimuth, elevation);
+#else
+  gazimuth = azimuth;
+  gelevation = elevation;
+#endif
 
   double rad_azimuth   = to_radians(azimuth);
   double rad_elevation = to_radians(elevation);
@@ -240,6 +281,8 @@ sat_angle( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *ls )
 
   return ret;
 }
+
+#ifndef ROTOR_TEST
 
 /* **************************************************************************
  * Class methods
@@ -444,6 +487,46 @@ linuxdvb_rotor_destroy ( linuxdvb_diseqc_t *lr )
   linuxdvb_diseqc_destroy(lr);
   free(lr);
 }
+
+#else /* ROTOR_TEST */
+
+int main(int argc, char *argv[])
+{
+  if (argc < 5) {
+    fprintf(stderr, "Usage: <site_latitude> <site_lontitude> <site_altitude> <sat_longtitude>\n");
+    return 1;
+  }
+  linuxdvb_rotor_t lr;
+  linuxdvb_satconf_t ls;
+  linuxdvb_satconf_ele_t lse;
+  int angle;
+
+  memset(&lr, 0, sizeof(lr));
+  memset(&ls, 0, sizeof(ls));
+  memset(&lse, 0, sizeof(lse));
+
+  lse.lse_parent = &ls;
+
+  ls.ls_site_lat = atof(argv[1]);
+  ls.ls_site_lon = atof(argv[2]);
+  ls.ls_site_altitude = atof(argv[3]);
+  lr.lr_sat_lon  = atof(argv[4]);
+
+  angle = sat_angle(&lr, &lse);
+
+  printf("Input values:\n");
+  printf("  %20s: %.4f\n", "Site Latidude", ls.ls_site_lat);
+  printf("  %20s: %.4f\n", "Site Longtitude", ls.ls_site_lon);
+  printf("  %20s: %.4f\n", "Site Altitude", ls.ls_site_altitude);
+  printf("  %20s: %.4f\n", "Satellite Longtitude", lr.lr_sat_lon);
+  printf("\nResult:\n");
+  printf("  %20s: %.4f\n", "Azimuth", gazimuth);
+  printf("  %20s: %.4f\n", "Elevation", gelevation);
+  printf("  %20s: %.1f %sclockwise\n", "Angle", (double)abs(angle) / 10.0, angle < 0 ? "counter-" : "");
+  return 0;
+}
+
+#endif
 
 /******************************************************************************
  * Editor Configuration
