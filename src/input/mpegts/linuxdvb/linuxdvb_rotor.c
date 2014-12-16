@@ -228,7 +228,7 @@ sat_angle( linuxdvb_rotor_t *lr, linuxdvb_satconf_ele_t *ls )
   if (lsp->ls_site_lon_west)
     site_lon = 360 - site_lon;
   if (sat_lon < 0)
-    sat_lon = 360 - sat_lon;
+    sat_lon = 360 + sat_lon;
 
   double azimuth, elevation;
 
