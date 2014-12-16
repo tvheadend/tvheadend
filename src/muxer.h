@@ -129,7 +129,7 @@ static inline int muxer_destroy (muxer_t *m)
   { if (m) { m->m_destroy(m); return 0; } return -1; }
 
 static inline int muxer_write_meta (muxer_t *m, struct epg_broadcast *eb, const char *comment)
-  { if (m && eb) return m->m_write_meta(m, eb, comment); return -1; }
+  { if (m) return m->m_write_meta(m, eb, comment); return -1; }
 
 static inline int muxer_write_pkt (muxer_t *m, streaming_message_type_t smt, void *data)
   { if (m && data) return m->m_write_pkt(m, smt, data); return -1; }
