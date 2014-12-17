@@ -2002,7 +2002,7 @@ const idclass_t caclient_capmt_class =
       .def.s    = "/tmp/camd.socket",
     },
     {
-      .type     = PT_U16,
+      .type     = PT_INT,
       .id       = "port",
       .name     = "Listen/Connect Port",
       .off      = offsetof(capmt_t, capmt_port),
