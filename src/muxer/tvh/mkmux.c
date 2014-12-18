@@ -678,7 +678,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   const epg_genre_t *eg = NULL;
   epg_genre_t eg0;
   struct tm tm;
-  localtime_r(de ? &de->de_start : &ebc->start, &tm);
+  time_t t;
   epg_episode_t *ee = NULL;
   channel_t *ch = NULL;
   lang_str_t *ls = NULL, *ls2 = NULL;
@@ -690,6 +690,12 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   if (de)       ch = de->de_channel;
   else if (ebc) ch = ebc->channel;
 
+  if (de || ebc) {
+    localtime_r(de ? &de->de_start : &ebc->start, &tm);
+  } else {
+    t = time(NULL);
+    localtime_r(&t, &tm);
+  }
   snprintf(datestr, sizeof(datestr),
 	   "%04d-%02d-%02d %02d:%02d:%02d",
 	   tm.tm_year + 1900,
