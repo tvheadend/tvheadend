@@ -198,7 +198,7 @@ subscription_show_none(th_subscription_t *s)
 {
   channel_t *ch = s->ths_channel;
   tvhlog(LOG_NOTICE, "subscription",
-	 "%04X: No transponder available for subscription \"%s\" "
+	 "%04X: No input source available for subscription \"%s\" "
 	 "to channel \"%s\"",
 	   shortid(s), s->ths_title, ch ? channel_get_name(ch) : "none");
 }
