@@ -640,6 +640,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
   htsmsg_add_u32(out, "tagId", htsp_channel_tag_get_identifier(ct));
+  htsmsg_add_u32(out, "tagIndex", ct->ct_index);
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
   htsmsg_add_str(out, "tagIcon", channel_tag_get_icon(ct));

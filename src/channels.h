@@ -91,6 +91,7 @@ typedef struct channel_tag {
   TAILQ_ENTRY(channel_tag) ct_link;
 
   int ct_enabled;
+  uint32_t ct_index;
   int ct_internal;
   int ct_private;
   int ct_titled_icon;
