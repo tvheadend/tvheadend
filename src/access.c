@@ -1392,7 +1392,7 @@ access_init(int createdefault, int noacl)
     access_entry_reindex();
   }
 
-  if(TAILQ_FIRST(&access_entries) == NULL) {
+  if(createdefault && TAILQ_FIRST(&access_entries) == NULL) {
     /* No records available */
     ae = access_entry_create(NULL, NULL);
 
