@@ -294,7 +294,7 @@ linuxdvb_rotor_grace
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
   linuxdvb_satconf_t *ls = ld->ld_satconf->lse_parent;
-  int newpos, delta, tunit;
+  int newpos, delta, tunit, min, res;
 
   if (!ls->ls_last_orbital_pos || ls->ls_motor_rate == 0)
     return ls->ls_max_rotor_move;
@@ -310,7 +310,13 @@ linuxdvb_rotor_grace
     return 0;
 
   /* add one extra second, because of the rounding issue */
-  return ((ls->ls_motor_rate*delta+(tunit-1))/tunit) + 1;
+  res = ((ls->ls_motor_rate*delta+(tunit-1))/tunit) + 1;
+
+  min = 1 + ls->ls_min_rotor_move;
+  if (res < min)
+    res = min;
+
+  return res;
 }
 
 static int

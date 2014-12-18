@@ -254,6 +254,13 @@ const idclass_t linuxdvb_satconf_class =
       .def.u32  = 120
     },
     {
+      .type     = PT_U32,
+      .id       = "min_rotor_move",
+      .name     = "Min Rotor Time (seconds)",
+      .off      = offsetof(linuxdvb_satconf_t, ls_min_rotor_move),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_DBL,
       .id       = "site_lat",
       .name     = "Site Latitude",
