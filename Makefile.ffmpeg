@@ -72,10 +72,10 @@ LIBVORBIS_TB    = $(LIBVORBIS).tar.gz
 LIBVORBIS_URL   = http://downloads.xiph.org/releases/vorbis/$(LIBVORBIS_TB)
 LIBVORBIS_SHA1  = 1602716c187593ffe4302124535240cec2079df3
 
-LIBX264         = x264-snapshot-20141012-2245
+LIBX264         = x264-snapshot-20141218-2245
 LIBX264_TB      = $(LIBX264).tar.bz2
-LIBX264_URL     = ftp://ftp.videolan.org/pub/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1    = 392cd6b0e723192e009d731fe44db01b55c97fba
+LIBX264_URL     = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
+LIBX264_SHA1    = 24a3b20e2c49a112e40df9f64885cbd81250298a
 
 LIBVPX          = libvpx-v1.3.0
 LIBVPX_TB       = $(LIBVPX).tar.bz2
