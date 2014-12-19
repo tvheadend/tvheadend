@@ -1515,7 +1515,7 @@ dvb_nit_callback
         case 0x82:
           if (priv == 0) goto lcn;
         case 0x83:
-          if (priv == 0 || priv == 0x28 || priv == 0xa5) goto lcn;
+          if (priv == 0 || priv == 0x28 || priv == 0x29 || priv == 0xa5) goto lcn;
         case 0x86:
           if (priv == 0) goto lcn;
         case 0x93:
