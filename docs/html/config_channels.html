@@ -21,6 +21,16 @@
  The columns have the following functions:
 
  <dl>
+  <dt>Play
+  <dd>Direct play link using the HTTP streaming.
+
+  <dt>Enabled
+  <dd>Whether or not the mux is enabled and thus available.
+
+  <dd>Channel number. This is not used by Tvheadend internally, but rather
+      intended to be used by HTSP clients for mapping to remote control
+      buttons, presentation order, etc
+
   <dt>Number
   <dd>Channel number. This is not used by Tvheadend internally, but rather
       intended to be used by HTSP clients for mapping to remote control
@@ -59,10 +69,13 @@
       in the EPG if you have many channels. The tags are also presented
       in a Media player.
 
-  <dt>Icon
+  <dt>User Icon
   <dd>An URL pointing to an image representing the channel.
       The icon URL will be set automatically when importing data from
-      XMLTV. This field allows the user to edit it manually.
+      XMLTV, when picon path is set or when channel icon path is set
+      in the general config. This field allows the user to edit it manually. The
+      reset icon action allows to re-set the automatic URL for
+      selected channel (e.g. after configuration change).
 
   <dt>DVR Pre-Start
   <dd>Allows the user to specify an amount of extra time that should
