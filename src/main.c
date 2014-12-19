@@ -978,12 +978,14 @@ main(int argc, char **argv)
   CRYPTO_cleanup_all_ex_data();
   EVP_cleanup();
   CONF_modules_free();
+#ifndef OPENSSL_NO_COMP
   COMP_zlib_cleanup();
+#endif
   ERR_remove_state(0);
   ERR_free_strings();
-  {
-    sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
-  }
+#ifndef OPENSSL_NO_COMP
+  sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+#endif
   /* end of OpenSSL cleanup code */
 
 #if ENABLE_DBUS_1
