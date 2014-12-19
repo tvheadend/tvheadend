@@ -40,7 +40,7 @@ tvheadend.esfilter_tab = function(panel)
         },
         del: true,
         help: function() {
-            new tvheadend.help('Stream Profile', 'config_profile.html');
+            new tvheadend.help('Stream Profile', 'config_streamprofile.html');
         }
     });
 
