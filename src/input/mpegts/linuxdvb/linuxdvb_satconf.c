@@ -657,8 +657,7 @@ linuxdvb_satconf_post_stop_mux
 {
   gtimer_disarm(&ls->ls_diseqc_timer);
   if (ls->ls_frontend && ls->ls_lnb_poweroff) {
-    linuxdvb_diseqc_set_volt(
-        ((linuxdvb_frontend_t *)ls->ls_frontend)->lfe_fe_fd, -1);
+    linuxdvb_diseqc_set_volt(ls, -1);
     linuxdvb_satconf_reset(ls);
   }
 }
@@ -689,13 +688,14 @@ linuxdvb_satconf_get_grace
 }
 
 int
-linuxdvb_satconf_tone_off ( linuxdvb_satconf_ele_t *lse, int fd, int delay )
+linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
 {
-  linuxdvb_satconf_t *ls = lse->lse_parent;
+  if (vol >= 0 && linuxdvb_diseqc_set_volt(ls, vol))
+    return -1;
 
   if (ls->ls_last_tone_off != 1) {
     tvhtrace("diseqc", "initial tone off");
-    if (ioctl(fd, FE_SET_TONE, SEC_TONE_OFF)) {
+    if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_SET_TONE, SEC_TONE_OFF)) {
       tvherror("diseqc", "failed to disable tone");
       return -1;
     }
@@ -728,6 +728,12 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     (linuxdvb_diseqc_t*)lse->lse_lnb
   };
 
+  if (!lse->lse_en50494) {
+    pol = (lse->lse_lnb) ? lse->lse_lnb->lnb_pol(lse->lse_lnb, lm) & 0x1 : 0;
+  } else {
+    pol = 0; /* 13V */
+  }
+
   /*
    * Disable tone (en50494 don't use tone)
    * The 22khz tone is used for signalling band (universal LNB)
@@ -738,7 +744,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   if (!lse->lse_en50494 || lse->lse_switch || lse->lse_rotor) {
     if (ls->ls_diseqc_full) {
       ls->ls_last_tone_off = 0; /* force */
-      if (linuxdvb_satconf_tone_off(lse, lfe->lfe_fe_fd, 0))
+      if (linuxdvb_satconf_start(ls, 0, pol))
         return -1;
     }
   }
@@ -746,7 +752,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* Diseqc */  
   for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
     if (!lds[i]) continue;
-    r = lds[i]->ld_tune(lds[i], lm, lse, lfe->lfe_fe_fd);
+    r = lds[i]->ld_tune(lds[i], lm, ls, lse, pol);
 
     /* Error */
     if (r < 0) return r;
@@ -762,24 +768,14 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* Do post things (store position for rotor) */
   if (lse->lse_rotor)
-    lse->lse_rotor->ld_post(lse->lse_rotor, lm, lse, lfe->lfe_fe_fd);
+    lse->lse_rotor->ld_post(lse->lse_rotor, lm, ls, lse);
 
   /* LNB settings */
-  pol  = (lse->lse_lnb) ? lse->lse_lnb->lnb_pol (lse->lse_lnb, lm) & 0x1 : 0;
-
-  if (ls->ls_diseqc_full || ls->ls_last_pol != pol + 1) {
-
-    ls->ls_last_pol = 0;
-
-    /* EN50494 devices have another mechanism to select polarization */
-    if (!lse->lse_en50494) {
-
-      /* Set the voltage */
-      if (linuxdvb_diseqc_set_volt(lfe->lfe_fe_fd, pol))
-        return -1;
-
-      ls->ls_last_pol = pol + 1;
-    }
+  /* EN50494 devices have another mechanism to select polarization */
+  if (!lse->lse_en50494) {
+    /* Set the voltage */
+    if (linuxdvb_diseqc_set_volt(ls, pol))
+      return -1;
   }
 
   /* Set the tone (en50494 don't use tone) */
@@ -867,7 +863,7 @@ linuxdvb_satconf_reset
   ( linuxdvb_satconf_t *ls )
 {
   ls->ls_last_switch = NULL;
-  ls->ls_last_pol = 0;
+  ls->ls_last_vol = 0;
   ls->ls_last_toneburst = 0;
   ls->ls_last_tone_off = 0;
 }
@@ -1438,17 +1434,22 @@ linuxdvb_diseqc_send
 }
 
 int
-linuxdvb_diseqc_set_volt ( int fd, int vol )
+linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
 {
+  /* Already set ? */
+  if (vol >= 0 && ls->ls_last_vol == vol + 1)
+    return 0;
   /* Set voltage */
   tvhtrace("diseqc", "set voltage %dV", vol ? (vol < 0 ? 0 : 18) : 13);
-  if (ioctl(fd, FE_SET_VOLTAGE,
-        vol ? (vol < 0 ? SEC_VOLTAGE_OFF : SEC_VOLTAGE_18) : SEC_VOLTAGE_13)) {
+  if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_SET_VOLTAGE,
+            vol ? (vol < 0 ? SEC_VOLTAGE_OFF : SEC_VOLTAGE_18) : SEC_VOLTAGE_13)) {
     tvherror("diseqc", "failed to set voltage (e=%s)", strerror(errno));
+    ls->ls_last_vol = 0;
     return -1;
   }
   if (vol >= 0)
     usleep(15000);
+  ls->ls_last_vol = vol ? (vol < 0 ? 0 : 2) : 1;
   return 0;
 }
 

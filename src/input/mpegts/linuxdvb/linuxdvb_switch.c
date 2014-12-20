@@ -144,18 +144,19 @@ const idclass_t linuxdvb_switch_class =
 
 static int
 linuxdvb_switch_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_t *lsp,
+    linuxdvb_satconf_ele_t *sc, int vol )
 {
   int i, com, r1 = 0, r2 = 0;
   int pol, band;
+  int fd = linuxdvb_satconf_fe_fd(lsp);
   linuxdvb_switch_t *ls = (linuxdvb_switch_t*)ld;
-  linuxdvb_satconf_t *lsp = sc->lse_parent;
 
   if (lsp->ls_diseqc_full || lsp->ls_last_switch != sc) {
 
     lsp->ls_last_switch = NULL;
 
-    if (linuxdvb_satconf_tone_off(sc, fd, 1))
+    if (linuxdvb_satconf_start(lsp, 1, vol))
       return -1;
 
     pol  = (sc->lse_lnb) ? sc->lse_lnb->lnb_pol (sc->lse_lnb, lm) & 0x1 : 0;
@@ -204,7 +205,7 @@ linuxdvb_switch_tune
   if (ls->ls_toneburst >= 0 &&
       (lsp->ls_diseqc_full || lsp->ls_last_toneburst != ls->ls_toneburst + 1)) {
 
-    if (linuxdvb_satconf_tone_off(sc, fd, 1))
+    if (linuxdvb_satconf_start(lsp, 1, vol))
       return -1;
 
     lsp->ls_last_toneburst = 0;

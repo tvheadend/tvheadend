@@ -158,7 +158,7 @@ struct linuxdvb_satconf
    */
   linuxdvb_satconf_ele_list_t ls_elements;
   linuxdvb_satconf_ele_t *ls_last_switch;
-  int                    ls_last_pol;
+  int                    ls_last_vol;
   int                    ls_last_toneburst;
   int                    ls_last_tone_off;
   int                    ls_last_orbital_pos;
@@ -204,9 +204,9 @@ struct linuxdvb_diseqc
   linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-                   linuxdvb_satconf_ele_t *ls, int fd);
+                   linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int pol);
   int (*ld_post)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-                   linuxdvb_satconf_ele_t *ls, int fd);
+                   linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls);
 };
 
 struct linuxdvb_lnb
@@ -309,7 +309,7 @@ void linuxdvb_en50494_init (void);
 int
 linuxdvb_diseqc_send
   (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...);
-int linuxdvb_diseqc_set_volt (int fd, int volt);
+int linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int volt );
 
 /*
  * Satconf
@@ -340,9 +340,11 @@ void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
 int linuxdvb_satconf_start_mux
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
 
-int linuxdvb_satconf_tone_off( linuxdvb_satconf_ele_t *ls, int fd, int delay );
+int linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol );
 
-void linuxdvb_satconf_reset
-  ( linuxdvb_satconf_t *ls );
+void linuxdvb_satconf_reset ( linuxdvb_satconf_t *ls );
+
+static inline int linuxdvb_satconf_fe_fd ( linuxdvb_satconf_t *ls )
+  { return ((linuxdvb_frontend_t *)ls->ls_frontend)->lfe_fe_fd; }
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

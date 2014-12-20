@@ -346,9 +346,10 @@ linuxdvb_rotor_check_orbital_pos
 /* GotoX */
 static int
 linuxdvb_rotor_gotox_tune
-  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
-  int i;
+  int i, fd = linuxdvb_satconf_fe_fd(lsp);
 
   for (i = 0; i <= ls->lse_parent->ls_diseqc_repeats; i++) {
     if (linuxdvb_diseqc_send(fd, 0xE0, 0x31, 0x6B, 1, (int)lr->lr_position)) {
@@ -366,13 +367,13 @@ linuxdvb_rotor_gotox_tune
 /* USALS */
 static int
 linuxdvb_rotor_usals_tune
-  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_rotor_t *lr, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
   static const uint8_t xtable[10] =
          { 0x00, 0x02, 0x03, 0x05, 0x06, 0x08, 0x0A, 0x0B, 0x0D, 0x0E };
 
-  linuxdvb_satconf_t *lsp = ls->lse_parent;
-  int i, angle = sat_angle(lr, ls);
+  int i, angle = sat_angle(lr, ls), fd = linuxdvb_satconf_fe_fd(lsp);
   uint32_t cmd = 0xE000;
 
   if (angle < 0) {
@@ -399,39 +400,34 @@ linuxdvb_rotor_usals_tune
 
 static int
 linuxdvb_rotor_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int vol )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
   if (linuxdvb_rotor_check_orbital_pos(lr, lm, ls))
     return 0;
 
-  if (linuxdvb_satconf_tone_off(ls, fd, 1))
-    return -1;
-
   /* Force to 18v (quicker movement) */
-  if (ioctl(fd, FE_SET_VOLTAGE, SEC_VOLTAGE_18)) {
-    tvherror("diseqc", "failed to set 18v for rotor movement");
+  if (linuxdvb_satconf_start(lsp, 1, 1))
     return -1;
-  }
-  usleep(15000);
-  ls->lse_parent->ls_last_pol = 2;
 
   /* GotoX */
   if (idnode_is_instance(&lr->ld_id, &linuxdvb_rotor_gotox_class))
-    return linuxdvb_rotor_gotox_tune(lr, lm, ls, fd);
+    return linuxdvb_rotor_gotox_tune(lr, lm, lsp, ls);
 
   /* USALS */
-  return linuxdvb_rotor_usals_tune(lr, lm, ls, fd);
+  return linuxdvb_rotor_usals_tune(lr, lm, lsp, ls);
 }
 
 static int
 linuxdvb_rotor_post
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *ls, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 
-  ls->lse_parent->ls_last_orbital_pos = pos_to_integer(lr->lr_sat_lon);
+  lsp->ls_last_orbital_pos = pos_to_integer(lr->lr_sat_lon);
   return 0;
 }
 

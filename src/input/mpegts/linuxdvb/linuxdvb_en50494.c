@@ -157,10 +157,10 @@ const idclass_t linuxdvb_en50494_class =
 
 static int
 linuxdvb_en50494_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, linuxdvb_satconf_ele_t *sc, int fd )
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc, int vol )
 {
-  int ret = 0;
-  int i;
+  int ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp);
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
   linuxdvb_lnb_t *lnb = sc->lse_lnb;
 
@@ -211,7 +211,7 @@ linuxdvb_en50494_tune
     }
 
     /* use 18V */
-    ret = linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_18);
+    ret = linuxdvb_diseqc_set_volt(lsp, 1);
     if (ret) {
       tvherror("en50494", "error setting lnb voltage to 18V");
       break;
@@ -245,7 +245,7 @@ linuxdvb_en50494_tune
     usleep(50000); /* standard: 2ms < x < 60ms */
 
     /* return to 13V */
-    ret = linuxdvb_diseqc_set_volt(fd, SEC_VOLTAGE_13);
+    ret = linuxdvb_diseqc_set_volt(lsp, 0);
     if (ret) {
       tvherror("en50494", "error setting lnb voltage back to 13V");
       break;
