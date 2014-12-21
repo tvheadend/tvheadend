@@ -156,7 +156,7 @@ Ext.Ajax.request({
  */
 tvheadend.niceDate = function(dt) {
     var d = new Date(dt);
-    return '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>' +
+    return '<div class="x-nice-date">' + d.toLocaleString(window.navigator.language, {weekday: 'long'}) + ' ' + d.toLocaleDateString() + '</div>' +
            '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
 }
 
