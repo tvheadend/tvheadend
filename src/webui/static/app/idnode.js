@@ -233,7 +233,7 @@ tvheadend.IdNodeField = function(conf)
             ftype = this.hexa ? 'string' : 'numeric';
             w = 80;
         } else if (this.type === 'time') {
-            w = 120;
+            w = 140;
             ftype = 'date';
             if (this.duration) {
               ftype = 'numeric';
@@ -297,13 +297,20 @@ tvheadend.IdNodeField = function(conf)
                 }
             if (this.date) {
                 return function(v) {
-                    var dt = new Date(v * 1000);
-                    return dt.toLocaleDateString();
+                    if (v > 0) {
+                        var dt = new Date(v * 1000);
+                        return dt.toLocaleDateString();
+                    }
+                    return '';
                 }
             }
             return function(v) {
-                var dt = new Date(v * 1000);
-                return dt.toLocaleString(window.navigator.language, {weekday: 'short'}) + ' ' + dt.toLocaleString();
+                if (v > 0) {
+                    var dt = new Date(v * 1000);
+                    var wd = dt.toLocaleString(window.navigator.language, {weekday: 'short'});
+                    return wd + ' ' + dt.toLocaleString();
+                }
+                return '';
             }
         }
 
