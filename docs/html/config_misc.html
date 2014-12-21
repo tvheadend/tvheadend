@@ -60,26 +60,35 @@
     <dt>Update tolerance (milliseconds)</dt>
     <dd>Only update the system clock (doesn't affect NTP driver) if the delta
     between the system clock and DVB time is greater than this. This can help
-    stop horrible oscillations on the system clock.</dd>
+    stop excessive oscillations on the system clock.</dd>
 
    <br><br>
    <hr>
    <b>Picon</b>
    <hr>
 
-   <dd>Text description.</dd>
+   <dd>Picons are small logos ('personal icons') that are automatically matched based
+    on the parameters of a channel. This typically saves you from having to set each
+    icon separately, because they're matched based on polarity, frequency,
+    orbital position, mux, and similar.
+
+    They were originally introduced on Dream Multimedia's 'Dreambox' PVRs,
+    but have since spread to more general use. You can generate picons yourself 
+    from pre-existing image files, or you can download packs of icons from various 
+    places on the Internet, especially national satellite forums.</dd>
 
    <dl>
     <dt>Prefer picons over channel name:</dt>
-    <dd>???<br>
-	example: file:///tmp/icons/%C.png or http://...   (add description)</dd>
+    <dd>Defines whether the picons take priority over the channel icons if both are set.</dd>
  
     <dt>Channel icon path</dt>
-    <dd>???<br>
-	example: file:///tmp/picons or http://...    (add description)</dd>
+    <dd>Set the path to your channel icon library.<br>
+	Example: file:///tmp/icons/%C.png (where %C is the channel nameon local storage where
+	is TVHeadend) or http://example.com/example.png to set icon from web page.</dd>
   
     <dt>Picon path</dt>
-    <dd>???</dd>
+    <dd>Set the path to your picon library.<br>
+    Example: file:///home/hts/picons</dd>
   </dl>
   
   <br><br>
