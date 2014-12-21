@@ -303,7 +303,7 @@ tvheadend.IdNodeField = function(conf)
             }
             return function(v) {
                 var dt = new Date(v * 1000);
-                return dt.toLocaleString();
+                return dt.toLocaleString(window.navigator.language, {weekday: 'short'}) + ' ' + dt.toLocaleString();
             }
         }
 
