@@ -510,9 +510,16 @@
     width: 100px;
 }
 
+
+.x-nice-dayofweek {
+    display: inline-block;
+    width: 4em;
+}
+
 .x-nice-date {
     display: inline-block;
-    width: 10em;
+    text-align: center;
+    width: 6em;
 }
 
 .x-nice-time {
