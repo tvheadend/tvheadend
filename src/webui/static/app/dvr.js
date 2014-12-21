@@ -25,15 +25,23 @@ tvheadend.dvrDetails = function(uuid) {
         if (chicon != null && chicon.length > 0)
             content += '<img class="x-epg-chicon" src="' + chicon + '">';
 
-        content += '<div class="x-epg-title">' + title + '</div>';
-        content += '<div class="x-epg-title">' + episode + '</div>';
-        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Start Time:</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
-        content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Stop Time:</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
-        content += '<div class="x-epg-time"><div class="x-epg-prefix">Duration:</div> ' + parseInt(duration / 60) + ' min</div>';
-        content += '<div class="x-epg-desc">' + desc + '</div>';
+        if (title)
+          content += '<div class="x-epg-title">' + title + '</div>';
+        if (episode)
+          content += '<div class="x-epg-title">' + episode + '</div>';
+        if (start_real)
+          content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Start Time:</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
+        if (stop_real)
+          content += '<div class="x-epg-time"><div class="x-epg-prefix">Scheduled Stop Time:</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
+        if (duration)
+          content += '<div class="x-epg-time"><div class="x-epg-prefix">Duration:</div> ' + parseInt(duration / 60) + ' min</div>';
+        if (desc)
+          content += '<div class="x-epg-desc">' + desc + '</div>';
         content += '<hr>';
-        content += '<div class="x-epg-meta"><div class="x-epg-prefix">Status:</div> ' + status + '</div>';
-        content += '<div class="x-epg-meta"><div class="x-epg-prefix">File size:</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
+        if (status)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">Status:</div> ' + status + '</div>';
+        if (filesize)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">File size:</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
         if (comment)
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">Comment:</div> ' + comment + '</div>';
 
