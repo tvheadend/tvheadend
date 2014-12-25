@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Automatic recordings
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     a_time.tm_hour = dae->dae_start / 60;
     ta = mktime(&a_time);
     te = mktime(&ev_time);
-    if(ta > te || te > ta + dae->dae_start_window * 60)
+    if(abs(ta - te) > dae->dae_start_window * 60)
       return 0;
   }
 
