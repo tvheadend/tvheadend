@@ -1559,7 +1559,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     start = start_window = -1;
   if (start < 0 && approx_time >= 0) {
     start = approx_time;
-    start_window = 60;
+    start_window = 15;
   }
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;     // 0 = dvr config
