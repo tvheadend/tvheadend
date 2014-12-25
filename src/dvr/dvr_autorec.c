@@ -541,7 +541,7 @@ dvr_autorec_entry_class_time_list_(void *o)
 static htsmsg_t *
 dvr_autorec_entry_class_time_window_list(void *o)
 {
-  return dvr_entry_class_duration_list(o, "Exact", 24*60, 60);
+  return dvr_entry_class_duration_list(o, "Exact", 24*60, 1);
 }
 
 static htsmsg_t *
