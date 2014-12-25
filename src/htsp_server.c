@@ -739,7 +739,7 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
   htsmsg_add_u32(out, "retention",   dae->dae_retention);
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
-  htsmsg_add_u32(out, "approxTime",
+  htsmsg_add_s32(out, "approxTime",
                  dae->dae_start_window == 30 && dae->dae_start >= 0 ?
                    dae->dae_start + 15 : -1);
   htsmsg_add_u32(out, "start",       dae->dae_start);
@@ -1531,8 +1531,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *dvr_config_name, *title, *creator, *comment;
   int64_t start_extra, stop_extra;
-  uint32_t u32, days_of_week, priority, approx_time, start, start_window,
-           min_duration, max_duration, retention;
+  uint32_t u32, days_of_week, priority, min_duration, max_duration, retention;
+  int32_t approx_time, start, start_window;
   channel_t *ch = NULL;
 
   /* Options */
@@ -1551,11 +1551,11 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     days_of_week = 0x7f; // all days
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
-  if(htsmsg_get_u32(in, "approxTime", &approx_time))
+  if(htsmsg_get_s32(in, "approxTime", &approx_time))
     approx_time = -1;
-  if(htsmsg_get_u32(in, "start", &start))
+  if(htsmsg_get_s32(in, "start", &start))
     start = -1;
-  if(htsmsg_get_u32(in, "startWindow", &start_window))
+  if(htsmsg_get_s32(in, "startWindow", &start_window))
     start_window = -1;
   if (start < 0 || start_window < 0)
     start = start_window = -1;
