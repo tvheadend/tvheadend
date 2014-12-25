@@ -178,6 +178,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_weekdays = 0x7f;
   dae->dae_pri = DVR_PRIO_NORMAL;
   dae->dae_start = -1;
+  dae->dae_start_window = -1;
   dae->dae_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
@@ -193,7 +194,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
 dvr_autorec_entry_t*
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t start, uint32_t start_window,
+                            channel_t *ch, int32_t start, int32_t start_window,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
@@ -219,9 +220,9 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_str(conf, "comment",     comment ?: "");
 
   if (start >= 0)
-    htsmsg_add_u32(conf, "start", start);
+    htsmsg_add_s32(conf, "start", start);
   if (start_window >= 0)
-    htsmsg_add_u32(conf, "start_window", start_window);
+    htsmsg_add_s32(conf, "start_window", start_window);
   if (ch)
     htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
 

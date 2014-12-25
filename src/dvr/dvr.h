@@ -485,7 +485,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
 
 dvr_autorec_entry_t *
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t start, uint32_t start_window,
+                            channel_t *ch, int32_t start, int32_t start_window,
                             uint32_t days, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
