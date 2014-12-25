@@ -732,6 +732,7 @@ static htsmsg_t *
 htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
 {
   htsmsg_t *out = htsmsg_create_map();
+  int tad;
 
   htsmsg_add_str(out, "id",          idnode_uuid_as_str(&dae->dae_id));
   htsmsg_add_u32(out, "enabled",     dae->dae_enabled);
@@ -739,9 +740,17 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
   htsmsg_add_u32(out, "retention",   dae->dae_retention);
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
+  if (dae->dae_start >= 0 && dae->dae_start_window >= 0) {
+    if (dae->dae_start > dae->dae_start_window)
+      tad = 24 * 60 - dae->dae_start + dae->dae_start_window;
+    else
+      tad = dae->dae_start_window - dae->dae_start;
+  } else {
+    tad = -1;
+  }
   htsmsg_add_s32(out, "approxTime",
-                 dae->dae_start_window == 30 && dae->dae_start >= 0 ?
-                   dae->dae_start + 15 : -1);
+                 dae->dae_start >= 0 && tad >= 0 ?
+                   ((dae->dae_start + tad / 2) % (24 * 60)) : -1);
   htsmsg_add_u32(out, "start",       dae->dae_start);
   htsmsg_add_u32(out, "startWindow", dae->dae_start_window);
   htsmsg_add_u32(out, "priority",    dae->dae_pri);
@@ -1563,7 +1572,9 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     start = approx_time - 15;
     if (start < 0)
       start += 24 * 60;
-    start_window = 60;
+    start_window = start + 30;
+    if (start_window >= 24 * 60)
+      start_window -= 24 * 60;
   }
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;     // 0 = dvr config

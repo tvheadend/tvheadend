@@ -126,17 +126,29 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-  if(dae->dae_start >= 0 && dae->dae_start_window >= 0) {
+  if(dae->dae_start >= 0 && dae->dae_start_window >= 0 &&
+     dae->dae_start < 24*60 && dae->dae_start_window < 24*60) {
     struct tm a_time, ev_time;
-    time_t ta, te;
+    time_t ta, te, tad;
     localtime_r(&e->start, &a_time);
     ev_time = a_time;
     a_time.tm_min = dae->dae_start % 60;
     a_time.tm_hour = dae->dae_start / 60;
     ta = mktime(&a_time);
     te = mktime(&ev_time);
-    if(ta > te || te > ta + dae->dae_start_window * 60)
-      return 0;
+    if(dae->dae_start > dae->dae_start_window) {
+      ta -= 24 * 3600; /* 24 hours */
+      tad = ((24 * 60) - dae->dae_start + dae->dae_start_window) * 60;
+      if(ta > te || te > ta + tad) {
+        ta += 24 * 3600;
+        if(ta > te || te > ta + tad)
+          return 0;
+      }
+    } else {
+      tad = (dae->dae_start_window - dae->dae_start) * 60;
+      if(ta > te || te > ta + tad)
+        return 0;
+    }
   }
 
   duration = difftime(e->stop,e->start);
@@ -499,6 +511,13 @@ dvr_autorec_entry_class_start_set(void *o, const void *v)
   return dvr_autorec_entry_class_time_set(o, v, &dae->dae_start);
 }
 
+static int
+dvr_autorec_entry_class_start_window_set(void *o, const void *v)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_time_set(o, v, &dae->dae_start_window);
+}
+
 static const void *
 dvr_autorec_entry_class_time_get(void *o, int tm)
 {
@@ -519,6 +538,13 @@ dvr_autorec_entry_class_start_get(void *o)
   return dvr_autorec_entry_class_time_get(o, dae->dae_start);
 }
 
+static const void *
+dvr_autorec_entry_class_start_window_get(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  return dvr_autorec_entry_class_time_get(o, dae->dae_start_window);
+}
+
 htsmsg_t *
 dvr_autorec_entry_class_time_list(void *o, const char *null)
 {
@@ -537,12 +563,6 @@ static htsmsg_t *
 dvr_autorec_entry_class_time_list_(void *o)
 {
   return dvr_autorec_entry_class_time_list(o, "Any");
-}
-
-static htsmsg_t *
-dvr_autorec_entry_class_time_window_list(void *o)
-{
-  return dvr_entry_class_duration_list(o, "Exact", 24*60, 1);
 }
 
 static htsmsg_t *
@@ -863,11 +883,13 @@ const idclass_t dvr_autorec_entry_class = {
       .opts     = PO_SORTKEY
     },
     {
-      .type     = PT_INT,
+      .type     = PT_STR,
       .id       = "start_window",
-      .name     = "Start Window",
-      .list     = dvr_autorec_entry_class_time_window_list,
-      .off      = offsetof(dvr_autorec_entry_t, dae_start_window),
+      .name     = "Start Up To",
+      .set      = dvr_autorec_entry_class_start_window_set,
+      .get      = dvr_autorec_entry_class_start_window_get,
+      .list     = dvr_autorec_entry_class_time_list_,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_TIME,

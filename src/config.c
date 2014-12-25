@@ -1128,16 +1128,20 @@ config_dvr_autorec_start_set(const char *s, int *tm)
 static void
 config_modify_dvrauto( htsmsg_t *c )
 {
-  int tm = -1;
+  int tm = -1, tw = -1;
   char buf[16];
 
   if (config_dvr_autorec_start_set(htsmsg_get_str(c, "start"), &tm) > 0 && tm >= 0) {
     tm -= 15;
     if (tm < 0)
       tm += 24 * 60;
+    tw = tm + 30;
+    if (tw >= 24 * 60)
+      tw -= 24 * 60;
     snprintf(buf, sizeof(buf), "%02d:%02d", tm / 60, tm % 60);
-    htsmsg_set_str(c, "start", tm <= 0 ? "Any" : buf);
-    htsmsg_set_u32(c, "start_window", 30);
+    htsmsg_set_str(c, "start", buf);
+    snprintf(buf, sizeof(buf), "%02d:%02d", tw / 60, tw % 60);
+    htsmsg_set_str(c, "start_window", buf);
   } else {
     htsmsg_delete_field(c, "start");
   }
