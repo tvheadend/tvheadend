@@ -538,6 +538,12 @@ void dvr_autorec_update(void);
 dvr_timerec_entry_t *
 dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
+dvr_timerec_entry_t*
+dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
+                            channel_t *ch, uint32_t start, uint32_t stop,
+                            uint32_t weekdays, dvr_prio_t pri, int retention,
+                            const char *owner, const char *creator, const char *comment, const char *name);
+
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
   { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class, NULL); }
