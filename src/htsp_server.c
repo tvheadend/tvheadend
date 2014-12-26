@@ -77,6 +77,7 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_AUX_CHTAG   0x01
 #define HTSP_ASYNC_AUX_DVR     0x02
 #define HTSP_ASYNC_AUX_AUTOREC 0x03
+#define HTSP_ASYNC_AUX_TIMEREC 0x04
 
 #define HTSP_PRIV_MASK (ACCESS_HTSP_STREAMING)
 
@@ -676,6 +677,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if (de->de_autorec)
     htsmsg_add_str(out, "autorecId", idnode_uuid_as_str(&de->de_autorec->dae_id));
 
+  if (de->de_timerec)
+    htsmsg_add_str(out, "timerecId", idnode_uuid_as_str(&de->de_timerec->dte_id));
+
   htsmsg_add_s64(out, "start",       de->de_start);
   htsmsg_add_s64(out, "stop",        de->de_stop);
   htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de));
@@ -762,6 +766,38 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
 
   if(dae->dae_channel)
     htsmsg_add_u32(out, "channel", channel_get_id(dae->dae_channel));
+
+  htsmsg_add_str(out, "method", method);
+
+  return out;
+}
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_build_timerecentry(dvr_timerec_entry_t *dte, const char *method)
+{
+  htsmsg_t *out = htsmsg_create_map();
+
+  htsmsg_add_str(out, "id",          idnode_uuid_as_str(&dte->dte_id));
+  htsmsg_add_u32(out, "enabled",     dte->dte_enabled);
+  htsmsg_add_u32(out, "daysOfWeek",  dte->dte_weekdays);
+  htsmsg_add_u32(out, "retention",   dte->dte_retention);
+  htsmsg_add_u32(out, "priority",    dte->dte_pri);
+  htsmsg_add_s32(out, "start",       dte->dte_start);
+  htsmsg_add_s32(out, "stop",        dte->dte_stop);
+
+  if(dte->dte_title)
+    htsmsg_add_str(out, "title",  dte->dte_title);
+  if(dte->dte_name)
+    htsmsg_add_str(out, "name",    dte->dte_name);
+  if(dte->dte_owner)
+    htsmsg_add_str(out, "owner",   dte->dte_owner);
+  if(dte->dte_creator)
+    htsmsg_add_str(out, "creator", dte->dte_creator);
+  if(dte->dte_channel)
+    htsmsg_add_u32(out, "channel", channel_get_id(dte->dte_channel));
 
   htsmsg_add_str(out, "method", method);
 
@@ -979,6 +1015,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   channel_tag_t *ct;
   dvr_entry_t *de;
   dvr_autorec_entry_t *dae;
+  dvr_timerec_entry_t *dte;
   htsmsg_t *m;
   uint32_t epg = 0;
   int64_t lastUpdate = 0;
@@ -1021,6 +1058,10 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   /* Send all autorecs */
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
     htsp_send_message(htsp, htsp_build_autorecentry(dae, "autorecEntryAdd"), NULL);
+
+  /* Send all timerecs */
+  TAILQ_FOREACH(dte, &timerec_entries, dte_link)
+    htsp_send_message(htsp, htsp_build_timerecentry(dte, "timerecEntryAdd"), NULL);
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
@@ -1628,6 +1669,97 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   autorec_destroy_by_id(daeId, 1);
   
+  /* create response */
+  out = htsmsg_create_map();
+  htsmsg_add_u32(out, "success", 1);
+
+  return out;
+}
+
+/**
+ * add a Dvr timerec entry
+ */
+static htsmsg_t *
+htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  dvr_timerec_entry_t *dte;
+  const char *dvr_config_name, *title, *creator, *comment, *owner, *name;
+  uint32_t u32, days_of_week, priority, retention, start, stop;
+  channel_t *ch = NULL;
+
+  /* Options */
+  if(!(title = htsmsg_get_str(in, "title"))
+      || htsmsg_get_u32(in, "start", &start)
+      || htsmsg_get_u32(in, "stop", &stop)
+      || htsmsg_get_u32(in, "channelId", &u32))
+    return htsp_error("Invalid arguments");
+
+  if (stop == start)
+    stop = start+1;
+
+  ch = channel_find_by_id(u32);
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
+
+  if(htsmsg_get_u32(in, "retention", &retention))
+    retention = 0;       // 0 = dvr config
+  if(htsmsg_get_u32(in, "daysOfWeek", &days_of_week))
+    days_of_week = 0x7f; // all days
+  if(htsmsg_get_u32(in, "priority", &priority))
+    priority = DVR_PRIO_NORMAL;
+
+  creator = htsp->htsp_username;
+  if (!(comment = htsmsg_get_str(in, "comment")))
+    comment = "";
+  if (!(owner = htsmsg_get_str(in, "owner")))
+    owner = "";
+  if (!(name = htsmsg_get_str(in, "name")))
+    name = "";
+
+  /* Check access */
+  if (ch && !htsp_user_access_channel(htsp, ch))
+    return htsp_error("User does not have access");
+
+  /* Add actual timerec */
+  dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, start, stop, days_of_week,
+      priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name);
+
+  /* create response */
+  out = htsmsg_create_map();
+
+  if (dte) {
+    htsmsg_add_str(out, "id", idnode_uuid_as_str(&dte->dte_id));
+    htsmsg_add_u32(out, "success", 1);
+  }
+  else {
+    htsmsg_add_str(out, "error", "Could not add timerec entry");
+    htsmsg_add_u32(out, "success", 0);
+  }
+  return out;
+}
+
+/**
+ * delete a Dvr timerec entry
+ */
+static htsmsg_t *
+htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  const char *dteId;
+  dvr_timerec_entry_t *dte;
+
+  if (!(dteId = htsmsg_get_str(in, "id")))
+    return htsp_error("Missing argument 'id'");
+
+  if((dte = dvr_timerec_find_by_uuid(dteId)) == NULL)
+    return htsp_error("id not found");
+
+  /* Check access */
+  if (!htsp_user_access_channel(htsp, dte->dte_channel))
+    return htsp_error("User does not have access");
+
+  timerec_destroy_by_id(dteId, 1);
+
   /* create response */
   out = htsmsg_create_map();
   htsmsg_add_u32(out, "success", 1);
@@ -2257,6 +2389,8 @@ struct {
   { "deleteDvrEntry",           htsp_method_deleteDvrEntry,     ACCESS_HTSP_RECORDER},
   { "addAutorecEntry",          htsp_method_addAutorecEntry,    ACCESS_HTSP_RECORDER},
   { "deleteAutorecEntry",       htsp_method_deleteAutorecEntry, ACCESS_HTSP_RECORDER},
+  { "addTimerecEntry",          htsp_method_addTimerecEntry,    ACCESS_HTSP_RECORDER},
+  { "deleteTimerecEntry",       htsp_method_deleteTimerecEntry, ACCESS_HTSP_RECORDER},
   { "getDvrCutpoints",          htsp_method_getDvrCutpoints,    ACCESS_HTSP_RECORDER},
   { "getTicket",                htsp_method_getTicket,          ACCESS_HTSP_STREAMING},
   { "subscribe",                htsp_method_subscribe,          ACCESS_HTSP_STREAMING},
@@ -2923,6 +3057,58 @@ htsp_autorec_entry_delete(dvr_autorec_entry_t *dae)
   htsmsg_add_str(m, "id", idnode_uuid_as_str(&dae->dae_id));
   htsmsg_add_str(m, "method", "autorecEntryDelete");
   htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_AUTOREC, dae);
+}
+
+/**
+ * Called when a timerec entry is updated/added
+ */
+static void
+_htsp_timerec_entry_update(dvr_timerec_entry_t *dte, const char *method, htsmsg_t *msg)
+{
+  htsp_connection_t *htsp;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
+      if (dte->dte_channel == NULL || htsp_user_access_channel(htsp, dte->dte_channel)) {
+        htsmsg_t *m = msg ? htsmsg_copy(msg)
+                          : htsp_build_timerecentry(dte, method);
+        htsp_send_message(htsp, m, NULL);
+      }
+    }
+  }
+  htsmsg_destroy(msg);
+}
+
+/**
+ * Called from dvr_timerec.c when a timerec entry is added
+ */
+void
+htsp_timerec_entry_add(dvr_timerec_entry_t *dte)
+{
+  _htsp_timerec_entry_update(dte, "timerecEntryAdd", NULL);
+}
+
+/**
+ * Called from dvr_timerec.c when a timerec entry is updated
+ */
+void
+htsp_timerec_entry_update(dvr_timerec_entry_t *dte)
+{
+  _htsp_timerec_entry_update(dte, "timerecEntryUpdate", NULL);
+}
+
+/**
+ * Called from dvr_timerec.c when a timerec entry is deleted
+ */
+void
+htsp_timerec_entry_delete(dvr_timerec_entry_t *dte)
+{
+  if(dte == NULL)
+    return;
+
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(&dte->dte_id));
+  htsmsg_add_str(m, "method", "timerecEntryDelete");
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_TIMEREC, dte);
 }
 
 /**
