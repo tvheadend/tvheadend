@@ -876,7 +876,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start",
-      .name     = "Start Time",
+      .name     = "Start After",
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -885,7 +885,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start_window",
-      .name     = "Start Up To",
+      .name     = "Start Before",
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
