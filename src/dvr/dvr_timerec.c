@@ -133,7 +133,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   /* day boundary correction */
   if (start > stop)
     stop += 24 * 60 * 60;
-  assert(start < stop);
+  assert(start <= stop);
 
   if(dte->dte_weekdays != 0x7f) {
     localtime_r(&start, &tm_start);
