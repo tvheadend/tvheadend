@@ -210,7 +210,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
-                            const char *owner, const char *creator, const char *comment)
+                            const char *owner, const char *creator, const char *comment, const char *name)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf, *days;
@@ -230,6 +230,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_str(conf, "owner",       owner ?: "");
   htsmsg_add_str(conf, "creator",     creator ?: "");
   htsmsg_add_str(conf, "comment",     comment ?: "");
+  htsmsg_add_str(conf, "name",        name ?: "");
 
   if (start >= 0)
     htsmsg_add_s32(conf, "start", start);

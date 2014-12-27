@@ -490,7 +490,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
                             const char *owner, const char *creator,
-                            const char *comment);
+                            const char *comment, const char *name);
 
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
