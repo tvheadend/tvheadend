@@ -206,7 +206,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
 dvr_autorec_entry_t*
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, int32_t start, int32_t start_window,
+                            channel_t *ch, uint32_t enabled, int32_t start, int32_t start_window,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
@@ -218,7 +218,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   conf = htsmsg_create_map();
   days = htsmsg_create_list();
 
-  htsmsg_add_u32(conf, "enabled",     1);
+  htsmsg_add_u32(conf, "enabled",     enabled > 0 ? 1 : 0);
   htsmsg_add_u32(conf, "retention",   retention);
   htsmsg_add_u32(conf, "pri",         pri);
   htsmsg_add_u32(conf, "minduration", min_duration);
