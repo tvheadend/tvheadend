@@ -1590,7 +1590,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *dvr_config_name, *title, *creator, *comment, *name;
   int64_t start_extra, stop_extra;
-  uint32_t u32, days_of_week, priority, min_duration, max_duration, retention;
+  uint32_t u32, days_of_week, priority, min_duration, max_duration, retention, enabled;
   int32_t approx_time, start, start_window;
   channel_t *ch = NULL;
 
@@ -1610,6 +1610,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     days_of_week = 0x7f; // all days
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
+  if(htsmsg_get_u32(in, "enabled", &enabled))
+    enabled = 1;
   if(htsmsg_get_s32(in, "approxTime", &approx_time))
     approx_time = -1;
   if(htsmsg_get_s32(in, "start", &start))
@@ -1640,7 +1642,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, start, start_window, days_of_week,
+  dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, enabled, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration,
       htsp->htsp_granted_access->aa_username, creator, comment, name);
 
@@ -1696,7 +1698,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
   const char *dvr_config_name, *title, *creator, *comment, *name;
-  uint32_t u32, days_of_week, priority, retention, start, stop;
+  uint32_t u32, days_of_week, priority, retention, start, stop, enabled;
   channel_t *ch = NULL;
 
   /* Options */
@@ -1718,6 +1720,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     days_of_week = 0x7f; // all days
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
+  if(htsmsg_get_u32(in, "enabled", &enabled))
+    enabled = 1;
 
   creator = htsp->htsp_username;
   if (!(comment = htsmsg_get_str(in, "comment")))
@@ -1730,7 +1734,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access");
 
   /* Add actual timerec */
-  dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, start, stop, days_of_week,
+  dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, enabled, start, stop, days_of_week,
       priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name);
 
   /* create response */
