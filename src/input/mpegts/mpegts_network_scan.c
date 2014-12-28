@@ -49,6 +49,9 @@ mpegts_network_scan_timer_cb ( void *p )
     nxt = TAILQ_NEXT(mm, mm_scan_link);
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
 
+    /* Don't try to subscribe already tuned muxes */
+    if (mm->mm_active) continue;
+
     /* Attempt to tune */
     r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight, mm->mm_scan_flags);
 

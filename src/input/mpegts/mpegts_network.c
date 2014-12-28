@@ -172,7 +172,7 @@ const idclass_t mpegts_network_class =
       .off      = offsetof(mpegts_network_t, mn_idlescan),
       .def.i    = 0,
       .notify   = mpegts_network_class_idlescan_notify,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_HIDDEN,
     },
     {
       .type     = PT_BOOL,
