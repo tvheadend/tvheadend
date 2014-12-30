@@ -60,6 +60,11 @@
   <dd>If checked, broadcasts with matching title and matching non-zero episode number 
       are considered duplicates.
 
+  <dt>EPG update window
+  <dd>Maximum difference between event start times when the EPG event is changed.
+      TVHeadend uses a fuzzy match logic (using title, start times,
+      duration, episode) to check when the event was changed.
+
   <dt>Post-processor command
   <dd>Command to run after finishing a recording. The command will be run in background and is executed even if a recording is aborted or an error occurred. Use the %e error formatting string to check for errors, the error string is "OK" if recording finished successfully.
       <br><br>
