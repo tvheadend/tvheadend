@@ -497,7 +497,6 @@ int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 #endif
 #endif
 
-
 #ifndef CONFIG_RECVMMSG
 
 struct mmsghdr {
@@ -505,9 +504,11 @@ struct mmsghdr {
   unsigned int  msg_len;
 };
 
-static int
-recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
-         unsigned int flags, struct timespec *timeout)
+#endif
+
+static inline int
+recvmmsg_i(int sockfd, struct mmsghdr *msgvec,
+           unsigned int vlen, unsigned int flags)
 {
   ssize_t r;
   unsigned int i;
@@ -522,8 +523,16 @@ recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
   return i;
 }
 
-#endif
+#ifndef CONFIG_RECVMMSG
 
+int
+recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+         unsigned int flags, struct timespec *timeout)
+{
+  return recvmmsg_i(sockfd, msgvec, vlen, flags);
+}
+
+#endif
 
 void
 udp_multirecv_init( udp_multirecv_t *um, int packets, int psize )
@@ -563,6 +572,7 @@ int
 udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
                     struct iovec **iovec )
 {
+  static char use_emul = 0;
   int n, i;
   if (um == NULL || iovec == NULL) {
     errno = EINVAL;
@@ -570,7 +580,16 @@ udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
   }
   if (packets > um->um_packets)
     packets = um->um_packets;
-  n = recvmmsg(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT, NULL);
+  if (!use_emul) {
+    n = recvmmsg(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT, NULL);
+  } else {
+    n = -1;
+    errno = ENOSYS;
+  }
+  if (n < 0 && errno == ENOSYS) {
+    use_emul = 1;
+    n = recvmmsg_i(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT);
+  }
   if (n > 0) {
     for (i = 0; i < n; i++)
       um->um_riovec[i].iov_len = ((struct mmsghdr *)um->um_msg)[i].msg_len;
