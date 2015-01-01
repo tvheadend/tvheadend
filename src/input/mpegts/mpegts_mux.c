@@ -543,7 +543,7 @@ mpegts_mux_start
   int64_t aweight, *allw;
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - starting for '%s' (weight %d. flags %04X)",
+  tvhtrace("mpegts", "%s - starting for '%s' (weight %d, flags %04X)",
            buf, reason, weight, flags);
 
   /* Disabled */
@@ -609,6 +609,14 @@ mpegts_mux_start
     allw[index] = aweight;
     count++;
   }
+
+#if ENABLE_TRACE
+  for (index = 0; index < count; index++) {
+    if (all[index])
+      tvhtrace("mpegts", "%s - %i: prio %li weight %li", buf, index,
+               (long)(allw[index] >> 32), (long)(allw[index] & 0xffffffff));
+  }
+#endif
 
   /* Try free inputs */
   for (index = count - 1; index >= 0; index--) {
