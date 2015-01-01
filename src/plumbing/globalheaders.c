@@ -34,8 +34,30 @@ typedef struct globalheaders {
 
 } globalheaders_t;
 
+#define PTS_MASK      0x1ffffffffLL
 #define MAX_SCAN_TIME 1500  // in ms
 
+/**
+ *
+ */
+static inline int
+gh_require_meta(int type)
+{
+  return type == SCT_H264 ||
+         type == SCT_MPEG2VIDEO ||
+         type == SCT_MP4A ||
+         type == SCT_AAC ||
+         type == SCT_VORBIS;
+}
+
+/**
+ *
+ */
+static inline int
+gh_is_audiovideo(int type)
+{
+  return SCT_ISVIDEO(type) || SCT_ISAUDIO(type);
+}
 
 /**
  *
@@ -112,13 +134,9 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
      (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
     return 0;
   
-  if(ssc->ssc_gh == NULL &&
-     (ssc->ssc_type == SCT_H264 ||
-      ssc->ssc_type == SCT_MPEG2VIDEO ||
-      ssc->ssc_type == SCT_MP4A ||
-      ssc->ssc_type == SCT_AAC ||
-      ssc->ssc_type == SCT_VORBIS))
+  if(ssc->ssc_gh == NULL && gh_require_meta(ssc->ssc_type))
     return 0;
+
   return 1;
 }
 
@@ -164,8 +182,29 @@ gh_queue_delay(globalheaders_t *gh)
 {
   th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
   th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
+  streaming_start_component_t *ssc;
+  int64_t diff;
 
-  return l->pr_pkt->pkt_dts - f->pr_pkt->pkt_dts;
+  /*
+   * Find only packets which require the meta data. Ignore others.
+   */
+  while (f != l) {
+    ssc = streaming_start_component_find_by_index
+            (gh->gh_ss, f->pr_pkt->pkt_componentindex);
+    if (ssc && gh_is_audiovideo(ssc->ssc_type)) break;
+    f = TAILQ_NEXT(f, pr_link);
+  }
+  while (l != f) {
+    ssc = streaming_start_component_find_by_index
+            (gh->gh_ss, l->pr_pkt->pkt_componentindex);
+    if (ssc && gh_is_audiovideo(ssc->ssc_type)) break;
+    l = TAILQ_PREV(l, th_pktref_queue, pr_link);
+  }
+
+  diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
+  if (diff < 0)
+    diff += PTS_MASK;
+  return diff;
 }
 
 
