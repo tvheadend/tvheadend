@@ -104,6 +104,7 @@ mpegts_mux_instance_start
   mpegts_mux_instance_t *mmi = *mmiptr;
   mpegts_mux_t          * mm = mmi->mmi_mux;
   mpegts_input_t        * mi = mmi->mmi_input;
+  mpegts_service_t      *  s;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
 
   /* Already active */
@@ -113,6 +114,10 @@ mpegts_mux_instance_start
     mpegts_mux_scan_active(mm, buf, (*mmiptr)->mmi_input);
     return 0;
   }
+
+  /* Dead service check */
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    s->s_dvb_check_seen = s->s_dvb_last_seen;
 
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
@@ -832,6 +837,34 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
  * Scanning
  * *************************************************************************/
 
+static void
+mpegts_mux_scan_service_check ( mpegts_mux_t *mm )
+{
+  mpegts_service_t *s, *snext;
+  time_t last_seen;
+
+  /*
+   * Disable "not seen" services. It's quite easy algorithm which
+   * compares the time for the most recent services with others.
+   * If there is a big gap (24 hours) the service will be removed.
+   *
+   * Note that this code is run only when the PAT table scan is
+   * fully completed (all live services are known at this point).
+   */
+  last_seen = 0;
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (last_seen < s->s_dvb_check_seen)
+      last_seen = s->s_dvb_check_seen;
+  for (s = LIST_FIRST(&mm->mm_services); s; s = snext) {
+    snext = LIST_NEXT(s, s_dvb_mux_link);
+    if (s->s_enabled && s->s_auto != SERVICE_AUTO_OFF &&
+        s->s_dvb_check_seen + 24 * 3600 < last_seen) {
+      tvhinfo("mpegts", "disabling service %s (missing in PAT/SDT)", s->s_nicename ?: "<unknown>");
+      service_set_enabled((service_t *)s, 0, SERVICE_AUTO_PAT_MISSING);
+    }
+  }
+}
+
 void
 mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 {
@@ -854,9 +887,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
-  if (res)
+  if (res) {
     mpegts_network_scan_mux_done(mm);
-  else
+    mpegts_mux_scan_service_check(mm);
+  } else
     mpegts_network_scan_mux_fail(mm);
 }
 

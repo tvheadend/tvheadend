@@ -1020,37 +1020,13 @@ dvb_pat_callback
   uint16_t nit_pid = 0;
   mpegts_mux_t          *mm  = mt->mt_mux;
   mpegts_table_state_t  *st  = NULL;
-  mpegts_service_t *s, *snext;
-  time_t last_seen;
+  mpegts_service_t *s;
 
   /* Begin */
   if (tableid != 0) return -1;
   tsid = (ptr[0] << 8) | ptr[1];
   r    = dvb_table_begin(mt, ptr, len, tableid, tsid, 5,
                          &st, &sect, &last, &ver);
-  if (r == 0 && mt->mt_opaque == NULL) {
-    /*
-     * Disable "not seen" services. It's quite easy algorithm which
-     * compares the time for the most recent services with others.
-     * If there is a big gap (24 hours) the service will be removed.
-     *
-     * Note that this code is run only when the PAT table scan is
-     * fully completed (all live services are known at this point).
-     */
-    last_seen = 0;
-    LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-      if (last_seen < s->s_dvb_check_seen)
-        last_seen = s->s_dvb_check_seen;
-    for (s = LIST_FIRST(&mm->mm_services); s; s = snext) {
-      snext = LIST_NEXT(s, s_dvb_mux_link);
-      if (s->s_enabled && s->s_auto != SERVICE_AUTO_OFF &&
-          s->s_dvb_check_seen + 24 * 3600 < last_seen) {
-        tvhinfo("mpegts", "disabling service %s (missing in PAT)", s->s_nicename ?: "<unknown>");
-        service_set_enabled((service_t *)s, 0, SERVICE_AUTO_PAT_MISSING);
-      }
-    }
-    mt->mt_opaque = mm;
-  }
   if (r != 1) return r;
 
   /* Multiplex */
@@ -1609,6 +1585,9 @@ dvb_sdt_callback
     /* Find service */
     s       = mpegts_service_find(mm, service_id, 0, 1, &save);
     charset = dvb_charset_find(mn, mm, s);
+
+    if (s)
+      s->s_dvb_check_seen = dispatch_clock;
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -2430,10 +2409,6 @@ psi_parse_pmt
 void
 psi_tables_default ( mpegts_mux_t *mm )
 {
-  mpegts_service_t *s;
-
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    s->s_dvb_check_seen = s->s_dvb_last_seen;
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
                    NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_PAT_PID);

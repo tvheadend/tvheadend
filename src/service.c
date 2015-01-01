@@ -183,7 +183,7 @@ service_class_auto_list ( void *o )
   static const struct strtab tab[] = {
     { "",                   0 },
     { "No Auto (Disabled)", 1 },
-    { "Missing In PAT",     2 }
+    { "Missing In PAT/SDT", 2 }
   };
   return strtab2htsmsg(tab);
 }
