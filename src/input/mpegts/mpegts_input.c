@@ -850,7 +850,7 @@ mpegts_input_process
   mpegts_mux_instance_t *mmi;
   mpegts_pid_t *last_mp = NULL;
 #if ENABLE_TSDEBUG
-  off_t tsdebug_pos = mm->mm_tsdebug_pos;
+  off_t tsdebug_pos;
 #endif
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
@@ -858,6 +858,9 @@ mpegts_input_process
 
   assert(mm == mmi->mmi_mux);
 
+#if ENABLE_TSDEBUG
+  tsdebug_pos = mm->mm_tsdebug_pos;
+#endif
   mi->mi_live = 1;
 
   /* Process */
