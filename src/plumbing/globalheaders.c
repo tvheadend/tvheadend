@@ -35,7 +35,7 @@ typedef struct globalheaders {
 } globalheaders_t;
 
 #define PTS_MASK      0x1ffffffffLL
-#define MAX_SCAN_TIME 1500  // in ms
+#define MAX_SCAN_TIME 3000  // in ms
 
 /**
  *
@@ -183,39 +183,56 @@ gh_queue_delay(globalheaders_t *gh, int index)
  *
  */
 static int
-headers_complete(globalheaders_t *gh, int64_t qd)
+headers_complete(globalheaders_t *gh)
 {
   streaming_start_t *ss = gh->gh_ss;
   streaming_start_component_t *ssc;
-  int i, threshold = qd > (MAX_SCAN_TIME * 90);
+  int64_t *qd = alloca(ss->ss_num_components * sizeof(int64_t));
+  int64_t qd_max = 0;
+  int i, threshold = 0;
 
   assert(ss != NULL);
- 
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    qd[i] = gh_is_audiovideo(ssc->ssc_type) ?
+              gh_queue_delay(gh, ssc->ssc_index) : 0;
+    if (qd[i] > qd_max)
+      qd_max = qd[i];
+  }
+
+  if (qd_max <= 0)
+    return 0;
+
+  threshold = qd_max > MAX_SCAN_TIME * 90;
+
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
     if(!header_complete(ssc, threshold)) {
-
-      if(threshold) {
-        tvhwarn("parser", "stream %d %s%s%s (PID %i) disabled (no packets)",
-                ssc->ssc_index,
-                streaming_component_type2txt(ssc->ssc_type),
-                ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang,
-                ssc->ssc_pid);
+      /*
+       * disable stream only when
+       * - half timeout is reached without any packets seen
+       * - maximal timeout is reached without metadata
+       */
+      if(threshold || (qd[i] <= 0 && qd_max > (MAX_SCAN_TIME * 90) / 2)) {
 	ssc->ssc_disabled = 1;
       } else {
 	return 0;
       }
+    } else {
+      ssc->ssc_disabled = 0;
     }
   }
 
 #if ENABLE_TRACE
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    tvhtrace("parser", "stream %d %s%s%s (PID %i) complete time %li",
+    tvhtrace("parser", "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
              ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
              ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
-             gh_queue_delay(gh, ssc->ssc_index));
+             gh_queue_delay(gh, ssc->ssc_index),
+             ssc->ssc_disabled ? " disabled" : "");
   }
 #endif
 
@@ -262,7 +279,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     if(!gh_is_audiovideo(ssc->ssc_type))
       break;
 
-    if(!headers_complete(gh, gh_queue_delay(gh, ssc->ssc_index)))
+    if(!headers_complete(gh))
       break;
 
     // Send our modified start
