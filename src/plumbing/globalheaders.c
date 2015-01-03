@@ -121,17 +121,19 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
-  if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
-     ssc->ssc_frameduration == 0)
+  int is_video = SCT_ISVIDEO(ssc->ssc_type);
+  int is_audio = !is_video && SCT_ISAUDIO(ssc->ssc_type);
+
+  if((is_audio || is_video) && ssc->ssc_frameduration == 0)
     return 0;
 
-  if(SCT_ISVIDEO(ssc->ssc_type)) {
-    if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0))
+  if(is_video) {
+    if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0 ||
+                         ssc->ssc_width == 0 || ssc->ssc_height == 0))
       return 0;
   }
 
-  if(SCT_ISAUDIO(ssc->ssc_type) &&
-     (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
+  if(is_audio && (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
     return 0;
   
   if(ssc->ssc_gh == NULL && gh_require_meta(ssc->ssc_type))
@@ -139,6 +141,43 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
 
   return 1;
 }
+
+
+/**
+ *
+ */
+static int64_t
+gh_queue_delay(globalheaders_t *gh, int index)
+{
+  th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
+  th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
+  streaming_start_component_t *ssc;
+  int64_t diff;
+
+  /*
+   * Find only packets which require the meta data. Ignore others.
+   */
+  while (f != l) {
+    ssc = streaming_start_component_find_by_index
+            (gh->gh_ss, f->pr_pkt->pkt_componentindex);
+    if (ssc && ssc->ssc_index == index)
+      break;
+    f = TAILQ_NEXT(f, pr_link);
+  }
+  while (l != f) {
+    ssc = streaming_start_component_find_by_index
+            (gh->gh_ss, l->pr_pkt->pkt_componentindex);
+    if (ssc && ssc->ssc_index == index)
+      break;
+    l = TAILQ_PREV(l, th_pktref_queue, pr_link);
+  }
+
+  diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
+  if (diff < 0)
+    diff += PTS_MASK;
+  return diff;
+}
+
 
 /**
  *
@@ -170,6 +209,16 @@ headers_complete(globalheaders_t *gh, int64_t qd)
     }
   }
 
+#if ENABLE_TRACE
+  for(i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    tvhtrace("parser", "stream %d %s%s%s (PID %i) complete time %li",
+             ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
+             ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
+             gh_queue_delay(gh, ssc->ssc_index));
+  }
+#endif
+
   return 1;
 }
 
@@ -177,34 +226,11 @@ headers_complete(globalheaders_t *gh, int64_t qd)
 /**
  *
  */
-static int64_t 
-gh_queue_delay(globalheaders_t *gh)
+static void
+gh_start(globalheaders_t *gh, streaming_message_t *sm)
 {
-  th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
-  th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
-  streaming_start_component_t *ssc;
-  int64_t diff;
-
-  /*
-   * Find only packets which require the meta data. Ignore others.
-   */
-  while (f != l) {
-    ssc = streaming_start_component_find_by_index
-            (gh->gh_ss, f->pr_pkt->pkt_componentindex);
-    if (ssc && gh_is_audiovideo(ssc->ssc_type)) break;
-    f = TAILQ_NEXT(f, pr_link);
-  }
-  while (l != f) {
-    ssc = streaming_start_component_find_by_index
-            (gh->gh_ss, l->pr_pkt->pkt_componentindex);
-    if (ssc && gh_is_audiovideo(ssc->ssc_type)) break;
-    l = TAILQ_PREV(l, th_pktref_queue, pr_link);
-  }
-
-  diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
-  if (diff < 0)
-    diff += PTS_MASK;
-  return diff;
+  gh->gh_ss = streaming_start_copy(sm->sm_data);
+  streaming_msg_free(sm);
 }
 
 
@@ -233,7 +259,10 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     streaming_msg_free(sm);
 
-    if(!headers_complete(gh, gh_queue_delay(gh))) 
+    if(!gh_is_audiovideo(ssc->ssc_type))
+      break;
+
+    if(!headers_complete(gh, gh_queue_delay(gh, ssc->ssc_index)))
       break;
 
     // Send our modified start
@@ -254,8 +283,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
   case SMT_START:
     assert(gh->gh_ss == NULL);
-    gh->gh_ss = streaming_start_copy(sm->sm_data);
-    streaming_msg_free(sm);
+    gh_start(gh, sm);
     break;
 
   case SMT_STOP:
@@ -290,8 +318,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     gh->gh_passthru = 0;
     gh_flush(gh);
     /* restart */
-    gh->gh_ss = streaming_start_copy(sm->sm_data);
-    streaming_msg_free(sm);
+    gh_start(gh, sm);
     break;
     
   case SMT_STOP:
