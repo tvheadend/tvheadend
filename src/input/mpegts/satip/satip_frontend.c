@@ -512,6 +512,9 @@ satip_frontend_add_pid( satip_frontend_t *lfe, int pid)
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   tr = lfe->sf_req;
+  if (tr == NULL)
+    goto done;
+
   if (tr->sf_pids_count >= tr->sf_pids_size) {
     tr->sf_pids_size += 64;
     tr->sf_pids       = realloc(tr->sf_pids,
@@ -573,6 +576,7 @@ satip_frontend_add_pid( satip_frontend_t *lfe, int pid)
   { int i; for (i = 0; i < tr->sf_pids_count; i++)
     printf("Apid[%i] = %i\n", i, tr->sf_pids[i]); }
 #endif
+done:
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
   return 1;
 }
@@ -592,17 +596,19 @@ satip_frontend_open_pid
   if (pid == MPEGTS_FULLMUX_PID) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     tr = lfe->sf_req;
-    if (lfe->sf_device->sd_fullmux_ok) {
-      if (!tr->sf_pids_any)
-        tr->sf_pids_any = change = 1;
-    } else {
-      mpegts_service_t *s;
-      elementary_stream_t *st;
-      LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-        change |= satip_frontend_add_pid(lfe, s->s_pmt_pid);
-        change |= satip_frontend_add_pid(lfe, s->s_pcr_pid);
-        TAILQ_FOREACH(st, &s->s_components, es_link)
-          change |= satip_frontend_add_pid(lfe, st->es_pid);
+    if (tr) {
+      if (lfe->sf_device->sd_fullmux_ok) {
+        if (!tr->sf_pids_any)
+          tr->sf_pids_any = change = 1;
+      } else {
+        mpegts_service_t *s;
+        elementary_stream_t *st;
+        LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+          change |= satip_frontend_add_pid(lfe, s->s_pmt_pid);
+          change |= satip_frontend_add_pid(lfe, s->s_pcr_pid);
+          TAILQ_FOREACH(st, &s->s_components, es_link)
+            change |= satip_frontend_add_pid(lfe, st->es_pid);
+        }
       }
     }
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
@@ -613,8 +619,9 @@ satip_frontend_open_pid
   if (change) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     tr = lfe->sf_req;
-    if (!tr->sf_pids_any_tuned ||
-        tr->sf_pids_any != tr->sf_pids_any_tuned)
+    if (tr &&
+        (!tr->sf_pids_any_tuned ||
+         tr->sf_pids_any != tr->sf_pids_any_tuned))
       tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
@@ -635,7 +642,7 @@ satip_frontend_close_pid
   if (pid == MPEGTS_FULLMUX_PID) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     tr = lfe->sf_req;
-    if (lfe->sf_device->sd_fullmux_ok) {
+    if (tr && lfe->sf_device->sd_fullmux_ok) {
       if (tr->sf_pids_any) {
         tr->sf_pids_any = 0;
         change = 1;
@@ -647,7 +654,7 @@ satip_frontend_close_pid
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   tr = lfe->sf_req;
-  if (tr->sf_pids) {
+  if (tr && tr->sf_pids) {
     mid = div = (cnt = tr->sf_pids_count) / 2;
     while (cnt > 0) {
       if (div > 1)
@@ -682,8 +689,10 @@ finish:
 
   if (change) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
-    if (!tr->sf_pids_any_tuned ||
-        tr->sf_pids_any != tr->sf_pids_any_tuned)
+    tr = lfe->sf_req;
+    if (tr &&
+        (!tr->sf_pids_any_tuned ||
+         tr->sf_pids_any != tr->sf_pids_any_tuned))
       tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
@@ -873,12 +882,15 @@ satip_frontend_pid_changed( http_client_t *rtsp,
   int deleted;
   int max_pids_len = lfe->sf_device->sd_pids_len;
 
-  if (!lfe->sf_running || !lfe->sf_req)
-    return 0;
-
   pthread_mutex_lock(&lfe->sf_dvr_lock);
 
   tr = lfe->sf_req_thread;
+
+  if (!lfe->sf_running || !lfe->sf_req || !tr) {
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    return 0;
+  }
+
   any = tr->sf_pids_any;
 
   if (tr->sf_pids_count > lfe->sf_device->sd_pids_max)
