@@ -211,7 +211,46 @@ tvheadend.services = function(panel, index)
             },
             callback: tvheadend.service_mapper
         };
-        
+
+        var filterServiceName = {
+            name: 'svcname_filter',
+            builder: function() {
+                var b = new Ext.form.TextField({
+                    emptyText: 'Search service name...',
+                    width: 200
+                });
+
+                b.on('valid', function(c) {
+                    this.handler(this, c);
+                });
+
+                return b;
+            },
+            callback: function(t, e, store, select) {
+                window.filterServiceName_callback = {t:t, e:e, store:store, select:select};
+                var value = e.getValue();
+
+                if (value.length > 0)
+                {
+                    var filter = JSON.stringify([{ field: "svcname", type: "string", value: value}]);
+
+                    if (store.baseParams.filter!==filter)
+                    {
+                        store.baseParams.filter = filter;
+                        store.reload();
+                    }
+                }
+                else
+                {
+                    if (store.baseParams.filter)
+                    {
+                        delete store.baseParams.filter;
+                        store.reload();
+                    }
+                }
+            }
+        };
+
         var selected = function(s, abuttons)
         {
             if (s.getCount() > 0)
@@ -242,7 +281,7 @@ tvheadend.services = function(panel, index)
             destroy: function() {
             }
         });
-        conf.tbar = [mapButton];
+        conf.tbar = [filterServiceName, {name: "-"}, mapButton];
         conf.selected = selected;
         conf.lcol[1] = actions;
         conf.plugins = [actions];
