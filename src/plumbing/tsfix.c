@@ -427,7 +427,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     if (diff > 160000)
       diff = 160000;
     tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-    tvhtrace("parser", "reference clock set to %"PRId64" (backlog %"PRId64")\n", tf->tf_tsref, diff2);
+    tvhtrace("parser", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
     tsfix_backlog(tf);
   } else if (tfs->tfs_local_ref == PTS_UNSET && tf->tf_tsref != PTS_UNSET &&
              pkt->pkt_dts != PTS_UNSET) {
