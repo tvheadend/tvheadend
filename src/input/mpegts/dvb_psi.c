@@ -1538,7 +1538,7 @@ dvb_sdt_callback
   uint8_t dtag;
   int llen, dlen;
   const uint8_t *lptr, *dptr;
-  mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
   mpegts_network_t *mn = mm->mm_network;
   mpegts_table_state_t  *st  = NULL;
 
@@ -1636,7 +1636,7 @@ dvb_sdt_callback
     /* Check if this is master 
      * Some networks appear to provide diff service names on diff transponders
      */
-    if (tableid == 0x42)
+    if (tableid == 0x42 || mm == mm_orig)
       master = 1;
     
     /* Update CRID authority */
