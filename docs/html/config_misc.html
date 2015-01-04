@@ -67,27 +67,31 @@
    <b>Picon</b>
    <hr>
 
-   <dd>Picons are small logos ('personal icons') that are automatically matched based
-    on the parameters of a channel. This typically saves you from having to set each
-    icon separately, because they're matched based on polarity, frequency,
-    orbital position, mux, and similar.
+   <dd>Picons (from p ersonal icons) are collections of similar icons that can be automatically
+   matched against your channels based on a number of technical parameters that will uniquely 
+   define a channel. The use of these parameters (e.g. mux, frequency, orbital position) 
+   removes the ambiguity of using names - it's not case sensitive, it doesn't care if there 
+   are spaces or not, and so on.
 
-    They were originally introduced on Dream Multimedia's 'Dreambox' PVRs,
-    but have since spread to more general use. You can generate picons yourself 
-    from pre-existing image files, or you can download packs of icons from various 
-    places on the Internet, especially national satellite forums.</dd>
+    You can generate picons yourself from existing images, or you can usually find sets 
+	pre-made on the Internet if you search for them. They're a good way to get large numbers 
+	of icons matched quickly, and usually in a similar style (such as square, x * y pixels, with 
+	a consistent highlight/reflection effect).</dd>
 
    <dl>
     <dt>Prefer picons over channel name:</dt>
-    <dd>Defines whether the picons take priority over the channel icons if both are set.</dd>
+    <dd>If both a picon and a channel-specific (e.g. channelname.jpg) icon are defined, use the picon.</dd>
  
     <dt>Channel icon path</dt>
-    <dd>Set the path to your channel icon library.<br>
+    <dd>Path to an icon for this channel. This can be named however you wish, as a local (file://) or remote (http://) image.<br>
 	Example: file:///tmp/icons/%C.png (where %C is the channel nameon local storage where
 	is TVHeadend) or http://example.com/example.png to set icon from web page.</dd>
   
     <dt>Picon path</dt>
-    <dd>Set the path to your picon library.<br>
+    <dd>Path to a directory (folder) containing your picon collection. This can be named however 
+	you wish, as a local (file://) or remote (http://) location - however, remember that it's pointing 
+	to a directory as the picon names are automatically generated from the service parameters 
+	(frequency, orbital position, etc.).<br>
     Example: file:///home/hts/picons</dd>
   </dl>
   
