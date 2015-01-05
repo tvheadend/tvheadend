@@ -113,6 +113,8 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
 
+    dlen = 0;
+
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
       c = 0x02;
@@ -120,16 +122,23 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
 
     case SCT_MPEG2AUDIO:
       c = 0x04;
+      dlen = 6;
       break;
 
     case SCT_EAC3:
+      c = 0x06;
+      dlen = 9;
+      break;
+
     case SCT_DVBSUB:
       c = 0x06;
+      dlen = 10;
       break;
 
     case SCT_MP4A:
     case SCT_AAC:
       c = 0x11;
+      dlen = 6;
       break;
 
     case SCT_H264:
@@ -142,12 +151,19 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
 
     case SCT_AC3:
       c = 0x81;
+      dlen = 9;
       break;
 
     default:
       continue;
     }
 
+    if (tlen + 5 + dlen > maxlen) {
+      tvhwarn("pass", "unable to add stream %d %s%s%s (PID %i) - no space",
+              ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
+              ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid);
+      continue;
+    }
 
     buf[0] = c;
     buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
@@ -156,7 +172,6 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
     buf1 = &buf[3];
     tlen += 5;
     buf  += 5;
-    dlen = 0;
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2AUDIO:
@@ -166,7 +181,6 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[1] = 4;
       memcpy(&buf[2],ssc->ssc_lang,3);
       buf[5] = 0; /* Main audio */
-      dlen = 6;
       break;
     case SCT_DVBSUB:
       buf[0] = DVB_DESC_SUBTITLE;
@@ -177,7 +191,6 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[7] = ssc->ssc_composition_id;
       buf[8] = ssc->ssc_ancillary_id >> 8; 
       buf[9] = ssc->ssc_ancillary_id;
-      dlen = 10;
       break;
     case SCT_AC3:
       buf[0] = DVB_DESC_LANGUAGE;
@@ -187,7 +200,6 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[6] = DVB_DESC_AC3;
       buf[7] = 1;
       buf[8] = 0; /* XXX: generate real AC3 desc */
-      dlen = 9;
       break;
     case SCT_EAC3:
       buf[0] = DVB_DESC_LANGUAGE;
@@ -197,7 +209,6 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[6] = DVB_DESC_EAC3;
       buf[7] = 1;
       buf[8] = 0; /* XXX: generate real EAC3 desc */
-      dlen = 9;
       break;
     default:
       break;
