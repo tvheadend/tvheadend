@@ -756,7 +756,7 @@ scleanup:
       n->pkt_duration       = packet.duration;
 
       if (extra_size && ts->ts_type == SCT_AAC)
-        create_adts_header(pkt->pkt_payload, n->pkt_sri, octx->channels);
+        create_adts_header(n->pkt_payload, n->pkt_sri, octx->channels);
 
       if (octx->extradata_size)
 	n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
