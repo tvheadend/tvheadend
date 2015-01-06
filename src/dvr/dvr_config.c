@@ -727,6 +727,13 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
       .group    = 5,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "clean-samba-unsafe",
+      .name     = "Replace Samba Unsafe Characters with '_'",
+      .off      = offsetof(dvr_config_t, dvr_clean_samba_unsafe),
+      .group    = 5,
+    },
     {}
   },
 };
