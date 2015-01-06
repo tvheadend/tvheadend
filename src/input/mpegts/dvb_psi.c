@@ -1052,6 +1052,10 @@ dvb_pat_callback
       tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
+        if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
+          tvhinfo("mpegts", "enabling service %s (found in PAT)", s->s_nicename);
+          s->s_enabled = 1;
+        }
         s->s_dvb_check_seen = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                          NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_SCANSUBS,
@@ -1588,8 +1592,13 @@ dvb_sdt_callback
     s       = mpegts_service_find(mm, service_id, 0, 1, &save);
     charset = dvb_charset_find(mn, mm, s);
 
-    if (s)
+    if (s) {
+      if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
+        tvhinfo("mpegts", "enabling service %s (found in SDT)", s->s_nicename);
+        s->s_enabled = 1;
+      }
       s->s_dvb_check_seen = dispatch_clock;
+    }
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
