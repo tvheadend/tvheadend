@@ -164,6 +164,9 @@ cleanup_filename(char *s, dvr_config_t *cfg)
             ((s[i] < 32) || (s[i] > 122) ||
              (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
       s[i] = '_';
+    else if(cfg->dvr_clean_samba_unsafe &&
+             (strchr("/:\\<>|*?'\"", s[i]) != NULL))
+      s[i] = '_';
   }
 
   return s;
