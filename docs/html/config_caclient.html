@@ -155,6 +155,18 @@
                 pmt_mode = 4
           </dl>
 
+      <dt>mode 5 (new OSCam since revision 10087)
+      <dd>Similar to mode 3 (TCP), but uses a new network protocol which also added
+          client/server greeting messages and protocol version information (to be able
+          to smoothly detect enhancements in the future).<br><br>
+          <b>This is currently the preferred mode (the other may be removed in future)!</b><br><br>
+          The following lines are required in <b>[dvbapi]</b> section of oscam.conf file:
+          <dl>
+            <dt>boxtype = pc<br>
+                pmt_mode = 4<br>
+                listen_port = 9000 # or your preferred port<br>
+          </dl>
+
   <dt>Comment
   <dd>Allows the administrator to set a comment only visible in this editor.
       It does not serve any active purpose.
