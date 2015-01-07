@@ -1429,8 +1429,10 @@ new_tune:
       nseq = (p[2] << 8) | p[3];
       if (seq == -1)
         seq = nseq;
-      else if (((seq + 1) & 0xffff) != nseq)
+      else if (((seq + 1) & 0xffff) != nseq) {
         unc += ((c - pos) / 188) * (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
+        tvhtrace("satip", "RTP discontinuity (%i != %i)", seq + 1, nseq);
+      }
       seq = nseq;
       /* Process */
       tsdebug_write((mpegts_mux_t *)lm, p + pos, c - pos);
