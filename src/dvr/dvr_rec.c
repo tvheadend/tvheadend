@@ -198,39 +198,50 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   if (path[strlen(path)-1] == '/')
     path[strlen(path)-1] = '\0';
 
-  /* Append per-day directory */
-  if (cfg->dvr_dir_per_day) {
-    localtime_r(&de->de_start, &tm);
-    strftime(fullname, sizeof(fullname), "%F", &tm);
-    s = cleanup_filename(fullname, cfg);
+  /* Use the specified directory if set, otherwise construct it from the DVR 
+     configuration */
+  if (de->de_directory) {
+    char *directory = strdup(de->de_directory);
+    s = cleanup_filename(directory, cfg);
     if (s == NULL)
       return -1;
     snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
     free(s);
-  }
-
-  /* Append per-channel directory */
-  if (cfg->dvr_channel_dir) {
-    char *chname = strdup(DVR_CH_NAME(de));
-    s = cleanup_filename(chname, cfg);
-    free(chname);
-    if (s == NULL)
+  } else {
+    /* Append per-day directory */
+    if (cfg->dvr_dir_per_day) {
+      localtime_r(&de->de_start, &tm);
+      strftime(fullname, sizeof(fullname), "%F", &tm);
+      s = cleanup_filename(fullname, cfg);
+      if (s == NULL)
       return -1;
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-    free(s);
-  }
+      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
+      free(s);
+    }
 
-  // TODO: per-brand, per-season
-
-  /* Append per-title directory */
-  if (cfg->dvr_title_dir) {
-    char *title = strdup(lang_str_get(de->de_title, NULL));
-    s = cleanup_filename(title, cfg);
-    free(title);
-    if (s == NULL)
+    /* Append per-channel directory */
+    if (cfg->dvr_channel_dir) {
+      char *chname = strdup(DVR_CH_NAME(de));
+      s = cleanup_filename(chname, cfg);
+      free(chname);
+      if (s == NULL)
       return -1;
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-    free(s);
+      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
+      free(s);
+    }
+
+    // TODO: per-brand, per-season
+
+    /* Append per-title directory */
+    if (cfg->dvr_title_dir) {
+      char *title = strdup(lang_str_get(de->de_title, NULL));
+      s = cleanup_filename(title, cfg);
+      free(title);
+      if (s == NULL)
+      return -1;
+      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
+      free(s);
+    }
   }
 
   if (makedirs(path, cfg->dvr_muxcnf.m_directory_permissions) != 0)

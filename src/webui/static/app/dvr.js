@@ -434,6 +434,7 @@ tvheadend.autorec_editor = function(panel, index) {
         columns: {
             enabled:      { width: 50 },
             name:         { width: 200 },
+            directory:    { width: 200 },
             title:        { width: 300 },
             channel:      { width: 200 },
             tag:          { width: 200 },
@@ -452,13 +453,13 @@ tvheadend.autorec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enabled,name,title,channel,tag,content_type,minduration,' +
+               list: 'enabled,name,directory,title,channel,tag,content_type,minduration,' +
                      'maxduration,weekdays,start,start_window,pri,config_name,comment'
             },
             create: { }
         },
         del: true,
-        list: 'enabled,name,title,channel,tag,content_type,minduration,' +
+        list: 'enabled,name,directory,title,channel,tag,content_type,minduration,' +
               'maxduration,weekdays,start,start_window,pri,config_name,owner,creator,comment',
         columns: {
             weekdays: {
@@ -492,6 +493,7 @@ tvheadend.timerec_editor = function(panel, index) {
         columns: {
             enabled:      { width: 50 },
             name:         { width: 200 },
+            directory:    { width: 200 },
             title:        { width: 300 },
             channel:      { width: 200 },
             weekdays:     { width: 160 },
@@ -506,12 +508,12 @@ tvheadend.timerec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/timerec',
             params: {
-               list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,comment'
+               list: 'enabled,name,directory,title,channel,weekdays,start,stop,pri,config_name,comment'
             },
             create: { }
         },
         del: true,
-        list: 'enabled,name,title,channel,weekdays,start,stop,pri,config_name,owner,creator,comment',
+        list: 'enabled,name,directory,title,channel,weekdays,start,stop,pri,config_name,owner,creator,comment',
         columns: {
             weekdays: {
                 renderer: function(st) { return tvheadend.weekdaysRenderer(st); }

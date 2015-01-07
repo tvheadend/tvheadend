@@ -514,9 +514,15 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
   if (e)
     htsmsg_add_u32(conf, "broadcast", e->id);
   if (dae)
+  {
     htsmsg_add_str(conf, "autorec", idnode_uuid_as_str(&dae->dae_id));
+    htsmsg_add_str(conf, "directory", dae->dae_directory ?: "");
+  }
   if (dte)
+  {
     htsmsg_add_str(conf, "timerec", idnode_uuid_as_str(&dte->dte_id));
+    htsmsg_add_str(conf, "directory", dte->dte_directory ?: "");
+  }
 
   de = dvr_entry_create(NULL, conf);
 
@@ -1846,6 +1852,13 @@ const idclass_t dvr_entry_class = {
       .opts     = PO_RDONLY,
     },
     {
+      .type     = PT_STR,
+      .id       = "directory",
+      .name     = "Directory",
+      .off      = offsetof(dvr_entry_t, de_directory),
+      .opts     = PO_RDONLY,
+    },
+    {
       .type     = PT_U32,
       .id       = "errorcode",
       .name     = "Error Code",
@@ -2047,7 +2060,7 @@ dvr_entry_delete(dvr_entry_t *de)
 
     snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
 
-    if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day) {
+    if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory) {
       char *p;
       int l;
 

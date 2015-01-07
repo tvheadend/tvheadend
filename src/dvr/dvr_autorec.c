@@ -210,7 +210,8 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
-                            const char *owner, const char *creator, const char *comment, const char *name)
+                            const char *owner, const char *creator, const char *comment, 
+                            const char *name, const char *directory)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf, *days;
@@ -231,6 +232,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_str(conf, "creator",     creator ?: "");
   htsmsg_add_str(conf, "comment",     comment ?: "");
   htsmsg_add_str(conf, "name",        name ?: "");
+  htsmsg_add_str(conf, "directory",   directory ?: "");
 
   if (start >= 0)
     htsmsg_add_s32(conf, "start", start);
@@ -308,6 +310,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
     LIST_REMOVE(dae, dae_config_link);
 
   free(dae->dae_name);
+  free(dae->dae_directory);
   free(dae->dae_owner);
   free(dae->dae_creator);
   free(dae->dae_comment);
@@ -848,6 +851,12 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "name",
       .name     = "Name",
       .off      = offsetof(dvr_autorec_entry_t, dae_name),
+    },
+	{
+      .type     = PT_STR,
+      .id       = "directory",
+      .name     = "Directory",
+      .off      = offsetof(dvr_autorec_entry_t, dae_directory),
     },
     {
       .type     = PT_STR,
