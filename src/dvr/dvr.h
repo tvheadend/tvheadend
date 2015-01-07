@@ -159,6 +159,8 @@ typedef struct dvr_entry {
   char *de_comment;
   char *de_filename;   /* Initially null if no filename has been
 			  generated yet */
+  char *de_directory; /* Can be set for autorec entries, will override any 
+                         directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
@@ -240,6 +242,7 @@ typedef struct dvr_autorec_entry {
   TAILQ_ENTRY(dvr_autorec_entry) dae_link;
 
   char *dae_name;
+  char *dae_directory;
   dvr_config_t *dae_config;
   LIST_ENTRY(dvr_autorec_entry) dae_config_link;
 
@@ -294,6 +297,7 @@ typedef struct dvr_timerec_entry {
   TAILQ_ENTRY(dvr_timerec_entry) dte_link;
 
   char *dte_name;
+  char *dte_directory;
   dvr_config_t *dte_config;
   LIST_ENTRY(dvr_timerec_entry) dte_config_link;
 
@@ -490,7 +494,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
                             time_t stop_extra, dvr_prio_t pri, int retention,
                             int min_duration, int max_duration,
                             const char *owner, const char *creator,
-                            const char *comment, const char *name);
+                            const char *comment, const char *name, const char *directory);
 
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
@@ -542,7 +546,8 @@ dvr_timerec_entry_t*
 dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
                             channel_t *ch, uint32_t enabled, uint32_t start, uint32_t stop,
                             uint32_t weekdays, dvr_prio_t pri, int retention,
-                            const char *owner, const char *creator, const char *comment, const char *name);
+                            const char *owner, const char *creator, const char *comment, 
+                            const char *name, const char *directory);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)

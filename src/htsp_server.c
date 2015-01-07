@@ -68,7 +68,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 18
+#define HTSP_PROTO_VERSION 19
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -766,15 +766,17 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
 
   if(dae->dae_title)
-    htsmsg_add_str(out, "title",   dae->dae_title);
+    htsmsg_add_str(out, "title",     dae->dae_title);
   if(dae->dae_name)
-    htsmsg_add_str(out, "name",    dae->dae_name);
+    htsmsg_add_str(out, "name",      dae->dae_name);
+  if(dae->dae_directory)
+    htsmsg_add_str(out, "directory", dae->dae_directory);
   if(dae->dae_owner)
-    htsmsg_add_str(out, "owner",   dae->dae_owner);
+    htsmsg_add_str(out, "owner",     dae->dae_owner);
   if(dae->dae_creator)
-    htsmsg_add_str(out, "creator", dae->dae_creator);
+    htsmsg_add_str(out, "creator",   dae->dae_creator);
   if(dae->dae_channel)
-    htsmsg_add_u32(out, "channel", channel_get_id(dae->dae_channel));
+    htsmsg_add_u32(out, "channel",   channel_get_id(dae->dae_channel));
 
   htsmsg_add_str(out, "method", method);
 
@@ -798,15 +800,17 @@ htsp_build_timerecentry(dvr_timerec_entry_t *dte, const char *method)
   htsmsg_add_s32(out, "stop",        dte->dte_stop);
 
   if(dte->dte_title)
-    htsmsg_add_str(out, "title",  dte->dte_title);
+    htsmsg_add_str(out, "title",     dte->dte_title);
   if(dte->dte_name)
-    htsmsg_add_str(out, "name",    dte->dte_name);
+    htsmsg_add_str(out, "name",      dte->dte_name);
+  if(dte->dte_directory)
+    htsmsg_add_str(out, "directory", dte->dte_directory);
   if(dte->dte_owner)
-    htsmsg_add_str(out, "owner",   dte->dte_owner);
+    htsmsg_add_str(out, "owner",     dte->dte_owner);
   if(dte->dte_creator)
-    htsmsg_add_str(out, "creator", dte->dte_creator);
+    htsmsg_add_str(out, "creator",   dte->dte_creator);
   if(dte->dte_channel)
-    htsmsg_add_u32(out, "channel", channel_get_id(dte->dte_channel));
+    htsmsg_add_u32(out, "channel",   channel_get_id(dte->dte_channel));
 
   htsmsg_add_str(out, "method", method);
 
@@ -1588,7 +1592,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_autorec_entry_t *dae;
-  const char *dvr_config_name, *title, *creator, *comment, *name;
+  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
   uint32_t u32, days_of_week, priority, min_duration, max_duration, retention, enabled;
   int32_t approx_time, start, start_window;
@@ -1637,6 +1641,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
     name = "";
+  if (!(directory = htsmsg_get_str(in, "directory")))
+    directory = "";
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -1644,7 +1650,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, enabled, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration,
-      htsp->htsp_granted_access->aa_username, creator, comment, name);
+      htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
@@ -1697,7 +1703,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
-  const char *dvr_config_name, *title, *creator, *comment, *name;
+  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
   uint32_t u32, days_of_week, priority, retention, start, stop, enabled;
   channel_t *ch = NULL;
 
@@ -1728,6 +1734,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
     name = "";
+  if (!(directory = htsmsg_get_str(in, "directory")))
+    directory = "";
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -1735,7 +1743,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Add actual timerec */
   dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, enabled, start, stop, days_of_week,
-      priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name);
+      priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
