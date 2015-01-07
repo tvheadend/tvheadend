@@ -1054,7 +1054,7 @@ dvb_pat_callback
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
         if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
           tvhinfo("mpegts", "enabling service %s (found in PAT)", s->s_nicename);
-          s->s_enabled = 1;
+          service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
         }
         s->s_dvb_check_seen = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
@@ -1595,7 +1595,7 @@ dvb_sdt_callback
     if (s) {
       if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
         tvhinfo("mpegts", "enabling service %s (found in SDT)", s->s_nicename);
-        s->s_enabled = 1;
+        service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
       }
       s->s_dvb_check_seen = dispatch_clock;
     }
