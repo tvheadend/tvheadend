@@ -203,4 +203,9 @@ void xmltv_init  ( void );
 void xmltv_done  ( void );
 void xmltv_load  ( void );
 
+/* PSIP module */
+void psip_init  ( void );
+void psip_done  ( void );
+void psip_load  ( void );
+
 #endif /* __EPGGRAB_PRIVATE_H__ */
