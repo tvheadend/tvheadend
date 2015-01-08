@@ -645,17 +645,14 @@ channel_get_icon ( channel_t *ch )
         (chname = channel_get_name(ch)) != NULL && chname[0]) {
       const char *chi, *send, *sname, *s;
       chi = strdup(chicon);
-      send = strstr(chi, "%C");
-      if (send == NULL) {
-        buf[0] = '\0';
-        sname = "";
-      } else {
-        *(char *)send = '\0';
-        send += 2;
+
+      /* Check for and replace placeholders */
+      if ((send = strstr(chi, "%C"))) {
         sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                      chname, strlen(chname) * 2);
         if (sname == NULL)
           sname = strdup(chname);
+
         /* Remove problematic characters */
         s = sname;
         while (s && *s) {
@@ -665,6 +662,26 @@ channel_get_icon ( channel_t *ch )
           s++;
         }
       }
+      else if((send = strstr(chi, "%c"))) {
+        char *aname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                     chname, strlen(chname) * 2);
+
+        if (aname == NULL)
+          aname = strdup(chname);
+
+        sname = url_encode(aname);
+        free((char *)aname);
+      }
+      else {
+        buf[0] = '\0';
+        sname = "";
+      }
+
+      if (send) {
+        *(char *)send = '\0';
+        send += 2;
+      }
+
       snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
       if (send)
         free((char *)sname);

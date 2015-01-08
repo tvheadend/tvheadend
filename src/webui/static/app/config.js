@@ -140,13 +140,13 @@ tvheadend.miscconf = function(panel, index) {
 
     var chiconPath = new Ext.form.TextField({
         name: 'chiconpath',
-        fieldLabel: 'Channel icon path<br/>(e.g. file:///tmp/icons/%C.png or http://...)',
+        fieldLabel: 'Channel icon path (see Help)',
         width: 400
     });
 
     var piconPath = new Ext.form.TextField({
         name: 'piconpath',
-        fieldLabel: 'Picon path<br/>(e.g. file:///tmp/picons or http://...)',
+        fieldLabel: 'Picon path (see Help)',
         width: 400
     });
 

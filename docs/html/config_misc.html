@@ -83,9 +83,13 @@
     <dd>If both a picon and a channel-specific (e.g. channelname.jpg) icon are defined, use the picon.</dd>
  
     <dt>Channel icon path</dt>
-    <dd>Path to an icon for this channel. This can be named however you wish, as a local (file://) or remote (http://) image.<br>
-	Example: file:///tmp/icons/%C.png (where %C is the channel nameon local storage where
-	is TVHeadend) or http://example.com/example.png to set icon from web page.</dd>
+    <dd>Path to an icon for this channel. This can be named however you wish, as a local (file://) or remote (http://) image. 
+        The following placeholders are available:<br>
+	<ul>
+		<li>%C - the transliterated channel name in ASCII (safe characters, no spaces etc.)</li>
+		<li>%c - the channel name (URL encoded ASCII)</li>
+	</ul>
+	Example: file:///tmp/icons/%C.png or http://example.com/%c.png</dd>
   
     <dt>Picon path</dt>
     <dd>Path to a directory (folder) containing your picon collection. This can be named however 
