@@ -64,7 +64,7 @@ typedef struct dvr_config {
   int dvr_subtitle_in_title;
   int dvr_episode_before_date;
   int dvr_episode_duplicate;
-  int dvr_clean_samba_unsafe;
+  int dvr_windows_compatible_filenames;
 
   /* Series link support */
   int dvr_sl_brand_lock;
