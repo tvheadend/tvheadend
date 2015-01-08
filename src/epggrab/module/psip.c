@@ -69,9 +69,75 @@ typedef struct psip_event
  * EIT Event
  * ***********************************************************************/
 
+static int
+_psip_eit_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r;
+  int sect, last, ver;
+  // int count, i;
+  int count;
+  uint16_t tsid;
+  uint32_t extraid;
+  mpegts_mux_t         *mm  = mt->mt_mux;
+  mpegts_service_t     *svc;
+  mpegts_table_state_t *st;
+
+  /* Validate */
+  if (tableid != 0xcb) return -1;
+
+  /* Extra ID - this identified the channel */
+  tsid    = ptr[0] << 8 | ptr[1];
+  extraid = tsid;
+
+  svc = mpegts_service_find(mm, tsid, 0, 0, 0);
+  if (!svc) return -1;
+
+  /* Begin */
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) return r;
+  tvhdebug("psip", "0x%04x: EIT tsid %04X (%s), ver %d",
+		  mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
+
+  /* # events */
+  count = ptr[6];
+  tvhdebug("psip", "event count %d", count);
+  ptr  += 7;
+  len  -= 7;
+
+  return dvb_table_end(mt, st, sect);
+}
 
 static int
-_psip_callback
+_psip_ett_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r;
+  int sect, last, ver;
+  uint16_t tsid;
+  uint32_t extraid;
+  mpegts_table_state_t *st;
+
+  /* Validate */
+  if (tableid != 0xcc) return -1;
+
+  /* Extra ID */
+  tsid    = ptr[0] << 8 | ptr[1];
+  extraid = tsid;
+
+  /* Begin */
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) return r;
+  tvhdebug("psip", "0x%04x: ETT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
+
+  return dvb_table_end(mt, st, sect);
+}
+
+
+static int
+_psip_mgt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
 #if 0
@@ -92,9 +158,9 @@ _psip_callback
   int count, i;
   uint16_t tsid;
   uint32_t extraid;
+  mpegts_mux_t         *mm  = mt->mt_mux;
+  epggrab_ota_map_t    *map = mt->mt_opaque;
   mpegts_table_state_t *st;
-
-  tvhtrace("psip", "tableid='0x%04x'", tableid);
 
   /* Validate */
   if (tableid != 0xc7) return -1;
@@ -107,7 +173,7 @@ _psip_callback
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhdebug("psip", "tsid %04X (%d), ver %04X", tsid, tsid, ver);
+  tvhdebug("psip", "0x%04x: MGT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
 
   /* # tables */
   count = ptr[6] << 9 | ptr[7];
@@ -127,13 +193,26 @@ _psip_callback
     tablesize = ptr[5] << 24 | ptr[6] << 16 | ptr[7] << 8 | ptr[8];
 
     tvhdebug("psip", "table %d", i);
-    tvhdebug("psip", "  type %04X", type);
-    tvhdebug("psip", "  pid  %04X", tablepid);
-    tvhdebug("psip", "  ver  %04X", tablever);
-    tvhdebug("psip", "  size %08X", tablesize);
+    tvhdebug("psip", "  type 0x%04X", type);
+    tvhdebug("psip", "  pid  0x%04X", tablepid);
+    tvhdebug("psip", "  ver  0x%04X", tablever);
+    tvhdebug("psip", "  size 0x%08X", tablesize);
+
+    if (type >= 0x100 && type <= 0x17f) {
+      /* This is an EIT table */
+      tvhdebug("psip", "  EIT-%d", type-0x100);
+      mpegts_table_add(mm, 0xcb, 0xff, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+    } else if (type >= 0x200 && type <= 0x27f) {
+      /* This is an ETT table */
+      tvhdebug("psip", "  ETT-%d", type-0x200);
+      mpegts_table_add(mm, 0xcc, 0xff, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+    } else {
+      /* Skip this table */
+      goto next;
+    }
 
     /* Move on */
-// next:
+next:
     ptr += dlen + 11;
     len -= dlen + 11;
   }
@@ -155,9 +234,9 @@ static int _psip_start
   if (!m->enabled && !map->om_forced) return -1;
 
   pid  = 0x1FFB;
-  opts = MT_RECORD;
+  opts = MT_QUICKREQ | MT_RECORD;
 
-  mpegts_table_add(dm, 0xC7, 0xFF, _psip_callback, map, m->id, MT_CRC | opts, pid);
+  mpegts_table_add(dm, 0xC7, 0xFF, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid);
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
 }
