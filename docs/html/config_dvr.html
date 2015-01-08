@@ -176,10 +176,17 @@
   <dd>If checked, insert the episode number before the data and time rather than after (assumes <i>Include date</i>, <i>Include time</i> and <i>Include episode</i> options are set).
 	  
   <dt>Remove all unsafe characters from filename
-  <dd>If checked, all characters that could possibly cause problems for filenaming will be removed.
+  <dd>If checked, all characters that could possibly cause problems for filenaming will be replaced with '_'.<br>
+  	  Applies to characters:<br>
+      * not supported by Windows characters: <i>/ : \ < > | * ? ' "</i><br>
+      * control characters (ASCII code below 32)<br>
+      * control and national characters (ASCII code above 122)<br> 
   
   <dt>Replace whitespace in title with '-'
-  <dd>If checked, all whitespace characters will be replaced with '-'.
+  <dd>If checked, whitespace characters (spaces and tabs) will be replaced with '-'.
+  
+  <dt>Use Windows-compatible filenames
+  <dd>If checked, special characters not supported by Windows like: <i>/ : \ < > | * ? ' "</i> will be replaced with '_'.
   
  </dl>
  Changes to any of these settings must be confirmed by pressing the 'Save configuration' button before taking effect.

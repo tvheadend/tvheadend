@@ -729,9 +729,9 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_BOOL,
-      .id       = "clean-samba-unsafe",
-      .name     = "Replace Samba Unsafe Characters with '_'",
-      .off      = offsetof(dvr_config_t, dvr_clean_samba_unsafe),
+      .id       = "windows-compatible-filenames",
+      .name     = "Use Windows-compatible filenames",
+      .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
       .group    = 5,
     },
     {}
