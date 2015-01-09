@@ -1012,6 +1012,48 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 }
 
 static void
+satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
+                           int shutdown2, int timeout )
+{
+  char b[32];
+  tvhpoll_event_t ev;
+  int r, nfds;
+
+  if (rtsp->hc_rtsp_stream_id < 0)
+    return;
+
+  snprintf(b, sizeof(b), "/stream=%li", rtsp->hc_rtsp_stream_id);
+  r = rtsp_teardown(rtsp, (char *)b, NULL);
+  if (r < 0) {
+    tvhtrace("satip", "%s - bad teardown", b);
+  } else {
+    while (1) {
+      r = http_client_run(rtsp);
+      if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
+        break;
+      nfds = tvhpoll_wait(efd, &ev, 1, timeout);
+      if (nfds == 0)
+        break;
+      if (nfds < 0) {
+        if (ERRNO_AGAIN(errno))
+          continue;
+        break;
+      }
+      if(ev.events & (TVHPOLL_ERR | TVHPOLL_HUP))
+        break;
+    }
+  }
+}
+
+static void
+satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd, int shutdown2 )
+{
+  satip_frontend_shutdown1(rtsp, efd, shutdown2, 250);
+  if (shutdown2)
+    satip_frontend_shutdown1(rtsp, efd, shutdown2, 50);
+}
+
+static void
 satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
 {
   pthread_mutex_lock(&global_lock);
@@ -1055,6 +1097,7 @@ satip_frontend_input_thread ( void *aux )
 
   /* Setup poll */
   efd = tvhpoll_create(4);
+  rtsp = NULL;
 
   /*
    * New tune
@@ -1063,7 +1106,6 @@ new_tune:
   udp_close(rtcp);
   udp_close(rtp);
   rtcp = rtp = NULL;
-  rtsp = NULL;
   lfe_master = NULL;
 
   memset(ev, 0, sizeof(ev));
@@ -1076,9 +1118,14 @@ new_tune:
 
   while (!start) {
 
-    nfds = tvhpoll_wait(efd, ev, 1, -1);
+    nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
+    if (rtsp && nfds == 0) {
+      satip_frontend_shutdown(rtsp, efd, lfe->sf_device->sd_shutdown2);
+      http_client_close(rtsp);
+      rtsp = NULL;
+    }
     if (nfds <= 0) continue;
 
     if (ev[0].data.ptr == NULL) {
@@ -1092,6 +1139,14 @@ new_tune:
           tvhtrace("satip", "%s - start", buf);
           start = 1;
         }
+      }
+    }
+
+    if (ev[0].data.ptr == rtsp) {
+      r = http_client_run(rtsp);
+      if (r < 0) {
+        http_client_close(rtsp);
+        rtsp = NULL;
       }
     }
 
@@ -1201,12 +1256,16 @@ new_tune:
   lfe_master->sf_last_tune = getmonoclock();
   pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
-  rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
-                             lfe->sf_device->sd_info.addr, 554,
-                             satip_frontend_bindaddr(lfe));
-  if (rtsp == NULL) {
-    satip_frontend_tuning_error(lfe, tr);
-    goto done;
+  i = 0;
+  if (!rtsp) {
+    rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
+                               lfe->sf_device->sd_info.addr, 554,
+                               satip_frontend_bindaddr(lfe));
+    if (rtsp == NULL) {
+      satip_frontend_tuning_error(lfe, tr);
+      goto done;
+    }
+    i = 1;
   }
 
   /* Setup poll */
@@ -1217,10 +1276,12 @@ new_tune:
   ev[1].events             = TVHPOLL_IN;
   ev[1].fd                 = rtcp->fd;
   ev[1].data.ptr           = rtcp;
-  ev[2].events             = TVHPOLL_IN;
-  ev[2].fd                 = rtsp->hc_fd;
-  ev[2].data.ptr           = rtsp;
-  tvhpoll_add(efd, ev, 3);
+  if (i) {
+    ev[2].events           = TVHPOLL_IN;
+    ev[2].fd               = rtsp->hc_fd;
+    ev[2].data.ptr         = rtsp;
+  }
+  tvhpoll_add(efd, ev, i ? 3 : 2);
   rtsp->hc_efd = efd;
 
   position = lfe_master->sf_position;
@@ -1465,51 +1526,10 @@ new_tune:
   ev[2].data.ptr           = NULL;
   tvhpoll_rem(efd, ev, 3);
 
-  if (rtsp->hc_rtsp_stream_id >= 0) {
-    snprintf((char *)b, sizeof(b), "/stream=%li", rtsp->hc_rtsp_stream_id);
-    r = rtsp_teardown(rtsp, (char *)b, NULL);
-    if (r < 0) {
-      tvhtrace("satip", "%s - bad teardown", buf);
-    } else {
-      while (1) {
-        r = http_client_run(rtsp);
-        if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
-          break;
-        nfds = tvhpoll_wait(efd, ev, 1, 250);
-        if (nfds == 0)
-          break;
-        if (nfds < 0) {
-          if (ERRNO_AGAIN(errno))
-            continue;
-          break;
-        }
-        if(ev[0].events & (TVHPOLL_ERR | TVHPOLL_HUP))
-          break;
-      }
-    }
-    /* for sure - the second sequence */
-    if (lfe->sf_device->sd_shutdown2) {
-      r = rtsp_teardown(rtsp, (char *)b, NULL);
-      if (r < 0) {
-        tvhtrace("satip", "%s - bad teardown2", buf);
-      } else {
-        while (1) {
-          r = http_client_run(rtsp);
-          if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
-            break;
-          nfds = tvhpoll_wait(efd, ev, 1, 50); /* only small delay here */
-          if (nfds == 0)
-            break;
-          if (nfds < 0) {
-            if (ERRNO_AGAIN(errno))
-              continue;
-            break;
-          }
-          if(ev[0].events & (TVHPOLL_ERR | TVHPOLL_HUP))
-            break;
-        }
-      }
-    }
+  if (exit_flag) {
+    satip_frontend_shutdown(rtsp, efd, lfe->sf_device->sd_shutdown2);
+    http_client_close(rtsp);
+    rtsp = NULL;
   }
 
 done:
@@ -1532,11 +1552,11 @@ done:
     pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
   }
 
-  if (rtsp)
-    http_client_close(rtsp);
-
   if (!exit_flag)
     goto new_tune;
+
+  if (rtsp)
+    http_client_close(rtsp);
 
   tvhpoll_destroy(efd);
   return NULL;
