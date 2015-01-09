@@ -90,8 +90,15 @@ _psip_eit_callback
   tsid    = ptr[0] << 8 | ptr[1];
   extraid = tsid;
 
-  svc = mpegts_service_find(mm, tsid, 0, 0, 0);
-  if (!svc) return -1;
+  /* Look up channel based on the source id */
+  LIST_FOREACH(svc, &mm->mm_services, s_dvb_mux_link) {
+    if (svc->s_atsc_source_id == tsid)
+      break;
+  }
+  if (!svc) {
+    tvhwarn("psip", "EIT with no associated channel found (tsid 0x%04x)", tsid);
+    return -1;
+  }
 
   /* Begin */
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
