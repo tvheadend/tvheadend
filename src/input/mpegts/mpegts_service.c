@@ -138,6 +138,13 @@ const idclass_t mpegts_service_class =
       .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
     },
     {
+      .type     = PT_U16,
+      .id       = "srcid",
+      .name     = "ATSC Source ID",
+      .opts     = PO_RDONLY,
+      .off      = offsetof(mpegts_service_t, s_atsc_source_id),
+    },
+    {
       .type     = PT_STR,
       .id       = "svcname",
       .name     = N_("Service Name"),
