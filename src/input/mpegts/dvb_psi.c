@@ -1625,6 +1625,7 @@ atsc_vct_callback
   int i, r, sect, last, ver, extraid, save, dlen;
   int maj, min, count;
   uint16_t tsid, sid, type;
+  uint16_t srcid;
   char chname[256];
   mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
   mpegts_network_t *mn = mm->mm_network;
@@ -1660,11 +1661,13 @@ atsc_vct_callback
     tsid = (ptr[22]) << 8 | ptr[23];
     sid  = (ptr[24]) << 8 | ptr[25];
     type = ptr[27] & 0x3f;
+    srcid  = (ptr[28]) << 8 | ptr[29];
     tvhdebug("vct", "tsid   %04X (%d)", tsid, tsid);
     tvhdebug("vct", "sid    %04X (%d)", sid, sid);
     tvhdebug("vct", "chname %s",    chname);
     tvhdebug("vct", "chnum  %d.%d", maj, min);
     tvhdebug("vct", "type   %02X (%d)", type, type);
+    tvhdebug("vct", "srcid  %04X (%d)", srcid, srcid);
 
     /* Skip */
     if (type > 3)
@@ -1687,6 +1690,11 @@ atsc_vct_callback
           s->s_dvb_channel_minor = min;
           save = 1;
         }
+        if (s->s_atsc_source_id != srcid) {
+          s->s_atsc_source_id = srcid;
+          save = 1;
+        }
+
         /* Save */
         if (save)
           s->s_config_save((service_t*)s);

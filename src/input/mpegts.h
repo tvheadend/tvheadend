@@ -549,6 +549,7 @@ struct mpegts_service
   int      s_dvb_eit_enable;
   uint64_t s_dvb_opentv_chnum;
   uint16_t s_dvb_opentv_id;
+  uint16_t s_atsc_source_id;
 
   /*
    * Link to carrying multiplex and active adapter
