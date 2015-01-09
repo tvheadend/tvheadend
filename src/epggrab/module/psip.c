@@ -213,6 +213,10 @@ _psip_mgt_callback
       /* This is an ETT table */
       tvhdebug("psip", "  ETT-%d", type-0x200);
       mpegts_table_add(mm, 0xcc, 0xff, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+    } else if (type == 0x04) {
+      /* This is channel ETT */
+      tvhdebug("psip", "  ETT-channel");
+      mpegts_table_add(mm, 0xcc, 0xff, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
     } else {
       /* Skip this table */
       goto next;
@@ -243,7 +247,9 @@ static int _psip_start
   pid  = 0x1FFB;
   opts = MT_QUICKREQ | MT_RECORD;
 
+  /* Listen for Master Guide Table */
   mpegts_table_add(dm, 0xC7, 0xFF, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid);
+
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
 }
