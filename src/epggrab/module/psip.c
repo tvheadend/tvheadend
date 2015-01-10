@@ -75,8 +75,7 @@ _psip_eit_callback
 {
   int r;
   int sect, last, ver;
-  // int count, i;
-  int count;
+  int count, i;
   uint16_t tsid;
   uint32_t extraid;
   mpegts_mux_t         *mm  = mt->mt_mux;
@@ -112,6 +111,29 @@ _psip_eit_callback
   tvhdebug("psip", "event count %d", count);
   ptr  += 7;
   len  -= 7;
+
+  for (i = 0; i < count && len >= 12; i++) {
+    uint16_t eventid;
+    uint32_t starttime, length;
+    uint8_t titlelen;
+    unsigned int dlen;
+    eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
+    starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
+    length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
+    titlelen = ptr[9];
+    dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
+    // tvhdebug("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
+
+    if (titlelen + dlen + 12 > len) return -1;
+
+    tvhdebug("psip", "  %03d: 0x%04x at %d, duration %d, title data %d bytes",
+      i, eventid, starttime, length, titlelen);
+
+    /* Move on */
+// next:
+    ptr += titlelen + dlen + 12;
+    len -= titlelen + dlen + 12;
+  }
 
   return dvb_table_end(mt, st, sect);
 }
