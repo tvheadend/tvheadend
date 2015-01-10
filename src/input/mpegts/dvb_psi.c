@@ -1668,6 +1668,7 @@ atsc_vct_callback
     tvhdebug("vct", "chnum  %d.%d", maj, min);
     tvhdebug("vct", "type   %02X (%d)", type, type);
     tvhdebug("vct", "srcid  %04X (%d)", srcid, srcid);
+    tvhdebug("vct", "dlen   %d", dlen);
 
     /* Skip */
     if (type > 3)
