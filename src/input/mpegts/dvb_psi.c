@@ -1622,7 +1622,7 @@ int
 atsc_vct_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int i, r, sect, last, ver, extraid, save, dlen;
+  int i, j, r, sect, last, ver, extraid, save, dlen;
   int maj, min, count;
   uint16_t tsid, sid, type;
   uint16_t srcid;
@@ -1694,6 +1694,14 @@ atsc_vct_callback
         if (s->s_atsc_source_id != srcid) {
           s->s_atsc_source_id = srcid;
           save = 1;
+        }
+        
+        for (j=0; j < dlen; ) {
+          unsigned int len, tag;
+          tag = ptr[32+j];
+          len = ptr[33+j];
+          tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+          j += len + 2;
         }
 
         /* Save */
