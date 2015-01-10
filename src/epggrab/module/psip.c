@@ -123,7 +123,7 @@ _psip_ett_callback
   int r;
   int sect, last, ver;
   uint16_t tsid;
-  uint32_t extraid;
+  uint32_t extraid, sourceid, eventid;
   mpegts_table_state_t *st;
 
   /* Validate */
@@ -137,7 +137,14 @@ _psip_ett_callback
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhdebug("psip", "0x%04x: ETT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
+
+  sourceid = ptr[6] << 8 | ptr[7];
+  eventid = ptr[8] << 8 | ptr[9];
+  if (eventid == 0) {
+    tvhdebug("psip", "0x%04x: channel ETT tsid 0x%04X (%d), sourceid 0x%04X, ver %d", mt->mt_pid, tsid, tsid, sourceid, ver);
+  } else {
+    tvhdebug("psip", "0x%04x: ETT tsid 0x%04X (%d), sourceid 0x%04X, eventid 0x%04X, ver %d", mt->mt_pid, tsid, tsid, sourceid, eventid, ver);
+  }
 
   return dvb_table_end(mt, st, sect);
 }
@@ -272,6 +279,7 @@ static int _psip_tune
     return 1;
 
   /* Check if any services are mapped */
+  // FIXME: copied from the eit module - is this a good idea here?
   // TODO: using indirect ref's like this is inefficient, should 
   //       consider changeing it?
   for (osl = RB_FIRST(&map->om_svcs); osl != NULL; osl = nxt) {
