@@ -146,6 +146,8 @@ _psip_ett_callback
   int sect, last, ver;
   uint16_t tsid;
   uint32_t extraid, sourceid, eventid;
+  mpegts_mux_t         *mm  = mt->mt_mux;
+  mpegts_service_t     *svc;
   mpegts_table_state_t *st;
 
   /* Validate */
@@ -162,10 +164,21 @@ _psip_ett_callback
 
   sourceid = ptr[6] << 8 | ptr[7];
   eventid = ptr[8] << 8 | ptr[9];
+
+  /* Look up channel based on the source id */
+  LIST_FOREACH(svc, &mm->mm_services, s_dvb_mux_link) {
+    if (svc->s_atsc_source_id == sourceid)
+      break;
+  }
+  if (!svc) {
+    tvhwarn("psip", "ETT with no associated channel found (sourceid 0x%04x)", sourceid);
+    return -1;
+  }
+
   if (eventid == 0) {
-    tvhdebug("psip", "0x%04x: channel ETT tsid 0x%04X (%d), sourceid 0x%04X, ver %d", mt->mt_pid, tsid, tsid, sourceid, ver);
+    tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
-    tvhdebug("psip", "0x%04x: ETT tsid 0x%04X (%d), sourceid 0x%04X, eventid 0x%04X, ver %d", mt->mt_pid, tsid, tsid, sourceid, eventid, ver);
+    tvhdebug("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X, ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, ver);
   }
 
   return dvb_table_end(mt, st, sect);
