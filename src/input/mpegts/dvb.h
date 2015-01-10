@@ -153,6 +153,22 @@ struct mpegts_mux;
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 
+/* Descriptors defined in A/65:2009 */
+
+#define ATSC_DESC_STUFFING            0x80
+#define ATSC_DESC_AC3                 0x81
+#define ATSC_DESC_CAPTION             0x86
+#define ATSC_DESC_CONTENT_ADVISORY    0x87
+#define ATSC_DESC_EXT_CHANNEL_NAME    0xA0
+#define ATSC_DESC_SERVICE_LOCATION    0xA1
+#define ATSC_DESC_TIMESHIFTED_SVC     0xA2
+#define ATSC_DESC_COMPONENT_NAME      0xA3
+#define ATSC_DESC_DCC_DEPARTING       0xA8
+#define ATSC_DESC_DCC_ARRIVING        0xA9
+#define ATSC_DESC_REDISTRIB_CTRL      0xAA
+#define ATSC_DESC_GENRE               0xAB
+#define ATSC_DESC_PRIVATE_INFO        0xAD
+
 /* Service type lookup */
 
 int dvb_servicetype_lookup ( int t );
