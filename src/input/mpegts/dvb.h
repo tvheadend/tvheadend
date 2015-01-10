@@ -48,6 +48,7 @@ struct mpegts_mux;
 #define DVB_DIT_PID                   0x1E
 #define DVB_SIT_PID                   0x1F
 #define DVB_VCT_PID                   0x1FFB
+#define DVB_ATSC_MGT_PID              0x1FFB
 
 /* Tables */
 
@@ -82,6 +83,15 @@ struct mpegts_mux;
 #define DVB_VCT_T_BASE                0xC8
 #define DVB_VCT_C_BASE                0xC9
 #define DVB_VCT_MASK                  0xFF
+
+#define DVB_ATSC_MGT_BASE             0xC7
+#define DVB_ATSC_MGT_MASK             0xFF
+
+#define DVB_ATSC_EIT_BASE             0xCB
+#define DVB_ATSC_EIT_MASK             0xFF
+
+#define DVB_ATSC_ETT_BASE             0xCC
+#define DVB_ATSC_ETT_MASK             0xFF
 
 #define DVB_TELETEXT_BASE             0x2000
 
