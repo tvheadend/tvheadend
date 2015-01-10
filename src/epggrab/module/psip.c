@@ -250,15 +250,15 @@ _psip_mgt_callback
     if (type >= 0x100 && type <= 0x17f) {
       /* This is an EIT table */
       tvhdebug("psip", "  EIT-%d", type-0x100);
-      mpegts_table_add(mm, 0xcb, 0xff, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
     } else if (type >= 0x200 && type <= 0x27f) {
       /* This is an ETT table */
       tvhdebug("psip", "  ETT-%d", type-0x200);
-      mpegts_table_add(mm, 0xcc, 0xff, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
     } else if (type == 0x04) {
       /* This is channel ETT */
       tvhdebug("psip", "  ETT-channel");
-      mpegts_table_add(mm, 0xcc, 0xff, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
     } else {
       /* Skip this table */
       goto next;
@@ -286,11 +286,11 @@ static int _psip_start
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
-  pid  = 0x1FFB;
+  pid  = DVB_ATSC_MGT_PID;
   opts = MT_QUICKREQ | MT_RECORD;
 
   /* Listen for Master Guide Table */
-  mpegts_table_add(dm, 0xC7, 0xFF, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid);
+  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid);
 
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
