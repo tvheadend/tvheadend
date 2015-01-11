@@ -151,7 +151,8 @@ cleanup_filename(char *s, dvr_config_t *cfg)
   if (s[0] == '.')
     s[0] = '_';
 
-  for (i = 0, len = strlen(s); i < len; i++) {
+  int len2 = strlen(s);
+  for (i = 0; i < len2; i++) {
 
     if(s[i] == '/')
       s[i] = '-';
@@ -167,6 +168,18 @@ cleanup_filename(char *s, dvr_config_t *cfg)
     else if(cfg->dvr_windows_compatible_filenames &&
              (strchr("/:\\<>|*?'\"", s[i]) != NULL))
       s[i] = '_';
+  }
+
+  if(cfg->dvr_windows_compatible_filenames) {
+    //trim trailing spaces and dots
+    for (i = len2 - 1; i >= 0; i--) {
+      if((s[i] == ' ') || (s[i] == '.')) {
+        s[i] = '\0';
+      }
+      else {
+          break;
+      }
+    }
   }
 
   return s;
