@@ -117,6 +117,8 @@ _psip_eit_callback
     uint32_t starttime, length;
     uint8_t titlelen;
     unsigned int dlen;
+    char buf[512];
+
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
     length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
@@ -126,8 +128,10 @@ _psip_eit_callback
 
     if (titlelen + dlen + 12 > len) return -1;
 
-    tvhdebug("psip", "  %03d: 0x%04x at %d, duration %d, title data %d bytes",
-      i, eventid, starttime, length, titlelen);
+    atsc_get_string(buf, 512, &ptr[10], titlelen, "eng");
+
+    tvhdebug("psip", "  %03d: 0x%04x at %d, duration %d, title: '%s' (%d bytes)",
+      i, eventid, starttime, length, buf, titlelen);
 
     /* Move on */
 // next:
@@ -149,6 +153,7 @@ _psip_ett_callback
   mpegts_mux_t         *mm  = mt->mt_mux;
   mpegts_service_t     *svc;
   mpegts_table_state_t *st;
+  char buf[512];
 
   /* Validate */
   if (tableid != 0xcc) return -1;
@@ -175,11 +180,15 @@ _psip_ett_callback
     return -1;
   }
 
+  atsc_get_string(buf, 512, &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
+
   if (eventid == 0) {
     tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
     tvhdebug("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X, ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, ver);
   }
+
+  tvhdebug("psip", "        text message: '%s'", buf);
 
   return dvb_table_end(mt, st, sect);
 }
