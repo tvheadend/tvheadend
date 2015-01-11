@@ -92,8 +92,17 @@ static char                    *http_user_agent;
 /*
  *
  */
+static inline int
+shortid( http_client_t *hc )
+{
+  return hc->hc_id;
+}
+
+/*
+ *
+ */
 static int
-http_port( const char *scheme, int port )
+http_port( http_client_t *hc, const char *scheme, int port )
 {
   if (port <= 0 || port > 65535) {
     if (scheme && strcmp(scheme, "http") == 0)
@@ -103,7 +112,7 @@ http_port( const char *scheme, int port )
     else if (scheme && strcmp(scheme, "rtsp") == 0)
       port = 554;
     else {
-      tvhlog(LOG_ERR, "httpc", "Unknown scheme '%s'", scheme ? scheme : "");
+      tvhlog(LOG_ERR, "httpc", "%04X: Unknown scheme '%s'", shortid(hc), scheme ? scheme : "");
       return -EINVAL;
     }
   }
@@ -389,8 +398,8 @@ http_client_ssl_send( http_client_t *hc, const void *buf, size_t len )
         if (hc->hc_verify_peer > 0) {
           if (SSL_get_peer_certificate(ssl->ssl) == NULL ||
               SSL_get_verify_result(ssl->ssl) != X509_V_OK) {
-            tvhlog(LOG_ERR, "httpc", "SSL peer verification failed (%s:%i)%s %li",
-                   hc->hc_host, hc->hc_port,
+            tvhlog(LOG_ERR, "httpc", "%04X: SSL peer verification failed (%s:%i)%s %li",
+                   shortid(hc), hc->hc_host, hc->hc_port,
                    SSL_get_peer_certificate(ssl->ssl) ? " X509" : "",
                    SSL_get_verify_result(ssl->ssl));
             errno = EPERM;
@@ -605,7 +614,7 @@ error:
   htsbuf_read(&q, body, body_size);
 
 #if ENABLE_TRACE
-  tvhtrace("httpc", "sending %s cmd", http_ver2str(hc->hc_version));
+  tvhtrace("httpc", "%04X: sending %s cmd", shortid(hc), http_ver2str(hc->hc_version));
   tvhlog_hexdump("httpc", body, body_size);
 #endif
 
@@ -630,7 +639,7 @@ http_client_finish( http_client_t *hc )
 
 #if ENABLE_TRACE
   if (hc->hc_data) {
-    tvhtrace("httpc", "received %s data", http_ver2str(hc->hc_version));
+    tvhtrace("httpc", "%04X: received %s data", shortid(hc), http_ver2str(hc->hc_version));
     tvhlog_hexdump("httpc", hc->hc_data, hc->hc_csize);
   }
 #endif
@@ -912,7 +921,7 @@ retry:
   }
 #if ENABLE_TRACE
   if (r > 0) {
-    tvhtrace("httpc", "received %s answer", http_ver2str(hc->hc_version));
+    tvhtrace("httpc", "%04X: received %s answer", shortid(hc), http_ver2str(hc->hc_version));
     tvhlog_hexdump("httpc", buf, r);
   }
 #endif
@@ -957,7 +966,7 @@ header:
   p = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
   if (p == NULL)
     return http_client_flush(hc, -EINVAL);
-  tvhtrace("httpc", "%s answer '%s'", http_ver2str(hc->hc_version), p);
+  tvhtrace("httpc", "%04X: %s answer '%s'", shortid(hc), http_ver2str(hc->hc_version), p);
   if (http_tokenize(p, argv, 3, -1) != 3)
     return http_client_flush(hc, -EINVAL);
   if ((ver = http_str2ver(argv[0])) < 0)
@@ -1029,7 +1038,7 @@ header:
  * Redirected
  */
 static void
-http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
+http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
 {
   char buf[256];
 
@@ -1038,7 +1047,7 @@ http_client_basic_args ( http_arg_list_t *h, const url_t *url, int keepalive )
     http_arg_set(h, "Host", url->host);
   } else {
     snprintf(buf, sizeof(buf), "%s:%u", url->host,
-                                        http_port(url->scheme, url->port));
+                                        http_port(hc, url->scheme, url->port));
     http_arg_set(h, "Host", buf);
   }
   if (http_user_agent) {
@@ -1092,8 +1101,8 @@ http_client_redirected ( http_client_t *hc )
 
   memset(&u, 0, sizeof(u));
   if (urlparse(location2 ? location2 : location, &u)) {
-    tvherror("httpc", "redirection - cannot parse url '%s'",
-             location2 ? location2 : location);
+    tvherror("httpc", "%04X: redirection - cannot parse url '%s'",
+             shortid(hc), location2 ? location2 : location);
     free(location);
     return -EIO;
   }
@@ -1101,7 +1110,7 @@ http_client_redirected ( http_client_t *hc )
 
   if (strcmp(u.scheme, hc->hc_scheme) ||
       strcmp(u.host, hc->hc_host) ||
-      http_port(u.scheme, u.port) != hc->hc_port ||
+      http_port(hc, u.scheme, u.port) != hc->hc_port ||
       !hc->hc_keepalive) {
     efd = hc->hc_efd;
     http_client_shutdown(hc, 1, 1);
@@ -1119,7 +1128,7 @@ http_client_redirected ( http_client_t *hc )
 
   http_client_flush(hc, 0);
 
-  http_client_basic_args(&h, &u, hc->hc_keepalive);
+  http_client_basic_args(hc, &h, &u, hc->hc_keepalive);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
   hc->hc_pevents     = 0;
@@ -1140,7 +1149,7 @@ http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
 
-  http_client_basic_args(&h, url, 0);
+  http_client_basic_args(hc, &h, url, 0);
   return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
                           &h, NULL, 0);
 }
@@ -1154,14 +1163,14 @@ http_client_ssl_peer_verify( http_client_t *hc, int verify )
     hc->hc_verify_peer = verify ? 1 : 0;
     if ((ssl = hc->hc_ssl) != NULL) {
       if (!SSL_CTX_set_default_verify_paths(ssl->ctx))
-        tvherror("httpc", "SSL - unable to load CA certificates for verification");
+        tvherror("httpc", "%04X: SSL - unable to load CA certificates for verification", shortid(hc));
       SSL_CTX_set_verify_depth(ssl->ctx, 1);
       SSL_CTX_set_verify(ssl->ctx,
                          hc->hc_verify_peer ? SSL_VERIFY_PEER : SSL_VERIFY_NONE,
                          NULL);
     }
   } else {
-    tvherror("httpc", "SSL peer verification method must be set only once");
+    tvherror("httpc", "%04X: SSL peer verification method must be set only once", shortid(hc));
   }
 }
 
@@ -1250,7 +1259,7 @@ http_client_reconnect
   if (scheme == NULL || host == NULL)
     return -EINVAL;
 
-  port           = http_port(scheme, port);
+  port           = http_port(hc, scheme, port);
   hc->hc_pevents = 0;
   hc->hc_version = ver;
   hc->hc_scheme  = strdup(scheme);
@@ -1258,37 +1267,37 @@ http_client_reconnect
   hc->hc_port    = port;
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
-    tvhlog(LOG_ERR, "httpc", "Unable to connect to %s:%i - %s", host, port, errbuf);
+    tvhlog(LOG_ERR, "httpc", "%04X: Unable to connect to %s:%i - %s", shortid(hc), host, port, errbuf);
     return -EINVAL;
   }
   hc->hc_einprogress = 1;
-  tvhtrace("httpc", "Connected to %s:%i", host, port);
+  tvhtrace("httpc", "%04X: Connected to %s:%i", shortid(hc), host, port);
   http_client_ssl_free(hc);
   if (strcasecmp(scheme, "https") == 0 || strcasecmp(scheme, "rtsps") == 0) {
     ssl = calloc(1, sizeof(*ssl));
     hc->hc_ssl = ssl;
     ssl->ctx   = SSL_CTX_new(SSLv23_client_method());
     if (ssl->ctx == NULL) {
-      tvhlog(LOG_ERR, "httpc", "Unable to get SSL_CTX");
+      tvhlog(LOG_ERR, "httpc", "%04X: Unable to get SSL_CTX", shortid(hc));
       goto err1;
     }
     /* do not use SSLv2 */
     SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_COMPRESSION);
     /* adjust cipher list */
     if (SSL_CTX_set_cipher_list(ssl->ctx, "HIGH:MEDIUM") != 1) {
-      tvhlog(LOG_ERR, "httpc", "Unable to adjust SSL cipher list");
+      tvhlog(LOG_ERR, "httpc", "%04X: Unable to adjust SSL cipher list", shortid(hc));
       goto err2;
     }
     ssl->rbio  = BIO_new(BIO_s_mem());
     ssl->wbio  = BIO_new(BIO_s_mem());
     ssl->ssl   = SSL_new(ssl->ctx);
     if (ssl->ssl == NULL || ssl->rbio == NULL || ssl->wbio == NULL) {
-      tvhlog(LOG_ERR, "httpc", "Unable to get SSL handle");
+      tvhlog(LOG_ERR, "httpc", "%04X: Unable to get SSL handle", shortid(hc));
       goto err3;
     }
     SSL_set_bio(ssl->ssl, ssl->rbio, ssl->wbio);
     if (!SSL_set_tlsext_host_name(ssl->ssl, host)) {
-      tvhlog(LOG_ERR, "httpc", "Unable to set SSL hostname");
+      tvhlog(LOG_ERR, "httpc", "%04X: Unable to set SSL hostname", shortid(hc));
       goto err4;
     }
   }
@@ -1314,8 +1323,10 @@ http_client_connect
     const char *host, int port, const char *bindaddr )
 {
   http_client_t *hc;
+  static int tally;
 
   hc             = calloc(1, sizeof(http_client_t));
+  hc->hc_id      = ++tally;
   hc->hc_aux     = aux;
   hc->hc_io_size = 1024;
   hc->hc_rtsp_stream_id = -1;

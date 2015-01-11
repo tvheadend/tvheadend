@@ -235,6 +235,7 @@ struct http_client {
 
   TAILQ_ENTRY(http_client) hc_link;
 
+  int          hc_id;
   int          hc_fd;
   char        *hc_scheme;
   char        *hc_host;
