@@ -200,6 +200,10 @@ int dvb_get_string_with_len
   (char *dst, size_t dstlen, const uint8_t *buf, size_t buflen,
    const char *dvb_charset, dvb_string_conv_t *conv);
 
+int atsc_get_string
+  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
+   const char *lang);
+
 /* Conversion */
 
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
