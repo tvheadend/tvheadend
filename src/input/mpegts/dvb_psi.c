@@ -432,7 +432,7 @@ dvb_desc_service_list
 static int
 dvb_desc_local_channel
   ( const char *dstr, const uint8_t *ptr, int len,
-    uint8_t dtag, mpegts_mux_t *mm, dvb_bat_id_t *bi )
+    uint8_t dtag, mpegts_mux_t *mm, dvb_bat_id_t *bi, int prefer )
 {
   int save = 0;
   uint16_t sid, lcn;
@@ -451,7 +451,7 @@ dvb_desc_local_channel
         if (bi) {
           dvb_bat_find_service(bi, s, dtag, lcn);
         } else if ((!s->s_dvb_channel_dtag ||
-                    s->s_dvb_channel_dtag == dtag) &&
+                    s->s_dvb_channel_dtag == dtag || prefer) &&
                     s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_dtag = dtag;
           s->s_dvb_channel_num = lcn;
@@ -1369,11 +1369,18 @@ dvb_nit_mux
           priv == 0x233A) goto lcn;
     case 0x86:
       if (priv == 0) goto lcn;
+    case 0x88:
+      if (priv == 0x28) {
+        /* HD simulcast */
+        if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi, 1))
+          return -1;
+      }
+      break;
     case 0x93:
       if (priv == 0 || priv == 0x362275)
       /* fall thru */
 lcn:
-      if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi))
+      if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi, 0))
         return -1;
       break;
     case DVB_DESC_FREESAT_LCN:
