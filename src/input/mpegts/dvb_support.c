@@ -392,6 +392,60 @@ atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
   *buf = 0;
 }
 
+int
+atsc_get_string
+  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
+   const char *lang)
+{
+  int stringcount;
+  int i, j;
+
+  stringcount = src[0];
+  tvhdebug("mss", "%d strings", stringcount);
+
+  src++;
+  srclen--;
+
+  for (i = 0; i < stringcount && srclen >= 4; i++) {
+    char langcode[3];
+    int segmentcount;
+
+    langcode[0] = src[0];
+    langcode[1] = src[1];
+    langcode[2] = src[2];
+    segmentcount = src[3];
+
+    tvhdebug("mss", "  %d: lang '%c%c%c', segments %d",
+              i, langcode[0], langcode[1], langcode[2], segmentcount);
+
+    src += 4;
+    srclen -= 4;
+
+    for (j = 0; j < segmentcount && srclen >= 3; j++) {
+      int compressiontype, mode, bytecount;
+
+      compressiontype = src[0];
+      mode = src[1];
+      bytecount = src[2];
+
+      src += 3;
+      srclen -= 3;
+
+      if (mode == 0 && compressiontype == 0) {
+        tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+            j, compressiontype, mode, bytecount, bytecount, src);
+      } else {
+        tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
+            j, compressiontype, mode, bytecount);
+      }
+
+      /* FIXME: read compressed bytes */
+      src += bytecount; srclen -= bytecount; // skip for now
+    }
+  }
+  return 0;
+}
+
 /*
  * DVB time and date functions
  */
