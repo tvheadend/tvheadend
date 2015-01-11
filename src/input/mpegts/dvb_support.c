@@ -399,6 +399,7 @@ atsc_get_string
 {
   int stringcount;
   int i, j;
+  int outputbytes = 0;
 
   stringcount = src[0];
   tvhdebug("mss", "%d strings", stringcount);
@@ -409,6 +410,7 @@ atsc_get_string
   for (i = 0; i < stringcount && srclen >= 4; i++) {
     char langcode[3];
     int segmentcount;
+    int langok;
 
     langcode[0] = src[0];
     langcode[1] = src[1];
@@ -417,6 +419,8 @@ atsc_get_string
 
     tvhdebug("mss", "  %d: lang '%c%c%c', segments %d",
               i, langcode[0], langcode[1], langcode[2], segmentcount);
+
+    langok = (lang == NULL || memcmp(langcode, lang, 3) == 0);
 
     src += 4;
     srclen -= 4;
@@ -434,6 +438,16 @@ atsc_get_string
       if (mode == 0 && compressiontype == 0) {
         tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
             j, compressiontype, mode, bytecount, bytecount, src);
+        if (langok) {
+          if (dstlen > bytecount) {
+            memcpy(dst, src, bytecount);
+            dst += bytecount;
+            dstlen -= bytecount;
+            outputbytes += bytecount;
+          } else {
+            tvhwarn("mss", "destination buffer too small, %d bytes needed", bytecount);
+          }
+        }
       } else {
         tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
             j, compressiontype, mode, bytecount);
@@ -443,7 +457,9 @@ atsc_get_string
       src += bytecount; srclen -= bytecount; // skip for now
     }
   }
-  return 0;
+  if (dstlen > 0)
+    dst[0] = 0;
+  return outputbytes;
 }
 
 /*
