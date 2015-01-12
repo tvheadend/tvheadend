@@ -134,7 +134,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 static char *
 cleanup_filename(char *s, dvr_config_t *cfg)
 {
-  int i, len = strlen(s);
+  int i, len = strlen(s), len2;
   char *s1;
 
   s1 = intlconv_utf8safestr(cfg->dvr_charset_id, s, len * 2);
@@ -151,7 +151,7 @@ cleanup_filename(char *s, dvr_config_t *cfg)
   if (s[0] == '.')
     s[0] = '_';
 
-  int len2 = strlen(s);
+  len2 = strlen(s);
   for (i = 0; i < len2; i++) {
 
     if(s[i] == '/')
@@ -171,14 +171,11 @@ cleanup_filename(char *s, dvr_config_t *cfg)
   }
 
   if(cfg->dvr_windows_compatible_filenames) {
-    //trim trailing spaces and dots
+    // trim trailing spaces and dots
     for (i = len2 - 1; i >= 0; i--) {
-      if((s[i] == ' ') || (s[i] == '.')) {
-        s[i] = '\0';
-      }
-      else {
-          break;
-      }
+      if((s[i] != ' ') && (s[i] != '.'))
+        break;
+      s[i] = '\0';
     }
   }
 
