@@ -45,10 +45,10 @@ LIBHDHRDIR = $(ROOTDIR)/libhdhomerun_static
 
 export PATH := $(LIBHDHRDIR)/build/bin:$(PATH)
 
-LIBHDHR         = libhdhomerun_20140604
+LIBHDHR         = libhdhomerun_20141210
 LIBHDHR_TB      = $(LIBHDHR).tgz
 LIBHDHR_URL     = http://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
-LIBHDHR_SHA1    = b8d910a5721c484a30b81662fd6991e3546ed67c
+LIBHDHR_SHA1    = 4f6827e17f8f79401f272f62089352fe01eae740
 
 .PHONY: build
 build: $(LIBHDHRDIR)/$(LIBHDHR)/.tvh_build
