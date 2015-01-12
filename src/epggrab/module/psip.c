@@ -115,12 +115,14 @@ _psip_eit_callback
   for (i = 0; i < count && len >= 12; i++) {
     uint16_t eventid;
     uint32_t starttime, length;
+    time_t start;
     uint8_t titlelen;
     unsigned int dlen;
     char buf[512];
 
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
+    start = atsc_convert_gpstime(starttime);
     length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
     titlelen = ptr[9];
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
@@ -130,8 +132,8 @@ _psip_eit_callback
 
     atsc_get_string(buf, 512, &ptr[10], titlelen, "eng");
 
-    tvhdebug("psip", "  %03d: 0x%04x at %d, duration %d, title: '%s' (%d bytes)",
-      i, eventid, starttime, length, buf, titlelen);
+    tvhdebug("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
+      i, eventid, start, length, buf, titlelen);
 
     /* Move on */
 // next:
