@@ -1700,7 +1700,12 @@ atsc_vct_callback
           unsigned int len, tag;
           tag = ptr[32+j];
           len = ptr[33+j];
-          tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+          if (tag == ATSC_DESC_EXT_CHANNEL_NAME) {
+            tvhdebug("vct", "  extended channel name, len %d", len);
+            atsc_get_string(NULL, 0, &ptr[34+j], len, "  ");
+          } else {
+            tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+          }
           j += len + 2;
         }
 
