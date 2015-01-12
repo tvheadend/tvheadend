@@ -743,8 +743,11 @@ mux_data_timeout ( void *aux )
   th_subscription_t *s = aux;
   mpegts_input_t *mi = s->ths_mmi->mmi_input;
 
+  if (!s->ths_mmi)
+    return;
+
   if (!mi->mi_live) {
-    subscription_unlink_mux(s, SM_CODE_NO_INPUT);
+    mpegts_mux_remove_subscriber(s->ths_mmi->mmi_mux, s, SM_CODE_NO_INPUT);
     return;
   }
   mi->mi_live = 0;
