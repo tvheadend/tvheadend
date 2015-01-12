@@ -26,7 +26,6 @@ typedef struct transcoder_prop {
   char     tp_scodec[32];
 
   int8_t   tp_channels;
-  int32_t  tp_bandwidth;
   int32_t  tp_vbitrate;
   int32_t  tp_abitrate;
   char     tp_language[4];
