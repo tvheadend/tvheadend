@@ -220,10 +220,10 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   init_wbits(&out, pktbuf_ptr(pkt->pkt_payload), 56);
 
   put_bits(&out, 0xfff, 12); // Sync marker
-  put_bits(&out, 0, 1);      // ID 0 = MPEG 4
+  put_bits(&out, 1, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
   put_bits(&out, 0, 2);      // Layer
   put_bits(&out, 1, 1);      // Protection absent
-  put_bits(&out, 2, 2);      // AOT
+  put_bits(&out, 1, 2);      // AOT, 1 = AAC Main
   put_bits(&out, latm->sample_rate_index, 4);
   put_bits(&out, 1, 1);      // Private bit
   put_bits(&out, latm->channel_config, 3);
@@ -232,7 +232,7 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   
   put_bits(&out, 1, 1);      // Copyright identification bit
   put_bits(&out, 1, 1);      // Copyright identification start
-  put_bits(&out, slot_len, 13); 
+  put_bits(&out, slot_len + 7, 13);
   put_bits(&out, 0, 11);     // Buffer fullness
   put_bits(&out, 0, 2);      // RDB in frame
 
