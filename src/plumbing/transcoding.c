@@ -96,6 +96,8 @@ typedef struct video_stream {
 
   int16_t                    vid_width;
   int16_t                    vid_height;
+
+  int                        vid_first_sent;
 } video_stream_t;
 
 
@@ -329,10 +331,10 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
    init_wbits(&bs, pktbuf_ptr(pb), 56);
 
    put_bits(&bs, 0xfff, 12); // Sync marker
-   put_bits(&bs, 0, 1);      // ID 0 = MPEG 4
+   put_bits(&bs, 1, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
    put_bits(&bs, 0, 2);      // Layer
    put_bits(&bs, 1, 1);      // Protection absent
-   put_bits(&bs, 2, 2);      // AOT
+   put_bits(&bs, 1, 2);      // AOT, 1 = AAC Main
    put_bits(&bs, sri, 4);
    put_bits(&bs, 1, 1);      // Private bit
    put_bits(&bs, channels, 3);
@@ -341,7 +343,7 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
 
    put_bits(&bs, 1, 1);      // Copyright identification bit
    put_bits(&bs, 1, 1);      // Copyright identification start
-   put_bits(&bs, pktbuf_len(pb), 13);
+   put_bits(&bs, pktbuf_len(pb) + 7, 13);
    put_bits(&bs, 0, 11);     // Buffer fullness
    put_bits(&bs, 0, 2);      // RDB in frame
 }
@@ -941,6 +943,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   uint8_t *buf, *deint;
   int length, len, ret, got_picture, got_output, got_ref;
   video_stream_t *vs = (video_stream_t*)ts;
+  streaming_message_t *sm;
+  th_pkt_t *pkt2;
 
   av_init_packet(&packet);
   av_init_packet(&packet2);
@@ -967,6 +971,17 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
+  }
+
+  if (!vs->vid_first_sent) {
+    /* notify global headers that we're live */
+    /* the video packets might be delayed */
+    pkt2 = pkt_alloc(NULL, 0, pkt->pkt_pts, pkt->pkt_dts);
+    pkt2->pkt_componentindex = pkt->pkt_componentindex;
+    sm = streaming_msg_create_pkt(pkt2);
+    streaming_target_deliver2(ts->ts_target, sm);
+    pkt_ref_dec(pkt);
+    vs->vid_first_sent = 1;
   }
 
   packet.data     = pktbuf_ptr(pkt->pkt_payload);

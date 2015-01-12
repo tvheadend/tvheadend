@@ -175,6 +175,11 @@ gh_queue_delay(globalheaders_t *gh, int index)
   diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
   if (diff < 0)
     diff += PTS_MASK;
+
+  /* special noop packet from transcoder, increase decision limit */
+  if (l == f && l->pr_pkt->pkt_payload == NULL)
+    return 1;
+
   return diff;
 }
 
@@ -290,9 +295,12 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     // Send all pending packets
     while((pr = TAILQ_FIRST(&gh->gh_holdq)) != NULL) {
       TAILQ_REMOVE(&gh->gh_holdq, pr, pr_link);
-      sm = streaming_msg_create_pkt(pr->pr_pkt);
-      streaming_target_deliver2(gh->gh_output, sm);
-      pkt_ref_dec(pr->pr_pkt);
+      pkt = pr->pr_pkt;
+      if (pkt->pkt_payload) {
+        sm = streaming_msg_create_pkt(pkt);
+        streaming_target_deliver2(gh->gh_output, sm);
+      }
+      pkt_ref_dec(pkt);
       free(pr);
     }
     gh->gh_passthru = 1;
@@ -329,6 +337,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 static void
 gh_pass(globalheaders_t *gh, streaming_message_t *sm)
 {
+  th_pkt_t *pkt;
   switch(sm->sm_type) {
   case SMT_START:
     /* stop */
@@ -347,12 +356,18 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
-  case SMT_PACKET:
   case SMT_MPEGTS:
   case SMT_SKIP:
   case SMT_SPEED:
   case SMT_TIMESHIFT_STATUS:
     streaming_target_deliver2(gh->gh_output, sm);
+    break;
+  case SMT_PACKET:
+    pkt = sm->sm_data;
+    if (pkt->pkt_payload)
+      streaming_target_deliver2(gh->gh_output, sm);
+    else
+      streaming_msg_free(sm);
     break;
   }
 }
