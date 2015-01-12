@@ -506,6 +506,43 @@ dvb_convert_date(const uint8_t *dvb_buf, int local)
   return local ? mktime(&dvb_time) : timegm(&dvb_time);
 }
 
+static time_t _gps_leap_seconds[17] = {
+	362793600,
+	394329600,
+	425865600,
+	489024000,
+	567993600,
+	631152000,
+	662688000,
+	709948800,
+	741484800,
+	773020800,
+	820454400,
+	867715200,
+	915148800,
+	1136073600,
+	1230768000,
+	1341100800,
+	1435708800,
+};
+
+time_t
+atsc_convert_gpstime(uint32_t gpstime)
+{
+  int i;
+  time_t out = gpstime + 315964800; // Add Unix - GPS epoch
+
+  for (i = (sizeof(_gps_leap_seconds)/sizeof(time_t)) - 1; i >= 0; i--) {
+    if (out > _gps_leap_seconds[i]) {
+      tvhwarn("gpstime", "leap seconds: %d", i+1);
+      out -= i+1;
+      break;
+    }
+  }
+
+  return out;
+}
+
 /*
  * DVB API helpers
  */

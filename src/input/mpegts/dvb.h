@@ -209,7 +209,7 @@ int atsc_get_string
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
 
 time_t dvb_convert_date(const uint8_t *dvb_buf, int local);
-
+time_t atsc_convert_gpstime(uint32_t gpstime);
 void atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen);
 
 /*
