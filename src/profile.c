@@ -1018,7 +1018,6 @@ typedef struct profile_transcode {
   int      pro_mc;
   uint32_t pro_resolution;
   uint32_t pro_channels;
-  uint32_t pro_bandwidth;
   uint32_t pro_vbitrate;
   uint32_t pro_abitrate;
   char    *pro_language;
@@ -1257,12 +1256,6 @@ profile_transcode_resolution(profile_transcode_t *pro)
 }
 
 static int
-profile_transcode_bandwidth(profile_transcode_t *pro)
-{
-  return pro->pro_bandwidth >= 64 ? pro->pro_bandwidth : 64;
-}
-
-static int
 profile_transcode_vbitrate(profile_transcode_t *pro)
 {
   return pro->pro_vbitrate;
@@ -1296,8 +1289,6 @@ profile_transcode_can_share(profile_chain_t *prch,
     return 0;
   if (profile_transcode_resolution(pro1) != profile_transcode_resolution(pro2))
     return 0;
-  if (profile_transcode_bandwidth(pro1) != profile_transcode_bandwidth(pro2))
-    return 0;
   if (profile_transcode_vbitrate(pro1) != profile_transcode_vbitrate(pro2))
     return 0;
   if (profile_transcode_abitrate(pro1) != profile_transcode_abitrate(pro2))
@@ -1328,7 +1319,6 @@ profile_transcode_work(profile_chain_t *prch,
   strncpy(props.tp_scodec, pro->pro_scodec ?: "", sizeof(props.tp_scodec)-1);
   props.tp_resolution = profile_transcode_resolution(pro);
   props.tp_channels   = pro->pro_channels;
-  props.tp_bandwidth  = profile_transcode_bandwidth(pro);
   props.tp_vbitrate   = profile_transcode_vbitrate(pro);
   props.tp_abitrate   = profile_transcode_abitrate(pro);
   strncpy(props.tp_language, pro->pro_language ?: "", 3);

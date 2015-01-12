@@ -1046,11 +1046,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         octx->rc_max_rate    = 4 * octx->bit_rate;
       }
 
-      if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) { // CRF
+      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) { // CRF
         octx->qmin           = t->t_props.tp_vbitrate;
       }
 
-      if (t->t_props.tp_vbitrate >=64) { // CBR
+      if (t->t_props.tp_vbitrate >= 64) { // CBR
         octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
         octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
       }
@@ -1075,13 +1075,13 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
 
       // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) {
+      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
         octx->qmin = t->t_props.tp_vbitrate;
         octx->qmax = octx->qmin + 30 <= 63 ? octx->qmin + 30 : 63;
         octx->rc_max_rate = 16 * octx->width * octx->height;
        }
 
-      if (t->t_props.tp_vbitrate >=64) { // CBR mode.
+      if (t->t_props.tp_vbitrate >= 64) { // CBR mode.
         octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
         octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
       }
@@ -1113,7 +1113,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       av_dict_set(&opts, "tune",    "zerolatency", 0);
 
       // If we are encoding HD, upgrade the profile to high.
-      if (octx->height >= 720 && t->t_props.tp_resolution >=720) {
+      if (octx->height >= 720 && t->t_props.tp_resolution >= 720) {
         av_dict_set(&opts, "profile", "high", 0); // L3.1
       }
 
@@ -1124,11 +1124,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
 
       // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) {
+      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
         octx->qmin = t->t_props.tp_vbitrate; // qmax = 51 in all default profiles, let's stick with it for now.
       }
 
-      if (t->t_props.tp_vbitrate >=64) { // Bitrate limited encoding (CBR mode).
+      if (t->t_props.tp_vbitrate >= 64) { // Bitrate limited encoding (CBR mode).
         octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
         octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
       }
@@ -1442,7 +1442,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   sct = codec_id2streaming_component_type(ocodec->id);
 
   // Don't transcode to identical output codec unless the streaming profile specifies a bitrate limiter.
-  if (sct == ssc->ssc_type && t->t_props.tp_abitrate <16 ) {
+  if (sct == ssc->ssc_type && t->t_props.tp_abitrate < 16 ) {
     return transcoder_init_stream(t, ssc);
   }
 
@@ -1802,7 +1802,6 @@ transcoder_set_properties(streaming_target_t *st,
   strncpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec)-1);
   strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
   tp->tp_channels   = props->tp_channels;
-  tp->tp_bandwidth  = props->tp_bandwidth;
   tp->tp_vbitrate   = props->tp_vbitrate;
   tp->tp_abitrate   = props->tp_abitrate;
   tp->tp_resolution = props->tp_resolution;
