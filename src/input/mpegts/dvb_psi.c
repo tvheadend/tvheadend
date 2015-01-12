@@ -1718,6 +1718,39 @@ next:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
+/*
+ * ATSC STT processing
+ */
+int
+atsc_stt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r, sect, last, ver, extraid;
+  uint32_t systemtime, gps_utc_offset;
+  int is_dst;
+  mpegts_table_state_t  *st  = NULL;
+
+  /* Validate */
+  if (tableid != DVB_ATSC_STT_BASE) return -1;
+
+  /* Extra ID */
+  extraid = ptr[0] << 8 | ptr[1];
+
+  /* Begin */
+  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) return r;
+
+  /* Parse fields */
+  systemtime = ptr[6] << 24 | ptr[7] << 16 | ptr[8] << 8 | ptr[9];
+  gps_utc_offset = ptr[10];
+  is_dst = ptr[11] >> 7;
+
+  tvhdebug("stt", "system_time %d, gps_utc_offset %d, is DST %d",
+      systemtime, gps_utc_offset, is_dst);
+
+  return dvb_table_end(mt, st, sect);
+}
 
 /*
  * DVB BAT processing
@@ -2490,6 +2523,9 @@ psi_tables_atsc_c ( mpegts_mux_t *mm )
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+  mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
+                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 
 static void
@@ -2498,6 +2534,9 @@ psi_tables_atsc_t ( mpegts_mux_t *mm )
   mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+  mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
+                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 
 void

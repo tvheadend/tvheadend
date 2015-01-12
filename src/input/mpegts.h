@@ -153,6 +153,7 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_NIT      999
 #define MPS_WEIGHT_BAT      999
 #define MPS_WEIGHT_VCT      999
+#define MPS_WEIGHT_STT      999
 #define MPS_WEIGHT_EIT      999
 #define MPS_WEIGHT_PMT      998
 #define MPS_WEIGHT_PCR      997
@@ -988,6 +989,8 @@ int dvb_tdt_callback
 int dvb_tot_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int atsc_vct_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int atsc_stt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 
 void psi_tables_install
