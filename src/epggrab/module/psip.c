@@ -130,7 +130,7 @@ _psip_eit_callback
 
     if (titlelen + dlen + 12 > len) return -1;
 
-    atsc_get_string(buf, 512, &ptr[10], titlelen, "eng");
+    atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
 
     tvhdebug("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
       i, eventid, start, length, buf, titlelen);
@@ -155,7 +155,7 @@ _psip_ett_callback
   mpegts_mux_t         *mm  = mt->mt_mux;
   mpegts_service_t     *svc;
   mpegts_table_state_t *st;
-  char buf[512];
+  char buf[4096];
 
   /* Validate */
   if (tableid != 0xcc) return -1;
@@ -182,7 +182,7 @@ _psip_ett_callback
     return -1;
   }
 
-  atsc_get_string(buf, 512, &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
+  atsc_get_string(buf, sizeof(buf), &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
 
   if (eventid == 0) {
     tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
