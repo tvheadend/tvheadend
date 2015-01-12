@@ -590,10 +590,10 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // Convert audio
       tvhtrace("transcode", "%04X: converting audio", shortid(t));
 
-      tvhinfo("transcode", "%04X: IN : channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
+      tvhtrace("transcode", "%04X: IN : channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
                shortid(t), ictx->channels, ictx->channel_layout, ictx->sample_rate,
                ictx->sample_fmt, ictx->bit_rate);
-      tvhinfo("transcode", "%04X: OUT: channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
+      tvhtrace("transcode", "%04X: OUT: channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
                shortid(t), octx->channels, octx->channel_layout, octx->sample_rate,
                octx->sample_fmt, octx->bit_rate);
 
@@ -1037,41 +1037,58 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
+      // Default settings for quantizer. Best quality unless changed by the streaming profile.
       octx->qmin           = 1;
       octx->qmax           = FF_LAMBDA_MAX;
 
-      if (t->t_props.tp_vbitrate == 0) {
+      if (t->t_props.tp_vbitrate == 0) { // "Auto"
         octx->bit_rate       = 2 * octx->width * octx->height;
         octx->rc_max_rate    = 4 * octx->bit_rate;
-
-      } else {
-        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
-        octx->rc_max_rate    = octx->bit_rate;
       }
 
-      octx->rc_buffer_size = 2 * octx->rc_max_rate;
+      if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) { // CRF
+        octx->qmin           = t->t_props.tp_vbitrate;
+      }
+
+      if (t->t_props.tp_vbitrate >=64) { // CBR
+        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
+        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
+      }
+
+      if (octx->rc_max_rate > 0)
+        octx->rc_buffer_size = 2 * octx->rc_max_rate;
+
       break;
- 
+
     case SCT_VP8:
       octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
-      av_dict_set(&opts, "quality",  "good", 0);
+      av_dict_set(&opts, "quality", "realtime", 0);
+
+      octx->qcompress      = 0.6;
 
       if (t->t_props.tp_vbitrate == 0) {
         octx->qmin = 10;
         octx->qmax = 20;
+        octx->rc_max_rate = 6 * octx->width * octx->height;
       }
 
       // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
       if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) {
-        octx->qmin = t->t_props.tp_vbitrate; // qmax = 63 as default.
-      } else { // CBR mode.
-        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
-        octx->rc_max_rate    = octx->bit_rate;
+        octx->qmin = t->t_props.tp_vbitrate;
+        octx->qmax = octx->qmin + 30 <= 63 ? octx->qmin + 30 : 63;
+        octx->rc_max_rate = 16 * octx->width * octx->height;
+       }
+
+      if (t->t_props.tp_vbitrate >=64) { // CBR mode.
+        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
+        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
       }
 
-      octx->rc_buffer_size = 8 * 1024 * 224;
+      if (octx->rc_max_rate > 0)
+        octx->rc_buffer_size = 8 * 1024 * 224;
+
       break;
 
     case SCT_H264:
@@ -1088,15 +1105,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // Recommended default: -qcomp 0.60
       octx->qcompress = 0.6;
 
-      // Minimum quantizer. Doesn't need to be changed.
-      // Recommended default: -qmin 10
-      // octx->qmin = 10;
-
-      // Maximum quantizer. Doesn't need to be changed.
-      // Recommended default: -qmax 51
-      // octx->qmax = 30;
-
-      av_dict_set(&opts, "preset",  "veryfast", 0);
+      // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
+      av_dict_set(&opts, "preset",  "faster", 0);
       // Use main profile instead of the standard "baseline", we are aiming for better quality.
       // Older devices (iPhone <4, Android <4) only supports baseline. Chromecast only supports >=4.1...
       av_dict_set(&opts, "profile", "main", 0); // L3.0
@@ -1116,12 +1126,16 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
       if (t->t_props.tp_vbitrate >0 && t->t_props.tp_vbitrate <64) {
         octx->qmin = t->t_props.tp_vbitrate; // qmax = 51 in all default profiles, let's stick with it for now.
-      } else { // Bitrate limited encoding (CBR mode).
-        octx->bit_rate       = t->t_props.tp_vbitrate * 1000;
-        octx->rc_max_rate    = octx->bit_rate;
       }
 
-      octx->rc_buffer_size = 8 * 1024 * 224;
+      if (t->t_props.tp_vbitrate >=64) { // Bitrate limited encoding (CBR mode).
+        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
+        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
+      }
+
+      if (octx->rc_max_rate > 0)
+        octx->rc_buffer_size = 8 * 1024 * 224;
+
       break;
 
     default:
