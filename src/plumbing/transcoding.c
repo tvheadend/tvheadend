@@ -543,7 +543,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     // User specified streaming profile audio bitrate limiter.
-    if (t->t_props.tp_abitrate >=16) {
+    if (t->t_props.tp_abitrate >= 16) {
       octx->bit_rate       = t->t_props.tp_abitrate * 1000;
     }
 
@@ -1118,7 +1118,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
 
       // Default "auto" CRF settings. Aimed for quality without being too agressive.
-      if (t->t_props.tp_vbitrate == 0 ) {
+      if (t->t_props.tp_vbitrate == 0) {
         octx->qmin = 10;
         octx->qmax = 30;
       }
@@ -1442,7 +1442,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   sct = codec_id2streaming_component_type(ocodec->id);
 
   // Don't transcode to identical output codec unless the streaming profile specifies a bitrate limiter.
-  if (sct == ssc->ssc_type && t->t_props.tp_abitrate < 16 ) {
+  if (sct == ssc->ssc_type && t->t_props.tp_abitrate < 16) {
     return transcoder_init_stream(t, ssc);
   }
 
