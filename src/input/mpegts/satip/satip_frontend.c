@@ -1047,10 +1047,8 @@ satip_frontend_extra_shutdown
   } else {
     while (1) {
       r = http_client_run(rtsp);
-      if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING) {
-        printf("%s", rtsp->hc_data);
+      if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
         break;
-      }
       nfds = tvhpoll_wait(efd, &ev, 1, 100);
       if (nfds == 0)
         break;
