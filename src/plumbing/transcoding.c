@@ -343,7 +343,7 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
 
    put_bits(&bs, 1, 1);      // Copyright identification bit
    put_bits(&bs, 1, 1);      // Copyright identification start
-   put_bits(&bs, pktbuf_len(pb) + 7, 13);
+   put_bits(&bs, pktbuf_len(pb), 13);
    put_bits(&bs, 0, 11);     // Buffer fullness
    put_bits(&bs, 0, 2);      // RDB in frame
 }
