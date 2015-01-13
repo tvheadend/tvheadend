@@ -82,7 +82,6 @@ struct satip_device
   int                        sd_sig_scale;
   int                        sd_pids0;
   int                        sd_pilot_on;
-  int                        sd_shutdown2;
   int                        sd_dbus_allow;
   pthread_mutex_t            sd_tune_mutex;
 };

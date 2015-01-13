@@ -182,13 +182,6 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "shutdown2",
-      .name     = "Double RTSP Shutdown",
-      .opts     = PO_ADVANCED,
-      .off      = offsetof(satip_device_t, sd_shutdown2),
-    },
-    {
-      .type     = PT_BOOL,
       .id       = "piloton",
       .name     = "Force pilot for DVB-S2",
       .opts     = PO_ADVANCED,

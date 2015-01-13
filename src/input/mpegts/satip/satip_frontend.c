@@ -1072,8 +1072,7 @@ done:
 }
 
 static void
-satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
-                           int shutdown2, int timeout )
+satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
@@ -1091,7 +1090,7 @@ satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
       r = http_client_run(rtsp);
       if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
         break;
-      nfds = tvhpoll_wait(efd, &ev, 1, timeout);
+      nfds = tvhpoll_wait(efd, &ev, 1, 400);
       if (nfds == 0)
         break;
       if (nfds < 0) {
@@ -1103,15 +1102,6 @@ satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
         break;
     }
   }
-}
-
-static void
-satip_frontend_shutdown
-  ( satip_frontend_t *lfe, http_client_t *rtsp, tvhpoll_t *efd, int shutdown2 )
-{
-  satip_frontend_shutdown1(rtsp, efd, shutdown2, 250);
-  if (shutdown2)
-    satip_frontend_shutdown1(rtsp, efd, shutdown2, 50);
 }
 
 static void
@@ -1188,7 +1178,21 @@ new_tune:
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
     if (rtsp && nfds == 0) {
-      satip_frontend_shutdown(lfe, rtsp, efd, lfe->sf_device->sd_shutdown2);
+
+      memset(ev, 0, sizeof(ev));
+      ev[0].events             = TVHPOLL_IN;
+      ev[0].fd                 = lfe->sf_dvr_pipe.rd;
+      ev[0].data.ptr           = NULL;
+      tvhpoll_rem(efd, ev, 1);
+
+      satip_frontend_shutdown(rtsp, efd);
+
+      memset(ev, 0, sizeof(ev));
+      ev[0].events             = TVHPOLL_IN;
+      ev[0].fd                 = lfe->sf_dvr_pipe.rd;
+      ev[0].data.ptr           = NULL;
+      tvhpoll_add(efd, ev, 1);
+
       http_client_close(rtsp);
       rtsp = NULL;
     }
@@ -1604,7 +1608,7 @@ new_tune:
   tvhpoll_rem(efd, ev, 3);
 
   if (exit_flag) {
-    satip_frontend_shutdown(lfe, rtsp, efd, lfe->sf_device->sd_shutdown2);
+    satip_frontend_shutdown(rtsp, efd);
     http_client_close(rtsp);
     rtsp = NULL;
   }
