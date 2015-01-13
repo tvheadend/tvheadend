@@ -205,6 +205,7 @@ static int
 http_client_flush( http_client_t *hc, int result )
 {
   hc->hc_result       = result;
+  tvhtrace("httpc", "%04X: client flush %i", shortid(hc), result);
   if (result < 0)
     http_client_shutdown(hc, 0, 0);
   hc->hc_in_data      = 0;
@@ -907,6 +908,7 @@ retry:
     r = http_client_ssl_recv(hc, buf, hc->hc_io_size);
   else
     r = recv(hc->hc_fd, buf, hc->hc_io_size, MSG_DONTWAIT);
+  tvhtrace("httpc", "%04X: recv %zi", shortid(hc), r);
   if (r == 0) {
     if (hc->hc_in_data && !hc->hc_keepalive)
       return http_client_finish(hc);
@@ -1385,6 +1387,7 @@ http_client_close ( http_client_t *hc )
   }
   http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
+  tvhtrace("httpc", "%04X: Closed", shortid(hc));
   while ((wcmd = TAILQ_FIRST(&hc->hc_wqueue)) != NULL)
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
