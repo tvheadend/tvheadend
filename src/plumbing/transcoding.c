@@ -334,7 +334,7 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
    put_bits(&bs, 1, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
    put_bits(&bs, 0, 2);      // Layer
    put_bits(&bs, 1, 1);      // Protection absent
-   put_bits(&bs, 1, 2);      // AOT, 1 = AAC Main
+   put_bits(&bs, 2, 2);      // AOT, 2 = AAC SSR (Scalable Sample Rate)
    put_bits(&bs, sri, 4);
    put_bits(&bs, 1, 1);      // Private bit
    put_bits(&bs, channels, 3);
