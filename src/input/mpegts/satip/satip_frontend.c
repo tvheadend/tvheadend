@@ -1012,6 +1012,66 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 }
 
 static void
+satip_frontend_extra_shutdown
+  ( satip_frontend_t *lfe, uint8_t *session, long stream_id )
+{
+  http_client_t *rtsp;
+  tvhpoll_t *efd;
+  tvhpoll_event_t ev;
+  int r, nfds;
+  char b[32];
+
+  if (session[0] == '\0' || stream_id <= 0)
+    return;
+
+  efd = tvhpoll_create(1);
+  rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
+                               lfe->sf_device->sd_info.addr, 554,
+                               satip_frontend_bindaddr(lfe));
+  if (rtsp == NULL)
+    goto done;
+
+  rtsp->hc_rtsp_session = strdup((char *)session);
+
+  memset(&ev, 0, sizeof(ev));
+  ev.events           = TVHPOLL_IN;
+  ev.fd               = rtsp->hc_fd;
+  ev.data.ptr         = rtsp;
+  tvhpoll_add(efd, &ev, 1);
+  rtsp->hc_efd = efd;
+
+  snprintf(b, sizeof(b), "/stream=%li", stream_id);
+  r = rtsp_teardown(rtsp, b, NULL);
+  if (r < 0) {
+    tvhtrace("satip", "bad shutdown for session %s stream id %li", session, stream_id);
+  } else {
+    while (1) {
+      r = http_client_run(rtsp);
+      if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING) {
+        printf("%s", rtsp->hc_data);
+        break;
+      }
+      nfds = tvhpoll_wait(efd, &ev, 1, 100);
+      if (nfds == 0)
+        break;
+      if (nfds < 0) {
+        if (ERRNO_AGAIN(errno))
+          continue;
+        break;
+      }
+      if(ev.events & (TVHPOLL_ERR | TVHPOLL_HUP))
+        break;
+    }
+  }
+
+  http_client_close(rtsp);
+  tvhlog(LOG_INFO, "satip", "extra shutdown done for session %s", session);
+
+done:
+  tvhpoll_destroy(efd);
+}
+
+static void
 satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
                            int shutdown2, int timeout )
 {
@@ -1046,7 +1106,8 @@ satip_frontend_shutdown1 ( http_client_t *rtsp, tvhpoll_t *efd,
 }
 
 static void
-satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd, int shutdown2 )
+satip_frontend_shutdown
+  ( satip_frontend_t *lfe, http_client_t *rtsp, tvhpoll_t *efd, int shutdown2 )
 {
   satip_frontend_shutdown1(rtsp, efd, shutdown2, 250);
   if (shutdown2)
@@ -1080,20 +1141,25 @@ satip_frontend_input_thread ( void *aux )
   dvb_mux_t *lm;
   char buf[256];
   struct iovec *iovec;
-  uint8_t b[2048];
+  uint8_t b[2048], session[32];
   uint8_t *p;
   sbuf_t sb;
   int pos, nfds, i, r, tc, rtp_port, start = 0;
   size_t c;
   tvhpoll_event_t ev[3];
   tvhpoll_t *efd;
-  int changing, ms, fatal, running, play2, exit_flag, rtsp_flags, position, reply;
+  int changing, ms, fatal, running, play2, exit_flag;
+  int rtsp_flags, position, reply;
   uint32_t seq, nseq, unc;
   udp_multirecv_t um;
   uint64_t u64, u64_2;
+  long stream_id;
 
   /* If set - the thread will be cancelled */
   exit_flag = 0;
+  /* Remember session for extra shutdown (workaround for IDL4K firmware bug) */
+  session[0] = '\0';
+  stream_id = 0;
 
   /* Setup poll */
   efd = tvhpoll_create(4);
@@ -1122,7 +1188,7 @@ new_tune:
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
     if (rtsp && nfds == 0) {
-      satip_frontend_shutdown(rtsp, efd, lfe->sf_device->sd_shutdown2);
+      satip_frontend_shutdown(lfe, rtsp, efd, lfe->sf_device->sd_shutdown2);
       http_client_close(rtsp);
       rtsp = NULL;
     }
@@ -1298,7 +1364,7 @@ new_tune:
                          rtsp_flags);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
   if (r < 0) {
-    tvherror("satip", "%s - failed to tune", buf);
+    tvherror("satip", "%s - failed to tune (%i)", buf, r);
     satip_frontend_tuning_error(lfe, tr);
     goto done;
   }
@@ -1350,6 +1416,14 @@ new_tune:
     if (ev[0].data.ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
+        if (rtsp->hc_code == 404) {
+          tvhlog(LOG_WARNING, "satip", "%s - RTSP 404 ERROR (retrying)", buf);
+          satip_frontend_extra_shutdown(lfe, session, stream_id);
+          start = 1;
+          http_client_close(rtsp);
+          rtsp = NULL;
+          break;
+        }
         tvhlog(LOG_ERR, "satip", "%s - RTSP error %d (%s) [%i-%i]",
                buf, r, strerror(-r), rtsp->hc_cmd, rtsp->hc_code);
         satip_frontend_tuning_error(lfe, tr);
@@ -1379,6 +1453,9 @@ new_tune:
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           } else {
+            strncpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
+            session[sizeof(session)-1] = '\0';
+            stream_id = rtsp->hc_rtsp_stream_id;
             tvhdebug("satip", "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
@@ -1391,7 +1468,7 @@ new_tune:
                                      rtsp_flags | SATIP_SETUP_PLAY);
               pthread_mutex_unlock(&lfe->sf_dvr_lock);
               if (r < 0) {
-                tvherror("satip", "%s - failed to tune2", buf);
+                tvherror("satip", "%s - failed to tune2 (%i)", buf, r);
                 satip_frontend_tuning_error(lfe, tr);
                 fatal = 1;
               }
@@ -1527,7 +1604,7 @@ new_tune:
   tvhpoll_rem(efd, ev, 3);
 
   if (exit_flag) {
-    satip_frontend_shutdown(rtsp, efd, lfe->sf_device->sd_shutdown2);
+    satip_frontend_shutdown(lfe, rtsp, efd, lfe->sf_device->sd_shutdown2);
     http_client_close(rtsp);
     rtsp = NULL;
   }
