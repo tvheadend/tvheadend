@@ -223,7 +223,7 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   put_bits(&out, 1, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
   put_bits(&out, 0, 2);      // Layer
   put_bits(&out, 1, 1);      // Protection absent
-  put_bits(&out, 2, 2);      // AOT, 2 = AAC SSR (Scalable Sample Rate)
+  put_bits(&out, 2, 2);      // AOT, 2 = AAC LC (for MPEG 2 bit)
   put_bits(&out, latm->sample_rate_index, 4);
   put_bits(&out, 1, 1);      // Private bit
   put_bits(&out, latm->channel_config, 3);
