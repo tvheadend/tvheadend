@@ -1411,7 +1411,9 @@ dvb_nit_callback
 {
   int save = 0;
   int r, sect, last, ver;
+#if ENABLE_MPEGTS_DVB
   uint32_t priv = 0;
+#endif
   uint8_t  dtag;
   int llen, dlen;
   const uint8_t *lptr, *dptr;
