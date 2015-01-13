@@ -115,7 +115,7 @@ pktbuf_t *pktbuf_make(void *data, size_t size);
 
 pktbuf_t *pktbuf_append(pktbuf_t *pb, const void *data, size_t size);
 
-static inline size_t   pktbuf_len(pktbuf_t *pb) { return pb->pb_size; }
+static inline size_t   pktbuf_len(pktbuf_t *pb) { return pb ? pb->pb_size : 0; }
 static inline uint8_t *pktbuf_ptr(pktbuf_t *pb) { return pb->pb_data; }
 
 #endif /* PACKET_H_ */
