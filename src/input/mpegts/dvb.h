@@ -162,7 +162,7 @@ int dvb_get_string_with_len
 
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
 
-time_t dvb_convert_date(const uint8_t *dvb_buf);
+time_t dvb_convert_date(const uint8_t *dvb_buf, int local);
 
 void atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen);
 

@@ -190,6 +190,13 @@ const idclass_t mpegts_network_class =
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "localtime",
+      .name     = "EIT Local Time",
+      .off      = offsetof(mpegts_network_t, mn_localtime),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_INT,
       .id       = "num_mux",
       .name     = "# Muxes",

@@ -398,7 +398,7 @@ static int _eit_desc_crid
 static int _eit_process_event
   ( epggrab_module_t *mod, int tableid,
     mpegts_service_t *svc, const uint8_t *ptr, int len,
-    int *resched, int *save )
+    int local, int *resched, int *save )
 {
   int save2 = 0;
   int ret, dllen;
@@ -415,7 +415,7 @@ static int _eit_process_event
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
-  start = dvb_convert_date(&ptr[2]);
+  start = dvb_convert_date(&ptr[2], local);
   stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
                   bcdtoint(ptr[8] & 0xff) * 60 +
                   bcdtoint(ptr[9] & 0xff);
@@ -643,6 +643,7 @@ _eit_callback
   while (len) {
     int r;
     if ((r = _eit_process_event(mod, tableid, svc, ptr, len,
+                                mm->mm_network->mn_localtime,
                                 &resched, &save)) < 0)
       break;
     len -= r;

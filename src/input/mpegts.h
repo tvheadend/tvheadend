@@ -298,6 +298,7 @@ struct mpegts_network
   char    *mn_charset;
   int      mn_idlescan;
   int      mn_ignore_chnum;
+  int      mn_localtime;
 };
 
 typedef enum mpegts_mux_scan_state

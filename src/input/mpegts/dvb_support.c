@@ -396,7 +396,7 @@ atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
  */
 
 time_t
-dvb_convert_date(const uint8_t *dvb_buf)
+dvb_convert_date(const uint8_t *dvb_buf, int local)
 {
   int i;
   int year, month, day, hour, min, sec;
@@ -432,7 +432,7 @@ dvb_convert_date(const uint8_t *dvb_buf)
   dvb_time.tm_isdst = -1;
   dvb_time.tm_wday = 0;
   dvb_time.tm_yday = 0;
-  return (timegm(&dvb_time));
+  return local ? mktime(&dvb_time) : timegm(&dvb_time);
 }
 
 /*
