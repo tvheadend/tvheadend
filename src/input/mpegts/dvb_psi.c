@@ -1573,7 +1573,8 @@ dvb_nit_callback
 
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
-      if (mux->mm_onid == onid && mux->mm_tsid == tsid) {
+      if (mux->mm_onid == onid && mux->mm_tsid == tsid &&
+          (mm == mux || !LIST_EMPTY(&mux->mm_services))) {
         r = dvb_nit_mux(mt, mux, mm, mn, onid, tsid, lptr, llen, tableid, bi, 0);
         if (r < 0)
           return r;
@@ -1765,7 +1766,8 @@ dvb_sdt_callback
       return r;
   } else {
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-      if (mm->mm_onid == onid && mm->mm_tsid == tsid) {
+      if (mm->mm_onid == onid && mm->mm_tsid == tsid &&
+          (mm == mm_orig || !LIST_EMPTY(&mm->mm_services))) {
         r = dvb_sdt_mux(mt, mm, mm_orig, ptr, len, tableid);
         if (r)
           return r;
@@ -1788,7 +1790,7 @@ atsc_vct_callback
   int maj, min, count;
   uint16_t tsid, sid, type;
   char chname[256];
-  mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
   mpegts_network_t *mn = mm->mm_network;
   mpegts_service_t *s;
   mpegts_table_state_t  *st  = NULL;
@@ -1834,7 +1836,8 @@ atsc_vct_callback
 
     /* Find mux */
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-      if (mm->mm_tsid == tsid) {
+      if (mm->mm_tsid == tsid &&
+          (mm == mm_orig || !LIST_EMPTY(&mm->mm_services))) {
         /* Find the service */
         if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
           continue;
