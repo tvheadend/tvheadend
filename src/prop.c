@@ -395,17 +395,15 @@ prop_serialize_value
     }
   }
 
+  /* Skip - special blocker */
+  if (pl->type == PT_NONE)
+    return;
+
   htsmsg_t *m = htsmsg_create_map();
 
   /* ID / type */
   htsmsg_add_str(m, "id",       pl->id);
   htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
-
-  /* Skip - special blocker */
-  if (pl->type == PT_NONE) {
-    htsmsg_add_msg(msg, NULL, m);
-    return;
-  }
 
   /* Metadata */
   htsmsg_add_str(m, "caption",  pl->name);
