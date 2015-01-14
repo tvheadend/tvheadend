@@ -208,7 +208,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
       timeshift_filemgr_close(tsf_tl);
 
     /* Check period */
-    if (ts->max_time && tsf_hd && tsf_tl) {
+    if (!timeshift_unlimited_period &&
+        ts->max_time && tsf_hd && tsf_tl) {
       time_t d = (tsf_tl->time - tsf_hd->time) * TIMESHIFT_FILE_PERIOD;
       if (d > (ts->max_time+5)) {
         if (!tsf_hd->refcount) {
