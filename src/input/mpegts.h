@@ -726,6 +726,7 @@ void mpegts_network_delete ( mpegts_network_t *mn, int delconf );
 
 int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
+void mpegts_network_scan ( mpegts_network_t *mn );
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,

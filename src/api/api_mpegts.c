@@ -137,6 +137,44 @@ api_mpegts_network_create
 }
 
 static int
+api_mpegts_network_scan
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_field_t *f;
+  htsmsg_t *uuids;
+  mpegts_network_t *mn;
+  const char *uuid;
+
+  if (!(f = htsmsg_field_find(args, "uuid")))
+    return -EINVAL;
+  if ((uuids = htsmsg_field_get_list(f))) {
+    HTSMSG_FOREACH(f, uuids) {
+      if (!(uuid = htsmsg_field_get_str(f))) continue;
+      mn = mpegts_network_find(uuid);
+      if (mn) {
+        pthread_mutex_lock(&global_lock);
+        mpegts_network_scan(mn);
+        pthread_mutex_unlock(&global_lock);
+      }
+    }
+  } else if ((uuid = htsmsg_field_get_str(f))) {
+    printf("STR: '%s'\n", uuid);
+    mn = mpegts_network_find(uuid);
+    if (mn) {
+      pthread_mutex_lock(&global_lock);
+      mpegts_network_scan(mn);
+      pthread_mutex_unlock(&global_lock);
+    }
+    else
+      return -ENOENT;
+  } else {
+    return -EINVAL;
+  }
+
+  return 0;
+}
+
+static int
 api_mpegts_network_muxclass
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
@@ -356,6 +394,7 @@ api_mpegts_init ( void )
     { "mpegts/network/create",     ACCESS_ADMIN, api_mpegts_network_create,   NULL },
     { "mpegts/network/mux_class",  ACCESS_ADMIN, api_mpegts_network_muxclass, NULL },
     { "mpegts/network/mux_create", ACCESS_ADMIN, api_mpegts_network_muxcreate, NULL },
+    { "mpegts/network/scan",       ACCESS_ADMIN, api_mpegts_network_scan, NULL },
     { "mpegts/mux/grid",           ACCESS_ADMIN, api_idnode_grid,  api_mpegts_mux_grid },
     { "mpegts/mux/class",          ACCESS_ADMIN, api_idnode_class, (void*)&mpegts_mux_class },
     { "mpegts/service/grid",       ACCESS_ADMIN, api_idnode_grid,  api_mpegts_service_grid },

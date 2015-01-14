@@ -27,6 +27,39 @@ tvheadend.networks = function(panel, index)
         });
     }
 
+    var scanButton = {
+        name: 'scan',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Force new scan (all muxes) for selected networks',
+                iconCls: 'find',
+                text: 'Force Scan',
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/mpegts/network/scan',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },    
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
+    function selected(s, abuttons) {
+        abuttons.scan.setDisabled(!s || s.length <= 0);
+    }
+
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
         titleS: 'Network',
@@ -35,7 +68,8 @@ tvheadend.networks = function(panel, index)
         tabIndex: index,
         help: function() {
             new tvheadend.help('Networks', 'config_networks.html');
-        },            
+        },
+        tbar: [scanButton],
         add: {
             titleS: 'Network',
             select: {
@@ -50,6 +84,7 @@ tvheadend.networks = function(panel, index)
             }
         },
         del: true,
+        selected: selected,
         sort: {
             field: 'networkname',
             direction: 'ASC'

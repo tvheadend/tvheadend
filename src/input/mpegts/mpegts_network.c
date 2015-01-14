@@ -401,6 +401,14 @@ mpegts_network_set_network_name
   return 1;
 }
 
+void
+mpegts_network_scan ( mpegts_network_t *mn )
+{
+  mpegts_mux_t *mm;
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+}
+
 /******************************************************************************
  * Network classes/creation
  *****************************************************************************/
