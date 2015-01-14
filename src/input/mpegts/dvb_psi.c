@@ -1278,7 +1278,8 @@ static int
 dvb_nit_mux
   (mpegts_table_t *mt, mpegts_mux_t *mux, mpegts_mux_t *mm,
    mpegts_network_t *mn, uint16_t onid, uint16_t tsid,
-   const uint8_t *lptr, int llen, uint8_t tableid, dvb_bat_id_t *bi)
+   const uint8_t *lptr, int llen, uint8_t tableid,
+   dvb_bat_id_t *bi, int discovery)
 {
   uint32_t priv = 0;
   uint8_t dtag;
@@ -1296,10 +1297,20 @@ dvb_nit_mux
     mpegts_mux_nice_name(mux, buf, sizeof(buf));
   else
     strcpy(buf, "<none>");
-  tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %s", onid, onid, tsid, tsid, buf);
+  tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %s%s",
+           onid, onid, tsid, tsid, buf, discovery ? " (discovery)" : "");
 
   DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
     tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+
+#if ENABLE_MPEGTS_DVB
+    /* Limit delivery descriptiors only in the discovery phase */
+    if (discovery &&
+        dtag != DVB_DESC_SAT_DEL &&
+        dtag != DVB_DESC_CABLE_DEL &&
+        dtag != DVB_DESC_TERR_DEL)
+      continue;
+#endif
 
     /* User-defined */
     if (mt->mt_mux_cb && mux) {
@@ -1327,15 +1338,17 @@ dvb_nit_mux
     case DVB_DESC_SAT_DEL:
     case DVB_DESC_CABLE_DEL:
     case DVB_DESC_TERR_DEL:
-      if (dtag == DVB_DESC_SAT_DEL)
-        mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
-      else if (dtag == DVB_DESC_CABLE_DEL)
-        mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
-      else
-        mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
-      if (mux) {
-        mpegts_mux_set_onid(mux, onid);
-        mpegts_mux_set_tsid(mux, tsid, 0);
+      if (discovery) {
+        if (dtag == DVB_DESC_SAT_DEL)
+          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
+        else if (dtag == DVB_DESC_CABLE_DEL)
+          mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
+        else
+          mux = dvb_desc_terr_del(mm, onid, tsid, dptr, dlen);
+        if (mux) {
+          mpegts_mux_set_onid(mux, onid);
+          mpegts_mux_set_tsid(mux, tsid, 0);
+        }
       }
       break;
 #endif
@@ -1551,21 +1564,21 @@ dvb_nit_callback
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
 
+#if ENABLE_MPEGTS_DVB
+    /* Create new muxes (auto-discovery) */
+    r = dvb_nit_mux(mt, NULL, mm, mn, onid, tsid, lptr, llen, tableid, bi, 1);
+    if (r < 0)
+      return r;
+#endif
+
     /* Find existing mux */
-    r = -1;
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
       if (mux->mm_onid == onid && mux->mm_tsid == tsid) {
-        r = dvb_nit_mux(mt, mux, mm, mn, onid, tsid, lptr, llen, tableid, bi);
+        r = dvb_nit_mux(mt, mux, mm, mn, onid, tsid, lptr, llen, tableid, bi, 0);
         if (r < 0)
           return r;
       }
       
-    /* New mux */
-    if (r == -1) {
-      r = dvb_nit_mux(mt, NULL, mm, mn, onid, tsid, lptr, llen, tableid, bi);
-      if (r < 0)
-        return r;
-    }
     lptr += r;
     llen -= r;
   }
