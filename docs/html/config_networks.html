@@ -55,7 +55,11 @@ Buttons have the following functions:
 		<dd>Whether automatic discovery is enabled for this network, i.e. whether Tvheadend looks for muxes or simply stays with the list of muxes as defined initially.
 <p>
 		<dt><b>Skip initial Scan</b>
-		<dd>Don't scan this network for muxes at Tvheadend start.
+		<dd>Don't scan all muxes in this network at Tvheadend start.
+		The initial scan procedure is not a blind scan. Only known muxes
+		registered to this network are scanned. If Network Discovery
+		is enabled and new muxes are discovered using DVB
+		descriptors, these muxes will be scanned too.
 <p>
 		<dt><b>Idle Scan Muxes</b>
 		<dd>When nothing else happens Tvheadend will continuously rotate among all muxes and tune to them to verify that they are still working
