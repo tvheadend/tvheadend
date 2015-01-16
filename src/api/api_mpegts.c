@@ -158,7 +158,6 @@ api_mpegts_network_scan
       }
     }
   } else if ((uuid = htsmsg_field_get_str(f))) {
-    printf("STR: '%s'\n", uuid);
     mn = mpegts_network_find(uuid);
     if (mn) {
       pthread_mutex_lock(&global_lock);
