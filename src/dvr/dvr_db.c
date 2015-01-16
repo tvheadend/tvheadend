@@ -1108,6 +1108,20 @@ dvr_entry_class_delete(idnode_t *self)
   dvr_entry_cancel_delete((dvr_entry_t *)self);
 }
 
+static int
+dvr_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
+{
+  dvr_entry_t *de = (dvr_entry_t *)self;
+
+  if (access_verify2(a, ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER))
+    return -1;
+  if (!access_verify2(a, ACCESS_ADMIN))
+    return 0;
+  if (dvr_entry_verify(de, a, msg_to_write == NULL ? 1 : 0))
+    return -1;
+  return 0;
+}
+
 static const char *
 dvr_entry_class_get_title (idnode_t *self)
 {
@@ -1680,10 +1694,10 @@ const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
   .ic_caption   = "DVR Entry",
   .ic_event     = "dvrentry",
-  .ic_perm_def  = ACCESS_RECORDER,
   .ic_save      = dvr_entry_class_save,
   .ic_get_title = dvr_entry_class_get_title,
   .ic_delete    = dvr_entry_class_delete,
+  .ic_perm      = dvr_entry_class_perm,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_TIME,

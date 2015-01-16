@@ -7,7 +7,7 @@ tvheadend.acleditor = function(panel, index)
     var list = 'enabled,username,password,prefix,' +
                'webui,admin,' +
                'streaming,adv_streaming,htsp_streaming,' +
-               'profile,conn_limit,dvr,htsp_dvr,dvr_config,' +
+               'profile,conn_limit,dvr,htsp_dvr,all_dvr,dvr_config,' +
                'channel_min,channel_max,channel_tag,comment';
 
     tvheadend.idnode_grid(panel, {
@@ -25,6 +25,7 @@ tvheadend.acleditor = function(panel, index)
             htsp_streaming: { width: 200 },
             dvr:            { width: 150 },
             htsp_dvr:       { width: 150 },
+            all_dvr:        { width: 150 },
             webui:          { width: 140 },
             admin:          { width: 100 },
             conn_limit:     { width: 160 },

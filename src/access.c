@@ -357,16 +357,17 @@ access_dump_a(access_t *a)
   int first;
 
   snprintf(buf, sizeof(buf),
-    "%s:%s [%s%s%s%s%s%s%s], conn=%u, chmin=%llu, chmax=%llu%s",
+    "%s:%s [%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
-    a->aa_rights & ACCESS_STREAMING          ? "S" : "",
-    a->aa_rights & ACCESS_ADVANCED_STREAMING ? "A" : "",
-    a->aa_rights & ACCESS_HTSP_STREAMING     ? "T" : "",
-    a->aa_rights & ACCESS_WEB_INTERFACE      ? "W" : "",
-    a->aa_rights & ACCESS_RECORDER           ? "R" : "",
-    a->aa_rights & ACCESS_HTSP_RECORDER      ? "E" : "",
-    a->aa_rights & ACCESS_ADMIN              ? "*" : "",
+    a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
+    a->aa_rights & ACCESS_ADVANCED_STREAMING ? 'A' : ' ',
+    a->aa_rights & ACCESS_HTSP_STREAMING     ? 'T' : ' ',
+    a->aa_rights & ACCESS_WEB_INTERFACE      ? 'W' : ' ',
+    a->aa_rights & ACCESS_RECORDER           ? 'R' : ' ',
+    a->aa_rights & ACCESS_HTSP_RECORDER      ? 'E' : ' ',
+    a->aa_rights & ACCESS_ALL_RECORDER       ? 'L' : ' ',
+    a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
     (long long)a->aa_chmin, (long long)a->aa_chmax,
     a->aa_match ? ", matched" : "");
@@ -812,6 +813,8 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_RECORDER;
   if (ae->ae_htsp_dvr)
     r |= ACCESS_HTSP_RECORDER;
+  if (ae->ae_all_dvr)
+    r |= ACCESS_ALL_RECORDER;
   if (ae->ae_webui)
     r |= ACCESS_WEB_INTERFACE;
   if (ae->ae_admin)
@@ -846,8 +849,10 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
   TAILQ_INIT(&ae->ae_ipmasks);
 
   if (conf) {
+    /* defaults */
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
+    ae->ae_all_dvr        = 1;
     idnode_load(&ae->ae_id, conf);
     /* note password has PO_NOSAVE, thus it must be set manually */
     if ((s = htsmsg_get_str(conf, "password")) != NULL)
@@ -1298,6 +1303,12 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_htsp_dvr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "all_dvr",
+      .name     = "All DVR",
+      .off      = offsetof(access_entry_t, ae_all_dvr),
+    },
+    {
       .type     = PT_STR,
       .id       = "dvr_config",
       .name     = "DVR Config Profile",
@@ -1405,6 +1416,7 @@ access_init(int createdefault, int noacl)
     ae->ae_htsp_streaming = 1;
     ae->ae_dvr            = 1;
     ae->ae_htsp_dvr       = 1;
+    ae->ae_all_dvr        = 1;
     ae->ae_webui          = 1;
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);

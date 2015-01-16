@@ -631,6 +631,9 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   if(http_access_verify(hc, ACCESS_RECORDER))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  if(dvr_entry_verify(de, hc->hc_access, 1))
+    return HTTP_STATUS_NOT_FOUND;
+
   hostpath  = http_get_hostpath(hc);
   durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
   fsize = dvr_get_filesize(de);
@@ -1131,6 +1134,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if (de == NULL)
     de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_NOT_FOUND;
+  }
+  if(dvr_entry_verify(de, hc->hc_access, 1)) {
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }

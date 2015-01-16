@@ -471,6 +471,17 @@ htsmsg_t *dvr_entry_class_pri_list(void *o);
 htsmsg_t *dvr_entry_class_config_name_list(void *o);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
 
+static inline int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
+{
+  if (!a->aa_username || !de->de_owner)
+    return -1;
+  if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
+    return 0;
+  if (strcmp(de->de_owner, a->aa_username))
+    return -1;
+  return 0;
+}
+
 /**
  *
  */
@@ -536,6 +547,15 @@ void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
 
+static inline int dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a)
+{
+  if (!a->aa_username || !dae->dae_owner)
+    return -1;
+  if (strcmp(dae->dae_owner, a->aa_username))
+    return -1;
+  return 0;
+}
+
 /**
  *
  */
@@ -570,6 +590,15 @@ void dvr_timerec_init(void);
 void dvr_timerec_done(void);
 
 void dvr_timerec_update(void);
+
+static inline int dvr_timerec_entry_verify(dvr_timerec_entry_t *dte, access_t *a)
+{
+  if (!a->aa_username || !dte->dte_owner)
+    return -1;
+  if (strcmp(dte->dte_owner, a->aa_username))
+    return -1;
+  return 0;
+}
 
 /**
  *

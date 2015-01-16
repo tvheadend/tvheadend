@@ -369,6 +369,20 @@ dvr_autorec_entry_class_delete(idnode_t *self)
   autorec_entry_destroy((dvr_autorec_entry_t *)self, 1);
 }
 
+static int
+dvr_autorec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
+
+  if (access_verify2(a, ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER))
+    return -1;
+  if (!access_verify2(a, ACCESS_ADMIN))
+    return 0;
+  if (dvr_autorec_entry_verify(dae, a))
+    return -1;
+  return 0;
+}
+
 static const char *
 dvr_autorec_entry_class_get_title (idnode_t *self)
 {
@@ -839,6 +853,7 @@ const idclass_t dvr_autorec_entry_class = {
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,
   .ic_delete     = dvr_autorec_entry_class_delete,
+  .ic_perm       = dvr_autorec_entry_class_perm,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
