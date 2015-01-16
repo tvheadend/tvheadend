@@ -88,12 +88,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   //       if configured
   if(dae->dae_serieslink) {
     if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
-    return 1;
+  } else {
+    if(dae->dae_season)
+      if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
+    if(dae->dae_brand)
+      if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   }
-  if(dae->dae_season)
-    if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
-  if(dae->dae_brand)
-    if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if(!e->episode->title) return 0;
