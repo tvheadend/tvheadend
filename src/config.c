@@ -1211,10 +1211,12 @@ dobackup(const char *oldver)
                                      root, oldver);
   tvhinfo("config", "backup: running, output file %s", outfile);
 
-  spawnv(argv[0], (void *)argv, NULL, 1, 1);
-
-  while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
-    usleep(20000);
+  if (spawnv(argv[0], (void *)argv, NULL, 1, 1)) {
+    code = -ENOENT;
+  } else {
+    while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
+      usleep(20000);
+  }
 
   if (code) {
     htsbuf_queue_t q;
