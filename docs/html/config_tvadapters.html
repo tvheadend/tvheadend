@@ -76,6 +76,14 @@ The rows have the following functions
  <dt><b>Input Buffer (Bytes)</b></dt>
   <dd>By default, linuxdvb input buffer is 18800 bytes long. The accepted
       range is 18800-1880000 bytes.</dd>
+<p>
+ <dt><b>Status Period</b></dt>
+  <dd>By default, linuxdvb status read period is 1000ms (one second). The
+      accepted range is 250ms to 8000ms. Note that for some hardware /
+      drivers (like USB), the status operations takes too much time and CPU.
+      In this case, increase the default value. For fast hardware, this value
+      might be descreased to make the decision of the re-tune algorithm
+      based on the signal status faster.</dd>
 </dl>
 
 <p>

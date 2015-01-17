@@ -113,6 +113,13 @@ const idclass_t linuxdvb_frontend_class =
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_ibuf_size),
     },
+    {
+      .type     = PT_U32,
+      .id       = "status_period",
+      .name     = "Status Period (ms)",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_status_period),
+    },
     {}
   }
 };
@@ -491,6 +498,7 @@ linuxdvb_frontend_monitor ( void *aux )
   streaming_message_t sm;
   service_t *s;
   int logit = 0, retune;
+  uint32_t period = MIN(MAX(250, lfe->lfe_status_period), 8000);
 #if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
@@ -526,7 +534,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if (!mmi || !lfe->lfe_ready) return;
 
   /* re-arm */
-  gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 1);
+  gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, period);
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -609,10 +617,9 @@ linuxdvb_frontend_monitor ( void *aux )
       lfe->lfe_monitor = dispatch_clock + 1;
     }
   } else {
-    /* Monitor 1 per sec */
     if (dispatch_clock < lfe->lfe_monitor)
       return;
-    lfe->lfe_monitor = dispatch_clock + 1;
+    lfe->lfe_monitor = dispatch_clock + (period + 999) / 1000;
   }
 
   /* Statistics - New API */
@@ -1441,6 +1448,7 @@ linuxdvb_frontend_create
   strncpy(lfe->lfe_name, name, sizeof(lfe->lfe_name));
   lfe->lfe_name[sizeof(lfe->lfe_name)-1] = '\0';
   lfe->lfe_ibuf_size = 18800;
+  lfe->lfe_status_period = 1000;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
