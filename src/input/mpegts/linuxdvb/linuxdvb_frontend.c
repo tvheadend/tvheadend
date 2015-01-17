@@ -106,6 +106,13 @@ const idclass_t linuxdvb_frontend_class =
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_skip_bytes),
     },
+    {
+      .type     = PT_U32,
+      .id       = "ibuf_size",
+      .name     = "Input Buffer (Bytes)",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_ibuf_size),
+    },
     {}
   }
 };
@@ -886,7 +893,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 2);
 
   /* Allocate memory */
-  sbuf_init_fixed(&sb, 18800);
+  sbuf_init_fixed(&sb, MIN(MAX(18800, lfe->lfe_ibuf_size), 1880000));
 
   /* Read */
   while (tvheadend_running) {
@@ -1433,6 +1440,7 @@ linuxdvb_frontend_create
   lfe->lfe_type = type;
   strncpy(lfe->lfe_name, name, sizeof(lfe->lfe_name));
   lfe->lfe_name[sizeof(lfe->lfe_name)-1] = '\0';
+  lfe->lfe_ibuf_size = 18800;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
