@@ -211,7 +211,7 @@ mpegts_mux_sched_timer ( void *p )
     mms->mms_prch->prch_st = &mms->mms_input;
 
     mms->mms_sub
-      = subscription_create_from_mux(mms->mms_prch, mms->mms_weight,
+      = subscription_create_from_mux(mms->mms_prch, NULL, mms->mms_weight,
                                      mms->mms_creator ?: "",
                                      SUBSCRIPTION_NONE,
                                      NULL, NULL, NULL, NULL);

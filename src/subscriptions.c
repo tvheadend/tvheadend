@@ -758,6 +758,7 @@ mux_data_timeout ( void *aux )
 
 th_subscription_t *
 subscription_create_from_mux(profile_chain_t *prch,
+                             tvh_input_t *ti,
                              unsigned int weight,
                              const char *name,
                              int flags,
@@ -774,7 +775,7 @@ subscription_create_from_mux(profile_chain_t *prch,
   int r;
 
   /* Tune */
-  r = mm->mm_start(mm, name, weight, flags);
+  r = mm->mm_start(mm, (mpegts_input_t *)ti, name, weight, flags);
   if (r) {
     if (err) *err = r;
     return NULL;

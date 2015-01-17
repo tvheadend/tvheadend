@@ -95,6 +95,111 @@ mpegts_mux_scan_active
   }
 }
 
+static int
+mpegts_mux_keep_exists
+  ( mpegts_input_t *mi )
+{
+  mpegts_mux_instance_t *mmi;
+  th_subscription_t *s;
+
+  if (!mi)
+    return 0;
+
+  mmi = LIST_FIRST(&mi->mi_mux_active);
+  if (mmi)
+    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+      LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
+        if (!strcmp(s->ths_title, "keep"))
+          return 1;
+
+  return 0;
+}
+
+static int
+mpegts_mux_subscribe_keep
+  ( mpegts_mux_t *mm, mpegts_input_t *mi )
+{
+  char *s;
+  int r;
+
+  s = mi->mi_linked;
+  mi->mi_linked = NULL;
+  r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP, SUBSCRIPTION_NONE);
+  mi->mi_linked = s;
+  return r;
+}
+
+static void
+mpegts_mux_subscribe_linked
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  mpegts_input_t *mi2 = mpegts_input_find(mi->mi_linked);
+  mpegts_mux_instance_t *mmi2;
+  mpegts_network_link_t *mnl2;
+  mpegts_mux_t *mm2;
+  char buf1[128], buf2[128];
+  const char *serr = "All";
+  int r = 0;
+
+  tvhtrace("mpegts", "subscribe linked");
+
+  if (!mpegts_mux_keep_exists(mi) && (r = mpegts_mux_subscribe_keep(mm, mi))) {
+    serr = "active1";
+    goto fatal;
+  }
+
+  if (!mi2)
+    return;
+
+  if (mpegts_mux_keep_exists(mi2))
+    return;
+
+  mmi2 = LIST_FIRST(&mi2->mi_mux_active);
+  if (mmi2) {
+    r = mpegts_mux_subscribe_keep(mmi2->mmi_mux, mi2);
+    if (!r)
+      return;
+    serr = "active2";
+    goto fatal;
+  }
+
+  /* Try muxes within same network */
+  LIST_FOREACH(mnl2, &mi2->mi_networks, mnl_mi_link)
+    if (mnl2->mnl_network == mm->mm_network)
+      LIST_FOREACH(mm2, &mnl2->mnl_network->mn_muxes, mm_network_link)
+        if (!mm2->mm_active && mm->mm_scan_result == MM_SCAN_OK &&
+            !LIST_EMPTY(&mm2->mm_services))
+          if (!mpegts_mux_subscribe_keep(mm2, mi2))
+            return;
+
+  /* Try all other muxes */
+  LIST_FOREACH(mnl2, &mi2->mi_networks, mnl_mi_link)
+    if (mnl2->mnl_network != mm->mm_network)
+      LIST_FOREACH(mm2, &mnl2->mnl_network->mn_muxes, mm_network_link)
+        if (!mm2->mm_active && mm->mm_scan_result == MM_SCAN_OK &&
+            !LIST_EMPTY(&mm2->mm_services))
+          if (!mpegts_mux_subscribe_keep(mm2, mi2))
+            return;
+
+fatal:
+  mi ->mi_display_name(mi,  buf1, sizeof(buf1));
+  mi2->mi_display_name(mi2, buf2, sizeof(buf2));
+  tvherror("mpegts", "%s - %s - linked input cannot be started (%s: %i)", buf1, buf2, serr, r);
+  abort();
+}
+
+void
+mpegts_mux_unsubscribe_linked
+  ( mpegts_input_t *mi )
+{
+  mpegts_mux_instance_t *mmi;
+
+  if (mi) {
+    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+      mpegts_mux_unsubscribe_by_name(mmi->mmi_mux, "keep");
+  }
+}
+
 int
 mpegts_mux_instance_start
   ( mpegts_mux_instance_t **mmiptr )
@@ -136,6 +241,12 @@ mpegts_mux_instance_start
 
   /* Link */
   mpegts_mux_scan_active(mm, buf, mi);
+
+  if (mi->mi_linked) {
+    mpegts_mux_subscribe_linked(mi, mm);
+    if (mm->mm_active)
+      return 0;
+  }
 
   return 0;
 }
@@ -535,12 +646,15 @@ mpegts_mux_start1( mpegts_mux_instance_t *mmi )
 
 static int
 mpegts_mux_start
-  ( mpegts_mux_t *mm, const char *reason, int weight, int flags )
+  ( mpegts_mux_t *mm, mpegts_input_t *_mi, const char *reason, int weight, int flags )
 {
   int havefree = 0, enabled = 0, index, index2, weight2, count, size = 0;
   char buf[256];
+  mpegts_input_t *mi;
+  mpegts_mux_t *mm2;
   mpegts_mux_instance_t *mmi, **all;
   int64_t aweight, *allw;
+  int e, j;
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - starting for '%s' (weight %d, flags %04X)",
@@ -575,13 +689,16 @@ mpegts_mux_start
   /* Calculate priority+weight and sort */
   count = 0;
   LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-    int e = mmi->mmi_input->mi_is_enabled(mmi->mmi_input, mm, flags);
+    mi = mmi->mmi_input;
+    mm2 = mmi->mmi_mux;
+    if (_mi && mi != _mi) continue;
+    e = mi->mi_is_enabled(mi, mm, flags);
     tvhtrace("mpegts", "%s -   mmi %p enabled %d", buf, mmi, e);
     if (!e) continue;
     enabled = 1;
 
     /* Already live? Try it... */
-    if (e && mmi->mmi_mux->mm_active == mmi) {
+    if (e && mm2->mm_active == mmi) {
       if (!mpegts_mux_start1(mmi))
         return 0;
       continue;
@@ -591,20 +708,18 @@ mpegts_mux_start
 
     tvhtrace("mpegts", "%s - found mmi %p", buf, mmi);
 
-    aweight = ((int64_t )mmi->mmi_input->mi_get_priority(mmi->mmi_input,
-                                                         mmi->mmi_mux, flags) << 32) |
-                         mmi->mmi_input->mi_get_weight(mmi->mmi_input, flags);
-    for (index = 0; index < count; index++) {
+    aweight = ((int64_t )mi->mi_get_priority(mi, mm2, flags) << 32) |
+                         mi->mi_get_weight(mi, flags);
+
+    for (index = 0; index < count; index++)
       if (allw[index] >= aweight)
         break;
+
+    for (j = count; j > index; j--) {
+      allw[j] = allw[j - 1];
+      all [j] = all [j - 1];
     }
-    if (index < count) {
-      int j;
-      for (j = count; j > index; j--) {
-        allw[j] = allw[j - 1];
-        all [j] = all [j - 1];
-      }
-    }
+
     all [index] = mmi;
     allw[index] = aweight;
     count++;
@@ -613,7 +728,7 @@ mpegts_mux_start
 #if ENABLE_TRACE
   for (index = 0; index < count; index++) {
     if (all[index]) {
-      mpegts_input_t *mi = all[index]->mmi_input;
+      mi = all[index]->mmi_input;
       char buf2[256];
       mi->mi_display_name(mi, buf2, sizeof(buf2));
       tvhtrace("mpegts", "%s - %i [%s]: prio %li weight %li", buf, index, buf2,
@@ -624,7 +739,6 @@ mpegts_mux_start
 
   /* Try free inputs */
   for (index = count - 1; index >= 0; index--) {
-    mpegts_input_t *mi;
     mmi = all[index];
     mi = mmi->mmi_input;
     if (mi->mi_is_free(mi)) {
@@ -685,11 +799,13 @@ static int
 mpegts_mux_has_subscribers ( mpegts_mux_t *mm, const char *name )
 {
   mpegts_mux_instance_t *mmi = mm->mm_active;
+  th_subscription_t *sub;
   if (mmi) {
-    if (LIST_FIRST(&mmi->mmi_subs)) {
-      tvhtrace("mpegts", "%s - keeping mux (direct subscription)", name);
-      return 1; 
-    }
+    if ((sub = LIST_FIRST(&mmi->mmi_subs)) != NULL)
+      if (strcmp(sub->ths_title, "keep") || LIST_NEXT(sub, ths_mmi_link)) {
+        tvhtrace("mpegts", "%s - keeping mux (direct subscription)", name);
+        return 1;
+      }
     if (mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm)) {
       tvhtrace("mpegts", "%s - keeping mux (service)", name);
       return 1;
@@ -701,9 +817,9 @@ mpegts_mux_has_subscribers ( mpegts_mux_t *mm, const char *name )
 static void
 mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 {
-  char buf[256];
-  mpegts_mux_instance_t *mmi = mm->mm_active;
-  mpegts_input_t *mi = NULL;
+  char buf[256], *s;
+  mpegts_mux_instance_t *mmi = mm->mm_active, *mmi2;
+  mpegts_input_t *mi = NULL, *mi2;
   th_subscription_t *sub;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
@@ -716,10 +832,30 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   /* Stop possible recursion */
   if (!mmi) return;
 
-  tvhdebug("mpegts", "%s - stopping mux", buf);
+  tvhdebug("mpegts", "%s - stopping mux%s", buf, force ? " (forced)" : "");
 
   mi = mmi->mmi_input;
   assert(mi);
+
+  /* Linked input */
+  if (mi->mi_linked) {
+    mi2 = mpegts_input_find(mi->mi_linked);
+    if (mi2 && (mmi2 = LIST_FIRST(&mi2->mi_mux_active)) != NULL) {
+      mpegts_mux_nice_name(mmi2->mmi_mux, buf, sizeof(buf));
+      if (mmi2 && !mpegts_mux_has_subscribers(mmi2->mmi_mux, buf)) {
+        s = mi2->mi_linked;
+        mi2->mi_linked = NULL;
+        mpegts_mux_unsubscribe_linked(mi2);
+        mi2->mi_linked = s;
+      } else {
+        if (!force) {
+          tvhtrace("mpegts", "%s - keeping subscribed (linked tuner active)", buf);
+          return;
+        }
+      }
+    }
+  }
+
   mi->mi_stopping_mux(mi, mmi);
   LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
     subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
@@ -760,6 +896,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
 
   /* Events */
   mpegts_fire_event(mm, ml_mux_stop);
+
 }
 
 void
@@ -1143,14 +1280,16 @@ mpegts_mux_remove_subscriber
 
 int
 mpegts_mux_subscribe
-  ( mpegts_mux_t *mm, const char *name, int weight, int flags )
+  ( mpegts_mux_t *mm, mpegts_input_t *mi,
+    const char *name, int weight, int flags )
 {
   int err = 0;
   profile_chain_t prch;
   th_subscription_t *s;
   memset(&prch, 0, sizeof(prch));
   prch.prch_id = mm;
-  s = subscription_create_from_mux(&prch, weight, name,
+  s = subscription_create_from_mux(&prch, (tvh_input_t *)mi,
+                                   weight, name,
                                    SUBSCRIPTION_NONE | flags,
                                    NULL, NULL, NULL, &err);
   return s ? 0 : err;

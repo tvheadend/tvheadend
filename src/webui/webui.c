@@ -819,7 +819,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_mux(&prch, weight ?: 10, "HTTP",
+    s = subscription_create_from_mux(&prch, NULL, weight ?: 10, "HTTP",
                                      prch.prch_flags |
                                      SUBSCRIPTION_FULLMUX |
                                      SUBSCRIPTION_STREAMING,

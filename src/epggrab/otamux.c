@@ -540,7 +540,7 @@ next_one:
 
   /* Subscribe to the mux */
   om->om_requeue = 1;
-  if ((r = mpegts_mux_subscribe(mm, "epggrab", SUBSCRIPTION_PRIO_EPG,
+  if ((r = mpegts_mux_subscribe(mm, NULL, "epggrab", SUBSCRIPTION_PRIO_EPG,
                                 SUBSCRIPTION_EPG))) {
     TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
     om->om_q_type = EPGGRAB_OTA_MUX_PENDING;

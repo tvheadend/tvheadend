@@ -413,7 +413,7 @@ struct mpegts_mux
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
-  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w, int flags);
+  int  (*mm_start)            (mpegts_mux_t *mm, mpegts_input_t *mi, const char *r, int w, int flags);
   void (*mm_stop)             (mpegts_mux_t *mm, int force);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
@@ -563,6 +563,8 @@ struct mpegts_input
 
   int mi_initscan;
   int mi_idlescan;
+
+  char *mi_linked;
 
   LIST_ENTRY(mpegts_input) mi_global_link;
 
@@ -779,8 +781,11 @@ void mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe
 void mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt );
 
 void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int reason);
-int  mpegts_mux_subscribe(mpegts_mux_t *mm, const char *name, int weight, int flags);
+int  mpegts_mux_subscribe(mpegts_mux_t *mm, mpegts_input_t *mi,
+                          const char *name, int weight, int flags);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
+
+void mpegts_mux_unsubscribe_linked(mpegts_input_t *mi);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 

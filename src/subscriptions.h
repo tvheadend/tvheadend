@@ -35,14 +35,15 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_USERSCAN   0x080 ///< for mux subscriptions
 #define SUBSCRIPTION_EPG        0x100 ///< for mux subscriptions
 
-/* Some internal prioties */
-#define SUBSCRIPTION_PRIO_SCAN_IDLE   1 ///< Idle scanning
-#define SUBSCRIPTION_PRIO_SCAN_SCHED  2 ///< Scheduled scan
-#define SUBSCRIPTION_PRIO_EPG         3 ///< EPG scanner
-#define SUBSCRIPTION_PRIO_SCAN_INIT   4 ///< Initial scan
-#define SUBSCRIPTION_PRIO_SCAN_USER   5 ///< User defined scan
-#define SUBSCRIPTION_PRIO_MAPPER      6 ///< Channel mapper
-#define SUBSCRIPTION_PRIO_MIN	 	     10 ///< User defined / Normal levels
+/* Some internal priorities */
+#define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
+#define SUBSCRIPTION_PRIO_SCAN_IDLE   2 ///< Idle scanning
+#define SUBSCRIPTION_PRIO_SCAN_SCHED  3 ///< Scheduled scan
+#define SUBSCRIPTION_PRIO_EPG         4 ///< EPG scanner
+#define SUBSCRIPTION_PRIO_SCAN_INIT   5 ///< Initial scan
+#define SUBSCRIPTION_PRIO_SCAN_USER   6 ///< User defined scan
+#define SUBSCRIPTION_PRIO_MAPPER      7 ///< Channel mapper
+#define SUBSCRIPTION_PRIO_MIN        10 ///< User defined / Normal levels
 
 typedef struct th_subscription {
 
@@ -154,9 +155,10 @@ subscription_create_from_service(struct profile_chain *prch,
 				 const char *client);
 
 #if ENABLE_MPEGTS
-struct mpegts_mux;
+struct tvh_input;
 th_subscription_t *
 subscription_create_from_mux(struct profile_chain *prch,
+                             struct tvh_input *ti,
                              unsigned int weight,
                              const char *name,
                              int flags,

@@ -53,7 +53,7 @@ mpegts_network_scan_timer_cb ( void *p )
     if (mm->mm_active) continue;
 
     /* Attempt to tune */
-    r = mpegts_mux_subscribe(mm, "scan", mm->mm_scan_weight, mm->mm_scan_flags);
+    r = mpegts_mux_subscribe(mm, NULL, "scan", mm->mm_scan_weight, mm->mm_scan_flags);
 
     /* Started */
     if (!r) {
