@@ -33,6 +33,7 @@
 #include <linux/dvb/dmx.h>
 #include <linux/dvb/frontend.h> 
 
+#define NOSIGNAL(x) (((x) & FE_HAS_SIGNAL) == 0)
 
 static void
 linuxdvb_frontend_monitor ( void *aux );
@@ -303,9 +304,10 @@ linuxdvb_frontend_stop_mux
   }
 
   /* Not locked */
-  lfe->lfe_ready  = 0;
-  lfe->lfe_locked = 0;
-  lfe->lfe_status = 0;
+  lfe->lfe_ready   = 0;
+  lfe->lfe_locked  = 0;
+  lfe->lfe_status  = 0;
+  lfe->lfe_status2 = 0;
 
   /* Ensure it won't happen immediately */
   gtimer_arm(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 2);
@@ -314,6 +316,7 @@ linuxdvb_frontend_stop_mux
     linuxdvb_satconf_post_stop_mux(lfe->lfe_satconf);
 
   lfe->lfe_in_setup = 0;
+  lfe->lfe_freq = 0;
 }
 
 static int
@@ -480,7 +483,7 @@ linuxdvb_frontend_monitor ( void *aux )
   signal_status_t sigstat;
   streaming_message_t sm;
   service_t *s;
-  int logit = 0;
+  int logit = 0, retune;
 #if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
@@ -546,7 +549,19 @@ linuxdvb_frontend_monitor ( void *aux )
   } else {
     tvhtrace("linuxdvb", "%s - status %d (%04X)", buf, status, fe_status);
   }
+  retune = NOSIGNAL(fe_status) && NOSIGNAL(lfe->lfe_status) && !NOSIGNAL(lfe->lfe_status2);
+  lfe->lfe_status2 = lfe->lfe_status;
   lfe->lfe_status = fe_status;
+
+  /* Retune check - we lost signal or no data were received */
+  if (retune || lfe->lfe_nodata) {
+    lfe->lfe_nodata = 0;
+    if (lfe->lfe_freq > 0) {
+      tvhlog(LOG_WARNING, "linuxdvb", "%s - %s", buf, retune ? "retune" : "retune nodata");
+      linuxdvb_frontend_tune0(lfe, mmi, lfe->lfe_freq);
+      gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+    }
+  }
 
   /* Get current mux */
   mm = mmi->mmi_mux;
@@ -586,6 +601,11 @@ linuxdvb_frontend_monitor ( void *aux )
         return;
       lfe->lfe_monitor = dispatch_clock + 1;
     }
+  } else {
+    /* Monitor 1 per sec */
+    if (dispatch_clock < lfe->lfe_monitor)
+      return;
+    lfe->lfe_monitor = dispatch_clock + 1;
   }
 
   /* Statistics - New API */
@@ -839,6 +859,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   size_t skip = (MIN(lfe->lfe_skip_bytes, 1024*1024) / 188) * 188;
   size_t counter = 0;
   sbuf_t sb;
+  int nodata = 8;
 
   /* Get MMI */
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
@@ -869,9 +890,21 @@ linuxdvb_frontend_input_thread ( void *aux )
 
   /* Read */
   while (tvheadend_running) {
-    nfds = tvhpoll_wait(efd, ev, 1, -1);
+    nfds = tvhpoll_wait(efd, ev, 1, 15);
+    if (nfds == 0) { /* timeout */
+      if (nodata == 0) {
+        tvhlog(LOG_WARNING, "linuxdvb", "%s - poll TIMEOUT", buf);
+        nodata = 50;
+        lfe->lfe_nodata = 1;
+      } else {
+        nodata--;
+      }
+    }
     if (nfds < 1) continue;
     if (ev[0].data.fd != dvr) break;
+
+    nodata = 50;
+    lfe->lfe_nodata = 0;
     
     /* Read */
     if ((n = sbuf_tsdebug_read(mmi->mmi_mux, &sb, dvr)) < 0) {
@@ -1002,8 +1035,9 @@ linuxdvb_frontend_clear
       return SM_CODE_TUNING_FAILED;
     }
   }
-  lfe->lfe_locked = 0;
-  lfe->lfe_status = 0;
+  lfe->lfe_locked  = 0;
+  lfe->lfe_status  = 0;
+  lfe->lfe_status2 = 0;
 
 #if DVB_API_VERSION >= 5
   static struct dtv_property clear_p[] = {
@@ -1206,7 +1240,7 @@ linuxdvb_frontend_tune0
   }
 
   if (freq != (uint32_t)-1)
-    p.frequency = freq;
+    p.frequency = lfe->lfe_freq = freq;
 
   if (dmc->dmc_fe_type != lfe->lfe_type) {
     tvherror("linuxdvb", "%s - failed to tune [type does not match %i != %i]", buf1, dmc->dmc_fe_type, lfe->lfe_type);
