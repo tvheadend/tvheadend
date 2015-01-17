@@ -2263,6 +2263,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
 {
   const char *s, *lang = eq->lang;
   epg_episode_t *ep;
+  int fulltext = eq->stitle && eq->fulltext;
 
   /* Filtering */
   if (e == NULL) return;
@@ -2292,22 +2293,36 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
     }
     if (!r) return;
   }
-  if (eq->title.comp != EC_NO || eq->stitle) {
+  if (fulltext) {
+    if ((s = epg_episode_get_title(ep, lang)) == NULL ||
+        regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+      if ((s = epg_episode_get_subtitle(ep, lang)) == NULL ||
+          regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+        if ((s = epg_broadcast_get_summary(e, lang)) == NULL ||
+            regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+          if ((s = epg_broadcast_get_description(e, lang)) == NULL ||
+              regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+            return;
+          }
+        }
+      }
+    }
+  }
+  if (eq->title.comp != EC_NO || (eq->stitle && !fulltext)) {
     if ((s = epg_episode_get_title(ep, lang)) == NULL) return;
-    if (eq->stitle)
-      if (regexec(&eq->stitle_re, s, 0, NULL, 0)) return;
-    if (_eq_comp_str(&eq->title, s)) return;
+    if (eq->stitle && !fulltext && regexec(&eq->stitle_re, s, 0, NULL, 0)) return;
+    if (eq->title.comp != EC_NO && _eq_comp_str(&eq->title, s)) return;
   }
   if (eq->subtitle.comp != EC_NO) {
     if ((s = epg_episode_get_subtitle(ep, lang)) == NULL) return;
     if (_eq_comp_str(&eq->subtitle, s)) return;
   }
   if (eq->summary.comp != EC_NO) {
-    if ((s = epg_episode_get_summary(ep, lang)) == NULL) return;
+    if ((s = epg_broadcast_get_summary(e, lang)) == NULL) return;
     if (_eq_comp_str(&eq->summary, s)) return;
   }
   if (eq->description.comp != EC_NO) {
-    if ((s = epg_episode_get_description(ep, lang)) == NULL) return;
+    if ((s = epg_broadcast_get_description(e, lang)) == NULL) return;
     if (_eq_comp_str(&eq->description, s)) return;
   }
 

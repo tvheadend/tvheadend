@@ -289,11 +289,12 @@ api_epg_grid
   memset(&eq, 0, sizeof(eq));
 
   lang = htsmsg_get_str(args, "lang");
-  eq.lang = lang ? strdup(lang) : NULL;
-
+  if (lang)
+    eq.lang = strdup(lang);
   str = htsmsg_get_str(args, "title");
   if (str)
     eq.stitle = strdup(str);
+  eq.fulltext = htsmsg_get_bool_or_default(args, "fulltext", 0);
   str = htsmsg_get_str(args, "channel");
   if (str)
     eq.channel = strdup(str);

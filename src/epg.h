@@ -579,6 +579,7 @@ typedef struct epg_query {
   epg_filter_num_t  channel_num;
   char             *stitle;
   regex_t           stitle_re;
+  int               fulltext;
   char             *channel;
   char             *channel_tag;
   uint32_t          genre_count;
