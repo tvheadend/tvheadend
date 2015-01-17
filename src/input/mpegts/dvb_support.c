@@ -534,9 +534,8 @@ atsc_convert_gpstime(uint32_t gpstime)
 
   for (i = (sizeof(_gps_leap_seconds)/sizeof(time_t)) - 1; i >= 0; i--) {
     if (out > _gps_leap_seconds[i]) {
-      // offset should be i+1, but sample STTs don't agree?
-      tvhdebug("gpstime", "leap seconds: %d", i);
-      out -= i;
+      tvhwarn("gpstime", "leap seconds: %d", i+1);
+      out -= i+1;
       break;
     }
   }
