@@ -30,21 +30,6 @@ The rows have the following functions
 <p>
   <dt><b>Networks</b></dt>
   <dd>Associate this device with one or more networks.</dd>
-<p>
-  <dt><b>Init Scan</b></dt>
-  <dd>Allow the initial scan tuning on this device. See to
-  Skip initial Scan in the network settings for the further description.</dd>
-<p>
-  <dt><b>Idle Scan</b></dt>
-  <dd>Allow the idle scan tuning on this device.</dd>
- <p> 
- <dt><b>Power Save</b></dt>
-  <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
- <p>
- <dt><b>Skip Initial Bytes</b></dt>
-  <dd>If set, first bytes from the MPEG-TS stream are discarded. It may be
-      required for some drivers / hardware which does not flush completely
-      the MPEG-TS buffers after a frequency/parameters change.</dd>
  <p>
  </dl>
  <dt><u><i><b>Advanced Settings</b></i></u></dt>
@@ -57,9 +42,39 @@ The rows have the following functions
   <dd>The tuner priority value for streamed channels through HTTP or HTSP
       (higher value = higher priority to use this tuner). If not set (zero),
       the standard priority value is used.</dd>
-
+<p>
+  <dt><b>Init Scan</b></dt>
+  <dd>Allow the initial scan tuning on this device. See to
+  Skip initial Scan in the network settings for the further description.</dd>
+<p>
+  <dt><b>Idle Scan</b></dt>
+  <dd>Allow the idle scan tuning on this device.</dd>
+<p>
+  <dt><b>Linked Input</b></dt>
+  <dd>Always make alive also the linked input. The subscriptions are named as "keep".</dd>
 </dl>
 </p>     
+
+<br>
+<hr>
+<b>LinuxDVB Specific Rows</b>
+<hr>
+
+<dl>
+ <dt><b>Power Save</b></dt>
+  <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
+<p>
+ <dt><b>Tune Repeats</b></dt>
+  <dd>If set, the tune requests are repeated using this number. Zero means
+      one tune requests, one two tune requests etc.</dd>
+<p>
+ <dt><b>Skip Initial Bytes</b></dt>
+  <dd>If set, first bytes from the MPEG-TS stream are discarded. It may be
+      required for some drivers / hardware which does not flush completely
+      the MPEG-TS buffers after a frequency/parameters change.</dd>
+</dl>
+
+<p>
 <br>
 <hr>
 <b>SAT>IP Specific Rows</b>
@@ -128,5 +143,6 @@ setting this to 100.</dd>
       quick continuous tuning.</dd>
 
 </dl>
+</p>
 
 </div>
