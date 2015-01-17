@@ -76,9 +76,13 @@ _psip_eit_callback
   int r;
   int sect, last, ver;
   int count, i;
+  int save = 0;
   uint16_t tsid;
   uint32_t extraid;
   mpegts_mux_t         *mm  = mt->mt_mux;
+  epggrab_ota_map_t    *map = mt->mt_opaque;
+  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
+  epggrab_ota_mux_t    *ota = NULL;
   mpegts_service_t     *svc;
   mpegts_table_state_t *st;
 
@@ -99,6 +103,9 @@ _psip_eit_callback
     return -1;
   }
 
+  /* Register interest */
+  ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
+
   /* Begin */
   r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
@@ -108,22 +115,36 @@ _psip_eit_callback
 
   /* # events */
   count = ptr[6];
-  tvhdebug("psip", "event count %d", count);
+  tvhdebug("eit", "event count %d", count);
   ptr  += 7;
   len  -= 7;
+
+  /* Register this */
+  if (ota)
+    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id), 1);
+
+  /* No point processing */
+  if (!LIST_FIRST(&svc->s_channels))
+    goto done;
 
   for (i = 0; i < count && len >= 12; i++) {
     uint16_t eventid;
     uint32_t starttime, length;
-    time_t start;
+    time_t start, stop;
+    int save2 = 0;
     uint8_t titlelen;
     unsigned int dlen;
     char buf[512];
+    epg_broadcast_t *ebc;
+    epg_episode_t *ee;
+    channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
+    lang_str_t       *title;
 
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
     start = atsc_convert_gpstime(starttime);
     length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
+    stop = start + length;
     titlelen = ptr[9];
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
     // tvhdebug("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
@@ -132,16 +153,43 @@ _psip_eit_callback
 
     atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
 
-    tvhdebug("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
+    tvhdebug("eit", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
       i, eventid, start, length, buf, titlelen);
 
+    ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
+    tvhtrace("eit", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+        " stop=%"PRItime_t", ebc=%p",
+        svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
+        eventid, start, stop, ebc);
+    if (!ebc) goto next;
+
+    title = lang_str_create();
+    lang_str_add(title, buf, "eng", 0);
+
+    save2 |= epg_broadcast_set_summary2(ebc, title, mod);
+
+    ee = epg_broadcast_get_episode(ebc, 1, &save2);
+    save2 |= epg_episode_set_title2(ee, title, mod);
+
+    lang_str_destroy(title);
+
+    save |= save2;
+
     /* Move on */
-// next:
+next:
     ptr += titlelen + dlen + 12;
     len -= titlelen + dlen + 12;
   }
 
-  return dvb_table_end(mt, st, sect);
+  if (save)
+    epg_updated();
+
+done:
+  r = dvb_table_end(mt, st, sect);
+  if (ota && !r)
+    epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+
+  return r;
 }
 
 static int
