@@ -155,15 +155,16 @@ mpegts_input_class_linked_set ( void *self, const void *val )
       mpegts_mux_unsubscribe_linked(mi2);
     }
     mpegts_mux_unsubscribe_linked(mi);
-    if (val) {
+    if (val && ((char *)val)[0]) {
       mi->mi_linked = strdup((char *)val);
       mi2 = mpegts_input_find((char *)val);
       if (mi2) {
         free(mi2->mi_linked);
         mi2->mi_linked = strdup(idnode_uuid_as_str(&mi->ti_id));
-        idnode_changed(&mi2->ti_id);
       }
     }
+    if (mi2)
+      idnode_changed(&mi2->ti_id);
     return 1;
   }
   return 0;
