@@ -223,6 +223,12 @@ const idclass_t service_class = {
       .opts     = PO_NOSAVE
     },
     {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Priority (0-10)",
+      .off      = offsetof(service_t, s_prio),
+    },
+    {
       .type     = PT_BOOL,
       .id       = "encrypted",
       .name     = "Encrypted",
@@ -1535,6 +1541,8 @@ service_instance_add(service_instance_list_t *sil,
                      const char *source, int prio, int weight)
 {
   service_instance_t *si;
+
+  prio += MAX(0, MIN(10, s->s_prio));
 
   /* Existing */
   TAILQ_FOREACH(si, sil, si_link)
