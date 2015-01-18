@@ -416,7 +416,7 @@ mpegts_service_channel_number ( service_t *s )
     if (r <= 0)
       r = ms->s_dvb_opentv_chnum * CHANNEL_SPLIT;
   }
-  if (r <= 0 || ms->s_dvb_mux->mm_network->mn_sid_chnum)
+  if (r <= 0 && ms->s_dvb_mux->mm_network->mn_sid_chnum)
     r = ms->s_dvb_service_id * CHANNEL_SPLIT;
   return r;
 }
