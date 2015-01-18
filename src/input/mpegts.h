@@ -298,6 +298,7 @@ struct mpegts_network
   char    *mn_charset;
   int      mn_idlescan;
   int      mn_ignore_chnum;
+  int      mn_sid_chnum;
   int      mn_localtime;
 };
 

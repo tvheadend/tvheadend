@@ -176,6 +176,13 @@ const idclass_t mpegts_network_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "sid_chnum",
+      .name     = "Service IDs as Channel Numbers",
+      .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
+      .def.i    = 0,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "ignore_chnum",
       .name     = "Ignore Provider's Channel Numbers",
       .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
