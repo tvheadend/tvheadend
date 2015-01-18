@@ -263,6 +263,15 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   tvhdhomerun_device_calc_uuid(&uuid, dInfo->device_id);
 
+  hdhomerun_tuner = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, 0, NULL);
+  {
+    const char *deviceModel =  hdhomerun_device_get_model_str(hdhomerun_tuner);
+    if(deviceModel != NULL) {
+      hd->hd_info.deviceModel = strdup(deviceModel);
+    }
+    hdhomerun_device_destroy(hdhomerun_tuner);
+  }
+
   conf = hts_settings_load("input/tvhdhomerun/adapters/%s", uuid.hex);
 
   if ( conf != NULL ) {
@@ -273,6 +282,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
         type = DVB_TYPE_C;
       }
     }
+  } else {
+    if (strstr(hd->hd_info.deviceModel, "_atsc"))
+      type = DVB_TYPE_ATSC;
   }
 
   hd->hd_override_type = strdup(dvb_type2str(type));
@@ -283,15 +295,6 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   hd->hd_pids_len    = 127;
   hd->hd_pids_max    = 32;
   hd->hd_pids_deladd = 1;
-  
-  hdhomerun_tuner = hdhomerun_device_create(dInfo->device_id, dInfo->ip_addr, 0, NULL);
-  {
-    const char *deviceModel =  hdhomerun_device_get_model_str(hdhomerun_tuner);
-    if(deviceModel != NULL) {
-      hd->hd_info.deviceModel = strdup(deviceModel);
-    }
-    hdhomerun_device_destroy(hdhomerun_tuner);
-  }
 
   if (!tvh_hardware_create0((tvh_hardware_t*)hd, &tvhdhomerun_device_class,
                             uuid.hex, conf)) {
