@@ -96,9 +96,25 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
-    if(!e->episode->title) return 0;
-    RB_FOREACH(ls, e->episode->title, link)
-      if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+    if (!dae->dae_fulltext) {
+      if(!e->episode->title) return 0;
+      RB_FOREACH(ls, e->episode->title, link)
+        if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+    } else {
+      ls = NULL;
+      if (e->episode->title)
+        RB_FOREACH(ls, e->episode->title, link)
+          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+      if (!ls && e->episode->subtitle)
+        RB_FOREACH(ls, e->episode->subtitle, link)
+          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+      if (!ls && e->summary)
+        RB_FOREACH(ls, e->summary, link)
+          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+      if (!ls && e->description)
+        RB_FOREACH(ls, e->description, link)
+          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+    }
     if (!ls) return 0;
   }
 
@@ -205,7 +221,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
 
 dvr_autorec_entry_t*
-dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
                             channel_t *ch, uint32_t enabled, int32_t start, int32_t start_window,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
@@ -227,6 +243,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_s64(conf, "start_extra", start_extra);
   htsmsg_add_s64(conf, "stop_extra",  stop_extra);
   htsmsg_add_str(conf, "title",       title);
+  htsmsg_add_u32(conf, "fulltext",    1);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "owner",       owner ?: "");
   htsmsg_add_str(conf, "creator",     creator ?: "");
@@ -879,6 +896,12 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = "Title (Regexp)",
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fulltext",
+      .name     = "Fulltext",
+      .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
     },
     {
       .type     = PT_STR,

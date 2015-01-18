@@ -915,6 +915,7 @@ tvheadend.epg = function() {
 
         var title = epgStore.baseParams.title ? epgStore.baseParams.title
                 : "<i>Don't care</i>";
+        var fulltext = epgStore.baseParams.fulltext ? " <i>(Fulltext)</i>" : "";
         var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
                 : "<i>Don't care</i>";
         var tag = epgStore.baseParams.channelTag ? tvheadend.channelTagLookupName(epgStore.baseParams.channelTag)
@@ -927,7 +928,7 @@ tvheadend.epg = function() {
         Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
                 + 'to record that match this query: ' + '<br><br>'
-                + '<div class="x-smallhdr">Title:</div>' + title + '<br>'
+                + '<div class="x-smallhdr">Title:</div>' + title + fulltext + '<br>'
                 + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
                 + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
                 + '<div class="x-smallhdr">Genre:</div>' + contentType + '<br>'
@@ -948,6 +949,7 @@ tvheadend.epg = function() {
           comment: 'Created from EPG query'
         };
         if (params.title) conf.title = params.title;
+        if (params.fulltext) conf.fulltext = params.fulltext;
         if (params.channel) conf.channel = params.channel;
         if (params.channelTag) conf.tag = params.channelTag;
         if (params.contentType) conf.content_type = params.contentType;

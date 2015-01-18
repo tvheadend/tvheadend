@@ -254,6 +254,7 @@ typedef struct dvr_autorec_entry {
 
   char *dae_title;
   regex_t dae_title_preg;
+  int dae_fulltext;
   
   uint32_t dae_content_type;
 
@@ -498,7 +499,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   dvr_prio_t pri, int retention, const char *comment);
 
 dvr_autorec_entry_t *
-dvr_autorec_create_htsp(const char *dvr_config_name, const char *title,
+dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
                             channel_t *ch, uint32_t enabled, int32_t start,
                             int32_t start_window, uint32_t days, time_t start_extra,
                             time_t stop_extra, dvr_prio_t pri, int retention,

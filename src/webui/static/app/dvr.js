@@ -436,15 +436,23 @@ tvheadend.autorec_editor = function(panel, index) {
             name:         { width: 200 },
             directory:    { width: 200 },
             title:        { width: 300 },
+            fulltext:     { width: 70 },
             channel:      { width: 200 },
             tag:          { width: 200 },
             content_type: { width: 100 },
-            minduration:  { width: 80 },
-            maxduration:  { width: 80 },
+            minduration:  { width: 100 },
+            maxduration:  { width: 100 },
             weekdays:     { width: 160 },
-            start:        { width: 120 },
-            start_window: { width: 100 },
+            start:        { width: 80 },
+            start_window: { width: 80 },
+            start_extra:  { width: 80 },
+            stop_extra:   { width: 80 },
+            weekdays: {
+                width: 120,
+                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
+            },
             pri:          { width: 80 },
+            retention:    { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -453,19 +461,14 @@ tvheadend.autorec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enabled,name,directory,title,channel,tag,content_type,minduration,' +
+               list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
                      'maxduration,weekdays,start,start_window,pri,config_name,comment'
             },
             create: { }
         },
         del: true,
-        list: 'enabled,name,directory,title,channel,tag,content_type,minduration,' +
+        list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
               'maxduration,weekdays,start,start_window,pri,config_name,owner,creator,comment',
-        columns: {
-            weekdays: {
-                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
-            }
-        },
         sort: {
           field: 'name',
           direction: 'ASC'
@@ -496,7 +499,10 @@ tvheadend.timerec_editor = function(panel, index) {
             directory:    { width: 200 },
             title:        { width: 300 },
             channel:      { width: 200 },
-            weekdays:     { width: 160 },
+            weekdays: {
+                width: 120,
+                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
+            },
             start:        { width: 120 },
             stop:         { width: 120 },
             pri:          { width: 80 },
@@ -514,11 +520,6 @@ tvheadend.timerec_editor = function(panel, index) {
         },
         del: true,
         list: 'enabled,name,directory,title,channel,weekdays,start,stop,pri,config_name,owner,creator,comment',
-        columns: {
-            weekdays: {
-                renderer: function(st) { return tvheadend.weekdaysRenderer(st); }
-            }
-        },
         sort: {
           field: 'name',
           direction: 'ASC'

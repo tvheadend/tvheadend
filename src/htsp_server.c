@@ -765,8 +765,10 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_s64(out, "startExtra",  dae->dae_start_extra);
   htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
 
-  if(dae->dae_title)
+  if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
+    htsmsg_add_u32(out, "fulltext",  dae->dae_fulltext);
+  }
   if(dae->dae_name)
     htsmsg_add_str(out, "name",      dae->dae_name);
   if(dae->dae_directory)
@@ -1607,13 +1609,16 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
-  uint32_t u32, days_of_week, priority, min_duration, max_duration, retention, enabled;
+  uint32_t u32, days_of_week, priority, min_duration, max_duration;
+  uint32_t retention, enabled, fulltext;
   int32_t approx_time, start, start_window;
   channel_t *ch = NULL;
 
   /* Options */
   if(!(title = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
+  if(htsmsg_get_u32(in, "fulltext", &fulltext))
+    fulltext = 0;
   dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_id(u32);
@@ -1661,7 +1666,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (ch && !htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  dae = dvr_autorec_create_htsp(dvr_config_name, title, ch, enabled, start, start_window, days_of_week,
+  dae = dvr_autorec_create_htsp(dvr_config_name, title, fulltext,
+      ch, enabled, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration,
       htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
 
