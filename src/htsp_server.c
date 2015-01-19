@@ -2914,12 +2914,12 @@ _htsp_channel_update(channel_t *ch, const char *method, htsmsg_t *msg)
 {
   htsp_connection_t *htsp;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
-    if (htsp->htsp_async_mode & HTSP_ASYNC_ON &&
-        htsp_user_access_channel(htsp,ch)) {
-      htsmsg_t *m = msg ? htsmsg_copy(msg)
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON)
+      if (htsp_user_access_channel(htsp,ch)) {
+        htsmsg_t *m = msg ? htsmsg_copy(msg)
                         : htsp_build_channel(ch, method, htsp);
-      htsp_send_message(htsp, m, NULL);
-    }
+        htsp_send_message(htsp, m, NULL);
+      }
   }
   htsmsg_destroy(msg);
 }
@@ -3017,13 +3017,13 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
 {
   htsp_connection_t *htsp;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
-    if (htsp->htsp_async_mode & HTSP_ASYNC_ON &&
-        !dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
-        htsp_user_access_channel(htsp, de->de_channel)) {
-      htsmsg_t *m = msg ? htsmsg_copy(msg)
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON)
+      if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
+          htsp_user_access_channel(htsp, de->de_channel)) {
+        htsmsg_t *m = msg ? htsmsg_copy(msg)
                         : htsp_build_dvrentry(de, method);
-      htsp_send_message(htsp, m, NULL);
-    }
+        htsp_send_message(htsp, m, NULL);
+      }
   }
   htsmsg_destroy(msg);
 }
@@ -3174,13 +3174,13 @@ _htsp_event_update(epg_broadcast_t *ebc, const char *method, htsmsg_t *msg)
 {
   htsp_connection_t *htsp;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
-    if (htsp->htsp_async_mode & HTSP_ASYNC_EPG &&
-        htsp_user_access_channel(htsp,ebc->channel)) {
-      htsmsg_t *m = msg ? htsmsg_copy(msg)
+    if (htsp->htsp_async_mode & HTSP_ASYNC_EPG)
+      if (htsp_user_access_channel(htsp,ebc->channel)) {
+        htsmsg_t *m = msg ? htsmsg_copy(msg)
                         : htsp_build_event(ebc, method, htsp->htsp_language,
                                            0, htsp);
-      htsp_send_message(htsp, m, NULL);
-    }
+        htsp_send_message(htsp, m, NULL);
+      }
   }
   htsmsg_destroy(msg);
 }
