@@ -571,10 +571,11 @@ linuxdvb_frontend_monitor ( void *aux )
   /* Retune check - we lost signal or no data were received */
   if (retune || lfe->lfe_nodata) {
     lfe->lfe_nodata = 0;
-    if (lfe->lfe_freq > 0) {
+    if (lfe->lfe_locked && lfe->lfe_freq > 0) {
       tvhlog(LOG_WARNING, "linuxdvb", "%s - %s", buf, retune ? "retune" : "retune nodata");
       linuxdvb_frontend_tune0(lfe, mmi, lfe->lfe_freq);
       gtimer_arm_ms(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, 50);
+      lfe->lfe_locked = 1;
     }
   }
 
@@ -873,7 +874,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   size_t skip = (MIN(lfe->lfe_skip_bytes, 1024*1024) / 188) * 188;
   size_t counter = 0;
   sbuf_t sb;
-  int nodata = 8;
+  int nodata = 4;
 
   /* Get MMI */
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
@@ -904,7 +905,7 @@ linuxdvb_frontend_input_thread ( void *aux )
 
   /* Read */
   while (tvheadend_running) {
-    nfds = tvhpoll_wait(efd, ev, 1, 15);
+    nfds = tvhpoll_wait(efd, ev, 1, 150);
     if (nfds == 0) { /* timeout */
       if (nodata == 0) {
         tvhlog(LOG_WARNING, "linuxdvb", "%s - poll TIMEOUT", buf);
