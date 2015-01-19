@@ -5,17 +5,17 @@ tvheadend.timeshift = function(panel, index) {
      * ***************************************************************/
 
     var confreader = new Ext.data.JsonReader(
-            {
+        {
                 root: 'config'
-            },
-    [
-        'timeshift_enabled', 'timeshift_ondemand',
-        'timeshift_path',
-        'timeshift_unlimited_period', 'timeshift_max_period',
-        'timeshift_unlimited_size', 'timeshift_max_size',
-        'timeshift_ram_size'
-    ]
-            );
+        },
+        [
+            'timeshift_enabled', 'timeshift_ondemand',
+            'timeshift_path',
+            'timeshift_unlimited_period', 'timeshift_max_period',
+            'timeshift_unlimited_size', 'timeshift_max_size',
+            'timeshift_ram_size', 'timeshift_ram_only'
+        ]
+    );
 
     /* ****************************************************************
      * Fields
@@ -64,12 +64,18 @@ tvheadend.timeshift = function(panel, index) {
         fieldLabel: 'Max. RAM Size (MB)',
         name: 'timeshift_ram_size',
         allowBlank: false,
-        width: 300
+        width: 250
     });
 
     var timeshiftUnlSize = new Ext.form.Checkbox({
         fieldLabel: 'Unlimited size',
         name: 'timeshift_unlimited_size',
+        width: 300
+    });
+
+    var timeshiftRamOnly = new Ext.form.Checkbox({
+        fieldLabel: 'Use only RAM',
+        name: 'timeshift_ram_only',
         width: 300
     });
 
@@ -82,7 +88,11 @@ tvheadend.timeshift = function(panel, index) {
     });
 
     timeshiftUnlSize.on('check', function(e, c){
-        timeshiftMaxSize.setDisabled(c);
+        timeshiftMaxSize.setDisabled(c || timeshiftMaxSize.getValue());
+    });
+
+    timeshiftRamOnly.on('check', function(e, c){
+        timeshiftMaxSize.setDisabled(c || timeshiftUnlSize.getValue());
     });
 
     /* ****************************************************************
@@ -108,14 +118,14 @@ tvheadend.timeshift = function(panel, index) {
         width: 500,
         autoHeight: true,
         border: false,
-  	    items : [timeshiftMaxPeriod, timeshiftMaxSize, timeshiftRamSize]
+        items : [timeshiftMaxPeriod, timeshiftMaxSize, timeshiftRamSize]
     });
 
     var timeshiftPanelB = new Ext.form.FieldSet({
         width: 200,
         autoHeight: true,
         border: false,
-        items : [timeshiftUnlPeriod,timeshiftUnlSize]
+        items : [timeshiftUnlPeriod, timeshiftUnlSize, timeshiftRamOnly]
     });
 
     var timeshiftPanel = new Ext.form.FieldSet({
@@ -166,7 +176,7 @@ tvheadend.timeshift = function(panel, index) {
             success: function() {
                 confpanel.enable();
                 timeshiftMaxPeriod.setDisabled(timeshiftUnlPeriod.getValue());
-                timeshiftMaxSize.setDisabled(timeshiftUnlSize.getValue());
+                timeshiftMaxSize.setDisabled(timeshiftUnlSize.getValue() || timeshiftRamOnly.getValue());
             }
         });
     });

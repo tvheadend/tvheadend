@@ -43,6 +43,16 @@ int       timeshift_unlimited_size;
 uint64_t  timeshift_max_size;
 uint64_t  timeshift_ram_size;
 uint64_t  timeshift_ram_segment_size;
+int       timeshift_ram_only;
+
+/*
+ * Safe values for RAM configuration
+ */
+static void timeshift_fixup ( void )
+{
+  if (timeshift_ram_only)
+    timeshift_max_size = timeshift_ram_size;
+}
 
 /*
  * Intialise global file manager
@@ -85,7 +95,10 @@ void timeshift_init ( void )
       timeshift_ram_size = 1048576LL * u32;
       timeshift_ram_segment_size = timeshift_ram_size / 10;
     }
+    if (!htsmsg_get_u32(m, "ram_only", &u32))
+      timeshift_ram_only = u32 ? 1 : 0;
     htsmsg_destroy(m);
+    timeshift_fixup();
   }
 }
 
@@ -106,6 +119,8 @@ void timeshift_save ( void )
 {
   htsmsg_t *m;
 
+  timeshift_fixup();
+
   m = htsmsg_create_map();
   htsmsg_add_u32(m, "enabled", timeshift_enabled);
   htsmsg_add_u32(m, "ondemand", timeshift_ondemand);
@@ -116,6 +131,7 @@ void timeshift_save ( void )
   htsmsg_add_u32(m, "unlimited_size", timeshift_unlimited_size);
   htsmsg_add_u32(m, "max_size", timeshift_max_size / 1048576);
   htsmsg_add_u32(m, "ram_size", timeshift_ram_size / 1048576);
+  htsmsg_add_u32(m, "ram_only", timeshift_ram_only);
 
   hts_settings_save(m, "timeshift/config");
 }

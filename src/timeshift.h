@@ -30,6 +30,7 @@ extern uint64_t  timeshift_total_size;
 extern uint64_t  timeshift_ram_size;
 extern uint64_t  timeshift_ram_segment_size;
 extern uint64_t  timeshift_total_ram_size;
+extern int       timeshift_ram_only;
 
 typedef struct timeshift_status
 {

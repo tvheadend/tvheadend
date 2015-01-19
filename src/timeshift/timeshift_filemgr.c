@@ -302,7 +302,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         }
       }
       
-      if (!tsf_tmp) {
+      if (!tsf_tmp && !timeshift_ram_only) {
         /* Create directories */
         if (!ts->path) {
           if (timeshift_filemgr_makedirs(ts->id, path, sizeof(path)))
