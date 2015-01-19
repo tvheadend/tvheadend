@@ -534,7 +534,6 @@ atsc_convert_gpstime(uint32_t gpstime)
 
   for (i = (sizeof(_gps_leap_seconds)/sizeof(time_t)) - 1; i >= 0; i--) {
     if (out > _gps_leap_seconds[i]) {
-      tvhwarn("gpstime", "leap seconds: %d", i+1);
       out -= i+1;
       break;
     }
