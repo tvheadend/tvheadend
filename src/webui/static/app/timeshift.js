@@ -12,7 +12,8 @@ tvheadend.timeshift = function(panel, index) {
         'timeshift_enabled', 'timeshift_ondemand',
         'timeshift_path',
         'timeshift_unlimited_period', 'timeshift_max_period',
-        'timeshift_unlimited_size', 'timeshift_max_size'
+        'timeshift_unlimited_size', 'timeshift_max_size',
+        'timeshift_ram_size'
     ]
             );
 
@@ -59,6 +60,13 @@ tvheadend.timeshift = function(panel, index) {
         width: 300
     });
 
+    var timeshiftRamSize = new Ext.form.NumberField({
+        fieldLabel: 'Max. RAM Size (MB)',
+        name: 'timeshift_ram_size',
+        allowBlank: false,
+        width: 300
+    });
+
     var timeshiftUnlSize = new Ext.form.Checkbox({
         fieldLabel: 'Unlimited size',
         name: 'timeshift_unlimited_size',
@@ -100,7 +108,7 @@ tvheadend.timeshift = function(panel, index) {
         width: 500,
         autoHeight: true,
         border: false,
-  	    items : [timeshiftMaxPeriod, timeshiftMaxSize]
+  	    items : [timeshiftMaxPeriod, timeshiftMaxSize, timeshiftRamSize]
     });
 
     var timeshiftPanelB = new Ext.form.FieldSet({

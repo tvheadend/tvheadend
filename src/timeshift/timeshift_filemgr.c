@@ -39,6 +39,7 @@ static pthread_mutex_t       timeshift_reaper_lock;
 static pthread_cond_t        timeshift_reaper_cond;
 
 uint64_t                     timeshift_total_size;
+uint64_t                     timeshift_total_ram_size;
 
 /* **************************************************************************
  * File reaper thread
@@ -63,15 +64,19 @@ static void* timeshift_reaper_callback ( void *p )
     TAILQ_REMOVE(&timeshift_reaper_list, tsf, link);
     pthread_mutex_unlock(&timeshift_reaper_lock);
 
-    tvhtrace("timeshift", "remove file %s", tsf->path);
+    if (tsf->path) {
+      tvhtrace("timeshift", "remove file %s", tsf->path);
 
-    /* Remove */
-    unlink(tsf->path);
-    dpath = dirname(tsf->path);
-    if (rmdir(dpath) == -1)
-      if (errno != ENOTEMPTY)
-        tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
-               dpath, strerror(errno));
+      /* Remove */
+      unlink(tsf->path);
+      dpath = dirname(tsf->path);
+      if (rmdir(dpath) == -1)
+        if (errno != ENOTEMPTY)
+          tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
+                 dpath, strerror(errno));
+    } else {
+      tvhtrace("timeshift", "remove RAM segment (time %li)", (long)tsf->time);
+    }
 
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
@@ -85,6 +90,7 @@ static void* timeshift_reaper_callback ( void *p )
       free(tid);
     }
     free(tsf->path);
+    free(tsf->ram);
     free(tsf);
 
     pthread_mutex_lock(&timeshift_reaper_lock);
@@ -96,7 +102,12 @@ static void* timeshift_reaper_callback ( void *p )
 
 static void timeshift_reaper_remove ( timeshift_file_t *tsf )
 {
-  tvhtrace("timeshift", "queue file for removal %s", tsf->path);
+#if ENABLE_TRACE
+  if (tsf->path)
+    tvhtrace("timeshift", "queue file for removal %s", tsf->path);
+  else
+    tvhtrace("timeshift", "queue file for removal - RAM segment time %li", (long)tsf->time);
+#endif
   pthread_mutex_lock(&timeshift_reaper_lock);
   TAILQ_INSERT_TAIL(&timeshift_reaper_list, tsf, link);
   pthread_cond_signal(&timeshift_reaper_cond);
@@ -140,14 +151,17 @@ int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
  */
 void timeshift_filemgr_close ( timeshift_file_t *tsf )
 {
-  ssize_t r = timeshift_write_eof(tsf->fd);
+  ssize_t r = timeshift_write_eof(tsf);
   if (r > 0)
   {
     tsf->size += r;
     atomic_add_u64(&timeshift_total_size, r);
+    if (tsf->ram)
+      atomic_add_u64(&timeshift_total_ram_size, r);
   }
-  close(tsf->fd);
-  tsf->fd = -1;
+  if (tsf->wfd >= 0)
+    close(tsf->wfd);
+  tsf->wfd = -1;
 }
 
 /*
@@ -156,11 +170,19 @@ void timeshift_filemgr_close ( timeshift_file_t *tsf )
 void timeshift_filemgr_remove
   ( timeshift_t *ts, timeshift_file_t *tsf, int force )
 {
-  if (tsf->fd != -1)
-    close(tsf->fd);
-  tvhlog(LOG_DEBUG, "timeshift", "ts %d remove %s", ts->id, tsf->path);
+  if (tsf->wfd >= 0)
+    close(tsf->wfd);
+  assert(tsf->rfd < 0);
+#if ENABLE_TRACE
+  if (tsf->path)
+    tvhdebug("timeshift", "ts %d remove %s", ts->id, tsf->path);
+  else
+    tvhdebug("timeshift", "ts %d RAM segment remove time %li", ts->id, (long)tsf->time);
+#endif
   TAILQ_REMOVE(&ts->files, tsf, link);
   atomic_add_u64(&timeshift_total_size, -tsf->size);
+  if (tsf->ram)
+    atomic_add_u64(&timeshift_total_ram_size, -tsf->size);
   timeshift_reaper_remove(tsf);
 }
 
@@ -177,6 +199,26 @@ void timeshift_filemgr_flush ( timeshift_t *ts, timeshift_file_t *end )
 }
 
 /*
+ *
+ */
+static timeshift_file_t * timeshift_filemgr_file_init
+  ( timeshift_t *ts, time_t time )
+{
+  timeshift_file_t *tsf;
+
+  tsf = calloc(1, sizeof(timeshift_file_t));
+  tsf->time     = time;
+  tsf->last     = getmonoclock();
+  tsf->wfd      = -1;
+  tsf->rfd      = -1;
+  TAILQ_INIT(&tsf->iframes);
+  TAILQ_INIT(&tsf->sstart);
+  TAILQ_INSERT_TAIL(&ts->files, tsf, link);
+  pthread_mutex_init(&tsf->ram_lock, NULL);
+  return tsf;
+}
+
+/*
  * Get current / new file
  */
 timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
@@ -185,7 +227,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
   struct timespec tp;
   timeshift_file_t *tsf_tl, *tsf_hd, *tsf_tmp;
   timeshift_index_data_t *ti;
-  char path[512];
+  char path[PATH_MAX];
   time_t time;
 
   /* Return last file */
@@ -200,11 +242,12 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
   clock_gettime(CLOCK_MONOTONIC_COARSE, &tp);
   time   = tp.tv_sec / TIMESHIFT_FILE_PERIOD;
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
-  if (!tsf_tl || tsf_tl->time != time) {
+  if (!tsf_tl || tsf_tl->time != time ||
+      (tsf_tl->ram && tsf_tl->woff >= timeshift_ram_segment_size)) {
     tsf_hd = TAILQ_FIRST(&ts->files);
 
     /* Close existing */
-    if (tsf_tl && tsf_tl->fd != -1)
+    if (tsf_tl)
       timeshift_filemgr_close(tsf_tl);
 
     /* Check period */
@@ -236,32 +279,48 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         ts->full = 1;
       }
     }
-      
+
     /* Create new file */
     tsf_tmp = NULL;
     if (!ts->full) {
 
-      /* Create directories */
-      if (!ts->path) {
-        if (timeshift_filemgr_makedirs(ts->id, path, sizeof(path)))
-          return NULL;
-        ts->path = strdup(path);
+      tvhtrace("timeshift", "ts %d RAM total %"PRId64" requested %"PRId64" segment %"PRId64,
+                   ts->id, atomic_pre_add_u64(&timeshift_total_ram_size, 0),
+                   timeshift_ram_size, timeshift_ram_segment_size);
+      if (timeshift_ram_size >= 8*1024*1024 &&
+          atomic_pre_add_u64(&timeshift_total_ram_size, 0) <
+            timeshift_ram_size + (timeshift_ram_segment_size / 2)) {
+        tsf_tmp = timeshift_filemgr_file_init(ts, time);
+        tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_ram_segment_size);
+        tsf_tmp->ram = malloc(tsf_tmp->ram_size);
+        if (!tsf_tmp->ram) {
+          free(tsf_tmp);
+          tsf_tmp = NULL;
+        } else {
+          tvhtrace("timeshift", "ts %d create RAM segment with %"PRId64" bytes (time %li)",
+                   ts->id, tsf_tmp->ram_size, (long)time);
+        }
+      }
+      
+      if (!tsf_tmp) {
+        /* Create directories */
+        if (!ts->path) {
+          if (timeshift_filemgr_makedirs(ts->id, path, sizeof(path)))
+            return NULL;
+          ts->path = strdup(path);
+        }
+
+        /* Create File */
+        snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, time);
+        tvhtrace("timeshift", "ts %d create file %s", ts->id, path);
+        if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
+          tsf_tmp = timeshift_filemgr_file_init(ts, time);
+          tsf_tmp->wfd = fd;
+          tsf_tmp->path = strdup(path);
+        }
       }
 
-      /* Create File */
-      snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, time);
-      tvhtrace("timeshift", "ts %d create file %s", ts->id, path);
-      if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
-        tsf_tmp = calloc(1, sizeof(timeshift_file_t));
-        tsf_tmp->time     = time;
-        tsf_tmp->fd       = fd;
-        tsf_tmp->path     = strdup(path);
-        tsf_tmp->refcount = 0;
-        tsf_tmp->last     = getmonoclock();
-        TAILQ_INIT(&tsf_tmp->iframes);
-        TAILQ_INIT(&tsf_tmp->sstart);
-        TAILQ_INSERT_TAIL(&ts->files, tsf_tmp, link);
-
+      if (tsf_tmp) {
         /* Copy across last start message */
         if (tsf_tl && (ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_data_list))) {
           tvhtrace("timeshift", "ts %d copy smt_start to new file",
@@ -343,6 +402,7 @@ void timeshift_filemgr_init ( void )
 
   /* Size processing */
   timeshift_total_size = 0;
+  timeshift_ram_size   = 0;
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;
@@ -371,5 +431,3 @@ void timeshift_filemgr_term ( void )
   if (!timeshift_filemgr_get_root(path, sizeof(path)))
     rmtree(path);
 }
-
-

@@ -51,12 +51,18 @@ typedef TAILQ_HEAD(timeshift_index_data_list,timeshift_index_data) timeshift_ind
  */
 typedef struct timeshift_file
 {
-  int                           fd;       ///< Write descriptor
+  int                           wfd;      ///< Write descriptor
+  int                           rfd;      ///< Read descriptor
   char                          *path;    ///< Full path to file
 
   time_t                        time;     ///< Files coarse timestamp
   size_t                        size;     ///< Current file size;
   int64_t                       last;     ///< Latest timestamp
+  off_t                         woff;     ///< Write offset
+  off_t                         roff;     ///< Read offset
+
+  uint8_t                      *ram;      ///< RAM area
+  int64_t                       ram_size; ///< RAM area size in bytes
 
   uint8_t                       bad;      ///< File is broken
 
@@ -66,6 +72,8 @@ typedef struct timeshift_file
   timeshift_index_data_list_t   sstart;   ///< Stream start messages
 
   TAILQ_ENTRY(timeshift_file) link;     ///< List entry
+
+  pthread_mutex_t               ram_lock; ///< Mutex for the ram array access
 } timeshift_file_t;
 
 typedef TAILQ_HEAD(timeshift_file_list,timeshift_file) timeshift_file_list_t;
@@ -113,15 +121,15 @@ typedef struct timeshift {
 /*
  * Write functions
  */
-ssize_t timeshift_write_start   ( int fd, int64_t time, streaming_start_t *ss );
-ssize_t timeshift_write_sigstat ( int fd, int64_t time, signal_status_t *ss );
-ssize_t timeshift_write_packet  ( int fd, int64_t time, th_pkt_t *pkt );
-ssize_t timeshift_write_mpegts  ( int fd, int64_t time, void *data );
+ssize_t timeshift_write_start   ( timeshift_file_t *tsf, int64_t time, streaming_start_t *ss );
+ssize_t timeshift_write_sigstat ( timeshift_file_t *tsf, int64_t time, signal_status_t *ss );
+ssize_t timeshift_write_packet  ( timeshift_file_t *tsf, int64_t time, th_pkt_t *pkt );
+ssize_t timeshift_write_mpegts  ( timeshift_file_t *tsf, int64_t time, void *data );
 ssize_t timeshift_write_skip    ( int fd, streaming_skip_t *skip );
 ssize_t timeshift_write_speed   ( int fd, int speed );
 ssize_t timeshift_write_stop    ( int fd, int code );
 ssize_t timeshift_write_exit    ( int fd );
-ssize_t timeshift_write_eof     ( int fd );
+ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
 
 void timeshift_writer_flush ( timeshift_t *ts );
 

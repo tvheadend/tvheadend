@@ -27,6 +27,9 @@ extern uint32_t  timeshift_max_period;
 extern int       timeshift_unlimited_size;
 extern uint64_t  timeshift_max_size;
 extern uint64_t  timeshift_total_size;
+extern uint64_t  timeshift_ram_size;
+extern uint64_t  timeshift_ram_segment_size;
+extern uint64_t  timeshift_total_ram_size;
 
 typedef struct timeshift_status
 {

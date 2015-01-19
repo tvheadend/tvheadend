@@ -41,6 +41,8 @@ int       timeshift_unlimited_period;
 uint32_t  timeshift_max_period;
 int       timeshift_unlimited_size;
 uint64_t  timeshift_max_size;
+uint64_t  timeshift_ram_size;
+uint64_t  timeshift_ram_segment_size;
 
 /*
  * Intialise global file manager
@@ -61,6 +63,8 @@ void timeshift_init ( void )
   timeshift_max_period       = 3600;                    // 1Hr
   timeshift_unlimited_size   = 0;
   timeshift_max_size         = 10000 * (size_t)1048576; // 10G
+  timeshift_ram_size         = 0;
+  timeshift_ram_segment_size = 0;
 
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
@@ -77,6 +81,10 @@ void timeshift_init ( void )
       timeshift_unlimited_size = u32 ? 1 : 0;
     if (!htsmsg_get_u32(m, "max_size", &u32))
       timeshift_max_size = 1048576LL * u32;
+    if (!htsmsg_get_u32(m, "ram_size", &u32)) {
+      timeshift_ram_size = 1048576LL * u32;
+      timeshift_ram_segment_size = timeshift_ram_size / 10;
+    }
     htsmsg_destroy(m);
   }
 }
@@ -107,6 +115,7 @@ void timeshift_save ( void )
   htsmsg_add_u32(m, "max_period", timeshift_max_period);
   htsmsg_add_u32(m, "unlimited_size", timeshift_unlimited_size);
   htsmsg_add_u32(m, "max_size", timeshift_max_size / 1048576);
+  htsmsg_add_u32(m, "ram_size", timeshift_ram_size / 1048576);
 
   hts_settings_save(m, "timeshift/config");
 }
