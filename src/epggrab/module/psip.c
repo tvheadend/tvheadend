@@ -157,7 +157,7 @@ _psip_eit_callback
       i, eventid, start, length, buf, titlelen);
 
     ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
-    tvhtrace("eit", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+    tvhdebug("eit", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
         " stop=%"PRItime_t", ebc=%p",
         svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
         eventid, start, stop, ebc);
@@ -165,8 +165,6 @@ _psip_eit_callback
 
     title = lang_str_create();
     lang_str_add(title, buf, "eng", 0);
-
-    save2 |= epg_broadcast_set_summary2(ebc, title, mod);
 
     ee = epg_broadcast_get_episode(ebc, 1, &save2);
     save2 |= epg_episode_set_title2(ee, title, mod);
@@ -198,9 +196,13 @@ _psip_ett_callback
 {
   int r;
   int sect, last, ver;
+  int save = 0;
   uint16_t tsid;
   uint32_t extraid, sourceid, eventid;
+  int isevent;
   mpegts_mux_t         *mm  = mt->mt_mux;
+  epggrab_ota_map_t    *map = mt->mt_opaque;
+  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   mpegts_service_t     *svc;
   mpegts_table_state_t *st;
   char buf[4096];
@@ -218,7 +220,8 @@ _psip_ett_callback
   if (r != 1) return r;
 
   sourceid = ptr[6] << 8 | ptr[7];
-  eventid = ptr[8] << 8 | ptr[9];
+  eventid = ptr[8] << 8 | ptr[9] >> 2;
+  isevent = (ptr[9] & 0x2) >> 1;
 
   /* Look up channel based on the source id */
   LIST_FOREACH(svc, &mm->mm_services, s_dvb_mux_link) {
@@ -230,16 +233,36 @@ _psip_ett_callback
     return -1;
   }
 
+  /* No point processing */
+  if (!LIST_FIRST(&svc->s_channels))
+    goto done;
+
   atsc_get_string(buf, sizeof(buf), &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
 
-  if (eventid == 0) {
+  if (!isevent) {
     tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
-    tvhdebug("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X, ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, ver);
+    channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
+    epg_broadcast_t *ebc;
+    ebc = epg_broadcast_find_by_eid(ch, eventid);
+    if (ebc) {
+      lang_str_t *description;
+      description = lang_str_create();
+      lang_str_add(description, buf, "eng", 0);
+      save |= epg_broadcast_set_description2(ebc, description, mod);
+      lang_str_destroy(description);
+      tvhinfo("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
+    } else {
+      tvhdebug("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver);
+    }
   }
 
   tvhdebug("psip", "        text message: '%s'", buf);
 
+  if (save)
+    epg_updated();
+
+done:
   return dvb_table_end(mt, st, sect);
 }
 
