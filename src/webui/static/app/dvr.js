@@ -370,7 +370,7 @@ tvheadend.dvr_failed = function(panel, index) {
           direction: 'ASC'
         },
         plugins: [actions],
-		lcol: [
+        lcol: [
             actions,
             {
                 width: 40,
