@@ -575,7 +575,7 @@ channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
 const char *
 channel_get_name ( channel_t *ch )
 {
-  static const char *blank = "";
+  static const char *blank = "{name-not-set}";
   const char *s;
   channel_service_mapping_t *csm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
