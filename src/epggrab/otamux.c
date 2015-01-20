@@ -192,7 +192,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
     /* Do not requeue completed muxes */
-    if (!om->om_done && om->om_requeue) {
+    if (!om->om_done && om->om_requeue && mm->mm_scan_result != MM_SCAN_FAIL) {
       TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
     } else {
