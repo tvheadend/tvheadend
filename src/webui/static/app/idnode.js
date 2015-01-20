@@ -1017,7 +1017,7 @@ tvheadend.idnode_grid = function(panel, conf)
         var fields = [];
         var buttons = [];
         var abuttons = {};
-        var plugins = conf.plugins.slice() || [];
+        var plugins = conf.plugins ? conf.plugins.slice() : [];
 
         /* Some copies */
         if (conf.add && !conf.add.titleS && conf.titleS)
@@ -1530,7 +1530,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         var columns = [];
         var buttons = [];
         var abuttons = {};
-        var plugins = conf.plugins.slice() || [];
+        var plugins = conf.plugins ? conf.plugins.slice() : [];
         var current = null;
         var selectuuid = null;
 
