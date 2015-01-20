@@ -86,6 +86,35 @@ The rows have the following functions
       based on the signal status faster.</dd>
 </dl>
 
+<br>
+<hr>
+<b>LinuxDVB Satellite Config Rows</b>
+<hr>
+
+<dl>
+ <dt><b>DiseqC repeats</b></dt>
+  <dd>Number of repeats for the DiseqC commands (default is zero - no DiseqC repeats).</dd>
+<p>
+ <dt><b>Full DiseqC</b></dt>
+  <dd>Always issue the whole DiseqC sequence including LNB setup (voltage, tone).
+      If this is not checked, only changed settings is set. It may cause
+      issues with some drivers. If the tuning is not reliable, try to
+      activate this option.</dd>
+<p>
+ <dt><b>Turn off LNB when idle</b></dt>
+  <dd>Turn off LNB when it is not used. It may save some power.</dd>
+<p>
+ <dt><b>Switch Then Rotor</b></dt>
+  <dd>If the DiseqC switch is before rotor (tuner - switch - rotor), enable this.</dd>
+<p>
+ <dt><b>Init Rotor Time (seconds)</b></dt>
+  <dd>Upon new start, tvheadend does not know the last rotor position. This
+      value defined the initial rotor movement. TVHeadend waits the
+      specified seconds when the first movement is requested.</dd>
+ <dt><b>Min Rotor Time (seconds)</b></dt>
+  <dd>The minimum delay after the rotor movement command is send.</dd>
+</dl>
+
 <p>
 <br>
 <hr>
