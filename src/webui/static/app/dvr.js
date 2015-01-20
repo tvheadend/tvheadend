@@ -215,7 +215,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
-              'duration,channelname,owner,creator,config_name,' +
+              'duration,channel,owner,creator,config_name,' +
               'sched_status,comment',
         sort: {
           field: 'start_real',

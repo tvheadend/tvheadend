@@ -1777,6 +1777,7 @@ const idclass_t dvr_entry_class = {
       .get      = dvr_entry_class_channel_name_get,
       .set      = dvr_entry_class_channel_name_set,
       .off      = offsetof(dvr_entry_t, de_channel_name),
+      .opts     = PO_RDONLY,
     },
     {
       .type     = PT_LANGSTR,
