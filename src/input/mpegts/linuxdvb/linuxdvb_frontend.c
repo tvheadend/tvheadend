@@ -510,7 +510,7 @@ linuxdvb_frontend_monitor ( void *aux )
   
   /* Disabled */
   if (!lfe->mi_enabled && mmi)
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1, SM_CODE_ABORTED);
 
   /* Close FE */
   if (lfe->lfe_fe_fd > 0 && !mmi && lfe->lfe_powersave) {

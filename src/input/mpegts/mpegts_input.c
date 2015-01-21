@@ -133,7 +133,7 @@ mpegts_input_enabled_notify ( void *p )
 
   /* Stop */
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1, SM_CODE_ABORTED);
 
   /* Alert */
   if (mi->mi_enabled_updated)
@@ -382,7 +382,7 @@ mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
       return 0;
 
     /* Stop current */
-    cur->mmi_mux->mm_stop(cur->mmi_mux, 1);
+    cur->mmi_mux->mm_stop(cur->mmi_mux, 1, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
   }
   if (LIST_FIRST(&mi->mi_mux_active))
     return SM_CODE_TUNING_FAILED;
@@ -540,7 +540,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_unlock(&mi->mi_output_lock);
 
   /* Stop mux? */
-  s->s_dvb_mux->mm_stop(s->s_dvb_mux, 0);
+  s->s_dvb_mux->mm_stop(s->s_dvb_mux, 0, SM_CODE_OK);
 }
 
 static void
@@ -1393,7 +1393,7 @@ mpegts_input_stop_all ( mpegts_input_t *mi )
 {
   mpegts_mux_instance_t *mmi;
   while ((mmi = LIST_FIRST(&mi->mi_mux_active)))
-    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1);
+    mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1, SM_CODE_OK);
 }
 
 void

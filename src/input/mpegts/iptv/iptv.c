@@ -208,7 +208,7 @@ iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   
     /* Stop */
     if (s)
-      s->mmi_mux->mm_stop(s->mmi_mux, 1);
+      s->mmi_mux->mm_stop(s->mmi_mux, 1, SM_CODE_ABORTED);
   }
   return 0;
 }

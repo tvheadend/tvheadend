@@ -415,7 +415,7 @@ struct mpegts_mux
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
   int  (*mm_start)            (mpegts_mux_t *mm, mpegts_input_t *mi, const char *r, int w, int flags);
-  void (*mm_stop)             (mpegts_mux_t *mm, int force);
+  void (*mm_stop)             (mpegts_mux_t *mm, int force, int reason);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_create_instances) (mpegts_mux_t*);
@@ -913,7 +913,7 @@ typedef struct mpegts_listener
   LIST_ENTRY(mpegts_listener) ml_link;
   void *ml_opaque;
   void (*ml_mux_start)  (mpegts_mux_t *mm, void *p);
-  void (*ml_mux_stop)   (mpegts_mux_t *mm, void *p);
+  void (*ml_mux_stop)   (mpegts_mux_t *mm, void *p, int reason);
   void (*ml_mux_create) (mpegts_mux_t *mm, void *p);
   void (*ml_mux_delete) (mpegts_mux_t *mm, void *p);
 } mpegts_listener_t;
@@ -931,6 +931,13 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
   mpegts_listener_t *ml;\
   LIST_FOREACH(ml, &mpegts_listeners, ml_link)\
     if (ml->op) ml->op(t, ml->ml_opaque);\
+} (void)0
+
+#define mpegts_fire_event1(t, op, arg1)\
+{\
+  mpegts_listener_t *ml;\
+  LIST_FOREACH(ml, &mpegts_listeners, ml_link)\
+    if (ml->op) ml->op(t, ml->ml_opaque, arg1);\
 } (void)0
 
 /*

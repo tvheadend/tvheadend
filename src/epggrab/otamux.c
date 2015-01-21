@@ -192,7 +192,7 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   om->om_q_type = EPGGRAB_OTA_MUX_IDLE;
   if (reason == EPGGRAB_OTA_DONE_STOLEN) {
     /* Do not requeue completed muxes */
-    if (!om->om_done && om->om_requeue && mm->mm_scan_result != MM_SCAN_FAIL) {
+    if (!om->om_done && om->om_requeue) {
       TAILQ_INSERT_HEAD(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
     } else {
@@ -295,15 +295,18 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 }
 
 static void
-epggrab_mux_stop ( mpegts_mux_t *mm, void *p )
+epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
 {
   epggrab_ota_mux_t *ota;
   const char *uuid = idnode_uuid_as_str(&mm->mm_id);
+  int done = EPGGRAB_OTA_DONE_STOLEN;
 
+  if (reason == SM_CODE_NO_INPUT)
+    done = EPGGRAB_OTA_DONE_NO_DATA;
   tvhtrace("epggrab", "mux %p (%s) stop", mm, uuid);
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
     if (!strcmp(ota->om_mux_uuid, uuid)) {
-      epggrab_ota_done(ota, EPGGRAB_OTA_DONE_STOLEN);
+      epggrab_ota_done(ota, done);
       break;
     }
 }

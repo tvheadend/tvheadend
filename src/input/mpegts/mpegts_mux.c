@@ -427,7 +427,7 @@ mpegts_mux_class_enabled_notify ( void *p )
 {
   mpegts_mux_t *mm = p;
   if (!mm->mm_is_enabled(mm)) {
-    mm->mm_stop(mm, 1);
+    mm->mm_stop(mm, 1, SM_CODE_MUX_NOT_ENABLED);
     mpegts_network_scan_mux_cancel(mm, 0);
   }
 }
@@ -583,7 +583,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
   
   /* Stop */
-  mm->mm_stop(mm, 1);
+  mm->mm_stop(mm, 1, SM_CODE_ABORTED);
 
   /* Remove from network */
   LIST_REMOVE(mm, mm_network_link);
@@ -815,7 +815,7 @@ mpegts_mux_has_subscribers ( mpegts_mux_t *mm, const char *name )
 }
 
 static void
-mpegts_mux_stop ( mpegts_mux_t *mm, int force )
+mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
 {
   char buf[256], *s;
   mpegts_mux_instance_t *mmi = mm->mm_active, *mmi2;
@@ -895,7 +895,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force )
   mpegts_network_scan_mux_cancel(mm, 1);
 
   /* Events */
-  mpegts_fire_event(mm, ml_mux_stop);
+  mpegts_fire_event1(mm, ml_mux_stop, reason);
 
 }
 
@@ -1275,7 +1275,7 @@ mpegts_mux_remove_subscriber
   tvhtrace("mpegts", "%s - remove subscriber", buf);
 #endif
   subscription_unlink_mux(s, reason);
-  mm->mm_stop(mm, 0);
+  mm->mm_stop(mm, 0, reason);
 }
 
 int
