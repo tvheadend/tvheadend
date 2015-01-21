@@ -813,16 +813,23 @@ epggrab_ota_init ( void )
 }
 
 void
+epggrab_ota_trigger ( int secs )
+{
+  /* notify another system layers, that we will do EPG OTA */
+  secs = MIN(1, MAX(secs, 7*24*3600));
+  dbus_emit_signal_s64("/epggrab/ota", "next", time(NULL) + secs);
+  epggrab_ota_pending_flag = 1;
+  epggrab_ota_kick(secs);
+}
+
+void
 epggrab_ota_post ( void )
 {
   time_t t = (time_t)-1;
 
   /* Init timer (call after full init - wait for network tuners) */
   if (epggrab_ota_initial) {
-    /* notify another system layers, that we will do EPG OTA */
-    dbus_emit_signal_s64("/epggrab/ota", "next", time(NULL) + 15);
-    epggrab_ota_pending_flag = 1;
-    epggrab_ota_kick(15);
+    epggrab_ota_trigger(15);
     t = time(NULL);
   }
 

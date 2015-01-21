@@ -4,8 +4,7 @@ tvheadend.epggrabChannels = new Ext.data.JsonStore({
     baseParams: {
         op: 'channelList'
     },
-    fields: ['id', 'mod', 'name', 'icon', 'number', 'channel', 'mod-id',
-        'mod-name']
+    fields: ['id', 'mod', 'name', 'icon', 'number', 'channel', 'mod-id', 'mod-name']
 });
 
 tvheadend.epggrab = function(panel, index) {
@@ -296,6 +295,13 @@ tvheadend.epggrab = function(panel, index) {
         handler: saveChanges
     });
 
+    var otaepgButton = new Ext.Button({
+        text: "Trigger OTA EPG Grabber",
+        tooltip: 'Tune over-the-air EPG muxes to grab new events now',
+        iconCls: 'find',
+        handler: otaepgTrigger
+    });
+
     var helpButton = new Ext.Button({
         text: 'Help',
 		iconCls: 'help',
@@ -317,7 +323,7 @@ tvheadend.epggrab = function(panel, index) {
         defaultType: 'textfield',
         autoHeight: true,
         items: [simplePanel, internalPanel, otaPanel, externalPanel],
-        tbar: [saveButton, '->', helpButton]
+        tbar: [saveButton, otaepgButton, '->', helpButton]
     });
 
     /* ****************************************************************
@@ -391,6 +397,20 @@ tvheadend.epggrab = function(panel, index) {
             },
             failure: function(form, action) {
                 Ext.Msg.alert('Save failed', action.result.errormsg);
+            }
+        });
+    }
+
+    function otaepgTrigger() {
+        Ext.Ajax.request({
+            url: 'epggrab',
+            params: {
+                op: 'otaepgTrigger',
+                after: 1,
+            },
+            waitMsg: 'Triggering...',
+            failure: function(response, options) {
+                Ext.Msg.alert('Trigger failed', response.statusText);
             }
         });
     }

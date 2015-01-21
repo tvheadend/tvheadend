@@ -292,6 +292,7 @@ int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
 int  epggrab_ota_set_cron         ( const char *cron, int lock );
 int  epggrab_ota_set_timeout      ( uint32_t e );
 int  epggrab_ota_set_initial      ( uint32_t e );
+void epggrab_ota_trigger          ( int secs );
 
 /*
  * Load/Save

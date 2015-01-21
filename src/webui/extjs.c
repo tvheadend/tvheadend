@@ -381,6 +381,19 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
+  /* OTA EPG trigger */
+  } else if (!strcmp(op, "otaepgTrigger") ) {
+
+    str = http_arg_get(&hc->hc_req_args, "after");
+    if (!str)
+      return HTTP_STATUS_BAD_REQUEST;
+
+    pthread_mutex_lock(&global_lock);
+    epggrab_ota_trigger(atoi(str));
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
   } else {
     return HTTP_STATUS_BAD_REQUEST;
   }
