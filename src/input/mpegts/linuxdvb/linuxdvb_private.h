@@ -137,6 +137,11 @@ struct linuxdvb_satconf
   mpegts_mux_instance_t *ls_mmi;      ///< Used within delay diseqc handler
 
   /*
+   * Tuning
+   */
+  int                    ls_early_tune;
+
+  /*
    * Diseqc handling
    */
   gtimer_t               ls_diseqc_timer;

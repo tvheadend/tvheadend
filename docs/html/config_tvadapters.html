@@ -64,6 +64,11 @@ The rows have the following functions
  <dt><b>Power Save</b></dt>
   <dd>If enabled, allows the tuner to go to sleep when idle.</dd>
 <p>
+ <dt><b>Tune Before DiseqC</b></dt>
+  <dd>If set, one tune request (setup) is proceed before the DiseqC
+      sequence (voltage, tone settings). Some linux drivers require this
+      procedure.</dd>
+<p>
  <dt><b>Tune Repeats</b></dt>
   <dd>If set, the tune requests are repeated using this number. Zero means
       one tune requests, one two tune requests etc.</dd>
