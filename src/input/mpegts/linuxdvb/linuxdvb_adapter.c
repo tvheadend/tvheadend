@@ -193,7 +193,7 @@ linuxdvb_adapter_add ( const char *path )
   struct dvb_frontend_info dfi;
   SHA_CTX sha1;
   uint8_t uuidbin[20];
-  htsmsg_t *conf, *feconf;
+  htsmsg_t *conf = NULL, *feconf = NULL;
   int save = 0;
   dvb_fe_type_t type;
 #if DVB_VER_ATLEAST(5,5)
@@ -222,8 +222,6 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Process each frontend */
   for (i = 0; i < 32; i++) {
-    conf = feconf = NULL;
-
     snprintf(fe_path, sizeof(fe_path), FE_PATH, path, i);
 
     /* Wait for access (first FE can take a fe ms to be setup) */
@@ -340,8 +338,11 @@ linuxdvb_adapter_add ( const char *path )
     }
 #endif
     pthread_mutex_unlock(&global_lock);
-    htsmsg_destroy(conf);
   }
+
+  /* Cleanup */
+  if (conf)
+    htsmsg_destroy(conf);
 
   /* Relock before exit */
   pthread_mutex_lock(&global_lock);
