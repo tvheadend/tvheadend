@@ -1328,7 +1328,7 @@ linuxdvb_frontend_tune0
 
   /* discard stale events */
   while (1) {
-    if (ioctl(lfe->lfe_fe_fd, FE_GET_EVENT, &ev) == -1)
+    if (ioctl(lfe->lfe_fe_fd, FE_GET_EVENT, &ev) < 0)
       break;
   }
 
