@@ -797,7 +797,7 @@ capmt_send_client_info(capmt_t *capmt)
   int len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
   buf[6] = len;
 
-  capmt_write_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7);
+  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST);
 }
 
 static void
