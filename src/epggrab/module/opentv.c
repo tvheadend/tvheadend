@@ -76,6 +76,8 @@ typedef struct opentv_module_t
   int                   onid;
   int                   tsid;
   int                   sid;
+  int                   bouquetid;
+  int                   bouquet_auto;
   int                   *channel;
   int                   *title;
   int                   *summary;
@@ -435,7 +437,7 @@ done:
 
 static int
 opentv_desc_channels
-  ( mpegts_table_t *mt, mpegts_mux_t *mm,
+  ( mpegts_table_t *mt, mpegts_mux_t *mm, uint16_t nbid,
     const uint8_t dtag, const uint8_t *buf, int len )
 {
   opentv_status_t *sta = mt->mt_opaque;
@@ -444,21 +446,39 @@ opentv_desc_channels
   epggrab_channel_link_t *ecl;
   mpegts_service_t *svc;
   channel_t *ch;
-  int sid, cid, cnum;
+  int sid, type, cid, cnum, unk;
   int save = 0;
   int i = 2;
+
+  if (mod->bouquetid != nbid) {
+    if (mod->bouquet_auto) {
+      if (nbid < mod->bouquetid) {
+        tvhwarn(mt->mt_name, "bouquet id set to %d, report this!", nbid);
+        mod->bouquetid = nbid;
+      } else
+        return 0;
+    } else {
+      return 0;
+    }
+  }
+
   while (i < len) {
     sid  = ((int)buf[i] << 8) | buf[i+1];
+    type = buf[2];
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
-    tvhtrace(mt->mt_name, "     sid %04X cid %04X cnum %d", sid, cid, cnum);
+    unk  = ((int)buf[i+7] << 8) | buf[i+8];
+    tvhtrace(mt->mt_name, "     sid %04X type %02X cid %04X cnum %d unk %04X", sid, type, cid, cnum, unk);
     cnum = cnum < 65535 ? cnum : 0;
 
     /* Find the service */
     svc = mpegts_service_find(mm, sid, 0, 0, NULL);
     tvhtrace(mt->mt_name, "     svc %p [%s]", svc, svc ? svc->s_nicename : NULL);
-    if (svc && svc->s_dvb_opentv_chnum != cnum) {
+    if (svc && svc->s_dvb_opentv_chnum != cnum &&
+        (!svc->s_dvb_opentv_id || svc->s_dvb_opentv_id == unk)) {
+      tvhtrace(mt->mt_name, "      cnum changed (%i != %i)", cnum, (int)svc->s_dvb_opentv_chnum);
       svc->s_dvb_opentv_chnum = cnum;
+      svc->s_dvb_opentv_id = unk;
       service_request_save((service_t *)svc, 0);
     }
     if (svc && LIST_FIRST(&svc->s_channels)) {
@@ -815,7 +835,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 {
   char ibuf[100], nbuf[1000];
   htsmsg_t *cl, *tl, *sl;
-  uint32_t tsid, sid, onid;
+  uint32_t tsid, sid, onid, bouquetid;
   const char *str, *name;
   opentv_dict_t *dict;
   opentv_genre_t *genre;
@@ -837,6 +857,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
     if (htsmsg_get_u32(m, "nid", &onid)) return -1;
   if (htsmsg_get_u32(m, "tsid", &tsid)) return -1;
   if (htsmsg_get_u32(m, "sid", &sid)) return -1;
+  if (htsmsg_get_u32(m, "bouquetid", &bouquetid)) return -1;
 
   /* Genre map (optional) */
   str = htsmsg_get_str(m, "genre");
@@ -861,6 +882,8 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod->onid     = onid;
   mod->tsid     = tsid;
   mod->sid      = sid;
+  mod->bouquetid = bouquetid;
+  mod->bouquet_auto = bouquetid == 0;
   mod->channel  = _pid_list_to_array(cl);
   mod->title    = _pid_list_to_array(tl);
   mod->summary  = _pid_list_to_array(sl);

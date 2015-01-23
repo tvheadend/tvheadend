@@ -1321,7 +1321,7 @@ dvb_nit_mux
         i++;
         }
       if (mt->mt_mux_cb[i].cb) {
-        if (mt->mt_mux_cb[i].cb(mt, mux, dtag, dptr, dlen))
+        if (mt->mt_mux_cb[i].cb(mt, mux, bi ? bi->nbid : 0, dtag, dptr, dlen))
           return -1;
         dtag = 0;
       }

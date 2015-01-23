@@ -94,7 +94,7 @@ typedef void (*mpegts_psi_section_callback_t)
 struct mpegts_table_mux_cb
 {
   int tag;
-  int (*cb) ( mpegts_table_t*, mpegts_mux_t *mm,
+  int (*cb) ( mpegts_table_t*, mpegts_mux_t *mm, uint16_t nbid,
               const uint8_t dtag, const uint8_t *dptr, int dlen );
 };
 
@@ -473,6 +473,7 @@ struct mpegts_service
 
   int      s_dvb_eit_enable;
   uint64_t s_dvb_opentv_chnum;
+  uint16_t s_dvb_opentv_id;
 
   /*
    * Link to carrying multiplex and active adapter
