@@ -24,8 +24,11 @@
 #include <string.h>
 #include <stdio.h>
 #if ENABLE_ZLIB
-#define z_const const
+#define ZLIB_CONST 1
 #include <zlib.h>
+#ifndef z_const
+#define z_const
+#endif
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
