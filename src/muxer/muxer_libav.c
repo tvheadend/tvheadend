@@ -105,8 +105,6 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     break;
   }
 
-
-
   if(ssc->ssc_gh) {
     if (ssc->ssc_type == SCT_H264) {
       sbuf_t hdr;

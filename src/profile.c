@@ -48,10 +48,18 @@ static void profile_class_save ( idnode_t *in );
 void
 profile_register(const idclass_t *clazz, profile_builder_t builder)
 {
-  profile_build_t *pb = calloc(1, sizeof(*pb));
+  profile_build_t *pb = calloc(1, sizeof(*pb)), *pb2;
   pb->clazz = clazz;
   pb->build = builder;
-  LIST_INSERT_HEAD(&profile_builders, pb, link);
+  pb2 = LIST_FIRST(&profile_builders);
+  if (pb2) {
+    /* append tail */
+    while (LIST_NEXT(pb2, link))
+      pb2 = LIST_NEXT(pb2, link);
+    LIST_INSERT_AFTER(pb2, pb, link);
+  } else {
+    LIST_INSERT_HEAD(&profile_builders, pb, link);
+  }
 }
 
 static profile_build_t *
@@ -852,7 +860,7 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = "MPEG-TS Pass-through",
+  .ic_caption    = "MPEG-TS Pass-through /build-in",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -936,7 +944,7 @@ const idclass_t profile_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
-  .ic_caption    = "Matroska (mkv)",
+  .ic_caption    = "Matroska (mkv) /build-in",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1008,11 +1016,164 @@ profile_matroska_builder(void)
 
 #if ENABLE_LIBAV
 
-static int profile_transcode_experimental_codecs = 1;
+/*
+ *  LibAV/MPEG-TS muxer
+ */
+typedef struct profile_libav_mpegts {
+  profile_t;
+} profile_libav_mpegts_t;
+
+const idclass_t profile_libav_mpegts_class =
+{
+  .ic_super      = &profile_class,
+  .ic_class      = "profile-libav-mpegts",
+  .ic_caption    = "MPEG-TS /av-lib",
+  .ic_properties = (const property_t[]){
+    { }
+  }
+};
+
+static int
+profile_libav_mpegts_reopen(profile_chain_t *prch,
+                            muxer_config_t *m_cfg, int flags)
+{
+  muxer_config_t c;
+
+  if (m_cfg)
+    c = *m_cfg; /* do not alter the original parameter */
+  else
+    memset(&c, 0, sizeof(c));
+  c.m_type = MC_MPEGTS;
+
+  assert(!prch->prch_muxer);
+  prch->prch_muxer = muxer_create(&c);
+  return 0;
+}
+
+static int
+profile_libav_mpegts_open(profile_chain_t *prch,
+                          muxer_config_t *m_cfg, int flags, size_t qsize)
+{
+  int r;
+
+  prch->prch_sq.sq_maxsize = qsize;
+
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  if (r) {
+    profile_chain_close(prch);
+    return r;
+  }
+
+  profile_libav_mpegts_reopen(prch, m_cfg, flags);
+  return 0;
+}
+
+static muxer_container_type_t
+profile_libav_mpegts_get_mc(profile_t *_pro)
+{
+  return MC_MPEGTS;
+}
+
+static profile_t *
+profile_libav_mpegts_builder(void)
+{
+  profile_libav_mpegts_t *pro = calloc(1, sizeof(*pro));
+  pro->pro_reopen = profile_libav_mpegts_reopen;
+  pro->pro_open   = profile_libav_mpegts_open;
+  pro->pro_get_mc = profile_libav_mpegts_get_mc;
+  return (profile_t *)pro;
+}
+
+/*
+ *  LibAV/Matroska muxer
+ */
+typedef struct profile_libav_matroska {
+  profile_t;
+  int pro_webm;
+} profile_libav_matroska_t;
+
+const idclass_t profile_libav_matroska_class =
+{
+  .ic_super      = &profile_class,
+  .ic_class      = "profile-libav-matroska",
+  .ic_caption    = "Matroska /av-lib",
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "webm",
+      .name     = "WEBM",
+      .off      = offsetof(profile_libav_matroska_t, pro_webm),
+      .def.i    = 0,
+    },
+    { }
+  }
+};
+
+static int
+profile_libav_matroska_reopen(profile_chain_t *prch,
+                              muxer_config_t *m_cfg, int flags)
+{
+  profile_libav_matroska_t *pro = (profile_libav_matroska_t *)prch->prch_pro;
+  muxer_config_t c;
+
+  if (m_cfg)
+    c = *m_cfg; /* do not alter the original parameter */
+  else
+    memset(&c, 0, sizeof(c));
+  if (c.m_type != MC_AVWEBM)
+    c.m_type = MC_AVMATROSKA;
+  if (pro->pro_webm)
+    c.m_type = MC_AVWEBM;
+
+  assert(!prch->prch_muxer);
+  prch->prch_muxer = muxer_create(&c);
+  return 0;
+}
+
+static int
+profile_libav_matroska_open(profile_chain_t *prch,
+                            muxer_config_t *m_cfg, int flags, size_t qsize)
+{
+  int r;
+
+  prch->prch_sq.sq_maxsize = qsize;
+
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  if (r) {
+    profile_chain_close(prch);
+    return r;
+  }
+
+  profile_libav_matroska_reopen(prch, m_cfg, flags);
+
+  return 0;
+}
+
+static muxer_container_type_t
+profile_libav_matroska_get_mc(profile_t *_pro)
+{
+  profile_libav_matroska_t *pro = (profile_libav_matroska_t *)_pro;
+  if (pro->pro_webm)
+    return MC_AVWEBM;
+  return MC_AVMATROSKA;
+}
+
+static profile_t *
+profile_libav_matroska_builder(void)
+{
+  profile_libav_matroska_t *pro = calloc(1, sizeof(*pro));
+  pro->pro_reopen = profile_libav_matroska_reopen;
+  pro->pro_open   = profile_libav_matroska_open;
+  pro->pro_get_mc = profile_libav_matroska_get_mc;
+  return (profile_t *)pro;
+}
 
 /*
  *  Transcoding + packet-like muxers
  */
+
+static int profile_transcode_experimental_codecs = 1;
+
 typedef struct profile_transcode {
   profile_t;
   int      pro_mc;
@@ -1175,7 +1336,7 @@ const idclass_t profile_transcode_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-transcode",
-  .ic_caption    = "Transcode",
+  .ic_caption    = "Transcode /av-lib",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -1452,6 +1613,8 @@ profile_init(void)
   profile_register(&profile_matroska_class, profile_matroska_builder);
   profile_register(&profile_htsp_class, profile_htsp_builder);
 #if ENABLE_LIBAV
+  profile_register(&profile_libav_mpegts_class, profile_libav_mpegts_builder);
+  profile_register(&profile_libav_matroska_class, profile_libav_matroska_builder);
   profile_transcode_experimental_codecs =
     getenv("TVHEADEND_LIBAV_NO_EXPERIMENTAL_CODECS") ? 0 : 1;
   profile_register(&profile_transcode_class, profile_transcode_builder);
