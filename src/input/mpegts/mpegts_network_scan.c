@@ -69,7 +69,7 @@ mpegts_network_scan_timer_cb ( void *p )
     /* No valid tuners (subtly different, might be able to tuner a later
      * mux)
      */
-    if (r == SM_CODE_NO_VALID_ADAPTER)
+    if (r == SM_CODE_NO_VALID_ADAPTER && mm->mm_is_enabled(mm))
       continue;
 
     /* Failed */
