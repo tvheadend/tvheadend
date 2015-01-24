@@ -466,6 +466,7 @@ satip_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
+  dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
   satip_tune_req_t *tr;
   char buf1[256], buf2[256];
 
@@ -478,6 +479,16 @@ satip_frontend_start_mux
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - starting %s", buf1, buf2);
+
+  if (lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS ||
+      lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS2) {
+    /* Note: assume universal LNB */
+    if (lm->lm_tuning.dmc_fe_freq < 10700000 ||
+        lm->lm_tuning.dmc_fe_freq > 12750000) {
+      tvhwarn("satip", "DVB-S/S2 frequency %d out of range universal LNB", lm->lm_tuning.dmc_fe_freq);
+      return SM_CODE_TUNING_FAILED;
+    }
+  }
 
   tr = calloc(1, sizeof(*tr));
   tr->sf_mmi        = mmi;
