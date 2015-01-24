@@ -61,7 +61,7 @@ LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
            -lavresample -lswresample -lswscale \
            -lavutil -lavformat -lavcodec -lavutil \
            -lvorbisenc -lvorbis -logg -lx264 -lvpx \
-           -Wl,-Bdynamic
+           -Wl,-Bdynamic -ldl
 endif
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
