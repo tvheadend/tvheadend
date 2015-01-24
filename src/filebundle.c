@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdio.h>
 #if ENABLE_ZLIB
-#define ZLIB_CONST 1
+#define z_const const
 #include <zlib.h>
 #endif
 #include <sys/types.h>
