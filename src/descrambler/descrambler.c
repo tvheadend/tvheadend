@@ -747,7 +747,7 @@ next:
         caid = emm->caid;
         pid  = emm->pid;
         tvhtrace("descrambler", "close emm caid %04X (%i) pid %04X (%i)", caid, caid, pid, pid);
-        descrambler_close_pid(mux, emm->opaque, pid);
+        descrambler_close_pid_(mux, emm->opaque, pid);
       }
       TAILQ_REMOVE(&mux->mm_descrambler_emms, emm, link);
       TAILQ_INSERT_TAIL(&removing, emm, link);
