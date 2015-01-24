@@ -916,6 +916,10 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 static void
 capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
 {
+  /* flush out the greeting */
+  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
+    capmt_flush_queue(capmt, 0);
+
   pthread_mutex_lock(&capmt->capmt_mutex);
   if (capmt_oscam_new(capmt)) {
     if (!LIST_EMPTY(&capmt->capmt_services))
