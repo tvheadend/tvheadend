@@ -55,6 +55,8 @@ CFLAGS  += -Wno-unused-value -Wno-tautological-constant-out-of-range-compare
 CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
 endif
 
+ARCH = $(shell $(CC) -dumpmachine | cut -d '-' -f 3)
+
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
 LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
@@ -67,6 +69,10 @@ ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
 LDFLAGS += -L${ROOTDIR}/libhdhomerun_static/libhdhomerun \
            -Wl,-Bstatic -lhdhomerun -Wl,-Bdynamic
+
+ifneq (,$(filter gnueabihf,$(ARCH)))
+LDFLAGS += -ldl
+endif
 endif
 
 vpath %.c $(ROOTDIR)
