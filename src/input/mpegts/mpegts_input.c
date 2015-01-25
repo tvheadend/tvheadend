@@ -288,7 +288,8 @@ const idclass_t mpegts_input_class =
       .name     = "Linked Input",
       .set      = mpegts_input_class_linked_set,
       .get      = mpegts_input_class_linked_get,
-      .list     = mpegts_input_class_linked_enum
+      .list     = mpegts_input_class_linked_enum,
+      .opts     = PO_ADVANCED,
     },
     {}
   }
