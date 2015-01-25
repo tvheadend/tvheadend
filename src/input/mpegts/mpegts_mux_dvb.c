@@ -218,6 +218,13 @@ const idclass_t dvb_mux_dvbt_class =
     {
       MUX_PROP_STR("fec_lo", "FEC Low", dvbt, feclo, "AUTO"),
     },
+    {
+      .type     = PT_INT,
+      .id       = "plp_id",
+      .name     = "PLP ID",
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= 0,
+    },
     {}
   }
 };
@@ -401,6 +408,33 @@ dvb_mux_dvbs_class_pilot_list ( void *o )
   return list;
 }
 
+static const void *
+dvb_mux_dvbs_class_pls_mode_get ( void *o )
+{
+  static const char *s;
+  dvb_mux_t *lm = o;
+  s = dvb_plsmode2str(lm->lm_tuning.dmc_fe_pls_mode);
+  return &s;
+}
+
+static int
+dvb_mux_dvbs_class_pls_mode_set ( void *o, const void *s )
+{
+  dvb_mux_t *lm = o;
+  lm->lm_tuning.dmc_fe_pls_mode = dvb_str2plsmode(s);
+  return 1;
+}
+
+static htsmsg_t *
+dvb_mux_dvbs_class_pls_mode_list ( void *o )
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_plsmode2str(DVB_PLS_ROOT));
+  htsmsg_add_str(list, NULL, dvb_plsmode2str(DVB_PLS_GOLD));
+  htsmsg_add_str(list, NULL, dvb_plsmode2str(DVB_PLS_COMBO));
+  return list;
+}
+
 #define dvb_mux_dvbs_class_delsys_get dvb_mux_class_delsys_get
 #define dvb_mux_dvbs_class_delsys_set dvb_mux_class_delsys_set
 
@@ -504,6 +538,29 @@ const idclass_t dvb_mux_dvbs_class =
       .set      = dvb_mux_dvbs_class_pilot_set,
       .get      = dvb_mux_dvbs_class_pilot_get,
       .list     = dvb_mux_dvbs_class_pilot_list,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "stream_id",
+      .name     = "ISI",
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
+      .def.i	= -1,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "pls_mode",
+      .name     = "PLS MODE",
+      .set      = dvb_mux_dvbs_class_pls_mode_set,
+      .get      = dvb_mux_dvbs_class_pls_mode_get,
+      .list     = dvb_mux_dvbs_class_pls_mode_list,
+      .def.s    = "ROOT",
+    },
+    {
+      .type     = PT_U32,
+      .id       = "pls_code",
+      .name     = "PLS CODE",
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
+      .def.u32	= 1,
     },
     {
       .type     = PT_STR,
