@@ -304,6 +304,7 @@ dvb_network_find_mux
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
 
+
     /* DVB-S extra checks */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
 
@@ -313,6 +314,9 @@ dvb_network_find_mux
       /* Same orbital position */
       if (dvb_network_check_orbital_pos(lm, dmc)) continue;
     }
+
+    /* Same PLP/ISI */
+    if (lm->lm_tuning.dmc_fe_stream_id != dmc->dmc_fe_stream_id) continue;
 
     mm_alt = mm;
 
@@ -453,6 +457,7 @@ dvb_network_create_mux
     save |= COMPAREN(dmc_fe_pilot);
     switch (dmc->dmc_fe_type) {
     case DVB_TYPE_T:
+      save |= COMPARE(dmc_fe_stream_id);
       save |= COMPAREN(u.dmc_fe_ofdm.bandwidth);
       save |= COMPAREN(u.dmc_fe_ofdm.code_rate_HP);
       save |= COMPAREN(u.dmc_fe_ofdm.code_rate_LP);
@@ -463,6 +468,9 @@ dvb_network_create_mux
     case DVB_TYPE_S:
       save |= COMPARE(u.dmc_fe_qpsk.polarisation);
       save |= COMPARE(u.dmc_fe_qpsk.symbol_rate);
+      save |= COMPARE(dmc_fe_stream_id);
+      save |= COMPAREN(dmc_fe_pls_mode);
+      save |= COMPAREN(dmc_fe_pls_code);
       save |= COMPAREN(u.dmc_fe_qpsk.fec_inner);
       break;
     case DVB_TYPE_C:

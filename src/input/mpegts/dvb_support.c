@@ -758,14 +758,23 @@ const static struct strtab pilottab[] = {
   {"OFF",  DVB_PILOT_OFF}
 };
 dvb_str2val(pilot);
+
+const static struct strtab plsmodetab[] = {
+  {"ROOT", DVB_PLS_ROOT},
+  {"GOLD", DVB_PLS_GOLD},
+  {"COMBO", DVB_PLS_COMBO},
+};
+dvb_str2val(plsmode);
 #undef dvb_str2val
+
+
 
 static int
 dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   return
   snprintf(buf, bufsize,
-           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
+           "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s plp_id %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->dmc_fe_freq,
            dvb_bw2str(dmc->u.dmc_fe_ofdm.bandwidth),
@@ -774,7 +783,8 @@ dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP),
            dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
            dvb_guard2str(dmc->u.dmc_fe_ofdm.guard_interval),
-           dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode));
+           dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode),
+           dmc->dmc_fe_stream_id);
 }
 
 static int
@@ -797,7 +807,7 @@ dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   const char dir = dmc->u.dmc_fe_qpsk.orbital_dir;
   return
   snprintf(buf, bufsize,
-           "%s pos %d.%d%c freq %d %c sym %d fec %s mod %s roff %s",
+           "%s pos %d.%d%c freq %d %c sym %d fec %s mod %s roff %s is_id %d pls_mode %s pls_code %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
            dmc->u.dmc_fe_qpsk.orbital_pos / 10,
            dmc->u.dmc_fe_qpsk.orbital_pos % 10,
@@ -807,7 +817,10 @@ dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dmc->u.dmc_fe_qpsk.symbol_rate,
            dvb_fec2str(dmc->u.dmc_fe_qpsk.fec_inner),
            dvb_qam2str(dmc->dmc_fe_modulation),
-           dvb_rolloff2str(dmc->dmc_fe_rolloff));
+           dvb_rolloff2str(dmc->dmc_fe_rolloff),
+           dmc->dmc_fe_stream_id,
+           dvb_plsmode2str(dmc->dmc_fe_pls_mode),
+           dmc->dmc_fe_pls_code);
 }
 
 static int

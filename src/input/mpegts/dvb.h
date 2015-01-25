@@ -410,6 +410,12 @@ typedef enum dvb_fe_rolloff {
   DVB_ROLLOFF_35         = 350,
 } dvb_fe_rolloff_t;
 
+typedef enum dvb_fe_pls_mode {
+  DVB_PLS_ROOT = 0,
+  DVB_PLS_GOLD,
+  DVB_PLS_COMBO,
+} dvb_fe_pls_mode_t;
+
 typedef enum dvb_polarisation {
   DVB_POLARISATION_HORIZONTAL     = 0x00,
   DVB_POLARISATION_VERTICAL       = 0x01,
@@ -449,6 +455,9 @@ typedef struct dvb_mux_conf
   dvb_fe_spectral_inversion_t dmc_fe_inversion;
   dvb_fe_rolloff_t            dmc_fe_rolloff;
   dvb_fe_pilot_t              dmc_fe_pilot;
+  int32_t                     dmc_fe_stream_id;
+  dvb_fe_pls_mode_t           dmc_fe_pls_mode;
+  uint32_t                    dmc_fe_pls_code;
   union {
     dvb_qpsk_config_t         dmc_fe_qpsk;
     dvb_qam_config_t          dmc_fe_qam;
@@ -473,6 +482,7 @@ const char *dvb_hier2str    ( int hier );
 const char *dvb_pol2str     ( int pol );
 const char *dvb_type2str    ( int type );
 const char *dvb_pilot2str   ( int pilot );
+const char *dvb_plsmode2str   ( int pls_mode );
 #define dvb_feclo2str dvb_fec2str
 #define dvb_fechi2str dvb_fec2str
 
@@ -488,6 +498,7 @@ int dvb_str2hier    ( const char *str );
 int dvb_str2pol     ( const char *str );
 int dvb_str2type    ( const char *str );
 int dvb_str2pilot   ( const char *str );
+int dvb_str2plsmode ( const char *str );
 #define dvb_str2feclo dvb_str2fec
 #define dvb_str2fechi dvb_str2fec
 
