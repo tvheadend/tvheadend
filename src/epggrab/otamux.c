@@ -507,10 +507,13 @@ next_one:
     net->failed = 0;
   }
 
-  epg_flag = mm->mm_is_epg(mm);
-  if (epg_flag > MM_EPG_LAST)
-    epg_flag = MM_EPG_ENABLE;
-  modname  = epg_flag >= 0 ? modnames[epg_flag] : NULL;
+  epg_flag = MM_EPG_DISABLE;
+  if (mm->mm_is_enabled(mm)) {
+    epg_flag = mm->mm_is_epg(mm);
+    if (epg_flag > MM_EPG_LAST)
+      epg_flag = MM_EPG_ENABLE;
+    modname  = epg_flag >= 0 ? modnames[epg_flag] : NULL;
+  }
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
 #if ENABLE_TRACE
