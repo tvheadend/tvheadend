@@ -1314,21 +1314,30 @@ mpegts_mux_unsubscribe_by_name
 }
 
 void
-mpegts_mux_tuning_error ( mpegts_mux_t *mm )
+mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match )
 {
+  mpegts_mux_t *mm;
   th_subscription_t *sub;
   mpegts_mux_instance_t *mmi;
   streaming_message_t *sm;
+  struct timespec timeout;
 
-  lock_assert(&global_lock);
+  timeout.tv_sec = 2;
+  timeout.tv_nsec = 0;
 
-  if ((mmi = mm->mm_active) != NULL) {
-    LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link) {
-      sm = streaming_msg_create_code(SMT_SERVICE_STATUS, TSS_TUNING);
-      streaming_target_deliver(sub->ths_output, sm);
+  if (!pthread_mutex_timedlock(&global_lock, &timeout)) {
+    mm = mpegts_mux_find(mux_uuid);
+    if (mm) {
+      if ((mmi = mm->mm_active) != NULL && mmi == mmi_match) {
+        LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link) {
+          sm = streaming_msg_create_code(SMT_SERVICE_STATUS, TSS_TUNING);
+          streaming_target_deliver(sub->ths_output, sm);
+        }
+        if (mmi->mmi_input)
+          mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
+      }
     }
-    if (mmi->mmi_input)
-      mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
+    pthread_mutex_unlock(&global_lock);
   }
 }
 

@@ -755,7 +755,7 @@ void mpegts_mux_delete ( mpegts_mux_t *mm, int delconf );
 
 void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
 
-void mpegts_mux_tuning_error( mpegts_mux_t *mm );
+void mpegts_mux_tuning_error( const char *mux_uuid, mpegts_mux_instance_t *mmi_match );
 
 mpegts_mux_instance_t *mpegts_mux_instance_create0
   ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,

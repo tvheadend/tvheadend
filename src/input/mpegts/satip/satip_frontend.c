@@ -1116,13 +1116,43 @@ satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
 static void
 satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
 {
-  pthread_mutex_lock(&global_lock);
+  mpegts_mux_t *mm;
+  mpegts_mux_instance_t *mmi;
+  char uuid[UUID_HEX_SIZE];
+
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_running && lfe->sf_req == tr &&
-      tr->sf_mmi && tr->sf_mmi->mmi_mux)
-    mpegts_mux_tuning_error(tr->sf_mmi->mmi_mux);
+      (mmi = tr->sf_mmi) != NULL && (mm = mmi->mmi_mux) != NULL) {
+    strcpy(uuid, idnode_uuid_as_str(&mm->mm_id));
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    mpegts_mux_tuning_error(uuid, mmi);
+    return;
+  }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  pthread_mutex_unlock(&global_lock);
+}
+
+static void
+satip_frontend_close_rtsp
+  ( satip_frontend_t *lfe, tvhpoll_t *efd, http_client_t **rtsp )
+{
+  tvhpoll_event_t ev;
+
+  memset(&ev, 0, sizeof(ev));
+  ev.events   = TVHPOLL_IN;
+  ev.fd       = lfe->sf_dvr_pipe.rd;
+  ev.data.ptr = NULL;
+  tvhpoll_rem(efd, &ev, 1);
+
+  satip_frontend_shutdown(*rtsp, efd);
+
+  memset(&ev, 0, sizeof(ev));
+  ev.events   = TVHPOLL_IN;
+  ev.fd       = lfe->sf_dvr_pipe.rd;
+  ev.data.ptr = NULL;
+  tvhpoll_add(efd, &ev, 1);
+
+  http_client_close(*rtsp);
+  *rtsp = NULL;
 }
 
 static void *
@@ -1186,25 +1216,7 @@ new_tune:
     nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
-    if (rtsp && nfds == 0) {
-
-      memset(ev, 0, sizeof(ev));
-      ev[0].events             = TVHPOLL_IN;
-      ev[0].fd                 = lfe->sf_dvr_pipe.rd;
-      ev[0].data.ptr           = NULL;
-      tvhpoll_rem(efd, ev, 1);
-
-      satip_frontend_shutdown(rtsp, efd);
-
-      memset(ev, 0, sizeof(ev));
-      ev[0].events             = TVHPOLL_IN;
-      ev[0].fd                 = lfe->sf_dvr_pipe.rd;
-      ev[0].data.ptr           = NULL;
-      tvhpoll_add(efd, ev, 1);
-
-      http_client_close(rtsp);
-      rtsp = NULL;
-    }
+    if (rtsp && nfds == 0) satip_frontend_close_rtsp(lfe, efd, &rtsp);
     if (nfds <= 0) continue;
 
     if (ev[0].data.ptr == NULL) {
@@ -1280,14 +1292,17 @@ new_tune:
       lfe_master = lfe;
   }
 
-  pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
-  u64 = lfe_master->sf_last_tune;
-  i = lfe_master->sf_tdelay;
-  pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
-  if (i < 0)
-    i = 0;
-  if (i > 2000)
-    i = 2000;
+  i = 0;
+  if (!rtsp) {
+    pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
+    u64 = lfe_master->sf_last_tune;
+    i = lfe_master->sf_tdelay;
+    pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
+    if (i < 0)
+      i = 0;
+    if (i > 2000)
+      i = 2000;
+  }
 
   tc = 1;
   while (i) {
@@ -1327,6 +1342,15 @@ new_tune:
       }
       tvhtrace("satip", "%s - input thread received mux close", buf);
       goto done;
+    }
+
+    if (ev[0].data.ptr == rtsp) {
+      tc = 0;
+      r = http_client_run(rtsp);
+      if (r < 0) {
+        http_client_close(rtsp);
+        rtsp = NULL;
+      }
     }
 
   }
@@ -1408,7 +1432,7 @@ new_tune:
           continue;
         } else if (b[0] == 's') {
           start = 1; running = 0;
-          goto done;
+          continue;
         }
       }
       tvhtrace("satip", "%s - input thread received mux close", buf);
@@ -1442,6 +1466,8 @@ new_tune:
         satip_frontend_tuning_error(lfe, tr);
         fatal = 1;
       } else if (r == HTTP_CON_DONE) {
+        if (start)
+          goto done;
         reply = 0;
         switch (rtsp->hc_cmd) {
         case RTSP_CMD_OPTIONS:
