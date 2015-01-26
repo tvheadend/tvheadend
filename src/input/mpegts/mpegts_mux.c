@@ -242,11 +242,8 @@ mpegts_mux_instance_start
   /* Link */
   mpegts_mux_scan_active(mm, buf, mi);
 
-  if (mi->mi_linked) {
+  if (mi->mi_linked)
     mpegts_mux_subscribe_linked(mi, mm);
-    if (mm->mm_active)
-      return 0;
-  }
 
   return 0;
 }
@@ -817,7 +814,7 @@ mpegts_mux_has_subscribers ( mpegts_mux_t *mm, const char *name )
 static void
 mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
 {
-  char buf[256], *s;
+  char buf[256], buf2[256], *s;
   mpegts_mux_instance_t *mmi = mm->mm_active, *mmi2;
   mpegts_input_t *mi = NULL, *mi2;
   th_subscription_t *sub;
@@ -841,8 +838,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   if (mi->mi_linked) {
     mi2 = mpegts_input_find(mi->mi_linked);
     if (mi2 && (mmi2 = LIST_FIRST(&mi2->mi_mux_active)) != NULL) {
-      mpegts_mux_nice_name(mmi2->mmi_mux, buf, sizeof(buf));
-      if (mmi2 && !mpegts_mux_has_subscribers(mmi2->mmi_mux, buf)) {
+      mpegts_mux_nice_name(mmi2->mmi_mux, buf2, sizeof(buf2));
+      if (mmi2 && !mpegts_mux_has_subscribers(mmi2->mmi_mux, buf2)) {
         s = mi2->mi_linked;
         mi2->mi_linked = NULL;
         mpegts_mux_unsubscribe_linked(mi2);
