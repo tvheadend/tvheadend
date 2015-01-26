@@ -85,7 +85,7 @@ esfilter_txt2class(const char *s)
 static struct strtab esfilteractiontab[] = {
   { "NONE",       ESFA_NONE },
   { "USE",	  ESFA_USE },
-  { "ONCE",	  ESFA_ONCE },
+  { "ONE_TIME",	  ESFA_ONE_TIME },
   { "EXCLUSIVE",  ESFA_EXCLUSIVE },
   { "EMPTY",	  ESFA_EMPTY },
   { "IGNORE",     ESFA_IGNORE }

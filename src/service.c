@@ -517,7 +517,7 @@ ca_ignore:
               ca->filter |= ESFM_IGNORE;
             st->es_filter |= ESFM_IGNORE;
             break;
-          case ESFA_ONCE:
+          case ESFA_ONE_TIME:
             TAILQ_FOREACH(st2, &t->s_components, es_link)
               if (st2->es_type == SCT_CA && (st2->es_filter & ESFM_USED) != 0)
                 break;
@@ -566,7 +566,7 @@ ca_ignore:
 ignore:
             st->es_filter |= ESFM_IGNORE;
             break;
-          case ESFA_ONCE:
+          case ESFA_ONE_TIME:
             TAILQ_FOREACH(st2, &t->s_components, es_link) {
               if (st == st2)
                 continue;

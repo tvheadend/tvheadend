@@ -73,7 +73,7 @@ extern struct esfilter_entry_queue esfilters[];
 typedef enum {
   ESFA_NONE = 0,
   ESFA_USE,		/* use this stream */
-  ESFA_ONCE,		/* use this stream once per language */
+  ESFA_ONE_TIME,	/* use this stream once per language */
   ESFA_EXCLUSIVE,       /* use this stream exclusively */
   ESFA_EMPTY,		/* use this stream when no streams were added */
   ESFA_IGNORE,
