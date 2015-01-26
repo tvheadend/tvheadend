@@ -590,8 +590,6 @@ mpegts_input_started_mux
 
   /* Deliver first TS packets as fast as possible */
   mi->mi_last_dispatch = 0;
-  /* Wait for first TS packet */
-  mi->mi_live = 0;
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
@@ -931,6 +929,7 @@ mpegts_input_process
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
   mpegts_pid_t *last_mp = NULL;
+  th_subscription_t *ths;
 #if ENABLE_TSDEBUG
   off_t tsdebug_pos;
 #endif
@@ -938,12 +937,14 @@ mpegts_input_process
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return;
 
+  LIST_FOREACH(ths, &mmi->mmi_subs, ths_mmi_link)
+    ths->ths_live = 1;
+
   assert(mm == mmi->mmi_mux);
 
 #if ENABLE_TSDEBUG
   tsdebug_pos = mm->mm_tsdebug_pos;
 #endif
-  mi->mi_live = 1;
 
   /* Process */
   assert((len % 188) == 0);

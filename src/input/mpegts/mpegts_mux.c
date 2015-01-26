@@ -1269,7 +1269,7 @@ mpegts_mux_remove_subscriber
 #if ENABLE_TRACE
   char buf[256];
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - remove subscriber", buf);
+  tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
 #endif
   subscription_unlink_mux(s, reason);
   mm->mm_stop(mm, 0, reason);

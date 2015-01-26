@@ -117,6 +117,7 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_mmi_link;
   struct mpegts_mux_instance *ths_mmi;
   gtimer_t ths_receive_timer;
+  uint8_t ths_live;
 #endif
 
 } th_subscription_t;

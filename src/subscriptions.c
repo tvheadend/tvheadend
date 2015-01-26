@@ -741,16 +741,16 @@ static void
 mux_data_timeout ( void *aux )
 {
   th_subscription_t *s = aux;
-  mpegts_input_t *mi = s->ths_mmi->mmi_input;
 
   if (!s->ths_mmi)
     return;
 
-  if (!mi->mi_live) {
+  if (!s->ths_live) {
+    tvhwarn("subscription", "%04X: mux data timeout for %s", shortid(s), s->ths_title);
     mpegts_mux_remove_subscriber(s->ths_mmi->mmi_mux, s, SM_CODE_NO_INPUT);
     return;
   }
-  mi->mi_live = 0;
+  s->ths_live = 0;
 
   if (s->ths_timeout > 0)
     gtimer_arm(&s->ths_receive_timer, mux_data_timeout, s, s->ths_timeout);
