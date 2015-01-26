@@ -107,6 +107,8 @@ static void
 tvhcsa_des_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
 {
+  assert(csa->csa_fill >= 0 && csa->csa_fill < csa->csa_cluster_size);
+
 #if ENABLE_DVBCSA
   uint8_t *pkt;
   int xc0;
@@ -247,7 +249,10 @@ tvhcsa_init ( tvhcsa_t *csa )
 #else
   csa->csa_cluster_size  = get_suggested_cluster_size();
 #endif
-  csa->csa_tsbcluster    = malloc(csa->csa_cluster_size * 188);
+  /* Note: the optimized routines might read memory after last TS packet */
+  /*       allocate safe memory and fill it with zeros */
+  csa->csa_tsbcluster    = malloc((csa->csa_cluster_size + 1) * 188);
+  memset(csa->csa_tsbcluster + csa->csa_cluster_size * 188, 0, 188);
 #if ENABLE_DVBCSA
   csa->csa_tsbbatch_even = malloc((csa->csa_cluster_size + 1) *
                                    sizeof(struct dvbcsa_bs_batch_s));
