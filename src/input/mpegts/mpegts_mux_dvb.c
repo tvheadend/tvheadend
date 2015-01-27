@@ -649,10 +649,19 @@ dvb_mux_create0
   }
 
   /* Create */
-  if (!(mm = mpegts_mux_create0(calloc(1, sizeof(dvb_mux_t)), idc, uuid,
-                                (mpegts_network_t*)ln, onid, tsid, conf)))
-    return NULL;
+  mm = calloc(1, sizeof(dvb_mux_t));
   lm = (dvb_mux_t*)mm;
+
+  /* Defaults */
+  lm->lm_tuning.dmc_fe_inversion = DVB_INVERSION_AUTO;
+  lm->lm_tuning.dmc_fe_pilot     = DVB_PILOT_AUTO;
+
+  /* Parent init and load config */
+  if (!(mm = mpegts_mux_create0(mm, idc, uuid,
+                                (mpegts_network_t*)ln, onid, tsid, conf))) {
+    free(mm);
+    return NULL;
+  }
 
   /* Tuning */
   if (dmc)
@@ -665,12 +674,6 @@ dvb_mux_create0
   lm->mm_config_save      = dvb_mux_config_save;
   lm->mm_create_instances = dvb_mux_create_instances;
 
-  /* Defaults */
-  if (dmc == NULL) {
-    lm->lm_tuning.dmc_fe_inversion = DVB_INVERSION_AUTO;
-    lm->lm_tuning.dmc_fe_pilot     = DVB_PILOT_AUTO;
-  }
-  
   /* No config */
   if (!conf) return lm;
 
