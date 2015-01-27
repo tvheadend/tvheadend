@@ -95,6 +95,7 @@ typedef void (aparser_t)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
 static void parse_sc(service_t *t, elementary_stream_t *st, const uint8_t *data,
                      int len, packet_parser_t *vp);
 
+static void parse_mp4a_data(service_t *t, elementary_stream_t *st, int skip_next_check);
 
 static void parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
                       int len, int start);
@@ -218,7 +219,7 @@ parse_mpeg_ps(service_t *t, elementary_stream_t *st, uint8_t *data, int len)
 }
 
 /**
- * Parse AAC LATM
+ * Parse AAC LATM and ADTS
  */
 static void 
 parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
@@ -256,6 +257,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   while((l = st->es_buf.sb_ptr - p) > 3) {
     const uint8_t *d = st->es_buf.sb_data + p;
+    /* LATM */
     if(d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
       muxlen = (d[1] & 0x1f) << 8 | d[2];
 
@@ -268,6 +270,22 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
         parser_deliver(t, st, pkt, st->es_buf.sb_err);
 
       p += muxlen + 3;
+    /* ADTS */
+    } else if(d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
+
+      if (l < 7)
+        break;
+      muxlen = ((uint16_t)(d[3] & 0x03) << 11) | ((uint16_t)d[4] << 3) | (d[5] >> 5);
+      if (l < muxlen)
+        break;
+
+      sbuf_reset(&st->es_buf_a, 4000);
+      sbuf_append(&st->es_buf_a, d, muxlen);
+      parse_mp4a_data(t, st, 1);
+
+      p += muxlen;
+
+    /* Wrong bytestream */
     } else {
       p++;
     }
@@ -469,14 +487,11 @@ mp4a_valid_frame(const uint8_t *buf)
   return (buf[0] == 0xff) && ((buf[1] & 0xf6) == 0xf0);
 }
 
-static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
-                      uint32_t next_startcode, int sc_offset)
+static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
+                            int skip_next_check)
 {
   int i, len;
   const uint8_t *buf;
-
-  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
-    return i;
 
  again:
   buf = st->es_buf_a.sb_data;
@@ -484,11 +499,12 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
 
   for(i = 0; i < len - 6; i++) {
     const uint8_t *p = buf + i;
+
     if(mp4a_valid_frame(p)) {
 
-      int fsize     = ((p[3] & 0x03) << 11) | (p[4] << 3) | ((p[5] & 0xe0) >> 5);
+      int fsize    = ((p[3] & 0x03) << 11) | (p[4] << 3) | ((p[5] & 0xe0) >> 5);
       int sr_index = (p[2] & 0x3c) >> 2;
-      int sr = aac_sample_rates[sr_index];
+      int sr       = aac_sample_rates[sr_index];
 
       if(sr && fsize) {
         int duration = 90000 * 1024 / sr;
@@ -498,8 +514,8 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
         if(dts == PTS_UNSET)
           dts = st->es_nextdts;
 
-        if(dts != PTS_UNSET && len >= i + fsize + 6 &&
-           mp4a_valid_frame(p + fsize)) {
+        if(dts != PTS_UNSET && len >= i + fsize + (skip_next_check ? 0 : 6) &&
+           (skip_next_check || mp4a_valid_frame(p + fsize))) {
 
           int channels = ((p[2] & 0x01) << 2) | ((p[3] & 0xc0) >> 6);
 
@@ -512,6 +528,17 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
       }
     }
   }
+}
+
+static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
+                      uint32_t next_startcode, int sc_offset)
+{
+  int r;
+
+  if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return r;
+
+  parse_mp4a_data(t, st, 0);
   return 1;
 }
 
