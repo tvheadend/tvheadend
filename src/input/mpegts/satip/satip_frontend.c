@@ -752,6 +752,10 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
    * ver=1.1;tuner=<feID>,<level>,<lock>,<quality>,<freq>,<bw>,<msys>,<tmode>,\
    * <mtype>,<gi>,<fec>,<plp>,<t2id>,<sm>;pids=<pid0>,...,<pidn>
    *
+   * DVB-C:
+   * ver=1.2;tuner=<feID>,<level>,<lock>,<quality>,<freq>,<bw>,<msys>,<mtype>,\
+   * <sr>,<c2tft>,<ds>,<plp>,<specinv>;pids=<pid0>,...,<pidn>
+   *
    * DVB-C (OctopusNet):
    * ver=0.9;tuner=<feID>,<0>,<lock>,<0>,<freq>,<bw>,<msys>,<mtype>;pids=<pid0>,...<pidn>
    * example:
@@ -792,7 +796,8 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
         s = (char *)rtcp + 16;
         tvhtrace("satip", "Status string: '%s'", s);
         status = SIGNAL_NONE;
-        if (strncmp(s, "ver=0.9;tuner=", 14) == 0) {
+        if (strncmp(s, "ver=0.9;tuner=", 14) == 0 ||
+            strncmp(s, "ver=1.2;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
             return;
