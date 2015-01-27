@@ -221,6 +221,7 @@ const idclass_t linuxdvb_satconf_class =
       .name     = "Tune Before DiseqC",
       .off      = offsetof(linuxdvb_satconf_t, ls_early_tune),
       .opts     = PO_ADVANCED,
+      .def.i    = 1
     },
     {
       .type     = PT_INT,
@@ -236,6 +237,7 @@ const idclass_t linuxdvb_satconf_class =
       .name     = "Full DiseqC",
       .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_full),
       .opts     = PO_ADVANCED,
+      .def.i    = 1
     },
     {
       .type     = PT_BOOL,
@@ -890,6 +892,7 @@ linuxdvb_satconf_create
   TAILQ_INIT(&ls->ls_elements);
 
   ls->ls_early_tune = 1;
+  ls->ls_diseqc_full = 1;
   ls->ls_max_rotor_move = 120;
 
   /* Create node */
