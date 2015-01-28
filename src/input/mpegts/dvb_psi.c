@@ -2294,7 +2294,7 @@ psi_parse_pmt
     case 0x06:
       /* 0x06 is Chinese Cable TV AC-3 audio track */
       /* but mark it so only when no more descriptors exist */
-      if (dllen > 1 || !mux || !mux->mm_pmt_06_ac3)
+      if (dllen > 1 || !mux || mux->mm_pmt_ac3 != MM_AC3_PMT_06)
         break;
       /* fall through to SCT_AC3 */
     case 0x81:
@@ -2336,7 +2336,7 @@ psi_parse_pmt
         break;
 
       case DVB_DESC_REGISTRATION:
-        if(dlen == 4 && 
+        if(mux->mm_pmt_ac3 != MM_AC3_PMT_N05 && dlen == 4 &&
            ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
           hts_stream_type = SCT_AC3;
         /* seen also these formats: */

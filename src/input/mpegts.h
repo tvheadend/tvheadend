@@ -331,6 +331,13 @@ enum mpegts_mux_epg_flag
 };
 #define MM_EPG_LAST MM_EPG_ONLY_OPENTV_SKY_AUSAT
 
+enum mpegts_mux_ac3_flag
+{
+  MM_AC3_STANDARD,
+  MM_AC3_PMT_06,
+  MM_AC3_PMT_N05,
+};
+
 typedef struct tsdebug_packet {
   TAILQ_ENTRY(tsdebug_packet) link;
   uint8_t pkt[188];
@@ -428,7 +435,7 @@ struct mpegts_mux
   int   mm_enabled;
   int   mm_epg;
   char *mm_charset;
-  int   mm_pmt_06_ac3;
+  int   mm_pmt_ac3;
 
   /*
    * TSDEBUG

@@ -447,6 +447,17 @@ mpegts_mux_epg_list ( void *o )
   return strtab2htsmsg(tab);
 }
 
+static htsmsg_t *
+mpegts_mux_ac3_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "Standard",                 MM_AC3_STANDARD },
+    { "AC-3 = descriptor 6",      MM_AC3_PMT_06 },
+    { "Ignore descriptor 5",      MM_AC3_PMT_N05 },
+  };
+  return strtab2htsmsg(tab);
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -548,11 +559,12 @@ const idclass_t mpegts_mux_class =
       .get      = mpegts_mux_class_get_num_chn,
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "pmt_06_ac3",
-      .name     = "PMT Descriptor 0x06 = AC-3",
-      .off      = offsetof(mpegts_mux_t, mm_pmt_06_ac3),
-      .opts     = PO_ADVANCED,
+      .name     = "AC-3 Detection",
+      .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
+      .def.i    = MM_EPG_ENABLE,
+      .list     = mpegts_mux_ac3_list,
     },
     {}
   }
