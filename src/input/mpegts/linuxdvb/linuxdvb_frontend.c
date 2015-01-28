@@ -1322,7 +1322,7 @@ linuxdvb_frontend_tune0
       S2CMD(DTV_PILOT,           TR(pilot, pilot_tbl, PILOT_AUTO));
       S2CMD(DTV_ROLLOFF,         TR(rolloff, rolloff_tbl, ROLLOFF_AUTO));
       r = dmc->dmc_fe_stream_id != -1 ? (dmc->dmc_fe_stream_id & 0xFF) |
-          ((dmc->dmc_fe_pls_code & 0x3FFFF)<<8) | ((dmc->dmc_fe_pls_mode & 0x3)<<26) : r;
+          ((dmc->dmc_fe_pls_code & 0x3FFFF)<<8) | ((dmc->dmc_fe_pls_mode & 0x3)<<26) : dmc->dmc_fe_stream_id;
 #if DVB_VER_ATLEAST(5,9)
       S2CMD(DTV_STREAM_ID, r );
 #elif DVB_VER_ATLEAST(5,3)

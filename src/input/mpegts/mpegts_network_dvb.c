@@ -304,7 +304,6 @@ dvb_network_find_mux
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
 
-
     /* DVB-S extra checks */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
 
