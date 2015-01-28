@@ -563,7 +563,7 @@ const idclass_t mpegts_mux_class =
       .id       = "pmt_06_ac3",
       .name     = "AC-3 Detection",
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
-      .def.i    = MM_EPG_ENABLE,
+      .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
     },
     {}
