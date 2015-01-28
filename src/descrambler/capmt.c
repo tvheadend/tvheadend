@@ -740,6 +740,27 @@ capmt_send_stop(capmt_service_t *t)
 }
 
 /**
+ *
+ */
+static void
+capmt_send_stop_descrambling(capmt_t *capmt)
+{
+  uint8_t buf[8];
+
+  buf[0] = 0x9F;
+  buf[1] = 0x80;
+  buf[2] = 0x3F;
+  buf[3] = 0x04;
+
+  buf[4] = 0x83;
+  buf[5] = 0x02;
+  buf[6] = 0x00;
+  buf[7] = 0xFF; //wildcard demux id
+
+  capmt_write_msg(capmt, 0, 0, buf, 8);
+}
+
+/**
  * global_lock is held
  * s_stream_mutex is held
  */
@@ -1828,7 +1849,12 @@ capmt_enumerate_services(capmt_t *capmt, int force)
     tvhlog(LOG_DEBUG, "capmt", "%s: %s: no subscribed services, closing socket, fd=%d", capmt_name(capmt), __FUNCTION__, capmt->capmt_sock[0]);
     if (capmt->capmt_sock[0] >= 0)
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
-    capmt_socket_close(capmt, 0);
+    if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+      capmt_send_stop_descrambling(capmt);
+      capmt_pid_flush(capmt);
+    }
+    else
+      capmt_socket_close(capmt, 0);
   }
   else if (force || (res_srv_count != all_srv_count)) {
     LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
@@ -2037,8 +2063,8 @@ static htsmsg_t *
 caclient_capmt_class_oscam_mode_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "OSCam net protocol (rev >= 10087)", CAPMT_OSCAM_NET_PROTO},
-    { "OSCam pc-nodmx (rev >= 9756)",      CAPMT_OSCAM_UNIX_SOCKET},
+    { "OSCam net protocol (rev >= 10389)", CAPMT_OSCAM_NET_PROTO },
+    { "OSCam pc-nodmx (rev >= 9756)",      CAPMT_OSCAM_UNIX_SOCKET },
     { "OSCam TCP (rev >= 9574)",           CAPMT_OSCAM_TCP },
     { "OSCam (rev >= 9095)",               CAPMT_OSCAM_MULTILIST },
     { "Older OSCam",                       CAPMT_OSCAM_OLD },
