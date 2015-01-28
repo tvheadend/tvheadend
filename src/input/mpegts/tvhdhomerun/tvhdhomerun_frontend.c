@@ -366,9 +366,31 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
   dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
   dvb_mux_conf_t *dmc = &lm->lm_tuning;
   char channel_buf[64];
+  uint32_t symbol_rate = 0;
   int res;
 
-  snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+  /* resolve the modulation type */
+  switch (dmc->dmc_fe_type) {
+    case DVB_TYPE_C:
+      /* the symbol rate */
+      symbol_rate = dmc->u.dmc_fe_qam.symbol_rate / 1000;
+      switch(dmc->dmc_fe_modulation) {
+        case DVB_MOD_QAM_64:
+          snprintf(channel_buf, sizeof(channel_buf), "a8qam64-%d:%u", symbol_rate, dmc->dmc_fe_freq);
+          break;
+        case DVB_MOD_QAM_256:
+          snprintf(channel_buf, sizeof(channel_buf), "a8qam256-%d:%u", symbol_rate, dmc->dmc_fe_freq);
+          break;
+        default:
+          snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+          break;
+      }
+      break;
+    default:
+      snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+      break;
+  }
+
   tvhlog(LOG_INFO, "tvhdhomerun", "tuning to %s", channel_buf);
   
   pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
