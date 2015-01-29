@@ -486,6 +486,10 @@ static inline int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
 {
   if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
     return 0;
+
+  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
+    return 0;
+
   if (strcmp(de->de_owner ?: "", a->aa_username ?: ""))
     return -1;
   return 0;

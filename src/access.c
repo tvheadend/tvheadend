@@ -357,7 +357,7 @@ access_dump_a(access_t *a)
   int first;
 
   snprintf(buf, sizeof(buf),
-    "%s:%s [%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -367,6 +367,7 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_RECORDER           ? 'R' : ' ',
     a->aa_rights & ACCESS_HTSP_RECORDER      ? 'E' : ' ',
     a->aa_rights & ACCESS_ALL_RECORDER       ? 'L' : ' ',
+    a->aa_rights & ACCESS_ALL_RW_RECORDER    ? 'D' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
     (long long)a->aa_chmin, (long long)a->aa_chmax,
@@ -819,6 +820,8 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_WEB_INTERFACE;
   if (ae->ae_admin)
     r |= ACCESS_ADMIN;
+  if (ae->ae_all_rw_dvr)
+    r |= ACCESS_ALL_RW_RECORDER;
   ae->ae_rights = r;
 }
 
@@ -1309,6 +1312,12 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_all_dvr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "all_rw_dvr",
+      .name     = "All DVR (rw)",
+      .off      = offsetof(access_entry_t, ae_all_rw_dvr),
+    },
+    {
       .type     = PT_STR,
       .id       = "dvr_config",
       .name     = "DVR Config Profile",
@@ -1417,6 +1426,7 @@ access_init(int createdefault, int noacl)
     ae->ae_dvr            = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
+    ae->ae_all_rw_dvr     = 1;
     ae->ae_webui          = 1;
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
