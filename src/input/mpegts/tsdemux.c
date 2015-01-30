@@ -42,7 +42,7 @@
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
-static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
+static void ts_remux(mpegts_service_t *t, const uint8_t *tsb, int error);
 
 /**
  * Continue processing of transport stream packets
@@ -55,11 +55,11 @@ ts_recv_packet0
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
-  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
-    ts_remux(t, tsb);
-
-  if (!st)
+  if (!st) {
+    if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+      ts_remux(t, tsb, 0);
     return;
+  }
 
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
@@ -79,10 +79,15 @@ ts_recv_packet0
 
       // Mark as error if this is not the first packet of a payload
       if(!pusi)
-        error |= 0x2;
+        error |= 2;
+        
+      error |= 4;
     }
     st->es_cc = (cc + 1) & 0xf;
   }
+
+  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+    ts_remux(t, tsb, error);
 
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
 
@@ -97,12 +102,11 @@ ts_recv_packet0
 
     if(st->es_type == SCT_TELETEXT)
       teletext_input(t, st, tsb);
-
     if(off > 188)
       break;
 
     if(t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
+      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error & 3);
     break;
   }
 }
@@ -264,7 +268,7 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb)
  *
  */
 static void
-ts_remux(mpegts_service_t *t, const uint8_t *src)
+ts_remux(mpegts_service_t *t, const uint8_t *src, int error)
 {
   streaming_message_t sm;
   pktbuf_t *pb;
@@ -275,10 +279,14 @@ ts_remux(mpegts_service_t *t, const uint8_t *src)
 
   sbuf_append(sb, src, 188);
 
+  if (error)
+    sb->sb_err++;
+
   if(sb->sb_ptr < TS_REMUX_BUFSIZE) 
     return;
 
   pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
+  pb->pb_err = sb->sb_err;
 
   sm.sm_type = SMT_MPEGTS;
   sm.sm_data = pb;

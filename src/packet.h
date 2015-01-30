@@ -25,6 +25,7 @@
 
 typedef struct pktbuf {
   int pb_refcount;
+  int pb_err;
   uint8_t *pb_data;
   size_t pb_size;
 } pktbuf_t;

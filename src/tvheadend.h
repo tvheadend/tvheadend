@@ -504,10 +504,10 @@ typedef struct streaming_queue {
  */
 typedef struct sbuf {
   uint8_t *sb_data;
-  int sb_ptr;
-  int sb_size;
-  unsigned int sb_err  : 1;
-  unsigned int sb_bswap: 1;
+  int      sb_ptr;
+  int      sb_size;
+  uint16_t sb_err;
+  uint8_t  sb_bswap;
 } sbuf_t;
 
 
