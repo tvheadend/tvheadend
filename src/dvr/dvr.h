@@ -195,6 +195,11 @@ typedef struct dvr_entry {
   uint32_t de_errors;
 
   /**
+   * Number of data errors (only to be modified by the recording thread)
+   */
+  uint32_t de_data_errors;
+
+  /**
    * Last error, see SM_CODE_ defines
    */
   uint32_t de_last_error;

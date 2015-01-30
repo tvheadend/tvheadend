@@ -483,6 +483,7 @@ dvr_thread(void *aux)
   profile_chain_t *prch = de->de_chain;
   streaming_queue_t *sq = &prch->prch_sq;
   streaming_message_t *sm;
+  th_subscription_t *ts;
   th_pkt_t *pkt;
   int run = 1;
   int started = 0;
@@ -498,14 +499,19 @@ dvr_thread(void *aux)
       continue;
     }
 
-    if (de->de_s && started) {
+    if ((ts = de->de_s) != NULL && started) {
       pktbuf_t *pb = NULL;
       if (sm->sm_type == SMT_PACKET)
         pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
       else if (sm->sm_type == SMT_MPEGTS)
         pb = sm->sm_data;
-      if (pb)
-        atomic_add(&de->de_s->ths_bytes_out, pktbuf_len(pb));
+      if (pb) {
+        atomic_add(&ts->ths_bytes_out, pktbuf_len(pb));
+        if (ts->ths_total_err != de->de_data_errors) {
+          de->de_data_errors = ts->ths_total_err;
+          idnode_notify_simple(&de->de_id);
+        }
+      }
     }
 
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);

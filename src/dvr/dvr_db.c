@@ -1888,6 +1888,13 @@ const idclass_t dvr_entry_class = {
       .opts     = PO_RDONLY,
     },
     {
+      .type     = PT_U32,
+      .id       = "data_errors",
+      .name     = "Data Errors",
+      .off      = offsetof(dvr_entry_t, de_data_errors),
+      .opts     = PO_RDONLY,
+    },
+    {
       .type     = PT_U16,
       .id       = "dvb_eid",
       .name     = "DVB EPG ID",

@@ -216,7 +216,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
               'duration,channel,owner,creator,config_name,' +
-              'sched_status,comment',
+              'sched_status,errors,data_errors,comment',
         sort: {
           field: 'start_real',
           direction: 'ASC'
@@ -279,7 +279,7 @@ tvheadend.dvr_finished = function(panel, index) {
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
-              'sched_status,url,comment',
+              'sched_status,errors,data_errors,url,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -359,7 +359,7 @@ tvheadend.dvr_failed = function(panel, index) {
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
-              'status,sched_status,url,comment',
+              'status,sched_status,errors,data_errors,url,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
