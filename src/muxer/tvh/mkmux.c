@@ -1188,7 +1188,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
       break;
   }
   
-  if(i >= mkm->ntracks) {
+  if(i >= mkm->ntracks || pkt->pkt_payload == NULL) {
     pkt_ref_dec(pkt);
     return mkm->error;
   }

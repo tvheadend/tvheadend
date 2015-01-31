@@ -403,6 +403,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     if(st->id != pkt->pkt_componentindex)
       continue;
+    if(pkt->pkt_payload == NULL)
+      continue;
 
     av_init_packet(&packet);
 
