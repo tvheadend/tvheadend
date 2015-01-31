@@ -504,7 +504,7 @@ dvr_thread(void *aux)
       if (sm->sm_type == SMT_PACKET) {
         pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         if (((th_pkt_t*)sm->sm_data)->pkt_err) {
-          de->de_data_errors++;
+          de->de_data_errors += ((th_pkt_t*)sm->sm_data)->pkt_err;
           idnode_notify_simple(&de->de_id);
         }
       }

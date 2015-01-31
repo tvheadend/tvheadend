@@ -427,13 +427,11 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
   /* Log data and errors */
   if(sm->sm_type == SMT_PACKET) {
     th_pkt_t *pkt = sm->sm_data;
-    if(pkt->pkt_err)
-      s->ths_total_err++;
+    s->ths_total_err += pkt->pkt_err;
     s->ths_bytes_in += pkt->pkt_payload->pb_size;
   } else if(sm->sm_type == SMT_MPEGTS) {
     pktbuf_t *pb = sm->sm_data;
-    if(pb->pb_err)
-      s->ths_total_err += pb->pb_err;
+    s->ths_total_err += pb->pb_err;
     s->ths_bytes_in += pb->pb_size;
   }
 
