@@ -134,9 +134,11 @@ void
 parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data, 
               int len, int start, int err)
 {
-  
-  if(err && (err != 2 || !start))
+  if(err) {
+    if (start)
+      parser_deliver_error(t, st);
     sbuf_err(&st->es_buf, 1);
+  }
 
   switch(st->es_type) {
   case SCT_MPEG2VIDEO:
@@ -232,7 +234,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     /* Payload unit start */
     st->es_parser_state = 1;
     st->es_parser_ptr = 0;
-    parser_deliver_error(t, st);
     sbuf_reset(&st->es_buf, 4000);
   }
 
@@ -1343,7 +1344,6 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
   if(start) {
     /* Payload unit start */
     st->es_parser_state = 1;
-    parser_deliver_error(t, st);
     sbuf_reset(&st->es_buf, 4000);
   }
 
@@ -1409,7 +1409,6 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   if(start) {
     st->es_parser_state = 1;
     st->es_parser_ptr = 0;
-    parser_deliver_error(t, st);
     sbuf_reset(&st->es_buf, 4000);
   }
 
@@ -1480,8 +1479,10 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   /**
    * Input is ok
    */
-  service_set_streaming_status_flags(t, TSS_PACKETS);
-  t->s_streaming_live |= TSS_LIVE;
+  if (pkt->pkt_payload) {
+    service_set_streaming_status_flags(t, TSS_PACKETS);
+    t->s_streaming_live |= TSS_LIVE;
+  }
 
   /* Forward packet */
   pkt->pkt_componentindex = st->es_index;

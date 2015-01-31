@@ -364,7 +364,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     break;
   case SMT_PACKET:
     pkt = sm->sm_data;
-    if (pkt->pkt_payload)
+    if (pkt->pkt_payload || pkt->pkt_err)
       streaming_target_deliver2(gh->gh_output, sm);
     else
       streaming_msg_free(sm);
