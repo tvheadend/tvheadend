@@ -47,6 +47,8 @@ typedef struct tfstream {
 
   int64_t tfs_last_dts_in;
 
+  int tfs_seen;
+
 } tfstream_t;
 
 
@@ -139,6 +141,7 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
   tfs->tfs_last_dts_norm = PTS_UNSET;
   tfs->tfs_last_dts_in = PTS_UNSET;
   tfs->tfs_dts_epoch = 0;
+  tfs->tfs_seen = 0;
 
   LIST_INSERT_HEAD(&tf->tf_streams, tfs, tfs_link);
   return tfs;
@@ -193,9 +196,11 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   int64_t ref, dts, d;
 
   if(tf->tf_tsref == PTS_UNSET) {
-    if (backlog)
+    if (backlog) {
+      if (pkt->pkt_dts != PTS_UNSET)
+        tfs->tfs_seen = 1;
       pktref_enqueue(&tf->tf_backlog, pkt);
-    else
+    } else
       pkt_ref_dec(pkt);
     return;
   }
@@ -410,9 +415,9 @@ static void
 tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
   th_pkt_t *pkt = pkt_copy_shallow(sm->sm_data);
-  tfstream_t *tfs = tfs_find(tf, pkt);
+  tfstream_t *tfs = tfs_find(tf, pkt), *tfs2;
   streaming_msg_free(sm);
-  int64_t diff, diff2;
+  int64_t diff, diff2, threshold;
   
   if(tfs == NULL || dispatch_clock < tf->tf_start_time) {
     pkt_ref_dec(pkt);
@@ -422,13 +427,21 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   if(tf->tf_tsref == PTS_UNSET &&
      ((!tf->tf_hasvideo && tfs->tfs_audio) ||
       (tfs->tfs_video && pkt->pkt_frametype == PKT_I_FRAME))) {
+    threshold = 22500;
+    LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
+      if (tfs != tfs2 && tfs2->tfs_audio && tfs2->tfs_video && !tfs2->tfs_seen) {
+        threshold = 90000;
+        break;
+      }
     tf->tf_tsref = pkt->pkt_dts & PTS_MASK;
     diff = diff2 = tsfix_backlog_diff(tf);
-    if (diff > 160000)
-      diff = 160000;
-    tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-    tvhtrace("parser", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
-    tsfix_backlog(tf);
+    if (diff > threshold) {
+      if (diff > 160000)
+        diff = 160000;
+      tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
+      tvhtrace("parser", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
+      tsfix_backlog(tf);
+    }
   } else if (tfs->tfs_local_ref == PTS_UNSET && tf->tf_tsref != PTS_UNSET &&
              pkt->pkt_dts != PTS_UNSET) {
     if (tfs->tfs_audio) {
