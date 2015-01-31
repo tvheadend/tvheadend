@@ -76,12 +76,7 @@ ts_recv_packet0
                       service_component_nicename(st), st->es_cc_log.count);
       avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
-
-      // Mark as error if this is not the first packet of a payload
-      if(!pusi)
-        error |= 2;
-        
-      error |= 4;
+      error |= 2;
     }
     st->es_cc = (cc + 1) & 0xf;
   }
@@ -106,7 +101,7 @@ ts_recv_packet0
       break;
 
     if(t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error & 3);
+      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
     break;
   }
 }

@@ -134,7 +134,7 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
               int len, int start, int err)
 {
   
-  if(err)
+  if(err && (err != 2 || !start))
     sbuf_err(&st->es_buf);
 
   switch(st->es_type) {
