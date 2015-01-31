@@ -501,17 +501,22 @@ dvr_thread(void *aux)
 
     if ((ts = de->de_s) != NULL && started) {
       pktbuf_t *pb = NULL;
-      if (sm->sm_type == SMT_PACKET)
+      if (sm->sm_type == SMT_PACKET) {
         pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
-      else if (sm->sm_type == SMT_MPEGTS)
-        pb = sm->sm_data;
-      if (pb) {
-        atomic_add(&ts->ths_bytes_out, pktbuf_len(pb));
-        if (ts->ths_total_err != de->de_data_errors) {
-          de->de_data_errors = ts->ths_total_err;
+        if (((th_pkt_t*)sm->sm_data)->pkt_err) {
+          de->de_data_errors++;
           idnode_notify_simple(&de->de_id);
         }
       }
+      else if (sm->sm_type == SMT_MPEGTS) {
+        pb = sm->sm_data;
+        if (pb->pb_err) {
+          de->de_data_errors += pb->pb_err;
+          idnode_notify_simple(&de->de_id);
+        }
+      }
+      if (pb)
+        atomic_add(&ts->ths_bytes_out, pktbuf_len(pb));
     }
 
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
