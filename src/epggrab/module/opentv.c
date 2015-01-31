@@ -453,18 +453,6 @@ opentv_desc_channels
   int save = 0;
   int i = 2;
 
-  if (mod->bouquetid != nbid) {
-    if (mod->bouquet_auto) {
-      if (nbid < mod->bouquetid) {
-        tvhwarn(mt->mt_name, "bouquet id set to %d, report this!", nbid);
-        mod->bouquetid = nbid;
-      } else
-        return 0;
-    } else {
-      return 0;
-    }
-  }
-
   while (i < len) {
     sid  = ((int)buf[i] << 8) | buf[i+1];
 #if ENABLE_TRACE
@@ -481,11 +469,22 @@ opentv_desc_channels
     tvhtrace(mt->mt_name, "     svc %p [%s]", svc, svc ? svc->s_nicename : NULL);
     if (svc && svc->s_dvb_opentv_chnum != cnum &&
         (!svc->s_dvb_opentv_id || svc->s_dvb_opentv_id == unk)) {
+      if (mod->bouquetid != nbid) {
+        if (mod->bouquet_auto) {
+          if (nbid < mod->bouquetid) {
+            tvhwarn(mt->mt_name, "bouquet id set to %d, report this!", nbid);
+            mod->bouquetid = nbid;
+          } else
+            goto skip_chnum;
+        } else
+          goto skip_chnum;
+      }
       tvhtrace(mt->mt_name, "      cnum changed (%i != %i)", cnum, (int)svc->s_dvb_opentv_chnum);
       svc->s_dvb_opentv_chnum = cnum;
       svc->s_dvb_opentv_id = unk;
       service_request_save((service_t *)svc, 0);
     }
+skip_chnum:
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
