@@ -43,7 +43,7 @@ struct filebundle_dir
     } d;
     struct {
       const filebundle_entry_t *root;
-      filebundle_entry_t       *cur;
+      const filebundle_entry_t *cur;
     } b;
   };
 };
@@ -142,7 +142,7 @@ fb_dir *fb_opendir ( const char *path )
     char *tmp1, *tmp2, *tmp3 = NULL;
     tmp1 = strdup(path);
     tmp2 = strtok_r(tmp1, "/", &tmp3);
-    filebundle_entry_t *fb = filebundle_root;
+    const filebundle_entry_t *fb = filebundle_root;
     while (fb && tmp2) {
       if (fb->type == FB_DIR && !strcmp(fb->name, tmp2)) {
         tmp2 = strtok_r(NULL, "/", &tmp3);

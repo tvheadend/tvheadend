@@ -102,7 +102,7 @@ def output_file ( path, name, idx, next = -1 ):
   outf.write('\n')
   outf.write('};\n')
   
-  outf.write('static filebundle_entry_t filebundle_entry_%06d = {\n' % idx)
+  outf.write('static const filebundle_entry_t filebundle_entry_%06d = {\n' % idx)
   outf.write('  .type    = FB_FILE,\n')
   outf.write('  .name    = "%s",\n'  % name)
   outf.write('  .next    = %s,\n' % n)
@@ -120,7 +120,7 @@ def output_dir ( path, name, idx, child, count, next = -1 ):
   if next >= 0: n = '&filebundle_entry_%06d' % next
   outf.write('/* DIR: %s %s %d %d %d %d */\n' \
              % (path, name, idx, child, count, next))
-  outf.write('static filebundle_entry_t filebundle_entry_%06d = {\n' % idx)
+  outf.write('static const filebundle_entry_t filebundle_entry_%06d = {\n' % idx)
   outf.write('  .type    = FB_DIR,\n')
   outf.write('  .name    = "%s",\n'  % name)
   outf.write('  .next    = %s,\n' % n)
@@ -172,4 +172,4 @@ outf.write('\n')
 idx = add_entry(ents)
 
 # Output top link
-outf.write('filebundle_entry_t *filebundle_root = &filebundle_entry_%06d;\n' % idx)
+outf.write('const filebundle_entry_t * const filebundle_root = &filebundle_entry_%06d;\n' % idx)
