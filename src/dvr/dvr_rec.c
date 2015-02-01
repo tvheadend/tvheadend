@@ -309,6 +309,17 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 	 de->de_filename ?: lang_str_get(de->de_title, NULL), msgbuf);
 }
 
+/**
+ *
+ */
+static void
+dvr_notify(dvr_entry_t *de, int now)
+{
+  if (now || de->de_last_notify + 5 < dispatch_clock) {
+    idnode_notify_simple(&de->de_id);
+    de->de_last_notify = dispatch_clock;
+  }
+}
 
 /**
  *
@@ -328,7 +339,7 @@ dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
       de->de_errors++;
   }
   if (notify)
-    idnode_notify_simple(&de->de_id);
+    dvr_notify(de, 1);
 }
 
 /**
@@ -505,14 +516,14 @@ dvr_thread(void *aux)
         pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         if (((th_pkt_t*)sm->sm_data)->pkt_err) {
           de->de_data_errors += ((th_pkt_t*)sm->sm_data)->pkt_err;
-          idnode_notify_simple(&de->de_id);
+          dvr_notify(de, 0);
         }
       }
       else if (sm->sm_type == SMT_MPEGTS) {
         pb = sm->sm_data;
         if (pb->pb_err) {
           de->de_data_errors += pb->pb_err;
-          idnode_notify_simple(&de->de_id);
+          dvr_notify(de, 0);
         }
       }
       if (pb)
@@ -543,6 +554,7 @@ dvr_thread(void *aux)
       if(started) {
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
+	dvr_notify(de, 0);
       }
       break;
 
@@ -551,6 +563,7 @@ dvr_thread(void *aux)
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
+	dvr_notify(de, 0);
       }
       break;
 
@@ -729,6 +742,7 @@ dvr_thread_epilog(dvr_entry_t *de)
   muxer_close(prch->prch_muxer);
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
+  dvr_notify(de, 1);
 
   dvr_config_t *cfg = de->de_config;
   if(cfg && cfg->dvr_postproc && de->de_filename)

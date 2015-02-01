@@ -235,6 +235,11 @@ typedef struct dvr_entry {
   LIST_ENTRY(dvr_entry) de_inotify_link;
 #endif
 
+  /**
+   * Entry change notification timer
+   */
+  time_t de_last_notify;
+
 } dvr_entry_t;
 
 #define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))
