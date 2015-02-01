@@ -1555,7 +1555,8 @@ dvr_entry_class_url_get(void *o)
   static const char *s;
   static char buf[100];
   s = "";
-  if (de->de_sched_state == DVR_COMPLETED) {
+  if (de->de_sched_state == DVR_COMPLETED ||
+      de->de_sched_state == DVR_RECORDING) {
     snprintf(buf, sizeof(buf), "dvrfile/%s", idnode_uuid_as_str(&de->de_id));
     s = buf;
   }
@@ -1567,9 +1568,12 @@ dvr_entry_class_filesize_get(void *o)
 {
   static int64_t size;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  if (de->de_sched_state == DVR_COMPLETED)
+  if (de->de_sched_state == DVR_COMPLETED ||
+      de->de_sched_state == DVR_RECORDING) {
     size = dvr_get_filesize(de);
-  else
+    if (size < 0)
+      size = 0;
+  } else
     size = 0;
   return &size;
 }

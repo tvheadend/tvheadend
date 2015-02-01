@@ -215,8 +215,13 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         del: true,
         list: 'disp_title,episode,pri,start_real,stop_real,' +
-              'duration,channel,owner,creator,config_name,' +
+              'duration,filesize,channel,owner,creator,config_name,' +
               'sched_status,errors,data_errors,comment',
+        columns: {
+            filesize: {
+                renderer: tvheadend.filesizeRenderer()
+            }
+        },
         sort: {
           field: 'start_real',
           direction: 'ASC'
