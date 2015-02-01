@@ -240,7 +240,10 @@ dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_destroy(conf);
 
   if (dte)
+  {
     dvr_timerec_save(dte);
+    dvr_timerec_check(dte);
+  }
 
   return dte;
 }
