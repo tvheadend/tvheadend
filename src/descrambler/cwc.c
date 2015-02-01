@@ -2039,7 +2039,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   ct->cs_constcw       = pcard->cwc_caid == 0x2600;
 
   td                   = (th_descrambler_t *)ct;
-  snprintf(buf, sizeof(buf), "cwc-%s-%i", cwc->cwc_hostname, cwc->cwc_port);
+  snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cwc_caid);
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
   td->td_stop          = cwc_service_destroy;
