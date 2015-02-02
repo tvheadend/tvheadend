@@ -3234,6 +3234,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int qlen = hs->hs_q.hmq_payload;
   size_t payloadlen;
 
+  if(pkt->pkt_payload == NULL)
+    return;
+
   if(!htsp_is_stream_enabled(hs, pkt->pkt_componentindex)) {
     pkt_ref_dec(pkt);
     return;
