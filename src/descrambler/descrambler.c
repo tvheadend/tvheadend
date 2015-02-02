@@ -529,17 +529,22 @@ descrambler_table_callback
   descrambler_section_t *ds;
   descrambler_ecmsec_t *des;
   th_descrambler_runtime_t *dr;
+  int emm = (mt->mt_flags & MT_FAST) == 0;
 
   if (len < 6)
     return 0;
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
   TAILQ_FOREACH(ds, &dt->sections, link) {
-    LIST_FOREACH(des, &ds->ecmsecs, link)
-      if (des->number == ptr[4])
-        break;
+    if (!emm) {
+      LIST_FOREACH(des, &ds->ecmsecs, link)
+        if (des->number == ptr[4])
+          break;
+    } else {
+      des = LIST_FIRST(&ds->ecmsecs);
+    }
     if (des == NULL) {
       des = calloc(1, sizeof(*des));
-      des->number = ptr[4];
+      des->number = emm ? 0 : ptr[4];
       LIST_INSERT_HEAD(&ds->ecmsecs, des, link);
     }
     if (des->last_data == NULL || len != des->last_data_len ||
@@ -553,7 +558,7 @@ descrambler_table_callback
         des->last_data_len = 0;
       }
       ds->callback(ds->opaque, mt->mt_pid, ptr, len);
-      if ((mt->mt_flags & MT_FAST) != 0) { /* ECM */
+      if (!emm) { /* ECM */
         mpegts_service_t *t = mt->mt_service;
         if (t) {
           /* The keys are requested from this moment */
@@ -566,6 +571,8 @@ descrambler_table_callback
         } else
           tvhtrace("descrambler", "Unknown fast table message (section %d, len %d, pid %d)",
                    des->number, len, mt->mt_pid);
+      } else {
+        tvhtrace("descrambler", "EMM message (len %d, pid %d)", len, mt->mt_pid);
       }
     }
   }
