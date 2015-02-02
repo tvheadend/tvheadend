@@ -131,18 +131,18 @@ scanfile_load_dvbt ( dvb_mux_conf_t *mux, const char *line )
   int r;
 
   if (*line == '2') {
-    unsigned int plp_id, system_id;
-    r = sscanf(line+1, "%u %s", &plp_id, bw);
-    if (r == 2 && plp_id < 1000 && strstr(bw, "MHz") == 0) {
+    unsigned int system_id;
+    r = sscanf(line+1, "%u %s", &mux->dmc_fe_stream_id, bw);
+    if (r == 2 && mux->dmc_fe_stream_id < 1000 && strstr(bw, "MHz") == 0) {
       r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
-	             &plp_id, &system_id, &mux->dmc_fe_freq, bw, fec, fec2, qam,
+	             &mux->dmc_fe_stream_id, &system_id, &mux->dmc_fe_freq, bw, fec, fec2, qam,
                      mode, guard, hier);
       if(r != 10) return 1;
     } else {
       r = sscanf(line+1, "%u %10s %10s %10s %10s %10s %10s %10s %u",
 	             &mux->dmc_fe_freq, bw, fec, fec2, qam,
-                     mode, guard, hier, &plp_id);
-      if(r == 8) plp_id = 0; /* auto? */ else
+                     mode, guard, hier, &mux->dmc_fe_stream_id);
+      if(r == 8) mux->dmc_fe_stream_id = -1; else
       if(r != 9) return 1;
     }
     mux->dmc_fe_delsys = DVB_SYS_DVBT2;
@@ -176,9 +176,9 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
     line++;
   }
 
-  r = sscanf(line, "%u %s %u %s %s %s",
+  r = sscanf(line, "%u %s %u %s %s %s %d %d %d",
 	           &mux->dmc_fe_freq, pol, &mux->u.dmc_fe_qpsk.symbol_rate,
-             fec, rolloff, qam);
+             fec, rolloff, qam, &mux->dmc_fe_stream_id, &mux->dmc_fe_pls_code, (int*)&mux->dmc_fe_pls_mode);
   if (r < (4+v2)) return 1;
 
   mux->dmc_fe_type = DVB_TYPE_S;
@@ -188,6 +188,9 @@ scanfile_load_dvbs ( dvb_mux_conf_t *mux, const char *line )
     mux->dmc_fe_delsys     = DVB_SYS_DVBS2;
     if ((mux->dmc_fe_rolloff    = dvb_str2rolloff(rolloff)) == -1) return 1;
     if ((mux->dmc_fe_modulation = dvb_str2qam(qam))         == -1) return 1;
+    if (r < (4+v2+1)) mux->dmc_fe_stream_id = -1;
+    if (r < (4+v2+2)) mux->dmc_fe_pls_code = 1;
+    if (r < (4+v2+3)) mux->dmc_fe_pls_mode = 0;
   } else {
     mux->dmc_fe_delsys     = DVB_SYS_DVBS;
     mux->dmc_fe_rolloff    = DVB_ROLLOFF_35;
@@ -454,6 +457,8 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     if ((x = htsmsg_get_str(l, "INVERSION")))
       if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
         mux_fail(r, "wrong inversion '%s'", x);
+    if (htsmsg_get_s32(l, "STREAM_ID", &mux->dmc_fe_stream_id))
+      mux->dmc_fe_stream_id = -1;
 
   } else if (mux->dmc_fe_delsys == DVB_SYS_DVBS ||
              mux->dmc_fe_delsys == DVB_SYS_DVBS2) {
@@ -481,6 +486,17 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
     if ((x = htsmsg_get_str(l, "PILOT")))
       if ((mux->dmc_fe_pilot = dvb_str2rolloff(x)) == -1)
         mux_fail(r, "wrong pilot '%s'", x);
+    if (htsmsg_get_s32(l, "STREAM_ID", &r)) {
+      mux->dmc_fe_stream_id = -1;
+      mux->dmc_fe_pls_mode = 0;
+      mux->dmc_fe_pls_code = 1;
+    }
+    else {
+      mux->dmc_fe_stream_id = r&0xff;
+      mux->dmc_fe_pls_mode = (r>>26)&0x3;
+      mux->dmc_fe_pls_code = (r>>8)&0x3FFFF;
+    }
+
     if ((x = htsmsg_get_str(l, "POLARIZATION"))) {
       char pol[2];
       pol[0] = x[0]; pol[1] = '\0';
