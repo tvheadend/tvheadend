@@ -51,6 +51,7 @@ typedef struct mk_track {
   int avc;
   int type;
   int tracknum;
+  int tracktype;
   int disabled;
   int64_t nextpts;
 
@@ -334,6 +335,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     }
 
     tr->tracknum = ++tracknum;
+    tr->tracktype = tracktype;
     mkm->has_video |= (tracktype == 1);
     
     t = htsbuf_queue_alloc(0);
@@ -976,7 +978,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
     nxt = ts_rescale(t->nextpts, 1000000000 / MATROSKA_TIMESCALE);
     pts = ts_rescale(pts,        1000000000 / MATROSKA_TIMESCALE);
 
-    if(mkm->totduration < nxt)
+    if((t->tracktype == 1 || t->tracktype == 2) && mkm->totduration < nxt)
       mkm->totduration = nxt;
 
     delta = pts - mkm->cluster_tc;
