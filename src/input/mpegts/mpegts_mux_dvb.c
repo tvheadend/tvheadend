@@ -223,7 +223,7 @@ const idclass_t dvb_mux_dvbt_class =
       .id       = "plp_id",
       .name     = "PLP ID",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
-      .def.i	= 0,
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
     {}
   }
@@ -544,7 +544,7 @@ const idclass_t dvb_mux_dvbs_class =
       .id       = "stream_id",
       .name     = "ISI",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
-      .def.i	= -1,
+      .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
     {
       .type     = PT_STR,
@@ -712,6 +712,7 @@ dvb_mux_create0
   /* Defaults */
   lm->lm_tuning.dmc_fe_inversion = DVB_INVERSION_AUTO;
   lm->lm_tuning.dmc_fe_pilot     = DVB_PILOT_AUTO;
+  lm->lm_tuning.dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER;
 
   /* Parent init and load config */
   if (!(mm = mpegts_mux_create0(mm, idc, uuid,

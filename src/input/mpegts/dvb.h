@@ -424,6 +424,8 @@ typedef enum dvb_polarisation {
   DVB_POLARISATION_OFF            = 0x04
 } dvb_polarisation_t;
 
+#define DVB_NO_STREAM_ID_FILTER (-1)
+
 typedef struct dvb_qpsk_config {
   dvb_polarisation_t  polarisation;
   int                 orbital_pos;
