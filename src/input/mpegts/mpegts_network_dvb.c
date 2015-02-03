@@ -362,7 +362,7 @@ dvb_network_mux_class
 
 static mpegts_mux_t *
 dvb_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *p )
+  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *p, int force )
 {
   int save = 0;
   mpegts_mux_t *mmo = mm;
@@ -370,7 +370,7 @@ dvb_network_create_mux
   dvb_mux_conf_t *dmc = p;
 
   mm = dvb_network_find_mux(ln, dmc, onid, tsid);
-  if (!mm && ln->mn_autodiscovery) {
+  if (!mm && (ln->mn_autodiscovery || force)) {
     const idclass_t *cls;
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;

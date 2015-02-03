@@ -152,7 +152,7 @@ static const dvb_fe_code_rate_t fec_tab [16] = {
 static mpegts_mux_t *
 dvb_desc_sat_del
   (mpegts_mux_t *mm, uint16_t onid, uint16_t tsid,
-   const uint8_t *ptr, int len )
+   const uint8_t *ptr, int len, int force )
 {
   int frequency, symrate;
   dvb_mux_conf_t dmc;
@@ -214,7 +214,7 @@ dvb_desc_sat_del
   tvhdebug("nit", "    %s", buf);
 
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
+  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, force);
 }
 
 /*
@@ -271,7 +271,7 @@ dvb_desc_cable_del
   tvhdebug("nit", "    %s", buf);
 
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
+  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, 0);
 }
 
 /*
@@ -339,7 +339,7 @@ dvb_desc_terr_del
   tvhdebug("nit", "    %s", buf);
   
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc);
+  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, 0);
 }
  
 #endif /* ENABLE_MPEGTS_DVB */
@@ -1340,7 +1340,7 @@ dvb_nit_mux
     case DVB_DESC_TERR_DEL:
       if (discovery) {
         if (dtag == DVB_DESC_SAT_DEL)
-          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
+          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen, 0);
         else if (dtag == DVB_DESC_CABLE_DEL)
           mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
         else
@@ -1878,37 +1878,17 @@ dvb_bat_callback
 }
 
 #if ENABLE_MPEGTS_DVB
-/*
- * DVB fastscan table processing
- */
-int
-dvb_fs_sdt_callback
-  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+static int
+dvb_fs_sdt_mux
+  ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_table_state_t *st,
+    const uint8_t *ptr, int len, int discovery )
 {
-  int r, sect, last, ver;
+  uint16_t onid, tsid, service_id;
   uint8_t dtag;
   int llen, dlen;
   const uint8_t *lptr, *dptr;
-  uint16_t nbid = 0, onid, tsid, service_id;
-  mpegts_mux_t     *mm = mt->mt_mux, *mux;
   mpegts_network_t *mn = mm->mm_network;
-  mpegts_table_state_t  *st  = NULL;
-
-  /* Fastscan ID */
-  nbid = (ptr[0] << 8) | ptr[1];
-
-  /* Begin */
-  if (tableid != 0xBD)
-    return -1;
-  r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
-  if (r == 0) {
-    mt->mt_working -= st->working;
-    st->working = 0;
-  }
-  if (r != 1) return r;
-  if (len < 5) return -1;
-  ptr += 5;
-  len -= 5;
+  mpegts_mux_t *mux;
 
   while (len > 0) {
     const char *charset;
@@ -1925,11 +1905,29 @@ dvb_fs_sdt_callback
     /* (ptr[10] << 8) | ptr[12] - audio ecm pid */
     /* (ptr[14] << 8) | ptr[15] - pcr pid */
 
-    tvhdebug(mt->mt_name, "  service %04X (%d) onid %04X (%d) tsid %04X (%d)",
-             service_id, service_id, onid, onid, tsid, tsid);
-
     /* Initialise the loop */
     DVB_LOOP_INIT(ptr, len, 16, lptr, llen);
+
+    if (discovery) {
+      /* Descriptor loop */
+      DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
+        switch (dtag) {
+          case DVB_DESC_SAT_DEL:
+            tvhtrace(mt->mt_name, "    dtag %02X dlen %d (discovery) onid %04X (%d) tsid %04X (%d)",
+                     dtag, dlen, onid, onid, tsid, tsid);
+            mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen, 1);
+            if (mux) {
+              mpegts_mux_set_onid(mux, onid);
+              mpegts_mux_set_tsid(mux, tsid, 0);
+            }
+            break;
+        }
+      }
+      continue;
+    }
+
+    tvhdebug(mt->mt_name, "  service %04X (%d) onid %04X (%d) tsid %04X (%d)",
+             service_id, service_id, onid, onid, tsid, tsid);
 
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
@@ -1953,13 +1951,6 @@ dvb_fs_sdt_callback
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
                                sizeof(sprov), sname, sizeof(sname), charset))
             return -1;
-          break;
-        case DVB_DESC_SAT_DEL:
-          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen);
-          if (mux) {
-            mpegts_mux_set_onid(mux, onid);
-            mpegts_mux_set_tsid(mux, tsid, 0);
-          }
           break;
       }
     }
@@ -2014,6 +2005,41 @@ dvb_fs_sdt_callback
       mt->mt_flags |= MT_FASTSWITCH;
     }
   }
+
+  return 0;
+}
+
+
+/*
+ * DVB fastscan table processing
+ */
+int
+dvb_fs_sdt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r, sect, last, ver;
+  uint16_t nbid;
+  mpegts_mux_t     *mm = mt->mt_mux;
+  mpegts_table_state_t  *st  = NULL;
+
+  /* Fastscan ID */
+  nbid = (ptr[0] << 8) | ptr[1];
+
+  /* Begin */
+  if (tableid != 0xBD)
+    return -1;
+  r = dvb_table_begin(mt, ptr, len, tableid, nbid, 7, &st, &sect, &last, &ver);
+  if (r == 0) {
+    mt->mt_working -= st->working;
+    st->working = 0;
+  }
+  if (r != 1) return r;
+  if (len < 5) return -1;
+  ptr += 5;
+  len -= 5;
+
+  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 1);
+  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 0);
 
   /* End */
   return dvb_table_end(mt, st, sect);
