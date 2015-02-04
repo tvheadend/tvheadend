@@ -1,38 +1,74 @@
 [
   {
-    "name": "Canal Digitaal",
+    "name": "Canal Digitaal Astra1",
     "position": 192,
     "frequency": 12515000,
     "pid": 900
   },
   {
-    "name": "TV Vlaanderen",
+    "name": "TV Vlaanderen Astra1",
     "position": 192,
     "frequency": 12515000,
     "pid": 910
   },
   {
-    "name": "TéléSAT",
+    "name": "TéléSAT Astra1",
     "position": 192,
     "frequency": 12515000,
     "pid": 920
   },
   {
-    "name": "Mobistar NL",
+    "name": "Mobistar NL Astra1",
     "position": 192,
     "frequency": 12515000,
     "pid": 930
   },
   {
-    "name": "Mobistar FR",
+    "name": "Mobistar FR Astra1",
     "position": 192,
     "frequency": 12515000,
     "pid": 940
   },
   {
-    "name": "AustriaSat",
+    "name": "AustriaSat Astra1",
     "position": 192,
     "frequency": 12515000,
+    "pid": 950
+  },
+  {
+    "name": "Canal Digitaal Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "pid": 900
+  },
+  {
+    "name": "TV Vlaanderen Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "pid": 910
+  },
+    {
+    "name": "TéléSAT Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "pid": 920
+  },
+  {
+    "name": "Mobistar NL Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "pid": 930
+  },
+  {
+    "name": "Mobistar FR Astra3",
+    "position": 235,
+    "frequency": 12187000,
+    "pid": 940
+  },
+  {
+    "name": "AustriaSat Astra3",
+    "position": 235,
+    "frequency": 12187000,
     "pid": 950
   },
   {
