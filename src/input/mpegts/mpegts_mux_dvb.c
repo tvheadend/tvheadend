@@ -542,14 +542,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_INT,
       .id       = "stream_id",
-      .name     = "ISI",
+      .name     = "ISI (Stream ID)",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
     {
       .type     = PT_STR,
       .id       = "pls_mode",
-      .name     = "PLS MODE",
+      .name     = "PLS Mode",
       .set      = dvb_mux_dvbs_class_pls_mode_set,
       .get      = dvb_mux_dvbs_class_pls_mode_get,
       .list     = dvb_mux_dvbs_class_pls_mode_list,
@@ -558,7 +558,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "pls_code",
-      .name     = "PLS CODE",
+      .name     = "PLS Code",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
     },
