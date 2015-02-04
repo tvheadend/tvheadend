@@ -1458,9 +1458,10 @@ new_tune:
     if (ev[0].data.ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
-        if (rtsp->hc_code == 404) {
+        if (rtsp->hc_code == 404 && session[0]) {
           tvhlog(LOG_WARNING, "satip", "%s - RTSP 404 ERROR (retrying)", buf);
           satip_frontend_extra_shutdown(lfe, session, stream_id);
+          session[0] = '\0';
           start = 1;
           http_client_close(rtsp);
           rtsp = NULL;
