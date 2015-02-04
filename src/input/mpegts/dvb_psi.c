@@ -177,10 +177,8 @@ dvb_desc_sat_del
     return NULL;
   }
 
-  memset(&dmc, 0, sizeof(dmc));
-  dmc.dmc_fe_type                = DVB_TYPE_S;
-  dmc.dmc_fe_pilot               = DVB_PILOT_AUTO;
-  dmc.dmc_fe_inversion           = DVB_INVERSION_AUTO;
+  dvb_mux_conf_init(&dmc, (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
+
   dmc.dmc_fe_freq                = frequency;
   dmc.u.dmc_fe_qpsk.orbital_pos  = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
   dmc.u.dmc_fe_qpsk.orbital_dir  = (ptr[6] & 0x80) ? 'E' : 'W';
@@ -195,7 +193,6 @@ dvb_desc_sat_del
   static int rtab[4] = {
     DVB_ROLLOFF_35, DVB_ROLLOFF_25, DVB_ROLLOFF_20, DVB_ROLLOFF_AUTO
   };
-  dmc.dmc_fe_delsys     = (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS;
   dmc.dmc_fe_modulation = mtab[ptr[6] & 0x3];
   if (dmc.dmc_fe_modulation != DVB_MOD_NONE &&
       dmc.dmc_fe_modulation != DVB_MOD_QPSK)
@@ -253,10 +250,8 @@ dvb_desc_cable_del
     return NULL;
   }
 
-  memset(&dmc, 0, sizeof(dmc));
-  dmc.dmc_fe_type            = DVB_TYPE_C;
-  dmc.dmc_fe_delsys          = DVB_SYS_DVBC_ANNEX_A;
-  dmc.dmc_fe_inversion       = DVB_INVERSION_AUTO;
+  dvb_mux_conf_init(&dmc, DVB_SYS_DVBC_ANNEX_A);
+
   dmc.dmc_fe_freq            = frequency * 100;
 
   dmc.u.dmc_fe_qam.symbol_rate  = symrate * 100;
@@ -320,12 +315,9 @@ dvb_desc_terr_del
     return NULL;
   }
 
-  memset(&dmc, 0, sizeof(dmc));
-  dmc.dmc_fe_type             = DVB_TYPE_T;
-  dmc.dmc_fe_delsys           = DVB_SYS_DVBT;
-  dmc.dmc_fe_inversion        = DVB_INVERSION_AUTO;
-  dmc.dmc_fe_freq             = frequency * 10;
+  dvb_mux_conf_init(&dmc, DVB_SYS_DVBT);
 
+  dmc.dmc_fe_freq                         = frequency * 10;
   dmc.u.dmc_fe_ofdm.bandwidth             = btab[(ptr[4] >> 5) & 0x7];
   dmc.dmc_fe_modulation                   = ctab[(ptr[5] >> 6) & 0x3];
   dmc.u.dmc_fe_ofdm.hierarchy_information = htab[(ptr[5] >> 3) & 0x3];

@@ -511,6 +511,8 @@ static inline int dvb_bandwidth( dvb_fe_bandwidth_t bw )
 
 int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 
+void dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys );
+
 int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
 
 int dvb_sat_position( const dvb_mux_conf_t *mc );

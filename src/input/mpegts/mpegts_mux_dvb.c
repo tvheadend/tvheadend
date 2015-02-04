@@ -710,9 +710,7 @@ dvb_mux_create0
   lm = (dvb_mux_t*)mm;
 
   /* Defaults */
-  lm->lm_tuning.dmc_fe_inversion = DVB_INVERSION_AUTO;
-  lm->lm_tuning.dmc_fe_pilot     = DVB_PILOT_AUTO;
-  lm->lm_tuning.dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER;
+  dvb_mux_conf_init(&lm->lm_tuning, DVB_SYS_NONE);
 
   /* Parent init and load config */
   if (!(mm = mpegts_mux_create0(mm, idc, uuid,
