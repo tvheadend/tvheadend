@@ -163,6 +163,7 @@ bouquet_find_by_source(const char *name, const char *src, int create)
       tvhwarn("bouquet", "bouquet name '%s' changed to '%s'", bq->bq_name ?: "", name);
       free(bq->bq_name);
       bq->bq_name = strdup(name);
+      bouquet_save(bq, 1);
     }
     return bq;
   }
