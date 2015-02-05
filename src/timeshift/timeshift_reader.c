@@ -809,6 +809,7 @@ void *timeshift_reader ( void *p )
         cur_speed = 100;
         ctrl      = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
+        ctrl      = NULL;
 
         /* Flush timeshift buffer to live */
         if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1)
@@ -837,8 +838,8 @@ void *timeshift_reader ( void *p )
         pause_time = last_time;
         ctrl       = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
+        ctrl       = NULL;
       }
-      ctrl = NULL;
 
     /* Flush unwanted */
     } else if (ts->ondemand && cur_file) {
