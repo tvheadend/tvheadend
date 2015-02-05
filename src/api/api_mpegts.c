@@ -327,6 +327,42 @@ api_mpegts_mux_sched_create
   return err;
 }
 
+static int
+api_dvb_orbitalpos_list
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *l, *e, *c;
+  htsmsg_field_t *f;
+  const char *s;
+  int satpos, i;
+  char buf[128];
+
+  if (!satellites)
+    return 0;
+
+  l = htsmsg_create_list();
+  HTSMSG_FOREACH(f, satellites) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+    if(htsmsg_get_s32(c, "pos", &satpos))
+      continue;
+    if((s = htsmsg_get_str(c, "name")) == NULL)
+      continue;
+    e = htsmsg_create_map();
+    dvb_sat_position_to_str(satpos, buf, sizeof(buf));
+    htsmsg_add_str(e, "key", buf);
+    i = strlen(buf);
+    snprintf(buf + i, sizeof(buf) - i, " : %s", s);
+    htsmsg_add_str(e, "val", buf);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  return 0;
+}
+
+
 #if ENABLE_MPEGTS_DVB
 static int
 api_dvb_scanfile_list
@@ -334,6 +370,7 @@ api_dvb_scanfile_list
 {
   char buf[512];
   const char *type = htsmsg_get_str(args, "type");
+  int satpos = htsmsg_get_s32_or_default(args, "satpos", INT_MAX);
   scanfile_region_list_t *list = NULL;
   htsmsg_t *l, *e;
   scanfile_region_t *r;
@@ -356,6 +393,7 @@ api_dvb_scanfile_list
   l = htsmsg_create_list();
   LIST_FOREACH(r, list, sfr_link) {
     LIST_FOREACH(n, &r->sfr_networks, sfn_link) {
+      if (satpos != INT_MAX && n->sfn_satpos != satpos) continue;
       e = htsmsg_create_map();
       sprintf(buf, "%s/%s/%s", type, r->sfr_id, n->sfn_id);
       htsmsg_add_str(e, "key", buf);
@@ -401,6 +439,7 @@ api_mpegts_init ( void )
     { "mpegts/mux_sched/class",    ACCESS_ADMIN, api_idnode_class, (void*)&mpegts_mux_sched_class },
     { "mpegts/mux_sched/grid",     ACCESS_ADMIN, api_idnode_grid, api_mpegts_mux_sched_grid },
     { "mpegts/mux_sched/create",   ACCESS_ADMIN, api_mpegts_mux_sched_create, NULL },
+    { "dvb/orbitalpos/list",       ACCESS_ADMIN, api_dvb_orbitalpos_list, NULL },
 #if ENABLE_MPEGTS_DVB
     { "dvb/scanfile/list",         ACCESS_ADMIN, api_dvb_scanfile_list, NULL },
 #endif

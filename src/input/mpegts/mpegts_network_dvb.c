@@ -76,6 +76,10 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   if (!(sfn = scanfile_find(s)))
     return 0;
 
+  /* Set satellite position */
+  if (sfn->sfn_satpos != INT_MAX && ln->mn_satpos == INT_MAX)
+    ln->mn_satpos = sfn->sfn_satpos;
+
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
     if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
@@ -103,35 +107,86 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   return 0;
 }
 static htsmsg_t *
-dvb_network_class_scanfile_list ( const char *type )
+dvb_network_class_scanfile_list ( void *o, const char *type )
 {
+  dvb_network_t *ln = o;
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type", "api");
   htsmsg_add_str(m, "uri", "dvb/scanfile/list");
+  htsmsg_add_str(m, "stype", "none");
   e = htsmsg_create_map();
   htsmsg_add_str(e, "type", type);
+  if (ln && ln->mn_satpos != INT_MAX)
+    htsmsg_add_s32(e, "satpos", ln->mn_satpos);
   htsmsg_add_msg(m, "params", e);
   return m;
 }
+
 static htsmsg_t *
 dvb_network_dvbt_class_scanfile_list ( void *o )
 {
-  return dvb_network_class_scanfile_list("dvbt");
+  return dvb_network_class_scanfile_list(o, "dvbt");
 }
 static htsmsg_t *
 dvb_network_dvbc_class_scanfile_list ( void *o )
 {
-  return dvb_network_class_scanfile_list("dvbc");
+  return dvb_network_class_scanfile_list(o, "dvbc");
 }
 static htsmsg_t *
 dvb_network_dvbs_class_scanfile_list ( void *o )
 {
-  return dvb_network_class_scanfile_list("dvbs");
+  return dvb_network_class_scanfile_list(o, "dvbs");
 }
 static htsmsg_t *
 dvb_network_atsc_class_scanfile_list ( void *o )
 {
-  return dvb_network_class_scanfile_list("atsc");
+  return dvb_network_class_scanfile_list(o, "atsc");
+}
+
+static const void *
+dvb_network_class_orbital_pos_get ( void *o )
+{
+  dvb_network_t *ln = o;
+  static char buf[16];
+  static const char *s;
+  s = NULL;
+  if (ln->mn_satpos != INT_MAX) {
+    dvb_sat_position_to_str(ln->mn_satpos, buf, sizeof(buf));
+    s = buf;
+  } else
+    s = "";
+  return &s;
+}
+
+static int
+dvb_network_class_orbital_pos_set ( void *o, const void *s )
+{
+  dvb_network_t *ln = o;
+  int satpos;
+
+  /* Find */
+  if (!s)
+    return 0;
+
+  satpos = dvb_sat_position_from_str(s);
+  if (satpos != ln->mn_satpos) {
+    ln->mn_satpos = satpos;
+    return 1;
+  }
+
+  return 0;
+}
+
+static htsmsg_t *
+dvb_network_class_orbital_pos_list ( void *o )
+{
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type", "api");
+  htsmsg_add_str(m, "uri", "dvb/orbitalpos/list");
+  htsmsg_add_str(m, "stype", "none");
+  e = htsmsg_create_map();
+  htsmsg_add_msg(m, "params", e);
+  return m;
 }
 
 const idclass_t dvb_network_class =
@@ -197,6 +252,14 @@ const idclass_t dvb_network_dvbs_class =
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbs_class_scanfile_list,
       .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "orbital_pos",
+      .name     = "Orbital Position",
+      .set      = dvb_network_class_orbital_pos_set,
+      .get      = dvb_network_class_orbital_pos_get,
+      .list     = dvb_network_class_orbital_pos_list,
     },
     {}
   }

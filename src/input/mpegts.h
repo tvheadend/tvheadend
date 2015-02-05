@@ -300,6 +300,7 @@ struct mpegts_network
   int      mn_ignore_chnum;
   int      mn_sid_chnum;
   int      mn_localtime;
+  int      mn_satpos;
 };
 
 typedef enum mpegts_mux_scan_state

@@ -22,6 +22,7 @@
 typedef struct scanfile_network {
   const char                  *sfn_id;
   const char                  *sfn_name;
+  int                          sfn_satpos;
   LIST_ENTRY(scanfile_network) sfn_link;
   LIST_HEAD(,dvb_mux_conf)     sfn_muxes;
 } scanfile_network_t;

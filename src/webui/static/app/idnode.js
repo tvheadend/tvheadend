@@ -16,6 +16,13 @@ tvheadend.idnode_get_enum = function(conf)
     if (key in tvheadend.idnode_enum_stores)
         return tvheadend.idnode_enum_stores[key];
 
+    var stype = Ext.data.SortTypes.none;
+    var sinfo = conf.sort;
+    if (conf.stype !== 'none') {
+        stype = Ext.data.SortTypes.asUCString;
+        sinfo = { field: 'val', 'direction': 'ASC' };
+    }
+
     /* Build store */
     var st = new Ext.data.JsonStore({
         root: conf.root || 'entries',
@@ -24,18 +31,16 @@ tvheadend.idnode_get_enum = function(conf)
         fields: conf.fields ||
             [
                 'key',
+                'val',
                 {
                     name: 'val',
-                    sortType: Ext.data.SortTypes.asUCString
+                    sortType: stype
                 }
             ],
         id: conf.id || 'key',
         autoLoad: true,
         listeners: conf.listeners || {},
-        sortInfo: conf.sort || {
-            field: 'val',
-            direction: 'ASC'
-        }
+        sortInfo: sinfo
     });
     tvheadend.idnode_enum_stores[key] = st;
 
@@ -75,7 +80,8 @@ tvheadend.idnode_enum_store = function(f)
         return tvheadend.idnode_get_enum({
             url: 'api/' + f['enum'].uri,
             params: f['enum'].params,
-            event: f['enum'].event
+            event: f['enum'].event,
+            stype: f['enum'].stype
         });
     }
 

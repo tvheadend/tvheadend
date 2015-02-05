@@ -227,7 +227,7 @@ scanfile_network_dvbs_pos(char *n, int *rpos)
 {
   int len = strlen(n), pos = len - 1, frac = 0;
 
-  if (len > 0 && n[pos] != 'W' && n[pos] != 'E')
+  if (len > 0 && toupper(n[pos]) != 'W' && toupper(n[pos]) != 'E')
     return 0;
   pos--;
   while (pos >= 0 && isdigit(n[pos]))
@@ -248,7 +248,7 @@ scanfile_network_dvbs_pos(char *n, int *rpos)
   n[pos] = '\0';
   *rpos *= 10;
   *rpos += frac;
-  if (n[len-1] == 'W')
+  if (toupper(n[len-1]) == 'W')
     *rpos = -*rpos;
   return 1;
 }
@@ -257,7 +257,9 @@ static int
 scanfile_network_cmp
   ( scanfile_network_t *a, scanfile_network_t *b )
 {
-  return strcmp(a->sfn_name, b->sfn_name);
+  if (a->sfn_satpos == b->sfn_satpos)
+    return strcmp(a->sfn_name, b->sfn_name);
+  return b->sfn_satpos - a->sfn_satpos;
 }
 static int
 scanfile_region_cmp
@@ -601,6 +603,7 @@ scanfile_load_file
     str++;
   }
   *str = '\0';
+  opos = INT_MAX;
   if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
     snprintf(buf3, sizeof(buf3), "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
                                                    abs(opos) / 10, abs(opos) % 10,
@@ -611,6 +614,7 @@ scanfile_load_file
   net = calloc(1, sizeof(scanfile_network_t));
   net->sfn_id   = strdup(buf2);
   net->sfn_name = strdup(buf);
+  net->sfn_satpos = opos;
   LIST_INSERT_SORTED(&reg->sfr_networks, net, sfn_link, scanfile_network_cmp);
 
   /* Process file */

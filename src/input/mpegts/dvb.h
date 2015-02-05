@@ -236,6 +236,8 @@ void psi_tables_dvb     ( struct mpegts_mux *mm );
 void psi_tables_atsc_t  ( struct mpegts_mux *mm );
 void psi_tables_atsc_c  ( struct mpegts_mux *mm );
 
+extern htsmsg_t *satellites;
+
 /*
  *
  */

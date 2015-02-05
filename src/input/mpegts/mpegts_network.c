@@ -357,6 +357,9 @@ mpegts_network_create0
   TAILQ_INIT(&mn->mn_scan_active);
   gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 
+  /* Defaults */
+  mn->mn_satpos = INT_MAX;
+
   /* Load config */
   if (conf)
     idnode_load(&mn->mn_id, conf);

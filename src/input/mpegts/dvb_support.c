@@ -31,6 +31,7 @@
 #include "dvb_charset_tables.h"
 #include "input.h"
 #include "intlconv.h"
+#include "settings.h"
 
 static int convert_iso_8859[16] = {
   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
@@ -923,8 +924,11 @@ dvb_sat_position_from_str( const char *buf )
 /**
  *
  */
+htsmsg_t *satellites;
+
 void dvb_init( void )
 {
+  satellites = hts_settings_load("satellites");
 }
 
 void dvb_done( void )
@@ -932,4 +936,5 @@ void dvb_done( void )
   extern SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
 
   SKEL_FREE(mpegts_table_state_skel);
+  htsmsg_destroy(satellites);
 }
