@@ -1332,7 +1332,12 @@ dvb_nit_mux
     case DVB_DESC_TERR_DEL:
       if (discovery) {
         if (dtag == DVB_DESC_SAT_DEL)
-          mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen, 0);
+        {
+          if (tableid == DVB_FASTSCAN_NIT_BASE)
+            mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen, 1);
+          else
+            mux = dvb_desc_sat_del(mm, onid, tsid, dptr, dlen, 0);
+        }
         else if (dtag == DVB_DESC_CABLE_DEL)
           mux = dvb_desc_cable_del(mm, onid, tsid, dptr, dlen);
         else
