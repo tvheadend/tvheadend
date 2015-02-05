@@ -816,14 +816,18 @@ static int
 dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   const char *pol = dvb_pol2str(dmc->u.dmc_fe_qpsk.polarisation);
-  const char dir = dmc->u.dmc_fe_qpsk.orbital_dir;
+  const int satpos = dmc->u.dmc_fe_qpsk.orbital_pos;
+  char satbuf[16];
+  if (satpos) {
+    snprintf(satbuf, sizeof(buf), "%d.%d%c ", abs(satpos) / 10, abs(satpos) % 10, satpos < 0 ? 'W' : 'E');
+  } else {
+    satbuf[0] = '\0';
+  }
   return
   snprintf(buf, bufsize,
-           "%s pos %d.%d%c freq %d %c sym %d fec %s mod %s roff %s is_id %d pls_mode %s pls_code %d",
+           "%s %sfreq %d %c sym %d fec %s mod %s roff %s is_id %d pls_mode %s pls_code %d",
            dvb_delsys2str(dmc->dmc_fe_delsys),
-           dmc->u.dmc_fe_qpsk.orbital_pos / 10,
-           dmc->u.dmc_fe_qpsk.orbital_pos % 10,
-           dir >= ' ' && dir <= 'z' ? dir : '?',
+           satbuf,
            dmc->dmc_fe_freq,
            pol ? pol[0] : 'X',
            dmc->u.dmc_fe_qpsk.symbol_rate,
@@ -865,18 +869,6 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
     return
       snprintf(buf, bufsize, "UNKNOWN MUX CONFIG");
   }
-}
-
-int
-dvb_sat_position(const dvb_mux_conf_t *mc)
-{
-  int pos = mc->u.dmc_fe_qpsk.orbital_pos;
-  assert(mc->dmc_fe_type == DVB_TYPE_S);
-  if (!mc->u.dmc_fe_qpsk.orbital_dir)
-    return INT_MAX;
-  if (mc->u.dmc_fe_qpsk.orbital_dir == 'W')
-    return -pos;
-  return pos;
 }
 
 const char *

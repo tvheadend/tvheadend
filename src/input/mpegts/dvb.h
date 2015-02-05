@@ -431,7 +431,6 @@ typedef enum dvb_polarisation {
 typedef struct dvb_qpsk_config {
   dvb_polarisation_t  polarisation;
   int                 orbital_pos;
-  char                orbital_dir;
   uint32_t            symbol_rate;
   dvb_fe_code_rate_t  fec_inner;
 } dvb_qpsk_config_t;
@@ -516,8 +515,6 @@ int dvb_delsys2type ( enum dvb_fe_delivery_system ds );
 void dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys );
 
 int dvb_mux_conf_str ( dvb_mux_conf_t *conf, char *buf, size_t bufsize );
-
-int dvb_sat_position( const dvb_mux_conf_t *mc );
 
 const char *dvb_sat_position_to_str( int position, char *buf, size_t buflen );
 

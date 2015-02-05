@@ -34,6 +34,7 @@ typedef struct dvb_network
   dvb_fe_type_t ln_type;
 } dvb_network_t;
 
+extern const idclass_t dvb_network_class;
 extern const idclass_t dvb_network_dvbt_class;
 extern const idclass_t dvb_network_dvbc_class;
 extern const idclass_t dvb_network_dvbs_class;
@@ -41,13 +42,13 @@ extern const idclass_t dvb_network_atsc_class;
 
 void dvb_network_init ( void );
 void dvb_network_done ( void );
-dvb_network_t *dvb_network_find_by_uuid(const char *uuid);
+static inline dvb_network_t *dvb_network_find_by_uuid(const char *uuid)
+  { return idnode_find(uuid, &dvb_network_class, NULL); }
 
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
-int dvb_network_get_orbital_pos
-  ( mpegts_network_t *mn, int *pos, char *dir );
+int dvb_network_get_orbital_pos(mpegts_network_t *mn);
 
 /*
  *

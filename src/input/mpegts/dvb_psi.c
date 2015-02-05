@@ -181,7 +181,8 @@ dvb_desc_sat_del
 
   dmc.dmc_fe_freq                = frequency;
   dmc.u.dmc_fe_qpsk.orbital_pos  = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
-  dmc.u.dmc_fe_qpsk.orbital_dir  = (ptr[6] & 0x80) ? 'E' : 'W';
+  if ((ptr[6] & 0x80) == 0)
+    dmc.u.dmc_fe_qpsk.orbital_pos *= -1;
   dmc.u.dmc_fe_qpsk.polarisation = (ptr[6] >> 5) & 0x03;
 
   dmc.u.dmc_fe_qpsk.symbol_rate  = symrate * 100;
@@ -555,7 +556,7 @@ dvb_freesat_add_service
   if (!fr->bouquet) {
     strcpy(name, "???");
     if (idnode_is_instance(&bi->mm->mm_id, &dvb_mux_dvbs_class))
-      dvb_sat_position_to_str(dvb_sat_position(&((dvb_mux_t *)bi->mm)->lm_tuning),
+      dvb_sat_position_to_str(((dvb_mux_t *)bi->mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos,
                               name, sizeof(name));
     snprintf(src, sizeof(src), "dvb-%s://dvbs,%s,%04X,%u",
              bi->freesat ? "freesat" : "bskyb", name, bi->nbid, fr->regionid);
@@ -1230,9 +1231,9 @@ dvb_bat_completed
       char src[64] = "";
       if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbs_class)) {
         dvb_mux_conf_t *mc = &((dvb_mux_t *)mux)->lm_tuning;
-        if (mc->u.dmc_fe_qpsk.orbital_dir) {
+        if (mc->u.dmc_fe_qpsk.orbital_pos != INT_MAX) {
           char buf[16];
-          dvb_sat_position_to_str(dvb_sat_position(mc), buf, sizeof(buf));
+          dvb_sat_position_to_str(mc->u.dmc_fe_qpsk.orbital_pos, buf, sizeof(buf));
           snprintf(src, sizeof(src), "dvb-bouquet://dvbs,%s,%04X,%04X", buf, tsid, bi->nbid);
         }
       } else if (idnode_is_instance(&mux->mm_id, &dvb_mux_dvbt_class)) {
@@ -2553,7 +2554,7 @@ psi_tables_dvb ( mpegts_mux_t *mm )
   if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
     if (mc->dmc_fe_type == DVB_TYPE_S)
-      dvb_fastscan_each(mm, dvb_sat_position(mc),
+      dvb_fastscan_each(mm, mc->u.dmc_fe_qpsk.orbital_pos,
                         mc->dmc_fe_freq, psi_tables_dvb_fastscan);
   }
 #endif

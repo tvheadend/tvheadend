@@ -289,7 +289,7 @@ mpegts_mux_bouquet_rescan ( const char *src, const char *extra )
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
         if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
             mm->mm_tsid == tsid &&
-            dvb_sat_position(&((dvb_mux_t *)mm)->lm_tuning) == satpos)
+            ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos == satpos)
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
     return;
   }
@@ -337,7 +337,7 @@ freq:
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
         if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
             abs(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq - freq) < 2000 &&
-            dvb_sat_position(&((dvb_mux_t *)mm)->lm_tuning) == satpos)
+            ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos == satpos)
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
     return;
   }

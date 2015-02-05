@@ -450,39 +450,25 @@ dvb_mux_dvbs_class_delsys_enum (void *o)
 static const void *
 dvb_mux_dvbs_class_orbital_get ( void *o )
 {
-  static char buf[256], *s = buf;
+  static char buf[16], *s = buf;
   dvb_mux_t *lm = o;
-  snprintf(buf, sizeof(buf), "%0.1f%c",
-           lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos / 10.0,
-           lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir);
+  dvb_sat_position_to_str(lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos, buf, sizeof(buf));
   return &s;
 }
 
 static int
 dvb_mux_dvbs_class_orbital_set ( void *o, const void *s )
 {
-  float posf;
-  char dir;
-  int pos, n, save = 0;
-  const char *tmp = s;
   dvb_mux_t *lm = o;
+  int pos;
 
-  /* Note that 'E' is not passed to dir from sscanf (scientific float format) */
-  if ((n = sscanf(tmp, "%f%c", &posf, &dir)) < 1) return 0;
-  if (n != 2) {
-    dir = tmp[0] != '\0' ? tmp[strlen(tmp)-1] : 0;
-    if (dir != 'E' && dir != 'W')
-      dir = 0;
-  }
-  pos = (int)floorf(posf * 10.0);
+  pos = dvb_sat_position_from_str((const char *)s);
 
-  if (pos != lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos ||
-      dir != lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir) {
+  if (pos != lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos) {
     lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos = pos;
-    lm->lm_tuning.u.dmc_fe_qpsk.orbital_dir = dir;
-    save = 1;
+    return 1;
   }
-  return save;
+  return 0;
 }
 
 const idclass_t dvb_mux_dvbs_class =
@@ -744,6 +730,10 @@ dvb_mux_create0
     }
     htsmsg_destroy(c);
   }
+
+  /* Update the satellite position for the network settings */
+  if (ln->mn_satpos == INT_MAX && lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != INT_MAX)
+    ln->mn_satpos = lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
 
   return lm;
 }
