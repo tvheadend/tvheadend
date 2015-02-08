@@ -778,6 +778,13 @@ dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys )
   dmc->dmc_fe_inversion = DVB_INVERSION_AUTO;
   dmc->dmc_fe_pilot     = DVB_PILOT_AUTO;
   dmc->dmc_fe_stream_id = DVB_NO_STREAM_ID_FILTER;
+  switch (dmc->dmc_fe_type) {
+  case DVB_TYPE_S:
+    dmc->u.dmc_fe_qpsk.orbital_pos = INT_MAX;
+    break;
+  default:
+    break;
+  }
 }
 
 

@@ -452,7 +452,10 @@ dvb_mux_dvbs_class_orbital_get ( void *o )
 {
   static char buf[16], *s = buf;
   dvb_mux_t *lm = o;
-  dvb_sat_position_to_str(lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos, buf, sizeof(buf));
+  if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos == INT_MAX)
+    buf[0] = '\0';
+  else
+    dvb_sat_position_to_str(lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos, buf, sizeof(buf));
   return &s;
 }
 
@@ -696,7 +699,7 @@ dvb_mux_create0
   lm = (dvb_mux_t*)mm;
 
   /* Defaults */
-  dvb_mux_conf_init(&lm->lm_tuning, DVB_SYS_NONE);
+  dvb_mux_conf_init(&lm->lm_tuning, ln->ln_type);
 
   /* Parent init and load config */
   if (!(mm = mpegts_mux_create0(mm, idc, uuid,
