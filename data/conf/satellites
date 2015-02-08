@@ -1,0 +1,638 @@
+[
+  {
+    "name": "NSS 9",
+    "pos": -1770
+  },
+  {
+    "name": "AMC 8",
+    "pos": -1390
+  },
+  {
+    "name": "AMC 7",
+    "pos": -1370
+  },
+  {
+    "name": "AMC 10",
+    "pos": -1350
+  },
+  {
+    "name": "Galaxy 15",
+    "pos": -1330
+  },
+  {
+    "name": "AMC 11",
+    "pos": -1310
+  },
+  {
+    "name": "Ciel 2/Galaxy 12",
+    "pos": -1290
+  },
+  {
+    "name": "Galaxy 13/Horizons 1",
+    "pos": -1270
+  },
+  {
+    "name": "AMC 21/Galaxy 14",
+    "pos": -1250
+  },
+  {
+    "name": "Galaxy 18",
+    "pos": -1230
+  },
+  {
+    "name": "EchoStar 9/Galaxy 23",
+    "pos": -1210
+  },
+  {
+    "name": "Anik F3/DirecTV 7S/EchoStar 14",
+    "pos": -1190
+  },
+  {
+    "name": "Eutelsat 117 West A",
+    "pos": -1168
+  },
+  {
+    "name": "Eutelsat 115 West A",
+    "pos": -1149
+  },
+  {
+    "name": "Eutelsat 113 West A",
+    "pos": -1130
+  },
+  {
+    "name": "Anik F2",
+    "pos": -1111
+  },
+  {
+    "name": "DirecTV 5/EchoStar 10/11",
+    "pos": -1100
+  },
+  {
+    "name": "Anik F1R/G1",
+    "pos": -1073
+  },
+  {
+    "name": "AMC 15/18",
+    "pos": -1050
+  },
+  {
+    "name": "AMC 1/SES 3/Spaceway 1 &amp; DirecTV 10/12",
+    "pos": -1030
+  },
+  {
+    "name": "DirecTV 4S/8/SES 1",
+    "pos": -1010
+  },
+  {
+    "name": "DirecTV 14/Galaxy 16/Spaceway 2 &amp; DirecTV 11",
+    "pos": -992
+  },
+  {
+    "name": "Galaxy 19",
+    "pos": -970
+  },
+  {
+    "name": "Galaxy 3C/Spaceway 3",
+    "pos": -950
+  },
+  {
+    "name": "Galaxy 25",
+    "pos": -931
+  },
+  {
+    "name": "Galaxy 17/Nimiq 6",
+    "pos": -910
+  },
+  {
+    "name": "Galaxy 28",
+    "pos": -890
+  },
+  {
+    "name": "TKSat 1",
+    "pos": -872
+  },
+  {
+    "name": "SES 2",
+    "pos": -870
+  },
+  {
+    "name": "AMC 16",
+    "pos": -850
+  },
+  {
+    "name": "Brasilsat B4",
+    "pos": -840
+  },
+  {
+    "name": "AMC 9",
+    "pos": -830
+  },
+  {
+    "name": "Nimiq 4",
+    "pos": -820
+  },
+  {
+    "name": "Simon Bolivar",
+    "pos": -780
+  },
+  {
+    "name": "EchoStar 8/QuetzSat 1",
+    "pos": -770
+  },
+  {
+    "name": "Star One C3",
+    "pos": -750
+  },
+  {
+    "name": "Nimiq 5",
+    "pos": -727
+  },
+  {
+    "name": "AMC 6",
+    "pos": -720
+  },
+  {
+    "name": "Star One C2",
+    "pos": -700
+  },
+  {
+    "name": "AMC 4",
+    "pos": -670
+  },
+  {
+    "name": "Star One C1",
+    "pos": -650
+  },
+  {
+    "name": "Telstar 14R",
+    "pos": -630
+  },
+  {
+    "name": "EchoStar 12/16",
+    "pos": -615
+  },
+  {
+    "name": "Amazonas 2/3/4A",
+    "pos": -610
+  },
+  {
+    "name": "Intelsat 21",
+    "pos": -580
+  },
+  {
+    "name": "Amazonas 1/Galaxy 11/Intelsat 805",
+    "pos": -555
+  },
+  {
+    "name": "Intelsat 23",
+    "pos": -530
+  },
+  {
+    "name": "Intelsat 1R",
+    "pos": -500
+  },
+  {
+    "name": "NSS 806",
+    "pos": -475
+  },
+  {
+    "name": "Intelsat 14",
+    "pos": -450
+  },
+  {
+    "name": "Intelsat 9/11",
+    "pos": -431
+  },
+  {
+    "name": "SES 6",
+    "pos": -405
+  },
+  {
+    "name": "NSS 10/Telstar 11N",
+    "pos": -375
+  },
+  {
+    "name": "Intelsat 903",
+    "pos": -345
+  },
+  {
+    "name": "Hylas 1",
+    "pos": -335
+  },
+  {
+    "name": "Intelsat 25",
+    "pos": -315
+  },
+  {
+    "name": "Hispasat 1D/1E",
+    "pos": -300
+  },
+  {
+    "name": "Intelsat 907",
+    "pos": -275
+  },
+  {
+    "name": "Intelsat 905",
+    "pos": -245
+  },
+  {
+    "name": "SES 4",
+    "pos": -220
+  },
+  {
+    "name": "NSS 7",
+    "pos": -200
+  },
+  {
+    "name": "Intelsat 901",
+    "pos": -180
+  },
+  {
+    "name": "Telstar 12",
+    "pos": -150
+  },
+  {
+    "name": "Express A4",
+    "pos": -140
+  },
+  {
+    "name": "Eutelsat 12 West A",
+    "pos": -125
+  },
+  {
+    "name": "Express AM44",
+    "pos": -110
+  },
+  {
+    "name": "Eutelsat 8 West A",
+    "pos": -80
+  },
+  {
+    "name": "Eutelsat 7 West A/Eutelsat 8 West C/Nilesat 102/201",
+    "pos": -73
+  },
+  {
+    "name": "Eutelsat 5 West A",
+    "pos": -50
+  },
+  {
+    "name": "Amos 2/3",
+    "pos": -40
+  },
+  {
+    "name": "Thor 5/6/Intelsat 10-02",
+    "pos": -8
+  },
+  {
+    "name": "Eutelsat 3B/Rascom QAF 1R",
+    "pos": 31
+  },
+  {
+    "name": "Astra 4A/SES 5",
+    "pos": 49
+  },
+  {
+    "name": "Eutelsat 7A/7B",
+    "pos": 70
+  },
+  {
+    "name": "Eutelsat 9A/Ka-Sat 9A",
+    "pos": 90
+  },
+  {
+    "name": "Eutelsat 10A",
+    "pos": 100
+  },
+  {
+    "name": "Eutelsat Hot Bird 13B/13C/13D",
+    "pos": 130
+  },
+  {
+    "name": "Eutelsat 16A",
+    "pos": 160
+  },
+  {
+    "name": "Amos 5",
+    "pos": 170
+  },
+  {
+    "name": "Astra 1KR/1L/1M/1N",
+    "pos": 192
+  },
+  {
+    "name": "Arabsat 5C",
+    "pos": 200
+  },
+  {
+    "name": "Eutelsat 21B",
+    "pos": 215
+  },
+  {
+    "name": "Astra 3B",
+    "pos": 235
+  },
+  {
+    "name": "Eutelsat 25B/Es'hail 1",
+    "pos": 255
+  },
+  {
+    "name": "Badr 4/5/6",
+    "pos": 260
+  },
+  {
+    "name": "Astra 2A/2C/2E/2F/Eutelsat 28A",
+    "pos": 282
+  },
+  {
+    "name": "Arabsat 5A",
+    "pos": 305
+  },
+  {
+    "name": "Eutelsat 31A",
+    "pos": 308
+  },
+  {
+    "name": "Astra 5B",
+    "pos": 315
+  },
+  {
+    "name": "Eutelsat 33B/Intelsat 28",
+    "pos": 330
+  },
+  {
+    "name": "Eutelsat 36A/36B",
+    "pos": 360
+  },
+  {
+    "name": "Paksat 1R",
+    "pos": 380
+  },
+  {
+    "name": "Hellas Sat 2",
+    "pos": 390
+  },
+  {
+    "name": "Türksat 2A/3A/4A",
+    "pos": 420
+  },
+  {
+    "name": "Intelsat 12",
+    "pos": 450
+  },
+  {
+    "name": "AzerSpace 1/Africasat 1a",
+    "pos": 460
+  },
+  {
+    "name": "Intelsat 10",
+    "pos": 475
+  },
+  {
+    "name": "Afghansat 1",
+    "pos": 480
+  },
+  {
+    "name": "Yamal 202",
+    "pos": 490
+  },
+  {
+    "name": "NSS 5",
+    "pos": 505
+  },
+  {
+    "name": "Y1A",
+    "pos": 525
+  },
+  {
+    "name": "Express AM22",
+    "pos": 530
+  },
+  {
+    "name": "G-Sat 8/Yamal 402",
+    "pos": 549
+  },
+  {
+    "name": "Express AT1",
+    "pos": 560
+  },
+  {
+    "name": "NSS 12",
+    "pos": 570
+  },
+  {
+    "name": "Intelsat 904",
+    "pos": 600
+  },
+  {
+    "name": "Intelsat 902",
+    "pos": 620
+  },
+  {
+    "name": "Intelsat 906",
+    "pos": 642
+  },
+  {
+    "name": "Intelsat 17",
+    "pos": 660
+  },
+  {
+    "name": "Intelsat 20",
+    "pos": 685
+  },
+  {
+    "name": "Eutelsat 70B",
+    "pos": 705
+  },
+  {
+    "name": "Intelsat 22",
+    "pos": 721
+  },
+  {
+    "name": "Insat 3C/4CR",
+    "pos": 740
+  },
+  {
+    "name": "ABS 2",
+    "pos": 750
+  },
+  {
+    "name": "Apstar 7",
+    "pos": 765
+  },
+  {
+    "name": "Thaicom 5/6",
+    "pos": 785
+  },
+  {
+    "name": "G-Sat 10/Insat 4A",
+    "pos": 830
+  },
+  {
+    "name": "Horizons 2/Intelsat 15",
+    "pos": 851
+  },
+  {
+    "name": "KazSat 2",
+    "pos": 865
+  },
+  {
+    "name": "ChinaSat 12",
+    "pos": 875
+  },
+  {
+    "name": "ST 2",
+    "pos": 880
+  },
+  {
+    "name": "Yamal 300K/401",
+    "pos": 900
+  },
+  {
+    "name": "Measat 3/3a/3b",
+    "pos": 915
+  },
+  {
+    "name": "ChinaSat 9",
+    "pos": 922
+  },
+  {
+    "name": "Insat 3A/4B",
+    "pos": 935
+  },
+  {
+    "name": "NSS 6/SES 8",
+    "pos": 950
+  },
+  {
+    "name": "Express AM33",
+    "pos": 965
+  },
+  {
+    "name": "AsiaSat 5",
+    "pos": 1005
+  },
+  {
+    "name": "Express AM3",
+    "pos": 1030
+  },
+  {
+    "name": "AsiaSat 7/8",
+    "pos": 1055
+  },
+  {
+    "name": "NSS 11/SES 7/Telkom 1",
+    "pos": 1082
+  },
+  {
+    "name": "BSAT 3A/3C/JCSAT 110R/N-Sat 110",
+    "pos": 1100
+  },
+  {
+    "name": "ChinaSat 10",
+    "pos": 1105
+  },
+  {
+    "name": "Koreasat 5/Palapa D",
+    "pos": 1130
+  },
+  {
+    "name": "ChinaSat 6B",
+    "pos": 1155
+  },
+  {
+    "name": "ABS 7/Koreasat 6",
+    "pos": 1160
+  },
+  {
+    "name": "AsiaSat 3S/Telkom 2",
+    "pos": 1180
+  },
+  {
+    "name": "Thaicom 4",
+    "pos": 1195
+  },
+  {
+    "name": "AsiaSat 4",
+    "pos": 1222
+  },
+  {
+    "name": "JCSAT 4B",
+    "pos": 1240
+  },
+  {
+    "name": "ChinaSat 6A",
+    "pos": 1250
+  },
+  {
+    "name": "JCSAT 3A",
+    "pos": 1280
+  },
+  {
+    "name": "JCSAT 5A/Vinasat 1/2",
+    "pos": 1320
+  },
+  {
+    "name": "Apstar 6",
+    "pos": 1340
+  },
+  {
+    "name": "Telstar 18",
+    "pos": 1380
+  },
+  {
+    "name": "Express AM5/AT2",
+    "pos": 1400
+  },
+  {
+    "name": "Superbird C2",
+    "pos": 1440
+  },
+  {
+    "name": "JCSAT 1B",
+    "pos": 1500
+  },
+  {
+    "name": "Optus D2",
+    "pos": 1520
+  },
+  {
+    "name": "JCSAT 2A",
+    "pos": 1540
+  },
+  {
+    "name": "Optus C1/D3",
+    "pos": 1560
+  },
+  {
+    "name": "ABS 6",
+    "pos": 1590
+  },
+  {
+    "name": "Optus D1",
+    "pos": 1600
+  },
+  {
+    "name": "Superbird B2",
+    "pos": 1620
+  },
+  {
+    "name": "Optus 10/B3",
+    "pos": 1640
+  },
+  {
+    "name": "Intelsat 19",
+    "pos": 1660
+  },
+  {
+    "name": "Intelsat 8",
+    "pos": 1690
+  },
+  {
+    "name": "Eutelsat 172A",
+    "pos": 1720
+  },
+  {
+    "name": "Intelsat 18",
+    "pos": 1800
+  }
+]
