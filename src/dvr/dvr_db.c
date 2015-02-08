@@ -313,7 +313,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
     gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, stop);
 
-  } else if (de->de_channel) {
+  } else if (de->de_channel && de->de_channel->ch_enabled) {
 
     de->de_sched_state = DVR_SCHEDULED;
 
@@ -1014,6 +1014,11 @@ static void
 dvr_timer_start_recording(void *aux)
 {
   dvr_entry_t *de = aux;
+
+  if (de->de_channel == NULL || !de->de_channel->ch_enabled) {
+    de->de_sched_state = DVR_NOSTATE;
+    return;
+  }
 
   de->de_sched_state = DVR_RECORDING;
   de->de_rec_state = DVR_RS_PENDING;

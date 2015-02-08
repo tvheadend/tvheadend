@@ -254,6 +254,7 @@ stream_init(elementary_stream_t *st)
 {
   st->es_cc = -1;
 
+  st->es_parser_state = 0;
   st->es_startcond = 0xffffffff;
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
@@ -700,6 +701,10 @@ service_find_instance
     si->si_mark = 1;
 
   if (ch) {
+    if (!ch->ch_enabled) {
+      *error = SM_CODE_SVC_NOT_ENABLED;
+      return NULL;
+    }
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
       if (s->s_is_enabled(s, flags))

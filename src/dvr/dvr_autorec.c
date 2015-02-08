@@ -122,9 +122,13 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   if ((cfg = dae->dae_config) == NULL)
     return 0;
   if (cfg->dvr_sl_quality_lock)
-    if(dae->dae_channel != NULL &&
-       dae->dae_channel != e->channel)
-      return 0;
+    if(dae->dae_channel != NULL) {
+      if (dae->dae_channel != e->channel &&
+          dae->dae_channel->ch_enabled)
+        return 0;
+      if (!dae->dae_channel->ch_enabled)
+        return 0;
+    }
 
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)

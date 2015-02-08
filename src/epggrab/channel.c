@@ -36,7 +36,7 @@ SKEL_DECLARE(epggrab_channel_skel, epggrab_channel_t);
 /* Check if channels match */
 int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 {
-  if (!ec || !ch || !ch->ch_epgauto) return 0;
+  if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled) return 0;
   if (LIST_FIRST(&ec->channels)) return 0; // ignore already paired
 
   if (ec->name && !strcmp(ec->name, channel_get_name(ch))) return 1;
@@ -62,7 +62,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
   epggrab_channel_link_t *ecl;
 
   /* No change */
-  if (!ch) return 0;
+  if (!ch || !ch->ch_enabled) return 0;
 
   /* Already linked */
   LIST_FOREACH(ecl, &ec->channels, ecl_epg_link) {
