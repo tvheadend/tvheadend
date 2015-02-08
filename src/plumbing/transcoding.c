@@ -331,10 +331,10 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
    init_wbits(&bs, pktbuf_ptr(pb), 56);
 
    put_bits(&bs, 0xfff, 12); // Sync marker
-   put_bits(&bs, 1, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
+   put_bits(&bs, 0, 1);      // ID 0 = MPEG 4, 1 = MPEG 2
    put_bits(&bs, 0, 2);      // Layer
    put_bits(&bs, 1, 1);      // Protection absent
-   put_bits(&bs, 2, 2);      // AOT, 2 = AAC LC (for MPEG 2 bit)
+   put_bits(&bs, 1, 2);      // AOT, 1 = AAC LC
    put_bits(&bs, sri, 4);
    put_bits(&bs, 1, 1);      // Private bit
    put_bits(&bs, channels, 3);
@@ -344,7 +344,7 @@ create_adts_header(pktbuf_t *pb, int sri, int channels)
    put_bits(&bs, 1, 1);      // Copyright identification bit
    put_bits(&bs, 1, 1);      // Copyright identification start
    put_bits(&bs, pktbuf_len(pb), 13);
-   put_bits(&bs, 0, 11);     // Buffer fullness
+   put_bits(&bs, 0x7ff, 11); // Buffer fullness
    put_bits(&bs, 0, 2);      // RDB in frame
 }
 

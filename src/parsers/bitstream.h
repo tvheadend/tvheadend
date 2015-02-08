@@ -26,7 +26,8 @@ typedef struct bitstream {
   int len;
 } bitstream_t;
 
-void skip_bits(bitstream_t *bs, int num);
+static inline void skip_bits(bitstream_t *bs, int num)
+  { bs->offset += num; }
 
 void init_rbits(bitstream_t *bs, const uint8_t *data, int bits);
 
@@ -34,16 +35,21 @@ void init_wbits(bitstream_t *bs, uint8_t *data, int bits);
 
 unsigned int read_bits(bitstream_t *gb, int num);
 
-unsigned int read_bits1(bitstream_t *gb);
+unsigned int show_bits(bitstream_t *gb, int num);
+
+static inline unsigned int read_bits1(bitstream_t *gb)
+  { return read_bits(gb, 1); }
 
 unsigned int read_golomb_ue(bitstream_t *gb);
 
 signed int read_golomb_se(bitstream_t *gb);
 
-unsigned int remaining_bits(bitstream_t *gb);
+static inline unsigned int remaining_bits(bitstream_t *gb)
+  { return gb->len - gb->offset; }
 
 void put_bits(bitstream_t *bs, int val, int num);
 
-int bs_eof(const bitstream_t *bs);
+static inline int bs_eof(const bitstream_t *bs)
+  { return bs->offset >= bs->len; }
 
 #endif /* BITSTREAM_H_ */

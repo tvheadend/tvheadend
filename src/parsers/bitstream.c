@@ -40,23 +40,10 @@ init_wbits(bitstream_t *bs, uint8_t *data, int bits)
   bs->len = bits;
 }
 
-void
-skip_bits(bitstream_t *bs, int num)
-{
-  bs->offset += num;
-}
-
-int
-bs_eof(const bitstream_t *bs)
-{
-  return bs->offset >= bs->len;
-}
-
-
 unsigned int
 read_bits(bitstream_t *bs, int num)
 {
-  int r = 0;
+  unsigned int r = 0;
 
   while(num > 0) {
     if(bs->offset >= bs->len)
@@ -73,9 +60,22 @@ read_bits(bitstream_t *bs, int num)
 }
 
 unsigned int
-read_bits1(bitstream_t *bs)
+show_bits(bitstream_t *bs, int num)
 {
-  return read_bits(bs, 1);
+  unsigned int r = 0, offset = bs->offset;
+
+  while(num > 0) {
+    if(offset >= bs->len)
+      return 0;
+
+    num--;
+
+    if(bs->rdata[offset / 8] & (1 << (7 - (offset & 7))))
+      r |= 1 << num;
+
+    offset++;
+  }
+  return r;
 }
 
 unsigned int
@@ -103,13 +103,6 @@ read_golomb_se(bitstream_t *bs)
   pos = v & 1;
   v = (v + 1) >> 1;
   return pos ? v : -v;
-}
-
-
-unsigned int
-remaining_bits(bitstream_t *bs)
-{
-  return bs->len - bs->offset;
 }
 
 
