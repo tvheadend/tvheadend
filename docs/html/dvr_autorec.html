@@ -53,7 +53,10 @@ The name you've given to the rule, e.g. 'Stuff involving Jeremy Clarkson'.
 <p>
 <dt><b>Directory</b>
 <dd>
-When specified, this setting overrides the subdirectory rules specified by the DVR configuration and puts all recordings done by this entry into the specified subdirectory. Useful for e.g. recording multiple different news broadcasts into one common subdirectory called "News".
+When specified, this setting overrides the subdirectory rules (except the base directory) specified by the DVR configuration
+and puts all recordings done by this entry into the specified subdirectory. Useful for e.g. recording multiple different news
+broadcasts into one common subdirectory called "News". The backshlash and other special characters are escaped, so it is possible
+to create only one sublevel subdirectories (the base path for the target directory is always taken from the DVR configuration).
 <p>
 <dt><b>Title (Regexp)</b>
 <dd>
