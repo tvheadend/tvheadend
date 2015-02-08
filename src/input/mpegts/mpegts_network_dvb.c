@@ -445,7 +445,7 @@ dvb_network_create_mux
        if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != INT_MAX)
          break;
       }
-      /* do not allow to mix sattelite positions */
+      /* do not allow to mix satellite positions */
       if (mm2 && dvb_network_check_orbital_pos(lm, dmc))
         save = 0;
     }
