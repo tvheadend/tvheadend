@@ -682,12 +682,35 @@ scanfile_load_dir
 }
 
 /*
+ *
+ */
+static int
+scanfile_stats(const char *what, scanfile_region_list_t *list)
+{
+  scanfile_region_t *reg;
+  scanfile_network_t *sfn;
+  int regions = 0, networks =0;
+
+  LIST_FOREACH(reg, list, sfr_link) {
+    regions++;
+    LIST_FOREACH(sfn, &reg->sfr_networks, sfn_link)
+      networks++;
+  }
+  if (regions) {
+    tvhinfo("scanfile", "%s - loaded %i regions with %i networks", what, regions, networks);
+    return 1;
+  }
+  return 0;
+}
+
+/*
  * Initialise the mux list
  */
 void
 scanfile_init ( void )
 {
   const char *path = config_get_muxconfpath();
+  int r = 0;
   if (!path || !*path)
 #if ENABLE_DVBSCAN
     path = "data/dvb-scan";
@@ -697,6 +720,17 @@ scanfile_init ( void )
     path = "/usr/share/dvb";
 #endif
   scanfile_load_dir(path, NULL, 0);
+
+  r += scanfile_stats("DVB-T", &scanfile_regions_DVBT);
+  r += scanfile_stats("DVB-S", &scanfile_regions_DVBS);
+  r += scanfile_stats("DVB-C", &scanfile_regions_DVBC);
+  r += scanfile_stats("ATSC", &scanfile_regions_ATSC);
+  if (!r) {
+    tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
+            path[0] == '/' ? path : TVHEADEND_DATADIR "/",
+            path[0] == '/' ? "" : path);
+    tvhwarn("scanfile", "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
+  }
 }
 
 /*
