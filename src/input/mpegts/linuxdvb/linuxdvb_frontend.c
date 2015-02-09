@@ -965,6 +965,7 @@ typedef struct linuxdvb_tbl {
 
 #define TABLE_EOD -1
 
+#if DVB_API_VERSION >= 5
 static int
 linuxdvb2tvh ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
 {
@@ -976,6 +977,7 @@ linuxdvb2tvh ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
   tvhtrace("linuxdvb", "%s - linuxdvb2tvh failed %d", prefix, key);
   return defval;
 }
+#endif
 
 static int
 tvh2linuxdvb ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
