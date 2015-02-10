@@ -1252,11 +1252,18 @@ static void
 transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
 {
   transcoder_stream_t *ts;
+  streaming_message_t *sm;
 
   LIST_FOREACH(ts, &t->t_stream_list, ts_link) {
     if (pkt->pkt_componentindex == ts->ts_index) {
-      ts->ts_handle_pkt(t, ts, pkt);
-      return;
+      if (pkt->pkt_payload) {
+        ts->ts_handle_pkt(t, ts, pkt);
+        return;
+      } else {
+        sm = streaming_msg_create_pkt(pkt);
+        streaming_target_deliver2(ts->ts_target, sm);
+        pkt_ref_dec(pkt);
+      }
     }
   }
   pkt_ref_dec(pkt);
