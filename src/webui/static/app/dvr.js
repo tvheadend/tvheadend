@@ -284,7 +284,7 @@ tvheadend.dvr_finished = function(panel, index) {
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
-              'sched_status,errors,data_errors,url,comment',
+              'config_name,sched_status,errors,data_errors,url,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -363,7 +363,7 @@ tvheadend.dvr_failed = function(panel, index) {
         delquestion: 'Do you really want to delete the selected recordings?<br/><br/>' +
                      'The associated file will be removed from the storage.',
         list: 'disp_title,episode,start_real,stop_real,' +
-              'duration,filesize,channelname,owner,creator,' +
+              'duration,filesize,channelname,owner,creator,config_name,' +
               'status,sched_status,errors,data_errors,url,comment',
         columns: {
             filesize: {
