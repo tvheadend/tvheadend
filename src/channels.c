@@ -45,6 +45,8 @@
 #include "bouquet.h"
 #include "intlconv.h"
 
+#define CHANNEL_BLANK_NAME  "{name-not-set}"
+
 struct channel_tree channels;
 
 struct channel_tag_queue channel_tags;
@@ -575,7 +577,7 @@ channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
 const char *
 channel_get_name ( channel_t *ch )
 {
-  static const char *blank = "{name-not-set}";
+  static const char *blank = CHANNEL_BLANK_NAME;
   const char *s;
   channel_service_mapping_t *csm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
@@ -642,7 +644,8 @@ channel_get_icon ( channel_t *ch )
 
     /* No user icon - try to get the channel icon by name */
     if (!pick && chicon && chicon[0] >= ' ' && chicon[0] <= 122 &&
-        (chname = channel_get_name(ch)) != NULL && chname[0]) {
+        (chname = channel_get_name(ch)) != NULL && chname[0] &&
+        strcmp(chname, CHANNEL_BLANK_NAME)) {
       const char *chi, *send, *sname, *s;
       chi = strdup(chicon);
 
