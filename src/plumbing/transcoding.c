@@ -1258,12 +1258,12 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
     if (pkt->pkt_componentindex == ts->ts_index) {
       if (pkt->pkt_payload) {
         ts->ts_handle_pkt(t, ts, pkt);
-        return;
       } else {
         sm = streaming_msg_create_pkt(pkt);
         streaming_target_deliver2(ts->ts_target, sm);
         pkt_ref_dec(pkt);
       }
+      return;
     }
   }
   pkt_ref_dec(pkt);
