@@ -1606,7 +1606,6 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
   ecm_section_t *es;
   char chaninfo[32];
   struct cs_card_data *pcard = NULL;
-  int i_break;
   caid_t *c;
   uint16_t caid;
   uint32_t providerid;
@@ -1669,27 +1668,18 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
     return;
   }
 
-  i_break = 0;
-  c = NULL;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    if (st->es_pid != pid) continue;
-    LIST_FOREACH(c, &st->es_caids, link) {
-      LIST_FOREACH(pcard,&cwc->cwc_cards, cs_card) {
-        if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid)){
-          i_break = 1;
-          break;
-       }
-      }
-      if (i_break == 1) break;
-    }
-    if (i_break == 1) break;
+  st = service_stream_find((service_t *)t, pid);
+  if (st) {
+    LIST_FOREACH(c, &st->es_caids, link)
+      LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
+        if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid))
+          goto found;
   }
 
-  if(c == NULL) {
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    return;
-  }
+  pthread_mutex_unlock(&t->s_stream_mutex);
+  return;
 
+found:
   caid = c->caid;
   providerid = c->providerid;
 
