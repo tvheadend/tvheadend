@@ -43,7 +43,8 @@ typedef struct latm_private {
   int aot;
   int frame_length_type;
 
-  int sample_rate_index;
+  int sri;
+  int ext_sri;
   int channel_config;
 
 } latm_private_t;
@@ -95,25 +96,40 @@ static int
 read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
 			   bitstream_t *bs)
 {
-  int aot, sr;
+  int aot, sr, sri;
 
   if ((bs->offset % 8) != 0)
     return -1;
 
   aot = read_aot(bs);
-  sr  = read_sr(bs, &latm->sample_rate_index);
+  sr                    = read_sr(bs, &latm->sri);
   latm->channel_config  = read_bits(bs, 4);
+
+  if (sr < 7350 || sr > 96000 ||
+      latm->channel_config == 0 || latm->channel_config > 7)
+    return -1;
 
   st->es_frame_duration = 1024 * 90000 / sr;
 
+  latm->ext_sri = 0;
   if (aot == AOT_SBR ||
       (aot == AOT_PS && !(show_bits(bs, 3) & 3 && !(show_bits(bs, 9) & 0x3f)))) {
-    sr  = read_sr(bs, &latm->sample_rate_index);
-    aot = read_aot(bs);		// this is the main object type (i.e. non-extended)
+    sr  = read_sr(bs, &latm->ext_sri);
+    if (sr < 7350 || sr > 96000)
+      return -1;
+    latm->ext_sri++;    // zero means "not set"
+    aot = read_aot(bs); // this is the main object type (i.e. non-extended)
   }
 
-  if (sr == 0 || latm->channel_config == 0)
-    return -1;
+  /* it's really unusual to use lower sample rates than 32000Hz */
+  /* for the professional broadcasting, assume the SBR extension */
+  if (aot == AOT_AAC_LC && latm->ext_sri == 0 && sr <= 24000) {
+    sri = rate_to_sri(sr * 2);
+    if (sri < 0)
+      return -1;
+    latm->ext_sri = sri + 1;
+  }
+
   if (aot != AOT_AAC_MAIN && aot != AOT_AAC_LC &&
       aot != AOT_AAC_SSR  && aot != AOT_AAC_LTP)
     return -1;
@@ -121,10 +137,10 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
 
   if (read_bits1(bs))   // framelen_flag
     return -1;
-  if (read_bits1(bs))    // depends_on_coder
+  if (read_bits1(bs))   // depends_on_coder
     skip_bits(bs, 14);
 
-  if (read_bits1(bs))    // ext_flag
+  if (read_bits1(bs))   // ext_flag
      skip_bits(bs, 1);  // ext3_flag
   return 0;
 }
@@ -250,9 +266,10 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   th_pkt_t *pkt = pkt_alloc(NULL, slot_len + 7, st->es_curdts, st->es_curdts);
 
   pkt->pkt_commercial = t->s_tt_commercial_advice;
-  pkt->pkt_duration = st->es_frame_duration;
-  pkt->pkt_sri = latm->sample_rate_index;
-  pkt->pkt_channels = latm->channel_config == 7 ? 8 : latm->channel_config;
+  pkt->pkt_duration   = st->es_frame_duration;
+  pkt->pkt_sri        = latm->sri + 1;
+  pkt->pkt_ext_sri    = latm->ext_sri;
+  pkt->pkt_channels   = latm->channel_config == 7 ? 8 : latm->channel_config;
 
   /* 7 bytes of ADTS header */
   init_wbits(&out, pktbuf_ptr(pkt->pkt_payload), 7 * 8);
@@ -262,7 +279,7 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   put_bits(&out, 0, 2);      // Layer
   put_bits(&out, 1, 1);      // Protection absent
   put_bits(&out, adts_aot(latm->aot), 2);
-  put_bits(&out, latm->sample_rate_index, 4);
+  put_bits(&out, latm->sri, 4);
   put_bits(&out, 1, 1);      // Private bit
   put_bits(&out, latm->channel_config, 3);
   put_bits(&out, 1, 1);      // Original

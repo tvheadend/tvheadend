@@ -314,6 +314,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
     /* Wrong bytestream */
     } else {
+      tvhtrace("parser", "AAC skip byte %02x", d[0]);
       p++;
     }
   }
