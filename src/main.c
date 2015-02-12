@@ -854,7 +854,6 @@ main(int argc, char **argv)
 #endif
 
   tcp_server_init();
-  http_server_register();
   webui_init(opt_xspf);
 #if ENABLE_UPNP
   upnp_server_init(opt_bindaddr);
@@ -871,6 +870,7 @@ main(int argc, char **argv)
 
   dbus_server_start();
 
+  http_server_register();
   htsp_register();
 
 
