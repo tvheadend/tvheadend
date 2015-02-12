@@ -146,6 +146,7 @@ typedef struct http_connection {
 
 } http_connection_t;
 
+extern void *http_server;
 
 const char *http_cmd2str(int val);
 int http_str2cmd(const char *str);

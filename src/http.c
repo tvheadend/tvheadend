@@ -37,7 +37,7 @@
 #include "notify.h"
 #include "channels.h"
 
-static void *http_server;
+void *http_server;
 
 static LIST_HEAD(, http_path) http_paths;
 
