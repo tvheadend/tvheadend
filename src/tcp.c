@@ -381,6 +381,7 @@ static uint32_t tcp_server_launch_id;
 
 typedef struct tcp_server {
   int serverfd;
+  struct sockaddr_storage bound;
   tcp_server_ops_t ops;
   void *opaque;
 } tcp_server_t;
@@ -641,6 +642,7 @@ tcp_server_create
   int fd, x;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
+  struct sockaddr_storage bound;
   char port_buf[6];
   int one = 1;
   int zero = 0;
@@ -683,6 +685,10 @@ tcp_server_create
     setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
 
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+
+  assert(use->ai_addrlen <= sizeof(bound));
+  memset(&bound, 0, sizeof(bound));
+  memcpy(&bound, use->ai_addr, use->ai_addrlen);
   
   x = bind(fd, use->ai_addr, use->ai_addrlen);
   freeaddrinfo(ressave);
@@ -698,6 +704,7 @@ tcp_server_create
 
   ts = malloc(sizeof(tcp_server_t));
   ts->serverfd = fd;
+  ts->bound  = bound;
   ts->ops    = *ops;
   ts->opaque = opaque;
   return ts;
@@ -742,6 +749,94 @@ tcp_server_delete(void *server)
   ev.data.ptr = ts;
   tvhpoll_rem(tcp_server_poll, &ev, 1);  
   free(ts);
+}
+
+/**
+ *
+ */
+int
+tcp_default_ip_addr ( struct sockaddr_storage *deflt )
+{
+
+  struct sockaddr_storage ss;
+  socklen_t ss_len;
+  int sock;
+
+  memset(&ss, 0, sizeof(ss));
+  ss.ss_family = tcp_preferred_address_family;
+  if (inet_pton(ss.ss_family,
+                ss.ss_family == AF_INET ?
+                  /* Google name servers */
+                  "8.8.8.8" : "2001:4860:4860::8888",
+                IP_IN_ADDR(ss)) <= 0)
+    return -1;
+
+  if (ss.ss_family == AF_INET)
+    IP_AS_V4(ss, port) = htons(53);
+  else
+    IP_AS_V6(ss, port) = htons(53);
+
+  sock = tvh_socket(ss.ss_family, SOCK_STREAM, 0);
+  if (sock < 0)
+    return -1;
+
+  if (connect(sock, (struct sockaddr *)&ss, IP_IN_ADDRLEN(ss)) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  ss_len = sizeof(ss);
+  if (getsockname(sock, (struct sockaddr *)&ss, &ss_len) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  if (ss.ss_family == AF_INET)
+    IP_AS_V4(ss, port) = 0;
+  else
+    IP_AS_V6(ss, port) = 0;
+
+  memset(deflt, 0, sizeof(*deflt));
+  memcpy(deflt, &ss, ss_len);
+
+  close(sock);
+  return 0;
+}
+
+/**
+ *
+ */
+int
+tcp_server_bound ( void *server, struct sockaddr_storage *bound )
+{
+  tcp_server_t *ts = server;
+  int i, len, port;
+  uint8_t *ptr;
+
+  if (server == NULL) {
+    memset(bound, 0, sizeof(*bound));
+    return 0;
+  }
+
+  len = IP_IN_ADDRLEN(*bound);
+  ptr = (uint8_t *)IP_IN_ADDR(*bound);
+  for (i = 0; i < len; i++)
+    if (ptr[0])
+      break;
+  if (i < len) {
+    *bound = ts->bound;
+    return 0;
+  }
+  port = IP_PORT(ts->bound);
+
+  /* no bind address was set, try to find one */
+  if (tcp_default_ip_addr(bound) < 0)
+    return -1;
+  if (bound->ss_family == AF_INET)
+    IP_AS_V4(*bound, port) = port;
+  else
+    IP_AS_V6(*bound, port) = port;
+  return 0;
 }
 
 /*
