@@ -525,6 +525,9 @@ recvmmsg_i(int sockfd, struct mmsghdr *msgvec,
 
 #ifndef CONFIG_RECVMMSG
 
+int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags, struct timespec *timeout);
+
 int
 recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
          unsigned int flags, struct timespec *timeout)
