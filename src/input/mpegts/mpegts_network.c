@@ -188,6 +188,14 @@ const idclass_t mpegts_network_class =
       .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
       .def.i    = 0,
     },
+#if ENABLE_SATIP_SERVER
+    {
+      .type     = PT_U16,
+      .id       = "satip_source",
+      .name     = "SAT>IP Source Number",
+      .off      = offsetof(mpegts_network_t, mn_satip_source),
+    },
+#endif
     {
       .type     = PT_STR,
       .id       = "charset",

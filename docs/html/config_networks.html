@@ -87,6 +87,11 @@ Buttons have the following functions:
 		<dt><b>Ignore Provider's Channel Numbers</b>
 		<dd>Do not use the local channel numbers defined by provider.
 <p>
+		<dt><b>SAT>IP Source Number</b>
+		<dd>For DVB-S SAT>IP source means the LNB selection. 0 = do not use; 1 = AA; 2 = AB; 3 = BA; 4 = BB.
+		    Other values are allowed too (but clients have to support them).
+		    For other network types (DVB-T, DVB-C), use value 1 to enable SAT>IP for this network.
+<p>
 		<dt><b>EIT Local Time</b>
 		<dd>EPG (EIT) events uses local time instead UTC.
 <p>

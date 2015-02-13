@@ -47,6 +47,7 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 #include "input.h"
+#include "satip/server.h"
 
 /**
  *
@@ -510,7 +511,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
-    int save = 0;
+    int save = 0, ssave = 0;
 
     /* Misc settings */
     pthread_mutex_lock(&global_lock);
@@ -524,8 +525,20 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_chicon_path(str);
     if ((str = http_arg_get(&hc->hc_req_args, "piconpath")))
       save |= config_set_picon_path(str);
-    if (save)
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_rtsp")))
+      ssave |= config_set_int("satip_rtsp", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_weight")))
+      ssave |= config_set_int("satip_weight", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
+      ssave |= config_set_int("satip_dvbt", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))
+      ssave |= config_set_int("satip_dvbt", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
+      ssave |= config_set_int("satip_dvbt", atoi(str));
+    if (save | ssave)
       config_save();
+    if (ssave)
+      satip_server_config_changed();
 
     /* Time */
     str = http_arg_get(&hc->hc_req_args, "tvhtime_update_enabled");

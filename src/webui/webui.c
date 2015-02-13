@@ -47,6 +47,9 @@
 #if ENABLE_MPEGTS
 #include "input.h"
 #endif
+#if ENABLE_SATIP_SERVER
+#include "satip/server.h"
+#endif
 
 #if defined(PLATFORM_LINUX)
 #include <sys/sendfile.h>
@@ -1363,6 +1366,10 @@ webui_init(int xspf)
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
 
+#if CONFIG_SATIP_SERVER
+  http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);
+#endif
+
   http_path_add_modify("/play", NULL, page_play, ACCESS_ANONYMOUS, page_play_path_modify);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_ANONYMOUS);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
@@ -1382,7 +1389,6 @@ webui_init(int xspf)
   extjs_start();
   comet_init();
   webui_api_init();
-
 }
 
 void

@@ -50,6 +50,7 @@
 #include "descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
+#include "satip/server.h"
 #include "avahi.h"
 #include "bonjour.h"
 #include "input.h"
@@ -141,6 +142,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #endif
 #if ENABLE_V4L || ENABLE_LINUXDVB || ENABLE_SATIP_CLIENT || ENABLE_HDHOMERUN_CLIENT
   { "tvadapters", NULL },
+#endif
+#if ENABLE_SATIP_SERVER
+  { "satip_server", NULL },
 #endif
 #if ENABLE_IMAGECACHE
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },
@@ -470,6 +474,9 @@ main(int argc, char **argv)
               opt_fileline     = 0,
               opt_threadid     = 0,
               opt_ipv6         = 0,
+#if ENABLE_SATIP_SERVER
+              opt_satip_rtsp   = 0,
+#endif
 #if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
 #endif
@@ -521,6 +528,11 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
+#endif
+#if ENABLE_SATIP_SERVER
+    {   0, "satip_rtsp", "SAT>IP RTSP port number for server\n"
+                         "(default: -1 = disable, 0 = webconfig, standard port is 554)",
+      OPT_INT, &opt_satip_rtsp },
 #endif
 #if ENABLE_SATIP_CLIENT
     {   0, "satip_xml", "URL with the SAT>IP server XML location",
@@ -696,9 +708,11 @@ main(int argc, char **argv)
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
   signal(SIGILL, handle_sigill);   // see handler..
 
+  uuid_init();
   tcp_server_preinit(opt_ipv6);
-  http_server_init(opt_bindaddr);  // bind to ports only
-  htsp_init(opt_bindaddr);	   // bind to ports only
+  http_server_init(opt_bindaddr);    // bind to ports only
+  htsp_init(opt_bindaddr);	     // bind to ports only
+  satip_server_init(opt_satip_rtsp); // bind to ports only
 
   if (opt_fork)
     pidfile = tvh_fopen(opt_pidpath, "w+");
@@ -801,7 +815,6 @@ main(int argc, char **argv)
   SSL_library_init();
 
   /* Initialise configuration */
-  uuid_init();
   idnode_init();
   spawn_init();
   config_init(opt_config, opt_nobackup == 0);
@@ -871,8 +884,8 @@ main(int argc, char **argv)
   dbus_server_start();
 
   http_server_register();
+  satip_server_register();
   htsp_register();
-
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);
@@ -914,6 +927,7 @@ main(int argc, char **argv)
 #if ENABLE_UPNP
   tvhftrace("main", upnp_server_done);
 #endif
+  tvhftrace("main", satip_server_done);
   tvhftrace("main", htsp_done);
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);

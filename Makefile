@@ -159,6 +159,10 @@ SRCS =  src/version.c \
 SRCS-${CONFIG_UPNP} += \
 	src/upnp.c
 
+# SATIP Server
+SRCS-${CONFIG_SATIP_SERVER} += \
+	src/satip/server.c
+
 SRCS += \
 	src/api.c \
 	src/api/api_status.c \
@@ -261,7 +265,7 @@ SRCS-${CONFIG_LINUXDVB} += \
         src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
         src/input/mpegts/linuxdvb/linuxdvb_en50494.c
 
-# SATIP
+# SATIP Client
 SRCS-${CONFIG_SATIP_CLIENT} += \
 	src/input/mpegts/satip/satip.c \
 	src/input/mpegts/satip/satip_frontend.c \

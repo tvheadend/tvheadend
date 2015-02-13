@@ -44,9 +44,8 @@ tvheadend.miscconf = function(panel, index) {
         'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
-        'prefer_picon',
-        'chiconpath',
-        'piconpath'
+        'prefer_picon', 'chiconpath', 'piconpath',
+        'satip_rtsp', 'satip_weight', 'satip_dvbt', 'satip_dvbs', 'satip_dvbc'
     ]);
 
     /* ****************************************************************
@@ -216,6 +215,42 @@ tvheadend.miscconf = function(panel, index) {
         var imagecache_form = null;
     }
 
+    /*
+    * SAT>IP server
+    */
+
+    var satipPanel = null;
+    if (tvheadend.capabilities.indexOf('satip_server') !== -1) {
+        var rtsp = new Ext.form.NumberField({
+             name: 'satip_rtsp',
+             fieldLabel: 'RTSP Port (554), 0 = disable'
+        });
+        var weight = new Ext.form.NumberField({
+             name: 'satip_weight',
+             fieldLabel: 'Subscription Weight'
+        });
+        var dvbt = new Ext.form.NumberField({
+             name: 'satip_dvbt',
+             fieldLabel: 'Exported DVB-T Tuners'
+        });
+        var dvbs = new Ext.form.NumberField({
+             name: 'satip_dvbt',
+             fieldLabel: 'Exported DVB-S2 Tuners'
+        });
+        var dvbc = new Ext.form.NumberField({
+             name: 'satip_dvbt',
+             fieldLabel: 'Exported DVB-C Tuners'
+        });
+        satipPanel = new Ext.form.FieldSet({
+            title: 'SAT>IP Server',
+            width: 700,
+            autoHeight: true,
+            collapsible: true,
+            animCollapse: true,
+            items: [rtsp, weight, dvbt, dvbs, dvbc]
+        });
+    }
+
     /* ****************************************************************
     * Form
     * ***************************************************************/
@@ -242,6 +277,11 @@ tvheadend.miscconf = function(panel, index) {
         }
     });
 
+    var _items = [languageWrap, dvbscanWrap, tvhtimePanel, piconPanel];
+
+    if (satipPanel)
+      _items.push(satipPanel);
+
     var confpanel = new Ext.form.FormPanel({
         labelAlign: 'left',
         labelWidth: 200,
@@ -251,7 +291,7 @@ tvheadend.miscconf = function(panel, index) {
         layout: 'form',
         defaultType: 'textfield',
         autoHeight: true,
-        items: [languageWrap, dvbscanWrap, tvhtimePanel, piconPanel]
+        items: _items
     });
 
     var _items = [confpanel];

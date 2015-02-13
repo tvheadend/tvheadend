@@ -293,6 +293,7 @@ struct mpegts_network
    * Configuration
    */
   uint16_t mn_nid;
+  uint16_t mn_satip_source;
   int      mn_autodiscovery;
   int      mn_skipinitscan;
   char    *mn_charset;

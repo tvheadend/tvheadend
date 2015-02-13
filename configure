@@ -21,6 +21,7 @@ OPTIONS=(
   "constcw:yes"
   "v4l:no"
   "linuxdvb:yes"
+  "satip_server:yes"
   "satip_client:yes"
   "hdhomerun_client:auto"
   "hdhomerun_static:no"
@@ -258,6 +259,13 @@ if enabled_or_auto zlib; then
 fi
 
 #
+# SAT>IP server
+#
+if enabled_or_auto satip_server; then
+  enable upnp
+fi
+
+#
 # SAT>IP client
 #
 if enabled_or_auto satip_client; then
@@ -450,11 +458,12 @@ fi
 disable mpegts
 disable mpegps
 disable mpegts_dvb
-if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || enabled hdhomerun_client;
+if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || \
+   enabled hdhomerun_client || enabled satip_server;
 then
   enable mpegts
 fi
-if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client; then
+if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || enabled satip_server; then
   enable mpegts_dvb
 fi
 

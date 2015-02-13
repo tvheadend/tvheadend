@@ -131,5 +131,45 @@
 
   </dl>
 
+  <br><br>
+  <hr>
+  <b>SAT>IP Server</b>
+  <hr>
+
+  <dd>SAT>IP Server is something like DVB network tuner. TVHeadend can
+  forward mpegts input streams including on-the-fly descramling to SAT>IP
+  clients.</dd>
+
+  <dl>
+
+  <dt>RTSP Port
+  <dd>
+  Select RTSP port (TCP) for realtime commands from SAT>IP clients. Usually
+  (as defined in the specification) this port is 554. But as extension,
+  TVHeadend can use any TCP port value (which is default 9983 for non-root
+  users). But the SAT>IP client must allow to set this value (TVHeadend
+  client will obtain the RTSP port number automatically using the XML
+  description). If the RTSP port value is zero, the SAT>IP server
+  functionality is not enabled.
+
+  <dt>Subscription Weight
+  <dd>
+  Subscription weight value. Default value is 100 (standard streaming). Note
+  that the default value for DVR is 300 (normal priority).
+
+  <dt>Exported DVB-T Tuners
+  <dd>
+  Exported DVB-T tuners - streaming instances.
+
+  <dt>Exported DVB-S2 Tuners
+  <dd>
+  Exported DVB-S2 tuners - streaming instances.
+
+  <dt>Exported DVB-C Tuners
+  <dd>
+  Exported DVB-C tuners - streaming instances.
+
+  </dl>
+
  </dl>  
 </div>

@@ -23,6 +23,7 @@
 #include "htsmsg_xml.h"
 #include "upnp.h"
 #include "settings.h"
+#include "satip/server.h"
 #include "satip_private.h"
 #include "dbus.h"
 
@@ -882,7 +883,7 @@ satip_discovery_service_received
   /* Sanity checks */
   if (st == NULL || strcmp(st, "urn:ses-com:device:SatIPServer:1"))
     return;
-  if (uuid == NULL || strlen(uuid) < 16)
+  if (uuid == NULL || strlen(uuid) < 16 || satip_server_match_uuid(uuid))
     return;
   if (location == NULL || strncmp(location, "http://", 7))
     return;
