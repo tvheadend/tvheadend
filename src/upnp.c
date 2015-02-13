@@ -102,6 +102,20 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage, int delay_ms )
 }
 
 /*
+ *
+ */
+static void
+upnp_dump_data( upnp_data_t *data )
+{
+#if 0
+  char tbuf[256];
+  inet_ntop(data->storage.ss_family, IP_IN_ADDR(data->storage), tbuf, sizeof(tbuf));
+  printf("upnp out to %s:%d\n", tbuf, ntohs(IP_PORT(data->storage)));
+  htsbuf_hexdump(&data->queue, "upnp out");
+#endif
+}
+
+/*
  *  Discovery thread
  */
 static void *
@@ -183,6 +197,7 @@ upnp_thread( void *aux )
       pthread_mutex_unlock(&upnp_lock);
       if (data == NULL)
         break;
+      upnp_dump_data(data);
       udp_write_queue(unicast, &data->queue, &data->storage);
       htsbuf_queue_flush(&data->queue);
       free(data);
@@ -200,6 +215,7 @@ upnp_thread( void *aux )
     if (data == NULL)
       break;
     usleep((long)data->delay_ms * 1000);
+    upnp_dump_data(data);
     udp_write_queue(unicast, &data->queue, &data->storage);
     htsbuf_queue_flush(&data->queue);
     free(data);
