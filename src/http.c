@@ -898,11 +898,15 @@ http_parse_get_args(http_connection_t *hc, char *args)
  *
  */
 static void
-http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
+http_serve_requests(http_connection_t *hc)
 {
+  htsbuf_queue_t spill;
   char *argv[3], *c, *cmdline = NULL, *hdrline = NULL;
   int n;
 
+  http_arg_init(&hc->hc_args);
+  http_arg_init(&hc->hc_req_args);
+  htsbuf_queue_init(&spill, 0);
   htsbuf_queue_init(&hc->hc_reply, 0);
 
   do {
@@ -910,7 +914,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 
     if (cmdline) free(cmdline);
 
-    if ((cmdline = tcp_read_line(hc->hc_fd, spill)) == NULL)
+    if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL)
       goto error;
 
     if((n = http_tokenize(cmdline, argv, 3, -1)) != 3)
@@ -927,7 +931,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
     while(1) {
       if (hdrline) free(hdrline);
 
-      if ((hdrline = tcp_read_line(hc->hc_fd, spill)) == NULL)
+      if ((hdrline = tcp_read_line(hc->hc_fd, &spill)) == NULL)
         goto error;
 
       if(!*hdrline)
@@ -943,7 +947,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
       http_arg_set(&hc->hc_args, argv[0], argv[1]);
     }
 
-    if(process_request(hc, spill))
+    if(process_request(hc, &spill))
       break;
 
     free(hc->hc_post_data);
@@ -967,6 +971,18 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 error:
   free(hdrline);
   free(cmdline);
+
+  http_arg_flush(&hc->hc_args);
+  http_arg_flush(&hc->hc_req_args);
+
+  htsbuf_queue_flush(&hc->hc_reply);
+
+  free(hc->hc_post_data);
+  hc->hc_post_data = NULL;
+  free(hc->hc_username);
+  hc->hc_username = NULL;
+  free(hc->hc_password);
+  hc->hc_password = NULL;
 }
 
 
@@ -977,7 +993,6 @@ static void
 http_serve(int fd, void **opaque, struct sockaddr_storage *peer, 
 	   struct sockaddr_storage *self)
 {
-  htsbuf_queue_t spill;
   http_connection_t hc;
 
   // Note: global_lock held on entry */
@@ -985,29 +1000,16 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
-  http_arg_init(&hc.hc_args);
-  http_arg_init(&hc.hc_req_args);
-
-  hc.hc_fd = fd;
+  hc.hc_fd   = fd;
   hc.hc_peer = peer;
   hc.hc_self = self;
 
-  htsbuf_queue_init(&spill, 0);
+  http_serve_requests(&hc);
 
-  http_serve_requests(&hc, &spill);
-
-  http_arg_flush(&hc.hc_args);
-  http_arg_flush(&hc.hc_req_args);
-
-  htsbuf_queue_flush(&hc.hc_reply);
-  htsbuf_queue_flush(&spill);
   close(fd);
 
   // Note: leave global_lock held for parent
   pthread_mutex_lock(&global_lock);
-  free(hc.hc_post_data);
-  free(hc.hc_username);
-  free(hc.hc_password);
   *opaque = NULL;
 }
 
