@@ -182,6 +182,24 @@ dvb_mux_dvbt_class_delsys_enum (void *o)
   return list;
 }
 
+static int
+dvb_mux_dvbt_class_frequency_set ( void *o, const void *v )
+{
+  dvb_mux_t *lm = o;
+  uint32_t val = *(uint32_t *)v;
+
+  if (val < 1000)
+    val *= 1000000;
+  else if (val < 1000000)
+    val *= 1000;
+
+  if (val != lm->lm_tuning.dmc_fe_freq) {
+    lm->lm_tuning.dmc_fe_freq = val;
+    return 1;
+  }
+  return 0;
+}
+
 const idclass_t dvb_mux_dvbt_class =
 {
   .ic_super      = &dvb_mux_class,
@@ -196,6 +214,7 @@ const idclass_t dvb_mux_dvbt_class =
       .id       = "frequency",
       .name     = "Frequency (Hz)",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
       MUX_PROP_STR("bandwidth", "Bandwidth", dvbt, bw, "AUTO")
@@ -267,6 +286,7 @@ const idclass_t dvb_mux_dvbc_class =
       .id       = "frequency",
       .name     = "Frequency (Hz)",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
       .type     = PT_U32,
@@ -289,6 +309,38 @@ dvb_mux_class_X(dvbs, qpsk, fec_inner,             fec,
                      DVB_FEC_1_2, DVB_FEC_2_3, DVB_FEC_3_4, DVB_FEC_3_5,
                      DVB_FEC_4_5, DVB_FEC_5_6, DVB_FEC_7_8, DVB_FEC_8_9,
                      DVB_FEC_9_10);
+
+static int
+dvb_mux_dvbs_class_frequency_set ( void *o, const void *v )
+{
+  dvb_mux_t *lm = o;
+  uint32_t val = *(uint32_t *)v;
+
+  if (val < 100000)
+    val *= 1000;
+
+  if (val != lm->lm_tuning.dmc_fe_freq) {
+    lm->lm_tuning.dmc_fe_freq = val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+dvb_mux_dvbs_class_symbol_rate_set ( void *o, const void *v )
+{
+  dvb_mux_t *lm = o;
+  uint32_t val = *(uint32_t *)v;
+
+  if (val < 100000)
+    val *= 1000;
+
+  if (val != lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate) {
+    lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate = val;
+    return 1;
+  }
+  return 0;
+}
 
 static const void *
 dvb_mux_dvbs_class_polarity_get (void *o)
@@ -488,12 +540,14 @@ const idclass_t dvb_mux_dvbs_class =
       .id       = "frequency",
       .name     = "Frequency (kHz)",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .set      = dvb_mux_dvbs_class_frequency_set,
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
       .name     = "Symbol Rate (Sym/s)",
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qpsk.symbol_rate),
+      .set      = dvb_mux_dvbs_class_symbol_rate_set,
     },
     {
       MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity, NULL)
@@ -590,8 +644,9 @@ const idclass_t dvb_mux_atsc_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (kHz)",
+      .name     = "Frequency (Hz)",
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
       MUX_PROP_STR("modulation", "Modulation", atsc, qam, "AUTO")
@@ -621,7 +676,7 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   dvb_mux_t *lm = (dvb_mux_t*)mm;
   dvb_network_t *ln = (dvb_network_t*)mm->mm_network;
   uint32_t freq = lm->lm_tuning.dmc_fe_freq, freq2;
-  char extra[8];
+  char extra[8], buf2[5], *p;
   if (ln->ln_type == DVB_TYPE_S) {
     const char *s = dvb_pol2str(lm->lm_tuning.u.dmc_fe_qpsk.polarisation);
     if (s) extra[0] = *s;
@@ -632,10 +687,14 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
   }
   freq2 = freq % 1000;
   freq /= 1000;
-  while (freq2 && (freq2 % 10) == 0)
+  snprintf(buf2, sizeof(buf2), "%03d", freq2);
+  p = buf2 + 2;
+  while (freq2 && (freq2 % 10) == 0) {
     freq2 /= 10;
+    *(p--) = '\0';
+  }
   if (freq2)
-    snprintf(buf, len, "%d.%d%s", freq, freq2, extra);
+    snprintf(buf, len, "%d.%s%s", freq, buf2, extra);
   else
     snprintf(buf, len, "%d%s", freq, extra);
 }
