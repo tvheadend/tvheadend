@@ -189,6 +189,7 @@ http_rc2str(int code)
   case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
   case HTTP_STATUS_BAD_REQUEST:     return "Bad request";
   case HTTP_STATUS_FOUND:           return "Found";
+  case HTTP_STATUS_HTTP_VERSION:    return "HTTP Version Not Supported";
   default:
     return "Unknown returncode";
     break;
@@ -224,7 +225,8 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 val2str(hc->hc_version, HTTP_versiontab),
 		 rc, http_rc2str(rc));
 
-  htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
+  if (hc->hc_version != RTSP_VERSION_1_0)
+    htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
 
   if(maxage == 0) {
     htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
@@ -258,8 +260,9 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
   }
 
-  htsbuf_qprintf(&hdrs, "Connection: %s\r\n", 
-	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
+  if (hc->hc_version != RTSP_VERSION_1_0)
+    htsbuf_qprintf(&hdrs, "Connection: %s\r\n",
+	           hc->hc_keep_alive ? "Keep-Alive" : "Close");
 
   if(encoding != NULL)
     htsbuf_qprintf(&hdrs, "Content-Encoding: %s\r\n", encoding);
@@ -281,6 +284,12 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(disposition != NULL)
     htsbuf_qprintf(&hdrs, "Content-Disposition: %s\r\n", disposition);
   
+  if(hc->hc_cseq) {
+    htsbuf_qprintf(&hdrs, "CSeq: %"PRIu64"\r\n", hc->hc_cseq);
+    if (++hc->hc_cseq == 0)
+      hc->hc_cseq = 1;
+  }
+
   htsbuf_qprintf(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
@@ -695,11 +704,18 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
+    if (hc->hc_cseq)
+      rval = hc->hc_process(hc, spill);
+    else
+      rval = -1;
     break;
 
   case HTTP_VERSION_1_0:
   case HTTP_VERSION_1_1:
-    rval = http_process_request(hc, spill);
+    if (!hc->hc_cseq)
+      rval = hc->hc_process(hc, spill);
+    else
+      http_error(hc, HTTP_STATUS_HTTP_VERSION);
     break;
   }
   free(hc->hc_representative);
@@ -897,7 +913,7 @@ http_parse_get_args(http_connection_t *hc, char *args)
 /**
  *
  */
-static void
+void
 http_serve_requests(http_connection_t *hc)
 {
   htsbuf_queue_t spill;
@@ -1000,10 +1016,11 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
-  hc.hc_fd    = fd;
-  hc.hc_peer  = peer;
-  hc.hc_self  = self;
-  hc.hc_paths = &http_paths;
+  hc.hc_fd      = fd;
+  hc.hc_peer    = peer;
+  hc.hc_self    = self;
+  hc.hc_paths   = &http_paths;
+  hc.hc_process = http_process_request;
 
   http_serve_requests(&hc);
 

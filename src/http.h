@@ -119,6 +119,7 @@ typedef struct http_connection {
   char *hc_representative;
 
   http_path_list_t *hc_paths;
+  int (*hc_process)(struct http_connection *hc, htsbuf_queue_t *spill);
 
   char *hc_url;
   char *hc_url_orig;
@@ -143,6 +144,7 @@ typedef struct http_connection {
   int hc_no_output;
   int hc_logout_cookie;
   int hc_shutdown;
+  uint64_t hc_cseq;
 
   /* Support for HTTP POST */
   
@@ -184,6 +186,8 @@ void http_send_header(http_connection_t *hc, int rc, const char *content,
 		      int64_t contentlen, const char *encoding,
 		      const char *location, int maxage, const char *range,
 		      const char *disposition);
+
+void http_serve_requests(http_connection_t *hc);
 
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);
