@@ -1442,13 +1442,39 @@ htsmsg_t *config_get_all ( void )
   return htsmsg_copy(config);
 }
 
-static int
-_config_set_str ( const char *fld, const char *val )
+const char *
+config_get_str ( const char *fld )
+{
+  return htsmsg_get_str(config, fld);
+}
+
+int
+config_set_str ( const char *fld, const char *val )
 {
   const char *c = htsmsg_get_str(config, fld);
   if (!c || strcmp(c, val)) {
     if (c) htsmsg_delete_field(config, fld);
     htsmsg_add_str(config, fld, val);
+    return 1;
+  }
+  return 0;
+}
+
+int
+config_get_int ( const char *fld, int deflt )
+{
+  return htsmsg_get_s32_or_default(config, fld, deflt);
+}
+
+int
+config_set_int ( const char *fld, int val )
+{
+  const char *c = htsmsg_get_str(config, fld);
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%d", val);
+  if (!c || strcmp(c, buf)) {
+    if (c) htsmsg_delete_field(config, fld);
+    htsmsg_add_s32(config, fld, val);
     return 1;
   }
   return 0;
@@ -1461,7 +1487,7 @@ const char *config_get_language ( void )
 
 int config_set_language ( const char *lang )
 {
-  return _config_set_str("language", lang);
+  return config_set_str("language", lang);
 }
 
 const char *config_get_muxconfpath ( void )
@@ -1471,7 +1497,7 @@ const char *config_get_muxconfpath ( void )
 
 int config_set_muxconfpath ( const char *path )
 {
-  return _config_set_str("muxconfpath", path);
+  return config_set_str("muxconfpath", path);
 }
 
 int config_get_prefer_picon ( void )
@@ -1483,7 +1509,7 @@ int config_get_prefer_picon ( void )
 
 int config_set_prefer_picon ( const char *str )
 {
-  return _config_set_str("prefer_picon", str);
+  return config_set_str("prefer_picon", str);
 }
 
 const char *config_get_chicon_path ( void )
@@ -1493,7 +1519,7 @@ const char *config_get_chicon_path ( void )
 
 int config_set_chicon_path ( const char *str )
 {
-  return _config_set_str("chiconpath", str);
+  return config_set_str("chiconpath", str);
 }
 
 const char *config_get_picon_path ( void )
@@ -1503,5 +1529,5 @@ const char *config_get_picon_path ( void )
 
 int config_set_picon_path ( const char *str )
 {
-  return _config_set_str("piconpath", str);
+  return config_set_str("piconpath", str);
 }
