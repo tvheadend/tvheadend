@@ -25,6 +25,9 @@
 #include "access.h"
 
 struct channel;
+struct http_path;
+
+typedef LIST_HEAD(, http_path) http_path_list_t;
 
 typedef TAILQ_HEAD(http_arg_list, http_arg) http_arg_list_t;
 
@@ -114,6 +117,8 @@ typedef struct http_connection {
   struct sockaddr_storage *hc_peer;
   struct sockaddr_storage *hc_self;
   char *hc_representative;
+
+  http_path_list_t *hc_paths;
 
   char *hc_url;
   char *hc_url_orig;

@@ -39,7 +39,7 @@
 
 void *http_server;
 
-static LIST_HEAD(, http_path) http_paths;
+static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
@@ -113,7 +113,7 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 
   while (1) {
 
-    LIST_FOREACH(hp, &http_paths, hp_link) {
+    LIST_FOREACH(hp, hc->hc_paths, hp_link) {
       if(!strncmp(path, hp->hp_path, hp->hp_len)) {
         if(path[hp->hp_len] == 0 ||
            path[hp->hp_len] == '/' ||
@@ -1000,9 +1000,10 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
 
-  hc.hc_fd   = fd;
-  hc.hc_peer = peer;
-  hc.hc_self = self;
+  hc.hc_fd    = fd;
+  hc.hc_peer  = peer;
+  hc.hc_self  = self;
+  hc.hc_paths = &http_paths;
 
   http_serve_requests(&hc);
 
