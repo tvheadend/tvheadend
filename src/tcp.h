@@ -36,6 +36,10 @@
   ((storage).ss_family == AF_INET6 ? \
       ((struct sockaddr_in6 *)&(storage))->sin6_port : \
       ((struct sockaddr_in  *)&(storage))->sin_port)
+#define IP_PORT_SET(storage, port) \
+  if ((storage).ss_family == AF_INET6) \
+      ((struct sockaddr_in6 *)&(storage))->sin6_port = (port); else \
+      ((struct sockaddr_in  *)&(storage))->sin_port  = (port);
 
 typedef struct tcp_server_ops
 {

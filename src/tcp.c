@@ -771,10 +771,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt )
                 IP_IN_ADDR(ss)) <= 0)
     return -1;
 
-  if (ss.ss_family == AF_INET)
-    IP_AS_V4(ss, port) = htons(53);
-  else
-    IP_AS_V6(ss, port) = htons(53);
+  IP_PORT_SET(ss, htons(53));
 
   sock = tvh_socket(ss.ss_family, SOCK_STREAM, 0);
   if (sock < 0)
