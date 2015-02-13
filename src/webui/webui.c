@@ -189,7 +189,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   size = fb_size(fp);
   gzip = fb_gzipped(fp) ? "gzip" : NULL;
 
-  http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL);
+  http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL, NULL);
   while (!fb_eof(fp)) {
     ssize_t c = fb_read(fp, buf, sizeof(buf));
     if (c < 0) {
@@ -1002,7 +1002,7 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   image ? "       <image>" : "", image ?: "", image ? "</image>\r\n" : "");
 
   len = strlen(buf);
-  http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL);
+  http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, len);
 
   free(hostpath);
@@ -1034,7 +1034,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
 %s/%s%s%s\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "");
 
   len = strlen(buf);
-  http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL);
+  http_send_header(hc, 200, "audio/x-mpegurl", len, 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, len);
 
   free(hostpath);
@@ -1234,7 +1234,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
        range ? range_buf : NULL,
-       disposition[0] ? disposition : NULL);
+       disposition[0] ? disposition : NULL, NULL);
 
   ret = 0;
   if(!hc->hc_no_output) {
@@ -1313,7 +1313,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_FOUND;
   }
 
-  http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL);
+  http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL, NULL);
 
   while (1) {
     c = read(fd, buf, sizeof(buf));

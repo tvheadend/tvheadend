@@ -173,7 +173,7 @@ satip_server_http_xml(http_connection_t *hc)
 
   free(devicelist);
 
-  http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL);
+  http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, strlen(buf));
 
   return 0;
@@ -474,7 +474,8 @@ void satip_server_config_changed(void)
   if (!satip_server_rtsp_port_locked) {
     rtsp_port = config_get_int("satip_rtsp", 0);
     satip_server_rtsp_port = rtsp_port;
-    if (rtsp_port <= 0) {
+    if (rtsp_port > 0) {
+      satip_server_rtsp_init(http_server_ip, rtsp_port);
       tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
               http_server_ip, http_server_port, http_server_ip, rtsp_port,
               config_get_int("satip_dvbt", 0),
@@ -483,6 +484,7 @@ void satip_server_config_changed(void)
       satips_upnp_send_announce();
     } else {
       tvhinfo("satips", "SAT>IP Server shutdown");
+      satip_server_rtsp_done();
       satips_upnp_send_byebye();
     }
   }
@@ -519,8 +521,13 @@ void satip_server_init(int rtsp_port)
   if (rtsp_port <= 0)
     return;
 
-  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d)",
-          http_server_ip, http_server_port, http_server_ip, rtsp_port);
+  satip_server_rtsp_init(http_server_ip, rtsp_port);
+
+  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+          http_server_ip, http_server_port, http_server_ip, rtsp_port,
+          config_get_int("satip_dvbt", 0),
+          config_get_int("satip_dvbs", 0),
+          config_get_int("satip_dvbc", 0));
 }
 
 void satip_server_register(void)
@@ -576,13 +583,16 @@ void satip_server_register(void)
     satips_upnp_discovery->us_destroy  = satips_upnp_discovery_destroy;
   }
 
+  satip_server_rtsp_register();
   satips_upnp_send_announce();
 }
 
 void satip_server_done(void)
 {
+  satip_server_rtsp_done();
   if (satip_server_rtsp_port > 0)
     satips_upnp_send_byebye();
+  satip_server_rtsp_port = 0;
   free(http_server_ip);
   http_server_ip = NULL;
   free(satip_server_uuid);
