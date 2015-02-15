@@ -156,8 +156,7 @@ mpegts_mux_subscribe_linked
 
   mmi2 = LIST_FIRST(&mi2->mi_mux_active);
   if (mmi2) {
-    r = mpegts_mux_subscribe_keep(mmi2->mmi_mux, mi2);
-    if (!r)
+    if (!mpegts_mux_subscribe_keep(mmi2->mmi_mux, mi2))
       return;
     serr = "active2";
     goto fatal;
@@ -185,7 +184,6 @@ fatal:
   mi ->mi_display_name(mi,  buf1, sizeof(buf1));
   mi2->mi_display_name(mi2, buf2, sizeof(buf2));
   tvherror("mpegts", "%s - %s - linked input cannot be started (%s: %i)", buf1, buf2, serr, r);
-  abort();
 }
 
 void
