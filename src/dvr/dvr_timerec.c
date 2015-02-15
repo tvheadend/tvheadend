@@ -183,7 +183,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
     return NULL;
   }
 
-  dte->dte_title = strdup("Time-%x-%R");
+  dte->dte_title = strdup("Time-%F_%R");
   dte->dte_weekdays = 0x7f;
   dte->dte_pri = DVR_PRIO_NORMAL;
   dte->dte_start = -1;
@@ -557,7 +557,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "title",
       .name     = "Title",
       .off      = offsetof(dvr_timerec_entry_t, dte_title),
-      .def.s    = "Time-%x-%R",
+      .def.s    = "Time-%F_%R",
     },
     {
       .type     = PT_STR,
