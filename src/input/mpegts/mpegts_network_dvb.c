@@ -441,6 +441,8 @@ dvb_network_create_mux
         if (!dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos))
           break;
       }
+      if (mn == NULL)
+        return NULL;
     }
   }
 
