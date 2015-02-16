@@ -1027,8 +1027,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->width           = vs->vid_width  ? vs->vid_width  : ictx->width;
     octx->height          = vs->vid_height ? vs->vid_height : ictx->height;
     octx->gop_size        = 25;
-    octx->time_base.den   = 25;
-    octx->time_base.num   = 1;
+    octx->time_base.den   = ictx->time_base.den;
+    octx->time_base.num   = ictx->time_base.num;
     octx->has_b_frames    = ictx->has_b_frames;
 
     switch (ts->ts_type) {
