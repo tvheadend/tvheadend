@@ -117,6 +117,15 @@ dvb_servicetype_lookup ( int t )
   return -1;
 }
 
+static inline int
+mpegts_mux_alive(mpegts_mux_t *mm)
+{
+  /*
+   * Return, if mux seems to be alive for updating.
+   */
+  return !LIST_EMPTY(&mm->mm_services) && mm->mm_scan_result != MM_SCAN_FAIL;
+}
+
 static void
 dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
 {
@@ -1568,7 +1577,7 @@ dvb_nit_callback
     /* Find existing mux */
     LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
       if (mux->mm_onid == onid && mux->mm_tsid == tsid &&
-          (mm == mux || !LIST_EMPTY(&mux->mm_services))) {
+          (mm == mux || mpegts_mux_alive(mux))) {
         r = dvb_nit_mux(mt, mux, mm, mn, onid, tsid, lptr, llen, tableid, bi, 0);
         if (r < 0)
           return r;
@@ -1761,7 +1770,7 @@ dvb_sdt_callback
   } else {
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_onid == onid && mm->mm_tsid == tsid &&
-          (mm == mm_orig || !LIST_EMPTY(&mm->mm_services))) {
+          (mm == mm_orig || mpegts_mux_alive(mm))) {
         r = dvb_sdt_mux(mt, mm, mm_orig, ptr, len, tableid);
         if (r)
           return r;
@@ -1830,8 +1839,7 @@ atsc_vct_callback
 
     /* Find mux */
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-      if (mm->mm_tsid == tsid &&
-          (mm == mm_orig || !LIST_EMPTY(&mm->mm_services))) {
+      if (mm->mm_tsid == tsid && (mm == mm_orig || mpegts_mux_alive(mm))) {
         /* Find the service */
         if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
           continue;
