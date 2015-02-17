@@ -387,6 +387,8 @@ struct mpegts_mux
   mpegts_mux_t            *mm_dmc_origin;
   time_t                   mm_dmc_origin_expire;
 
+  char                    *mm_fastscan_muxes;
+
   /*
    * Physical instances
    */

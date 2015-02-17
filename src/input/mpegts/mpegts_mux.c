@@ -904,6 +904,8 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   /* Events */
   mpegts_fire_event1(mm, ml_mux_stop, reason);
 
+  free(mm->mm_fastscan_muxes);
+  mm->mm_fastscan_muxes = NULL;
 }
 
 void

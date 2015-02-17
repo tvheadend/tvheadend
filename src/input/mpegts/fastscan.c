@@ -73,9 +73,9 @@ dvb_fastscan_each(void *aux, int position, uint32_t frequency,
   if (!fs)
     return;
   LIST_FOREACH(fsi, &fs->items, ilink) {
-    dvb_sat_position_to_str(fastscan_rb_skel->position, buf, sizeof(buf));
+    dvb_sat_position_to_str(fs->position, buf, sizeof(buf));
     snprintf(url, sizeof(url), "dvb-fastscan://dvbs,%s,%u,%d",
-             buf, frequency, fsi->pid);
+             buf, fs->frequency, fsi->pid);
     bq = bouquet_find_by_source(NULL, url, 0);
     if (bq == NULL || !bq->bq_enabled)
       continue;
