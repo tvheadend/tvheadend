@@ -441,6 +441,7 @@ dvb_convert_date(const uint8_t *dvb_buf, int local)
  */
 #if ENABLE_MPEGTS_DVB
 
+htsmsg_t *satellites;
 
 #define dvb_str2val(p)\
 const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
@@ -923,11 +924,11 @@ dvb_sat_position_from_str( const char *buf )
 /**
  *
  */
-htsmsg_t *satellites;
-
 void dvb_init( void )
 {
+#if ENABLE_MPEGTS_DVB
   satellites = hts_settings_load("satellites");
+#endif
 }
 
 void dvb_done( void )
@@ -935,5 +936,7 @@ void dvb_done( void )
   extern SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
 
   SKEL_FREE(mpegts_table_state_skel);
+#if ENABLE_MPEGTS_DVB
   htsmsg_destroy(satellites);
+#endif
 }

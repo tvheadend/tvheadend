@@ -327,6 +327,7 @@ api_mpegts_mux_sched_create
   return err;
 }
 
+#if ENABLE_MPEGTS_DVB
 static int
 api_dvb_orbitalpos_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
@@ -361,7 +362,7 @@ api_dvb_orbitalpos_list
 
   return 0;
 }
-
+#endif
 
 #if ENABLE_MPEGTS_DVB
 static int
@@ -439,8 +440,8 @@ api_mpegts_init ( void )
     { "mpegts/mux_sched/class",    ACCESS_ADMIN, api_idnode_class, (void*)&mpegts_mux_sched_class },
     { "mpegts/mux_sched/grid",     ACCESS_ADMIN, api_idnode_grid, api_mpegts_mux_sched_grid },
     { "mpegts/mux_sched/create",   ACCESS_ADMIN, api_mpegts_mux_sched_create, NULL },
-    { "dvb/orbitalpos/list",       ACCESS_ADMIN, api_dvb_orbitalpos_list, NULL },
 #if ENABLE_MPEGTS_DVB
+    { "dvb/orbitalpos/list",       ACCESS_ADMIN, api_dvb_orbitalpos_list, NULL },
     { "dvb/scanfile/list",         ACCESS_ADMIN, api_dvb_scanfile_list, NULL },
 #endif
     { NULL },
