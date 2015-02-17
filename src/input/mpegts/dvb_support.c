@@ -826,7 +826,7 @@ dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   const char *pol = dvb_pol2str(dmc->u.dmc_fe_qpsk.polarisation);
   const int satpos = dmc->u.dmc_fe_qpsk.orbital_pos;
   char satbuf[16];
-  if (satpos) {
+  if (satpos != INT_MAX) {
     snprintf(satbuf, sizeof(buf), "%d.%d%c ", abs(satpos) / 10, abs(satpos) % 10, satpos < 0 ? 'W' : 'E');
   } else {
     satbuf[0] = '\0';
