@@ -451,7 +451,8 @@ mpegts_service_channel_icon ( service_t *s )
       case DVB_TYPE_S:
         if ((pos = dvb_network_get_orbital_pos(mmd->mm_network)) == INT_MAX)
           return NULL;
-        assert(pos >= -1800 && pos <= 1800);
+        if (pos < -1800 || pos > 1800)
+          return NULL;
         hash = (pos >= 0 ? pos : 3600 + pos) << 16;
         break;
       case DVB_TYPE_C:
