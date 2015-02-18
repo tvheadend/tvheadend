@@ -209,6 +209,8 @@ typedef struct htsp_subscription {
 
   int hs_first;
 
+  uint32_t hs_data_errors;
+
 } htsp_subscription_t;
 
 
@@ -3234,8 +3236,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int qlen = hs->hs_q.hmq_payload;
   size_t payloadlen;
 
-  if(pkt->pkt_payload == NULL)
+  if (pkt->pkt_err)
+    hs->hs_data_errors += pkt->pkt_err;
+  if(pkt->pkt_payload == NULL) {
     return;
+  }
 
   if(!htsp_is_stream_enabled(hs, pkt->pkt_componentindex)) {
     pkt_ref_dec(pkt);
@@ -3295,6 +3300,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
     htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
     htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
+    if (hs->hs_data_errors)
+      htsmsg_add_u32(m, "errors", hs->hs_data_errors);
 
     /**
      * Figure out real time queue delay 
