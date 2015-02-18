@@ -731,6 +731,10 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_str(out, "state", s);
   if(error)
     htsmsg_add_str(out, "error", error);
+  if (de->de_errors)
+    htsmsg_add_u32(out, "streamErrors", de->de_errors);
+  if (de->de_data_errors)
+    htsmsg_add_u32(out, "dataErrors", de->de_data_errors);
   htsmsg_add_str(out, "method", method);
   return out;
 }
