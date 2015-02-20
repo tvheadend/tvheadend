@@ -76,5 +76,20 @@ int
 udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
                     struct iovec **iovec );
 
+typedef struct udp_multisend {
+  int             um_psize;
+  int             um_packets;
+  uint8_t        *um_data;
+  struct iovec   *um_iovec;
+  struct mmsghdr *um_msg;
+} udp_multisend_t;
+
+void
+udp_multisend_init( udp_multisend_t *um, int packets, int psize,
+                    struct iovec **iovec );
+void
+udp_multisend_free( udp_multisend_t *um );
+int
+udp_multisend_send( udp_multisend_t *um, int fd, int packets );
 
 #endif /* UDP_H_ */

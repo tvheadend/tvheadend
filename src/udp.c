@@ -600,3 +600,120 @@ udp_multirecv_read( udp_multirecv_t *um, int fd, int packets,
   }
   return n;
 }
+
+/*
+ * UDP multi packet send support
+ */
+
+#if !defined (CONFIG_SENDMMSG) && defined(__linux__)
+/* define the syscall - works only for linux */
+#include <linux/unistd.h>
+#ifdef __NR_sendmmsg
+
+int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags);
+
+int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags)
+{
+  return syscall(__NR_sendmmsg, sockfd, msgvec, vlen, flags);
+}
+
+#define CONFIG_RECVMMSG
+
+#endif
+#endif
+
+static inline int
+sendmmsg_i(int sockfd, struct mmsghdr *msgvec,
+           unsigned int vlen, unsigned int flags)
+{
+  ssize_t r;
+  unsigned int i;
+
+  for (i = 0; i < vlen; i++) {
+    r = sendmsg(sockfd, &msgvec->msg_hdr, flags);
+    if (r < 0)
+      return (i > 0) ? i : r;
+    msgvec->msg_len = r;
+    msgvec++;
+  }
+  return i;
+}
+
+#ifndef CONFIG_SENDMMSG
+
+int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+             unsigned int flags);
+
+int
+sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+         unsigned int flags)
+{
+  return recvmmsg_i(sockfd, msgvec, vlen, flags);
+}
+
+#endif
+
+void
+udp_multisend_init( udp_multisend_t *um, int packets, int psize,
+                    struct iovec **iovec )
+{
+  int i;
+
+  assert(um);
+  um->um_psize   = psize;
+  um->um_packets = packets;
+  um->um_data    = malloc(packets * psize);
+  um->um_iovec   = malloc(packets * sizeof(struct iovec));
+  um->um_msg     = calloc(packets,  sizeof(struct mmsghdr));
+  for (i = 0; i < packets; i++) {
+    ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iov    = &um->um_iovec[i];
+    ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iovlen = 1;
+    um->um_iovec[i].iov_base  = um->um_data + i * psize;
+    um->um_iovec[i].iov_len   = psize;
+  }
+  *iovec = um->um_iovec;
+}
+
+void
+udp_multisend_free( udp_multisend_t *um )
+{
+  if (um == NULL)
+    return;
+  free(um->um_msg);    um->um_msg   = NULL;
+  free(um->um_iovec);  um->um_iovec = NULL;
+  free(um->um_data);   um->um_data  = NULL;
+  um->um_psize   = 0;
+  um->um_packets = 0;
+}
+
+int
+udp_multisend_send( udp_multisend_t *um, int fd, int packets )
+{
+  static char use_emul = 0;
+  int n, i;
+  if (um == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+  if (packets > um->um_packets)
+    packets = um->um_packets;
+  for (i = 0; i < packets; i++)
+    ((struct mmsghdr *)um->um_msg)[i].msg_len = um->um_iovec[i].iov_len;
+  if (!use_emul) {
+    n = sendmmsg(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT);
+  } else {
+    n = -1;
+    errno = ENOSYS;
+  }
+  if (n < 0 && errno == ENOSYS) {
+    use_emul = 1;
+    n = sendmmsg_i(fd, (struct mmsghdr *)um->um_msg, packets, MSG_DONTWAIT);
+  }
+  if (n > 0) {
+    for (i = 0; i < n; i++)
+      um->um_iovec[i].iov_len = ((struct mmsghdr *)um->um_msg)[i].msg_len;
+  }
+  return n;
+}
