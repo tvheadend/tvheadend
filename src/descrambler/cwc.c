@@ -272,6 +272,7 @@ typedef struct cwc {
  *
  */
 
+static void cwc_service_pid_free(cwc_service_t *ct);
 static void cwc_service_destroy(th_descrambler_t *td);
 void cwc_emm_conax(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
@@ -666,20 +667,20 @@ static int
 cwc_ecm_reset(th_descrambler_t *th)
 {
   cwc_service_t *ct = (cwc_service_t *)th;
-  mpegts_service_t *t;
+  cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
   ecm_section_t *es;
 
   if (ct->cs_constcw)
     return 1;  /* keys will not change */
+
+  pthread_mutex_lock(&cwc->cwc_mutex);
   ct->td_keystate = DS_UNKNOWN;
   LIST_FOREACH(ep, &ct->cs_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_UNKNOWN;
   ct->ecm_state = ECM_RESET;
-  t = (mpegts_service_t *)th->td_service;
-  if (t->s_dvb_prefcapid_lock != PREFCAPID_FORCE)
-    t->s_dvb_prefcapid = 0;
+  pthread_mutex_unlock(&cwc->cwc_mutex);
   return 0;
 }
 
@@ -687,13 +688,16 @@ static void
 cwc_ecm_idle(th_descrambler_t *th)
 {
   cwc_service_t *ct = (cwc_service_t *)th;
+  cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
   ecm_section_t *es;
 
+  pthread_mutex_lock(&cwc->cwc_mutex);
   LIST_FOREACH(ep, &ct->cs_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_IDLE;
   ct->ecm_state = ECM_RESET;
+  pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
 static void
@@ -701,6 +705,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
                  int len, int seq)
 {
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
+  cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
   ecm_section_t *es2;
   char chaninfo[32];
@@ -813,7 +818,9 @@ forbid:
       es->es_keystate = ES_RESOLVED;
       es->es_resolved = 1;
 
+      pthread_mutex_unlock(&cwc->cwc_mutex);
       descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + 8);
+      pthread_mutex_lock(&cwc->cwc_mutex);
     } else {
       tvhlog(LOG_DEBUG, "cwc",
            "Received ECM reply%s for service \"%s\" "
@@ -837,7 +844,9 @@ forbid:
       es->es_keystate = ES_RESOLVED;
       es->es_resolved = 1;
 
+      pthread_mutex_unlock(&cwc->cwc_mutex);
       descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
+      pthread_mutex_lock(&cwc->cwc_mutex);
     }
   }
 }
@@ -1617,32 +1626,36 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
   if (data == NULL)
     return;
 
-  if (ct->td_keystate == DS_IDLE)
-    return;
-
   if(len > 4096)
     return;
 
   if((data[0] & 0xf0) != 0x80)
     return;
 
-  LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-    if(ep->ep_pid == pid)
-      break;
+  pthread_mutex_lock(&t->s_stream_mutex);
+  pthread_mutex_lock(&cwc->cwc_mutex);
+
+  if (ct->td_keystate == DS_IDLE)
+    goto end;
+
+  if (ct->ecm_state == ECM_RESET) {
+    /* clean all */
+    cwc_service_pid_free(ct);
+    /* move to init state */
+    ct->ecm_state = ECM_INIT;
+    ct->cs_channel = -1;
+    t->s_dvb_prefcapid = 0;
+    tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_dvb_svcname);
   }
 
-  pthread_mutex_lock(&t->s_stream_mutex);
-  if(ep == NULL) {
-    tvhlog(LOG_DEBUG, "cwc", "ECM state %i", ct->ecm_state);
-    if (ct->ecm_state == ECM_RESET) {
-      ct->ecm_state = ECM_INIT;
-      ct->cs_channel = -1;
-      t->s_dvb_prefcapid = 0;
-      tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_dvb_svcname);
-    }
+  LIST_FOREACH(ep, &ct->cs_pids, ep_link)
+    if(ep->ep_pid == pid) break;
 
+  if(ep == NULL) {
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
+      tvhlog(LOG_DEBUG, "cwc", "ECM state INIT");
+
       if(t->s_dvb_prefcapid != PREFCAPID_OFF) {
         struct elementary_stream *prefca
           = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
@@ -1661,11 +1674,8 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
       }
     }
   }
-
-  if(ep == NULL) {
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    return;
-  }
+  if(ep == NULL)
+    goto end;
 
   st = service_stream_find((service_t *)t, pid);
   if (st) {
@@ -1675,14 +1685,11 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
           goto found;
   }
 
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  return;
+  goto end;
 
 found:
   caid = c->caid;
   providerid = c->providerid;
-
-  pthread_mutex_unlock(&t->s_stream_mutex);
 
   switch(data[0]) {
     case 0x80:
@@ -1726,7 +1733,7 @@ found:
       if(ct->cs_channel >= 0 && channel != -1 &&
          ct->cs_channel != channel) {
         tvhlog(LOG_DEBUG, "cwc", "Filtering ECM (PID %d)", channel);
-        return;
+        goto end;
       }
 
       es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, caid, providerid);
@@ -1743,6 +1750,10 @@ found:
         cwc_send_msg(cwc, data, len, sid, 1, 0, 0);
       break;
   }
+
+end:
+  pthread_mutex_unlock(&cwc->cwc_mutex);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 /**
@@ -1936,16 +1947,10 @@ cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, in
  * s_stream_mutex is held
  */
 static void 
-cwc_service_destroy(th_descrambler_t *td)
+cwc_service_pid_free(cwc_service_t *ct)
 {
-  cwc_service_t *ct = (cwc_service_t *)td;
   ecm_pid_t *ep;
   ecm_section_t *es;
-  int i;
-
-  for (i = 0; i < CWC_ES_PIDS; i++)
-    if (ct->cs_epids[i])
-      descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids[i]);
 
   while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
     while ((es = LIST_FIRST(&ep->ep_sections)) != NULL) {
@@ -1955,6 +1960,23 @@ cwc_service_destroy(th_descrambler_t *td)
     LIST_REMOVE(ep, ep_link);
     free(ep);
   }
+}
+
+/**
+ * cwc_mutex is held
+ * s_stream_mutex is held
+ */
+static void
+cwc_service_destroy(th_descrambler_t *td)
+{
+  cwc_service_t *ct = (cwc_service_t *)td;
+  int i;
+
+  for (i = 0; i < CWC_ES_PIDS; i++)
+    if (ct->cs_epids[i])
+      descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids[i]);
+
+  cwc_service_pid_free(ct);
 
   LIST_REMOVE(td, td_service_link);
 
@@ -1985,12 +2007,12 @@ cwc_service_start(caclient_t *cac, service_t *t)
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
     return;
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&cwc->cwc_mutex);
   LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
     if (ct->td_service == t && ct->cs_cwc == cwc)
       break;
   }
-  pthread_mutex_lock(&t->s_stream_mutex);
   LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
     if (pcard->cwc_caid == 0) continue;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
@@ -2009,16 +2031,10 @@ cwc_service_start(caclient_t *cac, service_t *t)
   }
   if (!pcard) {
     if (ct) cwc_service_destroy((th_descrambler_t*)ct);
-    pthread_mutex_unlock(&t->s_stream_mutex);
-    pthread_mutex_unlock(&cwc->cwc_mutex);
-    return;
+    goto end;
   }
-
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  if (ct) {
-    pthread_mutex_unlock(&cwc->cwc_mutex);
-    return;
-  }
+  if (ct)
+    goto end;
 
   ct                   = calloc(1, sizeof(cwc_service_t));
   ct->cs_cwc           = cwc;
@@ -2038,7 +2054,6 @@ cwc_service_start(caclient_t *cac, service_t *t)
 
   LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     LIST_FOREACH(c, &st->es_caids, link)
@@ -2048,7 +2063,6 @@ cwc_service_start(caclient_t *cac, service_t *t)
       }
     if (i == CWC_ES_PIDS) break;
   }
-  pthread_mutex_unlock(&t->s_stream_mutex);
 
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
@@ -2059,7 +2073,9 @@ cwc_service_start(caclient_t *cac, service_t *t)
   tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
          service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
 
+end:
   pthread_mutex_unlock(&cwc->cwc_mutex);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 
@@ -2077,7 +2093,9 @@ cwc_free(caclient_t *cac)
   while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
     t = (mpegts_service_t *)ct->td_service;
     pthread_mutex_lock(&t->s_stream_mutex);
+    pthread_mutex_lock(&cwc->cwc_mutex);
     cwc_service_destroy((th_descrambler_t *)&ct);
+    pthread_mutex_lock(&cwc->cwc_mutex);
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
 
