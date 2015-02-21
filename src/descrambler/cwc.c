@@ -769,7 +769,7 @@ forbid:
       ct->td_keystate = DS_FORBIDDEN;
       ct->ecm_state = ECM_RESET;
       /* this pid is not valid, force full scan */
-      if (t->s_dvb_prefcapid == ct->cs_channel && t->s_dvb_prefcapid_lock == 0)
+      if (t->s_dvb_prefcapid == ct->cs_channel && t->s_dvb_prefcapid_lock == PREFCAPID_OFF)
         t->s_dvb_prefcapid = 0;
     }
     return;
@@ -782,7 +782,7 @@ forbid:
 
     if(t->s_dvb_prefcapid == 0 ||
        (t->s_dvb_prefcapid != ct->cs_channel &&
-        t->s_dvb_prefcapid_lock == 0)) {
+        t->s_dvb_prefcapid_lock == PREFCAPID_OFF)) {
       t->s_dvb_prefcapid = ct->cs_channel;
       tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d for %s",
                                t->s_dvb_prefcapid, ct->td_nicename);
@@ -1639,7 +1639,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
 
     if (ct->ecm_state == ECM_INIT) {
       // Validate prefered ECM PID
-      if(t->s_dvb_prefcapid != 0) {
+      if(t->s_dvb_prefcapid != PREFCAPID_OFF) {
         struct elementary_stream *prefca
           = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
         if (!prefca || prefca->es_type != SCT_CA) {
@@ -1995,7 +1995,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
     if (pcard->cwc_caid == 0) continue;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-      if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == 2 &&
+      if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
           ((mpegts_service_t *)t)->s_dvb_prefcapid != st->es_pid)
         continue;
       LIST_FOREACH(c, &st->es_caids, link) {

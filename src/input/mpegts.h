@@ -450,7 +450,11 @@ struct mpegts_mux
   TAILQ_HEAD(, tsdebug_packet) mm_tsdebug_packets;
 #endif
 };
- 
+
+#define PREFCAPID_OFF      0
+#define PREFCAPID_ON       1
+#define PREFCAPID_FORCE    2
+
 /* Service */
 struct mpegts_service
 {

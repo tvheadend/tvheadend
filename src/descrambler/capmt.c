@@ -1664,7 +1664,7 @@ capmt_caid_change(th_descrambler_t *td)
   lock_assert(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    if (t->s_dvb_prefcapid_lock == 2 &&
+    if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
@@ -1954,7 +1954,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     caid_t *c;
-    if (t->s_dvb_prefcapid_lock == 2 &&
+    if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
