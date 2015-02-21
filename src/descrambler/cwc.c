@@ -666,6 +666,7 @@ static int
 cwc_ecm_reset(th_descrambler_t *th)
 {
   cwc_service_t *ct = (cwc_service_t *)th;
+  mpegts_service_t *t;
   ecm_pid_t *ep;
   ecm_section_t *es;
 
@@ -676,6 +677,9 @@ cwc_ecm_reset(th_descrambler_t *th)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_UNKNOWN;
   ct->ecm_state = ECM_RESET;
+  t = (mpegts_service_t *)th->td_service;
+  if (t->s_dvb_prefcapid_lock != PREFCAPID_FORCE)
+    t->s_dvb_prefcapid = 0;
   return 0;
 }
 
