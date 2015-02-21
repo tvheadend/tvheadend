@@ -1652,17 +1652,12 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
         }
       }
 
-      if(t->s_dvb_prefcapid == pid) {
+      if(t->s_dvb_prefcapid == pid || t->s_dvb_prefcapid == 0) {
         ep = calloc(1, sizeof(ecm_pid_t));
-        ep->ep_pid = t->s_dvb_prefcapid;
+        ep->ep_pid = pid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-        tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
-      }
-      else if(t->s_dvb_prefcapid == 0) {
-          ep = calloc(1, sizeof(ecm_pid_t));
-          ep->ep_pid = pid;
-          LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", pid, t->s_dvb_svcname);
+        tvhlog(LOG_DEBUG, "cwc", "Insert %s ECM (PID %d) for service \"%s\"",
+                          t->s_dvb_prefcapid ? "preferred" : "new", pid, t->s_dvb_svcname);
       }
     }
   }
