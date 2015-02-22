@@ -93,23 +93,17 @@ void dvr_inotify_add ( dvr_entry_t *de )
 {
   dvr_inotify_entry_t *e;
   char *path;
-  struct stat st;
 
   if (_inot_fd < 0)
     return;
 
-  if (!de->de_filename || stat(de->de_filename, &st))
+  if (!de->de_filename)
     return;
 
   path = strdup(de->de_filename);
 
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);
-  
-  if (stat(dvr_inotify_entry_skel->path, &st)) {
-    free(path);
-    return;
-  }
   
   e = RB_INSERT_SORTED(&_inot_tree, dvr_inotify_entry_skel, link, _str_cmp);
   if (!e) {
