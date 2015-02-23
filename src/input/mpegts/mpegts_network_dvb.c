@@ -421,11 +421,11 @@ dvb_network_mux_class
 
 static mpegts_mux_t *
 dvb_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *p, int force )
+  ( mpegts_network_t *mn, void *origin, uint16_t onid, uint16_t tsid,
+    void *p, int force )
 {
   int save = 0, satpos;
-  mpegts_mux_t *mmo = mm;
-  mpegts_network_t *mn = mm->mm_network;
+  dvb_mux_t *mm;
   dvb_network_t *ln;
   dvb_mux_conf_t *dmc = p;
   const idclass_t *cls = dvb_network_mux_class(mn);
@@ -447,7 +447,7 @@ dvb_network_create_mux
   }
 
   ln = (dvb_network_t*)mn;
-  mm = dvb_network_find_mux(ln, dmc, onid, tsid);
+  mm = (dvb_mux_t *)dvb_network_find_mux(ln, dmc, onid, tsid);
   if (!mm && (ln->mn_autodiscovery || force)) {
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
@@ -461,7 +461,7 @@ dvb_network_create_mux
         save = 0;
     }
     if (save) {
-      mm = (mpegts_mux_t*)dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
+      mm = dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
 #if ENABLE_TRACE
       char buf[128];
       dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
@@ -473,7 +473,7 @@ dvb_network_create_mux
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
-    if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != mmo)
+    if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
       goto noop;
 #if ENABLE_TRACE
     #define COMPARE(x) ({ \
@@ -565,12 +565,12 @@ dvb_network_create_mux
   }
 save:
   if (mm && save) {
-    mm->mm_dmc_origin        = mmo;
+    mm->mm_dmc_origin        = origin;
     mm->mm_dmc_origin_expire = dispatch_clock + 3600 * 24; /* one day */
-    mm->mm_config_save(mm);
+    mm->mm_config_save((mpegts_mux_t *)mm);
   }
 noop:
-  return mm;
+  return (mpegts_mux_t *)mm;
 }
 
 static mpegts_service_t *

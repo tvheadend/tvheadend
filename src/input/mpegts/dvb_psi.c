@@ -273,7 +273,7 @@ dvb_desc_sat_del
   tvhdebug(mt->mt_name, "    %s", buf);
 
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, force);
+  return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, force);
 }
 
 /*
@@ -329,7 +329,7 @@ dvb_desc_cable_del
   tvhdebug(mt->mt_name, "    %s", buf);
 
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, 0);
+  return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, 0);
 }
 
 /*
@@ -395,7 +395,7 @@ dvb_desc_terr_del
   tvhdebug(mt->mt_name, "    %s", buf);
   
   /* Create */
-  return mm->mm_network->mn_create_mux(mm, onid, tsid, &dmc, 0);
+  return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, 0);
 }
  
 #endif /* ENABLE_MPEGTS_DVB */

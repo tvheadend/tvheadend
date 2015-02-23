@@ -263,7 +263,8 @@ mpegts_network_config_save
 
 static mpegts_mux_t *
 mpegts_network_create_mux
-  ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, void *aux, int force )
+  ( mpegts_network_t *mn, void *origin, uint16_t sid, uint16_t tsid,
+    void *aux, int force )
 {
   return NULL;
 }
