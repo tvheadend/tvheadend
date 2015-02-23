@@ -20,10 +20,6 @@
 #ifndef __TVH_MPEGTS_DVB_H__
 #define __TVH_MPEGTS_DVB_H__
 
-/*
- * Network
- */
-
 typedef struct dvb_network
 {
   mpegts_network_t;
@@ -33,6 +29,20 @@ typedef struct dvb_network
    */
   dvb_fe_type_t ln_type;
 } dvb_network_t;
+
+typedef struct dvb_mux
+{
+  mpegts_mux_t;
+
+  /*
+   * Tuning information
+   */
+  dvb_mux_conf_t lm_tuning;
+} dvb_mux_t;
+
+/*
+ * Network
+ */
 
 extern const idclass_t dvb_network_class;
 extern const idclass_t dvb_network_dvbt_class;
@@ -48,21 +58,14 @@ static inline dvb_network_t *dvb_network_find_by_uuid(const char *uuid)
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
+dvb_mux_t *dvb_network_find_mux
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid );
+
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);
 
 /*
  *
  */
-typedef struct dvb_mux
-{
-  mpegts_mux_t;
-
-  /*
-   * Tuning information
-   */
-  dvb_mux_conf_t lm_tuning;
-} dvb_mux_t;
-
 extern const idclass_t dvb_mux_dvbt_class;
 extern const idclass_t dvb_mux_dvbc_class;
 extern const idclass_t dvb_mux_dvbs_class;

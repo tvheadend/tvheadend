@@ -33,10 +33,6 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-static mpegts_mux_t *
-dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid );
-
 /* ****************************************************************************
  * Class definition
  * ***************************************************************************/
@@ -68,7 +64,7 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   dvb_network_t *ln = o;
   dvb_mux_conf_t *dmc;
   scanfile_network_t *sfn;
-  mpegts_mux_t *mm;
+  dvb_mux_t *mm;
 
   /* Find */
   if (!s)
@@ -83,12 +79,10 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
     if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
-      mm = (mpegts_mux_t*)dvb_mux_create0(o,
-                                          MPEGTS_ONID_NONE,
-                                          MPEGTS_TSID_NONE,
-                                          dmc, NULL, NULL);
+      mm = dvb_mux_create0(o, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                           dmc, NULL, NULL);
       if (mm)
-        mm->mm_config_save(mm);
+        mm->mm_config_save((mpegts_mux_t *)mm);
 #if ENABLE_TRACE
       char buf[128];
       dvb_mux_conf_str(dmc, buf, sizeof(buf));
@@ -328,7 +322,7 @@ dvb_network_check_orbital_pos ( int satpos1, int satpos2 )
   return 0;
 }
 
-static mpegts_mux_t *
+dvb_mux_t *
 dvb_network_find_mux
   ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid )
 {
@@ -390,7 +384,7 @@ dvb_network_find_mux
     /* in the NIT table information and real mux feed */
     mm = mm_alt;
   }
-  return mm;
+  return (dvb_mux_t *)mm;
 }
 
 static void
@@ -447,7 +441,7 @@ dvb_network_create_mux
   }
 
   ln = (dvb_network_t*)mn;
-  mm = (dvb_mux_t *)dvb_network_find_mux(ln, dmc, onid, tsid);
+  mm = dvb_network_find_mux(ln, dmc, onid, tsid);
   if (!mm && (ln->mn_autodiscovery || force)) {
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
