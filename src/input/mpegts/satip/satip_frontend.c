@@ -1271,7 +1271,7 @@ new_tune:
   if (udp_bind_double(&rtp, &rtcp,
                       "satip", "rtp", "rtpc",
                       satip_frontend_bindaddr(lfe), lfe->sf_udp_rtp_port,
-                      NULL, SATIP_BUF_SIZE, 16384) < 0) {
+                      NULL, SATIP_BUF_SIZE, 16384, 4*1024, 4*1024) < 0) {
     satip_frontend_tuning_error(lfe, tr);
     goto done;
   }
