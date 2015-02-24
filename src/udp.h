@@ -89,6 +89,8 @@ void
 udp_multisend_init( udp_multisend_t *um, int packets, int psize,
                     struct iovec **iovec );
 void
+udp_multisend_clean( udp_multisend_t *um );
+void
 udp_multisend_free( udp_multisend_t *um );
 int
 udp_multisend_send( udp_multisend_t *um, int fd, int packets );

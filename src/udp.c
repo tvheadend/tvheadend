@@ -679,7 +679,7 @@ udp_multisend_init( udp_multisend_t *um, int packets, int psize,
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iov    = &um->um_iovec[i];
     ((struct mmsghdr *)um->um_msg)[i].msg_hdr.msg_iovlen = 1;
     um->um_iovec[i].iov_base  = um->um_data + i * psize;
-    um->um_iovec[i].iov_len   = psize;
+    um->um_iovec[i].iov_len   = 0;
   }
   *iovec = um->um_iovec;
 }
@@ -694,6 +694,14 @@ udp_multisend_free( udp_multisend_t *um )
   free(um->um_data);   um->um_data  = NULL;
   um->um_psize   = 0;
   um->um_packets = 0;
+}
+
+void
+udp_multisend_clean( udp_multisend_t *um )
+{
+  int i;
+  for (i = 0; i < um->um_packets; i++)
+    um->um_iovec[i].iov_len = 0;
 }
 
 int

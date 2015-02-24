@@ -18,22 +18,10 @@
  */
 
 #include "tvheadend.h"
-#include "input.h"
-#include "htsbuf.h"
-#include "htsmsg_xml.h"
 #include "upnp.h"
-#include "http.h"
 #include "settings.h"
 #include "config.h"
 #include "satip/server.h"
-
-#include <arpa/inet.h>
-#include <openssl/sha.h>
-
-#if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
-#include <sys/types.h>
-#include <sys/socket.h>
-#endif
 
 #define UPNP_MAX_AGE 1800
 

@@ -162,7 +162,8 @@ SRCS-${CONFIG_UPNP} += \
 # SATIP Server
 SRCS-${CONFIG_SATIP_SERVER} += \
 	src/satip/server.c \
-	src/satip/rtsp.c
+	src/satip/rtsp.c \
+	src/satip/rtp.c
 
 SRCS += \
 	src/api.c \

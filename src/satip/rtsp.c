@@ -18,36 +18,34 @@
  */
 
 #include "tvheadend.h"
-#include "input.h"
 #include "htsbuf.h"
-#include "htsmsg_xml.h"
-#include "upnp.h"
-#include "http.h"
-#include "settings.h"
 #include "config.h"
+#include "profile.h"
 #include "satip/server.h"
 
 #include <ctype.h>
-#include <arpa/inet.h>
-#include <openssl/sha.h>
-
-#if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
-#include <sys/types.h>
-#include <sys/socket.h>
-#endif
 
 #define RTSP_TIMEOUT 30
-#define RTSP_PIDS    128
+#define RTP_BUFSIZE  (256*1024)
+#define RTCP_BUFSIZE (16*1024)
 
 typedef struct session {
   TAILQ_ENTRY(session) link;
   int delsys;
   int stream;
   int frontend;
+  int findex;
+  uint32_t nsession;
   char session[9];
   dvb_mux_conf_t dmc;
   int16_t pids[RTSP_PIDS];
   gtimer_t timer;
+  dvb_mux_t *mux;
+  int mux_created;
+  profile_chain_t prch;
+  th_subscription_t *subs;
+  udp_connection_t *udp_rtp;
+  udp_connection_t *udp_rtcp;
 } session_t;
 
 static uint32_t session_number;
@@ -65,26 +63,36 @@ static void rtsp_free_session(session_t *rs);
  *
  */
 static int
-rtsp_delsys(int fe)
+rtsp_delsys(int fe, int *findex)
 {
-  int i;
+  int res, i;
 
   if (fe < 1)
     return DVB_SYS_NONE;
   pthread_mutex_lock(&global_lock);
   i = config_get_int("satip_dvbt", 0);
-  if (fe <= i)
-    return DVB_SYS_DVBT;
+  if (fe <= i) {
+    res = DVB_SYS_DVBT;
+    goto result;
+  }
   fe -= i;
   i = config_get_int("satip_dvbs", 0);
-  if (fe <= i)
-    return DVB_SYS_DVBS;
+  if (fe <= i) {
+    res = DVB_SYS_DVBS;
+    goto result;
+  }
   fe -= i;
   i = config_get_int("satip_dvbc", 0);
-  if (fe <= i)
-    return DVB_SYS_DVBC_ANNEX_A;
+  if (fe <= i) {
+    res = DVB_SYS_DVBC_ANNEX_A;
+    goto result;
+  }
   pthread_mutex_unlock(&global_lock);
   return DVB_SYS_NONE;
+result:
+  pthread_mutex_unlock(&global_lock);
+  *findex = i;
+  return res;
 }
 
 /*
@@ -97,8 +105,10 @@ rtsp_new_session(int delsys)
   if (rs == NULL)
     return NULL;
   rs->delsys = delsys;
+  rs->nsession = session_number;
   snprintf(rs->session, sizeof(rs->session), "%08X", session_number);
   session_number += 9876;
+  TAILQ_INSERT_TAIL(&rtsp_sessions, rs, link);
   return rs;
 }
 
@@ -241,10 +251,91 @@ rtsp_delpids(session_t *rs, int16_t *pids)
 /*
  *
  */
-static int
-rtsp_start(session_t *rs)
+static void
+rtsp_clean(session_t *rs)
 {
+  if (rs->subs) {
+    subscription_unsubscribe(rs->subs);
+    rs->subs = NULL;
+  }
+  if (rs->prch.prch_pro)
+    profile_chain_close(&rs->prch);
+  if (rs->mux && rs->mux_created) {
+    rs->mux->mm_delete((mpegts_mux_t *)rs->mux, 1);
+    rs->mux = NULL;
+    rs->mux_created = 0;
+  }
+}
+
+/*
+ *
+ */
+static int
+rtsp_start(http_connection_t *hc, session_t *rs)
+{
+  mpegts_network_t *mn;
+  dvb_network_t *ln;
+  char buf[256], addrbuf[50];
+  int res = HTTP_STATUS_SERVICE, qsize = 3000000;
+
+  if (rs->mux)
+    return 0;
+  rs->mux_created = 0;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    ln = (dvb_network_t *)mn;
+    if (ln->ln_type == rs->dmc.dmc_fe_type &&
+        mn->mn_satip_source == rs->findex)
+      break;
+  }
+  if (mn) {
+    rs->mux = dvb_network_find_mux((dvb_network_t *)mn, &rs->dmc,
+                                   MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
+    if (rs->mux == NULL) {
+      rs->mux = (dvb_mux_t *)
+        mn->mn_create_mux(mn, (void *)(intptr_t)rs->nsession,
+                          MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+                          &rs->dmc, 0);
+      if (rs->mux)
+        rs->mux_created = 1;
+    }
+  }
+  if (rs->mux == NULL) {
+    dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
+    tvhwarn("satips", "%i: unable to create mux %s", rs->frontend, buf);
+    goto end;
+  }
+  if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize))
+    goto endclean;
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
+  rs->subs = subscription_create_from_mux(&rs->prch, NULL,
+                                   config_get_int("satip_weight", 100),
+                                   "SAT>IP",
+                                   SUBSCRIPTION_FULLMUX | SUBSCRIPTION_STREAMING,
+                                   addrbuf, hc->hc_username,
+                                   http_arg_get(&hc->hc_args, "User-Agent"), NULL);
+  if (!rs->subs)
+    goto endclean;
+  memset(&rs->udp_rtp, 0, sizeof(rs->udp_rtp));
+  memset(&rs->udp_rtcp, 0, sizeof(rs->udp_rtcp));
+  if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
+                      "satips", "rtsp", "rtcp",
+                      addrbuf, 0, NULL,
+                      4*1024, 4*1024,
+                      RTP_BUFSIZE, RTCP_BUFSIZE))
+    goto endclean;
+  satip_rtp_queue((void *)(intptr_t)rs->nsession,
+                  rs->subs, &rs->prch.prch_sq,
+                  hc->hc_peer, ntohs(IP_PORT(rs->udp_rtp->ip)),
+                  rs->udp_rtp->fd, rs->udp_rtcp->fd,
+                  rs->frontend, rs->findex, &rs->mux->lm_tuning, rs->pids);
   return 0;
+
+endclean:
+  rtsp_clean(rs);
+end:
+  pthread_mutex_unlock(&global_lock);
+  return res;
 }
 
 
@@ -473,13 +564,14 @@ static int
 rtsp_process_play(http_connection_t *hc, int setup)
 {
   session_t *rs;
-  int errcode = HTTP_STATUS_BAD_REQUEST;
+  int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 0;
   int stream, delsys = DVB_SYS_NONE, msys, fe, src, freq, pol, sr;
   int fec, ro, plts, bw, tmode, mtype, gi, plp, t2id, sm, c2tft, ds, specinv;
   char *u, *s;
   char *pids, *addpids, *delpids;
   int16_t _pids[RTSP_PIDS+1], _addpids[RTSP_PIDS+1], _delpids[RTSP_PIDS+1];
   dvb_mux_conf_t *dmc;
+  char buf[256];
 
   u = tvh_strdupa(hc->hc_url);
   if ((u = rtsp_check_urlbase(u)) == NULL ||
@@ -507,7 +599,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
   rs = rtsp_find_session(hc);
 
   if (fe > 0) {
-    delsys = rtsp_delsys(fe);
+    delsys = rtsp_delsys(fe, &findex);
     if (delsys == DVB_SYS_NONE)
       goto error;
   }
@@ -533,6 +625,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
   dmc = &rs->dmc;
   dvb_mux_conf_init(dmc, msys);
   rs->frontend = fe;
+  rs->findex = findex;
 
   pids = http_arg_get_remove(&hc->hc_req_args, "pids");
   if (parse_pids(pids, _pids)) goto error;
@@ -615,8 +708,8 @@ rtsp_process_play(http_connection_t *hc, int setup)
     if (!TAILQ_EMPTY(&hc->hc_req_args))
       goto error;
 
-    dmc->u.dmc_fe_qpsk.symbol_rate = sr;
-    dmc->u.dmc_fe_qpsk.fec_inner = DVB_FEC_NONE;
+    dmc->u.dmc_fe_qam.symbol_rate = sr;
+    dmc->u.dmc_fe_qam.fec_inner = DVB_FEC_NONE;
     dmc->dmc_fe_inversion = specinv;
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
@@ -626,6 +719,9 @@ rtsp_process_play(http_connection_t *hc, int setup)
     goto error;
 
   }
+
+  dvb_mux_conf_str(dmc, buf, sizeof(buf));
+  tvhdebug("satips", "%i: setup %s", rs->frontend, buf);
 
   dmc->dmc_fe_freq = freq;
   dmc->dmc_fe_modulation = mtype;
@@ -641,10 +737,11 @@ play:
     rtsp_delpids(rs, _delpids);
   if (addpids)
     rtsp_addpids(rs, _addpids);
-  if (rtsp_start(rs) < 0) {
-    errcode = HTTP_STATUS_SERVICE;;
+  if ((r = rtsp_start(hc, rs)) < 0) {
+    errcode = r;
     goto error;
   }
+  tvhdebug("satips", "%i: play", rs->frontend);
 
 end:
   pthread_mutex_unlock(&rtsp_lock);
@@ -742,6 +839,12 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 static void
 rtsp_close_session(session_t *rs)
 {
+  satip_rtp_close((void *)(intptr_t)rs->nsession);
+  udp_close(rs->udp_rtp);
+  udp_close(rs->udp_rtcp);
+  pthread_mutex_lock(&global_lock);
+  rtsp_clean(rs);
+  pthread_mutex_unlock(&global_lock);
   gtimer_disarm(&rs->timer);
 }
 
@@ -786,6 +889,7 @@ void satip_server_rtsp_init(const char *bindaddr, int port)
     session_number = *(uint32_t *)rnd;
     TAILQ_INIT(&rtsp_sessions);
     pthread_mutex_init(&rtsp_lock, NULL);
+    satip_rtp_init();
   }
   if (rtsp_port != port && rtsp_server) {
     pthread_mutex_lock(&rtsp_lock);
@@ -817,5 +921,6 @@ void satip_server_rtsp_done(void)
   rtsp_port = -1;
   free(rtsp_ip);
   rtsp_ip = NULL;
+  satip_rtp_done();
   pthread_mutex_unlock(&global_lock);
 }
