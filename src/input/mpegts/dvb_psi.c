@@ -1425,12 +1425,10 @@ dvb_nit_mux
         return -1;
       break;
     case DVB_DESC_PRIVATE_DATA:
-#if ENABLE_MPEGTS_DVB
       if (dlen == 4) {
         priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
         tvhtrace(mt->mt_name, "      private %08X", priv);
       }
-#endif
       break;
     case 0x81:
       if (priv == 0) goto lcn;
@@ -1580,12 +1578,10 @@ dvb_nit_callback
         // TODO: implement this?
         break;
       case DVB_DESC_PRIVATE_DATA:
-#if ENABLE_MPEGTS_DVB
         if (tableid == 0x4A && dlen == 4) {
           priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
           tvhtrace(mt->mt_name, "    private %08X", priv);
         }
-#endif
         break;
       case DVB_DESC_FREESAT_REGIONS:
 #if ENABLE_MPEGTS_DVB
@@ -1719,12 +1715,10 @@ dvb_sdt_mux
             return -1;
           break;
         case DVB_DESC_PRIVATE_DATA:
-#if ENABLE_MPEGTS_DVB
           if (dlen == 4) {
             priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
             tvhtrace(mt->mt_name, "  private %08X", priv);
           }
-#endif
           break;
         case DVB_DESC_BSKYB_NVOD:
           if (priv == 2)
