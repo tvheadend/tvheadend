@@ -1026,8 +1026,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     // Common settings
     octx->width           = vs->vid_width  ? vs->vid_width  : ictx->width;
     octx->height          = vs->vid_height ? vs->vid_height : ictx->height;
-    octx->gop_size        = 25;
-    octx->has_b_frames    = ictx->has_b_frames;
 
     // Encoder uses "time_base" for bitrate calculation, but "time_base" from decoder
     // will be deprecated in the future, therefore calculate "time_base" from "framerate" if available.
@@ -1038,32 +1036,31 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->time_base       = ictx->time_base;
 #endif
 
+    // set default gop size to 1 second
+    octx->gop_size        = ceil(av_q2d(av_inv_q(av_div_q(octx->time_base, av_make_q(1, octx->ticks_per_frame)))));
+
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
       octx->codec_id       = AV_CODEC_ID_MPEG2VIDEO;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
-      // Default settings for quantizer. Best quality unless changed by the streaming profile.
-      octx->qmin           = 1;
-      octx->qmax           = FF_LAMBDA_MAX;
-
-      if (t->t_props.tp_vbitrate == 0) { // "Auto"
-        octx->bit_rate       = 2 * octx->width * octx->height;
-        octx->rc_max_rate    = 4 * octx->bit_rate;
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 2-31, smaller means better quality, use 5 as default
+        octx->flags          |= CODEC_FLAG_QSCALE;
+        octx->global_quality  = FF_QP2LAMBDA *
+            (t->t_props.tp_vbitrate == 0 ? 5 : MAX(2, MIN(31, t->t_props.tp_vbitrate)));
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate     = ceil(octx->bit_rate * 1.25);
+        octx->rc_buffer_size  = octx->rc_max_rate * 3;
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
+        // activate b-frames
+        octx->max_b_frames    = 3;
       }
-
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) { // CRF
-        octx->qmin           = t->t_props.tp_vbitrate;
-      }
-
-      if (t->t_props.tp_vbitrate >= 64) { // CBR
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 2 * octx->rc_max_rate;
 
       break;
 
@@ -1071,77 +1068,54 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
+      // setting quality to realtime will use as much CPU for transcoding as possible,
+      // while still encoding in realtime
       av_dict_set(&opts, "quality", "realtime", 0);
 
-      octx->qcompress      = 0.6;
-
-      if (t->t_props.tp_vbitrate == 0) {
-        octx->qmin = 10;
-        octx->qmax = 20;
-        octx->rc_max_rate = 6 * octx->width * octx->height;
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 1-63, smaller means better quality, use 15 as default
+        av_dict_set_int(&opts,  "crf", (t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate), 0);
+        // bitrate setting is still required, as it's used as max rate in CQ mode
+        // and set to a very low value by default
+        octx->bit_rate        = 25000000;
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_buffer_size  = octx->bit_rate * 3;
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
       }
-
-      // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
-        octx->qmin = t->t_props.tp_vbitrate;
-        octx->qmax = octx->qmin + 30 <= 63 ? octx->qmin + 30 : 63;
-        octx->rc_max_rate = 16 * octx->width * octx->height;
-       }
-
-      if (t->t_props.tp_vbitrate >= 64) { // CBR mode.
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 8 * 1024 * 224;
 
       break;
 
     case SCT_H264:
       octx->codec_id       = AV_CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;
-      octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
-
-      // Qscale difference between I-frames and P-frames. 
-      // Note: -i_qfactor is handled a little differently than --ipratio. 
-      // Recommended: -i_qfactor 0.71
-      octx->i_quant_factor = 0.71;
-
-      // QP curve compression: 0.0 => CBR, 1.0 => CQP.
-      // Recommended default: -qcomp 0.60
-      octx->qcompress = 0.6;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
       av_dict_set(&opts, "preset",  "faster", 0);
-      // Use main profile instead of the standard "baseline", we are aiming for better quality.
-      // Older devices (iPhone <4, Android <4) only supports baseline. Chromecast only supports >=4.1...
-      av_dict_set(&opts, "profile", "main", 0); // L3.0
-      av_dict_set(&opts, "tune",    "zerolatency", 0);
 
-      // If we are encoding HD, upgrade the profile to high.
-      if (octx->height >= 720 && t->t_props.tp_resolution >= 720) {
-        av_dict_set(&opts, "profile", "high", 0); // L3.1
+      // All modern devices should support "high" profile
+      av_dict_set(&opts, "profile", "high", 0);
+
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 1-51, smaller means better quality, use 15 as default
+        av_dict_set_int(&opts,  "crf",  (t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate)), 0);
+        // tune "zerolatency" removes as much encoder latency as possible
+        av_dict_set(&opts,      "tune", "zerolatency", 0);
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate     = ceil(octx->bit_rate * 1.25);
+        octx->rc_buffer_size  = octx->rc_max_rate * 3;
+        // force-cfr=1 is needed for correct bitrate calculation (tune "zerolatency" also sets this)
+        av_dict_set(&opts,      "x264opts", "force-cfr=1", 0);
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
       }
-
-      // Default "auto" CRF settings. Aimed for quality without being too agressive.
-      if (t->t_props.tp_vbitrate == 0) {
-        octx->qmin = 10;
-        octx->qmax = 30;
-      }
-
-      // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
-        octx->qmin = t->t_props.tp_vbitrate; // qmax = 51 in all default profiles, let's stick with it for now.
-      }
-
-      if (t->t_props.tp_vbitrate >= 64) { // Bitrate limited encoding (CBR mode).
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 8 * 1024 * 224;
 
       break;
 
