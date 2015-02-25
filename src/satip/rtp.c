@@ -520,7 +520,9 @@ void satip_rtp_init(void)
 void satip_rtp_done(void)
 {
   assert(TAILQ_EMPTY(&satip_rtp_sessions));
-  satip_rtcp_run = 0;
-  pthread_kill(satip_rtcp_tid, SIGTERM);
-  pthread_join(satip_rtcp_tid, NULL);
+  if (satip_rtcp_run) {
+    satip_rtcp_run = 0;
+    pthread_kill(satip_rtcp_tid, SIGTERM);
+    pthread_join(satip_rtcp_tid, NULL);
+  }
 }
