@@ -1042,7 +1042,8 @@ satip_frontend_extra_shutdown
 
   efd = tvhpoll_create(1);
   rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
-                               lfe->sf_device->sd_info.addr, 554,
+                               lfe->sf_device->sd_info.addr,
+                               lfe->sf_device->sd_info.rtsp_port,
                                satip_frontend_bindaddr(lfe));
   if (rtsp == NULL)
     goto done;
@@ -1367,7 +1368,8 @@ new_tune:
   i = 0;
   if (!rtsp) {
     rtsp = http_client_connect(lfe, RTSP_VERSION_1_0, "rstp",
-                               lfe->sf_device->sd_info.addr, 554,
+                               lfe->sf_device->sd_info.addr,
+                               lfe->sf_device->sd_info.rtsp_port,
                                satip_frontend_bindaddr(lfe));
     if (rtsp == NULL) {
       satip_frontend_tuning_error(lfe, tr);

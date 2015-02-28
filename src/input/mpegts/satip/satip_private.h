@@ -53,6 +53,7 @@ struct satip_device_info
   char *serialnum;
   char *presentation;
   char *tunercfg;     /*< XML urn:ses-com:satipX_SATIPCAP contents */
+  int rtsp_port;
 };
 
 struct satip_device

@@ -417,6 +417,7 @@ satip_device_create( satip_device_info_t *info )
   ASSIGN(presentation);
   ASSIGN(tunercfg);
 #undef ASSIGN
+  sd->sd_info.rtsp_port = info->rtsp_port;
 
   /*
    * device specific hacks
@@ -631,12 +632,12 @@ static void
 satip_discovery_http_closed(http_client_t *hc, int errn)
 {
   satip_discovery_t *d = hc->hc_aux;
-  char *s;
+  char *s, *p;
   htsmsg_t *xml = NULL, *tags, *root, *device;
   const char *friendlyname, *manufacturer, *manufacturerURL, *modeldesc;
   const char *modelname, *modelnum, *serialnum;
   const char *presentation, *tunercfg, *udn, *uuid;
-  const char *cs;
+  const char *cs, *upc;
   satip_device_info_t info;
   char errbuf[100];
   char *argv[10];
@@ -729,6 +730,17 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     }
   if (uuid == NULL || (d->uuid[0] && strcmp(uuid, d->uuid)))
     goto finish;
+
+  info.rtsp_port = 554;
+
+  upc = htsmsg_xml_get_cdata_str(device, "UPC");
+  if (upc && (s = strstr(upc, "{{{")) != NULL &&
+      strcmp(s + strlen(s) - 3, "}}}") == 0) {
+    if ((p = strstr(s, "RTSP:")) != NULL) {
+      i = atoi(p + 5);
+      info.rtsp_port = i;
+    }
+  }
 
   info.myaddr = strdup(d->myaddr);
   info.addr = strdup(d->url.host);
