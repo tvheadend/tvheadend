@@ -35,6 +35,7 @@ typedef struct session {
   int stream;
   int frontend;
   int findex;
+  int src;
   uint32_t nsession;
   char session[9];
   dvb_mux_conf_t dmc;
@@ -294,7 +295,7 @@ rtsp_start(http_connection_t *hc, session_t *rs, char *addrbuf)
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     ln = (dvb_network_t *)mn;
     if (ln->ln_type == rs->dmc.dmc_fe_type &&
-        mn->mn_satip_source == rs->findex)
+        mn->mn_satip_source == rs->src)
       break;
   }
   if (mn) {
@@ -650,6 +651,8 @@ rtsp_process_play(http_connection_t *hc, int setup)
   mtype = mtype_to_tvh(hc);
   if (mtype == DVB_MOD_NONE) goto error;
 
+  src = 1;
+
   if (msys == DVB_SYS_DVBS || msys == DVB_SYS_DVBS2) {
 
     src = atoi(http_arg_get_remove(&hc->hc_req_args, "src"));
@@ -746,6 +749,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
   if (stream_id == 0)
     stream_id++;
   rs->stream = stream_id % 0x7fff;
+  rs->src = src;
 
   memset(&rs->udp_rtp, 0, sizeof(rs->udp_rtp));
   memset(&rs->udp_rtcp, 0, sizeof(rs->udp_rtcp));

@@ -418,6 +418,7 @@ satip_device_create( satip_device_info_t *info )
   ASSIGN(tunercfg);
 #undef ASSIGN
   sd->sd_info.rtsp_port = info->rtsp_port;
+  sd->sd_info.srcs = info->srcs;
 
   /*
    * device specific hacks
@@ -732,13 +733,19 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     goto finish;
 
   info.rtsp_port = 554;
+  info.srcs = 4;
 
   upc = htsmsg_xml_get_cdata_str(device, "UPC");
   if (upc && (s = strstr(upc, "{{{")) != NULL &&
       strcmp(s + strlen(s) - 3, "}}}") == 0) {
     if ((p = strstr(s, "RTSP:")) != NULL) {
+      if ((i = atoi(p + 5)) > 0 && i < 65535)
+        info.rtsp_port = i;
+    }
+    if ((p = strstr(s, "SRCS:")) != NULL) {
       i = atoi(p + 5);
-      info.rtsp_port = i;
+      if ((i = atoi(p + 5)) > 0 && i < 128)
+        info.srcs = i;
     }
   }
 

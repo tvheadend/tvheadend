@@ -1716,7 +1716,7 @@ satip_frontend_create
   char id[16], lname[256];
   satip_frontend_t *lfe;
   uint32_t master = 0;
-  int i, def_positions = 4;
+  int i, def_positions = sd->sd_info.srcs;
 
   /* Override type */
   snprintf(id, sizeof(id), "override #%d", num);

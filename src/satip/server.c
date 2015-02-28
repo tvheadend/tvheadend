@@ -104,7 +104,7 @@ satip_server_http_xml(http_connection_t *hc)
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
-  int dvbt = 0, dvbs = 0, dvbc = 0, delim = 0, i;
+  int dvbt = 0, dvbs = 0, dvbc = 0, srcs = 0, delim = 0, i;
 
   htsbuf_queue_init(&q, 0);
 
@@ -114,9 +114,11 @@ satip_server_http_xml(http_connection_t *hc)
       continue;
     if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbt_class))
       dvbt++;
-    else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class))
+    else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) {
       dvbs++;
-    else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
+      if (srcs < mn->mn_satip_source)
+        srcs = mn->mn_satip_source;
+    } else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
       dvbc++;
   }
   if (dvbt && (i = config_get_int("satip_dvbt", 0)) > 0) {
@@ -138,6 +140,8 @@ satip_server_http_xml(http_connection_t *hc)
     dvbc = 0;
   }
   pthread_mutex_unlock(&global_lock);
+  if (!dvbs)
+    srcs = 0;
 
   devicelist = htsbuf_to_string(&q);
   htsbuf_queue_flush(&q);
@@ -151,7 +155,7 @@ satip_server_http_xml(http_connection_t *hc)
   snprintf(buf, sizeof(buf), MSG,
            tvheadend_version, tvheadend_version,
            satip_server_uuid, tvheadend_version,
-           satip_server_rtsp_port, dvbs,
+           satip_server_rtsp_port, srcs,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,

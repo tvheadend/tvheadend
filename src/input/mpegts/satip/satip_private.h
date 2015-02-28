@@ -54,6 +54,7 @@ struct satip_device_info
   char *presentation;
   char *tunercfg;     /*< XML urn:ses-com:satipX_SATIPCAP contents */
   int rtsp_port;
+  int srcs;
 };
 
 struct satip_device
