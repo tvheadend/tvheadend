@@ -815,8 +815,8 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound )
     return 0;
   }
 
-  len = IP_IN_ADDRLEN(*bound);
-  ptr = (uint8_t *)IP_IN_ADDR(*bound);
+  len = IP_IN_ADDRLEN(ts->bound);
+  ptr = (uint8_t *)IP_IN_ADDR(ts->bound);
   for (i = 0; i < len; i++)
     if (ptr[0])
       break;
