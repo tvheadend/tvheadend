@@ -1,6 +1,6 @@
 [
   {
-    "name": "Canal Digitaal Astra1",
+    "name": "Canal Digitaal SD",
     "position": 192,
     "frequency": 12515000,
     "symbolrate" : 22000000,
@@ -9,7 +9,7 @@
     "pid": 900
   },
   {
-    "name": "TV Vlaanderen Astra1",
+    "name": "TV Vlaanderen SD",
     "position": 192,
     "frequency": 12515000,
     "symbolrate" : 22000000,
@@ -18,7 +18,7 @@
     "pid": 910
   },
   {
-    "name": "TéléSAT Astra1",
+    "name": "TéléSAT SD",
     "position": 192,
     "frequency": 12515000,
     "symbolrate" : 22000000,
@@ -54,31 +54,31 @@
     "pid": 950
   },
   {
-    "name": "Canal Digitaal Astra3",
+    "name": "Canal Digitaal HD",
     "position": 235,
     "frequency": 12187000,
     "symbolrate" : 27500000,
     "polarisation" : "H",
     "delsys" : "dvbs2",
-    "pid": 900
+    "pid": 901
   },
   {
-    "name": "TV Vlaanderen Astra3",
+    "name": "TV Vlaanderen HD",
     "position": 235,
     "frequency": 12187000,
     "symbolrate" : 27500000,
     "polarisation" : "H",
     "delsys" : "dvbs2",
-    "pid": 910
+    "pid": 911
   },
     {
-    "name": "TéléSAT Astra3",
+    "name": "TéléSAT HD",
     "position": 235,
     "frequency": 12187000,
     "symbolrate" : 27500000,
     "polarisation" : "H",
     "delsys" : "dvbs2",
-    "pid": 920
+    "pid": 921
   },
   {
     "name": "Mobistar NL Astra3",
