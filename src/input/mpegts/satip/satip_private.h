@@ -184,6 +184,8 @@ void satip_device_destroy ( satip_device_t *sd );
 
 void satip_device_destroy_later( satip_device_t *sd, int after_ms );
 
+char *satip_device_nicename ( satip_device_t *sd, char *buf, int len );
+
 satip_frontend_t *
 satip_frontend_create
   ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int t2, int num );

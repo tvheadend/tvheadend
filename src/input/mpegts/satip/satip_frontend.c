@@ -1713,7 +1713,7 @@ satip_frontend_create
 {
   const idclass_t *idc;
   const char *uuid = NULL, *override = NULL;
-  char id[16], lname[256];
+  char id[16], lname[256], nname[60];
   satip_frontend_t *lfe;
   uint32_t master = 0;
   int i, def_positions = sd->sd_info.srcs;
@@ -1789,7 +1789,8 @@ satip_frontend_create
        strstr(lfe->mi_name, " Tuner ") &&
        strstr(lfe->mi_name, " #"))) {
     snprintf(lname, sizeof(lname), "SAT>IP %s Tuner #%i (%s)",
-             dvb_type2str(type), num, sd->sd_info.addr);
+             dvb_type2str(type), num,
+             satip_device_nicename(sd, nname, sizeof(nname)));
     free(lfe->mi_name);
     lfe->mi_name = strdup(lname);
   }

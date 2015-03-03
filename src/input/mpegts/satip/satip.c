@@ -51,6 +51,7 @@ satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
   htsmsg_add_str(msg, NULL, sd->sd_info.addr);
   htsmsg_add_str(msg, NULL, sd->sd_info.location);
   htsmsg_add_str(msg, NULL, sd->sd_info.server);
+  htsmsg_add_s64(msg, NULL, sd->sd_info.rtsp_port);
   snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id));
   dbus_emit_signal(buf, sig_name, msg);
 #endif
@@ -97,6 +98,19 @@ satip_device_addr( void *aux, const char *path, char *value )
     return strdup("ok");
   }
   return strdup("err");
+}
+
+/*
+ *
+ */
+char *
+satip_device_nicename( satip_device_t *sd, char *buf, int len )
+{
+  if (sd->sd_info.rtsp_port != 554)
+    snprintf(buf, len, "%s:%d", sd->sd_info.addr, sd->sd_info.rtsp_port);
+  else
+    snprintf(buf, len, "%s", sd->sd_info.addr);
+  return buf;
 }
 
 /*
@@ -201,6 +215,13 @@ const idclass_t satip_device_class =
       .name     = "IP Address",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.addr),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "rtsp",
+      .name     = "RTSP Port",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(satip_device_t, sd_info.rtsp_port),
     },
     {
       .type     = PT_STR,
@@ -371,6 +392,7 @@ satip_device_create( satip_device_info_t *info )
   char *argv[10];
   int i, j, n, m, fenum, t2, save = 0;
   dvb_fe_type_t type;
+  char buf2[60];
 
   satip_device_calc_uuid(&uuid, info->uuid);
 
@@ -448,9 +470,11 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 5);
     }
     if (type == DVB_TYPE_NONE) {
-      tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]", sd->sd_info.addr, argv[i]);
+      tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
+             satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else if (m < 0 || m > 32) {
-      tvhlog(LOG_ERR, "satip", "%s: bad tuner count [%s]", sd->sd_info.addr, argv[i]);
+      tvhlog(LOG_ERR, "satip", "%s: bad tuner count [%s]",
+             satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else {
       for (j = 0; j < m; j++)
         if (satip_frontend_create(feconf, sd, type, t2, fenum))
