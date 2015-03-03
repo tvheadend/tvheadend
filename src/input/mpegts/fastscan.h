@@ -24,7 +24,7 @@
 struct bouquet;
 
 void
-dvb_fastscan_each(void *aux, int position, uint32_t frequency,
+dvb_fastscan_each(void *aux, int position, uint32_t frequency, dvb_polarisation_t polarisation,
                   void (*job)(void *aux, struct bouquet *,
                               const char *name, int pid));
 

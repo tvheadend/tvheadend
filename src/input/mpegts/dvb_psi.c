@@ -2623,7 +2623,7 @@ psi_tables_dvb ( mpegts_mux_t *mm )
     dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
     if (mc->dmc_fe_type == DVB_TYPE_S)
       dvb_fastscan_each(mm, mc->u.dmc_fe_qpsk.orbital_pos,
-                        mc->dmc_fe_freq, psi_tables_dvb_fastscan);
+                        mc->dmc_fe_freq, mc->u.dmc_fe_qpsk.polarisation, psi_tables_dvb_fastscan);
   }
 #endif
 }
