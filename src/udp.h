@@ -31,6 +31,10 @@ typedef struct udp_connection {
   int multicast;
   char *ifname;
   struct sockaddr_storage ip;
+  char *peer_host;
+  int peer_port;
+  int peer_multicast;
+  struct sockaddr_storage peer;
   int fd;
   char *subsystem;
   char *name;
@@ -48,9 +52,11 @@ udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,
                   const char *ifname, int rxsize1, int rxsize2,
                   int txsize1, int txsize2 );
 udp_connection_t *
-udp_connect ( const char *subsystem, const char *name,
-              const char *host, int port,
-              const char *ifname, int txsize );
+udp_sendinit ( const char *subsystem, const char *name,
+               const char *ifname, int txsize );
+int
+udp_connect ( udp_connection_t *uc, const char *name,
+              const char *host, int port );
 void
 udp_close ( udp_connection_t *uc );
 int

@@ -39,23 +39,27 @@
 extern int tcp_preferred_address_family;
 
 static int
-udp_resolve( udp_connection_t *uc, int receiver )
+udp_resolve( udp_connection_t *uc,
+             struct sockaddr_storage *ss,
+             const char *host,
+             int port, int *multicast,
+             int receiver )
 {
   struct addrinfo hints, *res, *ressave, *use = NULL;
   char port_buf[6];
   int x;
 
-  snprintf(port_buf, 6, "%d", uc->port);
+  snprintf(port_buf, 6, "%d", port);
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_flags = (receiver ? AI_PASSIVE : 0) | AI_NUMERICSERV;
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
   
-  x = getaddrinfo(uc->host, port_buf, &hints, &res);
+  x = getaddrinfo(host, port_buf, &hints, &res);
   if (x < 0) {
     tvhlog(LOG_ERR, uc->subsystem, "getaddrinfo: %s: %s",
-           uc->host != NULL ? uc->host : "*",
+           host != NULL ? host : "*",
            x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
     return -1;
   }
@@ -71,19 +75,19 @@ udp_resolve( udp_connection_t *uc, int receiver )
     res = res->ai_next;
   }
   if (use->ai_family == AF_INET6) {
-    uc->ip.ss_family        = AF_INET6;
-    IP_AS_V6(uc->ip, port)  = htons(uc->port);
-    memcpy(&IP_AS_V6(uc->ip, addr), &((struct sockaddr_in6 *)use->ai_addr)->sin6_addr,
+    ss->ss_family        = AF_INET6;
+    IP_AS_V6(*ss, port)  = htons(port);
+    memcpy(&IP_AS_V6(*ss, addr), &((struct sockaddr_in6 *)use->ai_addr)->sin6_addr,
                                                              sizeof(struct in6_addr));
-    uc->multicast           = !!IN6_IS_ADDR_MULTICAST(&IP_AS_V6(uc->ip, addr));
+    *multicast           = !!IN6_IS_ADDR_MULTICAST(&IP_AS_V6(*ss, addr));
   } else if (use->ai_family == AF_INET) {
-    uc->ip.ss_family        = AF_INET;
-    IP_AS_V4(uc->ip, port)  = htons(uc->port);
-    IP_AS_V4(uc->ip, addr)  = ((struct sockaddr_in *)use->ai_addr)->sin_addr;
-    uc->multicast           = !!IN_MULTICAST(ntohl(IP_AS_V4(uc->ip, addr.s_addr)));
+    ss->ss_family        = AF_INET;
+    IP_AS_V4(*ss, port)  = htons(port);
+    IP_AS_V4(*ss, addr)  = ((struct sockaddr_in *)use->ai_addr)->sin_addr;
+    *multicast           = !!IN_MULTICAST(ntohl(IP_AS_V4(*ss, addr.s_addr)));
   }
   freeaddrinfo(ressave);
-  if (uc->ip.ss_family != AF_INET && uc->ip.ss_family != AF_INET6) {
+  if (ss->ss_family != AF_INET && ss->ss_family != AF_INET6) {
     tvherror(uc->subsystem, "%s - failed to process host '%s'", uc->name, uc->host);
     return -1;
   }
@@ -167,7 +171,7 @@ udp_bind ( const char *subsystem, const char *name,
   uc->name                 = name ? strdup(name) : NULL;
   uc->rxtxsize             = rxsize;
 
-  if (udp_resolve(uc, 1) < 0) {
+  if (udp_resolve(uc, &uc->ip, uc->host, port, &uc->multicast, 1)) {
     udp_close(uc);
     return UDP_FATAL_ERROR;
   }
@@ -206,7 +210,7 @@ udp_bind ( const char *subsystem, const char *name,
     memset(&m,   0, sizeof(m));
 
     /* Bind */
-    if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in)) == -1) {
+    if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in))) {
       inet_ntop(AF_INET, &IP_AS_V4(uc->ip, addr), buf, sizeof(buf));
       tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
                name, buf, ntohs(IP_AS_V4(uc->ip, port)), strerror(errno));
@@ -240,7 +244,7 @@ udp_bind ( const char *subsystem, const char *name,
     memset(&m,   0, sizeof(m));
 
     /* Bind */
-    if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in6)) == -1) {
+    if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in6))) {
       inet_ntop(AF_INET6, &IP_AS_V6(uc->ip, addr), buf, sizeof(buf));
       tvherror(subsystem, "%s - cannot bind %s:%hu [e=%s]",
                name, buf, ntohs(IP_AS_V6(uc->ip, port)), strerror(errno));
@@ -335,26 +339,18 @@ fail:
 }
 
 udp_connection_t *
-udp_connect ( const char *subsystem, const char *name,
-              const char *host, int port,
-              const char *ifname, int txsize )
+udp_sendinit ( const char *subsystem, const char *name,
+               const char *ifname, int txsize )
 {
   int fd, ifindex;
   udp_connection_t *uc;
 
   uc = calloc(1, sizeof(udp_connection_t));
   uc->fd                   = -1;
-  uc->host                 = host ? strdup(host) : NULL;
-  uc->port                 = port;
   uc->ifname               = ifname ? strdup(ifname) : NULL;
   uc->subsystem            = subsystem ? strdup(subsystem) : NULL;
   uc->name                 = name ? strdup(name) : NULL;
   uc->rxtxsize             = txsize;
-
-  if (udp_resolve(uc, 1) < 0) {
-    udp_close(uc);
-    return UDP_FATAL_ERROR;
-  }
 
   /* Open socket */
   if ((fd = tvh_socket(uc->ip.ss_family, SOCK_DGRAM, 0)) == -1) {
@@ -416,6 +412,33 @@ udp_connect ( const char *subsystem, const char *name,
 error:
   udp_close(uc);
   return NULL;
+}
+
+int
+udp_connect( udp_connection_t *uc, const char *name,
+              const char *host, int port )
+{
+  char buf[50];
+  int r;
+
+  if (uc == NULL || uc == UDP_FATAL_ERROR)
+    return -1;
+
+  uc->peer_host = host ? strdup(host) : NULL;
+  uc->peer_port = port;
+  uc->peer_multicast = 0;
+
+  if (udp_resolve(uc, &uc->peer, host, port, &uc->peer_multicast, 1))
+    return -1;
+
+  if (connect(uc->fd, (struct sockaddr *)&uc->peer, sizeof(struct sockaddr_in))) {
+    inet_ntop(uc->peer.ss_family, IP_IN_ADDR(uc->peer), buf, sizeof(buf));
+    tvherror(uc->subsystem, "%s - cannot bind %s:%hu [e=%s]",
+             name, buf, ntohs(IP_PORT(uc->peer)), strerror(errno));
+    r = -errno;
+    return r;
+  }
+  return 0;
 }
 
 void
