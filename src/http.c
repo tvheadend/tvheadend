@@ -221,6 +221,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   htsbuf_queue_t hdrs;
   http_arg_t *ra;
   time_t t;
+  int sess = 0;
 
   htsbuf_queue_init(&hdrs, 0);
 
@@ -293,13 +294,16 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     if (++hc->hc_cseq == 0)
       hc->hc_cseq = 1;
   }
-  if(hc->hc_session)
-    htsbuf_qprintf(&hdrs, "Session: %s\r\n", hc->hc_session);
 
   if (args) {
-    TAILQ_FOREACH(ra, args, link)
+    TAILQ_FOREACH(ra, args, link) {
+      if (strcmp(ra->key, "Session") == 0)
+        sess = 1;
       htsbuf_qprintf(&hdrs, "%s: %s\r\n", ra->key, ra->val);
+    }
   }
+  if(hc->hc_session && !sess)
+    htsbuf_qprintf(&hdrs, "Session: %s\r\n", hc->hc_session);
 
   htsbuf_qprintf(&hdrs, "\r\n");
 
@@ -749,6 +753,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   }
   free(hc->hc_representative);
   free(hc->hc_session);
+  hc->hc_session = NULL;
   return rval;
 }
 
