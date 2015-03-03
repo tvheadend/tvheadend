@@ -55,7 +55,7 @@ satip_server_http_xml(http_connection_t *hc)
 <specVersion><major>1</major><minor>1</minor></specVersion>\n\
 <device>\n\
 <deviceType>urn:ses-com:device:SatIPServer:1</deviceType>\n\
-<friendlyName>TVHeadend</friendlyName>\n\
+<friendlyName>TVHeadend%s</friendlyName>\n\
 <manufacturer>TVHeadend Team</manufacturer>\n\
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
@@ -64,7 +64,7 @@ satip_server_http_xml(http_connection_t *hc)
 <modelURL>http://tvheadend.org</modelURL>\n\
 <serialNumber>123456</serialNumber>\n\
 <UDN>uuid:%s</UDN>\n\
-<UPC>TVHeadend %s {{{RTSP:%d;SRCS:%d}}}</UPC>\n\
+<UPC>TVHeadend %s</UPC>\n\
 <iconList>\n\
 <icon>\n\
 <mimetype>image/png</mimetype>\n\
@@ -100,11 +100,12 @@ satip_server_http_xml(http_connection_t *hc)
 </device>\n\
 </root>\n"
 
-  char buf[sizeof(MSG) + 1024];
+  char buf[sizeof(MSG) + 1024], buf2[16];
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
   int dvbt = 0, dvbs = 0, dvbc = 0, srcs = 0, delim = 0, i;
+  http_arg_list_t args;
 
   htsbuf_queue_init(&q, 0);
 
@@ -152,10 +153,13 @@ satip_server_http_xml(http_connection_t *hc)
             buf, dvbt + dvbs + dvbc ? "tuner settings - global config" : "network assignment");
   }
 
+  buf2[0] = '\0';
+  if (satip_server_rtsp_port != 554)
+    snprintf(buf2, sizeof(buf2), ":%d", satip_server_rtsp_port);
+
   snprintf(buf, sizeof(buf), MSG,
-           tvheadend_version,
+           buf2, tvheadend_version,
            satip_server_uuid, tvheadend_version,
-           satip_server_rtsp_port, srcs,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
@@ -165,7 +169,16 @@ satip_server_http_xml(http_connection_t *hc)
 
   free(devicelist);
 
-  http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL, NULL);
+  http_arg_init(&args);
+  snprintf(buf2, sizeof(buf2), "%d", satip_server_rtsp_port);
+  http_arg_set(&args, "X-SATIP-RTSP-Port", buf2);
+  if (srcs) {
+    snprintf(buf2, sizeof(buf2), "%d", srcs);
+    http_arg_set(&args, "X-SATIP-Sources", buf2);
+  }
+  http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL, &args);
+  http_arg_flush(&args);
+
   tvh_write(hc->hc_fd, buf, strlen(buf));
 
   return 0;

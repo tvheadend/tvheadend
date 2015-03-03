@@ -633,12 +633,12 @@ static void
 satip_discovery_http_closed(http_client_t *hc, int errn)
 {
   satip_discovery_t *d = hc->hc_aux;
-  char *s, *p;
+  char *s;
   htsmsg_t *xml = NULL, *tags, *root, *device;
   const char *friendlyname, *manufacturer, *manufacturerURL, *modeldesc;
   const char *modelname, *modelnum, *serialnum;
   const char *presentation, *tunercfg, *udn, *uuid;
-  const char *cs, *upc;
+  const char *cs, *arg;
   satip_device_info_t info;
   char errbuf[100];
   char *argv[10];
@@ -735,18 +735,17 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   info.rtsp_port = 554;
   info.srcs = 4;
 
-  upc = htsmsg_xml_get_cdata_str(device, "UPC");
-  if (upc && (s = strstr(upc, "{{{")) != NULL &&
-      strcmp(s + strlen(s) - 3, "}}}") == 0) {
-    if ((p = strstr(s, "RTSP:")) != NULL) {
-      if ((i = atoi(p + 5)) > 0 && i < 65535)
-        info.rtsp_port = i;
-    }
-    if ((p = strstr(s, "SRCS:")) != NULL) {
-      i = atoi(p + 5);
-      if ((i = atoi(p + 5)) > 0 && i < 128)
-        info.srcs = i;
-    }
+  arg = http_arg_get(&hc->hc_args, "X-SATIP-RTSP-Port");
+  if (arg) {
+    i = atoi(arg);
+    if (i > 0 && i < 65535)
+      info.rtsp_port = i;
+  }
+  arg = http_arg_get(&hc->hc_args, "X-SATIP-Sources");
+  if (arg) {
+    i = atoi(arg);
+    if (i > 0 && i < 128)
+      info.srcs = i;
   }
 
   info.myaddr = strdup(d->myaddr);
