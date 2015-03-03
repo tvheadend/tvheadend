@@ -55,7 +55,7 @@ satip_server_http_xml(http_connection_t *hc)
 <specVersion><major>1</major><minor>1</minor></specVersion>\n\
 <device>\n\
 <deviceType>urn:ses-com:device:SatIPServer:1</deviceType>\n\
-<friendlyName>TVHeadend %s</friendlyName>\n\
+<friendlyName>TVHeadend</friendlyName>\n\
 <manufacturer>TVHeadend Team</manufacturer>\n\
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
@@ -153,7 +153,7 @@ satip_server_http_xml(http_connection_t *hc)
   }
 
   snprintf(buf, sizeof(buf), MSG,
-           tvheadend_version, tvheadend_version,
+           tvheadend_version,
            satip_server_uuid, tvheadend_version,
            satip_server_rtsp_port, srcs,
            http_server_ip, http_server_port,
