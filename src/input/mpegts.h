@@ -37,6 +37,8 @@
 #define MPEGTS_PID_NONE         0xFFFF
 
 /* Types */
+typedef int16_t                     mpegts_apid_t;
+typedef struct mpegts_apids         mpegts_apids_t;
 typedef struct mpegts_table         mpegts_table_t;
 typedef struct mpegts_psi_section   mpegts_psi_section_t;
 typedef struct mpegts_network       mpegts_network_t;
@@ -72,6 +74,31 @@ extern const idclass_t mpegts_input_class;
 void mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
                    str_list_t *tsfiles, int tstuners );
 void mpegts_done ( void );
+
+/* **************************************************************************
+ * PIDs
+ * *************************************************************************/
+
+struct mpegts_apids {
+  mpegts_apid_t *pids;
+  int alloc;
+  int count;
+  int all;
+};
+
+int mpegts_pid_init ( mpegts_apids_t *pids, mpegts_apid_t *vals, int count );
+void mpegts_pid_done ( mpegts_apids_t *pids );
+void mpegts_pid_reset ( mpegts_apids_t *pids );
+int mpegts_pid_add ( mpegts_apids_t *pids, mpegts_apid_t pid );
+int mpegts_pid_add_group ( mpegts_apids_t *pids, mpegts_apids_t *vals );
+int mpegts_pid_del ( mpegts_apids_t *pids, mpegts_apid_t pid );
+int mpegts_pid_del_group ( mpegts_apids_t *pids, mpegts_apids_t *vals );
+int mpegts_pid_find_index ( mpegts_apids_t *pids, mpegts_apid_t pid );
+static inline int mpegts_pid_exists ( mpegts_apids_t *pids, mpegts_apid_t pid )
+  { return pids->all || mpegts_pid_find_index(pids, pid) >= 0; }
+int mpegts_pid_copy ( mpegts_apids_t *dst, mpegts_apids_t *src );
+int mpegts_pid_compare ( mpegts_apids_t *dst, mpegts_apids_t *src,
+                         mpegts_apids_t *add, mpegts_apids_t *del );
 
 /* **************************************************************************
  * Data / SI processing
@@ -919,6 +946,7 @@ static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &mpegts_service_class, NULL); }
 
 void mpegts_service_delete ( service_t *s, int delconf );
+
 
 /*
  * MPEG-TS event handler

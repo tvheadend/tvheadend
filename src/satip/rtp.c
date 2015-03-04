@@ -41,7 +41,7 @@ typedef struct satip_rtp_session {
   int frontend;
   int source;
   dvb_mux_conf_t dmc;
-  int16_t pids[RTSP_PIDS];
+  mpegts_apids_t pids;
   udp_multisend_t um;
   struct iovec *um_iovec;
   int um_packet;
@@ -109,15 +109,18 @@ static int
 satip_rtp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
 {
   int i, j, pid, last_pid = -1, r;
-  int16_t *pids = rtp->pids;
+  mpegts_apid_t *pids = rtp->pids.pids;
   struct iovec *v = rtp->um_iovec + rtp->um_packet;
 
   assert((len % 188) == 0);
   for ( ; len >= 188 ; data += 188, len -= 188) {
     pid = ((data[1] & 0x1f) << 8) | data[2];
-    if (pid != last_pid) {
-      for (i = 0, j = -1; i < RTSP_PIDS && (j = pids[i]) >= 0; i++)
+    if (pid != last_pid && !rtp->pids.all) {
+      for (i = 0; i < rtp->pids.count; i++) {
+        j = pids[i];
+        if (pid < j) break;
         if (j == pid) goto found;
+      }
       continue;
 found:
       last_pid = pid;
@@ -238,7 +241,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source, dvb_mux_conf_t *dmc,
-                     int16_t *pids)
+                     mpegts_apids_t *pids)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
 
@@ -254,7 +257,8 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   rtp->fd_rtcp = fd_rtcp;
   rtp->subs = subs;
   rtp->sq = sq;
-  memcpy(rtp->pids, pids, sizeof(*pids)*RTSP_PIDS);
+  mpegts_pid_init(&rtp->pids, NULL, pids->count);
+  mpegts_pid_copy(&rtp->pids, pids);
   udp_multisend_init(&rtp->um, RTP_PACKETS, RTP_PAYLOAD, &rtp->um_iovec);
   satip_rtp_header(rtp);
   rtp->frontend = frontend;
@@ -268,7 +272,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
-void satip_rtp_update_pids(void *id, int16_t *pids)
+void satip_rtp_update_pids(void *id, mpegts_apids_t *pids)
 {
   satip_rtp_session_t *rtp;
 
@@ -276,7 +280,7 @@ void satip_rtp_update_pids(void *id, int16_t *pids)
   rtp = satip_rtp_find(id);
   if (rtp) {
     pthread_mutex_lock(&rtp->lock);
-    memcpy(rtp->pids, pids, sizeof(*pids)*RTSP_PIDS);
+    mpegts_pid_copy(&rtp->pids, pids);
     pthread_mutex_unlock(&rtp->lock);
   }
   pthread_mutex_unlock(&satip_rtp_lock);
@@ -299,6 +303,7 @@ void satip_rtp_close(void *id)
     pthread_mutex_unlock(&satip_rtp_lock);
     pthread_join(rtp->tid, NULL);
     udp_multisend_free(&rtp->um);
+    mpegts_pid_done(&rtp->pids);
     free(rtp);
   } else {
     pthread_mutex_unlock(&satip_rtp_lock);
@@ -365,8 +370,8 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
   }
 
   pids[0] = 0;
-  for (i = len = 0; i < RTSP_PIDS && rtp->pids[i] >= 0; i++)
-    len += snprintf(pids + len, sizeof(pids) - len, "%d,", rtp->pids[i]);
+  for (i = len = 0; i < rtp->pids.count; i++)
+    len += snprintf(pids + len, sizeof(pids) - len, "%d,", rtp->pids.pids[i]);
   if (len && pids[len-1] == ',')
     pids[len-1] = '\0';
 

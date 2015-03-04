@@ -29,21 +29,19 @@
 #include "udp.h"
 #include "http.h"
 
-#define RTSP_PIDS 128
-
 void satip_rtp_queue(void *id, th_subscription_t *subs,
                      streaming_queue_t *sq,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source,
                      dvb_mux_conf_t *dmc,
-                     int16_t *pids);
+                     mpegts_apids_t *pids);
 void satip_rtp_update(void *id, th_subscription_t *subs,
                       streaming_queue_t *sq,
                       int frontend, int source,
                       dvb_mux_conf_t *dmc,
-                      int16_t *pids);
-void satip_rtp_update_pids(void *id, int16_t *pids);
+                      mpegts_apids_t *pids);
+void satip_rtp_update_pids(void *id, mpegts_apids_t *pids);
 void satip_rtp_close(void *id);
 
 void satip_rtp_init(void);

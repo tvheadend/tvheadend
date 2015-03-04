@@ -40,7 +40,7 @@ typedef struct session {
   uint32_t nsession;
   char session[9];
   dvb_mux_conf_t dmc;
-  int16_t pids[RTSP_PIDS];
+  mpegts_apids_t pids;
   gtimer_t timer;
   dvb_mux_t *mux;
   int mux_created;
@@ -106,7 +106,6 @@ static struct session *
 rtsp_new_session(int delsys, uint32_t nsession, int session)
 {
   struct session *rs = calloc(1, sizeof(*rs));
-  int i;
 
   if (rs == NULL)
     return NULL;
@@ -118,8 +117,7 @@ rtsp_new_session(int delsys, uint32_t nsession, int session)
     if (session_number == 0)
       session_number += 9876;
   }
-  for (i = 0; i < RTSP_PIDS; i++)
-    rs->pids[i] = -1;
+  mpegts_pid_init(&rs->pids, NULL, 0);
   TAILQ_INSERT_TAIL(&rtsp_sessions, rs, link);
   return rs;
 }
@@ -225,69 +223,6 @@ rtsp_parse_args(http_connection_t *hc, char *u)
  *
  */
 static void
-rtsp_clrpids(session_t *rs)
-{
-  int16_t *pids = rs->pids;
-  int i = RTSP_PIDS;
-  while (*pids >= 0 && i-- > 0)
-    *pids++ = -1;
-}
-
-/*
- *
- */
-static int
-rtsp_addpids(session_t *rs, int16_t *pids)
-{
-  int pid, i, j;
-
-  while ((pid = *pids++) >= 0) {
-    for (i = 0; i < RTSP_PIDS; i++) {
-      if (rs->pids[i] > pid) {
-        if (rs->pids[RTSP_PIDS-1] >= 0)
-          return -1;
-        for (j = RTSP_PIDS-1; j != i; j--)
-          rs->pids[j] = rs->pids[j-1];
-        rs->pids[i] = pid;
-        break;
-      } else if (rs->pids[i] == pid) {
-        break;
-      } else if (rs->pids[i] < 0) {
-        rs->pids[i] = pid;
-        break;
-      }
-    }
-  }
-  return 0;
-}
-
-/*
- *
- */
-static int
-rtsp_delpids(session_t *rs, int16_t *pids)
-{
-  int pid, i, j;
-  
-  while ((pid = *pids++) >= 0) {
-    for (i = 0; i < RTSP_PIDS; i++) {
-      if (rs->pids[i] > pid)
-        break;
-      else if (rs->pids[i] == pid) {
-        for (j = i; rs->pids[j] >= 0 && j + 1 < RTSP_PIDS; j++)
-          rs->pids[j] = rs->pids[j+1];
-        rs->pids[RTSP_PIDS-1] = -1;
-        break;
-      }
-    }
-  }
-  return 0;
-}
-
-/*
- *
- */
-static void
 rtsp_clean(session_t *rs)
 {
   if (rs->subs) {
@@ -368,7 +303,7 @@ rtsp_start
     }
   } else {
 pids:
-    satip_rtp_update_pids((void *)(intptr_t)rs->stream, rs->pids);
+    satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
   }
   if (!setup && !rs->run) {
     if (rs->mux == NULL)
@@ -377,7 +312,8 @@ pids:
                     rs->subs, &rs->prch.prch_sq,
                     hc->hc_peer, rs->rtp_peer_port,
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
-                    rs->frontend, rs->findex, &rs->mux->lm_tuning, rs->pids);
+                    rs->frontend, rs->findex, &rs->mux->lm_tuning,
+                    &rs->pids);
     rs->run = 1;
   }
   pthread_mutex_unlock(&global_lock);
@@ -597,32 +533,32 @@ gi_to_tvh(http_connection_t *hc)
 }
 
 static int
-parse_pids(char *p, int16_t *pids)
+parse_pids(char *p, mpegts_apids_t *pids)
 {
   char *x, *saveptr;
-  int i = 0;
+  int i = 0, pid;
 
-  if (p == NULL || *p == '\0') {
-    pids[0] = -1;
+  mpegts_pid_reset(pids);
+  if (p == NULL || *p == '\0')
     return 0;
-  }
   x = strtok_r(p, ",", &saveptr);
   while (1) {
     if (x == NULL)
       break;
-    if (i >= RTSP_PIDS)
-      return -1;
-    pids[i] = atoi(x);
-    if (pids[i] < 0 || pids[i] > 8191) {
-      pids[i] = -1;
-      return -1;
+    if (strcmp(x, "all") == 0) {
+      pids->all = 1;
+    } else {
+      pids->all = 0;
+      pid = atoi(x);
+      if (pid < 0 || pid > 8191)
+        return -1;
+      mpegts_pid_add(pids, pid);
     }
     x = strtok_r(NULL, ",", &saveptr);
     i++;
   }
   if (i == 0)
     return -1;
-  pids[i] = -1;
   return 0;
 }
 
@@ -658,10 +594,14 @@ rtsp_process_play(http_connection_t *hc, int setup)
   int stream, delsys = DVB_SYS_NONE, msys, fe, src, freq, pol, sr;
   int fec, ro, plts, bw, tmode, mtype, gi, plp, t2id, sm, c2tft, ds, specinv;
   char *u, *s;
-  int16_t pids[RTSP_PIDS+1], addpids[RTSP_PIDS+1], delpids[RTSP_PIDS+1];
+  mpegts_apids_t pids, addpids, delpids;
   dvb_mux_conf_t *dmc;
   char buf[256], addrbuf[50];
   http_arg_list_t args;
+
+  mpegts_pid_init(&pids, NULL, 0);
+  mpegts_pid_init(&addpids, NULL, 0);
+  mpegts_pid_init(&delpids, NULL, 0);
 
   http_arg_init(&args);
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
@@ -673,15 +613,15 @@ rtsp_process_play(http_connection_t *hc, int setup)
 
   fe = atoi(http_arg_get_remove(&hc->hc_req_args, "fe"));
   s = http_arg_get_remove(&hc->hc_req_args, "addpids");
-  if (parse_pids(s, addpids)) goto error2;
+  if (parse_pids(s, &addpids)) goto error2;
   s = http_arg_get_remove(&hc->hc_req_args, "delpids");
-  if (parse_pids(s, delpids)) goto error2;
+  if (parse_pids(s, &delpids)) goto error2;
   s = http_arg_get_remove(&hc->hc_req_args, "pids");
-  if (parse_pids(s, pids)) goto error2;
+  if (parse_pids(s, &pids)) goto error2;
   msys = msys_to_tvh(hc);
   freq = atof(http_arg_get_remove(&hc->hc_req_args, "freq")) * 1000000;
 
-  if (addpids[0] >= 0 || delpids[0] >= 0) {
+  if (addpids.count > 0 || delpids.count > 0) {
     if (setup)
       goto error2;
     if (!stream)
@@ -872,14 +812,12 @@ rtsp_process_play(http_connection_t *hc, int setup)
   }
 
 play:
-  if (pids[0] >= 0) {
-    rtsp_clrpids(rs);
-    rtsp_addpids(rs, pids);
-  }
-  if (delpids[0] >= 0)
-    rtsp_delpids(rs, delpids);
-  if (addpids[0] >= 0)
-    rtsp_addpids(rs, addpids);
+  if (pids.count > 0)
+    mpegts_pid_copy(&rs->pids, &pids);
+  if (delpids.count > 0)
+    mpegts_pid_del_group(&rs->pids, &delpids);
+  if (addpids.count > 0)
+    mpegts_pid_add_group(&rs->pids, &addpids);
   if ((r = rtsp_start(hc, rs, addrbuf, freq >= 10000000, setup)) < 0) {
     errcode = r;
     goto error;
@@ -891,10 +829,9 @@ play:
              rs->rtp_peer_port, rs->rtp_peer_port + 1);
   dvb_mux_conf_str(dmc, buf, sizeof(buf));
   s = buf + strlen(buf);
-  for (r = 0; r < RTSP_PIDS; r++) {
-    if (rs->pids[r] < 0) break;
+  for (r = 0; r < rs->pids.count; r++) {
     s += snprintf(s, sizeof(buf) - (s - buf), "%s%i",
-                  r > 0 ? "," : " pids ", rs->pids[r]);
+                  r > 0 ? "," : " pids ", rs->pids.pids[r]);
   }
   tvhdebug("satips", "%i/%s/%d: %s %s",
            rs->frontend, rs->session, rs->stream,
@@ -916,14 +853,17 @@ play:
 
   pthread_mutex_unlock(&rtsp_lock);
 
-  http_arg_flush(&args);
-  return 0;
+  goto end;
 
 error:
   pthread_mutex_unlock(&rtsp_lock);
 error2:
   http_error(hc, errcode);
+end:
   http_arg_flush(&args);
+  mpegts_pid_done(&pids);
+  mpegts_pid_done(&addpids);
+  mpegts_pid_done(&delpids);
   return 0;
 }
 

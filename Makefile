@@ -230,6 +230,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/descrambler/descrambler.c \
 	src/descrambler/caclient.c \
 	src/input/mpegts.c \
+	src/input/mpegts/mpegts_pid.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/mpegts_network.c \
 	src/input/mpegts/mpegts_mux.c \
