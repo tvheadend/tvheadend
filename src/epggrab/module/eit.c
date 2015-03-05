@@ -531,6 +531,8 @@ static int _eit_process_event
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
     if ( ev.parental )
       *save |= epg_episode_set_age_rating(ee, ev.parental, mod);
+    if ( ev.summary )
+      *save |= epg_episode_set_subtitle2(ee, ev.summary, mod);
 #if TODO_ADD_EXTRA
     if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
