@@ -20,11 +20,15 @@ tvheadend.dvrDetails = function(uuid) {
         var status = params[8].value;
         var filesize = params[9].value;
         var comment = params[10].value;
+        var duplicate = params[11].value;
         var content = '';
         var but;
 
         if (chicon != null && chicon.length > 0)
             content += '<img class="x-epg-chicon" src="' + chicon + '">';
+
+        if (duplicate)
+            content += '<div class="x-epg-meta"><font color="red"><div class="x-epg-prefix">Will be skipped<br>because is rerun of:</div>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
 
         if (title)
           content += '<div class="x-epg-title">' + title + '</div>';
@@ -68,7 +72,7 @@ tvheadend.dvrDetails = function(uuid) {
         params: {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,episode,start_real,stop_real,' +
-                  'duration,disp_description,status,filesize,comment'
+                  'duration,disp_description,status,filesize,comment,duplicate'
         },
         success: function(d) {
             d = json_decode(d);
