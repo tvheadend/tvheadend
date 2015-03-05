@@ -318,6 +318,7 @@ dvr_notify(dvr_entry_t *de, int now)
   if (now || de->de_last_notify + 5 < dispatch_clock) {
     idnode_notify_simple(&de->de_id);
     de->de_last_notify = dispatch_clock;
+    htsp_dvr_entry_update(de);
   }
 }
 
