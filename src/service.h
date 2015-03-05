@@ -64,13 +64,6 @@ typedef struct elementary_stream {
 
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
-  /* PCR recovery */
-
-  int es_pcr_recovery_fails;
-  int64_t es_pcr_real_last;     /* realtime clock when we saw last PCR */
-  int64_t es_pcr_last;          /* PCR clock when we saw last PCR */
-  int64_t es_pcr_drift;
-
   /* For service stream packet reassembly */
 
   sbuf_t es_buf;

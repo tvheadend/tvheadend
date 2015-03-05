@@ -260,11 +260,6 @@ stream_init(elementary_stream_t *st)
   st->es_curpts = PTS_UNSET;
   st->es_prevdts = PTS_UNSET;
 
-  st->es_pcr_real_last = PTS_UNSET;
-  st->es_pcr_last      = PTS_UNSET;
-  st->es_pcr_drift     = 0;
-  st->es_pcr_recovery_fails = 0;
-
   st->es_blank = 0;
 }
 

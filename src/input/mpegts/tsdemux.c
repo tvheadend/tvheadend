@@ -107,46 +107,6 @@ ts_recv_packet0
 }
 
 /**
- * Recover PCR
- *
- * st->es_pcr_drift will increase if our (system clock) runs faster
- * than the stream PCR
- */
-static void
-ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
-{
-  int64_t real, d;
-  
-  if(st == NULL)
-    return;
-
-  real = getmonoclock();
-
-  if(st->es_pcr_real_last != PTS_UNSET) {
-    d = (real - st->es_pcr_real_last) - (pcr - st->es_pcr_last);
-    
-    if(d < -90000LL || d > 90000LL) {
-      st->es_pcr_recovery_fails++;
-      if(st->es_pcr_recovery_fails > 10) {
-        st->es_pcr_recovery_fails = 0;
-        st->es_pcr_real_last = PTS_UNSET;
-      }
-      return;
-    }
-    st->es_pcr_recovery_fails = 0;
-    st->es_pcr_drift += d;
-    
-    if(t->s_pcr_pid == st->es_pid) {
-      /* This is the registered PCR PID, adjust service PCR drift
-         via an IIR filter */
-      t->s_pcr_drift = (t->s_pcr_drift * 255 + st->es_pcr_drift) / 256;
-    }
-  }
-  st->es_pcr_last = pcr;
-  st->es_pcr_real_last = real;
-}
-
-/**
  * Process service stream packets, extract PCR and optionally descramble
  */
 int
@@ -198,10 +158,6 @@ ts_recv_packet1
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
   st = service_stream_find((service_t*)t, pid);
-
-  /* Extract PCR */
-  if (pcr != PTS_UNSET)
-    ts_process_pcr(t, st, pcr);
 
   if((st == NULL) && (pid != t->s_pcr_pid) && !table) {
     pthread_mutex_unlock(&t->s_stream_mutex);
