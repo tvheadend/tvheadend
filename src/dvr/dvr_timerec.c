@@ -155,7 +155,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
            dte->dte_creator ?: "");
   de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
                          NULL, dte->dte_channel,
-                         start, stop, 0, 0, title,
+                         start, stop, 0, 0, title, NULL,
                          NULL, NULL, NULL, dte->dte_owner, buf,
                          NULL, dte, dte->dte_pri, dte->dte_retention,
                          dte->dte_comment);
