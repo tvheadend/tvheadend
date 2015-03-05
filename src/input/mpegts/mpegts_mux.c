@@ -99,20 +99,26 @@ static int
 mpegts_mux_keep_exists
   ( mpegts_input_t *mi )
 {
-  mpegts_mux_instance_t *mmi;
-  th_subscription_t *s;
+  const mpegts_mux_instance_t *mmi;
+  const service_t *s;
+  const th_subscription_t *ths;
+  int ret;
+
+  lock_assert(&global_lock);
 
   if (!mi)
     return 0;
 
-  mmi = LIST_FIRST(&mi->mi_mux_active);
-  if (mmi)
-    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-      LIST_FOREACH(s, &mmi->mmi_subs, ths_mmi_link)
-        if (!strcmp(s->ths_title, "keep"))
-          return 1;
-
-  return 0;
+  ret = 0;
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+    LIST_FOREACH(ths, &mmi->mmi_mux->mm_raw_subs, ths_mux_link) {
+      s = ths->ths_service;
+      if (s && s->s_type == STYPE_RAW && !strcmp(ths->ths_title, "keep")) {
+        ret = 1;
+        break;
+      }
+    }
+  return ret;
 }
 
 static int
@@ -254,11 +260,6 @@ mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
   const th_subscription_t *ths;
   mpegts_input_t *mi = mmi->mmi_input;
   lock_assert(&mi->mi_output_lock);
-
-  /* Direct subs */
-  LIST_FOREACH(ths, &mmi->mmi_subs, ths_mmi_link) {
-    w = MAX(w, ths->ths_weight);
-  }
 
   /* Service subs */
   LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
@@ -806,15 +807,9 @@ static int
 mpegts_mux_has_subscribers ( mpegts_mux_t *mm, const char *name )
 {
   mpegts_mux_instance_t *mmi = mm->mm_active;
-  th_subscription_t *sub;
   if (mmi) {
-    if ((sub = LIST_FIRST(&mmi->mmi_subs)) != NULL)
-      if (strcmp(sub->ths_title, "keep") || LIST_NEXT(sub, ths_mmi_link)) {
-        tvhtrace("mpegts", "%s - keeping mux (direct subscription)", name);
-        return 1;
-      }
     if (mmi->mmi_input->mi_has_subscription(mmi->mmi_input, mm)) {
-      tvhtrace("mpegts", "%s - keeping mux (service)", name);
+      tvhtrace("mpegts", "%s - keeping mux", name);
       return 1;
     }
   }
@@ -827,7 +822,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   char buf[256], buf2[256], *s;
   mpegts_mux_instance_t *mmi = mm->mm_active, *mmi2;
   mpegts_input_t *mi = NULL, *mi2;
-  th_subscription_t *sub;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
 
@@ -864,8 +858,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   }
 
   mi->mi_stopping_mux(mi, mmi);
-  LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link)
-    subscription_unlink_mux(sub, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
   mi->mi_stop_mux(mi, mmi);
   mi->mi_stopped_mux(mi, mmi);
 
@@ -885,13 +877,22 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   mm->mm_last_mp = NULL;
   while ((mp = RB_FIRST(&mm->mm_pids))) {
     assert(mi);
-    while ((mps = RB_FIRST(&mp->mp_subs))) {
-      tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]", buf,
-               mp->mp_pid, mp->mp_pid, mps->mps_type, mps->mps_owner);
-      RB_REMOVE(&mp->mp_subs, mps, mps_link);
-      if (mps->mps_type & MPS_SERVICE)
-        LIST_REMOVE(mps, mps_svc_link);
-      free(mps);
+    if (mp->mp_pid == MPEGTS_FULLMUX_PID) {
+      while ((mps = LIST_FIRST(&mm->mm_all_subs))) {
+        tvhdebug("mpegts", "%s - close PID fullmux subscription [%d/%p]",
+                 buf, mps->mps_type, mps->mps_owner);
+        LIST_REMOVE(mps, mps_svcraw_link);
+        free(mps);
+      }
+    } else {
+      while ((mps = RB_FIRST(&mp->mp_subs))) {
+        tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]", buf,
+                 mp->mp_pid, mp->mp_pid, mps->mps_type, mps->mps_owner);
+        RB_REMOVE(&mp->mp_subs, mps, mps_link);
+        if (mps->mps_type & (MPS_SERVICE|MPS_RAW|MPS_ALL))
+          LIST_REMOVE(mps, mps_svcraw_link);
+        free(mps);
+      }
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
     if (mp->mp_fd != -1)
@@ -1285,7 +1286,6 @@ mpegts_mux_remove_subscriber
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
 #endif
-  subscription_unlink_mux(s, reason);
   mm->mm_stop(mm, 0, reason);
 }
 
@@ -1294,7 +1294,6 @@ mpegts_mux_subscribe
   ( mpegts_mux_t *mm, mpegts_input_t *mi,
     const char *name, int weight, int flags )
 {
-  int err = 0;
   profile_chain_t prch;
   th_subscription_t *s;
   memset(&prch, 0, sizeof(prch));
@@ -1302,8 +1301,8 @@ mpegts_mux_subscribe
   s = subscription_create_from_mux(&prch, (tvh_input_t *)mi,
                                    weight, name,
                                    SUBSCRIPTION_NONE | flags,
-                                   NULL, NULL, NULL, &err);
-  return s ? 0 : err;
+                                   NULL, NULL, NULL);
+  return s ? 0 : -EIO;
 }
 
 void
@@ -1311,13 +1310,15 @@ mpegts_mux_unsubscribe_by_name
   ( mpegts_mux_t *mm, const char *name )
 {
   mpegts_mux_instance_t *mmi;
+  const service_t *t;
   th_subscription_t *s, *n;
 
   LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-    s = LIST_FIRST(&mmi->mmi_subs);
+    s = LIST_FIRST(&subscriptions);
     while (s) {
-      n = LIST_NEXT(s, ths_mmi_link);
-      if (!strcmp(s->ths_title, name))
+      n = LIST_NEXT(s, ths_global_link);
+      t = s->ths_service;
+      if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
         subscription_unsubscribe(s);
       s = n;
     }
@@ -1328,9 +1329,7 @@ void
 mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match )
 {
   mpegts_mux_t *mm;
-  th_subscription_t *sub;
   mpegts_mux_instance_t *mmi;
-  streaming_message_t *sm;
   struct timespec timeout;
 
   timeout.tv_sec = 2;
@@ -1339,14 +1338,9 @@ mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match
   if (!pthread_mutex_timedlock(&global_lock, &timeout)) {
     mm = mpegts_mux_find(mux_uuid);
     if (mm) {
-      if ((mmi = mm->mm_active) != NULL && mmi == mmi_match) {
-        LIST_FOREACH(sub, &mmi->mmi_subs, ths_mmi_link) {
-          sm = streaming_msg_create_code(SMT_SERVICE_STATUS, TSS_TUNING);
-          streaming_target_deliver(sub->ths_output, sm);
-        }
+      if ((mmi = mm->mm_active) != NULL && mmi == mmi_match)
         if (mmi->mmi_input)
           mmi->mmi_input->mi_tuning_error(mmi->mmi_input, mm);
-      }
     }
     pthread_mutex_unlock(&global_lock);
   }
@@ -1380,15 +1374,17 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
 
   skel.mp_pid = pid;
   mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);
-  if (mp == NULL && create) {
-    mp = calloc(1, sizeof(*mp));
-    mp->mp_pid = pid;
-    if (!RB_INSERT_SORTED(&mm->mm_pids, mp, mp_link, mp_cmp)) {
-      mp->mp_fd = -1;
-      mp->mp_cc = -1;
-    } else {
-      free(mp);
-      mp = NULL;
+  if (mp == NULL) {
+    if (create) {
+      mp = calloc(1, sizeof(*mp));
+      mp->mp_pid = pid;
+      if (!RB_INSERT_SORTED(&mm->mm_pids, mp, mp_link, mp_cmp)) {
+        mp->mp_fd = -1;
+        mp->mp_cc = -1;
+      } else {
+        free(mp);
+        mp = NULL;
+      }
     }
   }
   if (mp) {

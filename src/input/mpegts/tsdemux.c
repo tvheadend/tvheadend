@@ -214,6 +214,28 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb)
     ts_recv_packet0(t, st, tsb);
 }
 
+/*
+ *
+ */
+void
+ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb)
+{
+  elementary_stream_t *st = NULL;
+  int pid;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+  if (t->s_parent) {
+    /* If PID is owned by parent, let parent service to
+     * deliver this PID (decrambling)
+     */
+    pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+    st = service_stream_find(t->s_parent, pid);
+  }
+  if(st == NULL)
+    if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+      ts_remux(t, tsb, 0);
+  pthread_mutex_unlock(&t->s_stream_mutex);
+}
 
 /**
  *

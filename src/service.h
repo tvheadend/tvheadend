@@ -24,10 +24,14 @@
 #include "descrambler.h"
 
 extern const idclass_t service_class;
+extern const idclass_t service_raw_class;
 
 extern struct service_queue service_all;
+extern struct service_queue service_raw_all;
 
 struct channel;
+struct tvh_input;
+struct mpegts_apids;
 
 /**
  * Stream, one media component for a service.
@@ -233,6 +237,14 @@ typedef struct service {
   int s_refcount;
 
   /**
+   * Service type, standard or raw (for mux or partial mux streaming)
+   */
+  enum {
+    STYPE_STD,
+    STYPE_RAW
+  } s_type;
+
+  /**
    * Source type is used to determine if an output requesting
    * MPEG-TS can shortcut all the parsing and remuxing.
    */ 
@@ -282,7 +294,8 @@ typedef struct service {
 
   int (*s_is_enabled)(struct service *t, int flags);
 
-  void (*s_enlist)(struct service *s, service_instance_list_t *sil, int flags);
+  void (*s_enlist)(struct service *s, struct tvh_input *ti,
+                   service_instance_list_t *sil, int flags);
 
   int (*s_start_feed)(struct service *s, int instance);
 
@@ -297,6 +310,10 @@ typedef struct service {
   int (*s_grace_period)(struct service *t);
 
   void (*s_delete)(struct service *t, int delconf);
+
+#if ENABLE_MPEGTS
+  int (*s_update_pids)(struct service *t, struct mpegts_apids *pids);
+#endif
 
   /**
    * Channel info
@@ -441,7 +458,10 @@ typedef struct service {
   struct elementary_stream_queue s_filt_components;
   int s_last_pid;
   elementary_stream_t *s_last_es;
-
+#if ENABLE_MPEGTS
+  struct service *s_parent;
+  struct mpegts_apids *s_pids;
+#endif
 
   /**
    * Delivery pad, this is were we finally deliver all streaming output
@@ -471,10 +491,11 @@ void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);
 
-service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type, htsmsg_t *conf);
+service_t *service_create0(service_t *t, int service_type, const idclass_t *idc,
+                           const char *uuid, int source_type, htsmsg_t *conf);
 
-#define service_create(t, c, u, s, m)\
-  (struct t*)service_create0(calloc(1, sizeof(struct t), &t##_class, c, u, s, m)
+#define service_create(t, y, c, u, s, m)\
+  (struct t*)service_create0(calloc(1, sizeof(struct t), y, &t##_class, c, u, s, m)
 
 void service_unref(service_t *t);
 
@@ -486,6 +507,7 @@ static inline service_t *service_find(const char *identifier)
 
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
+                                          struct tvh_input *source,
                                           service_instance_list_t *sil,
                                           int *error, int weight,
                                           int flags, int timeout,

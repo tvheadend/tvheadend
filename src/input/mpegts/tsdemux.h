@@ -26,4 +26,6 @@ int ts_recv_packet1
 
 void ts_recv_packet2(struct mpegts_service *t, const uint8_t *tsb);
 
+void ts_recv_raw(struct mpegts_service *t, const uint8_t *tsb);
+
 #endif /* TSDEMUX_H */

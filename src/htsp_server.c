@@ -2023,7 +2023,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   tvhdebug("htsp", "%s - subscribe to %s using profile %s\n",
            htsp->htsp_logname, channel_get_name(ch), pro->pro_name ?: "");
-  hs->hs_s = subscription_create_from_channel(&hs->hs_prch, weight,
+  hs->hs_s = subscription_create_from_channel(&hs->hs_prch, NULL, weight,
 					      htsp->htsp_logname,
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,

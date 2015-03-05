@@ -215,7 +215,8 @@ int get_device_connection(const char *dev);
 typedef enum {
   SCT_NONE = -1,
   SCT_UNKNOWN = 0,
-  SCT_MPEG2VIDEO = 1,
+  SCT_RAW = 1,
+  SCT_MPEG2VIDEO,
   SCT_MPEG2AUDIO,
   SCT_H264,
   SCT_AC3,

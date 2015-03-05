@@ -214,7 +214,7 @@ mpegts_mux_sched_timer ( void *p )
       = subscription_create_from_mux(mms->mms_prch, NULL, mms->mms_weight,
                                      mms->mms_creator ?: "",
                                      SUBSCRIPTION_NONE,
-                                     NULL, NULL, NULL, NULL);
+                                     NULL, NULL, NULL);
 
     /* Failed (try-again soon) */
     if (!mms->mms_sub) {

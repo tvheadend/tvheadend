@@ -247,6 +247,7 @@ rtsp_start
   mpegts_network_t *mn, *mn2;
   dvb_network_t *ln;
   dvb_mux_t *mux;
+  service_t *svc;
   char buf[384];
   int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0;
 
@@ -290,10 +291,9 @@ rtsp_start
                                    config_get_int("satip_weight", 100),
                                    "SAT>IP",
                                    rs->prch.prch_flags |
-                                   SUBSCRIPTION_FULLMUX |
                                    SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
-                                   http_arg_get(&hc->hc_args, "User-Agent"), NULL);
+                                   http_arg_get(&hc->hc_args, "User-Agent"));
     if (!rs->subs)
       goto endrtp;
     if (rs->run) {
@@ -303,6 +303,8 @@ rtsp_start
     }
   } else {
 pids:
+    svc = rs->subs->ths_service;
+    svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
   }
   if (!setup && !rs->run) {
@@ -314,6 +316,8 @@ pids:
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
                     rs->frontend, rs->findex, &rs->mux->lm_tuning,
                     &rs->pids);
+    svc = rs->subs->ths_service;
+    svc->s_update_pids(svc, &rs->pids);
     rs->run = 1;
   }
   pthread_mutex_unlock(&global_lock);

@@ -146,12 +146,14 @@ typedef struct mpegts_table_state
 typedef struct mpegts_pid_sub
 {
   RB_ENTRY(mpegts_pid_sub) mps_link;
-  LIST_ENTRY(mpegts_pid_sub) mps_svc_link;
-#define MPS_NONE    0x0
-#define MPS_STREAM  0x1
-#define MPS_TABLE   0x2
-#define MPS_FTABLE  0x4
-#define MPS_SERVICE 0x8
+  LIST_ENTRY(mpegts_pid_sub) mps_svcraw_link;
+#define MPS_NONE    0x00
+#define MPS_ALL     0x01
+#define MPS_RAW     0x02
+#define MPS_STREAM  0x04
+#define MPS_SERVICE 0x08
+#define MPS_TABLE   0x10
+#define MPS_FTABLE  0x20
   int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
@@ -430,10 +432,17 @@ struct mpegts_mux
   mpegts_mux_instance_t *mm_active;
 
   /*
+   * Raw subscriptions
+   */
+
+  LIST_HEAD(, th_subscription) mm_raw_subs;
+
+  /*
    * Data processing
    */
 
   RB_HEAD(, mpegts_pid)       mm_pids;
+  LIST_HEAD(, mpegts_pid_sub) mm_all_subs;
   int                         mm_last_pid;
   mpegts_pid_t               *mm_last_mp;
 
@@ -577,8 +586,6 @@ struct mpegts_mux_instance
   
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
-
-  LIST_HEAD(,th_subscription) mmi_subs;
 
   tvh_input_stream_stats_t mmi_stats;
 
@@ -745,6 +752,8 @@ int         mpegts_input_class_network_set  ( void *o, const void *p );
 htsmsg_t   *mpegts_input_class_network_enum ( void *o );
 char       *mpegts_input_class_network_rend ( void *o );
 
+int mpegts_mps_cmp( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b );
+
 void mpegts_network_register_builder
   ( const idclass_t *idc,
     mpegts_network_t *(*build)(const idclass_t *idc, htsmsg_t *conf) );
@@ -877,6 +886,9 @@ mpegts_pid_t * mpegts_input_open_pid
 void mpegts_input_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
+void mpegts_input_close_pids
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int type, void *owner );
+
 static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
@@ -942,6 +954,8 @@ mpegts_service_t *mpegts_service_create0
 #define mpegts_service_create1(u, m, s, p, c)\
   mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),\
                          &mpegts_service_class, u, m, s, p, c)
+
+mpegts_service_t *mpegts_service_create_raw(mpegts_mux_t *mm);
 
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );

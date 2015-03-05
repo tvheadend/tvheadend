@@ -259,7 +259,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   while(!hc->hc_shutdown && run && tvheadend_running) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
-    if(sm == NULL) {      
+    if(sm == NULL) {
       gettimeofday(&tp, NULL);
       ts.tv_sec  = tp.tv_sec + 1;
       ts.tv_nsec = tp.tv_usec * 1000;
@@ -769,7 +769,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_service(&prch, weight ?: 100, "HTTP",
+    s = subscription_create_from_service(&prch, NULL, weight ?: 100, "HTTP",
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
                                          addrbuf,
 				         hc->hc_username,
@@ -801,11 +801,12 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   th_subscription_t *s;
   profile_chain_t prch;
   size_t qsize;
-  const char *name;
+  const char *name, *str;
   char addrbuf[50];
   void *tcp_id;
-  const char *str;
-  int res = HTTP_STATUS_SERVICE;
+  char *p, *saveptr;
+  mpegts_apids_t pids;
+  int res = HTTP_STATUS_SERVICE, i;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -818,21 +819,46 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   else
     qsize = 10000000;
 
+  mpegts_pid_init(&pids, NULL, 0);
+  if ((str = http_arg_get(&hc->hc_req_args, "pids"))) {
+    p = tvh_strdupa(str);
+    p = strtok_r(p, ",", &saveptr);
+    while (p) {
+      if (strcmp(p, "all") == 0) {
+        pids.all = 1;
+      } else {
+        i = atoi(p);
+        if (i < 0 || i > 8192)
+          return HTTP_STATUS_BAD_REQUEST;
+        if (i == 8192)
+          pids.all = 1;
+        else
+          mpegts_pid_add(&pids, i);
+      }
+      p = strtok_r(NULL, ",", &saveptr);
+    }
+    if (!pids.all && pids.count <= 0)
+      return HTTP_STATUS_BAD_REQUEST;
+  } else {
+    pids.all = 1;
+  }
+
   if (!profile_chain_raw_open(&prch, mm, qsize)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
     s = subscription_create_from_mux(&prch, NULL, weight ?: 10, "HTTP",
                                      prch.prch_flags |
-                                     SUBSCRIPTION_FULLMUX |
                                      SUBSCRIPTION_STREAMING,
                                      addrbuf, hc->hc_username,
-                                     http_arg_get(&hc->hc_args, "User-Agent"), NULL);
+                                     http_arg_get(&hc->hc_args, "User-Agent"));
     if (s) {
       name = tvh_strdupa(s->ths_title);
-      pthread_mutex_unlock(&global_lock);
-      http_stream_run(hc, &prch, name, s);
-      pthread_mutex_lock(&global_lock);
+      if (s->ths_service->s_update_pids(s->ths_service, &pids) == 0) {
+        pthread_mutex_unlock(&global_lock);
+        http_stream_run(hc, &prch, name, s);
+        pthread_mutex_lock(&global_lock);
+      }
       subscription_unsubscribe(s);
       res = 0;
     }
@@ -882,7 +908,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
-    s = subscription_create_from_channel(&prch, weight ?: 100, "HTTP",
+    s = subscription_create_from_channel(&prch,
+                 NULL, weight ?: 100, "HTTP",
                  prch.prch_flags | SUBSCRIPTION_STREAMING,
                  addrbuf, hc->hc_username,
                  http_arg_get(&hc->hc_args, "User-Agent"));

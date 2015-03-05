@@ -159,9 +159,16 @@ mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
 {
   int i;
 
+  assert(dst);
+  assert(add);
+  assert(del);
   if (mpegts_pid_init(add, NULL, 0) ||
       mpegts_pid_init(del, NULL, 0))
     return -1;
+  if (src == NULL) {
+    mpegts_pid_copy(add, dst);
+    return add->count > 0;
+  }
   for (i = 0; i < src->count; i++)
     if (mpegts_pid_find_index(dst, src->pids[i]) < 0)
       mpegts_pid_add(del, src->pids[i]);

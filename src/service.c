@@ -53,6 +53,7 @@ static void service_class_delete(struct idnode *self);
 static void service_class_save(struct idnode *self);
 
 struct service_queue service_all;
+struct service_queue service_raw_all;
 
 static void
 service_class_notify_enabled ( void *obj )
@@ -244,6 +245,17 @@ const idclass_t service_class = {
     },
     {}
   }
+};
+
+const idclass_t service_raw_class = {
+  .ic_class      = "service_raw",
+  .ic_caption    = "Service Raw",
+  .ic_event      = "service_raw",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_delete     = service_class_delete,
+  .ic_save       = NULL,
+  .ic_get_title  = service_class_get_title,
+  .ic_properties = NULL
 };
 
 /**
@@ -682,7 +694,8 @@ service_start(service_t *t, int instance, int timeout, int postpone)
  */
 service_instance_t *
 service_find_instance
-  (service_t *s, channel_t *ch, service_instance_list_t *sil,
+  (service_t *s, channel_t *ch, tvh_input_t *ti,
+   service_instance_list_t *sil,
    int *error, int weight, int flags, int timeout, int postpone)
 {
   channel_service_mapping_t *csm;
@@ -703,10 +716,10 @@ service_find_instance
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
       if (s->s_is_enabled(s, flags))
-        s->s_enlist(s, sil, flags);
+        s->s_enlist(s, ti, sil, flags);
     }
   } else {
-    s->s_enlist(s, sil, flags);
+    s->s_enlist(s, ti, sil, flags);
   }
 
   /* Clean */
@@ -842,7 +855,10 @@ service_destroy(service_t *t, int delconf)
 
   avgstat_flush(&t->s_rate);
 
-  TAILQ_REMOVE(&service_all, t, s_all_link);
+  if (t->s_type == STYPE_RAW)
+    TAILQ_REMOVE(&service_raw_all, t, s_all_link);
+  else
+    TAILQ_REMOVE(&service_all, t, s_all_link);
 
   service_unref(t);
 }
@@ -882,7 +898,8 @@ service_provider_name ( service_t *s )
  */
 service_t *
 service_create0
-  ( service_t *t, const idclass_t *class, const char *uuid,
+  ( service_t *t, int service_type,
+    const idclass_t *class, const char *uuid,
     int source_type, htsmsg_t *conf )
 {
   if (idnode_insert(&t->s_id, uuid, class, 0)) {
@@ -894,10 +911,14 @@ service_create0
 
   lock_assert(&global_lock);
   
-  TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
+  if (service_type == STYPE_RAW)
+    TAILQ_INSERT_TAIL(&service_raw_all, t, s_all_link);
+  else
+    TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
+  t->s_type = service_type;
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -1201,6 +1222,9 @@ service_restart(service_t *t)
 {
   int had_components;
 
+  if(t->s_type != STYPE_STD)
+    goto refresh;
+
   pthread_mutex_lock(&t->s_stream_mutex);
 
   had_components = TAILQ_FIRST(&t->s_filt_components) != NULL &&
@@ -1227,6 +1251,7 @@ service_restart(service_t *t)
 
   pthread_mutex_unlock(&t->s_stream_mutex);
 
+refresh:
   if(t->s_refresh_feed != NULL)
     t->s_refresh_feed(t);
 
@@ -1298,6 +1323,9 @@ static struct service_queue pending_save_queue;
 void
 service_request_save(service_t *t, int restart)
 {
+  if (t->s_type != STYPE_STD && !restart)
+    return;
+
   pthread_mutex_lock(&pending_save_mutex);
 
   if(!t->s_ps_onqueue) {
@@ -1359,7 +1387,7 @@ service_saver(void *aux)
     pthread_mutex_unlock(&pending_save_mutex);
     pthread_mutex_lock(&global_lock);
 
-    if(t->s_status != SERVICE_ZOMBIE)
+    if(t->s_status != SERVICE_ZOMBIE && t->s_config_save)
       t->s_config_save(t);
     if(t->s_status == SERVICE_RUNNING && restart)
       service_restart(t);
@@ -1384,6 +1412,7 @@ service_init(void)
 {
   TAILQ_INIT(&pending_save_queue);
   TAILQ_INIT(&service_all);
+  TAILQ_INIT(&service_raw_all);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
   tvhthread_create(&service_saver_tid, NULL, service_saver, NULL);

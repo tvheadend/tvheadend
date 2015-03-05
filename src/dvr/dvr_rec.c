@@ -85,7 +85,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     return;
   }
 
-  de->de_s = subscription_create_from_channel(prch, weight,
+  de->de_s = subscription_create_from_channel(prch, NULL, weight,
 					      buf, prch->prch_flags,
 					      NULL, NULL, NULL);
   if (de->de_s == NULL) {

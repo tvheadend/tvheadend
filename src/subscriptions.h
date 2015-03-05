@@ -27,13 +27,12 @@ extern struct th_subscription_list subscriptions;
 
 #define SUBSCRIPTION_RAW_MPEGTS 0x001
 #define SUBSCRIPTION_NONE       0x002
-#define SUBSCRIPTION_FULLMUX    0x004
-#define SUBSCRIPTION_STREAMING  0x008
-#define SUBSCRIPTION_RESTART    0x010
-#define SUBSCRIPTION_INITSCAN   0x020 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN   0x040 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN   0x080 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG        0x100 ///< for mux subscriptions
+#define SUBSCRIPTION_STREAMING  0x004
+#define SUBSCRIPTION_RESTART    0x008
+#define SUBSCRIPTION_INITSCAN   0x010 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN   0x020 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN   0x040 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG        0x080 ///< for mux subscriptions
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
@@ -75,6 +74,8 @@ typedef struct th_subscription {
   struct service *ths_service;   /* if NULL, ths_service_link
 					   is not linked */
 
+  struct tvh_input *ths_source;  /* if NULL, all sources are allowed */
+
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
@@ -110,15 +111,10 @@ typedef struct th_subscription {
   int    ths_postpone;
   time_t ths_postpone_end;
 
-#if ENABLE_MPEGTS
-  // Note: its a bit ugly linking MPEG-TS code directly here, but to do
-  //       otherwise would probably require adding lots of additional
-  //       (repeated) logic elsewhere
-  LIST_ENTRY(th_subscription) ths_mmi_link;
-  struct mpegts_mux_instance *ths_mmi;
-  gtimer_t ths_receive_timer;
-  uint8_t ths_live;
-#endif
+  /*
+   * MPEG-TS mux chain
+   */
+  LIST_ENTRY(th_subscription) ths_mux_link;
 
 } th_subscription_t;
 
@@ -138,6 +134,7 @@ void subscription_reschedule(void);
 
 th_subscription_t *
 subscription_create_from_channel(struct profile_chain *prch,
+                                 struct tvh_input *ti,
 				 unsigned int weight,
 				 const char *name,
 				 int flags,
@@ -148,6 +145,7 @@ subscription_create_from_channel(struct profile_chain *prch,
 
 th_subscription_t *
 subscription_create_from_service(struct profile_chain *prch,
+                                 struct tvh_input *ti,
                                  unsigned int weight,
 				 const char *name,
 				 int flags,
@@ -165,7 +163,7 @@ subscription_create_from_mux(struct profile_chain *prch,
                              int flags,
                              const char *hostname,
                              const char *username,
-                             const char *client, int *err);
+                             const char *client);
 #endif
 
 th_subscription_t *subscription_create(struct profile_chain *prch,
@@ -187,8 +185,6 @@ void subscription_set_skip
 void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_service(th_subscription_t *s, int reason);
-
-void subscription_unlink_mux(th_subscription_t *s, int reason);
 
 void subscription_dummy_join(const char *id, int first);
 
