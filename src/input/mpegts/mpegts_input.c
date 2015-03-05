@@ -405,7 +405,7 @@ static int
 mps_cmp ( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b )
 {
   if (a->mps_type != b->mps_type) {
-    if (a->mps_type & MPS_STREAM)
+    if (a->mps_type & MPS_SERVICE)
       return 1;
     else
       return -1;
@@ -423,12 +423,17 @@ mpegts_input_open_pid
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   assert(owner != NULL);
+  assert((type & (MPS_STREAM|MPS_SERVICE)) == 0 ||
+         ((type & MPS_STREAM) ? 1 : 0) != ((type & MPS_SERVICE) ? 1 : 0));
   lock_assert(&mi->mi_output_lock);
   if ((mp = mpegts_mux_find_pid(mm, pid, 1))) {
     mps = calloc(1, sizeof(*mps));
     mps->mps_type  = type;
     mps->mps_owner = owner;
     if (!RB_INSERT_SORTED(&mp->mp_subs, mps, mps_link, mps_cmp)) {
+      mp->mp_type |= type;
+      if (type & MPS_SERVICE)
+        LIST_INSERT_HEAD(&mp->mp_svc_subs, mps, mps_svc_link);
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhdebug("mpegts", "%s - open PID %04X (%d) [%d/%p]",
                buf, mp->mp_pid, mp->mp_pid, type, owner);
@@ -462,6 +467,8 @@ mpegts_input_close_pid
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhdebug("mpegts", "%s - close PID %04X (%d) [%d/%p]",
              buf, mp->mp_pid, mp->mp_pid, type, owner);
+    if (type & MPS_SERVICE)
+      LIST_REMOVE(mps, mps_svc_link);
     RB_REMOVE(&mp->mp_subs, mps, mps_link);
     free(mps);
     if (!RB_FIRST(&mp->mp_subs)) {
@@ -469,6 +476,11 @@ mpegts_input_close_pid
       if (mp->mp_fd != -1)
         linuxdvb_filter_close(mp->mp_fd);
       free(mp);
+    } else {
+      type = 0;
+      RB_FOREACH(mps, &mp->mp_subs, mps_link)
+        type |= mps->mps_type;
+      mp->mp_type = type;
     }
   }
 }
@@ -487,13 +499,13 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init )
 
   /* Register PIDs */
   pthread_mutex_lock(&s->s_stream_mutex);
-  mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
-  mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
+  mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
+  mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
   /* Open only filtered components here */
   TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link) {
     if (st->es_type != SCT_CA) {
       st->es_pid_opened = 1;
-      mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+      mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
     }
   }
 
@@ -526,13 +538,13 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   
   /* Close PID */
   pthread_mutex_lock(&s->s_stream_mutex);
-  mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_STREAM, s);
-  mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_STREAM, s);
+  mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
+  mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
   /* Close all opened PIDs (the component filter may be changed at runtime) */
   TAILQ_FOREACH(st, &s->s_components, es_link) {
     if (st->es_pid_opened) {
       st->es_pid_opened = 0;
-      mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_STREAM, s);
+      mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
     }
   }
 
@@ -920,7 +932,7 @@ mpegts_input_process
   uint8_t cc;
   uint8_t *tsb = mpkt->mp_data;
   int len = mpkt->mp_len;
-  int table = 0, stream = 0, f;
+  int type = 0, f;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   service_t *s;
@@ -928,7 +940,6 @@ mpegts_input_process
   uint8_t *end = mpkt->mp_data + len;
   mpegts_mux_t          *mm  = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
-  mpegts_pid_t *last_mp = NULL;
   th_subscription_t *ths;
 #if ENABLE_TSDEBUG
   off_t tsdebug_pos;
@@ -981,45 +992,32 @@ mpegts_input_process
         mp->mp_cc = (cc + 1) & 0xF;
       }
 
-      if (mp != last_mp) {
-        last_mp = mp;
-        if (pid == 0) {
-          stream = MPS_STREAM;
-          table  = MPS_TABLE;
-        } else {
-          stream = table = 0;
+      type = mp->mp_type;
 
-          /* Determine PID type */
-          RB_FOREACH(mps, &mp->mp_subs, mps_link) {
-            stream |= mps->mps_type & MPS_STREAM;
-            table  |= mps->mps_type & (MPS_TABLE | MPS_FTABLE);
-            if (table == (MPS_TABLE|MPS_FTABLE) && stream) break;
-          }
-
-          /* Special case streams */
-          LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-            if (((mpegts_service_t*)s)->s_dvb_mux != mm) continue;
-                 if (pid == s->s_pmt_pid) stream = MPS_STREAM;
-            else if (pid == s->s_pcr_pid) stream = MPS_STREAM;
-          }
+      /* Stream service data */
+      if (type & MPS_SERVICE) {
+        LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svc_link) {
+          s = mps->mps_owner;
+          f = (type & (MPS_TABLE|MPS_FTABLE)) ||
+              (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
         }
-      }
-    
-      /* Stream data */
-      if (stream) {
+      } else
+      /* Stream table data */
+      if (type & MPS_STREAM) {
         LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-          if (((mpegts_service_t*)s)->s_dvb_mux != mm) continue;
-          f = table || (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
+          f = (type & (MPS_TABLE|MPS_FTABLE)) ||
+              (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
           ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
         }
       }
 
       /* Table data */
-      if (table) {
+      if (type & (MPS_TABLE | MPS_FTABLE)) {
         if (!(tsb[1] & 0x80)) {
-          if (table & MPS_FTABLE)
+          if (type & MPS_FTABLE)
             mpegts_input_table_dispatch(mm, tsb);
-          if (table & MPS_TABLE) {
+          if (type & MPS_TABLE) {
             // TODO: might be able to optimise this a bit by having slightly
             //       larger buffering and trying to aggregate data (if we get
             //       same PID multiple times in the loop)

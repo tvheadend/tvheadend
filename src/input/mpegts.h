@@ -146,10 +146,12 @@ typedef struct mpegts_table_state
 typedef struct mpegts_pid_sub
 {
   RB_ENTRY(mpegts_pid_sub) mps_link;
-#define MPS_NONE   0x0
-#define MPS_STREAM 0x1
-#define MPS_TABLE  0x2
-#define MPS_FTABLE 0x4
+  LIST_ENTRY(mpegts_pid_sub) mps_svc_link;
+#define MPS_NONE    0x0
+#define MPS_STREAM  0x1
+#define MPS_TABLE   0x2
+#define MPS_FTABLE  0x4
+#define MPS_SERVICE 0x8
   int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
@@ -157,9 +159,11 @@ typedef struct mpegts_pid_sub
 typedef struct mpegts_pid
 {
   int                      mp_pid;
+  int                      mp_type; // mask for all subscribers
   int                      mp_fd;   // linuxdvb demux fd
   int8_t                   mp_cc;
   RB_HEAD(,mpegts_pid_sub) mp_subs; // subscribers to pid
+  LIST_HEAD(,mpegts_pid_sub) mp_svc_subs;
   RB_ENTRY(mpegts_pid)     mp_link;
 } mpegts_pid_t;
 
