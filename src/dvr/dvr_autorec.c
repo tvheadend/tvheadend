@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Automatic recordings
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -867,6 +867,20 @@ dvr_autorec_entry_class_content_type_list(void *o)
   return m;
 }
 
+static htsmsg_t *
+dvr_autorec_entry_class_dedup_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "Record all",            DVR_AUTOREC_RECORD_ALL },
+    { "Record if different episode number", DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
+    { "Record if different subtitle", DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
+    { "Record if different description", DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION },
+    { "Record once per week", DVR_AUTOREC_RECORD_ONCE_PER_WEEK },
+    { "Record once per day", DVR_AUTOREC_RECORD_ONCE_PER_DAY },
+  };
+  return strtab2htsmsg(tab);
+}
+
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
   .ic_caption    = "DVR Auto-Record Entry",
@@ -998,6 +1012,14 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
+    },
+    {
+      .type     = PT_U32,
+      .id       = "record",
+      .name     = "Duplicate Handling",
+      .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .off      = offsetof(dvr_autorec_entry_t, dae_record),
+      .list     = dvr_autorec_entry_class_dedup_list,
     },
     {
       .type     = PT_INT,

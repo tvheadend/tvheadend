@@ -290,6 +290,8 @@ const char *epg_episode_get_title
   ( const epg_episode_t *e, const char *lang );
 const char *epg_episode_get_subtitle
   ( const epg_episode_t *e, const char *lang );
+lang_str_t *epg_episode_get_subtitle2
+        ( const epg_episode_t *e );
 const char *epg_episode_get_summary
   ( const epg_episode_t *e, const char *lang );
 const char *epg_episode_get_description
@@ -511,6 +513,8 @@ const char *epg_broadcast_get_title
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_subtitle
   ( epg_broadcast_t *b, const char *lang );
+lang_str_t *epg_broadcast_get_subtitle2
+        ( epg_broadcast_t *b );
 const char *epg_broadcast_get_summary
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_description

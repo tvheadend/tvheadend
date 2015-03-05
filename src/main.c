@@ -799,7 +799,7 @@ main(int argc, char **argv)
   OPENSSL_config(NULL);
   SSL_load_error_strings();
   SSL_library_init();
-  
+
   /* Initialise configuration */
   uuid_init();
   idnode_init();
