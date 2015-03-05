@@ -240,13 +240,6 @@ typedef struct service {
   int s_refcount;
 
   /**
-   *
-   */
-  int s_flags;
-
-#define S_DEBUG 0x1
-
-  /**
    * Source type is used to determine if an output requesting
    * MPEG-TS can shortcut all the parsing and remuxing.
    */ 

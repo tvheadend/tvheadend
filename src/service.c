@@ -1023,9 +1023,6 @@ service_stream_create(service_t *t, int pid,
 
   service_stream_make_nicename(t, st);
 
-  if(t->s_flags & S_DEBUG)
-    tvhlog(LOG_DEBUG, "service", "Add stream %s", st->es_nicename);
-
   if(t->s_status == SERVICE_RUNNING) {
     service_build_filter(t);
     TAILQ_FOREACH(st2, &t->s_filt_components, es_filt_link)
