@@ -302,7 +302,7 @@ typedef struct dvr_autorec_entry {
   int dae_minduration;
   int dae_maxduration;
   int dae_retention;
-  
+
   time_t dae_start_extra;
   time_t dae_stop_extra;
   
