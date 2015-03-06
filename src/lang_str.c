@@ -251,6 +251,14 @@ int lang_str_compare( lang_str_t *ls1, lang_str_t *ls2 )
   return 0;
 }
 
+int strempty(const char* c) {
+  return !c || c[0] == 0;
+}
+
+int lang_str_empty(lang_str_t* str) {
+  return strempty(lang_str_get(str, NULL));
+}
+
 void lang_str_done( void )
 {
   SKEL_FREE(lang_str_ele_skel);

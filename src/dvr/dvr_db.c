@@ -608,15 +608,6 @@ dvr_entry_create_by_event(const char *config_uuid,
                            comment);
 }
 
-static inline int strempty(const char* c) {
-  return !c || c[0] == 0;
-}
-
-static inline int lang_str_empty(lang_str_t* str) {
-  return strempty(lang_str_get(str, NULL));
-}
-
-
 /**
  *
  */
@@ -715,7 +706,8 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[200];
 
-  /* Dup detection */
+  /* Identical duplicate detection
+     NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
   dvr_entry_t* de;
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast == e || (de->de_bcast && de->de_bcast->episode == e->episode))
@@ -730,8 +722,6 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
                             dae->dae_start_extra, dae->dae_stop_extra,
                             dae->dae_owner, buf, dae, dae->dae_pri, dae->dae_retention,
                             dae->dae_comment);
-
-
 }
 
 /**
@@ -1633,7 +1623,6 @@ dvr_entry_class_disp_title_get(void *o)
   return &s;
 }
 
-
 static int
 dvr_entry_class_disp_subtitle_set(void *o, const void *v)
 {
@@ -1789,7 +1778,6 @@ dvr_entry_class_duplicate_get(void *o)
   de = _dvr_duplicate_event(de);
   return de ? &de->de_start : &null;
 }
-
 
 htsmsg_t *
 dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
