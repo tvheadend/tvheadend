@@ -75,10 +75,10 @@ tvh_input_stream_create_msg
     htsmsg_add_str(m, "stream", st->stream_name);
   htsmsg_add_u32(m, "subs", st->subs_count);
   htsmsg_add_u32(m, "weight", st->max_weight);
-  htsmsg_add_u32(m, "signal", st->stats.signal);
+  htsmsg_add_s32(m, "signal", st->stats.signal);
   htsmsg_add_u32(m, "signal_scale", st->stats.signal_scale);
   htsmsg_add_u32(m, "ber", st->stats.ber);
-  htsmsg_add_u32(m, "snr", st->stats.snr);
+  htsmsg_add_s32(m, "snr", st->stats.snr);
   htsmsg_add_u32(m, "snr_scale", st->stats.snr_scale);
   htsmsg_add_u32(m, "unc", st->stats.unc);
   htsmsg_add_u32(m, "bps", st->stats.bps);

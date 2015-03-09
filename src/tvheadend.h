@@ -252,7 +252,7 @@ typedef enum {
 typedef enum {
   SIGNAL_STATUS_SCALE_UNKNOWN = 0,
   SIGNAL_STATUS_SCALE_RELATIVE, // value is unsigned, where 0 means 0% and 65535 means 100%
-  SIGNAL_STATUS_SCALE_DECIBEL   // value is measured in dB
+  SIGNAL_STATUS_SCALE_DECIBEL   // value is measured in dB * 1000
 } signal_status_scale_t;
 
 /**

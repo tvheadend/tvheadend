@@ -363,7 +363,7 @@ tvheadend.status_streams = function(panel, index)
                 if (scale == 1)
                   return v;
                 if (scale == 2 && v > 0) {
-                  var snr = v * 0.0001;
+                  var snr = v * 0.001;
                   return snr.toFixed(1) + " dB";
                 }
                 return '<span class="tvh-grid-unset">Unknown</span>';
@@ -382,8 +382,8 @@ tvheadend.status_streams = function(panel, index)
                 var scale = record.get('snr_scale');
                 if (scale == 1)
                   return v;
-                if (scale == 2 && v > 0) {
-                    var snr = v * 0.0001;
+                if (scale == 2) {
+                    var snr = v * 0.001;
                     return snr.toFixed(1) + " dBm";
                 }
                 return '<span class="tvh-grid-unset">Unknown</span>';
