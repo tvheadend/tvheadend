@@ -346,24 +346,24 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
   const char *bw, *tmode, *gi, *plp, *t2id, *sm, *c2tft, *ds, *specinv;
   int i, len, len2, level = 0, lock = 0, quality = 0;
 
-  if (rtp->sig.signal > 0)
+  if (rtp->sig.snr > 0)
     lock = 1;
   switch (rtp->sig.signal_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
     level = MIN(240, MAX(0, (rtp->sig.signal * 245) / 0xffff));
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    level = MIN(240, MAX(0, (rtp->sig.signal * 900000)));
+    level = MIN(240, MAX(0, (rtp->sig.signal + 90000) / 375));
     break;
   default:
     break;
   }
   switch (rtp->sig.snr_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
-    quality = MIN(15, MAX(0, (rtp->sig.signal * 16) / 0xffff));
+    quality = MIN(15, MAX(0, (rtp->sig.snr * 16) / 0xffff));
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    quality = MIN(15, MAX(0, (rtp->sig.signal * 100000)));
+    quality = MIN(15, MAX(0, (rtp->sig.snr / 2000)));
     break;
   default:
     break;
@@ -399,7 +399,7 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
      * <system>,<type>,<pilots>,<roll_off>,<symbol_rate>,<fec_inner>;pids=<pid0>,...,<pidn>
      */
     snprintf(buf, sizeof(buf),
-      "vers=1.0;src=%d;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%s,%s,%.f,%s;pids=%s",
+      "ver=1.0;src=%d;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%s,%s,%.f,%s;pids=%s",
       rtp->source, rtp->frontend, level, lock, quality,
       (float)rtp->dmc.dmc_fe_freq / 1000000.0,
       dvb_pol2str(rtp->dmc.u.dmc_fe_qpsk.polarisation),
@@ -453,7 +453,7 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
      * <fec>,<plp>,<t2id>,<sm>;pids=<pid0>,...,<pidn>
      */
     snprintf(buf, sizeof(buf),
-      "vers=1.1;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%s,%s,%s,%s,%s,%s;pids=%s",
+      "ver=1.1;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%s,%s,%s,%s,%s,%s;pids=%s",
       rtp->frontend, level, lock, quality,
       (float)rtp->dmc.dmc_fe_freq / 1000000.0,
       bw, delsys, tmode, msys, gi,
@@ -479,7 +479,7 @@ satip_rtcp_build(satip_rtp_session_t *rtp, uint8_t *msg)
      * <specinv>;pids=<pid0>,...,<pidn>
      */
     snprintf(buf, sizeof(buf),
-      "vers=1.1;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%.f,%s,%s,%s,%s;pids=%s",
+      "ver=1.1;tuner=%d,%d,%d,%d,%.f,%s,%s,%s,%.f,%s,%s,%s,%s;pids=%s",
       rtp->frontend, level, lock, quality,
       (float)rtp->dmc.dmc_fe_freq / 1000000.0,
       bw, delsys, msys,
