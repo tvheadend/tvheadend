@@ -29,6 +29,7 @@ mpegts_pid_init(mpegts_apids_t *pids, mpegts_apid_t *vals, int count)
     return -1;
   pids->pids = p;
   pids->alloc = alloc;
+  pids->count = 0;
   pids->all = 0;
   if (vals) {
     memcpy(p, vals, count * sizeof(*pids));
@@ -176,4 +177,17 @@ mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
     if (mpegts_pid_find_index(src, dst->pids[i]) < 0)
       mpegts_pid_add(add, dst->pids[i]);
   return add->count || del->count;
+}
+
+int
+mpegts_pid_dump(mpegts_apids_t *pids, char *buf, int len)
+{
+  int i, l = 0;
+
+  if (pids->all)
+    return snprintf(buf, len, "all");
+  for (i = 0; i < pids->count; i++)
+    l += snprintf(buf + l, len - l, "%s%i",
+                  i > 0 ? "," : "", pids->pids[i]);
+  return l;
 }

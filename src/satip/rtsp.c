@@ -828,15 +828,14 @@ play:
   }
 
   if (setup)
-    tvhdebug("satips", "setup from %s:%d, RTP: %d, RTCP: %d",
+    tvhdebug("satips", "setup from %s:%d, RTP: %d, RTCP: %d, pids ",
              addrbuf, IP_PORT(*hc->hc_peer),
              rs->rtp_peer_port, rs->rtp_peer_port + 1);
+
   dvb_mux_conf_str(dmc, buf, sizeof(buf));
   s = buf + strlen(buf);
-  for (r = 0; r < rs->pids.count; r++) {
-    s += snprintf(s, sizeof(buf) - (s - buf), "%s%i",
-                  r > 0 ? "," : " pids ", rs->pids.pids[r]);
-  }
+  mpegts_pid_dump(&rs->pids, s, sizeof(buf) - (s - buf));
+
   tvhdebug("satips", "%i/%s/%d: %s %s",
            rs->frontend, rs->session, rs->stream,
            setup ? "setup" : "play", buf);
