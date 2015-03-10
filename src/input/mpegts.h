@@ -467,7 +467,6 @@ struct mpegts_mux
   void (*mm_config_save)      (mpegts_mux_t *mm);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
-  int  (*mm_start)            (mpegts_mux_t *mm, mpegts_input_t *mi, const char *r, int w, int flags);
   void (*mm_stop)             (mpegts_mux_t *mm, int force, int reason);
   void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*,int subscribe);
   void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
