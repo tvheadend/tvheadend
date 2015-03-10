@@ -1032,11 +1032,17 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     // Encoder uses "time_base" for bitrate calculation, but "time_base" from decoder
     // will be deprecated in the future, therefore calculate "time_base" from "framerate" if available.
     octx->ticks_per_frame = ictx->ticks_per_frame;
+    // The test of framerate.num and framerate.den fails on newer libavcodec builds (> 56.13.100)
+    // according to http://projects.vdr-developer.org/issues/2085
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(56,13,100)
+    octx->time_base     = ictx->time_base;
+#else
     if (ictx->framerate.num != 0 && ictx->framerate.den != 0) {
       octx->time_base     = av_inv_q(av_mul_q(ictx->framerate, av_make_q(ictx->ticks_per_frame, 1)));
     } else {
       octx->time_base     = ictx->time_base;
     }
+#endif
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
