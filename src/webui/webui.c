@@ -773,13 +773,14 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
                                          addrbuf,
 				         hc->hc_username,
-				         http_arg_get(&hc->hc_args, "User-Agent"));
+				         http_arg_get(&hc->hc_args, "User-Agent"),
+				         NULL);
     if(s) {
       name = tvh_strdupa(service->s_nicename);
       pthread_mutex_unlock(&global_lock);
       http_stream_run(hc, &prch, name, s);
       pthread_mutex_lock(&global_lock);
-      subscription_unsubscribe(s);
+      subscription_unsubscribe(s, 0);
       res = 0;
     }
   }
@@ -851,7 +852,8 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
                                      prch.prch_flags |
                                      SUBSCRIPTION_STREAMING,
                                      addrbuf, hc->hc_username,
-                                     http_arg_get(&hc->hc_args, "User-Agent"));
+                                     http_arg_get(&hc->hc_args, "User-Agent"),
+                                     NULL);
     if (s) {
       name = tvh_strdupa(s->ths_title);
       if (s->ths_service->s_update_pids(s->ths_service, &pids) == 0) {
@@ -859,7 +861,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
         http_stream_run(hc, &prch, name, s);
         pthread_mutex_lock(&global_lock);
       }
-      subscription_unsubscribe(s);
+      subscription_unsubscribe(s, 0);
       res = 0;
     }
   }
@@ -912,14 +914,15 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
                  NULL, weight ?: 100, "HTTP",
                  prch.prch_flags | SUBSCRIPTION_STREAMING,
                  addrbuf, hc->hc_username,
-                 http_arg_get(&hc->hc_args, "User-Agent"));
+                 http_arg_get(&hc->hc_args, "User-Agent"),
+                 NULL);
 
     if(s) {
       name = tvh_strdupa(channel_get_name(ch));
       pthread_mutex_unlock(&global_lock);
       http_stream_run(hc, &prch, name, s);
       pthread_mutex_lock(&global_lock);
-      subscription_unsubscribe(s);
+      subscription_unsubscribe(s, 0);
       res = 0;
     }
   }
@@ -1290,7 +1293,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
   if (sub)
-    subscription_unsubscribe(sub);
+    subscription_unsubscribe(sub, 0);
   http_stream_postop(tcp_id);
   pthread_mutex_unlock(&global_lock);
   return ret;

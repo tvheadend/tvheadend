@@ -87,7 +87,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_s = subscription_create_from_channel(prch, NULL, weight,
 					      buf, prch->prch_flags,
-					      NULL, NULL, NULL);
+					      NULL, NULL, NULL, NULL);
   if (de->de_s == NULL) {
     tvherror("dvr", "unable to create new channel subcription for '%s'",
              channel_get_name(de->de_channel));
@@ -117,7 +117,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   
   pthread_join(de->de_thread, NULL);
 
-  subscription_unsubscribe(de->de_s);
+  subscription_unsubscribe(de->de_s, 0);
   de->de_s = NULL;
 
   de->de_chain = NULL;

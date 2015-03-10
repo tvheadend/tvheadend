@@ -1130,13 +1130,14 @@ mpegts_mux_subscribe
 {
   profile_chain_t prch;
   th_subscription_t *s;
+  int err = 0;
   memset(&prch, 0, sizeof(prch));
   prch.prch_id = mm;
   s = subscription_create_from_mux(&prch, (tvh_input_t *)mi,
                                    weight, name,
                                    SUBSCRIPTION_NONE | flags,
-                                   NULL, NULL, NULL);
-  return s ? 0 : -EIO;
+                                   NULL, NULL, NULL, &err);
+  return s ? 0 : (err ? err : SM_CODE_UNDEFINED_ERROR);
 }
 
 void
@@ -1153,7 +1154,7 @@ mpegts_mux_unsubscribe_by_name
       n = LIST_NEXT(s, ths_global_link);
       t = s->ths_service;
       if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
-        subscription_unsubscribe(s);
+        subscription_unsubscribe(s, 0);
       s = n;
     }
   }

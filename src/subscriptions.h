@@ -29,10 +29,11 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_NONE       0x002
 #define SUBSCRIPTION_STREAMING  0x004
 #define SUBSCRIPTION_RESTART    0x008
-#define SUBSCRIPTION_INITSCAN   0x010 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN   0x020 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN   0x040 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG        0x080 ///< for mux subscriptions
+#define SUBSCRIPTION_ONESHOT    0x010
+#define SUBSCRIPTION_INITSCAN   0x020 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN   0x040 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN   0x080 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG        0x100 ///< for mux subscriptions
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
@@ -126,7 +127,7 @@ void subscription_init(void);
 
 void subscription_done(void);
 
-void subscription_unsubscribe(th_subscription_t *s);
+void subscription_unsubscribe(th_subscription_t *s, int quiet);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
@@ -140,7 +141,8 @@ subscription_create_from_channel(struct profile_chain *prch,
 				 int flags,
 				 const char *hostname,
 				 const char *username,
-				 const char *client);
+				 const char *client,
+				 int *error);
 
 
 th_subscription_t *
@@ -151,7 +153,8 @@ subscription_create_from_service(struct profile_chain *prch,
 				 int flags,
 				 const char *hostname,
 				 const char *username,
-				 const char *client);
+				 const char *client,
+				 int *error);
 
 #if ENABLE_MPEGTS
 struct tvh_input;
@@ -163,7 +166,8 @@ subscription_create_from_mux(struct profile_chain *prch,
                              int flags,
                              const char *hostname,
                              const char *username,
-                             const char *client);
+                             const char *client,
+                             int *error);
 #endif
 
 th_subscription_t *subscription_create(struct profile_chain *prch,

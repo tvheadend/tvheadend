@@ -219,6 +219,29 @@ subscription_reschedule_cb(void *aux)
   subscription_reschedule();
 }
 
+/**
+ *
+ */
+static service_instance_t *
+subscription_start_instance
+  (th_subscription_t *s, int *error)
+{
+  service_instance_t *si;
+
+  if (s->ths_channel)
+    tvhtrace("subscription", "%04X: find service for %s weight %d",
+             shortid(s), channel_get_name(s->ths_channel), s->ths_weight);
+  else
+    tvhtrace("subscription", "%04X: find instance for %s weight %d",
+             shortid(s), s->ths_service->s_nicename, s->ths_weight);
+  si = service_find_instance(s->ths_service, s->ths_channel,
+                             s->ths_source,
+                             &s->ths_instances, error, s->ths_weight,
+                             s->ths_flags, s->ths_timeout,
+                             dispatch_clock > s->ths_postpone_end ?
+                               0 : s->ths_postpone_end - dispatch_clock);
+  return s->ths_current_instance = si;
+}
 
 /**
  *
@@ -278,18 +301,7 @@ subscription_reschedule(void)
     }
 
     error = s->ths_testing_error;
-    if (s->ths_channel)
-      tvhtrace("subscription", "%04X: find service for %s weight %d",
-               shortid(s), channel_get_name(s->ths_channel), s->ths_weight);
-    else
-      tvhtrace("subscription", "%04X: find instance for %s weight %d",
-               shortid(s), s->ths_service->s_nicename, s->ths_weight);
-    si = service_find_instance(s->ths_service, s->ths_channel,
-                               s->ths_source,
-                               &s->ths_instances, &error, s->ths_weight,
-                               s->ths_flags, s->ths_timeout,
-                               dispatch_clock > s->ths_postpone_end ?
-                                 0 : s->ths_postpone_end - dispatch_clock);
+    si = subscription_start_instance(s, &error);
     s->ths_current_instance = si;
 
     if(si == NULL) {
@@ -325,7 +337,7 @@ subscription_reschedule(void)
 
   while ((s = LIST_FIRST(&subscriptions_remove))) {
     LIST_REMOVE(s, ths_remove_link);
-    subscription_unsubscribe(s);
+    subscription_unsubscribe(s, 0);
   }
 
   if (postpone <= 0 || postpone == INT_MAX)
@@ -487,7 +499,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
  * Delete
  */
 void
-subscription_unsubscribe(th_subscription_t *s)
+subscription_unsubscribe(th_subscription_t *s, int quiet)
 {
   service_t *t = s->ths_service;
   char buf[512];
@@ -517,7 +529,7 @@ subscription_unsubscribe(th_subscription_t *s)
              s->ths_username ?: "<N/A>",
              s->ths_client   ?: "<N/A>");
   }
-  tvhlog(LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
+  tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 
   if (t) {
     service_remove_subscriber(t, s, SM_CODE_OK);
@@ -621,6 +633,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
                                             const char *hostname,
                                             const char *username,
                                             const char *client,
+                                            int *error,
                                             service_t *service)
 {
   th_subscription_t *s;
@@ -628,6 +641,9 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
 
   assert(prch);
   assert(prch->prch_id);
+
+  if (error)
+    *error = 0;
 
   if (!service)
     ch = prch->prch_id;
@@ -640,7 +656,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     tvhtrace("subscription", "%04X: creating subscription for %s weight %d using profile %s",
              shortid(s), channel_get_name(ch), weight, pro_name);
   else
-    tvhtrace("subscription", "%04X: creating subscription for service %s weight %d sing profile %s",
+    tvhtrace("subscription", "%04X: creating subscription for service %s weight %d using profile %s",
              shortid(s), service->s_nicename, weight, pro_name);
 #endif
   s->ths_channel = ch;
@@ -656,7 +672,14 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
   }
 #endif
 
-  subscription_reschedule();
+  if (flags & SUBSCRIPTION_ONESHOT) {
+    if (subscription_start_instance(s, error) == NULL) {
+      subscription_unsubscribe(s, 1);
+      return NULL;
+    }
+  } else {
+    subscription_reschedule();
+  }
   return s;
 }
 
@@ -665,12 +688,16 @@ subscription_create_from_channel(profile_chain_t *prch,
                                  tvh_input_t *ti,
                                  unsigned int weight,
 				 const char *name,
-				 int flags, const char *hostname,
-				 const char *username, const char *client)
+				 int flags,
+				 const char *hostname,
+				 const char *username,
+				 const char *client,
+				 int *error)
 {
   assert(prch->prch_st);
   return subscription_create_from_channel_or_service
-           (prch, ti, weight, name, flags, hostname, username, client, NULL);
+           (prch, ti, weight, name, flags, hostname, username, client,
+            error, NULL);
 }
 
 /**
@@ -682,13 +709,15 @@ subscription_create_from_service(profile_chain_t *prch,
                                  unsigned int weight,
                                  const char *name,
 				 int flags,
-				 const char *hostname, const char *username, 
-				 const char *client)
+				 const char *hostname,
+				 const char *username,
+				 const char *client,
+				 int *error)
 {
   assert(prch->prch_st);
   return subscription_create_from_channel_or_service
            (prch, ti, weight, name, flags, hostname, username, client,
-            prch->prch_id);
+            error, prch->prch_id);
 }
 
 /**
@@ -704,7 +733,8 @@ subscription_create_from_mux(profile_chain_t *prch,
                              int flags,
                              const char *hostname,
                              const char *username,
-                             const char *client)
+                             const char *client,
+                             int *error)
 {
   mpegts_mux_t *mm = prch->prch_id;
   mpegts_service_t *s = mpegts_service_create_raw(mm);
@@ -714,7 +744,7 @@ subscription_create_from_mux(profile_chain_t *prch,
 
   return subscription_create_from_channel_or_service
     (prch, ti, weight, name, flags, hostname, username, client,
-     (service_t *)s);
+     error, (service_t *)s);
 }
 #endif
 
@@ -833,7 +863,7 @@ subscription_done(void)
 
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(s, &subscriptions, ths_global_link)
-    subscription_unsubscribe(s);
+    subscription_unsubscribe(s, 0);
   /* clear remaining subscriptions */
   subscription_reschedule();
   pthread_mutex_unlock(&global_lock);
@@ -972,7 +1002,7 @@ subscription_dummy_join(const char *id, int first)
   st = calloc(1, sizeof(*st));
   streaming_target_init(st, dummy_callback, NULL, 0);
   prch->prch_st = st;
-  s = subscription_create_from_service(prch, NULL, 1, "dummy", 0, NULL, NULL, "dummy");
+  s = subscription_create_from_service(prch, NULL, 1, "dummy", 0, NULL, NULL, "dummy", NULL);
 
   tvhlog(LOG_NOTICE, "subscription",
          "%04X: Dummy join %s ok", shortid(s), id);

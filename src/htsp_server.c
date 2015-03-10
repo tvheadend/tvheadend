@@ -330,7 +330,7 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
   LIST_REMOVE(hs, hs_link);
   LIST_INSERT_HEAD(&htsp->htsp_dead_subscriptions, hs, hs_link);
 
-  subscription_unsubscribe(hs->hs_s);
+  subscription_unsubscribe(hs->hs_s, 0);
 
   if(hs->hs_prch.prch_st != NULL)
     profile_chain_close(&hs->hs_prch);
@@ -2028,7 +2028,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
 					      htsp->htsp_username,
-					      htsp->htsp_clientname);
+					      htsp->htsp_clientname,
+					      NULL);
   return NULL;
 }
 

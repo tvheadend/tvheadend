@@ -226,7 +226,7 @@ static void
 rtsp_clean(session_t *rs)
 {
   if (rs->subs) {
-    subscription_unsubscribe(rs->subs);
+    subscription_unsubscribe(rs->subs, 0);
     rs->subs = NULL;
   }
   if (rs->prch.prch_pro)
@@ -293,7 +293,8 @@ rtsp_start
                                    rs->prch.prch_flags |
                                    SUBSCRIPTION_STREAMING,
                                    addrbuf, hc->hc_username,
-                                   http_arg_get(&hc->hc_args, "User-Agent"));
+                                   http_arg_get(&hc->hc_args, "User-Agent"),
+                                   NULL);
     if (!rs->subs)
       goto endrtp;
     if (rs->run) {
