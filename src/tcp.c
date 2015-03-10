@@ -695,7 +695,7 @@ tcp_server_create
 
   if(x != 0)
   {
-    tvhlog(LOG_ERR, "tcp", "bind: %s: %s", bindaddr != NULL ? bindaddr : "*", strerror(errno));
+    tvhlog(LOG_ERR, "tcp", "bind: %s:%i: %s", bindaddr != NULL ? bindaddr : "*", port, strerror(errno));
     close(fd);
     return NULL;
   }

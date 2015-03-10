@@ -1360,13 +1360,14 @@ config_check ( void )
  * Initialisation / Shutdown / Saving
  * *************************************************************************/
 
+static int config_newcfg = 0;
+
 void
-config_init ( const char *path, int backup )
+config_boot ( const char *path )
 {
   struct stat st;
   char buf[1024];
   const char *homedir = getenv("HOME");
-  int new = 0;
 
   /* Generate default */
   if (!path) {
@@ -1376,7 +1377,7 @@ config_init ( const char *path, int backup )
 
   /* Ensure directory exists */
   if (stat(path, &st)) {
-    new = 1;
+    config_newcfg = 1;
     if (makedirs(path, 0700)) {
       tvhwarn("START", "failed to create settings directory %s,"
                        " settings will not be saved", path);
@@ -1407,9 +1408,13 @@ config_init ( const char *path, int backup )
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
     config = htsmsg_create_map();
   }
+}
 
+void
+config_init ( int backup )
+{
   /* Store version number */
-  if (new) {
+  if (config_newcfg) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
     htsmsg_set_str(config, "fullversion", tvheadend_version);
     config_save();
@@ -1419,6 +1424,7 @@ config_init ( const char *path, int backup )
     if (config_migrate(backup))
       config_check();
   }
+  tvhinfo("config", "loaded");
 }
 
 void config_done ( void )

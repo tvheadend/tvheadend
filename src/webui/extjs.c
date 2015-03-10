@@ -532,9 +532,9 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
       ssave |= config_set_int("satip_dvbt", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))
-      ssave |= config_set_int("satip_dvbt", atoi(str));
+      ssave |= config_set_int("satip_dvbs", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
-      ssave |= config_set_int("satip_dvbt", atoi(str));
+      ssave |= config_set_int("satip_dvbc", atoi(str));
     if (save | ssave)
       config_save();
     if (ssave)

@@ -1029,12 +1029,14 @@ void satip_server_rtsp_init(const char *bindaddr, int port)
     rtsp_close_sessions();
     pthread_mutex_unlock(&rtsp_lock);
     tcp_server_delete(rtsp_server);
+    rtsp_server = NULL;
     reg = 1;
   }
   free(rtsp_ip);
   rtsp_ip = strdup(bindaddr);
   rtsp_port = port;
-  rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
+  if (!rtsp_server)
+    rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
   if (reg)
     tcp_server_register(rtsp_server);
 }

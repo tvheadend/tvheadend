@@ -234,11 +234,11 @@ tvheadend.miscconf = function(panel, index) {
              fieldLabel: 'Exported DVB-T Tuners'
         });
         var dvbs = new Ext.form.NumberField({
-             name: 'satip_dvbt',
+             name: 'satip_dvbs',
              fieldLabel: 'Exported DVB-S2 Tuners'
         });
         var dvbc = new Ext.form.NumberField({
-             name: 'satip_dvbt',
+             name: 'satip_dvbc',
              fieldLabel: 'Exported DVB-C Tuners'
         });
         satipPanel = new Ext.form.FieldSet({

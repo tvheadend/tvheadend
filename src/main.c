@@ -709,6 +709,7 @@ main(int argc, char **argv)
   signal(SIGILL, handle_sigill);   // see handler..
 
   uuid_init();
+  config_boot(opt_config);
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);    // bind to ports only
   htsp_init(opt_bindaddr);	     // bind to ports only
@@ -817,7 +818,7 @@ main(int argc, char **argv)
   /* Initialise configuration */
   idnode_init();
   spawn_init();
-  config_init(opt_config, opt_nobackup == 0);
+  config_init(opt_nobackup == 0);
 
   /**
    * Initialize subsystems
