@@ -1032,11 +1032,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     // Encoder uses "time_base" for bitrate calculation, but "time_base" from decoder
     // will be deprecated in the future, therefore calculate "time_base" from "framerate" if available.
     octx->ticks_per_frame = ictx->ticks_per_frame;
-    if (ictx->framerate.num != 0 && ictx->framerate.den != 0) {
-      octx->time_base     = av_inv_q(av_mul_q(ictx->framerate, av_make_q(ictx->ticks_per_frame, 1)));
-    } else {
-      octx->time_base     = ictx->time_base;
-    }
+#if LIBAVCODEC_VERSION_MICRO >= 100 && LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(56, 13, 100) // ffmpeg 2.5
+    octx->time_base       = av_inv_q(av_mul_q(ictx->framerate, av_make_q(ictx->ticks_per_frame, 1)));
+#else
+    octx->time_base       = ictx->time_base;
+#endif
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
