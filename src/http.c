@@ -801,6 +801,9 @@ http_arg_get_remove(struct http_arg_list *list, const char *name)
       TAILQ_REMOVE(list, ra, link);
       strncpy(buf, ra->val, sizeof(buf)-1);
       buf[sizeof(buf)-1] = '\0';
+      free(ra->key);
+      free(ra->val);
+      free(ra);
       return buf;
     }
   buf[0] = '\0';
@@ -972,7 +975,7 @@ http_serve_requests(http_connection_t *hc)
 {
   htsbuf_queue_t spill;
   char *argv[3], *c, *cmdline = NULL, *hdrline = NULL;
-  int n;
+  int n, r;
 
   http_arg_init(&hc->hc_args);
   http_arg_init(&hc->hc_req_args);
@@ -1017,8 +1020,7 @@ http_serve_requests(http_connection_t *hc)
       http_arg_set(&hc->hc_args, argv[0], argv[1]);
     }
 
-    if(process_request(hc, &spill))
-      break;
+    r = process_request(hc, &spill);
 
     free(hc->hc_post_data);
     hc->hc_post_data = NULL;
@@ -1034,6 +1036,9 @@ http_serve_requests(http_connection_t *hc)
     free(hc->hc_password);
     hc->hc_password = NULL;
 
+    if (r)
+      break;
+
     hc->hc_logout_cookie = 0;
 
   } while(hc->hc_keep_alive && http_server);
@@ -1041,18 +1046,6 @@ http_serve_requests(http_connection_t *hc)
 error:
   free(hdrline);
   free(cmdline);
-
-  http_arg_flush(&hc->hc_args);
-  http_arg_flush(&hc->hc_req_args);
-
-  htsbuf_queue_flush(&hc->hc_reply);
-
-  free(hc->hc_post_data);
-  hc->hc_post_data = NULL;
-  free(hc->hc_username);
-  hc->hc_username = NULL;
-  free(hc->hc_password);
-  hc->hc_password = NULL;
 }
 
 
