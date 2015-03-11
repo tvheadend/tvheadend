@@ -449,6 +449,7 @@ udp_close( udp_connection_t *uc )
   if (uc->fd >= 0)
     close(uc->fd);
   free(uc->host);
+  free(uc->peer_host);
   free(uc->ifname);
   free(uc->subsystem);
   free(uc->name);
