@@ -514,6 +514,11 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 
   LIST_REMOVE(s, ths_global_link);
 
+#if ENABLE_MPEGTS
+  if (s->ths_raw_service)
+    LIST_REMOVE(s, ths_mux_link);
+#endif
+
   if (s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
     snprintf(buf, sizeof(buf), "\"%s\" unsubscribing from \"%s\"",
@@ -537,10 +542,8 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   }
 
 #if ENABLE_MPEGTS
-  if (s->ths_raw_service) {
-    LIST_REMOVE(s, ths_mux_link);
+  if (s->ths_raw_service)
     service_destroy(s->ths_raw_service, 0);
-  }
 #endif
 
   streaming_msg_free(s->ths_start_message);
