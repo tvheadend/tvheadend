@@ -74,6 +74,7 @@ typedef struct profile_chain {
   int                       prch_flags;
   int                       prch_stop;
   int                       prch_start_pending;
+  int                       prch_sq_used;
   struct streaming_queue    prch_sq;
   struct streaming_target  *prch_post_share;
   struct streaming_target  *prch_st;

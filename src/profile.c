@@ -680,6 +680,7 @@ profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id)
   prch->prch_pro = pro;
   prch->prch_id  = id;
   streaming_queue_init(&prch->prch_sq, 0, 0);
+  prch->prch_sq_used = 1;
   LIST_INSERT_HEAD(&profile_chains, prch, prch_link);
   prch->prch_linked = 1;
   prch->prch_stop = 1;
@@ -738,6 +739,7 @@ profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize)
   prch->prch_id    = id;
   prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
   streaming_queue_init(&prch->prch_sq, SMT_PACKET, qsize);
+  prch->prch_sq_used = 1;
   prch->prch_st    = &prch->prch_sq.sq_st;
   prch->prch_muxer = muxer_create(&c);
   return 0;
@@ -772,8 +774,12 @@ profile_chain_close(profile_chain_t *prch)
 
   prch->prch_st = NULL;
 
-  if (prch->prch_linked) {
+  if (prch->prch_sq_used) {
     streaming_queue_deinit(&prch->prch_sq);
+    prch->prch_sq_used = 0;
+  }
+
+  if (prch->prch_linked) {
     LIST_REMOVE(prch, prch_link);
     prch->prch_linked = 0;
   }
@@ -782,6 +788,8 @@ profile_chain_close(profile_chain_t *prch)
     profile_release(prch->prch_pro);
     prch->prch_pro = NULL;
   }
+
+  prch->prch_id = NULL;
 }
 
 /*
