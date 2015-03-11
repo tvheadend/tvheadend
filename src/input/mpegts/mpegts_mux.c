@@ -585,6 +585,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   mpegts_mux_instance_t *mmi;
   mpegts_service_t *s;
+  th_subscription_t *ths;
   char buf[256];
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -602,6 +603,11 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   /* Remove instances */
   while ((mmi = LIST_FIRST(&mm->mm_instances))) {
     mmi->mmi_delete(mmi);
+  }
+
+  /* Remove raw subscribers */
+  while ((ths = LIST_FIRST(&mm->mm_raw_subs))) {
+    subscription_unsubscribe(ths, 0);
   }
 
   /* Delete services */
@@ -712,10 +718,12 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   mm->mm_last_mp = NULL;
   while ((mp = RB_FIRST(&mm->mm_pids))) {
     assert(mi);
-    if (mp->mp_pid == MPEGTS_FULLMUX_PID) {
+    if (mp->mp_pid == MPEGTS_FULLMUX_PID ||
+        mp->mp_pid == MPEGTS_TABLES_PID) {
       while ((mps = LIST_FIRST(&mm->mm_all_subs))) {
-        tvhdebug("mpegts", "%s - close PID fullmux subscription [%d/%p]",
-                 buf, mps->mps_type, mps->mps_owner);
+        tvhdebug("mpegts", "%s - close PID %s subscription [%d/%p]",
+                 buf, mp->mp_pid == MPEGTS_TABLES_PID ? "tables" : "fullmux",
+                 mps->mps_type, mps->mps_owner);
         LIST_REMOVE(mps, mps_svcraw_link);
         free(mps);
       }
@@ -1205,7 +1213,7 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
 {
   mpegts_pid_t skel, *mp;
 
-  if (pid > 0x2000) return NULL;
+  if (pid < 0 || pid > MPEGTS_TABLES_PID) return NULL;
 
   skel.mp_pid = pid;
   mp = RB_FIND(&mm->mm_pids, &skel, mp_link, mp_cmp);

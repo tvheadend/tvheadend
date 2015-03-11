@@ -297,7 +297,7 @@ typedef struct service {
   void (*s_enlist)(struct service *s, struct tvh_input *ti,
                    service_instance_list_t *sil, int flags);
 
-  int (*s_start_feed)(struct service *s, int instance);
+  int (*s_start_feed)(struct service *s, int instance, int flags);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -486,7 +486,7 @@ typedef struct service {
 void service_init(void);
 void service_done(void);
 
-int service_start(service_t *t, int instance, int timeout, int postpone);
+int service_start(service_t *t, int instance, int flags, int timeout, int postpone);
 void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);

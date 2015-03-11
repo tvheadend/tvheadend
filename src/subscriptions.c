@@ -262,6 +262,7 @@ subscription_reschedule(void)
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if (!s->ths_service && !s->ths_channel) continue;
+    if (s->ths_flags & SUBSCRIPTION_ONESHOT) continue;
 
     /* Postpone the tuner decision */
     /* Leave some time to wakeup tuners through DBus or so */
@@ -533,11 +534,14 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 
   if (t) {
     service_remove_subscriber(t, s, SM_CODE_OK);
-#if ENABLE_MPEGTS
-    if (t->s_type == STYPE_RAW)
-      LIST_REMOVE(s, ths_mux_link);
-#endif
   }
+
+#if ENABLE_MPEGTS
+  if (s->ths_raw_service) {
+    LIST_REMOVE(s, ths_mux_link);
+    service_destroy(s->ths_raw_service, 0);
+  }
+#endif
 
   streaming_msg_free(s->ths_start_message);
 
@@ -637,6 +641,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
                                             service_t *service)
 {
   th_subscription_t *s;
+  service_instance_t *si;
   channel_t *ch = NULL;
 
   assert(prch);
@@ -668,15 +673,18 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
 #if ENABLE_MPEGTS
   if (service && service->s_type == STYPE_RAW) {
     mpegts_mux_t *mm = prch->prch_id;
+    s->ths_raw_service = service;
     LIST_INSERT_HEAD(&mm->mm_raw_subs, s, ths_mux_link);
   }
 #endif
 
   if (flags & SUBSCRIPTION_ONESHOT) {
-    if (subscription_start_instance(s, error) == NULL) {
+    if ((si = subscription_start_instance(s, error)) == NULL) {
       subscription_unsubscribe(s, 1);
       return NULL;
     }
+    subscription_link_service(s, si->si_s);
+    subscription_show_info(s);
   } else {
     subscription_reschedule();
   }
@@ -859,11 +867,7 @@ subscription_init(void)
 void
 subscription_done(void)
 {
-  th_subscription_t *s;
-
   pthread_mutex_lock(&global_lock);
-  LIST_FOREACH(s, &subscriptions, ths_global_link)
-    subscription_unsubscribe(s, 0);
   /* clear remaining subscriptions */
   subscription_reschedule();
   pthread_mutex_unlock(&global_lock);

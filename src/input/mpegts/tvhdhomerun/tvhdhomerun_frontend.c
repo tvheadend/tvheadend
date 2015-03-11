@@ -330,6 +330,10 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, mpegts_pid_
 
   //tvhdebug("tvhdhomerun", "adding PID 0x%x to pfilter", mp->mp_pid);
 
+  /* Skip internal PIDs */
+  if (mp->mp_pid > MPEGTS_FULLMUX_PID)
+    return;
+
   /* get the current filter */
   pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
   res = hdhomerun_device_get_tuner_filter(hfe->hf_hdhomerun_tuner, &pfilter);

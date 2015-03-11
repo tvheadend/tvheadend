@@ -366,6 +366,10 @@ linuxdvb_frontend_open_pid0
   struct dmx_pes_filter_params dmx_param;
   int fd;
 
+  /* Do not open internal PIDs */
+  if (mp->mp_pid > MPEGTS_FULLMUX_PID)
+    return;
+
   /* Already opened */
   if (mp->mp_fd != -1)
     return;

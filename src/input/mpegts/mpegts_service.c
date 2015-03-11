@@ -279,7 +279,7 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
  * Start service
  */
 static int
-mpegts_service_start(service_t *t, int instance)
+mpegts_service_start(service_t *t, int instance, int flags)
 {
   int r;
   mpegts_service_t      *s = (mpegts_service_t*)t;
@@ -306,7 +306,8 @@ mpegts_service_start(service_t *t, int instance)
   if (!r) {
 
     /* Open service */
-    mmi->mmi_input->mi_open_service(mmi->mmi_input, s, 1);
+    s->s_dvb_subscription_flags = flags;
+    mmi->mmi_input->mi_open_service(mmi->mmi_input, s, flags, 1);
   }
 
   return r;
@@ -348,7 +349,7 @@ mpegts_service_refresh(service_t *t)
   lock_assert(&global_lock);
 
   /* Re-open */
-  i->mi_open_service(i, s, 0);
+  i->mi_open_service(i, s, s->s_dvb_subscription_flags, 0);
 }
 
 /*
@@ -510,7 +511,8 @@ mpegts_service_delete ( service_t *t, int delconf )
   free(ms->s_dvb_provider);
   free(ms->s_dvb_cridauth);
   free(ms->s_dvb_charset);
-  LIST_REMOVE(ms, s_dvb_mux_link);
+  if (t->s_type == STYPE_STD)
+    LIST_REMOVE(ms, s_dvb_mux_link);
   sbuf_free(&ms->s_tsbuf);
 
   // Note: the ultimate deletion and removal from the idnode list
@@ -552,6 +554,7 @@ mpegts_service_create0
   
   s->s_delete         = mpegts_service_delete;
   s->s_is_enabled     = mpegts_service_is_enabled;
+  s->s_config_save    = mpegts_service_config_save;
   s->s_enlist         = mpegts_service_enlist;
   s->s_start_feed     = mpegts_service_start;
   s->s_stop_feed      = mpegts_service_stop;
@@ -640,7 +643,7 @@ mpegts_service_raw_setsourceinfo(service_t *t, source_info_t *si)
   mpegts_service_setsourceinfo(t, si);
 
   free(si->si_service);
-  si->si_service = strdup("Raw Service");
+  si->si_service = strdup("Raw PID Subscription");
 }
 
 static int
@@ -667,12 +670,12 @@ mpegts_service_raw_update_pids(service_t *t, mpegts_apids_t *pids)
     t->s_pids = p;
     if (!pids->all && x && x->all) {
       mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
-      mpegts_input_close_pids(mi, mm, MPS_RAW, t);
+      mpegts_input_close_pids(mi, mm, t);
       for (i = 0; i < x->count; i++)
         mi->mi_open_pid(mi, mm, x->pids[i], MPS_RAW, t);
     } else {
       if (pids->all) {
-        mpegts_input_close_pids(mi, mm, MPS_RAW, t);
+        mpegts_input_close_pids(mi, mm, t);
         mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
       } else {
         mpegts_pid_compare(p, x, &add, &del);

@@ -41,6 +41,8 @@ mpegts_pid_init(mpegts_apids_t *pids, mpegts_apid_t *vals, int count)
 void
 mpegts_pid_done(mpegts_apids_t *pids)
 {
+  if (pids == NULL)
+    return;
   free(pids->pids);
   pids->pids = NULL;
   pids->alloc = pids->count = 0;

@@ -604,6 +604,9 @@ satip_frontend_open_pid
   if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner)))
     return NULL;
 
+  if (mp->mp_pid > MPEGTS_FULLMUX_PID)
+    return mp;
+
   if (pid == MPEGTS_FULLMUX_PID) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     tr = lfe->sf_req;
@@ -648,6 +651,10 @@ satip_frontend_close_pid
   satip_tune_req_t *tr;
   int change = 0;
   int mid, div, cnt;
+
+  /* Skip internal PIDs */
+  if (pid > MPEGTS_FULLMUX_PID)
+    goto finish;
 
   /* remove PID */
   if (pid == MPEGTS_FULLMUX_PID) {

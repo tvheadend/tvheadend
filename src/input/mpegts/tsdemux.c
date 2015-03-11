@@ -224,6 +224,7 @@ ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb)
   int pid;
 
   pthread_mutex_lock(&t->s_stream_mutex);
+  service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
   if (t->s_parent) {
     /* If PID is owned by parent, let parent service to
      * deliver this PID (decrambling)
@@ -231,9 +232,15 @@ ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb)
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
     st = service_stream_find(t->s_parent, pid);
   }
-  if(st == NULL)
+  if(st == NULL) {
     if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
       ts_remux(t, tsb, 0);
+    else {
+      /* No subscriber - set OK markers */
+      service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
+      t->s_streaming_live |= TSS_LIVE;
+    }
+  }
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 

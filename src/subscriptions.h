@@ -30,10 +30,11 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_STREAMING  0x004
 #define SUBSCRIPTION_RESTART    0x008
 #define SUBSCRIPTION_ONESHOT    0x010
-#define SUBSCRIPTION_INITSCAN   0x020 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN   0x040 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN   0x080 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG        0x100 ///< for mux subscriptions
+#define SUBSCRIPTION_TABLES     0x020
+#define SUBSCRIPTION_INITSCAN   0x040 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN   0x080 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN   0x100 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG        0x200 ///< for mux subscriptions
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
@@ -115,7 +116,10 @@ typedef struct th_subscription {
   /*
    * MPEG-TS mux chain
    */
+#if ENABLE_MPEGTS
+  service_t *ths_raw_service;
   LIST_ENTRY(th_subscription) ths_mux_link;
+#endif
 
 } th_subscription_t;
 

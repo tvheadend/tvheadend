@@ -370,6 +370,12 @@ service_stop(service_t *t)
   t->s_status = SERVICE_IDLE;
   tvhlog_limit_reset(&t->s_tei_log);
 
+#if ENABLE_MPEGTS
+  mpegts_pid_done(t->s_pids);
+  free(t->s_pids);
+  t->s_pids = NULL;
+#endif
+
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
@@ -639,7 +645,7 @@ ignore:
  *
  */
 int
-service_start(service_t *t, int instance, int timeout, int postpone)
+service_start(service_t *t, int instance, int flags, int timeout, int postpone)
 {
   elementary_stream_t *st;
   int r, stimeout = 10;
@@ -659,7 +665,7 @@ service_start(service_t *t, int instance, int timeout, int postpone)
   descrambler_caid_changed(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
-  if((r = t->s_start_feed(t, instance)))
+  if((r = t->s_start_feed(t, instance, flags)))
     return r;
 
   descrambler_service_start(t);
@@ -778,7 +784,7 @@ service_find_instance
 
   /* Start */
   tvhtrace("service", "will start new instance %d", si->si_instance);
-  if (service_start(si->si_s, si->si_instance, timeout, postpone)) {
+  if (service_start(si->si_s, si->si_instance, flags, timeout, postpone)) {
     tvhtrace("service", "tuning failed");
     si->si_error = SM_CODE_TUNING_FAILED;
     if (*error < SM_CODE_TUNING_FAILED)

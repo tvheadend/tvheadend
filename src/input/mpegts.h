@@ -34,6 +34,7 @@
 #define MPEGTS_TSID_NONE        0xFFFF
 #define MPEGTS_PSI_SECTION_SIZE 5000
 #define MPEGTS_FULLMUX_PID      0x2000
+#define MPEGTS_TABLES_PID       0x2001
 #define MPEGTS_PID_NONE         0xFFFF
 
 /* Types */
@@ -155,6 +156,7 @@ typedef struct mpegts_pid_sub
 #define MPS_SERVICE 0x08
 #define MPS_TABLE   0x10
 #define MPS_FTABLE  0x20
+#define MPS_TABLES  0x40
   int                       mps_type;
   void                     *mps_owner;
 } mpegts_pid_sub_t;
@@ -502,6 +504,8 @@ struct mpegts_service
 {
   service_t; // Parent
 
+  int      s_dvb_subscription_flags;
+
   /*
    * Fields defined by DVB standard EN 300 468
    */
@@ -680,7 +684,7 @@ struct mpegts_input
   int  (*mi_warm_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
-  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int first);
+  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   mpegts_pid_t *(*mi_open_pid)(mpegts_input_t*,mpegts_mux_t*,int,int,void*);
   void (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,void*);
@@ -737,7 +741,7 @@ int mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg );
 
 int mpegts_input_add_network  ( mpegts_input_t *mi, mpegts_network_t *mn );
 
-void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int init );
+void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 
 void mpegts_input_status_timer ( void *p );
@@ -887,7 +891,7 @@ void mpegts_input_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 void mpegts_input_close_pids
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int type, void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner );
 
 static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
