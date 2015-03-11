@@ -1152,19 +1152,16 @@ void
 mpegts_mux_unsubscribe_by_name
   ( mpegts_mux_t *mm, const char *name )
 {
-  mpegts_mux_instance_t *mmi;
   const service_t *t;
   th_subscription_t *s, *n;
 
-  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
-    s = LIST_FIRST(&subscriptions);
-    while (s) {
-      n = LIST_NEXT(s, ths_global_link);
-      t = s->ths_service;
-      if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
-        subscription_unsubscribe(s, 0);
-      s = n;
-    }
+  s = LIST_FIRST(&mm->mm_raw_subs);
+  while (s) {
+    n = LIST_NEXT(s, ths_global_link);
+    t = s->ths_service;
+    if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
+      subscription_unsubscribe(s, 0);
+    s = n;
   }
 }
 
