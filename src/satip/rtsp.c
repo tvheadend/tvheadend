@@ -366,12 +366,136 @@ rtsp_process_options(http_connection_t *hc)
   }
   http_arg_init(&args);
   http_arg_set(&args, "Public", "OPTIONS,DESCRIBE,SETUP,PLAY,TEARDOWN");
-  http_arg_set(&args, "Session", hc->hc_session);
+  if (hc->hc_session)
+    http_arg_set(&args, "Session", hc->hc_session);
   http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, &args);
   http_arg_flush(&args);
   return 0;
 
 error:
+  http_error(hc, HTTP_STATUS_BAD_REQUEST);
+  return 0;
+}
+
+/*
+ *
+ */
+static void
+rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
+{
+  unsigned long mono = getmonoclock();
+  int dvbt, dvbc;
+
+  htsbuf_qprintf(q, "v=0\r\n");
+  htsbuf_qprintf(q, "o=- %lu %lu IN %s %s\r\n",
+                 rs ? (unsigned long)rs->nsession : mono - 123,
+                 mono,
+                 strchr(rtsp_ip, ':') ? "IP6" : "IP4",
+                 rtsp_ip);
+
+  pthread_mutex_lock(&global_lock);
+  htsbuf_qprintf(q, "s=SatIPServer:1 %d",
+                 config_get_int("satip_dvbs", 0));
+  dvbt = config_get_int("satip_dvbt", 0);
+  dvbc = config_get_int("satip_dvbc", 0);
+  if (dvbc)
+    htsbuf_qprintf(q, " %d %d\r\n", dvbt, dvbc);
+  else if (dvbt)
+    htsbuf_qprintf(q, " %d\r\n", dvbt);
+  else
+    htsbuf_append(q, "\r\n", 1);
+  pthread_mutex_unlock(&global_lock);
+
+  htsbuf_qprintf(q, "t=0 0\r\n");
+  htsbuf_qprintf(q, "a=tool:tvheadend\r\n");
+}
+
+static void
+rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
+{
+  char buf[4096];
+
+  htsbuf_qprintf(q, "m=video 0 RTP/AVP 33\r\n");
+  if (strchr(rtsp_ip, ':'))
+    htsbuf_qprintf(q, "c=IN IP6 ::0\r\n");
+  else
+    htsbuf_qprintf(q, "c=IN IP4 0.0.0.0\r\n");
+  htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
+  if (rs->run) {
+    satip_rtp_status((void *)(intptr_t)rs->stream, buf, sizeof(buf));
+    htsbuf_qprintf(q, "a=fmtp:33 %s\r\n", buf);
+    htsbuf_qprintf(q, "a=sendonly\r\n");
+  } else {
+    htsbuf_qprintf(q, "a=inactive\r\n");
+  }
+}
+
+/*
+ *
+ */
+static int
+rtsp_process_describe(http_connection_t *hc)
+{
+  http_arg_list_t args;
+  const char *arg;
+  char *u = tvh_strdupa(hc->hc_url);
+  session_t *rs;
+  htsbuf_queue_t q;
+  char buf[96];
+  int stream;
+
+  htsbuf_queue_init(&q, 0);
+
+  arg = http_arg_get(&hc->hc_args, "Accept");
+  if (strcmp(arg, "application/sdp"))
+    goto error;
+
+  if ((u = rtsp_check_urlbase(u)) == NULL)
+    goto error;
+
+  stream = rtsp_parse_args(hc, u);
+
+  if (TAILQ_FIRST(&hc->hc_req_args))
+    goto error;
+
+  if (hc->hc_session) {
+    pthread_mutex_lock(&rtsp_lock);
+    TAILQ_FOREACH(rs, &rtsp_sessions, link)
+      if (rs->stream == stream)
+        break;
+    if (rs) {
+      rtsp_describe_header(rs, &q);
+      rtsp_describe_session(rs, &q);
+    }
+    pthread_mutex_unlock(&rtsp_lock);
+    if (rs == NULL) {
+      http_error(hc, HTTP_STATUS_BAD_SESSION);
+      return 0;
+    }
+  } else {
+    pthread_mutex_lock(&rtsp_lock);
+    rtsp_describe_header(NULL, &q);
+    TAILQ_FOREACH(rs, &rtsp_sessions, link)
+      rtsp_describe_session(rs, &q);
+    pthread_mutex_unlock(&rtsp_lock);
+  }
+  http_arg_init(&args);
+  if (hc->hc_session)
+    http_arg_set(&args, "Session", hc->hc_session);
+  if (stream > 0)
+    snprintf(buf, sizeof(buf), "rtsp://%s/stream=%i", rtsp_ip, stream);
+  else
+    snprintf(buf, sizeof(buf), "rtsp://%s", rtsp_ip);
+  http_arg_set(&args, "Content-Base", buf);
+  http_send_header(hc, HTTP_STATUS_OK, "application/sdp", q.hq_size,
+                   NULL, NULL, 0, NULL, NULL, &args);
+  tcp_write_queue(hc->hc_fd, &q);
+  http_arg_flush(&args);
+  htsbuf_queue_flush(&q);
+  return 0;
+
+error:
+  htsbuf_queue_flush(&q);
   http_error(hc, HTTP_STATUS_BAD_REQUEST);
   return 0;
 }
@@ -925,6 +1049,8 @@ rtsp_process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   switch (hc->hc_cmd) {
   case RTSP_CMD_OPTIONS:
     return rtsp_process_options(hc);
+  case RTSP_CMD_DESCRIBE:
+    return rtsp_process_describe(hc);
   case RTSP_CMD_SETUP:
   case RTSP_CMD_PLAY:
     return rtsp_process_play(hc, hc->hc_cmd == RTSP_CMD_SETUP);
@@ -972,7 +1098,6 @@ static void
 rtsp_close_session(session_t *rs)
 {
   satip_rtp_close((void *)(intptr_t)rs->stream);
-  rs->stream = 0;
   rs->run = 0;
   udp_close(rs->udp_rtp);
   rs->udp_rtp = NULL;

@@ -42,6 +42,7 @@ void satip_rtp_update(void *id, th_subscription_t *subs,
                       dvb_mux_conf_t *dmc,
                       mpegts_apids_t *pids);
 void satip_rtp_update_pids(void *id, mpegts_apids_t *pids);
+int satip_rtp_status(void *id, char *buf, int len);
 void satip_rtp_close(void *id);
 
 void satip_rtp_init(void);
