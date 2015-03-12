@@ -1,41 +1,138 @@
 <div class="hts-doc-text">
 
-<p>
-<br>
-<hr>
-<b>Buttons</b>
-<hr>
-Buttons have the following functions:
-<br><br>
-<dl>
-  <dt><b>Add</b>
-  <dd>
-  Add a new profile. You can choose from any of the types from the list.
   <p>
-  <dt><b>Delete</b>
-  <dd>
-  Delete an existing profile.
-  <p>
-  <dt><b>Save</b>
-  <dd>
-  Saves any changes.
-  <p>
-  <dt><b>Undo</b>
-  <dd>
-  Undoes any changes.
-  <p>
+    This tab is used to configure streaming profiles.
+  </p>
+
+  <hr/>
+  <b>Stream Profile Types</b>
+  <hr/>
+  
+  <dl>
+    <dt>MPEG-TS Pass-through /build-in</dt>
+    <dd>
+      MPEG-TS pass through muxer (built-in)
+    </dd>
+    
+    <dt>Matroska (mkv) /build-in</dt>
+    <dd>
+      Matroska/WebM muxer (built-in)
+    </dd>
+    
+    <dt>HTSP Stream Profile</dt>
+    <dd>
+      HTSP Default Stream Settings
+    </dd>
+    
+    <dt>MPEG-TS /av-lib</dt>
+    <dd>
+      MPEG-TS stream muxer (libav)
+    </dd>
+    
+    <dt>Matroska /av-lib</dt>
+    <dd>
+      Matroska/WebM muxer (libav)
+    </dd>
+    
+    <dt>Transcode /av-lib</dt>
+    <dd>
+      Transcode video/audio/subtitles to different codecs and containers
+    </dd>
   </dl>
 
-<p>
-<br>
-<hr>
-<b>Columns</b>
-<hr>
-The columns have the following functions:
+  <p> </p>
+  
+  <hr/>
+    <b>Transcoding Settings</b>
+  <hr/>
+    
+  <dl>
+    <dt>Container</dt>
+    <dd>
+      Container to use for transcoded streams.
+    </dd>
+    
+    <dt>Resolution</dt>
+    <dd>
+      Vertical resolution (height) of the output video stream. Horizontal resolution
+      is adjusted automatically to preserver aspect ratio.
+    </dd>
+    
+    <dt>Channels</dt>
+    <dd>
+      Channel layout for audio streams.
+    </dd>
+    
+    <dt>Language</dt>
+    <dd>
+      Currently unused.
+    </dd>
+    
+    <dt>Video Codec</dt>
+    <dd>
+      Codec for video stream.
+      <dl>
+        <dt>Do not use</dt>
+        <dd>Don't output a video stream.</dd>
+        
+        <dt>Copy codec type</dt>
+        <dd>Pass through video stream without transcoding.</dd>
+      </dl>
+    </dd>
+    
+    <dt>Video Bitrate</dt>
+    <dd>
+      Video quality/bitrate of the transcoded video stream.
+      <dl>
+        <dt>0: Automatic Setting (target quality)</dt>
+        <dd>
+          The automatic setting is dependent on the used codec. The respective
+          values used, are 5 for MPEG2 and 15 for H.264 and VP8.
+        </dd>
+        
+        <dt>1-63: Target Quality</dt>
+        <dd>
+          Use the given value to achieve average quality. A lower value results
+          in better quality. The resulting bitrate is dependent on the complexity
+          of the video stream.
+        </dd>
+        
+        <dt>&gt;63: Target Bitrate</dt>
+        <dd>
+          Use the given value to achieve average bitrate. The resulting quality
+          is dependent on the complexity of the video stream.
+        </dd>
+      </dl>
+    </dd>
+    
+    <dt>Audio Codec</dt>
+    <dd>
+      Codec for audio streams.
+      <dl>
+        <dt>Do not use</dt>
+        <dd>Don't output an audio stream.</dd>
+        
+        <dt>Copy codec type</dt>
+        <dd>Pass through audio streams without transcoding.</dd>
+      </dl>
+    </dd>
+    
+    <dt>Audio Bitrate</dt>
+    <dd>
+      Audio bitrate of the transcoded audio streams.
+    </dd>
+    
+    <dt>Subtitles Codec</dt>
+    <dd>
+      Codec for subtitles.
+      <dl>
+        <dt>Do not use</dt>
+        <dd>Don't output subtitles.</dd>
+        
+        <dt>Copy codec type</dt>
+        <dd>Pass through subtitles without transcoding.</dd>
+      </dl>
+    </dd>
+  </dl>
 
-<dl>
-  <dt><b>Stream Profile Name</b>
-  <dd>This column contains the name of Stream Profile.
-
- </dl>
 </div>
