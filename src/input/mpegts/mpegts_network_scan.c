@@ -381,7 +381,7 @@ tsid_lookup:
         mux->u.dmc_fe_qpsk.polarisation = dvb_str2pol(pol);
         mux->u.dmc_fe_qpsk.orbital_pos = satpos;
         mux->u.dmc_fe_qpsk.fec_inner = DVB_FEC_AUTO;
-        mux->dmc_fe_modulation = DVB_MOD_AUTO;
+        mux->dmc_fe_modulation = dvbs2 ? DVB_MOD_PSK_8 : DVB_MOD_QPSK;
         mux->dmc_fe_rolloff = DVB_ROLLOFF_AUTO;
         mux->dmc_fe_pls_code = 1;
 
