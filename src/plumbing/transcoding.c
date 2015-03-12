@@ -1037,7 +1037,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 #endif
 
     // set default gop size to 1 second
-    octx->gop_size        = ceil(av_q2d(av_inv_q(av_div_q(octx->time_base, av_make_q(1, octx->ticks_per_frame)))));
+    octx->gop_size        = ceil(av_q2d(av_inv_q(av_div_q(octx->time_base, (AVRational){1, octx->ticks_per_frame}))));
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
