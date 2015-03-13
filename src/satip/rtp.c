@@ -48,6 +48,7 @@ typedef struct satip_rtp_session {
   int um_packet;
   uint16_t seq;
   signal_status_t sig;
+  int sig_lock;
   pthread_mutex_t lock;
 } satip_rtp_session_t;
 
@@ -114,6 +115,8 @@ satip_rtp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
   struct iovec *v = rtp->um_iovec + rtp->um_packet;
 
   assert((len % 188) == 0);
+  if (len > 0)
+    rtp->sig_lock = 1;
   for ( ; len >= 188 ; data += 188, len -= 188) {
     pid = ((data[1] & 0x1f) << 8) | data[2];
     if (pid != last_pid && !rtp->pids.all) {
@@ -372,8 +375,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   const char *bw, *tmode, *gi, *plp, *t2id, *sm, *c2tft, *ds, *specinv;
   int i, j, r, level = 0, lock = 0, quality = 0;
 
-  if (rtp->sig.snr > 0)
-    lock = 1;
+  lock = rtp->sig_lock;
   switch (rtp->sig.signal_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
     level = MIN(240, MAX(0, (rtp->sig.signal * 245) / 0xffff));
@@ -382,6 +384,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     level = MIN(240, MAX(0, (rtp->sig.signal + 90000) / 375));
     break;
   default:
+    level = lock ? 10 : 0;
     break;
   }
   switch (rtp->sig.snr_scale) {
@@ -392,6 +395,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     quality = MIN(15, MAX(0, (rtp->sig.snr / 2000)));
     break;
   default:
+    quality = lock ? 1 : 0;
     break;
   }
 

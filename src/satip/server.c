@@ -60,11 +60,10 @@ satip_server_http_xml(http_connection_t *hc)
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
 <modelName>TVHeadend SAT>IP</modelName>\n\
-<modelNumber>1</modelNumber>\n\
-<modelURL>http://tvheadend.org</modelURL>\n\
+<modelNumber>1.0</modelNumber>\n\
+<modelURL></modelURL>\n\
 <serialNumber>123456</serialNumber>\n\
 <UDN>uuid:%s</UDN>\n\
-<UPC>TVHeadend %s</UPC>\n\
 <iconList>\n\
 <icon>\n\
 <mimetype>image/png</mimetype>\n\
@@ -74,7 +73,7 @@ satip_server_http_xml(http_connection_t *hc)
 <url>http://%s:%d/static/satip-icon40.png</url>\n\
 </icon>\n\
 <icon>\n\
-<mimetype>image/jpg</mimetype>\n\
+<mimetype>image/jpeg</mimetype>\n\
 <width>40</width>\n\
 <height>40</height>\n\
 <depth>16</depth>\n\
@@ -88,7 +87,7 @@ satip_server_http_xml(http_connection_t *hc)
 <url>http://%s:%d/static/satip-icon120.png</url>\n\
 </icon>\n\
 <icon>\n\
-<mimetype>image/jpg</mimetype>\n\
+<mimetype>image/jpeg</mimetype>\n\
 <width>120</width>\n\
 <height>120</height>\n\
 <depth>16</depth>\n\
@@ -100,7 +99,7 @@ satip_server_http_xml(http_connection_t *hc)
 </device>\n\
 </root>\n"
 
-  char buf[sizeof(MSG) + 1024], buf2[16];
+  char buf[sizeof(MSG) + 1024], buf2[64];
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
@@ -122,17 +121,17 @@ satip_server_http_xml(http_connection_t *hc)
     } else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
       dvbc++;
   }
-  if (dvbt && (i = config_get_int("satip_dvbt", 0)) > 0) {
-    htsbuf_qprintf(&q, "DVBT-%d", i);
-    delim++;
-  } else {
-    dvbt = 0;
-  }
   if (dvbs && (i = config_get_int("satip_dvbs", 0)) > 0) {
     htsbuf_qprintf(&q, "%sDVBS2-%d", delim ? "," : "", i);
     delim++;
   } else {
     dvbs = 0;
+  }
+  if (dvbt && (i = config_get_int("satip_dvbt", 0)) > 0) {
+    htsbuf_qprintf(&q, "%sDVBT-%d", delim ? "," : "", i);
+    delim++;
+  } else {
+    dvbt = 0;
   }
   if (dvbc && (i = config_get_int("satip_dvbc", 0)) > 0) {
     htsbuf_qprintf(&q, "%sDVBC-%d", delim ? "," : "", i);
@@ -153,13 +152,14 @@ satip_server_http_xml(http_connection_t *hc)
             buf, dvbt + dvbs + dvbc ? "tuner settings - global config" : "network assignment");
   }
 
-  buf2[0] = '\0';
   if (satip_server_rtsp_port != 554)
-    snprintf(buf2, sizeof(buf2), ":%d", satip_server_rtsp_port);
+    snprintf(buf2, sizeof(buf2), ":%d %s", satip_server_rtsp_port, satip_server_uuid + 26);
+  else
+    snprintf(buf2, sizeof(buf2), " %s", satip_server_uuid + 26);
 
   snprintf(buf, sizeof(buf), MSG,
            buf2, tvheadend_version,
-           satip_server_uuid, tvheadend_version,
+           satip_server_uuid,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
@@ -170,8 +170,10 @@ satip_server_http_xml(http_connection_t *hc)
   free(devicelist);
 
   http_arg_init(&args);
-  snprintf(buf2, sizeof(buf2), "%d", satip_server_rtsp_port);
-  http_arg_set(&args, "X-SATIP-RTSP-Port", buf2);
+  if (satip_server_rtsp_port != 554) {
+    snprintf(buf2, sizeof(buf2), "%d", satip_server_rtsp_port);
+    http_arg_set(&args, "X-SATIP-RTSP-Port", buf2);
+  }
   if (srcs) {
     snprintf(buf2, sizeof(buf2), "%d", srcs);
     http_arg_set(&args, "X-SATIP-Sources", buf2);
@@ -405,9 +407,9 @@ satips_upnp_discovery_received
     if (http_tokenize(ptr, argv, 2, ':') == 2) {
       if (strcmp(argv[0], "ST") == 0)
         st = argv[1];
-      else if (strcmp(argv[0], "HOST") == 0)
+      else if (strcasecmp(argv[0], "HOST") == 0)
         host = argv[1];
-      else if (strcmp(argv[0], "MAN") == 0)
+      else if (strcasecmp(argv[0], "MAN") == 0)
         man = argv[1];
       else if (strcmp(argv[0], "DEVICEID.SES.COM") == 0)
         deviceid = argv[1];

@@ -949,6 +949,8 @@ http_parse_get_args(http_connection_t *hc, char *args)
 {
   char *k, *v;
 
+  if (args && *args == '&')
+    args++;
   while(args) {
     k = args;
     if((args = strchr(args, '=')) == NULL)
@@ -1008,13 +1010,18 @@ http_serve_requests(http_connection_t *hc)
         goto error;
 
       if(!*hdrline)
-	      break; /* header complete */
+        break; /* header complete */
 
-      if((n = http_tokenize(hdrline, argv, 2, -1)) < 2)
-	      continue;
-
-      if((c = strrchr(argv[0], ':')) == NULL)
-	      goto error;
+      if((n = http_tokenize(hdrline, argv, 2, -1)) < 2) {
+        if ((c = strchr(hdrline, ':')) != NULL) {
+          *c = '\0';
+          argv[0] = hdrline;
+          argv[1] = c + 1;
+        } else {
+          continue;
+        }
+      } else if((c = strrchr(argv[0], ':')) == NULL)
+        goto error;
 
       *c = 0;
       http_arg_set(&hc->hc_args, argv[0], argv[1]);
