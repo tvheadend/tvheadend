@@ -1372,7 +1372,7 @@ handle_single(capmt_t *capmt)
        }
         if (adapter < MAX_CA) {
           cmd_size = capmt_msg_size(capmt, &buffer, offset);
-          if (cmd_size >= 0)
+          if (cmd_size > 0)
             break;
         }
         sbuf_cut(&buffer, 1);
