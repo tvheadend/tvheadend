@@ -370,12 +370,6 @@ service_stop(service_t *t)
   t->s_status = SERVICE_IDLE;
   tvhlog_limit_reset(&t->s_tei_log);
 
-#if ENABLE_MPEGTS
-  mpegts_pid_done(t->s_pids);
-  free(t->s_pids);
-  t->s_pids = NULL;
-#endif
-
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
@@ -943,6 +937,7 @@ service_create0
 
   return t;
 }
+
 
 /**
  *

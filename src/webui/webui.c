@@ -807,6 +807,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   void *tcp_id;
   char *p, *saveptr;
   mpegts_apids_t pids;
+  mpegts_service_t *ms;
   int res = HTTP_STATUS_SERVICE, i;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
@@ -820,7 +821,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   else
     qsize = 10000000;
 
-  mpegts_pid_init(&pids, NULL, 0);
+  mpegts_pid_init(&pids);
   if ((str = http_arg_get(&hc->hc_req_args, "pids"))) {
     p = tvh_strdupa(str);
     p = strtok_r(p, ",", &saveptr);
@@ -844,7 +845,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
     pids.all = 1;
   }
 
-  if (!profile_chain_raw_open(&prch, mm, qsize)) {
+  if (!profile_chain_raw_open(&prch, mm, qsize, 1)) {
 
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
 
@@ -856,7 +857,8 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
                                      NULL);
     if (s) {
       name = tvh_strdupa(s->ths_title);
-      if (s->ths_service->s_update_pids(s->ths_service, &pids) == 0) {
+      ms = (mpegts_service_t *)s->ths_service;
+      if (ms->s_update_pids(ms, &pids) == 0) {
         pthread_mutex_unlock(&global_lock);
         http_stream_run(hc, &prch, name, s);
         pthread_mutex_lock(&global_lock);

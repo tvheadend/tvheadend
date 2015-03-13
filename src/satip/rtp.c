@@ -260,7 +260,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   rtp->fd_rtcp = fd_rtcp;
   rtp->subs = subs;
   rtp->sq = sq;
-  mpegts_pid_init(&rtp->pids, NULL, pids->count);
+  mpegts_pid_init(&rtp->pids);
   mpegts_pid_copy(&rtp->pids, pids);
   udp_multisend_init(&rtp->um, RTP_PACKETS, RTP_PAYLOAD, &rtp->um_iovec);
   satip_rtp_header(rtp);

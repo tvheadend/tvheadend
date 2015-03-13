@@ -51,6 +51,7 @@ static void
 ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
+  mpegts_service_t *m;
   int off, pusi, cc, error;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
@@ -83,6 +84,13 @@ ts_recv_packet0
 
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb, error);
+
+  LIST_FOREACH(m, &t->s_masters, s_masters_link) {
+    pthread_mutex_lock(&t->s_stream_mutex);
+    if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+      ts_remux(t, tsb, error);
+    pthread_mutex_unlock(&t->s_stream_mutex);
+  }
 
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
 
@@ -220,19 +228,20 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb)
 void
 ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb)
 {
-  elementary_stream_t *st = NULL;
-  int pid;
+  int pid, parent = 0;
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
-  if (t->s_parent) {
-    /* If PID is owned by parent, let parent service to
+  if (!LIST_EMPTY(&t->s_slaves)) {
+    /* If PID is owned by a slave service, let parent service to
      * deliver this PID (decrambling)
      */
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    st = service_stream_find(t->s_parent, pid);
+    parent = mpegts_pid_exists(t->s_slaves_pids, pid);
+    service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
+    t->s_streaming_live |= TSS_LIVE;
   }
-  if(st == NULL) {
+  if(!parent) {
     if (streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
       ts_remux(t, tsb, 0);
     else {

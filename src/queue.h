@@ -30,6 +30,12 @@
 #define	LIST_NEXT(elm, field)		((elm)->field.le_next)
 #endif
 
+#ifndef LIST_SAFE_REMOVE
+#define LIST_SAFE_REMOVE(elm, field) \
+        if ((elm)->field.le_next != NULL || (elm)->field.le_prev != NULL) \
+                LIST_REMOVE(elm, field)
+#endif
+
 #ifndef LIST_INSERT_BEFORE
 #define	LIST_INSERT_BEFORE(listelm, elm, field) do {			\
 	(elm)->field.le_prev = (listelm)->field.le_prev;		\

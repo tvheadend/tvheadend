@@ -529,6 +529,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       ssave |= config_set_int("satip_rtsp", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_weight")))
       ssave |= config_set_int("satip_weight", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_descramble")))
+      ssave |= config_set_int("satip_descramble", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
       ssave |= config_set_int("satip_dvbt", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))

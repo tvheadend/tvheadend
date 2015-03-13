@@ -20,21 +20,10 @@
 #include "input.h"
 
 int
-mpegts_pid_init(mpegts_apids_t *pids, mpegts_apid_t *vals, int count)
+mpegts_pid_init(mpegts_apids_t *pids)
 {
-  int alloc = count + 32;
-  mpegts_apid_t *p = calloc(alloc, sizeof(*pids));
-
-  if (p == NULL)
-    return -1;
-  pids->pids = p;
-  pids->alloc = alloc;
-  pids->count = 0;
-  pids->all = 0;
-  if (vals) {
-    memcpy(p, vals, count * sizeof(*pids));
-    pids->count = count;
-  }
+  assert(pids);
+  memset(pids, 0, sizeof(*pids));
   return 0;
 }
 
@@ -46,6 +35,22 @@ mpegts_pid_done(mpegts_apids_t *pids)
   free(pids->pids);
   pids->pids = NULL;
   pids->alloc = pids->count = 0;
+}
+
+mpegts_apids_t *
+mpegts_pid_alloc(void)
+{
+  return calloc(1, sizeof(mpegts_apids_t));
+}
+
+void
+mpegts_pid_destroy(mpegts_apids_t **pids)
+{
+  if (pids) {
+    mpegts_pid_done(*pids);
+    free(*pids);
+    *pids = NULL;
+  }
 }
 
 void
@@ -165,8 +170,7 @@ mpegts_pid_compare(mpegts_apids_t *dst, mpegts_apids_t *src,
   assert(dst);
   assert(add);
   assert(del);
-  if (mpegts_pid_init(add, NULL, 0) ||
-      mpegts_pid_init(del, NULL, 0))
+  if (mpegts_pid_init(add) || mpegts_pid_init(del))
     return -1;
   if (src == NULL) {
     mpegts_pid_copy(add, dst);

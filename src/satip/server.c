@@ -474,15 +474,17 @@ satips_upnp_discovery_destroy(upnp_service_t *upnp)
  */
 void satip_server_config_changed(void)
 {
-  int rtsp_port;
+  int rtsp_port, descramble;
 
   if (!satip_server_rtsp_port_locked) {
     rtsp_port = config_get_int("satip_rtsp", 0);
     satip_server_rtsp_port = rtsp_port;
     if (rtsp_port > 0) {
-      satip_server_rtsp_init(http_server_ip, rtsp_port);
-      tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+      descramble = config_get_int("satip_descramble", 1);
+      satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
+      tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, Descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
               http_server_ip, http_server_port, http_server_ip, rtsp_port,
+              descramble,
               config_get_int("satip_dvbt", 0),
               config_get_int("satip_dvbs", 0),
               config_get_int("satip_dvbc", 0));
@@ -503,6 +505,7 @@ void satip_server_init(int rtsp_port)
 {
   struct sockaddr_storage http;
   char http_ip[128];
+  int descramble;
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
@@ -526,10 +529,13 @@ void satip_server_init(int rtsp_port)
   if (rtsp_port <= 0)
     return;
 
-  satip_server_rtsp_init(http_server_ip, rtsp_port);
+  descramble = config_get_int("satip_descramble", 1);
 
-  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+  satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
+
+  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, Descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
           http_server_ip, http_server_port, http_server_ip, rtsp_port,
+          descramble,
           config_get_int("satip_dvbt", 0),
           config_get_int("satip_dvbs", 0),
           config_get_int("satip_dvbc", 0));
@@ -546,6 +552,9 @@ void satip_server_register(void)
 
   if (config_set_int("satip_rtsp", satip_server_rtsp_port))
     save = 1;
+
+  if (config_get_int("satip_descramble", -1) < 0)
+    config_set_int("satip_descramble", 1);
 
   if (config_get_int("satip_weight", 0) <= 0)
     if (config_set_int("satip_weight", 100))

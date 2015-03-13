@@ -45,7 +45,8 @@ tvheadend.miscconf = function(panel, index) {
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
         'prefer_picon', 'chiconpath', 'piconpath',
-        'satip_rtsp', 'satip_weight', 'satip_dvbt', 'satip_dvbs', 'satip_dvbc'
+        'satip_rtsp', 'satip_weight', 'satip_descramble',
+        'satip_dvbt', 'satip_dvbs', 'satip_dvbc'
     ]);
 
     /* ****************************************************************
@@ -229,6 +230,10 @@ tvheadend.miscconf = function(panel, index) {
              name: 'satip_weight',
              fieldLabel: 'Subscription Weight'
         });
+        var descramble = new Ext.form.NumberField({
+             name: 'satip_descramble',
+             fieldLabel: 'Descramble Services (Limit Per Mux)'
+        });
         var dvbt = new Ext.form.NumberField({
              name: 'satip_dvbt',
              fieldLabel: 'Exported DVB-T Tuners'
@@ -247,7 +252,7 @@ tvheadend.miscconf = function(panel, index) {
             autoHeight: true,
             collapsible: true,
             animCollapse: true,
-            items: [rtsp, weight, dvbt, dvbs, dvbc]
+            items: [rtsp, weight, descramble, dvbt, dvbs, dvbc]
         });
     }
 

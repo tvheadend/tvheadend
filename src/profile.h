@@ -144,7 +144,7 @@ int
 profile_chain_open(profile_chain_t *prch,
                    muxer_config_t *m_cfg, int flags, size_t qsize);
 void profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id);
-int  profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize);
+int  profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer);
 void profile_chain_close(profile_chain_t *prch);
 
 static inline profile_t *profile_find_by_uuid(const char *uuid)

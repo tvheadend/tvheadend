@@ -533,6 +533,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
 {
   elementary_stream_t *st;
   mpegts_apids_t *pids;
+  mpegts_service_t *s2;
   int i;
 
   /* Add to list */
@@ -545,15 +546,30 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
   /* Register PIDs */
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
+
+    pids = mpegts_pid_alloc();
+
     mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
     mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
+    mpegts_pid_add(pids, s->s_pmt_pid);
+    mpegts_pid_add(pids, s->s_pcr_pid);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link) {
       if (st->es_type != SCT_CA) {
         st->es_pid_opened = 1;
         mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
+        mpegts_pid_add(pids, st->es_pid);
       }
     }
+
+    LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
+      pthread_mutex_lock(&s2->s_stream_mutex);
+      mpegts_pid_add_group(s2->s_slaves_pids, pids);
+      pthread_mutex_unlock(&s2->s_stream_mutex);
+    }
+
+    mpegts_pid_destroy(&pids);
+
   } else {
     if ((pids = s->s_pids) != NULL) {
       if (pids->all) {
@@ -583,6 +599,8 @@ void
 mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
   elementary_stream_t *st;
+  mpegts_apids_t *pids;
+  mpegts_service_t *s2;
 
   /* Close PMT table */
   if (s->s_type == STYPE_STD && s->s_pmt_mon)
@@ -599,15 +617,30 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   /* Close PID */
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
+
+    pids = mpegts_pid_alloc();
+
     mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
     mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
+    mpegts_pid_del(pids, s->s_pmt_pid);
+    mpegts_pid_del(pids, s->s_pcr_pid);
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
       if (st->es_pid_opened) {
         st->es_pid_opened = 0;
         mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
+        mpegts_pid_del(pids, st->es_pid);
       }
     }
+
+    LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
+      pthread_mutex_lock(&s2->s_stream_mutex);
+      mpegts_pid_del_group(s2->s_slaves_pids, pids);
+      pthread_mutex_unlock(&s2->s_stream_mutex);
+    }
+
+    mpegts_pid_destroy(&pids);
+
   } else {
     mpegts_input_close_pids(mi, s->s_dvb_mux, s);
   }

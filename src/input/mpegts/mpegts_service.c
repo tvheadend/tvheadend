@@ -515,6 +515,14 @@ mpegts_service_delete ( service_t *t, int delconf )
     LIST_REMOVE(ms, s_dvb_mux_link);
   sbuf_free(&ms->s_tsbuf);
 
+  /* Remove master/slave linking */
+  LIST_SAFE_REMOVE(ms, s_masters_link);
+  LIST_SAFE_REMOVE(ms, s_slaves_link);
+
+  /* Remove PID lists */
+  mpegts_pid_destroy(&ms->s_pids);
+  mpegts_pid_destroy(&ms->s_slaves_pids);
+
   // Note: the ultimate deletion and removal from the idnode list
   //       is done in service_destroy
 }
@@ -647,11 +655,10 @@ mpegts_service_raw_setsourceinfo(service_t *t, source_info_t *si)
 }
 
 static int
-mpegts_service_raw_update_pids(service_t *t, mpegts_apids_t *pids)
+mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
 {
-  mpegts_service_t *ms = (mpegts_service_t *)t;
-  mpegts_input_t *mi = ms->s_dvb_active_input;
-  mpegts_mux_t *mm = ms->s_dvb_mux;
+  mpegts_input_t *mi = t->s_dvb_active_input;
+  mpegts_mux_t *mm = t->s_dvb_mux;
   mpegts_apids_t *p, *x;
   mpegts_apids_t add, del;
   int i;
@@ -659,7 +666,7 @@ mpegts_service_raw_update_pids(service_t *t, mpegts_apids_t *pids)
   lock_assert(&global_lock);
   if (pids) {
     p = calloc(1, sizeof(*p));
-    mpegts_pid_init(p, NULL, 0);
+    mpegts_pid_init(p);
     mpegts_pid_copy(p, pids);
   } else
     p = NULL;
@@ -702,6 +709,28 @@ mpegts_service_raw_update_pids(service_t *t, mpegts_apids_t *pids)
   return 0;
 }
 
+static int
+mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
+{
+  pthread_mutex_lock(&master->s_stream_mutex);
+  assert(slave->s_status == SERVICE_IDLE);
+  LIST_INSERT_HEAD(&slave->s_masters, master, s_masters_link);
+  LIST_INSERT_HEAD(&master->s_slaves, slave, s_slaves_link);
+  pthread_mutex_unlock(&master->s_stream_mutex);
+  return 0;
+}
+
+static int
+mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
+{
+  pthread_mutex_lock(&master->s_stream_mutex);
+  assert(slave->s_status == SERVICE_IDLE);
+  LIST_SAFE_REMOVE(master, s_masters_link);
+  LIST_SAFE_REMOVE(slave, s_slaves_link);
+  pthread_mutex_unlock(&master->s_stream_mutex);
+  return 0;
+}
+
 mpegts_service_t *
 mpegts_service_create_raw ( mpegts_mux_t *mm )
 {
@@ -736,6 +765,8 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
   s->s_update_pids    = mpegts_service_raw_update_pids;
+  s->s_link           = mpegts_service_link;
+  s->s_unlink         = mpegts_service_unlink;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   free(s->s_nicename);

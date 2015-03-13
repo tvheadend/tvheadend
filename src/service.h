@@ -311,10 +311,6 @@ typedef struct service {
 
   void (*s_delete)(struct service *t, int delconf);
 
-#if ENABLE_MPEGTS
-  int (*s_update_pids)(struct service *t, struct mpegts_apids *pids);
-#endif
-
   /**
    * Channel info
    */
@@ -458,10 +454,6 @@ typedef struct service {
   struct elementary_stream_queue s_filt_components;
   int s_last_pid;
   elementary_stream_t *s_last_es;
-#if ENABLE_MPEGTS
-  struct service *s_parent;
-  struct mpegts_apids *s_pids;
-#endif
 
   /**
    * Delivery pad, this is were we finally deliver all streaming output

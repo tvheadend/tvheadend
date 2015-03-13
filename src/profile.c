@@ -729,19 +729,21 @@ profile_chain_open(profile_chain_t *prch,
  *
  */
 int
-profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize)
+profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer)
 {
   muxer_config_t c;
 
-  memset(&c, 0, sizeof(c));
-  c.m_type = MC_RAW;
   memset(prch, 0, sizeof(*prch));
   prch->prch_id    = id;
   prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
   streaming_queue_init(&prch->prch_sq, SMT_PACKET, qsize);
   prch->prch_sq_used = 1;
   prch->prch_st    = &prch->prch_sq.sq_st;
-  prch->prch_muxer = muxer_create(&c);
+  if (muxer) {
+    memset(&c, 0, sizeof(c));
+    c.m_type = MC_RAW;
+    prch->prch_muxer = muxer_create(&c);
+  }
   return 0;
 }
 

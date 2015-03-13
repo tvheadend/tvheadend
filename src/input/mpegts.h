@@ -87,8 +87,10 @@ struct mpegts_apids {
   int all;
 };
 
-int mpegts_pid_init ( mpegts_apids_t *pids, mpegts_apid_t *vals, int count );
+int mpegts_pid_init ( mpegts_apids_t *pids );
 void mpegts_pid_done ( mpegts_apids_t *pids );
+mpegts_apids_t *mpegts_pid_alloc ( void );
+void mpegts_pid_destroy ( mpegts_apids_t **pids );
 void mpegts_pid_reset ( mpegts_apids_t *pids );
 int mpegts_pid_add ( mpegts_apids_t *pids, mpegts_apid_t pid );
 int mpegts_pid_add_group ( mpegts_apids_t *pids, mpegts_apids_t *vals );
@@ -504,7 +506,18 @@ struct mpegts_service
 {
   service_t; // Parent
 
+  int (*s_update_pids)(mpegts_service_t *t, struct mpegts_apids *pids);
+  int (*s_link)(mpegts_service_t *master, mpegts_service_t *slave);
+  int (*s_unlink)(mpegts_service_t *master, mpegts_service_t *slave);
+
   int      s_dvb_subscription_flags;
+
+  mpegts_apids_t             *s_pids;
+  LIST_HEAD(, mpegts_service) s_masters;
+  LIST_ENTRY(mpegts_service)  s_masters_link;
+  LIST_HEAD(, mpegts_service) s_slaves;
+  LIST_ENTRY(mpegts_service)  s_slaves_link;
+  mpegts_apids_t             *s_slaves_pids;
 
   /*
    * Fields defined by DVB standard EN 300 468

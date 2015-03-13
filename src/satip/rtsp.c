@@ -55,6 +55,7 @@ static uint32_t session_number;
 static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static int rtsp_port = -1;
+static int rtsp_descramble = 1;
 static void *rtsp_server = NULL;
 static TAILQ_HEAD(,session) rtsp_sessions;
 static pthread_mutex_t rtsp_lock;
@@ -117,7 +118,7 @@ rtsp_new_session(int delsys, uint32_t nsession, int session)
     if (session_number == 0)
       session_number += 9876;
   }
-  mpegts_pid_init(&rs->pids, NULL, 0);
+  mpegts_pid_init(&rs->pids);
   TAILQ_INSERT_TAIL(&rtsp_sessions, rs, link);
   return rs;
 }
@@ -247,7 +248,7 @@ rtsp_start
   mpegts_network_t *mn, *mn2;
   dvb_network_t *ln;
   dvb_mux_t *mux;
-  service_t *svc;
+  mpegts_service_t *svc;
   char buf[384];
   int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0;
 
@@ -285,7 +286,7 @@ rtsp_start
     rtsp_clean(rs);
     rs->mux = mux;
     rs->mux_created = created;
-    if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize))
+    if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize, 0))
       goto endclean;
     rs->subs = subscription_create_from_mux(&rs->prch, NULL,
                                    config_get_int("satip_weight", 100),
@@ -304,7 +305,7 @@ rtsp_start
     }
   } else {
 pids:
-    svc = rs->subs->ths_service;
+    svc = (mpegts_service_t *)rs->subs->ths_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
   }
@@ -317,7 +318,7 @@ pids:
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
                     rs->frontend, rs->findex, &rs->mux->lm_tuning,
                     &rs->pids);
-    svc = rs->subs->ths_service;
+    svc = (mpegts_service_t *)rs->subs->ths_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->run = 1;
   }
@@ -728,9 +729,9 @@ rtsp_process_play(http_connection_t *hc, int setup)
   char buf[256], addrbuf[50];
   http_arg_list_t args;
 
-  mpegts_pid_init(&pids, NULL, 0);
-  mpegts_pid_init(&addpids, NULL, 0);
-  mpegts_pid_init(&delpids, NULL, 0);
+  mpegts_pid_init(&pids);
+  mpegts_pid_init(&addpids);
+  mpegts_pid_init(&delpids);
 
   http_arg_init(&args);
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
@@ -1142,7 +1143,7 @@ rtsp_close_sessions(void)
 /*
  *
  */
-void satip_server_rtsp_init(const char *bindaddr, int port)
+void satip_server_rtsp_init(const char *bindaddr, int port, int descramble)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1169,6 +1170,7 @@ void satip_server_rtsp_init(const char *bindaddr, int port)
   free(rtsp_ip);
   rtsp_ip = strdup(bindaddr);
   rtsp_port = port;
+  rtsp_descramble = descramble;
   if (!rtsp_server)
     rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
   if (reg)
