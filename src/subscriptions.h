@@ -25,16 +25,18 @@ struct profile_chain;
 
 extern struct th_subscription_list subscriptions;
 
-#define SUBSCRIPTION_RAW_MPEGTS 0x001
-#define SUBSCRIPTION_NONE       0x002
-#define SUBSCRIPTION_STREAMING  0x004
-#define SUBSCRIPTION_RESTART    0x008
-#define SUBSCRIPTION_ONESHOT    0x010
-#define SUBSCRIPTION_TABLES     0x020
-#define SUBSCRIPTION_INITSCAN   0x040 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN   0x080 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN   0x100 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG        0x200 ///< for mux subscriptions
+#define SUBSCRIPTION_NONE       0x000
+#define SUBSCRIPTION_MPEGTS     0x001
+#define SUBSCRIPTION_PACKET     0x002
+#define SUBSCRIPTION_TYPE_MASK  0x00f
+#define SUBSCRIPTION_STREAMING  0x010
+#define SUBSCRIPTION_RESTART    0x020
+#define SUBSCRIPTION_ONESHOT    0x040
+#define SUBSCRIPTION_TABLES     0x080
+#define SUBSCRIPTION_INITSCAN   0x100 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN   0x200 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN   0x400 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG        0x800 ///< for mux subscriptions
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling

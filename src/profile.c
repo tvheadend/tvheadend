@@ -735,7 +735,7 @@ profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer)
 
   memset(prch, 0, sizeof(*prch));
   prch->prch_id    = id;
-  prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
+  prch->prch_flags = SUBSCRIPTION_MPEGTS;
   streaming_queue_init(&prch->prch_sq, SMT_PACKET, qsize);
   prch->prch_sq_used = 1;
   prch->prch_st    = &prch->prch_sq.sq_st;
@@ -833,6 +833,7 @@ profile_htsp_work(profile_chain_t *prch,
     prsh->prsh_tsfix = tsfix_create(&prsh->prsh_input);
 
   prch->prch_share = prsh->prsh_tsfix;
+  prch->prch_flags = SUBSCRIPTION_PACKET;
   streaming_target_init(&prch->prch_input, profile_input, prch, 0);
   prch->prch_st = &prch->prch_input;
   return 0;
@@ -915,7 +916,7 @@ static int
 profile_mpegts_pass_open(profile_chain_t *prch,
                          muxer_config_t *m_cfg, int flags, size_t qsize)
 {
-  prch->prch_flags = SUBSCRIPTION_RAW_MPEGTS;
+  prch->prch_flags = SUBSCRIPTION_MPEGTS;
 
   prch->prch_sq.sq_st.st_reject_filter = SMT_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
@@ -994,6 +995,7 @@ profile_matroska_open(profile_chain_t *prch,
 {
   streaming_target_t *dst;
 
+  prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
   dst = prch->prch_gh    = globalheaders_create(&prch->prch_sq.sq_st);
@@ -1066,6 +1068,7 @@ profile_libav_mpegts_open(profile_chain_t *prch,
 {
   int r;
 
+  prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
   r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
@@ -1146,6 +1149,7 @@ profile_libav_matroska_open(profile_chain_t *prch,
 {
   int r;
 
+  prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
   r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
