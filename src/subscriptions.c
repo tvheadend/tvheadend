@@ -584,10 +584,8 @@ subscription_create
 
   TAILQ_INIT(&s->ths_instances);
 
-  assert(flags & (SUBSCRIPTION_NONE|SUBSCRIPTION_MPEGTS|SUBSCRIPTION_PACKET));
-
   switch (flags & SUBSCRIPTION_TYPE_MASK) {
-  default:
+  case SUBSCRIPTION_NONE:
     reject |= SMT_TO_MASK(SMT_PACKET) | SMT_TO_MASK(SMT_MPEGTS);
     break;
   case SUBSCRIPTION_MPEGTS:
@@ -596,6 +594,8 @@ subscription_create
   case SUBSCRIPTION_PACKET:
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
     break;
+  default:
+    abort();
   }
 
   if (!cb) cb = subscription_input_direct;
