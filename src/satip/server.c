@@ -482,7 +482,7 @@ void satip_server_config_changed(void)
     if (rtsp_port > 0) {
       descramble = config_get_int("satip_descramble", 1);
       satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
-      tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, Descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+      tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
               http_server_ip, http_server_port, http_server_ip, rtsp_port,
               descramble,
               config_get_int("satip_dvbt", 0),
@@ -533,7 +533,7 @@ void satip_server_init(int rtsp_port)
 
   satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
 
-  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, Descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
           http_server_ip, http_server_port, http_server_ip, rtsp_port,
           descramble,
           config_get_int("satip_dvbt", 0),
