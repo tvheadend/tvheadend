@@ -11,6 +11,11 @@
  * Complete missing LIST-ops
  */
 
+#ifndef LIST_ENTRY_INIT
+#define LIST_ENTRY_INIT(elm, field) \
+        (elm)->field.le_next = NULL, (elm)->field.le_prev = NULL
+#endif
+
 #ifndef LIST_FOREACH
 #define	LIST_FOREACH(var, head, field)					\
 	for ((var) = ((head)->lh_first);				\
@@ -32,8 +37,10 @@
 
 #ifndef LIST_SAFE_REMOVE
 #define LIST_SAFE_REMOVE(elm, field) \
-        if ((elm)->field.le_next != NULL || (elm)->field.le_prev != NULL) \
-                LIST_REMOVE(elm, field)
+        if ((elm)->field.le_next != NULL || (elm)->field.le_prev != NULL) { \
+                LIST_REMOVE(elm, field); \
+                LIST_ENTRY_INIT(elm, field); \
+        }
 #endif
 
 #ifndef LIST_INSERT_BEFORE

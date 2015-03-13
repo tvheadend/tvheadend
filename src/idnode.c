@@ -1011,7 +1011,7 @@ idnode_set_find_index
   return -1;
 }
 
-void
+int
 idnode_set_remove
   ( idnode_set_t *is, idnode_t *in )
 {
@@ -1020,7 +1020,9 @@ idnode_set_remove
     memmove(&is->is_array[i], &is->is_array[i+1],
             (is->is_count - i - 1) * sizeof(idnode_t *));
     is->is_count--;
+    return 1;
   }
+  return 0;
 }
 
 void

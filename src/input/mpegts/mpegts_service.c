@@ -634,6 +634,31 @@ mpegts_service_find
 }
 
 /*
+ * Find PID
+ */
+mpegts_service_t *
+mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid )
+{
+  mpegts_service_t *s;
+
+  lock_assert(&global_lock);
+
+  /* Find existing service */
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+    pthread_mutex_lock(&s->s_stream_mutex);
+    if (pid == s->s_pmt_pid || pid == s->s_pcr_pid)
+      goto ok;
+    if (service_stream_find((service_t *)s, pid))
+      goto ok;
+    pthread_mutex_unlock(&s->s_stream_mutex);
+  }
+  return NULL;
+ok:
+  pthread_mutex_unlock(&s->s_stream_mutex);
+  return s;
+}
+
+/*
  * Raw MPEGTS Service
  */
 
@@ -713,7 +738,6 @@ static int
 mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
 {
   pthread_mutex_lock(&master->s_stream_mutex);
-  assert(slave->s_status == SERVICE_IDLE);
   LIST_INSERT_HEAD(&slave->s_masters, master, s_masters_link);
   LIST_INSERT_HEAD(&master->s_slaves, slave, s_slaves_link);
   pthread_mutex_unlock(&master->s_stream_mutex);
@@ -724,7 +748,6 @@ static int
 mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
 {
   pthread_mutex_lock(&master->s_stream_mutex);
-  assert(slave->s_status == SERVICE_IDLE);
   LIST_SAFE_REMOVE(master, s_masters_link);
   LIST_SAFE_REMOVE(slave, s_slaves_link);
   pthread_mutex_unlock(&master->s_stream_mutex);

@@ -86,32 +86,25 @@ ts_recv_packet0
     ts_remux(t, tsb, error);
 
   LIST_FOREACH(m, &t->s_masters, s_masters_link) {
-    pthread_mutex_lock(&t->s_stream_mutex);
-    if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
-      ts_remux(t, tsb, error);
-    pthread_mutex_unlock(&t->s_stream_mutex);
+    pthread_mutex_lock(&m->s_stream_mutex);
+    if(streaming_pad_probe_type(&m->s_streaming_pad, SMT_MPEGTS))
+      ts_remux(m, tsb, error);
+    pthread_mutex_unlock(&m->s_stream_mutex);
   }
 
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
 
-  switch(st->es_type) {
+  if (st->es_type == SCT_CA)
+    return;
 
-  case SCT_CA:
-    break;
+  if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+    return;
 
-  default:
-    if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
-      break;
+  if(st->es_type == SCT_TELETEXT)
+    teletext_input(t, st, tsb);
 
-    if(st->es_type == SCT_TELETEXT)
-      teletext_input(t, st, tsb);
-    if(off > 188)
-      break;
-
-    if(t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
-    break;
-  }
+  if(off <= 188 && t->s_status == SERVICE_RUNNING)
+    parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
 }
 
 /**

@@ -977,6 +977,9 @@ mpegts_service_t *mpegts_service_create_raw(mpegts_mux_t *mm);
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
+mpegts_service_t *
+mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
+
 static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &mpegts_service_class, NULL); }
 

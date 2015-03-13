@@ -21,6 +21,7 @@
 #include "caclient.h"
 #include "ffdecsa/FFdecsa.h"
 #include "input.h"
+#include "input/mpegts/tsdemux.h"
 
 struct caid_tab {
   const char *name;
@@ -375,8 +376,19 @@ descrambler_descramble ( service_t *t,
 
   lock_assert(&t->s_stream_mutex);
 
-  if (dr == NULL)
+  if (dr == NULL) {
+    if ((tsb[3] & 0x80) == 0) {
+      ts_recv_packet2((mpegts_service_t *)t, tsb);
+      return 1;
+    }
     return -1;
+  }
+
+  if (dr->dr_csa.csa_type == DESCRAMBLER_NONE && dr->dr_buf.sb_ptr == 0)
+    if ((tsb[3] & 0x80) == 0) {
+      ts_recv_packet2((mpegts_service_t *)t, tsb);
+      return 1;
+    }
 
   count = failed = resolved = 0;
   LIST_FOREACH(td, &t->s_descramblers, td_service_link) {

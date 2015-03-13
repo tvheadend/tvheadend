@@ -203,7 +203,7 @@ static inline idnode_set_t * idnode_set_create(int sorted)
     is->is_sorted = sorted; return is; }
 void idnode_set_add
   ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt );
-void idnode_set_remove ( idnode_set_t *is, idnode_t *in );
+int idnode_set_remove ( idnode_set_t *is, idnode_t *in );
 ssize_t idnode_set_find_index( idnode_set_t *is, idnode_t *in );
 static inline int idnode_set_exists ( idnode_set_t *is, idnode_t *in )
   { return idnode_set_find_index(is, in) >= 0; }
