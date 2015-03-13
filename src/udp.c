@@ -651,7 +651,7 @@ int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
   return syscall(__NR_sendmmsg, sockfd, msgvec, vlen, flags);
 }
 
-#define CONFIG_RECVMMSG
+#define CONFIG_SENDMMSG
 
 #endif
 #endif
