@@ -59,6 +59,7 @@ epggrab_channel_link_delete
 int
 epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
 {
+  int save = 0;
   epggrab_channel_link_t *ecl;
 
   /* No change */
@@ -80,14 +81,14 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
   ecl->ecl_epggrab = ec;
   LIST_INSERT_HEAD(&ec->channels, ecl, ecl_epg_link);
   LIST_INSERT_HEAD(&ch->ch_epggrab, ecl, ecl_chn_link);
-#if TODO_CHAN_UPDATE
   if (ec->name && epggrab_channel_rename)
-    channel_rename(ch, ec->name);
-  if (ec->number>0 && epggrab_channel_renumber)
-    channel_set_number(ch, ec->number);
+    save |= channel_set_name(ch, ec->name);
+  if ((ec->major > 0 || ec->minor > 0) && epggrab_channel_renumber)
+    save |= channel_set_number(ch, ec->major, ec->minor);
   if (ec->icon && epggrab_channel_reicon)
-    channel_set_icon(ch, ec->icon);
-#endif
+    save |= channel_set_icon(ch, ec->icon);
+  if (save)
+    channel_save(ch);
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
@@ -111,13 +112,13 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   if (!ec->name || strcmp(ec->name, name)) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
-#if TODO_CHAN_UPDATE
     if (epggrab_channel_rename) {
       epggrab_channel_link_t *ecl;
-      LIST_FOREACH(ecl, &ec->channels, link)
-        channel_rename(ecl->channel, name);
+      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link) {
+        if (channel_set_name(ecl->ecl_channel, name))
+          channel_save(ecl->ecl_channel);
+      }
     }
-#endif
     save = 1;
   }
   return save;
@@ -131,32 +132,33 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
   if (!ec->icon || strcmp(ec->icon, icon) ) {
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
-#if TODO_CHAN_UPDATE
     if (epggrab_channel_reicon) {
       epggrab_channel_link_t *ecl;
-      LIST_FOREACH(ecl, &ec->channels, link)
-        channel_set_icon(ecl->channel, icon);
+      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link) {
+        if (channel_set_icon(ecl->ecl_channel, icon))
+          channel_save(ecl->ecl_channel);
+      }
     }
-#endif
     save = 1;
   }
   return save;
 }
 
 /* Set channel number */
-int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
+int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
 {
   int save = 0;
-  if (!ec || (number <= 0)) return 0;
-  if (ec->number != number) {
-    ec->number = number;
-#if TODO_CHAN_UPDATE
+  if (!ec || (major <= 0 && minor <= 0)) return 0;
+  if (ec->major != major || ec->minor != minor) {
+    ec->major = major;
+    ec->minor = minor;
     if (epggrab_channel_renumber) {
       epggrab_channel_link_t *ecl;
-      LIST_FOREACH(ecl, &ec->channels, link)
-        channel_set_number(ecl->channel, number);
+      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link) {
+        if (channel_set_number(ecl->ecl_channel, major, minor))
+          channel_save(ecl->ecl_channel);
+      }
     }
-#endif
     save = 1;
   }
   return save;

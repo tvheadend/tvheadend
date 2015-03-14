@@ -94,7 +94,7 @@ static int _pyepg_parse_channel
   if ((str = htsmsg_xml_get_cdata_str(tags, "image")))
     save |= epggrab_channel_set_icon(ch, str);
   if ((!htsmsg_xml_get_cdata_u32(tags, "number", &u32)))
-    save |= epggrab_channel_set_number(ch, u32);
+    save |= epggrab_channel_set_number(ch, u32, 0);
   
   /* Update */
   if (save) {
