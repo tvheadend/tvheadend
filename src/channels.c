@@ -1,6 +1,6 @@
 /*
  *  tvheadend, channel functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -587,6 +587,19 @@ channel_get_name ( channel_t *ch )
   return blank;
 }
 
+int
+channel_set_name ( channel_t *ch, const char *name )
+{
+  int save = 0;
+  if (!ch || !name) return 0;
+  if (!ch->ch_name || strcmp(ch->ch_name, name) ) {
+    if (ch->ch_name) free(ch->ch_name);
+    ch->ch_name = strdup(name);
+    save = 1;
+  }
+  return save;
+}
+
 int64_t
 channel_get_number ( channel_t *ch )
 {
@@ -609,6 +622,19 @@ channel_get_number ( channel_t *ch )
     return n;
   }
   return 0;
+}
+
+int
+channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor )
+{
+  int save = 0;
+  int64_t chnum = (uint64_t)major * CHANNEL_SPLIT + (uint64_t)minor;
+  if (!ch || !chnum) return 0;
+  if (!ch->ch_number || ch->ch_number != chnum) {
+    ch->ch_number = chnum;
+    save = 1;
+  }
+  return save;
 }
 
 static int
@@ -736,6 +762,18 @@ channel_get_icon ( channel_t *ch )
   }
 
   return buf;
+}
+
+int channel_set_icon ( channel_t *ch, const char *icon )
+{
+  int save = 0;
+  if (!ch || !icon) return 0;
+  if (!ch->ch_icon || strcmp(ch->ch_icon, icon) ) {
+    if (ch->ch_icon) free(ch->ch_icon);
+    ch->ch_icon = strdup(icon);
+    save = 1;
+  }
+  return save;
 }
 
 /* **************************************************************************

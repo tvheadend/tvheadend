@@ -498,7 +498,7 @@ skip_chnum:
       
       if (!ecl)
         epggrab_channel_link(ec, ch);
-      save |= epggrab_channel_set_number(ec, cnum);
+      save |= epggrab_channel_set_number(ec, cnum, 0);
     }
     i += 9;
   }

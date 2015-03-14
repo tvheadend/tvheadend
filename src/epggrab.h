@@ -83,8 +83,9 @@ typedef struct epggrab_channel
 
   char                      *name;    ///< Channel name
   char                      *icon;    ///< Channel icon
-  int                       number;   ///< Channel number
-  
+  int                       major;    ///< Channel major number
+  int                       minor;    ///< Channel minor number
+
   LIST_HEAD(,epggrab_channel_link) channels; ///< Mapped channels
 } epggrab_channel_t;
 
@@ -107,7 +108,7 @@ htsmsg_t*         epggrab_channel_list      ( int ota );
  */
 int epggrab_channel_set_name     ( epggrab_channel_t *ch, const char *name );
 int epggrab_channel_set_icon     ( epggrab_channel_t *ch, const char *icon );
-int epggrab_channel_set_number   ( epggrab_channel_t *ch, int number );
+int epggrab_channel_set_number   ( epggrab_channel_t *ch, int major, int minor );
 
 /*
  * Updated/link
