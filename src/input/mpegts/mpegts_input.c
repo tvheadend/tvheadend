@@ -875,7 +875,7 @@ mpegts_input_recv_packets
     for (tmp = tsb, end = tsb + p * 188; tmp < end; tmp += 188) {
       uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
-        ts_recv_packet1(NULL, tmp, pcr, 0);
+        ts_recv_packet1(NULL, tmp, 188, pcr, 0);
        if (*pcr != PTS_UNSET) *pcr_pid = pid;
       }
     }
@@ -911,20 +911,20 @@ mpegts_input_recv_packets
 }
 
 static void
-mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
+mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb, int tsb_len )
 {
   int i, len = 0, c = 0;
+  const uint8_t *tsb2, *tsb2_end;
   uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
-  uint8_t  cc  = (tsb[3] & 0x0f);
   mpegts_table_t *mt, **vec;
 
   /* Collate - tables may be removed during callbacks */
-  pthread_mutex_lock(&mm->mm_tables_lock);
   i = mm->mm_num_tables;
   vec = alloca(i * sizeof(mpegts_table_t *));
+  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     c++;
-    if (mt->mt_destroyed || !mt->mt_subscribed)
+    if (mt->mt_destroyed || !mt->mt_subscribed || mt->mt_pid != pid)
       continue;
     mpegts_table_grab(mt);
     if (len < i)
@@ -939,20 +939,22 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb )
   /* Process */
   for (i = 0; i < len; i++) {
     mt = vec[i];
-    if (!mt->mt_destroyed && mt->mt_pid == pid) {
-      if (tsb[3] & 0x10) {
-        int ccerr = 0;
-        if (mt->mt_cc != -1 && mt->mt_cc != cc) {
-          ccerr = 1;
-          /* Ignore dupes (shouldn't have payload set, but some seem to) */
-          //if (((mt->mt_cc + 15) & 0xf) != cc)
-          tvhdebug("psi", "PID %04X CC error %d != %d", pid, cc, mt->mt_cc);
-         }
-        mt->mt_cc = (cc + 1) & 0xF;
-        mpegts_psi_section_reassemble(&mt->mt_sect, tsb, 0, ccerr,
-                                      mpegts_table_dispatch, mt);
+    if (!mt->mt_destroyed && mt->mt_pid == pid)
+      for (tsb2 = tsb, tsb2_end = tsb + tsb_len; tsb2 < tsb2_end; tsb2 += 188) {
+        uint8_t cc = tsb2[3];
+        if (cc & 0x10) {
+          int ccerr = 0;
+          if (mt->mt_cc != -1 && mt->mt_cc != (cc & 0xF)) {
+            ccerr = 1;
+            /* Ignore dupes (shouldn't have payload set, but some seem to) */
+            //if (((mt->mt_cc + 15) & 0xf) != cc)
+            tvhdebug("psi", "PID %04X CC error %d != %d", pid, cc, mt->mt_cc);
+          }
+          mt->mt_cc = (cc + 1) & 0xF;
+          mpegts_psi_section_reassemble(&mt->mt_sect, tsb2, 0, ccerr,
+                                        mpegts_table_dispatch, mt);
+        }
       }
-    }
     mpegts_table_release(mt);
   }
 }
@@ -998,32 +1000,34 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
 
 #if ENABLE_TSDEBUG
 static void
-tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt )
+tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
 {
   void tsdebugcw_new_keys(service_t *t, int type, uint8_t *odd, uint8_t *even);
   uint32_t pos, type, keylen, sid, crc;
   mpegts_service_t *t;
 
-  if (memcmp(pkt + 4, "TVHeadendDescramblerKeys", 24))
-    return;
-  pos = 4 + 24;
-  type = pkt[pos + 0];
-  keylen = pkt[pos + 1];
-  sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
-  pos += 4 + 2 * keylen;
-  if (pos > 184)
-    return;
-  crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |
-        (pkt[pos + 2] << 8) | pkt[pos + 3];
-  if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
-    return;
-  LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
-    if (t->s_dvb_service_id == sid) break;
-  if (!t)
-    return;
-  pos =  4 + 24 + 4;
-  tvhdebug("descrambler", "Keys from MPEG-TS source (PID 0x1FFF)!");
-  tsdebugcw_new_keys((service_t *)t, type, pkt + pos, pkt + pos + keylen);
+  for ( ; len > 0; pkt += 188, len -= 188) {
+    if (memcmp(pkt + 4, "TVHeadendDescramblerKeys", 24))
+      continue;
+    pos = 4 + 24;
+    type = pkt[pos + 0];
+    keylen = pkt[pos + 1];
+    sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
+    pos += 4 + 2 * keylen;
+    if (pos > 184)
+      return;
+    crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |
+          (pkt[pos + 2] << 8) | pkt[pos + 3];
+    if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
+      return;
+    LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
+      if (t->s_dvb_service_id == sid) break;
+    if (!t)
+      return;
+    pos =  4 + 24 + 4;
+    tvhdebug("descrambler", "Keys from MPEG-TS source (PID 0x1FFF)!");
+    tsdebugcw_new_keys((service_t *)t, type, pkt + pos, pkt + pos + keylen);
+  }
 }
 #endif
 
@@ -1034,14 +1038,13 @@ mpegts_input_process
   uint16_t pid;
   uint8_t cc;
   uint8_t *tsb = mpkt->mp_data;
-  int len = mpkt->mp_len;
+  int len = mpkt->mp_len, llen;
   int type = 0, f;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   service_t *s;
   int table_wakeup = 0;
-  uint8_t *end = mpkt->mp_data + len;
-  mpegts_mux_t          *mm  = mpkt->mp_mux;
+  mpegts_mux_t *mm = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
 #if ENABLE_TSDEBUG
   off_t tsdebug_pos;
@@ -1058,7 +1061,19 @@ mpegts_input_process
 
   /* Process */
   assert((len % 188) == 0);
-  while (tsb < end) {
+  while (len > 0) {
+
+    /*
+     * mask
+     *  0 - 0xFF - sync word 0x47
+     *  1 - 0x80 - transport error
+     *  1 - 0x1F - pid high
+     *  2 - 0xFF - pid low
+     *  3 - 0xC0 - scrambled
+     *  3 - 0x10 - CC check
+     */
+    llen = mpegts_word_count(tsb, len, 0xFF9FFFD0);
+
     pid = (tsb[1] << 8) | tsb[2];
     cc  = tsb[3];
 
@@ -1073,7 +1088,7 @@ mpegts_input_process
     /* Ignore NUL packets */
     if (pid == 0x1FFF) {
 #if ENABLE_TSDEBUG
-      tsdebug_check_tspkt(mm, tsb);
+      tsdebug_check_tspkt(mm, tsb, llen);
 #endif
       goto done;
     }
@@ -1096,12 +1111,12 @@ mpegts_input_process
       /* Stream all PIDs */
       LIST_FOREACH(mps, &mm->mm_all_subs, mps_svcraw_link)
         if ((mps->mps_type & MPS_ALL) || (type & (MPS_TABLE|MPS_FTABLE)))
-          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb);
+          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
 
       /* Stream raw PIDs */
       if (type & MPS_RAW) {
         LIST_FOREACH(mps, &mp->mp_svc_subs, mps_svcraw_link)
-          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb);
+          ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
       }
 
       /* Stream service data */
@@ -1110,7 +1125,7 @@ mpegts_input_process
           s = mps->mps_owner;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, NULL, f);
         }
       } else
       /* Stream table data */
@@ -1119,7 +1134,7 @@ mpegts_input_process
           if (s->s_type != STYPE_STD) continue;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, NULL, f);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, NULL, f);
         }
       }
 
@@ -1127,14 +1142,12 @@ mpegts_input_process
       if (type & (MPS_TABLE | MPS_FTABLE)) {
         if (!(tsb[1] & 0x80)) {
           if (type & MPS_FTABLE)
-            mpegts_input_table_dispatch(mm, tsb);
+            mpegts_input_table_dispatch(mm, tsb, llen);
           if (type & MPS_TABLE) {
-            // TODO: might be able to optimise this a bit by having slightly
-            //       larger buffering and trying to aggregate data (if we get
-            //       same PID multiple times in the loop)
-            mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
-            memcpy(mtf->mtf_tsb, tsb, 188);
-            mtf->mtf_mux   = mm;
+            mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t)+llen);
+            mtf->mtf_len = llen;
+            memcpy(mtf->mtf_tsb, tsb, llen);
+            mtf->mtf_mux = mm;
             TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
             table_wakeup = 1;
           }
@@ -1147,14 +1160,15 @@ mpegts_input_process
 
       /* Stream to all fullmux subscribers */
       LIST_FOREACH(mps, &mm->mm_all_subs, mps_svcraw_link)
-        ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb);
+        ts_recv_raw((mpegts_service_t *)mps->mps_owner, tsb, llen);
 
     }
 
 done:
-    tsb += 188;
+    tsb += llen;
+    len -= llen;
 #if ENABLE_TSDEBUG
-    mm->mm_tsdebug_pos += 188;
+    mm->mm_tsdebug_pos += llen;
 #endif
   }
 
@@ -1266,7 +1280,7 @@ mpegts_input_table_thread ( void *aux )
     /* Process */
     pthread_mutex_lock(&global_lock);
     if (mtf->mtf_mux && mtf->mtf_mux->mm_active)
-      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb);
+      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb, mtf->mtf_len);
     pthread_mutex_unlock(&global_lock);
 
     /* Cleanup */

@@ -33,10 +33,13 @@ tvhcsa_aes_flush
 
 static void
 tvhcsa_aes_descramble
-  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int len )
 {
-  aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb);
-  ts_recv_packet2(s, tsb);
+  const uint8_t *tsb2, *end2;
+
+  for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
+    aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb2);
+  ts_recv_packet2(s, tsb, len);
 }
 
 static void
@@ -44,9 +47,6 @@ tvhcsa_des_flush
   ( tvhcsa_t *csa, struct mpegts_service *s )
 {
 #if ENABLE_DVBCSA
-
-  int i;
-  const uint8_t *t0;
 
   if(csa->csa_fill_even) {
     csa->csa_tsbbatch_even[csa->csa_fill_even].data = NULL;
@@ -59,45 +59,31 @@ tvhcsa_des_flush
     csa->csa_fill_odd = 0;
   }
 
-  t0 = csa->csa_tsbcluster;
+  ts_recv_packet2(s, csa->csa_tsbcluster, csa->csa_fill * 188);
 
-  for(i = 0; i < csa->csa_fill; i++) {
-    ts_recv_packet2(s, t0);
-    t0 += 188;
-  }
   csa->csa_fill = 0;
 
 #else
 
-  int r;
+  int r, l;
   unsigned char *vec[3];
 
-  while(1) {
+  vec[0] = csa->csa_tsbcluster;
+  vec[1] = csa->csa_tsbcluster + csa->csa_fill * 188;
+  vec[2] = NULL;
 
-    vec[0] = csa->csa_tsbcluster;
-    vec[1] = csa->csa_tsbcluster + csa->csa_fill * 188;
-    vec[2] = NULL;
+  r = decrypt_packets(csa->csa_keys, vec);
+  if(r > 0) {
+    ts_recv_packet2(s, csa->csa_tsbcluster, r * 188);
 
-    r = decrypt_packets(csa->csa_keys, vec);
-    if(r > 0) {
-      int i;
-      const uint8_t *t0 = csa->csa_tsbcluster;
+    l = csa->csa_fill - r;
+    assert(l >= 0);
 
-      for(i = 0; i < r; i++) {
-        ts_recv_packet2(s, t0);
-        t0 += 188;
-      }
-
-      r = csa->csa_fill - r;
-      assert(r >= 0);
-
-      if(r > 0)
-        memmove(csa->csa_tsbcluster, t0, r * 188);
-      csa->csa_fill = r;
-    } else {
-      csa->csa_fill = 0;
-    }
-    break;
+    if(l > 0)
+      memmove(csa->csa_tsbcluster, csa->csa_tsbcluster + r * 188, l * 188);
+    csa->csa_fill = l;
+  } else {
+    csa->csa_fill = 0;
   }
 
 #endif
@@ -105,8 +91,10 @@ tvhcsa_des_flush
 
 static void
 tvhcsa_des_descramble
-  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb )
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int tsb_len )
 {
+  const uint8_t *tsb_end = tsb + tsb_len;
+
   assert(csa->csa_fill >= 0 && csa->csa_fill < csa->csa_cluster_size);
 
 #if ENABLE_DVBCSA
@@ -117,61 +105,65 @@ tvhcsa_des_descramble
   int offset;
   int n;
 
-  pkt = csa->csa_tsbcluster + csa->csa_fill * 188;
-  memcpy(pkt, tsb, 188);
-  csa->csa_fill++;
+  for ( ; tsb < tsb_end; tsb += 188) {
 
-  do { // handle this packet
-    xc0 = pkt[3] & 0xc0;
-    if(xc0 == 0x00) { // clear
-      break;
-    }
-    if(xc0 == 0x40) { // reserved
-      break;
-    }
-    if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-      ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-      pkt[3] &= 0x3f;  // consider it decrypted now
-      if(pkt[3] & 0x20) { // incomplete packet
-        offset = 4 + pkt[4] + 1;
-        len = 188 - offset;
-        n = len >> 3;
-        // FIXME: //residue = len - (n << 3);
-        if(n == 0) { // decrypted==encrypted!
-          break; // this doesn't need more processing
-        }
-      } else {
-        len = 184;
-        offset = 4;
-        // FIXME: //n = 23;
-        // FIXME: //residue = 0;
-      }
-      if(ev_od == 0) {
-        csa->csa_tsbbatch_even[csa->csa_fill_even].data = pkt + offset;
-        csa->csa_tsbbatch_even[csa->csa_fill_even].len = len;
-        csa->csa_fill_even++;
-      } else {
-        csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = pkt + offset;
-        csa->csa_tsbbatch_odd[csa->csa_fill_odd].len = len;
-        csa->csa_fill_odd++;
-      }
-    }
-  } while(0);
+   pkt = csa->csa_tsbcluster + csa->csa_fill * 188;
+   memcpy(pkt, tsb, 188);
+   csa->csa_fill++;
 
-  if(csa->csa_fill != csa->csa_cluster_size)
-    return;
+   do { // handle this packet
+     xc0 = pkt[3] & 0xc0;
+     if(xc0 == 0x00) { // clear
+       break;
+     }
+     if(xc0 == 0x40) { // reserved
+       break;
+     }
+     if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
+       ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
+       pkt[3] &= 0x3f;  // consider it decrypted now
+       if(pkt[3] & 0x20) { // incomplete packet
+         offset = 4 + pkt[4] + 1;
+         len = 188 - offset;
+         n = len >> 3;
+         // FIXME: //residue = len - (n << 3);
+         if(n == 0) { // decrypted==encrypted!
+           break; // this doesn't need more processing
+         }
+       } else {
+         len = 184;
+         offset = 4;
+         // FIXME: //n = 23;
+         // FIXME: //residue = 0;
+       }
+       if(ev_od == 0) {
+         csa->csa_tsbbatch_even[csa->csa_fill_even].data = pkt + offset;
+         csa->csa_tsbbatch_even[csa->csa_fill_even].len = len;
+         csa->csa_fill_even++;
+       } else {
+         csa->csa_tsbbatch_odd[csa->csa_fill_odd].data = pkt + offset;
+         csa->csa_tsbbatch_odd[csa->csa_fill_odd].len = len;
+         csa->csa_fill_odd++;
+       }
+     }
+   } while(0);
 
-  tvhcsa_des_flush(csa, s);
+   if(csa->csa_fill == csa->csa_cluster_size)
+     tvhcsa_des_flush(csa, s);
+
+  }
 
 #else
 
-  memcpy(csa->csa_tsbcluster + csa->csa_fill * 188, tsb, 188);
-  csa->csa_fill++;
+  for ( ; tsb < tsb_end; tsb += 188 ) {
 
-  if(csa->csa_fill != csa->csa_cluster_size)
-    return;
+    memcpy(csa->csa_tsbcluster + csa->csa_fill * 188, tsb, 188);
+    csa->csa_fill++;
 
-  tvhcsa_des_flush(csa, s);
+    if(csa->csa_fill == csa->csa_cluster_size)
+      tvhcsa_des_flush(csa, s);
+
+  }
 
 #endif
 }

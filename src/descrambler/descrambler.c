@@ -367,18 +367,20 @@ ecm_reset( service_t *t, th_descrambler_runtime_t *dr )
 int
 descrambler_descramble ( service_t *t,
                          elementary_stream_t *st,
-                         const uint8_t *tsb )
+                         const uint8_t *tsb,
+                         int len )
 {
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
-  int count, failed, resolved, off, size, flush_data = 0;
-  uint8_t *tsb2, ki;
+  int count, failed, resolved, off, len2, len3, flush_data = 0;
+  const uint8_t *tsb2;
+  uint8_t ki;
 
   lock_assert(&t->s_stream_mutex);
 
   if (dr == NULL) {
     if ((tsb[3] & 0x80) == 0) {
-      ts_recv_packet2((mpegts_service_t *)t, tsb);
+      ts_recv_packet2((mpegts_service_t *)t, tsb, len);
       return 1;
     }
     return -1;
@@ -386,7 +388,7 @@ descrambler_descramble ( service_t *t,
 
   if (dr->dr_csa.csa_type == DESCRAMBLER_NONE && dr->dr_buf.sb_ptr == 0)
     if ((tsb[3] & 0x80) == 0) {
-      ts_recv_packet2((mpegts_service_t *)t, tsb);
+      ts_recv_packet2((mpegts_service_t *)t, tsb, len);
       return 1;
     }
 
@@ -414,12 +416,11 @@ descrambler_descramble ( service_t *t,
 
     /* process the queued TS packets */
     if (dr->dr_buf.sb_ptr > 0) {
-      for (off = 0, size = dr->dr_buf.sb_ptr; off < size; off += 188) {
-        tsb2 = dr->dr_buf.sb_data + off;
+      for (tsb2 = tsb, len2 = dr->dr_buf.sb_ptr; len2 > 0; tsb2 += len3, len2 -= len3) {
         ki = tsb2[3];
         if ((ki & 0x80) != 0x00) {
           if (key_valid(dr, ki) == 0) {
-            sbuf_cut(&dr->dr_buf, off);
+            sbuf_cut(&dr->dr_buf, tsb2 - tsb);
             flush_data = 1;
             goto next;
           }
@@ -429,8 +430,8 @@ descrambler_descramble ( service_t *t,
                                     (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             if (key_late(dr, ki)) {
-              sbuf_cut(&dr->dr_buf, off);
               if (ecm_reset(t, dr)) {
+                sbuf_cut(&dr->dr_buf, tsb2 - tsb);
                 flush_data = 1;
                 goto next;
               }
@@ -438,9 +439,10 @@ descrambler_descramble ( service_t *t,
             key_update(dr, ki);
           }
         }
-        dr->dr_csa.csa_descramble(&dr->dr_csa, (mpegts_service_t *)t, tsb2);
+        len3 = mpegts_word_count(tsb2, len2, 0xFF0000C0);
+        dr->dr_csa.csa_descramble(&dr->dr_csa, (mpegts_service_t *)t, tsb2, len3);
       }
-      if (off > 0)
+      if (len2 == 0)
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
       sbuf_free(&dr->dr_buf);
     }
@@ -473,7 +475,7 @@ descrambler_descramble ( service_t *t,
         key_update(dr, ki);
       }
     }
-    dr->dr_csa.csa_descramble(&dr->dr_csa, (mpegts_service_t *)t, tsb);
+    dr->dr_csa.csa_descramble(&dr->dr_csa, (mpegts_service_t *)t, tsb, len);
     service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
     return 1;
   }
@@ -520,7 +522,7 @@ next:
                    ((mpegts_service_t *)t)->s_dvb_svcname);
         }
       }
-      sbuf_append(&dr->dr_buf, tsb, 188);
+      sbuf_append(&dr->dr_buf, tsb, len);
       service_set_streaming_status_flags(t, TSS_NO_ACCESS);
     }
   } else {

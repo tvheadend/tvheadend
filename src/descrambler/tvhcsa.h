@@ -41,7 +41,8 @@ typedef struct tvhcsa
   int      csa_type;   /*< see DESCRAMBLER_* defines */
   int      csa_keylen;
   void   (*csa_descramble)
-              ( struct tvhcsa *csa, struct mpegts_service *s, const uint8_t *tsb );
+              ( struct tvhcsa *csa, struct mpegts_service *s,
+                const uint8_t *tsb, int len );
   void   (*csa_flush)
               ( struct tvhcsa *csa, struct mpegts_service *s );
 

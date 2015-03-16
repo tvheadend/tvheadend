@@ -262,8 +262,9 @@ struct mpegts_table
 
 struct mpegts_table_feed {
   TAILQ_ENTRY(mpegts_table_feed) mtf_link;
-  uint8_t mtf_tsb[188];
+  int mtf_len;
   mpegts_mux_t *mtf_mux;
+  uint8_t mtf_tsb[0];
 };
 
 /*

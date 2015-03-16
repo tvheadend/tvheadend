@@ -167,7 +167,7 @@ void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
-                                 const uint8_t *tsb );
+                                 const uint8_t *tsb, int len );
 int  descrambler_open_pid      ( struct mpegts_mux *mux, void *opaque, int pid,
                                  descrambler_section_callback_t callback,
                                  struct service *service );

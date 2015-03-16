@@ -1,6 +1,5 @@
 /*
- *  tvheadend, MPEG transport stream functions
- *  Copyright (C) 2007 Andreas Öman
+ * Copyright (c) 2015 Jaroslav Kysela <perex@perex.cz>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,16 +15,31 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TSDEMUX_H
-#define TSDEMUX_H
+#ifndef __TVH_ENDIAN_H
+#define __TVH_ENDIAN_H
 
-int ts_resync ( const uint8_t *tsb, int *len, int *idx );
+#include <byteswap.h>
+#if defined(PLATFORM_DARWIN)
+#include <machine/endian.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/endian.h>
+#else
+#include <endian.h>
+#endif
 
-int ts_recv_packet1
-  (struct mpegts_service *t, const uint8_t *tsb, int len, int64_t *pcrp, int table);
+#ifndef BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER
+#endif
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN __BIG_ENDIAN
+#endif
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define ENDIAN_SWAP_COND(x) (!(x))
+#else
+#define ENDIAN_SWAP_COND(x) (x)
+#endif
 
-void ts_recv_packet2(struct mpegts_service *t, const uint8_t *tsb, int len);
-
-void ts_recv_raw(struct mpegts_service *t, const uint8_t *tsb, int len);
-
-#endif /* TSDEMUX_H */
+#endif /* __TVH_ENDIAN_H */
