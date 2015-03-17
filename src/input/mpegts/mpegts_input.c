@@ -814,7 +814,7 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
 static int inline
 ts_sync_count ( const uint8_t *tsb, int len )
 {
-  int i = 0;
+  int r = 0;
   while (len >= 188) {
     if (len >= 1880 &&
         tsb[0*188] == 0x47 && tsb[1*188] == 0x47 &&
@@ -822,18 +822,18 @@ ts_sync_count ( const uint8_t *tsb, int len )
         tsb[4*188] == 0x47 && tsb[5*188] == 0x47 &&
         tsb[6*188] == 0x47 && tsb[7*188] == 0x47 &&
         tsb[8*188] == 0x47 && tsb[9*188] == 0x47) {
-      i += 10;
+      r   += 1880;
       len -= 1880;
       tsb += 1880;
     } else if (*tsb == 0x47) {
-      ++i;
+      r   += 188;
       len -= 188;
       tsb += 188;
     } else {
       break;
     }
   }
-  return i;
+  return r;
 }
 
 void
@@ -841,12 +841,12 @@ mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int p = 0, len2, off = 0;
+  int len2 = 0, off = 0;
   mpegts_packet_t *mp;
   uint8_t *tsb = sb->sb_data;
   int     len  = sb->sb_ptr;
 #define MIN_TS_PKT 100
-#define MIN_TS_SYN 5
+#define MIN_TS_SYN (5*188)
 
   if (len < (MIN_TS_PKT * 188)) {
     /* For slow streams, check also against the clock */
@@ -857,7 +857,7 @@ mpegts_input_recv_packets
 
   /* Check for sync */
   while ( (len >= (MIN_TS_SYN * 188)) &&
-          ((p = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
+          ((len2 = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
     mmi->mmi_stats.unc++;
     --len;
     ++tsb;
@@ -872,7 +872,7 @@ mpegts_input_recv_packets
   /* Extract PCR (used for tsfile playback) */
   if (pcr && pcr_pid) {
     uint8_t *tmp, *end;
-    for (tmp = tsb, end = tsb + p * 188; tmp < end; tmp += 188) {
+    for (tmp = tsb, end = tsb + len2; tmp < end; tmp += 188) {
       uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
         ts_recv_packet1(NULL, tmp, 188, pcr, 0);
@@ -882,9 +882,7 @@ mpegts_input_recv_packets
   }
 
   /* Pass */
-  if (p >= MIN_TS_SYN) {
-    len2 = p * 188;
-    
+  if (len2 >= MIN_TS_SYN) {
     mp = malloc(sizeof(mpegts_packet_t) + len2);
     mp->mp_mux  = mmi->mmi_mux;
     mp->mp_len  = len2;
