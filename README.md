@@ -1,6 +1,6 @@
 Tvheadend
-====================================
-(c) 2006 - 2014 Tvheadend Foundation CIC
+========================================
+(c) 2006 - 2015 Tvheadend Foundation CIC
 
 
 What it is
@@ -10,13 +10,21 @@ Tvheadend is a TV streaming server and digital video recorder.
 
 It supports the following inputs:
 
-  * DVB-C
+  * DVB-C(2)
   * DVB-T(2)
   * DVB-S(2)
   * ATSC
+  * SAT>IP
+  * HDHomeRun
   * IPTV
     * UDP
     * HTTP
+
+It support the following outputs:
+
+  * HTTP
+  * HTSP (own protocol)
+  * SAT>IP
 
 How to build for Linux
 ----------------------
