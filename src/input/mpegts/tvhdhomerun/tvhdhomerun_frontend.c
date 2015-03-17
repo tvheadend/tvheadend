@@ -483,13 +483,13 @@ static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_m
   return mp;
 }
 
-static void tvhdhomerun_frontend_close_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+static int tvhdhomerun_frontend_close_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
   //tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
 
   tvhdebug("tvhdhomerun", "closing pid 0x%x",pid);
 
-  mpegts_input_close_pid(mi, mm, pid, type, owner);
+  return mpegts_input_close_pid(mi, mm, pid, type, owner);
 
   //tvhdhomerun_device_update_pid_filter(hfe, mm);
 }

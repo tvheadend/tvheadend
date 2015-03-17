@@ -452,8 +452,8 @@ satip_frontend_stop_mux
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   tr = lfe->sf_req;
   if (tr && tr != lfe->sf_req_thread) {
-    free(tr->sf_pids_tuned);
-    free(tr->sf_pids);
+    mpegts_pid_done(&tr->sf_pids_tuned);
+    mpegts_pid_done(&tr->sf_pids);
     free(tr);
   }
   lfe->sf_running  = 0;
@@ -493,9 +493,8 @@ satip_frontend_start_mux
   tr = calloc(1, sizeof(*tr));
   tr->sf_mmi        = mmi;
 
-  tr->sf_pids_size  = 512;
-  tr->sf_pids       = calloc(tr->sf_pids_size, sizeof(uint16_t));
-  tr->sf_pids_tuned = calloc(tr->sf_pids_size, sizeof(uint16_t));
+  mpegts_pid_init(&tr->sf_pids);
+  mpegts_pid_init(&tr->sf_pids_tuned);
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   lfe->sf_req       = tr;
@@ -516,80 +515,17 @@ static int
 satip_frontend_add_pid( satip_frontend_t *lfe, int pid)
 {
   satip_tune_req_t *tr;
-  int mid, div;
 
   if (pid < 0 || pid >= 8191)
     return 0;
 
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
   tr = lfe->sf_req;
-  if (tr == NULL)
-    goto done;
-
-  if (tr->sf_pids_count >= tr->sf_pids_size) {
-    tr->sf_pids_size += 64;
-    tr->sf_pids       = realloc(tr->sf_pids,
-                                 tr->sf_pids_size * sizeof(uint16_t));
-    tr->sf_pids_tuned = realloc(tr->sf_pids_tuned,
-                                 tr->sf_pids_size * sizeof(uint16_t));
-  }
-
-  if (tr->sf_pids_count == 0) {
-    tr->sf_pids[tr->sf_pids_count++] = pid;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  if (tr && !mpegts_pid_exists(&tr->sf_pids, pid)) {
+    mpegts_pid_add(&tr->sf_pids, pid);
     return 1;
   }
 
-#if 0
-  printf("Insert PID: %i\n", pid);
-  if (pid == 0)
-    printf("HERE!!!\n");
-  { int i; for (i = 0; i < tr->sf_pids_count; i++)
-    printf("Bpid[%i] = %i\n", i, tr->sf_pids[i]); }
-#endif
-  /* insert pid to the sorted array */
-  mid = div = tr->sf_pids_count / 2;
-  while (1) {
-    assert(mid >= 0 && mid < tr->sf_pids_count);
-    if (div > 1)
-      div /= 2;
-    if (tr->sf_pids[mid] == pid) {
-      pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      return 0;
-    }
-    if (tr->sf_pids[mid] < pid) {
-      if (mid + 1 >= tr->sf_pids_count) {
-        tr->sf_pids[tr->sf_pids_count++] = pid;
-        break;
-      }
-      if (tr->sf_pids[mid + 1] > pid) {
-        mid++;
-        if (mid < tr->sf_pids_count)
-          memmove(&tr->sf_pids[mid + 1], &tr->sf_pids[mid],
-                  (tr->sf_pids_count - mid) * sizeof(uint16_t));
-        tr->sf_pids[mid] = pid;
-        tr->sf_pids_count++;
-        break;
-      }
-      mid += div;
-    } else {
-      if (mid == 0 || tr->sf_pids[mid - 1] < pid) {
-        memmove(&tr->sf_pids[mid+1], &tr->sf_pids[mid],
-                (tr->sf_pids_count - mid) * sizeof(uint16_t));
-        tr->sf_pids[mid] = pid;
-        tr->sf_pids_count++;
-        break;
-      }
-      mid -= div;
-    }
-  }
-#if 0
-  { int i; for (i = 0; i < tr->sf_pids_count; i++)
-    printf("Apid[%i] = %i\n", i, tr->sf_pids[i]); }
-#endif
-done:
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  return 1;
+  return 0;
 }
 
 static mpegts_pid_t *
@@ -607,13 +543,12 @@ satip_frontend_open_pid
   if (mp->mp_pid > MPEGTS_FULLMUX_PID)
     return mp;
 
-  if (pid == MPEGTS_FULLMUX_PID) {
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    tr = lfe->sf_req;
-    if (tr) {
+  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  if ((tr = lfe->sf_req) != NULL) {
+    if (pid == MPEGTS_FULLMUX_PID) {
       if (lfe->sf_device->sd_fullmux_ok) {
-        if (!tr->sf_pids_any)
-          tr->sf_pids_any = change = 1;
+        if (!tr->sf_pids.all)
+          tr->sf_pids.all = change = 1;
       } else {
         mpegts_service_t *s;
         elementary_stream_t *st;
@@ -624,96 +559,51 @@ satip_frontend_open_pid
             change |= satip_frontend_add_pid(lfe, st->es_pid);
         }
       }
+    } else {
+      change |= satip_frontend_add_pid(lfe, mp->mp_pid);
     }
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  } else {
-    change |= satip_frontend_add_pid(lfe, mp->mp_pid);
-  }
-
-  if (change) {
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    tr = lfe->sf_req;
-    if (tr &&
-        (!tr->sf_pids_any_tuned ||
-         tr->sf_pids_any != tr->sf_pids_any_tuned))
+    if (change)
       tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
+  pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
   return mp;
 }
 
-static void
+static int
 satip_frontend_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
-  int change = 0;
-  int mid, div, cnt;
+  int change = 0, r;
+
+  if ((r = mpegts_input_close_pid(mi, mm, pid, type, owner)) <= 0)
+    return r;
 
   /* Skip internal PIDs */
   if (pid > MPEGTS_FULLMUX_PID)
-    goto finish;
-
-  /* remove PID */
-  if (pid == MPEGTS_FULLMUX_PID) {
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    tr = lfe->sf_req;
-    if (tr && lfe->sf_device->sd_fullmux_ok) {
-      if (tr->sf_pids_any) {
-        tr->sf_pids_any = 0;
-        change = 1;
-      }
-    }
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
-    goto finish;
-  }
+    return r;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  tr = lfe->sf_req;
-  if (tr && tr->sf_pids) {
-    mid = div = (cnt = tr->sf_pids_count) / 2;
-    while (cnt > 0) {
-      if (div > 1)
-        div /= 2;
-      if (tr->sf_pids[mid] == pid) {
-        if (mid + 1 < tr->sf_pids_count)
-          memmove(&tr->sf_pids[mid], &tr->sf_pids[mid+1],
-                  (tr->sf_pids_count - mid - 1) * sizeof(uint16_t));
-        tr->sf_pids_count--;
-        change = 1;
-        break;
-      } else if (tr->sf_pids[mid] < pid) {
-        if (mid + 1 > tr->sf_pids_count)
-          break;
-        if (tr->sf_pids[mid + 1] > pid)
-          break;
-        mid += div;
-      } else {
-        if (mid == 0)
-          break;
-        if (tr->sf_pids[mid - 1] < pid)
-          break;
-        mid -= div;
+  /* remove PID */
+  if ((tr = lfe->sf_req) != NULL) {
+    if (pid == MPEGTS_FULLMUX_PID) {
+      if (lfe->sf_device->sd_fullmux_ok) {
+        if (tr->sf_pids.all) {
+          tr->sf_pids.all = 0;
+          change = 1;
+        }
       }
-      cnt--;
+    } else {
+      change = mpegts_pid_del(&tr->sf_pids, pid) >= 0;
     }
+    if (change)
+      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-finish:
-  mpegts_input_close_pid(mi, mm, pid, type, owner);
-
-  if (change) {
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    tr = lfe->sf_req;
-    if (tr &&
-        (!tr->sf_pids_any_tuned ||
-         tr->sf_pids_any != tr->sf_pids_any_tuned))
-      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  }
+  return r;
 }
 
 static idnode_set_t *
@@ -877,33 +767,16 @@ ok:
   lfe->sf_status        = status;
 }
 
-static void
-satip_frontend_store_pids( char *buf, uint16_t *pids, int count )
-{
-  int first = 1;
-  char *s = buf;
-
-  *s = '\0';
-  while (count--) {
-    assert(*pids < 8192);
-    if (!first)
-      sprintf(s + strlen(s), ",%i", *(pids++));
-    else {
-      sprintf(s + strlen(s), "%i", *(pids++));
-      first = 0;
-    }
-  }
-}
-
 static int
 satip_frontend_pid_changed( http_client_t *rtsp,
                             satip_frontend_t *lfe, const char *name )
 {
   satip_tune_req_t *tr;
   char *add, *del;
-  int i, j, r, count, any;
-  int deleted;
+  int i, j, r, any;
   int max_pids_len = lfe->sf_device->sd_pids_len;
+  int max_pids_count = lfe->sf_device->sd_pids_max;
+  mpegts_apids_t padd, pdel;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
 
@@ -914,46 +787,39 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     return 0;
   }
 
-  any = tr->sf_pids_any;
+  any = tr->sf_pids.all;
 
-  if (tr->sf_pids_count > lfe->sf_device->sd_pids_max)
+  if (tr->sf_pids.count > max_pids_count)
     any = lfe->sf_device->sd_fullmux_ok ? 1 : 0;
 
   if (any) {
 
-    if (tr->sf_pids_any_tuned) {
-      pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      return 0;
-    }
-    tr->sf_pids_any_tuned = 1;
-    memcpy(tr->sf_pids_tuned, tr->sf_pids,
-           tr->sf_pids_count * sizeof(uint16_t));
-    tr->sf_pids_tcount = tr->sf_pids_count;
+    i = tr->sf_pids_tuned.all;
+    mpegts_pid_copy(&tr->sf_pids_tuned, &tr->sf_pids);
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
+    if (i)
+      return 0;
 
     r = satip_rtsp_play(rtsp, "all", NULL, NULL, max_pids_len);
     r = r == 0 ? 1 : r;
 
   } else if (!lfe->sf_device->sd_pids_deladd ||
-             tr->sf_pids_any_tuned ||
-             tr->sf_pids_tcount == 0) {
+             tr->sf_pids_tuned.all ||
+             tr->sf_pids.count == 0) {
 
-    tr->sf_pids_any_tuned = 0;
-    count = tr->sf_pids_count;
-    if (count > lfe->sf_device->sd_pids_max)
-      count = lfe->sf_device->sd_pids_max;
-    add = alloca(1 + count * 5);
+    j = tr->sf_pids.count;
+    if (j > lfe->sf_device->sd_pids_max)
+      j = lfe->sf_device->sd_pids_max;
+    add = alloca(1 + j * 5);
     add[0] = '\0';
     /* prioritize higher PIDs (tables are low prio) */
-    satip_frontend_store_pids(add,
-                              &tr->sf_pids[tr->sf_pids_count - count],
-                              count);
-    memcpy(tr->sf_pids_tuned, tr->sf_pids,
-           tr->sf_pids_count * sizeof(uint16_t));
-    tr->sf_pids_tcount = tr->sf_pids_count;
+    for (i = tr->sf_pids.count - j; i < tr->sf_pids.count; i++)
+      sprintf(add + strlen(add), ",%i", tr->sf_pids.pids[i]);
+    mpegts_pid_copy(&tr->sf_pids_tuned, &tr->sf_pids);
+    tr->sf_pids_tuned.all = 0;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-    if (!count || add[0] == '\0')
+    if (!j || add[0] == '\0')
       return 0;
 
     r = satip_rtsp_play(rtsp, add, NULL, NULL, max_pids_len);
@@ -961,66 +827,29 @@ satip_frontend_pid_changed( http_client_t *rtsp,
 
   } else {
 
-    add = alloca(1 + tr->sf_pids_count * 5);
-    del = alloca(1 + tr->sf_pids_tcount * 5);
+    mpegts_pid_compare(&tr->sf_pids, &tr->sf_pids_tuned, &padd, &pdel);
+
+    add = alloca(1 + padd.count * 5);
+    del = alloca(1 + pdel.count * 5);
     add[0] = del[0] = '\0';
 
-#if 0
-    for (i = 0; i < tr->sf_pids_count; i++)
-      printf("pid[%i] = %i\n", i, tr->sf_pids[i]);
-    for (i = 0; i < tr->sf_pids_tcount; i++)
-      printf("tuned[%i] = %i\n", i, tr->sf_pids_tuned[i]);
-#endif
-
-    i = j = deleted = 0;
-    while (i < tr->sf_pids_count && j < tr->sf_pids_tcount) {
-      if (tr->sf_pids[i] == tr->sf_pids_tuned[j]) {
-        i++; j++;
-      } else if (tr->sf_pids[i] < tr->sf_pids_tuned[j]) {
-        i++;
-      } else {
-        sprintf(del + strlen(del), ",%i", tr->sf_pids_tuned[j++]);
-        deleted++;
-      }
-    }
-    while (j < tr->sf_pids_tcount) {
-      sprintf(del + strlen(del), ",%i", tr->sf_pids_tuned[j++]);
-      deleted++;
+    for (i = 0; i < pdel.count; i++) {
+      sprintf(del + strlen(del), ",%i", pdel.pids[i]);
+      mpegts_pid_del(&tr->sf_pids_tuned, pdel.pids[i]);
     }
 
-    count = tr->sf_pids_count + (tr->sf_pids_tcount - deleted);
-    if (count > lfe->sf_device->sd_pids_max)
-      count = lfe->sf_device->sd_pids_max;
+    j = padd.count;
+    if (padd.count + tr->sf_pids_tuned.count > max_pids_count)
+      j = max_pids_count - tr->sf_pids_tuned.count;
     /* prioritize higher PIDs (tables are low prio) */
-    /* count means "skip count" in following code */
-    count = tr->sf_pids_count - count;
-    
-    i = j = 0;
-    while (i < tr->sf_pids_count && j < tr->sf_pids_tcount) {
-      if (tr->sf_pids[i] == tr->sf_pids_tuned[j]) {
-        i++; j++;
-      } else if (tr->sf_pids[i] < tr->sf_pids_tuned[j]) {
-        if (count > 0) {
-          count--;
-        } else {
-          sprintf(add + strlen(add), ",%i", tr->sf_pids[i]);
-        }
-        i++;
-      } else {
-        j++;
-      }
-    }
-    while (i < tr->sf_pids_count) {
-      if (count > 0)
-        count--;
-      else
-        sprintf(add + strlen(add), ",%i", tr->sf_pids[i++]);
-    }
+    for (i = padd.count - j; i < padd.count; i++)
+      sprintf(add + strlen(add), ",%i", padd.pids[i]);
 
-    memcpy(tr->sf_pids_tuned, tr->sf_pids,
-           tr->sf_pids_count * sizeof(uint16_t));
-    tr->sf_pids_tcount = tr->sf_pids_count;
+    mpegts_pid_copy(&tr->sf_pids_tuned, &tr->sf_pids);
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
+
+    mpegts_pid_done(&padd);
+    mpegts_pid_done(&pdel);
 
     if (add[0] == '\0' && del[0] == '\0')
       return 0;
@@ -1683,8 +1512,8 @@ new_tune:
 done:
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (tr && tr != lfe->sf_req) {
-    free(tr->sf_pids);
-    free(tr->sf_pids_tuned);
+    mpegts_pid_done(&tr->sf_pids);
+    mpegts_pid_done(&tr->sf_pids_tuned);
     free(tr);
   }
   lfe->sf_req_thread = tr = NULL;

@@ -701,7 +701,7 @@ struct mpegts_input
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   mpegts_pid_t *(*mi_open_pid)(mpegts_input_t*,mpegts_mux_t*,int,int,void*);
-  void (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,void*);
+  int  (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,void*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
@@ -901,7 +901,7 @@ void mpegts_input_flush_mux ( mpegts_input_t *mi, mpegts_mux_t *mm );
 mpegts_pid_t * mpegts_input_open_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
-void mpegts_input_close_pid
+int mpegts_input_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 void mpegts_input_close_pids

@@ -91,13 +91,8 @@ struct satip_device
 struct satip_tune_req {
   mpegts_mux_instance_t     *sf_mmi;
 
-  uint16_t                  *sf_pids;
-  uint16_t                  *sf_pids_tuned;
-  int                        sf_pids_any;
-  int                        sf_pids_any_tuned;
-  int                        sf_pids_size;
-  int                        sf_pids_count;
-  int                        sf_pids_tcount;     /*< tuned count */
+  mpegts_apids_t             sf_pids;
+  mpegts_apids_t             sf_pids_tuned;
 };
 
 struct satip_frontend
