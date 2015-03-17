@@ -1207,10 +1207,16 @@ satip_frontend_input_thread ( void *aux )
   efd = tvhpoll_create(4);
   rtsp = NULL;
 
+  /* Setup buffers */
+  sbuf_init(&sb);
+  udp_multirecv_init(&um, 0, 0);
+
   /*
    * New tune
    */
 new_tune:
+  sbuf_free(&sb);
+  udp_multirecv_free(&um);
   udp_close(rtcp);
   udp_close(rtp);
   rtcp = rtp = NULL;
@@ -1246,11 +1252,22 @@ new_tune:
       }
     }
 
-    if (ev[0].data.ptr == rtsp) {
+    if (rtsp && ev[0].data.ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
         http_client_close(rtsp);
         rtsp = NULL;
+      } else {
+        switch (rtsp->hc_cmd) {
+        case RTSP_CMD_OPTIONS:
+          rtsp_options_decode(rtsp);
+          break;
+        case RTSP_CMD_SETUP:
+          rtsp_setup_decode(rtsp, 1);
+          break;
+        default:
+          break;
+        }
       }
     }
 
