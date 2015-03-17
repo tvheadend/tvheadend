@@ -416,7 +416,8 @@ descrambler_descramble ( service_t *t,
 
     /* process the queued TS packets */
     if (dr->dr_buf.sb_ptr > 0) {
-      for (tsb2 = tsb, len2 = dr->dr_buf.sb_ptr; len2 > 0; tsb2 += len3, len2 -= len3) {
+      for (tsb2 = dr->dr_buf.sb_data, len2 = dr->dr_buf.sb_ptr;
+           len2 > 0; tsb2 += len3, len2 -= len3) {
         ki = tsb2[3];
         if ((ki & 0x80) != 0x00) {
           if (key_valid(dr, ki) == 0) {
