@@ -169,6 +169,14 @@
   <dd>
   Exported DVB-C tuners - streaming instances.
 
+  <dt>Muxes Handling
+  <dd>
+  When SAT>IP client requests new mux configuration, tvheadend can handle it
+  in three ways. The auto (0) configuration means that if the mux does not exists,
+  a temporary mux is created and removed when the client closes the
+  connection. The keep (1) configuration will remember all successfuly scanned muxes.
+  The reject (2) configuration will reject unknown muxes.
+
   </dl>
 
  </dl>  

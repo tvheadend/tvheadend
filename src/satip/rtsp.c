@@ -29,6 +29,10 @@
 #define RTP_BUFSIZE  (256*1024)
 #define RTCP_BUFSIZE (16*1024)
 
+#define MUXCNF_AUTO   0
+#define MUXCNF_KEEP   1
+#define MUXCNF_REJECT 2
+
 typedef struct slave_subscription {
   LIST_ENTRY(slave_subscription) link;
   mpegts_service_t *service;
@@ -64,6 +68,7 @@ static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_descramble = 1;
+static int rtsp_muxcnf = MUXCNF_AUTO;
 static void *rtsp_server = NULL;
 static TAILQ_HEAD(,session) rtsp_sessions;
 static pthread_mutex_t rtsp_lock;
@@ -313,7 +318,8 @@ rtsp_clean(session_t *rs)
   }
   if (rs->prch.prch_id)
     profile_chain_close(&rs->prch);
-  if (rs->mux && rs->mux_created)
+  if (rs->mux && rs->mux_created &&
+      (rtsp_muxcnf != MUXCNF_KEEP || LIST_EMPTY(&rs->mux->mm_services)))
     rs->mux->mm_delete((mpegts_mux_t *)rs->mux, 1);
   rs->mux = NULL;
   rs->mux_created = 0;
@@ -430,7 +436,8 @@ rtsp_start
         if (mux) break;
       }
     }
-    if (mux == NULL && mn2) {
+    if (mux == NULL && mn2 &&
+        (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
       tvhwarn("satips", "%i/%s/%i: create mux %s",
               rs->frontend, rs->session, rs->stream, buf);
@@ -443,8 +450,9 @@ rtsp_start
     }
     if (mux == NULL) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
-      tvhwarn("satips", "%i/%s/%i: unable to create mux %s",
-              rs->frontend, rs->session, rs->stream, buf);
+      tvhwarn("satips", "%i/%s/%i: unable to create mux %s%s",
+              rs->frontend, rs->session, rs->stream, buf,
+              rtsp_muxcnf == MUXCNF_REJECT ? " (configuration)" : "");
       goto endclean;
     }
     if (rs->mux == mux)
@@ -1314,7 +1322,8 @@ rtsp_close_sessions(void)
 /*
  *
  */
-void satip_server_rtsp_init(const char *bindaddr, int port, int descramble)
+void satip_server_rtsp_init
+  (const char *bindaddr, int port, int descramble, int muxcnf)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1340,6 +1349,7 @@ void satip_server_rtsp_init(const char *bindaddr, int port, int descramble)
   rtsp_ip = strdup(bindaddr);
   rtsp_port = port;
   rtsp_descramble = descramble;
+  rtsp_muxcnf = muxcnf;
   if (!rtsp_server)
     rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
   if (reg)

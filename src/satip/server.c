@@ -491,15 +491,15 @@ static void satips_rtsp_port(int def)
  *
  */
 
-static void satip_server_info(const char *prefix, int descramble)
+static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 {
   tvhinfo("satips", "SAT>IP Server %sinitialized "
                     "(HTTP %s:%d, RTSP %s:%d, "
-                    "descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+                    "descramble %d, muxcnf %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
               prefix,
               http_server_ip, http_server_port,
               http_server_ip, satip_server_rtsp_port,
-              descramble,
+              descramble, muxcnf,
               config_get_int("satip_dvbt", 0),
               config_get_int("satip_dvbs", 0),
               config_get_int("satip_dvbc", 0));
@@ -510,15 +510,16 @@ static void satip_server_info(const char *prefix, int descramble)
  */
 void satip_server_config_changed(void)
 {
-  int descramble;
+  int descramble, muxcnf;
 
   if (!satip_server_rtsp_port_locked) {
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
       descramble = config_get_int("satip_descramble", 1);
+      muxcnf = config_get_int("satip_muxcnf", 0);
       pthread_mutex_unlock(&global_lock);
-      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble);
-      satip_server_info("re", descramble);
+      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, muxcnf);
+      satip_server_info("re", descramble, muxcnf);
       satips_upnp_send_announce();
       pthread_mutex_lock(&global_lock);
     } else {
@@ -539,7 +540,7 @@ void satip_server_init(int rtsp_port)
 {
   struct sockaddr_storage http;
   char http_ip[128];
-  int descramble;
+  int descramble, muxcnf;
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
@@ -562,10 +563,11 @@ void satip_server_init(int rtsp_port)
     return;
 
   descramble = config_get_int("satip_descramble", 1);
+  muxcnf = config_get_int("satip_muxcnf", 0);
 
-  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, muxcnf);
 
-  satip_server_info("", descramble);
+  satip_server_info("", descramble, muxcnf);
 }
 
 void satip_server_register(void)

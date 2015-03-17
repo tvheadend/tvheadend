@@ -537,6 +537,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       ssave |= config_set_int("satip_dvbs", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
       ssave |= config_set_int("satip_dvbc", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_muxcnf")))
+      ssave |= config_set_int("satip_muxcnf", atoi(str));
     if (save | ssave)
       config_save();
     if (ssave)

@@ -246,13 +246,18 @@ tvheadend.miscconf = function(panel, index) {
              name: 'satip_dvbc',
              fieldLabel: 'Exported DVB-C Tuners'
         });
+        var muxcnf = new Ext.form.NumberField({
+             name: 'satip_muxcnf',
+             fieldLabel: 'Muxes Handling (0 = auto, 1 = keep, 2 = reject)'
+        });
+
         satipPanel = new Ext.form.FieldSet({
             title: 'SAT>IP Server',
             width: 700,
             autoHeight: true,
             collapsible: true,
             animCollapse: true,
-            items: [rtsp, weight, descramble, dvbt, dvbs, dvbc]
+            items: [rtsp, weight, descramble, dvbt, dvbs, dvbc, muxcnf]
         });
     }
 
