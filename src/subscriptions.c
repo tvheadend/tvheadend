@@ -336,10 +336,8 @@ subscription_reschedule(void)
     subscription_show_info(s);
   }
 
-  while ((s = LIST_FIRST(&subscriptions_remove))) {
-    LIST_REMOVE(s, ths_remove_link);
+  while ((s = LIST_FIRST(&subscriptions_remove)))
     subscription_unsubscribe(s, 0);
-  }
 
   if (postpone <= 0 || postpone == INT_MAX)
     postpone = 2;
@@ -513,6 +511,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   service_instance_list_clear(&s->ths_instances);
 
   LIST_REMOVE(s, ths_global_link);
+  LIST_SAFE_REMOVE(s, ths_remove_link);
 
 #if ENABLE_MPEGTS
   if (s->ths_raw_service)
