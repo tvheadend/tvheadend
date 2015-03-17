@@ -472,7 +472,7 @@ md5sum ( const char *str )
 }
 
 int
-makedirs ( const char *inpath, int mode )
+makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
 {
   int err, ok;
   size_t x;
@@ -491,15 +491,18 @@ makedirs ( const char *inpath, int mode )
       path[x] = 0;
       if (stat(path, &st)) {
         err = mkdir(path, mode);
-        tvhtrace("settings", "Creating directory \"%s\" with octal permissions \"%o\"", path, mode);
+        if (!err && gid >= 0 && uid >= 0)
+          err = chown(path, uid, gid);
+        tvhtrace("settings", "Creating directory \"%s\" with octal permissions "
+                             "\"%o\" gid %d uid %d", path, mode, gid, uid);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;
       }
       if (err) {
-	      tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
-	             path, strerror(errno));
-	      return -1;
+        tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
+               path, strerror(errno));
+        return -1;
       }
       path[x] = '/';
     }

@@ -1200,7 +1200,7 @@ dobackup(const char *oldver)
   }
 
   snprintf(outfile, sizeof(outfile), "%s/backup", root);
-  if (makedirs(outfile, 0700))
+  if (makedirs(outfile, 0700, -1, -1))
     goto fatal;
   if (chdir(root)) {
     tvherror("config", "unable to find directory '%s'", root);
@@ -1363,7 +1363,7 @@ config_check ( void )
 static int config_newcfg = 0;
 
 void
-config_boot ( const char *path )
+config_boot ( const char *path, gid_t gid, uid_t uid )
 {
   struct stat st;
   char buf[1024];
@@ -1378,7 +1378,7 @@ config_boot ( const char *path )
   /* Ensure directory exists */
   if (stat(path, &st)) {
     config_newcfg = 1;
-    if (makedirs(path, 0700)) {
+    if (makedirs(path, 0700, gid, uid)) {
       tvhwarn("START", "failed to create settings directory %s,"
                        " settings will not be saved", path);
       return;
@@ -1402,6 +1402,8 @@ config_boot ( const char *path )
   if ((config_lock_fd = file_lock(config_lock, 3)) < 0)
     exit(78); /* config error */
 
+  chown(config_lock, uid, gid);
+
   /* Load global settings */
   config = hts_settings_load("config");
   if (!config) {
@@ -1413,6 +1415,16 @@ config_boot ( const char *path )
 void
 config_init ( int backup )
 {
+  const char *path = hts_settings_get_root();
+
+  if (access(path, R_OK | W_OK)) {
+    tvhwarn("START", "configuration path %s is not r/w"
+                     " for UID:%d GID:%d [e=%s],"
+                     " settings will not be saved",
+            path, getuid(), getgid(), strerror(errno));
+    return;
+  }
+
   /* Store version number */
   if (config_newcfg) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));

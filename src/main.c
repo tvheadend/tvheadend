@@ -442,6 +442,8 @@ main(int argc, char **argv)
   int  log_level   = LOG_INFO;
   int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
   const char *log_debug = NULL, *log_trace = NULL;
+  gid_t gid = -1;
+  uid_t uid = -1;
   char buf[512];
   FILE *pidfile = NULL;
   extern int dvb_bouquets_parse;
@@ -708,21 +710,9 @@ main(int argc, char **argv)
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
   signal(SIGILL, handle_sigill);   // see handler..
 
-  uuid_init();
-  config_boot(opt_config);
-  tcp_server_preinit(opt_ipv6);
-  http_server_init(opt_bindaddr);    // bind to ports only
-  htsp_init(opt_bindaddr);	     // bind to ports only
-  satip_server_init(opt_satip_rtsp); // bind to ports only
-
-  if (opt_fork)
-    pidfile = tvh_fopen(opt_pidpath, "w+");
-
   /* Set priviledges */
   if(opt_fork || opt_group || opt_user) {
     const char *homedir;
-    gid_t gid;
-    uid_t uid;
     struct group  *grp = getgrnam(opt_group ?: "video");
     struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
 
@@ -754,16 +744,27 @@ main(int argc, char **argv)
     } else {
       uid = 1;
     }
-    if ((getgid() != gid) && setgid(gid)) {
-      tvhlog(LOG_ALERT, "START",
-             "setgid(%d) failed, do you have permission?", gid);
-      return 1;
-    }
-    if ((getuid() != uid) && setuid(uid)) {
-      tvhlog(LOG_ALERT, "START",
-             "setuid(%d) failed, do you have permission?", uid);
-      return 1;
-    }
+  }
+
+  uuid_init();
+  config_boot(opt_config, gid, uid);
+  tcp_server_preinit(opt_ipv6);
+  http_server_init(opt_bindaddr);    // bind to ports only
+  htsp_init(opt_bindaddr);	     // bind to ports only
+  satip_server_init(opt_satip_rtsp); // bind to ports only
+
+  if (opt_fork)
+    pidfile = tvh_fopen(opt_pidpath, "w+");
+
+  if (gid >= 0 && (getgid() != gid) && setgid(gid)) {
+    tvhlog(LOG_ALERT, "START",
+           "setgid(%d) failed, do you have permission?", gid);
+    return 1;
+  }
+  if (uid >= 0 && (getuid() != uid) && setuid(uid)) {
+    tvhlog(LOG_ALERT, "START",
+           "setuid(%d) failed, do you have permission?", uid);
+    return 1;
   }
 
   /* Daemonise */
