@@ -1331,9 +1331,7 @@ void satip_server_rtsp_init(const char *bindaddr, int port, int descramble)
     satip_rtp_init();
   }
   if (rtsp_port != port && rtsp_server) {
-    pthread_mutex_lock(&rtsp_lock);
     rtsp_close_sessions();
-    pthread_mutex_unlock(&rtsp_lock);
     tcp_server_delete(rtsp_server);
     rtsp_server = NULL;
     reg = 1;

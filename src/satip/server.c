@@ -474,27 +474,59 @@ satips_upnp_discovery_destroy(upnp_service_t *upnp)
 /*
  *
  */
-void satip_server_config_changed(void)
+static void satips_rtsp_port(int def)
 {
-  int rtsp_port, descramble;
+  int rtsp_port = satip_server_rtsp_port;
+  if (!satip_server_rtsp_port_locked)
+    rtsp_port = config_get_int("satip_rtsp", def);
+  if (getuid() != 0 && rtsp_port > 0 && rtsp_port < 1024) {
+    tvherror("satips", "RTSP port %d specified but no root perms, using 9983", rtsp_port);
+    rtsp_port = 9983;
+  }
+  satip_server_rtsp_port = rtsp_port;
 
-  if (!satip_server_rtsp_port_locked) {
-    rtsp_port = config_get_int("satip_rtsp", 0);
-    satip_server_rtsp_port = rtsp_port;
-    if (rtsp_port > 0) {
-      descramble = config_get_int("satip_descramble", 1);
-      satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
-      tvhinfo("satips", "SAT>IP Server reinitialized (HTTP %s:%d, RTSP %s:%d, descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
-              http_server_ip, http_server_port, http_server_ip, rtsp_port,
+}
+
+/*
+ *
+ */
+
+static void satip_server_info(const char *prefix, int descramble)
+{
+  tvhinfo("satips", "SAT>IP Server %sinitialized "
+                    "(HTTP %s:%d, RTSP %s:%d, "
+                    "descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+              prefix,
+              http_server_ip, http_server_port,
+              http_server_ip, satip_server_rtsp_port,
               descramble,
               config_get_int("satip_dvbt", 0),
               config_get_int("satip_dvbs", 0),
               config_get_int("satip_dvbc", 0));
+}
+
+/*
+ *
+ */
+void satip_server_config_changed(void)
+{
+  int descramble;
+
+  if (!satip_server_rtsp_port_locked) {
+    satips_rtsp_port(0);
+    if (satip_server_rtsp_port > 0) {
+      descramble = config_get_int("satip_descramble", 1);
+      pthread_mutex_unlock(&global_lock);
+      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble);
+      satip_server_info("re", descramble);
       satips_upnp_send_announce();
+      pthread_mutex_lock(&global_lock);
     } else {
+      pthread_mutex_unlock(&global_lock);
       tvhinfo("satips", "SAT>IP Server shutdown");
       satip_server_rtsp_done();
       satips_upnp_send_byebye();
+      pthread_mutex_lock(&global_lock);
     }
   }
 }
@@ -522,25 +554,18 @@ void satip_server_init(int rtsp_port)
   http_server_ip = strdup(http_ip);
   http_server_port = ntohs(IP_PORT(http));
 
-  satip_server_rtsp_port_locked = 1;
-  if (rtsp_port == 0) {
-    satip_server_rtsp_port_locked = 0;
-    rtsp_port = config_get_int("satip_rtsp", getuid() == 0 ? 554 : 9983);
-  }
+  satip_server_rtsp_port_locked = rtsp_port > 0;
   satip_server_rtsp_port = rtsp_port;
-  if (rtsp_port <= 0)
+  satips_rtsp_port(rtsp_port);
+
+  if (satip_server_rtsp_port <= 0)
     return;
 
   descramble = config_get_int("satip_descramble", 1);
 
-  satip_server_rtsp_init(http_server_ip, rtsp_port, descramble);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble);
 
-  tvhinfo("satips", "SAT>IP Server initialized (HTTP %s:%d, RTSP %s:%d, descramble %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
-          http_server_ip, http_server_port, http_server_ip, rtsp_port,
-          descramble,
-          config_get_int("satip_dvbt", 0),
-          config_get_int("satip_dvbs", 0),
-          config_get_int("satip_dvbc", 0));
+  satip_server_info("", descramble);
 }
 
 void satip_server_register(void)

@@ -224,7 +224,7 @@ tvheadend.miscconf = function(panel, index) {
     if (tvheadend.capabilities.indexOf('satip_server') !== -1) {
         var rtsp = new Ext.form.NumberField({
              name: 'satip_rtsp',
-             fieldLabel: 'RTSP Port (554), 0 = disable'
+             fieldLabel: 'RTSP Port (554 or 9983), 0 = disable'
         });
         var weight = new Ext.form.NumberField({
              name: 'satip_weight',
