@@ -491,7 +491,7 @@ makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
       path[x] = 0;
       if (stat(path, &st)) {
         err = mkdir(path, mode);
-        if (!err && gid >= 0 && uid >= 0)
+        if (!err && gid != -1 && uid != -1)
           err = chown(path, uid, gid);
         tvhtrace("settings", "Creating directory \"%s\" with octal permissions "
                              "\"%o\" gid %d uid %d", path, mode, gid, uid);

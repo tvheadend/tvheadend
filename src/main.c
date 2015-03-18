@@ -756,12 +756,12 @@ main(int argc, char **argv)
   if (opt_fork)
     pidfile = tvh_fopen(opt_pidpath, "w+");
 
-  if (gid >= 0 && (getgid() != gid) && setgid(gid)) {
+  if (gid != -1 && (getgid() != gid) && setgid(gid)) {
     tvhlog(LOG_ALERT, "START",
            "setgid(%d) failed, do you have permission?", gid);
     return 1;
   }
-  if (uid >= 0 && (getuid() != uid) && setuid(uid)) {
+  if (uid != -1 && (getuid() != uid) && setuid(uid)) {
     tvhlog(LOG_ALERT, "START",
            "setuid(%d) failed, do you have permission?", uid);
     return 1;
