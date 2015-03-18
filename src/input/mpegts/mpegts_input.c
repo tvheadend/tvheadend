@@ -564,7 +564,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
 
     /* Ensure that filtered PIDs are not send in ts_recv_raw */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-      if (st->es_type != SCT_CA)
+      if (st->es_type != SCT_CA && st->es_pid >= 0 && st->es_pid < 8192)
         if (!mpegts_pid_exists(pids, st->es_pid))
           mpegts_pid_add(pids, st->es_pid);
 
@@ -635,8 +635,9 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
       if (st->es_pid_opened) {
         st->es_pid_opened = 0;
         mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
-        mpegts_pid_del(pids, st->es_pid);
       }
+      if (st->es_pid >= 0 && st->es_pid < 8192)
+        mpegts_pid_del(pids, st->es_pid);
     }
 
     LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
