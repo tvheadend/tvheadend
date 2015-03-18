@@ -219,9 +219,8 @@ rtsp_check_urlbase(char *u)
     return NULL;
   u += 7;
   p = strchr(u, '/');
-  if (p == NULL)
-    return NULL;
-  *p = '\0';
+  if (p)
+    *p = '\0';
   if ((s = strchr(u, ':')) != NULL) {
     *s = '\0';
     if (atoi(s + 1) != rtsp_port)
@@ -232,7 +231,7 @@ rtsp_check_urlbase(char *u)
   }
   if (strcmp(u, rtsp_ip))
     return NULL;
-  return p + 1;
+  return p ? p + 1 : u + strlen(u);
 }
 
 /*
@@ -597,9 +596,12 @@ rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 
   pthread_mutex_lock(&global_lock);
   htsbuf_qprintf(q, "s=SatIPServer:1 %d",
-                 config_get_int("satip_dvbs", 0));
-  dvbt = config_get_int("satip_dvbt", 0);
-  dvbc = config_get_int("satip_dvbc", 0);
+                 config_get_int("satip_dvbs", 0) +
+                 config_get_int("satip_dvbs2", 0));
+  dvbt = config_get_int("satip_dvbt", 0) +
+         config_get_int("satip_dvbt2", 0);
+  dvbc = config_get_int("satip_dvbc", 0) +
+         config_get_int("satip_dvbc2", 0);
   if (dvbc)
     htsbuf_qprintf(q, " %d %d\r\n", dvbt, dvbc);
   else if (dvbt)
