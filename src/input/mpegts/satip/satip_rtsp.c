@@ -77,8 +77,9 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     { .t = DVB_SYS_DVBS,                      "dvbs"  },
     { .t = DVB_SYS_DVBS2,                     "dvbs2" },
     { .t = DVB_SYS_DVBC_ANNEX_A,              "dvbc"  },
-    { .t = DVB_SYS_DVBC_ANNEX_B,              "dvbc"  },
     { .t = DVB_SYS_DVBC_ANNEX_C,              "dvbc"  },
+    { .t = DVB_SYS_ATSC,                      "atsc"  },
+    { .t = DVB_SYS_DVBC_ANNEX_B,              "dvbcb" },
     { .t = TABLE_EOD }
   };
   static tvh2satip_t pol[] = {
@@ -190,7 +191,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
         dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
       /* note: OctopusNet device does not handle 'fec=auto' */
       ADD(u.dmc_fe_qam.fec_inner,   fec,   "auto");
-  } else {
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBT ||
+             dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     if (dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_AUTO &&
         dmc->u.dmc_fe_ofdm.bandwidth != DVB_BANDWIDTH_NONE)
@@ -209,6 +211,14 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2)
       if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER)
         satip_rtsp_add_val("pls", buf, (dmc->dmc_fe_stream_id & 0xff) * 1000);
+  } else if (dmc->dmc_fe_delsys == DVB_SYS_ATSC ||
+             dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B) {
+    satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
+    if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
+      ADD(dmc_fe_modulation, mtype,
+          dmc->dmc_fe_delsys == DVB_SYS_ATSC ? "8vsb" : "64qam");
   }
   if (flags & SATIP_SETUP_PIDS0)
     strcat(buf, "&pids=0");

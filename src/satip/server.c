@@ -46,6 +46,12 @@ int satip_server_match_uuid(const char *uuid)
  * XML description
  */
 
+struct xml_type_xtab {
+  const char *id;
+  const char *cname;
+  int *count;
+};
+
 static int
 satip_server_http_xml(http_connection_t *hc)
 {
@@ -103,8 +109,23 @@ satip_server_http_xml(http_connection_t *hc)
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
-  int dvbt = 0, dvbs = 0, dvbc = 0, srcs = 0, delim = 0, i;
+  int dvbt = 0, dvbs = 0, dvbc = 0, atsc = 0;
+  int srcs = 0, delim = 0, tuners = 0, i;
+  struct xml_type_xtab *p;
   http_arg_list_t args;
+
+  struct xml_type_xtab xtab[] =  {
+    { "DVBS",  "satip_dvbs",  &dvbs },
+    { "DVBS2", "satip_dvbs2", &dvbs },
+    { "DVBT",  "satip_dvbt",  &dvbt },
+    { "DVBT2", "satip_dvbt2", &dvbt },
+    { "DVBC",  "satip_dvbc",  &dvbc },
+    { "DVBC2", "satip_dvbc2", &dvbc },
+    { "ATSC",   "satip_atsc",  &atsc },
+    { "DVBCB", "satip_dvbcb", &dvbc },
+    {}
+  };
+
 
   htsbuf_queue_init(&q, 0);
 
@@ -120,36 +141,31 @@ satip_server_http_xml(http_connection_t *hc)
         srcs = mn->mn_satip_source;
     } else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
       dvbc++;
+    else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
+      atsc++;
   }
-  if (dvbs && (i = config_get_int("satip_dvbs", 0)) > 0) {
-    htsbuf_qprintf(&q, "%sDVBS2-%d", delim ? "," : "", i);
-    delim++;
-  } else {
-    dvbs = 0;
-  }
-  if (dvbt && (i = config_get_int("satip_dvbt", 0)) > 0) {
-    htsbuf_qprintf(&q, "%sDVBT-%d", delim ? "," : "", i);
-    delim++;
-  } else {
-    dvbt = 0;
-  }
-  if (dvbc && (i = config_get_int("satip_dvbc", 0)) > 0) {
-    htsbuf_qprintf(&q, "%sDVBC-%d", delim ? "," : "", i);
-    delim++;
-  } else {
-    dvbc = 0;
+  for (p = xtab; p->id; p++) {
+    i = config_get_int(p->cname, 0);
+    if (i > 0) {
+      tuners += i;
+      if (*p->count && i > 0) {
+        htsbuf_qprintf(&q, "%s%s-%d", delim ? "," : "", p->id, i);
+        delim++;
+      }
+    }
   }
   pthread_mutex_unlock(&global_lock);
   if (!dvbs)
     srcs = 0;
 
   devicelist = htsbuf_to_string(&q);
+  printf("devicelist: '%s'\n", devicelist);
   htsbuf_queue_flush(&q);
 
   if (devicelist == NULL || devicelist[0] == '\0') {
     tcp_get_ip_str((struct sockaddr*)hc->hc_peer, buf, sizeof(buf));
     tvhwarn("satips", "SAT>IP server announces an empty tuner list to a client %s (missing %s)",
-            buf, dvbt + dvbs + dvbc ? "tuner settings - global config" : "network assignment");
+            buf, !tuners ? "tuner settings - global config" : "network assignment");
   }
 
   if (satip_server_rtsp_port != 554)
@@ -495,14 +511,20 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 {
   tvhinfo("satips", "SAT>IP Server %sinitialized "
                     "(HTTP %s:%d, RTSP %s:%d, "
-                    "descramble %d, muxcnf %d, DVB-T %d, DVB-S2 %d, DVB-C %d)",
+                    "descramble %d, muxcnf %d)",
               prefix,
               http_server_ip, http_server_port,
               http_server_ip, satip_server_rtsp_port,
-              descramble, muxcnf,
+              descramble, muxcnf);
+  tvhinfo("satips", "SAT>IP Server tuners: DVB-T/T2 %d/%d, DVB-S/S2 %d/%d, DVB-C/C2 %d/%d, ATSC %d, DVB-Cable/AnnexB %d",
               config_get_int("satip_dvbt", 0),
+              config_get_int("satip_dvbt2", 0),
               config_get_int("satip_dvbs", 0),
-              config_get_int("satip_dvbc", 0));
+              config_get_int("satip_dvbs2", 0),
+              config_get_int("satip_dvbc", 0),
+              config_get_int("satip_dvbc2", 0),
+              config_get_int("satip_atsc", 0),
+              config_get_int("satip_dvbcb", 0));
 }
 
 /*

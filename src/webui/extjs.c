@@ -531,14 +531,24 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       ssave |= config_set_int("satip_weight", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_descramble")))
       ssave |= config_set_int("satip_descramble", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
-      ssave |= config_set_int("satip_dvbt", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))
-      ssave |= config_set_int("satip_dvbs", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
-      ssave |= config_set_int("satip_dvbc", atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "satip_muxcnf")))
       ssave |= config_set_int("satip_muxcnf", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))
+      ssave |= config_set_int("satip_dvbs", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs2")))
+      ssave |= config_set_int("satip_dvbs2", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
+      ssave |= config_set_int("satip_dvbt", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt2")))
+      ssave |= config_set_int("satip_dvbt2", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
+      ssave |= config_set_int("satip_dvbc", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc2")))
+      ssave |= config_set_int("satip_dvbc2", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_atsc")))
+      ssave |= config_set_int("satip_atsc", atoi(str));
+    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbcb")))
+      ssave |= config_set_int("satip_dvbcb", atoi(str));
     if (save | ssave)
       config_save();
     if (ssave)

@@ -88,21 +88,51 @@ rtsp_delsys(int fe, int *findex)
   if (fe < 1)
     return DVB_SYS_NONE;
   pthread_mutex_lock(&global_lock);
-  i = config_get_int("satip_dvbt", 0);
-  if (fe <= i) {
-    res = DVB_SYS_DVBT;
-    goto result;
-  }
-  fe -= i;
   i = config_get_int("satip_dvbs", 0);
   if (fe <= i) {
     res = DVB_SYS_DVBS;
     goto result;
   }
   fe -= i;
+  i = config_get_int("satip_dvbs2", 0);
+  if (fe <= i) {
+    res = DVB_SYS_DVBS;
+    goto result;
+  }
+  fe -= i;
+  i = config_get_int("satip_dvbt", 0);
+  if (fe <= i) {
+    res = DVB_SYS_DVBT;
+    goto result;
+  }
+  fe -= i;
+  i = config_get_int("satip_dvbt2", 0);
+  if (fe <= i) {
+    res = DVB_SYS_DVBT;
+    goto result;
+  }
+  fe -= i;
   i = config_get_int("satip_dvbc", 0);
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
+    goto result;
+  }
+  fe -= i;
+  i = config_get_int("satip_dvbc2", 0);
+  if (fe <= i) {
+    res = DVB_SYS_DVBC_ANNEX_A;
+    goto result;
+  }
+  fe -= i;
+  i = config_get_int("satip_atsc", 0);
+  if (fe <= i) {
+    res = DVB_SYS_ATSC;
+    goto result;
+  }
+  fe -= i;
+  i = config_get_int("satip_dvbcb", 0);
+  if (fe <= i) {
+    res = DVB_SYS_DVBC_ANNEX_B;
     goto result;
   }
   pthread_mutex_unlock(&global_lock);
@@ -688,6 +718,8 @@ msys_to_tvh(http_connection_t *hc)
     { "dvbt2", DVB_SYS_DVBT2 },
     { "dvbc",  DVB_SYS_DVBC_ANNEX_A },
     { "dvbc2", DVB_SYS_DVBC_ANNEX_C },
+    { "atsc",  DVB_SYS_ATSC },
+    { "dvbcb", DVB_SYS_DVBC_ANNEX_B }
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "msys");
   return s[0] ? str2val(s, tab) : DVB_SYS_NONE;
@@ -811,6 +843,7 @@ mtype_to_tvh(http_connection_t *hc)
     { "64qam",  DVB_MOD_QAM_64 },
     { "128qam", DVB_MOD_QAM_128 },
     { "256qam", DVB_MOD_QAM_256 },
+    { "8vsb",   DVB_MOD_VSB_8 },
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "mtype");
   if (s[0]) {
@@ -1087,6 +1120,11 @@ rtsp_process_play(http_connection_t *hc, int setup)
     dmc->dmc_fe_inversion = specinv;
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
+
+  } else if (msys == DVB_SYS_ATSC || msys == DVB_SYS_DVBC_ANNEX_B) {
+
+    if (!TAILQ_EMPTY(&hc->hc_req_args))
+      goto error;
 
   } else {
 

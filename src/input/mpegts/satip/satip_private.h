@@ -110,7 +110,7 @@ struct satip_frontend
    */
   int                        sf_number;
   dvb_fe_type_t              sf_type;
-  int                        sf_type_t2;
+  int                        sf_type_v2;
   char                      *sf_type_override;
   int                        sf_master;
   int                        sf_udp_rtp_port;
@@ -127,6 +127,7 @@ struct satip_frontend
   int                        sf_thread;
   int                        sf_running;
   int                        sf_tables;
+  int                        sf_atsc_c;
   int                        sf_position;
   signal_state_t             sf_status;
   gtimer_t                   sf_monitor_timer;
@@ -183,7 +184,7 @@ char *satip_device_nicename ( satip_device_t *sd, char *buf, int len );
 
 satip_frontend_t *
 satip_frontend_create
-  ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int t2, int num );
+  ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int v2, int num );
 
 void satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *m );
 

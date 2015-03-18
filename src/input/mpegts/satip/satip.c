@@ -390,7 +390,7 @@ satip_device_create( satip_device_info_t *info )
   tvh_uuid_t uuid;
   htsmsg_t *conf = NULL, *feconf = NULL;
   char *argv[10];
-  int i, j, n, m, fenum, t2, save = 0;
+  int i, j, n, m, fenum, v2, save = 0;
   dvb_fe_type_t type;
   char buf2[60];
 
@@ -454,20 +454,34 @@ satip_device_create( satip_device_info_t *info )
   n = http_tokenize(sd->sd_info.tunercfg, argv, 10, ',');
   for (i = 0, fenum = 1; i < n; i++) {
     type = DVB_TYPE_NONE;
-    t2 = 0;
+    v2 = 0;
     if (strncmp(argv[i], "DVBS2-", 6) == 0) {
       type = DVB_TYPE_S;
       m = atoi(argv[i] + 6);
+      v2 = 1;
+    } else if (strncmp(argv[i], "DVBS-", 5) == 0) {
+      type = DVB_TYPE_S;
+      m = atoi(argv[i] + 5);
     } else if (strncmp(argv[i], "DVBT2-", 6) == 0) {
       type = DVB_TYPE_T;
       m = atoi(argv[i] + 6);
-      t2 = 1;
+      v2 = 1;
     } else if (strncmp(argv[i], "DVBT-", 5) == 0) {
       type = DVB_TYPE_T;
       m = atoi(argv[i] + 5);
+    } else if (strncmp(argv[i], "DVBC2-", 6) == 0) {
+      type = DVB_TYPE_C;
+      m = atoi(argv[i] + 6);
+      v2 = 1;
     } else if (strncmp(argv[i], "DVBC-", 5) == 0) {
       type = DVB_TYPE_C;
       m = atoi(argv[i] + 5);
+    } else if (strncmp(argv[i], "ATSC-", 5) == 0) {
+      type = DVB_TYPE_ATSC;
+      m = atoi(argv[i] + 5);
+    } else if (strncmp(argv[i], "DVBCB-", 6) == 0) {
+      m = atoi(argv[i] + 6);
+      v2 = 2;
     }
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
@@ -477,7 +491,7 @@ satip_device_create( satip_device_info_t *info )
              satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else {
       for (j = 0; j < m; j++)
-        if (satip_frontend_create(feconf, sd, type, t2, fenum))
+        if (satip_frontend_create(feconf, sd, type, v2, fenum))
           fenum++;
     }
   }

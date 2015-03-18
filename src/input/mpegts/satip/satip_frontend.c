@@ -65,7 +65,14 @@ satip_frontend_signal_cb( void *aux )
     return;
   if (!lfe->sf_tables) {
     psi_tables_default(mmi->mmi_mux);
-    psi_tables_dvb(mmi->mmi_mux);
+    if (lfe->sf_type == DVB_TYPE_ATSC) {
+      if (lfe->sf_atsc_c)
+        psi_tables_atsc_c(mmi->mmi_mux);
+      else
+        psi_tables_atsc_t(mmi->mmi_mux);
+    } else {
+      psi_tables_dvb(mmi->mmi_mux);
+    }
     lfe->sf_tables = 1;
   }
   sigstat.status_text  = signal2str(lfe->sf_status);
@@ -335,6 +342,16 @@ const idclass_t satip_frontend_dvbc_class =
   }
 };
 
+const idclass_t satip_frontend_atsc_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_atsc",
+  .ic_caption    = "SAT>IP ATSC Frontend",
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
@@ -500,6 +517,7 @@ satip_frontend_start_mux
   lfe->sf_req       = tr;
   lfe->sf_running   = 1;
   lfe->sf_tables    = 0;
+  lfe->sf_atsc_c    = lm->lm_tuning.dmc_fe_modulation != DVB_MOD_VSB_8;
   lfe->sf_status    = SIGNAL_NONE;
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
@@ -618,6 +636,8 @@ satip_frontend_network_list ( mpegts_input_t *mi )
     idc = &dvb_network_dvbs_class;
   else if (lfe->sf_type == DVB_TYPE_C)
     idc = &dvb_network_dvbc_class;
+  else if (lfe->sf_type == DVB_TYPE_ATSC)
+    idc = &dvb_network_atsc_class;
   else
     return NULL;
 
@@ -1562,7 +1582,7 @@ satip_frontend_hacks( satip_frontend_t *lfe, int *def_positions )
 
 satip_frontend_t *
 satip_frontend_create
-  ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int t2, int num )
+  ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int v2, int num )
 {
   const idclass_t *idc;
   const char *uuid = NULL, *override = NULL;
@@ -1606,6 +1626,8 @@ satip_frontend_create
     idc = &satip_frontend_dvbt_class;
   else if (type == DVB_TYPE_C)
     idc = &satip_frontend_dvbc_class;
+  else if (type == DVB_TYPE_ATSC)
+    idc = &satip_frontend_atsc_class;
   else {
     tvherror("satip", "unknown FE type %d", type);
     return NULL;
@@ -1618,7 +1640,7 @@ satip_frontend_create
   lfe->sf_device   = sd;
   lfe->sf_number   = num;
   lfe->sf_type     = type;
-  lfe->sf_type_t2  = t2;
+  lfe->sf_type_v2  = v2;
   lfe->sf_master   = master;
   lfe->sf_type_override = override ? strdup(override) : NULL;
   satip_frontend_hacks(lfe, &def_positions);
