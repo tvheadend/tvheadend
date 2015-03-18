@@ -159,7 +159,6 @@ satip_server_http_xml(http_connection_t *hc)
     srcs = 0;
 
   devicelist = htsbuf_to_string(&q);
-  printf("devicelist: '%s'\n", devicelist);
   htsbuf_queue_flush(&q);
 
   if (devicelist == NULL || devicelist[0] == '\0') {
