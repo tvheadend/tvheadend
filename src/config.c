@@ -1402,7 +1402,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if ((config_lock_fd = file_lock(config_lock, 3)) < 0)
     exit(78); /* config error */
 
-  chown(config_lock, uid, gid);
+  if (chown(config_lock, uid, gid))
+    tvhwarn("config", "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
 
   /* Load global settings */
   config = hts_settings_load("config");
