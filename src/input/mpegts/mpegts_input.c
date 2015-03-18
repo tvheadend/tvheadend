@@ -924,9 +924,9 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb, int tsb_len 
   mpegts_table_t *mt, **vec;
 
   /* Collate - tables may be removed during callbacks */
+  pthread_mutex_lock(&mm->mm_tables_lock);
   i = mm->mm_num_tables;
   vec = alloca(i * sizeof(mpegts_table_t *));
-  pthread_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     c++;
     if (mt->mt_destroyed || !mt->mt_subscribed || mt->mt_pid != pid)
