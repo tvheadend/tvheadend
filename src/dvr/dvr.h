@@ -163,6 +163,7 @@ typedef struct dvr_entry {
   char *de_directory; /* Can be set for autorec entries, will override any 
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
+  lang_str_t *de_subtitle;   /* Subtitle in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   uint32_t de_content_type;  /* Content type (from EPG) (only code) */
 
@@ -244,6 +245,16 @@ typedef struct dvr_entry {
 
 #define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))
 
+typedef enum {
+  DVR_AUTOREC_RECORD_ALL = 0,
+  DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER = 1,
+  DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE = 2,
+  DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION = 3,
+  DVR_AUTOREC_RECORD_ONCE_PER_WEEK = 4,
+  DVR_AUTOREC_RECORD_ONCE_PER_DAY = 5
+} dvr_autorec_dedup_t;
+
+
 /**
  * Autorec entry
  */
@@ -294,6 +305,9 @@ typedef struct dvr_autorec_entry {
 
   time_t dae_start_extra;
   time_t dae_stop_extra;
+  
+  int dae_record;
+  
 } dvr_autorec_entry_t;
 
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
@@ -432,7 +446,7 @@ dvr_entry_t *
 dvr_entry_create_htsp( const char *dvr_config_uuid,
                        channel_t *ch, time_t start, time_t stop,
                        time_t start_extra, time_t stop_extra,
-                       const char *title, const char *description,
+                       const char *title, const char* subtitle, const char *description,
                        const char *lang, epg_genre_t *content_type,
                        const char *owner, const char *creator,
                        dvr_autorec_entry_t *dae,
@@ -441,7 +455,7 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de,
-                  const char* de_title, const char *de_desc, const char *lang,
+                  const char* de_title, const char* de_subtitle, const char *de_desc, const char *lang,
                   time_t de_start, time_t de_stop,
                   time_t de_start_extra, time_t de_stop_extra,
                   dvr_prio_t pri, int retention );
@@ -506,7 +520,7 @@ dvr_entry_t *
 dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
                   channel_t *ch, time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
-                  const char *title, const char *description,
+                  const char *title, const char* subtitle, const char *description,
                   const char *lang, epg_genre_t *content_type,
                   const char *owner, const char *creator,
                   dvr_autorec_entry_t *dae, dvr_timerec_entry_t *tae,

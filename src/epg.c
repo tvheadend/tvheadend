@@ -1289,7 +1289,7 @@ const char *epg_episode_get_subtitle
   return lang_str_get(e->subtitle, lang);
 }
 
-const char *epg_episode_get_summary 
+const char *epg_episode_get_summary
   ( const epg_episode_t *e, const char *lang )
 {
   if (!e || !e->summary) return NULL;

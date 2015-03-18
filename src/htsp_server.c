@@ -710,7 +710,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_RECORDING:
     s = "recording";
-    if (de->de_rec_state == DVR_RS_ERROR)
+    if (de->de_rec_state == DVR_RS_ERROR ||
+       (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
       error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_COMPLETED:
@@ -1412,7 +1413,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   epg_broadcast_t *e = NULL;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
-  const char *dvr_config_name, *title, *desc, *creator, *lang, *comment;
+  const char *dvr_config_name, *title, *desc, *subtitle, *creator, *lang, *comment;
   int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority, retention;
   channel_t *ch = NULL;
@@ -1454,13 +1455,17 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("Invalid arguments");
 
     /* Optional attributes */
+    if (!(subtitle = htsmsg_get_str(in, "subtitle")))
+      subtitle = "";
+
+    /* Optional attributes */
     if (!(desc = htsmsg_get_str(in, "description")))
       desc = "";
 
     // create the dvr entry
     de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
-                               title, desc, lang, 0,
+                               title, subtitle, desc, lang, 0,
                                htsp->htsp_granted_access->aa_username,
                                creator, NULL,
                                priority, retention, comment);
@@ -1505,7 +1510,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t dvrEntryId;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority, retention;
-  const char *title, *desc, *lang;
+  const char *title, *subtitle, *desc, *lang;
     
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
@@ -1527,11 +1532,12 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   retention   = htsmsg_get_u32_or_default(in, "retention",  0);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
+  subtitle    = htsmsg_get_str(in, "title");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language");
   if (!lang) lang = htsp->htsp_language;
 
-  de = dvr_entry_update(de, title, desc, lang, start, stop,
+  de = dvr_entry_update(de, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention);
 
   //create response

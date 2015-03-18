@@ -59,6 +59,10 @@ lang_str_t     *lang_str_deserialize
 /* Compare */
 int             lang_str_compare ( lang_str_t *ls1, lang_str_t *ls2 );
 
+/* Empty */
+int             strempty(const char* c);
+int             lang_str_empty(lang_str_t* str);
+
 /* Init/Done */
 void            lang_str_done( void );
 

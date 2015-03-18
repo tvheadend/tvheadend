@@ -37,8 +37,11 @@ typedef struct dvb_fastscan {
 
   LIST_HEAD(,dvb_fastscan_item) items;
 
-  int      position;
-  uint32_t frequency;
+  int                       position;
+  dvb_fe_delivery_system_t  delsys;
+  dvb_polarisation_t        polarisation;
+  uint32_t                  frequency;
+  uint32_t                  symbolRate;
 } dvb_fastscan_t;
 
 static RB_HEAD(,dvb_fastscan) fastscan_rb;
@@ -51,13 +54,13 @@ _fs_cmp(const void *a, const void *b)
   if (r == 0) {
     r = ((dvb_fastscan_t *)a)->frequency - ((dvb_fastscan_t *)b)->frequency;
     if (abs(r) < 2000)
-      return 0;
+      return (((dvb_fastscan_t *)a)->polarisation - ((dvb_fastscan_t *)b)->polarisation);
   }
   return r;
 }
 
 void
-dvb_fastscan_each(void *aux, int position, uint32_t frequency,
+dvb_fastscan_each(void *aux, int position, uint32_t frequency, dvb_polarisation_t polarisation,
                   void (*job)(void *aux, bouquet_t *bq,
                               const char *name, int pid))
 {
@@ -69,13 +72,14 @@ dvb_fastscan_each(void *aux, int position, uint32_t frequency,
   SKEL_ALLOC(fastscan_rb_skel);
   fastscan_rb_skel->position = position;
   fastscan_rb_skel->frequency = frequency;
+  fastscan_rb_skel->polarisation = polarisation;
   fs = RB_FIND(&fastscan_rb, fastscan_rb_skel, link, _fs_cmp);
   if (!fs)
     return;
   LIST_FOREACH(fsi, &fs->items, ilink) {
     dvb_sat_position_to_str(fs->position, buf, sizeof(buf));
-    snprintf(url, sizeof(url), "dvb-fastscan://dvbs,%s,%u,%d",
-             buf, fs->frequency, fsi->pid);
+    snprintf(url, sizeof(url), "dvb-fastscan://%s,%s,%u,%s,%u,%d", dvb_delsys2str(fastscan_rb_skel->delsys),
+             buf, fs->frequency, dvb_pol2str(fs->polarisation), fs->symbolRate, fsi->pid);
     bq = bouquet_find_by_source(NULL, url, 0);
     if (bq == NULL || !bq->bq_enabled)
       continue;
@@ -90,7 +94,7 @@ dvb_fastscan_create(htsmsg_t *e)
   dvb_fastscan_t *fs;
   dvb_fastscan_item_t *fsi;
   bouquet_t *bq;
-  const char *name;
+  const char *name, *polarisation, *delsys;
   int pid;
   char url[64], buf[16];
 
@@ -103,10 +107,18 @@ dvb_fastscan_create(htsmsg_t *e)
     goto fail;
   if ((name = htsmsg_get_str(e, "name")) == NULL)
     goto fail;
+  if (htsmsg_get_u32(e, "symbolrate", &fastscan_rb_skel->symbolRate))
+    goto fail;
+  if ((delsys = htsmsg_get_str(e, "delsys")) == NULL)
+    goto fail;
+  if ((polarisation = htsmsg_get_str(e, "polarisation")) == NULL)
+    goto fail;
 
+  fastscan_rb_skel->polarisation = dvb_str2pol(polarisation);
+  fastscan_rb_skel->delsys = dvb_str2delsys(delsys);
   dvb_sat_position_to_str(fastscan_rb_skel->position, buf, sizeof(buf));
-  snprintf(url, sizeof(url), "dvb-fastscan://dvbs,%s,%u,%d",
-           buf, fastscan_rb_skel->frequency, pid);
+  snprintf(url, sizeof(url), "dvb-fastscan://%s,%s,%u,%s,%u,%d", dvb_delsys2str(fastscan_rb_skel->delsys),
+           buf, fastscan_rb_skel->frequency, dvb_pol2str(fastscan_rb_skel->polarisation), fastscan_rb_skel->symbolRate, pid);
   bq = bouquet_find_by_source(name, url, 1);
   if (bq == NULL)
     goto fail;

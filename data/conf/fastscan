@@ -1,86 +1,128 @@
 [
   {
-    "name": "Canal Digitaal Astra1",
+    "name": "Canal Digitaal SD",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 900
   },
   {
-    "name": "TV Vlaanderen Astra1",
+    "name": "TV Vlaanderen SD",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 910
   },
   {
-    "name": "TéléSAT Astra1",
+    "name": "TéléSAT SD",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 920
   },
   {
     "name": "Mobistar NL Astra1",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 930
   },
   {
     "name": "Mobistar FR Astra1",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 940
   },
   {
     "name": "AustriaSat Astra1",
     "position": 192,
     "frequency": 12515000,
+    "symbolrate" : 22000000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 950
   },
   {
-    "name": "Canal Digitaal Astra3",
+    "name": "Canal Digitaal HD",
     "position": 235,
     "frequency": 12187000,
-    "pid": 900
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
+    "pid": 901
   },
   {
-    "name": "TV Vlaanderen Astra3",
+    "name": "TV Vlaanderen HD",
     "position": 235,
     "frequency": 12187000,
-    "pid": 910
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
+    "pid": 911
   },
     {
-    "name": "TéléSAT Astra3",
+    "name": "TéléSAT HD",
     "position": 235,
     "frequency": 12187000,
-    "pid": 920
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
+    "pid": 921
   },
   {
     "name": "Mobistar NL Astra3",
     "position": 235,
     "frequency": 12187000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
     "pid": 930
   },
   {
     "name": "Mobistar FR Astra3",
     "position": 235,
     "frequency": 12187000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
     "pid": 940
   },
   {
     "name": "AustriaSat Astra3",
     "position": 235,
     "frequency": 12187000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs2",
     "pid": 950
   },
   {
     "name": "Skylink: Czech Republic",
     "position": 235,
     "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 30
   },
   {
     "name": "Skylink: Slovak Republic",
     "position": 235,
     "frequency": 12070000,
+    "symbolrate" : 27500000,
+    "polarisation" : "H",
+    "delsys" : "dvbs",
     "pid": 31
   }
 ]
