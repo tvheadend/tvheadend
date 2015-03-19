@@ -181,6 +181,7 @@ linuxdvb_get_type(int linux_type)
 /*
  *
  */
+#if DVB_VER_ATLEAST(5,5)
 static void
 linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
 {
@@ -212,6 +213,7 @@ linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
   }
   *_cmd = cmd;
 }
+#endif
 
 /*
  * Add adapter by path
