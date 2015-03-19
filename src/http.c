@@ -343,8 +343,9 @@ http_error(http_connection_t *hc, int error)
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
   if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
-    tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "http", "%s: %s -- %d",
-	   addrstr, hc->hc_url, error);
+    tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "http", "%s: %s %s %s -- %d",
+	   addrstr, http_ver2str(hc->hc_version),
+          http_cmd2str(hc->hc_cmd), hc->hc_url, error);
 
   if (hc->hc_version != RTSP_VERSION_1_0) {
     htsbuf_queue_flush(&hc->hc_reply);
