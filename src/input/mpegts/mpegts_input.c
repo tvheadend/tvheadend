@@ -863,7 +863,7 @@ mpegts_input_recv_packets
   mi->mi_last_dispatch = dispatch_clock;
 
   /* Check for sync */
-  while ( (len >= (MIN_TS_SYN * 188)) &&
+  while ( (len >= MIN_TS_SYN) &&
           ((len2 = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
     mmi->mmi_stats.unc++;
     --len;
