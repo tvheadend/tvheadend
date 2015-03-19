@@ -621,6 +621,7 @@ bw_to_tvh(http_connection_t *hc)
 {
   int bw = atof(http_arg_get_remove(&hc->hc_req_args, "bw")) * 1000;
   switch (bw) {
+  case 0: return DVB_BANDWIDTH_AUTO;
   case DVB_BANDWIDTH_1_712_MHZ:
   case DVB_BANDWIDTH_5_MHZ:
   case DVB_BANDWIDTH_6_MHZ:
