@@ -162,7 +162,7 @@ linuxdvb_adapter_create
  *
  */
 static dvb_fe_type_t
-linux_dvb_get_type(int linux_type)
+linuxdvb_get_type(int linux_type)
 {
   switch (linux_type) {
   case FE_QPSK:
@@ -176,6 +176,41 @@ linux_dvb_get_type(int linux_type)
   default:
     return DVB_TYPE_NONE;
   }
+}
+
+/*
+ *
+ */
+static void
+linuxdvb_get_systems(int fd, struct dtv_property *_cmd)
+{
+  struct dtv_property cmd = {
+    .cmd = DTV_ENUM_DELSYS
+  };
+  struct dtv_properties cmdseq = {
+    .num   = 1,
+    .props = &cmd
+  };
+  int r;
+
+  r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
+  if (!r && cmd.u.buffer.len) {
+    struct dtv_property fecmd[2] = {
+      {
+        .cmd    = DTV_DELIVERY_SYSTEM,
+        .u.data = cmd.u.buffer.data[0]
+      },
+      {
+        .cmd    = DTV_TUNE
+      }
+    };
+    cmdseq.props = fecmd;
+    cmdseq.num   = 2;
+    r = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
+  } else {
+    cmd.u.buffer.len = 0;
+  }
+  *_cmd = cmd;
 }
 
 /*
@@ -199,13 +234,7 @@ linuxdvb_adapter_add ( const char *path )
 #if DVB_VER_ATLEAST(5,5)
   int delsys;
   dvb_fe_type_t fetypes[DVB_TYPE_LAST+1] = { 0 };
-  struct dtv_property   cmd = {
-    .cmd = DTV_ENUM_DELSYS
-  };
-  struct dtv_properties cmdseq = {
-    .num   = 1,
-    .props = &cmd
-  };
+  struct dtv_property cmd;
 #endif
 
   /* Validate the path */
@@ -243,23 +272,7 @@ linuxdvb_adapter_add ( const char *path )
       continue;
     }
 #if DVB_VER_ATLEAST(5,5)
-    r = ioctl(fd, FE_GET_PROPERTY, &cmdseq);
-    if (!r && cmd.u.buffer.len) {
-      struct dtv_property fecmd[2] = {
-        {
-          .cmd    = DTV_DELIVERY_SYSTEM,
-          .u.data = cmd.u.buffer.data[0]
-        },
-        {
-          .cmd    = DTV_TUNE
-        }
-      };
-      cmdseq.props = fecmd;
-      cmdseq.num   = 2;
-      r = ioctl(fd, FE_SET_PROPERTY, &cmdseq);
-    } else {
-      cmd.u.buffer.len = 0;
-    }
+    linuxdvb_get_systems(fd, &cmd);
 #endif
     r = ioctl(fd, FE_GET_INFO, &dfi);
     close(fd);
@@ -267,7 +280,7 @@ linuxdvb_adapter_add ( const char *path )
       tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", fe_path);
       continue;
     }
-    type = linux_dvb_get_type(dfi.type);
+    type = linuxdvb_get_type(dfi.type);
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to determine FE type %s - %i", fe_path, dfi.type);
       continue;
