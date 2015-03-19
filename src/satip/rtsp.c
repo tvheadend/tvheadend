@@ -980,8 +980,13 @@ rtsp_parse_cmd
     if (sr < 1000) goto end;
     ds = atoi(http_arg_get_remove(&hc->hc_req_args, "ds"));
     if (ds < 0 || ds > 255) goto end;
-    plp = atoi(http_arg_get_remove(&hc->hc_req_args, "plp"));
-    if (plp < 0 || plp > 255) goto end;
+    s = http_arg_get_remove(&hc->hc_req_args, "plp");
+    if (s[0]) {
+      plp = atoi(http_arg_get_remove(&hc->hc_req_args, "plp"));
+      if (plp < 0 || plp > 255) goto end;
+    } else {
+      plp = DVB_NO_STREAM_ID_FILTER;
+    }
     specinv = atoi(http_arg_get_remove(&hc->hc_req_args, "specinv"));
     if (specinv < 0 || specinv > 1) goto end;
 
