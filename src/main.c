@@ -934,10 +934,8 @@ main(int argc, char **argv)
   tvhftrace("main", http_server_done);
   tvhftrace("main", webui_done);
   tvhftrace("main", fsmonitor_done);
-#if ENABLE_MPEGTS
-  tvhftrace("main", mpegts_done);
-#endif
   tvhftrace("main", http_client_done);
+  tvhftrace("main", tcp_server_done);
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
@@ -950,7 +948,9 @@ main(int argc, char **argv)
   pthread_mutex_unlock(&global_lock);
 
   tvhftrace("main", epggrab_done);
-  tvhftrace("main", tcp_server_done);
+#if ENABLE_MPEGTS
+  tvhftrace("main", mpegts_done);
+#endif
   tvhftrace("main", descrambler_done);
   tvhftrace("main", service_mapper_done);
   tvhftrace("main", service_done);
