@@ -1,6 +1,6 @@
 /*
  *  Service Mapper functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -376,11 +376,10 @@ service_mapper_thread ( void *aux )
     tvhinfo("service_mapper", "checking %s", s->s_nicename);
     prch.prch_id = s;
     sub = subscription_create_from_service(&prch, NULL,
-                                           SUBSCRIPTION_PACKET |
                                            SUBSCRIPTION_PRIO_MAPPER,
                                            "service_mapper",
-                                           0, NULL, NULL, "service_mapper",
-                                           NULL);
+                                           SUBSCRIPTION_PACKET,
+                                           NULL, NULL, "service_mapper", NULL);
 
     /* Failed */
     if (!sub) {
