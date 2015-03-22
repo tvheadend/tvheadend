@@ -1039,8 +1039,8 @@ mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
   uint16_t pid;
-  uint8_t cc;
-  uint8_t *tsb = mpkt->mp_data;
+  uint8_t cc, cc2;
+  uint8_t *tsb = mpkt->mp_data, *tsb2, *tsb2_end;
   int len = mpkt->mp_len, llen;
   int type = 0, f;
   mpegts_pid_t *mp;
@@ -1078,7 +1078,6 @@ mpegts_input_process
     llen = mpegts_word_count(tsb, len, 0xFF9FFFD0);
 
     pid = (tsb[1] << 8) | tsb[2];
-    cc  = tsb[3];
 
     /* Transport error */
     if (pid & 0x8000) {
@@ -1100,13 +1099,17 @@ mpegts_input_process
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
 
       /* Low level CC check */
-      if (cc & 0x10) {
-        cc  &= 0x0f;
-        if (mp->mp_cc != -1 && mp->mp_cc != cc) {
-          tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, mp->mp_cc);
+      if (tsb[3] & 0x10) {
+        for (tsb2 = tsb, tsb2_end = tsb + llen, cc2 = mp->mp_cc;
+             tsb2 < tsb2_end; tsb2 += 188) {
+          cc = tsb2[3] & 0x0f;
+          if (cc2 != -1 && cc2 != cc) {
+            tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, cc2);
           ++mmi->mmi_stats.cc;
+          }
+          cc2 = (cc + 1) & 0xF;
         }
-        mp->mp_cc = (cc + 1) & 0xF;
+        mp->mp_cc = cc2;
       }
 
       type = mp->mp_type;
