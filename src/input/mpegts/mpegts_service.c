@@ -382,6 +382,11 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 
   if(s->s_dvb_svcname != NULL)
     si->si_service = strdup(s->s_dvb_svcname);
+
+  if(m->mm_network != NULL && m->mm_network->mn_satpos != INT_MAX) {
+    dvb_sat_position_to_str(m->mm_network->mn_satpos, buf, sizeof(buf));
+    si->si_satpos = strdup(buf);
+  }
 }
 
 /*
