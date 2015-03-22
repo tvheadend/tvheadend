@@ -805,7 +805,8 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     if (mt->mt_defer_cmd) {
       TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
       mt->mt_defer_cmd = 0;
-      mpegts_table_release(mt);
+      if (mpegts_table_release(mt))
+        return;
     }
     mt->mt_subscribed = 0;
     LIST_REMOVE(mt, mt_link);

@@ -360,6 +360,8 @@ udp_sendinit ( const char *subsystem, const char *name,
     return UDP_FATAL_ERROR;
   }
 
+  uc->fd = fd;
+
   /* Bind to interface */
   ifindex = udp_ifindex_required(uc) ? udp_get_ifindex(ifname) : 0;
   if (ifindex < 0) {
@@ -406,7 +408,6 @@ udp_sendinit ( const char *subsystem, const char *name,
     tvhwarn(subsystem, "%s - cannot increase UDP tx buffer size [%s]",
             name, strerror(errno));
 
-  uc->fd = fd;
   return uc;
 
 error:

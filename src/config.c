@@ -1367,10 +1367,14 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 {
   struct stat st;
   char buf[1024];
-  const char *homedir = getenv("HOME");
 
   /* Generate default */
   if (!path) {
+    const char *homedir = getenv("HOME");
+    if (homedir == NULL) {
+      tvherror("START", "environment variable HOME is not set");
+      exit(EXIT_FAILURE);
+    }
     snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
     path = buf;
   }

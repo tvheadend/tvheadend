@@ -1432,13 +1432,17 @@ dvb_nit_mux
       break;
     case 0x81:
       if (priv == 0) goto lcn;
+      break;
     case 0x82:
       if (priv == 0) goto lcn;
+      break;
     case 0x83:
       if (priv == 0 || priv == 0x28 || priv == 0x29 || priv == 0xa5 ||
           priv == 0x233A) goto lcn;
+      break;
     case 0x86:
       if (priv == 0) goto lcn;
+      break;
     case 0x88:
       if (priv == 0x28) {
         /* HD simulcast */

@@ -227,10 +227,9 @@ static void
 parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
           int len, int start)
 {
-  int l, muxlen, p, hdr = 0;
+  int l, muxlen, p;
   th_pkt_t *pkt;
   int64_t olddts = PTS_UNSET, oldpts = PTS_UNSET;
-  int64_t newdts = PTS_UNSET, newpts = PTS_UNSET;
 
   if(st->es_parser_state == 0) {
     if (start) {
@@ -253,8 +252,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     oldpts = st->es_curpts;
     hlen = parse_pes_header(t, st, data + 6, len - 6);
     if (hlen >= 0 && st->es_buf.sb_ptr) {
-      newdts = st->es_curdts;
-      newpts = st->es_curpts;
       st->es_curdts = olddts;
       st->es_curpts = oldpts;
     }
@@ -287,10 +284,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
         st->es_buf.sb_err = 0;
       }
 
-      if (hdr && newdts != PTS_UNSET) {
-        st->es_curdts = newdts;
-        st->es_curpts = newpts;
-      }
       p += muxlen + 3;
     /* ADTS */
     } else if(p == 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
@@ -306,10 +299,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
       sbuf_append(&st->es_buf_a, d, muxlen);
       parse_mp4a_data(t, st, 1);
 
-      if (hdr && newdts != PTS_UNSET) {
-        st->es_curdts = newdts;
-        st->es_curpts = newpts;
-      }
       p += muxlen;
 
     /* Wrong bytestream */
@@ -319,10 +308,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     }
   }
 
-  if (hdr && newdts != PTS_UNSET) {
-    st->es_curdts = newdts;
-    st->es_curpts = newpts;
-  }
   if (p > 0)
     sbuf_cut(&st->es_buf, p);
 }

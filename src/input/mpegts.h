@@ -939,7 +939,7 @@ static inline void mpegts_table_grab
 }
 void mpegts_table_release_
   (mpegts_table_t *mt);
-static inline void mpegts_table_release
+static inline int mpegts_table_release
   (mpegts_table_t *mt)
 {
   int v = atomic_dec(&mt->mt_arefcount, 1);
@@ -947,7 +947,9 @@ static inline void mpegts_table_release
   if (v == 1) {
     assert(mt->mt_destroyed == 1);
     mpegts_table_release_(mt);
+    return 1;
   }
+  return 0;
 }
 int mpegts_table_type
   ( mpegts_table_t *mt );

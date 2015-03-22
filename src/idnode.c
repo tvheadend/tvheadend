@@ -1442,11 +1442,13 @@ idnode_thread ( void *p )
     HTSMSG_FOREACH(f, q) {
       node  = idnode_find(f->hmf_name, NULL, NULL);
       event = htsmsg_field_get_str(f);
-      m     = htsmsg_create_map();
-      htsmsg_add_str(m, "uuid", f->hmf_name);
-      if (!node)
-        htsmsg_add_u32(m, "removed", 1);
-      notify_by_msg(event, m);
+      if (event) {
+        m     = htsmsg_create_map();
+        htsmsg_add_str(m, "uuid", f->hmf_name);
+        if (!node)
+          htsmsg_add_u32(m, "removed", 1);
+        notify_by_msg(event, m);
+      }
     }
     
     /* Finished */

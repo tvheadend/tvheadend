@@ -1179,7 +1179,7 @@ rtsp_process_describe(http_connection_t *hc)
   htsbuf_queue_init(&q, 0);
 
   arg = http_arg_get(&hc->hc_args, "Accept");
-  if (strcmp(arg, "application/sdp"))
+  if (arg == NULL || strcmp(arg, "application/sdp"))
     goto error;
 
   if ((u = rtsp_check_urlbase(u)) == NULL)
@@ -1190,8 +1190,10 @@ rtsp_process_describe(http_connection_t *hc)
   pthread_mutex_lock(&rtsp_lock);
 
   if (TAILQ_FIRST(&hc->hc_req_args)) {
-    if (stream < 0)
+    if (stream < 0) {
+      pthread_mutex_unlock(&rtsp_lock);
       goto error;
+    }
     r = rtsp_parse_cmd(hc, stream, -1, &rs, &valid, &oldstate);
     if (r) {
       pthread_mutex_unlock(&rtsp_lock);
@@ -1328,7 +1330,7 @@ rtsp_process_teardown(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   struct session *rs = NULL;
   http_arg_list_t args;
-  char addrbuf[50];
+  char addrbuf[50], session[16];
   int stream;
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
@@ -1348,11 +1350,13 @@ rtsp_process_teardown(http_connection_t *hc)
     pthread_mutex_unlock(&rtsp_lock);
     http_error(hc, !rs ? HTTP_STATUS_BAD_SESSION : HTTP_STATUS_NOT_FOUND);
   } else {
+    strncpy(session, rs->session, sizeof(session));
+    session[sizeof(session)-1] = '\0';
     rtsp_close_session(rs);
     rtsp_free_session(rs);
     pthread_mutex_unlock(&rtsp_lock);
     http_arg_init(&args);
-    http_arg_set(&args, "Session", rs->session);
+    http_arg_set(&args, "Session", session);
     http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, NULL);
     http_arg_flush(&args);
   }

@@ -155,8 +155,7 @@ access_ticket_verify2(const char *id, const char *resource)
     return NULL;
 
   if (tvheadend_webroot) {
-    strcpy(buf, tvheadend_webroot);
-    strcat(buf, at->at_resource);
+    snprintf(buf, sizeof(buf), "%s%s", tvheadend_webroot, at->at_resource);
     r = buf;
   } else {
     r = at->at_resource;

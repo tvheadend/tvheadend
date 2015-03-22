@@ -79,6 +79,8 @@ rtsp_options_decode( http_client_t *hc )
   int i, n, what = 0;
 
   p = http_arg_get(&hc->hc_args, "Public");
+  if (p == NULL)
+    return -EIO;
   n = http_tokenize(p, argv, 32, ',');
   for (i = 1; i < n; i++) {
     if (strcmp(argv[i], "DESCRIBE") == 0)

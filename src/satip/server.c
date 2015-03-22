@@ -238,7 +238,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
 
   tvhtrace("satips", "sending byebye");
 
-  for (attempt = 1; attempt < 3; attempt++) {
+  for (attempt = 1; attempt <= 3; attempt++) {
     switch (attempt) {
     case 1:
       nt = "upnp:rootdevice";

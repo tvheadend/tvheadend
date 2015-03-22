@@ -401,6 +401,7 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
   }
 
   mux = malloc(sizeof(dvb_mux_conf_t));
+  mux->dmc_fe_delsys = -1;
 
   x = htsmsg_get_str(l, "DELIVERY_SYSTEM");
 

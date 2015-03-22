@@ -357,7 +357,7 @@ satip_rtcp_fec(int fec)
   strncpy(buf, s, sizeof(buf));
   buf[sizeof(buf)-1] = '\0';
   p = strchr(buf, '/');
-  while (*p) {
+  while (p && *p) {
     *p = *(p+1);
     p++;
   }
@@ -531,8 +531,7 @@ int satip_rtp_status(void *id, char *buf, int len)
   satip_rtp_session_t *rtp;
   int r = 0;
 
-  if (buf)
-    buf[0] = '\0';
+  buf[0] = '\0';
   pthread_mutex_lock(&satip_rtp_lock);
   rtp = satip_rtp_find(id);
   if (rtp) {
