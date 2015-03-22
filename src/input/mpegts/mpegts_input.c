@@ -1103,7 +1103,7 @@ mpegts_input_process
         for (tsb2 = tsb, tsb2_end = tsb + llen, cc2 = mp->mp_cc;
              tsb2 < tsb2_end; tsb2 += 188) {
           cc = tsb2[3] & 0x0f;
-          if (cc2 != -1 && cc2 != cc) {
+          if (cc2 != 0xff && cc2 != cc) {
             tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, cc2);
           ++mmi->mmi_stats.cc;
           }
