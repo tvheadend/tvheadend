@@ -706,9 +706,9 @@ static void _opentv_compile_pattern_list ( opentv_pattern_list_t *list, htsmsg_t
   TAILQ_INIT(list);
   if (!l) return;
   HTSMSG_FOREACH(f, l) {
-    pattern = calloc(1, sizeof(opentv_pattern_t));
     s = htsmsg_field_get_str(f);
     if (s == NULL) continue;
+    pattern = calloc(1, sizeof(opentv_pattern_t));
     pattern->text = strdup(s);
     if (regcomp(&pattern->compiled, pattern->text, REG_EXTENDED)) {
       tvhlog(LOG_WARNING, "opentv", "error compiling pattern \"%s\"", pattern->text);
