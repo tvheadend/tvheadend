@@ -805,7 +805,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   const char *name, *str;
   char addrbuf[50];
   void *tcp_id;
-  char *p, *saveptr;
+  char *p, *saveptr = NULL;
   mpegts_apids_t pids;
   mpegts_service_t *ms;
   int res = HTTP_STATUS_SERVICE, i;
