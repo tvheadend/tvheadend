@@ -466,11 +466,8 @@ subscription_input(void *opauqe, streaming_message_t *sm)
       if(s->ths_start_message != NULL) {
         streaming_target_deliver(s->ths_output, s->ths_start_message);
         s->ths_start_message = NULL;
-        if (s->ths_service) {
-          pthread_mutex_lock(&s->ths_service->s_stream_mutex);
+        if (s->ths_service)
           s->ths_service->s_running = 1;
-          pthread_mutex_unlock(&s->ths_service->s_stream_mutex);
-        }
       }
       s->ths_state = SUBSCRIPTION_GOT_SERVICE;
     }
