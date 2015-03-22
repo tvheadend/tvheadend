@@ -158,16 +158,11 @@ const idclass_t linuxdvb_en50494_class =
 static int
 linuxdvb_en50494_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc, int vol )
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc,
+    int vol, int pol, int band, int freq )
 {
   int ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp);
   linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
-  linuxdvb_lnb_t *lnb = sc->lse_lnb;
-
-  /* band & polarization */
-  uint8_t  pol  = lnb->lnb_pol(lnb, lm);
-  uint8_t  band = lnb->lnb_band(lnb, lm);
-  uint32_t freq = lnb->lnb_freq(lnb, lm);
 
   /* transponder value - t*/
   uint16_t t = round((( (freq / 1000) + 2 + le->le_frequency) / 4) - 350);

@@ -111,16 +111,10 @@ linuxdvb_lnb_inverted_pol
 static int 
 linuxdvb_lnb_standard_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int vol )
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
+    int vol, int pol, int band, int freq )
 {
-  /* en50494 does not use the voltage tune. this is happend in the switch */
-  if (ls->lse_en50494)
-    return 0;
-
-  /* note: differentiate between linuxdvb_lnb_standard_pol / linuxdvb_lnb_inverted_pol */
-  int pol = ((linuxdvb_lnb_t*)ld)->lnb_pol((linuxdvb_lnb_t*)ld, lm);
-
-  return linuxdvb_diseqc_set_volt(ls->lse_parent, pol);
+  return linuxdvb_diseqc_set_volt(ls->lse_parent, vol);
 }
 
 /*
@@ -158,20 +152,6 @@ linuxdvb_lnb_bandstack_pol
   ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
   return 0;
-}
-
-static int
-linuxdvb_lnb_bandstack_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int vol )
-{
-  int pol = linuxdvb_lnb_bandstack_pol((linuxdvb_lnb_t*)ld, lm);
-
-  /* en50494 does not use the voltage tune. this is happend in the switch */
-  if (ls->lse_en50494)
-    return 0;
-
-  return linuxdvb_diseqc_set_volt(ls->lse_parent, pol);
 }
 
 /* **************************************************************************
@@ -312,7 +292,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   {
     { {
       .ld_type    = "DBS Bandstack",
-      .ld_tune    = linuxdvb_lnb_bandstack_tune,
+      .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_bandstack_freq,
       .lnb_band   = linuxdvb_lnb_bandstack_band,

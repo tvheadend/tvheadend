@@ -401,7 +401,8 @@ linuxdvb_rotor_usals_tune
 static int
 linuxdvb_rotor_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int vol )
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
+    int vol, int pol, int band, int freq )
 {
   linuxdvb_rotor_t *lr = (linuxdvb_rotor_t*)ld;
 

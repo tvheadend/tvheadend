@@ -168,6 +168,8 @@ struct linuxdvb_satconf
    */
   linuxdvb_satconf_ele_list_t ls_elements;
   linuxdvb_satconf_ele_t *ls_last_switch;
+  int                    ls_last_switch_pol;
+  int                    ls_last_switch_band;
   int                    ls_last_vol;
   int                    ls_last_toneburst;
   int                    ls_last_tone_off;
@@ -214,7 +216,8 @@ struct linuxdvb_diseqc
   linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-                   linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls, int pol);
+                   linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
+                   int vol, int pol, int band, int freq);
   int (*ld_post)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls);
 };

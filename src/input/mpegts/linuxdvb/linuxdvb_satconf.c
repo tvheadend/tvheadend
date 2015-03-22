@@ -720,7 +720,7 @@ static void linuxdvb_satconf_ele_tune_cb ( void *o );
 static int
 linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 {
-  int r, i, b, pol;
+  int r, i, vol, pol, band, freq;
   uint32_t f;
   linuxdvb_satconf_t *ls = lse->lse_parent;
 
@@ -737,10 +737,18 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     (linuxdvb_diseqc_t*)lse->lse_lnb
   };
 
-  if (!lse->lse_en50494) {
-    pol = (lse->lse_lnb) ? lse->lse_lnb->lnb_pol(lse->lse_lnb, lm) & 0x1 : 0;
+  if (lse->lse_lnb) {
+    pol  = lse->lse_lnb->lnb_pol (lse->lse_lnb, lm) & 0x1;
+    band = lse->lse_lnb->lnb_band(lse->lse_lnb, lm) & 0x1;
+    freq = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
   } else {
-    pol = 0; /* 13V */
+    tvherror("linuxdvb", "LNB is not defined!!!");
+    return -1;
+  }
+  if (!lse->lse_en50494) {
+    vol = pol;
+  } else {
+    vol  = 0; /* 13V */
   }
 
   /*
@@ -753,7 +761,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   if (!lse->lse_en50494 || lse->lse_switch || lse->lse_rotor) {
     if (ls->ls_diseqc_full) {
       ls->ls_last_tone_off = 0; /* force */
-      if (linuxdvb_satconf_start(ls, 0, pol))
+      if (linuxdvb_satconf_start(ls, 0, vol))
         return -1;
     }
   }
@@ -761,7 +769,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* Diseqc */  
   for (i = ls->ls_diseqc_idx; i < ARRAY_SIZE(lds); i++) {
     if (!lds[i]) continue;
-    r = lds[i]->ld_tune(lds[i], lm, ls, lse, pol);
+    r = lds[i]->ld_tune(lds[i], lm, ls, lse, vol, pol, band, freq);
 
     /* Error */
     if (r < 0) return r;
@@ -781,23 +789,21 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
   /* LNB settings */
   /* EN50494 devices have another mechanism to select polarization */
-  if (!lse->lse_en50494) {
-    /* Set the voltage */
-    if (linuxdvb_diseqc_set_volt(ls, pol))
-      return -1;
-  }
+
+  /* Set the voltage */
+  if (linuxdvb_diseqc_set_volt(ls, vol))
+    return -1;
 
   /* Set the tone (en50494 don't use tone) */
   if (!lse->lse_en50494) {
-    b = lse->lse_lnb->lnb_band(lse->lse_lnb, lm);
-    if (ls->ls_diseqc_full || ls->ls_last_tone_off != b + 1) {
+    if (ls->ls_last_tone_off != band + 1) {
       ls->ls_last_tone_off = 0;
-      tvhtrace("diseqc", "set diseqc tone %s", b ? "on" : "off");
-      if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, b ? SEC_TONE_ON : SEC_TONE_OFF)) {
+      tvhtrace("diseqc", "set diseqc tone %s", band ? "on" : "off");
+      if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, band ? SEC_TONE_ON : SEC_TONE_OFF)) {
         tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
         return -1;
       }
-      ls->ls_last_tone_off = b + 1;
+      ls->ls_last_tone_off = band + 1;
       usleep(20000); // Allow LNB to settle before tuning
     }
   }
@@ -806,7 +812,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   /* use en50494 tuning frequency, if needed (not channel frequency) */
   f = lse->lse_en50494
     ? ((linuxdvb_en50494_t*)lse->lse_en50494)->le_tune_freq
-    : lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+    : freq;
   return linuxdvb_frontend_tune1(lfe, mmi, f);
 }
 
