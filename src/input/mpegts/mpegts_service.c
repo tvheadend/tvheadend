@@ -438,6 +438,26 @@ mpegts_service_provider_name ( service_t *s )
   return ((mpegts_service_t*)s)->s_dvb_provider;
 }
 
+#if ENABLE_MPEGTS_DVB
+static int
+mpegts_picon_mux_isvalid(dvb_mux_t *mux, int orbital_position)
+{
+  switch (mux->mm_onid) {
+    case 0:
+    case 0x1111:
+      return 0;
+    case 1:
+      return orbital_position == 192;
+    case 0x00B1:
+      return mux->mm_tsid != 0x00B0;
+    case 0x0002:
+      return abs(orbital_position-282) < 6;
+    default:
+      return mux->mm_tsid < 0xFF00;
+  }
+}
+#endif
+
 static const char *
 mpegts_service_channel_icon ( service_t *s )
 {
@@ -452,13 +472,16 @@ mpegts_service_channel_icon ( service_t *s )
     dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
     int pos;
 
-    switch ( mmd->lm_tuning.dmc_fe_type) {
+    switch (mmd->lm_tuning.dmc_fe_type) {
       case DVB_TYPE_S:
         if ((pos = dvb_network_get_orbital_pos(mmd->mm_network)) == INT_MAX)
           return NULL;
         if (pos < -1800 || pos > 1800)
           return NULL;
         hash = (pos >= 0 ? pos : 3600 + pos) << 16;
+        if (!mpegts_picon_mux_isvalid(mmd, pos))
+          hash |= ((mmd->lm_tuning.dmc_fe_freq / 1000) & 0x7fff) |
+                  (mmd->lm_tuning.u.dmc_fe_qpsk.orbital_pos == DVB_POLARISATION_HORIZONTAL ? 0x8000 : 0);
         break;
       case DVB_TYPE_C:
         hash = 0xFFFF0000;
