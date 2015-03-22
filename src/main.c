@@ -476,9 +476,7 @@ main(int argc, char **argv)
               opt_fileline     = 0,
               opt_threadid     = 0,
               opt_ipv6         = 0,
-#if ENABLE_SATIP_SERVER
               opt_satip_rtsp   = 0,
-#endif
 #if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
 #endif
