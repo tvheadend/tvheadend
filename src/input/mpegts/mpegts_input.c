@@ -821,7 +821,7 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
 static int inline
 ts_sync_count ( const uint8_t *tsb, int len )
 {
-  int r = 0;
+  const uint8_t *start = tsb;
   while (len >= 188) {
     if (len >= 1880 &&
         tsb[0*188] == 0x47 && tsb[1*188] == 0x47 &&
@@ -829,18 +829,16 @@ ts_sync_count ( const uint8_t *tsb, int len )
         tsb[4*188] == 0x47 && tsb[5*188] == 0x47 &&
         tsb[6*188] == 0x47 && tsb[7*188] == 0x47 &&
         tsb[8*188] == 0x47 && tsb[9*188] == 0x47) {
-      r   += 1880;
       len -= 1880;
       tsb += 1880;
     } else if (*tsb == 0x47) {
-      r   += 188;
       len -= 188;
       tsb += 188;
     } else {
       break;
     }
   }
-  return r;
+  return tsb - start;
 }
 
 void
