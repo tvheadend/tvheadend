@@ -111,6 +111,7 @@ typedef struct source_info {
   char *si_device;
   char *si_adapter;
   char *si_network;
+  char *si_satpos;
   char *si_mux;
   char *si_provider;
   char *si_service;
