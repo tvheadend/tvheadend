@@ -411,7 +411,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
   if (!argv) argv = (void *)local_argv;
   if (!argv[0]) {
     if (argv != (void *)local_argv) {
-      for (i = 1, e = argv; *e; i++, e++);
+      for (i = 1, e = argv + 1; *e; i++, e++);
       i = (i + 1) * sizeof(char *);
       e = alloca(i);
       memcpy(e, argv, i);
