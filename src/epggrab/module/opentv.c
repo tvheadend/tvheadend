@@ -512,7 +512,7 @@ opentv_table_callback
 {
   int r = 1, cid, mjd;
   int sect, last, ver;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
   opentv_status_t *sta = mt->mt_opaque;
   opentv_module_t *mod = sta->os_mod;
   epggrab_ota_mux_t *ota = sta->os_ota;
@@ -526,7 +526,8 @@ opentv_table_callback
   mjd = (mjd - 40587) * 86400;
 
   /* Begin */
-  r = dvb_table_begin(mt, buf, len, tableid, (uint64_t)cid << 32 | mjd, 7,
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, buf, len,
+                      tableid, (uint64_t)cid << 32 | mjd, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) goto done;
 
@@ -534,7 +535,7 @@ opentv_table_callback
   r = opentv_parse_event_section(sta, cid, mjd, buf, len);
 
   /* End */
-  r = dvb_table_end(mt, st, sect);
+  r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 
   /* Complete */
 done:

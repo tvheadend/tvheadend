@@ -215,6 +215,34 @@ typedef struct mpegts_psi_section
 typedef void (*mpegts_psi_section_callback_t)
   ( const uint8_t *tsb, size_t len, void *opaque );
 
+typedef struct mpegts_psi_table_state
+{
+  int      tableid;
+  uint64_t extraid;
+  int      version;
+  int      complete;
+  int      working;
+  uint32_t sections[8];
+  RB_ENTRY(mpegts_psi_table_state) link;
+} mpegts_psi_table_state_t;
+
+typedef struct mpegts_psi_table
+{
+  LIST_ENTRY(mpegts_table) mt_link;
+  RB_HEAD(,mpegts_psi_table_state) mt_state;
+
+  char   *mt_name;
+
+  uint8_t mt_table; // SI table id (base)
+  uint8_t mt_mask;  //              mask
+
+  int     mt_pid;
+
+  int     mt_complete;
+  int     mt_incomplete;
+  uint8_t mt_finished;
+} mpegts_psi_table_t;
+
 /*
  * Assemble SI section
  */
@@ -225,13 +253,13 @@ void mpegts_psi_section_reassemble
 /* PSI table callbacks */
 
 int dvb_table_end
-  (struct mpegts_table *mt, struct mpegts_table_state *st, int sect );
+  (mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int sect );
 int dvb_table_begin
-  (struct mpegts_table *mt, const uint8_t *ptr, int len,
+  (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
    int tableid, uint64_t extraid, int minlen,
-   struct mpegts_table_state **st, int *sect, int *last, int *ver);
-void dvb_table_reset
-  (struct mpegts_table *mt);
+   mpegts_psi_table_state_t **st, int *sect, int *last, int *ver);
+void dvb_table_reset (mpegts_psi_table_t *mt);
+void dvb_table_release (mpegts_psi_table_t *mt);
 
 extern htsmsg_t *satellites;
 

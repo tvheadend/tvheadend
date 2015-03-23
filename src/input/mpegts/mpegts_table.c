@@ -88,7 +88,7 @@ mpegts_table_dispatch
                              "(len %i, total %zi, errors %zi)",
                              len, r, mt->mt_err_log.count);
     }
-    dvb_table_reset(mt);
+    dvb_table_reset((mpegts_psi_table_t *)mt);
     return;
   }
 
@@ -134,12 +134,7 @@ mpegts_table_dispatch
 void
 mpegts_table_release_ ( mpegts_table_t *mt )
 {
-  struct mpegts_table_state *st;
-
-  while ((st = RB_FIRST(&mt->mt_state))) {
-    RB_REMOVE(&mt->mt_state, st, link);
-    free(st);
-  }
+  dvb_table_release((mpegts_psi_table_t *)mt);
   tvhtrace("mpegts", "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
            mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
            mt->mt_pid, mt->mt_pid);

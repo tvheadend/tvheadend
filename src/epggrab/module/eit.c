@@ -565,7 +565,7 @@ _eit_callback
   epggrab_ota_map_t    *map = mt->mt_opaque;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   epggrab_ota_mux_t    *ota = NULL;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
 
   /* Validate */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
@@ -584,7 +584,8 @@ _eit_callback
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 11, &st, &sect, &last, &ver);
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
+                      tableid, extraid, 11, &st, &sect, &last, &ver);
   if (r != 1) return r;
   if (st) {
     uint32_t mask;
@@ -657,7 +658,7 @@ _eit_callback
   if (save)    epg_updated();
   
 done:
-  r = dvb_table_end(mt, st, sect);
+  r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
   if (ota && !r)
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
   

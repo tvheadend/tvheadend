@@ -21,7 +21,7 @@
 #include "input.h"
 #include "dvb.h"
 
-SKEL_DECLARE(mpegts_table_state_skel, struct mpegts_table_state);
+SKEL_DECLARE(mpegts_psi_table_state_skel, struct mpegts_psi_table_state);
 
 /* **************************************************************************
  * Lookup tables
@@ -151,7 +151,7 @@ mpegts_psi_section_reassemble
  */
 
 static int sect_cmp
-  ( struct mpegts_table_state *a, struct mpegts_table_state *b )
+  ( mpegts_psi_table_state_t *a, mpegts_psi_table_state_t *b )
 {
   if (a->tableid != b->tableid)
     return a->tableid - b->tableid;
@@ -164,7 +164,7 @@ static int sect_cmp
 
 static void
 mpegts_table_state_reset
-  ( mpegts_table_t *mt, mpegts_table_state_t *st, int last )
+  ( mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int last )
 {
   int i;
   mt->mt_finished = 0;
@@ -176,20 +176,20 @@ mpegts_table_state_reset
   st->sections[last / 32] = 0xFFFFFFFF << (31 - (last % 32));
 }
 
-static struct mpegts_table_state *
+static mpegts_psi_table_state_t *
 mpegts_table_state_find
-  ( mpegts_table_t *mt, int tableid, uint64_t extraid, int last )
+  ( mpegts_psi_table_t *mt, int tableid, uint64_t extraid, int last )
 {
-  struct mpegts_table_state *st;
+  mpegts_psi_table_state_t *st;
 
   /* Find state */
-  SKEL_ALLOC(mpegts_table_state_skel);
-  mpegts_table_state_skel->tableid = tableid;
-  mpegts_table_state_skel->extraid = extraid;
-  st = RB_INSERT_SORTED(&mt->mt_state, mpegts_table_state_skel, link, sect_cmp);
+  SKEL_ALLOC(mpegts_psi_table_state_skel);
+  mpegts_psi_table_state_skel->tableid = tableid;
+  mpegts_psi_table_state_skel->extraid = extraid;
+  st = RB_INSERT_SORTED(&mt->mt_state, mpegts_psi_table_state_skel, link, sect_cmp);
   if (!st) {
-    st   = mpegts_table_state_skel;
-    SKEL_USED(mpegts_table_state_skel);
+    st   = mpegts_psi_table_state_skel;
+    SKEL_USED(mpegts_psi_table_state_skel);
     mt->mt_incomplete++;
     mpegts_table_state_reset(mt, st, last);
   }
@@ -201,11 +201,11 @@ mpegts_table_state_find
  */
 static int
 dvb_table_complete
-  (mpegts_table_t *mt)
+  (mpegts_psi_table_t *mt)
 {
   if (mt->mt_incomplete || !mt->mt_complete) {
     int total = 0;
-    mpegts_table_state_t *st;
+    mpegts_psi_table_state_t *st;
     RB_FOREACH(st, &mt->mt_state, link)
       total++;
     tvhtrace(mt->mt_name, "incomplete %d complete %d total %d",
@@ -220,7 +220,7 @@ dvb_table_complete
 
 int
 dvb_table_end
-  (mpegts_table_t *mt, mpegts_table_state_t *st, int sect)
+  (mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int sect)
 {
   int sa, sb;
   uint32_t rem;
@@ -250,11 +250,11 @@ dvb_table_end
  */
 int
 dvb_table_begin
-  (mpegts_table_t *mt, const uint8_t *ptr, int len,
+  (mpegts_psi_table_t *mt, const uint8_t *ptr, int len,
    int tableid, uint64_t extraid, int minlen,
-   mpegts_table_state_t **ret, int *sect, int *last, int *ver)
+   mpegts_psi_table_state_t **ret, int *sect, int *last, int *ver)
 {
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
   uint32_t sa, sb;
 
   /* Not long enough */
@@ -326,14 +326,25 @@ dvb_table_begin
 }
 
 void
-dvb_table_reset(mpegts_table_t *mt)
+dvb_table_reset(mpegts_psi_table_t *mt)
 {
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
 
   tvhtrace(mt->mt_name, "pid %02X complete reset", mt->mt_pid);
   mt->mt_incomplete = 0;
   mt->mt_complete   = 0;
   while ((st = RB_FIRST(&mt->mt_state)) != NULL) {
+    RB_REMOVE(&mt->mt_state, st, link);
+    free(st);
+  }
+}
+
+void
+dvb_table_release(mpegts_psi_table_t *mt)
+{
+  mpegts_psi_table_state_t *st;
+
+  while ((st = RB_FIRST(&mt->mt_state))) {
     RB_REMOVE(&mt->mt_state, st, link);
     free(st);
   }

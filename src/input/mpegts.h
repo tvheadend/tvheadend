@@ -125,17 +125,6 @@ struct mpegts_table_mux_cb
               const uint8_t dtag, const uint8_t *dptr, int dlen );
 };
 
-typedef struct mpegts_table_state
-{
-  int      tableid;
-  uint64_t extraid;
-  int      version;
-  int      complete;
-  int      working;
-  uint32_t sections[8];
-  RB_ENTRY(mpegts_table_state)   link;
-} mpegts_table_state_t;
-
 typedef struct mpegts_pid_sub
 {
   RB_ENTRY(mpegts_pid_sub) mps_link;
@@ -165,6 +154,8 @@ typedef struct mpegts_pid
 
 struct mpegts_table
 {
+  mpegts_psi_table_t;
+
   /**
    * Flags, must never be changed after creation.
    * We inspect it without holding global_lock
@@ -194,20 +185,13 @@ struct mpegts_table
    * File descriptor for filter
    */
 
-  LIST_ENTRY(mpegts_table) mt_link;
   TAILQ_ENTRY(mpegts_table) mt_defer_link;
   mpegts_mux_t *mt_mux;
-
-  char *mt_name;
 
   void *mt_opaque;
   void *mt_bat;
   mpegts_table_callback_t mt_callback;
 
-  RB_HEAD(,mpegts_table_state) mt_state;
-  int mt_complete;
-  int mt_incomplete;
-  uint8_t mt_finished;
   uint8_t mt_subscribed;
   uint8_t mt_defer_cmd;
 
@@ -218,13 +202,8 @@ struct mpegts_table
 
   int mt_count;
 
-  int mt_pid;
-
   int mt_id;
  
-  int mt_table; // SI table id (base)
-  int mt_mask;  //              mask
-
   int mt_destroyed; // Refcounting
   int mt_arefcount;
 
