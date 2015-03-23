@@ -659,7 +659,7 @@ pilot_to_tvh(http_connection_t *hc)
     return DVB_PILOT_ON;
   if (strcmp(s, "off") == 0)
     return DVB_PILOT_OFF;
-  if (s[0] == '\0')
+  if (s[0] == '\0' || strcmp(s, "auto") == 0)
     return DVB_PILOT_AUTO;
   return DVB_ROLLOFF_NONE;
 }
@@ -668,12 +668,13 @@ static int
 tmode_to_tvh(http_connection_t *hc)
 {
   static struct strtab tab[] = {
-    { "1k",  DVB_TRANSMISSION_MODE_1K },
-    { "2k",  DVB_TRANSMISSION_MODE_2K },
-    { "4k",  DVB_TRANSMISSION_MODE_4K },
-    { "8k",  DVB_TRANSMISSION_MODE_8K },
-    { "16k", DVB_TRANSMISSION_MODE_16K },
-    { "32k", DVB_TRANSMISSION_MODE_32K },
+    { "auto", DVB_TRANSMISSION_MODE_AUTO },
+    { "1k",   DVB_TRANSMISSION_MODE_1K },
+    { "2k",   DVB_TRANSMISSION_MODE_2K },
+    { "4k",   DVB_TRANSMISSION_MODE_4K },
+    { "8k",   DVB_TRANSMISSION_MODE_8K },
+    { "16k",  DVB_TRANSMISSION_MODE_16K },
+    { "32k",  DVB_TRANSMISSION_MODE_32K },
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "tmode");
   if (s[0]) {
@@ -687,6 +688,7 @@ static int
 mtype_to_tvh(http_connection_t *hc)
 {
   static struct strtab tab[] = {
+    { "auto",   DVB_MOD_AUTO },
     { "qpsk",   DVB_MOD_QPSK },
     { "8psk",   DVB_MOD_PSK_8 },
     { "16qam",  DVB_MOD_QAM_16 },
