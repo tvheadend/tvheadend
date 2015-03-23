@@ -32,7 +32,6 @@
 
 #define MPEGTS_ONID_NONE        0xFFFF
 #define MPEGTS_TSID_NONE        0xFFFF
-#define MPEGTS_PSI_SECTION_SIZE 5000
 #define MPEGTS_FULLMUX_PID      0x2000
 #define MPEGTS_TABLES_PID       0x2001
 #define MPEGTS_PID_NONE         0xFFFF
@@ -119,21 +118,11 @@ struct mpegts_packet
 typedef int (*mpegts_table_callback_t)
   ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
 
-typedef void (*mpegts_psi_section_callback_t)
-  ( const uint8_t *tsb, size_t len, void *opaque );
-
 struct mpegts_table_mux_cb
 {
   int tag;
   int (*cb) ( mpegts_table_t*, mpegts_mux_t *mm, uint16_t nbid,
               const uint8_t dtag, const uint8_t *dptr, int dlen );
-};
-
-struct mpegts_psi_section
-{
-  int     ps_offset;
-  int     ps_lock;
-  uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
 };
 
 typedef struct mpegts_table_state
@@ -266,13 +255,6 @@ struct mpegts_table_feed {
   mpegts_mux_t *mtf_mux;
   uint8_t mtf_tsb[0];
 };
-
-/*
- * Assemble SI section
- */
-void mpegts_psi_section_reassemble
-  ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc, int ccerr,
-    mpegts_psi_section_callback_t cb, void *opaque );
 
 /* **************************************************************************
  * Logical network
@@ -962,6 +944,33 @@ void mpegts_table_flush_all
 void mpegts_table_destroy ( mpegts_table_t *mt );
 
 void mpegts_table_consistency_check( mpegts_mux_t *mm );
+
+void dvb_bat_destroy
+  (struct mpegts_table *mt);
+
+int dvb_pat_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_cat_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_pmt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tabelid);
+int dvb_nit_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_bat_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_fs_sdt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_sdt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_tdt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int atsc_vct_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+
+void psi_tables_default ( struct mpegts_mux *mm );
+void psi_tables_dvb     ( struct mpegts_mux *mm );
+void psi_tables_atsc_t  ( struct mpegts_mux *mm );
+void psi_tables_atsc_c  ( struct mpegts_mux *mm );
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,

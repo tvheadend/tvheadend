@@ -199,6 +199,29 @@ do {\
   DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
   DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr)\
 
+/*
+ * SI typedefs
+ */
+
+#define MPEGTS_PSI_SECTION_SIZE 5000
+
+typedef struct mpegts_psi_section
+{
+  int     ps_offset;
+  int     ps_lock;
+  uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
+} mpegts_psi_section_t;
+
+typedef void (*mpegts_psi_section_callback_t)
+  ( const uint8_t *tsb, size_t len, void *opaque );
+
+/*
+ * Assemble SI section
+ */
+void mpegts_psi_section_reassemble
+ ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc, int ccerr,
+   mpegts_psi_section_callback_t cb, void *opaque );
+
 /* PSI table callbacks */
 
 int dvb_table_end
@@ -209,32 +232,6 @@ int dvb_table_begin
    struct mpegts_table_state **st, int *sect, int *last, int *ver);
 void dvb_table_reset
   (struct mpegts_table *mt);
-void dvb_bat_destroy
-  (struct mpegts_table *mt);
-
-int dvb_pat_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_cat_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_pmt_callback  
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tabelid);
-int dvb_nit_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_bat_callback  
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_fs_sdt_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_sdt_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int dvb_tdt_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-int atsc_vct_callback
-  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
-
-void psi_tables_default ( struct mpegts_mux *mm );
-void psi_tables_dvb     ( struct mpegts_mux *mm );
-void psi_tables_atsc_t  ( struct mpegts_mux *mm );
-void psi_tables_atsc_c  ( struct mpegts_mux *mm );
 
 extern htsmsg_t *satellites;
 

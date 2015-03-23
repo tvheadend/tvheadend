@@ -225,13 +225,15 @@ SRCS += src/muxer.c \
 # Optional code
 #
 
-# MPEGTS core
+# MPEGTS core, order by usage (psi lib, tsdemux)
 SRCS-$(CONFIG_MPEGTS) += \
 	src/descrambler/descrambler.c \
 	src/descrambler/caclient.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_pid.c \
 	src/input/mpegts/mpegts_input.c \
+	src/input/mpegts/tsdemux.c \
+	src/input/mpegts/dvb_psi_lib.c \
 	src/input/mpegts/mpegts_network.c \
 	src/input/mpegts/mpegts_mux.c \
 	src/input/mpegts/mpegts_service.c \
@@ -240,9 +242,8 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/input/mpegts/dvb_charset.c \
 	src/input/mpegts/dvb_psi.c \
 	src/input/mpegts/fastscan.c \
-	src/input/mpegts/tsdemux.c \
 	src/input/mpegts/mpegts_mux_sched.c \
-  src/input/mpegts/mpegts_network_scan.c \
+        src/input/mpegts/mpegts_network_scan.c
 
 # MPEGTS DVB
 SRCS-${CONFIG_MPEGTS_DVB} += \
