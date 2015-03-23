@@ -124,10 +124,6 @@ void tvh_input_stream_destroy ( tvh_input_stream_t *st );
  * Input subsystem includes
  */
 
-#if ENABLE_MPEGPS
-#include "input/mpegps.h"
-#endif
-
 #if ENABLE_MPEGTS
 #include "input/mpegts.h"
 #include "input/mpegts/mpegts_mux_sched.h"

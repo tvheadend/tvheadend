@@ -19,7 +19,6 @@ OPTIONS=(
   "cwc:yes"
   "capmt:yes"
   "constcw:yes"
-  "v4l:no"
   "linuxdvb:yes"
   "satip_server:yes"
   "satip_client:yes"
@@ -465,10 +464,9 @@ if [ ${PLATFORM} = "freebsd" ] || [ ${PLATFORM} = "darwin" ]; then
 fi
 
 #
-# MPEGTS/PS support
+# MPEGTS support
 #
 disable mpegts
-disable mpegps
 disable mpegts_dvb
 if enabled linuxdvb || enabled iptv || enabled tsfile || enabled satip_client || \
    enabled hdhomerun_client || enabled satip_server;
@@ -477,10 +475,6 @@ then
 fi
 if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || enabled satip_server; then
   enable mpegts_dvb
-fi
-
-if enabled v4l; then
-  enable mpegps
 fi
 
 #
