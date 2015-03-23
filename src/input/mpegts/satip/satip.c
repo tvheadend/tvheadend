@@ -383,6 +383,7 @@ satip_device_hack( satip_device_t *sd )
   } else if (strcmp(sd->sd_info.modelname, "TVHeadend SAT>IP") == 0)  {
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
+    sd->sd_no_univ_lnb = 1;
   }
 }
 

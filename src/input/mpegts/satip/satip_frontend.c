@@ -497,8 +497,9 @@ satip_frontend_start_mux
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - starting %s", buf1, buf2);
 
-  if (lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS ||
-      lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS2) {
+  if (!lfe->sf_device->sd_no_univ_lnb &&
+      (lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS ||
+       lm->lm_tuning.dmc_fe_delsys == DVB_SYS_DVBS2)) {
     /* Note: assume universal LNB */
     if (lm->lm_tuning.dmc_fe_freq < 10700000 ||
         lm->lm_tuning.dmc_fe_freq > 12750000) {
