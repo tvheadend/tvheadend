@@ -530,20 +530,21 @@ dump_request(http_connection_t *hc)
 {
   char buf[2048] = "";
   http_arg_t *ra;
-  int first;
+  int first, ptr = 0;
 
   first = 1;
   TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
-    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
+    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
     first = 0;
   }
 
   first = 1;
   TAILQ_FOREACH(ra, &hc->hc_args, link) {
-    snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
+    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
     first = 0;
   }
-  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "}}");
+  if (!first)
+    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, "}}");
 
   tvhtrace("http", "%s%s", hc->hc_url, buf);
 }
@@ -728,6 +729,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
+    dump_request(hc);
     if (hc->hc_cseq)
       rval = hc->hc_process(hc, spill);
     else
