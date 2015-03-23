@@ -725,12 +725,12 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     t->s_pids = p;
     if (!pids->all && x && x->all) {
       mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
-      mpegts_input_close_pids(mi, mm, t);
+      mpegts_input_close_pids(mi, mm, t, 1);
       for (i = 0; i < x->count; i++)
         mi->mi_open_pid(mi, mm, x->pids[i], MPS_RAW, t);
     } else {
       if (pids->all) {
-        mpegts_input_close_pids(mi, mm, t);
+        mpegts_input_close_pids(mi, mm, t, 1);
         mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
       } else {
         mpegts_pid_compare(p, x, &add, &del);

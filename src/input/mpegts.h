@@ -866,7 +866,7 @@ int mpegts_input_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 void mpegts_input_close_pids
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
 
 static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
