@@ -21,6 +21,7 @@
 #ifndef __TVH_CONFIG__H__
 #define __TVH_CONFIG__H__
 
+#include <unistd.h>
 #include "htsmsg.h"
 
 void        config_boot    ( const char *path, gid_t gid, uid_t uid );
