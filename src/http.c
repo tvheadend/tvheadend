@@ -226,8 +226,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   htsbuf_queue_init(&hdrs, 0);
 
   htsbuf_qprintf(&hdrs, "%s %d %s\r\n", 
-		 val2str(hc->hc_version, HTTP_versiontab),
-		 rc, http_rc2str(rc));
+		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
   if (hc->hc_version != RTSP_VERSION_1_0)
     htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
