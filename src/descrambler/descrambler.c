@@ -432,7 +432,7 @@ descrambler_descramble ( service_t *t,
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             if (key_late(dr, ki)) {
               if (ecm_reset(t, dr)) {
-                sbuf_cut(&dr->dr_buf, tsb2 - tsb);
+                sbuf_cut(&dr->dr_buf, tsb2 - dr->dr_buf.sb_data);
                 flush_data = 1;
                 goto next;
               }
