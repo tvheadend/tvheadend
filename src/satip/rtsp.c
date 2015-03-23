@@ -1301,7 +1301,10 @@ rtsp_process_play(http_connection_t *hc, int setup)
     snprintf(buf, sizeof(buf), "%d", rs->stream);
     http_arg_set(&args, "com.ses.streamID", buf);
   } else {
-    snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", rtsp_ip, rs->stream);
+    if (rtsp_port != 554)
+      snprintf(buf, sizeof(buf), "url=rtsp://%s:%d/stream=%d", rtsp_ip, rtsp_port, rs->stream);
+    else
+      snprintf(buf, sizeof(buf), "url=rtsp://%s/stream=%d", rtsp_ip, rs->stream);
     http_arg_set(&args, "RTP-Info", buf);
   }
 
