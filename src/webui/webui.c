@@ -744,7 +744,6 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *str;
   size_t qsize;
   const char *name;
-  char addrbuf[50];
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
 
@@ -767,11 +766,9 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   profile_chain_init(&prch, pro, service);
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-
     s = subscription_create_from_service(&prch, NULL, weight ?: 100, "HTTP",
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
-                                         addrbuf,
+                                         hc->hc_peer_ipstr,
 				         hc->hc_username,
 				         http_arg_get(&hc->hc_args, "User-Agent"),
 				         NULL);
@@ -803,7 +800,6 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
   profile_chain_t prch;
   size_t qsize;
   const char *name, *str;
-  char addrbuf[50];
   void *tcp_id;
   char *p, *saveptr = NULL;
   mpegts_apids_t pids;
@@ -847,12 +843,10 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
 
   if (!profile_chain_raw_open(&prch, mm, qsize, 1)) {
 
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-
     s = subscription_create_from_mux(&prch, NULL, weight ?: 10, "HTTP",
                                      prch.prch_flags |
                                      SUBSCRIPTION_STREAMING,
-                                     addrbuf, hc->hc_username,
+                                     hc->hc_peer_ipstr, hc->hc_username,
                                      http_arg_get(&hc->hc_args, "User-Agent"),
                                      NULL);
     if (s) {
@@ -887,7 +881,6 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   char *str;
   size_t qsize;
   const char *name;
-  char addrbuf[50];
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
 
@@ -910,12 +903,10 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   profile_chain_init(&prch, pro, ch);
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-
     s = subscription_create_from_channel(&prch,
                  NULL, weight ?: 100, "HTTP",
                  prch.prch_flags | SUBSCRIPTION_STREAMING,
-                 addrbuf, hc->hc_username,
+                 hc->hc_peer_ipstr, hc->hc_username,
                  http_arg_get(&hc->hc_args, "User-Agent"),
                  NULL);
 
@@ -1240,12 +1231,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
   tcp_id = http_stream_preop(hc);
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, range_buf, 50);
   sub = NULL;
   if (tcp_id && !hc->hc_no_output && content_len > 64*1024) {
     sub = subscription_create(NULL, 1, "HTTP",
                               SUBSCRIPTION_NONE, NULL,
-                              range_buf, hc->hc_username,
+                              hc->hc_peer_ipstr, hc->hc_username,
                               http_arg_get(&hc->hc_args, "User-Agent"));
     if (sub == NULL) {
       http_stream_postop(tcp_id);

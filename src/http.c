@@ -335,15 +335,12 @@ void
 http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
-  char addrstr[50];
 
   if (!http_server) return;
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
-
   if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
     tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "http", "%s: %s %s %s -- %d",
-	   addrstr, http_ver2str(hc->hc_version),
+	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
           http_cmd2str(hc->hc_cmd), hc->hc_url, error);
 
   if (hc->hc_version != RTSP_VERSION_1_0) {
@@ -447,10 +444,8 @@ http_access_verify_ticket(http_connection_t *hc)
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
     return;
-  char addrstr[50];
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
   tvhlog(LOG_INFO, "http", "%s: using ticket %s for %s",
-	 addrstr, ticket_id, hc->hc_url);
+	 hc->hc_peer_ipstr, ticket_id, hc->hc_url);
 }
 
 /**
@@ -675,7 +670,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 {
   char *v, *argv[2];
   int n, rval = -1;
-  uint8_t authbuf[150];
+  char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
 
@@ -715,11 +710,11 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   /* Extract authorization */
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
-      n = base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
+      n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
       if (n < 0)
         n = 0;
       authbuf[n] = 0;
-      if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
+      if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
 	      hc->hc_username = strdup(argv[0]);
 	      hc->hc_password = strdup(argv[1]);
         // No way to actually track this
@@ -727,13 +722,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
     }
   }
 
-  if(hc->hc_username != NULL) {
-    hc->hc_representative = strdup(hc->hc_username);
-  } else {
-    hc->hc_representative = malloc(50);
-    /* Not threadsafe ? */
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, hc->hc_representative, 50);
-  }
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  hc->hc_peer_ipstr = strdup(authbuf);
+  hc->hc_representative = strdup(hc->hc_username ?: authbuf);
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
@@ -752,6 +743,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
     break;
   }
   free(hc->hc_representative);
+  free(hc->hc_peer_ipstr);
   free(hc->hc_session);
   hc->hc_session = NULL;
   return rval;

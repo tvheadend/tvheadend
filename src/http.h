@@ -120,6 +120,7 @@ typedef enum http_ver {
 typedef struct http_connection {
   int hc_fd;
   struct sockaddr_storage *hc_peer;
+  char *hc_peer_ipstr;
   struct sockaddr_storage *hc_self;
   char *hc_representative;
 

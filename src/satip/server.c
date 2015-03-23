@@ -162,9 +162,8 @@ satip_server_http_xml(http_connection_t *hc)
   htsbuf_queue_flush(&q);
 
   if (devicelist == NULL || devicelist[0] == '\0') {
-    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, buf, sizeof(buf));
     tvhwarn("satips", "SAT>IP server announces an empty tuner list to a client %s (missing %s)",
-            buf, !tuners ? "tuner settings - global config" : "network assignment");
+            hc->hc_peer_ipstr, !tuners ? "tuner settings - global config" : "network assignment");
   }
 
   if (satip_server_rtsp_port != 554)

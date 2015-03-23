@@ -142,16 +142,13 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   htsmsg_t *m = htsmsg_create_map();
   const char *username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
-  char addrstr[50];
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, sizeof(addrstr));
-
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
-  if (addrstr[0])
-    htsmsg_add_str(m, "address", addrstr);
+  if (hc->hc_peer_ipstr)
+    htsmsg_add_str(m, "address", hc->hc_peer_ipstr);
   htsmsg_add_u32(m, "dvr",      !http_access_verify(hc, ACCESS_RECORDER));
   htsmsg_add_u32(m, "admin",    !http_access_verify(hc, ACCESS_ADMIN));
 

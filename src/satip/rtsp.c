@@ -787,7 +787,7 @@ rtsp_parse_cmd
   const char *caller;
   mpegts_apids_t pids, addpids, delpids;
   dvb_mux_conf_t *dmc;
-  char buf[256], addrbuf[50];
+  char buf[256];
   http_arg_t *arg;
 
   switch (cmd) {
@@ -802,8 +802,6 @@ rtsp_parse_cmd
   mpegts_pid_init(&pids);
   mpegts_pid_init(&addpids);
   mpegts_pid_init(&delpids);
-
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
 
   has_args = !TAILQ_EMPTY(&hc->hc_req_args);
 
@@ -1045,7 +1043,7 @@ play:
 
   tvhdebug("satips", "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
-           caller, addrbuf, IP_PORT(*hc->hc_peer), buf);
+           caller, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer), buf);
 
 ok:
   errcode = 0;
@@ -1257,10 +1255,8 @@ rtsp_process_play(http_connection_t *hc, int setup)
 {
   session_t *rs;
   int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, oldstate = 0, i, stream;;
-  char buf[256], addrbuf[50], *u = tvh_strdupa(hc->hc_url);
+  char buf[256], *u = tvh_strdupa(hc->hc_url);
   http_arg_list_t args;
-
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
 
   http_arg_init(&args);
 
@@ -1285,14 +1281,14 @@ rtsp_process_play(http_connection_t *hc, int setup)
       errcode = HTTP_STATUS_INTERNAL;
       goto error;
     }
-    if (udp_connect(rs->udp_rtp,  "RTP",  addrbuf, rs->rtp_peer_port) ||
-        udp_connect(rs->udp_rtcp, "RTCP", addrbuf, rs->rtp_peer_port + 1)) {
+    if (udp_connect(rs->udp_rtp,  "RTP",  hc->hc_peer_ipstr, rs->rtp_peer_port) ||
+        udp_connect(rs->udp_rtcp, "RTCP", hc->hc_peer_ipstr, rs->rtp_peer_port + 1)) {
       errcode = HTTP_STATUS_INTERNAL;
       goto error;
     }
   }
 
-  if ((errcode = rtsp_start(hc, rs, addrbuf, valid, setup, oldstate)) < 0)
+  if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, setup, oldstate)) < 0)
     goto error;
 
   if (setup) {
@@ -1336,10 +1332,8 @@ rtsp_process_teardown(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   struct session *rs = NULL;
   http_arg_list_t args;
-  char addrbuf[50], session[16];
+  char session[16];
   int stream;
-
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, sizeof(addrbuf));
 
   if ((u = rtsp_check_urlbase(u)) == NULL ||
       (stream = rtsp_parse_args(hc, u)) < 0) {
@@ -1348,7 +1342,7 @@ rtsp_process_teardown(http_connection_t *hc)
   }
 
   tvhdebug("satips", "-/%s/%i: teardown from %s:%d",
-           hc->hc_session, stream, addrbuf, IP_PORT(*hc->hc_peer));
+           hc->hc_session, stream, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer));
 
   pthread_mutex_lock(&rtsp_lock);
   rs = rtsp_find_session(hc, stream);
