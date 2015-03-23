@@ -1797,11 +1797,13 @@ capmt_send_request(capmt_service_t *ct, int lm)
     }
     memcpy(&buf[pos], &cad, cad.cad_length + 2);
     pos += cad.cad_length + 2;
-    tvhlog(LOG_DEBUG, "capmt", "%s: adding ECMPID=0x%X (%d), CAID=0x%X (%d) PROVID=0x%X (%d)",
+    tvhlog(LOG_DEBUG, "capmt", "%s: adding ECMPID=0x%X (%d), "
+                      "CAID=0x%X (%d) PROVID=0x%X (%d), SID=%d, ADAPTER=%d",
       capmt_name(capmt),
       cce2->cce_ecmpid, cce2->cce_ecmpid,
       cce2->cce_caid, cce2->cce_caid,
-      cce2->cce_providerid, cce2->cce_providerid);
+      cce2->cce_providerid, cce2->cce_providerid,
+      sid, adapter_num);
   }
 
   uint8_t end[] = { 
