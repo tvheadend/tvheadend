@@ -538,7 +538,7 @@ satip_frontend_add_pid( satip_frontend_t *lfe, int pid)
     return 0;
 
   tr = lfe->sf_req;
-  if (tr && !mpegts_pid_exists(&tr->sf_pids, pid)) {
+  if (tr) {
     mpegts_pid_add(&tr->sf_pids, pid);
     return 1;
   }

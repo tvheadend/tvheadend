@@ -565,8 +565,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
     /* Ensure that filtered PIDs are not send in ts_recv_raw */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if (st->es_type != SCT_CA && st->es_pid >= 0 && st->es_pid < 8192)
-        if (!mpegts_pid_exists(pids, st->es_pid))
-          mpegts_pid_add(pids, st->es_pid);
+        mpegts_pid_add(pids, st->es_pid);
 
     LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
       pthread_mutex_lock(&s2->s_stream_mutex);

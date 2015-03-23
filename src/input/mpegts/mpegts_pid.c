@@ -65,6 +65,8 @@ mpegts_pid_add(mpegts_apids_t *pids, mpegts_apid_t pid)
   mpegts_apid_t *p;
   int i;
 
+  if (mpegts_pid_exists(pids, pid))
+    return 0;
   assert(pids);
   assert(pid >= 0 && pid <= 8191);
   if (pids->alloc == pids->count) {
@@ -190,9 +192,14 @@ mpegts_pid_dump(mpegts_apids_t *pids, char *buf, int len)
 {
   int i, l = 0;
 
+  if (len < 1) {
+    if (len)
+      *buf = '\0';
+    return len;
+  }
   if (pids->all)
     return snprintf(buf, len, "all");
-  for (i = 0; i < pids->count; i++)
+  for (i = 0; i < pids->count && l + 1 < len; i++)
     l += snprintf(buf + l, len - l, "%s%i",
                   i > 0 ? "," : "", pids->pids[i]);
   return l;

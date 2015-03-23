@@ -373,7 +373,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   char pids[1400];
   const char *delsys, *msys, *pilot, *rolloff;
   const char *bw, *tmode, *gi, *plp, *t2id, *sm, *c2tft, *ds, *specinv;
-  int i, j, r, level = 0, lock = 0, quality = 0;
+  int r, level = 0, lock = 0, quality = 0;
 
   lock = rtp->sig_lock;
   switch (rtp->sig.signal_scale) {
@@ -399,11 +399,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     break;
   }
 
-  pids[0] = 0;
-  for (i = j = 0; i < rtp->pids.count; i++)
-    j += snprintf(pids + j, sizeof(pids) - j, "%d,", rtp->pids.pids[i]);
-  if (j && pids[j-1] == ',')
-    pids[j-1] = '\0';
+  mpegts_pid_dump(&rtp->pids, pids, sizeof(pids));
 
   switch (rtp->dmc.dmc_fe_delsys) {
   case DVB_SYS_DVBS:

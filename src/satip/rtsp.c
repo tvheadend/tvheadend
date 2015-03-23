@@ -377,7 +377,7 @@ rtsp_clean(session_t *rs)
  *
  */
 static int
-rtsp_validate_service(mpegts_service_t *s)
+rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
 {
   int av = 0, enc = 0;
   elementary_stream_t *st;
@@ -390,10 +390,11 @@ rtsp_validate_service(mpegts_service_t *s)
   TAILQ_FOREACH(st, &s->s_components, es_link) {
     if (st->es_type == SCT_CA)
       enc = 1;
-    if (st->es_pid > 0 &&
-        (SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type)))
-      av = 1;
-    }
+    if (st->es_pid > 0)
+      if (pids == NULL || mpegts_pid_exists(pids, st->es_pid))
+        if ((SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type)))
+          av = 1;
+  }
   pthread_mutex_unlock(&s->s_stream_mutex);
   return enc && av;
 }
@@ -420,12 +421,12 @@ rtsp_manage_descramble(session_t *rs)
 
   if (rs->pids.all) {
     LIST_FOREACH(s, &rs->mux->mm_services, s_dvb_mux_link)
-      if (rtsp_validate_service(s))
+      if (rtsp_validate_service(s, NULL))
         idnode_set_add(found, &s->s_id, NULL);
   } else {
     for (i = 0; i < rs->pids.count; i++) {
       s = mpegts_service_find_by_pid((mpegts_mux_t *)rs->mux, rs->pids.pids[i]);
-      if (s != NULL && rtsp_validate_service(s))
+      if (s != NULL && rtsp_validate_service(s, &rs->pids))
         if (!idnode_set_exists(found, &s->s_id))
           idnode_set_add(found, &s->s_id, NULL);
     }
@@ -1035,10 +1036,12 @@ play:
     mpegts_pid_add_group(&rs->pids, &addpids);
 
   dvb_mux_conf_str(dmc, buf, sizeof(buf));
-  s = buf + strlen(buf);
-  s += snprintf(s, sizeof(buf) - (s - buf), " pids ");
-  if (mpegts_pid_dump(&rs->pids, s, sizeof(buf) - (s - buf)) == 0)
-    snprintf(s, sizeof(buf) - (s - buf), "<none>");
+  r = strlen(buf);
+  if (r + 1 < sizeof(buf))
+    r += snprintf(buf + r, sizeof(buf) - r, " pids ");
+  if (r + 1 < sizeof(buf) &&
+      mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r) == 0)
+    snprintf(buf + r, sizeof(buf) - r, "<none>");
 
   tvhdebug("satips", "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
@@ -1451,6 +1454,7 @@ rtsp_close_session(session_t *rs)
   udp_close(rs->udp_rtcp);
   rs->udp_rtcp = NULL;
   pthread_mutex_lock(&global_lock);
+  mpegts_pid_reset(&rs->pids);
   rtsp_clean(rs);
   gtimer_disarm(&rs->timer);
   pthread_mutex_unlock(&global_lock);
