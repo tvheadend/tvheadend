@@ -696,7 +696,7 @@ static int _eit_start
 
   /* Standard (0x12) */
   } else {
-    pid  = 0x12;
+    pid  = DVB_EIT_PID;
     opts = MT_RECORD;
   }
   mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid);

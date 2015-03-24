@@ -188,7 +188,6 @@ struct mpegts_table
   TAILQ_ENTRY(mpegts_table) mt_defer_link;
   mpegts_mux_t *mt_mux;
 
-  void *mt_opaque;
   void *mt_bat;
   mpegts_table_callback_t mt_callback;
 
@@ -206,12 +205,6 @@ struct mpegts_table
  
   int mt_destroyed; // Refcounting
   int mt_arefcount;
-
-  int8_t mt_cc;
-
-  tvhlog_limit_t mt_err_log;
-
-  mpegts_psi_section_t mt_sect;
 
   struct mpegts_table_mux_cb *mt_mux_cb;
 

@@ -37,6 +37,7 @@ struct mpegts_mux;
 #define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
+#define DVB_EIT_PID                   0x12
 #define DVB_VCT_PID                   0x1FFB
 
 /* Tables */
@@ -207,6 +208,8 @@ do {\
 
 typedef struct mpegts_psi_section
 {
+  int8_t  ps_cc;
+  int8_t  ps_cco;
   int     ps_offset;
   int     ps_lock;
   uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
@@ -232,6 +235,7 @@ typedef struct mpegts_psi_table
   RB_HEAD(,mpegts_psi_table_state) mt_state;
 
   char   *mt_name;
+  void   *mt_opaque;
 
   uint8_t mt_table; // SI table id (base)
   uint8_t mt_mask;  //              mask
@@ -241,16 +245,21 @@ typedef struct mpegts_psi_table
   int     mt_complete;
   int     mt_incomplete;
   uint8_t mt_finished;
+
+  mpegts_psi_section_t mt_sect;
+
+  tvhlog_limit_t mt_err_log;
+
 } mpegts_psi_table_t;
 
 /*
  * Assemble SI section
  */
 void mpegts_psi_section_reassemble
- ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc, int ccerr,
+ ( mpegts_psi_table_t *mt, const uint8_t *tsb, int crc,
    mpegts_psi_section_callback_t cb, void *opaque );
 
-/* PSI table callbacks */
+/* PSI table parser helpers */
 
 int dvb_table_end
   (mpegts_psi_table_t *mt, mpegts_psi_table_state_t *st, int sect );
@@ -260,6 +269,25 @@ int dvb_table_begin
    mpegts_psi_table_state_t **st, int *sect, int *last, int *ver);
 void dvb_table_reset (mpegts_psi_table_t *mt);
 void dvb_table_release (mpegts_psi_table_t *mt);
+
+/* all-in-one parser */
+
+typedef void (*mpegts_psi_parse_callback_t)
+  ( mpegts_psi_table_t *, const uint8_t *buf, int len );
+
+void dvb_table_parse_init
+  ( mpegts_psi_table_t *mt, const char *name, int pid, void *opaque );
+
+void dvb_table_parse_done ( mpegts_psi_table_t *mt);
+
+void dvb_table_parse
+  (mpegts_psi_table_t *mt, const uint8_t *tsb, int len,
+   int crc, int full, mpegts_psi_parse_callback_t cb);
+
+int dvb_table_append_crc32(uint8_t *dst, int off, int maxlen);
+
+int dvb_table_remux
+  (mpegts_psi_table_t *mt, const uint8_t *buf, int len, uint8_t **out);
 
 extern htsmsg_t *satellites;
 

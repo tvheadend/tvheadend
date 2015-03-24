@@ -951,21 +951,10 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb, int tsb_len 
   for (i = 0; i < len; i++) {
     mt = vec[i];
     if (!mt->mt_destroyed && mt->mt_pid == pid)
-      for (tsb2 = tsb, tsb2_end = tsb + tsb_len; tsb2 < tsb2_end; tsb2 += 188) {
-        uint8_t cc = tsb2[3];
-        if (cc & 0x10) {
-          int ccerr = 0;
-          if (mt->mt_cc != -1 && mt->mt_cc != (cc & 0xF)) {
-            ccerr = 1;
-            /* Ignore dupes (shouldn't have payload set, but some seem to) */
-            //if (((mt->mt_cc + 15) & 0xf) != cc)
-            tvhdebug("psi", "PID %04X CC error %d != %d", pid, cc, mt->mt_cc);
-          }
-          mt->mt_cc = (cc + 1) & 0xF;
-          mpegts_psi_section_reassemble(&mt->mt_sect, tsb2, 0, ccerr,
-                                        mpegts_table_dispatch, mt);
-        }
-      }
+      for (tsb2 = tsb, tsb2_end = tsb + tsb_len; tsb2 < tsb2_end; tsb2 += 188)
+        mpegts_psi_section_reassemble((mpegts_psi_table_t *)mt, tsb2,
+                                      mt->mt_flags & MT_CRC,
+                                      mpegts_table_dispatch, mt);
     mpegts_table_release(mt);
   }
 }

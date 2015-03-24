@@ -72,48 +72,16 @@ mpegts_table_dispatch
 {
   int tid, len, ret;
   mpegts_table_t *mt = aux;
-  int chkcrc = mt->mt_flags & MT_CRC;
 
   if(mt->mt_destroyed)
     return;
 
-  /* Table info */
   tid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
-
-  if (tid == 0x72) { /* stuffing section */
-    if (len != r - 3) {
-      if (tvhlog_limit(&mt->mt_err_log, 10))
-        tvhwarn(mt->mt_name, "stuffing found with trailing data "
-                             "(len %i, total %zi, errors %zi)",
-                             len, r, mt->mt_err_log.count);
-    }
-    dvb_table_reset((mpegts_psi_table_t *)mt);
-    return;
-  }
-
-  /* It seems some hardware (or is it the dvb API?) does not
-     honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && tvh_crc32(sec, r, 0xffffffff)) {
-    if (tvhlog_limit(&mt->mt_err_log, 10))
-      tvhwarn(mt->mt_name, "invalid checksum (len %zi, errors %zi)",
-                           r, mt->mt_err_log.count);
-    return;
-  }
-
-  /* Not enough data */
-  if(len < r - 3) {
-    tvhtrace(mt->mt_name, "not enough data, %d < %d", (int)r, len);
-    return;
-  }
 
   /* Check table mask */
   if((tid & mt->mt_mask) != mt->mt_table)
     return;
-
-  /* Strip trailing CRC */
-  if(chkcrc)
-    len -= 4;
 
   /* Pass with tableid / len in data */
   if (mt->mt_flags & MT_FULL)
@@ -236,16 +204,16 @@ mpegts_table_add
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));
-  mt->mt_arefcount = 1;
-  mt->mt_name      = strdup(name);
-  mt->mt_callback  = callback;
-  mt->mt_opaque    = opaque;
-  mt->mt_pid       = pid;
-  mt->mt_flags     = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
-  mt->mt_table     = tableid;
-  mt->mt_mask      = mask;
-  mt->mt_mux       = mm;
-  mt->mt_cc        = -1;
+  mt->mt_arefcount  = 1;
+  mt->mt_name       = strdup(name);
+  mt->mt_callback   = callback;
+  mt->mt_opaque     = opaque;
+  mt->mt_pid        = pid;
+  mt->mt_flags      = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
+  mt->mt_table      = tableid;
+  mt->mt_mask       = mask;
+  mt->mt_mux        = mm;
+  mt->mt_sect.ps_cc = -1;
 
   /* Open table */
   if (pid < 0) {
