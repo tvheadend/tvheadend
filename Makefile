@@ -470,7 +470,8 @@ ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec
 	@touch $@
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
-	$(MAKE) -f Makefile.ffmpeg build
+	CONFIG_LIBFFMPEG_STATIC_X264=$(CONFIG_LIBFFMPEG_STATIC_X264) \
+	  $(MAKE) -f Makefile.ffmpeg build
 
 # Static HDHOMERUN library
 

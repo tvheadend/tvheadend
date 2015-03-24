@@ -34,6 +34,7 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "libffmpeg_static:no"
+  "libffmpeg_static_x264:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"

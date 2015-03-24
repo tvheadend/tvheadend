@@ -150,12 +150,10 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 # libx264
 #
 
-ARCH = $(shell $(CC) -dumpmachine | cut -d '-' -f 1)
-
-ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
+ifneq (yes,$(CONFIG_LIBFFMPEG_STATIC_X264))
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_download:
-	@echo "***** PLEASE FIX !!!! libx264 build for i386 *****"
+	@echo "***** LIBX264 STATIC BUILD IS DISABLED, USING INSTALLED PACKAGE *****"
 	@mkdir -p $(LIBAVDIR)/$(LIBX264)
 	@touch $@
 
