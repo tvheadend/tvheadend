@@ -816,6 +816,8 @@ capmt_send_client_info(capmt_t *capmt)
   *(uint32_t *)(buf + 0) = htonl(DVBAPI_CLIENT_INFO);
   *(uint16_t *)(buf + 4) = htons(DVBAPI_PROTOCOL_VERSION); //supported protocol version
   int len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
+  if (len >= sizeof(buf) - 7)
+    len = sizeof(buf) - 7 - 1;
   buf[6] = len;
 
   capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST);

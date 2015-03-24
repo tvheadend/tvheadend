@@ -1101,19 +1101,19 @@ size_t epg_episode_number_format
   epg_episode_num_t num;
   epg_episode_get_epnum(episode, &num);
   if ( num.e_num ) {
-    if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
+    if (pre) tvh_strlcatf2(buf, len, i, "%s", pre);
     if ( sfmt && num.s_num ) {
-      i += snprintf(&buf[i], len-i, sfmt, num.s_num);
+      tvh_strlcatf2(buf, len, i, sfmt, num.s_num);
       if ( cfmt && num.s_cnt )
-        i += snprintf(&buf[i], len-i, cfmt, num.s_cnt);
-      if (sep) i += snprintf(&buf[i], len-i, "%s", sep);
+        tvh_strlcatf2(buf, len, i, cfmt, num.s_cnt);
+      if (sep) tvh_strlcatf2(buf, len, i, "%s", sep);
     }
-    i += snprintf(&buf[i], len-i, efmt, num.e_num);
+    tvh_strlcatf2(buf, len, i, efmt, num.e_num);
     if ( cfmt && num.e_cnt )
-      i+= snprintf(&buf[i], len-i, cfmt, num.e_cnt);
+      tvh_strlcatf2(buf, len, i, cfmt, num.e_cnt);
   } else if ( num.text ) {
-    if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
-    i += snprintf(&buf[i], len-i, "%s", num.text);
+    if (pre) tvh_strlcatf2(buf, len, i, "%s", pre);
+    tvh_strlcatf2(buf, len, i, "%s", num.text);
   }
   return i;
 }
@@ -2118,12 +2118,11 @@ size_t epg_genre_get_str ( const epg_genre_t *genre, int major_only,
   if (!_epg_genre_names[maj][0]) return 0;
   min = major_only ? 0 : (genre->code & 0xf);
   if (!min || major_prefix ) {
-    ret = snprintf(buf, len, "%s", _epg_genre_names[maj][0]);
-    if (min) ret += snprintf(buf+ret, len-ret, " : ");
+    tvh_strlcatf2(buf, len, ret, "%s", _epg_genre_names[maj][0]);
+    if (min) tvh_strlcatf2(buf, len, ret, " : ");
   }
-  if (min && _epg_genre_names[maj][min]) {
-    ret += snprintf(buf+ret, len-ret, "%s", _epg_genre_names[maj][min]);
-  }
+  if (min && _epg_genre_names[maj][min])
+    tvh_strlcatf2(buf, len, ret, "%s", _epg_genre_names[maj][min]);
   return ret;
 }
 

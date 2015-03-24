@@ -516,7 +516,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     return 0;
   }
 
-  return r;
+  return r >= len ? len - 1 : r;
 }
 
 /*

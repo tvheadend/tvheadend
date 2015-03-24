@@ -74,7 +74,7 @@ tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
   if (ss) {
     HTSMSG_FOREACH(f, ss) {
       if (f->hmf_type != HMF_S64) continue;
-      c += snprintf(subsys+c, len-c, "%s%c%s",
+      tvh_strlcatf2(subsys, len, c, "%s%c%s",
                     first ? "" : ",",
                     f->hmf_s64 ? '+' : '-',
                     f->hmf_name);
@@ -168,7 +168,7 @@ tvhlog_process
   l = strftime(t, sizeof(t), "%F %T", &tm);// %d %H:%M:%S", &tm);
   if (options & TVHLOG_OPT_MILLIS) {
     int ms = msg->time.tv_usec / 1000;
-    snprintf(t+l, sizeof(t)-l, ".%03d", ms);
+    tvh_strlcatf2(t, sizeof(t), l, ".%03d", ms);
   }
 
   /* Comet (debug must still be enabled??) */
@@ -311,15 +311,15 @@ void tvhlogv ( const char *file, int line,
   /* Basic message */
   l = 0;
   if (options & TVHLOG_OPT_THREAD) {
-    l += snprintf(buf + l, sizeof(buf) - l, "tid %ld: ", (long)pthread_self());
+    tvh_strlcatf2(buf, sizeof(buf), l, "tid %ld: ", (long)pthread_self());
   }
-  l += snprintf(buf + l, sizeof(buf) - l, "%s: ", subsys);
+  tvh_strlcatf2(buf, sizeof(buf), l, "%s: ", subsys);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
-    l += snprintf(buf + l, sizeof(buf) - l, "(%s:%d) ", file, line);
+    tvh_strlcatf2(buf, sizeof(buf), l, "(%s:%d) ", file, line);
   if (args)
-    l += vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
+    vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
   else
-    l += snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
+    snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
 
   /* Store */
   tvhlog_msg_t *msg = calloc(1, sizeof(tvhlog_msg_t));
@@ -381,9 +381,9 @@ _tvhlog_hexdump(const char *file, int line,
     c = 0;
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
       if (i >= len)
-        c += snprintf(str+c, sizeof(str)-c, "   ");
+        tvh_strlcatf2(str, sizeof(str), c, "   ");
       else
-        c += snprintf(str+c, sizeof(str)-c, "%02X ", data[i]);
+        tvh_strlcatf2(str, sizeof(str), c, "%02X ", data[i]);
     }
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
       if (i < len) {

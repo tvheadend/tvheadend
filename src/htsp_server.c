@@ -572,21 +572,18 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     if ((strstr(icon, "imagecache") == icon) && htsp->htsp_version < 8) {
       struct sockaddr_storage addr;
       socklen_t addrlen;
-      size_t p = 0;
       char url[256];
       char buf[50];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
       tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
-      strcpy(url, "http://");
-      p = strlen(url);
-      p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%d%s",
+      snprintf(url, sizeof(url), "http://%s%s%s:%d%s/%s",
                     (addr.ss_family == AF_INET6)?"[":"",
                     buf,
                     (addr.ss_family == AF_INET6)?"]":"",
                     tvheadend_webui_port,
-                    tvheadend_webroot ?: "");
-      snprintf(url+p, sizeof(url)-p, "/%s", icon);
+                    tvheadend_webroot ?: "",
+                    icon);
       htsmsg_add_str(out, "channelIcon", url);
     } else {
       if (htsp->htsp_version < 15) {

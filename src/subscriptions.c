@@ -180,10 +180,10 @@ subscription_show_info(th_subscription_t *s)
   char buf[512];
   channel_t *ch = s->ths_channel;
   source_info_t si;
-  size_t buflen;
+  size_t l = 0;
 
   s->ths_service->s_setsourceinfo(s->ths_service, &si);
-  buflen = snprintf(buf, sizeof(buf),
+  tvh_strlcatf2(buf, sizeof(buf), l,
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", service: \"%s\"",
 	   s->ths_title, ch ? channel_get_name(ch) : "none", s->ths_weight,
@@ -195,17 +195,16 @@ subscription_show_info(th_subscription_t *s)
   service_source_info_free(&si);
 
   if (s->ths_prch && s->ths_prch->prch_pro)
-    buflen += snprintf(buf + buflen, sizeof(buf) - buflen,
+    tvh_strlcatf2(buf, sizeof(buf), l,
                        ", profile=\"%s\"",
                        s->ths_prch->prch_pro->pro_name ?: "");
 
-  if (s->ths_hostname) {
-    snprintf(buf + buflen, sizeof(buf) - buflen,
+  if (s->ths_hostname)
+    tvh_strlcatf2(buf, sizeof(buf), l,
              ", hostname=\"%s\", username=\"%s\", client=\"%s\"",
              s->ths_hostname ?: "<N/A>",
              s->ths_username ?: "<N/A>",
              s->ths_client   ?: "<N/A>");
-  }
 
   tvhlog(LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 }
@@ -502,7 +501,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 {
   service_t *t = s->ths_service;
   char buf[512];
-  size_t buflen;
+  size_t l = 0;
 
   lock_assert(&global_lock);
 
@@ -520,20 +519,18 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 
   if (s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
-    snprintf(buf, sizeof(buf), "\"%s\" unsubscribing from \"%s\"",
+    tvh_strlcatf2(buf, sizeof(buf), l, "\"%s\" unsubscribing from \"%s\"",
              s->ths_title, channel_get_name(s->ths_channel));
   } else {
-    snprintf(buf, sizeof(buf), "\"%s\" unsubscribing", s->ths_title);
+    tvh_strlcatf2(buf, sizeof(buf), l, "\"%s\" unsubscribing", s->ths_title);
   }
 
-  if (s->ths_hostname) {
-    buflen = strlen(buf);
-    snprintf(buf + buflen, sizeof(buf) - buflen,
+  if (s->ths_hostname)
+    tvh_strlcatf2(buf, sizeof(buf), l,
              ", hostname=\"%s\", username=\"%s\", client=\"%s\"",
              s->ths_hostname ?: "<N/A>",
              s->ths_username ?: "<N/A>",
              s->ths_client   ?: "<N/A>");
-  }
   tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 
   if (t) {

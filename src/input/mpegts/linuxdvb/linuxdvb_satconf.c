@@ -1426,7 +1426,7 @@ linuxdvb_diseqc_send
   for (i = 0; i < len; i++) {
     message.msg[3 + i] = (uint8_t)va_arg(ap, int);
 #if ENABLE_TRACE
-    c += snprintf(buf + c, sizeof(buf) - c, "%02X ", message.msg[3 + i]);
+    tvh_strlcatf2(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
 #endif
   }
   va_end(ap);

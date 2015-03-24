@@ -575,12 +575,19 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 
 #define scopedgloballock() scopedlock(&global_lock)
 
-#define tvh_strdupa(n) ({ int tvh_l = strlen(n); \
- char *tvh_b = alloca(tvh_l + 1); \
- memcpy(tvh_b, n, tvh_l + 1); })
+#define tvh_strdupa(n) \
+  ({ int tvh_l = strlen(n); \
+     char *tvh_b = alloca(tvh_l + 1); \
+     memcpy(tvh_b, n, tvh_l + 1); })
 
 #define tvh_strlcatf(buf, size, fmt...) \
- snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
+  ({ size_t __l = strlen(buf); \
+     int __r = snprintf((buf) + __l, (size) - __l, fmt); \
+     __r >= (size) - __l ? (size) - 1 : __l + __r }}
+
+#define tvh_strlcatf2(buf, size, ptr, fmt...) \
+  do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \
+       ptr = __r >= (size) - ptr ? (size) - 1 : ptr + __r; } while (0)
 
 static inline const char *tvh_strbegins(const char *s1, const char *s2)
 {

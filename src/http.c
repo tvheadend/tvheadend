@@ -534,17 +534,17 @@ dump_request(http_connection_t *hc)
 
   first = 1;
   TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
-    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
+    tvh_strlcatf2(buf, sizeof(buf), ptr, first ? "?%s=%s" : "&%s=%s", ra->key, ra->val);
     first = 0;
   }
 
   first = 1;
   TAILQ_FOREACH(ra, &hc->hc_args, link) {
-    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
+    tvh_strlcatf2(buf, sizeof(buf), ptr, first ? "{{%s=%s" : ",%s=%s", ra->key, ra->val);
     first = 0;
   }
   if (!first)
-    ptr += snprintf(buf + ptr, sizeof(buf) - ptr, "}}");
+    tvh_strlcatf2(buf, sizeof(buf), ptr, "}}");
 
   tvhtrace("http", "%s%s", hc->hc_url, buf);
 }

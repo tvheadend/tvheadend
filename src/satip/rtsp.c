@@ -1039,11 +1039,9 @@ play:
 
   dvb_mux_conf_str(dmc, buf, sizeof(buf));
   r = strlen(buf);
-  if (r + 1 < sizeof(buf))
-    r += snprintf(buf + r, sizeof(buf) - r, " pids ");
-  if (r + 1 < sizeof(buf) &&
-      mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r) == 0)
-    snprintf(buf + r, sizeof(buf) - r, "<none>");
+  tvh_strlcatf2(buf, sizeof(buf), r, " pids ");
+  if (mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r) == 0)
+    tvh_strlcatf2(buf, sizeof(buf), r, "<none>");
 
   tvhdebug("satips", "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
