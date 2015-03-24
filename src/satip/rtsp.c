@@ -162,7 +162,7 @@ rtsp_new_session(int delsys, uint32_t nsession, int session)
 
   rs->nsession = nsession ?: session_number;
   snprintf(rs->session, sizeof(rs->session), "%08X", session_number);
-  if (nsession) {
+  if (!nsession) {
     session_number += 9876;
     if (session_number == 0)
       session_number += 9876;
@@ -504,7 +504,7 @@ rtsp_start
               rtsp_muxcnf == MUXCNF_REJECT ? " (configuration)" : "");
       goto endclean;
     }
-    if (rs->mux == mux)
+    if (rs->mux == mux && rs->subs)
       goto pids;
     rtsp_clean(rs);
     rs->mux = mux;
@@ -528,6 +528,8 @@ rtsp_start
     }
   } else {
 pids:
+    if (!rs->subs)
+      goto endclean;
     svc = (mpegts_service_t *)rs->subs->ths_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
