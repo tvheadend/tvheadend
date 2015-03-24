@@ -359,7 +359,7 @@ rtsp_clean(session_t *rs)
   }
   if (rs->subs) {
     while ((sub = LIST_FIRST(&rs->slaves)) != NULL)
-      rtsp_slave_remove(rs, (mpegts_service_t *)rs->subs->ths_service,
+      rtsp_slave_remove(rs, (mpegts_service_t *)rs->subs->ths_raw_service,
                         sub->service);
     subscription_unsubscribe(rs->subs, 0);
     rs->subs = NULL;
@@ -407,7 +407,7 @@ rtsp_manage_descramble(session_t *rs)
 {
   idnode_set_t *found;
   mpegts_service_t *s, *snext;
-  mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_service;
+  mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_raw_service;
   size_t si;
   int i, used = 0;
 
@@ -530,7 +530,7 @@ rtsp_start
 pids:
     if (!rs->subs)
       goto endclean;
-    svc = (mpegts_service_t *)rs->subs->ths_service;
+    svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
   }
@@ -543,7 +543,7 @@ pids:
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
                     rs->frontend, rs->findex, &rs->mux->lm_tuning,
                     &rs->pids);
-    svc = (mpegts_service_t *)rs->subs->ths_service;
+    svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
   }
