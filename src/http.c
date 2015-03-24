@@ -674,6 +674,12 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  hc->hc_peer_ipstr = tvh_strdupa(authbuf);
+  hc->hc_representative = hc->hc_peer_ipstr;
+  hc->hc_username = NULL;
+  hc->hc_password = NULL;
+  hc->hc_session  = NULL;
 
   /* Set keep-alive status */
   v = http_arg_get(&hc->hc_args, "connection");
@@ -688,7 +694,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
       hc->hc_cseq = 0;
     free(hc->hc_session);
     if ((v = http_arg_get(&hc->hc_args, "Session")) != NULL)
-      hc->hc_session = strdup(v);
+      hc->hc_session = tvh_strdupa(v);
     else
       hc->hc_session = NULL;
     if(hc->hc_cseq == 0) {
@@ -716,16 +722,15 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
         n = 0;
       authbuf[n] = 0;
       if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
-	      hc->hc_username = strdup(argv[0]);
-	      hc->hc_password = strdup(argv[1]);
+        hc->hc_username = tvh_strdupa(argv[0]);
+        hc->hc_password = tvh_strdupa(argv[1]);
         // No way to actually track this
       }
     }
   }
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
-  hc->hc_peer_ipstr = strdup(authbuf);
-  hc->hc_representative = strdup(hc->hc_username ?: authbuf);
+  if (hc->hc_username)
+    hc->hc_representative = hc->hc_username;
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
@@ -744,10 +749,6 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
       http_error(hc, HTTP_STATUS_HTTP_VERSION);
     break;
   }
-  free(hc->hc_representative);
-  free(hc->hc_peer_ipstr);
-  free(hc->hc_session);
-  hc->hc_session = NULL;
   return rval;
 }
 
@@ -1030,12 +1031,6 @@ http_serve_requests(http_connection_t *hc)
     http_arg_flush(&hc->hc_req_args);
 
     htsbuf_queue_flush(&hc->hc_reply);
-
-    free(hc->hc_username);
-    hc->hc_username = NULL;
-
-    free(hc->hc_password);
-    hc->hc_password = NULL;
 
     if (r)
       break;
