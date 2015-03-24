@@ -1566,6 +1566,7 @@ profile_transcode_open(profile_chain_t *prch,
 {
   int r;
 
+  prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;
 
   r = profile_transcode_work(prch, &prch->prch_sq.sq_st, 0, 0);
