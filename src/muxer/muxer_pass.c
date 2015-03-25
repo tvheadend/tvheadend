@@ -42,13 +42,13 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
-  uint8_t   pm_pat_cc;
   uint16_t  pm_pmt_pid;
   uint8_t   pm_pmt_cc;
   uint8_t  *pm_pmt;
   uint16_t  pm_pmt_version;
   uint16_t  pm_service_id;
 
+  mpegts_psi_table_t pm_pat;
   mpegts_psi_table_t pm_sdt;
   mpegts_psi_table_t pm_eit;
 
@@ -58,29 +58,6 @@ typedef struct pass_muxer {
 static void
 pass_muxer_write(muxer_t *m, const void *data, size_t size);
 
-
-/**
- * Append CRC
- */
-static int
-pass_muxer_append_crc32(uint8_t *buf, int offset, int maxlen)
-{
-  uint32_t crc;
-
-  if(offset + 4 > maxlen)
-    return -1;
-
-  crc = tvh_crc32(buf, offset, 0xffffffff);
-
-  buf[offset + 0] = crc >> 24;
-  buf[offset + 1] = crc >> 16;
-  buf[offset + 2] = crc >> 8;
-  buf[offset + 3] = crc;
-
-  assert(tvh_crc32(buf, offset + 4, 0xffffffff) == 0);
-
-  return offset + 4;
-}
 
 /** 
  * PMT generator
@@ -234,53 +211,42 @@ pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
   buf0[1] = 0xb0 | (l >> 8);
   buf0[2] =         l;
 
-  return pass_muxer_append_crc32(buf0, tlen, maxlen);
+  return dvb_table_append_crc32(buf0, tlen, maxlen);
 }
 
 /*
  * Rewrite a PAT packet to only include the service included in the transport stream.
- *
- * Return 0 if packet can be dropped (i.e. isn't the starting packet
- * in section or doesn't contain the currently active PAT)
  */
 
-static int
-pass_muxer_rewrite_pat(pass_muxer_t* pm, unsigned char* tsb)
+static void
+pass_muxer_pat_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
-  int pusi = tsb[1]  & 0x40;
-  int cur  = tsb[10] & 0x01;
+  pass_muxer_t *pm;
+  uint8_t out[16], *ob;
+  int ol, l;
 
-  /* Ignore next packet or not start */
-  if (!pusi || !cur)
-    return 0;
+  if (buf[0])
+    return;
 
-  /* Some sanity checks */
-  if (tsb[4]) {
-    tvherror("pass", "Unsupported PAT format - pointer_to_data %d", tsb[4]);
-    return -1;
+  pm = (pass_muxer_t*)mt->mt_opaque;
+
+  memcpy(out, buf, 5 + 3);
+
+  out[1] = 0x80;
+  out[2] = 13; /* section_length (number of bytes after this field, including CRC) */
+  out[7] = 0;
+
+  out[8] = (pm->pm_service_id & 0xff00) >> 8;
+  out[9] = pm->pm_service_id & 0x00ff;
+  out[10] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
+  out[11] = pm->pm_pmt_pid & 0x00ff;
+
+  ol = dvb_table_append_crc32(out, 12, sizeof(out));
+
+  if (ol > 0 && (l = dvb_table_remux(mt, out, ol, &ob)) > 0) {
+    pass_muxer_write((muxer_t *)pm, ob, l);
+    free(ob);
   }
-  if (tsb[12]) {
-    tvherror("pass", "Multi-section PAT not supported");
-    return -2;
-  }
-
-  /* Rewrite continuity counter, in case this is a multi-packet PAT (we discard all but the first packet) */
-  tsb[3] = (tsb[3] & 0xf0) | pm->pm_pat_cc;
-  pm->pm_pat_cc = (pm->pm_pat_cc + 1) & 0xf;
-
-  tsb[6] = 0x80;
-  tsb[7] = 13; /* section_length (number of bytes after this field, including CRC) */
-
-  tsb[13] = (pm->pm_service_id & 0xff00) >> 8;
-  tsb[14] = pm->pm_service_id & 0x00ff;
-  tsb[15] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
-  tsb[16] = pm->pm_pmt_pid & 0x00ff;
-
-  pass_muxer_append_crc32(tsb+5, 12, 183);
-
-  memset(tsb + 21, 0xff, 167); /* Wipe rest of packet */
-
-  return 1;
 }
 
 /*
@@ -528,8 +494,8 @@ static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  int e, l, pid;
-  uint8_t tmp[188], *tsb, *tsb2, *pkt = pb->pb_data;
+  int l, pid;
+  uint8_t *tsb, *tsb2, *pkt = pb->pb_data;
   size_t  len = pb->pb_size, len2;
   
   /* Rewrite PAT/PMT in operation */
@@ -540,7 +506,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
          len2 > 0; tsb += l, len2 -= l) {
 
       pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-      l = mpegts_word_count(tsb, len2, 0xFF1FFF00);
+      l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
       /* Process */
       if ( (pm->m_config.m_rewrite_pat && pid == DVB_PAT_PID) ||
@@ -559,16 +525,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
         /* PAT */
         if (pid == DVB_PAT_PID) {
 
-          for (tsb2 = tsb; tsb2 < pkt; tsb2 += 188) {
-            memcpy(tmp, tsb2, sizeof(tmp));
-            e = pass_muxer_rewrite_pat(pm, tmp);
-            if (e < 0) {
-              tvherror("pass", "PAT rewrite failed, disabling");
-              pm->m_config.m_rewrite_pat = 0;
-            }
-            if (e)
-              pass_muxer_write(m, tmp, 188);
-          }
+          dvb_table_parse(&pm->pm_pat, tsb, l, 1, 0, pass_muxer_pat_cb);
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
@@ -674,6 +631,7 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_pmt)
     free(pm->pm_pmt);
 
+  dvb_table_parse_done(&pm->pm_pat);
   dvb_table_parse_done(&pm->pm_sdt);
   dvb_table_parse_done(&pm->pm_eit);
 
@@ -704,6 +662,7 @@ pass_muxer_create(const muxer_config_t *m_cfg)
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
 
+  dvb_table_parse_init(&pm->pm_pat, "pass-pat", DVB_PAT_PID, pm);
   dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", DVB_SDT_PID, pm);
   dvb_table_parse_init(&pm->pm_eit, "pass-eit", DVB_EIT_PID, pm);
 
