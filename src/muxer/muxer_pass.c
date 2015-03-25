@@ -528,16 +528,19 @@ static void
 pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  int e;
-  uint8_t tmp[188], *tsb, *pkt = pb->pb_data;
-  size_t  len = pb->pb_size;
+  int e, l, pid;
+  uint8_t tmp[188], *tsb, *tsb2, *pkt = pb->pb_data;
+  size_t  len = pb->pb_size, len2;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt) {
-    tsb = pb->pb_data;
-    len = 0;
-    while (tsb < pb->pb_data + pb->pb_size) {
-      int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+  if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt ||
+      pm->m_config.m_rewrite_sdt || pm->m_config.m_rewrite_eit) {
+
+    for (tsb = pb->pb_data, len2 = pb->pb_size, len = 0;
+         len2 > 0; tsb += l, len2 -= l) {
+
+      pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+      l = mpegts_word_count(tsb, len2, 0xFF1FFF00);
 
       /* Process */
       if ( (pm->m_config.m_rewrite_pat && pid == DVB_PAT_PID) ||
@@ -549,48 +552,50 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
         if (len)
           pass_muxer_write(m, pkt, len);
 
-        /* Store new start point (after this packet) */
-        pkt = tsb + 188;
+        /* Store new start point (after these packets) */
+        pkt = tsb + l;
         len = 0;
 
         /* PAT */
         if (pid == DVB_PAT_PID) {
 
-          memcpy(tmp, tsb, sizeof(tmp));
-          e = pass_muxer_rewrite_pat(pm, tmp);
-          if (e < 0) {
-            tvherror("pass", "PAT rewrite failed, disabling");
-            pm->m_config.m_rewrite_pat = 0;
+          for (tsb2 = tsb; tsb2 < pkt; tsb2 += 188) {
+            memcpy(tmp, tsb2, sizeof(tmp));
+            e = pass_muxer_rewrite_pat(pm, tmp);
+            if (e < 0) {
+              tvherror("pass", "PAT rewrite failed, disabling");
+              pm->m_config.m_rewrite_pat = 0;
+            }
+            if (e)
+              pass_muxer_write(m, tmp, 188);
           }
-          if (e)
-            pass_muxer_write(m, tmp, 188);
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
         
-          dvb_table_parse(&pm->pm_sdt, tsb, 188, 1, 0, pass_muxer_sdt_cb);
+          dvb_table_parse(&pm->pm_sdt, tsb, l, 1, 0, pass_muxer_sdt_cb);
 
         /* EIT */
         } else if (pid == DVB_EIT_PID) {
         
-          dvb_table_parse(&pm->pm_eit, tsb, 188, 1, 0, pass_muxer_eit_cb);
+          dvb_table_parse(&pm->pm_eit, tsb, l, 1, 0, pass_muxer_eit_cb);
 
         /* PMT */
-        } else if (tsb[1] & 0x40) { /* pusi - the first PMT packet */
+        } else {
 
-          pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
-          pm->pm_pmt_cc = (pm->pm_pmt_cc + 1) & 0xf;
-          pass_muxer_write(m, pm->pm_pmt, 188);
+          for (tsb2 = tsb; tsb2 < pkt; tsb2 += 188)
+            if (tsb2[1] & 0x40) { /* pusi - the first PMT packet */
+              pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
+              pm->pm_pmt_cc = (pm->pm_pmt_cc + 1) & 0xf;
+              pass_muxer_write(m, pm->pm_pmt, 188);
+            }
 
         }
 
       /* Record */
       } else {
-        len += 188;
+        len += l;
       }
-
-      /* Next packet */
-      tsb += 188;
     }
   }
 
