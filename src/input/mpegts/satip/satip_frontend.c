@@ -1282,7 +1282,10 @@ new_tune:
                          rtsp_flags);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
   if (r < 0) {
-    tvherror("satip", "%s - failed to tune (%i)", buf, r);
+    if (r != -12345678)
+      tvherror("satip", "%s - failed to tune (%i)", buf, r);
+    else
+      tvhtrace("satip", "%s - mux changed in the middle", buf);
     satip_frontend_tuning_error(lfe, tr);
     goto done;
   }
