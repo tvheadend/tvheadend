@@ -51,7 +51,7 @@ struct tvhdhomerun_device
    * Adapter info
    */
   tvhdhomerun_device_info_t      hd_info;
-  
+
   /*
    * Frontends
    */
@@ -61,14 +61,14 @@ struct tvhdhomerun_device
     Flags...
   */
   int                        hd_fullmux_ok;
-  
+
   int                        hd_pids_max;
   int                        hd_pids_len;
   int                        hd_pids_deladd;
 
   dvb_fe_type_t              hd_type;
   char                      *hd_override_type;
-  
+
 };
 
 #define HDHOMERUN_MAX_PIDS 32
@@ -88,7 +88,7 @@ struct tvhdhomerun_frontend
    * Frontend info
    */
   int                            hf_tunerNumber;
-  dvb_fe_type_t                  hf_type; 
+  dvb_fe_type_t                  hf_type;
 
   // libhdhomerun objects.
   struct hdhomerun_device_t     *hf_hdhomerun_tuner;
@@ -117,19 +117,19 @@ struct tvhdhomerun_frontend
   gtimer_t                       hf_monitor_timer;
 
   mpegts_mux_instance_t         *hf_mmi;
- 
+
 };
 
 /*
  * Methods
  */
-  
+
 void tvhdhomerun_device_init ( void );
 void tvhdhomerun_device_done ( void );
 void tvhdhomerun_device_destroy ( tvhdhomerun_device_t *sd );
 void tvhdhomerun_device_destroy_later( tvhdhomerun_device_t *sd, int after_ms );
 
-tvhdhomerun_frontend_t * 
+tvhdhomerun_frontend_t *
 tvhdhomerun_frontend_create( tvhdhomerun_device_t *hd, struct hdhomerun_discover_device_t *discover_info, htsmsg_t *conf, dvb_fe_type_t type, unsigned int frontend_number );
 
 void tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *lfe );
