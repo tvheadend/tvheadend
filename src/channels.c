@@ -250,7 +250,7 @@ channel_class_epggrab_set ( void *o, const void *v )
   }
     
   /* Link */
-  if (ch->ch_epgauto && l) {
+  if (l) {
     HTSMSG_FOREACH(f, l) {
       if ((ec = epggrab_channel_find_by_id(htsmsg_field_get_str(f))))
         save |= epggrab_channel_link(ec, ch);
@@ -279,14 +279,6 @@ channel_class_epggrab_list ( void *o )
   htsmsg_add_bool(e, "enum", 1);
   htsmsg_add_msg(m, "params", e);
   return m;
-}
-
-static void
-channel_class_epgauto_notify ( void *obj )
-{
-  channel_t *ch = obj;
-  if (!ch->ch_epgauto)
-    channel_class_epggrab_set(obj, NULL);
 }
 
 static const void *
@@ -365,7 +357,6 @@ const idclass_t channel_class = {
       .id       = "epgauto",
       .name     = "Auto EPG Channel",
       .off      = offsetof(channel_t, ch_epgauto),
-      .notify   = channel_class_epgauto_notify,
     },
     {
       .type     = PT_STR,
