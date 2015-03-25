@@ -50,6 +50,8 @@ typedef struct muxer_config {
 
   int                  m_rewrite_pat;
   int                  m_rewrite_pmt;
+  int                  m_rewrite_sdt;
+  int                  m_rewrite_eit;
   int                  m_cache;
 
 /* 

@@ -865,6 +865,8 @@ typedef struct profile_mpegts {
   profile_t;
   int pro_rewrite_pmt;
   int pro_rewrite_pat;
+  int pro_rewrite_sdt;
+  int pro_rewrite_eit;
 } profile_mpegts_t;
 
 const idclass_t profile_mpegts_pass_class =
@@ -887,6 +889,20 @@ const idclass_t profile_mpegts_pass_class =
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
       .def.i    = 1,
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_sdt",
+      .name     = "Rewrite SDT",
+      .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
+      .def.i    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "rewrite_eit",
+      .name     = "Rewrite EIT",
+      .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
+      .def.i    = 1,
+    },
     { }
   }
 };
@@ -906,6 +922,8 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
     c.m_type = MC_PASS;
   c.m_rewrite_pat = pro->pro_rewrite_pat;
   c.m_rewrite_pmt = pro->pro_rewrite_pmt;
+  c.m_rewrite_sdt = pro->pro_rewrite_sdt;
+  c.m_rewrite_eit = pro->pro_rewrite_eit;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
