@@ -40,7 +40,6 @@
 typedef int16_t                     mpegts_apid_t;
 typedef struct mpegts_apids         mpegts_apids_t;
 typedef struct mpegts_table         mpegts_table_t;
-typedef struct mpegts_psi_section   mpegts_psi_section_t;
 typedef struct mpegts_network       mpegts_network_t;
 typedef struct mpegts_mux           mpegts_mux_t;
 typedef struct mpegts_service       mpegts_service_t;
