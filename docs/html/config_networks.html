@@ -87,10 +87,16 @@ Buttons have the following functions:
 		<dt><b>Ignore Provider's Channel Numbers</b>
 		<dd>Do not use the local channel numbers defined by provider.
 <p>
-		<dt><b>SAT>IP Source Number</b>
-		<dd>For DVB-S SAT>IP source means the LNB selection. 0 = do not use; 1 = AA; 2 = AB; 3 = BA; 4 = BB.
-		    Other values are allowed too (but clients have to support them).
-		    For other network types (DVB-T, DVB-C), use value 1 to enable SAT>IP for this network.
+		<dt><b>SAT&gt;IP Source Number</b>
+		<dd>This field is matched through the "src" parameter asked from the
+		    SAT&gt;IP client. Usually (and by default) this value is 1.
+                    For satellite tuners, this value determines the satellite source (dish).
+                    By specification position 1 = DiseqC AA, 2 = DiseqC AB, 3 = DiseqC BA,
+                    4 = DiseqC BB, but any numbers may be used - depends on the SAT&gt;IP
+                    client. Note that if you use same number for multiple networks,
+                    the first matched network containing the mux with requested parameters
+                    will win (also for unknown mux). If this field is set to zero,
+                    the network cannot be used by the SAT&gt;IP server.</dd>
 <p>
 		<dt><b>EIT Local Time</b>
 		<dd>EPG (EIT) events uses local time instead UTC.
