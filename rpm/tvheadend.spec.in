@@ -32,7 +32,11 @@ to Showtime, XBMC and various other clients.
 
 %build
 echo %{version} > %{_builddir}/%{buildsubdir}/rpm/version
-%configure --disable-lockowner --enable-bundle --enable-libffmpeg_static
+%ifarch %arm
+      %configure --disable-lockowner --enable-bundle --disable-libffmpeg_static
+%else
+      %configure --disable-lockowner --enable-bundle --enable-libffmpeg_static
+%endif
 %{__make}
 
 %install
