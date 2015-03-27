@@ -421,7 +421,7 @@ descrambler_descramble ( service_t *t,
         ki = tsb2[3];
         if ((ki & 0x80) != 0x00) {
           if (key_valid(dr, ki) == 0) {
-            sbuf_cut(&dr->dr_buf, tsb2 - tsb);
+            sbuf_cut(&dr->dr_buf, tsb2 - dr->dr_buf.sb_data);
             flush_data = 1;
             goto next;
           }
