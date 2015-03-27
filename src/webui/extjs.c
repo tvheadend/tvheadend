@@ -245,7 +245,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2014 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2015 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
 		 "<a href=\"https://tvheadend.org\">"
 		 "https://tvheadend.org</a><br><br>"
