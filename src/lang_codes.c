@@ -422,6 +422,7 @@ const lang_code_t lang_codes[] = {
   { "swa", "sw", NULL , "Swahili" },
   { "swe", "sv", NULL , "Swedish" },
   { "syc", NULL, NULL , "Classical Syriac" },
+  { "syn", NULL, NULL , "Narration: (sync audio described)"},
   { "syr", NULL, NULL , "Syriac" },
   { "tah", "ty", NULL , "Tahitian" },
   { "tai", NULL, NULL , "Tai languages" },
