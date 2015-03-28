@@ -74,3 +74,18 @@ exit 0
 %{_bindir}/*
 %{_sysconfdir}/sysconfig/*
 %{_unitdir}/*
+
+%changelog
+* Wed Mar 25 2015 Bob Lightfoot <boblfoot@gmail.com> 3.9-2658-gb427d7e
+- Patching rpm spec file so the arm architecture builds properly
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1806-g6f3324e
+- RPM: Typo fixes
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1805-g14a7de8
+- RPM build - config fixes
+
+* Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1803-g392dec0
+- Add basic RPM build support
+
+~   
