@@ -14,6 +14,9 @@ pids_cc_err = {}
 fp = open(sys.argv[1])
 while True:
   tsb = fp.read(188)
+  while tsb and tsb[0] != '\x47':
+    tsb = tsb[1:] + fp.read(1)
+    print 'skip1'
   if len(tsb) < 16:
     break
   tsb = map(ord, tsb[:16])
@@ -26,6 +29,8 @@ while True:
     pids[pid] = 1
   else:
     pids[pid] += 1
+  if pid == 0x1fff:
+    continue
   cc = tsb[3]
   if cc & 0x10:
     cc &= 0x0f
