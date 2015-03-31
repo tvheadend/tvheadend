@@ -996,7 +996,7 @@ rtsp_parse_cmd
     if (!TAILQ_EMPTY(&hc->hc_req_args)) goto eargs;
 
     dmc->u.dmc_fe_qam.symbol_rate = sr;
-    dmc->u.dmc_fe_qam.fec_inner = DVB_FEC_NONE;
+    dmc->u.dmc_fe_qam.fec_inner = DVB_FEC_AUTO;
     dmc->dmc_fe_inversion = specinv;
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
