@@ -692,7 +692,8 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     subscription_link_service(s, si->si_s);
     subscription_show_info(s);
   } else {
-    subscription_reschedule();
+    gtimer_arm(&subscription_reschedule_timer,
+               subscription_reschedule_cb, NULL, 0);
   }
   return s;
 }
