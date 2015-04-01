@@ -415,11 +415,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   tvhtrace("transcode", "%04X: audio decode: consumed=%d size=%zu, got=%d, pts=%" PRIi64,
            shortid(t), length, pktbuf_len(pkt->pkt_payload), got_frame, pkt->pkt_pts);
 
-  if (!got_frame) {
-    tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
-    goto cleanup;
-  }
-
   if (length < 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
     tvherror("transcode", "%04X: Unable to decode audio (%d, %s)",
@@ -428,36 +423,66 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (length != pktbuf_len(pkt->pkt_payload))
-    tvhtrace("transcode",
-             "%04X: undecoded data (in=%zu, consumed=%d)",
-             shortid(t), pktbuf_len(pkt->pkt_payload), length);
-
-  if (length == 0 || !got_frame) {
-    tvhtrace("transcode", "%04X: Not yet enough data for decoding", shortid(t));
+  if (!got_frame) {
+    tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
     goto cleanup;
   }
+
+  if (length != pktbuf_len(pkt->pkt_payload))
+    tvhwarn("transcode",
+            "%04X: undecoded data (in=%zu, consumed=%d)",
+            shortid(t), pktbuf_len(pkt->pkt_payload), length);
 
   if (octx->codec_id == AV_CODEC_ID_NONE) {
     as->aud_enc_pts       = pkt->pkt_pts;
     octx->sample_rate     = ictx->sample_rate;
     octx->sample_fmt      = ictx->sample_fmt;
+
+    if (ocodec->supported_samplerates) {
+      /* Find if we have a matching sample_rate */
+      int acount = 0;
+      octx->sample_rate = 0;
+      int sample_rate_alt = 0;
+      while ((octx->sample_rate == 0) && (ocodec->supported_samplerates[acount] > 0)) {
+        if (ocodec->supported_samplerates[acount] == ictx->sample_rate) {
+          octx->sample_rate = ictx->sample_rate;
+          break;
+        }
+        if (ocodec->supported_samplerates[acount] > sample_rate_alt &&
+            ocodec->supported_samplerates[acount] < ictx->sample_rate) {
+          sample_rate_alt = ocodec->supported_samplerates[acount];
+        }
+        acount++;
+      }
+      if (octx->sample_rate == 0) {
+        if (sample_rate_alt > 0) {
+          tvhtrace("transcode", "%04X: sample_rate not supported, using: %d",
+                   shortid(t), sample_rate_alt);
+          octx->sample_rate = sample_rate_alt;
+        } else {
+          tvherror("transcode", "%04X: Encoder no sample_rate!!??", shortid(t));
+          transcoder_stream_invalidate(ts);
+          goto cleanup;
+        }
+      }
+    }
+
     if (ocodec->sample_fmts) {
       /* Find if we have a matching sample_fmt */
       int acount = 0;
-      octx->sample_fmt = -1;
-      while ((octx->sample_fmt == -1) && (ocodec->sample_fmts[acount] > -1)) {
+      octx->sample_fmt = AV_SAMPLE_FMT_NONE;
+      while ((octx->sample_fmt == AV_SAMPLE_FMT_NONE) && (ocodec->sample_fmts[acount] > AV_SAMPLE_FMT_NONE)) {
         if (ocodec->sample_fmts[acount] == ictx->sample_fmt) {
           octx->sample_fmt = ictx->sample_fmt;
           break;
         }
         acount++;
       }
-      if (octx->sample_fmt == -1) {
+      if (octx->sample_fmt == AV_SAMPLE_FMT_NONE) {
         if (acount > 0) {
-          tvhtrace("transcode", "%04X: No sample_fmt, using: %d",
-                   shortid(t), ocodec->sample_fmts[acount-1]);
-          octx->sample_fmt = ocodec->sample_fmts[acount-1];
+          tvhtrace("transcode", "%04X: sample_fmt not supported, using: %d",
+                   shortid(t), ocodec->sample_fmts[0]);
+          octx->sample_fmt = ocodec->sample_fmts[0];
         } else {
           tvherror("transcode", "%04X: Encoder no sample_fmt!!??", shortid(t));
           transcoder_stream_invalidate(ts);
@@ -466,14 +491,11 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
     }
 
-    octx->time_base.den   = ictx->time_base.den;
-    octx->time_base.num   = ictx->time_base.num;
+    octx->time_base  = ictx->time_base;
+    octx->channels   = as->aud_channels ? MIN(as->aud_channels, ictx->channels) : ictx->channels;
+    octx->bit_rate   = as->aud_bitrate  ? as->aud_bitrate  : 0;
+    octx->flags     |= CODEC_FLAG_GLOBAL_HEADER;
 
-    octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
-    octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
-
-    octx->channels        = MIN(octx->channels, ictx->channels);
-    octx->bit_rate        = MIN(octx->bit_rate, ictx->bit_rate);
 
     switch (octx->channels) {
     case 1:
@@ -513,27 +535,40 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     if (ocodec->channel_layouts) {
-      /* Find a matching channel_layout */
-      int acount = 0, maxchannels = 0, maxacount = 0;
+      int acount = 0;
+      uint64_t channel_layout = octx->channel_layout;
+      uint64_t channel_layout_def = av_get_default_channel_layout(octx->channels);
+      uint64_t channel_layout_alt = 0;
+      int channels_alt = 0;
+      /* check if requested layout is available and find best suited alternative layout */
       octx->channel_layout = 0;
       while ((octx->channel_layout == 0) && (ocodec->channel_layouts[acount] > 0)) {
-        if ((av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) >= maxchannels) &&
-            (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= octx->channels)) {
-          maxchannels = av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]);
-          maxacount = acount;
+        if (ocodec->channel_layouts[acount] == channel_layout) {
+          octx->channel_layout = channel_layout;
+          break;
         }
-        if (ocodec->channel_layouts[acount] == ictx->channel_layout)
-          octx->channel_layout = ictx->channel_layout;
+        if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= octx->channels) {
+          if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) > channels_alt) {
+            channel_layout_alt = ocodec->channel_layouts[acount];
+            channels_alt = av_get_channel_layout_nb_channels(channel_layout_alt);
+          } else if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) == channels_alt &&
+                     channel_layout_alt == channel_layout_def) {
+            channel_layout_alt = channel_layout_def;
+            channels_alt = av_get_channel_layout_nb_channels(channel_layout_alt);
+          }
+        }
         acount++;
       }
 
       if (octx->channel_layout == 0) {
-        if (acount > 0) {
+        if (channel_layout_alt != 0) {
           /* find next which has same or less channels than decoder. */
-          tvhtrace("transcode", "%04X: No channel_layout, using: %d with %d channels",
-                   shortid(t), (int)ocodec->channel_layouts[maxacount], maxchannels);
-          octx->channel_layout = ocodec->channel_layouts[maxacount];
-          octx->channels = maxchannels;
+          char layout_buf[100];
+          av_get_channel_layout_string(layout_buf, sizeof (layout_buf), channels_alt, channel_layout_alt);
+          tvhtrace("transcode", "%04X: channel_layout not available, using: %s",
+                   shortid(t), layout_buf);
+          octx->channel_layout = channel_layout_alt;
+          octx->channels = channels_alt;
         } else {
           tvherror("transcode", "%04X: Encoder no channel_layout!!??", shortid(t));
           transcoder_stream_invalidate(ts);
@@ -542,23 +577,39 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       }
     }
 
-    // User specified streaming profile audio bitrate limiter.
-    if (t->t_props.tp_abitrate >= 16) {
-      octx->bit_rate       = t->t_props.tp_abitrate * 1000;
-    }
-
+    // Set flags and quality settings, if no bitrate was specified.
+    // The MPEG2 encoder only supports encoding with fixed bitrate.
+    // All AAC encoders should support encoding with fixed bitrate,
+    // but some don't support encoding with global_quality (vbr).
+    // All vorbis encoders support encoding with global_quality (vbr),
+    // but the built in vorbis encoder doesn't support fixed bitrate.
     switch (ts->ts_type) {
     case SCT_MPEG2AUDIO:
+      // use 96 kbit per channel as default
+      if (octx->bit_rate == 0) {
+        octx->bit_rate = octx->channels * 96000;
+      }
       break;
 
     case SCT_AAC:
-      octx->flags         |= CODEC_FLAG_BITEXACT;
+      octx->flags |= CODEC_FLAG_BITEXACT;
+      // use 64 kbit per channel as default
+      if (octx->bit_rate == 0) {
+        octx->bit_rate = octx->channels * 64000;
+      }
       break;
 
     case SCT_VORBIS:
-      octx->flags         |= CODEC_FLAG_QSCALE;
-      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
-      octx->global_quality = 4*FF_QP2LAMBDA;
+      // use vbr with quality setting as default
+      // and also use a user specified bitrate < 16 kbit as quality setting
+      if (octx->bit_rate == 0) {
+        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->global_quality = 4 * FF_QP2LAMBDA;
+      } else if (t->t_props.tp_abitrate < 16) {
+        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->global_quality = t->t_props.tp_abitrate * FF_QP2LAMBDA;
+        octx->bit_rate = 0;
+      }
       break;
 
     default:
@@ -1468,8 +1519,8 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   if(tp->tp_channels > 0)
     as->aud_channels = tp->tp_channels; 
-
-  as->aud_bitrate = as->aud_channels * 64000;
+  if(tp->tp_abitrate > 0)
+    as->aud_bitrate = tp->tp_abitrate * 1000;
 
   as->resample_context = NULL;
   as->fifo = NULL;
