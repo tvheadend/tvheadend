@@ -200,6 +200,6 @@ mpegts_pid_dump(mpegts_apids_t *pids, char *buf, int len)
   if (pids->all)
     return snprintf(buf, len, "all");
   for (i = 0; i < pids->count && l + 1 < len; i++)
-    tvh_strlcatf2(buf, len, l, "%s%i", i > 0 ? "," : "", pids->pids[i]);
+    tvh_strlcatf(buf, len, l, "%s%i", i > 0 ? "," : "", pids->pids[i]);
   return l;
 }

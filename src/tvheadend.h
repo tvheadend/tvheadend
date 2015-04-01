@@ -580,12 +580,7 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
      char *tvh_b = alloca(tvh_l + 1); \
      memcpy(tvh_b, n, tvh_l + 1); })
 
-#define tvh_strlcatf(buf, size, fmt...) \
-  ({ size_t __l = strlen(buf); \
-     int __r = snprintf((buf) + __l, (size) - __l, fmt); \
-     __r >= (size) - __l ? (size) - 1 : __l + __r }}
-
-#define tvh_strlcatf2(buf, size, ptr, fmt...) \
+#define tvh_strlcatf(buf, size, ptr, fmt...) \
   do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \
        ptr = __r >= (size) - ptr ? (size) - 1 : ptr + __r; } while (0)
 

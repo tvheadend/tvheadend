@@ -169,27 +169,27 @@ subscription_show_none(th_subscription_t *s)
   char buf[256], buf2[128];
   size_t l = 0;
 
-  tvh_strlcatf2(buf, sizeof(buf), l,
+  tvh_strlcatf(buf, sizeof(buf), l,
                 "No input source available for subscription \"%s\"",
 	        s->ths_title);
   if (s->ths_channel)
-    tvh_strlcatf2(buf, sizeof(buf), l, " to channel \"%s\"",
+    tvh_strlcatf(buf, sizeof(buf), l, " to channel \"%s\"",
                   s->ths_channel ? channel_get_name(s->ths_channel) : "none");
 #if ENABLE_MPEGTS
   else if (s->ths_raw_service) {
     mpegts_service_t *ms = (mpegts_service_t *)s->ths_raw_service;
     mpegts_mux_nice_name(ms->s_dvb_mux, buf2, sizeof(buf2));
-    tvh_strlcatf2(buf, sizeof(buf), l, " to mux \"%s\"", buf2);
+    tvh_strlcatf(buf, sizeof(buf), l, " to mux \"%s\"", buf2);
   }
 #endif
   else {
-    tvh_strlcatf2(buf, sizeof(buf), l, " to service \"%s\"",
+    tvh_strlcatf(buf, sizeof(buf), l, " to service \"%s\"",
                   s->ths_service ? s->ths_service->s_nicename : "none");
 #if ENABLE_MPEGTS
     if (idnode_is_instance(&s->ths_service->s_id, &mpegts_service_class)) {
       mpegts_service_t *ms = (mpegts_service_t *)s->ths_service;
       mpegts_mux_nice_name(ms->s_dvb_mux, buf2, sizeof(buf2));
-      tvh_strlcatf2(buf, sizeof(buf), l, " in mux \"%s\"", buf2);
+      tvh_strlcatf(buf, sizeof(buf), l, " in mux \"%s\"", buf2);
     }
 #endif
   }
@@ -205,43 +205,43 @@ subscription_show_info(th_subscription_t *s)
   int mux = 0, service = 0;
 
   s->ths_service->s_setsourceinfo(s->ths_service, &si);
-  tvh_strlcatf2(buf, sizeof(buf), l, "\"%s\" subscribing", s->ths_title);
+  tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" subscribing", s->ths_title);
   if (s->ths_channel) {
-    tvh_strlcatf2(buf, sizeof(buf), l, " on channel \"%s\"",
+    tvh_strlcatf(buf, sizeof(buf), l, " on channel \"%s\"",
                   s->ths_channel ? channel_get_name(s->ths_channel) : "none");
 #if ENABLE_MPEGTS
   } else if (s->ths_raw_service && si.si_mux) {
-    tvh_strlcatf2(buf, sizeof(buf), l, " to mux \"%s\"", si.si_mux);
+    tvh_strlcatf(buf, sizeof(buf), l, " to mux \"%s\"", si.si_mux);
     mux = 1;
 #endif
   } else {
-    tvh_strlcatf2(buf, sizeof(buf), l, " to service \"%s\"",
+    tvh_strlcatf(buf, sizeof(buf), l, " to service \"%s\"",
                   s->ths_service ? s->ths_service->s_nicename : "none");
     service = 1;
   }
-  tvh_strlcatf2(buf, sizeof(buf), l, ", weight: %d", s->ths_weight);
+  tvh_strlcatf(buf, sizeof(buf), l, ", weight: %d", s->ths_weight);
   if (si.si_adapter)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", adapter: \"%s\"", si.si_adapter);
+    tvh_strlcatf(buf, sizeof(buf), l, ", adapter: \"%s\"", si.si_adapter);
   if (si.si_network)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", network: \"%s\"", si.si_network);
+    tvh_strlcatf(buf, sizeof(buf), l, ", network: \"%s\"", si.si_network);
   if (!mux && si.si_mux)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", mux: \"%s\"", si.si_mux);
+    tvh_strlcatf(buf, sizeof(buf), l, ", mux: \"%s\"", si.si_mux);
   if (si.si_provider)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", provider: \"%s\"", si.si_provider);
+    tvh_strlcatf(buf, sizeof(buf), l, ", provider: \"%s\"", si.si_provider);
   if (!service && si.si_service)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", service: \"%s\"", si.si_service);
+    tvh_strlcatf(buf, sizeof(buf), l, ", service: \"%s\"", si.si_service);
 
   if (s->ths_prch && s->ths_prch->prch_pro)
-    tvh_strlcatf2(buf, sizeof(buf), l,
+    tvh_strlcatf(buf, sizeof(buf), l,
                        ", profile=\"%s\"",
                        s->ths_prch->prch_pro->pro_name ?: "");
 
   if (s->ths_hostname)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", hostname=\"%s\"", s->ths_hostname);
+    tvh_strlcatf(buf, sizeof(buf), l, ", hostname=\"%s\"", s->ths_hostname);
   if (s->ths_username)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_username);
+    tvh_strlcatf(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_username);
   if (s->ths_client)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
+    tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
 
   tvhlog(LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 }
@@ -556,18 +556,18 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 
   if (s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
-    tvh_strlcatf2(buf, sizeof(buf), l, "\"%s\" unsubscribing from \"%s\"",
+    tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" unsubscribing from \"%s\"",
              s->ths_title, channel_get_name(s->ths_channel));
   } else {
-    tvh_strlcatf2(buf, sizeof(buf), l, "\"%s\" unsubscribing", s->ths_title);
+    tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" unsubscribing", s->ths_title);
   }
 
   if (s->ths_hostname)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", hostname=\"%s\"", s->ths_hostname);
+    tvh_strlcatf(buf, sizeof(buf), l, ", hostname=\"%s\"", s->ths_hostname);
   if (s->ths_username)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_username);
+    tvh_strlcatf(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_username);
   if (s->ths_client)
-    tvh_strlcatf2(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_client);
+    tvh_strlcatf(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_client);
   tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 
   if (t) {
