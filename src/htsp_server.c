@@ -1238,6 +1238,10 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Missing argument 'query'");
 
   memset(&eq, 0, sizeof(eq));
+
+  if(htsmsg_get_bool_or_default(in, "fulltext", 0))
+    eq.fulltext = 1;
+  eq.stitle = strdup(query);
   
   /* Optional */
   if(!(htsmsg_get_u32(in, "channelId", &u32))) {
