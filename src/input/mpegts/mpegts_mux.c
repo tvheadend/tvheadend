@@ -343,6 +343,18 @@ mpegts_mux_class_get_network ( void *ptr )
 }
 
 static const void *
+mpegts_mux_class_get_network_uuid ( void *ptr )
+{
+  static char buf[UUID_HEX_SIZE], *s = buf;
+  mpegts_mux_t *mm = ptr;
+  if (mm && mm->mm_network)
+    strcpy(buf, idnode_uuid_as_str(&mm->mm_network->mn_id) ?: "");
+  else
+    *buf = 0;
+  return &s;
+}
+
+static const void *
 mpegts_mux_class_get_name ( void *ptr )
 {
   static char buf[512], *s = buf;
@@ -489,6 +501,13 @@ const idclass_t mpegts_mux_class =
       .name     = "Network",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_network,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_uuid",
+      .name     = "Network Uuid",
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .get      = mpegts_mux_class_get_network_uuid,
     },
     {
       .type     = PT_STR,

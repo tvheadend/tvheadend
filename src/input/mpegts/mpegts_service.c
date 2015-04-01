@@ -46,6 +46,18 @@ mpegts_service_class_get_mux ( void *ptr )
 }
 
 static const void *
+mpegts_service_class_get_mux_uuid ( void *ptr )
+{
+  static char buf[UUID_HEX_SIZE], *s = buf;
+  mpegts_service_t *ms = ptr;
+  if (ms && ms->s_dvb_mux)
+    strcpy(buf, idnode_uuid_as_str(&ms->s_dvb_mux->mm_id) ?: "");
+  else
+    *buf = 0;
+  return &s;
+}
+
+static const void *
 mpegts_service_class_get_network ( void *ptr )
 {
   static char buf[512], *s = buf;
@@ -89,6 +101,13 @@ const idclass_t mpegts_service_class =
       .name     = "Mux",
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_mux,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "multiplex_uuid",
+      .name     = "Mux UUID",
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .get      = mpegts_service_class_get_mux_uuid,
     },
     {
       .type     = PT_U16,
