@@ -521,6 +521,8 @@ rtsp_start
                                    NULL);
     if (!rs->subs)
       goto endclean;
+    if (!rs->pids.all && rs->pids.count == 0)
+      mpegts_pid_add(&rs->pids, 0);
     /* retrigger play when new setup arrived */
     if (oldstate) {
       setup = 0;
@@ -530,6 +532,8 @@ rtsp_start
 pids:
     if (!rs->subs)
       goto endclean;
+    if (!rs->pids.all && rs->pids.count == 0)
+      mpegts_pid_add(&rs->pids, 0);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
@@ -543,6 +547,8 @@ pids:
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
                     rs->frontend, rs->findex, &rs->mux->lm_tuning,
                     &rs->pids);
+    if (!rs->pids.all && rs->pids.count == 0)
+      mpegts_pid_add(&rs->pids, 0);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
