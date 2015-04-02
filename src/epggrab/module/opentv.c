@@ -214,7 +214,9 @@ static int _opentv_parse_event_record
    time_t mjd )
 {
   uint8_t rtag = buf[0];
-  uint8_t rlen = buf[1];
+  int rlen = buf[1];
+  if (rlen+2 > len)
+    return -1;
   if (rlen+2 <= len) {
     switch (rtag) {
       case 0xb5: // title
@@ -256,13 +258,21 @@ static int _opentv_parse_event
     opentv_event_t *ev )
 {
   int      slen = (((int)buf[2] & 0xf) << 8) | buf[3];
-  int      i    = 4;
+  int      i    = 4, r;
+
+  if (slen+4 > len) {
+    tvhtrace("opentv", "event len (%d) > table len (%d)", slen+4, len);
+    return -1;
+  }
 
   ev->eid = ((uint16_t)buf[0] << 8) | buf[1];
 
   /* Process records */ 
   while (i < slen+4) {
-    i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd);
+    r = _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd);
+    if (r < 0)
+      return -1;
+    i += r;
   }
   return slen+4;
 }
@@ -296,7 +306,7 @@ opentv_parse_event_section
   ( opentv_status_t *sta, int cid, int mjd,
     const uint8_t *buf, int len )
 {
-  int i, save = 0;
+  int i, r, save = 0;
   opentv_module_t  *mod = sta->os_mod;
   epggrab_module_t *src = (epggrab_module_t*)mod;
   epggrab_channel_t *ec;
@@ -319,8 +329,9 @@ opentv_parse_event_section
   i = 7;
   while (i < len) {
     memset(&ev, 0, sizeof(opentv_event_t));
-    i += _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd,
-                             &ev);
+    r = _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd, &ev);
+    if (r < 0) break;
+    i += r;
 
     /*
      * Broadcast
