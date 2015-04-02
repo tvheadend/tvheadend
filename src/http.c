@@ -341,7 +341,7 @@ http_error(http_connection_t *hc, int error)
   if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
     tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "http", "%s: %s %s %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
-          http_cmd2str(hc->hc_cmd), hc->hc_url, error);
+           http_cmd2str(hc->hc_cmd), hc->hc_url, error);
 
   if (hc->hc_version != RTSP_VERSION_1_0) {
     htsbuf_queue_flush(&hc->hc_reply);
@@ -546,7 +546,8 @@ dump_request(http_connection_t *hc)
   if (!first)
     tvh_strlcatf(buf, sizeof(buf), ptr, "}}");
 
-  tvhtrace("http", "%s%s", hc->hc_url, buf);
+  tvhtrace("http", "%s %s %s%s", http_ver2str(hc->hc_version),
+           http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
 #else
 static inline void
