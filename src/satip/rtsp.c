@@ -1416,13 +1416,36 @@ rtsp_flush_requests(http_connection_t *hc)
  *
  */
 static void
+rtsp_stream_status ( void *opaque, htsmsg_t *m )
+{
+  http_connection_t *hc = opaque;
+  htsmsg_add_str(m, "type", "SAT>IP");
+  if (hc->hc_username)
+    htsmsg_add_str(m, "user", hc->hc_username);
+}
+
+/*
+ *
+ */
+static void
 rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
            struct sockaddr_storage *self)
 {
   http_connection_t hc;
+  access_t aa;
+  char buf[128];
+  void *tcp;
 
   memset(&hc, 0, sizeof(http_connection_t));
   *opaque = &hc;
+
+  memset(&aa, 0, sizeof(aa));
+  strcpy(buf, "SAT>IP Client ");
+  tcp_get_ip_str((struct sockaddr *)peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
+  aa.aa_representative = buf;
+
+  tcp = tcp_connection_launch(fd, rtsp_stream_status, &aa);
+
   /* Note: global_lock held on entry */
   pthread_mutex_unlock(&global_lock);
 
@@ -1441,6 +1464,8 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   /* Note: leave global_lock held for parent */
   pthread_mutex_lock(&global_lock);
   *opaque = NULL;
+
+  tcp_connection_land(tcp);
 }
 
 /*
