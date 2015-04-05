@@ -228,6 +228,10 @@ headers_complete(globalheaders_t *gh)
        */
       if(threshold || (qd[i] <= 0 && qd_max > (MAX_SCAN_TIME * 90) / 2)) {
 	ssc->ssc_disabled = 1;
+        tvhdebug("parser", "gh disable stream %d %s%s%s (PID %i) threshold %d qd %"PRId64" qd_max %"PRId64,
+             ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
+             ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
+             threshold, qd[i], qd_max);
       } else {
 	return 0;
       }
