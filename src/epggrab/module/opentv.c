@@ -228,8 +228,13 @@ static int _opentv_parse_event_record
           ev->cat         = buf[6];
           if (prov->genre)
             ev->cat = prov->genre->map[ev->cat];
-          if (!ev->title)
+          if (!ev->title) {
             ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
+            if (!strcmp(prov->dict->id, "skynz")) {
+              if ((strlen(ev->title) >= 6) && (ev->title[0] == '[') && (ev->title[1] == '[') && (ev->title[4] == ']') && (ev->title[5] == ']'))
+		memmove(ev->title,ev->title+6,strlen(ev->title)-5);
+	    }
+	  }
         }
         break;
       case 0xb9: // summary
@@ -320,6 +325,7 @@ opentv_parse_event_section
   /* Get language (bit of a hack) */
   if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
   else if (!strcmp(mod->dict->id, "skyeng")) lang = "eng";
+  else if (!strcmp(mod->dict->id, "skynz")) lang = "eng";
 
   /* Channel */
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
