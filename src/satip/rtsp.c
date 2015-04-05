@@ -1083,7 +1083,7 @@ rtsp_process_options(http_connection_t *hc)
   session_t *rs;
   int found;
 
-  if ((u = rtsp_check_urlbase(u)) == NULL)
+  if (strcmp(u, "*") != 0 && (u = rtsp_check_urlbase(u)) == NULL)
     goto error;
 
   if (hc->hc_session) {
