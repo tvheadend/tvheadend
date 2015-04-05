@@ -273,8 +273,10 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int error)
   if (error)
     sb->sb_err++;
 
-  if(sb->sb_ptr < TS_REMUX_BUFSIZE) 
+  if(dispatch_clock == t->s_tsbuf_last && sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
+
+  t->s_tsbuf_last = dispatch_clock;
 
   pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
   pb->pb_err = sb->sb_err;

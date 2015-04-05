@@ -521,6 +521,7 @@ struct mpegts_service
    * in order to recude load.
    */
   sbuf_t s_tsbuf;
+  time_t s_tsbuf_last;
 
   /**
    * Average continuity errors
