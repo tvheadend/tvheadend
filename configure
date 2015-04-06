@@ -328,7 +328,7 @@ else
   if enabled_or_auto libav; then
     has_libav=true
 
-    ffmpeg=$(pkg-config --modversion libavcodec | cut -d '.' -f 3)
+    ffmpeg=$(${PKG_CONFIG} --modversion libavcodec | cut -d '.' -f 3)
     test -z "$ffmpeg" && ffmpeg=0
     printf "$TAB" "checking for ffmpeg libraries ..."
     if test $ffmpeg -lt 100; then
