@@ -120,6 +120,13 @@ const idclass_t linuxdvb_frontend_class =
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_status_period),
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "old_status",
+      .name     = "Force old status",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_old_status),
+    },
     {}
   }
 };
@@ -649,7 +656,8 @@ linuxdvb_frontend_monitor ( void *aux )
 
   logit = tvhlog_limit(&lfe->lfe_status_log, 3600);
 
-  if(ioctl_check(lfe, 0) && !ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
+  if(ioctl_check(lfe, 0) && !lfe->lfe_old_status &&
+     !ioctl(lfe->lfe_fe_fd, FE_GET_PROPERTY, &dtv_prop)) {
     /* Signal strength */
     gotprop = 0;
     if(ioctl_check(lfe, 1) && fe_properties[0].u.st.len > 0) {

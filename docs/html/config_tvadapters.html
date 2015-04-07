@@ -89,6 +89,11 @@ The rows have the following functions
       In this case, increase the default value. For fast hardware, this value
       might be descreased to make the decision of the re-tune algorithm
       based on the signal status faster.</dd>
+<p>
+ <dt><b>Force old status</b></dt>
+  <dd>Always use the old ioctls to read the linuxdvb status (signal strenght,
+      SNR, error counters). Some drivers are not matured enough to provide
+      the correct values using the new v5 linuxdvb API.</dd>
 </dl>
 
 <br>
