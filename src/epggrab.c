@@ -148,9 +148,11 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
     htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
     htsmsg_get_u32(m, "epgdb_periodicsave", &epggrab_epgdb_periodicsave);
-    if (epggrab_epgdb_periodicsave)
+    if (epggrab_epgdb_periodicsave) {
+      epggrab_epgdb_periodicsave = MAX(epggrab_epgdb_periodicsave, 3600);
       gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
                  epggrab_epgdb_periodicsave);
+    }
     if ((str = htsmsg_get_str(m, "cron")) != NULL)
       epggrab_set_cron(str);
     htsmsg_get_u32(m, "grab-enabled", &enabled);
@@ -295,16 +297,16 @@ int epggrab_set_channel_renumber ( uint32_t e )
 int epggrab_set_periodicsave ( uint32_t e )
 {
   int save = 0;
+  pthread_mutex_lock(&global_lock);
   if ( e != epggrab_epgdb_periodicsave ) {
-    epggrab_epgdb_periodicsave = e;
-    pthread_mutex_lock(&global_lock);
+    epggrab_epgdb_periodicsave = e ? MAX(e, 3600) : 0;
     if (!e)
       gtimer_disarm(&epggrab_save_timer);
     else
       epg_save(); // will arm the timer
-    pthread_mutex_unlock(&global_lock);
     save = 1;
   }
+  pthread_mutex_unlock(&global_lock);
   return save;
 }
 
