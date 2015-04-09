@@ -299,7 +299,8 @@ spawn_kill(pid_t pid, int sig)
       if(s->pid == pid)
         break;
     if (s) {
-      r = kill(pid, sig);
+      /* kill the whole process group */
+      r = kill(-pid, sig);
       if (r < 0)
         r = -errno;
     }
@@ -502,8 +503,14 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
   close(fd[1]);
 
   *rd = fd[0];
-  if (pid)
+  if (pid) {
     *pid = p;
+
+    // make the spawned process a session leader so killing the
+    // process group recursively kills any child process that
+    // might have been spawned
+    setpgid(p, p);
+  }
   return 0;
 }
 
