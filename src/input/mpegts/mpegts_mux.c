@@ -913,7 +913,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
         s = "complete";
       else if (mt->mt_count)
         s = "incomplete";
-      tvhdebug("mpegts", "%s - %s %s", buf, mt->mt_name, s);
+      tvhdebug("mpegts", "%s - %04X (%d) %s %s", buf, mt->mt_pid, mt->mt_pid, mt->mt_name, s);
     }
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
@@ -972,7 +972,7 @@ again:
 
   /* Pending tables (another 20s or 30s - bit arbitrary) */
   } else if (q) {
-    tvhinfo("mpegts", "%s - scan needs more time", buf);
+    tvhtrace("mpegts", "%s - scan needs more time", buf);
     gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, w ? 30 : 20);
     return;
 
