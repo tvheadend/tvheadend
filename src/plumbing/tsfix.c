@@ -82,14 +82,14 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
   ts1 &= PTS_MASK;
   ts2 &= PTS_MASK;
 
-  r = abs(ts1 - ts2);
+  r = llabs(ts1 - ts2);
   if (r > (PTS_MASK / 2)) {
     /* try to wrap the lowest value */
     if (ts1 < ts2)
       ts1 += PTS_MASK + 1;
     else
       ts2 += PTS_MASK + 1;
-    return abs(ts1 - ts2);
+    return llabs(ts1 - ts2);
   }
   return r;
 }
