@@ -328,7 +328,7 @@ tsid_lookup:
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
         if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
-            abs(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq - freq) < 2000 &&
+            deltaU32(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq, freq) < 2000 &&
             ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos == satpos)
           mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
     return;
@@ -358,7 +358,7 @@ tsid_lookup:
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
         if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class) &&
-            abs(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq - freq) < 2000 &&
+            deltaU32(((dvb_mux_t *)mm)->lm_tuning.dmc_fe_freq, freq) < 2000 &&
             ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.polarisation == dvb_str2pol(pol) &&
             ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos == satpos)
         {
