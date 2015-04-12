@@ -235,8 +235,9 @@ linuxdvb_adapter_add ( const char *path )
   dvb_fe_type_t type;
 #if DVB_VER_ATLEAST(5,5)
   int delsys;
-  dvb_fe_type_t fetypes[DVB_TYPE_LAST+1] = { 0 };
+  dvb_fe_type_t fetypes[DVB_TYPE_LAST+1];
   struct dtv_property cmd;
+  linuxdvb_frontend_t *lfe;
 #endif
 
   /* Validate the path */
@@ -331,6 +332,7 @@ linuxdvb_adapter_add ( const char *path )
     /* Create frontend */
     linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, dfi.name);
 #if DVB_VER_ATLEAST(5,5)
+    memset(fetypes, 0, sizeof(fetypes));
     fetypes[type] = 1;
     for (j = 0; j < cmd.u.buffer.len; j++) {
       delsys = cmd.u.buffer.data[j];
@@ -361,6 +363,17 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Relock before exit */
   pthread_mutex_lock(&global_lock);
+
+#if DVB_VER_ATLEAST(5,5)
+  memset(fetypes, 0, sizeof(fetypes));
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+    fetypes[lfe->lfe_type]++;
+  for (i = 0; i < ARRAY_SIZE(fetypes); i++)
+    if (fetypes[i] > 1)
+      tvhwarn("linuxdvb", "adapter %d has multiple tuners %d for type %s, "
+                          "only one can be used at a time",
+                          a, fetypes[i], dvb_type2str(i));
+#endif
 
   /* Save configuration */
   if (save && la)
