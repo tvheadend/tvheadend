@@ -998,11 +998,13 @@ rtsp_parse_cmd
     }
     specinv = atoi(http_arg_get_remove(&hc->hc_req_args, "specinv"));
     if (specinv < 0 || specinv > 1) goto end;
+    fec = fec_to_tvh(hc);
+    if (fec == DVB_FEC_NONE) goto end;
 
     if (!TAILQ_EMPTY(&hc->hc_req_args)) goto eargs;
 
     dmc->u.dmc_fe_qam.symbol_rate = sr;
-    dmc->u.dmc_fe_qam.fec_inner = DVB_FEC_AUTO;
+    dmc->u.dmc_fe_qam.fec_inner = fec;
     dmc->dmc_fe_inversion = specinv;
     dmc->dmc_fe_stream_id = plp;
     dmc->dmc_fe_pls_code = ds; /* check */
