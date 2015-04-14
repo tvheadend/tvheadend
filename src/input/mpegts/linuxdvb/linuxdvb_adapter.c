@@ -34,8 +34,10 @@
 #include <openssl/sha.h>
 
 #include <linux/dvb/frontend.h>
+#include <linux/dvb/ca.h>
 
 #define FE_PATH  "%s/frontend%d"
+#define CA_PATH  "%s/ca%d"
 #define DVR_PATH "%s/dvr%d"
 #define DMX_PATH "%s/demux%d"
 
@@ -225,6 +227,9 @@ linuxdvb_adapter_add ( const char *path )
   extern int linuxdvb_adapter_mask;
   int a, i, j, r, fd;
   char fe_path[512], dmx_path[512], dvr_path[512];
+#if ENABLE_LINUXDVB_CA
+  char ca_path[512];
+#endif
   tvh_uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
@@ -356,6 +361,36 @@ linuxdvb_adapter_add ( const char *path )
 #endif
     pthread_mutex_unlock(&global_lock);
   }
+
+  /* Process each CA device */
+#if ENABLE_LINUXDVB_CA
+  for (i = 0; i < 32; i++) {
+    snprintf(ca_path, sizeof(ca_path), CA_PATH, path, i);
+    if (access(ca_path, R_OK | W_OK)) continue;
+
+    /* Get ca info */
+    for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
+      if ((fd = tvh_open(ca_path, O_RDWR, 0)) >= 0) break;
+      usleep(100000);
+    }
+    if (fd < 0) {
+      tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", ca_path);
+      continue;
+    }
+    r = ioctl(fd, CA_RESET, NULL);
+    close(fd);
+    if(r) {
+      tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", ca_path);
+      continue;
+    }
+    if (!la)
+      continue;
+
+    pthread_mutex_lock(&global_lock);
+    linuxdvb_ca_create(la, i, ca_path);
+    pthread_mutex_unlock(&global_lock);
+  }
+#endif
 
   /* Cleanup */
   if (conf)

@@ -43,6 +43,7 @@ OPTIONS=(
   "tvhcsa:auto"
   "bundle:no"
   "dvbcsa:no"
+  "libdvben50221:auto"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
@@ -195,6 +196,16 @@ int test(void)
   return 0;
 }
 ' -liconv
+
+check_cc_snippet libdvben50221 '
+#include <libdvben50221/en50221_session.h>
+#define TEST test
+int test(void)
+{
+  struct en50221_transport_layer *tl = en50221_tl_create(5, 32);
+  return 0;
+}
+' '-ldvben50221 -ldvbapi -lucsi'
 
 #
 # Python
@@ -430,6 +441,14 @@ if enabled cwc || enabled capmt || enabled constcw; then
     die "Failed to find dvbcsa support (use --disable-dvbcsa)"
     LDFLAGS="$LDFLAGS -ldvbcsa"
   fi
+fi
+
+#
+# libdvben50221
+#
+if enabled_or_auto libdvben50221; then
+  LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
+  enable linuxdvb_ca
 fi
 
 #
