@@ -26,6 +26,7 @@
 #include "dvb_charset.h"
 #include "bouquet.h"
 #include "fastscan.h"
+#include "descrambler/dvbcam.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -984,6 +985,10 @@ dvb_pmt_callback
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     if (s->s_dvb_service_id == sid) break;
   if (!s) return -1;
+
+#if ENABLE_LINUXDVB_CA
+  dvbcam_pmt_data(s, ptr, len);
+#endif
 
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);

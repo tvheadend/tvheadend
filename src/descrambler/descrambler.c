@@ -22,6 +22,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "input.h"
 #include "input/mpegts/tsdemux.h"
+#include "dvbcam.h"
 
 struct caid_tab {
   const char *name;
@@ -84,6 +85,9 @@ descrambler_init ( void )
   ffdecsa_init();
 #endif
   caclient_init();
+#if ENABLE_LINUXDVB_CA
+  dvbcam_init();
+#endif
 }
 
 void
@@ -123,6 +127,10 @@ descrambler_service_start ( service_t *t )
     tvhcsa_init(&dr->dr_csa);
   }
   caclient_start(t);
+
+#if ENABLE_LINUXDVB_CA
+  dvbcam_service_start(t);
+#endif
 }
 
 void
@@ -130,6 +138,10 @@ descrambler_service_stop ( service_t *t )
 {
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
+
+#if ENABLE_LINUXDVB_CA
+  dvbcam_service_stop(t);
+#endif
 
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
