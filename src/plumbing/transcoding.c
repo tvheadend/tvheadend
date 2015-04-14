@@ -1211,7 +1211,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     transcoder_stream_invalidate(ts);
     goto cleanup;
   }
- 
+
+  vs->vid_enc_frame->format  = octx->pix_fmt;
+  vs->vid_enc_frame->width   = octx->width;
+  vs->vid_enc_frame->height  = octx->height;
+
   vs->vid_enc_frame->pkt_pts = vs->vid_dec_frame->pkt_pts;
   vs->vid_enc_frame->pkt_dts = vs->vid_dec_frame->pkt_dts;
 
