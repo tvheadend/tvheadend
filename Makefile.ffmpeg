@@ -50,10 +50,10 @@ ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
 
 CONFIGURE        = PKG_CONFIG=/tmp/nobin/pkg-config ./configure
 
-FFMPEG          = ffmpeg-2.5.2
+FFMPEG          = ffmpeg-2.6.2
 FFMPEG_TB       = $(FFMPEG).tar.bz2
 FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1     = e167475426e8edf55601e79d3367c2210baa5f11
+FFMPEG_SHA1     = 65470c9b967485f72f81758a7bad44cf7a1763db
 
 EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avresample
