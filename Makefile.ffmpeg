@@ -104,7 +104,7 @@ $(LIBAVDIR)/$(YASM)/.tvh_build: \
 	cd $(LIBAVDIR)/$(YASM) && $(CONFIGURE) \
                 --prefix=/ffmpeg
 	DESTDIR=$(LIBAVDIR)/build \
-		make -C $(LIBAVDIR)/$(YASM) install
+		$(MAKE) -C $(LIBAVDIR)/$(YASM) install
 	@touch $@
 
 #
@@ -124,7 +124,7 @@ $(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
 		--enable-static \
 		--disable-shared
 	DESTDIR=$(LIBAVDIR)/build \
-		make -C $(LIBAVDIR)/$(LIBOGG) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBOGG) install
 	@touch $@
 
 $(LIBAVDIR)/$(LIBVORBIS)/.tvh_download: \
@@ -143,7 +143,7 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 		--disable-shared \
 		--with-ogg=$(LIBAVDIR)/build/ffmpeg
 	DESTDIR=$(LIBAVDIR)/build \
-		make -C $(LIBAVDIR)/$(LIBVORBIS) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBVORBIS) install
 	@touch $@
 
 #
@@ -183,7 +183,7 @@ $(LIBAVDIR)/$(LIBX264)/.tvh_build: \
 		--disable-gpac \
 		--disable-lsmash
 	DESTDIR=$(LIBAVDIR)/build \
-		make -C $(LIBAVDIR)/$(LIBX264) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBX264) install
 	@touch $@
 
 endif
@@ -206,7 +206,7 @@ $(LIBAVDIR)/$(LIBVPX)/.tvh_build: \
 		--enable-static \
 		--disable-shared
 	DIST_DIR=$(LIBAVDIR)/build/ffmpeg \
-		make -C $(LIBAVDIR)/$(LIBVPX) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBVPX) install
 	@touch $@
 
 #
@@ -240,7 +240,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf))
 	DESTDIR=$(LIBAVDIR)/build \
-		make -C $(LIBAVDIR)/$(FFMPEG) install
+		$(MAKE) -C $(LIBAVDIR)/$(FFMPEG) install
 	@touch $@
 
 .PHONY: static_libav_clean
