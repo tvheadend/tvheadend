@@ -495,11 +495,9 @@ dvb_network_create_mux
       if (xr) lm->lm_tuning.x = dmc->x; \
       xr; })
 #endif
-#if ENABLE_TRACE
     dvb_mux_conf_t tuning_old;
     char buf[128];
     tuning_old = lm->lm_tuning;
-#endif
     /* Always save the orbital position */
     if (dmc->dmc_fe_type == DVB_TYPE_S) {
       if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos == INT_MAX ||
@@ -546,16 +544,14 @@ dvb_network_create_mux
     }
     #undef COMPARE
     #undef COMPAREN
-#if ENABLE_TRACE
     if (save) {
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
-      tvhtrace("mpegts", "mux %p changed from %s in network %s",
+      tvhwarn("mpegts", "mux %p changed from %s in network %s",
                mm, buf, mm->mm_network->mn_network_name);
       dvb_mux_conf_str(&lm->lm_tuning, buf, sizeof(buf));
-      tvhtrace("mpegts", "mux %p changed to %s in network %s",
+      tvhwarn("mpegts", "mux %p changed to %s in network %s",
                mm, buf, mm->mm_network->mn_network_name);
     }
-#endif
   }
 save:
   if (mm && save) {
