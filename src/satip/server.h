@@ -17,7 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_SATIP_SERVER__H__
+#ifndef __TVH_SATIP_SERVER_H__
 #define __TVH_SATIP_SERVER_H__
 
 #include "build.h"
