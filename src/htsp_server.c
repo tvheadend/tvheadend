@@ -94,6 +94,7 @@ static struct htsp_connection_list htsp_async_connections;
 static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
+const char * _htsp_get_subscription_status(int smcode);
 
 /**
  *
@@ -663,7 +664,7 @@ static htsmsg_t *
 htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 {
   htsmsg_t *out = htsmsg_create_map();
-  const char *s = NULL, *error = NULL;
+  const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
@@ -708,8 +709,11 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   case DVR_RECORDING:
     s = "recording";
     if (de->de_rec_state == DVR_RS_ERROR ||
-       (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
+       (de->de_rec_state == DVR_RS_PENDING && de->de_last_error))
+    {
       error = streaming_code2txt(de->de_last_error);
+      subscriptionError = _htsp_get_subscription_status(de->de_last_error);
+    }
     break;
   case DVR_COMPLETED:
     s = "completed";
@@ -729,6 +733,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_str(out, "state", s);
   if(error)
     htsmsg_add_str(out, "error", error);
+  if (subscriptionError)
+    htsmsg_add_str(out, "subscriptionError", subscriptionError);
   if (de->de_errors)
     htsmsg_add_u32(out, "streamErrors", de->de_errors);
   if (de->de_data_errors)
@@ -3445,6 +3451,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
   if(si->si_provider) htsmsg_add_str(sourceinfo, "provider", si->si_provider);
   if(si->si_service ) htsmsg_add_str(sourceinfo, "service",  si->si_service );
+  if(si->si_satpos  ) htsmsg_add_str(sourceinfo, "satpos",   si->si_satpos  );
   
   htsmsg_add_msg(m, "sourceinfo", sourceinfo);
  
@@ -3457,7 +3464,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
  * Send a 'subscriptionStop' stop
  */
 static void
-htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
+htsp_subscription_stop(htsp_subscription_t *hs, const char *err, const char *subscriptionErr)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStop");
@@ -3466,6 +3473,9 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
 
   if(err != NULL)
     htsmsg_add_str(m, "status", err);
+
+  if(subscriptionErr != NULL)
+    htsmsg_add_str(m, "subscriptionError", subscriptionErr);
 
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 }
@@ -3489,7 +3499,7 @@ htsp_subscription_grace(htsp_subscription_t *hs, int grace)
  * Send a 'subscriptionStatus' message
  */
 static void
-htsp_subscription_status(htsp_subscription_t *hs, const char *err)
+htsp_subscription_status(htsp_subscription_t *hs, const char *err, const char *subscriptionErr)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStatus");
@@ -3498,7 +3508,37 @@ htsp_subscription_status(htsp_subscription_t *hs, const char *err)
   if(err != NULL)
     htsmsg_add_str(m, "status", err);
 
+  if(subscriptionErr != NULL)
+    htsmsg_add_str(m, "subscriptionError", subscriptionErr);
+
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+
+/**
+ * Convert the SM_CODE to an understandable string
+ */
+const char *
+_htsp_get_subscription_status(int smcode)
+{
+  switch (smcode)
+  {
+  case SM_CODE_NOT_FREE:
+  case SM_CODE_NO_FREE_ADAPTER:
+    return "noFreeAdapter";
+  case SM_CODE_NO_DESCRAMBLER:
+    return "scrambled";
+  case SM_CODE_NO_INPUT:
+  case SM_CODE_BAD_SIGNAL:
+    return "badSignal";
+  case SM_CODE_TUNING_FAILED:
+    return "tuningFailed";
+  case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
+    return "subscriptionOverridden";
+  case SM_CODE_MUX_NOT_ENABLED:
+    return "muxNotEnabled";
+  default:
+    return streaming_code2txt(smcode);
+  }
 }
 
 /**
@@ -3508,9 +3548,9 @@ static void
 htsp_subscription_service_status(htsp_subscription_t *hs, int status)
 {
   if(status & TSS_PACKETS) {
-    htsp_subscription_status(hs, NULL);
+    htsp_subscription_status(hs, NULL, NULL);
   } else if(status & TSS_ERRORS) {
-    htsp_subscription_status(hs, service_tss2text(status));
+    htsp_subscription_status(hs, service_tss2text(status), NULL);
   }
 }
 
@@ -3620,7 +3660,8 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_STOP:
-    htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code));
+    htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code),
+        sm->sm_code ? _htsp_get_subscription_status(sm->sm_code) : NULL);
     break;
 
   case SMT_GRACE:
@@ -3636,7 +3677,8 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_NOSTART:
-    htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code));
+    htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code),
+        sm->sm_code ? _htsp_get_subscription_status(sm->sm_code) : NULL);
     break;
 
   case SMT_MPEGTS:
