@@ -709,7 +709,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   case DVR_RECORDING:
     s = "recording";
     if (de->de_rec_state == DVR_RS_ERROR ||
-       (de->de_rec_state == DVR_RS_PENDING && de->de_last_error))
+       (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
     {
       error = streaming_code2txt(de->de_last_error);
       subscriptionError = _htsp_get_subscription_status(de->de_last_error);
