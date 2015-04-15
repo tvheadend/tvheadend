@@ -247,7 +247,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
   htsmsg_add_s64(conf, "start_extra", start_extra);
   htsmsg_add_s64(conf, "stop_extra",  stop_extra);
   htsmsg_add_str(conf, "title",       title);
-  htsmsg_add_u32(conf, "fulltext",    1);
+  htsmsg_add_u32(conf, "fulltext",    fulltext);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "owner",       owner ?: "");
   htsmsg_add_str(conf, "creator",     creator ?: "");
