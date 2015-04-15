@@ -337,6 +337,11 @@ SRCS-${CONFIG_CAPMT} += \
 SRCS-${CONFIG_CONSTCW} += \
 	src/descrambler/constcw.c
 
+# DVB CAM
+SRCS-${CONFIG_LINUXDVB_CA} += \
+	src/input/mpegts/linuxdvb/linuxdvb_ca.c \
+	src/descrambler/dvbcam.c
+
 # TSDEBUGCW
 SRCS-${CONFIG_TSDEBUG} += \
 	src/descrambler/tsdebugcw.c
