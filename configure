@@ -43,7 +43,7 @@ OPTIONS=(
   "tvhcsa:auto"
   "bundle:no"
   "dvbcsa:no"
-  "libdvben50221:auto"
+  "dvben50221:auto"
   "kqueue:no"
   "dbus_1:auto"
   "android:no"
@@ -197,15 +197,22 @@ int test(void)
 }
 ' -liconv
 
-check_cc_snippet libdvben50221 '
-#include <libdvben50221/en50221_session.h>
-#define TEST test
-int test(void)
-{
-  struct en50221_transport_layer *tl = en50221_tl_create(5, 32);
-  return 0;
-}
-' '-ldvben50221 -ldvbapi -lucsi'
+if enabled_or_auto dvben50221; then
+  check_cc_snippet libdvben50221 '
+  #include <libdvben50221/en50221_session.h>
+  #define TEST test
+  int test(void)
+  {
+    struct en50221_transport_layer *tl = en50221_tl_create(5, 32);
+    return 0;
+  }
+  ' '-ldvben50221 -ldvbapi -lucsi'
+  if enabled libdvben50221; then
+    enable dvben50221
+  else
+    disable dvben50221
+  fi
+fi
 
 #
 # Python
@@ -446,7 +453,7 @@ fi
 #
 # libdvben50221
 #
-if enabled_or_auto libdvben50221; then
+if enabled libdvben50221; then
   LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
   enable linuxdvb_ca
 fi
