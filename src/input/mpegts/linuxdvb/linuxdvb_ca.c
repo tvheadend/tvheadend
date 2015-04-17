@@ -310,24 +310,23 @@ linuxdvb_ca_en50221_thread ( void *aux )
 static void
 linuxdvb_ca_monitor ( void *aux )
 {
-	linuxdvb_ca_t *lca = aux;
-	ca_slot_info_t csi;
-	int state;
+  linuxdvb_ca_t *lca = aux;
+  ca_slot_info_t csi;
+  int state;
 
-	csi.num = 0;
+  csi.num = 0;
 
-	if (lca->lca_ca_fd > 0) {
-
-		if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
+  if (lca->lca_ca_fd > 0) {
+    if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
       tvherror("linuxdvb", "failed to get ca%u slot info [e=%s]",
       	       lca->lca_number, strerror(errno));
     }
     if (csi.flags & CA_CI_MODULE_READY)
-    	state = CA_SLOT_STATE_MODULE_READY;
+      state = CA_SLOT_STATE_MODULE_READY;
     else if (csi.flags & CA_CI_MODULE_PRESENT)
-  	  state = CA_SLOT_STATE_MODULE_PRESENT;
+      state = CA_SLOT_STATE_MODULE_PRESENT;
     else
-    	state = CA_SLOT_STATE_EMPTY;
+      state = CA_SLOT_STATE_EMPTY;
 
     if (lca->lca_state != state) {
 	    tvhlog(LOG_INFO, "linuxdvb", "ca%u slot %u status changed to %s",
@@ -337,15 +336,14 @@ linuxdvb_ca_monitor ( void *aux )
       	lca->lca_en50221_thread_running = 1;
         tvhthread_create(&lca->lca_en50221_thread, NULL,
                          linuxdvb_ca_en50221_thread, lca);
+      } else if (lca->lca_en50221_thread_running) {
+        lca->lca_en50221_thread_running = 0;
+        pthread_join(lca->lca_en50221_thread, NULL);
+      }
 
-	    } else {
-	    	lca->lca_en50221_thread_running = 0;
-	    	pthread_join(lca->lca_en50221_thread, NULL);
-	    }
-
-		  lca->lca_state = state;
-	  }
-	}
+      lca->lca_state = state;
+    }
+  }
 
   gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
 }
