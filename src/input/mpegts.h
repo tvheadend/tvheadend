@@ -548,10 +548,9 @@ struct mpegts_service
 /* Physical mux instance */
 struct mpegts_mux_instance
 {
-  idnode_t mmi_id;
+  tvh_input_instance_t;
 
   LIST_ENTRY(mpegts_mux_instance) mmi_mux_link;
-  LIST_ENTRY(mpegts_mux_instance) mmi_input_link;
   LIST_ENTRY(mpegts_mux_instance) mmi_active_link;
 
   streaming_pad_t mmi_streaming_pad;
@@ -559,11 +558,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
-  tvh_input_stream_stats_t mmi_stats;
-
   int             mmi_tune_failed;
-
-  void (*mmi_delete) (mpegts_mux_instance_t *mmi);
 };
 
 struct mpegts_mux_sub
@@ -598,7 +593,7 @@ struct mpegts_input
 
   mpegts_network_link_list_t mi_networks;
 
-  LIST_HEAD(,mpegts_mux_instance) mi_mux_instances;
+  LIST_HEAD(,tvh_input_instance) mi_mux_instances;
 
 
   /*
@@ -795,7 +790,7 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
                                             &type##_class, uuid,\
                                             mi, mm);
 
-void mpegts_mux_instance_delete ( mpegts_mux_instance_t *mmi );
+void mpegts_mux_instance_delete ( tvh_input_instance_t *tii );
 
 int mpegts_mux_instance_start
   ( mpegts_mux_instance_t **mmiptr );

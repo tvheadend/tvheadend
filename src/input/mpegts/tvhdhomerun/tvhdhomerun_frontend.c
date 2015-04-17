@@ -300,19 +300,19 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
 
   if(tuner_status.signal_present) {
     /* TODO: totaly stupid conversion from 0-100 scale to 0-655.35 */
-    mmi->mmi_stats.snr = tuner_status.signal_to_noise_quality * 655.35;
-    mmi->mmi_stats.signal = tuner_status.signal_strength * 655.35;
+    mmi->tii_stats.snr = tuner_status.signal_to_noise_quality * 655.35;
+    mmi->tii_stats.signal = tuner_status.signal_strength * 655.35;
   } else {
-    mmi->mmi_stats.snr = 0;
+    mmi->tii_stats.snr = 0;
   }
 
   sigstat.status_text  = signal2str(hfe->hf_status);
-  sigstat.snr          = mmi->mmi_stats.snr;
-  sigstat.snr_scale    = mmi->mmi_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-  sigstat.signal       = mmi->mmi_stats.signal;
-  sigstat.signal_scale = mmi->mmi_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-  sigstat.ber          = mmi->mmi_stats.ber;
-  sigstat.unc          = mmi->mmi_stats.unc;
+  sigstat.snr          = mmi->tii_stats.snr;
+  sigstat.snr_scale    = mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
+  sigstat.signal       = mmi->tii_stats.signal;
+  sigstat.signal_scale = mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
+  sigstat.ber          = mmi->tii_stats.ber;
+  sigstat.unc          = mmi->tii_stats.unc;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
 

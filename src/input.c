@@ -18,9 +18,17 @@
 
 #include "input.h"
 #include "notify.h"
+#include "access.h"
 
 tvh_input_list_t    tvh_inputs;
 tvh_hardware_list_t tvh_hardware;
+
+const idclass_t tvh_input_instance_class =
+{
+  .ic_class      = "tvh_input_instance",
+  .ic_caption    = "Input Instance",
+  .ic_perm_def   = ACCESS_ADMIN
+};
 
 /*
  * Create entry
@@ -57,6 +65,23 @@ tvh_hardware_delete ( tvh_hardware_t *th )
   // TODO
   LIST_REMOVE(th, th_link);
   idnode_unlink(&th->th_id);
+}
+
+/*
+ *
+ */
+
+void
+tvh_input_instance_clear_stats ( tvh_input_instance_t *tii )
+{
+  tvh_input_stream_stats_t *s = &tii->tii_stats;
+
+  atomic_exchange(&s->ber, 0);
+  atomic_exchange(&s->unc, 0);
+  atomic_exchange(&s->cc, 0);
+  atomic_exchange(&s->te, 0);
+  atomic_exchange(&s->ec_block, 0);
+  atomic_exchange(&s->tc_block, 0);
 }
 
 /*

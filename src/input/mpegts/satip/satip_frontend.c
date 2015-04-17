@@ -76,16 +76,16 @@ satip_frontend_signal_cb( void *aux )
     lfe->sf_tables = 1;
   }
   sigstat.status_text  = signal2str(lfe->sf_status);
-  sigstat.snr          = mmi->mmi_stats.snr;
-  sigstat.signal       = mmi->mmi_stats.signal;
-  sigstat.ber          = mmi->mmi_stats.ber;
-  sigstat.unc          = mmi->mmi_stats.unc;
-  sigstat.signal_scale = mmi->mmi_stats.signal_scale;
-  sigstat.snr_scale    = mmi->mmi_stats.snr_scale;
-  sigstat.ec_bit       = mmi->mmi_stats.ec_bit;
-  sigstat.tc_bit       = mmi->mmi_stats.tc_bit;
-  sigstat.ec_block     = mmi->mmi_stats.ec_block;
-  sigstat.tc_block     = mmi->mmi_stats.tc_block;
+  sigstat.snr          = mmi->tii_stats.snr;
+  sigstat.signal       = mmi->tii_stats.signal;
+  sigstat.ber          = mmi->tii_stats.ber;
+  sigstat.unc          = mmi->tii_stats.unc;
+  sigstat.signal_scale = mmi->tii_stats.signal_scale;
+  sigstat.snr_scale    = mmi->tii_stats.snr_scale;
+  sigstat.ec_bit       = mmi->tii_stats.ec_bit;
+  sigstat.tc_bit       = mmi->tii_stats.tc_bit;
+  sigstat.ec_block     = mmi->tii_stats.ec_block;
+  sigstat.tc_block     = mmi->tii_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &lfe->mi_transports, s_active_link) {
@@ -722,20 +722,20 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             return;
           if (atoi(argv[0]) != lfe->sf_number)
             return;
-          mmi->mmi_stats.signal =
+          mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
-          mmi->mmi_stats.signal_scale =
+          mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
-          mmi->mmi_stats.snr_scale =
+          mmi->tii_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->tii_stats.snr_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (status == SIGNAL_GOOD &&
-              mmi->mmi_stats.signal == 0 && mmi->mmi_stats.snr == 0) {
+              mmi->tii_stats.signal == 0 && mmi->tii_stats.snr == 0) {
             /* some values that we're tuned */
-            mmi->mmi_stats.signal = 50 * 0xffff / 100;
-            mmi->mmi_stats.snr = 12 * 0xffff / 15;
+            mmi->tii_stats.signal = 50 * 0xffff / 100;
+            mmi->tii_stats.snr = 12 * 0xffff / 15;
           }
           goto ok;          
         } else if (strncmp(s, "ver=1.0;", 8) == 0) {
@@ -747,14 +747,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             return;
           if (atoi(argv[0]) != lfe->sf_number)
             return;
-          mmi->mmi_stats.signal =
+          mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
-          mmi->mmi_stats.signal_scale =
+          mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
-          mmi->mmi_stats.snr_scale =
+          mmi->tii_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->tii_stats.snr_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           goto ok;          
         } else if (strncmp(s, "ver=1.1;tuner=", 14) == 0) {
@@ -763,14 +763,14 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             return;
           if (atoi(argv[0]) != lfe->sf_number)
             return;
-          mmi->mmi_stats.signal =
+          mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
-          mmi->mmi_stats.signal_scale =
+          mmi->tii_stats.signal_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           if (atoi(argv[2]) > 0)
             status = SIGNAL_GOOD;
-          mmi->mmi_stats.snr = atoi(argv[3]) * 0xffff / 15;
-          mmi->mmi_stats.snr_scale =
+          mmi->tii_stats.snr = atoi(argv[3]) * 0xffff / 15;
+          mmi->tii_stats.snr_scale =
             SIGNAL_STATUS_SCALE_RELATIVE;
           goto ok;
         }
@@ -782,9 +782,9 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
   return;
 
 ok:
-  if (mmi->mmi_stats.snr < 2 && status == SIGNAL_GOOD)
+  if (mmi->tii_stats.snr < 2 && status == SIGNAL_GOOD)
     status              = SIGNAL_BAD;
-  else if (mmi->mmi_stats.snr < 4 && status == SIGNAL_GOOD)
+  else if (mmi->tii_stats.snr < 4 && status == SIGNAL_GOOD)
     status              = SIGNAL_FAINT;
   lfe->sf_status        = status;
 }
@@ -1503,7 +1503,7 @@ new_tune:
     }
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
-      mmi->mmi_stats.unc += unc;
+      mmi->tii_stats.unc += unc;
       mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
                                 &sb, NULL, NULL);
     } else

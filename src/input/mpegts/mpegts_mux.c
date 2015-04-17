@@ -37,6 +37,7 @@ static void mpegts_mux_scan_timeout ( void *p );
 
 const idclass_t mpegts_mux_instance_class =
 {
+  .ic_super      = &tvh_input_instance_class,
   .ic_class      = "mpegts_mux_instance",
   .ic_caption    = "MPEGTS Multiplex Phy",
   .ic_perm_def   = ACCESS_ADMIN
@@ -44,11 +45,13 @@ const idclass_t mpegts_mux_instance_class =
 
 void
 mpegts_mux_instance_delete
-  ( mpegts_mux_instance_t *mmi )
+  ( tvh_input_instance_t *tii )
 {
-  idnode_unlink(&mmi->mmi_id);
+  mpegts_mux_instance_t *mmi = (mpegts_mux_instance_t *)tii;
+
+  idnode_unlink(&tii->tii_id);
   LIST_REMOVE(mmi, mmi_mux_link);
-  LIST_REMOVE(mmi, mmi_input_link);
+  LIST_REMOVE(tii, tii_input_link);
   free(mmi);
 }
 
@@ -58,7 +61,7 @@ mpegts_mux_instance_create0
     mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   // TODO: does this need to be an idnode?
-  if (idnode_insert(&mmi->mmi_id, uuid, class, 0)) {
+  if (idnode_insert(&mmi->tii_id, uuid, class, 0)) {
     free(mmi);
     return NULL;
   }
@@ -68,10 +71,11 @@ mpegts_mux_instance_create0
   mmi->mmi_input = mi;
   
   /* Callbacks */
-  mmi->mmi_delete = mpegts_mux_instance_delete;
+  mmi->tii_delete = mpegts_mux_instance_delete;
+  mmi->tii_clear_stats = tvh_input_instance_clear_stats;
 
   LIST_INSERT_HEAD(&mm->mm_instances, mmi, mmi_mux_link);
-  LIST_INSERT_HEAD(&mi->mi_mux_instances, mmi, mmi_input_link);
+  LIST_INSERT_HEAD(&mi->mi_mux_instances, (tvh_input_instance_t *)mmi, tii_input_link);
 
 
   return mmi;
@@ -621,7 +625,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Remove instances */
   while ((mmi = LIST_FIRST(&mm->mm_instances))) {
-    mmi->mmi_delete(mmi);
+    mmi->tii_delete((tvh_input_instance_t *)mmi);
   }
 
   /* Remove raw subscribers */

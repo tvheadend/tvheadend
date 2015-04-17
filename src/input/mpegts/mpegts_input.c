@@ -673,10 +673,10 @@ mpegts_input_create_mux_instance
   ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   extern const idclass_t mpegts_mux_instance_class;
-  mpegts_mux_instance_t *mmi;
-  LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
-    if (mmi->mmi_mux == mm) break;
-  if (!mmi)
+  tvh_input_instance_t *tii;
+  LIST_FOREACH(tii, &mi->mi_mux_instances, tii_input_link)
+    if (((mpegts_mux_instance_t *)tii)->mmi_mux == mm) break;
+  if (!tii)
     (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
 }
 
@@ -871,7 +871,7 @@ mpegts_input_recv_packets
   /* Check for sync */
   while ( (len >= MIN_TS_SYN) &&
           ((len2 = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
-    mmi->mmi_stats.unc++;
+    mmi->tii_stats.unc++;
     --len;
     ++tsb;
     ++off;
@@ -1079,7 +1079,7 @@ mpegts_input_process
     /* Transport error */
     if (pid & 0x8000) {
       if ((pid & 0x1FFF) != 0x1FFF)
-        ++mmi->mmi_stats.te;
+        ++mmi->tii_stats.te;
     }
     
     pid &= 0x1FFF;
@@ -1102,7 +1102,7 @@ mpegts_input_process
           cc = tsb2[3] & 0x0f;
           if (cc2 != 0xff && cc2 != cc) {
             tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, cc2);
-          ++mmi->mmi_stats.cc;
+            ++mmi->tii_stats.cc;
           }
           cc2 = (cc + 1) & 0xF;
         }
@@ -1214,7 +1214,7 @@ done:
     pthread_cond_signal(&mi->mi_table_cond);
 
   /* Bandwidth monitoring */
-  atomic_add(&mmi->mmi_stats.bps, tsb - mpkt->mp_data);
+  atomic_add(&mmi->tii_stats.bps, tsb - mpkt->mp_data);
 }
 
 static void *
@@ -1352,15 +1352,15 @@ mpegts_input_stream_status
         w = MAX(w, ths->ths_weight);
       }
 
-  st->uuid        = strdup(idnode_uuid_as_str(&mmi->mmi_id));
+  st->uuid        = strdup(idnode_uuid_as_str(&mmi->tii_id));
   mi->mi_display_name(mi, buf, sizeof(buf));
   st->input_name  = strdup(buf);
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;
-  st->stats       = mmi->mmi_stats;
-  st->stats.bps   = atomic_exchange(&mmi->mmi_stats.bps, 0) * 8;
+  st->stats       = mmi->tii_stats;
+  st->stats.bps   = atomic_exchange(&mmi->tii_stats.bps, 0) * 8;
 }
 
 static void
@@ -1524,19 +1524,19 @@ void
 mpegts_input_delete ( mpegts_input_t *mi, int delconf )
 {
   mpegts_network_link_t *mnl;
-  mpegts_mux_instance_t *mmi, *mmi_next;
+  tvh_input_instance_t *tii, *tii_next;
 
   /* Remove networks */
   while ((mnl = LIST_FIRST(&mi->mi_networks)))
     mpegts_input_del_network(mnl);
 
   /* Remove mux instances assigned to this input */
-  mmi = LIST_FIRST(&mi->mi_mux_instances);
-  while (mmi) {
-    mmi_next = LIST_NEXT(mmi, mmi_input_link);
-    if (mmi->mmi_input == mi)
-      mmi->mmi_delete(mmi);
-    mmi = mmi_next;
+  tii = LIST_FIRST(&mi->mi_mux_instances);
+  while (tii) {
+    tii_next = LIST_NEXT(tii, tii_input_link);
+    if (((mpegts_mux_instance_t *)tii)->mmi_input == mi)
+      tii->tii_delete(tii);
+    tii = tii_next;
   }
 
   /* Remove global refs */

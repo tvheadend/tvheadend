@@ -231,6 +231,33 @@ tvheadend.status_streams = function(panel, index)
         if (grid)
             return;
 
+        var actions = new Ext.ux.grid.RowActions({
+            header: '',
+            width: 10,
+            actions: [
+                {
+                    iconCls: 'undo',
+                    qtip: 'Clear statistics',
+                    cb: function(grid, rec, act, row) {
+                        var uuid = grid.getStore().getAt(row).data.uuid;
+                        Ext.MessageBox.confirm('Clear statistics',
+                            'Clear statistics for selected input?',
+                            function(button) {
+                                if (button === 'no')
+                                    return;
+                                Ext.Ajax.request({
+                                    url: 'api/status/inputclrstats',
+                                    params: { uuid: uuid }
+                                });
+                            }
+                       );
+                   }
+               },
+            ],
+            destroy: function() {
+            }
+        });
+
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
@@ -288,6 +315,7 @@ tvheadend.status_streams = function(panel, index)
         }
 
         var cm = new Ext.grid.ColumnModel([
+            actions,
             {
                 width: 120,
                 header: "Input",
@@ -402,7 +430,8 @@ tvheadend.status_streams = function(panel, index)
             flex: 1,
             viewConfig: {
                 forceFit: true
-            }
+            },
+            plugins: [actions]
         });
         
         dpanel.add(grid);

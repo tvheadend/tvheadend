@@ -27,6 +27,7 @@
  */
 typedef struct tvh_hardware           tvh_hardware_t;
 typedef struct tvh_input              tvh_input_t;
+typedef struct tvh_input_instance     tvh_input_instance_t;
 typedef struct tvh_input_stream       tvh_input_stream_t;
 typedef struct tvh_input_stream_stats tvh_input_stream_stats_t;
 
@@ -88,6 +89,20 @@ struct tvh_input {
 };
 
 /*
+ * Generic input instance super-class
+ */
+struct tvh_input_instance {
+  idnode_t tii_id;
+
+  LIST_ENTRY(tvh_input_instance) tii_input_link;
+
+  tvh_input_stream_stats_t tii_stats;
+
+  void (*tii_delete) (tvh_input_instance_t *tii);
+  void (*tii_clear_stats) (tvh_input_instance_t *tii);
+};
+
+/*
  * Generic hardware super-class
  */
 struct tvh_hardware {
@@ -103,6 +118,7 @@ void tvh_hardware_delete ( tvh_hardware_t *th );
  * Class and Global list defs
  */
 extern const idclass_t tvh_input_class;
+extern const idclass_t tvh_input_instance_class;
 
 tvh_input_list_t    tvh_inputs;
 tvh_hardware_list_t tvh_hardware;
@@ -119,6 +135,12 @@ void input_init ( void );
 htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
 
 void tvh_input_stream_destroy ( tvh_input_stream_t *st );
+
+static inline tvh_input_instance_t *
+tvh_input_instance_find_by_uuid(const char *uuid)
+  { return (tvh_input_instance_t*)idnode_find(uuid, &tvh_input_instance_class, NULL); }
+
+void tvh_input_instance_clear_stats ( tvh_input_instance_t *tii );
 
 /*
  * Input subsystem includes
