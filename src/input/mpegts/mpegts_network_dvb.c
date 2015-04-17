@@ -545,12 +545,12 @@ dvb_network_create_mux
     #undef COMPARE
     #undef COMPAREN
     if (save) {
+      char muxname[128];
+      mpegts_mux_nice_name((mpegts_mux_t *)mm, muxname, sizeof(muxname));
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
-      tvhwarn("mpegts", "mux %p changed from %s in network %s",
-               mm, buf, mm->mm_network->mn_network_name);
+      tvhwarn("mpegts", "mux %s changed from %s", muxname, buf);
       dvb_mux_conf_str(&lm->lm_tuning, buf, sizeof(buf));
-      tvhwarn("mpegts", "mux %p changed to %s in network %s",
-               mm, buf, mm->mm_network->mn_network_name);
+      tvhwarn("mpegts", "mux %s changed to   %s", muxname, buf);
     }
   }
 save:
