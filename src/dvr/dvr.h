@@ -531,7 +531,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
                             channel_t *ch, uint32_t enabled, int32_t start,
                             int32_t start_window, uint32_t days, time_t start_extra,
                             time_t stop_extra, dvr_prio_t pri, int retention,
-                            int min_duration, int max_duration,
+                            int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
                             const char *owner, const char *creator,
                             const char *comment, const char *name, const char *directory);
 
