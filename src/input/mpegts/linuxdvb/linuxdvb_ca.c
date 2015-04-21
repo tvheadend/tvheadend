@@ -89,8 +89,13 @@ linuxdvb_ca_lookup_cb (void * arg, uint8_t slot_id, uint32_t requested_rid,
         *arg_out = lca->lca_dt_resource;
         *connected_rid = EN50221_APP_DATETIME_RESOURCEID;
         break;
+      case EN50221_APP_MMI_RESOURCEID:
+        *callback_out = (en50221_sl_resource_callback) en50221_app_mmi_message;
+        *arg_out = lca->lca_mmi_resource;
+        *connected_rid = EN50221_APP_MMI_RESOURCEID;
+        break;
       default:
-        tvhtrace("en50221", "lookup cb for unknown resource id %u on slot %u",
+        tvhtrace("en50221", "lookup cb for unknown resource id %x on slot %u",
                  requested_rid, slot_id);
     		return -1;
     }
@@ -123,7 +128,7 @@ linuxdvb_ca_session_cb (void *arg, int reason, uint8_t slot_id,
     case S_SCALLBACK_REASON_TC_CONNECT:
       break;
 		default:
-		  tvhtrace("en50221", "unhandled sessopn callback - "
+		  tvhtrace("en50221", "unhandled session callback - "
 		  	       "reason %d slot_id %u session_num %u resource_id %x",
 		           reason, slot_id, session_num, rid);
 	}
@@ -200,30 +205,35 @@ linuxdvb_ca_ai_callback(void *arg, uint8_t slot_id, uint16_t session_num,
                      uint16_t manufacturer_code, uint8_t menu_string_len,
                      uint8_t *menu_string)
 {
-    tvhinfo("en50221", "slot %u: Application type: %02x", slot_id, app_type);
-    tvhinfo("en50221", "slot %u: Application manufacturer: %04x",slot_id, app_manufacturer);
-    tvhinfo("en50221", "slot %u: Manufacturer code: %04x", slot_id, manufacturer_code);
-    tvhinfo("en50221", "slot %u: Menu string: %.*s", slot_id, menu_string_len, menu_string);
+    tvhinfo("en50221", "CAM slot %u: Application type: %02x, manufacturer: %04x,"
+            " Manufacturer code: %04x", slot_id, app_type, app_manufacturer,
+            manufacturer_code);
+
+    tvhinfo("en50221", "CAM slot %u: Menu string: %.*s", slot_id,
+            menu_string_len, menu_string);
     return 0;
 }
 
 static int
-linuxdvb_ca_ca_info_callback(void *arg, uint8_t slot_id, uint16_t session_num, uint32_t ca_id_count, uint16_t *ca_ids)
+linuxdvb_ca_ca_info_callback(void *arg, uint8_t slot_id, uint16_t session_num,
+                             uint32_t ca_id_count, uint16_t *ca_ids)
 {
     linuxdvb_ca_t * lca = arg;
     uint32_t i;
-
+    char buf[256];
+    size_t c = 0;
 
     dvbcam_unregister_cam(lca, 0);
     dvbcam_register_cam(lca, 0, ca_ids, ca_id_count);
 
 
     for(i=0; i< ca_id_count; i++) {
-        tvhinfo("en50221", "slot %d supported CAID: %04x (%s)", slot_id,
-        	      ca_ids[i], descrambler_caid2name(ca_ids[i]));
+        tvh_strlcatf(buf, sizeof(buf), c, " %04X", ca_ids[i]);
+        tvh_strlcatf(buf, sizeof(buf), c, " (%s)",
+                     descrambler_caid2name(ca_ids[i]));
     }
 
-    //ca_connected = 1;
+    tvhinfo("en50221", "CAM slot %u supported CAIDs: %s", slot_id, buf);
     return 0;
 }
 
@@ -232,7 +242,124 @@ linuxdvb_ca_ca_pmt_reply_cb(void *arg, uint8_t slot_id, uint16_t session_num,
                             struct en50221_app_pmt_reply *reply,
                             uint32_t reply_size)
 {
-    tvhtrace("en50221", "ca pmt reply callback received for slot %d", slot_id);
+    const char *str;
+
+    switch (reply->CA_enable) {
+      case 0x01: str = "possible"; break;
+      case 0x02: str = "possible under conditions (purchase dialogue)"; break;
+      case 0x03: str = "possible under conditions (technical dialogue)"; break;
+      case 0x71: str = "not possible (because no entitlement)"; break;
+      case 0x73: str = "not possible (for technical reasons)"; break;
+      default:   str = "state unknown (unknown value received)";
+    }
+
+    tvhinfo("en50221", "CAM slot %u: descrambling %s", slot_id, str);
+
+    return 0;
+}
+
+static int
+linuxdvb_ca_mmi_close_cb(void *arg, uint8_t slot_id, uint16_t session_num,
+                         uint8_t cmd_id, uint8_t delay)
+{
+    tvhtrace("en50221", "mmi close cb received for slot %u session_num %u "
+             "cmd_id 0x%02x delay %u" , slot_id, session_num, cmd_id, delay);
+
+    return 0;
+}
+
+static int
+linuxdvb_ca_mmi_display_ctl_cb(void *arg, uint8_t slot_id, uint16_t session_num,
+                               uint8_t cmd_id, uint8_t mmi_mode)
+{
+    linuxdvb_ca_t * lca = arg;
+
+    tvhtrace("en50221", "mmi display ctl cb received for slot %u session_num %u "
+             "cmd_id 0x%02x mmi_mode %u" , slot_id, session_num, cmd_id, mmi_mode);
+
+    if (cmd_id == MMI_DISPLAY_CONTROL_CMD_ID_SET_MMI_MODE) {
+        struct en50221_app_mmi_display_reply_details d;
+
+        d.u.mode_ack.mmi_mode = mmi_mode;
+        if (en50221_app_mmi_display_reply(lca->lca_mmi_resource, session_num,
+                                          MMI_DISPLAY_REPLY_ID_MMI_MODE_ACK, &d)) {
+            tvherror("en50221","Slot %u: Failed to send MMI mode ack reply", slot_id);
+        }
+    }
+
+    return 0;
+}
+
+static int
+linuxdvb_ca_mmi_enq_cb(void *arg, uint8_t slot_id, uint16_t session_num,
+                       uint8_t blind_answ, uint8_t exp_answ_len,
+                       uint8_t *text, uint32_t text_size)
+{
+    linuxdvb_ca_t * lca = arg;
+
+    tvhlog(LOG_NOTICE, "en50221", "MMI enquiry from CAM in slot %u:  %.*s (%s%u digits)",
+           slot_id, text_size, text,blind_answ ? "blind " : "" , exp_answ_len);
+
+    /* cancel dialog */
+    en50221_app_mmi_answ(lca->lca_mmi_resource, session_num, MMI_ANSW_ID_CANCEL, NULL, 0);
+
+    /* TODO add gui to enter PIN - keeping this disabled as
+       entering wrong pin can block card */
+
+    //uint8_t answ[4] = "1234";
+    //en50221_app_mmi_answ(lca->lca_mmi_resource, session_num, MMI_ANSW_ID_ANSWER, answ, 4);
+
+    return 0;
+}
+
+static int
+linuxdvb_ca_mmi_menu_cb(void *arg, uint8_t slot_id, uint16_t session_num,
+                        struct en50221_app_mmi_text *title,
+                        struct en50221_app_mmi_text *sub_title,
+                        struct en50221_app_mmi_text *bottom,
+                        uint32_t item_count, struct en50221_app_mmi_text *items,
+                        uint32_t item_raw_length, uint8_t *items_raw)
+{
+    linuxdvb_ca_t * lca = arg;
+
+    tvhlog(LOG_NOTICE, "en50221", "MMI menu from CAM in the slot %u:", slot_id);
+    tvhlog(LOG_NOTICE, "en50221", "  title:    %.*s", title->text_length, title->text);
+    tvhlog(LOG_NOTICE, "en50221", "  subtitle: %.*s", sub_title->text_length, sub_title->text);
+
+    uint32_t i;
+    for(i=0; i< item_count; i++) {
+        tvhlog(LOG_NOTICE, "en50221", "  item %i:   %.*s", i+1,  items[i].text_length, items[i].text);
+    }
+    tvhlog(LOG_NOTICE, "en50221", "  bottom:   %.*s", bottom->text_length, bottom->text);
+
+    /* cancel menu */
+    en50221_app_mmi_menu_answ(lca->lca_mmi_resource, session_num, 0);
+
+    return 0;
+}
+
+static int
+linuxdvb_ca_app_mmi_list_cb(void *arg, uint8_t slot_id, uint16_t session_num,
+                            struct en50221_app_mmi_text *title,
+                            struct en50221_app_mmi_text *sub_title,
+                            struct en50221_app_mmi_text *bottom,
+                            uint32_t item_count, struct en50221_app_mmi_text *items,
+                            uint32_t item_raw_length, uint8_t *items_raw)
+{
+    linuxdvb_ca_t * lca = arg;
+
+    tvhlog(LOG_NOTICE, "en50221", "MMI list from CAM in the slot %u:", slot_id);
+    tvhlog(LOG_NOTICE, "en50221", "  title:    %.*s", title->text_length, title->text);
+    tvhlog(LOG_NOTICE, "en50221", "  subtitle: %.*s", sub_title->text_length, sub_title->text);
+
+    uint32_t i;
+    for(i=0; i< item_count; i++) {
+        tvhlog(LOG_NOTICE, "en50221", "  item %i:   %.*s", i+1,  items[i].text_length, items[i].text);
+    }
+    tvhlog(LOG_NOTICE, "en50221", "  bottom:   %.*s", bottom->text_length, bottom->text);
+
+    /* cancel menu */
+    en50221_app_mmi_menu_answ(lca->lca_mmi_resource, session_num, 0);
 
     return 0;
 }
@@ -282,6 +409,13 @@ linuxdvb_ca_en50221_thread ( void *aux )
   en50221_app_ca_register_info_callback(lca->lca_ca_resource, linuxdvb_ca_ca_info_callback, lca);
   en50221_app_ca_register_pmt_reply_callback(lca->lca_ca_resource, linuxdvb_ca_ca_pmt_reply_cb, lca);
 
+  lca->lca_mmi_resource = en50221_app_mmi_create(&lca->lca_sf);
+  en50221_app_mmi_register_close_callback(lca->lca_mmi_resource, linuxdvb_ca_mmi_close_cb, lca);
+  en50221_app_mmi_register_display_control_callback(lca->lca_mmi_resource, linuxdvb_ca_mmi_display_ctl_cb, lca);
+  en50221_app_mmi_register_enq_callback(lca->lca_mmi_resource, linuxdvb_ca_mmi_enq_cb, lca);
+  en50221_app_mmi_register_menu_callback(lca->lca_mmi_resource, linuxdvb_ca_mmi_menu_cb, lca);
+  en50221_app_mmi_register_list_callback(lca->lca_mmi_resource, linuxdvb_ca_app_mmi_list_cb, lca);
+
   en50221_sl_register_lookup_callback(lca->lca_sl, linuxdvb_ca_lookup_cb, lca);
   en50221_sl_register_session_callback(lca->lca_sl, linuxdvb_ca_session_cb, lca);
 
@@ -318,8 +452,8 @@ linuxdvb_ca_monitor ( void *aux )
 
   if (lca->lca_ca_fd > 0) {
     if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
-      tvherror("linuxdvb", "failed to get ca%u slot info [e=%s]",
-      	       lca->lca_number, strerror(errno));
+      tvherror("linuxdvb", "failed to get CAM slot %u info [e=%s]",
+               csi.num, strerror(errno));
     }
     if (csi.flags & CA_CI_MODULE_READY)
       state = CA_SLOT_STATE_MODULE_READY;
@@ -329,8 +463,8 @@ linuxdvb_ca_monitor ( void *aux )
       state = CA_SLOT_STATE_EMPTY;
 
     if (lca->lca_state != state) {
-	    tvhlog(LOG_INFO, "linuxdvb", "ca%u slot %u status changed to %s",
-	  	       lca->lca_number, csi.num, ca_slot_state2str(state));
+      tvhlog(LOG_INFO, "linuxdvb", "CAM slot %u status changed to %s",
+             csi.num, ca_slot_state2str(state));
 
       if (state == CA_SLOT_STATE_MODULE_READY) {
       	lca->lca_en50221_thread_running = 1;
@@ -412,15 +546,18 @@ linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int
   size = en50221_ca_format_pmt(pmt, capmt, sizeof(capmt),
                                CA_LIST_MANAGEMENT_ONLY, slot,
                                CA_PMT_CMD_ID_OK_DESCRAMBLING);
+
   if (size < 0) {
     tvherror("en50221", "Failed to format CAPMT");
   }
+
   if (en50221_app_ca_pmt(lca->lca_ca_resource, lca->lca_ca_session_number,
                          capmt, size)) {
         tvherror("en50221", "Failed to send CAPMT");
   }
 
-  tvhtrace("en50221", "CAPMT sent");
+  tvhtrace("en50221", "OK Descrambling CAPMT sent");
+  tvhlog_hexdump("en50221", capmt, size);
 
 fail:
   free(buffer);
