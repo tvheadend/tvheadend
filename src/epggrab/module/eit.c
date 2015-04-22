@@ -446,12 +446,13 @@ static int _eit_process_event
     int r;
     dtag = ptr[0];
     dlen = ptr[1];
-    tvhtrace(mod->id, "  dtag %02X dlen %d", dtag, dlen);
-    tvhlog_hexdump(mod->id, ptr+2, dlen);
 
     dllen -= 2;
     ptr   += 2;
     if (dllen < dlen) break;
+
+    tvhtrace(mod->id, "  dtag %02X dlen %d", dtag, dlen);
+    tvhlog_hexdump(mod->id, ptr, dlen);
 
     switch (dtag) {
       case DVB_DESC_SHORT_EVENT:
