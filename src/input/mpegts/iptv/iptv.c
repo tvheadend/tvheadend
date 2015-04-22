@@ -129,12 +129,9 @@ iptv_input_is_free ( mpegts_input_t *mi )
 static int
 iptv_input_get_weight ( mpegts_input_t *mi, int flags )
 {
-  int c = 0, w = 0;
+  int w = 0;
   const th_subscription_t *ths;
   const service_t *s;
-  const mpegts_mux_instance_t *mmi;
-  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    c++;
 
   /* Find the "min" weight */
   if (!iptv_input_is_free(mi)) {
