@@ -395,9 +395,10 @@ static int _eit_desc_crid
  * EIT Event
  * ***********************************************************************/
 
-static int _eit_process_event
+static int _eit_process_event_one
   ( epggrab_module_t *mod, int tableid,
-    mpegts_service_t *svc, const uint8_t *ptr, int len,
+    mpegts_service_t *svc, channel_t *ch,
+    const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
   int save2 = 0;
@@ -409,7 +410,6 @@ static int _eit_process_event
   epg_episode_t *ee;
   epg_serieslink_t *es;
   eit_event_t ev;
-  channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
 
   if ( len < 12 ) return -1;
 
@@ -551,6 +551,23 @@ static int _eit_process_event
 
   return ret;
 }
+
+static int _eit_process_event
+  ( epggrab_module_t *mod, int tableid,
+    mpegts_service_t *svc, const uint8_t *ptr, int len,
+    int local, int *resched, int *save )
+{
+  channel_service_mapping_t *csm;
+  int ret = 0;
+
+  if ( len < 12 ) return -1;
+
+  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
+    ret = _eit_process_event_one(mod, tableid, svc, csm->csm_chn,
+                                 ptr, len, local, resched, save);
+  return ret;
+}
+
 
 static int
 _eit_callback
