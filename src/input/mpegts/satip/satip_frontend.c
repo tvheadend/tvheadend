@@ -357,13 +357,6 @@ const idclass_t satip_frontend_atsc_class =
  * *************************************************************************/
 
 static int
-satip_frontend_is_free ( mpegts_input_t *mi )
-{
-  /* TODO: Add some RTSP live checks here */
-  return mpegts_input_is_free(mi);
-}
-
-static int
 satip_frontend_get_weight ( mpegts_input_t *mi, int flags )
 {
   return mpegts_input_get_weight(mi, flags);
@@ -1661,7 +1654,6 @@ satip_frontend_create
   lfe->sf_position     = -1;
 
   /* Callbacks */
-  lfe->mi_is_free      = satip_frontend_is_free;
   lfe->mi_get_weight   = satip_frontend_get_weight;
   lfe->mi_get_priority = satip_frontend_get_priority;
   lfe->mi_get_grace    = satip_frontend_get_grace;

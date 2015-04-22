@@ -599,7 +599,6 @@ void iptv_init ( void )
   iptv_input->mi_warm_mux       = iptv_input_warm_mux;
   iptv_input->mi_start_mux      = iptv_input_start_mux;
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;
-  iptv_input->mi_is_free        = iptv_input_is_free;
   iptv_input->mi_get_weight     = iptv_input_get_weight;
   iptv_input->mi_get_grace      = iptv_input_get_grace;
   iptv_input->mi_get_priority   = iptv_input_get_priority;

@@ -640,7 +640,6 @@ struct mpegts_input
   int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
-  int  (*mi_is_free)        (mpegts_input_t*);
   int  (*mi_get_weight)     (mpegts_input_t*, int flags);
   int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
@@ -836,8 +835,6 @@ mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
 void mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
    int64_t *pcr, uint16_t *pcr_pid);
-
-int mpegts_input_is_free ( mpegts_input_t *mi );
 
 int mpegts_input_get_weight ( mpegts_input_t *mi, int flags );
 int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );

@@ -322,18 +322,6 @@ mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 }
 
 int
-mpegts_input_is_free ( mpegts_input_t *mi )
-{
-  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
-#if ENABLE_TRACE
-  char buf[256];
-  mi->mi_display_name(mi, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - is free? %d", buf, mmi == NULL);
-#endif
-  return mmi ? 0 : 1;
-}
-
-int
 mpegts_input_get_weight ( mpegts_input_t *mi, int flags )
 {
   const service_t *s;
@@ -1464,7 +1452,6 @@ mpegts_input_create0
   /* Defaults */
   mi->mi_is_enabled           = mpegts_input_is_enabled;
   mi->mi_display_name         = mpegts_input_display_name;
-  mi->mi_is_free              = mpegts_input_is_free;
   mi->mi_get_weight           = mpegts_input_get_weight;
   mi->mi_get_priority         = mpegts_input_get_priority;
   mi->mi_warm_mux             = mpegts_input_warm_mux;

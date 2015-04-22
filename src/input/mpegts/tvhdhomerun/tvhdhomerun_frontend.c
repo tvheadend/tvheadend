@@ -28,12 +28,6 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, mpegts_pid_
 static mpegts_pid_t * tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 static int
-tvhdhomerun_frontend_is_free ( mpegts_input_t *mi )
-{
-  return mpegts_input_is_free(mi);
-}
-
-static int
 tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, int flags )
 {
   return mpegts_input_get_weight(mi, flags);
@@ -658,7 +652,6 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   if (!hfe) return NULL;
 
   /* Callbacks */
-  hfe->mi_is_free      = tvhdhomerun_frontend_is_free;
   hfe->mi_get_weight   = tvhdhomerun_frontend_get_weight;
   hfe->mi_get_priority = tvhdhomerun_frontend_get_priority;
   hfe->mi_get_grace    = tvhdhomerun_frontend_get_grace;
