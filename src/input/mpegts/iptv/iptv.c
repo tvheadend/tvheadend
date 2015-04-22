@@ -127,7 +127,7 @@ iptv_input_is_free ( mpegts_input_t *mi )
 }
 
 static int
-iptv_input_get_weight ( mpegts_input_t *mi, int flags )
+iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   int w = 0;
   const th_subscription_t *ths;

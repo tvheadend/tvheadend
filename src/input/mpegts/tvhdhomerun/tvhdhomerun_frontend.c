@@ -28,9 +28,9 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, mpegts_pid_
 static mpegts_pid_t * tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
 
 static int
-tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, int flags )
+tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  return mpegts_input_get_weight(mi, flags);
+  return mpegts_input_get_weight(mi, mm, flags);
 }
 
 static int

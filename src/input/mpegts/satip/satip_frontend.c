@@ -357,9 +357,9 @@ const idclass_t satip_frontend_atsc_class =
  * *************************************************************************/
 
 static int
-satip_frontend_get_weight ( mpegts_input_t *mi, int flags )
+satip_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  return mpegts_input_get_weight(mi, flags);
+  return mpegts_input_get_weight(mi, mm, flags);
 }
 
 static int
