@@ -392,15 +392,21 @@ satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 static int
 satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
 {
+  satip_frontend_t *lfe_master;
   mpegts_mux_t *mm1;
   dvb_mux_conf_t *mc1, *mc2;
   int position, high1, high2;
 
   if (lfe2->sf_req == NULL || lfe2->sf_req->sf_mmi == NULL)
     return 0;
+
+  lfe_master = lfe2;
+  if (lfe2->sf_master)
+    lfe_master = satip_frontend_find_by_number(lfe2->sf_device, lfe2->sf_master) ?: lfe2;
+
   mm1 = lfe2->sf_req->sf_mmi->mmi_mux;
   position = satip_satconf_get_position(lfe2, mm2);
-  if (position <= 0 || lfe2->sf_position != position)
+  if (position <= 0 || lfe_master->sf_position != position)
     return 0;
   mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
   mc2 = &((dvb_mux_t *)mm2)->lm_tuning;
@@ -1167,11 +1173,8 @@ new_tune:
   lm = (dvb_mux_t *)mmi->mmi_mux;
 
   lfe_master = lfe;
-  if (lfe->sf_master) {
-    lfe_master = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master);
-    if (lfe_master == NULL)
-      lfe_master = lfe;
-  }
+  if (lfe->sf_master)
+    lfe_master = satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master) ?: lfe;
 
   i = 0;
   if (!rtsp) {
