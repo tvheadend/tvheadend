@@ -1178,6 +1178,7 @@ dobackup(const char *oldver)
   const char *root = hts_settings_get_root();
   char errtxt[128];
   const char **arg;
+  pid_t pid;
   int code;
 
   tvhinfo("config", "backup: migrating config from %s (running %s)",
@@ -1211,10 +1212,10 @@ dobackup(const char *oldver)
                                      root, oldver);
   tvhinfo("config", "backup: running, output file %s", outfile);
 
-  if (spawnv(argv[0], (void *)argv, NULL, 1, 1)) {
+  if (spawnv(argv[0], (void *)argv, &pid, 1, 1)) {
     code = -ENOENT;
   } else {
-    while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
+    while ((code = spawn_reap(pid, errtxt, sizeof(errtxt))) == -EAGAIN)
       usleep(20000);
   }
 
