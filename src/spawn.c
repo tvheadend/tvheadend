@@ -283,7 +283,15 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
 static void
 spawn_reaper(void)
 {
-  while (spawn_reap(-1, NULL, 0) != -EAGAIN) ;
+  int r;
+
+  do {
+    r = spawn_reap(-1, NULL, 0);
+    if (r == -EAGAIN)
+      continue;
+    if (r < 0)
+      break;
+  } while (1);
 }
 
 /**
