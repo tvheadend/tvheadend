@@ -582,6 +582,8 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
       }
     } else if (flags & SUBSCRIPTION_TABLES) {
       mi->mi_open_pid(mi, s->s_dvb_mux, MPEGTS_TABLES_PID, MPS_RAW | MPS_TABLES, s);
+    } else if (flags & SUBSCRIPTION_MINIMAL) {
+      mi->mi_open_pid(mi, s->s_dvb_mux, DVB_PAT_PID, MPS_RAW, s);
     }
   }
 
