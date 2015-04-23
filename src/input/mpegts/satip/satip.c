@@ -494,9 +494,11 @@ satip_device_create( satip_device_info_t *info )
       tvhlog(LOG_ERR, "satip", "%s: bad tuner count [%s]",
              satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else {
+      sd->sd_nosave = 1;
       for (j = 0; j < m; j++)
         if (satip_frontend_create(feconf, sd, type, v2, fenum))
           fenum++;
+      sd->sd_nosave = 0;
     }
   }
 
@@ -543,6 +545,9 @@ satip_device_save( satip_device_t *sd )
 {
   satip_frontend_t *lfe;
   htsmsg_t *m, *l;
+
+  if (sd->sd_nosave)
+    return;
 
   m = htsmsg_create_map();
   idnode_save(&sd->th_id, m);
