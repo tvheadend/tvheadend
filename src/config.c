@@ -1217,6 +1217,8 @@ dobackup(const char *oldver)
   } else {
     while ((code = spawn_reap(pid, errtxt, sizeof(errtxt))) == -EAGAIN)
       usleep(20000);
+    if (code == -ECHILD)
+      code = 0;
   }
 
   if (code) {
