@@ -160,7 +160,6 @@ const tvh_caps_t tvheadend_capabilities[] = {
 
 pthread_mutex_t global_lock;
 pthread_mutex_t tasklet_lock;
-pthread_mutex_t ffmpeg_lock;
 pthread_mutex_t fork_lock;
 pthread_mutex_t atomic_lock;
 
@@ -549,7 +548,6 @@ main(int argc, char **argv)
   main_tid = pthread_self();
 
   /* Setup global mutexes */
-  pthread_mutex_init(&ffmpeg_lock, NULL);
   pthread_mutex_init(&fork_lock, NULL);
   pthread_mutex_init(&global_lock, NULL);
   pthread_mutex_init(&tasklet_lock, NULL);
