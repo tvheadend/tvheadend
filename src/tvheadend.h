@@ -150,7 +150,6 @@ typedef enum {
  * global timer
  */
 
-
 typedef void (gti_callback_t)(void *opaque);
 
 typedef struct gtimer {
@@ -173,6 +172,22 @@ void gtimer_arm_abs2(gtimer_t *gti, gti_callback_t *callback, void *opaque,
   struct timespec *when);
 
 void gtimer_disarm(gtimer_t *gti);
+
+
+/*
+ * tasklet
+ */
+
+typedef void (tsk_callback_t)(void *opaque, int disarmed);
+
+typedef struct tasklet {
+  TAILQ_ENTRY(tasklet) tsk_link;
+  tsk_callback_t *tsk_callback;
+  void *tsk_opaque;
+} tasklet_t;
+
+void tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque);
+void tasklet_disarm(tasklet_t *gti);
 
 
 /*
