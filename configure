@@ -48,6 +48,7 @@ OPTIONS=(
   "dbus_1:auto"
   "android:no"
   "tsdebug:no"
+  "gtimer_check:no"
 )
 
 #

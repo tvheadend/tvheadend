@@ -237,8 +237,8 @@ gtimercmp(gtimer_t *a, gtimer_t *b)
  *
  */
 void
-gtimer_arm_abs2
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when)
+GTIMER_FCN(gtimer_arm_abs2)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when)
 {
   lock_assert(&global_lock);
 
@@ -248,6 +248,10 @@ gtimer_arm_abs2
   gti->gti_callback = callback;
   gti->gti_opaque   = opaque;
   gti->gti_expire   = *when;
+#if ENABLE_GTIMER_CHECK
+  gti->gti_id       = id;
+  gti->gti_fcn      = fcn;
+#endif
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
 
@@ -259,37 +263,50 @@ gtimer_arm_abs2
  *
  */
 void
-gtimer_arm_abs
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when)
+GTIMER_FCN(gtimer_arm_abs)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when)
 {
   struct timespec ts;
   ts.tv_nsec = 0;
   ts.tv_sec  = when;
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs2)(id, fcn, gti, callback, opaque, &ts);
+#else
   gtimer_arm_abs2(gti, callback, opaque, &ts);
+#endif
 }
 
 /**
  *
  */
 void
-gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
+GTIMER_FCN(gtimer_arm)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
 {
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs)(id, fcn, gti, callback, opaque, dispatch_clock + delta);
+#else
   gtimer_arm_abs(gti, callback, opaque, dispatch_clock + delta);
+#endif
 }
 
 /**
  *
  */
 void
-gtimer_arm_ms
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
+GTIMER_FCN(gtimer_arm_ms)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
 {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_nsec += (1000000 * delta_ms);
   ts.tv_sec  += (ts.tv_nsec / 1000000000);
   ts.tv_nsec %= 1000000000;
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs2)(id, fcn, gti, callback, opaque, &ts);
+#else
   gtimer_arm_abs2(gti, callback, opaque, &ts);
+#endif
 }
 
 /**
@@ -469,6 +486,9 @@ mainloop(void)
   gtimer_t *gti;
   gti_callback_t *cb;
   struct timespec ts;
+#if ENABLE_GTIMER_CHECK
+  int64_t mtm;
+#endif
 
   while(tvheadend_running) {
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -502,13 +522,19 @@ mainloop(void)
         break;
       }
 
+#if ENABLE_GTIMER_CHECK
+      mtm = getmonoclock();
+#endif
       cb = gti->gti_callback;
-      //tvhdebug("gtimer", "%p callback", gti);
 
       LIST_REMOVE(gti, gti_link);
       gti->gti_callback = NULL;
 
       cb(gti->gti_opaque);
+
+#if ENABLE_GTIMER_CHECK
+      tvhtrace("gtimer", "%s:%s duration %"PRId64"ns", gti->gti_id, gti->gti_fcn, getmonoclock() - mtm);
+#endif
     }
 
     /* Bound wait */
@@ -518,7 +544,6 @@ mainloop(void)
     }
 
     /* Wait */
-    //tvhdebug("gtimer", "wait till %ld.%09ld", ts.tv_sec, ts.tv_nsec);
     pthread_cond_timedwait(&gtimer_cond, &global_lock, &ts);
     pthread_mutex_unlock(&global_lock);
   }

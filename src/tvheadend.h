@@ -44,6 +44,10 @@
 
 #include "redblack.h"
 
+#define STRINGIFY(s) # s
+#define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)
+#define SRCLINEID2(f,l) f ":" STRINGIFY(l)
+
 #define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
 
 #if ENABLE_ANDROID
@@ -156,19 +160,35 @@ typedef struct gtimer {
   gti_callback_t *gti_callback;
   void *gti_opaque;
   struct timespec gti_expire;
+#if ENABLE_GTIMER_CHECK
+  const char *gti_id;
+  const char *gti_fcn;
+#endif
 } gtimer_t;
 
-void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-		int delta);
+#if ENABLE_GTIMER_CHECK
+#define GTIMER_TRACEID_ const char *id, const char *fcn,
+#define GTIMER_FCN(n) check_##n
+#else
+#define GTIMER_TRACEID_
+#define GTIMER_FCN(n) n
+#endif
 
-void gtimer_arm_ms(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-  long delta_ms);
+void GTIMER_FCN(gtimer_arm)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta);
+void GTIMER_FCN(gtimer_arm_ms)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms);
+void GTIMER_FCN(gtimer_arm_abs)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when);
+void GTIMER_FCN(gtimer_arm_abs2)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when);
 
-void gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-		    time_t when);
-
-void gtimer_arm_abs2(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-  struct timespec *when);
+#if ENABLE_GTIMER_CHECK
+#define gtimer_arm(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#endif
 
 void gtimer_disarm(gtimer_t *gti);
 
