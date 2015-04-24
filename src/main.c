@@ -488,6 +488,8 @@ mainloop(void)
   struct timespec ts;
 #if ENABLE_GTIMER_CHECK
   int64_t mtm;
+  const char *id;
+  const char *fcn;
 #endif
 
   while(tvheadend_running) {
@@ -524,6 +526,8 @@ mainloop(void)
 
 #if ENABLE_GTIMER_CHECK
       mtm = getmonoclock();
+      id = gti->gti_id;
+      fcn = gti->gti_fcn;
 #endif
       cb = gti->gti_callback;
 
@@ -533,7 +537,7 @@ mainloop(void)
       cb(gti->gti_opaque);
 
 #if ENABLE_GTIMER_CHECK
-      tvhtrace("gtimer", "%s:%s duration %"PRId64"ns", gti->gti_id, gti->gti_fcn, getmonoclock() - mtm);
+      tvhtrace("gtimer", "%s:%s duration %"PRId64"ns", id, fcn, getmonoclock() - mtm);
 #endif
     }
 
