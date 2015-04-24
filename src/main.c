@@ -590,6 +590,7 @@ main(int argc, char **argv)
   tvheadend_webroot         = NULL;
   tvheadend_htsp_port       = 9982;
   tvheadend_htsp_port_extra = 0;
+  time(&dispatch_clock);
 
   /* Command line options */
   int         opt_help         = 0,
