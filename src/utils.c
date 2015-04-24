@@ -638,3 +638,34 @@ mpegts_word_count ( const uint8_t *tsb, int len, uint32_t mask )
 
   return r;
 }
+
+static void
+deferred_unlink_cb(void *s, int dearmed)
+{
+  if (unlink((const char *)s))
+    tvherror("main", "unable to remove file '%s'", (const char *)s);
+  free(s);
+}
+
+int
+deferred_unlink(const char *filename)
+{
+  char *s;
+  size_t l;
+  int r;
+
+  l = strlen(filename);
+  s = malloc(l + 9);
+  if (s == NULL)
+    return -ENOMEM;
+  strcpy(s, filename);
+  strcpy(s + l, ".removing");
+  r = rename(filename, s);
+  if (r) {
+    r = -errno;
+    free(s);
+    return r;
+  }
+  tasklet_arm_alloc(deferred_unlink_cb, s);
+  return 0;
+}

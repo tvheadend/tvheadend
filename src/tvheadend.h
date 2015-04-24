@@ -184,8 +184,10 @@ typedef struct tasklet {
   TAILQ_ENTRY(tasklet) tsk_link;
   tsk_callback_t *tsk_callback;
   void *tsk_opaque;
+  int tsk_allocated;
 } tasklet_t;
 
+tasklet_t *tasklet_arm_alloc(tsk_callback_t *callback, void *opaque);
 void tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque);
 void tasklet_disarm(tasklet_t *gti);
 
@@ -735,6 +737,8 @@ char to_hex(char code);
 char *url_encode(char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
+
+int deferred_unlink(const char *filename);
 
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }

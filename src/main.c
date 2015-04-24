@@ -308,6 +308,20 @@ gtimer_disarm(gtimer_t *gti)
 /**
  *
  */
+tasklet_t *
+tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
+{
+  tasklet_t *tsk = calloc(1, sizeof(*tsk));
+  if (tsk) {
+    tsk->tsk_allocated = 1;
+    tasklet_arm(tsk, callback, opaque);
+  }
+  return tsk;
+}
+
+/**
+ *
+ */
 void
 tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
 {
@@ -339,6 +353,8 @@ tasklet_disarm(tasklet_t *tsk)
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk->tsk_callback(tsk->tsk_opaque, 1);
     tsk->tsk_callback = NULL;
+    if (tsk->tsk_allocated)
+      free(tsk);
   }
 
   pthread_mutex_unlock(&tasklet_lock);
@@ -355,6 +371,8 @@ tasklet_flush()
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk->tsk_callback(tsk->tsk_opaque, 1);
     tsk->tsk_callback = NULL;
+    if (tsk->tsk_allocated)
+      free(tsk);
   }
 
   pthread_mutex_unlock(&tasklet_lock);
@@ -538,6 +556,7 @@ main(int argc, char **argv)
   pthread_mutex_init(&atomic_lock, NULL);
   pthread_cond_init(&gtimer_cond, NULL);
   pthread_cond_init(&tasklet_cond, NULL);
+  TAILQ_INIT(&tasklets);
 
   /* Defaults */
   tvheadend_webui_port      = 9981;
@@ -1058,6 +1077,7 @@ main(int argc, char **argv)
   tvhftrace("main", spawn_done);
 
   tvhtrace("main", "tasklet enter");
+  pthread_cond_signal(&tasklet_cond);
   pthread_join(tasklet_tid, NULL);
   tvhtrace("main", "tasklet thread end");
   tasklet_flush();
