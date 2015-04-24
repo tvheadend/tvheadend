@@ -185,9 +185,9 @@ void GTIMER_FCN(gtimer_arm_abs2)
 
 #if ENABLE_GTIMER_CHECK
 #define gtimer_arm(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm_ms)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm_abs)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm_abs2)(SRCLINEID(), __func__, a, b, c, d)
 #endif
 
 void gtimer_disarm(gtimer_t *gti);
