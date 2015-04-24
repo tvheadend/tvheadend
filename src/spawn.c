@@ -242,7 +242,7 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
   if(pid < 0)
     return -errno;
   if(pid < 1)
-    return -EAGAIN;
+    return 0;
 
   pthread_mutex_lock(&spawn_mutex);
   LIST_FOREACH(s, &spawns, link)
@@ -289,7 +289,7 @@ spawn_reaper(void)
     r = spawn_reap(-1, NULL, 0);
     if (r == -EAGAIN)
       continue;
-    if (r < 0)
+    if (r <= 0)
       break;
   } while (1);
 }
