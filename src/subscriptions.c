@@ -654,6 +654,8 @@ subscription_create
 
   if (s->ths_prch)
     s->ths_weight = profile_chain_weight(s->ths_prch, weight);
+  else
+    s->ths_weight = weight;
 
   if (pro && pro->pro_restart)
     s->ths_flags |= SUBSCRIPTION_RESTART;
