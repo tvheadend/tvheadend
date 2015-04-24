@@ -68,7 +68,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 19
+#define HTSP_PROTO_VERSION 20
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -774,6 +774,7 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "priority",    dae->dae_pri);
   htsmsg_add_s64(out, "startExtra",  dae->dae_start_extra);
   htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
+  htsmsg_add_u32(out, "dupDetect",   dae->dae_record);
 
   if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
@@ -1628,7 +1629,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
-  uint32_t u32, days_of_week, priority, min_duration, max_duration;
+  uint32_t u32, days_of_week, priority, min_duration, max_duration, dup_detect;
   uint32_t retention, enabled, fulltext;
   int32_t approx_time, start, start_window;
   channel_t *ch = NULL;
@@ -1680,6 +1681,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     name = "";
   if (!(directory = htsmsg_get_str(in, "directory")))
     directory = "";
+  if(htsmsg_get_u32(in, "dupDetect", &dup_detect))
+    dup_detect = DVR_AUTOREC_RECORD_ALL;
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -1687,7 +1690,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   dae = dvr_autorec_create_htsp(dvr_config_name, title, fulltext,
       ch, enabled, start, start_window, days_of_week,
-      start_extra, stop_extra, priority, retention, min_duration, max_duration,
+      start_extra, stop_extra, priority, retention, min_duration, max_duration, dup_detect,
       htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
 
   /* create response */
@@ -1959,7 +1962,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  weight = htsmsg_get_u32_or_default(in, "weight", 150);
+  weight = htsmsg_get_u32_or_default(in, "weight", 0);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
 
   profile_id = htsmsg_get_str(in, "profile");

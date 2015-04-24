@@ -27,6 +27,7 @@
 #include "htsbuf.h"
 #include "spawn.h"
 #include "lock.h"
+#include "profile.h"
 
 /* *************************************************************************
  * Global data
@@ -1163,6 +1164,27 @@ config_migrate_v16 ( void )
   }
 }
 
+static void
+config_migrate_v17 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  int i, p;
+
+  if ((c = hts_settings_load("profile")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if (htsmsg_get_s32(e, "priority", &i)) {
+        p = PROFILE_SPRIO_NORMAL;
+        if (strcmp(htsmsg_get_str(e, "name") ?: "", "htsp") == 0)
+          p = PROFILE_SPRIO_IMPORTANT;
+        htsmsg_set_s32(e, "priority", p);
+        hts_settings_save(e, "profile/%s", f->hmf_name);
+      }
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1178,6 +1200,7 @@ dobackup(const char *oldver)
   const char *root = hts_settings_get_root();
   char errtxt[128];
   const char **arg;
+  pid_t pid;
   int code;
 
   tvhinfo("config", "backup: migrating config from %s (running %s)",
@@ -1211,11 +1234,13 @@ dobackup(const char *oldver)
                                      root, oldver);
   tvhinfo("config", "backup: running, output file %s", outfile);
 
-  if (spawnv(argv[0], (void *)argv, NULL, 1, 1)) {
+  if (spawnv(argv[0], (void *)argv, &pid, 1, 1)) {
     code = -ENOENT;
   } else {
-    while ((code = spawn_reap(errtxt, sizeof(errtxt))) == -EAGAIN)
+    while ((code = spawn_reap(pid, errtxt, sizeof(errtxt))) == -EAGAIN)
       usleep(20000);
+    if (code == -ECHILD)
+      code = 0;
   }
 
   if (code) {
@@ -1269,7 +1294,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v13,
   config_migrate_v14,
   config_migrate_v15,
-  config_migrate_v16
+  config_migrate_v16,
+  config_migrate_v17
 };
 
 /*

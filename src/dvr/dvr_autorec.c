@@ -229,7 +229,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
                             channel_t *ch, uint32_t enabled, int32_t start, int32_t start_window,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
                             dvr_prio_t pri, int retention,
-                            int min_duration, int max_duration,
+                            int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
                             const char *owner, const char *creator, const char *comment, 
                             const char *name, const char *directory)
 {
@@ -248,6 +248,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
   htsmsg_add_s64(conf, "stop_extra",  stop_extra);
   htsmsg_add_str(conf, "title",       title);
   htsmsg_add_u32(conf, "fulltext",    fulltext);
+  htsmsg_add_u32(conf, "record",      dup_detect);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
   htsmsg_add_str(conf, "owner",       owner ?: "");
   htsmsg_add_str(conf, "creator",     creator ?: "");

@@ -1438,6 +1438,7 @@ service_source_info_free(struct source_info *si)
   free(si->si_mux);
   free(si->si_provider);
   free(si->si_service);
+  free(si->si_satpos);
 }
 
 
@@ -1451,6 +1452,7 @@ service_source_info_copy(source_info_t *dst, const source_info_t *src)
   COPY(mux);
   COPY(provider);
   COPY(service);
+  COPY(satpos);
 #undef COPY
 }
 

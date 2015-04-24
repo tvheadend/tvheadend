@@ -44,6 +44,10 @@
 
 #include "redblack.h"
 
+#define STRINGIFY(s) # s
+#define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)
+#define SRCLINEID2(f,l) f ":" STRINGIFY(l)
+
 #define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
 
 #if ENABLE_ANDROID
@@ -99,7 +103,6 @@ typedef struct str_list
 extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
-extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
 extern pthread_mutex_t atomic_lock;
 
@@ -150,7 +153,6 @@ typedef enum {
  * global timer
  */
 
-
 typedef void (gti_callback_t)(void *opaque);
 
 typedef struct gtimer {
@@ -158,21 +160,55 @@ typedef struct gtimer {
   gti_callback_t *gti_callback;
   void *gti_opaque;
   struct timespec gti_expire;
+#if ENABLE_GTIMER_CHECK
+  const char *gti_id;
+  const char *gti_fcn;
+#endif
 } gtimer_t;
 
-void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-		int delta);
+#if ENABLE_GTIMER_CHECK
+#define GTIMER_TRACEID_ const char *id, const char *fcn,
+#define GTIMER_FCN(n) check_##n
+#else
+#define GTIMER_TRACEID_
+#define GTIMER_FCN(n) n
+#endif
 
-void gtimer_arm_ms(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-  long delta_ms);
+void GTIMER_FCN(gtimer_arm)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta);
+void GTIMER_FCN(gtimer_arm_ms)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms);
+void GTIMER_FCN(gtimer_arm_abs)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when);
+void GTIMER_FCN(gtimer_arm_abs2)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when);
 
-void gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-		    time_t when);
-
-void gtimer_arm_abs2(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-  struct timespec *when);
+#if ENABLE_GTIMER_CHECK
+#define gtimer_arm(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#endif
 
 void gtimer_disarm(gtimer_t *gti);
+
+
+/*
+ * tasklet
+ */
+
+typedef void (tsk_callback_t)(void *opaque, int disarmed);
+
+typedef struct tasklet {
+  TAILQ_ENTRY(tasklet) tsk_link;
+  tsk_callback_t *tsk_callback;
+  void *tsk_opaque;
+  int tsk_allocated;
+} tasklet_t;
+
+tasklet_t *tasklet_arm_alloc(tsk_callback_t *callback, void *opaque);
+void tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque);
+void tasklet_disarm(tasklet_t *gti);
 
 
 /*
@@ -679,6 +715,8 @@ static inline void sbuf_alloc(sbuf_t *sb, int len)
     sbuf_alloc_(sb, len);
 }
 
+void sbuf_realloc(sbuf_t *sb, int len);
+
 void sbuf_append(sbuf_t *sb, const void *data, int len);
 
 void sbuf_cut(sbuf_t *sb, int off);
@@ -720,6 +758,8 @@ char to_hex(char code);
 char *url_encode(char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
+
+int deferred_unlink(const char *filename);
 
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }

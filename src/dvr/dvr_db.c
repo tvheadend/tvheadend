@@ -2210,6 +2210,7 @@ dvr_entry_delete(dvr_entry_t *de)
   time_t t;
   struct tm tm;
   char tbuf[64];
+  int r;
 
   t = dvr_entry_get_start_time(de);
   localtime_r(&t, &tm);
@@ -2227,9 +2228,10 @@ dvr_entry_delete(dvr_entry_t *de)
 #if ENABLE_INOTIFY
     dvr_inotify_del(de);
 #endif
-    if(unlink(de->de_filename) && errno != ENOENT)
+    r = deferred_unlink(de->de_filename);
+    if(r && r != -ENOENT)
       tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
-	     de->de_filename, strerror(errno));
+	     de->de_filename, strerror(-errno));
 
     /* Also delete directories, if they were created for the recording and if they are empty */
 

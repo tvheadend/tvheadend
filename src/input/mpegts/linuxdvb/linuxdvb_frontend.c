@@ -252,24 +252,13 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
 }
 
 static int
-linuxdvb_frontend_is_free ( mpegts_input_t *mi )
-{
-  linuxdvb_adapter_t *la = ((linuxdvb_frontend_t*)mi)->lfe_adapter;
-  linuxdvb_frontend_t *lfe;
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    if (!mpegts_input_is_free((mpegts_input_t*)lfe))
-      return 0;
-  return 1;
-}
-
-static int
-linuxdvb_frontend_get_weight ( mpegts_input_t *mi, int flags )
+linuxdvb_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   int weight = 0;
   linuxdvb_adapter_t *la = ((linuxdvb_frontend_t*)mi)->lfe_adapter;
   linuxdvb_frontend_t *lfe;
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    weight = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe, flags));
+    weight = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe, mm, flags));
   return weight;
 }
 
@@ -1483,7 +1472,6 @@ linuxdvb_frontend_create
   if (!lfe) return NULL;
 
   /* Callbacks */
-  lfe->mi_is_free      = linuxdvb_frontend_is_free;
   lfe->mi_get_weight   = linuxdvb_frontend_get_weight;
   lfe->mi_get_priority = linuxdvb_frontend_get_priority;
   lfe->mi_get_grace    = linuxdvb_frontend_get_grace;

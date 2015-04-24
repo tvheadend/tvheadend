@@ -100,44 +100,36 @@ const idclass_t iptv_input_class = {
 };
 
 static int
-iptv_input_is_free ( mpegts_input_t *mi )
+iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   int c = 0;
   mpegts_mux_instance_t *mmi;
-  mpegts_network_link_t *mnl;
+  iptv_network_t *in = (iptv_network_t *)mm->mm_network;
   
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    c++;
+    if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in)
+      c++;
   
   /* Limit reached */
-  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
-    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
-    if (in->in_max_streams && c >= in->in_max_streams)
-      return 0;
-  }
+  if (in->in_max_streams && c >= in->in_max_streams)
+    return 0;
   
   /* Bandwidth reached */
-  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
-    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
-    if (in->in_bw_limited)
+  if (in->in_bw_limited)
       return 0;
-  }
 
   return 1;
 }
 
 static int
-iptv_input_get_weight ( mpegts_input_t *mi, int flags )
+iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  int c = 0, w = 0;
+  int w = 0;
   const th_subscription_t *ths;
   const service_t *s;
-  const mpegts_mux_instance_t *mmi;
-  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    c++;
 
   /* Find the "min" weight */
-  if (!iptv_input_is_free(mi)) {
+  if (!iptv_input_is_free(mi, mm)) {
     w = 1000000;
 
     /* Service subs */
@@ -186,7 +178,7 @@ iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     return 0;
 
   /* Do we need to stop something? */
-  if (!iptv_input_is_free(mi)) {
+  if (!iptv_input_is_free(mi, mmi->mmi_mux)) {
     pthread_mutex_lock(&mi->mi_output_lock);
     mpegts_mux_instance_t *m, *s = NULL;
     int w = 1000000;
@@ -599,7 +591,6 @@ void iptv_init ( void )
   iptv_input->mi_warm_mux       = iptv_input_warm_mux;
   iptv_input->mi_start_mux      = iptv_input_start_mux;
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;
-  iptv_input->mi_is_free        = iptv_input_is_free;
   iptv_input->mi_get_weight     = iptv_input_get_weight;
   iptv_input->mi_get_grace      = iptv_input_get_grace;
   iptv_input->mi_get_priority   = iptv_input_get_priority;

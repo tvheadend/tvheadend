@@ -286,7 +286,7 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
       w = -1;
       p = -1;
     } else {
-      w = mi->mi_get_weight(mi, flags);
+      w = mi->mi_get_weight(mi, mmi->mmi_mux, flags);
       p = mi->mi_get_priority(mi, mmi->mmi_mux, flags);
     }
 

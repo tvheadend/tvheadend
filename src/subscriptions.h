@@ -37,6 +37,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_IDLESCAN   0x200 ///< for mux subscriptions
 #define SUBSCRIPTION_USERSCAN   0x400 ///< for mux subscriptions
 #define SUBSCRIPTION_EPG        0x800 ///< for mux subscriptions
+#define SUBSCRIPTION_MINIMAL   0x1000
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling

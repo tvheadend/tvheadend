@@ -903,6 +903,7 @@ tcp_server_done(void)
 {
   tcp_server_launch_t *tsl;  
   char c = 'E';
+  int64_t t;
 
   tcp_server_running = 0;
   tvh_write(tcp_server_pipe.wr, &c, 1);
@@ -912,8 +913,7 @@ tcp_server_done(void)
     if (tsl->ops.cancel)
       tsl->ops.cancel(tsl->opaque);
     if (tsl->fd >= 0)
-      close(tsl->fd);
-    tsl->fd = -1;
+      shutdown(tsl->fd, SHUT_RDWR);
     pthread_kill(tsl->tid, SIGTERM);
   }
   pthread_mutex_unlock(&global_lock);
@@ -922,8 +922,13 @@ tcp_server_done(void)
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
-  while (LIST_FIRST(&tcp_server_active) != NULL)
+  t = getmonoclock();
+  while (LIST_FIRST(&tcp_server_active) != NULL) {
+    if (getmonoclock() - t > 5000000)
+      tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
     usleep(20000);
+  }
+
   pthread_mutex_lock(&global_lock);
   while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
     LIST_REMOVE(tsl, jlink);

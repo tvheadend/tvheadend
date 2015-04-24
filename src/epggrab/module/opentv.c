@@ -307,30 +307,19 @@ static void *_opentv_apply_pattern_list(char *buf, size_t size_buf, const char *
 
 /* Parse an event section */
 static int
-opentv_parse_event_section
+opentv_parse_event_section_one
   ( opentv_status_t *sta, int cid, int mjd,
+    channel_t *ch, const char *lang,
     const uint8_t *buf, int len )
 {
   int i, r, save = 0;
   opentv_module_t  *mod = sta->os_mod;
   epggrab_module_t *src = (epggrab_module_t*)mod;
-  epggrab_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   epg_serieslink_t *es;
   opentv_event_t ev;
-  const char *lang = NULL;
-  epggrab_channel_link_t *ecl;
 
-  /* Get language (bit of a hack) */
-  if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
-  else if (!strcmp(mod->dict->id, "skyeng")) lang = "eng";
-  else if (!strcmp(mod->dict->id, "skynz")) lang = "eng";
-
-  /* Channel */
-  if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
-  if (!(ecl = LIST_FIRST(&ec->channels))) return 0;
-  
   /* Loop around event entries */
   i = 7;
   while (i < len) {
@@ -345,13 +334,13 @@ opentv_parse_event_section
 
     /* Find broadcast */
     if (ev.start && ev.stop) {
-      ebc = epg_broadcast_find_by_time(ecl->ecl_channel, ev.start, ev.stop,
+      ebc = epg_broadcast_find_by_time(ch, ev.start, ev.stop,
                                        ev.eid, 1, &save);
       tvhdebug("opentv", "find by time start %"PRItime_t " stop "
                "%"PRItime_t " eid %d = %p",
                ev.start, ev.stop, ev.eid, ebc);
     } else {
-      ebc = epg_broadcast_find_by_eid(ecl->ecl_channel, ev.eid);
+      ebc = epg_broadcast_find_by_eid(ch, ev.eid);
       tvhdebug("opentv", "find by eid %d = %p", ev.eid, ebc);
     }
     if (!ebc)
@@ -374,7 +363,7 @@ opentv_parse_event_section
     if (ev.serieslink) {
       char suri[257];
       snprintf(suri, 256, "opentv://channel-%s/series-%d",
-               channel_get_uuid(ecl->ecl_channel), ev.serieslink);
+               channel_get_uuid(ch), ev.serieslink);
       if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }
@@ -442,6 +431,32 @@ done:
     if (ev.summary) free(ev.summary);
     if (ev.desc)    free(ev.desc);
   }
+
+  return save;
+}
+
+static int
+opentv_parse_event_section
+  ( opentv_status_t *sta, int cid, int mjd,
+    const uint8_t *buf, int len )
+{
+  opentv_module_t *mod = sta->os_mod;
+  epggrab_channel_t *ec;
+  epggrab_channel_link_t *ecl;
+  const char *lang = NULL;
+  int save = 0;
+
+  /* Get language (bit of a hack) */
+  if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
+  else if (!strcmp(mod->dict->id, "skyeng")) lang = "eng";
+  else if (!strcmp(mod->dict->id, "skynz"))  lang = "eng";
+
+  /* Channel */
+  if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
+
+  /* Iterate all channels */
+  LIST_FOREACH(ecl, &ec->channels, ecl_epg_link)
+    save |= opentv_parse_event_section_one(sta, cid, mjd, ecl->ecl_channel, lang, buf, len);
 
   /* Update EPG */
   if (save) epg_updated();

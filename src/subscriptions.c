@@ -244,6 +244,7 @@ subscription_show_info(th_subscription_t *s)
     tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
 
   tvhlog(LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
+  service_source_info_free(&si);
 }
 
 /**
@@ -640,7 +641,6 @@ subscription_create
   streaming_target_init(&s->ths_input, cb, s, reject);
 
   s->ths_prch              = prch && prch->prch_st ? prch : NULL;
-  s->ths_weight            = weight;
   s->ths_title             = strdup(name);
   s->ths_hostname          = hostname ? strdup(hostname) : NULL;
   s->ths_username          = username ? strdup(username) : NULL;
@@ -651,6 +651,11 @@ subscription_create
   s->ths_timeout           = pro ? pro->pro_timeout : 0;
   s->ths_postpone          = subscription_postpone;
   s->ths_postpone_end      = dispatch_clock + s->ths_postpone;
+
+  if (s->ths_prch)
+    s->ths_weight = profile_chain_weight(s->ths_prch, weight);
+  else
+    s->ths_weight = weight;
 
   if (pro && pro->pro_restart)
     s->ths_flags |= SUBSCRIPTION_RESTART;

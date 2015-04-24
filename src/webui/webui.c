@@ -766,7 +766,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   profile_chain_init(&prch, pro, service);
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
-    s = subscription_create_from_service(&prch, NULL, weight ?: 100, "HTTP",
+    s = subscription_create_from_service(&prch, NULL, weight, "HTTP",
                                          prch.prch_flags | SUBSCRIPTION_STREAMING,
                                          hc->hc_peer_ipstr,
 				         hc->hc_username,
@@ -904,7 +904,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     s = subscription_create_from_channel(&prch,
-                 NULL, weight ?: 100, "HTTP",
+                 NULL, weight, "HTTP",
                  prch.prch_flags | SUBSCRIPTION_STREAMING,
                  hc->hc_peer_ipstr, hc->hc_username,
                  http_arg_get(&hc->hc_args, "User-Agent"),

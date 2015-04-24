@@ -32,6 +32,8 @@
 #endif
 #include "dvr/dvr.h"
 
+extern const idclass_t profile_htsp_class;
+
 profile_builders_queue profile_builders;
 
 struct profile_entry_queue profiles;
@@ -236,6 +238,25 @@ profile_class_name_opts(void *o)
   return r;
 }
 
+static htsmsg_t *
+profile_class_priority_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "Unset (default)",          PROFILE_SPRIO_NOTSET },
+    { "Important",                PROFILE_SPRIO_IMPORTANT },
+    { "High",                     PROFILE_SPRIO_HIGH, },
+    { "Normal",                   PROFILE_SPRIO_NORMAL },
+    { "Low",                      PROFILE_SPRIO_LOW },
+    { "Unimportant",              PROFILE_SPRIO_UNIMPORTANT },
+    { "DVR Override Important",   PROFILE_SPRIO_DVR_IMPORTANT },
+    { "DVR Override High",        PROFILE_SPRIO_DVR_HIGH },
+    { "DVR Override Normal",      PROFILE_SPRIO_DVR_NORMAL },
+    { "DVR Override Low",         PROFILE_SPRIO_DVR_LOW },
+    { "DVR Override Unimportant", PROFILE_SPRIO_DVR_UNIMPORTANT },
+  };
+  return strtab2htsmsg(tab);
+}
+
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
@@ -281,6 +302,21 @@ const idclass_t profile_class =
       .id       = "comment",
       .name     = "Comment",
       .off      = offsetof(profile_t, pro_comment),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = "Default Priority",
+      .list     = profile_class_priority_list,
+      .off      = offsetof(profile_t, pro_prio),
+      .opts     = PO_SORTKEY,
+      .def.i    = PROFILE_SPRIO_NORMAL
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fpriority",
+      .name     = "Force Priority",
+      .off      = offsetof(profile_t, pro_fprio),
     },
     {
       .type     = PT_INT,
@@ -745,6 +781,44 @@ profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer)
     prch->prch_muxer = muxer_create(&c);
   }
   return 0;
+}
+
+/*
+ *
+ */
+
+const static int prio2weight[] = {
+  [PROFILE_SPRIO_DVR_IMPORTANT]   = 525,
+  [PROFILE_SPRIO_DVR_HIGH]        = 425,
+  [PROFILE_SPRIO_DVR_NORMAL]      = 325,
+  [PROFILE_SPRIO_DVR_LOW]         = 225,
+  [PROFILE_SPRIO_DVR_UNIMPORTANT] = 175,
+  [PROFILE_SPRIO_IMPORTANT]       = 150,
+  [PROFILE_SPRIO_HIGH]            = 125,
+  [PROFILE_SPRIO_NORMAL]          = 100,
+  [PROFILE_SPRIO_LOW]             = 75,
+  [PROFILE_SPRIO_UNIMPORTANT]     = 50,
+  [PROFILE_SPRIO_NOTSET]          = 0
+};
+
+int profile_chain_weight(profile_chain_t *prch, int custom)
+{
+  int w, w2;
+
+  w = 100;
+  if (prch->prch_pro) {
+    if (!prch->prch_pro->pro_fprio && custom > 0)
+      return custom;
+    if (idnode_is_instance(&prch->prch_pro->pro_id, &profile_htsp_class))
+      w = 150;
+    w2 = prch->prch_pro->pro_prio;
+    if (w2 > 0 && w2 < ARRAY_SIZE(prio2weight))
+       w = prio2weight[w2];
+  } else {
+    if (custom > 0)
+      return custom;
+  }
+  return w;
 }
 
 /*
@@ -1673,8 +1747,11 @@ profile_init(void)
     htsmsg_add_bool(conf, "default", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "MPEG-TS Pass-through");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "rewrite_pmt", 1);
     htsmsg_add_bool(conf, "rewrite_pat", 1);
+    htsmsg_add_bool(conf, "rewrite_sdt", 1);
+    htsmsg_add_bool(conf, "rewrite_eit", 1);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
@@ -1690,6 +1767,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "Matroska");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
@@ -1705,6 +1783,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "HTSP Default Stream Settings");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_IMPORTANT);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
@@ -1722,6 +1801,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "WEBTV profile VP8/Vorbis/WEBM");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_WEBM);
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
@@ -1741,6 +1821,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/MPEG-TS");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_MPEGTS);
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
@@ -1760,6 +1841,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/Matroska");
+    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_MATROSKA);
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);

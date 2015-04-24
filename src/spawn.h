@@ -34,7 +34,7 @@ int spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 
 int spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr);
 
-int spawn_reap(char *stxt, size_t stxtlen);
+int spawn_reap(pid_t pid, char *stxt, size_t stxtlen);
 
 int spawn_kill(pid_t pid, int sig);
 

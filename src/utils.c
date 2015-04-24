@@ -333,20 +333,7 @@ sbuf_reset(sbuf_t *sb, int max_len)
 void
 sbuf_reset_and_alloc(sbuf_t *sb, int len)
 {
-  if (sb->sb_data) {
-    if (len != sb->sb_size) {
-      void *n = realloc(sb->sb_data, len);
-      if (n) {
-        sb->sb_data = n;
-        sb->sb_size = len;
-      }
-    }
-  } else {
-    sb->sb_data = malloc(len);
-    sb->sb_size = len;
-  }
-  if (sb->sb_data == NULL)
-    sbuf_alloc_fail(len);
+  sbuf_realloc(sb, len);
   sb->sb_ptr = sb->sb_err = 0;
 }
 
@@ -364,6 +351,25 @@ sbuf_alloc_(sbuf_t *sb, int len)
 
   if(sb->sb_data == NULL)
     sbuf_alloc_fail(sb->sb_size);
+}
+
+void
+sbuf_realloc(sbuf_t *sb, int len)
+{
+  if (sb->sb_data) {
+    if (len != sb->sb_size) {
+      void *n = realloc(sb->sb_data, len);
+      if (n) {
+        sb->sb_data = n;
+        sb->sb_size = len;
+      }
+    }
+  } else {
+    sb->sb_data = malloc(len);
+    sb->sb_size = len;
+  }
+  if (sb->sb_data == NULL)
+    sbuf_alloc_fail(len);
 }
 
 void
@@ -637,4 +643,35 @@ mpegts_word_count ( const uint8_t *tsb, int len, uint32_t mask )
   }
 
   return r;
+}
+
+static void
+deferred_unlink_cb(void *s, int dearmed)
+{
+  if (unlink((const char *)s))
+    tvherror("main", "unable to remove file '%s'", (const char *)s);
+  free(s);
+}
+
+int
+deferred_unlink(const char *filename)
+{
+  char *s;
+  size_t l;
+  int r;
+
+  l = strlen(filename);
+  s = malloc(l + 9);
+  if (s == NULL)
+    return -ENOMEM;
+  strcpy(s, filename);
+  strcpy(s + l, ".removing");
+  r = rename(filename, s);
+  if (r) {
+    r = -errno;
+    free(s);
+    return r;
+  }
+  tasklet_arm_alloc(deferred_unlink_cb, s);
+  return 0;
 }

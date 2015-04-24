@@ -159,7 +159,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
 };
 
 pthread_mutex_t global_lock;
-pthread_mutex_t ffmpeg_lock;
+pthread_mutex_t tasklet_lock;
 pthread_mutex_t fork_lock;
 pthread_mutex_t atomic_lock;
 
@@ -168,6 +168,9 @@ pthread_mutex_t atomic_lock;
  */
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
+static TAILQ_HEAD(, tasklet) tasklets;
+static pthread_cond_t tasklet_cond;
+static pthread_t tasklet_tid;
 
 static void
 handle_sigpipe(int x)
@@ -234,8 +237,8 @@ gtimercmp(gtimer_t *a, gtimer_t *b)
  *
  */
 void
-gtimer_arm_abs2
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when)
+GTIMER_FCN(gtimer_arm_abs2)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when)
 {
   lock_assert(&global_lock);
 
@@ -245,10 +248,12 @@ gtimer_arm_abs2
   gti->gti_callback = callback;
   gti->gti_opaque   = opaque;
   gti->gti_expire   = *when;
+#if ENABLE_GTIMER_CHECK
+  gti->gti_id       = id;
+  gti->gti_fcn      = fcn;
+#endif
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
-
-  //tvhdebug("gtimer", "%p @ %ld.%09ld", gti, when->tv_sec, when->tv_nsec);
 
   if (LIST_FIRST(&gtimers) == gti)
     pthread_cond_signal(&gtimer_cond); // force timer re-check
@@ -258,37 +263,50 @@ gtimer_arm_abs2
  *
  */
 void
-gtimer_arm_abs
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when)
+GTIMER_FCN(gtimer_arm_abs)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when)
 {
   struct timespec ts;
   ts.tv_nsec = 0;
   ts.tv_sec  = when;
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs2)(id, fcn, gti, callback, opaque, &ts);
+#else
   gtimer_arm_abs2(gti, callback, opaque, &ts);
+#endif
 }
 
 /**
  *
  */
 void
-gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
+GTIMER_FCN(gtimer_arm)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
 {
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs)(id, fcn, gti, callback, opaque, dispatch_clock + delta);
+#else
   gtimer_arm_abs(gti, callback, opaque, dispatch_clock + delta);
+#endif
 }
 
 /**
  *
  */
 void
-gtimer_arm_ms
-  (gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
+GTIMER_FCN(gtimer_arm_ms)
+  (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
 {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_nsec += (1000000 * delta_ms);
   ts.tv_sec  += (ts.tv_nsec / 1000000000);
   ts.tv_nsec %= 1000000000;
+#if ENABLE_GTIMER_CHECK
+  GTIMER_FCN(gtimer_arm_abs2)(id, fcn, gti, callback, opaque, &ts);
+#else
   gtimer_arm_abs2(gti, callback, opaque, &ts);
+#endif
 }
 
 /**
@@ -298,10 +316,106 @@ void
 gtimer_disarm(gtimer_t *gti)
 {
   if(gti->gti_callback) {
-    //tvhdebug("gtimer", "%p disarm", gti);
     LIST_REMOVE(gti, gti_link);
     gti->gti_callback = NULL;
   }
+}
+
+/**
+ *
+ */
+tasklet_t *
+tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
+{
+  tasklet_t *tsk = calloc(1, sizeof(*tsk));
+  if (tsk) {
+    tsk->tsk_allocated = 1;
+    tasklet_arm(tsk, callback, opaque);
+  }
+  return tsk;
+}
+
+/**
+ *
+ */
+void
+tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
+{
+  pthread_mutex_lock(&tasklet_lock);
+
+  if (tsk->tsk_callback != NULL)
+    TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+
+  tsk->tsk_callback = callback;
+  tsk->tsk_opaque   = opaque;
+
+  TAILQ_INSERT_TAIL(&tasklets, tsk, tsk_link);
+
+  if (TAILQ_FIRST(&tasklets) == tsk)
+    pthread_cond_signal(&tasklet_cond);
+
+  pthread_mutex_unlock(&tasklet_lock);
+}
+
+/**
+ *
+ */
+void
+tasklet_disarm(tasklet_t *tsk)
+{
+  pthread_mutex_lock(&tasklet_lock);
+
+  if(tsk->tsk_callback) {
+    TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+    tsk->tsk_callback(tsk->tsk_opaque, 1);
+    tsk->tsk_callback = NULL;
+    if (tsk->tsk_allocated)
+      free(tsk);
+  }
+
+  pthread_mutex_unlock(&tasklet_lock);
+}
+
+static void
+tasklet_flush()
+{
+  tasklet_t *tsk;
+
+  pthread_mutex_lock(&tasklet_lock);
+
+  while ((tsk = TAILQ_FIRST(&tasklets)) != NULL) {
+    TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+    tsk->tsk_callback(tsk->tsk_opaque, 1);
+    tsk->tsk_callback = NULL;
+    if (tsk->tsk_allocated)
+      free(tsk);
+  }
+
+  pthread_mutex_unlock(&tasklet_lock);
+}
+
+/**
+ *
+ */
+static void *
+tasklet_thread ( void *aux )
+{
+  tasklet_t *tsk;
+
+  pthread_mutex_lock(&tasklet_lock);
+  while (tvheadend_running) {
+    tsk = TAILQ_FIRST(&tasklets);
+    if (tsk == NULL) {
+      pthread_cond_wait(&tasklet_cond, &tasklet_lock);
+      continue;
+    }
+    if (tsk->tsk_callback)
+      tsk->tsk_callback(tsk->tsk_opaque, 0);
+    TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+  }
+  pthread_mutex_unlock(&tasklet_lock);
+
+  return NULL;
 }
 
 /**
@@ -372,6 +486,9 @@ mainloop(void)
   gtimer_t *gti;
   gti_callback_t *cb;
   struct timespec ts;
+#if ENABLE_GTIMER_CHECK
+  int64_t mtm;
+#endif
 
   while(tvheadend_running) {
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -405,13 +522,19 @@ mainloop(void)
         break;
       }
 
+#if ENABLE_GTIMER_CHECK
+      mtm = getmonoclock();
+#endif
       cb = gti->gti_callback;
-      //tvhdebug("gtimer", "%p callback", gti);
 
       LIST_REMOVE(gti, gti_link);
       gti->gti_callback = NULL;
 
       cb(gti->gti_opaque);
+
+#if ENABLE_GTIMER_CHECK
+      tvhtrace("gtimer", "%s:%s duration %"PRId64"ns", gti->gti_id, gti->gti_fcn, getmonoclock() - mtm);
+#endif
     }
 
     /* Bound wait */
@@ -421,7 +544,6 @@ mainloop(void)
     }
 
     /* Wait */
-    //tvhdebug("gtimer", "wait till %ld.%09ld", ts.tv_sec, ts.tv_nsec);
     pthread_cond_timedwait(&gtimer_cond, &global_lock, &ts);
     pthread_mutex_unlock(&global_lock);
   }
@@ -451,11 +573,13 @@ main(int argc, char **argv)
   main_tid = pthread_self();
 
   /* Setup global mutexes */
-  pthread_mutex_init(&ffmpeg_lock, NULL);
   pthread_mutex_init(&fork_lock, NULL);
   pthread_mutex_init(&global_lock, NULL);
+  pthread_mutex_init(&tasklet_lock, NULL);
   pthread_mutex_init(&atomic_lock, NULL);
   pthread_cond_init(&gtimer_cond, NULL);
+  pthread_cond_init(&tasklet_cond, NULL);
+  TAILQ_INIT(&tasklets);
 
   /* Defaults */
   tvheadend_webui_port      = 9981;
@@ -823,6 +947,8 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL);
+
   dbus_server_init(opt_dbus, opt_dbus_session);
 
   intlconv_init();
@@ -963,6 +1089,14 @@ main(int argc, char **argv)
   tvhftrace("main", imagecache_done);
   tvhftrace("main", lang_code_done);
   tvhftrace("main", api_done);
+
+  tvhtrace("main", "tasklet enter");
+  pthread_cond_signal(&tasklet_cond);
+  pthread_join(tasklet_tid, NULL);
+  tvhtrace("main", "tasklet thread end");
+  tasklet_flush();
+  tvhtrace("main", "tasklet leave");
+
   tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);

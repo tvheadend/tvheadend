@@ -738,17 +738,22 @@ dvb_mux_create0
   dvb_mux_t *lm;
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  dvb_fe_delivery_system_t delsys;
 
   /* Class */
-  if (ln->ln_type == DVB_TYPE_S)
+  if (ln->ln_type == DVB_TYPE_S) {
     idc = &dvb_mux_dvbs_class;
-  else if (ln->ln_type == DVB_TYPE_C)
+    delsys = DVB_SYS_DVBS;
+  } else if (ln->ln_type == DVB_TYPE_C) {
     idc = &dvb_mux_dvbc_class;
-  else if (ln->ln_type == DVB_TYPE_T)
+    delsys = DVB_SYS_DVBC_ANNEX_A;
+  } else if (ln->ln_type == DVB_TYPE_T) {
     idc = &dvb_mux_dvbt_class;
-  else if (ln->ln_type == DVB_TYPE_ATSC)
+    delsys = DVB_SYS_DVBT;
+  } else if (ln->ln_type == DVB_TYPE_ATSC) {
     idc = &dvb_mux_atsc_class;
-  else {
+    delsys = DVB_SYS_ATSC;
+  } else {
     tvherror("dvb", "unknown FE type %d", ln->ln_type);
     return NULL;
   }
@@ -758,7 +763,7 @@ dvb_mux_create0
   lm = (dvb_mux_t*)mm;
 
   /* Defaults */
-  dvb_mux_conf_init(&lm->lm_tuning, ln->ln_type);
+  dvb_mux_conf_init(&lm->lm_tuning, delsys);
 
   /* Parent init and load config */
   if (!(mm = mpegts_mux_create0(mm, idc, uuid,
@@ -793,14 +798,16 @@ dvb_mux_create0
     htsmsg_destroy(c);
   }
 
-  if (ln->mn_satpos == INT_MAX) {
-    /* Update the satellite position for the network settings */
-    if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != INT_MAX)
-      ln->mn_satpos = lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
-  }
-  else {
-    /* Update the satellite position for the mux setting */
-    lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos = ln->mn_satpos;
+  if (ln->ln_type == DVB_TYPE_S) {
+    if (ln->mn_satpos == INT_MAX) {
+      /* Update the satellite position for the network settings */
+      if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos != INT_MAX)
+        ln->mn_satpos = lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
+    }
+    else {
+      /* Update the satellite position for the mux setting */
+      lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos = ln->mn_satpos;
+    }
   }
 
   return lm;

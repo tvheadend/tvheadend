@@ -134,7 +134,8 @@ mpegts_mux_subscribe_keep
 
   s = mi->mi_linked;
   mi->mi_linked = NULL;
-  r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP, SUBSCRIPTION_NONE);
+  r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP,
+                           SUBSCRIPTION_RESTART | SUBSCRIPTION_MINIMAL);
   mi->mi_linked = s;
   return r;
 }
@@ -203,6 +204,7 @@ mpegts_mux_unsubscribe_linked
   mpegts_mux_instance_t *mmi;
 
   if (mi) {
+    tvhtrace("mpegts", "unsubscribing linked from '%s'", mi->mi_name);
     LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
       mpegts_mux_unsubscribe_by_name(mmi->mmi_mux, "keep");
   }
@@ -720,6 +722,9 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       }
     }
   }
+
+  if (mm->mm_active != mmi)
+    return;
 
   mi->mi_stopping_mux(mi, mmi);
   mi->mi_stop_mux(mi, mmi);

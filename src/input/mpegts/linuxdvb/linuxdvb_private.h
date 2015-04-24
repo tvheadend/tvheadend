@@ -325,7 +325,6 @@ void linuxdvb_adapter_done ( void );
 
 void linuxdvb_adapter_save ( linuxdvb_adapter_t *la );
 
-int  linuxdvb_adapter_is_free        ( linuxdvb_adapter_t *la );
 int  linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la );
 
 linuxdvb_frontend_t *

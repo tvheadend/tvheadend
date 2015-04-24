@@ -62,6 +62,7 @@ struct satip_device
   tvh_hardware_t;
 
   gtimer_t                   sd_destroy_timer;
+  int                        sd_nosave;
 
   /*
    * Adapter info

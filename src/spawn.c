@@ -230,15 +230,19 @@ find_exec ( const char *name, char *out, size_t len )
  * Reap one child
  */
 int
-spawn_reap(char *stxt, size_t stxtlen)
+spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
 {
   pid_t pid;
   int status, res;
   spawn_t *s;
 
-  pid = waitpid(-1, &status, WNOHANG);
-  if(pid < 1)
+  pid = waitpid(wpid, &status, WNOHANG);
+  if(pid < 0 && ERRNO_AGAIN(errno))
     return -EAGAIN;
+  if(pid < 0)
+    return -errno;
+  if(pid < 1)
+    return 0;
 
   pthread_mutex_lock(&spawn_mutex);
   LIST_FOREACH(s, &spawns, link)
@@ -279,7 +283,15 @@ spawn_reap(char *stxt, size_t stxtlen)
 static void
 spawn_reaper(void)
 {
-  while (spawn_reap(NULL, 0) != -EAGAIN) ;
+  int r;
+
+  do {
+    r = spawn_reap(-1, NULL, 0);
+    if (r == -EAGAIN)
+      continue;
+    if (r <= 0)
+      break;
+  } while (1);
 }
 
 /**
