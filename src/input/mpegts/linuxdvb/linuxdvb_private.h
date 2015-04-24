@@ -145,6 +145,7 @@ struct linuxdvb_frontend
   uint32_t                  lfe_ibuf_size;
   uint32_t                  lfe_status_period;
   int                       lfe_old_status;
+  int                       lfe_lna;
 
   /*
    * Satconf (DVB-S only)

@@ -137,6 +137,12 @@ const idclass_t linuxdvb_frontend_dvbt_class =
   .ic_class      = "linuxdvb_frontend_dvbt",
   .ic_caption    = "Linux DVB-T Frontend",
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "lna",
+      .name     = "LNA (Low Noise Amplifier)",
+      .off      = offsetof(linuxdvb_frontend_t, lfe_lna),
+    },
     {}
   }
 };
@@ -1307,6 +1313,9 @@ linuxdvb_frontend_tune0
       S2CMD(DTV_DVBT2_PLP_ID, dmc->dmc_fe_stream_id);
 #endif
     }
+#if DVB_VER_ATLEAST(5,9)
+    S2CMD(DTV_LNA, lfe->lfe_lna ? 1 : 0);
+#endif
 
   /* DVB-C */
   } else if (lfe->lfe_type == DVB_TYPE_C) {
