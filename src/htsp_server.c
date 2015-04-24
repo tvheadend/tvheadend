@@ -1962,7 +1962,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsp_user_access_channel(htsp, ch))
     return htsp_error("User does not have access");
 
-  weight = htsmsg_get_u32_or_default(in, "weight", 150);
+  weight = htsmsg_get_u32_or_default(in, "weight", 0);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
 
   profile_id = htsmsg_get_str(in, "profile");
