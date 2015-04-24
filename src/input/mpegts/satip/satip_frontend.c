@@ -88,7 +88,7 @@ satip_frontend_signal_cb( void *aux )
   sigstat.tc_block     = mmi->tii_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
-  LIST_FOREACH(svc, &lfe->mi_transports, s_active_link) {
+  LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
     pthread_mutex_lock(&svc->s_stream_mutex);
     streaming_pad_deliver(&svc->s_streaming_pad, streaming_msg_clone(&sm));
     pthread_mutex_unlock(&svc->s_stream_mutex);

@@ -388,7 +388,8 @@ struct mpegts_mux
    */
 
   LIST_HEAD(, mpegts_mux_instance) mm_instances;
-  mpegts_mux_instance_t *mm_active;
+  mpegts_mux_instance_t      *mm_active;
+  LIST_HEAD(,service)         mm_transports;
 
   /*
    * Raw subscriptions
@@ -622,7 +623,6 @@ struct mpegts_input
 
   /* Active sources */
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
-  LIST_HEAD(,service)             mi_transports;
 
   /* Table processing */
   pthread_t                       mi_table_tid;

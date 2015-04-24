@@ -324,18 +324,19 @@ mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 int
 mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
+  const mpegts_mux_instance_t *mmi;
   const service_t *s;
   const th_subscription_t *ths;
   int w = 0, count = 0;
 
   /* Service subs */
   pthread_mutex_lock(&mi->mi_output_lock);
-  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
-      w = MAX(w, ths->ths_weight);
-      count++;
-    }
-  }
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+    LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link)
+      LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
+        w = MAX(w, ths->ths_weight);
+        count++;
+      }
   pthread_mutex_unlock(&mi->mi_output_lock);
   return w > 0 ? w + count - 1 : 0;
 }
@@ -530,6 +531,7 @@ mpegts_input_close_pid
 void
 mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init )
 {
+  mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;
   mpegts_apids_t *pids;
   mpegts_service_t *s2;
@@ -538,7 +540,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
   /* Add to list */
   pthread_mutex_lock(&mi->mi_output_lock);
   if (!s->s_dvb_active_input) {
-    LIST_INSERT_HEAD(&mi->mi_transports, ((service_t*)s), s_active_link);
+    LIST_INSERT_HEAD(&mm->mm_transports, ((service_t*)s), s_active_link);
     s->s_dvb_active_input = mi;
   }
 
@@ -548,15 +550,15 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
 
     pids = mpegts_pid_alloc();
 
-    mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
-    mi->mi_open_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
+    mi->mi_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, s);
+    mi->mi_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, s);
     mpegts_pid_add(pids, s->s_pmt_pid);
     mpegts_pid_add(pids, s->s_pcr_pid);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if (st->es_type != SCT_CA) {
         st->es_pid_opened = 1;
-        mi->mi_open_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
+        mi->mi_open_pid(mi, mm, st->es_pid, MPS_SERVICE, s);
       }
 
     /* Ensure that filtered PIDs are not send in ts_recv_raw */
@@ -575,15 +577,15 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
   } else {
     if ((pids = s->s_pids) != NULL) {
       if (pids->all) {
-        mi->mi_open_pid(mi, s->s_dvb_mux, MPEGTS_FULLMUX_PID, MPS_RAW | MPS_ALL, s);
+        mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW | MPS_ALL, s);
       } else {
         for (i = 0; i < pids->count; i++)
-          mi->mi_open_pid(mi, s->s_dvb_mux, pids->pids[i], MPS_RAW, s);
+          mi->mi_open_pid(mi, mm, pids->pids[i], MPS_RAW, s);
       }
     } else if (flags & SUBSCRIPTION_TABLES) {
-      mi->mi_open_pid(mi, s->s_dvb_mux, MPEGTS_TABLES_PID, MPS_RAW | MPS_TABLES, s);
+      mi->mi_open_pid(mi, mm, MPEGTS_TABLES_PID, MPS_RAW | MPS_TABLES, s);
     } else if (flags & SUBSCRIPTION_MINIMAL) {
-      mi->mi_open_pid(mi, s->s_dvb_mux, DVB_PAT_PID, MPS_RAW, s);
+      mi->mi_open_pid(mi, mm, DVB_PAT_PID, MPS_RAW, s);
     }
   }
 
@@ -593,7 +595,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
   /* Add PMT monitor */
   if(s->s_type == STYPE_STD) {
     s->s_pmt_mon =
-      mpegts_table_add(s->s_dvb_mux, DVB_PMT_BASE, DVB_PMT_MASK,
+      mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK,
                        dvb_pmt_callback, s, "pmt",
                        MT_CRC, s->s_pmt_pid);
   }
@@ -602,6 +604,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
 void
 mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 {
+  mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;
   mpegts_apids_t *pids;
   mpegts_service_t *s2;
@@ -624,15 +627,15 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 
     pids = mpegts_pid_alloc();
 
-    mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pmt_pid, MPS_SERVICE, s);
-    mi->mi_close_pid(mi, s->s_dvb_mux, s->s_pcr_pid, MPS_SERVICE, s);
+    mi->mi_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, s);
+    mi->mi_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, s);
     mpegts_pid_del(pids, s->s_pmt_pid);
     mpegts_pid_del(pids, s->s_pcr_pid);
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
       if (st->es_pid_opened) {
         st->es_pid_opened = 0;
-        mi->mi_close_pid(mi, s->s_dvb_mux, st->es_pid, MPS_SERVICE, s);
+        mi->mi_close_pid(mi, mm, st->es_pid, MPS_SERVICE, s);
       }
       if (st->es_pid >= 0 && st->es_pid < 8192)
         mpegts_pid_del(pids, st->es_pid);
@@ -647,7 +650,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
     mpegts_pid_destroy(&pids);
 
   } else {
-    mpegts_input_close_pids(mi, s->s_dvb_mux, s, 1);
+    mpegts_input_close_pids(mi, mm, s, 1);
   }
 
 
@@ -739,6 +742,7 @@ mpegts_input_stopped_mux
 {
   char buf[256];
   service_t *s, *s_next;
+  mpegts_mux_t *mm = mmi->mmi_mux;
 
   /* no longer active */
   LIST_REMOVE(mmi, mmi_active_link);
@@ -749,17 +753,15 @@ mpegts_input_stopped_mux
 
   mi->mi_display_name(mi, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - flush subscribers", buf);
-  for (s = LIST_FIRST(&mi->mi_transports); s; s = s_next) {
+  for (s = LIST_FIRST(&mm->mm_transports); s; s = s_next) {
     s_next = LIST_NEXT(s, s_active_link);
-    if (((mpegts_service_t*)s)->s_dvb_mux == mmi->mmi_mux)
-      service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
   }
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 0);
 
 #if ENABLE_TSDEBUG
   tsdebug_packet_t *tp;
-  mpegts_mux_t *mm = mmi->mmi_mux;
   if (mm->mm_tsdebug_fd >= 0)
     close(mm->mm_tsdebug_fd);
   if (mm->mm_tsdebug_fd2 >= 0)
@@ -781,16 +783,14 @@ mpegts_input_has_subscription ( mpegts_input_t *mi, mpegts_mux_t *mm )
   const service_t *t;
   const th_subscription_t *ths;
   pthread_mutex_lock(&mi->mi_output_lock);
-  LIST_FOREACH(t, &mi->mi_transports, s_active_link) {
-    if (((mpegts_service_t*)t)->s_dvb_mux == mm) {
-      if (t->s_type == STYPE_RAW) {
-        LIST_FOREACH(ths, &t->s_subscriptions, ths_service_link)
-          if (!strcmp(ths->ths_title, "keep")) break;
-        if (ths) continue;
-      }
-      ret = 1;
-      break;
+  LIST_FOREACH(t, &mm->mm_transports, s_active_link) {
+    if (t->s_type == STYPE_RAW) {
+      LIST_FOREACH(ths, &t->s_subscriptions, ths_service_link)
+        if (!strcmp(ths->ths_title, "keep")) break;
+      if (ths) continue;
     }
+    ret = 1;
+    break;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   return ret;
@@ -801,13 +801,11 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   service_t *t, *t_next;
   pthread_mutex_lock(&mi->mi_output_lock);
-  for (t = LIST_FIRST(&mi->mi_transports); t; t = t_next) {
+  for (t = LIST_FIRST(&mm->mm_transports); t; t = t_next) {
     t_next = LIST_NEXT(t, s_active_link);
-    if (((mpegts_service_t*)t)->s_dvb_mux == mm) {
-      pthread_mutex_lock(&t->s_stream_mutex);
-      service_set_streaming_status_flags(t, TSS_TUNING);
-      pthread_mutex_unlock(&t->s_stream_mutex);
-    }
+    pthread_mutex_lock(&t->s_stream_mutex);
+    service_set_streaming_status_flags(t, TSS_TUNING);
+    pthread_mutex_unlock(&t->s_stream_mutex);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
 }
@@ -1123,7 +1121,7 @@ mpegts_input_process
       } else
       /* Stream table data */
       if (type & MPS_STREAM) {
-        LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+        LIST_FOREACH(s, &mm->mm_transports, s_active_link) {
           if (s->s_type != STYPE_STD) continue;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
@@ -1335,7 +1333,7 @@ mpegts_input_stream_status
   mpegts_mux_t *mm = mmi->mmi_mux;
   mpegts_input_t *mi = mmi->mmi_input;
 
-  LIST_FOREACH(t, &mi->mi_transports, s_active_link)
+  LIST_FOREACH(t, &mm->mm_transports, s_active_link)
     if (((mpegts_service_t *)t)->s_dvb_mux == mm)
       LIST_FOREACH(ths, &t->s_subscriptions, ths_service_link) {
         s++;

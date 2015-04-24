@@ -127,6 +127,7 @@ iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   int w = 0;
   const th_subscription_t *ths;
   const service_t *s;
+  mpegts_mux_instance_t *mmi;
 
   /* Find the "min" weight */
   if (!iptv_input_is_free(mi, mm)) {
@@ -134,11 +135,10 @@ iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 
     /* Service subs */
     pthread_mutex_lock(&mi->mi_output_lock);
-    LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-      LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
-        w = MIN(w, ths->ths_weight);
-      }
-    }
+    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
+      LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link)
+        LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
+          w = MIN(w, ths->ths_weight);
     pthread_mutex_unlock(&mi->mi_output_lock);
   }
 
