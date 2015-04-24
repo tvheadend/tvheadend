@@ -318,6 +318,9 @@ subscription_reschedule(void)
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
 	continue; /* And it not bad, so we're happy */
 
+      tvhwarn("subscription", "%04X: service instance is bad, reason: %s",
+              shortid(s), streaming_code2txt(s->ths_testing_error));
+
       t->s_streaming_status = 0;
       t->s_status = SERVICE_IDLE;
 
