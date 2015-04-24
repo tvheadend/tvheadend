@@ -1181,7 +1181,7 @@ mpegts_mux_unsubscribe_by_name
 
   s = LIST_FIRST(&mm->mm_raw_subs);
   while (s) {
-    n = LIST_NEXT(s, ths_global_link);
+    n = LIST_NEXT(s, ths_mux_link);
     t = s->ths_service;
     if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
       subscription_unsubscribe(s, 0);
