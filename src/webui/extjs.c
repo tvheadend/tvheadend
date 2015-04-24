@@ -93,8 +93,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<html>\n");
   htsbuf_qprintf(hq, "<head>\n");
 
-  // Issue #1504 - IE9 temporary fix
-  htsbuf_qprintf(hq, "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=8\">\n");
+  htsbuf_qprintf(hq, "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n");
 
   htsbuf_qprintf(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
   
