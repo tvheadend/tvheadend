@@ -333,20 +333,7 @@ sbuf_reset(sbuf_t *sb, int max_len)
 void
 sbuf_reset_and_alloc(sbuf_t *sb, int len)
 {
-  if (sb->sb_data) {
-    if (len != sb->sb_size) {
-      void *n = realloc(sb->sb_data, len);
-      if (n) {
-        sb->sb_data = n;
-        sb->sb_size = len;
-      }
-    }
-  } else {
-    sb->sb_data = malloc(len);
-    sb->sb_size = len;
-  }
-  if (sb->sb_data == NULL)
-    sbuf_alloc_fail(len);
+  sbuf_realloc(sb, len);
   sb->sb_ptr = sb->sb_err = 0;
 }
 
@@ -364,6 +351,25 @@ sbuf_alloc_(sbuf_t *sb, int len)
 
   if(sb->sb_data == NULL)
     sbuf_alloc_fail(sb->sb_size);
+}
+
+void
+sbuf_realloc(sbuf_t *sb, int len)
+{
+  if (sb->sb_data) {
+    if (len != sb->sb_size) {
+      void *n = realloc(sb->sb_data, len);
+      if (n) {
+        sb->sb_data = n;
+        sb->sb_size = len;
+      }
+    }
+  } else {
+    sb->sb_data = malloc(len);
+    sb->sb_size = len;
+  }
+  if (sb->sb_data == NULL)
+    sbuf_alloc_fail(len);
 }
 
 void
