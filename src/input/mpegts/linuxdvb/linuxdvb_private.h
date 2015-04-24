@@ -180,6 +180,7 @@ struct linuxdvb_ca
   struct en50221_app_ai             *lca_ai_resource;
   struct en50221_app_ca             *lca_ca_resource;
   struct en50221_app_datetime       *lca_dt_resource;
+  struct en50221_app_mmi            *lca_mmi_resource;
   int                                lca_tc;
   uint16_t                           lca_ai_session_number;
   uint16_t                           lca_ca_session_number;
