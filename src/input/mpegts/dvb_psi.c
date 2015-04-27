@@ -988,10 +988,6 @@ dvb_pmt_callback
     if (s->s_dvb_service_id == sid) break;
   if (!s) return -1;
 
-#if ENABLE_LINUXDVB_CA
-  dvbcam_pmt_data(s, ptr, len);
-#endif
-
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
   pthread_mutex_lock(&s->s_stream_mutex);
@@ -999,6 +995,10 @@ dvb_pmt_callback
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (r)
     service_restart((service_t*)s);
+
+#if ENABLE_LINUXDVB_CA
+  dvbcam_pmt_data(s, ptr, len);
+#endif
 
   /* Finish */
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
