@@ -889,8 +889,9 @@ dvb_pat_callback
         }
         s->s_dvb_check_seen = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
-                         NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_SCANSUBS,
-                         pid, MPS_WEIGHT_PMT);
+                         NULL, "pmt",
+                         MT_CRC | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
+                         pid, MPS_WEIGHT_PMT_SCAN);
 
         if (save)
           service_request_save((service_t*)s, 1);

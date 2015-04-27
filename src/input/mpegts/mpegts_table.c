@@ -42,10 +42,12 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
 }
 
 static void
-mpegts_table_fastswitch ( mpegts_mux_t *mm )
+mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 {
   char buf[256];
   mpegts_table_t   *mt;
+
+  assert(mm == mtm->mt_mux);
 
   if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
     return;
@@ -59,6 +61,8 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
       return;
     }
   }
+  if (mtm->mt_flags & MT_ONESHOT)
+    mm->mm_close_table(mm, mtm);
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -96,7 +100,7 @@ mpegts_table_dispatch
     mt->mt_count++;
 
   if(!ret && mt->mt_flags & (MT_QUICKREQ|MT_FASTSWITCH))
-    mpegts_table_fastswitch(mt->mt_mux);
+    mpegts_table_fastswitch(mt->mt_mux, mt);
 }
 
 void

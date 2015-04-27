@@ -154,6 +154,7 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_RAW      400
 #define MPS_WEIGHT_NIT2     300
 #define MPS_WEIGHT_SDT2     300
+#define MPS_WEIGHT_PMT_SCAN 100
   int   mps_weight;
   void *mps_owner;
 } mpegts_pid_sub_t;
@@ -183,12 +184,13 @@ struct mpegts_table
 #define MT_FULL       0x0002
 #define MT_QUICKREQ   0x0004
 #define MT_FASTSWITCH 0x0008
-#define MT_RECORD     0x0010
-#define MT_SKIPSUBS   0x0020
-#define MT_SCANSUBS   0x0040
-#define MT_FAST       0x0080
-#define MT_SLOW       0x0100
-#define MT_DEFER      0x0200
+#define MT_ONESHOT    0x0010
+#define MT_RECORD     0x0020
+#define MT_SKIPSUBS   0x0040
+#define MT_SCANSUBS   0x0080
+#define MT_FAST       0x0100
+#define MT_SLOW       0x0200
+#define MT_DEFER      0x0400
 
   /**
    * PID subscription weight
