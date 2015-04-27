@@ -29,6 +29,19 @@ static satip_satconf_t *
 satip_satconf_find_ele( satip_frontend_t *lfe, mpegts_mux_t *mux )
 {
   satip_satconf_t *sfc;
+  satip_frontend_t *lfe2;
+
+  if (lfe->sf_master) {
+    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
+      if (lfe2->sf_number != lfe->sf_number &&
+          lfe2->sf_number == lfe->sf_master &&
+          lfe2->sf_master == 0) {
+        lfe = lfe2;
+        goto found;
+      }
+    return 0;
+  }
+found:
   TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link) {
     if (idnode_set_exists(sfc->sfc_networks, &mux->mm_network->mn_id))
       return sfc;
@@ -45,22 +58,18 @@ satip_satconf_get_priority
 }
 
 int
+satip_satconf_get_grace
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm )
+{
+  satip_satconf_t *sfc = satip_satconf_find_ele(lfe, mm);
+  return sfc ? sfc->sfc_grace : 0;
+}
+
+int
 satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm )
 {
   satip_satconf_t *sfc;
-  satip_frontend_t *lfe2;
-  if (lfe->sf_master) {
-    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
-      if (lfe2->sf_number != lfe->sf_number &&
-          lfe2->sf_number == lfe->sf_master &&
-          lfe2->sf_master == 0) {
-        lfe = lfe2;
-        goto found;
-      }
-    return 0;
-  }
-found:
   sfc = satip_satconf_find_ele(lfe, mm);
   return sfc && sfc->sfc_enabled ? sfc->sfc_position : 0;
 }
@@ -195,6 +204,14 @@ const idclass_t satip_satconf_class =
     },
     {
       .type     = PT_INT,
+      .id       = "timeout",
+      .name     = "Timeout (seconds)",
+      .off      = offsetof(satip_satconf_t, sfc_grace),
+      .opts     = PO_ADVANCED,
+      .def.i    = 10
+    },
+    {
+      .type     = PT_INT,
       .id       = "position",
       .name     = "Position",
       .off      = offsetof(satip_satconf_t, sfc_position),
@@ -241,6 +258,7 @@ satip_satconf_create0
   sfc->sfc_networks = idnode_set_create(0);
   sfc->sfc_lfe      = lfe;
   sfc->sfc_position = position + 1;
+  sfc->sfc_grace    = 10;
   TAILQ_INSERT_TAIL(&lfe->sf_satconf, sfc, sfc_link);
   if (conf)
     idnode_load(&sfc->sfc_id, conf);
