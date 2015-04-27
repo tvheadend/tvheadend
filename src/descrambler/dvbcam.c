@@ -102,11 +102,12 @@ dvbcam_unregister_cam(linuxdvb_ca_t * lca, uint8_t slot)
 void
 dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
 {
-	linuxdvb_frontend_t *lfe;
-	dvbcam_active_caid_t *ac;
-	dvbcam_active_service_t *as = NULL, *as2;
-	int i, l;
-	uint8_t *p;
+  linuxdvb_frontend_t *lfe;
+  dvbcam_active_caid_t *ac;
+  dvbcam_active_service_t *as = NULL, *as2;
+  elementary_stream_t *st;
+  caid_t *c;
+  int i;
 
 	lfe = (linuxdvb_frontend_t*) s->s_dvb_active_input;
 
@@ -134,34 +135,26 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
   as->last_pmt_len = len + 3;
   as->ca = NULL;
 
-	l = (ptr[7] & 0x03 )| ptr[8];
-	p = (uint8_t *) ptr + 9;
+  pthread_mutex_lock(&dvbcam_mutex);
 
-	while (l > 0 ) {
-    uint8_t desc_tag = p[0];
-    uint8_t desc_len = p[1];
-
-   if (desc_tag == DVB_DESC_CA) {
-      uint16_t caid = (p[2] << 8) | p[3];
-
-      pthread_mutex_lock(&dvbcam_mutex);
-
+  /* check all ellementary streams for CAIDs, if any send PMT to CAM */
+  TAILQ_FOREACH(st, &s->s_components, es_link) {
+    LIST_FOREACH(c, &st->es_caids, link) {
       TAILQ_FOREACH(ac, &dvbcam_active_caids, link) {
         for(i=0;i<ac->num_caids;i++) {
           if(ac->ca && ac->ca->lca_adapter == lfe->lfe_adapter &&
-             ac->caids[i] == caid)
+             ac->caids[i] == c->caid)
           {
             as->ca = ac->ca;
             as->slot = ac->slot;
-	          break;
+            break;
           }
-	      }
+        }
       }
-			pthread_mutex_unlock(&dvbcam_mutex);
-		}
-		p += desc_len + 2;
-		l -= desc_len + 2;
-	}
+    }
+  }
+
+  pthread_mutex_unlock(&dvbcam_mutex);
 
   /* this service doesn't have assigned CAM */
   if (!as->ca)
