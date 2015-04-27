@@ -49,10 +49,16 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 
   assert(mm == mtm->mt_mux);
 
-  if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
-    return;
-
   pthread_mutex_lock(&mm->mm_tables_lock);
+
+  if ((mtm->mt_flags & MT_ONESHOT) && (mtm->mt_complete && !mtm->mt_working))
+    mm->mm_unsubscribe_table(mm, mtm);
+
+  if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE) {
+    pthread_mutex_unlock(&mm->mm_tables_lock);
+    return;
+  }
+
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working)
       continue;
@@ -61,8 +67,7 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
       return;
     }
   }
-  if (mtm->mt_flags & MT_ONESHOT)
-    mm->mm_close_table(mm, mtm);
+
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));

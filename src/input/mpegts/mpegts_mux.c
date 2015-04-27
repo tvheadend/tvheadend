@@ -818,10 +818,33 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 }
 
 void
-mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+mpegts_mux_unsubscribe_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
 
+  lock_assert(&mm->mm_tables_lock);
+
+  mi = mm->mm_active->mmi_input;
+  if (mt->mt_subscribed) {
+    mpegts_table_grab(mt);
+    mt->mt_subscribed = 0;
+    pthread_mutex_unlock(&mm->mm_tables_lock);
+    pthread_mutex_lock(&mi->mi_output_lock);
+    mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
+    pthread_mutex_unlock(&mi->mi_output_lock);
+    pthread_mutex_lock(&mm->mm_tables_lock);
+    mpegts_table_release(mt);
+  }
+  if ((mt->mt_flags & MT_DEFER) && mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
+    TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
+    mt->mt_defer_cmd = 0;
+    mpegts_table_release(mt);
+  }
+}
+
+void
+mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+{
   lock_assert(&mm->mm_tables_lock);
 
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
@@ -852,19 +875,9 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     TAILQ_INSERT_TAIL(&mm->mm_defer_tables, mt, mt_defer_link);
     return;
   }
-  mi = mm->mm_active->mmi_input;
   LIST_REMOVE(mt, mt_link);
   mm->mm_num_tables--;
-  if (mt->mt_subscribed) {
-    mpegts_table_grab(mt);
-    mt->mt_subscribed = 0;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
-    pthread_mutex_lock(&mi->mi_output_lock);
-    mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-    pthread_mutex_lock(&mm->mm_tables_lock);
-    mpegts_table_release(mt);
-  }
+  mm->mm_unsubscribe_table(mm, mt);
 }
 
 /* **************************************************************************
@@ -1030,6 +1043,7 @@ mpegts_mux_create0
 
   /* Table processing */
   mm->mm_open_table          = mpegts_mux_open_table;
+  mm->mm_unsubscribe_table   = mpegts_mux_unsubscribe_table;
   mm->mm_close_table         = mpegts_mux_close_table;
   pthread_mutex_init(&mm->mm_tables_lock, NULL);
   TAILQ_INIT(&mm->mm_table_queue);

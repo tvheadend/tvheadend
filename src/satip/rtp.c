@@ -121,7 +121,7 @@ satip_rtp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
     pid = ((data[1] & 0x1f) << 8) | data[2];
     if (pid != last_pid && !rtp->pids.all) {
       for (i = 0; i < rtp->pids.count; i++) {
-        j = pids[i];
+        j = pids[i].pid;
         if (pid < j) break;
         if (j == pid) goto found;
       }
@@ -399,7 +399,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     break;
   }
 
-  mpegts_pid_dump(&rtp->pids, pids, sizeof(pids));
+  mpegts_pid_dump(&rtp->pids, pids, sizeof(pids), 0, 0);
 
   switch (rtp->dmc.dmc_fe_delsys) {
   case DVB_SYS_DVBS:

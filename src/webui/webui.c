@@ -831,7 +831,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
         if (i == 8192)
           pids.all = 1;
         else
-          mpegts_pid_add(&pids, i);
+          mpegts_pid_add(&pids, i, MPS_WEIGHT_RAW);
       }
       p = strtok_r(NULL, ",", &saveptr);
     }

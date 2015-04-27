@@ -548,6 +548,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
   mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;
   mpegts_apids_t *pids;
+  mpegts_apid_t *p;
   mpegts_service_t *s2;
   int i;
 
@@ -566,8 +567,8 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
 
     mi->mi_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mi->mi_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
-    mpegts_pid_add(pids, s->s_pmt_pid);
-    mpegts_pid_add(pids, s->s_pcr_pid);
+    mpegts_pid_add(pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+    mpegts_pid_add(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if (st->es_type != SCT_CA) {
@@ -578,7 +579,7 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
     /* Ensure that filtered PIDs are not send in ts_recv_raw */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if (st->es_type != SCT_CA && st->es_pid >= 0 && st->es_pid < 8192)
-        mpegts_pid_add(pids, st->es_pid);
+        mpegts_pid_add(pids, st->es_pid, mps_weight(st));
 
     LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
       pthread_mutex_lock(&s2->s_stream_mutex);
@@ -593,8 +594,10 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
       if (pids->all) {
         mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW | MPS_ALL, MPS_WEIGHT_RAW, s);
       } else {
-        for (i = 0; i < pids->count; i++)
-          mi->mi_open_pid(mi, mm, pids->pids[i], MPS_RAW, MPS_WEIGHT_RAW, s);
+        for (i = 0; i < pids->count; i++) {
+          p = &pids->pids[i];
+          mi->mi_open_pid(mi, mm, p->pid, MPS_RAW, p->weight, s);
+        }
       }
     } else if (flags & SUBSCRIPTION_TABLES) {
       mi->mi_open_pid(mi, mm, MPEGTS_TABLES_PID, MPS_RAW | MPS_TABLES, MPS_WEIGHT_PAT, s);
@@ -643,8 +646,8 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
 
     mi->mi_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mi->mi_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
-    mpegts_pid_del(pids, s->s_pmt_pid);
-    mpegts_pid_del(pids, s->s_pcr_pid);
+    mpegts_pid_del(pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+    mpegts_pid_del(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
       if (st->es_pid_opened) {
@@ -652,7 +655,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
         mi->mi_close_pid(mi, mm, st->es_pid, MPS_SERVICE, mps_weight(st), s);
       }
       if (st->es_pid >= 0 && st->es_pid < 8192)
-        mpegts_pid_del(pids, st->es_pid);
+        mpegts_pid_del(pids, st->es_pid, mps_weight(st));
     }
 
     LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
