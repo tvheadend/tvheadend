@@ -590,7 +590,8 @@ done:
           mt2 = mpegts_table_add(mt->mt_mux,
                                  OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
                                  opentv_table_callback, sta,
-                                 mod->id, MT_CRC, *t++);
+                                 mod->id, MT_CRC, *t++,
+                                 MPS_WEIGHT_EIT);
           if (mt2) {
             sta->os_refcount++;
             mt2->mt_destroy    = opentv_status_destroy;
@@ -638,7 +639,8 @@ opentv_bat_callback
       mt2 = mpegts_table_add(mt->mt_mux,
                              OPENTV_TITLE_BASE, OPENTV_TABLE_MASK,
                              opentv_table_callback, mt->mt_opaque,
-                             mod->id, MT_CRC, *t++);
+                             mod->id, MT_CRC, *t++,
+                             MPS_WEIGHT_EIT);
       if (mt2) {
         if (!mt2->mt_destroy) {
           sta->os_refcount++;
@@ -688,7 +690,8 @@ static int _opentv_start
     }
     mt = mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK,
                           opentv_bat_callback, sta,
-                          m->id, MT_CRC, *t++);
+                          m->id, MT_CRC, *t++,
+                          MPS_WEIGHT_EIT);
     if (mt) {
       mt->mt_mux_cb  = bat_desc;
       if (!mt->mt_destroy) {

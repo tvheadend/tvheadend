@@ -136,8 +136,26 @@ typedef struct mpegts_pid_sub
 #define MPS_TABLE   0x10
 #define MPS_FTABLE  0x20
 #define MPS_TABLES  0x40
-  int                       mps_type;
-  void                     *mps_owner;
+  int   mps_type;
+#define MPS_WEIGHT_PAT     1000
+#define MPS_WEIGHT_CAT      999
+#define MPS_WEIGHT_SDT      999
+#define MPS_WEIGHT_NIT      999
+#define MPS_WEIGHT_BAT      999
+#define MPS_WEIGHT_VCT      999
+#define MPS_WEIGHT_EIT      999
+#define MPS_WEIGHT_PMT      998
+#define MPS_WEIGHT_PCR      997
+#define MPS_WEIGHT_CA       996
+#define MPS_WEIGHT_VIDEO    900
+#define MPS_WEIGHT_AUDIO    800
+#define MPS_WEIGHT_SUBTITLE 700
+#define MPS_WEIGHT_ESOTHER  500
+#define MPS_WEIGHT_RAW      400
+#define MPS_WEIGHT_NIT2     300
+#define MPS_WEIGHT_SDT2     300
+  int   mps_weight;
+  void *mps_owner;
 } mpegts_pid_sub_t;
 
 typedef struct mpegts_pid
@@ -171,6 +189,11 @@ struct mpegts_table
 #define MT_FAST       0x0080
 #define MT_SLOW       0x0100
 #define MT_DEFER      0x0200
+
+  /**
+   * PID subscription weight
+   */
+  int mt_weight;
 
   /**
    * Cycle queue
@@ -648,8 +671,8 @@ struct mpegts_input
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
-  mpegts_pid_t *(*mi_open_pid)(mpegts_input_t*,mpegts_mux_t*,int,int,void*);
-  int  (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,void*);
+  mpegts_pid_t *(*mi_open_pid)(mpegts_input_t*,mpegts_mux_t*,int,int,int,void*);
+  int  (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,int,void*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
@@ -845,10 +868,10 @@ void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
 void mpegts_input_flush_mux ( mpegts_input_t *mi, mpegts_mux_t *mm );
 
 mpegts_pid_t * mpegts_input_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner );
 
 int mpegts_input_close_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner );
 
 void mpegts_input_close_pids
   ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
@@ -902,7 +925,7 @@ int mpegts_table_type
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,
-   const char *name, int flags, int pid);
+   const char *name, int flags, int pid, int weight);
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );

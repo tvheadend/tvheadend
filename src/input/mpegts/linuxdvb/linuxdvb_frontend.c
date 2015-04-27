@@ -415,12 +415,12 @@ linuxdvb_frontend_open_pid0
 
 static mpegts_pid_t *
 linuxdvb_frontend_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   mpegts_pid_t *mp;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
-  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner)))
+  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner)))
     return NULL;
 
   linuxdvb_frontend_open_pid0(lfe, mp);

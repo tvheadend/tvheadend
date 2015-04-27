@@ -548,14 +548,14 @@ satip_frontend_add_pid( satip_frontend_t *lfe, int pid)
 
 static mpegts_pid_t *
 satip_frontend_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
   mpegts_pid_t *mp;
   int change = 0;
 
-  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner)))
+  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner)))
     return NULL;
 
   if (mp->mp_pid > MPEGTS_FULLMUX_PID)
@@ -590,13 +590,13 @@ satip_frontend_open_pid
 
 static int
 satip_frontend_close_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
   int change = 0, r;
 
-  if ((r = mpegts_input_close_pid(mi, mm, pid, type, owner)) <= 0)
+  if ((r = mpegts_input_close_pid(mi, mm, pid, type, weight, owner)) <= 0)
     return r;
 
   /* Skip internal PIDs */

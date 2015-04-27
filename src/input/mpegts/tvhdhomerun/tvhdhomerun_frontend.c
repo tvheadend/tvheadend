@@ -25,7 +25,7 @@
 
 static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, mpegts_pid_t *mp);
 
-static mpegts_pid_t * tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner );
+static mpegts_pid_t * tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner );
 
 static int
 tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
@@ -469,14 +469,14 @@ tvhdhomerun_frontend_stop_mux
   gtimer_arm(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 2);
 }
 
-static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
   mpegts_pid_t *mp;
 
   //tvhdebug("tvhdhomerun", "Open pid 0x%x\n", pid);
 
-  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, owner))) {
+  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner))) {
     tvhdebug("tvhdhomerun", "Failed to open pid %d", pid);
     return NULL;
   }
@@ -486,13 +486,13 @@ static mpegts_pid_t *tvhdhomerun_frontend_open_pid( mpegts_input_t *mi, mpegts_m
   return mp;
 }
 
-static int tvhdhomerun_frontend_close_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, void *owner )
+static int tvhdhomerun_frontend_close_pid( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   //tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
 
   tvhdebug("tvhdhomerun", "closing pid 0x%x",pid);
 
-  return mpegts_input_close_pid(mi, mm, pid, type, owner);
+  return mpegts_input_close_pid(mi, mm, pid, type, weight, owner);
 
   //tvhdhomerun_device_update_pid_filter(hfe, mm);
 }

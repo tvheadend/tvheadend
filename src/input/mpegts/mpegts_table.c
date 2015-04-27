@@ -166,7 +166,7 @@ mpegts_table_t *
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
     mpegts_table_callback_t callback, void *opaque,
-    const char *name, int flags, int pid )
+    const char *name, int flags, int pid, int weight )
 {
   mpegts_table_t *mt;
   int subscribe = 1;
@@ -182,6 +182,7 @@ mpegts_table_add
         continue;
       mt->mt_callback   = callback;
       mt->mt_pid        = pid;
+      mt->mt_weight     = weight;
       mt->mt_table      = tableid;
       mm->mm_open_table(mm, mt, 1);
     } else if (pid >= 0) {
@@ -209,6 +210,7 @@ mpegts_table_add
   mt->mt_callback   = callback;
   mt->mt_opaque     = opaque;
   mt->mt_pid        = pid;
+  mt->mt_weight     = weight;
   mt->mt_flags      = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
   mt->mt_table      = tableid;
   mt->mt_mask       = mask;

@@ -890,7 +890,7 @@ dvb_pat_callback
         s->s_dvb_check_seen = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                          NULL, "pmt", MT_CRC | MT_QUICKREQ | MT_SCANSUBS,
-                         pid);
+                         pid, MPS_WEIGHT_PMT);
 
         if (save)
           service_request_save((service_t*)s, 1);
@@ -905,7 +905,8 @@ dvb_pat_callback
   /* Install NIT handler */
   if (nit_pid)
     mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                     NULL, "nit", MT_QUICKREQ | MT_CRC, nit_pid);
+                     NULL, "nit", MT_QUICKREQ | MT_CRC, nit_pid,
+                     MPS_WEIGHT_NIT);
 
   /* End */
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
@@ -2377,9 +2378,10 @@ psi_tables_default ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
                    NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                   DVB_PAT_PID);
+                   DVB_PAT_PID, MPS_WEIGHT_PAT);
   mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
-                   NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID);
+                   NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID,
+                   MPS_WEIGHT_CAT);
 }
 
 #if ENABLE_MPEGTS_DVB
@@ -2388,9 +2390,11 @@ psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 {
   tvhtrace("fastscan", "adding table %04X (%i) for '%s'", pid, pid, name);
   mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,
-                   dvb_nit_callback, bq, "fs_nit", MT_CRC, pid);
+                   dvb_nit_callback, bq, "fs_nit", MT_CRC, pid,
+                   MPS_WEIGHT_NIT2);
   mpegts_table_add(aux, DVB_FASTSCAN_SDT_BASE, DVB_FASTSCAN_MASK,
-                   dvb_fs_sdt_callback, NULL, "fs_sdt", MT_CRC, pid);
+                   dvb_fs_sdt_callback, NULL, "fs_sdt", MT_CRC, pid,
+                   MPS_WEIGHT_SDT2);
 }
 #endif
 
@@ -2398,12 +2402,13 @@ void
 psi_tables_dvb ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                   NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID);
+                   NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID,
+                   MPS_WEIGHT_NIT);
   mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
                    NULL, "sdt", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                   DVB_SDT_PID);
+                   DVB_SDT_PID, MPS_WEIGHT_SDT);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
-                   NULL, "bat", MT_CRC, DVB_BAT_PID);
+                   NULL, "bat", MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
 #if ENABLE_MPEGTS_DVB
   if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
@@ -2419,7 +2424,7 @@ psi_tables_atsc_c ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                   DVB_VCT_PID);
+                   DVB_VCT_PID, MPS_WEIGHT_VCT);
 }
 
 void
@@ -2427,5 +2432,5 @@ psi_tables_atsc_t ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
-                   DVB_VCT_PID);
+                   DVB_VCT_PID, MPS_WEIGHT_VCT);
 }
