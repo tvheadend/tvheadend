@@ -598,7 +598,8 @@ satip_frontend_close_pid
 
   if (pid < MPEGTS_FULLMUX_PID) {
     pthread_mutex_lock(&lfe->sf_dvr_lock);
-    change = mpegts_pid_del(&lfe->sf_req->sf_pids, pid, weight) >= 0;
+    if ((tr = lfe->sf_req) != NULL)
+      change = mpegts_pid_del(&tr->sf_pids, pid, weight) >= 0;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
 
