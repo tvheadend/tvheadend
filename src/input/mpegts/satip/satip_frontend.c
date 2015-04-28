@@ -596,8 +596,14 @@ satip_frontend_close_pid
   satip_tune_req_t *tr;
   int change = 0, r;
 
+  if (pid < MPEGTS_FULLMUX_PID) {
+    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    change = mpegts_pid_del(&lfe->sf_req->sf_pids, pid, weight) >= 0;
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  }
+
   if ((r = mpegts_input_close_pid(mi, mm, pid, type, weight, owner)) <= 0)
-    return r;
+    return r; /* return here even if change is nonzero - multiple PID subscribers */
 
   /* Skip internal PIDs */
   if (pid > MPEGTS_FULLMUX_PID)
@@ -613,8 +619,6 @@ satip_frontend_close_pid
           change = 1;
         }
       }
-    } else {
-      change = mpegts_pid_del(&tr->sf_pids, pid, weight) >= 0;
     }
     if (change)
       tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
