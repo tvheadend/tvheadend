@@ -1417,7 +1417,8 @@ linuxdvb_frontend_tune0
 #endif
     }
 #if DVB_VER_ATLEAST(5,9)
-    S2CMD(DTV_LNA, lfe->lfe_lna ? 1 : 0);
+    if (lfe->lfe_lna)
+      S2CMD(DTV_LNA, 1);
 #endif
 
   /* DVB-C */
