@@ -1388,9 +1388,11 @@ linuxdvb_frontend_tune0
   memset(&cmds, 0, sizeof(cmds));
   
   /* Tune */
-#define S2CMD(c, d)\
-  cmds[cmdseq.num].cmd      = c;\
-  cmds[cmdseq.num++].u.data = d
+#define S2CMD(c, d) do { \
+  cmds[cmdseq.num].cmd      = c; \
+  cmds[cmdseq.num++].u.data = d; \
+} while (0)
+
   memset(&cmds, 0, sizeof(cmds));
   S2CMD(DTV_DELIVERY_SYSTEM, TR(delsys, delsys_tbl, SYS_UNDEFINED));
   S2CMD(DTV_FREQUENCY,       freq);
