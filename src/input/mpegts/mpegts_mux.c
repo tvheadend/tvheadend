@@ -761,8 +761,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       }
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
-    if (mp->mp_fd != -1)
-      linuxdvb_filter_close(mp->mp_fd);
     free(mp);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
@@ -1257,7 +1255,6 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
       mp = calloc(1, sizeof(*mp));
       mp->mp_pid = pid;
       if (!RB_INSERT_SORTED(&mm->mm_pids, mp, mp_link, mp_cmp)) {
-        mp->mp_fd = -1;
         mp->mp_cc = -1;
       } else {
         free(mp);

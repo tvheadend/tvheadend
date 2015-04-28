@@ -173,7 +173,6 @@ typedef struct mpegts_pid
 {
   int                      mp_pid;
   int                      mp_type; // mask for all subscribers
-  int                      mp_fd;   // linuxdvb demux fd
   int8_t                   mp_cc;
   RB_HEAD(,mpegts_pid_sub) mp_subs; // subscribers to pid
   LIST_HEAD(,mpegts_pid_sub) mp_svc_subs;
@@ -1034,15 +1033,6 @@ LIST_HEAD(,mpegts_listener) mpegts_listeners;
   LIST_FOREACH(ml, &mpegts_listeners, ml_link)\
     if (ml->op) ml->op(t, ml->ml_opaque, arg1);\
 } (void)0
-
-/*
- * Misc
- */
-#if ENABLE_LINUXDVB
-void linuxdvb_filter_close ( int fd );
-#else
-static inline void linuxdvb_filter_close ( int fd ) { assert(0); };
-#endif
 
 #endif /* __TVH_MPEGTS_H__ */
 
