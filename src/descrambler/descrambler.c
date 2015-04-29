@@ -477,7 +477,7 @@ descrambler_descramble ( service_t *t,
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         if (key_late(dr, ki)) {
-          tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
+          tvherror("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           if (ecm_reset(t, dr)) {
