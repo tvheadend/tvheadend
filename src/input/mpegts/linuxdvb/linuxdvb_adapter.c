@@ -399,6 +399,10 @@ linuxdvb_adapter_add ( const char *path )
   /* Relock before exit */
   pthread_mutex_lock(&global_lock);
 
+  /* Adapter couldn't be opened; there's nothing to work with  */
+  if (!la)
+    return;
+
 #if DVB_VER_ATLEAST(5,5)
   memset(fetypes, 0, sizeof(fetypes));
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
