@@ -122,6 +122,7 @@ typedef struct profile {
   int pro_fprio;
   int pro_timeout;
   int pro_restart;
+  int pro_contaccess;
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);

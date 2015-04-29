@@ -98,6 +98,7 @@ profile_create
   }
   LIST_INIT(&pro->pro_dvr_configs);
   LIST_INIT(&pro->pro_accesses);
+  pro->pro_contaccess = 1;
   if (idnode_insert(&pro->pro_id, uuid, pb->clazz, 0)) {
     if (uuid)
       tvherror("profile", "invalid uuid '%s'", uuid);
@@ -313,7 +314,7 @@ const idclass_t profile_class =
       .def.i    = PROFILE_SPRIO_NORMAL
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "fpriority",
       .name     = "Force Priority",
       .off      = offsetof(profile_t, pro_fprio),
@@ -331,6 +332,13 @@ const idclass_t profile_class =
       .name     = "Restart On Error",
       .off      = offsetof(profile_t, pro_restart),
       .def.i    = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "contaccess",
+      .name     = "Continue On Access Error",
+      .off      = offsetof(profile_t, pro_contaccess),
+      .def.i    = 1,
     },
     { }
   }

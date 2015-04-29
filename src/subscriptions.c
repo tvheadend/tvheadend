@@ -494,10 +494,13 @@ subscription_input(void *opauqe, streaming_message_t *sm)
       // No, mark our subscription as bad_service
       // the scheduler will take care of things
       error = tss2errcode(sm->sm_code);
-      if (error > s->ths_testing_error)
-        s->ths_testing_error = error;
-      s->ths_state = SUBSCRIPTION_BAD_SERVICE;
-      streaming_msg_free(sm);
+      if (error != SM_CODE_NO_ACCESS ||
+          (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
+        if (error > s->ths_testing_error)
+          s->ths_testing_error = error;
+        s->ths_state = SUBSCRIPTION_BAD_SERVICE;
+        streaming_msg_free(sm);
+      }
       return;
     }
 
@@ -521,9 +524,12 @@ subscription_input(void *opauqe, streaming_message_t *sm)
   if (sm->sm_type == SMT_SERVICE_STATUS &&
       sm->sm_code & (TSS_TUNING|TSS_TIMEOUT)) {
     error = tss2errcode(sm->sm_code);
-    if (error > s->ths_testing_error)
-      s->ths_testing_error = error;
-    s->ths_state = SUBSCRIPTION_BAD_SERVICE;
+    if (error != SM_CODE_NO_ACCESS ||
+        (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
+      if (error > s->ths_testing_error)
+        s->ths_testing_error = error;
+      s->ths_state = SUBSCRIPTION_BAD_SERVICE;
+    }
   }
 
   /* Pass to direct handler to log traffic */
@@ -660,8 +666,12 @@ subscription_create
   else
     s->ths_weight = weight;
 
-  if (pro && pro->pro_restart)
-    s->ths_flags |= SUBSCRIPTION_RESTART;
+  if (pro) {
+    if (pro->pro_restart)
+      s->ths_flags |= SUBSCRIPTION_RESTART;
+    if (pro->pro_contaccess)
+      s->ths_flags |= SUBSCRIPTION_CONTACCESS;
+  }
 
   time(&s->ths_start);
 

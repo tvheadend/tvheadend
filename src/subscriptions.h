@@ -31,13 +31,14 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_TYPE_MASK  0x00f
 #define SUBSCRIPTION_STREAMING  0x010
 #define SUBSCRIPTION_RESTART    0x020
-#define SUBSCRIPTION_ONESHOT    0x040
-#define SUBSCRIPTION_TABLES     0x080
-#define SUBSCRIPTION_INITSCAN   0x100 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN   0x200 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN   0x400 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG        0x800 ///< for mux subscriptions
-#define SUBSCRIPTION_MINIMAL   0x1000
+#define SUBSCRIPTION_CONTACCESS 0x040
+#define SUBSCRIPTION_ONESHOT    0x090
+#define SUBSCRIPTION_TABLES     0x100
+#define SUBSCRIPTION_MINIMAL    0x200
+#define SUBSCRIPTION_INITSCAN  0x1000 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN  0x2000 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN  0x4000 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG       0x8000 ///< for mux subscriptions
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
