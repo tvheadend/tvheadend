@@ -7,7 +7,7 @@
 
  <dt>Input sources
   <dl>
-   <dt>DVB-T, DVB-C, DVB-S, DVB-S2 and ATSC.
+   <dt>DVB-T, DVB-C, DVB-S, DVB-S2, ATSC and SAT>IP.
    <dd>
    Multiple adapters are supported.
    Each adapter can receive all programs available on the currently
@@ -20,13 +20,17 @@
    </dd>
    <dt>Analog TV
    <dd>
-   Using the Video4Linux2 API. Currently, only PAL is supported.
+   The IPTV extension URL - pipe:// allow to process any MPEG-TS input.
+   FFMPEG or LIBAV library can be used to produce analog to digital
+   conversion.
    </dd>
   </dl>
 
  <dt>Output targets
   <dl>
-   <dt>HTSP (Home TV Streaming Protocol), supported by Showtime Media player and <a href="http://www.xbmc.org/">XBMC</a>
+   <dt>HTTP (Web Protocol), supported by <a href="http://www.videolan.org/vlc/">VLC</a>, <a href="http://www.mplayerhq.hu">MPlayer</a>
+   <dt>HTSP (Home TV Streaming Protocol), supported by <a href="http://movian.tv">Movian Media player</a> and <a href="http://kodi.tv/">Kodi</a>
+   <dt>SAT>IP Server
    <dt>The Built-in Digital Video Recorder
   </dl>
 
@@ -40,7 +44,7 @@
  All setup and configuration is done from the built in web user interface.
  Even so, all settings are stored in human readable text files.
 
- <dt>Fully integrated with HTS Showtime Media player.
+ <dt>Fully integrated with HTS Movian Media player or Kodi HTS PVR addon.
  <dd>
  All channel data and their grouping, EPG and TV streaming is conducted over a
  single TCP connection.
@@ -78,6 +82,10 @@
  <dt>Software based CSA descrambling
  <dd>
  Requires a card server (newcamd and capmt protocol is supported).
+
+ <dt>Hardware based CSA descrambling
+ <dd>
+ Requires the standard dvben50221 linuxdvb library.
 
  <dt>Internationalization
  <dd>
