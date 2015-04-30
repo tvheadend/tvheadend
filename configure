@@ -165,6 +165,17 @@ int test(void)
 }
 '
 
+check_cc_snippet stime '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  time_t t = 1;
+  stime(&t);
+  return 0;
+}
+'
+
 check_cc_snippet recvmmsg '
 #define _GNU_SOURCE
 #include <stdlib.h>

@@ -164,6 +164,7 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_RAW      400
 #define MPS_WEIGHT_NIT2     300
 #define MPS_WEIGHT_SDT2     300
+#define MPS_WEIGHT_TDT      101
 #define MPS_WEIGHT_PMT_SCAN 100
   int   mps_weight;
   void *mps_owner;
@@ -963,6 +964,8 @@ int dvb_fs_sdt_callback
 int dvb_sdt_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int dvb_tdt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int dvb_tot_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int atsc_vct_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);

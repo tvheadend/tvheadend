@@ -27,6 +27,7 @@
 #include "bouquet.h"
 #include "fastscan.h"
 #include "descrambler/dvbcam.h"
+#include "tvhtime.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -2370,6 +2371,50 @@ psi_parse_pmt
   return ret;
 }
 
+/**
+ * TDT parser, from ISO 13818-1 and ETSI EN 300 468
+ */
+
+static void dvb_time_update(const uint8_t *ptr, const char *srcname)
+{
+  static time_t dvb_last_update = 0;
+  time_t t;
+  if (dvb_last_update + 1800 < dispatch_clock) {
+    t = dvb_convert_date(ptr, 0);
+    tvhtime_update(t, srcname);
+    dvb_last_update = dispatch_clock;
+  }
+}
+
+int
+dvb_tdt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  if (len == 5) {
+    dvb_time_update(ptr, "TDT");
+    mt->mt_incomplete = 0;
+    mt->mt_complete = 1;
+    mt->mt_finished = 1;
+  }
+  return 0;
+}
+
+/**
+ * TOT parser, from ISO 13818-1 and ETSI EN 300 468
+ */
+int
+dvb_tot_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  if (len >= 5) {
+    dvb_time_update(ptr, "TOT");
+    mt->mt_incomplete = 0;
+    mt->mt_complete = 1;
+    mt->mt_finished = 1;
+  }
+  return 0;
+}
+
 /*
  * Install default table sets
  */
@@ -2410,6 +2455,14 @@ psi_tables_dvb ( mpegts_mux_t *mm )
                    DVB_SDT_PID, MPS_WEIGHT_SDT);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                    NULL, "bat", MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
+  if (tvhtime_update_enabled) {
+    mpegts_table_add(mm, DVB_TDT_BASE, DVB_TDT_MASK, dvb_tdt_callback,
+                     NULL, "tdt", MT_ONESHOT | MT_QUICKREQ | MT_RECORD,
+                     DVB_TDT_PID, MPS_WEIGHT_TDT);
+    mpegts_table_add(mm, DVB_TOT_BASE, DVB_TOT_MASK, dvb_tot_callback,
+                     NULL, "tot", MT_ONESHOT | MT_QUICKREQ | MT_CRC | MT_RECORD,
+                     DVB_TDT_PID, MPS_WEIGHT_TDT);
+  }
 #if ENABLE_MPEGTS_DVB
   if (idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;

@@ -111,9 +111,10 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
   tvhtrace(subsys, "%s() leave", #fcn); \
 } while (0)
 
-#define tvhdebug(...) tvhlog(LOG_DEBUG,   ##__VA_ARGS__)
-#define tvhinfo(...)  tvhlog(LOG_INFO,    ##__VA_ARGS__)
-#define tvhwarn(...)  tvhlog(LOG_WARNING, ##__VA_ARGS__)
-#define tvherror(...) tvhlog(LOG_ERR,     ##__VA_ARGS__)
+#define tvhdebug(...)  tvhlog(LOG_DEBUG,   ##__VA_ARGS__)
+#define tvhinfo(...)   tvhlog(LOG_INFO,    ##__VA_ARGS__)
+#define tvhwarn(...)   tvhlog(LOG_WARNING, ##__VA_ARGS__)
+#define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
+#define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
 
 #endif /* __TVH_LOGGING_H__ */

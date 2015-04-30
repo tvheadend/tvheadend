@@ -71,6 +71,7 @@
 #endif
 #include "profile.h"
 #include "bouquet.h"
+#include "tvhtime.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -965,6 +966,8 @@ main(int argc, char **argv)
 #if ENABLE_LIBAV
   libav_init();
 #endif
+
+  tvhtime_init();
 
   profile_init();
 

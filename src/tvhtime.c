@@ -82,34 +82,40 @@ ntp_shm_init ( void )
  * Update time
  */
 void
-tvhtime_update ( struct tm *tm )
+tvhtime_update ( time_t utc, const char *srcname )
 {
 #if !ENABLE_ANDROID
-  time_t now;
+  struct tm tm;
   struct timeval tv;
   ntp_shm_t *ntp_shm;
-  int64_t t1, t2;
+  int64_t t1, t2, diff;
 
- tvhtrace("time", "current time is %04d/%02d/%02d %02d:%02d:%02d",
-         tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+  localtime_r(&utc, &tm);
 
-  /* Current and reported time */
-  now = mktime(tm);
+  tvhtrace("time", "%s - current time is %04d/%02d/%02d %02d:%02d:%02d",
+           srcname,
+           tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
+           tm.tm_hour, tm.tm_min, tm.tm_sec);
+
   gettimeofday(&tv, NULL);
 
   /* Delta */
-  t1 = now * 1000000;
+  t1 = utc * 1000000;
   t2 = tv.tv_sec * 1000000 + tv.tv_usec;
 
   /* Update local clock */
   if (tvhtime_update_enabled) {
-    if (llabs(t2 - t1) > tvhtime_tolerance) {
-      tvhlog(LOG_DEBUG, "time", "updated system clock");
-#ifdef stime
-      stime(&now);
+    if ((diff = llabs(t2 - t1)) > tvhtime_tolerance) {
+#if ENABLE_STIME
+      if (stime(&utc) < 0)
+        tvherror("time", "%s - unable to update system time: %s", srcname, strerror(errno));
+      else
+        tvhdebug("time", "%s - updated system clock", srcname);
 #else
-      tvhlog(LOG_NOTICE, "time", "stime(2) not implemented");
+      tvhnotice("time", "%s - stime(2) not implemented", srcname);
 #endif
+    } else {
+      tvhwarn("time", "%s - time not updated (diff %"PRId64")", srcname, diff);
     }
   }
 
@@ -121,7 +127,7 @@ tvhtime_update ( struct tm *tm )
     tvhtrace("time", "ntp delta = %"PRId64" us\n", t2 - t1);
     ntp_shm->valid = 0;
     ntp_shm->count++;
-    ntp_shm->clockTimeStampSec    = now;
+    ntp_shm->clockTimeStampSec    = utc;
     ntp_shm->clockTimeStampUSec   = 0;
     ntp_shm->receiveTimeStampSec  = tv.tv_sec;
     ntp_shm->receiveTimeStampUSec = (int)tv.tv_usec;
@@ -141,6 +147,7 @@ void tvhtime_init ( void )
     tvhtime_ntp_enabled = 0;
   if (htsmsg_get_u32(m, "tolerance", &tvhtime_tolerance))
     tvhtime_tolerance = 5000;
+  htsmsg_destroy(m);
 }
 
 static void tvhtime_save ( void )
@@ -150,6 +157,7 @@ static void tvhtime_save ( void )
   htsmsg_add_u32(m, "ntp_enabled", tvhtime_ntp_enabled);
   htsmsg_add_u32(m, "tolerance", tvhtime_tolerance);
   hts_settings_save(m, "tvhtime/config");
+  htsmsg_destroy(m);
 }
 
 void tvhtime_set_update_enabled ( uint32_t on )

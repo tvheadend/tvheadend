@@ -34,10 +34,19 @@ struct mpegts_mux;
 
 #define DVB_PAT_PID                   0x00
 #define DVB_CAT_PID                   0x01
+#define DVB_TSDT_PID                  0x02
 #define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
 #define DVB_EIT_PID                   0x12
+#define DVB_RST_PID                   0x13
+#define DVB_TDT_PID                   0x14
+#define DVB_SNC_PID                   0x15
+#define DVB_RNT_PID                   0x16
+#define DVB_INB_PID                   0x1C
+#define DVB_MSR_PID                   0x1D
+#define DVB_DIT_PID                   0x1E
+#define DVB_SIT_PID                   0x1F
 #define DVB_VCT_PID                   0x1FFB
 
 /* Tables */
@@ -59,6 +68,12 @@ struct mpegts_mux;
 
 #define DVB_BAT_BASE                  0x48
 #define DVB_BAT_MASK                  0xF8
+
+#define DVB_TDT_BASE                  0x70
+#define DVB_TDT_MASK                  0xFF
+
+#define DVB_TOT_BASE                  0x73
+#define DVB_TOT_MASK                  0xFF
 
 #define DVB_FASTSCAN_NIT_BASE         0xBC
 #define DVB_FASTSCAN_SDT_BASE         0xBD
