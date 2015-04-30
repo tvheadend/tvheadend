@@ -666,6 +666,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_t *out = htsmsg_create_map();
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p;
+  int64_t fsize = -1;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   if (de->de_channel)
@@ -701,13 +702,13 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     if ((p = tvh_strbegins(de->de_filename, de->de_config->dvr_storage)))
       htsmsg_add_str(out, "path", p);
   }
-
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
     s = "scheduled";
     break;
   case DVR_RECORDING:
     s = "recording";
+    fsize = dvr_get_filesize(de);
     if (de->de_rec_state == DVR_RS_ERROR ||
        (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
     {
@@ -717,7 +718,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(dvr_get_filesize(de) == -1)
+    fsize = dvr_get_filesize(de);
+    if (fsize < 0)
       error = "File missing";
     else if(de->de_last_error)
       error = streaming_code2txt(de->de_last_error);
@@ -739,6 +741,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     htsmsg_add_u32(out, "streamErrors", de->de_errors);
   if (de->de_data_errors)
     htsmsg_add_u32(out, "dataErrors", de->de_data_errors);
+  if (fsize >= 0)
+    htsmsg_add_s64(out, "dataSize", fsize);
   htsmsg_add_str(out, "method", method);
   return out;
 }
