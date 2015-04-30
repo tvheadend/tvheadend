@@ -600,7 +600,7 @@ dvr_thread(void *aux)
        } else if(sm->sm_code == 0) {
 	 // Recording is completed
 
-	de->de_last_error = 0;
+	de->de_last_error = SM_CODE_OK;
 	tvhlog(LOG_INFO, 
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));

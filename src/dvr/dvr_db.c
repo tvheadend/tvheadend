@@ -1106,6 +1106,7 @@ dvr_timer_start_recording(void *aux)
 
   de->de_sched_state = DVR_RECORDING;
   de->de_rec_state = DVR_RS_PENDING;
+  de->de_last_error = SM_CODE_OK;
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
