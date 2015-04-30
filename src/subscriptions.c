@@ -704,12 +704,14 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
   th_subscription_t *s;
   service_instance_t *si;
   channel_t *ch = NULL;
+  int _error;
 
   assert(prch);
   assert(prch->prch_id);
 
-  if (error)
-    *error = 0;
+  if (error == NULL)
+    error = &_error;
+  *error = 0;
 
   if (!service)
     ch = prch->prch_id;
