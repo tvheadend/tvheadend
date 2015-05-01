@@ -561,7 +561,7 @@ satip_frontend_open_pid
   if (mp->mp_pid > MPEGTS_FULLMUX_PID)
     return mp;
 
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  pthread_mutex_lock(&lfe->sf_dvr_lock);
   if ((tr = lfe->sf_req) != NULL) {
     if (pid == MPEGTS_FULLMUX_PID) {
       if (lfe->sf_device->sd_fullmux_ok) {
@@ -580,10 +580,10 @@ satip_frontend_open_pid
     } else {
       change |= satip_frontend_add_pid(lfe, mp->mp_pid, weight);
     }
-    if (change)
-      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  if (change)
+    tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
 
   return mp;
 }
@@ -594,14 +594,9 @@ satip_frontend_close_pid
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
+  mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
   int change = 0, r;
-
-  if (pid < MPEGTS_FULLMUX_PID) {
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    if ((tr = lfe->sf_req) != NULL)
-      change = mpegts_pid_del(&tr->sf_pids, pid, weight) >= 0;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  }
 
   if ((r = mpegts_input_close_pid(mi, mm, pid, type, weight, owner)) <= 0)
     return r; /* return here even if change is nonzero - multiple PID subscribers */
@@ -620,6 +615,12 @@ satip_frontend_close_pid
           change = 1;
         }
       }
+    } else {
+      mpegts_pid_done(&tr->sf_pids);
+      RB_FOREACH(mp, &mm->mm_pids, mp_link)
+        RB_FOREACH(mps, &mp->mp_subs, mps_link)
+          mpegts_pid_add(&tr->sf_pids, mp->mp_pid, mps->mps_weight);
+      change = 1;
     }
     if (change)
       tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);

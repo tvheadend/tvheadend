@@ -366,19 +366,22 @@ static mpegts_pid_t *
 linuxdvb_frontend_open_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
-  mpegts_pid_t *mp;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  int change = 0;
+  mpegts_pid_t *mp;
+  int change;
 
+  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner)))
+    return NULL;
+
+  change = 0;
+  pthread_mutex_lock(&lfe->lfe_dvr_lock);
   if (pid < MPEGTS_FULLMUX_PID)
     change = mpegts_pid_add(&lfe->lfe_pids, pid, weight) >= 0;
   else if (pid == MPEGTS_FULLMUX_PID) {
     change = lfe->lfe_pids.all == 0;
     lfe->lfe_pids.all = 1;
   }
-
-  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner)))
-    return NULL;
+  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
   if (change && lfe->lfe_dvr_pipe.wr > 0)
     tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
@@ -391,17 +394,26 @@ linuxdvb_frontend_close_pid
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  int change = 0, r;
-
-  if (pid < MPEGTS_FULLMUX_PID)
-    change = mpegts_pid_del(&lfe->lfe_pids, pid, weight) >= 0;
-  else if (pid == MPEGTS_FULLMUX_PID) {
-    change = lfe->lfe_pids.all != 0;
-    lfe->lfe_pids.all = 0;
-  }
+  mpegts_pid_t *mp;
+  mpegts_pid_sub_t *mps;
+  int change, r;
 
   if ((r = mpegts_input_close_pid(mi, mm, pid, type, weight, owner)) <= 0)
     return r;
+
+  change = 0;
+  pthread_mutex_lock(&lfe->lfe_dvr_lock);
+  if (pid == MPEGTS_FULLMUX_PID) {
+    change = lfe->lfe_pids.all != 0;
+    lfe->lfe_pids.all = 0;
+  } else if (pid < MPEGTS_FULLMUX_PID) {
+    mpegts_pid_done(&lfe->lfe_pids);
+    RB_FOREACH(mp, &mm->mm_pids, mp_link)
+      RB_FOREACH(mps, &mp->mp_subs, mps_link)
+        mpegts_pid_add(&lfe->lfe_pids, mp->mp_pid, mps->mps_weight);
+    change = 1;
+  }
+  pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
   if (change)
     tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
