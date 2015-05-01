@@ -46,12 +46,97 @@ const static char *
 ca_slot_state2str(ca_slot_state_t v)
 {
   switch(v) {
-    case CA_SLOT_STATE_EMPTY:           return "EMPTY";
-    case CA_SLOT_STATE_MODULE_PRESENT:  return "MODULE_PRESENT";
-    case CA_SLOT_STATE_MODULE_READY:    return "MODULE_READY";
+    case CA_SLOT_STATE_EMPTY:           return "slot empty";
+    case CA_SLOT_STATE_MODULE_PRESENT:  return "module present";
+    case CA_SLOT_STATE_MODULE_READY:    return "module ready";
 	};
   return "UNKNOWN";
 }
+
+static void
+linuxdvb_ca_class_save ( idnode_t *in )
+{
+  linuxdvb_adapter_t *la = ((linuxdvb_ca_t*)in)->lca_adapter;
+  linuxdvb_adapter_save(la);
+}
+
+static void
+linuxdvb_ca_class_enabled_notify ( void *p )
+{
+  linuxdvb_ca_t *lca = (linuxdvb_ca_t *) p;
+
+  if (lca->lca_enabled) {
+    if (lca->lca_ca_fd < 0) {
+      lca->lca_ca_fd = tvh_open(lca->lca_ca_path, O_RDWR | O_NONBLOCK, 0);
+      tvhtrace("linuxdvb", "opening ca%u %s (fd %d)",
+               lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
+    }
+  } else {
+    tvhtrace("linuxdvb", "closing ca%u %s (fd %d)",
+             lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
+
+    if (lca->lca_en50221_thread_running) {
+      lca->lca_en50221_thread_running = 0;
+      pthread_join(lca->lca_en50221_thread, NULL);
+    }
+
+    ioctl(lca->lca_ca_fd, CA_RESET, NULL);
+
+    close(lca->lca_ca_fd);
+    lca->lca_ca_fd = -1;
+
+    idnode_notify_title_changed(&lca->lca_id);
+  }
+}
+
+static const char *
+linuxdvb_ca_class_get_title ( idnode_t *in )
+{
+  linuxdvb_ca_t *lca = (linuxdvb_ca_t *) in;
+  static char buf[256];
+  if (!lca->lca_enabled)
+    snprintf(buf, sizeof(buf), "ca%u: disabled", lca->lca_number);
+  else if (lca->lca_state == CA_SLOT_STATE_EMPTY)
+    snprintf(buf, sizeof(buf), "ca%u: slot empty", lca->lca_number);
+  else
+    snprintf(buf, sizeof(buf), "ca%u: %s (%s)", lca->lca_number,
+           lca->lca_cam_menu_string, lca->lca_state_str);
+
+  return buf;
+}
+
+const idclass_t linuxdvb_ca_class =
+{
+  .ic_class      = "linuxdvb_ca",
+  .ic_caption    = "Linux DVB CA",
+  .ic_save       = linuxdvb_ca_class_save,
+  .ic_get_title   = linuxdvb_ca_class_get_title,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = "Enabled",
+      .off      = offsetof(linuxdvb_ca_t, lca_enabled),
+      .notify   = linuxdvb_ca_class_enabled_notify,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "ca_path",
+      .name     = "Device Path",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_ca_t, lca_ca_path),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "slot_state",
+      .name     = "Slot State",
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_ca_t, lca_state_str),
+    },
+    {}
+  }
+};
+
 
 static uint32_t
 resource_ids[] = { EN50221_APP_RM_RESOURCEID,
@@ -122,8 +207,10 @@ linuxdvb_ca_session_cb (void *arg, int reason, uint8_t slot_id,
       }
 			break;
     case S_SCALLBACK_REASON_CLOSE:
-      if (rid == EN50221_APP_CA_RESOURCEID)
+      if (rid == EN50221_APP_CA_RESOURCEID) {
         dvbcam_unregister_cam(lca, 0);
+        lca->lca_cam_menu_string[0] = 0;
+      }
       break;
     case S_SCALLBACK_REASON_TC_CONNECT:
       break;
@@ -205,12 +292,20 @@ linuxdvb_ca_ai_callback(void *arg, uint8_t slot_id, uint16_t session_num,
                      uint16_t manufacturer_code, uint8_t menu_string_len,
                      uint8_t *menu_string)
 {
+    linuxdvb_ca_t * lca = arg;
+
     tvhinfo("en50221", "CAM slot %u: Application type: %02x, manufacturer: %04x,"
             " Manufacturer code: %04x", slot_id, app_type, app_manufacturer,
             manufacturer_code);
 
     tvhinfo("en50221", "CAM slot %u: Menu string: %.*s", slot_id,
             menu_string_len, menu_string);
+
+    snprintf(lca->lca_cam_menu_string, sizeof(lca->lca_cam_menu_string),
+             "%.*s", menu_string_len, menu_string);
+
+    idnode_notify_title_changed(&lca->lca_id);
+
     return 0;
 }
 
@@ -450,7 +545,7 @@ linuxdvb_ca_monitor ( void *aux )
 
   csi.num = 0;
 
-  if (lca->lca_ca_fd > 0) {
+  if (lca->lca_ca_fd >= 0) {
     if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
       tvherror("linuxdvb", "failed to get CAM slot %u info [e=%s]",
                csi.num, strerror(errno));
@@ -462,21 +557,28 @@ linuxdvb_ca_monitor ( void *aux )
     else
       state = CA_SLOT_STATE_EMPTY;
 
+    lca->lca_state_str = ca_slot_state2str(state);
+
     if (lca->lca_state != state) {
       tvhlog(LOG_INFO, "linuxdvb", "CAM slot %u status changed to %s",
-             csi.num, ca_slot_state2str(state));
-
-      if (state == CA_SLOT_STATE_MODULE_READY) {
-      	lca->lca_en50221_thread_running = 1;
-        tvhthread_create(&lca->lca_en50221_thread, NULL,
-                         linuxdvb_ca_en50221_thread, lca);
-      } else if (lca->lca_en50221_thread_running) {
-        lca->lca_en50221_thread_running = 0;
-        pthread_join(lca->lca_en50221_thread, NULL);
-      }
-
+             csi.num, lca->lca_state_str);
+      idnode_notify_title_changed(&lca->lca_id);
       lca->lca_state = state;
     }
+
+    if ((!lca->lca_en50221_thread_running) &&
+        (state == CA_SLOT_STATE_MODULE_READY)) 
+    {
+      lca->lca_en50221_thread_running = 1;
+      tvhthread_create(&lca->lca_en50221_thread, NULL,
+                       linuxdvb_ca_en50221_thread, lca);
+    } else if (lca->lca_en50221_thread_running &&
+               (state != CA_SLOT_STATE_MODULE_READY))
+    {
+      lca->lca_en50221_thread_running = 0;
+      pthread_join(lca->lca_en50221_thread, NULL);
+    }
+
   }
 
   gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
@@ -484,25 +586,37 @@ linuxdvb_ca_monitor ( void *aux )
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( linuxdvb_adapter_t *la, int number, const char *ca_path)
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path)
 {
-	linuxdvb_ca_t *lca;
-	char id[6];
+  linuxdvb_ca_t *lca;
+  char id[6];
+  const char *uuid = NULL;
 
-  /* Internal config ID */
-  snprintf(id, sizeof(id), "CA #%d", number);
-
-	lca = calloc(1, sizeof(linuxdvb_frontend_t));
+  lca = calloc(1, sizeof(linuxdvb_ca_t));
+  memset(lca, 0, sizeof(linuxdvb_ca_t));
   lca->lca_number = number;
   lca->lca_ca_path  = strdup(ca_path);
+  lca->lca_ca_fd = -1;
+
+  /* Internal config ID */
+  snprintf(id, sizeof(id), "ca%u", number);
+
+  if (conf)
+    conf = htsmsg_get_map(conf, id);
+  if (conf)
+    uuid = htsmsg_get_str(conf, "uuid");
+
+  if (idnode_insert(&lca->lca_id, uuid, &linuxdvb_ca_class, 0)) {
+    free(lca);
+    return NULL;
+  }
+
+  if (conf)
+    idnode_load(&lca->lca_id, conf);
 
   /* Adapter link */
   lca->lca_adapter = la;
-  LIST_INSERT_HEAD(&la->la_cas, lca, lca_link);
-
-  lca->lca_ca_fd = tvh_open(lca->lca_ca_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace("linuxdvb", "opening CA%u %s (fd %d)",
-             lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
+  LIST_INSERT_HEAD(&la->la_ca_devices, lca, lca_link);
 
   gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
 
@@ -561,4 +675,18 @@ linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int
 
 fail:
   free(buffer);
+}
+
+void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
+{
+  char id[8];
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lca->lca_id));
+  idnode_save(&lca->lca_id, m);
+
+  /* Add to list */
+  snprintf(id, sizeof(id), "ca%u", lca->lca_number);
+  htsmsg_add_msg(msg, id, m);
+
 }
