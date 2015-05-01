@@ -100,6 +100,7 @@ typedef enum http_state {
 } http_state_t;
 
 typedef enum http_cmd {
+  HTTP_CMD_NONE,
   HTTP_CMD_GET,
   HTTP_CMD_HEAD,
   HTTP_CMD_POST,

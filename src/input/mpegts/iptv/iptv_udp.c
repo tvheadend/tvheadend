@@ -92,14 +92,13 @@ iptv_udp_read ( iptv_mux_t *im )
   return res;
 }
 
-static ssize_t
-iptv_rtp_read ( iptv_mux_t *im )
+ssize_t
+iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um )
 {
   ssize_t len, hlen;
   uint8_t *rtp;
   int i, n;
   struct iovec *iovec;
-  udp_multirecv_t *um = im->im_data;
   ssize_t res = 0;
 
   n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
@@ -145,6 +144,14 @@ iptv_rtp_read ( iptv_mux_t *im )
   return res;
 }
 
+static ssize_t
+iptv_udp_rtp_read ( iptv_mux_t *im )
+{
+  udp_multirecv_t *um = im->im_data;
+
+  return iptv_rtp_read(im, um);
+}
+
 /*
  * Initialise UDP handler
  */
@@ -163,7 +170,7 @@ iptv_udp_init ( void )
       .scheme = "rtp",
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
-      .read   = iptv_rtp_read,
+      .read   = iptv_udp_rtp_read,
     }
   };
   iptv_handler_register(ih, 2);

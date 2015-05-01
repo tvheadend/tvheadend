@@ -42,6 +42,7 @@ void *http_server;
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
+  { "NONE",       HTTP_CMD_NONE },
   { "GET",        HTTP_CMD_GET },
   { "HEAD",       HTTP_CMD_HEAD },
   { "POST",       HTTP_CMD_POST },

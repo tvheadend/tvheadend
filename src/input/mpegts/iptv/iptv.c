@@ -271,6 +271,13 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     im->mm_iptv_fd = -1;
   }
 
+  /* Close file2 */
+  if (im->mm_iptv_fd2 > 0) {
+    udp_close(im->mm_iptv_connection2); // removes from poll
+    im->mm_iptv_connection2 = NULL;
+    im->mm_iptv_fd2 = -1;
+  }
+
   /* Free memory */
   sbuf_free(&im->mm_iptv_buffer);
 
@@ -376,6 +383,22 @@ iptv_input_fd_started ( iptv_mux_t *im )
       tvherror("iptv", "%s - failed to add to poll q", buf);
       close(im->mm_iptv_fd);
       im->mm_iptv_fd = -1;
+      return -1;
+    }
+  }
+
+  /* Setup poll2 */
+  if (im->mm_iptv_fd2 > 0) {
+    ev.fd       = im->mm_iptv_fd2;
+    ev.events   = TVHPOLL_IN;
+    ev.data.ptr = im;
+
+    /* Error? */
+    if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
+      mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
+      tvherror("iptv", "%s - failed to add to poll q (2)", buf);
+      close(im->mm_iptv_fd2);
+      im->mm_iptv_fd2 = -1;
       return -1;
     }
   }
@@ -581,6 +604,7 @@ void iptv_init ( void )
   /* Register handlers */
   iptv_http_init();
   iptv_udp_init();
+  iptv_rtsp_init();
   iptv_pipe_init();
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
