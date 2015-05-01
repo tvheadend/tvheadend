@@ -63,7 +63,6 @@ typedef struct dvr_config {
   int dvr_skip_commercials;
   int dvr_subtitle_in_title;
   int dvr_episode_before_date;
-  int dvr_episode_duplicate;
   int dvr_windows_compatible_filenames;
 
   /* Series link support */

@@ -572,13 +572,6 @@ const idclass_t dvr_config_class = {
       .group    = 1,
     },
     {
-      .type     = PT_BOOL,
-      .id       = "episode-duplicate-detection",
-      .name     = "Episode Duplicate Detect",
-      .off      = offsetof(dvr_config_t, dvr_episode_duplicate),
-      .group    = 1,
-    },
-    {
       .type     = PT_U32,
       .id       = "epg-update-window",
       .name     = "EPG Update Window",
