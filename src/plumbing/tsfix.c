@@ -424,7 +424,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     return;
   }
 
-  if(tf->tf_tsref == PTS_UNSET &&
+  if(pkt->pkt_dts != PTS_UNSET && tf->tf_tsref == PTS_UNSET &&
      ((!tf->tf_hasvideo && tfs->tfs_audio) ||
       (tfs->tfs_video && pkt->pkt_frametype == PKT_I_FRAME))) {
     threshold = 22500;
