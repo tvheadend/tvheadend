@@ -600,6 +600,7 @@ main(int argc, char **argv)
               opt_firstrun     = 0,
               opt_stderr       = 0,
               opt_syslog       = 0,
+              opt_nosyslog     = 0,
               opt_uidebug      = 0,
               opt_abort        = 0,
               opt_noacl        = 0,
@@ -687,6 +688,7 @@ main(int argc, char **argv)
     {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
     { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
+    { 'S', "nosyslog",  "Disable syslog (all msgs)", OPT_BOOL, &opt_nosyslog },
     { 'l', "logfile",   "Enable debug to file",    OPT_STR,  &opt_logpath },
     {   0, "debug",     "Enable debug subsystems", OPT_STR,  &opt_log_debug },
 #if ENABLE_TRACE
@@ -819,6 +821,8 @@ main(int argc, char **argv)
     if (opt_logpath)
       log_options   |= TVHLOG_OPT_DBG_FILE;
   }
+  if (opt_nosyslog)
+    log_options &= ~(TVHLOG_OPT_SYSLOG|TVHLOG_OPT_DBG_SYSLOG);
   if (opt_fileline)
     log_options |= TVHLOG_OPT_FILELINE;
   if (opt_threadid)
