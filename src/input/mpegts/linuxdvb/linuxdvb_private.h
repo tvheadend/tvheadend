@@ -84,7 +84,7 @@ struct linuxdvb_adapter
    *  CA devices
    */
 #if ENABLE_LINUXDVB_CA
-  LIST_HEAD(,linuxdvb_ca) la_cas;
+  LIST_HEAD(,linuxdvb_ca) la_ca_devices;
 #endif
   /*
   * Functions
@@ -158,6 +158,7 @@ struct linuxdvb_frontend
 #if ENABLE_LINUXDVB_CA
 struct linuxdvb_ca
 {
+  idnode_t                     lca_id;
   /*
    * Adapter
    */
@@ -168,6 +169,7 @@ struct linuxdvb_ca
    * CA handling
    */
   int                       lca_ca_fd;
+  int                       lca_enabled;
   gtimer_t                  lca_monitor_timer;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
@@ -194,6 +196,11 @@ struct linuxdvb_ca
   char                     lca_name[128];
   char                     *lca_ca_path;
   int                      lca_state;
+  const char               *lca_state_str;
+  /*
+   * CAM module info
+   */
+  char                     lca_cam_menu_string[64];
 };
 #endif
 
@@ -357,7 +364,9 @@ int linuxdvb2tvh_delsys ( int delsys );
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( linuxdvb_adapter_t *la, int number, const char *ca_path);
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path);
+
+void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *m );
 
 void
 linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int len);

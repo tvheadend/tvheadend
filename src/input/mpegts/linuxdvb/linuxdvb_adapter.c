@@ -56,10 +56,17 @@ static idnode_set_t *
 linuxdvb_adapter_class_get_childs ( idnode_t *in )
 {
   linuxdvb_frontend_t *lfe;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_t *lca;
+#endif
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
   idnode_set_t *is = idnode_set_create(0);
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     idnode_set_add(is, &lfe->ti_id, NULL);
+#if ENABLE_LINUXDVB_CA
+  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
+    idnode_set_add(is, &lca->lca_id, NULL);
+#endif
   return is;
 }
 
@@ -98,6 +105,9 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 {
   htsmsg_t *m, *l;
   linuxdvb_frontend_t *lfe;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_t *lca;
+#endif
 
   m = htsmsg_create_map();
   idnode_save(&la->th_id, m);
@@ -107,6 +117,14 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     linuxdvb_frontend_save(lfe, l);
   htsmsg_add_msg(m, "frontends", l);
+
+  /* CAs */
+#if ENABLE_LINUXDVB_CA
+  l = htsmsg_create_map();
+  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
+    linuxdvb_ca_save(lca, l);
+  htsmsg_add_msg(m, "ca_devices", l);
+#endif
 
   /* Save */
   hts_settings_save(m, "input/linuxdvb/adapters/%s",
@@ -229,6 +247,7 @@ linuxdvb_adapter_add ( const char *path )
   char fe_path[512], dmx_path[512], dvr_path[512];
 #if ENABLE_LINUXDVB_CA
   char ca_path[512];
+  htsmsg_t *caconf = NULL;
 #endif
   tvh_uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
@@ -387,7 +406,11 @@ linuxdvb_adapter_add ( const char *path )
       continue;
 
     pthread_mutex_lock(&global_lock);
-    linuxdvb_ca_create(la, i, ca_path);
+
+    if (conf)
+      caconf = htsmsg_get_map(conf, "ca_devices");
+
+    linuxdvb_ca_create(caconf, la, i, ca_path);
     pthread_mutex_unlock(&global_lock);
   }
 #endif

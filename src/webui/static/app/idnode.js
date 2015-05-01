@@ -1913,6 +1913,7 @@ tvheadend.idnode_tree = function(panel, conf)
             if (o.text)
                 n.setText(o.text);
             tree.getRootNode().reload();
+            tree.expandAll();
             // cannot get this to properly reload children and maintain state
         }
     }
