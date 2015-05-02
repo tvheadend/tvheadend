@@ -759,7 +759,7 @@ char *url_encode(char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
-int deferred_unlink(const char *filename);
+int deferred_unlink(const char *filename, const char *rootdir);
 
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }

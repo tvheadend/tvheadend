@@ -2208,9 +2208,10 @@ dvr_val2pri(dvr_prio_t v)
 void
 dvr_entry_delete(dvr_entry_t *de)
 {
+  dvr_config_t *cfg = de->de_config;
   time_t t;
   struct tm tm;
-  char tbuf[64];
+  char tbuf[64], *rdir;
   int r;
 
   t = dvr_entry_get_start_time(de);
@@ -2229,38 +2230,14 @@ dvr_entry_delete(dvr_entry_t *de)
 #if ENABLE_INOTIFY
     dvr_inotify_del(de);
 #endif
-    r = deferred_unlink(de->de_filename);
+    rdir = NULL;
+    if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory)
+      rdir = cfg->dvr_storage;
+
+    r = deferred_unlink(de->de_filename, rdir);
     if(r && r != -ENOENT)
       tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
 	     de->de_filename, strerror(-errno));
-
-    /* Also delete directories, if they were created for the recording and if they are empty */
-
-    dvr_config_t *cfg = de->de_config;
-    char path[500];
-
-    snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
-
-    if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory) {
-      char *p;
-      int l;
-
-      l = strlen(de->de_filename);
-      p = alloca(l + 1);
-      memcpy(p, de->de_filename, l);
-      p[l--] = 0;
-
-      for(; l >= 0; l--) {
-        if(p[l] == '/') {
-          p[l] = 0;
-          if(strncmp(p, cfg->dvr_storage, strlen(p)) == 0)
-            break;
-          if(rmdir(p) == -1)
-            break;
-        }
-      }
-    }
-
   }
   dvr_entry_destroy(de, 1);
 }

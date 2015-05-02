@@ -653,9 +653,45 @@ deferred_unlink_cb(void *s, int dearmed)
   free(s);
 }
 
-int
-deferred_unlink(const char *filename)
+typedef struct {
+  char *filename;
+  char *rootdir;
+} deferred_unlink_t;
+
+static void
+deferred_unlink_dir_cb(void *s, int dearmed)
 {
+  deferred_unlink_t *du = s;
+  char *p;
+  int l;
+
+  if (unlink((const char *)du->filename))
+    tvherror("main", "unable to remove file '%s'", (const char *)du->filename);
+
+  /* Remove all directories up to rootdir */
+
+  l = strlen(du->filename) - 1;
+  p = du->filename;
+
+  for(; l >= 0; l--) {
+    if(p[l] == '/') {
+      p[l] = 0;
+      if(strncmp(p, du->rootdir, l) == 0)
+        break;
+      if(rmdir(p) == -1)
+        break;
+    }
+  }
+
+  free(du->filename);
+  free(du->rootdir);
+  free(du);
+}
+
+int
+deferred_unlink(const char *filename, const char *rootdir)
+{
+  deferred_unlink_t *du;
   char *s;
   size_t l;
   int r;
@@ -672,6 +708,15 @@ deferred_unlink(const char *filename)
     free(s);
     return r;
   }
-  tasklet_arm_alloc(deferred_unlink_cb, s);
+  if (rootdir == NULL)
+    tasklet_arm_alloc(deferred_unlink_cb, s);
+  else {
+    du = calloc(1, sizeof(*du));
+    if (du == NULL)
+      return -ENOMEM;
+    du->filename = s;
+    du->rootdir = strdup(rootdir);
+    tasklet_arm_alloc(deferred_unlink_dir_cb, du);
+  }
   return 0;
 }
