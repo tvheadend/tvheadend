@@ -661,7 +661,7 @@ deferred_unlink(const char *filename)
   int r;
 
   l = strlen(filename);
-  s = malloc(l + 9);
+  s = malloc(l + 9 + 1);
   if (s == NULL)
     return -ENOMEM;
   strcpy(s, filename);
