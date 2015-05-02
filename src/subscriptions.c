@@ -550,6 +550,9 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   char buf[512];
   size_t l = 0;
 
+  if (s == NULL)
+    return;
+
   lock_assert(&global_lock);
 
   s->ths_state = SUBSCRIPTION_ZOMBIE;
