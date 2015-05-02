@@ -53,6 +53,31 @@ ca_slot_state2str(ca_slot_state_t v)
   return "UNKNOWN";
 }
 
+/*
+ *  ts101699 and CI+ 1.3 definitions
+ */
+#define TS101699_APP_AI_RESOURCEID  MKRID(2, 1, 2)
+#define CIPLUS13_APP_AI_RESOURCEID  MKRID(2, 1, 3)
+
+typedef enum {
+  CIPLUS13_DATA_RATE_72_MBPS = 0,
+  CIPLUS13_DATA_RATE_96_MBPS = 1,
+} ciplus13_data_rate_t;
+
+static int
+ciplus13_app_ai_data_rate_info(linuxdvb_ca_t *lca, ciplus13_data_rate_t rate)
+{
+  uint8_t data[] = {0x9f, 0x80, 0x24, 0x01, (uint8_t) rate};
+
+  /* only version 3 (CI+ 1.3) supports data_rate_info */
+  if (lca->lca_ai_version != 3)
+    return 0;
+
+  tvhinfo("en50221", "setting CI+ CAM data rate to %s Mbps", rate ? "96":"72");
+
+  return en50221_sl_send_data(lca->lca_sl, lca->lca_ai_session_number, data, sizeof(data));
+}
+
 static void
 linuxdvb_ca_class_save ( idnode_t *in )
 {
@@ -89,6 +114,15 @@ linuxdvb_ca_class_enabled_notify ( void *p )
   }
 }
 
+static void
+linuxdvb_ca_class_high_bitrate_notify ( void *p )
+{
+  linuxdvb_ca_t *lca = (linuxdvb_ca_t *) p;
+  ciplus13_app_ai_data_rate_info(lca, lca->lca_high_bitrate_mode ?
+                                 CIPLUS13_DATA_RATE_96_MBPS :
+                                 CIPLUS13_DATA_RATE_72_MBPS);
+}
+
 static const char *
 linuxdvb_ca_class_get_title ( idnode_t *in )
 {
@@ -118,6 +152,13 @@ const idclass_t linuxdvb_ca_class =
       .name     = "Enabled",
       .off      = offsetof(linuxdvb_ca_t, lca_enabled),
       .notify   = linuxdvb_ca_class_enabled_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "high_bitrate_mode",
+      .name     = "High Bitrate Mode (CI+ CAMs Only)",
+      .off      = offsetof(linuxdvb_ca_t, lca_high_bitrate_mode),
+      .notify   = linuxdvb_ca_class_high_bitrate_notify,
     },
     {
       .type     = PT_BOOL,
@@ -160,14 +201,26 @@ const idclass_t linuxdvb_ca_class =
   }
 };
 
-
 static uint32_t
 resource_ids[] = { EN50221_APP_RM_RESOURCEID,
                    EN50221_APP_MMI_RESOURCEID,
                    EN50221_APP_DVB_RESOURCEID,
                    EN50221_APP_CA_RESOURCEID,
                    EN50221_APP_DATETIME_RESOURCEID,
-                   EN50221_APP_AI_RESOURCEID};
+                   EN50221_APP_AI_RESOURCEID,
+                   TS101699_APP_AI_RESOURCEID,
+                   CIPLUS13_APP_AI_RESOURCEID};
+
+static int
+en50221_app_unknown_message(void *arg, uint8_t slot_id,
+                            uint16_t session_num, uint32_t resource_id,
+                            uint8_t *data, uint32_t data_length)
+{
+  tvhtrace("en50221", "unknown message slot_id %u, session_num %u, resource_id %x",
+           slot_id, session_num, resource_id);
+  tvhlog_hexdump("en50221", data, data_length);
+  return 0;
+}
 
 static int
 linuxdvb_ca_lookup_cb (void * arg, uint8_t slot_id, uint32_t requested_rid,
@@ -183,9 +236,11 @@ linuxdvb_ca_lookup_cb (void * arg, uint8_t slot_id, uint32_t requested_rid,
         *connected_rid = EN50221_APP_RM_RESOURCEID;
         break;
       case EN50221_APP_AI_RESOURCEID:
+      case TS101699_APP_AI_RESOURCEID:
+      case CIPLUS13_APP_AI_RESOURCEID:
         *callback_out = (en50221_sl_resource_callback) en50221_app_ai_message;
         *arg_out = lca->lca_ai_resource;
-        *connected_rid = EN50221_APP_AI_RESOURCEID;
+        *connected_rid = requested_rid;
         break;
       case EN50221_APP_CA_RESOURCEID:
         *callback_out = (en50221_sl_resource_callback) en50221_app_ca_message;
@@ -205,7 +260,9 @@ linuxdvb_ca_lookup_cb (void * arg, uint8_t slot_id, uint32_t requested_rid,
       default:
         tvhtrace("en50221", "lookup cb for unknown resource id %x on slot %u",
                  requested_rid, slot_id);
-    		return -1;
+        *callback_out = (en50221_sl_resource_callback) en50221_app_unknown_message;
+        *arg_out = lca;
+        *connected_rid = requested_rid;
     }
     return 0;
 }
@@ -214,35 +271,61 @@ static int
 linuxdvb_ca_session_cb (void *arg, int reason, uint8_t slot_id,
                         uint16_t session_num, uint32_t rid)
 {
-    linuxdvb_ca_t * lca = arg;
+  linuxdvb_ca_t * lca = arg;
 
-	switch(reason) {
-		case S_SCALLBACK_REASON_CAMCONNECTING:
-			break;
-		case S_SCALLBACK_REASON_CAMCONNECTED:
-      if (rid == EN50221_APP_RM_RESOURCEID) {
-          en50221_app_rm_enq(lca->lca_rm_resource, session_num);
-      } else if (rid == EN50221_APP_AI_RESOURCEID) {
-          en50221_app_ai_enquiry(lca->lca_ai_resource, session_num);
-      } else if (rid == EN50221_APP_CA_RESOURCEID) {
-          en50221_app_ca_info_enq(lca->lca_ca_resource, session_num);
-          lca->lca_ca_session_number = session_num;
-      }
-			break;
-    case S_SCALLBACK_REASON_CLOSE:
-      if (rid == EN50221_APP_CA_RESOURCEID) {
+  if (reason == S_SCALLBACK_REASON_CAMCONNECTING) {
+    tvhtrace("en50221", "0x%08x session %u connecting", rid, session_num);
+    return 0;
+  }
+
+  if (reason == S_SCALLBACK_REASON_CAMCONNECTED) {
+    tvhtrace("en50221", "0x%08x session %u connected", rid, session_num);
+    switch(rid) {
+      case EN50221_APP_RM_RESOURCEID:
+        en50221_app_rm_enq(lca->lca_rm_resource, session_num);
+        break;
+      case EN50221_APP_AI_RESOURCEID:
+      case TS101699_APP_AI_RESOURCEID:
+      case CIPLUS13_APP_AI_RESOURCEID:
+        lca->lca_ai_version = rid & 0x3f;
+        lca->lca_ai_session_number = session_num;
+        en50221_app_ai_enquiry(lca->lca_ai_resource, session_num);
+        ciplus13_app_ai_data_rate_info(lca, lca->lca_high_bitrate_mode ?
+                                       CIPLUS13_DATA_RATE_96_MBPS :
+                                       CIPLUS13_DATA_RATE_72_MBPS );
+        break;
+      case EN50221_APP_CA_RESOURCEID:
+        en50221_app_ca_info_enq(lca->lca_ca_resource, session_num);
+        lca->lca_ca_session_number = session_num;
+        break;
+      case EN50221_APP_MMI_RESOURCEID:
+      case EN50221_APP_DATETIME_RESOURCEID:
+        break;
+      default:
+        tvhtrace("en50221", "session %u with unknown rid 0x%08x is connected",
+                 session_num, rid);
+    }
+    return 0;
+  }
+
+  if (reason == S_SCALLBACK_REASON_CLOSE) {
+    tvhtrace("en50221", "0x%08x session %u close", rid, session_num);
+    switch(rid) {
+      case EN50221_APP_CA_RESOURCEID:
         dvbcam_unregister_cam(lca, 0);
         lca->lca_cam_menu_string[0] = 0;
-      }
-      break;
-    case S_SCALLBACK_REASON_TC_CONNECT:
-      break;
-		default:
-		  tvhtrace("en50221", "unhandled session callback - "
-		  	       "reason %d slot_id %u session_num %u resource_id %x",
-		           reason, slot_id, session_num, rid);
-	}
+    }
     return 0;
+  }
+
+  if (reason == S_SCALLBACK_REASON_TC_CONNECT) {
+    tvhtrace("en50221", "0x%08x session %u tc connect", rid, session_num);
+    return 0;
+  }
+
+  tvhtrace("en50221", "unhandled session callback - reason %d slot_id %u "
+           "session_num %u resource_id %x", reason, slot_id, session_num, rid);
+  return 0;
 }
 
 static int
@@ -267,7 +350,8 @@ linuxdvb_ca_rm_reply_cb(void *arg, uint8_t slot_id, uint16_t session_num,
 {
     linuxdvb_ca_t * lca = arg;
 
-    tvhtrace("en50221", "rm reply cb received for slot %d", slot_id);
+    tvhtrace("en50221", "rm reply cb received for slot %d, count %u", slot_id,
+             resource_id_count);
 
     uint32_t i;
     for(i=0; i< resource_id_count; i++) {
