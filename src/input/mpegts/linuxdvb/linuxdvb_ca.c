@@ -49,7 +49,7 @@ ca_slot_state2str(ca_slot_state_t v)
     case CA_SLOT_STATE_EMPTY:           return "slot empty";
     case CA_SLOT_STATE_MODULE_PRESENT:  return "module present";
     case CA_SLOT_STATE_MODULE_READY:    return "module ready";
-	};
+  };
   return "UNKNOWN";
 }
 
@@ -336,9 +336,10 @@ linuxdvb_ca_rm_enq_cb(void *arg, uint8_t slot_id, uint16_t session_num)
     tvhtrace("en50221", "rm enq callback received for slot %d", slot_id);
 
     if (en50221_app_rm_reply(lca->lca_rm_resource, session_num,
-    	  sizeof(resource_ids)/4, resource_ids)) {
-        tvherror("en50221", "failed to send rm reply to slot %u session %u",
-                 slot_id, session_num);
+        sizeof(resource_ids)/4, resource_ids))
+    {
+      tvherror("en50221", "failed to send rm reply to slot %u session %u",
+               slot_id, session_num);
     }
 
     return 0;
@@ -630,7 +631,7 @@ linuxdvb_ca_en50221_thread ( void *aux )
 
   lca->lca_tc = en50221_tl_new_tc(lca->lca_tl, slot_id);
 
-  while (tvheadend_running & lca->lca_en50221_thread_running) {
+  while (tvheadend_running && lca->lca_en50221_thread_running) {
         int error;
         if ((error = en50221_tl_poll(lca->lca_tl)) != 0) {
             if (error != lasterror) {
@@ -734,7 +735,7 @@ linuxdvb_ca_create
 
   gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
 
-	return lca;
+  return lca;
 }
 
 void
