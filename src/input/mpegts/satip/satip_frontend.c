@@ -580,6 +580,8 @@ satip_frontend_open_pid
     } else {
       change |= satip_frontend_add_pid(lfe, mp->mp_pid, weight);
     }
+    if (lfe->sf_device->sd_fritz_quirk)
+      change |= satip_frontend_add_pid(lfe, 21, 1);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
   if (change)
@@ -1280,8 +1282,6 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PIDS0;
   if (lfe->sf_device->sd_pilot_on)
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
-  if (lfe->sf_device->sd_fritz_quirk)
-    rtsp_flags |= SATIP_SETUP_FRITZ_QUIRK;
   r = -12345678;
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req == lfe->sf_req_thread)
