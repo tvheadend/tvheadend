@@ -120,6 +120,29 @@ const idclass_t linuxdvb_ca_class =
       .notify   = linuxdvb_ca_class_enabled_notify,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "pin_reply",
+      .name     = "Reply to CAM PIN Enquiries",
+      .off      = offsetof(linuxdvb_ca_t, lca_pin_reply),
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "pin",
+      .name     = "PIN",
+      .off      = offsetof(linuxdvb_ca_t, lca_pin_str),
+      .opts     = PO_ADVANCED | PO_PASSWORD,
+      .def.s    = "1234",
+    },
+    {
+      .type     = PT_STR,
+      .id       = "pin_match",
+      .name     = "PIN Enquiry Match String",
+      .off      = offsetof(linuxdvb_ca_t, lca_pin_match_str),
+      .opts     = PO_ADVANCED,
+      .def.s    = "PIN",
+    },
+    {
       .type     = PT_STR,
       .id       = "ca_path",
       .name     = "Device Path",
@@ -391,18 +414,25 @@ linuxdvb_ca_mmi_enq_cb(void *arg, uint8_t slot_id, uint16_t session_num,
                        uint8_t *text, uint32_t text_size)
 {
     linuxdvb_ca_t * lca = arg;
+    char buffer[256];
 
-    tvhlog(LOG_NOTICE, "en50221", "MMI enquiry from CAM in slot %u:  %.*s (%s%u digits)",
-           slot_id, text_size, text,blind_answ ? "blind " : "" , exp_answ_len);
+    snprintf(buffer, sizeof(buffer), "%.*s", text_size, text);
 
-    /* cancel dialog */
-    en50221_app_mmi_answ(lca->lca_mmi_resource, session_num, MMI_ANSW_ID_CANCEL, NULL, 0);
+    tvhlog(LOG_NOTICE, "en50221", "MMI enquiry from CAM in slot %u:  %s (%s%u digits)",
+           slot_id, buffer, blind_answ ? "blind " : "" , exp_answ_len);
 
-    /* TODO add gui to enter PIN - keeping this disabled as
-       entering wrong pin can block card */
+    if (lca->lca_pin_reply &&
+        (strlen((char *) lca->lca_pin_str) == exp_answ_len) &&
+        strstr((char *) buffer, lca->lca_pin_match_str))
+    {
+      tvhtrace("en50221", "answering to PIN enquiry");
+      en50221_app_mmi_answ(lca->lca_mmi_resource, session_num,
+                           MMI_ANSW_ID_ANSWER, (uint8_t *) lca->lca_pin_str,
+                           exp_answ_len);
+    }
 
-    //uint8_t answ[4] = "1234";
-    //en50221_app_mmi_answ(lca->lca_mmi_resource, session_num, MMI_ANSW_ID_ANSWER, answ, 4);
+    en50221_app_mmi_close(lca->lca_mmi_resource, session_num,
+                          MMI_CLOSE_MMI_CMD_ID_IMMEDIATE, 0);
 
     return 0;
 }
@@ -428,8 +458,8 @@ linuxdvb_ca_mmi_menu_cb(void *arg, uint8_t slot_id, uint16_t session_num,
     tvhlog(LOG_NOTICE, "en50221", "  bottom:   %.*s", bottom->text_length, bottom->text);
 
     /* cancel menu */
-    en50221_app_mmi_menu_answ(lca->lca_mmi_resource, session_num, 0);
-
+    en50221_app_mmi_close(lca->lca_mmi_resource, session_num,
+                          MMI_CLOSE_MMI_CMD_ID_IMMEDIATE, 0);
     return 0;
 }
 
@@ -454,8 +484,8 @@ linuxdvb_ca_app_mmi_list_cb(void *arg, uint8_t slot_id, uint16_t session_num,
     tvhlog(LOG_NOTICE, "en50221", "  bottom:   %.*s", bottom->text_length, bottom->text);
 
     /* cancel menu */
-    en50221_app_mmi_menu_answ(lca->lca_mmi_resource, session_num, 0);
-
+    en50221_app_mmi_close(lca->lca_mmi_resource, session_num,
+                          MMI_CLOSE_MMI_CMD_ID_IMMEDIATE, 0);
     return 0;
 }
 
