@@ -384,6 +384,11 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
+  } else if (strstr(sd->sd_info.modelname, "FRITZ!")) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_deladd = 0;
+    sd->sd_pids0       = 1;
+    sd->sd_fritz_quirk = 1;
   }
 }
 
