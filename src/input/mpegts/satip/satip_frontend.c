@@ -1280,6 +1280,8 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PIDS0;
   if (lfe->sf_device->sd_pilot_on)
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
+  if (lfe->sf_device->sd_fritz_quirk)
+    rtsp_flags |= SATIP_SETUP_FRITZ_QUIRK;
   r = -12345678;
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_req == lfe->sf_req_thread)

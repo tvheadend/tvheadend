@@ -222,6 +222,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
   }
   if (flags & SATIP_SETUP_PIDS0)
     strcat(buf, "&pids=0");
+  if (flags & SATIP_SETUP_FRITZ_QUIRK)
+    strcat(buf, ",21");
   tvhtrace("satip", "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
