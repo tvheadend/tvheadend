@@ -170,6 +170,7 @@ struct linuxdvb_ca
    */
   int                       lca_ca_fd;
   int                       lca_enabled;
+  int                       lca_high_bitrate_mode;
   gtimer_t                  lca_monitor_timer;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
@@ -186,6 +187,7 @@ struct linuxdvb_ca
   struct en50221_app_datetime       *lca_dt_resource;
   struct en50221_app_mmi            *lca_mmi_resource;
   int                                lca_tc;
+  int                                lca_ai_version;
   uint16_t                           lca_ai_session_number;
   uint16_t                           lca_ca_session_number;
 
