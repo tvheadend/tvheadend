@@ -772,8 +772,8 @@ linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int
     goto fail;
   }
 
-  size = en50221_ca_format_pmt(pmt, capmt, sizeof(capmt),
-                               CA_LIST_MANAGEMENT_ONLY, slot,
+  size = en50221_ca_format_pmt(pmt, capmt, sizeof(capmt), 1,
+                               CA_LIST_MANAGEMENT_ONLY,
                                CA_PMT_CMD_ID_OK_DESCRAMBLING);
 
   if (size < 0) {
