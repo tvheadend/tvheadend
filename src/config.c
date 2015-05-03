@@ -1395,6 +1395,9 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 {
   struct stat st;
   char buf[1024];
+  htsmsg_t *config2;
+
+  config = htsmsg_create_map();
 
   /* Generate default */
   if (!path) {
@@ -1438,10 +1441,12 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
     tvhwarn("config", "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
 
   /* Load global settings */
-  config = hts_settings_load("config");
-  if (!config) {
+  config2 = hts_settings_load("config");
+  if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
-    config = htsmsg_create_map();
+  } else {
+    htsmsg_destroy(config);
+    config = config2;
   }
 }
 
