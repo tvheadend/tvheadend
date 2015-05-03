@@ -1203,6 +1203,8 @@ dobackup(const char *oldver)
   pid_t pid;
   int code;
 
+  assert(root);
+
   tvhinfo("config", "backup: migrating config from %s (running %s)",
                     oldver, tvheadend_version);
 
@@ -1448,7 +1450,7 @@ config_init ( int backup )
 {
   const char *path = hts_settings_get_root();
 
-  if (access(path, R_OK | W_OK)) {
+  if (path == NULL || access(path, R_OK | W_OK)) {
     tvhwarn("START", "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
