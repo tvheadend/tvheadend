@@ -416,12 +416,9 @@ iptv_input_mux_started ( iptv_mux_t *im )
 
   /* Install table handlers */
   mpegts_mux_t *mm = (mpegts_mux_t*)im;
-  psi_tables_default(mm);
-  if (im->mm_iptv_atsc) {
-    psi_tables_atsc_t(mm);
-    psi_tables_atsc_c(mm);
-  } else
-    psi_tables_dvb(mm);
+  if (mm->mm_active)
+    psi_tables_install(mm->mm_active->mmi_input, mm,
+                       im->mm_iptv_atsc ? DVB_SYS_ATSC_ALL : DVB_SYS_DVBT);
 }
 
 /* **************************************************************************

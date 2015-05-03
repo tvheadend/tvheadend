@@ -289,6 +289,7 @@ mpegts_pid_weighted(mpegts_apids_t *dst, mpegts_apids_t *pids, int limit)
     }
   dst->count = j;
   dst->sorted = 0;
+  dst->all = pids->all;
   return 0;
 }
 

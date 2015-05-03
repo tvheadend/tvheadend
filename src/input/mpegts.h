@@ -684,8 +684,7 @@ struct mpegts_input
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
-  mpegts_pid_t *(*mi_open_pid)(mpegts_input_t*,mpegts_mux_t*,int,int,int,void*);
-  int  (*mi_close_pid)      (mpegts_input_t*,mpegts_mux_t*,int,int,int,void*);
+  void (*mi_update_pids)    (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_started_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
@@ -970,10 +969,8 @@ int dvb_tot_callback
 int atsc_vct_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 
-void psi_tables_default ( struct mpegts_mux *mm );
-void psi_tables_dvb     ( struct mpegts_mux *mm );
-void psi_tables_atsc_t  ( struct mpegts_mux *mm );
-void psi_tables_atsc_c  ( struct mpegts_mux *mm );
+void psi_tables_install
+  (mpegts_input_t *mi, mpegts_mux_t *mm, dvb_fe_delivery_system_t delsys);
 
 mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,

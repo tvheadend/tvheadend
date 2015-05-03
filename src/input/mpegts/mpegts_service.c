@@ -751,31 +751,32 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     x = t->s_pids;
     t->s_pids = p;
     if (!pids->all && x && x->all) {
-      mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
+      mpegts_input_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
       mpegts_input_close_pids(mi, mm, t, 1);
       for (i = 0; i < x->count; i++) {
         pi = &x->pids[i];
-        mi->mi_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+        mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
       }
     } else {
       if (pids->all) {
         mpegts_input_close_pids(mi, mm, t, 1);
-        mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
+        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
       } else {
         mpegts_pid_compare(p, x, &add, &del);
         for (i = 0; i < del.count; i++) {
           pi = &x->pids[i];
-          mi->mi_close_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+          mpegts_input_close_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
         }
         for (i = 0; i < add.count; i++) {
           pi = &x->pids[i];
-          mi->mi_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+          mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
         }
         mpegts_pid_done(&add);
         mpegts_pid_done(&del);
       }
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
+    mi->mi_update_pids(mi, mm);
     pthread_mutex_unlock(&mi->mi_output_lock);
   } else {
     pthread_mutex_lock(&t->s_stream_mutex);

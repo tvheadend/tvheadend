@@ -64,15 +64,8 @@ satip_frontend_signal_cb( void *aux )
   if (mmi == NULL)
     return;
   if (!lfe->sf_tables) {
-    psi_tables_default(mmi->mmi_mux);
-    if (lfe->sf_type == DVB_TYPE_ATSC) {
-      if (lfe->sf_atsc_c)
-        psi_tables_atsc_c(mmi->mmi_mux);
-      else
-        psi_tables_atsc_t(mmi->mmi_mux);
-    } else {
-      psi_tables_dvb(mmi->mmi_mux);
-    }
+    psi_tables_install(mmi->mmi_input, mmi->mmi_mux,
+                       ((dvb_mux_t *)mmi->mmi_mux)->lm_tuning.dmc_fe_type);
     lfe->sf_tables = 1;
   }
   sigstat.status_text  = signal2str(lfe->sf_status);
@@ -529,107 +522,47 @@ satip_frontend_start_mux
   return 0;
 }
 
-static int
-satip_frontend_add_pid( satip_frontend_t *lfe, int pid, int weight)
-{
-  satip_tune_req_t *tr;
-
-  if (pid < 0 || pid >= 8191)
-    return 0;
-
-  tr = lfe->sf_req;
-  if (tr) {
-    mpegts_pid_add(&tr->sf_pids, pid, weight);
-    return 1;
-  }
-
-  return 0;
-}
-
-static mpegts_pid_t *
-satip_frontend_open_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
-{
-  satip_frontend_t *lfe = (satip_frontend_t*)mi;
-  satip_tune_req_t *tr;
-  mpegts_pid_t *mp;
-  int change = 0;
-
-  if (!(mp = mpegts_input_open_pid(mi, mm, pid, type, weight, owner)))
-    return NULL;
-
-  if (mp->mp_pid > MPEGTS_FULLMUX_PID)
-    return mp;
-
-  pthread_mutex_lock(&lfe->sf_dvr_lock);
-  if ((tr = lfe->sf_req) != NULL) {
-    if (pid == MPEGTS_FULLMUX_PID) {
-      if (lfe->sf_device->sd_fullmux_ok) {
-        if (!tr->sf_pids.all)
-          tr->sf_pids.all = change = 1;
-      } else {
-        mpegts_service_t *s;
-        elementary_stream_t *st;
-        LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-          change |= satip_frontend_add_pid(lfe, s->s_pmt_pid, weight);
-          change |= satip_frontend_add_pid(lfe, s->s_pcr_pid, weight);
-          TAILQ_FOREACH(st, &s->s_components, es_link)
-            change |= satip_frontend_add_pid(lfe, st->es_pid, weight);
-        }
-      }
-    } else {
-      change |= satip_frontend_add_pid(lfe, mp->mp_pid, weight);
-    }
-    if (lfe->sf_device->sd_fritz_quirk)
-      change |= satip_frontend_add_pid(lfe, 21, 1);
-  }
-  pthread_mutex_unlock(&lfe->sf_dvr_lock);
-  if (change)
-    tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
-
-  return mp;
-}
-
-static int
-satip_frontend_close_pid
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, int pid, int type, int weight, void *owner )
+static void
+satip_frontend_update_pids
+  ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
-  int change = 0, r;
-
-  if ((r = mpegts_input_close_pid(mi, mm, pid, type, weight, owner)) <= 0)
-    return r; /* return here even if change is nonzero - multiple PID subscribers */
-
-  /* Skip internal PIDs */
-  if (pid > MPEGTS_FULLMUX_PID)
-    return r;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  /* remove PID */
   if ((tr = lfe->sf_req) != NULL) {
-    if (pid == MPEGTS_FULLMUX_PID) {
-      if (lfe->sf_device->sd_fullmux_ok) {
-        if (tr->sf_pids.all) {
-          tr->sf_pids.all = 0;
-          change = 1;
+    mpegts_pid_done(&tr->sf_pids);
+    RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+      if (mp->mp_pid == MPEGTS_FULLMUX_PID) {
+        if (lfe->sf_device->sd_fullmux_ok) {
+          if (!tr->sf_pids.all)
+            tr->sf_pids.all = 1;
+        } else {
+          mpegts_service_t *s;
+          elementary_stream_t *st;
+          int w = 0;
+          RB_FOREACH(mps, &mp->mp_subs, mps_link)
+            w = MAX(w, mps->mps_weight);
+          LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+            mpegts_pid_add(&tr->sf_pids, s->s_pmt_pid, w);
+            mpegts_pid_add(&tr->sf_pids, s->s_pcr_pid, w);
+            TAILQ_FOREACH(st, &s->s_components, es_link)
+              mpegts_pid_add(&tr->sf_pids, st->es_pid, w);
+          }
         }
-      }
-    } else {
-      mpegts_pid_done(&tr->sf_pids);
-      RB_FOREACH(mp, &mm->mm_pids, mp_link)
+      } else if (mp->mp_pid < MPEGTS_FULLMUX_PID) {
         RB_FOREACH(mps, &mp->mp_subs, mps_link)
           mpegts_pid_add(&tr->sf_pids, mp->mp_pid, mps->mps_weight);
-      change = 1;
+      }
     }
-    if (change)
-      tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
+    if (lfe->sf_device->sd_fritz_quirk)
+      mpegts_pid_add(&tr->sf_pids, 21, 1);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-  return r;
+  tvh_write(lfe->sf_dvr_pipe.wr, "c", 1);
 }
 
 static idnode_set_t *
@@ -1687,8 +1620,7 @@ satip_frontend_create
   lfe->mi_start_mux      = satip_frontend_start_mux;
   lfe->mi_stop_mux       = satip_frontend_stop_mux;
   lfe->mi_network_list   = satip_frontend_network_list;
-  lfe->mi_open_pid       = satip_frontend_open_pid;
-  lfe->mi_close_pid      = satip_frontend_close_pid;
+  lfe->mi_update_pids    = satip_frontend_update_pids;
 
   /* Adapter link */
   lfe->sf_device = sd;

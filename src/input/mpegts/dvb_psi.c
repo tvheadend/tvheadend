@@ -2419,7 +2419,7 @@ dvb_tot_callback
  * Install default table sets
  */
 
-void
+static void
 psi_tables_default ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
@@ -2444,7 +2444,7 @@ psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 }
 #endif
 
-void
+static void
 psi_tables_dvb ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
@@ -2473,7 +2473,7 @@ psi_tables_dvb ( mpegts_mux_t *mm )
 #endif
 }
 
-void
+static void
 psi_tables_atsc_c ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
@@ -2481,10 +2481,61 @@ psi_tables_atsc_c ( mpegts_mux_t *mm )
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
 }
 
-void
+static void
 psi_tables_atsc_t ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+}
+
+void
+psi_tables_install ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                     dvb_fe_delivery_system_t delsys)
+{
+  if (mi == NULL || mm == NULL)
+    return;
+
+  psi_tables_default(mm);
+
+  switch (delsys) {
+  case DVB_SYS_DVBC_ANNEX_A:
+  case DVB_SYS_DVBC_ANNEX_C:
+  case DVB_SYS_DVBT:
+  case DVB_SYS_DVBT2:
+  case DVB_SYS_DVBS:
+  case DVB_SYS_DVBS2:
+  case DVB_SYS_ISDBS:
+    psi_tables_dvb(mm);
+    break;
+  case DVB_SYS_TURBO:
+  case DVB_SYS_ATSC:
+  case DVB_SYS_ATSCMH:
+    psi_tables_atsc_t(mm);
+    break;
+  case DVB_SYS_DVBC_ANNEX_B:
+    psi_tables_atsc_c(mm);
+    break;
+  case DVB_SYS_NONE:
+  case DVB_SYS_DVBH:
+  case DVB_SYS_ISDBT:
+  case DVB_SYS_ISDBC:
+  case DVB_SYS_DTMB:
+  case DVB_SYS_CMMB:
+  case DVB_SYS_DSS:
+  case DVB_SYS_DAB:
+    break;
+  case DVB_SYS_ATSC_ALL:
+    psi_tables_atsc_c(mm);
+    psi_tables_atsc_t(mm);
+    break;
+  case DVB_SYS_UNKNOWN:
+    psi_tables_dvb(mm);
+    psi_tables_atsc_c(mm);
+    psi_tables_atsc_t(mm);
+    break;
+    break;
+  }
+
+  mi->mi_update_pids(mi, mm);
 }

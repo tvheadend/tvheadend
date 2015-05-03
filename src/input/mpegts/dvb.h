@@ -340,6 +340,9 @@ typedef enum dvb_fe_delivery_system {
   DVB_SYS_CMMB            =  900,
   DVB_SYS_DAB             = 1000,
   DVB_SYS_TURBO           = 1100,
+  /* TVH internal */
+  DVB_SYS_ATSC_ALL        = 9998,
+  DVB_SYS_UNKNOWN         = 9999
 } dvb_fe_delivery_system_t;
 
 typedef enum dvb_fe_spectral_inversion {
