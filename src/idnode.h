@@ -160,8 +160,8 @@ void         *idnode_find    (const char *uuid, const idclass_t *idc, const idno
 idnode_set_t *idnode_find_all(const idclass_t *idc, const idnodes_rb_t *nodes);
 
 
-void idnode_notify (idnode_t *in, int event);
-void idnode_notify_simple (void *in);
+void idnode_notify (idnode_t *in, const char *action);
+void idnode_notify_changed (void *in);
 void idnode_notify_title_changed (void *in);
 
 void idclass_register ( const idclass_t *idc );

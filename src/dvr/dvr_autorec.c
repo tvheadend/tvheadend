@@ -1207,7 +1207,7 @@ autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
   while((dae = LIST_FIRST(&ct->ct_autorecs)) != NULL) {
     LIST_REMOVE(dae, dae_channel_tag_link);
     dae->dae_channel_tag = NULL;
-    idnode_notify_simple(&dae->dae_id);
+    idnode_notify_changed(&dae->dae_id);
     if (delconf)
       dvr_autorec_save(dae);
   }

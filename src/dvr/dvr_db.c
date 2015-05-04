@@ -1066,7 +1066,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 
   if (saveconf)
     dvr_entry_save(de);
-  idnode_notify_simple(&de->de_id);
+  idnode_notify_changed(&de->de_id);
   htsp_dvr_entry_update(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 

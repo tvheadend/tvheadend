@@ -289,7 +289,7 @@ htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 /*
  *
  */
-void
+htsmsg_t *
 htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 {
   htsmsg_field_t *f;
@@ -301,6 +301,11 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   f->hmf_msg.hm_islist = sub->hm_islist;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   free(sub);
+
+  if (f->hmf_type == (f->hmf_msg.hm_islist ? HMF_LIST : HMF_MAP))
+    return &f->hmf_msg;
+
+  return NULL;
 }
 
 

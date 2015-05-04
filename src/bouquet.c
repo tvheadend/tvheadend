@@ -283,7 +283,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
   if (lcn != tl->sl_lcn) {
     tl->sl_lcn = lcn;
     LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
-      idnode_notify_simple(&csm->csm_chn->ch_id);
+      idnode_notify_changed(&csm->csm_chn->ch_id);
   }
   tl->sl_seen = 1;
 
@@ -456,7 +456,7 @@ bouquet_notify_channels(bouquet_t *bq)
     t = (service_t *)bq->bq_services->is_array[z];
     LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
       if (csm->csm_chn->ch_bouquet == bq)
-        idnode_notify_simple(&csm->csm_chn->ch_id);
+        idnode_notify_changed(&csm->csm_chn->ch_id);
   }
 }
 
@@ -511,7 +511,7 @@ bouquet_save(bouquet_t *bq, int notify)
   htsmsg_destroy(c);
   bq->bq_saveflag = 0;
   if (notify)
-    idnode_notify_simple(&bq->bq_id);
+    idnode_notify_changed(&bq->bq_id);
 }
 
 /* **************************************************************************

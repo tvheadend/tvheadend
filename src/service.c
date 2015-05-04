@@ -120,7 +120,7 @@ service_class_channel_set
 
   /* no save - the link information is in the saved channel record */
   /* only send a notify about the change to other clients */
-  idnode_notify_simple(&svc->s_id);
+  idnode_notify_changed(&svc->s_id);
   return 0;
 }
 
@@ -871,7 +871,7 @@ service_set_enabled(service_t *t, int enabled, int _auto)
     t->s_auto = _auto;
     service_class_notify_enabled(t);
     service_request_save(t, 0);
-    idnode_notify_simple(&t->s_id);
+    idnode_notify_changed(&t->s_id);
   }
 }
 

@@ -1601,14 +1601,14 @@ mpegts_input_add_network ( mpegts_input_t *mi, mpegts_network_t *mn )
   mnl->mnl_network  = mn;
   LIST_INSERT_HEAD(&mi->mi_networks, mnl, mnl_mi_link);
   LIST_INSERT_HEAD(&mn->mn_inputs,   mnl, mnl_mn_link);
-  idnode_notify_simple(&mnl->mnl_network->mn_id);
+  idnode_notify_changed(&mnl->mnl_network->mn_id);
   return 1;
 }
 
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl )
 {
-  idnode_notify_simple(&mnl->mnl_network->mn_id);
+  idnode_notify_changed(&mnl->mnl_network->mn_id);
   LIST_REMOVE(mnl, mnl_mn_link);
   LIST_REMOVE(mnl, mnl_mi_link);
   free(mnl);

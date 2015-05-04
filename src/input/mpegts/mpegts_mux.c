@@ -1089,7 +1089,7 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
   tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1107,7 +1107,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
 #endif
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1123,7 +1123,7 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
 #endif
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 

@@ -294,7 +294,7 @@ mpegts_network_mux_create2
 static void
 mpegts_network_link_delete ( mpegts_network_link_t *mnl )
 {
-  idnode_notify_simple(&mnl->mnl_input->ti_id);
+  idnode_notify_changed(&mnl->mnl_input->ti_id);
   LIST_REMOVE(mnl, mnl_mn_link);
   LIST_REMOVE(mnl, mnl_mi_link);
   free(mnl);

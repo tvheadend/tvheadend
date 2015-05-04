@@ -710,7 +710,7 @@ channel_get_icon ( channel_t *ch )
       if (i > 1 || check_file(buf)) {
         icon = ch->ch_icon = strdup(buf);
         channel_save(ch);
-        idnode_notify_simple(&ch->ch_id);
+        idnode_notify_changed(&ch->ch_id);
       }
     }
 
@@ -725,7 +725,7 @@ channel_get_icon ( channel_t *ch )
         if (i > 1 || check_file(buf2)) {
           icon = ch->ch_icon = strdup(icn);
           channel_save(ch);
-          idnode_notify_simple(&ch->ch_id);
+          idnode_notify_changed(&ch->ch_id);
           break;
         }
       }
@@ -1009,7 +1009,7 @@ channel_tag_unmap(channel_t *ch, channel_tag_t *ct)
       LIST_REMOVE(ctm, ctm_tag_link);
       free(ctm);
       channel_save(ch);
-      idnode_notify_simple(&ch->ch_id);
+      idnode_notify_changed(&ch->ch_id);
       if (ct->ct_enabled && !ct->ct_internal) {
         htsp_tag_update(ct);
         htsp_channel_update(ch);

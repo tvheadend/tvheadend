@@ -184,11 +184,11 @@ service_mapper_notify ( channel_service_mapping_t *csm, void *origin )
   if (origin == NULL)
     return;
   if (origin == csm->csm_svc) {
-    idnode_notify_simple(&csm->csm_chn->ch_id);
+    idnode_notify_changed(&csm->csm_chn->ch_id);
     channel_save(csm->csm_chn);
   }
   if (origin == csm->csm_chn)
-    idnode_notify_simple(&csm->csm_svc->s_id);
+    idnode_notify_changed(&csm->csm_svc->s_id);
 }
 
 /*
@@ -315,7 +315,7 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
         channel_tag_map(chn, channel_tag_find_by_name(prov, 1));
 
     /* save */
-    idnode_notify_simple(&chn->ch_id);
+    idnode_notify_changed(&chn->ch_id);
     channel_save(chn);
   }
   if (!bq) {

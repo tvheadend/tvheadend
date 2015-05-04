@@ -632,8 +632,8 @@ mpegts_service_create0
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
-  idnode_notify_simple(&mm->mm_id);
-  idnode_notify_simple(&mm->mm_network->mn_id);
+  idnode_notify_changed(&mm->mm_id);
+  idnode_notify_changed(&mm->mm_network->mn_id);
 
   /* Save the create time */
   if (s->s_dvb_created == dispatch_clock)
