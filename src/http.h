@@ -323,6 +323,8 @@ struct http_client {
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
+  gtimer_t     hc_close_timer;
+
   /* callbacks */
   int     (*hc_hdr_received) (http_client_t *hc);
   int     (*hc_data_received)(http_client_t *hc, void *buf, size_t len);

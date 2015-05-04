@@ -20,14 +20,24 @@
 #include "tvheadend.h"
 #include "iptv_private.h"
 #include "http.h"
-#include "udp.h"
 
 typedef struct {
   http_client_t *hc;
   udp_multirecv_t um;
-  char *url;
+  char *path;
+  char *query;
   gtimer_t alive_timer;
+  int play;
 } rtsp_priv_t;
+
+/*
+ *
+ */
+static void
+iptv_rtsp_close_cb ( void *aux )
+{
+  http_client_close((http_client_t *)aux);
+}
 
 /*
  * Alive timeout
@@ -49,22 +59,33 @@ static int
 iptv_rtsp_header ( http_client_t *hc )
 {
   iptv_mux_t *im = hc->hc_aux;
-  rtsp_priv_t *rp = im->im_data;
+  rtsp_priv_t *rp;
   int r;
 
-  if (im == NULL)
+  if (im == NULL) {
+    /* teardown (or teardown timeout) */
+    if (hc->hc_cmd == RTSP_CMD_TEARDOWN) {
+      pthread_mutex_lock(&global_lock);
+      gtimer_arm(&hc->hc_close_timer, iptv_rtsp_close_cb, hc, 0);
+      pthread_mutex_unlock(&global_lock);
+    }
     return 0;
+  }
 
   if (hc->hc_code != HTTP_STATUS_OK) {
     tvherror("iptv", "invalid error code %d for '%s'", hc->hc_code, im->mm_iptv_url);
     return 0;
   }
 
+  rp = im->im_data;
+
   switch (hc->hc_cmd) {
   case RTSP_CMD_SETUP:
     r = rtsp_setup_decode(hc, 0);
-    if (r >= 0)
-      rtsp_play(hc, rp->url, "");
+    if (r >= 0) {
+      rtsp_play(hc, rp->path, rp->query);
+      rp->play = 1;
+    }
     break;
   case RTSP_CMD_PLAY:
     hc->hc_cmd = HTTP_CMD_NONE;
@@ -139,7 +160,8 @@ iptv_rtsp_start
   rp = calloc(1, sizeof(*rp));
   rp->hc = hc;
   udp_multirecv_init(&rp->um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
-  rp->url = strdup(u->raw);
+  rp->path = strdup(u->path ?: "");
+  rp->query = strdup(u->query ?: "");
 
   im->im_data = rp;
   im->mm_iptv_fd = rtp->fd;
@@ -158,6 +180,7 @@ iptv_rtsp_stop
   ( iptv_mux_t *im )
 {
   rtsp_priv_t *rp = im->im_data;
+  int play = rp->play;
 
   lock_assert(&global_lock);
 
@@ -165,11 +188,15 @@ iptv_rtsp_stop
     return;
   im->im_data = NULL;
   rp->hc->hc_aux = NULL;
+  if (play)
+    rtsp_teardown(rp->hc, rp->path, "");
   pthread_mutex_unlock(&iptv_lock);
   gtimer_disarm(&rp->alive_timer);
   udp_multirecv_free(&rp->um);
-  http_client_close(rp->hc);
-  free(rp->url);
+  if (!play)
+    http_client_close(rp->hc);
+  free(rp->path);
+  free(rp->query);
   free(rp);
   pthread_mutex_lock(&iptv_lock);
 }

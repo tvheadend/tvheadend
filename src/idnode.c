@@ -215,7 +215,6 @@ idnode_handler(size_t off, idnode_t *in, const char *action)
     }
     idc = idc->ic_super;
   }
-  
 }
 
 void
