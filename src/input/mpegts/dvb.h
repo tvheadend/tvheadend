@@ -306,19 +306,7 @@ int dvb_table_remux
 
 extern htsmsg_t *satellites;
 
-/*
- *
- */
-#if ENABLE_MPEGTS_DVB
-
-typedef enum dvb_fe_type {
-  DVB_TYPE_NONE = 0,
-  DVB_TYPE_T = 1,		/* terrestrial */
-  DVB_TYPE_C,			/* cable */
-  DVB_TYPE_S,			/* satellite */
-  DVB_TYPE_ATSC,		/* terrestrial - north america */
-  DVB_TYPE_LAST = DVB_TYPE_ATSC
-} dvb_fe_type_t;
+/* Delivery systems */
 
 typedef enum dvb_fe_delivery_system {
   DVB_SYS_NONE            =    0,
@@ -344,6 +332,20 @@ typedef enum dvb_fe_delivery_system {
   DVB_SYS_ATSC_ALL        = 9998,
   DVB_SYS_UNKNOWN         = 9999
 } dvb_fe_delivery_system_t;
+
+/*
+ *
+ */
+#if ENABLE_MPEGTS_DVB
+
+typedef enum dvb_fe_type {
+  DVB_TYPE_NONE = 0,
+  DVB_TYPE_T = 1,		/* terrestrial */
+  DVB_TYPE_C,			/* cable */
+  DVB_TYPE_S,			/* satellite */
+  DVB_TYPE_ATSC,		/* terrestrial - north america */
+  DVB_TYPE_LAST = DVB_TYPE_ATSC
+} dvb_fe_type_t;
 
 typedef enum dvb_fe_spectral_inversion {
   DVB_INVERSION_UNDEFINED,
