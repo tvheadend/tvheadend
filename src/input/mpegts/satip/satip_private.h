@@ -223,6 +223,7 @@ int satip_satconf_get_position
 #define SATIP_SETUP_PLAY     (1<<0)
 #define SATIP_SETUP_PIDS0    (1<<1)
 #define SATIP_SETUP_PILOT_ON (1<<2)
+#define SATIP_SETUP_FRITZ_QUIRK   (1<<3)
 
 int
 satip_rtsp_setup( http_client_t *hc,
