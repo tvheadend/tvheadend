@@ -51,6 +51,25 @@ static int dvr_entry_class_disp_subtitle_set(void *o, const void *v);
  *
  */
 static int
+dvr_entry_assign_sched_state(dvr_entry_t *de, int state)
+{
+  char id[16];
+  if (de->de_sched_state != state) {
+    if (de->de_bcast) {
+      snprintf(id, sizeof(id), "%u", de->de_bcast->id);
+      notify_delayed(id, "epg", "dvr_update");
+    }
+    de->de_sched_state = state;
+    idnode_notify_changed(&de->de_id);
+    return 1;
+  }
+  return 0;
+}
+
+/*
+ *
+ */
+static int
 dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
 {
   char id[16];
@@ -185,7 +204,7 @@ dvr_dbus_timer_cb( void *aux )
 static void
 _dvr_entry_completed(dvr_entry_t *de)
 {
-  de->de_sched_state = DVR_COMPLETED;
+  dvr_entry_assign_sched_state(de, DVR_COMPLETED);
 #if ENABLE_INOTIFY
   dvr_inotify_add(de);
 #endif
@@ -329,7 +348,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if(now >= stop || de->de_dont_reschedule) {
 
     if(de->de_filename == NULL)
-      de->de_sched_state = DVR_MISSED_TIME;
+      dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
     else
       _dvr_entry_completed(de);
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de,
@@ -341,7 +360,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else if (de->de_channel && de->de_channel->ch_enabled) {
 
-    de->de_sched_state = DVR_SCHEDULED;
+    dvr_entry_assign_sched_state(de, DVR_SCHEDULED);
 
     tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, start);
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, start);
@@ -351,7 +370,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else {
 
-    de->de_sched_state = DVR_NOSTATE;
+    dvr_entry_assign_sched_state(de, DVR_NOSTATE);
 
   }
 }
@@ -1072,7 +1091,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
   if (de->de_rec_state == DVR_RS_PENDING ||
       de->de_rec_state == DVR_RS_WAIT_PROGRAM_START ||
       de->de_filename == NULL)
-    de->de_sched_state = DVR_MISSED_TIME;
+    dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
   else
     _dvr_entry_completed(de);
 
@@ -1113,7 +1132,7 @@ dvr_timer_start_recording(void *aux)
   dvr_entry_t *de = aux;
 
   if (de->de_channel == NULL || !de->de_channel->ch_enabled) {
-    de->de_sched_state = DVR_NOSTATE;
+    dvr_entry_assign_sched_state(de, DVR_NOSTATE);
     return;
   }
 
@@ -1123,7 +1142,7 @@ dvr_timer_start_recording(void *aux)
     return;
   }
 
-  de->de_sched_state = DVR_RECORDING;
+  dvr_entry_assign_sched_state(de, DVR_RECORDING);
   de->de_rec_state = DVR_RS_PENDING;
   de->de_last_error = SM_CODE_OK;
 
