@@ -186,7 +186,12 @@ setting this to 100.</dd>
 <p>
   <dt><b>Send full PLAY cmd</b></dt>
   <dd>Send the full RTSP PLAY command after full RTSP SETUP command. Some
-      device firmwares requires this to get MPEG-TS stream.</dd>
+      device firmwares require this to get MPEG-TS stream.</dd>
+<p>
+  <dt><b>Override tuner count</b></dt>
+  <dd>Force tvheadend to see a specific number of tuners. Some devices, notably 
+      AVM's FRITZ!Box Cable 6490, report wrong number of tuners and this setting
+      allows you to override that. Any value below 1 or above 32 is ignored.</dd>
 <p>
   <dt><b>Force teardown delay</b><dt>
   <dd>Force the delay between RTSP TEARDOWN and RTSP SETUP command (value
