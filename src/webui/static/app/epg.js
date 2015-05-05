@@ -859,15 +859,60 @@ tvheadend.epg = function() {
     });
 
     /**
-     * Listener for DVR notifications. We want to update the EPG grid when a
-     * recording is finished/deleted etc. so the status icon gets updated. 
-     * Only do this when the tab is visible, otherwise it won't work as 
-     * expected.
+     * Listener for EPG and DVR notifications.
+     * We want to update the EPG grid when a recording is finished/deleted etc.
+     * so the status icon gets updated. Only do this when the tab is visible,
+     * otherwise it won't work as expected.
      */
     tvheadend.comet.on('epg', function(m) {
-        if (m.dvr_update || m.dvr_change)
-            if (panel.isVisible())
-                epgStore.reload();
+        if (!panel.isVisible())
+            return;
+        if (m.delete) {
+            for (var i = 0; i < m.delete.length; i++) {
+                var r = epgStore.getById(m.delete[i]);
+                if (r)
+                  epgStore.remove(r);
+            }
+        }
+        if (m.update || m.dvr_update) {
+            if (m.update && m.dvr_update)
+              var a = m.update.concat(m.dvr_update);
+            else
+              var a = m.update || m.dvr_update;
+            var ids = [];
+            for (var i = 0; i < a.length; i++) {
+                var r = epgStore.getById(a[i]);
+                if (r)
+                  ids.push(r.id);
+            }
+            if (ids) {
+                Ext.Ajax.request({
+                    url: 'api/epg/events/byid',
+                    params: {
+                        eventId: ids
+                    },
+                    success: function(d) {
+                        d = json_decode(d);
+                        for (var i = 0; i < d.length; i++) {
+                            var r = epgStore.getById(d[i].eventId);
+                            if (r) {
+                                for (var j = 0; j < r.store.fields.items.length; j++) {
+                                    var n = r.store.fields.items[j];
+                                    var v = d[i][n.name];
+                                    r.data[n.name] = n.convert((v !== undefined) ? v : n.defaultValue, v);
+                                }
+                                r.json = d[i];
+                                r.commit();
+                            }
+                        }
+                        panel.getView().refresh();
+                    },
+                    failure: function(response, options) {
+                        Ext.MessageBox.alert('EPG Update', response.statusText);
+                    }
+                });
+            }
+        }
     });
     
     // Always reload the store when the tab is activated
