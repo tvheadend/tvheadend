@@ -186,6 +186,7 @@ void epg_init ( void )
   }
 
   /* Process */
+  epg_in_load = 1;
   memset(&stats, 0, sizeof(stats));
   while ( remain > 4 ) {
 
@@ -222,6 +223,7 @@ void epg_init ( void )
     /* Cleanup */
     htsmsg_destroy(m);
   }
+  epg_in_load = 0;
 
   free(sect);
 

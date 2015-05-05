@@ -34,6 +34,7 @@
 #include "htsp_server.h"
 #include "epggrab.h"
 #include "imagecache.h"
+#include "notify.h"
 
 /* Broadcast hashing */
 #define EPG_HASH_WIDTH 1024
@@ -51,6 +52,8 @@ epg_object_tree_t epg_serieslinks;
 /* Other special case lists */
 epg_object_list_t epg_object_unref;
 epg_object_list_t epg_object_updated;
+
+int epg_in_load;
 
 /* Global counter */
 static uint32_t _epg_object_idx    = 0;
@@ -1559,7 +1562,13 @@ void epg_channel_unlink ( channel_t *ch )
 static void _epg_broadcast_destroy ( void *eo )
 {
   epg_broadcast_t *ebc = eo;
-  if (ebc->created)     htsp_event_delete(ebc);
+  char id[16];
+
+  if (ebc->created) {
+    htsp_event_delete(ebc);
+    snprintf(id, sizeof(id), "%u", ebc->id);
+    notify_delayed(id, "epg", "delete");
+  }
   if (ebc->episode)     _epg_episode_rem_broadcast(ebc->episode, ebc);
   if (ebc->serieslink)  _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
   if (ebc->summary)     lang_str_destroy(ebc->summary);
@@ -1571,10 +1580,20 @@ static void _epg_broadcast_destroy ( void *eo )
 static void _epg_broadcast_updated ( void *eo )
 {
   epg_broadcast_t *ebc = eo;
-  if (ebc->created)
-    htsp_event_update(eo);
+  char id[16];
+
+  if (!epg_in_load)
+    snprintf(id, sizeof(id), "%u", ebc->id);
   else
+    id[0] = '\0';
+
+  if (ebc->created) {
+    htsp_event_update(eo);
+    notify_delayed(id, "epg", "update");
+  } else {
     htsp_event_add(eo);
+    notify_delayed(id, "epg", "create");
+  }
   dvr_event_updated(eo);
   dvr_autorec_check_event(eo);
 }

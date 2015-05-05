@@ -54,6 +54,8 @@ typedef struct epg_episode         epg_episode_t;
 typedef struct epg_broadcast       epg_broadcast_t;
 typedef struct epg_serieslink      epg_serieslink_t;
 
+extern int epg_in_load;
+
 /* ************************************************************************
  * Genres
  * ***********************************************************************/
