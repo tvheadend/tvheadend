@@ -776,8 +776,8 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
       }
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
-    mi->mi_update_pids(mi, mm);
     pthread_mutex_unlock(&mi->mi_output_lock);
+    mpegts_mux_update_pids(mm);
   } else {
     pthread_mutex_lock(&t->s_stream_mutex);
     x = t->s_pids;

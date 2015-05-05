@@ -2537,5 +2537,5 @@ psi_tables_install ( mpegts_input_t *mi, mpegts_mux_t *mm,
     break;
   }
 
-  mi->mi_update_pids(mi, mm);
+  mpegts_mux_update_pids(mm);
 }

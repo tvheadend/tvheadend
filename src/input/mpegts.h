@@ -388,6 +388,9 @@ struct mpegts_mux
   uint16_t                mm_onid;
   uint16_t                mm_tsid;
 
+  int                     mm_update_pids_flag;
+  gtimer_t                mm_update_pids_timer;
+
   /*
    * Services
    */
@@ -867,6 +870,8 @@ mpegts_mux_find_pid(mpegts_mux_t *mm, int pid, int create)
   else
     return mm->mm_last_mp;
 }
+
+void mpegts_mux_update_pids ( mpegts_mux_t *mm );
 
 void mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,

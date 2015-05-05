@@ -635,6 +635,9 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
     service_destroy((service_t*)s, delconf);
   }
 
+  /* Stop PID timer */
+  gtimer_disarm(&mm->mm_update_pids_timer);
+
   /* Free memory */
   idnode_unlink(&mm->mm_id);
   free(mm->mm_crid_authority);
@@ -775,6 +778,29 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   mm->mm_fastscan_muxes = NULL;
 }
 
+static void
+mpegts_mux_update_pids_cb ( void *aux )
+{
+  mpegts_mux_t *mm = aux;
+  mpegts_input_t *mi;
+
+  if (mm && mm->mm_active) {
+    mi = mm->mm_active->mmi_input;
+    if (mi) {
+      pthread_mutex_lock(&mi->mi_output_lock);
+      mi->mi_update_pids(mi, mm);
+      pthread_mutex_unlock(&mi->mi_output_lock);
+    }
+  }
+}
+
+void
+mpegts_mux_update_pids ( mpegts_mux_t *mm )
+{
+  if (mm && mm->mm_active)
+    gtimer_arm(&mm->mm_update_pids_timer, mpegts_mux_update_pids_cb, mm, 0);
+}
+
 void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 {
@@ -809,7 +835,6 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
     pthread_mutex_unlock(&mm->mm_tables_lock);
     pthread_mutex_lock(&mi->mi_output_lock);
     mpegts_input_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
-    mi->mi_update_pids(mi, mm);
     pthread_mutex_unlock(&mi->mi_output_lock);
     pthread_mutex_lock(&mm->mm_tables_lock);
     mpegts_table_release(mt);
@@ -830,7 +855,6 @@ mpegts_mux_unsubscribe_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     pthread_mutex_unlock(&mm->mm_tables_lock);
     pthread_mutex_lock(&mi->mi_output_lock);
     mpegts_input_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
-    mi->mi_update_pids(mi, mm);
     pthread_mutex_unlock(&mi->mi_output_lock);
     pthread_mutex_lock(&mm->mm_tables_lock);
     mpegts_table_release(mt);
