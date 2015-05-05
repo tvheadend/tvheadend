@@ -225,10 +225,10 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "disablefritz",
-      .name     = "Disable FRITZ!-specific workarounds",
+      .id       = "disableworkarounds",
+      .name     = "Disable device-/firmware-specific workarounds",
       .opts     = PO_ADVANCED,
-      .off      = offsetof(satip_device_t, sd_no_fritz_workarounds),
+      .off      = offsetof(satip_device_t, sd_disable_workarounds),
     },
     {
       .type     = PT_STR,
@@ -385,6 +385,8 @@ satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 static void
 satip_device_hack( satip_device_t *sd )
 {
+  if(sd->sd_disable_workarounds)
+      return;
   if (sd->sd_info.deviceid[0] &&
       strcmp(sd->sd_info.server, "Linux/1.0 UPnP/1.1 IDL4K/1.0") == 0) {
     /* AXE Linux distribution - Inverto firmware */
@@ -406,14 +408,12 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
   } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
-             strstr(sd->sd_info.modelname, "FRITZ!") &&
-             sd->sd_no_fritz_workarounds != 1) {
+             strstr(sd->sd_info.modelname, "FRITZ!")) {
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_deladd = 0;
     sd->sd_pids0       = 1;
     sd->sd_pids21       = 1;
   }
-
 }
 
 static satip_device_t *
