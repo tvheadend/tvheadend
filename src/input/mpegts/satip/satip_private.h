@@ -84,6 +84,7 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
   int                        sd_pids0;
+  int                        sd_tunercfg_override;
   int                        sd_fritz_quirk;
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;

@@ -203,6 +203,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_pilot_on),
     },
     {
+      .type     = PT_INT,
+      .id       = "tunercfgoverride",
+      .name     = "Override tuner count",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_tunercfg_override),
+    },
+    {
       .type     = PT_STR,
       .id       = "bindaddr",
       .name     = "Local bind IP address",
@@ -493,6 +500,7 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 6);
       v2 = 2;
     }
+    if (sd->sd_tunercfg_override > 0 && sd->sd_tunercfg_override < 33) m = sd->sd_tunercfg_override;
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
              satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
