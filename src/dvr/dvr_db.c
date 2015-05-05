@@ -32,6 +32,7 @@
 #include "dbus.h"
 #include "imagecache.h"
 #include "access.h"
+#include "notify.h"
 
 struct dvr_entry_list dvrentries;
 
@@ -45,6 +46,31 @@ static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_class_disp_title_set(void *o, const void *v);
 static int dvr_entry_class_disp_subtitle_set(void *o, const void *v);
+
+/*
+ *
+ */
+static int
+dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
+{
+  char id[16];
+  if (bcast != de->de_bcast) {
+    if (de->de_bcast) {
+      de->de_bcast->putref((epg_object_t*)de->de_bcast);
+      snprintf(id, sizeof(id), "%u", de->de_bcast->id);
+      notify_delayed(id, "epg", "dvr_delete");
+      de->de_bcast = NULL;
+    }
+    if (bcast) {
+      bcast->getref((epg_object_t*)bcast);
+      de->de_bcast = bcast;
+      snprintf(id, sizeof(id), "%u", bcast->id);
+      notify_delayed(id, "epg", "dvr_update");
+    }
+    return 1;
+  }
+  return 0;
+}
 
 /*
  * Start / stop time calculators
@@ -917,10 +943,7 @@ static dvr_entry_t *_dvr_entry_update
 
   /* Broadcast */
   if (e && (de->de_bcast != e)) {
-    if (de->de_bcast)
-      de->de_bcast->putref(de->de_bcast);
-    de->de_bcast = e;
-    e->getref(e);
+    dvr_entry_assign_broadcast(de, e);
     save = 1;
   }
 
@@ -987,12 +1010,10 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     if (de->de_sched_state != DVR_SCHEDULED)
       return;
 
-    /* Unlink the broadcast */
-    e->putref(e);
-    de->de_bcast = NULL;
-
     /* If this was created by autorec - just remove it, it'll get recreated */
     if (de->de_autorec) {
+
+      dvr_entry_assign_broadcast(de, NULL);
       dvr_entry_destroy(de, 1);
 
     /* Find match */
@@ -1005,12 +1026,12 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                    epg_broadcast_get_title(e, NULL),
                    channel_get_name(e->channel),
                    e->start, e->stop);
-          e->getref(e);
-          de->de_bcast = e;
+          dvr_entry_assign_broadcast(de, e);
           _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
-          break;
+          return;
         }
       }
+      dvr_entry_assign_broadcast(de, NULL);
     }
   }
 }
@@ -1034,8 +1055,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel),
                  e->start, e->stop);
-        e->getref(e);
-        de->de_bcast = e;
+        dvr_entry_assign_broadcast(de, e);
         _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
         break;
       }
@@ -1567,20 +1587,7 @@ dvr_entry_class_broadcast_set(void *o, const void *v)
   if (!dvr_entry_is_editable(de))
     return 0;
   bcast = epg_broadcast_find_by_id(id);
-  if (bcast == NULL) {
-    if (de->de_bcast) {
-      de->de_bcast->putref((epg_object_t*)de->de_bcast);
-      de->de_bcast = NULL;
-      return 1;
-    }
-  } else if (de->de_bcast != bcast) {
-    if (de->de_bcast)
-      de->de_bcast->putref((epg_object_t*)de->de_bcast);
-    de->de_bcast = bcast;
-    de->de_bcast->getref((epg_object_t*)bcast);
-    return 1;
-  }
-  return 0;
+  return dvr_entry_assign_broadcast(de, bcast);
 }
 
 static const void *

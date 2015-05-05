@@ -864,9 +864,10 @@ tvheadend.epg = function() {
      * Only do this when the tab is visible, otherwise it won't work as 
      * expected.
      */
-    tvheadend.comet.on('dvrentry', function() {
-        if (panel.isVisible())
-            epgStore.reload();
+    tvheadend.comet.on('epg', function(m) {
+        if (m.dvr_update || m.dvr_change)
+            if (panel.isVisible())
+                epgStore.reload();
     });
     
     // Always reload the store when the tab is activated
