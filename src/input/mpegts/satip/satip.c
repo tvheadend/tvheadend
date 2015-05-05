@@ -203,6 +203,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_pilot_on),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "fritzquirks",
+      .name     = "Enable FRITZ!Box-workarounds",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_fritz_quirk),
+    },
+    {
       .type     = PT_INT,
       .id       = "tunercfgoverride",
       .name     = "Override tuner count",
@@ -391,12 +398,6 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
-  } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
-             strstr(sd->sd_info.modelname, "FRITZ!")) {
-    sd->sd_fullmux_ok  = 0;
-    sd->sd_pids_deladd = 0;
-    sd->sd_pids0       = 1;
-    sd->sd_fritz_quirk = 1;
   }
 }
 
@@ -414,7 +415,6 @@ satip_device_create( satip_device_info_t *info )
   satip_device_calc_uuid(&uuid, info->uuid);
 
   conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
-
   /* some sane defaults */
   sd->sd_fullmux_ok  = 1;
   sd->sd_pids_len    = 127;
@@ -422,6 +422,15 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
+
+  /* safe defaults for FRITZ!-devices */
+  if (strstr(info->manufacturer, "AVM Berlin") &&
+             strstr(info->modelname, "FRITZ!")) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_deladd = 0;
+    sd->sd_pids0       = 1;
+    sd->sd_fritz_quirk = 1;
+  }
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
@@ -514,6 +523,12 @@ satip_device_create( satip_device_info_t *info )
           fenum++;
       sd->sd_nosave = 0;
     }
+  }
+
+  if (sd->sd_fritz_quirk == 1) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_deladd = 0;
+    sd->sd_pids0       = 1;
   }
 
   if (save)
