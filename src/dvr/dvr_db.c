@@ -1291,7 +1291,11 @@ dvr_entry_class_stop_set(void *o, const void *_v)
   }
   if (v < de->de_start)
     v = de->de_start;
-  return dvr_entry_class_time_set(de, &de->de_stop, v);
+  if (v != de->de_stop) {
+    de->de_stop = v;
+    return 1;
+  }
+  return 0;
 }
 
 static int
