@@ -260,7 +260,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
 
       /* install table handlers */
       psi_tables_install(mmi->mmi_input, mm,
-                         ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_type);
+                         ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
     } else { // quick re-arm the timer to wait for signal lock
       gtimer_arm_ms(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, 50);

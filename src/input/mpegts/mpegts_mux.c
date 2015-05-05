@@ -788,6 +788,7 @@ mpegts_mux_update_pids_cb ( void *aux )
     mi = mm->mm_active->mmi_input;
     if (mi) {
       pthread_mutex_lock(&mi->mi_output_lock);
+      mm->mm_update_pids_flag = 0;
       mi->mi_update_pids(mi, mm);
       pthread_mutex_unlock(&mi->mi_output_lock);
     }

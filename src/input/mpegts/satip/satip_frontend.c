@@ -65,7 +65,7 @@ satip_frontend_signal_cb( void *aux )
     return;
   if (!lfe->sf_tables) {
     psi_tables_install(mmi->mmi_input, mmi->mmi_mux,
-                       ((dvb_mux_t *)mmi->mmi_mux)->lm_tuning.dmc_fe_type);
+                       ((dvb_mux_t *)mmi->mmi_mux)->lm_tuning.dmc_fe_delsys);
     lfe->sf_tables = 1;
   }
   sigstat.status_text  = signal2str(lfe->sf_status);

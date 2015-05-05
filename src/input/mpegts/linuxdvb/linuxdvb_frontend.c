@@ -541,7 +541,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
       /* Table handlers */
       psi_tables_install((mpegts_input_t *)lfe, mm,
-                         ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_type);
+                         ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
     /* Re-arm (quick) */
     } else {
