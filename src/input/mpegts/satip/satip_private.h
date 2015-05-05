@@ -89,6 +89,7 @@ struct satip_device
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
   int                        sd_dbus_allow;
+  int                        sd_no_fritz_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };
 

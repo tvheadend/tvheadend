@@ -224,6 +224,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_bindaddr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "disablefritz",
+      .name     = "Disable FRITZ!-specific workarounds",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_no_fritz_workarounds),
+    },
+    {
       .type     = PT_STR,
       .id       = "addr",
       .name     = "IP Address",
@@ -398,7 +405,15 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
+  } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
+             strstr(sd->sd_info.modelname, "FRITZ!") &&
+             sd->sd_no_fritz_workarounds != 1) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_deladd = 0;
+    sd->sd_pids0       = 1;
+    sd->sd_pids21       = 1;
   }
+
 }
 
 static satip_device_t *
@@ -423,15 +438,6 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
-
-  /* safe defaults for FRITZ!-devices */
-  if (strstr(info->manufacturer, "AVM Berlin") &&
-             strstr(info->modelname, "FRITZ!")) {
-    sd->sd_fullmux_ok  = 0;
-    sd->sd_pids_deladd = 0;
-    sd->sd_pids0       = 1;
-    sd->sd_pids21 = 1;
-  }
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
