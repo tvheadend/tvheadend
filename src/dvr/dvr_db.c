@@ -922,7 +922,6 @@ static dvr_entry_t *_dvr_entry_update
     de->de_bcast = e;
     e->getref(e);
     save = 1;
-
   }
 
   /* Episode */

@@ -58,6 +58,7 @@
 #include "trap.h"
 #include "settings.h"
 #include "config.h"
+#include "notify.h"
 #include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
@@ -949,6 +950,7 @@ main(int argc, char **argv)
   SSL_library_init();
 
   /* Initialise configuration */
+  notify_init();
   idnode_init();
   spawn_init();
   config_init(opt_nobackup == 0);
@@ -1117,6 +1119,7 @@ main(int argc, char **argv)
   tvhftrace("main", intlconv_done);
   tvhftrace("main", urlparse_done);
   tvhftrace("main", idnode_done);
+  tvhftrace("main", notify_done);
   tvhftrace("main", spawn_done);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");

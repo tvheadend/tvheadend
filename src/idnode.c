@@ -44,10 +44,6 @@ typedef struct idclass_link
 static idnodes_rb_t           idnodes;
 static RB_HEAD(,idclass_link) idclasses;
 static RB_HEAD(,idclass_link) idrootclasses;
-static pthread_cond_t         idnode_cond;
-static pthread_mutex_t        idnode_mutex;
-static htsmsg_t              *idnode_queue;
-static void*                  idnode_thread(void* p);
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
@@ -84,13 +80,9 @@ pthread_t idnode_tid;
 void
 idnode_init(void)
 {
-  idnode_queue = NULL;
   RB_INIT(&idnodes);
   RB_INIT(&idclasses);
   RB_INIT(&idrootclasses);
-  pthread_mutex_init(&idnode_mutex, NULL);
-  pthread_cond_init(&idnode_cond, NULL);
-  tvhthread_create(&idnode_tid, NULL, idnode_thread, NULL);
 }
 
 void
@@ -98,12 +90,6 @@ idnode_done(void)
 {
   idclass_link_t *il;
 
-  pthread_cond_signal(&idnode_cond);
-  pthread_join(idnode_tid, NULL);
-  pthread_mutex_lock(&idnode_mutex);
-  htsmsg_destroy(idnode_queue);
-  idnode_queue = NULL;
-  pthread_mutex_unlock(&idnode_mutex);  
   while ((il = RB_FIRST(&idclasses)) != NULL) {
     RB_REMOVE(&idclasses, il, link);
     free(il);
@@ -1338,38 +1324,6 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
  * *************************************************************************/
 
 /**
- * Delayed notification
- */
-static void
-idnode_notify_delayed
-  ( const char *uuid, const char *event, const char *action )
-{
-  htsmsg_t *m = NULL, *e = NULL;
-  htsmsg_field_t *f;
-
-  pthread_mutex_lock(&idnode_mutex);
-  if (idnode_queue == NULL) {
-    idnode_queue = htsmsg_create_map();
-  } else {
-    m = htsmsg_get_map(idnode_queue, event);
-  }
-  if (m == NULL) {
-    m = htsmsg_add_msg(idnode_queue, event, htsmsg_create_map());
-  } else {
-    e = htsmsg_get_list(m, action);
-  }
-  if (e == NULL)
-    e = htsmsg_add_msg(m, action, htsmsg_create_list());
-  HTSMSG_FOREACH(f, e)
-    if (strcmp(htsmsg_field_get_str(f) ?: "", uuid) == 0)
-      goto skip;
-  htsmsg_add_str(e, NULL, uuid);
-  pthread_cond_signal(&idnode_cond);
-skip:
-  pthread_mutex_unlock(&idnode_mutex);
-}
-
-/**
  * Notify about a change
  */
 void
@@ -1383,7 +1337,7 @@ idnode_notify ( idnode_t *in, const char *action )
 
   while (ic) {
     if (ic->ic_event)
-      idnode_notify_delayed(uuid, ic->ic_event, action);
+      notify_delayed(uuid, ic->ic_event, action);
     ic = ic->ic_super;
   }
 }
@@ -1402,47 +1356,6 @@ idnode_notify_title_changed (void *in)
   htsmsg_add_str(m, "text", idnode_get_title(in));
   notify_by_msg("title", m);
   idnode_notify_changed(in);
-}
-
-/*
- * Thread for handling notifications
- */
-void*
-idnode_thread ( void *p )
-{
-  htsmsg_t *q = NULL;
-  htsmsg_field_t *f;
-
-  pthread_mutex_lock(&idnode_mutex);
-
-  while (tvheadend_running) {
-
-    /* Get queue */
-    if (!idnode_queue) {
-      pthread_cond_wait(&idnode_cond, &idnode_mutex);
-      continue;
-    }
-    q            = idnode_queue;
-    idnode_queue = NULL;
-    pthread_mutex_unlock(&idnode_mutex);
-
-    /* Process */
-    pthread_mutex_lock(&global_lock);
-
-    HTSMSG_FOREACH(f, q)
-      notify_by_msg(f->hmf_name, htsmsg_detach_submsg(f));
-    
-    /* Finished */
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_destroy(q);
-
-    /* Wait */
-    usleep(500000);
-    pthread_mutex_lock(&idnode_mutex);
-  }
-  pthread_mutex_unlock(&idnode_mutex);
-  
-  return NULL;
 }
 
 /******************************************************************************
