@@ -67,7 +67,7 @@ typedef struct dmx_filter {
   uint8_t mode[DMX_FILTER_SIZE];
 } dmx_filter_t;
 
-#define DVBAPI_PROTOCOL_VERSION     1
+#define DVBAPI_PROTOCOL_VERSION     2
 
 #define CA_SET_DESCR       0x40106f86
 #define CA_SET_DESCR_X     0x866f1040
@@ -82,6 +82,7 @@ typedef struct dmx_filter {
 #define DVBAPI_FILTER_DATA 0xFFFF0000
 #define DVBAPI_CLIENT_INFO 0xFFFF0001
 #define DVBAPI_SERVER_INFO 0xFFFF0002
+#define DVBAPI_ECM_INFO    0xFFFF0003
 
 
 // ca_pmt_list_management values:
@@ -1063,6 +1064,14 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 4 + adapter_byte;
   else if (oscam_new && cmd == DVBAPI_SERVER_INFO && sb->sb_ptr > 6)
     return 4 + 2 + 1 + sbuf_peek_u8(sb, 6);
+  else if (oscam_new && cmd == DVBAPI_ECM_INFO && sb->sb_ptr > 14) {
+    int len = 4 + adapter_byte + 2 + 2 + 2 + 4 + 4;
+    int i;
+    for (i=0; i<4; i++)
+      len += sbuf_peek_u8(sb, len) + 1;
+    len += 1;
+    return len;
+  }
   else {
     sb->sb_err = 0;
     return -1; /* fatal */
@@ -1168,6 +1177,53 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     tvhlog(LOG_INFO, "capmt", "%s: connected to %s, using network protocol_version = %d", capmt_name(capmt), oscam_info, protocol_version);
 
+  } else if (cmd == DVBAPI_ECM_INFO) {
+    int offset2 = 4;
+    uint16_t sid = sbuf_peek_u16(sb, offset + offset2);
+    offset2 += 2;
+    uint16_t caid = sbuf_peek_u16(sb, offset + offset2);
+    offset2 += 2;
+    uint16_t pid = sbuf_peek_u16(sb, offset + offset2);
+    offset2 += 2;
+    uint32_t prid = sbuf_peek_u32(sb, offset + offset2);
+    offset2 += 4;
+    uint32_t ecmtime = sbuf_peek_u32(sb, offset + offset2);
+    offset2 += 4;
+
+    uint8_t len = sbuf_peek_u8(sb, offset + offset2);
+    offset2 += 1;
+    unsigned char cardsystem[len+1];
+    memcpy(&cardsystem, sbuf_peek(sb, offset + offset2), len);
+    offset2 += len;
+    cardsystem[len] = 0;
+
+    len = sbuf_peek_u8(sb, offset + offset2);
+    offset2 += 1;
+    unsigned char reader[len+1];
+    memcpy(&reader, sbuf_peek(sb, offset + offset2), len);
+    offset2 += len;
+    reader[len] = 0;
+
+    len = sbuf_peek_u8(sb, offset + offset2);
+    offset2 += 1;
+    unsigned char from[len+1];
+    memcpy(&from, sbuf_peek(sb, offset + offset2), len);
+    offset2 += len;
+    from[len] = 0;
+
+    len = sbuf_peek_u8(sb, offset + offset2);
+    offset2 += 1;
+    unsigned char protocol[len+1];
+    memcpy(&protocol, sbuf_peek(sb, offset + offset2), len);
+    offset2 += len;
+    protocol[len] = 0;
+
+    uint8_t hops = sbuf_peek_u8(sb, offset + offset2);
+
+    tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X prid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
+                      capmt_name(capmt), adapter, sid, caid, cardsystem, pid, prid, ecmtime, hops, reader, from, protocol);
+  } else {
+    tvhlog(LOG_ERR, "capmt", "%s: unknown command %08X", capmt_name(capmt), cmd);
   }
 }
 
