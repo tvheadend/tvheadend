@@ -85,7 +85,7 @@ struct satip_device
   int                        sd_sig_scale;
   int                        sd_pids0;
   int                        sd_tunercfg_override;
-  int                        sd_fritz_quirk;
+  int                        sd_pids21;
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
   int                        sd_dbus_allow;
@@ -225,7 +225,7 @@ int satip_satconf_get_position
 #define SATIP_SETUP_PLAY     (1<<0)
 #define SATIP_SETUP_PIDS0    (1<<1)
 #define SATIP_SETUP_PILOT_ON (1<<2)
-#define SATIP_SETUP_FRITZ_QUIRK   (1<<3)
+#define SATIP_SETUP_PIDS21   (1<<3)
 
 int
 satip_rtsp_setup( http_client_t *hc,

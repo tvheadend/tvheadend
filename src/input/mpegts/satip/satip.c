@@ -204,10 +204,10 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
-      .id       = "fritzquirks",
-      .name     = "Enable FRITZ!Box-workarounds",
+      .id       = "pids21",
+      .name     = "PIDs 21 in setup",
       .opts     = PO_ADVANCED,
-      .off      = offsetof(satip_device_t, sd_fritz_quirk),
+      .off      = offsetof(satip_device_t, sd_pids21),
     },
     {
       .type     = PT_INT,
@@ -415,6 +415,7 @@ satip_device_create( satip_device_info_t *info )
   satip_device_calc_uuid(&uuid, info->uuid);
 
   conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
+
   /* some sane defaults */
   sd->sd_fullmux_ok  = 1;
   sd->sd_pids_len    = 127;
@@ -429,7 +430,7 @@ satip_device_create( satip_device_info_t *info )
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_deladd = 0;
     sd->sd_pids0       = 1;
-    sd->sd_fritz_quirk = 1;
+    sd->sd_pids21 = 1;
   }
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
@@ -509,7 +510,8 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 6);
       v2 = 2;
     }
-    if (sd->sd_tunercfg_override > 0 && sd->sd_tunercfg_override < 33) m = sd->sd_tunercfg_override;
+    if (sd->sd_tunercfg_override > 0 && sd->sd_tunercfg_override < 33)
+             m = sd->sd_tunercfg_override;
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
              satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
@@ -523,12 +525,6 @@ satip_device_create( satip_device_info_t *info )
           fenum++;
       sd->sd_nosave = 0;
     }
-  }
-
-  if (sd->sd_fritz_quirk == 1) {
-    sd->sd_fullmux_ok  = 0;
-    sd->sd_pids_deladd = 0;
-    sd->sd_pids0       = 1;
   }
 
   if (save)
