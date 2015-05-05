@@ -46,7 +46,7 @@ satip_frontend_find_by_number( satip_device_t *sd, int num )
 static char *
 satip_frontend_bindaddr( satip_frontend_t *lfe )
 {
-  char *bindaddr = lfe->sf_device->sd_bindaddr;
+  char *bindaddr = lfe->sf_tuner_bindaddr;
   if (bindaddr == NULL || bindaddr[0] == '\0')
     bindaddr = lfe->sf_device->sd_bindaddr;
   return bindaddr;
@@ -173,6 +173,13 @@ const idclass_t satip_frontend_class =
       .name     = "Force teardown delay",
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_teardown_delay),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "tunerbindaddr",
+      .name     = "Tuner bind IP address",
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_tuner_bindaddr),
     },
     {}
   }

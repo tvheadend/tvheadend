@@ -121,6 +121,7 @@ struct satip_frontend
   int                        sf_play2;
   int                        sf_tdelay;
   int                        sf_teardown_delay;
+  char                      *sf_tuner_bindaddr;
 
   /*
    * Reception
