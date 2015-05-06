@@ -66,13 +66,13 @@ iptv_mux_url_set ( void *p, const void *v )
               (url.path ? strlen(url.path) + 1 : 0) +
               (url.query ? strlen(url.query) + 2 : 0);
         buf = alloca(len);
-        if (url.port)
-          snprintf(port, sizeof(port), "%d", url.port);
-        snprintf(buf, len, "%s%s%s%s%s%s",
+        if (url.port > 0 && url.port <= 65535)
+          snprintf(port, sizeof(port), ":%d", url.port);
+        snprintf(buf, len, "%s%s%s%s%s%s%s",
                  url.scheme ?: "", url.scheme ? "://" : "",
-                 url.host ?: "",
+                 url.host ?: "", port,
                  url.path ?: "", url.query ? "?" : "",
-                 url.query);
+                 url.query ?: "");
         im->mm_iptv_url_sane = strdup(buf);
       } else {
         im->mm_iptv_url_sane = NULL;
