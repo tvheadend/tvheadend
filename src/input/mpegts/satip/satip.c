@@ -485,7 +485,7 @@ satip_device_create( satip_device_info_t *info )
   save = !conf || !feconf;
 
   n = http_tokenize(sd->sd_info.tunercfg, argv, 10, ',');
-  for (i = 0, fenum = 1; i < n; i++) {
+  for (i = m = 0, fenum = 1; i < n; i++) {
     type = DVB_TYPE_NONE;
     v2 = 0;
     if (strncmp(argv[i], "DVBS2-", 6) == 0) {
