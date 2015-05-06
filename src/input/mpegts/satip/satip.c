@@ -35,6 +35,8 @@
 #include <sys/socket.h>
 #endif
 
+static void satip_discovery_timer_cb(void *aux);
+
 /*
  *
  */
@@ -976,13 +978,13 @@ satip_discovery_service_received
   }
   /* Sanity checks */
   if (st == NULL || strcmp(st, "urn:ses-com:device:SatIPServer:1"))
-    return;
+    goto add_uuid;
   if (uuid == NULL || strlen(uuid) < 16 || satip_server_match_uuid(uuid))
-    return;
+    goto add_uuid;
   if (location == NULL || strncmp(location, "http://", 7))
-    return;
+    goto add_uuid;
   if (bootid == NULL || configid == NULL || server == NULL)
-    return;
+    goto add_uuid;
 
   /* Forward information to next layer */
 
@@ -1015,6 +1017,16 @@ satip_discovery_service_received
   pthread_mutex_unlock(&global_lock);
   if (i) /* duplicate */
     satip_discovery_destroy(d, 0);
+  return;
+
+add_uuid:
+  if (deviceid == NULL || uuid == NULL)
+    return;
+  /* if new uuid was discovered, retrigger MSEARCH */
+  pthread_mutex_lock(&global_lock);
+  if (!satip_device_find(uuid))
+    gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 5);
+  pthread_mutex_unlock(&global_lock);
 }
 
 static void
