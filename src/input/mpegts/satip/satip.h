@@ -20,6 +20,8 @@
 #ifndef __TVH_SATIP_H__
 #define __TVH_SATIP_H__
 
+void satip_device_discovery_start( void );
+
 void satip_init( str_list_t *clients );
 void satip_done( void );
 

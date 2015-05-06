@@ -145,6 +145,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_V4L || ENABLE_LINUXDVB || ENABLE_SATIP_CLIENT || ENABLE_HDHOMERUN_CLIENT
   { "tvadapters", NULL },
 #endif
+#if ENABLE_SATIP_CLIENT
+  { "satip_client", NULL },
+#endif
 #if ENABLE_SATIP_SERVER
   { "satip_server", NULL },
 #endif

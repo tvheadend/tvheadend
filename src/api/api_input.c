@@ -36,10 +36,33 @@ api_input_hw_tree ( void )
   return is;
 }
 
+#if ENABLE_SATIP_CLIENT
+static int
+api_input_satip_discover
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err = 0;
+
+  if (strcmp(op, "all"))
+    return -EINVAL;
+
+  tvhinfo("satip", "Triggered new server discovery");
+
+  pthread_mutex_lock(&global_lock);
+  satip_device_discovery_start();
+  pthread_mutex_unlock(&global_lock);
+
+  return err;
+}
+#endif
+
 void api_input_init ( void )
 {
   static api_hook_t ah[] = {
     { "hardware/tree", ACCESS_ADMIN,     api_idnode_tree, api_input_hw_tree }, 
+#if ENABLE_SATIP_CLIENT
+    { "hardware/satip/discover", ACCESS_ADMIN, api_input_satip_discover, NULL },
+#endif
     { NULL },
   };
 

@@ -302,6 +302,18 @@ tvheadend.miscconf = function(panel, index) {
         handler: cleanImagecache
     });
 
+    if (tvheadend.capabilities.indexOf('satip_client') !== -1) {
+        var satipButton = new Ext.Button({
+            text: "Discover SAT>IP servers",
+            tooltip: 'Look for new SAT>IP servers',
+            iconCls: 'find',
+            handler: satipDiscover,
+        });
+    } else {
+        var satipButton = null;
+    }
+
+
     var helpButton = new Ext.Button({
         text: 'Help',
         iconCls: 'help',
@@ -332,6 +344,14 @@ tvheadend.miscconf = function(panel, index) {
     if (imagecache_form)
         _items.push(imagecache_form);
 
+    var _tbar = [saveButton, '-', imagecacheButton];
+    if (satipButton) {
+       _tbar.push('-');
+       _tbar.push(satipButton);
+    }
+    _tbar.push('->');
+    _tbar.push(helpButton);
+
     var mpanel = new Ext.Panel({
         title: 'General',
         iconCls: 'general',
@@ -340,7 +360,7 @@ tvheadend.miscconf = function(panel, index) {
         bodyStyle: 'padding:15px',
         layout: 'form',
         items: _items,
-        tbar: [saveButton, '-', imagecacheButton, '->', helpButton]
+        tbar: _tbar,
     });
 
     tvheadend.paneladd(panel, mpanel, index);
@@ -399,5 +419,12 @@ tvheadend.miscconf = function(panel, index) {
 
     function cleanImagecache() {
         saveChangesImagecache({'clean': 1});
+    }
+
+    function satipDiscover() {
+        Ext.Ajax.request({
+            url: 'api/hardware/satip/discover',
+            params: { op: 'all' },
+        });
     }
 };

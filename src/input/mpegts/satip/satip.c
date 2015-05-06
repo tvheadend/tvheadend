@@ -35,8 +35,6 @@
 #include <sys/socket.h>
 #endif
 
-static void satip_device_discovery_start( void );
-
 /*
  *
  */
@@ -1114,7 +1112,7 @@ satip_discovery_timer_cb(void *aux)
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
 }
 
-static void
+void
 satip_device_discovery_start( void )
 {
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
