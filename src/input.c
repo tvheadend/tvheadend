@@ -51,6 +51,8 @@ tvh_hardware_create0
   /* Load config */
   if (conf)
     idnode_load(&th->th_id, conf);
+
+  notify_reload("hardware");
   
   return o;
 }
@@ -65,6 +67,7 @@ tvh_hardware_delete ( tvh_hardware_t *th )
   // TODO
   LIST_REMOVE(th, th_link);
   idnode_unlink(&th->th_id);
+  notify_reload("hardware");
 }
 
 /*

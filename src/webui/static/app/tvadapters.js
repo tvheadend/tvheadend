@@ -5,6 +5,7 @@ tvheadend.tvadapters = function(panel, index) {
         title: 'TV adapters',
         iconCls: 'tvCards',
         tabIndex: index,
+        comet: 'hardware',
         help: function() {
             new tvheadend.help('TV adapters', 'config_tvadapters.html');
         }
