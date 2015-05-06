@@ -32,7 +32,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_STREAMING  0x010
 #define SUBSCRIPTION_RESTART    0x020
 #define SUBSCRIPTION_CONTACCESS 0x040
-#define SUBSCRIPTION_ONESHOT    0x090
+#define SUBSCRIPTION_ONESHOT    0x080
 #define SUBSCRIPTION_TABLES     0x100
 #define SUBSCRIPTION_MINIMAL    0x200
 #define SUBSCRIPTION_INITSCAN  0x1000 ///< for mux subscriptions
