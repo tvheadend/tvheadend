@@ -97,7 +97,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
   if (_inot_fd < 0)
     return;
 
-  if (!de->de_filename)
+  if (!de->de_filename || de->de_filename[0] == '\0')
     return;
 
   path = strdup(de->de_filename);
@@ -131,6 +131,7 @@ void dvr_inotify_del ( dvr_entry_t *de )
 {
   dvr_entry_t *det;
   dvr_inotify_entry_t *e;
+  lock_assert(&global_lock);
   RB_FOREACH(e, &_inot_tree, link) {
     LIST_FOREACH(det, &e->entries, de_inotify_link)
       if (det == de) break;

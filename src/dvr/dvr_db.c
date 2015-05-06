@@ -802,7 +802,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if (de->de_title) lang_str_destroy(de->de_title);
   if (de->de_subtitle)  lang_str_destroy(de->de_subtitle);
   if (de->de_desc)  lang_str_destroy(de->de_desc);
-  if (de->de_bcast) de->de_bcast->putref((epg_object_t*)de->de_bcast);
+  dvr_entry_assign_broadcast(de, NULL);
   free(de->de_channel_name);
   free(de->de_episode);
 

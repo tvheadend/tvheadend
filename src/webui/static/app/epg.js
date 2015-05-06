@@ -137,9 +137,10 @@ tvheadend.epgDetails = function(event) {
     
     var now = new Date();
     var buttons = [];
-    var recording = event.dvrState.indexOf('recording') == 0;
+    var recording = event.dvrState.indexOf('recording') === 0;
+    var scheduled = event.dvrState.indexOf('scheduled') === 0;
 
-    if (!recording) {
+    if (!recording && !scheduled) {
         buttons.push(new Ext.Button({
             disabled: !event.title,
             handler: searchIMDB,
@@ -181,7 +182,16 @@ tvheadend.epgDetails = function(event) {
               handler: stopDVR,
               iconCls: 'stopRec',
               tooltip: 'Stop recording of this program',
-              text: "Stop record"
+              text: "Stop recording"
+          }));
+        }
+
+        if (scheduled) {
+          buttons.push(new Ext.Button({
+              handler: deleteDVR,
+              iconCls: 'remove',
+              tooltip: 'Delete scheduled recording of this program',
+              text: "Delete recording"
           }));
         }
 
@@ -266,7 +276,20 @@ tvheadend.epgDetails = function(event) {
             success: function(d) {
                 win.close();
             },
-            question: 'Do you really want to abort/unschedule this event?'
+            question: 'Do you really want to abort/unschedule this recording?'
+        });
+    }
+
+    function deleteDVR() {
+        tvheadend.AjaxConfirm({
+            url: 'api/idnode/delete',
+            params: {
+                uuid: event.dvrUuid,
+            },
+            success: function(d) {
+                win.close();
+            },
+            question: 'Do you really want to remove this recording?'
         });
     }
 
@@ -290,20 +313,31 @@ tvheadend.epgDetails = function(event) {
 tvheadend.epg = function() {
     var lookup = '<span class="x-linked">&nbsp;</span>';
 
+    var detailsfcn = function(grid, rec, act, row) {
+        new tvheadend.epgDetails(grid.getStore().getAt(row).data);
+    };
+
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',
         header: 'Details',
         width: 45,
         dataIndex: 'actions',
+        callbacks: {
+            'recording':      detailsfcn,
+            'recordingError': detailsfcn,
+            'scheduled':      detailsfcn,
+            'completed':      detailsfcn,
+            'completedError': detailsfcn,
+        },
         actions: [
             {
                 iconCls: 'broadcast_details',
                 qtip: 'Broadcast details',
-                cb: function(grid, rec, act, row) {
-                    new tvheadend.epgDetails(grid.getStore().getAt(row).data);
-                }
+                cb: detailsfcn,
             },
-            { iconIndex: 'dvrState' }
+            {
+                iconIndex: 'dvrState',
+            }
                                                                                                           
         ]
     });
@@ -874,11 +908,12 @@ tvheadend.epg = function() {
                   epgStore.remove(r);
             }
         }
-        if (m.update || m.dvr_update) {
+        if (m.update || m.dvr_update || m.dvr_delete) {
+            var a = m.update || m.dvr_update || m.dvr_delete;
             if (m.update && m.dvr_update)
-              var a = m.update.concat(m.dvr_update);
-            else
-              var a = m.update || m.dvr_update;
+                var a = m.update.concat(m.dvr_update);
+            if (m.update || m.dvr_update)
+                a = a.concat(m.dvr_delete);
             var ids = [];
             for (var i = 0; i < a.length; i++) {
                 var r = epgStore.getById(a[i]);
@@ -887,7 +922,7 @@ tvheadend.epg = function() {
             }
             if (ids) {
                 Ext.Ajax.request({
-                    url: 'api/epg/events/byid',
+                    url: 'api/epg/events/load',
                     params: {
                         eventId: ids
                     },
@@ -905,7 +940,6 @@ tvheadend.epg = function() {
                                 r.commit();
                             }
                         }
-                        panel.getView().refresh();
                     },
                     failure: function(response, options) {
                         Ext.MessageBox.alert('EPG Update', response.statusText);

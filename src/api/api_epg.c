@@ -533,7 +533,7 @@ api_epg_related
 }
 
 static int
-api_epg_byid
+api_epg_load
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   uint32_t id = 0, entries = 0;
@@ -611,7 +611,7 @@ void api_epg_init ( void )
     { "epg/events/grid",        ACCESS_ANONYMOUS, api_epg_grid, NULL },
     { "epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL },
     { "epg/events/related",     ACCESS_ANONYMOUS, api_epg_related, NULL },
-    { "epg/events/byid",        ACCESS_ANONYMOUS, api_epg_byid, NULL },
+    { "epg/events/load",        ACCESS_ANONYMOUS, api_epg_load, NULL },
     { "epg/brand/list",         ACCESS_ANONYMOUS, api_epg_brand_list, NULL },
     { "epg/content_type/list",  ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
 
