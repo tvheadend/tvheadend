@@ -385,6 +385,7 @@ satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 static void
 satip_device_hack( satip_device_t *sd )
 {
+  satip_frontend_t *lfe;
   if(sd->sd_disable_workarounds)
       return;
   if (sd->sd_info.deviceid[0] &&
@@ -409,6 +410,8 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_no_univ_lnb = 1;
   } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
              strstr(sd->sd_info.modelname, "FRITZ!")) {
+    TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+             lfe->sf_play2 = 1;
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_deladd = 0;
     sd->sd_pids0       = 1;
@@ -532,6 +535,8 @@ satip_device_create( satip_device_info_t *info )
       sd->sd_nosave = 0;
     }
   }
+
+  satip_device_hack(sd);
 
   if (save)
     satip_device_save(sd);
