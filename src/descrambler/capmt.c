@@ -235,6 +235,7 @@ typedef struct capmt_opaque {
   uint16_t         adapter;
   uint16_t         pid;
   uint32_t         pid_refs;
+  int              ecm;
 } capmt_opaque_t;
 
 typedef struct capmt_adapter {
@@ -341,14 +342,16 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
   capmt_opaque_t *o = NULL, *t;
   mpegts_mux_instance_t *mmi;
   mpegts_mux_t *mux;
-  int i = 0;
+  int i = 0, ecm = s != NULL;
 
   lock_assert(&capmt->capmt_mutex);
 
   for (i = 0; i < MAX_PIDS; i++) {
     t = &ca->ca_pids[i];
-    if (t->pid == pid)
+    if (t->pid == pid && t->ecm == ecm) {
+      t->pid_refs++;
       return;
+    }
     if (t->pid == 0)
       o = t;
   }
@@ -357,6 +360,7 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
     o->adapter  = adapter;
     o->pid      = pid;
     o->pid_refs = 1;
+    o->ecm      = ecm;
     mmi         = ca->ca_tuner ? LIST_FIRST(&ca->ca_tuner->mi_mux_active) : NULL;
     mux         = mmi ? mmi->mmi_mux : NULL;
     if (mux) {
@@ -370,13 +374,13 @@ capmt_pid_add(capmt_t *capmt, int adapter, int pid, mpegts_service_t *s)
 }
 
 static void
-capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
+capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
 {
   capmt_adapter_t *ca = &capmt->capmt_adapters[adapter];
   capmt_opaque_t *o;
   mpegts_mux_instance_t *mmi;
   mpegts_mux_t *mux;
-  int i = 0;
+  int i = 0, ecm = (flags & CAPMT_MSG_FAST) != 0;
 
   lock_assert(&capmt->capmt_mutex);
 
@@ -384,7 +388,7 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
     return;
   for (i = 0; i < MAX_PIDS; i++) {
     o = &ca->ca_pids[i];
-    if (o->pid == pid) {
+    if (o->pid == pid && o->ecm == ecm) {
       if (--o->pid_refs == 0)
         break;
       return;
@@ -396,6 +400,7 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid)
   mux = mmi ? mmi->mmi_mux : NULL;
   o->pid = -1; /* block for new registrations */
   o->pid_refs = 0;
+  o->ecm = -1;
   if (mux) {
     pthread_mutex_unlock(&capmt->capmt_mutex);
     descrambler_close_pid(mux, o, pid);
@@ -866,7 +871,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
   if (filter->pid && pid != filter->pid)
-    capmt_pid_remove(capmt, adapter, filter->pid);
+    capmt_pid_remove(capmt, adapter, filter->pid, filter->flags);
   filter->pid = pid;
   if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
     offset = 1; //filter data starts +1 byte because of adapter no
@@ -886,8 +891,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
         t = cce->cce_service;
         break;
       }
-    if (cce) break;
-    t = NULL;
+    if (t) break;
   }
   capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
@@ -904,6 +908,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 4);
   uint8_t filter_index = sbuf_peek_u8   (sb, offset + 5);
   int16_t pid;
+  uint32_t flags;
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
@@ -922,9 +927,10 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   filter = &cf->dmx[filter_index];
   if (filter->pid != pid)
     return;
+  flags = filter->flags;
   pthread_mutex_lock(&capmt->capmt_mutex);
   memset(filter, 0, sizeof(*filter));
-  capmt_pid_remove(capmt, adapter, pid);
+  capmt_pid_remove(capmt, adapter, pid, flags);
   /* short the max values */
   filter_index = cf->max - 1;
   while (filter_index != 255 && cf->dmx[filter_index].pid == 0)
