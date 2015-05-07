@@ -764,11 +764,11 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
       } else {
         mpegts_pid_compare(p, x, &add, &del);
         for (i = 0; i < del.count; i++) {
-          pi = &x->pids[i];
+          pi = &del.pids[i];
           mpegts_input_close_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
         }
         for (i = 0; i < add.count; i++) {
-          pi = &x->pids[i];
+          pi = &add.pids[i];
           mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
         }
         mpegts_pid_done(&add);
