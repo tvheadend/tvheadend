@@ -70,6 +70,16 @@ tvheadend.status_subs = function(panel, index)
         var subsCm = new Ext.grid.ColumnModel([
             {
                 width: 50,
+                id: 'id',
+                header: "Id",
+                dataIndex: 'id',
+                renderer: function(v) {
+                    return ("0000000" + v.toString(16).toUpperCase()).substr(-8);
+                }
+
+            },
+            {
+                width: 50,
                 id: 'hostname',
                 header: "Hostname",
                 dataIndex: 'hostname'
