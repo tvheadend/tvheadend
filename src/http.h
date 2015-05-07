@@ -320,6 +320,8 @@ struct http_client {
   int          hc_rtp_multicast:1;
   long         hc_rtsp_stream_id;
   int          hc_rtp_timeout;
+  char        *hc_rtsp_user;
+  char        *hc_rtsp_pass;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
@@ -344,6 +346,8 @@ void http_client_close ( http_client_t *hc );
 int http_client_send( http_client_t *hc, http_cmd_t cmd,
                       const char *path, const char *query,
                       http_arg_list_t *header, void *body, size_t body_size );
+void http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
+                             const char *user, const char *pass );
 int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );

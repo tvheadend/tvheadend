@@ -135,6 +135,11 @@ iptv_rtsp_start
                                  u->host, u->port, NULL)))
     return SM_CODE_TUNING_FAILED;
 
+  if (u->user)
+    hc->hc_rtsp_user = strdup(u->user);
+  if (u->pass)
+    hc->hc_rtsp_pass = strdup(u->pass);
+
   if (udp_bind_double(&rtp, &rtpc,
                       "IPTV", "rtp", "rtcp",
                       NULL, 0, NULL,

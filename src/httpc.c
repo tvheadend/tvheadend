@@ -1037,6 +1037,31 @@ header:
 }
 
 /*
+ *
+ */
+void
+http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
+                        const char *user, const char *pass )
+{
+  if (user && user[0] && pass && pass[0]) {
+#define BASIC "Basic "
+    size_t plen = strlen(pass);
+    size_t ulen = strlen(user);
+    size_t len = BASE64_SIZE(plen + ulen + 1) + 1;
+    char *buf = alloca(ulen + 1 + plen + 1);
+    char *cbuf = alloca(len + sizeof(BASIC) + 1);
+    strcpy(buf, user);
+    strcat(buf, ":");
+    strcat(buf, pass);
+    strcpy(cbuf, BASIC);
+    base64_encode(cbuf + sizeof(BASIC) - 1, len,
+                  (uint8_t *)buf, ulen + 1 + plen);
+    http_arg_set(h, "Authorization", cbuf);
+#undef BASIC
+  }
+}
+
+/*
  * Redirected
  */
 static void
@@ -1060,22 +1085,7 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   }
   if (!keepalive)
     http_arg_set(h, "Connection", "close");
-  if (url->user && url->user[0] && url->pass && url->pass[0]) {
-#define BASIC "Basic "
-    size_t plen = strlen(url->pass);
-    size_t ulen = strlen(url->user);
-    size_t len = BASE64_SIZE(plen + ulen + 1) + 1;
-    char *buf = alloca(ulen + 1 + plen + 1);
-    char *cbuf = alloca(len + sizeof(BASIC) + 1);
-    strcpy(buf, url->user);
-    strcat(buf, ":");
-    strcat(buf, url->pass);
-    strcpy(cbuf, BASIC);
-    base64_encode(cbuf + sizeof(BASIC) - 1, len,
-                  (uint8_t *)buf, ulen + 1 + plen);
-    http_arg_set(h, "Authorization", cbuf);
-#undef BASIC
-  }
+  http_client_basic_auth(hc, h, url->user, url->pass);
 }
 
 static int
@@ -1398,6 +1408,8 @@ http_client_close ( http_client_t *hc )
   free(hc->hc_host);
   free(hc->hc_scheme);
   free(hc->hc_bindaddr);
+  free(hc->hc_rtsp_user);
+  free(hc->hc_rtsp_pass);
   free(hc);
 }
 

@@ -46,6 +46,7 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd,
     }
     http_arg_set(hdr, "Session", hc->hc_rtsp_session);
   }
+  http_client_basic_auth(hc, hdr, hc->hc_rtsp_user, hc->hc_rtsp_pass);
   if (hc->hc_port != 554)
     snprintf(buf2, sizeof(buf2), ":%d", hc->hc_port);
   else
