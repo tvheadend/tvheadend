@@ -962,6 +962,8 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  epg_in_load = 1;
+
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL);
 
   dbus_server_init(opt_dbus, opt_dbus_session);
@@ -1037,6 +1039,7 @@ main(int argc, char **argv)
   bonjour_init();
 
   epg_updated(); // cleanup now all prev ref's should have been created
+  epg_in_load = 0;
 
   pthread_mutex_unlock(&global_lock);
 
