@@ -128,7 +128,7 @@ iptv_rtsp_start
 {
   rtsp_priv_t *rp;
   http_client_t *hc;
-  udp_connection_t *rtp, *rtpc;
+  udp_connection_t *rtp, *rtcp;
   int r;
 
   if (!(hc = http_client_connect(im, RTSP_VERSION_1_0, u->scheme,
@@ -140,7 +140,7 @@ iptv_rtsp_start
   if (u->pass)
     hc->hc_rtsp_pass = strdup(u->pass);
 
-  if (udp_bind_double(&rtp, &rtpc,
+  if (udp_bind_double(&rtp, &rtcp,
                       "IPTV", "rtp", "rtcp",
                       NULL, 0, NULL,
                       128*1024, 16384, 4*1024, 4*1024) < 0) {
@@ -154,9 +154,9 @@ iptv_rtsp_start
   http_client_register(hc);          /* register to the HTTP thread */
   r = rtsp_setup(hc, u->path, u->query, NULL,
                  ntohs(IP_PORT(rtp->ip)),
-                 ntohs(IP_PORT(rtpc->ip)));
+                 ntohs(IP_PORT(rtcp->ip)));
   if (r < 0) {
-    udp_close(rtpc);
+    udp_close(rtcp);
     udp_close(rtp);
     http_client_close(hc);
     return SM_CODE_TUNING_FAILED;
@@ -171,8 +171,8 @@ iptv_rtsp_start
   im->im_data = rp;
   im->mm_iptv_fd = rtp->fd;
   im->mm_iptv_connection = rtp;
-  im->mm_iptv_fd2 = rtpc->fd;
-  im->mm_iptv_connection2 = rtpc;
+  im->mm_iptv_fd2 = rtcp->fd;
+  im->mm_iptv_connection2 = rtcp;
 
   return 0;
 }
@@ -217,7 +217,7 @@ iptv_rtsp_read ( iptv_mux_t *im )
   ssize_t r;
   uint8_t buf[1500];
 
-  /* RTPC - ignore all incoming packets for now */
+  /* RTCP - ignore all incoming packets for now */
   do {
     r = recv(im->mm_iptv_fd2, buf, sizeof(buf), MSG_DONTWAIT);
   } while (r > 0);
