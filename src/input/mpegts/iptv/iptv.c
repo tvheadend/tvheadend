@@ -307,7 +307,7 @@ iptv_input_thread ( void *aux )
   while ( tvheadend_running ) {
     nfds = tvhpoll_wait(iptv_poll, &ev, 1, -1);
     if ( nfds < 0 ) {
-      if (tvheadend_running) {
+      if (tvheadend_running && !ERRNO_AGAIN(errno)) {
         tvhlog(LOG_ERR, "iptv", "poll() error %s, sleeping 1 second",
                strerror(errno));
         sleep(1);
