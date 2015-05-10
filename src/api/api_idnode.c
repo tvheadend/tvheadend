@@ -224,7 +224,7 @@ api_idnode_load
   htsmsg_t *uuids, *l = NULL, *m;
   htsmsg_t *flist;
   htsmsg_field_t *f;
-  const char *uuid, *class;
+  const char *uuid = NULL, *class;
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {

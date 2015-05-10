@@ -447,7 +447,7 @@ linuxdvb_adapter_del ( const char *path )
 {
   int a;
   linuxdvb_frontend_t *lfe, *next;
-  linuxdvb_adapter_t *la;
+  linuxdvb_adapter_t *la = NULL;
   tvh_hardware_t *th;
 
   if (sscanf(path, "/dev/dvb/adapter%d", &a) == 1) {

@@ -75,8 +75,8 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
   char id[16];
   if (bcast != de->de_bcast) {
     if (de->de_bcast) {
-      de->de_bcast->putref((epg_object_t*)de->de_bcast);
       snprintf(id, sizeof(id), "%u", de->de_bcast->id);
+      de->de_bcast->putref((epg_object_t*)de->de_bcast);
       notify_delayed(id, "epg", "dvr_delete");
       de->de_bcast = NULL;
     }

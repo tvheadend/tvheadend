@@ -1450,7 +1450,7 @@ int
 linuxdvb_frontend_tune1
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq )
 {
-  int r, i, rep;
+  int r = 0, i, rep;
   char buf1[256], buf2[256];
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));

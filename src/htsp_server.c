@@ -2628,6 +2628,8 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   while(tvheadend_running) {
 readmsg:
+    reply = NULL;
+
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       break;
 

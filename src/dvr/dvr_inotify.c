@@ -129,7 +129,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
  */
 void dvr_inotify_del ( dvr_entry_t *de )
 {
-  dvr_entry_t *det;
+  dvr_entry_t *det = NULL;
   dvr_inotify_entry_t *e;
   lock_assert(&global_lock);
   RB_FOREACH(e, &_inot_tree, link) {
