@@ -894,13 +894,15 @@ static dvr_entry_t *_dvr_entry_update
   int save = 0;
 
   if (!dvr_entry_is_editable(de)) {
-    if (stop < dispatch_clock)
-      stop = dispatch_clock;
-    if (stop < de->de_start)
-      stop = de->de_start;
-    if (stop != de->de_stop) {
-      de->de_stop = stop;
-      save = 1;
+    if (stop > 0) {
+      if (stop < dispatch_clock)
+        stop = dispatch_clock;
+      if (stop < de->de_start)
+        stop = de->de_start;
+      if (stop != de->de_stop) {
+        de->de_stop = stop;
+        save = 1;
+      }
     }
     if (stop_extra && (stop_extra != de->de_stop_extra)) {
       de->de_stop_extra = stop_extra;
