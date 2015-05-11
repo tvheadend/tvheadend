@@ -289,7 +289,7 @@ static void capmt_enumerate_services(capmt_t *capmt, int force);
 static void capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force);
 static void capmt_send_request(capmt_service_t *ct, int lm);
 static void capmt_table_input(void *opaque, int pid,
-                              const uint8_t *data, int len);
+                              const uint8_t *data, int len, int emm);
 static void capmt_send_client_info(capmt_t *capmt);
 
 /**
@@ -400,6 +400,8 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
   mux = mmi ? mmi->mmi_mux : NULL;
   o->pid = -1; /* block for new registrations */
   o->pid_refs = 0;
+  if (o->ecm)
+    pid = DESCRAMBLER_ECM_PID(pid);
   o->ecm = -1;
   if (mux) {
     pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1668,13 +1670,15 @@ capmt_thread(void *aux)
  *
  */
 static void
-capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
+capmt_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
   capmt_opaque_t *o = opaque;
   capmt_t *capmt = o->capmt;
   int i, demux_index, filter_index;
+  capmt_dmx_t *df;
   capmt_filters_t *cf;
   dmx_filter_t *f;
+  int flags = emm ? 0 : CAPMT_MSG_FAST;
 
   /* Validate */
   if (data == NULL || len > 4096) return;
@@ -1685,8 +1689,9 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
     cf = &capmt->capmt_demuxes.filters[demux_index];
     if (cf->adapter != o->adapter)
       continue;
-    for (filter_index = 0; filter_index < cf->max; filter_index++)
-      if (cf->dmx[filter_index].pid == pid) {
+    for (filter_index = 0; filter_index < cf->max; filter_index++) {
+      df = &cf->dmx[filter_index];
+      if (df->pid == pid && (df->flags & CAPMT_MSG_FAST) == flags) {
         f = &cf->dmx[filter_index].filter;
         if (f->mode[0] != 0)
           continue;
@@ -1705,6 +1710,7 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len)
                             filter_index, data, len,
                             cf->dmx[filter_index].flags);
       }
+    }
   }
 
   pthread_mutex_unlock(&capmt->capmt_mutex);

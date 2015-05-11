@@ -79,7 +79,7 @@ typedef struct th_descrambler_runtime {
 } th_descrambler_runtime_t;
 
 typedef void (*descrambler_section_callback_t)
-  (void *opaque, int pid, const uint8_t *section, int section_len);
+  (void *opaque, int pid, const uint8_t *section, int section_len, int emm);
 
 /**
  * Track required PIDs

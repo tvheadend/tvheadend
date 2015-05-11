@@ -1280,7 +1280,7 @@ cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
  *
  */
 static void
-cwc_emm(void *opaque, int pid, const uint8_t *data, int len)
+cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
   struct cs_card_data *pcard = opaque;
   cwc_t *cwc;
@@ -1606,7 +1606,7 @@ cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, in
  * t->s_streaming_mutex is held
  */
 static void
-cwc_table_input(void *opaque, int pid, const uint8_t *data, int len)
+cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
   cwc_service_t *ct = opaque;
   elementary_stream_t *st;
@@ -1974,7 +1974,8 @@ cwc_service_destroy(th_descrambler_t *td)
 
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
-      descrambler_close_pid(ct->cs_mux, ct, ct->cs_epids[i]);
+      descrambler_close_pid(ct->cs_mux, ct,
+                            DESCRAMBLER_ECM_PID(ct->cs_epids[i]));
 
   cwc_service_pid_free(ct);
 
