@@ -895,6 +895,20 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       }
     if (t) break;
   }
+  if (t) {
+    /* OK, probably ECM, but sometimes, it's shared */
+    /* Inspect the filter */
+    for (i = 1; i < DMX_FILTER_SIZE; i++) {
+      if (filter->filter.mode[i]) break;
+      if (filter->filter.filter[i]) break;
+      if (filter->filter.mask[i]) break;
+    }
+    if (i < DMX_FILTER_SIZE ||
+        filter->filter.mode[0] ||
+        (filter->filter.filter[0] & 0xf0) != 0x80 ||
+        (filter->filter.mask[0] & 0xf0) != 0xf0)
+      t = NULL;
+  }
   capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
   if (capmt->capmt_demuxes.max <= demux_index)
@@ -2043,6 +2057,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
       cce->cce_caid   = c->caid;
       cce->cce_ecmpid = st->es_pid;
       cce->cce_providerid = c->providerid;
+      cce->cce_service = t;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
       ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
       change = 1;
