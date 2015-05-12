@@ -1049,7 +1049,7 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
 }
 #endif
 
-static void
+static int
 mpegts_input_process
   ( mpegts_input_t *mi, mpegts_packet_t *mpkt )
 {
@@ -1069,7 +1069,7 @@ mpegts_input_process
 #endif
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
-    return;
+    return 0;
 
   assert(mm == mmi->mmi_mux);
 
@@ -1232,7 +1232,9 @@ done:
     pthread_cond_signal(&mi->mi_table_cond);
 
   /* Bandwidth monitoring */
-  atomic_add(&mmi->tii_stats.bps, tsb - mpkt->mp_data);
+  llen = tsb - mpkt->mp_data;
+  atomic_add(&mmi->tii_stats.bps, llen);
+  return llen;
 }
 
 static void *
@@ -1240,12 +1242,19 @@ mpegts_input_thread ( void * p )
 {
   mpegts_packet_t *mp;
   mpegts_input_t  *mi = p;
+  size_t bytes = 0;
+  char buf[256];
 
+  mi->mi_display_name(mi, buf, sizeof(buf));
   pthread_mutex_lock(&mi->mi_input_lock);
   while (mi->mi_running) {
 
     /* Wait for a packet */
     if (!(mp = TAILQ_FIRST(&mi->mi_input_queue))) {
+      if (bytes) {
+        tvhtrace("mpegts", "input %s got %zu bytes", buf, bytes);
+        bytes = 0;
+      }
       pthread_cond_wait(&mi->mi_input_cond, &mi->mi_input_lock);
       continue;
     }
@@ -1262,7 +1271,7 @@ mpegts_input_thread ( void * p )
       pthread_mutex_unlock(&global_lock);
       pthread_mutex_lock(&mi->mi_output_lock);
     }
-    mpegts_input_process(mi, mp);
+    bytes += mpegts_input_process(mi, mp);
     pthread_mutex_unlock(&mi->mi_output_lock);
     if (mp->mp_mux && mp->mp_mux->mm_update_pids_flag) {
       pthread_mutex_lock(&global_lock);
@@ -1282,6 +1291,8 @@ mpegts_input_thread ( void * p )
 
     pthread_mutex_lock(&mi->mi_input_lock);
   }
+
+  tvhtrace("mpegts", "input %s got %zu bytes (finish)", buf, bytes);
 
   /* Flush */
   while ((mp = TAILQ_FIRST(&mi->mi_input_queue))) {
