@@ -49,15 +49,39 @@
 #include "input.h"
 #include "satip/server.h"
 
+#define EXTJSPATH "static/extjs"
+
 /**
  *
  */
 static void
-extjs_load(htsbuf_queue_t *hq, const char *script)
+extjs_load(htsbuf_queue_t *hq, const char *script, ...)
 {
-  htsbuf_qprintf(hq,
-                 "<script type=\"text/javascript\" "
-		             "src=\"%s\"></script>\n", script);
+  va_list ap;
+  htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\"");
+
+  va_start(ap, script);
+  htsbuf_vqprintf(hq, script, ap);
+  va_end(ap);
+
+  htsbuf_qprintf(hq, "\"></script>\n");
+}
+
+/**
+ *
+ */
+static void
+extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
+{
+  va_list ap;
+
+  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"");
+
+  va_start(ap, css);
+  htsbuf_vqprintf(hq, css, ap);
+  va_end(ap);
+
+  htsbuf_qprintf(hq, "\"/>\n");
 }
 
 /**
@@ -68,13 +92,13 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 {
   va_list ap;
 
-  htsbuf_qprintf(hq, "<script type=\"text/javascript\">\r\n");
+  htsbuf_qprintf(hq, "<script type=\"text/javascript\">\n");
 
   va_start(ap, fmt);
   htsbuf_vqprintf(hq, fmt, ap);
   va_end(ap);
 
-  htsbuf_qprintf(hq, "\r\n</script>\r\n");
+  htsbuf_qprintf(hq, "\n</script>\n");
 }
 
 /**
@@ -85,26 +109,22 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-#define EXTJSPATH "static/extjs"
   htsbuf_qprintf(hq, "<html>\n");
   htsbuf_qprintf(hq, "<head>\n");
 
   htsbuf_qprintf(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
   
-  htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base%s.js\"></script>\n"
-                     "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all%s.js\"></script>\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme%s.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/xtheme-blue.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/GridFilters.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/extjs/examples/ux/gridfilters/css/RangeMenu.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/xcheckbox/xcheckbox.css\">\n"
-                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n",
-                     tvheadend_webui_debug ? "-debug" : "",
-                     tvheadend_webui_debug ? "-debug" : "",
-                     "");//tvheadend_webui_debug ? ""       : "-min");
+  extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base%s.js", tvheadend_webui_debug ? "-debug" : "");
+  extjs_load(hq, EXTJSPATH "/ext-all%s.js", tvheadend_webui_debug ? "-debug" : "");
+  extjs_lcss(hq, EXTJSPATH "/resources/css/ext-all-notheme.css");
+  extjs_lcss(hq, EXTJSPATH "/resources/css/xtheme-blue.css");
+  extjs_lcss(hq, "static/livegrid/resources/css/ext-ux-livegrid.css");
+  extjs_lcss(hq, EXTJSPATH "/examples/ux/gridfilters/css/GridFilters.css");
+  extjs_lcss(hq, EXTJSPATH "/examples/ux/gridfilters/css/RangeMenu.css");
+  extjs_lcss(hq, "static/xcheckbox/xcheckbox.css");
+  extjs_lcss(hq, "static/app/ext.css");
   
-  extjs_exec(hq, "Ext.BLANK_IMAGE_URL = " "'"EXTJSPATH"/resources/images/default/s.gif';");
+  extjs_exec(hq, "Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';");
 
   /**
    * Load extjs extensions
@@ -116,15 +136,15 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/multiselect/ddview.js");
   extjs_load(hq, "static/xcheckbox/xcheckbox.js");
   extjs_load(hq, "static/checkcolumn/CheckColumn.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/GridFilters.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/Filter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/BooleanFilter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/DateFilter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/ListFilter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/NumericFilter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/filter/StringFilter.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/menu/ListMenu.js");
-  extjs_load(hq, "static/extjs/examples/ux/gridfilters/menu/RangeMenu.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/GridFilters.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/Filter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/BooleanFilter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/DateFilter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/ListFilter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/NumericFilter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/StringFilter.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/menu/ListMenu.js");
+  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/menu/RangeMenu.js");
 
   /**
    * Create a namespace for our app
@@ -210,14 +230,14 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<html>\n");
   htsbuf_qprintf(hq, "<head>\n");
   htsbuf_qprintf(hq, "<title>HTS Tvheadend %s</title>\n", tvheadend_version);
-  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/tv.css\">\n");
+  extjs_lcss(hq, "static/tv.css");
 
   if(tvheadend_webui_debug) {
-    extjs_load(hq, "static/extjs/adapter/ext/ext-base-debug.js");
-    extjs_load(hq, "static/extjs/ext-all-debug.js");
+    extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base-debug.js");
+    extjs_load(hq, EXTJSPATH "/ext-all-debug.js");
   } else {
-    extjs_load(hq, "static/extjs/adapter/ext/ext-base.js");
-    extjs_load(hq, "static/extjs/ext-all.js");
+    extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base.js");
+    extjs_load(hq, EXTJSPATH "/ext-all.js");
   }
 
   extjs_load(hq, "static/tv.js");
