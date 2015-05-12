@@ -377,7 +377,7 @@ satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   int r = 5;
-  if (lfe->sf_positions)
+  if (lfe->sf_positions || lfe->sf_master)
     r = MIN(60, MAX(r, satip_satconf_get_grace(lfe, mm) ?: 10));
   return r;
 }
