@@ -134,6 +134,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   /**
    * Load all components
    */
+  extjs_load(hq, "static/smoothie.js");
   extjs_load(hq, "static/app/comet.js");
   extjs_load(hq, "static/app/tableeditor.js");
   extjs_load(hq, "static/app/cteditor.js");
