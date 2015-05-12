@@ -102,7 +102,7 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 }
 
 /**
- * PVR info, deliver info about the given PVR entry
+ * EXTJS root page
  */
 static int
 extjs_root(http_connection_t *hc, const char *remain, void *opaque)
@@ -799,8 +799,4 @@ extjs_start(void)
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
-
-#if ENABLE_V4L
-  extjs_start_v4l();
-#endif
 }

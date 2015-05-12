@@ -39,10 +39,6 @@ int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
 void extjs_start_dvb(void);
 #endif
 
-#if ENABLE_V4L
-void extjs_start_v4l(void);
-#endif
-
 void webui_api_init ( void );
 
 
