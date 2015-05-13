@@ -57,6 +57,7 @@ FFMPEG_SHA1     = 65470c9b967485f72f81758a7bad44cf7a1763db
 
 EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avresample
+PROTOCOLS       = file
 DECODERS        = mpeg2video mp2 ac3 eac3 h264 h264_vdpau aac aac_latm vorbis libvorbis
 ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
 MUXERS          = mpegts mpeg2dvd matroska webm
@@ -235,6 +236,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		--extra-libs="$(ELIBS)" \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
+		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
 		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
