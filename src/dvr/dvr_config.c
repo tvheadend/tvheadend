@@ -260,6 +260,43 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 /**
  *
  */
+
+static void
+dvr_config_storage_check(dvr_config_t *cfg)
+{
+  char buf[PATH_MAX];
+  struct stat st;
+  const char *homedir;
+
+  if(cfg->dvr_storage != NULL && cfg->dvr_storage[0])
+    return;
+
+  /* Try to figure out a good place to put them videos */
+
+  homedir = getenv("HOME");
+
+  if(homedir != NULL) {
+    snprintf(buf, sizeof(buf), "%s/Videos", homedir);
+    if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strdup(buf);
+
+    else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strdup(homedir);
+    else
+      cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
+  }
+
+  tvhlog(LOG_WARNING, "dvr",
+         "Output directory for video recording is not yet configured "
+         "for DVR configuration \"%s\". "
+         "Defaulting to to \"%s\". "
+         "This can be changed from the web user interface.",
+         cfg->dvr_config_name, cfg->dvr_storage);
+}
+
+/**
+ *
+ */
 void
 dvr_config_delete(const char *name)
 {
@@ -282,6 +319,7 @@ dvr_config_save(dvr_config_t *cfg)
 
   lock_assert(&global_lock);
 
+  dvr_config_storage_check(cfg);
   idnode_save(&cfg->dvr_id, m);
   hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id));
   htsmsg_destroy(m);
@@ -753,9 +791,6 @@ dvr_config_init(void)
 {
   htsmsg_t *m, *l;
   htsmsg_field_t *f;
-  char buf[500];
-  const char *homedir;
-  struct stat st;
   dvr_config_t *cfg;
 
   dvr_iov_max = sysconf(_SC_IOV_MAX);
@@ -777,31 +812,8 @@ dvr_config_init(void)
   cfg = dvr_config_find_by_name_default(NULL);
   assert(cfg);
 
-  LIST_FOREACH(cfg, &dvrconfigs, config_link) {
-    if(cfg->dvr_storage == NULL || !strlen(cfg->dvr_storage)) {
-      /* Try to figure out a good place to put them videos */
-
-      homedir = getenv("HOME");
-
-      if(homedir != NULL) {
-        snprintf(buf, sizeof(buf), "%s/Videos", homedir);
-        if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
-          cfg->dvr_storage = strdup(buf);
-        
-        else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
-          cfg->dvr_storage = strdup(homedir);
-        else
-          cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
-      }
-
-      tvhlog(LOG_WARNING, "dvr",
-             "Output directory for video recording is not yet configured "
-             "for DVR configuration \"%s\". "
-             "Defaulting to to \"%s\". "
-             "This can be changed from the web user interface.",
-             cfg->dvr_config_name, cfg->dvr_storage);
-    }
-  }
+  LIST_FOREACH(cfg, &dvrconfigs, config_link)
+    dvr_config_storage_check(cfg);
 }
 
 void
