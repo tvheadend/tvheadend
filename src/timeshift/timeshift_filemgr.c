@@ -180,9 +180,9 @@ void timeshift_filemgr_remove
     tvhdebug("timeshift", "ts %d RAM segment remove time %li", ts->id, (long)tsf->time);
 #endif
   TAILQ_REMOVE(&ts->files, tsf, link);
-  atomic_add_u64(&timeshift_total_size, -tsf->size);
+  atomic_dec_u64(&timeshift_total_size, tsf->size);
   if (tsf->ram)
-    atomic_add_u64(&timeshift_total_ram_size, -tsf->size);
+    atomic_dec_u64(&timeshift_total_ram_size, tsf->size);
   timeshift_reaper_remove(tsf);
 }
 
