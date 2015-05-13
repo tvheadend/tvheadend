@@ -152,7 +152,7 @@ linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
 static linuxdvb_adapter_t *
 linuxdvb_adapter_create
   ( const char *uuid, htsmsg_t *conf,
-    const char *path, int number, struct dvb_frontend_info *dfi )
+    const char *path, int number, const char *name )
 {
   linuxdvb_adapter_t *la;
   char buf[1024];
@@ -166,7 +166,7 @@ linuxdvb_adapter_create
   }
 
   /* Setup */
-  sprintf(buf, "%s [%s]", path, dfi->name);
+  sprintf(buf, "%s [%s]", path, name);
   free(la->la_rootpath);
   la->la_rootpath   = strdup(path);
   la->la_name       = strdup(buf);
@@ -175,6 +175,41 @@ linuxdvb_adapter_create
   /* Callbacks */
   la->la_is_enabled = linuxdvb_adapter_is_enabled;
 
+  return la;
+}
+
+/*
+ *
+ */
+static linuxdvb_adapter_t *
+linuxdvb_adapter_new(const char *path, int a, const char *name,
+                     htsmsg_t **conf, int *save)
+{
+  linuxdvb_adapter_t *la;
+  SHA_CTX sha1;
+  uint8_t uuidbin[20];
+  tvh_uuid_t uuid;
+
+  /* Create hash for adapter */
+  SHA1_Init(&sha1);
+  SHA1_Update(&sha1, (void*)path,     strlen(path));
+  SHA1_Update(&sha1, (void*)name,     strlen(name));
+  SHA1_Final(uuidbin, &sha1);
+  bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
+
+  /* Load config */
+  *conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid.hex);
+  if (*conf == NULL)
+    *save = 1;
+
+  /* Create */
+  if (!(la = linuxdvb_adapter_create(uuid.hex, *conf, path, a, name))) {
+    htsmsg_destroy(*conf);
+    *conf = NULL;
+    return NULL;
+  }
+
+  tvhinfo("linuxdvb", "adapter added %s", path);
   return la;
 }
 
@@ -249,11 +284,8 @@ linuxdvb_adapter_add ( const char *path )
   char ca_path[512];
   htsmsg_t *caconf = NULL;
 #endif
-  tvh_uuid_t uuid;
   linuxdvb_adapter_t *la = NULL;
   struct dvb_frontend_info dfi;
-  SHA_CTX sha1;
-  uint8_t uuidbin[20];
   htsmsg_t *conf = NULL, *feconf = NULL;
   int save = 0;
   dvb_fe_type_t type;
@@ -329,28 +361,13 @@ linuxdvb_adapter_add ( const char *path )
     /* Create/Find adapter */
     pthread_mutex_lock(&global_lock);
     if (!la) {
-
-      /* Create hash for adapter */
-      SHA1_Init(&sha1); 
-      SHA1_Update(&sha1, (void*)path,     strlen(path));
-      SHA1_Update(&sha1, (void*)dfi.name, strlen(dfi.name));
-      SHA1_Final(uuidbin, &sha1);
-      bin2hex(uuid.hex, sizeof(uuid.hex), uuidbin, sizeof(uuidbin));
-
-      /* Load config */
-      conf = hts_settings_load("input/linuxdvb/adapters/%s", uuid.hex);
-      if (conf)
-        feconf = htsmsg_get_map(conf, "frontends");
-      else
-        save = 1;
-  
-      /* Create */
-      if (!(la = linuxdvb_adapter_create(uuid.hex, conf, path, a, &dfi))) {
+      la = linuxdvb_adapter_new(path, a, dfi.name, &conf, &save);
+      if (la == NULL) {
         tvhlog(LOG_ERR, "linuxdvb", "failed to create %s", path);
-        htsmsg_destroy(conf);
         return; // Note: save to return here as global_lock is held
       }
-      tvhinfo("linuxdvb", "adapter added %s", path);
+      if (conf)
+        feconf = htsmsg_get_map(conf, "frontends");
     }
 
     /* Create frontend */
@@ -402,10 +419,16 @@ linuxdvb_adapter_add ( const char *path )
       tvhlog(LOG_ERR, "linuxdvb", "unable to query %s", ca_path);
       continue;
     }
-    if (!la)
-      continue;
 
     pthread_mutex_lock(&global_lock);
+
+    if (!la) {
+      la = linuxdvb_adapter_new(path, a, ca_path, &conf, &save);
+      if (la == NULL) {
+        tvhlog(LOG_ERR, "linuxdvb", "failed to create %s", path);
+        return; // Note: save to return here as global_lock is held
+      }
+    }
 
     if (conf)
       caconf = htsmsg_get_map(conf, "ca_devices");
