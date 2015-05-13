@@ -52,6 +52,21 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
 }
 
 static inline uint64_t
+atomic_dec_u64(volatile uint64_t *ptr, uint64_t decr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_sub(ptr, decr);
+#else
+  uint64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline uint64_t
 atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
 {
 #if ENABLE_ATOMIC64
