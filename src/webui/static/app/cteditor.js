@@ -66,7 +66,7 @@ tvheadend.bouquet = function(panel, index)
         },
         help: function() {
             new tvheadend.help('Bouquets', 'config_bouquet.html');
-        },
+        }
     });
 
     return panel;

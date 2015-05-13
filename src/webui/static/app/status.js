@@ -262,7 +262,7 @@ tvheadend.status_streams = function(panel, index)
                             }
                        );
                    }
-               },
+               }
             ],
             destroy: function() {
             }
@@ -509,7 +509,7 @@ tvheadend.status_conns = function(panel, index) {
                             }
                        );
                    }
-               },
+               }
             ],
             destroy: function() {
             }

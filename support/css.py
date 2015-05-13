@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+#
+# Change css
+#
+
+import sys, os
+
+TVHDIR = os.path.realpath('.')
+
+def error(fmt, *msg):
+  sys.stderr.write(" [ERROR] " + (fmt % msg) + '\n')
+  sys.exit(1)
+
+def umangle(u, f, r):
+  if not u.startswith(f):
+    error('Internal error')
+  return r + u[len(f):]
+
+def ustrip(u, f):
+  return u[len(f):]
+
+def url(fn):
+
+  PATHS={
+    '../docresources':'../docresources',
+  }
+
+  f = open(fn)
+  if fn[0] != '/':
+    fn = os.path.join(os.environ['PWD'], fn)
+  fn = os.path.normpath(fn)
+  if not fn.startswith(TVHDIR):
+    error('Wrong filename "%s"', fn)
+  bd = os.path.dirname(fn)
+  while 1:
+    l = f.readline()
+    if not l:
+      break
+    n = l
+    p = l.find('url(')
+    if p >= 0:
+      e = l[p:].find(')')
+      if e < 0:
+        error('Wrong url() "%s" (from %s)', l, fn)
+      e += p
+      p += 4
+      url = l[p:e].strip().lstrip()
+      if url.startswith('../docresources'):
+        url = umangle(url, '../docresources', TVHDIR + '/docs/docresources')
+      elif url.startswith('../../docresources'):
+        url = umangle(url, '../../docresources', TVHDIR + '/docs/docresources')
+      else:
+        url = os.path.normpath(bd + '/' + url)
+      if not os.path.exists(url):
+        error('Wrong path "%s" (from %s)', url, fn)
+      url = url[len(TVHDIR)+1:]
+      if url.startswith('src/webui/static/'):
+        url = ustrip(url, 'src/webui/static/')
+      elif url.startswith('docs/docresources/'):
+        url = 'docresources/' + ustrip(url, 'docs/docresources/')
+      n = l[:p] + url + l[e:]
+    sys.stdout.write(n)
+  f.close()
+
+fn=''
+for opt in sys.argv:
+  if opt.startswith('--tvhdir='):
+    TVHDIR=os.path.realpath(opt[9:])
+  if opt.startswith('--in='):
+    fn=os.path.normpath(opt[5:]).split(' ')
+
+if not fn:
+  error('Specify input file')
+for f in fn:
+  url(f)

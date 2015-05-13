@@ -420,7 +420,7 @@ reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: check_config $(OBJS) $(ALLDEPS)
+${PROG}: check_config make_webui $(OBJS) $(ALLDEPS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
@@ -437,6 +437,7 @@ ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 clean:
 	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle*
 	find . -name "*~" | xargs rm -f
+	$(MAKE) -f Makefile.webui clean
 
 distclean: clean
 	rm -rf ${ROOTDIR}/libav_static
@@ -461,9 +462,13 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
 	$(CC) -I${ROOTDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundle.c: check_dvb_scan
+$(BUILDDIR)/bundle.c: check_dvb_scan make_webui
 	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
+
+.PHONY: make_webui
+make_webui:
+	$(MAKE) -f Makefile.webui all
 
 # Static FFMPEG
 
