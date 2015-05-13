@@ -27,6 +27,9 @@ tvheadend.spec: tvheadend.spec.in
 	     -e 's/@COMMIT@/$(COMMIT1)/g' \
 		$< > $@
 
-build: tvheadend.spec
+~/rpmbuild/SOURCES:
+	mkdir -p $(foreach f,BUILD RPMS SOURCES SPECS SRPMS,~/rpmbuild/$(f))
+
+build: ~/rpmbuild/SOURCES tvheadend.spec
 	spectool --get-files --sourcedir tvheadend.spec
 	rpmbuild -ba tvheadend.spec
