@@ -454,6 +454,9 @@ FORCE:
 # Include dependency files if they exist.
 -include $(DEPS)
 
+# Some hardcoded deps
+src/webui/extjs.c: make_webui
+
 # Include OS specific targets
 include ${ROOTDIR}/support/${OSENV}.mk
 
