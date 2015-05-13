@@ -12,12 +12,12 @@
     height: 5.3em;
     margin: 0;
     padding: 6px 8px 0 6px;
-    background: url("../img/bg-header.png") repeat-x scroll 0 0 transparent;
+    background: url(../img/bg-header.png) repeat-x scroll 0 0 transparent;
     height: 45px;
 }
 
 #header > h1 {
-    background: url("../img/logo.png") no-repeat scroll 10px 20% transparent;
+    background: url(../img/logo.png) no-repeat scroll 10px 20% transparent;
     color: #E0E0E0;
     font-size: 22px;
     padding: 2px 55px;

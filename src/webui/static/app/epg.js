@@ -271,7 +271,7 @@ tvheadend.epgDetails = function(event) {
         tvheadend.AjaxConfirm({
             url: 'api/dvr/entry/cancel',
             params: {
-                uuid: event.dvrUuid,
+                uuid: event.dvrUuid
             },
             success: function(d) {
                 win.close();
@@ -284,7 +284,7 @@ tvheadend.epgDetails = function(event) {
         tvheadend.AjaxConfirm({
             url: 'api/idnode/delete',
             params: {
-                uuid: event.dvrUuid,
+                uuid: event.dvrUuid
             },
             success: function(d) {
                 win.close();
@@ -327,16 +327,16 @@ tvheadend.epg = function() {
             'recordingError': detailsfcn,
             'scheduled':      detailsfcn,
             'completed':      detailsfcn,
-            'completedError': detailsfcn,
+            'completedError': detailsfcn
         },
         actions: [
             {
                 iconCls: 'broadcast_details',
                 qtip: 'Broadcast details',
-                cb: detailsfcn,
+                cb: detailsfcn
             },
             {
-                iconIndex: 'dvrState',
+                iconIndex: 'dvrState'
             }
                                                                                                           
         ]
@@ -901,9 +901,9 @@ tvheadend.epg = function() {
     tvheadend.comet.on('epg', function(m) {
         if (!panel.isVisible())
             return;
-        if (m.delete) {
-            for (var i = 0; i < m.delete.length; i++) {
-                var r = epgStore.getById(m.delete[i]);
+        if ('delete' in m) {
+            for (var i = 0; i < m['delete'].length; i++) {
+                var r = epgStore.getById(m['delete'][i]);
                 if (r)
                   epgStore.remove(r);
             }

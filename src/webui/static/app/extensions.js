@@ -508,41 +508,41 @@ Ext.ux.grid.RowActions = function(config) {
     // {{{
     this.addEvents(
             /**
-             * @event beforeaction
+             * event beforeaction
              * Fires before action event. Return false to cancel the subsequent action event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             'beforeaction'
             /**
-             * @event action
+             * event action
              * Fires when icon is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             , 'action'
             /**
-             * @event beforegroupaction
+             * event beforegroupaction
              * Fires before group action event. Return false to cancel the subsequent groupaction event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'beforegroupaction'
             /**
-             * @event groupaction
+             * event groupaction
              * Fires when icon in a group header is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'groupaction'
             );

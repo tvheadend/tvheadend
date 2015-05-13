@@ -307,7 +307,7 @@ tvheadend.miscconf = function(panel, index) {
             text: "Discover SAT>IP servers",
             tooltip: 'Look for new SAT>IP servers',
             iconCls: 'find',
-            handler: satipDiscover,
+            handler: satipDiscover
         });
     } else {
         var satipButton = null;
@@ -360,7 +360,7 @@ tvheadend.miscconf = function(panel, index) {
         bodyStyle: 'padding:15px',
         layout: 'form',
         items: _items,
-        tbar: _tbar,
+        tbar: _tbar
     });
 
     tvheadend.paneladd(panel, mpanel, index);
@@ -424,7 +424,7 @@ tvheadend.miscconf = function(panel, index) {
     function satipDiscover() {
         Ext.Ajax.request({
             url: 'api/hardware/satip/discover',
-            params: { op: 'all' },
+            params: { op: 'all' }
         });
     }
 };

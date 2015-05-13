@@ -153,41 +153,53 @@ redirect:
  * Static download of a file from the filesystem
  */
 int
-page_static_file(http_connection_t *hc, const char *remain, void *opaque)
+page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
 {
   int ret = 0;
   const char *base = opaque;
+  char *remain, *postfix;
   char path[500];
   ssize_t size;
-  const char *content = NULL, *postfix;
+  const char *content = NULL;
   char buf[4096];
-  const char *gzip;
+  const char *gzip = NULL;
+  int nogzip = 0;
 
-  if(remain == NULL)
+  if(_remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  if(strstr(remain, ".."))
+  if(strstr(_remain, ".."))
     return HTTP_STATUS_BAD_REQUEST;
 
-  snprintf(path, sizeof(path), "%s/%s", base, remain);
+  snprintf(path, sizeof(path), "%s/%s", base, _remain);
 
+  remain = tvh_strdupa(_remain);
   postfix = strrchr(remain, '.');
+  if(postfix != NULL && !strcmp(postfix + 1, "gz")) {
+    gzip = "gzip";
+    *postfix = '\0';
+    postfix = strrchr(remain, '.');
+  }
   if(postfix != NULL) {
     postfix++;
     if(!strcmp(postfix, "js"))
       content = "text/javascript; charset=UTF-8";
     else if(!strcmp(postfix, "css"))
       content = "text/css; charset=UTF-8";
+    else if(!strcmp(postfix, "git"))
+      nogzip = 1;
+    else if(!strcmp(postfix, "jpg"))
+      nogzip = 1;
   }
 
-  // TODO: handle compression
-  fb_file *fp = fb_open(path, 0, 1);
+  fb_file *fp = fb_open(path, 0, (nogzip || gzip) ? 0 : 1);
   if (!fp) {
     tvhlog(LOG_ERR, "webui", "failed to open %s", path);
     return HTTP_STATUS_INTERNAL;
   }
   size = fb_size(fp);
-  gzip = fb_gzipped(fp) ? "gzip" : NULL;
+  if (!gzip && fb_gzipped(fp))
+    gzip = "gzip";
 
   http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL, NULL);
   while (!fb_eof(fp)) {

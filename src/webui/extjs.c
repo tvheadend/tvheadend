@@ -113,81 +113,21 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<head>\n");
 
   htsbuf_qprintf(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
+
+  if (tvheadend_webui_debug) {
   
-  extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base%s.js", tvheadend_webui_debug ? "-debug" : "");
-  extjs_load(hq, EXTJSPATH "/ext-all%s.js", tvheadend_webui_debug ? "-debug" : "");
-  extjs_lcss(hq, EXTJSPATH "/resources/css/ext-all-notheme.css");
-  extjs_lcss(hq, EXTJSPATH "/resources/css/xtheme-blue.css");
-  extjs_lcss(hq, "static/livegrid/resources/css/ext-ux-livegrid.css");
-  extjs_lcss(hq, EXTJSPATH "/examples/ux/gridfilters/css/GridFilters.css");
-  extjs_lcss(hq, EXTJSPATH "/examples/ux/gridfilters/css/RangeMenu.css");
-  extjs_lcss(hq, "static/xcheckbox/xcheckbox.css");
-  extjs_lcss(hq, "static/app/ext.css");
-  
-  extjs_exec(hq, "Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';");
+#include "extjs-debug.c"
 
-  /**
-   * Load extjs extensions
-   */
-  extjs_load(hq, "static/app/extensions.js");
-  extjs_load(hq, "static/livegrid/livegrid-all.js");
-  extjs_load(hq, "static/lovcombo/lovcombo-all.js");
-  extjs_load(hq, "static/multiselect/multiselect.js");
-  extjs_load(hq, "static/multiselect/ddview.js");
-  extjs_load(hq, "static/xcheckbox/xcheckbox.js");
-  extjs_load(hq, "static/checkcolumn/CheckColumn.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/GridFilters.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/Filter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/BooleanFilter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/DateFilter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/ListFilter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/NumericFilter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/filter/StringFilter.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/menu/ListMenu.js");
-  extjs_load(hq, EXTJSPATH "/examples/ux/gridfilters/menu/RangeMenu.js");
+  } else {
 
-  /**
-   * Create a namespace for our app
-   */
-  extjs_exec(hq, "Ext.namespace('tvheadend');");
+#include "extjs-std.c"
 
-  /**
-   * Load all components
-   */
-  extjs_load(hq, "static/smoothie.js");
-  extjs_load(hq, "static/app/comet.js");
-  extjs_load(hq, "static/app/tableeditor.js");
-  extjs_load(hq, "static/app/cteditor.js");
-  extjs_load(hq, "static/app/acleditor.js");
-#if ENABLE_CWC || ENABLE_CAPMT
-  extjs_load(hq, "static/app/caclient.js");
-#endif
-  extjs_load(hq, "static/app/tvadapters.js");
-  extjs_load(hq, "static/app/idnode.js");
-  extjs_load(hq, "static/app/esfilter.js");
-#if ENABLE_MPEGTS
-  extjs_load(hq, "static/app/mpegts.js");
-#endif
-#if ENABLE_TIMESHIFT
-  extjs_load(hq, "static/app/timeshift.js");
-#endif
-  extjs_load(hq, "static/app/chconf.js");
-  extjs_load(hq, "static/app/epg.js");
-  extjs_load(hq, "static/app/dvr.js");
-  extjs_load(hq, "static/app/epggrab.js");
-  extjs_load(hq, "static/app/config.js");
-  extjs_load(hq, "static/app/tvhlog.js");
-  extjs_load(hq, "static/app/status.js");
-  extjs_load(hq, "static/tv.js");
-  extjs_load(hq, "static/app/servicemapper.js");
+  }
 
-  /**
-   * Finally, the app itself
-   */
-  extjs_load(hq, "static/app/tvheadend.js");
-  extjs_exec(hq, "Ext.onReady(tvheadend.app.init, tvheadend.app);");
-  
-
+  extjs_exec(hq, "\
+Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';\r\n\
+Ext.onReady(tvheadend.app.init, tvheadend.app);\
+");
 
 
   htsbuf_qprintf(hq,
@@ -213,6 +153,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
 		 tvheadend_version);
+
   http_output_html(hc);
   return 0;
 }
@@ -230,17 +171,17 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<html>\n");
   htsbuf_qprintf(hq, "<head>\n");
   htsbuf_qprintf(hq, "<title>HTS Tvheadend %s</title>\n", tvheadend_version);
-  extjs_lcss(hq, "static/tv.css");
 
-  if(tvheadend_webui_debug) {
-    extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base-debug.js");
-    extjs_load(hq, EXTJSPATH "/ext-all-debug.js");
+  if (tvheadend_webui_debug) {
+
+#include "extjs-tv-debug.c"
+
   } else {
-    extjs_load(hq, EXTJSPATH "/adapter/ext/ext-base.js");
-    extjs_load(hq, EXTJSPATH "/ext-all.js");
+
+#include "extjs-tv-std.c"
+
   }
 
-  extjs_load(hq, "static/tv.js");
   extjs_exec(hq, "Ext.onReady(tv.app.init, tv.app);");
 
   htsbuf_qprintf(hq, "</head>\n");

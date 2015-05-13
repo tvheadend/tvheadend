@@ -406,7 +406,7 @@ tvheadend.epggrab = function(panel, index) {
             url: 'epggrab',
             params: {
                 op: 'otaepgTrigger',
-                after: 1,
+                after: 1
             },
             waitMsg: 'Triggering...',
             failure: function(response, options) {
