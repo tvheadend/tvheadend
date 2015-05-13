@@ -1530,6 +1530,9 @@ satip_frontend_hacks( satip_frontend_t *lfe, int *def_positions )
     lfe->sf_teardown_delay = 1;
   } else if (!strcmp(sd->sd_info.modelname, "IPLNB")) {
     *def_positions = 1;
+  } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
+              strstr(sd->sd_info.modelname, "FRITZ!")) {
+    lfe->sf_play2 = 1;
   }
 }
 
