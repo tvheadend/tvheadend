@@ -29,9 +29,9 @@ ifneq ($(WEBUI),)
 TOPDIR=$(dir $(IAM))
 include $(TOPDIR)/.config.mk
 EXTJSPATH = $(ROOTPATH)/extjs
-CSS_PY = support/css.py
-RUN_JS = vendor/rjsmin-1.0.10/rjsmin.py
-RUN_CSS = vendor/rcssmin-1.0.5/rcssmin.py
+CSS_PY = PYTHONIOENCODING=utf-8 support/css.py
+RUN_JS = PYTHONIOENCODING=utf-8 vendor/rjsmin-1.0.10/rjsmin.py
+RUN_CSS = PYTHONIOENCODING=utf-8 vendor/rcssmin-1.0.5/rcssmin.py
 GZIP = gzip -n
 
 ifeq ($(WEBUI),std)
@@ -150,6 +150,7 @@ VV = @
 endif
 
 define GO_JS
+	$(VV)$(CSS_PY) --in="$^" utf-check
 	$(VV)cat $^ > $@.tmp
 	$(VV)$(RUN_JS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
@@ -160,6 +161,7 @@ define GO_JS
 endef
 
 define GO_CSS
+	$(VV)$(CSS_PY) --in="$^" utf-check
 	$(VV)$(CSS_PY) --in="$^" > $@.tmp
 	$(VV)$(RUN_CSS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2

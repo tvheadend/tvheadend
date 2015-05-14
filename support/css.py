@@ -15,6 +15,12 @@ def error(fmt, *msg):
   sys.stderr.write(" [ERROR] " + (fmt % msg) + '\n')
   sys.exit(1)
 
+def utf8open(fn, mode):
+  if sys.version_info[0] < 3:
+    return open(fn, mode)
+  else:
+    return open(fn, mode, encoding='utf-8')
+
 def umangle(u, f, r):
   if not u.startswith(f):
     error('Internal error')
@@ -29,7 +35,7 @@ def url(fn):
     '../docresources':'../docresources',
   }
 
-  f = open(fn, 'rb')
+  f = utf8open(fn, 'r')
   if fn[0] != '/':
     fn = os.path.join(os.environ['PWD'], fn)
   fn = os.path.normpath(fn)
@@ -39,7 +45,7 @@ def url(fn):
     error('Wrong filename "%s"', fn)
   bd = os.path.dirname(fn)
   while 1:
-    l = f.readline().decode('utf8')
+    l = f.readline()
     if not l:
       break
     n = l
@@ -68,6 +74,21 @@ def url(fn):
     sys.stdout.write(n)
   f.close()
 
+def utf_check(fn):
+  f = utf8open(fn, 'r')
+  if fn[0] != '/':
+    fn = os.path.join(os.environ['PWD'], fn)
+  fn = os.path.normpath(fn)
+  if VERBOSE:
+    info('utf-check: %s', fn)
+  if not fn.startswith(TVHDIR):
+    error('Wrong filename "%s"', fn)
+  while 1:
+    l = f.readline()
+    if not l:
+      break
+  f.close()
+
 fn=''
 for opt in sys.argv:
   if opt.startswith('--tvhdir='):
@@ -78,4 +99,10 @@ for opt in sys.argv:
 if not fn:
   error('Specify input file')
 for f in fn:
-  url(f)
+  try:
+    if 'utf-check' in sys.argv:
+      utf_check(f)
+    else:
+      url(f)
+  except:
+    error('Unable to process file "%s": %s', f, sys.exc_info())
