@@ -5,7 +5,11 @@
 
 import sys, os
 
+VERBOSE = len(os.environ['V'] or '') > 0
 TVHDIR = os.path.realpath('.')
+
+def info(fmt, *msg):
+  sys.stderr.write(" [INFO ] " + (fmt % msg) + '\n')
 
 def error(fmt, *msg):
   sys.stderr.write(" [ERROR] " + (fmt % msg) + '\n')
@@ -25,15 +29,17 @@ def url(fn):
     '../docresources':'../docresources',
   }
 
-  f = open(fn)
+  f = open(fn, 'rb')
   if fn[0] != '/':
     fn = os.path.join(os.environ['PWD'], fn)
   fn = os.path.normpath(fn)
+  if VERBOSE:
+    info('css: %s', fn)
   if not fn.startswith(TVHDIR):
     error('Wrong filename "%s"', fn)
   bd = os.path.dirname(fn)
   while 1:
-    l = f.readline()
+    l = f.readline().decode('utf8')
     if not l:
       break
     n = l
