@@ -31,7 +31,7 @@ include $(TOPDIR)/.config.mk
 EXTJSPATH = $(ROOTPATH)/extjs
 CSS_PY = support/css.py
 RUN_JS = vendor/rjsmin-1.0.10/rjsmin.py
-RUN_CSS = vendor/rjsmin-1.0.10/rjsmin.py
+RUN_CSS = vendor/rcssmin-1.0.5/rcssmin.py
 GZIP = gzip -n
 
 ifeq ($(WEBUI),std)
