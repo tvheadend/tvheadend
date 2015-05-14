@@ -5,7 +5,7 @@
 
 import sys, os
 
-VERBOSE = len(os.environ['V'] or '') > 0
+VERBOSE = 'V' in os.environ and len(os.environ['V']) > 0
 TVHDIR = os.path.realpath('.')
 
 def info(fmt, *msg):
