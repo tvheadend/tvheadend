@@ -13,7 +13,8 @@
         "wget",
         "bzip2",
         "git-core",
-        "liburiparser-dev"
+        "liburiparser-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -35,7 +36,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev"
+	"libx264-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -56,7 +58,8 @@
         "wget",
         "bzip2",
         "git-core",
-        "liburiparser-dev"
+        "liburiparser-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -78,7 +81,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev"
+	"libx264-dev",
+        "python"
       ],
 
       "buildcmd": [
