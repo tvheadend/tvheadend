@@ -76,7 +76,12 @@ def output_file ( path, name, idx, next = -1 ):
   outf.write('static const uint8_t filebundle_data_%06d[] = {' % idx)
   o = -1
   d = open(p, 'rb').read()
-  if opts.gzip:
+  if p.endswith('.gz'):
+    t = BytesIO(d)
+    z = gzip.GzipFile(filename=name, mode='r', fileobj=t)
+    nd = z.read()
+    o = len(nd)
+  elif opts.gzip:
     o = len(d)
     l = opts.gzlevel
     t = BytesIO()
