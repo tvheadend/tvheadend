@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
@@ -33,6 +34,7 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
+#include "filebundle.h"
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
@@ -310,7 +312,34 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   tcp_write_queue(hc->hc_fd, &hdrs);
 }
 
+/*
+ *
+ */
+int
+http_encoding_valid(http_connection_t *hc, const char *encoding)
+{
+  const char *accept;
+  size_t l = strlen(encoding);
+  size_t i;
 
+  accept = http_arg_get(&hc->hc_args, "accept-encoding");
+  if (!accept)
+    return 0;
+
+  while (*accept) {
+    for (i = 0; i < l; i++)
+      if (tolower(accept[i]) != encoding[i])
+        break;
+    if (i < l)
+      continue;
+    accept += l;
+    while (*accept == ' ')
+      accept++;
+    if (*accept == ',' || *accept == '\0')
+      return 1;
+  }
+  return 0;
+}
 
 /**
  * Transmit a HTTP reply
@@ -319,13 +348,29 @@ static void
 http_send_reply(http_connection_t *hc, int rc, const char *content, 
 		const char *encoding, const char *location, int maxage)
 {
-  http_send_header(hc, rc, content, hc->hc_reply.hq_size,
+  size_t size = hc->hc_reply.hq_size;
+  uint8_t *data = NULL;
+
+#if ENABLE_ZLIB
+  if (http_encoding_valid(hc, "gzip") && encoding == NULL && size > 256) {
+    uint8_t *data2 = (uint8_t *)htsbuf_to_string(&hc->hc_reply);
+    data = gzip_deflate(data2, size, &size);
+    free(data2);
+    encoding = "gzip";
+  }
+#endif
+
+  http_send_header(hc, rc, content, size,
 		   encoding, location, maxage, 0, NULL, NULL);
   
-  if(hc->hc_no_output)
-    return;
+  if(!hc->hc_no_output) {
+    if (data == NULL)
+      tcp_write_queue(hc->hc_fd, &hc->hc_reply);
+    else
+      tvh_write(hc->hc_fd, data, size);
+  }
 
-  tcp_write_queue(hc->hc_fd, &hc->hc_reply);
+  free(data);
 }
 
 

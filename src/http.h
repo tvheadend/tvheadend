@@ -184,6 +184,8 @@ int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 void http_error(http_connection_t *hc, int error);
 
+int http_encoding_valid(http_connection_t *hc, const char *encoding);
+
 void http_output_html(http_connection_t *hc);
 
 void http_output_content(http_connection_t *hc, const char *content);

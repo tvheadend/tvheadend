@@ -82,6 +82,10 @@ extern filebundle_entry_t *filebundle_root;
 
 /* Miscellaneous */
 int fb_stat ( const char *path, struct filebundle_stat *st );
+#if ENABLE_ZLIB
+uint8_t *gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
+uint8_t *gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
+#endif
 
 /* Directory processing wrappers */
 fb_dir    *fb_opendir  ( const char *path );
