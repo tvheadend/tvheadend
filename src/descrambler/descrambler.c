@@ -623,7 +623,7 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
   flags  = (pid >> 16) & MT_FAST;
   pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
-    if (dt->table->mt_pid != pid && (dt->table->mt_flags & MT_FAST) != flags)
+    if (dt->table->mt_pid != pid || (dt->table->mt_flags & MT_FAST) != flags)
       continue;
     TAILQ_FOREACH(ds, &dt->sections, link) {
       if (ds->opaque == opaque)
