@@ -857,7 +857,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_service_t *ct;
   mpegts_service_t *t;
   capmt_caid_ecm_t *cce;
-  int i;
+  int i, add = 0;
 
   tvhtrace("capmt", "%s: setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            capmt_name(capmt), adapter, demux_index, filter_index, pid);
@@ -872,8 +872,12 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   pthread_mutex_lock(&capmt->capmt_mutex);
   cf->adapter = adapter;
   filter = &cf->dmx[filter_index];
-  if (filter->pid && pid != filter->pid)
+  if (!filter->pid) {
+    add = 1;
+  } else if (pid != filter->pid) {
     capmt_pid_remove(capmt, adapter, filter->pid, filter->flags);
+    add = 1;
+  }
   filter->pid = pid;
   if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
     offset = 1; //filter data starts +1 byte because of adapter no
@@ -909,7 +913,8 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
         (filter->filter.mask[0] & 0xf0) != 0xf0)
       t = NULL;
   }
-  capmt_pid_add(capmt, adapter, pid, t);
+  if (add)
+    capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
   if (capmt->capmt_demuxes.max <= demux_index)
     capmt->capmt_demuxes.max = demux_index + 1;
