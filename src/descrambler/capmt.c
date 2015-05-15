@@ -857,7 +857,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_service_t *ct;
   mpegts_service_t *t;
   capmt_caid_ecm_t *cce;
-  int i, add = 0;
+  int i, flags = 0, add = 0;
 
   tvhtrace("capmt", "%s: setting filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            capmt_name(capmt), adapter, demux_index, filter_index, pid);
@@ -869,50 +869,52 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   cf = &capmt->capmt_demuxes.filters[demux_index];
   if (cf->max && cf->adapter != adapter)
     return;
+
   pthread_mutex_lock(&capmt->capmt_mutex);
-  cf->adapter = adapter;
-  filter = &cf->dmx[filter_index];
-  if (!filter->pid) {
-    add = 1;
-  } else if (pid != filter->pid) {
-    capmt_pid_remove(capmt, adapter, filter->pid, filter->flags);
-    add = 1;
-  }
-  filter->pid = pid;
-  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
-    offset = 1; //filter data starts +1 byte because of adapter no
-  memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
-  tvhlog_hexdump("capmt", filter->filter.filter, DMX_FILTER_SIZE);
-  tvhlog_hexdump("capmt", filter->filter.mask, DMX_FILTER_SIZE);
-  tvhlog_hexdump("capmt", filter->filter.mode, DMX_FILTER_SIZE);
-  for (i = 0; i < DMX_FILTER_SIZE; i++)
-    filter->filter.filter[i] &= filter->filter.mask[i];
-  filter->flags = 0;
+
   /* ECM messages have the higher priority */
   t = NULL;
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
     LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
       if (cce->cce_ecmpid == pid) {
-        filter->flags = CAPMT_MSG_FAST;
+        flags = CAPMT_MSG_FAST;
         t = cce->cce_service;
         break;
       }
     if (t) break;
   }
   if (t) {
+    dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 8);
     /* OK, probably ECM, but sometimes, it's shared */
     /* Inspect the filter */
     for (i = 1; i < DMX_FILTER_SIZE; i++) {
-      if (filter->filter.mode[i]) break;
-      if (filter->filter.filter[i]) break;
-      if (filter->filter.mask[i]) break;
+      if (pf->mode[i]) break;
+      if (pf->filter[i]) break;
+      if (pf->mask[i]) break;
     }
     if (i < DMX_FILTER_SIZE ||
-        filter->filter.mode[0] ||
-        (filter->filter.filter[0] & 0xf0) != 0x80 ||
-        (filter->filter.mask[0] & 0xf0) != 0xf0)
+        pf->mode[0] ||
+        (pf->filter[0] & 0xf0) != 0x80 ||
+        (pf->mask[0] & 0xf0) != 0xf0)
       t = NULL;
   }
+
+  cf->adapter = adapter;
+  filter = &cf->dmx[filter_index];
+  if (!filter->pid) {
+    add = 1;
+  } else if (pid != filter->pid || flags != filter->flags) {
+    capmt_pid_remove(capmt, adapter, filter->pid, filter->flags);
+    add = 1;
+  }
+  filter->pid = pid;
+  filter->flags = flags;
+  memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
+  tvhlog_hexdump("capmt", filter->filter.filter, DMX_FILTER_SIZE);
+  tvhlog_hexdump("capmt", filter->filter.mask, DMX_FILTER_SIZE);
+  tvhlog_hexdump("capmt", filter->filter.mode, DMX_FILTER_SIZE);
+  for (i = 0; i < DMX_FILTER_SIZE; i++)
+    filter->filter.filter[i] &= filter->filter.mask[i];
   if (add)
     capmt_pid_add(capmt, adapter, pid, t);
   /* Update the max values */
