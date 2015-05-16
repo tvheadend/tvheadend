@@ -48,8 +48,9 @@ iptv_rtsp_alive_cb ( void *aux )
   iptv_mux_t *im = aux;
   rtsp_priv_t *rp = im->im_data;
 
-  rtsp_options(rp->hc);
-  gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im, rp->hc->hc_rtp_timeout / 2);
+  rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
+  gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im,
+             MAX(1, (rp->hc->hc_rtp_timeout / 2) - 1));
 }
 
 /*
@@ -91,7 +92,8 @@ iptv_rtsp_header ( http_client_t *hc )
     hc->hc_cmd = HTTP_CMD_NONE;
     pthread_mutex_lock(&global_lock);
     iptv_input_mux_started(hc->hc_aux);
-    gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im, hc->hc_rtp_timeout / 2);
+    gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im,
+               MAX(1, (hc->hc_rtp_timeout / 2) - 1));
     pthread_mutex_unlock(&global_lock);
     break;
   default:
