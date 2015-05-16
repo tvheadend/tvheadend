@@ -41,7 +41,7 @@ def url(fn):
   fn = os.path.normpath(fn)
   if VERBOSE:
     info('css: %s', fn)
-  if not fn.startswith(TVHDIR):
+  if not os.path.realpath(fn).startswith(TVHDIR):
     error('Wrong filename "%s"', fn)
   bd = os.path.dirname(fn)
   while 1:
@@ -81,7 +81,7 @@ def utf_check(fn):
   fn = os.path.normpath(fn)
   if VERBOSE:
     info('utf-check: %s', fn)
-  if not fn.startswith(TVHDIR):
+  if not os.path.realpath(fn).startswith(TVHDIR):
     error('Wrong filename "%s"', fn)
   while 1:
     l = f.readline()
