@@ -73,7 +73,7 @@ for opt do
     *dir|prefix)
       eval "$opt=$val"
       ;;
-    cc|cflags|ldflags|arch|cpu|platform|python)
+    cc|cflags|ldflags|arch|cpu|platform|python|gzip|bzip2)
       eval "$(toupper $opt)=\"$val\""
       ;;
     enable-*)
@@ -235,7 +235,8 @@ check_py_import gzip
 #
 # Binaries
 #
-check_bin bzip2 || echo 'WARN: no bzip2 binary found'
+check_bin ${GZIP} || die 'WARN: no gzip binary found'
+check_bin ${BZIP2} || echo 'WARN: no bzip2 binary found'
 
 #
 # SSL
