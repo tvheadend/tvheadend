@@ -32,7 +32,7 @@ EXTJSPATH = $(ROOTPATH)/extjs
 CSS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/css.py
 RUN_JS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rjsmin-1.0.10/rjsmin.py
 RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
-GZIP = gzip -n
+GZIP += -n
 
 ifeq ($(WEBUI),std)
 DEBUG =
