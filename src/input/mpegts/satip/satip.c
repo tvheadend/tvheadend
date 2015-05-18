@@ -145,6 +145,49 @@ satip_device_class_get_title( idnode_t *in )
   return buf;
 }
 
+static const char *satip_tunercfg_tab[] = {
+  "DVBS2-1",
+  "DVBS2-2",
+  "DVBS2-4",
+  "DVBS2-8",
+  "DVBC-1",
+  "DVBC-2",
+  "DVBC-4",
+  "DVBC-8",
+  "DVBT-1",
+  "DVBT-2",
+  "DVBT-4",
+  "DVBT-8",
+  "DVBS2-1,DVBT-1",
+  "DVBS2-2,DVBT-2",
+  "DVBT-1,DVBS2-1",
+  "DVBT-2,DVBS2-2",
+  "DVBS2-1,DVB-C1",
+  "DVBS2-2,DVB-C2",
+  "DVBC-1,DVBS2-1",
+  "DVBC-2,DVBS2-2",
+  NULL
+};
+
+static htsmsg_t *
+satip_device_class_tunercfg_list ( void *o )
+{
+  htsmsg_t *l = htsmsg_create_list();
+  const char **p;
+  htsmsg_add_str(l, NULL, "Auto");
+  for (p = satip_tunercfg_tab; *p; p++)
+    htsmsg_add_str(l, NULL, *p);
+  return l;
+}
+
+static void
+satip_device_class_tunercfg_notify ( void *o )
+{
+  satip_device_t *sd = (satip_device_t *)o;
+  if (!sd->sd_inload)
+    satip_device_destroy_later(sd, 100);
+}
+
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
@@ -153,6 +196,16 @@ const idclass_t satip_device_class =
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "tunercfgu",
+      .name     = "Tuner Configuration",
+      .opts     = PO_SORTKEY,
+      .off      = offsetof(satip_device_t, sd_tunercfg),
+      .list     = satip_device_class_tunercfg_list,
+      .notify   = satip_device_class_tunercfg_notify,
+      .def.s    = "Auto"
+    },
     {
       .type     = PT_BOOL,
       .id       = "fullmux_ok",
@@ -208,13 +261,6 @@ const idclass_t satip_device_class =
       .name     = "PIDs 21 in setup",
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids21),
-    },
-    {
-      .type     = PT_INT,
-      .id       = "tunercfgoverride",
-      .name     = "Override tuner count",
-      .opts     = PO_ADVANCED,
-      .off      = offsetof(satip_device_t, sd_tunercfg_override),
     },
     {
       .type     = PT_STR,
@@ -422,10 +468,12 @@ satip_device_create( satip_device_info_t *info )
   satip_device_t *sd = calloc(1, sizeof(satip_device_t));
   tvh_uuid_t uuid;
   htsmsg_t *conf = NULL, *feconf = NULL;
-  char *argv[10];
+  char *argv[10], *tunercfg;
   int i, j, n, m, fenum, v2, save = 0;
   dvb_fe_type_t type;
   char buf2[60];
+
+  sd->sd_inload = 1;
 
   satip_device_calc_uuid(&uuid, info->uuid);
 
@@ -438,6 +486,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
+
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
@@ -484,7 +533,13 @@ satip_device_create( satip_device_info_t *info )
     feconf = htsmsg_get_map(conf, "frontends");
   save = !conf || !feconf;
 
-  n = http_tokenize(sd->sd_info.tunercfg, argv, 10, ',');
+  tunercfg = sd->sd_tunercfg;
+  if (tunercfg == NULL)
+    tunercfg = sd->sd_tunercfg = strdup("Auto");
+  if (strncmp(tunercfg, "DVB", 3) && strncmp(tunercfg, "ATSC", 4))
+    tunercfg = sd->sd_info.tunercfg;
+
+  n = http_tokenize(tvh_strdupa(tunercfg), argv, 10, ',');
   for (i = m = 0, fenum = 1; i < n; i++) {
     type = DVB_TYPE_NONE;
     v2 = 0;
@@ -516,8 +571,6 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 6);
       v2 = 2;
     }
-    if (sd->sd_tunercfg_override > 0 && sd->sd_tunercfg_override < 33)
-             m = sd->sd_tunercfg_override;
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
              satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
@@ -535,6 +588,8 @@ satip_device_create( satip_device_info_t *info )
 
   if (save)
     satip_device_save(sd);
+
+  sd->sd_inload = 0;
 
   htsmsg_destroy(conf);
 
@@ -627,6 +682,7 @@ satip_device_destroy( satip_device_t *sd )
   FREEM(tunercfg);
 #undef FREEM
   free(sd->sd_bindaddr);
+  free(sd->sd_tunercfg);
 
   tvh_hardware_delete((tvh_hardware_t*)sd);
   free(sd);
@@ -798,7 +854,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   if ((udn          = htsmsg_xml_get_cdata_str(device, "UDN")) == NULL)
     goto finish;
   if ((tunercfg     = htsmsg_xml_get_cdata_str(device, "urn:ses-com:satipX_SATIPCAP")) == NULL)
-    goto finish;
+    tunercfg = "";
 
   uuid = NULL;
   n = http_tokenize((char *)udn, argv, ARRAY_SIZE(argv), ':');

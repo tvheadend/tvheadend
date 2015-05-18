@@ -62,6 +62,7 @@ struct satip_device
   tvh_hardware_t;
 
   gtimer_t                   sd_destroy_timer;
+  int                        sd_inload;
   int                        sd_nosave;
 
   /*
@@ -84,7 +85,7 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
   int                        sd_pids0;
-  int                        sd_tunercfg_override;
+  char                      *sd_tunercfg;
   int                        sd_pids21;
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
