@@ -53,6 +53,7 @@ typedef struct linuxdvb_adapter     linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend    linuxdvb_frontend_t;
 #if ENABLE_LINUXDVB_CA
 typedef struct linuxdvb_ca          linuxdvb_ca_t;
+typedef struct linuxdvb_ca_capmt    linuxdvb_ca_capmt_t;
 #endif
 typedef struct linuxdvb_satconf     linuxdvb_satconf_t;
 typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
@@ -63,6 +64,9 @@ typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
+#if ENABLE_LINUXDVB_CA
+typedef TAILQ_HEAD(linuxdvb_ca_capmt_queue,linuxdvb_ca_capmt) linuxdvb_ca_capmt_queue_t;
+#endif
 
 struct linuxdvb_adapter
 {
@@ -172,6 +176,7 @@ struct linuxdvb_ca
   int                       lca_enabled;
   int                       lca_high_bitrate_mode;
   gtimer_t                  lca_monitor_timer;
+  gtimer_t                  lca_capmt_queue_timer;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
 
@@ -199,6 +204,7 @@ struct linuxdvb_ca
   char                     *lca_ca_path;
   int                      lca_state;
   const char               *lca_state_str;
+  linuxdvb_ca_capmt_queue_t lca_capmt_queue;
   /*
    * CAM module info
    */
@@ -374,7 +380,8 @@ linuxdvb_ca_create
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *m );
 
 void
-linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int len);
+linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
+                          int len, uint8_t list_mgmt, uint8_t cmd_id);
 
 #endif
 

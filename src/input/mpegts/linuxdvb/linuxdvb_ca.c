@@ -53,6 +53,41 @@ ca_slot_state2str(ca_slot_state_t v)
   return "UNKNOWN";
 }
 
+const static char *
+ca_pmt_list_mgmt2str(uint8_t v)
+{
+  switch(v) {
+    case CA_LIST_MANAGEMENT_MORE:   return "more";
+    case CA_LIST_MANAGEMENT_FIRST:  return "first";
+    case CA_LIST_MANAGEMENT_LAST:   return "last";
+    case CA_LIST_MANAGEMENT_ONLY:   return "only";
+    case CA_LIST_MANAGEMENT_ADD:    return "add";
+    case CA_LIST_MANAGEMENT_UPDATE: return "update";
+  }
+  return "UNKNOWN";
+}
+
+const static char *
+ca_pmt_cmd_id2str(uint8_t v)
+{
+  switch(v) {
+    case CA_PMT_CMD_ID_OK_DESCRAMBLING: return "ok_descrambling";
+    case CA_PMT_CMD_ID_OK_MMI:          return "ok_mmi";
+    case CA_PMT_CMD_ID_QUERY:           return "query";
+    case CA_PMT_CMD_ID_NOT_SELECTED:    return "not_selected";
+  }
+  return "UNKNOWN";
+}
+
+struct linuxdvb_ca_capmt {
+  TAILQ_ENTRY(linuxdvb_ca_capmt)  lcc_link;
+  int      len;
+  uint8_t *data;
+  uint8_t  slot;
+  uint8_t  list_mgmt;
+  uint8_t  cmd_id;
+};
+
 /*
  *  ts101699 and CI+ 1.3 definitions
  */
@@ -733,48 +768,46 @@ linuxdvb_ca_create
   lca->lca_adapter = la;
   LIST_INSERT_HEAD(&la->la_ca_devices, lca, lca_link);
 
+  TAILQ_INIT(&lca->lca_capmt_queue);
+
   gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
 
   return lca;
 }
 
-void
-linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int len)
+static void
+linuxdvb_ca_process_capmt_queue ( void *aux )
 {
+  linuxdvb_ca_t *lca = aux;
+  linuxdvb_ca_capmt_t *lcc;
   struct section *section;
   struct section_ext *result;
   struct mpeg_pmt_section *pmt;
-  uint8_t *buffer;
   uint8_t capmt[4096];
   int size;
 
-  buffer = malloc(len);
-  if (!buffer)
+  lcc = TAILQ_FIRST(&lca->lca_capmt_queue);
+
+  if (!lcc)
     return;
 
-  memcpy(buffer, ptr, len);
-
-  section = section_codec(buffer, len);
-  if (!section){
+  if (!(section = section_codec(lcc->data, lcc->len))){
     tvherror("en50221", "failed to decode PMT section");
-    goto fail;
+    goto done;
   }
 
-  result = section_ext_decode(section, 0);
-  if (!result){
+  if (!(result = section_ext_decode(section, 0))){
     tvherror("en50221", "failed to decode PMT ext_section");
-    goto fail;
+    goto done;
   }
 
-  pmt = mpeg_pmt_section_codec(result);
-  if (!pmt){
+  if (!(pmt = mpeg_pmt_section_codec(result))){
     tvherror("en50221", "failed to decode PMT");
-    goto fail;
+    goto done;
   }
 
-  size = en50221_ca_format_pmt(pmt, capmt, sizeof(capmt), 1,
-                               CA_LIST_MANAGEMENT_ONLY,
-                               CA_PMT_CMD_ID_OK_DESCRAMBLING);
+  size = en50221_ca_format_pmt(pmt, capmt, sizeof(capmt), 0,
+                               lcc->list_mgmt, lcc->cmd_id);
 
   if (size < 0) {
     tvherror("en50221", "Failed to format CAPMT");
@@ -785,11 +818,51 @@ linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int
         tvherror("en50221", "Failed to send CAPMT");
   }
 
-  tvhtrace("en50221", "OK Descrambling CAPMT sent");
+  tvhtrace("en50221", "%s CAPMT sent (%s)", ca_pmt_cmd_id2str(lcc->cmd_id),
+           ca_pmt_list_mgmt2str(lcc->list_mgmt));
   tvhlog_hexdump("en50221", capmt, size);
 
-fail:
-  free(buffer);
+done:
+
+  TAILQ_REMOVE(&lca->lca_capmt_queue, lcc, lcc_link);
+
+  free(lcc->data);
+  free(lcc);
+
+  if (!TAILQ_EMPTY(&lca->lca_capmt_queue)) {
+    gtimer_arm_ms(&lca->lca_capmt_queue_timer,
+                  linuxdvb_ca_process_capmt_queue, lca, 1000);
+  }
+}
+
+void
+linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
+                          int len, uint8_t list_mgmt, uint8_t cmd_id)
+{
+  linuxdvb_ca_capmt_t *lcc;
+
+  if (!lca)
+    return;
+
+  lcc = calloc(1, sizeof(*lcc));
+
+  if (!lcc)
+    return;
+
+  lcc->data = malloc(len);
+  lcc->len = len;
+  lcc->slot = slot;
+  lcc->list_mgmt = list_mgmt;
+  lcc->cmd_id = cmd_id;
+  memcpy(lcc->data, ptr, len);
+
+  TAILQ_INSERT_TAIL(&lca->lca_capmt_queue, lcc, lcc_link);
+
+  tvhtrace("en50221", "%s CAPMT enqueued (%s)", ca_pmt_cmd_id2str(lcc->cmd_id),
+           ca_pmt_list_mgmt2str(lcc->list_mgmt));
+
+  gtimer_arm_ms(&lca->lca_capmt_queue_timer,
+                linuxdvb_ca_process_capmt_queue, lca, 50);
 }
 
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
