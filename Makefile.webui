@@ -154,7 +154,7 @@ define GO_JS
 	$(VV)cat $^ > $@.tmp
 	$(VV)$(RUN_JS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
-	@$(GZIP) -c $@.tmp2 > $@.tmp
+	$(VV)$(GZIP) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
 	@stat --printf="%-35n %7s\n" $@
@@ -165,7 +165,7 @@ define GO_CSS
 	$(VV)$(CSS_PY) --in="$^" > $@.tmp
 	$(VV)$(RUN_CSS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
-	@$(GZIP) -c $@.tmp2 > $@.tmp
+	$(VV)$(GZIP) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
 	@stat --printf="%-35n %7s\n" $@
