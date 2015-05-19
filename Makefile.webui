@@ -32,7 +32,7 @@ EXTJSPATH = $(ROOTPATH)/extjs
 CSS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/css.py
 RUN_JS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rjsmin-1.0.10/rjsmin.py
 RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
-GZIP += -n
+GZIPCMD += -n
 
 ifeq ($(WEBUI),std)
 DEBUG =
@@ -154,7 +154,7 @@ define GO_JS
 	$(VV)cat $^ > $@.tmp
 	$(VV)$(RUN_JS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
-	$(VV)$(GZIP) -c $@.tmp2 > $@.tmp
+	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
 	@stat --printf="%-35n %7s\n" $@
@@ -165,7 +165,7 @@ define GO_CSS
 	$(VV)$(CSS_PY) --in="$^" > $@.tmp
 	$(VV)$(RUN_CSS) < $@.tmp > $@.tmp2
 	@stat --printf="%-35n %7s\n" $@.tmp $@.tmp2
-	$(VV)$(GZIP) -c $@.tmp2 > $@.tmp
+	$(VV)$(GZIPCMD) -c $@.tmp2 > $@.tmp
 	@rm $@.tmp2
 	@mv $@.tmp $@
 	@stat --printf="%-35n %7s\n" $@

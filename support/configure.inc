@@ -17,7 +17,7 @@ CONFIGURE_ARGS="$*"
 [ -z "$ARCH"     ] && ARCH=$(uname -m)
 [ -z "$OSENV"    ] && OSENV=posix
 [ -z "$PYTHON"   ] && PYTHON=python
-[ -z "$GZIP"     ] && GZIP=gzip
+[ -z "$GZIPCMD"  ] && GZIPCMD=gzip
 [ -z "$BZIP2"    ] && BZIP2=bzip2
 
 # Paths
@@ -400,7 +400,7 @@ print_config ()
 
   echo "Binaries:"
   printf "$fmt" "Using PYTHON:" "${PYTHON}"
-  printf "$fmt" "Using GZIP:" "${GZIP}"
+  printf "$fmt" "Using GZIP:" "${GZIPCMD}"
   printf "$fmt" "Using BZIP2:" "${BZIP2}"
   echo ""
 
@@ -459,7 +459,7 @@ ifeq (\$(origin CC),default)
 CC        = ${CC}
 endif
 PYTHON   ?= ${PYTHON}
-GZIP     ?= ${GZIP}
+GZIPCMD  ?= ${GZIPCMD}
 BZIP2    ?= ${BZIP2}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
