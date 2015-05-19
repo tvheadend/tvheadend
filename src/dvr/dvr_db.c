@@ -486,8 +486,18 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   if (de->de_channel) {
     LIST_FOREACH(de2, &de->de_channel->ch_dvrs, de_channel_link)
       if(de2 != de &&
+         de2->de_channel == de->de_channel &&
+         de2->de_config == de->de_config &&
          de2->de_start == de->de_start &&
-         de2->de_sched_state != DVR_COMPLETED) {
+         de2->de_sched_state != DVR_COMPLETED &&
+         de2->de_sched_state != DVR_MISSED_TIME &&
+         strcmp(de2->de_owner ?: "", de->de_owner ?: "") == 0) {
+        tvhlog(LOG_INFO, "dvr", "delete entry %s \"%s\" on \"%s\" start time %"PRId64", "
+           "scheduled for recording by \"%s\" (duplicate with %s)",
+          idnode_uuid_as_str(&de->de_id),
+          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+          (int64_t)de2->de_start, de->de_creator ?: "",
+          idnode_uuid_as_str(&de2->de_id));
         dvr_entry_destroy(de, 0);
         return NULL;
       }
