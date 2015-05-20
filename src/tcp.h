@@ -87,6 +87,8 @@ int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
 
 char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 
+int tcp_get_sockaddr(struct sockaddr *sa, const char *s);
+
 struct access;
 
 void *tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m),
