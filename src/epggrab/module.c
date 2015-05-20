@@ -68,7 +68,8 @@ htsmsg_t *epggrab_module_list ( void )
       htsmsg_add_str(e, "name", m->name);
     if(m->type == EPGGRAB_EXT) {
       epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
-      htsmsg_add_str(e, "path", ext->path);
+      if (ext->path)
+        htsmsg_add_str(e, "path", ext->path);
     }
     htsmsg_add_msg(a, NULL, e);
   }
