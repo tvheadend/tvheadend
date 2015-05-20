@@ -68,7 +68,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 20
+#define HTSP_PROTO_VERSION 21
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -663,9 +663,10 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 static htsmsg_t *
 htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 {
-  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *out = htsmsg_create_map(), *l, *m;
+  htsmsg_field_t *f;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
-  const char *p;
+  const char *p, *last;
   int64_t fsize = -1;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
@@ -689,7 +690,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_u32(out, "priority",    de->de_pri);
   htsmsg_add_u32(out, "contentType", de->de_content_type);
 
-  if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
+  if(de->de_title && (s = lang_str_get(de->de_title, NULL)))
     htsmsg_add_str(out, "title", s);
   if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
     htsmsg_add_str(out, "description", s);
@@ -698,10 +699,23 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if(de->de_creator)
     htsmsg_add_str(out, "creator", de->de_creator);
 
-  if( de->de_filename && de->de_config ) {
-    if ((p = tvh_strbegins(de->de_filename, de->de_config->dvr_storage)))
-      htsmsg_add_str(out, "path", p);
+  last = NULL;
+  if (!htsmsg_is_empty(de->de_files) && de->de_config) {
+    l = htsmsg_create_list();
+    htsmsg_add_msg(out, "files", l);
+    HTSMSG_FOREACH(f, de->de_files) {
+      m = htsmsg_field_get_list(f);
+      if (m == NULL) continue;
+      s = last = htsmsg_get_str(m, "filename");
+      if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL)
+        htsmsg_add_msg(l, NULL, htsmsg_copy(m));
+    }
   }
+
+  if(last && de->de_config)
+    if ((p = tvh_strbegins(last, de->de_config->dvr_storage)))
+      htsmsg_add_str(out, "path", p);
+
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
     s = "scheduled";
@@ -2251,6 +2265,9 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 {
   const char *str, *s2;
   const char *filename = NULL;
+  htsmsg_field_t *f;
+
+
   if((str = htsmsg_get_str(in, "file")) == NULL)
     return htsp_error("Missing argument 'file'");
 
@@ -2270,10 +2287,13 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     if (!htsp_user_access_channel(htsp, de->de_channel))
       return htsp_error("User does not have access");
 
-    if(de->de_filename == NULL)
+    f = htsmsg_field_last(de->de_files);
+    if (f)
+      filename = htsmsg_field_get_str(f);
+
+    if (f == NULL || filename == NULL)
       return htsp_error("DVR entry does not have a file yet");
 
-    filename = de->de_filename;
     return htsp_file_open(htsp, filename, 0);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {

@@ -92,15 +92,16 @@ void dvr_inotify_done ( void )
 void dvr_inotify_add ( dvr_entry_t *de )
 {
   dvr_inotify_entry_t *e;
+  const char *filename = dvr_get_filename(de);
   char *path;
 
   if (_inot_fd < 0)
     return;
 
-  if (!de->de_filename || de->de_filename[0] == '\0')
+  if (filename == NULL)
     return;
 
-  path = strdup(de->de_filename);
+  path = strdup(filename);
 
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);
@@ -165,25 +166,6 @@ _dvr_inotify_find
 }
 
 /*
- * Find DVR entry
- */
-static dvr_entry_t *
-_dvr_inotify_find2
-  ( dvr_inotify_entry_t *die, const char *name )
-{
-  dvr_entry_t *de = NULL;
-  char path[512];
-  
-  snprintf(path, sizeof(path), "%s/%s", die->path, name);
-  
-  LIST_FOREACH(de, &die->entries, de_inotify_link)
-    if (de->de_filename && !strcmp(path, de->de_filename))
-      break;
-  
-  return de;
-}
-
-/*
  * File moved
  */
 static void
@@ -192,20 +174,43 @@ _dvr_inotify_moved
 {
   dvr_inotify_entry_t *die;
   dvr_entry_t *de;
+  char path[PATH_MAX];
+  const char *filename;
+  htsmsg_t *m = NULL;
+  htsmsg_field_t *f = NULL;
 
   if (!(die = _dvr_inotify_find(fd)))
     return;
 
-  if (!(de = _dvr_inotify_find2(die, from)))
+  snprintf(path, sizeof(path), "%s/%s", die->path, from);
+
+  LIST_FOREACH(de, &die->entries, de_inotify_link) {
+    if (de->de_files == NULL)
+      continue;
+    HTSMSG_FOREACH(f, de->de_files)
+      if ((m = htsmsg_field_get_list(f)) != NULL) {
+        filename = htsmsg_get_str(m, "filename");
+        if (filename && !strcmp(path, filename))
+          break;
+      }
+    if (f)
+      break;
+  }
+
+  if (!de)
     return;
 
-  if (to) {
-    char path[512];
-    snprintf(path, sizeof(path), "%s/%s", die->path, to);
-    tvh_str_update(&de->de_filename, path);
-    dvr_entry_save(de);
-  } else
-    dvr_inotify_del(de);
+  if (f && m) {
+    if (to) {
+      snprintf(path, sizeof(path), "%s/%s", die->path, to);
+      htsmsg_set_str(m, "filename", path);
+      dvr_entry_save(de);
+    } else {
+      htsmsg_field_destroy(de->de_files, f);
+      if (htsmsg_is_empty(de->de_files))
+        dvr_inotify_del(de);
+    }
+  }
   
   htsp_dvr_entry_update(de);
   idnode_notify_changed(&de->de_id);

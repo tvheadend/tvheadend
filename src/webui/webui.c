@@ -1140,7 +1140,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
   int fd, i, ret;
   struct stat st;
-  const char *content = NULL, *range;
+  const char *content = NULL, *range, *filename;
   dvr_entry_t *de;
   char *fname;
   char *basename;
@@ -1171,7 +1171,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   de = dvr_entry_find_by_uuid(remain);
   if (de == NULL)
     de = dvr_entry_find_by_id(atoi(remain));
-  if(de == NULL || de->de_filename == NULL) {
+  if(de == NULL || (filename = dvr_get_filename(de)) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }
@@ -1180,7 +1180,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_FOUND;
   }
 
-  fname = tvh_strdupa(de->de_filename);
+  fname = tvh_strdupa(filename);
   content = muxer_container_type2mime(de->de_mc, 1);
 
   pthread_mutex_unlock(&global_lock);

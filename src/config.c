@@ -1185,6 +1185,31 @@ config_migrate_v17 ( void )
   }
 }
 
+static void
+config_migrate_v18 ( void )
+{
+  htsmsg_t *c, *e, *l, *m;
+  htsmsg_field_t *f;
+  const char *filename;
+
+  if ((c = hts_settings_load("dvr/log")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if ((filename = htsmsg_get_str(e, "filename")) == NULL)
+        continue;
+      if ((l = htsmsg_get_list(e, "files")) != NULL)
+        continue;
+      l = htsmsg_create_list();
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "filename", filename);
+      htsmsg_add_msg(l, NULL, m);
+      htsmsg_delete_field(e, "filename");
+      htsmsg_add_msg(e, "files", l);
+      hts_settings_save(e, "dvr/log/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1297,7 +1322,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v14,
   config_migrate_v15,
   config_migrate_v16,
-  config_migrate_v17
+  config_migrate_v17,
+  config_migrate_v18,
 };
 
 /*

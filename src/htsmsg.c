@@ -75,7 +75,6 @@ htsmsg_clear(htsmsg_t *msg)
 }
 
 
-
 /*
  *
  */
@@ -121,6 +120,17 @@ htsmsg_field_find(htsmsg_t *msg, const char *name)
 }
 
 
+/*
+ *
+ */
+htsmsg_field_t *
+htsmsg_field_last(htsmsg_t *msg)
+{
+  if (msg == NULL)
+    return NULL;
+  return TAILQ_LAST(&msg->hm_fields, htsmsg_field_queue);
+}
+
 
 /**
  *
@@ -134,6 +144,20 @@ htsmsg_delete_field(htsmsg_t *msg, const char *name)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
   htsmsg_field_destroy(msg, f);
   return 0;
+}
+
+
+/**
+ *
+ */
+int
+htsmsg_is_empty(htsmsg_t *msg)
+{
+  if (msg == NULL)
+    return 1;
+
+  assert(msg->hm_data == NULL);
+  return TAILQ_EMPTY(&msg->hm_fields);
 }
 
 
@@ -245,19 +269,27 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
  *
  */
 int
+htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
+{
+  if (f->hmf_type != HMF_STR)
+    return 1;
+  if (f->hmf_flags & HMF_ALLOCED)
+    free((void *)f->hmf_str);
+  f->hmf_flags |= HMF_ALLOCED;
+  f->hmf_str = strdup(str);
+  return 0;
+}
+
+/*
+ *
+ */
+int
 htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 {
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
     f = htsmsg_field_add(msg, name, HMF_STR, HMF_ALLOCED | HMF_NAME_ALLOCED);
-  else {
-    if (f->hmf_type != HMF_STR)
-      return 1;
-    if(f->hmf_flags & HMF_ALLOCED)
-      free((void *)f->hmf_str);
-  }
-  f->hmf_str = strdup(str);
-  return 0;
+  return htsmsg_field_set_str(f, str);
 }
 
 /*

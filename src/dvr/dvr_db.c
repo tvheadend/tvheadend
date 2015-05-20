@@ -347,7 +347,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   if(now >= stop || de->de_dont_reschedule) {
 
-    if(de->de_filename == NULL)
+    if(htsmsg_is_empty(de->de_files))
       dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
     else
       _dvr_entry_completed(de);
@@ -441,6 +441,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
 {
   dvr_entry_t *de, *de2;
   int64_t start, stop;
+  htsmsg_t *m;
   const char *s;
 
   if (conf) {
@@ -469,12 +470,17 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
 
   idnode_load(&de->de_id, conf);
 
-  /* special case, becaous PO_NOSAVE, load ignores it */
+  /* filenames */
+  m = htsmsg_get_list(conf, "files");
+  if (m)
+    de->de_files = htsmsg_copy(m);
+
+  /* special case, because PO_NOSAVE, load ignores it */
   if (de->de_title == NULL &&
       (s = htsmsg_get_str(conf, "disp_title")) != NULL)
     dvr_entry_class_disp_title_set(de, s);
 
-  /* special case, becaous PO_NOSAVE, load ignores it */
+  /* special case, because PO_NOSAVE, load ignores it */
   if (de->de_subtitle == NULL &&
           (s = htsmsg_get_str(conf, "disp_subtitle")) != NULL)
     dvr_entry_class_disp_subtitle_set(de, s);
@@ -805,7 +811,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   if(de->de_config != NULL)
     LIST_REMOVE(de, de_config_link);
 
-  free(de->de_filename);
+  htsmsg_destroy(de->de_files);
   free(de->de_owner);
   free(de->de_creator);
   free(de->de_comment);
@@ -879,6 +885,8 @@ dvr_entry_save(dvr_entry_t *de)
   lock_assert(&global_lock);
 
   idnode_save(&de->de_id, m);
+  if (de->de_files)
+    htsmsg_add_msg(m, "files", htsmsg_copy(de->de_files));
   hts_settings_save(m, "dvr/log/%s", idnode_uuid_as_str(&de->de_id));
   htsmsg_destroy(m);
 }
@@ -1116,7 +1124,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 {
   if (de->de_rec_state == DVR_RS_PENDING ||
       de->de_rec_state == DVR_RS_WAIT_PROGRAM_START ||
-      de->de_filename == NULL)
+      htsmsg_is_empty(de->de_files))
     dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
   else
     _dvr_entry_completed(de);
@@ -1422,6 +1430,16 @@ dvr_entry_class_config_name_rend(void *o)
   if (de->de_config)
     return strdup(de->de_config->dvr_config_name);
   return NULL;
+}
+
+static const void *
+dvr_entry_class_filename_get(void *o)
+{
+  static const char *ret;
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *s = dvr_get_filename(de);
+  ret = s ?: "";
+  return &ret;
 }
 
 static int
@@ -2068,8 +2086,8 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "filename",
       .name     = "Filename",
-      .off      = offsetof(dvr_entry_t, de_filename),
-      .opts     = PO_RDONLY,
+      .get      = dvr_entry_class_filename_get,
+      .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {
       .type     = PT_STR,
@@ -2217,21 +2235,39 @@ dvr_destroy_by_channel(channel_t *ch, int delconf)
 /**
  *
  */
+const char *
+dvr_get_filename(dvr_entry_t *de)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+  const char *s;
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (m = htsmsg_field_get_map(f)) != NULL &&
+      (s = htsmsg_get_str(m, "filename")) != NULL)
+    return s;
+  else
+    return NULL;
+}
+
+/**
+ *
+ */
 int64_t
 dvr_get_filesize(dvr_entry_t *de)
 {
+  const char *filename;
   struct stat st;
 
-  if(de->de_filename == NULL)
+  filename = dvr_get_filename(de);
+
+  if(filename == NULL)
     return -1;
 
-  if(stat(de->de_filename, &st) != 0)
+  if(stat(filename, &st) != 0)
     return -1;
 
   return st.st_size;
 }
-
-
 
 /**
  *
@@ -2264,8 +2300,11 @@ void
 dvr_entry_delete(dvr_entry_t *de)
 {
   dvr_config_t *cfg = de->de_config;
+  htsmsg_t *m;
+  htsmsg_field_t *f;
   time_t t;
   struct tm tm;
+  const char *filename;
   char tbuf[64], *rdir;
   int r;
 
@@ -2281,7 +2320,7 @@ dvr_entry_delete(dvr_entry_t *de)
 	 de->de_creator ?: "",
 	 dvr_entry_get_retention(de));
 
-  if(de->de_filename != NULL) {
+  if(!htsmsg_is_empty(de->de_files)) {
 #if ENABLE_INOTIFY
     dvr_inotify_del(de);
 #endif
@@ -2289,10 +2328,15 @@ dvr_entry_delete(dvr_entry_t *de)
     if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory)
       rdir = cfg->dvr_storage;
 
-    r = deferred_unlink(de->de_filename, rdir);
-    if(r && r != -ENOENT)
-      tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
-	     de->de_filename, strerror(-errno));
+    HTSMSG_FOREACH(f, de->de_files) {
+      m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
+      filename = htsmsg_get_str(m, "filename");
+      r = deferred_unlink(filename, rdir);
+      if(r && r != -ENOENT)
+        tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
+  	       filename, strerror(-errno));
+    }
   }
   dvr_entry_destroy(de, 1);
 }

@@ -199,6 +199,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   char *filename, *s;
   struct tm tm;
   dvr_config_t *cfg;
+  htsmsg_t *m;
 
   if (de == NULL)
     return -1;
@@ -287,7 +288,11 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   }
   free(filename);
 
-  tvh_str_set(&de->de_filename, fullname);
+  if (de->de_files == NULL)
+    de->de_files = htsmsg_create_list();
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "filename", fullname);
+  htsmsg_add_msg(de->de_files, NULL, m);
 
   return 0;
 }
@@ -308,7 +313,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 
   tvhlog(LOG_ERR, "dvr", 
 	 "Recording error: \"%s\": %s",
-	 de->de_filename ?: lang_str_get(de->de_title, NULL), msgbuf);
+	 dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL), msgbuf);
 }
 
 /**
@@ -386,7 +391,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
-  if(muxer_open_file(muxer, de->de_filename)) {
+  if(muxer_open_file(muxer, dvr_get_filename(de))) {
     dvr_rec_fatal_error(de, "Unable to open file");
     return -1;
   }
@@ -408,7 +413,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	 "service: \"%s\"",
 		
-	 de->de_filename ?: lang_str_get(de->de_title, NULL),
+	 dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
 	 si->si_adapter  ?: "<N/A>",
 	 si->si_network  ?: "<N/A>",
 	 si->si_mux      ?: "<N/A>",
@@ -575,7 +580,7 @@ dvr_thread(void *aux)
 	 muxer_reconfigure(prch->prch_muxer, sm->sm_data) < 0) {
 	tvhlog(LOG_WARNING,
 	       "dvr", "Unable to reconfigure \"%s\"",
-	       de->de_filename ?: lang_str_get(de->de_title, NULL));
+	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
 
 	// Try to restart the recording if the muxer doesn't
 	// support reconfiguration of the streams.
@@ -605,7 +610,7 @@ dvr_thread(void *aux)
 	de->de_last_error = SM_CODE_OK;
 	tvhlog(LOG_INFO, 
 	       "dvr", "Recording completed: \"%s\"",
-	       de->de_filename ?: lang_str_get(de->de_title, NULL));
+	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
 
 	dvr_thread_epilog(de);
 	started = 0;
@@ -616,7 +621,7 @@ dvr_thread(void *aux)
 	 dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
 	 tvhlog(LOG_ERR,
 		"dvr", "Recording stopped: \"%s\": %s",
-		de->de_filename ?: lang_str_get(de->de_title, NULL),
+		dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
 		streaming_code2txt(sm->sm_code));
 
 	 dvr_thread_epilog(de);
@@ -641,7 +646,7 @@ dvr_thread(void *aux)
 	  dvr_rec_set_state(de, DVR_RS_ERROR, code);
 	  tvhlog(LOG_ERR,
 		 "dvr", "Streaming error: \"%s\": %s",
-		 de->de_filename ?: lang_str_get(de->de_title, NULL),
+		 dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
 		 streaming_code2txt(code));
 	}
       }
@@ -654,7 +659,7 @@ dvr_thread(void *aux)
 
 	tvhlog(LOG_ERR,
 	       "dvr", "Recording unable to start: \"%s\": %s",
-	       de->de_filename ?: lang_str_get(de->de_title, NULL),
+	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
 	       streaming_code2txt(sm->sm_code));
       }
       break;
@@ -689,7 +694,7 @@ dvr_thread(void *aux)
 static void
 dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 {
-  const char *fmap[256];
+  const char *fmap[256], *filename;
   char **args;
   char start[16];
   char stop[16];
@@ -703,12 +708,16 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     return;
   }
 
-  fbasename = tvh_strdupa(de->de_filename);
+  filename = dvr_get_filename(de);
+  if (filename == NULL)
+    return;
+
+  fbasename = tvh_strdupa(filename);
   snprintf(start, sizeof(start), "%"PRItime_t, (time_t)dvr_entry_get_start_time(de));
   snprintf(stop, sizeof(stop),   "%"PRItime_t, (time_t)dvr_entry_get_stop_time(de));
 
   memset(fmap, 0, sizeof(fmap));
-  fmap['f'] = de->de_filename; /* full path to recoding */
+  fmap['f'] = filename; /* full path to recoding */
   fmap['b'] = basename(fbasename); /* basename of recoding */
   fmap['c'] = DVR_CH_NAME(de); /* channel name */
   fmap['C'] = de->de_creator; /* user who created this recording */
@@ -748,6 +757,6 @@ dvr_thread_epilog(dvr_entry_t *de)
   dvr_notify(de, 1);
 
   dvr_config_t *cfg = de->de_config;
-  if(cfg && cfg->dvr_postproc && de->de_filename)
+  if(cfg && cfg->dvr_postproc)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
 }

@@ -157,8 +157,7 @@ typedef struct dvr_entry {
   char *de_owner;
   char *de_creator;
   char *de_comment;
-  char *de_filename;   /* Initially null if no filename has been
-			  generated yet */
+  htsmsg_t *de_files; /* List of all used files */
   char *de_directory; /* Can be set for autorec entries, will override any 
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
@@ -479,6 +478,8 @@ dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
+
+const char *dvr_get_filename(dvr_entry_t *de);
 
 int64_t dvr_get_filesize(dvr_entry_t *de);
 
