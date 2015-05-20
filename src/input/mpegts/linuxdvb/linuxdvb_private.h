@@ -175,8 +175,11 @@ struct linuxdvb_ca
   int                       lca_ca_fd;
   int                       lca_enabled;
   int                       lca_high_bitrate_mode;
+  int                       lca_capmt_query;
   gtimer_t                  lca_monitor_timer;
   gtimer_t                  lca_capmt_queue_timer;
+  int                       lca_capmt_interval;
+  int                       lca_capmt_query_interval;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
 

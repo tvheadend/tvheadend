@@ -219,6 +219,29 @@ const idclass_t linuxdvb_ca_class =
       .def.s    = "PIN",
     },
     {
+      .type     = PT_INT,
+      .id       = "capmt_interval",
+      .name     = "CAPMT Interval (ms)",
+      .off      = offsetof(linuxdvb_ca_t, lca_capmt_interval),
+      .opts     = PO_ADVANCED,
+      .def.i    = 100,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "capmt_query_interval",
+      .name     = "CAPMT Query Interval (ms)",
+      .off      = offsetof(linuxdvb_ca_t, lca_capmt_query_interval),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1200,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "query_before_ok_descrambling",
+      .name     = "Send CAPMT Query",
+      .off      = offsetof(linuxdvb_ca_t, lca_capmt_query),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "ca_path",
       .name     = "Device Path",
@@ -747,6 +770,8 @@ linuxdvb_ca_create
   lca->lca_number = number;
   lca->lca_ca_path  = strdup(ca_path);
   lca->lca_ca_fd = -1;
+  lca->lca_capmt_interval = 100;
+  lca->lca_capmt_query_interval = 1200;
 
   /* Internal config ID */
   snprintf(id, sizeof(id), "ca%u", number);
@@ -784,7 +809,7 @@ linuxdvb_ca_process_capmt_queue ( void *aux )
   struct section_ext *result;
   struct mpeg_pmt_section *pmt;
   uint8_t capmt[4096];
-  int size;
+  int size, i;
 
   lcc = TAILQ_FIRST(&lca->lca_capmt_queue);
 
@@ -823,6 +848,8 @@ linuxdvb_ca_process_capmt_queue ( void *aux )
   tvhlog_hexdump("en50221", capmt, size);
 
 done:
+  i = (lcc->cmd_id == CA_PMT_CMD_ID_QUERY) ?
+    lca->lca_capmt_query_interval : lca->lca_capmt_interval;
 
   TAILQ_REMOVE(&lca->lca_capmt_queue, lcc, lcc_link);
 
@@ -831,7 +858,7 @@ done:
 
   if (!TAILQ_EMPTY(&lca->lca_capmt_queue)) {
     gtimer_arm_ms(&lca->lca_capmt_queue_timer,
-                  linuxdvb_ca_process_capmt_queue, lca, 1000);
+                  linuxdvb_ca_process_capmt_queue, lca, i);
   }
 }
 
@@ -840,26 +867,32 @@ linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
                           int len, uint8_t list_mgmt, uint8_t cmd_id)
 {
   linuxdvb_ca_capmt_t *lcc;
+  int c = 1;
 
   if (!lca)
     return;
 
-  lcc = calloc(1, sizeof(*lcc));
+  if (lca->lca_capmt_query && cmd_id == CA_PMT_CMD_ID_OK_DESCRAMBLING)
+    c = 2;
 
-  if (!lcc)
-    return;
+  while (c--) {
+    lcc = calloc(1, sizeof(*lcc));
 
-  lcc->data = malloc(len);
-  lcc->len = len;
-  lcc->slot = slot;
-  lcc->list_mgmt = list_mgmt;
-  lcc->cmd_id = cmd_id;
-  memcpy(lcc->data, ptr, len);
+    if (!lcc)
+      return;
 
-  TAILQ_INSERT_TAIL(&lca->lca_capmt_queue, lcc, lcc_link);
+    lcc->data = malloc(len);
+    lcc->len = len;
+    lcc->slot = slot;
+    lcc->list_mgmt = list_mgmt;
+    lcc->cmd_id = (c ? CA_PMT_CMD_ID_QUERY : cmd_id);
+    memcpy(lcc->data, ptr, len);
 
-  tvhtrace("en50221", "%s CAPMT enqueued (%s)", ca_pmt_cmd_id2str(lcc->cmd_id),
-           ca_pmt_list_mgmt2str(lcc->list_mgmt));
+    TAILQ_INSERT_TAIL(&lca->lca_capmt_queue, lcc, lcc_link);
+
+    tvhtrace("en50221", "%s CAPMT enqueued (%s)", ca_pmt_cmd_id2str(lcc->cmd_id),
+             ca_pmt_list_mgmt2str(lcc->list_mgmt));
+  }
 
   gtimer_arm_ms(&lca->lca_capmt_queue_timer,
                 linuxdvb_ca_process_capmt_queue, lca, 50);
