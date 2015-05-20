@@ -68,6 +68,7 @@ typedef struct access_entry {
   int ae_htsp_dvr;
   int ae_all_dvr;
   int ae_all_rw_dvr;
+  int ae_failed_dvr;
   struct dvr_config *ae_dvr_config;
   LIST_ENTRY(access_entry) ae_dvr_config_link;
 
@@ -122,15 +123,17 @@ typedef struct access_ticket {
 #define ACCESS_RECORDER           (1<<4)
 #define ACCESS_HTSP_RECORDER      (1<<5)
 #define ACCESS_ALL_RECORDER       (1<<6)
-#define ACCESS_ADMIN              (1<<7)
-#define ACCESS_ALL_RW_RECORDER    (1<<8)
+#define ACCESS_ALL_RW_RECORDER    (1<<7)
+#define ACCESS_FAILED_RECORDER    (1<<8)
+#define ACCESS_ADMIN              (1<<9)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
    ACCESS_HTSP_STREAMING | ACCESS_WEB_INTERFACE | \
    ACCESS_RECORDER | ACCESS_HTSP_RECORDER | \
-   ACCESS_ALL_RECORDER | ACCESS_ADMIN | ACCESS_ALL_RW_RECORDER)
+   ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER | \
+   ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it

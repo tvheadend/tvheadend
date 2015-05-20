@@ -836,18 +836,20 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_ADVANCED_STREAMING;
   if (ae->ae_htsp_streaming)
     r |= ACCESS_HTSP_STREAMING;
+  if (ae->ae_webui)
+    r |= ACCESS_WEB_INTERFACE;
   if (ae->ae_dvr)
     r |= ACCESS_RECORDER;
   if (ae->ae_htsp_dvr)
     r |= ACCESS_HTSP_RECORDER;
   if (ae->ae_all_dvr)
     r |= ACCESS_ALL_RECORDER;
-  if (ae->ae_webui)
-    r |= ACCESS_WEB_INTERFACE;
-  if (ae->ae_admin)
-    r |= ACCESS_ADMIN;
   if (ae->ae_all_rw_dvr)
     r |= ACCESS_ALL_RW_RECORDER;
+  if (ae->ae_failed_dvr)
+    r |= ACCESS_FAILED_RECORDER;
+  if (ae->ae_admin)
+    r |= ACCESS_ADMIN;
   ae->ae_rights = r;
 }
 
@@ -882,6 +884,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
+    ae->ae_failed_dvr     = 1;
     idnode_load(&ae->ae_id, conf);
     /* note password has PO_NOSAVE, thus it must be set manually */
     if ((s = htsmsg_get_str(conf, "password")) != NULL)
@@ -1344,6 +1347,13 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_all_rw_dvr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "failed_dvr",
+      .name     = "Failed DVR",
+      .off      = offsetof(access_entry_t, ae_failed_dvr),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+    },
+    {
       .type     = PT_STR,
       .id       = "dvr_config",
       .name     = "DVR Config Profile",
@@ -1449,11 +1459,12 @@ access_init(int createdefault, int noacl)
     ae->ae_streaming      = 1;
     ae->ae_adv_streaming  = 1;
     ae->ae_htsp_streaming = 1;
+    ae->ae_webui          = 1;
     ae->ae_dvr            = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
     ae->ae_all_rw_dvr     = 1;
-    ae->ae_webui          = 1;
+    ae->ae_failed_dvr     = 1;
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
 

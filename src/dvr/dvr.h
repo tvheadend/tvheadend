@@ -503,18 +503,7 @@ htsmsg_t *dvr_entry_class_pri_list(void *o);
 htsmsg_t *dvr_entry_class_config_name_list(void *o);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
 
-static inline int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
-{
-  if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
-    return 0;
-
-  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
-    return 0;
-
-  if (strcmp(de->de_owner ?: "", a->aa_username ?: ""))
-    return -1;
-  return 0;
-}
+int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
 /**
  *

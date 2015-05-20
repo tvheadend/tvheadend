@@ -1115,7 +1115,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
-        htsp_user_access_channel(htsp,de->de_channel))
+        htsp_user_access_channel(htsp, de->de_channel))
       htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
 
   /* Send EPG updates */

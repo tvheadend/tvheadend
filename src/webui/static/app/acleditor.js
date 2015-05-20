@@ -10,6 +10,13 @@ tvheadend.acleditor = function(panel, index)
                'profile,conn_limit,dvr,htsp_dvr,all_dvr,all_rw_dvr,' +
 	       'dvr_config,channel_min,channel_max,channel_tag,comment';
 
+    var list2 = 'enabled,username,password,prefix,' +
+                'webui,admin,' +
+                'streaming,adv_streaming,htsp_streaming,' +
+                'profile,conn_limit,dvr,htsp_dvr,all_dvr,all_rw_dvr,' +
+                'failed_dvr,dvr_config,channel_min,channel_max,channel_tag,' +
+                'comment';
+
     tvheadend.idnode_grid(panel, {
         url: 'api/access/entry',
         titleS: 'Access Entry',
@@ -36,13 +43,13 @@ tvheadend.acleditor = function(panel, index)
         tabIndex: index,
         edit: {
             params: {
-                list: list
+                list: list2
             }
         },
         add: {
             url: 'api/access/entry',
             params: {
-                list: list
+                list: list2
             },
             create: { }
         },
