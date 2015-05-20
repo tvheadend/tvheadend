@@ -50,17 +50,23 @@ static int dvr_entry_class_disp_subtitle_set(void *o, const void *v);
 /*
  *
  */
-static int
-dvr_entry_assign_sched_state(dvr_entry_t *de, int state)
+int
+dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
+                    dvr_rs_state_t rec_state, int error_code)
 {
   char id[16];
-  if (de->de_sched_state != state) {
+  if (de->de_sched_state != state ||
+      de->de_rec_state != rec_state ||
+      de->de_last_error != error_code) {
     if (de->de_bcast) {
       snprintf(id, sizeof(id), "%u", de->de_bcast->id);
       notify_delayed(id, "epg", "dvr_update");
     }
     de->de_sched_state = state;
+    de->de_rec_state = rec_state;
+    de->de_last_error = error_code;
     idnode_notify_changed(&de->de_id);
+    htsp_dvr_entry_update(de);
     return 1;
   }
   return 0;
@@ -201,10 +207,10 @@ dvr_dbus_timer_cb( void *aux )
 /*
  * Completed
  */
-static void
-_dvr_entry_completed(dvr_entry_t *de)
+void
+dvr_entry_completed(dvr_entry_t *de, int error_code)
 {
-  dvr_entry_assign_sched_state(de, DVR_COMPLETED);
+  dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_PENDING, error_code);
 #if ENABLE_INOTIFY
   dvr_inotify_add(de);
 #endif
@@ -348,9 +354,9 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if(now >= stop || de->de_dont_reschedule) {
 
     if(htsmsg_is_empty(de->de_files))
-      dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
+      dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, de->de_last_error);
     else
-      _dvr_entry_completed(de);
+      dvr_entry_completed(de, de->de_last_error);
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de,
                    de->de_stop + dvr_entry_get_retention(de) * 86400);
 
@@ -360,7 +366,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else if (de->de_channel && de->de_channel->ch_enabled) {
 
-    dvr_entry_assign_sched_state(de, DVR_SCHEDULED);
+    dvr_entry_set_state(de, DVR_SCHEDULED, DVR_RS_PENDING, de->de_last_error);
 
     tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, start);
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, start);
@@ -370,7 +376,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else {
 
-    dvr_entry_assign_sched_state(de, DVR_NOSTATE);
+    dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_PENDING, de->de_last_error);
 
   }
 }
@@ -718,7 +724,9 @@ static dvr_entry_t* _dvr_duplicate_event(dvr_entry_t* de)
       continue;
 
     // only successful earlier recordings qualify as master
-    if (de2->de_sched_state == DVR_MISSED_TIME || (de2->de_sched_state == DVR_COMPLETED && de2->de_last_error != SM_CODE_OK))
+    if (de2->de_sched_state == DVR_MISSED_TIME ||
+        (de2->de_sched_state == DVR_COMPLETED &&
+         de2->de_last_error != SM_CODE_OK))
       continue;
 
     // if titles are not defined or do not match, don't dedup
@@ -1122,14 +1130,16 @@ void dvr_event_updated ( epg_broadcast_t *e )
 static void
 dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 {
-  if (de->de_rec_state == DVR_RS_PENDING ||
-      de->de_rec_state == DVR_RS_WAIT_PROGRAM_START ||
-      htsmsg_is_empty(de->de_files))
-    dvr_entry_assign_sched_state(de, DVR_MISSED_TIME);
-  else
-    _dvr_entry_completed(de);
+  dvr_rs_state_t rec_state = de->de_rec_state;
 
-  dvr_rec_unsubscribe(de, stopcode);
+  dvr_rec_unsubscribe(de);
+
+  if (rec_state == DVR_RS_PENDING ||
+      rec_state == DVR_RS_WAIT_PROGRAM_START ||
+      htsmsg_is_empty(de->de_files))
+    dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, stopcode);
+  else
+    dvr_entry_completed(de, stopcode);
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
@@ -1138,8 +1148,6 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 
   if (saveconf)
     dvr_entry_save(de);
-  idnode_notify_changed(&de->de_id);
-  htsp_dvr_entry_update(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + dvr_entry_get_retention(de) * 86400);
@@ -1152,7 +1160,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 static void
 dvr_timer_stop_recording(void *aux)
 {
-  dvr_stop_recording(aux, 0, 1);
+  dvr_stop_recording(aux, SM_CODE_OK, 1);
 }
 
 
@@ -1166,7 +1174,7 @@ dvr_timer_start_recording(void *aux)
   dvr_entry_t *de = aux;
 
   if (de->de_channel == NULL || !de->de_channel->ch_enabled) {
-    dvr_entry_assign_sched_state(de, DVR_NOSTATE);
+    dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_PENDING, de->de_last_error);
     return;
   }
 
@@ -1176,16 +1184,13 @@ dvr_timer_start_recording(void *aux)
     return;
   }
 
-  dvr_entry_assign_sched_state(de, DVR_RECORDING);
-  de->de_rec_state = DVR_RS_PENDING;
-  de->de_last_error = SM_CODE_OK;
+  dvr_entry_set_state(de, DVR_RECORDING, DVR_RS_PENDING, SM_CODE_OK);
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
-  idnode_changed(&de->de_id);
-  htsp_dvr_entry_update(de);
-  dvr_rec_subscribe(de);
+  if (dvr_rec_subscribe(de))
+    dvr_entry_completed(de, SM_CODE_BAD_SOURCE);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
                  dvr_entry_get_stop_time(de));

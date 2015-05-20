@@ -58,7 +58,7 @@ const static int prio2weight[6] = {
 /**
  *
  */
-void
+int
 dvr_rec_subscribe(dvr_entry_t *de)
 {
   char buf[100];
@@ -82,7 +82,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
     tvherror("dvr", "unable to create new channel streaming chain for '%s'",
              channel_get_name(de->de_channel));
-    return;
+    free(prch);
+    return -1;
   }
 
   de->de_s = subscription_create_from_channel(prch, NULL, weight,
@@ -93,20 +94,20 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel));
     profile_chain_close(prch);
     free(prch);
-    de->de_chain = NULL;
-    return;
+    return -1;
   }
 
   de->de_chain = prch;
 
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de);
+  return 0;
 }
 
 /**
  *
  */
 void
-dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
+dvr_rec_unsubscribe(dvr_entry_t *de)
 {
   profile_chain_t *prch = de->de_chain;
 
@@ -123,8 +124,6 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   de->de_chain = NULL;
   profile_chain_close(prch);
   free(prch);
-
-  de->de_last_error = stopcode;
 }
 
 
@@ -320,9 +319,9 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
  *
  */
 static void
-dvr_notify(dvr_entry_t *de, int now)
+dvr_notify(dvr_entry_t *de)
 {
-  if (now || de->de_last_notify + 5 < dispatch_clock) {
+  if (de->de_last_notify + 5 < dispatch_clock) {
     idnode_notify_changed(&de->de_id);
     de->de_last_notify = dispatch_clock;
     htsp_dvr_entry_update(de);
@@ -335,19 +334,9 @@ dvr_notify(dvr_entry_t *de, int now)
 static void
 dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
 {
-  int notify = 0;
-  if(de->de_rec_state != newstate) {
-    de->de_rec_state = newstate;
-    notify = 1;
-  }
-  if(de->de_last_error != error) {
-    de->de_last_error = error;
-    notify = 1;
-    if(error)
-      de->de_errors++;
-  }
-  if (notify)
-    dvr_notify(de, 1);
+  if (de->de_last_error != error && error)
+    de->de_errors++;
+  dvr_entry_set_state(de, de->de_sched_state, newstate, error);
 }
 
 /**
@@ -524,14 +513,14 @@ dvr_thread(void *aux)
         pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         if (((th_pkt_t*)sm->sm_data)->pkt_err) {
           de->de_data_errors += ((th_pkt_t*)sm->sm_data)->pkt_err;
-          dvr_notify(de, 0);
+          dvr_notify(de);
         }
       }
       else if (sm->sm_type == SMT_MPEGTS) {
         pb = sm->sm_data;
         if (pb->pb_err) {
           de->de_data_errors += pb->pb_err;
-          dvr_notify(de, 0);
+          dvr_notify(de);
         }
       }
       if (pb)
@@ -562,7 +551,7 @@ dvr_thread(void *aux)
       if(started) {
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
-	dvr_notify(de, 0);
+	dvr_notify(de);
       }
       break;
 
@@ -571,7 +560,7 @@ dvr_thread(void *aux)
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
-	dvr_notify(de, 0);
+	dvr_notify(de);
       }
       break;
 
@@ -591,11 +580,8 @@ dvr_thread(void *aux)
       if(!started) {
         pthread_mutex_lock(&global_lock);
         dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-        if(dvr_rec_start(de, sm->sm_data) == 0) {
+        if(dvr_rec_start(de, sm->sm_data) == 0)
           started = 1;
-          idnode_changed(&de->de_id);
-          htsp_dvr_entry_update(de);
-        }
         pthread_mutex_unlock(&global_lock);
       } 
       break;
@@ -607,7 +593,7 @@ dvr_thread(void *aux)
        } else if(sm->sm_code == 0) {
 	 // Recording is completed
 
-	de->de_last_error = SM_CODE_OK;
+	dvr_entry_set_state(de, de->de_sched_state, de->de_rec_state, SM_CODE_OK);
 	tvhlog(LOG_INFO, 
 	       "dvr", "Recording completed: \"%s\"",
 	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
@@ -754,7 +740,6 @@ dvr_thread_epilog(dvr_entry_t *de)
   muxer_close(prch->prch_muxer);
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
-  dvr_notify(de, 1);
 
   dvr_config_t *cfg = de->de_config;
   if(cfg && cfg->dvr_postproc)
