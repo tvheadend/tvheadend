@@ -19,6 +19,7 @@
 
 #include "tvheadend.h"
 #include "iptv_private.h"
+#include "iptv_rtcp.h"
 #include "http.h"
 
 typedef struct {
@@ -28,6 +29,7 @@ typedef struct {
   char *query;
   gtimer_t alive_timer;
   int play;
+  iptv_rtcp_info_t * rtcp_info;
 } rtsp_priv_t;
 
 /*
@@ -165,6 +167,9 @@ iptv_rtsp_start
   }
 
   rp = calloc(1, sizeof(*rp));
+  rp->rtcp_info = calloc(1, sizeof(iptv_rtcp_info_t));
+  rtcp_init(rp->rtcp_info);
+  rp->rtcp_info->connection = rtcp;
   rp->hc = hc;
   udp_multirecv_init(&rp->um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   rp->path = strdup(u->path ?: "");
@@ -204,6 +209,8 @@ iptv_rtsp_stop
     http_client_close(rp->hc);
   free(rp->path);
   free(rp->query);
+  rtcp_destroy(rp->rtcp_info);
+  free(rp->rtcp_info);
   free(rp);
   pthread_mutex_lock(&iptv_lock);
 }
