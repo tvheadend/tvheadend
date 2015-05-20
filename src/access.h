@@ -187,6 +187,12 @@ access_get_hashed(const char *username, const uint8_t digest[20],
  *
  */
 access_t *
+access_get_by_username(const char *username);
+
+/**
+ *
+ */
+access_t *
 access_get_by_addr(struct sockaddr *src);
 
 /**

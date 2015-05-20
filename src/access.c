@@ -486,7 +486,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
     a->aa_representative = strdup(username);
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
   }
 
   if (access_noacl) {
@@ -555,7 +555,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     a->aa_representative = strdup(username);
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
   }
 
   if(access_noacl) {
@@ -617,7 +617,33 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   return a;
 }
 
+/**
+ *
+ */
+access_t *
+access_get_by_username(const char *username)
+{
+  access_t *a = calloc(1, sizeof(*a));
+  access_entry_t *ae;
 
+  if(access_noacl) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!ae->ae_enabled)
+      continue;
+
+    if(ae->ae_username[0] == '*' || strcmp(ae->ae_username, username))
+      continue;
+
+    access_update(a, ae);
+  }
+
+  return a;
+}
 
 /**
  *

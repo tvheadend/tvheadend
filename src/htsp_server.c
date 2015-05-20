@@ -577,7 +577,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       char buf[50];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-      tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
+      tcp_get_str_from_ip((struct sockaddr*)&addr, buf, 50);
       snprintf(url, sizeof(url), "http://%s%s%s:%d%s/%s",
                     (addr.ss_family == AF_INET6)?"[":"",
                     buf,
@@ -2794,7 +2794,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   
   // Note: global_lock held on entry
 
-  tcp_get_ip_str((struct sockaddr*)source, buf, 50);
+  tcp_get_str_from_ip((struct sockaddr*)source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
   *opaque = &htsp;

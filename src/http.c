@@ -721,7 +721,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  tcp_get_str_from_ip((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
   hc->hc_peer_ipstr = tvh_strdupa(authbuf);
   hc->hc_representative = hc->hc_peer_ipstr;
   hc->hc_username = NULL;

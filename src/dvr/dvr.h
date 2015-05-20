@@ -393,6 +393,8 @@ void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
+uint32_t dvr_usage_count(access_t *aa);
+
 static inline int dvr_entry_is_editable(dvr_entry_t *de)
   { return de->de_sched_state == DVR_SCHEDULED; }
 

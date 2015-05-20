@@ -27,6 +27,7 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
+#include "tcp.h"
 #include "dvr.h"
 #include "spawn.h"
 #include "service.h"
@@ -65,6 +66,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
   int weight;
   profile_t *pro;
   profile_chain_t *prch;
+  struct sockaddr sa;
+  access_t *aa;
+  uint32_t rec_count, net_count;
 
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
@@ -75,6 +79,28 @@ dvr_rec_subscribe(dvr_entry_t *de)
     weight = 300;
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
+
+  if (de->de_owner && de->de_owner[0] != '\0')
+    aa = access_get_by_username(de->de_owner);
+  else if (de->de_creator && de->de_creator[0] != '\0' &&
+           tcp_get_ip_from_str(de->de_creator, &sa) != NULL)
+    aa = access_get_by_addr(&sa);
+  else {
+    tvherror("dvr", "unable to find access");
+    return -1;
+  }
+
+  if (aa->aa_conn_limit) {
+    rec_count = dvr_usage_count(aa);
+    net_count = tcp_connection_count(aa);
+    if (rec_count + net_count >= aa->aa_conn_limit) {
+      tvherror("dvr", "multiple connections are not allowed for user '%s' from '%s' "
+                      "(limit %u, active streaming %u, active DVR %u)",
+               aa->aa_username ?: "", aa->aa_representative ?: "",
+               aa->aa_conn_limit, rec_count, net_count);
+      return -1;
+    }
+  }
 
   pro = de->de_config->dvr_profile;
   prch = malloc(sizeof(*prch));

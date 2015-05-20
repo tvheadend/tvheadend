@@ -341,6 +341,27 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   }
 }
 
+/**
+ *
+ */
+uint32_t
+dvr_usage_count(access_t *aa)
+{
+  dvr_entry_t *de;
+  uint32_t used = 0;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (de->de_owner && de->de_owner[0]) {
+      if (!strcmp(de->de_owner, aa->aa_username ?: ""))
+        used++;
+    } else if (!strcmp(de->de_creator ?: "", aa->aa_representative ?: "")) {
+      used++;
+    }
+  }
+
+  return used;
+}
+
 static void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
@@ -498,7 +519,6 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   if (de->de_channel) {
     LIST_FOREACH(de2, &de->de_channel->ch_dvrs, de_channel_link)
       if(de2 != de &&
-         de2->de_channel == de->de_channel &&
          de2->de_config == de->de_config &&
          de2->de_start == de->de_start &&
          de2->de_sched_state != DVR_COMPLETED &&
