@@ -1464,6 +1464,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     retention = 0;
   comment = htsmsg_get_str(in, "comment");
   creator = htsp->htsp_username;
+  if (creator == NULL || *creator == '\0')
+    creator = htsp->htsp_granted_access->aa_representative;
   if (!(lang        = htsmsg_get_str(in, "language")))
     lang    = htsp->htsp_language;
 
