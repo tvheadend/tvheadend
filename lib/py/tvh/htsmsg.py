@@ -24,7 +24,7 @@ Support for processing HTSMSG binary format
 
 def int2bin ( i ):
   return chr(i >> 24 & 0xFF) + chr(i >> 16 & 0xFF)\
-       + chr(i >> 16 & 0xFF) + chr(i & 0xFF)
+       + chr(i >> 8 & 0xFF) + chr(i & 0xFF)
 
 def bin2int ( d ):
   return (ord(d[0]) << 24) + (ord(d[1]) << 16)\
