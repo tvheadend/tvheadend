@@ -20,10 +20,18 @@ include $(dir $(lastword $(MAKEFILE_LIST)))../.config.mk
 
 COMMIT   ?= $(shell git rev-parse HEAD)
 COMMIT1   = $(shell git rev-parse $(COMMIT))
-VERSION   = $(shell cd .. && git describe --match "v*" $(COMMIT1) | sed -e 's/-/./g' -e 's/^v//g' )
+FVERSION  = $(shell cd .. && git describe --match "v*" $(COMMIT1) | sed "s/^v//")
+VERSION   = $(shell echo "$(FVERSION)" | cut -d '-' -f 1)
+RELEASE   = $(shell echo "$(FVERSION)" | cut -d '-' -f 2-10 | sed "s/-/~/g")
+VERSION  ?= "0.0.0"
+RELEASE  ?= 1
+ifeq ($(VERSION),$(RELEASE))
+RELEASE   = 1
+endif
 
 tvheadend.spec: tvheadend.spec.in
 	@sed -e 's/@VERSION@/$(VERSION)/g' \
+	     -e 's/@RELEASE@/$(RELEASE)/g' \
 	     -e 's/@COMMIT@/$(COMMIT1)/g' \
 		$< > $@
 
