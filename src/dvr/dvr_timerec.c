@@ -151,14 +151,14 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
 
   title = dvr_timerec_title(dte, &tm_start);
   snprintf(buf, sizeof(buf), "Time recording%s%s",
-           dte->dte_creator ? " by: " : "",
-           dte->dte_creator ?: "");
+           dte->dte_comment ? ": " : "",
+           dte->dte_comment ?: "");
   de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
                          NULL, dte->dte_channel,
                          start, stop, 0, 0, title, NULL,
-                         NULL, NULL, NULL, dte->dte_owner, buf,
+                         NULL, NULL, NULL, dte->dte_owner, dte->dte_creator,
                          NULL, dte, dte->dte_pri, dte->dte_retention,
-                         dte->dte_comment);
+                         buf);
 
   return;
 

@@ -771,13 +771,13 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
   }
 
   snprintf(buf, sizeof(buf), "Auto recording%s%s",
-           dae->dae_creator ? " by: " : "",
-           dae->dae_creator ?: "");
+           dae->dae_comment ? ": " : "",
+           dae->dae_comment ?: "");
 
   dvr_entry_create_by_event(idnode_uuid_as_str(&dae->dae_config->dvr_id), e,
                             dae->dae_start_extra, dae->dae_stop_extra,
-                            dae->dae_owner, buf, dae, dae->dae_pri, dae->dae_retention,
-                            dae->dae_comment);
+                            dae->dae_owner, dae->dae_creator,
+                            dae, dae->dae_pri, dae->dae_retention, buf);
 }
 
 /**
