@@ -497,7 +497,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_en50494",
-  .ic_caption    = "DVB-S EN50494 (UniCable)",
+  .ic_caption    = "DVB-S EN50494 (UniCable, experimental)",
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_U16,
@@ -599,7 +599,7 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "en50494",
-    .name  = "Unicable Switch (Universal LNB)",
+    .name  = "Unicable Switch (Universal LNB, experimental)",
     .idc   = &linuxdvb_satconf_en50494_class,
     .ports = 2,
   },
