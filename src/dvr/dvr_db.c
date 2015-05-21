@@ -227,15 +227,46 @@ dvr_dbus_timer_cb( void *aux )
 #endif
 
 /*
+ *
+ */
+static void
+dvr_entry_retention_timer(dvr_entry_t *de)
+{
+  gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de,
+                 de->de_stop + dvr_entry_get_retention(de) * 86400);
+}
+
+/*
+ * No state
+ */
+static void
+dvr_entry_nostate(dvr_entry_t *de, int error_code)
+{
+  dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_PENDING, de->de_last_error);
+  dvr_entry_retention_timer(de);
+}
+
+/*
+ * Missed time
+ */
+static void
+dvr_entry_missed_time(dvr_entry_t *de, int error_code)
+{
+  dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, error_code);
+  dvr_entry_retention_timer(de);
+}
+
+/*
  * Completed
  */
-void
+static void
 dvr_entry_completed(dvr_entry_t *de, int error_code)
 {
   dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_PENDING, error_code);
 #if ENABLE_INOTIFY
   dvr_inotify_add(de);
 #endif
+  dvr_entry_retention_timer(de);
 }
 
 /**
@@ -342,11 +373,9 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if(now >= stop || de->de_dont_reschedule) {
 
     if(htsmsg_is_empty(de->de_files))
-      dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, de->de_last_error);
+      dvr_entry_missed_time(de, de->de_last_error);
     else
       dvr_entry_completed(de, de->de_last_error);
-    gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de,
-                   de->de_stop + dvr_entry_get_retention(de) * 86400);
 
   } else if (de->de_sched_state == DVR_RECORDING)  {
 
@@ -364,7 +393,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else {
 
-    dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_PENDING, de->de_last_error);
+    dvr_entry_nostate(de, de->de_last_error);
 
   }
 }
@@ -1124,7 +1153,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
   if (rec_state == DVR_RS_PENDING ||
       rec_state == DVR_RS_WAIT_PROGRAM_START ||
       htsmsg_is_empty(de->de_files))
-    dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, stopcode);
+    dvr_entry_missed_time(de, stopcode);
   else
     dvr_entry_completed(de, stopcode);
 
@@ -1176,8 +1205,10 @@ dvr_timer_start_recording(void *aux)
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
-  if (dvr_rec_subscribe(de))
+  if (dvr_rec_subscribe(de)) {
     dvr_entry_completed(de, SM_CODE_BAD_SOURCE);
+    return;
+  }
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
                  dvr_entry_get_stop_time(de));

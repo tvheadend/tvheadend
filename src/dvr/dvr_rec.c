@@ -86,7 +86,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
            tcp_get_ip_from_str(de->de_creator, &sa) != NULL)
     aa = access_get_by_addr(&sa);
   else {
-    tvherror("dvr", "unable to find access");
+    tvherror("dvr", "unable to find access (owner '%s', creator '%s')",
+             de->de_owner, de->de_creator);
     return -1;
   }
 

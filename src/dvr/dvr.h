@@ -413,8 +413,6 @@ void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 int dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
                         dvr_rs_state_t rec_state, int error_code);
 
-void dvr_entry_completed(dvr_entry_t *de, int error_code);
-
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
