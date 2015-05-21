@@ -157,10 +157,10 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
  * Replace various chars with a dash
  */
 static char *
-cleanup_filename(char *s, dvr_config_t *cfg)
+cleanup_filename(dvr_config_t *cfg, char *s)
 {
-  int i, len = strlen(s), len2;
-  char *s1;
+  int len = strlen(s);
+  char *s1, *p;
 
   s1 = intlconv_utf8safestr(cfg->dvr_charset_id, s, len * 2);
   if (s1 == NULL) {
@@ -170,41 +170,208 @@ cleanup_filename(char *s, dvr_config_t *cfg)
     if (s1 == NULL)
       return NULL;
   }
-  s = s1;
 
   /* Do not create hidden files */
-  if (s[0] == '.')
-    s[0] = '_';
+  if (s1[0] == '.')
+    s1[0] = '_';
+  if (s1[0] == '\\' && s1[1] == '.')
+    s1[1] = '_';
 
-  len2 = strlen(s);
-  for (i = 0; i < len2; i++) {
+  for (s = s1 ; *s; s++) {
 
-    if(s[i] == '/')
-      s[i] = '-';
+    if (*s == '\\') {
+      s++;
+      if (*s == '\0')
+        break;
+    }
 
-    else if(cfg->dvr_whitespace_in_title &&
-            (s[i] == ' ' || s[i] == '\t'))
-      s[i] = '-';	
+    if (*s == '/')
+      *s = '-';
 
-    else if(cfg->dvr_clean_title &&
-            ((s[i] < 32) || (s[i] > 122) ||
-             (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
-      s[i] = '_';
-    else if(cfg->dvr_windows_compatible_filenames &&
-             (strchr("/:\\<>|*?'\"", s[i]) != NULL))
-      s[i] = '_';
+    else if (cfg->dvr_whitespace_in_title &&
+             (*s == ' ' || *s == '\t'))
+      *s = '-';	
+
+    else if (cfg->dvr_clean_title &&
+             ((*s < 32) || (*s > 122) ||
+             (strchr("/:\\<>|*?'\"", *s) != NULL)))
+      *s = '_';
+
+    else if (cfg->dvr_windows_compatible_filenames &&
+             (strchr("/:\\<>|*?'\"", *s) != NULL))
+      *s = '_';
   }
 
-  if(cfg->dvr_windows_compatible_filenames) {
-    // trim trailing spaces and dots
-    for (i = len2 - 1; i >= 0; i--) {
-      if((s[i] != ' ') && (s[i] != '.'))
-        break;
-      s[i] = '\0';
+  if (cfg->dvr_windows_compatible_filenames) {
+    /* trim trailing spaces and dots */
+    for (s = p = s1; *s; s++) {
+      if (*s == '\\')
+        s++;
+      if (*s != ' ' && *s != '.')
+        p = s + 1;
+    }
+    *p = '\0';
+  }
+
+  return s1;
+}
+
+/**
+ *
+ */
+
+static const char *dvr_sub_title(const char *id, const void *aux)
+{
+  return lang_str_get(((dvr_entry_t *)aux)->de_title, NULL);
+}
+
+static const char *dvr_sub_subtitle(const char *id, const void *aux)
+{
+  return lang_str_get(((dvr_entry_t *)aux)->de_subtitle, NULL);
+}
+
+static const char *dvr_sub_episode(const char *id, const void *aux)
+{
+  const dvr_entry_t *de = aux;
+  static char buf[64];
+
+  if (de->de_bcast == NULL || de->de_bcast->episode == NULL)
+    return "";
+  epg_episode_number_format(de->de_bcast->episode,
+                            buf, sizeof(buf),
+                            ".", "S%02d", NULL, "E%02d", NULL);
+  return buf;
+}
+
+static const char *dvr_sub_channel(const char *id, const void *aux)
+{
+  return DVR_CH_NAME((dvr_entry_t *)aux);
+}
+
+
+static str_substitute_t dvr_subs_entry[] = {
+  { .id = "t", .getval = dvr_sub_title },
+  { .id = "s", .getval = dvr_sub_subtitle },
+  { .id = "e", .getval = dvr_sub_episode },
+  { .id = "c", .getval = dvr_sub_channel },
+  { .id = NULL, .getval = NULL }
+};
+
+static const char *dvr_sub_strftime(const char *id, const void *aux)
+{
+  char fid[8];
+  static char buf[40];
+  snprintf(fid, sizeof(fid), "%%%s", id);
+  strftime(buf, sizeof(buf), fid, (struct tm *)aux);
+  return buf;
+}
+
+static str_substitute_t dvr_subs_time[] = {
+  { .id = "a", .getval = dvr_sub_strftime }, /* The abbreviated name of the day of the week */
+  { .id = "A", .getval = dvr_sub_strftime }, /* The full name of the day of the week */
+  { .id = "b", .getval = dvr_sub_strftime }, /* The abbreviated month name */
+  { .id = "B", .getval = dvr_sub_strftime }, /* The full month name */
+  { .id = "c", .getval = dvr_sub_strftime }, /* The preferred date and time representation */
+  { .id = "C", .getval = dvr_sub_strftime }, /* The century number (year/100) as a 2-digit integer */
+  { .id = "d", .getval = dvr_sub_strftime }, /* The day of the month as a decimal number (range 01 to 31) */
+  { .id = "D", .getval = dvr_sub_strftime }, /* Equivalent to %m/%d/%y */
+  { .id = "e", .getval = dvr_sub_strftime }, /* The day of the month as a decimal number (range 01 to 31) */
+
+  { .id = "Ec", .getval = dvr_sub_strftime }, /* alternatives */
+  { .id = "EC", .getval = dvr_sub_strftime },
+  { .id = "Ex", .getval = dvr_sub_strftime },
+  { .id = "EX", .getval = dvr_sub_strftime },
+  { .id = "Ey", .getval = dvr_sub_strftime },
+  { .id = "EY", .getval = dvr_sub_strftime },
+
+  { .id = "F", .getval = dvr_sub_strftime }, /* Equivalent to %m/%d/%y */
+  { .id = "G", .getval = dvr_sub_strftime }, /* The ISO 8601 week-based year with century */
+  { .id = "g", .getval = dvr_sub_strftime }, /* Like %G, but without century */
+  { .id = "h", .getval = dvr_sub_strftime }, /* Equivalent to %b */
+  { .id = "H", .getval = dvr_sub_strftime }, /* The hour (range 00 to 23) */
+  { .id = "j", .getval = dvr_sub_strftime }, /* The day of the year (range 000 to 366) */
+  { .id = "k", .getval = dvr_sub_strftime }, /* The hour (range 0 to 23) - with space */
+  { .id = "l", .getval = dvr_sub_strftime }, /* The hour (range 1 to 12) - with space */
+  { .id = "m", .getval = dvr_sub_strftime }, /* The month (range 01 to 12) */
+  { .id = "M", .getval = dvr_sub_strftime }, /* The minute (range 00 to 59) */
+
+  { .id = "Od", .getval = dvr_sub_strftime }, /* alternatives */
+  { .id = "Oe", .getval = dvr_sub_strftime },
+  { .id = "OH", .getval = dvr_sub_strftime },
+  { .id = "OI", .getval = dvr_sub_strftime },
+  { .id = "Om", .getval = dvr_sub_strftime },
+  { .id = "OM", .getval = dvr_sub_strftime },
+  { .id = "OS", .getval = dvr_sub_strftime },
+  { .id = "Ou", .getval = dvr_sub_strftime },
+  { .id = "OU", .getval = dvr_sub_strftime },
+  { .id = "OV", .getval = dvr_sub_strftime },
+  { .id = "Ow", .getval = dvr_sub_strftime },
+  { .id = "OW", .getval = dvr_sub_strftime },
+  { .id = "Oy", .getval = dvr_sub_strftime },
+
+  { .id = "p", .getval = dvr_sub_strftime }, /* AM/PM */
+  { .id = "P", .getval = dvr_sub_strftime }, /* am/pm */
+  { .id = "r", .getval = dvr_sub_strftime }, /* a.m./p.m. */
+  { .id = "R", .getval = dvr_sub_strftime }, /* %H:%M */
+  { .id = "s", .getval = dvr_sub_strftime }, /* The number of seconds since the Epoch */
+  { .id = "S", .getval = dvr_sub_strftime }, /* The seconds (range 00 to 60) */
+  { .id = "T", .getval = dvr_sub_strftime }, /* %H:%M:%S */
+  { .id = "u", .getval = dvr_sub_strftime }, /* The day of the week as a decimal, range 1 to 7, Monday being 1 */
+  { .id = "U", .getval = dvr_sub_strftime }, /* The week number of the current year as a decimal number, range 00 to 53 (Sunday) */
+  { .id = "V", .getval = dvr_sub_strftime }, /* The  ISO 8601  week  number (range 01 to 53) */
+  { .id = "w", .getval = dvr_sub_strftime }, /* The day of the week as a decimal, range 0 to 6, Sunday being 0 */
+  { .id = "W", .getval = dvr_sub_strftime }, /* The week number of the current year as a decimal number, range 00 to 53 (Monday) */
+  { .id = "x", .getval = dvr_sub_strftime }, /* The preferred date representation */
+  { .id = "X", .getval = dvr_sub_strftime }, /* The preferred time representation */
+  { .id = "y", .getval = dvr_sub_strftime }, /* The year as a decimal number without a century (range 00 to 99) */
+  { .id = "Y", .getval = dvr_sub_strftime }, /* The year as a decimal number including the century */
+  { .id = "z", .getval = dvr_sub_strftime }, /* The +hhmm or -hhmm numeric timezone */
+  { .id = "Z", .getval = dvr_sub_strftime }, /* The timezone name or abbreviation */
+
+  { .id = NULL, .getval = NULL }
+};
+
+static const char *dvr_sub_str(const char *id, const void *aux)
+{
+  return (const char *)aux;
+}
+
+static str_substitute_t dvr_subs_extension[] = {
+  { .id = "x", .getval = dvr_sub_str },
+  { .id = NULL, .getval = NULL }
+};
+
+static str_substitute_t dvr_subs_tally[] = {
+  { .id = "n", .getval = dvr_sub_str },
+  { .id = NULL, .getval = NULL }
+};
+
+static char *dvr_find_last_path_component(char *path)
+{
+  char *res, *p;
+  for (p = res = path; *p; p++) {
+    if (*p == '\\') {
+      p++;
+    } else {
+      if (*p == '/')
+        res = p;
     }
   }
+  return res;
+}
 
-  return s;
+static char *dvr_find_next_path_component(char *path)
+{
+  char *res, *p;
+  for (p = res = path; *p; p++) {
+    if (*p == '\\') {
+      p++;
+    } else {
+      if (*p == '/')
+        return p + 1;
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -217,14 +384,17 @@ cleanup_filename(char *s, dvr_config_t *cfg)
 static int
 pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 {
-  char fullname[PATH_MAX];
+  char filename[PATH_MAX];
   char path[PATH_MAX];
+  char ptmp[PATH_MAX];
+  char number[16];
   int tally = 0;
   struct stat st;
-  char *filename, *s;
+  char *s, *x, *fmtstr, *dirsep;
   struct tm tm;
   dvr_config_t *cfg;
   htsmsg_t *m;
+  size_t l, j;
 
   if (de == NULL)
     return -1;
@@ -232,91 +402,124 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   cfg = de->de_config;
   if (cfg->dvr_storage == NULL || cfg->dvr_storage == '\0')
     return -1;
+
+  localtime_r(&de->de_start, &tm);
+
   strncpy(path, cfg->dvr_storage, sizeof(path));
   path[sizeof(path)-1] = '\0';
-
-  /* Remove trailing slash */
-  if (path[strlen(path)-1] == '/')
-    path[strlen(path)-1] = '\0';
-
-  /* Use the specified directory if set, otherwise construct it from the DVR 
-     configuration */
-  if (de->de_directory) {
-    char *directory = strdup(de->de_directory);
-    s = cleanup_filename(directory, cfg);
-    if (s == NULL)
-      return -1;
-    snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-    free(s);
-  } else {
-    /* Append per-day directory */
-    if (cfg->dvr_dir_per_day) {
-      localtime_r(&de->de_start, &tm);
-      strftime(fullname, sizeof(fullname), "%F", &tm);
-      s = cleanup_filename(fullname, cfg);
-      if (s == NULL)
-      return -1;
-      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-      free(s);
-    }
-
-    /* Append per-channel directory */
-    if (cfg->dvr_channel_dir) {
-      char *chname = strdup(DVR_CH_NAME(de));
-      s = cleanup_filename(chname, cfg);
-      free(chname);
-      if (s == NULL)
-      return -1;
-      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-      free(s);
-    }
-
-    // TODO: per-brand, per-season
-
-    /* Append per-title directory */
-    if (cfg->dvr_title_dir) {
-      char *title = strdup(lang_str_get(de->de_title, NULL));
-      s = cleanup_filename(title, cfg);
-      free(title);
-      if (s == NULL)
-      return -1;
-      snprintf(path + strlen(path), sizeof(path) - strlen(path), "/%s", s);
-      free(s);
-    }
+  l = strlen(path);
+  if (l + 1 >= sizeof(path)) {
+    tvherror("dvr", "wrong storage path");
+    return -1;
   }
 
-  if (makedirs(path, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
-    return -1;
-  
-  /* Construct final name */
-  dvr_make_title(fullname, sizeof(fullname), de);
-  filename = cleanup_filename(fullname, cfg);
-  if (filename == NULL)
-    return -1;
-  snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, muxer_suffix(de->de_chain->prch_muxer, ss));
+  /* Remove trailing slash */
+  while (l > 0 && path[l-1] == '/')
+    path[--l] = '\0';
+  if (l + 1 >= sizeof(path))
+    l--;
+  path[l++] = '/';
+  path[l] = '\0';
 
-  while(1) {
-    if(stat(fullname, &st) == -1) {
+  fmtstr = cfg->dvr_pathname;
+  while (*fmtstr == '/')
+    fmtstr++;
+
+  /* Substitute DVR entry fields */
+  str_substitute(fmtstr, path + l, sizeof(path) - l, '$', dvr_subs_entry, de);
+
+  /* Own directory? */
+  if (de->de_directory) {
+    dirsep = dvr_find_last_path_component(path + l);
+    if (dirsep)
+      strcpy(filename, dirsep + 1);
+    else
+      filename[0] = '\0';
+    str_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    s = ptmp;
+    while (*s == '/')
+      s++;
+    j = strlen(s);
+    while (j >= 0 && s[j-1] == '/')
+      j--;
+    s[j] = '\0';
+    snprintf(path + l, sizeof(path) - l, "%s", s);
+    snprintf(path + l + j, sizeof(path) - l + j, "/%s", filename);
+  }
+
+  /* Substitute time fields */
+  str_substitute(path + l, filename, sizeof(filename), '%', dvr_subs_time, &tm);
+
+  /* Substitute extension */
+  str_substitute(filename, path + l, sizeof(path) - l, '$', dvr_subs_extension,
+                 muxer_suffix(de->de_chain->prch_muxer, ss) ?: "");
+
+  /* Cleanup all directory names */
+  x = path + l;
+  filename[j = 0] = '\0';
+  while (1) {
+    dirsep = dvr_find_next_path_component(x);
+    if (dirsep == NULL || *dirsep == '\0')
+      break;
+    *(dirsep - 1) = '\0';
+    if (*x) {
+      s = cleanup_filename(cfg, x);
+      tvh_strlcatf(filename, sizeof(filename), j, "%s/", s);
+      free(s);
+    }
+    x = dirsep;
+  }
+  tvh_strlcatf(filename, sizeof(filename), j, "%s", x);
+  snprintf(path + l, sizeof(path) - l, "%s", filename);
+
+  /* Deescape directory path and create directory tree */
+  dirsep = dvr_find_last_path_component(path + l);
+  *dirsep = '\0';
+  dirsep++;
+  str_unescape(path, filename, sizeof(filename));
+  if (makedirs(filename, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
+    return -1;
+  j = strlen(filename);
+  snprintf(filename + j, sizeof(filename) - j, "/%s", dirsep);
+  if (filename[j] == '/')
+    j++;
+  
+  /* Unique filename loop */
+  while (1) {
+
+    /* Prepare the name portion */
+    if (tally > 0) {
+      snprintf(number, sizeof(number), "-%d", tally);
+    } else {
+      number[0] = '\0';
+    }
+    str_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
+    s = cleanup_filename(cfg, ptmp);
+    if (s == NULL)
+      return -1;
+
+    /* Construct the final filename */
+    memcpy(path, filename, j);
+    path[j] = '\0';
+    str_unescape(s, path + j, sizeof(path) - j);
+    free(s);
+
+    if(stat(path, &st) == -1) {
       tvhlog(LOG_DEBUG, "dvr", "File \"%s\" -- %s -- Using for recording",
-	     fullname, strerror(errno));
+	     path, strerror(errno));
       break;
     }
 
-    tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists", 
-	   fullname);
+    tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists",
+	   path);
 
     tally++;
-
-    snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, muxer_suffix(de->de_chain->prch_muxer, ss));
   }
-  free(filename);
 
   if (de->de_files == NULL)
     de->de_files = htsmsg_create_list();
   m = htsmsg_create_map();
-  htsmsg_add_str(m, "filename", fullname);
+  htsmsg_add_str(m, "filename", path);
   htsmsg_add_msg(de->de_files, NULL, m);
 
   return 0;

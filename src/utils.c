@@ -645,6 +645,88 @@ mpegts_word_count ( const uint8_t *tsb, int len, uint32_t mask )
   return r;
 }
 
+char *str_substitute(const char *src, char *dst, size_t dstlen,
+                     int first, str_substitute_t *sub, const void *aux)
+{
+  str_substitute_t *s;
+  const char *p, *x, *v;
+  char *res = dst;
+  size_t l;
+
+  if (!dstlen)
+    return NULL;
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
+        break;
+      *dst = '\\'; src++; dst++; dstlen--;
+      if (*src)
+        *dst = *src; src++; dst++; dstlen--;
+      continue;
+    }
+    if (first >= 0) {
+      if (*src != first) {
+        *dst = *src; src++; dst++; dstlen--;
+        continue;
+      }
+      src++;
+    }
+    for (s = sub; s->id; s++) {
+      for (p = s->id, x = src; *p; p++, x++)
+        if (*p != *x)
+          break;
+      if (*p == '\0') {
+        src = x;
+        if ((l = dstlen) > 0) {
+          v = s->getval(s->id, aux);
+          strncpy(dst, v, l);
+          l = MIN(strlen(v), l);
+          dst += l;
+          dstlen -= l;
+        }
+        break;
+      }
+    }
+    if (!s->id) {
+      if (first >= 0) {
+        *dst = first;
+      } else {
+        *dst = *src;
+        src++;
+      }
+      dst++; dstlen--;
+    }
+  }
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
+}
+
+char *str_unescape(const char *src, char *dst, size_t dstlen)
+{
+  char *res = dst;
+
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
+        break;
+      *dst = '\\'; src++; dst++; dstlen--;
+      if (*src)
+        *dst = *src; src++; dst++; dstlen--;
+      continue;
+    } else {
+      *dst = *src; src++; dst++; dstlen--;
+    }
+  }
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
+}
+
 static void
 deferred_unlink_cb(void *s, int dearmed)
 {

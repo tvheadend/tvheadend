@@ -311,61 +311,6 @@ dvr_entry_schedstatus(dvr_entry_t *de)
 /**
  *
  */
-void
-dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
-{
-  struct tm tm;
-  char buf[40];
-  dvr_config_t *cfg = de->de_config;
-
-  if(cfg->dvr_channel_in_title)
-    snprintf(output, outlen, "%s-", DVR_CH_NAME(de));
-  else
-    output[0] = 0;
-  
-  if (cfg->dvr_omit_title == 0)
-    snprintf(output + strlen(output), outlen - strlen(output),
-	     "%s", lang_str_get(de->de_title, NULL));
-
-  if (cfg->dvr_episode_before_date) {
-    if (cfg->dvr_episode_in_title && de->de_bcast && de->de_bcast->episode)
-      epg_episode_number_format(de->de_bcast->episode,
-                                output + strlen(output),
-                                outlen - strlen(output),
-                                ".", "S%02d", NULL, "E%02d", NULL);
-  }
-
-  if (cfg->dvr_subtitle_in_title && de->de_subtitle) {
-      snprintf(output + strlen(output), outlen - strlen(output),
-           ".%s", lang_str_get(de->de_subtitle, NULL));
-  }
-
-  localtime_r(&de->de_start, &tm);
-  
-  if (cfg->dvr_date_in_title) {
-    strftime(buf, sizeof(buf), "%F", &tm);
-    snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
-  }
-
-  if (cfg->dvr_time_in_title) {
-    strftime(buf, sizeof(buf), "%H-%M", &tm);
-    snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
-  }
-
-  if (!cfg->dvr_episode_before_date) {
-    if(cfg->dvr_episode_in_title) {
-      if(de->de_bcast && de->de_bcast->episode)
-        epg_episode_number_format(de->de_bcast->episode,
-                                  output + strlen(output),
-                                  outlen - strlen(output),
-                                  ".", "S%02d", NULL, "E%02d", NULL);
-    }
-  }
-}
-
-/**
- *
- */
 uint32_t
 dvr_usage_count(access_t *aa)
 {

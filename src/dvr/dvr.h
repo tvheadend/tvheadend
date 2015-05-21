@@ -49,6 +49,9 @@ typedef struct dvr_config {
 
   muxer_config_t dvr_muxcnf;
 
+  char *dvr_pathname;
+  int dvr_pathname_changed;
+
   int dvr_dir_per_day;
   int dvr_channel_dir;
   int dvr_channel_in_title;
@@ -62,7 +65,6 @@ typedef struct dvr_config {
   int dvr_tag_files;
   int dvr_skip_commercials;
   int dvr_subtitle_in_title;
-  int dvr_episode_before_date;
   int dvr_windows_compatible_filenames;
 
   /* Series link support */
@@ -390,8 +392,6 @@ void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 /*
  *
  */
-
-void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
 
 uint32_t dvr_usage_count(access_t *aa);
 

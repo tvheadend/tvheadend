@@ -759,6 +759,16 @@ char *url_encode(char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
+typedef struct {
+  const char *id;
+  const char *(*getval)(const char *id, const void *aux);
+} str_substitute_t;
+
+char *str_substitute(const char *src, char *dst, size_t dstlen,
+                     int first, str_substitute_t *sub, const void *aux);
+
+char *str_unescape(const char *src, char *dst, size_t dstlen);
+
 int deferred_unlink(const char *filename, const char *rootdir);
 
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
