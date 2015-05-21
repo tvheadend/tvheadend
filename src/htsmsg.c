@@ -288,7 +288,7 @@ htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 {
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
-    f = htsmsg_field_add(msg, name, HMF_STR, HMF_ALLOCED | HMF_NAME_ALLOCED);
+    f = htsmsg_field_add(msg, name, HMF_STR, HMF_NAME_ALLOCED);
   return htsmsg_field_set_str(f, str);
 }
 
