@@ -1697,6 +1697,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
     stop_extra  = 0;     // 0 = dvr config
   creator = htsp->htsp_username;
+  if (creator == NULL || *creator == '\0')
+    creator = htsp->htsp_granted_access->aa_representative;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
@@ -1796,6 +1798,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     enabled = 1;
 
   creator = htsp->htsp_username;
+  if (creator == NULL || *creator == '\0')
+    creator = htsp->htsp_granted_access->aa_representative;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
