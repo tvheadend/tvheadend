@@ -180,19 +180,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
 
-  /* series link support */
-  cfg->dvr_sl_brand_lock   = 1; // use brand linking
-  cfg->dvr_sl_season_lock  = 0; // ignore season (except if no brand)
-  cfg->dvr_sl_channel_lock = 1; // channel locked
-  cfg->dvr_sl_time_lock    = 0; // time slot (approx) locked
-  cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
-  cfg->dvr_sl_quality_lock = 1; // Don't attempt to ajust quality
-
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
-
-  /* dup detect */
-  cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
   /* Default recording file and directory permissions */
 

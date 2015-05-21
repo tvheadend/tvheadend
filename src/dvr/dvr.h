@@ -67,17 +67,6 @@ typedef struct dvr_config {
   int dvr_subtitle_in_title;
   int dvr_windows_compatible_filenames;
 
-  /* Series link support */
-  int dvr_sl_brand_lock;
-  int dvr_sl_season_lock;
-  int dvr_sl_channel_lock;
-  int dvr_sl_time_lock;
-  int dvr_sl_more_recent;
-  int dvr_sl_quality_lock;
-
-  /* Duplicate detect */
-  int dvr_dup_detect_episode;
-
   struct dvr_entry_list dvr_entries;
   struct dvr_autorec_entry_list dvr_autorec_entries;
   struct dvr_timerec_entry_list dvr_timerec_entries;
