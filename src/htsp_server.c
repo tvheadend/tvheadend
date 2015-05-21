@@ -2265,7 +2265,6 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 {
   const char *str, *s2;
   const char *filename = NULL;
-  htsmsg_field_t *f;
 
 
   if((str = htsmsg_get_str(in, "file")) == NULL)
@@ -2287,11 +2286,9 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     if (!htsp_user_access_channel(htsp, de->de_channel))
       return htsp_error("User does not have access");
 
-    f = htsmsg_field_last(de->de_files);
-    if (f)
-      filename = htsmsg_field_get_str(f);
+    filename = dvr_get_filename(de);
 
-    if (f == NULL || filename == NULL)
+    if (filename == NULL)
       return htsp_error("DVR entry does not have a file yet");
 
     return htsp_file_open(htsp, filename, 0);
