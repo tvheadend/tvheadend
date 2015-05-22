@@ -1412,10 +1412,9 @@ linuxdvb_diseqc_send
   int i;
   va_list ap;
   struct dvb_diseqc_master_cmd message;
-#if ENABLE_TRACE
   char buf[256];
   size_t c = 0;
-#endif
+  int tr = tvhtrace_enabled();
 
   /* Build message */
   message.msg_len = len + 3;
@@ -1425,14 +1424,14 @@ linuxdvb_diseqc_send
   va_start(ap, len);
   for (i = 0; i < len; i++) {
     message.msg[3 + i] = (uint8_t)va_arg(ap, int);
-#if ENABLE_TRACE
-    tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
-#endif
+    if (tr)
+      tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
   }
   va_end(ap);
 
-  tvhtrace("diseqc", "sending diseqc (len %d) %02X %02X %02X %s",
-           len + 3, framing, addr, cmd, buf);
+  if (tr)
+    tvhtrace("diseqc", "sending diseqc (len %d) %02X %02X %02X %s",
+             len + 3, framing, addr, cmd, buf);
 
   /* Send */
   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {

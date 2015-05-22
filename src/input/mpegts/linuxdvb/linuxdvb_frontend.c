@@ -1283,13 +1283,11 @@ linuxdvb_frontend_tune0
    */
 
   dmc = &lm->lm_tuning;
-#if ENABLE_TRACE
-  {
+  if (tvhtrace_enabled()) {
     char buf2[256];
     dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
     tvhtrace("linuxdvb", "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
   }
-#endif
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;
   p.inversion                = TR(inversion, inv_tbl, INVERSION_AUTO);
@@ -1424,11 +1422,11 @@ linuxdvb_frontend_tune0
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
-#if ENABLE_TRACE
-  int i;
-  for (i = 0; i < cmdseq.num; i++)
-    tvhtrace("linuxdvb", "S2CMD %02u => %u", cmds[i].cmd, cmds[i].u.data);
-#endif
+  if (tvhtrace_enabled()) {
+    int i;
+    for (i = 0; i < cmdseq.num; i++)
+      tvhtrace("linuxdvb", "S2CMD %02u => %u", cmds[i].cmd, cmds[i].u.data);
+  }
   r = ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &cmdseq);
 
   /* v3 tuning */

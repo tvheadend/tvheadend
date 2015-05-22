@@ -516,11 +516,11 @@ next_one:
   }
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
-#if ENABLE_TRACE
-    char name[256];
-    mpegts_mux_nice_name(mm, name, sizeof(name));
-    tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
-#endif
+    if (tvhtrace_enabled()) {
+      char name[256];
+      mpegts_mux_nice_name(mm, name, sizeof(name));
+      tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
+    }
     goto done;
   }
 
@@ -572,14 +572,14 @@ done:
   if (kick)
     epggrab_ota_kick(64); /* a random number? */
 
-#if ENABLE_TRACE
-  i = r = 0;
-  RB_FOREACH(om, &epggrab_ota_all, om_global_link)
-    i++;
-  TAILQ_FOREACH(om, &epggrab_ota_pending, om_q_link)
-    r++;
-  tvhtrace("epggrab", "mux stats - all %i pending %i", i, r);
-#endif
+  if (tvhtrace_enabled()) {
+    i = r = 0;
+    RB_FOREACH(om, &epggrab_ota_all, om_global_link)
+      i++;
+    TAILQ_FOREACH(om, &epggrab_ota_pending, om_q_link)
+      r++;
+    tvhtrace("epggrab", "mux stats - all %i pending %i", i, r);
+  }
 }
 
 /*
@@ -644,16 +644,20 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
                             epggrab_ota_svc_link_t *svcl,
                             const char *op )
 {
-#if ENABLE_TRACE
   char buf[256];
-  mpegts_mux_t *mm = mpegts_mux_find(ota->om_mux_uuid);
-  mpegts_service_t *svc = mpegts_service_find_by_uuid(svcl->uuid);
+  mpegts_mux_t *mm;
+  mpegts_service_t *svc;
+
+  if (!tvhtrace_enabled())
+    return;
+
+  mm = mpegts_mux_find(ota->om_mux_uuid);
+  svc = mpegts_service_find_by_uuid(svcl->uuid);
   if (mm && svc) {
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("epggrab", "ota %s %s service %s", buf, op, svc->s_nicename);
   } else if (tvheadend_running)
     tvhtrace("epggrab", "ota %s, problem? (%p %p)", op, mm, svc);
-#endif
 }
 
 void
@@ -740,13 +744,11 @@ epggrab_ota_load_one
     hts_settings_remove("epggrab/otamux/%s", uuid);
     return;
   }
-#if ENABLE_TRACE
-  {
+  if (tvhtrace_enabled()) {
     char name[256];
     mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhtrace("epggrab", "loading config for %s", name);
   }
-#endif
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = strdup(uuid);

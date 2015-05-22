@@ -479,17 +479,13 @@ opentv_desc_channels
   mpegts_service_t *svc;
   channel_t *ch;
   int sid, cid, cnum, unk;
-#if ENABLE_TRACE
   int type;
-#endif
   int save = 0;
   int i = 2;
 
   while (i < len) {
     sid  = ((int)buf[i] << 8) | buf[i+1];
-#if ENABLE_TRACE
     type = buf[2];
-#endif
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
     unk  = ((int)buf[i+7] << 8) | buf[i+8];

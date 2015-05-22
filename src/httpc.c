@@ -614,10 +614,10 @@ error:
   body = malloc(body_size);
   htsbuf_read(&q, body, body_size);
 
-#if ENABLE_TRACE
-  tvhtrace("httpc", "%04X: sending %s cmd", shortid(hc), http_ver2str(hc->hc_version));
-  tvhlog_hexdump("httpc", body, body_size);
-#endif
+  if (tvhtrace_enabled()) {
+    tvhtrace("httpc", "%04X: sending %s cmd", shortid(hc), http_ver2str(hc->hc_version));
+    tvhlog_hexdump("httpc", body, body_size);
+  }
 
   wcmd->wbuf  = body;
   wcmd->wsize = body_size;
@@ -638,12 +638,10 @@ http_client_finish( http_client_t *hc )
   http_client_wcmd_t *wcmd;
   int res;
 
-#if ENABLE_TRACE
-  if (hc->hc_data) {
+  if (hc->hc_data && tvhtrace_enabled()) {
     tvhtrace("httpc", "%04X: received %s data", shortid(hc), http_ver2str(hc->hc_version));
     tvhlog_hexdump("httpc", hc->hc_data, hc->hc_csize);
   }
-#endif
   if (hc->hc_data_complete) {
     res = hc->hc_data_complete(hc);
     if (res < 0)
@@ -921,12 +919,10 @@ retry:
       return HTTP_CON_RECEIVING;
     return http_client_flush(hc, -errno);
   }
-#if ENABLE_TRACE
-  if (r > 0) {
+  if (r > 0 && tvhtrace_enabled()) {
     tvhtrace("httpc", "%04X: received %s answer", shortid(hc), http_ver2str(hc->hc_version));
     tvhlog_hexdump("httpc", buf, r);
   }
-#endif
 
   if (hc->hc_in_data) {
     res = http_client_data_received(hc, buf, r, 0);

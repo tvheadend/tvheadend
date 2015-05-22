@@ -570,7 +570,6 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 /*
  * Dump request
  */
-#if ENABLE_TRACE
 static void
 dump_request(http_connection_t *hc)
 {
@@ -595,12 +594,6 @@ dump_request(http_connection_t *hc)
   tvhtrace("http", "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
-#else
-static inline void
-dump_request(http_connection_t *hc)
-{
-}
-#endif
 
 /**
  * HTTP GET
@@ -612,7 +605,8 @@ http_cmd_get(http_connection_t *hc)
   char *remain;
   char *args;
 
-  dump_request(hc);
+  if (tvhtrace_enabled())
+    dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -678,7 +672,8 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
       http_parse_get_args(hc, hc->hc_post_data);
   }
 
-  dump_request(hc);
+  if (tvhtrace_enabled())
+    dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -781,7 +776,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
-    dump_request(hc);
+    if (tvhtrace_enabled())
+      dump_request(hc);
     if (hc->hc_cseq)
       rval = hc->hc_process(hc, spill);
     else

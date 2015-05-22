@@ -1113,7 +1113,6 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
   mm->mm_onid = onid;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
-  tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
   idnode_notify_changed(&mm->mm_id);
   return 1;
 }
@@ -1127,11 +1126,11 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
     return 0;
   mm->mm_tsid = tsid;
   mm->mm_config_save(mm);
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
-#endif
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
+  }
   idnode_notify_changed(&mm->mm_id);
   return 1;
 }
@@ -1143,11 +1142,11 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
     return 0;
   tvh_str_update(&mm->mm_crid_authority, defauth);
   mm->mm_config_save(mm);
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
-#endif
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
+  }
   idnode_notify_changed(&mm->mm_id);
   return 1;
 }
@@ -1186,11 +1185,11 @@ void
 mpegts_mux_remove_subscriber
   ( mpegts_mux_t *mm, th_subscription_t *s, int reason )
 {
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
-#endif
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
+  }
   mm->mm_stop(mm, 0, reason);
 }
 

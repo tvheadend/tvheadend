@@ -24,9 +24,13 @@
 void
 mpegts_table_consistency_check ( mpegts_mux_t *mm )
 {
-#if ENABLE_TRACE
-  int i, c = 0;
+  int i, c;
   mpegts_table_t *mt;
+
+  if (!tvhtrace_enabled())
+    return;
+
+  c = 0;
 
   lock_assert(&mm->mm_tables_lock);
 
@@ -38,7 +42,6 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
     tvherror("mpegts", "table: mux %p count inconsistency (num %d, list %d)", mm, i, c);
     abort();
   }
-#endif
 }
 
 static void
@@ -120,10 +123,10 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
-#if ENABLE_TRACE
-  /* poison */
-  memset(mt, 0xa5, sizeof(*mt));
-#endif
+  if (tvhtrace_enabled()) {
+    /* poison */
+    memset(mt, 0xa5, sizeof(*mt));
+  }
   free(mt);
 }
 

@@ -347,11 +347,11 @@ CONFIGID.UPNP.ORG: 0\r\n"
   if (satips_upnp_discovery == NULL || satip_server_rtsp_port <= 0)
     return;
 
-#if ENABLE_TRACE
-  tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
-  tvhtrace("satips", "sending discover reply to %s:%d%s%s",
-           buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
-#endif
+  if (tvhtrace_enabled()) {
+    tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
+    tvhtrace("satips", "sending discover reply to %s:%d%s%s",
+             buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
+  }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
            http_server_ip, http_server_port, tvheadend_version,
@@ -452,12 +452,12 @@ satips_upnp_discovery_received
   if (!conn->multicast && strcmp(argv[0], http_server_ip))
     return;
 
-#if ENABLE_TRACE
-  tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
-  tvhtrace("satips", "received %s M-SEARCH from %s:%d",
-           conn->multicast ? "multicast" : "unicast",
-           buf2, ntohs(IP_PORT(*storage)));
-#endif
+  if (tvhtrace_enabled()) {
+    tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
+    tvhtrace("satips", "received %s M-SEARCH from %s:%d",
+             conn->multicast ? "multicast" : "unicast",
+             buf2, ntohs(IP_PORT(*storage)));
+  }
 
   /* Check for deviceid collision */
   if (!conn->multicast) {

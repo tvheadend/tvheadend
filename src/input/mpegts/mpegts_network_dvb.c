@@ -83,19 +83,19 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
                            dmc, NULL, NULL);
       if (mm)
         mm->mm_config_save((mpegts_mux_t *)mm);
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(dmc, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
-#endif
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(dmc, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
+      }
     } else {
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(dmc, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
-      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
-#endif
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(dmc, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
+        dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
+      }
     }
   }
   return 0;
@@ -456,12 +456,12 @@ dvb_network_create_mux
     }
     if (save) {
       mm = dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-      tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
-               mm, buf, onid, tsid, mm->mm_network->mn_network_name);
-#endif      
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+        tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
+                 mm, buf, onid, tsid, mm->mm_network->mn_network_name);
+      }
     }
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
@@ -469,7 +469,6 @@ dvb_network_create_mux
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
       goto noop;
-#if ENABLE_TRACE
     #define COMPARE(x) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
       if (xr) { \
@@ -484,17 +483,6 @@ dvb_network_create_mux
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
         lm->lm_tuning.x = dmc->x; \
       } xr; })
-#else
-    #define COMPARE(x) ({ \
-      int xr = dmc->x != lm->lm_tuning.x; \
-      if (xr) lm->lm_tuning.x = dmc->x; \
-      xr; })
-    /* note - zero means NONE, one means AUTO */
-    #define COMPAREN(x) ({ \
-      int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
-      if (xr) lm->lm_tuning.x = dmc->x; \
-      xr; })
-#endif
     dvb_mux_conf_t tuning_old;
     char buf[128];
     tuning_old = lm->lm_tuning;

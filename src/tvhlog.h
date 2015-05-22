@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include <stdarg.h>
 
+#include "atomic.h"
 #include "htsmsg.h"
 
 typedef struct {
@@ -96,13 +97,22 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define tvhlog_spawn(severity, subsys, fmt, ...)\
   _tvhlog(__FILE__, __LINE__, 0, severity, subsys, fmt, ##__VA_ARGS__)
 #if ENABLE_TRACE
-#define tvhtrace(subsys, fmt, ...)\
-  _tvhlog(__FILE__, __LINE__, 0, LOG_TRACE, subsys, fmt, ##__VA_ARGS__)
-#define tvhlog_hexdump(subsys, data, len)\
-  _tvhlog_hexdump(__FILE__, __LINE__, 0, LOG_TRACE, subsys, (uint8_t*)data, len)
+#define tvhtrace_enabled() LOG_TRACE <= atomic_add(&tvhlog_level, 0)
+#define tvhtrace(subsys, fmt, ...) \
+  do { \
+    if (tvhtrace_enabled()) \
+      _tvhlog(__FILE__, __LINE__, 0, LOG_TRACE, subsys, fmt, ##__VA_ARGS__); \
+  } while (0)
+#define tvhlog_hexdump(subsys, data, len) \
+  do { \
+    if (tvhtrace_enabled()) \
+      _tvhlog_hexdump(__FILE__, __LINE__, 0, LOG_TRACE, subsys, (uint8_t*)data, len); \
+  } while (0)
 #else
-#define tvhtrace(...) (void)0
-#define tvhlog_hexdump(...) (void)0
+static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
+#define tvhtrace_enabled() 0
+#define tvhtrace(subsys, fmt, ...) do { tvhtrace_no_warnings(NULL, subsys, fmt, ##__VA_ARGS__); } while (0)
+#define tvhlog_hexdump(subsys, data, len) do { tvhtrace_no_warnings(NULL, subsys, data, len); } while (0)
 #endif
 
 #define tvhftrace(subsys, fcn) do { \

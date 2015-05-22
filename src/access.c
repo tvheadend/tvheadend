@@ -347,7 +347,6 @@ access_verify(const char *username, const char *password,
 /*
  *
  */
-#if ENABLE_TRACE
 static void
 access_dump_a(access_t *a)
 {
@@ -424,12 +423,6 @@ access_dump_a(access_t *a)
 
   tvhtrace("access", "%s", buf);
 }
-#else
-static inline void
-access_dump_a(access_t *a)
-{
-}
-#endif
 
 /*
  *
@@ -535,7 +528,8 @@ access_get(const char *username, const char *password, struct sockaddr *src)
       a->aa_rights = 0;
   }
 
-  access_dump_a(a);
+  if (tvhtrace_enabled())
+    access_dump_a(a);
   return a;
 }
 
@@ -614,7 +608,8 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       a->aa_rights = 0;
   }
 
-  access_dump_a(a);
+  if (tvhtrace_enabled())
+    access_dump_a(a);
   return a;
 }
 

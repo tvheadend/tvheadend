@@ -792,10 +792,10 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     return;
   }
 
-#if ENABLE_TRACE
-  tvhtrace("satip", "received XML description from %s", hc->hc_host);
-  tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
-#endif
+  if (tvhtrace_enabled()) {
+    tvhtrace("satip", "received XML description from %s", hc->hc_host);
+    tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
+  }
 
   if (d->myaddr == NULL || d->myaddr[0] == '\0') {
     struct sockaddr_storage ip;

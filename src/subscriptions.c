@@ -721,15 +721,15 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
 
   s = subscription_create(prch, weight, name, flags, subscription_input,
                           hostname, username, client);
-#if ENABLE_TRACE
-  const char *pro_name = prch->prch_pro ? (prch->prch_pro->pro_name ?: "") : "<none>";
-  if (ch)
-    tvhtrace("subscription", "%04X: creating subscription for %s weight %d using profile %s",
-             shortid(s), channel_get_name(ch), weight, pro_name);
-  else
-    tvhtrace("subscription", "%04X: creating subscription for service %s weight %d using profile %s",
-             shortid(s), service->s_nicename, weight, pro_name);
-#endif
+  if (tvhtrace_enabled()) {
+    const char *pro_name = prch->prch_pro ? (prch->prch_pro->pro_name ?: "") : "<none>";
+    if (ch)
+      tvhtrace("subscription", "%04X: creating subscription for %s weight %d using profile %s",
+               shortid(s), channel_get_name(ch), weight, pro_name);
+    else
+      tvhtrace("subscription", "%04X: creating subscription for service %s weight %d using profile %s",
+               shortid(s), service->s_nicename, weight, pro_name);
+  }
   s->ths_channel = ch;
   s->ths_service = service;
   s->ths_source  = ti;

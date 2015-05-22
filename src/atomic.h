@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {

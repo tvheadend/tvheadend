@@ -367,15 +367,11 @@ _tvhlog_hexdump(const char *file, int line,
                 const char *subsys,
                 const uint8_t *data, ssize_t len )
 {
-  int i, c, skip;
+  int i, c;
   char str[1024];
 
-  /* Don't process if trace is OFF */
-  pthread_mutex_lock(&tvhlog_mutex);
-  skip = (severity > tvhlog_level);
-  pthread_mutex_unlock(&tvhlog_mutex);
-  if (skip) return;
- 
+  /* Assume that severify was validated before call */
+
   /* Build and log output */
   while (len > 0) {
     c = 0;
