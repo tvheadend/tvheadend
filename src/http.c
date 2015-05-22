@@ -319,7 +319,7 @@ int
 http_encoding_valid(http_connection_t *hc, const char *encoding)
 {
   const char *accept;
-  char *tokbuf, *tok, *saveptr, *q, *s;
+  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
 
   accept = http_arg_get(&hc->hc_args, "accept-encoding");
   if (!accept)
