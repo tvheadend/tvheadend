@@ -53,6 +53,7 @@ ca_slot_state2str(ca_slot_state_t v)
   return "UNKNOWN";
 }
 
+#if ENABLE_TRACE
 const static char *
 ca_pmt_list_mgmt2str(uint8_t v)
 {
@@ -66,7 +67,9 @@ ca_pmt_list_mgmt2str(uint8_t v)
   }
   return "UNKNOWN";
 }
+#endif
 
+#if ENABLE_TRACE
 const static char *
 ca_pmt_cmd_id2str(uint8_t v)
 {
@@ -78,6 +81,7 @@ ca_pmt_cmd_id2str(uint8_t v)
   }
   return "UNKNOWN";
 }
+#endif
 
 struct linuxdvb_ca_capmt {
   TAILQ_ENTRY(linuxdvb_ca_capmt)  lcc_link;
