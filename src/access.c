@@ -357,7 +357,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -368,6 +368,7 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_HTSP_RECORDER      ? 'E' : ' ',
     a->aa_rights & ACCESS_ALL_RECORDER       ? 'L' : ' ',
     a->aa_rights & ACCESS_ALL_RW_RECORDER    ? 'D' : ' ',
+    a->aa_rights & ACCESS_FAILED_RECORDER    ? 'F' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
     (long long)a->aa_chmin, (long long)a->aa_chmax,
