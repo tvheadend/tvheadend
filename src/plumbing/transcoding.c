@@ -983,7 +983,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     pkt2->pkt_componentindex = pkt->pkt_componentindex;
     sm = streaming_msg_create_pkt(pkt2);
     streaming_target_deliver2(ts->ts_target, sm);
-    pkt_ref_dec(pkt);
+    pkt_ref_dec(pkt2);
     vs->vid_first_sent = 1;
   }
 
