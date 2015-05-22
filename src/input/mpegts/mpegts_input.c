@@ -940,7 +940,8 @@ mpegts_input_recv_packets
 }
 
 static void
-mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb, int tsb_len )
+mpegts_input_table_dispatch
+  ( mpegts_mux_t *mm, const char *logprefix, const uint8_t *tsb, int tsb_len )
 {
   int i, len = 0, c = 0;
   const uint8_t *tsb2, *tsb2_end;
@@ -970,8 +971,8 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, const uint8_t *tsb, int tsb_len 
     mt = vec[i];
     if (!mt->mt_destroyed && mt->mt_pid == pid)
       for (tsb2 = tsb, tsb2_end = tsb + tsb_len; tsb2 < tsb2_end; tsb2 += 188)
-        mpegts_psi_section_reassemble((mpegts_psi_table_t *)mt, tsb2,
-                                      mt->mt_flags & MT_CRC,
+        mpegts_psi_section_reassemble((mpegts_psi_table_t *)mt, logprefix,
+                                      tsb2, mt->mt_flags & MT_CRC,
                                       mpegts_table_dispatch, mt);
     mpegts_table_release(mt);
   }
@@ -1067,9 +1068,12 @@ mpegts_input_process
 #if ENABLE_TSDEBUG
   off_t tsdebug_pos;
 #endif
+  char muxname[256];
 
   if (mm == NULL || (mmi = mm->mm_active) == NULL)
     return 0;
+
+  mpegts_mux_nice_name(mm, muxname, sizeof(muxname));
 
   assert(mm == mmi->mmi_mux);
 
@@ -1119,7 +1123,7 @@ mpegts_input_process
              tsb2 < tsb2_end; tsb2 += 188) {
           cc = tsb2[3] & 0x0f;
           if (cc2 != 0xff && cc2 != cc) {
-            tvhtrace("mpegts", "pid %04X cc err %2d != %2d", pid, cc, cc2);
+            tvhtrace("mpegts", "%s: pid %04X cc err %2d != %2d", muxname, pid, cc, cc2);
             ++mmi->tii_stats.cc;
           }
           cc2 = (cc + 1) & 0xF;
@@ -1163,7 +1167,7 @@ mpegts_input_process
       if (type & (MPS_TABLE | MPS_FTABLE)) {
         if (!(tsb[1] & 0x80)) {
           if (type & MPS_FTABLE)
-            mpegts_input_table_dispatch(mm, tsb, llen);
+            mpegts_input_table_dispatch(mm, muxname, tsb, llen);
           if (type & MPS_TABLE) {
             mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t)+llen);
             mtf->mtf_len = llen;
@@ -1309,6 +1313,8 @@ mpegts_input_table_thread ( void *aux )
 {
   mpegts_table_feed_t   *mtf;
   mpegts_input_t        *mi = aux;
+  mpegts_mux_t          *mm = NULL;
+  char                   muxname[256];
 
   pthread_mutex_lock(&mi->mi_output_lock);
   while (mi->mi_running) {
@@ -1323,8 +1329,13 @@ mpegts_input_table_thread ( void *aux )
     
     /* Process */
     pthread_mutex_lock(&global_lock);
-    if (mtf->mtf_mux && mtf->mtf_mux->mm_active)
-      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb, mtf->mtf_len);
+    if (mm != mtf->mtf_mux) {
+      mm = mtf->mtf_mux;
+      if (mm)
+        mpegts_mux_nice_name(mm, muxname, sizeof(muxname));
+    }
+    if (mm && mm->mm_active)
+      mpegts_input_table_dispatch(mm, muxname, mtf->mtf_tsb, mtf->mtf_len);
     pthread_mutex_unlock(&global_lock);
 
     /* Cleanup */

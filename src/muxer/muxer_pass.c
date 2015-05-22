@@ -525,17 +525,17 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
         /* PAT */
         if (pid == DVB_PAT_PID) {
 
-          dvb_table_parse(&pm->pm_pat, tsb, l, 1, 0, pass_muxer_pat_cb);
+          dvb_table_parse(&pm->pm_pat, "-", tsb, l, 1, 0, pass_muxer_pat_cb);
 
         /* SDT */
         } else if (pid == DVB_SDT_PID) {
         
-          dvb_table_parse(&pm->pm_sdt, tsb, l, 1, 0, pass_muxer_sdt_cb);
+          dvb_table_parse(&pm->pm_sdt, "-", tsb, l, 1, 0, pass_muxer_sdt_cb);
 
         /* EIT */
         } else if (pid == DVB_EIT_PID) {
         
-          dvb_table_parse(&pm->pm_eit, tsb, l, 1, 0, pass_muxer_eit_cb);
+          dvb_table_parse(&pm->pm_eit, "-", tsb, l, 1, 0, pass_muxer_eit_cb);
 
         /* PMT */
         } else {

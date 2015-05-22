@@ -63,7 +63,8 @@ dvb_servicetype_lookup ( int t )
  */
 static int
 mpegts_psi_section_reassemble0
-  ( mpegts_psi_table_t *mt, const uint8_t *data,
+  ( mpegts_psi_table_t *mt, const char *logpref,
+    const uint8_t *data,
     int len, int start, int crc,
     mpegts_psi_section_callback_t cb, void *opaque)
 {
@@ -99,9 +100,10 @@ mpegts_psi_section_reassemble0
   }
 
   if(crc && tvh_crc32(p, tsize, 0xffffffff)) {
-    if (tvhlog_limit(&mt->mt_err_log, 10))
-      tvhwarn(mt->mt_name, "invalid checksum (len %i, errors %zi)",
-              tsize, mt->mt_err_log.count);
+    if (tvhlog_limit(&mt->mt_err_log, 10)) {
+      tvhwarn(mt->mt_name, "%s: invalid checksum (len %i, errors %zi)",
+              logpref, tsize, mt->mt_err_log.count);
+    }
     return -1;
   }
 
@@ -119,7 +121,8 @@ mpegts_psi_section_reassemble0
  */
 void
 mpegts_psi_section_reassemble
-  (mpegts_psi_table_t *mt, const uint8_t *tsb, int crc,
+  (mpegts_psi_table_t *mt, const char *logprefix,
+   const uint8_t *tsb, int crc,
    mpegts_psi_section_callback_t cb, void *opaque)
 {
   int pusi   = tsb[1] & 0x40;
@@ -130,7 +133,8 @@ mpegts_psi_section_reassemble
   if (cc & 0x10) {
     if (mt->mt_sect.ps_cc != -1 && mt->mt_sect.ps_cc != (cc & 0x0f)) {
       uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
-      tvhdebug(mt->mt_name, "PID %04X CC error %d != %d", pid, cc & 0x0f, mt->mt_sect.ps_cc);
+      tvhdebug(mt->mt_name, "%s: PID %04X CC error %d != %d",
+               logprefix, pid, cc & 0x0f, mt->mt_sect.ps_cc);
       mt->mt_sect.ps_lock = 0;
     }
     mt->mt_sect.ps_cc = (cc + 1) & 0x0f;
@@ -148,13 +152,13 @@ mpegts_psi_section_reassemble
         mt->mt_sect.ps_lock = 0;
         return;
       }
-      mpegts_psi_section_reassemble0(mt, tsb + off, len, 0, crc, cb, opaque);
+      mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
       off += len;
     }
   }
 
   while(off < 188) {
-    r = mpegts_psi_section_reassemble0(mt, tsb + off, 188 - off, pusi, crc,
+    r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, 188 - off, pusi, crc,
         cb, opaque);
     if(r < 0) {
       mt->mt_sect.ps_lock = 0;
@@ -405,8 +409,9 @@ dvb_table_parse_cb( const uint8_t *sec, size_t len, void *opaque )
 }
 
 void dvb_table_parse
-  (mpegts_psi_table_t *mt, const uint8_t *tsb, int len,
-  int crc, int full, mpegts_psi_parse_callback_t cb)
+  (mpegts_psi_table_t *mt, const char *logprefix,
+   const uint8_t *tsb, int len,
+   int crc, int full, mpegts_psi_parse_callback_t cb)
 {
   const uint8_t *end;
   struct psi_parse parse;
@@ -416,7 +421,7 @@ void dvb_table_parse
   parse.full = full ? 3 : 0;
 
   for (end = tsb + len; tsb < end; tsb += 188)
-    mpegts_psi_section_reassemble(mt, tsb, crc,
+    mpegts_psi_section_reassemble(mt, logprefix, tsb, crc,
                                   dvb_table_parse_cb, &parse);
 }
 
