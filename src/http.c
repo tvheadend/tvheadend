@@ -1,6 +1,6 @@
 /*
  *  tvheadend, HTTP interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -319,24 +319,30 @@ int
 http_encoding_valid(http_connection_t *hc, const char *encoding)
 {
   const char *accept;
-  size_t l = strlen(encoding);
-  size_t i;
+  char *tokbuf, *tok, *saveptr, *q, *s;
 
   accept = http_arg_get(&hc->hc_args, "accept-encoding");
   if (!accept)
     return 0;
 
-  while (*accept) {
-    for (i = 0; i < l; i++)
-      if (tolower(accept[i]) != encoding[i])
-        break;
-    if (i < l)
-      continue;
-    accept += l;
-    while (*accept == ' ')
-      accept++;
-    if (*accept == ',' || *accept == '\0')
+  tokbuf = tvh_strdupa(accept);
+  tok = strtok_r(tokbuf, ",", &saveptr);
+  while (tok) {
+    while (*tok == ' ')
+      tok++;
+    // check for semicolon
+    if ((q = strchr(tok, ';')) != NULL) {
+      *q = '\0';
+      q++;
+      while (*q == ' ')
+        q++;
+    }
+    if ((s = strchr(tok, ' ')) != NULL)
+      *s = '\0';
+    // check for matching encoding with q > 0
+    if ((!strcasecmp(tok, encoding) || !strcmp(tok, "*")) && (q == NULL || strncmp(q, "q=0.000", strlen(q))))
       return 1;
+    tok = strtok_r(NULL, ",", &saveptr);
   }
   return 0;
 }
