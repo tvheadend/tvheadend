@@ -836,6 +836,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
     LIST_REMOVE(de, de_config_link);
 
   htsmsg_destroy(de->de_files);
+  free(de->de_directory);
   free(de->de_owner);
   free(de->de_creator);
   free(de->de_comment);

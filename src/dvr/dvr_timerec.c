@@ -269,6 +269,7 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
 
   free(dte->dte_name);
   free(dte->dte_title);
+  free(dte->dte_directory);
   free(dte->dte_owner);
   free(dte->dte_creator);
   free(dte->dte_comment);
