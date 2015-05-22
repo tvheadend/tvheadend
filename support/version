@@ -20,7 +20,12 @@ elif [ -f "$(dirname "$0")/../debian/changelog" ]; then
 elif [ -r "$(dirname "$0")/../rpm/version" ]; then
   VER=$(cat "$(dirname "$0")/../rpm/version")
 else
-  VER="0.0.0~unknown"
+  VER=$(basename $(realpath $(dirname "$0")/..) | sed -e 's/^tvheadend-//' | sed -e 's/^tvheadend-v//')
+  case $VER in
+  [1-9]*\.[0-9]*) ;;
+  *) VER="0.0.0~unknown" ;;
+  esac
+  echo $VER
 fi
 
 # Output
