@@ -1441,7 +1441,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   epg_broadcast_t *e = NULL;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
-  const char *dvr_config_name, *title, *desc, *subtitle, *creator, *lang, *comment;
+  const char *dvr_config_name, *title, *desc, *subtitle, *lang, *comment;
   int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority, retention;
   channel_t *ch = NULL;
@@ -1463,9 +1463,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;
   comment = htsmsg_get_str(in, "comment");
-  creator = htsp->htsp_username;
-  if (creator == NULL || *creator == '\0')
-    creator = htsp->htsp_granted_access->aa_representative;
   if (!(lang        = htsmsg_get_str(in, "language")))
     lang    = htsp->htsp_language;
 
@@ -1497,16 +1494,16 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
                                start_extra, stop_extra,
                                title, subtitle, desc, lang, 0,
                                htsp->htsp_granted_access->aa_username,
-                               creator, NULL,
-                               priority, retention, comment);
+                               htsp->htsp_granted_access->aa_representative,
+                               NULL, priority, retention, comment);
 
   /* Event timer */
   } else {
     de = dvr_entry_create_by_event(dvr_config_name, e, 
                                    start_extra, stop_extra,
                                    htsp->htsp_granted_access->aa_username,
-                                   creator, NULL,
-                                   priority, retention, comment);
+                                   htsp->htsp_granted_access->aa_representative,
+                                   NULL, priority, retention, comment);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
@@ -1649,7 +1646,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_autorec_entry_t *dae;
-  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
+  const char *dvr_config_name, *title, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
   uint32_t u32, days_of_week, priority, min_duration, max_duration, dup_detect;
   uint32_t retention, enabled, fulltext;
@@ -1696,9 +1693,6 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     start_extra = 0;     // 0 = dvr config
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
     stop_extra  = 0;     // 0 = dvr config
-  creator = htsp->htsp_username;
-  if (creator == NULL || *creator == '\0')
-    creator = htsp->htsp_granted_access->aa_representative;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
@@ -1715,7 +1709,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dae = dvr_autorec_create_htsp(dvr_config_name, title, fulltext,
       ch, enabled, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration, dup_detect,
-      htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
+      htsp->htsp_granted_access->aa_username, htsp->htsp_granted_access->aa_representative,
+      comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
@@ -1771,7 +1766,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
-  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
+  const char *dvr_config_name, *title, *comment, *name, *directory;
   uint32_t u32, days_of_week, priority, retention, start, stop, enabled;
   channel_t *ch = NULL;
 
@@ -1797,9 +1792,6 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "enabled", &enabled))
     enabled = 1;
 
-  creator = htsp->htsp_username;
-  if (creator == NULL || *creator == '\0')
-    creator = htsp->htsp_granted_access->aa_representative;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
@@ -1813,7 +1805,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Add actual timerec */
   dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, enabled, start, stop, days_of_week,
-      priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
+      priority, retention, htsp->htsp_granted_access->aa_username,
+      htsp->htsp_granted_access->aa_representative, comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
@@ -2064,7 +2057,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      SUBSCRIPTION_PACKET |
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
-					      htsp->htsp_username,
+					      htsp->htsp_granted_access->aa_representative,
 					      htsp->htsp_clientname,
 					      NULL);
   return NULL;
@@ -2530,7 +2523,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   const void *digest;
   size_t digestlen;
   access_t *rights;
-  int privgain;
+  int privgain = 0;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return 0;
@@ -2543,21 +2536,42 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
     notify_reload("connections");
   }
 
-  if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
-    return 0;
+  if(!htsmsg_get_bin(m, "digest", &digest, &digestlen)) {
 
-  rights = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer);
+    rights = access_get_hashed(username, digest, htsp->htsp_challenge,
+                               (struct sockaddr *)htsp->htsp_peer);
 
-  privgain = (rights->aa_rights |
-              htsp->htsp_granted_access->aa_rights) !=
-                htsp->htsp_granted_access->aa_rights;
-    
-  if(privgain)
-    tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
+    if (rights->aa_rights == 0) {
+      tvhlog(LOG_INFO, "htsp", "%s: Unauthorized access", htsp->htsp_logname);
+      access_destroy(rights);
+      return 0;
+    }
 
-  access_destroy(htsp->htsp_granted_access);
-  htsp->htsp_granted_access = rights;
+    privgain = (rights->aa_rights |
+                htsp->htsp_granted_access->aa_rights) !=
+                  htsp->htsp_granted_access->aa_rights;
+      
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s",
+	   htsp->htsp_logname, username);
+    tvh_str_update(&htsp->htsp_username, username);
+    htsp_update_logname(htsp);
+    if(privgain)
+      tvhlog(LOG_INFO, "htsp", "%s: Privileges updated", htsp->htsp_logname);
+
+    access_destroy(htsp->htsp_granted_access);
+    htsp->htsp_granted_access = rights;
+
+  } else {
+
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s (unverified)",
+	   htsp->htsp_logname, username);
+    tvh_str_update(&htsp->htsp_username, username);
+    htsp_update_logname(htsp);
+
+  }
+
+  notify_reload("connections");
+
   return privgain;
 }
 
@@ -2610,9 +2624,17 @@ static void
 htsp_server_status ( void *opaque, htsmsg_t *m )
 {
   htsp_connection_t *htsp = opaque;
+  access_t *aa;
+  char buf[128];
   htsmsg_add_str(m, "type", "HTSP");
-  if (htsp->htsp_username)
-    htsmsg_add_str(m, "user", htsp->htsp_username);
+  if (htsp->htsp_username) {
+    aa = htsp->htsp_granted_access;
+    if (!strcmp(htsp->htsp_username, aa->aa_username ?: ""))
+      snprintf(buf, sizeof(buf), "%s", htsp->htsp_username);
+    else
+      snprintf(buf, sizeof(buf), "[%s]", htsp->htsp_username);
+    htsmsg_add_str(m, "user", buf);
+  }
 }
 
 /**
