@@ -106,12 +106,12 @@ tvheadend.miscconf = function(panel, index) {
     * Time/Date
     */
 
-    var tvhtimeUpdateEnabled = new Ext.form.Checkbox({
+    var tvhtimeUpdateEnabled = new Ext.ux.form.XCheckbox({
         name: 'tvhtime_update_enabled',
         fieldLabel: 'Update time'
     });
 
-    var tvhtimeNtpEnabled = new Ext.form.Checkbox({
+    var tvhtimeNtpEnabled = new Ext.ux.form.XCheckbox({
         name: 'tvhtime_ntp_enabled',
         fieldLabel: 'Enable NTP driver'
     });
