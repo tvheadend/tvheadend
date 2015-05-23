@@ -37,7 +37,7 @@ def url(fn):
 
   f = utf8open(fn, 'r')
   if fn[0] != '/':
-    fn = os.path.join(os.environ['PWD'], fn)
+    fn = os.path.join(os.path.realpath(os.environ['PWD']), fn)
   fn = os.path.normpath(fn)
   if VERBOSE:
     info('css: %s', fn)
