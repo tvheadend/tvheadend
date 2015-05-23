@@ -57,12 +57,25 @@ endif
 
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
-LDFLAGS += -L${ROOTDIR}/libav_static/build/ffmpeg/lib -Wl,-Bstatic \
-           -lavresample -lswresample -lswscale \
-           -lavutil -lavformat -lavcodec -lavutil \
-           -lvorbisenc -lvorbis -logg -lx264 -lvpx \
-           -Wl,-Bdynamic -ldl
+LDFLAGS_FFDIR = ${ROOTDIR}/libav_static/build/ffmpeg/lib
+LDFLAGS += ${LDFLAGS_FFDIR}/libavresample.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libswresample.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libswscale.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libavformat.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libavcodec.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
+ifeq ($(CONFIG_LIBFFMPEG_STATIC_X264),yes)
+LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a
+else
+LDFLAGS += -lx264
 endif
+LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
+endif
+
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
 LDFLAGS += -L${ROOTDIR}/libhdhomerun_static/libhdhomerun \
