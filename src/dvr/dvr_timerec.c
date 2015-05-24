@@ -753,3 +753,14 @@ timerec_destroy_by_config(dvr_config_t *kcfg, int delconf)
       dvr_timerec_save(dte);
   }
 }
+
+/**
+ *
+ */
+int
+dvr_timerec_get_retention( dvr_timerec_entry_t *dte )
+{
+  if (dte->dte_retention > 0)
+    return dte->dte_retention;
+  return dte->dte_config->dvr_retention_days;
+}
