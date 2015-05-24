@@ -1245,3 +1245,53 @@ autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
       dvr_autorec_save(dae);
   }
 }
+
+static inline int extra_valid(time_t extra)
+{
+  return extra != 0 && extra != (time_t)-1;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae )
+{
+  time_t extra = dae->dae_start_extra;
+
+  if (!extra_valid(extra)) {
+    if (dae->dae_channel)
+      extra = dae->dae_channel->ch_dvr_extra_time_pre;
+    if (!extra_valid(extra))
+      extra = dae->dae_config->dvr_extra_time_pre;
+  }
+  return extra;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae )
+{
+  time_t extra = dae->dae_stop_extra;
+
+  if (!extra_valid(extra)) {
+    if (dae->dae_channel)
+      extra = dae->dae_channel->ch_dvr_extra_time_post;
+    if (!extra_valid(extra))
+      extra = dae->dae_config->dvr_extra_time_post;
+  }
+  return extra;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_retention( dvr_autorec_entry_t *dae )
+{
+  if (dae->dae_retention > 0)
+    return dae->dae_retention;
+  return dae->dae_config->dvr_retention_days;
+}

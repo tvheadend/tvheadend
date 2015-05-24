@@ -774,7 +774,7 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "enabled",     dae->dae_enabled);
   htsmsg_add_u32(out, "maxDuration", dae->dae_maxduration);
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
-  htsmsg_add_u32(out, "retention",   dae->dae_retention);
+  htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention(dae));
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
   if (dae->dae_start >= 0 && dae->dae_start_window >= 0) {
     if (dae->dae_start > dae->dae_start_window)
@@ -790,8 +790,8 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_s32(out, "start",       dae->dae_start >= 0 ? dae->dae_start : -1);
   htsmsg_add_s32(out, "startWindow", dae->dae_start_window >= 0 ? dae->dae_start_window : -1);
   htsmsg_add_u32(out, "priority",    dae->dae_pri);
-  htsmsg_add_s64(out, "startExtra",  dae->dae_start_extra);
-  htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
+  htsmsg_add_s64(out, "startExtra",  dvr_autorec_get_extra_time_pre(dae));
+  htsmsg_add_s64(out, "stopExtra",   dvr_autorec_get_extra_time_post(dae));
   htsmsg_add_u32(out, "dupDetect",   dae->dae_record);
 
   if(dae->dae_title) {
@@ -825,7 +825,7 @@ htsp_build_timerecentry(dvr_timerec_entry_t *dte, const char *method)
   htsmsg_add_str(out, "id",          idnode_uuid_as_str(&dte->dte_id));
   htsmsg_add_u32(out, "enabled",     dte->dte_enabled);
   htsmsg_add_u32(out, "daysOfWeek",  dte->dte_weekdays);
-  htsmsg_add_u32(out, "retention",   dte->dte_retention);
+  htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention(dte));
   htsmsg_add_u32(out, "priority",    dte->dte_pri);
   htsmsg_add_s32(out, "start",       dte->dte_start);
   htsmsg_add_s32(out, "stop",        dte->dte_stop);

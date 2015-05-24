@@ -566,6 +566,12 @@ static inline int dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a
   return 0;
 }
 
+int dvr_autorec_get_retention( dvr_autorec_entry_t *dae );
+
+int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
+
+int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
+
 /**
  *
  */
@@ -609,6 +615,8 @@ static inline int dvr_timerec_entry_verify(dvr_timerec_entry_t *dte, access_t *a
     return -1;
   return 0;
 }
+
+int dvr_timerec_get_retention( dvr_timerec_entry_t *dte );
 
 /**
  *
