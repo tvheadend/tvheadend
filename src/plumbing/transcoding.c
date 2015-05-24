@@ -1126,7 +1126,9 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-63, smaller means better quality, use 15 as default
-        av_dict_set_int(&opts,  "crf", (t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate), 0);
+        char valuestr[3];
+        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate);
+        av_dict_set(&opts,      "crf", valuestr, 0);
         // bitrate setting is still required, as it's used as max rate in CQ mode
         // and set to a very low value by default
         octx->bit_rate        = 25000000;
@@ -1154,7 +1156,9 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-51, smaller means better quality, use 15 as default
-        av_dict_set_int(&opts,  "crf",  (t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate)), 0);
+        char valuestr[3];
+        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate));
+        av_dict_set(&opts,      "crf", valuestr, 0);
         // tune "zerolatency" removes as much encoder latency as possible
         av_dict_set(&opts,      "tune", "zerolatency", 0);
       } else {
