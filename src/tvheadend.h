@@ -104,7 +104,6 @@ extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t fork_lock;
-extern pthread_mutex_t atomic_lock;
 
 extern int tvheadend_webui_port;
 extern int tvheadend_webui_debug;

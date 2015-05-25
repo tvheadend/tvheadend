@@ -20,6 +20,8 @@
 
 #include <stdint.h>
 
+extern pthread_mutex_t atomic_lock;
+
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {
