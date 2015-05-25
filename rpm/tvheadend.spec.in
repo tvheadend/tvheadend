@@ -20,11 +20,16 @@ BuildRequires:  openssl-devel
 BuildRequires:  git wget python
 
 Requires:       systemd-units >= 1
+Requires:       dbus-libs
+Requires:       avahi-libs
+Requires:       openssl-libs
 
 %description
-Tvheadend is a TV streaming server with DVR for Linux supporting
-DVB, ATSC, IPTV, SAT>IP as input sources. Can be used as a backend
-to Showtime, XBMC and various other clients.
+Tvheadend is a TV streaming server with Digital Video Recorder functionality
+for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
+
+It can be used as a backend to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
+SAT>IP and various other clients using these protocols.
 
 %prep
 %setup -q -n tvheadend-%{commit}
@@ -76,6 +81,9 @@ exit 0
 %{_unitdir}/*
 
 %changelog
+* Thu May 25 2015 Jaroslav Kysela <perex@perex.cz> v4.0.2
+- fix requires (libs) and improve description
+
 * Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> v4.0.1
 - changed versioning system (put changes and git hash to revision)
 
