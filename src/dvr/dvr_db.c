@@ -349,6 +349,8 @@ dvr_usage_count(access_t *aa)
   uint32_t used = 0;
 
   LIST_FOREACH(de, &dvrentries, de_global_link) {
+    if (de->de_sched_state != DVR_RECORDING)
+      continue;
     if (de->de_owner && de->de_owner[0]) {
       if (!strcmp(de->de_owner, aa->aa_username ?: ""))
         used++;
