@@ -223,12 +223,12 @@ cleanup_filename(dvr_config_t *cfg, char *s)
 
 static const char *dvr_sub_title(const char *id, const void *aux)
 {
-  return lang_str_get(((dvr_entry_t *)aux)->de_title, NULL);
+  return lang_str_get(((dvr_entry_t *)aux)->de_title, NULL) ?: "";
 }
 
 static const char *dvr_sub_subtitle(const char *id, const void *aux)
 {
-  return lang_str_get(((dvr_entry_t *)aux)->de_subtitle, NULL);
+  return lang_str_get(((dvr_entry_t *)aux)->de_subtitle, NULL) ?: "";
 }
 
 static const char *dvr_sub_episode(const char *id, const void *aux)
