@@ -198,11 +198,11 @@ cleanup_filename(dvr_config_t *cfg, char *s)
 
     else if (cfg->dvr_clean_title &&
              ((*s < 32) || (*s > 122) ||
-             (strchr("/:\\<>|*?'\"", *s) != NULL)))
+             (strchr("/:\\<>|*?\"", *s) != NULL)))
       *s = '_';
 
     else if (cfg->dvr_windows_compatible_filenames &&
-             (strchr("/:\\<>|*?'\"", *s) != NULL))
+             (strchr("/:\\<>|*?\"", *s) != NULL))
       *s = '_';
   }
 
