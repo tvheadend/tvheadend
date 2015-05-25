@@ -27,22 +27,33 @@ VERSION  ?= "0.0.0"
 RELEASE  ?= 1
 ifeq ($(VERSION),$(RELEASE))
 RELEASE   = 1
-COMMIT1   = $(COMMIT)
+REF       = $(COMMIT)
+COMMITR   = $(shell echo $(COMMIT) | sed "s/^v//")
+else
+REF       = $(COMMIT1)
+COMMITR   = $(COMMIT1)
 endif
 
 tvheadend.spec: tvheadend.spec.in
 	@sed -e 's/@VERSION@/$(VERSION)/g' \
 	     -e 's/@RELEASE@/$(RELEASE)/g' \
-	     -e 's/@COMMIT@/$(COMMIT1)/g' \
+	     -e 's/@REF@/$(REF)/g' \
+	     -e 's/@COMMIT@/$(COMMITR)/g' \
 		$< > $@
 
 ~/rpmbuild/SOURCES:
 	mkdir -p $(foreach f,BUILD RPMS SOURCES SPECS SRPMS,~/rpmbuild/$(f))
 
+.PHONY: srpm
 srpm: ~/rpmbuild/SOURCES tvheadend.spec
 	spectool --get-files --sourcedir tvheadend.spec
 	rpmbuild -bs tvheadend.spec
 
+.PHONY: build
 build: ~/rpmbuild/SOURCES tvheadend.spec
 	spectool --get-files --sourcedir tvheadend.spec
 	rpmbuild -ba tvheadend.spec
+
+.PHONY: clean.
+clean:
+	rm -f tvheadend.spec
