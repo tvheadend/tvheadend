@@ -323,7 +323,7 @@ dvr_timerec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write
     return -1;
   if (!access_verify2(a, ACCESS_ADMIN))
     return 0;
-  if (dvr_timerec_entry_verify(dte, a))
+  if (dvr_timerec_entry_verify(dte, a, msg_to_write == NULL ? 1 : 0))
     return -1;
   return 0;
 }

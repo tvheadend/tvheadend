@@ -1104,12 +1104,12 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all autorecs */
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access))
+    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_autorecentry(dae, "autorecEntryAdd"), NULL);
 
   /* Send all timerecs */
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access))
+    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_timerecentry(dte, "timerecEntryAdd"), NULL);
 
   /* Send all DVR entries */
@@ -1742,7 +1742,7 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if((dae = dvr_autorec_find_by_uuid(daeId)) == NULL)
     return htsp_error("id not found");
 
-  if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access))
+  if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 0))
     return htsp_error("User does not have access");
 
   /* Check access */
@@ -1838,7 +1838,7 @@ htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if((dte = dvr_timerec_find_by_uuid(dteId)) == NULL)
     return htsp_error("id not found");
 
-  if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access))
+  if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 0))
     return htsp_error("User does not have access");
 
   /* Check access */
@@ -3147,7 +3147,7 @@ _htsp_autorec_entry_update(dvr_autorec_entry_t *dae, const char *method, htsmsg_
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
       if ((dae->dae_channel == NULL || htsp_user_access_channel(htsp, dae->dae_channel)) &&
-          !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access)) {
+          !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
                           : htsp_build_autorecentry(dae, method);
         htsp_send_message(htsp, m, NULL);
@@ -3200,7 +3200,7 @@ _htsp_timerec_entry_update(dvr_timerec_entry_t *dte, const char *method, htsmsg_
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
       if ((dte->dte_channel == NULL || htsp_user_access_channel(htsp, dte->dte_channel)) &&
-          !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access)) {
+          !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
                           : htsp_build_timerecentry(dte, method);
         htsp_send_message(htsp, m, NULL);
