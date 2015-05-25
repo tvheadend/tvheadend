@@ -81,7 +81,7 @@ exit 0
 %{_unitdir}/*
 
 %changelog
-* Thu May 25 2015 Jaroslav Kysela <perex@perex.cz> v4.0.2
+* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> v4.0.2
 - fix requires (libs) and improve description
 
 * Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> v4.0.1

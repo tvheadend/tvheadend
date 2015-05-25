@@ -27,6 +27,7 @@ VERSION  ?= "0.0.0"
 RELEASE  ?= 1
 ifeq ($(VERSION),$(RELEASE))
 RELEASE   = 1
+COMMIT1   = $(COMMIT)
 endif
 
 tvheadend.spec: tvheadend.spec.in
@@ -37,6 +38,10 @@ tvheadend.spec: tvheadend.spec.in
 
 ~/rpmbuild/SOURCES:
 	mkdir -p $(foreach f,BUILD RPMS SOURCES SPECS SRPMS,~/rpmbuild/$(f))
+
+srpm: ~/rpmbuild/SOURCES tvheadend.spec
+	spectool --get-files --sourcedir tvheadend.spec
+	rpmbuild -bs tvheadend.spec
 
 build: ~/rpmbuild/SOURCES tvheadend.spec
 	spectool --get-files --sourcedir tvheadend.spec
