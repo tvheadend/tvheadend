@@ -350,7 +350,7 @@ static str_substitute_t dvr_subs_tally[] = {
 static char *dvr_find_last_path_component(char *path)
 {
   char *res, *p;
-  for (p = res = path; *p; p++) {
+  for (p = path, res = NULL; *p; p++) {
     if (*p == '\\') {
       p++;
     } else {
@@ -475,8 +475,16 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
   /* Deescape directory path and create directory tree */
   dirsep = dvr_find_last_path_component(path + l);
-  *dirsep = '\0';
-  dirsep++;
+  if (dirsep) {
+    *dirsep = '\0';
+    dirsep++;
+  } else {
+    if (l > 0) {
+      assert(path[l-1] == '/');
+      path[l-1] = '\0';
+    }
+    dirsep = path + l;
+  }
   str_unescape(path, filename, sizeof(filename));
   if (makedirs(filename, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
     return -1;
