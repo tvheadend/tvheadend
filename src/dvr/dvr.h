@@ -559,6 +559,8 @@ void dvr_autorec_update(void);
 
 static inline int dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a)
 {
+  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
+    return 0;
   if (strcmp(dae->dae_owner ?: "", a->aa_username ?: ""))
     return -1;
   return 0;
@@ -601,6 +603,8 @@ void dvr_timerec_update(void);
 
 static inline int dvr_timerec_entry_verify(dvr_timerec_entry_t *dte, access_t *a)
 {
+  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
+    return 0;
   if (strcmp(dte->dte_owner ?: "", a->aa_username ?: ""))
     return -1;
   return 0;
