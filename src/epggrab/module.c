@@ -167,7 +167,7 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
   if (ch->major)
     htsmsg_add_u32(m, "major", ch->major);
   if (ch->minor)
-    htsmsg_add_u32(m, "major", ch->minor);
+    htsmsg_add_u32(m, "minor", ch->minor);
 
   hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
   htsmsg_destroy(m);
