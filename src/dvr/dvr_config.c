@@ -431,11 +431,11 @@ dvr_update_pathname_from_fmtstr(dvr_config_t *cfg)
   cfg->dvr_channel_dir = dvr_match_fmtstr(cfg, "$c/") >= 0;
   cfg->dvr_title_dir   = dvr_match_fmtstr(cfg, "$t/") >= 0;
 
-  cfg->dvr_channel_in_title  = dvr_match_fmtstr_nodir(cfg, "$c-") >= 0;
+  cfg->dvr_channel_in_title  = dvr_match_fmtstr_nodir(cfg, "$-c") >= 0;
   cfg->dvr_date_in_title     = dvr_match_fmtstr_nodir(cfg, "%F") >= 0;
   cfg->dvr_time_in_title     = dvr_match_fmtstr_nodir(cfg, "%R") >= 0;
-  cfg->dvr_episode_in_title  = dvr_match_fmtstr_nodir(cfg, "$e") >= 0;
-  cfg->dvr_subtitle_in_title = dvr_match_fmtstr_nodir(cfg, ".$s") >= 0;
+  cfg->dvr_episode_in_title  = dvr_match_fmtstr_nodir(cfg, "$-e") >= 0;
+  cfg->dvr_subtitle_in_title = dvr_match_fmtstr_nodir(cfg, "$.s") >= 0;
 
   cfg->dvr_omit_title = dvr_match_fmtstr_nodir(cfg, "$t") < 0;
 }
@@ -460,11 +460,11 @@ dvr_update_pathname_from_booleans(dvr_config_t *cfg)
       dvr_insert_fmtstr_before_extension(cfg, "$t");
   }
 
-  dvr_match_and_insert_or_remove(cfg, "$c-", cfg->dvr_channel_in_title, -1);
-  dvr_match_and_insert_or_remove(cfg, ".$s", cfg->dvr_subtitle_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "$-c", cfg->dvr_channel_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "$.s", cfg->dvr_subtitle_in_title, -1);
   dvr_match_and_insert_or_remove(cfg, "%F",  cfg->dvr_date_in_title, -1);
   dvr_match_and_insert_or_remove(cfg, "%R",  cfg->dvr_time_in_title, -1);
-  dvr_match_and_insert_or_remove(cfg, "$e",  cfg->dvr_episode_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "$-e",  cfg->dvr_episode_in_title, -1);
 
   dvr_match_and_insert_or_remove(cfg, "$t/", cfg->dvr_title_dir, 0);
   dvr_match_and_insert_or_remove(cfg, "$c/", cfg->dvr_channel_dir, 0);

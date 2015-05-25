@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <libgen.h> /* basename */
 
@@ -89,7 +90,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     tvherror("dvr", "unable to find access (owner '%s', creator '%s')",
              de->de_owner, de->de_creator);
     return -1;
-  }
+ }
 
   if (aa->aa_conn_limit) {
     rec_count = dvr_usage_count(aa);
@@ -220,15 +221,28 @@ cleanup_filename(dvr_config_t *cfg, char *s)
 /**
  *
  */
+static const char *dvr_do_prefix(const char *id, const char *s)
+{
+  static char buf[128];
+
+  if (s == NULL)
+    s = "";
+  if (s[0] && !isalpha(id[0])) {
+    snprintf(buf, sizeof(buf), "%c%s", id[0], s);
+    return buf;
+  }
+  return s;
+}
+
 
 static const char *dvr_sub_title(const char *id, const void *aux)
 {
-  return lang_str_get(((dvr_entry_t *)aux)->de_title, NULL) ?: "";
+  return dvr_do_prefix(id, lang_str_get(((dvr_entry_t *)aux)->de_title, NULL));
 }
 
 static const char *dvr_sub_subtitle(const char *id, const void *aux)
 {
-  return lang_str_get(((dvr_entry_t *)aux)->de_subtitle, NULL) ?: "";
+  return dvr_do_prefix(id, lang_str_get(((dvr_entry_t *)aux)->de_subtitle, NULL));
 }
 
 static const char *dvr_sub_episode(const char *id, const void *aux)
@@ -241,20 +255,43 @@ static const char *dvr_sub_episode(const char *id, const void *aux)
   epg_episode_number_format(de->de_bcast->episode,
                             buf, sizeof(buf),
                             ".", "S%02d", NULL, "E%02d", NULL);
-  return buf;
+  return dvr_do_prefix(id, buf);
 }
 
 static const char *dvr_sub_channel(const char *id, const void *aux)
 {
-  return DVR_CH_NAME((dvr_entry_t *)aux);
+  return dvr_do_prefix(id, DVR_CH_NAME((dvr_entry_t *)aux));
 }
 
-
 static str_substitute_t dvr_subs_entry[] = {
-  { .id = "t", .getval = dvr_sub_title },
-  { .id = "s", .getval = dvr_sub_subtitle },
-  { .id = "e", .getval = dvr_sub_episode },
-  { .id = "c", .getval = dvr_sub_channel },
+  { .id = "t",  .getval = dvr_sub_title },
+  { .id = " t", .getval = dvr_sub_title },
+  { .id = "-t", .getval = dvr_sub_title },
+  { .id = "_t", .getval = dvr_sub_title },
+  { .id = ".t", .getval = dvr_sub_title },
+  { .id = ",t", .getval = dvr_sub_title },
+  { .id = ";t", .getval = dvr_sub_title },
+  { .id = "s",  .getval = dvr_sub_subtitle },
+  { .id = " s", .getval = dvr_sub_subtitle },
+  { .id = "-s", .getval = dvr_sub_subtitle },
+  { .id = "_s", .getval = dvr_sub_subtitle },
+  { .id = ".s", .getval = dvr_sub_subtitle },
+  { .id = ",s", .getval = dvr_sub_subtitle },
+  { .id = ";s", .getval = dvr_sub_subtitle },
+  { .id = "e",  .getval = dvr_sub_episode },
+  { .id = " e", .getval = dvr_sub_episode },
+  { .id = "-e", .getval = dvr_sub_episode },
+  { .id = "_e", .getval = dvr_sub_episode },
+  { .id = ".e", .getval = dvr_sub_episode },
+  { .id = ",e", .getval = dvr_sub_episode },
+  { .id = ";e", .getval = dvr_sub_episode },
+  { .id = "c",  .getval = dvr_sub_channel },
+  { .id = " c", .getval = dvr_sub_channel },
+  { .id = "-c", .getval = dvr_sub_channel },
+  { .id = "_c", .getval = dvr_sub_channel },
+  { .id = ".c", .getval = dvr_sub_channel },
+  { .id = ",c", .getval = dvr_sub_channel },
+  { .id = ";c", .getval = dvr_sub_channel },
   { .id = NULL, .getval = NULL }
 };
 

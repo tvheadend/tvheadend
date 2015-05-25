@@ -134,13 +134,20 @@
       <tr><td>$t$n.$x</td><td>Default format (title, unique number, extension)</td><td>Tenis - Wimbledon-1.mkv</td></tr>
       <br>
       <tr><td>$t</td><td>Event title name</td><td>Tenis - Wimbledon</td></tr>
+      <tr><td>$s</td><td>Event subtitle name</td><td>Sport</td></tr>
       <tr><td>$e</td><td>Event episode name</td><td>S02-E06</td></tr>
+      <tr><td>$c</td><td>Channel name</td><td>SkySport</td></tr>
       <tr><td>$n</td><td>Unique number added when the file already exists&nbsp;&nbsp;&nbsp;&nbsp;</td><td>-1</td></tr>
       <tr><td>$x</td><td>Filename extension (from the active stream muxer</td><td>mkv</td></tr>
       <br>
       <tr><td>%F</td><td>ISO 8601 date format</td><td>2011-03-19</td></tr>
       <tr><td>%R</td><td>The time in 24-hour notation</td><td>14:12</td></tr>
       </table>
+
+  The format strings <i>$t,$s,%e,$c</i> have also delimiter variants like
+  <i>$ t</i> (space after the dolar character), <i>$-t</i>, <i>$_t</i>,
+  <i>$.t</i>, <i>$,t</i>, <i>$;t</i>, . In this case, the delimiter is applied
+  only when the substituted string is not empty.
 
   <br><br>
   <hr>
