@@ -98,6 +98,8 @@ typedef struct video_stream {
   int16_t                    vid_height;
 
   int                        vid_first_sent;
+  int                        vid_first_encoded;
+  th_pkt_t                  *vid_first_pkt;
 } video_stream_t;
 
 
@@ -910,6 +912,7 @@ static void
 send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
                   AVPacket *epkt, AVCodecContext *octx)
 {
+  video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
   th_pkt_t *n;
 
@@ -976,7 +979,24 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
       extract_mpeg2_global_data(n, epkt->data, epkt->size);
   }
 
-  tvhtrace("transcode", "%04X: deliver video (pts = %" PRIu64 ")", shortid(t), n->pkt_pts);
+  tvhtrace("transcode", "%04X: deliver video (dts = %" PRIu64 ", pts = %" PRIu64 ")", shortid(t), n->pkt_dts, n->pkt_pts);
+
+  if (!vs->vid_first_encoded) {
+    vs->vid_first_pkt = n;
+    vs->vid_first_encoded = 1;
+    return;
+  }
+  if (vs->vid_first_pkt) {
+    if (vs->vid_first_pkt->pkt_dts < n->pkt_dts) {
+      sm = streaming_msg_create_pkt(vs->vid_first_pkt);
+      streaming_target_deliver2(ts->ts_target, sm);
+    } else {
+      tvhtrace("transcode", "%04X: video skip first packet", shortid(t));
+    }
+    pkt_ref_dec(vs->vid_first_pkt);
+    vs->vid_first_pkt = NULL;
+  }
+
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
@@ -1562,6 +1582,9 @@ transcoder_destroy_video(transcoder_t *t, transcoder_stream_t *ts)
 
   if(vs->vid_enc_frame)
     av_free(vs->vid_enc_frame);
+
+  if (vs->vid_first_pkt)
+    pkt_ref_dec(vs->vid_first_pkt);
 
   free(ts);
 }
