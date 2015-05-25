@@ -110,6 +110,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
     tvherror("dvr", "unable to create new channel streaming chain for '%s'",
              channel_get_name(de->de_channel));
+    profile_chain_close(prch);
     free(prch);
     return -1;
   }
