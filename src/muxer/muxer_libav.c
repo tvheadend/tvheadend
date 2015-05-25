@@ -380,7 +380,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVPacket packet;
   th_pkt_t *pkt = (th_pkt_t*)data, *opkt;
   lav_muxer_t *lm = (lav_muxer_t*)m;
-  int rc = 0, free_data = 0;
+  unsigned char *tofree;
+  int rc = 0;
 
   assert(smt == SMT_PACKET);
 
@@ -406,10 +407,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if(pkt->pkt_payload == NULL)
       continue;
 
+    tofree = NULL;
     av_init_packet(&packet);
 
     if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
-      free_data = 1;
       pkt = avc_convert_pkt(opkt = pkt);
       pkt_ref_dec(opkt);
       if(av_bitstream_filter_filter(lm->lm_h264_filter,
@@ -424,6 +425,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 	if (packet.data != pktbuf_ptr(pkt->pkt_payload))
 	  av_free(packet.data);
 	break;
+      } else {
+        tofree = packet.data;
       }
     } else if (st->codec->codec_id == AV_CODEC_ID_AAC) {
       /* remove ADTS header */
@@ -446,8 +449,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if((rc = av_interleaved_write_frame(oc, &packet)))
       tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
 
-    if(free_data && packet.data != pktbuf_ptr(pkt->pkt_payload))
-      av_free(packet.data);
+    if(tofree && tofree != pktbuf_ptr(pkt->pkt_payload))
+      av_free(tofree);
 
     break;
   }
