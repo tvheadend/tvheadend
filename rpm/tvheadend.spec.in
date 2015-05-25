@@ -10,7 +10,7 @@ License:        GPLv3
 Group:          Applications/Multimedia
 URL:            http://tvheadend.org
 
-Source:		https://github.com/tvheadend/tvheadend/archive/%{commit}/tvheadend-%{commit}.tar.gz
+Source:         https://github.com/tvheadend/tvheadend/archive/%{commit}/tvheadend-%{commit}.tar.gz
 #Patch999:      test.patch
 
 BuildRequires:  systemd-units >= 1
