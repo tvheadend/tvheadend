@@ -84,7 +84,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel));
     profile_chain_close(prch);
     free(prch);
-    return -1;
+    return;
   }
 
   de->de_s = subscription_create_from_channel(prch, NULL, weight,
