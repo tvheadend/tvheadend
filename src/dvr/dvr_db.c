@@ -637,7 +637,7 @@ dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
   tvhlog(LOG_INFO, "dvr", "entry %s \"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
          idnode_uuid_as_str(&de->de_id),
-	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator);
+	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator ?: "");
 
   dvr_entry_save(de);
   return de;

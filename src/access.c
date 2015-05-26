@@ -622,6 +622,9 @@ access_get_by_username(const char *username)
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
 
+  a->aa_username = strdup(username);
+  a->aa_representative = strdup(username);
+
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
     return a;
@@ -649,6 +652,9 @@ access_get_by_addr(struct sockaddr *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
+
+  a->aa_representative = malloc(50);
+  tcp_get_str_from_ip(src, a->aa_representative, 50);
 
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
