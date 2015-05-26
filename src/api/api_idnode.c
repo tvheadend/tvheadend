@@ -458,11 +458,12 @@ exit:
 int
 api_idnode_handler
   ( access_t *perm, htsmsg_t *args, htsmsg_t **resp,
-    void (*handler)(access_t *perm, idnode_t *in) )
+    void (*handler)(access_t *perm, idnode_t *in),
+    const char *op )
 {
   int err = 0;
   idnode_t *in;
-  htsmsg_t *uuids;
+  htsmsg_t *uuids, *msg;
   htsmsg_field_t *f;
   const char *uuid;
 
@@ -488,10 +489,18 @@ api_idnode_handler
   /* Single */
   } else {
     uuid = htsmsg_field_get_string(f);
-    if (!(in   = idnode_find(uuid, NULL, NULL)))
+    if (!(in   = idnode_find(uuid, NULL, NULL))) {
       err = ENOENT;
-    else
-      handler(perm, in);
+    } else {
+      msg = htsmsg_create_map();
+      htsmsg_add_str(msg, "__op__", op);
+      if (idnode_perm(in, perm, msg)) {
+        err = EPERM;
+      } else {
+        handler(perm, in);
+      }
+      htsmsg_destroy(msg);
+    }
   }
 
   pthread_mutex_unlock(&global_lock);
@@ -509,7 +518,7 @@ static int
 api_idnode_delete
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_delete_);
+  return api_idnode_handler(perm, args, resp, api_idnode_delete_, "delete");
 }
 
 static void
@@ -522,7 +531,7 @@ static int
 api_idnode_moveup
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_moveup_);
+  return api_idnode_handler(perm, args, resp, api_idnode_moveup_, "moveup");
 }
 
 static void
@@ -535,19 +544,22 @@ static int
 api_idnode_movedown
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_movedown_);
+  return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown");
 }
 
 void api_idnode_init ( void )
 {
+  /*
+   * note: permissions are verified using idnode_perm() calls
+   */
   static api_hook_t ah[] = {
     { "idnode/load",     ACCESS_ANONYMOUS, api_idnode_load,     NULL },
-    { "idnode/save",     ACCESS_ADMIN,     api_idnode_save,     NULL },
+    { "idnode/save",     ACCESS_ANONYMOUS, api_idnode_save,     NULL },
     { "idnode/tree",     ACCESS_ANONYMOUS, api_idnode_tree,     NULL },
     { "idnode/class",    ACCESS_ANONYMOUS, api_idnode_class,    NULL },
-    { "idnode/delete",   ACCESS_ADMIN,     api_idnode_delete,   NULL },
-    { "idnode/moveup",   ACCESS_ADMIN,     api_idnode_moveup,   NULL },
-    { "idnode/movedown", ACCESS_ADMIN,     api_idnode_movedown, NULL },
+    { "idnode/delete",   ACCESS_ANONYMOUS, api_idnode_delete,   NULL },
+    { "idnode/moveup",   ACCESS_ANONYMOUS, api_idnode_moveup,   NULL },
+    { "idnode/movedown", ACCESS_ANONYMOUS, api_idnode_movedown, NULL },
     { NULL },
   };
 
