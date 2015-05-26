@@ -936,7 +936,7 @@ static dvr_entry_t *_dvr_entry_update
     time_t start_extra, time_t stop_extra,  dvr_prio_t pri, int retention )
 {
   char buf[40];
-  int save = 0;
+  int save = 0, updated = 0;
 
   if (!dvr_entry_is_editable(de)) {
     if (stop > 0) {
@@ -985,8 +985,10 @@ static dvr_entry_t *_dvr_entry_update
     de->de_retention = retention;
     save = 1;
   }
-  if (save)
+  if (save) {
+    updated = 1;
     dvr_entry_set_timer(de);
+  }
 
   /* Title */ 
   if (e && e->episode && e->episode->title) {
@@ -1040,8 +1042,9 @@ dosave:
   if (save) {
     idnode_changed(&de->de_id);
     htsp_dvr_entry_update(de);
-    tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer",
-           lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
+    tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s",
+             lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+             updated ? " Timer" : "");
   }
 
   return de;
