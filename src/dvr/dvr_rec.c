@@ -473,7 +473,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     if (dirsep)
       strcpy(filename, dirsep + 1);
     else
-      filename[0] = '\0';
+      strcpy(filename, path + l);
     str_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
     s = ptmp;
     while (*s == '/')
