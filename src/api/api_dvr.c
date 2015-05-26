@@ -236,7 +236,7 @@ static int
 api_dvr_entry_cancel
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_cancel);
+  return api_idnode_handler(perm, args, resp, api_dvr_cancel, "cancel");
 }
 
 static void
