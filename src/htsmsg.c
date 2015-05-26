@@ -403,6 +403,18 @@ htsmsg_field_get_s64
  */
 
 int
+bool_check(const char *str)
+{
+  if (str &&
+      (!strcmp(str, "yes")  ||
+       !strcmp(str, "true") ||
+       !strcmp(str, "on") ||
+       !strcmp(str, "1")))
+    return 1;
+  return 0;
+}
+
+int
 htsmsg_field_get_bool
   ( htsmsg_field_t *f, int *boolp )
 {
@@ -410,13 +422,7 @@ htsmsg_field_get_bool
   default:
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
   case HMF_STR:
-    if (!strcmp(f->hmf_str, "yes")  ||
-        !strcmp(f->hmf_str, "true") ||
-        !strcmp(f->hmf_str, "on") ||
-        !strcmp(f->hmf_str, "1"))
-      *boolp = 1;
-    else
-      *boolp = 0;
+    *boolp = bool_check(f->hmf_str);
     break;
   case HMF_S64:
     *boolp = f->hmf_s64 ? 1 : 0;

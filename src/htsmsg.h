@@ -231,6 +231,8 @@ int htsmsg_field_get_s64(htsmsg_field_t *f, int64_t *s64p);
  */
 int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
 
+int bool_check(const char *str);
+
 int htsmsg_field_get_bool(htsmsg_field_t *f, int *boolp);
 
 int htsmsg_get_bool(htsmsg_t *msg, const char *name, int *boolp);
