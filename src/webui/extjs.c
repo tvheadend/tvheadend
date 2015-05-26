@@ -518,9 +518,9 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     /* Time */
     str = http_arg_get(&hc->hc_req_args, "tvhtime_update_enabled");
-    tvhtime_set_update_enabled(!!str);
+    tvhtime_set_update_enabled(bool_check(str));
     str = http_arg_get(&hc->hc_req_args, "tvhtime_ntp_enabled");
-    tvhtime_set_ntp_enabled(!!str);
+    tvhtime_set_ntp_enabled(bool_check(str));
     if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_tolerance")))
       tvhtime_set_tolerance(atoi(str));
 
