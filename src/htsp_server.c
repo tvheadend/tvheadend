@@ -1746,7 +1746,7 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access");
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, dae->dae_channel))
+  if (dae->dae_channel && !htsp_user_access_channel(htsp, dae->dae_channel))
     return htsp_error("User does not have access");
 
   autorec_destroy_by_id(daeId, 1);
@@ -1842,7 +1842,7 @@ htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access");
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, dte->dte_channel))
+  if (dte->dte_channel && !htsp_user_access_channel(htsp, dte->dte_channel))
     return htsp_error("User does not have access");
 
   timerec_destroy_by_id(dteId, 1);
