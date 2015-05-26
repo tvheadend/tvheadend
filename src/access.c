@@ -617,8 +617,6 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   return a;
 }
 
-
-
 /**
  *
  */
@@ -627,6 +625,9 @@ access_get_by_addr(struct sockaddr *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
+
+  a->aa_representative = malloc(50);
+  tcp_get_ip_str(src, a->aa_representative, 50);
 
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
