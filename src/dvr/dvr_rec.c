@@ -298,7 +298,7 @@ static const char *dvr_sub_stop(const char *id, const void *aux)
   return dvr_do_prefix(id, buf);
 }
 
-static str_substitute_t dvr_subs_entry[] = {
+static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = "t",  .getval = dvr_sub_title },
   { .id = " t", .getval = dvr_sub_title },
   { .id = "-t", .getval = dvr_sub_title },
@@ -339,7 +339,7 @@ static const char *dvr_sub_strftime(const char *id, const void *aux)
   return buf;
 }
 
-static str_substitute_t dvr_subs_time[] = {
+static htsstr_substitute_t dvr_subs_time[] = {
   { .id = "a", .getval = dvr_sub_strftime }, /* The abbreviated name of the day of the week */
   { .id = "A", .getval = dvr_sub_strftime }, /* The full name of the day of the week */
   { .id = "b", .getval = dvr_sub_strftime }, /* The abbreviated month name */
@@ -409,17 +409,17 @@ static const char *dvr_sub_str(const char *id, const void *aux)
   return (const char *)aux;
 }
 
-static str_substitute_t dvr_subs_extension[] = {
+static htsstr_substitute_t dvr_subs_extension[] = {
   { .id = "x", .getval = dvr_sub_str },
   { .id = NULL, .getval = NULL }
 };
 
-static str_substitute_t dvr_subs_tally[] = {
+static htsstr_substitute_t dvr_subs_tally[] = {
   { .id = "n", .getval = dvr_sub_str },
   { .id = NULL, .getval = NULL }
 };
 
-static str_substitute_t dvr_subs_postproc_entry[] = {
+static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "t",  .getval = dvr_sub_title },
   { .id = "s",  .getval = dvr_sub_subtitle },
   { .id = "p",  .getval = dvr_sub_episode },
@@ -441,7 +441,7 @@ static const char *dvr_sub_basename(const char *id, const void *aux)
   return basename(buf);
 }
 
-static str_substitute_t dvr_subs_postproc_filename[] = {
+static htsstr_substitute_t dvr_subs_postproc_filename[] = {
   { .id = "f",  .getval = dvr_sub_str },
   { .id = "b",  .getval = dvr_sub_basename },
   { .id = NULL, .getval = NULL }
@@ -527,7 +527,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     fmtstr++;
 
   /* Substitute DVR entry formatters */
-  str_substitute(fmtstr, path + l, sizeof(path) - l, '$', dvr_subs_entry, de);
+  htsstr_substitute(fmtstr, path + l, sizeof(path) - l, '$', dvr_subs_entry, de);
 
   /* Own directory? */
   if (de->de_directory) {
@@ -536,7 +536,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       strcpy(filename, dirsep + 1);
     else
       strcpy(filename, path + l);
-    str_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    htsstr_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
     s = ptmp;
     while (*s == '/')
       s++;
@@ -549,11 +549,11 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   }
 
   /* Substitute time formatters */
-  str_substitute(path + l, filename, sizeof(filename), '%', dvr_subs_time, &tm);
+  htsstr_substitute(path + l, filename, sizeof(filename), '%', dvr_subs_time, &tm);
 
   /* Substitute extension */
-  str_substitute(filename, path + l, sizeof(path) - l, '$', dvr_subs_extension,
-                 muxer_suffix(de->de_chain->prch_muxer, ss) ?: "");
+  htsstr_substitute(filename, path + l, sizeof(path) - l, '$', dvr_subs_extension,
+                    muxer_suffix(de->de_chain->prch_muxer, ss) ?: "");
 
   /* Cleanup all directory names */
   x = path + l;
@@ -585,7 +585,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     }
     dirsep = path + l;
   }
-  str_unescape(path, filename, sizeof(filename));
+  htsstr_unescape_to(path, filename, sizeof(filename));
   if (makedirs(filename, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
     return -1;
   j = strlen(filename);
@@ -602,7 +602,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     } else {
       number[0] = '\0';
     }
-    str_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
+    htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
     s = cleanup_filename(cfg, ptmp);
     if (s == NULL)
       return -1;
@@ -610,7 +610,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     /* Construct the final filename */
     memcpy(path, filename, j);
     path[j] = '\0';
-    str_unescape(s, path + j, sizeof(path) - j);
+    htsstr_unescape_to(s, path + j, sizeof(path) - j);
     free(s);
 
     if(stat(path, &st) == -1) {
@@ -1026,10 +1026,10 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     return;
 
   /* Substitute DVR entry formatters */
-  str_substitute(dvr_postproc, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de);
+  htsstr_substitute(dvr_postproc, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de);
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
-  str_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename);
+  htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename);
 
   args = htsstr_argsplit(buf1);
   /* no arguments at all */

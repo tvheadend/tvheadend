@@ -22,6 +22,7 @@
 #include <string.h>
 #include "htsstr.h"
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 static void htsstr_argsplit_add(char ***argv, int *argc, char *s);
 
@@ -61,6 +62,43 @@ htsstr_unescape(char *str) {
   } 
 
   return str;
+}
+
+char *
+htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
+{
+  char *res = dst;
+
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
+        break;
+      src++;
+      if (*src) {
+        if (*src == 'b')
+          *dst = '\b';
+        else if (*src == 'f')
+          *dst = '\f';
+        else if (*src == 'n')
+          *dst = '\n';
+        else if (*src == 'r')
+          *dst = '\r';
+        else if (*src == 't')
+          *dst = '\t';
+        else
+          *dst = *src;
+        src++; dst++; dstlen--;
+      }
+      continue;
+    } else {
+      *dst = *src; src++; dst++; dstlen--;
+    }
+  }
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
 }
 
 static void
@@ -145,4 +183,64 @@ htsstr_argsplit_free(char **argv) {
     free(argv[i]);
   
   free(argv);
+}
+
+char *
+htsstr_substitute(const char *src, char *dst, size_t dstlen,
+                  int first, htsstr_substitute_t *sub, const void *aux)
+{
+  htsstr_substitute_t *s;
+  const char *p, *x, *v;
+  char *res = dst;
+  size_t l;
+
+  if (!dstlen)
+    return NULL;
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
+        break;
+      *dst = '\\'; src++; dst++; dstlen--;
+      if (*src)
+        *dst = *src; src++; dst++; dstlen--;
+      continue;
+    }
+    if (first >= 0) {
+      if (*src != first) {
+        *dst = *src; src++; dst++; dstlen--;
+        continue;
+      }
+      src++;
+    }
+    for (s = sub; s->id; s++) {
+      for (p = s->id, x = src; *p; p++, x++)
+        if (*p != *x)
+          break;
+      if (*p == '\0') {
+        src = x;
+        if ((l = dstlen) > 0) {
+          v = s->getval(s->id, aux);
+          strncpy(dst, v, l);
+          l = MIN(strlen(v), l);
+          dst += l;
+          dstlen -= l;
+        }
+        break;
+      }
+    }
+    if (!s->id) {
+      if (first >= 0) {
+        *dst = first;
+      } else {
+        *dst = *src;
+        src++;
+      }
+      dst++; dstlen--;
+    }
+  }
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
 }
