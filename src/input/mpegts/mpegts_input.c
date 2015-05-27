@@ -1329,13 +1329,15 @@ mpegts_input_table_thread ( void *aux )
     
     /* Process */
     pthread_mutex_lock(&global_lock);
-    if (mm != mtf->mtf_mux) {
-      mm = mtf->mtf_mux;
-      if (mm)
-        mpegts_mux_nice_name(mm, muxname, sizeof(muxname));
+    if (mi->mi_running) {
+      if (mm != mtf->mtf_mux) {
+        mm = mtf->mtf_mux;
+        if (mm)
+          mpegts_mux_nice_name(mm, muxname, sizeof(muxname));
+      }
+      if (mm && mm->mm_active)
+        mpegts_input_table_dispatch(mm, muxname, mtf->mtf_tsb, mtf->mtf_len);
     }
-    if (mm && mm->mm_active)
-      mpegts_input_table_dispatch(mm, muxname, mtf->mtf_tsb, mtf->mtf_len);
     pthread_mutex_unlock(&global_lock);
 
     /* Cleanup */
