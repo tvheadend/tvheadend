@@ -1274,6 +1274,7 @@ linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
   if (ls->lse_switch)  linuxdvb_switch_destroy(ls->lse_switch);
   if (ls->lse_rotor)   linuxdvb_rotor_destroy(ls->lse_rotor);
   if (ls->lse_en50494) linuxdvb_en50494_destroy(ls->lse_en50494);
+  idnode_set_free(ls->lse_networks);
   free(ls->lse_name);
   free(ls);
 }
@@ -1331,18 +1332,7 @@ linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
   gtimer_disarm(&ls->ls_diseqc_timer);
   for (lse = TAILQ_FIRST(&ls->ls_elements); lse != NULL; lse = nxt) {
     nxt = TAILQ_NEXT(lse, lse_link);
-    TAILQ_REMOVE(&ls->ls_elements, lse, lse_link);
-    if (lse->lse_lnb)
-      linuxdvb_lnb_destroy(lse->lse_lnb);
-    if (lse->lse_switch)
-      linuxdvb_switch_destroy(lse->lse_switch);
-    if (lse->lse_rotor)
-      linuxdvb_rotor_destroy(lse->lse_rotor);
-    if (lse->lse_en50494)
-      linuxdvb_en50494_destroy(lse->lse_en50494);
-    idnode_unlink(&lse->lse_id);
-    idnode_set_free(lse->lse_networks);
-    free(lse);
+    linuxdvb_satconf_ele_destroy(lse);
   }
   idnode_unlink(&ls->ls_id);
   free(ls);
