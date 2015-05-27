@@ -103,6 +103,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
       return -1;
     }
   }
+  access_destroy(aa);
 
   pro = de->de_config->dvr_profile;
   prch = malloc(sizeof(*prch));
