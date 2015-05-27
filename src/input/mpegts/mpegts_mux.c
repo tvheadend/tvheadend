@@ -136,7 +136,7 @@ mpegts_mux_subscribe_keep
   mi->mi_linked = NULL;
   tvhtrace("mpegts", "subscribe keep for '%s' (%p)", mi->mi_name, mm);
   r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP,
-                           SUBSCRIPTION_RESTART | SUBSCRIPTION_MINIMAL);
+                           SUBSCRIPTION_ONESHOT | SUBSCRIPTION_MINIMAL);
   mi->mi_linked = s;
   return r;
 }
