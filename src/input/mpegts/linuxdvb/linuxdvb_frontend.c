@@ -382,7 +382,8 @@ linuxdvb_frontend_update_pids
   }
   pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
-  tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
+  if (lfe->lfe_dvr_pipe.wr > 0)
+    tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
 }
 
 static idnode_set_t *
