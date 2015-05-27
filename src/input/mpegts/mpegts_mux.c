@@ -134,6 +134,7 @@ mpegts_mux_subscribe_keep
 
   s = mi->mi_linked;
   mi->mi_linked = NULL;
+  tvhtrace("mpegts", "subscribe keep for '%s' (%p)", mi->mi_name, mm);
   r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP,
                            SUBSCRIPTION_RESTART | SUBSCRIPTION_MINIMAL);
   mi->mi_linked = s;
@@ -201,12 +202,16 @@ void
 mpegts_mux_unsubscribe_linked
   ( mpegts_input_t *mi )
 {
-  mpegts_mux_instance_t *mmi;
+  th_subscription_t *ths, *ths_next;
 
   if (mi) {
-    tvhtrace("mpegts", "unsubscribing linked from '%s'", mi->mi_name);
-    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-      mpegts_mux_unsubscribe_by_name(mmi->mmi_mux, "keep");
+    tvhtrace("mpegts", "unsubscribing linked");
+
+    for (ths = LIST_FIRST(&subscriptions); ths; ths = ths_next) {
+      ths_next = LIST_NEXT(ths, ths_global_link);
+      if (ths->ths_source == (tvh_input_t *)mi && !strcmp(ths->ths_title, "keep"))
+        subscription_unsubscribe(ths, 0);
+    }
   }
 }
 
@@ -237,6 +242,10 @@ mpegts_mux_instance_start
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+
+  if (mi->mi_linked)
+    mpegts_mux_unsubscribe_linked(mi);
+
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
   r = mi->mi_start_mux(mi, mmi);
