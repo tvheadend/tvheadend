@@ -200,7 +200,7 @@ fatal:
 
 void
 mpegts_mux_unsubscribe_linked
-  ( mpegts_input_t *mi )
+  ( mpegts_input_t *mi, service_t *t )
 {
   th_subscription_t *ths, *ths_next;
 
@@ -209,7 +209,8 @@ mpegts_mux_unsubscribe_linked
 
     for (ths = LIST_FIRST(&subscriptions); ths; ths = ths_next) {
       ths_next = LIST_NEXT(ths, ths_global_link);
-      if (ths->ths_source == (tvh_input_t *)mi && !strcmp(ths->ths_title, "keep"))
+      if (ths->ths_source == (tvh_input_t *)mi && !strcmp(ths->ths_title, "keep") &&
+          ths->ths_service != t)
         subscription_unsubscribe(ths, 0);
     }
   }
@@ -217,7 +218,7 @@ mpegts_mux_unsubscribe_linked
 
 int
 mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr )
+  ( mpegts_mux_instance_t **mmiptr, service_t *t )
 {
   int r;
   char buf[256], buf2[256];
@@ -244,7 +245,7 @@ mpegts_mux_instance_start
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
 
   if (mi->mi_linked)
-    mpegts_mux_unsubscribe_linked(mi);
+    mpegts_mux_unsubscribe_linked(mi, t);
 
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
@@ -719,7 +720,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       if (mmi2 && !mpegts_mux_has_subscribers(mmi2->mmi_mux, buf2)) {
         s = mi2->mi_linked;
         mi2->mi_linked = NULL;
-        mpegts_mux_unsubscribe_linked(mi2);
+        mpegts_mux_unsubscribe_linked(mi2, NULL);
         mi2->mi_linked = s;
       } else {
         if (!force) {

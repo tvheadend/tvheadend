@@ -152,9 +152,9 @@ mpegts_input_class_linked_set ( void *self, const void *val )
     if (mi2) {
       free(mi2->mi_linked);
       mi2->mi_linked = NULL;
-      mpegts_mux_unsubscribe_linked(mi2);
+      mpegts_mux_unsubscribe_linked(mi2, NULL);
     }
-    mpegts_mux_unsubscribe_linked(mi);
+    mpegts_mux_unsubscribe_linked(mi, NULL);
     if (val && ((char *)val)[0]) {
       mi->mi_linked = strdup((char *)val);
       mi2 = mpegts_input_find((char *)val);

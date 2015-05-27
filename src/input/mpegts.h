@@ -830,7 +830,7 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
 void mpegts_mux_instance_delete ( tvh_input_instance_t *tii );
 
 int mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr );
+  ( mpegts_mux_instance_t **mmiptr, service_t *t );
 
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 
@@ -847,7 +847,7 @@ int  mpegts_mux_subscribe(mpegts_mux_t *mm, mpegts_input_t *mi,
                           const char *name, int weight, int flags);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
 
-void mpegts_mux_unsubscribe_linked(mpegts_input_t *mi);
+void mpegts_mux_unsubscribe_linked(mpegts_input_t *mi, service_t *t);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
 

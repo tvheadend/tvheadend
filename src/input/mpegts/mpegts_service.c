@@ -319,7 +319,7 @@ mpegts_service_start(service_t *t, int instance, int flags)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
-  r = mpegts_mux_instance_start(&mmi);
+  r = mpegts_mux_instance_start(&mmi, t);
 
   /* Start */
   if (!r) {
