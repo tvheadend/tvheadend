@@ -2528,14 +2528,6 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return 0;
 
-  if(strcmp(htsp->htsp_username ?: "", username)) {
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
-	   htsp->htsp_logname, username);
-    tvh_str_update(&htsp->htsp_username, username);
-    htsp_update_logname(htsp);
-    notify_reload("connections");
-  }
-
   if(!htsmsg_get_bin(m, "digest", &digest, &digestlen)) {
 
     rights = access_get_hashed(username, digest, htsp->htsp_challenge,
@@ -2551,7 +2543,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
                 htsp->htsp_granted_access->aa_rights) !=
                   htsp->htsp_granted_access->aa_rights;
       
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s",
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s'",
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
@@ -2563,7 +2555,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   } else {
 
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s (unverified)",
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s' (unverified)",
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);

@@ -475,7 +475,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
 
-  if (username) {
+  if (username && username[0]) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
   } else {
@@ -545,7 +545,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   SHA_CTX shactx;
   uint8_t d[20];
 
-  if (username) {
+  if (username && username[0]) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
   } else {
@@ -629,6 +629,9 @@ access_get_by_username(const char *username)
     a->aa_rights = ACCESS_FULL;
     return a;
   }
+
+  if (username[0] == '\0')
+    return a;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
