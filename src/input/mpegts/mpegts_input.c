@@ -1578,6 +1578,9 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   mpegts_network_link_t *mnl;
   tvh_input_instance_t *tii, *tii_next;
 
+  /* Early shutdown flag */
+  mi->mi_running = 0;
+
   /* Remove networks */
   while ((mnl = LIST_FIRST(&mi->mi_networks)))
     mpegts_input_del_network(mnl);
