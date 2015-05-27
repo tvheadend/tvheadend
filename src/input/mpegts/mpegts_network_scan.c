@@ -47,7 +47,7 @@ mpegts_network_scan_timer_cb ( void *p )
   /* Process Q */
   for (mm = TAILQ_FIRST(&mn->mn_scan_pend); mm != NULL; mm = nxt) {
     nxt = TAILQ_NEXT(mm, mm_scan_link);
-    assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
+    assert(mm->mm_scan_state == MM_SCAN_STATE_PEND || mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
 
     /* Don't try to subscribe already tuned muxes */
     if (mm->mm_active) continue;
