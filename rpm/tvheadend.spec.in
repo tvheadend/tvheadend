@@ -3,7 +3,7 @@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Name:           tvheadend
-Summary:        a TV streaming server and Digital Video Recorder
+Summary:        TV streaming server and Digital Video Recorder
 Version:        @VERSION@
 Release:        @RELEASE@%{?dist}
 
@@ -79,14 +79,14 @@ exit 0
 %{_unitdir}/*
 
 %changelog
-* Wed May 27 2015 Jaroslav Kysela <perex@perex.cz> 4.0.3
+* Wed May 27 2015 Jaroslav Kysela <perex@perex.cz> 4.0.3-1
 - rpmlint fixes
 
-* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> 4.0.2
+* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> 4.0.2-1
 - fix requires (libs) and improve description
 - add support for final version to Source
 
-* Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> 4.0.1
+* Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> 4.0.1-1
 - changed versioning system (put changes and git hash to revision)
 
 * Thu May 14 2015 Jaroslav Kysela <perex@perex.cz> 3.9-2842
