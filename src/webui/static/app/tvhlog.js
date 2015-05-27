@@ -61,14 +61,22 @@ tvheadend.tvhlog = function(panel, index) {
         }
     });
 
+    items = new Array();
+    items.push(tvhlogLogPath);
+    items.push(tvhlogToSyslog);
+    if (tvheadend.accessUpdate.trace)
+      items.push(tvhlogTraceOn);
+    items.push(tvhlogDebugSubsys);
+    if (tvheadend.accessUpdate.trace)
+      items.push(tvhlogTraceSubsys);
+
     var DebuggingPanel = new Ext.form.FieldSet({
         title: 'Debugging Options',
         width: 700,
         autoHeight: true,
         collapsible: true,
         animCollapse : true,
-        items: [tvhlogLogPath, tvhlogToSyslog,
-            tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys]
+        items: items
     });
 
     var confpanel = new Ext.form.FormPanel({
