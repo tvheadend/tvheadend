@@ -1323,8 +1323,10 @@ mpegts_input_table_thread ( void *aux )
     
     /* Process */
     pthread_mutex_lock(&global_lock);
-    if (mtf->mtf_mux && mtf->mtf_mux->mm_active)
-      mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb, mtf->mtf_len);
+    if (mi->mi_running) {
+      if (mtf->mtf_mux && mtf->mtf_mux->mm_active)
+        mpegts_input_table_dispatch(mtf->mtf_mux, mtf->mtf_tsb, mtf->mtf_len);
+    }
     pthread_mutex_unlock(&global_lock);
 
     /* Cleanup */
