@@ -3,7 +3,7 @@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Name:           tvheadend
-Summary:        a TV streaming server and Digital Video Recorder
+Summary:        TV streaming server and Digital Video Recorder
 Version:        @VERSION@
 Release:        @RELEASE@%{?dist}
 
