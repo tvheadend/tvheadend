@@ -82,26 +82,28 @@ void
 mpegts_table_dispatch
   ( const uint8_t *sec, size_t r, void *aux )
 {
-  int tid, len, ret;
+  int tid, len, crc_len, ret;
   mpegts_table_t *mt = aux;
 
   if(mt->mt_destroyed)
     return;
 
   tid = sec[0];
-  len = ((sec[1] & 0x0f) << 8) | sec[2];
 
   /* Check table mask */
   if((tid & mt->mt_mask) != mt->mt_table)
     return;
 
+  len = ((sec[1] & 0x0f) << 8) | sec[2];
+  crc_len = (mt->mt_flags & MT_CRC) ? 4 : 0;
+
   /* Pass with tableid / len in data */
   if (mt->mt_flags & MT_FULL)
-    ret = mt->mt_callback(mt, sec, len+3, tid);
+    ret = mt->mt_callback(mt, sec, len+3-crc_len, tid);
 
   /* Pass w/out tableid/len in data */
   else
-    ret = mt->mt_callback(mt, sec+3, len, tid);
+    ret = mt->mt_callback(mt, sec+3, len-crc_len, tid);
   
   /* Good */
   if(ret >= 0)
