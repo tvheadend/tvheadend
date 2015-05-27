@@ -2,10 +2,10 @@
 %global commit @COMMIT@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-Summary:        Tvheadend - a TV streaming server and DVR
 Name:           tvheadend
+Summary:        a TV streaming server and Digital Video Recorder
 Version:        @VERSION@
-Release:        @RELEASE@
+Release:        @RELEASE@%{?dist}
 
 License:        GPLv3
 Group:          Applications/Multimedia
@@ -21,15 +21,12 @@ BuildRequires:  openssl-devel
 BuildRequires:  git wget python
 
 Requires:       systemd-units >= 1
-Requires:       dbus-libs
-Requires:       avahi-libs
-Requires:       openssl-libs
 
 %description
 Tvheadend is a TV streaming server with Digital Video Recorder functionality
 for Linux supporting DVB, ATSC, IPTV, SAT>IP, HDHomeRun as input sources.
 
-It can be used as a backend to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
+It can be used as a back-end to HTTP (VLC, MPlayer), HTSP (Movian, Kodi),
 SAT>IP and various other clients using these protocols.
 
 %prep
@@ -82,14 +79,17 @@ exit 0
 %{_unitdir}/*
 
 %changelog
-* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> v4.0.2
+* Wed May 27 2015 Jaroslav Kysela <perex@perex.cz> 4.0.3-1
+- rpmlint fixes
+
+* Mon May 25 2015 Jaroslav Kysela <perex@perex.cz> 4.0.2-1
 - fix requires (libs) and improve description
 - add support for final version to Source
 
-* Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> v4.0.1
+* Thu May 21 2015 Jaroslav Kysela <perex@perex.cz> 4.0.1-1
 - changed versioning system (put changes and git hash to revision)
 
-* Thu May 14 2015 Jaroslav Kysela <perex@perex.cz> v3.9-2842
+* Thu May 14 2015 Jaroslav Kysela <perex@perex.cz> 3.9-2842
 - add python to BuildRequires
 
 * Wed Mar 25 2015 Bob Lightfoot <boblfoot@gmail.com> 3.9-2658-gb427d7e
