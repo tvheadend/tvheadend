@@ -931,6 +931,8 @@ dvr_thread(void *aux)
         dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
         if(dvr_rec_start(de, sm->sm_data) == 0)
           started = 1;
+        else
+          dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1);
         pthread_mutex_unlock(&global_lock);
       } 
       break;

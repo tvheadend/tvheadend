@@ -3584,6 +3584,8 @@ _htsp_get_subscription_status(int smcode)
     return "subscriptionOverridden";
   case SM_CODE_MUX_NOT_ENABLED:
     return "muxNotEnabled";
+  case SM_CODE_INVALID_TARGET:
+    return "invalidTarget";
   default:
     return streaming_code2txt(smcode);
   }

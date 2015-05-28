@@ -448,6 +448,7 @@ typedef enum {
 #define SM_CODE_BAD_SOURCE                101
 #define SM_CODE_SOURCE_DELETED            102
 #define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
+#define SM_CODE_INVALID_TARGET            104
 
 #define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201

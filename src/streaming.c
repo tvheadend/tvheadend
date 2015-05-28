@@ -412,6 +412,8 @@ streaming_code2txt(int code)
     return "Source deleted";
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
     return "Subscription overridden";
+  case SM_CODE_INVALID_TARGET:
+    return "Invalid target";
 
   case SM_CODE_NO_FREE_ADAPTER:
     return "No free adapter";

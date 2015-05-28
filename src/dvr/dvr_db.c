@@ -297,6 +297,8 @@ dvr_entry_status(dvr_entry_t *de)
     }
 
   case DVR_COMPLETED:
+    if(de->de_last_error == SM_CODE_INVALID_TARGET)
+      return "File Not Created";
     if(dvr_get_filesize(de) == -1)
       return "File Missing";
     if(de->de_last_error)
@@ -1149,16 +1151,17 @@ void dvr_event_updated ( epg_broadcast_t *e )
 /**
  *
  */
-static void
+void
 dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf)
 {
   dvr_rs_state_t rec_state = de->de_rec_state;
 
   dvr_rec_unsubscribe(de);
 
-  if (rec_state == DVR_RS_PENDING ||
-      rec_state == DVR_RS_WAIT_PROGRAM_START ||
-      htsmsg_is_empty(de->de_files))
+  if (stopcode != SM_CODE_INVALID_TARGET &&
+      (rec_state == DVR_RS_PENDING ||
+       rec_state == DVR_RS_WAIT_PROGRAM_START ||
+       htsmsg_is_empty(de->de_files)))
     dvr_entry_missed_time(de, stopcode);
   else
     dvr_entry_completed(de, stopcode);
