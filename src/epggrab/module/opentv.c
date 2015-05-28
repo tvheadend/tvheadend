@@ -541,9 +541,15 @@ opentv_table_callback
   int r = 1, cid, mjd;
   int sect, last, ver;
   mpegts_psi_table_state_t *st;
-  opentv_status_t *sta = mt->mt_opaque;
-  opentv_module_t *mod = sta->os_mod;
-  epggrab_ota_mux_t *ota = sta->os_ota;
+  opentv_status_t *sta;
+  opentv_module_t *mod;
+  epggrab_ota_mux_t *ota;
+
+  if (!epggrab_ota_running) return -1;
+
+  sta = mt->mt_opaque;
+  mod = sta->os_mod;
+  ota = sta->os_ota;
 
   /* Validate */
   if (len < 7) return -1;
@@ -612,11 +618,18 @@ static int
 opentv_bat_callback
   ( mpegts_table_t *mt, const uint8_t *buf, int len, int tableid )
 {
-  int *t;
-  opentv_status_t *sta = mt->mt_opaque;
-  opentv_module_t *mod = sta->os_mod;
-  int r = dvb_bat_callback(mt, buf, len, tableid);
-  epggrab_ota_mux_t *ota = sta->os_ota;
+  int *t, r;
+  opentv_status_t *sta;
+  opentv_module_t *mod;
+  epggrab_ota_mux_t *ota;
+
+  if (!epggrab_ota_running) return -1;
+
+  sta = mt->mt_opaque;
+  mod = sta->os_mod;
+  ota = sta->os_ota;
+
+  r = dvb_bat_callback(mt, buf, len, tableid);
 
   /* Register */
   if (!ota) {

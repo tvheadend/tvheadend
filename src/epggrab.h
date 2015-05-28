@@ -274,6 +274,7 @@ extern uint32_t              epggrab_channel_rename;
 extern uint32_t              epggrab_channel_renumber;
 extern uint32_t              epggrab_channel_reicon;
 extern uint32_t              epggrab_epgdb_periodicsave;
+extern int                   epggrab_ota_running;
 extern char                 *epggrab_ota_cron;
 extern uint32_t              epggrab_ota_timeout;
 extern uint32_t              epggrab_ota_initial;

@@ -579,11 +579,18 @@ _eit_callback
   uint16_t onid, tsid, sid;
   uint32_t extraid;
   mpegts_service_t     *svc;
-  mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
-  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
+  mpegts_mux_t         *mm;
+  epggrab_ota_map_t    *map;
+  epggrab_module_t     *mod;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
+
+  if (!epggrab_ota_running)
+    return -1;
+
+  mm  = mt->mt_mux;
+  map = mt->mt_opaque;
+  mod = (epggrab_module_t *)map->om_module;
 
   /* Validate */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
