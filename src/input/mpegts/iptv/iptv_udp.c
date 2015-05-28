@@ -93,7 +93,8 @@ iptv_udp_read ( iptv_mux_t *im )
 }
 
 ssize_t
-iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um )
+iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
+                void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int len) )
 {
   ssize_t len, hlen;
   uint8_t *rtp;
@@ -114,6 +115,9 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um )
     /* Strip RTP header */
     if (len < 12)
       continue;
+
+    if (pkt_cb)
+      pkt_cb(im, rtp, len);
 
     /* Version 2 */
     if ((rtp[0] & 0xC0) != 0x80)
@@ -149,7 +153,7 @@ iptv_udp_rtp_read ( iptv_mux_t *im )
 {
   udp_multirecv_t *um = im->im_data;
 
-  return iptv_rtp_read(im, um);
+  return iptv_rtp_read(im, um, NULL);
 }
 
 /*
