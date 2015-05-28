@@ -166,7 +166,7 @@ cleanup_filename(dvr_config_t *cfg, char *s)
   int len = strlen(s);
   char *s1, *p;
 
-  s1 = intlconv_utf8safestr(cfg->dvr_charset_id, s, len * 2);
+  s1 = intlconv_utf8safestr(cfg->dvr_charset_id, s, (len * 2) + 1);
   if (s1 == NULL) {
     tvherror("dvr", "Unsupported charset %s using ASCII", cfg->dvr_charset);
     s1 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
@@ -612,6 +612,16 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     memcpy(path, filename, j);
     path[j] = '\0';
     htsstr_unescape_to(s, path + j, sizeof(path) - j);
+
+    if (tally > 0) {
+      htsstr_unescape_to(filename + j, ptmp, sizeof(ptmp));
+      if (strcmp(ptmp, s) == 0) {
+        free(s);
+        tvherror("dvr", "unable to create unique name (missing $n in format string?)");
+        return -1;
+      }
+    }
+
     free(s);
 
     if(stat(path, &st) == -1) {
@@ -715,7 +725,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   }
 
   if(pvr_generate_filename(de, ss) != 0) {
-    dvr_rec_fatal_error(de, "Unable to create directories");
+    dvr_rec_fatal_error(de, "Unable to create file");
     return -1;
   }
 
