@@ -19,7 +19,9 @@ BuildRequires:  dbus-devel
 BuildRequires:  avahi-devel
 BuildRequires:  avahi-libs
 BuildRequires:  openssl-devel
-BuildRequires:  wget python
+BuildRequires:  uriparser-devel
+BuildRequires:  ffmpeg-devel
+BuildRequires:  python
 
 Requires:       systemd-units
 
@@ -36,11 +38,7 @@ SAT>IP and various other clients using these protocols.
 
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
-%ifarch %arm
-      %configure --disable-lockowner --enable-bundle --disable-libffmpeg_static
-%else
-      %configure --disable-lockowner --enable-bundle --enable-libffmpeg_static
-%endif
+%configure --disable-lockowner --enable-bundle --disable-libffmpeg_static
 %{__make} %{?_smp_mflags}
 
 %install
