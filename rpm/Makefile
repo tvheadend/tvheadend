@@ -18,6 +18,8 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST)))../.config.mk
 
+SPEC     ?= tvheadend.spec.in
+
 COMMIT   ?= $(shell git rev-parse HEAD)
 COMMIT1   = $(shell git rev-parse $(COMMIT))
 FVERSION  = $(shell cd .. && git describe --match "v*" $(COMMIT1) | sed "s/^v//")
@@ -34,7 +36,7 @@ REF       = $(COMMIT1)
 COMMITR   = $(COMMIT1)
 endif
 
-tvheadend.spec: tvheadend.spec.in
+tvheadend.spec: $(SPEC)
 	@sed -e 's/@VERSION@/$(VERSION)/g' \
 	     -e 's/@RELEASE@/$(RELEASE)/g' \
 	     -e 's/@REF@/$(REF)/g' \
