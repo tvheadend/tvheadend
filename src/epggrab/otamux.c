@@ -811,6 +811,8 @@ epggrab_ota_init ( void )
   if (!lstat(path, &st))
     if (!S_ISDIR(st.st_mode))
       hts_settings_remove("epggrab/otamux");
+
+  epggrab_ota_running = 1;
   
   /* Load config */
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
@@ -820,8 +822,6 @@ epggrab_ota_init ( void )
     }
     htsmsg_destroy(c);
   }
-
-  epggrab_ota_running = 1;
 }
 
 void
