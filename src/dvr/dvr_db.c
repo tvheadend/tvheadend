@@ -996,6 +996,7 @@ static dvr_entry_t *_dvr_entry_update
   if (e && e->episode && e->episode->title) {
     if (de->de_title) lang_str_destroy(de->de_title);
     de->de_title = lang_str_copy(e->episode->title);
+    save = 1;
   } else if (title) {
     if (!de->de_title) de->de_title = lang_str_create();
     save = lang_str_add(de->de_title, title, lang, 1);
@@ -1013,7 +1014,23 @@ static dvr_entry_t *_dvr_entry_update
     save = 1;
   }
 
-  // TODO: description
+  /* Description */
+  if (e && e->description) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->description);
+  } else if (e && e->episode && e->episode->description) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->episode->description);
+  } else if (e && e->summary) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->summary);
+  } else if (e && e->episode && e->episode->summary) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->episode->summary);
+  } else if (desc) {
+    if (!de->de_desc) de->de_desc = lang_str_create();
+    save = lang_str_add(de->de_desc, title, lang, 1);
+  }
 
   /* Genre */
   if (e && e->episode) {
