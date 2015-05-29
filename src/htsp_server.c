@@ -693,6 +693,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
 
   if(de->de_title && (s = lang_str_get(de->de_title, lang)))
     htsmsg_add_str(out, "title", s);
+  if(de->de_title && (s = lang_str_get(de->de_subtitle, lang)))
+    htsmsg_add_str(out, "subtitle", s);
   if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
     htsmsg_add_str(out, "description", s);
   if(de->de_owner)
@@ -1563,7 +1565,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   retention   = htsmsg_get_u32_or_default(in, "retention",  0);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
-  subtitle    = htsmsg_get_str(in, "title");
+  subtitle    = htsmsg_get_str(in, "subtitle");
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
