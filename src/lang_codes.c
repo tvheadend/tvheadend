@@ -674,6 +674,7 @@ static void lang_code_free( lang_code_lookup_t *l )
 {
   lang_code_lookup_element_t *element;
   if (l == NULL)
+    return;
   while ((element = RB_FIRST(l)) != NULL) {
     RB_REMOVE(l, element, link);
     free(element);
