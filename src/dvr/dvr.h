@@ -438,7 +438,8 @@ dvr_entry_t *
 dvr_entry_create_htsp( const char *dvr_config_uuid,
                        channel_t *ch, time_t start, time_t stop,
                        time_t start_extra, time_t stop_extra,
-                       const char *title, const char* subtitle, const char *description,
+                       const char *title, const char *subtitle,
+                       const char *description,
                        const char *lang, epg_genre_t *content_type,
                        const char *owner, const char *creator,
                        dvr_autorec_entry_t *dae,
@@ -447,9 +448,10 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
 
 dvr_entry_t *
 dvr_entry_update( dvr_entry_t *de,
-                  const char* de_title, const char* de_subtitle, const char *de_desc, const char *lang,
-                  time_t de_start, time_t de_stop,
-                  time_t de_start_extra, time_t de_stop_extra,
+                  const char *title, const char *subtitle,
+                  const char *desc, const char *lang,
+                  time_t start, time_t stop,
+                  time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention );
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);

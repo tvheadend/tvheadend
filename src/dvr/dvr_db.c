@@ -933,9 +933,9 @@ dvr_timer_expire(void *aux)
 }
 
 static dvr_entry_t *_dvr_entry_update
-  ( dvr_entry_t *de, epg_broadcast_t *e, const char *title, const char* subtitle,
+  ( dvr_entry_t *de, epg_broadcast_t *e, const char *title, const char *subtitle,
     const char *desc, const char *lang, time_t start, time_t stop,
-    time_t start_extra, time_t stop_extra,  dvr_prio_t pri, int retention )
+    time_t start_extra, time_t stop_extra, dvr_prio_t pri, int retention )
 {
   char buf[40];
   int save = 0, updated = 0;
@@ -1003,7 +1003,11 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   /* Subtitle*/
-  if (subtitle) {
+  if (e && e->episode && e->episode->subtitle) {
+    if (de->de_subtitle) lang_str_destroy(de->de_subtitle);
+    de->de_subtitle = lang_str_copy(e->episode->subtitle);
+    save = 1;
+  } else if (subtitle) {
     if (!de->de_subtitle) de->de_subtitle = lang_str_create();
     save = lang_str_add(de->de_subtitle, subtitle, lang, 1);
   }
@@ -1029,7 +1033,7 @@ static dvr_entry_t *_dvr_entry_update
     de->de_desc = lang_str_copy(e->episode->summary);
   } else if (desc) {
     if (!de->de_desc) de->de_desc = lang_str_create();
-    save = lang_str_add(de->de_desc, title, lang, 1);
+    save = lang_str_add(de->de_desc, desc, lang, 1);
   }
 
   /* Genre */
@@ -1074,14 +1078,15 @@ dosave:
  */
 dvr_entry_t * 
 dvr_entry_update
-  (dvr_entry_t *de,
-   const char* de_title, const char* de_subtitle, const char *de_desc, const char *lang,
-   time_t de_start, time_t de_stop,
-   time_t de_start_extra, time_t de_stop_extra,
-   dvr_prio_t pri, int retention)
+  ( dvr_entry_t *de,
+    const char *title, const char *subtitle,
+    const char *desc, const char *lang,
+    time_t start, time_t stop,
+    time_t start_extra, time_t stop_extra,
+    dvr_prio_t pri, int retention )
 {
-  return _dvr_entry_update(de, NULL, de_title, de_subtitle, de_desc, lang,
-                           de_start, de_stop, de_start_extra, de_stop_extra,
+  return _dvr_entry_update(de, NULL, title, subtitle, desc, lang,
+                           start, stop, start_extra, stop_extra,
                            pri, retention);
 }
 
