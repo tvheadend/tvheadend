@@ -117,6 +117,7 @@ static int _lang_str_add
   if (!str) return 0;
 
   /* Get proper code */
+  if (!lang) lang = lang_code_preferred();
   if (!(lang = lang_code_get(lang))) return 0;
 
   /* Create skel */

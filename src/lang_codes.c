@@ -674,12 +674,25 @@ static void lang_code_free( lang_code_lookup_t *l )
 {
   lang_code_lookup_element_t *element;
   if (l == NULL)
-    return;
   while ((element = RB_FIRST(l)) != NULL) {
     RB_REMOVE(l, element, link);
     free(element);
   }
   free(l);
+}
+
+const char *lang_code_preferred( void )
+{
+  const char *codes = config_get_language(), *ret = "und";
+  const lang_code_t *co;
+
+  if (codes) {
+    co = lang_code_get3(codes);
+    if (co && co->code2b)
+      ret = co->code2b;
+  }
+
+  return ret;
 }
 
 void lang_code_done( void )
