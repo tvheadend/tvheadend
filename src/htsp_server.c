@@ -18,6 +18,7 @@
 
 #include "tvheadend.h"
 #include "atomic.h"
+#include "config.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "tcp.h"
@@ -966,7 +967,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *r;
   uint32_t v;
-  const char *name;
+  const char *name, *lang;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
     return htsp_error("Missing argument 'htspversion'");
@@ -987,6 +988,9 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
   if (tvheadend_webroot)
     htsmsg_add_str(r, "webroot", tvheadend_webroot);
+  lang = config_get_language();
+  if (lang)
+    htsmsg_add_str(r, "language", lang);
 
   /* Capabilities */
   htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
