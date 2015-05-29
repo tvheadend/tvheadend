@@ -661,7 +661,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
  *
  */
 static htsmsg_t *
-htsp_build_dvrentry(dvr_entry_t *de, const char *method)
+htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
 {
   htsmsg_t *out = htsmsg_create_map(), *l, *m;
   htsmsg_field_t *f;
@@ -690,9 +690,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_u32(out, "priority",    de->de_pri);
   htsmsg_add_u32(out, "contentType", de->de_content_type);
 
-  if(de->de_title && (s = lang_str_get(de->de_title, NULL)))
+  if(de->de_title && (s = lang_str_get(de->de_title, lang)))
     htsmsg_add_str(out, "title", s);
-  if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
+  if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
     htsmsg_add_str(out, "description", s);
   if(de->de_owner)
     htsmsg_add_str(out, "owner",   de->de_owner);
@@ -1116,7 +1116,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
         htsp_user_access_channel(htsp, de->de_channel))
-      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
+      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd", htsp->htsp_language), NULL);
 
   /* Send EPG updates */
   if (epg) {
@@ -1463,8 +1463,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;
   comment = htsmsg_get_str(in, "comment");
-  if (!(lang        = htsmsg_get_str(in, "language")))
-    lang    = htsp->htsp_language;
+  if (!(lang  = htsmsg_get_str(in, "language")))
+    lang = htsp->htsp_language;
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -1561,8 +1561,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "title");
   desc        = htsmsg_get_str(in, "description");
-  lang        = htsmsg_get_str(in, "language");
-  if (!lang) lang = htsp->htsp_language;
+  lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   de = dvr_entry_update(de, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention);
@@ -3090,7 +3089,7 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
       if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
           htsp_user_access_channel(htsp, de->de_channel)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
-                        : htsp_build_dvrentry(de, method);
+                        : htsp_build_dvrentry(de, method, htsp->htsp_language);
         htsp_send_message(htsp, m, NULL);
       }
   }
