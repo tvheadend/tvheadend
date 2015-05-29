@@ -166,9 +166,15 @@ intlconv_utf8safestr( const char *dst_charset_id,
                       const char *src_utf8,
                       size_t max_size )
 {
-  char *str = alloca(max_size), *res;
-  ssize_t r = intlconv_utf8(str, max_size, dst_charset_id, src_utf8);
+  char *str, *res;
+  ssize_t r;
   size_t i;
+
+  if (max_size == 0 || *src_utf8 == '\0')
+    return strdup("");
+
+  str = alloca(max_size);
+  r = intlconv_utf8(str, max_size, dst_charset_id, src_utf8);
   if (r <= 0)
     return NULL;
   if (r >= max_size)
