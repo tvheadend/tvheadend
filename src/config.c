@@ -1564,7 +1564,10 @@ config_set_int ( const char *fld, int val )
 
 const char *config_get_language ( void )
 {
-  return htsmsg_get_str(config, "language");
+  const char *s = htsmsg_get_str(config, "language");
+  if (s == NULL || *s == '\0')
+    return "eng";
+  return s;
 }
 
 int config_set_language ( const char *lang )
