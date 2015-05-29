@@ -288,40 +288,9 @@ dvr_config_storage_check(dvr_config_t *cfg)
  *
  */
 static int
-dvr_match_fmtstr(dvr_config_t *cfg, const char *needle)
+dvr_filename_index(dvr_config_t *cfg)
 {
   char *str = cfg->dvr_pathname, *p;
-  const char *x;
-
-  if (needle == NULL)
-    return -1;
-
-  while (*str) {
-    if (*str == '\\') {
-      str++;
-      if (*str)
-        str++;
-      continue;
-    }
-    for (p = str, x = needle; *p && *x; p++, x++)
-      if (*p != *x)
-        break;
-    if (*x == '\0')
-      return str - cfg->dvr_pathname;
-    else
-      str++;
-  }
-  return -1;
-}
-
-/**
- *
- */
-static int
-dvr_match_fmtstr_nodir(dvr_config_t *cfg, const char *needle)
-{
-  char *str = cfg->dvr_pathname, *p;
-  const char *x;
 
   for (str = p = cfg->dvr_pathname; *p; p++) {
     if (*p == '\\')
@@ -330,6 +299,24 @@ dvr_match_fmtstr_nodir(dvr_config_t *cfg, const char *needle)
       str = p;
   }
 
+  return str - cfg->dvr_pathname;
+}
+
+/**
+ *
+ */
+static int
+dvr_match_fmtstr(dvr_config_t *cfg, const char *needle, int nodir)
+{
+  char *str = cfg->dvr_pathname, *p;
+  const char *x;
+
+  if (needle == NULL)
+    return -1;
+
+  if (nodir)
+    str += dvr_filename_index(cfg);
+
   while (*str) {
     if (*str == '\\') {
       str++;
@@ -345,7 +332,6 @@ dvr_match_fmtstr_nodir(dvr_config_t *cfg, const char *needle)
     else
       str++;
   }
-
   return -1;
 }
 
@@ -357,7 +343,7 @@ dvr_insert_fmtstr(dvr_config_t *cfg, int idx, const char *str)
 {
   size_t t = strlen(cfg->dvr_pathname);
   size_t l = strlen(str);
-  char *n = malloc(t + l);
+  char *n = malloc(t + l + 1);
   memcpy(n, cfg->dvr_pathname, idx);
   memcpy(n + idx, str, l);
   memcpy(n + idx + l, cfg->dvr_pathname + idx, t - idx);
@@ -372,9 +358,10 @@ dvr_insert_fmtstr(dvr_config_t *cfg, int idx, const char *str)
 static void
 dvr_insert_fmtstr_before_extension(dvr_config_t *cfg, const char *str)
 {
-  int idx = dvr_match_fmtstr_nodir(cfg, "%x");
+  int idx = dvr_match_fmtstr(cfg, "$n", 1);
+  idx = idx < 0 ? dvr_match_fmtstr(cfg, "$x", 1) : idx;
   if (idx < 0) {
-    idx = strlen(str);
+    idx = strlen(cfg->dvr_pathname);
   } else {
     while (idx > 0) {
       if (cfg->dvr_pathname[idx - 1] != '.')
@@ -403,7 +390,7 @@ dvr_remove_fmtstr(dvr_config_t *cfg, int idx, int len)
 static void
 dvr_match_and_insert_or_remove(dvr_config_t *cfg, const char *str, int val, int idx)
 {
-  int i = dvr_match_fmtstr(cfg, str);
+  int i = dvr_match_fmtstr(cfg, str, idx < 0 ? 1 : 0);
   if (val) {
     if (i < 0) {
       if (idx < 0)
@@ -412,11 +399,29 @@ dvr_match_and_insert_or_remove(dvr_config_t *cfg, const char *str, int val, int 
         dvr_insert_fmtstr(cfg, idx, str);
     }
   } else {
-    if (i >= 0)
-      dvr_remove_fmtstr(cfg, i, strlen(str));
+    if (i >= 0) {
+      if (idx < 0 && i >= dvr_filename_index(cfg))
+        dvr_remove_fmtstr(cfg, i, strlen(str));
+      else if (idx >= 0 && i < dvr_filename_index(cfg))
+        dvr_remove_fmtstr(cfg, i, strlen(str));
+    }
   }
 }
 
+/**
+ *
+ */
+static void
+dvr_update_pathname_safe(dvr_config_t *cfg)
+{
+  if (cfg->dvr_pathname[0] == '\0') {
+    free(cfg->dvr_pathname);
+    cfg->dvr_pathname = strdup("$t$n.$x");
+  }
+
+  if (strstr(cfg->dvr_pathname, "%n"))
+    dvr_insert_fmtstr_before_extension(cfg, "%n");
+}
 
 /**
  *
@@ -427,17 +432,19 @@ dvr_update_pathname_from_fmtstr(dvr_config_t *cfg)
   if (cfg->dvr_pathname == NULL)
     return;
 
-  cfg->dvr_dir_per_day = dvr_match_fmtstr(cfg, "%F/") >= 0;
-  cfg->dvr_channel_dir = dvr_match_fmtstr(cfg, "$c/") >= 0;
-  cfg->dvr_title_dir   = dvr_match_fmtstr(cfg, "$t/") >= 0;
+  dvr_update_pathname_safe(cfg);
 
-  cfg->dvr_channel_in_title  = dvr_match_fmtstr_nodir(cfg, "$-c") >= 0;
-  cfg->dvr_date_in_title     = dvr_match_fmtstr_nodir(cfg, "%F") >= 0;
-  cfg->dvr_time_in_title     = dvr_match_fmtstr_nodir(cfg, "%R") >= 0;
-  cfg->dvr_episode_in_title  = dvr_match_fmtstr_nodir(cfg, "$-e") >= 0;
-  cfg->dvr_subtitle_in_title = dvr_match_fmtstr_nodir(cfg, "$.s") >= 0;
+  cfg->dvr_dir_per_day = dvr_match_fmtstr(cfg, "%F/", 0) >= 0;
+  cfg->dvr_channel_dir = dvr_match_fmtstr(cfg, "$c/", 0) >= 0;
+  cfg->dvr_title_dir   = dvr_match_fmtstr(cfg, "$t/", 0) >= 0;
 
-  cfg->dvr_omit_title = dvr_match_fmtstr_nodir(cfg, "$t") < 0;
+  cfg->dvr_channel_in_title  = dvr_match_fmtstr(cfg, "$-c", 1) >= 0;
+  cfg->dvr_date_in_title     = dvr_match_fmtstr(cfg, "%F", 1) >= 0;
+  cfg->dvr_time_in_title     = dvr_match_fmtstr(cfg, "%R", 1) >= 0;
+  cfg->dvr_episode_in_title  = dvr_match_fmtstr(cfg, "$-e", 1) >= 0;
+  cfg->dvr_subtitle_in_title = dvr_match_fmtstr(cfg, "$.s", 1) >= 0;
+
+  cfg->dvr_omit_title = dvr_match_fmtstr(cfg, "$t", 1) < 0;
 }
 
 /**
@@ -448,17 +455,21 @@ dvr_update_pathname_from_booleans(dvr_config_t *cfg)
 {
   int i;
 
-  i = dvr_match_fmtstr_nodir(cfg, "$t");
+  i = dvr_match_fmtstr(cfg, "$t", 1);
   if (cfg->dvr_omit_title) {
     if (i >= 0)
       dvr_remove_fmtstr(cfg, i, 2);
   } else if (i < 0) {
-    i = dvr_match_fmtstr_nodir(cfg, "$n");
+    i = dvr_match_fmtstr(cfg, "$n", 1);
     if (i >= 0)
       dvr_insert_fmtstr(cfg, i, "$t");
     else
       dvr_insert_fmtstr_before_extension(cfg, "$t");
   }
+
+  dvr_match_and_insert_or_remove(cfg, "$t/", cfg->dvr_title_dir, 0);
+  dvr_match_and_insert_or_remove(cfg, "$c/", cfg->dvr_channel_dir, 0);
+  dvr_match_and_insert_or_remove(cfg, "%F/", cfg->dvr_dir_per_day, 0);
 
   dvr_match_and_insert_or_remove(cfg, "$-c", cfg->dvr_channel_in_title, -1);
   dvr_match_and_insert_or_remove(cfg, "$.s", cfg->dvr_subtitle_in_title, -1);
@@ -466,9 +477,7 @@ dvr_update_pathname_from_booleans(dvr_config_t *cfg)
   dvr_match_and_insert_or_remove(cfg, "%R",  cfg->dvr_time_in_title, -1);
   dvr_match_and_insert_or_remove(cfg, "$-e",  cfg->dvr_episode_in_title, -1);
 
-  dvr_match_and_insert_or_remove(cfg, "$t/", cfg->dvr_title_dir, 0);
-  dvr_match_and_insert_or_remove(cfg, "$c/", cfg->dvr_channel_dir, 0);
-  dvr_match_and_insert_or_remove(cfg, "%F/", cfg->dvr_dir_per_day, 0);
+  dvr_update_pathname_safe(cfg);
 }
 
 /**
