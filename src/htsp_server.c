@@ -664,7 +664,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 static htsmsg_t *
 htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
 {
-  htsmsg_t *out = htsmsg_create_map(), *l, *m;
+  htsmsg_t *out = htsmsg_create_map(), *l, *m, *e;
   htsmsg_field_t *f;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p, *last;
@@ -710,8 +710,11 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
       m = htsmsg_field_get_list(f);
       if (m == NULL) continue;
       s = last = htsmsg_get_str(m, "filename");
-      if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL)
-        htsmsg_add_msg(l, NULL, htsmsg_copy(m));
+      if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL) {
+        e = htsmsg_copy(m);
+        htsmsg_set_str(e, "filename", p);
+        htsmsg_add_msg(l, NULL, e);
+      }
     }
   }
 
