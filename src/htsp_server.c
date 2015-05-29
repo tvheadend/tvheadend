@@ -1080,8 +1080,14 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_get_u32(in, "epg", &epg);
   htsmsg_get_s64(in, "lastUpdate", &lastUpdate);
   htsmsg_get_s64(in, "epgMaxTime", &epgMaxTime);
-  if ((lang = htsmsg_get_str(in, "language")))
-    htsp->htsp_language = strdup(lang);
+  if ((lang = htsmsg_get_str(in, "language")) != NULL) {
+    if (lang[0]) {
+      htsp->htsp_language = strdup(lang);
+    } else {
+      free(htsp->htsp_language);
+      htsp->htsp_language = NULL;
+    }
+  }
 
   /* First, just OK the async request */
   htsp_reply(htsp, in, htsmsg_create_map()); 
