@@ -453,11 +453,22 @@ linuxdvb_adapter_add ( const char *path )
   memset(fetypes, 0, sizeof(fetypes));
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
     fetypes[lfe->lfe_type]++;
-  for (i = 0; i < ARRAY_SIZE(fetypes); i++)
+  for (i = j = r = 0; i < ARRAY_SIZE(fetypes); i++) {
     if (fetypes[i] > 1)
-      tvhwarn("linuxdvb", "adapter %d has multiple tuners %d for type %s, "
-                          "only one can be used at a time",
-                          a, fetypes[i], dvb_type2str(i));
+      r++;
+    else if (fetypes[i] > 0)
+      j++;
+  }
+  if (r && j) {
+    la->la_exclusive = 1;
+    for (i = 0; i < ARRAY_SIZE(fetypes); i++)
+      if (fetypes[i] > 0)
+        tvhwarn("linuxdvb", "adapter %d has tuner count %d for type %s (wrong config)",
+                            a, fetypes[i], dvb_type2str(i));
+  } else if (!r && j > 1) {
+    la->la_exclusive = 1;
+    tvhinfo("linuxdvb", "adapter %d setting exlusive flag", a);
+  }
 #endif
 
   /* Save configuration */
