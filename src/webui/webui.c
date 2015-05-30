@@ -254,7 +254,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int started = 0;
   streaming_queue_t *sq = &prch->prch_sq;
   muxer_t *mux = prch->prch_muxer;
-  int timeouts = 0, grace = 20;
+  time_t lastpkt;
+  int ptimeout, grace = 20;
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
@@ -268,6 +269,9 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   tp.tv_usec = 0;
   setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
 
+  lastpkt = dispatch_clock;
+  ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5;
+
   while(!hc->hc_shutdown && run && tvheadend_running) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
@@ -277,13 +281,13 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       ts.tv_nsec = tp.tv_usec * 1000;
 
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
-        timeouts++;
 
         /* Check socket status */
         if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err) {
           tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
           run = 0;
-        } else if(timeouts >= grace) {
+        } else if((!started && dispatch_clock - lastpkt > grace) ||
+                   (started && ptimeout > 0 && dispatch_clock - lastpkt > ptimeout)) {
           tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
           run = 0;
         }
@@ -292,13 +296,13 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       continue;
     }
 
-    timeouts = 0; /* Reset timeout counter */
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
+      lastpkt = dispatch_clock;
       if(started) {
         pktbuf_t *pb;;
         if (sm->sm_type == SMT_PACKET)
@@ -339,9 +343,13 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
-      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
+      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen) || err) {
         tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
                hc->hc_url_orig);
+        run = 0;
+      } else if((!started && dispatch_clock - lastpkt > grace) ||
+                 (started && ptimeout > 0 && dispatch_clock - lastpkt > ptimeout)) {
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
         run = 0;
       }
       break;
