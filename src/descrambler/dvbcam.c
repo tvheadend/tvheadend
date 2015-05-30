@@ -141,9 +141,9 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
     is_update = 1;
   }
 
-  as->last_pmt = malloc(len + 3);
-  memcpy(as->last_pmt, ptr-3, len + 3);
-  as->last_pmt_len = len + 3;
+  as->last_pmt = malloc(len);
+  memcpy(as->last_pmt, ptr, len);
+  as->last_pmt_len = len;
 
   /*if this is update just send updated CAPMT to CAM */
   if (is_update) {

@@ -986,7 +986,8 @@ dvb_pmt_callback
     service_restart((service_t*)s);
 
 #if ENABLE_LINUXDVB_CA
-  dvbcam_pmt_data(s, ptr, len);
+  /* DVBCAM requires full pmt data including header and crc */
+  dvbcam_pmt_data(s, ptr - 3, len + 3 + 4);
 #endif
 
   /* Finish */
