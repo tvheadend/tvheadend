@@ -170,6 +170,16 @@ rtsp_setup_decode( http_client_t *hc, int satip )
         return -EIO;
       }
     }
+    else if (strncmp(argv[i], "server_port=", 12) == 0) {
+      j = http_tokenize(argv[i] + 12, argv2, 2, '-');
+      if (j > 1) {
+        hc->hc_rtcp_server_port = atoi(argv2[1]);
+        if (hc->hc_rtcp_server_port <= 0)
+          return -EIO;
+      } else {
+        return -EIO;
+      }
+    }
   }
   return HTTP_CON_OK;
 }
