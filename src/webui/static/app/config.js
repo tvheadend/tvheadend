@@ -41,7 +41,7 @@ tvheadend.miscconf = function(panel, index) {
         root: 'config'
     },
     [
-        'muxconfpath', 'language',
+        'server_name', 'muxconfpath', 'language',
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
         'prefer_picon', 'chiconpath', 'piconpath',
@@ -57,6 +57,22 @@ tvheadend.miscconf = function(panel, index) {
     /*
     * DVB path
     */
+
+    var serverName = new Ext.form.TextField({
+        fieldLabel: 'Tvheadend server name',
+        name: 'server_name',
+        allowBlank: true,
+        width: 400
+    });
+
+    var serverWrap = new Ext.form.FieldSet({
+        title: 'Server',
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items : [ serverName ]
+    });
 
     var dvbscanPath = new Ext.form.TextField({
         fieldLabel: 'DVB scan files path',
@@ -322,7 +338,7 @@ tvheadend.miscconf = function(panel, index) {
         }
     });
 
-    var _items = [languageWrap, dvbscanWrap, tvhtimePanel, piconPanel];
+    var _items = [serverWrap, languageWrap, dvbscanWrap, tvhtimePanel, piconPanel];
 
     if (satipPanel)
       _items.push(satipPanel);

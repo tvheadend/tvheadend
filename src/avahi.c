@@ -52,11 +52,13 @@
 
 #include "tvheadend.h"
 #include "avahi.h"
+#include "config.h"
 
 static AvahiEntryGroup *group = NULL;
 static char *name = NULL;
 static AvahiSimplePoll *avahi_asp = NULL;
 static const AvahiPoll *avahi_poll = NULL;
+static int avahi_do_restart = 0;
 
 static void create_services(AvahiClient *c);
 
@@ -261,20 +263,34 @@ avahi_thread(void *aux)
   AvahiClient *ac;
   char *name2;
 
-  name = name2 = avahi_strdup("Tvheadend");
+  do {
+    if (avahi_poll)
+        avahi_simple_poll_free((AvahiSimplePoll *)avahi_poll);
 
-  ac = avahi_client_new(avahi_poll, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
- 
-  while(avahi_simple_poll_iterate(avahi_asp, -1) == 0);
+    avahi_asp = avahi_simple_poll_new();
+    avahi_poll = avahi_simple_poll_get(avahi_asp);
 
-  avahi_client_free(ac);
+    if(avahi_do_restart) {
+      tvhlog(LOG_INFO, "AVAHI", "Service restarted.");
+      avahi_do_restart = 0;
+      group = NULL;
+    }
 
-  name = NULL;
-  free(name2);
+    name = name2 = avahi_strdup(config_get_server_name());
+
+    ac = avahi_client_new(avahi_poll, AVAHI_CLIENT_NO_FAIL, client_callback, NULL, NULL);
+
+    while((avahi_do_restart == 0) &&
+          (avahi_simple_poll_iterate(avahi_asp, -1) == 0));
+
+    avahi_client_free(ac);
+
+    name = NULL;
+    free(name2);
+
+  } while (tvheadend_running && avahi_do_restart);
 
   return NULL;
-  
-
 }
 
 /**
@@ -285,8 +301,6 @@ pthread_t avahi_tid;
 void
 avahi_init(void)
 {
-  avahi_asp = avahi_simple_poll_new();
-  avahi_poll = avahi_simple_poll_get(avahi_asp);
   tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL);
 }
 
@@ -297,4 +311,11 @@ avahi_done(void)
   pthread_kill(avahi_tid, SIGTERM);
   pthread_join(avahi_tid, NULL);
   avahi_simple_poll_free((AvahiSimplePoll *)avahi_poll);
+}
+
+void
+avahi_restart(void)
+{
+  avahi_do_restart = 1;
+  avahi_simple_poll_quit(avahi_asp);
 }

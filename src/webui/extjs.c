@@ -478,6 +478,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     /* Misc settings */
     pthread_mutex_lock(&global_lock);
+    if ((str = http_arg_get(&hc->hc_req_args, "server_name")))
+      save |= config_set_server_name(str);
     if ((str = http_arg_get(&hc->hc_req_args, "muxconfpath")))
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))

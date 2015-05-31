@@ -28,6 +28,7 @@
 #include "spawn.h"
 #include "lock.h"
 #include "profile.h"
+#include "avahi.h"
 
 /* *************************************************************************
  * Global data
@@ -1520,6 +1521,7 @@ config_init ( int backup )
   if (config_newcfg) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
     htsmsg_set_str(config, "fullversion", tvheadend_version);
+    htsmsg_set_str(config, "server_name", "Tvheadend");
     config_save();
   
   /* Perform migrations */
@@ -1587,6 +1589,21 @@ config_set_int ( const char *fld, int val )
     return 1;
   }
   return 0;
+}
+
+const char *config_get_server_name ( void )
+{
+  const char *s = htsmsg_get_str(config, "server_name");
+  if (s == NULL || *s == '\0')
+    return "Tvheadend";
+  return s;
+}
+
+int config_set_server_name ( const char *name )
+{
+  int r = config_set_str("server_name", name);
+  avahi_restart();
+  return r;
 }
 
 const char *config_get_language ( void )
