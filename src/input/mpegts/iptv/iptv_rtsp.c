@@ -92,7 +92,8 @@ iptv_rtsp_header ( http_client_t *hc )
     break;
   case RTSP_CMD_PLAY:
     // Now let's set peer port for RTCP
-    if (udp_connect(rp->rtcp_info->connection, "rtcp", hc->hc_rtp_dest, hc->hc_rtcp_server_port)) {
+    // Use the HTTP host for sending RTCP reports, NOT the hc_rtp_dest (which is where the stream is sent)
+    if (udp_connect(rp->rtcp_info->connection, "rtcp", hc->hc_host, hc->hc_rtcp_server_port)) {
         tvhlog(LOG_WARNING, "rtsp", "Can't connect to remote, RTCP receiver reports won't be sent");
     }
     hc->hc_cmd = HTTP_CMD_NONE;
