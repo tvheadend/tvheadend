@@ -223,17 +223,30 @@ cleanup_filename(dvr_config_t *cfg, char *s)
 /**
  *
  */
+static char *dvr_clean_directory_separator(char *buf)
+{
+  char *p;
+
+  /* replace directory separator */
+  for (p = buf; *p; p++)
+    if (*p == '/')
+      *p = '-';
+  return buf;
+}
+
 static const char *dvr_do_prefix(const char *id, const char *s)
 {
   static char buf[128];
 
-  if (s == NULL)
-    s = "";
-  if (s[0] && !isalpha(id[0])) {
+  if (s == NULL) {
+    buf[0] = '\0';
+  } else if (s[0] && !isalpha(id[0])) {
     snprintf(buf, sizeof(buf), "%c%s", id[0], s);
-    return buf;
+  } else {
+    strncpy(buf, s, sizeof(buf)-1);
+    buf[sizeof(buf)-1] = '\0';
   }
-  return s;
+  return dvr_clean_directory_separator(buf);
 }
 
 
@@ -337,7 +350,7 @@ static const char *dvr_sub_strftime(const char *id, const void *aux)
   static char buf[40];
   snprintf(fid, sizeof(fid), "%%%s", id);
   strftime(buf, sizeof(buf), fid, (struct tm *)aux);
-  return buf;
+  return dvr_clean_directory_separator(buf);
 }
 
 static htsstr_substitute_t dvr_subs_time[] = {
@@ -410,13 +423,21 @@ static const char *dvr_sub_str(const char *id, const void *aux)
   return (const char *)aux;
 }
 
+static const char *dvr_sub_str_separator(const char *id, const void *aux)
+{
+  static char buf[128];
+  strncpy(buf, (const char *)aux, sizeof(buf)-1);
+  buf[sizeof(buf)-1] = '\0';
+  return dvr_clean_directory_separator(buf);
+}
+
 static htsstr_substitute_t dvr_subs_extension[] = {
-  { .id = "x", .getval = dvr_sub_str },
+  { .id = "x", .getval = dvr_sub_str_separator },
   { .id = NULL, .getval = NULL }
 };
 
 static htsstr_substitute_t dvr_subs_tally[] = {
-  { .id = "n", .getval = dvr_sub_str },
+  { .id = "n", .getval = dvr_sub_str_separator },
   { .id = NULL, .getval = NULL }
 };
 
