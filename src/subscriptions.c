@@ -142,6 +142,9 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   LIST_REMOVE(s, ths_service_link);
   s->ths_service = NULL;
+
+  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+    subscription_unsubscribe(s, 0);
 }
 
 void
@@ -584,6 +587,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 
   if (t) {
+    s->ths_flags &= ~SUBSCRIPTION_ONESHOT;
     service_remove_subscriber(t, s, SM_CODE_OK);
   }
 
