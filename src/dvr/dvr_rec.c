@@ -346,10 +346,13 @@ static htsstr_substitute_t dvr_subs_entry[] = {
 
 static const char *dvr_sub_strftime(const char *id, const void *aux)
 {
-  char fid[8];
+  char fid[8], *p;
   static char buf[40];
   snprintf(fid, sizeof(fid), "%%%s", id);
   strftime(buf, sizeof(buf), fid, (struct tm *)aux);
+  for (p = buf; *p; p++)
+    if (*p == ':')
+      *p = '-';
   return dvr_clean_directory_separator(buf);
 }
 
