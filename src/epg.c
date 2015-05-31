@@ -1103,6 +1103,7 @@ size_t epg_episode_number_format
   if (!episode || !buf || !len) return 0;
   epg_episode_num_t num;
   epg_episode_get_epnum(episode, &num);
+  buf[0] = '\0';
   if ( num.e_num ) {
     if (pre) tvh_strlcatf(buf, len, i, "%s", pre);
     if ( sfmt && num.s_num ) {
