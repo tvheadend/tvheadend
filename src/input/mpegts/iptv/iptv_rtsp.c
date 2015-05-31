@@ -220,6 +220,32 @@ iptv_rtsp_stop
   pthread_mutex_lock(&iptv_lock);
 }
 
+static void
+iptv_rtp_header_callback ( iptv_mux_t *im, uint8_t *rtp, int len )
+{
+    rtsp_priv_t *rp = im->im_data;
+    iptv_rtcp_info_t *rtcp_info = rp->rtcp_info;
+    ssize_t hlen;
+    
+    /* Basic headers checks */
+    /* Version 2 */
+    if ((rtp[0] & 0xC0) != 0x80)
+      return;
+
+    /* Header length (4bytes per CSRC) */
+    hlen = ((rtp[0] & 0xf) * 4) + 12;
+    if (rtp[0] & 0x10) {
+      if (len < hlen+4)
+        return;
+      hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
+      hlen += 4;
+    }
+    if (len < hlen || ((len - hlen) % 188) != 0)
+      return;
+    
+    rtcp_receiver_update(rtcp_info, rtp);
+}
+
 /*
  * Read data
  */
