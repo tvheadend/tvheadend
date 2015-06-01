@@ -144,11 +144,8 @@ api_dvr_entry_create
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
-
-    if (perm->aa_username)
-       htsmsg_set_str(conf, "owner", perm->aa_username);
-    if (perm->aa_representative)
-       htsmsg_set_str(conf, "creator", perm->aa_representative);
+    htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+    htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
     if ((de = dvr_entry_create(NULL, conf)))
       dvr_entry_save(de);
@@ -265,10 +262,8 @@ api_dvr_autorec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  if (perm->aa_username)
-    htsmsg_set_str(conf, "owner", perm->aa_username);
-  if (perm->aa_representative)
-    htsmsg_set_str(conf, "creator", perm->aa_representative);
+  htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+  htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
   s1 = htsmsg_get_str(conf, "config_uuid");
   if (s1 == NULL)
@@ -358,10 +353,8 @@ api_dvr_timerec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  if (perm->aa_username)
-    htsmsg_set_str(conf, "owner", perm->aa_username);
-  if (perm->aa_representative)
-    htsmsg_set_str(conf, "creator", perm->aa_representative);
+  htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+  htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
   pthread_mutex_lock(&global_lock);
   dte = dvr_timerec_create(NULL, conf);
