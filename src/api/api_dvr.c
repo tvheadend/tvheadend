@@ -256,7 +256,9 @@ api_dvr_autorec_create
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *conf;
+  dvr_config_t *cfg;
   dvr_autorec_entry_t *dae;
+  const char *config_uuid;
 
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
@@ -266,11 +268,16 @@ api_dvr_autorec_create
   if (perm->aa_representative)
     htsmsg_set_str(conf, "creator", perm->aa_representative);
 
+  config_uuid = htsmsg_get_str(conf, "config_uuid");
+
   pthread_mutex_lock(&global_lock);
-  dae = dvr_autorec_create(NULL, conf);
-  if (dae) {
-    dvr_autorec_save(dae);
-    dvr_autorec_changed(dae, 1);
+  cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
+  if (cfg) {
+    dae = dvr_autorec_create(NULL, conf);
+    if (dae) {
+      dvr_autorec_save(dae);
+      dvr_autorec_changed(dae, 1);
+    }
   }
   pthread_mutex_unlock(&global_lock);
 
