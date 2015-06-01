@@ -1210,6 +1210,32 @@ config_migrate_v18 ( void )
   }
 }
 
+static void
+config_migrate_v19 ( void )
+{
+  htsmsg_t *c, *e, *m;
+  htsmsg_field_t *f;
+  const char *username, *passwd;
+  tvh_uuid_t u;
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if ((username = htsmsg_get_str(e, "username")) == NULL)
+        continue;
+      if ((passwd = htsmsg_get_str(e, "password2")) == NULL)
+        continue;
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "username", username);
+      htsmsg_add_str(m, "password2", passwd);
+      uuid_init_hex(&u, NULL);
+      hts_settings_save(m, "passwd/%s", u.hex);
+      htsmsg_delete_field(e, "password2");
+      hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
+    }
+  }
+}
+
 /*
  * Perform backup
  */
@@ -1324,6 +1350,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v16,
   config_migrate_v17,
   config_migrate_v18,
+  config_migrate_v19,
 };
 
 /*

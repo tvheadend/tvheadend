@@ -61,3 +61,43 @@ tvheadend.acleditor = function(panel, index)
         }
     });
 };
+
+/*
+ * Password Control
+ */
+
+tvheadend.passwdeditor = function(panel, index)
+{
+    var list = 'enabled,username,password,comment';
+
+    tvheadend.idnode_grid(panel, {
+        url: 'api/passwd/entry',
+        titleS: 'Password',
+        titleP: 'Passwords',
+        iconCls: 'key',
+        columns: {
+            enabled:        { width: 120 },
+            username:       { width: 250 },
+            password:       { width: 250 }
+        },
+        tabIndex: index,
+        edit: {
+            params: {
+                list: list
+            }
+        },
+        add: {
+            url: 'api/passwd/entry',
+            params: {
+                list: list
+            },
+            create: { }
+        },
+        del: true,
+        move: true,
+        list: list,
+        help: function() {
+            new tvheadend.help('Password Control Entries', 'config_passwd.html');
+        }
+    });
+};

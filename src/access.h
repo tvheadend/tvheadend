@@ -26,6 +26,26 @@ struct profile;
 struct dvr_config;
 struct channel_tag;
 
+TAILQ_HEAD(passwd_entry_queue, passwd_entry);
+
+extern struct passwd_entry_queue passwd_entries;
+
+typedef struct passwd_entry {
+  idnode_t pw_id;
+
+  TAILQ_ENTRY(passwd_entry) pw_link;
+
+  char *pw_username;
+  char *pw_password;
+  char *pw_password2;
+
+  int   pw_enabled;
+
+  char *pw_comment;
+} passwd_entry_t;
+
+extern const idclass_t passwd_entry_class;
+
 typedef struct access_ipmask {
   TAILQ_ENTRY(access_ipmask) ai_link;
 
@@ -48,8 +68,6 @@ typedef struct access_entry {
 
   TAILQ_ENTRY(access_entry) ae_link;
   char *ae_username;
-  char *ae_password;
-  char *ae_password2;
   char *ae_comment;
 
   int ae_index;
@@ -219,6 +237,14 @@ void
 access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
 void
 access_destroy_by_channel_tag(struct channel_tag *ct, int delconf);
+
+/**
+ *
+ */
+passwd_entry_t *
+passwd_entry_create(const char *uuid, htsmsg_t *conf);
+void
+passwd_entry_save(passwd_entry_t *pw);
 
 /**
  *

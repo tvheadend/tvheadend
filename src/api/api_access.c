@@ -21,6 +21,42 @@
 #include "access.h"
 #include "api.h"
 
+/*
+ *
+ */
+
+static void
+api_passwd_entry_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  passwd_entry_t *pw;
+
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
+    idnode_set_add(ins, (idnode_t*)pw, &conf->filter);
+}
+
+static int
+api_passwd_entry_create
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  passwd_entry_t *pw;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  if ((pw = passwd_entry_create(NULL, conf)) != NULL)
+    passwd_entry_save(pw);
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+/*
+ *
+ */
+
 static void
 api_access_entry_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -52,6 +88,10 @@ api_access_entry_create
 void api_access_init ( void )
 {
   static api_hook_t ah[] = {
+    { "passwd/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&passwd_entry_class },
+    { "passwd/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_passwd_entry_grid },
+    { "passwd/entry/create", ACCESS_ADMIN, api_passwd_entry_create, NULL },
+
     { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
     { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },

@@ -345,6 +345,7 @@ function accessUpdate(o) {
         tvheadend.miscconf(cp);
 
         tvheadend.acleditor(cp);
+        tvheadend.passwdeditor(cp);
 
         /* DVB inputs, networks, muxes, services */
         var dvbin = new Ext.TabPanel({
