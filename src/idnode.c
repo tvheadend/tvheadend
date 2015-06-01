@@ -559,13 +559,22 @@ int
 idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
 {
   const idclass_t *ic = self->in_class;
+  int r;
 
   while (ic) {
     if (ic->ic_perm)
-      return self->in_class->ic_perm(self, a, msg_to_write);
-    if (ic->ic_perm_def)
-      return access_verify2(a, self->in_class->ic_perm_def);
-    ic = ic->ic_super;
+      r = self->in_class->ic_perm(self, a, msg_to_write);
+    else if (ic->ic_perm_def)
+      r = access_verify2(a, self->in_class->ic_perm_def);
+    else {
+      ic = ic->ic_super;
+      continue;
+    }
+    if (!r) {
+      self->in_access = a;
+      return 0;
+    }
+    return r;
   }
   return 0;
 }

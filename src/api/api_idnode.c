@@ -122,6 +122,7 @@ api_idnode_grid
   htsmsg_t *list, *e;
   htsmsg_t *flist = api_idnode_flist_conf(args, "list");
   api_idnode_grid_conf_t conf = { 0 };
+  idnode_t *in;
   idnode_set_t ins = { 0 };
   api_idnode_grid_callback_t cb = opaque;
 
@@ -141,7 +142,10 @@ api_idnode_grid
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
-    idnode_read0(ins.is_array[i], e, flist, 0);
+    in = ins.is_array[i];
+    idnode_perm_set(in, perm);
+    idnode_read0(in, e, flist, 0);
+    idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
     if (conf.limit > 0) conf.limit--;
   }
@@ -200,9 +204,11 @@ api_idnode_load_by_class
         e = idnode_serialize0(in, flist, 0);
         htsmsg_destroy(flist);
       }
-        
+
       if (e)
         htsmsg_add_msg(l, NULL, e);
+
+      idnode_perm_unset(in);
     }
     free(is->is_array);
     free(is);
@@ -267,6 +273,7 @@ api_idnode_load
         htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0));
       htsmsg_add_msg(l, NULL, m);
       count++;
+      idnode_perm_unset(in);
     }
 
     if (count)
@@ -285,6 +292,7 @@ api_idnode_load
         if (meta > 0)
           htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0));
         htsmsg_add_msg(l, NULL, m);
+        idnode_perm_unset(in);
       }
     }
   }
@@ -331,6 +339,7 @@ api_idnode_save
       goto exit;
     }
     idnode_update(in, msg);
+    idnode_perm_unset(in);
     err = 0;
 
   /* Multiple */
@@ -350,6 +359,7 @@ api_idnode_save
       }
       count++;
       idnode_update(in, conf);
+      idnode_perm_unset(in);
     }
     if (count)
       err = 0;
@@ -399,7 +409,10 @@ api_idnode_tree
 
   /* Root node */
   if (isroot && node) {
-    htsmsg_t *m = idnode_serialize(node);
+    htsmsg_t *m;
+    idnode_perm_set(node, perm);
+    m = idnode_serialize(node);
+    idnode_perm_unset(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(*resp, NULL, m);
 
@@ -410,7 +423,11 @@ api_idnode_tree
       int i;
       idnode_set_sort_by_title(v);
       for(i = 0; i < v->is_count; i++) {
-        htsmsg_t *m = idnode_serialize(v->is_array[i]);
+        idnode_t *in = v->is_array[i];
+        htsmsg_t *m;
+        idnode_perm_set(in, perm);
+        m = idnode_serialize(v->is_array[i]);
+        idnode_perm_unset(in);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
         htsmsg_add_msg(*resp, NULL, m);
       }
@@ -498,6 +515,7 @@ api_idnode_handler
         err = EPERM;
       } else {
         handler(perm, in);
+        idnode_perm_unset(in);
       }
       htsmsg_destroy(msg);
     }

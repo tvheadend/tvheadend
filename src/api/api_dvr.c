@@ -33,8 +33,10 @@ api_dvr_config_grid
   dvr_config_t *cfg;
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
-    if (!idnode_perm((idnode_t *)cfg, perm, NULL))
+    if (!idnode_perm((idnode_t *)cfg, perm, NULL)) {
       idnode_set_add(ins, (idnode_t*)cfg, &conf->filter);
+      idnode_perm_unset((idnode_t *)cfg);
+    }
 }
 
 static int

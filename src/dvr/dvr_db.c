@@ -1390,6 +1390,16 @@ dvr_entry_class_start_opts(void *o)
 }
 
 static uint32_t
+dvr_entry_class_owner_opts(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de && de->de_id.in_access &&
+      !access_verify2(de->de_id.in_access, ACCESS_ADMIN))
+    return 0;
+  return PO_RDONLY;
+}
+
+static uint32_t
 dvr_entry_class_start_extra_opts(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
@@ -1977,7 +1987,7 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
       .get_opts = dvr_entry_class_start_extra_opts,
-      .opts     = PO_DURATION | PO_SORTKEY,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_TIME,
@@ -1999,7 +2009,7 @@ const idclass_t dvr_entry_class = {
       .name     = "Extra Stop Time",
       .off      = offsetof(dvr_entry_t, de_stop_extra),
       .list     = dvr_entry_class_extra_list,
-      .opts     = PO_DURATION | PO_SORTKEY,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_TIME,
@@ -2127,14 +2137,14 @@ const idclass_t dvr_entry_class = {
       .id       = "owner",
       .name     = "Owner",
       .off      = offsetof(dvr_entry_t, de_owner),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "creator",
       .name     = "Creator",
       .off      = offsetof(dvr_entry_t, de_creator),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,

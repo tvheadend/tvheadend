@@ -881,6 +881,16 @@ dvr_autorec_entry_class_dedup_list ( void *o )
   return strtab2htsmsg(tab);
 }
 
+static uint32_t
+dvr_autorec_entry_class_owner_opts(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae && dae->dae_id.in_access &&
+      !access_verify2(dae->dae_id.in_access, ACCESS_ADMIN))
+    return 0;
+  return PO_RDONLY;
+}
+
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
   .ic_caption    = "DVR Auto-Record Entry",
@@ -1065,14 +1075,14 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "owner",
       .name     = "Owner",
       .off      = offsetof(dvr_autorec_entry_t, dae_owner),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_autorec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "creator",
       .name     = "Creator",
       .off      = offsetof(dvr_autorec_entry_t, dae_creator),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_autorec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,

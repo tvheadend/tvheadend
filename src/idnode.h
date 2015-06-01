@@ -87,6 +87,8 @@ struct idnode {
   RB_ENTRY(idnode)  in_domain_link;         ///< Root class link (domain)
   idnodes_rb_t     *in_domain;              ///< Domain nodes
   const idclass_t  *in_class;               ///< Class definition
+  struct access    *in_access;              ///< Actual permissions
+
 };
 
 /*
@@ -178,6 +180,8 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
 
 int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
+static inline void idnode_perm_set(idnode_t *self, struct access *a) { self->in_access = a; }
+static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);

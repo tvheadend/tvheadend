@@ -156,6 +156,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var actions = tvheadend.dvrRowActions();
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name,comment';
+    var elist = tvheadend.accessUpdate.admin ? list + ',owner,creator' : list;
 
     var abortButton = {
         name: 'abort',
@@ -217,7 +218,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         edit: {
             params: {
-                list: list
+                list: elist
             }
         },
         del: true,

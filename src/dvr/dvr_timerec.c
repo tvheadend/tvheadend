@@ -532,6 +532,16 @@ dvr_timerec_entry_class_weekdays_rend(void *o)
   return dvr_autorec_entry_class_weekdays_rend(dte->dte_weekdays);
 }
 
+static uint32_t
+dvr_timerec_entry_class_owner_opts(void *o)
+{
+  dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
+  if (dte && dte->dte_id.in_access &&
+      !access_verify2(dte->dte_id.in_access, ACCESS_ADMIN))
+    return 0;
+  return PO_RDONLY;
+}
+
 const idclass_t dvr_timerec_entry_class = {
   .ic_class      = "dvrtimerec",
   .ic_caption    = "DVR Time-Record Entry",
@@ -635,14 +645,14 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "owner",
       .name     = "Owner",
       .off      = offsetof(dvr_timerec_entry_t, dte_creator),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_timerec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "creator",
       .name     = "Creator",
       .off      = offsetof(dvr_timerec_entry_t, dte_creator),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_timerec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
