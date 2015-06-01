@@ -39,6 +39,7 @@ struct dvr_config_list dvrconfigs;
 static dvr_config_t *dvrdefaultconfig = NULL;
 
 static void dvr_config_destroy(dvr_config_t *cfg, int delconf);
+static void dvr_update_pathname_from_booleans(dvr_config_t *cfg);
 
 /**
  * find a dvr config by name, return NULL if not found
@@ -190,6 +191,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     idnode_load(&cfg->dvr_id, conf);
+    if (!htsmsg_field_find(conf, "pathname"))
+      dvr_update_pathname_from_booleans(cfg);
     cfg->dvr_valid = 1;
   }
 
