@@ -1527,7 +1527,8 @@ const idclass_t profile_transcode_class =
 static int
 profile_transcode_resolution(profile_transcode_t *pro)
 {
-  return pro->pro_resolution >= 240 ? pro->pro_resolution : 240;
+  return pro->pro_resolution == 0 ? 0 :
+         (pro->pro_resolution >= 240 ? pro->pro_resolution : 240);
 }
 
 static int
