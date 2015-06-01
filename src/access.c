@@ -200,6 +200,14 @@ access_copy(access_t *src)
     dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
     dst->aa_dvrcfgs = htsmsg_copy(src->aa_dvrcfgs);
+  if (src->aa_chrange) {
+    size_t l = src->aa_chrange_count * sizeof(uint64_t);
+    dst->aa_chrange = malloc(l);
+    if (dst->aa_chrange == NULL)
+      dst->aa_chrange_count = 0;
+    else
+      memcpy(dst->aa_chrange, src->aa_chrange, l);
+  }
   if (src->aa_chtags)
     dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
   return dst;
@@ -356,7 +364,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -370,7 +378,6 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_FAILED_RECORDER    ? 'F' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
-    (long long)a->aa_chmin, (long long)a->aa_chmax,
     a->aa_match ? ", matched" : "");
 
   if (a->aa_profiles) {
@@ -405,6 +412,13 @@ access_dump_a(access_t *a)
     tvh_strlcatf(buf, sizeof(buf), l, ", dvr=ANY");
   }
 
+  if (a->aa_chrange) {
+    for (first = 0; first < a->aa_chrange_count; first += 2)
+      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%llu, chmax=%llu]",
+                   (long long)a->aa_chrange[first],
+                   (long long)a->aa_chrange[first+1]);
+  }
+
   if (a->aa_chtags) {
     first = 1;
     HTSMSG_FOREACH(f, a->aa_chtags) {
@@ -434,14 +448,11 @@ access_update(access_t *a, access_entry_t *ae)
     a->aa_conn_limit = ae->ae_conn_limit;
 
   if(ae->ae_chmin || ae->ae_chmax) {
-    if(a->aa_chmin || a->aa_chmax) {
-      if (a->aa_chmin < ae->ae_chmin)
-        a->aa_chmin = ae->ae_chmin;
-      if (a->aa_chmax > ae->ae_chmax)
-        a->aa_chmax = ae->ae_chmax;
-    } else {
-      a->aa_chmin = ae->ae_chmin;
-      a->aa_chmax = ae->ae_chmax;
+    uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
+    if (p) {
+      p[a->aa_chrange_count++] = ae->ae_chmin;
+      p[a->aa_chrange_count++] = ae->ae_chmax;
+      a->aa_chrange = p;
     }
   }
 

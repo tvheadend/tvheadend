@@ -477,10 +477,12 @@ channel_access(channel_t *ch, access_t *a, int disabled)
     return 0;
 
   /* Channel number check */
-  if (a->aa_chmin || a->aa_chmax) {
+  if (a->aa_chrange) {
     int64_t chnum = channel_get_number(ch);
-    if (chnum < a->aa_chmin || chnum > a->aa_chmax)
-      return 0;
+    int i;
+    for (i = 0; i < a->aa_chrange_count; i += 2)
+      if (chnum < a->aa_chrange[i] || chnum > a->aa_chrange[i+1])
+        return 0;
   }
 
   /* Channel tag check */
