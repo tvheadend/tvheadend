@@ -145,6 +145,8 @@ api_dvr_entry_create
   if (cfg) {
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
 
+    if (perm->aa_username)
+       htsmsg_set_str(conf, "owner", perm->aa_username);
     if (perm->aa_representative)
        htsmsg_set_str(conf, "creator", perm->aa_representative);
 
