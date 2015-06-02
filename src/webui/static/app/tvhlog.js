@@ -5,7 +5,7 @@ tvheadend.tvhlog = function(panel, index) {
     var confreader = new Ext.data.JsonReader({
         root: 'config'
     }, ['tvhlog_path', 'tvhlog_dbg_syslog', 'tvhlog_trace_on',
-        'tvhlog_debug', 'tvhlog_trace']);
+        'tvhlog_debug', 'tvhlog_trace', 'tvhlog_libav']);
 
     /* ****************************************************************
      * Form Fields

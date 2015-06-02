@@ -10,6 +10,9 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
     char *nl;
     char *l;
 
+    if ((level == AV_LOG_DEBUG) && !(tvhlog_options & TVHLOG_OPT_LIBAV))
+      return;
+
     memset(message, 0, sizeof(message));
     vsnprintf(message, sizeof(message), fmt, vl);
 
