@@ -64,10 +64,10 @@ tvheadend.tvhlog = function(panel, index) {
     items = new Array();
     items.push(tvhlogLogPath);
     items.push(tvhlogToSyslog);
-    if (tvheadend.accessUpdate.trace)
+    if (tvheadend.capabilities.indexOf('trace') !== -1)
       items.push(tvhlogTraceOn);
     items.push(tvhlogDebugSubsys);
-    if (tvheadend.accessUpdate.trace)
+    if (tvheadend.capabilities.indexOf('trace') !== -1)
       items.push(tvhlogTraceSubsys);
 
     var DebuggingPanel = new Ext.form.FieldSet({
