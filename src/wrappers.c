@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
@@ -72,11 +73,19 @@ int
 tvh_write(int fd, const void *buf, size_t len)
 {
   ssize_t c;
+  struct stat st;
+  int err;
+  socklen_t errlen;
 
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
       if (ERRNO_AGAIN(errno)) {
+        fstat(fd, &st);
+        errlen = sizeof(err);
+        if (S_ISSOCK(st.st_mode) &&
+            (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err))
+          break;
         usleep(100);
         continue;
       }
