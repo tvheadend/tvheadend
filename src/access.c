@@ -586,7 +586,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
     if(ae->ae_username[0] != '*') {
 
-      if (!username)
+      if (username == NULL || strcmp(username, ae->ae_username))
         continue;
 
       a->aa_match = 1;
