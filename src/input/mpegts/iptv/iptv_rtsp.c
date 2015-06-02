@@ -262,7 +262,7 @@ iptv_rtsp_read ( iptv_mux_t *im )
     r = recv(im->mm_iptv_fd2, buf, sizeof(buf), MSG_DONTWAIT);
   } while (r > 0);
 
-  r = iptv_rtp_read(im, um, & iptv_rtp_header_callback);
+  r = iptv_rtp_read(im, um, iptv_rtp_header_callback);
   if (r < 0 && ERRNO_AGAIN(errno))
     r = 0;
   return r;
