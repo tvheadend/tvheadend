@@ -32,6 +32,7 @@
 #include "imagecache.h"
 #include "descrambler.h"
 #include "notify.h"
+#include "htsmsg_json.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -233,6 +234,20 @@ typedef struct htsp_file {
  * *************************************************************************/
 
 static void
+htsp_trace(htsp_connection_t *htsp, const char *subsystem,
+           const char *prefix, htsmsg_t *m)
+{
+  htsbuf_queue_t q;
+  char *s;
+  htsbuf_queue_init(&q, 0);
+  htsmsg_json_serialize(m, &q, 0);
+  s = htsbuf_to_string(&q);
+  htsbuf_queue_flush(&q);
+  tvhtrace(subsystem, "%s - %s '%s'", htsp->htsp_logname, prefix, s);
+  free(s);
+}
+
+static void
 htsp_disable_stream(htsp_subscription_t *hs, unsigned int id)
 {
   if(id < NUM_FILTERED_STREAMS)
@@ -392,8 +407,34 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
  *
  */
 static void
+htsp_send_subscription(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
+	               htsp_subscription_t *hs, int payloadsize)
+{
+  if (tvhtrace_enabled()) {
+    char buf[64];
+    size_t l = 0;
+    tvh_strlcatf(buf, sizeof(buf), l, "subscription %i", hs->hs_sid);
+    if (payloadsize)
+      tvh_strlcatf(buf, sizeof(buf), l, " (payload %d)", payloadsize);
+    htsp_trace(htsp, "htsp-sub", buf, m);
+  }
+
+  htsp_send(htsp, m, pb, &hs->hs_q, payloadsize);
+}
+
+/**
+ *
+ */
+static void
 htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
 {
+  if (tvhtrace_enabled()) {
+    const char *qname = "answer";
+    if (hmq == &htsp->htsp_hmq_qstatus)
+      qname = "status";
+    htsp_trace(htsp, "htsp-ans", qname, m);
+  }
+
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
 }
 
@@ -2159,12 +2200,12 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
-    tvhtrace("htsp", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
+    tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
     skip.size = s64;
-    tvhtrace("htsp", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
+    tvhtrace("htsp-sub", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
   } else {
     return htsp_error("Missing argument 'time' or 'size'");
   }
@@ -2197,7 +2238,7 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
-  tvhtrace("htsp", "speed: %d", speed);
+  tvhtrace("htsp-sub", "speed: %d", speed);
   subscription_set_speed(hs->hs_s, speed);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2225,7 +2266,7 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested subscription does not exist");
 
   skip.type = SMT_SKIP_LIVE;
-  tvhtrace("htsp", "live");
+  tvhtrace("htsp-sub", "live");
   subscription_set_skip(hs->hs_s, &skip);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2698,6 +2739,8 @@ readmsg:
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
       tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
+      if (tvhtrace_enabled())
+        htsp_trace(htsp, "htsp-req", "request", m);
       for(i = 0; i < NUM_METHODS; i++) {
         if(!strcmp(method, htsp_methods[i].name)) {
 
@@ -3367,7 +3410,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
    */
   payloadlen = pktbuf_len(pkt->pkt_payload);
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
-  htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, payloadlen);
+  htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s->ths_bytes_out, payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
@@ -3519,7 +3562,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
  
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3539,7 +3582,7 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err, const char *sub
   if(subscriptionErr != NULL)
     htsmsg_add_str(m, "subscriptionError", subscriptionErr);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3554,7 +3597,7 @@ htsp_subscription_grace(htsp_subscription_t *hs, int grace)
   htsmsg_add_u32(m, "graceTimeout", grace);
   tvhdebug("htsp", "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3573,7 +3616,7 @@ htsp_subscription_status(htsp_subscription_t *hs, const char *err, const char *s
   if(subscriptionErr != NULL)
     htsmsg_add_str(m, "subscriptionError", subscriptionErr);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3650,7 +3693,7 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
   htsmsg_add_str(m, "method", "subscriptionSpeed");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "speed", speed);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3676,7 +3719,7 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
     htsmsg_add_s64(m, "time", hs->hs_90khz ? skip->time : ts_rescale(skip->time, 1000000));
   else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
     htsmsg_add_s64(m, "size", skip->size);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3695,7 +3738,7 @@ htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *
     htsmsg_add_s64(m, "start", hs->hs_90khz ? status->pts_start : ts_rescale(status->pts_start, 1000000)) ;
   if (status->pts_end != PTS_UNSET)
     htsmsg_add_s64(m, "end", hs->hs_90khz ? status->pts_end : ts_rescale(status->pts_end, 1000000)) ;
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 #endif
 

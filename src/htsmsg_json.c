@@ -50,7 +50,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
     if(!isarray) {
       htsbuf_append_and_escape_jsonstr(hq, f->hmf_name ?: "noname");
-      htsbuf_append(hq, ": ", 2);
+      htsbuf_append(hq, ": ", pretty ? 2 : 1);
     }
 
     switch(f->hmf_type) {

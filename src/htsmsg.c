@@ -969,5 +969,3 @@ htsmsg_list_2_csv(htsmsg_t *m)
 
   return ret;
 }
-
-
