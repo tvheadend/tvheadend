@@ -2197,6 +2197,7 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
 
   abs = htsmsg_get_u32_or_default(in, "absolute", 0);
 
+  memset(&skip, 0, sizeof(skip));
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
@@ -2265,6 +2266,7 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
+  memset(&skip, 0, sizeof(skip));
   skip.type = SMT_SKIP_LIVE;
   tvhtrace("htsp-sub", "live");
   subscription_set_skip(hs->hs_s, &skip);
