@@ -218,6 +218,10 @@
     background-image: url(../icons/key.png) !important;
 }
 
+.pass {
+    background-image: url(../icons/pass.png) !important;
+}
+
 .tags {
     background-image: url(../icons/tag_blue.png) !important;
 }
