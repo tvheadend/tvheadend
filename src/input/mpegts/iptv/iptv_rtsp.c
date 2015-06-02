@@ -19,6 +19,7 @@
 
 #include "tvheadend.h"
 #include "iptv_private.h"
+#include "iptv_rtcp.h"
 #include "http.h"
 
 typedef struct {
@@ -28,6 +29,7 @@ typedef struct {
   char *query;
   gtimer_t alive_timer;
   int play;
+  iptv_rtcp_info_t * rtcp_info;
 } rtsp_priv_t;
 
 /*
@@ -89,6 +91,11 @@ iptv_rtsp_header ( http_client_t *hc )
     }
     break;
   case RTSP_CMD_PLAY:
+    // Now let's set peer port for RTCP
+    // Use the HTTP host for sending RTCP reports, NOT the hc_rtp_dest (which is where the stream is sent)
+    if (udp_connect(rp->rtcp_info->connection, "rtcp", hc->hc_host, hc->hc_rtcp_server_port)) {
+        tvhlog(LOG_WARNING, "rtsp", "Can't connect to remote, RTCP receiver reports won't be sent");
+    }
     hc->hc_cmd = HTTP_CMD_NONE;
     pthread_mutex_lock(&global_lock);
     iptv_input_mux_started(hc->hc_aux);
@@ -165,6 +172,9 @@ iptv_rtsp_start
   }
 
   rp = calloc(1, sizeof(*rp));
+  rp->rtcp_info = calloc(1, sizeof(iptv_rtcp_info_t));
+  rtcp_init(rp->rtcp_info);
+  rp->rtcp_info->connection = rtcp;
   rp->hc = hc;
   udp_multirecv_init(&rp->um, IPTV_PKTS, IPTV_PKT_PAYLOAD);
   rp->path = strdup(u->path ?: "");
@@ -204,8 +214,36 @@ iptv_rtsp_stop
     http_client_close(rp->hc);
   free(rp->path);
   free(rp->query);
+  rtcp_destroy(rp->rtcp_info);
+  free(rp->rtcp_info);
   free(rp);
   pthread_mutex_lock(&iptv_lock);
+}
+
+static void
+iptv_rtp_header_callback ( iptv_mux_t *im, uint8_t *rtp, int len )
+{
+    rtsp_priv_t *rp = im->im_data;
+    iptv_rtcp_info_t *rtcp_info = rp->rtcp_info;
+    ssize_t hlen;
+    
+    /* Basic headers checks */
+    /* Version 2 */
+    if ((rtp[0] & 0xC0) != 0x80)
+      return;
+
+    /* Header length (4bytes per CSRC) */
+    hlen = ((rtp[0] & 0xf) * 4) + 12;
+    if (rtp[0] & 0x10) {
+      if (len < hlen+4)
+        return;
+      hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
+      hlen += 4;
+    }
+    if (len < hlen || ((len - hlen) % 188) != 0)
+      return;
+    
+    rtcp_receiver_update(rtcp_info, rtp);
 }
 
 /*
@@ -224,7 +262,7 @@ iptv_rtsp_read ( iptv_mux_t *im )
     r = recv(im->mm_iptv_fd2, buf, sizeof(buf), MSG_DONTWAIT);
   } while (r > 0);
 
-  r = iptv_rtp_read(im, um, NULL);
+  r = iptv_rtp_read(im, um, & iptv_rtp_header_callback);
   if (r < 0 && ERRNO_AGAIN(errno))
     r = 0;
   return r;

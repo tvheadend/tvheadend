@@ -319,6 +319,7 @@ struct http_client {
   char        *hc_rtp_dest;
   int          hc_rtp_port;
   int          hc_rtpc_port;
+  int          hc_rtcp_server_port;
   int          hc_rtp_multicast:1;
   long         hc_rtsp_stream_id;
   int          hc_rtp_timeout;
