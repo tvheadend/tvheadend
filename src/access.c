@@ -495,19 +495,23 @@ access_get(const char *username, const char *password, struct sockaddr *src)
   if (!passwd_verify(username, password)) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
+    if(!passwd_verify2(username, password,
+                       superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
   } else {
-    username = NULL;
     a->aa_representative = malloc(50);
     tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
+    if(!passwd_verify2(username, password,
+                       superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
+    username = NULL;
   }
 
   if (access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
-
-  if(!passwd_verify2(username, password,
-                     superuser_username, superuser_password)) {
     a->aa_rights = ACCESS_FULL;
     return a;
   }
@@ -559,19 +563,23 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   if (!passwd_verify_digest(username, digest, challenge)) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
+    if(!passwd_verify_digest2(username, digest, challenge,
+                              superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
   } else {
     a->aa_representative = malloc(50);
     tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
+    if(!passwd_verify_digest2(username, digest, challenge,
+                              superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
     username = NULL;
   }
 
   if(access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
-
-  if(!passwd_verify_digest2(username, digest, challenge,
-                            superuser_username, superuser_password)) {
     a->aa_rights = ACCESS_FULL;
     return a;
   }
