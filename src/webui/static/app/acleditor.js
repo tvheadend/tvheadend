@@ -74,7 +74,7 @@ tvheadend.passwdeditor = function(panel, index)
         url: 'api/passwd/entry',
         titleS: 'Password',
         titleP: 'Passwords',
-        iconCls: 'key',
+        iconCls: 'pass',
         columns: {
             enabled:        { width: 120 },
             username:       { width: 250 },
