@@ -42,6 +42,12 @@ tvheadend.tvhlog = function(panel, index) {
         width: 400
     });
 
+    var tvhlogLibav = new Ext.form.Checkbox({
+        name: 'tvhlog_libav',
+        fieldLabel: 'Debug libav log'
+    });
+
+
     /* ****************************************************************
      * Form
      * ***************************************************************/
@@ -69,6 +75,8 @@ tvheadend.tvhlog = function(panel, index) {
     items.push(tvhlogDebugSubsys);
     if (tvheadend.capabilities.indexOf('trace') !== -1)
       items.push(tvhlogTraceSubsys);
+    if (tvheadend.capabilities.indexOf('libav') !== -1)
+      items.push(tvhlogLibav);
 
     var DebuggingPanel = new Ext.form.FieldSet({
         title: 'Debugging Options',

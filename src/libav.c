@@ -16,11 +16,15 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
     l = message;
 
     if(level == AV_LOG_DEBUG)
+#if ENABLE_TRACE
+      level = LOG_TRACE;
+#else
       level = LOG_DEBUG;
+#endif
     else if(level == AV_LOG_VERBOSE)
-      level = LOG_INFO;
+      level = LOG_DEBUG;
     else if(level == AV_LOG_INFO)
-      level = LOG_NOTICE;
+      level = LOG_INFO;
     else if(level == AV_LOG_WARNING)
       level = LOG_WARNING;
     else if(level == AV_LOG_ERROR)
@@ -181,9 +185,23 @@ libav_is_encoder(AVCodec *codec)
  * 
  */ 
 void
+libav_set_loglevel(void)
+{
+  int level = AV_LOG_VERBOSE;
+
+  if (tvhlog_options & TVHLOG_OPT_LIBAV)
+    level = AV_LOG_DEBUG;
+
+  av_log_set_level(level);
+}
+
+/**
+ *
+ */
+void
 libav_init(void)
 {
   av_log_set_callback(libav_log_callback);
-  av_log_set_level(AV_LOG_VERBOSE);
+  libav_set_loglevel();
   av_register_all();
 }

@@ -84,6 +84,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define TVHLOG_OPT_DECORATE     0x0200
 #define TVHLOG_OPT_FILELINE     0x0400
 #define TVHLOG_OPT_THREAD       0x0800
+#define TVHLOG_OPT_LIBAV        0x1000
 #define TVHLOG_OPT_ALL          0xFFFF
 
 /* Levels */
