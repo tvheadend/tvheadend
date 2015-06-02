@@ -72,19 +72,14 @@ tvh_pipe_close(th_pipe_t *p)
 int
 tvh_write(int fd, const void *buf, size_t len)
 {
+  time_t next = dispatch_clock + 25;
   ssize_t c;
-  struct stat st;
-  int err;
-  socklen_t errlen;
 
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
       if (ERRNO_AGAIN(errno)) {
-        fstat(fd, &st);
-        errlen = sizeof(err);
-        if (S_ISSOCK(st.st_mode) &&
-            (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err))
+        if (dispatch_clock > next)
           break;
         usleep(100);
         continue;
