@@ -705,9 +705,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
   last = NULL;
   if (!htsmsg_is_empty(de->de_files) && de->de_config) {
     l = htsmsg_create_list();
-    htsmsg_add_msg(out, "files", l);
     HTSMSG_FOREACH(f, de->de_files) {
-      m = htsmsg_field_get_list(f);
+      m = htsmsg_field_get_map(f);
       if (m == NULL) continue;
       s = last = htsmsg_get_str(m, "filename");
       if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL) {
@@ -716,6 +715,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
         htsmsg_add_msg(l, NULL, e);
       }
     }
+    htsmsg_add_msg(out, "files", l);
   }
 
   if(last && de->de_config)
