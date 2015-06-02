@@ -183,9 +183,11 @@ static void timeshift_input
   if (sm->sm_type == SMT_SKIP) {
     if (ts->state >= TS_LIVE)
       timeshift_write_skip(ts->rd_pipe.wr, sm->sm_data);
+    streaming_msg_free(sm);
   } else if (sm->sm_type == SMT_SPEED) {
     if (ts->state >= TS_LIVE)
       timeshift_write_speed(ts->rd_pipe.wr, sm->sm_code);
+    streaming_msg_free(sm);
   }
 
   else {
