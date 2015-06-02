@@ -1146,18 +1146,20 @@ page_play(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
-  int fd, i, ret;
+  int fd, ret;
   struct stat st;
   const char *content = NULL, *range, *filename;
   dvr_entry_t *de;
   char *fname;
   char *basename;
+  char *str;
   char range_buf[255];
   char disposition[256];
   off_t content_len, chunk;
   intmax_t file_start, file_end;
   void *tcp_id;
   th_subscription_t *sub;
+  htsbuf_queue_t q;
 #if defined(PLATFORM_LINUX)
   ssize_t r;
 #elif defined(PLATFORM_FREEBSD) || defined(PLATFORM_DARWIN)
@@ -1196,13 +1198,12 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   basename = strrchr(fname, '/');
   if (basename) {
     basename++; /* Skip '/' */
-    snprintf(disposition, sizeof(disposition), "attachment; filename=\"%s\"", basename);
-    // Ensure there are no " characters in the filename.
-    i = strlen(disposition)-2;
-    while (i > 21) {
-      if (disposition[i] == '"') { disposition[i] = '_'; }
-      i--;
-    }
+    htsbuf_queue_init(&q, 0);
+    htsbuf_append_and_escape_url(&q, basename);
+    str = htsbuf_to_string(&q);
+    snprintf(disposition, sizeof(disposition), "attachment; filename=\"%s\"", str);
+    htsbuf_queue_flush(&q);
+    free(str);
   } else {
     disposition[0] = 0;
   }
