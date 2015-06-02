@@ -61,8 +61,8 @@ void libav_init(void);
 
 #else
 
-static inline void libav_set_loglevel(void);
-static inline void libav_init(void);
+static inline void libav_set_loglevel(void) { };
+static inline void libav_init(void) { };
 
 #endif
 
