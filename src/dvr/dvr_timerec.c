@@ -644,7 +644,7 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_STR,
       .id       = "owner",
       .name     = "Owner",
-      .off      = offsetof(dvr_timerec_entry_t, dte_creator),
+      .off      = offsetof(dvr_timerec_entry_t, dte_owner),
       .get_opts = dvr_timerec_entry_class_owner_opts,
     },
     {
