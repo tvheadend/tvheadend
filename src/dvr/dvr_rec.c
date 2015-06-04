@@ -89,7 +89,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   else {
     tvherror("dvr", "unable to find access (owner '%s', creator '%s')",
              de->de_owner, de->de_creator);
-    return -1;
+    return -EPERM;
  }
 
   if (aa->aa_conn_limit) {
@@ -100,7 +100,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
                       "(limit %u, active streaming %u, active DVR %u)",
                aa->aa_username ?: "", aa->aa_representative ?: "",
                aa->aa_conn_limit, rec_count, net_count);
-      return -1;
+      return -EOVERFLOW;
     }
   }
   access_destroy(aa);
@@ -113,7 +113,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel));
     profile_chain_close(prch);
     free(prch);
-    return -1;
+    return -EINVAL;
   }
 
   de->de_s = subscription_create_from_channel(prch, NULL, weight,
@@ -124,7 +124,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel));
     profile_chain_close(prch);
     free(prch);
-    return -1;
+    return -EINVAL;
   }
 
   de->de_chain = prch;

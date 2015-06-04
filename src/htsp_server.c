@@ -3646,6 +3646,10 @@ _htsp_get_subscription_status(int smcode)
     return "muxNotEnabled";
   case SM_CODE_INVALID_TARGET:
     return "invalidTarget";
+  case SM_CODE_USER_ACCESS:
+    return "userAccess";
+  case SM_CODE_USER_LIMIT:
+    return "userLimit";
   default:
     return streaming_code2txt(smcode);
   }

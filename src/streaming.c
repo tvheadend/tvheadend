@@ -414,6 +414,10 @@ streaming_code2txt(int code)
     return "Subscription overridden";
   case SM_CODE_INVALID_TARGET:
     return "Invalid target";
+  case SM_CODE_USER_ACCESS:
+    return "User access error";
+  case SM_CODE_USER_LIMIT:
+    return "User limit reached";
 
   case SM_CODE_NO_FREE_ADAPTER:
     return "No free adapter";
