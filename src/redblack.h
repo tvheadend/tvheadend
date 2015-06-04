@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
 * Copyright (C) 2001 Mark Edel
-* Copyright (C) 2008 Andreas Öman
+* Copyright (C) 2008 Andreas Ã–man
 
 * This is free software; you can redistribute it and/or modify it under the
 * terms of the GNU General Public License as published by the Free Software
@@ -18,7 +18,7 @@
 * Place, Suite 330, Boston, MA  02111-1307 USA
 *
 * Written by Mark Edel
-* Macroified + additional support functions by Andreas Öman
+* Macroified + additional support functions by Andreas Ã–man
 *
 *****************************************************************************/
 
