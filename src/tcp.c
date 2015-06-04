@@ -461,6 +461,7 @@ tcp_connection_launch
   tcp_server_launch_t *tsl, *res;
   uint32_t used = 0, used2;
   time_t started = dispatch_clock;
+  int c1, c2;
 
   lock_assert(&global_lock);
 
@@ -474,7 +475,7 @@ try_again:
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
       res = tsl;
-      if (!aa->aa_conn_limit)
+      if (!aa->aa_conn_limit && !aa->aa_conn_limit_streaming)
         break;
       continue;
     }
@@ -484,20 +485,27 @@ try_again:
   if (res == NULL)
     return NULL;
 
-  if (aa->aa_conn_limit && used + (used2 = dvr_usage_count(aa)) >= aa->aa_conn_limit) {
-    if (started + 3 < dispatch_clock) {
-      tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
-                      "(limit %u, active streaming %u, active DVR %u)",
-               aa->aa_username ?: "", aa->aa_representative ?: "", aa->aa_conn_limit,
-               used, used2);
+  if (aa->aa_conn_limit || aa->aa_conn_limit_streaming) {
+    used2 = aa->aa_conn_limit ? dvr_usage_count(aa) : 0;
+    /* the rule is: allow if one condition is OK */
+    c1 = aa->aa_conn_limit ? used + used2 >= aa->aa_conn_limit : -1;
+    c2 = aa->aa_conn_limit_streaming ? used >= aa->aa_conn_limit_streaming : -1;
+
+    if (c1 && c2) {
+      if (started + 3 < dispatch_clock) {
+        tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
+                        "(limit %u, active streaming %u, DVR %u)",
+                 aa->aa_username ?: "", aa->aa_representative ?: "", aa->aa_conn_limit,
+                 used, used2);
+        return NULL;
+      }
+      pthread_mutex_unlock(&global_lock);
+      usleep(250000);
+      pthread_mutex_lock(&global_lock);
+      if (tvheadend_running)
+        goto try_again;
       return NULL;
     }
-    pthread_mutex_unlock(&global_lock);
-    usleep(250000);
-    pthread_mutex_lock(&global_lock);
-    if (tvheadend_running)
-      goto try_again;
-    return NULL;
   }
 
   res->representative = aa->aa_representative ? strdup(aa->aa_representative) : NULL;

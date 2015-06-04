@@ -63,6 +63,12 @@ TAILQ_HEAD(access_entry_queue, access_entry);
 
 extern struct access_entry_queue access_entries;
 
+enum {
+  ACCESS_CONN_LIMIT_TYPE_ALL = 0,
+  ACCESS_CONN_LIMIT_TYPE_STREAMING,
+  ACCESS_CONN_LIMIT_TYPE_DVR,
+};
+
 typedef struct access_entry {
   idnode_t ae_id;
 
@@ -80,6 +86,7 @@ typedef struct access_entry {
   struct profile *ae_profile;
   LIST_ENTRY(access_entry) ae_profile_link;
 
+  int ae_conn_limit_type;
   uint32_t ae_conn_limit;
 
   int ae_dvr;
@@ -117,6 +124,10 @@ typedef struct access {
   htsmsg_t *aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;
+  uint32_t  aa_conn_limit_streaming;
+  uint32_t  aa_conn_limit_dvr;
+  uint32_t  aa_conn_streaming;
+  uint32_t  aa_conn_dvr;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);

@@ -369,7 +369,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -383,6 +383,8 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_FAILED_RECORDER    ? 'F' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
+    a->aa_conn_limit_streaming,
+    a->aa_conn_limit_dvr,
     a->aa_match ? ", matched" : "");
 
   if (a->aa_profiles) {
@@ -446,9 +448,34 @@ access_dump_a(access_t *a)
 /*
  *
  */
+static access_t *access_alloc(void)
+{
+  return calloc(1, sizeof(access_t));
+}
+
+/*
+ *
+ */
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
+  switch (ae->ae_conn_limit_type) {
+  case ACCESS_CONN_LIMIT_TYPE_ALL:
+    if (a->aa_conn_limit < ae->ae_conn_limit)
+      a->aa_conn_limit = ae->ae_conn_limit;
+    break;
+  case ACCESS_CONN_LIMIT_TYPE_STREAMING:
+    if (ae->ae_conn_limit && a->aa_conn_limit_streaming < ae->ae_conn_limit) {
+      a->aa_conn_limit_streaming = ae->ae_conn_limit;
+      a->aa_conn_limit = 0;
+    }
+    break;
+  case ACCESS_CONN_LIMIT_TYPE_DVR:
+    if (a->aa_conn_limit_dvr < ae->ae_conn_limit)
+      a->aa_conn_limit_dvr = ae->ae_conn_limit;
+    break;
+  }
+
   if(a->aa_conn_limit < ae->ae_conn_limit)
     a->aa_conn_limit = ae->ae_conn_limit;
 
@@ -488,7 +515,7 @@ access_update(access_t *a, access_entry_t *ae)
 access_t *
 access_get(const char *username, const char *password, struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = username == NULL || username[0] == '\0';
 
@@ -556,7 +583,7 @@ access_t *
 access_get_hashed(const char *username, const uint8_t digest[20],
 		  const uint8_t *challenge, struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = username == NULL || username[0] == '\0';
 
@@ -622,7 +649,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 access_t *
 access_get_by_username(const char *username)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
 
   a->aa_username = strdup(username);
@@ -656,7 +683,7 @@ access_get_by_username(const char *username)
 access_t *
 access_get_by_addr(struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
 
   a->aa_representative = malloc(50);
@@ -1201,6 +1228,18 @@ access_entry_profile_get(void *o)
   return &ret;
 }
 
+static htsmsg_t *
+access_entry_conn_limit_type_enum ( void *p )
+{
+  static struct strtab
+  conn_limit_type_tab[] = {
+    { "All (Streaming + DVR)",  ACCESS_CONN_LIMIT_TYPE_ALL },
+    { "Streaming",              ACCESS_CONN_LIMIT_TYPE_STREAMING   },
+    { "DVR",                    ACCESS_CONN_LIMIT_TYPE_DVR },
+  };
+  return strtab2htsmsg(conn_limit_type_tab);
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = "Access",
@@ -1314,6 +1353,13 @@ const idclass_t access_entry_class = {
       .id       = "admin",
       .name     = "Admin",
       .off      = offsetof(access_entry_t, ae_admin),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "conn_limit_type",
+      .name     = "Connection Limit Type",
+      .off      = offsetof(access_entry_t, ae_conn_limit_type),
+      .list     = access_entry_conn_limit_type_enum,
     },
     {
       .type     = PT_U32,
