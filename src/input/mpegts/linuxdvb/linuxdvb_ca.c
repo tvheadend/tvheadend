@@ -34,6 +34,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/ca.h>
 
+#include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
 
 typedef enum {
@@ -491,7 +492,7 @@ linuxdvb_ca_ca_info_callback(void *arg, uint8_t slot_id, uint16_t session_num,
     for(i=0; i< ca_id_count; i++) {
         tvh_strlcatf(buf, sizeof(buf), c, " %04X", ca_ids[i]);
         tvh_strlcatf(buf, sizeof(buf), c, " (%s)",
-                     descrambler_caid2name(ca_ids[i]));
+                     caid2name(ca_ids[i]));
     }
 
     tvhinfo("en50221", "CAM slot %u supported CAIDs: %s", slot_id, buf);
