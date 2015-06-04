@@ -31,6 +31,7 @@
 #include "plumbing/tsfix.h"
 #include "imagecache.h"
 #include "descrambler.h"
+#include "descrambler/caid.h"
 #include "notify.h"
 #include "htsmsg_json.h"
 #if ENABLE_TIMESHIFT
@@ -660,7 +661,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
     if((caid = service_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
-      htsmsg_add_str(svcmsg, "caname", descrambler_caid2name(caid));
+      htsmsg_add_str(svcmsg, "caname", caid2name(caid));
     }
     htsmsg_add_msg(services, NULL, svcmsg);
   }

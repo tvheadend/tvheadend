@@ -21,6 +21,7 @@
 #include "lang_codes.h"
 #include "service.h"
 #include "access.h"
+#include "descrambler/caid.h"
 #include "esfilter.h"
 
 struct esfilter_entry_queue esfilters[ESF_CLASS_LAST + 1];
@@ -474,7 +475,7 @@ esfilter_build_ca_enum(int provider)
     snprintf(buf, sizeof(buf), provider ? "%06x" : "%04x", a[i]);
     if (!provider)
       snprintf(buf2, sizeof(buf2), "%04x - %s",
-               a[i], descrambler_caid2name(a[i]));
+               a[i], caid2name(a[i]));
     htsmsg_add_str(e, "key", buf);
     htsmsg_add_str(e, "val", provider ? buf : buf2);
     htsmsg_add_msg(l, NULL, e);

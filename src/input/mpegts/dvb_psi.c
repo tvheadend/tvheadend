@@ -26,6 +26,7 @@
 #include "dvb_charset.h"
 #include "bouquet.h"
 #include "fastscan.h"
+#include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
 #include "tvhtime.h"
 
@@ -1915,7 +1916,7 @@ psi_desc_add_ca
   int r = 0;
 
   tvhdebug("pmt", "  caid %04X (%s) provider %08X pid %04X",
-           caid, descrambler_caid2name(caid), provid, pid);
+           caid, caid2name(caid), provid, pid);
 
   if((st = service_stream_find((service_t*)t, pid)) == NULL) {
     st = service_stream_create((service_t*)t, pid, SCT_CA);

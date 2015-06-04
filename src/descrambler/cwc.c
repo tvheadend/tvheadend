@@ -35,6 +35,8 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "caclient.h"
+#include "descrambler/caid.h"
+#include "descrambler/emm_reass.h"
 #include "atomic.h"
 #include "subscriptions.h"
 #include "service.h"
@@ -175,19 +177,7 @@ typedef struct cs_card_data {
   
   LIST_ENTRY(cs_card_data) cs_card;
 
-  /* Card caid */
-  uint16_t cwc_caid;
-
-  /* Card type */
-  card_type_t cwc_card_type;
-
-  /* Card providers */
-  cwc_provider_t *cwc_providers;
-
-  /* Number of Card providers */
-  int cwc_num_providers;
-
-  uint8_t cwc_ua[8];
+  emm_reass_t cs_ra;
 
   struct cwc *cwc;
   mpegts_mux_t *cwc_mux;
@@ -228,27 +218,9 @@ typedef struct cwc {
   /* Emm forwarding */
   int cwc_forward_emm;
 
-  /* Emm duplicate cache */
-  struct {
-#define EMM_CACHE_SIZE (1<<5)
-#define EMM_CACHE_MASK (EMM_CACHE_SIZE-1)
-    uint32_t cache[EMM_CACHE_SIZE];
-    uint32_t w;
-    uint32_t n;
-  } cwc_emm_cache;
-
-  /* Viaccess EMM assemble state */
-  struct {
-    int shared_toggle;
-    int shared_len;
-    uint8_t * shared_emm;
-    void *ca_update_id;
-  } cwc_viaccess_emm;
-#define cwc_cryptoworks_emm cwc_viaccess_emm
-
   /* one update id */
   int64_t cwc_update_time;
-  void *cwc_update_id;
+  void *cwc_mux;
   
   /* From configuration */
 
@@ -274,16 +246,6 @@ typedef struct cwc {
 
 static void cwc_service_pid_free(cwc_service_t *ct);
 static void cwc_service_destroy(th_descrambler_t *td);
-void cwc_emm_conax(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_irdeto(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_dre(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_seca(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_nagra(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_cryptoworks(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
-void cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len);
 
 
 /**
@@ -533,6 +495,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   int plen, i;
   unsigned int nprov;
   const char *n;
+  uint8_t *ua, *sa;
+  emm_provider_t *ep;
 
   msg += 12;
   len -= 12;
@@ -559,49 +523,33 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
   struct cs_card_data *pcard;
   pcard = calloc(1, sizeof(struct cs_card_data));
-  pcard->cwc_caid = (msg[4] << 8) | msg[5];
+  emm_reass_init(&pcard->cs_ra, (msg[4] << 8) | msg[5]);
 
-  n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
+  n = caid2name(pcard->cs_ra.caid & 0xff00) ?: "Unknown";
 
-  memcpy(pcard->cwc_ua, &msg[6], 8);
-  pcard->cwc_card_type = detect_card_type(pcard->cwc_caid);
+  memcpy(ua = pcard->cs_ra.ua, &msg[6], 8);
 
   msg  += 15;
   plen -= 12;
 
-  pcard->cwc_num_providers = nprov;
-  pcard->cwc_providers = calloc(nprov, sizeof(pcard->cwc_providers[0]));
+  pcard->cs_ra.providers_count = nprov;
+  pcard->cs_ra.providers = calloc(nprov, sizeof(pcard->cs_ra.providers[0]));
   
   tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
          "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
          "with %d providers",
          cwc->cwc_hostname, cwc->cwc_port,
-         cwc->cwc_username, n, pcard->cwc_caid,
-         pcard->cwc_ua[0], pcard->cwc_ua[1], pcard->cwc_ua[2], pcard->cwc_ua[3], pcard->cwc_ua[4], pcard->cwc_ua[5], pcard->cwc_ua[6], pcard->cwc_ua[7],
+         cwc->cwc_username, n, pcard->cs_ra.caid,
+         ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
          nprov);
 
-  for(i = 0; i < nprov; i++) {
-    pcard->cwc_providers[i].id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
-    pcard->cwc_providers[i].sa[0] = msg[3];
-    pcard->cwc_providers[i].sa[1] = msg[4];
-    pcard->cwc_providers[i].sa[2] = msg[5];
-    pcard->cwc_providers[i].sa[3] = msg[6];
-    pcard->cwc_providers[i].sa[4] = msg[7];
-    pcard->cwc_providers[i].sa[5] = msg[8];
-    pcard->cwc_providers[i].sa[6] = msg[9];
-    pcard->cwc_providers[i].sa[7] = msg[10];
+  for (i = 0, ep = pcard->cs_ra.providers; i < nprov; i++, ep++) {
+    ep->id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
+    memcpy(sa = ep->sa, msg + 3, 8);
     
     tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-           cwc->cwc_hostname, cwc->cwc_port, i + 1,
-           pcard->cwc_providers[i].id,
-           pcard->cwc_providers[i].sa[0],
-           pcard->cwc_providers[i].sa[1],
-           pcard->cwc_providers[i].sa[2],
-           pcard->cwc_providers[i].sa[3],
-           pcard->cwc_providers[i].sa[4],
-           pcard->cwc_providers[i].sa[5],
-           pcard->cwc_providers[i].sa[6],
-           pcard->cwc_providers[i].sa[7]);
+           cwc->cwc_hostname, cwc->cwc_port, i + 1, ep->id,
+           sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
 
     msg += 11;
   }
@@ -610,16 +558,14 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
   cwc->cwc_forward_emm = 0;
   if (cwc->cwc_emm) {
-    int emm_allowed = (pcard->cwc_ua[0] || pcard->cwc_ua[1] ||
-                       pcard->cwc_ua[2] || pcard->cwc_ua[3] ||
-                       pcard->cwc_ua[4] || pcard->cwc_ua[5] ||
-                       pcard->cwc_ua[6] || pcard->cwc_ua[7]);
+    int emm_allowed = ua[0] || ua[1] || ua[2] || ua[3] ||
+                      ua[4] || ua[5] || ua[6] || ua[7];
 
     if (!emm_allowed) {
       tvhlog(LOG_INFO, "cwc", 
              "%s:%i: Will not forward EMMs (not allowed by server)",
              cwc->cwc_hostname, cwc->cwc_port);
-    } else if (pcard->cwc_card_type != CARD_UNKNOWN) {
+    } else if (pcard->cs_ra.type != CARD_UNKNOWN) {
       tvhlog(LOG_INFO, "cwc", "%s:%i: Will forward EMMs",
              cwc->cwc_hostname, cwc->cwc_port);
       cwc->cwc_forward_emm = 1;
@@ -866,6 +812,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   int plen;
   short caid;
   const char *n;
+  uint8_t *ua;
   unsigned int nprov;
 
   switch(msgtype) {
@@ -920,25 +867,23 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
         caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
         struct cs_card_data *pcard;
         pcard = calloc(1, sizeof(struct cs_card_data));
-        pcard->cwc_caid = caid;
-        pcard->cwc_num_providers = 1;
-        pcard->cwc_providers = calloc(1, sizeof(pcard->cwc_providers[0]));
+        emm_reass_init(&pcard->cs_ra, caid);
+        pcard->cs_ra.providers_count = 1;
+        pcard->cs_ra.providers = calloc(1, sizeof(pcard->cs_ra.providers[0]));
         
-        n = descrambler_caid2name(pcard->cwc_caid & 0xff00) ?: "Unknown";
+        n = caid2name(caid & 0xff00) ?: "Unknown";
 
-        memcpy(pcard->cwc_ua, &msg[6], 8);
+        memcpy(ua = pcard->cs_ra.ua, &msg[6], 8);
 
-        pcard->cwc_card_type = detect_card_type(pcard->cwc_caid);
-
-        pcard->cwc_providers[0].id = (msg[8] << 16) | (msg[9] << 8) | msg[10];
+        pcard->cs_ra.providers[0].id = (msg[8] << 16) | (msg[9] << 8) | msg[10];
         
         tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
                "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
                "with one Provider ID 0x%06x",
                cwc->cwc_hostname, cwc->cwc_port,
-               cwc->cwc_username, n, pcard->cwc_caid,
-               pcard->cwc_ua[0], pcard->cwc_ua[1], pcard->cwc_ua[2], pcard->cwc_ua[3], pcard->cwc_ua[4], pcard->cwc_ua[5], pcard->cwc_ua[6],
-               pcard->cwc_ua[7], pcard->cwc_providers[0].id);
+               cwc->cwc_username, n, caid,
+               ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
+               pcard->cs_ra.providers[0].id);
 
         LIST_INSERT_HEAD(&cwc->cwc_cards, pcard, cs_card);
       }
@@ -1246,8 +1191,8 @@ verify_provider(struct cs_card_data *pcard, uint32_t providerid)
   if(providerid == 0)
     return 1;
   
-  for(i = 0; i < pcard->cwc_num_providers; i++)
-    if(providerid == pcard->cwc_providers[i].id)
+  for(i = 0; i < pcard->cs_ra.providers_count; i++)
+    if(providerid == pcard->cs_ra.providers[i].id)
       return 1;
   return 0;
 }
@@ -1256,25 +1201,15 @@ verify_provider(struct cs_card_data *pcard, uint32_t providerid)
  *
  */
 static void
-cwc_emm_cache_insert(cwc_t *cwc, uint32_t crc)
+cwc_emm_send(void *aux, const uint8_t *radata, int ralen, void *mux)
 {
-  /* evict the oldest entry */
-  cwc->cwc_emm_cache.cache[cwc->cwc_emm_cache.w] = crc;
-  cwc->cwc_emm_cache.w = (cwc->cwc_emm_cache.w+1)&EMM_CACHE_MASK;
-  if (cwc->cwc_emm_cache.n < EMM_CACHE_SIZE)
-    cwc->cwc_emm_cache.n++;
-}
+  struct cs_card_data *pcard = aux;
+  cwc_t *cwc = pcard->cwc;
 
-static int
-cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
-{
-  int i;
-  for (i=0; i<cwc->cwc_emm_cache.n; i++)
-    if (cwc->cwc_emm_cache.cache[i] == crc)
-      return 1;
-  return 0;
+  tvhtrace("cwc", "sending EMM for %04x mux %p", pcard->cs_ra.caid, mux);
+  tvhlog_hexdump("cwc", radata, ralen);
+  cwc_send_msg(cwc, radata, ralen, 0, 1, 0, 0);
 }
-
 
 /**
  *
@@ -1284,7 +1219,7 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
   struct cs_card_data *pcard = opaque;
   cwc_t *cwc;
-  void *ca_update_id;
+  void *mux;
 
   if (data == NULL) {  /* end-of-data */
     pcard->cwc_mux = NULL;
@@ -1292,314 +1227,23 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   }
   if (pcard->cwc_mux == NULL)
     return;
-  cwc          = pcard->cwc;
+  cwc = pcard->cwc;
   pthread_mutex_lock(&cwc->cwc_mutex);
-  ca_update_id = pcard->cwc_mux;
+  mux = pcard->cwc_mux;
   if (cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
-      if (cwc->cwc_update_id != ca_update_id) {
+      if (cwc->cwc_mux != mux) {
         int64_t delta = getmonoclock() - cwc->cwc_update_time;
         if (delta < 25000000UL)  /* 25 seconds */
           goto end_of_job;
       }
       cwc->cwc_update_time = getmonoclock();
     }
-    cwc->cwc_update_id = ca_update_id;
-    switch (pcard->cwc_card_type) {
-      case CARD_CONAX:
-        cwc_emm_conax(cwc, pcard, data, len);
-        break;
-      case CARD_IRDETO:
-        cwc_emm_irdeto(cwc, pcard, data, len);
-        break;
-      case CARD_SECA:
-        cwc_emm_seca(cwc, pcard, data, len);
-        break;
-      case CARD_VIACCESS:
-        cwc_emm_viaccess(cwc, pcard, data, len);
-        break;
-      case CARD_DRE:
-        cwc_emm_dre(cwc, pcard, data, len);
-        break;
-      case CARD_NAGRA:
-        cwc_emm_nagra(cwc, pcard, data, len);
-        break;
-      case CARD_NDS:
-        cwc_emm_nds(cwc, pcard, data, len);
-        break;
-      case CARD_CRYPTOWORKS:
-        cwc_emm_cryptoworks(cwc, pcard, data, len);
-        break;
-      case CARD_BULCRYPT:
-        cwc_emm_bulcrypt(cwc, pcard, data, len);
-        break;
-      case CARD_STREAMGUARD:
-        cwc_emm_streamguard(cwc, pcard, data, len);
-        break;
-      case CARD_UNKNOWN:
-        break;
-    }
+    cwc->cwc_mux = mux;
+    emm_filter(&pcard->cs_ra, data, len, mux, cwc_emm_send, pcard);
   }
 end_of_job:
   pthread_mutex_unlock(&cwc->cwc_mutex);
-}
-
-
-/**
- * conax emm handler
- */
-void
-cwc_emm_conax(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  if (data[0] == 0x82) {
-    int i;
-    for (i=0; i < pcard->cwc_num_providers; i++) {
-      if (memcmp(&data[3], &pcard->cwc_providers[i].sa[1], 7) == 0) {
-        cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-        break;
-      }
-    }
-  }
-}
-
-
-/**
- * irdeto emm handler
- * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
- */
-void
-cwc_emm_irdeto(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int emm_mode = data[3] >> 3;
-  int emm_len = data[3] & 0x07;
-  int match = 0;
-  
-  if (emm_mode & 0x10){
-    // try to match card
-    match = (emm_mode == pcard->cwc_ua[4] &&
-             (!emm_len || // zero length
-              !memcmp(&data[4], &pcard->cwc_ua[5], emm_len))); // exact match
-  } else {
-    // try to match provider
-    int i;
-    for(i=0; i < pcard->cwc_num_providers; i++) {
-      match = (emm_mode == pcard->cwc_providers[i].sa[4] &&
-               (!emm_len || // zero length
-                !memcmp(&data[4], &pcard->cwc_providers[i].sa[5], emm_len)));
-      // exact match
-      if (match) break;
-    }
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-
-/**
- * seca emm handler
- * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
- */
-void
-cwc_emm_seca(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-
-  if (data[0] == 0x82) {                    //unique emm
-    if (memcmp(&data[3], &pcard->cwc_ua[2], 6) == 0) {
-      match = 1;
-    }
-  } 
-  else if (data[0] == 0x84) {               //shared emm
-    /* XXX this part is untested but should do no harm */
-    int i;
-    for (i=0; i < pcard->cwc_num_providers; i++) {
-      if (memcmp(&data[5], &pcard->cwc_providers[i].sa[5], 3) == 0) {
-        match = 1;
-        break;
-      }
-    }
-  }
-  else if (data[0] == 0x83) {               //global emm -> seca3
-    match = 1;
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-/**
- * viaccess emm handler
- * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
- */
-static
-const uint8_t * nano_start(const uint8_t * data)
-{
-  switch(data[0]) {
-  case 0x88: return &data[8];
-  case 0x8e: return &data[7];
-  case 0x8c:
-  case 0x8d: return &data[3];
-  case 0x80:
-  case 0x81: return &data[4];
-  }
-  return NULL;
-}
-
-static
-const uint8_t * nano_checknano90fromnano(const uint8_t * data)
-{
-  if(data && data[0]==0x90 && data[1]==0x03) return data;
-  return 0;
-}
-
-static
-const uint8_t * nano_checknano90(const uint8_t * data)
-{
-  return nano_checknano90fromnano(nano_start(data));
-}
-
-static
-int sort_nanos(uint8_t *dest, const uint8_t *src, int len)
-{
-  int w = 0, c = -1;
-
-  while (1) {
-    int j, n;
-    n = 0x100;
-    for (j = 0; j < len;) {
-      int l = src[j + 1] + 2;
-      if (src[j] == c) {
-        if (w + l > len)
-          return -1;
-        memcpy(dest + w, src + j, l);
-        w += l;
-      }
-      else if (src[j] > c && src[j] < n) {
-        n = src[j];
-      }
-      j += l;
-    }
-    if (n == 0x100) {
-      break;
-    }
-    c = n;
-  }
-  return 0;
-}
-
-static int via_provider_id(const uint8_t * data)
-{
-  const uint8_t * tmp;
-  tmp = nano_checknano90(data);
-  if (!tmp) return 0;
-  return (tmp[2] << 16) | (tmp[3] << 8) | (tmp[4]&0xf0);
-}
-
-
-void
-cwc_emm_viaccess(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int mlen)
-{
-  /* Get SCT len */
-  int len = 3 + ((data[1] & 0x0f) << 8) + data[2];
-
-  switch (data[0])
-    {
-    case 0x8c:
-    case 0x8d:
-    {
-      int match = 0;
-      int i;
-      uint32_t id;
-      
-      /* Match provider id */
-      id = via_provider_id(data);
-      if (!id) break;
-      
-      for(i = 0; i < pcard->cwc_num_providers; i++)
-        if(pcard->cwc_providers[i].id == id) {
-          match = 1;
-          break;
-        }
-      if (!match) break;
-
-      if (data[0] != cwc->cwc_viaccess_emm.shared_toggle) {
-        cwc->cwc_viaccess_emm.shared_len = 0;
-        free(cwc->cwc_viaccess_emm.shared_emm);
-        cwc->cwc_viaccess_emm.shared_emm = (uint8_t*)malloc(len);
-        if (cwc->cwc_viaccess_emm.shared_emm) {
-          cwc->cwc_viaccess_emm.shared_len = len;
-          memcpy(cwc->cwc_viaccess_emm.shared_emm, data, len);
-          cwc->cwc_viaccess_emm.ca_update_id = cwc->cwc_update_id;
-        }
-        cwc->cwc_viaccess_emm.shared_toggle = data[0];
-      }
-    }
-    break;
-    case 0x8e:
-      if (cwc->cwc_viaccess_emm.shared_emm &&
-          cwc->cwc_viaccess_emm.ca_update_id == cwc->cwc_update_id) {
-        int match = 0;
-        int i;
-        /* Match SA and provider in shared */
-        for(i = 0; i < pcard->cwc_num_providers; i++) {
-          if(memcmp(&data[3],&pcard->cwc_providers[i].sa[4], 3)) continue;
-          if((data[6]&2)) continue;
-          if(via_provider_id(cwc->cwc_viaccess_emm.shared_emm) != pcard->cwc_providers[i].id) continue;
-            match = 1;
-            break;
-        }
-        if (!match) break;
-
-        uint8_t * tmp = alloca(len + cwc->cwc_viaccess_emm.shared_len);
-        const uint8_t * ass = nano_start(data);
-        len -= (ass - data);
-        if((data[6] & 2) == 0)  {
-          int addrlen = len - 8;
-          len=0;
-          tmp[len++] = 0x9e;
-          tmp[len++] = addrlen;
-          memcpy(&tmp[len], &ass[0], addrlen); len += addrlen;
-          tmp[len++] = 0xf0;
-          tmp[len++] = 0x08;
-          memcpy(&tmp[len],&ass[addrlen],8); len += 8;
-        } else {
-          memcpy(tmp, ass, len);
-        }
-        ass = nano_start(cwc->cwc_viaccess_emm.shared_emm);
-        int l = cwc->cwc_viaccess_emm.shared_len - (ass - cwc->cwc_viaccess_emm.shared_emm);
-        memcpy(&tmp[len], ass, l); len += l;
-
-        uint8_t *ass2 = (uint8_t*) alloca(len+7);
-        if(ass2) {
-          uint32_t crc;
-
-          memcpy(ass2, data, 7);
-          if (sort_nanos(ass2 + 7, tmp, len))
-            return;
-
-          /* Set SCT len */
-          len += 4;
-          ass2[1] = (len>>8) | 0x70;
-          ass2[2] = len & 0xff;
-          len += 3;
-
-          crc = tvh_crc32(ass2, len, 0xffffffff);
-          if (!cwc_emm_cache_lookup(cwc, crc)) {
-            tvhlog(LOG_DEBUG, "cwc",
-                  "Send EMM "
-                  "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-                  "...%02x.%02x.%02x.%02x",
-                  ass2[0], ass2[1], ass2[2], ass2[3],
-                  ass2[4], ass2[5], ass2[6], ass2[7],
-                  ass2[len-4], ass2[len-3], ass2[len-2], ass2[len-1]);
-            cwc_send_msg(cwc, ass2, len, 0, 1, 0, 0);
-            cwc_emm_cache_insert(cwc, crc);
-          }
-        }
-      }
-    break;
-  }
 }
 
 /**
@@ -1681,7 +1325,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (st) {
     LIST_FOREACH(c, &st->es_caids, link)
       LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
-        if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid))
+        if(pcard->cs_ra.caid == c->caid && verify_provider(pcard, c->providerid))
           goto found;
   }
 
@@ -1696,7 +1340,7 @@ found:
     case 0x81:
       /* ECM */
       
-      if(pcard->cwc_caid >> 8 == 6) {
+      if((pcard->cs_ra.caid >> 8) == 6) {
         ep->ep_last_section = data[5];
         section = data[4];
         
@@ -1754,192 +1398,6 @@ found:
 end:
   pthread_mutex_unlock(&cwc->cwc_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
-}
-
-/**
- * dre emm handler
- */
-void
-cwc_emm_dre(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-
-  if (data[0] == 0x87) {
-    if (memcmp(&data[3], &pcard->cwc_ua[4], 4) == 0) {
-      match = 1;
-    }
-  } 
-  else if (data[0] == 0x86) {
-    int i;
-    for (i=0; i < pcard->cwc_num_providers; i++) {
-      if (memcmp(&data[40], &pcard->cwc_providers[i].sa[4], 4) == 0) {
-        /*      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
-        match = 1;
-        break;
-      }
-    }
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-void
-cwc_emm_nagra(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-  unsigned char hexserial[4];
-
-  if (data[0] == 0x83) {      // unique|shared
-    hexserial[0] = data[5];
-    hexserial[1] = data[4];
-    hexserial[2] = data[3];
-    hexserial[3] = data[6];
-    if (memcmp(hexserial, &pcard->cwc_ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
-      match = 1;
-  } 
-  else if (data[0] == 0x82) { // global
-    match = 1;
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-void
-cwc_emm_nds(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-  int i;
-  int serial_count = ((data[3] >> 4) & 3) + 1;
-  unsigned char emmtype = (data[3] & 0xC0) >> 6;
-
-  if (emmtype == 1 || emmtype == 2) {  // unique|shared
-    for (i = 0; i < serial_count; i++) {
-      if (memcmp(&data[i * 4 + 4], &pcard->cwc_ua[4], 5 - emmtype) == 0) {
-        match = 1;
-        break;
-      }
-    }
-  }
-  else if (emmtype == 0) {  // global
-    match = 1;
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-/**
- * streamguard emm handler
- */
-void
-cwc_emm_streamguard(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-    //todo
-    tvhlog(LOG_INFO, "cwc", "cwc_emm_streamguard streamguard card data emm get,here lots of works todo...");
-    int match = 0;
-
-    if (data[0] == 0x87) {
-        if (memcmp(&data[3], &pcard->cwc_ua[4], 4) == 0) {
-            match = 1;
-        }
-    }
-    else if (data[0] == 0x86) {
-        int i;
-        for (i=0; i < pcard->cwc_num_providers; i++) {
-            if (memcmp(&data[40], &pcard->cwc_providers[i].sa[4], 4) == 0) {
-                /*      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
-                match = 1;
-                break;
-            }
-        }
-    }
-
-    if (match)
-        cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-void
-cwc_emm_cryptoworks(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-
-  switch (data[0]) {
-  case 0x82: /* unique */
-    match = len >= 10 && memcmp(data + 5, pcard->cwc_ua + 3, 5) == 0;
-    break;
-  case 0x84: /* emm-sh */
-    if (len >= 9 && memcmp(data + 5, pcard->cwc_ua + 3, 4) == 0) {
-      if (cwc->cwc_cryptoworks_emm.shared_emm) {
-        free(cwc->cwc_cryptoworks_emm.shared_emm);
-        cwc->cwc_cryptoworks_emm.shared_len = 0;
-      }
-      cwc->cwc_cryptoworks_emm.shared_emm = malloc(len);
-      if (cwc->cwc_cryptoworks_emm.shared_emm) {
-        cwc->cwc_cryptoworks_emm.shared_len = len;
-        memcpy(cwc->cwc_cryptoworks_emm.shared_emm, data, len);
-        cwc->cwc_cryptoworks_emm.ca_update_id = cwc->cwc_update_id;
-      }
-    }
-    break;
-  case 0x86: /* emm-sb */ 
-    if (cwc->cwc_cryptoworks_emm.shared_emm &&
-        cwc->cwc_cryptoworks_emm.ca_update_id == cwc->cwc_update_id) {
-      /* python: EMM_SH[0:12] + EMM_SB[5:-1] + EMM_SH[12:-1] */
-      uint32_t elen = len - 5 + cwc->cwc_cryptoworks_emm.shared_len - 12;
-      uint8_t *tmp = malloc(elen);
-      uint8_t *composed = tmp ? malloc(elen + 12) : NULL;
-      if (composed) {
-        memcpy(tmp, data + 5, len - 5);
-        memcpy(tmp + len - 5, cwc->cwc_cryptoworks_emm.shared_emm + 12,
-                                cwc->cwc_cryptoworks_emm.shared_len - 12);
-        memcpy(composed, cwc->cwc_cryptoworks_emm.shared_emm, 12);
-        sort_nanos(composed + 12, tmp, elen);
-        composed[1] = ((elen + 9) >> 8) | 0x70;
-        composed[2] = (elen + 9) & 0xff;
-        cwc_send_msg(cwc, composed, elen + 12, 0, 1, 0, 0);
-        free(composed);
-        free(tmp);
-      } else if (tmp)
-        free(tmp);
-
-      free(cwc->cwc_cryptoworks_emm.shared_emm);
-      cwc->cwc_cryptoworks_emm.shared_emm = NULL;
-      cwc->cwc_cryptoworks_emm.shared_len = 0;
-    }
-    break;
-  case 0x88: /* global */
-  case 0x89: /* global */
-    match = 1;
-    break;
-  default:
-    break;
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
-}
-
-void
-cwc_emm_bulcrypt(cwc_t *cwc, struct cs_card_data *pcard, const uint8_t *data, int len)
-{
-  int match = 0;
-
-  switch (data[0]) {
-  case 0x82: /* unique - bulcrypt (1 card) */
-  case 0x8a: /* unique - polaris  (1 card) */
-  case 0x85: /* unique - bulcrypt (4 cards) */
-  case 0x8b: /* unique - polaris  (4 cards) */
-    match = len >= 10 && memcmp(data + 3, pcard->cwc_ua + 2, 3) == 0;
-    break;
-  case 0x84: /* shared - (1024 cards) */
-    match = len >= 10 && memcmp(data + 3, pcard->cwc_ua + 2, 2) == 0;
-    break;
-  }
-
-  if (match)
-    cwc_send_msg(cwc, data, len, 0, 1, 0, 0);
 }
 
 /**
@@ -2015,13 +1473,13 @@ cwc_service_start(caclient_t *cac, service_t *t)
       break;
   }
   LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
-    if (pcard->cwc_caid == 0) continue;
+    if (pcard->cs_ra.caid == 0) continue;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
       if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
           ((mpegts_service_t *)t)->s_dvb_prefcapid != st->es_pid)
         continue;
       LIST_FOREACH(c, &st->es_caids, link) {
-        if (c->use && c->caid == pcard->cwc_caid)
+        if (c->use && c->caid == pcard->cs_ra.caid)
           if (!((mpegts_service_t *)t)->s_dvb_forcecaid ||
                ((mpegts_service_t *)t)->s_dvb_forcecaid == c->caid)
             break;
@@ -2042,10 +1500,10 @@ cwc_service_start(caclient_t *cac, service_t *t)
   ct->cs_channel       = -1;
   ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
   ct->ecm_state        = ECM_INIT;
-  ct->cs_constcw       = pcard->cwc_caid == 0x2600;
+  ct->cs_constcw       = pcard->cs_ra.caid == 0x2600;
 
   td                   = (th_descrambler_t *)ct;
-  snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cwc_caid);
+  snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cs_ra.caid);
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
   td->td_stop          = cwc_service_destroy;
@@ -2058,7 +1516,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     LIST_FOREACH(c, &st->es_caids, link)
-      if (c->use && c->caid == pcard->cwc_caid) {
+      if (c->use && c->caid == pcard->cs_ra.caid) {
         ct->cs_epids[i++] = st->es_pid;
         break;
       }
@@ -2102,15 +1560,14 @@ cwc_free(caclient_t *cac)
 
   while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
     LIST_REMOVE(cd, cs_card);
-    descrambler_close_emm(cd->cwc_mux, cd, cd->cwc_caid);
-    free(cd->cwc_providers);
+    descrambler_close_emm(cd->cwc_mux, cd, cd->cs_ra.caid);
+    emm_reass_done(&cd->cs_ra);
     free(cd);
   }
   free((void *)cwc->cwc_password);
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
   free((void *)cwc->cwc_hostname);
-  free((void *)cwc->cwc_viaccess_emm.shared_emm);
 }
 
 /**
@@ -2128,7 +1585,7 @@ cwc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid,
   pthread_mutex_lock(&cwc->cwc_mutex);
   if (valid < 0 || cwc->cwc_running) {
     LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
-      if (valid < 0 || pcard->cwc_caid == caid) {
+      if (valid < 0 || pcard->cs_ra.caid == caid) {
         if (pcard->cwc_mux && pcard->cwc_mux != mux) continue;
         if (valid > 0) {
           pcard->cwc       = cwc;

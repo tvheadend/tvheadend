@@ -242,6 +242,7 @@ SRCS += src/muxer.c \
 SRCS-$(CONFIG_MPEGTS) += \
 	src/descrambler/descrambler.c \
 	src/descrambler/caclient.c \
+	src/descrambler/caid.c \
 	src/input/mpegts.c \
 	src/input/mpegts/mpegts_pid.c \
 	src/input/mpegts/mpegts_input.c \
@@ -343,6 +344,7 @@ SRCS-${CONFIG_TVHCSA} += \
 # CWC
 SRCS-${CONFIG_CWC} += \
 	src/descrambler/cwc.c \
+	src/descrambler/emm_reass.c
 	
 # CAPMT
 SRCS-${CONFIG_CAPMT} += \

@@ -43,6 +43,7 @@
 #include "htsp_server.h"
 #include "lang_codes.h"
 #include "descrambler.h"
+#include "descrambler/caid.h"
 #include "input.h"
 #include "access.h"
 #include "esfilter.h"
@@ -1881,7 +1882,7 @@ load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
 
   if(htsmsg_get_u32(c, "caidnum", &a)) {
     if((v = htsmsg_get_str(c, "caid")) != NULL) {
-      a = descrambler_name2caid(v);
+      a = name2caid(v);
     } else {
       return;
     }
