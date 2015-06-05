@@ -652,10 +652,11 @@ capmt_queue_msg
   sbuf_append(&msg->cm_sb, buf, len);
   msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
-  if (flags & CAPMT_MSG_FAST)
+  if (flags & CAPMT_MSG_FAST) {
     TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
-  else
+  } else {
     TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+  }
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
 

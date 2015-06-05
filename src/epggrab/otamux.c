@@ -236,10 +236,11 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
   int grace;
 
   /* In pending queue? Remove.. */
-  if (om->om_q_type == EPGGRAB_OTA_MUX_PENDING)
+  if (om->om_q_type == EPGGRAB_OTA_MUX_PENDING) {
     TAILQ_REMOVE(&epggrab_ota_pending, om, om_q_link);
-  else
+  } else {
     assert(om->om_q_type == EPGGRAB_OTA_MUX_IDLE);
+  }
 
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_ACTIVE;
