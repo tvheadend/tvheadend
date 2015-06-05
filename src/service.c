@@ -855,10 +855,11 @@ service_destroy(service_t *t, int delconf)
 
   avgstat_flush(&t->s_rate);
 
-  if (t->s_type == STYPE_RAW)
+  if (t->s_type == STYPE_RAW) {
     TAILQ_REMOVE(&service_raw_all, t, s_all_link);
-  else
+  } else {
     TAILQ_REMOVE(&service_all, t, s_all_link);
+  }
 
   service_unref(t);
 }
