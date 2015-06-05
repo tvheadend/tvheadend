@@ -465,10 +465,8 @@ access_update(access_t *a, access_entry_t *ae)
       a->aa_conn_limit = ae->ae_conn_limit;
     break;
   case ACCESS_CONN_LIMIT_TYPE_STREAMING:
-    if (ae->ae_conn_limit && a->aa_conn_limit_streaming < ae->ae_conn_limit) {
+    if (a->aa_conn_limit_streaming < ae->ae_conn_limit)
       a->aa_conn_limit_streaming = ae->ae_conn_limit;
-      a->aa_conn_limit = 0;
-    }
     break;
   case ACCESS_CONN_LIMIT_TYPE_DVR:
     if (a->aa_conn_limit_dvr < ae->ae_conn_limit)

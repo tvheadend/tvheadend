@@ -101,9 +101,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
     c2 = aa->aa_conn_limit_dvr ? rec_count >= aa->aa_conn_limit : -1;
     if (c1 && c2) {
       tvherror("dvr", "multiple connections are not allowed for user '%s' from '%s' "
-                      "(limit %u, streaming %u, active DVR %u)",
+                      "(limit %u, dvr limit %u, active DVR %u, streaming %u)",
                aa->aa_username ?: "", aa->aa_representative ?: "",
-               aa->aa_conn_limit, rec_count, net_count);
+               aa->aa_conn_limit, aa->aa_conn_limit_dvr, rec_count, net_count);
       return -EOVERFLOW;
     }
   }

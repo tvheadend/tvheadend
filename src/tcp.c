@@ -494,8 +494,9 @@ try_again:
     if (c1 && c2) {
       if (started + 3 < dispatch_clock) {
         tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
-                        "(limit %u, active streaming %u, DVR %u)",
-                 aa->aa_username ?: "", aa->aa_representative ?: "", aa->aa_conn_limit,
+                        "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
+                 aa->aa_username ?: "", aa->aa_representative ?: "",
+                 aa->aa_conn_limit, aa->aa_conn_limit_streaming,
                  used, used2);
         return NULL;
       }
