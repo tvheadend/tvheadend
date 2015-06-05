@@ -297,8 +297,16 @@ dvr_entry_status(dvr_entry_t *de)
     }
 
   case DVR_COMPLETED:
-    if(de->de_last_error == SM_CODE_INVALID_TARGET)
-      return "File Not Created";
+    switch(de->de_last_error) {
+      case SM_CODE_INVALID_TARGET:
+        return "File Not Created";
+      case SM_CODE_USER_ACCESS:
+        return "User Access Error";
+      case SM_CODE_USER_LIMIT:
+        return "User Limit Reached";
+      default:
+        break;
+    }
     if(dvr_get_filesize(de) == -1)
       return "File Missing";
     if(de->de_last_error)
