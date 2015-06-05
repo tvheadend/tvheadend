@@ -183,6 +183,128 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
 }
 
 /**
+ * get best effort sample rate
+ */
+static int
+transcode_get_sample_rate(int rate, AVCodec *codec)
+{
+  /* if codec only supports certain rates, check if rate is available */
+  if (codec->supported_samplerates) {
+    /* Find if we have a matching sample_rate */
+    int acount = 0;
+    int rate_alt = 0;
+    while (codec->supported_samplerates[acount] > 0) {
+      if (codec->supported_samplerates[acount] == rate) {
+        /* original rate supported by codec */
+        return rate;
+      }
+
+      /* check for highest available rate smaller that the original rate */
+      if (codec->supported_samplerates[acount] > rate_alt &&
+          codec->supported_samplerates[acount] < rate) {
+        rate_alt = codec->supported_samplerates[acount];
+      }
+      acount++;
+    }
+
+    return rate_alt;
+  }
+
+
+  return rate;
+}
+
+/**
+ * get best effort sample format
+ */
+static enum AVSampleFormat
+transcode_get_sample_fmt(enum AVSampleFormat fmt, AVCodec *codec)
+{
+  /* if codec only supports certain formats, check if selected format is available */
+  if (codec->sample_fmts) {
+    /* Find if we have a matching sample_fmt */
+    int acount = 0;
+    while (codec->sample_fmts[acount] > AV_SAMPLE_FMT_NONE) {
+      if (codec->sample_fmts[acount] == fmt) {
+        /* original format supported by codec */
+        return fmt;
+      }
+      acount++;
+    }
+
+    /* use first supported sample format */
+    if (acount > 0) {
+      return codec->sample_fmts[0];
+    } else {
+      return AV_SAMPLE_FMT_NONE;
+    }
+  }
+
+  return fmt;
+}
+
+/**
+ * get best effort channel layout
+ */
+static uint64_t
+transcode_get_channel_layout(int *channels, AVCodec *codec)
+{
+  uint64_t channel_layout = AV_CH_LAYOUT_STEREO;
+
+  /* use channel layout based on input field */
+  switch (*channels) {
+  case 1: channel_layout = AV_CH_LAYOUT_MONO;     break;
+  case 2: channel_layout = AV_CH_LAYOUT_STEREO;   break;
+  case 3: channel_layout = AV_CH_LAYOUT_SURROUND; break;
+  case 4: channel_layout = AV_CH_LAYOUT_QUAD;     break;
+  case 5: channel_layout = AV_CH_LAYOUT_5POINT0;  break;
+  case 6: channel_layout = AV_CH_LAYOUT_5POINT1;  break;
+  case 7: channel_layout = AV_CH_LAYOUT_6POINT1;  break;
+  case 8: channel_layout = AV_CH_LAYOUT_7POINT1;  break;
+  }
+
+  /* if codec only supports certain layouts, check if selected layout is available */
+  if (codec->channel_layouts) {
+    int acount = 0;
+    uint64_t channel_layout_def = av_get_default_channel_layout(*channels);
+    uint64_t channel_layout_alt = 0;
+
+    while (codec->channel_layouts[acount] > 0) {
+      if (codec->channel_layouts[acount] == channel_layout) {
+        /* original layout supported by codec */
+        return channel_layout;
+      }
+
+      /* check for best matching layout with same or less number of channels */
+      if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) <= *channels) {
+        if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) >
+            av_get_channel_layout_nb_channels(channel_layout_alt)) {
+          /* prefer layout with more channels */
+          channel_layout_alt = codec->channel_layouts[acount];
+        } else if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) ==
+                   av_get_channel_layout_nb_channels(channel_layout_alt) &&
+                   codec->channel_layouts[acount] == channel_layout_def) {
+          /* prefer default layout for number of channels over alternative layout */
+          channel_layout_alt = channel_layout_def;
+        }
+      }
+
+      acount++;
+    }
+
+    if (channel_layout_alt) {
+      channel_layout = channel_layout_alt;
+      *channels = av_get_channel_layout_nb_channels(channel_layout_alt);
+    } else {
+      channel_layout = 0;
+      *channels = 0;
+    }
+  }
+
+  return channel_layout;
+}
+
+/**
  *
  */
 static AVCodec *
@@ -421,146 +543,41 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if (octx->codec_id == AV_CODEC_ID_NONE) {
     as->aud_enc_pts       = pkt->pkt_pts;
-    octx->sample_rate     = ictx->sample_rate;
-    octx->sample_fmt      = ictx->sample_fmt;
+    octx->sample_rate     = transcode_get_sample_rate(ictx->sample_rate, ocodec);
+    octx->sample_fmt      = transcode_get_sample_fmt(ictx->sample_fmt, ocodec);
+    octx->time_base       = ictx->time_base;
+    octx->channels        = as->aud_channels ? MIN(as->aud_channels, ictx->channels) : ictx->channels;
+    octx->channel_layout  = transcode_get_channel_layout(&octx->channels, ocodec);
+    octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : 0;
+    octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
 
-    if (ocodec->supported_samplerates) {
-      /* Find if we have a matching sample_rate */
-      int acount = 0;
-      octx->sample_rate = 0;
-      int sample_rate_alt = 0;
-      while ((octx->sample_rate == 0) && (ocodec->supported_samplerates[acount] > 0)) {
-        if (ocodec->supported_samplerates[acount] == ictx->sample_rate) {
-          octx->sample_rate = ictx->sample_rate;
-          break;
-        }
-        if (ocodec->supported_samplerates[acount] > sample_rate_alt &&
-            ocodec->supported_samplerates[acount] < ictx->sample_rate) {
-          sample_rate_alt = ocodec->supported_samplerates[acount];
-        }
-        acount++;
-      }
-      if (octx->sample_rate == 0) {
-        if (sample_rate_alt > 0) {
-          tvhtrace("transcode", "%04X: sample_rate not supported, using: %d",
-                   shortid(t), sample_rate_alt);
-          octx->sample_rate = sample_rate_alt;
-        } else {
-          tvherror("transcode", "%04X: Encoder no sample_rate!!??", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
-        }
-      }
+    if (!octx->sample_rate) {
+      tvherror("transcode", "%04X: audio encoder has no suitable sample rate!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      tvhdebug("transcode", "%04X: using audio sample rate %d",
+                          shortid(t), octx->sample_rate);
     }
 
-    if (ocodec->sample_fmts) {
-      /* Find if we have a matching sample_fmt */
-      int acount = 0;
-      octx->sample_fmt = AV_SAMPLE_FMT_NONE;
-      while ((octx->sample_fmt == AV_SAMPLE_FMT_NONE) && (ocodec->sample_fmts[acount] > AV_SAMPLE_FMT_NONE)) {
-        if (ocodec->sample_fmts[acount] == ictx->sample_fmt) {
-          octx->sample_fmt = ictx->sample_fmt;
-          break;
-        }
-        acount++;
-      }
-      if (octx->sample_fmt == AV_SAMPLE_FMT_NONE) {
-        if (acount > 0) {
-          tvhtrace("transcode", "%04X: sample_fmt not supported, using: %d",
-                   shortid(t), ocodec->sample_fmts[0]);
-          octx->sample_fmt = ocodec->sample_fmts[0];
-        } else {
-          tvherror("transcode", "%04X: Encoder no sample_fmt!!??", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
-        }
-      }
+    if (octx->sample_fmt == AV_SAMPLE_FMT_NONE) {
+      tvherror("transcode", "%04X: audio encoder has no suitable sample format!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      tvhdebug("transcode", "%04X: using audio sample format %s",
+                          shortid(t), av_get_sample_fmt_name(octx->sample_fmt));
     }
 
-    octx->time_base  = ictx->time_base;
-    octx->channels   = as->aud_channels ? MIN(as->aud_channels, ictx->channels) : ictx->channels;
-    octx->bit_rate   = as->aud_bitrate  ? as->aud_bitrate  : 0;
-    octx->flags     |= CODEC_FLAG_GLOBAL_HEADER;
-
-
-    switch (octx->channels) {
-    case 1:
-      octx->channel_layout = AV_CH_LAYOUT_MONO;
-      break;
-
-    case 2:
-      octx->channel_layout = AV_CH_LAYOUT_STEREO;
-      break;
-
-    case 3:
-      octx->channel_layout = AV_CH_LAYOUT_SURROUND;
-      break;
-
-    case 4:
-      octx->channel_layout = AV_CH_LAYOUT_QUAD;
-      break;
-
-    case 5:
-      octx->channel_layout = AV_CH_LAYOUT_5POINT0;
-      break;
-
-    case 6:
-      octx->channel_layout = AV_CH_LAYOUT_5POINT1;
-      break;
-
-    case 7:
-      octx->channel_layout = AV_CH_LAYOUT_6POINT1;
-      break;
-
-    case 8:
-      octx->channel_layout = AV_CH_LAYOUT_7POINT1;
-      break;
-
-    default:
-      break;
-    }
-
-    if (ocodec->channel_layouts) {
-      int acount = 0;
-      uint64_t channel_layout = octx->channel_layout;
-      uint64_t channel_layout_def = av_get_default_channel_layout(octx->channels);
-      uint64_t channel_layout_alt = 0;
-      int channels_alt = 0;
-      /* check if requested layout is available and find best suited alternative layout */
-      octx->channel_layout = 0;
-      while ((octx->channel_layout == 0) && (ocodec->channel_layouts[acount] > 0)) {
-        if (ocodec->channel_layouts[acount] == channel_layout) {
-          octx->channel_layout = channel_layout;
-          break;
-        }
-        if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= octx->channels) {
-          if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) > channels_alt) {
-            channel_layout_alt = ocodec->channel_layouts[acount];
-            channels_alt = av_get_channel_layout_nb_channels(channel_layout_alt);
-          } else if (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) == channels_alt &&
-                     channel_layout_alt == channel_layout_def) {
-            channel_layout_alt = channel_layout_def;
-            channels_alt = av_get_channel_layout_nb_channels(channel_layout_alt);
-          }
-        }
-        acount++;
-      }
-
-      if (octx->channel_layout == 0) {
-        if (channel_layout_alt != 0) {
-          /* find next which has same or less channels than decoder. */
-          char layout_buf[100];
-          av_get_channel_layout_string(layout_buf, sizeof (layout_buf), channels_alt, channel_layout_alt);
-          tvhtrace("transcode", "%04X: channel_layout not available, using: %s",
-                   shortid(t), layout_buf);
-          octx->channel_layout = channel_layout_alt;
-          octx->channels = channels_alt;
-        } else {
-          tvherror("transcode", "%04X: Encoder no channel_layout!!??", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
-        }
-      }
+    if (!octx->channel_layout) {
+      tvherror("transcode", "%04X: audio encoder has no suitable channel layout!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      char layout_buf[100];
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
+      tvhdebug("transcode", "%04X: using audio channel layout %s",
+                          shortid(t), layout_buf);
     }
 
     // Set flags and quality settings, if no bitrate was specified.
