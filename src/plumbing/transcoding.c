@@ -155,9 +155,7 @@ avcodec_alloc_context3_tvh(const AVCodec *codec)
 {
   AVCodecContext *ctx = avcodec_alloc_context3(codec);
   if (ctx) {
-    ctx->codec_id = AV_CODEC_ID_NONE;
     ctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
-
   }
   return ctx;
 }
@@ -398,9 +396,7 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   icodec = ss->sub_icodec;
   //ocodec = ss->sub_ocodec;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-    ictx->codec_id = icodec->id;
-
+  if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder",
                shortid(t), icodec->name);
@@ -483,8 +479,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = as->aud_icodec;
   ocodec = as->aud_ocodec;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-
+  if (!avcodec_is_open(ictx)) {
     if (icodec->id == AV_CODEC_ID_AAC || icodec->id == AV_CODEC_ID_VORBIS) {
       if (pkt->pkt_meta) {
         ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
@@ -496,8 +491,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         return;
       }
     }
-
-    ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder",
@@ -546,7 +539,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
             "%04X: undecoded data (in=%zu, consumed=%d)",
             shortid(t), pktbuf_len(pkt->pkt_payload), length);
 
-  if (octx->codec_id == AV_CODEC_ID_NONE) {
+  if (!avcodec_is_open(octx)) {
     as->aud_enc_pts       = pkt->pkt_pts;
     octx->sample_rate     = transcode_get_sample_rate(ictx->sample_rate, ocodec);
     octx->sample_fmt      = transcode_get_sample_fmt(ictx->sample_fmt, ocodec);
@@ -622,8 +615,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     default:
       break;
     }
-
-    octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s encoder",
@@ -1063,10 +1054,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   got_ref = 0;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-
-    ictx->codec_id = icodec->id;
-
+  if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder", shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
@@ -1120,7 +1108,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   vs->vid_enc_frame->sample_aspect_ratio.num = vs->vid_dec_frame->sample_aspect_ratio.num;
   vs->vid_enc_frame->sample_aspect_ratio.den = vs->vid_dec_frame->sample_aspect_ratio.den;
 
-  if(octx->codec_id == AV_CODEC_ID_NONE) {
+  if(!avcodec_is_open(octx)) {
     // Common settings
     octx->width           = vs->vid_width  ? vs->vid_width  : ictx->width;
     octx->height          = vs->vid_height ? vs->vid_height : ictx->height;
@@ -1139,7 +1127,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
-      octx->codec_id       = AV_CODEC_ID_MPEG2VIDEO;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
@@ -1163,7 +1150,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_VP8:
-      octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
       // setting quality to realtime will use as much CPU for transcoding as possible,
@@ -1190,7 +1176,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_H264:
-      octx->codec_id       = AV_CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
@@ -1224,8 +1209,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     default:
       break;
     }
-
-    octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, &opts) < 0) {
       tvherror("transcode", "%04X: Unable to open %s encoder",
