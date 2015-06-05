@@ -76,6 +76,10 @@ typedef struct audio_stream {
   int             resample;
   int             resample_is_open;
 
+  enum AVSampleFormat last_sample_fmt;
+  int             last_sample_rate;
+  uint64_t        last_channel_layout;
+
 } audio_stream_t;
 
 
@@ -471,6 +475,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   audio_stream_t *as = (audio_stream_t*)ts;
   int got_frame, got_packet_ptr;
   AVFrame *frame = av_frame_alloc();
+  char layout_buf[100];
 
   ictx = as->aud_ictx;
   octx = as->aud_octx;
@@ -546,7 +551,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->sample_rate     = transcode_get_sample_rate(ictx->sample_rate, ocodec);
     octx->sample_fmt      = transcode_get_sample_fmt(ictx->sample_fmt, ocodec);
     octx->time_base       = ictx->time_base;
-    octx->channels        = as->aud_channels ? MIN(as->aud_channels, ictx->channels) : ictx->channels;
+    octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
     octx->channel_layout  = transcode_get_channel_layout(&octx->channels, ocodec);
     octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : 0;
     octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
@@ -574,7 +579,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       transcoder_stream_invalidate(ts);
       goto cleanup;
     } else {
-      char layout_buf[100];
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
       tvhdebug("transcode", "%04X: using audio channel layout %s",
                           shortid(t), layout_buf);
@@ -619,11 +623,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
     }
 
-    as->resample = (ictx->channels != octx->channels)             ||
-                   (ictx->channel_layout != octx->channel_layout) ||
-                   (ictx->sample_fmt != octx->sample_fmt)         ||
-                   (ictx->sample_rate != octx->sample_rate);
-
     octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
@@ -633,23 +632,62 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    as->resample_context = NULL;
-    if (as->resample) {
+    as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
+    if (!as->fifo) {
+      tvherror("transcode", "%04X: Could not allocate fifo", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    }
+
+    as->resample_context    = NULL;
+
+    as->last_sample_rate    = ictx->sample_rate;
+    as->last_sample_fmt     = ictx->sample_fmt;
+    as->last_channel_layout = ictx->channel_layout;
+  }
+
+  /* check for changed input format and close resampler, if changed */
+  if (as->last_sample_rate    != ictx->sample_rate    ||
+      as->last_sample_fmt     != ictx->sample_fmt     ||
+      as->last_channel_layout != ictx->channel_layout) {
+    tvhdebug("transcode", "%04X: audio input format changed", shortid(t));
+
+    as->last_sample_rate    = ictx->sample_rate;
+    as->last_sample_fmt     = ictx->sample_fmt;
+    as->last_channel_layout = ictx->channel_layout;
+
+    if (as->resample_context) {
+      tvhdebug("transcode", "%04X: stopping audio resampling", shortid(t));
+      avresample_free(&as->resample_context);
+      as->resample_context = NULL;
+      as->resample_is_open = 0;
+    }
+  }
+
+  as->resample = (ictx->channel_layout != octx->channel_layout) ||
+                 (ictx->sample_fmt     != octx->sample_fmt)     ||
+                 (ictx->sample_rate    != octx->sample_rate);
+
+  if (as->resample) {
+    if (!as->resample_context) {
       if (!(as->resample_context = avresample_alloc_context())) {
         tvherror("transcode", "%04X: Could not allocate resample context", shortid(t));
         transcoder_stream_invalidate(ts);
         goto cleanup;
       }
 
-      // Convert audio
-      tvhtrace("transcode", "%04X: converting audio", shortid(t));
+      // resample audio
+      tvhdebug("transcode", "%04X: starting audio resampling", shortid(t));
 
-      tvhtrace("transcode", "%04X: IN : channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
-               shortid(t), ictx->channels, ictx->channel_layout, ictx->sample_rate,
-               ictx->sample_fmt, ictx->bit_rate);
-      tvhtrace("transcode", "%04X: OUT: channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
-               shortid(t), octx->channels, octx->channel_layout, octx->sample_rate,
-               octx->sample_fmt, octx->bit_rate);
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), ictx->channels, ictx->channel_layout);
+      tvhdebug("transcode", "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+               shortid(t), layout_buf, ictx->sample_rate,
+               av_get_sample_fmt_name(ictx->sample_fmt), ictx->bit_rate);
+
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
+      tvhdebug("transcode", "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+               shortid(t), layout_buf, octx->sample_rate,
+               av_get_sample_fmt_name(octx->sample_fmt), octx->bit_rate);
 
       if (transcode_opt_set_int(t, ts, as->resample_context,
                                 "in_channel_layout", ictx->channel_layout, 1))
@@ -675,19 +713,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         goto cleanup;
       }
       as->resample_is_open = 1;
-
     }
-
-    as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
-    if (!as->fifo) {
-      tvherror("transcode", "%04X: Could not allocate fifo", shortid(t));
-      transcoder_stream_invalidate(ts);
-      goto cleanup;
-    }
-
-  }
-
-  if (as->resample) {
 
     uint8_t **output = alloca(octx->channels * sizeof(uint8_t *));
 
@@ -818,7 +844,7 @@ scleanup:
         create_adts_header(n->pkt_payload, n->pkt_sri, octx->channels);
 
       if (octx->extradata_size)
-	n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
+        n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
       tvhtrace("transcode", "%04X: deliver audio (pts = %" PRIi64 ", delay = %i)",
                shortid(t), n->pkt_pts, octx->delay);
