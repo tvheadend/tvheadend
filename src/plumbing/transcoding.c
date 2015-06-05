@@ -40,8 +40,6 @@
 #include "parsers/bitstream.h"
 #include "parsers/parser_avc.h"
 
-static long transcoder_nrprocessors;
-
 LIST_HEAD(transcoder_stream_list, transcoder_stream);
 
 struct transcoder;
@@ -182,20 +180,6 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
     return -1;
   }
   return 0;
-}
-
-/**
- *
- */
-static long
-transcoder_thread_count(transcoder_t *t, streaming_component_type_t ty)
-{
-  long r = LONG_MAX;
-  if (SCT_ISAUDIO(ty))
-    return 1;
-  if (t->t_props.tp_nrprocessors)
-    r = t->t_props.tp_nrprocessors;
-  return MIN(r, transcoder_nrprocessors);
 }
 
 /**
@@ -1527,9 +1511,6 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx = avcodec_alloc_context3_tvh(icodec);
   as->aud_octx = avcodec_alloc_context3_tvh(ocodec);
 
-  as->aud_ictx->thread_count =
-    as->aud_octx->thread_count = transcoder_thread_count(t, sct);
-
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)as, ts_link);
 
   tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
@@ -1629,8 +1610,8 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_ictx = avcodec_alloc_context3_tvh(icodec);
   vs->vid_octx = avcodec_alloc_context3_tvh(ocodec);
 
-  vs->vid_ictx->thread_count =
-    vs->vid_octx->thread_count = transcoder_thread_count(t, sct);
+  if (t->t_props.tp_nrprocessors)
+    vs->vid_octx->thread_count = t->t_props.tp_nrprocessors;
 
   vs->vid_dec_frame = avcodec_alloc_frame();
   vs->vid_enc_frame = avcodec_alloc_frame();
@@ -1940,7 +1921,4 @@ transcoder_get_capabilities(int experimental)
  */
 void transcoding_init(void)
 {
-  transcoder_nrprocessors = sysconf(_SC_NPROCESSORS_ONLN);
-  if (transcoder_nrprocessors <= 0)
-    transcoder_nrprocessors = LONG_MAX;
 }

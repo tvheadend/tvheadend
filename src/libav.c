@@ -1,3 +1,4 @@
+#include "plumbing/transcoding.h"
 #include "libav.h"
 
 /**
@@ -207,4 +208,5 @@ libav_init(void)
   av_log_set_callback(libav_log_callback);
   libav_set_loglevel();
   av_register_all();
+  transcoding_init();
 }
