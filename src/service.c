@@ -912,11 +912,11 @@ service_create0
 
   lock_assert(&global_lock);
   
-  if (service_type == STYPE_RAW)
+  if (service_type == STYPE_RAW) {
     TAILQ_INSERT_TAIL(&service_raw_all, t, s_all_link);
-  else
+  } else {
     TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
-
+  }
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
   t->s_type = service_type;
