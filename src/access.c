@@ -474,9 +474,6 @@ access_update(access_t *a, access_entry_t *ae)
     break;
   }
 
-  if(a->aa_conn_limit < ae->ae_conn_limit)
-    a->aa_conn_limit = ae->ae_conn_limit;
-
   if(ae->ae_chmin || ae->ae_chmax) {
     uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
     if (p) {
