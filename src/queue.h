@@ -5,108 +5,27 @@
 #ifndef HTSQ_H
 #define HTSQ_H
 
-#include <sys/queue.h>
+#include "../vendor/include/sys/queue.h"
 
 /*
- * Complete missing LIST-ops
+ * Extra LIST-ops
  */
 
-#ifndef LIST_ENTRY_INIT
 #define LIST_ENTRY_INIT(elm, field) \
         (elm)->field.le_next = NULL, (elm)->field.le_prev = NULL
-#endif
 
-#ifndef LIST_FOREACH
-#define	LIST_FOREACH(var, head, field)					\
-	for ((var) = ((head)->lh_first);				\
-		(var);							\
-		(var) = ((var)->field.le_next))
-#endif
-
-#ifndef LIST_EMPTY
-#define	LIST_EMPTY(head)		((head)->lh_first == NULL)
-#endif
-
-#ifndef LIST_FIRST
-#define	LIST_FIRST(head)		((head)->lh_first)
-#endif
-
-#ifndef LIST_NEXT
-#define	LIST_NEXT(elm, field)		((elm)->field.le_next)
-#endif
-
-#ifndef LIST_SAFE_REMOVE
 #define LIST_SAFE_REMOVE(elm, field) \
         if ((elm)->field.le_next != NULL || (elm)->field.le_prev != NULL) { \
                 LIST_REMOVE(elm, field); \
                 LIST_ENTRY_INIT(elm, field); \
         }
-#endif
 
-#ifndef LIST_INSERT_BEFORE
-#define	LIST_INSERT_BEFORE(listelm, elm, field) do {			\
-	(elm)->field.le_prev = (listelm)->field.le_prev;		\
-	(elm)->field.le_next = (listelm);				\
-	*(listelm)->field.le_prev = (elm);				\
-	(listelm)->field.le_prev = &(elm)->field.le_next;		\
-} while (/*CONSTCOND*/0)
-#endif
-
-/*
- * Complete missing TAILQ-ops
- */
-
-#ifndef TAILQ_INSERT_BEFORE
-#define	TAILQ_INSERT_BEFORE(listelm, elm, field) do {			\
-	(elm)->field.tqe_prev = (listelm)->field.tqe_prev;		\
-	(elm)->field.tqe_next = (listelm);				\
-	*(listelm)->field.tqe_prev = (elm);				\
-	(listelm)->field.tqe_prev = &(elm)->field.tqe_next;		\
-} while (0)
-#endif
-
-#ifndef TAILQ_FOREACH
-#define TAILQ_FOREACH(var, head, field)                                     \
- for ((var) = ((head)->tqh_first); (var); (var) = ((var)->field.tqe_next))
-#endif
-
-#ifndef TAILQ_FIRST
-#define TAILQ_FIRST(head)               ((head)->tqh_first)
-#endif
-
-#ifndef TAILQ_NEXT
-#define TAILQ_NEXT(elm, field)          ((elm)->field.tqe_next)
-#endif
-
-#ifndef TAILQ_LAST
-#define TAILQ_LAST(head, headname) \
-        (*(((struct headname *)((head)->tqh_last))->tqh_last))
-#endif
-
-#ifndef TAILQ_PREV
-#define TAILQ_PREV(elm, headname, field) \
-        (*(((struct headname *)((elm)->field.tqe_prev))->tqh_last))
-#endif
-
-#ifndef TAILQ_FOREACH_REVERSE
-#define	TAILQ_FOREACH_REVERSE(var, head, headname, field)		\
-	for ((var) = (*(((struct headname *)((head)->tqh_last))->tqh_last));	\
-		(var);							\
-		(var) = (*(((struct headname *)((var)->field.tqe_prev))->tqh_last)))
-#endif
-
-/*
- * Some extra functions for LIST manipulation
- */
-
-#ifndef LIST_MOVE
 #define LIST_MOVE(newhead, oldhead, field) do {			        \
         if((oldhead)->lh_first) {					\
            (oldhead)->lh_first->field.le_prev = &(newhead)->lh_first;	\
 	}								\
         (newhead)->lh_first = (oldhead)->lh_first;			\
 } while (0)
-#endif
 
 #define LIST_INSERT_SORTED(head, elm, field, cmpfunc) do {	\
         if(LIST_EMPTY(head)) {					\
@@ -125,6 +44,10 @@
            }							\
         }							\
 } while(0)
+
+/*
+ * Extra TAILQ-ops
+ */
 
 #define TAILQ_INSERT_SORTED(head, elm, field, cmpfunc) do {	\
         if(TAILQ_FIRST(head) == NULL) {				\
@@ -173,5 +96,4 @@
         }\
 } while (/*CONSTCOND*/0) 
  
-
 #endif /* HTSQ_H */
