@@ -95,6 +95,10 @@
 		(var) = (*(((struct headname *)((var)->field.tqe_prev))->tqh_last)))
 #endif
 
+#ifndef TAILQ_EMPTY
+#define TAILQ_EMPTY(head)               ((head)->tqh_first == NULL)
+#endif
+
 /*
  * Some extra functions for LIST manipulation
  */
