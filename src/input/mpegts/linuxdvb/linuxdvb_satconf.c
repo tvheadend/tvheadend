@@ -852,7 +852,7 @@ linuxdvb_satconf_start_mux
     if (r) return r;
   } else {
     /* Clear the frontend settings, open frontend fd */
-    r = linuxdvb_frontend_clear(lfe);
+    r = linuxdvb_frontend_clear(lfe, mmi);
     if (r) return r;
   }
 

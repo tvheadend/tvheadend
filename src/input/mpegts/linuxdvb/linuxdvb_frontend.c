@@ -1110,7 +1110,7 @@ int linuxdvb2tvh_delsys ( int delsys )
 
 int
 linuxdvb_frontend_clear
-  ( linuxdvb_frontend_t *lfe )
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi )
 {
   char buf1[256];
 
@@ -1139,6 +1139,23 @@ linuxdvb_frontend_clear
   if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
     tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
     return -1;
+  }
+
+  if (mmi) {
+    dvb_mux_t *lm = (dvb_mux_t*)mmi->mmi_mux;
+    dvb_mux_conf_t *dmc = &lm->lm_tuning;
+
+    struct dtv_property delsys_p;
+    struct dtv_properties delsys_cmdseq = {
+      .num = 1,
+      .props = &delsys_p
+    };
+    delsys_p.cmd = DTV_DELIVERY_SYSTEM;
+    delsys_p.u.data = TR(delsys, delsys_tbl, SYS_UNDEFINED);
+    if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &delsys_cmdseq)) != 0) {
+      tvherror("linuxdvb", "%s - DTV_DELIVERY_SYSTEM failed [e=%s]", buf1, strerror(errno));
+      return -1;
+    }
   }
 #endif
 
@@ -1278,7 +1295,7 @@ linuxdvb_frontend_tune0
   dvb_mux_conf_t *dmc;
   struct dvb_frontend_parameters p;
 
-  r = linuxdvb_frontend_clear(lfe);
+  r = linuxdvb_frontend_clear(lfe, NULL);
   if (r) return r;
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
