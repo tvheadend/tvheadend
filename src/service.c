@@ -227,7 +227,7 @@ const idclass_t service_class = {
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Priority (0-10)",
+      .name     = "Priority (-10..10)",
       .off      = offsetof(service_t, s_prio),
     },
     {
@@ -1572,7 +1572,7 @@ service_instance_add(service_instance_list_t *sil,
 {
   service_instance_t *si;
 
-  prio += MAX(0, MIN(10, s->s_prio));
+  prio += 10 + MAX(-10, MIN(10, s->s_prio));
 
   /* Existing */
   TAILQ_FOREACH(si, sil, si_link)
