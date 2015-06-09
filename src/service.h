@@ -21,6 +21,7 @@
 
 #include "htsmsg.h"
 #include "idnode.h"
+#include "profile.h"
 #include "descrambler.h"
 
 extern const idclass_t service_class;
@@ -500,6 +501,7 @@ static inline service_t *service_find(const char *identifier)
 service_instance_t *service_find_instance(struct service *s,
                                           struct channel *ch,
                                           struct tvh_input *source,
+                                          profile_chain_t *prch,
                                           service_instance_list_t *sil,
                                           int *error, int weight,
                                           int flags, int timeout,

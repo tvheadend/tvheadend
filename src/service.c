@@ -696,12 +696,13 @@ service_start(service_t *t, int instance, int flags, int timeout, int postpone)
 service_instance_t *
 service_find_instance
   (service_t *s, channel_t *ch, tvh_input_t *ti,
-   service_instance_list_t *sil,
+   profile_chain_t *prch, service_instance_list_t *sil,
    int *error, int weight, int flags, int timeout, int postpone)
 {
   channel_service_mapping_t *csm;
   service_instance_t *si, *next;
-  int weight2;
+  profile_t *pro = prch ? prch->prch_pro : NULL;
+  int enlisted, weight2;
 
   lock_assert(&global_lock);
 
@@ -714,10 +715,25 @@ service_find_instance
       *error = SM_CODE_SVC_NOT_ENABLED;
       return NULL;
     }
+    enlisted = 0;
     LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
       s = csm->csm_svc;
-      if (s->s_is_enabled(s, flags))
-        s->s_enlist(s, ti, sil, flags);
+      if (s->s_is_enabled(s, flags)) {
+        if (pro == NULL ||
+            pro->pro_svfilter == PROFILE_SVF_NONE ||
+            (pro->pro_svfilter == PROFILE_SVF_SD && service_is_sdtv(s)) ||
+            (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s))) {
+          s->s_enlist(s, ti, sil, flags);
+          enlisted++;
+        }
+      }
+    }
+    if (enlisted == 0) {
+      LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+        s = csm->csm_svc;
+        if (s->s_is_enabled(s, flags))
+          s->s_enlist(s, ti, sil, flags);
+      }
     }
   } else {
     s->s_enlist(s, ti, sil, flags);

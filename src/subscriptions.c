@@ -275,7 +275,7 @@ subscription_start_instance
     tvhtrace("subscription", "%04X: find instance for %s weight %d",
              shortid(s), s->ths_service->s_nicename, s->ths_weight);
   si = service_find_instance(s->ths_service, s->ths_channel,
-                             s->ths_source,
+                             s->ths_source, s->ths_prch,
                              &s->ths_instances, error, s->ths_weight,
                              s->ths_flags, s->ths_timeout,
                              dispatch_clock > s->ths_postpone_end ?

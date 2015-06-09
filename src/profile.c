@@ -258,6 +258,17 @@ profile_class_priority_list ( void *o )
   return strtab2htsmsg(tab);
 }
 
+static htsmsg_t *
+profile_class_svfilter_list ( void *o )
+{
+  static const struct strtab tab[] = {
+    { "None",                    PROFILE_SVF_NONE },
+    { "SD: Standard Definition", PROFILE_SVF_SD },
+    { "HD: High Definition",     PROFILE_SVF_HD },
+  };
+  return strtab2htsmsg(tab);
+}
+
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
@@ -339,6 +350,15 @@ const idclass_t profile_class =
       .name     = "Continue On Access Error",
       .off      = offsetof(profile_t, pro_contaccess),
       .def.i    = 1,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "svfilter",
+      .name     = "Preferred Service Video Type",
+      .list     = profile_class_svfilter_list,
+      .off      = offsetof(profile_t, pro_svfilter),
+      .opts     = PO_SORTKEY,
+      .def.i    = PROFILE_SVF_NONE
     },
     { }
   }

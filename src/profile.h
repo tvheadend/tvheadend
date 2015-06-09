@@ -37,6 +37,12 @@ typedef enum {
   PROFILE_SPRIO_DVR_UNIMPORTANT
 } profile_sprio_t;
 
+typedef enum {
+  PROFILE_SVF_NONE = 0,
+  PROFILE_SVF_SD,
+  PROFILE_SVF_HD
+} profile_svfilter_t;
+
 struct profile;
 struct muxer;
 struct streaming_target;
@@ -123,6 +129,7 @@ typedef struct profile {
   int pro_timeout;
   int pro_restart;
   int pro_contaccess;
+  int pro_svfilter;
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);
