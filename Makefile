@@ -456,6 +456,7 @@ distclean: clean
 	rm -rf ${ROOTDIR}/libav_static
 	rm -rf ${ROOTDIR}/libhdhomerun_static
 	rm -rf ${ROOTDIR}/build.*
+	rm -rf ${ROOTDIR}/data/dvb-scan
 	rm -f ${ROOTDIR}/.config.mk
 
 # Create version
@@ -496,7 +497,7 @@ endif
 ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
 	@touch $@
 
-${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a:
+${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
 	CONFIG_LIBFFMPEG_STATIC_X264=$(CONFIG_LIBFFMPEG_STATIC_X264) \
 	  $(MAKE) -f Makefile.ffmpeg build
 
@@ -510,7 +511,7 @@ endif
 ${BUILDDIR}/libhdhomerun_stamp: ${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a
 	@touch $@
 
-${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a:
+${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
 	$(MAKE) -f Makefile.hdhomerun build
 
 # linuxdvb git tree
