@@ -346,6 +346,7 @@ Ext.reg("multiselect", Ext.ux.Multiselect);
 /**
  * 22/07/2014: ceiling support backported from version 1.2, by Kai Sommerfeld
  * 01/08/2014: tvh_renderer fcn added by Jaroslav Kysela
+ * 09/06/2015: update timeout code added by Jaroslav Kysela
  */
 Ext.namespace('Ext.ux.grid');
 
@@ -357,6 +358,10 @@ Ext.ux.grid.ProgressColumn = function(config) {
 };
 
 Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
+    /**
+     * @cfg {Integer} update timeout in milliseconds (defaults to 0 - inactive)
+     */
+    timeout : 0,
     /**
      * @cfg {Integer} upper limit for full progress indicator (defaults to 100)
      */
@@ -405,6 +410,7 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
       return v;
     },
     renderer: function(v, p, record) {
+        var ov = v;
         v = this.tvh_renderer(v, p, record);
         if (typeof v === "string")
           return v; // custom string
@@ -430,11 +436,28 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
                 style = '-red';
         }
 
-        p.css += ' x-grid3-progresscol';
-        return String.format(
+        var res = String.format(
                 '<div class="x-progress-wrap"><div class="x-progress-inner"><div class="x-progress-bar{0}" style="width:{1}%;">{2}</div>' +
                 '</div>', style, value, text
                 );
+        if (!this.timerflag) {
+            p.css += ' x-grid3-progresscol';
+            if (this.timeout) {
+              var tid = Ext.id();
+              res = '<div id="' + tid + '">' + res + '</div>';
+              setInterval(this.runTimer, this.timeout, this, ov, p, record, tid);
+            }
+        }
+        return res;
+    },
+    runTimer: function(obj, v, p, record, tid) {
+        var dom = document.getElementById(tid);
+        if (dom) {
+           obj.timerflag = true;
+           var res = obj.renderer(v, p, record, tid);
+           obj.timerflag = false;
+           dom.innerHTML = res;
+        }
     }
 });
 

@@ -453,6 +453,7 @@ tvheadend.epg = function() {
                 dataIndex: 'progress',
                 colored: false,
                 ceiling: 100,
+                timeout: 20000, // 20 seconds
                 tvh_renderer: function(value, meta, record) {
                     var entry = record.data;
                     var start = entry.start;           // milliseconds
