@@ -1823,20 +1823,20 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
   const char *dvr_config_name, *title, *comment, *name, *directory;
-  uint32_t u32, days_of_week, priority, retention, start, stop, enabled;
+  uint32_t u32, days_of_week, priority, retention, start = 0, stop = 0, enabled;
   channel_t *ch = NULL;
 
   /* Options */
-  if(!(title = htsmsg_get_str(in, "title"))
-      || htsmsg_get_u32(in, "start", &start)
-      || htsmsg_get_u32(in, "stop", &stop)
-      || htsmsg_get_u32(in, "channelId", &u32))
+  if(!(title = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
 
+  htsmsg_get_u32(in, "start", &start);
+  htsmsg_get_u32(in, "stop", &stop);
   if (stop == start)
     stop = start+1;
 
-  ch = channel_find_by_id(u32);
+  if (!htsmsg_get_u32(in, "channelId", &u32))
+    ch = channel_find_by_id(u32);
   dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
 
   if(htsmsg_get_u32(in, "retention", &retention))
