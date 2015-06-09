@@ -415,6 +415,8 @@ ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 DEPS      += ${BUILDDIR}/libhdhomerun_stamp
 endif
 
+SRCS += build.c timestamp.c
+
 #
 # Build Rules
 #
@@ -451,7 +453,7 @@ ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 
 # Clean
 clean:
-	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle*
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle* ${BUILDDIR}/build.o ${BUILDDIR}/timestamp.*
 	find . -name "*~" | xargs rm -f
 	$(MAKE) -f Makefile.webui clean
 
@@ -475,6 +477,20 @@ src/webui/extjs.c: make_webui
 
 # Include OS specific targets
 include ${ROOTDIR}/support/${OSENV}.mk
+
+# Build files
+$(BUILDDIR)/timestamp.c: FORCE
+	@mkdir -p $(dir $@)
+	@echo '#include "build.h"' > $@
+	@echo 'const char* build_timestamp = "'`date -Iseconds`'";' >> $@
+
+$(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
+	@mkdir -p $(dir $@)
+	$(CC) -c -o $@ $<
+
+$(BUILDDIR)/build.o: $(BUILDDIR)/build.c
+	@mkdir -p $(dir $@)
+	$(CC) -c -o $@ $<
 
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
