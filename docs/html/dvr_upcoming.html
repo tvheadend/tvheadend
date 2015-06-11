@@ -1,103 +1,90 @@
+<!-- ***** WARNING! This file is auto-generated ***** -->
+
+<!-- Do not edit it by hand if you want to keep your changes. -->
+<!-- All changes *must* be made in the source markdown and then carried-->
+<!-- through the pandoc conversion that creates these html files. -->
+
+<!-- Make changes on https://github.com/tvheadend/tvheadend-documentation -->
+
+<!-- File created on Wed Jun 10 22:12:04 BST 2015  -->
+<!-- Created with pandoc 1.13.2  -->
+
 <div class="hts-doc-text">
-This tab show your all upcoming/current recordings.
-
-<p>
-<img src="docresources/upcomingrecordings1.png">
-</p>
-<p>
-<br>
-<hr>
-<b>Buttons</b>
-<hr>
-Buttons have the following functions:
-<br><br>
-<dl>
-  <dt><b>Add</b>
-  <dd>
-  Add and configure a recording event by hand as opposed to choosing something from the EPG. This is useful if you wish to record something that isn't yet in the EPG, or record at a particular time that perhaps spans several EPG events.
-  <p>
-  <dt><b>Delete</b>
-  <dd>
-  If clicked delete selected upcoming/current recordings you delete recordings. Before deleted show message: Do you really want to delete the selection ? Answer Yes or No.
-  <p>
-  <dt><b>Abort</b>
-  <dd>
-  Abort an already-underway recording. Note that this does not remove the (partial) recording file from disk.
-  <p>
-  <dt><b>Edit</b>
-  <dd>
-  Manually edit an already-scheduled recording event. This uses the same fields as <b>Add</b>, but they're obviously pre-populated with their current values.
-  <p>
-  <dt><b>Save</b>
-  <dd>
-  Saves any changes made to the recording list.
-  <p>
-  <dt><b>Undo</b>
-  <dd>
-  Undoes any changes made to the recording list.
-  <p>
-  </dl>
-<p>
-<br>
-<hr>
-<b>Columns</b>
-<hr>
-The columns have the following functions:
-<br><br>
- <dl>
-  <dt><b>Details</b>
-  <dd>
-  Shows the status of the recording event:<br>
-  <br>
-  <b>Clock</b> - the recording is scheduled (upcoming).<br>
-  <br>
-  <b>Record symbol (red circle)</b> - the recording is active and underway (current).<br>
-  <br>
-  <b>InInfo</b> - displays detailed information about the selected recording (upcoming or current).<br>
- <p>
- <img src="docresources/upcomingrecordings2.png">
-  <p>
-<dt><b>Title</b>
-  <dd>
-  The title (name) of the recording. While this is copied from the EPG when you create a recording, it's not used to match the event itself and is thus used here as the name of the event (see also: adding an event manually with the <b>Add</b> button).
- <p>
- <dt><b>Episode</b>
-  <dd>
-  The episode number of the recording (whether this is available depends on your broadcaster and/or EPG data source).
- <p>
- <dt><b>Priority</b>
-  <dd>
-  The priority of the recording: Not set, Important, High, Normal, Low, Unimportant.
-  <br>
-  If there is a clash, more important recordings will take priority over less important ones.
- <p>
- <dt><b>Scheduled Start Time</b>
-  <dd>
-  The date and time when the scheduled recording will start. Note that this includes any extra time defined in the recording profile (e.g. "start two minutes earlier than the EPG start time").
- <p>
- <dt><b>Scheduled Stop Time</b>
-  <dd>
-  The date and time when the scheduled recording will stop. Note that this includes any extra time defined in the recording profile (e.g. "finish recording five minutes after the EPG stop time").
- <p>
- <dt><b>Duration</b>
-  <dd>
-  The total duration of the scheduled recording, including any extra time before or after.
- <p>
-  <dt><b>Channel Name</b>
-  <dd>
-  The channel to be recorded.
- <p>
- <dt><b>Creator</b>
-  <dd>
-  The user who created the recording or the auto-recording source and IP address if scheduled by a matching rule.
- <p>
- <dt><b>DVR Configuration</b>
-  <dd>
-  The DVR configuration to be used for this recording.
- <p>
- <dt><b>Schedule Status</b>
-  <dd>
-  The status of the recording(scheduled or recording).
- <p>
-
+<h2 id="digital-video-recorder---upcomingcurrent-recordings">Digital Video Recorder - Upcoming/Current Recordings</h2>
+<p>This tab show your all upcoming/current recordings.</p>
+<div class="figure">
+<img src="docresources/upcomingrecordings1.png" alt="&#39;Upcoming/Current Recordings&#39; Tab" />
+<p class="caption">'Upcoming/Current Recordings' Tab</p>
+</div>
+<hr />
+<h4 id="menu-barbuttons">Menu Bar/Buttons</h4>
+<p>The following functions are available:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Button</th>
+<th align="left">Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Save</strong></td>
+<td align="left">Saves any changes made to the recording list.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Undo</strong></td>
+<td align="left">Undo any changes made since the last save.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Add</strong></td>
+<td align="left">Add and configure a recording event by hand as opposed to choosing something from the EPG. This is useful if you wish to record something that isn’t yet in the EPG, or record at a particular time that perhaps spans several EPG events.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Delete</strong></td>
+<td align="left">Delete the selected recording event. You will be prompted for confirmation.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Abort</strong></td>
+<td align="left">Abort an already-underway recording. Note that this does not remove the (partial) recording file from disk.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Edit</strong></td>
+<td align="left">Manually edit an already-scheduled recording event. This uses the same fields as <strong>Add</strong>, but they’re obviously pre-populated with their current values.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Help</strong></td>
+<td align="left">Display this help page.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="grid-items">Grid Items</h4>
+<p>The main grid items have the following functions:</p>
+<p><strong>Details</strong> : Shows the status of the recording event:</p>
+<ul>
+<li><p><img class = iconimg src="static/icons/clock.png" alt="Clock icon"> - the recording is scheduled (upcoming).</p></li>
+<li><p><img class = iconimg src="static/icons/rec.png" alt="Recording icon"> - the recording is active and underway (current).</p></li>
+<li><p><img class = iconimg src="static/icons/information.png" alt="Information icon"> - displays detailed information about the selected recording (upcoming or current).</p></li>
+</ul>
+<div class="figure">
+<img src="docresources/upcomingrecordings2.png" alt="Detailed Recording Information" />
+<p class="caption">Detailed Recording Information</p>
+</div>
+<p><strong>Rerun Of</strong> : <font color=red>Text...</font></p>
+<p><strong>Title</strong> : The title (name) of the recording. While this is copied from the EPG when you create a recording, it’s not used to match the event itself and is thus used here as the name of the event (see also: adding an event manually with the <strong>Add</strong> button).</p>
+<p><strong>Subtitle</strong> : <font color=red>Text...</font></p>
+<p><strong>Episode</strong> : The episode number of the recording (whether this is available depends on your broadcaster and/or EPG data source).</p>
+<p><strong>Priority</strong> : The priority of the recording: Not set, Important, High, Normal, Low, Unimportant. If there is a clash, more important recordings will take priority over less important ones.</p>
+<p><strong>Scheduled Start Time</strong> :The date and time when the scheduled recording will start. Note that this includes any extra time defined in the recording profile (e.g. “start two minutes earlier than the EPG start time”).</p>
+<p><strong>Scheduled Stop Time</strong> : The date and time when the scheduled recording will stop. Note that this includes any extra time defined in the recording profile (e.g. “finish recording five minutes after the EPG stop time”).</p>
+<p><strong>Duration</strong> : The total duration of the scheduled recording, including any extra time before or after.</p>
+<p><strong>File Size</strong> : <font color=red>Text...</font></p>
+<p><strong>Channel</strong> : The channel to be recorded.</p>
+<p><strong>Owner</strong> : <font color=red>Text...</font></p>
+<p><strong>Creator</strong> : The user who created the recording or the auto-recording source and IP address if scheduled by a matching rule.</p>
+<p><strong>DVR Configuration</strong> : The DVR configuration to be used for this recording.</p>
+<p><strong>Schedule Status</strong> : The status of the recording (scheduled or recording).</p>
+<p><strong>Errors</strong> : <font color=red>Text...</font></p>
+<p><strong>Data Errors</strong> : <font color=red>Text...</font></p>
+<p><strong>Comment</strong> : <font color=red>Text...</font></p>
 </div>

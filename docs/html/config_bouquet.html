@@ -1,43 +1,68 @@
+<!-- ***** WARNING! This file is auto-generated ***** -->
+
+<!-- Do not edit it by hand if you want to keep your changes. -->
+<!-- All changes *must* be made in the source markdown and then carried-->
+<!-- through the pandoc conversion that creates these html files. -->
+
+<!-- Make changes on https://github.com/tvheadend/tvheadend-documentation -->
+
+<!-- File created on Wed Jun 10 22:12:04 BST 2015  -->
+<!-- Created with pandoc 1.13.2  -->
+
 <div class="hts-doc-text">
-
-<p>
-To use bouquets, ensure to add and scan all available muxes using
-the predefined muxes or manual configuration.
-</p>
-
-<p>
-The bouquets are obtained automatically from the DVB source during
-the mux scan period. Note that bouquets may use more muxes and only
-services from scanned muxes are added. The mux with bouquets might
-require another scan when all muxes are discovered (manually using
-the rescan checkbox).
-</p>
-
-<p>
-The fastscan bouquets are pre-defined in the configuration tree. These
-bouquets must be manually enabled to let tvheadend to subscribe and listen
-to the specific MPEG-TS PIDs.
-</p>
-
-<p>
-The bouquets are listed / edited  in a grid. 
-
-<ul>
- <li>To edit a cell, double click on it. After a cell is changed it
-     will flags one of its corner to red to indicated that it has been
-     changed. To commit these changes back to Tvheadend press the 
-     'Save changes' button. In order to change a Checkbox cell you only
-     have to click once in it.
-
- <li>To add a new entry, press the 'Add entry' button. The new (empty) entry
-     will be created on the server but will not be in its enabled state.
-     You can now change all the cells to the desired values, check the
-     'enable' box and then press 'Save changes' to activate the new entry.
-
- <li>To delete one or more entries, select the lines (by clicking once on 
-     them), and press the 'Delete selected' button. A popup
-     will ask you to confirm your request.
-</ul>
-</p>
-
+<h2 id="configuration---channelepg---bouquets">Configuration - Channel/EPG - Bouquets</h2>
+<p>Bouquets are broadcaster-defined groupings and orders of channels.</p>
+<h2 id="note-screenshot-here">NOTE: <font color=red>SCREENSHOT HERE</font></h2>
+<p>To use bouquets, ensure to add and scan all available muxes using the predefined muxes or manual configuration.</p>
+<p>The bouquets are obtained automatically from the DVB source during the mux scan period. Note that bouquets may use more muxes and only services from scanned muxes are added. The mux with bouquets might require another scan when all muxes are discovered (manually using the rescan checkbox).</p>
+<p>The fastscan bouquets are pre-defined in the configuration tree. These bouquets must be manually enabled to let Tvheadend to subscribe and listen to the specific MPEG-TS PIDs.</p>
+<hr />
+<h4 id="menu-barbuttons">Menu Bar/Buttons</h4>
+<p>The following functions are available:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Button</th>
+<th align="left">Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Save</strong></td>
+<td align="left">Save any changes made to the bouquet configuration.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Undo</strong></td>
+<td align="left">Undo any changes made to the bouquetconfiguration since the last save.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Delete</strong></td>
+<td align="left">Delete an existing bouquet.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Edit</strong></td>
+<td align="left">Edit an existing bouquet. This allows you to change any of the parameters you’d otherwise set when adding a new channel, e.g. enabled, map radio, etc.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Help</strong></td>
+<td align="left">Displays this help page.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="grid-items">Grid Items</h4>
+<p>The main grid items have the following functions:</p>
+<p><strong>Enabled</strong> : <font color=red>Text...</font></p>
+<p><strong>Rescan</strong> : <font color=red>Text...</font></p>
+<p><strong>Name</strong> : <font color=red>Text...</font></p>
+<p><strong>Auto-Map to Channels</strong> : <font color=red>Text...</font></p>
+<p><strong>Map Zero Numbers</strong> : <font color=red>Text...</font></p>
+<p><strong>Channel Number Offset</strong> : <font color=red>Text...</font></p>
+<p><strong>Map No Name</strong> : <font color=red>Text...</font></p>
+<p><strong>Map Radio</strong> : <font color=red>Text...</font></p>
+<p><strong>Create Tag</strong> : <font color=red>Text...</font></p>
+<p><strong>Source</strong> : <font color=red>Text...</font></p>
+<p><strong># Services</strong> : <font color=red>Text...</font></p>
+<p><strong># Seen Services</strong> : <font color=red>Text...</font></p>
+<p><strong>Comment</strong> : <font color=red>Text...</font></p>
 </div>
