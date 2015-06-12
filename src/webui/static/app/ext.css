@@ -648,6 +648,11 @@
   font-style: italic
 }
 
+.hts-doc-text td img {
+  display: inline;
+  margin: -10px -10px -10px -5px
+}
+
 /* List styles for webUI help */
 
 .hts-doc-text dt {
