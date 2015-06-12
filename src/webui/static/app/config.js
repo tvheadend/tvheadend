@@ -334,7 +334,7 @@ tvheadend.miscconf = function(panel, index) {
         text: 'Help',
         iconCls: 'help',
         handler: function() {
-            new tvheadend.help('General Configuration', 'config_misc.html');
+            new tvheadend.help('General Configuration', 'config_general.html');
         }
     });
 
