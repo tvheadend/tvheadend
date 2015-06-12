@@ -623,6 +623,7 @@
 
 .hts-doc-text img {
     padding: 10px;
+    max-width: 97%
 }
 
 .hts-doc-text p {
