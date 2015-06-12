@@ -17,7 +17,7 @@ tvheadend.regexEscape = function(s) {
  */
 tvheadend.help = function(title, pagename) {
     Ext.Ajax.request({
-        url: 'docs/' + pagename,
+        url: 'docs/en/' + pagename,
         success: function(result, request) {
 
             var content = new Ext.Panel({
