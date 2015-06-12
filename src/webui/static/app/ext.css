@@ -576,35 +576,6 @@
     margin: 5px;
 }
 
-.hts-t-info {
-    float: left;
-    width: 100px;
-}
-
-.hts-doc-text {
-    font: normal 11px verdana;
-    padding: 5px;
-}
-
-.hts-doc-text dt {
-    padding-top: 10px;
-    font-weight: bold;
-}
-
-.hts-doc-text dl {
-    padding-left: 10px;
-    padding-bottom: 10px;
-}
-
-.hts-doc-text li {
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-
-.hts-doc-text img {
-    padding: 10px;
-}
-
 .tv-video-player {
     margin-right: auto;
     margin-left : auto;
@@ -645,6 +616,15 @@
 
 /* Additional general text styles for webUI help */
 
+.hts-doc-text {
+    font: normal 11px verdana;
+    padding: 5px;
+}
+
+.hts-doc-text img {
+    padding: 10px;
+}
+
 .hts-doc-text p {
   margin-top: 1em;
   margin-bottom: 1em;
@@ -655,7 +635,7 @@
   font-size: larger
 }
 
-.hts-doc-text h4{
+.hts-doc-text h4 {
   color: #2163A6;
   margin-top: 15px
 }
@@ -669,6 +649,21 @@
 }
 
 /* List styles for webUI help */
+
+.hts-doc-text dt {
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+.hts-doc-text dl {
+    padding-left: 10px;
+    padding-bottom: 10px;
+}
+
+.hts-doc-text li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
 
 .hts-doc-text ul {
   list-style-type:disc;
@@ -686,11 +681,6 @@
   margin: 0px auto;
   display: block;
   border: none
-}
-
-.hts-doc-text img.iconimg {
-  display: inline;
-  margin:-2px -10px -15px -10px
 }
 
 .hts-doc-text p.caption {
