@@ -63,7 +63,7 @@ tvheadend.tvhlog = function(panel, index) {
         text: 'Help',
 		iconCls: 'help',
         handler: function() {
-            new tvheadend.help('Debug Configuration', 'config_tvhlog.html');
+            new tvheadend.help('Debug Configuration', 'config_debugging.html');
         }
     });
 

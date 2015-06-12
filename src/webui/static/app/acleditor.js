@@ -100,7 +100,7 @@ tvheadend.passwdeditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help('Password Control Entries', 'config_passwd.html');
+            new tvheadend.help('Password Control Entries', 'config_passwords.html');
         }
     });
 };
