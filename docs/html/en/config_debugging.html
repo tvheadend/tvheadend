@@ -1,0 +1,37 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - Debugging</h3>
+<p>This tab is used to configure various debugging options in tvheadend.</p>
+<p><img src="docresources/configtvhlog.png" alt="&#39;Debugging&#39; Tab" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Apply Configuration (run-time only)</strong></td>
+<td>Saves any changes made to the debugging configuration. Changes will be lost on a restart.</td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Configuration Options</h5>
+<p><strong>Debug log path</strong> : <font color=red>Text...</font></p>
+<p><strong>Debug to syslog</strong> : <font color=red>Text...</font></p>
+<p><strong>Debug trace (low-level stuff)</strong> : <font color=red>Text...</font></p>
+<p><strong>Debug subsystems</strong> : <font color=red>Text...</font></p>
+<p><strong>Trace subsystems</strong> : <font color=red>Text...</font></p>
+<p>Changes to any of these settings must be confirmed by pressing the ‘Save configuration’ button before taking effect.</p>
+<p>Note that settings are not saved to a storage. Any change is available only while Tvheadend is running, and will be lost on a restart. To change the default behaviour permanently, use command line options such as <code>-l</code>, <code>–debug</code>, <code>–trace</code>.</p>
+<p>Depending on your distribution, the default command-line configuration is usually stored in the <code>/etc/sysconfig</code> tree or an init script. You may also be able to change <code>/etc/default/tvheadend</code> to add additional command-line parameters.</p>
+<h3>Note: <font color=red>It'd be helpful to expand as to what happens on what distro...</font></h3>
+</div>
