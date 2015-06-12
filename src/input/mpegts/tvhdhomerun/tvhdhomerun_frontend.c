@@ -340,6 +340,7 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
   dvb_mux_conf_t *dmc = &lm->lm_tuning;
   char channel_buf[64];
   uint32_t symbol_rate = 0;
+  uint8_t bandwidth = 0;
   int res;
   char *perror;
 
@@ -358,6 +359,36 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
         default:
           snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
           break;
+      }
+      break;
+    case DVB_TYPE_T:
+      bandwidth = dmc->u.dmc_fe_ofdm.bandwidth / 1000UL;
+      switch (dmc->dmc_fe_modulation) {
+        case DVB_MOD_AUTO:
+            if (dmc->u.dmc_fe_ofdm.bandwidth == DVB_BANDWIDTH_AUTO) {
+                snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+            } else {
+                snprintf(channel_buf, sizeof(channel_buf), "auto%dt:%u", bandwidth, dmc->dmc_fe_freq);
+            }
+            break;
+        case DVB_MOD_QAM_256:
+            if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
+                snprintf(channel_buf, sizeof(channel_buf), "tt%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
+            } else {
+                snprintf(channel_buf, sizeof(channel_buf), "t%dqam256:%u", bandwidth, dmc->dmc_fe_freq);
+            }
+            break;
+        case DVB_MOD_QAM_64:
+            if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2) {
+                snprintf(channel_buf, sizeof(channel_buf), "tt%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
+            } else {
+                snprintf(channel_buf, sizeof(channel_buf), "t%dqam64:%u", bandwidth, dmc->dmc_fe_freq);
+            }
+            break;
+        default:
+            /* probably won't work but never mind */
+            snprintf(channel_buf, sizeof(channel_buf), "auto:%u", dmc->dmc_fe_freq);
+            break;
       }
       break;
     default:
