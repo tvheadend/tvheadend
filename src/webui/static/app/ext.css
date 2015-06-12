@@ -610,7 +610,7 @@
   font-weight: bold
 }
 
-.hts-doc-text tr.even {
+.hts-doc-text tr:nth-child(even) {
   background-color: #F2F7FE
 }
 
