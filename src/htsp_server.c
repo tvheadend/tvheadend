@@ -2072,7 +2072,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   }
 #endif
 
-  pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
+  pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id,
+                             "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch);
   if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);

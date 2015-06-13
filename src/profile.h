@@ -120,6 +120,7 @@ typedef struct profile {
   LIST_HEAD(,dvr_config) pro_dvr_configs;
   LIST_HEAD(,access_entry) pro_accesses;
 
+  int pro_sflags;
   int pro_enabled;
   int pro_shield;
   char *pro_name;
@@ -175,7 +176,8 @@ int  profile_chain_weight(profile_chain_t *prch, int custom);
 static inline profile_t *profile_find_by_uuid(const char *uuid)
   {  return (profile_t*)idnode_find(uuid, &profile_class, NULL); }
 profile_t *profile_find_by_name(const char *name, const char *alt);
-profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt);
+profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name,
+                                const char *alt, int sflags);
 
 htsmsg_t * profile_class_get_list(void *o);
 
