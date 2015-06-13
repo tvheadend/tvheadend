@@ -2076,6 +2076,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   profile_chain_init(&hs->hs_prch, pro, ch);
   if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
+    profile_chain_close(&hs->hs_prch);
     free(hs);
     return htsp_error("Stream setup error");
   }
