@@ -584,6 +584,7 @@ _eit_callback
   epggrab_module_t     *mod;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
+  th_subscription_t    *ths;
 
   if (!epggrab_ota_running)
     return -1;
@@ -592,9 +593,19 @@ _eit_callback
   map = mt->mt_opaque;
   mod = (epggrab_module_t *)map->om_module;
 
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
+
   /* Validate */
-  if(tableid < 0x4e || tableid > 0x6f || len < 11)
+  if(tableid < 0x4e || tableid > 0x6f || len < 11) {
+    if (ths)
+      ths->ths_total_err++;
     return -1;
+  }
 
   /* Basic info */
   sid     = ptr[0] << 8 | ptr[1];

@@ -846,6 +846,7 @@ void mpegts_mux_remove_subscriber(mpegts_mux_t *mm, th_subscription_t *s, int re
 int  mpegts_mux_subscribe(mpegts_mux_t *mm, mpegts_input_t *mi,
                           const char *name, int weight, int flags);
 void mpegts_mux_unsubscribe_by_name(mpegts_mux_t *mm, const char *name);
+th_subscription_t *mpegts_mux_find_subscription_by_name(mpegts_mux_t *mm, const char *name);
 
 void mpegts_mux_unsubscribe_linked(mpegts_input_t *mi, service_t *t);
 

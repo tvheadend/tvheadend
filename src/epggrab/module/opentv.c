@@ -544,6 +544,7 @@ opentv_table_callback
   opentv_status_t *sta;
   opentv_module_t *mod;
   epggrab_ota_mux_t *ota;
+  th_subscription_t *ths;
 
   if (!epggrab_ota_running) return -1;
 
@@ -558,6 +559,14 @@ opentv_table_callback
   cid = ((int)buf[0] << 8) | buf[1];
   mjd = ((int)buf[5] << 8) | buf[6];
   mjd = (mjd - 40587) * 86400;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
+
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, buf, len,
@@ -622,12 +631,20 @@ opentv_bat_callback
   opentv_status_t *sta;
   opentv_module_t *mod;
   epggrab_ota_mux_t *ota;
+  th_subscription_t *ths;
 
   if (!epggrab_ota_running) return -1;
 
   sta = mt->mt_opaque;
   mod = sta->os_mod;
   ota = sta->os_ota;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
 
   r = dvb_bat_callback(mt, buf, len, tableid);
 

@@ -1237,6 +1237,21 @@ mpegts_mux_unsubscribe_by_name
   }
 }
 
+th_subscription_t *
+mpegts_mux_find_subscription_by_name
+  ( mpegts_mux_t *mm, const char *name )
+{
+  const service_t *t;
+  th_subscription_t *s;
+
+  LIST_FOREACH(s, &mm->mm_raw_subs, ths_mux_link) {
+    t = s->ths_service;
+    if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
+      return s;
+  }
+  return NULL;
+}
+
 void
 mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match )
 {
