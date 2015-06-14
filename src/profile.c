@@ -408,6 +408,8 @@ profile_verify(profile_t *pro, int sflags)
     return 0;
   if ((sflags & SUBSCRIPTION_HTSP) != 0 && !pro->pro_work)
     return 0;
+  if ((sflags & SUBSCRIPTION_HTSP) == 0 && !pro->pro_open)
+    return 0;
   sflags &= pro->pro_sflags;
   sflags &= SUBSCRIPTION_PACKET|SUBSCRIPTION_MPEGTS;
   return sflags ? 1 : 0;
@@ -427,6 +429,7 @@ profile_find_by_list
   pro = profile_find_by_uuid(name);
   if (!pro)
     pro = profile_find_by_name(name, alt);
+  if (!profile_verify(pro, sflags))
     pro = NULL;
   if (uuids) {
     uuid = pro ? idnode_uuid_as_str(&pro->pro_id) : "";
@@ -444,7 +447,7 @@ profile_find_by_list
     res = pro;
   }
   if (!res)
-    res = profile_find_by_name(!strcmp(alt, "htsp") ? "htsp" : NULL, NULL);
+    res = profile_find_by_name((sflags & SUBSCRIPTION_HTSP) ? "htsp" : NULL, NULL);
   return res;
 }
 
