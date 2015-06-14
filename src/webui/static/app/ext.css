@@ -621,10 +621,6 @@
     padding: 5px;
 }
 
-.hts-doc-text img {
-    padding: 10px;
-    max-width: 97%
-}
 
 .hts-doc-text p {
   margin-top: 1em;
@@ -651,7 +647,7 @@
 
 .hts-doc-text td img {
   display: inline;
-  margin: -10px -10px -10px -5px
+  margin: -5px auto
 }
 
 /* List styles for webUI help */
@@ -686,7 +682,9 @@
 .hts-doc-text img {
   margin: 0px auto;
   display: block;
-  border: none
+  border: none;
+  padding: 10px;
+  max-width: 97%
 }
 
 .hts-doc-text p.caption {
