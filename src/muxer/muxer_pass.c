@@ -41,14 +41,15 @@ typedef struct pass_muxer {
   /* Filename is also used for logging */
   char *pm_filename;
 
+  /* Streaming components */
+  streaming_start_t *pm_ss;
+
   /* TS muxing */
-  uint16_t  pm_pmt_pid;
-  uint8_t   pm_pmt_cc;
-  uint8_t  *pm_pmt;
-  uint16_t  pm_pmt_version;
-  uint16_t  pm_service_id;
+  uint16_t pm_pmt_pid;
+  uint16_t pm_service_id;
 
   mpegts_psi_table_t pm_pat;
+  mpegts_psi_table_t pm_pmt;
   mpegts_psi_table_t pm_sdt;
   mpegts_psi_table_t pm_eit;
 
@@ -57,162 +58,6 @@ typedef struct pass_muxer {
 
 static void
 pass_muxer_write(muxer_t *m, const void *data, size_t size);
-
-
-/** 
- * PMT generator
- */
-static int
-pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
-	      int version, int pcrpid)
-{
-  int c, tlen, dlen, l, i;
-  uint8_t *buf, *buf1;
-
-  buf = buf0;
-
-  if(maxlen < 12)
-    return -1;
-
-  buf[0] = 2; /* table id, always 2 */
-
-  /* program id */
-  buf[3] = ss->ss_service_id >> 8;
-  buf[4] = ss->ss_service_id & 0xff;
-
-  buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[5] |= (version & 0x1F) << 1;
-
-  buf[6] = 0; /* section number */
-  buf[7] = 0; /* last section number */
-
-  buf[8] = 0xe0 | (pcrpid >> 8);
-  buf[9] =         pcrpid;
-
-  buf[10] = 0xf0; /* Program info length */
-  buf[11] = 0x00; /* We dont have any such things atm */
-
-  buf += 12;
-  tlen = 12;
-
-  for(i = 0; i < ss->ss_num_components; i++) {
-    const streaming_start_component_t *ssc = &ss->ss_components[i];
-
-    dlen = 0;
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2VIDEO:
-      c = 0x02;
-      break;
-
-    case SCT_MPEG2AUDIO:
-      c = 0x04;
-      dlen = 6;
-      break;
-
-    case SCT_EAC3:
-      c = 0x06;
-      dlen = 9;
-      break;
-
-    case SCT_DVBSUB:
-      c = 0x06;
-      dlen = 10;
-      break;
-
-    case SCT_MP4A:
-    case SCT_AAC:
-      c = 0x11;
-      dlen = 6;
-      break;
-
-    case SCT_H264:
-      c = 0x1b;
-      break;
-
-    case SCT_HEVC:
-      c = 0x24;
-      break;
-
-    case SCT_AC3:
-      c = 0x81;
-      dlen = 9;
-      break;
-
-    default:
-      continue;
-    }
-
-    if (tlen + 5 + dlen > maxlen) {
-      tvhwarn("pass", "unable to add stream %d %s%s%s (PID %i) - no space",
-              ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
-              ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid);
-      continue;
-    }
-
-    buf[0] = c;
-    buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
-    buf[2] =         ssc->ssc_pid;
-
-    buf1 = &buf[3];
-    tlen += 5;
-    buf  += 5;
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2AUDIO:
-    case SCT_MP4A:
-    case SCT_AAC:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      break;
-    case SCT_DVBSUB:
-      buf[0] = DVB_DESC_SUBTITLE;
-      buf[1] = 8;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 16; /* Subtitling type */
-      buf[6] = ssc->ssc_composition_id >> 8; 
-      buf[7] = ssc->ssc_composition_id;
-      buf[8] = ssc->ssc_ancillary_id >> 8; 
-      buf[9] = ssc->ssc_ancillary_id;
-      break;
-    case SCT_AC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_AC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real AC3 desc */
-      break;
-    case SCT_EAC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_EAC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real EAC3 desc */
-      break;
-    default:
-      break;
-    }
-
-    tlen += dlen;
-    buf  += dlen;
-
-    buf1[0] = 0xf0 | (dlen >> 8);
-    buf1[1] =         dlen;
-  }
-
-  l = tlen - 3 + 4;
-
-  buf0[1] = 0xb0 | (l >> 8);
-  buf0[2] =         l;
-
-  return dvb_table_append_crc32(buf0, tlen, maxlen);
-}
 
 /*
  * Rewrite a PAT packet to only include the service included in the transport stream.
@@ -242,6 +87,80 @@ pass_muxer_pat_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   out[11] = pm->pm_pmt_pid & 0x00ff;
 
   ol = dvb_table_append_crc32(out, 12, sizeof(out));
+
+  if (ol > 0 && (l = dvb_table_remux(mt, out, ol, &ob)) > 0) {
+    pass_muxer_write((muxer_t *)pm, ob, l);
+    free(ob);
+  }
+}
+
+/*
+ *
+ */
+static void
+pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
+{
+  pass_muxer_t *pm;
+  uint8_t out[1024], *ob;
+  uint16_t sid, pid;
+  int l, ol, i;
+  const streaming_start_component_t *ssc;
+
+  memcpy(out, buf, ol = 3);
+  buf += ol;
+  len -= ol;
+
+  sid = (buf[0] << 8) | buf[1];
+  l = (buf[7] & 0x0f) << 8 | buf[8];
+
+  if (l > len - 9)
+    return;
+
+  pm = (pass_muxer_t*)mt->mt_opaque;
+  if (sid != pm->pm_service_id)
+    return;
+
+  memcpy(out + ol, buf, 9);
+
+  ol  += 9;     /* skip common descriptors */
+  buf += 9 + l;
+  len -= 9 + l;
+
+  /* no common descriptors */
+  out[7+3] &= 0xf0;
+  out[8+3] = 0;
+
+  while (len >= 5) {
+    pid = (buf[1] & 0x1f) << 8 | buf[2];
+    l   = (buf[3] & 0xf) << 8 | buf[4];
+
+    if (l > len - 5)
+      return;
+
+    if (sizeof(out) < ol + l + 5 + 4 /* crc */) {
+      tvherror("pass", "PMT entry too long (%i)", l);
+      return;
+    }
+
+    for (i = 0; i < pm->pm_ss->ss_num_components; i++) {
+      ssc = &pm->pm_ss->ss_components[i];
+      if (ssc->ssc_pid == pid)
+        break;
+    }
+    if (i < pm->pm_ss->ss_num_components) {
+      memcpy(out + ol, buf, 5 + l);
+      ol += 5 + l;
+    }
+
+    buf += 5 + l;
+    len -= 5 + l;
+  }
+
+  /* update section length */
+  out[1] = (out[1] & 0xf0) | ((ol + 4 - 3) >> 8);
+  out[2] = (ol + 4 - 3) & 0xff;
+
+  ol = dvb_table_append_crc32(out, ol, sizeof(out));
 
   if (ol > 0 && (l = dvb_table_remux(mt, out, ol, &ob)) > 0) {
     pass_muxer_write((muxer_t *)pm, ob, l);
@@ -379,24 +298,18 @@ static int
 pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  pm->pm_pmt_pid = ss->ss_pmt_pid;
+
   pm->pm_service_id = ss->ss_service_id;
+  pm->pm_pmt_pid    = ss->ss_pmt_pid;
 
   if (pm->m_config.m_rewrite_pmt) {
-    pm->pm_pmt = realloc(pm->pm_pmt, 188);
-    memset(pm->pm_pmt, 0xff, 188);
-    pm->pm_pmt[0] = 0x47;
-    pm->pm_pmt[1] = 0x40 | (ss->ss_pmt_pid >> 8);
-    pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
-    pm->pm_pmt[3] = 0x10;
-    pm->pm_pmt[4] = 0x00;
-    if(pass_muxer_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
-			    ss->ss_pcr_pid) < 0) {
-      pm->m_errors++;
-      tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);
-      return -1;
-    }
-    pm->pm_pmt_version++;
+
+    if (pm->pm_ss)
+      streaming_start_unref(pm->pm_ss);
+    pm->pm_ss = streaming_start_copy(ss);
+
+    dvb_table_parse_done(&pm->pm_pmt);
+    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", pm->pm_pmt_pid, pm);
   }
 
   return 0;
@@ -495,7 +408,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int l, pid;
-  uint8_t *tsb, *tsb2, *pkt = pb->pb_data;
+  uint8_t *tsb, *pkt = pb->pb_data;
   size_t  len = pb->pb_size, len2;
   
   /* Rewrite PAT/PMT in operation */
@@ -540,12 +453,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
         /* PMT */
         } else {
 
-          for (tsb2 = tsb; tsb2 < pkt; tsb2 += 188)
-            if (tsb2[1] & 0x40) { /* pusi - the first PMT packet */
-              pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | pm->pm_pmt_cc;
-              pm->pm_pmt_cc = (pm->pm_pmt_cc + 1) & 0xf;
-              pass_muxer_write(m, pm->pm_pmt, 188);
-            }
+          dvb_table_parse(&pm->pm_pmt, "-", tsb, l, 1, 0, pass_muxer_pmt_cb);
 
         }
 
@@ -628,10 +536,11 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_filename)
     free(pm->pm_filename);
 
-  if(pm->pm_pmt)
-    free(pm->pm_pmt);
+  if (pm->pm_ss)
+    streaming_start_unref(pm->pm_ss);
 
   dvb_table_parse_done(&pm->pm_pat);
+  dvb_table_parse_done(&pm->pm_pmt);
   dvb_table_parse_done(&pm->pm_sdt);
   dvb_table_parse_done(&pm->pm_eit);
 
@@ -663,6 +572,7 @@ pass_muxer_create(const muxer_config_t *m_cfg)
   pm->pm_fd          = -1;
 
   dvb_table_parse_init(&pm->pm_pat, "pass-pat", DVB_PAT_PID, pm);
+  dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", 100,         pm);
   dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", DVB_SDT_PID, pm);
   dvb_table_parse_init(&pm->pm_eit, "pass-eit", DVB_EIT_PID, pm);
 
