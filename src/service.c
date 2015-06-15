@@ -69,29 +69,14 @@ static const void *
 service_class_channel_get ( void *obj )
 {
   service_t *svc = obj;
-  channel_service_mapping_t *csm;
-
-  htsmsg_t *l = htsmsg_create_list();
-  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_chn->ch_id));
-  
-  return l;
+  return idnode_list_get1(&svc->s_channels);
 }
 
 static char *
 service_class_channel_rend ( void *obj )
 {
-  char *str;
   service_t *svc = obj;
-  channel_service_mapping_t *csm;
-
-  htsmsg_t *l = htsmsg_create_list();
-  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(&csm->csm_chn->ch_id));
-
-  str = htsmsg_list_2_csv(l);
-  htsmsg_destroy(l);
-  return str;
+  return idnode_list_get_csv1(&svc->s_channels);
 }
 
 static int
@@ -99,30 +84,9 @@ service_class_channel_set
   ( void *obj, const void *p )
 {
   service_t *svc = obj;
-  htsmsg_t  *chns = (htsmsg_t*)p;
-  const char *str;
-  htsmsg_field_t *f;
-  channel_t *ch;
-  channel_service_mapping_t *csm;
-
-  /* Mark all for deletion */
-  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
-    csm->csm_mark = 1;
-
-  /* Make new links */
-  HTSMSG_FOREACH(f, chns) {
-    if ((str = htsmsg_field_get_str(f)))
-      if ((ch = channel_find(str)))
-        service_mapper_link(svc, ch, svc);
-  }
-
-  /* Delete unlinked */
-  service_mapper_clean(svc, NULL, svc);
-
-  /* no save - the link information is in the saved channel record */
-  /* only send a notify about the change to other clients */
-  idnode_notify_changed(&svc->s_id);
-  return 0;
+  return idnode_list_set1(&svc->s_id, &svc->s_channels,
+                          &channel_class, (htsmsg_t *)p,
+                          service_mapper_create);
 }
 
 static htsmsg_t *
@@ -699,7 +663,7 @@ service_find_instance
    profile_chain_t *prch, service_instance_list_t *sil,
    int *error, int weight, int flags, int timeout, int postpone)
 {
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   service_instance_t *si, *next;
   profile_t *pro = prch ? prch->prch_pro : NULL;
   int enlisted, weight2;
@@ -716,8 +680,8 @@ service_find_instance
       return NULL;
     }
     enlisted = 0;
-    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-      s = csm->csm_svc;
+    LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+      s = (service_t *)ilm->ilm_in1;
       if (s->s_is_enabled(s, flags)) {
         if (pro == NULL ||
             pro->pro_svfilter == PROFILE_SVF_NONE ||
@@ -729,8 +693,8 @@ service_find_instance
       }
     }
     if (enlisted == 0) {
-      LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-        s = csm->csm_svc;
+      LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+        s = (service_t *)ilm->ilm_in1;
         if (s->s_is_enabled(s, flags))
           s->s_enlist(s, ti, sil, flags);
       }
@@ -838,7 +802,7 @@ service_destroy(service_t *t, int delconf)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   if(t->s_delete != NULL)
     t->s_delete(t, delconf);
@@ -851,11 +815,8 @@ service_destroy(service_t *t, int delconf)
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
   }
 
-  while ((csm = LIST_FIRST(&t->s_channels))) {
-    LIST_REMOVE(csm, csm_svc_link);
-    LIST_REMOVE(csm, csm_chn_link);
-    free(csm);
-  }
+  while ((ilm = LIST_FIRST(&t->s_channels)))
+    idnode_list_unlink(ilm, t);
 
   idnode_unlink(&t->s_id);
 

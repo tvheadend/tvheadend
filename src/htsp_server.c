@@ -592,8 +592,7 @@ htsp_file_destroy(htsp_file_t *hf)
 static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
-  channel_tag_mapping_t *ctm;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
@@ -647,14 +646,14 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_add_u32(out, "eventId", now ? now->id : 0);
   htsmsg_add_u32(out, "nextEventId", next ? next->id : 0);
 
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-    ct = ctm->ctm_tag;
+  LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
+    ct = (channel_tag_t *)ilm->ilm_in1;
     if(channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsmsg_add_u32(tags, NULL, htsp_channel_tag_get_identifier(ct));
   }
 
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-    t = csm->csm_svc;
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    t = (service_t *)ilm->ilm_in1;
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
@@ -679,7 +678,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 static htsmsg_t *
 htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 {
-  channel_tag_mapping_t *ctm;
+  idnode_list_mapping_t *ilm;
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
@@ -691,8 +690,8 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
 
   if(members != NULL) {
-    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      htsmsg_add_u32(members, NULL, channel_get_id(ctm->ctm_channel));
+    LIST_FOREACH(ilm, &ct->ct_ctms, ilm_in1_link)
+      htsmsg_add_u32(members, NULL, channel_get_id((channel_t *)ilm->ilm_in2));
     htsmsg_add_msg(out, "members", members);
   }
 

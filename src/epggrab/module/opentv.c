@@ -516,7 +516,7 @@ skip_chnum:
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
-      ch  = LIST_FIRST(&svc->s_channels)->csm_chn;
+      ch  = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
       tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
 
       if (ecl && ecl->ecl_channel != ch) {

@@ -85,12 +85,12 @@ mpegts_network_class_get_num_chn ( void *ptr )
   mpegts_mux_t *mm;
   mpegts_service_t *s;
   mpegts_network_t *mn = ptr;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   n = 0;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
     LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-      LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
+      LIST_FOREACH(ilm, &s->s_channels, ilm_in1_link)
         n++;
 
   return &n;

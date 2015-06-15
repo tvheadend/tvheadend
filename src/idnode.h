@@ -92,6 +92,27 @@ struct idnode {
 };
 
 /*
+ * Node list mapping definition
+ */
+struct idnode_list_mapping;
+
+typedef struct idnode_list_head {
+  struct idnode_list_mapping *lh_first;
+} idnode_list_head_t;
+
+typedef struct idnode_list_mapping {
+  LIST_ENTRY(idnode_list_mapping) ilm_in1_link;
+  LIST_ENTRY(idnode_list_mapping) ilm_in2_link;
+
+  idnode_t *ilm_in1;
+  idnode_t *ilm_in2;
+
+  uint8_t ilm_in1_save;
+  uint8_t ilm_in2_save;
+  uint8_t ilm_mark;
+} idnode_list_mapping_t;
+
+/*
  * Sorting definition
  */
 typedef struct idnode_sort {
@@ -182,6 +203,22 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
 static inline void idnode_perm_set(idnode_t *self, struct access *a) { self->in_access = a; }
 static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
+
+idnode_list_mapping_t * idnode_list_link
+                       ( idnode_t *in1, idnode_list_head_t *in1_list,
+                         idnode_t *in2, idnode_list_head_t *in2_list,
+                         void *origin );
+void idnode_list_unlink ( idnode_list_mapping_t *ilm, void *origin );
+htsmsg_t * idnode_list_get1 ( idnode_list_head_t *in1_list );
+htsmsg_t * idnode_list_get2 ( idnode_list_head_t *in2_list );
+char * idnode_list_get_csv1 ( idnode_list_head_t *in1_list );
+char * idnode_list_get_csv2 ( idnode_list_head_t *in2_list );
+int idnode_list_set1 ( idnode_t *in1, idnode_list_head_t *in1_list,
+                       const idclass_t *in2_class, htsmsg_t *in2_list,
+                       int (*in2_create)(idnode_t *in1, idnode_t *in2, void *origin) );
+int idnode_list_set2 ( idnode_t *in2, idnode_list_head_t *in2_list,
+                       const idclass_t *in1_class, htsmsg_t *in1_list,
+                       int (*in2_create)(idnode_t *in1, idnode_t *in2, void *origin) );
 
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);

@@ -53,13 +53,7 @@ struct channel_tag_queue channel_tags;
 
 static void channel_tag_init ( void );
 static void channel_tag_done ( void );
-static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
-					int flags);
-static void channel_tag_destroy(channel_tag_t *ct, int delconf);
-
-
-#define CTM_DESTROY_UPDATE_TAG     0x1
-#define CTM_DESTROY_UPDATE_CHANNEL 0x2
+static void channel_tag_mapping_destroy(idnode_list_mapping_t *ilm, void *origin);
 
 static int
 ch_id_cmp ( channel_t *a, channel_t *b )
@@ -86,37 +80,24 @@ channel_class_delete ( idnode_t *self )
 static const void *
 channel_class_services_get ( void *obj )
 {
-  htsmsg_t *l = htsmsg_create_list();
   channel_t *ch = obj;
-  channel_service_mapping_t *csm;
-
-  /* Add all */
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&csm->csm_svc->s_id));
-
-  return l;
+  return idnode_list_get2(&ch->ch_services);
 }
 
 static char *
 channel_class_services_rend ( void *obj )
 {
-  char *str;
-  htsmsg_t   *l = htsmsg_create_list();
   channel_t *ch = obj;
-  channel_service_mapping_t  *csm;
-
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(&csm->csm_svc->s_id) ?: "");
-
-  str = htsmsg_list_2_csv(l);
-  htsmsg_destroy(l);
-  return str;
+  return idnode_list_get_csv2(&ch->ch_services);
 }
 
 static int
 channel_class_services_set ( void *obj, const void *p )
 {
-  return channel_set_services_by_list(obj, (htsmsg_t*)p);
+  channel_t *ch = obj;
+  return idnode_list_set2(&ch->ch_id, &ch->ch_services,
+                          &service_class, (htsmsg_t *)p,
+                          service_mapper_create);
 }
 
 static htsmsg_t *
@@ -135,37 +116,30 @@ channel_class_services_enum ( void *obj )
 static const void *
 channel_class_tags_get ( void *obj )
 {
-  channel_tag_mapping_t *ctm;
   channel_t *ch = obj;
-  htsmsg_t *m = htsmsg_create_list();
-
-  /* Add all */
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    htsmsg_add_str(m, NULL, idnode_uuid_as_str(&ctm->ctm_tag->ct_id));
-
-  return m;
+  return idnode_list_get2(&ch->ch_ctms);
 }
 
 static char *
 channel_class_tags_rend ( void *obj )
 {
-  char *str;
-  htsmsg_t   *l = htsmsg_create_list();
   channel_t *ch = obj;
-  channel_tag_mapping_t *ctm;
+  return idnode_list_get_csv2(&ch->ch_ctms);
+}
 
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    htsmsg_add_str(l, NULL, ctm->ctm_tag->ct_name);
-
-  str = htsmsg_list_2_csv(l);
-  htsmsg_destroy(l);
-  return str;
+static int
+channel_class_tags_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  return channel_tag_map((channel_tag_t *)in1, (channel_t *)in2, origin);
 }
 
 static int
 channel_class_tags_set ( void *obj, const void *p )
 {
-  return channel_set_tags_by_list(obj, (htsmsg_t*)p);
+  channel_t *ch = obj;
+  return idnode_list_set2(&ch->ch_id, &ch->ch_ctms,
+                          &channel_tag_class, (htsmsg_t *)p,
+                          channel_class_tags_set_cb);
 }
 
 static void
@@ -487,12 +461,12 @@ channel_access(channel_t *ch, access_t *a, int disabled)
 
   /* Channel tag check */
   if (a->aa_chtags) {
-    channel_tag_mapping_t *ctm;
+    idnode_list_mapping_t *ilm;
     htsmsg_field_t *f;
     HTSMSG_FOREACH(f, a->aa_chtags) {
-      LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+      LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
         if (!strcmp(htsmsg_field_get_str(f) ?: "",
-                    idnode_uuid_as_str(&ctm->ctm_tag->ct_id)))
+                    idnode_uuid_as_str(ilm->ilm_in1)))
           goto chtags_ok;
       }
     }
@@ -507,75 +481,15 @@ chtags_ok:
  * Property updating
  * *************************************************************************/
 
-int
-channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs )
-{
-  int save = 0;
-  const char *str;
-  service_t *svc;
-  htsmsg_field_t *f;
-  channel_service_mapping_t *csm;
-
-  /* Mark all for deletion */
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
-    csm->csm_mark = 1;
-
-  /* Link */
-  HTSMSG_FOREACH(f, svcs) {
-    if ((str = htsmsg_field_get_str(f)))
-      if ((svc = service_find(str)))
-        save |= service_mapper_link(svc, ch, ch);
-  }
-
-  /* Remove */
-  save |= service_mapper_clean(NULL, ch, ch);
-
-  return save;
-}
-
-int
-channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags )
-{
-  int save = 0;
-  const char *uuid;
-  channel_tag_mapping_t *ctm, *n;
-  channel_tag_t *ct;
-  htsmsg_field_t *f;
-  
-  /* Mark for deletion */
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    ctm->ctm_mark = 1;
-
-  /* Link */
-  HTSMSG_FOREACH(f, tags)
-    if ((uuid = htsmsg_field_get_str(f)) != NULL) {
-      if ((ct = channel_tag_find_by_uuid(uuid)))
-        save |= channel_tag_map(ch, ct);
-    }
-    
-  /* Remove */
-  for (ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
-    n = LIST_NEXT(ctm, ctm_channel_link);
-    if (ctm->ctm_mark) {
-      LIST_REMOVE(ctm, ctm_channel_link);
-      LIST_REMOVE(ctm, ctm_tag_link);
-      free(ctm);
-      save = 1;
-    }
-  }
-
-  return save;
-}
-
 const char *
 channel_get_name ( channel_t *ch )
 {
   static const char *blank = CHANNEL_BLANK_NAME;
   const char *s;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link)
-    if ((s = service_get_channel_name(csm->csm_svc)))
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
+    if ((s = service_get_channel_name((service_t *)ilm->ilm_in1)))
       return s;
   return blank;
 }
@@ -597,15 +511,15 @@ int64_t
 channel_get_number ( channel_t *ch )
 {
   int64_t n = 0;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   if (ch->ch_number) {
     n = ch->ch_number;
   } else {
-    LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+    LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
       if (ch->ch_bouquet &&
-          (n = bouquet_get_channel_number(ch->ch_bouquet, csm->csm_svc)))
+          (n = bouquet_get_channel_number(ch->ch_bouquet, (service_t *)ilm->ilm_in1)))
         break;
-      if ((n = service_get_channel_number(csm->csm_svc)))
+      if ((n = service_get_channel_number((service_t *)ilm->ilm_in1)))
         break;
     }
   }
@@ -642,7 +556,7 @@ const char *
 channel_get_icon ( channel_t *ch )
 {
   static char buf[512], buf2[512];
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   const char *chicon = config_get_chicon_path(),
              *picon  = config_get_picon_path(),
              *icon   = ch->ch_icon,
@@ -718,9 +632,9 @@ channel_get_icon ( channel_t *ch )
 
     /* No user icon - try access from services */
     if (pick && picon) {
-      LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
+      LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
         const char *icn;
-        if (!(icn = service_get_channel_icon(csm->csm_svc))) continue;
+        if (!(icn = service_get_channel_icon((service_t *)ilm->ilm_in1))) continue;
         if (strncmp(icn, "picon://", 8))
           continue;
         snprintf(buf2, sizeof(buf2), "%s/%s", picon, icn+8);
@@ -829,8 +743,7 @@ void
 channel_delete ( channel_t *ch, int delconf )
 {
   th_subscription_t *s;
-  channel_tag_mapping_t *ctm;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   lock_assert(&global_lock);
 
@@ -838,8 +751,8 @@ channel_delete ( channel_t *ch, int delconf )
     tvhinfo("channel", "%s - deleting", channel_get_name(ch));
 
   /* Tags */
-  while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
-    channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG);
+  while((ilm = LIST_FIRST(&ch->ch_ctms)) != NULL)
+    channel_tag_mapping_destroy(ilm, ch);
 
   /* DVR */
   autorec_destroy_by_channel(ch, delconf);
@@ -847,8 +760,8 @@ channel_delete ( channel_t *ch, int delconf )
   dvr_destroy_by_channel(ch, delconf);
 
   /* Services */
-  while((csm = LIST_FIRST(&ch->ch_services)) != NULL)
-    service_mapper_unlink(csm->csm_svc, ch, ch);
+  while((ilm = LIST_FIRST(&ch->ch_services)) != NULL)
+    idnode_list_unlink(ilm, ch);
 
   /* Subscriptions */
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
@@ -934,44 +847,22 @@ channel_done ( void )
  *
  */
 int
-channel_tag_map(channel_t *ch, channel_tag_t *ct)
+channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin)
 {
-  channel_tag_mapping_t *ctm;
+  idnode_list_mapping_t *ilm;
 
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    if(ctm->ctm_tag == ct)
-      break;
-  if (!ctm)
-    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      if(ctm->ctm_channel == ch)
-        break;
-
-  if (ctm) {
-    ctm->ctm_mark = 0;
-    return 0;
+  ilm = idnode_list_link(&ct->ct_id, &ct->ct_ctms,
+                         &ch->ch_id, &ch->ch_ctms,
+                         origin);
+  if (ilm) {
+    ilm->ilm_in2_save = 1; /* channel */
+    if(ct->ct_enabled && !ct->ct_internal) {
+      htsp_tag_update(ct);
+      htsp_channel_update(ch);
+    }
+    return 1;
   }
-
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    assert(ctm->ctm_tag != ct);
-
-  LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-    assert(ctm->ctm_channel != ch);
-
-  ctm = malloc(sizeof(channel_tag_mapping_t));
-
-  ctm->ctm_channel = ch;
-  LIST_INSERT_HEAD(&ch->ch_ctms, ctm, ctm_channel_link);
-
-  ctm->ctm_tag = ct;
-  LIST_INSERT_HEAD(&ct->ct_ctms, ctm, ctm_tag_link);
-
-  ctm->ctm_mark = 0;
-
-  if(ct->ct_enabled && !ct->ct_internal) {
-    htsp_tag_update(ct);
-    htsp_channel_update(ch);
-  }
-  return 1;
+  return 0;
 }
 
 
@@ -979,19 +870,17 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct)
  *
  */
 static void
-channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, int flags)
+channel_tag_mapping_destroy(idnode_list_mapping_t *ilm, void *origin)
 {
-  channel_tag_t *ct = ctm->ctm_tag;
-  channel_t *ch = ctm->ctm_channel;
+  channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in1;
+  channel_t *ch = (channel_t *)ilm->ilm_in2;
 
-  LIST_REMOVE(ctm, ctm_channel_link);
-  LIST_REMOVE(ctm, ctm_tag_link);
-  free(ctm);
+  idnode_list_unlink(ilm, origin);
 
   if(ct->ct_enabled && !ct->ct_internal) {
-    if(flags & CTM_DESTROY_UPDATE_TAG)
+    if(origin == ch)
       htsp_tag_update(ct);
-    if(flags & CTM_DESTROY_UPDATE_CHANNEL)
+    if(origin == ct)
       htsp_channel_update(ch);
   }
 }
@@ -1000,22 +889,14 @@ channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, int flags)
  *
  */
 void
-channel_tag_unmap(channel_t *ch, channel_tag_t *ct)
+channel_tag_unmap(channel_t *ch, void *origin)
 {
-  channel_tag_mapping_t *ctm, *n;
+  idnode_list_mapping_t *ilm, *n;
 
-  for (ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
-    n = LIST_NEXT(ctm, ctm_channel_link);
-    if (ctm->ctm_channel == ch) {
-      LIST_REMOVE(ctm, ctm_channel_link);
-      LIST_REMOVE(ctm, ctm_tag_link);
-      free(ctm);
-      channel_save(ch);
-      idnode_notify_changed(&ch->ch_id);
-      if (ct->ct_enabled && !ct->ct_internal) {
-        htsp_tag_update(ct);
-        htsp_channel_update(ch);
-      }
+  for (ilm = LIST_FIRST(&ch->ch_ctms); ilm != NULL; ilm = n) {
+    n = LIST_NEXT(ilm, ilm_in2_link);
+    if ((channel_t *)ilm->ilm_in2 == ch) {
+      channel_tag_mapping_destroy(ilm, origin);
       return;
     }
   }
@@ -1061,15 +942,11 @@ channel_tag_create(const char *uuid, htsmsg_t *conf)
 static void
 channel_tag_destroy(channel_tag_t *ct, int delconf)
 {
-  channel_tag_mapping_t *ctm;
-  channel_t *ch;
+  idnode_list_mapping_t *ilm;
 
   if (delconf) {
-    while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL) {
-      ch = ctm->ctm_channel;
-      channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
-      channel_save(ch);
-    }
+    while((ilm = LIST_FIRST(&ct->ct_ctms)) != NULL)
+      channel_tag_mapping_destroy(ilm, ilm->ilm_in1);
     hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
   }
 

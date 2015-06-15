@@ -63,7 +63,7 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del)
 static int
 autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
-  channel_tag_mapping_t *ctm;
+  idnode_list_mapping_t *ilm;
   dvr_config_t *cfg;
   double duration;
 
@@ -130,10 +130,10 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   if(dae->dae_channel_tag != NULL) {
-    LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
-      if(ctm->ctm_channel == e->channel)
+    LIST_FOREACH(ilm, &dae->dae_channel_tag->ct_ctms, ilm_in1_link)
+      if((channel_t *)ilm->ilm_in2 == e->channel)
 	break;
-    if(ctm == NULL)
+    if(ilm == NULL)
       return 0;
   }
 

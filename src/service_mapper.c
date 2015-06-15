@@ -178,88 +178,29 @@ service_mapper_remove ( service_t *s )
   api_service_mapper_notify();
 }
 
-static void
-service_mapper_notify ( channel_service_mapping_t *csm, void *origin )
-{
-  if (origin == NULL)
-    return;
-  if (origin == csm->csm_svc) {
-    idnode_notify_changed(&csm->csm_chn->ch_id);
-    channel_save(csm->csm_chn);
-  }
-  if (origin == csm->csm_chn)
-    idnode_notify_changed(&csm->csm_svc->s_id);
-}
-
 /*
  * Link service and channel
  */
 int
 service_mapper_link ( service_t *s, channel_t *c, void *origin )
 {
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
-  /* Already linked */
-  LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
-    if (csm->csm_chn == c) {
-      csm->csm_mark = 0;
-      return 0;
-    }
-  LIST_FOREACH(csm, &c->ch_services, csm_chn_link)
-    if (csm->csm_svc == s) {
-      csm->csm_mark = 0;
-      return 0;
-    }
-
-  /* Link */
-  csm = calloc(1, sizeof(channel_service_mapping_t));
-  csm->csm_chn = c;
-  csm->csm_svc = s;
-  LIST_INSERT_HEAD(&s->s_channels,  csm, csm_svc_link);
-  LIST_INSERT_HEAD(&c->ch_services, csm, csm_chn_link);
-  service_mapped( s );
-  service_mapper_notify( csm, origin );
-  return 1;
-}
-
-static void
-service_mapper_unlink0 ( channel_service_mapping_t *csm, void *origin )
-{
-  LIST_REMOVE(csm, csm_chn_link);
-  LIST_REMOVE(csm, csm_svc_link);
-  service_mapper_notify( csm, origin );
-  free(csm);
-}
-
-void
-service_mapper_unlink ( service_t *s, channel_t *c, void *origin )
-{
-  channel_service_mapping_t *csm;
-
-  /* Unlink */
-  LIST_FOREACH(csm, &s->s_channels, csm_svc_link) {
-    if (csm->csm_chn == c) {
-      service_mapper_unlink0(csm, origin);
-      break;
-    }
+  ilm = idnode_list_link(&s->s_id, &s->s_channels,
+                         &c->ch_id, &c->ch_services,
+                         origin);
+  if (ilm) {
+    service_mapped(s);
+    ilm->ilm_in2_save = 1; /* channel */
+    return 1;
   }
+  return 0;
 }
 
 int
-service_mapper_clean ( service_t *s, channel_t *c, void *origin )
+service_mapper_create ( idnode_t *s, idnode_t *c, void *origin )
 {
-  int save = 0;
-  channel_service_mapping_t *csm, *n;
-
-  csm = s ? LIST_FIRST(&s->s_channels) : LIST_FIRST(&c->ch_services);
-  for (; csm != NULL; csm = n ) {
-    n = s ? LIST_NEXT(csm, csm_svc_link) : LIST_NEXT(csm, csm_chn_link);
-    if (csm->csm_mark) {
-      service_mapper_unlink0(csm, origin);
-      save = 1;
-    }
-  }
-  return save;
+  return service_mapper_link((service_t *)s, (channel_t *)c, origin);
 }
 
 /*
@@ -300,19 +241,19 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
 
     /* Type tags */
     if (service_is_hdtv(s)) {
-      channel_tag_map(chn, channel_tag_find_by_name("TV channels", 1));
-      channel_tag_map(chn, channel_tag_find_by_name("HDTV", 1));
+      channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+      channel_tag_map(channel_tag_find_by_name("HDTV", 1), chn, chn);
     } else if (service_is_sdtv(s)) {
-      channel_tag_map(chn, channel_tag_find_by_name("TV channels", 1));
-      channel_tag_map(chn, channel_tag_find_by_name("SDTV", 1));
+      channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+      channel_tag_map(channel_tag_find_by_name("SDTV", 1), chn, chn);
     } else if (service_is_radio(s)) {
-      channel_tag_map(chn, channel_tag_find_by_name("Radio", 1));
+      channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
     }
 
     /* Provider */
     if (service_mapper_conf.provider_tags)
       if ((prov = s->s_provider_name(s)))
-        channel_tag_map(chn, channel_tag_find_by_name(prov, 1));
+        channel_tag_map(channel_tag_find_by_name(prov, 1), chn, chn);
 
     /* save */
     idnode_notify_changed(&chn->ch_id);

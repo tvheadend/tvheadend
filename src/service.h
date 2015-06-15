@@ -336,7 +336,7 @@ typedef struct service {
   /**
    * Channel mapping
    */
-  LIST_HEAD(,channel_service_mapping) s_channels;
+  idnode_list_head_t s_channels;
 
   /**
    * Service mapping, see service_mapper.c form details

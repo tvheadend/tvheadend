@@ -1329,6 +1329,222 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
 }
 
 /* **************************************************************************
+ * List helpers
+ * *************************************************************************/
+
+static void
+idnode_list_notify ( idnode_list_mapping_t *ilm, void *origin )
+{
+  if (origin == NULL)
+    return;
+  if (origin == ilm->ilm_in1) {
+    idnode_notify_changed(ilm->ilm_in2);
+    if (ilm->ilm_in2_save)
+      idnode_savefn(ilm->ilm_in2);
+  }
+  if (origin == ilm->ilm_in2) {
+    idnode_notify_changed(ilm->ilm_in1);
+    if (ilm->ilm_in1_save)
+      idnode_savefn(ilm->ilm_in1);
+  }
+}
+
+/*
+ * Link class1 and class2
+ */
+idnode_list_mapping_t *
+idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
+                   idnode_t *in2, idnode_list_head_t *in2_list,
+                   void *origin )
+{
+  idnode_list_mapping_t *ilm;
+
+  /* Already linked */
+  LIST_FOREACH(ilm, in1_list, ilm_in1_link)
+    if (ilm->ilm_in2 == in2) {
+      ilm->ilm_mark = 0;
+      return NULL;
+    }
+  LIST_FOREACH(ilm, in2_list, ilm_in2_link)
+    if (ilm->ilm_in1 == in1) {
+      ilm->ilm_mark = 0;
+      return NULL;
+    }
+
+  /* Link */
+  ilm = calloc(1, sizeof(idnode_list_mapping_t));
+  ilm->ilm_in1 = in1;
+  ilm->ilm_in2 = in2;
+  LIST_INSERT_HEAD(in1_list, ilm, ilm_in1_link);
+  LIST_INSERT_HEAD(in2_list, ilm, ilm_in2_link);
+  idnode_list_notify(ilm, origin);
+  return ilm;
+}
+
+void
+idnode_list_unlink ( idnode_list_mapping_t *ilm, void *origin )
+{
+  LIST_REMOVE(ilm, ilm_in1_link);
+  LIST_REMOVE(ilm, ilm_in2_link);
+  idnode_list_notify(ilm, origin);
+  free(ilm);
+}
+
+static int
+idnode_list_clean
+  ( idnode_t *in1, idnode_list_head_t *in1_list,
+    idnode_t *in2, idnode_list_head_t *in2_list,
+    void *origin )
+{
+  int save = 0;
+  idnode_list_mapping_t *ilm, *n;
+
+  for (ilm = LIST_FIRST(in1 ? in1_list : in2_list); ilm != NULL; ilm = n) {
+    n = in1 ? LIST_NEXT(ilm, ilm_in1_link) : LIST_NEXT(ilm, ilm_in2_link);
+    if (ilm->ilm_mark) {
+      idnode_list_unlink(ilm, origin);
+      save = 1;
+    }
+  }
+  return save;
+}
+
+htsmsg_t *
+idnode_list_get1
+  ( idnode_list_head_t *in1_list )
+{
+  idnode_list_mapping_t *ilm;
+  htsmsg_t *l = htsmsg_create_list();
+
+  LIST_FOREACH(ilm, in1_list, ilm_in1_link)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in2));
+  return l;
+}
+
+htsmsg_t *
+idnode_list_get2
+  ( idnode_list_head_t *in2_list )
+{
+  idnode_list_mapping_t *ilm;
+  htsmsg_t *l = htsmsg_create_list();
+
+  LIST_FOREACH(ilm, in2_list, ilm_in2_link)
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in1));
+  return l;
+}
+
+char *
+idnode_list_get_csv1
+  ( idnode_list_head_t *in1_list )
+{
+  char *str;
+  idnode_list_mapping_t *ilm;
+  htsmsg_t *l = htsmsg_create_list();
+
+  LIST_FOREACH(ilm, in1_list, ilm_in1_link)
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2));
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
+}
+
+char *
+idnode_list_get_csv2
+  ( idnode_list_head_t *in2_list )
+{
+  char *str;
+  idnode_list_mapping_t *ilm;
+  htsmsg_t *l = htsmsg_create_list();
+
+  LIST_FOREACH(ilm, in2_list, ilm_in2_link)
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1));
+
+  str = htsmsg_list_2_csv(l);
+  htsmsg_destroy(l);
+  return str;
+}
+
+int
+idnode_list_set1
+  ( idnode_t *in1, idnode_list_head_t *in1_list,
+    const idclass_t *in2_class, htsmsg_t *in2_list,
+    int (*in2_create)(idnode_t *in1, idnode_t *in2, void *origin) )
+{
+  const char *str;
+  htsmsg_field_t *f;
+  idnode_t *in2;
+  idnode_list_mapping_t *ilm;
+  int save = 0;
+
+  /* Mark all for deletion */
+  LIST_FOREACH(ilm, in1_list, ilm_in1_link)
+    ilm->ilm_mark = 1;
+
+  /* Make new links */
+  HTSMSG_FOREACH(f, in2_list)
+    if ((str = htsmsg_field_get_str(f)))
+      if ((in2 = idnode_find(str, in2_class, NULL)) != NULL)
+        if (in2_create(in1, in2, in1))
+          save = 1;
+
+  /* Delete unlinked */
+  if (idnode_list_clean(in1, in1_list, NULL, NULL, in1))
+    save = 1;
+
+  /* Change notification */
+  if (save)
+    idnode_notify_changed(in1);
+
+  /* Save only on demand */
+  ilm = LIST_FIRST(in1_list);
+  if (ilm && !ilm->ilm_in1_save)
+    save = 0;
+
+  return save;
+}
+
+int
+idnode_list_set2
+  ( idnode_t *in2, idnode_list_head_t *in2_list,
+    const idclass_t *in1_class, htsmsg_t *in1_list,
+    int (*in1_create)(idnode_t *in1, idnode_t *in2, void *origin) )
+{
+  const char *str;
+  htsmsg_field_t *f;
+  idnode_t *in1;
+  idnode_list_mapping_t *ilm;
+  int save = 0;
+
+  /* Mark all for deletion */
+  LIST_FOREACH(ilm, in2_list, ilm_in2_link)
+    ilm->ilm_mark = 1;
+
+  /* Make new links */
+  HTSMSG_FOREACH(f, in1_list)
+    if ((str = htsmsg_field_get_str(f)))
+      if ((in1 = idnode_find(str, in1_class, NULL)) != NULL)
+        if (in1_create(in1, in2, in2))
+          save = 1;
+
+  /* Delete unlinked */
+  if (idnode_list_clean(in2, in2_list, NULL, NULL, in2))
+    save = 1;
+
+  /* Change notification */
+  if (save)
+    idnode_notify_changed(in2);
+
+  /* Save only on demand */
+  ilm = LIST_FIRST(in2_list);
+  if (ilm && !ilm->ilm_in2_save)
+    save = 0;
+
+  return save;
+}
+
+
+/* **************************************************************************
  * Notification
  * *************************************************************************/
 

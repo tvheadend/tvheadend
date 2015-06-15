@@ -2581,10 +2581,10 @@ epg_query ( epg_query_t *eq, access_t *perm )
   
   /* Tag based */
   } else if (tag) {
-    channel_tag_mapping_t *ctm;
+    idnode_list_mapping_t *ilm;
     channel_t *ch2;
-    LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
-      ch2 = ctm->ctm_channel;
+    LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
+      ch2 = (channel_t *)ilm->ilm_in2;
       if(ch2 == channel || channel == NULL)
         if (channel_access(ch2, perm, 0))
           _eq_add_channel(eq, ch2);

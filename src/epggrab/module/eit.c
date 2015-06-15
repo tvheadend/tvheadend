@@ -557,13 +557,14 @@ static int _eit_process_event
     mpegts_service_t *svc, const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   int ret = 0;
 
   if ( len < 12 ) return -1;
 
-  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
-    ret = _eit_process_event_one(mod, tableid, svc, csm->csm_chn,
+  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link)
+    ret = _eit_process_event_one(mod, tableid, svc,
+                                 (channel_t *)ilm->ilm_in2,
                                  ptr, len, local, resched, save);
   return ret;
 }

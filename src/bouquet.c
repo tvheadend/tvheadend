@@ -224,7 +224,7 @@ static void
 bouquet_map_channel(bouquet_t *bq, service_t *t)
 {
   channel_t *ch = NULL;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   if (!t->s_enabled)
     return;
@@ -236,15 +236,18 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
     return;
-  LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
-    if (csm->csm_chn->ch_bouquet == bq)
+  LIST_FOREACH(ilm, &t->s_channels, ilm_in1_link)
+    if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
       break;
-  if (!csm)
+  if (!ilm)
     ch = service_mapper_process(t, bq);
   else
-    ch = csm->csm_chn;
+    ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
-    channel_tag_map(ch, bouquet_tag(bq, 1));
+    if (channel_tag_map(bouquet_tag(bq, 1), ch, ch)) {
+      idnode_notify_changed(&ch->ch_id);
+      channel_save(ch);
+    }
 }
 
 /*
@@ -254,7 +257,7 @@ void
 bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
 {
   service_lcn_t *tl;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   lock_assert(&global_lock);
 
@@ -282,8 +285,8 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
   }
   if (lcn != tl->sl_lcn) {
     tl->sl_lcn = lcn;
-    LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
-      idnode_notify_changed(&csm->csm_chn->ch_id);
+    LIST_FOREACH(ilm, &s->s_channels, ilm_in1_link)
+      idnode_notify_changed(ilm->ilm_in2);
   }
   tl->sl_seen = 1;
 
@@ -307,18 +310,18 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
 static void
 bouquet_unmap_channel(bouquet_t *bq, service_t *t)
 {
-  channel_service_mapping_t *csm, *csm_next;
+  idnode_list_mapping_t *ilm, *ilm_next;
 
-  csm = LIST_FIRST(&t->s_channels);
-  while (csm) {
-    csm_next = LIST_NEXT(csm, csm_svc_link);
-    if (csm->csm_chn->ch_bouquet == bq) {
+  ilm = LIST_FIRST(&t->s_channels);
+  while (ilm) {
+    ilm_next = LIST_NEXT(ilm, ilm_in1_link);
+    if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq) {
       tvhinfo("bouquet", "%s / %s: unmapped from %s",
-              channel_get_name(csm->csm_chn), t->s_nicename,
+              channel_get_name((channel_t *)ilm->ilm_in2), t->s_nicename,
               bq->bq_name ?: "<unknown>");
-      channel_delete(csm->csm_chn, 1);
+      channel_delete((channel_t *)ilm->ilm_in2, 1);
     }
-    csm = csm_next;
+    ilm = ilm_next;
   }
 }
 
@@ -448,15 +451,15 @@ bouquet_map_to_channels(bouquet_t *bq)
 void
 bouquet_notify_channels(bouquet_t *bq)
 {
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   service_t *t;
   size_t z;
 
   for (z = 0; z < bq->bq_services->is_count; z++) {
     t = (service_t *)bq->bq_services->is_array[z];
-    LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
-      if (csm->csm_chn->ch_bouquet == bq)
-        idnode_notify_changed(&csm->csm_chn->ch_id);
+    LIST_FOREACH(ilm, &t->s_channels, ilm_in1_link)
+      if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
+        idnode_notify_changed(ilm->ilm_in2);
   }
 }
 
@@ -661,7 +664,7 @@ bouquet_class_chtag_notify ( void *obj )
 {
   bouquet_t *bq = obj;
   service_t *t;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   channel_tag_t *ct;
   size_t z;
 
@@ -673,11 +676,11 @@ bouquet_class_chtag_notify ( void *obj )
       return;
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
-      LIST_FOREACH(csm, &t->s_channels, csm_svc_link)
-        if (csm->csm_chn->ch_bouquet == bq)
+      LIST_FOREACH(ilm, &t->s_channels, ilm_in1_link)
+        if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
           break;
-      if (csm)
-        channel_tag_unmap(csm->csm_chn, ct);
+      if (ilm)
+        channel_tag_unmap((channel_t *)ilm->ilm_in2, ct);
     }
   } else {
     bouquet_map_to_channels(bq);
