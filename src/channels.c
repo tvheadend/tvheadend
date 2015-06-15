@@ -393,7 +393,7 @@ const idclass_t channel_class = {
       .rend     = channel_class_services_rend,
     },
     {
-      .type     = PT_INT,
+      .type     = PT_STR,
       .islist   = 1,
       .id       = "tags",
       .name     = "Tags",
