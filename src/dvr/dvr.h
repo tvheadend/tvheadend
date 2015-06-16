@@ -71,7 +71,7 @@ typedef struct dvr_config {
   struct dvr_autorec_entry_list dvr_autorec_entries;
   struct dvr_timerec_entry_list dvr_timerec_entries;
 
-  struct access_entry_list dvr_accesses;
+  idnode_list_head_t dvr_accesses;
 
 } dvr_config_t;
 

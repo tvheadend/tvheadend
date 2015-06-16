@@ -1013,6 +1013,7 @@ config_migrate_v12 ( void )
       hts_settings_remove("cwc/%s", f->hmf_name);
       hts_settings_save(e, "caclient/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
   if ((c = hts_settings_load("capmt")) != NULL) {
     HTSMSG_FOREACH(f, c) {
@@ -1020,6 +1021,7 @@ config_migrate_v12 ( void )
       hts_settings_remove("capmt/%s", f->hmf_name);
       hts_settings_save(e, "caclient/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1044,6 +1046,7 @@ config_migrate_v13 ( void )
       htsmsg_delete_field(e, "rewrite-pmt");
       hts_settings_save(e, "dvr/config/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1084,6 +1087,7 @@ config_migrate_v14 ( void )
         htsmsg_delete_field(e, "scodec");
       hts_settings_save(e, "profile/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1102,6 +1106,7 @@ config_migrate_v15 ( void )
         hts_settings_save(e, "profile/%s", f->hmf_name);
       }
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1183,6 +1188,7 @@ config_migrate_v17 ( void )
         hts_settings_save(e, "profile/%s", f->hmf_name);
       }
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1208,6 +1214,7 @@ config_migrate_v18 ( void )
       htsmsg_add_msg(e, "files", l);
       hts_settings_save(e, "dvr/log/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1234,6 +1241,42 @@ config_migrate_v19 ( void )
       htsmsg_delete_field(e, "password2");
       hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
     }
+  }
+  htsmsg_destroy(c);
+}
+
+static void
+config_migrate_v20_helper ( htsmsg_t *e, const char *fname )
+{
+  htsmsg_t *l;
+  const char *str;
+  char *p;
+
+  if ((str = htsmsg_get_str(e, fname)) != NULL) {
+    p = strdup(str);
+    htsmsg_delete_field(e, fname);
+    l = htsmsg_create_list();
+    htsmsg_add_str(l, NULL, p);
+    htsmsg_add_msg(e, fname, l);
+    free(p);
+  }
+}
+
+static void
+config_migrate_v20 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_migrate_v20_helper(e, "profile");
+      config_migrate_v20_helper(e, "dvr_config");
+      config_migrate_v20_helper(e, "channel_tag");
+      hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
+    }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1352,6 +1395,7 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v17,
   config_migrate_v18,
   config_migrate_v19,
+  config_migrate_v20
 };
 
 /*

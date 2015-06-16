@@ -118,7 +118,7 @@ typedef struct profile {
   int pro_refcount;
 
   LIST_HEAD(,dvr_config) pro_dvr_configs;
-  LIST_HEAD(,access_entry) pro_accesses;
+  idnode_list_head_t pro_accesses;
 
   int pro_sflags;
   int pro_enabled;

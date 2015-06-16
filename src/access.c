@@ -459,6 +459,8 @@ static access_t *access_alloc(void)
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
+  idnode_list_mapping_t *ilm;
+
   switch (ae->ae_conn_limit_type) {
   case ACCESS_CONN_LIMIT_TYPE_ALL:
     if (a->aa_conn_limit < ae->ae_conn_limit)
@@ -483,22 +485,31 @@ access_update(access_t *a, access_entry_t *ae)
     }
   }
 
-  if(ae->ae_profile && ae->ae_profile->pro_name[0] != '\0') {
-    if (a->aa_profiles == NULL)
-      a->aa_profiles = htsmsg_create_list();
-    htsmsg_add_str(a->aa_profiles, NULL, idnode_uuid_as_str(&ae->ae_profile->pro_id));
+  LIST_FOREACH(ilm, &ae->ae_profiles, ilm_in1_link) {
+    profile_t *pro = (profile_t *)ilm->ilm_in2;
+    if(pro && pro->pro_name[0] != '\0') {
+      if (a->aa_profiles == NULL)
+        a->aa_profiles = htsmsg_create_list();
+      htsmsg_add_str(a->aa_profiles, NULL, idnode_uuid_as_str(&pro->pro_id));
+    }
   }
 
-  if(ae->ae_dvr_config && ae->ae_dvr_config->dvr_config_name[0] != '\0') {
-    if (a->aa_dvrcfgs == NULL)
-      a->aa_dvrcfgs = htsmsg_create_list();
-    htsmsg_add_str(a->aa_dvrcfgs, NULL, idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id));
+  LIST_FOREACH(ilm, &ae->ae_dvr_configs, ilm_in1_link) {
+    dvr_config_t *dvr = (dvr_config_t *)ilm->ilm_in2;
+    if(dvr && dvr->dvr_config_name[0] != '\0') {
+      if (a->aa_dvrcfgs == NULL)
+        a->aa_dvrcfgs = htsmsg_create_list();
+      htsmsg_add_str(a->aa_dvrcfgs, NULL, idnode_uuid_as_str(&dvr->dvr_id));
+     }
   }
 
-  if(ae->ae_chtag && ae->ae_chtag->ct_name[0] != '\0') {
-    if (a->aa_chtags == NULL)
-      a->aa_chtags = htsmsg_create_list();
-    htsmsg_add_str(a->aa_chtags, NULL, idnode_uuid_as_str(&ae->ae_chtag->ct_id));
+  LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+    channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
+    if(ct && ct->ct_name[0] != '\0') {
+      if (a->aa_chtags == NULL)
+        a->aa_chtags = htsmsg_create_list();
+      htsmsg_add_str(a->aa_chtags, NULL, idnode_uuid_as_str(&ct->ct_id));
+    }
   }
 
   a->aa_rights |= ae->ae_rights;
@@ -948,12 +959,9 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   idnode_unlink(&ae->ae_id);
 
-  if (ae->ae_profile)
-    LIST_REMOVE(ae, ae_profile_link);
-  if (ae->ae_dvr_config)
-    LIST_REMOVE(ae, ae_dvr_config_link);
-  if (ae->ae_chtag)
-    LIST_REMOVE(ae, ae_channel_tag_link);
+  idnode_list_destroy(&ae->ae_profiles, ae);
+  idnode_list_destroy(&ae->ae_dvr_configs, ae);
+  idnode_list_destroy(&ae->ae_chtags, ae);
 
   while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
   {
@@ -972,14 +980,7 @@ access_entry_destroy(access_entry_t *ae)
 void
 access_destroy_by_profile(profile_t *pro, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&pro->pro_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&pro->pro_accesses, pro);
 }
 
 /*
@@ -988,14 +989,7 @@ access_destroy_by_profile(profile_t *pro, int delconf)
 void
 access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&cfg->dvr_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&cfg->dvr_accesses, cfg);
 }
 
 /*
@@ -1004,14 +998,7 @@ access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 void
 access_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&ct->ct_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&ct->ct_accesses, ct);
 }
 
 /**
@@ -1131,96 +1118,108 @@ access_entry_class_prefix_get(void *o)
 }
 
 static int
-access_entry_chtag_set(void *o, const void *v)
+access_entry_chtag_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
 {
-  access_entry_t *ae = (access_entry_t *)o;
-  channel_tag_t *tag = v ? channel_tag_find_by_uuid(v) : NULL;
-  if (tag == NULL && ae->ae_chtag) {
-    LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = NULL;
-    return 1;
-  } else if (ae->ae_chtag != tag) {
-    if (ae->ae_chtag)
-      LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = tag;
-    LIST_INSERT_HEAD(&tag->ct_accesses, ae, ae_channel_tag_link);
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  channel_tag_t *ct = (channel_tag_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
     return 1;
   }
   return 0;
 }
 
+static int
+access_entry_chtag_set(void *o, const void *v)
+{
+  access_entry_t *ae = (access_entry_t *)o;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_chtags,
+                          &channel_tag_class, (htsmsg_t *)v,
+                          access_entry_chtag_set_cb);
+}
+
 static const void *
 access_entry_chtag_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_chtag)
-    ret = idnode_uuid_as_str(&ae->ae_chtag->ct_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_chtags);
+}
+
+static char *
+access_entry_chtag_rend (void *o)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_chtags);
+}
+
+static int
+access_entry_dvr_config_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  dvr_config_t *dvr = (dvr_config_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
+    return 1;
+  }
+  return 0;
 }
 
 static int
 access_entry_dvr_config_set(void *o, const void *v)
 {
   access_entry_t *ae = (access_entry_t *)o;
-  dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
-  if (cfg == NULL && ae->ae_dvr_config) {
-    LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = NULL;
-    return 1;
-  } else if (ae->ae_dvr_config != cfg) {
-    if (ae->ae_dvr_config)
-      LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = cfg;
-    LIST_INSERT_HEAD(&cfg->dvr_accesses, ae, ae_dvr_config_link);
-    return 1;
-  }
-  return 0;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_dvr_configs,
+                          &dvr_config_class, (htsmsg_t *)v,
+                          access_entry_dvr_config_set_cb);
 }
 
 static const void *
 access_entry_dvr_config_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_dvr_config)
-    ret = idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_dvr_configs);
+}
+
+static char *
+access_entry_dvr_config_rend (void *o)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_dvr_configs);
+}
+
+static int
+access_entry_profile_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  profile_t *pro = (profile_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
+    return 1;
+  }
+  return 0;
 }
 
 static int
 access_entry_profile_set(void *o, const void *v)
 {
   access_entry_t *ae = (access_entry_t *)o;
-  profile_t *pro = v ? profile_find_by_uuid(v) : NULL;
-  if (pro == NULL && ae->ae_profile) {
-    LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = NULL;
-    return 1;
-  } else if (ae->ae_profile != pro) {
-    if (ae->ae_profile)
-      LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = pro;
-    LIST_INSERT_HEAD(&pro->pro_accesses, ae, ae_profile_link);
-    return 1;
-  }
-  return 0;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_profiles,
+                          &profile_class, (htsmsg_t *)v,
+                          access_entry_profile_set_cb);
 }
 
 static const void *
 access_entry_profile_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_profile)
-    ret = idnode_uuid_as_str(&ae->ae_profile->pro_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_profiles);
+}
+
+static char *
+access_entry_profile_rend (void *o)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_profiles);
 }
 
 static htsmsg_t *
@@ -1292,11 +1291,13 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "profile",
       .name     = "Streaming Profile",
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
+      .rend     = access_entry_profile_rend,
     },
     {
       .type     = PT_BOOL,
@@ -1331,11 +1332,13 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "dvr_config",
       .name     = "DVR Config Profile",
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
+      .rend     = access_entry_dvr_config_rend,
     },
     {
       .type     = PT_BOOL,
@@ -1378,11 +1381,13 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "channel_tag",
       .name     = "Channel Tag",
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,
+      .rend     = access_entry_chtag_rend,
     },
     {
       .type     = PT_STR,

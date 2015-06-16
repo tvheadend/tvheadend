@@ -209,6 +209,7 @@ idnode_list_mapping_t * idnode_list_link
                          idnode_t *in2, idnode_list_head_t *in2_list,
                          void *origin );
 void idnode_list_unlink ( idnode_list_mapping_t *ilm, void *origin );
+void idnode_list_destroy ( idnode_list_head_t *ilh, void *origin );
 htsmsg_t * idnode_list_get1 ( idnode_list_head_t *in1_list );
 htsmsg_t * idnode_list_get2 ( idnode_list_head_t *in2_list );
 char * idnode_list_get_csv1 ( idnode_list_head_t *in1_list );

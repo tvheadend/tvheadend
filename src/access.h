@@ -83,8 +83,7 @@ typedef struct access_entry {
   int ae_adv_streaming;
   int ae_htsp_streaming;
 
-  struct profile *ae_profile;
-  LIST_ENTRY(access_entry) ae_profile_link;
+  idnode_list_head_t ae_profiles;
 
   int ae_conn_limit_type;
   uint32_t ae_conn_limit;
@@ -94,8 +93,8 @@ typedef struct access_entry {
   int ae_all_dvr;
   int ae_all_rw_dvr;
   int ae_failed_dvr;
-  struct dvr_config *ae_dvr_config;
-  LIST_ENTRY(access_entry) ae_dvr_config_link;
+
+  idnode_list_head_t ae_dvr_configs;
 
   int ae_webui;
   int ae_admin;
@@ -103,8 +102,7 @@ typedef struct access_entry {
   uint64_t ae_chmin;
   uint64_t ae_chmax;
 
-  struct channel_tag *ae_chtag;
-  LIST_ENTRY(access_entry) ae_channel_tag_link;
+  idnode_list_head_t ae_chtags;
 
   uint32_t ae_rights;
 

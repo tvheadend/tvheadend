@@ -1390,6 +1390,15 @@ idnode_list_unlink ( idnode_list_mapping_t *ilm, void *origin )
   free(ilm);
 }
 
+void
+idnode_list_destroy(idnode_list_head_t *ilh, void *origin)
+{
+  idnode_list_mapping_t *ilm;
+
+  while ((ilm = LIST_FIRST(ilh)) != NULL)
+    idnode_list_unlink(ilm, origin);
+}
+
 static int
 idnode_list_clean
   ( idnode_t *in1, idnode_list_head_t *in1_list,

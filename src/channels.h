@@ -102,7 +102,7 @@ typedef struct channel_tag {
 
   struct dvr_autorec_entry_list ct_autorecs;
 
-  struct access_entry_list ct_accesses;
+  idnode_list_head_t ct_accesses;
 
   int ct_htsp_id;
 
