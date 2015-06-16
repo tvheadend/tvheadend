@@ -995,7 +995,7 @@ access_entry_destroy(access_entry_t *ae)
 void
 access_destroy_by_profile(profile_t *pro, int delconf)
 {
-  idnode_list_destroy(&pro->pro_accesses, pro);
+  idnode_list_destroy(&pro->pro_accesses, delconf ? pro : NULL);
 }
 
 /*
@@ -1004,7 +1004,7 @@ access_destroy_by_profile(profile_t *pro, int delconf)
 void
 access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 {
-  idnode_list_destroy(&cfg->dvr_accesses, cfg);
+  idnode_list_destroy(&cfg->dvr_accesses, delconf ? cfg : NULL);
 }
 
 /*
@@ -1013,7 +1013,7 @@ access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 void
 access_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
 {
-  idnode_list_destroy(&ct->ct_accesses, ct);
+  idnode_list_destroy(&ct->ct_accesses, delconf ? ct : NULL);
 }
 
 /**

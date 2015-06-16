@@ -811,12 +811,11 @@ service_destroy(service_t *t, int delconf)
   
   service_mapper_remove(t);
 
-  while((s = LIST_FIRST(&t->s_subscriptions)) != NULL) {
+  while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
-  }
 
   while ((ilm = LIST_FIRST(&t->s_channels)))
-    idnode_list_unlink(ilm, t);
+    idnode_list_unlink(ilm, delconf ? t : NULL);
 
   idnode_unlink(&t->s_id);
 

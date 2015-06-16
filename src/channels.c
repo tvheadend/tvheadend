@@ -752,7 +752,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Tags */
   while((ilm = LIST_FIRST(&ch->ch_ctms)) != NULL)
-    channel_tag_mapping_destroy(ilm, ch);
+    channel_tag_mapping_destroy(ilm, delconf ? ch : NULL);
 
   /* DVR */
   autorec_destroy_by_channel(ch, delconf);
@@ -761,7 +761,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Services */
   while((ilm = LIST_FIRST(&ch->ch_services)) != NULL)
-    idnode_list_unlink(ilm, ch);
+    idnode_list_unlink(ilm, delconf ? ch : NULL);
 
   /* Subscriptions */
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
@@ -944,11 +944,11 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
 {
   idnode_list_mapping_t *ilm;
 
-  if (delconf) {
-    while((ilm = LIST_FIRST(&ct->ct_ctms)) != NULL)
-      channel_tag_mapping_destroy(ilm, ilm->ilm_in1);
+  while((ilm = LIST_FIRST(&ct->ct_ctms)) != NULL)
+    channel_tag_mapping_destroy(ilm, delconf ? ilm->ilm_in1 : NULL);
+
+  if (delconf)
     hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
-  }
 
   if(ct->ct_enabled && !ct->ct_internal)
     htsp_tag_delete(ct);
