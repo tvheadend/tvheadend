@@ -431,10 +431,8 @@ access_dump_a(access_t *a)
     HTSMSG_FOREACH(f, a->aa_chtags) {
       channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
       if (ct) {
-        if (first)
-          tvh_strlcatf(buf, sizeof(buf), l, ", tags=");
         tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
-                 first ? "" : ",", ct->ct_name ?: "");
+                 first ? ", tags=" : ",", ct->ct_name ?: "");
         first = 0;
       }
     }
@@ -490,7 +488,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(pro && pro->pro_name[0] != '\0') {
       if (a->aa_profiles == NULL)
         a->aa_profiles = htsmsg_create_list();
-      htsmsg_add_str(a->aa_profiles, NULL, idnode_uuid_as_str(&pro->pro_id));
+      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id));
     }
   }
 
@@ -499,16 +497,33 @@ access_update(access_t *a, access_entry_t *ae)
     if(dvr && dvr->dvr_config_name[0] != '\0') {
       if (a->aa_dvrcfgs == NULL)
         a->aa_dvrcfgs = htsmsg_create_list();
-      htsmsg_add_str(a->aa_dvrcfgs, NULL, idnode_uuid_as_str(&dvr->dvr_id));
+      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id));
      }
   }
 
-  LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
-    channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
-    if(ct && ct->ct_name[0] != '\0') {
-      if (a->aa_chtags == NULL)
-        a->aa_chtags = htsmsg_create_list();
-      htsmsg_add_str(a->aa_chtags, NULL, idnode_uuid_as_str(&ct->ct_id));
+  if (ae->ae_chtags_exclude) {
+    channel_tag_t *ct;
+    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+      if(ct && ct->ct_name[0] != '\0') {
+        LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+          channel_tag_t *ct2 = (channel_tag_t *)ilm->ilm_in2;
+          if (ct == ct2) break;
+        }
+        if (ilm == NULL) {
+          if (a->aa_chtags == NULL)
+            a->aa_chtags = htsmsg_create_list();
+          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+        }
+      }
+    }
+  } else {
+    LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+      channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
+      if(ct && ct->ct_name[0] != '\0') {
+        if (a->aa_chtags == NULL)
+          a->aa_chtags = htsmsg_create_list();
+        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+      }
     }
   }
 
@@ -1293,7 +1308,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "profile",
-      .name     = "Streaming Profile",
+      .name     = "Streaming Profiles",
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
@@ -1334,7 +1349,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "dvr_config",
-      .name     = "DVR Config Profile",
+      .name     = "DVR Config Profiles",
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
@@ -1380,10 +1395,16 @@ const idclass_t access_entry_class = {
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "channel_tag_exclude",
+      .name     = "Exclude Channel Tags",
+      .off      = offsetof(access_entry_t, ae_chtags_exclude),
+    },
+    {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "channel_tag",
-      .name     = "Channel Tag",
+      .name     = "Channel Tags",
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,

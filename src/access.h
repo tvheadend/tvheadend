@@ -102,6 +102,7 @@ typedef struct access_entry {
   uint64_t ae_chmin;
   uint64_t ae_chmax;
 
+  int ae_chtags_exclude;
   idnode_list_head_t ae_chtags;
 
   uint32_t ae_rights;

@@ -268,6 +268,25 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
 /*
  *
  */
+void
+htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str)
+{
+  htsmsg_field_t *f;
+
+  assert(msg->hm_islist);
+
+  TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
+    assert(f->hmf_type == HMF_STR);
+    if (strcmp(f->hmf_str, str) == 0)
+      return;
+  }
+
+  htsmsg_add_str(msg, NULL, str);
+}
+
+/*
+ *
+ */
 int
 htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
 {

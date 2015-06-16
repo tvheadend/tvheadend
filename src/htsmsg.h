@@ -154,6 +154,11 @@ htsmsg_set_s32(htsmsg_t *msg, const char *name,  int32_t s32)
 void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Add a string field to a list only once.
+ */
+void htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str);
+
+/**
  * Add/update a string field
  */
 int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);
