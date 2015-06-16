@@ -481,6 +481,8 @@ const char *dvr_get_filename(dvr_entry_t *de);
 
 int64_t dvr_get_filesize(dvr_entry_t *de);
 
+dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
+
 dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);

@@ -158,6 +158,36 @@ tvheadend.dvr_upcoming = function(panel, index) {
                'channel,config_name,comment';
     var elist = tvheadend.accessUpdate.admin ? list + ',owner,creator' : list;
 
+    var stopButton = {
+        name: 'stop',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: 'Stop the selected recording',
+                iconCls: 'stopRec',
+                text: 'Stop',
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.AjaxConfirm({
+                    url: 'api/dvr/entry/stop',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    },
+                    question: 'Do you really want to gracefully stop/unschedule the selection?'
+                });
+            }
+        }
+    };
+
     var abortButton = {
         name: 'abort',
         builder: function() {
@@ -194,6 +224,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             if (s.data.sched_status.indexOf('recording') == 0)
                 recording++;
         });
+        abuttons.stop.setDisabled(recording < 1);
         abuttons.abort.setDisabled(recording < 1);
     }
 
@@ -236,7 +267,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         },
         plugins: [actions],
         lcol: [actions],
-        tbar: [abortButton],
+        tbar: [stopButton, abortButton],
         selected: selected,
         beforeedit: beforeedit,
         help: function() {

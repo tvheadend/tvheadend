@@ -228,6 +228,19 @@ api_dvr_entry_create_by_event
 }
 
 static void
+api_dvr_stop(access_t *perm, idnode_t *self)
+{
+  dvr_entry_stop((dvr_entry_t *)self);
+}
+
+static int
+api_dvr_entry_stop
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_stop, "stop");
+}
+
+static void
 api_dvr_cancel(access_t *perm, idnode_t *self)
 {
   dvr_entry_cancel((dvr_entry_t *)self);
@@ -383,6 +396,7 @@ void api_dvr_init ( void )
     { "dvr/entry/grid_failed",     ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_failed },
     { "dvr/entry/create",          ACCESS_RECORDER, api_dvr_entry_create, NULL },
     { "dvr/entry/create_by_event", ACCESS_RECORDER, api_dvr_entry_create_by_event, NULL },
+    { "dvr/entry/stop",            ACCESS_RECORDER, api_dvr_entry_stop, NULL },
     { "dvr/entry/cancel",          ACCESS_RECORDER, api_dvr_entry_cancel, NULL },
 
     { "dvr/autorec/class",         ACCESS_RECORDER, api_idnode_class, (void*)&dvr_autorec_entry_class },

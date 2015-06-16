@@ -2420,6 +2420,20 @@ dvr_entry_delete(dvr_entry_t *de)
  *
  */
 dvr_entry_t *
+dvr_entry_stop(dvr_entry_t *de)
+{
+  if(de->de_sched_state == DVR_RECORDING) {
+    dvr_stop_recording(de, SM_CODE_OK, 1);
+    return de;
+  }
+
+  return dvr_entry_cancel(de);
+}
+
+/**
+ *
+ */
+dvr_entry_t *
 dvr_entry_cancel(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
