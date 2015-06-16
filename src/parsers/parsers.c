@@ -30,6 +30,7 @@
 #include "parsers.h"
 #include "parser_h264.h"
 #include "parser_latm.h"
+#include "parser_teletext.h"
 #include "bitstream.h"
 #include "packet.h"
 #include "streaming.h"
@@ -1447,11 +1448,12 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   buf = d + 6 + hlen;
   
   if(psize >= 46) {
-      pkt = pkt_alloc(buf, psize, st->es_curpts, st->es_curdts);
-      pkt->pkt_commercial = t->s_tt_commercial_advice;
-      pkt->pkt_err = st->es_buf.sb_err;
-      parser_deliver(t, st, pkt);
-      sbuf_reset(&st->es_buf, 4000);
+    teletext_input((mpegts_service_t *)t, st, buf, psize);
+    pkt = pkt_alloc(buf, psize, st->es_curpts, st->es_curdts);
+    pkt->pkt_commercial = t->s_tt_commercial_advice;
+    pkt->pkt_err = st->es_buf.sb_err;
+    parser_deliver(t, st, pkt);
+    sbuf_reset(&st->es_buf, 4000);
   }
 }
 

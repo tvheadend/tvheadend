@@ -946,21 +946,21 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
  *
  */
 void
-teletext_input(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
+teletext_input
+  (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *data, int len)
 {
-  int i, j;
-  const uint8_t *x;
+  int j;
   uint8_t buf[42];
 
-  x = tsb + 4;
-  for(i = 0; i < 4; i++) {
-    if(*x == 2 || *x == 3) {
+  data++; len--; /* first byte: 0x10 ? */
+
+  for (; len >= 46; data += 46, len -= 46) {
+    if (*data == 2 || *data == 3) {
       for(j = 0; j < 42; j++)
-	buf[j] = bitreverse(x[4 + j]);
+	buf[j] = bitreverse(data[4 + j]);
       tt_decode_line(t, st, buf);
     }
-    x += 46;
-  }
+ }
 }
 
 

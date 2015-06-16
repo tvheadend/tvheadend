@@ -21,9 +21,9 @@
 
 #define PID_TELETEXT_BASE 0x2000
 
-#include "input/mpegts.h"
+#include "input.h"
 
 void teletext_input(struct mpegts_service *t, struct elementary_stream *st,
-		    const uint8_t *tsb);
+		    const uint8_t *data, int len);
 
 #endif /* TELETEXT_H */
