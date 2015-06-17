@@ -2,7 +2,7 @@
 
 const idclass_t obj_a_class = {
   .ic_class      = "obj_a",
-  .ic_caption    = "Object A",
+  .ic_caption    = N_("Object A"),
   .ic_properties = (const property_t[]){
     { PROPDEF1("int1",  "Integer 1", PT_INT,  obj_a_t, a_int1)  },
     { PROPDEF1("bool1", "Boolean 1", PT_BOOL, obj_a_t, a_bool1) },
@@ -15,7 +15,7 @@ static void obj_b_save ( idnode_t *self );
 const idclass_t obj_b_class = {
   .ic_super      = &obj_a_class,
   .ic_class      = "obj_b",
-  .ic_caption    = "Object B",
+  .ic_caption    = N_("Object B"),
   .ic_save       = obj_b_save,
   .ic_properties = (const property_t[]){
     { PROPDEF1("int2",  "Integer 2", PT_INT,  obj_b_t, b_int2)  },

@@ -402,52 +402,53 @@ streaming_code2txt(int code)
   static __thread char ret[64];
 
   switch(code) {
-  case SM_CODE_OK: return "OK";
+  case SM_CODE_OK:
+    return N_("OK");
     
   case SM_CODE_SOURCE_RECONFIGURED:
-    return "Source reconfigured";
+    return N_("Source reconfigured");
   case SM_CODE_BAD_SOURCE:
-    return "Source quality is bad";
+    return N_("Source quality is bad");
   case SM_CODE_SOURCE_DELETED:
-    return "Source deleted";
+    return N_("Source deleted");
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
-    return "Subscription overridden";
+    return N_("Subscription overridden");
   case SM_CODE_INVALID_TARGET:
-    return "Invalid target";
+    return N_("Invalid target");
   case SM_CODE_USER_ACCESS:
-    return "User access error";
+    return N_("User access error");
   case SM_CODE_USER_LIMIT:
-    return "User limit reached";
+    return N_("User limit reached");
 
   case SM_CODE_NO_FREE_ADAPTER:
-    return "No free adapter";
+    return N_("No free adapter");
   case SM_CODE_MUX_NOT_ENABLED:
-    return "Mux not enabled";
+    return N_("Mux not enabled");
   case SM_CODE_NOT_FREE:
-    return "Adapter in use by other subscription";
+    return N_("Adapter in use by other subscription");
   case SM_CODE_TUNING_FAILED:
-    return "Tuning failed";
+    return N_("Tuning failed");
   case SM_CODE_SVC_NOT_ENABLED:
-    return "No service enabled";
+    return N_("No service enabled");
   case SM_CODE_BAD_SIGNAL:
-    return "Too bad signal quality";
+    return N_("Too bad signal quality");
   case SM_CODE_NO_SOURCE:
-    return "No source available";
+    return N_("No source available");
   case SM_CODE_NO_SERVICE:
-    return "No service assigned to channel";
+    return N_("No service assigned to channel");
 
   case SM_CODE_ABORTED:
-    return "Aborted by user";
+    return N_("Aborted by user");
 
   case SM_CODE_NO_DESCRAMBLER:
-    return "No descrambler";
+    return N_("No descrambler");
   case SM_CODE_NO_ACCESS:
-    return "No access";
+    return N_("No access");
   case SM_CODE_NO_INPUT:
-    return "No input detected";
+    return N_("No input detected");
 
   default:
-    snprintf(ret, sizeof(ret), "Unknown reason (%i)", code);
+    snprintf(ret, sizeof(ret), _("Unknown reason (%i)"), code);
     return ret;
   }
 }
@@ -539,10 +540,10 @@ streaming_component_audio_type2desc(int audio_type)
   /* From ISO 13818-1 - ISO 639 language descriptor */
   switch(audio_type) {
     case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
-    case 1: return "Clean effects";
-    case 2: return "Hearing impaired";
-    case 3: return "Visually impaired commentary";
+    case 1: return N_("Clean effects");
+    case 2: return N_("Hearing impaired");
+    case 3: return N_("Visually impaired commentary");
   }
 
-  return "Reserved";
+  return N_("Reserved");
 }

@@ -137,47 +137,47 @@ const idclass_t satip_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "satip_frontend",
-  .ic_caption    = "SAT>IP DVB Frontend",
+  .ic_caption    = N_("SAT>IP DVB Frontend"),
   .ic_save       = satip_frontend_class_save,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_INT,
       .id       = "fe_number",
-      .name     = "Frontend Number",
+      .name     = N_("Frontend Number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_number),
     },
     {
       .type     = PT_INT,
       .id       = "udp_rtp_port",
-      .name     = "UDP RTP Port Number (2 ports)",
+      .name     = N_("UDP RTP Port Number (2 ports)"),
       .off      = offsetof(satip_frontend_t, sf_udp_rtp_port),
     },
     {
       .type     = PT_INT,
       .id       = "tdelay",
-      .name     = "Next tune delay in ms (0-2000)",
+      .name     = N_("Next tune delay in ms (0-2000)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_tdelay),
     },
     {
       .type     = PT_BOOL,
       .id       = "play2",
-      .name     = "Send full PLAY cmd",
+      .name     = N_("Send full PLAY cmd"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_play2),
     },
     {
       .type     = PT_BOOL,
       .id       = "teardown_delay",
-      .name     = "Force teardown delay",
+      .name     = N_("Force teardown delay"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_teardown_delay),
     },
     {
       .type     = PT_STR,
       .id       = "tunerbindaddr",
-      .name     = "Tuner bind IP address",
+      .name     = N_("Tuner bind IP address"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_tuner_bindaddr),
     },
@@ -189,12 +189,12 @@ const idclass_t satip_frontend_dvbt_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbt",
-  .ic_caption    = "SAT>IP DVB-T Frontend",
+  .ic_caption    = N_("SAT>IP DVB-T Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "fe_override",
-      .name     = "Network Type",
+      .name     = N_("Network Type"),
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
@@ -274,13 +274,13 @@ const idclass_t satip_frontend_dvbs_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbs",
-  .ic_caption    = "SAT>IP DVB-S Frontend",
+  .ic_caption    = N_("SAT>IP DVB-S Frontend"),
   .ic_get_childs = satip_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "positions",
-      .name     = "Satellite Positions",
+      .name     = N_("Satellite Positions"),
       .set      = satip_frontend_dvbs_class_positions_set,
       .opts     = PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_positions),
@@ -289,7 +289,7 @@ const idclass_t satip_frontend_dvbs_class =
     {
       .type     = PT_INT,
       .id       = "fe_master",
-      .name     = "Master Tuner",
+      .name     = N_("Master Tuner"),
       .set      = satip_frontend_dvbs_class_master_set,
       .list     = satip_frontend_dvbs_class_master_enum,
       .off      = offsetof(satip_frontend_t, sf_master),
@@ -306,12 +306,12 @@ const idclass_t satip_frontend_dvbs_slave_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbs",
-  .ic_caption    = "SAT>IP DVB-S Slave Frontend",
+  .ic_caption    = N_("SAT>IP DVB-S Slave Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "fe_master",
-      .name     = "Master Tuner",
+      .name     = N_("Master Tuner"),
       .set      = satip_frontend_dvbs_class_master_set,
       .list     = satip_frontend_dvbs_class_master_enum,
       .off      = offsetof(satip_frontend_t, sf_master),
@@ -328,12 +328,12 @@ const idclass_t satip_frontend_dvbc_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbc",
-  .ic_caption    = "SAT>IP DVB-C Frontend",
+  .ic_caption    = N_("SAT>IP DVB-C Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "fe_override",
-      .name     = "Network Type",
+      .name     = N_("Network Type"),
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
@@ -346,7 +346,7 @@ const idclass_t satip_frontend_atsc_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_atsc",
-  .ic_caption    = "SAT>IP ATSC Frontend",
+  .ic_caption    = N_("SAT>IP ATSC Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }

@@ -189,6 +189,7 @@ void idnode_notify_title_changed (void *in);
 
 void idclass_register ( const idclass_t *idc );
 const idclass_t *idclass_find ( const char *name );
+const char *idclass_get_caption ( const idclass_t *idc );
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, htsmsg_t *list, int optmask);
 htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask);
 void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask);

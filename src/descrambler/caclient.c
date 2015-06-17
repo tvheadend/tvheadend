@@ -233,7 +233,7 @@ caclient_class_status_get(void *o)
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
-  .ic_caption    = "Conditional Access Client",
+  .ic_caption    = N_("Conditional Access Client"),
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
   .ic_get_title  = caclient_class_get_title,
@@ -244,7 +244,7 @@ const idclass_t caclient_class =
     {
       .type     = PT_STR,
       .id       = "class",
-      .name     = "Class",
+      .name     = N_("Class"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .get      = caclient_class_class_get,
       .set      = caclient_class_class_set,
@@ -252,33 +252,33 @@ const idclass_t caclient_class =
     {
       .type     = PT_INT,
       .id       = "index",
-      .name     = "Index",
+      .name     = N_("Index"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(caclient_t, cac_index),
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(caclient_t, cac_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Client Name",
+      .name     = N_("Client Name"),
       .off      = offsetof(caclient_t, cac_name),
       .notify   = idnode_notify_title_changed,
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(caclient_t, cac_comment),
     },
     {
       .type     = PT_STR,
       .id       = "status",
-      .name     = "Status",
+      .name     = N_("Status"),
       .get      = caclient_class_status_get,
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
     },

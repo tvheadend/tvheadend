@@ -549,13 +549,13 @@ const idclass_t tvhdhomerun_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "tvhdhomerun_frontend",
-  .ic_caption    = "HDHomeRun DVB Frontend",
+  .ic_caption    = N_("HDHomeRun DVB Frontend"),
   .ic_save       = tvhdhomerun_frontend_class_save,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_INT,
       .id       = "fe_number",
-      .name     = "Frontend Number",
+      .name     = N_("Frontend Number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_frontend_t, hf_tunerNumber),
     },
@@ -567,7 +567,7 @@ const idclass_t tvhdhomerun_frontend_dvbt_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_dvbt",
-  .ic_caption    = "HDHomeRun DVB-T Frontend",
+  .ic_caption    = N_("HDHomeRun DVB-T Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -577,7 +577,7 @@ const idclass_t tvhdhomerun_frontend_dvbc_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_dvbc",
-  .ic_caption    = "HDHomeRun DVB-C Frontend",
+  .ic_caption    = N_("HDHomeRun DVB-C Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -587,7 +587,7 @@ const idclass_t tvhdhomerun_frontend_atsc_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_atsc",
-  .ic_caption    = "HDHomeRun ATSC Frontend",
+  .ic_caption    = N_("HDHomeRun ATSC Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }

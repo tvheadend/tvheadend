@@ -92,7 +92,7 @@ dvr_timerec_title(dvr_timerec_entry_t *dte, struct tm *start)
   size_t len;
 
   if (dte->dte_title == NULL)
-    return "Unknown";
+    return _("Unknown");
   len = strftime(buf, sizeof(buf) - 1, dte->dte_title, start);
   buf[len] = '\0';
   return buf;
@@ -150,7 +150,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   }
 
   title = dvr_timerec_title(dte, &tm_start);
-  snprintf(buf, sizeof(buf), "Time recording%s%s",
+  snprintf(buf, sizeof(buf), _("Time recording%s%s"),
            dte->dte_comment ? ": " : "",
            dte->dte_comment ?: "");
   de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
@@ -544,7 +544,7 @@ dvr_timerec_entry_class_owner_opts(void *o)
 
 const idclass_t dvr_timerec_entry_class = {
   .ic_class      = "dvrtimerec",
-  .ic_caption    = "DVR Time-Record Entry",
+  .ic_caption    = N_("DVR Time-Record Entry"),
   .ic_event      = "dvrtimerec",
   .ic_save       = dvr_timerec_entry_class_save,
   .ic_get_title  = dvr_timerec_entry_class_get_title,
@@ -554,32 +554,32 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(dvr_timerec_entry_t, dte_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Name",
+      .name     = N_("Name"),
       .off      = offsetof(dvr_timerec_entry_t, dte_name),
     },
     {
       .type     = PT_STR,
       .id       = "title",
-      .name     = "Title",
+      .name     = N_("Title"),
       .off      = offsetof(dvr_timerec_entry_t, dte_title),
       .def.s    = "Time-%F_%R",
     },
     {
       .type     = PT_STR,
       .id       = "directory",
-      .name     = "Directory",
+      .name     = N_("Directory"),
       .off      = offsetof(dvr_timerec_entry_t, dte_directory),
     },
     {
       .type     = PT_STR,
       .id       = "channel",
-      .name     = "Channel",
+      .name     = N_("Channel"),
       .set      = dvr_timerec_entry_class_channel_set,
       .get      = dvr_timerec_entry_class_channel_get,
       .rend     = dvr_timerec_entry_class_channel_rend,
@@ -588,7 +588,7 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start",
-      .name     = "Start",
+      .name     = N_("Start"),
       .set      = dvr_timerec_entry_class_start_set,
       .get      = dvr_timerec_entry_class_start_get,
       .list     = dvr_timerec_entry_class_time_list,
@@ -598,7 +598,7 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "stop",
-      .name     = "Stop",
+      .name     = N_("Stop"),
       .set      = dvr_timerec_entry_class_stop_set,
       .get      = dvr_timerec_entry_class_stop_get,
       .list     = dvr_timerec_entry_class_time_list,
@@ -609,7 +609,7 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_U32,
       .islist   = 1,
       .id       = "weekdays",
-      .name     = "Week Days",
+      .name     = N_("Week Days"),
       .set      = dvr_timerec_entry_class_weekdays_set,
       .get      = dvr_timerec_entry_class_weekdays_get,
       .list     = dvr_autorec_entry_class_weekdays_list,
@@ -619,7 +619,7 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "pri",
-      .name     = "Priority",
+      .name     = N_("Priority"),
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_timerec_entry_t, dte_pri),
@@ -628,13 +628,13 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_INT,
       .id       = "retention",
-      .name     = "Retention",
+      .name     = N_("Retention"),
       .off      = offsetof(dvr_timerec_entry_t, dte_retention),
     },
     {
       .type     = PT_STR,
       .id       = "config_name",
-      .name     = "DVR Configuration",
+      .name     = N_("DVR Configuration"),
       .set      = dvr_timerec_entry_class_config_name_set,
       .get      = dvr_timerec_entry_class_config_name_get,
       .rend     = dvr_timerec_entry_class_config_name_rend,
@@ -643,21 +643,21 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "owner",
-      .name     = "Owner",
+      .name     = N_("Owner"),
       .off      = offsetof(dvr_timerec_entry_t, dte_owner),
       .get_opts = dvr_timerec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "creator",
-      .name     = "Creator",
+      .name     = N_("Creator"),
       .off      = offsetof(dvr_timerec_entry_t, dte_creator),
       .get_opts = dvr_timerec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(dvr_timerec_entry_t, dte_comment),
     },
     {}

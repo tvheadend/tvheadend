@@ -89,12 +89,12 @@ const idclass_t iptv_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "iptv_mux",
-  .ic_caption    = "IPTV Multiplex",
+  .ic_caption    = N_("IPTV Multiplex"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Priority",
+      .name     = N_("Priority"),
       .off      = offsetof(iptv_mux_t, mm_iptv_priority),
       .def.i    = 0,
       .opts     = PO_ADVANCED
@@ -102,7 +102,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = "Streaming Priority",
+      .name     = N_("Streaming Priority"),
       .off      = offsetof(iptv_mux_t, mm_iptv_streaming_priority),
       .def.i    = 0,
       .opts     = PO_ADVANCED
@@ -110,45 +110,45 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_url",
-      .name     = "URL",
+      .name     = N_("URL"),
       .off      = offsetof(iptv_mux_t, mm_iptv_url),
       .set      = iptv_mux_url_set,
     },
     {
       .type     = PT_STR,
       .id       = "iptv_interface",
-      .name     = "Interface",
+      .name     = N_("Interface"),
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
     },
     {
       .type     = PT_BOOL,
       .id       = "iptv_atsc",
-      .name     = "ATSC",
+      .name     = N_("ATSC"),
       .off      = offsetof(iptv_mux_t, mm_iptv_atsc),
     },
     {
       .type     = PT_STR,
       .id       = "iptv_muxname",
-      .name     = "Mux Name",
+      .name     = N_("Mux Name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
     },
     {
       .type     = PT_STR,
       .id       = "iptv_sname",
-      .name     = "Service Name",
+      .name     = N_("Service Name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
     {
       .type     = PT_BOOL,
       .id       = "iptv_respawn",
-      .name     = "Respawn (pipe)",
+      .name     = N_("Respawn (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_respawn),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "iptv_env",
-      .name     = "Environment (pipe)",
+      .name     = N_("Environment (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
       .opts     = PO_ADVANCED,
     },

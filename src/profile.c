@@ -168,7 +168,7 @@ profile_class_get_title ( idnode_t *in )
   static char buf[32];
   if (pro->pro_name && pro->pro_name[0])
     return pro->pro_name;
-  snprintf(buf, sizeof(buf), "%s", in->in_class->ic_caption);
+  snprintf(buf, sizeof(buf), "%s", idclass_get_caption(in->in_class));
   return buf;
 }
 
@@ -243,36 +243,36 @@ static htsmsg_t *
 profile_class_priority_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Unset (default)",          PROFILE_SPRIO_NOTSET },
-    { "Important",                PROFILE_SPRIO_IMPORTANT },
-    { "High",                     PROFILE_SPRIO_HIGH, },
-    { "Normal",                   PROFILE_SPRIO_NORMAL },
-    { "Low",                      PROFILE_SPRIO_LOW },
-    { "Unimportant",              PROFILE_SPRIO_UNIMPORTANT },
-    { "DVR Override Important",   PROFILE_SPRIO_DVR_IMPORTANT },
-    { "DVR Override High",        PROFILE_SPRIO_DVR_HIGH },
-    { "DVR Override Normal",      PROFILE_SPRIO_DVR_NORMAL },
-    { "DVR Override Low",         PROFILE_SPRIO_DVR_LOW },
-    { "DVR Override Unimportant", PROFILE_SPRIO_DVR_UNIMPORTANT },
+    { N_("Unset (default)"),          PROFILE_SPRIO_NOTSET },
+    { N_("Important"),                PROFILE_SPRIO_IMPORTANT },
+    { N_("High"),                     PROFILE_SPRIO_HIGH, },
+    { N_("Normal"),                   PROFILE_SPRIO_NORMAL },
+    { N_("Low"),                      PROFILE_SPRIO_LOW },
+    { N_("Unimportant"),              PROFILE_SPRIO_UNIMPORTANT },
+    { N_("DVR Override Important"),   PROFILE_SPRIO_DVR_IMPORTANT },
+    { N_("DVR Override High"),        PROFILE_SPRIO_DVR_HIGH },
+    { N_("DVR Override Normal"),      PROFILE_SPRIO_DVR_NORMAL },
+    { N_("DVR Override Low"),         PROFILE_SPRIO_DVR_LOW },
+    { N_("DVR Override Unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 static htsmsg_t *
 profile_class_svfilter_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "None",                    PROFILE_SVF_NONE },
-    { "SD: Standard Definition", PROFILE_SVF_SD },
-    { "HD: High Definition",     PROFILE_SVF_HD },
+    { N_("None"),                    PROFILE_SVF_NONE },
+    { N_("SD: Standard Definition"), PROFILE_SVF_SD },
+    { N_("HD: High Definition"),     PROFILE_SVF_HD },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
-  .ic_caption    = "Stream Profile",
+  .ic_caption    = N_("Stream Profile"),
   .ic_event      = "profile",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = profile_class_save,
@@ -282,7 +282,7 @@ const idclass_t profile_class =
     {
       .type     = PT_STR,
       .id       = "class",
-      .name     = "Class",
+      .name     = N_("Class"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .get      = profile_class_class_get,
       .set      = profile_class_class_set,
@@ -290,21 +290,21 @@ const idclass_t profile_class =
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(profile_t, pro_enabled),
       .get_opts = profile_class_enabled_opts,
     },
     {
       .type     = PT_BOOL,
       .id       = "default",
-      .name     = "Default",
+      .name     = N_("Default"),
       .set      = profile_class_default_set,
       .get      = profile_class_default_get,
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Profile Name",
+      .name     = N_("Profile Name"),
       .off      = offsetof(profile_t, pro_name),
       .get_opts = profile_class_name_opts,
       .notify   = idnode_notify_title_changed,
@@ -312,13 +312,13 @@ const idclass_t profile_class =
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(profile_t, pro_comment),
     },
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Default Priority",
+      .name     = N_("Default Priority"),
       .list     = profile_class_priority_list,
       .off      = offsetof(profile_t, pro_prio),
       .opts     = PO_SORTKEY,
@@ -327,34 +327,34 @@ const idclass_t profile_class =
     {
       .type     = PT_INT,
       .id       = "fpriority",
-      .name     = "Force Priority",
+      .name     = N_("Force Priority"),
       .off      = offsetof(profile_t, pro_fprio),
     },
     {
       .type     = PT_INT,
       .id       = "timeout",
-      .name     = "Timeout (sec) (0=infinite)",
+      .name     = N_("Timeout (sec) (0=infinite)"),
       .off      = offsetof(profile_t, pro_timeout),
       .def.i    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "restart",
-      .name     = "Restart On Error",
+      .name     = N_("Restart On Error"),
       .off      = offsetof(profile_t, pro_restart),
       .def.i    = 0,
     },
     {
       .type     = PT_BOOL,
       .id       = "contaccess",
-      .name     = "Continue On Access Error",
+      .name     = N_("Continue On Access Error"),
       .off      = offsetof(profile_t, pro_contaccess),
       .def.i    = 1,
     },
     {
       .type     = PT_INT,
       .id       = "svfilter",
-      .name     = "Preferred Service Video Type",
+      .name     = N_("Preferred Service Video Type"),
       .list     = profile_class_svfilter_list,
       .off      = offsetof(profile_t, pro_svfilter),
       .opts     = PO_SORTKEY,
@@ -925,7 +925,7 @@ const idclass_t profile_htsp_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-htsp",
-  .ic_caption    = "HTSP Stream Profile",
+  .ic_caption    = N_("HTSP Stream Profile"),
   .ic_properties = (const property_t[]){
     /* Ready for future extensions */
     { }
@@ -998,33 +998,33 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = "MPEG-TS Pass-through /build-in",
+  .ic_caption    = N_("MPEG-TS Pass-through /build-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "rewrite_pmt",
-      .name     = "Rewrite PMT",
+      .name     = N_("Rewrite PMT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
       .def.i    = 1,
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_pat",
-      .name     = "Rewrite PAT",
+      .name     = N_("Rewrite PAT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
       .def.i    = 1,
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_sdt",
-      .name     = "Rewrite SDT",
+      .name     = N_("Rewrite SDT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
       .def.i    = 1,
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_eit",
-      .name     = "Rewrite EIT",
+      .name     = N_("Rewrite EIT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
       .def.i    = 1,
     },
@@ -1099,12 +1099,12 @@ const idclass_t profile_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
-  .ic_caption    = "Matroska (mkv) /build-in",
+  .ic_caption    = N_("Matroska (mkv) /build-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "webm",
-      .name     = "WEBM",
+      .name     = N_("WEBM"),
       .off      = offsetof(profile_matroska_t, pro_webm),
       .def.i    = 0,
     },
@@ -1184,7 +1184,7 @@ const idclass_t profile_libav_mpegts_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-libav-mpegts",
-  .ic_caption    = "MPEG-TS /av-lib",
+  .ic_caption    = N_("MPEG-TS /av-lib"),
   .ic_properties = (const property_t[]){
     { }
   }
@@ -1255,12 +1255,12 @@ const idclass_t profile_libav_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-libav-matroska",
-  .ic_caption    = "Matroska /av-lib",
+  .ic_caption    = N_("Matroska /av-lib"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "webm",
-      .name     = "WEBM",
+      .name     = N_("WEBM"),
       .off      = offsetof(profile_libav_matroska_t, pro_webm),
       .def.i    = 0,
     },
@@ -1352,32 +1352,32 @@ static htsmsg_t *
 profile_class_mc_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Not set",                       MC_UNKNOWN },
-    { "Matroska (mkv) /built-in",      MC_MATROSKA, },
-    { "WEBM /built-in",                MC_WEBM, },
-    { "MPEG-TS /av-lib",               MC_MPEGTS },
-    { "MPEG-PS (DVD) /av-lib",         MC_MPEGPS },
-    { "Matroska (mkv) /av-lib",        MC_AVMATROSKA },
-    { "WEBM /av-lib",                  MC_AVWEBM },
+    { N_("Not set"),                       MC_UNKNOWN },
+    { N_("Matroska (mkv) /built-in"),      MC_MATROSKA, },
+    { N_("WEBM /built-in"),                MC_WEBM, },
+    { N_("MPEG-TS /av-lib"),               MC_MPEGTS },
+    { N_("MPEG-PS (DVD) /av-lib"),         MC_MPEGPS },
+    { N_("Matroska (mkv) /av-lib"),        MC_AVMATROSKA },
+    { N_("WEBM /av-lib"),                  MC_AVWEBM },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 static htsmsg_t *
 profile_class_channels_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Copy layout",                   0 },
-    { "Mono",                          1 },
-    { "Stereo",                        2 },
-    { "Surround (2 Front, Rear Mono)", 3 },
-    { "Quad (4.0)",                    4 },
-    { "5.0",                           5 },
-    { "5.1",                           6 },
-    { "6.1",                           7 },
-    { "7.1",                           8 }
+    { N_("Copy layout"),                   0 },
+    { N_("Mono"),                          1 },
+    { N_("Stereo"),                        2 },
+    { N_("Surround (2 Front, Rear Mono)"), 3 },
+    { N_("Quad (4.0)"),                    4 },
+    { N_("5.0"),                           5 },
+    { N_("5.1"),                           6 },
+    { N_("6.1"),                           7 },
+    { N_("7.1"),                           8 }
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 static htsmsg_t *
@@ -1497,12 +1497,12 @@ const idclass_t profile_transcode_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-transcode",
-  .ic_caption    = "Transcode /av-lib",
+  .ic_caption    = N_("Transcode /av-lib"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "container",
-      .name     = "Container",
+      .name     = N_("Container"),
       .off      = offsetof(profile_transcode_t, pro_mc),
       .def.i    = MC_MATROSKA,
       .list     = profile_class_mc_list,
@@ -1510,14 +1510,14 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "resolution",
-      .name     = "Resolution",
+      .name     = N_("Resolution"),
       .off      = offsetof(profile_transcode_t, pro_resolution),
       .def.u32  = 384,
     },
     {
       .type     = PT_U32,
       .id       = "channels",
-      .name     = "Channels",
+      .name     = N_("Channels"),
       .off      = offsetof(profile_transcode_t, pro_channels),
       .def.u32  = 2,
       .list     = profile_class_channels_list,
@@ -1525,14 +1525,14 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .off      = offsetof(profile_transcode_t, pro_language),
       .list     = profile_class_language_list,
     },
     {
       .type     = PT_STR,
       .id       = "vcodec",
-      .name     = "Video Codec",
+      .name     = N_("Video Codec"),
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
@@ -1540,14 +1540,14 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "vbitrate",
-      .name     = "Video Bitrate (kb/s) (0=Auto)",
+      .name     = N_("Video Bitrate (kb/s) (0=Auto)"),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
       .def.u32  = 0,
     },
     {
       .type     = PT_STR,
       .id       = "acodec",
-      .name     = "Audio Codec",
+      .name     = N_("Audio Codec"),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
@@ -1555,14 +1555,14 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "abitrate",
-      .name     = "Audio Bitrate (kb/s) (0=Auto)",
+      .name     = N_("Audio Bitrate (kb/s) (0=Auto)"),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
       .def.u32  = 0,
     },
     {
       .type     = PT_STR,
       .id       = "scodec",
-      .name     = "Subtitles Codec",
+      .name     = N_("Subtitles Codec"),
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .def.s    = "",
       .list     = profile_class_scodec_list,
@@ -1803,7 +1803,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_bool(conf, "default", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "MPEG-TS Pass-through");
+    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-through"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "rewrite_pmt", 1);
     htsmsg_add_bool(conf, "rewrite_pat", 1);
@@ -1823,7 +1823,7 @@ profile_init(void)
     htsmsg_add_str (conf, "class", "profile-matroska");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "Matroska");
+    htsmsg_add_str (conf, "comment", _("Matroska"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1839,7 +1839,7 @@ profile_init(void)
     htsmsg_add_str (conf, "class", "profile-htsp");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "HTSP Default Stream Settings");
+    htsmsg_add_str (conf, "comment", _("HTSP Default Stream Settings"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_IMPORTANT);
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1857,7 +1857,7 @@ profile_init(void)
     htsmsg_add_str (conf, "class", "profile-transcode");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "WEBTV profile VP8/Vorbis/WEBM");
+    htsmsg_add_str (conf, "comment", _("WEBTV profile VP8/Vorbis/WEBM"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_WEBM);
     htsmsg_add_u32 (conf, "resolution", 384);
@@ -1877,7 +1877,7 @@ profile_init(void)
     htsmsg_add_str (conf, "class", "profile-transcode");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/MPEG-TS");
+    htsmsg_add_str (conf, "comment", _("WEBTV profile H264/AAC/MPEG-TS"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_MPEGTS);
     htsmsg_add_u32 (conf, "resolution", 384);
@@ -1897,7 +1897,7 @@ profile_init(void)
     htsmsg_add_str (conf, "class", "profile-transcode");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", "WEBTV profile H264/AAC/Matroska");
+    htsmsg_add_str (conf, "comment", _("WEBTV profile H264/AAC/Matroska"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_s32 (conf, "container", MC_MATROSKA);
     htsmsg_add_u32 (conf, "resolution", 384);

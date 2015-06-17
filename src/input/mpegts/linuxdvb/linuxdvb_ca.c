@@ -178,35 +178,35 @@ linuxdvb_ca_class_get_title ( idnode_t *in )
 const idclass_t linuxdvb_ca_class =
 {
   .ic_class      = "linuxdvb_ca",
-  .ic_caption    = "Linux DVB CA",
+  .ic_caption    = N_("Linux DVB CA"),
   .ic_save       = linuxdvb_ca_class_save,
   .ic_get_title   = linuxdvb_ca_class_get_title,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(linuxdvb_ca_t, lca_enabled),
       .notify   = linuxdvb_ca_class_enabled_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "high_bitrate_mode",
-      .name     = "High Bitrate Mode (CI+ CAMs Only)",
+      .name     = N_("High Bitrate Mode (CI+ CAMs Only)"),
       .off      = offsetof(linuxdvb_ca_t, lca_high_bitrate_mode),
       .notify   = linuxdvb_ca_class_high_bitrate_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "pin_reply",
-      .name     = "Reply to CAM PIN Enquiries",
+      .name     = N_("Reply to CAM PIN Enquiries"),
       .off      = offsetof(linuxdvb_ca_t, lca_pin_reply),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "pin",
-      .name     = "PIN",
+      .name     = N_("PIN"),
       .off      = offsetof(linuxdvb_ca_t, lca_pin_str),
       .opts     = PO_ADVANCED | PO_PASSWORD,
       .def.s    = "1234",
@@ -214,7 +214,7 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_STR,
       .id       = "pin_match",
-      .name     = "PIN Enquiry Match String",
+      .name     = N_("PIN Enquiry Match String"),
       .off      = offsetof(linuxdvb_ca_t, lca_pin_match_str),
       .opts     = PO_ADVANCED,
       .def.s    = "PIN",
@@ -222,7 +222,7 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_INT,
       .id       = "capmt_interval",
-      .name     = "CAPMT Interval (ms)",
+      .name     = N_("CAPMT Interval (ms)"),
       .off      = offsetof(linuxdvb_ca_t, lca_capmt_interval),
       .opts     = PO_ADVANCED,
       .def.i    = 100,
@@ -230,7 +230,7 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_INT,
       .id       = "capmt_query_interval",
-      .name     = "CAPMT Query Interval (ms)",
+      .name     = N_("CAPMT Query Interval (ms)"),
       .off      = offsetof(linuxdvb_ca_t, lca_capmt_query_interval),
       .opts     = PO_ADVANCED,
       .def.i    = 1200,
@@ -238,21 +238,21 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_BOOL,
       .id       = "query_before_ok_descrambling",
-      .name     = "Send CAPMT Query",
+      .name     = N_("Send CAPMT Query"),
       .off      = offsetof(linuxdvb_ca_t, lca_capmt_query),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "ca_path",
-      .name     = "Device Path",
+      .name     = N_("Device Path"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_ca_t, lca_ca_path),
     },
     {
       .type     = PT_STR,
       .id       = "slot_state",
-      .name     = "Slot State",
+      .name     = N_("Slot State"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_ca_t, lca_state_str),
     },

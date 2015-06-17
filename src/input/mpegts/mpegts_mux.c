@@ -39,7 +39,7 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_super      = &tvh_input_instance_class,
   .ic_class      = "mpegts_mux_instance",
-  .ic_caption    = "MPEGTS Multiplex Phy",
+  .ic_caption    = N_("MPEGTS Multiplex Phy"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
@@ -379,16 +379,16 @@ mpegts_mux_class_get_name ( void *ptr )
 
 static struct strtab
 scan_state_tab[] = {
-  { "IDLE",   MM_SCAN_STATE_IDLE },
-  { "PEND",   MM_SCAN_STATE_PEND },
-  { "ACTIVE", MM_SCAN_STATE_ACTIVE },
+  { N_("IDLE"),   MM_SCAN_STATE_IDLE },
+  { N_("PEND"),   MM_SCAN_STATE_PEND },
+  { N_("ACTIVE"), MM_SCAN_STATE_ACTIVE },
 };
 
 static struct strtab
 scan_result_tab[] = {
- { "NONE",    MM_SCAN_NONE },
- { "OK",      MM_SCAN_OK   },
- { "FAIL",    MM_SCAN_FAIL },
+ { N_("NONE"),    MM_SCAN_NONE },
+ { N_("OK"),      MM_SCAN_OK   },
+ { N_("FAIL"),    MM_SCAN_FAIL },
 };
 
 int
@@ -432,13 +432,13 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
 static htsmsg_t *
 mpegts_mux_class_scan_state_enum ( void *p )
 {
-  return strtab2htsmsg(scan_state_tab);
+  return strtab2htsmsg(scan_state_tab, 1);
 }
 
 static htsmsg_t *
 mpegts_mux_class_scan_result_enum ( void *p )
 {
-  return strtab2htsmsg(scan_result_tab);
+  return strtab2htsmsg(scan_result_tab, 1);
 }
 
 static void
@@ -455,35 +455,35 @@ static htsmsg_t *
 mpegts_mux_epg_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Disable",                  MM_EPG_DISABLE },
-    { "Enable (auto)",            MM_EPG_ENABLE },
-    { "Force (auto)",             MM_EPG_FORCE },
-    { "Only EIT",                 MM_EPG_ONLY_EIT },
-    { "Only UK Freesat",          MM_EPG_ONLY_UK_FREESAT },
-    { "Only UK Freeview",         MM_EPG_ONLY_UK_FREEVIEW },
-    { "Only Viasat Baltic",       MM_EPG_ONLY_VIASAT_BALTIC },
-    { "Only OpenTV Sky UK",       MM_EPG_ONLY_OPENTV_SKY_UK },
-    { "Only OpenTV Sky Italia",   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
-    { "Only OpenTV Sky Ausat",    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
+    { N_("Disable"),                  MM_EPG_DISABLE },
+    { N_("Enable (auto)"),            MM_EPG_ENABLE },
+    { N_("Force (auto)"),             MM_EPG_FORCE },
+    { N_("Only EIT"),                 MM_EPG_ONLY_EIT },
+    { N_("Only UK Freesat"),          MM_EPG_ONLY_UK_FREESAT },
+    { N_("Only UK Freeview"),         MM_EPG_ONLY_UK_FREEVIEW },
+    { N_("Only Viasat Baltic"),       MM_EPG_ONLY_VIASAT_BALTIC },
+    { N_("Only OpenTV Sky UK"),       MM_EPG_ONLY_OPENTV_SKY_UK },
+    { N_("Only OpenTV Sky Italia"),   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
+    { N_("Only OpenTV Sky Ausat"),    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 static htsmsg_t *
 mpegts_mux_ac3_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Standard",                 MM_AC3_STANDARD },
-    { "AC-3 = descriptor 6",      MM_AC3_PMT_06 },
-    { "Ignore descriptor 5",      MM_AC3_PMT_N05 },
+    { N_("Standard"),                 MM_AC3_STANDARD },
+    { N_("AC-3 = descriptor 6"),      MM_AC3_PMT_06 },
+    { N_("Ignore descriptor 5"),      MM_AC3_PMT_N05 },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
-  .ic_caption    = "MPEGTS Multiplex",
+  .ic_caption    = N_("MPEGTS Multiplex"),
   .ic_event      = "mpegts_mux",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
@@ -493,7 +493,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(mpegts_mux_t, mm_enabled),
       .def.i    = 1,
       .notify   = mpegts_mux_class_enabled_notify,
@@ -501,7 +501,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "epg",
-      .name     = "EPG Scan",
+      .name     = N_("EPG Scan"),
       .off      = offsetof(mpegts_mux_t, mm_epg),
       .def.i    = MM_EPG_ENABLE,
       .list     = mpegts_mux_epg_list,
@@ -509,49 +509,49 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "network",
-      .name     = "Network",
+      .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_network,
     },
     {
       .type     = PT_STR,
       .id       = "network_uuid",
-      .name     = "Network Uuid",
+      .name     = N_("Network Uuid"),
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
       .get      = mpegts_mux_class_get_network_uuid,
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Name",
+      .name     = N_("Name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_name,
     },
     {
       .type     = PT_U16,
       .id       = "onid",
-      .name     = "Original Network ID",
+      .name     = N_("Original Network ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_onid),
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transport Stream ID",
+      .name     = N_("Transport Stream ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_tsid),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = "CRID Authority",
+      .name     = N_("CRID Authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
       .type     = PT_INT,
       .id       = "scan_state",
-      .name     = "Scan Status",
+      .name     = N_("Scan Status"),
       .off      = offsetof(mpegts_mux_t, mm_scan_state),
       .set      = mpegts_mux_class_scan_state_set,
       .list     = mpegts_mux_class_scan_state_enum,
@@ -560,7 +560,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "scan_result",
-      .name     = "Scan Result",
+      .name     = N_("Scan Result"),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
       .opts     = PO_RDONLY | PO_SORTKEY,
       .list     = mpegts_mux_class_scan_result_enum,
@@ -568,7 +568,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Character Set",
+      .name     = N_("Character Set"),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -576,21 +576,21 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "num_svc",
-      .name     = "# Services",
+      .name     = N_("# Services"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
     },
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = "# Channels",
+      .name     = N_("# Channels"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
     {
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
-      .name     = "AC-3 Detection",
+      .name     = N_("AC-3 Detection"),
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,

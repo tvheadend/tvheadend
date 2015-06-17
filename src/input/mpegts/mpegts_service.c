@@ -74,108 +74,108 @@ static htsmsg_t *
 mpegts_service_pref_capid_lock_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Off",                0 },
-    { "On",                 1 },
-    { "Only Pref. CA PID",  2 },
+    { N_("Off"),                0 },
+    { N_("On"),                 1 },
+    { N_("Only Pref. CA PID"),  2 },
   };
-   return strtab2htsmsg(tab);
+   return strtab2htsmsg(tab, 1);
 }
 
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
-  .ic_caption    = "MPEGTS Service",
+  .ic_caption    = N_("MPEGTS Service"),
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "network",
-      .name     = "Network",
+      .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_network,
     },
     {
       .type     = PT_STR,
       .id       = "multiplex",
-      .name     = "Mux",
+      .name     = N_("Mux"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_mux,
     },
     {
       .type     = PT_STR,
       .id       = "multiplex_uuid",
-      .name     = "Mux UUID",
+      .name     = N_("Mux UUID"),
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
       .get      = mpegts_service_class_get_mux_uuid,
     },
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_service_id),
     },
     {
       .type     = PT_U16,
       .id       = "lcn",
-      .name     = "Local Channel Number",
+      .name     = N_("Local Channel Number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
     },
     {
       .type     = PT_U16,
       .id       = "lcn_minor",
-      .name     = "Local Channel Minor",
+      .name     = N_("Local Channel Minor"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_minor),
     },
     {
       .type     = PT_U16,
       .id       = "lcn2",
-      .name     = "OpenTV Channel Number",
+      .name     = N_("OpenTV Channel Number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
     },
     {
       .type     = PT_STR,
       .id       = "svcname",
-      .name     = "Service Name",
+      .name     = N_("Service Name"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_svcname),
     },
     {
       .type     = PT_STR,
       .id       = "provider",
-      .name     = "Provider",
+      .name     = N_("Provider"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_provider),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = "CRID Authority",
+      .name     = N_("CRID Authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_cridauth),
     },
     {
       .type     = PT_U16,
       .id       = "dvb_servicetype",
-      .name     = "Service Type",
+      .name     = N_("Service Type"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {
       .type     = PT_BOOL,
       .id       = "dvb_ignore_eit",
-      .name     = "Ignore EPG (EIT)",
+      .name     = N_("Ignore EPG (EIT)"),
       .off      = offsetof(mpegts_service_t, s_dvb_ignore_eit),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Character Set",
+      .name     = N_("Character Set"),
       .off      = offsetof(mpegts_service_t, s_dvb_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -183,14 +183,14 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "prefcapid",
-      .name     = "Pref. CA PID",
+      .name     = N_("Pref. CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
       .id       = "prefcapid_lock",
-      .name     = "Lock Pref. CA PID",
+      .name     = N_("Lock Pref. CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
       .opts     = PO_ADVANCED,
       .list     = mpegts_service_pref_capid_lock_list,
@@ -198,21 +198,21 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "force_caid",
-      .name     = "Force CA ID (e.g. 0x2600)",
+      .name     = N_("Force CA ID (e.g. 0x2600)"),
       .off      = offsetof(mpegts_service_t, s_dvb_forcecaid),
       .opts     = PO_ADVANCED | PO_HEXA,
     },
     {
       .type     = PT_TIME,
       .id       = "created",
-      .name     = "Created",
+      .name     = N_("Created"),
       .off      = offsetof(mpegts_service_t, s_dvb_created),
       .opts     = PO_ADVANCED | PO_RDONLY,
     },
     {
       .type     = PT_TIME,
       .id       = "last_seen",
-      .name     = "Last Seen",
+      .name     = N_("Last Seen"),
       .off      = offsetof(mpegts_service_t, s_dvb_last_seen),
       .opts     = PO_ADVANCED | PO_RDONLY,
     },
@@ -715,7 +715,7 @@ const idclass_t mpegts_service_raw_class =
 {
   .ic_super      = &service_raw_class,
   .ic_class      = "mpegts_raw_service",
-  .ic_caption    = "MPEGTS Raw Service",
+  .ic_caption    = N_("MPEGTS Raw Service"),
   .ic_properties = NULL
 };
 

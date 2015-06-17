@@ -86,7 +86,7 @@ extern const idclass_t linuxdvb_diseqc_class;
 const idclass_t linuxdvb_rotor_class = {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_rotor",
-  .ic_caption     = "DiseqC Rotor",
+  .ic_caption     = N_("DiseqC Rotor"),
   .ic_get_title   = linuxdvb_rotor_class_get_title,
 };
 
@@ -94,18 +94,18 @@ const idclass_t linuxdvb_rotor_gotox_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_gotox",
-  .ic_caption     = "GOTOX Rotor",
+  .ic_caption     = N_("GOTOX Rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
-      .name   = "GOTOX Position",
+      .name   = N_("GOTOX Position"),
       .off    = offsetof(linuxdvb_rotor_t, lr_position),
     },
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = "Satellite Longitude",
+      .name   = N_("Satellite Longitude"),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}
@@ -116,12 +116,12 @@ const idclass_t linuxdvb_rotor_usals_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_usals",
-  .ic_caption     = "USALS Rotor",
+  .ic_caption     = N_("USALS Rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = "Satellite Longitude",
+      .name   = N_("Satellite Longitude"),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
  
@@ -441,11 +441,11 @@ struct {
   const idclass_t *idc;
 } linuxdvb_rotor_all[] = {
   {
-    .name = "GOTOX",
+    .name = N_("GOTOX"),
     .idc  = &linuxdvb_rotor_gotox_class
   },
   {
-    .name = "USALS",
+    .name = N_("USALS"),
     .idc  = &linuxdvb_rotor_usals_class
   }
 };

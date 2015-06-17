@@ -58,7 +58,7 @@ const idclass_t linuxdvb_lnb_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_lnb_basic",
-  .ic_caption     = "LNB",
+  .ic_caption     = N_("LNB"),
   .ic_get_title   = linuxdvb_lnb_class_get_title,
 };
 

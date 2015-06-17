@@ -177,7 +177,7 @@ satip_satconf_class_save ( idnode_t *in )
 const idclass_t satip_satconf_class =
 {
   .ic_class      = "satip_satconf",
-  .ic_caption    = "Satconf",
+  .ic_caption    = N_("Satconf"),
   .ic_event      = "satip_satconf",
   .ic_get_title  = satip_satconf_class_get_title,
   .ic_save       = satip_satconf_class_save,
@@ -185,27 +185,27 @@ const idclass_t satip_satconf_class =
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(satip_satconf_t, sfc_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "displayname",
-      .name     = "Name",
+      .name     = N_("Name"),
       .off      = offsetof(satip_satconf_t, sfc_name),
       .notify   = idnode_notify_title_changed,
     },
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Priority",
+      .name     = N_("Priority"),
       .off      = offsetof(satip_satconf_t, sfc_priority),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
       .id       = "timeout",
-      .name     = "Timeout (seconds)",
+      .name     = N_("Timeout (seconds)"),
       .off      = offsetof(satip_satconf_t, sfc_grace),
       .opts     = PO_ADVANCED,
       .def.i    = 10
@@ -213,7 +213,7 @@ const idclass_t satip_satconf_class =
     {
       .type     = PT_INT,
       .id       = "position",
-      .name     = "Position",
+      .name     = N_("Position"),
       .off      = offsetof(satip_satconf_t, sfc_position),
       .def.i    = 1,
       .opts     = PO_RDONLY | PO_ADVANCED,
@@ -221,7 +221,7 @@ const idclass_t satip_satconf_class =
     {
       .type     = PT_STR,
       .id       = "networks",
-      .name     = "Networks",
+      .name     = N_("Networks"),
       .islist   = 1,
       .set      = satip_satconf_class_network_set,
       .get      = satip_satconf_class_network_get,

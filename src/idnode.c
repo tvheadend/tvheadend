@@ -1134,7 +1134,7 @@ add_params
 #if 0
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "caption",  ic->ic_caption ?: ic->ic_class);
+    htsmsg_add_str(m, "caption",  gettext(ic->ic_caption) ?: ic->ic_class);
     htsmsg_add_str(m, "type",     "separator");
     htsmsg_add_msg(p, NULL, m);
   }
@@ -1152,12 +1152,12 @@ idnode_params (const idclass_t *idc, idnode_t *self, htsmsg_t *list, int optmask
   return p;
 }
 
-static const char *
-idclass_get_caption (const idclass_t *idc )
+const char *
+idclass_get_caption (const idclass_t *idc)
 {
   while (idc) {
     if (idc->ic_caption)
-      return idc->ic_caption;
+      return gettext(idc->ic_caption);
     idc = idc->ic_super;
   }
   return NULL;
@@ -1209,7 +1209,7 @@ idclass_get_property_groups (const idclass_t *idc)
       for (g = idc->ic_groups; g->number && g->name; g++) {
         e = htsmsg_create_map();
         htsmsg_add_u32(e, "number", g->number);
-        htsmsg_add_str(e, "name",   g->name);
+        htsmsg_add_str(e, "name",   gettext(g->name));
         if (g->parent)
           htsmsg_add_u32(e, "parent", g->parent);
         if (g->column)

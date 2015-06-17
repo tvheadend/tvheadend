@@ -55,41 +55,41 @@ const idclass_t linuxdvb_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_frontend",
-  .ic_caption    = "Linux DVB Frontend",
+  .ic_caption    = N_("Linux DVB Frontend"),
   .ic_save       = linuxdvb_frontend_class_save,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "fe_path",
-      .name     = "Frontend Path",
+      .name     = N_("Frontend Path"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_frontend_t, lfe_fe_path),
     },
     {
       .type     = PT_STR,
       .id       = "dvr_path",
-      .name     = "Input Path",
+      .name     = N_("Input Path"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_frontend_t, lfe_dvr_path),
     },
     {
       .type     = PT_STR,
       .id       = "dmx_path",
-      .name     = "Demux Path",
+      .name     = N_("Demux Path"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_frontend_t, lfe_dmx_path),
     },
     {
       .type     = PT_INT,
       .id       = "fe_number",
-      .name     = "Frontend Number",
+      .name     = N_("Frontend Number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(linuxdvb_frontend_t, lfe_number),
     },
     {
       .type     = PT_INT,
       .id       = "pids_max",
-      .name     = "Maximum PIDs ",
+      .name     = N_("Maximum PIDs "),
       .off      = offsetof(linuxdvb_frontend_t, lfe_pids_max),
       .opts     = PO_ADVANCED,
       .def.i    = 32
@@ -97,41 +97,41 @@ const idclass_t linuxdvb_frontend_class =
     {
       .type     = PT_BOOL,
       .id       = "powersave",
-      .name     = "Power Save",
+      .name     = N_("Power Save"),
       .off      = offsetof(linuxdvb_frontend_t, lfe_powersave),
     },
     {
       .type     = PT_U32,
       .id       = "tune_repeats",
-      .name     = "Tune Repeats",
+      .name     = N_("Tune Repeats"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_tune_repeats),
     },
     {
       .type     = PT_U32,
       .id       = "skip_bytes",
-      .name     = "Skip Initial Bytes",
+      .name     = N_("Skip Initial Bytes"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_skip_bytes),
     },
     {
       .type     = PT_U32,
       .id       = "ibuf_size",
-      .name     = "Input Buffer (Bytes)",
+      .name     = N_("Input Buffer (Bytes)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_ibuf_size),
     },
     {
       .type     = PT_U32,
       .id       = "status_period",
-      .name     = "Status Period (ms)",
+      .name     = N_("Status Period (ms)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_status_period),
     },
     {
       .type     = PT_BOOL,
       .id       = "old_status",
-      .name     = "Force old status",
+      .name     = N_("Force old status"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_old_status),
     },
@@ -143,12 +143,12 @@ const idclass_t linuxdvb_frontend_dvbt_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbt",
-  .ic_caption    = "Linux DVB-T Frontend",
+  .ic_caption    = N_("Linux DVB-T Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "lna",
-      .name     = "LNA (Low Noise Amplifier)",
+      .name     = N_("LNA (Low Noise Amplifier)"),
       .off      = offsetof(linuxdvb_frontend_t, lfe_lna),
     },
     {}
@@ -193,13 +193,13 @@ const idclass_t linuxdvb_frontend_dvbs_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbs",
-  .ic_caption    = "Linux DVB-S Frontend",
+  .ic_caption    = N_("Linux DVB-S Frontend"),
   .ic_get_childs = linuxdvb_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "satconf",
-      .name     = "SatConfig",
+      .name     = N_("SatConfig"),
       .opts     = PO_NOSAVE,
       .set      = linuxdvb_frontend_dvbs_class_satconf_set,
       .get      = linuxdvb_frontend_dvbs_class_satconf_get,
@@ -218,7 +218,7 @@ const idclass_t linuxdvb_frontend_dvbc_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbc",
-  .ic_caption    = "Linux DVB-C Frontend",
+  .ic_caption    = N_("Linux DVB-C Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -228,7 +228,7 @@ const idclass_t linuxdvb_frontend_atsc_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_atsc",
-  .ic_caption    = "Linux ATSC Frontend",
+  .ic_caption    = N_("Linux ATSC Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }

@@ -26,7 +26,7 @@ tvh_hardware_list_t tvh_hardware;
 const idclass_t tvh_input_instance_class =
 {
   .ic_class      = "tvh_input_instance",
-  .ic_caption    = "Input Instance",
+  .ic_caption    = N_("Input Instance"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 

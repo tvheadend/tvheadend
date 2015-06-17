@@ -1242,16 +1242,16 @@ access_entry_conn_limit_type_enum ( void *p )
 {
   static struct strtab
   conn_limit_type_tab[] = {
-    { "All (Streaming + DVR)",  ACCESS_CONN_LIMIT_TYPE_ALL },
-    { "Streaming",              ACCESS_CONN_LIMIT_TYPE_STREAMING   },
-    { "DVR",                    ACCESS_CONN_LIMIT_TYPE_DVR },
+    { N_("All (Streaming + DVR)"),  ACCESS_CONN_LIMIT_TYPE_ALL },
+    { N_("Streaming"),              ACCESS_CONN_LIMIT_TYPE_STREAMING   },
+    { N_("DVR"),                    ACCESS_CONN_LIMIT_TYPE_DVR },
   };
-  return strtab2htsmsg(conn_limit_type_tab);
+  return strtab2htsmsg(conn_limit_type_tab, 1);
 }
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = "Access",
+  .ic_caption    = N_("Access"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = access_entry_class_save,
@@ -1263,52 +1263,52 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_INT,
       .id       = "index",
-      .name     = "Index",
+      .name     = N_("Index"),
       .off      = offsetof(access_entry_t, ae_index),
       .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(access_entry_t, ae_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "username",
-      .name     = "Username",
+      .name     = N_("Username"),
       .off      = offsetof(access_entry_t, ae_username),
     },
     {
       .type     = PT_STR,
       .id       = "prefix",
-      .name     = "Network prefix",
+      .name     = N_("Network prefix"),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
     },
     {
       .type     = PT_BOOL,
       .id       = "streaming",
-      .name     = "Streaming",
+      .name     = N_("Streaming"),
       .off      = offsetof(access_entry_t, ae_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "adv_streaming",
-      .name     = "Advanced Streaming",
+      .name     = N_("Advanced Streaming"),
       .off      = offsetof(access_entry_t, ae_adv_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "htsp_streaming",
-      .name     = "HTSP Streaming",
+      .name     = N_("HTSP Streaming"),
       .off      = offsetof(access_entry_t, ae_htsp_streaming),
     },
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "profile",
-      .name     = "Streaming Profiles",
+      .name     = N_("Streaming Profiles"),
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
@@ -1317,31 +1317,31 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "dvr",
-      .name     = "Video Recorder",
+      .name     = N_("Video Recorder"),
       .off      = offsetof(access_entry_t, ae_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "htsp_dvr",
-      .name     = "HTSP DVR",
+      .name     = N_("HTSP DVR"),
       .off      = offsetof(access_entry_t, ae_htsp_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "all_dvr",
-      .name     = "All DVR",
+      .name     = N_("All DVR"),
       .off      = offsetof(access_entry_t, ae_all_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "all_rw_dvr",
-      .name     = "All DVR (rw)",
+      .name     = N_("All DVR (rw)"),
       .off      = offsetof(access_entry_t, ae_all_rw_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "failed_dvr",
-      .name     = "Failed DVR",
+      .name     = N_("Failed DVR"),
       .off      = offsetof(access_entry_t, ae_failed_dvr),
       .opts     = PO_ADVANCED | PO_HIDDEN,
     },
@@ -1349,7 +1349,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "dvr_config",
-      .name     = "DVR Config Profiles",
+      .name     = N_("DVR Config Profiles"),
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
@@ -1358,53 +1358,53 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "webui",
-      .name     = "Web Interface",
+      .name     = N_("Web Interface"),
       .off      = offsetof(access_entry_t, ae_webui),
     },
     {
       .type     = PT_BOOL,
       .id       = "admin",
-      .name     = "Admin",
+      .name     = N_("Admin"),
       .off      = offsetof(access_entry_t, ae_admin),
     },
     {
       .type     = PT_INT,
       .id       = "conn_limit_type",
-      .name     = "Connection Limit Type",
+      .name     = N_("Connection Limit Type"),
       .off      = offsetof(access_entry_t, ae_conn_limit_type),
       .list     = access_entry_conn_limit_type_enum,
     },
     {
       .type     = PT_U32,
       .id       = "conn_limit",
-      .name     = "Limit Connections",
+      .name     = N_("Limit Connections"),
       .off      = offsetof(access_entry_t, ae_conn_limit),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
-      .name     = "Min Channel Num",
+      .name     = N_("Min Channel Num"),
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = "Max Channel Num",
+      .name     = N_("Max Channel Num"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
       .type     = PT_BOOL,
       .id       = "channel_tag_exclude",
-      .name     = "Exclude Channel Tags",
+      .name     = N_("Exclude Channel Tags"),
       .off      = offsetof(access_entry_t, ae_chtags_exclude),
     },
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "channel_tag",
-      .name     = "Channel Tags",
+      .name     = N_("Channel Tags"),
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,
@@ -1413,7 +1413,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(access_entry_t, ae_comment),
     },
     {}
@@ -1613,7 +1613,7 @@ passwd_entry_class_password2_set(void *o, const void *v)
 
 const idclass_t passwd_entry_class = {
   .ic_class      = "passwd",
-  .ic_caption    = "Passwords",
+  .ic_caption    = N_("Passwords"),
   .ic_event      = "passwd",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = passwd_entry_class_save,
@@ -1623,19 +1623,19 @@ const idclass_t passwd_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(passwd_entry_t, pw_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "username",
-      .name     = "Username",
+      .name     = N_("Username"),
       .off      = offsetof(passwd_entry_t, pw_username),
     },
     {
       .type     = PT_STR,
       .id       = "password",
-      .name     = "Password",
+      .name     = N_("Password"),
       .off      = offsetof(passwd_entry_t, pw_password),
       .opts     = PO_PASSWORD | PO_NOSAVE,
       .set      = passwd_entry_class_password_set,
@@ -1643,7 +1643,7 @@ const idclass_t passwd_entry_class = {
     {
       .type     = PT_STR,
       .id       = "password2",
-      .name     = "Password2",
+      .name     = N_("Password2"),
       .off      = offsetof(passwd_entry_t, pw_password2),
       .opts     = PO_PASSWORD | PO_HIDDEN | PO_ADVANCED | PO_WRONCE,
       .set      = passwd_entry_class_password2_set,
@@ -1651,7 +1651,7 @@ const idclass_t passwd_entry_class = {
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(passwd_entry_t, pw_comment),
     },
     {}

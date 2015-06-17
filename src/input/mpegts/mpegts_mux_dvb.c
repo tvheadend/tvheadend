@@ -132,7 +132,7 @@ const idclass_t dvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "dvb_mux",
-  .ic_caption    = "Linux DVB Multiplex",
+  .ic_caption    = N_("Linux DVB Multiplex"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -204,7 +204,7 @@ const idclass_t dvb_mux_dvbt_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbt",
-  .ic_caption    = "Linux DVB-T Multiplex",
+  .ic_caption    = N_("Linux DVB-T Multiplex"),
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", "Delivery System", dvbt, delsys, "DVBT"),
@@ -212,7 +212,7 @@ const idclass_t dvb_mux_dvbt_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (Hz)",
+      .name     = N_("Frequency (Hz)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
       .set      = dvb_mux_dvbt_class_frequency_set,
     },
@@ -240,7 +240,7 @@ const idclass_t dvb_mux_dvbt_class =
     {
       .type     = PT_INT,
       .id       = "plp_id",
-      .name     = "PLP ID",
+      .name     = N_("PLP ID"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
@@ -276,7 +276,7 @@ const idclass_t dvb_mux_dvbc_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbc",
-  .ic_caption    = "Linux DVB-C Multiplex",
+  .ic_caption    = N_("Linux DVB-C Multiplex"),
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", "Delivery System", dvbc, delsys, "DVBC_ANNEX_AC"),
@@ -284,14 +284,14 @@ const idclass_t dvb_mux_dvbc_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (Hz)",
+      .name     = N_("Frequency (Hz)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
       .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = "Symbol Rate (Sym/s)",
+      .name     = N_("Symbol Rate (Sym/s)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qam.symbol_rate),
     },
     {
@@ -530,7 +530,7 @@ const idclass_t dvb_mux_dvbs_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbs",
-  .ic_caption    = "Linux DVB-S Multiplex",
+  .ic_caption    = N_("Linux DVB-S Multiplex"),
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", "Delivery System", dvbs, delsys, "DVBS"),
@@ -538,14 +538,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (kHz)",
+      .name     = N_("Frequency (kHz)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
       .set      = dvb_mux_dvbs_class_frequency_set,
     },
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = "Symbol Rate (Sym/s)",
+      .name     = N_("Symbol Rate (Sym/s)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qpsk.symbol_rate),
       .set      = dvb_mux_dvbs_class_symbol_rate_set,
     },
@@ -555,7 +555,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "modulation",
-      .name     = "Modulation",
+      .name     = N_("Modulation"),
       .set      = dvb_mux_dvbs_class_modulation_set,
       .get      = dvb_mux_dvbs_class_modulation_get,
       .list     = dvb_mux_dvbs_class_modulation_list,
@@ -567,7 +567,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "rolloff",
-      .name     = "Rolloff",
+      .name     = N_("Rolloff"),
       .set      = dvb_mux_dvbs_class_rolloff_set,
       .get      = dvb_mux_dvbs_class_rolloff_get,
       .list     = dvb_mux_dvbs_class_rolloff_list,
@@ -576,7 +576,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "pilot",
-      .name     = "Pilot",
+      .name     = N_("Pilot"),
       .opts     = PO_ADVANCED,
       .set      = dvb_mux_dvbs_class_pilot_set,
       .get      = dvb_mux_dvbs_class_pilot_get,
@@ -585,14 +585,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_INT,
       .id       = "stream_id",
-      .name     = "ISI (Stream ID)",
+      .name     = N_("ISI (Stream ID)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
     {
       .type     = PT_STR,
       .id       = "pls_mode",
-      .name     = "PLS Mode",
+      .name     = N_("PLS Mode"),
       .set      = dvb_mux_dvbs_class_pls_mode_set,
       .get      = dvb_mux_dvbs_class_pls_mode_get,
       .list     = dvb_mux_dvbs_class_pls_mode_list,
@@ -601,14 +601,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "pls_code",
-      .name     = "PLS Code",
+      .name     = N_("PLS Code"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
     },
     {
       .type     = PT_STR,
       .id       = "orbital",
-      .name     = "Orbital Pos.",
+      .name     = N_("Orbital Pos."),
       .set      = dvb_mux_dvbs_class_orbital_set,
       .get      = dvb_mux_dvbs_class_orbital_get,
       .opts     = PO_ADVANCED | PO_RDONLY
@@ -636,7 +636,7 @@ const idclass_t dvb_mux_atsc_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_atsc",
-  .ic_caption    = "Linux ATSC Multiplex",
+  .ic_caption    = N_("Linux ATSC Multiplex"),
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", "Delivery System", atsc, delsys, "ATSC"),
@@ -644,7 +644,7 @@ const idclass_t dvb_mux_atsc_class =
     {
       .type     = PT_U32,
       .id       = "frequency",
-      .name     = "Frequency (Hz)",
+      .name     = N_("Frequency (Hz)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
       .set      = dvb_mux_dvbt_class_frequency_set,
     },

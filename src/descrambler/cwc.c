@@ -1718,38 +1718,38 @@ const idclass_t caclient_cwc_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_cwc",
-  .ic_caption    = "Code Word Client (newcamd)",
+  .ic_caption    = N_("Code Word Client (newcamd)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "username",
-      .name     = "Username",
+      .name     = N_("Username"),
       .off      = offsetof(cwc_t, cwc_username),
     },
     {
       .type     = PT_STR,
       .id       = "password",
-      .name     = "Password",
+      .name     = N_("Password"),
       .off      = offsetof(cwc_t, cwc_password),
       .opts     = PO_PASSWORD
     },
     {
       .type     = PT_STR,
       .id       = "hostname",
-      .name     = "Hostname / IP",
+      .name     = N_("Hostname / IP"),
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
     },
     {
       .type     = PT_INT,
       .id       = "port",
-      .name     = "Port",
+      .name     = N_("Port"),
       .off      = offsetof(cwc_t, cwc_port),
     },
     {
       .type     = PT_STR,
       .id       = "deskey",
-      .name     = "DES Key",
+      .name     = N_("DES Key"),
       .set      = caclient_cwc_class_deskey_set,
       .get      = caclient_cwc_class_deskey_get,
       .opts     = PO_PASSWORD,
@@ -1758,14 +1758,14 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_BOOL,
       .id       = "emm",
-      .name     = "Update Card (EMM)",
+      .name     = N_("Update Card (EMM)"),
       .off      = offsetof(cwc_t, cwc_emm),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "emmex",
-      .name     = "One Mux (EMM)",
+      .name     = N_("One Mux (EMM)"),
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },

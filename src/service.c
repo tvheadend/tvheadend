@@ -147,16 +147,16 @@ static htsmsg_t *
 service_class_auto_list ( void *o )
 {
   static const struct strtab tab[] = {
-    { "Auto Check Enabled",  0 },
-    { "Auto Check Disabled", 1 },
-    { "Missing In PAT/SDT",  2 }
+    { N_("Auto Check Enabled"),  0 },
+    { N_("Auto Check Disabled"), 1 },
+    { N_("Missing In PAT/SDT"),  2 }
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1);
 }
 
 const idclass_t service_class = {
   .ic_class      = "service",
-  .ic_caption    = "Service",
+  .ic_caption    = N_("Service"),
   .ic_event      = "service",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_delete     = service_class_delete,
@@ -166,14 +166,14 @@ const idclass_t service_class = {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(service_t, s_enabled),
       .notify   = service_class_notify_enabled,
     },
     {
       .type     = PT_INT,
       .id       = "auto",
-      .name     = "Automatic Checking",
+      .name     = N_("Automatic Checking"),
       .list     = service_class_auto_list,
       .off      = offsetof(service_t, s_auto),
     },
@@ -181,7 +181,7 @@ const idclass_t service_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "channel",
-      .name     = "Channel",
+      .name     = N_("Channel"),
       .get      = service_class_channel_get,
       .set      = service_class_channel_set,
       .list     = service_class_channel_enum,
@@ -191,20 +191,20 @@ const idclass_t service_class = {
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Priority (-10..10)",
+      .name     = N_("Priority (-10..10)"),
       .off      = offsetof(service_t, s_prio),
     },
     {
       .type     = PT_BOOL,
       .id       = "encrypted",
-      .name     = "Encrypted",
+      .name     = N_("Encrypted"),
       .get      = service_class_encrypted_get,
       .opts     = PO_NOSAVE | PO_RDONLY
     },
     {
       .type     = PT_STR,
       .id       = "caid",
-      .name     = "CAID",
+      .name     = N_("CAID"),
       .get      = service_class_caid_get,
       .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN,
     },
@@ -214,7 +214,7 @@ const idclass_t service_class = {
 
 const idclass_t service_raw_class = {
   .ic_class      = "service_raw",
-  .ic_caption    = "Service Raw",
+  .ic_caption    = N_("Service Raw"),
   .ic_event      = "service_raw",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_delete     = service_class_delete,

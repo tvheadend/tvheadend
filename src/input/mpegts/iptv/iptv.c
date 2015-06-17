@@ -92,7 +92,7 @@ extern const idclass_t mpegts_input_class;
 const idclass_t iptv_input_class = {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "iptv_input",
-  .ic_caption    = "IPTV Input",
+  .ic_caption    = N_("IPTV Input"),
   .ic_get_title  = iptv_input_class_get_title,
   .ic_properties = (const property_t[]){
     {}
@@ -442,13 +442,13 @@ extern const idclass_t mpegts_network_class;
 const idclass_t iptv_network_class = {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "iptv_network",
-  .ic_caption    = "IPTV Network",
+  .ic_caption    = N_("IPTV Network"),
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = "Priority",
+      .name     = N_("Priority"),
       .off      = offsetof(iptv_network_t, in_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -456,7 +456,7 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = "Streaming Priority",
+      .name     = N_("Streaming Priority"),
       .off      = offsetof(iptv_network_t, in_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -464,21 +464,21 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_U32,
       .id       = "max_streams",
-      .name     = "Max Input Streams",
+      .name     = N_("Max Input Streams"),
       .off      = offsetof(iptv_network_t, in_max_streams),
       .def.i    = 0,
     },
     {
       .type     = PT_U32,
       .id       = "max_bandwidth",
-      .name     = "Max Bandwidth (Kbps)",
+      .name     = N_("Max Bandwidth (Kbps)"),
       .off      = offsetof(iptv_network_t, in_max_bandwidth),
       .def.i    = 0,
     },
     {
       .type     = PT_U32,
       .id       = "max_timeout",
-      .name     = "Max timeout (seconds)",
+      .name     = N_("Max timeout (seconds)"),
       .off      = offsetof(iptv_network_t, in_max_timeout),
       .def.i    = 15,
     },

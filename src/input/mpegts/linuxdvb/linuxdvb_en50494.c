@@ -117,33 +117,33 @@ const idclass_t linuxdvb_en50494_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_en50494",
-  .ic_caption     = "en50494",
+  .ic_caption     = N_("en50494"),
   .ic_get_title   = linuxdvb_en50494_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
-      .name   = "Position",
+      .name   = N_("Position"),
       .off    = offsetof(linuxdvb_en50494_t, le_position),
       .list   = linuxdvb_en50494_position_list,
     },
     {
       .type   = PT_U16,
       .id     = "frequency",
-      .name   = "Frequency",
+      .name   = N_("Frequency"),
       .off    = offsetof(linuxdvb_en50494_t, le_frequency),
     },
     {
       .type   = PT_U16,
       .id     = "id",
-      .name   = "SCR (ID)",
+      .name   = N_("SCR (ID)"),
       .off    = offsetof(linuxdvb_en50494_t, le_id),
       .list   = linuxdvb_en50494_id_list,
     },
     {
       .type   = PT_U16,
       .id     = "pin",
-      .name   = "Pin",
+      .name   = N_("Pin"),
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
       .list   = linuxdvb_en50494_pin_list,
     },
