@@ -134,6 +134,7 @@ int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
 int              tvheadend_htsp_port_extra;
 const char      *tvheadend_tsdebug;
+const char      *tvheadend_cwd0;
 const char      *tvheadend_cwd;
 const char      *tvheadend_webroot;
 const tvh_caps_t tvheadend_capabilities[] = {
@@ -443,13 +444,12 @@ show_usage
 {
   int i;
   char buf[256];
-  printf("Usage: %s [OPTIONS]\n", argv0);
+  printf(_("Usage: %s [OPTIONS]\n"), argv0);
   for (i = 0; i < num; i++) {
 
     /* Section */
     if (!opts[i].lopt) {
-      printf("\n%s\n\n",
-            opts[i].desc);
+      printf("\n%s\n\n", gettext(opts[i].desc));
 
     /* Option */
     } else {
@@ -460,7 +460,7 @@ show_usage
       else
         strcpy(sopt, "   ");
       snprintf(buf, sizeof(buf), "  %s --%s", sopt, opts[i].lopt);
-      desc = strdup(opts[i].desc);
+      desc = strdup(gettext(opts[i].desc));
       tok  = strtok(desc, "\n");
       while (tok) {
         printf("%-30s%s\n", buf, tok);
@@ -474,10 +474,9 @@ show_usage
       free(desc);
     }
   }
-  printf("\n");
-  printf("For more information please visit the Tvheadend website:\n");
-  printf("  https://tvheadend.org\n");
-  printf("\n");
+  printf(_("\n"
+           "For more information please visit the Tvheadend website:\n"
+           "https://tvheadend.org\n"));
   exit(0);
 }
 
@@ -639,102 +638,109 @@ main(int argc, char **argv)
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
-    {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
-    { 'h', "help",      "Show this page",          OPT_BOOL, &opt_help    },
-    { 'v', "version",   "Show version infomation", OPT_BOOL, &opt_version },
+    {   0, NULL,        N_("Generic Options"),         OPT_BOOL, NULL         },
+    { 'h', "help",      N_("Show this page"),          OPT_BOOL, &opt_help    },
+    { 'v', "version",   N_("Show version information"),OPT_BOOL, &opt_version },
 
-    {   0, NULL,        "Service Configuration",   OPT_BOOL, NULL         },
-    { 'c', "config",    "Alternate config path",   OPT_STR,  &opt_config  },
-    { 'B', "nobackup",  "Do not backup config tree at upgrade", OPT_BOOL, &opt_nobackup },
-    { 'f', "fork",      "Fork and run as daemon",  OPT_BOOL, &opt_fork    },
-    { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
-    { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
-    { 'p', "pid",       "Alternate pid path",      OPT_STR,  &opt_pidpath },
-    { 'C', "firstrun",  "If no user account exists then create one with\n"
-	                      "no username and no password. Use with care as\n"
-	                      "it will allow world-wide administrative access\n"
-	                      "to your Tvheadend installation until you edit\n"
-	                      "the access-control from within the Tvheadend UI",
+    {   0, NULL,        N_("Service Configuration"),   OPT_BOOL, NULL         },
+    { 'c', "config",    N_("Alternate config path"),   OPT_STR,  &opt_config  },
+    { 'B', "nobackup",  N_("Do not backup config tree at upgrade"), OPT_BOOL, &opt_nobackup },
+    { 'f', "fork",      N_("Fork and run as daemon"),  OPT_BOOL, &opt_fork    },
+    { 'u', "user",      N_("Run as user"),             OPT_STR,  &opt_user    },
+    { 'g', "group",     N_("Run as group"),            OPT_STR,  &opt_group   },
+    { 'p', "pid",       N_("Alternate pid path"),      OPT_STR,  &opt_pidpath },
+    { 'C', "firstrun",  N_("If no user account exists then create one with\n"
+	                   "no username and no password. Use with care as\n"
+	                   "it will allow world-wide administrative access\n"
+	                   "to your Tvheadend installation until you edit\n"
+	                   "the access-control from within the Tvheadend UI"),
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
-    { 'U', "dbus",      "Enable DBus",
+    { 'U', "dbus",      N_("Enable DBus"),
       OPT_BOOL, &opt_dbus },
-    { 'e', "dbus_session", "DBus - use the session message bus instead system one",
+    { 'e', "dbus_session", N_("DBus - use the session message bus instead system one"),
       OPT_BOOL, &opt_dbus_session },
 #endif
 #if ENABLE_LINUXDVB
-    { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
+    { 'a', "adapters",  N_("Only use specified DVB adapters (comma separated)"),
       OPT_STR, &opt_dvb_adapters },
 #endif
 #if ENABLE_SATIP_SERVER
-    {   0, "satip_rtsp", "SAT>IP RTSP port number for server\n"
-                         "(default: -1 = disable, 0 = webconfig, standard port is 554)",
+    {   0, "satip_rtsp", N_("SAT>IP RTSP port number for server\n"
+                            "(default: -1 = disable, 0 = webconfig, standard port is 554)"),
       OPT_INT, &opt_satip_rtsp },
 #endif
 #if ENABLE_SATIP_CLIENT
-    {   0, "satip_xml", "URL with the SAT>IP server XML location",
+    {   0, "satip_xml", N_("URL with the SAT>IP server XML location"),
       OPT_STR_LIST, &opt_satip_xml },
 #endif
-    {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
-    { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
-    { 'b', "bindaddr",   "Specify bind address",   OPT_STR,  &opt_bindaddr},
-    {   0, "http_port",  "Specify alternative http port",
+    {   0, NULL,         N_("Server Connectivity"),    OPT_BOOL, NULL         },
+    { '6', "ipv6",       N_("Listen on IPv6"),         OPT_BOOL, &opt_ipv6    },
+    { 'b', "bindaddr",   N_("Specify bind address"),   OPT_STR,  &opt_bindaddr},
+    {   0, "http_port",  N_("Specify alternative http port"),
       OPT_INT, &tvheadend_webui_port },
-    {   0, "http_root",  "Specify alternative http webroot",
+    {   0, "http_root",  N_("Specify alternative http webroot"),
       OPT_STR, &tvheadend_webroot },
-    {   0, "htsp_port",  "Specify alternative htsp port",
+    {   0, "htsp_port",  N_("Specify alternative htsp port"),
       OPT_INT, &tvheadend_htsp_port },
-    {   0, "htsp_port2", "Specify extra htsp port",
+    {   0, "htsp_port2", N_("Specify extra htsp port"),
       OPT_INT, &tvheadend_htsp_port_extra },
-    {   0, "useragent",  "Specify User-Agent header for the http client",
+    {   0, "useragent",  N_("Specify User-Agent header for the http client"),
       OPT_STR, &opt_user_agent },
-    {   0, "xspf",       "Use xspf playlist instead M3U",
+    {   0, "xspf",       N_("Use xspf playlist instead M3U"),
       OPT_BOOL, &opt_xspf },
 
-    {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
-    { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
-    { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
-    { 'S', "nosyslog",  "Disable syslog (all msgs)", OPT_BOOL, &opt_nosyslog },
-    { 'l', "logfile",   "Enable debug to file",    OPT_STR,  &opt_logpath },
-    {   0, "debug",     "Enable debug subsystems", OPT_STR,  &opt_log_debug },
+    {   0, NULL,        N_("Debug Options"),           OPT_BOOL, NULL         },
+    { 'd', "stderr",    N_("Enable debug on stderr"),  OPT_BOOL, &opt_stderr  },
+    { 's', "syslog",    N_("Enable debug to syslog"),  OPT_BOOL, &opt_syslog  },
+    { 'S', "nosyslog",  N_("Disable syslog (all msgs)"), OPT_BOOL, &opt_nosyslog },
+    { 'l', "logfile",   N_("Enable debug to file"),    OPT_STR,  &opt_logpath },
+    {   0, "debug",     N_("Enable debug subsystems"),  OPT_STR,  &opt_log_debug },
 #if ENABLE_TRACE
-    {   0, "trace",     "Enable trace subsystems", OPT_STR,  &opt_log_trace },
+    {   0, "trace",     N_("Enable trace subsystems"), OPT_STR,  &opt_log_trace },
 #endif
-    {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
-    {   0, "threadid",  "Add the thread ID to debug", OPT_BOOL, &opt_threadid },
+    {   0, "fileline",  N_("Add file and line numbers to debug"), OPT_BOOL, &opt_fileline },
+    {   0, "threadid",  N_("Add the thread ID to debug"), OPT_BOOL, &opt_threadid },
 #if ENABLE_LIBAV
-    {   0, "libav",     "More verbose libav log",  OPT_BOOL, &opt_libav },
+    {   0, "libav",     N_("More verbose libav log"),  OPT_BOOL, &opt_libav },
 #endif
-    {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
-    { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
-    { 'D', "dump",      "Enable coredumps for daemon", OPT_BOOL, &opt_dump },
-    {   0, "noacl",     "Disable all access control checks",
+    {   0, "uidebug",   N_("Enable webUI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
+    { 'A', "abort",     N_("Immediately abort"),       OPT_BOOL, &opt_abort   },
+    { 'D', "dump",      N_("Enable coredumps for daemon"), OPT_BOOL, &opt_dump },
+    {   0, "noacl",     N_("Disable all access control checks"),
       OPT_BOOL, &opt_noacl },
-    {   0, "nobat",     "Disable DVB bouquets",
+    {   0, "nobat",     N_("Disable DVB bouquets"),
       OPT_BOOL, &opt_nobat },
-    { 'j', "join",      "Subscribe to a service permanently",
+    { 'j', "join",      N_("Subscribe to a service permanently"),
       OPT_STR, &opt_subscribe },
 
 
 #if ENABLE_TSFILE || ENABLE_TSDEBUG
-    { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
-#if ENABLE_TSFILE
-    { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
-    { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
+    { 0, NULL, N_("Testing options"), OPT_BOOL, NULL },
+    { 0, "tsfile_tuners", N_("Number of tsfile tuners"), OPT_INT, &opt_tsfile_tuner },
+    { 0, "tsfile", N_("tsfile input (mux file)"), OPT_STR_LIST, &opt_tsfile },
 #endif
 #if ENABLE_TSDEBUG
-    { 0, "tsdebug", "Output directory for tsdebug", OPT_STR, &tvheadend_tsdebug },
-#endif
+    { 0, "tsdebug", N_("Output directory for tsdebug"), OPT_STR, &tvheadend_tsdebug },
 #endif
 
   };
 
   /* Get current directory */
-  tvheadend_cwd = dirname(dirname(tvh_strdupa(argv[0])));
+  tvheadend_cwd0 = dirname(tvh_strdupa(argv[0]));
+  tvheadend_cwd = dirname(tvh_strdupa(tvheadend_cwd0));
 
   /* Set locale */
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
+  snprintf(buf, sizeof(buf), "%s/build.h", tvheadend_cwd0);
+  if (!access(buf, W_OK)) {
+    snprintf(buf, sizeof(buf), "%s/intl", tvheadend_cwd0);
+    bindtextdomain("tvheadend", buf);
+  } else {
+    bindtextdomain("tvheadend", "/usr/share/locale");
+  }
+  textdomain("tvheadend");
 
   /* make sure the timezone is set */
   tzset();
@@ -747,14 +753,14 @@ main(int argc, char **argv)
       = cmdline_opt_find(cmdline_opts, ARRAY_SIZE(cmdline_opts), argv[i]);
     if (!opt)
       show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
-                 "invalid option specified [%s]", argv[i]);
+                 _("invalid option specified [%s]"), argv[i]);
 
     /* Process */
     if (opt->type == OPT_BOOL)
       *((int*)opt->param) = 1;
     else if (++i == argc)
       show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
-                 "option %s requires a value", opt->lopt);
+                 _("option %s requires a value"), opt->lopt);
     else if (opt->type == OPT_INT)
       *((int*)opt->param) = atoi(argv[i]);
     else if (opt->type == OPT_STR_LIST) {
@@ -787,7 +793,7 @@ main(int argc, char **argv)
     while (p) {
       int a = strtol(p, &e, 10);
       if (*e != 0 || a < 0 || a > 31) {
-        tvhlog(LOG_ERR, "START", "Invalid adapter number '%s'", p);
+        fprintf(stderr, _("Invalid adapter number '%s'\n"), p);
         free(dvb_adapters);
         return 1;
       }
@@ -796,7 +802,7 @@ main(int argc, char **argv)
     }
     free(dvb_adapters);
     if (!adapter_mask) {
-      tvhlog(LOG_ERR, "START", "No adapters specified!");
+      fprintf(stderr, _("No adapters specified!\n"));
       return 1;
     }
   }

@@ -32,10 +32,10 @@
 #include <assert.h>
 #include <unistd.h>
 #include <limits.h>
+#include <libintl.h>
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
 #endif
-
 #include "queue.h"
 #include "avg.h"
 #include "hts_strtab.h"
@@ -43,6 +43,9 @@
 #include "tvhlog.h"
 
 #include "redblack.h"
+
+#define _(s) gettext(s)
+#define N_(s) (s)
 
 #define STRINGIFY(s) # s
 #define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)

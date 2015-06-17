@@ -1,0 +1,247 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-17 14:31+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/main.c:477
+#, c-format
+msgid ""
+"\n"
+"For more information please visit the Tvheadend website:\n"
+"https://tvheadend.org\n"
+msgstr ""
+"\n"
+"Pro získání více informací navštivte webovou stránku programu Tvheadend:\n"
+"https://tvheadend.org\n"
+
+#: src/main.c:702
+msgid "Add file and line numbers to debug"
+msgstr "Přidá název souboru a řádek do ladícího výstupu"
+
+#: src/main.c:703
+msgid "Add the thread ID to debug"
+msgstr "Přidá identifikaci vlákna do ladícího výstupu"
+
+#: src/main.c:646
+msgid "Alternate config path"
+msgstr "Alternativní cesta ke konfiguraci"
+
+#: src/main.c:651
+msgid "Alternate pid path"
+msgstr "Alternativní cesta k PID"
+
+#: src/main.c:661
+msgid "DBus - use the session message bus instead system one"
+msgstr "DBUs - použije se 'session' sběrnice pro zprávy místo systémové"
+
+#: src/main.c:693
+msgid "Debug Options"
+msgstr "Ladící možnosti"
+
+#: src/main.c:712
+msgid "Disable DVB bouquets"
+msgstr "Zakázat DVB bukety"
+
+#: src/main.c:710
+msgid "Disable all access control checks"
+msgstr "Zakázat veškeré přístupové kontroly"
+
+#: src/main.c:696
+msgid "Disable syslog (all msgs)"
+msgstr "Zakázat výstup pro syslog"
+
+#: src/main.c:647
+msgid "Do not backup config tree at upgrade"
+msgstr "Zakázat zálohování konfiguračního stromu při upgrade"
+
+#: src/main.c:659
+msgid "Enable DBus"
+msgstr "Povolit DBus"
+
+#: src/main.c:709
+msgid "Enable coredumps for daemon"
+msgstr "Povolit coredump pro démona"
+
+#: src/main.c:694
+msgid "Enable debug on stderr"
+msgstr "Povolit výstup na stderr"
+
+#: src/main.c:698
+msgid "Enable debug subsystems"
+msgstr "Povolit ladící podsystémy"
+
+#: src/main.c:697
+msgid "Enable debug to file"
+msgstr "Povolit ladící výstup do souboru"
+
+#: src/main.c:695
+msgid "Enable debug to syslog"
+msgstr "Povolit ladící výstop pro syslog"
+
+#: src/main.c:700
+msgid "Enable trace subsystems"
+msgstr "Povolit trasovací subsystémy"
+
+#: src/main.c:707
+msgid "Enable webUI debug (non-minified JS)"
+msgstr "Povolit ladění webUI (neminimalizované JS)"
+
+#: src/main.c:648
+msgid "Fork and run as daemon"
+msgstr "Démon mód"
+
+#: src/main.c:641
+msgid "Generic Options"
+msgstr "Generické možnosti"
+
+#: src/main.c:652
+msgid ""
+"If no user account exists then create one with\n"
+"no username and no password. Use with care as\n"
+"it will allow world-wide administrative access\n"
+"to your Tvheadend installation until you edit\n"
+"the access-control from within the Tvheadend UI"
+ msgstr ""
+"Pokud není vytvořený žádný uživatelský účet,\n"
+"tak se vytvoří účet bez uživatelského jména\n"
+"a hesla. Je doporučené tento administrátorský\n"
+"účet okamžitě změnit (uživatelské jméno a heslo)"
+
+#: src/main.c:708
+msgid "Immediately abort"
+msgstr "Okamžitě ukonči činnost"
+
+#: src/main.c:796
+#, c-format
+msgid "Invalid adapter number '%s'\n"
+msgstr "Chybné číslo adaptéru '%s'\n"
+
+#: src/main.c:678
+msgid "Listen on IPv6"
+msgstr "Poslouchej na IPv6"
+
+#: src/main.c:705
+msgid "More verbose libav log"
+msgstr ""
+
+#: src/main.c:805
+#, c-format
+msgid "No adapters specified!\n"
+msgstr "Žádné adaptéry nebyly specifikovány!\n"
+
+#: src/main.c:720
+msgid "Number of tsfile tuners"
+msgstr "Počet tsfile tunerů"
+
+#: src/main.c:665
+msgid "Only use specified DVB adapters (comma separated)"
+msgstr "Použij pouze specifikované DVB adaptéry (oddělené čárkou)"
+
+#: src/main.c:724
+msgid "Output directory for tsdebug"
+msgstr "Výstupní adresář pro tsdebug"
+
+#: src/main.c:650
+msgid "Run as group"
+msgstr "Skupina pro běh"
+
+#: src/main.c:649
+msgid "Run as user"
+msgstr "Uživatel pro běh"
+
+#: src/main.c:669
+msgid ""
+"SAT>IP RTSP port number for server\n"
+"(default: -1 = disable, 0 = webconfig, standard port is 554)"
+msgstr ""
+"SAT>IP RTSP číslo portu pro server\n"
+"(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
+
+#: src/main.c:677
+msgid "Server Connectivity"
+msgstr "Konektivita serveru"
+
+#: src/main.c:645
+msgid "Service Configuration"
+msgstr "Konfigurace služeb"
+
+#: src/main.c:642
+msgid "Show this page"
+msgstr "Ukaž tuto stránku"
+
+#: src/main.c:643
+msgid "Show version information"
+msgstr "Ukaž informace o verzi"
+
+#: src/main.c:688
+msgid "Specify User-Agent header for the http client"
+msgstr "Specifikuj hlavičku User-Agent pro http klienta"
+
+#: src/main.c:684
+msgid "Specify alternative htsp port"
+msgstr "Specifikuj alternativní htsp port"
+
+#: src/main.c:680
+msgid "Specify alternative http port"
+msgstr "Specifikuj alternativní http port"
+
+#: src/main.c:682
+msgid "Specify alternative http webroot"
+msgstr "Specifikuj alternativní http webroot"
+
+#: src/main.c:679
+msgid "Specify bind address"
+msgstr "Specifikuj IP adresu pro příjem"
+
+#: src/main.c:686
+msgid "Specify extra htsp port"
+msgstr "Specifikuj extra htsp port"
+
+#: src/main.c:714
+msgid "Subscribe to a service permanently"
+msgstr "Odebírej tuto službu permanentně"
+
+#: src/main.c:719
+msgid "Testing options"
+msgstr "Testovací volby"
+
+#: src/main.c:674
+msgid "URL with the SAT>IP server XML location"
+msgstr "URL s umístěním XML souboru na SAT>IP serveru"
+
+#: src/main.c:447
+#, c-format
+msgid "Usage: %s [OPTIONS]\n"
+msgstr "Použití: %s [VOLBY]\n"
+
+#: src/main.c:690
+msgid "Use xspf playlist instead M3U"
+msgstr "Použij xspf playlist místo M3U"
+
+#: src/main.c:756
+#, c-format
+msgid "invalid option specified [%s]"
+msgstr "specifikována chybná volba [%s]"
+
+#: src/main.c:763
+#, c-format
+msgid "option %s requires a value"
+msgstr "volba %s vyžaduje argument"
+
+#: src/main.c:721
+msgid "tsfile input (mux file)"
+msgstr "tsfile vstup (mux soubor)"

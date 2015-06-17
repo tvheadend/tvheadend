@@ -1,0 +1,238 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-17 14:31+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/main.c:477
+#, c-format
+msgid ""
+"\n"
+"For more information please visit the Tvheadend website:\n"
+"https://tvheadend.org\n"
+msgstr ""
+
+#: src/main.c:702
+msgid "Add file and line numbers to debug"
+msgstr ""
+
+#: src/main.c:703
+msgid "Add the thread ID to debug"
+msgstr ""
+
+#: src/main.c:646
+msgid "Alternate config path"
+msgstr ""
+
+#: src/main.c:651
+msgid "Alternate pid path"
+msgstr ""
+
+#: src/main.c:661
+msgid "DBus - use the session message bus instead system one"
+msgstr ""
+
+#: src/main.c:693
+msgid "Debug Options"
+msgstr ""
+
+#: src/main.c:712
+msgid "Disable DVB bouquets"
+msgstr ""
+
+#: src/main.c:710
+msgid "Disable all access control checks"
+msgstr ""
+
+#: src/main.c:696
+msgid "Disable syslog (all msgs)"
+msgstr ""
+
+#: src/main.c:647
+msgid "Do not backup config tree at upgrade"
+msgstr ""
+
+#: src/main.c:659
+msgid "Enable DBus"
+msgstr ""
+
+#: src/main.c:709
+msgid "Enable coredumps for daemon"
+msgstr ""
+
+#: src/main.c:694
+msgid "Enable debug on stderr"
+msgstr ""
+
+#: src/main.c:698
+msgid "Enable debug subsystems"
+msgstr ""
+
+#: src/main.c:697
+msgid "Enable debug to file"
+msgstr ""
+
+#: src/main.c:695
+msgid "Enable debug to syslog"
+msgstr ""
+
+#: src/main.c:700
+msgid "Enable trace subsystems"
+msgstr ""
+
+#: src/main.c:707
+msgid "Enable webUI debug (non-minified JS)"
+msgstr ""
+
+#: src/main.c:648
+msgid "Fork and run as daemon"
+msgstr ""
+
+#: src/main.c:641
+msgid "Generic Options"
+msgstr ""
+
+#: src/main.c:652
+msgid ""
+"If no user account exists then create one with\n"
+"no username and no password. Use with care as\n"
+"it will allow world-wide administrative access\n"
+"to your Tvheadend installation until you edit\n"
+"the access-control from within the Tvheadend UI"
+msgstr ""
+
+#: src/main.c:708
+msgid "Immediately abort"
+msgstr ""
+
+#: src/main.c:796
+#, c-format
+msgid "Invalid adapter number '%s'\n"
+msgstr ""
+
+#: src/main.c:678
+msgid "Listen on IPv6"
+msgstr ""
+
+#: src/main.c:705
+msgid "More verbose libav log"
+msgstr ""
+
+#: src/main.c:805
+#, c-format
+msgid "No adapters specified!\n"
+msgstr ""
+
+#: src/main.c:720
+msgid "Number of tsfile tuners"
+msgstr ""
+
+#: src/main.c:665
+msgid "Only use specified DVB adapters (comma separated)"
+msgstr ""
+
+#: src/main.c:724
+msgid "Output directory for tsdebug"
+msgstr ""
+
+#: src/main.c:650
+msgid "Run as group"
+msgstr ""
+
+#: src/main.c:649
+msgid "Run as user"
+msgstr ""
+
+#: src/main.c:669
+msgid ""
+"SAT>IP RTSP port number for server\n"
+"(default: -1 = disable, 0 = webconfig, standard port is 554)"
+msgstr ""
+
+#: src/main.c:677
+msgid "Server Connectivity"
+msgstr ""
+
+#: src/main.c:645
+msgid "Service Configuration"
+msgstr ""
+
+#: src/main.c:642
+msgid "Show this page"
+msgstr ""
+
+#: src/main.c:643
+msgid "Show version information"
+msgstr ""
+
+#: src/main.c:688
+msgid "Specify User-Agent header for the http client"
+msgstr ""
+
+#: src/main.c:684
+msgid "Specify alternative htsp port"
+msgstr ""
+
+#: src/main.c:680
+msgid "Specify alternative http port"
+msgstr ""
+
+#: src/main.c:682
+msgid "Specify alternative http webroot"
+msgstr ""
+
+#: src/main.c:679
+msgid "Specify bind address"
+msgstr ""
+
+#: src/main.c:686
+msgid "Specify extra htsp port"
+msgstr ""
+
+#: src/main.c:714
+msgid "Subscribe to a service permanently"
+msgstr ""
+
+#: src/main.c:719
+msgid "Testing options"
+msgstr ""
+
+#: src/main.c:674
+msgid "URL with the SAT>IP server XML location"
+msgstr ""
+
+#: src/main.c:447
+#, c-format
+msgid "Usage: %s [OPTIONS]\n"
+msgstr ""
+
+#: src/main.c:690
+msgid "Use xspf playlist instead M3U"
+msgstr ""
+
+#: src/main.c:756
+#, c-format
+msgid "invalid option specified [%s]"
+msgstr ""
+
+#: src/main.c:763
+#, c-format
+msgid "option %s requires a value"
+msgstr ""
+
+#: src/main.c:721
+msgid "tsfile input (mux file)"
+msgstr ""
