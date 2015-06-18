@@ -32,10 +32,6 @@ def ustrip(u, f):
 
 def url(fn):
 
-  PATHS={
-    '../docresources':'../docresources',
-  }
-
   f = utf8open(fn, 'r')
   if fn[0] != '/':
     fn = os.path.join(PWD, fn)

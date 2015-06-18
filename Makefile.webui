@@ -36,6 +36,7 @@ RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
 GZIPCMD += -n
 XGETTEXT ?= xgettext --language=JavaScript --from-code=utf-8 -k_ -kN_ -s
 MSGMERGE ?= msgmerge
+POJS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/pojs.py
 
 ifeq ($(WEBUI),std)
 DEBUG =
@@ -150,6 +151,7 @@ CSS_TV_SRC = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
 # Internationalization
 #
 PO-FILES = $(foreach f,$(LANGUAGES),intl/js/tvheadend.js.$(f).po)
+JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh.$(f).js.gz)
 
 endif # WEBUI defined
 
@@ -188,6 +190,14 @@ define merge-po
 	@mv $(1).new $(1)
 endef
 
+define go-po
+	@mkdir -p $(dir $(1))
+	$(VV)$(POJS_PY) --in="$(2)" > $(1).new
+	$(VV)$(GZIPCMD) -c $(1).new > $@.new2
+	@rm $(1).new
+	@mv $(1).new2 $(1)
+endef
+
 all:
 	$(MAKE) -f $(IAM) WEBUI=std   compile-std
 	$(MAKE) -f $(IAM) WEBUI=debug compile-debug
@@ -223,7 +233,7 @@ $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz: $(CSS_TV_SRC)
 .PHONY: compile-std
 compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
-             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(PO-FILES)
+             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES)
 	@echo "WEBUI std finished"
 	
 .PHONY: compile-debug
@@ -246,6 +256,18 @@ intl/js/tvheadend.js.cs.po: intl/js/tvheadend.js.pot
 
 intl/js/tvheadend.js.pl.po: intl/js/tvheadend.js.pot
 	$(call merge-po,$@,$<)
+
+src/webui/static/intl/tvh.de.js.gz: intl/js/tvheadend.js.de.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.fr.js.gz: intl/js/tvheadend.js.fr.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.cs.js.gz: intl/js/tvheadend.js.cs.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.pl.js.gz: intl/js/tvheadend.js.pl.po
+	$(call go-po,$@,$<)
 
 .PHONY:
 clean:
