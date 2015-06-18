@@ -193,6 +193,7 @@ endef
 define go-po
 	@mkdir -p $(dir $(1))
 	$(VV)$(POJS_PY) --in="$(2)" > $(1).new
+	@echo "tvh_locale_lang = '$(subst .,,$(suffix $(basename $(2))))';" >> $(1).new
 	$(VV)$(GZIPCMD) -c $(1).new > $@.new2
 	@rm $(1).new
 	@mv $(1).new2 $(1)
@@ -204,10 +205,12 @@ all:
 
 $(WEBDIR)/extjs-std.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 	$(VV)printf 'extjs_lcss(hq, "static/tvh.css.gz");\n' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf 'extjs_load(hq, "static/tvh.js.gz");\n' >> $@
 
 $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 	$(VV)printf '$(foreach f,$(CSS),extjs_lcss(hq, "$(f)");\r\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\r\n)' >> $@
 
 $(WEBDIR)/extjs-tv-std.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)

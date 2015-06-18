@@ -75,6 +75,7 @@ typedef struct access_entry {
   TAILQ_ENTRY(access_entry) ae_link;
   char *ae_username;
   char *ae_comment;
+  char *ae_lang;
 
   int ae_index;
   int ae_enabled;
@@ -115,6 +116,7 @@ extern const idclass_t access_entry_class;
 typedef struct access {
   char     *aa_username;
   char     *aa_representative;
+  char     *aa_lang;
   uint32_t  aa_rights;
   htsmsg_t *aa_profiles;
   htsmsg_t *aa_dvrcfgs;

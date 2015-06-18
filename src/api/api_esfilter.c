@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "esfilter.h"
-#include "lang_codes.h"
 #include "access.h"
 #include "api.h"
 

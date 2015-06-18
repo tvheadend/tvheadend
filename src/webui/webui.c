@@ -44,6 +44,7 @@
 #include "tcp.h"
 #include "config.h"
 #include "atomic.h"
+#include "lang_codes.h"
 #if ENABLE_MPEGTS
 #include "input.h"
 #endif
@@ -1395,6 +1396,83 @@ favicon(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ *
+ */
+static const char *http_locale_lang(http_connection_t *hc)
+{
+  const char *s = hc->hc_access->aa_lang;
+  if (s && s[0]) {
+    const lang_code_t *lc;
+    lc = lang_code_get3(s);
+    if (strcmp(lc->code2b, "und"))
+      return lc->code1;
+  }
+  return NULL;
+}
+
+/**
+ *
+ */
+static int http_file_test(const char *path)
+{
+  fb_file *fb = fb_open(path, 0, 0);
+  if (fb) {
+    fb_close(fb);
+    return 0;
+  }
+  return -1;
+}
+
+/**
+ *
+ */
+static int
+http_redir(http_connection_t *hc, const char *remain, void *opaque)
+{
+  const char *lang;
+  char *components[3];
+  char buf[256];
+  int nc;
+
+  nc = http_tokenize((char *)remain, components, 3, '/');
+  if(!nc)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if (nc == 1) {
+    if (!strcmp(components[0], "locale.js")) {
+      lang = http_locale_lang(hc);
+      if (lang) {
+        snprintf(buf, sizeof(buf), "src/webui/static/intl/tvh.%s.js.gz", lang);
+        if (!http_file_test(buf)) {
+          snprintf(buf, sizeof(buf), "/static/intl/tvh.%s.js.gz", lang);
+          http_redirect(hc, buf, NULL);
+          return 0;
+        }
+      }
+      snprintf(buf, sizeof(buf), "tvheadend_locale={};tvheadend_locale_lang='';");
+      http_send_header(hc, 200, "text/javascript; charset=UTF-8", strlen(buf), 0, NULL, 10, 0, NULL, NULL);
+      tvh_write(hc->hc_fd, buf, strlen(buf));
+      return 0;
+    }
+  }
+
+  if (nc >= 2) {
+    if (!strcmp(components[0], "docs")) {
+      lang = http_locale_lang(hc);
+      snprintf(buf, sizeof(buf), "docs/html/%s/%s%s%s", lang, components[1],
+                                 nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
+      if (http_file_test(buf)) lang = "en";
+      snprintf(buf, sizeof(buf), "/docs/%s/%s%s%s", lang, components[1],
+                                 nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
+      http_redirect(hc, buf, NULL);
+      return 0;
+    }
+  }
+
+  return HTTP_STATUS_BAD_REQUEST;
+}
+
 int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 
 /**
@@ -1427,6 +1505,8 @@ webui_init(int xspf)
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
   http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
+
+  http_path_add("/redir",  NULL, http_redir, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");

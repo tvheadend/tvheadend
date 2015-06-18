@@ -206,6 +206,8 @@ access_copy(access_t *src)
     dst->aa_username = strdup(src->aa_username);
   if (src->aa_representative)
     dst->aa_representative = strdup(src->aa_representative);
+  if (src->aa_lang)
+    dst->aa_lang = strdup(src->aa_lang);
   if (src->aa_profiles)
     dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
@@ -233,6 +235,7 @@ access_destroy(access_t *a)
     return;
   free(a->aa_username);
   free(a->aa_representative);
+  free(a->aa_lang);
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
@@ -526,6 +529,9 @@ access_update(access_t *a, access_entry_t *ae)
       }
     }
   }
+
+  if (!a->aa_lang && ae->ae_lang)
+    a->aa_lang = strdup(ae->ae_lang);
 
   a->aa_rights |= ae->ae_rights;
 }
@@ -986,6 +992,7 @@ access_entry_destroy(access_entry_t *ae)
 
   free(ae->ae_username);
   free(ae->ae_comment);
+  free(ae->ae_lang);
   free(ae);
 }
 
@@ -1249,6 +1256,15 @@ access_entry_conn_limit_type_enum ( void *p )
   return strtab2htsmsg(conn_limit_type_tab, 1);
 }
 
+static htsmsg_t *
+language_get_list ( void *obj )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "language/list");
+  return m;
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = N_("Access"),
@@ -1285,6 +1301,13 @@ const idclass_t access_entry_class = {
       .name     = N_("Network prefix"),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "lang",
+      .name     = N_("Language"),
+      .list     = language_get_list,
+      .off      = offsetof(access_entry_t, ae_lang),
     },
     {
       .type     = PT_BOOL,

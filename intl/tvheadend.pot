@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-18 13:54+0200\n"
+"POT-Creation-Date: 2015-06-18 19:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -177,7 +177,7 @@ msgstr ""
 msgid "Aborted by user"
 msgstr ""
 
-#: src/access.c:1254
+#: src/access.c:1270
 msgid "Access"
 msgstr ""
 
@@ -198,7 +198,7 @@ msgstr ""
 msgid "Add the thread ID to debug"
 msgstr ""
 
-#: src/access.c:1367
+#: src/access.c:1390
 msgid "Admin"
 msgstr ""
 
@@ -206,19 +206,19 @@ msgstr ""
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr ""
 
-#: src/access.c:1298
+#: src/access.c:1321
 msgid "Advanced Streaming"
 msgstr ""
 
-#: src/access.c:1245
+#: src/access.c:1252
 msgid "All (Streaming + DVR)"
 msgstr ""
 
-#: src/access.c:1332
+#: src/access.c:1355
 msgid "All DVR"
 msgstr ""
 
-#: src/access.c:1338
+#: src/access.c:1361
 msgid "All DVR (rw)"
 msgstr ""
 
@@ -378,7 +378,7 @@ msgstr ""
 msgid "Channel Tag Reference"
 msgstr ""
 
-#: src/access.c:1407
+#: src/access.c:1430
 msgid "Channel Tags"
 msgstr ""
 
@@ -411,7 +411,7 @@ msgstr ""
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
-#: src/access.c:1416 src/access.c:1654 src/channels.c:1142 src/esfilter.c:685
+#: src/access.c:1439 src/access.c:1677 src/channels.c:1142 src/esfilter.c:685
 #: src/esfilter.c:752 src/esfilter.c:819 src/esfilter.c:886 src/esfilter.c:961
 #: src/esfilter.c:1022 src/profile.c:315 src/bouquet.c:897
 #: src/dvr/dvr_db.c:2286 src/dvr/dvr_autorec.c:1096 src/dvr/dvr_timerec.c:660
@@ -443,7 +443,7 @@ msgstr ""
 msgid "Config Name"
 msgstr ""
 
-#: src/access.c:1373
+#: src/access.c:1396
 msgid "Connection Limit Type"
 msgstr ""
 
@@ -531,7 +531,7 @@ msgstr ""
 msgid "DVB-T Network"
 msgstr ""
 
-#: src/access.c:1247
+#: src/access.c:1254
 msgid "DVR"
 msgstr ""
 
@@ -543,7 +543,7 @@ msgstr ""
 msgid "DVR Behaviour"
 msgstr ""
 
-#: src/access.c:1352
+#: src/access.c:1375
 msgid "DVR Config Profiles"
 msgstr ""
 
@@ -756,7 +756,7 @@ msgstr ""
 msgid "Enable webUI debug (non-minified JS)"
 msgstr ""
 
-#: src/access.c:1273 src/access.c:1626 src/channels.c:296 src/channels.c:1092
+#: src/access.c:1289 src/access.c:1649 src/channels.c:296 src/channels.c:1092
 #: src/service.c:169 src/imagecache.c:71 src/esfilter.c:618 src/profile.c:293
 #: src/bouquet.c:801 src/dvr/dvr_autorec.c:912 src/dvr/dvr_timerec.c:557
 #: src/dvr/dvr_config.c:758 src/descrambler/caclient.c:262
@@ -797,7 +797,7 @@ msgstr ""
 msgid "Even Key"
 msgstr ""
 
-#: src/access.c:1400
+#: src/access.c:1423
 msgid "Exclude Channel Tags"
 msgstr ""
 
@@ -821,7 +821,7 @@ msgstr ""
 msgid "FAIL"
 msgstr ""
 
-#: src/access.c:1344
+#: src/access.c:1367
 msgid "Failed DVR"
 msgstr ""
 
@@ -973,7 +973,7 @@ msgstr ""
 msgid "HDHomeRun DVB-T Frontend"
 msgstr ""
 
-#: src/access.c:1326
+#: src/access.c:1349
 msgid "HTSP DVR"
 msgstr ""
 
@@ -985,7 +985,7 @@ msgstr ""
 msgid "HTSP Stream Profile"
 msgstr ""
 
-#: src/access.c:1304
+#: src/access.c:1327
 msgid "HTSP Streaming"
 msgstr ""
 
@@ -1103,7 +1103,7 @@ msgstr ""
 msgid "Include Time In Filename"
 msgstr ""
 
-#: src/access.c:1266 src/esfilter.c:611 src/descrambler/caclient.c:255
+#: src/access.c:1282 src/esfilter.c:611 src/descrambler/caclient.c:255
 msgid "Index"
 msgstr ""
 
@@ -1160,8 +1160,8 @@ msgstr ""
 msgid "LNB Type"
 msgstr ""
 
-#: src/esfilter.c:643 src/esfilter.c:710 src/esfilter.c:777 src/esfilter.c:844
-#: src/esfilter.c:986 src/profile.c:1528
+#: src/access.c:1308 src/esfilter.c:643 src/esfilter.c:710 src/esfilter.c:777
+#: src/esfilter.c:844 src/esfilter.c:986 src/profile.c:1528
 msgid "Language"
 msgstr ""
 
@@ -1173,7 +1173,7 @@ msgstr ""
 msgid "Latitude Direction South"
 msgstr ""
 
-#: src/access.c:1380
+#: src/access.c:1403
 msgid "Limit Connections"
 msgstr ""
 
@@ -1391,7 +1391,7 @@ msgstr ""
 msgid "Max Bandwidth (Kbps)"
 msgstr ""
 
-#: src/access.c:1394
+#: src/access.c:1417
 msgid "Max Channel Num"
 msgstr ""
 
@@ -1419,7 +1419,7 @@ msgstr ""
 msgid "Maximum length of PIDs"
 msgstr ""
 
-#: src/access.c:1387
+#: src/access.c:1410
 msgid "Min Channel Num"
 msgstr ""
 
@@ -1542,7 +1542,7 @@ msgstr ""
 msgid "Network Uuid"
 msgstr ""
 
-#: src/access.c:1285
+#: src/access.c:1301
 msgid "Network prefix"
 msgstr ""
 
@@ -1763,15 +1763,15 @@ msgstr ""
 msgid "PLS Mode"
 msgstr ""
 
-#: src/access.c:1638 src/descrambler/cwc.c:1732
+#: src/access.c:1661 src/descrambler/cwc.c:1732
 msgid "Password"
 msgstr ""
 
-#: src/access.c:1646
+#: src/access.c:1669
 msgid "Password2"
 msgstr ""
 
-#: src/access.c:1616
+#: src/access.c:1639
 msgid "Passwords"
 msgstr ""
 
@@ -2274,7 +2274,7 @@ msgstr ""
 msgid "Stream Type"
 msgstr ""
 
-#: src/access.c:1246 src/access.c:1292
+#: src/access.c:1253 src/access.c:1315
 msgid "Streaming"
 msgstr ""
 
@@ -2283,7 +2283,7 @@ msgstr ""
 msgid "Streaming Priority"
 msgstr ""
 
-#: src/access.c:1311
+#: src/access.c:1334
 msgid "Streaming Profiles"
 msgstr ""
 
@@ -2544,7 +2544,7 @@ msgstr ""
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1279 src/access.c:1632 src/descrambler/cwc.c:1726
+#: src/access.c:1295 src/access.c:1655 src/descrambler/cwc.c:1726
 msgid "Username"
 msgstr ""
 
@@ -2556,7 +2556,7 @@ msgstr ""
 msgid "Video Codec"
 msgstr ""
 
-#: src/access.c:1320
+#: src/access.c:1343
 msgid "Video Recorder"
 msgstr ""
 
@@ -2600,7 +2600,7 @@ msgstr ""
 msgid "Waiting for stream"
 msgstr ""
 
-#: src/access.c:1361
+#: src/access.c:1384
 msgid "Web Interface"
 msgstr ""
 

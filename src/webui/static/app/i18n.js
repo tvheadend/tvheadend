@@ -23,8 +23,6 @@ function sprintf() {
     });
 }
 
-tvh_locale = {};
-
 function _(s)
 {
     var r = tvh_locale[s];
