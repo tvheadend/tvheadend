@@ -7,8 +7,8 @@ tvheadend.cteditor = function(panel, index)
     tvheadend.idnode_grid(panel, {
         url: 'api/channeltag',
         all: 1,
-        titleS: 'Channel Tag',
-        titleP: 'Channel Tags',
+        titleS: _('Channel Tag'),
+        titleP: _('Channel Tags'),
         iconCls: 'channelTags',
         tabIndex: index,
         add: {
@@ -21,7 +21,7 @@ tvheadend.cteditor = function(panel, index)
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help('Channel Tags', 'config_tags.html');
+            new tvheadend.help(_('Channel Tags'), 'config_tags.html');
         }
     });
 
@@ -38,8 +38,8 @@ tvheadend.bouquet = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/bouquet',
-        titleS: 'Bouquet',
-        titleP: 'Bouquets',
+        titleS: _('Bouquet'),
+        titleP: _('Bouquets'),
         iconCls: 'bouquets',
         tabIndex: index,
         columns: {
@@ -65,7 +65,7 @@ tvheadend.bouquet = function(panel, index)
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help('Bouquets', 'config_bouquet.html');
+            new tvheadend.help(_('Bouquets'), 'config_bouquet.html');
         }
     });
 

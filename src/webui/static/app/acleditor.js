@@ -22,8 +22,8 @@ tvheadend.acleditor = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/access/entry',
-        titleS: 'Access Entry',
-        titleP: 'Access Entries',
+        titleS: _('Access Entry'),
+        titleP: _('Access Entries'),
         iconCls: 'group',
         columns: {
             enabled:        { width: 120 },
@@ -61,7 +61,7 @@ tvheadend.acleditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help('Access Control Entries', 'config_access.html');
+            new tvheadend.help(_('Access Control Entries'), 'config_access.html');
         }
     });
 };
@@ -76,8 +76,8 @@ tvheadend.passwdeditor = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/passwd/entry',
-        titleS: 'Password',
-        titleP: 'Passwords',
+        titleS: _('Password'),
+        titleP: _('Passwords'),
         iconCls: 'pass',
         columns: {
             enabled:        { width: 120 },
@@ -101,7 +101,7 @@ tvheadend.passwdeditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help('Password Control Entries', 'config_passwords.html');
+            new tvheadend.help(_('Password Control Entries'), 'config_passwords.html');
         }
     });
 };

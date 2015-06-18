@@ -104,11 +104,11 @@ tvheadend.epgDetails = function(event) {
     if (event.episodeOnscreen)
         content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
     if (event.start)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Start Time:</div> ' + tvheadend.niceDate(event.start) + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Start Time') + ':</div> ' + tvheadend.niceDate(event.start) + '</div>';
     if (event.stop)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">End Time:</div> ' + tvheadend.niceDate(event.stop) + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('End Time') + ':</div> ' + tvheadend.niceDate(event.stop) + '</div>';
     if (duration)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Duration:</div> ' + parseInt(duration / 60) + ' min</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Duration') + ':</div> ' + parseInt(duration / 60) + ' min</div>';
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
@@ -116,9 +116,9 @@ tvheadend.epgDetails = function(event) {
     if (event.starRating || event.ageRating || event.genre)
       content += '<hr/>';
     if (event.starRating)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Star Rating:</div> ' + event.starRating + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Star Rating') + ':</div> ' + event.starRating + '</div>';
     if (event.ageRating)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Age Rating:</div> ' + event.ageRating + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Age Rating') + ':</div> ' + event.ageRating + '</div>';
     if (event.genre) {
       var genre = [];
       Ext.each(event.genre, function(g) {
@@ -129,7 +129,7 @@ tvheadend.epgDetails = function(event) {
         if (g1 || g2)
           genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
       });
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">Content Type:</div> ' + genre.join(', ') + '</div>';
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Content Type') + ':</div> ' + genre.join(', ') + '</div>';
     }
 
     content += '<div id="related"></div>';
@@ -145,8 +145,8 @@ tvheadend.epgDetails = function(event) {
             disabled: !event.title,
             handler: searchIMDB,
             iconCls: 'find',
-            tooltip: 'Search IMDB (for title)',
-            text: "Search IMDB"
+            tooltip: _('Search IMDB (for title)'),
+            text: _("Search IMDB")
         }));
     }
 
@@ -154,8 +154,8 @@ tvheadend.epgDetails = function(event) {
         disabled: event.start > now || event.stop < now,
         handler: playProgram,
         iconCls: 'control_play',
-        tooltip: 'Play this program',
-        text: "Play program"
+        tooltip: _('Play this program'),
+        text: _("Play program")
     }));
 
     if (tvheadend.accessUpdate.dvr) {
@@ -181,8 +181,8 @@ tvheadend.epgDetails = function(event) {
           buttons.push(new Ext.Button({
               handler: stopDVR,
               iconCls: 'stopRec',
-              tooltip: 'Stop recording of this program',
-              text: "Stop recording"
+              tooltip: _('Stop recording of this program'),
+              text: _("Stop recording")
           }));
         }
 
@@ -190,8 +190,8 @@ tvheadend.epgDetails = function(event) {
           buttons.push(new Ext.Button({
               handler: deleteDVR,
               iconCls: 'remove',
-              tooltip: 'Delete scheduled recording of this program',
-              text: "Delete recording"
+              tooltip: _('Delete scheduled recording of this program'),
+              text: _("Delete recording")
           }));
         }
 
@@ -202,7 +202,7 @@ tvheadend.epgDetails = function(event) {
             valueField: 'key',
             displayField: 'val',
             name: 'config_name',
-            emptyText: '(default DVR Profile)',
+            emptyText: _('(default DVR Profile)'),
             value: '',
             editable: false
         });
@@ -211,15 +211,15 @@ tvheadend.epgDetails = function(event) {
         buttons.push(new Ext.Button({
             handler: recordEvent,
             iconCls: 'rec',
-            tooltip: 'Record now this program',
-            text: 'Record program'
+            tooltip: _('Record now this program'),
+            text: _('Record program')
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
             iconCls: 'autoRec',
-            tooltip: 'Create an automatic recording entry for this program that will '
+            tooltip: _('Create an automatic recording entry for this program that will '
                  + 'record all future programmes that matches '
-                 + 'the current query.',
+                 + 'the current query.'),
             text: event.serieslinkId ? "Record series" : "Autorec"
         }));
 
@@ -276,7 +276,7 @@ tvheadend.epgDetails = function(event) {
             success: function(d) {
                 win.close();
             },
-            question: 'Do you really want to gracefully stop/unschedule this recording?'
+            question: _('Do you really want to gracefully stop/unschedule this recording?')
         });
     }
 
@@ -289,7 +289,7 @@ tvheadend.epgDetails = function(event) {
             success: function(d) {
                 win.close();
             },
-            question: 'Do you really want to remove this recording?'
+            question: _('Do you really want to remove this recording?')
         });
     }
 
@@ -319,7 +319,7 @@ tvheadend.epg = function() {
 
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',
-        header: 'Details',
+        header: _('Details'),
         width: 45,
         dataIndex: 'actions',
         callbacks: {
@@ -332,7 +332,7 @@ tvheadend.epg = function() {
         actions: [
             {
                 iconCls: 'broadcast_details',
-                qtip: 'Broadcast details',
+                qtip: _('Broadcast details'),
                 cb: detailsfcn
             },
             {
@@ -416,12 +416,12 @@ tvheadend.epg = function() {
             var hours = Math.floor(value / 60);
 
             if (min === 0) {
-                return hours + ' hrs';
+                return hours + ' ' + _('hrs');
             }
-            return hours + ' hrs, ' + min + ' min';
+            return hours + ' ' + _('hrs') + ', ' + min + ' ' + _('min');
         }
         else {
-            return value + ' min';
+            return value + ' ' + _('min');
         }
     }
 
@@ -449,7 +449,7 @@ tvheadend.epg = function() {
             actions,
             new Ext.ux.grid.ProgressColumn({
                 width: 100,
-                header: "Progress",
+                header: _("Progress"),
                 dataIndex: 'progress',
                 colored: false,
                 ceiling: 100,
@@ -471,7 +471,7 @@ tvheadend.epg = function() {
             {
                 width: 250,
                 id: 'title',
-                header: "Title",
+                header: _("Title"),
                 dataIndex: 'title',
                 renderer: function(value, meta, record) {
                     var clickable = tvheadend.regexEscape(record.data['title']) !=
@@ -484,21 +484,21 @@ tvheadend.epg = function() {
             {
                 width: 250,
                 id: 'subtitle',
-                header: "SubTitle",
+                header: _("SubTitle"),
                 dataIndex: 'subtitle',
                 renderer: renderText
             },
             {
                 width: 100,
                 id: 'episodeOnscreen',
-                header: "Episode",
+                header: _("Episode"),
                 dataIndex: 'episodeOnscreen',
                 renderer: renderText
             },
             {
                 width: 100,
                 id: 'start',
-                header: "Start Time",
+                header: _("Start Time"),
                 dataIndex: 'start',
                 renderer: renderDate
             },
@@ -506,20 +506,20 @@ tvheadend.epg = function() {
                 width: 100,
                 hidden: true,
                 id: 'stop',
-                header: "End Time",
+                header: _("End Time"),
                 dataIndex: 'stop',
                 renderer: renderDate
             },
             {
                 width: 100,
                 id: 'duration',
-                header: "Duration",
+                header: _("Duration"),
                 renderer: renderDuration
             },
             {
                 width: 60,
                 id: 'channelNumber',
-                header: "Number",
+                header: _("Number"),
                 align: 'right',
                 dataIndex: 'channelNumber',
                 renderer: renderText
@@ -527,7 +527,7 @@ tvheadend.epg = function() {
             {
                 width: 250,
                 id: 'channelName',
-                header: "Channel",
+                header: _("Channel"),
                 dataIndex: 'channelName',
                 renderer: function(value, meta, record) {
                     var clickable = record.data['channelUuid'] !==
@@ -540,20 +540,20 @@ tvheadend.epg = function() {
             {
                 width: 50,
                 id: 'starRating',
-                header: "Stars",
+                header: _("Stars"),
                 dataIndex: 'starRating',
                 renderer: renderInt
             },
             {
                 width: 50,
                 id: 'ageRating',
-                header: "Age",
+                header: _("Age"),
                 dataIndex: 'ageRating',
                 renderer: renderInt
             }, {
                 width: 250,
                 id: 'genre',
-                header: "Content Type",
+                header: _("Content Type"),
                 dataIndex: 'genre',
                 renderer: function(vals, meta, record) {
                     var r = [];
@@ -604,7 +604,7 @@ tvheadend.epg = function() {
     // Channels, uses global store
 
     var epgFilterChannels = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
         store: tvheadend.channels,
@@ -613,7 +613,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: 'Filter channel...',
+        emptyText: _('Filter channel...'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -627,6 +627,7 @@ tvheadend.epg = function() {
     // Tags, uses global store
 
     var epgFilterChannelTags = new Ext.form.ComboBox({
+        loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
         store: tvheadend.channelTags,
@@ -635,7 +636,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: 'Filter tag...',
+        emptyText: _('Filter tag...'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -650,7 +651,7 @@ tvheadend.epg = function() {
     // Content groups
 
     var epgFilterContentGroup = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
         store: tvheadend.ContentGroupStore,
@@ -659,7 +660,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: 'Filter content type...',
+        emptyText: _('Filter content type...'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -671,7 +672,7 @@ tvheadend.epg = function() {
     });
 
     var epgFilterDuration = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 150,
         displayField: 'label',
         store: tvheadend.DurationStore,
@@ -680,7 +681,7 @@ tvheadend.epg = function() {
         forceSelection: true,
         triggerAction: 'all',
         typeAhead: true,
-        emptyText: 'Filter duration...',
+        emptyText: _('Filter duration...'),
         listeners: {
             blur: function () {
                 if(this.getRawValue() == "" ) {
@@ -807,7 +808,7 @@ tvheadend.epg = function() {
     var epgView = new Ext.ux.grid.livegrid.GridView({
         nearLimit: 100,
         loadMask: {
-            msg: 'Buffering. Please wait...'
+            msg: _('Buffering. Please wait...')
         },
         listeners: {
             beforebuffer: {
@@ -820,31 +821,31 @@ tvheadend.epg = function() {
     });
 
     tvheadend.autorecButton = new Ext.Button({
-        text: 'Create AutoRec',
+        text: _('Create AutoRec'),
         iconCls: 'autoRec',
-        tooltip: 'Create an automatic recording entry that will '
+        tooltip: _('Create an automatic recording entry that will '
                  + 'record all future programmes that matches '
-                 + 'the current query.',
+                 + 'the current query.'),
         handler: createAutoRec
     });
 
     var tbar = [
-        epgFilterTitle, { text: 'Fulltext' }, epgFilterFulltext, '-',
+        epgFilterTitle, { text: _('Fulltext') }, epgFilterFulltext, '-',
         epgFilterChannels, '-',
         epgFilterChannelTags, '-',
         epgFilterContentGroup, '-',
         epgFilterDuration, '-',
         {
-            text: 'Reset All',
+            text: _('Reset All'),
             iconCls: 'resetIcon',
-            tooltip: 'Reset all filters (show all)',
+            tooltip: _('Reset all filters (show all)'),
             handler: epgQueryClear
         },
         '->',
         {
-            text: 'Watch TV',
+            text: _('Watch TV'),
             iconCls: 'watchTv',
-			tooltip: 'Watch TV online in the window by web',
+            tooltip: _('Watch TV online in the window by web'),
             handler: function() {
                 new tvheadend.VideoPlayer();
             }
@@ -853,10 +854,10 @@ tvheadend.epg = function() {
         tvheadend.autorecButton,
         '-',
         {
-            text: 'Help',
-			iconCls: 'help',
+            text: _('Help'),
+            iconCls: 'help',
             handler: function() {
-                new tvheadend.help('Electronic Program Guide', 'epg.html');
+                new tvheadend.help(_('Electronic Program Guide'), 'epg.html');
             }
         }
     ];
@@ -867,7 +868,7 @@ tvheadend.epg = function() {
         enableDragDrop: false,
         cm: epgCm,
         plugins: [filter, actions],
-        title: 'Electronic Program Guide',
+        title: _('Electronic Program Guide'),
         iconCls: 'epg',
         store: epgStore,
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
@@ -943,7 +944,7 @@ tvheadend.epg = function() {
                         }
                     },
                     failure: function(response, options) {
-                        Ext.MessageBox.alert('EPG Update', response.statusText);
+                        Ext.MessageBox.alert(_('EPG Update'), response.statusText);
                     }
                 });
             }
@@ -994,28 +995,36 @@ tvheadend.epg = function() {
         if (!tvheadend.accessUpdate.dvr)
             return;
 
-        var title = epgStore.baseParams.title ? epgStore.baseParams.title
-                : "<i>Don't care</i>";
-        var fulltext = epgStore.baseParams.fulltext ? " <i>(Fulltext)</i>" : "";
-        var channel = epgStore.baseParams.channel ? tvheadend.channelLookupName(epgStore.baseParams.channel)
-                : "<i>Don't care</i>";
-        var tag = epgStore.baseParams.channelTag ? tvheadend.channelTagLookupName(epgStore.baseParams.channelTag)
-                : "<i>Don't care</i>";
-        var contentType = epgStore.baseParams.contentType ? tvheadend.contentGroupLookupName(epgStore.baseParams.contentType)
-                : "<i>Don't care</i>";
-        var duration = epgStore.baseParams.durationMin ? tvheadend.durationLookupRange(epgStore.baseParams.durationMin)
-                : "<i>Don't care</i>";
+        var title = epgStore.baseParams.title ?
+                epgStore.baseParams.title
+                : "<i>" + _("Don't care") + "</i>";
+        var fulltext = epgStore.baseParams.fulltext ?
+                " <i>(" + _("Fulltext") + ")</i>"
+                : "";
+        var channel = epgStore.baseParams.channel ?
+                tvheadend.channelLookupName(epgStore.baseParams.channel)
+                : "<i>" + _("Don't care") + "</i>";
+        var tag = epgStore.baseParams.channelTag ?
+                tvheadend.channelTagLookupName(epgStore.baseParams.channelTag)
+                : "<i>" + _("Don't care") + "</i>";
+        var contentType = epgStore.baseParams.contentType ?
+                tvheadend.contentGroupLookupName(epgStore.baseParams.contentType)
+                : "<i>" + _("Don't care") + "</i>";
+        var duration = epgStore.baseParams.durationMin ?
+                tvheadend.durationLookupRange(epgStore.baseParams.durationMin)
+                : "<i>" + _("Don't care") + "</i>";
 
-        Ext.MessageBox.confirm('Auto Recorder', 'This will create an automatic rule that '
+        Ext.MessageBox.confirm(_('Auto Recorder'), _('This will create an automatic rule that '
                 + 'continuously scans the EPG for programmes '
-                + 'to record that match this query: ' + '<br><br>'
-                + '<div class="x-smallhdr">Title:</div>' + title + fulltext + '<br>'
-                + '<div class="x-smallhdr">Channel:</div>' + channel + '<br>'
-                + '<div class="x-smallhdr">Tag:</div>' + tag + '<br>'
-                + '<div class="x-smallhdr">Genre:</div>' + contentType + '<br>'
-                + '<div class="x-smallhdr">Duration:</div>' + duration + '<br>'
-                + '<br><br>' + 'Currently this will match (and record) '
-                + epgStore.getTotalCount() + ' events. ' + 'Are you sure?',
+                + 'to record that match this query') + ': ' + '<br><br>'
+                + '<div class="x-smallhdr">' + _('Title') + ':</div>' + title + fulltext + '<br>'
+                + '<div class="x-smallhdr">' + _('Channel') + ':</div>' + channel + '<br>'
+                + '<div class="x-smallhdr">' + _('Tag') + ':</div>' + tag + '<br>'
+                + '<div class="x-smallhdr">' + _('Genre') + ':</div>' + contentType + '<br>'
+                + '<div class="x-smallhdr">' + _('Duration') + ':</div>' + duration + '<br>'
+                + '<br><br>'
+                + sprintf(_('Currently this will match (and record) %d events.'), epgStore.GetTotalCount())
+                + ' ' + 'Are you sure?',
             function(button) {
                 if (button === 'no')
                     return;
@@ -1027,7 +1036,7 @@ tvheadend.epg = function() {
         /* Really do it */
         var conf = {
           enabled: 1,
-          comment: 'Created from EPG query'
+          comment: _('Created from EPG query')
         };
         if (params.title) conf.title = params.title;
         if (params.fulltext) conf.fulltext = params.fulltext;

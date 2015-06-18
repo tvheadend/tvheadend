@@ -6,7 +6,7 @@ tvheadend.timeshift = function(panel, index) {
 
     var confreader = new Ext.data.JsonReader(
         {
-                root: 'config'
+            root: 'config'
         },
         [
             'timeshift_enabled', 'timeshift_ondemand',
@@ -22,59 +22,59 @@ tvheadend.timeshift = function(panel, index) {
      * ***************************************************************/
 
     var timeshiftEnabled = new Ext.form.Checkbox({
-        fieldLabel: 'Enabled',
+        fieldLabel: _('Enabled'),
         name: 'timeshift_enabled',
         width: 300
     });
 
     var timeshiftOndemand = new Ext.form.Checkbox({
-        fieldLabel: 'On-Demand',
+        fieldLabel: _('On-Demand'),
         name: 'timeshift_ondemand',
         width: 300
     });
 
     var timeshiftPath = new Ext.form.TextField({
-        fieldLabel: 'Storage Path',
+        fieldLabel: _('Storage Path'),
         name: 'timeshift_path',
         allowBlank: true,
         width: 300
     });
 
     var timeshiftMaxPeriod = new Ext.form.NumberField({
-        fieldLabel: 'Max. Period (mins)',
+        fieldLabel: _('Max. Period (mins)'),
         name: 'timeshift_max_period',
         allowBlank: false,
         width: 300
     });
 
     var timeshiftUnlPeriod = new Ext.form.Checkbox({
-        fieldLabel: 'Unlimited time',
+        fieldLabel: _('Unlimited time'),
         name: 'timeshift_unlimited_period',
         width: 300
     });
 
     var timeshiftMaxSize = new Ext.form.NumberField({
-        fieldLabel: 'Max. Size (MB)',
+        fieldLabel: _('Max. Size (MB)'),
         name: 'timeshift_max_size',
         allowBlank: false,
         width: 300
     });
 
     var timeshiftRamSize = new Ext.form.NumberField({
-        fieldLabel: 'Max. RAM Size (MB)',
+        fieldLabel: _('Max. RAM Size (MB)'),
         name: 'timeshift_ram_size',
         allowBlank: false,
         width: 250
     });
 
     var timeshiftUnlSize = new Ext.form.Checkbox({
-        fieldLabel: 'Unlimited size',
+        fieldLabel: _('Unlimited size'),
         name: 'timeshift_unlimited_size',
         width: 300
     });
 
     var timeshiftRamOnly = new Ext.form.Checkbox({
-        fieldLabel: 'Use only RAM',
+        fieldLabel: _('Use only RAM'),
         name: 'timeshift_ram_only',
         width: 300
     });
@@ -100,17 +100,17 @@ tvheadend.timeshift = function(panel, index) {
      * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
+        text: _("Save configuration"),
+        tooltip: _('Save changes made to configuration below'),
         iconCls: 'save',
         handler: saveChanges
     });
 
     var helpButton = new Ext.Button({
-        text: 'Help',
-		iconCls: 'help',
+        text: _('Help'),
+        iconCls: 'help',
         handler: function() {
-            new tvheadend.help('Timeshift Configuration', 'config_timeshift.html');
+            new tvheadend.help(_('Timeshift Configuration'), 'config_timeshift.html');
         }
     });
 
@@ -129,7 +129,7 @@ tvheadend.timeshift = function(panel, index) {
     });
 
     var timeshiftPanel = new Ext.form.FieldSet({
-        title: 'Timeshift Options',
+        title: _('Timeshift Options'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -147,7 +147,7 @@ tvheadend.timeshift = function(panel, index) {
     });
 
     var confpanel = new Ext.form.FormPanel({
-        title : 'Timeshift',
+        title : _('Timeshift'),
         iconCls : 'timeshift',
         border : false,
         bodyStyle : 'padding:15px',
@@ -187,11 +187,11 @@ tvheadend.timeshift = function(panel, index) {
             params: {
                 op: 'saveSettings'
             },
-            waitMsg: 'Saving Data...',
+            waitMsg: _('Saving Data...'),
             success: function(form, action) {
             },
             failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
+                Ext.Msg.alert(_('Save failed'), action.result.errormsg);
             }
         });
     }

@@ -31,9 +31,9 @@ tvheadend.networks = function(panel, index)
         name: 'scan',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Force new scan (all muxes) for selected networks',
+                tooltip: _('Force new scan (all muxes) for selected networks'),
                 iconCls: 'find',
-                text: 'Force Scan',
+                text: _('Force Scan'),
                 disabled: true
             });
         },
@@ -62,18 +62,18 @@ tvheadend.networks = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/network',
-        titleS: 'Network',
-        titleP: 'Networks',
-		iconCls: 'networks',
+        titleS: _('Network'),
+        titleP: _('Networks'),
+        iconCls: 'networks',
         tabIndex: index,
         help: function() {
-            new tvheadend.help('Networks', 'config_networks.html');
+            new tvheadend.help(_('Networks'), 'config_networks.html');
         },
         tbar: [scanButton],
         add: {
-            titleS: 'Network',
+            titleS: _('Network'),
             select: {
-                label: 'Type',
+                label: _('Type'),
                 store: tvheadend.network_builders,
                 displayField: 'caption',
                 valueField: 'class',
@@ -96,18 +96,18 @@ tvheadend.muxes = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux',
-        titleS: 'Mux',
-        titleP: 'Muxes',
-		iconCls: 'muxes',
+        titleS: _('Mux'),
+        titleP: _('Muxes'),
+        iconCls: 'muxes',
         tabIndex: index,
         hidemode: true,
         help: function() {
-            new tvheadend.help('Muxes', 'config_muxes.html');
+            new tvheadend.help(_('Muxes'), 'config_muxes.html');
         },            
         add: {
-            titleS: 'Mux',
+            titleS: _('Mux'),
             select: {
-                label: 'Network',
+                label: _('Network'),
                 store: tvheadend.network_list,
                 valueField: 'key',
                 displayField: 'val',
@@ -127,7 +127,7 @@ tvheadend.muxes = function(panel, index)
                 renderer: function(v, o, r) {
                     var title = r.data['name'] + ' / ' + r.data['network'];
                     return "<a href='play/stream/mux/" + r.id +
-                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
+                           "?title=" + encodeURIComponent(title) + "'>" + _("Play") + "</a>";
                 }
             }
         ],
@@ -186,7 +186,7 @@ tvheadend.show_service_streams = function(data) {
         html += '<td>' + s.type + '</td>';
         html += '<td>' + (s.language || '&nbsp;') + '</td>';
         if (s.type === 'CA') {
-            d = 'CAIDS: ';
+            d = _('CAIDS: ');
             for (j = 0; j < s.caids.length; j++) {
                 if (j > 0)
                     d += ', ';
@@ -204,20 +204,20 @@ tvheadend.show_service_streams = function(data) {
         for (i = 0; i < data.streams.length; i++)
             stream(data.streams[i]);
     } else
-        single('None');
+        single(_('None'));
 
     single('&nbsp;');
-    single('<h3>After filtering and reordering (without PCR and PMT)</h3>');
+    single('<h3>' + _('After filtering and reordering (without PCR and PMT)') + '</h3>');
     header();
 
     if (data.fstreams.length)
         for (i = 0; i < data.fstreams.length; i++)
             stream(data.fstreams[i]);
     else
-        single('<p>None</p>');
+        single('<p>' + _('None') + '</p>');
 
     var win = new Ext.Window({
-        title: 'Service details for ' + data.name,
+        title: _('Service details for') + ' ' + data.name,
         iconCls: 'info',
         layout: 'fit',
         width: 650,
@@ -238,9 +238,9 @@ tvheadend.services = function(panel, index)
             name: 'map',
             builder: function() {
                 return new Ext.Toolbar.Button({
-                    tooltip: 'Map services to channels',
+                    tooltip: _('Map services to channels'),
                     iconCls: 'clone',
-                    text: 'Map All',
+                    text: _('Map All'),
                     disabled: false
                 });
             },
@@ -250,17 +250,17 @@ tvheadend.services = function(panel, index)
         var selected = function(s, abuttons)
         {
             if (s.getCount() > 0)
-                abuttons.map.setText('Map Selected');
+                abuttons.map.setText(_('Map Selected'));
             else
-                abuttons.map.setText('Map All');
+                abuttons.map.setText(_('Map All'));
         };
 
         var actions = new Ext.ux.grid.RowActions({
-            header: 'Details',
+            header: _('Details'),
             width: 10,
             actions: [{
                     iconCls: 'info',
-                    qtip: 'Detailed stream info',
+                    qtip: _('Detailed stream info'),
                     cb: function(grid, rec, act, row, col) {
                         Ext.Ajax.request({
                             url: 'api/service/streams',
@@ -290,24 +290,24 @@ tvheadend.services = function(panel, index)
     }
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/service',
-        titleS: 'Service',
-        titleP: 'Services',
-		iconCls: 'services',
+        titleS: _('Service'),
+        titleP: _('Services'),
+        iconCls: 'services',
         tabIndex: index,
         hidemode: true,
         add: false,
         del: true,
         help: function() {
-            new tvheadend.help('Services', 'config_services.html');
+            new tvheadend.help(_('Services'), 'config_services.html');
         },         
         lcol: [
             {
                 width: 50,
-                header: 'Play',
+                header: _('Play'),
                 renderer: function(v, o, r) {
                     var title = r.data['svcname'] + ' / ' + r.data['provider'];
                     return "<a href='play/stream/service/" + r.id +
-                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
+                           "?title=" + encodeURIComponent(title) + "'>" + _('Play') + "</a>";
                 }
             },
             {
@@ -327,17 +327,17 @@ tvheadend.mux_sched = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux_sched',
-        titleS: 'Mux Scheduler',
-        titleP: 'Mux Schedulers',
-		iconCls: 'muxSchedulers',
+        titleS: _('Mux Scheduler'),
+        titleP: _('Mux Schedulers'),
+        iconCls: 'muxSchedulers',
         tabIndex: index,
         help: function() {
-            new tvheadend.help('Mux Schedulers', 'config_muxsched.html');
+            new tvheadend.help(_('Mux Schedulers'), 'config_muxsched.html');
         },          
         hidemode: true,
         add: {
             url: 'api/mpegts/mux_sched',
-            titleS: 'Mux Scheduler',
+            titleS: _('Mux Scheduler'),
             create: {
                 url: 'api/mpegts/mux_sched/create'
             }

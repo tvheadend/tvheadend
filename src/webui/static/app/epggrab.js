@@ -44,7 +44,7 @@ tvheadend.epggrab = function(panel, index) {
         });
         r = new internalModuleStore.recordType({
             id: '',
-            name: 'Disabled'
+            name: _('Disabled')
         });
         internalModuleStore.add(r);
         moduleStore.each(function(r) {
@@ -93,7 +93,7 @@ tvheadend.epggrab = function(panel, index) {
      * Cron setup
      */
     var internalCron = new Ext.form.TextArea({
-        fieldLabel: 'Cron multi-line',
+        fieldLabel: _('Cron multi-line'),
         name: 'cron',
         width: 350
     });
@@ -102,7 +102,7 @@ tvheadend.epggrab = function(panel, index) {
      * Module selector
      */
     var internalModule = new Ext.form.ComboBox({
-        fieldLabel: 'Module',
+        fieldLabel: _('Module'),
         hiddenName: 'module',
         width: 350,
         valueField: 'id',
@@ -119,17 +119,17 @@ tvheadend.epggrab = function(panel, index) {
      */
     var channelRename = new Ext.form.Checkbox({
         name: 'channel_rename',
-        fieldLabel: 'Update channel name'
+        fieldLabel: _('Update channel name')
     });
 
     var channelRenumber = new Ext.form.Checkbox({
         name: 'channel_renumber',
-        fieldLabel: 'Update channel number'
+        fieldLabel: _('Update channel number')
     });
 
     var channelReicon = new Ext.form.Checkbox({
         name: 'channel_reicon',
-        fieldLabel: 'Update channel icon'
+        fieldLabel: _('Update channel icon')
     });
 
     var epgPeriodicSave = new Ext.form.NumberField({
@@ -139,7 +139,7 @@ tvheadend.epggrab = function(panel, index) {
         minValue: 0,
         maxValue: 24,
         value: 0,
-        fieldLabel: 'Periodic save EPG to disk',
+        fieldLabel: _('Periodic save EPG to disk'),
         name: 'epgdb_periodicsave'
     });
 
@@ -147,7 +147,7 @@ tvheadend.epggrab = function(panel, index) {
      * Simple fields
      */
     var simplePanel = new Ext.form.FieldSet({
-        title: 'General Config',
+        title: _('General Config'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -158,7 +158,7 @@ tvheadend.epggrab = function(panel, index) {
      * Internal grabber
      */
     var internalPanel = new Ext.form.FieldSet({
-        title: 'Internal Grabber',
+        title: _('Internal Grabber'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -186,7 +186,7 @@ tvheadend.epggrab = function(panel, index) {
 
     var externalColumnModel = new Ext.grid.ColumnModel([externalSelectionModel,
         {
-            header: 'Module',
+            header: _('Module'),
             dataIndex: 'name',
             width: 200,
             sortable: false
@@ -211,7 +211,7 @@ tvheadend.epggrab = function(panel, index) {
     });
 
     var externalPanel = new Ext.form.FieldSet({
-        title: 'External Interfaces',
+        title: _('External Interfaces'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -235,7 +235,7 @@ tvheadend.epggrab = function(panel, index) {
     });
 
     var otaColumnModel = new Ext.grid.ColumnModel([otaSelectionModel, {
-            header: 'Module',
+            header: _('Module'),
             dataIndex: 'name',
             width: 200,
             sortable: false
@@ -256,11 +256,11 @@ tvheadend.epggrab = function(panel, index) {
 
     var otaInitial = new Ext.form.Checkbox({
         name: 'ota_initial',
-        fieldLabel: 'Force initial EPG scan at startup'
+        fieldLabel: _('Force initial EPG scan at startup')
     });
 
     var otaCron = new Ext.form.TextArea({
-        fieldLabel: 'Over-the-air Cron multi-line',
+        fieldLabel: _('Over-the-air Cron multi-line'),
         name: 'ota_cron',
         width: 350
     });
@@ -272,12 +272,12 @@ tvheadend.epggrab = function(panel, index) {
         minValue: 30,
         maxValue: 7200,
         value: 600,
-        fieldLabel: 'EPG scan timeout in seconds (30-7200)',
+        fieldLabel: _('EPG scan timeout in seconds (30-7200)'),
         name: 'ota_timeout'
     });
 
     var otaPanel = new Ext.form.FieldSet({
-        title: 'Over-the-air Grabbers',
+        title: _('Over-the-air Grabbers'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -289,29 +289,29 @@ tvheadend.epggrab = function(panel, index) {
      * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
+        text: _("Save configuration"),
+        tooltip: _('Save changes made to configuration below'),
         iconCls: 'save',
         handler: saveChanges
     });
 
     var otaepgButton = new Ext.Button({
-        text: "Trigger OTA EPG Grabber",
-        tooltip: 'Tune over-the-air EPG muxes to grab new events now',
+        text: _("Trigger OTA EPG Grabber"),
+        tooltip: _('Tune over-the-air EPG muxes to grab new events now'),
         iconCls: 'find',
         handler: otaepgTrigger
     });
 
     var helpButton = new Ext.Button({
-        text: 'Help',
-		iconCls: 'help',
+        text: _('Help'),
+	iconCls: 'help',
         handler: function() {
-            new tvheadend.help('EPG Grab Configuration', 'config_epggrab.html');
+            new tvheadend.help(_('EPG Grab Configuration'), 'config_epggrab.html');
         }
     });
 
     var confpanel = new Ext.FormPanel({
-        title: 'EPG Grabber',
+        title: _('EPG Grabber'),
         iconCls: 'xml',
         border: false,
         bodyStyle: 'padding:15px',
@@ -391,7 +391,7 @@ tvheadend.epggrab = function(panel, index) {
                 op: 'saveSettings',
                 external: mods
             },
-            waitMsg: 'Saving Data...',
+            waitMsg: _('Saving Data...'),
             success: function(form, action) {
                 externalModuleStore.commitChanges();
             },
@@ -408,7 +408,7 @@ tvheadend.epggrab = function(panel, index) {
                 op: 'otaepgTrigger',
                 after: 1
             },
-            waitMsg: 'Triggering...',
+            waitMsg: _('Triggering...'),
             failure: function(response, options) {
                 Ext.Msg.alert('Trigger failed', response.statusText);
             }

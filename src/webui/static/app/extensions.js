@@ -112,12 +112,12 @@ Ext.ux.Multiselect = Ext.extend(Ext.form.Field, {
      * @cfg {String} minLengthText Validation message displayed when {@link #minLength} is not met (defaults to 'Minimum {0} 
      * item(s) required').  The {0} token will be replaced by the value of {@link #minLength}.
      */
-    minLengthText: 'Minimum {0} item(s) required',
+    minLengthText: _('Minimum {0} item(s) required'),
     /**
      * @cfg {String} maxLengthText Validation message displayed when {@link #maxLength} is not met (defaults to 'Maximum {0} 
      * item(s) allowed').  The {0} token will be replaced by the value of {@link #maxLength}.
      */
-    maxLengthText: 'Maximum {0} item(s) allowed',
+    maxLengthText: _('Maximum {0} item(s) allowed'),
     /**
      * @cfg {String} delimiter The string used to delimit between items when set or returned as a string of values
      * (defaults to ',').

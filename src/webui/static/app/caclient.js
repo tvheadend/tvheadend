@@ -30,9 +30,9 @@ tvheadend.caclient = function(panel, index) {
         url: 'api/caclient',
         clazz: 'caclient',
         comet: 'caclient',
-        titleS: 'CA',
-        titleP: 'CAs',
-        titleC: 'Client Name',
+        titleS: _('CA'),
+        titleP: _('CAs'),
+        titleC: _('Client Name'),
         iconCls: 'key',
         key: 'uuid',
         val: 'title',
@@ -42,9 +42,9 @@ tvheadend.caclient = function(panel, index) {
         edit: { params: { list: list } },
         add: {
             url: 'api/caclient',
-            titleS: 'Conditional Access Client',
+            titleS: _('Conditional Access Client'),
             select: {
-                label: 'Type',
+                label: _('Type'),
                 store: tvheadend.caclient_builders,
                 displayField: 'caption',
                 valueField: 'class',
@@ -59,7 +59,7 @@ tvheadend.caclient = function(panel, index) {
         lcol: [actions],
         plugins: [actions],
         help: function() {
-            new tvheadend.help('Conditional Access Client', 'config_caclient.html');
+            new tvheadend.help(_('Conditional Access Client'), 'config_caclient.html');
         }
     });
 

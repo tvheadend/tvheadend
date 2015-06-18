@@ -59,14 +59,14 @@ tvheadend.miscconf = function(panel, index) {
     */
 
     var serverName = new Ext.form.TextField({
-        fieldLabel: 'Tvheadend server name',
+        fieldLabel: _('Tvheadend server name'),
         name: 'server_name',
         allowBlank: true,
         width: 400
     });
 
     var serverWrap = new Ext.form.FieldSet({
-        title: 'Server',
+        title: _('Server'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -75,14 +75,14 @@ tvheadend.miscconf = function(panel, index) {
     });
 
     var dvbscanPath = new Ext.form.TextField({
-        fieldLabel: 'DVB scan files path',
+        fieldLabel: _('DVB scan files path'),
         name: 'muxconfpath',
         allowBlank: true,
         width: 400
     });
 
     var dvbscanWrap = new Ext.form.FieldSet({
-        title: 'DVB Scan Files',
+        title: _('DVB Scan Files'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -98,19 +98,19 @@ tvheadend.miscconf = function(panel, index) {
         name: 'language',
         fromStore: tvheadend.languages,
         toStore: tvheadend.config_languages,
-        fieldLabel: 'Default Language(s)',
+        fieldLabel: _('Default Language(s)'),
         dataFields: ['identifier', 'name'],
         msWidth: 190,
         msHeight: 150,
         valueField: 'identifier',
         displayField: 'name',
         imagePath: 'static/multiselect/resources',
-        toLegend: 'Selected',
-        fromLegend: 'Available'
+        toLegend: _('Selected'),
+        fromLegend: _('Available')
     });
 
     var languageWrap = new Ext.form.FieldSet({
-        title: 'Language Settings',
+        title: _('Language Settings'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -124,21 +124,21 @@ tvheadend.miscconf = function(panel, index) {
 
     var tvhtimeUpdateEnabled = new Ext.ux.form.XCheckbox({
         name: 'tvhtime_update_enabled',
-        fieldLabel: 'Update time'
+        fieldLabel: _('Update time')
     });
 
     var tvhtimeNtpEnabled = new Ext.ux.form.XCheckbox({
         name: 'tvhtime_ntp_enabled',
-        fieldLabel: 'Enable NTP driver'
+        fieldLabel: _('Enable NTP driver')
     });
 
     var tvhtimeTolerance = new Ext.form.NumberField({
         name: 'tvhtime_tolerance',
-        fieldLabel: 'Update tolerance (ms)'
+        fieldLabel: _('Update tolerance (ms)')
     });
 
     var tvhtimePanel = new Ext.form.FieldSet({
-        title: 'Time Update',
+        title: _('Time Update'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -152,23 +152,23 @@ tvheadend.miscconf = function(panel, index) {
 
     var preferPicon = new Ext.ux.form.XCheckbox({
         name: 'prefer_picon',
-        fieldLabel: 'Prefer picons over channel name'
+        fieldLabel: _('Prefer picons over channel name')
     });
 
     var chiconPath = new Ext.form.TextField({
         name: 'chiconpath',
-        fieldLabel: 'Channel icon path (see Help)',
+        fieldLabel: _('Channel icon path (see Help)'),
         width: 400
     });
 
     var piconPath = new Ext.form.TextField({
         name: 'piconpath',
-        fieldLabel: 'Picon path (see Help)',
+        fieldLabel: _('Picon path (see Help)'),
         width: 400
     });
 
     var piconPanel = new Ext.form.FieldSet({
-        title: 'Picon',
+        title: _('Picon'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -190,26 +190,26 @@ tvheadend.miscconf = function(panel, index) {
 
         var imagecacheEnabled = new Ext.ux.form.XCheckbox({
             name: 'enabled',
-            fieldLabel: 'Enabled'
+            fieldLabel: _('Enabled')
         });
 
         var imagecacheOkPeriod = new Ext.form.NumberField({
             name: 'ok_period',
-            fieldLabel: 'Re-fetch period (hours)'
+            fieldLabel: _('Re-fetch period (hours)')
         });
 
         var imagecacheFailPeriod = new Ext.form.NumberField({
             name: 'fail_period',
-            fieldLabel: 'Re-try period (hours)'
+            fieldLabel: _('Re-try period (hours)')
         });
 
         var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
             name: 'ignore_sslcert',
-            fieldLabel: 'Ignore invalid SSL certificate'
+            fieldLabel: _('Ignore invalid SSL certificate')
         });
 
         var imagecachePanel = new Ext.form.FieldSet({
-            title: 'Image Caching',
+            title: _('Image Caching'),
             width: 700,
             autoHeight: true,
             collapsible: true,
@@ -241,55 +241,55 @@ tvheadend.miscconf = function(panel, index) {
     if (tvheadend.capabilities.indexOf('satip_server') !== -1) {
         var rtsp = new Ext.form.NumberField({
              name: 'satip_rtsp',
-             fieldLabel: 'RTSP Port (554 or 9983), 0 = disable'
+             fieldLabel: _('RTSP Port (554 or 9983), 0 = disable')
         });
         var weight = new Ext.form.NumberField({
              name: 'satip_weight',
-             fieldLabel: 'Subscription Weight'
+             fieldLabel: _('Subscription Weight')
         });
         var descramble = new Ext.form.NumberField({
              name: 'satip_descramble',
-             fieldLabel: 'Descramble Services (Limit Per Mux)'
+             fieldLabel: _('Descramble Services (Limit Per Mux)')
         });
         var muxcnf = new Ext.form.NumberField({
              name: 'satip_muxcnf',
-             fieldLabel: 'Muxes Handling (0 = auto, 1 = keep, 2 = reject)'
+             fieldLabel: _('Muxes Handling (0 = auto, 1 = keep, 2 = reject)')
         });
         var dvbs = new Ext.form.NumberField({
              name: 'satip_dvbs',
-             fieldLabel: 'Exported DVB-S Tuners'
+             fieldLabel: _('Exported DVB-S Tuners')
         });
         var dvbs2 = new Ext.form.NumberField({
              name: 'satip_dvbs2',
-             fieldLabel: 'Exported DVB-S2 Tuners'
+             fieldLabel: _('Exported DVB-S2 Tuners')
         });
         var dvbt = new Ext.form.NumberField({
              name: 'satip_dvbt',
-             fieldLabel: 'Exported DVB-T Tuners'
+             fieldLabel: _('Exported DVB-T Tuners')
         });
         var dvbt2 = new Ext.form.NumberField({
              name: 'satip_dvbt2',
-             fieldLabel: 'Exported DVB-T2 Tuners'
+             fieldLabel: _('Exported DVB-T2 Tuners')
         });
         var dvbc = new Ext.form.NumberField({
              name: 'satip_dvbc',
-             fieldLabel: 'Exported DVB-C Tuners'
+             fieldLabel: _('Exported DVB-C Tuners')
         });
         var dvbc2 = new Ext.form.NumberField({
              name: 'satip_dvbc2',
-             fieldLabel: 'Exported DVB-C2 Tuners'
+             fieldLabel: _('Exported DVB-C2 Tuners')
         });
         var atsc = new Ext.form.NumberField({
              name: 'satip_atsc',
-             fieldLabel: 'Exported ATSC Tuners'
+             fieldLabel: _('Exported ATSC Tuners')
         });
         var dvbcb = new Ext.form.NumberField({
              name: 'satip_dvbcb',
-             fieldLabel: 'Exported DVB-Cable/AnnexB Tuners'
+             fieldLabel: _('Exported DVB-Cable/AnnexB Tuners')
         });
 
         satipPanel = new Ext.form.FieldSet({
-            title: 'SAT>IP Server',
+            title: _('SAT>IP Server'),
             width: 700,
             autoHeight: true,
             collapsible: true,
@@ -305,23 +305,23 @@ tvheadend.miscconf = function(panel, index) {
     * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Save configuration",
-        tooltip: 'Save changes made to configuration below',
+        text: _("Save configuration"),
+        tooltip: _('Save changes made to configuration below'),
         iconCls: 'save',
         handler: saveChanges
     });
 
     var imagecacheButton = new Ext.Button({
-        text: "Clean image (icon) cache",
-        tooltip: 'Clean image cache on storage',
+        text: _("Clean image (icon) cache"),
+        tooltip: _('Clean image cache on storage'),
         iconCls: 'clean',
         handler: cleanImagecache
     });
 
     if (tvheadend.capabilities.indexOf('satip_client') !== -1) {
         var satipButton = new Ext.Button({
-            text: "Discover SAT>IP servers",
-            tooltip: 'Look for new SAT>IP servers',
+            text: _("Discover SAT>IP servers"),
+            tooltip: _('Look for new SAT>IP servers'),
             iconCls: 'find',
             handler: satipDiscover
         });
@@ -331,10 +331,10 @@ tvheadend.miscconf = function(panel, index) {
 
 
     var helpButton = new Ext.Button({
-        text: 'Help',
+        text: _('Help'),
         iconCls: 'help',
         handler: function() {
-            new tvheadend.help('General Configuration', 'config_general.html');
+            new tvheadend.help(_('General Configuration'), 'config_general.html');
         }
     });
 
@@ -369,7 +369,7 @@ tvheadend.miscconf = function(panel, index) {
     _tbar.push(helpButton);
 
     var mpanel = new Ext.Panel({
-        title: 'General',
+        title: _('General'),
         iconCls: 'general',
         border: false,
         autoScroll: true,
@@ -414,7 +414,7 @@ tvheadend.miscconf = function(panel, index) {
                 params: params || {},
                 waitMsg: 'Saving data...',
                 failure: function(form, action) {
-                    Ext.Msg.alert('Imagecache save failed', action.result.errormsg);
+                    Ext.Msg.alert(_('Imagecache save failed'), action.result.errormsg);
                 }
             });
     }
@@ -425,9 +425,9 @@ tvheadend.miscconf = function(panel, index) {
             params: {
                 op: 'saveSettings'
             },
-            waitMsg: 'Saving Data...',
+            waitMsg: _('Saving Data...'),
             failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
+                Ext.Msg.alert(_('Save failed'), action.result.errormsg);
             }
         });
         saveChangesImagecache();

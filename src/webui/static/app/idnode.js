@@ -288,7 +288,7 @@ tvheadend.IdNodeField = function(conf)
             if (this.duration)
                 return function(v) {
                     if (v < 0 || v === '')
-                       return "Not set";
+                       return _("Not set");
                     var i = parseInt(v / 60); /* Nevermind the seconds */
                     if (i === 0)
                        return "0";
@@ -296,10 +296,10 @@ tvheadend.IdNodeField = function(conf)
                     var min = parseInt(i % 60);
                     if (hours) {
                         if (min === 0)
-                            return hours + ' hrs';
-                        return hours + ' hrs, ' + min + ' min';
+                            return hours + ' ' + _('hrs');
+                        return hours + ' ' + _('hrs') + ', ' + min + ' ' + _('min');
                     }
-                    return min + ' min';
+                    return min + ' ' + _('min');
                 }
             if (this.date) {
                 return function(v) {
@@ -390,7 +390,7 @@ tvheadend.IdNodeField = function(conf)
                 c['regex'] = /^[0][0-7]{3}$/;
                 c['maskRe'] = /[0-7]/;
                 c['allowBlank'] = false;
-                c['blankText'] = 'You must provide a value - use octal chmod notation, e.g. 0664';
+                c['blankText'] = _('You must provide a value - use octal chmod notation, e.g. 0664');
                 c['width'] = 125;
             }
 
@@ -649,7 +649,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                 regex: /^[0][0-7]{3}$/,
                 maskRe: /[0-7]/,
                 allowBlank: false,
-                blankText: 'You must provide a value - use octal chmod notation, e.g. 0664'
+                blankText: _('You must provide a value - use octal chmod notation, e.g. 0664')
             });
 
 
@@ -734,7 +734,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
                         columns = met[k].column;
             met[number].columns = columns;
             if (columns) {
-                var p = newFieldSet({ title: m.name || "Settings", layout: 'column', border: false });
+                var p = newFieldSet({ title: m.name || _("Settings"), layout: 'column', border: false });
                 cfs[number] = newFieldSet({ nocollapse: true, style: 'border-width: 0px', bodyStyle: ' ' });
                 p.add(cfs[number]);
                 fs[number] = p;
@@ -772,11 +772,11 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
         panel.add(f);
     } else {
         if (df.length)
-            panel.add(newFieldSet({ title: "Basic Settings", items: df }));
+            panel.add(newFieldSet({ title: _("Basic Settings"), items: df }));
         if (af.length)
-            panel.add(newFieldSet({ title: "Advanced Settings", items: af }));
+            panel.add(newFieldSet({ title: _("Advanced Settings"), items: af }));
         if (rf.length)
-            panel.add(newFieldSet({ title: "Read-only Info", items: rf, collapsed: 'true'}));
+            panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
     panel.doLayout();
 };
@@ -792,7 +792,7 @@ tvheadend.idnode_editor = function(item, conf)
     /* Buttons */
     if (!conf.noButtons) {
         var saveBtn = new Ext.Button({
-            text: 'Save',
+            text: _('Save'),
             iconCls: 'save',
             handler: function() {
                 var node = panel.getForm().getFieldValues();
@@ -813,7 +813,7 @@ tvheadend.idnode_editor = function(item, conf)
 
         if (conf.help) {
             var helpBtn = new Ext.Button({
-                text: 'Help',
+                text: _('Help'),
                 iconCls: 'help',
                 handler: conf.help
             });
@@ -855,8 +855,8 @@ tvheadend.idnode_create = function(conf, onlyDefault)
 
     /* Buttons */
     var saveBtn = new Ext.Button({
-        tooltip: 'Create new entry',
-        text: 'Create',
+        tooltip: _('Create new entry'),
+        text: _('Create'),
         iconCls: 'add',
         hidden: true,
         handler: function() {
@@ -876,8 +876,8 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         }
     });
     var undoBtn = new Ext.Button({
-        tooltip: 'Cancel operation',
-        text: 'Cancel',
+        tooltip: _('Cancel operation'),
+        text: _('Cancel'),
         iconCls: 'cancelButton',
         handler: function() {
             win.close();
@@ -901,7 +901,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
 
     /* Create window */
     win = new Ext.Window({
-        title: 'Add ' + conf.titleS,
+        title: _('Add') + ' ' + conf.titleS,
         iconCls: 'add',
         layout: 'fit',
         autoWidth: true,
@@ -931,7 +931,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                     if (d) {
                         d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
-                        win.setTitle('Add ' + s.lastSelectionText);
+                        win.setTitle(_('Add') + ' ' + s.lastSelectionText);
                         panel.remove(s);
                         tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
@@ -1110,9 +1110,9 @@ tvheadend.idnode_grid = function(panel, conf)
         /* Top bar */
         if (!conf.readonly) {
             abuttons.save = new Ext.Toolbar.Button({
-                tooltip: 'Save pending changes (marked with red border)',
+                tooltip: _('Save pending changes (marked with red border)'),
                 iconCls: 'save',
-                text: 'Save',
+                text: _('Save'),
                 disabled: true,
                 handler: function() {
                     var mr = store.getModifiedRecords();
@@ -1137,9 +1137,9 @@ tvheadend.idnode_grid = function(panel, conf)
             });
             buttons.push(abuttons.save);
             abuttons.undo = new Ext.Toolbar.Button({
-                tooltip: 'Revert pending changes (marked with red border)',
+                tooltip: _('Revert pending changes (marked with red border)'),
                 iconCls: 'undo',
-                text: 'Undo',
+                text: _('Undo'),
                 disabled: true,
                 handler: function() {
                     store.rejectChanges();
@@ -1151,9 +1151,9 @@ tvheadend.idnode_grid = function(panel, conf)
             if (buttons.length > 0)
                 buttons.push('-');
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: 'Add a new entry',
+                tooltip: _('Add a new entry'),
                 iconCls: 'add',
-                text: 'Add',
+                text: _('Add'),
                 disabled: false,
                 handler: function() {
                     tvheadend.idnode_create(conf.add);
@@ -1165,9 +1165,9 @@ tvheadend.idnode_grid = function(panel, conf)
             if (!conf.add && buttons.length > 0)
                 buttons.push('-');
             abuttons.del = new Ext.Toolbar.Button({
-                tooltip: 'Delete selected entries',
+                tooltip: _('Delete selected entries'),
                 iconCls: 'remove',
-                text: 'Delete',
+                text: _('Delete'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelections();
@@ -1196,9 +1196,9 @@ tvheadend.idnode_grid = function(panel, conf)
         }
         if (conf.move) {
             abuttons.up = new Ext.Toolbar.Button({
-                tooltip: 'Move selected entries up',
+                tooltip: _('Move selected entries up'),
                 iconCls: 'moveup',
-                text: 'Move Up',
+                text: _('Move Up'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelections();
@@ -1221,9 +1221,9 @@ tvheadend.idnode_grid = function(panel, conf)
             });
             buttons.push(abuttons.up);
             abuttons.down = new Ext.Toolbar.Button({
-                tooltip: 'Move selected entries down',
+                tooltip: _('Move selected entries down'),
                 iconCls: 'movedown',
-                text: 'Move Down',
+                text: _('Move Down'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelections();
@@ -1250,9 +1250,9 @@ tvheadend.idnode_grid = function(panel, conf)
             if (buttons.length > 0)
                 buttons.push('-');
             abuttons.edit = new Ext.Toolbar.Button({
-                tooltip: 'Edit selected entry',
+                tooltip: _('Edit selected entry'),
                 iconCls: 'edit',
-                text: 'Edit',
+                text: _('Edit'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelected();
@@ -1266,7 +1266,7 @@ tvheadend.idnode_grid = function(panel, conf)
                             });
                             p.setSize(800, 600);
                             var w = new Ext.Window({
-                                title: 'Edit ' + conf.titleS,
+                                title: _('Edit') + ' ' + conf.titleS,
                                 iconCls: 'edit',
                                 layout: 'fit',
                                 autoWidth: true,
@@ -1290,7 +1290,7 @@ tvheadend.idnode_grid = function(panel, conf)
                                     var c = {win: w};
                                     var p = tvheadend.idnode_editor(d[0], c);
                                     w = new Ext.Window({
-                                        title: 'Edit ' + conf.titleS,
+                                        title: _('Edit') + ' ' + conf.titleS,
                                         iconCls: 'edit',
                                         layout: 'fit',
                                         autoWidth: true,
@@ -1318,9 +1318,9 @@ tvheadend.idnode_grid = function(panel, conf)
                 store: new Ext.data.ArrayStore({
                     id: 0,
                     fields: ['key', 'val'],
-                    data: [['default', 'Parent disabled'],
-                        ['all', 'All'],
-                        ['none', 'None']]
+                    data: [['default', _('Parent disabled')],
+                        ['all', _('All')],
+                        ['none', _('None')]]
                 }),
                 value: 'default',
                 mode: 'local',
@@ -1335,14 +1335,14 @@ tvheadend.idnode_grid = function(panel, conf)
                 }
             });
             buttons.push('-');
-            buttons.push('Hide:');
+            buttons.push(_('Hide') + ':');
             buttons.push(hidemode);
         }
         var page = new Ext.PagingToolbar({
             store: store,
             pageSize: 50,
             displayInfo: true,
-            displayMsg: conf.titleP + ' {0} - {1} of {2}',
+            displayMsg: conf.titleP + _(' {0} - {1} of {2}'),
             width: 50
         });
 
@@ -1370,7 +1370,7 @@ tvheadend.idnode_grid = function(panel, conf)
         if (conf.help) {
             buttons.push('->');
             buttons.push({
-                text: 'Help',
+                text: _('Help'),
                 iconCls: 'help',
                 handler: conf.help
             });
@@ -1394,7 +1394,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 id: 0,
                 fields: ['key', 'val'],
                 data: [[25, '25'], [50, '50'], [100, '100'],
-                    [200, '200'], [999999999, 'All']]
+                    [200, '200'], [999999999, _('All')]]
             }),
             value: 50,
             mode: 'local',
@@ -1416,10 +1416,10 @@ tvheadend.idnode_grid = function(panel, conf)
             store: store,
             pageSize: 50,
             displayInfo: true,
-            displayMsg: conf.titleP + ' {0} - {1} of {2}',
+            displayMsg: conf.titleP + _(' {0} - {1} of {2}'),
             emptyMsg: 'No ' + conf.titleP.toLowerCase() + ' to display',
-            items: ['-', 'Auto-refresh', auto,
-                '->', '-', 'Per page', count]
+            items: ['-', _('Auto-refresh'), auto,
+                '->', '-', _('Per page'), count]
         });
         plugins.push(filter);
         var gconf = {
@@ -1607,9 +1607,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
 
         /* Top bar */
         abuttons.save = new Ext.Toolbar.Button({
-            tooltip: 'Save pending changes (marked with red border)',
+            tooltip: _('Save pending changes (marked with red border)'),
             iconCls: 'save',
-            text: 'Save',
+            text: _('Save'),
             disabled: true,
             handler: function() {
                 var node = current.editor.getForm().getFieldValues();
@@ -1629,9 +1629,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
         });
         buttons.push(abuttons.save);
         abuttons.undo = new Ext.Toolbar.Button({
-            tooltip: 'Revert pending changes (marked with red border)',
+            tooltip: _('Revert pending changes (marked with red border)'),
             iconCls: 'undo',
-            text: 'Undo',
+            text: _('Undo'),
             disabled: true,
             handler: function() {
                 if (current)
@@ -1642,9 +1642,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
         buttons.push('-');
         if (conf.add) {
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: 'Add a new entry',
+                tooltip: _('Add a new entry'),
                 iconCls: 'add',
-                text: 'Add',
+                text: _('Add'),
                 disabled: false,
                 handler: function() {
                     tvheadend.idnode_create(conf.add, true);
@@ -1654,9 +1654,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
         if (conf.del) {
             abuttons.del = new Ext.Toolbar.Button({
-                tooltip: 'Delete selected entries',
+                tooltip: _('Delete selected entries'),
                 iconCls: 'remove',
-                text: 'Delete',
+                text: _('Delete'),
                 disabled: true,
                 handler: function() {
                     if (current) {
@@ -1680,9 +1680,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
         if (conf.move) {
             abuttons.up = new Ext.Toolbar.Button({
-                tooltip: 'Move selected entry up',
+                tooltip: _('Move selected entry up'),
                 iconCls: 'moveup',
-                text: 'Move Up',
+                text: _('Move Up'),
                 disabled: true,
                 handler: function() {
                     if (current) {
@@ -1701,9 +1701,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
             });
             buttons.push(abuttons.up);
             abuttons.down = new Ext.Toolbar.Button({
-                tooltip: 'Move selected entry down',
+                tooltip: _('Move selected entry down'),
                 iconCls: 'movedown',
-                text: 'Move Down',
+                text: _('Move Down'),
                 disabled: true,
                 handler: function() {
                     if (current) {
@@ -1725,13 +1725,13 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.hidepwd) {
             buttons.push('-');
             abuttons.add = new Ext.Toolbar.Button({
-                tooltip: 'Show or hide passwords',
+                tooltip: _('Show or hide passwords'),
                 iconCls: 'eye',
-                text: 'Show passwords',
+                text: _('Show passwords'),
                 disabled: false,
                 handler: function() {
                     conf.showpwd = !conf.showpwd ? true : false;
-                    this.setText(conf.showpwd ? 'Hide passwords' : 'Show passwords');
+                    this.setText(conf.showpwd ? _('Hide passwords') : _('Show passwords'));
                     roweditor_destroy();
                     roweditor(select.getSelected());
                 }
@@ -1763,8 +1763,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
         if (conf.help) {
             buttons.push('->');
             buttons.push({
-                text: 'Help',
-		  iconCls: 'help',
+                text: _('Help'),
+                iconCls: 'help',
                 handler: conf.help
             });
         }
@@ -1790,7 +1790,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                     d = json_decode(d);
                     roweditor_destroy();
                     var editor = new tvheadend.idnode_editor(d[0], {
-                                    title: 'Parameters',
+                                    title: _('Parameters'),
                                     labelWidth: 300,
                                     fixedHeight: true,
                                     help: conf.help || null,
@@ -1976,7 +1976,7 @@ tvheadend.idnode_tree = function(panel, conf)
                     if (!n.isRoot) {
                         uuid = n.attributes.uuid;
                         current = new tvheadend.idnode_editor(n.attributes, {
-                            title: 'Parameters',
+                            title: _('Parameters'),
                             width: 550,
                             noautoWidth: true,
                             fixedHeight: true,

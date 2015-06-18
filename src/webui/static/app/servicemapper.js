@@ -8,20 +8,20 @@ tvheadend.service_mapper_status = function(panel, index)
 {
     /* Fields */
     var ok = new Ext.form.Label({
-        fieldLabel: 'Mapped',
+        fieldLabel: _('Mapped'),
         text: '0'
     });
     var fail = new Ext.form.Label({
-        fieldLabel: 'Failed',
+        fieldLabel: _('Failed'),
         text: '0'
     });
     var ignore = new Ext.form.Label({
-        fieldLabel: 'Ignored',
+        fieldLabel: _('Ignored'),
         text: '0'
     });
     var active = new Ext.form.Label({
         width: 200,
-        fieldLabel: 'Active',
+        fieldLabel: _('Active'),
         text: ''
     });
     var prog = new Ext.ProgressBar({
@@ -31,8 +31,8 @@ tvheadend.service_mapper_status = function(panel, index)
     /* Panel */
     var mpanel = new Ext.FormPanel({
         method: 'get',
-        title: 'Service Mapper',
-		iconCls: 'serviceMapper',
+        title: _('Service Mapper'),
+        iconCls: 'serviceMapper',
         frame: true,
         border: true,
         bodyStyle: 'padding: 5px',
@@ -86,23 +86,23 @@ tvheadend.service_mapper = function(t, e, store, select)
     /* Form fields */
     var availCheck = new Ext.form.Checkbox({
         name: 'check_availability',
-        fieldLabel: 'Check availability',
+        fieldLabel: _('Check availability'),
         checked: false
     });
     var ftaCheck = new Ext.form.Checkbox({
         name: 'encrypted',
-        fieldLabel: 'Include encrypted services',
+        fieldLabel: _('Include encrypted services'),
         checked: false
         // TODO: make dependent on CSA config
     });
     var mergeCheck = new Ext.form.Checkbox({
         name: 'merge_same_name',
-        fieldLabel: 'Merge same name',
+        fieldLabel: _('Merge same name'),
         checked: false
     });
     var provtagCheck = new Ext.form.Checkbox({
         name: 'provider_tags',
-        fieldLabel: 'Create provider tags',
+        fieldLabel: _('Create provider tags'),
         checked: false
     });
 
@@ -119,7 +119,7 @@ tvheadend.service_mapper = function(t, e, store, select)
 
     var saveBtn = new Ext.Button({
         text: 'Map',
-        tooltip: 'Begin mapping',
+        tooltip: _('Begin mapping'),
         handler: function() {
             p = null;
             if (select) {
@@ -135,7 +135,7 @@ tvheadend.service_mapper = function(t, e, store, select)
 
             panel.getForm().submit({
                 url: 'api/service/mapper/start',
-                waitMessage: 'Mapping services...',
+                waitMessage: _('Mapping services...'),
                 params: p
             });
 
@@ -143,7 +143,7 @@ tvheadend.service_mapper = function(t, e, store, select)
 
             /* Dialog */
             win = new Ext.Window({
-                title: 'Service Mapper Status',
+                title: _('Service Mapper Status'),
                 iconCls: 'clone',
                 layout: 'fit',
                 autoWidth: true,
@@ -173,7 +173,7 @@ tvheadend.service_mapper = function(t, e, store, select)
 
     /* Create window */
     win = new Ext.Window({
-        title: 'Map services',
+        title: _('Map services'),
         iconCls: 'clone',
         layout: 'fit',
         autoWidth: true,

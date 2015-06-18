@@ -2,12 +2,12 @@ tvheadend.tvadapters = function(panel, index) {
 
     tvheadend.idnode_tree(panel, {
         url: 'api/hardware/tree',
-        title: 'TV adapters',
+        title: _('TV adapters'),
         iconCls: 'tvCards',
         tabIndex: index,
         comet: 'hardware',
         help: function() {
-            new tvheadend.help('TV adapters', 'config_tvadapters.html');
+            new tvheadend.help(_('TV adapters'), 'config_tvadapters.html');
         }
     });
 

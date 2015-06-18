@@ -1,3 +1,4 @@
+
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
@@ -28,7 +29,7 @@ tvheadend.help = function(title, pagename) {
             });
 
             var win = new Ext.Window({
-                title: 'Help for ' + title,
+                title: _('Help for') + ' ' + title,
                 iconCls: 'help',
                 layout: 'fit',
                 width: 900,
@@ -77,8 +78,8 @@ tvheadend.Ajax = function(conf) {
 
 tvheadend.AjaxConfirm = function(conf) {
     Ext.MessageBox.confirm(
-        conf.title || 'Message',
-        conf.question || 'Do you really want to delete the selection?',
+        conf.title || _('Message'),
+        conf.question || _('Do you really want to delete the selection?'),
         function (btn) {
             if (btn == 'yes')
                 tvheadend.Ajax(conf);
@@ -88,7 +89,7 @@ tvheadend.AjaxConfirm = function(conf) {
 
 tvheadend.loading = function(on) {
     if (on)
-      Ext.getBody().mask('Loading... Please, wait...', 'loading');
+      Ext.getBody().mask(_('Loading... Please, wait...'), 'loading');
     else
       Ext.getBody().unmask();
 };
@@ -171,7 +172,7 @@ tvheadend.VideoPlayer = function(url) {
     });
 
     var selectChannel = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
         store: tvheadend.channels,
@@ -209,7 +210,7 @@ tvheadend.VideoPlayer = function(url) {
     }
 
     var selectProfile = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 150,
         displayField: 'val',
         mode: 'local',
@@ -233,7 +234,7 @@ tvheadend.VideoPlayer = function(url) {
     });
 
     var win = new Ext.Window({
-        title: 'Live TV Player',
+        title: _('Live TV Player'),
         layout: 'fit',
         width: 682 + 14,
         height: 384 + 56,
@@ -245,7 +246,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_play',
-                tooltip: 'Play',
+                tooltip: _('Play'),
                 handler: function() {
                     if (!videoPlayer.isIdle()) { //probobly paused
                         videoPlayer.play();
@@ -262,14 +263,14 @@ tvheadend.VideoPlayer = function(url) {
             },
             {
                 iconCls: 'control_pause',
-                tooltip: 'Pause',
+                tooltip: _('Pause'),
                 handler: function() {
                     videoPlayer.pause();
                 }
             },
             {
                 iconCls: 'control_stop',
-                tooltip: 'Stop',
+                tooltip: _('Stop'),
                 handler: function() {
                     videoPlayer.stop();
                 }
@@ -277,7 +278,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_fullscreen',
-                tooltip: 'Fullscreen',
+                tooltip: _('Fullscreen'),
                 handler: function() {
                     videoPlayer.fullscreen();
                 }
@@ -287,7 +288,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_volume',
-                tooltip: 'Volume',
+                tooltip: _('Volume'),
                 disabled: true
             }],
         items: [videoPlayer]
@@ -337,7 +338,7 @@ function accessUpdate(o) {
         var cp = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Configuration',
+            title: _('Configuration'),
             iconCls: 'wrench',
             items: []
         });
@@ -351,7 +352,7 @@ function accessUpdate(o) {
         var dvbin = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'DVB Inputs',
+            title: _('DVB Inputs'),
             iconCls: 'hardware',
             items: []
         });
@@ -371,7 +372,7 @@ function accessUpdate(o) {
         var chepg = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Channel / EPG',
+            title: _('Channel / EPG'),
             iconCls: 'television',
             items: []
         });
@@ -386,7 +387,7 @@ function accessUpdate(o) {
         var stream = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Stream',
+            title: _('Stream'),
             iconCls: 'film_edit',
             items: []
         });
@@ -398,7 +399,7 @@ function accessUpdate(o) {
         var tsdvr = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Recording',
+            title: _('Recording'),
             iconCls: 'recordingtab',
             items: []
         });
@@ -430,7 +431,7 @@ function accessUpdate(o) {
         tvheadend.aboutPanel = new Ext.Panel({
             border: false,
             layout: 'fit',
-            title: 'About',
+            title: _('About'),
             iconCls: 'info',
             autoLoad: 'about.html'
         });
@@ -522,11 +523,11 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     setLogin: function(login) {
         this.login = login;
         if (login) {
-            text = 'Logged in as <b>' + login + '</b>';
-            cmd = '(logout)';
+            text = _('Logged in as') + ' <b>' + login + '</b>';
+            cmd = '(' + _('logout') + ')';
         } else {
-            text = 'No verified access';
-            cmd = '(login)';
+            text = _('No verified access');
+            cmd = '(' + _('login') + ')';
         }
         var el = this.loginItem.tabEl;
         var fly = Ext.fly(this.loginItem.tabEl);
@@ -540,7 +541,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     onLoginCmdClicked: function(e) {
-        window.location.href = this.login ? 'logout' : 'login';
+        window.location.href = this.login ? _('logout') : _('login');
     }
 
 });
@@ -563,7 +564,7 @@ tvheadend.app = function() {
                 boxMinHeight: 45,
                 border: false,
                 hidden: true,
-                html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
+                html: '<div id="header"><h1>' + _('Tvheadend Web-Panel') + '</h1></div>'
             });
 
             tvheadend.rootTabPanel = new tvheadend.RootTabPanel({
@@ -584,11 +585,11 @@ tvheadend.app = function() {
                         maxSize: 400,
                         collapsible: true,
                         collapsed: true,
-                        title: 'System log',
+                        title: _('System log'),
                         margins: '0 0 0 0',
                         tools: [{
                                 id: 'gear',
-                                qtip: 'Enable debug output',
+                                qtip: _('Enable debug output'),
                                 handler: function(event, toolEl, panel) {
                                     Ext.Ajax.request({
                                         url: 'comet/debug',

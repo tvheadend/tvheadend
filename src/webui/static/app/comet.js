@@ -25,7 +25,7 @@ tvheadend.cometPoller = function() {
                         parse_comet_response(result.responseText);
 
                         if (failures > 1) {
-                            tvheadend.log('Reconnected to Tvheadend',
+                            tvheadend.log(_('Reconnected to Tvheadend'),
                                     'font-weight: bold; color: #080');
                         }
                         failures = 0;
@@ -33,9 +33,9 @@ tvheadend.cometPoller = function() {
                     failure: function(result, request) {
                         cometRequest.delay(failures ? 1000 : 1);
                         if (failures === 1) {
-                            tvheadend.log('There seems to be a problem with the '
+                            tvheadend.log(_('There seems to be a problem with the '
                                     + 'live update feed from Tvheadend. '
-                                    + 'Trying to reconnect...',
+                                    + 'Trying to reconnect...'),
                                     'font-weight: bold; color: #f00');
                         }
                         failures++;
@@ -51,7 +51,7 @@ tvheadend.cometPoller = function() {
             try {
                 tvheadend.comet.fireEvent(m.notificationClass, m);
             } catch (e) {
-                tvheadend.log('comet failure [e=' + e.message + ']');
+                tvheadend.log(_('comet failure') + ' [e=' + e.message + ']');
             }
         }
         cometRequest.delay(100);

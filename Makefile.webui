@@ -69,6 +69,7 @@ CSS += static/app/ext.css
 # extjs extensions
 #
 
+JAVASCRIPT += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT += $(ROOTPATH)/app/extensions.js
 JAVASCRIPT += $(ROOTPATH)/livegrid/livegrid-all.js
 JAVASCRIPT += $(ROOTPATH)/lovcombo/lovcombo-all.js
@@ -93,7 +94,6 @@ JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/RangeMenu.js
 JAVASCRIPT += $(ROOTPATH)/app/namespace.js
 JAVASCRIPT += $(ROOTPATH)/smoothie.js
 JAVASCRIPT += $(ROOTPATH)/app/comet.js
-JAVASCRIPT += $(ROOTPATH)/app/tableeditor.js
 JAVASCRIPT += $(ROOTPATH)/app/cteditor.js
 JAVASCRIPT += $(ROOTPATH)/app/acleditor.js
 
