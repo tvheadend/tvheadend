@@ -511,7 +511,7 @@ reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: check_config make_webui $(PO-FILES) $(MO-FILES) $(OBJS)
+${PROG}: check_config make_webui $(MO-FILES) $(OBJS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
@@ -566,9 +566,14 @@ $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 	$(CC) -c -o $@ $<
 
 # Internationalization
-intl/tvheadend.pot: $(I18N-C)
-	@$(XGETTEXT) -o $@.new $(I18N-C)
-	@mv $@.new $@
+.PHONY: intl
+intl:
+	@printf "Building tvheadend.pot\n"
+	@$(XGETTEXT) -o intl/tvheadend.pot.new $(I18N-C)
+	@mv intl/tvheadend.pot.new intl/tvheadend.pot
+	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
+
+intl/tvheadend.pot:
 
 intl/tvheadend.de.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
@@ -583,6 +588,7 @@ intl/tvheadend.pl.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
 ${BUILDDIR}/%.mo: %.po
+	@printf "Building $@\n"
 	@mkdir -p $(dir $@)/$(subst .,,$(suffix $(basename $@)))/LC_MESSAGES
 	@$(MSGFMT) -o $@ $<
 	@ln -sf ../../tvheadend.$(subst .,,$(suffix $(basename $@))).mo \

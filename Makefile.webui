@@ -191,6 +191,7 @@ define merge-po
 endef
 
 define go-po
+	@printf "Building $(1)\n"
 	@mkdir -p $(dir $(1))
 	$(VV)$(POJS_PY) --in="$(2)" > $(1).new
 	@echo "tvh_locale_lang = '$(subst .,,$(suffix $(basename $(2))))';" >> $(1).new
@@ -244,9 +245,13 @@ compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
 	@echo "WEBUI debug finished"
 
 # Internationalization
-intl/js/tvheadend.js.pot: $(JAVASCRIPT_SRC)
-	@$(XGETTEXT) -o $@.new $(JAVASCRIPT_SRC)
-	@mv $@.new $@
+.PHONY: intl
+intl:
+	@printf "Building intl/js/tvheadend.js.pot\n"
+	@$(XGETTEXT) -o intl/js/tvheadend.js.pot.new $(JAVASCRIPT_SRC)
+	@mv intl/js/tvheadend.js.pot.new intl/js/tvheadend.js.pot
+
+intl/js/tvheadend.js.pot:
 
 intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
 	$(call merge-po,$@,$<)
