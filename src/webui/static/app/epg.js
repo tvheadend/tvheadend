@@ -593,7 +593,7 @@ tvheadend.epg = function() {
     // Title search box
 
     var epgFilterTitle = new Ext.form.TextField({
-        emptyText: 'Search title...',
+        emptyText: _('Search title...'),
         width: 200
     });
 
