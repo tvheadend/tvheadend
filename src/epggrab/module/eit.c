@@ -731,6 +731,10 @@ static int _eit_start
   } else if (!strcmp("viasat_baltic", m->id)) {
     pid = 0x39;
 
+  /* Bulsatcom 39E (0x12b) */
+  } else if (!strcmp("Bulsatcom_39E", m->id)) {
+    pid = 0x12b;
+
   /* Standard (0x12) */
   } else {
     pid  = DVB_EIT_PID;
@@ -788,6 +792,7 @@ void eit_init ( void )
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops, NULL);
+  epggrab_module_ota_create(NULL, "Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops, NULL);
 }
 
 void eit_done ( void )
