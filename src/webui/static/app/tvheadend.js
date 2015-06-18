@@ -541,7 +541,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     onLoginCmdClicked: function(e) {
-        window.location.href = this.login ? _('logout') : _('login');
+        window.location.href = this.login ? 'logout' : 'login';
     }
 
 });
