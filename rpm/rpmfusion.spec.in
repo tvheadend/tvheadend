@@ -15,6 +15,7 @@ Source:         https://github.com/tvheadend/tvheadend/archive/%{ref}/tvheadend-
 #Patch999:      test.patch
 
 BuildRequires:  systemd-units
+BuildRequires:  gettext-devel
 BuildRequires:  dbus-devel
 BuildRequires:  avahi-devel
 BuildRequires:  avahi-libs
