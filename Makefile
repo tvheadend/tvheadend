@@ -22,7 +22,7 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 PROG    := $(BUILDDIR)/tvheadend
-LANGUAGES ?= de cs pl
+LANGUAGES ?= de fr cs pl
 
 #
 # Common compiler flags
@@ -572,6 +572,9 @@ intl/tvheadend.pot: $(I18N-C)
 intl/tvheadend.de.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
+intl/tvheadend.fr.po: intl/tvheadend.pot
+	$(call merge-po,$@,$<)
+
 intl/tvheadend.cs.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
@@ -595,7 +598,7 @@ $(BUILDDIR)/bundle.c: check_dvb_scan make_webui
 
 .PHONY: make_webui
 make_webui:
-	$(MAKE) -f Makefile.webui all
+	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" all
 
 # Static FFMPEG
 
