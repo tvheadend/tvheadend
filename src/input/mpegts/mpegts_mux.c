@@ -462,6 +462,7 @@ mpegts_mux_epg_list ( void *o, const char *lang )
     { N_("Only UK Freesat"),          MM_EPG_ONLY_UK_FREESAT },
     { N_("Only UK Freeview"),         MM_EPG_ONLY_UK_FREEVIEW },
     { N_("Only Viasat Baltic"),       MM_EPG_ONLY_VIASAT_BALTIC },
+    { N_("Only Bulsatcom 39E"),       MM_EPG_ONLY_BULSATCOM_39E },
     { N_("Only OpenTV Sky UK"),       MM_EPG_ONLY_OPENTV_SKY_UK },
     { N_("Only OpenTV Sky Italia"),   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
     { N_("Only OpenTV Sky Ausat"),    MM_EPG_ONLY_OPENTV_SKY_AUSAT },

@@ -469,6 +469,7 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
     [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
     [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
+    [MM_EPG_ONLY_BULSATCOM_39E]      = "Bulsatcom_39E",
     [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
     [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
     [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
