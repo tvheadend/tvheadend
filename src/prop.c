@@ -406,7 +406,7 @@ prop_serialize_value
   htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
 
   /* Metadata */
-  htsmsg_add_str(m, "caption",  pl->name);
+  htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, pl->name));
   if (pl->islist) {
     htsmsg_add_u32(m, "list", 1);
     if (pl->def.list)

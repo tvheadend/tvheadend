@@ -30,24 +30,24 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
-msgstr ""
+msgstr "# Programů"
 
 #: src/input/mpegts/mpegts_network.c:231
 msgid "# Mapped Channels"
-msgstr ""
+msgstr "# Mapovaných programů"
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
-msgstr ""
+msgstr "# Muxů"
 
 #: src/bouquet.c:883
 msgid "# Seen Services"
-msgstr ""
+msgstr "# Viděných služeb"
 
 #: src/bouquet.c:890 src/input/mpegts/mpegts_network.c:224
 #: src/input/mpegts/mpegts_mux.c:579
 msgid "# Services"
-msgstr ""
+msgstr "# Služeb"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -162,7 +162,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:384
 msgid "ACTIVE"
-msgstr ""
+msgstr "AKTIVNÍ"
 
 #: src/descrambler/constcw.c:345
 msgid "AES Constant Code Word Client"
@@ -298,19 +298,19 @@ msgstr ""
 
 #: src/bouquet.c:791
 msgid "Bouquet"
-msgstr ""
+msgstr "Buket"
 
 #: src/channels.c:382
 msgid "Bouquet (auto)"
-msgstr ""
+msgstr "Buket (automatický)"
 
 #: src/dvr/dvr_autorec.c:1058
 msgid "Brand"
-msgstr ""
+msgstr "Značka"
 
 #: src/dvr/dvr_db.c:2236
 msgid "Broadcast"
-msgstr ""
+msgstr "Vysílání"
 
 #: src/descrambler/constcw.c:290 src/descrambler/constcw.c:350
 msgid "CA ID"
@@ -387,7 +387,7 @@ msgstr ""
 
 #: src/profile.c:1520
 msgid "Channels"
-msgstr ""
+msgstr "Programy"
 
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
 #: src/input/mpegts/mpegts_service.c:178
@@ -404,7 +404,7 @@ msgstr ""
 
 #: src/descrambler/caclient.c:268
 msgid "Client Name"
-msgstr ""
+msgstr "Název klienta"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
@@ -420,7 +420,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:2286 src/dvr/dvr_autorec.c:1096 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:778 src/descrambler/caclient.c:275
 msgid "Comment"
-msgstr ""
+msgstr "Komentář"
 
 #: src/dvr/dvr_db.c:292
 msgid "Commercial break"
@@ -1537,7 +1537,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:157
 msgid "Network Discovery"
-msgstr ""
+msgstr "Název sítě"
 
 #: src/input/mpegts/mpegts_network.c:150
 msgid "Network ID (limit scanning)"
@@ -1545,7 +1545,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:143
 msgid "Network Name"
-msgstr ""
+msgstr "Název sítě"
 
 #: src/input/mpegts/satip/satip_frontend.c:197
 #: src/input/mpegts/satip/satip_frontend.c:336
@@ -1607,7 +1607,7 @@ msgstr ""
 
 #: src/profile.c:265
 msgid "None"
-msgstr ""
+msgstr "Žádný"
 
 #: src/profile.c:249 src/dvr/dvr_db.c:1615
 msgid "Normal"
@@ -1615,11 +1615,11 @@ msgstr ""
 
 #: src/profile.c:1355 src/dvr/dvr_db.c:1612 src/dvr/dvr_db.c:1640
 msgid "Not set"
-msgstr ""
+msgstr "Nenastaveno"
 
 #: src/dvr/dvr_config.c:693
 msgid "Not set (none or channel config)"
-msgstr ""
+msgstr "Nenastaveno (žádný nebo z konfigurace programu)"
 
 #: src/channels.c:311
 msgid "Number"
@@ -1780,15 +1780,15 @@ msgstr ""
 
 #: src/access.c:1661 src/descrambler/cwc.c:1732
 msgid "Password"
-msgstr ""
+msgstr "Heslo"
 
 #: src/access.c:1669
 msgid "Password2"
-msgstr ""
+msgstr "Heslo2"
 
 #: src/access.c:1639
 msgid "Passwords"
-msgstr ""
+msgstr "Hesla"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
@@ -1845,23 +1845,23 @@ msgstr ""
 
 #: src/service.c:194
 msgid "Priority (-10..10)"
-msgstr ""
+msgstr "Priorita (-10..10)"
 
 #: src/channels.c:1116
 msgid "Private"
-msgstr ""
+msgstr "Privátní"
 
 #: src/profile.c:307
 msgid "Profile Name"
-msgstr ""
+msgstr "Název profilu"
 
 #: src/input/mpegts/mpegts_service.c:150
 msgid "Provider"
-msgstr ""
+msgstr "Poskytovatel"
 
 #: src/descrambler/constcw.c:298 src/descrambler/constcw.c:358
 msgid "Provider ID"
-msgstr ""
+msgstr "ID poskytovatele"
 
 #: src/profile.c:1374
 msgid "Quad (4.0)"
@@ -2199,7 +2199,7 @@ msgstr ""
 
 #: src/bouquet.c:866
 msgid "Source"
-msgstr ""
+msgstr "Zdroj"
 
 #: src/streaming.c:413
 msgid "Source deleted"
@@ -2212,7 +2212,7 @@ msgstr ""
 #: src/streaming.c:409
 #, fuzzy
 msgid "Source reconfigured"
-msgstr "Konfigurace služeb"
+msgstr "Zdroj byl rekonfigurován"
 
 #: src/main.c:688
 msgid "Specify User-Agent header for the http client"
@@ -2248,19 +2248,19 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:961
 msgid "Start After"
-msgstr ""
+msgstr "Začátek za"
 
 #: src/dvr/dvr_autorec.c:970
 msgid "Start Before"
-msgstr ""
+msgstr "Začátek před"
 
 #: src/dvr/dvr_db.c:1988
 msgid "Start Time"
-msgstr ""
+msgstr "Začátek"
 
 #: src/dvr/dvr_db.c:2265 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Stav"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
@@ -2566,7 +2566,7 @@ msgstr ""
 
 #: src/access.c:1295 src/access.c:1655 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr ""
+msgstr "Uživatelské jméno"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"

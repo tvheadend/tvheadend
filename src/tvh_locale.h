@@ -19,7 +19,8 @@
 #define __TVH_LOCALE_H__
 
 const char *tvh_gettext_lang(const char *lang, const char *s);
-const char *tvh_gettext(const char *s);
+static inline const char *tvh_gettext(const char *s)
+  { return tvh_gettext_lang(NULL, s); }
 
 #define _(s) tvh_gettext(s)
 #define N_(s) (s)

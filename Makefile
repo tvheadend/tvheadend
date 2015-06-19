@@ -588,7 +588,7 @@ intl/tvheadend.pl.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
 $(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c
-src/tvh_locale_inc.c: $(PO_FILES)
+src/tvh_locale_inc.c: $(PO-FILES)
 	@printf "Building $@\n"
 	@./support/poc.py --in="$(PO-FILES)" > $@.new
 	@mv $@.new $@

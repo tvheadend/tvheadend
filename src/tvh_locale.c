@@ -37,25 +37,63 @@ const char *tvh_gettext_default_lang = NULL;
 const char *tvh_gettext_last_lang = NULL;
 const char **tvh_gettext_last_strings = NULL;
 
+static const char *tvh_gettext_lang_check(const char *lang)
+{
+  if (!strcmp(lang, "ger"))
+    return "de";
+  if (!strcmp(lang, "fre"))
+    return "fr";
+  if (!strcmp(lang, "cze"))
+    return "cs";
+  if (!strcmp(lang, "pol"))
+    return "pl";
+  return lang;
+}
+
 static void tvh_gettext_init(void)
 {
+  struct tvh_locale *l;
   static char dflt[16];
   char *p;
+  int i;
 
-  if (tvh_gettext_default_lang == NULL) {
-    tvh_gettext_default_lang = getenv("LC_ALL");
-    if (tvh_gettext_default_lang == NULL)
-      tvh_gettext_default_lang = getenv("LANG");
-    if (tvh_gettext_default_lang == NULL)
-      tvh_gettext_default_lang = getenv("LANGUAGE");
-    if (tvh_gettext_default_lang == NULL)
-      tvh_gettext_default_lang = "en";
-    strncpy(dflt, tvh_gettext_default_lang, sizeof(dflt)-1);
-    dflt[sizeof(dflt)-1] = '\0';
-    for (p = dflt; p && *p != '_'; p++);
-    if (*p == '_') *p = '\0';
-    tvh_gettext_default_lang = dflt;
-  }
+  tvh_gettext_default_lang = getenv("LC_ALL");
+  if (tvh_gettext_default_lang == NULL)
+    tvh_gettext_default_lang = getenv("LANG");
+  if (tvh_gettext_default_lang == NULL)
+    tvh_gettext_default_lang = getenv("LANGUAGE");
+  if (tvh_gettext_default_lang == NULL)
+    tvh_gettext_default_lang = "en";
+
+  strncpy(dflt, tvh_gettext_default_lang, sizeof(dflt)-1);
+  dflt[sizeof(dflt)-1] = '\0';
+  for (p = dflt; p && *p != '.'; p++);
+  if (*p == '.') *p = '\0';
+
+  tvh_gettext_default_lang = NULL;
+  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++)
+    if (strcmp(dflt, l->lang) == 0) {
+      tvh_gettext_default_lang = l->lang;
+      tvh_gettext_last_lang = l->lang;
+      tvh_gettext_last_strings = l->strings;
+      return;
+    }
+
+  for (p = dflt; p && *p != '_'; p++);
+  if (*p == '_') *p = '\0';
+
+  tvh_gettext_default_lang = NULL;
+  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++)
+    if (strcmp(dflt, l->lang) == 0) {
+      tvh_gettext_default_lang = l->lang;
+      tvh_gettext_last_lang = l->lang;
+      tvh_gettext_last_strings = l->strings;
+      return;
+    }
+
+  tvh_gettext_default_lang = dflt;
+  tvh_gettext_last_lang = dflt;
+  tvh_gettext_last_strings = NULL;
 }
 
 static void tvh_gettext_new_lang(const char *lang)
@@ -78,15 +116,23 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
   const char **strings;
 
   pthread_mutex_lock(&tvh_gettext_mutex);
-  if (tvh_gettext_last_lang == NULL || !strcmp(tvh_gettext_last_lang, lang)) {
+  if (lang == NULL) {
+    if (tvh_gettext_default_lang == NULL)
+      tvh_gettext_init();
+    lang = tvh_gettext_default_lang;
+  } else {
+    lang = tvh_gettext_lang_check(lang);
+  }
+  if (tvh_gettext_last_lang == NULL || strcmp(tvh_gettext_last_lang, lang)) {
     tvh_gettext_new_lang(lang);
     if (tvh_gettext_last_lang == NULL) {
       if (tvh_gettext_default_lang == NULL)
         tvh_gettext_init();
       tvh_gettext_new_lang(tvh_gettext_default_lang);
+    } else {
+      if (tvh_gettext_last_lang == NULL)
+        tvh_gettext_last_lang = "en";
     }
-    if (tvh_gettext_last_lang == NULL)
-      tvh_gettext_last_lang = "en";
   }
   if ((strings = tvh_gettext_last_strings) != NULL) {
     for ( ; strings[0]; strings += 2)
@@ -97,15 +143,4 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
   }
   pthread_mutex_unlock(&tvh_gettext_mutex);
   return s;
-}
-
-const char *tvh_gettext(const char *s)
-{
-  const char *lang;
-  pthread_mutex_lock(&tvh_gettext_mutex);
-  if (tvh_gettext_default_lang == NULL)
-    tvh_gettext_init();
-  lang = tvh_gettext_default_lang;
-  pthread_mutex_unlock(&tvh_gettext_mutex);
-  return tvh_gettext_lang(lang, s);
 }
