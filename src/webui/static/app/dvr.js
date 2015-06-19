@@ -194,7 +194,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
             return new Ext.Toolbar.Button({
                 tooltip: _('Abort the selected recording'),
                 iconCls: 'abort',
-                text: 'Abort',
+                text: _('Abort'),
                 disabled: true
             });
         },

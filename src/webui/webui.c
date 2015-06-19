@@ -1450,7 +1450,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
           return 0;
         }
       }
-      snprintf(buf, sizeof(buf), "tvheadend_locale={};tvheadend_locale_lang='';");
+      snprintf(buf, sizeof(buf), "tvh_locale={};tvh_locale_lang='';");
       http_send_header(hc, 200, "text/javascript; charset=UTF-8", strlen(buf), 0, NULL, 10, 0, NULL, NULL);
       tvh_write(hc->hc_fd, buf, strlen(buf));
       return 0;

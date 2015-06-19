@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-19 17:34+0200\n"
+"POT-Creation-Date: 2015-06-19 21:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/webui/static/app/idnode.js:1345 src/webui/static/app/idnode.js:1419
+#: src/webui/static/app/tvheadend.js:102
 msgid " {0} - {1} of {2}"
 msgstr " {0} - {1} z {2}"
 
@@ -29,17 +29,21 @@ msgstr "(Prázdný filtr)"
 msgid "(default DVR Profile)"
 msgstr "(výchozí DVR profil)"
 
+#: src/webui/static/app/dvr.js:197
+msgid "Abort"
+msgstr "Zrušit"
+
 #: src/webui/static/app/dvr.js:195
 msgid "Abort the selected recording"
 msgstr "Ukonči vybrané nahrávání"
 
-#: src/webui/static/app/tvheadend.js:434
+#: src/webui/static/app/tvheadend.js:464
 msgid "About"
 msgstr "O programu"
 
 #: src/webui/static/app/acleditor.js:64
 msgid "Access Control Entries"
-msgstr ""
+msgstr "Kontrola přístupu"
 
 #: src/webui/static/app/acleditor.js:26
 msgid "Access Entries"
@@ -54,11 +58,11 @@ msgid "Active"
 msgstr "Aktivní"
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
-#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1647
+#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1636
 msgid "Add"
 msgstr "Přidej"
 
-#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1645
+#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1634
 msgid "Add a new entry"
 msgstr "Přidej novou položku"
 
@@ -78,7 +82,7 @@ msgstr "Věk"
 msgid "Age Rating"
 msgstr "Věkové hodnocení"
 
-#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1397
+#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1395
 msgid "All"
 msgstr "Vše"
 
@@ -88,11 +92,11 @@ msgstr "Všechny dny"
 
 #: src/webui/static/app/chconf.js:158
 msgid "Assign Number"
-msgstr ""
+msgstr "Přiřaď číslo"
 
 #: src/webui/static/app/chconf.js:156
 msgid "Assign lowest free channel number"
-msgstr ""
+msgstr "Přiřaď nejmenší volné číslo"
 
 #: src/webui/static/app/esfilter.js:70
 msgid "Audio Stream Filter"
@@ -102,11 +106,11 @@ msgstr "Filter pro audio"
 msgid "Audio Stream Filters"
 msgstr "Filtry pro audio"
 
-#: src/webui/static/app/epg.js:1017
+#: src/webui/static/app/epg.js:1016
 msgid "Auto Recorder"
 msgstr "Automatický záznam"
 
-#: src/webui/static/app/idnode.js:1421
+#: src/webui/static/app/tvheadend.js:115
 msgid "Auto-refresh"
 msgstr "Automatické obnovení"
 
@@ -191,11 +195,11 @@ msgid "Cancel this connection"
 msgstr "Zruš toto spojení"
 
 #: src/webui/static/app/chconf.js:221 src/webui/static/app/epg.js:530
-#: src/webui/static/app/epg.js:1021 src/webui/static/app/status.js:102
+#: src/webui/static/app/epg.js:1020 src/webui/static/app/status.js:102
 msgid "Channel"
 msgstr "Program"
 
-#: src/webui/static/app/tvheadend.js:375
+#: src/webui/static/app/tvheadend.js:405
 msgid "Channel / EPG"
 msgstr "Program / EPG"
 
@@ -251,7 +255,7 @@ msgstr "Poměr komprese"
 msgid "Conditional Access Client"
 msgstr "Klient systém podmíněného přístupu"
 
-#: src/webui/static/app/tvheadend.js:341
+#: src/webui/static/app/tvheadend.js:371
 msgid "Configuration"
 msgstr "Konfigurace"
 
@@ -295,7 +299,7 @@ msgstr "Vytvoř novou položku"
 msgid "Create provider tags"
 msgstr "Vytvořit štítek poskytovatele"
 
-#: src/webui/static/app/epg.js:1039
+#: src/webui/static/app/epg.js:1038
 msgid "Created from EPG query"
 msgstr "Vytvořeno z EPG dotazu"
 
@@ -303,12 +307,12 @@ msgstr "Vytvořeno z EPG dotazu"
 msgid "Cron multi-line"
 msgstr "Víceřádkový cron"
 
-#: src/webui/static/app/epg.js:1026
+#: src/webui/static/app/epg.js:1025
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr "Aktuálně bude vyhodnoceno (a zaznamenáno) %d událostí."
 
-#: src/webui/static/app/tvheadend.js:355
+#: src/webui/static/app/tvheadend.js:385
 msgid "DVB Inputs"
 msgstr "DVB Vstupy"
 
@@ -356,7 +360,7 @@ msgstr "Rekordér budoucí/současné záznamy"
 msgid "Default Language(s)"
 msgstr "Výchozí jazyk(y)"
 
-#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1659
+#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1648
 msgid "Delete"
 msgstr "Vymazat"
 
@@ -368,13 +372,13 @@ msgstr "Vymazat záznam"
 msgid "Delete scheduled recording of this program"
 msgstr "Vymazat naplánovaný záznam tohoto programu"
 
-#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1657
+#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1646
 msgid "Delete selected entries"
 msgstr "Vymazat označené položky"
 
 #: src/webui/static/app/config.js:252
 msgid "Descramble Services (Limit Per Mux)"
-msgstr ""
+msgstr "Dekóduj služby (limit pro mux)"
 
 #: src/webui/static/app/mpegts.js:263
 msgid "Detailed stream info"
@@ -391,11 +395,11 @@ msgstr "Digitální video rekordér"
 
 #: src/webui/static/app/dvr.js:448
 msgid "Digital Video Recorder Profile"
-msgstr ""
+msgstr "Profil digitální video rekordéru"
 
 #: src/webui/static/app/dvr.js:449
 msgid "Digital Video Recorder Profiles"
-msgstr ""
+msgstr "Profily digitálního video rekordéru"
 
 #: src/webui/static/app/epggrab.js:47
 msgid "Disabled"
@@ -425,11 +429,11 @@ msgstr "Skutečně chcete zastavit/odebrat vybrané události?"
 msgid "Do you really want to remove this recording?"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1000 src/webui/static/app/epg.js:1006
-#: src/webui/static/app/epg.js:1009 src/webui/static/app/epg.js:1012
-#: src/webui/static/app/epg.js:1015
+#: src/webui/static/app/epg.js:999 src/webui/static/app/epg.js:1005
+#: src/webui/static/app/epg.js:1008 src/webui/static/app/epg.js:1011
+#: src/webui/static/app/epg.js:1014
 msgid "Don't care"
-msgstr ""
+msgstr "Libovolný"
 
 #: src/webui/static/app/dvr.js:294 src/webui/static/app/dvr.js:373
 msgid "Download"
@@ -440,7 +444,7 @@ msgid "Download the selected recording"
 msgstr ""
 
 #: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:516
-#: src/webui/static/app/epg.js:1024 src/webui/static/app/dvr.js:44
+#: src/webui/static/app/epg.js:1023 src/webui/static/app/dvr.js:44
 msgid "Duration"
 msgstr "Doba"
 
@@ -452,7 +456,7 @@ msgstr ""
 msgid "EPG Grabber"
 msgstr ""
 
-#: src/webui/static/app/epg.js:947
+#: src/webui/static/app/epg.js:946
 msgid "EPG Update"
 msgstr ""
 
@@ -467,7 +471,7 @@ msgstr "Edituj"
 
 #: src/webui/static/app/idnode.js:1253
 msgid "Edit selected entry"
-msgstr ""
+msgstr "Edituj vybranou položku"
 
 #: src/webui/static/app/epg.js:860 src/webui/static/app/epg.js:871
 msgid "Electronic Program Guide"
@@ -481,19 +485,19 @@ msgstr "Filtr elementárního toku"
 
 #: src/webui/static/app/config.js:132
 msgid "Enable NTP driver"
-msgstr ""
+msgstr "Povolit NTP ovladač"
 
-#: src/webui/static/app/tvheadend.js:592
+#: src/webui/static/app/tvheadend.js:622
 msgid "Enable debug output"
-msgstr ""
+msgstr "Povolit ladící výstup"
 
 #: src/webui/static/app/timeshift.js:25 src/webui/static/app/config.js:193
 msgid "Enabled"
-msgstr ""
+msgstr "Povoleno"
 
 #: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:509
 msgid "End Time"
-msgstr ""
+msgstr "Konec"
 
 #: src/webui/static/app/epg.js:494
 msgid "Episode"
@@ -502,6 +506,10 @@ msgstr "Episoda"
 #: src/webui/static/app/status.js:130
 msgid "Errors"
 msgstr "Chyby"
+
+#: src/webui/static/app/epg.js:878
+msgid "Events"
+msgstr "Pořady"
 
 #: src/webui/static/app/config.js:284
 msgid "Exported ATSC Tuners"
@@ -541,19 +549,19 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
-msgstr ""
+msgstr "Nezdařené"
 
 #: src/webui/static/app/dvr.js:397
 msgid "Failed Recording"
-msgstr ""
+msgstr "Nezdařený záznam"
 
 #: src/webui/static/app/dvr.js:398
 msgid "Failed Recordings"
-msgstr ""
+msgstr "Nezdařené záznamy"
 
 #: src/webui/static/app/dvr.js:51
 msgid "File size"
-msgstr ""
+msgstr "Velikost souboru"
 
 #: src/webui/static/app/epg.js:616
 msgid "Filter channel..."
@@ -579,6 +587,10 @@ msgstr "Ukončený záznam"
 msgid "Finished Recordings"
 msgstr "Ukončené záznamy"
 
+#: src/webui/static/app/tvheadend.js:106
+msgid "First Page"
+msgstr "První stránka"
+
 #: src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
 msgstr "Vynutit scan"
@@ -591,11 +603,11 @@ msgstr "Vynutit počáteční EPG scan po startu"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:281
+#: src/webui/static/app/tvheadend.js:311
 msgid "Fullscreen"
 msgstr "Celá obrazovka"
 
-#: src/webui/static/app/epg.js:833 src/webui/static/app/epg.js:1002
+#: src/webui/static/app/epg.js:833 src/webui/static/app/epg.js:1001
 msgid "Fulltext"
 msgstr "Celý text"
 
@@ -611,12 +623,12 @@ msgstr "Základní konfigurace"
 msgid "General Configuration"
 msgstr "Základní konfigurace"
 
-#: src/webui/static/app/epg.js:1023
+#: src/webui/static/app/epg.js:1022
 msgid "Genre"
 msgstr "Styl"
 
-#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1373
-#: src/webui/static/app/idnode.js:1766 src/webui/static/app/timeshift.js:110
+#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1381
+#: src/webui/static/app/idnode.js:1755 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:334
 msgid "Help"
@@ -624,13 +636,13 @@ msgstr "Nápověda"
 
 #: src/webui/static/app/tvheadend.js:32
 msgid "Help for"
-msgstr ""
+msgstr "Nápověda pro"
 
 #: src/webui/static/app/idnode.js:1338
 msgid "Hide"
-msgstr ""
+msgstr "Skrýt"
 
-#: src/webui/static/app/idnode.js:1734
+#: src/webui/static/app/idnode.js:1723
 msgid "Hide passwords"
 msgstr ""
 
@@ -664,7 +676,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:707
 msgid "In"
-msgstr ""
+msgstr "Vstup"
 
 #: src/webui/static/app/servicemapper.js:94
 msgid "Include encrypted services"
@@ -686,13 +698,17 @@ msgstr "Interní grabber"
 msgid "Language Settings"
 msgstr "Jazykové nastavení"
 
-#: src/webui/static/app/tvheadend.js:237
+#: src/webui/static/app/tvheadend.js:109
+msgid "Last Page"
+msgstr "Poslední stránka"
+
+#: src/webui/static/app/tvheadend.js:267
 msgid "Live TV Player"
 msgstr "Live TV Přehrávač"
 
 #: src/webui/static/app/epg.js:607 src/webui/static/app/epg.js:630
 #: src/webui/static/app/epg.js:654 src/webui/static/app/epg.js:675
-#: src/webui/static/app/tvheadend.js:175 src/webui/static/app/tvheadend.js:213
+#: src/webui/static/app/tvheadend.js:205 src/webui/static/app/tvheadend.js:243
 msgid "Loading..."
 msgstr "Nahrávám..."
 
@@ -700,7 +716,7 @@ msgstr "Nahrávám..."
 msgid "Loading... Please, wait..."
 msgstr "Nahrávám... Prosím, čekejte..."
 
-#: src/webui/static/app/tvheadend.js:526
+#: src/webui/static/app/tvheadend.js:556
 msgid "Logged in as"
 msgstr "Přihlášen jako"
 
@@ -750,11 +766,11 @@ msgstr ""
 
 #: src/webui/static/app/extensions.js:120
 msgid "Maximum {0} item(s) allowed"
-msgstr ""
+msgstr "Je dovoleno maximálně {0} položek"
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
-msgstr ""
+msgstr "Spoj stejný název"
 
 #: src/webui/static/app/tvheadend.js:81
 msgid "Message"
@@ -762,20 +778,20 @@ msgstr "Zpráva"
 
 #: src/webui/static/app/extensions.js:115
 msgid "Minimum {0} item(s) required"
-msgstr ""
+msgstr "Požadováno minimálně {0} položek"
 
 #: src/webui/static/app/epggrab.js:105 src/webui/static/app/epggrab.js:189
 #: src/webui/static/app/epggrab.js:238
 msgid "Module"
 msgstr "Modul"
 
-#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1706
+#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1695
 msgid "Move Down"
-msgstr ""
+msgstr "Posunout dolů"
 
-#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1685
+#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1674
 msgid "Move Up"
-msgstr ""
+msgstr "Posunout nahoru"
 
 #: src/webui/static/app/chconf.js:169
 msgid "Move channel one number up"
@@ -789,11 +805,11 @@ msgstr ""
 msgid "Move selected entries up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1704
+#: src/webui/static/app/idnode.js:1693
 msgid "Move selected entry down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1683
+#: src/webui/static/app/idnode.js:1672
 msgid "Move selected entry up"
 msgstr ""
 
@@ -803,15 +819,15 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:330 src/webui/static/app/mpegts.js:340
 msgid "Mux Scheduler"
-msgstr ""
+msgstr "Plánovač muxů"
 
 #: src/webui/static/app/mpegts.js:331 src/webui/static/app/mpegts.js:335
 msgid "Mux Schedulers"
-msgstr ""
+msgstr "Plánovače muxů"
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:105
 msgid "Muxes"
-msgstr ""
+msgstr "Muxy"
 
 #: src/webui/static/app/config.js:256
 msgid "Muxes Handling (0 = auto, 1 = keep, 2 = reject)"
@@ -820,19 +836,27 @@ msgstr ""
 #: src/webui/static/app/mpegts.js:65 src/webui/static/app/mpegts.js:74
 #: src/webui/static/app/mpegts.js:110
 msgid "Network"
-msgstr ""
+msgstr "Síť"
 
 #: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:70
 msgid "Networks"
-msgstr ""
+msgstr "Sítě"
+
+#: src/webui/static/app/tvheadend.js:108
+msgid "Next Page"
+msgstr "Další stránka"
 
 #: src/webui/static/app/dvr.js:117
 msgid "No days"
 msgstr "Žádné dny"
 
-#: src/webui/static/app/tvheadend.js:529
+#: src/webui/static/app/tvheadend.js:559
 msgid "No verified access"
 msgstr "Neprověřený přístup"
+
+#: src/webui/static/app/tvheadend.js:103
+msgid "No {0} to display"
+msgstr "Žádné {0} k zobrazení"
 
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/mpegts.js:207
 #: src/webui/static/app/mpegts.js:217
@@ -877,13 +901,17 @@ msgstr ""
 
 #: src/webui/static/app/epggrab.js:280
 msgid "Over-the-air Grabbers"
-msgstr ""
+msgstr "Over-the-air grabery"
 
 #: src/webui/static/app/status.js:364
 msgid "PER"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:1979
+#: src/webui/static/app/tvheadend.js:104
+msgid "Page"
+msgstr "Stránka"
+
+#: src/webui/static/app/idnode.js:1782 src/webui/static/app/idnode.js:1968
 msgid "Parameters"
 msgstr "Parametry"
 
@@ -903,11 +931,11 @@ msgstr ""
 msgid "Passwords"
 msgstr "Hesla"
 
-#: src/webui/static/app/tvheadend.js:266
+#: src/webui/static/app/tvheadend.js:296
 msgid "Pause"
 msgstr "Pauza"
 
-#: src/webui/static/app/idnode.js:1422
+#: src/webui/static/app/tvheadend.js:121
 msgid "Per page"
 msgstr "Na stránce"
 
@@ -927,7 +955,7 @@ msgstr "Cesta pro pikony (viz. nápověda)"
 #: src/webui/static/app/mpegts.js:310 src/webui/static/app/chconf.js:244
 #: src/webui/static/app/dvr.js:341 src/webui/static/app/dvr.js:347
 #: src/webui/static/app/dvr.js:421 src/webui/static/app/dvr.js:427
-#: src/webui/static/app/tvheadend.js:249
+#: src/webui/static/app/tvheadend.js:279
 msgid "Play"
 msgstr "Přehraj"
 
@@ -942,6 +970,10 @@ msgstr "Přehraj tento program"
 #: src/webui/static/app/config.js:155
 msgid "Prefer picons over channel name"
 msgstr "Preferuj picony před názvy programů"
+
+#: src/webui/static/app/tvheadend.js:107
+msgid "Previous Page"
+msgstr "Předchozí stránka"
 
 #: src/webui/static/app/dvr.js:450
 msgid "Profile Name"
@@ -979,13 +1011,18 @@ msgstr "Zaznamenej vysílání tohoto programu"
 msgid "Record program"
 msgstr "Zaznamenej vysílání"
 
-#: src/webui/static/app/tvheadend.js:402
+#: src/webui/static/app/tvheadend.js:432
 msgid "Recording"
 msgstr "Nahrávání"
 
 #: src/webui/static/app/dvr.js:99
 msgid "Recording details"
 msgstr "Detaily nahrávání"
+
+#: src/webui/static/app/tvheadend.js:110
+#, fuzzy
+msgid "Refresh"
+msgstr "Obnovení"
 
 #: src/webui/static/app/chconf.js:208
 msgid "Reset (clear) the selected icon URLs"
@@ -1003,7 +1040,7 @@ msgstr "Resetuj ikonu"
 msgid "Reset all filters (show all)"
 msgstr "Resetuj všechny filtry (zobraz vše)"
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1632
+#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1621
 msgid "Revert pending changes (marked with red border)"
 msgstr ""
 
@@ -1016,7 +1053,7 @@ msgid "SNR"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
-#: src/webui/static/app/idnode.js:1612
+#: src/webui/static/app/idnode.js:1601
 msgid "Save"
 msgstr "Ulož"
 
@@ -1034,7 +1071,7 @@ msgstr "Uložit konfigurace"
 msgid "Save failed"
 msgstr "Uložení selhalo"
 
-#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1610
+#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1599
 msgid "Save pending changes (marked with red border)"
 msgstr "Ulož změny udělané do konfigurace (označené červeným okrajem)"
 
@@ -1096,11 +1133,11 @@ msgstr "Služby"
 msgid "Settings"
 msgstr "Nastavení"
 
-#: src/webui/static/app/idnode.js:1728
+#: src/webui/static/app/idnode.js:1717
 msgid "Show or hide passwords"
 msgstr "Ukázat nebo skrýt hesla"
 
-#: src/webui/static/app/idnode.js:1730 src/webui/static/app/idnode.js:1734
+#: src/webui/static/app/idnode.js:1719 src/webui/static/app/idnode.js:1723
 msgid "Show passwords"
 msgstr "Ukázat hesla"
 
@@ -1136,7 +1173,7 @@ msgstr "Stav"
 msgid "Status"
 msgstr "Stav"
 
-#: src/webui/static/app/dvr.js:167 src/webui/static/app/tvheadend.js:273
+#: src/webui/static/app/dvr.js:167 src/webui/static/app/tvheadend.js:303
 msgid "Stop"
 msgstr ""
 
@@ -1153,7 +1190,7 @@ msgid "Storage Path"
 msgstr ""
 
 #: src/webui/static/app/status.js:336 src/webui/static/app/status.js:466
-#: src/webui/static/app/tvheadend.js:390
+#: src/webui/static/app/tvheadend.js:420
 msgid "Stream"
 msgstr ""
 
@@ -1176,15 +1213,15 @@ msgstr "Podtitulek"
 
 #: src/webui/static/app/status.js:341
 msgid "Subs #"
-msgstr ""
+msgstr "Odběry #"
 
 #: src/webui/static/app/config.js:248
 msgid "Subscription Weight"
-msgstr ""
+msgstr "Váha odběru"
 
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
-msgstr ""
+msgstr "Odběry"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1196,31 +1233,31 @@ msgstr ""
 
 #: src/webui/static/app/chconf.js:197
 msgid "Swap Numbers"
-msgstr ""
+msgstr "Zaměň čísla"
 
 #: src/webui/static/app/chconf.js:195
 msgid "Swap the two selected channels numbers"
-msgstr ""
+msgstr "Zaměň čísla pro dva vybrané programy"
 
-#: src/webui/static/app/tvheadend.js:588
+#: src/webui/static/app/tvheadend.js:618
 msgid "System log"
-msgstr ""
+msgstr "Systémový log"
 
 #: src/webui/static/app/tvadapters.js:5 src/webui/static/app/tvadapters.js:10
 msgid "TV adapters"
-msgstr ""
+msgstr "TV adaptéry"
 
-#: src/webui/static/app/epg.js:1022
+#: src/webui/static/app/epg.js:1021
 msgid "Tag"
-msgstr ""
+msgstr "Štítek"
 
 #: src/webui/static/app/esfilter.js:89
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Filter toku teletext"
 
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
-msgstr ""
+msgstr "Filtry toku teletext"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
@@ -1228,7 +1265,7 @@ msgid ""
 "to reconnect..."
 msgstr ""
 
-#: src/webui/static/app/epg.js:1017
+#: src/webui/static/app/epg.js:1016
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programmes to record that match this query"
@@ -1236,15 +1273,15 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:537
 msgid "Time Schedule"
-msgstr ""
+msgstr "Plánovač času"
 
 #: src/webui/static/app/dvr.js:538
 msgid "Time Schedules"
-msgstr ""
+msgstr "Plánovače času"
 
 #: src/webui/static/app/config.js:141
 msgid "Time Update"
-msgstr ""
+msgstr "Aktualizace času"
 
 #: src/webui/static/app/timeshift.js:150
 msgid "Timeshift"
@@ -1252,20 +1289,20 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:113
 msgid "Timeshift Configuration"
-msgstr ""
+msgstr "Timeshift konfigurace"
 
 #: src/webui/static/app/timeshift.js:132
 msgid "Timeshift Options"
-msgstr ""
+msgstr "Timeshift volby"
 
-#: src/webui/static/app/epg.js:474 src/webui/static/app/epg.js:1020
+#: src/webui/static/app/epg.js:474 src/webui/static/app/epg.js:1019
 #: src/webui/static/app/status.js:96
 msgid "Title"
 msgstr "Název pořadu"
 
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
-msgstr ""
+msgstr "Chyby transportu"
 
 #: src/webui/static/app/epggrab.js:299
 msgid "Trigger OTA EPG Grabber"
@@ -1279,7 +1316,7 @@ msgstr ""
 msgid "Tune over-the-air EPG muxes to grab new events now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:567
+#: src/webui/static/app/tvheadend.js:597
 msgid "Tvheadend Web-Panel"
 msgstr ""
 
@@ -1296,7 +1333,7 @@ msgstr "Typ"
 msgid "Uncorrected Blocks"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1634
+#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1623
 msgid "Undo"
 msgstr "Zpět"
 
@@ -1314,11 +1351,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:240
 msgid "Upcoming / Current Recordings"
-msgstr ""
+msgstr "Budoucí / současné záznamy"
 
 #: src/webui/static/app/dvr.js:239
 msgid "Upcoming Recording"
-msgstr ""
+msgstr "Budoucí záznamy"
 
 #: src/webui/static/app/epggrab.js:132
 msgid "Update channel icon"
@@ -1356,7 +1393,7 @@ msgstr ""
 msgid "Video Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:291
+#: src/webui/static/app/tvheadend.js:321
 msgid "Volume"
 msgstr "Hlasitost"
 
@@ -1393,11 +1430,11 @@ msgstr "comet chyba"
 msgid "hrs"
 msgstr "hod"
 
-#: src/webui/static/app/tvheadend.js:530
+#: src/webui/static/app/tvheadend.js:560
 msgid "login"
 msgstr "přihlásit"
 
-#: src/webui/static/app/tvheadend.js:527
+#: src/webui/static/app/tvheadend.js:557
 msgid "logout"
 msgstr "odhlásit"
 
@@ -1406,3 +1443,7 @@ msgstr "odhlásit"
 #: src/webui/static/app/dvr.js:44
 msgid "min"
 msgstr "min"
+
+#: src/webui/static/app/tvheadend.js:105
+msgid "of {0}"
+msgstr "z {0}"

@@ -109,7 +109,8 @@ def load(po_files, fn):
 
 def cstr(s):
   return s.replace('\t', '\\t').\
-           replace('\n', '\\n');
+           replace('\n', '\\n').\
+           replace('"', '\\"');
 
 def to_c(po_files):
 

@@ -90,6 +90,11 @@ class PO:
         msgstr = po_modify(msgstr, line)
     self.po_finish(msgid, msgstr)
 
+def jsstr(s):
+  return s.replace('\t', '\\t').\
+           replace('\n', '\\n').\
+           replace("'", "\\'");
+
 def cnv(fn):
 
   f = utf8open(fn, 'r')
@@ -106,7 +111,7 @@ def cnv(fn):
   sep = ''
   for s in po.strings:
     if s != po.strings[s]:
-      sys.stdout.write("%s'%s':'%s'" % (sep, s, po.strings[s]))
+      sys.stdout.write("%s'%s':'%s'" % (sep, jsstr(s), jsstr(po.strings[s])))
       sep = ',\n'
   sys.stdout.write("\n}\n");
 
