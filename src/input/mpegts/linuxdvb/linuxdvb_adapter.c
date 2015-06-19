@@ -65,7 +65,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
     idnode_set_add(is, &lfe->ti_id, NULL, NULL);
 #if ENABLE_LINUXDVB_CA
   LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-    idnode_set_add(is, &lca->lca_id, NULL);
+    idnode_set_add(is, &lca->lca_id, NULL, NULL);
 #endif
   return is;
 }

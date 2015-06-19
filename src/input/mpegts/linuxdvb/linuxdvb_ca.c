@@ -122,7 +122,7 @@ linuxdvb_ca_class_save ( idnode_t *in )
 }
 
 static void
-linuxdvb_ca_class_enabled_notify ( void *p )
+linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
 {
   linuxdvb_ca_t *lca = (linuxdvb_ca_t *) p;
 
@@ -160,7 +160,7 @@ linuxdvb_ca_class_high_bitrate_notify ( void *p )
 }
 
 static const char *
-linuxdvb_ca_class_get_title ( idnode_t *in )
+linuxdvb_ca_class_get_title ( idnode_t *in, const char *lang )
 {
   linuxdvb_ca_t *lca = (linuxdvb_ca_t *) in;
   static char buf[256];
@@ -180,7 +180,7 @@ const idclass_t linuxdvb_ca_class =
   .ic_class      = "linuxdvb_ca",
   .ic_caption    = N_("Linux DVB CA"),
   .ic_save       = linuxdvb_ca_class_save,
-  .ic_get_title   = linuxdvb_ca_class_get_title,
+  .ic_get_title  = linuxdvb_ca_class_get_title,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
