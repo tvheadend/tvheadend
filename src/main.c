@@ -474,7 +474,8 @@ show_usage
       free(desc);
     }
   }
-  printf(_("\n"
+  printf("%s", 
+         _("\n"
            "For more information please visit the Tvheadend website:\n"
            "https://tvheadend.org\n"));
   exit(0);
